@@ -2,9 +2,15 @@
 	<div class="case-templates-list flex flex-col gap-4">
 		<!-- Header / actions -->
 		<div class="flex flex-wrap items-center justify-between gap-3">
-			<div class="flex flex-col gap-1">
-				<h2 class="text-lg font-semibold">Case Templates</h2>
-				<p class="text-secondary text-sm">
+			<div class="flex flex-col gap-2">
+				<div class="flex items-center gap-4">
+					<h3>Case Templates</h3>
+					<n-button size="small" secondary type="primary" @click="openCreate">
+						<template #icon><Icon name="carbon:add" /></template>
+						New template
+					</n-button>
+				</div>
+				<p class="text-sm">
 					Reusable investigation playbooks. Templates are matched to new cases by customer + alert source on
 					case creation, with priority customer+source &gt; customer-only &gt; source-only &gt; global
 					default.
@@ -20,37 +26,33 @@
 				>
 					<template #prefix><Icon name="carbon:search" :size="14" /></template>
 				</n-input>
-				<n-button size="small" type="primary" @click="openCreate">
-					<template #icon><Icon name="carbon:add" :size="14" /></template>
-					New template
-				</n-button>
 			</div>
 		</div>
 
 		<!-- Filters -->
 		<div class="flex flex-wrap items-center gap-3">
-			<n-input
+			<n-select
 				v-model:value="customerFilter"
 				size="small"
+				:options="customersOptions"
 				placeholder="Customer code (blank = all)"
-				clearable
-				style="width: 220px"
+				:loading="loadingCustomers"
+				filterable
+				class="w-50!"
+				:consistent-menu-width="false"
 			/>
-			<n-input
+			<n-select
 				v-model:value="sourceFilter"
-				size="small"
+				:options="sourcesOptions"
 				placeholder="Alert source (blank = all)"
+				size="small"
+				filterable
 				clearable
-				style="width: 220px"
+				class="w-44!"
+				:loading="loadingConfiguredSources"
 			/>
 			<n-checkbox v-model:checked="includeGlobal" size="small">Include global / source-agnostic</n-checkbox>
-			<n-button size="small" quaternary @click="fetchTemplates">
-				<template #icon><Icon name="carbon:renew" :size="14" /></template>
-				Refresh
-			</n-button>
 		</div>
-
-		<n-divider class="!my-1" />
 
 		<n-spin :show="loading">
 			<n-data-table
@@ -81,11 +83,16 @@
 
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
+import type { ApiError } from "@/types/common"
+import type { Customer } from "@/types/customers"
 import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
-import { NButton, NCheckbox, NDataTable, NDivider, NInput, NModal, NSpin, NTag, useDialog, useMessage } from "naive-ui"
-import { computed, h, onMounted, ref, watch } from "vue"
+import type { SourceName } from "@/types/incidentManagement/sources"
+import { useDebounceFn } from "@vueuse/core"
+import { NButton, NCheckbox, NDataTable, NInput, NModal, NSelect, NSpin, NTag, useDialog, useMessage } from "naive-ui"
+import { computed, h, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import CaseTemplateEditor from "./CaseTemplateEditor.vue"
 
@@ -94,23 +101,36 @@ const dialog = useDialog()
 
 const templates = ref<CaseTemplate[]>([])
 const loading = ref(false)
-const search = ref("")
-const customerFilter = ref("")
-const sourceFilter = ref("")
+const deletingId = ref<number | null>(null)
+const search = ref<string | null>(null)
+const customerFilter = ref<string | null>(null)
+const sourceFilter = ref<string | null>(null)
 const includeGlobal = ref(true)
+
+const loadingCustomers = ref(false)
+const customersList = ref<Customer[]>([])
+const customersOptions = computed(() =>
+	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
+)
+
+const loadingConfiguredSources = ref(false)
+const configuredSourcesList = ref<SourceName[]>([])
+const sourcesOptions = computed(() => configuredSourcesList.value.map(o => ({ label: o, value: o })))
 
 const showEditor = ref(false)
 const editing = ref<CaseTemplate | null>(null)
 
 const filteredRows = computed(() => {
-	if (!search.value.trim()) return templates.value
-	const needle = search.value.trim().toLowerCase()
+	if (!search.value?.trim()) return templates.value
+
+	const text = search.value.trim().toLowerCase()
+
 	return templates.value.filter(
 		t =>
-			t.name.toLowerCase().includes(needle) ||
-			(t.description ?? "").toLowerCase().includes(needle) ||
-			(t.customer_code ?? "").toLowerCase().includes(needle) ||
-			(t.source ?? "").toLowerCase().includes(needle)
+			t.name.toLowerCase().includes(text) ||
+			(t.description ?? "").toLowerCase().includes(text) ||
+			(t.customer_code ?? "").toLowerCase().includes(text) ||
+			(t.source ?? "").toLowerCase().includes(text)
 	)
 })
 
@@ -190,6 +210,7 @@ const columns: DataTableColumns<CaseTemplate> = [
 						size: "tiny",
 						quaternary: true,
 						type: "error",
+						loading: deletingId.value === row.id,
 						onClick: () => confirmDelete(row)
 					} as any,
 					{ default: () => "Delete" }
@@ -199,8 +220,9 @@ const columns: DataTableColumns<CaseTemplate> = [
 	}
 ]
 
-function fetchTemplates() {
+const fetchTemplates = useDebounceFn(() => {
 	loading.value = true
+
 	Api.incidentManagement.caseTemplates
 		.listTemplates({
 			customerCode: customerFilter.value || undefined,
@@ -215,12 +237,12 @@ function fetchTemplates() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "Failed to load templates")
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to load templates")
 		})
 		.finally(() => {
 			loading.value = false
 		})
-}
+}, 400)
 
 function openCreate() {
 	editing.value = null
@@ -245,6 +267,8 @@ function confirmDelete(row: CaseTemplate) {
 		positiveText: "Delete",
 		negativeText: "Cancel",
 		onPositiveClick: () => {
+			deletingId.value = row.id
+
 			Api.incidentManagement.caseTemplates
 				.deleteTemplate(row.id)
 				.then(res => {
@@ -256,10 +280,53 @@ function confirmDelete(row: CaseTemplate) {
 					}
 				})
 				.catch(err => {
-					message.error(err.response?.data?.message || "Failed to delete template")
+					message.error(getApiErrorMessage(err as ApiError) || "Failed to delete template")
+				})
+				.finally(() => {
+					deletingId.value = null
 				})
 		}
 	})
+}
+
+function getCustomers() {
+	loadingCustomers.value = true
+
+	Api.customers
+		.getCustomers()
+		.then(res => {
+			if (res.data.success) {
+				customersList.value = res.data?.customers || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingCustomers.value = false
+		})
+}
+
+function getConfiguredSources() {
+	loadingConfiguredSources.value = true
+
+	Api.incidentManagement.sources
+		.getConfiguredSources()
+		.then(res => {
+			if (res.data.success) {
+				configuredSourcesList.value = res.data?.sources || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingConfiguredSources.value = false
+		})
 }
 
 // Re-fetch when scope filters change so the result set follows the
@@ -268,5 +335,9 @@ watch([customerFilter, sourceFilter, includeGlobal], () => {
 	fetchTemplates()
 })
 
-onMounted(fetchTemplates)
+onBeforeMount(() => {
+	fetchTemplates()
+	getCustomers()
+	getConfiguredSources()
+})
 </script>
