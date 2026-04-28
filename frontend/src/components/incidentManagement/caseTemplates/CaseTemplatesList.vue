@@ -60,14 +60,10 @@
 			v-model:show="showEditor"
 			preset="card"
 			:title="editing ? `Edit template — ${editing.name}` : 'New template'"
+			display-directive="show"
 			style="max-width: 720px"
 		>
-			<CaseTemplateEditor
-				v-if="showEditor"
-				:template="editing"
-				@saved="onTemplateSaved"
-				@cancel="showEditor = false"
-			/>
+			<CaseTemplateEditor :template="editing" @saved="onTemplateSaved" @cancel="showEditor = false" />
 		</n-modal>
 	</div>
 </template>
@@ -330,7 +326,7 @@ function getCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCustomers.value = false
@@ -350,7 +346,7 @@ function getConfiguredSources() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingConfiguredSources.value = false

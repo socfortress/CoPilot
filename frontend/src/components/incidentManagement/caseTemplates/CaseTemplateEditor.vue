@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="form" :rules="formRules" label-placement="top">
+	<n-form ref="formRef" :model="form" :rules="formRules" label-placement="top" :disabled="saving">
 		<n-form-item label="Name" path="name">
 			<n-input v-model:value="form.name" placeholder="e.g., Wazuh — Default" />
 		</n-form-item>
@@ -43,6 +43,15 @@
 		</n-form-item>
 
 		<n-card size="small" title="Tasks" content-class="flex flex-col gap-3">
+			<template #header-extra>
+				<div
+					v-if="taskSaving"
+					class="text-secondary text-xs opacity-0 transition-opacity duration-300"
+					:class="{ 'animate-pulse opacity-100': taskSaving }"
+				>
+					saving...
+				</div>
+			</template>
 			<p v-if="props.template == null" class="text-xs">
 				Add at least one task. You can edit / reorder tasks after the template is created.
 			</p>
@@ -163,6 +172,7 @@ const emit = defineEmits<{
 const message = useMessage()
 const formRef = ref<FormInst | null>(null)
 const saving = ref(false)
+const taskSaving = ref(false)
 
 const loadingCustomers = ref(false)
 const customersList = ref<Customer[]>([])
@@ -244,6 +254,8 @@ async function deleteTask(idx: number) {
 		tasks.value.splice(idx, 1)
 		return
 	}
+
+	taskSaving.value = true
 	try {
 		const res = await Api.incidentManagement.caseTemplates.deleteTemplateTask(task.id)
 		if (res.data.success) {
@@ -253,6 +265,8 @@ async function deleteTask(idx: number) {
 		}
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError) || "Failed to delete task")
+	} finally {
+		taskSaving.value = false
 	}
 }
 
@@ -269,11 +283,14 @@ async function moveTask(idx: number, delta: number) {
 	if (props.template) {
 		const orderedIds = tasks.value.filter(t => t.id != null).map(t => t.id as number)
 		if (orderedIds.length === tasks.value.length) {
-			await Api.incidentManagement.caseTemplates
-				.reorderTemplateTasks(props.template.id, orderedIds)
-				.catch(err => {
-					message.error(err.response?.data?.message || "Failed to reorder tasks")
-				})
+			taskSaving.value = true
+			try {
+				await Api.incidentManagement.caseTemplates.reorderTemplateTasks(props.template.id, orderedIds)
+			} catch (err) {
+				message.error(getApiErrorMessage(err as ApiError) || "Failed to reorder tasks")
+			} finally {
+				taskSaving.value = false
+			}
 		}
 	}
 }
@@ -284,6 +301,8 @@ async function saveTask(idx: number) {
 	const draft = tasks.value[idx]
 
 	if (!draft.title.trim()) return // skip empty drafts; user is still typing
+
+	taskSaving.value = true
 
 	const payload = {
 		title: draft.title,
@@ -307,6 +326,8 @@ async function saveTask(idx: number) {
 		}
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError) || "Failed to save task")
+	} finally {
+		taskSaving.value = false
 	}
 }
 
@@ -356,8 +377,8 @@ async function handleSave() {
 				message.warning(res.data.message)
 			}
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to save template")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to save template")
 	} finally {
 		saving.value = false
 	}
@@ -376,7 +397,7 @@ function getCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCustomers.value = false
@@ -396,7 +417,7 @@ function getConfiguredSources() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingConfiguredSources.value = false
