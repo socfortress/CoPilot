@@ -62,6 +62,8 @@
 							clearable
 							filterable
 							to="body"
+							:render-label="renderOption"
+							size="large"
 						/>
 					</n-form-item>
 					<p class="text-secondary -mt-2 text-xs">
@@ -95,7 +97,7 @@ import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, inject, onBeforeMount, onMounted, ref, watch } from "vue"
+import { computed, h, inject, onBeforeMount, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 
 const emit = defineEmits<{
@@ -122,9 +124,11 @@ const availableTemplates = ref<CaseTemplate[]>([])
 const selectedTemplateId = ref<number | null>(null)
 const templateOptions = computed(() =>
 	availableTemplates.value.map(t => ({
-		label: `${t.name}${t.is_default ? " (default)" : ""}${
-			t.customer_code ? ` — ${t.customer_code}` : ""
-		}${t.source ? ` · ${t.source}` : ""}`,
+		label: t.name,
+		name: t.name,
+		customer_code: t.customer_code,
+		source: t.source,
+		is_default: t.is_default,
 		value: t.id
 	}))
 )
@@ -222,6 +226,22 @@ function reset(force?: boolean) {
 
 function resetForm() {
 	form.value = getForm()
+}
+
+function renderOption(option: {
+	label: string
+	value: number
+	name?: string | null
+	is_default?: boolean
+	customer_code?: string | null
+	source?: string | null
+}) {
+	const title = `${option.name}${option.is_default ? " (default)" : ""}`
+	const description = [option.customer_code, option.source].filter(Boolean).join(" — ")
+	return h("div", { class: "flex flex-col gap-0.5 leading-none py-2" }, [
+		h("span", title),
+		h("span", { class: "text-secondary text-xs" }, description)
+	])
 }
 
 function submit() {
