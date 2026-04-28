@@ -14,11 +14,27 @@
 		</n-form-item>
 
 		<div class="grid grid-cols-2 gap-4">
-			<n-form-item label="Customer code" path="customer_code">
-				<n-input v-model:value="form.customer_code" placeholder="Leave empty for global" clearable />
+			<n-form-item label="Customer code" path="customer_code" :show-feedback="false">
+				<n-select
+					v-model:value="form.customer_code"
+					:options="customersOptions"
+					placeholder="Leave empty for global"
+					:loading="loadingCustomers"
+					filterable
+					clearable
+					:consistent-menu-width="false"
+				/>
 			</n-form-item>
-			<n-form-item label="Alert source" path="source">
-				<n-input v-model:value="form.source" placeholder="e.g., wazuh (leave empty for any)" clearable />
+			<n-form-item label="Alert source" path="source" :show-feedback="false">
+				<n-select
+					v-model:value="form.source"
+					:options="sourcesOptions"
+					:consistent-menu-width="false"
+					placeholder="e.g., wazuh (leave empty for any)"
+					filterable
+					clearable
+					:loading="loadingConfiguredSources"
+				/>
 			</n-form-item>
 		</div>
 
@@ -26,63 +42,74 @@
 			<n-checkbox v-model:checked="form.is_default">Default for this (customer, source) scope</n-checkbox>
 		</n-form-item>
 
-		<n-divider title-placement="left">Tasks</n-divider>
+		<n-card size="small" title="Tasks" content-class="flex flex-col gap-3">
+			<p v-if="props.template == null" class="text-xs">
+				Add at least one task. You can edit / reorder tasks after the template is created.
+			</p>
+			<p v-else class="text-xs">
+				Tasks below are saved immediately on add / edit / delete. Editing the template does NOT mutate task
+				snapshots already attached to real cases.
+			</p>
 
-		<div v-if="props.template == null" class="text-secondary mb-2 text-xs">
-			Add at least one task. You can edit / reorder tasks after the template is created.
-		</div>
-		<div v-else class="text-secondary mb-2 text-xs">
-			Tasks below are saved immediately on add / edit / delete. Editing the template does NOT mutate task
-			snapshots already attached to real cases.
-		</div>
+			<div class="flex flex-col gap-2">
+				<CardEntity v-for="(task, idx) in tasks" :key="task._key" embedded size="small">
+					<div class="flex flex-col gap-2">
+						<div class="flex items-center gap-2">
+							<n-input
+								v-model:value="task.title"
+								size="small"
+								placeholder="Task title"
+								class="flex-1"
+								@blur="saveTask(idx)"
+							/>
+							<n-checkbox v-model:checked="task.mandatory" @update:checked="saveTask(idx)">
+								mandatory
+							</n-checkbox>
+							<n-button-group v-if="tasks.length > 1" size="tiny">
+								<n-button :disabled="idx === 0" @click="moveTask(idx, -1)">
+									<template #icon><Icon name="carbon:arrow-up" /></template>
+								</n-button>
+								<n-button :disabled="idx === tasks.length - 1" @click="moveTask(idx, 1)">
+									<template #icon><Icon name="carbon:arrow-down" /></template>
+								</n-button>
+							</n-button-group>
+							<n-button
+								v-if="tasks.length > 1"
+								size="tiny"
+								type="error"
+								quaternary
+								@click="deleteTask(idx)"
+							>
+								<template #icon><Icon name="carbon:trash-can" /></template>
+							</n-button>
+						</div>
+						<n-input
+							v-model:value="task.description"
+							size="small"
+							placeholder="Description (optional)"
+							:autosize="{ minRows: 1, maxRows: 3 }"
+							type="textarea"
+							clearable
+							@blur="saveTask(idx)"
+						/>
+						<n-input
+							v-model:value="task.guidelines"
+							size="small"
+							placeholder="Guidelines / best practices (optional)"
+							:autosize="{ minRows: 1, maxRows: 5 }"
+							type="textarea"
+							clearable
+							@blur="saveTask(idx)"
+						/>
+					</div>
+				</CardEntity>
 
-		<div class="flex flex-col gap-2">
-			<div v-for="(task, idx) in tasks" :key="task._key" class="border-border rounded-md border p-3">
-				<div class="mb-2 flex items-center gap-2">
-					<n-input
-						v-model:value="task.title"
-						size="small"
-						placeholder="Task title"
-						style="flex: 1"
-						@blur="saveTask(idx)"
-					/>
-					<n-checkbox v-model:checked="task.mandatory" @update:checked="saveTask(idx)">mandatory</n-checkbox>
-					<n-button-group size="tiny">
-						<n-button :disabled="idx === 0" @click="moveTask(idx, -1)">
-							<template #icon><Icon name="carbon:arrow-up" :size="14" /></template>
-						</n-button>
-						<n-button :disabled="idx === tasks.length - 1" @click="moveTask(idx, 1)">
-							<template #icon><Icon name="carbon:arrow-down" :size="14" /></template>
-						</n-button>
-					</n-button-group>
-					<n-button size="tiny" type="error" quaternary @click="deleteTask(idx)">
-						<template #icon><Icon name="carbon:trash-can" :size="14" /></template>
-					</n-button>
-				</div>
-				<n-input
-					v-model:value="task.description"
-					size="small"
-					placeholder="Description (optional)"
-					:autosize="{ minRows: 1, maxRows: 3 }"
-					type="textarea"
-					class="mb-2"
-					@blur="saveTask(idx)"
-				/>
-				<n-input
-					v-model:value="task.guidelines"
-					size="small"
-					placeholder="Guidelines / best practices (optional)"
-					:autosize="{ minRows: 1, maxRows: 5 }"
-					type="textarea"
-					@blur="saveTask(idx)"
-				/>
+				<n-button size="small" dashed @click="addTask">
+					<template #icon><Icon name="carbon:add" /></template>
+					Add task
+				</n-button>
 			</div>
-
-			<n-button size="small" dashed @click="addTask">
-				<template #icon><Icon name="carbon:add" :size="14" /></template>
-				Add task
-			</n-button>
-		</div>
+		</n-card>
 
 		<div class="mt-4 flex justify-end gap-2">
 			<n-button @click="emit('cancel')">Cancel</n-button>
@@ -95,11 +122,16 @@
 
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
+import type { ApiError } from "@/types/common"
+import type { Customer } from "@/types/customers"
 import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
-import { NButton, NButtonGroup, NCheckbox, NDivider, NForm, NFormItem, NInput, useMessage } from "naive-ui"
-import { ref, watch } from "vue"
+import type { SourceName } from "@/types/incidentManagement/sources"
+import { NButton, NButtonGroup, NCard, NCheckbox, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 interface DraftTask {
 	_key: string // stable client-side key for v-for
@@ -111,9 +143,18 @@ interface DraftTask {
 	order_index: number
 }
 
+interface FormModel {
+	name: string | null
+	description: string | null
+	customer_code: string | null
+	source: string | null
+	is_default: boolean
+}
+
 const props = defineProps<{
 	template: CaseTemplate | null
 }>()
+
 const emit = defineEmits<{
 	(e: "saved", template: CaseTemplate): void
 	(e: "cancel"): void
@@ -123,11 +164,21 @@ const message = useMessage()
 const formRef = ref<FormInst | null>(null)
 const saving = ref(false)
 
-const form = ref({
-	name: "",
-	description: "",
-	customer_code: "",
-	source: "",
+const loadingCustomers = ref(false)
+const customersList = ref<Customer[]>([])
+const customersOptions = computed(() =>
+	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
+)
+
+const loadingConfiguredSources = ref(false)
+const configuredSourcesList = ref<SourceName[]>([])
+const sourcesOptions = computed(() => configuredSourcesList.value.map(o => ({ label: o, value: o })))
+
+const form = ref<FormModel>({
+	name: null,
+	description: null,
+	customer_code: null,
+	source: null,
 	is_default: false
 })
 const formRules: FormRules = {
@@ -161,7 +212,7 @@ function loadFromTemplate(t: CaseTemplate | null) {
 			order_index: task.order_index
 		}))
 	} else {
-		form.value = { name: "", description: "", customer_code: "", source: "", is_default: false }
+		form.value = { name: null, description: null, customer_code: null, source: null, is_default: false }
 		tasks.value = [
 			{
 				_key: nextKey(),
@@ -174,8 +225,6 @@ function loadFromTemplate(t: CaseTemplate | null) {
 		]
 	}
 }
-
-watch(() => props.template, loadFromTemplate, { immediate: true })
 
 function addTask() {
 	tasks.value.push({
@@ -202,14 +251,16 @@ async function deleteTask(idx: number) {
 		} else {
 			message.warning(res.data.message)
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to delete task")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to delete task")
 	}
 }
 
 async function moveTask(idx: number, delta: number) {
 	const newIdx = idx + delta
+
 	if (newIdx < 0 || newIdx >= tasks.value.length) return
+
 	const moved = tasks.value.splice(idx, 1)[0]
 	tasks.value.splice(newIdx, 0, moved)
 	tasks.value.forEach((t, i) => (t.order_index = i))
@@ -229,7 +280,9 @@ async function moveTask(idx: number, delta: number) {
 
 async function saveTask(idx: number) {
 	if (!props.template) return // creation flow batches at submit time
+
 	const draft = tasks.value[idx]
+
 	if (!draft.title.trim()) return // skip empty drafts; user is still typing
 
 	const payload = {
@@ -252,8 +305,8 @@ async function saveTask(idx: number) {
 			const res = await Api.incidentManagement.caseTemplates.updateTemplateTask(draft.id, payload)
 			if (!res.data.success) message.warning(res.data.message)
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to save task")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to save task")
 	}
 }
 
@@ -265,8 +318,9 @@ async function handleSave() {
 	}
 
 	saving.value = true
+
 	const payload = {
-		name: form.value.name,
+		name: form.value.name || "",
 		description: form.value.description || null,
 		customer_code: form.value.customer_code || null,
 		source: form.value.source || null,
@@ -308,4 +362,51 @@ async function handleSave() {
 		saving.value = false
 	}
 }
+
+function getCustomers() {
+	loadingCustomers.value = true
+
+	Api.customers
+		.getCustomers()
+		.then(res => {
+			if (res.data.success) {
+				customersList.value = res.data?.customers || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingCustomers.value = false
+		})
+}
+
+function getConfiguredSources() {
+	loadingConfiguredSources.value = true
+
+	Api.incidentManagement.sources
+		.getConfiguredSources()
+		.then(res => {
+			if (res.data.success) {
+				configuredSourcesList.value = res.data?.sources || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingConfiguredSources.value = false
+		})
+}
+
+watch(() => props.template, loadFromTemplate, { immediate: true })
+
+onBeforeMount(() => {
+	getCustomers()
+	getConfiguredSources()
+})
 </script>
