@@ -86,6 +86,7 @@ import { NButton, NCheckbox, NDataTable, NInput, NModal, NSelect, NSpin, NTag, u
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import CaseTemplateEditor from "./CaseTemplateEditor.vue"
@@ -93,6 +94,7 @@ import CaseTemplateEditor from "./CaseTemplateEditor.vue"
 const message = useMessage()
 const dialog = useDialog()
 
+const dFormats = useSettingsStore().dateFormat
 const templates = ref<CaseTemplate[]>([])
 const loading = ref(false)
 const deletingId = ref<number | null>(null)
@@ -114,6 +116,22 @@ const sourcesOptions = computed(() => configuredSourcesList.value.map(o => ({ la
 const showEditor = ref(false)
 const editing = ref<CaseTemplate | null>(null)
 
+function renderCustomerCode(customerCode: string | null | undefined) {
+	if (customerCode) {
+		return <span class="font-mono">{customerCode}</span>
+	}
+
+	return <em class="text-tertiary">any</em>
+}
+
+function renderSource(source: string | null | undefined) {
+	if (source) {
+		return <span class="font-mono">{source}</span>
+	}
+
+	return <em class="text-tertiary">any</em>
+}
+
 const filteredRows = computed(() => {
 	if (!search.value?.trim()) return templates.value
 
@@ -132,40 +150,34 @@ const columns: DataTableColumns<CaseTemplate> = [
 	{
 		title: "Name",
 		key: "name",
+		className: "whitespace-nowrap",
 		render: row => (
 			<div class="flex flex-col gap-1">
 				<div class="flex items-center gap-2">
-					<span class="font-medium">{row.name}</span>
-					{row.is_default
-						? (
-							<NTag size="tiny" type="info" bordered={false}>
-								default
-							</NTag>
-						)
-						: null}
+					<span class="font-medium whitespace-nowrap">{row.name}</span>
+					{row.is_default && (
+						<NTag size="tiny" type="info" bordered={false}>
+							default
+						</NTag>
+					)}
 				</div>
-				{row.description
-					? (
-						<span class="text-secondary text-xs">
-							{row.description}
-						</span>
-					)
-					: null}
+				{row.description && <span class="text-secondary text-xs">{row.description}</span>}
 			</div>
 		)
 	},
 	{
 		title: "Scope",
 		key: "scope",
+		className: "whitespace-nowrap",
 		render: row => (
-			<div class="flex flex-col gap-1 text-xs">
+			<div class="flex flex-col text-sm whitespace-nowrap">
 				<span>
-					<span class="text-tertiary">customer: </span>
-					{row.customer_code ?? <em class="text-tertiary">any</em>}
+					<span class="text-secondary">customer: </span>
+					{renderCustomerCode(row.customer_code)}
 				</span>
 				<span>
-					<span class="text-tertiary">source: </span>
-					{row.source ?? <em class="text-tertiary">any</em>}
+					<span class="text-secondary">source: </span>
+					{renderSource(row.source)}
 				</span>
 			</div>
 		)
@@ -173,25 +185,24 @@ const columns: DataTableColumns<CaseTemplate> = [
 	{
 		title: "Tasks",
 		key: "tasks",
-		width: 90,
+		width: 110,
+		className: "whitespace-nowrap",
 		render(row) {
 			const total = row.tasks?.length ?? 0
 			const mandatory = row.tasks?.filter(t => t.mandatory).length ?? 0
 
 			return (
-				<div class="flex flex-col text-xs">
+				<div class="flex flex-col text-sm whitespace-nowrap">
 					<span>
-						{total}
+						<span class="font-mono">{total}</span>
 						{" total"}
 					</span>
-					{mandatory > 0
-						? (
-							<span class="text-warning">
-								{mandatory}
-								{" mandatory"}
-							</span>
-						)
-						: null}
+					{mandatory > 0 && (
+						<span class="text-warning">
+							<span class="font-mono">{mandatory}</span>
+							{" mandatory"}
+						</span>
+					)}
 				</div>
 			)
 		}
@@ -199,20 +210,30 @@ const columns: DataTableColumns<CaseTemplate> = [
 	{
 		title: "Created by",
 		key: "created_by",
-		render: row => row.created_by
+		className: "whitespace-nowrap",
+		render: row => <span class="whitespace-nowrap">{row.created_by}</span>
 	},
 	{
 		title: "Updated",
 		key: "updated_at",
-		render: row => formatDate(row.updated_at, "MMM D, YYYY HH:mm") as string
+		className: "whitespace-nowrap",
+		render: row => (
+			<span class="font-mono text-xs whitespace-nowrap">{formatDate(row.updated_at, dFormats.datetime)}</span>
+		)
 	},
 	{
 		title: "Actions",
 		key: "actions",
 		width: 120,
+		className: "whitespace-nowrap",
 		render: row => (
 			<div class="flex gap-2">
-				<NButton size="small" secondary onClick={() => openEdit(row)}>
+				<NButton
+					size="small"
+					secondary
+					onClick={() => openEdit(row)}
+					v-slots={{ icon: () => <Icon name="carbon:edit" size={14} /> }}
+				>
 					Edit
 				</NButton>
 				<NButton
@@ -221,6 +242,7 @@ const columns: DataTableColumns<CaseTemplate> = [
 					type="error"
 					loading={deletingId.value === row.id}
 					onClick={() => confirmDelete(row)}
+					v-slots={{ icon: () => <Icon name="carbon:trash-can" size={14} /> }}
 				>
 					Delete
 				</NButton>
