@@ -2,25 +2,22 @@
 	<n-spin :show="loading">
 		<div class="flex flex-col gap-3">
 			<div class="flex items-center justify-between">
-				<n-tag :bordered="false" type="info" size="small">
-					{{ events.length }} event{{ events.length === 1 ? "" : "s" }}
-				</n-tag>
-				<n-button size="tiny" quaternary @click="fetchTimeline">
-					<template #icon><Icon name="carbon:renew" :size="14" /></template>
+				<Chip :value="events.length" label="events" :bordered="false" />
+
+				<n-button size="small" secondary @click="fetchTimeline">
+					<template #icon><Icon name="carbon:renew" /></template>
 					Refresh
 				</n-button>
 			</div>
 
-			<p class="text-secondary text-xs">
-				Read-only audit log of investigation activity on this case.
-			</p>
+			<p class="text-secondary text-xs">Read-only audit log of investigation activity on this case.</p>
 
 			<n-timeline v-if="events.length">
 				<n-timeline-item
 					v-for="event in events"
 					:key="event.id"
 					:type="timelineType(event)"
-					:time="formatDateTime(event.timestamp)"
+					:time="formatDate(event.timestamp, dFormats.datetimesec).toString()"
 				>
 					<template #header>
 						<div class="flex flex-wrap items-center gap-2">
@@ -43,15 +40,19 @@
 import type { CaseEvent } from "@/types/caseTemplates"
 import type { ApiError } from "@/types/common"
 import { NButton, NEmpty, NSpin, NTag, NTimeline, NTimelineItem, useMessage } from "naive-ui"
-import { h, onMounted, ref, watch } from "vue"
+import { h, ref, watch } from "vue"
 import Api from "@/api"
+import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
-import dayjs from "@/utils/dayjs"
+import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
 	caseId: number
 }>()
+
+const dFormats = useSettingsStore().dateFormat
 
 const message = useMessage()
 const events = ref<CaseEvent[]>([])
@@ -69,20 +70,11 @@ async function fetchTimeline() {
 	}
 }
 
-watch(() => props.caseId, fetchTimeline)
-onMounted(fetchTimeline)
-
-function formatDateTime(iso: string): string {
-	return dayjs(iso).format("MMM D, YYYY HH:mm:ss")
-}
-
 function summary(event: CaseEvent): string {
 	const p = (event.payload || {}) as Record<string, any>
 	switch (event.event_type) {
 		case "case_created":
-			return p.source === "from_alert"
-				? `Case created from alert #${p.alert_id}`
-				: "Case created"
+			return p.source === "from_alert" ? `Case created from alert #${p.alert_id}` : "Case created"
 		case "case_status_changed":
 			return p.forced
 				? `Status forced from ${p.from ?? "—"} to ${p.to} (mandatory tasks bypassed)`
@@ -94,9 +86,7 @@ function summary(event: CaseEvent): string {
 		case "case_escalated":
 			return p.escalated ? "Case escalated" : "Case de-escalated"
 		case "alert_linked":
-			return p.alert_ids
-				? `${p.alert_ids.length} alert(s) linked to case`
-				: `Alert #${p.alert_id} linked`
+			return p.alert_ids ? `${p.alert_ids.length} alert(s) linked to case` : `Alert #${p.alert_id} linked`
 		case "alert_unlinked":
 			return `Alert #${p.alert_id} unlinked`
 		case "comment_added":
@@ -110,7 +100,7 @@ function summary(event: CaseEvent): string {
 		case "task_commented":
 			return `Notes added on task: ${p.title ?? `#${p.task_id}`}`
 		default:
-			return event.event_type.replace(/_/g, " ")
+			return String(event.event_type).replace(/_/g, " ")
 	}
 }
 
@@ -124,11 +114,7 @@ function timelineType(event: CaseEvent): "default" | "success" | "info" | "warni
 		case "case_status_changed":
 			return p.to === "CLOSED" ? "success" : p.to === "OPEN" ? "info" : "warning"
 		case "task_status_changed":
-			return p.to_status === "DONE"
-				? "success"
-				: p.to_status === "NOT_NECESSARY"
-					? "warning"
-					: "default"
+			return p.to_status === "DONE" ? "success" : p.to_status === "NOT_NECESSARY" ? "warning" : "default"
 		case "case_escalated":
 			return p.escalated ? "warning" : "default"
 		case "alert_unlinked":
@@ -175,8 +161,7 @@ function hasDetail(event: CaseEvent): boolean {
 function renderDetail(event: CaseEvent) {
 	const p = (event.payload || {}) as Record<string, any>
 	if ((event.event_type === "comment_added" || event.event_type === "task_commented") && p.snippet) {
-		return () =>
-			h("blockquote", { class: "border-border mt-1 border-l-4 pl-3 italic" }, String(p.snippet))
+		return () => h("blockquote", { class: "border-border mt-1 border-l-4 pl-3 italic" }, String(p.snippet))
 	}
 	if (event.event_type === "alert_linked" && Array.isArray(p.alert_ids)) {
 		return () =>
@@ -188,4 +173,6 @@ function renderDetail(event: CaseEvent) {
 	}
 	return () => h("span")
 }
+
+watch(() => props.caseId, fetchTimeline, { immediate: true })
 </script>
