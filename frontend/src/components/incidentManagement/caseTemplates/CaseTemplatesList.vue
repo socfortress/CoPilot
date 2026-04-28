@@ -1,36 +1,32 @@
 <template>
 	<div class="case-templates-list flex flex-col gap-4">
 		<!-- Header / actions -->
-		<div class="flex flex-wrap items-center justify-between gap-3">
-			<div class="flex flex-col gap-2">
-				<div class="flex items-center gap-4">
-					<h3>Case Templates</h3>
-					<n-button size="small" secondary type="primary" @click="openCreate">
-						<template #icon><Icon name="carbon:add" /></template>
-						New template
-					</n-button>
-				</div>
-				<p class="text-sm">
-					Reusable investigation playbooks. Templates are matched to new cases by customer + alert source on
-					case creation, with priority customer+source &gt; customer-only &gt; source-only &gt; global
-					default.
-				</p>
+
+		<div class="flex flex-col gap-2">
+			<div class="flex items-center gap-4">
+				<h2>Case Templates</h2>
+				<n-button size="small" secondary type="primary" @click="openCreate">
+					<template #icon><Icon name="carbon:add" /></template>
+					New template
+				</n-button>
 			</div>
-			<div class="flex items-center gap-2">
-				<n-input
-					v-model:value="search"
-					size="small"
-					placeholder="Search by name or description"
-					clearable
-					style="width: 240px"
-				>
-					<template #prefix><Icon name="carbon:search" :size="14" /></template>
-				</n-input>
-			</div>
+			<p>
+				Reusable investigation playbooks. Templates are matched to new cases by customer + alert source on case
+				creation, with priority customer+source &gt; customer-only &gt; source-only &gt; global default.
+			</p>
 		</div>
 
 		<!-- Filters -->
-		<div class="flex flex-wrap items-center gap-3">
+		<div class="@container mt-4 grid grid-cols-12 items-center gap-3">
+			<n-input
+				v-model:value="search"
+				size="small"
+				placeholder="Search by name or description"
+				clearable
+				class="col-span-full @3xl:col-span-4 @6xl:col-span-5"
+			>
+				<template #prefix><Icon name="carbon:search" /></template>
+			</n-input>
 			<n-select
 				v-model:value="customerFilter"
 				size="small"
@@ -38,30 +34,28 @@
 				placeholder="Customer code (blank = all)"
 				:loading="loadingCustomers"
 				filterable
-				class="w-50!"
+				clearable
+				class="col-span-full @lg:col-span-6 @3xl:col-span-3"
 				:consistent-menu-width="false"
 			/>
 			<n-select
 				v-model:value="sourceFilter"
 				:options="sourcesOptions"
+				:consistent-menu-width="false"
 				placeholder="Alert source (blank = all)"
 				size="small"
 				filterable
 				clearable
-				class="w-44!"
+				class="col-span-full @lg:col-span-6 @3xl:col-span-3 @6xl:col-span-2"
 				:loading="loadingConfiguredSources"
 			/>
-			<n-checkbox v-model:checked="includeGlobal" size="small">Include global / source-agnostic</n-checkbox>
+			<n-checkbox v-model:checked="includeGlobal" size="small" class="col-span-full @3xl:col-span-2">
+				<div class="text-xs">Include global / source-agnostic</div>
+			</n-checkbox>
 		</div>
 
 		<n-spin :show="loading">
-			<n-data-table
-				:columns
-				:data="filteredRows"
-				:row-key="(row: CaseTemplate) => row.id"
-				:bordered="false"
-				size="small"
-			/>
+			<n-data-table :columns :data="filteredRows" size="small" />
 		</n-spin>
 
 		<!-- Editor modal -->
@@ -198,21 +192,21 @@ const columns: DataTableColumns<CaseTemplate> = [
 				h(
 					NButton,
 					{
-						size: "tiny",
-						quaternary: true,
+						size: "small",
+						secondary: true,
 						onClick: () => openEdit(row)
-					} as any,
+					},
 					{ default: () => "Edit" }
 				),
 				h(
 					NButton,
 					{
-						size: "tiny",
-						quaternary: true,
+						size: "small",
+						secondary: true,
 						type: "error",
 						loading: deletingId.value === row.id,
 						onClick: () => confirmDelete(row)
-					} as any,
+					},
 					{ default: () => "Delete" }
 				)
 			])
@@ -261,7 +255,7 @@ function onTemplateSaved() {
 
 function confirmDelete(row: CaseTemplate) {
 	dialog.warning({
-		title: `Delete template "${row.name}"?`,
+		title: `Delete template "${row.name}" ?`,
 		content:
 			"Deleting the template removes its task definitions. Existing CaseTask snapshots on real cases are preserved (they're independent of the template).",
 		positiveText: "Delete",
