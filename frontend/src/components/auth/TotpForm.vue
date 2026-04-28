@@ -37,7 +37,7 @@
 			{{ showBackupInput ? "Use backup code" : "Verify" }}
 		</n-button>
 
-		<div class="mt-4 flex items-center justify-between">
+		<div class="mt-4 flex items-center justify-between gap-2">
 			<n-button text size="small" @click="cancel2fa()">← Back to login</n-button>
 			<n-button text size="small" @click="showBackupInput = !showBackupInput">
 				{{ showBackupInput ? "Use authenticator code" : "Use a backup code instead" }}
