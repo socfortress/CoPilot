@@ -89,6 +89,13 @@ export interface ShuffleApp {
 	large_image: string | null
 }
 
+export interface ShuffleOrg {
+	id: string
+	name: string
+	role: string | null
+	org_type: string | null
+}
+
 export interface ShuffleVerifyResult {
 	success: boolean
 	message: string

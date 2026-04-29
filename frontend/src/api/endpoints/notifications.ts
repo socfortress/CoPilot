@@ -7,6 +7,7 @@ import type {
 	ShuffleIntegration,
 	ShuffleIntegrationPayload,
 	ShuffleIntegrationUpdatePayload,
+	ShuffleOrg,
 	ShuffleVerifyResult
 } from "@/types/notifications.d"
 import type { FlaskBaseResponse } from "@/types/flask.d"
@@ -90,6 +91,15 @@ export default {
 	verifyShuffleIntegration(customerCode: string, integrationId: number) {
 		return HttpClient.get<FlaskBaseResponse & ShuffleVerifyResult>(
 			`/customers/${customerCode}/shuffle_integrations/${integrationId}/verify`
+		)
+	},
+
+	// Phase 3a — deployment-scoped org listing for the integration form's
+	// dropdown picker. Not customer-scoped; the admin Bearer (Shuffle
+	// connector) has access to every org we can attach.
+	listShuffleOrgs() {
+		return HttpClient.get<FlaskBaseResponse & { orgs: ShuffleOrg[] }>(
+			`/notifications/shuffle/orgs`
 		)
 	}
 }

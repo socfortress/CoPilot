@@ -278,3 +278,51 @@ async def verify_shuffle_org(
     if not ok:
         return (False, None, error)
     return (True, len(apps), None)
+
+
+async def list_shuffle_orgs(
+    *,
+    base_url: str,
+    api_key: str,
+) -> Tuple[bool, list, Optional[str]]:
+    """Fetch the orgs the deployment's admin Bearer can see.
+
+    Used by the integration form so admins pick from a dropdown of real
+    orgs instead of pasting Org-Ids. Hits `GET /api/v1/orgs` — Shuffle
+    treats the admin key as having visibility into the parent org plus
+    any sub-orgs. We deliberately do NOT send an `Org-Id` header: the
+    request is unscoped so we get the full list back rather than a
+    single-org view.
+
+    Returns (ok, orgs, error_message). Each org element is a dict with
+    at least `id` and `name`; the service layer trims it to the shape
+    the frontend dropdown needs.
+    """
+    url = f"{base_url.rstrip('/')}/api/v1/orgs"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Accept": "application/json",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=_SHUFFLE_TIMEOUT_S, http2=True) as client:
+            response = await client.get(url, headers=headers)
+        if response.status_code in (401, 403):
+            return (False, [], f"Shuffle authentication failed ({response.status_code})")
+        if response.status_code >= 400:
+            return (False, [], f"Shuffle returned {response.status_code}: {response.text[:200]}")
+        try:
+            data = response.json()
+        except ValueError:
+            return (False, [], "Shuffle returned non-JSON response")
+
+        # Shuffle's `/api/v1/orgs` historically returns a flat list of
+        # org objects; some installs wrap it in `{"orgs": [...]}`. Tolerate
+        # both shapes so we don't break on an upstream change.
+        if isinstance(data, dict) and "orgs" in data:
+            data = data.get("orgs") or []
+        if not isinstance(data, list):
+            return (False, [], f"Unexpected Shuffle response shape: {type(data).__name__}")
+        return (True, data, None)
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Shuffle orgs list failed: {e!r}")
+        return (False, [], f"{type(e).__name__}: {e}")

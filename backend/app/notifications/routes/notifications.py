@@ -41,6 +41,7 @@ from app.notifications.schema.notifications import ShuffleIntegrationListRespons
 from app.notifications.schema.notifications import ShuffleIntegrationRead
 from app.notifications.schema.notifications import ShuffleIntegrationResponse
 from app.notifications.schema.notifications import ShuffleIntegrationUpdate
+from app.notifications.schema.notifications import ShuffleOrgListResponse
 from app.notifications.schema.notifications import ShuffleVerifyResponse
 from app.notifications.services import notifications as svc
 
@@ -150,6 +151,34 @@ async def list_dispatch_log_route(
         success=True,
         message=f"{len(entries)} entry/entries retrieved",
         entries=entries,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Deployment-scoped Shuffle helpers (Phase 3)
+# ---------------------------------------------------------------------------
+
+
+@notifications_router.get(
+    "/notifications/shuffle/orgs",
+    response_model=ShuffleOrgListResponse,
+    description=(
+        "List every Shuffle org the deployment's admin Bearer key can see. "
+        "Used by the integration form's org picker so admins choose from a "
+        "dropdown instead of pasting Org-Ids. Not customer-scoped — each "
+        "org is later attached to a specific customer via a "
+        "customer_shuffle_integration row."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def list_shuffle_orgs_route(
+    session: AsyncSession = Depends(get_db),
+) -> ShuffleOrgListResponse:
+    orgs = await svc.list_orgs(session)
+    return ShuffleOrgListResponse(
+        success=True,
+        message=f"{len(orgs)} org(s) retrieved",
+        orgs=orgs,
     )
 
 
