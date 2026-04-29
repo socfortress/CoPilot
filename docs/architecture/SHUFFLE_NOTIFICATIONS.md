@@ -103,20 +103,73 @@ instruction.
 
 ### Backend
 
-- Alembic migration: create `customer_notification_routes`
-  - `id`, `customer_code` (FK), `trigger` enum, `channel` enum, `destination`
-    (text), `min_severity` enum, `format_template` (text, nullable),
-    `anonymize` (bool, default false), `enabled` (bool), `created_at`,
-    `updated_at`
-- Alembic migration: create `notification_dispatch_log`
-  - `id`, `customer_code`, `alert_id`, `route_id`, `trigger`, `dispatched_at`,
-    `status` (sent/failed/skipped), `error_message`
-  - **Unique index** on `(customer_code, alert_id, route_id, trigger)` for
-    idempotency
-- SQLModel + Pydantic schemas in `app/notifications/`
-- CRUD service + REST routes
+#### Tables
+
+```python
+class CustomerNotificationRoute(SQLModel, table=True):
+    __tablename__ = "customer_notification_routes"
+
+    id: int | None = Field(default=None, primary_key=True)
+    customer_code: str = Field(foreign_key="customers.customer_code", index=True)
+
+    name: str                            # human label, e.g. "SOC team Slack #alerts"
+    trigger: str                         # 'investigation_true_positive', 'severity_critical', ...
+    channel: str                         # Phase 1 set: 'slack_webhook' | 'smtp_email'
+    destination: str                     # webhook URL or email address
+    min_severity: str                    # 'Critical' | 'High' | 'Medium' | 'Low' | 'Informational'
+    format_template: str | None = None   # optional Jinja override
+
+    enabled: bool = True
+
+    last_dispatched_at: datetime | None = None  # denorm for UI list
+    dispatch_count: int = 0                     # denorm counter
+    created_by: str | None = None               # CoPilot user who added it
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+```
+
+```python
+class NotificationDispatchLog(SQLModel, table=True):
+    __tablename__ = "notification_dispatch_log"
+    __table_args__ = (
+        UniqueConstraint(
+            "customer_code", "alert_id", "route_id", "trigger",
+            name="uq_notif_dispatch_idem",
+        ),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    customer_code: str = Field(index=True)
+    alert_id: int = Field(index=True)
+    route_id: int = Field(foreign_key="customer_notification_routes.id")
+    trigger: str
+
+    dispatched_at: datetime = Field(default_factory=datetime.utcnow)
+    status: str                                 # 'sent' | 'failed' | 'skipped'
+    error_message: str | None = None
+    latency_ms: int | None = None
+    payload_preview: str | None = None          # first 500 chars, debugging
+```
+
+#### Deferred / dropped
+
+- **`anonymize`** — dropped. Recipients are SOC analysts who already see
+  deanonymized reports in the UI; toggle has no consumer.
+- **`tags`**, **`payload_filter`**, **`rate_limit_per_minute`** — deferred.
+  `trigger` + `min_severity` covers the 80% case. Phase 4 can layer on
+  richer filters / rate limits without touching this schema (rate limit
+  derivable from a windowed count over the dispatch log).
+
+#### Wiring
+
+- Alembic migration creates both tables
+- Pydantic schemas in `app/notifications/schema.py`
+- CRUD service + REST routes (`/customers/{code}/notification_routes`)
 - Initial dispatch helpers: `dispatch_slack_webhook(url, payload)`,
   `dispatch_smtp_email(to, subject, body)` — plain HTTP/SMTP, no Shuffle
+- Logger writes to `notification_dispatch_log` with the unique-index
+  upsert pattern for idempotency
 
 ### Frontend
 
@@ -252,9 +305,6 @@ embedded picker.
   full markdown, Teams gets adaptive card. Default templates in
   `shuffle-mcp/templates/{channel}.j2`. Routes can override via
   `format_template`.
-- **Anonymize flag:** when `anonymize=true`, Talon sends the *tokenized*
-  report (USER_1, HOST_1) through Shuffle instead of the deanonymized
-  version. For customers who don't want PII traversing a 3rd-party MCP.
 - **Retry semantics:** failed dispatches retry once after 30s, then mark
   failed. Logged in `notification_dispatch_log.status='failed'` with the
   upstream error.
@@ -270,31 +320,24 @@ embedded picker.
 
 | Concern | Decision |
 |---------|----------|
-| **Tenant isolation** | The Talon `shuffle-mcp` MCP MUST scope all key lookups by the alert's `customer_code` (passed as a tool argument, validated against the alert's actual customer in the DB). Cross-tenant leak = highest-severity bug class for this feature. Add an explicit unit test. |
+| **Tenant isolation** | The Shuffle MCP itself is a stateless adapter — same `/apps/slack` URL for every customer. Isolation lives in two CoPilot-side places: (1) which `customer_shuffle_integrations.api_key` row gets fetched (Bearer token differs per customer's OAuth-issued workspace), (2) which `customer_notification_routes.destination` (channel name / email) is used. Both are filtered by `customer_code` at lookup time — single SQLAlchemy boundary. Cross-tenant leak risk is "did the lookup pull the right customer's row" — covered by the FK + an explicit test. |
 | **Shuffle outage** | Notification step wrapped in try/except; failure does not fail the investigation. Logged to `notification_dispatch_log.status='failed'`. |
-| **PII** | Default `anonymize=false` (deanonymized — what the analyst sees). Per-customer override via the route flag. Document the tradeoff in the user docs. |
+| **PII** | Recipients are SOC analysts who already see deanonymized reports in the CoPilot UI. No anonymization layer needed. The `anonymize` column from earlier drafts has been dropped. |
 | **Idempotency** | Unique index on `(customer_code, alert_id, route_id, trigger)`. Agent's instruction is "skip if log row already exists." Re-runs are safe. |
-| **Format mismatch** | Default templates per channel. Custom override per route. Phase 4. |
-| **Cost** | Shuffle's pricing for the hosted MCP layer is per-call. Document the cost model for ops once we have a real number. |
+| **Format mismatch** | Default templates per channel. Custom override per route via `format_template`. Phase 4 ships the default template set. |
+| **Cost** | Shuffle's per-call pricing exists but isn't blocking — revisit once we have real volume. Phase 4's coalescing/rate-limit work covers it preemptively if needed. |
 | **Failure mode visibility** | `notification_dispatch_log` is the source of truth. Frontend surfaces it. |
 
 ---
 
 ## Open questions
 
-1. **Shuffle pricing tier** — what's the per-call cost? Affects whether we
-   want coalescing in Phase 1 vs Phase 4.
-2. **Shuffle key revocation** — does Shuffle expose a webhook when a user
+1. **Shuffle key revocation** — does Shuffle expose a webhook when a user
    revokes upstream? Need this for clean state in CoPilot.
-3. **Shuffle's `tools/list` schema** — does each app expose typed tool
+2. **Shuffle's `tools/list` schema** — does each app expose typed tool
    schemas, or only the natural-language `tool_name` + `input` shape? If
    typed, Phase 2 can register N tools per app instead of one generic
    `shuffle_invoke`. Worth a 30-min spike before locking Phase 2's design.
-4. **Anonymizer round-trip** — when `anonymize=true`, do we send the
-   tokenized form and let the recipient deanonymize, or just deliver the
-   tokenized report as-is? Probably as-is for v1 (recipients are humans
-   reading email/Slack — they don't need real names there if the customer
-   chose to opt in to anonymization).
 
 ---
 
