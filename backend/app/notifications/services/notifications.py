@@ -41,7 +41,6 @@ from app.notifications.schema.notifications import (
 )
 from app.notifications.services.dispatchers import (
     DispatchResult,
-    dispatch_slack_webhook,
     dispatch_smtp_email,
 )
 
@@ -316,16 +315,16 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
 
         try:
             result: DispatchResult
-            if route.channel == NotificationChannel.SLACK_WEBHOOK.value:
-                result = await dispatch_slack_webhook(route.destination, body)
-            elif route.channel == NotificationChannel.SMTP_EMAIL.value:
+            if route.channel == NotificationChannel.SMTP_EMAIL.value:
                 recipients = [r.strip() for r in route.destination.split(",") if r.strip()]
                 subject = _format_default_subject(req)
                 result = await dispatch_smtp_email(recipients, subject, body)
             else:
-                # Unknown channel (Phase 2's 'shuffle' will land here
-                # before the dispatcher arm exists) — log a clear
-                # failure rather than silently skipping.
+                # Unknown channel — Phase 2 will add 'shuffle' here.
+                # Until then any non-SMTP value reaching this branch is
+                # either a bad migration or a row that predates the
+                # current channel enum; log a clear failure rather than
+                # silently skipping so the operator notices.
                 result = (
                     "failed",
                     f"Unsupported channel: {route.channel}",

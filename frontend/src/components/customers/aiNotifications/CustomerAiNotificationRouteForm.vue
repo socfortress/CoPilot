@@ -36,13 +36,19 @@
 		</div>
 
 		<n-form-item label="Channel" path="channel">
-			<n-select v-model:value="form.channel" :options="channelOptions" />
+			<n-select v-model:value="form.channel" :options="channelOptions" :disabled="channelOptions.length === 1" />
+			<template #feedback>
+				<span class="text-tertiary text-xs">
+					Slack, Teams, and other channels arrive in Phase 2 via Shuffle —
+					no need to paste webhook URLs once that ships.
+				</span>
+			</template>
 		</n-form-item>
 
-		<n-form-item :label="destinationLabel" path="destination">
+		<n-form-item label="Recipient email(s)" path="destination">
 			<n-input
 				v-model:value="form.destination"
-				:placeholder="destinationPlaceholder"
+				placeholder="soc@example.com, ir@example.com"
 				type="text"
 			/>
 		</n-form-item>
@@ -109,7 +115,7 @@ const editing = computed(() => props.editingRoute !== null)
 const form = reactive<NotificationRoutePayload>({
 	name: props.editingRoute?.name ?? "",
 	trigger: props.editingRoute?.trigger ?? ("investigation_complete" as NotificationTrigger),
-	channel: props.editingRoute?.channel ?? ("slack_webhook" as NotificationChannel),
+	channel: props.editingRoute?.channel ?? ("smtp_email" as NotificationChannel),
 	destination: props.editingRoute?.destination ?? "",
 	min_severity: props.editingRoute?.min_severity ?? ("Medium" as NotificationSeverity),
 	format_template: props.editingRoute?.format_template ?? "",
@@ -121,10 +127,11 @@ const triggerOptions = [
 	{ label: "Critical / High severity only", value: "severity_critical_or_high" }
 ]
 
-const channelOptions = [
-	{ label: "Slack incoming webhook", value: "slack_webhook" },
-	{ label: "Email (SMTP)", value: "smtp_email" }
-]
+// Phase 1 ships SMTP only — Slack/Teams/etc. arrive in Phase 2 via
+// Shuffle. The select stays in the form so the schema's "channel"
+// column is visible to admins, but it's effectively a single-option
+// disabled control until Phase 2 adds 'shuffle'.
+const channelOptions = [{ label: "Email (SMTP)", value: "smtp_email" }]
 
 const severityOptions = [
 	{ label: "Critical (only)", value: "Critical" },
@@ -133,16 +140,6 @@ const severityOptions = [
 	{ label: "Low and above", value: "Low" },
 	{ label: "Informational and above (everything)", value: "Informational" }
 ]
-
-const destinationLabel = computed(() =>
-	form.channel === "slack_webhook" ? "Slack webhook URL" : "Recipient email(s)"
-)
-
-const destinationPlaceholder = computed(() =>
-	form.channel === "slack_webhook"
-		? "https://hooks.slack.com/services/T.../B.../..."
-		: "soc@example.com, ir@example.com"
-)
 
 // Light-touch validation. Backend re-validates everything; the form
 // rules just keep obvious typos out of the round trip.
@@ -155,18 +152,15 @@ const rules: FormRules = {
 		required: true,
 		validator: (_rule, value: string) => {
 			if (!value || !value.trim()) {
-				return new Error("Destination is required")
+				return new Error("At least one recipient email required")
 			}
-			if (form.channel === "slack_webhook") {
-				if (!value.startsWith("https://hooks.slack.com/")) {
-					return new Error("Must be a Slack incoming webhook URL")
-				}
-			} else if (form.channel === "smtp_email") {
-				const recipients = value.split(",").map(s => s.trim()).filter(Boolean)
-				if (!recipients.length) return new Error("At least one email required")
-				const bad = recipients.find(r => !r.includes("@"))
-				if (bad) return new Error(`Invalid email: ${bad}`)
-			}
+			const recipients = value
+				.split(",")
+				.map(s => s.trim())
+				.filter(Boolean)
+			if (!recipients.length) return new Error("At least one recipient email required")
+			const bad = recipients.find(r => !r.includes("@"))
+			if (bad) return new Error(`Invalid email: ${bad}`)
 			return true
 		},
 		trigger: ["input", "blur"]

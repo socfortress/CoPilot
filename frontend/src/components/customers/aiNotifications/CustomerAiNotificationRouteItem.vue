@@ -117,13 +117,11 @@ const PlayIcon = "carbon:play"
 
 const message = useMessage()
 
-const channelIcon = computed(() =>
-	props.route.channel === "slack_webhook" ? "carbon:logo-slack" : "carbon:email"
-)
-
-const channelLabel = computed(() =>
-	props.route.channel === "slack_webhook" ? "Slack webhook" : "SMTP email"
-)
+// Phase 1 channels: SMTP only. Phase 2 will branch this on `shuffle`
+// (and inspect the underlying integration's app to pick a Slack/Teams/
+// Outlook icon respectively).
+const channelIcon = computed(() => "carbon:email")
+const channelLabel = computed(() => "SMTP email")
 
 const triggerLabel = computed(() =>
 	props.route.trigger === "investigation_complete"
@@ -137,22 +135,10 @@ const severityColor = computed<"danger" | "warning" | "success">(() => {
 	return "success"
 })
 
-// Mask Slack webhook URLs in the list view — they're effectively secrets;
-// a user with browser console access can still inspect them but the
-// shoulder-surf risk is real for casual viewers.
-const destinationDisplay = computed(() => {
-	if (props.route.channel === "slack_webhook") {
-		const url = props.route.destination
-		try {
-			const u = new URL(url)
-			const last = u.pathname.split("/").pop() || ""
-			return `${u.origin}/…/${last.slice(0, 4)}…`
-		} catch {
-			return "(invalid URL)"
-		}
-	}
-	return props.route.destination
-})
+// SMTP recipients shown verbatim — email addresses aren't secrets the
+// way Slack webhook URLs were. Phase 2 may reintroduce per-channel
+// formatting logic for shuffle integrations.
+const destinationDisplay = computed(() => props.route.destination)
 
 async function toggleEnabled() {
 	try {

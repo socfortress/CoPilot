@@ -41,9 +41,19 @@ class NotificationTrigger(str, Enum):
 
 
 class NotificationChannel(str, Enum):
-    """Phase 1 delivery channels. Phase 2 adds `shuffle`."""
+    """Phase 1 delivery channel set.
 
-    SLACK_WEBHOOK = "slack_webhook"
+    SMTP-only intentionally. We considered shipping Slack via raw
+    incoming-webhook URLs as a second Phase 1 channel, but Phase 2 will
+    handle Slack (and Teams, Outlook, etc.) through Shuffle's hosted MCP
+    using the customer's authenticated Slack workspace — at which point
+    asking customers to paste a webhook URL into CoPilot is replaced by
+    a one-click OAuth picker. To avoid throwaway UI, we ship SMTP only
+    for Phase 1 and add `shuffle` as the Phase 2 channel.
+
+    Phase 2 will extend this enum with: SHUFFLE = "shuffle"
+    """
+
     SMTP_EMAIL = "smtp_email"
 
 

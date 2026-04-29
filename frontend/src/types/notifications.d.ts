@@ -4,7 +4,9 @@
 
 export type NotificationTrigger = "investigation_complete" | "severity_critical_or_high"
 
-export type NotificationChannel = "slack_webhook" | "smtp_email"
+// Phase 1 ships SMTP only. Phase 2 will extend this union with
+// "shuffle" once Shuffle's hosted MCP layer lands.
+export type NotificationChannel = "smtp_email"
 
 export type NotificationSeverity = "Critical" | "High" | "Medium" | "Low" | "Informational"
 

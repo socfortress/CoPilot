@@ -114,7 +114,7 @@ class CustomerNotificationRoute(SQLModel, table=True):
 
     name: str                            # human label, e.g. "SOC team Slack #alerts"
     trigger: str                         # 'investigation_true_positive', 'severity_critical', ...
-    channel: str                         # Phase 1 set: 'slack_webhook' | 'smtp_email'
+    channel: str                         # Phase 1 set: 'smtp_email' only. Phase 2 adds 'shuffle'.
     destination: str                     # webhook URL or email address
     min_severity: str                    # 'Critical' | 'High' | 'Medium' | 'Low' | 'Informational'
     format_template: str | None = None   # optional Jinja override
@@ -166,8 +166,11 @@ class NotificationDispatchLog(SQLModel, table=True):
 - Alembic migration creates both tables
 - Pydantic schemas in `app/notifications/schema.py`
 - CRUD service + REST routes (`/customers/{code}/notification_routes`)
-- Initial dispatch helpers: `dispatch_slack_webhook(url, payload)`,
-  `dispatch_smtp_email(to, subject, body)` — plain HTTP/SMTP, no Shuffle
+- Initial dispatch helper: `dispatch_smtp_email(to, subject, body)` —
+  SMTP only. Slack/Teams/etc. arrive in Phase 2 via Shuffle's hosted
+  MCP rather than as raw webhook URLs in CoPilot, since Phase 2's
+  picker-based OAuth replaces the manual-paste UX entirely. Shipping
+  `slack_webhook` as a Phase 1 channel would have been throwaway UI.
 - Logger writes to `notification_dispatch_log` with the unique-index
   upsert pattern for idempotency
 
@@ -195,11 +198,12 @@ class NotificationDispatchLog(SQLModel, table=True):
 
 ### Acceptance
 
-- Configure a Slack webhook for one customer
-- Trigger an investigation that resolves true-positive Critical
-- Slack message arrives within ~10s of report write-back
+- Set `SMTP_HOST` / `SMTP_PORT` / `SMTP_FROM` (and creds if required) in CoPilot's environment
+- Configure an SMTP route on one customer (e.g. `severity_critical_or_high` → `soc@example.com`)
+- Trigger an investigation that resolves Critical or High
+- Email arrives within ~10s of report write-back
 - `notification_dispatch_log` has the row
-- Re-running the same investigation does not re-fire the Slack message
+- Re-running the same investigation does not re-fire the email
 
 ---
 

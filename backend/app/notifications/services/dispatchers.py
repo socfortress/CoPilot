@@ -6,13 +6,14 @@ tuple, and never raises — failures are reported via the tuple so the
 caller can log them in a single shape regardless of which channel failed.
 This keeps the dispatch loop's try/except surface trivial.
 
-Phase 1 ships two channels:
-  - slack_webhook : POSTs a JSON body to a Slack incoming webhook URL
-  - smtp_email    : sends a plaintext email via SMTP env config
+Phase 1 ships SMTP only:
+  - smtp_email : sends a plaintext email via SMTP env config
 
-Phase 2 will add a third helper that POSTs to Shuffle's hosted MCP
-(`https://shuffler.io/api/v1/apps/{app}/mcp`). Same return shape, same
-caller — just a new branch in the dispatcher's channel switch.
+Slack/Teams/Outlook/etc. land in Phase 2 via Shuffle's hosted MCP
+(`https://shuffler.io/api/v1/apps/{app}/mcp`). The Phase 2 dispatcher
+will be a single helper that takes (customer_code, app, body) and
+proxies through Shuffle using the customer's stored API key — no
+direct webhook URLs, no per-channel auth in CoPilot.
 """
 
 from __future__ import annotations
@@ -25,7 +26,6 @@ import time
 from email.message import EmailMessage
 from typing import Tuple
 
-import httpx
 from loguru import logger
 
 # Tuple shape used by every dispatcher: (status, error_message, latency_ms)
@@ -34,39 +34,9 @@ from loguru import logger
 DispatchResult = Tuple[str, str | None, int]
 
 
-# Hard cap on the upstream POST. 10s is generous for Slack's incoming
-# webhook latency (typically <500ms) but tight enough that a hung edge
-# doesn't stall the dispatch loop. SMTP gets the same budget.
+# Hard cap on the upstream provider call. 10s is generous for SMTP and
+# leaves room for the Phase 2 Shuffle HTTP path without retuning.
 _PROVIDER_TIMEOUT_S = 10.0
-
-
-async def dispatch_slack_webhook(url: str, text: str) -> DispatchResult:
-    """POST a plaintext message to a Slack incoming-webhook URL.
-
-    Slack's incoming webhook accepts a JSON body of `{"text": "..."}` —
-    that's the simplest possible Slack message and it renders as plain
-    text. Phase 4 will swap this for blocks for richer formatting; for
-    Phase 1 plaintext is enough to validate the dispatch loop.
-    """
-    started = time.monotonic()
-    try:
-        async with httpx.AsyncClient(timeout=_PROVIDER_TIMEOUT_S) as client:
-            response = await client.post(url, json={"text": text})
-        latency_ms = int((time.monotonic() - started) * 1000)
-        # Slack returns 200 + body "ok" on success; any other status is a
-        # webhook config / Slack-side issue and should surface to the user
-        # via the dispatch log error_message.
-        if response.status_code != 200 or response.text.strip().lower() != "ok":
-            return (
-                "failed",
-                f"Slack returned {response.status_code}: {response.text[:200]}",
-                latency_ms,
-            )
-        return ("sent", None, latency_ms)
-    except Exception as e:  # noqa: BLE001 — caller logs everything
-        latency_ms = int((time.monotonic() - started) * 1000)
-        logger.warning(f"Slack webhook dispatch failed: {e!r}")
-        return ("failed", f"{type(e).__name__}: {e}", latency_ms)
 
 
 async def dispatch_smtp_email(
