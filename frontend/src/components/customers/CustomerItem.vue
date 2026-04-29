@@ -188,6 +188,9 @@
 					<n-tab-pane name="AI Triggers" tab="AI Triggers" display-directive="show:lazy">
 						<CustomerAITriggers :customer-code="customer.customer_code" />
 					</n-tab-pane>
+					<n-tab-pane name="AI Notifications" tab="AI Notifications" display-directive="show:lazy">
+						<CustomerAiNotifications :customer-code="customer.customer_code" />
+					</n-tab-pane>
 					<n-tab-pane name="Event Sources" tab="Event Sources" display-directive="show:lazy">
 						<CustomerEventSources :customer-code="customer.customer_code" />
 					</n-tab-pane>
@@ -304,6 +307,9 @@ const CustomerNotificationsWorkflows = defineAsyncComponent(
 	() => import("./notifications/CustomerNotificationsWorkflows.vue")
 )
 const CustomerAITriggers = defineAsyncComponent(() => import("./aiTriggers/CustomerAITriggers.vue"))
+const CustomerAiNotifications = defineAsyncComponent(
+	() => import("./aiNotifications/CustomerAiNotifications.vue")
+)
 const CustomerEventSources = defineAsyncComponent(() => import("./eventSources/CustomerEventSources.vue"))
 const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWorker.vue"))
 
