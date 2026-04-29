@@ -66,6 +66,7 @@ from app.routers import mimecast
 from app.routers import modules
 from app.routers import monitoring_alert
 from app.routers import network_connectors
+from app.routers import notifications
 from app.routers import nuclei
 from app.routers import office365
 from app.routers import portainer
@@ -176,6 +177,7 @@ api_router.include_router(duo.router)
 api_router.include_router(portainer.router)
 api_router.include_router(incidents.router)
 api_router.include_router(ai_analyst.router)
+api_router.include_router(notifications.router)
 api_router.include_router(darktrace.router)
 api_router.include_router(defenderforendpoint.router)
 api_router.include_router(siem.router)

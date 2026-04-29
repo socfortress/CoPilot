@@ -697,3 +697,120 @@ class AiAnalystPalaceLesson(SQLModel, table=True):
 
     review: Optional["AiAnalystReview"] = Relationship(back_populates="palace_lessons")
     customer: Optional["Customers"] = Relationship()
+
+
+# ---------------------------------------------------------------------------
+# Notification routing
+#
+# Per-customer "where do we tell someone about an investigation result"
+# config. Phase 1 ships with two delivery channels — Slack incoming
+# webhooks and SMTP email — and is intentionally provider-direct (no
+# Shuffle dependency yet). Phase 2 adds a `customer_shuffle_integrations`
+# table and an `integration_id` FK on the routes table to layer Shuffle's
+# 3,000+ app catalog on top, without breaking the Phase 1 routes.
+#
+# Triggers and severities are stored as plain strings (not enums) on
+# purpose — adding a new trigger or severity tier later is a data-only
+# change, no migration. The CRUD layer enforces the v1 set.
+# ---------------------------------------------------------------------------
+
+
+class CustomerNotificationRoute(SQLModel, table=True):
+    __tablename__ = "customer_notification_route"
+
+    id: Optional[int] = Field(primary_key=True)
+    customer_code: str = Field(
+        foreign_key="customers.customer_code",
+        max_length=64,
+        index=True,
+        nullable=False,
+    )
+
+    # Human label shown in the UI list. Without this, users would have to
+    # mentally parse channel+destination columns to identify a rule.
+    name: str = Field(max_length=128, nullable=False)
+
+    # 'investigation_complete' (any successful investigation, regardless
+    # of verdict) or 'severity_critical_or_high' (Critical/High only).
+    # Stored as string so adding new triggers later is a data-only change.
+    trigger: str = Field(max_length=64, nullable=False, index=True)
+
+    # 'slack_webhook' or 'smtp_email' for Phase 1. Phase 2 adds 'shuffle'
+    # and pairs with an integration_id FK.
+    channel: str = Field(max_length=32, nullable=False)
+
+    # Slack incoming-webhook URL or SMTP recipient email address
+    # (multi-recipient = comma separated, normalized in the service).
+    destination: str = Field(sa_column=Column(Text), nullable=False)
+
+    # 'Critical' | 'High' | 'Medium' | 'Low' | 'Informational'. Inclusive
+    # — a 'High' route fires on Critical and High.
+    min_severity: str = Field(max_length=20, nullable=False, default="Medium")
+
+    # Optional Jinja-style override for the dispatched message body.
+    # Default templates live in the service layer; this lets a customer
+    # tune wording without a code change. Phase 4 ships the polished
+    # default set; Phase 1 ships a no-frills fallback.
+    format_template: Optional[str] = Field(sa_column=Column(Text), default=None)
+
+    enabled: bool = Field(default=True, nullable=False)
+
+    # Denormalized for the UI list so we can show "fired 2h ago" without
+    # joining the dispatch log on every render. Maintained by the
+    # dispatch service.
+    last_dispatched_at: Optional[datetime] = Field(default=None)
+    dispatch_count: int = Field(default=0, nullable=False)
+
+    # CoPilot user who created the route — audit trail for change
+    # management. Populated from the auth context in the route handler.
+    created_by: Optional[str] = Field(default=None, max_length=128)
+
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    updated_at: Optional[datetime] = Field(default=None)
+
+    customer: Optional["Customers"] = Relationship()
+    dispatches: list["NotificationDispatchLog"] = Relationship(back_populates="route")
+
+
+class NotificationDispatchLog(SQLModel, table=True):
+    __tablename__ = "notification_dispatch_log"
+    __table_args__ = (
+        # Idempotency key: re-running the same investigation must not
+        # re-fire the same notification. The dispatch service does
+        # "INSERT ... ON CONFLICT DO NOTHING" against this constraint and
+        # short-circuits if a row already exists.
+        UniqueConstraint(
+            "customer_code",
+            "alert_id",
+            "route_id",
+            "trigger",
+            name="uq_notif_dispatch_idem",
+        ),
+    )
+
+    id: Optional[int] = Field(primary_key=True)
+    customer_code: str = Field(max_length=64, index=True, nullable=False)
+    alert_id: int = Field(nullable=False, index=True)
+    route_id: int = Field(
+        foreign_key="customer_notification_route.id",
+        nullable=False,
+        index=True,
+    )
+    trigger: str = Field(max_length=64, nullable=False)
+
+    dispatched_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    # 'sent' | 'failed' | 'skipped' (skipped = filter mismatch reached
+    # the log path, e.g. a route whose enabled=false flipped during a
+    # batch). Phase 4 retry semantics will add 'retrying'.
+    status: str = Field(max_length=16, nullable=False, index=True)
+    error_message: Optional[str] = Field(sa_column=Column(Text), default=None)
+    # Wall-clock latency of the underlying provider call (Slack POST or
+    # SMTP send), excluding our own DB work. Useful for spotting flaky
+    # webhooks before they become a customer complaint.
+    latency_ms: Optional[int] = Field(default=None)
+    # First 500 chars of the formatted body. Stored for debugging — when
+    # a customer says "the message looked wrong" we want to see what we
+    # actually sent without storing the entire body history.
+    payload_preview: Optional[str] = Field(sa_column=Column(Text), default=None)
+
+    route: Optional["CustomerNotificationRoute"] = Relationship(back_populates="dispatches")

@@ -23,6 +23,7 @@ import logs from "./endpoints/logs"
 import metrics from "./endpoints/metrics"
 import monitoringAlerts from "./endpoints/monitoringAlerts"
 import networkConnectors from "./endpoints/networkConnectors"
+import notifications from "./endpoints/notifications"
 import patchTuesday from "./endpoints/patchTuesday"
 import portainer from "./endpoints/portainer"
 import reporting from "./endpoints/reporting"
@@ -74,6 +75,7 @@ export default {
 	githubAudit,
 	scheduler,
 	networkConnectors,
+	notifications,
 	copilotSearches,
 	cloudSecurityAssessment,
 	webVulnerabilityAssessment,
