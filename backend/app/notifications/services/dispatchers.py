@@ -24,7 +24,10 @@ import smtplib
 import ssl
 import time
 from email.message import EmailMessage
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Tuple
 
 import httpx
 from loguru import logger
@@ -213,11 +216,7 @@ async def dispatch_shuffle(
         # Shuffle's success body shape: {success, execution_id, authorization, mode}.
         # `execution_id` is what we stash for forensic correlation in
         # the dispatch log; no polling.
-        execution_id = (
-            data.get("execution_id")
-            if isinstance(data, dict)
-            else None
-        )
+        execution_id = data.get("execution_id") if isinstance(data, dict) else None
         if isinstance(data, dict) and data.get("success") is False:
             return (
                 "failed",

@@ -14,7 +14,6 @@ log row is what gives us idempotency — re-dispatching the same
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Iterable
 from typing import List
 from typing import Optional
 
@@ -30,29 +29,26 @@ from app.connectors.utils import get_connector_info_from_db
 from app.db.universal_models import CustomerNotificationRoute
 from app.db.universal_models import CustomerShuffleIntegration
 from app.db.universal_models import NotificationDispatchLog
-from app.notifications.schema.notifications import (
-    DispatchOutcome,
-    DispatchRequest,
-    DispatchResponse,
-    DispatchStatus,
-    NotificationChannel,
-    NotificationRouteCreate,
-    NotificationRouteRead,
-    NotificationRouteUpdate,
-    NotificationTrigger,
-    SEVERITY_ORDER,
-    ShuffleApp,
-    ShuffleIntegrationCreate,
-    ShuffleIntegrationUpdate,
+from app.notifications.schema.notifications import SEVERITY_ORDER
+from app.notifications.schema.notifications import DispatchOutcome
+from app.notifications.schema.notifications import DispatchRequest
+from app.notifications.schema.notifications import DispatchResponse
+from app.notifications.schema.notifications import DispatchStatus
+from app.notifications.schema.notifications import NotificationChannel
+from app.notifications.schema.notifications import NotificationRouteCreate
+from app.notifications.schema.notifications import NotificationRouteUpdate
+from app.notifications.schema.notifications import NotificationTrigger
+from app.notifications.schema.notifications import ShuffleApp
+from app.notifications.schema.notifications import ShuffleIntegrationCreate
+from app.notifications.schema.notifications import ShuffleIntegrationUpdate
+from app.notifications.services.dispatchers import dispatch_shuffle
+from app.notifications.services.dispatchers import dispatch_smtp_email
+from app.notifications.services.dispatchers import (
+    list_shuffle_apps as shuffle_apps_client,
 )
 from app.notifications.services.dispatchers import (
-    DispatchResult,
-    dispatch_shuffle,
-    dispatch_smtp_email,
-    list_shuffle_apps as shuffle_apps_client,
     verify_shuffle_org as verify_shuffle_org_client,
 )
-
 
 # Name of the Shuffle row in CoPilot's connectors table. The
 # `connector_url` (Shuffle base URL) and `connector_api_key` (admin
@@ -126,9 +122,7 @@ async def create_route(
     # belong to the same customer. Pydantic validators caught the "is
     # the field present" question; this catches the cross-tenant version.
     if payload.channel == NotificationChannel.SHUFFLE:
-        await _ensure_integration_belongs_to_customer(
-            payload.shuffle_integration_id, customer_code, session
-        )
+        await _ensure_integration_belongs_to_customer(payload.shuffle_integration_id, customer_code, session)
 
     route = CustomerNotificationRoute(
         customer_code=customer_code,
@@ -173,9 +167,7 @@ async def update_route(
     else:
         new_channel_value = new_channel or route.channel
     if new_channel_value == NotificationChannel.SHUFFLE.value and new_integration_id:
-        await _ensure_integration_belongs_to_customer(
-            new_integration_id, customer_code, session
-        )
+        await _ensure_integration_belongs_to_customer(new_integration_id, customer_code, session)
 
     for field, value in data.items():
         # Enums: write the underlying string into the DB column.
@@ -229,9 +221,7 @@ async def _ensure_integration_belongs_to_customer(
     return integration
 
 
-async def list_shuffle_integrations(
-    customer_code: str, session: AsyncSession
-) -> List[CustomerShuffleIntegration]:
+async def list_shuffle_integrations(customer_code: str, session: AsyncSession) -> List[CustomerShuffleIntegration]:
     result = await session.execute(
         select(CustomerShuffleIntegration)
         .where(CustomerShuffleIntegration.customer_code == customer_code)
@@ -240,12 +230,8 @@ async def list_shuffle_integrations(
     return result.scalars().all()
 
 
-async def get_shuffle_integration(
-    integration_id: int, customer_code: str, session: AsyncSession
-) -> CustomerShuffleIntegration:
-    return await _ensure_integration_belongs_to_customer(
-        integration_id, customer_code, session
-    )
+async def get_shuffle_integration(integration_id: int, customer_code: str, session: AsyncSession) -> CustomerShuffleIntegration:
+    return await _ensure_integration_belongs_to_customer(integration_id, customer_code, session)
 
 
 async def create_shuffle_integration(
@@ -273,9 +259,7 @@ async def update_shuffle_integration(
     payload: ShuffleIntegrationUpdate,
     session: AsyncSession,
 ) -> CustomerShuffleIntegration:
-    integration = await _ensure_integration_belongs_to_customer(
-        integration_id, customer_code, session
-    )
+    integration = await _ensure_integration_belongs_to_customer(integration_id, customer_code, session)
     data = payload.dict(exclude_unset=True)
     for field, value in data.items():
         setattr(integration, field, value)
@@ -285,19 +269,13 @@ async def update_shuffle_integration(
     return integration
 
 
-async def delete_shuffle_integration(
-    integration_id: int, customer_code: str, session: AsyncSession
-) -> None:
-    integration = await _ensure_integration_belongs_to_customer(
-        integration_id, customer_code, session
-    )
+async def delete_shuffle_integration(integration_id: int, customer_code: str, session: AsyncSession) -> None:
+    integration = await _ensure_integration_belongs_to_customer(integration_id, customer_code, session)
     # Refuse if any routes still reference this integration — better to
     # surface the dependency than silently leave routes pointing at a
     # missing FK that the dispatch loop will then have to skip.
     result = await session.execute(
-        select(CustomerNotificationRoute).where(
-            CustomerNotificationRoute.shuffle_integration_id == integration_id
-        )
+        select(CustomerNotificationRoute).where(CustomerNotificationRoute.shuffle_integration_id == integration_id)
     )
     referencing = result.scalars().all()
     if referencing:
@@ -325,9 +303,7 @@ async def list_apps_for_integration(
     returns the catalog quickly) and the result is small, so we don't
     cache — fresh data on every form open is fine for v1.
     """
-    integration = await _ensure_integration_belongs_to_customer(
-        integration_id, customer_code, session
-    )
+    integration = await _ensure_integration_belongs_to_customer(integration_id, customer_code, session)
     base_url, api_key = await _get_shuffle_connector(session)
     ok, apps_raw, error = await shuffle_apps_client(
         base_url=base_url,
@@ -358,12 +334,8 @@ async def list_apps_for_integration(
     return apps
 
 
-async def verify_integration(
-    integration_id: int, customer_code: str, session: AsyncSession
-) -> dict:
-    integration = await _ensure_integration_belongs_to_customer(
-        integration_id, customer_code, session
-    )
+async def verify_integration(integration_id: int, customer_code: str, session: AsyncSession) -> dict:
+    integration = await _ensure_integration_belongs_to_customer(integration_id, customer_code, session)
     base_url, api_key = await _get_shuffle_connector(session)
     ok, app_count, error = await verify_shuffle_org_client(
         base_url=base_url,
@@ -419,9 +391,7 @@ def _severity_meets(report_severity: str, route_min: str) -> bool:
         # Unknown severity string — fail closed. Better to drop a
         # notification than fire it on bad input.
         logger.warning(
-            f"Unknown severity in routing comparison "
-            f"(report={report_severity!r}, route_min={route_min!r}); "
-            f"skipping route."
+            f"Unknown severity in routing comparison " f"(report={report_severity!r}, route_min={route_min!r}); " f"skipping route."
         )
         return False
 
@@ -648,9 +618,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
             if route_channel == NotificationChannel.SMTP_EMAIL.value:
                 recipients = [r.strip() for r in route_destination.split(",") if r.strip()]
                 subject = _format_default_subject(req)
-                result_status, error_message, latency_ms = await dispatch_smtp_email(
-                    recipients, subject, body
-                )
+                result_status, error_message, latency_ms = await dispatch_smtp_email(recipients, subject, body)
             elif route_channel == NotificationChannel.SHUFFLE.value:
                 # Phase 2: Shuffle hosted MCP. Fire-and-record — we POST
                 # to /api/v1/apps/{app_id}/mcp with the deployment's
@@ -667,9 +635,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
                     error_message = "Route has no shuffle_app_id (data integrity issue)"
                     latency_ms = 0
                 else:
-                    integration = await session.get(
-                        CustomerShuffleIntegration, route_shuffle_integration_id
-                    )
+                    integration = await session.get(CustomerShuffleIntegration, route_shuffle_integration_id)
                     if not integration or integration.customer_code != req.customer_code:
                         # Defense-in-depth: we already enforce tenant
                         # isolation at create/update time, but a hand-
@@ -677,8 +643,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
                         # at dispatch time prevents cross-tenant leaks.
                         result_status = "failed"
                         error_message = (
-                            "Route's shuffle_integration is missing or belongs to a "
-                            "different customer; refusing to dispatch."
+                            "Route's shuffle_integration is missing or belongs to a " "different customer; refusing to dispatch."
                         )
                         latency_ms = 0
                     elif not integration.enabled:
@@ -771,10 +736,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
             # Bump the integration's last_used_at on a successful
             # Shuffle dispatch — gives the integration list a "fired
             # 2h ago" signal without a join against the log.
-            if (
-                route_channel == NotificationChannel.SHUFFLE.value
-                and route_shuffle_integration_id
-            ):
+            if route_channel == NotificationChannel.SHUFFLE.value and route_shuffle_integration_id:
                 await session.execute(
                     update(CustomerShuffleIntegration)
                     .where(CustomerShuffleIntegration.id == route_shuffle_integration_id)
@@ -800,10 +762,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
 
     return DispatchResponse(
         success=True,
-        message=(
-            f"Dispatched {sent} of {len(matched_routes)} matching route(s) "
-            f"for customer {req.customer_code} alert {req.alert_id}"
-        ),
+        message=(f"Dispatched {sent} of {len(matched_routes)} matching route(s) " f"for customer {req.customer_code} alert {req.alert_id}"),
         routes_matched=len(matched_routes),
         dispatched=sent,
         skipped=skipped,

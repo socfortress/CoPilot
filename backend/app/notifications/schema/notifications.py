@@ -19,7 +19,6 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
-
 # ---------------------------------------------------------------------------
 # Enums (input validation only — DB stores strings)
 # ---------------------------------------------------------------------------
@@ -101,18 +100,31 @@ class NotificationRouteBase(BaseModel):
     # destination hint (e.g. '#soc-alerts', 'ir@corp.com') that gets
     # injected into Shuffle's natural-language input — Shuffle's app
     # agent figures out how to route it within the authenticated app.
-    destination: str = Field(..., min_length=1, description="SMTP recipient email(s) or Shuffle destination hint (channel name / address / handle).")
+    destination: str = Field(
+        ...,
+        min_length=1,
+        description="SMTP recipient email(s) or Shuffle destination hint (channel name / address / handle).",
+    )
     min_severity: NotificationSeverity = NotificationSeverity.MEDIUM
-    format_template: Optional[str] = Field(default=None, description="Optional Jinja override for the message body. Leave empty to use the channel default.")
+    format_template: Optional[str] = Field(
+        default=None,
+        description="Optional Jinja override for the message body. Leave empty to use the channel default.",
+    )
     enabled: bool = True
 
     # Phase 2: Shuffle routing target. Required when channel='shuffle'.
     # The integration row scopes the dispatch to a specific customer
     # Shuffle org; the app id + name describe which app within that
     # org receives the natural-language input.
-    shuffle_integration_id: Optional[int] = Field(default=None, description="ID of the customer_shuffle_integration row (required when channel='shuffle').")
+    shuffle_integration_id: Optional[int] = Field(
+        default=None,
+        description="ID of the customer_shuffle_integration row (required when channel='shuffle').",
+    )
     shuffle_app_id: Optional[str] = Field(default=None, description="Shuffle app UUID (required when channel='shuffle').")
-    shuffle_app_name: Optional[str] = Field(default=None, description="Human-readable Shuffle app name cached for the UI list (e.g. 'Slack').")
+    shuffle_app_name: Optional[str] = Field(
+        default=None,
+        description="Human-readable Shuffle app name cached for the UI list (e.g. 'Slack').",
+    )
 
     @validator("destination")
     def _strip_destination(cls, v: str) -> str:
@@ -173,7 +185,12 @@ class NotificationRouteRead(NotificationRouteBase):
 
 class ShuffleIntegrationBase(BaseModel):
     display_name: str = Field(..., min_length=1, max_length=128, description="Human label, e.g. 'Acme Production Shuffle'.")
-    shuffle_org_id: str = Field(..., min_length=1, max_length=64, description="The customer's Shuffle Org-Id. Sent as the Org-Id header on each dispatch.")
+    shuffle_org_id: str = Field(
+        ...,
+        min_length=1,
+        max_length=64,
+        description="The customer's Shuffle Org-Id. Sent as the Org-Id header on each dispatch.",
+    )
     enabled: bool = True
 
     @validator("shuffle_org_id")
@@ -298,8 +315,14 @@ class DispatchRequest(BaseModel):
 
     customer_code: str = Field(..., description="The alert's customer_code — scopes the route lookup.")
     alert_id: int = Field(..., description="The alert this investigation was for. Used as the idempotency key.")
-    trigger: NotificationTrigger = Field(..., description="Which trigger Talon thinks applies. The service still re-validates it against the alert's severity.")
-    severity_assessment: NotificationSeverity = Field(..., description="The report's assessed severity — used for `min_severity` filtering.")
+    trigger: NotificationTrigger = Field(
+        ...,
+        description="Which trigger Talon thinks applies. The service still re-validates it against the alert's severity.",
+    )
+    severity_assessment: NotificationSeverity = Field(
+        ...,
+        description="The report's assessed severity — used for `min_severity` filtering.",
+    )
     summary: str = Field(..., description="One-paragraph human-readable summary. Renders into the default template.")
     report_url: Optional[str] = Field(default=None, description="Deep link back to the full report in CoPilot.")
     alert_name: Optional[str] = Field(default=None, description="Original alert title for context in the message.")

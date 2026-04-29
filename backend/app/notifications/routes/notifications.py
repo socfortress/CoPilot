@@ -27,23 +27,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-from app.notifications.schema.notifications import (
-    DispatchLogListResponse,
-    DispatchRequest,
-    DispatchResponse,
-    NotificationRouteCreate,
-    NotificationRouteListResponse,
-    NotificationRouteRead,
-    NotificationRouteResponse,
-    NotificationRouteUpdate,
-    ShuffleAppListResponse,
-    ShuffleIntegrationCreate,
-    ShuffleIntegrationListResponse,
-    ShuffleIntegrationRead,
-    ShuffleIntegrationResponse,
-    ShuffleIntegrationUpdate,
-    ShuffleVerifyResponse,
-)
+from app.notifications.schema.notifications import DispatchLogListResponse
+from app.notifications.schema.notifications import DispatchRequest
+from app.notifications.schema.notifications import DispatchResponse
+from app.notifications.schema.notifications import NotificationRouteCreate
+from app.notifications.schema.notifications import NotificationRouteListResponse
+from app.notifications.schema.notifications import NotificationRouteRead
+from app.notifications.schema.notifications import NotificationRouteResponse
+from app.notifications.schema.notifications import NotificationRouteUpdate
+from app.notifications.schema.notifications import ShuffleAppListResponse
+from app.notifications.schema.notifications import ShuffleIntegrationCreate
+from app.notifications.schema.notifications import ShuffleIntegrationListResponse
+from app.notifications.schema.notifications import ShuffleIntegrationRead
+from app.notifications.schema.notifications import ShuffleIntegrationResponse
+from app.notifications.schema.notifications import ShuffleIntegrationUpdate
+from app.notifications.schema.notifications import ShuffleVerifyResponse
 from app.notifications.services import notifications as svc
 
 notifications_router = APIRouter()
@@ -84,10 +82,7 @@ async def create_route_route(
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(AuthHandler().get_current_user),
 ) -> NotificationRouteResponse:
-    logger.info(
-        f"User {current_user.id} creating notification route "
-        f"for customer {customer_code}"
-    )
+    logger.info(f"User {current_user.id} creating notification route " f"for customer {customer_code}")
     route = await svc.create_route(
         customer_code=customer_code,
         payload=payload,
@@ -193,10 +188,7 @@ async def create_shuffle_integration_route(
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(AuthHandler().get_current_user),
 ) -> ShuffleIntegrationResponse:
-    logger.info(
-        f"User {current_user.id} adding Shuffle integration "
-        f"({payload.display_name}) for customer {customer_code}"
-    )
+    logger.info(f"User {current_user.id} adding Shuffle integration " f"({payload.display_name}) for customer {customer_code}")
     integration = await svc.create_shuffle_integration(
         customer_code=customer_code,
         payload=payload,
@@ -222,9 +214,7 @@ async def update_shuffle_integration_route(
     payload: ShuffleIntegrationUpdate,
     session: AsyncSession = Depends(get_db),
 ) -> ShuffleIntegrationResponse:
-    integration = await svc.update_shuffle_integration(
-        integration_id, customer_code, payload, session
-    )
+    integration = await svc.update_shuffle_integration(integration_id, customer_code, payload, session)
     return ShuffleIntegrationResponse(
         success=True,
         message="Integration updated",
