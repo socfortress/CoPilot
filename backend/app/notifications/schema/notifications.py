@@ -262,6 +262,31 @@ class ShuffleVerifyResponse(BaseModel):
     error: Optional[str] = None
 
 
+class ShuffleOrg(BaseModel):
+    """One Shuffle org visible to the deployment's admin Bearer.
+
+    Used to populate the integration form's org-picker dropdown so
+    admins don't have to paste UUIDs. Forwards only the fields the UI
+    needs — Shuffle's full org payload carries a lot of internal state
+    (users, billing, region, sync_config) we don't want leaking
+    through. `creator_org` is empty/falsy on top-level orgs and set to
+    the parent's UUID on sub-orgs, so the UI can label sub-orgs
+    distinctly without an extra round-trip.
+    """
+
+    id: str
+    name: str
+    description: Optional[str] = None
+    role: Optional[str] = None
+    creator_org: Optional[str] = None
+
+
+class ShuffleOrgListResponse(BaseModel):
+    success: bool = True
+    message: str = "Orgs retrieved"
+    orgs: List[ShuffleOrg]
+
+
 class NotificationRouteListResponse(BaseModel):
     success: bool = True
     message: str = "Routes retrieved"

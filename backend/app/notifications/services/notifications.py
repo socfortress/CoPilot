@@ -41,10 +41,14 @@ from app.notifications.schema.notifications import NotificationTrigger
 from app.notifications.schema.notifications import ShuffleApp
 from app.notifications.schema.notifications import ShuffleIntegrationCreate
 from app.notifications.schema.notifications import ShuffleIntegrationUpdate
+from app.notifications.schema.notifications import ShuffleOrg
 from app.notifications.services.dispatchers import dispatch_shuffle
 from app.notifications.services.dispatchers import dispatch_smtp_email
 from app.notifications.services.dispatchers import (
     list_shuffle_apps as shuffle_apps_client,
+)
+from app.notifications.services.dispatchers import (
+    list_shuffle_orgs as shuffle_orgs_client,
 )
 from app.notifications.services.dispatchers import (
     verify_shuffle_org as verify_shuffle_org_client,
@@ -351,6 +355,49 @@ async def verify_integration(integration_id: int, customer_code: str, session: A
         "app_count": app_count,
         "error": error,
     }
+
+
+async def list_orgs(session: AsyncSession) -> List[ShuffleOrg]:
+    """List every Shuffle org the deployment's admin Bearer can see.
+
+    Used by the integration form's org-picker dropdown so admins pick
+    a real org instead of pasting a UUID. Not customer-scoped — the
+    caller's auth gate (admin/analyst scope) is the only access check;
+    each org is then attached to a specific customer via the
+    integration row at create time.
+    """
+    base_url, api_key = await _get_shuffle_connector(session)
+    ok, orgs_raw, error = await shuffle_orgs_client(base_url=base_url, api_key=api_key)
+    if not ok:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Failed to fetch orgs from Shuffle: {error}",
+        )
+    # Forward only the fields the UI needs. Shuffle's full org payload
+    # carries internal billing/users/region state we don't want leaking
+    # through.
+    orgs: List[ShuffleOrg] = []
+    for raw in orgs_raw:
+        if not isinstance(raw, dict):
+            continue
+        if not raw.get("id") or not raw.get("name"):
+            continue
+        # `creator_org` is set on sub-orgs to the parent's UUID and
+        # empty/None on top-level orgs. We forward it as-is so the UI
+        # can render a "(sub-org)" hint without re-querying.
+        creator_org = raw.get("creator_org")
+        if creator_org in ("", "PARENT_ORG_ID"):  # ignore placeholder fixtures
+            creator_org = None
+        orgs.append(
+            ShuffleOrg(
+                id=str(raw.get("id")),
+                name=str(raw.get("name")),
+                description=raw.get("description") or None,
+                role=raw.get("role") or None,
+                creator_org=creator_org,
+            ),
+        )
+    return orgs
 
 
 # ---------------------------------------------------------------------------
