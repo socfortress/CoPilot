@@ -765,11 +765,35 @@ class CustomerNotificationRoute(SQLModel, table=True):
     # management. Populated from the auth context in the route handler.
     created_by: Optional[str] = Field(default=None, max_length=128)
 
+    # ----- Phase 2: Shuffle channel routing -----
+    # Populated when channel='shuffle'. NULL for legacy SMTP routes.
+    # The (integration_id, app_id, app_name) triple together describes
+    # "which Shuffle org" + "which app inside that org" + "label for the
+    # UI." `app_id` is the Shuffle app UUID we POST to
+    # /api/v1/apps/{app_id}/mcp; `app_name` is the human-readable label
+    # (e.g. "Slack") we cache so the UI doesn't have to roundtrip to
+    # Shuffle to render the route list.
+    shuffle_integration_id: Optional[int] = Field(
+        default=None,
+        foreign_key="customer_shuffle_integration.id",
+        index=True,
+    )
+    shuffle_app_id: Optional[str] = Field(default=None, max_length=64)
+    shuffle_app_name: Optional[str] = Field(default=None, max_length=128)
+
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
     updated_at: Optional[datetime] = Field(default=None)
 
     customer: Optional["Customers"] = Relationship()
-    dispatches: list["NotificationDispatchLog"] = Relationship(back_populates="route")
+    # NB: no `back_populates` on the reverse relationships below. The
+    # dispatch service never traverses these — but with back_populates
+    # configured, SQLAlchemy fires implicit synchronous loads on the
+    # parent collections during flush() to keep the in-session graph in
+    # sync, which throws MissingGreenlet under AsyncSession. One-way
+    # foreign keys are fine here; we walk them via explicit queries
+    # (`session.get(...)`) when we need them.
+    dispatches: list["NotificationDispatchLog"] = Relationship()
+    shuffle_integration: Optional["CustomerShuffleIntegration"] = Relationship()
 
 
 class NotificationDispatchLog(SQLModel, table=True):
@@ -812,5 +836,53 @@ class NotificationDispatchLog(SQLModel, table=True):
     # a customer says "the message looked wrong" we want to see what we
     # actually sent without storing the entire body history.
     payload_preview: Optional[str] = Field(sa_column=Column(Text), default=None)
+    # Phase 2: Shuffle's POST /apps/{id}/mcp returns a fire-and-record
+    # execution_id. Stored here so an admin can pivot from "this
+    # notification didn't arrive at Slack" → look up the run in
+    # shuffler.io's UI to see whether Shuffle accepted the dispatch but
+    # the downstream app rejected it. Null for non-Shuffle channels.
+    shuffle_execution_id: Optional[str] = Field(default=None, max_length=128)
 
-    route: Optional["CustomerNotificationRoute"] = Relationship(back_populates="dispatches")
+    # See note on CustomerNotificationRoute.dispatches — back_populates
+    # removed deliberately to keep AsyncSession flush() synchronous-IO-free.
+    route: Optional["CustomerNotificationRoute"] = Relationship()
+
+
+class CustomerShuffleIntegration(SQLModel, table=True):
+    __tablename__ = "customer_shuffle_integration"
+
+    id: Optional[int] = Field(primary_key=True)
+    customer_code: str = Field(
+        foreign_key="customers.customer_code",
+        max_length=64,
+        index=True,
+        nullable=False,
+    )
+
+    # The customer's Shuffle Org-Id. SOCfortress's deployment-wide
+    # `SHUFFLE_API_KEY` (admin-scoped, lives in the connectors table)
+    # has access to every org; the per-customer differentiator is this
+    # Org-Id, sent as the `Org-Id` header on each dispatch so Shuffle
+    # routes the call to the correct org's authenticated apps. Stored
+    # opaquely as a string — Shuffle uses a UUID format today but we
+    # don't depend on that.
+    shuffle_org_id: str = Field(max_length=64, nullable=False)
+
+    # Human label, e.g. "Acme Production Shuffle". Surfaced in the
+    # CoPilot UI's integration picker; not sent to Shuffle.
+    display_name: str = Field(max_length=128, nullable=False)
+
+    enabled: bool = Field(default=True, nullable=False)
+    # Updated by the dispatch service whenever a route referencing this
+    # integration successfully fires — useful for spotting integrations
+    # that are configured but never used.
+    last_used_at: Optional[datetime] = Field(default=None)
+
+    created_by: Optional[str] = Field(default=None, max_length=128)
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    updated_at: Optional[datetime] = Field(default=None)
+
+    customer: Optional["Customers"] = Relationship()
+    # See note on CustomerNotificationRoute.dispatches — back_populates
+    # removed for AsyncSession compatibility.
+    routes: list["CustomerNotificationRoute"] = Relationship()

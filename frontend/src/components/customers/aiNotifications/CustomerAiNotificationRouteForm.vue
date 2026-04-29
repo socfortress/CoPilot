@@ -36,22 +36,77 @@
 		</div>
 
 		<n-form-item label="Channel" path="channel">
-			<n-select v-model:value="form.channel" :options="channelOptions" :disabled="channelOptions.length === 1" />
+			<n-select v-model:value="form.channel" :options="channelOptions" @update:value="onChannelChange" />
 			<template #feedback>
 				<span class="text-tertiary text-xs">
-					Slack, Teams, and other channels arrive in Phase 2 via Shuffle —
-					no need to paste webhook URLs once that ships.
+					Email is direct SMTP via CoPilot's deployment config. Shuffle proxies to
+					3,000+ integrations through a customer's authenticated Shuffle org.
 				</span>
 			</template>
 		</n-form-item>
 
-		<n-form-item label="Recipient email(s)" path="destination">
+		<!-- SMTP-specific: recipient emails -->
+		<n-form-item v-if="form.channel === 'smtp_email'" label="Recipient email(s)" path="destination">
 			<n-input
 				v-model:value="form.destination"
 				placeholder="soc@example.com, ir@example.com"
 				type="text"
 			/>
 		</n-form-item>
+
+		<!-- Shuffle-specific: integration picker, app picker, destination hint -->
+		<template v-if="form.channel === 'shuffle'">
+			<n-form-item label="Shuffle integration" path="shuffle_integration_id">
+				<div class="flex w-full flex-col gap-1">
+					<n-select
+						v-model:value="form.shuffle_integration_id"
+						:options="integrationOptions"
+						placeholder="Pick a Shuffle org for this customer"
+						:loading="loadingIntegrations"
+						@update:value="onIntegrationChange"
+					/>
+					<div v-if="!integrationOptions.length && !loadingIntegrations" class="text-tertiary text-xs">
+						No Shuffle integrations configured for this customer yet — go to the
+						<strong>Shuffle integrations</strong> tab to add one first.
+					</div>
+				</div>
+			</n-form-item>
+
+			<n-form-item label="Shuffle app" path="shuffle_app_id">
+				<div class="flex w-full flex-col gap-1">
+					<n-select
+						v-model:value="form.shuffle_app_id"
+						:options="appOptions"
+						placeholder="Pick an authenticated app"
+						:loading="loadingApps"
+						:disabled="!form.shuffle_integration_id || loadingApps"
+						filterable
+						@update:value="onAppChange"
+					/>
+					<div
+						v-if="form.shuffle_integration_id && !appOptions.length && !loadingApps && appsError"
+						class="text-error text-xs"
+					>
+						Couldn't fetch apps from Shuffle: {{ appsError }}
+					</div>
+				</div>
+			</n-form-item>
+
+			<n-form-item label="Destination hint" path="destination">
+				<n-input
+					v-model:value="form.destination"
+					placeholder="e.g. #soc-alerts, soc@example.com, @user-id"
+					type="text"
+				/>
+				<template #feedback>
+					<span class="text-tertiary text-xs">
+						Free-form — gets prepended to the outgoing message as a
+						<code>Send to &lt;destination&gt;: …</code> hint so the Shuffle app agent
+						knows where to deliver. Channel name for Slack, email for Outlook, etc.
+					</span>
+				</template>
+			</n-form-item>
+		</template>
 
 		<n-form-item label="Custom message template (optional)" path="format_template">
 			<n-input
@@ -81,11 +136,13 @@ import type {
 	NotificationRoute,
 	NotificationRoutePayload,
 	NotificationSeverity,
-	NotificationTrigger
+	NotificationTrigger,
+	ShuffleApp,
+	ShuffleIntegration
 } from "@/types/notifications.d"
 import type { FormInst, FormRules } from "naive-ui"
 import { NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
-import { computed, reactive, ref } from "vue"
+import { computed, onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
@@ -106,10 +163,6 @@ const message = useMessage()
 const formRef = ref<FormInst | null>(null)
 const submitting = ref(false)
 
-// Reactive form seeded from the editing route if present, else from
-// reasonable defaults. Channel and trigger default to the values most
-// admins want first ("every investigation" / Slack) so empty form is
-// closer to "ready to type the destination" than "where do I start".
 const editing = computed(() => props.editingRoute !== null)
 
 const form = reactive<NotificationRoutePayload>({
@@ -119,7 +172,10 @@ const form = reactive<NotificationRoutePayload>({
 	destination: props.editingRoute?.destination ?? "",
 	min_severity: props.editingRoute?.min_severity ?? ("Medium" as NotificationSeverity),
 	format_template: props.editingRoute?.format_template ?? "",
-	enabled: props.editingRoute?.enabled ?? true
+	enabled: props.editingRoute?.enabled ?? true,
+	shuffle_integration_id: props.editingRoute?.shuffle_integration_id ?? null,
+	shuffle_app_id: props.editingRoute?.shuffle_app_id ?? null,
+	shuffle_app_name: props.editingRoute?.shuffle_app_name ?? null
 })
 
 const triggerOptions = [
@@ -127,11 +183,10 @@ const triggerOptions = [
 	{ label: "Critical / High severity only", value: "severity_critical_or_high" }
 ]
 
-// Phase 1 ships SMTP only — Slack/Teams/etc. arrive in Phase 2 via
-// Shuffle. The select stays in the form so the schema's "channel"
-// column is visible to admins, but it's effectively a single-option
-// disabled control until Phase 2 adds 'shuffle'.
-const channelOptions = [{ label: "Email (SMTP)", value: "smtp_email" }]
+const channelOptions = [
+	{ label: "Email (SMTP)", value: "smtp_email" },
+	{ label: "Shuffle (Slack / Teams / Outlook / 3,000+ apps)", value: "shuffle" }
+]
 
 const severityOptions = [
 	{ label: "Critical (only)", value: "Critical" },
@@ -141,8 +196,95 @@ const severityOptions = [
 	{ label: "Informational and above (everything)", value: "Informational" }
 ]
 
-// Light-touch validation. Backend re-validates everything; the form
-// rules just keep obvious typos out of the round trip.
+// Shuffle integrations + apps state. Integrations are fetched on form
+// open; apps are fetched lazily when an integration is picked. Both
+// short-circuit on edit so we don't blank a route's existing values.
+const integrations = ref<ShuffleIntegration[]>([])
+const loadingIntegrations = ref(false)
+const apps = ref<ShuffleApp[]>([])
+const loadingApps = ref(false)
+const appsError = ref<string | null>(null)
+
+const integrationOptions = computed(() =>
+	integrations.value
+		.filter(i => i.enabled)
+		.map(i => ({
+			label: `${i.display_name} (${i.shuffle_org_id.slice(0, 8)}…)`,
+			value: i.id
+		}))
+)
+
+const appOptions = computed(() =>
+	apps.value.map(a => ({
+		label: a.name,
+		value: a.id
+	}))
+)
+
+async function loadIntegrations() {
+	loadingIntegrations.value = true
+	try {
+		const res = await Api.notifications.listShuffleIntegrations(props.customerCode)
+		if (res.data.success) {
+			integrations.value = res.data.integrations
+		}
+	} catch (err: unknown) {
+		message.error(getApiErrorMessage(err as never) || "Failed to load Shuffle integrations")
+	} finally {
+		loadingIntegrations.value = false
+	}
+}
+
+async function loadApps(integrationId: number) {
+	loadingApps.value = true
+	appsError.value = null
+	try {
+		const res = await Api.notifications.listShuffleApps(props.customerCode, integrationId)
+		if (res.data.success) {
+			apps.value = res.data.apps
+		} else {
+			apps.value = []
+			appsError.value = res.data.message || "Failed to load apps"
+		}
+	} catch (err: unknown) {
+		apps.value = []
+		appsError.value = getApiErrorMessage(err as never) || "Failed to load apps"
+	} finally {
+		loadingApps.value = false
+	}
+}
+
+function onChannelChange(value: NotificationChannel) {
+	// Clear channel-specific fields when switching, so we don't carry
+	// stale Shuffle picks into an SMTP route or vice versa.
+	if (value === "smtp_email") {
+		form.shuffle_integration_id = null
+		form.shuffle_app_id = null
+		form.shuffle_app_name = null
+	} else {
+		// Reset destination — SMTP recipients don't make sense as a
+		// Shuffle channel hint.
+		if (!editing.value) form.destination = ""
+	}
+}
+
+async function onIntegrationChange(integrationId: number | null) {
+	apps.value = []
+	form.shuffle_app_id = null
+	form.shuffle_app_name = null
+	if (integrationId) {
+		await loadApps(integrationId)
+	}
+}
+
+function onAppChange(appId: string | null) {
+	// Cache the app's display name alongside the UUID so the UI list can
+	// render "Slack" instead of a UUID without re-fetching the catalog
+	// every render.
+	const app = apps.value.find(a => a.id === appId)
+	form.shuffle_app_name = app?.name ?? null
+}
+
 const rules: FormRules = {
 	name: { required: true, message: "Name is required", trigger: ["input", "blur"] },
 	trigger: { required: true, message: "Pick a trigger", trigger: ["change", "blur"] },
@@ -152,18 +294,40 @@ const rules: FormRules = {
 		required: true,
 		validator: (_rule, value: string) => {
 			if (!value || !value.trim()) {
-				return new Error("At least one recipient email required")
+				return form.channel === "smtp_email"
+					? new Error("At least one recipient email required")
+					: new Error("Destination hint is required")
 			}
-			const recipients = value
-				.split(",")
-				.map(s => s.trim())
-				.filter(Boolean)
-			if (!recipients.length) return new Error("At least one recipient email required")
-			const bad = recipients.find(r => !r.includes("@"))
-			if (bad) return new Error(`Invalid email: ${bad}`)
+			if (form.channel === "smtp_email") {
+				const recipients = value
+					.split(",")
+					.map(s => s.trim())
+					.filter(Boolean)
+				if (!recipients.length) return new Error("At least one recipient email required")
+				const bad = recipients.find(r => !r.includes("@"))
+				if (bad) return new Error(`Invalid email: ${bad}`)
+			}
 			return true
 		},
 		trigger: ["input", "blur"]
+	},
+	shuffle_integration_id: {
+		validator: (_rule, value: number | null) => {
+			if (form.channel === "shuffle" && !value) {
+				return new Error("Pick a Shuffle integration")
+			}
+			return true
+		},
+		trigger: ["change", "blur"]
+	},
+	shuffle_app_id: {
+		validator: (_rule, value: string | null) => {
+			if (form.channel === "shuffle" && !value) {
+				return new Error("Pick a Shuffle app")
+			}
+			return true
+		},
+		trigger: ["change", "blur"]
 	}
 }
 
@@ -197,4 +361,13 @@ async function submit() {
 		submitting.value = false
 	}
 }
+
+onBeforeMount(async () => {
+	await loadIntegrations()
+	// If editing a Shuffle route, prefetch the apps for its integration
+	// so the picker is populated when the form first renders.
+	if (props.editingRoute?.shuffle_integration_id) {
+		await loadApps(props.editingRoute.shuffle_integration_id)
+	}
+})
 </script>

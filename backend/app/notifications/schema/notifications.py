@@ -41,20 +41,18 @@ class NotificationTrigger(str, Enum):
 
 
 class NotificationChannel(str, Enum):
-    """Phase 1 delivery channel set.
+    """Delivery channel set.
 
-    SMTP-only intentionally. We considered shipping Slack via raw
-    incoming-webhook URLs as a second Phase 1 channel, but Phase 2 will
-    handle Slack (and Teams, Outlook, etc.) through Shuffle's hosted MCP
-    using the customer's authenticated Slack workspace — at which point
-    asking customers to paste a webhook URL into CoPilot is replaced by
-    a one-click OAuth picker. To avoid throwaway UI, we ship SMTP only
-    for Phase 1 and add `shuffle` as the Phase 2 channel.
-
-    Phase 2 will extend this enum with: SHUFFLE = "shuffle"
+    `smtp_email` is direct SMTP via env config (CoPilot deployment-wide).
+    `shuffle` proxies to Shuffle's hosted MCP — each customer points at
+    their own Shuffle Org via `customer_shuffle_integration`, and Shuffle
+    handles the OAuth-authenticated downstream app (Slack workspace,
+    Outlook tenant, Teams, etc.). Routes referencing `shuffle` MUST
+    populate the `shuffle_integration_id` + `shuffle_app_id` columns.
     """
 
     SMTP_EMAIL = "smtp_email"
+    SHUFFLE = "shuffle"
 
 
 class NotificationSeverity(str, Enum):
@@ -99,14 +97,38 @@ class NotificationRouteBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=128, description="Human label for the rule (e.g. 'SOC team Slack #alerts').")
     trigger: NotificationTrigger
     channel: NotificationChannel
-    destination: str = Field(..., min_length=1, description="Slack incoming-webhook URL or SMTP recipient email (comma-separated for multiple).")
+    # For SMTP: comma-separated recipient emails. For Shuffle: free-form
+    # destination hint (e.g. '#soc-alerts', 'ir@corp.com') that gets
+    # injected into Shuffle's natural-language input — Shuffle's app
+    # agent figures out how to route it within the authenticated app.
+    destination: str = Field(..., min_length=1, description="SMTP recipient email(s) or Shuffle destination hint (channel name / address / handle).")
     min_severity: NotificationSeverity = NotificationSeverity.MEDIUM
     format_template: Optional[str] = Field(default=None, description="Optional Jinja override for the message body. Leave empty to use the channel default.")
     enabled: bool = True
 
+    # Phase 2: Shuffle routing target. Required when channel='shuffle'.
+    # The integration row scopes the dispatch to a specific customer
+    # Shuffle org; the app id + name describe which app within that
+    # org receives the natural-language input.
+    shuffle_integration_id: Optional[int] = Field(default=None, description="ID of the customer_shuffle_integration row (required when channel='shuffle').")
+    shuffle_app_id: Optional[str] = Field(default=None, description="Shuffle app UUID (required when channel='shuffle').")
+    shuffle_app_name: Optional[str] = Field(default=None, description="Human-readable Shuffle app name cached for the UI list (e.g. 'Slack').")
+
     @validator("destination")
     def _strip_destination(cls, v: str) -> str:
         return v.strip()
+
+    @validator("shuffle_integration_id", always=True)
+    def _shuffle_integration_required(cls, v, values):
+        if values.get("channel") == NotificationChannel.SHUFFLE and not v:
+            raise ValueError("shuffle_integration_id is required when channel='shuffle'")
+        return v
+
+    @validator("shuffle_app_id", always=True)
+    def _shuffle_app_required(cls, v, values):
+        if values.get("channel") == NotificationChannel.SHUFFLE and not v:
+            raise ValueError("shuffle_app_id is required when channel='shuffle'")
+        return v
 
 
 class NotificationRouteCreate(NotificationRouteBase):
@@ -124,6 +146,11 @@ class NotificationRouteUpdate(BaseModel):
     min_severity: Optional[NotificationSeverity] = None
     format_template: Optional[str] = None
     enabled: Optional[bool] = None
+    # Shuffle target — included on PATCH so admins can re-point a route
+    # at a different integration / app without recreating it.
+    shuffle_integration_id: Optional[int] = None
+    shuffle_app_id: Optional[str] = None
+    shuffle_app_name: Optional[str] = None
 
 
 class NotificationRouteRead(NotificationRouteBase):
@@ -137,6 +164,85 @@ class NotificationRouteRead(NotificationRouteBase):
 
     class Config:
         orm_mode = True
+
+
+# ---------------------------------------------------------------------------
+# Shuffle integrations (Phase 2)
+# ---------------------------------------------------------------------------
+
+
+class ShuffleIntegrationBase(BaseModel):
+    display_name: str = Field(..., min_length=1, max_length=128, description="Human label, e.g. 'Acme Production Shuffle'.")
+    shuffle_org_id: str = Field(..., min_length=1, max_length=64, description="The customer's Shuffle Org-Id. Sent as the Org-Id header on each dispatch.")
+    enabled: bool = True
+
+    @validator("shuffle_org_id")
+    def _strip_org(cls, v: str) -> str:
+        return v.strip()
+
+
+class ShuffleIntegrationCreate(ShuffleIntegrationBase):
+    """Body for POST /customers/{code}/shuffle_integrations."""
+
+
+class ShuffleIntegrationUpdate(BaseModel):
+    """Body for PATCH — every field optional."""
+
+    display_name: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    shuffle_org_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
+    enabled: Optional[bool] = None
+
+
+class ShuffleIntegrationRead(ShuffleIntegrationBase):
+    id: int
+    customer_code: str
+    last_used_at: Optional[datetime] = None
+    created_by: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        orm_mode = True
+
+
+class ShuffleIntegrationListResponse(BaseModel):
+    success: bool = True
+    message: str = "Integrations retrieved"
+    integrations: List[ShuffleIntegrationRead]
+
+
+class ShuffleIntegrationResponse(BaseModel):
+    success: bool = True
+    message: str = "Integration saved"
+    integration: ShuffleIntegrationRead
+
+
+class ShuffleApp(BaseModel):
+    """One Shuffle app in the catalog the customer's org has access to.
+
+    Used to populate the route form's app picker. We forward the minimal
+    subset Shuffle returns — enough for the UI to render a recognizable
+    list and for the form to record the (id, name) pair on submit.
+    """
+
+    id: str
+    name: str
+    description: Optional[str] = None
+    large_image: Optional[str] = None
+
+
+class ShuffleAppListResponse(BaseModel):
+    success: bool = True
+    message: str = "Apps retrieved"
+    apps: List[ShuffleApp]
+
+
+class ShuffleVerifyResponse(BaseModel):
+    success: bool = True
+    message: str
+    org_id: str
+    app_count: Optional[int] = None
+    error: Optional[str] = None
 
 
 class NotificationRouteListResponse(BaseModel):
@@ -167,6 +273,7 @@ class DispatchLogRead(BaseModel):
     error_message: Optional[str] = None
     latency_ms: Optional[int] = None
     payload_preview: Optional[str] = None
+    shuffle_execution_id: Optional[str] = None
 
     class Config:
         orm_mode = True
@@ -205,6 +312,10 @@ class DispatchOutcome(BaseModel):
     status: DispatchStatus
     error_message: Optional[str] = None
     latency_ms: Optional[int] = None
+    # Shuffle's POST /apps/{id}/mcp returns this on a successful kickoff.
+    # Surfaced in the response so the calling agent (Talon) can include
+    # it in its analyst summary if the dispatch went through Shuffle.
+    shuffle_execution_id: Optional[str] = None
 
 
 class DispatchResponse(BaseModel):

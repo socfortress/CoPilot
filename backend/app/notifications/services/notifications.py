@@ -22,10 +22,13 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import desc
 from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.connectors.utils import get_connector_info_from_db
 from app.db.universal_models import CustomerNotificationRoute
+from app.db.universal_models import CustomerShuffleIntegration
 from app.db.universal_models import NotificationDispatchLog
 from app.notifications.schema.notifications import (
     DispatchOutcome,
@@ -38,11 +41,49 @@ from app.notifications.schema.notifications import (
     NotificationRouteUpdate,
     NotificationTrigger,
     SEVERITY_ORDER,
+    ShuffleApp,
+    ShuffleIntegrationCreate,
+    ShuffleIntegrationUpdate,
 )
 from app.notifications.services.dispatchers import (
     DispatchResult,
+    dispatch_shuffle,
     dispatch_smtp_email,
+    list_shuffle_apps as shuffle_apps_client,
+    verify_shuffle_org as verify_shuffle_org_client,
 )
+
+
+# Name of the Shuffle row in CoPilot's connectors table. The
+# `connector_url` (Shuffle base URL) and `connector_api_key` (admin
+# Bearer token) are read fresh on every dispatch so a key rotation
+# takes effect without restarting the backend.
+_SHUFFLE_CONNECTOR_NAME = "Shuffle"
+
+
+async def _get_shuffle_connector(session: AsyncSession) -> tuple[str, str]:
+    """Fetch (base_url, api_key) for the Shuffle connector. Raises
+    HTTPException if the connector row is missing or unconfigured —
+    surfaces a clear 4xx in the dispatch endpoint instead of a generic
+    500 when an admin forgets to configure Shuffle."""
+    info = await get_connector_info_from_db(_SHUFFLE_CONNECTOR_NAME, session)
+    if not info:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Shuffle connector is not configured in CoPilot. "
+                "Add the Shuffle connector with a valid API key before "
+                "creating Shuffle-channel notification routes."
+            ),
+        )
+    api_key = info.get("connector_api_key") or ""
+    base_url = info.get("connector_url") or "https://shuffler.io"
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="Shuffle connector is configured but has no API key set.",
+        )
+    return (base_url, api_key)
 
 
 # ---------------------------------------------------------------------------
@@ -81,6 +122,14 @@ async def create_route(
     created_by: Optional[str],
     session: AsyncSession,
 ) -> CustomerNotificationRoute:
+    # Shuffle-channel sanity check: the integration must exist AND
+    # belong to the same customer. Pydantic validators caught the "is
+    # the field present" question; this catches the cross-tenant version.
+    if payload.channel == NotificationChannel.SHUFFLE:
+        await _ensure_integration_belongs_to_customer(
+            payload.shuffle_integration_id, customer_code, session
+        )
+
     route = CustomerNotificationRoute(
         customer_code=customer_code,
         name=payload.name,
@@ -91,6 +140,9 @@ async def create_route(
         format_template=payload.format_template,
         enabled=payload.enabled,
         created_by=created_by,
+        shuffle_integration_id=payload.shuffle_integration_id,
+        shuffle_app_id=payload.shuffle_app_id,
+        shuffle_app_name=payload.shuffle_app_name,
     )
     session.add(route)
     await session.commit()
@@ -110,6 +162,21 @@ async def update_route(
     # the client actually sent so a PATCH that omits `enabled` doesn't
     # accidentally re-flag it.
     data = payload.dict(exclude_unset=True)
+
+    # If the PATCH switches the channel to Shuffle (or re-points an
+    # existing Shuffle route at a different integration), the new
+    # integration must belong to the same customer.
+    new_integration_id = data.get("shuffle_integration_id", route.shuffle_integration_id)
+    new_channel = data.get("channel")
+    if hasattr(new_channel, "value"):
+        new_channel_value = new_channel.value
+    else:
+        new_channel_value = new_channel or route.channel
+    if new_channel_value == NotificationChannel.SHUFFLE.value and new_integration_id:
+        await _ensure_integration_belongs_to_customer(
+            new_integration_id, customer_code, session
+        )
+
     for field, value in data.items():
         # Enums: write the underlying string into the DB column.
         if hasattr(value, "value"):
@@ -126,6 +193,190 @@ async def delete_route(route_id: int, customer_code: str, session: AsyncSession)
     route = await get_route(route_id, customer_code, session)
     await session.delete(route)
     await session.commit()
+
+
+# ---------------------------------------------------------------------------
+# Shuffle integrations (Phase 2)
+# ---------------------------------------------------------------------------
+
+
+async def _ensure_integration_belongs_to_customer(
+    integration_id: int, customer_code: str, session: AsyncSession
+) -> CustomerShuffleIntegration:
+    """Tenant-boundary check for Shuffle integration references.
+
+    Used at route create/update time. Without this, a malicious or
+    typo'd `shuffle_integration_id` could silently route customer A's
+    notifications through customer B's Shuffle org. Failing closed with
+    a 400 is the right answer — the route never persists.
+    """
+    result = await session.execute(
+        select(CustomerShuffleIntegration).where(
+            CustomerShuffleIntegration.id == integration_id,
+            CustomerShuffleIntegration.customer_code == customer_code,
+        )
+    )
+    integration = result.scalars().first()
+    if not integration:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Shuffle integration {integration_id} not found for "
+                f"customer {customer_code}. Cross-tenant references are "
+                f"refused — create the integration on the target customer first."
+            ),
+        )
+    return integration
+
+
+async def list_shuffle_integrations(
+    customer_code: str, session: AsyncSession
+) -> List[CustomerShuffleIntegration]:
+    result = await session.execute(
+        select(CustomerShuffleIntegration)
+        .where(CustomerShuffleIntegration.customer_code == customer_code)
+        .order_by(desc(CustomerShuffleIntegration.created_at))
+    )
+    return result.scalars().all()
+
+
+async def get_shuffle_integration(
+    integration_id: int, customer_code: str, session: AsyncSession
+) -> CustomerShuffleIntegration:
+    return await _ensure_integration_belongs_to_customer(
+        integration_id, customer_code, session
+    )
+
+
+async def create_shuffle_integration(
+    customer_code: str,
+    payload: ShuffleIntegrationCreate,
+    created_by: Optional[str],
+    session: AsyncSession,
+) -> CustomerShuffleIntegration:
+    integration = CustomerShuffleIntegration(
+        customer_code=customer_code,
+        display_name=payload.display_name,
+        shuffle_org_id=payload.shuffle_org_id,
+        enabled=payload.enabled,
+        created_by=created_by,
+    )
+    session.add(integration)
+    await session.commit()
+    await session.refresh(integration)
+    return integration
+
+
+async def update_shuffle_integration(
+    integration_id: int,
+    customer_code: str,
+    payload: ShuffleIntegrationUpdate,
+    session: AsyncSession,
+) -> CustomerShuffleIntegration:
+    integration = await _ensure_integration_belongs_to_customer(
+        integration_id, customer_code, session
+    )
+    data = payload.dict(exclude_unset=True)
+    for field, value in data.items():
+        setattr(integration, field, value)
+    integration.updated_at = datetime.utcnow()
+    await session.commit()
+    await session.refresh(integration)
+    return integration
+
+
+async def delete_shuffle_integration(
+    integration_id: int, customer_code: str, session: AsyncSession
+) -> None:
+    integration = await _ensure_integration_belongs_to_customer(
+        integration_id, customer_code, session
+    )
+    # Refuse if any routes still reference this integration — better to
+    # surface the dependency than silently leave routes pointing at a
+    # missing FK that the dispatch loop will then have to skip.
+    result = await session.execute(
+        select(CustomerNotificationRoute).where(
+            CustomerNotificationRoute.shuffle_integration_id == integration_id
+        )
+    )
+    referencing = result.scalars().all()
+    if referencing:
+        names = ", ".join(r.name for r in referencing[:5])
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Integration is referenced by {len(referencing)} route(s) "
+                f"({names}{'…' if len(referencing) > 5 else ''}). Delete "
+                f"or re-point those routes first."
+            ),
+        )
+    await session.delete(integration)
+    await session.commit()
+
+
+async def list_apps_for_integration(
+    integration_id: int,
+    customer_code: str,
+    session: AsyncSession,
+) -> List[ShuffleApp]:
+    """Fetch the Shuffle app catalog scoped to this customer's org.
+
+    Used by the route form's app picker. Roundtrip is short (Shuffle
+    returns the catalog quickly) and the result is small, so we don't
+    cache — fresh data on every form open is fine for v1.
+    """
+    integration = await _ensure_integration_belongs_to_customer(
+        integration_id, customer_code, session
+    )
+    base_url, api_key = await _get_shuffle_connector(session)
+    ok, apps_raw, error = await shuffle_apps_client(
+        base_url=base_url,
+        api_key=api_key,
+        org_id=integration.shuffle_org_id,
+    )
+    if not ok:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Failed to fetch apps from Shuffle: {error}",
+        )
+    # Forward only the fields the UI needs; ignore extra metadata that
+    # Shuffle returns (versioning, ownership info, internal ids).
+    apps: List[ShuffleApp] = []
+    for raw in apps_raw:
+        if not isinstance(raw, dict):
+            continue
+        if not raw.get("id") or not raw.get("name"):
+            continue
+        apps.append(
+            ShuffleApp(
+                id=str(raw.get("id")),
+                name=str(raw.get("name")),
+                description=raw.get("description"),
+                large_image=raw.get("large_image"),
+            )
+        )
+    return apps
+
+
+async def verify_integration(
+    integration_id: int, customer_code: str, session: AsyncSession
+) -> dict:
+    integration = await _ensure_integration_belongs_to_customer(
+        integration_id, customer_code, session
+    )
+    base_url, api_key = await _get_shuffle_connector(session)
+    ok, app_count, error = await verify_shuffle_org_client(
+        base_url=base_url,
+        api_key=api_key,
+        org_id=integration.shuffle_org_id,
+    )
+    return {
+        "success": ok,
+        "message": "Shuffle integration reachable" if ok else "Shuffle integration check failed",
+        "org_id": integration.shuffle_org_id,
+        "app_count": app_count,
+        "error": error,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -252,10 +503,57 @@ async def _record_log(
     error_message: Optional[str],
     latency_ms: Optional[int],
     payload_preview: Optional[str],
+    shuffle_execution_id: Optional[str] = None,
 ) -> bool:
-    """Insert a dispatch log row. Returns False if the unique-key
-    constraint trips (i.e. this dispatch was already recorded), which
-    is the idempotency signal for the caller."""
+    """Record a dispatch outcome. Returns False ONLY when the dispatch
+    has already been recorded as `sent` — i.e. a true idempotency hit
+    against a successful prior dispatch. Returns True in all other
+    cases, including overwriting a previous failed/skipped attempt
+    with the new result so retries land cleanly.
+
+    Idempotency model:
+      - One row per (customer_code, alert_id, route_id, trigger) tuple
+        (enforced by a unique index)
+      - If the existing row's status is `sent`, refuse the new write
+        (caller treats as "already done, skip")
+      - If the existing row's status is `failed`/`skipped`, overwrite
+        with the new outcome — a previous failure must not block a
+        retry
+      - If no row exists yet, insert a fresh one
+    """
+    # Pre-flight: check whether a row already exists for this
+    # (customer, alert, route, trigger) tuple. Doing the check up front
+    # lets us update-in-place when needed — avoids the rollback path
+    # whose `session.rollback()` expires every loaded object in the
+    # session (route, integrations, etc.) and breaks subsequent
+    # attribute access in async context.
+    result = await session.execute(
+        select(NotificationDispatchLog).where(
+            NotificationDispatchLog.customer_code == customer_code,
+            NotificationDispatchLog.alert_id == alert_id,
+            NotificationDispatchLog.route_id == route_id,
+            NotificationDispatchLog.trigger == trigger,
+        )
+    )
+    existing = result.scalars().first()
+
+    if existing is not None and existing.status == "sent":
+        # True idempotency hit — don't overwrite a successful dispatch.
+        return False
+
+    if existing is not None:
+        # Previous failed/skipped attempt — overwrite it so the log
+        # reflects the latest outcome and the retry path is clean.
+        existing.status = status
+        existing.error_message = error_message
+        existing.latency_ms = latency_ms
+        existing.payload_preview = payload_preview[:500] if payload_preview else None
+        existing.shuffle_execution_id = shuffle_execution_id
+        existing.dispatched_at = datetime.utcnow()
+        await session.commit()
+        return True
+
+    # No prior record — insert fresh.
     log = NotificationDispatchLog(
         customer_code=customer_code,
         alert_id=alert_id,
@@ -265,14 +563,18 @@ async def _record_log(
         error_message=error_message,
         latency_ms=latency_ms,
         payload_preview=payload_preview[:500] if payload_preview else None,
+        shuffle_execution_id=shuffle_execution_id,
     )
     session.add(log)
     try:
         await session.commit()
         return True
     except IntegrityError:
-        # Another dispatch (or a re-run) raced us — treat the existing
-        # row as authoritative and back out cleanly.
+        # Race: another concurrent dispatch slipped in between our
+        # SELECT and INSERT. Roll back, treat as idempotency hit. The
+        # caller's outcome will be `skipped` and the route's attrs
+        # will be expired — but the caller has already cached them
+        # into locals so this is safe.
         await session.rollback()
         return False
 
@@ -298,67 +600,153 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
     outcomes: List[DispatchOutcome] = []
     sent = failed = skipped = 0
 
+    # Shuffle dispatch needs the deployment's connector creds. We fetch
+    # them once per dispatch call (before the per-route loop) so a
+    # whole batch of Shuffle routes shares one DB read. The fetch
+    # itself is gated by "is any matched route Shuffle" — for SMTP-only
+    # customers we never touch the connector row.
+    shuffle_creds: Optional[tuple[str, str]] = None
+    if any(r.channel == NotificationChannel.SHUFFLE.value for r in matched_routes):
+        try:
+            shuffle_creds = await _get_shuffle_connector(session)
+        except HTTPException as e:
+            # Connector misconfigured — the dispatch endpoint exposes
+            # the helper's 503, but for a batch dispatch we'd rather
+            # mark each Shuffle route as failed in the log than abort
+            # the whole loop. SMTP routes in the same batch still go.
+            logger.warning(f"Shuffle connector unavailable: {e.detail}")
+            shuffle_creds = None
+            shuffle_creds_error = str(e.detail)
+        else:
+            shuffle_creds_error = None
+    else:
+        shuffle_creds_error = None
+
     for route in matched_routes:
+        # Cache every route attribute we'll need into locals UP FRONT.
+        # Once we cross any `await` (let alone any rollback) the route
+        # SQLAlchemy state can be expired and a synchronous attribute
+        # access then triggers an implicit refresh query — which in
+        # AsyncSession throws MissingGreenlet. Caching here means the
+        # rest of the loop is plain-Python access on locals.
+        route_id = route.id
+        route_name = route.name
+        route_channel = route.channel
+        route_destination = route.destination
+        route_shuffle_app_id = route.shuffle_app_id
+        route_shuffle_integration_id = route.shuffle_integration_id
+
         body = _render_body(route, req)
         body_preview = body[:500]
 
-        # Idempotency check — try to claim the dispatch slot first. If
-        # the unique constraint trips, a previous dispatch already
-        # handled this (customer, alert, route, trigger) tuple.
-        # We insert with status=skipped initially; on success we'll
-        # update the row to 'sent' to record the real outcome.
-        # Simpler approach: insert *after* the provider call, catch the
-        # IntegrityError, treat as "already done".
         latency_ms: Optional[int] = None
         result_status = "sent"
         error_message: Optional[str] = None
+        shuffle_execution_id: Optional[str] = None
 
         try:
-            result: DispatchResult
-            if route.channel == NotificationChannel.SMTP_EMAIL.value:
-                recipients = [r.strip() for r in route.destination.split(",") if r.strip()]
+            if route_channel == NotificationChannel.SMTP_EMAIL.value:
+                recipients = [r.strip() for r in route_destination.split(",") if r.strip()]
                 subject = _format_default_subject(req)
-                result = await dispatch_smtp_email(recipients, subject, body)
-            else:
-                # Unknown channel — Phase 2 will add 'shuffle' here.
-                # Until then any non-SMTP value reaching this branch is
-                # either a bad migration or a row that predates the
-                # current channel enum; log a clear failure rather than
-                # silently skipping so the operator notices.
-                result = (
-                    "failed",
-                    f"Unsupported channel: {route.channel}",
-                    None,
+                result_status, error_message, latency_ms = await dispatch_smtp_email(
+                    recipients, subject, body
                 )
-
-            result_status, error_message, latency_ms = result
+            elif route_channel == NotificationChannel.SHUFFLE.value:
+                # Phase 2: Shuffle hosted MCP. Fire-and-record — we POST
+                # to /api/v1/apps/{app_id}/mcp with the deployment's
+                # admin Bearer + the customer's Org-Id, capture the
+                # execution_id, and consider the dispatch "sent" on
+                # HTTP 200. We do NOT poll for the downstream app's
+                # terminal state.
+                if shuffle_creds is None:
+                    result_status = "failed"
+                    error_message = shuffle_creds_error or "Shuffle connector unavailable"
+                    latency_ms = 0
+                elif not route_shuffle_app_id:
+                    result_status = "failed"
+                    error_message = "Route has no shuffle_app_id (data integrity issue)"
+                    latency_ms = 0
+                else:
+                    integration = await session.get(
+                        CustomerShuffleIntegration, route_shuffle_integration_id
+                    )
+                    if not integration or integration.customer_code != req.customer_code:
+                        # Defense-in-depth: we already enforce tenant
+                        # isolation at create/update time, but a hand-
+                        # edited row could still slip through. Refusing
+                        # at dispatch time prevents cross-tenant leaks.
+                        result_status = "failed"
+                        error_message = (
+                            "Route's shuffle_integration is missing or belongs to a "
+                            "different customer; refusing to dispatch."
+                        )
+                        latency_ms = 0
+                    elif not integration.enabled:
+                        result_status = "skipped"
+                        error_message = "Shuffle integration is disabled"
+                        latency_ms = 0
+                    else:
+                        base_url, api_key = shuffle_creds
+                        # Cache integration attrs too — same reason as
+                        # the route caching above.
+                        integration_org_id = integration.shuffle_org_id
+                        # Shuffle's input_text is natural language. We
+                        # prepend a "send to {destination}" hint so the
+                        # Shuffle app agent knows where to deliver, and
+                        # follow with the formatted body.
+                        if route_destination:
+                            input_text = f"Send to {route_destination}: {body}"
+                        else:
+                            input_text = body
+                        (
+                            result_status,
+                            error_message,
+                            latency_ms,
+                            shuffle_execution_id,
+                        ) = await dispatch_shuffle(
+                            base_url=base_url,
+                            api_key=api_key,
+                            org_id=integration_org_id,
+                            app_id=route_shuffle_app_id,
+                            input_text=input_text,
+                        )
+            else:
+                # Unknown channel — preserved as a failure rather than
+                # silently dropped so a misconfigured row surfaces in
+                # the dispatch log.
+                result_status = "failed"
+                error_message = f"Unsupported channel: {route_channel}"
+                latency_ms = None
         except Exception as e:  # noqa: BLE001 — best-effort, never raise
-            logger.exception(f"Dispatcher raised for route {route.id}: {e!r}")
+            logger.exception(f"Dispatcher raised for route {route_id}: {e!r}")
             result_status = "failed"
             error_message = f"Dispatcher exception: {type(e).__name__}: {e}"
 
-        # Try to record the outcome. If the unique constraint trips,
-        # this dispatch was already logged — treat as 'skipped' for the
-        # response (no double-counting in the per-route stats).
+        # Record (or update) the dispatch outcome. _record_log handles
+        # the retry-after-failure case in-place so a previous failed
+        # row doesn't block a new attempt — the only way we get back
+        # `False` here is a true idempotency hit on a previously-sent
+        # dispatch.
         recorded = await _record_log(
             session,
             customer_code=req.customer_code,
             alert_id=req.alert_id,
-            route_id=route.id,
+            route_id=route_id,
             trigger=req.trigger.value,
             status=result_status,
             error_message=error_message,
             latency_ms=latency_ms,
             payload_preview=body_preview,
+            shuffle_execution_id=shuffle_execution_id,
         )
 
         if not recorded:
             skipped += 1
             outcomes.append(
                 DispatchOutcome(
-                    route_id=route.id,
-                    route_name=route.name,
-                    channel=route.channel,
+                    route_id=route_id,
+                    route_name=route_name,
+                    channel=route_channel,
                     status=DispatchStatus.SKIPPED,
                     error_message="Already dispatched (idempotency)",
                     latency_ms=None,
@@ -367,23 +755,46 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
             continue
 
         # Maintain denorm columns for the UI list. Cheaper than joining
-        # the log table on every render.
+        # the log table on every render. We do this via an explicit
+        # UPDATE statement rather than mutating the loaded route
+        # object, so route's expiration state can't bite us.
         if result_status == "sent":
             sent += 1
-            route.dispatch_count += 1
-            route.last_dispatched_at = datetime.utcnow()
+            await session.execute(
+                update(CustomerNotificationRoute)
+                .where(CustomerNotificationRoute.id == route_id)
+                .values(
+                    dispatch_count=CustomerNotificationRoute.dispatch_count + 1,
+                    last_dispatched_at=datetime.utcnow(),
+                )
+            )
+            # Bump the integration's last_used_at on a successful
+            # Shuffle dispatch — gives the integration list a "fired
+            # 2h ago" signal without a join against the log.
+            if (
+                route_channel == NotificationChannel.SHUFFLE.value
+                and route_shuffle_integration_id
+            ):
+                await session.execute(
+                    update(CustomerShuffleIntegration)
+                    .where(CustomerShuffleIntegration.id == route_shuffle_integration_id)
+                    .values(last_used_at=datetime.utcnow())
+                )
             await session.commit()
+        elif result_status == "skipped":
+            skipped += 1
         else:
             failed += 1
 
         outcomes.append(
             DispatchOutcome(
-                route_id=route.id,
-                route_name=route.name,
-                channel=route.channel,
+                route_id=route_id,
+                route_name=route_name,
+                channel=route_channel,
                 status=DispatchStatus(result_status),
                 error_message=error_message,
                 latency_ms=latency_ms,
+                shuffle_execution_id=shuffle_execution_id,
             )
         )
 

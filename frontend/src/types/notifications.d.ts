@@ -4,9 +4,7 @@
 
 export type NotificationTrigger = "investigation_complete" | "severity_critical_or_high"
 
-// Phase 1 ships SMTP only. Phase 2 will extend this union with
-// "shuffle" once Shuffle's hosted MCP layer lands.
-export type NotificationChannel = "smtp_email"
+export type NotificationChannel = "smtp_email" | "shuffle"
 
 export type NotificationSeverity = "Critical" | "High" | "Medium" | "Low" | "Informational"
 
@@ -27,6 +25,10 @@ export interface NotificationRoute {
 	created_by: string | null
 	created_at: string
 	updated_at: string | null
+	// Phase 2 — populated only when channel === "shuffle"
+	shuffle_integration_id: number | null
+	shuffle_app_id: string | null
+	shuffle_app_name: string | null
 }
 
 export interface NotificationRoutePayload {
@@ -37,6 +39,9 @@ export interface NotificationRoutePayload {
 	min_severity: NotificationSeverity
 	format_template?: string | null
 	enabled: boolean
+	shuffle_integration_id?: number | null
+	shuffle_app_id?: string | null
+	shuffle_app_name?: string | null
 }
 
 export type NotificationRouteUpdatePayload = Partial<NotificationRoutePayload>
@@ -52,4 +57,42 @@ export interface NotificationDispatchLogEntry {
 	error_message: string | null
 	latency_ms: number | null
 	payload_preview: string | null
+	shuffle_execution_id: string | null
+}
+
+// ----- Shuffle integrations (Phase 2) -----
+
+export interface ShuffleIntegration {
+	id: number
+	customer_code: string
+	display_name: string
+	shuffle_org_id: string
+	enabled: boolean
+	last_used_at: string | null
+	created_by: string | null
+	created_at: string
+	updated_at: string | null
+}
+
+export interface ShuffleIntegrationPayload {
+	display_name: string
+	shuffle_org_id: string
+	enabled: boolean
+}
+
+export type ShuffleIntegrationUpdatePayload = Partial<ShuffleIntegrationPayload>
+
+export interface ShuffleApp {
+	id: string
+	name: string
+	description: string | null
+	large_image: string | null
+}
+
+export interface ShuffleVerifyResult {
+	success: boolean
+	message: string
+	org_id: string
+	app_count: number | null
+	error: string | null
 }

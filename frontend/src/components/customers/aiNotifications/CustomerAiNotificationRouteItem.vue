@@ -117,11 +117,21 @@ const PlayIcon = "carbon:play"
 
 const message = useMessage()
 
-// Phase 1 channels: SMTP only. Phase 2 will branch this on `shuffle`
-// (and inspect the underlying integration's app to pick a Slack/Teams/
-// Outlook icon respectively).
-const channelIcon = computed(() => "carbon:email")
-const channelLabel = computed(() => "SMTP email")
+// Channel icon + label. Shuffle routes show the underlying app name
+// (cached on the route row at form-submit time, so we don't have to
+// roundtrip to Shuffle on every list render).
+const channelIcon = computed(() => {
+	if (props.route.channel === "shuffle") return "carbon:integration"
+	return "carbon:email"
+})
+const channelLabel = computed(() => {
+	if (props.route.channel === "shuffle") {
+		return props.route.shuffle_app_name
+			? `Shuffle · ${props.route.shuffle_app_name}`
+			: "Shuffle"
+	}
+	return "SMTP email"
+})
 
 const triggerLabel = computed(() =>
 	props.route.trigger === "investigation_complete"

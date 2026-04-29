@@ -36,6 +36,13 @@ from app.notifications.schema.notifications import (
     NotificationRouteRead,
     NotificationRouteResponse,
     NotificationRouteUpdate,
+    ShuffleAppListResponse,
+    ShuffleIntegrationCreate,
+    ShuffleIntegrationListResponse,
+    ShuffleIntegrationRead,
+    ShuffleIntegrationResponse,
+    ShuffleIntegrationUpdate,
+    ShuffleVerifyResponse,
 )
 from app.notifications.services import notifications as svc
 
@@ -149,6 +156,132 @@ async def list_dispatch_log_route(
         message=f"{len(entries)} entry/entries retrieved",
         entries=entries,
     )
+
+
+# ---------------------------------------------------------------------------
+# Per-customer Shuffle integrations (Phase 2)
+# ---------------------------------------------------------------------------
+
+
+@notifications_router.get(
+    "/customers/{customer_code}/shuffle_integrations",
+    response_model=ShuffleIntegrationListResponse,
+    description="List Shuffle integrations (per-customer Org-Id rows) for a customer.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def list_shuffle_integrations_route(
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
+) -> ShuffleIntegrationListResponse:
+    integrations = await svc.list_shuffle_integrations(customer_code, session)
+    return ShuffleIntegrationListResponse(
+        success=True,
+        message=f"{len(integrations)} integration(s) retrieved",
+        integrations=[ShuffleIntegrationRead.from_orm(i) for i in integrations],
+    )
+
+
+@notifications_router.post(
+    "/customers/{customer_code}/shuffle_integrations",
+    response_model=ShuffleIntegrationResponse,
+    description="Create a new Shuffle integration for a customer (records the customer's Shuffle Org-Id).",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def create_shuffle_integration_route(
+    customer_code: str,
+    payload: ShuffleIntegrationCreate,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
+) -> ShuffleIntegrationResponse:
+    logger.info(
+        f"User {current_user.id} adding Shuffle integration "
+        f"({payload.display_name}) for customer {customer_code}"
+    )
+    integration = await svc.create_shuffle_integration(
+        customer_code=customer_code,
+        payload=payload,
+        created_by=getattr(current_user, "username", None) or str(current_user.id),
+        session=session,
+    )
+    return ShuffleIntegrationResponse(
+        success=True,
+        message="Integration created",
+        integration=ShuffleIntegrationRead.from_orm(integration),
+    )
+
+
+@notifications_router.patch(
+    "/customers/{customer_code}/shuffle_integrations/{integration_id}",
+    response_model=ShuffleIntegrationResponse,
+    description="Update an existing Shuffle integration. Only fields included in the body are modified.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def update_shuffle_integration_route(
+    customer_code: str,
+    integration_id: int,
+    payload: ShuffleIntegrationUpdate,
+    session: AsyncSession = Depends(get_db),
+) -> ShuffleIntegrationResponse:
+    integration = await svc.update_shuffle_integration(
+        integration_id, customer_code, payload, session
+    )
+    return ShuffleIntegrationResponse(
+        success=True,
+        message="Integration updated",
+        integration=ShuffleIntegrationRead.from_orm(integration),
+    )
+
+
+@notifications_router.delete(
+    "/customers/{customer_code}/shuffle_integrations/{integration_id}",
+    description="Delete a Shuffle integration. Refused if any notification routes reference it.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def delete_shuffle_integration_route(
+    customer_code: str,
+    integration_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    await svc.delete_shuffle_integration(integration_id, customer_code, session)
+    return {"success": True, "message": "Integration deleted"}
+
+
+@notifications_router.get(
+    "/customers/{customer_code}/shuffle_integrations/{integration_id}/apps",
+    response_model=ShuffleAppListResponse,
+    description=(
+        "Fetch the Shuffle app catalog scoped to this customer's org. Used "
+        "by the route form's app picker so admins can pick from a list "
+        "instead of hand-typing UUIDs."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def list_shuffle_apps_route(
+    customer_code: str,
+    integration_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> ShuffleAppListResponse:
+    apps = await svc.list_apps_for_integration(integration_id, customer_code, session)
+    return ShuffleAppListResponse(
+        success=True,
+        message=f"{len(apps)} app(s) retrieved",
+        apps=apps,
+    )
+
+
+@notifications_router.get(
+    "/customers/{customer_code}/shuffle_integrations/{integration_id}/verify",
+    response_model=ShuffleVerifyResponse,
+    description="Probe Shuffle with the integration's Org-Id to confirm the connector is reachable and the org is valid.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def verify_shuffle_integration_route(
+    customer_code: str,
+    integration_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> ShuffleVerifyResponse:
+    result = await svc.verify_integration(integration_id, customer_code, session)
+    return ShuffleVerifyResponse(**result)
 
 
 # ---------------------------------------------------------------------------

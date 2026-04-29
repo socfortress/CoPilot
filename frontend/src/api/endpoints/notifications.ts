@@ -2,7 +2,12 @@ import type {
 	NotificationDispatchLogEntry,
 	NotificationRoute,
 	NotificationRoutePayload,
-	NotificationRouteUpdatePayload
+	NotificationRouteUpdatePayload,
+	ShuffleApp,
+	ShuffleIntegration,
+	ShuffleIntegrationPayload,
+	ShuffleIntegrationUpdatePayload,
+	ShuffleVerifyResult
 } from "@/types/notifications.d"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
@@ -41,6 +46,50 @@ export default {
 	listDispatchLog(customerCode: string) {
 		return HttpClient.get<FlaskBaseResponse & { entries: NotificationDispatchLogEntry[] }>(
 			`/customers/${customerCode}/notification_dispatch_log`
+		)
+	},
+
+	// ----- Shuffle integrations (Phase 2) -----
+
+	listShuffleIntegrations(customerCode: string) {
+		return HttpClient.get<FlaskBaseResponse & { integrations: ShuffleIntegration[] }>(
+			`/customers/${customerCode}/shuffle_integrations`
+		)
+	},
+
+	createShuffleIntegration(customerCode: string, payload: ShuffleIntegrationPayload) {
+		return HttpClient.post<FlaskBaseResponse & { integration: ShuffleIntegration }>(
+			`/customers/${customerCode}/shuffle_integrations`,
+			payload
+		)
+	},
+
+	updateShuffleIntegration(
+		customerCode: string,
+		integrationId: number,
+		payload: ShuffleIntegrationUpdatePayload
+	) {
+		return HttpClient.patch<FlaskBaseResponse & { integration: ShuffleIntegration }>(
+			`/customers/${customerCode}/shuffle_integrations/${integrationId}`,
+			payload
+		)
+	},
+
+	deleteShuffleIntegration(customerCode: string, integrationId: number) {
+		return HttpClient.delete<FlaskBaseResponse>(
+			`/customers/${customerCode}/shuffle_integrations/${integrationId}`
+		)
+	},
+
+	listShuffleApps(customerCode: string, integrationId: number) {
+		return HttpClient.get<FlaskBaseResponse & { apps: ShuffleApp[] }>(
+			`/customers/${customerCode}/shuffle_integrations/${integrationId}/apps`
+		)
+	},
+
+	verifyShuffleIntegration(customerCode: string, integrationId: number) {
+		return HttpClient.get<FlaskBaseResponse & ShuffleVerifyResult>(
+			`/customers/${customerCode}/shuffle_integrations/${integrationId}/verify`
 		)
 	}
 }
