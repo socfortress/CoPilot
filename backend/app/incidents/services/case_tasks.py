@@ -29,7 +29,6 @@ from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseTask
 from app.incidents.models import CaseTemplate
-from app.incidents.models import CaseTemplateTask
 from app.incidents.schema.case_templates import CaseCloseWarningResponse
 from app.incidents.schema.case_templates import CaseEventType
 from app.incidents.schema.case_templates import CaseTaskCreate
@@ -38,7 +37,6 @@ from app.incidents.schema.case_templates import CaseTaskOperationResponse
 from app.incidents.schema.case_templates import CaseTaskResponse
 from app.incidents.schema.case_templates import CaseTaskStatus
 from app.incidents.schema.case_templates import CaseTaskUpdate
-
 
 # ---------------------------------------------------------------------------
 # Conversions
@@ -163,9 +161,7 @@ async def apply_template_to_case(
     caller is then responsible for the commit.
     """
     template_result = await session.execute(
-        select(CaseTemplate)
-        .where(CaseTemplate.id == template_id)
-        .options(selectinload(CaseTemplate.tasks)),
+        select(CaseTemplate).where(CaseTemplate.id == template_id).options(selectinload(CaseTemplate.tasks)),
     )
     template = template_result.scalar_one_or_none()
     if template is None:
@@ -201,11 +197,9 @@ async def apply_template_to_case(
     # plus one task_added event per snapshotted task. Imported lazily to
     # avoid a circular import — case_events doesn't depend on case_tasks
     # but isort/lint sometimes resolves these eagerly.
-    from app.incidents.services.case_events import (
-        emit_case_event,
-        payload_task,
-        payload_template_applied,
-    )
+    from app.incidents.services.case_events import emit_case_event
+    from app.incidents.services.case_events import payload_task
+    from app.incidents.services.case_events import payload_template_applied
 
     await session.flush()  # ensure case_task.id is populated for the audit payloads
 
@@ -242,13 +236,11 @@ async def apply_template_to_case(
         for t in new_tasks:
             await session.refresh(t)
         logger.info(
-            f"Applied template id={template_id} ('{template.name}') to case id={case_id}: "
-            f"{len(new_tasks)} task(s) created by {actor}",
+            f"Applied template id={template_id} ('{template.name}') to case id={case_id}: " f"{len(new_tasks)} task(s) created by {actor}",
         )
     else:
         logger.info(
-            f"Staged template id={template_id} ('{template.name}') for case id={case_id}: "
-            f"{len(new_tasks)} task(s) (uncommitted)",
+            f"Staged template id={template_id} ('{template.name}') for case id={case_id}: " f"{len(new_tasks)} task(s) (uncommitted)",
         )
 
     return new_tasks
@@ -296,11 +288,7 @@ async def auto_apply_template_for_new_case(
 
 async def list_case_tasks(case_id: int, session: AsyncSession) -> CaseTaskListResponse:
     try:
-        stmt = (
-            select(CaseTask)
-            .where(CaseTask.case_id == case_id)
-            .order_by(CaseTask.order_index, CaseTask.id)
-        )
+        stmt = select(CaseTask).where(CaseTask.case_id == case_id).order_by(CaseTask.order_index, CaseTask.id)
         result = await session.execute(stmt)
         tasks = result.scalars().all()
         return CaseTaskListResponse(
@@ -347,7 +335,8 @@ async def add_case_task(
         session.add(task)
         await session.flush()
 
-        from app.incidents.services.case_events import emit_case_event, payload_task
+        from app.incidents.services.case_events import emit_case_event
+        from app.incidents.services.case_events import payload_task
 
         await emit_case_event(
             session=session,
@@ -437,7 +426,8 @@ async def update_case_task(
         # Audit emits (Phase 4): two distinct events when both fire — the UI
         # can render them as a single block but the data model keeps them
         # separate so a comment-only update still appears in the timeline.
-        from app.incidents.services.case_events import emit_case_event, payload_task
+        from app.incidents.services.case_events import emit_case_event
+        from app.incidents.services.case_events import payload_task
 
         if status_changed:
             await emit_case_event(
@@ -557,10 +547,7 @@ def build_close_warning_response(incomplete: List[CaseTask]) -> CaseCloseWarning
     return CaseCloseWarningResponse(
         success=False,
         requires_confirmation=True,
-        message=(
-            f"{len(incomplete)} mandatory task(s) are not marked DONE. "
-            "Re-submit with force=true to close anyway."
-        ),
+        message=(f"{len(incomplete)} mandatory task(s) are not marked DONE. " "Re-submit with force=true to close anyway."),
         incomplete_mandatory_tasks=[_case_task_to_response(t) for t in incomplete],
     )
 

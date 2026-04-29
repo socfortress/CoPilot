@@ -27,7 +27,6 @@ from app.incidents.schema.case_templates import CaseTemplateTaskUpdate
 from app.incidents.schema.case_templates import CaseTemplateUpdate
 from app.incidents.services import case_templates as service
 
-
 # Scope guard applied to every route on this router. Returns the username,
 # which we use as the audit actor for create operations.
 _require_admin_or_analyst = AuthHandler().require_any_scope("admin", "analyst")

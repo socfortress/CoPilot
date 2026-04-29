@@ -18,7 +18,6 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
-
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------

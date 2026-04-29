@@ -35,7 +35,6 @@ from app.incidents.schema.case_templates import CaseTemplateTaskResponse
 from app.incidents.schema.case_templates import CaseTemplateTaskUpdate
 from app.incidents.schema.case_templates import CaseTemplateUpdate
 
-
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
@@ -73,11 +72,7 @@ async def _load_template_with_tasks(
     template_id: int,
     session: AsyncSession,
 ) -> Optional[CaseTemplate]:
-    stmt = (
-        select(CaseTemplate)
-        .where(CaseTemplate.id == template_id)
-        .options(selectinload(CaseTemplate.tasks))
-    )
+    stmt = select(CaseTemplate).where(CaseTemplate.id == template_id).options(selectinload(CaseTemplate.tasks))
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
@@ -160,7 +155,7 @@ async def create_template(
         return CaseTemplateOperationResponse(
             template=_template_to_response(loaded),
             success=True,
-            message=f"Created template '{loaded.name}' (id={loaded.id})",
+            message=f"Created template id={template.id}",
         )
 
     except Exception as e:

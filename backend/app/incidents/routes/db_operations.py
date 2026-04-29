@@ -665,7 +665,8 @@ async def create_case_comment_endpoint(
     created = await create_case_comment(comment, db)
 
     from app.incidents.schema.case_templates import CaseEventType
-    from app.incidents.services.case_events import emit_case_event, payload_comment
+    from app.incidents.services.case_events import emit_case_event
+    from app.incidents.services.case_events import payload_comment
 
     await emit_case_event(
         session=db,
@@ -985,7 +986,8 @@ async def create_case_alert_link_endpoint(
     link = await create_case_alert_link(case_alert_link, db)
 
     from app.incidents.schema.case_templates import CaseEventType
-    from app.incidents.services.case_events import emit_case_event, payload_alert_link
+    from app.incidents.services.case_events import emit_case_event
+    from app.incidents.services.case_events import payload_alert_link
 
     await emit_case_event(
         session=db,
@@ -1016,7 +1018,8 @@ async def create_case_alert_links_endpoint(
     links = await create_case_alert_links_bulk(case_alert_links, db)
 
     from app.incidents.schema.case_templates import CaseEventType
-    from app.incidents.services.case_events import emit_case_event, payload_alert_links_bulk
+    from app.incidents.services.case_events import emit_case_event
+    from app.incidents.services.case_events import payload_alert_links_bulk
 
     # One aggregated event for the bulk operation rather than N individual
     # ones — keeps the timeline readable when 50 alerts are bulk-attached.
@@ -1049,7 +1052,8 @@ async def case_alert_unlink_endpoint(
     response = await case_alert_unlink(case_alert_link, db)
 
     from app.incidents.schema.case_templates import CaseEventType
-    from app.incidents.services.case_events import emit_case_event, payload_alert_link
+    from app.incidents.services.case_events import emit_case_event
+    from app.incidents.services.case_events import payload_alert_link
 
     await emit_case_event(
         session=db,
@@ -1097,10 +1101,8 @@ async def create_case_from_alert_endpoint(
     # already emitted by the apply_template_to_case service inside
     # create_case_from_alert, so we don't re-emit them here.
     from app.incidents.schema.case_templates import CaseEventType
-    from app.incidents.services.case_events import (
-        emit_case_event,
-        payload_alert_link,
-    )
+    from app.incidents.services.case_events import emit_case_event
+    from app.incidents.services.case_events import payload_alert_link
 
     await emit_case_event(
         session=db,
@@ -1849,16 +1851,13 @@ async def update_case_status_endpoint(
     # and any mandatory CaseTask is not DONE, return a warning payload
     # without performing the close. force=true overrides.
     if new_status_value == "CLOSED" and old_status != "CLOSED" and not force:
-        from app.incidents.services.case_tasks import (
-            build_close_warning_response,
-            get_incomplete_mandatory_tasks,
-        )
+        from app.incidents.services.case_tasks import build_close_warning_response
+        from app.incidents.services.case_tasks import get_incomplete_mandatory_tasks
 
         incomplete = await get_incomplete_mandatory_tasks(case_status.case_id, db)
         if incomplete:
             logger.info(
-                f"Case {case_status.case_id} close blocked by soft warning: "
-                f"{len(incomplete)} mandatory task(s) not DONE",
+                f"Case {case_status.case_id} close blocked by soft warning: " f"{len(incomplete)} mandatory task(s) not DONE",
             )
             return build_close_warning_response(incomplete)
 
@@ -1978,7 +1977,8 @@ async def update_case_escalated_endpoint(
 
     # Phase 4 audit emit
     from app.incidents.schema.case_templates import CaseEventType
-    from app.incidents.services.case_events import emit_case_event, payload_escalation
+    from app.incidents.services.case_events import emit_case_event
+    from app.incidents.services.case_events import payload_escalation
 
     await emit_case_event(
         session=db,
@@ -2027,7 +2027,8 @@ async def update_case_assigned_to_endpoint(
 
     # Phase 4 audit emit
     from app.incidents.schema.case_templates import CaseEventType
-    from app.incidents.services.case_events import emit_case_event, payload_assignment
+    from app.incidents.services.case_events import emit_case_event
+    from app.incidents.services.case_events import payload_assignment
 
     await emit_case_event(
         session=db,

@@ -26,8 +26,8 @@ from typing import Sequence
 from typing import Union
 
 import sqlalchemy as sa
-from alembic import op
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "03508fb56a48"
