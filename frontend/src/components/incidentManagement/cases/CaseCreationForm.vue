@@ -52,6 +52,25 @@
 						/>
 					</n-form-item>
 				</div>
+				<div>
+					<n-form-item label="Template (optional)" path="template_id">
+						<n-select
+							v-model:value="selectedTemplateId"
+							:options="templateOptions"
+							:loading="loadingTemplates"
+							placeholder="Apply a template on creation (optional)"
+							clearable
+							filterable
+							to="body"
+							:render-label="renderOption"
+							size="large"
+						/>
+					</n-form-item>
+					<p class="text-secondary -mt-2 text-xs">
+						Applies the template's predefined tasks to the case. Filtered by the selected customer; global
+						templates are always shown.
+					</p>
+				</div>
 
 				<div class="flex justify-between gap-4">
 					<div class="flex gap-4">
@@ -74,10 +93,11 @@ import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { Ref } from "vue"
 import type { Customer } from "@/types/customers.d"
 import type { Case, CasePayload, CaseStatus } from "@/types/incidentManagement/cases.d"
+import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, inject, onBeforeMount, onMounted, ref, watch } from "vue"
+import { computed, h, inject, onBeforeMount, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 
 const emit = defineEmits<{
@@ -93,8 +113,25 @@ const emit = defineEmits<{
 
 const loadingAvailableUsers = ref(false)
 const loadingCustomersList = ref(false)
+const loadingTemplates = ref(false)
 const submitting = ref(false)
-const loading = computed(() => loadingAvailableUsers.value || loadingCustomersList.value || submitting.value)
+const loading = computed(
+	() => loadingAvailableUsers.value || loadingCustomersList.value || loadingTemplates.value || submitting.value
+)
+// Template picker state. Lives outside form because it's a query param to the
+// API call, not a body field on CasePayload.
+const availableTemplates = ref<CaseTemplate[]>([])
+const selectedTemplateId = ref<number | null>(null)
+const templateOptions = computed(() =>
+	availableTemplates.value.map(t => ({
+		label: t.name,
+		name: t.name,
+		customer_code: t.customer_code,
+		source: t.source,
+		is_default: t.is_default,
+		value: t.id
+	}))
+)
 const message = useMessage()
 const form = ref<CasePayload>(getForm())
 const formRef = ref<FormInst | null>(null)
@@ -191,11 +228,32 @@ function resetForm() {
 	form.value = getForm()
 }
 
+function renderOption(option: {
+	label: string
+	value: number
+	name?: string | null
+	is_default?: boolean
+	customer_code?: string | null
+	source?: string | null
+}) {
+	const title = `${option.name}${option.is_default ? " (default)" : ""}`
+	const description = [option.customer_code, option.source].filter(Boolean).join(" — ")
+	return h("div", { class: "flex flex-col gap-0.5 leading-none py-2" }, [
+		h("span", title),
+		h("span", { class: "text-secondary text-xs" }, description)
+	])
+}
+
 function submit() {
 	submitting.value = true
 
+	const params: Record<string, number> = {}
+	if (selectedTemplateId.value != null) {
+		params.template_id = selectedTemplateId.value
+	}
+
 	Api.incidentManagement.cases
-		.createCase(form.value)
+		.createCase(form.value, params)
 		.then(res => {
 			if (res.data.success) {
 				message.success(res.data?.message || "Case created successfully")
@@ -210,6 +268,28 @@ function submit() {
 		})
 		.finally(() => {
 			submitting.value = false
+		})
+}
+
+function getTemplates(customerCode?: string | null) {
+	loadingTemplates.value = true
+	Api.incidentManagement.caseTemplates
+		.listTemplates({
+			customerCode: customerCode || undefined,
+			includeGlobal: true
+		})
+		.then(res => {
+			if (res.data.success) {
+				availableTemplates.value = res.data.templates
+			}
+		})
+		.catch(err => {
+			// Soft failure — template picker is optional. Log via console rather
+			// than spamming a toast, since the user can still submit without one.
+			console.warn("Failed to load templates for picker:", err)
+		})
+		.finally(() => {
+			loadingTemplates.value = false
 		})
 }
 
@@ -260,8 +340,19 @@ function load() {
 	if (!customersList.value.length) {
 		getCustomers()
 	}
+	getTemplates(form.value.customer_code)
 	reset()
 }
+
+// Re-fetch templates when the customer changes so the picker only offers
+// applicable + global templates. Reset the selection if it no longer applies.
+watch(
+	() => form.value.customer_code,
+	newCustomer => {
+		selectedTemplateId.value = null
+		getTemplates(newCustomer)
+	}
+)
 
 watch(loading, val => {
 	emit("update:loading", val)

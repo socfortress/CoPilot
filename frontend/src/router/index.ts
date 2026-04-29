@@ -1,6 +1,6 @@
 import type { FormType } from "@/components/auth/types.d"
 import { createRouter, createWebHistory } from "vue-router"
-import { RouteRole } from "@/types/auth.d"
+import { AuthUserRole, RouteRole } from "@/types/auth.d"
 import { Layout } from "@/types/theme.d"
 import { authCheck } from "@/utils/auth"
 import AuthPage from "@/views/Auth.vue"
@@ -266,6 +266,16 @@ const router = createRouter({
 					name: "IncidentManagement-Cases",
 					component: () => import("@/views/incidentManagement/Cases.vue"),
 					meta: { title: "Incident Cases" }
+				},
+				{
+					path: "case-templates",
+					name: "IncidentManagement-CaseTemplates",
+					component: () => import("@/views/incidentManagement/CaseTemplates.vue"),
+					meta: {
+						title: "Case Templates",
+						// Admin/analyst only — templates are SOC-team-managed playbooks.
+						roles: [AuthUserRole.Admin, AuthUserRole.Analyst]
+					}
 				},
 				{
 					path: "sigma",

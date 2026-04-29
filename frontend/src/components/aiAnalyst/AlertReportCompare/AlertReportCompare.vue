@@ -53,6 +53,7 @@ import type { AiAnalystReport } from "@/types/aiAnalyst.d"
 import { NEmpty, NFormItem, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, ref, toRefs, watch } from "vue"
 import Api from "@/api"
+import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import ReportColumn from "./AlertReportCompareColumn.vue"
 
@@ -65,6 +66,7 @@ const { alertId, currentReportId } = toRefs(props)
 
 const message = useMessage()
 const loading = ref(false)
+const dFormats = useSettingsStore().dateFormat
 const reports = ref<AiAnalystReport[]>([])
 
 const idA = ref<number | null>(null)
@@ -87,7 +89,7 @@ const reportB = computed(() => reports.value.find(r => r.id === idB.value) ?? nu
 // Render option with created_at + severity so the picker shows meaningful
 // distinctions between runs rather than just bare IDs.
 function renderOption(option: { label: string; value: number; severity?: string | null; created_at?: string }) {
-	const ts = option.created_at ? String(formatDate(option.created_at, "MMM D, YYYY HH:mm")) : ""
+	const ts = option.created_at ? String(formatDate(option.created_at, dFormats.datetime)) : ""
 	const sev = option.severity ? ` · ${option.severity}` : ""
 	return h("div", { class: "flex flex-col leading-none py-2" }, [
 		h("span", `#${option.label}${sev}`),

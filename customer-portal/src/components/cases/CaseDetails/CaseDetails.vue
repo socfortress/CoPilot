@@ -43,6 +43,12 @@
 						@linked="handleAlertLinked"
 					/>
 				</n-tab-pane>
+				<n-tab-pane name="tasks" tab="Tasks">
+					<CaseTasks :case-id="caseData.id" />
+				</n-tab-pane>
+				<n-tab-pane name="timeline" tab="Timeline">
+					<CaseTimeline :case-id="caseData.id" />
+				</n-tab-pane>
 				<n-tab-pane name="files" tab="Files">
 					<CaseFiles :case-id="caseData.id" />
 				</n-tab-pane>
@@ -74,6 +80,8 @@ import CaseAlerts from "./CaseAlerts.vue"
 import CaseComments from "./CaseComments.vue"
 import CaseFiles from "./CaseFiles.vue"
 import CaseOverview from "./CaseOverview.vue"
+import CaseTasks from "./CaseTasks.vue"
+import CaseTimeline from "./CaseTimeline.vue"
 
 const props = defineProps<{
 	caseId: number | null
