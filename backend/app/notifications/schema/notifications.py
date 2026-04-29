@@ -267,14 +267,18 @@ class ShuffleOrg(BaseModel):
 
     Used to populate the integration form's org-picker dropdown so
     admins don't have to paste UUIDs. Forwards only the fields the UI
-    needs — Shuffle's full org payload includes a lot of internal
-    state (users, billing, region) we don't want leaking through.
+    needs — Shuffle's full org payload carries a lot of internal state
+    (users, billing, region, sync_config) we don't want leaking
+    through. `creator_org` is empty/falsy on top-level orgs and set to
+    the parent's UUID on sub-orgs, so the UI can label sub-orgs
+    distinctly without an extra round-trip.
     """
 
     id: str
     name: str
+    description: Optional[str] = None
     role: Optional[str] = None
-    org_type: Optional[str] = None
+    creator_org: Optional[str] = None
 
 
 class ShuffleOrgListResponse(BaseModel):

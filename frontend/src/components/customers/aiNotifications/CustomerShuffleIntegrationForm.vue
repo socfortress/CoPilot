@@ -132,12 +132,18 @@ const orgsError = ref<string | null>(null)
 const manualEntry = ref(false)
 
 const orgOptions = computed(() =>
-	orgs.value.map(o => ({
+	orgs.value.map(o => {
 		// Show the name with a short Org-Id suffix so admins can disambiguate
-		// when two customers share a display name (rare but possible).
-		label: `${o.name} (${o.id.slice(0, 8)}…)`,
-		value: o.id
-	}))
+		// when two orgs share a display name. Sub-orgs get an extra hint so
+		// it's obvious which rows are children of the parent (typical Shuffle
+		// pattern: one parent org per MSP, one sub-org per customer).
+		const idHint = `(${o.id.slice(0, 8)}…)`
+		const subOrgHint = o.creator_org ? " · sub-org" : ""
+		return {
+			label: `${o.name} ${idHint}${subOrgHint}`,
+			value: o.id
+		}
+	})
 )
 
 async function loadOrgs(force = false) {

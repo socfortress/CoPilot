@@ -382,13 +382,20 @@ async def list_orgs(session: AsyncSession) -> List[ShuffleOrg]:
             continue
         if not raw.get("id") or not raw.get("name"):
             continue
+        # `creator_org` is set on sub-orgs to the parent's UUID and
+        # empty/None on top-level orgs. We forward it as-is so the UI
+        # can render a "(sub-org)" hint without re-querying.
+        creator_org = raw.get("creator_org")
+        if creator_org in ("", "PARENT_ORG_ID"):  # ignore placeholder fixtures
+            creator_org = None
         orgs.append(
             ShuffleOrg(
                 id=str(raw.get("id")),
                 name=str(raw.get("name")),
-                role=raw.get("role"),
-                org_type=raw.get("org_type") or raw.get("type"),
-            )
+                description=raw.get("description") or None,
+                role=raw.get("role") or None,
+                creator_org=creator_org,
+            ),
         )
     return orgs
 

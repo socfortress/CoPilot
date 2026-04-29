@@ -92,8 +92,10 @@ export interface ShuffleApp {
 export interface ShuffleOrg {
 	id: string
 	name: string
+	description: string | null
 	role: string | null
-	org_type: string | null
+	// Parent org UUID on sub-orgs, null/empty on top-level orgs.
+	creator_org: string | null
 }
 
 export interface ShuffleVerifyResult {
