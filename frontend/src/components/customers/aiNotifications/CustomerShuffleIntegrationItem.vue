@@ -41,6 +41,17 @@
 
 				<n-tooltip>
 					<template #trigger>
+						<n-button size="tiny" quaternary circle @click="$emit('manageApps')">
+							<template #icon>
+								<Icon :name="ManageAppsIcon" :size="14" />
+							</template>
+						</n-button>
+					</template>
+					Manage apps
+				</n-tooltip>
+
+				<n-tooltip>
+					<template #trigger>
 						<n-button size="tiny" quaternary circle @click="toggleEnabled">
 							<template #icon>
 								<Icon :name="integration.enabled ? PauseIcon : PlayIcon" :size="14" />
@@ -120,12 +131,14 @@ const emit = defineEmits<{
 	(e: "edit"): void
 	(e: "deleted"): void
 	(e: "toggled"): void
+	(e: "manageApps"): void
 }>()
 
 const EditIcon = "carbon:edit"
 const DeleteIcon = "carbon:trash-can"
 const PauseIcon = "carbon:pause"
 const PlayIcon = "carbon:play"
+const ManageAppsIcon = "carbon:catalog"
 const VerifyIcon = "carbon:checkmark-outline"
 const VerifyOkIcon = "carbon:checkmark-filled"
 const VerifyFailIcon = "carbon:misuse"

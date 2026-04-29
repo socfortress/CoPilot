@@ -43,6 +43,7 @@
 								@edit="openEdit(integration)"
 								@deleted="refreshList()"
 								@toggled="refreshList()"
+								@manage-apps="openAppsDrawer(integration)"
 							/>
 						</template>
 						<template v-else>
@@ -56,6 +57,8 @@
 				</n-spin>
 			</div>
 		</transition>
+
+		<CustomerShuffleAppsDrawer v-model:show="showAppsDrawer" :integration="appsDrawerIntegration" />
 	</div>
 </template>
 
@@ -66,6 +69,7 @@ import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
+import CustomerShuffleAppsDrawer from "./CustomerShuffleAppsDrawer.vue"
 import CustomerShuffleIntegrationForm from "./CustomerShuffleIntegrationForm.vue"
 import CustomerShuffleIntegrationItem from "./CustomerShuffleIntegrationItem.vue"
 
@@ -81,6 +85,14 @@ const showForm = ref(false)
 const loading = ref(false)
 const list = ref<ShuffleIntegration[]>([])
 const editingIntegration = ref<ShuffleIntegration | null>(null)
+
+// "Manage apps" drawer state. Opened from each integration row's
+// catalog button — gives admins a Shuffle picker scoped to that org
+// for authenticating new apps. Independent from the form drawer so
+// both can be open at once if needed (e.g. edit metadata while the
+// picker is still up after an OAuth handoff).
+const showAppsDrawer = ref(false)
+const appsDrawerIntegration = ref<ShuffleIntegration | null>(null)
 
 function refreshList() {
 	loading.value = true
@@ -119,6 +131,11 @@ function closeForm() {
 function onFormSubmitted() {
 	closeForm()
 	refreshList()
+}
+
+function openAppsDrawer(integration: ShuffleIntegration) {
+	appsDrawerIntegration.value = integration
+	showAppsDrawer.value = true
 }
 
 onBeforeMount(refreshList)

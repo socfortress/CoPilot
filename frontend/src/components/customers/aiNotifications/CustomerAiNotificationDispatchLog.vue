@@ -66,7 +66,7 @@ const columns = computed<DataTableColumns<DispatchLogEntry>>(() => [
 		title: "When",
 		key: "dispatched_at",
 		width: 160,
-		render: row => formatDate(row.dispatched_at, "MMM D, YYYY HH:mm:ss")
+		render: row => String(formatDate(row.dispatched_at, "MMM D, YYYY HH:mm:ss"))
 	},
 	{
 		title: "Alert",
