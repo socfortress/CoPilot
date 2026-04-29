@@ -92,7 +92,7 @@ async def list_routes(customer_code: str, session: AsyncSession) -> List[Custome
     result = await session.execute(
         select(CustomerNotificationRoute)
         .where(CustomerNotificationRoute.customer_code == customer_code)
-        .order_by(desc(CustomerNotificationRoute.created_at))
+        .order_by(desc(CustomerNotificationRoute.created_at)),
     )
     return result.scalars().all()
 
@@ -104,7 +104,7 @@ async def get_route(route_id: int, customer_code: str, session: AsyncSession) ->
         select(CustomerNotificationRoute).where(
             CustomerNotificationRoute.id == route_id,
             CustomerNotificationRoute.customer_code == customer_code,
-        )
+        ),
     )
     route = result.scalars().first()
     if not route:
@@ -193,7 +193,9 @@ async def delete_route(route_id: int, customer_code: str, session: AsyncSession)
 
 
 async def _ensure_integration_belongs_to_customer(
-    integration_id: int, customer_code: str, session: AsyncSession
+    integration_id: int,
+    customer_code: str,
+    session: AsyncSession,
 ) -> CustomerShuffleIntegration:
     """Tenant-boundary check for Shuffle integration references.
 
@@ -206,7 +208,7 @@ async def _ensure_integration_belongs_to_customer(
         select(CustomerShuffleIntegration).where(
             CustomerShuffleIntegration.id == integration_id,
             CustomerShuffleIntegration.customer_code == customer_code,
-        )
+        ),
     )
     integration = result.scalars().first()
     if not integration:
@@ -225,7 +227,7 @@ async def list_shuffle_integrations(customer_code: str, session: AsyncSession) -
     result = await session.execute(
         select(CustomerShuffleIntegration)
         .where(CustomerShuffleIntegration.customer_code == customer_code)
-        .order_by(desc(CustomerShuffleIntegration.created_at))
+        .order_by(desc(CustomerShuffleIntegration.created_at)),
     )
     return result.scalars().all()
 
@@ -275,7 +277,7 @@ async def delete_shuffle_integration(integration_id: int, customer_code: str, se
     # surface the dependency than silently leave routes pointing at a
     # missing FK that the dispatch loop will then have to skip.
     result = await session.execute(
-        select(CustomerNotificationRoute).where(CustomerNotificationRoute.shuffle_integration_id == integration_id)
+        select(CustomerNotificationRoute).where(CustomerNotificationRoute.shuffle_integration_id == integration_id),
     )
     referencing = result.scalars().all()
     if referencing:
@@ -329,7 +331,7 @@ async def list_apps_for_integration(
                 name=str(raw.get("name")),
                 description=raw.get("description"),
                 large_image=raw.get("large_image"),
-            )
+            ),
         )
     return apps
 
@@ -368,7 +370,7 @@ async def list_dispatch_log(
         select(NotificationDispatchLog)
         .where(NotificationDispatchLog.customer_code == customer_code)
         .order_by(desc(NotificationDispatchLog.dispatched_at))
-        .limit(limit)
+        .limit(limit),
     )
     return result.scalars().all()
 
@@ -391,7 +393,7 @@ def _severity_meets(report_severity: str, route_min: str) -> bool:
         # Unknown severity string — fail closed. Better to drop a
         # notification than fire it on bad input.
         logger.warning(
-            f"Unknown severity in routing comparison " f"(report={report_severity!r}, route_min={route_min!r}); " f"skipping route."
+            f"Unknown severity in routing comparison " f"(report={report_severity!r}, route_min={route_min!r}); " f"skipping route.",
         )
         return False
 
@@ -503,7 +505,7 @@ async def _record_log(
             NotificationDispatchLog.alert_id == alert_id,
             NotificationDispatchLog.route_id == route_id,
             NotificationDispatchLog.trigger == trigger,
-        )
+        ),
     )
     existing = result.scalars().first()
 
@@ -715,7 +717,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
                     status=DispatchStatus.SKIPPED,
                     error_message="Already dispatched (idempotency)",
                     latency_ms=None,
-                )
+                ),
             )
             continue
 
@@ -731,7 +733,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
                 .values(
                     dispatch_count=CustomerNotificationRoute.dispatch_count + 1,
                     last_dispatched_at=datetime.utcnow(),
-                )
+                ),
             )
             # Bump the integration's last_used_at on a successful
             # Shuffle dispatch — gives the integration list a "fired
@@ -740,7 +742,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
                 await session.execute(
                     update(CustomerShuffleIntegration)
                     .where(CustomerShuffleIntegration.id == route_shuffle_integration_id)
-                    .values(last_used_at=datetime.utcnow())
+                    .values(last_used_at=datetime.utcnow()),
                 )
             await session.commit()
         elif result_status == "skipped":
@@ -757,7 +759,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
                 error_message=error_message,
                 latency_ms=latency_ms,
                 shuffle_execution_id=shuffle_execution_id,
-            )
+            ),
         )
 
     return DispatchResponse(

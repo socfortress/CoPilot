@@ -297,6 +297,6 @@ async def dispatch_route(
     logger.info(
         f"Notification dispatch requested for customer {payload.customer_code} "
         f"alert {payload.alert_id} trigger {payload.trigger.value} "
-        f"severity {payload.severity_assessment.value}"
+        f"severity {payload.severity_assessment.value}",
     )
     return await svc.dispatch(payload, session)
