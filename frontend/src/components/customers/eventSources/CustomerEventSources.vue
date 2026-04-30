@@ -1,7 +1,8 @@
 <template>
 	<div class="customer-event-sources">
 		<transition name="form-fade" mode="out-in">
-			<div v-if="showForm">
+			<div v-if="showForm" class="flex flex-col gap-4">
+				<h4>{{ !!editingSource ? "Edit Event Source" : "Add Event Source" }}</h4>
 				<CustomerEventSourceForm
 					:customer-code
 					:editing-source
@@ -10,7 +11,7 @@
 				/>
 			</div>
 			<div v-else>
-				<div class="flex items-center justify-between gap-4 px-7 pt-2">
+				<div class="flex items-center justify-between gap-4">
 					<n-button size="small" type="primary" @click="openForm()">
 						<template #icon>
 							<Icon :name="AddIcon" :size="14" />
@@ -20,7 +21,7 @@
 				</div>
 
 				<n-spin :show="loading">
-					<div class="min-h-52 p-7 pt-4">
+					<div class="min-h-52">
 						<template v-if="list.length">
 							<CustomerEventSourceItem
 								v-for="source of list"
