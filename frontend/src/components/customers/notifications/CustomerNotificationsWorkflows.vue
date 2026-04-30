@@ -1,7 +1,8 @@
 <template>
 	<div class="customer-notifications-workflows flex flex-col gap-4">
 		<transition name="form-fade" mode="out-in">
-			<div v-if="showForm">
+			<div v-if="showForm" class="flex flex-col gap-4">
+				<h4>Create a Notification</h4>
 				<CustomerNotificationsWorkflowsForm
 					:customer-code
 					@mounted="formCTX = $event"
