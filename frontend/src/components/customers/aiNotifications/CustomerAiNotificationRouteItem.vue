@@ -117,21 +117,13 @@ const PlayIcon = "carbon:play"
 
 const message = useMessage()
 
-// Channel icon + label. Shuffle routes show the underlying app name
-// (cached on the route row at form-submit time, so we don't have to
-// roundtrip to Shuffle on every list render).
-const channelIcon = computed(() => {
-	if (props.route.channel === "shuffle") return "carbon:integration"
-	return "carbon:email"
-})
-const channelLabel = computed(() => {
-	if (props.route.channel === "shuffle") {
-		return props.route.shuffle_app_name
-			? `Shuffle · ${props.route.shuffle_app_name}`
-			: "Shuffle"
-	}
-	return "SMTP email"
-})
+// All current routes are Shuffle-routed; the underlying Shuffle app
+// name is cached on the route row at form-submit time so we don't
+// need to roundtrip to Shuffle on every list render.
+const channelIcon = computed(() => "carbon:integration")
+const channelLabel = computed(() =>
+	props.route.shuffle_app_name ? `Shuffle · ${props.route.shuffle_app_name}` : "Shuffle"
+)
 
 const triggerLabel = computed(() =>
 	props.route.trigger === "investigation_complete"
@@ -145,9 +137,8 @@ const severityColor = computed<"danger" | "warning" | "success">(() => {
 	return "success"
 })
 
-// SMTP recipients shown verbatim — email addresses aren't secrets the
-// way Slack webhook URLs were. Phase 2 may reintroduce per-channel
-// formatting logic for shuffle integrations.
+// Destination hint shown verbatim — Shuffle's app agent figures out
+// what to do with it (channel name, email recipient, handle, etc.).
 const destinationDisplay = computed(() => props.route.destination)
 
 async function toggleEnabled() {

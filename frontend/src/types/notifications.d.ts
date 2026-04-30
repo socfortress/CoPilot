@@ -1,10 +1,10 @@
 // Notification routing — types mirror app/notifications/schema/notifications.py.
-// Kept intentionally narrow: Phase 1 ships Slack webhook + SMTP email only;
-// Phase 2 will extend the channel union with 'shuffle'.
+// Shuffle is the sole delivery channel; email, chat, ticketing, and the
+// rest flow through Shuffle's catalog of authenticated apps.
 
 export type NotificationTrigger = "investigation_complete" | "severity_critical_or_high"
 
-export type NotificationChannel = "smtp_email" | "shuffle"
+export type NotificationChannel = "shuffle"
 
 export type NotificationSeverity = "Critical" | "High" | "Medium" | "Low" | "Informational"
 

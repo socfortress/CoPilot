@@ -735,12 +735,15 @@ class CustomerNotificationRoute(SQLModel, table=True):
     # Stored as string so adding new triggers later is a data-only change.
     trigger: str = Field(max_length=64, nullable=False, index=True)
 
-    # 'slack_webhook' or 'smtp_email' for Phase 1. Phase 2 adds 'shuffle'
-    # and pairs with an integration_id FK.
+    # Always 'shuffle' on the current code path — the column kept its
+    # varchar shape so we can re-introduce direct channels (raw webhook,
+    # PagerDuty REST, etc.) later without a migration. Pairs with the
+    # shuffle_integration_id FK to scope the dispatch to a specific org.
     channel: str = Field(max_length=32, nullable=False)
 
-    # Slack incoming-webhook URL or SMTP recipient email address
-    # (multi-recipient = comma separated, normalized in the service).
+    # Free-form destination hint (Slack channel, email recipient,
+    # handle, etc.) — Shuffle's app agent figures out how to route it
+    # within the authenticated app at dispatch time.
     destination: str = Field(sa_column=Column(Text), nullable=False)
 
     # 'Critical' | 'High' | 'Medium' | 'Low' | 'Informational'. Inclusive

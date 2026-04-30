@@ -42,15 +42,16 @@ class NotificationTrigger(str, Enum):
 class NotificationChannel(str, Enum):
     """Delivery channel set.
 
-    `smtp_email` is direct SMTP via env config (CoPilot deployment-wide).
     `shuffle` proxies to Shuffle's hosted MCP — each customer points at
     their own Shuffle Org via `customer_shuffle_integration`, and Shuffle
     handles the OAuth-authenticated downstream app (Slack workspace,
-    Outlook tenant, Teams, etc.). Routes referencing `shuffle` MUST
-    populate the `shuffle_integration_id` + `shuffle_app_id` columns.
+    Outlook tenant, Teams, Gmail, SendGrid, etc.). Routes referencing
+    `shuffle` MUST populate the `shuffle_integration_id` + `shuffle_app_id`
+    columns. Email, chat, ticketing, and the rest of the catalog all
+    flow through this single channel — there's no separate direct SMTP
+    path because Shuffle's email apps cover that surface.
     """
 
-    SMTP_EMAIL = "smtp_email"
     SHUFFLE = "shuffle"
 
 
@@ -96,14 +97,15 @@ class NotificationRouteBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=128, description="Human label for the rule (e.g. 'SOC team Slack #alerts').")
     trigger: NotificationTrigger
     channel: NotificationChannel
-    # For SMTP: comma-separated recipient emails. For Shuffle: free-form
-    # destination hint (e.g. '#soc-alerts', 'ir@corp.com') that gets
-    # injected into Shuffle's natural-language input — Shuffle's app
-    # agent figures out how to route it within the authenticated app.
+    # Free-form destination hint (e.g. '#soc-alerts', 'ir@corp.com',
+    # '@user-handle') that gets injected into Shuffle's natural-language
+    # input — Shuffle's app agent figures out how to route it within
+    # the authenticated app (channel for Slack, recipient for email
+    # apps, mention for chat handles, etc.).
     destination: str = Field(
         ...,
         min_length=1,
-        description="SMTP recipient email(s) or Shuffle destination hint (channel name / address / handle).",
+        description="Destination hint for the Shuffle app (channel name, email address, handle).",
     )
     min_severity: NotificationSeverity = NotificationSeverity.MEDIUM
     format_template: Optional[str] = Field(
