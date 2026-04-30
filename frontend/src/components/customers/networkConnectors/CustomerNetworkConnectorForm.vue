@@ -1,5 +1,5 @@
 <template>
-	<div class="customer-network-connector-form flex min-h-120 flex-col gap-4 overflow-hidden">
+	<div class="customer-network-connector-form flex min-h-120 flex-col gap-6 overflow-hidden">
 		<div>
 			<n-scrollbar x-scrollable trigger="none">
 				<div class="p-1 pr-4">
