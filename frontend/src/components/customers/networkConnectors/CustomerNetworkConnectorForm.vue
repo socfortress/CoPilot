@@ -2,7 +2,7 @@
 	<div class="customer-network-connector-form flex min-h-120 flex-col gap-4 overflow-hidden">
 		<div>
 			<n-scrollbar x-scrollable trigger="none">
-				<div class="px-7 pt-4 pb-2">
+				<div class="p-1 pr-4">
 					<n-steps :current size="small" :status="currentStatus">
 						<n-step title="Choose Network Connector" />
 						<n-step title="Set Auth Keys">
@@ -15,21 +15,21 @@
 			</n-scrollbar>
 		</div>
 
-		<div class="flex grow flex-col overflow-hidden">
+		<div class="flex grow flex-col gap-2 overflow-hidden">
 			<Transition :name="`slide-form-${slideFormDirection}`">
 				<div v-if="current === 1" class="available-list grow overflow-hidden">
-					<n-scrollbar style="max-height: 355px" trigger="none">
+					<n-scrollbar class="max-h-100" trigger="none">
 						<NetworkConnectorsList
 							v-model:selected="selectedNetworkConnector"
 							embedded
 							hide-totals
 							selectable
 							:disabled-ids-list
-							class="px-7"
+							class="pr-4"
 						/>
 					</n-scrollbar>
 				</div>
-				<div v-else class="auth-key-form flex flex-wrap gap-3 px-7">
+				<div v-else class="auth-key-form flex flex-wrap gap-3">
 					<template v-for="ak of authKeysForm" :key="ak.key">
 						<n-form-item v-if="ak.type === 'string'" :label="ak.key" required class="grow">
 							<n-input v-model:value="ak.value" :placeholder="`Input ${ak.key}...`" clearable />
@@ -48,7 +48,7 @@
 			</Transition>
 		</div>
 
-		<div class="flex justify-between gap-4 px-7 pb-4">
+		<div class="flex justify-between gap-4">
 			<div class="flex gap-4">
 				<n-button @click="close()">Close</n-button>
 			</div>
