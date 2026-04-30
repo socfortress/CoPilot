@@ -1,7 +1,8 @@
 <template>
 	<div class="customer-ai-triggers flex flex-col gap-4">
 		<transition name="form-fade" mode="out-in">
-			<div v-if="showForm">
+			<div v-if="showForm" class="flex flex-col gap-4">
+				<h4>Create an AI Trigger</h4>
 				<CustomerAITriggersForm :customer-code @mounted="formCTX = $event" @submitted="refreshList()">
 					<template #additionalActions="{ loading: loadingForm }">
 						<n-button :disabled="loadingForm" @click="closeForm()">Close</n-button>
