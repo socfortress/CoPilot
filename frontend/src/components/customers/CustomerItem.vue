@@ -137,7 +137,7 @@
 			v-model:show="showDetails"
 			preset="card"
 			content-class="p-0!"
-			:style="{ maxWidth: 'min(1100px, 90vw)', minHeight: 'min(450px, 90vh)', overflow: 'hidden' }"
+			:style="{ maxWidth: 'min(1100px, 90vw)', minHeight: 'min(470px, 90vh)', overflow: 'hidden' }"
 			:title="customerInfo?.customer_name"
 			:bordered="false"
 			segmented
@@ -150,6 +150,7 @@
 						:tabs-padding="24"
 						class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-99"
 						placement="left"
+						:pane-style="{ minHeight: 'min(450px, 90vh)' }"
 					>
 						<n-tab-pane name="Info" tab="Info" display-directive="show:lazy" class="p-4!">
 							<CustomerInfo
@@ -225,40 +226,43 @@
 						:tabs-padding="24"
 						class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-99"
 						placement="left"
+						:pane-style="{ minHeight: 'min(450px, 90vh)' }"
 					>
-						<n-tab-pane name="Agents" tab="Agents" display-directive="show:lazy">
-							<n-scrollbar style="max-height: 470px" trigger="none">
-								<div class="p-6 pt-2">
-									<CustomerAgents v-if="customerInfo" :customer="customerInfo" />
-								</div>
+						<n-tab-pane name="Agents" tab="Agents" display-directive="show" class="p-4! pr-0!">
+							<n-scrollbar style="max-height: 470px" trigger="none" class="pr-4">
+								<CustomerAgents v-if="customerInfo" :customer="customerInfo" />
 							</n-scrollbar>
 						</n-tab-pane>
-						<n-tab-pane name="Healthcheck Wazuh" tab="Healthcheck Wazuh" display-directive="show:lazy">
-							<n-scrollbar style="max-height: 470px" trigger="none">
-								<div class="p-6 pt-2">
-									<CustomerHealthcheckList
-										v-model:filters="healthcheckFilters"
-										source="wazuh"
-										:customer-code="customer.customer_code"
-									/>
-								</div>
+						<n-tab-pane
+							name="Healthcheck Wazuh"
+							tab="Healthcheck Wazuh"
+							display-directive="show:lazy"
+							class="p-4! pr-0!"
+						>
+							<n-scrollbar style="max-height: 470px" trigger="none" class="pr-4">
+								<CustomerHealthcheckList
+									v-model:filters="healthcheckFilters"
+									source="wazuh"
+									:customer-code="customer.customer_code"
+								/>
 							</n-scrollbar>
 						</n-tab-pane>
 						<n-tab-pane
 							name="Healthcheck Velociraptor"
 							tab="Healthcheck Velociraptor"
 							display-directive="show:lazy"
+							class="p-4! pr-0!"
 						>
-							<n-scrollbar style="max-height: 470px" trigger="none">
-								<div class="p-6 pt-2">
-									<CustomerHealthcheckList
-										v-model:filters="healthcheckFilters"
-										source="velociraptor"
-										:customer-code="customer.customer_code"
-									/>
-								</div>
+							<n-scrollbar style="max-height: 470px" trigger="none" class="pr-4">
+								<CustomerHealthcheckList
+									v-model:filters="healthcheckFilters"
+									source="velociraptor"
+									:customer-code="customer.customer_code"
+								/>
 							</n-scrollbar>
 						</n-tab-pane>
+
+						<template #suffix><div class="h-4 w-full"></div></template>
 					</n-tabs>
 				</n-tab-pane>
 
