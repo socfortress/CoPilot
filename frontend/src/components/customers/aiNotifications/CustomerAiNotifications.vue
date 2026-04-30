@@ -1,14 +1,19 @@
 <template>
 	<div class="customer-ai-notifications">
-		<n-tabs type="line" animated :tabs-padding="24">
-			<n-tab-pane name="routes" tab="Routes" display-directive="show:lazy">
-				<CustomerAiNotificationRoutes :customer-code="customerCode" />
+		<n-tabs type="segment" animated tab-class="px-4! py-1!" class="[&_.n-tabs-nav]:mx-auto">
+			<n-tab-pane name="routes" tab="Routes" display-directive="show:lazy" class="pt-4!">
+				<CustomerAiNotificationRoutes :customer-code />
 			</n-tab-pane>
-			<n-tab-pane name="shuffle_integrations" tab="Shuffle integrations" display-directive="show:lazy">
-				<CustomerShuffleIntegrations :customer-code="customerCode" />
+			<n-tab-pane
+				name="shuffle_integrations"
+				tab="Shuffle integrations"
+				display-directive="show:lazy"
+				class="pt-4!"
+			>
+				<CustomerShuffleIntegrations :customer-code />
 			</n-tab-pane>
-			<n-tab-pane name="dispatch_log" tab="Dispatch log" display-directive="show:lazy">
-				<CustomerAiNotificationDispatchLog :customer-code="customerCode" />
+			<n-tab-pane name="dispatch_log" tab="Dispatch log" display-directive="show:lazy" class="pt-4!">
+				<CustomerAiNotificationDispatchLog :customer-code />
 			</n-tab-pane>
 		</n-tabs>
 	</div>
