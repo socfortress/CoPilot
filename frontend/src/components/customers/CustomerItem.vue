@@ -137,62 +137,91 @@
 			v-model:show="showDetails"
 			preset="card"
 			content-class="p-0!"
-			:style="{ maxWidth: 'min(1100px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
+			:style="{ maxWidth: 'min(1100px, 90vw)', minHeight: 'min(450px, 90vh)', overflow: 'hidden' }"
 			:title="customerInfo?.customer_name"
 			:bordered="false"
 			segmented
 		>
 			<Transition :name="`slide-tabs-${selectedTabsGroup === 'customer' ? 'left' : 'right'}`">
 				<n-tabs v-if="selectedTabsGroup === 'customer'" type="line" animated :tabs-padding="24" class="h-full">
-					<n-tab-pane name="Info" tab="Info" display-directive="show:lazy">
-						<CustomerInfo
-							v-if="customerInfo"
-							v-model:loading="loadingDelete"
-							:customer="customerInfo"
-							@delete="deletedItem()"
-							@submitted="customerInfo = $event"
-						/>
-					</n-tab-pane>
-					<n-tab-pane name="Provision" tab="Provision" display-directive="show:lazy">
-						<CustomerProvision
-							:customer-meta
-							:customer-code="customer.customer_code"
-							:customer-name="customer.customer_name"
-							@delete="customerMeta = null"
-							@submitted="customerMeta = $event"
-						/>
-					</n-tab-pane>
-					<n-tab-pane
-						name="3rd Party Integrations"
-						tab="3rd Party Integrations"
-						display-directive="show:lazy"
-					>
-						<CustomerIntegrations
-							:customer-code="customer.customer_code"
-							:customer-name="customer.customer_name"
-						/>
-					</n-tab-pane>
-					<n-tab-pane name="Network Connectors" tab="Network Connectors" display-directive="show:lazy">
-						<CustomerNetworkConnectors
-							:customer-code="customer.customer_code"
-							:customer-name="customer.customer_name"
-						/>
-					</n-tab-pane>
-					<n-tab-pane
-						name="Notification Workflows"
-						tab="Notification Workflows"
-						display-directive="show:lazy"
-					>
-						<CustomerNotificationsWorkflows :customer-code="customer.customer_code" />
-					</n-tab-pane>
-					<n-tab-pane name="AI Triggers" tab="AI Triggers" display-directive="show:lazy">
-						<CustomerAITriggers :customer-code="customer.customer_code" />
-					</n-tab-pane>
-					<n-tab-pane name="AI Notifications" tab="AI Notifications" display-directive="show:lazy">
-						<CustomerAiNotifications :customer-code="customer.customer_code" />
-					</n-tab-pane>
-					<n-tab-pane name="Event Sources" tab="Event Sources" display-directive="show:lazy">
-						<CustomerEventSources :customer-code="customer.customer_code" />
+					<n-tab-pane name="Customer" tab="Customer" display-directive="show" class="pt-0!">
+						<n-tabs
+							type="line"
+							animated
+							:tabs-padding="24"
+							class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-99"
+							placement="left"
+						>
+							<n-tab-pane name="Info" tab="Info" display-directive="show:lazy" class="p-4!">
+								<CustomerInfo
+									v-if="customerInfo"
+									v-model:loading="loadingDelete"
+									:customer="customerInfo"
+									@delete="deletedItem()"
+									@submitted="customerInfo = $event"
+								/>
+							</n-tab-pane>
+							<n-tab-pane name="Provision" tab="Provision" display-directive="show:lazy" class="p-4!">
+								<CustomerProvision
+									:customer-meta
+									:customer-code="customer.customer_code"
+									:customer-name="customer.customer_name"
+									@delete="customerMeta = null"
+									@submitted="customerMeta = $event"
+								/>
+							</n-tab-pane>
+							<n-tab-pane
+								name="3rd Party Integrations"
+								tab="3rd Party Integrations"
+								display-directive="show:lazy"
+								class="p-4!"
+							>
+								<CustomerIntegrations
+									:customer-code="customer.customer_code"
+									:customer-name="customer.customer_name"
+								/>
+							</n-tab-pane>
+							<n-tab-pane
+								name="Network Connectors"
+								tab="Network Connectors"
+								display-directive="show:lazy"
+								class="p-4!"
+							>
+								<CustomerNetworkConnectors
+									:customer-code="customer.customer_code"
+									:customer-name="customer.customer_name"
+								/>
+							</n-tab-pane>
+							<n-tab-pane
+								name="Notification Workflows"
+								tab="Notification Workflows"
+								display-directive="show:lazy"
+								class="p-4!"
+							>
+								<CustomerNotificationsWorkflows :customer-code="customer.customer_code" />
+							</n-tab-pane>
+							<n-tab-pane name="AI Triggers" tab="AI Triggers" display-directive="show:lazy" class="p-4!">
+								<CustomerAITriggers :customer-code="customer.customer_code" />
+							</n-tab-pane>
+							<n-tab-pane
+								name="AI Notifications"
+								tab="AI Notifications"
+								display-directive="show:lazy"
+								class="p-4!"
+							>
+								<CustomerAiNotifications :customer-code="customer.customer_code" />
+							</n-tab-pane>
+							<n-tab-pane
+								name="Event Sources"
+								tab="Event Sources"
+								display-directive="show:lazy"
+								class="p-4!"
+							>
+								<CustomerEventSources :customer-code="customer.customer_code" />
+							</n-tab-pane>
+
+							<template #suffix><div class="h-4 w-full"></div></template>
+						</n-tabs>
 					</n-tab-pane>
 
 					<template #suffix>
@@ -211,6 +240,7 @@
 						</div>
 					</template>
 				</n-tabs>
+
 				<n-tabs v-else-if="selectedTabsGroup === 'agents'" type="line" animated :tabs-padding="24">
 					<template #prefix>
 						<div
@@ -307,9 +337,7 @@ const CustomerNotificationsWorkflows = defineAsyncComponent(
 	() => import("./notifications/CustomerNotificationsWorkflows.vue")
 )
 const CustomerAITriggers = defineAsyncComponent(() => import("./aiTriggers/CustomerAITriggers.vue"))
-const CustomerAiNotifications = defineAsyncComponent(
-	() => import("./aiNotifications/CustomerAiNotifications.vue")
-)
+const CustomerAiNotifications = defineAsyncComponent(() => import("./aiNotifications/CustomerAiNotifications.vue"))
 const CustomerEventSources = defineAsyncComponent(() => import("./eventSources/CustomerEventSources.vue"))
 const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWorker.vue"))
 
