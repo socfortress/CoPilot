@@ -1,17 +1,17 @@
 <template>
-	<div class="customer-ai-triggers">
+	<div class="customer-ai-triggers flex flex-col gap-4">
 		<transition name="form-fade" mode="out-in">
-			<div v-if="showForm" class="p-7 pt-4">
+			<div v-if="showForm">
 				<CustomerAITriggersForm :customer-code @mounted="formCTX = $event" @submitted="refreshList()">
 					<template #additionalActions="{ loading: loadingForm }">
 						<n-button :disabled="loadingForm" @click="closeForm()">Close</n-button>
 					</template>
 				</CustomerAITriggersForm>
 			</div>
-			<div v-else>
+			<div v-else class="flex flex-col gap-4">
 				<n-spin :show="loading" class="min-h-48">
 					<template v-if="list.length">
-						<div class="min-h-52 p-7 pt-4">
+						<div class="min-h-52">
 							<CustomerAITriggersItem
 								v-for="item of list"
 								:key="item.id"
