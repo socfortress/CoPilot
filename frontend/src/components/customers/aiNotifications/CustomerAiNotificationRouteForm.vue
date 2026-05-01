@@ -6,12 +6,12 @@
 
 		<n-form-item label="Minimum severity" path="min_severity">
 			<n-select v-model:value="form.min_severity" :options="severityOptions" />
-			<template #feedback>
+			<template v-if="!fieldErrors.min_severity" #feedback>
 				<span class="text-tertiary text-xs">
-					Route fires when the investigation's severity is at this tier or
-					higher. The route is hard-bound to the
-					<code>investigation_complete</code> event — every Talon-driven
-					investigation runs through these filters.
+					Route fires when the investigation's severity is at this tier or higher. The route is hard-bound to
+					the
+					<code>investigation_complete</code>
+					event — every Talon-driven investigation runs through these filters.
 				</span>
 			</template>
 		</n-form-item>
@@ -23,7 +23,7 @@
 				to="body"
 				@update:value="onChannelChange"
 			/>
-			<template #feedback>
+			<template v-if="!fieldErrors.channel" #feedback>
 				Email is direct SMTP via CoPilot's deployment config. Shuffle proxies to 3,000+ integrations through a
 				customer's authenticated Shuffle org.
 			</template>
@@ -44,7 +44,10 @@
 					:loading="loadingIntegrations"
 					@update:value="onIntegrationChange"
 				/>
-				<template v-if="!integrationOptions.length && !loadingIntegrations" #feedback>
+				<template
+					v-if="!fieldErrors.shuffle_integration_id && !integrationOptions.length && !loadingIntegrations"
+					#feedback
+				>
 					No Shuffle integrations configured for this customer yet — go to the
 					<strong>Shuffle integrations</strong>
 					tab to add one first.
@@ -62,7 +65,13 @@
 					@update:value="onAppChange"
 				/>
 				<template
-					v-if="form.shuffle_integration_id && !appOptions.length && !loadingApps && appsError"
+					v-if="
+						!fieldErrors.shuffle_app_id
+							&& form.shuffle_integration_id
+							&& !appOptions.length
+							&& !loadingApps
+							&& appsError
+					"
 					#feedback
 				>
 					Couldn't fetch apps from Shuffle: {{ appsError }}
@@ -75,7 +84,7 @@
 					placeholder="e.g. #soc-alerts, soc@example.com, @user-id"
 					type="text"
 				/>
-				<template #feedback>
+				<template v-if="!fieldErrors.destination" #feedback>
 					Free-form — gets prepended to the outgoing message as a
 					<code>Send to &lt;destination&gt;: …</code>
 					hint so the Shuffle app agent knows where to deliver. Channel name for Slack, email for Outlook,
@@ -137,6 +146,9 @@ const formRef = ref<FormInst | null>(null)
 const submitting = ref(false)
 
 const editing = computed(() => props.editingRoute !== null)
+type FeedbackField = "channel" | "destination" | "min_severity" | "shuffle_app_id" | "shuffle_integration_id"
+
+const fieldErrors = reactive<Partial<Record<FeedbackField, string>>>({})
 
 const form = reactive<NotificationRoutePayload>({
 	name: props.editingRoute?.name ?? "",
@@ -194,6 +206,15 @@ const appOptions = computed(() =>
 	}))
 )
 
+function clearFieldError(field: FeedbackField) {
+	delete fieldErrors[field]
+}
+
+function createFieldError(field: FeedbackField, message: string) {
+	fieldErrors[field] = message
+	return new Error(message)
+}
+
 async function loadIntegrations() {
 	loadingIntegrations.value = true
 	try {
@@ -239,6 +260,9 @@ function onChannelChange(value: NotificationChannel) {
 		// Shuffle channel hint.
 		if (!editing.value) form.destination = ""
 	}
+	clearFieldError("destination")
+	clearFieldError("shuffle_integration_id")
+	clearFieldError("shuffle_app_id")
 }
 
 async function onIntegrationChange(integrationId: number | null) {
@@ -260,25 +284,40 @@ function onAppChange(appId: string | null) {
 
 const rules: FormRules = {
 	name: { required: true, message: "Name is required", trigger: ["input", "blur"] },
-	channel: { required: true, message: "Pick a channel", trigger: ["change", "blur"] },
-	min_severity: { required: true, message: "Pick a severity threshold", trigger: ["change", "blur"] },
+	channel: {
+		validator: (_rule, value: NotificationChannel | null) => {
+			if (!value) return createFieldError("channel", "Pick a channel")
+			clearFieldError("channel")
+			return true
+		},
+		trigger: ["change", "blur"]
+	},
+	min_severity: {
+		validator: (_rule, value: NotificationSeverity | null) => {
+			if (!value) return createFieldError("min_severity", "Pick a severity threshold")
+			clearFieldError("min_severity")
+			return true
+		},
+		trigger: ["change", "blur"]
+	},
 	destination: {
 		required: true,
 		validator: (_rule, value: string) => {
 			if (!value || !value.trim()) {
 				return form.channel === "smtp_email"
-					? new Error("At least one recipient email required")
-					: new Error("Destination hint is required")
+					? createFieldError("destination", "At least one recipient email required")
+					: createFieldError("destination", "Destination hint is required")
 			}
 			if (form.channel === "smtp_email") {
 				const recipients = value
 					.split(",")
 					.map(s => s.trim())
 					.filter(Boolean)
-				if (!recipients.length) return new Error("At least one recipient email required")
+				if (!recipients.length) return createFieldError("destination", "At least one recipient email required")
 				const bad = recipients.find(r => !r.includes("@"))
-				if (bad) return new Error(`Invalid email: ${bad}`)
+				if (bad) return createFieldError("destination", `Invalid email: ${bad}`)
 			}
+			clearFieldError("destination")
 			return true
 		},
 		trigger: ["input", "blur"]
@@ -286,8 +325,9 @@ const rules: FormRules = {
 	shuffle_integration_id: {
 		validator: (_rule, value: number | null) => {
 			if (form.channel === "shuffle" && !value) {
-				return new Error("Pick a Shuffle integration")
+				return createFieldError("shuffle_integration_id", "Pick a Shuffle integration")
 			}
+			clearFieldError("shuffle_integration_id")
 			return true
 		},
 		trigger: ["change", "blur"]
@@ -295,8 +335,9 @@ const rules: FormRules = {
 	shuffle_app_id: {
 		validator: (_rule, value: string | null) => {
 			if (form.channel === "shuffle" && !value) {
-				return new Error("Pick a Shuffle app")
+				return createFieldError("shuffle_app_id", "Pick a Shuffle app")
 			}
+			clearFieldError("shuffle_app_id")
 			return true
 		},
 		trigger: ["change", "blur"]
