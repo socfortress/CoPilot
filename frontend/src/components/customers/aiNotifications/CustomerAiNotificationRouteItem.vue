@@ -51,10 +51,6 @@
 		<template #default>
 			<div class="flex flex-col gap-2 text-sm">
 				<div class="flex flex-wrap items-center gap-2">
-					<Badge type="splitted" bright>
-						<template #label>Trigger</template>
-						<template #value>{{ triggerLabel }}</template>
-					</Badge>
 					<Badge type="splitted" :color="severityColor">
 						<template #label>Min severity</template>
 						<template #value>{{ route.min_severity }}</template>
@@ -132,12 +128,6 @@ const channelLabel = computed(() => {
 	}
 	return "SMTP email"
 })
-
-const triggerLabel = computed(() =>
-	props.route.trigger === "investigation_complete"
-		? "Every investigation"
-		: "Critical / High only"
-)
 
 const severityColor = computed<"danger" | "warning" | "success">(() => {
 	if (props.route.min_severity === "Critical" || props.route.min_severity === "High") return "danger"

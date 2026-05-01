@@ -25,18 +25,18 @@ from pydantic import validator
 
 
 class NotificationTrigger(str, Enum):
-    """When a route should fire.
+    """What kind of event caused this dispatch.
 
-    `INVESTIGATION_COMPLETE` covers "tell me whenever the AI finishes,
-    regardless of verdict" — useful for low-volume customers who want a
-    receipt for every run. `SEVERITY_CRITICAL_OR_HIGH` is the noisier
-    feed gated by severity for SOC teams that only want to be paged on
-    real findings. More triggers can be added later (true-positive after
-    review, IOC accuracy thresholds, etc.) without a schema change.
+    Currently a single value — `investigation_complete` covers every
+    Talon-driven dispatch (one per investigation that reaches the
+    write-back step). Severity-based filtering lives entirely in the
+    route's `min_severity` field, not here, so the trigger is purely
+    an event-type dimension that grows when we add new dispatch
+    sources (analyst-review hooks, scheduled-sweep findings,
+    IOC-enrichment alerts, etc.).
     """
 
     INVESTIGATION_COMPLETE = "investigation_complete"
-    SEVERITY_CRITICAL_OR_HIGH = "severity_critical_or_high"
 
 
 class NotificationChannel(str, Enum):
@@ -96,6 +96,22 @@ class NotificationRouteBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=128, description="Human label for the rule (e.g. 'SOC team Slack #alerts').")
     trigger: NotificationTrigger
     channel: NotificationChannel
+
+    @validator("trigger", pre=True)
+    def _coerce_legacy_trigger(cls, v):
+        """Coerce legacy `severity_critical_or_high` rows on read.
+
+        Older versions of this schema treated trigger as a severity
+        filter; routes saved against that schema have a stale value
+        the new enum no longer accepts. Pydantic validates BEFORE the
+        enum check when `pre=True`, so we rewrite the legacy value to
+        the new event-type value here. The dispatch loop has the same
+        backward-compat in `_trigger_applies` for the route-side
+        comparison; this is the read-API equivalent.
+        """
+        if v == "severity_critical_or_high":
+            return NotificationTrigger.INVESTIGATION_COMPLETE.value
+        return v
     # For SMTP: comma-separated recipient emails. For Shuffle: free-form
     # destination hint (e.g. '#soc-alerts', 'ir@corp.com') that gets
     # injected into Shuffle's natural-language input — Shuffle's app

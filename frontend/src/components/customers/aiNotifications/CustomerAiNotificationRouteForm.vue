@@ -4,15 +4,17 @@
 			<n-input v-model:value="form.name" placeholder="e.g. SOC team Slack #alerts" :maxlength="128" show-count />
 		</n-form-item>
 
-		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-			<n-form-item label="Trigger" path="trigger">
-				<n-select v-model:value="form.trigger" :options="triggerOptions" to="body" />
-			</n-form-item>
-
-			<n-form-item label="Minimum severity" path="min_severity">
-				<n-select v-model:value="form.min_severity" :options="severityOptions" to="body" />
-			</n-form-item>
-		</div>
+		<n-form-item label="Minimum severity" path="min_severity">
+			<n-select v-model:value="form.min_severity" :options="severityOptions" />
+			<template #feedback>
+				<span class="text-tertiary text-xs">
+					Route fires when the investigation's severity is at this tier or
+					higher. The route is hard-bound to the
+					<code>investigation_complete</code> event — every Talon-driven
+					investigation runs through these filters.
+				</span>
+			</template>
+		</n-form-item>
 
 		<n-form-item label="Channel" path="channel">
 			<n-select
@@ -149,10 +151,10 @@ const form = reactive<NotificationRoutePayload>({
 	shuffle_app_name: props.editingRoute?.shuffle_app_name ?? null
 })
 
-const triggerOptions = [
-	{ label: "Every investigation completes", value: "investigation_complete" },
-	{ label: "Critical / High severity only", value: "severity_critical_or_high" }
-]
+// Trigger is a single fixed value today (`investigation_complete`).
+// Hidden from the UI — set programmatically on the form. Will become
+// a select again when we add more dispatch event types (analyst-review
+// hooks, IOC-enrichment alerts, scheduled-sweep findings).
 
 const channelOptions = [
 	{ label: "Email (SMTP)", value: "smtp_email" },
@@ -258,7 +260,6 @@ function onAppChange(appId: string | null) {
 
 const rules: FormRules = {
 	name: { required: true, message: "Name is required", trigger: ["input", "blur"] },
-	trigger: { required: true, message: "Pick a trigger", trigger: ["change", "blur"] },
 	channel: { required: true, message: "Pick a channel", trigger: ["change", "blur"] },
 	min_severity: { required: true, message: "Pick a severity threshold", trigger: ["change", "blur"] },
 	destination: {
