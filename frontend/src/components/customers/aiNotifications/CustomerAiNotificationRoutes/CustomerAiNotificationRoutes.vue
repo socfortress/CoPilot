@@ -2,7 +2,7 @@
 	<div class="customer-ai-notification-routes flex flex-col gap-4">
 		<transition name="fade" mode="out-in">
 			<div v-if="showForm" class="flex flex-col gap-4">
-				<h4>Create a notification route</h4>
+				<h4>{{ editingRoute ? `Edit ${editingRoute.name}` : "Create a notification route" }}</h4>
 				<CustomerAiNotificationRouteForm
 					:customer-code
 					:editing-route

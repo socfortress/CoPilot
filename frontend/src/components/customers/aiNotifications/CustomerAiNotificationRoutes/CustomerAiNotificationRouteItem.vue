@@ -50,39 +50,48 @@
 		</template>
 
 		<template #footerMain>
-			<div class="text-tertiary flex items-center gap-3 text-xs">
-				<span>{{ route.dispatch_count }} dispatch(es)</span>
-				<span>·</span>
-				<span v-if="route.last_dispatched_at">
-					last fired {{ formatDate(route.last_dispatched_at, "MMM D, YYYY HH:mm") }}
-				</span>
-				<span v-else>never fired</span>
-				<span v-if="route.created_by">· created by {{ route.created_by }}</span>
+			<div class="flex flex-wrap items-center gap-2">
+				<Badge type="splitted">
+					<template #label>dispatch</template>
+					<template #value>{{ route.dispatch_count }}</template>
+				</Badge>
+
+				<Badge type="splitted">
+					<template #label>fired</template>
+					<template v-if="route.last_dispatched_at" #value>
+						{{ formatDate(route.last_dispatched_at, dFormats.datetime) }}
+					</template>
+					<template v-else #value>never fired</template>
+				</Badge>
+
+				<Badge v-if="route.created_by" type="splitted">
+					<template #label>owner</template>
+					<template #value>{{ route.created_by }}</template>
+				</Badge>
 			</div>
 		</template>
 
 		<template #footerExtra>
-			<n-tooltip>
-				<template #trigger>
-					<n-button size="tiny" quaternary circle @click="$emit('edit')">
-						<template #icon>
-							<Icon :name="EditIcon" :size="14" />
-						</template>
-					</n-button>
-				</template>
-				Edit
-			</n-tooltip>
+			<div class="flex items-center justify-end gap-2">
+				<n-button size="tiny" quaternary @click="$emit('edit')">
+					<template #icon>
+						<Icon :name="EditIcon" :size="14" />
+					</template>
+					Edit
+				</n-button>
 
-			<n-popconfirm @positive-click="confirmDelete">
-				<template #trigger>
-					<n-button size="tiny" quaternary circle :loading="loadingDelete">
-						<template #icon>
-							<Icon :name="DeleteIcon" :size="14" />
-						</template>
-					</n-button>
-				</template>
-				Delete this route? Dispatch log entries will be retained.
-			</n-popconfirm>
+				<n-popconfirm to="body" @positive-click="confirmDelete">
+					<template #trigger>
+						<n-button size="tiny" quaternary :loading="loadingDelete">
+							<template #icon>
+								<Icon :name="DeleteIcon" :size="14" />
+							</template>
+							Delete
+						</n-button>
+					</template>
+					Delete this route? Dispatch log entries will be retained.
+				</n-popconfirm>
+			</div>
 		</template>
 	</CardEntity>
 </template>
@@ -97,6 +106,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
@@ -118,6 +128,7 @@ const PlayIcon = "carbon:play"
 const loadingToggle = ref(false)
 const loadingDelete = ref(false)
 const message = useMessage()
+const dFormats = useSettingsStore().dateFormat
 
 // Channel icon + label. Shuffle routes show the underlying app name
 // (cached on the route row at form-submit time, so we don't have to
