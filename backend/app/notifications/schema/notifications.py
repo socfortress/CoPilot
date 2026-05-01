@@ -25,18 +25,18 @@ from pydantic import validator
 
 
 class NotificationTrigger(str, Enum):
-    """When a route should fire.
+    """What kind of event caused this dispatch.
 
-    `INVESTIGATION_COMPLETE` covers "tell me whenever the AI finishes,
-    regardless of verdict" — useful for low-volume customers who want a
-    receipt for every run. `SEVERITY_CRITICAL_OR_HIGH` is the noisier
-    feed gated by severity for SOC teams that only want to be paged on
-    real findings. More triggers can be added later (true-positive after
-    review, IOC accuracy thresholds, etc.) without a schema change.
+    Currently a single value — `investigation_complete` covers every
+    Talon-driven dispatch (one per investigation that reaches the
+    write-back step). Severity-based filtering lives entirely in the
+    route's `min_severity` field, not here, so the trigger is purely
+    an event-type dimension that grows when we add new dispatch
+    sources (analyst-review hooks, scheduled-sweep findings,
+    IOC-enrichment alerts, etc.).
     """
 
     INVESTIGATION_COMPLETE = "investigation_complete"
-    SEVERITY_CRITICAL_OR_HIGH = "severity_critical_or_high"
 
 
 class NotificationChannel(str, Enum):

@@ -445,18 +445,24 @@ def _severity_meets(report_severity: str, route_min: str) -> bool:
         return False
 
 
-def _trigger_applies(report_trigger: str, route_trigger: str, severity: str) -> bool:
-    """Decide whether a route's trigger matches the dispatch.
+def _trigger_applies(report_trigger: str, route_trigger: str) -> bool:
+    """Decide whether a route's trigger matches the dispatch event type.
 
-    `investigation_complete` always matches (it's the catch-all).
-    `severity_critical_or_high` only matches when the report severity
-    is Critical or High.
+    Triggers represent the kind of event that caused the dispatch
+    (currently only `investigation_complete`, with more event types
+    arriving as we add hooks for analyst review / IOC enrichment /
+    scheduled sweeps). Severity filtering lives in `min_severity`,
+    not here — this function is purely an event-type equality check.
+
+    Routes with stale `severity_critical_or_high` values from earlier
+    schemas are treated as `investigation_complete` so they keep
+    firing instead of being silently filtered out.
     """
-    if route_trigger != report_trigger:
-        return False
-    if route_trigger == NotificationTrigger.SEVERITY_CRITICAL_OR_HIGH.value:
-        return severity in ("Critical", "High")
-    return True
+    if route_trigger == "severity_critical_or_high":
+        # Backward compat: legacy enum value, treat as the catch-all
+        # event type so existing routes don't go dark on upgrade.
+        return report_trigger == NotificationTrigger.INVESTIGATION_COMPLETE.value
+    return route_trigger == report_trigger
 
 
 def _format_default_body(req: DispatchRequest) -> str:
@@ -612,7 +618,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
         r
         for r in routes
         if r.enabled
-        and _trigger_applies(req.trigger.value, r.trigger, req.severity_assessment.value)
+        and _trigger_applies(req.trigger.value, r.trigger)
         and _severity_meets(req.severity_assessment.value, r.min_severity)
     ]
 
