@@ -28,8 +28,8 @@
 //   - Dispatch log: read-only audit trail of every dispatch attempt
 import { NTabPane, NTabs } from "naive-ui"
 import CustomerAiNotificationDispatchLog from "./CustomerAiNotificationDispatchLog.vue"
-import CustomerAiNotificationRoutes from "./CustomerAiNotificationRoutes.vue"
-import CustomerShuffleIntegrations from "./CustomerShuffleIntegrations.vue"
+import CustomerAiNotificationRoutes from "./CustomerAiNotificationRoutes/CustomerAiNotificationRoutes.vue"
+import CustomerShuffleIntegrations from "./CustomerShuffleIntegrations/CustomerShuffleIntegrations.vue"
 
 defineProps<{
 	customerCode: string
