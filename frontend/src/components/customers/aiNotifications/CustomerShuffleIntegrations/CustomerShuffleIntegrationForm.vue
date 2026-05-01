@@ -31,12 +31,13 @@
 					Don't see your org? Enter the ID manually
 				</n-checkbox>
 
-				<n-input
-					v-if="manualEntry"
-					v-model:value="form.shuffle_org_id"
-					placeholder="6b6f65a4-d8f8-48ef-b02f-23a4a5f73e4a"
-					:maxlength="64"
-				/>
+				<n-collapse-transition :show="manualEntry">
+					<n-input
+						v-model:value="form.shuffle_org_id"
+						placeholder="6b6f65a4-d8f8-48ef-b02f-23a4a5f73e4a"
+						:maxlength="64"
+					/>
+				</n-collapse-transition>
 			</div>
 			<template v-if="!fieldErrors.shuffle_org_id" #feedback>
 				Sent as the
@@ -62,7 +63,7 @@
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { ShuffleIntegration, ShuffleIntegrationPayload, ShuffleOrg } from "@/types/notifications.d"
-import { NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
+import { NButton, NCheckbox, NCollapseTransition, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
