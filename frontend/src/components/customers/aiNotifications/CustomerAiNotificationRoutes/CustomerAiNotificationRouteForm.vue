@@ -66,11 +66,11 @@
 				/>
 				<template
 					v-if="
-						!fieldErrors.shuffle_app_id
-							&& form.shuffle_integration_id
-							&& !appOptions.length
-							&& !loadingApps
-							&& appsError
+						!fieldErrors.shuffle_app_id &&
+						form.shuffle_integration_id &&
+						!appOptions.length &&
+						!loadingApps &&
+						appsError
 					"
 					#feedback
 				>

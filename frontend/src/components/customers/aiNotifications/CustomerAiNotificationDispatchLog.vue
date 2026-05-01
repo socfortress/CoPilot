@@ -22,7 +22,7 @@
 
 				<n-data-table
 					v-else-if="entries.length"
-					:columns="columns"
+					:columns
 					:data="entries"
 					size="small"
 					:bordered="false"
@@ -34,8 +34,8 @@
 </template>
 
 <script setup lang="ts">
-import type { NotificationDispatchLogEntry as DispatchLogEntry } from "@/types/notifications.d"
 import type { DataTableColumns } from "naive-ui"
+import type { NotificationDispatchLogEntry as DispatchLogEntry } from "@/types/notifications.d"
 import { NButton, NDataTable, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
@@ -78,8 +78,7 @@ const columns = computed<DataTableColumns<DispatchLogEntry>>(() => [
 		title: "Trigger",
 		key: "trigger",
 		width: 220,
-		render: row =>
-			row.trigger === "investigation_complete" ? "Every investigation" : "Critical / High only"
+		render: row => (row.trigger === "investigation_complete" ? "Every investigation" : "Critical / High only")
 	},
 	{
 		title: "Status",

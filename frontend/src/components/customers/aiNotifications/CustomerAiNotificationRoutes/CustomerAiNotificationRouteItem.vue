@@ -100,7 +100,7 @@
 import type { ApiError } from "@/types/common"
 import type { NotificationRoute } from "@/types/notifications.d"
 import _split from "lodash/split"
-import { NButton, NPopconfirm, NTooltip, useMessage } from "naive-ui"
+import { NButton, NPopconfirm, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"

@@ -1,3 +1,4 @@
+import type { FlaskBaseResponse } from "@/types/flask.d"
 import type {
 	NotificationDispatchLogEntry,
 	NotificationRoute,
@@ -10,7 +11,6 @@ import type {
 	ShuffleOrg,
 	ShuffleVerifyResult
 } from "@/types/notifications.d"
-import type { FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 
 // Per-customer notification routing — wraps app/notifications/routes/notifications.py.
@@ -39,9 +39,7 @@ export default {
 	},
 
 	deleteRoute(customerCode: string, routeId: number) {
-		return HttpClient.delete<FlaskBaseResponse>(
-			`/customers/${customerCode}/notification_routes/${routeId}`
-		)
+		return HttpClient.delete<FlaskBaseResponse>(`/customers/${customerCode}/notification_routes/${routeId}`)
 	},
 
 	listDispatchLog(customerCode: string) {
@@ -65,11 +63,7 @@ export default {
 		)
 	},
 
-	updateShuffleIntegration(
-		customerCode: string,
-		integrationId: number,
-		payload: ShuffleIntegrationUpdatePayload
-	) {
+	updateShuffleIntegration(customerCode: string, integrationId: number, payload: ShuffleIntegrationUpdatePayload) {
 		return HttpClient.patch<FlaskBaseResponse & { integration: ShuffleIntegration }>(
 			`/customers/${customerCode}/shuffle_integrations/${integrationId}`,
 			payload
@@ -77,9 +71,7 @@ export default {
 	},
 
 	deleteShuffleIntegration(customerCode: string, integrationId: number) {
-		return HttpClient.delete<FlaskBaseResponse>(
-			`/customers/${customerCode}/shuffle_integrations/${integrationId}`
-		)
+		return HttpClient.delete<FlaskBaseResponse>(`/customers/${customerCode}/shuffle_integrations/${integrationId}`)
 	},
 
 	listShuffleApps(customerCode: string, integrationId: number) {
@@ -98,8 +90,6 @@ export default {
 	// dropdown picker. Not customer-scoped; the admin Bearer (Shuffle
 	// connector) has access to every org we can attach.
 	listShuffleOrgs() {
-		return HttpClient.get<FlaskBaseResponse & { orgs: ShuffleOrg[] }>(
-			`/notifications/shuffle/orgs`
-		)
+		return HttpClient.get<FlaskBaseResponse & { orgs: ShuffleOrg[] }>(`/notifications/shuffle/orgs`)
 	}
 }
