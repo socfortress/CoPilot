@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-col gap-2">
+	<div class="page page-wrapped page-without-footer flex flex-col gap-2 overflow-hidden">
 		<n-select
 			v-model:value="selectedOrganization"
 			:options="organizationsOptions"
@@ -8,12 +8,18 @@
 			placeholder="Select an Organization..."
 		/>
 
-		<n-spin v-if="selectedOrganization" :show="loadingToken" :size="14">
+		<n-spin
+			v-if="selectedOrganization"
+			:show="loadingToken"
+			class="flex grow flex-col overflow-hidden"
+			content-class="h-full"
+		>
 			<ShuffleMCPEmbed
 				v-if="organization?.org_auth?.token"
 				:auth-token="organization.org_auth.token"
 				placeholder="Find an app..."
-				:inline="true"
+				inline
+				class="h-full"
 			/>
 		</n-spin>
 	</div>
