@@ -120,6 +120,12 @@ export function getThemeOverrides(state: ThemeState): GlobalThemeOverrides {
 			titleFontSizeHuge: state.fontSize.cardTitle,
 			titleFontWeight: state.fontWeight.cardTitle
 		},
+		Form: {
+			feedbackPadding: "2px",
+			feedbackFontSizeSmall: "10px",
+			feedbackFontSizeMedium: "12px",
+			feedbackFontSizeLarge: "14px"
+		},
 		LoadingBar: {
 			colorLoading: primary
 		},
