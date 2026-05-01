@@ -1,5 +1,5 @@
 <template>
-	<div ref="container" class="shuffle-mcp-embed" />
+	<div ref="container" class="w-full" />
 </template>
 
 <script setup lang="ts">
@@ -15,6 +15,7 @@
 // reacts to live updates (e.g. when the parent swaps the auth token
 // after picking a different Shuffle org).
 
+import type { Root } from "react-dom/client"
 // `@shuffleio/shuffle-mcps/dist/index.js` self-imports its CSS via a
 // hash-suffixed filename (`./singul-GZKBHJNI.css`). The package's own
 // `./singul.css` export entry points at `./dist/singul.css` which
@@ -22,7 +23,7 @@
 // import the CSS here ourselves; importing `ShuffleMCP` pulls it in.
 import { ShuffleMCP } from "@shuffleio/shuffle-mcps"
 import { createElement } from "react"
-import { type Root, createRoot } from "react-dom/client"
+import { createRoot } from "react-dom/client"
 import { onBeforeUnmount, onMounted, ref, watch } from "vue"
 
 interface Props {
@@ -61,6 +62,7 @@ const emit = defineEmits<{
 
 const container = ref<HTMLElement | null>(null)
 let root: Root | null = null
+const EMPTY_SELECTED_APPS: unknown[] = []
 
 function render() {
 	if (!root) return
@@ -77,6 +79,10 @@ function render() {
 		multiSelect: props.multiSelect,
 		showCheckbox: props.showCheckbox,
 		showSourceFilter: props.showSourceFilter,
+		// The package currently defaults `selectedApps` to a fresh `[]`
+		// inside the React component, then mirrors it into state from a
+		// useEffect. Passing a stable array avoids that render loop.
+		selectedApps: EMPTY_SELECTED_APPS,
 		onAppSelected: (payload: unknown) => emit("appSelected", payload),
 		onSelectionChange: (payload: unknown) => emit("selectionChange", payload)
 	}
@@ -109,9 +115,3 @@ onBeforeUnmount(() => {
 	}
 })
 </script>
-
-<style scoped>
-.shuffle-mcp-embed {
-	width: 100%;
-}
-</style>
