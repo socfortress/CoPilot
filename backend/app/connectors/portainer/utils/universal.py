@@ -84,6 +84,7 @@ async def verify_portainer_credentials(attributes: Dict[str, Any]) -> Dict[str, 
             f"{attributes['connector_url']}/api/v1/apps/authentication",
             headers=headers,
             verify=False,
+            timeout=2,
         )
 
         # If API key auth fails, try JWT authentication
@@ -91,7 +92,7 @@ async def verify_portainer_credentials(attributes: Dict[str, Any]) -> Dict[str, 
             auth_endpoint = urljoin(attributes["connector_url"], "/api/auth")
             auth_payload = {"username": attributes["connector_username"], "password": attributes["connector_password"]}
 
-            jwt_response = requests.post(auth_endpoint, json=auth_payload, verify=False)
+            jwt_response = requests.post(auth_endpoint, json=auth_payload, verify=False, timeout=2)
 
             if jwt_response.status_code == 200:
                 jwt_token = jwt_response.json()["jwt"]
