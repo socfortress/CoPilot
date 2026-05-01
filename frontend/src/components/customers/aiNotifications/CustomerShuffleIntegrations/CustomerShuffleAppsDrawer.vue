@@ -5,18 +5,16 @@
 				<div class="flex items-center gap-2">
 					<Icon name="carbon:integration" :size="18" />
 					<span>Shuffle apps</span>
-					<span v-if="integration" class="text-secondary text-sm">
-						· {{ integration.display_name }}
-					</span>
+					<span v-if="integration" class="text-secondary">•</span>
+					<span v-if="integration" class="text-secondary">{{ integration.display_name }}</span>
 				</div>
 			</template>
 
 			<div class="flex flex-col gap-3">
 				<div class="text-secondary text-sm">
-					Browse Shuffle's catalog of 3,000+ integrations and authenticate the
-					ones this org needs. Apps you authenticate here become available in
-					the route form's app picker — Shuffle handles the OAuth flow; CoPilot
-					just stores the resulting Org-Id and references it in routes.
+					Browse Shuffle's catalog of 3,000+ integrations and authenticate the ones this org needs. Apps you
+					authenticate here become available in the route form's app picker — Shuffle handles the OAuth flow;
+					CoPilot just stores the resulting Org-Id and references it in routes.
 				</div>
 
 				<div v-if="loadingToken" class="text-tertiary py-6 text-center text-sm">
@@ -31,7 +29,7 @@
 					v-else-if="orgAuthToken"
 					:auth-token="orgAuthToken"
 					placeholder="Find a Shuffle app to authenticate…"
-					:inline="true"
+					inline
 					layout="grid"
 					:grid-columns="3"
 					@app-selected="onAppSelected"
@@ -42,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { ShuffleIntegration } from "@/types/notifications.d"
 import { NDrawer, NDrawerContent, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
@@ -83,6 +82,7 @@ const error = ref<string | null>(null)
 async function loadOrgToken(orgId: string) {
 	loadingToken.value = true
 	error.value = null
+
 	try {
 		const res = await Api.shuffle.getOrganization(orgId)
 		if (res.data.success) {
@@ -94,8 +94,8 @@ async function loadOrgToken(orgId: string) {
 		} else {
 			error.value = res.data.message || "Failed to fetch org auth token"
 		}
-	} catch (err: unknown) {
-		error.value = getApiErrorMessage(err as never) || "Failed to fetch org auth token"
+	} catch (err) {
+		error.value = getApiErrorMessage(err as ApiError) || "Failed to fetch org auth token"
 	} finally {
 		loadingToken.value = false
 	}
@@ -106,8 +106,7 @@ function onAppSelected(payload: unknown) {
 	// time we get this callback, the user has either started or
 	// completed authentication. Surface a confirmation; the new app
 	// will appear in the route form's app picker on next refresh.
-	const name =
-		(payload as { app?: { name?: string } } | undefined)?.app?.name ?? "the selected app"
+	const name = (payload as { app?: { name?: string } } | undefined)?.app?.name ?? "the selected app"
 	message.success(`${name} authentication initiated. Refresh the route form to use it.`)
 }
 
