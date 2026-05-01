@@ -96,6 +96,22 @@ class NotificationRouteBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=128, description="Human label for the rule (e.g. 'SOC team Slack #alerts').")
     trigger: NotificationTrigger
     channel: NotificationChannel
+
+    @validator("trigger", pre=True)
+    def _coerce_legacy_trigger(cls, v):
+        """Coerce legacy `severity_critical_or_high` rows on read.
+
+        Older versions of this schema treated trigger as a severity
+        filter; routes saved against that schema have a stale value
+        the new enum no longer accepts. Pydantic validates BEFORE the
+        enum check when `pre=True`, so we rewrite the legacy value to
+        the new event-type value here. The dispatch loop has the same
+        backward-compat in `_trigger_applies` for the route-side
+        comparison; this is the read-API equivalent.
+        """
+        if v == "severity_critical_or_high":
+            return NotificationTrigger.INVESTIGATION_COMPLETE.value
+        return v
     # For SMTP: comma-separated recipient emails. For Shuffle: free-form
     # destination hint (e.g. '#soc-alerts', 'ir@corp.com') that gets
     # injected into Shuffle's natural-language input — Shuffle's app
