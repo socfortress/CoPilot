@@ -38,7 +38,7 @@
 					:maxlength="64"
 				/>
 			</div>
-			<template #feedback>
+			<template v-if="!fieldErrors.shuffle_org_id" #feedback>
 				Sent as the
 				<code>Org-Id</code>
 				header on every dispatch — scopes the Shuffle call to the right org's authenticated apps.
@@ -65,7 +65,6 @@ import type { ShuffleIntegration, ShuffleIntegrationPayload, ShuffleOrg } from "
 import { NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
@@ -83,6 +82,9 @@ const formRef = ref<FormInst | null>(null)
 const submitting = ref(false)
 
 const editing = computed(() => props.editingIntegration !== null)
+type FeedbackField = "shuffle_org_id"
+
+const fieldErrors = reactive<Partial<Record<FeedbackField, string>>>({})
 
 const form = reactive<ShuffleIntegrationPayload>({
 	display_name: props.editingIntegration?.display_name ?? "",
@@ -111,6 +113,15 @@ const orgOptions = computed(() =>
 		}
 	})
 )
+
+function clearFieldError(field: FeedbackField) {
+	delete fieldErrors[field]
+}
+
+function createFieldError(field: FeedbackField, message: string) {
+	fieldErrors[field] = message
+	return new Error(message)
+}
 
 async function loadOrgs() {
 	if (loadingOrgs.value) return
@@ -147,7 +158,11 @@ const rules: FormRules = {
 	display_name: { required: true, message: "Name is required", trigger: ["input", "blur"] },
 	shuffle_org_id: {
 		required: true,
-		message: "Pick a Shuffle org or enter an Org-Id manually",
+		validator: (_rule, value: string | null) => {
+			if (!value) return createFieldError("shuffle_org_id", "Pick a Shuffle org or enter an Org-Id manually")
+			clearFieldError("shuffle_org_id")
+			return true
+		},
 		trigger: ["input", "change", "blur"]
 	}
 }
