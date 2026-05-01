@@ -8,7 +8,7 @@
 				name="shuffle_integrations"
 				tab="Shuffle integrations"
 				display-directive="show:lazy"
-				class="pt-4!"
+				class="p-0!"
 			>
 				<CustomerShuffleIntegrations :customer-code />
 			</n-tab-pane>
