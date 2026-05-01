@@ -1,95 +1,70 @@
 <template>
-	<n-form
-		ref="formRef"
-		:model="form"
-		:rules="rules"
-		label-placement="top"
-		class="px-7 py-4"
-	>
-		<div class="mb-3 flex items-center justify-between">
-			<h3 class="text-lg font-medium">{{ editing ? "Edit route" : "Add route" }}</h3>
-			<n-button size="small" quaternary @click="$emit('close')">
-				<template #icon>
-					<Icon :name="CloseIcon" :size="14" />
-				</template>
-				Cancel
-			</n-button>
-		</div>
-
+	<n-form ref="formRef" :model="form" :rules label-placement="top">
 		<n-form-item label="Name" path="name">
-			<n-input
-				v-model:value="form.name"
-				placeholder="e.g. SOC team Slack #alerts"
-				:maxlength="128"
-				show-count
-			/>
+			<n-input v-model:value="form.name" placeholder="e.g. SOC team Slack #alerts" :maxlength="128" show-count />
 		</n-form-item>
 
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 			<n-form-item label="Trigger" path="trigger">
-				<n-select v-model:value="form.trigger" :options="triggerOptions" />
+				<n-select v-model:value="form.trigger" :options="triggerOptions" to="body" />
 			</n-form-item>
 
 			<n-form-item label="Minimum severity" path="min_severity">
-				<n-select v-model:value="form.min_severity" :options="severityOptions" />
+				<n-select v-model:value="form.min_severity" :options="severityOptions" to="body" />
 			</n-form-item>
 		</div>
 
 		<n-form-item label="Channel" path="channel">
-			<n-select v-model:value="form.channel" :options="channelOptions" @update:value="onChannelChange" />
+			<n-select
+				v-model:value="form.channel"
+				:options="channelOptions"
+				to="body"
+				@update:value="onChannelChange"
+			/>
 			<template #feedback>
-				<span class="text-tertiary text-xs">
-					Email is direct SMTP via CoPilot's deployment config. Shuffle proxies to
-					3,000+ integrations through a customer's authenticated Shuffle org.
-				</span>
+				Email is direct SMTP via CoPilot's deployment config. Shuffle proxies to 3,000+ integrations through a
+				customer's authenticated Shuffle org.
 			</template>
 		</n-form-item>
 
 		<!-- SMTP-specific: recipient emails -->
 		<n-form-item v-if="form.channel === 'smtp_email'" label="Recipient email(s)" path="destination">
-			<n-input
-				v-model:value="form.destination"
-				placeholder="soc@example.com, ir@example.com"
-				type="text"
-			/>
+			<n-input v-model:value="form.destination" placeholder="soc@example.com, ir@example.com" type="text" />
 		</n-form-item>
 
 		<!-- Shuffle-specific: integration picker, app picker, destination hint -->
 		<template v-if="form.channel === 'shuffle'">
 			<n-form-item label="Shuffle integration" path="shuffle_integration_id">
-				<div class="flex w-full flex-col gap-1">
-					<n-select
-						v-model:value="form.shuffle_integration_id"
-						:options="integrationOptions"
-						placeholder="Pick a Shuffle org for this customer"
-						:loading="loadingIntegrations"
-						@update:value="onIntegrationChange"
-					/>
-					<div v-if="!integrationOptions.length && !loadingIntegrations" class="text-tertiary text-xs">
-						No Shuffle integrations configured for this customer yet — go to the
-						<strong>Shuffle integrations</strong> tab to add one first.
-					</div>
-				</div>
+				<n-select
+					v-model:value="form.shuffle_integration_id"
+					:options="integrationOptions"
+					placeholder="Pick a Shuffle org for this customer"
+					:loading="loadingIntegrations"
+					@update:value="onIntegrationChange"
+				/>
+				<template v-if="!integrationOptions.length && !loadingIntegrations" #feedback>
+					No Shuffle integrations configured for this customer yet — go to the
+					<strong>Shuffle integrations</strong>
+					tab to add one first.
+				</template>
 			</n-form-item>
 
 			<n-form-item label="Shuffle app" path="shuffle_app_id">
-				<div class="flex w-full flex-col gap-1">
-					<n-select
-						v-model:value="form.shuffle_app_id"
-						:options="appOptions"
-						placeholder="Pick an authenticated app"
-						:loading="loadingApps"
-						:disabled="!form.shuffle_integration_id || loadingApps"
-						filterable
-						@update:value="onAppChange"
-					/>
-					<div
-						v-if="form.shuffle_integration_id && !appOptions.length && !loadingApps && appsError"
-						class="text-error text-xs"
-					>
-						Couldn't fetch apps from Shuffle: {{ appsError }}
-					</div>
-				</div>
+				<n-select
+					v-model:value="form.shuffle_app_id"
+					:options="appOptions"
+					placeholder="Pick an authenticated app"
+					:loading="loadingApps"
+					:disabled="!form.shuffle_integration_id || loadingApps"
+					filterable
+					@update:value="onAppChange"
+				/>
+				<template
+					v-if="form.shuffle_integration_id && !appOptions.length && !loadingApps && appsError"
+					#feedback
+				>
+					Couldn't fetch apps from Shuffle: {{ appsError }}
+				</template>
 			</n-form-item>
 
 			<n-form-item label="Destination hint" path="destination">
@@ -99,16 +74,15 @@
 					type="text"
 				/>
 				<template #feedback>
-					<span class="text-tertiary text-xs">
-						Free-form — gets prepended to the outgoing message as a
-						<code>Send to &lt;destination&gt;: …</code> hint so the Shuffle app agent
-						knows where to deliver. Channel name for Slack, email for Outlook, etc.
-					</span>
+					Free-form — gets prepended to the outgoing message as a
+					<code>Send to &lt;destination&gt;: …</code>
+					hint so the Shuffle app agent knows where to deliver. Channel name for Slack, email for Outlook,
+					etc.
 				</template>
 			</n-form-item>
 		</template>
 
-		<n-form-item label="Custom message template (optional)" path="format_template">
+		<n-form-item label="Custom message template (optional)" path="format_template" :show-feedback="false">
 			<n-input
 				v-model:value="form.format_template"
 				type="textarea"
@@ -131,6 +105,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FormInst, FormRules } from "naive-ui"
 import type {
 	NotificationChannel,
 	NotificationRoute,
@@ -140,11 +115,9 @@ import type {
 	ShuffleApp,
 	ShuffleIntegration
 } from "@/types/notifications.d"
-import type { FormInst, FormRules } from "naive-ui"
 import { NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
@@ -156,8 +129,6 @@ const emit = defineEmits<{
 	(e: "submitted"): void
 	(e: "close"): void
 }>()
-
-const CloseIcon = "carbon:close"
 
 const message = useMessage()
 const formRef = ref<FormInst | null>(null)

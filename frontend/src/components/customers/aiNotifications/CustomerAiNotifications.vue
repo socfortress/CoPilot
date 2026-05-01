@@ -1,7 +1,7 @@
 <template>
 	<div class="customer-ai-notifications">
-		<n-tabs type="segment" animated tab-class="px-4! py-1!" class="[&_.n-tabs-nav]:mx-auto">
-			<n-tab-pane name="routes" tab="Routes" display-directive="show:lazy" class="pt-4!">
+		<n-tabs type="segment" animated tab-class="px-4! py-1!" class="[&_.n-tabs-nav]:mx-auto [&_.n-tabs-nav]:mb-6">
+			<n-tab-pane name="routes" tab="Routes" display-directive="show:lazy" class="p-0!">
 				<CustomerAiNotificationRoutes :customer-code />
 			</n-tab-pane>
 			<n-tab-pane

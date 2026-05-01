@@ -1,7 +1,8 @@
 <template>
 	<div class="customer-ai-notification-routes flex flex-col gap-4">
-		<transition name="form-fade" mode="out-in">
-			<div v-if="showForm">
+		<transition name="fade" mode="out-in">
+			<div v-if="showForm" class="flex flex-col gap-4">
+				<h4>Create a notification route</h4>
 				<CustomerAiNotificationRouteForm
 					:customer-code
 					:editing-route
@@ -16,12 +17,6 @@
 							<Icon :name="AddIcon" :size="14" />
 						</template>
 						Add route
-					</n-button>
-					<n-button size="small" :disabled="loading" @click="refreshList()">
-						<template #icon>
-							<Icon :name="RefreshIcon" :size="14" />
-						</template>
-						Refresh
 					</n-button>
 				</div>
 
@@ -67,7 +62,6 @@ const { customerCode } = defineProps<{
 }>()
 
 const AddIcon = "carbon:add-alt"
-const RefreshIcon = "carbon:renew"
 
 const message = useMessage()
 const showForm = ref(false)
@@ -116,3 +110,14 @@ function onFormSubmitted() {
 
 onBeforeMount(refreshList)
 </script>
+
+<style lang="scss" scoped>
+.fade-enter-active,
+.fade-leave-active {
+	transition: opacity 0.2s ease-in-out;
+}
+.fade-enter-from,
+.fade-leave-to {
+	opacity: 0;
+}
+</style>
