@@ -12,7 +12,7 @@
 					@close="closeForm()"
 				/>
 			</div>
-			<div v-else>
+			<div v-else class="flex flex-col gap-4">
 				<div class="flex items-center justify-between gap-4">
 					<n-button size="small" type="primary" @click="openForm()">
 						<template #icon>
@@ -22,13 +22,17 @@
 					</n-button>
 				</div>
 
-				<p class="text-sm">
+				<n-alert
+					title="Shuffle integrations"
+					type="info"
+					class="[&_.n-alert-body\_\_content]:text-sm! [&_.n-alert-body\_\_title]:text-sm!"
+				>
 					Each row is one of this customer's Shuffle organizations. Routes set to the
 					<strong>Shuffle</strong>
 					channel reference one of these to pick the right org for outbound notifications. The deployment-wide
 					Shuffle API key lives in the CoPilot connectors table — these rows just record the per-customer
 					Org-Id.
-				</p>
+				</n-alert>
 
 				<n-spin :show="loading">
 					<div class="min-h-52">
@@ -62,7 +66,7 @@
 
 <script setup lang="ts">
 import type { ShuffleIntegration } from "@/types/notifications.d"
-import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
+import { NAlert, NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
