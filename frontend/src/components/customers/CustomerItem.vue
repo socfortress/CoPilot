@@ -271,7 +271,7 @@
 					name="Wazuh Worker"
 					tab="Wazuh Worker"
 					display-directive="show"
-					class="pt-0!"
+					class="p-4!"
 				>
 					<CustomerWazuhWorker :stack-id="customerPortainerStackId" />
 				</n-tab-pane>
