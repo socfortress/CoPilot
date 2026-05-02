@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="form" :rules label-placement="top">
+	<n-form ref="formRef" :model="form" :rules label-placement="top" class="flex flex-col gap-1">
 		<n-form-item label="Name" path="name">
 			<n-input v-model:value="form.name" placeholder="e.g. SOC team Slack #alerts" :maxlength="128" show-count />
 		</n-form-item>
