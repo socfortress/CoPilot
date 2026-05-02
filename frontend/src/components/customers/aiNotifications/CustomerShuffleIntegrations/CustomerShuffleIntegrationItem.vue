@@ -4,23 +4,54 @@
 			<div class="flex items-center gap-2">
 				<Icon name="carbon:integration" :size="16" />
 				<span class="font-medium">{{ integration.display_name }}</span>
-				<Badge v-if="!integration.enabled" type="splitted" color="warning">
-					<template #label>Status</template>
-					<template #value>Disabled</template>
-				</Badge>
-				<Badge v-if="verifyResult === 'ok'" type="splitted" color="success">
-					<template #label>Probe</template>
-					<template #value>{{ verifyAppCount }} app(s)</template>
-				</Badge>
-				<Badge v-else-if="verifyResult === 'fail'" type="splitted" color="danger">
-					<template #label>Probe</template>
-					<template #value>failed</template>
-				</Badge>
 			</div>
 		</template>
 
 		<template #headerExtra>
-			<div class="flex items-center gap-2">
+			<n-button size="small" secondary :type="integration.enabled ? 'warning' : 'success'" @click="toggleEnabled">
+				<template #icon>
+					<Icon :name="integration.enabled ? PauseIcon : PlayIcon" :size="14" />
+				</template>
+				{{ integration.enabled ? "Disable" : "Enable" }}
+			</n-button>
+		</template>
+
+		<template #default>
+			<div class="flex flex-col gap-2">
+				<div class="flex flex-col gap-1 text-sm">
+					<div class="flex flex-wrap items-center gap-1">
+						<span class="font-medium">Org-Id:</span>
+						<code class="break-all">{{ integration.shuffle_org_id }}</code>
+					</div>
+				</div>
+				<div class="flex flex-wrap gap-1">
+					<Badge v-if="verifyResult === 'ok'" type="splitted" color="success" size="small">
+						<template #label>Probe</template>
+						<template #value>{{ verifyAppCount }} app(s)</template>
+					</Badge>
+					<Badge v-else-if="verifyResult === 'fail'" type="splitted" color="danger" size="small">
+						<template #label>Probe</template>
+						<template #value>failed</template>
+					</Badge>
+
+					<Badge type="splitted" size="small">
+						<template #label>Last used</template>
+						<template v-if="integration.last_used_at" #value>
+							{{ formatDate(integration.last_used_at, dFormats.datetime) }}
+						</template>
+						<template v-else #value>never used</template>
+					</Badge>
+
+					<Badge type="splitted" size="small">
+						<template #label>Owner</template>
+						<template #value>{{ integration.created_by }}</template>
+					</Badge>
+				</div>
+			</div>
+		</template>
+
+		<template #footer>
+			<div class="flex items-center justify-end gap-2">
 				<n-tooltip>
 					<template #trigger>
 						<n-button
@@ -41,13 +72,13 @@
 
 				<n-tooltip>
 					<template #trigger>
-						<n-button size="tiny" quaternary circle @click="toggleEnabled">
+						<n-button size="tiny" quaternary circle @click="$emit('manageApps')">
 							<template #icon>
-								<Icon :name="integration.enabled ? PauseIcon : PlayIcon" :size="14" />
+								<Icon :name="ManageAppsIcon" :size="14" />
 							</template>
 						</n-button>
 					</template>
-					{{ integration.enabled ? "Disable" : "Enable" }}
+					Manage apps
 				</n-tooltip>
 
 				<n-tooltip>
@@ -61,47 +92,31 @@
 					Edit
 				</n-tooltip>
 
-				<n-popconfirm @positive-click="confirmDelete">
+				<n-tooltip>
 					<template #trigger>
-						<n-button size="tiny" quaternary circle>
-							<template #icon>
-								<Icon :name="DeleteIcon" :size="14" />
+						<n-popconfirm to="body" @positive-click="confirmDelete">
+							<template #trigger>
+								<n-button size="tiny" quaternary circle>
+									<template #icon>
+										<Icon :name="DeleteIcon" :size="14" />
+									</template>
+								</n-button>
 							</template>
-						</n-button>
+							Delete this integration?
+							<template #icon>
+								<Icon :name="WarningIcon" :size="14" />
+							</template>
+						</n-popconfirm>
 					</template>
-					Delete this integration?
-					<template #icon>
-						<Icon :name="WarningIcon" :size="14" />
-					</template>
-				</n-popconfirm>
-			</div>
-		</template>
-
-		<template #default>
-			<div class="flex flex-col gap-1 text-sm">
-				<div class="text-secondary">
-					<span class="font-medium">Org-Id:</span>
-					<code class="ml-1 break-all">{{ integration.shuffle_org_id }}</code>
-				</div>
-				<div v-if="verifyError" class="text-error text-xs">
-					{{ verifyError }}
-				</div>
-			</div>
-		</template>
-
-		<template #footer>
-			<div class="text-tertiary flex items-center gap-3 text-xs">
-				<span v-if="integration.last_used_at">
-					last used {{ formatDate(integration.last_used_at, "MMM D, YYYY HH:mm") }}
-				</span>
-				<span v-else>never used</span>
-				<span v-if="integration.created_by">· created by {{ integration.created_by }}</span>
+					Delete
+				</n-tooltip>
 			</div>
 		</template>
 	</CardEntity>
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { ShuffleIntegration } from "@/types/notifications.d"
 import { NButton, NPopconfirm, NTooltip, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
@@ -109,6 +124,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
@@ -120,18 +136,21 @@ const emit = defineEmits<{
 	(e: "edit"): void
 	(e: "deleted"): void
 	(e: "toggled"): void
+	(e: "manageApps"): void
 }>()
 
 const EditIcon = "carbon:edit"
 const DeleteIcon = "carbon:trash-can"
 const PauseIcon = "carbon:pause"
 const PlayIcon = "carbon:play"
+const ManageAppsIcon = "carbon:catalog"
 const VerifyIcon = "carbon:checkmark-outline"
 const VerifyOkIcon = "carbon:checkmark-filled"
 const VerifyFailIcon = "carbon:misuse"
 const WarningIcon = "carbon:warning"
 
 const message = useMessage()
+const dFormats = useSettingsStore().dateFormat
 
 // Verify state — null until the user clicks "Test connection." Drives
 // both the inline status badge and the verify button's color/icon so
@@ -140,7 +159,6 @@ const message = useMessage()
 const verifying = ref(false)
 const verifyResult = ref<"ok" | "fail" | null>(null)
 const verifyAppCount = ref<number | null>(null)
-const verifyError = ref<string | null>(null)
 
 // naive-ui n-button accepts type='success'|'error'|'default'|... — we
 // map verify result to a colored button so the icon turns green on a
@@ -167,7 +185,7 @@ const verifyTooltip = computed(() => {
 
 async function verify() {
 	verifying.value = true
-	verifyError.value = null
+
 	try {
 		const res = await Api.notifications.verifyShuffleIntegration(
 			props.integration.customer_code,
@@ -178,11 +196,11 @@ async function verify() {
 			verifyAppCount.value = res.data.app_count
 		} else {
 			verifyResult.value = "fail"
-			verifyError.value = res.data.error || res.data.message || "Verification failed"
+			message.warning(res.data.error || res.data.message || "Verification failed")
 		}
-	} catch (err: unknown) {
+	} catch (err) {
 		verifyResult.value = "fail"
-		verifyError.value = getApiErrorMessage(err as never) || "Verification failed"
+		message.error(getApiErrorMessage(err as ApiError) || "Verification failed")
 	} finally {
 		verifying.value = false
 	}

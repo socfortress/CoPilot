@@ -137,44 +137,11 @@
 }
 
 .n-form-item {
-	.n-form-item-feedback-wrapper:not(:empty) {
-		transform: translateY(-7px);
-		padding-left: 0px !important;
-		padding-right: 0px !important;
-		padding-top: 0 !important;
-		z-index: 1;
-
+	.n-form-item-feedback-wrapper {
 		.n-form-item-feedback {
-			font-size: 13px;
-			line-height: 1.2;
-			padding: 3px 12px;
-			border-bottom-left-radius: var(--border-radius);
-			border-bottom-right-radius: var(--border-radius);
-			background: color-mix(in srgb, currentColor 5%, var(--bg-default-color) 95%);
-			border: 1px solid currentColor;
-			border-top: 0;
+			line-height: 1.1;
 		}
 	}
-
-	&.n-form-item--small-size {
-		.n-form-item-feedback-wrapper:not(:empty) {
-			transform: translateY(-6px);
-
-			.n-form-item-feedback {
-				font-size: 11px;
-				padding: 3px 10px;
-			}
-		}
-	}
-
-	&.n-form-item--small-large {
-		.n-form-item-feedback-wrapper:not(:empty) {
-			.n-form-item-feedback {
-				padding: 3px 14px;
-			}
-		}
-	}
-
 	.n-form-item-blank--error {
 		.n-upload-dragger {
 			border-color: var(--n-feedback-text-color-error);

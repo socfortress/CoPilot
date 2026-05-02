@@ -27,7 +27,6 @@
 import type { Component } from "vue"
 import type { RouteLocationNormalized } from "vue-router"
 import type { Layout, RouterTransition, ThemeNameEnum } from "@/types/theme.d"
-import { defineCustomElements } from "@singulio/app-auth-search/loader"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Blank from "@/app-layouts/Blank"
@@ -44,8 +43,6 @@ const layoutComponents = {
 	VerticalNav,
 	Blank
 }
-
-defineCustomElements()
 
 const router = useRouter()
 const route = useRoute()

@@ -2,7 +2,11 @@
 // Shuffle is the sole delivery channel; email, chat, ticketing, and the
 // rest flow through Shuffle's catalog of authenticated apps.
 
-export type NotificationTrigger = "investigation_complete" | "severity_critical_or_high"
+// Trigger represents the *event type* that caused the dispatch — not
+// a severity filter (severity gating lives in min_severity). Currently
+// just the one Talon-driven event; will grow when we add hooks for
+// analyst-review / IOC-enrichment / scheduled sweeps.
+export type NotificationTrigger = "investigation_complete"
 
 export type NotificationChannel = "shuffle"
 

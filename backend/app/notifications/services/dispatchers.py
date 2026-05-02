@@ -95,6 +95,7 @@ async def dispatch_shuffle(
             "environment": environment,
         },
     }
+    logger.info(f"Dispatching payload to Shuffle body: {body}")
     started = time.monotonic()
     try:
         async with httpx.AsyncClient(timeout=_SHUFFLE_TIMEOUT_S, http2=True) as client:

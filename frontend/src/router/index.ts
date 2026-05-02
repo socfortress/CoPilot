@@ -352,10 +352,10 @@ const router = createRouter({
 					meta: { title: "Network Connectors" }
 				},
 				{
-					path: "singul-app-auth",
-					name: "ExternalServices-SingulAppAuth",
-					component: () => import("@/views/externalServices/SingulAppAuth.vue"),
-					meta: { title: "Singul App Auth" }
+					path: "shuffle-app-auth",
+					name: "ExternalServices-ShuffleAppAuth",
+					component: () => import("@/views/externalServices/ShuffleAppAuth.vue"),
+					meta: { title: "Shuffle App Auth" }
 				}
 			]
 		},

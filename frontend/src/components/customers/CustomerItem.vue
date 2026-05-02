@@ -137,139 +137,145 @@
 			v-model:show="showDetails"
 			preset="card"
 			content-class="p-0!"
-			:style="{ maxWidth: 'min(1100px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
+			:style="{ maxWidth: 'min(1100px, 90vw)', minHeight: 'min(470px, 90vh)', overflow: 'hidden' }"
 			:title="customerInfo?.customer_name"
 			:bordered="false"
 			segmented
 		>
-			<Transition :name="`slide-tabs-${selectedTabsGroup === 'customer' ? 'left' : 'right'}`">
-				<n-tabs v-if="selectedTabsGroup === 'customer'" type="line" animated :tabs-padding="24" class="h-full">
-					<n-tab-pane name="Info" tab="Info" display-directive="show:lazy">
-						<CustomerInfo
-							v-if="customerInfo"
-							v-model:loading="loadingDelete"
-							:customer="customerInfo"
-							@delete="deletedItem()"
-							@submitted="customerInfo = $event"
-						/>
-					</n-tab-pane>
-					<n-tab-pane name="Provision" tab="Provision" display-directive="show:lazy">
-						<CustomerProvision
-							:customer-meta
-							:customer-code="customer.customer_code"
-							:customer-name="customer.customer_name"
-							@delete="customerMeta = null"
-							@submitted="customerMeta = $event"
-						/>
-					</n-tab-pane>
-					<n-tab-pane
-						name="3rd Party Integrations"
-						tab="3rd Party Integrations"
-						display-directive="show:lazy"
+			<n-tabs type="line" animated :tabs-padding="24" class="h-full">
+				<n-tab-pane name="Customer" tab="Customer" display-directive="show" class="pt-0!">
+					<n-tabs
+						type="line"
+						animated
+						:tabs-padding="24"
+						class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-99"
+						placement="left"
+						:pane-style="{ minHeight: 'min(450px, 90vh)' }"
 					>
-						<CustomerIntegrations
-							:customer-code="customer.customer_code"
-							:customer-name="customer.customer_name"
-						/>
-					</n-tab-pane>
-					<n-tab-pane name="Network Connectors" tab="Network Connectors" display-directive="show:lazy">
-						<CustomerNetworkConnectors
-							:customer-code="customer.customer_code"
-							:customer-name="customer.customer_name"
-						/>
-					</n-tab-pane>
-					<n-tab-pane
-						name="Notification Workflows"
-						tab="Notification Workflows"
-						display-directive="show:lazy"
-					>
-						<CustomerNotificationsWorkflows :customer-code="customer.customer_code" />
-					</n-tab-pane>
-					<n-tab-pane name="AI Triggers" tab="AI Triggers" display-directive="show:lazy">
-						<CustomerAITriggers :customer-code="customer.customer_code" />
-					</n-tab-pane>
-					<n-tab-pane name="AI Notifications" tab="AI Notifications" display-directive="show:lazy">
-						<CustomerAiNotifications :customer-code="customer.customer_code" />
-					</n-tab-pane>
-					<n-tab-pane name="Event Sources" tab="Event Sources" display-directive="show:lazy">
-						<CustomerEventSources :customer-code="customer.customer_code" />
-					</n-tab-pane>
+						<n-tab-pane name="Info" tab="Info" display-directive="show:lazy" class="p-4!">
+							<CustomerInfo
+								v-if="customerInfo"
+								v-model:loading="loadingDelete"
+								:customer="customerInfo"
+								@delete="deletedItem()"
+								@submitted="customerInfo = $event"
+							/>
+						</n-tab-pane>
+						<n-tab-pane name="Provision" tab="Provision" display-directive="show:lazy" class="p-4!">
+							<CustomerProvision
+								:customer-meta
+								:customer-code="customer.customer_code"
+								:customer-name="customer.customer_name"
+								@delete="customerMeta = null"
+								@submitted="customerMeta = $event"
+							/>
+						</n-tab-pane>
+						<n-tab-pane
+							name="3rd Party Integrations"
+							tab="3rd Party Integrations"
+							display-directive="show:lazy"
+							class="p-4!"
+						>
+							<CustomerIntegrations
+								:customer-code="customer.customer_code"
+								:customer-name="customer.customer_name"
+							/>
+						</n-tab-pane>
+						<n-tab-pane
+							name="Network Connectors"
+							tab="Network Connectors"
+							display-directive="show:lazy"
+							class="p-4!"
+						>
+							<CustomerNetworkConnectors
+								:customer-code="customer.customer_code"
+								:customer-name="customer.customer_name"
+							/>
+						</n-tab-pane>
+						<n-tab-pane
+							name="Notification Workflows"
+							tab="Notification Workflows"
+							display-directive="show:lazy"
+							class="p-4!"
+						>
+							<CustomerNotificationsWorkflows :customer-code="customer.customer_code" />
+						</n-tab-pane>
+						<n-tab-pane name="AI Triggers" tab="AI Triggers" display-directive="show:lazy" class="p-4!">
+							<CustomerAITriggers :customer-code="customer.customer_code" />
+						</n-tab-pane>
+						<n-tab-pane
+							name="AI Notifications"
+							tab="AI Notifications"
+							display-directive="show:lazy"
+							class="p-4!"
+						>
+							<CustomerAiNotifications :customer-code="customer.customer_code" />
+						</n-tab-pane>
+						<n-tab-pane name="Event Sources" tab="Event Sources" display-directive="show:lazy" class="p-4!">
+							<CustomerEventSources :customer-code="customer.customer_code" />
+						</n-tab-pane>
 
-					<template #suffix>
-						<div
-							v-if="customerPortainerStackId !== null"
-							class="hover:text-primary cursor-pointer pr-8 text-sm"
-							@click="selectedTabsGroup = 'wazuh_worker'"
-						>
-							Wazuh Worker
-						</div>
-						<div
-							class="hover:text-primary cursor-pointer pr-8 text-sm"
-							@click="selectedTabsGroup = 'agents'"
-						>
-							Agents
-						</div>
-					</template>
-				</n-tabs>
-				<n-tabs v-else-if="selectedTabsGroup === 'agents'" type="line" animated :tabs-padding="24">
-					<template #prefix>
-						<div
-							class="hover:text-primary relative top-1 cursor-pointer pl-6"
-							@click="selectedTabsGroup = 'customer'"
-						>
-							<Icon :name="ArrowIcon" :size="20" />
-						</div>
-					</template>
-					<n-tab-pane name="Agents" tab="Agents" display-directive="show:lazy">
-						<n-scrollbar style="max-height: 470px" trigger="none">
-							<div class="p-6 pt-2">
+						<template #suffix><div class="h-4 w-full"></div></template>
+					</n-tabs>
+				</n-tab-pane>
+
+				<n-tab-pane name="Agents" tab="Agents" display-directive="show" class="pt-0!">
+					<n-tabs
+						type="line"
+						animated
+						:tabs-padding="24"
+						class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-99"
+						placement="left"
+						:pane-style="{ minHeight: 'min(450px, 90vh)' }"
+					>
+						<n-tab-pane name="Agents" tab="Agents" display-directive="show" class="p-4! pr-0!">
+							<n-scrollbar style="max-height: 470px" trigger="none" class="pr-4">
 								<CustomerAgents v-if="customerInfo" :customer="customerInfo" />
-							</div>
-						</n-scrollbar>
-					</n-tab-pane>
-					<n-tab-pane name="Healthcheck Wazuh" tab="Healthcheck Wazuh" display-directive="show:lazy">
-						<n-scrollbar style="max-height: 470px" trigger="none">
-							<div class="p-6 pt-2">
+							</n-scrollbar>
+						</n-tab-pane>
+						<n-tab-pane
+							name="Healthcheck Wazuh"
+							tab="Healthcheck Wazuh"
+							display-directive="show:lazy"
+							class="p-4! pr-0!"
+						>
+							<n-scrollbar style="max-height: 470px" trigger="none" class="pr-4">
 								<CustomerHealthcheckList
 									v-model:filters="healthcheckFilters"
 									source="wazuh"
 									:customer-code="customer.customer_code"
 								/>
-							</div>
-						</n-scrollbar>
-					</n-tab-pane>
-					<n-tab-pane
-						name="Healthcheck Velociraptor"
-						tab="Healthcheck Velociraptor"
-						display-directive="show:lazy"
-					>
-						<n-scrollbar style="max-height: 470px" trigger="none">
-							<div class="p-6 pt-2">
+							</n-scrollbar>
+						</n-tab-pane>
+						<n-tab-pane
+							name="Healthcheck Velociraptor"
+							tab="Healthcheck Velociraptor"
+							display-directive="show:lazy"
+							class="p-4! pr-0!"
+						>
+							<n-scrollbar style="max-height: 470px" trigger="none" class="pr-4">
 								<CustomerHealthcheckList
 									v-model:filters="healthcheckFilters"
 									source="velociraptor"
 									:customer-code="customer.customer_code"
 								/>
-							</div>
-						</n-scrollbar>
-					</n-tab-pane>
-				</n-tabs>
-				<n-tabs v-else-if="selectedTabsGroup === 'wazuh_worker'" type="line" animated :tabs-padding="24">
-					<template #prefix>
-						<div
-							class="hover:text-primary relative top-1 cursor-pointer pl-6"
-							@click="selectedTabsGroup = 'customer'"
-						>
-							<Icon :name="ArrowIcon" :size="20" />
-						</div>
-					</template>
-					<n-tab-pane name="Wazuh Worker" tab="Wazuh Worker" display-directive="show:lazy">
-						<div class="px-7 py-4">
-							<CustomerWazuhWorker v-if="customerPortainerStackId" :stack-id="customerPortainerStackId" />
-						</div>
-					</n-tab-pane>
-				</n-tabs>
-			</Transition>
+							</n-scrollbar>
+						</n-tab-pane>
+
+						<template #suffix><div class="h-4 w-full"></div></template>
+					</n-tabs>
+				</n-tab-pane>
+
+				<n-tab-pane
+					v-if="customerPortainerStackId !== null"
+					name="Wazuh Worker"
+					tab="Wazuh Worker"
+					display-directive="show"
+					class="p-4!"
+				>
+					<CustomerWazuhWorker :stack-id="customerPortainerStackId" />
+				</n-tab-pane>
+			</n-tabs>
 		</n-modal>
 	</div>
 </template>
@@ -307,9 +313,7 @@ const CustomerNotificationsWorkflows = defineAsyncComponent(
 	() => import("./notifications/CustomerNotificationsWorkflows.vue")
 )
 const CustomerAITriggers = defineAsyncComponent(() => import("./aiTriggers/CustomerAITriggers.vue"))
-const CustomerAiNotifications = defineAsyncComponent(
-	() => import("./aiNotifications/CustomerAiNotifications.vue")
-)
+const CustomerAiNotifications = defineAsyncComponent(() => import("./aiNotifications/CustomerAiNotifications.vue"))
 const CustomerEventSources = defineAsyncComponent(() => import("./eventSources/CustomerEventSources.vue"))
 const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWorker.vue"))
 
@@ -319,14 +323,12 @@ const DetailsIcon = "carbon:settings-adjust"
 const UserTypeIcon = "solar:shield-user-linear"
 const ParentIcon = "material-symbols-light:supervisor-account-outline-rounded"
 const InfoIcon = "carbon:information"
-const ArrowIcon = "carbon:arrow-left"
 const LocationIcon = "carbon:location"
 const PhoneIcon = "carbon:phone"
 const ProvisionIcon = "carbon:network-3"
 const AgentsIcon = "carbon:devices"
 
 const showDetails = ref(false)
-const selectedTabsGroup = ref<"customer" | "agents" | "wazuh_worker">("customer")
 const loadingFull = ref(false)
 const loadingDelete = ref(false)
 const message = useMessage()
@@ -406,8 +408,6 @@ function deletedItem() {
 
 watch(showDetails, val => {
 	if (val) {
-		selectedTabsGroup.value = "customer"
-
 		if (
 			customer.value.customer_code &&
 			(!customer.value.customer_name || !customerMeta.value?.customer_meta_graylog_index)
@@ -433,29 +433,3 @@ onBeforeMount(() => {
 	}
 })
 </script>
-
-<style>
-.slide-tabs-right-enter-active,
-.slide-tabs-right-leave-active,
-.slide-tabs-left-enter-active,
-.slide-tabs-left-leave-active {
-	transition: all 0.2s ease-out;
-	position: absolute;
-}
-
-.slide-tabs-left-enter-from {
-	transform: translateX(-100%);
-}
-
-.slide-tabs-left-leave-to {
-	transform: translateX(100%);
-}
-
-.slide-tabs-right-enter-from {
-	transform: translateX(100%);
-}
-
-.slide-tabs-right-leave-to {
-	transform: translateX(-100%);
-}
-</style>

@@ -1,23 +1,5 @@
 <template>
-	<n-form
-		ref="formRef"
-		:model="form"
-		:rules="rules"
-		label-placement="top"
-		class="px-7 py-4"
-	>
-		<div class="mb-3 flex items-center justify-between">
-			<h3 class="text-lg font-medium">
-				{{ editing ? "Edit Shuffle integration" : "Add Shuffle integration" }}
-			</h3>
-			<n-button size="small" quaternary @click="$emit('close')">
-				<template #icon>
-					<Icon :name="CloseIcon" :size="14" />
-				</template>
-				Cancel
-			</n-button>
-		</div>
-
+	<n-form ref="formRef" :model="form" :rules label-placement="top">
 		<n-form-item label="Display name" path="display_name">
 			<n-input
 				v-model:value="form.display_name"
@@ -45,34 +27,22 @@
 					@update:value="onOrgPicked"
 				/>
 
-				<div class="flex items-center gap-3 text-xs">
-					<n-button size="tiny" quaternary :disabled="loadingOrgs" @click="loadOrgs(true)">
-						<template #icon>
-							<Icon :name="RefreshIcon" :size="12" />
-						</template>
-						Refresh list
-					</n-button>
-					<n-checkbox v-model:checked="manualEntry" size="small">
-						Don't see your org? Enter the ID manually
-					</n-checkbox>
-				</div>
+				<n-checkbox v-model:checked="manualEntry" size="small">
+					Don't see your org? Enter the ID manually
+				</n-checkbox>
 
-				<n-input
-					v-if="manualEntry"
-					v-model:value="form.shuffle_org_id"
-					placeholder="6b6f65a4-d8f8-48ef-b02f-23a4a5f73e4a"
-					:maxlength="64"
-				/>
-
-				<div v-if="orgsError" class="text-error text-xs">
-					Couldn't fetch orgs from Shuffle: {{ orgsError }}. Use manual entry above.
-				</div>
+				<n-collapse-transition :show="manualEntry">
+					<n-input
+						v-model:value="form.shuffle_org_id"
+						placeholder="6b6f65a4-d8f8-48ef-b02f-23a4a5f73e4a"
+						:maxlength="64"
+					/>
+				</n-collapse-transition>
 			</div>
-			<template #feedback>
-				<span class="text-tertiary text-xs">
-					Sent as the <code>Org-Id</code> header on every dispatch — scopes the
-					Shuffle call to the right org's authenticated apps.
-				</span>
+			<template v-if="!fieldErrors.shuffle_org_id" #feedback>
+				Sent as the
+				<code>Org-Id</code>
+				header on every dispatch — scopes the Shuffle call to the right org's authenticated apps.
 			</template>
 		</n-form-item>
 
@@ -90,12 +60,12 @@
 </template>
 
 <script setup lang="ts">
-import type { ShuffleIntegration, ShuffleIntegrationPayload, ShuffleOrg } from "@/types/notifications.d"
 import type { FormInst, FormRules } from "naive-ui"
-import { NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
+import type { ApiError } from "@/types/common"
+import type { ShuffleIntegration, ShuffleIntegrationPayload, ShuffleOrg } from "@/types/notifications.d"
+import { NButton, NCheckbox, NCollapseTransition, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
@@ -108,14 +78,14 @@ const emit = defineEmits<{
 	(e: "close"): void
 }>()
 
-const CloseIcon = "carbon:close"
-const RefreshIcon = "carbon:renew"
-
 const message = useMessage()
 const formRef = ref<FormInst | null>(null)
 const submitting = ref(false)
 
 const editing = computed(() => props.editingIntegration !== null)
+type FeedbackField = "shuffle_org_id"
+
+const fieldErrors = reactive<Partial<Record<FeedbackField, string>>>({})
 
 const form = reactive<ShuffleIntegrationPayload>({
 	display_name: props.editingIntegration?.display_name ?? "",
@@ -128,7 +98,6 @@ const form = reactive<ShuffleIntegrationPayload>({
 // fails or the desired org doesn't appear in the list.
 const orgs = ref<ShuffleOrg[]>([])
 const loadingOrgs = ref(false)
-const orgsError = ref<string | null>(null)
 const manualEntry = ref(false)
 
 const orgOptions = computed(() =>
@@ -146,35 +115,38 @@ const orgOptions = computed(() =>
 	})
 )
 
-async function loadOrgs(force = false) {
+function clearFieldError(field: FeedbackField) {
+	delete fieldErrors[field]
+}
+
+function createFieldError(field: FeedbackField, message: string) {
+	fieldErrors[field] = message
+	return new Error(message)
+}
+
+async function loadOrgs() {
 	if (loadingOrgs.value) return
+
 	loadingOrgs.value = true
-	orgsError.value = null
+
 	try {
 		const res = await Api.notifications.listShuffleOrgs()
 		if (res.data.success) {
 			orgs.value = res.data.orgs
 			// If we're editing and the existing org_id isn't in the list,
 			// fall through to manual entry so the form stays usable.
-			if (
-				editing.value &&
-				form.shuffle_org_id &&
-				!orgs.value.some(o => o.id === form.shuffle_org_id)
-			) {
+			if (editing.value && form.shuffle_org_id && !orgs.value.some(o => o.id === form.shuffle_org_id)) {
 				manualEntry.value = true
 			}
 		} else {
-			orgsError.value = res.data.message || "Unknown error"
+			message.warning(res.data.message || "Failed to load Shuffle orgs")
 			manualEntry.value = true
 		}
-	} catch (err: unknown) {
-		orgsError.value = getApiErrorMessage(err as never) || "Network error"
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load Shuffle orgs")
 		manualEntry.value = true
 	} finally {
 		loadingOrgs.value = false
-	}
-	if (force) {
-		message.success(`${orgs.value.length} org(s) loaded`)
 	}
 }
 
@@ -187,7 +159,11 @@ const rules: FormRules = {
 	display_name: { required: true, message: "Name is required", trigger: ["input", "blur"] },
 	shuffle_org_id: {
 		required: true,
-		message: "Pick a Shuffle org or enter an Org-Id manually",
+		validator: (_rule, value: string | null) => {
+			if (!value) return createFieldError("shuffle_org_id", "Pick a Shuffle org or enter an Org-Id manually")
+			clearFieldError("shuffle_org_id")
+			return true
+		},
 		trigger: ["input", "change", "blur"]
 	}
 }
@@ -202,11 +178,7 @@ async function submit() {
 	submitting.value = true
 	try {
 		const res = props.editingIntegration
-			? await Api.notifications.updateShuffleIntegration(
-					props.customerCode,
-					props.editingIntegration.id,
-					form
-				)
+			? await Api.notifications.updateShuffleIntegration(props.customerCode, props.editingIntegration.id, form)
 			: await Api.notifications.createShuffleIntegration(props.customerCode, form)
 
 		if (res.data.success) {

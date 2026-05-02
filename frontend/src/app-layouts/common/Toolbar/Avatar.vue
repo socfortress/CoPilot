@@ -87,8 +87,8 @@ const options = ref([
 		icon: renderIcon(ExternalServicesIcon)
 	},
 	{
-		label: "Singul App Auth",
-		key: "route-ExternalServices-SingulAppAuth",
+		label: "Shuffle App Auth",
+		key: "route-ExternalServices-ShuffleAppAuth",
 		icon: renderIcon(ExternalServicesIcon)
 	},
 	{
