@@ -617,9 +617,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
     matched_routes = [
         r
         for r in routes
-        if r.enabled
-        and _trigger_applies(req.trigger.value, r.trigger)
-        and _severity_meets(req.severity_assessment.value, r.min_severity)
+        if r.enabled and _trigger_applies(req.trigger.value, r.trigger) and _severity_meets(req.severity_assessment.value, r.min_severity)
     ]
 
     outcomes: List[DispatchOutcome] = []

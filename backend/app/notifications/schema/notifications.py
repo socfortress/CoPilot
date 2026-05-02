@@ -112,6 +112,7 @@ class NotificationRouteBase(BaseModel):
         if v == "severity_critical_or_high":
             return NotificationTrigger.INVESTIGATION_COMPLETE.value
         return v
+
     # For SMTP: comma-separated recipient emails. For Shuffle: free-form
     # destination hint (e.g. '#soc-alerts', 'ir@corp.com') that gets
     # injected into Shuffle's natural-language input — Shuffle's app
