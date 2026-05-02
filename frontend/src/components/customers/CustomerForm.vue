@@ -2,6 +2,7 @@
 	<n-spin :show="loading" class="customer-form">
 		<n-form ref="formRef" :label-width="80" :model="form" :rules>
 			<div class="flex flex-col gap-4">
+				<h4>Edit Customer</h4>
 				<div class="flex flex-wrap gap-4">
 					<div v-for="(val, key) of fieldsMeta" :key class="grow">
 						<n-form-item :label="val.label" :path="key" class="grow">

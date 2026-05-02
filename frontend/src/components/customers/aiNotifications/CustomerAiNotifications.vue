@@ -1,14 +1,19 @@
 <template>
 	<div class="customer-ai-notifications">
-		<n-tabs type="line" animated :tabs-padding="24">
-			<n-tab-pane name="routes" tab="Routes" display-directive="show:lazy">
-				<CustomerAiNotificationRoutes :customer-code="customerCode" />
+		<n-tabs type="segment" animated tab-class="px-4! py-1!" class="[&_.n-tabs-nav]:mx-auto [&_.n-tabs-nav]:mb-6">
+			<n-tab-pane name="routes" tab="Routes" display-directive="show:lazy" class="p-0!">
+				<CustomerAiNotificationRoutes :customer-code />
 			</n-tab-pane>
-			<n-tab-pane name="shuffle_integrations" tab="Shuffle integrations" display-directive="show:lazy">
-				<CustomerShuffleIntegrations :customer-code="customerCode" />
+			<n-tab-pane
+				name="shuffle_integrations"
+				tab="Shuffle integrations"
+				display-directive="show:lazy"
+				class="p-0!"
+			>
+				<CustomerShuffleIntegrations :customer-code />
 			</n-tab-pane>
-			<n-tab-pane name="dispatch_log" tab="Dispatch log" display-directive="show:lazy">
-				<CustomerAiNotificationDispatchLog :customer-code="customerCode" />
+			<n-tab-pane name="dispatch_log" tab="Dispatch log" display-directive="show:lazy" class="pt-4!">
+				<CustomerAiNotificationDispatchLog :customer-code />
 			</n-tab-pane>
 		</n-tabs>
 	</div>
@@ -23,8 +28,8 @@
 //   - Dispatch log: read-only audit trail of every dispatch attempt
 import { NTabPane, NTabs } from "naive-ui"
 import CustomerAiNotificationDispatchLog from "./CustomerAiNotificationDispatchLog.vue"
-import CustomerAiNotificationRoutes from "./CustomerAiNotificationRoutes.vue"
-import CustomerShuffleIntegrations from "./CustomerShuffleIntegrations.vue"
+import CustomerAiNotificationRoutes from "./CustomerAiNotificationRoutes/CustomerAiNotificationRoutes.vue"
+import CustomerShuffleIntegrations from "./CustomerShuffleIntegrations/CustomerShuffleIntegrations.vue"
 
 defineProps<{
 	customerCode: string

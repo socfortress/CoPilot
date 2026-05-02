@@ -1,0 +1,352 @@
+---
+title: AI Analyst — Notification routing
+description: Send Talon's investigation reports to the customer's Slack, Outlook, Teams, or any of Shuffle's 3,000+ apps based on per-customer routing rules.
+---
+
+Every Talon investigation produces a report. The notification routing
+feature sends those reports out — to a Slack channel, an email
+distribution list, a Teams card, a ServiceNow ticket, or any of
+Shuffle's 3,000+ authenticated apps — based on rules a SOC admin
+configures per customer.
+
+This page is for **operators** (SOC admins setting up notifications).
+For the architecture and dispatch internals, see
+[AI Analyst (Talon)](/power-features/ai-analyst).
+
+---
+
+## Why route notifications
+
+Without routing, investigation reports live in CoPilot's UI and
+nowhere else. Routing pushes the result to wherever the SOC team
+already operates:
+
+- A Slack channel where the on-call sees high-severity findings
+- An email distribution list for after-hours escalation
+- A Teams card for the IR team's daily standup feed
+- A ServiceNow ticket auto-created on Critical alerts
+- Anything else Shuffle's catalog can reach
+
+CoPilot owns the routing logic (which destinations to fan out to,
+filtered by severity); Shuffle handles the actual delivery to each
+app's API.
+
+---
+
+## Where it lives in the UI
+
+Per-customer config lives under **Customers → [your customer] →
+Details → AI Notifications**. Three sub-tabs:
+
+| Sub-tab | Purpose |
+|---------|---------|
+| **Routes** | The actual notification rules — what severity threshold, which Shuffle integration, which app, where to send |
+| **Shuffle integrations** | Per-customer Shuffle org configurations + the "Manage apps" drawer for authenticating new Shuffle apps |
+| **Dispatch log** | Read-only audit of every notification attempt — `sent`, `failed`, `skipped`, latency, error messages |
+
+---
+
+## One-time prerequisite: deployment Shuffle connector
+
+Before any customer can use notifications, your CoPilot deployment
+needs the Shuffle connector configured. This is admin-tier infra
+that's set up once for the whole platform, not per-customer.
+
+1. **Connectors → Shuffle** (or via SQL: `SELECT * FROM connectors
+   WHERE connector_name='Shuffle'`)
+2. Set:
+   - `connector_url` — your Shuffle region (e.g. `https://shuffler.io`,
+     `https://california.shuffler.io`)
+   - `connector_api_key` — admin Bearer token from your Shuffle account
+     (Shuffle profile → API key, or
+     `POST /api/v1/users/generateapikey`)
+   - `connector_extra_data` — your parent Org-Id (optional but helps
+     in some flows)
+   - `connector_enabled` = 1, `connector_verified` = 1
+
+CoPilot's notification engine reads the URL + API key fresh on every
+dispatch, so a key rotation takes effect without restarting the
+backend.
+
+---
+
+## Step-by-step setup for one customer
+
+End-to-end walkthrough — first time setting up notifications for a
+customer that's not yet configured.
+
+### Step 1 — Add a Shuffle integration
+
+The integration tells CoPilot **which Shuffle org** belongs to this
+customer. Each customer gets one or more integration rows.
+
+1. Open the customer's **AI Notifications** tab
+2. Click **Shuffle integrations**
+3. Click **Add Shuffle integration**
+4. Fill out:
+   - **Display name** — human label, e.g. `Acme Production Shuffle`
+   - **Shuffle org** — dropdown populated from your deployment's
+     Shuffle connector. Picks the org for this customer (top-level or
+     sub-org). Sub-orgs show a `· sub-org` hint
+   - **Enabled** — leave checked
+5. Click **Add integration**
+
+After creating, click the **checkmark** icon on the new row to
+**Test connection** — should turn green with the count of authenticated
+apps in that org.
+
+> If the org dropdown is empty or fails to load, the Shuffle connector
+> isn't configured correctly. See [troubleshooting](#troubleshooting).
+
+### Step 2 — Authenticate the apps you want to use
+
+Each Shuffle org needs the apps you plan to notify through to be
+**authenticated** within Shuffle. CoPilot doesn't do the authentication
+itself — Shuffle owns that flow. You can authenticate apps either:
+
+- **Inside Shuffle's UI directly** (shuffler.io → Apps → connect Slack/
+  Outlook/etc.)
+- **From CoPilot's "Manage apps" drawer** — clicks through to
+  Shuffle's OAuth dance
+
+To use the drawer:
+
+1. **Shuffle integrations** sub-tab → click the **catalog icon** on
+   the integration row
+2. The drawer opens with Shuffle's app picker scoped to this
+   customer's org
+3. Search for the app you want (`Slack`, `Outlook`, `Teams`, `Gmail`,
+   `ServiceNow`, etc.)
+4. Click the app — Shuffle opens an OAuth window in a new tab
+5. Authenticate in Shuffle, return to CoPilot
+6. The new app is now available for routes that target this org
+
+> Apps authenticated inside Shuffle directly will also appear here —
+> the drawer is a convenience, not a requirement.
+
+### Step 3 — Create a notification route
+
+The route is the actual rule that says "when an AI investigation
+matches X, send to Y."
+
+1. Open **Routes** sub-tab → **Add route**
+2. Fill out:
+   - **Name** — human label, e.g. `SOC Slack #alerts`
+   - **Minimum severity** — only investigations at this tier or
+     higher fire this route. Pick from `Critical (only)`, `High and
+     above`, `Medium and above`, `Low and above`, `Informational and
+     above (everything)`
+   - **Channel** — locked to **Shuffle**
+   - **Shuffle integration** — pick the integration you created in
+     Step 1
+   - **Shuffle app** — pick from the dropdown of apps authenticated
+     in this org (Step 2)
+   - **Destination hint** — free-form text that's prepended to the
+     outgoing message as a `Send to <hint>: …` instruction so
+     Shuffle's app agent knows where to deliver inside that app:
+     - For Slack: `#soc-alerts` or `#general`
+     - For Outlook / Gmail: `soc@example.com`
+     - For Teams: a channel name or webhook target
+     - For ServiceNow: ticket queue or assignee
+   - **Custom message template** — leave empty for the default body.
+     If you set one, include `{{summary}}` somewhere or the AI's
+     finding will be dropped from the message
+   - **Enabled** — leave checked
+3. Click **Create route**
+
+### Step 4 — Test by triggering an investigation
+
+The notification fires automatically every time Talon completes an
+investigation that matches the route's filter. To test without
+waiting for a real alert:
+
+1. Pick any alert in **Incident Management → Alerts** for this
+   customer
+2. Click the **AI Analyst** tab on the alert
+3. Click **Investigate with AI Analyst** if no report exists
+4. Wait ~30–90 seconds for Talon to finish
+5. Check the route's destination — Slack channel, mailbox, etc.
+
+You can also fire a dispatch manually for any alert via:
+
+```bash
+curl -X POST "${COPILOT_URL}/api/notifications/dispatch" \
+  -H "Authorization: Bearer ${COPILOT_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_code": "00001",
+    "alert_id": 147,
+    "trigger": "investigation_complete",
+    "severity_assessment": "Critical",
+    "summary": "Test notification — ignore",
+    "alert_name": "Manual smoke test"
+  }'
+```
+
+The response shows `routes_matched`, `dispatched`, `failed`, and
+per-route outcomes including the Shuffle `execution_id` for forensics.
+
+### Step 5 — Verify in the dispatch log
+
+**Dispatch log** sub-tab shows every notification attempt for this
+customer:
+
+- **When** — timestamp
+- **Alert** — alert ID
+- **Trigger** — the event type (`investigation_complete`)
+- **Status** — `sent` (success), `failed` (provider error), or
+  `skipped` (idempotency hit — same alert already dispatched for the
+  same route+trigger)
+- **Latency** — provider call duration
+- **Error / Preview** — error message on failures, or the first 500
+  chars of the rendered body
+
+Click any failed row to see why; cross-reference the
+`shuffle_execution_id` (if present) in Shuffle's UI to see what
+happened on Shuffle's side.
+
+---
+
+## End-to-end example: Slack #soc-alerts for High+ findings
+
+Putting it all together for customer code `acme`:
+
+1. **Shuffle prerequisite:** Slack workspace authenticated in Acme's
+   Shuffle org as the `Slack` app (done either in Shuffle's UI or
+   via Step 2 above)
+2. **Add Shuffle integration:**
+   - Display name: `Acme Shuffle`
+   - Shuffle org: `Acme Corp (3a8c…)` (picked from dropdown)
+3. **Add notification route:**
+   - Name: `SOC Slack #soc-alerts`
+   - Minimum severity: `High and above`
+   - Shuffle integration: `Acme Shuffle`
+   - Shuffle app: `Slack`
+   - Destination hint: `#soc-alerts`
+   - Custom template: empty
+4. **Trigger test investigation** on a High-severity alert
+5. **Dispatch log** shows `sent` row with ~300 ms latency,
+   `shuffle_execution_id=exec-…`
+6. **Slack #soc-alerts** receives a message with the alert summary
+   and severity
+
+Repeat steps 2–4 for additional destinations (e.g. an Outlook email
+distribution list for Critical-only, a Teams card for the daily
+standup feed).
+
+---
+
+## Common patterns
+
+| Pattern | How to configure |
+|---------|------------------|
+| **One channel, all severities** | Single route, `min_severity = Informational` |
+| **High-tier paging only** | Single route, `min_severity = High` (fires on High and Critical) |
+| **Critical to one channel, everything else to another** | Two routes — Critical-only Slack DM to on-call, separate `Informational+` route to a noisy `#all-investigations` channel |
+| **Multiple destinations for the same severity** | Multiple routes with the same `min_severity`, different `shuffle_app` / `destination_hint`. Each fires independently |
+| **Customer with no notifications** | No routes configured. Investigations still write back to CoPilot's DB; nothing fans out |
+
+---
+
+## How filtering actually works
+
+A route fires when **all** of these are true:
+
+1. Route is `enabled`
+2. Route's `trigger` matches the dispatch's event type
+   (currently always `investigation_complete`)
+3. Investigation's severity is at-or-above the route's
+   `min_severity` (`Informational < Low < Medium < High < Critical`)
+
+If any check fails, the route is skipped (no row in the dispatch log
+for skipped-by-filter — those only show idempotency hits).
+
+**Idempotency:** the same investigation cannot fire the same route
+twice. The dispatch log has a unique constraint on `(customer_code,
+alert_id, route_id, trigger)`. Re-running an investigation re-fires
+the route only after the initial dispatch failed (the `failed` row
+gets overwritten on retry; `sent` rows are immutable).
+
+---
+
+## Custom message templates
+
+By default the notification body is a simple AI-generated summary
+plus alert metadata. If you need a different format — branded
+language, specific recipient phrasing, internal ticket numbers — set
+a custom **format_template** on the route.
+
+Templates support these substitution tokens:
+
+| Token | Replaced with |
+|-------|---------------|
+| `{{customer_code}}` | The customer's code |
+| `{{alert_id}}` | The integer alert ID |
+| `{{alert_name}}` | The original alert title |
+| `{{severity}}` | `Critical` / `High` / `Medium` / `Low` / `Informational` |
+| `{{summary}}` | The AI investigation summary |
+| `{{report_url}}` | Deep link to the report in CoPilot |
+
+Example for a Slack-style banner:
+
+```
+:rotating_light: *{{severity}}* finding on alert #{{alert_id}}
+
+{{summary}}
+
+<{{report_url}}|Open in CoPilot>
+```
+
+> **Watch out:** if your template doesn't reference `{{summary}}`,
+> the actual investigation finding gets dropped. The route fires but
+> recipients see only what's in the template literal. Always include
+> `{{summary}}` somewhere unless you genuinely want a content-free
+> teaser.
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---------|--------------|-----|
+| Org dropdown is empty when adding a Shuffle integration | Deployment's Shuffle connector misconfigured or unreachable | Check `Connectors → Shuffle`. Confirm `connector_url`, `connector_api_key`, `connector_enabled=1`. Try `curl ${SHUFFLE_URL}/api/v1/orgs -H "Authorization: Bearer ${KEY}"` from the CoPilot host |
+| "Test connection" stays neutral / turns red | Org-Id is invalid or the API key doesn't have access to that org | Verify the Org-Id in Shuffle's UI. Confirm your API key is admin-scoped or has access to that org |
+| Route saves but dispatch log says `routes_matched: 0` | Route's `min_severity` is higher than the alert's actual severity | Edit the route, lower `min_severity`. Or trigger an investigation on a higher-severity alert |
+| Dispatch log shows `status=failed` with `Shuffle returned 4xx` | The Shuffle app isn't authenticated in the customer's org, or the destination is wrong | Open Shuffle UI → Apps → check the app is authenticated. For unrecognized destinations, check Shuffle's app-specific docs (e.g. Slack channel must include `#`) |
+| Dispatch log shows `status=failed` with `ReadTimeout` | Shuffle backend was slow or temporarily unreachable | Re-trigger the investigation. The dispatch loop overwrites the `failed` row on retry |
+| Recipient gets a notification with the wrong content | A custom `format_template` is set on the route and doesn't include `{{summary}}` | Edit the route, either add `{{summary}}` to the template or clear the template field entirely |
+| Investigation completes but nothing in the dispatch log | Talon didn't call `DispatchNotificationsTool`. Either no routes configured or Talon's `notifications.md` not deployed | Check Talon container logs for the `tool_use: DispatchNotificationsTool` line. Confirm at least one route exists for the customer |
+
+---
+
+## Safety & guardrails
+
+- **Per-customer scope** — routes attached to customer A's integrations
+  only fire on customer A's alerts. CoPilot's dispatcher refuses to
+  cross tenant boundaries even if a route is hand-edited to point at
+  another customer's integration.
+- **Best-effort delivery** — a notification dispatch failure never
+  fails the underlying investigation. Talon's report is written
+  before the dispatch attempt; failures are logged but don't
+  propagate.
+- **No automatic retries** — a `failed` dispatch waits for the next
+  Talon run on the same alert (or a manual re-trigger) to overwrite
+  the log row. Phase 4 may add automatic retry semantics for
+  transient failures.
+- **Admin-tier auth** — only users with `admin` or `analyst` scope
+  can read or modify routes. Operator-tier users see investigation
+  reports but not the routing config.
+- **Org auth tokens visible to admins** — the Manage apps drawer
+  fetches a per-org auth token from Shuffle so the embedded picker
+  can show authenticated apps. This token is exposed to the admin's
+  browser session for the duration of the drawer being open. Don't
+  share screenshots of the drawer with non-admins.
+
+---
+
+## Related
+
+- [AI Analyst (Talon)](/power-features/ai-analyst) — the investigation
+  engine that produces the reports being routed
+- [AI Analyst — Analyst review workflow](/power-features/ai-analyst-review)
+  — review and grade the reports after they're produced

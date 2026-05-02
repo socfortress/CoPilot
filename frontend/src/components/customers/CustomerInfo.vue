@@ -1,6 +1,6 @@
 <template>
-	<div class="customer-info">
-		<div v-if="editing" class="p-7 pt-4">
+	<div class="customer-info flex flex-col gap-4">
+		<div v-if="editing">
 			<CustomerForm :customer lock-code @submitted="submitted">
 				<template #additionalActions>
 					<n-button @click="editing = false">Close</n-button>
@@ -8,7 +8,7 @@
 			</CustomerForm>
 		</div>
 		<template v-else>
-			<div class="flex items-center justify-between gap-4 px-7 pt-2">
+			<div class="flex items-center justify-between gap-4">
 				<n-button size="small" :disabled="loadingDelete" @click="editing = true">
 					<template #icon>
 						<Icon :name="EditIcon" :size="14" />
@@ -23,7 +23,7 @@
 				</n-button>
 			</div>
 
-			<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+			<div class="grid-auto-fit-200 grid gap-2">
 				<CardKV v-for="(value, key) of customer" :key>
 					<template #key>
 						{{ key }}

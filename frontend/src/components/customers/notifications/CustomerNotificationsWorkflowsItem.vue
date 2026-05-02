@@ -19,7 +19,7 @@
 		<n-modal
 			v-model:show="showForm"
 			preset="card"
-			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(400px, 90vh)', overflow: 'hidden' }"
+			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
 			title="Notification"
 			:bordered="false"
 			display-directive="show"

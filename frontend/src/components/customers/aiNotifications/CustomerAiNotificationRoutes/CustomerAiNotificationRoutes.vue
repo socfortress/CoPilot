@@ -1,7 +1,8 @@
 <template>
-	<div class="customer-ai-notification-routes">
-		<transition name="form-fade" mode="out-in">
-			<div v-if="showForm">
+	<div class="customer-ai-notification-routes flex flex-col gap-4">
+		<transition name="fade" mode="out-in">
+			<div v-if="showForm" class="flex flex-col gap-4">
+				<h4>{{ editingRoute ? `Edit ${editingRoute.name}` : "Create a notification route" }}</h4>
 				<CustomerAiNotificationRouteForm
 					:customer-code
 					:editing-route
@@ -9,29 +10,23 @@
 					@close="closeForm()"
 				/>
 			</div>
-			<div v-else>
-				<div class="flex items-center justify-between gap-4 px-7 pt-2">
+			<div v-else class="flex flex-col gap-4">
+				<div class="flex items-center justify-between gap-4">
 					<n-button size="small" type="primary" @click="openForm()">
 						<template #icon>
 							<Icon :name="AddIcon" :size="14" />
 						</template>
 						Add route
 					</n-button>
-					<n-button size="small" :disabled="loading" @click="refreshList()">
-						<template #icon>
-							<Icon :name="RefreshIcon" :size="14" />
-						</template>
-						Refresh
-					</n-button>
 				</div>
 
 				<n-spin :show="loading">
-					<div class="min-h-52 p-7 pt-4">
+					<div class="min-h-52">
 						<template v-if="list.length">
 							<CustomerAiNotificationRouteItem
 								v-for="route of list"
 								:key="route.id"
-								:route="route"
+								:route
 								class="item-appear item-appear-bottom item-appear-005 mb-2"
 								@edit="openEdit(route)"
 								@deleted="refreshList()"
@@ -67,7 +62,6 @@ const { customerCode } = defineProps<{
 }>()
 
 const AddIcon = "carbon:add-alt"
-const RefreshIcon = "carbon:renew"
 
 const message = useMessage()
 const showForm = ref(false)
@@ -116,3 +110,14 @@ function onFormSubmitted() {
 
 onBeforeMount(refreshList)
 </script>
+
+<style lang="scss" scoped>
+.fade-enter-active,
+.fade-leave-active {
+	transition: opacity 0.2s ease-in-out;
+}
+.fade-enter-from,
+.fade-leave-to {
+	opacity: 0;
+}
+</style>

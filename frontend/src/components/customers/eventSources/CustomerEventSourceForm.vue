@@ -1,8 +1,6 @@
 <template>
 	<div class="flex min-h-120 flex-col gap-4 overflow-hidden">
-		<div class="flex flex-col gap-4 px-7 pt-4">
-			<div class="text-sm font-semibold">{{ isEditing ? "Edit Event Source" : "New Event Source" }}</div>
-
+		<div class="flex flex-col gap-4">
 			<n-form-item label="Name" required>
 				<n-input v-model:value="form.name" placeholder="e.g. Wazuh Alerts" clearable />
 			</n-form-item>
@@ -28,7 +26,7 @@
 			</n-form-item>
 		</div>
 
-		<div class="flex justify-between gap-4 px-7 pb-4">
+		<div class="flex justify-between gap-4">
 			<n-button @click="close()">Close</n-button>
 			<n-button type="primary" :disabled="!isValid" :loading @click="submit()">
 				{{ isEditing ? "Update" : "Create" }}

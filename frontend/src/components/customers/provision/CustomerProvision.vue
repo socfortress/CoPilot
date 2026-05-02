@@ -1,5 +1,5 @@
 <template>
-	<div class="customer-provision">
+	<div class="customer-provision flex flex-col gap-4">
 		<transition name="form-fade" mode="out-in">
 			<div v-if="editing">
 				<CustomerProvisionWizard :customer-name="customerNameSanitized" :customer-code @submitted="submitted">
@@ -8,8 +8,8 @@
 					</template>
 				</CustomerProvisionWizard>
 			</div>
-			<div v-else>
-				<div v-if="customerMeta" class="flex items-center justify-end gap-4 px-7 pt-2">
+			<div v-else class="flex flex-col gap-4">
+				<div v-if="customerMeta" class="flex items-center justify-end gap-4">
 					<n-button size="small" type="error" ghost :loading="loadingDelete" @click="handleDelete">
 						<template #icon>
 							<Icon :name="DeleteIcon" :size="15" />
@@ -17,7 +17,7 @@
 						Decommission
 					</n-button>
 				</div>
-				<div v-else class="flex items-center justify-between gap-4 px-7 pt-2">
+				<div v-else class="flex items-center justify-between gap-4">
 					<n-button size="small" type="primary" @click="editing = true">
 						<template #icon>
 							<Icon :name="AddIcon" :size="14" />
@@ -26,7 +26,7 @@
 					</n-button>
 				</div>
 
-				<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+				<div class="grid-auto-fit-200 grid gap-2">
 					<CardKV v-for="(value, key) of customerMeta" :key>
 						<template #key>
 							{{ key }}

@@ -1,9 +1,9 @@
 <template>
 	<n-spin :show="loading" class="customer-provision-wizard">
-		<div class="flex min-h-120 flex-col">
-			<div class="grow">
+		<div class="flex min-h-120 flex-col gap-4">
+			<div class="flex grow flex-col gap-6">
 				<n-scrollbar x-scrollable trigger="none">
-					<div class="p-7 pt-4">
+					<div class="p-1 pr-4">
 						<n-steps :current size="small" :status="currentStatus">
 							<n-step title="Provisioning" />
 							<n-step title="Graylog" />
@@ -22,9 +22,9 @@
 					</div>
 				</n-scrollbar>
 
-				<n-form ref="formRef" :label-width="80" :model="form" :rules class="form-container mt-4">
+				<n-form ref="formRef" :label-width="80" :model="form" :rules class="form-container">
 					<Transition :name="`slide-form-${slideFormDirection}`">
-						<div v-if="current === 1" class="flex flex-col gap-3 px-7">
+						<div v-if="current === 1" class="flex flex-col gap-3">
 							<div class="flex flex-wrap gap-3">
 								<n-form-item label="Customer Code" path="customer_code" class="grow">
 									<n-input
@@ -68,7 +68,7 @@
 							</n-form-item>
 						</div>
 
-						<div v-else-if="current === 2" class="flex flex-col gap-3 px-7">
+						<div v-else-if="current === 2" class="flex flex-col gap-3">
 							<div class="flex flex-col gap-3 sm:flex-row">
 								<n-form-item
 									label="Customer Index name"
@@ -97,7 +97,7 @@
 							</div>
 						</div>
 
-						<div v-else-if="current === 3" class="flex flex-col gap-3 px-7">
+						<div v-else-if="current === 3" class="flex flex-col gap-3">
 							<n-form-item label="Subscriptions" path="customer_subscription" class="grow">
 								<n-select
 									v-model:value="form.customer_subscription"
@@ -148,7 +148,7 @@
 							</n-form-item>
 						</div>
 
-						<div v-else-if="current === 4" class="flex gap-3 px-7">
+						<div v-else-if="current === 4" class="flex gap-3">
 							<n-card class="grow">
 								<n-form-item label="Deploy Wazuh Worker" path="provision_wazuh_worker">
 									<n-switch v-model:value="form.provision_wazuh_worker" clearable />
@@ -175,7 +175,7 @@
 							</n-card>
 						</div>
 
-						<div v-else-if="current === 5" class="flex flex-col gap-3 px-7">
+						<div v-else-if="current === 5" class="flex flex-col gap-3">
 							<div class="flex flex-wrap gap-3">
 								<n-form-item label="Auth Password" path="wazuh_auth_password" class="grow">
 									<n-input
@@ -251,7 +251,7 @@
 				</n-form>
 			</div>
 
-			<div class="flex justify-between gap-4 p-7 pt-4">
+			<div class="flex justify-between gap-4">
 				<div class="flex gap-4">
 					<slot name="additionalActions"></slot>
 				</div>

@@ -1,7 +1,8 @@
 <template>
-	<div class="customer-notifications-workflows">
+	<div class="customer-notifications-workflows flex flex-col gap-4">
 		<transition name="form-fade" mode="out-in">
-			<div v-if="showForm" class="p-7 pt-4">
+			<div v-if="showForm" class="flex flex-col gap-4">
+				<h4>Create a Notification</h4>
 				<CustomerNotificationsWorkflowsForm
 					:customer-code
 					@mounted="formCTX = $event"
@@ -12,10 +13,10 @@
 					</template>
 				</CustomerNotificationsWorkflowsForm>
 			</div>
-			<div v-else>
+			<div v-else class="flex flex-col gap-4">
 				<n-spin :show="loading" class="min-h-48">
 					<template v-if="list.length">
-						<div class="min-h-52 p-7 pt-4">
+						<div class="min-h-52">
 							<CustomerNotificationsWorkflowsItem
 								v-for="item of list"
 								:key="item.id"
