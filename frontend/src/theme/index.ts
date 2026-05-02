@@ -121,7 +121,7 @@ export function getThemeOverrides(state: ThemeState): GlobalThemeOverrides {
 			titleFontWeight: state.fontWeight.cardTitle
 		},
 		Form: {
-			feedbackPadding: "2px",
+			feedbackPadding: "4px 2px 8px",
 			feedbackFontSizeSmall: "10px",
 			feedbackFontSizeMedium: "12px",
 			feedbackFontSizeLarge: "14px"

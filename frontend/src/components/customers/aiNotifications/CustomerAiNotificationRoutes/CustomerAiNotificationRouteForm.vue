@@ -22,47 +22,47 @@
 		-->
 		<n-form-item label="Channel">
 			<n-select v-model:value="form.channel" :options="channelOptions" disabled />
-			<template #feedback v-if="!fieldErrors.channel">
-					Email is direct SMTP via CoPilot's deployment config. Shuffle proxies to
-					3,000+ integrations through a customer's authenticated Shuffle org.
+			<template v-if="!fieldErrors.channel" #feedback>
+				Email is direct SMTP via CoPilot's deployment config. Shuffle proxies to
+				3,000+ integrations through a customer's authenticated Shuffle org.
 			</template>
 		</n-form-item>
 
-
 		<n-form-item label="Shuffle integration" path="shuffle_integration_id">
-			<div class="flex w-full flex-col gap-1">
-				<n-select
-					v-model:value="form.shuffle_integration_id"
-					:options="integrationOptions"
-					placeholder="Pick a Shuffle org for this customer"
-					:loading="loadingIntegrations"
-					@update:value="onIntegrationChange"
-				/>
-				<div v-if="!integrationOptions.length && !loadingIntegrations" class="text-tertiary text-xs">
-					No Shuffle integrations configured for this customer yet — go to the
-					<strong>Shuffle integrations</strong> tab to add one first.
-				</div>
-			</div>
+			<n-select
+				v-model:value="form.shuffle_integration_id"
+				:options="integrationOptions"
+				placeholder="Pick a Shuffle org for this customer"
+				:loading="loadingIntegrations"
+				@update:value="onIntegrationChange"
+			/>
+			<template
+				v-if="!fieldErrors.shuffle_integration_id && !integrationOptions.length && !loadingIntegrations"
+				#feedback
+			>
+				No Shuffle integrations configured for this customer yet — go to the
+				<strong>Shuffle integrations</strong> tab to add one first.
+			</template>
 		</n-form-item>
 
 		<n-form-item label="Shuffle app" path="shuffle_app_id">
-			<div class="flex w-full flex-col gap-1">
-				<n-select
-					v-model:value="form.shuffle_app_id"
-					:options="appOptions"
-					placeholder="Pick an authenticated app"
-					:loading="loadingApps"
-					:disabled="!form.shuffle_integration_id || loadingApps"
-					filterable
-					@update:value="onAppChange"
-				/>
-				<div
-					v-if="form.shuffle_integration_id && !appOptions.length && !loadingApps && appsError"
-					class="text-error text-xs"
-				>
+			<n-select
+				v-model:value="form.shuffle_app_id"
+				:options="appOptions"
+				placeholder="Pick an authenticated app"
+				:loading="loadingApps"
+				:disabled="!form.shuffle_integration_id || loadingApps"
+				filterable
+				@update:value="onAppChange"
+			/>
+			<template
+				v-if="!fieldErrors.shuffle_app_id && form.shuffle_integration_id && !appOptions.length && !loadingApps && appsError"
+				#feedback
+			>
+				<div class="text-error">
 					Couldn't fetch apps from Shuffle: {{ appsError }}
 				</div>
-			</div>
+			</template>
 		</n-form-item>
 
 		<n-form-item label="Destination hint" path="destination">
@@ -72,14 +72,12 @@
 				type="text"
 			/>
 			<template v-if="!fieldErrors.destination" #feedback>
-					Free-form — gets prepended to the outgoing message as a
-					<code>Send to &lt;destination&gt;: …</code> hint so the Shuffle app
-					agent knows where to deliver. Channel name for Slack, email for
-					Outlook / Gmail, handle for chat apps, etc.
-
+				Free-form — gets prepended to the outgoing message as a
+				<code>Send to &lt;destination&gt;: …</code> hint so the Shuffle app
+				agent knows where to deliver. Channel name for Slack, email for
+				Outlook / Gmail, handle for chat apps, etc.
 			</template>
-
-				</n-form-item>
+		</n-form-item>
 		<n-form-item label="Custom message template (optional)" path="format_template" :show-feedback="false">
 			<n-input
 				v-model:value="form.format_template"
@@ -157,6 +155,10 @@ const form = reactive<NotificationRoutePayload>({
 // Hidden from the UI — set programmatically on the form. Will become
 // a select again when we add more dispatch event types (analyst-review
 // hooks, IOC-enrichment alerts, scheduled-sweep findings).
+const triggerOptions = [
+	{ label: "Every investigation completes", value: "investigation_complete" },
+	{ label: "Critical / High severity only", value: "severity_critical_or_high" }
+]
 
 // Single-option list — keeps the n-select rendering consistent with
 // the rest of the form even though there's nothing to pick. If we
@@ -239,23 +241,6 @@ async function loadApps(integrationId: number) {
 	}
 }
 
-function onChannelChange(value: NotificationChannel) {
-	// Clear channel-specific fields when switching, so we don't carry
-	// stale Shuffle picks into an SMTP route or vice versa.
-	if (value === "smtp_email") {
-		form.shuffle_integration_id = null
-		form.shuffle_app_id = null
-		form.shuffle_app_name = null
-	} else {
-		// Reset destination — SMTP recipients don't make sense as a
-		// Shuffle channel hint.
-		if (!editing.value) form.destination = ""
-	}
-	clearFieldError("destination")
-	clearFieldError("shuffle_integration_id")
-	clearFieldError("shuffle_app_id")
-}
-
 async function onIntegrationChange(integrationId: number | null) {
 	apps.value = []
 	form.shuffle_app_id = null
@@ -309,7 +294,8 @@ const rules: FormRules = {
 	shuffle_app_id: {
 		required: true,
 		validator: (_rule, value: string | null) => {
-			if (!value) return new Error("Pick a Shuffle app")
+			if (!value) return createFieldError("shuffle_app_id", "Pick a Shuffle app")
+			clearFieldError("shuffle_app_id")
 			return true
 		},
 		trigger: ["change", "blur"]
