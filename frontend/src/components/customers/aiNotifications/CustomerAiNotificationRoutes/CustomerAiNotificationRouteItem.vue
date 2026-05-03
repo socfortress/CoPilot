@@ -130,20 +130,13 @@ const loadingDelete = ref(false)
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
 
-// Channel icon + label. Shuffle routes show the underlying app name
-// (cached on the route row at form-submit time, so we don't have to
-// roundtrip to Shuffle on every list render).
-const channelIcon = computed(() => {
-	if (props.route.channel === "shuffle") return "carbon:integration"
-	return "carbon:email"
-})
-
-const channelLabel = computed(() => {
-	if (props.route.channel === "shuffle") {
-		return props.route.shuffle_app_name ? `Shuffle · ${props.route.shuffle_app_name}` : "Shuffle"
-	}
-	return "SMTP email"
-})
+// All current routes are Shuffle-routed; the underlying Shuffle app
+// name is cached on the route row at form-submit time so we don't
+// need to roundtrip to Shuffle on every list render.
+const channelIcon = computed(() => "carbon:integration")
+const channelLabel = computed(() =>
+	props.route.shuffle_app_name ? `Shuffle · ${props.route.shuffle_app_name}` : "Shuffle"
+)
 
 const severityColor = computed<"danger" | "warning" | "success">(() => {
 	if (props.route.min_severity === "Critical" || props.route.min_severity === "High") return "danger"

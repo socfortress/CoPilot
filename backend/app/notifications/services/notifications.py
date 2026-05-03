@@ -43,7 +43,6 @@ from app.notifications.schema.notifications import ShuffleIntegrationCreate
 from app.notifications.schema.notifications import ShuffleIntegrationUpdate
 from app.notifications.schema.notifications import ShuffleOrg
 from app.notifications.services.dispatchers import dispatch_shuffle
-from app.notifications.services.dispatchers import dispatch_smtp_email
 from app.notifications.services.dispatchers import (
     list_shuffle_apps as shuffle_apps_client,
 )
@@ -485,14 +484,6 @@ def _format_default_body(req: DispatchRequest) -> str:
     return "\n".join(parts)
 
 
-def _format_default_subject(req: DispatchRequest) -> str:
-    return (
-        f"[{req.severity_assessment.value}] AI investigation — "
-        f"alert #{req.alert_id}"
-        f"{(' ' + req.alert_name) if req.alert_name else ''}"
-    )
-
-
 def _render_body(route: CustomerNotificationRoute, req: DispatchRequest) -> str:
     """Apply the route's `format_template` if set, else fall back.
 
@@ -625,25 +616,21 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
 
     # Shuffle dispatch needs the deployment's connector creds. We fetch
     # them once per dispatch call (before the per-route loop) so a
-    # whole batch of Shuffle routes shares one DB read. The fetch
-    # itself is gated by "is any matched route Shuffle" — for SMTP-only
-    # customers we never touch the connector row.
+    # whole batch shares one DB read. Only fetch if at least one
+    # matched route uses Shuffle — early-out keeps zero-route customers
+    # from touching the connectors table.
     shuffle_creds: Optional[tuple[str, str]] = None
+    shuffle_creds_error: Optional[str] = None
     if any(r.channel == NotificationChannel.SHUFFLE.value for r in matched_routes):
         try:
             shuffle_creds = await _get_shuffle_connector(session)
         except HTTPException as e:
-            # Connector misconfigured — the dispatch endpoint exposes
-            # the helper's 503, but for a batch dispatch we'd rather
-            # mark each Shuffle route as failed in the log than abort
-            # the whole loop. SMTP routes in the same batch still go.
+            # Connector misconfigured — the dispatch endpoint surfaces
+            # the helper's 503 to ad-hoc callers, but for a batch we'd
+            # rather mark each route as failed in the log than abort
+            # the whole loop.
             logger.warning(f"Shuffle connector unavailable: {e.detail}")
-            shuffle_creds = None
             shuffle_creds_error = str(e.detail)
-        else:
-            shuffle_creds_error = None
-    else:
-        shuffle_creds_error = None
 
     for route in matched_routes:
         # Cache every route attribute we'll need into locals UP FRONT.
@@ -668,14 +655,10 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
         shuffle_execution_id: Optional[str] = None
 
         try:
-            if route_channel == NotificationChannel.SMTP_EMAIL.value:
-                recipients = [r.strip() for r in route_destination.split(",") if r.strip()]
-                subject = _format_default_subject(req)
-                result_status, error_message, latency_ms = await dispatch_smtp_email(recipients, subject, body)
-            elif route_channel == NotificationChannel.SHUFFLE.value:
-                # Phase 2: Shuffle hosted MCP. Fire-and-record — we POST
-                # to /api/v1/apps/{app_id}/mcp with the deployment's
-                # admin Bearer + the customer's Org-Id, capture the
+            if route_channel == NotificationChannel.SHUFFLE.value:
+                # Shuffle hosted MCP. Fire-and-record — we POST to
+                # /api/v1/apps/{app_id}/mcp with the deployment's admin
+                # Bearer + the customer's Org-Id, capture the
                 # execution_id, and consider the dispatch "sent" on
                 # HTTP 200. We do NOT poll for the downstream app's
                 # terminal state.

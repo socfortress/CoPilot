@@ -42,15 +42,16 @@ class NotificationTrigger(str, Enum):
 class NotificationChannel(str, Enum):
     """Delivery channel set.
 
-    `smtp_email` is direct SMTP via env config (CoPilot deployment-wide).
     `shuffle` proxies to Shuffle's hosted MCP — each customer points at
     their own Shuffle Org via `customer_shuffle_integration`, and Shuffle
     handles the OAuth-authenticated downstream app (Slack workspace,
-    Outlook tenant, Teams, etc.). Routes referencing `shuffle` MUST
-    populate the `shuffle_integration_id` + `shuffle_app_id` columns.
+    Outlook tenant, Teams, Gmail, SendGrid, etc.). Routes referencing
+    `shuffle` MUST populate the `shuffle_integration_id` + `shuffle_app_id`
+    columns. Email, chat, ticketing, and the rest of the catalog all
+    flow through this single channel — there's no separate direct SMTP
+    path because Shuffle's email apps cover that surface.
     """
 
-    SMTP_EMAIL = "smtp_email"
     SHUFFLE = "shuffle"
 
 
@@ -120,7 +121,7 @@ class NotificationRouteBase(BaseModel):
     destination: str = Field(
         ...,
         min_length=1,
-        description="SMTP recipient email(s) or Shuffle destination hint (channel name / address / handle).",
+        description="Destination hint for the Shuffle app (channel name, email address, handle).",
     )
     min_severity: NotificationSeverity = NotificationSeverity.MEDIUM
     format_template: Optional[str] = Field(
