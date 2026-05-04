@@ -12,6 +12,17 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
     ExecuteGraylogQueryRequest,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
+    MitreCoverageResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    RulesByIdsRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    RulesByIdsResponse,
+)
+from app.integrations.copilot_searches.services.mitre_coverage import get_coverage
+from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
+from app.integrations.copilot_searches.schema.copilot_searches import (
     ExecuteSearchRequest,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
@@ -41,6 +52,7 @@ from app.integrations.copilot_searches.services.copilot_searches import (
 )
 from app.integrations.copilot_searches.services.copilot_searches import get_rule_by_id
 from app.integrations.copilot_searches.services.copilot_searches import get_rule_by_name
+from app.integrations.copilot_searches.services.copilot_searches import get_rules_by_ids
 from app.integrations.copilot_searches.services.copilot_searches import get_rules_list
 from app.integrations.copilot_searches.services.copilot_searches import get_rules_stats
 from app.integrations.copilot_searches.services.copilot_searches import (
@@ -332,6 +344,68 @@ async def get_rule_by_name_endpoint(rule_name: str):
         )
 
     return RuleDetailResponse(rule=rule)
+
+
+@copilot_searches_router.post(
+    "/by-ids",
+    response_model=RulesByIdsResponse,
+    description="Fetch many rule summaries by ID in a single request",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_rules_by_ids_endpoint(request: RulesByIdsRequest):
+    """
+    Fetch multiple rule summaries by ID in one round-trip.
+
+    Used by the MITRE matrix drawer to avoid N+1 calls when displaying
+    the rules covering a technique.
+    """
+    if not request.ids:
+        return RulesByIdsResponse(rules=[], missing=[])
+    found, missing = await get_rules_by_ids(request.ids)
+    return RulesByIdsResponse(rules=found, missing=missing)
+
+
+@copilot_searches_router.get(
+    "/mitre/coverage",
+    response_model=MitreCoverageResponse,
+    description="MITRE ATT&CK matrix with per-technique rule coverage from CoPilot Searches",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_mitre_coverage():
+    """
+    Build the MITRE ATT&CK Enterprise matrix annotated with the CoPilot Search
+    rules that cover each technique and sub-technique.
+
+    Tactics are returned in canonical kill-chain order. Each technique includes
+    its own rule list plus a `total_rule_count` that aggregates sub-techniques.
+    """
+    try:
+        result = await get_coverage()
+        return MitreCoverageResponse(**result)
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Failed to build MITRE coverage: {str(e)}",
+        )
+
+
+@copilot_searches_router.post(
+    "/mitre/refresh",
+    description="Force re-fetch of the MITRE ATT&CK STIX bundle",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def refresh_mitre_matrix():
+    """Force re-fetch of the MITRE ATT&CK STIX bundle."""
+    try:
+        await mitre_matrix.refresh()
+        return {
+            "success": True,
+            "message": "MITRE matrix refreshed",
+            "tactics": len(mitre_matrix.tactics),
+            "techniques": len(mitre_matrix.techniques),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Failed to refresh MITRE matrix: {str(e)}")
 
 
 @copilot_searches_router.get(

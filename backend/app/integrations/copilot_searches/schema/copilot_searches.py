@@ -302,3 +302,66 @@ class ProvisionGraylogAlertResponse(BaseModel):
     rule_name: str
     alert_title: str
     graylog_query: str
+
+
+# =============================================================================
+# MITRE Coverage Models
+# =============================================================================
+
+
+class MitreSubTechnique(BaseModel):
+    id: str
+    name: str
+    url: str
+    rule_count: int
+    rule_ids: list[str]
+
+
+class MitreTechnique(BaseModel):
+    id: str
+    name: str
+    url: str
+    rule_count: int
+    rule_ids: list[str]
+    total_rule_count: int
+    subtechniques: list[MitreSubTechnique]
+
+
+class MitreTactic(BaseModel):
+    id: str
+    name: str
+    short_name: str
+    url: str
+    techniques: list[MitreTechnique]
+
+
+class MitreCoverageStats(BaseModel):
+    total_tactics: int
+    total_techniques: int
+    covered_techniques: int
+    total_rules: int
+    matrix_last_refreshed: Optional[datetime] = None
+    rules_last_refreshed: Optional[datetime] = None
+
+
+class MitreCoverageResponse(BaseModel):
+    success: bool = True
+    message: str = "MITRE coverage built successfully"
+    tactics: list[MitreTactic]
+    stats: MitreCoverageStats
+
+
+# =============================================================================
+# Batch Rule Lookup
+# =============================================================================
+
+
+class RulesByIdsRequest(BaseModel):
+    ids: list[str] = Field(..., description="Rule IDs to fetch", max_length=500)
+
+
+class RulesByIdsResponse(BaseModel):
+    success: bool = True
+    message: str = "Rules fetched successfully"
+    rules: list[RuleSummary]
+    missing: list[str] = Field(default_factory=list, description="IDs that were requested but not found in cache")

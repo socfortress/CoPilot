@@ -209,3 +209,60 @@ export interface RuleListQuery {
 	skip?: number
 	limit?: number
 }
+
+// MITRE Coverage
+
+export interface MitreSubTechnique {
+	id: string
+	name: string
+	url: string
+	rule_count: number
+	rule_ids: string[]
+}
+
+export interface MitreTechnique {
+	id: string
+	name: string
+	url: string
+	rule_count: number
+	rule_ids: string[]
+	total_rule_count: number
+	subtechniques: MitreSubTechnique[]
+}
+
+export interface MitreTactic {
+	id: string
+	name: string
+	short_name: string
+	url: string
+	techniques: MitreTechnique[]
+}
+
+export interface MitreCoverageStats {
+	total_tactics: number
+	total_techniques: number
+	covered_techniques: number
+	total_rules: number
+	matrix_last_refreshed: string | null
+	rules_last_refreshed: string | null
+}
+
+export interface MitreCoverageResponse {
+	success: boolean
+	message: string
+	tactics: MitreTactic[]
+	stats: MitreCoverageStats
+}
+
+// Batch rule lookup
+
+export interface RulesByIdsRequest {
+	ids: string[]
+}
+
+export interface RulesByIdsResponse {
+	success: boolean
+	message: string
+	rules: RuleSummary[]
+	missing: string[]
+}

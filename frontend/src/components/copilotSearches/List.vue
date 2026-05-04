@@ -10,7 +10,22 @@
 
 		<div class="flex flex-col">
 			<div class="flex flex-wrap items-center justify-end gap-2">
-				<div class="flex min-w-80 grow gap-2">
+				<n-button-group size="small">
+					<n-button :type="viewMode === 'grid' ? 'primary' : 'default'" @click="viewMode = 'grid'">
+						<template #icon>
+							<Icon :name="GridIcon" />
+						</template>
+						Rules
+					</n-button>
+					<n-button :type="viewMode === 'matrix' ? 'primary' : 'default'" @click="viewMode = 'matrix'">
+						<template #icon>
+							<Icon :name="MatrixIcon" />
+						</template>
+						MITRE Navigator
+					</n-button>
+				</n-button-group>
+
+				<div v-if="viewMode === 'grid'" class="flex min-w-80 grow gap-2">
 					<n-popover overlap placement="bottom-start">
 						<template #trigger>
 							<div class="bg-default rounded-lg">
@@ -105,7 +120,7 @@
 					</n-popover>
 				</div>
 
-				<n-button size="small" :loading="refreshing" @click="handleRefresh">
+				<n-button v-if="viewMode === 'grid'" size="small" :loading="refreshing" @click="handleRefresh">
 					<template #icon>
 						<Icon :name="RefreshIcon" />
 					</template>
@@ -113,6 +128,7 @@
 				</n-button>
 
 				<n-pagination
+					v-if="viewMode === 'grid'"
 					v-model:page="pagination.current"
 					:page-size="pagination.size"
 					:item-count="pagination.filtered"
@@ -120,7 +136,7 @@
 				/>
 			</div>
 
-			<n-spin :show="loading">
+			<n-spin v-if="viewMode === 'grid'" :show="loading">
 				<div class="my-3">
 					<div
 						v-if="list.length"
@@ -135,7 +151,9 @@
 				</div>
 			</n-spin>
 
-			<div class="flex justify-end">
+			<MatrixView v-else class="my-3" />
+
+			<div v-if="viewMode === 'grid'" class="flex justify-end">
 				<n-pagination
 					v-if="list.length > 3"
 					v-model:page="pagination.current"
@@ -150,12 +168,13 @@
 
 <script setup lang="ts">
 import type { PlatformFilter, RuleListQuery, RuleSeverity, RuleStatus, RuleSummary } from "@/types/copilotSearches.d"
-import { watchDebounced } from "@vueuse/core"
+import { useLocalStorage, watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import {
 	NAlert,
 	NBadge,
 	NButton,
+	NButtonGroup,
 	NCheckbox,
 	NEmpty,
 	NInput,
@@ -168,6 +187,7 @@ import {
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import MatrixView from "./MatrixView.vue"
 import RuleCard from "./RuleCard.vue"
 
 const loading = ref(false)
@@ -196,6 +216,10 @@ const InfoIcon = "carbon:information"
 const FilterIcon = "carbon:filter-edit"
 const SearchIcon = "carbon:search"
 const RefreshIcon = "carbon:renew"
+const GridIcon = "carbon:grid"
+const MatrixIcon = "carbon:chart-network"
+
+const viewMode = useLocalStorage<"grid" | "matrix">("copilot-searches/view-mode", "grid")
 
 const platformOptions = [
 	{ label: "Linux", value: "linux" },

@@ -3,6 +3,7 @@ import type {
 	ExecuteSearchRequest,
 	ExecuteSearchResponse,
 	GraylogQueryResponse,
+	MitreCoverageResponse,
 	PlatformFilter,
 	ProvisionGraylogAlertRequest,
 	ProvisionGraylogAlertResponse,
@@ -10,6 +11,8 @@ import type {
 	RuleDetailResponse,
 	RuleListQuery,
 	RuleListResponse,
+	RulesByIdsRequest,
+	RulesByIdsResponse,
 	RuleStatsResponse
 } from "@/types/copilotSearches.d"
 import type { FlaskBaseResponse } from "@/types/flask.d"
@@ -177,6 +180,34 @@ export default {
 		return HttpClient.post<FlaskBaseResponse & ProvisionGraylogAlertResponse>(
 			`/copilot_searches/provision/graylog`,
 			request
+		)
+	},
+
+	/**
+	 * Fetch many rule summaries by ID in one round-trip
+	 */
+	getRulesByIds(ids: string[], signal?: AbortSignal) {
+		const body: RulesByIdsRequest = { ids }
+		return HttpClient.post<FlaskBaseResponse & RulesByIdsResponse>(`/copilot_searches/by-ids`, body, {
+			signal
+		})
+	},
+
+	/**
+	 * MITRE ATT&CK matrix annotated with per-technique CoPilot Search rule coverage
+	 */
+	getMitreCoverage(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & MitreCoverageResponse>(`/copilot_searches/mitre/coverage`, {
+			signal
+		})
+	},
+
+	/**
+	 * Force re-fetch of the MITRE ATT&CK STIX bundle
+	 */
+	refreshMitreMatrix() {
+		return HttpClient.post<FlaskBaseResponse & { tactics: number; techniques: number }>(
+			`/copilot_searches/mitre/refresh`
 		)
 	}
 }
