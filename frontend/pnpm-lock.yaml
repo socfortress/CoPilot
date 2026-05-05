@@ -48,8 +48,8 @@ importers:
         specifier: ^4.0.2
         version: 4.0.2
       '@shuffleio/shuffle-mcps':
-        specifier: ^0.0.3
-        version: 0.0.3(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+        specifier: ^0.0.4
+        version: 0.0.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@types/codemirror':
         specifier: ^5.60.17
         version: 5.60.17
@@ -1384,8 +1384,8 @@ packages:
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
 
-  '@shuffleio/shuffle-mcps@0.0.3':
-    resolution: {integrity: sha512-w2A2wyuxtPo70sdb/aXQPAIXQVIcUoCRdzh2EkxpCttpnPxDSBjVlx+PMCVW5kblQMIvU4Q7EQCndLvdK+FzfA==}
+  '@shuffleio/shuffle-mcps@0.0.4':
+    resolution: {integrity: sha512-Oj7m3KY4QBO5OdjhDrhAGyf0yQ7SSaaZ8ty75wx0M9C+o+9ftPpefli3n4/P/kD4btCmPmUK3iRGMd3Ov4jP0Q==}
     peerDependencies:
       react: '>=18'
       react-dom: '>=18'
@@ -5877,7 +5877,7 @@ snapshots:
 
   '@shikijs/vscode-textmate@10.0.2': {}
 
-  '@shuffleio/shuffle-mcps@0.0.3(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+  '@shuffleio/shuffle-mcps@0.0.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
       algoliasearch: 5.52.0
       react: 19.2.5
