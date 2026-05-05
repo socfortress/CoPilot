@@ -298,9 +298,7 @@ async def get_coverage(
         )
 
     total_techniques = sum(len(t["techniques"]) for t in tactics_out)
-    covered_techniques = sum(
-        1 for t in tactics_out for tech in t["techniques"] if tech["total_rule_count"] > 0
-    )
+    covered_techniques = sum(1 for t in tactics_out for tech in t["techniques"] if tech["total_rule_count"] > 0)
 
     return {
         "success": True,

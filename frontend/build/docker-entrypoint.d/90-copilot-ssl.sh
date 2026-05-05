@@ -23,4 +23,3 @@ if [[ ! -f /etc/nginx/certs/dhparams.pem ]]; then
 else
     echo "... DH parameters found"
 fi
- 

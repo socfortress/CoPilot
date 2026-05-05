@@ -10,36 +10,6 @@ from app.auth.routes.auth import AuthHandler
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from app.integrations.copilot_searches.schema.copilot_searches import (
-    ExecuteGraylogQueryRequest,
-)
-from app.integrations.copilot_searches.schema.copilot_searches import (
-    MitreCoverageResponse,
-)
-from app.integrations.copilot_searches.schema.copilot_searches import (
-    RulesByIdsRequest,
-)
-from app.integrations.copilot_searches.schema.copilot_searches import (
-    RulesByIdsResponse,
-)
-from app.integrations.copilot_searches.services.mitre_coverage import get_coverage
-from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
-from app.integrations.copilot_searches.schema.copilot_searches import (
-    ExecuteSearchRequest,
-)
-from app.integrations.copilot_searches.schema.copilot_searches import (
-    ExecuteSearchResponse,
-)
-from app.integrations.copilot_searches.schema.copilot_searches import (
-    GraylogQueryResponse,
-)
-from app.integrations.copilot_searches.schema.copilot_searches import PlatformFilter
-from app.integrations.copilot_searches.schema.copilot_searches import (
-    ProvisionGraylogAlertRequest,
-)
-from app.integrations.copilot_searches.schema.copilot_searches import (
-    ProvisionGraylogAlertResponse,
-)
-from app.integrations.copilot_searches.schema.copilot_searches import (
     BulkProvisionGraylogAlertRequest,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
@@ -49,17 +19,38 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
     BulkProvisionRuleResult,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
+    ExecuteGraylogQueryRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    ExecuteSearchRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    ExecuteSearchResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
     GraylogProvisioningStatusResponse,
 )
-from app.integrations.copilot_searches.services.copilot_searches import (
-    rules_cache,
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    GraylogQueryResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    MitreCoverageResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import PlatformFilter
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    ProvisionGraylogAlertRequest,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
     ProvisionGraylogAlertRequest as PerRuleProvisionRequest,
 )
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    ProvisionGraylogAlertResponse,
+)
 from app.integrations.copilot_searches.schema.copilot_searches import RefreshResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RuleDetailResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RuleListResponse
+from app.integrations.copilot_searches.schema.copilot_searches import RulesByIdsRequest
+from app.integrations.copilot_searches.schema.copilot_searches import RulesByIdsResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RuleSeverity
 from app.integrations.copilot_searches.schema.copilot_searches import RuleStatsResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RuleStatus
@@ -80,6 +71,9 @@ from app.integrations.copilot_searches.services.copilot_searches import (
 from app.integrations.copilot_searches.services.copilot_searches import (
     refresh_rules_cache,
 )
+from app.integrations.copilot_searches.services.copilot_searches import rules_cache
+from app.integrations.copilot_searches.services.mitre_coverage import get_coverage
+from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
 
 copilot_searches_router = APIRouter()
 

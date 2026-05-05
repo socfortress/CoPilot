@@ -5,10 +5,11 @@ from typing import Optional
 import requests
 from fastapi import HTTPException
 from loguru import logger
-#from shufflepy import Singul
 
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
+
+# from shufflepy import Singul
 
 
 async def verify_shuffle_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:

@@ -4,7 +4,8 @@ from loguru import logger
 
 from app.auth.utils import AuthHandler
 from app.connectors.shuffle.schema.singul import SingulRequest
-#from app.connectors.shuffle.services.singul import execute_singul
+
+# from app.connectors.shuffle.services.singul import execute_singul
 
 shuffle_singul_router = APIRouter()
 
@@ -26,4 +27,4 @@ async def execute_integration_route(request: SingulRequest):
     """
     logger.info("Executing Singul integration")
     exit(0)
-    #return await execute_singul(request)
+    # return await execute_singul(request)

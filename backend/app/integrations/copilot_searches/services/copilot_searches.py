@@ -20,6 +20,7 @@ def _github_headers() -> dict[str, str]:
         headers["Authorization"] = f"Bearer {token}"
     return headers
 
+
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
 )
