@@ -7,6 +7,9 @@ from typing import Optional
 import httpx
 from loguru import logger
 
+from app.integrations.copilot_searches.schema.copilot_searches import PlatformFilter
+from app.integrations.copilot_searches.schema.copilot_searches import RuleSeverity
+from app.integrations.copilot_searches.schema.copilot_searches import RuleStatus
 from app.integrations.copilot_searches.services.copilot_searches import rules_cache
 
 MITRE_STIX_URL = "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
@@ -152,23 +155,77 @@ class MitreMatrix:
 mitre_matrix = MitreMatrix()
 
 
-async def get_coverage() -> dict:
+def _rule_matches_filters(
+    rule: dict,
+    platform: Optional[PlatformFilter],
+    severity: Optional[RuleSeverity],
+    status: Optional[RuleStatus],
+    has_graylog: Optional[bool],
+    search: Optional[str],
+) -> bool:
+    if platform is not None and platform != PlatformFilter.ALL:
+        if rule.get("_platform", "unknown") != platform.value:
+            return False
+    if severity is not None:
+        if rule.get("response", {}).get("severity", "").lower() != severity.value:
+            return False
+    if status is not None:
+        if rule.get("status", "").lower() != status.value:
+            return False
+    if has_graylog is not None:
+        if rule.get("_has_graylog", False) != has_graylog:
+            return False
+    if search:
+        s = search.lower()
+        name = rule.get("name", "").lower()
+        desc = rule.get("description", "").lower()
+        if s not in name and s not in desc:
+            return False
+    return True
+
+
+async def get_coverage(
+    platform: Optional[PlatformFilter] = None,
+    severity: Optional[RuleSeverity] = None,
+    status: Optional[RuleStatus] = None,
+    has_graylog: Optional[bool] = None,
+    search: Optional[str] = None,
+) -> dict:
     """Build the MITRE coverage map by cross-referencing rules against the matrix.
 
+    Optional filters narrow the rules considered (platform/severity/status/has_graylog/search)
+    so the matrix can show "Windows-only coverage", etc.
+
     Returns a payload shaped for the frontend matrix view: ordered tactic columns,
-    techniques grouped under each tactic, and per-technique rule counts + IDs
-    with sub-techniques nested.
+    techniques grouped under each tactic, per-technique rule counts + IDs with
+    sub-techniques nested, and a flat `rules_index` mapping rule ID to a small
+    summary (name, severity, platform, has_graylog) for hover previews.
     """
     await mitre_matrix.ensure_loaded()
     await rules_cache.ensure_loaded()
 
     # Map base technique -> {rule_ids set, subtechniques: {sub_id -> rule_ids set}}
     coverage: dict[str, dict] = {}
+    rules_index: dict[str, dict] = {}
 
     for rule in rules_cache.get_all_rules():
         rule_id = rule.get("id", "")
         if not rule_id:
             continue
+        if not _rule_matches_filters(rule, platform, severity, status, has_graylog, search):
+            continue
+
+        # Cap data_sources at 3 to keep payload small; full list is in /id/{rule_id}.
+        ds = rule.get("data_source", []) or []
+        rules_index[rule_id] = {
+            "id": rule_id,
+            "name": rule.get("name", ""),
+            "severity": rule.get("response", {}).get("severity", "medium"),
+            "platform": rule.get("_platform", "unknown"),
+            "has_graylog": rule.get("_has_graylog", False),
+            "data_sources": [s for s in ds if isinstance(s, str)][:3],
+        }
+
         for raw_tid in rule.get("tags", {}).get("mitre_attack_id", []) or []:
             tid = raw_tid.strip().upper()
             if not tid.startswith("T"):
@@ -249,11 +306,12 @@ async def get_coverage() -> dict:
         "success": True,
         "message": "MITRE coverage built successfully",
         "tactics": tactics_out,
+        "rules_index": rules_index,
         "stats": {
             "total_tactics": len(tactics_out),
             "total_techniques": total_techniques,
             "covered_techniques": covered_techniques,
-            "total_rules": rules_cache.rules_count,
+            "total_rules": len(rules_index),
             "matrix_last_refreshed": mitre_matrix._last_refresh,
             "rules_last_refreshed": rules_cache.last_refresh,
         },
