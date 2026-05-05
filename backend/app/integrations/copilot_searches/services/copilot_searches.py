@@ -1,6 +1,7 @@
 import asyncio
 import copy
 import json
+import os
 import re
 from datetime import datetime
 from datetime import timedelta
@@ -10,6 +11,15 @@ from typing import Optional
 import httpx
 import yaml
 from loguru import logger
+
+
+def _github_headers() -> dict[str, str]:
+    headers = {"Accept": "application/vnd.github+json"}
+    token = os.getenv("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
 
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
@@ -158,7 +168,7 @@ class RulesCache:
         """Fetch all YAML rules from GitHub repository."""
         rules = []
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=30.0, headers=_github_headers()) as client:
             # Get the directory tree for detections
             tree_url = f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/git/trees/{GITHUB_BRANCH}" f"?recursive=1"
 
@@ -588,6 +598,25 @@ async def get_rule_by_id(rule_id: str) -> Optional[RuleDetail]:
         return None
 
     return rule_to_detail(rule)
+
+
+async def get_rules_by_ids(ids: list[str]) -> tuple[list[RuleSummary], list[str]]:
+    """
+    Fetch many rule summaries by ID in one shot.
+
+    Returns (found_summaries, missing_ids).
+    """
+    await rules_cache.ensure_loaded()
+
+    found: list[RuleSummary] = []
+    missing: list[str] = []
+    for rule_id in ids:
+        rule = rules_cache.get_rule_by_id(rule_id)
+        if rule is None:
+            missing.append(rule_id)
+        else:
+            found.append(rule_to_summary(rule))
+    return found, missing
 
 
 async def get_rule_by_name(rule_name: str) -> Optional[RuleDetail]:

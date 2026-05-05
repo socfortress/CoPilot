@@ -1,8 +1,13 @@
 import type {
+	BulkProvisionGraylogAlertRequest,
+	BulkProvisionGraylogAlertResponse,
+	GraylogProvisioningStatusResponse,
 	ExecuteGraylogQueryRequest,
 	ExecuteSearchRequest,
 	ExecuteSearchResponse,
 	GraylogQueryResponse,
+	MitreCoverageQuery,
+	MitreCoverageResponse,
 	PlatformFilter,
 	ProvisionGraylogAlertRequest,
 	ProvisionGraylogAlertResponse,
@@ -10,6 +15,8 @@ import type {
 	RuleDetailResponse,
 	RuleListQuery,
 	RuleListResponse,
+	RulesByIdsRequest,
+	RulesByIdsResponse,
 	RuleStatsResponse
 } from "@/types/copilotSearches.d"
 import type { FlaskBaseResponse } from "@/types/flask.d"
@@ -177,6 +184,64 @@ export default {
 		return HttpClient.post<FlaskBaseResponse & ProvisionGraylogAlertResponse>(
 			`/copilot_searches/provision/graylog`,
 			request
+		)
+	},
+
+	/**
+	 * Provision multiple CoPilot Search rules as Graylog event definitions in a single call.
+	 * Per-rule failures are reported in `results` rather than aborting the batch.
+	 */
+	bulkProvisionGraylogAlerts(request: BulkProvisionGraylogAlertRequest) {
+		return HttpClient.post<FlaskBaseResponse & BulkProvisionGraylogAlertResponse>(
+			`/copilot_searches/provision/graylog/bulk`,
+			request
+		)
+	},
+
+	/**
+	 * For each rule ID, check whether a matching Graylog event definition already exists.
+	 * Used to mark rules as "in Graylog" without forcing a re-provision.
+	 */
+	checkGraylogProvisioningStatus(ids: string[]) {
+		return HttpClient.post<FlaskBaseResponse & GraylogProvisioningStatusResponse>(
+			`/copilot_searches/provision/graylog/check`,
+			{ ids }
+		)
+	},
+
+	/**
+	 * Fetch many rule summaries by ID in one round-trip
+	 */
+	getRulesByIds(ids: string[], signal?: AbortSignal) {
+		const body: RulesByIdsRequest = { ids }
+		return HttpClient.post<FlaskBaseResponse & RulesByIdsResponse>(`/copilot_searches/by-ids`, body, {
+			signal
+		})
+	},
+
+	/**
+	 * MITRE ATT&CK matrix annotated with per-technique CoPilot Search rule coverage.
+	 * Optional filters narrow which rules contribute to coverage (e.g. Windows-only).
+	 */
+	getMitreCoverage(query?: MitreCoverageQuery, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & MitreCoverageResponse>(`/copilot_searches/mitre/coverage`, {
+			params: {
+				platform: query?.platform,
+				severity: query?.severity,
+				status: query?.status,
+				has_graylog: query?.has_graylog,
+				search: query?.search
+			},
+			signal
+		})
+	},
+
+	/**
+	 * Force re-fetch of the MITRE ATT&CK STIX bundle
+	 */
+	refreshMitreMatrix() {
+		return HttpClient.post<FlaskBaseResponse & { tactics: number; techniques: number }>(
+			`/copilot_searches/mitre/refresh`
 		)
 	}
 }

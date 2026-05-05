@@ -48,7 +48,7 @@
 		"@fontsource/public-sans": "^5.2.7",
 		"@microsoft/fetch-event-source": "^2.0.1",
 		"@shikijs/markdown-it": "^4.0.2",
-		"@shuffleio/shuffle-mcps": "^0.0.3",
+		"@shuffleio/shuffle-mcps": "^0.0.4",
 		"@types/codemirror": "^5.60.17",
 		"@vueuse/core": "^14.3.0",
 		"@vueuse/motion": "^3.0.3",

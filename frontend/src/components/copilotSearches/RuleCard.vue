@@ -1,5 +1,13 @@
 <template>
-	<div class="h-full">
+	<div class="rule-card-wrap h-full" :class="{ 'is-selected': selectable && selected }">
+		<n-checkbox
+			v-if="selectable"
+			:checked="selected"
+			class="rule-card-checkbox"
+			size="small"
+			@update:checked="emit('update:selected', $event)"
+			@click.stop
+		/>
 		<CardEntity
 			hoverable
 			clickable
@@ -38,6 +46,15 @@
 			</template>
 			<template #headerExtra>
 				<div class="text-default pt-.5 flex h-full items-center gap-2">
+					<n-tooltip v-if="provisioned">
+						<template #trigger>
+							<div class="provisioned-chip">
+								<Icon :name="ProvisionedIcon" :size="11" />
+								<span>in Graylog</span>
+							</div>
+						</template>
+						An event definition with this rule's title already exists in Graylog
+					</n-tooltip>
 					<n-tooltip v-if="rule.has_graylog_query">
 						<template #trigger>
 							<Icon :name="GraylogIcon" :size="16" />
@@ -57,7 +74,14 @@
 			<template #mainExtra>
 				<div class="flex flex-wrap items-center justify-between gap-2">
 					<SeverityBadge :severity="rule.severity" />
-					<PlatformBadge :platform="rule.platform" />
+					<Badge>
+						<template #value>
+							<div class="flex items-center gap-2">
+								<Icon :name="platformInfo.icon" :size="14" />
+								<span class="whitespace-nowrap">{{ platformInfo.label }}</span>
+							</div>
+						</template>
+					</Badge>
 				</div>
 			</template>
 			<template #footerExtra>
@@ -134,18 +158,27 @@
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
 import type { RuleSummary } from "@/types/copilotSearches.d"
-import { NButton, NModal, NTooltip, useMessage } from "naive-ui"
-import { ref } from "vue"
+import { NButton, NCheckbox, NModal, NTooltip, useMessage } from "naive-ui"
+import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import PlatformBadge from "@/components/common/PlatformBadge.vue"
 import ExecuteSearchForm from "./ExecuteSearchForm.vue"
 import ProvisionGraylogForm from "./ProvisionGraylogForm.vue"
 import RuleCardContent from "./RuleCardContent.vue"
 import SeverityBadge from "./SeverityBadge.vue"
 
-const { rule } = defineProps<{ rule: RuleSummary; embedded?: boolean }>()
+const { rule } = defineProps<{
+	rule: RuleSummary
+	embedded?: boolean
+	provisioned?: boolean
+	selectable?: boolean
+	selected?: boolean
+}>()
+
+const emit = defineEmits<{
+	(e: "update:selected", value: boolean): void
+}>()
 
 const showDetails = ref(false)
 const showExecuteModal = ref(false)
@@ -155,6 +188,22 @@ const message = useMessage()
 const PlayIcon = "carbon:play"
 const ProvisionIcon = "carbon:add-alt"
 const GraylogIcon = "carbon:notification"
+const ProvisionedIcon = "carbon:checkmark-filled"
+
+// Platform → icon + label mapping. Mirrors the platforms the CoPilot Searches
+// backend actually emits (linux, windows, powershell, cve, unknown). Done
+// locally instead of using the shared PlatformBadge so we cover values like
+// "powershell" and "cve" that the shared `getOS` util doesn't recognize.
+const PLATFORM_INFO: Record<string, { icon: string; label: string }> = {
+	linux: { icon: "mdi:linux", label: "Linux" },
+	windows: { icon: "mdi:microsoft-windows", label: "Windows" },
+	powershell: { icon: "mdi:powershell", label: "PowerShell" },
+	cve: { icon: "carbon:security", label: "CVE" }
+}
+const platformInfo = computed(() => {
+	const key = (rule.platform || "").toLowerCase()
+	return PLATFORM_INFO[key] || { icon: "mdi:help-box", label: "Unknown" }
+})
 
 function getStatusColor(status: string): BadgeColor | undefined {
 	switch (status.toLowerCase()) {
@@ -178,3 +227,51 @@ function handleProvisionSuccess() {
 	showProvisionModal.value = false
 }
 </script>
+
+<style scoped lang="scss">
+.provisioned-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 6px;
+	font-size: 0.65rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--success-color);
+	background: rgba(var(--success-color-rgb) / 0.1);
+	border: 1px solid rgba(var(--success-color-rgb) / 0.4);
+	border-radius: 3px;
+	white-space: nowrap;
+}
+
+.rule-card-wrap {
+	position: relative;
+}
+
+/* Sits just outside the card's top-left corner like a sticker so it never
+   overlaps the header badges. The card's own click handler still triggers
+   the rule-detail modal; the checkbox stops propagation. */
+.rule-card-checkbox {
+	position: absolute;
+	top: -7px;
+	left: -7px;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--bg-default-color);
+	border: 1px solid var(--border-color);
+	border-radius: 4px;
+	padding: 2px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+	transition: border-color 0.12s, box-shadow 0.12s;
+}
+.rule-card-wrap.is-selected .rule-card-checkbox {
+	border-color: rgba(var(--primary-color-rgb) / 0.6);
+	box-shadow: 0 1px 4px rgba(var(--primary-color-rgb) / 0.4);
+}
+
+.rule-card-wrap.is-selected :deep(.card-entity) {
+	box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb) / 0.6);
+}
+</style>

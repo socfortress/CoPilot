@@ -5,10 +5,11 @@ from typing import Optional
 import requests
 from fastapi import HTTPException
 from loguru import logger
-from shufflepy import Singul
 
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
+
+# from shufflepy import Singul
 
 
 async def verify_shuffle_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -295,30 +296,3 @@ def send_put_request(
             status_code=500,
             detail=f"Failed to send PUT request to {endpoint} with error: {e}",
         )
-
-
-async def get_singul_client(connector_name: str = "Shuffle") -> Singul:
-    """
-    Create and return a Singul client using database credentials.
-
-    Args:
-        connector_name (str, optional): The name of the connector to use. Defaults to "Shuffle".
-
-    Returns:
-        Singul: An initialized Singul client instance.
-    """
-    logger.info("Creating Singul client from database credentials")
-    async with get_db_session() as session:
-        attributes = await get_connector_info_from_db(connector_name, session)
-
-    if attributes is None:
-        logger.error("No Shuffle connector found in the database")
-        raise HTTPException(status_code=404, detail="Shuffle connector not found in database")
-
-    try:
-        singul_client = Singul(auth=attributes["connector_api_key"], url=attributes["connector_url"])
-        logger.info(f"Singul client created successfully for {attributes['connector_url']}")
-        return singul_client
-    except Exception as e:
-        logger.error(f"Failed to create Singul client: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to create Singul client: {e}")
