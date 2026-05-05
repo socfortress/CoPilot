@@ -74,7 +74,14 @@
 			<template #mainExtra>
 				<div class="flex flex-wrap items-center justify-between gap-2">
 					<SeverityBadge :severity="rule.severity" />
-					<PlatformBadge :platform="rule.platform" />
+					<Badge>
+						<template #value>
+							<div class="flex items-center gap-2">
+								<Icon :name="platformInfo.icon" :size="14" />
+								<span class="whitespace-nowrap">{{ platformInfo.label }}</span>
+							</div>
+						</template>
+					</Badge>
 				</div>
 			</template>
 			<template #footerExtra>
@@ -152,11 +159,10 @@
 import type { BadgeColor } from "@/components/common/Badge.vue"
 import type { RuleSummary } from "@/types/copilotSearches.d"
 import { NButton, NCheckbox, NModal, NTooltip, useMessage } from "naive-ui"
-import { ref } from "vue"
+import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import PlatformBadge from "@/components/common/PlatformBadge.vue"
 import ExecuteSearchForm from "./ExecuteSearchForm.vue"
 import ProvisionGraylogForm from "./ProvisionGraylogForm.vue"
 import RuleCardContent from "./RuleCardContent.vue"
@@ -183,6 +189,21 @@ const PlayIcon = "carbon:play"
 const ProvisionIcon = "carbon:add-alt"
 const GraylogIcon = "carbon:notification"
 const ProvisionedIcon = "carbon:checkmark-filled"
+
+// Platform → icon + label mapping. Mirrors the platforms the CoPilot Searches
+// backend actually emits (linux, windows, powershell, cve, unknown). Done
+// locally instead of using the shared PlatformBadge so we cover values like
+// "powershell" and "cve" that the shared `getOS` util doesn't recognize.
+const PLATFORM_INFO: Record<string, { icon: string; label: string }> = {
+	linux: { icon: "mdi:linux", label: "Linux" },
+	windows: { icon: "mdi:microsoft-windows", label: "Windows" },
+	powershell: { icon: "mdi:powershell", label: "PowerShell" },
+	cve: { icon: "carbon:security", label: "CVE" }
+}
+const platformInfo = computed(() => {
+	const key = (rule.platform || "").toLowerCase()
+	return PLATFORM_INFO[key] || { icon: "mdi:help-box", label: "Unknown" }
+})
 
 function getStatusColor(status: string): BadgeColor | undefined {
 	switch (status.toLowerCase()) {
