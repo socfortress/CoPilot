@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
+from loguru import logger
 
 from app.auth.routes.auth import AuthHandler
 from app.connectors.graylog.routes.events import get_all_event_definitions
@@ -37,6 +38,24 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
     ProvisionGraylogAlertResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    BulkProvisionGraylogAlertRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    BulkProvisionGraylogAlertResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    BulkProvisionRuleResult,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    GraylogProvisioningStatusResponse,
+)
+from app.integrations.copilot_searches.services.copilot_searches import (
+    rules_cache,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    ProvisionGraylogAlertRequest as PerRuleProvisionRequest,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import RefreshResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RuleDetailResponse
@@ -265,21 +284,29 @@ async def list_cve_rules(
     limit: int = Query(100, ge=1, le=500),
 ):
     """List all detection rules that have CVE tags."""
-    result = await get_rules_list(
+    # Pull a generous slice unfiltered, then keep only CVE-tagged rules and
+    # paginate those. Previously the route filtered after slicing, which made
+    # pagination wrong (a page could come back empty even when more CVE rules
+    # existed later in the list).
+    full = await get_rules_list(
         status=status,
         severity=severity,
         mitre_id=mitre_id,
         search=search,
         has_graylog=has_graylog,
-        skip=skip,
-        limit=limit,
+        skip=0,
+        limit=500,
     )
 
-    # Filter to only rules with CVE tags
-    result["rules"] = [r for r in result["rules"] if r.cve]
-    result["filtered"] = len(result["rules"])
+    cve_only = [r for r in full["rules"] if r.cve]
+    paginated = cve_only[skip : skip + limit]
 
-    return RuleListResponse(**result)
+    return RuleListResponse(
+        total=full["total"],
+        filtered=len(cve_only),
+        platform=full["platform"],
+        rules=paginated,
+    )
 
 
 @copilot_searches_router.get(
@@ -371,16 +398,38 @@ async def get_rules_by_ids_endpoint(request: RulesByIdsRequest):
     description="MITRE ATT&CK matrix with per-technique rule coverage from CoPilot Searches",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def get_mitre_coverage():
+async def get_mitre_coverage(
+    platform: PlatformFilter = Query(
+        PlatformFilter.ALL,
+        description="Restrict coverage to rules matching this platform",
+    ),
+    severity: Optional[RuleSeverity] = Query(None, description="Restrict coverage to rules of this severity"),
+    status: Optional[RuleStatus] = Query(None, description="Restrict coverage to rules of this status"),
+    has_graylog: Optional[bool] = Query(
+        None,
+        description="If true, only consider rules that have a Graylog query",
+    ),
+    search: Optional[str] = Query(
+        None,
+        description="Substring match against rule name/description",
+    ),
+):
     """
     Build the MITRE ATT&CK Enterprise matrix annotated with the CoPilot Search
     rules that cover each technique and sub-technique.
 
-    Tactics are returned in canonical kill-chain order. Each technique includes
-    its own rule list plus a `total_rule_count` that aggregates sub-techniques.
+    Optional filters narrow which rules contribute to coverage so users can
+    answer "what's my Windows-only coverage?" or "where do I have *production*
+    detection?" without leaving the matrix view.
     """
     try:
-        result = await get_coverage()
+        result = await get_coverage(
+            platform=platform,
+            severity=severity,
+            status=status,
+            has_graylog=has_graylog,
+            search=search,
+        )
         return MitreCoverageResponse(**result)
     except Exception as e:
         raise HTTPException(
@@ -561,6 +610,153 @@ async def generate_graylog_query_endpoint(request: ExecuteGraylogQueryRequest):
             status_code=500,
             detail=f"Graylog query generation failed: {str(e)}",
         )
+
+
+@copilot_searches_router.post(
+    "/provision/graylog/check",
+    response_model=GraylogProvisioningStatusResponse,
+    description="For a list of rule IDs, return which ones already have a matching Graylog event definition",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def check_graylog_provisioning_status(request: RulesByIdsRequest):
+    """
+    For each requested rule, compute the alert title that bulk-provision would
+    use and check whether Graylog already has an event definition with that
+    title. Lets the UI mark rules as "in Graylog" without re-provisioning.
+    """
+    existing_titles: set[str] = set()
+    warning: Optional[str] = None
+    try:
+        ed_resp = await get_all_event_definitions()
+        if ed_resp.success:
+            ed = GraylogEventDefinitionsResponse(**ed_resp.dict())
+            existing_titles = {e.title for e in ed.event_definitions}
+        else:
+            warning = "Failed to read event definitions from Graylog"
+    except Exception as e:
+        warning = f"Could not reach Graylog: {e}"
+        logger.warning(f"check-provisioning: {warning}")
+
+    await rules_cache.ensure_loaded()
+    provisioned: dict[str, bool] = {}
+    for rule_id in request.ids:
+        rule = rules_cache.get_rule_by_id(rule_id)
+        if rule is None:
+            continue
+        if warning:
+            # Conservative: don't claim "in Graylog" when we can't verify.
+            provisioned[rule_id] = False
+            continue
+        alert_title = rule.get("name", "").upper().replace(" ", " - ")
+        provisioned[rule_id] = alert_title in existing_titles
+
+    return GraylogProvisioningStatusResponse(
+        success=True,
+        provisioned=provisioned,
+        warning=warning,
+    )
+
+
+@copilot_searches_router.post(
+    "/provision/graylog/bulk",
+    response_model=BulkProvisionGraylogAlertResponse,
+    description="Provision multiple CoPilot Search rules as Graylog event definitions in a single call",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def bulk_provision_graylog_alerts(request: BulkProvisionGraylogAlertRequest):
+    """
+    Provision a batch of CoPilot Search rules as Graylog event definitions.
+
+    The endpoint never aborts on a single failure — instead, each rule's result
+    is captured (`provisioned`, `skipped`, or `failed`) and returned together so
+    the UI can show a partial-success summary. Skips are conservative: any rule
+    that has no Graylog query, or whose alert title already exists in Graylog,
+    is reported as skipped rather than failed.
+    """
+    # Resolve existing event definition titles once so we don't query Graylog
+    # per rule.
+    existing_titles: set[str] = set()
+    try:
+        ed_resp = await get_all_event_definitions()
+        if ed_resp.success:
+            ed = GraylogEventDefinitionsResponse(**ed_resp.dict())
+            existing_titles = {e.title for e in ed.event_definitions}
+    except Exception as e:
+        # If we can't pre-fetch the existing list, fall back to skipping the
+        # collision check. The per-rule provision call will surface failures.
+        logger.warning(f"bulk-provision: could not list event definitions: {e}")
+
+    results: list[BulkProvisionRuleResult] = []
+
+    for rule_id in request.rule_ids:
+        try:
+            rule = await get_rule_by_id(rule_id)
+            if rule is None:
+                results.append(
+                    BulkProvisionRuleResult(rule_id=rule_id, status="failed", reason="Rule not found"),
+                )
+                continue
+            if rule.graylog is None or not rule.graylog.query:
+                results.append(
+                    BulkProvisionRuleResult(
+                        rule_id=rule_id,
+                        rule_name=rule.name,
+                        status="skipped",
+                        reason="Rule has no Graylog query",
+                    ),
+                )
+                continue
+
+            alert_title = rule.name.upper().replace(" ", " - ")
+            if alert_title in existing_titles:
+                results.append(
+                    BulkProvisionRuleResult(
+                        rule_id=rule_id,
+                        rule_name=rule.name,
+                        alert_title=alert_title,
+                        status="skipped",
+                        reason="Event definition with this title already exists in Graylog",
+                    ),
+                )
+                continue
+
+            single = PerRuleProvisionRequest(
+                rule_id=rule_id,
+                search_within_seconds=request.search_within_seconds,
+                execute_every_seconds=request.execute_every_seconds,
+                streams=request.streams,
+                custom_title=None,
+                priority=request.priority,
+                event_limit=request.event_limit,
+            )
+            await provision_graylog_alert_from_rule(single)
+            existing_titles.add(alert_title)  # avoid double-provisioning within the same batch
+            results.append(
+                BulkProvisionRuleResult(
+                    rule_id=rule_id,
+                    rule_name=rule.name,
+                    alert_title=alert_title,
+                    status="provisioned",
+                ),
+            )
+        except Exception as e:
+            logger.error(f"bulk-provision: rule '{rule_id}' failed: {e}")
+            results.append(
+                BulkProvisionRuleResult(rule_id=rule_id, status="failed", reason=str(e)),
+            )
+
+    provisioned = sum(1 for r in results if r.status == "provisioned")
+    skipped = sum(1 for r in results if r.status == "skipped")
+    failed = sum(1 for r in results if r.status == "failed")
+
+    return BulkProvisionGraylogAlertResponse(
+        success=failed == 0,
+        message=f"Provisioned {provisioned}, skipped {skipped}, failed {failed}",
+        provisioned_count=provisioned,
+        skipped_count=skipped,
+        failed_count=failed,
+        results=results,
+    )
 
 
 @copilot_searches_router.post(

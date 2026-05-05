@@ -197,6 +197,40 @@ export interface ProvisionGraylogAlertResponse {
 	graylog_query: string
 }
 
+export interface BulkProvisionGraylogAlertRequest {
+	rule_ids: string[]
+	search_within_seconds?: number
+	execute_every_seconds?: number
+	streams?: string[]
+	priority?: 1 | 2 | 3
+	event_limit?: number
+}
+
+export type BulkProvisionRuleStatus = "provisioned" | "skipped" | "failed"
+
+export interface BulkProvisionRuleResult {
+	rule_id: string
+	rule_name: string | null
+	alert_title: string | null
+	status: BulkProvisionRuleStatus
+	reason: string | null
+}
+
+export interface BulkProvisionGraylogAlertResponse {
+	success: boolean
+	message: string
+	provisioned_count: number
+	skipped_count: number
+	failed_count: number
+	results: BulkProvisionRuleResult[]
+}
+
+export interface GraylogProvisioningStatusResponse {
+	success: boolean
+	provisioned: Record<string, boolean>
+	warning: string | null
+}
+
 // Query Parameters
 
 export interface RuleListQuery {
@@ -247,10 +281,28 @@ export interface MitreCoverageStats {
 	rules_last_refreshed: string | null
 }
 
+export interface MitreRuleIndexEntry {
+	id: string
+	name: string
+	severity: string
+	platform: string
+	has_graylog: boolean
+	data_sources: string[]
+}
+
+export interface MitreCoverageQuery {
+	platform?: PlatformFilter
+	severity?: RuleSeverity
+	status?: RuleStatus
+	has_graylog?: boolean
+	search?: string
+}
+
 export interface MitreCoverageResponse {
 	success: boolean
 	message: string
 	tactics: MitreTactic[]
+	rules_index: Record<string, MitreRuleIndexEntry>
 	stats: MitreCoverageStats
 }
 

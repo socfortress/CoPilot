@@ -1,8 +1,12 @@
 import type {
+	BulkProvisionGraylogAlertRequest,
+	BulkProvisionGraylogAlertResponse,
+	GraylogProvisioningStatusResponse,
 	ExecuteGraylogQueryRequest,
 	ExecuteSearchRequest,
 	ExecuteSearchResponse,
 	GraylogQueryResponse,
+	MitreCoverageQuery,
 	MitreCoverageResponse,
 	PlatformFilter,
 	ProvisionGraylogAlertRequest,
@@ -184,6 +188,28 @@ export default {
 	},
 
 	/**
+	 * Provision multiple CoPilot Search rules as Graylog event definitions in a single call.
+	 * Per-rule failures are reported in `results` rather than aborting the batch.
+	 */
+	bulkProvisionGraylogAlerts(request: BulkProvisionGraylogAlertRequest) {
+		return HttpClient.post<FlaskBaseResponse & BulkProvisionGraylogAlertResponse>(
+			`/copilot_searches/provision/graylog/bulk`,
+			request
+		)
+	},
+
+	/**
+	 * For each rule ID, check whether a matching Graylog event definition already exists.
+	 * Used to mark rules as "in Graylog" without forcing a re-provision.
+	 */
+	checkGraylogProvisioningStatus(ids: string[]) {
+		return HttpClient.post<FlaskBaseResponse & GraylogProvisioningStatusResponse>(
+			`/copilot_searches/provision/graylog/check`,
+			{ ids }
+		)
+	},
+
+	/**
 	 * Fetch many rule summaries by ID in one round-trip
 	 */
 	getRulesByIds(ids: string[], signal?: AbortSignal) {
@@ -194,10 +220,18 @@ export default {
 	},
 
 	/**
-	 * MITRE ATT&CK matrix annotated with per-technique CoPilot Search rule coverage
+	 * MITRE ATT&CK matrix annotated with per-technique CoPilot Search rule coverage.
+	 * Optional filters narrow which rules contribute to coverage (e.g. Windows-only).
 	 */
-	getMitreCoverage(signal?: AbortSignal) {
+	getMitreCoverage(query?: MitreCoverageQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & MitreCoverageResponse>(`/copilot_searches/mitre/coverage`, {
+			params: {
+				platform: query?.platform,
+				severity: query?.severity,
+				status: query?.status,
+				has_graylog: query?.has_graylog,
+				search: query?.search
+			},
 			signal
 		})
 	},

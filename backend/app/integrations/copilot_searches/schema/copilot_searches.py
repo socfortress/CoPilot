@@ -304,6 +304,53 @@ class ProvisionGraylogAlertResponse(BaseModel):
     graylog_query: str
 
 
+class BulkProvisionGraylogAlertRequest(BaseModel):
+    """Provision multiple CoPilot Search rules as Graylog event definitions in one call.
+
+    Each rule is checked for an existing event definition with the resolved alert
+    title and skipped if a duplicate is found. Failures on one rule do not block
+    the rest — the response carries per-rule results.
+    """
+
+    rule_ids: list[str] = Field(..., description="Rule IDs to provision", min_length=1, max_length=200)
+    search_within_seconds: int = Field(default=300, ge=60, le=86400)
+    execute_every_seconds: int = Field(default=300, ge=60, le=86400)
+    streams: list[str] = Field(default_factory=list)
+    priority: int = Field(default=2, ge=1, le=3)
+    event_limit: int = Field(default=1000, ge=1, le=10000)
+
+
+class BulkProvisionRuleResult(BaseModel):
+    rule_id: str
+    rule_name: Optional[str] = None
+    alert_title: Optional[str] = None
+    status: str  # "provisioned" | "skipped" | "failed"
+    reason: Optional[str] = None
+
+
+class BulkProvisionGraylogAlertResponse(BaseModel):
+    success: bool = True
+    message: str
+    provisioned_count: int
+    skipped_count: int
+    failed_count: int
+    results: list[BulkProvisionRuleResult]
+
+
+class GraylogProvisioningStatusResponse(BaseModel):
+    """Per-rule view of which rules already have a matching Graylog event definition.
+
+    `provisioned` maps rule_id -> bool. Rules not present in the cache are omitted.
+    `warning` is set when Graylog itself was unreachable, in which case all values
+    are conservatively reported as `False` so the UI doesn't claim "in Graylog"
+    based on stale info.
+    """
+
+    success: bool = True
+    provisioned: dict[str, bool]
+    warning: Optional[str] = None
+
+
 # =============================================================================
 # MITRE Coverage Models
 # =============================================================================
@@ -344,10 +391,20 @@ class MitreCoverageStats(BaseModel):
     rules_last_refreshed: Optional[datetime] = None
 
 
+class MitreRuleIndexEntry(BaseModel):
+    id: str
+    name: str
+    severity: str
+    platform: str
+    has_graylog: bool
+    data_sources: list[str] = Field(default_factory=list)
+
+
 class MitreCoverageResponse(BaseModel):
     success: bool = True
     message: str = "MITRE coverage built successfully"
     tactics: list[MitreTactic]
+    rules_index: dict[str, MitreRuleIndexEntry] = Field(default_factory=dict)
     stats: MitreCoverageStats
 
 
