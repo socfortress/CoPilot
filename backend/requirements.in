@@ -13,8 +13,8 @@ elasticsearch7==7.10.1
 environs<10
 fastapi<0.116
 grafana-client<4
-grpcio==1.59.0
-grpcio-tools==1.59.0
+grpcio
+grpcio-tools
 httpx[http2]<0.29
 influxdb-client[async]
 Jinja2
