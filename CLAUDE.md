@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Repository orientation for AI coding assistants (Claude Code, Cursor, GitHub Copilot, Aider, etc.) and human contributors. The notes below capture non-obvious context that's hard to reverse-engineer from the source alone — startup ordering, tenancy invariants, and footguns that have actually caught people. If you're using a tool that prefers `AGENTS.md`, symlink it to this file.
+Repository orientation for AI coding assistants and human contributors. The notes below capture non-obvious context that's hard to reverse-engineer from the source alone — startup ordering, tenancy invariants, and footguns that have actually caught people. If you're using a tool that prefers `AGENTS.md`, symlink it to this file.
 
 ## What this is
 
