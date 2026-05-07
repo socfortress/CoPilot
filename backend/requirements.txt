@@ -43,8 +43,8 @@ azure-mgmt-storage==17.0.0
 azure-mgmt-web==1.0.0
 backports-tarfile==1.2.0
 bcrypt==4.3.0
-boto3==1.43.5
-botocore==1.43.5
+boto3==1.43.6
+botocore==1.43.6
 cachetools==4.2.4
 certifi==2025.11.12
 cffi==2.0.0
@@ -70,7 +70,7 @@ google-api-core[grpc]==1.31.5
 google-api-python-client==2.196.0
 google-auth==1.35.0
 google-auth-httplib2==0.4.0
-google-cloud-appengine-logging==1.1.6
+google-cloud-appengine-logging==1.1.1
 google-cloud-audit-log==0.5.0
 google-cloud-container==2.10.7
 google-cloud-core==2.3.1
@@ -85,9 +85,9 @@ google-resumable-media==2.9.0
 googleapis-common-protos[grpc]==1.75.0
 grafana-client==3.11.2
 greenlet==3.5.0
-grpc-google-iam-v1==0.12.7
-grpcio==1.59.0
-grpcio-tools==1.59.0
+grpc-google-iam-v1==0.12.4
+grpcio==1.80.0
+grpcio-tools==1.80.0
 h11==0.16.0
 h2==4.3.0
 hpack==4.1.0
@@ -137,7 +137,7 @@ portalocker==2.10.1
 portend==3.2.1
 propcache==0.4.1
 proto-plus==1.28.0
-protobuf==4.25.9
+protobuf==6.33.6
 pyasn1==0.6.3
 pyasn1-modules==0.4.2
 pycparser==3.0
