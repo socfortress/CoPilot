@@ -34,7 +34,7 @@ services:
     #     restart: always
 
     copilot-mysql:
-        image: mysql:8.0.38-debian
+        image: mysql:8.0.46-debian
         environment:
             MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
             MYSQL_DATABASE: copilot
