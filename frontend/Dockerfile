@@ -1,8 +1,11 @@
-# Use a node.js base image
-FROM node:21 as builder
+# # Use a node.js base image
+# FROM node:21 as builder
 
-# Install pnpm globally
-RUN npm install -g pnpm
+# # Install pnpm globally
+# RUN npm install -g pnpm
+
+FROM node:22 as builder
+RUN npm install -g pnpm@10.33.2
 
 # Drop root
 USER node
