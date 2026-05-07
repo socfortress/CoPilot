@@ -1,5 +1,5 @@
 aiocsv==1.4.0
-aiofiles==23.2.1
+aiofiles==25.1.0
 aiohappyeyeballs==2.6.1
 aiohttp==3.13.5
 aiohttp-retry==2.9.1
@@ -42,7 +42,7 @@ azure-mgmt-sql==1.0.0
 azure-mgmt-storage==17.0.0
 azure-mgmt-web==1.0.0
 backports-tarfile==1.2.0
-bcrypt==4.3.0
+bcrypt==5.0.0
 boto3==1.43.6
 botocore==1.43.6
 cachetools==4.2.4
@@ -57,13 +57,13 @@ click==8.3.3
 coloredlogs==10.0
 cortex4py==2.1.0
 crcmod==1.7
-cryptography==41.0.7
+cryptography==46.0.7
 dnspython==2.8.0
 docxtpl==0.20.2
 durationpy==0.10
 elasticsearch7==7.10.1
 email-validator==2.3.0
-environs==9.5.0
+environs==15.0.1
 fastapi==0.115.14
 frozenlist==1.8.0
 google-api-core[grpc]==1.31.5
@@ -83,7 +83,7 @@ google-cloud-storage==2.11.0
 google-crc32c==1.8.0
 google-resumable-media==2.9.0
 googleapis-common-protos[grpc]==1.75.0
-grafana-client==3.11.2
+grafana-client==5.1.0
 greenlet==3.5.0
 grpc-google-iam-v1==0.12.4
 grpcio==1.80.0
@@ -106,6 +106,7 @@ jaraco-collections==5.2.1
 jaraco-context==6.1.2
 jaraco-functools==4.4.0
 jaraco-text==4.2.0
+jh2==5.0.11
 jinja2==3.1.6
 jmespath==0.10.0
 kubernetes==35.0.0
@@ -114,7 +115,7 @@ lxml==6.1.0
 mako==1.3.12
 markdown-it-py==4.2.0
 markupsafe==3.0.3
-marshmallow==3.26.2
+marshmallow==4.3.0
 mdurl==0.1.2
 miniopy-async==1.23.5
 more-itertools==11.0.2
@@ -124,6 +125,7 @@ msgraph-core==0.2.2
 msrest==0.7.1
 multidict==6.7.1
 netaddr==1.3.0
+niquests==3.18.7
 oauth2client==4.1.3
 oauthlib==3.3.1
 oci==2.168.1
@@ -148,7 +150,7 @@ pyee==13.0.1
 pygments==2.20.0
 pyjwt[crypto]==2.12.1
 pymysql==1.1.3
-pyopenssl==25.1.0
+pyopenssl==25.3.0
 pyotp==2.9.0
 pyparsing==3.3.2
 python-dateutil==2.8.0
@@ -157,8 +159,9 @@ python-dotenv==1.2.2
 python-magic==0.4.27
 python-multipart==0.0.27
 pytz==2026.2
-pyvelociraptor==0.1.9
+pyvelociraptor==0.1.14
 pyyaml==6.0.3
+qh3==1.8.1
 qrcode==8.2
 reactivex==4.1.0
 regex==2026.4.4
@@ -183,14 +186,16 @@ typing-extensions==4.15.0
 tzlocal==5.3.1
 uritemplate==4.2.0
 urllib3==1.26.20
+urllib3-future==2.19.913
 uvicorn[standard]==0.46.0
 uvloop==0.22.1
-verlib2==0.2.0
+verlib2==0.3.2
+wassima==2.0.6
 watchfiles==1.1.1
 websocket-client==1.9.0
 websockets==16.0
 werkzeug==3.1.8
-xmltodict==0.15.1
+xmltodict==1.0.4
 yarl==1.23.0
 zc-lockfile==4.0
 
