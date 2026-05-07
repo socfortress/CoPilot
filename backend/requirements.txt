@@ -128,7 +128,7 @@ python-dateutil==2.8.0
 python-dotenv==1.0.0
 python-jose==3.3.0
 python-magic==0.4.27
-python-multipart==0.0.6
+python-multipart==0.0.27
 pytz==2023.3.post1
 pyvelociraptor==0.1.8
 PyYAML==6.0.1
