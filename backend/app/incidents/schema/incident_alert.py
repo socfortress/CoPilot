@@ -117,10 +117,14 @@ class GenericSourceModel(BaseModel):
 
 
 class GenericAlertModel(BaseModel):
-    _index: str
-    _id: str
-    _version: int
-    _source: GenericSourceModel  # Nested model
+    # NOTE: Pydantic 2 treats names with a leading underscore as PrivateAttr
+    # and silently drops them from input parsing. Elasticsearch hits use
+    # `_index`, `_id`, `_version`, `_source` as JSON keys, so we expose those
+    # via aliases and access them as `index`/`id`/`version`/`source` in code.
+    index: str = Field(alias="_index")
+    id: str = Field(alias="_id")
+    version: int = Field(alias="_version")
+    source: GenericSourceModel = Field(alias="_source")
     asset_type_id: Optional[int] = Field(
         None,
         description="The asset type id of the alert which is needed for when we add the asset to IRIS.",
@@ -141,7 +145,7 @@ class GenericAlertModel(BaseModel):
         None,
         description="The type of the alert to be used when creating the CoPilot alert.",
     )
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
 
 class AlertDetailsResponse(BaseModel):
