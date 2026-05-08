@@ -134,6 +134,7 @@ oss2==2.19.1
 packaging==26.2
 passlib[bcrypt]==1.7.4
 pdfkit==1.0.0
+pillow==12.2.0
 playwright==1.59.0
 policyuniverse==1.5.1.20231109
 portalocker==2.10.1
