@@ -47,6 +47,8 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
 
 ################## ! 422 VALIDATION ERROR TYPES FOR PYDANTIC VALUE ERROR RESPONSE ! ##################
 class ErrorType(str, Enum):
+    # Legacy pydantic 1 codes — kept so any consumer reading these by string
+    # value continues to work. Pydantic 2 uses the *_V2 codes below.
     PASSWORD_REGEX = "value_error.str.regex"
     TIME_RANGE = "value_error.time_range"
     JSON_INVALID = "json_invalid"
@@ -64,7 +66,19 @@ class ErrorType(str, Enum):
     MISSING = "value_error.missing"
     GENERAL = "value_error"
     INVALID_ENUM = "type_error.enum"
-    # Add other types as needed
+    # Pydantic 2 codes (renamed in #849). Add more here as users surface them.
+    STRING_TOO_SHORT = "string_too_short"
+    STRING_TOO_LONG = "string_too_long"
+    STRING_PATTERN_MISMATCH = "string_pattern_mismatch"
+    INT_PARSING = "int_parsing"
+    GREATER_THAN = "greater_than"
+    GREATER_THAN_EQUAL = "greater_than_equal"
+    LESS_THAN = "less_than"
+    LESS_THAN_EQUAL = "less_than_equal"
+    DATETIME_PARSING = "datetime_parsing"
+    DATE_PARSING = "date_parsing"
+    ENUM = "enum"
+    MISSING_V2 = "missing"
 
 
 class ValidationErrorItem(BaseModel):
@@ -93,6 +107,19 @@ class ValidationErrorItem(BaseModel):
             ErrorType.MISSING: "Missing data for required field.",
             ErrorType.GENERAL: "Invalid value.",
             ErrorType.INVALID_ENUM: "Value is not a valid enumeration member.",
+            # Pydantic 2 codes — same human messages as their v1 equivalents.
+            ErrorType.STRING_TOO_SHORT: "Value is shorter than minimum length.",
+            ErrorType.STRING_TOO_LONG: "Value is longer than maximum length.",
+            ErrorType.STRING_PATTERN_MISMATCH: "Value does not match the required pattern.",
+            ErrorType.INT_PARSING: "Input is not a valid integer.",
+            ErrorType.GREATER_THAN: "Value is too small.",
+            ErrorType.GREATER_THAN_EQUAL: "Value is too small.",
+            ErrorType.LESS_THAN: "Value is too large.",
+            ErrorType.LESS_THAN_EQUAL: "Value is too large.",
+            ErrorType.DATETIME_PARSING: "Invalid datetime format.",
+            ErrorType.DATE_PARSING: "Invalid date format.",
+            ErrorType.ENUM: "Value is not a valid enumeration member.",
+            ErrorType.MISSING_V2: "Missing data for required field.",
         }
         if self.error_type in error_messages:
             self.message = error_messages[self.error_type]

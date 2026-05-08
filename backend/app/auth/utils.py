@@ -46,11 +46,19 @@ class AuthHandler:
     )
     secret = _load_jwt_secret()
 
+    @staticmethod
+    def _to_bcrypt_bytes(password: str) -> bytes:
+        # bcrypt 5 raises ValueError on >72 bytes; bcrypt 4 silently truncated.
+        # We slice by bytes (not chars) for backwards compat with hashes created
+        # under bcrypt 4's silent truncation, while protecting against bcrypt 5
+        # raising for any path that bypasses the schema-layer length validation.
+        return password.encode("utf-8")[:72]
+
     def get_password_hash(self, password: str) -> str:
-        return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        return bcrypt.hashpw(self._to_bcrypt_bytes(password), bcrypt.gensalt()).decode("utf-8")
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+        return bcrypt.checkpw(self._to_bcrypt_bytes(plain_password), hashed_password.encode("utf-8"))
 
     # ! TODO: HAVE LOGIC TO HANDLE PASSWORD RESET VIA A TOKEN BUT NOT IMPLEMENTED YET ! #
     def generate_reset_token(
