@@ -4,6 +4,7 @@ from typing import Any
 from typing import Dict
 from typing import List
 
+from elasticsearch7.exceptions import RequestError
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import select
@@ -146,6 +147,28 @@ async def disable_dashboard(
 # ── Panel data (execute queries for dashboard rendering) ─────────
 
 
+def _is_text_field_agg_error(exc: RequestError) -> bool:
+    """True iff the Elasticsearch error is the one raised when a terms agg
+    targets a `text`-typed field (which lacks per-document field data by
+    default). The error string is stable across ES 7.x and is the cue we
+    use to retry the agg against `<field>.keyword`.
+
+    Sample message body (in `exc.info`):
+        "Text fields are not optimised for operations that require
+         per-document field data like aggregations and sorting..."
+
+    Note: `str(exc)` for elasticsearch7 RequestError only includes the
+    error code ("search_phase_execution_exception"), NOT the message —
+    the human-readable text lives on `exc.info`. We match against both
+    so the type code and the specific cause both have to line up.
+    """
+    info = getattr(exc, "info", "") or ""
+    return (
+        getattr(exc, "error", "") == "search_phase_execution_exception"
+        and "Text fields are not optimised" in str(info)
+    )
+
+
 def _compute_histogram_interval(timerange: str) -> str:
     """Pick a reasonable date_histogram interval for the given timerange."""
     mapping = {
@@ -258,15 +281,34 @@ async def get_panel_data(
                     if not field:
                         results[pid] = PanelResult(type=ptype, error="No field specified for aggregation")
                         continue
-                    body["aggs"] = {
-                        "top_values": {
-                            "terms": {
-                                "field": field,
-                                "size": size,
+
+                    def _build_terms_agg(agg_field: str) -> dict:
+                        return {
+                            "top_values": {
+                                "terms": {"field": agg_field, "size": size},
                             },
-                        },
-                    }
-                    resp = await es_client.search(index=event_source.index_pattern, body=body)
+                        }
+
+                    body["aggs"] = _build_terms_agg(field)
+                    try:
+                        resp = await es_client.search(index=event_source.index_pattern, body=body)
+                    except RequestError as exc:
+                        # Elasticsearch refuses terms aggs on `text` fields by default.
+                        # If the index maps `field` as text, retry with the conventional
+                        # `field.keyword` subfield. Cheap one-shot fallback that handles
+                        # the common case where customer index templates differ.
+                        if (
+                            _is_text_field_agg_error(exc)
+                            and not field.endswith(".keyword")
+                        ):
+                            logger.info(
+                                f"Panel {pid}: '{field}' is text-typed in {event_source.index_pattern}; "
+                                f"retrying with '{field}.keyword'",
+                            )
+                            body["aggs"] = _build_terms_agg(f"{field}.keyword")
+                            resp = await es_client.search(index=event_source.index_pattern, body=body)
+                        else:
+                            raise
                     buckets = resp["aggregations"]["top_values"]["buckets"]
                     labels = [str(b["key"]) for b in buckets]
                     data = [b["doc_count"] for b in buckets]
