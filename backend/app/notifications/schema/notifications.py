@@ -17,7 +17,7 @@ from typing import Optional
 
 from pydantic import field_validator, ConfigDict, BaseModel
 from pydantic import Field
-from pydantic import validator
+from pydantic import model_validator
 
 # ---------------------------------------------------------------------------
 # Enums (input validation only — DB stores strings)
@@ -150,21 +150,14 @@ class NotificationRouteBase(BaseModel):
     def _strip_destination(cls, v: str) -> str:
         return v.strip()
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator("shuffle_integration_id", always=True)
-    def _shuffle_integration_required(cls, v, values):
-        if values.get("channel") == NotificationChannel.SHUFFLE and not v:
-            raise ValueError("shuffle_integration_id is required when channel='shuffle'")
-        return v
-
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator("shuffle_app_id", always=True)
-    def _shuffle_app_required(cls, v, values):
-        if values.get("channel") == NotificationChannel.SHUFFLE and not v:
-            raise ValueError("shuffle_app_id is required when channel='shuffle'")
-        return v
+    @model_validator(mode="after")
+    def _shuffle_fields_required(self):
+        if self.channel == NotificationChannel.SHUFFLE:
+            if not self.shuffle_integration_id:
+                raise ValueError("shuffle_integration_id is required when channel='shuffle'")
+            if not self.shuffle_app_id:
+                raise ValueError("shuffle_app_id is required when channel='shuffle'")
+        return self
 
 
 class NotificationRouteCreate(NotificationRouteBase):

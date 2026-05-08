@@ -32,7 +32,7 @@ async def get_connector_info_from_db(
     connector = result.scalars().first()
     if connector:
         connector_pydantic = ConnectorResponse.from_orm(connector)
-        return connector_pydantic.dict()
+        return connector_pydantic.model_dump()
     else:
         logger.warning("No connector found.")
         return None

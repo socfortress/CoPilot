@@ -411,14 +411,14 @@ async def invoke_mimecast_api_ttp_urls(
     """Invoke the Mimecast API call to get TTP URLs."""
     logger.info("Mimecast TTP URL request received")
     request_body = await create_ttp_request_body(mimecast_request)
-    request_dict = request_body.dict(by_alias=True)
+    request_dict = request_body.model_dump(by_alias=True)
     logger.info(f"Request: {request_dict}")
     for item in request_dict["data"]:
         item["from"] = await custom_datetime_format(item["from"])
         item["to"] = await custom_datetime_format(item["to"])
     response = requests.post(
         url=mimecast_request.BaseURL + "/api/ttp/url/get-logs",
-        headers=mimecast_request.headers.dict(by_alias=True),
+        headers=mimecast_request.headers.model_dump(by_alias=True),
         data=str(request_dict),
     )
     return TtpURLResponseBody(**response.json())
@@ -454,7 +454,7 @@ async def get_ttp_urls(
                 customer_code=customer_code,
                 integration="mimecast",
                 version="1.0",
-                **data.dict(by_alias=True),
+                **data.model_dump(by_alias=True),
             )
             await event_shipper(message)
 

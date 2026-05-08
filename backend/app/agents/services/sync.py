@@ -265,7 +265,7 @@ async def sync_agents_wazuh() -> SyncedAgentsResponse:
             else:
                 await add_wazuh_agent_in_db(session, wazuh_agent, customer_code)
 
-            synced_wazuh_agent = SyncedWazuhAgent(**wazuh_agent.dict())
+            synced_wazuh_agent = SyncedWazuhAgent(**wazuh_agent.model_dump())
             agents_added_list.append(synced_wazuh_agent)
 
     logger.info(f"Agents Added List: {agents_added_list}")

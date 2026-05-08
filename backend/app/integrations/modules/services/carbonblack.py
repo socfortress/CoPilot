@@ -11,11 +11,11 @@ async def post_to_copilot_carbonblack_module(data: CollectCarbonBlack, license_k
     Args:
         data (CollectHuntress): The data to send to the copilot-huntress-module Docker container.
     """
-    logger.info(f"Sending POST request to http://copilot-carbonblack-module/collect with data: {data.dict()}")
+    logger.info(f"Sending POST request to http://copilot-carbonblack-module/collect with data: {data.model_dump()}")
     async with httpx.AsyncClient() as client:
         await client.post(
             "http://copilot-carbonblack-module/collect",
-            json=data.dict(),
+            json=data.model_dump(),
             # params={"license_key": license_key, "feature_name": "CARBONBLACK"},
             timeout=120,
         )

@@ -338,7 +338,7 @@ class IrisCasePayload(BaseModel):
     )
 
     def to_dict(self):
-        return self.dict(exclude_none=True)
+        return self.model_dump(exclude_none=True)
 
 
 class ModificationHistoryEntry(BaseModel):
@@ -408,4 +408,4 @@ class AddAssetModel(BaseModel):
     )
 
     def to_dict(self):
-        return self.dict(exclude_none=True)
+        return self.model_dump(exclude_none=True)

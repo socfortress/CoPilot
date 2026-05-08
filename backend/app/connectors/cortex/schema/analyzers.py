@@ -8,7 +8,7 @@ from typing import Tuple
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import validator
+from pydantic import model_validator
 
 HASH_REGEX = re.compile(
     r"[a-fA-F\d]{32}|[a-fA-F\d]{64}",
@@ -35,15 +35,13 @@ class RunAnalyzerBody(BaseModel):
         description="Data type determined after validation",
     )
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator("analyzer_data", pre=True, always=True)
-    def validate_and_set_data_type(cls, value: str, values: dict) -> str:
-        is_valid, data_type = cls.is_valid_datatype(value)
+    @model_validator(mode="after")
+    def validate_and_set_data_type(self):
+        is_valid, data_type = self.is_valid_datatype(self.analyzer_data)
         if not is_valid:
             raise ValueError(f"Invalid data type: {data_type}")
-        values["data_type"] = data_type
-        return value
+        self.data_type = data_type
+        return self
 
     @classmethod
     def is_valid_datatype(cls, value: str) -> Tuple[bool, str]:

@@ -264,7 +264,7 @@ async def process_content_pack(content_pack, content_pack_request):
         TLS_KEY_FILE=content_pack_request.keywords.tls_key_file,
     )
     if "PROCESSING_PIPELINE" not in content_pack:
-        content_pack = replace_keywords_in_json_complex(content_pack, replace_content_pack_keywords.dict())
+        content_pack = replace_keywords_in_json_complex(content_pack, replace_content_pack_keywords.model_dump())
         content_pack = convert_port_value_to_int(content_pack)
     await insert_and_install_content_pack(content_pack)
 

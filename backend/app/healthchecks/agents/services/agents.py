@@ -36,7 +36,7 @@ def is_wazuh_agent_unhealthy(
     # If wazuh_last_seen is None, consider it unhealthy
     if agent.wazuh_last_seen is None:
         logger.info(f"Agent {agent.hostname} (ID: {agent.agent_id}) has no Wazuh last seen time - marking as unhealthy")
-        return ExtendedAgentModel(**agent.dict(), unhealthy_wazuh_agent=True)
+        return ExtendedAgentModel(**agent.model_dump(), unhealthy_wazuh_agent=True)
 
     current_time = datetime.now()
     wazuh_last_seen = agent.wazuh_last_seen
@@ -45,14 +45,14 @@ def is_wazuh_agent_unhealthy(
         logger.info(
             f"Agent {agent} has a wazuh_last_seen time in the future: {wazuh_last_seen}",
         )
-        return ExtendedAgentModel(**agent.dict(), unhealthy_wazuh_agent=True)
+        return ExtendedAgentModel(**agent.model_dump(), unhealthy_wazuh_agent=True)
 
     # Calculate the total time delta based on the criteria
     total_minutes = time_criteria.minutes + time_criteria.hours * 60 + time_criteria.days * 24 * 60
     time_delta = timedelta(minutes=total_minutes)
 
     is_unhealthy = (current_time - wazuh_last_seen) > time_delta
-    return ExtendedAgentModel(**agent.dict(), unhealthy_wazuh_agent=is_unhealthy)
+    return ExtendedAgentModel(**agent.model_dump(), unhealthy_wazuh_agent=is_unhealthy)
 
 
 def is_velociraptor_agent_unhealthy(
@@ -72,7 +72,7 @@ def is_velociraptor_agent_unhealthy(
     # If velociraptor_id is None or velociraptor_last_seen is None, consider it unhealthy
     if agent.velociraptor_id is None or agent.velociraptor_last_seen is None:
         logger.info(f"Agent {agent.hostname} (ID: {agent.agent_id}) has no Velociraptor ID or last seen time - marking as unhealthy")
-        return ExtendedAgentModel(**agent.dict(), unhealthy_velociraptor_agent=True)
+        return ExtendedAgentModel(**agent.model_dump(), unhealthy_velociraptor_agent=True)
 
     current_time = datetime.now()
     velociraptor_last_seen = agent.velociraptor_last_seen
@@ -81,14 +81,14 @@ def is_velociraptor_agent_unhealthy(
         logger.info(
             f"Agent {agent} has a velociraptor_last_seen time in the future: {velociraptor_last_seen}",
         )
-        return ExtendedAgentModel(**agent.dict(), unhealthy_velociraptor_agent=True)
+        return ExtendedAgentModel(**agent.model_dump(), unhealthy_velociraptor_agent=True)
 
     # Calculate the total time delta based on the criteria
     total_minutes = time_criteria.minutes + time_criteria.hours * 60 + time_criteria.days * 24 * 60
     time_delta = timedelta(minutes=total_minutes)
 
     is_unhealthy = (current_time - velociraptor_last_seen) > time_delta
-    return ExtendedAgentModel(**agent.dict(), unhealthy_velociraptor_agent=is_unhealthy)
+    return ExtendedAgentModel(**agent.model_dump(), unhealthy_velociraptor_agent=is_unhealthy)
 
 
 async def wazuh_agents_healthcheck(

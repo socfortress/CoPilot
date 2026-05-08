@@ -362,7 +362,7 @@ async def generate_sca_report(
     Returns:
         SCAReportGenerateResponse: Report generation status and details
     """
-    logger.info(f"Generating SCA report for customer {request.customer_code} " f"with filters: {request.dict(exclude_none=True)}")
+    logger.info(f"Generating SCA report for customer {request.customer_code} " f"with filters: {request.model_dump(exclude_none=True)}")
 
     try:
         # Note: This will be processed synchronously for now

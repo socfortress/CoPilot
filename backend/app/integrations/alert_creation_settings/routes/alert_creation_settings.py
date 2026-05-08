@@ -94,7 +94,7 @@ async def create_alert_creation_settings(
     Returns:
         AlertCreationSettings: The created alert creation setting.
     """
-    logger.info(f"alert_creation_settings: {alert_creation_settings.dict()}")
+    logger.info(f"alert_creation_settings: {alert_creation_settings.model_dump()}")
 
     result = await session.execute(
         select(AlertCreationSettings).where(
@@ -113,7 +113,7 @@ async def create_alert_creation_settings(
         )
 
     alert_creation_settings_db = AlertCreationSettings(
-        **alert_creation_settings.dict(exclude={"event_orders"}),
+        **alert_creation_settings.model_dump(exclude={"event_orders"}),
     )
 
     if alert_creation_settings.event_orders is not None:
@@ -125,7 +125,7 @@ async def create_alert_creation_settings(
             session.add(event_order_db)
             for event_config in event_order.event_configs:
                 event_config_db = AlertCreationEventConfig(
-                    **event_config.dict(),
+                    **event_config.model_dump(),
                     event_order=event_order_db,
                 )
                 session.add(event_config_db)
@@ -226,7 +226,7 @@ async def add_event_order(
     session.add(event_order_db)
     for event_config in event_order.event_configs:
         event_config_db = AlertCreationEventConfig(
-            **event_config.dict(),
+            **event_config.model_dump(),
             event_order=event_order_db,
         )
         session.add(event_config_db)
@@ -293,7 +293,7 @@ async def update_event_orders(
             # If it does, add the new EventConfig instances to it
             for event_config in event_order.event_configs:
                 event_config_db = AlertCreationEventConfig(
-                    **event_config.dict(),
+                    **event_config.model_dump(),
                     event_order=existing_order,
                 )
                 session.add(event_config_db)

@@ -209,7 +209,7 @@ async def decommission_wazuh_worker(
         request.portainer_deployment = False
         response = requests.post(
             url=f"{api_endpoint}/provision_worker/decommission",
-            json=request.dict(),
+            json=request.model_dump(),
         )
         # Check the response status code
         if response.status_code != 200:
@@ -237,7 +237,7 @@ async def decommission_wazuh_worker(
             logger.info(f"Provisioning Wazuh worker on IP: {ip}")
             response = requests.post(
                 url=f"http://{ip}:5003/provision_worker/decommission",
-                json=request.dict(),
+                json=request.model_dump(),
             )
             logger.info(f"Status code from Wazuh Worker: {response.status_code}")
             if response.status_code != 200:
@@ -290,7 +290,7 @@ async def decommission_haproxy(
     # Send the POST request to the HAProxy worker
     response = requests.post(
         url=f"{api_endpoint}/provision_worker/haproxy/decommission",
-        json=request.dict(),
+        json=request.model_dump(),
     )
     # Check the response status code
     if response.status_code != 200:

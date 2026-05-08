@@ -172,11 +172,11 @@ async def send_index_set_creation_request(
     Returns:
         GraylogIndexSetCreationResponse: The response from Graylog after creating the index set.
     """
-    json_index_set = json.dumps(index_set.dict())
+    json_index_set = json.dumps(index_set.model_dump())
     logger.info(f"json_index_set set: {json_index_set}")
     response_json = await send_post_request(
         endpoint="/api/system/indices/index_sets",
-        data=index_set.dict(),
+        data=index_set.model_dump(),
     )
     return GraylogIndexSetCreationResponse(**response_json)
 
@@ -309,7 +309,7 @@ async def create_grafana_datasource(
         readOnly=True,
     )
     results = grafana_client.datasource.create_datasource(
-        datasource=datasource_payload.dict(),
+        datasource=datasource_payload.model_dump(),
     )
     return GrafanaDataSourceCreationResponse(**results)
 

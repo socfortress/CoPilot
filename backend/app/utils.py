@@ -17,7 +17,7 @@ from fastapi.exceptions import RequestValidationError
 from loguru import logger
 from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
+from pydantic import model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
@@ -72,13 +72,8 @@ class ValidationErrorItem(BaseModel):
     error_type: ErrorType
     message: str = None  # Initialize as None
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator("message", pre=True, always=True)
-    def set_message(cls, value, values):
-        error_type = values.get("error_type")
-        logger.info(error_type)
-
+    @model_validator(mode="after")
+    def set_message(self):
         error_messages = {
             ErrorType.PASSWORD_REGEX: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one "
             "special character.",
@@ -99,8 +94,9 @@ class ValidationErrorItem(BaseModel):
             ErrorType.GENERAL: "Invalid value.",
             ErrorType.INVALID_ENUM: "Value is not a valid enumeration member.",
         }
-
-        return error_messages.get(error_type, value)
+        if self.error_type in error_messages:
+            self.message = error_messages[self.error_type]
+        return self
 
 
 class ValidationErrorResponse(BaseModel):
@@ -275,7 +271,7 @@ class Logger:
         Returns:
             None
         """
-        log_entry = LogEntry(**log_entry_model.dict())
+        log_entry = LogEntry(**log_entry_model.model_dump())
         self.session.add(log_entry)
         await self.session.commit()
 

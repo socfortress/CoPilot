@@ -151,7 +151,7 @@ class CollectSapSiemRequest(BaseModel):
         return values
 
     def to_dict(self):
-        return self.dict()
+        return self.model_dump()
 
 
 class InvokeSapSiemAnalysis(BaseModel):

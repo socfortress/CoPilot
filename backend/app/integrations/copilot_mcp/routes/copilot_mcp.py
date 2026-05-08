@@ -91,7 +91,7 @@ async def get_mcp_server_details(mcp_server: MCPServerType) -> dict:
         total_questions = len(ExampleQuestionsService.get_example_questions(mcp_server))
 
         return {
-            "server": server_info.dict(),
+            "server": server_info.model_dump(),
             "available_categories": categories,
             "total_example_questions": total_questions,
             "message": f"Successfully retrieved details for {mcp_server.value}",

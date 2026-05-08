@@ -64,7 +64,7 @@ async def get_alerts(alert_query: AlertQuery) -> GraylogAlertsResponse:
     logger.info("Getting alerts from Graylog")
     response = await send_post_request(
         endpoint="/api/events/search",
-        data=alert_query.dict(),
+        data=alert_query.model_dump(),
     )
 
     if response["success"]:

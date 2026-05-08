@@ -11,11 +11,11 @@ async def post_to_copilot_mimecast_module(data: CollectMimecast, license_key: st
     Args:
         data (CollectMimecast): The data to send to the copilot-mimecast-module Docker container.
     """
-    logger.info(f"Sending POST request to http://copilot-huntress-module/collect with data: {data.dict()}")
+    logger.info(f"Sending POST request to http://copilot-huntress-module/collect with data: {data.model_dump()}")
     async with httpx.AsyncClient() as client:
         await client.post(
             "http://copilot-mimecast-module/collect",
-            json=data.dict(),
+            json=data.model_dump(),
             # params={"license_key": license_key, "feature_name": "MIMECAST"},
             timeout=120,
         )

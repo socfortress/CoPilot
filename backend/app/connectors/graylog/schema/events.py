@@ -26,7 +26,7 @@ class ExpressionItem(BaseModel):
     right: Optional["ExpressionItem"] = None
 
 
-ExpressionItem.update_forward_refs()
+ExpressionItem.model_rebuild()
 
 
 class Conditions(BaseModel):

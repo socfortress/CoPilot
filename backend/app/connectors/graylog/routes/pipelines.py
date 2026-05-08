@@ -57,7 +57,7 @@ def transform_stages_with_rule_ids(
     new_stages = []
     for stage in stages:
         rule_ids = [rule_title_to_id.get(rule_title, None) for rule_title in stage.rules]
-        new_stage = StageWithRuleID(**stage.dict(), rule_ids=rule_ids)
+        new_stage = StageWithRuleID(**stage.model_dump(), rule_ids=rule_ids)
         new_stages.append(new_stage)
     return new_stages
 
@@ -78,7 +78,7 @@ def transform_pipeline_with_rule_ids(
 
     """
     new_stages = transform_stages_with_rule_ids(pipeline.stages, rule_title_to_id)
-    pipeline_dict = pipeline.dict()
+    pipeline_dict = pipeline.model_dump()
     pipeline_dict["stages"] = new_stages
     return PipelineWithRuleID(**pipeline_dict)
 

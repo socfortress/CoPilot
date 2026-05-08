@@ -166,7 +166,7 @@ async def provision_wazuh_customer(
             return CustomerProvisionResponse(
                 message=f"Customer {request.customer_name} provisioned successfully, but the Wazuh worker failed to provision",
                 success=True,
-                customer_meta=customer_meta.dict(),
+                customer_meta=customer_meta.model_dump(),
                 wazuh_worker_provisioned=False,
             )
 
@@ -185,14 +185,14 @@ async def provision_wazuh_customer(
             return CustomerProvisionResponse(
                 message=f"Customer {request.customer_name} provisioned successfully, but the HAProxy failed to provision",
                 success=True,
-                customer_meta=customer_meta.dict(),
+                customer_meta=customer_meta.model_dump(),
                 wazuh_worker_provisioned=True,
             )
 
     return CustomerProvisionResponse(
         message=f"Customer {request.customer_name} provisioned successfully",
         success=True,
-        customer_meta=customer_meta.dict(),
+        customer_meta=customer_meta.model_dump(),
         wazuh_worker_provisioned=True,
     )
 
@@ -330,7 +330,7 @@ async def provision_wazuh_worker(
         request.wazuh_manager_version = await get_wazuh_manager_version()
         response = requests.post(
             url=f"{api_endpoint}/provision_worker",
-            json=request.dict(),
+            json=request.model_dump(),
         )
         logger.info(f"Status code from Wazuh Worker: {response.status_code}")
         # Check the response status code
@@ -356,7 +356,7 @@ async def provision_wazuh_worker(
 
             response = requests.post(
                 url=f"http://{ip}:5003/provision_worker",
-                json=request.dict(),
+                json=request.model_dump(),
             )
             logger.info(f"Status code from Wazuh Worker: {response.status_code}")
             if response.status_code != 200:
@@ -404,7 +404,7 @@ async def provision_haproxy(
         # Send the POST request to the Wazuh worker
         response = requests.post(
             url=f"{api_endpoint}/provision_worker/haproxy",
-            json=request.dict(),
+            json=request.model_dump(),
         )
         # Check the response status code
         if response.status_code != 200:
@@ -429,7 +429,7 @@ async def provision_haproxy(
         logger.info(f"Invoking the customer provisioning application on the swarm node IPs: {request.swarm_nodes}")
         response = requests.post(
             url=f"{api_endpoint}/provision_worker/haproxy",
-            json=request.dict(),
+            json=request.model_dump(),
         )
         # Check the response status code
         if response.status_code != 200:

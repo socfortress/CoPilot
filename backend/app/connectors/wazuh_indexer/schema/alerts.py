@@ -157,4 +157,4 @@ class AlertNotFound(BaseModel):
     source: Dict[str, str] = Field(alias="_source")
 
     def to_dict(self) -> Dict[str, str]:
-        return self.dict(by_alias=True)
+        return self.model_dump(by_alias=True)

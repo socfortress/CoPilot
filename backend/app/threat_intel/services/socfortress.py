@@ -303,7 +303,7 @@ async def invoke_socfortress_ai_alert_api(
     headers = {"module-version": "1.0", "x-api-key": api_key}
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
-            response = await client.post(url, json=request.dict(), headers=headers)
+            response = await client.post(url, json=request.model_dump(), headers=headers)
             response.raise_for_status()  # Raise an exception for non-successful status codes
             return response.json()
     except httpx.HTTPStatusError as e:

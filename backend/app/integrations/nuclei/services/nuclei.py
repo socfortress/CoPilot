@@ -73,12 +73,12 @@ async def post_to_copilot_nuclei_module(data: NucleiScanRequest) -> NucleiScanRe
     Args:
         data (NucleiScanRequest): The data to send to the copilot-nuclei-module Docker container.
     """
-    logger.info(f"Sending POST request to http://copilot-nuclei-module/scan with data: {data.dict()}")
+    logger.info(f"Sending POST request to http://copilot-nuclei-module/scan with data: {data.model_dump()}")
     # raise HTTPException(status_code=501, detail="Not Implemented Yet")
     async with httpx.AsyncClient() as client:
         data = await client.post(
             "http://copilot-nuclei-module/scan",
-            json=data.dict(),
+            json=data.model_dump(),
             timeout=120,
         )
     return NucleiScanResponse(**data.json())

@@ -807,7 +807,7 @@ async def create_integration_meta(
     )
     try:
         new_customer_integration_meta = CustomerIntegrationsMeta(
-            **customer_integration_meta.dict(),
+            **customer_integration_meta.model_dump(),
         )
         session.add(new_customer_integration_meta)
         await session.commit()
@@ -1218,7 +1218,7 @@ async def get_meta_auto(
         return {
             "success": True,
             "message": f"Successfully retrieved metadata for {customer_code}/{integration_name}",
-            "data": meta_record.dict() if hasattr(meta_record, "dict") else meta_record.__dict__,
+            "data": meta_record.model_dump() if hasattr(meta_record, "dict") else meta_record.__dict__,
             "table_type": "network_connector" if is_network_integration else "integration",
         }
 

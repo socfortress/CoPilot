@@ -744,7 +744,7 @@ async def put_customer_ai_trigger(notification: PutNotification, session: AsyncS
     )
     existing_notification = result.scalars().first()
     if existing_notification is None:
-        new_notification = AIAnalystTriggerEnabled(**notification.dict())
+        new_notification = AIAnalystTriggerEnabled(**notification.model_dump())
         session.add(new_notification)
     else:
         existing_notification.customer_code = notification.customer_code
@@ -763,7 +763,7 @@ async def put_customer_notification(notification: PutNotification, session: Asyn
     result = await session.execute(select(Notification).where(Notification.customer_code == notification.customer_code))
     existing_notification = result.scalars().first()
     if existing_notification is None:
-        new_notification = Notification(**notification.dict())
+        new_notification = Notification(**notification.model_dump())
         session.add(new_notification)
     else:
         existing_notification.customer_code = notification.customer_code
@@ -982,7 +982,7 @@ async def delete_customer_code_name(source: str, customer_code_name: str, sessio
 
 
 async def create_alert(alert: AlertCreate, db: AsyncSession) -> Alert:
-    db_alert = Alert(**alert.dict())
+    db_alert = Alert(**alert.model_dump())
     db.add(db_alert)
     try:
         await db.flush()
@@ -1104,7 +1104,7 @@ async def create_comment(comment: CommentCreate, db: AsyncSession) -> Comment:
         raise HTTPException(status_code=404, detail="Alert not found")
 
     # Create comment with automatic timestamp if not provided
-    comment_data = comment.dict()
+    comment_data = comment.model_dump()
     if comment_data.get("created_at") is None:
         comment_data["created_at"] = datetime.utcnow()
 
@@ -1146,7 +1146,7 @@ async def create_case_comment(comment: CaseCommentCreate, db: AsyncSession) -> C
         raise HTTPException(status_code=404, detail="Case not found")
 
     # Create comment with automatic timestamp if not provided
-    comment_data = comment.dict()
+    comment_data = comment.model_dump()
     if comment_data.get("created_at") is None:
         comment_data["created_at"] = datetime.utcnow()
 
@@ -1193,7 +1193,7 @@ async def create_asset(asset: AssetCreate, db: AsyncSession) -> Asset:
     if not alert_context:
         raise HTTPException(status_code=404, detail="Alert context not found")
 
-    db_asset = Asset(**asset.dict())
+    db_asset = Asset(**asset.model_dump())
     db.add(db_asset)
     try:
         await db.commit()
@@ -1246,7 +1246,7 @@ async def delete_alert_ioc(ioc: AlertIoCDelete, db: AsyncSession) -> AlertToIoC:
 
 async def create_alert_tag(alert_tag: AlertTagCreate, db: AsyncSession) -> AlertTag:
     # Create the AlertTag instance
-    db_alert_tag = AlertTag(**alert_tag.dict())
+    db_alert_tag = AlertTag(**alert_tag.model_dump())
     db.add(db_alert_tag)
     await db.flush()
 
@@ -1301,7 +1301,7 @@ async def delete_alert_tag(alert_id: int, tag_id: int, db: AsyncSession):
 
 
 async def create_alert_context(alert_context: AlertContextCreate, db: AsyncSession) -> AlertContext:
-    db_alert_context = AlertContext(**alert_context.dict())
+    db_alert_context = AlertContext(**alert_context.model_dump())
     db.add(db_alert_context)
     try:
         await db.flush()
@@ -1432,7 +1432,7 @@ async def create_case(
     has no source hint to pick from. Analysts can apply a template later
     via ``POST /case/{id}/apply-template/{template_id}``.
     """
-    db_case = Case(**case.dict())
+    db_case = Case(**case.model_dump())
     db.add(db_case)
     try:
         await db.flush()
@@ -1538,7 +1538,7 @@ async def create_case_alert_link(case_alert_link: CaseAlertLinkCreate, db: Async
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
 
-    db_case_alert_link = CaseAlertLink(**case_alert_link.dict())
+    db_case_alert_link = CaseAlertLink(**case_alert_link.model_dump())
     db.add(db_case_alert_link)
     try:
         await db.commit()

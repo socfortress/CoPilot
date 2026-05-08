@@ -11,11 +11,11 @@ async def post_to_copilot_cato_module(data: CollectCato, license_key: str = None
     Args:
         data (CollectCato): The data to send to the copilot-cato-module Docker container.
     """
-    logger.info(f"Sending POST request to http://copilot-cato-module/collect with data: {data.dict()}")
+    logger.info(f"Sending POST request to http://copilot-cato-module/collect with data: {data.model_dump()}")
     async with httpx.AsyncClient() as client:
         await client.post(
             "http://copilot-cato-module/collect",
-            json=data.dict(),
+            json=data.model_dump(),
             timeout=120,
         )
     return None

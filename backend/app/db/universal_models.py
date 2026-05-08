@@ -791,8 +791,8 @@ class CustomerNotificationRoute(SQLModel, table=True):
     # sync, which throws MissingGreenlet under AsyncSession. One-way
     # foreign keys are fine here; we walk them via explicit queries
     # (`session.get(...)`) when we need them.
-    dispatches: list["NotificationDispatchLog"] = Relationship()
-    shuffle_integration: Optional["CustomerShuffleIntegration"] = Relationship()
+    dispatches: list["NotificationDispatchLog"] = Relationship(sa_relationship_kwargs={"overlaps": "route"})
+    shuffle_integration: Optional["CustomerShuffleIntegration"] = Relationship(sa_relationship_kwargs={"overlaps": "routes"})
 
 
 class NotificationDispatchLog(SQLModel, table=True):
@@ -844,7 +844,8 @@ class NotificationDispatchLog(SQLModel, table=True):
 
     # See note on CustomerNotificationRoute.dispatches — back_populates
     # removed deliberately to keep AsyncSession flush() synchronous-IO-free.
-    route: Optional["CustomerNotificationRoute"] = Relationship()
+    # `overlaps` makes the deliberate one-way nature explicit to SQLAlchemy 2.
+    route: Optional["CustomerNotificationRoute"] = Relationship(sa_relationship_kwargs={"overlaps": "dispatches"})
 
 
 class CustomerShuffleIntegration(SQLModel, table=True):
@@ -884,4 +885,4 @@ class CustomerShuffleIntegration(SQLModel, table=True):
     customer: Optional["Customers"] = Relationship()
     # See note on CustomerNotificationRoute.dispatches — back_populates
     # removed for AsyncSession compatibility.
-    routes: list["CustomerNotificationRoute"] = Relationship()
+    routes: list["CustomerNotificationRoute"] = Relationship(sa_relationship_kwargs={"overlaps": "shuffle_integration"})

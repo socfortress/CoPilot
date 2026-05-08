@@ -60,7 +60,7 @@ class IoCMapping(BaseModel):
         return v
 
     def to_dict(self):
-        return self.dict()
+        return self.model_dump()
 
 
 class IoCResponse(BaseModel):
@@ -69,7 +69,7 @@ class IoCResponse(BaseModel):
     message: Optional[str] = Field(None, description="Message about the IoC")
 
     def to_dict(self):
-        return self.dict()
+        return self.model_dump()
 
 
 class SocfortressProcessNameAnalysisRequest(BaseModel):
@@ -217,7 +217,7 @@ class SocfortressProcessNameAnalysisResponse(BaseModel):
     data: SocfortressProcessNameAnalysisAPIResponse
 
     def to_dict(self):
-        return self.dict()
+        return self.model_dump()
 
 
 class Artifacts(BaseModel):
