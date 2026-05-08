@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import validator
+from pydantic import model_validator
 
 
 class Fields(BaseModel):
@@ -36,24 +36,22 @@ class Source(BaseModel):
     original_alert_id: Optional[str] = Field(None, alias="original_alert_id")
     original_alert_index_name: Optional[str] = Field(None, alias="original_alert_index_name")
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator("original_alert_id", "original_alert_index_name", allow_reuse=True, pre=True)
-    def extract_origin_context(cls, v, values, **kwargs):
-        origin_context = values.get("origin_context", "")
-        try:
-            # Assuming the format is always as given in the example
-            parts = origin_context.split(":")
-            if len(parts) == 6:
-                _, _, _, _, index_name, alert_id = parts
-                if kwargs["field"].name == "original_alert_id":
-                    return alert_id
-                elif kwargs["field"].name == "original_alert_index_name":
-                    return index_name
-        except Exception as e:
-            # Consider logging the exception to understand what's going wrong
-            print(f"Error parsing origin_context: {e}")
-        return v
+    @model_validator(mode="before")
+    @classmethod
+    def extract_origin_context(cls, data):
+        if isinstance(data, dict):
+            origin_context = data.get("origin_context", "")
+            try:
+                # Assuming the format is always as given in the example
+                parts = origin_context.split(":")
+                if len(parts) == 6:
+                    _, _, _, _, index_name, alert_id = parts
+                    data["original_alert_id"] = alert_id
+                    data["original_alert_index_name"] = index_name
+            except Exception as e:
+                # Consider logging the exception to understand what's going wrong
+                print(f"Error parsing origin_context: {e}")
+        return data
 
 
 class AlertPayloadItem(BaseModel):

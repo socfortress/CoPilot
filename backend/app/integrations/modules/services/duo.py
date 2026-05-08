@@ -11,11 +11,11 @@ async def post_to_copilot_duo_module(data: CollectDuo):
     Args:
         data (CollectDuo): The data to send to the copilot-duo-module Docker container.
     """
-    logger.info(f"Sending POST request to http://copilot-duo-module/auth with data: {data.dict()}")
+    logger.info(f"Sending POST request to http://copilot-duo-module/auth with data: {data.model_dump()}")
     async with httpx.AsyncClient() as client:
         await client.post(
             "http://copilot-duo-module/auth",
-            json=data.dict(),
+            json=data.model_dump(),
             timeout=120,
         )
     return None

@@ -158,7 +158,7 @@ async def update_route(
     # Pydantic v1 vs v2 parity — exclude_unset returns only the fields
     # the client actually sent so a PATCH that omits `enabled` doesn't
     # accidentally re-flag it.
-    data = payload.dict(exclude_unset=True)
+    data = payload.model_dump(exclude_unset=True)
 
     # If the PATCH switches the channel to Shuffle (or re-points an
     # existing Shuffle route at a different integration), the new
@@ -265,7 +265,7 @@ async def update_shuffle_integration(
     session: AsyncSession,
 ) -> CustomerShuffleIntegration:
     integration = await _ensure_integration_belongs_to_customer(integration_id, customer_code, session)
-    data = payload.dict(exclude_unset=True)
+    data = payload.model_dump(exclude_unset=True)
     for field, value in data.items():
         setattr(integration, field, value)
     integration.updated_at = datetime.utcnow()

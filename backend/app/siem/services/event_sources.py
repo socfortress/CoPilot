@@ -52,7 +52,7 @@ async def create_event_source(
             detail=f"Event source '{event_source_data.name}' already exists for customer {event_source_data.customer_code}",
         )
 
-    db_event_source = EventSources(**event_source_data.dict())
+    db_event_source = EventSources(**event_source_data.model_dump())
     db.add(db_event_source)
     await db.flush()
     await db.refresh(db_event_source)

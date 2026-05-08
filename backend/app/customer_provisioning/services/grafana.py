@@ -110,7 +110,7 @@ async def create_grafana_datasource(
         readOnly=True,
     )
     results = grafana_client.datasource.create_datasource(
-        datasource=datasource_payload.dict(),
+        datasource=datasource_payload.model_dump(),
     )
     return GrafanaDataSourceCreationResponse(**results)
 
@@ -189,7 +189,7 @@ async def create_vulnerability_datasource(
         readOnly=True,
     )
     results = grafana_client.datasource.create_datasource(
-        datasource=datasource_payload.dict(),
+        datasource=datasource_payload.model_dump(),
     )
     return GrafanaDataSourceCreationResponse(**results)
 

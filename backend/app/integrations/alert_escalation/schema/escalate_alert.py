@@ -75,7 +75,7 @@ class GenericSourceModel(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     def to_dict(self):
-        return self.dict(exclude_none=True)
+        return self.model_dump(exclude_none=True)
 
 
 class GenericAlertModel(BaseModel):
@@ -145,7 +145,7 @@ class IrisAsset(BaseModel):
     )
 
     def to_dict(self):
-        return self.dict(exclude_none=True)
+        return self.model_dump(exclude_none=True)
 
 
 class IrisIoc(BaseModel):
@@ -163,7 +163,7 @@ class IrisIoc(BaseModel):
     ioc_type_id: int = Field(20, description="Type ID of the IoC", examples=[20])
 
     def to_dict(self):
-        return self.dict(exclude_none=True)
+        return self.model_dump(exclude_none=True)
 
 
 class IrisAlertContext(BaseModel):
@@ -215,4 +215,4 @@ class IrisAlertPayload(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     def to_dict(self):
-        return self.dict(exclude_none=True)
+        return self.model_dump(exclude_none=True)

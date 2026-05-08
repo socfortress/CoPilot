@@ -189,7 +189,7 @@ async def update_config(
         raise HTTPException(status_code=404, detail="Configuration not found")
 
     # Update fields that were provided
-    update_data = config_update.dict(exclude_unset=True)
+    update_data = config_update.model_dump(exclude_unset=True)
 
     for field, value in update_data.items():
         if value is not None:
@@ -342,8 +342,8 @@ async def run_audit_from_config(
             report.score = audit_response.summary.score
             report.grade = audit_response.summary.grade
 
-        report.full_report = audit_response.dict()
-        report.top_findings = [f.dict() for f in audit_response.top_findings[:20]]
+        report.full_report = audit_response.model_dump()
+        report.top_findings = [f.model_dump() for f in audit_response.top_findings[:20]]
 
         # Update config with last audit info
         config.last_audit_at = end_time
@@ -683,7 +683,7 @@ async def update_exclusion(
     if not exclusion:
         raise HTTPException(status_code=404, detail="Exclusion not found")
 
-    update_data = exclusion_update.dict(exclude_unset=True)
+    update_data = exclusion_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         if value is not None:
             setattr(exclusion, field, value)

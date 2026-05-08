@@ -337,7 +337,7 @@ async def sync_agent_vulnerabilities(agent_name: str, customer_code: str):
                         integration="vulnerabilities",
                         customer_code=customer_code,
                         agent_name=agent_name,
-                        **vulnerability.dict(),
+                        **vulnerability.model_dump(),
                     ),
                 )
         return True
@@ -350,7 +350,7 @@ async def sync_agent_vulnerabilities(agent_name: str, customer_code: str):
                 integration="vulnerabilities",
                 customer_code=customer_code,
                 agent_name=agent_name,
-                **vulnerability.dict(),
+                **vulnerability.model_dump(),
             ),
         )
     return True

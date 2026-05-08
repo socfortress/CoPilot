@@ -118,7 +118,7 @@ class MCPService:
             is_cloud = cls.is_cloud_service(data.mcp_server)
 
             logger.info(f"Sending MCP query to {data.mcp_server.value} ({'cloud' if is_cloud else 'local'}) at {full_url}")
-            logger.debug(f"Query data: {data.dict()}")
+            logger.debug(f"Query data: {data.model_dump()}")
 
             # Set different timeout for cloud vs local services
             timeout = 300 if is_cloud else 300
@@ -136,7 +136,7 @@ class MCPService:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     full_url,
-                    json=data.dict(),
+                    json=data.model_dump(),
                     headers=headers,
                     timeout=timeout,
                 )

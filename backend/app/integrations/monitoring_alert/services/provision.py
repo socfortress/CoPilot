@@ -89,7 +89,7 @@ async def check_if_url_whitelist_entry_exists(url: str) -> bool:
             detail="Failed to collect url whitelist entries",
         )
     url_whitelist_entries_response = UrlWhitelistEntryResponse(
-        **url_whitelist_entries_response.dict(),
+        **url_whitelist_entries_response.model_dump(),
     )
     logger.info(
         f"Url whitelist entries collected: {url_whitelist_entries_response.url_whitelist_entries}",
@@ -117,7 +117,7 @@ async def get_notification_id(notification_title: str) -> Optional[str]:
             detail="Failed to collect event notifications",
         )
     event_notifications_response = GraylogEventNotificationsResponse(
-        **event_notifications_response.dict(),
+        **event_notifications_response.model_dump(),
     )
     logger.info(
         f"Event notifications collected: {event_notifications_response.event_notifications}",
@@ -144,7 +144,7 @@ async def build_url_whitelisted_entries(
             detail="Failed to collect url whitelist entries",
         )
     url_whitelist_entries_response = UrlWhitelistEntryResponse(
-        **url_whitelist_entries_response.dict(),
+        **url_whitelist_entries_response.model_dump(),
     )
     logger.info(f"Url whitelist entries collected: {url_whitelist_entries_response}")
     url_whitelist_entries = url_whitelist_entries_response.url_whitelist_entries.entries
@@ -167,10 +167,10 @@ async def provision_webhook_url_whitelist(
     Returns:
         bool: True if the webhook URL was provisioned successfully, False otherwise.
     """
-    logger.info(f"Provisioning URL Whitelist: {whitelist_url_model.dict()}")
+    logger.info(f"Provisioning URL Whitelist: {whitelist_url_model.model_dump()}")
     response = await send_put_request(
         endpoint="/api/system/urlwhitelist",
-        data=whitelist_url_model.dict(),
+        data=whitelist_url_model.model_dump(),
     )
     logger.info(f"URL Whitelist provisioned: {response}")
     if response["success"]:
@@ -195,7 +195,7 @@ async def check_if_event_notification_exists(event_notification: str) -> bool:
             detail="Failed to collect event notifications",
         )
     event_notifications_response = GraylogEventNotificationsResponse(
-        **event_notifications_response.dict(),
+        **event_notifications_response.model_dump(),
     )
     logger.info(
         f"Event notifications collected: {event_notifications_response.event_notifications}",
@@ -221,7 +221,7 @@ async def provision_webhook(
     """
     response = await send_post_request(
         endpoint="/api/events/notifications",
-        data=webhook_model.dict(),
+        data=webhook_model.model_dump(),
     )
     if response["success"]:
         logger.info(f"response: {response}")
@@ -251,7 +251,7 @@ async def provision_alert_definition(
 
     response = await send_post_request(
         endpoint="/api/events/definitions",
-        data=alert_definition_model.dict(),
+        data=alert_definition_model.model_dump(),
     )
     logger.info(f"Graylog alert definition provisioned response: {response}")
     if response["success"]:
@@ -270,7 +270,7 @@ async def provision_wazuh_monitoring_alert(
     """
     #
     logger.info(
-        f"Invoking provision_wazuh_monitoring_alert with request: {request.dict()}",
+        f"Invoking provision_wazuh_monitoring_alert with request: {request.model_dump()}",
     )
     # ! TODO Commenting out for now since the plan is to pull from gl-events ! #
     # notification_exists = await check_if_event_notification_exists("SEND TO COPILOT")
@@ -400,7 +400,7 @@ async def provision_suricata_monitoring_alert(
     """
     #
     logger.info(
-        f"Invoking provision_suricata_monitoring_alert with request: {request.dict()}",
+        f"Invoking provision_suricata_monitoring_alert with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -493,7 +493,7 @@ async def provision_office365_exchange_online_alert(
     """
     #
     logger.info(
-        f"Invoking provision_office365_exchange_online_alert with request: {request.dict()}",
+        f"Invoking provision_office365_exchange_online_alert with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -586,7 +586,7 @@ async def provision_office365_threat_intel_alert(
     """
     #
     logger.info(
-        f"Invoking provision_office365_threat_intel_alert with request: {request.dict()}",
+        f"Invoking provision_office365_threat_intel_alert with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -679,7 +679,7 @@ async def provision_crowdstrike_monitoring_alert(
     """
     #
     logger.info(
-        f"Invoking provision_crowdstrike_monitoring_alert with request: {request.dict()}",
+        f"Invoking provision_crowdstrike_monitoring_alert with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -772,7 +772,7 @@ async def provision_fortinet_system_monitoring_alert(
     """
     #
     logger.info(
-        f"Invoking provision_fortinet_system_monitoring_alert with request: {request.dict()}",
+        f"Invoking provision_fortinet_system_monitoring_alert with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -865,7 +865,7 @@ async def provision_fortinet_utm_monitoring_alert(
     """
     #
     logger.info(
-        f"Invoking provision_fortinet_utm_monitoring_alert with request: {request.dict()}",
+        f"Invoking provision_fortinet_utm_monitoring_alert with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -955,7 +955,7 @@ async def provision_fortinet_fortiweb_path_traversal_vulnerability_exploitation_
     """
     logger.info(
         "Invoking provision_fortinet_fortiweb_path_traversal_vulnerability_exploitation_attempt_monitoring_alert "
-        f"with request: {request.dict()}",
+        f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1013,7 +1013,7 @@ async def provision_fortinet_wids_wireless_valid_client_misassociation_detected_
     """
     logger.info(
         "Invoking provision_fortinet_wids_wireless_valid_client_misassociation_detected_monitoring_alert "
-        f"with request: {request.dict()}",
+        f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1070,7 +1070,7 @@ async def provision_fortinet_wids_wireless_management_flooding_detected_monitori
     Provisions Fortinet WIDS Wireless Management Flooding Detected monitoring alert.
     """
     logger.info(
-        "Invoking provision_fortinet_wids_wireless_management_flooding_detected_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_fortinet_wids_wireless_management_flooding_detected_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1127,7 +1127,7 @@ async def provision_fortinet_wids_wireless_eapol_packet_flooding_detected_monito
     Provisions Fortinet WIDS Wireless EAPOL Packet Flooding Detected monitoring alert.
     """
     logger.info(
-        "Invoking provision_fortinet_wids_wireless_eapol_packet_flooding_detected_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_fortinet_wids_wireless_eapol_packet_flooding_detected_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1184,7 +1184,7 @@ async def provision_fortinet_wids_rogue_access_point_detected_monitoring_alert(
     Provisions Fortinet WIDS Rogue Access Point Detected monitoring alert.
     """
     logger.info(
-        "Invoking provision_fortinet_wids_rogue_access_point_detected_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_fortinet_wids_rogue_access_point_detected_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1241,7 +1241,7 @@ async def provision_fortinet_wids_wireless_long_duration_attack_detected_monitor
     Provisions Fortinet WIDS Wireless Long Duration Attack Detected monitoring alert.
     """
     logger.info(
-        "Invoking provision_fortinet_wids_wireless_long_duration_attack_detected_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_fortinet_wids_wireless_long_duration_attack_detected_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1298,7 +1298,7 @@ async def provision_fortinet_firewall_virus_detected_monitoring_alert(
     Provisions Fortinet Firewall Virus Detected monitoring alert.
     """
     logger.info(
-        "Invoking provision_fortinet_firewall_virus_detected_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_fortinet_firewall_virus_detected_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1355,7 +1355,7 @@ async def provision_fortinet_wids_wireless_threat_detected_monitoring_alert(
     Provisions Fortinet WIDS Wireless Threat Detected monitoring alert.
     """
     logger.info(
-        "Invoking provision_fortinet_wids_wireless_threat_detected_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_fortinet_wids_wireless_threat_detected_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1412,7 +1412,7 @@ async def provision_fortinet_wids_wireless_invalid_mac_oui_detected_monitoring_a
     Provisions Fortinet WIDS Wireless Invalid MAC OUI Detected monitoring alert.
     """
     logger.info(
-        "Invoking provision_fortinet_wids_wireless_invalid_mac_oui_detected_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_fortinet_wids_wireless_invalid_mac_oui_detected_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1469,7 +1469,7 @@ async def provision_fortinet_wids_wireless_asleap_attack_detected_monitoring_ale
     Provisions Fortinet WIDS Wireless Asleap Attack Detected monitoring alert.
     """
     logger.info(
-        "Invoking provision_fortinet_wids_wireless_asleap_attack_detected_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_fortinet_wids_wireless_asleap_attack_detected_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1526,7 +1526,7 @@ async def provision_fortinet_ips_malicious_url_detected_monitoring_alert(
     Provisions Fortinet IPS Malicious URL Detected monitoring alert.
     """
     logger.info(
-        "Invoking provision_fortinet_ips_malicious_url_detected_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_fortinet_ips_malicious_url_detected_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1583,7 +1583,7 @@ async def provision_fortinet_ips_botnet_activity_detected_monitoring_alert(
     Provisions Fortinet IPS Botnet Activity Detected monitoring alert.
     """
     logger.info(
-        "Invoking provision_fortinet_ips_botnet_activity_detected_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_fortinet_ips_botnet_activity_detected_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1640,7 +1640,7 @@ async def provision_fortinet_admin_user_created_from_public_ip_monitoring_alert(
     Provisions Fortinet Admin User Created from Public IP monitoring alert.
     """
     logger.info(
-        "Invoking provision_fortinet_admin_user_created_from_public_ip_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_fortinet_admin_user_created_from_public_ip_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1698,7 +1698,7 @@ async def provision_fortinet_suspicious_config_file_access_from_external_network
     """
     logger.info(
         "Invoking provision_fortinet_suspicious_config_file_access_from_external_network_monitoring_alert "
-        f"with request: {request.dict()}",
+        f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1755,7 +1755,7 @@ async def provision_fortinet_wids_wireless_weak_encryption_detected_monitoring_a
     Provisions Fortinet WIDS Wireless Weak Encryption Detected monitoring alert.
     """
     logger.info(
-        "Invoking provision_fortinet_wids_wireless_weak_encryption_detected_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_fortinet_wids_wireless_weak_encryption_detected_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1812,7 +1812,7 @@ async def provision_fortinet_suspicious_super_admin_login_detected_monitoring_al
     Provisions Fortinet Suspicious Super Admin Login Detected monitoring alert.
     """
     logger.info(
-        "Invoking provision_fortinet_suspicious_super_admin_login_detected_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_fortinet_suspicious_super_admin_login_detected_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1874,7 +1874,7 @@ async def provision_paloalto_monitoring_alert(
     """
     #
     logger.info(
-        f"Invoking provision_paloalto_monitoring_alert with request: {request.dict()}",
+        f"Invoking provision_paloalto_monitoring_alert with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -1963,7 +1963,7 @@ async def provision_paloalto_firewall_traffic_to_phishing_url_allowed_monitoring
     Provisions PaloAlto Firewall Traffic to Phishing URL Allowed monitoring alert.
     """
     logger.info(
-        "Invoking provision_paloalto_firewall_traffic_to_phishing_url_allowed_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_paloalto_firewall_traffic_to_phishing_url_allowed_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2035,7 +2035,7 @@ async def provision_paloalto_firewall_traffic_to_malicious_url_allowed_monitorin
     Provisions PaloAlto Firewall Traffic to Malicious URL Allowed monitoring alert.
     """
     logger.info(
-        "Invoking provision_paloalto_firewall_traffic_to_malicious_url_allowed_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_paloalto_firewall_traffic_to_malicious_url_allowed_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2108,7 +2108,7 @@ async def provision_paloalto_firewall_virus_allowed_monitoring_alert(
     Provisions PaloAlto Firewall Virus Allowed monitoring alert.
     """
     logger.info(
-        "Invoking provision_paloalto_firewall_virus_allowed_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_paloalto_firewall_virus_allowed_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2179,7 +2179,7 @@ async def provision_paloalto_firewall_tor_traffic_allowed_monitoring_alert(
     Provisions PaloAlto Firewall TOR Traffic Allowed monitoring alert.
     """
     logger.info(
-        "Invoking provision_paloalto_firewall_tor_traffic_allowed_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_paloalto_firewall_tor_traffic_allowed_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2247,7 +2247,7 @@ async def provision_paloalto_firewall_medium_severity_correlation_event_detected
     """
     logger.info(
         "Invoking provision_paloalto_firewall_medium_severity_correlation_event_detected_monitoring_alert "
-        f"with request: {request.dict()}",
+        f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2318,7 +2318,7 @@ async def provision_sentinelone_new_active_threat_malicious_detected_monitoring_
     Provisions SentinelOne: New Active Threat Malicious Detected.
     """
     logger.info(
-        "Invoking provision_sentinelone_new_active_threat_malicious_detected_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_sentinelone_new_active_threat_malicious_detected_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2375,7 +2375,7 @@ async def provision_sentinelone_new_active_threat_suspicious_detected_monitoring
     Provisions SentinelOne: New Active Threat Suspicious Detected.
     """
     logger.info(
-        "Invoking provision_sentinelone_new_active_threat_suspicious_detected_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_sentinelone_new_active_threat_suspicious_detected_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2432,7 +2432,7 @@ async def provision_sentinelone_new_mitigation_kill_performed_successfully_monit
     Provisions SentinelOne: New Mitigation, Kill performed successfully.
     """
     logger.info(
-        "Invoking provision_sentinelone_new_mitigation_kill_performed_successfully_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_sentinelone_new_mitigation_kill_performed_successfully_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2490,7 +2490,7 @@ async def provision_sentinelone_new_mitigation_quarantine_performed_successfully
     """
     logger.info(
         "Invoking provision_sentinelone_new_mitigation_quarantine_performed_successfully_monitoring_alert "
-        f"with request: {request.dict()}",
+        f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2547,7 +2547,7 @@ async def provision_sentinelone_new_exclusion_was_added_or_modified_by_user_moni
     Provisions SentinelOne: New Exclusion was added/modified by user.
     """
     logger.info(
-        "Invoking provision_sentinelone_new_exclusion_was_added_or_modified_by_user_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_sentinelone_new_exclusion_was_added_or_modified_by_user_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2604,7 +2604,7 @@ async def provision_sentinelone_new_path_exclusion_added_monitoring_alert(
     Provisions SentinelOne: New Path Exclusion added.
     """
     logger.info(
-        "Invoking provision_sentinelone_new_path_exclusion_added_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_sentinelone_new_path_exclusion_added_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2661,7 +2661,7 @@ async def provision_sentinelone_analyst_verdict_changed_to_true_positive_monitor
     Provisions SentinelOne: Analyst verdict changed to True Positive.
     """
     logger.info(
-        "Invoking provision_sentinelone_analyst_verdict_changed_to_true_positive_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_sentinelone_analyst_verdict_changed_to_true_positive_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2718,7 +2718,7 @@ async def provision_sentinelone_analyst_verdict_changed_to_false_positive_monito
     Provisions SentinelOne: Analyst verdict changed to False Positive.
     """
     logger.info(
-        "Invoking provision_sentinelone_analyst_verdict_changed_to_false_positive_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_sentinelone_analyst_verdict_changed_to_false_positive_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2776,7 +2776,7 @@ async def provision_mimecast_compromised_site_url_accessed_monitoring_alert(
     Provisions Mimecast Compromised Site URL Accessed monitoring alert.
     """
     logger.info(
-        "Invoking provision_mimecast_compromised_site_url_accessed_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_mimecast_compromised_site_url_accessed_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2833,7 +2833,7 @@ async def provision_mimecast_executable_file_attachment_delivered_monitoring_ale
     Provisions Mimecast Executable File Attachment Delivered monitoring alert.
     """
     logger.info(
-        "Invoking provision_mimecast_executable_file_attachment_delivered_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_mimecast_executable_file_attachment_delivered_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2890,7 +2890,7 @@ async def provision_mimecast_malicious_email_attachment_delivered_monitoring_ale
     Provisions Mimecast Malicious Email Attachment Delivered monitoring alert.
     """
     logger.info(
-        "Invoking provision_mimecast_malicious_email_attachment_delivered_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_mimecast_malicious_email_attachment_delivered_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2947,7 +2947,7 @@ async def provision_mimecast_malicious_email_link_accessed_monitoring_alert(
     Provisions Mimecast Malicious Email Link Accessed monitoring alert.
     """
     logger.info(
-        "Invoking provision_mimecast_malicious_email_link_accessed_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_mimecast_malicious_email_link_accessed_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -3004,7 +3004,7 @@ async def provision_mimecast_p2p_file_sharing_url_accessed_monitoring_alert(
     Provisions Mimecast P2P File Sharing URL Accessed monitoring alert.
     """
     logger.info(
-        "Invoking provision_mimecast_p2p_file_sharing_url_accessed_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_mimecast_p2p_file_sharing_url_accessed_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -3061,7 +3061,7 @@ async def provision_mimecast_anonymizer_url_accessed_monitoring_alert(
     Provisions Mimecast Anonymizer URL Accessed monitoring alert.
     """
     logger.info(
-        "Invoking provision_mimecast_anonymizer_url_accessed_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_mimecast_anonymizer_url_accessed_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -3118,7 +3118,7 @@ async def provision_mimecast_impersonation_email_delivered_monitoring_alert(
     Provisions Mimecast Impersonation Email Delivered monitoring alert.
     """
     logger.info(
-        "Invoking provision_mimecast_impersonation_email_delivered_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_mimecast_impersonation_email_delivered_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -3175,7 +3175,7 @@ async def provision_mimecast_malicious_outbound_email_monitoring_alert(
     Provisions Mimecast Malicious Outbound Email monitoring alert.
     """
     logger.info(
-        "Invoking provision_mimecast_malicious_outbound_email_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_mimecast_malicious_outbound_email_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -3232,7 +3232,7 @@ async def provision_mimecast_malicious_rtf_attachment_delivered_monitoring_alert
     Provisions Mimecast Malicious RTF Attachment Delivered monitoring alert.
     """
     logger.info(
-        "Invoking provision_mimecast_malicious_rtf_attachment_delivered_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_mimecast_malicious_rtf_attachment_delivered_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -3289,7 +3289,7 @@ async def provision_mimecast_phishing_email_delivered_monitoring_alert(
     Provisions Mimecast Phishing Email Delivered monitoring alert.
     """
     logger.info(
-        "Invoking provision_mimecast_phishing_email_delivered_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_mimecast_phishing_email_delivered_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -3346,7 +3346,7 @@ async def provision_mimecast_source_code_file_in_email_attachment_monitoring_ale
     Provisions Mimecast Source Code File In Email Attachment monitoring alert.
     """
     logger.info(
-        "Invoking provision_mimecast_source_code_file_in_email_attachment_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_mimecast_source_code_file_in_email_attachment_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -3403,7 +3403,7 @@ async def provision_mimecast_url_with_dangerous_file_type_accessed_monitoring_al
     Provisions Mimecast URL with Dangerous File Type Accessed monitoring alert.
     """
     logger.info(
-        "Invoking provision_mimecast_url_with_dangerous_file_type_accessed_monitoring_alert " f"with request: {request.dict()}",
+        "Invoking provision_mimecast_url_with_dangerous_file_type_accessed_monitoring_alert " f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -3462,7 +3462,7 @@ async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -
     """
     #
     logger.info(
-        f"Invoking provision_custom_alert with request: {request.dict()}",
+        f"Invoking provision_custom_alert with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(

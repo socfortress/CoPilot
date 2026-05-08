@@ -734,7 +734,7 @@ async def create_network_connector_meta(
     )
     try:
         new_customer_network_connector_meta = CustomerNetworkConnectorsMeta(
-            **customer_network_connector_meta.dict(),
+            **customer_network_connector_meta.model_dump(),
         )
         session.add(new_customer_network_connector_meta)
         await session.commit()

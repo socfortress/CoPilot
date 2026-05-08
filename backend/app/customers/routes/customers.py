@@ -211,7 +211,7 @@ async def create_customer(
     await mssp_license_check(session)
     await verify_unique_customer_code(session, customer)
     logger.info(f"Creating new customer: {customer}")
-    new_customer = Customers(**customer.dict())
+    new_customer = Customers(**customer.model_dump())
     session.add(new_customer)
     await session.commit()
     return CustomerResponse(
@@ -348,7 +348,7 @@ async def update_customer(
         )
 
     # Update model instance with input data
-    for key, value in customer.dict(exclude={"is_provisioned"}).items():
+    for key, value in customer.model_dump(exclude={"is_provisioned"}).items():
         setattr(existing_customer, key, value)
 
     await session.commit()  # Commit changes asynchronously
@@ -478,7 +478,7 @@ async def add_customer_meta(
         )
 
     logger.info(f"Got existing customer: {existing_customer}")
-    new_customer_meta = CustomersMeta(**customer_meta.dict())
+    new_customer_meta = CustomersMeta(**customer_meta.model_dump())
     new_customer_meta.customer_code = existing_customer.customer_code
     new_customer_meta.customer_name = existing_customer.customer_name
 
@@ -578,7 +578,7 @@ async def update_customer_meta(
         )
 
     # Update the existing record with new values
-    for key, value in customer_meta.dict(exclude_unset=True).items():
+    for key, value in customer_meta.model_dump(exclude_unset=True).items():
         setattr(existing_customer_meta, key, value)
 
     await session.commit()  # Commit the changes to the database asynchronously

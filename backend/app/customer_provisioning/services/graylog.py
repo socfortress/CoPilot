@@ -69,11 +69,11 @@ async def send_index_set_creation_request(
     Returns:
         GraylogIndexSetCreationResponse: The response from Graylog after creating the index set.
     """
-    json_index_set = json.dumps(index_set.dict())
+    json_index_set = json.dumps(index_set.model_dump())
     logger.info(f"json_index_set set: {json_index_set}")
     response_json = await send_post_request(
         endpoint="/api/system/indices/index_sets",
-        data=index_set.dict(),
+        data=index_set.model_dump(),
     )
     return GraylogIndexSetCreationResponse(**response_json)
 
@@ -158,11 +158,11 @@ async def send_event_stream_creation_request(
     Returns:
         StreamCreationResponse: The response containing the created event stream.
     """
-    json_event_stream = json.dumps(event_stream.dict())
+    json_event_stream = json.dumps(event_stream.model_dump())
     logger.info(f"json_event_stream set: {json_event_stream}")
     response_json = await send_post_request(
         endpoint="/api/streams",
-        data=event_stream.dict(),
+        data=event_stream.model_dump(),
     )
     return StreamCreationResponse(**response_json)
 
@@ -238,7 +238,7 @@ async def connect_stream_to_pipeline(
     )
     response_json = await send_post_request(
         endpoint="/api/system/pipelines/connections/to_stream",
-        data=stream_and_pipeline.dict(),
+        data=stream_and_pipeline.model_dump(),
     )
     logger.info(f"Response: {response_json}")
     return StreamConnectionToPipelineResponse(**response_json)

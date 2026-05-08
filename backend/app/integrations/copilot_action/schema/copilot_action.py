@@ -8,7 +8,7 @@ from typing import Union
 
 from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
+from pydantic import model_validator
 
 
 class Technology(str, Enum):
@@ -58,13 +58,11 @@ class ActiveResponseItem(BaseModel):
     category: Optional[str] = None
     tags: Optional[List[str]] = None
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator("icon", always=True)
-    def set_icon_default(cls, v, values):
-        if v is None and "technology" in values:
-            return values["technology"].value.lower()
-        return v
+    @model_validator(mode="after")
+    def set_icon_default(self):
+        if self.icon is None and self.technology is not None:
+            self.icon = self.technology.value.lower()
+        return self
 
 
 class InventoryQueryRequest(BaseModel):

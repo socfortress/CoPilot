@@ -656,7 +656,7 @@ async def check_if_event_definition_exists(event_definition: str) -> bool:
             detail="Failed to collect event definitions",
         )
     event_definitions_response = GraylogEventDefinitionsResponse(
-        **event_definitions_response.dict(),
+        **event_definitions_response.model_dump(),
     )
     logger.info(
         f"Event definitions collected: {event_definitions_response.event_definitions}",

@@ -206,7 +206,7 @@ async def connect_stream_to_pipeline(
     )
     response_json = await send_post_request(
         endpoint="/api/system/pipelines/connections/to_stream",
-        data=stream_and_pipeline.dict(),
+        data=stream_and_pipeline.model_dump(),
     )
     logger.info(f"Response: {response_json}")
     return StreamConnectionToPipelineResponse(**response_json)

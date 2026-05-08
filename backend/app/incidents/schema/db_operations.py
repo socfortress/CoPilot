@@ -6,7 +6,7 @@ from typing import Optional
 
 from fastapi import HTTPException
 from pydantic import field_validator, BaseModel
-from pydantic import validator
+from pydantic import model_validator
 
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
@@ -565,9 +565,8 @@ class CaseDownloadDocxRequest(BaseModel):
     template_name: str
     file_name: Optional[str] = "case_report.docx"
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator("file_name", pre=True, always=True)
+    @field_validator("file_name", mode="before")
+    @classmethod
     def ensure_docx_extension(cls, v):
         if v and not v.endswith(".docx"):
             return f"{v}.docx"
@@ -665,16 +664,14 @@ class TagAccessSettingsUpdate(BaseModel):
     untagged_alert_behavior: UntaggedAlertBehavior = UntaggedAlertBehavior.VISIBLE_TO_ALL
     default_tag_id: Optional[int] = None
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator("default_tag_id")
-    def validate_default_tag(cls, v, values):
-        if values.get("untagged_alert_behavior") == UntaggedAlertBehavior.DEFAULT_TAG and v is None:
+    @model_validator(mode="after")
+    def validate_default_tag(self):
+        if self.untagged_alert_behavior == UntaggedAlertBehavior.DEFAULT_TAG and self.default_tag_id is None:
             raise HTTPException(
                 status_code=400,
                 detail="default_tag_id is required when untagged_alert_behavior is 'default_tag'",
             )
-        return v
+        return self
 
 
 class TagAccessSettingsItem(BaseModel):

@@ -104,7 +104,7 @@ async def run_and_wait_for_analyzer(
     if api is None:
         return {"success": False, "message": "API initialization failed"}
     try:
-        job = api.analyzers.run_by_name(analyzer_name, job_data.dict(), force=1)
+        job = api.analyzers.run_by_name(analyzer_name, job_data.model_dump(), force=1)
         return await monitor_analyzer_job(api, job)
     except Exception as e:
         raise HTTPException(

@@ -92,7 +92,7 @@ async def update_customer_provisioning_default_settings(
         raise HTTPException(status_code=404, detail="Settings not found")
 
     # Update the fields
-    for key, value in customer_provisioning_default_settings.dict().items():
+    for key, value in customer_provisioning_default_settings.model_dump().items():
         setattr(existing_settings, key, value)
 
     await db.commit()

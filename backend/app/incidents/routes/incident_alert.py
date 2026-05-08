@@ -359,7 +359,7 @@ async def invoke_alert_threshold_graylog_route(
 
     alert_id = await create_alert_full(
         alert_payload=CreatedAlertPayload(
-            alert_context_payload=request.event.fields.dict(),
+            alert_context_payload=request.event.fields.model_dump(),
             asset_payload=asset_name,
             timefield_payload=str(request.event.timestamp),
             alert_title_payload=request.event.message,
@@ -439,12 +439,12 @@ async def create_exclusion(
     logger.info(f"Current user: {current_user}")
 
     # Take only needed fields from exclusion, excluding created_by
-    exclusion_dict = exclusion.dict(exclude={"created_by"})
+    exclusion_dict = exclusion.model_dump(exclude={"created_by"})
     # Create a new exclusion with the current user
     updated_exclusion = VeloSigmaExclusionCreate(**exclusion_dict, created_by=current_user)
 
     # Log the exclusion data for debugging
-    logger.info(f"Exclusion data: {updated_exclusion.dict()}")
+    logger.info(f"Exclusion data: {updated_exclusion.model_dump()}")
 
     service = VeloSigmaExclusionService(db)
     # return await service.create_exclusion(updated_exclusion)
@@ -518,7 +518,7 @@ async def update_exclusion(
 ):
     """Update an existing exclusion rule."""
     service = VeloSigmaExclusionService(db)
-    updated = await service.update_exclusion(exclusion_id, exclusion.dict(exclude_unset=True))
+    updated = await service.update_exclusion(exclusion_id, exclusion.model_dump(exclude_unset=True))
 
     if not updated:
         raise HTTPException(status_code=404, detail="Exclusion rule not found")

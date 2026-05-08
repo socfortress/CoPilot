@@ -31,7 +31,7 @@ class EpssApiResponse(BaseModel):
     data: List[EpssData]
 
     def to_dict(self):
-        return self.dict()
+        return self.model_dump()
 
 
 class EpssThreatIntelResponse(BaseModel):

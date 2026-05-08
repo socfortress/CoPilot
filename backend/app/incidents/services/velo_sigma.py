@@ -342,7 +342,7 @@ class VeloSigmaExclusionService:
 
     async def create_exclusion(self, exclusion: VeloSigmaExclusionCreate) -> VeloSigmaExclusion:
         """Create a new exclusion rule."""
-        exclusion_data = exclusion.dict()
+        exclusion_data = exclusion.model_dump()
 
         # Ensure created_by is set to something non-null
         if not exclusion_data.get("created_by"):
@@ -453,7 +453,7 @@ class VelociraptorSigmaService:
             if hasattr(parsed_event, "EventData"):
                 # Try to convert EventData to dict for context
                 try:
-                    event_context = parsed_event.EventData.dict()
+                    event_context = parsed_event.EventData.model_dump()
                 except AttributeError:
                     # If not directly convertible, extract key attributes
                     event_context = {

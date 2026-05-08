@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 
 import uvicorn
 from dotenv import load_dotenv
@@ -99,7 +100,41 @@ environment = os.getenv("ENVIRONMENT", "PRODUCTION")
 # ssl_keyfile = os.path.join(os.path.dirname(__file__), "../nginx/server.key")
 # ssl_certfile = os.path.join(os.path.dirname(__file__), "../nginx/server.crt")
 
-app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API")
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # ── startup ──
+    logger.info("Initializing database")
+    if environment == "PRODUCTION":
+        await create_database_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_name="copilot")
+        await create_copilot_user_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_user_name="copilot")
+    apply_migrations()
+    await create_buckets()
+    await add_connectors(async_engine)
+    await delete_connectors(async_engine)
+    await create_roles(async_engine)
+    await create_available_integrations(async_engine)
+    await create_available_network_connectors(async_engine)
+    await ensure_admin_user(async_engine)
+    await ensure_scheduler_user(async_engine)
+
+    # Initialize the scheduler
+    scheduler = await init_scheduler()
+    if not scheduler.running:
+        logger.info("Scheduler is not running, starting now...")
+        scheduler.start()
+
+    yield
+
+    # ── shutdown ──
+    logger.info("Shutting down scheduler")
+    scheduler = await get_scheduler_instance()
+    if scheduler.running:
+        logger.info("Scheduler is running, shutting down now...")
+        scheduler.shutdown()
+    await ensure_scheduler_user_removed(async_engine)
+
+
+app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API", lifespan=lifespan)
 
 # Create an APIRouter with a prefix of `/api`
 api_router = APIRouter(prefix="/api")
@@ -187,30 +222,6 @@ api_router.include_router(talon.router)
 app.include_router(api_router)
 
 
-@app.on_event("startup")
-async def init_db():
-    logger.info("Initializing database")
-    if environment == "PRODUCTION":
-        await create_database_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_name="copilot")
-        await create_copilot_user_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_user_name="copilot")
-    apply_migrations()
-    await create_buckets()
-    await add_connectors(async_engine)
-    await delete_connectors(async_engine)
-    await create_roles(async_engine)
-    await create_available_integrations(async_engine)
-    await create_available_network_connectors(async_engine)
-    await ensure_admin_user(async_engine)
-    await ensure_scheduler_user(async_engine)
-
-    # Initialize the scheduler
-    scheduler = await init_scheduler()
-
-    if not scheduler.running:
-        logger.info("Scheduler is not running, starting now...")
-        scheduler.start()
-
-
 # Create `scoutsuite-report` directory if it doesnt exist
 if not os.path.exists("scoutsuite-report"):
     os.makedirs("scoutsuite-report")
@@ -221,18 +232,6 @@ app.mount("/scoutsuite-report", StaticFiles(directory="scoutsuite-report"), name
 @app.get("/")
 def hello():
     return {"message": "CoPilot - We Made It!"}
-
-
-@app.on_event("shutdown")
-async def shutdown_scheduler():
-    logger.info("Shutting down scheduler")
-    # Initialize the scheduler
-    scheduler = await get_scheduler_instance()
-    if scheduler.running:
-        logger.info("Scheduler is running, shutting down now...")
-        scheduler.shutdown()
-
-    await ensure_scheduler_user_removed(async_engine)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ from typing import List
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_validator
 
 
 class GrafanaDashboard(BaseModel):
@@ -155,10 +155,9 @@ class DashboardProvisionRequest(BaseModel):
         description="URL of the Grafana instance for the links within the dashboards.",
     )
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator("dashboards", each_item=True)
-    def check_dashboard_exists(cls, e):
+    @field_validator("dashboards")
+    @classmethod
+    def check_dashboards_exist(cls, dashboards):
         valid_dashboards = {
             item.name: item
             for item in list(WazuhDashboard)
@@ -177,6 +176,7 @@ class DashboardProvisionRequest(BaseModel):
             + list(SonicwallDashboard)
             + list(SentinelOneDashboard)
         }
-        if e not in valid_dashboards:
-            raise ValueError(f'Dashboard identifier "{e}" is not recognized.')
-        return e
+        for e in dashboards:
+            if e not in valid_dashboards:
+                raise ValueError(f'Dashboard identifier "{e}" is not recognized.')
+        return dashboards

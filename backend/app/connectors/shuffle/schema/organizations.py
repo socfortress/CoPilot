@@ -6,7 +6,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_validator
 
 
 class SyncConfig(BaseModel):
@@ -103,9 +103,8 @@ class DetailedOrganization(BaseModel):
     region_url: str = ""
     tutorials: List[Any] = []
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator("manager_orgs", pre=True, always=True)
+    @field_validator("manager_orgs", mode="before")
+    @classmethod
     def validate_manager_orgs(cls, v):
         """
         Validate and normalize manager_orgs field.

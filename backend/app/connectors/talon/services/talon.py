@@ -34,7 +34,7 @@ async def send_talon_message(request: TalonMessageRequest) -> TalonMessageRespon
     logger.info(f"Sending message to Talon: {request.message}")
     response = await send_post_request(
         endpoint="/message",
-        data=request.dict(),
+        data=request.model_dump(),
         timeout=600,
     )
     if not response.get("success"):
@@ -62,7 +62,7 @@ async def stream_talon_message(request: TalonMessageRequest):
     logger.info(f"Streaming message to Talon: {request.message}")
     async for chunk in send_post_request_sse(
         endpoint="/message",
-        data=request.dict(),
+        data=request.model_dump(),
     ):
         yield chunk
 

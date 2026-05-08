@@ -99,7 +99,7 @@ async def check_if_event_definition_exists(event_definition_title: str) -> bool:
         )
 
     event_definitions_response = GraylogEventDefinitionsResponse(
-        **event_definitions_response.dict(),
+        **event_definitions_response.model_dump(),
     )
 
     existing_titles = [ed.title for ed in event_definitions_response.event_definitions]
@@ -623,7 +623,7 @@ async def check_graylog_provisioning_status(request: RulesByIdsRequest):
     try:
         ed_resp = await get_all_event_definitions()
         if ed_resp.success:
-            ed = GraylogEventDefinitionsResponse(**ed_resp.dict())
+            ed = GraylogEventDefinitionsResponse(**ed_resp.model_dump())
             existing_titles = {e.title for e in ed.event_definitions}
         else:
             warning = "Failed to read event definitions from Graylog"
@@ -673,7 +673,7 @@ async def bulk_provision_graylog_alerts(request: BulkProvisionGraylogAlertReques
     try:
         ed_resp = await get_all_event_definitions()
         if ed_resp.success:
-            ed = GraylogEventDefinitionsResponse(**ed_resp.dict())
+            ed = GraylogEventDefinitionsResponse(**ed_resp.model_dump())
             existing_titles = {e.title for e in ed.event_definitions}
     except Exception as e:
         # If we can't pre-fetch the existing list, fall back to skipping the

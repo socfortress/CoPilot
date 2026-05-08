@@ -110,7 +110,7 @@ class GenericSourceModel(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     def to_dict(self):
-        return self.dict(exclude_none=True)
+        return self.model_dump(exclude_none=True)
 
 
 class GenericAlertModel(BaseModel):

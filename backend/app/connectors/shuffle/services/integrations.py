@@ -16,7 +16,7 @@ async def execute_integration(request: IntegrationRequest) -> dict:
         dict: The response containing the execution ID.
     """
     logger.info(f"Executing integration: {request}")
-    response = await send_post_request("/api/v1/apps/categories/run", request.dict())
+    response = await send_post_request("/api/v1/apps/categories/run", request.model_dump())
     logger.info(f"Response: {response}")
     return response
 
@@ -31,9 +31,9 @@ async def execute_workflow(request: ExecuteWorkflowRequest) -> dict:
     Returns:
         dict: The response containing the execution ID.
     """
-    logger.info(f"Executing workflow: {request.dict()}")
+    logger.info(f"Executing workflow: {request.model_dump()}")
     try:
-        response = await send_post_request(f"/api/v1/workflows/{request.workflow_id}/execute", request.dict())
+        response = await send_post_request(f"/api/v1/workflows/{request.workflow_id}/execute", request.model_dump())
         logger.info(f"Response: {response}")
         return response
     except Exception as e:

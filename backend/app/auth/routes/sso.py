@@ -148,7 +148,7 @@ async def get_sso_settings():
 )
 async def update_sso_settings(body: SSOConfigUpdate):
     """Update SSO configuration. Admin only."""
-    data = body.dict(exclude_none=False)
+    data = body.model_dump(exclude_none=False)
 
     # Don't overwrite secrets if empty/None
     if not data.get("azure_client_secret"):

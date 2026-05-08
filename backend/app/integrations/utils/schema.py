@@ -114,7 +114,7 @@ class WazuhSocketPayload(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     def to_dict(self):
-        return self.dict(exclude_none=True)
+        return self.model_dump(exclude_none=True)
 
 
 ############################### ! Sublime ! ###############################
@@ -154,7 +154,7 @@ class WazuhSublimeSocketPayload(WazuhSocketPayload):
         # If `display_name` is an empty string, set it to `None`.
         if self.display_name == "":
             self.display_name = None
-        return self.dict(exclude_none=True)
+        return self.model_dump(exclude_none=True)
 
 
 ######### ! SEND TO SHUFFLE PAYLOAD ! #########
@@ -192,7 +192,7 @@ class ShufflePayload(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     def to_dict(self):
-        return self.dict(exclude_none=True)
+        return self.model_dump(exclude_none=True)
 
 
 ######### ! SEND TO EVENT SHIPPER ! #########
@@ -210,7 +210,7 @@ class EventShipperPayload(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     def to_dict(self):
-        return self.dict(exclude_none=True)
+        return self.model_dump(exclude_none=True)
 
 
 class EventShipperPayloadResponse(BaseModel):
