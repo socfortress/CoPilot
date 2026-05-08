@@ -36,7 +36,7 @@ class ArtifactsResponse(BaseModel):
     message: str = Field(...)
     # make artifacts optional
     artifacts: Optional[List[Artifacts]] = None
-    success: str = Field(...)
+    success: bool = Field(...)
 
 
 class ArtifactParametersResponse(BaseModel):
