@@ -5,6 +5,7 @@ from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 
@@ -16,6 +17,8 @@ class Alert(BaseModel):
         [],
         description="The alerts returned from the search.",
     )
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AlertsSearchBody(BaseModel):
