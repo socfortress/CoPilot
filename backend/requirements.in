@@ -1,3 +1,17 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Accepted residual CVE risks (cannot be remediated upstream from here)
+#
+#   urllib3 1.26.x   — pip-audit flags CVE-2025-50181, -66418, -66471, -21441,
+#                      all fixed only in urllib3 2.x. We're stuck on 1.x because
+#                      `elasticsearch7==7.10.1` (which is locked at 7.x for
+#                      Wazuh-indexer compatibility) hard-requires `urllib3<2`.
+#                      Lifting this requires migrating off elasticsearch7.
+#
+#   sqlitedict 2.1.0 — pip-audit flags CVE-2024-35515. Upstream has no fix yet
+#                      (last release Apr 2024). Pulled in transitively by
+#                      ScoutSuite. Either accept or eventually replace ScoutSuite.
+# ─────────────────────────────────────────────────────────────────────────────
+
 aiofiles
 aiohttp
 aiomysql
@@ -5,13 +19,14 @@ aiosqlite
 alembic
 apscheduler
 asyncgelf
+azure-identity>=1.16.1  # security floor — CVE-2024-35255 (transitive of ScoutSuite)
 bcrypt
 cortex4py
 cryptography
 docxtpl
 elasticsearch7==7.10.1
 environs
-fastapi<0.116
+fastapi
 grafana-client
 grpcio
 grpcio-tools
@@ -25,6 +40,7 @@ pdfkit
 Pillow  # transitive runtime dep of qrcode for 2FA QR generation (qrcode.make() uses qrcode.image.pil)
 playwright
 pydantic[email]
+pyOpenSSL>=26.0.0  # security floor — CVE-2026-27448, -27459 (transitive of ScoutSuite)
 PyJWT
 PyMySQL
 pyotp
@@ -37,9 +53,11 @@ qrcode
 regex
 requests
 ScoutSuite
+setuptools>=78.1.1  # security floor — Snyk-flagged transitive CVE
 SQLAlchemy
 sqlmodel
 starlette
 uvicorn[standard]
 werkzeug
 xmltodict
+zipp>=3.19.1  # security floor — Snyk-flagged transitive CVE
