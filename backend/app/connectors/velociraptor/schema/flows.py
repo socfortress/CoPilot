@@ -3,15 +3,14 @@ from typing import Optional
 
 from fastapi import HTTPException
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import model_validator, BaseModel
 from pydantic import Field
-from pydantic import root_validator
 
 
 class FlowSpecParameter(BaseModel):
     key: str
     value: str
-    comment: Optional[str]
+    comment: Optional[str] = None
 
 
 class FlowSpec(BaseModel):
@@ -45,7 +44,8 @@ class FlowRequest(BaseModel):
     compiled_collector_args: List[str]
     ops_per_second: int
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def validate_specs(cls, values):
         if "specs" in values and values["specs"] is not None:
             validated_specs = []
@@ -116,7 +116,8 @@ class RetrieveFlowRequest(BaseModel):
     client_id: str
     session_id: str
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def validate_session_id(cls, values):
         if "session_id" in values and values["session_id"] == "":
             raise HTTPException(

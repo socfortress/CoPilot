@@ -35,6 +35,8 @@ class RunAnalyzerBody(BaseModel):
         description="Data type determined after validation",
     )
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("analyzer_data", pre=True, always=True)
     def validate_and_set_data_type(cls, value: str, values: dict) -> str:
         is_valid, data_type = cls.is_valid_datatype(value)

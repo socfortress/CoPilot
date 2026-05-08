@@ -1,7 +1,7 @@
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -32,33 +32,31 @@ class TimeBasedIndexSet(BaseModel):
     index_optimization_disabled: bool
     writable: bool
     field_type_refresh_interval: int
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "title": "Wazuh - Example Company",
-                "description": "Wazuh - Example Company",
-                "index_prefix": "wazuh-examplecode",
-                "rotation_strategy_class": "org.graylog2.indexer.rotation.strategies.SizeBasedRotationStrategy",
-                "rotation_strategy": {
-                    "type": "org.graylog2.indexer.rotation.strategies.SizeBasedRotationStrategyConfig",
-                    "max_size": 2684354560,
-                },
-                "retention_strategy_class": "org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy",
-                "retention_strategy": {
-                    "type": "org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig",
-                    "max_number_of_indices": 20,
-                },
-                "creation_date": "2021-01-01T00:00:00.000Z",
-                "index_analyzer": "standard",
-                "shards": 1,
-                "replicas": 0,
-                "index_optimization_max_num_segments": 1,
-                "index_optimization_disabled": False,
-                "writable": True,
-                "field_type_refresh_interval": 5000,
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "title": "Wazuh - Example Company",
+            "description": "Wazuh - Example Company",
+            "index_prefix": "wazuh-examplecode",
+            "rotation_strategy_class": "org.graylog2.indexer.rotation.strategies.SizeBasedRotationStrategy",
+            "rotation_strategy": {
+                "type": "org.graylog2.indexer.rotation.strategies.SizeBasedRotationStrategyConfig",
+                "max_size": 2684354560,
             },
-        }
+            "retention_strategy_class": "org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy",
+            "retention_strategy": {
+                "type": "org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig",
+                "max_number_of_indices": 20,
+            },
+            "creation_date": "2021-01-01T00:00:00.000Z",
+            "index_analyzer": "standard",
+            "shards": 1,
+            "replicas": 0,
+            "index_optimization_max_num_segments": 1,
+            "index_optimization_disabled": False,
+            "writable": True,
+            "field_type_refresh_interval": 5000,
+        },
+    })
 
 
 class RotationStrategyConfig(BaseModel):
@@ -126,26 +124,24 @@ class WazuhEventStream(BaseModel):
         None,
         description="Associated content pack, if any",
     )
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "title": "WAZUH EVENTS CUSTOMERS - Example Company",
-                "description": "WAZUH EVENTS CUSTOMERS - Example Company",
-                "index_set_id": "12345",
-                "rules": [
-                    {
-                        "field": "agent_labels_customer",
-                        "type": 1,
-                        "inverted": False,
-                        "value": "ExampleCode",
-                    },
-                ],
-                "matching_type": "AND",
-                "remove_matches_from_default_stream": True,
-                "content_pack": None,
-            },
-        }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "title": "WAZUH EVENTS CUSTOMERS - Example Company",
+            "description": "WAZUH EVENTS CUSTOMERS - Example Company",
+            "index_set_id": "12345",
+            "rules": [
+                {
+                    "field": "agent_labels_customer",
+                    "type": 1,
+                    "inverted": False,
+                    "value": "ExampleCode",
+                },
+            ],
+            "matching_type": "AND",
+            "remove_matches_from_default_stream": True,
+            "content_pack": None,
+        },
+    })
 
 
 class Office365EventStream(BaseModel):
@@ -162,32 +158,30 @@ class Office365EventStream(BaseModel):
         None,
         description="Associated content pack, if any",
     )
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "title": "Office365 EVENTS - Example Company",
-                "description": "Office365 EVENTS - Example Company",
-                "index_set_id": "12345",
-                "rules": [
-                    {
-                        "field": "agent_labels_customer",
-                        "type": 1,
-                        "inverted": False,
-                        "value": "ExampleCode",
-                    },
-                    {
-                        "field": "agent_labels_integration",
-                        "type": 1,
-                        "inverted": False,
-                        "value": "Office365",
-                    },
-                ],
-                "matching_type": "AND",
-                "remove_matches_from_default_stream": True,
-                "content_pack": None,
-            },
-        }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "title": "Office365 EVENTS - Example Company",
+            "description": "Office365 EVENTS - Example Company",
+            "index_set_id": "12345",
+            "rules": [
+                {
+                    "field": "agent_labels_customer",
+                    "type": 1,
+                    "inverted": False,
+                    "value": "ExampleCode",
+                },
+                {
+                    "field": "agent_labels_integration",
+                    "type": 1,
+                    "inverted": False,
+                    "value": "Office365",
+                },
+            ],
+            "matching_type": "AND",
+            "remove_matches_from_default_stream": True,
+            "content_pack": None,
+        },
+    })
 
 
 class StreamData(BaseModel):

@@ -7,9 +7,8 @@ from typing import List
 from typing import Optional
 
 import bcrypt
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import EmailStr
-from pydantic import validator
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -97,7 +96,8 @@ class UserInput(SQLModel):
         foreign_key="role.id",
     )
 
-    @validator("role_id")
+    @field_validator("role_id")
+    @classmethod
     def check_role_id(cls, value):
         if value not in [e.value for e in RoleEnum]:
             raise ValueError("Invalid role ID")
@@ -119,7 +119,8 @@ class Password(BaseModel):
     hashed: str  # Holds the hashed password
     plain: str  # Holds the plain password
 
-    @validator("length")
+    @field_validator("length")
+    @classmethod
     def validate_length(cls, value):
         if value < 8 or value > 128:
             raise ValueError("Password length must be between 8 and 128 characters.")
@@ -176,7 +177,8 @@ class PasswordResetToken(BaseModel):
     reset_token: str
     new_password: str
 
-    @validator("new_password")
+    @field_validator("new_password")
+    @classmethod
     def validate_password(cls, password):
         if len(password) < 8 or len(password) > 256:
             raise ValueError("Password length must be between 8 and 256 characters.")

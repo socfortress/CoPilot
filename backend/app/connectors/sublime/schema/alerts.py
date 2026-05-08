@@ -2,7 +2,7 @@ import datetime
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -82,9 +82,7 @@ class FlaggedRuleSchema(BaseModel):
         description="Severity level of the flagged rule",
     )
     tags: str
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MailboxSchema(BaseModel):
@@ -93,34 +91,26 @@ class MailboxSchema(BaseModel):
         description="External identifier for the mailbox",
     )
     mailbox_id: str
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TriggeredActionSchema(BaseModel):
     action_id: str
     name: str
     type: str
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SenderSchema(BaseModel):
     email: str
     name: str
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RecipientSchema(BaseModel):
     email: str
     name: str
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SublimeAlertsSchema(BaseModel):
@@ -138,9 +128,7 @@ class SublimeAlertsSchema(BaseModel):
     triggered_actions: List[TriggeredActionSchema]
     sender: List[SenderSchema]
     recipients: List[RecipientSchema]
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SublimeAlertsResponse(BaseModel):

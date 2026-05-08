@@ -6,7 +6,7 @@ from pydantic import Field
 
 
 class Rule(BaseModel):
-    description: Optional[str]
+    description: Optional[str] = None
     field: str
     id: str
     inverted: bool
@@ -16,7 +16,7 @@ class Rule(BaseModel):
 
 
 class Stream(BaseModel):
-    content_pack: Optional[str]
+    content_pack: Optional[str] = None
     created_at: str
     creator_user_id: str
     description: Optional[str] = Field("No description provided")

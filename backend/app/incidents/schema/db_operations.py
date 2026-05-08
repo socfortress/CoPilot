@@ -5,7 +5,7 @@ from typing import List
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import validator
 
 from app.incidents.models import Alert
@@ -174,7 +174,8 @@ class AlertIoCCreate(BaseModel):
     ioc_type: AlertIocValue
     ioc_description: Optional[str] = None
 
-    @validator("ioc_type")
+    @field_validator("ioc_type")
+    @classmethod
     def validate_ioc_type(cls, v):
         if v not in AlertIocValue:
             raise HTTPException(
@@ -265,7 +266,7 @@ class AlertCreate(BaseModel):
     status: str
     alert_creation_time: datetime
     customer_code: str
-    time_closed: Optional[datetime]
+    time_closed: Optional[datetime] = None
     source: str
     assigned_to: str
 
@@ -322,7 +323,8 @@ class LinkedCaseCreate(BaseModel):
     assigned_to: Optional[str] = None
     id: int
 
-    @validator("case_creation_time", pre=True)
+    @field_validator("case_creation_time", mode="before")
+    @classmethod
     def format_case_creation_time(cls, v):
         if isinstance(v, datetime):
             return v.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
@@ -352,8 +354,8 @@ class AssetCreate(BaseModel):
     alert_linked: int
     asset_name: str
     alert_context_id: int
-    agent_id: Optional[str]
-    velociraptor_id: Optional[str]
+    agent_id: Optional[str] = None
+    velociraptor_id: Optional[str] = None
     customer_code: str
     index_name: str
     index_id: str
@@ -386,7 +388,8 @@ class CommentBase(BaseModel):
     comment: str
     created_at: str
 
-    @validator("created_at", pre=True)
+    @field_validator("created_at", mode="before")
+    @classmethod
     def format_created_at(cls, v):
         if isinstance(v, datetime):
             return v.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
@@ -400,7 +403,8 @@ class CaseCommentBase(BaseModel):
     comment: str
     created_at: str
 
-    @validator("created_at", pre=True)
+    @field_validator("created_at", mode="before")
+    @classmethod
     def format_created_at(cls, v):
         if isinstance(v, datetime):
             return v.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
@@ -443,7 +447,8 @@ class AlertOut(BaseModel):
     linked_cases: List[LinkedCaseCreate] = []
     iocs: List[IoCBase] = []
 
-    @validator("alert_creation_time", "time_closed", pre=True)
+    @field_validator("alert_creation_time", "time_closed", mode="before")
+    @classmethod
     def format_datetime(cls, v):
         if isinstance(v, datetime):
             return v.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
@@ -474,7 +479,8 @@ class CaseOut(BaseModel):
     escalated: bool = False
     comments: List[CaseCommentBase] = []
 
-    @validator("case_creation_time", pre=True)
+    @field_validator("case_creation_time", mode="before")
+    @classmethod
     def format_case_creation_time(cls, v):
         if isinstance(v, datetime):
             return v.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
@@ -559,6 +565,8 @@ class CaseDownloadDocxRequest(BaseModel):
     template_name: str
     file_name: Optional[str] = "case_report.docx"
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("file_name", pre=True, always=True)
     def ensure_docx_extension(cls, v):
         if v and not v.endswith(".docx"):
@@ -657,6 +665,8 @@ class TagAccessSettingsUpdate(BaseModel):
     untagged_alert_behavior: UntaggedAlertBehavior = UntaggedAlertBehavior.VISIBLE_TO_ALL
     default_tag_id: Optional[int] = None
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("default_tag_id")
     def validate_default_tag(cls, v, values):
         if values.get("untagged_alert_behavior") == UntaggedAlertBehavior.DEFAULT_TAG and v is None:
@@ -672,8 +682,8 @@ class TagAccessSettingsItem(BaseModel):
 
     enabled: bool
     untagged_alert_behavior: str
-    default_tag_id: Optional[int]
-    default_tag_name: Optional[str]
+    default_tag_id: Optional[int] = None
+    default_tag_name: Optional[str] = None
 
 
 class TagAccessSettingsResponse(BaseModel):
@@ -689,8 +699,8 @@ class UserEffectiveAccessResponse(BaseModel):
 
     user_id: int
     username: str
-    role_id: Optional[int]
-    role_name: Optional[str]
+    role_id: Optional[int] = None
+    role_name: Optional[str] = None
     accessible_customers: List[str]
     accessible_tags: List[AlertTagItem]
     is_tag_unrestricted: bool

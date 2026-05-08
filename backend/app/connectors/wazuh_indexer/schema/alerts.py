@@ -4,9 +4,8 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class Alert(BaseModel):
@@ -31,7 +30,8 @@ class AlertsSearchBody(BaseModel):
         description="The timestamp field to search alerts in.",
     )
 
-    @validator("timerange")
+    @field_validator("timerange")
+    @classmethod
     def validate_timerange(cls, value):
         if value[-1] not in ("h", "d", "w"):
             raise ValueError(
@@ -127,7 +127,8 @@ class GraylogAlertsSearchBody(BaseModel):
         description="The index prefix to search alerts in.",
     )
 
-    @validator("timerange")
+    @field_validator("timerange")
+    @classmethod
     def validate_timerange(cls, value):
         if value[-1] not in ("h", "d", "w"):
             raise ValueError(

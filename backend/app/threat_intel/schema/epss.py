@@ -23,7 +23,7 @@ class EpssApiResponse(BaseModel):
     status: str
     status_code: int
     version: str
-    access_control_allow_headers: Optional[str]
+    access_control_allow_headers: Optional[str] = None
     access: str
     total: int
     offset: int

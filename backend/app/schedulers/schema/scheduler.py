@@ -10,8 +10,8 @@ class Job(BaseModel):
     name: str
     enabled: bool
     time_interval: int
-    last_success: Optional[datetime]
-    description: Optional[str]
+    last_success: Optional[datetime] = None
+    description: Optional[str] = None
 
 
 class JobsResponse(BaseModel):

@@ -132,12 +132,12 @@ class RestoreSnapshotRequest(BaseModel):
     rename_pattern: Optional[str] = Field(
         None,
         description="Pattern to match indices to rename",
-        example="wazuh_(.+)",
+        examples=["wazuh_(.+)"],
     )
     rename_replacement: Optional[str] = Field(
         None,
         description="Replacement string for renamed indices",
-        example="restored_wazuh_$1",
+        examples=["restored_wazuh_$1"],
     )
     include_aliases: Optional[bool] = Field(
         True,
@@ -246,7 +246,7 @@ class SnapshotScheduleCreate(BaseModel):
     index_pattern: str = Field(
         ...,
         description="Index pattern to snapshot (e.g., wazuh_customer_*)",
-        example="wazuh_customer_*",
+        examples=["wazuh_customer_*"],
     )
     repository: str = Field(..., description="Repository to store snapshots")
     enabled: Optional[bool] = Field(True, description="Whether this schedule is active")

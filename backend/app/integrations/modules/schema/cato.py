@@ -1,7 +1,6 @@
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class InvokeCatoRequest(BaseModel):
@@ -55,16 +54,17 @@ class InvokeCatoResponse(BaseModel):
 
 
 class CollectCato(BaseModel):
-    integration: str = Field(..., example="cato")
-    customer_code: str = Field(..., example="socfortress")
-    graylog_host: str = Field(..., example="127.0.0.1")
-    graylog_port: str = Field(..., example=12201)
-    api_key: str = Field(..., example="1234567890")
-    account_id: int = Field(..., example=123456)
-    event_types: str = Field(..., example="Security")
-    event_sub_types: str = Field(..., example="NG Anti Malware,Anti Malware,IPS")
+    integration: str = Field(..., examples=["cato"])
+    customer_code: str = Field(..., examples=["socfortress"])
+    graylog_host: str = Field(..., examples=["127.0.0.1"])
+    graylog_port: str = Field(..., examples=[12201])
+    api_key: str = Field(..., examples=["1234567890"])
+    account_id: int = Field(..., examples=[123456])
+    event_types: str = Field(..., examples=["Security"])
+    event_sub_types: str = Field(..., examples=["NG Anti Malware,Anti Malware,IPS"])
 
-    @validator("integration")
+    @field_validator("integration")
+    @classmethod
     def check_integration(cls, v):
         if v != "cato":
             raise HTTPException(

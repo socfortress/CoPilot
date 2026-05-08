@@ -5,9 +5,8 @@ from typing import List
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class MCPServerType(str, Enum):
@@ -68,7 +67,8 @@ class MCPQueryRequest(BaseModel):
     mcp_server: MCPServerType = Field(..., description="MCP server to use for the query")
     verbose: Optional[bool] = Field(default=True, description="Enable verbose output")
 
-    @validator("mcp_server", pre=True)
+    @field_validator("mcp_server", mode="before")
+    @classmethod
     def validate_mcp_server(cls, v):
         """Validate that the MCP server type is one of the allowed values"""
         if isinstance(v, str):

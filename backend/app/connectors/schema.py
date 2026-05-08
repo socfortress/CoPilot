@@ -2,30 +2,28 @@ from datetime import datetime
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 
 
 class ConnectorHistoryResponse(BaseModel):
-    id: Optional[int]
+    id: Optional[int] = None
     connector_id: int
     change_timestamp: datetime
     change_description: str
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ConnectorResponse(BaseModel):
-    id: Optional[int]
+    id: Optional[int] = None
     connector_name: str
     connector_type: str
     connector_url: str
     connector_last_updated: datetime
-    connector_username: Optional[str]
-    connector_password: Optional[str]
-    connector_api_key: Optional[str]
-    connector_description: Optional[str]
-    connector_supports: Optional[str]
+    connector_username: Optional[str] = None
+    connector_password: Optional[str] = None
+    connector_api_key: Optional[str] = None
+    connector_description: Optional[str] = None
+    connector_supports: Optional[str] = None
     connector_configured: bool
     connector_verified: bool
     connector_accepts_host_only: bool
@@ -33,12 +31,9 @@ class ConnectorResponse(BaseModel):
     connector_accepts_username_password: bool
     connector_accepts_file: bool
     connector_accepts_extra_data: bool
-    connector_extra_data: Optional[str]
-    history_logs: Optional[List[ConnectorHistoryResponse]]
-
-    class Config:
-        orm_mode = True
-        from_attributes = True
+    connector_extra_data: Optional[str] = None
+    history_logs: Optional[List[ConnectorHistoryResponse]] = None
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ConnectorsListResponse(BaseModel):
@@ -60,7 +55,7 @@ class VerifyConnectorResponse(BaseModel):
 
 class UpdateConnector(BaseModel):
     connector_url: str
-    connector_username: Optional[str]
-    connector_password: Optional[str]
-    connector_api_key: Optional[str]
-    connector_extra_data: Optional[str]
+    connector_username: Optional[str] = None
+    connector_password: Optional[str] = None
+    connector_api_key: Optional[str] = None
+    connector_extra_data: Optional[str] = None

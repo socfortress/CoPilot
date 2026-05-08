@@ -7,9 +7,8 @@ from typing import Optional
 from typing import Union
 
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import field_validator, ConfigDict, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class SystemProvider(BaseModel):
@@ -67,9 +66,7 @@ class SysmonEventData(BaseModel):
     CallTrace: str
     SourceUser: str
     TargetUser: str
-
-    class Config:
-        extra = "allow"  # Allow additional fields not specified in the model
+    model_config = ConfigDict(extra="allow")
 
 
 # class DefenderEventData(BaseModel):
@@ -121,10 +118,7 @@ class DefenderEventData(BaseModel):
     remediation_user: Optional[str] = Field(None, alias="Remediation User")
     security_intelligence_version: Optional[str] = Field(None, alias="Security intelligence Version")
     engine_version: Optional[str] = Field(None, alias="Engine Version")
-
-    class Config:
-        allow_population_by_field_name = True
-        extra = "allow"  # Allow additional fields not specified in the model
+    model_config = ConfigDict(populate_by_name=True, extra="allow")
 
 
 class PowerShellEventData(BaseModel):
@@ -146,17 +140,13 @@ class PowerShellEventData(BaseModel):
     CommandName: Optional[str] = None
     CommandType: Optional[str] = None
     ConnectedUser: Optional[str] = None
-
-    class Config:
-        extra = "allow"  # Allow additional fields not specified in the model
+    model_config = ConfigDict(extra="allow")
 
 
 # Generic event data model that accepts any fields
 class GenericEventData(BaseModel):
     """Generic event data structure that accepts any fields"""
-
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class EventBase(BaseModel):
@@ -206,7 +196,8 @@ class VelociraptorSigmaAlert(BaseModel):
     index_pattern: str
     sourceRef: str
 
-    @validator("event", pre=True)
+    @field_validator("event", mode="before")
+    @classmethod
     def parse_event(cls, v):
         """Parse the event if it's a string"""
         if isinstance(v, str):
@@ -316,64 +307,62 @@ class VelociraptorSigmaAlert(BaseModel):
 
         # Use generic model for other event types
         return GenericEvent(**event_data)
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "computer": "WIN-HFOU106TD7K",
-                "clientID": "C.475df76785008b04",
-                "channel": "Microsoft-Windows-Sysmon/Operational",
-                "title": "Proc Access (Sysmon Alert)",
-                "level": "high",
-                "event": (
-                    '{"System":{"Provider":{"Name":"Microsoft-Windows-Sysmon","Guid":"5770385F-C22A-43E0-BF4C-06F5698FFBD9"},'
-                    '"EventID":{"Value":10},"Version":3,"Level":4,"Task":10,"Opcode":0,"Keywords":9223372036854775808,'
-                    '"TimeCreated":{"SystemTime":1744233485.0778975},"EventRecordID":564617,"Correlation":{},'
-                    '"Execution":{"ProcessID":2320,"ThreadID":3540},"Channel":"Microsoft-Windows-Sysmon/Operational",'
-                    '"Computer":"WIN-HFOU106TD7K","Security":{"UserID":"S-1-5-18"}},"EventData":{"RuleName":"technique_id=T1003,'
-                    'technique_name=Credential Dumping","UtcTime":"2025-04-09 21:18:05.064",'
-                    '"SourceProcessGUID":"691FF406-E40B-67F6-2901-000000003A00","SourceProcessId":4964,"SourceThreadId":4448,'
-                    '"SourceImage":"C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\2\\\\AttackSim\\\\procdump.exe",'
-                    '"TargetProcessGUID":"691FF406-DDC8-67F6-0C00-000000003A00","TargetProcessId":668,'
-                    '"TargetImage":"C:\\\\Windows\\\\system32\\\\lsass.exe","GrantedAccess":2097151,'
-                    '"CallTrace":"C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+9fc24|C:\\\\Windows\\\\System32\\\\wow64.dll+3cf4|'
-                    "C:\\\\Windows\\\\System32\\\\wow64.dll+7783|C:\\\\Windows\\\\System32\\\\wow64cpu.dll+1783|"
-                    "C:\\\\Windows\\\\System32\\\\wow64cpu.dll+1199|C:\\\\Windows\\\\System32\\\\wow64.dll+cfda|"
-                    "C:\\\\Windows\\\\System32\\\\wow64.dll+cea0|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+757db|"
-                    "C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+756c3|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+7566e|"
-                    "C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+7070c(wow64)|C:\\\\Windows\\\\System32\\\\KERNELBASE.dll+10eca8(wow64)|"
-                    "C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\2\\\\AttackSim\\\\procdump.exe+876e|"
-                    "C:\\\\Windows\\\\System32\\\\KERNEL32.DLL+20419(wow64)|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+6662d(wow64)|"
-                    'C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+665fd(wow64)","SourceUser":"WIN-HFOU106TD7K\\\\Administrator",'
-                    '"TargetUser":"NT AUTHORITY\\\\SYSTEM"},'
-                    '"Message":"Process accessed:\\nRuleName: technique_id=T1003,technique_name=Credential Dumping!s!\\n'
-                    "UtcTime: 2025-04-09 21:18:05.064!s!\\n"
-                    "SourceProcessGUID: 691FF406-E40B-67F6-2901-000000003A00!s!\\n"
-                    "SourceProcessId: 4964!s!\\n"
-                    "SourceThreadId: 4448!s!\\n"
-                    "SourceImage: C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\2\\\\AttackSim\\\\procdump.exe!s!\\n"
-                    "TargetProcessGUID: 691FF406-DDC8-67F6-0C00-000000003A00!s!\\n"
-                    "TargetProcessId: 668!s!\\n"
-                    "TargetImage: C:\\\\Windows\\\\system32\\\\lsass.exe!s!\\n"
-                    "GrantedAccess: 2097151!s!\\n"
-                    "CallTrace: C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+9fc24|C:\\\\Windows\\\\System32\\\\wow64.dll+3cf4|"
-                    "C:\\\\Windows\\\\System32\\\\wow64.dll+7783|C:\\\\Windows\\\\System32\\\\wow64cpu.dll+1783|"
-                    "C:\\\\Windows\\\\System32\\\\wow64cpu.dll+1199|C:\\\\Windows\\\\System32\\\\wow64.dll+cfda|"
-                    "C:\\\\Windows\\\\System32\\\\wow64.dll+cea0|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+757db|"
-                    "C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+756c3|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+7566e|"
-                    "C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+7070c(wow64)|C:\\\\Windows\\\\System32\\\\KERNELBASE.dll+10eca8(wow64)|"
-                    "C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\2\\\\AttackSim\\\\procdump.exe+876e|"
-                    "C:\\\\Windows\\\\System32\\\\KERNEL32.DLL+20419(wow64)|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+6662d(wow64)|"
-                    "C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+665fd(wow64)!s!\\n"
-                    "SourceUser: WIN-HFOU106TD7K\\\\Administrator!s!\\n"
-                    'TargetUser: NT AUTHORITY\\\\SYSTEM!s!\\r\\n"}'
-                ),
-                "type": "sigma-alert",
-                "source": "velociraptor",
-                "index_pattern": "wazuh-*",
-                "sourceRef": "754600692",
-            },
-        }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "computer": "WIN-HFOU106TD7K",
+            "clientID": "C.475df76785008b04",
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "title": "Proc Access (Sysmon Alert)",
+            "level": "high",
+            "event": (
+                '{"System":{"Provider":{"Name":"Microsoft-Windows-Sysmon","Guid":"5770385F-C22A-43E0-BF4C-06F5698FFBD9"},'
+                '"EventID":{"Value":10},"Version":3,"Level":4,"Task":10,"Opcode":0,"Keywords":9223372036854775808,'
+                '"TimeCreated":{"SystemTime":1744233485.0778975},"EventRecordID":564617,"Correlation":{},'
+                '"Execution":{"ProcessID":2320,"ThreadID":3540},"Channel":"Microsoft-Windows-Sysmon/Operational",'
+                '"Computer":"WIN-HFOU106TD7K","Security":{"UserID":"S-1-5-18"}},"EventData":{"RuleName":"technique_id=T1003,'
+                'technique_name=Credential Dumping","UtcTime":"2025-04-09 21:18:05.064",'
+                '"SourceProcessGUID":"691FF406-E40B-67F6-2901-000000003A00","SourceProcessId":4964,"SourceThreadId":4448,'
+                '"SourceImage":"C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\2\\\\AttackSim\\\\procdump.exe",'
+                '"TargetProcessGUID":"691FF406-DDC8-67F6-0C00-000000003A00","TargetProcessId":668,'
+                '"TargetImage":"C:\\\\Windows\\\\system32\\\\lsass.exe","GrantedAccess":2097151,'
+                '"CallTrace":"C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+9fc24|C:\\\\Windows\\\\System32\\\\wow64.dll+3cf4|'
+                "C:\\\\Windows\\\\System32\\\\wow64.dll+7783|C:\\\\Windows\\\\System32\\\\wow64cpu.dll+1783|"
+                "C:\\\\Windows\\\\System32\\\\wow64cpu.dll+1199|C:\\\\Windows\\\\System32\\\\wow64.dll+cfda|"
+                "C:\\\\Windows\\\\System32\\\\wow64.dll+cea0|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+757db|"
+                "C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+756c3|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+7566e|"
+                "C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+7070c(wow64)|C:\\\\Windows\\\\System32\\\\KERNELBASE.dll+10eca8(wow64)|"
+                "C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\2\\\\AttackSim\\\\procdump.exe+876e|"
+                "C:\\\\Windows\\\\System32\\\\KERNEL32.DLL+20419(wow64)|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+6662d(wow64)|"
+                'C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+665fd(wow64)","SourceUser":"WIN-HFOU106TD7K\\\\Administrator",'
+                '"TargetUser":"NT AUTHORITY\\\\SYSTEM"},'
+                '"Message":"Process accessed:\\nRuleName: technique_id=T1003,technique_name=Credential Dumping!s!\\n'
+                "UtcTime: 2025-04-09 21:18:05.064!s!\\n"
+                "SourceProcessGUID: 691FF406-E40B-67F6-2901-000000003A00!s!\\n"
+                "SourceProcessId: 4964!s!\\n"
+                "SourceThreadId: 4448!s!\\n"
+                "SourceImage: C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\2\\\\AttackSim\\\\procdump.exe!s!\\n"
+                "TargetProcessGUID: 691FF406-DDC8-67F6-0C00-000000003A00!s!\\n"
+                "TargetProcessId: 668!s!\\n"
+                "TargetImage: C:\\\\Windows\\\\system32\\\\lsass.exe!s!\\n"
+                "GrantedAccess: 2097151!s!\\n"
+                "CallTrace: C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+9fc24|C:\\\\Windows\\\\System32\\\\wow64.dll+3cf4|"
+                "C:\\\\Windows\\\\System32\\\\wow64.dll+7783|C:\\\\Windows\\\\System32\\\\wow64cpu.dll+1783|"
+                "C:\\\\Windows\\\\System32\\\\wow64cpu.dll+1199|C:\\\\Windows\\\\System32\\\\wow64.dll+cfda|"
+                "C:\\\\Windows\\\\System32\\\\wow64.dll+cea0|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+757db|"
+                "C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+756c3|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+7566e|"
+                "C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+7070c(wow64)|C:\\\\Windows\\\\System32\\\\KERNELBASE.dll+10eca8(wow64)|"
+                "C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\2\\\\AttackSim\\\\procdump.exe+876e|"
+                "C:\\\\Windows\\\\System32\\\\KERNEL32.DLL+20419(wow64)|C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+6662d(wow64)|"
+                "C:\\\\Windows\\\\SYSTEM32\\\\ntdll.dll+665fd(wow64)!s!\\n"
+                "SourceUser: WIN-HFOU106TD7K\\\\Administrator!s!\\n"
+                'TargetUser: NT AUTHORITY\\\\SYSTEM!s!\\r\\n"}'
+            ),
+            "type": "sigma-alert",
+            "source": "velociraptor",
+            "index_pattern": "wazuh-*",
+            "sourceRef": "754600692",
+        },
+    })
 
 
 class VelociraptorSigmaAlertResponse(BaseModel):
@@ -403,20 +392,17 @@ class VeloSigmaExclusionCreate(VeloSigmaExclusionBase):
 
     # Make created_by optional so it can be set by the server
     created_by: Optional[str] = Field(None, description="User who created this exclusion rule")
-
-    class Config:
-        # Example showing the expected request format
-        schema_extra = {
-            "example": {
-                "name": "Chainsaw Batch Script Exclusion",
-                "description": "Exclude alerts from chainsaw batch scripts in Windows Temp folder",
-                "channel": "Microsoft-Windows-Sysmon/Operational",
-                "title": "HackTool - Powerup Write Hijack DLL",
-                "field_matches": {"TargetFilename": "C:\\Windows\\Temp\\chainsaw_batch.bat"},
-                "customer_code": None,  # Optional, NULL means apply to all customers
-                "enabled": True,
-            },
-        }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "name": "Chainsaw Batch Script Exclusion",
+            "description": "Exclude alerts from chainsaw batch scripts in Windows Temp folder",
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "title": "HackTool - Powerup Write Hijack DLL",
+            "field_matches": {"TargetFilename": "C:\\Windows\\Temp\\chainsaw_batch.bat"},
+            "customer_code": None,  # Optional, NULL means apply to all customers
+            "enabled": True,
+        },
+    })
 
 
 class VeloSigmaExclusionUpdate(BaseModel):
@@ -439,9 +425,7 @@ class VeloSigmaExclusionResponse(VeloSigmaExclusionBase):
     created_at: datetime
     last_matched_at: Optional[datetime] = None
     match_count: int
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class VeloSigmaExlcusionRouteResponse(BaseModel):

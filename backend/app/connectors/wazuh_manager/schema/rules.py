@@ -3,9 +3,8 @@ from typing import Optional
 from typing import Union
 
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import field_validator, ConfigDict, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class RuleDisable(BaseModel):
@@ -15,7 +14,7 @@ class RuleDisable(BaseModel):
 
 
 class RuleDisableResponse(BaseModel):
-    previous_level: Optional[str]
+    previous_level: Optional[str] = None
     message: str
     success: bool
 
@@ -26,7 +25,7 @@ class RuleEnable(BaseModel):
 
 
 class RuleEnableResponse(BaseModel):
-    new_level: Optional[str]
+    new_level: Optional[str] = None
     message: str
     success: bool
 
@@ -65,10 +64,7 @@ class WazuhRule(BaseModel):
     tsc: List[str] = []
     mitre: List[str] = []
     details: Optional[dict] = None
-
-    class Config:
-        allow_population_by_field_name = True
-        extra = "ignore"  # Ignore extra fields from API
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
 
 class WazuhRulesResponse(BaseModel):
@@ -86,9 +82,7 @@ class WazuhRuleFile(BaseModel):
     filename: str = Field(..., description="Rule file name")
     relative_dirname: str = Field(..., description="Relative directory path")
     status: str = Field(..., description="File status (enabled/disabled)")
-
-    class Config:
-        extra = "ignore"  # Ignore extra fields from API
+    model_config = ConfigDict(extra="ignore")
 
 
 class WazuhRuleFilesResponse(BaseModel):
@@ -179,10 +173,11 @@ payload = {
 
 
 class RuleExcludeRequest(BaseModel):
-    integration: str = Field(..., example="wazuh-rule-exclusion")
-    prompt: dict = Field(..., example=payload)
+    integration: str = Field(..., examples=["wazuh-rule-exclusion"])
+    prompt: dict = Field(..., examples=[payload])
 
-    @validator("integration")
+    @field_validator("integration")
+    @classmethod
     def check_integration(cls, v):
         if v != "wazuh-rule-exclusion":
             raise HTTPException(
@@ -191,7 +186,8 @@ class RuleExcludeRequest(BaseModel):
             )
         return v
 
-    @validator("prompt")
+    @field_validator("prompt")
+    @classmethod
     def check_rule_group(cls, v):
         if "rule_group3" in v:
             if "rule_group1" not in v and "rule_group3" not in v:

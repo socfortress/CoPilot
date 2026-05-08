@@ -9,10 +9,9 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import model_validator, ConfigDict, BaseModel
 from pydantic import Field
 from pydantic import HttpUrl
-from pydantic import root_validator
 
 
 class PipelineRuleTitles(Enum):
@@ -76,7 +75,7 @@ class MimecastAuthKeys(BaseModel):
         description="SECRET KEY FOR YOUR ADMINISTRATOR",
         examples=["00002"],
     )
-    URI = str = Field(
+    URI: str = Field(
         "/api/audit/get-siem-logs",
         description="URI FOR YOUR API Endpoint",
         examples=["/api/audit/get-siem-logs"],
@@ -145,9 +144,7 @@ class MimecastHeaders(BaseModel):
         alias="Content-Type",
         description="The type of content, usually application/json.",
     )
-
-    class Config:
-        allow_population_by_field_name = True  # This allows field population by both alias and field name
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class MimecastTTPURLSRequest(BaseModel):
@@ -185,7 +182,8 @@ class MimecastTTPURLSRequest(BaseModel):
         super().__init__(*args, **kwargs)
         self.generate_headers("/api/ttp/url/get-logs")  # default URI
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def set_time_bounds(cls, values):
         time_range = values.get("time_range")
         if time_range:
@@ -248,9 +246,7 @@ class DataItem(BaseModel):
     to: datetime = Field(..., description="End date-time in ISO 8601 format.")
     route: str = Field(..., description="Routing information.")
     scanResult: str = Field(..., description="Scan result.")
-
-    class Config:
-        allow_population_by_field_name = True  # This allows field population by both alias and field name
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class RequestBody(BaseModel):
@@ -286,7 +282,7 @@ class TTPResponseDataItem(BaseModel):
 class TTPResponsePagination(BaseModel):
     pageSize: int
     totalCount: int
-    next: Optional[str]
+    next: Optional[str] = None
 
 
 class ResponseMeta(BaseModel):

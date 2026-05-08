@@ -17,6 +17,7 @@ aliyun-python-sdk-rds==2.7.53
 aliyun-python-sdk-sts==3.1.3
 aliyun-python-sdk-vpc==3.0.48
 annotated-doc==0.0.4
+annotated-types==0.7.0
 anyio==4.13.0
 apscheduler==3.11.2
 argon2-cffi==23.1.0
@@ -26,7 +27,7 @@ asyncio==4.0.0
 asyncio-throttle==0.1.1
 attrs==26.1.0
 azure-common==1.1.28
-azure-core==1.40.0
+azure-core==1.41.0
 azure-identity==1.5.0
 azure-mgmt-authorization==3.0.0
 azure-mgmt-compute==18.2.0
@@ -144,7 +145,8 @@ pyasn1==0.6.3
 pyasn1-modules==0.4.2
 pycparser==3.0
 pycryptodome==3.23.0
-pydantic[email]==1.10.26
+pydantic[email]==2.13.4
+pydantic-core==2.46.4
 pydo==0.34.0
 pyee==13.0.1
 pygments==2.20.0
@@ -173,16 +175,16 @@ s3transfer==0.17.0
 scoutsuite==5.14.0
 shellingham==1.5.4
 six==1.17.0
-sqlalchemy==1.4.54
-sqlalchemy2-stubs==0.0.2a38
+sqlalchemy==2.0.49
 sqlitedict==2.1.0
-sqlmodel==0.0.9
+sqlmodel==0.0.38
 starlette==0.46.2
 tempora==5.9.0
 typer==0.25.1
 typer-slim==0.24.0
 typing==3.7.4.3
 typing-extensions==4.15.0
+typing-inspection==0.4.2
 tzlocal==5.3.1
 uritemplate==4.2.0
 urllib3==1.26.20

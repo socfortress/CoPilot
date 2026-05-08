@@ -15,7 +15,7 @@ from fastapi import Request
 from fastapi import Security
 from fastapi.exceptions import RequestValidationError
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
 from pydantic import validator
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -72,6 +72,8 @@ class ValidationErrorItem(BaseModel):
     error_type: ErrorType
     message: str = None  # Initialize as None
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("message", pre=True, always=True)
     def set_message(cls, value, values):
         error_type = values.get("error_type")
@@ -109,21 +111,21 @@ class ValidationErrorResponse(BaseModel):
 ################## ! LOGGING TO `log_entry` table ! ##################
 # #######! MODELS !########
 class LogEntryModel(BaseModel):
-    event_type: str = Field(..., example="Info", description="Event type")
-    user_id: Optional[int] = Field(None, example=1, description="User ID")
-    route: str = Field(..., example="/wazuh_indexer/health", description="Route")
-    method: str = Field(..., example="GET", description="Method")
-    status_code: int = Field(..., example=200, description="Status code")
-    message: str = Field(..., example="Route accessed", description="Message")
+    event_type: str = Field(..., examples=["Info"], description="Event type")
+    user_id: Optional[int] = Field(None, examples=[1], description="User ID")
+    route: str = Field(..., examples=["/wazuh_indexer/health"], description="Route")
+    method: str = Field(..., examples=["GET"], description="Method")
+    status_code: int = Field(..., examples=[200], description="Status code")
+    message: str = Field(..., examples=["Route accessed"], description="Message")
     additional_info: Optional[str] = Field(
         None,
-        example="Additional details here",
+        examples=["Additional details here"],
         description="Additional info",
     )
 
 
 class LogRetrieveModel(LogEntryModel):
-    timestamp: datetime = Field(..., example=datetime.now(), description="Timestamp")
+    timestamp: datetime = Field(..., examples=[datetime.now()], description="Timestamp")
 
 
 class LogsResponse(BaseModel):
@@ -144,7 +146,8 @@ class TimeRangeModel(BaseModel):
         description="Time range to fetch logs for, e.g., 1, 1h, 1d, 1w",
     )
 
-    @validator("time_range")
+    @field_validator("time_range")
+    @classmethod
     def validate_time_range(cls, value):
         """
         Validate the time range value.

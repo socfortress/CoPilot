@@ -32,25 +32,25 @@ class GraylogThroughputMetrics(BaseModel):
 
 class GraylogThroughputMetricsCollection(BaseModel):
     graylog2_buffers_input_usage: Optional[str] = Field(
-        alias="org.graylog2.buffers.input.usage",
+        None, alias="org.graylog2.buffers.input.usage",
     )
     graylog2_buffers_output_usage: Optional[str] = Field(
-        alias="org.graylog2.buffers.output.usage",
+        None, alias="org.graylog2.buffers.output.usage",
     )
     graylog2_buffers_process_usage: Optional[str] = Field(
-        alias="org.graylog2.buffers.process.usage",
+        None, alias="org.graylog2.buffers.process.usage",
     )
     graylog2_throughput_input_1_sec_rate: Optional[str] = Field(
-        alias="org.graylog2.throughput.input.1-sec-rate",
+        None, alias="org.graylog2.throughput.input.1-sec-rate",
     )
     graylog2_throughput_output_1_sec_rate: Optional[str] = Field(
-        alias="org.graylog2.throughput.output.1-sec-rate",
+        None, alias="org.graylog2.throughput.output.1-sec-rate",
     )
     graylog2_throughput_output: Optional[str] = Field(
-        alias="org.graylog2.throughput.output",
+        None, alias="org.graylog2.throughput.output",
     )
     graylog2_throughput_input: Optional[str] = Field(
-        alias="org.graylog2.throughput.input",
+        None, alias="org.graylog2.throughput.input",
     )
 
 
@@ -91,7 +91,7 @@ class GraylogEventNotificationsNotification(BaseModel):
     title: str
     description: str
     # config: GraylogEventNotificationsConfig
-    config: Optional[Dict[str, Any]]
+    config: Optional[Dict[str, Any]] = None
 
 
 class GraylogEventNotifications(BaseModel):
@@ -105,6 +105,6 @@ class GraylogEventNotifications(BaseModel):
 
 
 class GraylogEventNotificationsResponse(BaseModel):
-    event_notifications: Optional[GraylogEventNotifications]
+    event_notifications: Optional[GraylogEventNotifications] = None
     message: str
     success: bool

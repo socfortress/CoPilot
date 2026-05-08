@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -69,9 +69,7 @@ class AgentDataStoreData(BaseModel):
     uploaded_by: Optional[int] = None
     notes: Optional[str] = None
     status: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AgentDataStoreResponse(BaseModel):

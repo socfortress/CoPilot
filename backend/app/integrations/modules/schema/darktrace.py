@@ -1,7 +1,6 @@
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class InvokeDarktraceRequest(BaseModel):
@@ -54,17 +53,18 @@ class InvokeDarktraceResponse(BaseModel):
 
 
 class CollectDarktrace(BaseModel):
-    integration: str = Field(..., example="darktrace")
-    customer_code: str = Field(..., example="socfortress")
-    graylog_host: str = Field(..., example="127.0.0.1")
-    graylog_port: str = Field(..., example=12201)
-    public_token: str = Field(..., example="public_token")
-    private_token: str = Field(..., example="private_token")
-    darktrace_host: str = Field(..., example="https://darktrace.local")
-    darktrace_port: str = Field(..., example=2026)
-    timeframe: str = Field(..., example="15m")
+    integration: str = Field(..., examples=["darktrace"])
+    customer_code: str = Field(..., examples=["socfortress"])
+    graylog_host: str = Field(..., examples=["127.0.0.1"])
+    graylog_port: str = Field(..., examples=[12201])
+    public_token: str = Field(..., examples=["public_token"])
+    private_token: str = Field(..., examples=["private_token"])
+    darktrace_host: str = Field(..., examples=["https://darktrace.local"])
+    darktrace_port: str = Field(..., examples=[2026])
+    timeframe: str = Field(..., examples=["15m"])
 
-    @validator("integration")
+    @field_validator("integration")
+    @classmethod
     def check_integration(cls, v):
         if v != "darktrace":
             raise HTTPException(
@@ -73,7 +73,8 @@ class CollectDarktrace(BaseModel):
             )
         return v
 
-    @validator("timeframe")
+    @field_validator("timeframe")
+    @classmethod
     def validate_range(cls, v):
         if not v.endswith(("m", "h", "d")):
             raise HTTPException(

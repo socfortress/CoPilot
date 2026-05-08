@@ -3,9 +3,8 @@ from enum import Enum
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.db.universal_models import CustomersMeta
@@ -19,52 +18,52 @@ class CustomerSubsctipion(Enum):
 class ProvisionNewCustomer(BaseModel):
     customer_name: str = Field(
         ...,
-        example="SOC Fortress",
+        examples=["SOC Fortress"],
         description="Name of the customer",
     )
     customer_code: str = Field(
         ...,
-        example="SOCF",
+        examples=["SOCF"],
         description="Code of the customer. Referenced in Wazuh Agent Label, Graylog Stream, etc.",
     )
     customer_index_name: str = Field(
         ...,
-        example="socf",
+        examples=["socf"],
         description="Index prefix for the customer's Graylog instance",
     )
     customer_grafana_org_name: str = Field(
         ...,
-        example="SOCFortress",
+        examples=["SOCFortress"],
         description="Name of the customer's Grafana organization",
     )
     hot_data_retention: int = Field(
         ...,
-        example=30,
+        examples=[30],
         description="Number of days to retain hot data",
     )
     index_replicas: int = Field(
         ...,
-        example=1,
+        examples=[1],
         description="Number of replicas for the customer's Graylog instance",
     )
     index_shards: int = Field(
         ...,
-        example=1,
+        examples=[1],
         description="Number of shards for the customer's Graylog instance",
     )
     customer_subscription: List[CustomerSubsctipion] = Field(
         ...,
-        example=["Wazuh"],
+        examples=[["Wazuh"]],
         description="List of subscriptions for the customer",
     )
     dashboards_to_include: DashboardProvisionRequest = Field(
         ...,
         description="Dashboards to include in the customer's Grafana instance",
-        example={
+        examples=[{
             "dashboards": [
                 "WAZUH_SUMMARY",
             ],
-        },
+        }],
     )
     wazuh_auth_password: Optional[str] = Field("n/a", description="Password for the Wazuh API user")
     wazuh_registration_port: Optional[str] = Field(
@@ -107,7 +106,8 @@ class ProvisionNewCustomer(BaseModel):
         description="Whether deployment of Portainer is occurring",
     )
 
-    @validator("customer_index_name")
+    @field_validator("customer_index_name")
+    @classmethod
     def validate_customer_index_name(cls, v):
         pattern = r"^[a-z0-9][a-z0-9_+-]*$"
         if not re.match(pattern, v):
@@ -185,32 +185,32 @@ class CustomersMetaResponse(BaseModel):
 class ProvisionHaProxyRequest(BaseModel):
     customer_name: str = Field(
         ...,
-        example="SOCFortress",
+        examples=["SOCFortress"],
         description="The name of the customer",
     )
     wazuh_registration_port: str = Field(
         ...,
-        example="1515",
+        examples=["1515"],
         description="The port for the Wazuh registration service",
     )
     wazuh_logs_port: str = Field(
         ...,
-        example="1514",
+        examples=["1514"],
         description="The port for the Wazuh logs service",
     )
     wazuh_worker_hostname: Optional[str] = Field(
         None,
-        example="worker1",
+        examples=["worker1"],
         description="The hostname of the Wazuh worker",
     )
     portainer_deployment: Optional[bool] = Field(
         None,
-        example=True,
+        examples=[True],
         description="Whether deployment of Portainer is occurring",
     )
     swarm_nodes: Optional[List[str]] = Field(
         None,
-        example=["127.0.0.1"],
+        examples=[["127.0.0.1"]],
         description="The IP addresses of the swarm nodes",
     )
 
@@ -218,13 +218,13 @@ class ProvisionHaProxyRequest(BaseModel):
 class ProvisionDashboardRequest(BaseModel):
     customer_name: str = Field(
         ...,
-        example="SOCFortress",
+        examples=["SOCFortress"],
         description="The name of the customer",
     )
     dashboards_to_include: DashboardProvisionRequest = Field(
         ...,
         description="Dashboards to include in the customer's Grafana instance",
-        example={
+        examples=[{
             "dashboards": [
                 "WAZUH_SUMMARY",
                 "EDR_WINDOWS_EVENT_LOGS",
@@ -250,7 +250,7 @@ class ProvisionDashboardRequest(BaseModel):
             "organizationId": 1,
             "folderId": 1,
             "datasourceUid": "wazuh",
-        },
+        }],
     )
     grafana_org_id: int = Field(
         ...,

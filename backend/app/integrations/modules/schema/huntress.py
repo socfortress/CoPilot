@@ -1,7 +1,6 @@
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class InvokeHuntressRequest(BaseModel):
@@ -44,17 +43,18 @@ class InvokeHuntressResponse(BaseModel):
 
 
 class CollectHuntress(BaseModel):
-    integration: str = Field(..., example="huntress")
-    customer_code: str = Field(..., example="socfortress")
-    graylog_host: str = Field(..., example="127.0.0.1")
-    graylog_port: str = Field(..., example=12201)
-    wazuh_indexer_host: str = Field(..., example="127.0.0.1")
-    wazuh_indexer_username: str = Field(..., example="admin")
-    wazuh_indexer_password: str = Field(..., example="admin")
-    api_key: str = Field(..., example="1234567890")
-    api_secret: str = Field(..., example="1234567890")
+    integration: str = Field(..., examples=["huntress"])
+    customer_code: str = Field(..., examples=["socfortress"])
+    graylog_host: str = Field(..., examples=["127.0.0.1"])
+    graylog_port: str = Field(..., examples=[12201])
+    wazuh_indexer_host: str = Field(..., examples=["127.0.0.1"])
+    wazuh_indexer_username: str = Field(..., examples=["admin"])
+    wazuh_indexer_password: str = Field(..., examples=["admin"])
+    api_key: str = Field(..., examples=["1234567890"])
+    api_secret: str = Field(..., examples=["1234567890"])
 
-    @validator("integration")
+    @field_validator("integration")
+    @classmethod
     def check_integration(cls, v):
         if v != "huntress":
             raise HTTPException(

@@ -2,9 +2,8 @@ from enum import Enum
 from typing import Any
 from typing import Dict
 
-from pydantic import BaseModel
+from pydantic import model_validator, BaseModel
 from pydantic import Field
-from pydantic import root_validator
 
 
 class PipelineRuleTitles(Enum):
@@ -32,7 +31,8 @@ class ProvisionOffice365Request(BaseModel):
     )
 
     # ensure the `integration_name` is always set to "Office365"
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def set_integration_name(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         values["integration_name"] = "Office365"
         return values

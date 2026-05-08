@@ -3,7 +3,7 @@ from enum import Enum
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -29,37 +29,33 @@ class WazuhAgent(BaseModel):
     def agent_last_seen_as_datetime(self):
         dt = datetime.strptime(self.agent_last_seen, "%Y-%m-%dT%H:%M:%S%z")
         return dt.replace(tzinfo=None)
-
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class WazuhAgentsList(BaseModel):
     agents: List[WazuhAgent]
     success: bool
     message: str
-
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class WazuhAgentVulnerabilities(BaseModel):
-    severity: Optional[str]
-    version: Optional[str]
-    type: Optional[str]
-    name: Optional[str]
-    external_references: Optional[List[str]]
-    detection_time: Optional[str]
-    cvss3_score: Optional[float]
-    published: Optional[str]
-    architecture: Optional[str]
-    cve: Optional[str]
-    status: Optional[str]
-    title: Optional[str]
+    severity: Optional[str] = None
+    version: Optional[str] = None
+    type: Optional[str] = None
+    name: Optional[str] = None
+    external_references: Optional[List[str]] = None
+    detection_time: Optional[str] = None
+    cvss3_score: Optional[float] = None
+    published: Optional[str] = None
+    architecture: Optional[str] = None
+    cve: Optional[str] = None
+    status: Optional[str] = None
+    title: Optional[str] = None
 
 
 class WazuhAgentVulnerabilitiesResponse(BaseModel):
-    vulnerabilities: Optional[List[WazuhAgentVulnerabilities]]
+    vulnerabilities: Optional[List[WazuhAgentVulnerabilities]] = None
     success: bool
     message: str
 
@@ -80,7 +76,7 @@ class WazuhAgentScaResults(BaseModel):
 
 
 class WazuhAgentScaResponse(BaseModel):
-    sca: Optional[List[WazuhAgentScaResults]]
+    sca: Optional[List[WazuhAgentScaResults]] = None
     success: bool
     message: str
 
@@ -120,6 +116,6 @@ class WazuhAgentScaPolicyResults(BaseModel):
 
 
 class WazuhAgentScaPolicyResultsResponse(BaseModel):
-    sca_policy_results: Optional[List[WazuhAgentScaPolicyResults]]
+    sca_policy_results: Optional[List[WazuhAgentScaPolicyResults]] = None
     success: bool
     message: str

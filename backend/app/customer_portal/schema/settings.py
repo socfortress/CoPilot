@@ -3,9 +3,8 @@ import re
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import field_validator, ConfigDict, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class UpdatePortalSettingsRequest(BaseModel):
@@ -13,7 +12,8 @@ class UpdatePortalSettingsRequest(BaseModel):
     logo_base64: Optional[str] = Field(None, description="Base64 encoded logo image. Set to null to restore default.")
     logo_mime_type: Optional[str] = Field(None, max_length=50, description="MIME type of the logo. Set to null to restore default.")
 
-    @validator("logo_base64")
+    @field_validator("logo_base64")
+    @classmethod
     def validate_base64(cls, v):
         if v is None:
             return v
@@ -42,7 +42,8 @@ class UpdatePortalSettingsRequest(BaseModel):
 
         return v
 
-    @validator("logo_mime_type")
+    @field_validator("logo_mime_type")
+    @classmethod
     def validate_mime_type(cls, v):
         if v is None:
             return v
@@ -51,9 +52,7 @@ class UpdatePortalSettingsRequest(BaseModel):
         if v not in allowed_types:
             raise HTTPException(status_code=400, detail=f"Invalid MIME type. Allowed types are: {', '.join(allowed_types)}")
         return v
-
-    class Config:
-        json_schema_extra = {"example": {"title": "My Custom Portal", "logo_base64": "iVBORw0KGgoAAAANS...", "logo_mime_type": "image/png"}}
+    model_config = ConfigDict(json_schema_extra={"example": {"title": "My Custom Portal", "logo_base64": "iVBORw0KGgoAAAANS...", "logo_mime_type": "image/png"}})
 
 
 class PortalSettingsData(BaseModel):
@@ -62,9 +61,7 @@ class PortalSettingsData(BaseModel):
     logo_base64: Optional[str] = None
     logo_mime_type: Optional[str] = None
     updated_at: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PortalSettingsResponse(BaseModel):

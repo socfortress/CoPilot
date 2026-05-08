@@ -3,7 +3,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -21,9 +21,7 @@ class PackageItem(BaseModel):
     vendor: Optional[str] = None
     version: Optional[str] = None
     agent_id: Optional[str] = None
-
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class AgentPackagesResponse(BaseModel):
@@ -65,10 +63,7 @@ class IndexerPackageItem(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
     agent: Optional[IndexerPackageAgent] = None
     package: Optional[IndexerPackageDetail] = None
-
-    class Config:
-        populate_by_name = True
-        extra = "allow"
+    model_config = ConfigDict(populate_by_name=True, extra="allow")
 
 
 class IndexerPackagesResponse(BaseModel):

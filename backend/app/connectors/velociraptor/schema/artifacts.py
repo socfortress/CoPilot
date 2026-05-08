@@ -6,9 +6,8 @@ from typing import Optional
 from typing import Union
 
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import field_validator, ConfigDict, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class ArtifactParameter(BaseModel):
@@ -34,7 +33,7 @@ class Artifacts(BaseModel):
 class ArtifactsResponse(BaseModel):
     message: str = Field(...)
     # make artifacts optional
-    artifacts: Optional[List[Artifacts]]
+    artifacts: Optional[List[Artifacts]] = None
     success: str = Field(...)
 
 
@@ -47,21 +46,19 @@ class ArtifactParametersResponse(BaseModel):
     parameter_prefix: str = Field(..., description="The prefix used for filtering")
     matching_parameters: List[ArtifactParameter] = Field(default_factory=list, description="List of parameters that match the prefix")
     total_matches: int = Field(..., description="Total number of matching parameters")
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "success": True,
-                "message": "Found 2 parameters matching prefix 'T1552.001'",
-                "artifact_name": "Windows.AttackSimulation.AtomicRedTeam",
-                "parameter_prefix": "T1552.001",
-                "matching_parameters": [
-                    {"name": "T1552.001 - 3", "description": "Credentials In Files - Extracting passwords with findstr", "type": "bool"},
-                    {"name": "T1552.001 - 4", "description": "Credentials In Files - Access unattend.xml", "type": "bool"},
-                ],
-                "total_matches": 2,
-            },
-        }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "success": True,
+            "message": "Found 2 parameters matching prefix 'T1552.001'",
+            "artifact_name": "Windows.AttackSimulation.AtomicRedTeam",
+            "parameter_prefix": "T1552.001",
+            "matching_parameters": [
+                {"name": "T1552.001 - 3", "description": "Credentials In Files - Extracting passwords with findstr", "type": "bool"},
+                {"name": "T1552.001 - 4", "description": "Credentials In Files - Access unattend.xml", "type": "bool"},
+            ],
+            "total_matches": 2,
+        },
+    })
 
 
 class OSPrefixEnum(Enum):
@@ -71,7 +68,7 @@ class OSPrefixEnum(Enum):
 
 
 class OSPrefixModel(BaseModel):
-    os_name: Optional[str]
+    os_name: Optional[str] = None
     os_prefix_mapping: Dict[str, str] = {
         "windows": "Windows",
         "linux": "Linux",
@@ -142,18 +139,16 @@ class CollectArtifactBody(BaseBody):
         False,
         description="If true, only store the collected data in the datastore without sending it back immediately",
     )
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "hostname": "WIN-HFOU106TD7K",
-                "velociraptor_id": "C.475df76785008b04",
-                "velociraptor_org": "root",
-                "artifact_name": "Windows.AttackSimulation.AtomicRedTeam",
-                "parameters": {"env": [{"key": "InstallART", "value": "N"}, {"key": "T1552.001 - 3", "value": "Y"}]},
-                "data_store_only": False,
-            },
-        }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "hostname": "WIN-HFOU106TD7K",
+            "velociraptor_id": "C.475df76785008b04",
+            "velociraptor_org": "root",
+            "artifact_name": "Windows.AttackSimulation.AtomicRedTeam",
+            "parameters": {"env": [{"key": "InstallART", "value": "N"}, {"key": "T1552.001 - 3", "value": "Y"}]},
+            "data_store_only": False,
+        },
+    })
 
 
 class InvokeCopilotActionBody(BaseModel):
@@ -176,7 +171,8 @@ class CollectFileBody(BaseBody):
     file: str = Field("Glob\nUsers\\Administrator\\Documents\\*\n", description="File to collect")
     root_disk: Optional[str] = Field("C:", description="Root disk to collect from")
 
-    @validator("artifact_name")
+    @field_validator("artifact_name")
+    @classmethod
     def validate_artifact_name(cls, value):
         if value != "Generic.Collectors.File":
             raise HTTPException(status_code=400, detail="Invalid artifact name. Name should be 'Generic.Collectors.File'")
@@ -315,13 +311,13 @@ class OS(str, Enum):
 
 class ArtifactReccomendationAIRequest(BaseModel):
     os: OS = Field(..., description="Operating system of the client")
-    prompt: dict = Field(..., example=payload)
+    prompt: dict = Field(..., examples=[payload])
 
 
 class ArtifactReccomendationRequest(BaseModel):
     artifacts: List[Artifacts] = Field(..., description="List of artifacts to be recommended")
     os: str = Field(..., description="Operating system of the client")
-    prompt: dict = Field(..., example=payload)
+    prompt: dict = Field(..., examples=[payload])
 
 
 class VelociraptorArtifactRecommendation(BaseModel):

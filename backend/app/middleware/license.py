@@ -78,7 +78,7 @@ class CreateCustomerKeyResult(BaseModel):
     customerId: int
     key: str
     result: int
-    message: Optional[str]
+    message: Optional[str] = None
 
 
 class CreateCustomerKeyResponseModel(BaseModel):
@@ -104,7 +104,7 @@ class RawResponse(BaseModel):
     signature: str
     result: int
     message: str
-    metadata: Optional[Any]
+    metadata: Optional[Any] = None
 
 
 class LicenseResponse(BaseModel):
@@ -129,7 +129,7 @@ class LicenseResponse(BaseModel):
     activatedMachines: List
     trialActivation: bool
     maxNoOfMachines: int
-    allowedMachines: Optional[Any]
+    allowedMachines: Optional[Any] = None
     dataObjects: List
     signDate: dt
     reseller: Optional[Any] = None
@@ -177,15 +177,15 @@ class GetSubscriptionCatalogFeaturesResponse(BaseModel):
 
 
 class FeatureSubscriptionRequest(BaseModel):
-    feature_id: int = Field(..., example=1)
-    cancel_url: str = Field(..., example="https://example.com/cancel")
-    success_url: str = Field(..., example="https://example.com/success")
-    customer_email: str = Field(..., example="info@socfortress.co")
-    company_name: str = Field(..., example="SOCFORTRESS")
+    feature_id: int = Field(..., examples=[1])
+    cancel_url: str = Field(..., examples=["https://example.com/cancel"])
+    success_url: str = Field(..., examples=["https://example.com/success"])
+    customer_email: str = Field(..., examples=["info@socfortress.co"])
+    company_name: str = Field(..., examples=["SOCFORTRESS"])
 
 
 class GetLicenseByEmailRequest(BaseModel):
-    email: str = Field(..., example="info@socfortress.co")
+    email: str = Field(..., examples=["info@socfortress.co"])
 
 
 class AddLicenseToDB(BaseModel):

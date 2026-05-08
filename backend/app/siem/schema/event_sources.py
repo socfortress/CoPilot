@@ -3,7 +3,7 @@ from enum import Enum
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -41,9 +41,7 @@ class EventSourceResponse(BaseModel):
     enabled: bool
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EventSourcesListResponse(BaseModel):
