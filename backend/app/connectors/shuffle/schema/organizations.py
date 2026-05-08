@@ -5,6 +5,7 @@ from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 
@@ -27,6 +28,8 @@ class SSOConfig(BaseModel):
     client_secret: str = ""
     openid_authorization: str = ""
     openid_token: str = ""
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class OrgAuth(BaseModel):

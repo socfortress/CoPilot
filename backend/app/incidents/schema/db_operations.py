@@ -6,6 +6,7 @@ from typing import Optional
 
 from fastapi import HTTPException
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import field_validator
 from pydantic import model_validator
 
@@ -513,6 +514,8 @@ class Notification(BaseModel):
     shuffle_workflow_id: str
     enabled: bool
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class NotificationResponse(BaseModel):
     notifications: Optional[List[Notification]] = []
@@ -530,6 +533,8 @@ class AITrigger(BaseModel):
     id: int
     customer_code: str
     enabled: bool
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AITriggerResponse(BaseModel):

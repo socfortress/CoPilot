@@ -19,6 +19,8 @@ class FlaggedRule(BaseModel):
         description="List of tags associated with the flagged rule",
     )
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class Mailbox(BaseModel):
     external_id: Optional[str] = Field(
@@ -26,6 +28,8 @@ class Mailbox(BaseModel):
         description="External identifier for the mailbox",
     )
     id: str = Field(..., description="Unique identifier for the mailbox")
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Message(BaseModel):
@@ -43,6 +47,8 @@ class TriggeredAction(BaseModel):
     id: str = Field(..., description="Unique identifier for the triggered action")
     name: str = Field(..., description="Name of the triggered action")
     type: str = Field(..., description="Type of the triggered action")
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Data(BaseModel):

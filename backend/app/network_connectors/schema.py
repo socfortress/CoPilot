@@ -143,11 +143,15 @@ class NetworkConnectorsAuthKeys(BaseModel):
     auth_value: str
     subscription_id: int
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class NetworkConnectorsService(BaseModel):
     auth_type: str
     service_name: str
     id: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class NetworkConnectorsSubscription(BaseModel):
@@ -156,6 +160,8 @@ class NetworkConnectorsSubscription(BaseModel):
     network_connectors_service_id: int
     network_connectors_service: NetworkConnectorsService
     network_connectors_keys: List[NetworkConnectorsAuthKeys]
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CustomerNetworkConnectors(BaseModel):
@@ -178,6 +184,8 @@ class CustomerNetworkConnectors(BaseModel):
         description="The deployment status.",
         examples=[True],
     )
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CustomerNetworkConnectorsResponse(BaseModel):
