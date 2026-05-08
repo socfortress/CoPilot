@@ -21,6 +21,11 @@ Plus `tools/remotion-*` (video generators) and `docs/` (mkdocs site, published b
 ```bash
 docker compose pull && docker compose up -d   # backend, frontend, mysql, minio, nuclei, mcp
 ./build-dockers.sh [version]                  # local image rebuild (frontend only; backend stanza commented)
+
+# Local backend rebuild + hot-swap into the running stack (~5–8 min build):
+cd backend && docker buildx build --load -t ghcr.io/socfortress/copilot-backend:latest .
+docker compose up -d --force-recreate copilot-backend
+# Boot signal: "Application startup complete" + "Uvicorn running on 0.0.0.0:5000"
 ```
 
 `.env` at repo root feeds compose; `.env.example` documents every var.
@@ -184,3 +189,10 @@ The `customer-portal/` mirrors this structure but is a leaner standalone app, se
 - **AsyncSession + `back_populates` = `MissingGreenlet`** in some cases. `CustomerNotificationRoute` and `NotificationDispatchLog` deliberately omit `back_populates` on their reverse relationships (with code comments explaining why) — bidirectional relationships fire implicit synchronous loads on `flush()` that fail under `AsyncSession`. When adding relationships in async-write paths, prefer one-way FKs and explicit `session.get(...)` over `back_populates`.
 - **`.env` is shared across compose services.** Backend and `copilot-mcp` both read it; many MCP vars fall back to `WAZUH_*` defaults — renaming without fixing fallbacks breaks MCP wiring.
 - **Black line length is 140**, not 88. **isort `force_single_line = true`** — combined imports get split.
+- **Pydantic 2 strictness regressions are still surfacing across the codebase.** The repo migrated from v1 to v2; v1 was lenient where v2 errors. Three patterns to watch for:
+  - **Leading-underscore field annotations get silently dropped as `PrivateAttr`.** A field like `_source: GenericSourceModel` parses as nothing — Pydantic 2 never populates it. Use `source: GenericSourceModel = Field(alias="_source")` plus `model_config = ConfigDict(populate_by_name=True)`. We've hit this on `_source` (`GenericAlertModel`) and `_client_config` (Velociraptor `Organization`).
+  - **Pydantic schemas fed SQLAlchemy/SQLModel rows need `model_config = ConfigDict(from_attributes=True)`** (the rename of v1's `orm_mode`). Symptom is a 400/500 with `Input should be a valid dictionary or instance of <ClassName>` even though the input *is* an instance — Pydantic 2 enforces exact class match, and ORM-row → Pydantic-schema extraction requires this config explicitly. Audit signal: any Pydantic class that shares a name with a `SQLModel(table=True)` is suspicious. Whole chains of nested response models (`CustomerIntegrations` → `IntegrationSubscription` → `IntegrationService` → `IntegrationAuthKeys`) need it on every level when joinedload feeds them.
+  - **v2 stops coercing `bool→str`, `int→str`, etc.** A schema typed `success: str` whose callers all pass `success=True` worked in v1 (silently coerced to `"True"`); v2 errors with `Input should be a valid string [type=string_type, input_value=True, input_type=bool]`. Fix the schema's type to match what callers actually pass, not the other way around.
+- **`regex=` → `pattern=` is FastAPI-only.** FastAPI 0.116 deprecated `regex=` on `Query/Path/Header/Body` in favor of `pattern=`. **`sqlmodel.Field` still uses `regex=` and rejects `pattern=`** — blindly running a global rename will crashloop the backend at import time with `TypeError: Field() got an unexpected keyword argument 'pattern'`. Pydantic v2 native `Field` uses `pattern=`. Three different surfaces, three different rules; check the import before renaming.
+- **`pyvelociraptor` is pure gRPC transport.** It `json.loads` whatever the Velociraptor server emits in `Response` chunks; it does no semantic deserialization. The shape is whatever the server version picks, and *can change between minor versions*. 0.75.6 changed `_client_config` from a structured object to a YAML string. Schemas for VQL outputs should default to tolerant — drop unused fields, structure only what we actually read, lean on `extra='ignore'`.
+- **`elasticsearch7.exceptions.RequestError` message lives on `.info`, not `str(err)`.** `str(err)` returns only the error code (`search_phase_execution_exception`); the human-readable cause is on `err.info`. `_is_text_field_agg_error` in `app/siem/services/dashboards.py` is the canonical example — match against `err.error` for the type and `str(err.info)` for the message.
