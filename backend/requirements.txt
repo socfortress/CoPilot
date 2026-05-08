@@ -43,7 +43,7 @@ azure-mgmt-sql==1.0.0
 azure-mgmt-storage==17.0.0
 azure-mgmt-web==1.0.0
 backports-tarfile==1.2.0
-bcrypt==5.0.0
+bcrypt==4.3.0
 boto3==1.43.6
 botocore==1.43.6
 cachetools==4.2.4
