@@ -83,11 +83,14 @@ class RoleEnum(int, Enum):
 
 class UserInput(SQLModel):
     username: str
+    # bcrypt's input is capped at 72 bytes; longer passwords would either be silently
+    # truncated (bcrypt 4 behaviour) or rejected with ValueError (bcrypt 5+). We enforce
+    # the limit here so users get a clean 422 ValidationError instead.
     password: str = Field(
-        max_length=256,
+        max_length=72,
         min_length=8,
         regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#]).{8,}$",
-        description="Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+        description="Password must be 8-72 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
     )
     email: EmailStr
     role_id: RoleEnum = Field(
@@ -110,11 +113,12 @@ class UserLogin(SQLModel):
 
 
 class Password(BaseModel):
+    # Capped at 72 — bcrypt's input limit. The generated chars are ASCII so 72 chars = 72 bytes.
     length: int = Field(
         default=12,
         ge=8,
-        le=128,
-        description="The length of the password",
+        le=72,
+        description="The length of the password (max 72 — bcrypt input limit)",
     )
     hashed: str  # Holds the hashed password
     plain: str  # Holds the plain password
@@ -122,14 +126,14 @@ class Password(BaseModel):
     @field_validator("length")
     @classmethod
     def validate_length(cls, value):
-        if value < 8 or value > 128:
-            raise ValueError("Password length must be between 8 and 128 characters.")
+        if value < 8 or value > 72:
+            raise ValueError("Password length must be between 8 and 72 characters.")
         return value
 
     @classmethod
     def generate(cls, length: int = 12) -> "Password":
-        if length < 8:  # Ensure the password is a reasonable length
-            raise ValueError("Password length should be at least 8 characters.")
+        if length < 8 or length > 72:
+            raise ValueError("Password length should be between 8 and 72 characters.")
 
         # Define the characters that can be used in the password
         lowercase = string.ascii_lowercase
@@ -180,8 +184,8 @@ class PasswordResetToken(BaseModel):
     @field_validator("new_password")
     @classmethod
     def validate_password(cls, password):
-        if len(password) < 8 or len(password) > 256:
-            raise ValueError("Password length must be between 8 and 256 characters.")
+        if len(password) < 8 or len(password) > 72:
+            raise ValueError("Password length must be between 8 and 72 characters (bcrypt input limit).")
         if not re.search(r"[a-z]", password):
             raise ValueError("Password must contain at least one lowercase letter.")
         if not re.search(r"[A-Z]", password):
@@ -195,9 +199,10 @@ class PasswordResetToken(BaseModel):
 
 class PasswordReset(BaseModel):
     username: str
+    # 8-72 chars — bcrypt's 72-byte input limit (matches UserInput).
     new_password: str = Field(
-        max_length=256,
+        max_length=72,
         min_length=8,
         regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$",
-        description="Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+        description="Password must be 8-72 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
     )

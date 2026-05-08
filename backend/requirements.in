@@ -5,7 +5,7 @@ aiosqlite
 alembic
 apscheduler
 asyncgelf
-bcrypt<5  # bcrypt 5 errors (instead of silently truncating) on passwords >72 bytes; lift after enforcing length limit at the model layer
+bcrypt
 cortex4py
 cryptography
 docxtpl

@@ -69,7 +69,14 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
     for error in errors:
         field = error["loc"][-1]
-        error_type = ErrorType(error["type"])
+        try:
+            error_type = ErrorType(error["type"])
+        except ValueError:
+            # Pydantic 2 emits codes the v1-era ErrorType enum doesn't list
+            # (string_too_long, string_pattern_mismatch, etc.) — fall back to
+            # GENERAL so unknown codes still produce a 422 with a sensible
+            # message instead of crashing the handler.
+            error_type = ErrorType.GENERAL
         details.append(ValidationErrorItem(field=field, error_type=error_type))
 
     main_message = details[0].message if details else "Validation Error"
