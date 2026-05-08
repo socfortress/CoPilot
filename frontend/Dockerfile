@@ -41,7 +41,7 @@ WORKDIR /app
 
 CMD pnpm install && pnpm run start-frontend
 
-FROM nginx:1.24.0-alpine
+FROM nginx:1.30.0-alpine
 
 # Added to create self-signed cert on run time if needed
 RUN apk add openssl
