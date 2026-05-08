@@ -150,11 +150,15 @@ class IntegrationAuthKeys(BaseModel):
     auth_value: str
     subscription_id: int
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class IntegrationService(BaseModel):
     auth_type: str
     service_name: str
     id: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class IntegrationSubscription(BaseModel):
@@ -163,6 +167,8 @@ class IntegrationSubscription(BaseModel):
     integration_service_id: int
     integration_service: IntegrationService
     integration_auth_keys: List[IntegrationAuthKeys]  # Changed from IntegrationConfig
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CustomerIntegrations(BaseModel):
@@ -185,6 +191,8 @@ class CustomerIntegrations(BaseModel):
         description="The deployment status.",
         examples=[True],
     )
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CustomerIntegrationsResponse(BaseModel):
