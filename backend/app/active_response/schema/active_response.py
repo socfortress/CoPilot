@@ -1,12 +1,16 @@
 from enum import Enum
-from typing import Literal, Any
+from typing import Any
 from typing import Dict
 from typing import List
+from typing import Literal
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import field_validator, model_validator, ConfigDict, BaseModel
+from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_validator
+from pydantic import model_validator
 
 
 class ActiveResponsesSupported(Enum):
@@ -121,16 +125,19 @@ class InvokeActiveResponseRequest(BaseModel):
             raise HTTPException(status_code=400, detail="Invalid command for alert")
 
         return values
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "endpoint": "/active-response",
-            "arguments": [],
-            "command": "windows_firewall",
-            "custom": True,
-            "alert": {"action": "block", "ip": "1.1.1.1"},
-            "params": {"wait_for_complete": True, "agents_list": ["032"]},
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "endpoint": "/active-response",
+                "arguments": [],
+                "command": "windows_firewall",
+                "custom": True,
+                "alert": {"action": "block", "ip": "1.1.1.1"},
+                "params": {"wait_for_complete": True, "agents_list": ["032"]},
+            },
         },
-    })
+    )
 
 
 class InvokeActiveResponseResponse(BaseModel):

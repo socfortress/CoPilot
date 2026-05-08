@@ -3,8 +3,10 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import model_validator, ConfigDict, BaseModel
+from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import model_validator
 
 
 class ProvisionSapSiemRequest(BaseModel):
@@ -59,27 +61,29 @@ class SapSiemEventStream(BaseModel):
         None,
         description="Associated content pack, if any",
     )
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "title": "SAP SIEM EVENTS - Example Company",
-            "description": "SAP SIEM EVENTS - Example Company",
-            "index_set_id": "12345",
-            "rules": [
-                {
-                    "field": "customer_code",
-                    "type": 1,
-                    "inverted": False,
-                    "value": "ExampleCode",
-                },
-                {
-                    "field": "integration",
-                    "type": 1,
-                    "inverted": False,
-                    "value": "sap_siem",
-                },
-            ],
-            "matching_type": "AND",
-            "remove_matches_from_default_stream": True,
-            "content_pack": None,
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "title": "SAP SIEM EVENTS - Example Company",
+                "description": "SAP SIEM EVENTS - Example Company",
+                "index_set_id": "12345",
+                "rules": [
+                    {
+                        "field": "customer_code",
+                        "type": 1,
+                        "inverted": False,
+                        "value": "ExampleCode",
+                    },
+                    {
+                        "field": "integration",
+                        "type": 1,
+                        "inverted": False,
+                        "value": "sap_siem",
+                    },
+                ],
+                "matching_type": "AND",
+                "remove_matches_from_default_stream": True,
+                "content_pack": None,
+            },
         },
-    })
+    )

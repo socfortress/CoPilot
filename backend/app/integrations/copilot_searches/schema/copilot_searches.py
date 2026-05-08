@@ -157,12 +157,14 @@ class ExecuteSearchRequest(BaseModel):
     parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Parameter values to substitute in the query",
-        examples=[{
-            "AGENT_NAME": "my-server",
-            "CUSTOMER_CODE": "lab",
-            "START_TIME": "now-24h",
-            "END_TIME": "now",
-        }],
+        examples=[
+            {
+                "AGENT_NAME": "my-server",
+                "CUSTOMER_CODE": "lab",
+                "START_TIME": "now-24h",
+                "END_TIME": "now",
+            },
+        ],
     )
     size: Optional[int] = Field(
         default=None,
@@ -226,10 +228,12 @@ class ExecuteGraylogQueryRequest(BaseModel):
     parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Parameter values to substitute in the query",
-        examples=[{
-            "AGENT_NAME": "my-server",
-            "CUSTOMER_CODE": "lab",
-        }],
+        examples=[
+            {
+                "AGENT_NAME": "my-server",
+                "CUSTOMER_CODE": "lab",
+            },
+        ],
     )
 
 

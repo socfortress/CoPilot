@@ -4,8 +4,9 @@ from enum import Enum
 from typing import List
 from typing import Optional
 
-from pydantic import field_validator, BaseModel
+from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 
 # --- Enums ---
 

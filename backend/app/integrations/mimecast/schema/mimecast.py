@@ -9,9 +9,11 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import model_validator, ConfigDict, BaseModel
+from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import HttpUrl
+from pydantic import model_validator
 
 
 class PipelineRuleTitles(Enum):

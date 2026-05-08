@@ -16,11 +16,13 @@ class IntegrationRequest(BaseModel):
     fields: Optional[List[Dict[str, Any]]] = Field(
         [],
         description="The fields of the application",
-        examples=[[
-            {"key": "title", "value": "This is the title"},
-            {"key": "description", "value": "This is the description"},
-            {"key": "source", "value": "Shuffle"},
-        ]],
+        examples=[
+            [
+                {"key": "title", "value": "This is the title"},
+                {"key": "description", "value": "This is the description"},
+                {"key": "source", "value": "Shuffle"},
+            ],
+        ],
     )
     skip_workflow: Optional[bool] = Field(
         False,

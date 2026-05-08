@@ -3,8 +3,10 @@ import re
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import field_validator, ConfigDict, BaseModel
+from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_validator
 
 
 class UpdatePortalSettingsRequest(BaseModel):
@@ -52,7 +54,10 @@ class UpdatePortalSettingsRequest(BaseModel):
         if v not in allowed_types:
             raise HTTPException(status_code=400, detail=f"Invalid MIME type. Allowed types are: {', '.join(allowed_types)}")
         return v
-    model_config = ConfigDict(json_schema_extra={"example": {"title": "My Custom Portal", "logo_base64": "iVBORw0KGgoAAAANS...", "logo_mime_type": "image/png"}})
+
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"title": "My Custom Portal", "logo_base64": "iVBORw0KGgoAAAANS...", "logo_mime_type": "image/png"}},
+    )
 
 
 class PortalSettingsData(BaseModel):

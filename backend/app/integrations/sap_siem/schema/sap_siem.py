@@ -5,8 +5,9 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import model_validator, BaseModel
+from pydantic import BaseModel
 from pydantic import Field
+from pydantic import model_validator
 
 
 class InvokeSapSiemRequest(BaseModel):

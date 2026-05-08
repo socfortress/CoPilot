@@ -2,7 +2,8 @@ from typing import List
 from typing import Optional
 from typing import Union
 
-from pydantic import ConfigDict, BaseModel
+from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 
 
@@ -59,9 +60,10 @@ class WazuhGroupConfigurationUpdateRequest(BaseModel):
     """Request model for updating group configuration."""
 
     configuration: str = Field(..., description="Full valid XML configuration content")
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "configuration": """<agent_config>
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "configuration": """<agent_config>
     <labels>
         <label key="customer">example</label>
     </labels>
@@ -71,8 +73,9 @@ class WazuhGroupConfigurationUpdateRequest(BaseModel):
         <events_per_second>1000</events_per_second>
     </client_buffer>
 </agent_config>""",
+            },
         },
-    })
+    )
 
 
 class WazuhGroupConfigurationUpdateResponse(BaseModel):

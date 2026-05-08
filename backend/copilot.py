@@ -100,6 +100,7 @@ environment = os.getenv("ENVIRONMENT", "PRODUCTION")
 # ssl_keyfile = os.path.join(os.path.dirname(__file__), "../nginx/server.key")
 # ssl_certfile = os.path.join(os.path.dirname(__file__), "../nginx/server.crt")
 
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     # ── startup ──

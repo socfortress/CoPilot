@@ -15,8 +15,9 @@ from fastapi import Request
 from fastapi import Security
 from fastapi.exceptions import RequestValidationError
 from loguru import logger
-from pydantic import field_validator, BaseModel
+from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select

@@ -3,8 +3,9 @@ from enum import Enum
 from typing import List
 from typing import Optional
 
-from pydantic import field_validator, BaseModel
+from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.db.universal_models import CustomersMeta
@@ -59,11 +60,13 @@ class ProvisionNewCustomer(BaseModel):
     dashboards_to_include: DashboardProvisionRequest = Field(
         ...,
         description="Dashboards to include in the customer's Grafana instance",
-        examples=[{
-            "dashboards": [
-                "WAZUH_SUMMARY",
-            ],
-        }],
+        examples=[
+            {
+                "dashboards": [
+                    "WAZUH_SUMMARY",
+                ],
+            },
+        ],
     )
     wazuh_auth_password: Optional[str] = Field("n/a", description="Password for the Wazuh API user")
     wazuh_registration_port: Optional[str] = Field(
@@ -224,33 +227,35 @@ class ProvisionDashboardRequest(BaseModel):
     dashboards_to_include: DashboardProvisionRequest = Field(
         ...,
         description="Dashboards to include in the customer's Grafana instance",
-        examples=[{
-            "dashboards": [
-                "WAZUH_SUMMARY",
-                "EDR_WINDOWS_EVENT_LOGS",
-                "EDR_WAZUH_INVENOTRY",
-                "EDR_USERS_AND_GROUPS",
-                "EDR_SYSTEM_VULNERABILITIES",
-                "EDR_SYSTEM_SECURITY_AUDIT",
-                "EDR_SYSTEM_PROCESSES",
-                "EDR_PROCESS_INJECTION",
-                "EDR_OPEN_AUDIT",
-                "EDR_NETWORK_SCAN",
-                "EDR_NETWORK_CONNECTIONS",
-                "EDR_MITRE",
-                "EDR_FIM",
-                "EDR_DOCKER_MONITORING",
-                "EDR_DNS_REQUESTS",
-                "EDR_DLL_SIDE_LOADING",
-                "EDR_COMPLIANCE",
-                "EDR_AV_MALWARE_IOC",
-                "EDR_AGENT_INVENTORY",
-                "EDR_AD_INVENOTRY",
-            ],
-            "organizationId": 1,
-            "folderId": 1,
-            "datasourceUid": "wazuh",
-        }],
+        examples=[
+            {
+                "dashboards": [
+                    "WAZUH_SUMMARY",
+                    "EDR_WINDOWS_EVENT_LOGS",
+                    "EDR_WAZUH_INVENOTRY",
+                    "EDR_USERS_AND_GROUPS",
+                    "EDR_SYSTEM_VULNERABILITIES",
+                    "EDR_SYSTEM_SECURITY_AUDIT",
+                    "EDR_SYSTEM_PROCESSES",
+                    "EDR_PROCESS_INJECTION",
+                    "EDR_OPEN_AUDIT",
+                    "EDR_NETWORK_SCAN",
+                    "EDR_NETWORK_CONNECTIONS",
+                    "EDR_MITRE",
+                    "EDR_FIM",
+                    "EDR_DOCKER_MONITORING",
+                    "EDR_DNS_REQUESTS",
+                    "EDR_DLL_SIDE_LOADING",
+                    "EDR_COMPLIANCE",
+                    "EDR_AV_MALWARE_IOC",
+                    "EDR_AGENT_INVENTORY",
+                    "EDR_AD_INVENOTRY",
+                ],
+                "organizationId": 1,
+                "folderId": 1,
+                "datasourceUid": "wazuh",
+            },
+        ],
     )
     grafana_org_id: int = Field(
         ...,

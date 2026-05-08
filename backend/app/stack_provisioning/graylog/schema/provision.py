@@ -69,10 +69,12 @@ class ContentPack(BaseModel):
 class AvailableContentPacksResponse(BaseModel):
     available_content_packs: List[ContentPack] = Field(
         ...,
-        examples=[{
-            "name": AvailableContentPacks.SOCFORTRESS_WAZUH_CONTENT_PACK.name,
-            "description": AvailableContentPacks.SOCFORTRESS_WAZUH_CONTENT_PACK.value,
-        }],
+        examples=[
+            {
+                "name": AvailableContentPacks.SOCFORTRESS_WAZUH_CONTENT_PACK.name,
+                "description": AvailableContentPacks.SOCFORTRESS_WAZUH_CONTENT_PACK.value,
+            },
+        ],
         description="The available content packs for provisioning in Graylog",
     )
     success: bool = Field(

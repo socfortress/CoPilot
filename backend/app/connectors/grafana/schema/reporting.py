@@ -2,8 +2,9 @@ from typing import List
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import field_validator, BaseModel
+from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 
 
 class GrafanaOrganizations(BaseModel):
@@ -223,50 +224,52 @@ class GenerateReportRequest(BaseModel):
     rows: List[RequestRow] = Field(
         ...,
         description="Rows in the report",
-        examples=[[
-            {
-                "id": 1710437961108,
-                "panels": [
-                    {
-                        "panel_id": 5,
-                        "org_id": 1,
-                        "dashboard_title": "HUNTRESS - _SUMMARY",
-                        "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342",
-                        "panel_width": 500,
-                        "panel_height": 300,
-                    },
-                    {
-                        "panel_id": 3,
-                        "org_id": 1,
-                        "dashboard_title": "HUNTRESS - _SUMMARY",
-                        "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342",
-                        "panel_width": 500,
-                        "panel_height": 300,
-                    },
-                ],
-            },
-            {
-                "id": 1710437961109,
-                "panels": [
-                    {
-                        "panel_id": 5,
-                        "org_id": 1,
-                        "dashboard_title": "HUNTRESS - _SUMMARY",
-                        "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342",
-                        "panel_width": 500,
-                        "panel_height": 300,
-                    },
-                    {
-                        "panel_id": 3,
-                        "org_id": 1,
-                        "dashboard_title": "HUNTRESS - _SUMMARY",
-                        "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342",
-                        "panel_width": 500,
-                        "panel_height": 300,
-                    },
-                ],
-            },
-        ]],
+        examples=[
+            [
+                {
+                    "id": 1710437961108,
+                    "panels": [
+                        {
+                            "panel_id": 5,
+                            "org_id": 1,
+                            "dashboard_title": "HUNTRESS - _SUMMARY",
+                            "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342",
+                            "panel_width": 500,
+                            "panel_height": 300,
+                        },
+                        {
+                            "panel_id": 3,
+                            "org_id": 1,
+                            "dashboard_title": "HUNTRESS - _SUMMARY",
+                            "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342",
+                            "panel_width": 500,
+                            "panel_height": 300,
+                        },
+                    ],
+                },
+                {
+                    "id": 1710437961109,
+                    "panels": [
+                        {
+                            "panel_id": 5,
+                            "org_id": 1,
+                            "dashboard_title": "HUNTRESS - _SUMMARY",
+                            "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342",
+                            "panel_width": 500,
+                            "panel_height": 300,
+                        },
+                        {
+                            "panel_id": 3,
+                            "org_id": 1,
+                            "dashboard_title": "HUNTRESS - _SUMMARY",
+                            "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342",
+                            "panel_width": 500,
+                            "panel_height": 300,
+                        },
+                    ],
+                },
+            ],
+        ],
     )
 
 
