@@ -42,7 +42,7 @@ async def list_wazuh_groups(
     hash: Optional[str] = Query(
         None,
         description="Select algorithm to generate the returned checksums",
-        regex="^(md5|sha1|sha224|sha256|sha384|sha512|blake2b|blake2s|sha3_224|sha3_256|sha3_384|sha3_512)$",
+        pattern="^(md5|sha1|sha224|sha256|sha384|sha512|blake2b|blake2s|sha3_224|sha3_256|sha3_384|sha3_512)$",
     ),
     q: Optional[str] = Query(None, description="Query to filter results by"),
     select: Optional[List[str]] = Query(None, description="Select which fields to return"),
@@ -92,7 +92,7 @@ async def get_wazuh_group_files_endpoint(
     hash: Optional[str] = Query(
         None,
         description="Select algorithm to generate the returned checksums",
-        regex="^(md5|sha1|sha224|sha256|sha384|sha512|blake2b|blake2s|sha3_224|sha3_256|sha3_384|sha3_512)$",
+        pattern="^(md5|sha1|sha224|sha256|sha384|sha512|blake2b|blake2s|sha3_224|sha3_256|sha3_384|sha3_512)$",
     ),
     q: Optional[str] = Query(None, description="Query to filter results by"),
     select: Optional[List[str]] = Query(None, description="Select which fields to return"),
@@ -140,7 +140,7 @@ async def get_wazuh_group_file_endpoint(
     filename: str = Path(..., description="Filename (e.g., agent.conf)"),
     pretty: Optional[bool] = Query(False, description="Show results in human-readable format"),
     wait_for_complete: Optional[bool] = Query(False, description="Disable timeout response"),
-    type: Optional[List[str]] = Query(None, description="Type of file", regex="^(conf|rootkit_files|rootkit_trojans|rcl)$"),
+    type: Optional[List[str]] = Query(None, description="Type of file", pattern="^(conf|rootkit_files|rootkit_trojans|rcl)$"),
     raw: Optional[bool] = Query(True, description="Format response in plain text"),
 ) -> WazuhGroupFileResponse:
     """

@@ -45,7 +45,7 @@ async def get_patch_tuesday_data(
     cycle: Optional[str] = Query(
         None,
         description="Cycle in YYYY-Mmm format (e.g., 2026-Jan). Defaults to current month.",
-        regex=r"^\d{4}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$",
+        pattern=r"^\d{4}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$",
     ),
     include_epss: bool = Query(True, description="Include EPSS scores in the response"),
     include_kev: bool = Query(True, description="Include CISA KEV data in the response"),
@@ -87,7 +87,7 @@ async def get_patch_tuesday_summary_endpoint(
     cycle: Optional[str] = Query(
         None,
         description="Cycle in YYYY-Mmm format (e.g., 2026-Jan). Defaults to current month.",
-        regex=r"^\d{4}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$",
+        pattern=r"^\d{4}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$",
     ),
     include_epss: bool = Query(True, description="Include EPSS scores in the response"),
     include_kev: bool = Query(True, description="Include CISA KEV data in the response"),
@@ -138,7 +138,7 @@ async def search_cves(
     cycle: Optional[str] = Query(
         None,
         description="Cycle in YYYY-Mmm format to limit search to. Defaults to current month.",
-        regex=r"^\d{4}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$",
+        pattern=r"^\d{4}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$",
     ),
 ) -> PatchTuesdayResponse:
     """
@@ -162,7 +162,7 @@ async def get_by_priority(
     cycle: Optional[str] = Query(
         None,
         description="Cycle in YYYY-Mmm format. Defaults to current month.",
-        regex=r"^\d{4}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$",
+        pattern=r"^\d{4}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$",
     ),
     include_epss: bool = Query(True, description="Include EPSS scores"),
     include_kev: bool = Query(True, description="Include CISA KEV data"),
@@ -245,7 +245,7 @@ async def get_kev_items(
     cycle: Optional[str] = Query(
         None,
         description="Cycle in YYYY-Mmm format. Defaults to current month.",
-        regex=r"^\d{4}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$",
+        pattern=r"^\d{4}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$",
     ),
 ) -> PatchTuesdayResponse:
     """
