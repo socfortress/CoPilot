@@ -25,13 +25,13 @@ class AvailableNetworkConnectors(str, Enum):
 class DecommissionNetworkContentPackRequest(BaseModel):
     network_connector: AvailableNetworkConnectors = Field(
         ...,
-        example=AvailableNetworkConnectors.FORTINET.name,
+        examples=[AvailableNetworkConnectors.FORTINET.name],
         description="The name of the content pack to provision in Graylog",
     )
     customer_code: str = Field(
         ...,
         description="The customer code for the content pack to provision in Graylog",
-        example="00001",
+        examples=["00001"],
     )
 
     def __init__(self, **data: Any):
@@ -52,11 +52,11 @@ class DecommissionNetworkContentPackRequest(BaseModel):
 class DecommissionNetworkContentPackResponse(BaseModel):
     message: str = Field(
         ...,
-        example="FORTINET Content Pack decommissioned successfully",
+        examples=["FORTINET Content Pack decommissioned successfully"],
         description="Message from the request to decommission a content pack",
     )
     success: bool = Field(
         ...,
-        example=True,
+        examples=[True],
         description="Success of the request to decommission a content pack",
     )

@@ -2,9 +2,8 @@ from datetime import datetime
 from datetime import timedelta
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import model_validator, BaseModel
 from pydantic import Field
-from pydantic import root_validator
 
 
 class InvokeSapSiemRequest(BaseModel):
@@ -31,7 +30,8 @@ class InvokeSapSiemRequest(BaseModel):
     lower_bound: str = None
     upper_bound: str = None
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def set_time_bounds(cls, values):
         time_range = values.get("time_range")
         if time_range:
@@ -127,7 +127,8 @@ class CollectSapSiemRequest(BaseModel):
         description="The customer details.",
     )
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def set_time_bounds(cls, values):
         time_range = values.get("time_range")
         if time_range:

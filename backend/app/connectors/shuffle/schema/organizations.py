@@ -103,6 +103,8 @@ class DetailedOrganization(BaseModel):
     region_url: str = ""
     tutorials: List[Any] = []
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("manager_orgs", pre=True, always=True)
     def validate_manager_orgs(cls, v):
         """

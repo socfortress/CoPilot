@@ -1,8 +1,7 @@
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -112,9 +111,7 @@ class WazuhSocketPayload(BaseModel):
         description="The integration name.",
         examples="sublime",
     )
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
     def to_dict(self):
         return self.dict(exclude_none=True)
@@ -192,9 +189,7 @@ class ShufflePayload(BaseModel):
         description="The hostname of the affected asset.",
         examples="test-hostname",
     )
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
     def to_dict(self):
         return self.dict(exclude_none=True)
@@ -212,9 +207,7 @@ class EventShipperPayload(BaseModel):
         description="The customer code.",
         examples="socfortress",
     )
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
     def to_dict(self):
         return self.dict(exclude_none=True)
@@ -269,9 +262,7 @@ class PraecoAlertConfig(BaseModel):
     timestamp_type: str
     type: str
     use_strftime_index: bool
-
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class PraecoProvisionAlertResponse(BaseModel):

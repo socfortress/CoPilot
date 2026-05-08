@@ -70,7 +70,7 @@ class EventDefinition(BaseModel):
     id: str
     key_spec: List[str]
     notification_settings: NotificationSettings
-    notifications: Optional[List[Dict[str, Union[str, None]]]]
+    notifications: Optional[List[Dict[str, Union[str, None]]]] = None
     priority: int
     storage: List[Storage]
     title: str
@@ -120,7 +120,7 @@ class Event(BaseModel):
     fields: Dict[str, str]
     group_by_fields: Dict[str, str]
     id: str
-    key: Optional[str]
+    key: Optional[str] = None
     key_tuple: List[str]
     message: str
     origin_context: str
@@ -128,8 +128,8 @@ class Event(BaseModel):
     source: str
     source_streams: List[str]
     streams: List[str]
-    timerange_end: Optional[str]
-    timerange_start: Optional[str]
+    timerange_end: Optional[str] = None
+    timerange_start: Optional[str] = None
     timestamp: str
     timestamp_processing: str
 

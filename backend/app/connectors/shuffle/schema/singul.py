@@ -3,4 +3,4 @@ from pydantic import Field
 
 
 class SingulRequest(BaseModel):
-    app: str = Field(..., description="The name of the application", example="outlook_office365")
+    app: str = Field(..., description="The name of the application", examples=["outlook_office365"])

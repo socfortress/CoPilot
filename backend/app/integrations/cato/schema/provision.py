@@ -3,9 +3,8 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import model_validator, ConfigDict, BaseModel
 from pydantic import Field
-from pydantic import root_validator
 
 
 class ProvisionCatoRequest(BaseModel):
@@ -26,7 +25,8 @@ class ProvisionCatoRequest(BaseModel):
     )
 
     # ensure the `integration_name` is always set to "Mimecast"
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def set_integration_name(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         values["integration_name"] = "Cato"
         return values
@@ -59,29 +59,27 @@ class CatoEventStream(BaseModel):
         None,
         description="Associated content pack, if any",
     )
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "title": "Cato SIEM EVENTS - Example Company",
-                "description": "Cato SIEM EVENTS - Example Company",
-                "index_set_id": "12345",
-                "rules": [
-                    {
-                        "field": "customer_code",
-                        "type": 1,
-                        "inverted": False,
-                        "value": "ExampleCode",
-                    },
-                    {
-                        "field": "integration",
-                        "type": 1,
-                        "inverted": False,
-                        "value": "cato",
-                    },
-                ],
-                "matching_type": "AND",
-                "remove_matches_from_default_stream": True,
-                "content_pack": None,
-            },
-        }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "title": "Cato SIEM EVENTS - Example Company",
+            "description": "Cato SIEM EVENTS - Example Company",
+            "index_set_id": "12345",
+            "rules": [
+                {
+                    "field": "customer_code",
+                    "type": 1,
+                    "inverted": False,
+                    "value": "ExampleCode",
+                },
+                {
+                    "field": "integration",
+                    "type": 1,
+                    "inverted": False,
+                    "value": "cato",
+                },
+            ],
+            "matching_type": "AND",
+            "remove_matches_from_default_stream": True,
+            "content_pack": None,
+        },
+    })

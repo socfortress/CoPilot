@@ -155,6 +155,8 @@ class DashboardProvisionRequest(BaseModel):
         description="URL of the Grafana instance for the links within the dashboards.",
     )
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("dashboards", each_item=True)
     def check_dashboard_exists(cls, e):
         valid_dashboards = {

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -16,9 +16,7 @@ class VelociraptorAgent(BaseModel):
     def client_last_seen_as_datetime(self):
         dt = datetime.strptime(self.client_last_seen, "%Y-%m-%dT%H:%M:%S%z")
         return dt.replace(tzinfo=None)
-
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class VelociraptorAgentInformation(BaseModel):

@@ -2,8 +2,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -12,17 +11,13 @@ class AnalysisResult(BaseModel):
     engine_name: str
     category: str
     result: Optional[str] = Field(default=None)
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class TotalVotes(BaseModel):
     harmless: int
     malicious: int
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class Attributes(BaseModel):
@@ -44,16 +39,12 @@ class Attributes(BaseModel):
     last_analysis_stats: Optional[Dict[str, int]] = Field(default=None)
     last_https_certificate_date: Optional[int] = Field(default=None)
     network: Optional[str] = Field(default=None)
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class Links(BaseModel):
     self: str
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class Data(BaseModel):
@@ -61,16 +52,12 @@ class Data(BaseModel):
     type: str
     links: Links
     attributes: Attributes
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class VirusTotalResponse(BaseModel):
     data: Data
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class VirusTotalRouteResponse(BaseModel):
@@ -82,26 +69,20 @@ class VirusTotalRouteResponse(BaseModel):
 # New schemas for file submission
 class FileSubmissionRequest(BaseModel):
     password: Optional[str] = Field(default=None, description="Password for encrypted files")
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class FileSubmissionData(BaseModel):
     type: str
     id: str
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class FileSubmissionResponse(BaseModel):
     data: FileSubmissionData
     success: bool
     message: str
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class FileAnalysisStats(BaseModel):
@@ -113,36 +94,28 @@ class FileAnalysisStats(BaseModel):
     confirmed_timeout: int = 0
     failure: int = 0
     type_unsupported: int = 0
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class FileAnalysisAttributes(BaseModel):
     date: int
     status: str
     stats: FileAnalysisStats
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class FileAnalysisData(BaseModel):
     type: str
     id: str
     attributes: FileAnalysisAttributes
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class FileAnalysisResponse(BaseModel):
     data: FileAnalysisData
     success: bool
     message: str
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class FileReportAttributes(BaseModel):
@@ -161,24 +134,18 @@ class FileReportAttributes(BaseModel):
     reputation: Optional[int] = None
     times_submitted: Optional[int] = None
     total_votes: Optional[TotalVotes] = None
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class FileReportData(BaseModel):
     type: str
     id: str
     attributes: FileReportAttributes
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class FileReportResponse(BaseModel):
     data: FileReportData
     success: bool
     message: str
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")

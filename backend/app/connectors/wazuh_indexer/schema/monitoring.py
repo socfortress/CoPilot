@@ -27,7 +27,7 @@ class ClusterHealth(BaseModel):
 
 
 class ClusterHealthResponse(BaseModel):
-    cluster_health: Optional[ClusterHealth]
+    cluster_health: Optional[ClusterHealth] = None
     message: str
     success: bool
 
@@ -41,7 +41,7 @@ class NodeAllocation(BaseModel):
 
 
 class NodeAllocationResponse(BaseModel):
-    node_allocation: Optional[List[NodeAllocation]]
+    node_allocation: Optional[List[NodeAllocation]] = None
     message: str
     success: bool
 
@@ -61,7 +61,7 @@ class IndicesStats(BaseModel):
 
 
 class IndicesStatsResponse(BaseModel):
-    indices_stats: Optional[List[IndicesStats]]
+    indices_stats: Optional[List[IndicesStats]] = None
     message: str
     success: bool
 
@@ -75,7 +75,7 @@ class Shards(BaseModel):
 
 
 class ShardsResponse(BaseModel):
-    shards: Optional[List[Shards]]
+    shards: Optional[List[Shards]] = None
     message: str
     success: bool
 
@@ -89,6 +89,6 @@ class CustomerIndicesSize(BaseModel):
 
 
 class CustomerIndicesSizeResponse(BaseModel):
-    customer_sizes: Optional[List[CustomerIndicesSize]]
+    customer_sizes: Optional[List[CustomerIndicesSize]] = None
     message: str
     success: bool

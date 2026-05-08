@@ -1,7 +1,7 @@
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -219,9 +219,7 @@ class CustomerNetworkConnectorsMetaSchema(BaseModel):
     graylog_stream_id: str
     grafana_org_id: str
     grafana_dashboard_folder_id: str
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CustomerNetworkConnectorsMetaResponse(BaseModel):

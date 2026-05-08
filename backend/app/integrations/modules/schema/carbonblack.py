@@ -1,9 +1,8 @@
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class InvokeCarbonBlackRequest(BaseModel):
@@ -20,13 +19,13 @@ class InvokeCarbonBlackRequest(BaseModel):
 
 
 class CarbonBlackAuthKeys(BaseModel):
-    carbonblack_api_url: str = Field(..., example="https://127.0.0.1")
-    carbonblack_api_key: str = Field(..., example="1234567890")
-    carbonblack_api_id: str = Field(..., example="1234567890")
-    carbonblack_org_key: str = Field(..., example="1234567890")
+    carbonblack_api_url: str = Field(..., examples=["https://127.0.0.1"])
+    carbonblack_api_key: str = Field(..., examples=["1234567890"])
+    carbonblack_api_id: str = Field(..., examples=["1234567890"])
+    carbonblack_org_key: str = Field(..., examples=["1234567890"])
     time_range: Optional[str] = Field(
         "-15m",
-        example="-15m",
+        examples=["-15m"],
         description="The time range to collect events.",
     )
 
@@ -45,20 +44,21 @@ class InvokeCarbonBlackResponse(BaseModel):
 
 
 class CollectCarbonBlack(BaseModel):
-    integration: str = Field(..., example="carbonblack")
-    customer_code: str = Field(..., example="socfortress")
-    graylog_host: str = Field(..., example="127.0.0.1")
-    graylog_port: str = Field(..., example=12201)
-    carbonblack_api_url: str = Field(..., example="https://127.0.0.1")
-    carbonblack_api_key: str = Field(..., example="1234567890")
-    carbonblack_api_id: str = Field(..., example="1234567890")
-    carbonblack_org_key: str = Field(..., example="1234567890")
+    integration: str = Field(..., examples=["carbonblack"])
+    customer_code: str = Field(..., examples=["socfortress"])
+    graylog_host: str = Field(..., examples=["127.0.0.1"])
+    graylog_port: str = Field(..., examples=[12201])
+    carbonblack_api_url: str = Field(..., examples=["https://127.0.0.1"])
+    carbonblack_api_key: str = Field(..., examples=["1234567890"])
+    carbonblack_api_id: str = Field(..., examples=["1234567890"])
+    carbonblack_org_key: str = Field(..., examples=["1234567890"])
     time_range: Optional[str] = Field(
         "-15m",
-        example="-15m",
+        examples=["-15m"],
     )
 
-    @validator("integration")
+    @field_validator("integration")
+    @classmethod
     def check_integration(cls, v):
         if v != "carbonblack":
             raise HTTPException(

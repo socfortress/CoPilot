@@ -4,28 +4,25 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import field_validator, ConfigDict, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class AgentModel(BaseModel):
-    id: Optional[int]
-    os: Optional[str]
-    label: Optional[str]
-    wazuh_last_seen: Optional[datetime]
-    velociraptor_last_seen: Optional[datetime]
-    velociraptor_agent_version: Optional[str]
-    ip_address: Optional[str]
-    agent_id: Optional[str]
-    hostname: Optional[str]
-    critical_asset: Optional[bool]
-    velociraptor_id: Optional[str]
-    wazuh_agent_version: Optional[str]
-    customer_code: Optional[str]
-
-    class Config:
-        orm_mode = True
+    id: Optional[int] = None
+    os: Optional[str] = None
+    label: Optional[str] = None
+    wazuh_last_seen: Optional[datetime] = None
+    velociraptor_last_seen: Optional[datetime] = None
+    velociraptor_agent_version: Optional[str] = None
+    ip_address: Optional[str] = None
+    agent_id: Optional[str] = None
+    hostname: Optional[str] = None
+    critical_asset: Optional[bool] = None
+    velociraptor_id: Optional[str] = None
+    wazuh_agent_version: Optional[str] = None
+    customer_code: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ExtendedAgentModel(AgentModel):
@@ -44,12 +41,12 @@ class ExtendedAgentModel(AgentModel):
 
 
 class AgentHealthCheckResponse(BaseModel):
-    healthy_wazuh_agents: Optional[List[ExtendedAgentModel]]
-    unhealthy_wazuh_agents: Optional[List[ExtendedAgentModel]]
-    healthy_velociraptor_agents: Optional[List[ExtendedAgentModel]]
-    unhealthy_velociraptor_agents: Optional[List[ExtendedAgentModel]]
-    healthy_recent_logs_collected: Optional[List[ExtendedAgentModel]]
-    unhealthy_recent_logs_collected: Optional[List[ExtendedAgentModel]]
+    healthy_wazuh_agents: Optional[List[ExtendedAgentModel]] = None
+    unhealthy_wazuh_agents: Optional[List[ExtendedAgentModel]] = None
+    healthy_velociraptor_agents: Optional[List[ExtendedAgentModel]] = None
+    unhealthy_velociraptor_agents: Optional[List[ExtendedAgentModel]] = None
+    healthy_recent_logs_collected: Optional[List[ExtendedAgentModel]] = None
+    unhealthy_recent_logs_collected: Optional[List[ExtendedAgentModel]] = None
     message: str
     success: bool
 
@@ -91,7 +88,8 @@ class LogsSearchBody(BaseModel):
         description="The timestamp field to search logs in.",
     )
 
-    @validator("timerange")
+    @field_validator("timerange")
+    @classmethod
     def validate_timerange(cls, value):
         if value[-1] not in ("h", "d", "w", "m"):
             raise ValueError(

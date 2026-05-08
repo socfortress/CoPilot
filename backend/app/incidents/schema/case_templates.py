@@ -14,9 +14,8 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import field_validator, ConfigDict, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 # ---------------------------------------------------------------------------
 # Enums
@@ -82,9 +81,7 @@ class CaseTemplateTaskResponse(BaseModel):
     guidelines: Optional[str] = None
     mandatory: bool
     order_index: int
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ---------------------------------------------------------------------------
@@ -139,9 +136,7 @@ class CaseTemplateResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     tasks: List[CaseTemplateTaskResponse] = Field(default_factory=list)
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CaseTemplateListResponse(BaseModel):
@@ -189,7 +184,8 @@ class CaseTaskUpdate(BaseModel):
     status: Optional[CaseTaskStatus] = None
     evidence_comment: Optional[str] = None
 
-    @validator("status")
+    @field_validator("status")
+    @classmethod
     def _status_must_be_known(cls, v: Optional[CaseTaskStatus]) -> Optional[CaseTaskStatus]:
         # Pydantic already enforces enum membership; this guard is for clarity
         # and to catch any future string-coercion shenanigans.
@@ -214,9 +210,7 @@ class CaseTaskResponse(BaseModel):
     created_by: str
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CaseTaskListResponse(BaseModel):
@@ -264,9 +258,7 @@ class CaseEventResponse(BaseModel):
     actor: str
     timestamp: datetime
     payload: Optional[Dict[str, Any]] = None
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CaseTimelineResponse(BaseModel):

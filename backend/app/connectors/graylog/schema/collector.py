@@ -62,52 +62,52 @@ class GraylogIndicesResponse(BaseModel):
 class ConfiguredInputAttributes(BaseModel):
     recv_buffer_size: int
     tcp_keepalive: Optional[bool] = Field(None, description="TCP keepalive")
-    use_null_delimiter: Optional[bool]
+    use_null_delimiter: Optional[bool] = None
     number_worker_threads: int
-    tls_client_auth_cert_file: Optional[str]
-    force_rdns: Optional[bool]
+    tls_client_auth_cert_file: Optional[str] = None
+    force_rdns: Optional[bool] = None
     bind_address: str
-    tls_cert_file: Optional[str]
-    store_full_message: Optional[bool]
-    expand_structured_data: Optional[bool]
+    tls_cert_file: Optional[str] = None
+    store_full_message: Optional[bool] = None
+    expand_structured_data: Optional[bool] = None
     port: int
-    tls_key_file: Optional[str]
+    tls_key_file: Optional[str] = None
     tls_enable: Optional[bool] = Field(None, description="TLS is enabled")
-    tls_key_password: Optional[str]
-    max_message_size: Optional[int]
+    tls_key_password: Optional[str] = None
+    max_message_size: Optional[int] = None
     tls_client_auth: Optional[str] = Field(None, description="TLS client authentication")
-    override_source: Optional[str]
-    charset_name: Optional[str]
-    allow_override_date: Optional[bool]
+    override_source: Optional[str] = None
+    charset_name: Optional[str] = None
+    allow_override_date: Optional[bool] = None
 
 
 class ConfiguredInput(BaseModel):
     title: str
     global_field: bool = Field(alias="global")
     name: str
-    content_pack: Optional[str]
+    content_pack: Optional[str] = None
     created_at: str
     type: str
     creator_user_id: str
     attributes: ConfiguredInputAttributes
     static_fields: Dict[str, str]
-    node: Optional[str]
+    node: Optional[str] = None
     id: str
 
 
 class MessageInputAttributes(BaseModel):
     recv_buffer_size: int
     tcp_keepalive: Optional[bool] = Field(None, description="TCP keepalive")
-    use_null_delimiter: Optional[bool]
+    use_null_delimiter: Optional[bool] = None
     number_worker_threads: int
-    tls_client_auth_cert_file: Optional[str]
+    tls_client_auth_cert_file: Optional[str] = None
     bind_address: str
-    tls_cert_file: Optional[str]
+    tls_cert_file: Optional[str] = None
     port: int
-    tls_key_file: Optional[str]
+    tls_key_file: Optional[str] = None
     tls_enable: Optional[bool] = Field(None, description="TLS is enabled")
-    tls_key_password: Optional[str]
-    max_message_size: Optional[int]
+    tls_key_password: Optional[str] = None
+    max_message_size: Optional[int] = None
     tls_client_auth: Optional[str] = Field(None, description="TLS client authentication")
 
 
@@ -115,13 +115,13 @@ class MessageInput(BaseModel):
     title: str
     global_field: bool = Field(alias="global")
     name: str
-    content_pack: Optional[str]
+    content_pack: Optional[str] = None
     created_at: str
     type: str
     creator_user_id: str
     attributes: MessageInputAttributes
     static_fields: Dict[str, str]
-    node: Optional[str]
+    node: Optional[str] = None
     id: str
 
 
@@ -129,7 +129,7 @@ class RunningInput(BaseModel):
     id: str
     state: str
     started_at: str
-    detailed_message: Optional[str]
+    detailed_message: Optional[str] = None
     message_input: MessageInput
 
 

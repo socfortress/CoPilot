@@ -4,9 +4,8 @@ from typing import List
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class SocfortressThreatIntelRequest(BaseModel):
@@ -43,7 +42,8 @@ class IoCMapping(BaseModel):
         description="URL to the VirusTotal report",
     )
 
-    @validator("score", pre=True)
+    @field_validator("score", mode="before")
+    @classmethod
     def convert_score_to_int(cls, v):
         """Convert score from string to integer"""
         if v is None:
@@ -78,7 +78,8 @@ class SocfortressProcessNameAnalysisRequest(BaseModel):
         description="The process name to evaluate.",
     )
 
-    @validator("process_name", pre=True)
+    @field_validator("process_name", mode="before")
+    @classmethod
     def extract_filename(cls, v):
         match = re.search(r"[^\\]+$", v)
         return match.group() if match else v
@@ -91,10 +92,11 @@ class SyslogType(str, Enum):
 
 
 class SocfortressAiAlertRequest(BaseModel):
-    integration: str = Field(..., example="SOCFORTRESS AI")
-    alert_payload: dict = Field(..., example={"alert": "test"})
+    integration: str = Field(..., examples=["SOCFORTRESS AI"])
+    alert_payload: dict = Field(..., examples=[{"alert": "test"}])
 
-    @validator("integration")
+    @field_validator("integration")
+    @classmethod
     def check_integration(cls, v):
         if v != "SOCFORTRESS AI":
             raise HTTPException(
@@ -103,7 +105,8 @@ class SocfortressAiAlertRequest(BaseModel):
             )
         return v
 
-    @validator("alert_payload")
+    @field_validator("alert_payload")
+    @classmethod
     def check_syslog_type(cls, v):
         if v.get("syslog_type") not in SyslogType.__members__.values():
             raise HTTPException(
@@ -229,15 +232,16 @@ class OS(str, Enum):
 
 
 class VelociraptorArtifactRecommendationRequest(BaseModel):
-    integration: str = Field(..., example="SOCFORTRESS AI")
+    integration: str = Field(..., examples=["SOCFORTRESS AI"])
     artifacts: Optional[List[Artifacts]] = Field(
         None,
         description="List of artifacts to recommend.",
     )
     os: OS = Field(..., description="The operating system of the endpoint.")
-    alert_payload: dict = Field(..., example={"alert": "test"})
+    alert_payload: dict = Field(..., examples=[{"alert": "test"}])
 
-    @validator("integration")
+    @field_validator("integration")
+    @classmethod
     def check_integration(cls, v):
         if v != "SOCFORTRESS AI":
             raise HTTPException(
@@ -246,7 +250,8 @@ class VelociraptorArtifactRecommendationRequest(BaseModel):
             )
         return v
 
-    @validator("alert_payload")
+    @field_validator("alert_payload")
+    @classmethod
     def check_syslog_type(cls, v):
         if v.get("syslog_type") != "wazuh":
             raise HTTPException(

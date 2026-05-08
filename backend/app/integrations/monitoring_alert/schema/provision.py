@@ -4,9 +4,8 @@ from typing import List
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class AvailableMonitoringAlerts(str, Enum):
@@ -293,7 +292,8 @@ class ProvisionMonitoringAlertRequest(BaseModel):
         description="The name of the alert to provision.",
     )
 
-    @validator("alert_name")
+    @field_validator("alert_name")
+    @classmethod
     def validate_alert_name(cls, v):
         v = v.replace(" ", "_").upper()
         if v not in AvailableMonitoringAlerts.__members__:
@@ -303,7 +303,8 @@ class ProvisionMonitoringAlertRequest(BaseModel):
             )
         return v
 
-    @validator("search_within_last", "execute_every")
+    @field_validator("search_within_last", "execute_every")
+    @classmethod
     def validate_non_zero(cls, v):
         if v == 0:
             raise HTTPException(
@@ -429,7 +430,8 @@ class CustomFields(BaseModel):
     name: str
     value: str
 
-    @validator("name")
+    @field_validator("name")
+    @classmethod
     def replace_spaces_with_underscores(cls, v):
         return v.replace(" ", "_")
 
@@ -438,7 +440,7 @@ class CustomMonitoringAlertProvisionModel(BaseModel):
     alert_name: str = Field(
         ...,
         description="The name of the alert to provision.",
-        example="WAZUH_SYSLOG_LEVEL_ALERT",
+        examples=["WAZUH_SYSLOG_LEVEL_ALERT"],
     )
     alert_description: str = Field(
         ...,
@@ -449,42 +451,42 @@ class CustomMonitoringAlertProvisionModel(BaseModel):
             "have a pipeline rule that sets the SYSLOG_LEVEL field to ALERT when "
             "the Wazuh rule level is greater than 11."
         ),
-        example=(
+        examples=[(
             "This alert monitors the SYSLOG_LEVEL field in the Wazuh logs. When "
             "the level is ALERT, it triggers an alert that is created within "
             "DFIR-IRIS. Ensure that you have a pipeline rule that sets the "
             "SYSLOG_LEVEL field to ALERT when the Wazuh rule level is greater than 11."
-        ),
+        )],
     )
     alert_priority: AlertPriority = Field(
         ...,
         description="The priority of the alert to provision.",
-        example=2,
+        examples=[2],
     )
     search_query: str = Field(
         ...,
         description="The search query to use for the alert.",
-        example="syslog_type:wazuh AND syslog_level:alert",
+        examples=["syslog_type:wazuh AND syslog_level:alert"],
     )
     streams: Optional[List[str]] = Field(
         [],
         description="The streams to use for the alert.",
-        example=["5f3e4c3b3f37b70001f3d7b3"],
+        examples=[["5f3e4c3b3f37b70001f3d7b3"]],
     )
     custom_fields: Optional[List[CustomFields]] = Field(
         None,
         description="The custom fields to use for the alert.",
-        example=[{"name": "source", "value": "Wazuh"}],
+        examples=[[{"name": "source", "value": "Wazuh"}]],
     )
     search_within_ms: int = Field(
         ...,
         description="The time in milliseconds to search within for the alert.",
-        example=300000,
+        examples=[300000],
     )
     execute_every_ms: int = Field(
         ...,
         description="The time in milliseconds to execute the alert search.",
-        example=300000,
+        examples=[300000],
     )
 
     # ! I think I can remove the requirement for the CUSTOMER_CODE field.

@@ -39,11 +39,11 @@ async def create_database_if_not_exists(db_url: str, db_name: str):
     conn = engine.connect()
     try:
         # Check if database exists
-        conn.execute("commit")
+        conn.execute(text("commit"))
         exists = conn.execute(text(f"SHOW DATABASES LIKE '{db_name}';")).fetchone()
         if not exists:
             # Create database if it does not exist
-            conn.execute("commit")
+            conn.execute(text("commit"))
             conn.execute(text(f"CREATE DATABASE {db_name};"))
             logger.info(f"Database '{db_name}' created successfully.")
         else:
@@ -68,11 +68,11 @@ async def create_copilot_user_if_not_exists(db_url: str, db_user_name: str):
     conn = engine.connect()
     try:
         # Check if user exists
-        conn.execute("commit")
+        conn.execute(text("commit"))
         exists = conn.execute(text(f"SELECT * FROM mysql.user WHERE user = '{db_user_name}';")).fetchone()
         if not exists:
             # Create user if it does not exist
-            conn.execute("commit")
+            conn.execute(text("commit"))
             conn.execute(text(f"CREATE USER '{db_user_name}'@'%' IDENTIFIED BY '{db_password}';"))
             logger.info(f"User '{db_user_name}' created successfully with password '{db_password}'.")
             conn.execute(text(f"GRANT ALL PRIVILEGES ON {db_name}.* TO '{db_user_name}'@'%';"))

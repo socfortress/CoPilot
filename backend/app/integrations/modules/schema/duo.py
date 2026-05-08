@@ -1,7 +1,6 @@
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class InvokeDuoRequest(BaseModel):
@@ -49,17 +48,18 @@ class InvokeDuoResponse(BaseModel):
 
 
 class CollectDuo(BaseModel):
-    integration: str = Field(..., example="duo")
-    customer_code: str = Field(..., example="socfortress")
-    integration_key: str = Field(..., example="1234567890")
-    secret_key: str = Field(..., example="1234567890")
-    api_host: str = Field(..., example="api-1234567890.duosecurity.com")
-    api_endpoint: str = Field(..., example="/admin/v2/logs/authentication")
-    graylog_host: str = Field(..., example="127.0.0.1")
-    graylog_port: str = Field(..., example=12201)
-    range: str = Field(..., example="15m")  # New field for range
+    integration: str = Field(..., examples=["duo"])
+    customer_code: str = Field(..., examples=["socfortress"])
+    integration_key: str = Field(..., examples=["1234567890"])
+    secret_key: str = Field(..., examples=["1234567890"])
+    api_host: str = Field(..., examples=["api-1234567890.duosecurity.com"])
+    api_endpoint: str = Field(..., examples=["/admin/v2/logs/authentication"])
+    graylog_host: str = Field(..., examples=["127.0.0.1"])
+    graylog_port: str = Field(..., examples=[12201])
+    range: str = Field(..., examples=["15m"])  # New field for range
 
-    @validator("integration")
+    @field_validator("integration")
+    @classmethod
     def check_integration(cls, v):
         if v != "duo":
             raise HTTPException(
@@ -68,7 +68,8 @@ class CollectDuo(BaseModel):
             )
         return v
 
-    @validator("range")
+    @field_validator("range")
+    @classmethod
     def validate_range(cls, v):
         if not v.endswith(("m", "h", "d")):
             raise HTTPException(

@@ -6,7 +6,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
 from pydantic import validator
 
@@ -34,7 +34,8 @@ class ScriptParameter(BaseModel):
     enum: Optional[List[str]] = None
     arg_position: Optional[str] = None
 
-    @validator("type")
+    @field_validator("type")
+    @classmethod
     def validate_type(cls, v):
         allowed = {"string", "int", "float", "bool", "path", "enum", "list", "json", "integer", "boolean"}
         if v not in allowed:
@@ -57,6 +58,8 @@ class ActiveResponseItem(BaseModel):
     category: Optional[str] = None
     tags: Optional[List[str]] = None
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("icon", always=True)
     def set_icon_default(cls, v, values):
         if v is None and "technology" in values:

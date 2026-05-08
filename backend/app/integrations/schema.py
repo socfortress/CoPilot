@@ -1,7 +1,7 @@
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -227,9 +227,7 @@ class CustomerIntegrationsMetaSchema(BaseModel):
     grafana_org_id: str
     grafana_dashboard_folder_id: str
     grafana_datasource_uid: Optional[str] = None
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CustomerIntegrationsMetaResponse(BaseModel):

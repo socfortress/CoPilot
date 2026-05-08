@@ -4,7 +4,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 # ── Template browsing (read from disk) ───────────────────────────
@@ -75,9 +75,7 @@ class EnabledDashboardResponse(BaseModel):
     template_id: str
     display_name: str
     created_at: datetime
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EnabledDashboardsListResponse(BaseModel):

@@ -117,7 +117,7 @@ class RuleStatsResponse(BaseModel):
     by_severity: dict[str, int]
     by_mitre_tactic: dict[str, int]
     rules_with_graylog: int
-    last_refreshed: Optional[datetime]
+    last_refreshed: Optional[datetime] = None
     cache_ttl_minutes: int
     success: bool = True
     message: str = "Statistics fetched successfully"
@@ -152,17 +152,17 @@ class ExecuteSearchRequest(BaseModel):
     index_pattern: str = Field(
         ...,
         description="The index pattern to search (e.g., 'wazuh-alerts-*')",
-        example="wazuh-alerts-*",
+        examples=["wazuh-alerts-*"],
     )
     parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Parameter values to substitute in the query",
-        example={
+        examples=[{
             "AGENT_NAME": "my-server",
             "CUSTOMER_CODE": "lab",
             "START_TIME": "now-24h",
             "END_TIME": "now",
-        },
+        }],
     )
     size: Optional[int] = Field(
         default=None,
@@ -226,10 +226,10 @@ class ExecuteGraylogQueryRequest(BaseModel):
     parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Parameter values to substitute in the query",
-        example={
+        examples=[{
             "AGENT_NAME": "my-server",
             "CUSTOMER_CODE": "lab",
-        },
+        }],
     )
 
 

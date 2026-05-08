@@ -4,9 +4,8 @@ from enum import Enum
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 # --- Enums ---
 
@@ -107,7 +106,8 @@ class SubmitReportRequest(BaseModel):
     report_markdown: Optional[str] = Field(None, description="Full investigation report in Markdown")
     recommended_actions: Optional[str] = Field(None, description="Recommended response actions")
 
-    @validator("summary", "report_markdown", "recommended_actions", pre=True)
+    @field_validator("summary", "report_markdown", "recommended_actions", mode="before")
+    @classmethod
     def strip_control_characters(cls, v):
         """Strip control characters that break JSON serialization.
         Preserves newline (0x0a), carriage return (0x0d), and tab (0x09).
@@ -140,13 +140,13 @@ class JobResponse(BaseModel):
     alert_id: int
     customer_code: str
     status: str
-    alert_type: Optional[str]
+    alert_type: Optional[str] = None
     triggered_by: str
-    template_used: Optional[str]
+    template_used: Optional[str] = None
     created_at: datetime
-    started_at: Optional[datetime]
-    completed_at: Optional[datetime]
-    error_message: Optional[str]
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    error_message: Optional[str] = None
 
 
 class ReportResponse(BaseModel):
@@ -154,10 +154,10 @@ class ReportResponse(BaseModel):
     job_id: str
     alert_id: int
     customer_code: str
-    severity_assessment: Optional[str]
-    summary: Optional[str]
-    report_markdown: Optional[str]
-    recommended_actions: Optional[str]
+    severity_assessment: Optional[str] = None
+    summary: Optional[str] = None
+    report_markdown: Optional[str] = None
+    recommended_actions: Optional[str] = None
     created_at: datetime
 
 
@@ -169,8 +169,8 @@ class IocResponse(BaseModel):
     ioc_value: str
     ioc_type: str
     vt_verdict: str
-    vt_score: Optional[str]
-    details: Optional[str]
+    vt_score: Optional[str] = None
+    details: Optional[str] = None
     created_at: datetime
 
 
@@ -223,7 +223,7 @@ class AlertWithReportResponse(BaseModel):
     customer_code: str
     status: str
     source: str
-    assigned_to: Optional[str]
+    assigned_to: Optional[str] = None
     alert_creation_time: datetime
     report: ReportResponse
 
@@ -250,7 +250,8 @@ class IocVerdictCorrection(BaseModel):
     verdict_correct: bool = Field(..., description="True if the original VT verdict was correct")
     note: Optional[str] = Field(None, max_length=2000, description="Optional reviewer note")
 
-    @validator("note", pre=True)
+    @field_validator("note", mode="before")
+    @classmethod
     def strip_control_characters_note(cls, v):
         if v is None:
             return v
@@ -268,7 +269,8 @@ class SubmitReviewRequest(BaseModel):
     suggested_edits: Optional[str] = Field(None, description="Free-text suggested prompt / template edits")
     ioc_reviews: List[IocVerdictCorrection] = Field(default_factory=list, description="Per-IOC verdict corrections")
 
-    @validator("missing_steps", "suggested_edits", pre=True)
+    @field_validator("missing_steps", "suggested_edits", mode="before")
+    @classmethod
     def strip_control_characters(cls, v):
         if v is None:
             return v
@@ -280,7 +282,7 @@ class IocReviewResponse(BaseModel):
     review_id: int
     ioc_id: int
     verdict_correct: bool
-    note: Optional[str]
+    note: Optional[str] = None
     created_at: datetime
 
 
@@ -290,14 +292,14 @@ class ReviewResponse(BaseModel):
     alert_id: int
     customer_code: str
     reviewer_user_id: int
-    overall_verdict: Optional[str]
-    template_choice: Optional[str]
-    template_used: Optional[str]
-    rating_instructions: Optional[int]
-    rating_artifacts: Optional[int]
-    rating_severity: Optional[int]
-    missing_steps: Optional[str]
-    suggested_edits: Optional[str]
+    overall_verdict: Optional[str] = None
+    template_choice: Optional[str] = None
+    template_used: Optional[str] = None
+    rating_instructions: Optional[int] = None
+    rating_artifacts: Optional[int] = None
+    rating_severity: Optional[int] = None
+    missing_steps: Optional[str] = None
+    suggested_edits: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
     ioc_reviews: List[IocReviewResponse] = Field(default_factory=list)
@@ -331,7 +333,8 @@ class QueuePalaceLessonRequest(BaseModel):
     durability: Durability = Field(default=Durability.DURABLE, description="one_off = single-session hint, durable = persistent knowledge")
     review_id: Optional[int] = Field(None, description="Optional review.id this lesson was born from")
 
-    @validator("lesson_text", pre=True)
+    @field_validator("lesson_text", mode="before")
+    @classmethod
     def strip_control_characters_lesson(cls, v):
         if v is None:
             return v
@@ -340,13 +343,13 @@ class QueuePalaceLessonRequest(BaseModel):
 
 class PalaceLessonResponse(BaseModel):
     id: int
-    review_id: Optional[int]
+    review_id: Optional[int] = None
     customer_code: str
     lesson_type: str
     lesson_text: str
     durability: str
     status: str
-    ingested_at: Optional[datetime]
+    ingested_at: Optional[datetime] = None
     created_at: datetime
 
 
@@ -365,7 +368,8 @@ class ReplayRequest(BaseModel):
     customer_code: str = Field(..., max_length=64, description="Customer code for the alert")
     sender: str = Field(default="copilot-replay", max_length=64, description="Sender identifier for audit")
 
-    @validator("template_override")
+    @field_validator("template_override")
+    @classmethod
     def validate_template_filename(cls, v):
         if not re.match(r"^[a-zA-Z0-9._-]+\.txt$", v):
             raise ValueError("template_override must be a filename matching ^[a-zA-Z0-9._-]+\\.txt$")

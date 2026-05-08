@@ -4,7 +4,7 @@ from typing import List
 from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import root_validator
+from pydantic import model_validator
 
 
 class ScoutSuiteReportOptions(str, Enum):
@@ -17,44 +17,42 @@ class ScoutSuiteReportOptionsResponse(BaseModel):
     options: List[ScoutSuiteReportOptions] = Field(
         ...,
         description="The available report generation options",
-        example=["aws", "azure", "gcp"],
+        examples=[["aws", "azure", "gcp"]],
     )
     success: bool
     message: str
 
 
 class AWSScoutSuiteReportRequest(BaseModel):
-    report_type: str = Field(..., description="The type of report to generate", example="aws")
-    access_key_id: str = Field(..., description="The AWS access key ID", example="AKIAIOSFODNN7EXAMPLE")
-    secret_access_key: str = Field(..., description="The AWS secret access key", example="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
-    report_name: str = Field(..., description="The name of the report", example="aws-report")
+    report_type: str = Field(..., description="The type of report to generate", examples=["aws"])
+    access_key_id: str = Field(..., description="The AWS access key ID", examples=["AKIAIOSFODNN7EXAMPLE"])
+    secret_access_key: str = Field(..., description="The AWS secret access key", examples=["wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"])
+    report_name: str = Field(..., description="The name of the report", examples=["aws-report"])
 
-    @root_validator
-    def validate_report_type(cls, values):
-        report_type = values.get("report_type")
-        if report_type != ScoutSuiteReportOptions.aws:
+    @model_validator(mode="after")
+    def validate_report_type(self):
+        if self.report_type != ScoutSuiteReportOptions.aws:
             raise HTTPException(status_code=400, detail="Invalid report type.")
-        return values
+        return self
 
 
 class AzureScoutSuiteReportRequest(BaseModel):
-    report_type: str = Field(..., description="The type of report to generate", example="azure")
-    username: str = Field(..., description="The username used to auth to Azure", example="scoutsuite@socfortress.co")
-    password: str = Field(..., description="The password used to auth to Azure", example="EXAMPLE_PASSWORD")
-    tenant_id: str = Field(..., description="The tenant ID used to auth to Azure", example="EXAMPLE_TENANT_ID")
-    report_name: str = Field(..., description="The name of the report", example="aws-report")
+    report_type: str = Field(..., description="The type of report to generate", examples=["azure"])
+    username: str = Field(..., description="The username used to auth to Azure", examples=["scoutsuite@socfortress.co"])
+    password: str = Field(..., description="The password used to auth to Azure", examples=["EXAMPLE_PASSWORD"])
+    tenant_id: str = Field(..., description="The tenant ID used to auth to Azure", examples=["EXAMPLE_TENANT_ID"])
+    report_name: str = Field(..., description="The name of the report", examples=["aws-report"])
 
-    @root_validator
-    def validate_report_type(cls, values):
-        report_type = values.get("report_type")
-        if report_type != ScoutSuiteReportOptions.azure:
+    @model_validator(mode="after")
+    def validate_report_type(self):
+        if self.report_type != ScoutSuiteReportOptions.azure:
             raise HTTPException(status_code=400, detail="Invalid report type.")
-        return values
+        return self
 
 
 class GCPScoutSuiteReportRequest(BaseModel):
-    report_name: str = Field(..., description="The name of the report", example="gcp-report")
-    file_path: str = Field(..., description="The path to the GCP credentials file", example="gcp-credentials.json")
+    report_name: str = Field(..., description="The name of the report", examples=["gcp-report"])
+    file_path: str = Field(..., description="The path to the GCP credentials file", examples=["gcp-credentials.json"])
 
 
 class GCPScoutSuiteJSON(BaseModel):

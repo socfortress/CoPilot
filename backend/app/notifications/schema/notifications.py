@@ -15,7 +15,7 @@ from enum import Enum
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import field_validator, ConfigDict, BaseModel
 from pydantic import Field
 from pydantic import validator
 
@@ -98,7 +98,8 @@ class NotificationRouteBase(BaseModel):
     trigger: NotificationTrigger
     channel: NotificationChannel
 
-    @validator("trigger", pre=True)
+    @field_validator("trigger", mode="before")
+    @classmethod
     def _coerce_legacy_trigger(cls, v):
         """Coerce legacy `severity_critical_or_high` rows on read.
 
@@ -144,16 +145,21 @@ class NotificationRouteBase(BaseModel):
         description="Human-readable Shuffle app name cached for the UI list (e.g. 'Slack').",
     )
 
-    @validator("destination")
+    @field_validator("destination")
+    @classmethod
     def _strip_destination(cls, v: str) -> str:
         return v.strip()
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("shuffle_integration_id", always=True)
     def _shuffle_integration_required(cls, v, values):
         if values.get("channel") == NotificationChannel.SHUFFLE and not v:
             raise ValueError("shuffle_integration_id is required when channel='shuffle'")
         return v
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("shuffle_app_id", always=True)
     def _shuffle_app_required(cls, v, values):
         if values.get("channel") == NotificationChannel.SHUFFLE and not v:
@@ -191,9 +197,7 @@ class NotificationRouteRead(NotificationRouteBase):
     created_by: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ---------------------------------------------------------------------------
@@ -211,7 +215,8 @@ class ShuffleIntegrationBase(BaseModel):
     )
     enabled: bool = True
 
-    @validator("shuffle_org_id")
+    @field_validator("shuffle_org_id")
+    @classmethod
     def _strip_org(cls, v: str) -> str:
         return v.strip()
 
@@ -235,9 +240,7 @@ class ShuffleIntegrationRead(ShuffleIntegrationBase):
     created_by: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ShuffleIntegrationListResponse(BaseModel):
@@ -334,9 +337,7 @@ class DispatchLogRead(BaseModel):
     latency_ms: Optional[int] = None
     payload_preview: Optional[str] = None
     shuffle_execution_id: Optional[str] = None
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DispatchLogListResponse(BaseModel):

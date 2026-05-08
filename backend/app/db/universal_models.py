@@ -247,11 +247,11 @@ class AgentDataStore(SQLModel, table=True):
 
     # Metadata
     uploaded_by: Optional[int] = Field(default=None)  # User ID who initiated the collection
-    notes: Optional[str] = Field(sa_column=Column(Text), nullable=True)
+    notes: Optional[str] = Field(sa_column=Column(Text, nullable=True))
 
     # Status tracking
     status: str = Field(max_length=50, default="completed", index=True)  # completed, failed, processing
-    error_message: Optional[str] = Field(sa_column=Column(Text), nullable=True)
+    error_message: Optional[str] = Field(sa_column=Column(Text, nullable=True))
 
     # Relationship to Agents table
     agent: Optional["Agents"] = Relationship(back_populates="data_store")
@@ -448,7 +448,7 @@ class VulnerabilityReport(SQLModel, table=True):
     generated_by: int = Field(nullable=False)  # User ID who generated the report
 
     # Report filters applied
-    filters_json: Optional[str] = Field(sa_column=Column(Text), nullable=True)  # JSON string of filters used
+    filters_json: Optional[str] = Field(sa_column=Column(Text, nullable=True))  # JSON string of filters used
 
     # Statistics
     total_vulnerabilities: int = Field(default=0)
@@ -459,7 +459,7 @@ class VulnerabilityReport(SQLModel, table=True):
 
     # Status
     status: str = Field(max_length=50, default="completed", index=True)  # completed, failed, processing
-    error_message: Optional[str] = Field(sa_column=Column(Text), nullable=True)
+    error_message: Optional[str] = Field(sa_column=Column(Text, nullable=True))
 
     # Relationship to Customers table
     customer: Optional["Customers"] = Relationship()
@@ -486,7 +486,7 @@ class SCAReport(SQLModel, table=True):
     generated_by: int = Field(nullable=False)  # User ID who generated the report
 
     # Report filters applied
-    filters_json: Optional[str] = Field(sa_column=Column(Text), nullable=True)  # JSON string of filters used
+    filters_json: Optional[str] = Field(sa_column=Column(Text, nullable=True))  # JSON string of filters used
 
     # SCA Statistics
     total_policies: int = Field(default=0)  # Number of policy results in report
@@ -497,7 +497,7 @@ class SCAReport(SQLModel, table=True):
 
     # Status tracking (for background generation)
     status: str = Field(max_length=50, default="processing", index=True)  # processing, completed, failed
-    error_message: Optional[str] = Field(sa_column=Column(Text), nullable=True)
+    error_message: Optional[str] = Field(sa_column=Column(Text, nullable=True))
 
     # Relationship to Customers table
     customer: Optional["Customers"] = Relationship()
@@ -522,10 +522,6 @@ class EventSources(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     customer: Optional["Customers"] = Relationship()
-
-    class Config:
-        # Enforce event_type values at the application level
-        pass
 
     def update_from_model(self, source_data):
         if hasattr(source_data, "name"):
@@ -680,7 +676,7 @@ class AiAnalystPalaceLesson(SQLModel, table=True):
     review_id: Optional[int] = Field(foreign_key="ai_analyst_review.id", default=None, index=True)  # nullable — can be standalone
     customer_code: str = Field(foreign_key="customers.customer_code", max_length=64, index=True, nullable=False)
     lesson_type: str = Field(max_length=20, nullable=False)  # environment, false_positives, assets, threat_intel
-    lesson_text: str = Field(sa_column=Column(Text), nullable=False)
+    lesson_text: str = Field(sa_column=Column(Text, nullable=False))
     durability: str = Field(default="durable", max_length=8)  # one_off, durable
     status: str = Field(default="pending", max_length=8, index=True)  # pending, ingested, failed, expired
     # drawer_id returned by mempalace add_drawer — required to call
@@ -744,7 +740,7 @@ class CustomerNotificationRoute(SQLModel, table=True):
     # Free-form destination hint (Slack channel, email recipient,
     # handle, etc.) — Shuffle's app agent figures out how to route it
     # within the authenticated app at dispatch time.
-    destination: str = Field(sa_column=Column(Text), nullable=False)
+    destination: str = Field(sa_column=Column(Text, nullable=False))
 
     # 'Critical' | 'High' | 'Medium' | 'Low' | 'Informational'. Inclusive
     # — a 'High' route fires on Critical and High.

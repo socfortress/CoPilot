@@ -3,7 +3,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -98,11 +98,7 @@ class MitreTechniqueItem(BaseModel):
     platforms: List[str] = []
     data_sources: List[str] = []
     is_subtechnique: bool = False
-
-    class Config:
-        """Configuration for the model."""
-
-        extra = "ignore"  # Ignore extra fields from the API
+    model_config = ConfigDict(extra="ignore")
 
 
 class WazuhMitreTechniquesResponse(BaseModel):
@@ -208,11 +204,7 @@ class MitreSoftwareItem(BaseModel):
     platforms: Optional[List[str]] = None
     aliases: Optional[List[str]] = None
     type: Optional[str] = None  # For distinguishing between malware, tool, etc.
-
-    class Config:
-        """Configuration for the model."""
-
-        extra = "ignore"  # Ignore extra fields from the API
+    model_config = ConfigDict(extra="ignore")
 
 
 class WazuhMitreSoftwareResponse(BaseModel):
@@ -231,11 +223,7 @@ class MitreReferenceItem(BaseModel):
     source: str
     id: Optional[str] = None  # ID of the related technique, tactic, or software
     type: Optional[str] = None  # Type of the item the reference belongs to (technique, tactic, etc.)
-
-    class Config:
-        """Configuration for the model."""
-
-        extra = "ignore"  # Ignore extra fields from the API
+    model_config = ConfigDict(extra="ignore")
 
 
 class WazuhMitreReferencesResponse(BaseModel):
@@ -262,11 +250,7 @@ class MitreMitigationItem(BaseModel):
     url: str
     source: str
     external_id: str
-
-    class Config:
-        """Configuration for the model."""
-
-        extra = "ignore"  # Ignore extra fields from the API
+    model_config = ConfigDict(extra="ignore")
 
 
 class WazuhMitreMitigationsResponse(BaseModel):
@@ -298,11 +282,7 @@ class MitreGroupItem(BaseModel):
     # Additional fields that might be present
     aliases: Optional[List[str]] = None
     country: Optional[str] = None
-
-    class Config:
-        """Configuration for the model."""
-
-        extra = "ignore"  # Ignore extra fields from the API
+    model_config = ConfigDict(extra="ignore")
 
 
 class WazuhMitreGroupsResponse(BaseModel):

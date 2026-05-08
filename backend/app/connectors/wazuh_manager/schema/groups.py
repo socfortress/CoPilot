@@ -2,7 +2,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -13,9 +13,7 @@ class WazuhGroup(BaseModel):
     count: int = Field(..., description="Number of agents belonging to the group")
     mergedSum: str = Field(..., description="Checksum of merged configuration files")
     configSum: str = Field(..., description="Checksum of configuration files")
-
-    class Config:
-        extra = "ignore"  # Ignore extra fields from API
+    model_config = ConfigDict(extra="ignore")
 
 
 class WazuhGroupsResponse(BaseModel):
@@ -44,9 +42,7 @@ class WazuhGroupFile(BaseModel):
 
     filename: str = Field(..., description="Name of the file")
     hash: str = Field(..., description="Hash/checksum of the file")
-
-    class Config:
-        extra = "ignore"  # Ignore extra fields from API
+    model_config = ConfigDict(extra="ignore")
 
 
 class WazuhGroupFilesResponse(BaseModel):
@@ -63,11 +59,9 @@ class WazuhGroupConfigurationUpdateRequest(BaseModel):
     """Request model for updating group configuration."""
 
     configuration: str = Field(..., description="Full valid XML configuration content")
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "configuration": """<agent_config>
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "configuration": """<agent_config>
     <labels>
         <label key="customer">example</label>
     </labels>
@@ -77,8 +71,8 @@ class WazuhGroupConfigurationUpdateRequest(BaseModel):
         <events_per_second>1000</events_per_second>
     </client_buffer>
 </agent_config>""",
-            },
-        }
+        },
+    })
 
 
 class WazuhGroupConfigurationUpdateResponse(BaseModel):

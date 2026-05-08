@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -26,31 +26,28 @@ class CustomerRequestBody(BaseModel):
     customer_type: Optional[str] = Field(None, description="Type of the customer")
     logo_file: Optional[str] = Field(None, description="Logo file for the customer")
     is_provisioned: Optional[bool] = Field(None, description="Whether the customer has been provisioned")
-
-    class Config:
-        orm_mode = True
-        schema_extra = {
-            "example": {
-                "customer_code": "CUST123",
-                "customer_name": "Sample Customer",
-                "contact_last_name": "Doe",
-                "contact_first_name": "John",
-                "phone": "123-456-7890",
-                "address_line1": "123 Main St",
-                "address_line2": "Apt 4",
-                "city": "Anytown",
-                "state": "CA",
-                "postal_code": "12345",
-                "country": "USA",
-                "customer_type": "Enterprise",
-                "logo_file": "logo.png",
-                "is_provisioned": True,
-            },
-        }
+    model_config = ConfigDict(from_attributes=True, json_schema_extra={
+        "example": {
+            "customer_code": "CUST123",
+            "customer_name": "Sample Customer",
+            "contact_last_name": "Doe",
+            "contact_first_name": "John",
+            "phone": "123-456-7890",
+            "address_line1": "123 Main St",
+            "address_line2": "Apt 4",
+            "city": "Anytown",
+            "state": "CA",
+            "postal_code": "12345",
+            "country": "USA",
+            "customer_type": "Enterprise",
+            "logo_file": "logo.png",
+            "is_provisioned": True,
+        },
+    })
 
 
 class CustomerResponse(BaseModel):
-    customer: Optional[CustomerRequestBody]
+    customer: Optional[CustomerRequestBody] = None
     success: bool
     message: str
 
@@ -103,55 +100,50 @@ class CustomerMetaRequestBody(BaseModel):
         None,
         description="Portainer stack ID for the customer",
     )
-
-    class Config:
-        orm_mode = True
-        schema_extra = {
-            "example": {
-                "customer_meta_graylog_index": "graylog_index",
-                "customer_meta_graylog_stream": "graylog_stream",
-                "customer_meta_grafana_org_id": "grafana_org",
-                "customer_meta_wazuh_group": "wazuh_group",
-                "customer_meta_index_retention": "30D",
-                "customer_meta_wazuh_registration_port": "1514",
-                "customer_meta_wazuh_log_ingestion_port": "1515",
-                "customer_meta_wazuh_auth_password": "wazuh_password",
-            },
-        }
+    model_config = ConfigDict(from_attributes=True, json_schema_extra={
+        "example": {
+            "customer_meta_graylog_index": "graylog_index",
+            "customer_meta_graylog_stream": "graylog_stream",
+            "customer_meta_grafana_org_id": "grafana_org",
+            "customer_meta_wazuh_group": "wazuh_group",
+            "customer_meta_index_retention": "30D",
+            "customer_meta_wazuh_registration_port": "1514",
+            "customer_meta_wazuh_log_ingestion_port": "1515",
+            "customer_meta_wazuh_auth_password": "wazuh_password",
+        },
+    })
 
 
 class CustomerMetaResponse(BaseModel):
-    customer_meta: Optional[CustomerMetaRequestBody]
+    customer_meta: Optional[CustomerMetaRequestBody] = None
     success: bool
     message: str
 
 
 ############# Customer Full Response
 class CustomerFullResponse(BaseModel):
-    customer: Optional[CustomerRequestBody]
-    customer_meta: Optional[CustomerMetaRequestBody]
+    customer: Optional[CustomerRequestBody] = None
+    customer_meta: Optional[CustomerMetaRequestBody] = None
     success: bool
     message: str
 
 
 ############# Agent Model #############
 class AgentModel(BaseModel):
-    id: Optional[int]
-    os: Optional[str]
-    label: Optional[str]
-    wazuh_last_seen: Optional[datetime]
-    velociraptor_last_seen: Optional[datetime]
-    velociraptor_agent_version: Optional[str]
-    ip_address: Optional[str]
-    agent_id: Optional[str]
-    hostname: Optional[str]
-    critical_asset: Optional[bool]
-    velociraptor_id: Optional[str]
-    wazuh_agent_version: Optional[str]
-    customer_code: Optional[str]
-
-    class Config:
-        orm_mode = True
+    id: Optional[int] = None
+    os: Optional[str] = None
+    label: Optional[str] = None
+    wazuh_last_seen: Optional[datetime] = None
+    velociraptor_last_seen: Optional[datetime] = None
+    velociraptor_agent_version: Optional[str] = None
+    ip_address: Optional[str] = None
+    agent_id: Optional[str] = None
+    hostname: Optional[str] = None
+    critical_asset: Optional[bool] = None
+    velociraptor_id: Optional[str] = None
+    wazuh_agent_version: Optional[str] = None
+    customer_code: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AgentsResponse(BaseModel):
@@ -167,16 +159,9 @@ class DeleteCustomerResponse(BaseModel):
 
     success: bool
     message: str
-
-    class Config:
-        """
-        Pydantic configuration class.
-        """
-
-        from_attributes = True
-        json_schema_extra = {
-            "example": {
-                "success": True,
-                "message": "Customer 'customer_code' deleted successfully",
-            },
-        }
+    model_config = ConfigDict(from_attributes=True, json_schema_extra={
+        "example": {
+            "success": True,
+            "message": "Customer 'customer_code' deleted successfully",
+        },
+    })

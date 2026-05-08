@@ -36,6 +36,8 @@ class Source(BaseModel):
     original_alert_id: Optional[str] = Field(None, alias="original_alert_id")
     original_alert_index_name: Optional[str] = Field(None, alias="original_alert_index_name")
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("original_alert_id", "original_alert_index_name", allow_reuse=True, pre=True)
     def extract_origin_context(cls, v, values, **kwargs):
         origin_context = values.get("origin_context", "")

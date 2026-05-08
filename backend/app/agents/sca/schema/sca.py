@@ -4,7 +4,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -26,9 +26,7 @@ class AgentScaOverviewItem(BaseModel):
     end_scan: str
     references: Optional[str] = None
     hash_file: Optional[str] = None
-
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class ScaOverviewResponse(BaseModel):

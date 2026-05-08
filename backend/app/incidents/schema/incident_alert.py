@@ -5,8 +5,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -56,18 +55,16 @@ class AutoCreateAlertResponse(BaseModel):
     alerts_failed: int = 0
     batches_processed: int = 0
     alerts_remaining: int = 0
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "success": True,
-                "message": "Processed 5 batches: 487 alerts created, 13 failed. 2000 alerts remaining for next run",
-                "alerts_created": 487,
-                "alerts_failed": 13,
-                "batches_processed": 5,
-                "alerts_remaining": 2000,
-            },
-        }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "success": True,
+            "message": "Processed 5 batches: 487 alerts created, 13 failed. 2000 alerts remaining for next run",
+            "alerts_created": 487,
+            "alerts_failed": 13,
+            "batches_processed": 5,
+            "alerts_remaining": 2000,
+        },
+    })
 
 
 class IndexNamesResponse(BaseModel):
@@ -110,9 +107,7 @@ class GenericSourceModel(BaseModel):
         None,
         description="The agent name of the alert.",
     )
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
     def to_dict(self):
         return self.dict(exclude_none=True)
@@ -143,9 +138,7 @@ class GenericAlertModel(BaseModel):
         None,
         description="The type of the alert to be used when creating the CoPilot alert.",
     )
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
 
 class AlertDetailsResponse(BaseModel):

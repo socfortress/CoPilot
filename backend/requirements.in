@@ -25,7 +25,7 @@ passlib
 passlib[bcrypt]
 pdfkit
 playwright
-pydantic[email]<2
+pydantic[email]
 PyJWT
 PyMySQL
 pyotp
@@ -38,8 +38,8 @@ qrcode
 regex
 requests
 ScoutSuite
-SQLAlchemy<2
-sqlmodel<0.0.10
+SQLAlchemy
+sqlmodel
 starlette
 uvicorn[standard]
 werkzeug

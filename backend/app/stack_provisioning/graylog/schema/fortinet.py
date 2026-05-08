@@ -2,9 +2,8 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import model_validator, BaseModel
 from pydantic import Field
-from pydantic import root_validator
 
 
 class ProvisionFortinetRequest(BaseModel):
@@ -30,17 +29,18 @@ class ProvisionFortinetRequest(BaseModel):
     )
     hot_data_retention: int = Field(
         ...,
-        example=30,
+        examples=[30],
         description="Number of days to retain hot data",
     )
     index_replicas: int = Field(
         ...,
-        example=1,
+        examples=[1],
         description="Number of replicas for the customer's Graylog instance",
     )
 
     # ensure the `integration_name` is always set to "Fortinet"
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def set_integration_name(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         values["integration_name"] = "Fortinet"
         return values
@@ -82,11 +82,11 @@ class FortinetCustomerDetails(BaseModel):
     )
     hot_data_retention: int = Field(
         ...,
-        example=30,
+        examples=[30],
         description="Number of days to retain hot data",
     )
     index_replicas: int = Field(
         ...,
-        example=1,
+        examples=[1],
         description="Number of replicas for the customer's Graylog instance",
     )

@@ -2,9 +2,8 @@ from typing import List
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class GrafanaOrganizations(BaseModel):
@@ -53,7 +52,7 @@ class Annotation(BaseModel):
 
 class Threshold(BaseModel):
     color: str
-    value: Optional[float]
+    value: Optional[float] = None
 
 
 class FieldConfigDefaults(BaseModel):
@@ -164,7 +163,8 @@ class TimeRange(BaseModel):
     value: int
     unit: str
 
-    @validator("unit")
+    @field_validator("unit")
+    @classmethod
     def validate_unit(cls, unit):
         valid_units = ["m", "h", "d"]
         if unit not in valid_units:
@@ -211,19 +211,19 @@ class RequestRow(BaseModel):
 
 
 class GenerateReportRequest(BaseModel):
-    company_name: str = Field(..., description="Company name", example="SOC Fortress")
-    timerange_text: str = Field(..., description="Time range text", example="Last 7 days")
+    company_name: str = Field(..., description="Company name", examples=["SOC Fortress"])
+    timerange_text: str = Field(..., description="Time range text", examples=["Last 7 days"])
     logo_base64: str = Field(
         ...,
         description="Base64 encoded logo",
-        example="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAABjklEQVRIS+2Vv0oDQRDG",
+        examples=["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAABjklEQVRIS+2Vv0oDQRDG"],
     )
     timerange: str = Field(..., description="Time range for the report")
     # rows: List[RequestRow] = Field(..., description="Rows in the report")
     rows: List[RequestRow] = Field(
         ...,
         description="Rows in the report",
-        example=[
+        examples=[[
             {
                 "id": 1710437961108,
                 "panels": [
@@ -266,7 +266,7 @@ class GenerateReportRequest(BaseModel):
                     },
                 ],
             },
-        ],
+        ]],
     )
 
 

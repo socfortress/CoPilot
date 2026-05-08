@@ -1,9 +1,8 @@
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import field_validator, BaseModel
 from pydantic import Field
-from pydantic import validator
 
 
 class InvokeMimecastRequest(BaseModel):
@@ -45,7 +44,7 @@ class MimecastAuthKeys(BaseModel):
         description="SECRET KEY FOR YOUR ADMINISTRATOR",
         examples=["00002"],
     )
-    URI = str = Field(
+    URI: str = Field(
         "/api/audit/get-siem-logs",
         description="URI FOR YOUR API Endpoint",
         examples=["/api/audit/get-siem-logs"],
@@ -66,10 +65,10 @@ class InvokeMimecastResponse(BaseModel):
 
 
 class CollectMimecast(BaseModel):
-    integration: str = Field(..., example="mimecast")
-    customer_code: str = Field(..., example="socfortress")
-    graylog_host: str = Field(..., example="127.0.0.1")
-    graylog_port: str = Field(..., example=12201)
+    integration: str = Field(..., examples=["mimecast"])
+    customer_code: str = Field(..., examples=["socfortress"])
+    graylog_host: str = Field(..., examples=["127.0.0.1"])
+    graylog_port: str = Field(..., examples=[12201])
     app_id: str = Field(
         ...,
         description="YOUR DEVELOPER APPLICATION ID",
@@ -106,7 +105,8 @@ class CollectMimecast(BaseModel):
         description="Time range for the query (1m, 1h, 1d, 1w)",
     )
 
-    @validator("integration")
+    @field_validator("integration")
+    @classmethod
     def check_integration(cls, v):
         if v != "mimecast":
             raise HTTPException(

@@ -5,9 +5,8 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import model_validator, BaseModel
 from pydantic import Field
-from pydantic import root_validator
 
 
 class InvokeSapSiemRequest(BaseModel):
@@ -34,7 +33,8 @@ class InvokeSapSiemRequest(BaseModel):
     lower_bound: str = None
     upper_bound: str = None
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def set_time_bounds(cls, values):
         time_range = values.get("time_range")
         if time_range:
@@ -298,7 +298,7 @@ class SuspiciousLogin(BaseModel):
     customer_code: str
     logSource: Optional[str] = Field(None)
     loginID: str
-    country: Optional[str]
+    country: Optional[str] = None
     ip: str
     event_timestamp: str
     errMessage: str
@@ -351,20 +351,20 @@ class CaseData(BaseModel):
     case_id: int
     open_date: str
     modification_history: Dict[str, ModificationHistoryEntry]
-    close_date: Optional[str]
+    close_date: Optional[str] = None
     case_description: str
     classification_id: int
     case_soc_id: str
     case_name: str
-    custom_attributes: Optional[Dict[str, str]]
+    custom_attributes: Optional[Dict[str, str]] = None
     case_uuid: str
-    review_status_id: Optional[int]
+    review_status_id: Optional[int] = None
     state_id: int
     case_customer: int
-    reviewer_id: Optional[int]
+    reviewer_id: Optional[int] = None
     user_id: int
     owner_id: int
-    closing_note: Optional[str]
+    closing_note: Optional[str] = None
     status_id: int
 
 

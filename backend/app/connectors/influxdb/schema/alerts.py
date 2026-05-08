@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from pydantic import Field
 
 
@@ -50,9 +50,7 @@ class InfluxDBAlert(BaseModel):
     message: str
     status: Optional[str] = None  # active or cleared
     check_id: Optional[str] = None  # For internal filtering
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InfluxDBAlertResponse(BaseModel):
@@ -67,29 +65,26 @@ class InfluxDBAlertResponse(BaseModel):
     filtered_count: int
     active_alerts_count: int = 0
     cleared_alerts_count: int = 0
-
-    class Config:
-        from_attributes = True
-        json_schema_extra = {
-            "example": {
-                "success": True,
-                "message": "Successfully retrieved alerts",
-                "alerts": [
-                    {
-                        "time": "2025-12-01T10:30:00Z",
-                        "check_name": "CPU CHECK",
-                        "sensor_type": "CPU",
-                        "severity": "warning",
-                        "message": "CPU usage high",
-                        "status": "active",
-                    },
-                ],
-                "total_count": 150,
-                "filtered_count": 25,
-                "active_alerts_count": 5,
-                "cleared_alerts_count": 20,
-            },
-        }
+    model_config = ConfigDict(from_attributes=True, json_schema_extra={
+        "example": {
+            "success": True,
+            "message": "Successfully retrieved alerts",
+            "alerts": [
+                {
+                    "time": "2025-12-01T10:30:00Z",
+                    "check_name": "CPU CHECK",
+                    "sensor_type": "CPU",
+                    "severity": "warning",
+                    "message": "CPU usage high",
+                    "status": "active",
+                },
+            ],
+            "total_count": 150,
+            "filtered_count": 25,
+            "active_alerts_count": 5,
+            "cleared_alerts_count": 20,
+        },
+    })
 
 
 class InfluxDBAlertsResponse(BaseModel):
@@ -107,14 +102,11 @@ class InfluxDBCheckNamesResponse(BaseModel):
     message: str
     check_names: list[str]
     total_count: int
-
-    class Config:
-        from_attributes = True
-        json_schema_extra = {
-            "example": {
-                "success": True,
-                "message": "Successfully retrieved check names",
-                "check_names": ["CPU CHECK", "Host Offline", "Memory Usage", "Disk Space"],
-                "total_count": 4,
-            },
-        }
+    model_config = ConfigDict(from_attributes=True, json_schema_extra={
+        "example": {
+            "success": True,
+            "message": "Successfully retrieved check names",
+            "check_names": ["CPU CHECK", "Host Offline", "Memory Usage", "Disk Space"],
+            "total_count": 4,
+        },
+    })
