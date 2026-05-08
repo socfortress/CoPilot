@@ -5,7 +5,7 @@ aiosqlite
 alembic
 apscheduler
 asyncgelf
-bcrypt<5  # passlib 1.7.4 (last released 2020) is incompatible with bcrypt 5+; remove this cap when passlib gets replaced
+bcrypt<5  # bcrypt 5 errors (instead of silently truncating) on passwords >72 bytes; lift after enforcing length limit at the model layer
 cortex4py
 cryptography
 docxtpl
@@ -21,8 +21,6 @@ Jinja2
 loguru
 miniopy-async
 packaging
-passlib
-passlib[bcrypt]
 pdfkit
 Pillow  # transitive runtime dep of qrcode for 2FA QR generation (qrcode.make() uses qrcode.image.pil)
 playwright

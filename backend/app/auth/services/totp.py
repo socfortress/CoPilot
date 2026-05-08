@@ -11,11 +11,11 @@ import string
 import time
 from typing import Optional
 
+import bcrypt
 import pyotp
 import qrcode
 from cryptography.fernet import Fernet
 from loguru import logger
-from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
@@ -53,8 +53,6 @@ except (ValueError, TypeError) as e:
     raise RuntimeError(
         f"Failed to initialise TOTP Fernet from derived JWT_SECRET key. (underlying error: {e})",
     ) from e
-
-_pwd_ctx = CryptContext(schemes=["bcrypt"])
 
 # ── Brute-force protection ───────────────────────────────────────────────────
 # Per-user: {user_id: (fail_count, first_fail_time)}
@@ -115,7 +113,8 @@ def _generate_backup_codes() -> tuple[list[str], list[dict]]:
     for _ in range(_BACKUP_CODE_COUNT):
         code = "".join(secrets.choice(alphabet) for _ in range(_BACKUP_CODE_LENGTH))
         codes.append(code)
-        hashed.append({"hash": _pwd_ctx.hash(code), "used": False})
+        hashed_code = bcrypt.hashpw(code.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        hashed.append({"hash": hashed_code, "used": False})
     return codes, hashed
 
 
@@ -124,7 +123,7 @@ def _verify_backup_code(backup_code: str, stored_codes: list[dict]) -> int:
     for i, entry in enumerate(stored_codes):
         if entry.get("used"):
             continue
-        if _pwd_ctx.verify(backup_code.upper().strip(), entry["hash"]):
+        if bcrypt.checkpw(backup_code.upper().strip().encode("utf-8"), entry["hash"].encode("utf-8")):
             return i
     return -1
 

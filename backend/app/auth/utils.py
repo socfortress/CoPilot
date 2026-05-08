@@ -2,13 +2,13 @@ import os
 from datetime import datetime
 from datetime import timedelta
 
+import bcrypt
 import jwt
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.security import SecurityScopes
 from loguru import logger
-from passlib.context import CryptContext
 
 from app.auth.services.universal import find_user
 from app.auth.services.universal import get_role
@@ -44,14 +44,13 @@ class AuthHandler:
             "customer_user": "Customer portal users",
         },
     )
-    pwd_context = CryptContext(schemes=["bcrypt"])
     secret = _load_jwt_secret()
 
-    def get_password_hash(self, password):
-        return self.pwd_context.hash(password)
+    def get_password_hash(self, password: str) -> str:
+        return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
-    def verify_password(self, plain_password, hashed_password):
-        return self.pwd_context.verify(plain_password, hashed_password)
+    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
     # ! TODO: HAVE LOGIC TO HANDLE PASSWORD RESET VIA A TOKEN BUT NOT IMPLEMENTED YET ! #
     def generate_reset_token(
