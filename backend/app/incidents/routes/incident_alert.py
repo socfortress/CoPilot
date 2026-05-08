@@ -296,8 +296,7 @@ async def create_alert_auto_route(
                 # Any other error — preserve the full traceback so the source line
                 # of the failure is in the log, not just the message.
                 logger.opt(exception=True).error(
-                    f"Failed to create alert {alert.id} from index {alert.index}: "
-                    f"{type(e).__name__}: {e}",
+                    f"Failed to create alert {alert.id} from index {alert.index}: " f"{type(e).__name__}: {e}",
                 )
                 batch_failed += 1
                 total_failed += 1
