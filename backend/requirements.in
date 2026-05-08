@@ -5,7 +5,7 @@ aiosqlite
 alembic
 apscheduler
 asyncgelf
-bcrypt
+bcrypt<5  # passlib 1.7.4 (last released 2020) is incompatible with bcrypt 5+; remove this cap when passlib gets replaced
 cortex4py
 cryptography
 docxtpl
