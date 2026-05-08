@@ -40,9 +40,9 @@ pdfkit
 Pillow  # transitive runtime dep of qrcode for 2FA QR generation (qrcode.make() uses qrcode.image.pil)
 playwright
 pydantic[email]
-pyOpenSSL>=26.0.0  # security floor — CVE-2026-27448, -27459 (transitive of ScoutSuite)
 PyJWT
 PyMySQL
+pyOpenSSL>=26.0.0  # security floor — CVE-2026-27448, -27459 (transitive of ScoutSuite)
 pyotp
 python-dotenv
 python-magic

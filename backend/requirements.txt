@@ -155,8 +155,8 @@ pyasn1==0.6.3
 pyasn1-modules==0.4.2
 pycparser==3.0
 pycryptodome==3.23.0
-pydantic[email]==2.13.4
 pydantic-core==2.46.4
+pydantic[email]==2.13.4
 pyee==13.0.1
 pygments==2.20.0
 pyjwt[crypto]==2.12.1
@@ -177,8 +177,8 @@ qh3==1.8.1
 qrcode==8.2
 reactivex==4.1.0
 regex==2026.4.4
-requests[socks]==2.33.1
 requests-oauthlib==2.0.0
+requests[socks]==2.33.1
 rich==15.0.0
 rsa==4.9.1
 s3transfer==0.17.0
