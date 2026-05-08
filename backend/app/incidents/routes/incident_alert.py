@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
 from loguru import logger
+from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.active_response.routes.graylog import verify_graylog_header
@@ -274,8 +275,30 @@ async def create_alert_auto_route(
                 batch_created += 1
                 total_created += 1
 
+            except ValidationError as e:
+                # Pydantic validation failure — log per-field detail so a misshapen
+                # index document is fast to diagnose (which field, what was provided,
+                # which constraint failed).
+                logger.error(
+                    f"Failed to create alert {alert.id} from index {alert.index}: "
+                    f"Pydantic validation failed in {len(e.errors())} field(s)",
+                )
+                for err in e.errors():
+                    loc = ".".join(str(x) for x in err.get("loc", ()))
+                    inp = err.get("input", "<not captured>")
+                    inp_repr = repr(inp)[:200]  # truncate verbose inputs
+                    logger.error(
+                        f"  field={loc} type={err.get('type')} msg={err.get('msg')} input={inp_repr}",
+                    )
+                batch_failed += 1
+                total_failed += 1
             except Exception as e:
-                logger.error(f"Failed to create alert {alert.id} from index {alert.index}: {e}")
+                # Any other error — preserve the full traceback so the source line
+                # of the failure is in the log, not just the message.
+                logger.opt(exception=True).error(
+                    f"Failed to create alert {alert.id} from index {alert.index}: "
+                    f"{type(e).__name__}: {e}",
+                )
                 batch_failed += 1
                 total_failed += 1
 

@@ -1260,15 +1260,15 @@ async def create_alert(
     logger.info(f"Creating alert {alert.alert_id} in CoPilot")
     alert_details = await get_single_alert_details(alert_details=alert)
     await validate_syslog_type_source(alert_details.syslog_type, session)
-    customer_code = await get_customer_code(dict(alert_details._source), session=session)
+    customer_code = await get_customer_code(dict(alert_details.source), session=session)
     logger.info(f"Customer code: {customer_code}")
     customer_alert_creation_settings = await is_customer_code_valid(customer_code=customer_code, session=session)
     logger.info(f"Customer creation settings: {customer_alert_creation_settings}")
     alert_payload = await build_alert_payload(
         alert_details.syslog_type,
-        alert_details._index,
-        alert_details._id,
-        alert_details._source.to_dict(),
+        alert_details.index,
+        alert_details.id,
+        alert_details.source.to_dict(),
         session,
     )
     if simga_alert is not None:
@@ -1323,13 +1323,13 @@ async def retrieve_alert_timeline(alert: CreateAlertRequestRoute, session: Async
         return threshold_timeline
 
     alert_details = await get_alert_details(alert)
-    if alert_details._source.process_id is not None:
-        alert_timestamp = alert_details._source.timestamp
+    if alert_details.source.process_id is not None:
+        alert_timestamp = alert_details.source.timestamp
         start_of_day, end_of_day = calculate_day_range(alert_timestamp)
         return await fetch_alert_timeline(
             alert.index_name,
-            alert_details._source.process_id,
-            alert_details._source.agent_name,
+            alert_details.source.process_id,
+            alert_details.source.agent_name,
             start_of_day,
             end_of_day,
         )

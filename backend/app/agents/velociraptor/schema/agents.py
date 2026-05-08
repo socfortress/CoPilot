@@ -101,7 +101,10 @@ class ClientConfig(BaseModel):
 class Organization(BaseModel):
     Name: str
     OrgId: str
-    _client_config: ClientConfig
+    # Pydantic 2 silently drops leading-underscore field annotations as
+    # PrivateAttr; alias the JSON key so it's actually parsed.
+    client_config: ClientConfig = Field(alias="_client_config")
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class VelociraptorOrganizations(BaseModel):

@@ -454,7 +454,7 @@ async def ai_anaylze_alert_socfortress(
 
     ai_request = SocfortressAiAlertRequest(
         integration="SOCFORTRESS AI",
-        alert_payload=alert_details._source.model_dump(),
+        alert_payload=alert_details.source.model_dump(),
     )
 
     socfortress_lookup = await socfortress_ai_alert_lookup(
@@ -492,7 +492,7 @@ async def ai_wazuh_exclusion_rule_socfortress(
 
     ai_request = SocfortressAiAlertRequest(
         integration="SOCFORTRESS AI",
-        alert_payload=alert_details._source.model_dump(),
+        alert_payload=alert_details.source.model_dump(),
     )
 
     logger.info(f"Sending request: {request}")
