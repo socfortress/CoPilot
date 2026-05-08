@@ -24,6 +24,7 @@ packaging
 passlib
 passlib[bcrypt]
 pdfkit
+Pillow  # transitive runtime dep of qrcode for 2FA QR generation (qrcode.make() uses qrcode.image.pil)
 playwright
 pydantic[email]
 PyJWT

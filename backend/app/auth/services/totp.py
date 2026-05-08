@@ -29,10 +29,30 @@ from app.db.db_session import async_engine
 # haven't set TOTP_ENCRYPTION_KEY continue to decrypt stored TOTP secrets.
 _totp_enc_key = os.environ.get("TOTP_ENCRYPTION_KEY")
 if _totp_enc_key:
-    _fernet_key = _totp_enc_key.encode()
+    # Trim accidental whitespace/newlines that .env editors sometimes append
+    _fernet_key = _totp_enc_key.strip().encode()
+    _fernet_key_source = "TOTP_ENCRYPTION_KEY"
 else:
     _fernet_key = base64.urlsafe_b64encode(hashlib.sha256(AuthHandler.secret.encode()).digest())
-_fernet = Fernet(_fernet_key)
+    _fernet_key_source = "JWT_SECRET (derived fallback)"
+
+try:
+    _fernet = Fernet(_fernet_key)
+except (ValueError, TypeError) as e:
+    # Surface a clear, actionable error instead of the obscure
+    # `binascii.Error: Incorrect padding` chain. See issue #838.
+    if _fernet_key_source == "TOTP_ENCRYPTION_KEY":
+        raise RuntimeError(
+            "TOTP_ENCRYPTION_KEY is malformed. Expected a 32-byte url-safe base64 key "
+            "(typically 44 characters ending with '='). Generate a valid one with:\n"
+            "  python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\"\n"
+            f"Then paste the value into your .env without surrounding quotes or trailing whitespace. "
+            f"(underlying error: {e})",
+        ) from e
+    # Fallback path failed — would be a bug, not a misconfiguration
+    raise RuntimeError(
+        f"Failed to initialise TOTP Fernet from derived JWT_SECRET key. (underlying error: {e})",
+    ) from e
 
 _pwd_ctx = CryptContext(schemes=["bcrypt"])
 
