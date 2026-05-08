@@ -143,7 +143,7 @@ async def find_user_by_email(email: str) -> Optional[User]:
 
 async def get_or_create_sso_user(email: str, role_id: int = 2) -> User:
     """Find existing user by email or create a new SSO‑managed user."""
-    from passlib.context import CryptContext
+    import bcrypt
 
     async with AsyncSession(async_engine) as session:
         result = await session.execute(select(User).where(User.email == email))
@@ -151,10 +151,10 @@ async def get_or_create_sso_user(email: str, role_id: int = 2) -> User:
         if user:
             return user
 
-        # Create a new user with a random unusable password
-        pwd_ctx = CryptContext(schemes=["bcrypt"])
-        random_pw = secrets.token_urlsafe(64)
-        hashed = pwd_ctx.hash(random_pw)
+        # Create a new user with a random unusable password.
+        # token_urlsafe(48) → 64 chars, safely under bcrypt's 72-byte limit.
+        random_pw = secrets.token_urlsafe(48)
+        hashed = bcrypt.hashpw(random_pw.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
         username = email.split("@")[0]
         # Ensure unique username
