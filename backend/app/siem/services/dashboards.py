@@ -163,10 +163,7 @@ def _is_text_field_agg_error(exc: RequestError) -> bool:
     so the type code and the specific cause both have to line up.
     """
     info = getattr(exc, "info", "") or ""
-    return (
-        getattr(exc, "error", "") == "search_phase_execution_exception"
-        and "Text fields are not optimised" in str(info)
-    )
+    return getattr(exc, "error", "") == "search_phase_execution_exception" and "Text fields are not optimised" in str(info)
 
 
 def _compute_histogram_interval(timerange: str) -> str:
@@ -297,10 +294,7 @@ async def get_panel_data(
                         # If the index maps `field` as text, retry with the conventional
                         # `field.keyword` subfield. Cheap one-shot fallback that handles
                         # the common case where customer index templates differ.
-                        if (
-                            _is_text_field_agg_error(exc)
-                            and not field.endswith(".keyword")
-                        ):
+                        if _is_text_field_agg_error(exc) and not field.endswith(".keyword"):
                             logger.info(
                                 f"Panel {pid}: '{field}' is text-typed in {event_source.index_pattern}; "
                                 f"retrying with '{field}.keyword'",
