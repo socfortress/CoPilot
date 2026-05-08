@@ -1192,7 +1192,7 @@ async def get_case_filter_options_endpoint(
 async def list_alerts_endpoint(
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
-    order: str = Query("desc", regex="^(asc|desc)$"),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1388,7 +1388,7 @@ async def list_alerts_by_status_endpoint(
     status: AlertStatus,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
-    order: str = Query("desc", regex="^(asc|desc)$"),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1445,7 +1445,7 @@ async def list_alerts_by_assigned_to_endpoint(
     assigned_to: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
-    order: str = Query("desc", regex="^(asc|desc)$"),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1497,7 +1497,7 @@ async def list_alerts_by_asset_name_endpoint(
     asset_name: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
-    order: str = Query("desc", regex="^(asc|desc)$"),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1549,7 +1549,7 @@ async def list_alerts_by_title_endpoint(
     title: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
-    order: str = Query("desc", regex="^(asc|desc)$"),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1601,7 +1601,7 @@ async def list_alerts_by_customer_code_endpoint(
     customer_code: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
-    order: str = Query("desc", regex="^(asc|desc)$"),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(customer_access_handler.require_customer_access()),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1630,7 +1630,7 @@ async def list_alerts_by_source_endpoint(
     source: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
-    order: str = Query("desc", regex="^(asc|desc)$"),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1689,7 +1689,7 @@ async def list_alerts_multiple_filters_endpoint(
     ioc_value: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
-    order: str = Query("desc", regex="^(asc|desc)$"),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1767,7 +1767,7 @@ async def list_alerts_multiple_filters_endpoint(
 async def list_cases_endpoint(
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
-    order: str = Query("desc", regex="^(asc|desc)$"),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -2118,7 +2118,7 @@ async def list_cases_by_status_endpoint(
     status: AlertStatus,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
-    order: str = Query("desc", regex="^(asc|desc)$"),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
