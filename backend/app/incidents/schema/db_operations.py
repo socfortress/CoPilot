@@ -5,7 +5,8 @@ from typing import List
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import field_validator, BaseModel
+from pydantic import BaseModel
+from pydantic import field_validator
 from pydantic import model_validator
 
 from app.incidents.models import Alert

@@ -45,7 +45,7 @@ except (ValueError, TypeError) as e:
         raise RuntimeError(
             "TOTP_ENCRYPTION_KEY is malformed. Expected a 32-byte url-safe base64 key "
             "(typically 44 characters ending with '='). Generate a valid one with:\n"
-            "  python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\"\n"
+            '  python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"\n'
             f"Then paste the value into your .env without surrounding quotes or trailing whitespace. "
             f"(underlying error: {e})",
         ) from e

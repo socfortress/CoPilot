@@ -58,7 +58,10 @@ class GitHubAuditConfig(SQLModel, table=True):
         default="all",
         description="'all', 'include', or 'exclude'",
     )
-    repo_filter_list: Optional[List[str]] = Field(sa_column=Column(JSON, nullable=True), description="List of repos to include/exclude based on filter_mode")
+    repo_filter_list: Optional[List[str]] = Field(
+        sa_column=Column(JSON, nullable=True),
+        description="List of repos to include/exclude based on filter_mode",
+    )
 
     # Notification settings
     notify_on_critical: bool = Field(default=True, description="Send notification on critical findings")
@@ -209,7 +212,10 @@ class GitHubAuditBaseline(SQLModel, table=True):
     description: Optional[str] = Field(sa_column=Column(Text, nullable=True))
 
     # Expected values
-    expected_checks: Optional[Dict] = Field(sa_column=Column(JSON, nullable=True), description="Expected check results by check_id: {check_id: expected_status}")
+    expected_checks: Optional[Dict] = Field(
+        sa_column=Column(JSON, nullable=True),
+        description="Expected check results by check_id: {check_id: expected_status}",
+    )
 
     # Baseline from a previous report
     baseline_report_id: Optional[int] = Field(

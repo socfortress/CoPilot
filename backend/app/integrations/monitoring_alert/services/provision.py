@@ -1127,7 +1127,8 @@ async def provision_fortinet_wids_wireless_eapol_packet_flooding_detected_monito
     Provisions Fortinet WIDS Wireless EAPOL Packet Flooding Detected monitoring alert.
     """
     logger.info(
-        "Invoking provision_fortinet_wids_wireless_eapol_packet_flooding_detected_monitoring_alert " f"with request: {request.model_dump()}",
+        "Invoking provision_fortinet_wids_wireless_eapol_packet_flooding_detected_monitoring_alert "
+        f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2432,7 +2433,8 @@ async def provision_sentinelone_new_mitigation_kill_performed_successfully_monit
     Provisions SentinelOne: New Mitigation, Kill performed successfully.
     """
     logger.info(
-        "Invoking provision_sentinelone_new_mitigation_kill_performed_successfully_monitoring_alert " f"with request: {request.model_dump()}",
+        "Invoking provision_sentinelone_new_mitigation_kill_performed_successfully_monitoring_alert "
+        f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2547,7 +2549,8 @@ async def provision_sentinelone_new_exclusion_was_added_or_modified_by_user_moni
     Provisions SentinelOne: New Exclusion was added/modified by user.
     """
     logger.info(
-        "Invoking provision_sentinelone_new_exclusion_was_added_or_modified_by_user_monitoring_alert " f"with request: {request.model_dump()}",
+        "Invoking provision_sentinelone_new_exclusion_was_added_or_modified_by_user_monitoring_alert "
+        f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(
@@ -2718,7 +2721,8 @@ async def provision_sentinelone_analyst_verdict_changed_to_false_positive_monito
     Provisions SentinelOne: Analyst verdict changed to False Positive.
     """
     logger.info(
-        "Invoking provision_sentinelone_analyst_verdict_changed_to_false_positive_monitoring_alert " f"with request: {request.model_dump()}",
+        "Invoking provision_sentinelone_analyst_verdict_changed_to_false_positive_monitoring_alert "
+        f"with request: {request.model_dump()}",
     )
     await provision_alert_definition(
         GraylogAlertProvisionModel(

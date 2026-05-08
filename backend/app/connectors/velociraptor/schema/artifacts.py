@@ -6,8 +6,10 @@ from typing import Optional
 from typing import Union
 
 from fastapi import HTTPException
-from pydantic import field_validator, ConfigDict, BaseModel
+from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_validator
 
 
 class ArtifactParameter(BaseModel):
@@ -46,19 +48,21 @@ class ArtifactParametersResponse(BaseModel):
     parameter_prefix: str = Field(..., description="The prefix used for filtering")
     matching_parameters: List[ArtifactParameter] = Field(default_factory=list, description="List of parameters that match the prefix")
     total_matches: int = Field(..., description="Total number of matching parameters")
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "success": True,
-            "message": "Found 2 parameters matching prefix 'T1552.001'",
-            "artifact_name": "Windows.AttackSimulation.AtomicRedTeam",
-            "parameter_prefix": "T1552.001",
-            "matching_parameters": [
-                {"name": "T1552.001 - 3", "description": "Credentials In Files - Extracting passwords with findstr", "type": "bool"},
-                {"name": "T1552.001 - 4", "description": "Credentials In Files - Access unattend.xml", "type": "bool"},
-            ],
-            "total_matches": 2,
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "success": True,
+                "message": "Found 2 parameters matching prefix 'T1552.001'",
+                "artifact_name": "Windows.AttackSimulation.AtomicRedTeam",
+                "parameter_prefix": "T1552.001",
+                "matching_parameters": [
+                    {"name": "T1552.001 - 3", "description": "Credentials In Files - Extracting passwords with findstr", "type": "bool"},
+                    {"name": "T1552.001 - 4", "description": "Credentials In Files - Access unattend.xml", "type": "bool"},
+                ],
+                "total_matches": 2,
+            },
         },
-    })
+    )
 
 
 class OSPrefixEnum(Enum):
@@ -139,16 +143,18 @@ class CollectArtifactBody(BaseBody):
         False,
         description="If true, only store the collected data in the datastore without sending it back immediately",
     )
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "hostname": "WIN-HFOU106TD7K",
-            "velociraptor_id": "C.475df76785008b04",
-            "velociraptor_org": "root",
-            "artifact_name": "Windows.AttackSimulation.AtomicRedTeam",
-            "parameters": {"env": [{"key": "InstallART", "value": "N"}, {"key": "T1552.001 - 3", "value": "Y"}]},
-            "data_store_only": False,
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "hostname": "WIN-HFOU106TD7K",
+                "velociraptor_id": "C.475df76785008b04",
+                "velociraptor_org": "root",
+                "artifact_name": "Windows.AttackSimulation.AtomicRedTeam",
+                "parameters": {"env": [{"key": "InstallART", "value": "N"}, {"key": "T1552.001 - 3", "value": "Y"}]},
+                "data_store_only": False,
+            },
         },
-    })
+    )
 
 
 class InvokeCopilotActionBody(BaseModel):

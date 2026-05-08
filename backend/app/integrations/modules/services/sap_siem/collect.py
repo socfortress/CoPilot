@@ -148,7 +148,9 @@ async def post_to_copilot_sap_module_brute_force_failed_logins_same_ip(data: Inv
     Args:
         data (InvokeSapSiemAnalysis): The data to send to the copilot-sap-module Docker container.
     """
-    logger.info(f"Sending POST request to http://copilot-sap-module/sap-siem/brute_force_failed_logins_same_ip with data: {data.model_dump()}")
+    logger.info(
+        f"Sending POST request to http://copilot-sap-module/sap-siem/brute_force_failed_logins_same_ip with data: {data.model_dump()}",
+    )
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(

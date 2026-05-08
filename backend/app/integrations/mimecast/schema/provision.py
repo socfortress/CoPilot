@@ -3,8 +3,10 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import model_validator, ConfigDict, BaseModel
+from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import model_validator
 
 
 class ProvisionMimecastRequest(BaseModel):
@@ -54,27 +56,29 @@ class MimecastEventStream(BaseModel):
         None,
         description="Associated content pack, if any",
     )
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "title": "Mimecast EVENTS - Example Company",
-            "description": "Mimecast EVENTS - Example Company",
-            "index_set_id": "12345",
-            "rules": [
-                {
-                    "field": "agent_labels_customer",
-                    "type": 1,
-                    "inverted": False,
-                    "value": "ExampleCode",
-                },
-                {
-                    "field": "agent_labels_integration",
-                    "type": 1,
-                    "inverted": False,
-                    "value": "Office365",
-                },
-            ],
-            "matching_type": "AND",
-            "remove_matches_from_default_stream": True,
-            "content_pack": None,
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "title": "Mimecast EVENTS - Example Company",
+                "description": "Mimecast EVENTS - Example Company",
+                "index_set_id": "12345",
+                "rules": [
+                    {
+                        "field": "agent_labels_customer",
+                        "type": 1,
+                        "inverted": False,
+                        "value": "ExampleCode",
+                    },
+                    {
+                        "field": "agent_labels_integration",
+                        "type": 1,
+                        "inverted": False,
+                        "value": "Office365",
+                    },
+                ],
+                "matching_type": "AND",
+                "remove_matches_from_default_stream": True,
+                "content_pack": None,
+            },
         },
-    })
+    )

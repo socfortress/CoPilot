@@ -5,7 +5,8 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import ConfigDict, BaseModel
+from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 
 
@@ -55,16 +56,18 @@ class AutoCreateAlertResponse(BaseModel):
     alerts_failed: int = 0
     batches_processed: int = 0
     alerts_remaining: int = 0
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "success": True,
-            "message": "Processed 5 batches: 487 alerts created, 13 failed. 2000 alerts remaining for next run",
-            "alerts_created": 487,
-            "alerts_failed": 13,
-            "batches_processed": 5,
-            "alerts_remaining": 2000,
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "success": True,
+                "message": "Processed 5 batches: 487 alerts created, 13 failed. 2000 alerts remaining for next run",
+                "alerts_created": 487,
+                "alerts_failed": 13,
+                "batches_processed": 5,
+                "alerts_remaining": 2000,
+            },
         },
-    })
+    )
 
 
 class IndexNamesResponse(BaseModel):

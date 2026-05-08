@@ -7,8 +7,9 @@ from typing import List
 from typing import Optional
 
 import bcrypt
-from pydantic import field_validator, BaseModel
+from pydantic import BaseModel
 from pydantic import EmailStr
+from pydantic import field_validator
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel

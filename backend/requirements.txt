@@ -145,8 +145,8 @@ pyasn1==0.6.3
 pyasn1-modules==0.4.2
 pycparser==3.0
 pycryptodome==3.23.0
-pydantic[email]==2.13.4
 pydantic-core==2.46.4
+pydantic[email]==2.13.4
 pydo==0.34.0
 pyee==13.0.1
 pygments==2.20.0

@@ -4,8 +4,9 @@ from typing import List
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import field_validator, BaseModel
+from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 
 
 class AvailableMonitoringAlerts(str, Enum):
@@ -451,12 +452,14 @@ class CustomMonitoringAlertProvisionModel(BaseModel):
             "have a pipeline rule that sets the SYSLOG_LEVEL field to ALERT when "
             "the Wazuh rule level is greater than 11."
         ),
-        examples=[(
-            "This alert monitors the SYSLOG_LEVEL field in the Wazuh logs. When "
-            "the level is ALERT, it triggers an alert that is created within "
-            "DFIR-IRIS. Ensure that you have a pipeline rule that sets the "
-            "SYSLOG_LEVEL field to ALERT when the Wazuh rule level is greater than 11."
-        )],
+        examples=[
+            (
+                "This alert monitors the SYSLOG_LEVEL field in the Wazuh logs. When "
+                "the level is ALERT, it triggers an alert that is created within "
+                "DFIR-IRIS. Ensure that you have a pipeline rule that sets the "
+                "SYSLOG_LEVEL field to ALERT when the Wazuh rule level is greater than 11."
+            ),
+        ],
     )
     alert_priority: AlertPriority = Field(
         ...,

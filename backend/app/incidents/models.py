@@ -245,7 +245,10 @@ class VeloSigmaExclusion(SQLModel, table=True):
     title: Optional[str] = Field(max_length=255, nullable=True, description="Sigma rule title to match (exact match)")
 
     # Field matching data - stored as JSON to allow flexible field matching
-    field_matches: Optional[Dict] = Field(sa_column=Column(JSON, nullable=True), description="JSON of field names and values to match in the event data")
+    field_matches: Optional[Dict] = Field(
+        sa_column=Column(JSON, nullable=True),
+        description="JSON of field names and values to match in the event data",
+    )
 
     # Metadata
     customer_code: Optional[str] = Field(
@@ -271,7 +274,10 @@ class ThresholdAlertMetadata(SQLModel, table=True):
     replay_query: str = Field(sa_column=Column(Text, nullable=False), description="Lucene query from Graylog replay_info")
     timerange_start: datetime = Field(nullable=False, description="Start of the threshold evaluation window")
     timerange_end: datetime = Field(nullable=False, description="End of the threshold evaluation window")
-    group_by_fields: Optional[Dict] = Field(sa_column=Column(JSON, nullable=True), description="Group-by field key/value pairs from the threshold event")
+    group_by_fields: Optional[Dict] = Field(
+        sa_column=Column(JSON, nullable=True),
+        description="Group-by field key/value pairs from the threshold event",
+    )
     source_streams: Optional[List] = Field(sa_column=Column(JSON, nullable=True), description="Graylog source stream IDs")
     source: str = Field(max_length=50, nullable=False, description="SOURCE field value (e.g. wazuh)")
     resolved_index_name: str = Field(max_length=255, nullable=False, description="OpenSearch index of the resolved event")
@@ -327,7 +333,10 @@ class CaseTemplateTask(SQLModel, table=True):
     template_id: int = Field(foreign_key="incident_management_case_template.id", nullable=False)
     title: str = Field(max_length=500, nullable=False)
     description: Optional[str] = Field(sa_column=Column(Text, nullable=True))
-    guidelines: Optional[str] = Field(sa_column=Column(Text, nullable=True), description="Best practices / steps the analyst should follow when executing this task")
+    guidelines: Optional[str] = Field(
+        sa_column=Column(Text, nullable=True),
+        description="Best practices / steps the analyst should follow when executing this task",
+    )
     mandatory: bool = Field(
         default=False,
         nullable=False,
@@ -374,7 +383,10 @@ class CaseTask(SQLModel, table=True):
         nullable=False,
         description="One of TODO, DONE, NOT_NECESSARY (NOT_NECESSARY only valid when mandatory=False).",
     )
-    evidence_comment: Optional[str] = Field(sa_column=Column(Text, nullable=True), description="Free-form notes / evidence (logs, command output) attached when status changes.")
+    evidence_comment: Optional[str] = Field(
+        sa_column=Column(Text, nullable=True),
+        description="Free-form notes / evidence (logs, command output) attached when status changes.",
+    )
     completed_by: Optional[str] = Field(max_length=100, nullable=True)
     completed_at: Optional[datetime] = Field(default=None, nullable=True)
 
@@ -408,7 +420,10 @@ class CaseEvent(SQLModel, table=True):
     )
     actor: str = Field(max_length=100, nullable=False, description="user_name that performed the action")
     timestamp: datetime = Field(default_factory=datetime.utcnow, index=True)
-    payload: Optional[Dict] = Field(sa_column=Column(JSON, nullable=True), description="Event-type-specific JSON payload (e.g., from_status/to_status, alert_id, task_id).")
+    payload: Optional[Dict] = Field(
+        sa_column=Column(JSON, nullable=True),
+        description="Event-type-specific JSON payload (e.g., from_status/to_status, alert_id, task_id).",
+    )
 
 
 class TagAccessSettings(SQLModel, table=True):

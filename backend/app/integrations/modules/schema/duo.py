@@ -1,6 +1,7 @@
 from fastapi import HTTPException
-from pydantic import field_validator, BaseModel
+from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 
 
 class InvokeDuoRequest(BaseModel):

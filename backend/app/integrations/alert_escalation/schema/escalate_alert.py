@@ -4,7 +4,8 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import ConfigDict, BaseModel
+from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 
 
@@ -175,7 +176,8 @@ class IrisAlertContext(BaseModel):
     )
     alert_level: int = Field(..., description="Severity level of the alert", examples=[3])
     process_name: Optional[List[str]] = Field(
-        None, examples=[["No process name found"]],
+        None,
+        examples=[["No process name found"]],
         description="Name of the process",
     )
     model_config = ConfigDict(extra="allow")

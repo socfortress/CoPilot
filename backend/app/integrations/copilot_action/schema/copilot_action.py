@@ -6,8 +6,9 @@ from typing import List
 from typing import Optional
 from typing import Union
 
-from pydantic import field_validator, BaseModel
+from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import model_validator
 
 
