@@ -271,5 +271,3 @@ async def delete_client(client_id: str) -> dict:
         return check_flow_success(flow, client_id)
     except Exception as e:
         return handle_exception(e, client_id)
-
-
