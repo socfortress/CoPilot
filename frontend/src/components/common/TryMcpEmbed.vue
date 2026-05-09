@@ -70,19 +70,14 @@ function render() {
 
 onMounted(async () => {
 	if (!container.value) return
-	// Default to the per-customer org auth token until we resolve the
-	// deployment-wide connector creds. The connector API key is the right
-	// one for `/api/v1/apps` (private apps lookup) — without it the
-	// browser hits CORS against shuffler.io. The org token is a usable
-	// fallback when no Shuffle connector is configured.
-	API_CONFIG.setApiKey(props.authToken)
 	root = createRoot(container.value)
-	render()
+	// Resolve creds before the first render — same reason as
+	// ShuffleMCPEmbed. The package's hooks (useAppLookup, the chat fetch)
+	// fire on mount; rendering them with the wrong API key burns
+	// unauthenticated requests to shuffler.io.
 	const creds = await fetchShuffleConnectorCredentials()
-	if (creds?.api_key) {
-		API_CONFIG.setApiKey(creds.api_key)
-		render()
-	}
+	API_CONFIG.setApiKey(creds?.api_key ?? props.authToken)
+	render()
 })
 
 watch(

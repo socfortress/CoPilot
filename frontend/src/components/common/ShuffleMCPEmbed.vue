@@ -108,16 +108,17 @@ function render() {
 onMounted(async () => {
 	if (!container.value) return
 	root = createRoot(container.value)
-	// Render once immediately with whatever explicit overrides the caller
-	// gave us so the embed is interactive on first paint, then re-render
-	// once the connector creds resolve.
-	render()
+	// Wait for the connector creds before the first render. The package
+	// fires its private/authenticated apps fetches eagerly on mount; if we
+	// render with no apiKey/apiBaseUrl those fetches go to the package
+	// defaults (shuffler.io, unauthed) and 401/CORS-block. Better to hold
+	// off one async tick and render once with the right config.
 	const creds = await fetchShuffleConnectorCredentials()
 	if (creds) {
 		connectorApiKey.value = creds.api_key
 		connectorBaseUrl.value = creds.base_url
-		render()
 	}
+	render()
 })
 
 // Re-render when any reactive prop changes. The shallow watch is fine
