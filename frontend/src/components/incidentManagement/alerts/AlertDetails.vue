@@ -50,6 +50,17 @@
 					<AlertIoCsList :iocs="alert.iocs" :alert-id="alert.id" @updated="updateIos($event)" />
 				</div>
 			</n-tab-pane>
+			<n-tab-pane name="TryMcp" display-directive="show:lazy">
+				<template #tab>
+					<div class="flex items-center gap-1.5">
+						<Icon name="carbon:bot" :size="14" class="text-primary" />
+						<span>Try MCP</span>
+					</div>
+				</template>
+				<div class="p-7 pt-4">
+					<AlertTryMcp :alert />
+				</div>
+			</n-tab-pane>
 		</n-tabs>
 	</n-spin>
 </template>
@@ -76,6 +87,7 @@ const AlertCommentsList = defineAsyncComponent(() => import("./AlertCommentsList
 const AlertIoCsList = defineAsyncComponent(() => import("./AlertIoCsList.vue"))
 const AlertOverview = defineAsyncComponent(() => import("./AlertOverview.vue"))
 const AlertAiAnalyst = defineAsyncComponent(() => import("./AlertAiAnalyst.vue"))
+const AlertTryMcp = defineAsyncComponent(() => import("./AlertTryMcp.vue"))
 
 const { alertData, alertId } = toRefs(props)
 
