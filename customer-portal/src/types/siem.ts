@@ -1,3 +1,12 @@
+export interface DisplayColumn {
+	/** Field path in the event _source object (dotted, e.g. "agent.name"). */
+	key: string
+	/** Human-readable column header. */
+	label: string
+	/** Optional pixel width hint. */
+	width?: number | null
+}
+
 export interface EventSourceItem {
 	id: number
 	customer_code: string
@@ -6,6 +15,7 @@ export interface EventSourceItem {
 	event_type: string
 	time_field: string
 	enabled: boolean
+	displayed_columns?: DisplayColumn[] | null
 	created_at: string
 	updated_at: string
 }

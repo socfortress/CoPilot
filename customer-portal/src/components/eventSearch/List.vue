@@ -57,10 +57,10 @@
 </template>
 
 <script setup lang="tsx">
-import type { DataTableColumns, TagProps } from "naive-ui"
+import type { DataTableColumn, DataTableColumns, TagProps } from "naive-ui"
 import type { SearchFormLoad, SearchFormParams } from "@/components/eventSearch/SearchForm.vue"
 import type { ApiError } from "@/types/common"
-import type { EventSearchQueryParams, EventSearchResult } from "@/types/siem"
+import type { DisplayColumn, EventSearchQueryParams, EventSearchResult, EventSourceItem } from "@/types/siem"
 import { useElementSize } from "@vueuse/core"
 import { NAlert, NButton, NDataTable, NEmpty, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
@@ -95,7 +95,43 @@ function selectEvent(event: EventSearchResult) {
 const { width: headerWidthRef } = useElementSize(useTemplateRef("headerRef"))
 const simpleMode = computed(() => headerWidthRef.value < 600)
 
-const columns = computed<DataTableColumns<EventSearchResult>>(() => [
+const selectedEventSource = computed<EventSourceItem | null>(() => {
+	const sourceName = searchFormParams.value?.sourceName
+	const sources = searchFormLoad.value?.eventSources
+	if (!sourceName || !sources) return null
+	return sources.find(s => s.name === sourceName) ?? null
+})
+
+/** Walk a dotted path (e.g. "agent.name") through a nested object. */
+function getNestedValue(obj: EventSearchResult, path: string): unknown {
+	return path.split(".").reduce<unknown>((acc, segment) => {
+		if (acc && typeof acc === "object") {
+			return (acc as Record<string, unknown>)[segment]
+		}
+		return undefined
+	}, obj)
+}
+
+function formatCellValue(val: unknown): string {
+	if (val === undefined || val === null || val === "") return "-"
+	if (Array.isArray(val)) return val.map(v => (v === null || v === undefined ? "" : String(v))).join(", ")
+	if (typeof val === "object") return JSON.stringify(val)
+	return String(val)
+}
+
+function buildColumnFromConfig(col: DisplayColumn): DataTableColumn<EventSearchResult> {
+	return {
+		title: col.label || col.key,
+		key: col.key,
+		width: col.width || undefined,
+		ellipsis: { tooltip: true },
+		render: row => <div>{formatCellValue(getNestedValue(row, col.key))}</div>
+	}
+}
+
+// Defaults preserved from the original hardcoded layout so behaviour is unchanged
+// for event sources that haven't been configured yet.
+const defaultColumns = computed<DataTableColumn<EventSearchResult>[]>(() => [
 	{
 		title: "Timestamp",
 		key: "Timestamp",
@@ -124,26 +160,34 @@ const columns = computed<DataTableColumns<EventSearchResult>>(() => [
 		title: "Rule",
 		key: "Rule",
 		render: row => <div>{row.rule_description || row.rule?.description || "-"}</div>
-	},
-	{
-		title: "Actions",
-		key: "actions",
-		width: 150,
-		fixed: simpleMode.value ? undefined : "right",
-		render: row => {
-			return (
-				<NButton
-					onClick={() => selectEvent(row)}
-					v-slots={{
-						icon: () => <Icon name="carbon:view" />
-					}}
-				>
-					View Details
-				</NButton>
-			)
-		}
 	}
 ])
+
+const actionsColumn = computed<DataTableColumn<EventSearchResult>>(() => ({
+	title: "Actions",
+	key: "actions",
+	width: 150,
+	fixed: simpleMode.value ? undefined : "right",
+	render: row => (
+		<NButton
+			onClick={() => selectEvent(row)}
+			v-slots={{
+				icon: () => <Icon name="carbon:view" />
+			}}
+		>
+			View Details
+		</NButton>
+	)
+}))
+
+const columns = computed<DataTableColumns<EventSearchResult>>(() => {
+	const configured = selectedEventSource.value?.displayed_columns
+	const dataColumns =
+		configured && configured.length > 0 ? configured.map(buildColumnFromConfig) : defaultColumns.value
+	// Always keep the View Details action at the right edge — it's the only way
+	// to open the event drawer from the table.
+	return [...dataColumns, actionsColumn.value]
+})
 
 function handleSearchFormSearch(params: SearchFormParams) {
 	searchFormParams.value = params
