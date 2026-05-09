@@ -15,15 +15,14 @@ export default defineConfig(({ mode }) => {
 	// Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
 	process.env = { ...process.env, ...loadEnv(mode, process.cwd(), "") }
 
-	// `@shuffleio/shuffle-mcps` reads VITE_SHUFFLE_API_URL at module init
-	// to set its global API base URL. Components beyond `<ShuffleMCP>`
-	// (AppDetailDrawer, TryMcpSection, SingulActionsPreview) ignore prop
-	// overrides and only honour this global. Default to our same-origin
-	// proxy so every embed routes through the backend regardless of
-	// component. Any explicit `.env` setting still wins.
-	if (!process.env.VITE_SHUFFLE_API_URL) {
-		process.env.VITE_SHUFFLE_API_URL = "/api/shuffle/integrations/proxy"
-	}
+	// `@shuffleio/shuffle-mcps` reads `import.meta.env.VITE_SHUFFLE_API_URL`
+	// at module init to set its global API base URL. Components beyond
+	// `<ShuffleMCP>` (AppDetailDrawer, TryMcpSection, SingulActionsPreview)
+	// ignore prop overrides and only honour this global, so we have to set
+	// it via real Vite text-replacement (process.env assignment in
+	// vite.config.ts is *not* auto-piped to import.meta.env). Any explicit
+	// `.env` value still wins.
+	const shuffleApiUrl = process.env.VITE_SHUFFLE_API_URL || "/api/shuffle/integrations/proxy"
 
 	return {
 		plugins: [
@@ -70,7 +69,8 @@ export default defineConfig(({ mode }) => {
 			}
 		},
 		define: {
-			__APP_ENV__: JSON.stringify(process.env.APP_ENV)
+			__APP_ENV__: JSON.stringify(process.env.APP_ENV),
+			"import.meta.env.VITE_SHUFFLE_API_URL": JSON.stringify(shuffleApiUrl)
 		},
 		css: {
 			preprocessorOptions: {
