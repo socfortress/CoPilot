@@ -15,6 +15,16 @@ export default defineConfig(({ mode }) => {
 	// Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
 	process.env = { ...process.env, ...loadEnv(mode, process.cwd(), "") }
 
+	// `@shuffleio/shuffle-mcps` reads VITE_SHUFFLE_API_URL at module init
+	// to set its global API base URL. Components beyond `<ShuffleMCP>`
+	// (AppDetailDrawer, TryMcpSection, SingulActionsPreview) ignore prop
+	// overrides and only honour this global. Default to our same-origin
+	// proxy so every embed routes through the backend regardless of
+	// component. Any explicit `.env` setting still wins.
+	if (!process.env.VITE_SHUFFLE_API_URL) {
+		process.env.VITE_SHUFFLE_API_URL = "/api/shuffle/integrations/proxy"
+	}
+
 	return {
 		plugins: [
 			tailwindcss(),
