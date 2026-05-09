@@ -542,11 +542,7 @@ class EventSources(SQLModel, table=True):
         SQLAlchemy's json_serializer otherwise raises "Object of type
         DisplayColumn is not JSON serializable" on commit.
         """
-        data = (
-            source_data.model_dump(exclude_unset=True)
-            if hasattr(source_data, "model_dump")
-            else {}
-        )
+        data = source_data.model_dump(exclude_unset=True) if hasattr(source_data, "model_dump") else {}
         for field in ("name", "index_pattern", "event_type", "time_field", "enabled", "displayed_columns"):
             if field in data:
                 setattr(self, field, data[field])
