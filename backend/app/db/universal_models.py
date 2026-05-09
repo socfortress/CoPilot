@@ -543,7 +543,16 @@ class EventSources(SQLModel, table=True):
         if hasattr(source_data, "enabled"):
             self.enabled = source_data.enabled
         if hasattr(source_data, "displayed_columns"):
-            self.displayed_columns = source_data.displayed_columns
+            # Pydantic deserializes incoming JSON into DisplayColumn instances; the JSON
+            # column needs plain dicts, otherwise SQLAlchemy's json_serializer raises
+            # "Object of type DisplayColumn is not JSON serializable" on commit.
+            cols = source_data.displayed_columns
+            if cols is None:
+                self.displayed_columns = None
+            else:
+                self.displayed_columns = [
+                    c.model_dump() if hasattr(c, "model_dump") else c for c in cols
+                ]
         self.updated_at = datetime.utcnow()
 
 
