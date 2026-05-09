@@ -70,8 +70,10 @@ async def get_shuffle_connector_credentials(
         success=True,
         message="Shuffle connector credentials retrieved.",
         # Frontend uses this as the embed's `apiBaseUrl` — all browser-side
-        # XHR is same-origin via the proxy below.
-        base_url="/api/shuffle/proxy",
+        # XHR is same-origin via the proxy below. Path must match the
+        # proxy route's actual mount point (the integrations router is
+        # itself prefixed at `/shuffle/integrations`).
+        base_url="/api/shuffle/integrations/proxy",
         api_key=api_key,
     )
 
