@@ -1,7 +1,9 @@
 from datetime import datetime
+from typing import List
 from typing import Optional
 
 from loguru import logger
+from sqlalchemy import JSON
 from sqlalchemy import Column
 from sqlalchemy import Float
 from sqlalchemy import LargeBinary
@@ -518,6 +520,12 @@ class EventSources(SQLModel, table=True):
     event_type: str = Field(max_length=50, nullable=False)  # EDR, EPP, Cloud Integration, Network Security
     time_field: str = Field(max_length=255, nullable=False, default="timestamp")
     enabled: bool = Field(default=True)
+    # List of {key, label, width?} dicts. NULL/empty means "use the frontend's
+    # hardcoded defaults" so behaviour for un-customised sources is unchanged.
+    displayed_columns: Optional[List[dict]] = Field(
+        default=None,
+        sa_column=Column(JSON, nullable=True),
+    )
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -534,6 +542,8 @@ class EventSources(SQLModel, table=True):
             self.time_field = source_data.time_field
         if hasattr(source_data, "enabled"):
             self.enabled = source_data.enabled
+        if hasattr(source_data, "displayed_columns"):
+            self.displayed_columns = source_data.displayed_columns
         self.updated_at = datetime.utcnow()
 
 
