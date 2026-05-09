@@ -1277,12 +1277,30 @@ async def delete_agent(
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found or access denied")
 
-    await delete_agent_wazuh(agent_id)
-    client_id = await fetch_velociraptor_id(db=session, agent_id=agent_id)
-    logger.info(f"Client ID: {client_id}")
-    if client_id != "Unknown":
-        await delete_agent_velociraptor(client_id)
+    upstream_errors: list[str] = []
+
+    try:
+        await delete_agent_wazuh(agent_id)
+    except Exception as e:
+        logger.error(f"Wazuh delete failed for agent {agent_id}: {e}")
+        upstream_errors.append(f"Wazuh: {e}")
+
+    try:
+        client_id = await fetch_velociraptor_id(db=session, agent_id=agent_id)
+        logger.info(f"Client ID: {client_id}")
+        if client_id != "Unknown":
+            await delete_agent_velociraptor(client_id)
+    except Exception as e:
+        logger.error(f"Velociraptor delete failed for agent {agent_id}: {e}")
+        upstream_errors.append(f"Velociraptor: {e}")
+
     await delete_agent_from_database(db=session, agent_id=agent_id)
+
+    if upstream_errors:
+        return AgentModifyResponse(
+            success=True,
+            message=f"Agent {agent_id} deleted from CoPilot; upstream services reported: {'; '.join(upstream_errors)}",
+        )
     return AgentModifyResponse(
         success=True,
         message=f"Agent {agent_id} deleted successfully",
