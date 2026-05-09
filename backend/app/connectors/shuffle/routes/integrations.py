@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from fastapi import Request
 from fastapi import Response
 from fastapi import Security
+from fastapi.responses import RedirectResponse
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -95,11 +96,6 @@ async def shuffle_proxy(
     request: Request,
     session: AsyncSession = Depends(get_db),
 ) -> Response:
-    auth = request.headers.get("Authorization", "")
-    if not auth.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing Bearer authorization for Shuffle proxy.")
-    token = auth.removeprefix("Bearer ")
-
     info = await get_connector_info_from_db("Shuffle", session)
     if not info:
         raise HTTPException(status_code=404, detail="Shuffle connector is not configured.")
@@ -110,6 +106,23 @@ async def shuffle_proxy(
             status_code=400,
             detail="Shuffle connector is missing connector_url or connector_api_key.",
         )
+
+    # Top-level OAuth handoff (e.g., `/appauth?app_id=…&auth=…`) is a
+    # browser navigation, not an XHR. Browsers never set the Authorization
+    # header on those, so the Bearer check below would always 401. The
+    # query string Shuffle constructed is enough to identify the auth
+    # session, the URL exposes no secrets, and the destination's OAuth
+    # provider is the real authority. Forward the user with a 302.
+    if path == "appauth":
+        target = f"{real_base_url}/appauth"
+        qs = str(request.url.query)
+        return RedirectResponse(url=f"{target}?{qs}" if qs else target, status_code=302)
+
+    # All other paths are XHR — require the connector key as Bearer.
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer authorization for Shuffle proxy.")
+    token = auth.removeprefix("Bearer ")
     # Constant-time-ish equality is overkill here (this isn't a public
     # endpoint and the token is the same one the caller fetched seconds
     # ago via /credentials), but cheap.
