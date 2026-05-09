@@ -532,18 +532,20 @@ class EventSources(SQLModel, table=True):
     customer: Optional["Customers"] = Relationship()
 
     def update_from_model(self, source_data):
-        if hasattr(source_data, "name"):
-            self.name = source_data.name
-        if hasattr(source_data, "index_pattern"):
-            self.index_pattern = source_data.index_pattern
-        if hasattr(source_data, "event_type"):
-            self.event_type = source_data.event_type
-        if hasattr(source_data, "time_field"):
-            self.time_field = source_data.time_field
-        if hasattr(source_data, "enabled"):
-            self.enabled = source_data.enabled
-        if hasattr(source_data, "displayed_columns"):
-            self.displayed_columns = source_data.displayed_columns
+        """Apply only the fields the caller explicitly set on source_data.
+
+        Pydantic 2's `model_dump(exclude_unset=True)` filters to fields the
+        client actually sent, so partial updates (e.g. PUT with just
+        `displayed_columns`) don't clobber unrelated columns to NULL. The
+        same dump recursively flattens nested Pydantic models (DisplayColumn)
+        into plain dicts, which is what the JSON column requires —
+        SQLAlchemy's json_serializer otherwise raises "Object of type
+        DisplayColumn is not JSON serializable" on commit.
+        """
+        data = source_data.model_dump(exclude_unset=True) if hasattr(source_data, "model_dump") else {}
+        for field in ("name", "index_pattern", "event_type", "time_field", "enabled", "displayed_columns"):
+            if field in data:
+                setattr(self, field, data[field])
         self.updated_at = datetime.utcnow()
 
 

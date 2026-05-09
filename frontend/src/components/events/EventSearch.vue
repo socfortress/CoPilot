@@ -64,6 +64,17 @@
 						</template>
 						Search
 					</n-button>
+					<n-button
+						quaternary
+						:disabled="!selectedEventSource"
+						title="Configure which columns to display for this event source"
+						@click="showColumnConfig = true"
+					>
+						<template #icon>
+							<Icon :name="SettingsIcon" :size="16" />
+						</template>
+						Columns
+					</n-button>
 				</div>
 
 				<!-- Query Bar with Autocomplete -->
@@ -138,6 +149,14 @@
 			@filter-add="addFilterFromDetail"
 			@filter-exclude="excludeFilterFromDetail"
 		/>
+
+		<!-- Column Config Modal -->
+		<ColumnConfigModal
+			v-model:show="showColumnConfig"
+			:event-source="selectedEventSource"
+			:field-mappings
+			@saved="onColumnsSaved"
+		/>
 	</div>
 </template>
 
@@ -145,18 +164,20 @@
 import type { DataTableColumns } from "naive-ui"
 import type { Customer } from "@/types/customers.d"
 import type { EventSearchResult, FieldMapping } from "@/types/events.d"
-import type { EventSource } from "@/types/eventSources.d"
+import type { DisplayColumn, EventSource } from "@/types/eventSources.d"
 import { NAlert, NButton, NCard, NDataTable, NDatePicker, NEmpty, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, nextTick, onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import ColumnConfigModal from "./ColumnConfigModal.vue"
 import EventDetailDrawer from "./EventDetailDrawer.vue"
 
 const route = useRoute()
 
 const SearchIcon = "carbon:search"
 const CodeIcon = "carbon:code"
+const SettingsIcon = "carbon:settings"
 const FIELD_TOKEN_REGEX = /(?:^|[\s(])([a-z_][\w.]*)$/i
 
 const message = useMessage()
@@ -200,6 +221,10 @@ const eventSourceOptions = computed(() =>
 
 const showNoSourcesWarning = computed(
 	() => selectedCustomerCode.value && !loadingEventSources.value && eventSourcesList.value.length === 0
+)
+
+const selectedEventSource = computed<EventSource | null>(
+	() => eventSourcesList.value.find(s => s.name === selectedSourceName.value) ?? null
 )
 
 // -- Field mappings / autocomplete --
@@ -397,67 +422,112 @@ function loadMoreEvents() {
 }
 
 // -- Table columns --
-const columns = computed<DataTableColumns<EventSearchResult>>(() => {
-	const baseColumns: DataTableColumns<EventSearchResult> = [
-		{
-			title: "Timestamp",
-			key: "timestamp",
-			width: 180,
-			sorter: (a, b) => {
-				const timeA = a.timestamp || a["@timestamp"] || ""
-				const timeB = b.timestamp || b["@timestamp"] || ""
-				return new Date(timeA).getTime() - new Date(timeB).getTime()
-			},
-			render(row) {
-				const ts = row.timestamp || row["@timestamp"]
-				if (!ts) return "-"
-				return new Date(ts).toLocaleString()
-			}
+// Default columns we fall back to when an event source has no displayed_columns
+// configured. These keep the prior behaviour for un-customised sources.
+const defaultColumns: DataTableColumns<EventSearchResult> = [
+	{
+		title: "Timestamp",
+		key: "timestamp",
+		width: 180,
+		sorter: (a, b) => {
+			const timeA = a.timestamp || a["@timestamp"] || ""
+			const timeB = b.timestamp || b["@timestamp"] || ""
+			return new Date(timeA).getTime() - new Date(timeB).getTime()
 		},
-		{
-			title: "Source",
-			key: "agent_name",
-			width: 140,
-			ellipsis: { tooltip: true },
-			render(row) {
-				return row.agent_name || row.source || "-"
-			}
-		},
-		{
-			title: "Rule",
-			key: "rule_description",
-			ellipsis: { tooltip: true },
-			render(row) {
-				return row.rule_description || row.rule_id || "-"
-			}
-		},
-		{
-			title: "Level",
-			key: "rule_level",
-			width: 80,
-			sorter: (a, b) => (Number(a.rule_level) || 0) - (Number(b.rule_level) || 0),
-			render(row) {
-				if (row.rule_level === undefined || row.rule_level === null) return "-"
-				const level = Number(row.rule_level)
-				let type: "default" | "warning" | "error" | "success" | "info" = "default"
-				if (level >= 12) type = "error"
-				else if (level >= 8) type = "warning"
-				else if (level >= 4) type = "info"
-				return h("span", { class: `level-${type}` }, String(row.rule_level))
-			}
-		},
-		{
-			title: "Summary",
-			key: "full_log",
-			ellipsis: { tooltip: true },
-			render(row) {
-				return row.full_log || row.data || row.message || "-"
-			}
+		render(row) {
+			const ts = row.timestamp || row["@timestamp"]
+			if (!ts) return "-"
+			return new Date(ts).toLocaleString()
 		}
-	]
+	},
+	{
+		title: "Source",
+		key: "agent_name",
+		width: 140,
+		ellipsis: { tooltip: true },
+		render(row) {
+			return row.agent_name || row.source || "-"
+		}
+	},
+	{
+		title: "Rule",
+		key: "rule_description",
+		ellipsis: { tooltip: true },
+		render(row) {
+			return row.rule_description || row.rule_id || "-"
+		}
+	},
+	{
+		title: "Level",
+		key: "rule_level",
+		width: 80,
+		sorter: (a, b) => (Number(a.rule_level) || 0) - (Number(b.rule_level) || 0),
+		render(row) {
+			if (row.rule_level === undefined || row.rule_level === null) return "-"
+			const level = Number(row.rule_level)
+			let type: "default" | "warning" | "error" | "success" | "info" = "default"
+			if (level >= 12) type = "error"
+			else if (level >= 8) type = "warning"
+			else if (level >= 4) type = "info"
+			return h("span", { class: `level-${type}` }, String(row.rule_level))
+		}
+	},
+	{
+		title: "Summary",
+		key: "full_log",
+		ellipsis: { tooltip: true },
+		render(row) {
+			return row.full_log || row.data || row.message || "-"
+		}
+	}
+]
 
-	return baseColumns
+/** Walk a dotted path (e.g. "agent.name") through a nested object. */
+function getNestedValue(obj: EventSearchResult, path: string): unknown {
+	return path.split(".").reduce<unknown>((acc, segment) => {
+		if (acc && typeof acc === "object") {
+			return (acc as Record<string, unknown>)[segment]
+		}
+		return undefined
+	}, obj)
+}
+
+function formatCellValue(val: unknown): string {
+	if (val === undefined || val === null || val === "") return "-"
+	if (Array.isArray(val)) return val.map(v => (v === null || v === undefined ? "" : String(v))).join(", ")
+	if (typeof val === "object") return JSON.stringify(val)
+	return String(val)
+}
+
+function buildColumnFromConfig(col: DisplayColumn): DataTableColumns<EventSearchResult>[number] {
+	return {
+		title: col.label || col.key,
+		key: col.key,
+		width: col.width || undefined,
+		ellipsis: { tooltip: true },
+		render(row: EventSearchResult) {
+			return formatCellValue(getNestedValue(row, col.key))
+		}
+	}
+}
+
+const columns = computed<DataTableColumns<EventSearchResult>>(() => {
+	const configured = selectedEventSource.value?.displayed_columns
+	if (configured && configured.length > 0) {
+		return configured.map(buildColumnFromConfig)
+	}
+	return defaultColumns
 })
+
+// -- Configure columns modal --
+const showColumnConfig = ref(false)
+
+function onColumnsSaved(saved: DisplayColumn[] | null) {
+	// Patch the local list so the table re-renders without a network round-trip.
+	if (selectedEventSource.value) {
+		selectedEventSource.value.displayed_columns = saved
+	}
+}
 
 // -- Event detail --
 const showDetailDrawer = ref(false)
