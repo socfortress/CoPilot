@@ -214,33 +214,6 @@ def check_flow_success(flow: dict, client_id: str) -> dict:
         )
 
 
-def check_client_in_results(results: dict, client_id: str) -> dict:
-    """
-    Checks if a client is present in the results dictionary.
-
-    Args:
-        results (dict): The dictionary containing the results.
-        client_id (str): The ID of the client to check.
-
-    Returns:
-        dict: A dictionary with a success message if the client is found, otherwise an error message.
-    """
-    if results["results"] == []:
-        logger.info(f"Successfully deleted velociraptor client {client_id}")
-        return {
-            "message": f"Successfully deleted velociraptor client {client_id}",
-            "success": True,
-        }
-
-    for result in results["results"]:
-        if result["client_id"] == client_id:
-            logger.error(f"Failed to delete velociraptor client {client_id}")
-            return handle_exception(
-                e="Failed to delete velociraptor client",
-                client_id=client_id,
-            )
-
-
 def handle_exception(e: Exception, client_id: str) -> dict:
     """
     Handles exceptions that occur during the deletion of a Velociraptor client.
@@ -274,7 +247,6 @@ async def delete_agent_velociraptor(client_id: str) -> AgentModifyResponse:
     """
     try:
         await delete_client(client_id=client_id)
-        await ensure_client_deleted(client_id=client_id)
         return AgentModifyResponse(success=True, message="Agent deleted successfully")
     except Exception as e:
         return handle_exception(e, client_id)
@@ -301,35 +273,3 @@ async def delete_client(client_id: str) -> dict:
         return handle_exception(e, client_id)
 
 
-async def ensure_client_deleted(client_id: str) -> dict:
-    """
-    Ensures that a client is deleted from the server.
-
-    Args:
-        client_id (str): The ID of the client to be deleted.
-
-    Returns:
-        dict: The result of the deletion operation.
-    """
-    universal_service = await UniversalService.create("Velociraptor")
-    try:
-        query = create_query(
-            "SELECT collect_client(client_id='server', artifacts=['Server.Information.Clients'], env=dict()) FROM scope()",
-        )
-        flow = execute_query(universal_service, query)
-        flow_id = (
-            flow.get("results")[0]
-            .get(
-                "collect_client(client_id='server', artifacts=['Server.Information.Clients'], env=dict())",
-            )
-            .get("flow_id")
-        )
-
-        results = universal_service.read_collection_results(
-            client_id=client_id,
-            flow_id=flow_id,
-            artifact="Server.Information.Clients",
-        )
-        return check_client_in_results(results, client_id)
-    except Exception as e:
-        return handle_exception(e, client_id)
