@@ -151,6 +151,10 @@
 			"@tailwindcss/oxide",
 			"esbuild",
 			"unrs-resolver"
-		]
+		],
+		"overrides": {
+			"@mui/icons-material": "^7.3.9",
+			"@mui/material": "^7.3.9"
+		}
 	}
 }
