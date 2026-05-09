@@ -6,7 +6,7 @@ import type {
 	PanelDataResponse
 } from "@/types/dashboards.d"
 import type { EventSearchResult, FieldMapping } from "@/types/events.d"
-import type { EventSource } from "@/types/eventSources.d"
+import type { DisplayColumn, EventSource } from "@/types/eventSources.d"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 
@@ -17,6 +17,7 @@ export interface EventSourceCreatePayload {
 	event_type: string
 	time_field: string
 	enabled: boolean
+	displayed_columns?: DisplayColumn[] | null
 }
 
 export interface EventSourceUpdatePayload {
@@ -25,6 +26,7 @@ export interface EventSourceUpdatePayload {
 	event_type?: string
 	time_field?: string
 	enabled?: boolean
+	displayed_columns?: DisplayColumn[] | null
 }
 
 export default {
