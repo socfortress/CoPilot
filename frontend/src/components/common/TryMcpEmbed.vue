@@ -22,9 +22,15 @@ import { API_CONFIG, TryMcpSection, useAppLookup } from "@shuffleio/shuffle-mcps
 import { createElement, type FC } from "react"
 import { createRoot } from "react-dom/client"
 import { onBeforeUnmount, onMounted, ref, watch } from "vue"
+import { fetchShuffleConnectorCredentials } from "@/composables/shuffleConnectorCredentials"
 
 interface Props {
 	appName: string
+	/**
+	 * Per-customer Shuffle org auth token. Forwarded to TryMcpSection's
+	 * underlying chat so per-customer scoping holds even when the
+	 * deployment-wide connector API key is also set.
+	 */
 	authToken: string
 }
 
@@ -62,21 +68,32 @@ function render() {
 	root.render(createElement(TryMcpInline, { appName: props.appName }))
 }
 
-onMounted(() => {
+onMounted(async () => {
 	if (!container.value) return
-	// Set the API key globally so useAppLookup + TryMcpSection's internal
-	// fetches use the customer's Shuffle org token. Re-setting on each
-	// mount is cheap and keeps the wrapper drop-in.
+	// Default to the per-customer org auth token until we resolve the
+	// deployment-wide connector creds. The connector API key is the right
+	// one for `/api/v1/apps` (private apps lookup) — without it the
+	// browser hits CORS against shuffler.io. The org token is a usable
+	// fallback when no Shuffle connector is configured.
 	API_CONFIG.setApiKey(props.authToken)
 	root = createRoot(container.value)
 	render()
+	const creds = await fetchShuffleConnectorCredentials()
+	if (creds?.api_key) {
+		API_CONFIG.setApiKey(creds.api_key)
+		render()
+	}
 })
 
 watch(
 	() => [props.appName, props.authToken] as const,
-	([, token]) => {
-		API_CONFIG.setApiKey(token)
-		render()
+	() => {
+		// Don't clobber the connector key if it's already loaded —
+		// fetchShuffleConnectorCredentials caches across the session.
+		fetchShuffleConnectorCredentials().then(creds => {
+			API_CONFIG.setApiKey(creds?.api_key ?? props.authToken)
+			render()
+		})
 	}
 )
 

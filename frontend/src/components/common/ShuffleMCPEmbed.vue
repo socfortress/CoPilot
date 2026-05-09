@@ -25,6 +25,7 @@ import { ShuffleMCP } from "@shuffleio/shuffle-mcps"
 import { createElement } from "react"
 import { createRoot } from "react-dom/client"
 import { onBeforeUnmount, onMounted, ref, watch } from "vue"
+import { fetchShuffleConnectorCredentials } from "@/composables/shuffleConnectorCredentials"
 
 interface Props {
 	authToken: string
@@ -64,6 +65,14 @@ const container = ref<HTMLElement | null>(null)
 let root: Root | null = null
 const EMPTY_SELECTED_APPS: unknown[] = []
 
+// Connector creds (URL + admin API key) read from CoPilot's `connectors`
+// table. Without these, ShuffleMCP fetches private/authenticated apps
+// unauthenticated and CORS-blocks against the default `shuffler.io`
+// origin. Loaded lazily so the embed doesn't gate on the round-trip
+// when the caller already passed explicit overrides.
+const connectorApiKey = ref<string | null>(null)
+const connectorBaseUrl = ref<string | null>(null)
+
 function render() {
 	if (!root) return
 	// Drop undefined props so React doesn't override the package's
@@ -86,17 +95,29 @@ function render() {
 		onAppSelected: (payload: unknown) => emit("appSelected", payload),
 		onSelectionChange: (payload: unknown) => emit("selectionChange", payload)
 	}
-	if (props.apiKey) reactProps.apiKey = props.apiKey
-	if (props.apiBaseUrl) reactProps.apiBaseUrl = props.apiBaseUrl
+	// Caller-provided overrides win; fall back to the connector creds.
+	const effectiveApiKey = props.apiKey ?? connectorApiKey.value
+	const effectiveBaseUrl = props.apiBaseUrl ?? connectorBaseUrl.value
+	if (effectiveApiKey) reactProps.apiKey = effectiveApiKey
+	if (effectiveBaseUrl) reactProps.apiBaseUrl = effectiveBaseUrl
 	if (props.initialFilterQuery) reactProps.initialFilterQuery = props.initialFilterQuery
 
 	root.render(createElement(ShuffleMCP as never, reactProps))
 }
 
-onMounted(() => {
+onMounted(async () => {
 	if (!container.value) return
 	root = createRoot(container.value)
+	// Render once immediately with whatever explicit overrides the caller
+	// gave us so the embed is interactive on first paint, then re-render
+	// once the connector creds resolve.
 	render()
+	const creds = await fetchShuffleConnectorCredentials()
+	if (creds) {
+		connectorApiKey.value = creds.api_key
+		connectorBaseUrl.value = creds.base_url
+		render()
+	}
 })
 
 // Re-render when any reactive prop changes. The shallow watch is fine
