@@ -113,8 +113,14 @@ async def shuffle_proxy(
     # query string Shuffle constructed is enough to identify the auth
     # session, the URL exposes no secrets, and the destination's OAuth
     # provider is the real authority. Forward the user with a 302.
+    #
+    # Important: Shuffle's OAuth UI lives on the canonical `shuffler.io`
+    # host even when the API backend is a regional one
+    # (e.g. `california.shuffler.io`). `connector_url` stores the API
+    # backend; the OAuth handoff page is always `https://shuffler.io`.
     if path == "appauth":
-        target = f"{real_base_url}/appauth"
+        oauth_base_url = "https://shuffler.io"
+        target = f"{oauth_base_url}/appauth"
         qs = str(request.url.query)
         return RedirectResponse(url=f"{target}?{qs}" if qs else target, status_code=302)
 
