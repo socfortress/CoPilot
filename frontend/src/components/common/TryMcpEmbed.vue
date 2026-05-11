@@ -17,6 +17,10 @@
 // good enough for a single-customer prototype. Multi-customer scoping
 // (per-org headers via `getAuthHeader(orgId)`) is a follow-up.
 
+// Side-effect import: overrides API_CONFIG.baseUrl to point at our
+// same-origin proxy. Must come before the `@shuffleio/shuffle-mcps`
+// import so the override is in place when the package initialises.
+import "@/composables/installShuffleApiBase"
 import type { Root } from "react-dom/client"
 import { API_CONFIG, TryMcpSection, useAppLookup } from "@shuffleio/shuffle-mcps"
 import { createElement, type FC } from "react"

@@ -13,6 +13,10 @@
 // picking an app from <ShuffleMCP preventDefault> so the user lands
 // on a CoPilot-orchestrated drawer instead of a top-level redirect.
 
+// Side-effect import: overrides API_CONFIG.baseUrl to point at our
+// same-origin proxy. Must come before the `@shuffleio/shuffle-mcps`
+// import so the override is in place when the package initialises.
+import "@/composables/installShuffleApiBase"
 import type { Root } from "react-dom/client"
 import { API_CONFIG, AppDetailDrawer } from "@shuffleio/shuffle-mcps"
 import { createElement } from "react"
