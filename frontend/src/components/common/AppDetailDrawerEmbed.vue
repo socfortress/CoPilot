@@ -21,8 +21,11 @@ import type { Root } from "react-dom/client"
 import { API_CONFIG, AppDetailDrawer } from "@shuffleio/shuffle-mcps"
 import { createElement } from "react"
 import { createRoot } from "react-dom/client"
+import { storeToRefs } from "pinia"
 import { onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { fetchShuffleConnectorCredentials } from "@/composables/shuffleConnectorCredentials"
+import { MuiProvider } from "@/composables/shuffleMuiTheme"
+import { useThemeStore } from "@/stores/theme"
 
 interface Props {
 	open: boolean
@@ -44,17 +47,24 @@ const emit = defineEmits<{
 const container = ref<HTMLElement | null>(null)
 let root: Root | null = null
 
+const themeStore = useThemeStore()
+const { isThemeDark } = storeToRefs(themeStore)
+
 function render() {
 	if (!root) return
 	root.render(
-		createElement(AppDetailDrawer as never, {
-			open: props.open,
-			onClose: () => emit("update:open", false),
-			appName: props.appName,
-			anchor: props.anchor,
-			width: props.width,
-			onRefresh: () => emit("refresh")
-		})
+		createElement(
+			MuiProvider as never,
+			{ isDark: isThemeDark.value },
+			createElement(AppDetailDrawer as never, {
+				open: props.open,
+				onClose: () => emit("update:open", false),
+				appName: props.appName,
+				anchor: props.anchor,
+				width: props.width,
+				onRefresh: () => emit("refresh")
+			})
+		)
 	)
 }
 
@@ -72,7 +82,7 @@ onMounted(async () => {
 })
 
 watch(
-	() => [props.open, props.appName, props.width, props.anchor] as const,
+	() => [props.open, props.appName, props.width, props.anchor, isThemeDark.value] as const,
 	() => render()
 )
 

@@ -26,10 +26,13 @@ import type { Root } from "react-dom/client"
 // doesn't exist on disk — that's a package bug. We don't need to
 // import the CSS here ourselves; importing `ShuffleMCP` pulls it in.
 import { ShuffleMCP } from "@shuffleio/shuffle-mcps"
+import { storeToRefs } from "pinia"
 import { createElement } from "react"
 import { createRoot } from "react-dom/client"
 import { onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { fetchShuffleConnectorCredentials } from "@/composables/shuffleConnectorCredentials"
+import { MuiProvider } from "@/composables/shuffleMuiTheme"
+import { useThemeStore } from "@/stores/theme"
 
 interface Props {
 	authToken: string
@@ -69,6 +72,9 @@ const container = ref<HTMLElement | null>(null)
 let root: Root | null = null
 const EMPTY_SELECTED_APPS: unknown[] = []
 
+const themeStore = useThemeStore()
+const { isThemeDark } = storeToRefs(themeStore)
+
 // Connector creds (URL + admin API key) read from CoPilot's `connectors`
 // table. Without these, ShuffleMCP fetches private/authenticated apps
 // unauthenticated and CORS-blocks against the default `shuffler.io`
@@ -106,7 +112,13 @@ function render() {
 	if (effectiveBaseUrl) reactProps.apiBaseUrl = effectiveBaseUrl
 	if (props.initialFilterQuery) reactProps.initialFilterQuery = props.initialFilterQuery
 
-	root.render(createElement(ShuffleMCP as never, reactProps))
+	root.render(
+		createElement(
+			MuiProvider as never,
+			{ isDark: isThemeDark.value },
+			createElement(ShuffleMCP as never, reactProps)
+		)
+	)
 }
 
 onMounted(async () => {
@@ -133,6 +145,10 @@ watch(
 	() => render(),
 	{ deep: true }
 )
+
+// Re-render when the host theme toggles so the MUI provider swaps to
+// the matching light/dark palette.
+watch(isThemeDark, () => render())
 
 onBeforeUnmount(() => {
 	if (root) {

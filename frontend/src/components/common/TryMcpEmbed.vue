@@ -23,10 +23,13 @@
 import "@/composables/installShuffleApiBase"
 import type { Root } from "react-dom/client"
 import { API_CONFIG, TryMcpSection, useAppLookup } from "@shuffleio/shuffle-mcps"
+import { storeToRefs } from "pinia"
 import { createElement, type FC } from "react"
 import { createRoot } from "react-dom/client"
 import { onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { fetchShuffleConnectorCredentials } from "@/composables/shuffleConnectorCredentials"
+import { MuiProvider } from "@/composables/shuffleMuiTheme"
+import { useThemeStore } from "@/stores/theme"
 
 interface Props {
 	appName: string
@@ -42,6 +45,9 @@ const props = defineProps<Props>()
 
 const container = ref<HTMLElement | null>(null)
 let root: Root | null = null
+
+const themeStore = useThemeStore()
+const { isThemeDark } = storeToRefs(themeStore)
 
 // Inline React component that resolves appName → algoliaId via the
 // package's hook, then mounts TryMcpSection. Lives inline (not a
@@ -69,7 +75,13 @@ const TryMcpInline: FC<{ appName: string }> = ({ appName }) => {
 
 function render() {
 	if (!root) return
-	root.render(createElement(TryMcpInline, { appName: props.appName }))
+	root.render(
+		createElement(
+			MuiProvider as never,
+			{ isDark: isThemeDark.value },
+			createElement(TryMcpInline, { appName: props.appName })
+		)
+	)
 }
 
 onMounted(async () => {
@@ -95,6 +107,10 @@ watch(
 		})
 	}
 )
+
+// Re-render when the host theme toggles so the MUI provider swaps to
+// the matching light/dark palette.
+watch(isThemeDark, () => render())
 
 onBeforeUnmount(() => {
 	if (root) {
