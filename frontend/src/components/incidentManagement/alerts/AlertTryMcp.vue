@@ -66,8 +66,8 @@ import { NAlert, NButton, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import ShuffleMCPEmbed from "@/components/common/ShuffleMCPEmbed.vue"
-import TryMcpEmbed from "@/components/common/TryMcpEmbed.vue"
+import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
+import TryMcpEmbed from "@/components/shuffle/TryMcpEmbed.vue"
 
 const props = defineProps<{ alert: Alert }>()
 

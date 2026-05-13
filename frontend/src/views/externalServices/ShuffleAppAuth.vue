@@ -39,8 +39,8 @@ import type { Organization } from "@/types/shuffle.d"
 import { NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
-import AppDetailDrawerEmbed from "@/components/common/AppDetailDrawerEmbed.vue"
-import ShuffleMCPEmbed from "@/components/common/ShuffleMCPEmbed.vue"
+import AppDetailDrawerEmbed from "@/components/shuffle/AppDetailDrawerEmbed.vue"
+import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
 
 const loadingList = ref(false)
 const loadingToken = ref(false)

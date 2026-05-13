@@ -51,9 +51,9 @@ import type { ShuffleIntegration } from "@/types/notifications.d"
 import { NDrawer, NDrawerContent } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
-import AppDetailDrawerEmbed from "@/components/common/AppDetailDrawerEmbed.vue"
+import AppDetailDrawerEmbed from "@/components/shuffle/AppDetailDrawerEmbed.vue"
 import Icon from "@/components/common/Icon.vue"
-import ShuffleMCPEmbed from "@/components/common/ShuffleMCPEmbed.vue"
+import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
 import { getApiErrorMessage } from "@/utils"
 
 // Per-integration "Manage apps" drawer. Opened from the Shuffle
