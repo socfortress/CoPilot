@@ -15,13 +15,13 @@
 // reacts to live updates (e.g. when the parent swaps the auth token
 // after picking a different Shuffle org).
 
-import type { Root } from "react-dom/client"
 // `@shuffleio/shuffle-mcps/dist/index.js` self-imports its CSS via a
 // hash-suffixed filename (`./singul-GZKBHJNI.css`). The package's own
 // `./singul.css` export entry points at `./dist/singul.css` which
 // doesn't exist on disk — that's a package bug. We don't need to
 // import the CSS here ourselves; importing `ShuffleMCP` pulls it in.
-import { ShuffleMCP } from "@shuffleio/shuffle-mcps"
+import type { Root } from "react-dom/client"
+import { ShuffleMCP, type AlgoliaSearchApp, type AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 import { storeToRefs } from "pinia"
 import { createElement } from "react"
 import { createRoot } from "react-dom/client"
@@ -60,13 +60,13 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-	(e: "appSelected", payload: unknown): void
-	(e: "selectionChange", payload: unknown): void
+	(e: "appSelected", payload: AppSelectedEvent): void
+	(e: "selectionChange", payload: AlgoliaSearchApp[]): void
 }>()
 
 const container = ref<HTMLElement | null>(null)
 let root: Root | null = null
-const EMPTY_SELECTED_APPS: unknown[] = []
+const EMPTY_SELECTED_APPS: AlgoliaSearchApp[] = []
 
 const themeStore = useThemeStore()
 const { isThemeDark } = storeToRefs(themeStore)
@@ -98,8 +98,8 @@ function render() {
 		// inside the React component, then mirrors it into state from a
 		// useEffect. Passing a stable array avoids that render loop.
 		selectedApps: EMPTY_SELECTED_APPS,
-		onAppSelected: (payload: unknown) => emit("appSelected", payload),
-		onSelectionChange: (payload: unknown) => emit("selectionChange", payload)
+		onAppSelected: (payload: AppSelectedEvent) => emit("appSelected", payload),
+		onSelectionChange: (payload: AlgoliaSearchApp[]) => emit("selectionChange", payload)
 	}
 	// Caller-provided overrides win; fall back to the connector creds.
 	const effectiveApiKey = props.apiKey ?? connectorApiKey.value

@@ -68,6 +68,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
 import TryMcpEmbed from "@/components/shuffle/TryMcpEmbed.vue"
+import type { AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 
 const props = defineProps<{ alert: Alert }>()
 
@@ -130,11 +131,10 @@ async function loadOrgToken(orgId: string) {
 	}
 }
 
-function onAppSelected(payload: unknown) {
-	const name = (payload as { app?: { name?: string } } | undefined)?.app?.name
-	if (name) {
-		selectedAppName.value = name
-	}
+function onAppSelected(payload: AppSelectedEvent) {
+	const name = payload.app?.name
+	if (!name) return
+	selectedAppName.value = name
 }
 
 onBeforeMount(() => {

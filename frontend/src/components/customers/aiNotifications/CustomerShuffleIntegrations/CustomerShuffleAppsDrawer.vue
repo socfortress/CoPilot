@@ -55,6 +55,7 @@ import AppDetailDrawerEmbed from "@/components/shuffle/AppDetailDrawerEmbed.vue"
 import Icon from "@/components/common/Icon.vue"
 import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
 import { getApiErrorMessage } from "@/utils"
+import type { AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 
 // Per-integration "Manage apps" drawer. Opened from the Shuffle
 // integration list when an admin wants to authenticate a new Shuffle
@@ -110,13 +111,13 @@ async function loadOrgToken(orgId: string) {
 const appDrawerOpen = ref(false)
 const appDrawerAppName = ref<string | null>(null)
 
-function onAppSelected(payload: unknown) {
+function onAppSelected(payload: AppSelectedEvent) {
 	// With prevent-default on the picker, Shuffle doesn't fire the
 	// top-level OAuth redirect. We open AppDetailDrawer for the picked
 	// app — the drawer renders an inline auth form for API-key/URL apps
 	// and a redirect handoff button for OAuth ones, so the admin can
 	// configure both kinds without leaving the page.
-	const name = (payload as { app?: { name?: string } } | undefined)?.app?.name
+	const name = payload.app?.name
 	if (!name) return
 	appDrawerAppName.value = name
 	appDrawerOpen.value = true

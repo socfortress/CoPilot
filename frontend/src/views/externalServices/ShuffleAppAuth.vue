@@ -41,6 +41,7 @@ import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import AppDetailDrawerEmbed from "@/components/shuffle/AppDetailDrawerEmbed.vue"
 import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
+import type { AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 
 const loadingList = ref(false)
 const loadingToken = ref(false)
@@ -101,8 +102,8 @@ watch(selectedOrganization, val => {
 const appDrawerOpen = ref(false)
 const appDrawerAppName = ref<string | null>(null)
 
-function onAppSelected(payload: unknown) {
-	const name = (payload as { app?: { name?: string } } | undefined)?.app?.name
+function onAppSelected(payload: AppSelectedEvent) {
+	const name = payload.app?.name
 	if (!name) return
 	appDrawerAppName.value = name
 	appDrawerOpen.value = true
