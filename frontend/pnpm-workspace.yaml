@@ -2,6 +2,10 @@ shellEmulator: true
 
 trustPolicy: no-downgrade
 
+trustPolicyExclude:
+  - chokidar
+  - semver
+
 allowBuilds:
   "@parcel/watcher": true
   "@tailwindcss/oxide": true
