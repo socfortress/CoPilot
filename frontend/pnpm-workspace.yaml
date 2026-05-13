@@ -1,0 +1,13 @@
+allowBuilds:
+  '@parcel/watcher': true
+  '@tailwindcss/oxide': true
+  esbuild: true
+  unrs-resolver: true
+
+peerDependencyRules:
+  allowedVersions:
+    eslint: "10"
+
+overrides:
+  "@mui/icons-material": "^7.3.9"
+  "@mui/material": "^7.3.9"
