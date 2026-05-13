@@ -24,8 +24,8 @@ import { storeToRefs } from "pinia"
 import { createElement } from "react"
 import { createRoot } from "react-dom/client"
 import { onBeforeUnmount, onMounted, ref, watch } from "vue"
-import { fetchShuffleConnectorCredentials } from "@/composables/shuffleConnectorCredentials"
-import { MuiProvider } from "@/composables/shuffleMuiTheme"
+import { fetchShuffleConnectorCredentials } from "@/utils/shuffle/shuffleConnectorCredentials"
+import { MuiProvider } from "@/utils/shuffle/shuffleMuiTheme"
 import { useThemeStore } from "@/stores/theme"
 
 interface Props {
