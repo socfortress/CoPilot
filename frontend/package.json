@@ -48,7 +48,7 @@
 		"@fontsource/lexend": "^5.2.11",
 		"@fontsource/public-sans": "^5.2.7",
 		"@microsoft/fetch-event-source": "^2.0.1",
-		"@mui/material": "^7.3.11",
+		"@mui/material": "^9.0.1",
 		"@shikijs/markdown-it": "^4.0.2",
 		"@shuffleio/shuffle-mcps": "^0.0.8",
 		"@types/codemirror": "^5.60.17",

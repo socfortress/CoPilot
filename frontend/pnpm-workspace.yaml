@@ -10,7 +10,6 @@ allowBuilds:
 
 overrides:
   "@mui/icons-material": ^7.3.9
-  "@mui/material": ^7.3.9
 peerDependencyRules:
   allowedVersions:
     eslint: "10"
