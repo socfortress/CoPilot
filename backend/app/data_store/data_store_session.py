@@ -1,13 +1,17 @@
 from pathlib import Path
 
+from dotenv import load_dotenv
 from environs import Env
 from loguru import logger
 from miniopy_async import Minio
 
+# Repo root is four parents up (backend/app/data_store/data_store_session.py).
+# environs >= 14 stopped mutating os.environ from read_env(); use python-dotenv
+# so os.environ.get() callsites elsewhere in the app see .env values.
+_DOTENV_PATH = Path(__file__).parent.parent.parent.parent / ".env"
+load_dotenv(_DOTENV_PATH)
 env = Env()
-env.read_env(Path(__file__).parent.parent / ".env")
-# env.read_env(Path(__file__).parent.parent.parent / "docker-env" / ".env")
-logger.info(f"Loading environment from {Path(__file__).parent.parent.parent.parent / '.env'}")
+logger.info(f"Loading environment from {_DOTENV_PATH}")
 
 
 minio_root_user = env.str("MINIO_ROOT_USER", default="admin")

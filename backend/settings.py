@@ -7,14 +7,17 @@ environment variables.
 """
 from pathlib import Path
 
+from dotenv import load_dotenv
 from environs import Env
 from loguru import logger
 
+# environs >= 14 stopped mutating os.environ from read_env() — values only land on the
+# Env instance. Use python-dotenv to populate os.environ for the many os.environ.get()
+# callsites across the app (notably _load_jwt_secret in app/auth/utils.py).
+_DOTENV_PATH = Path(__file__).parent.parent / ".env"
+load_dotenv(_DOTENV_PATH)
 env = Env()
-env.read_env(Path(__file__).parent.parent / ".env")
-# env.read_env(Path(__file__).parent.parent.parent / "docker-env" / ".env")
-logger.info(f"Loading environment from {Path(__file__).parent.parent / '.env'}")
-# logger.info(f"Loading environment from {Path(__file__).parent.parent.parent / 'docker-env' / '.env'}")
+logger.info(f"Loading environment from {_DOTENV_PATH}")
 
 
 basedir = Path().absolute()
