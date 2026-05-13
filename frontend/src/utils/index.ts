@@ -1,6 +1,5 @@
 import type { Component } from "vue"
 import type { ApiError, OsTypesFull, SafeAny } from "@/types/common.d"
-import process from "node:process"
 import { isMobile as detectMobile } from "detect-touch-device"
 import { md5 } from "js-md5"
 import isDateObject from "lodash/isDate"
@@ -22,13 +21,13 @@ export function file2Base64(blob: Blob): Promise<string> {
 }
 
 export function isEnvDev() {
-	return process.env.NODE_ENV === "development"
+	return import.meta.env.DEV
 }
 export function isEnvTest() {
-	return process.env.NODE_ENV === "test"
+	return import.meta.env.MODE === "test"
 }
 export function isEnvProd() {
-	return process.env.NODE_ENV === "production"
+	return import.meta.env.PROD
 }
 
 export function isMobile() {
