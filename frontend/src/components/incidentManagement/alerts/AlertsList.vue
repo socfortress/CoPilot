@@ -88,7 +88,7 @@
 						</div>
 					</n-button>
 				</div>
-				<n-button size="small" ghost type="error" @click="showDeleteByTitleModal = true">
+				<n-button size="small" text type="error" @click="showDeleteByTitleModal = true">
 					<div class="flex items-center gap-2">
 						<Icon :name="TrashIcon" />
 						<span class="hidden @3xl:inline">Bulk Delete</span>

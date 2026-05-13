@@ -29,10 +29,6 @@ import { onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { fetchShuffleConnectorCredentials } from "@/composables/shuffleConnectorCredentials"
 import { MuiProvider } from "@/composables/shuffleMuiTheme"
 import { useThemeStore } from "@/stores/theme"
-// Side-effect import: overrides API_CONFIG.baseUrl to point at our
-// same-origin proxy. Must come before any other `@shuffleio/shuffle-mcps`
-// import so the override is in place when the package initialises.
-import "@/composables/installShuffleApiBase"
 
 interface Props {
 	authToken: string
