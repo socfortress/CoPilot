@@ -1,3 +1,4 @@
+import type { RollupLog, RollupLogWithString } from "rolldown"
 import fs from "node:fs"
 import process from "node:process"
 import { fileURLToPath, URL } from "node:url"
@@ -9,8 +10,19 @@ import VueDevTools from "vite-plugin-vue-devtools"
 import svgLoader from "vite-svg-loader"
 // import { analyzer } from "vite-bundle-analyzer"
 
+function suppressRolldownIifeNameWarning(
+	warning: RollupLog,
+	defaultHandler: (warning: RollupLogWithString | (() => RollupLogWithString)) => void
+) {
+	if (warning.code === "MISSING_NAME_OPTION_FOR_IIFE_EXPORT") {
+		return
+	}
+
+	defaultHandler(warning)
+}
+
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
 	// Load env file based on `mode` in the current working directory.
 	// Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
 	process.env = { ...process.env, ...loadEnv(mode, process.cwd(), "") }
@@ -29,9 +41,13 @@ export default defineConfig(({ mode }) => {
 				}
 			}),
 			vueJsx(),
-			VueDevTools({
-				launchEditor: "cursor"
-			}),
+			...(command === "serve"
+				? [
+						VueDevTools({
+							launchEditor: "cursor"
+						})
+					]
+				: []),
 			svgLoader()
 			// uncomment to enable analyzer after build
 			// analyzer()
@@ -43,7 +59,10 @@ export default defineConfig(({ mode }) => {
 		},
 		optimizeDeps: {
 			exclude: ["xmllint-wasm"],
-			include: ["fast-deep-equal"]
+			include: ["fast-deep-equal"],
+			rolldownOptions: {
+				onwarn: suppressRolldownIifeNameWarning
+			}
 		},
 		server: {
 			allowedHosts: true,
@@ -71,14 +90,8 @@ export default defineConfig(({ mode }) => {
 			}
 		},
 		build: {
-			rollupOptions: {
-				onwarn(warning, warn) {
-					if (warning.code === "PLUGIN_WARNING" && warning.message.includes('Module "node:process"')) {
-						return
-					}
-
-					warn(warning)
-				}
+			rolldownOptions: {
+				onwarn: suppressRolldownIifeNameWarning
 			}
 		}
 	}
