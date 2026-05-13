@@ -1,17 +1,26 @@
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-import uvicorn
 from dotenv import load_dotenv
-from fastapi import APIRouter
-from fastapi import FastAPI
-from fastapi import HTTPException
-from fastapi.exceptions import RequestValidationError
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from loguru import logger
 
-from app.auth.utils import AuthHandler
+# Load .env into os.environ before any `from app...` import. AuthHandler's class body
+# (app/auth/utils.py) calls _load_jwt_secret() at import time and reads JWT_SECRET
+# directly from os.environ — environs >= 14 no longer populates os.environ from
+# read_env(), so without this line the backend refuses to boot unless JWT_SECRET is
+# already exported in the shell (or uvicorn was invoked with --env-file).
+load_dotenv(Path(__file__).parent.parent / ".env")
+
+import uvicorn  # noqa: E402
+from fastapi import APIRouter  # noqa: E402
+from fastapi import FastAPI  # noqa: E402
+from fastapi import HTTPException  # noqa: E402
+from fastapi.exceptions import RequestValidationError  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.staticfiles import StaticFiles  # noqa: E402
+from loguru import logger  # noqa: E402
+
+from app.auth.utils import AuthHandler  # noqa: E402
 from app.data_store.data_store_setup import create_buckets
 from app.db.db_session import SQLALCHEMY_DATABASE_URI_NO_DB
 from app.db.db_session import async_engine
@@ -91,8 +100,6 @@ from app.schedulers.scheduler import init_scheduler
 
 
 auth_handler = AuthHandler()
-# Get the `SERVER_IP` from the `.env` file
-load_dotenv()
 server_ip = os.getenv("SERVER_IP", "localhost")
 environment = os.getenv("ENVIRONMENT", "PRODUCTION")
 
