@@ -38,15 +38,12 @@ import SearchDialog from "@/components/common/SearchDialog.vue"
 import { useAuthStore } from "@/stores/auth"
 import { useMainStore } from "@/stores/main"
 import { useThemeStore } from "@/stores/theme"
-import { useMessage } from "naive-ui"
-import { setToastImpl } from "@shuffleio/shuffle-mcps"
 
 const layoutComponents = {
 	VerticalNav,
 	Blank
 }
 
-const message = useMessage()
 const router = useRouter()
 const route = useRoute()
 const loading = ref(true)
@@ -73,34 +70,6 @@ function checkThemeOverrides(currentRoute: RouteLocationNormalized) {
 	}
 }
 
-function setShuffleToastImpl() {
-	/**
-	 * Bridges `@shuffleio/shuffle-mcps`'s internal toast facade onto Naive
-	 * UI's message API so toasts the package emits (auth saved, test
-	 * connection results, errors, etc.) surface in CoPilot's UI instead of
-	 * the package's silent console.warn fallback.
-	 */
-	setToastImpl((arg, opts) => {
-		const obj = typeof arg === "string" ? null : arg
-		const title = obj ? obj.title : arg
-		const description = obj?.description ?? opts?.description
-		const text = [title, description].filter(Boolean).join(" — ")
-		if (!text) return
-
-		const variant = obj?.variant ?? opts?.variant
-
-		const VARIANT_TO_METHOD = {
-			destructive: "error",
-			error: "error",
-			success: "success",
-			warning: "warning"
-		} as const
-
-		const method = VARIANT_TO_METHOD[variant as keyof typeof VARIANT_TO_METHOD] ?? "info"
-		message[method](text)
-	})
-}
-
 watch(layoutComponentName, () => {
 	loading.value = false
 })
@@ -111,8 +80,6 @@ router.afterEach(currentRoute => {
 
 onBeforeMount(() => {
 	checkThemeOverrides(route)
-
-	setShuffleToastImpl()
 
 	setTimeout(() => {
 		loading.value = false
