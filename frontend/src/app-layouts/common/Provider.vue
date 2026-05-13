@@ -10,7 +10,6 @@
 	>
 		<n-loading-bar-provider container-class="h-0.75!">
 			<n-message-provider>
-				<ShuffleToastBridge />
 				<n-notification-provider>
 					<n-dialog-provider>
 						<GlobalListener>
@@ -37,7 +36,6 @@ import {
 } from "naive-ui"
 import { computed, onBeforeMount } from "vue"
 import GlobalListener from "@/app-layouts/common/GlobalListener.vue"
-import ShuffleToastBridge from "@/components/common/ShuffleToastBridge.vue"
 import { useLocalesStore } from "@/stores/i18n"
 import { useThemeStore } from "@/stores/theme"
 import { rtlStyles } from "./rtlProvider"
