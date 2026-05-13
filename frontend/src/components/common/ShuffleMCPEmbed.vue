@@ -15,10 +15,6 @@
 // reacts to live updates (e.g. when the parent swaps the auth token
 // after picking a different Shuffle org).
 
-// Side-effect import: overrides API_CONFIG.baseUrl to point at our
-// same-origin proxy. Must come before any other `@shuffleio/shuffle-mcps`
-// import so the override is in place when the package initialises.
-import "@/composables/installShuffleApiBase"
 import type { Root } from "react-dom/client"
 // `@shuffleio/shuffle-mcps/dist/index.js` self-imports its CSS via a
 // hash-suffixed filename (`./singul-GZKBHJNI.css`). The package's own
@@ -33,6 +29,10 @@ import { onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { fetchShuffleConnectorCredentials } from "@/composables/shuffleConnectorCredentials"
 import { MuiProvider } from "@/composables/shuffleMuiTheme"
 import { useThemeStore } from "@/stores/theme"
+// Side-effect import: overrides API_CONFIG.baseUrl to point at our
+// same-origin proxy. Must come before any other `@shuffleio/shuffle-mcps`
+// import so the override is in place when the package initialises.
+import "@/composables/installShuffleApiBase"
 
 interface Props {
 	authToken: string

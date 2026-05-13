@@ -23,8 +23,8 @@
 		<n-form-item label="Channel">
 			<n-select v-model:value="form.channel" :options="channelOptions" disabled />
 			<template v-if="!fieldErrors.channel" #feedback>
-				Email is direct SMTP via CoPilot's deployment config. Shuffle proxies to
-				3,000+ integrations through a customer's authenticated Shuffle org.
+				Email is direct SMTP via CoPilot's deployment config. Shuffle proxies to 3,000+ integrations through a
+				customer's authenticated Shuffle org.
 			</template>
 		</n-form-item>
 
@@ -41,7 +41,8 @@
 				#feedback
 			>
 				No Shuffle integrations configured for this customer yet — go to the
-				<strong>Shuffle integrations</strong> tab to add one first.
+				<strong>Shuffle integrations</strong>
+				tab to add one first.
 			</template>
 		</n-form-item>
 
@@ -56,12 +57,16 @@
 				@update:value="onAppChange"
 			/>
 			<template
-				v-if="!fieldErrors.shuffle_app_id && form.shuffle_integration_id && !appOptions.length && !loadingApps && appsError"
+				v-if="
+					!fieldErrors.shuffle_app_id &&
+					form.shuffle_integration_id &&
+					!appOptions.length &&
+					!loadingApps &&
+					appsError
+				"
 				#feedback
 			>
-				<div class="text-error">
-					Couldn't fetch apps from Shuffle: {{ appsError }}
-				</div>
+				<div class="text-error">Couldn't fetch apps from Shuffle: {{ appsError }}</div>
 			</template>
 		</n-form-item>
 
@@ -73,9 +78,9 @@
 			/>
 			<template v-if="!fieldErrors.destination" #feedback>
 				Free-form — gets prepended to the outgoing message as a
-				<code>Send to &lt;destination&gt;: …</code> hint so the Shuffle app
-				agent knows where to deliver. Channel name for Slack, email for
-				Outlook / Gmail, handle for chat apps, etc.
+				<code>Send to &lt;destination&gt;: …</code>
+				hint so the Shuffle app agent knows where to deliver. Channel name for Slack, email for Outlook / Gmail,
+				handle for chat apps, etc.
 			</template>
 		</n-form-item>
 		<n-form-item label="Custom message template (optional)" path="format_template" :show-feedback="false">
@@ -273,7 +278,7 @@ const rules: FormRules = {
 		required: true,
 		validator: (_rule, value: string) => {
 			if (!value || !value.trim()) {
-					 createFieldError("destination", "Destination hint is required")
+				createFieldError("destination", "Destination hint is required")
 			}
 			clearFieldError("destination")
 			return true

@@ -9,9 +9,9 @@
 	>
 		<div v-if="!result" class="flex flex-col gap-3">
 			<n-alert type="info" :show-icon="false">
-				This will create one Graylog event definition per rule, using the shared
-				configuration below. Rules whose alert title already exists in Graylog
-				are skipped automatically. Rules without a Graylog query are also skipped.
+				This will create one Graylog event definition per rule, using the shared configuration below. Rules
+				whose alert title already exists in Graylog are skipped automatically. Rules without a Graylog query are
+				also skipped.
 			</n-alert>
 
 			<div class="grid grid-cols-2 gap-3">
@@ -40,9 +40,7 @@
 			</div>
 
 			<div class="flex justify-end gap-2">
-				<n-button size="small" quaternary :disabled="submitting" @click="showLocal = false">
-					Cancel
-				</n-button>
+				<n-button size="small" quaternary :disabled="submitting" @click="showLocal = false">Cancel</n-button>
 				<n-button
 					size="small"
 					type="primary"
@@ -92,10 +90,7 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
-import type {
-	BulkProvisionGraylogAlertResponse,
-	BulkProvisionRuleStatus
-} from "@/types/copilotSearches.d"
+import type { BulkProvisionGraylogAlertResponse, BulkProvisionRuleStatus } from "@/types/copilotSearches.d"
 import { NAlert, NButton, NInputNumber, NModal, NSelect, useMessage } from "naive-ui"
 import { computed, reactive, ref, watch } from "vue"
 import Api from "@/api"

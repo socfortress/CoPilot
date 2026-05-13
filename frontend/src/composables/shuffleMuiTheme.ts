@@ -1,3 +1,4 @@
+import type { Theme } from "@mui/material/styles"
 // Shared Material UI theme bridge for the React-mounted Shuffle embeds.
 //
 // Background: `@shuffleio/shuffle-mcps` is built with `@mui/material`.
@@ -16,7 +17,6 @@
 //     `<ThemeProvider value={mui-theme}>`. Each embed wrapper renders
 //     this around the package's exported component.
 import type { ReactNode } from "react"
-import type { Theme } from "@mui/material/styles"
 import { createTheme, ThemeProvider } from "@mui/material/styles"
 import { createElement } from "react"
 

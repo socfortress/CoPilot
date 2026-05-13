@@ -1,3 +1,4 @@
+import type { ShuffleConnectorCredentials } from "@/api/endpoints/shuffle"
 // Single-fetch cache for the deployment-wide Shuffle connector creds
 // (URL + admin API key) used by the ShuffleMCP / TryMcp React embeds.
 //
@@ -8,7 +9,6 @@
 // `null` and don't retry — callers stay on whatever explicit overrides
 // they were already passing.
 import Api from "@/api"
-import type { ShuffleConnectorCredentials } from "@/api/endpoints/shuffle"
 
 let cached: Promise<ShuffleConnectorCredentials | null> | null = null
 

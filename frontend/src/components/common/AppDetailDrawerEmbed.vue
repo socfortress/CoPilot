@@ -13,19 +13,19 @@
 // picking an app from <ShuffleMCP preventDefault> so the user lands
 // on a CoPilot-orchestrated drawer instead of a top-level redirect.
 
-// Side-effect import: overrides API_CONFIG.baseUrl to point at our
-// same-origin proxy. Must come before the `@shuffleio/shuffle-mcps`
-// import so the override is in place when the package initialises.
-import "@/composables/installShuffleApiBase"
 import type { Root } from "react-dom/client"
 import { API_CONFIG, AppDetailDrawer } from "@shuffleio/shuffle-mcps"
+import { storeToRefs } from "pinia"
 import { createElement } from "react"
 import { createRoot } from "react-dom/client"
-import { storeToRefs } from "pinia"
 import { onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { fetchShuffleConnectorCredentials } from "@/composables/shuffleConnectorCredentials"
 import { MuiProvider } from "@/composables/shuffleMuiTheme"
 import { useThemeStore } from "@/stores/theme"
+// Side-effect import: overrides API_CONFIG.baseUrl to point at our
+// same-origin proxy. Must come before the `@shuffleio/shuffle-mcps`
+// import so the override is in place when the package initialises.
+import "@/composables/installShuffleApiBase"
 
 interface Props {
 	open: boolean

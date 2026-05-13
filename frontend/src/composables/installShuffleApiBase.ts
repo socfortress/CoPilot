@@ -42,7 +42,7 @@ function install() {
 	} catch (err) {
 		// Defensive: if a future package version freezes API_CONFIG we'd
 		// silently fall back to env-var behaviour. Log so it's debuggable.
-		// eslint-disable-next-line no-console
+
 		console.warn("[shuffle] could not override API_CONFIG.baseUrl:", err)
 	}
 }
