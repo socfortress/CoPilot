@@ -19,28 +19,50 @@ import type { Theme } from "@mui/material/styles"
 import type { ReactNode } from "react"
 import { createTheme, ThemeProvider } from "@mui/material/styles"
 import { createElement } from "react"
+import { useThemeStore } from "@/stores/theme"
 
 let lightTheme: Theme | null = null
 let darkTheme: Theme | null = null
 
 function buildTheme(isDark: boolean): Theme {
+	const themeStore = useThemeStore()
+
 	return createTheme({
 		palette: {
 			mode: isDark ? "dark" : "light",
-			// MUI's default dark mode uses #121212 / #1e1e1e — slightly too
-			// flat against CoPilot's elevated panels. Bump it a touch so
-			// drawer/menu surfaces sit visibly above the page.
 			...(isDark
 				? {
-						background: { default: "#171819", paper: "#1e2024" }
+						background: {
+							default: "var(--bg-body-color) !important",
+							paper: "var(--bg-default-color) !important"
+						},
+						primary: {
+							main: themeStore.style["primary-color"]
+						}
 					}
 				: {})
 		},
-		// Inherit CoPilot's font stack so the embeds don't introduce a
-		// second typeface inside the same view.
+		components: {
+			MuiPaper: {
+				styleOverrides: {
+					root: {
+						backgroundImage: "none !important"
+					}
+				}
+			},
+			MuiCard: {
+				styleOverrides: {
+					root: {
+						border: "1px solid var(--border-color) !important",
+						borderColor: "var(--border-color) !important",
+						backgroundImage: "none !important",
+						backgroundColor: "var(--bg-secondary-color) !important"
+					}
+				}
+			}
+		},
 		typography: {
-			fontFamily:
-				'"Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+			fontFamily: "var(--font-family)"
 		}
 	})
 }

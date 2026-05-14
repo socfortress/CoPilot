@@ -36,6 +36,15 @@ export function colorToArray(color: string, output: "rgb" | "hsl"): number[] {
 	}
 }
 
+export function colorToRgbValues(color: string): string {
+	return colorToArray(color, "rgb").join(" ")
+}
+
+export function colorToHslValues(color: string): string {
+	const values = colorToArray(color, "hsl")
+	return `${values[0]}, ${values[1]}%, ${values[2]}%`
+}
+
 export function exposure(color: string, amount: number): string {
 	return colord(color)
 		.lighten(amount) /* .desaturate(Math.abs(amount)) */

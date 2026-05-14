@@ -1,0 +1,22 @@
+.MuiBox-root {
+	scrollbar-width: thin;
+	scrollbar-color: var(--hover-color) var(--bg-secondary-color);
+
+	/* Works on Chrome, Edge, and Safari */
+	&::-webkit-scrollbar,
+	::-webkit-scrollbar {
+		width: 12px;
+	}
+
+	&::-webkit-scrollbar-track,
+	::-webkit-scrollbar-track {
+		background: var(--bg-secondary-color);
+	}
+
+	&::-webkit-scrollbar-thumb,
+	::-webkit-scrollbar-thumb {
+		background-color: var(--hover-color);
+		border-radius: 20px;
+		border: 2px solid var(--bg-secondary-color);
+	}
+}

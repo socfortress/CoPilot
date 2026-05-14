@@ -18,6 +18,9 @@
 	--singul-app-name-color: var(--fg-default-color);
 	--singul-app-description-color: var(--fg-secondary-color);
 	--singul-item-hover-bg: var(--bg-secondary-color);
+	--singul-spinner-border-top: 2px solid var(--primary-color);
+	--singul-item-selected-border: rgba(var(--primary-color-rgb) / 0.55);
+	--singul-accent-color: var(--primary-color);
 
 	display: flex;
 	flex-direction: column;
@@ -56,5 +59,21 @@
 				margin-bottom: 0rem;
 			}
 		}
+	}
+
+	.singul-source-pill-active {
+		background: transparent;
+		border-color: var(--primary-color);
+		color: var(--primary-color);
+
+		.singul-source-count {
+			background: rgba(var(--primary-color-rgb) / 0.2);
+			color: var(--primary-color);
+		}
+	}
+
+	.singul-dot-inactive {
+		background-color: var(--primary-color);
+		box-shadow: 0 0 6px rgba(var(--primary-color-rgb) / 0.4);
 	}
 }
