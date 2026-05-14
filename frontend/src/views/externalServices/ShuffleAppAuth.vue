@@ -35,13 +35,13 @@
 </template>
 
 <script setup lang="ts">
+import type { AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 import type { Organization } from "@/types/shuffle.d"
 import { NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import AppDetailDrawerEmbed from "@/components/shuffle/AppDetailDrawerEmbed.vue"
 import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
-import type { AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 
 const loadingList = ref(false)
 const loadingToken = ref(false)

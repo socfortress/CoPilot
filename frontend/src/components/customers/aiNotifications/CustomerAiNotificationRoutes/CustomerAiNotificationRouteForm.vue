@@ -56,16 +56,7 @@
 				filterable
 				@update:value="onAppChange"
 			/>
-			<template
-				v-if="
-					!fieldErrors.shuffle_app_id &&
-					form.shuffle_integration_id &&
-					!appOptions.length &&
-					!loadingApps &&
-					appsError
-				"
-				#feedback
-			>
+			<template v-if="showShuffleAppsFetchError" #feedback>
 				<div class="text-error">Couldn't fetch apps from Shuffle: {{ appsError }}</div>
 			</template>
 		</n-form-item>
@@ -202,6 +193,15 @@ const appOptions = computed(() =>
 		label: a.name,
 		value: a.id
 	}))
+)
+
+const showShuffleAppsFetchError = computed(
+	() =>
+		!fieldErrors.shuffle_app_id &&
+		Boolean(form.shuffle_integration_id) &&
+		appOptions.value.length === 0 &&
+		!loadingApps.value &&
+		Boolean(appsError.value)
 )
 
 function clearFieldError(field: FeedbackField) {

@@ -20,15 +20,17 @@
 // `./singul.css` export entry points at `./dist/singul.css` which
 // doesn't exist on disk — that's a package bug. We don't need to
 // import the CSS here ourselves; importing `ShuffleMCP` pulls it in.
+
+import type { AlgoliaSearchApp, AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 import type { Root } from "react-dom/client"
-import { ShuffleMCP, type AlgoliaSearchApp, type AppSelectedEvent } from "@shuffleio/shuffle-mcps"
+import { ShuffleMCP } from "@shuffleio/shuffle-mcps"
 import { storeToRefs } from "pinia"
 import { createElement } from "react"
 import { createRoot } from "react-dom/client"
 import { onBeforeUnmount, onMounted, ref, watch } from "vue"
+import { useThemeStore } from "@/stores/theme"
 import { fetchShuffleConnectorCredentials } from "@/utils/shuffle/shuffleConnectorCredentials"
 import { MuiProvider } from "@/utils/shuffle/shuffleMuiTheme"
-import { useThemeStore } from "@/stores/theme"
 
 interface Props {
 	authToken: string

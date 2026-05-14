@@ -60,6 +60,7 @@
 </template>
 
 <script setup lang="ts">
+import type { AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { ShuffleIntegration } from "@/types/notifications.d"
 import { NAlert, NButton, useMessage } from "naive-ui"
@@ -68,7 +69,6 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
 import TryMcpEmbed from "@/components/shuffle/TryMcpEmbed.vue"
-import type { AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 
 const props = defineProps<{ alert: Alert }>()
 

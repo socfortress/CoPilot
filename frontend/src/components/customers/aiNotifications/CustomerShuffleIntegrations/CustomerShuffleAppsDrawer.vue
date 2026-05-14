@@ -46,16 +46,16 @@
 </template>
 
 <script setup lang="ts">
+import type { AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 import type { ApiError } from "@/types/common"
 import type { ShuffleIntegration } from "@/types/notifications.d"
 import { NDrawer, NDrawerContent } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
-import AppDetailDrawerEmbed from "@/components/shuffle/AppDetailDrawerEmbed.vue"
 import Icon from "@/components/common/Icon.vue"
+import AppDetailDrawerEmbed from "@/components/shuffle/AppDetailDrawerEmbed.vue"
 import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
 import { getApiErrorMessage } from "@/utils"
-import type { AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 
 // Per-integration "Manage apps" drawer. Opened from the Shuffle
 // integration list when an admin wants to authenticate a new Shuffle
