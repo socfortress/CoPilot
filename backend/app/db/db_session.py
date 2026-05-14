@@ -6,6 +6,7 @@ from contextlib import contextmanager
 # from settings import SQLALCHEMY_DATABASE_URI
 from pathlib import Path
 
+from dotenv import load_dotenv
 from environs import Env
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,10 +15,13 @@ from sqlalchemy.orm import sessionmaker
 from sqlmodel import Session
 from sqlmodel import create_engine
 
+# Repo root is four parents up from this file (backend/app/db/db_session.py).
+# environs >= 14 stopped mutating os.environ from read_env(); use python-dotenv so
+# os.environ.get() callsites (e.g. _load_jwt_secret) see values from .env.
+_DOTENV_PATH = Path(__file__).parent.parent.parent.parent / ".env"
+load_dotenv(_DOTENV_PATH)
 env = Env()
-env.read_env(Path(__file__).parent.parent / ".env")
-# env.read_env(Path(__file__).parent.parent.parent / "docker-env" / ".env")
-logger.info(f"Loading environment from {Path(__file__).parent.parent.parent.parent / '.env'}")
+logger.info(f"Loading environment from {_DOTENV_PATH}")
 
 db_user = env.str("MYSQL_USER", default="copilot")
 db_password = env.str("MYSQL_PASSWORD")
