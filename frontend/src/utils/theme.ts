@@ -42,7 +42,7 @@ export function colorToRgbValues(color: string): string {
 
 export function colorToHslValues(color: string): string {
 	const values = colorToArray(color, "hsl")
-	return `${values[0]}, ${values[1]}%, ${values[2]}%`
+	return `${values[0]} ${values[1]}% ${values[2]}%`
 }
 
 export function exposure(color: string, amount: number): string {

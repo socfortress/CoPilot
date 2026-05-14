@@ -47,7 +47,8 @@ function buildTheme(isDark: boolean): Theme {
 			MuiPaper: {
 				styleOverrides: {
 					root: {
-						backgroundImage: "none !important"
+						backgroundImage: "none !important",
+						boxShadow: "none !important"
 					}
 				}
 			},
@@ -58,6 +59,23 @@ function buildTheme(isDark: boolean): Theme {
 						borderColor: "var(--border-color) !important",
 						backgroundImage: "none !important",
 						backgroundColor: "var(--bg-secondary-color) !important"
+					}
+				}
+			},
+			MuiDrawer: {
+				styleOverrides: {
+					paper: {
+						borderLeft: "none !important",
+						borderTopLeftRadius: "var(--border-radius) !important",
+						borderBottomLeftRadius: "var(--border-radius) !important"
+					}
+				}
+			},
+			MuiButton: {
+				styleOverrides: {
+					root: {
+						borderRadius: "var(--border-radius) !important",
+						boxShadow: "none !important"
 					}
 				}
 			}

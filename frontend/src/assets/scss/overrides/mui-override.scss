@@ -1,4 +1,7 @@
-.MuiBox-root {
+.MuiBox-root,
+.MuiDialogContent-root,
+.MuiAutocomplete-popper,
+.MuiPopover-paper {
 	scrollbar-width: thin;
 	scrollbar-color: var(--hover-color) var(--bg-secondary-color);
 
@@ -18,5 +21,15 @@
 		background-color: var(--hover-color);
 		border-radius: 20px;
 		border: 2px solid var(--bg-secondary-color);
+	}
+}
+
+.MuiBox-root {
+	box-shadow: none !important;
+}
+
+.MuiInputBase-root.MuiOutlinedInput-root.Mui-focused {
+	.MuiOutlinedInput-notchedOutline {
+		border-width: 1px !important;
 	}
 }
