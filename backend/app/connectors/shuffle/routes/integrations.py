@@ -1,11 +1,7 @@
-import httpx
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Request
-from fastapi import Response
 from fastapi import Security
-from fastapi.responses import RedirectResponse
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,26 +16,6 @@ from app.db.db_session import get_db
 
 shuffle_integrations_router = APIRouter()
 
-# Hop-by-hop headers MUST NOT be forwarded across a proxy boundary
-# (RFC 7230 §6.1). We strip them in both directions so the response we
-# return doesn't carry stale framing/encoding metadata that the upstream
-# server already consumed.
-_HOP_BY_HOP_HEADERS = {
-    "connection",
-    "keep-alive",
-    "proxy-authenticate",
-    "proxy-authorization",
-    "te",
-    "trailers",
-    "transfer-encoding",
-    "upgrade",
-    # Stripped for our case specifically: httpx already decoded the body,
-    # so re-emitting these would mislead the browser into trying to decode
-    # again or expect a different framing.
-    "content-encoding",
-    "content-length",
-}
-
 
 @shuffle_integrations_router.get(
     "/credentials",
@@ -50,13 +26,12 @@ _HOP_BY_HOP_HEADERS = {
 async def get_shuffle_connector_credentials(
     session: AsyncSession = Depends(get_db),
 ) -> ShuffleConnectorCredentialsResponse:
-    """Return the Shuffle creds the frontend needs to talk to our
-    same-origin proxy below. We expose the deployment-wide
-    `connector_api_key` (the embed sends it as Bearer auth on every
-    proxied request — the proxy validates it matches the stored key
-    before forwarding) and `base_url='/api/shuffle/proxy'` (so the
-    package never crosses origins). The real Shuffle URL stays
-    server-side; the browser only ever talks to CoPilot."""
+    """Return the deployment-wide Shuffle connector URL + API key for the
+    embedded `<ShuffleMCP>` / `<TryMcpSection>` / `<AppDetailDrawer>`
+    React components. The browser talks to Shuffle directly now that the
+    Shuffle team has fixed CORS on their backends — base_url is the real
+    connector URL (e.g. https://shuffler.io or a regional/self-hosted
+    deployment), not a same-origin proxy path."""
     info = await get_connector_info_from_db("Shuffle", session)
     if not info:
         raise HTTPException(status_code=404, detail="Shuffle connector is not configured.")
@@ -70,101 +45,8 @@ async def get_shuffle_connector_credentials(
     return ShuffleConnectorCredentialsResponse(
         success=True,
         message="Shuffle connector credentials retrieved.",
-        # Frontend uses this as the embed's `apiBaseUrl` — all browser-side
-        # XHR is same-origin via the proxy below. Path must match the
-        # proxy route's actual mount point (the integrations router is
-        # itself prefixed at `/shuffle/integrations`).
-        base_url="/api/shuffle/integrations/proxy",
+        base_url=real_base_url.rstrip("/"),
         api_key=api_key,
-    )
-
-
-@shuffle_integrations_router.api_route(
-    "/proxy/{path:path}",
-    methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-    description=(
-        "Same-origin proxy for `<ShuffleMCP>` / `<TryMcpSection>` XHR. The "
-        "browser-side embed configures its `apiBaseUrl` at this path and "
-        "sends the deployment-wide `connector_api_key` as Bearer auth. We "
-        "validate that against the stored connector record, then forward "
-        "the request to `connector_url + path` server-side. Avoids the "
-        "CORS preflight rejection from hosted Shuffle backends."
-    ),
-)
-async def shuffle_proxy(
-    path: str,
-    request: Request,
-    session: AsyncSession = Depends(get_db),
-) -> Response:
-    info = await get_connector_info_from_db("Shuffle", session)
-    if not info:
-        raise HTTPException(status_code=404, detail="Shuffle connector is not configured.")
-    expected = info.get("connector_api_key")
-    real_base_url = (info.get("connector_url") or "").rstrip("/")
-    if not expected or not real_base_url:
-        raise HTTPException(
-            status_code=400,
-            detail="Shuffle connector is missing connector_url or connector_api_key.",
-        )
-
-    # Top-level OAuth handoff (e.g., `/appauth?app_id=…&auth=…`) is a
-    # browser navigation, not an XHR. Browsers never set the Authorization
-    # header on those, so the Bearer check below would always 401. The
-    # query string Shuffle constructed is enough to identify the auth
-    # session, the URL exposes no secrets, and the destination's OAuth
-    # provider is the real authority. Forward the user with a 302.
-    #
-    # Important: Shuffle's OAuth UI lives on the canonical `shuffler.io`
-    # host even when the API backend is a regional one
-    # (e.g. `california.shuffler.io`). `connector_url` stores the API
-    # backend; the OAuth handoff page is always `https://shuffler.io`.
-    if path == "appauth":
-        oauth_base_url = "https://shuffler.io"
-        target = f"{oauth_base_url}/appauth"
-        qs = str(request.url.query)
-        return RedirectResponse(url=f"{target}?{qs}" if qs else target, status_code=302)
-
-    # All other paths are XHR — require the connector key as Bearer.
-    auth = request.headers.get("Authorization", "")
-    if not auth.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing Bearer authorization for Shuffle proxy.")
-    token = auth.removeprefix("Bearer ")
-    # Constant-time-ish equality is overkill here (this isn't a public
-    # endpoint and the token is the same one the caller fetched seconds
-    # ago via /credentials), but cheap.
-    if token != expected:
-        raise HTTPException(status_code=403, detail="Shuffle proxy token does not match connector key.")
-
-    target = f"{real_base_url}/{path}"
-    forward_headers = {
-        k: v
-        for k, v in request.headers.items()
-        if k.lower() not in _HOP_BY_HOP_HEADERS and k.lower() != "host"
-    }
-    body = await request.body()
-
-    logger.info(f"Shuffle proxy → {request.method} {target}")
-    try:
-        async with httpx.AsyncClient(timeout=30.0, follow_redirects=False) as client:
-            upstream = await client.request(
-                method=request.method,
-                url=target,
-                params=request.query_params,
-                content=body,
-                headers=forward_headers,
-            )
-    except httpx.RequestError as e:
-        logger.error(f"Shuffle proxy upstream error: {e}")
-        raise HTTPException(status_code=502, detail=f"Upstream Shuffle request failed: {e}")
-
-    response_headers = {
-        k: v for k, v in upstream.headers.items() if k.lower() not in _HOP_BY_HOP_HEADERS
-    }
-    return Response(
-        content=upstream.content,
-        status_code=upstream.status_code,
-        headers=response_headers,
-        media_type=upstream.headers.get("content-type"),
     )
 
 
