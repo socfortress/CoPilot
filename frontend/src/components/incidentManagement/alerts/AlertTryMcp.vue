@@ -43,19 +43,22 @@
 				</div>
 
 				<!-- App picker: only mounted until a selection is made -->
-				<ShuffleMCPEmbed
-					v-if="!selectedAppName"
-					:auth-token="orgAuthToken"
-					placeholder="Pick an app to act on this alert (e.g. Crowdstrike, Cloudflare, VirusTotal)…"
-					inline
-					class="[&_.singul-container]:max-h-100!"
-					layout="list"
-					disable-app-drawer
-					@app-selected="onAppSelected"
-				/>
+				<CollapseKeepAlive :show="!selectedAppName">
+					<ShuffleMCPEmbed
+						:auth-token="orgAuthToken"
+						placeholder="Pick an app to act on this alert (e.g. Crowdstrike, Cloudflare, VirusTotal)…"
+						inline
+						class="[&_.singul-container]:max-h-100!"
+						disable-app-drawer
+						prevent-default
+						@app-selected="onAppSelected"
+					/>
+				</CollapseKeepAlive>
 
 				<!-- Try MCP for the chosen app -->
-				<TryMcpEmbed v-else :app-name="selectedAppName" :auth-token="orgAuthToken" />
+				<n-collapse-transition :show="!!selectedAppName">
+					<TryMcpEmbed v-if="selectedAppName" :app-name="selectedAppName" :auth-token="orgAuthToken" />
+				</n-collapse-transition>
 			</div>
 		</template>
 	</div>
@@ -65,9 +68,10 @@
 import type { AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { ShuffleIntegration } from "@/types/notifications.d"
-import { NAlert, NButton, useMessage } from "naive-ui"
+import { NAlert, NButton, NCollapseTransition, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
 import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
 import TryMcpEmbed from "@/components/shuffle/TryMcpEmbed.vue"

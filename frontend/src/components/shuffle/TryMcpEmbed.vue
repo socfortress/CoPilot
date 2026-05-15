@@ -53,7 +53,7 @@ const { isThemeDark } = storeToRefs(themeStore)
 const TryMcpInline: FC<{ appName: string }> = ({ appName }) => {
 	const { displayName, image, categories, algoliaId, loading } = useAppLookup(appName)
 	if (loading) {
-		return createElement("div", { className: "text-tertiary p-4 text-sm" }, "Resolving app…")
+		return createElement("div", { className: "text-tertiary text-center text-sm" }, "Resolving app…")
 	}
 	if (!algoliaId) {
 		return createElement(

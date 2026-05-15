@@ -65,7 +65,7 @@ function buildTheme(isDark: boolean): Theme {
 			MuiDrawer: {
 				styleOverrides: {
 					root: {
-						zIndex: "2004 !important"
+						zIndex: "2104 !important"
 					},
 					paper: {
 						borderLeft: "none !important",
