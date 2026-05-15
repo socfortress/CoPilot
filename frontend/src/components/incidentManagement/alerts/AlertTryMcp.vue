@@ -32,7 +32,7 @@
 					<span class="text-sm">
 						Acting as
 						<strong>{{ activeIntegration.display_name }}</strong>
-						<span class="text-tertiary">· alert #{{ alert.id }}</span>
+						<span class="text-secondary">&nbsp;• alert #{{ alert.id }}</span>
 					</span>
 					<n-button v-if="selectedAppName" size="tiny" @click="selectedAppName = null">
 						<template #icon>
@@ -48,7 +48,9 @@
 					:auth-token="orgAuthToken"
 					placeholder="Pick an app to act on this alert (e.g. Crowdstrike, Cloudflare, VirusTotal)…"
 					inline
+					class="[&_.singul-container]:max-h-100!"
 					layout="list"
+					disable-app-drawer
 					@app-selected="onAppSelected"
 				/>
 
