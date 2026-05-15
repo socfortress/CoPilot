@@ -96,11 +96,7 @@
 					</div>
 				</n-popover>
 
-				<n-checkbox
-					v-model:checked="onlyCovered"
-					size="small"
-					class="shrink-0! self-center whitespace-nowrap"
-				>
+				<n-checkbox v-model:checked="onlyCovered" size="small" class="shrink-0! self-center whitespace-nowrap">
 					<span class="text-xs">Only covered</span>
 				</n-checkbox>
 			</div>
@@ -114,7 +110,8 @@
 						Export CSV
 					</n-button>
 				</template>
-				Download a CSV of the current coverage (one row per technique and sub-technique, with rule counts and IDs).
+				Download a CSV of the current coverage (one row per technique and sub-technique, with rule counts and
+				IDs).
 			</n-tooltip>
 
 			<n-tooltip placement="bottom-end">
@@ -128,8 +125,8 @@
 				</template>
 				Force a re-fetch of the MITRE ATT&amp;CK STIX bundle from
 				<code>github.com/mitre/cti</code>
-				, bypassing the 24-hour cache. Use this if MITRE published a new release and you want
-				the matrix to pick it up immediately.
+				, bypassing the 24-hour cache. Use this if MITRE published a new release and you want the matrix to pick
+				it up immediately.
 			</n-tooltip>
 		</div>
 
@@ -153,10 +150,7 @@
 			<!-- Subtle top progress bar replaces the heavy spin overlay during refetches. -->
 			<div v-if="loading && coverage" class="matrix-progress" />
 
-			<div
-				class="matrix-scroll"
-				:class="{ 'matrix-scroll-loading': loading && coverage }"
-			>
+			<div class="matrix-scroll" :class="{ 'matrix-scroll-loading': loading && coverage }">
 				<n-empty
 					v-if="!loading && coverage && filteredTactics.length === 0"
 					description="No techniques match your filters."
@@ -167,14 +161,11 @@
 					</template>
 				</n-empty>
 
-				<n-spin v-else-if="loading && !coverage" :show="true" class="matrix-initial-load" />
+				<n-spin v-else-if="loading && !coverage" show class="matrix-initial-load" />
 
 				<div v-else class="matrix-grid">
 					<div v-for="tactic of filteredTactics" :key="tactic.id" class="tactic-column">
-						<div
-							class="tactic-header"
-							:class="{ 'tactic-uncovered': isTacticUncovered(tactic) }"
-						>
+						<div class="tactic-header" :class="{ 'tactic-uncovered': isTacticUncovered(tactic) }">
 							<div class="flex items-center justify-between gap-2">
 								<div class="tactic-name">{{ tactic.name }}</div>
 								<span
@@ -206,8 +197,7 @@
 											cellClass(tech),
 											{
 												'cell-cross-tactic':
-													hoveredTechniqueId === tech.id &&
-													hoveredTacticId !== tactic.id
+													hoveredTechniqueId === tech.id && hoveredTacticId !== tactic.id
 											}
 										]"
 										:title="cellTooltip(tech)"
@@ -241,11 +231,7 @@
 											{{ tech.subtechniques.length }} sub
 										</div>
 
-										<div
-											v-if="expanded[tactic.id + tech.id]"
-											class="subtechnique-list"
-											@click.stop
-										>
+										<div v-if="expanded[tactic.id + tech.id]" class="subtechnique-list" @click.stop>
 											<n-popover
 												v-for="sub of visibleSubs(tech, tactic.id + tech.id)"
 												:key="sub.id"
@@ -259,7 +245,7 @@
 												<template #trigger>
 													<div
 														class="subtechnique-cell"
-														:class="cellClass(sub, true)"
+														:class="cellClass(sub)"
 														:title="subCellTooltip(sub)"
 														@click="openSubTechnique(tactic, tech, sub)"
 													>
@@ -297,7 +283,11 @@
 									</div>
 								</template>
 
-								<RulePreviewList :rule-ids="tech.rule_ids" :index="rulesIndex" :extra-via-subs="tech.total_rule_count - tech.rule_count" />
+								<RulePreviewList
+									:rule-ids="tech.rule_ids"
+									:index="rulesIndex"
+									:extra-via-subs="tech.total_rule_count - tech.rule_count"
+								/>
 							</n-popover>
 
 							<n-empty
@@ -443,11 +433,7 @@ const statusOptions = [
 ]
 
 const anyFiltersActive = computed(
-	() =>
-		!!selectedPlatform.value ||
-		!!selectedSeverity.value ||
-		!!selectedStatus.value ||
-		!!hasGraylogFilter.value
+	() => !!selectedPlatform.value || !!selectedSeverity.value || !!selectedStatus.value || !!hasGraylogFilter.value
 )
 
 const rulesIndex = computed<Record<string, MitreRuleIndexEntry>>(() => coverage.value?.rules_index ?? {})
@@ -477,8 +463,7 @@ const filteredTactics = computed<MitreTactic[]>(() => {
 				const techHaystack = `${tech.id} ${tech.name}`.toLowerCase()
 				const techMatches = techHaystack.includes(q)
 				const ruleMatches =
-					ruleIdsMatch(tech.rule_ids, q) ||
-					tech.subtechniques.some(s => ruleIdsMatch(s.rule_ids, q))
+					ruleIdsMatch(tech.rule_ids, q) || tech.subtechniques.some(s => ruleIdsMatch(s.rule_ids, q))
 				if (!techMatches && !ruleMatches) return false
 			}
 			return true
@@ -510,7 +495,7 @@ function isTacticUncovered(tactic: MitreTactic): boolean {
 	return total > 0 && covered === 0
 }
 
-function cellClass(item: MitreTechnique | MitreSubTechnique, isSub = false) {
+function cellClass(item: MitreTechnique | MitreSubTechnique) {
 	const count = "total_rule_count" in item ? item.total_rule_count : item.rule_count
 	if (count === 0) return `cov-empty`
 	if (count === 1) return `cov-1`
@@ -527,9 +512,7 @@ function cellTooltip(tech: MitreTechnique) {
 		: `${tech.id} ${tech.name} — ${tech.rule_count} rule(s)`
 }
 function subCellTooltip(sub: MitreSubTechnique) {
-	return sub.rule_count
-		? `${sub.id} ${sub.name} — ${sub.rule_count} rule(s)`
-		: `${sub.id} ${sub.name} — no rules`
+	return sub.rule_count ? `${sub.id} ${sub.name} — ${sub.rule_count} rule(s)` : `${sub.id} ${sub.name} — no rules`
 }
 
 function toggleExpand(tacticId: string, techId: string) {
@@ -558,7 +541,17 @@ function clearAllFilters() {
 
 function exportCoverageCsv() {
 	if (!coverage.value) return
-	const rows: string[][] = [["tactic_id", "tactic_name", "technique_id", "technique_name", "rule_count_direct", "rule_count_total", "rule_ids"]]
+	const rows: string[][] = [
+		[
+			"tactic_id",
+			"tactic_name",
+			"technique_id",
+			"technique_name",
+			"rule_count_direct",
+			"rule_count_total",
+			"rule_ids"
+		]
+	]
 	for (const tactic of coverage.value.tactics) {
 		for (const tech of tactic.techniques) {
 			rows.push([
@@ -674,8 +667,7 @@ function applyFiltersFromUrl() {
 		platform && (validPlatforms as string[]).includes(platform) ? (platform as PlatformFilter) : null
 	selectedSeverity.value =
 		severity && (validSeverities as string[]).includes(severity) ? (severity as RuleSeverity) : null
-	selectedStatus.value =
-		status && (validStatuses as string[]).includes(status) ? (status as RuleStatus) : null
+	selectedStatus.value = status && (validStatuses as string[]).includes(status) ? (status as RuleStatus) : null
 	hasGraylogFilter.value = q.has_graylog === "true"
 }
 
@@ -772,11 +764,11 @@ const platformIcon: Record<string, string> = {
 	unknown: "carbon:help"
 }
 
-const RulePreviewList = (props: {
+function RulePreviewList(props: {
 	ruleIds: string[]
 	index: Record<string, MitreRuleIndexEntry>
 	extraViaSubs?: number
-}) => {
+}) {
 	const ids = props.ruleIds || []
 	if (!ids.length) {
 		return h("div", { class: "preview-empty text-secondary text-xs" }, "No rules")
@@ -787,8 +779,9 @@ const RulePreviewList = (props: {
 		h(
 			"div",
 			{ class: "text-tertiary text-xs uppercase tracking-wide" },
-			`${ids.length} rule${ids.length === 1 ? "" : "s"}` +
-				(props.extraViaSubs ? ` · +${props.extraViaSubs} via sub-techniques` : "")
+			`${ids.length} rule${ids.length === 1 ? "" : "s"}${
+				props.extraViaSubs ? ` · +${props.extraViaSubs} via sub-techniques` : ""
+			}`
 		),
 		...shown.map(id => {
 			const entry = props.index[id]
@@ -815,7 +808,7 @@ const RulePreviewList = (props: {
 									"span",
 									{ class: `preview-sev preview-sev-${entry.severity.toLowerCase()} text-xs` },
 									entry.severity
-							  )
+								)
 							: null
 					]),
 					dataSources.length
@@ -823,7 +816,7 @@ const RulePreviewList = (props: {
 								"div",
 								{ class: "preview-sources flex flex-wrap items-center gap-1" },
 								dataSources.map(s => h("span", { class: "preview-source text-xs", key: s }, s))
-						  )
+							)
 						: null
 				]
 			)
@@ -903,8 +896,12 @@ const RulePreviewList = (props: {
 	animation: matrix-progress-slide 1.1s ease-in-out infinite;
 }
 @keyframes matrix-progress-slide {
-	0% { left: -40%; }
-	100% { left: 100%; }
+	0% {
+		left: -40%;
+	}
+	100% {
+		left: 100%;
+	}
 }
 
 /* Matrix scrolls inside its own bounded box so the horizontal scrollbar
@@ -1001,7 +998,10 @@ const RulePreviewList = (props: {
 	padding: 6px 8px;
 	border-radius: 4px;
 	cursor: pointer;
-	transition: background-color 0.12s, border-color 0.12s, box-shadow 0.12s;
+	transition:
+		background-color 0.12s,
+		border-color 0.12s,
+		box-shadow 0.12s;
 	font-size: 0.75rem;
 	border: 1px solid var(--border-color);
 	background: var(--bg-default-color);
@@ -1080,7 +1080,9 @@ const RulePreviewList = (props: {
 	font-size: 0.7rem;
 	border: 1px solid var(--border-color);
 	background: var(--bg-default-color);
-	transition: background-color 0.12s, border-color 0.12s;
+	transition:
+		background-color 0.12s,
+		border-color 0.12s;
 }
 
 .subtechnique-cell:hover {

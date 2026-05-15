@@ -264,7 +264,9 @@ function handleProvisionSuccess() {
 	border-radius: 4px;
 	padding: 2px;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-	transition: border-color 0.12s, box-shadow 0.12s;
+	transition:
+		border-color 0.12s,
+		box-shadow 0.12s;
 }
 .rule-card-wrap.is-selected .rule-card-checkbox {
 	border-color: rgba(var(--primary-color-rgb) / 0.6);

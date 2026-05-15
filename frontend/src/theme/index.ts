@@ -2,7 +2,7 @@ import type { GlobalThemeOverrides, ThemeCommonVars } from "naive-ui"
 import { useOsTheme } from "naive-ui"
 import tokens from "@/design-tokens.json"
 import { Layout, RouterTransition, ThemeNameEnum } from "@/types/theme.d"
-import { colorToArray, expandPattern, getThemeColors, getTypeValue } from "@/utils/theme"
+import { colorToArray, colorToHslValues, expandPattern, getThemeColors, getTypeValue } from "@/utils/theme"
 
 type ThemeState = ReturnType<typeof getDefaultState>
 
@@ -203,7 +203,35 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 		"font-family-display": `${fontFamilyDisplay}`,
 		"font-family-mono": `${fontFamilyMono}`,
 		"font-size": `${fontSize}`,
-		"line-height": `${lineHeight}`
+		"line-height": `${lineHeight}`,
+
+		background: `${colorToHslValues(bgSecondaryColor)}`,
+		"background-elevated": `${colorToHslValues(bgColor)}`,
+		"background-surface": `${colorToHslValues(bgSecondaryColor)}`,
+		foreground: `${colorToHslValues(fgColor)}`,
+		card: `${colorToHslValues(bgColor)}`,
+		"card-foreground": `${colorToHslValues(fgColor)}`,
+		popover: `${colorToHslValues(bgColor)}`,
+		"popover-foreground": `${colorToHslValues(fgColor)}`,
+		primary: `${colorToHslValues(state.colors[state.themeName].primary)}`,
+		"primary-foreground": `${colorToHslValues(bgBody)}`,
+		secondary: `${colorToHslValues(state.colors[state.themeName].primary)}`,
+		"secondary-foreground": `${colorToHslValues(fgSecondaryColor)}`,
+		muted: `${colorToHslValues(bgSecondaryColor)}`,
+		"muted-foreground": `${colorToHslValues(fgSecondaryColor)}`,
+		accent: `${colorToHslValues(state.colors[state.themeName].primary)}`,
+		"accent-foreground": `${colorToHslValues(bgBody)}`,
+		destructive: `${colorToHslValues(state.colors[state.themeName].error)}`,
+		"destructive-foreground": `${colorToHslValues(bgBody)}`,
+		border: `${colorToHslValues(state.colors[state.themeName].border)}`,
+		input: `${colorToHslValues(bgSecondaryColor)}`,
+		ring: `${colorToHslValues(state.colors[state.themeName].border)}`,
+		"severity-info": `${colorToHslValues(state.colors[state.themeName].info)}`,
+		"severity-low": `${colorToHslValues(state.colors[state.themeName].success)}`,
+		"severity-medium": `${colorToHslValues(state.colors[state.themeName].warning)}`,
+		"severity-high": `${colorToHslValues(state.colors[state.themeName].error)}`,
+		"severity-critical": `${colorToHslValues(state.colors[state.themeName].error)}`,
+		"infra-email": `${colorToHslValues(state.colors[state.themeName].info)}`
 	}
 
 	// import colors by patterns

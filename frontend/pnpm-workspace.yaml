@@ -1,0 +1,19 @@
+shellEmulator: true
+
+trustPolicy: no-downgrade
+
+trustPolicyExclude:
+  - chokidar
+  - semver
+
+allowBuilds:
+  "@parcel/watcher": true
+  "@tailwindcss/oxide": true
+  esbuild: true
+  unrs-resolver: true
+
+overrides:
+  "@mui/icons-material": ^7.3.9
+peerDependencyRules:
+  allowedVersions:
+    eslint: "10"

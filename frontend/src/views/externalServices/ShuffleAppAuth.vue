@@ -19,6 +19,7 @@
 				:auth-token="organization.org_auth.token"
 				placeholder="Find an app..."
 				inline
+				prevent-default
 				class="h-full"
 			/>
 		</n-spin>
@@ -30,7 +31,7 @@ import type { Organization } from "@/types/shuffle.d"
 import { NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
-import ShuffleMCPEmbed from "@/components/common/ShuffleMCPEmbed.vue"
+import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
 
 const loadingList = ref(false)
 const loadingToken = ref(false)

@@ -17,7 +17,10 @@
 					</div>
 				</div>
 
-				<div v-if="provisionableCount > 0" class="mb-3 flex items-center justify-between gap-2 rounded-md border border-default bg-secondary p-2">
+				<div
+					v-if="provisionableCount > 0"
+					class="border-default bg-secondary mb-3 flex items-center justify-between gap-2 rounded-md border p-2"
+				>
 					<div class="text-secondary text-xs">
 						<strong>{{ provisionableCount }}</strong>
 						of

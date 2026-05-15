@@ -559,10 +559,7 @@ function exportSelectedCsv() {
 		.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
 		.join("\n")
 	const stamp = new Date().toISOString().slice(0, 10)
-	downloadBlob(
-		new Blob([csv], { type: "text/csv;charset=utf-8;" }),
-		`copilot-searches-selected-${stamp}.csv`
-	)
+	downloadBlob(new Blob([csv], { type: "text/csv;charset=utf-8;" }), `copilot-searches-selected-${stamp}.csv`)
 }
 
 function exportSelectedJson() {
@@ -598,7 +595,9 @@ function exportSelectedJson() {
 
 .fade-up-enter-active,
 .fade-up-leave-active {
-	transition: opacity 0.2s ease, transform 0.2s ease;
+	transition:
+		opacity 0.2s ease,
+		transform 0.2s ease;
 }
 .fade-up-enter-from,
 .fade-up-leave-to {

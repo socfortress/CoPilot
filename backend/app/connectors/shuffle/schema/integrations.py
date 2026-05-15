@@ -9,6 +9,17 @@ from pydantic import Field
 from pydantic import model_validator
 
 
+class ShuffleConnectorCredentialsResponse(BaseModel):
+    """Minimal Shuffle connector creds for the frontend's `<ShuffleMCP>` /
+    `<TryMcpSection>` embeds. We only expose URL + API key — not the full
+    connector row — to keep the frontend surface narrow."""
+
+    success: bool
+    message: str
+    base_url: str = Field(..., description="The Shuffle backend base URL (e.g. https://shuffler.io).")
+    api_key: str = Field(..., description="The deployment-wide Shuffle API key from the connectors table.")
+
+
 class IntegrationRequest(BaseModel):
     app_name: str = Field(..., description="The name of the application", examples=["PagerDuty"])
     category: str = Field(..., description="The category of the application", examples=["cases"])

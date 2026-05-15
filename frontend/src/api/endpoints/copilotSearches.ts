@@ -1,10 +1,10 @@
 import type {
 	BulkProvisionGraylogAlertRequest,
 	BulkProvisionGraylogAlertResponse,
-	GraylogProvisioningStatusResponse,
 	ExecuteGraylogQueryRequest,
 	ExecuteSearchRequest,
 	ExecuteSearchResponse,
+	GraylogProvisioningStatusResponse,
 	GraylogQueryResponse,
 	MitreCoverageQuery,
 	MitreCoverageResponse,

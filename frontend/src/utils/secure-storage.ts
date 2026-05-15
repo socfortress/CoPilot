@@ -1,4 +1,11 @@
-import SecureLS from "secure-ls"
+import SecureLSModule from "secure-ls"
+
+type SecureLSConstructor = typeof SecureLSModule
+
+const SecureLS: SecureLSConstructor =
+	typeof SecureLSModule === "function"
+		? SecureLSModule
+		: (SecureLSModule as unknown as { default: SecureLSConstructor }).default
 
 const secureLS = new SecureLS({
 	encodingType: "aes",

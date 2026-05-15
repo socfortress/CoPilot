@@ -24,26 +24,28 @@
 			</div>
 		</CollapseKeepAlive>
 
-		<div class="mt-3 flex flex-col gap-2">
-			<template v-if="iocs.length">
-				<AlertIoCItem v-for="ioc of iocs" :key="ioc.id" :ioc :alert-id embedded @deleted="delIoc(ioc)" />
-			</template>
-			<template v-else>
-				<n-collapse-transition :show="!showForm">
-					<n-empty v-if="!loading" class="min-h-48">
-						<div class="flex flex-col items-center gap-4">
-							<p>No IoCs found</p>
-							<n-button type="primary" :loading="submitting" @click="openForm()">
-								<template #icon>
-									<Icon :name="AddIcon" />
-								</template>
-								Create an IoCs
-							</n-button>
-						</div>
-					</n-empty>
-				</n-collapse-transition>
-			</template>
-		</div>
+		<CollapseKeepAlive :show="!showForm">
+			<div class="mt-3 flex flex-col gap-2">
+				<template v-if="iocs.length">
+					<AlertIoCItem v-for="ioc of iocs" :key="ioc.id" :ioc :alert-id embedded @deleted="delIoc(ioc)" />
+				</template>
+				<template v-else>
+					<n-collapse-transition :show="!showForm">
+						<n-empty v-if="!loading" class="min-h-48">
+							<div class="flex flex-col items-center gap-4">
+								<p>No IoCs found</p>
+								<n-button type="primary" :loading="submitting" @click="openForm()">
+									<template #icon>
+										<Icon :name="AddIcon" />
+									</template>
+									Create an IoCs
+								</n-button>
+							</div>
+						</n-empty>
+					</n-collapse-transition>
+				</template>
+			</div>
+		</CollapseKeepAlive>
 	</div>
 </template>
 
