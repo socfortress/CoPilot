@@ -1,5 +1,5 @@
 <template>
-	<n-drawer v-model:show="showLocal" :width="720" placement="right">
+	<n-drawer v-model:show="show" :width="720" placement="right" display-directive="show">
 		<n-drawer-content closable>
 			<template #header>
 				<div class="flex items-center gap-2">
@@ -33,27 +33,19 @@
 					layout="grid"
 					:grid-columns="3"
 					prevent-default
-					@app-selected="onAppSelected"
 				/>
 			</div>
 		</n-drawer-content>
-
-		<!-- All-in-one app drawer for the picked app. Inline auth for
-		     API-key/URL apps; OAuth apps still redirect on click. Stacks
-		     visually on top of the picker drawer. -->
-		<AppDetailDrawerEmbed v-model:open="appDrawerOpen" :app-name="appDrawerAppName" />
 	</n-drawer>
 </template>
 
 <script setup lang="ts">
-import type { AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 import type { ApiError } from "@/types/common"
 import type { ShuffleIntegration } from "@/types/notifications.d"
 import { NDrawer, NDrawerContent } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import AppDetailDrawerEmbed from "@/components/shuffle/AppDetailDrawerEmbed.vue"
 import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
 import { getApiErrorMessage } from "@/utils"
 
@@ -67,26 +59,18 @@ import { getApiErrorMessage } from "@/utils"
 //   3. Surfacing a confirmation message when the admin picks an app
 
 const props = defineProps<{
-	show: boolean
 	integration: ShuffleIntegration | null
 }>()
 
-const emit = defineEmits<{
-	(e: "update:show", value: boolean): void
-}>()
-
-// v-model:show bridge — lets the drawer's built-in close button
-// propagate state back to the parent.
-const showLocal = computed({
-	get: () => props.show,
-	set: (v: boolean) => emit("update:show", v)
-})
+const show = defineModel<boolean>("show", { required: true, default: false })
 
 const orgAuthToken = ref<string | null>(null)
 const loadingToken = ref(false)
 const error = ref<string | null>(null)
 
 async function loadOrgToken(orgId: string) {
+	if (orgAuthToken.value) return
+
 	loadingToken.value = true
 	error.value = null
 
@@ -108,32 +92,14 @@ async function loadOrgToken(orgId: string) {
 	}
 }
 
-const appDrawerOpen = ref(false)
-const appDrawerAppName = ref<string | null>(null)
-
-function onAppSelected(payload: AppSelectedEvent) {
-	// With prevent-default on the picker, Shuffle doesn't fire the
-	// top-level OAuth redirect. We open AppDetailDrawer for the picked
-	// app — the drawer renders an inline auth form for API-key/URL apps
-	// and a redirect handoff button for OAuth ones, so the admin can
-	// configure both kinds without leaving the page.
-	const name = payload.app?.name
-	if (!name) return
-	appDrawerAppName.value = name
-	appDrawerOpen.value = true
-}
-
 // Re-fetch the org token whenever the drawer opens or switches to a
 // different integration. Cleared when closing so reopening on a
 // different integration doesn't briefly flash stale data.
 watch(
-	() => [props.show, props.integration?.id] as const,
-	([show, id]) => {
-		if (show && id && props.integration?.shuffle_org_id) {
+	[show, () => props.integration?.id],
+	([showValue, integrationId]) => {
+		if (showValue && integrationId && props.integration?.shuffle_org_id) {
 			loadOrgToken(props.integration.shuffle_org_id)
-		} else if (!show) {
-			orgAuthToken.value = null
-			error.value = null
 		}
 	},
 	{ immediate: true }

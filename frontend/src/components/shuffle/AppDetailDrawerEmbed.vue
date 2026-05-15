@@ -24,7 +24,6 @@ import { fetchShuffleConnectorCredentials } from "@/utils/shuffle/shuffleConnect
 import { MuiProvider } from "@/utils/shuffle/shuffleMuiTheme"
 
 interface Props {
-	open: boolean
 	appName: string | null
 	width?: number
 	anchor?: "left" | "right"
@@ -36,9 +35,10 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-	(e: "update:open", value: boolean): void
 	(e: "refresh"): void
 }>()
+
+const show = defineModel<boolean>("show", { required: true, default: false })
 
 const container = ref<HTMLElement | null>(null)
 let root: Root | null = null
@@ -53,8 +53,8 @@ function render() {
 			MuiProvider as never,
 			{ isDark: isThemeDark.value },
 			createElement(AppDetailDrawer as never, {
-				open: props.open,
-				onClose: () => emit("update:open", false),
+				open: show.value,
+				onClose: () => (show.value = false),
 				appName: props.appName,
 				anchor: props.anchor,
 				width: props.width,
@@ -63,6 +63,15 @@ function render() {
 		)
 	)
 }
+
+watch([show.value, () => props.appName, () => props.width, () => props.anchor, isThemeDark], () => render())
+
+onBeforeUnmount(() => {
+	if (root) {
+		root.unmount()
+		root = null
+	}
+})
 
 onMounted(async () => {
 	if (!container.value) return
@@ -75,17 +84,5 @@ onMounted(async () => {
 		API_CONFIG.setApiKey(creds.api_key)
 	}
 	render()
-})
-
-watch(
-	() => [props.open, props.appName, props.width, props.anchor, isThemeDark.value] as const,
-	() => render()
-)
-
-onBeforeUnmount(() => {
-	if (root) {
-		root.unmount()
-		root = null
-	}
 })
 </script>

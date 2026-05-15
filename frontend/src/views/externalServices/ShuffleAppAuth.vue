@@ -21,26 +21,16 @@
 				inline
 				prevent-default
 				class="h-full"
-				@app-selected="onAppSelected"
 			/>
 		</n-spin>
-
-		<!-- All-in-one app drawer (auth + MCP chat + actions). Replaces the
-		     top-level redirect to shuffler.io that <ShuffleMCP> would do
-		     by default. Inline auth form for API-key/URL apps; OAuth apps
-		     still redirect from inside the drawer when the user clicks
-		     "Authenticate". -->
-		<AppDetailDrawerEmbed v-model:open="appDrawerOpen" :app-name="appDrawerAppName" />
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 import type { Organization } from "@/types/shuffle.d"
 import { NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
-import AppDetailDrawerEmbed from "@/components/shuffle/AppDetailDrawerEmbed.vue"
 import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
 
 const loadingList = ref(false)
@@ -98,16 +88,6 @@ watch(selectedOrganization, val => {
 		organization.value = null
 	}
 })
-
-const appDrawerOpen = ref(false)
-const appDrawerAppName = ref<string | null>(null)
-
-function onAppSelected(payload: AppSelectedEvent) {
-	const name = payload.app?.name
-	if (!name) return
-	appDrawerAppName.value = name
-	appDrawerOpen.value = true
-}
 
 onBeforeMount(() => {
 	getOrganizations()

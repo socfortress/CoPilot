@@ -1,5 +1,14 @@
 <template>
-	<div ref="container" class="w-full" />
+	<div>
+		<div ref="container" class="w-full" />
+
+		<!-- All-in-one app drawer (auth + MCP chat + actions). Replaces the
+		     top-level redirect to shuffler.io that <ShuffleMCP> would do
+		     by default. Inline auth form for API-key/URL apps; OAuth apps
+		     still redirect from inside the drawer when the user clicks
+		     "Authenticate". -->
+		<AppDetailDrawerEmbed v-model:show="showAppDrawer" :app-name="selectedAppName" />
+	</div>
 </template>
 
 <script setup lang="ts">
@@ -31,6 +40,7 @@ import { onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useThemeStore } from "@/stores/theme"
 import { fetchShuffleConnectorCredentials } from "@/utils/shuffle/shuffleConnectorCredentials"
 import { MuiProvider } from "@/utils/shuffle/shuffleMuiTheme"
+import AppDetailDrawerEmbed from "./AppDetailDrawerEmbed.vue"
 
 interface Props {
 	authToken: string
@@ -45,6 +55,7 @@ interface Props {
 	showCheckbox?: boolean
 	initialFilterQuery?: string
 	showSourceFilter?: boolean
+	disableAppDrawer?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -58,12 +69,13 @@ const props = withDefaults(defineProps<Props>(), {
 	multiSelect: false,
 	showCheckbox: false,
 	initialFilterQuery: undefined,
-	showSourceFilter: true
+	showSourceFilter: true,
+	disableAppDrawer: false
 })
 
 const emit = defineEmits<{
-	(e: "appSelected", payload: AppSelectedEvent): void
-	(e: "selectionChange", payload: AlgoliaSearchApp[]): void
+	(e: "app-selected", payload: AppSelectedEvent): void
+	(e: "selection-change", payload: AlgoliaSearchApp[]): void
 }>()
 
 const container = ref<HTMLElement | null>(null)
@@ -80,6 +92,9 @@ const { isThemeDark } = storeToRefs(themeStore)
 // when the caller already passed explicit overrides.
 const connectorApiKey = ref<string | null>(null)
 const connectorBaseUrl = ref<string | null>(null)
+
+const showAppDrawer = ref(false)
+const selectedAppName = ref<string | null>(null)
 
 function render() {
 	if (!root) return
@@ -100,8 +115,8 @@ function render() {
 		// inside the React component, then mirrors it into state from a
 		// useEffect. Passing a stable array avoids that render loop.
 		selectedApps: EMPTY_SELECTED_APPS,
-		onAppSelected: (payload: AppSelectedEvent) => emit("appSelected", payload),
-		onSelectionChange: (payload: AlgoliaSearchApp[]) => emit("selectionChange", payload)
+		onAppSelected: (payload: AppSelectedEvent) => onAppSelected(payload),
+		onSelectionChange: (payload: AlgoliaSearchApp[]) => emit("selection-change", payload)
 	}
 	// Caller-provided overrides win; fall back to the connector creds.
 	const effectiveApiKey = props.apiKey ?? connectorApiKey.value
@@ -119,20 +134,21 @@ function render() {
 	)
 }
 
-onMounted(async () => {
-	if (!container.value) return
-	root = createRoot(container.value)
-	// Wait for the connector creds before the first render. The package
-	// fires its private/authenticated apps fetches eagerly on mount; if we
-	// render with no apiKey/apiBaseUrl those fetches go to the package
-	// defaults (shuffler.io, unauthed) and 401/CORS-block. Better to hold
-	// off one async tick and render once with the right config.
-	const creds = await fetchShuffleConnectorCredentials()
-	if (creds) {
-		connectorApiKey.value = creds.api_key
-		connectorBaseUrl.value = creds.base_url
+function onAppSelected(payload: AppSelectedEvent) {
+	emit("app-selected", payload)
+
+	if (props.disableAppDrawer) return
+
+	const name = payload.app?.name
+	if (!name) return
+	selectedAppName.value = name
+	showAppDrawer.value = true
+}
+
+watch(showAppDrawer, value => {
+	if (!value) {
+		selectedAppName.value = null
 	}
-	render()
 })
 
 // Re-render when any reactive prop changes. The shallow watch is fine
@@ -153,5 +169,22 @@ onBeforeUnmount(() => {
 		root.unmount()
 		root = null
 	}
+})
+
+onMounted(async () => {
+	if (!container.value) return
+	root = createRoot(container.value)
+
+	// Wait for the connector creds before the first render. The package
+	// fires its private/authenticated apps fetches eagerly on mount; if we
+	// render with no apiKey/apiBaseUrl those fetches go to the package
+	// defaults (shuffler.io, unauthed) and 401/CORS-block. Better to hold
+	// off one async tick and render once with the right config.
+	const creds = await fetchShuffleConnectorCredentials()
+	if (creds) {
+		connectorApiKey.value = creds.api_key
+		connectorBaseUrl.value = creds.base_url
+	}
+	render()
 })
 </script>
