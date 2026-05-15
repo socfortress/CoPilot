@@ -8,7 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.utils import AuthHandler
 from app.connectors.shuffle.schema.integrations import ExecuteWorkflowRequest
 from app.connectors.shuffle.schema.integrations import IntegrationRequest
-from app.connectors.shuffle.schema.integrations import ShuffleConnectorCredentialsResponse
+from app.connectors.shuffle.schema.integrations import (
+    ShuffleConnectorCredentialsResponse,
+)
 from app.connectors.shuffle.services.integrations import execute_integration
 from app.connectors.shuffle.services.integrations import execute_workflow
 from app.connectors.utils import get_connector_info_from_db
