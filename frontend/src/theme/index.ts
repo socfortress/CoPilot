@@ -205,7 +205,7 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 		"font-size": `${fontSize}`,
 		"line-height": `${lineHeight}`,
 
-		background: `${colorToHslValues(bgBody)}`,
+		background: `${colorToHslValues(bgSecondaryColor)}`,
 		"background-elevated": `${colorToHslValues(bgColor)}`,
 		"background-surface": `${colorToHslValues(bgSecondaryColor)}`,
 		foreground: `${colorToHslValues(fgColor)}`,

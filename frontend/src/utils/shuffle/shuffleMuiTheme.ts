@@ -64,6 +64,9 @@ function buildTheme(isDark: boolean): Theme {
 			},
 			MuiDrawer: {
 				styleOverrides: {
+					root: {
+						zIndex: "2004 !important"
+					},
 					paper: {
 						borderLeft: "none !important",
 						borderTopLeftRadius: "var(--border-radius) !important",
