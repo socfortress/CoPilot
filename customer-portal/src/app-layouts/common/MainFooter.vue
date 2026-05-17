@@ -2,35 +2,23 @@
 	<footer class="footer py-4" :class="{ boxed }">
 		<div class="wrap flex items-center justify-end gap-3">
 			<div class="copy">
-				Made with
-				<Icon :size="22" class="text-primary mx-1">
-					<BrainIcon />
-				</Icon>
-				By
-				<a
-					href="https://www.socfortress.co/"
-					target="_blank"
-					alt="SOCFortress"
-					rel="noopener noreferrer"
-					class="mx-1"
-				>
-					SOCFortress
-				</a>
-				All rights Reserved © Copyright {{ year }}
+				<template v-if="portalTitle">© Copyright {{ year }} {{ portalTitle }}</template>
+				<template v-else>© Copyright {{ year }}</template>
 			</div>
 		</div>
 	</footer>
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue"
-import BrainIcon from "@/assets/icons/brain-icon.svg"
-import Icon from "@/components/common/Icon.vue"
+import { computed, ref } from "vue"
+import { usePortalSettingsStore } from "@/stores/portalSettings"
 
 const { boxed } = defineProps<{
 	boxed: boolean
 }>()
 
+const portalSettingsStore = usePortalSettingsStore()
+const portalTitle = computed(() => portalSettingsStore.portalTitle)
 const year = ref(new Date().getFullYear())
 </script>
 
