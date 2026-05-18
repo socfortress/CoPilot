@@ -317,6 +317,27 @@ class CaseTemplate(SQLModel, table=True):
         nullable=False,
         description="Default template for its (customer_code, source) scope. Used as the final fallback in selection.",
     )
+    match_field: Optional[str] = Field(
+        default=None,
+        max_length=255,
+        nullable=True,
+        description=(
+            "Optional conditional auto-apply: name of a flat top-level field on the originating Wazuh "
+            "document (e.g., 'data_win_system_eventID'). When both match_field and match_value are set, "
+            "auto-apply fetches the raw event via the asset's (index_name, index_id) and applies this "
+            "template only when document[match_field] == match_value. Both null = unconditional template "
+            "(legacy customer/source tier picker)."
+        ),
+    )
+    match_value: Optional[str] = Field(
+        default=None,
+        sa_column=Column(Text, nullable=True),
+        description=(
+            "Optional conditional auto-apply: the string value compared (equality) against the raw "
+            "document field. Stored as text since Wazuh field values are heterogeneous; numeric fields "
+            "like eventID arrive as quoted strings already ('1' not 1)."
+        ),
+    )
     created_by: str = Field(max_length=100, nullable=False, description="User who created this template")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
