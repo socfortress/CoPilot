@@ -1,11 +1,18 @@
 <template>
 	<div class="page">
 		<div class="agent-toolbar">
-			<div class="back-btn" @click="routeAgent().navigate()">
-				<Icon :name="ArrowIcon" :size="16" />
-				<span>Agents list</span>
-			</div>
-			<div v-if="agent" class="delete-btn" @click.stop="handleDelete">Delete Agent</div>
+			<n-button text size="small" :focusable="false" @click="routeAgent().navigate()">
+				<template #icon>
+					<Icon :name="ArrowIcon" :size="16" />
+				</template>
+				Back to agents list
+			</n-button>
+			<n-button v-if="agent" text size="small" :focusable="false" @click.stop="handleDelete">
+				<template #icon>
+					<Icon :name="DeleteIcon" :size="16" />
+				</template>
+				Delete Agent
+			</n-button>
 		</div>
 		<CardEntity
 			class="agent-header my-4"
@@ -26,7 +33,7 @@
 										@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
 									>
 										<template #icon>
-											<Icon :name="StarIcon" />
+											<Icon :name="CriticalIcon" />
 										</template>
 									</n-button>
 								</template>
@@ -182,9 +189,10 @@ const FileCollectionForm = defineAsyncComponent(
 	() => import("@/components/agents/fileCollection/FileCollectionForm.vue")
 )
 
-const StarIcon = "carbon:star"
+const CriticalIcon = "carbon:warning"
 const QuarantinedIcon = "ph:seal-warning-light"
 const ArrowIcon = "carbon:arrow-left"
+const DeleteIcon = "ph:trash"
 
 const { routeAgent } = useNavigation()
 const message = useMessage()
@@ -309,28 +317,6 @@ onBeforeMount(() => {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-
-		.back-btn {
-			cursor: pointer;
-			opacity: 0.8;
-			font-size: 14px;
-
-			i {
-				font-size: 20px;
-			}
-
-			span {
-				position: relative;
-				top: -3px;
-				margin-left: 4px;
-			}
-		}
-
-		.delete-btn {
-			opacity: 0.8;
-			cursor: pointer;
-			font-size: 14px;
-		}
 	}
 
 	.agent-header {
