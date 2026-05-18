@@ -1,6 +1,6 @@
 <template>
 	<div :id="`customer-${customer.customer_code}`">
-		<CardEntity :loading :highlighted="!!highlight">
+		<CardEntity :loading :highlighted="!!highlight" :hide-footer-extra="!!hideCardActions">
 			<template #default>
 				<div class="flex items-start gap-4">
 					<n-avatar
@@ -123,7 +123,7 @@
 				</div>
 			</template>
 
-			<template v-if="!hideCardActions" #footerExtra>
+			<template #footerExtra>
 				<n-button size="small" @click.stop="showDetails = true">
 					<template #icon>
 						<Icon :name="DetailsIcon" />

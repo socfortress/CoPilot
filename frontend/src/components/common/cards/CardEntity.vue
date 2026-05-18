@@ -48,14 +48,14 @@
 				</div>
 
 				<div
-					v-if="!$slots.footer && ($slots.footerMain || $slots.footerExtra)"
+					v-if="!$slots.footer && ($slots.footerMain || ($slots.footerExtra && !hideFooterExtra))"
 					class="footer-box flex flex-wrap items-start justify-between"
 					:class="footerBoxClass"
 				>
 					<div>
 						<slot name="footerMain" />
 					</div>
-					<div>
+					<div v-if="$slots.footerExtra && !hideFooterExtra">
 						<slot name="footerExtra" />
 					</div>
 				</div>
@@ -77,6 +77,7 @@ const {
 	disabled,
 	loading,
 	loadingDescription,
+	hideFooterExtra,
 	mainBoxClass,
 	headerBoxClass,
 	cardEntityClass,
@@ -92,6 +93,7 @@ const {
 	disabled?: boolean
 	loading?: boolean
 	loadingDescription?: string
+	hideFooterExtra?: boolean
 	mainBoxClass?: string
 	headerBoxClass?: string
 	cardEntityClass?: string

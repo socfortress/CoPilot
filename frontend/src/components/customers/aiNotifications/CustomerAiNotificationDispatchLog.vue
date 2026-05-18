@@ -1,6 +1,6 @@
 <template>
-	<div class="customer-ai-notification-dispatch-log">
-		<div class="flex items-center justify-between gap-4 px-7 pt-2">
+	<div class="flex flex-col gap-4">
+		<div class="flex items-center justify-between gap-4">
 			<div class="text-secondary text-sm">
 				Recent notification dispatches for this customer (newest first, capped at 100).
 			</div>
@@ -13,7 +13,7 @@
 		</div>
 
 		<n-spin :show="loading">
-			<div class="min-h-52 p-7 pt-4">
+			<div class="min-h-52">
 				<n-empty
 					v-if="!loading && !entries.length"
 					description="No dispatches yet"
@@ -25,7 +25,6 @@
 					:columns
 					:data="entries"
 					size="small"
-					:bordered="false"
 					:row-key="(r: DispatchLogEntry) => r.id"
 				/>
 			</div>
