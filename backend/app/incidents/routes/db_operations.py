@@ -2694,8 +2694,7 @@ async def apply_template_to_case_endpoint(
         raise HTTPException(
             status_code=400,
             detail=(
-                f"Alert id={alert_id} is not linked to case id={case_id}; "
-                "link the alert first or omit alert_id to apply case-wide."
+                f"Alert id={alert_id} is not linked to case id={case_id}; " "link the alert first or omit alert_id to apply case-wide."
             ),
         )
     new_tasks = await apply_template_to_case(

@@ -167,22 +167,18 @@ async def _fetch_raw_event_for_alert(
     its syslog_type validation gate — for field-match we only need a key/value
     bag.
     """
-    asset_stmt = (
-        select(Asset)
-        .where(Asset.alert_linked == alert.id)
-        .order_by(Asset.id.asc())
-        .limit(1)
-    )
+    asset_stmt = select(Asset).where(Asset.alert_linked == alert.id).order_by(Asset.id.asc()).limit(1)
     asset = (await session.execute(asset_stmt)).scalars().first()
     if asset is None:
         logger.info(
-            f"pick_templates_for_alert: alert id={alert.id} has no asset row; "
-            "field-match templates are skipped for this alert.",
+            f"pick_templates_for_alert: alert id={alert.id} has no asset row; " "field-match templates are skipped for this alert.",
         )
         return None
 
     try:
-        from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
+        from app.connectors.wazuh_indexer.utils.universal import (
+            create_wazuh_indexer_client_async,
+        )
 
         es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
         doc = await es_client.get(index=asset.index_name, id=asset.index_id)
@@ -451,12 +447,7 @@ async def is_alert_linked_to_case(
     session: AsyncSession,
 ) -> bool:
     """True iff a CaseAlertLink row exists for this (case, alert) pair."""
-    stmt = (
-        select(CaseAlertLink.alert_id)
-        .where(CaseAlertLink.case_id == case_id)
-        .where(CaseAlertLink.alert_id == alert_id)
-        .limit(1)
-    )
+    stmt = select(CaseAlertLink.alert_id).where(CaseAlertLink.case_id == case_id).where(CaseAlertLink.alert_id == alert_id).limit(1)
     result = await session.execute(stmt)
     return result.scalar_one_or_none() is not None
 

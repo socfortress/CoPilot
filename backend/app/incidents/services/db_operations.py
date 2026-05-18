@@ -1572,7 +1572,9 @@ async def create_case_alert_link(
     try:
         await db.flush()
         if auto_apply_template:
-            from app.incidents.services.case_tasks import auto_apply_template_for_new_case
+            from app.incidents.services.case_tasks import (
+                auto_apply_template_for_new_case,
+            )
 
             await auto_apply_template_for_new_case(
                 case=case,
@@ -1622,9 +1624,7 @@ async def case_alert_unlink(case_alert_unlink: CaseAlertUnLink, db: AsyncSession
     return CaseAlertUnLinkResponse(
         success=True,
         message=(
-            f"Case alert link deleted successfully; {orphaned} task(s) orphaned"
-            if orphaned
-            else "Case alert link deleted successfully"
+            f"Case alert link deleted successfully; {orphaned} task(s) orphaned" if orphaned else "Case alert link deleted successfully"
         ),
         tasks_orphaned=orphaned,
     )
@@ -1649,7 +1649,9 @@ async def create_case_alert_links_bulk(
     try:
         await db.flush()
         if auto_apply_template and case_alert_links.alert_ids:
-            from app.incidents.services.case_tasks import auto_apply_template_for_new_case
+            from app.incidents.services.case_tasks import (
+                auto_apply_template_for_new_case,
+            )
 
             case_result = await db.execute(select(Case).where(Case.id == case_alert_links.case_id))
             case = case_result.scalars().first()
@@ -2910,9 +2912,7 @@ async def delete_alert(alert_id: int, db: AsyncSession):
     # alert-unlink behavior — tasks survive as case-wide so investigation
     # evidence isn't lost when an alert is purged). Spans all cases.
     await db.execute(
-        update(CaseTask)
-        .where(CaseTask.alert_id == alert_id)
-        .values(alert_id=None, updated_at=datetime.utcnow()),
+        update(CaseTask).where(CaseTask.alert_id == alert_id).values(alert_id=None, updated_at=datetime.utcnow()),
     )
 
     await db.execute(delete(Alert).where(Alert.id == alert.id))
