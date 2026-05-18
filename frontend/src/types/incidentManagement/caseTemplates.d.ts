@@ -130,3 +130,45 @@ export interface CaseEvent {
 	timestamp: string
 	payload?: Record<string, unknown> | null
 }
+
+// ----- Case Template Library -----
+// Mirrors the backend's CaseTemplateLibraryEntry / CaseTemplateLibraryListResponse
+// / CaseTemplateLibraryRefreshResponse from backend/app/incidents/schema/case_templates.py.
+//
+// A LibraryEntry is the YAML view of a playbook hosted in
+// https://github.com/socfortress/CoPilot-Case-Templates. It becomes a real
+// CaseTemplate row only on import.
+
+export interface CaseTemplateLibraryTask {
+	title: string
+	description?: string | null
+	guidelines?: string | null
+	mandatory: boolean
+	order_index: number
+}
+
+export interface CaseTemplateLibraryEntry {
+	key: string
+	name: string
+	description?: string | null
+	source?: string | null
+	tags: Record<string, unknown>
+	tasks: CaseTemplateLibraryTask[]
+	file_path?: string | null
+}
+
+export interface CaseTemplateLibraryListResponse {
+	entries: CaseTemplateLibraryEntry[]
+	invalid_paths: string[]
+	last_refresh: string | null
+	success: boolean
+	message: string
+}
+
+export interface CaseTemplateLibraryRefreshResponse {
+	loaded: number
+	invalid_paths: string[]
+	last_refresh: string | null
+	success: boolean
+	message: string
+}

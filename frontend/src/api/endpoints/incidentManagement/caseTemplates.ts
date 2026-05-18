@@ -6,6 +6,8 @@ import type {
 	CaseTaskUpdatePayload,
 	CaseTemplate,
 	CaseTemplateCreatePayload,
+	CaseTemplateLibraryListResponse,
+	CaseTemplateLibraryRefreshResponse,
 	CaseTemplateTask,
 	CaseTemplateTaskCreatePayload,
 	CaseTemplateTaskUpdatePayload,
@@ -121,6 +123,29 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { case_id: number; events: CaseEvent[] }>(
 			`/incidents/db_operations/case/${caseId}/timeline`,
 			{ params: { limit, offset } }
+		)
+	},
+
+	// ---------------------------------------------------------------------------
+	// Case Template Library (admin/analyst only — backend gates by scope)
+	// Read-only catalog of YAML playbooks from
+	// https://github.com/socfortress/CoPilot-Case-Templates.
+	// ---------------------------------------------------------------------------
+	getLibrary() {
+		return HttpClient.get<FlaskBaseResponse & CaseTemplateLibraryListResponse>(
+			`/incidents/case_templates/library`
+		)
+	},
+	refreshLibrary() {
+		return HttpClient.post<FlaskBaseResponse & CaseTemplateLibraryRefreshResponse>(
+			`/incidents/case_templates/library/refresh`
+		)
+	},
+	importLibraryEntry(key: string) {
+		// Backend returns the standard CaseTemplateOperationResponse on success,
+		// or HTTP 409 if a CaseTemplate with the same name already exists.
+		return HttpClient.post<FlaskBaseResponse & { template: CaseTemplate | null }>(
+			`/incidents/case_templates/library/${encodeURIComponent(key)}/import`
 		)
 	}
 }
