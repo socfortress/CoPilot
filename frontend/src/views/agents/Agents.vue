@@ -262,6 +262,10 @@ onBeforeMount(() => {
 		height: 100%;
 		overflow: hidden;
 
+		@media (max-width: 1023px) {
+			flex-direction: column;
+		}
+
 		.sidebar {
 			.agent-toolbar {
 				height: 100%;
@@ -330,11 +334,6 @@ onBeforeMount(() => {
 					margin-bottom: 50px;
 				}
 			}
-		}
-	}
-	@container (max-width: 770px) {
-		.wrapper {
-			flex-direction: column;
 		}
 	}
 }
