@@ -11,6 +11,7 @@ import copilotAction from "./endpoints/copilotAction"
 import copilotMCP from "./endpoints/copilotMCP"
 import copilotSearches from "./endpoints/copilotSearches"
 import customerPortal from "./endpoints/customerPortal"
+import detectionCatalog from "./endpoints/detectionCatalog"
 import customers from "./endpoints/customers"
 import flow from "./endpoints/flow"
 import githubAudit from "./endpoints/githubAudit"
@@ -77,6 +78,7 @@ export default {
 	networkConnectors,
 	notifications,
 	copilotSearches,
+	detectionCatalog,
 	cloudSecurityAssessment,
 	webVulnerabilityAssessment,
 	incidentManagement,

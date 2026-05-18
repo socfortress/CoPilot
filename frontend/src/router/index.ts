@@ -292,6 +292,12 @@ const router = createRouter({
 			meta: { title: "AI Analyst", auth: true, roles: RouteRole.All }
 		},
 		{
+			path: "/detection-catalog",
+			name: "DetectionCatalog",
+			component: () => import("@/views/DetectionCatalog.vue"),
+			meta: { title: "Detections Catalog", auth: true, roles: RouteRole.All }
+		},
+		{
 			path: "/healthcheck",
 			redirect: "/healthcheck/alerts",
 			meta: {
