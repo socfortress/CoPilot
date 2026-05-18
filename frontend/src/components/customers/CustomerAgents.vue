@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<div class="flex min-h-28 flex-col gap-2">
+		<div class="flex min-h-28 flex-col gap-2 p-px">
 			<div v-if="sortedList.length" class="mb-2 flex justify-end">
 				<n-button type="primary" @click="exportToCSV">
 					<template #icon>
@@ -21,10 +21,11 @@
 					<n-tooltip to="body">
 						<span class="text-sm">Open in new tab</span>
 						<template #trigger>
-							<n-button quaternary circle type="primary" @click.stop="openAgentInNewTab(agent.agent_id)">
+							<n-button text size="small" type="primary" @click.stop="openAgentInNewTab(agent.agent_id)">
 								<template #icon>
 									<Icon name="carbon:launch" />
 								</template>
+								Open
 							</n-button>
 						</template>
 					</n-tooltip>
