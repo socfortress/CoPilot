@@ -24,6 +24,7 @@
 					v-else-if="entries.length"
 					:columns
 					:data="entries"
+					:scroll-x="1000"
 					size="small"
 					:row-key="(r: DispatchLogEntry) => r.id"
 				/>
@@ -40,6 +41,7 @@ import { computed, h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
@@ -53,6 +55,8 @@ const message = useMessage()
 const loading = ref(false)
 const entries = ref<DispatchLogEntry[]>([])
 
+const dFormats = useSettingsStore().dateFormat
+
 function statusColor(status: string): "success" | "warning" | "danger" | undefined {
 	if (status === "sent") return "success"
 	if (status === "skipped") return "warning"
@@ -65,7 +69,7 @@ const columns = computed<DataTableColumns<DispatchLogEntry>>(() => [
 		title: "When",
 		key: "dispatched_at",
 		width: 160,
-		render: row => String(formatDate(row.dispatched_at, "MMM D, YYYY HH:mm:ss"))
+		render: row => String(formatDate(row.dispatched_at, dFormats.datetime))
 	},
 	{
 		title: "Alert",
@@ -82,11 +86,11 @@ const columns = computed<DataTableColumns<DispatchLogEntry>>(() => [
 	{
 		title: "Status",
 		key: "status",
-		width: 110,
+		minWidth: 130,
 		render: row =>
 			h(
 				Badge,
-				{ type: "splitted", color: statusColor(row.status) },
+				{ type: "splitted", color: statusColor(row.status), class: "whitespace-nowrap" },
 				{
 					label: () => "Status",
 					value: () => row.status
@@ -102,18 +106,9 @@ const columns = computed<DataTableColumns<DispatchLogEntry>>(() => [
 	{
 		title: "Error / Preview",
 		key: "detail",
-		// Long column — collapses content with title on hover for full text.
-		render: row => {
-			const text = row.error_message || row.payload_preview || ""
-			return h(
-				"div",
-				{
-					class: "truncate max-w-md",
-					title: text
-				},
-				text
-			)
-		}
+		maxWidth: 200,
+		ellipsis: { tooltip: { to: "body ", class: "max-w-[90vw] text-sm" } },
+		render: row => row.error_message || row.payload_preview || ""
 	}
 ])
 

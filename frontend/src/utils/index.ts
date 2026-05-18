@@ -132,7 +132,7 @@ export function getNameInitials(name: string, cap?: number) {
 		initials = name
 			.split(" ")
 			.map(chunk => chunk[0])
-			.join()
+			.join("")
 	}
 
 	return (cap ? initials.slice(0, cap) : initials).toUpperCase()
