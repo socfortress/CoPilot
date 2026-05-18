@@ -1,7 +1,7 @@
 <template>
 	<div class="page page-wrapped page-without-footer flex flex-col">
 		<div class="wrapper flex grow gap-4">
-			<div class="sidebar">
+			<div class="sidebar p-px">
 				<AgentToolbar
 					v-model="textFilter"
 					:syncing="loadingSync"
@@ -9,6 +9,7 @@
 					:agents-filtered-length="agentsFiltered.length"
 					:agents-critical
 					:agents-online
+					hide-selection-switch
 					:selection-mode
 					:selected-count="selectedAgents.length"
 					@run="runCommand($event)"
@@ -21,15 +22,15 @@
 			<div class="main flex grow flex-col overflow-hidden">
 				<n-spin class="flex h-full w-full flex-col overflow-hidden" :show="loadingAgents">
 					<n-scrollbar class="grow">
-						<div class="agents-list flex grow flex-col gap-3">
+						<div class="agents-list flex grow flex-col gap-3 p-px">
 							<template v-if="agentsFiltered.length">
 								<AgentCard
 									v-for="agent in itemsPaginated"
 									:key="agent.agent_id"
 									:agent
-									:show-actions="!selectionMode"
 									:selectable="selectionMode"
 									:selected="isAgentSelected(agent)"
+									show-actions
 									hoverable
 									clickable
 									class="item-appear item-appear-bottom item-appear-005"
@@ -89,7 +90,7 @@ const page = ref(1)
 const pageSize = ref(20)
 
 // Selection mode state
-const selectionMode = ref(false)
+const selectionMode = ref(true)
 const selectedAgents = ref<Agent[]>([])
 const showBulkDeleteModal = ref(false)
 
@@ -161,16 +162,11 @@ function clearSelection() {
 }
 
 function handleAgentClick(agent: Agent) {
-	if (selectionMode.value) {
-		toggleAgentSelection(agent)
-	} else {
-		routeAgent(agent.agent_id).navigate()
-	}
+	routeAgent(agent.agent_id).navigate()
 }
 
 function onBulkDeleteComplete() {
 	clearSelection()
-	selectionMode.value = false
 	getAgents()
 }
 

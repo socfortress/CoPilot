@@ -2,12 +2,13 @@
 	<n-card class="agent-toolbar" content-class="p-0!">
 		<div class="wrapper flex flex-col gap-6 px-4 py-3">
 			<div class="flex flex-col gap-2">
-				<div class="agent-search flex gap-3">
-					<n-input v-model:value="textFilter" placeholder="Search for an agent" clearable>
-						<template #prefix>
-							<Icon :name="SearchIcon" />
-						</template>
-					</n-input>
+				<div class="flex items-center justify-between gap-2">
+					<div class="text-secondary">
+						<strong v-if="agentsFilteredLength !== agentsLength">{{ agentsFilteredLength }}</strong>
+						<span v-if="agentsFilteredLength !== agentsLength">/</span>
+						<strong class="font-mono">{{ agentsLength }}</strong>
+						Agents
+					</div>
 
 					<n-dropdown
 						v-if="enableSyncVulnerabilitiesDropdown"
@@ -20,44 +21,48 @@
 					</n-dropdown>
 					<n-button v-else :loading="syncing" secondary @click="emit('run', 'sync-agents')">Sync</n-button>
 				</div>
-				<div class="search-info">
-					<strong v-if="agentsFilteredLength !== agentsLength">{{ agentsFilteredLength }}</strong>
-					<span v-if="agentsFilteredLength !== agentsLength" class="mh-5">/</span>
-					<strong class="font-mono">{{ agentsLength }}</strong>
-					Agents
+				<div class="agent-search flex gap-3">
+					<n-input v-model:value="textFilter" placeholder="Search for an agent" clearable>
+						<template #prefix>
+							<Icon :name="SearchIcon" />
+						</template>
+					</n-input>
 				</div>
 			</div>
 
 			<!-- Selection Mode & Bulk Delete Section -->
-			<div class="bulk-actions flex flex-col gap-3">
-				<div class="selection-toggle flex items-center gap-2">
-					<n-switch
-						v-model:value="selectionModeInternal"
-						@update:value="emit('update:selection-mode', $event)"
-					>
+			<n-card embedded content-class="flex flex-col gap-3" size="small">
+				<div v-if="!hideSelectionSwitch" class="selection-toggle flex items-center gap-2">
+					<n-switch v-model:value="selectionMode" @update:value="emit('update:selection-mode', $event)">
 						<template #checked>Selection ON</template>
 						<template #unchecked>Selection OFF</template>
 					</n-switch>
 				</div>
 
-				<p v-if="selectionModeInternal" class="text-secondary-color text-xs">
+				<p v-if="selectionMode" class="text-secondary-color text-xs">
 					Click agents to select them for bulk operations. Or select "Bulk Delete" and apply a filter to
 					delete multiple agents at once.
 				</p>
 
-				<!-- Selected count and actions -->
-				<div v-if="selectedCount && selectedCount > 0" class="selected-info flex items-center gap-2">
-					<n-tag type="info" size="small">{{ selectedCount }} selected</n-tag>
-					<n-button size="tiny" quaternary @click="emit('clear-selection')">Clear</n-button>
-				</div>
+				<div class="flex items-center justify-between gap-2">
+					<n-button
+						type="error"
+						secondary
+						size="small"
+						:disabled="syncing || !selectedCount"
+						@click="emit('bulk-delete')"
+					>
+						<template #icon>
+							<Icon :name="DeleteIcon" />
+						</template>
+						{{ selectedCount ? `Delete ${selectedCount}` : "Bulk Delete" }}
+					</n-button>
 
-				<n-button type="error" secondary size="small" :disabled="syncing" @click="emit('bulk-delete')">
-					<template #icon>
-						<Icon :name="DeleteIcon" />
-					</template>
-					Bulk Delete
-				</n-button>
-			</div>
+					<div v-if="selectedCount && selectedCount > 0">
+						<n-button size="small" quaternary @click="emit('clear-selection')">Clear</n-button>
+					</div>
+				</div>
+			</n-card>
 
 			<div class="agents-list flex grow flex-col overflow-hidden">
 				<n-scrollbar>
@@ -106,7 +111,7 @@ import type { Agent } from "@/types/agents.d"
 import type { Customer } from "@/types/customers.d"
 import { useWindowSize } from "@vueuse/core"
 import { NButton, NCard, NDropdown, NInput, NScrollbar, NSwitch, NTag, useMessage } from "naive-ui"
-import { computed, h, ref, toRefs, watch } from "vue"
+import { computed, h, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 
@@ -118,8 +123,8 @@ const props = defineProps<{
 	agentsFilteredLength?: number
 	agentsCritical?: Agent[]
 	agentsOnline?: Agent[]
-	selectionMode?: boolean
 	selectedCount?: number
+	hideSelectionSwitch?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -139,8 +144,8 @@ const {
 	agentsCritical,
 	agentsOnline,
 	enableSyncVulnerabilitiesDropdown,
-	selectionMode,
-	selectedCount
+	selectedCount,
+	hideSelectionSwitch
 } = toRefs(props)
 
 const SearchIcon = "carbon:search"
@@ -156,14 +161,7 @@ const textFilter = computed<string>({
 	}
 })
 
-const selectionModeInternal = ref(selectionMode?.value ?? false)
-
-watch(
-	() => selectionMode?.value,
-	val => {
-		selectionModeInternal.value = val ?? false
-	}
-)
+const selectionMode = defineModel<boolean>("selectionMode", { default: true, required: false })
 
 const loadingCustomersList = ref(false)
 const customersList = ref<Customer[]>([])
@@ -246,24 +244,6 @@ function load() {
 	.wrapper {
 		overflow: hidden;
 		height: 100%;
-
-		.search-info {
-			color: var(--fg-secondary-color);
-		}
-
-		.bulk-actions {
-			padding: 12px;
-			background: var(--bg-secondary-color);
-			border-radius: var(--border-radius);
-
-			.selection-toggle {
-				font-size: 13px;
-			}
-
-			.selected-info {
-				flex-wrap: wrap;
-			}
-		}
 
 		.agents-list {
 			.title {
