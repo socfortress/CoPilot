@@ -1521,10 +1521,9 @@ async def create_case_from_alert(
         else:
             await auto_apply_template_for_new_case(
                 case=case,
+                alert=alert,
                 actor=actor_name,
                 session=db,
-                source_hint=alert.source,
-                alert_id=alert.id,
             )
 
         await db.commit()
@@ -1577,10 +1576,9 @@ async def create_case_alert_link(
 
             await auto_apply_template_for_new_case(
                 case=case,
+                alert=alert,
                 actor=actor or "system",
                 session=db,
-                source_hint=alert.source,
-                alert_id=alert.id,
             )
         await db.commit()
     except IntegrityError:
@@ -1666,10 +1664,9 @@ async def create_case_alert_links_bulk(
             for alert in alerts:
                 await auto_apply_template_for_new_case(
                     case=case,
+                    alert=alert,
                     actor=actor_name,
                     session=db,
-                    source_hint=alert.source,
-                    alert_id=alert.id,
                 )
         await db.commit()
     except IntegrityError:

@@ -29,6 +29,21 @@
 						</div>
 					</div>
 
+					<div
+						v-if="entry.match_field && entry.match_value"
+						class="info-cell"
+						style="grid-column: 1 / -1;"
+					>
+						<div class="info-label">Conditional auto-apply</div>
+						<div class="text-xs">
+							Only fires when
+							<code>{{ entry.match_field }}</code>
+							==
+							<code>{{ entry.match_value }}</code>
+							on the originating Wazuh document.
+						</div>
+					</div>
+
 					<div v-if="entry.description" class="text-secondary text-sm">
 						{{ entry.description }}
 					</div>

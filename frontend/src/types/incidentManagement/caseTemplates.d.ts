@@ -55,6 +55,11 @@ export interface CaseTemplate {
 	customer_code?: string | null
 	source?: string | null
 	is_default: boolean
+	// Optional conditional auto-apply: both fields must be set together.
+	// When set, auto-apply runs only if document[match_field] == match_value
+	// on the originating Wazuh event.
+	match_field?: string | null
+	match_value?: string | null
 	created_by: string
 	created_at: string
 	updated_at: string
@@ -67,6 +72,8 @@ export interface CaseTemplateCreatePayload {
 	customer_code?: string | null
 	source?: string | null
 	is_default?: boolean
+	match_field?: string | null
+	match_value?: string | null
 	tasks?: CaseTemplateTaskCreatePayload[]
 }
 
@@ -76,6 +83,8 @@ export interface CaseTemplateUpdatePayload {
 	customer_code?: string | null
 	source?: string | null
 	is_default?: boolean
+	match_field?: string | null
+	match_value?: string | null
 }
 
 // ----- CaseTask (per-case instance) -----
@@ -156,6 +165,8 @@ export interface CaseTemplateLibraryEntry {
 	name: string
 	description?: string | null
 	source?: string | null
+	match_field?: string | null
+	match_value?: string | null
 	tags: Record<string, unknown>
 	tasks: CaseTemplateLibraryTask[]
 	file_path?: string | null

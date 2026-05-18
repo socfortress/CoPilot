@@ -93,6 +93,15 @@
 							<template #value>{{ mandatoryCount(entry) }}</template>
 						</Badge>
 						<n-tag
+							v-if="entry.match_field && entry.match_value"
+							size="tiny"
+							:bordered="false"
+							type="success"
+							:title="`Conditional: applies when ${entry.match_field} == ${entry.match_value}`"
+						>
+							{{ entry.match_field }} == {{ entry.match_value }}
+						</n-tag>
+						<n-tag
 							v-for="tactic of mitreTactics(entry)"
 							:key="tactic"
 							size="tiny"

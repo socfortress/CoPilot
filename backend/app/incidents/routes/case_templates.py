@@ -110,6 +110,8 @@ def _library_entry_to_response(entry: dict) -> CaseTemplateLibraryEntry:
         name=entry["name"],
         description=entry.get("description"),
         source=entry.get("source"),
+        match_field=entry.get("match_field"),
+        match_value=entry.get("match_value"),
         tags=entry.get("tags", {}),
         tasks=[CaseTemplateLibraryTask(**t) for t in entry.get("tasks", [])],
         file_path=entry.get("_file_path"),
@@ -208,6 +210,8 @@ async def import_library_entry_endpoint(
         customer_code=None,
         source=entry.get("source"),
         is_default=False,
+        match_field=entry.get("match_field"),
+        match_value=entry.get("match_value"),
         tasks=[
             CaseTemplateTaskCreate(
                 title=t["title"],

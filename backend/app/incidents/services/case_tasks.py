@@ -15,6 +15,8 @@ Authorization is enforced at the route layer; this module is auth-agnostic.
 """
 
 from datetime import datetime
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -26,6 +28,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.incidents.models import Alert
+from app.incidents.models import Asset
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseTask
@@ -135,6 +138,123 @@ async def pick_template_for_case(
         return match
 
     return None
+
+
+# ---------------------------------------------------------------------------
+# Conditional template selection (field-match against the raw Wazuh document)
+# ---------------------------------------------------------------------------
+
+
+async def _fetch_raw_event_for_alert(
+    alert: Alert,
+    session: AsyncSession,
+) -> Optional[Dict[str, Any]]:
+    """
+    Return the raw Wazuh document for this alert's first asset, or None if
+    there is no asset or the OpenSearch fetch raises.
+
+    Picks the lowest-id asset deterministically; the original-event coordinates
+    are typically the same across an alert's assets, but if they diverge we
+    prefer the asset that landed first. Talks to the Wazuh indexer directly
+    rather than going through ``fetch_alert_details`` because we don't want
+    its syslog_type validation gate — for field-match we only need a key/value
+    bag.
+    """
+    asset_stmt = (
+        select(Asset)
+        .where(Asset.alert_linked == alert.id)
+        .order_by(Asset.id.asc())
+        .limit(1)
+    )
+    asset = (await session.execute(asset_stmt)).scalars().first()
+    if asset is None:
+        logger.info(
+            f"pick_templates_for_alert: alert id={alert.id} has no asset row; "
+            "field-match templates are skipped for this alert.",
+        )
+        return None
+
+    try:
+        from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
+
+        es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+        doc = await es_client.get(index=asset.index_name, id=asset.index_id)
+        return doc.get("_source") or {}
+    except Exception as e:
+        logger.warning(
+            f"pick_templates_for_alert: raw-event fetch failed for alert id={alert.id} "
+            f"(index={asset.index_name}, id={asset.index_id}): {e}. "
+            "Falling back to non-field-match templates.",
+        )
+        return None
+
+
+async def pick_templates_for_alert(
+    case: Case,
+    alert: Alert,
+    session: AsyncSession,
+) -> List[CaseTemplate]:
+    """
+    Return every CaseTemplate that should auto-apply for this (case, alert).
+
+    Two-stage selection:
+
+    1. **Field-match templates** (both ``match_field`` and ``match_value``
+       set) scoped to this case's customer + alert's source are evaluated
+       against the raw Wazuh document fetched via the alert's first asset.
+       Every template whose ``document[match_field] == match_value`` is
+       included — they layer additively.
+    2. **Fallback.** If zero field-match templates fired (no candidates, no
+       matches, or the raw-event fetch raised), use the existing single-
+       template tier picker (``customer+source > customer > source > global
+       default``) and return its result as a one-element list.
+
+    This split is deliberate: a generic "wazuh global" template shouldn't
+    drown a specific "sysmon event 1" one. Returns an empty list if nothing
+    applies.
+    """
+    field_match_stmt = (
+        select(CaseTemplate)
+        .options(selectinload(CaseTemplate.tasks))
+        .where(CaseTemplate.match_field.is_not(None))
+        .where(CaseTemplate.match_value.is_not(None))
+        .where(
+            (CaseTemplate.customer_code == case.customer_code) | (CaseTemplate.customer_code.is_(None)),
+        )
+        .where(
+            (CaseTemplate.source == alert.source) | (CaseTemplate.source.is_(None)),
+        )
+    )
+    candidates = list((await session.execute(field_match_stmt)).scalars().all())
+
+    matched: List[CaseTemplate] = []
+    if candidates:
+        raw_event = await _fetch_raw_event_for_alert(alert, session)
+        if raw_event is not None:
+            for tmpl in candidates:
+                doc_value = raw_event.get(tmpl.match_field)
+                if doc_value is None:
+                    continue
+                # Wazuh top-level values arrive as strings already (numeric
+                # fields like data_win_system_eventID are quoted: "1"). Coerce
+                # defensively so a numeric value in the document still matches
+                # the string in match_value.
+                if str(doc_value) == tmpl.match_value:
+                    matched.append(tmpl)
+
+    if matched:
+        logger.info(
+            f"pick_templates_for_alert: {len(matched)} field-match template(s) fired "
+            f"for case id={case.id} alert id={alert.id}: {[t.id for t in matched]}",
+        )
+        return matched
+
+    fallback = await pick_template_for_case(
+        customer_code=case.customer_code,
+        source=alert.source,
+        session=session,
+    )
+    return [fallback] if fallback is not None else []
 
 
 # ---------------------------------------------------------------------------
@@ -263,42 +383,35 @@ async def apply_template_to_case(
 
 async def auto_apply_template_for_new_case(
     case: Case,
+    alert: Alert,
     actor: str,
     session: AsyncSession,
-    *,
-    source_hint: Optional[str] = None,
-    alert_id: Optional[int] = None,
-) -> Optional[Tuple[CaseTemplate, List[CaseTask]]]:
+) -> List[Tuple[CaseTemplate, List[CaseTask]]]:
     """
-    Convenience wrapper used from ``create_case_from_alert``,
-    ``create_case``, and the per-alert auto-apply path on alert-link.
-    Picks the best matching template using the case's customer_code and
-    an optional ``source_hint`` (the linked alert's source).
+    Run the per-alert auto-apply selection for a case and apply every
+    template the new ``pick_templates_for_alert`` returns.
 
-    When ``alert_id`` is provided the materialized CaseTask rows are
-    stamped with it so the Tasks UI can group by originating alert.
+    Field-match templates (when present and the raw event matches) layer
+    additively; otherwise the legacy tier picker contributes one fallback
+    template. All materialized CaseTask rows are stamped with ``alert.id``
+    so they group under the originating alert in the UI.
 
-    Returns (template, tasks) on success, or None if no template
-    matched. ``commit=False`` so the caller's transaction stays in
-    control; caller commits after this returns.
+    Returns the list of (template, tasks) pairs applied. ``commit=False`` on
+    each apply call — the caller's transaction stays in control.
     """
-    template = await pick_template_for_case(
-        customer_code=case.customer_code,
-        source=source_hint,
-        session=session,
-    )
-    if template is None:
-        return None
-
-    tasks = await apply_template_to_case(
-        case_id=case.id,
-        template_id=template.id,
-        actor=actor,
-        session=session,
-        alert_id=alert_id,
-        commit=False,
-    )
-    return template, tasks
+    templates = await pick_templates_for_alert(case=case, alert=alert, session=session)
+    applied: List[Tuple[CaseTemplate, List[CaseTask]]] = []
+    for template in templates:
+        tasks = await apply_template_to_case(
+            case_id=case.id,
+            template_id=template.id,
+            actor=actor,
+            session=session,
+            alert_id=alert.id,
+            commit=False,
+        )
+        applied.append((template, tasks))
+    return applied
 
 
 # ---------------------------------------------------------------------------

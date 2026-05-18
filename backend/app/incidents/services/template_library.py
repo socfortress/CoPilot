@@ -28,6 +28,9 @@ Library YAML schema (see ``SCHEMA.md`` in the playbook repo):
     name: str           (required, <= 255 chars)
     description: str    (optional)
     source: str         (optional, <= 50 chars)
+    match:              (optional; both keys required when the block is present)
+      field: str        (e.g., "data_win_system_eventID")
+      value: str        (equality target; stored as-is)
     tags: dict          (optional, library-only metadata, not persisted)
     tasks:
       - title: str         (required, <= 500 chars)
@@ -266,11 +269,30 @@ def _normalize_entry(data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     if not isinstance(tags, dict):
         tags = {}
 
+    # Optional ``match:`` block for conditional auto-apply. Both ``field`` and
+    # ``value`` must be present (and non-empty strings) or the block is
+    # ignored — half-set conditions never trigger, so we'd rather drop the
+    # block and log than persist a misleading template.
+    match_field: Optional[str] = None
+    match_value: Optional[str] = None
+    match_block = data.get("match")
+    if isinstance(match_block, dict):
+        raw_field = match_block.get("field")
+        raw_value = match_block.get("value")
+        if isinstance(raw_field, str) and raw_field.strip() and raw_value is not None:
+            match_field = raw_field.strip()
+            # Coerce to string so YAML-typed values (ints, bools) survive the
+            # round-trip the same way they arrive from OpenSearch — Wazuh
+            # field values come back as strings ("1" not 1).
+            match_value = str(raw_value)
+
     return {
         "key": key.strip(),
         "name": name.strip(),
         "description": data.get("description") or None,
         "source": data.get("source") or None,
+        "match_field": match_field,
+        "match_value": match_value,
         "tags": tags,
         "tasks": normalised_tasks,
     }

@@ -110,6 +110,19 @@ class CaseTemplateCreate(BaseModel):
         False,
         description="If true, this template is the fallback within its (customer_code, source) scope.",
     )
+    match_field: Optional[str] = Field(
+        None,
+        max_length=255,
+        description=(
+            "Optional conditional auto-apply field name on the originating Wazuh document "
+            "(e.g., 'data_win_system_eventID'). Both match_field and match_value must be set "
+            "together — providing one without the other is rejected on create/update."
+        ),
+    )
+    match_value: Optional[str] = Field(
+        None,
+        description="Equality value compared against document[match_field] at auto-apply time.",
+    )
     tasks: List[CaseTemplateTaskCreate] = Field(
         default_factory=list,
         description="Initial task list. More can be added later via the task endpoints.",
@@ -125,6 +138,10 @@ class CaseTemplateUpdate(BaseModel):
     customer_code: Optional[str] = Field(None, max_length=50)
     source: Optional[str] = Field(None, max_length=50)
     is_default: Optional[bool] = None
+    # Explicit None clears the field (when present in the request); omitted field
+    # leaves the existing value alone. Handled in the service via __fields_set__.
+    match_field: Optional[str] = Field(None, max_length=255)
+    match_value: Optional[str] = None
 
 
 class CaseTemplateResponse(BaseModel):
@@ -134,6 +151,8 @@ class CaseTemplateResponse(BaseModel):
     customer_code: Optional[str] = None
     source: Optional[str] = None
     is_default: bool
+    match_field: Optional[str] = None
+    match_value: Optional[str] = None
     created_by: str
     created_at: datetime
     updated_at: datetime
@@ -309,6 +328,15 @@ class CaseTemplateLibraryEntry(BaseModel):
     name: str = Field(..., max_length=255)
     description: Optional[str] = None
     source: Optional[str] = Field(None, max_length=50)
+    match_field: Optional[str] = Field(
+        None,
+        max_length=255,
+        description="Optional conditional auto-apply field (from the YAML ``match.field``). Persisted on import.",
+    )
+    match_value: Optional[str] = Field(
+        None,
+        description="Optional conditional auto-apply value (from the YAML ``match.value``). Persisted on import.",
+    )
     tags: Dict[str, Any] = Field(default_factory=dict, description="Library-only metadata; not persisted into the DB")
     tasks: List[CaseTemplateLibraryTask] = Field(default_factory=list)
     file_path: Optional[str] = Field(None, description="Path of the source YAML within the repo (for display only)")
