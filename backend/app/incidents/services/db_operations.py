@@ -16,6 +16,7 @@ from sqlalchemy import delete
 from sqlalchemy import desc
 from sqlalchemy import distinct
 from sqlalchemy import func
+from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -42,7 +43,9 @@ from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseComment
 from app.incidents.models import CaseDataStore
+from app.incidents.models import CaseEvent
 from app.incidents.models import CaseReportTemplateDataStore
+from app.incidents.models import CaseTask
 from app.incidents.models import Comment
 from app.incidents.models import CustomerCodeFieldName
 from app.incidents.models import FieldName
@@ -2906,6 +2909,15 @@ async def delete_alert(alert_id: int, db: AsyncSession):
     await delete_iocs(alert_id, db)
     await db.execute(delete(ThresholdAlertMetadata).where(ThresholdAlertMetadata.alert_id == alert_id))
 
+    # Orphan any case tasks that were stamped with this alert id (matches the
+    # alert-unlink behavior — tasks survive as case-wide so investigation
+    # evidence isn't lost when an alert is purged). Spans all cases.
+    await db.execute(
+        update(CaseTask)
+        .where(CaseTask.alert_id == alert_id)
+        .values(alert_id=None, updated_at=datetime.utcnow()),
+    )
+
     await db.execute(delete(Alert).where(Alert.id == alert.id))
 
     try:
@@ -2932,7 +2944,16 @@ async def delete_case(case_id: int, db: AsyncSession):
         logger.info(f"Deleting case alert links for case {case_id}")
         await db.execute(delete(CaseAlertLink).where(CaseAlertLink.case_id == case_id))
 
-        # 3. Delete all data store files associated with the case
+        # 3. Delete case tasks and their audit-log events (both FK to Case).
+        # Tasks first to avoid leaving dangling task_id references in payloads,
+        # though the events table doesn't FK to case_task directly so order is
+        # only a logical preference, not a correctness requirement.
+        logger.info(f"Deleting case tasks for case {case_id}")
+        await db.execute(delete(CaseTask).where(CaseTask.case_id == case_id))
+        logger.info(f"Deleting case timeline events for case {case_id}")
+        await db.execute(delete(CaseEvent).where(CaseEvent.case_id == case_id))
+
+        # 4. Delete all data store files associated with the case
         logger.info(f"Deleting data store files for case {case_id}")
         files = await list_files_by_case_id(case_id, db)
         for file in files:
@@ -2941,7 +2962,7 @@ async def delete_case(case_id: int, db: AsyncSession):
             except Exception as e:
                 logger.warning(f"Failed to delete file {file.file_name} from case {case_id}: {e}")
 
-        # 4. Finally delete the case itself
+        # 5. Finally delete the case itself
         logger.info(f"Deleting case {case_id}")
         await db.execute(delete(Case).where(Case.id == case_id))
 
