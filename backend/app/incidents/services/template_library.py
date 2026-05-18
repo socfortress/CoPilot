@@ -38,7 +38,6 @@ Library YAML schema (see ``SCHEMA.md`` in the playbook repo):
 """
 
 import asyncio
-import os
 from datetime import datetime
 from datetime import timedelta
 from typing import Any
@@ -123,9 +122,7 @@ class TemplateLibraryCache:
             invalid: List[str] = []
 
             async with httpx.AsyncClient(timeout=30.0, headers=_github_headers()) as client:
-                tree_url = (
-                    f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/git/trees/{GITHUB_BRANCH}?recursive=1"
-                )
+                tree_url = f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/git/trees/{GITHUB_BRANCH}?recursive=1"
                 response = await client.get(tree_url)
                 response.raise_for_status()
                 tree = response.json()
@@ -161,8 +158,7 @@ class TemplateLibraryCache:
                     continue
                 if key in entries:
                     logger.warning(
-                        f"Library: duplicate key '{key}' in {path} "
-                        f"(already used by {entries[key].get('_file_path')}), skipping",
+                        f"Library: duplicate key '{key}' in {path} " f"(already used by {entries[key].get('_file_path')}), skipping",
                     )
                     invalid.append(path)
                     continue
