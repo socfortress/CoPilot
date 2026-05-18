@@ -75,9 +75,6 @@ def _github_headers() -> Dict[str, str]:
     on shared dev environments. Same convention as the CoPilot Searches loader.
     """
     headers = {"Accept": "application/vnd.github+json"}
-    token = os.getenv("GITHUB_TOKEN")
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
     return headers
 
 
