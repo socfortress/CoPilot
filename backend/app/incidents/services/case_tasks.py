@@ -88,6 +88,12 @@ async def pick_template_for_case(
     3. ``source`` only (customer_code IS NULL), prefer is_default
     4. Global default (both NULL, is_default=True)
 
+    **Conditional templates are excluded from every tier.** A template with a
+    ``match_field`` set is saying "fire only when this condition matches" — it
+    participates in selection exclusively via ``pick_templates_for_alert``. If
+    its condition is rejected, it must not silently re-enter via the fallback
+    tier; that would defeat the whole point of having a condition.
+
     Returns the template with tasks eagerly loaded, or None if no match.
     """
 
@@ -95,6 +101,7 @@ async def pick_template_for_case(
         stmt = (
             select(CaseTemplate)
             .options(selectinload(CaseTemplate.tasks))
+            .where(CaseTemplate.match_field.is_(None))
             .where(customer_filter)
             .where(source_filter)
             .order_by(CaseTemplate.is_default.desc(), CaseTemplate.created_at.desc())
