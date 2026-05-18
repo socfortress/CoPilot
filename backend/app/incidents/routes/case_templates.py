@@ -12,13 +12,20 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.incidents.models import CaseTemplate
 from app.incidents.schema.case_templates import CaseTemplateCreate
+from app.incidents.schema.case_templates import CaseTemplateLibraryEntry
+from app.incidents.schema.case_templates import CaseTemplateLibraryListResponse
+from app.incidents.schema.case_templates import CaseTemplateLibraryRefreshResponse
+from app.incidents.schema.case_templates import CaseTemplateLibraryTask
 from app.incidents.schema.case_templates import CaseTemplateListResponse
 from app.incidents.schema.case_templates import CaseTemplateOperationResponse
 from app.incidents.schema.case_templates import CaseTemplateTaskCreate
@@ -26,6 +33,7 @@ from app.incidents.schema.case_templates import CaseTemplateTaskOperationRespons
 from app.incidents.schema.case_templates import CaseTemplateTaskUpdate
 from app.incidents.schema.case_templates import CaseTemplateUpdate
 from app.incidents.services import case_templates as service
+from app.incidents.services import template_library
 
 # Scope guard applied to every route on this router. Returns the username,
 # which we use as the audit actor for create operations.
@@ -80,6 +88,144 @@ async def create_case_template(
     actor: str = Security(_require_admin_or_analyst),
 ) -> CaseTemplateOperationResponse:
     return await service.create_template(request=request, actor=actor, session=db)
+
+
+# ---------------------------------------------------------------------------
+# Case Template Library — read-only catalog of playbooks pulled from
+# https://github.com/socfortress/CoPilot-Case-Templates. The Library tab in
+# the admin UI calls these endpoints. Importing an entry creates a normal
+# CaseTemplate row via the existing ``create_template`` service.
+#
+# IMPORTANT: these MUST be declared before the ``/{template_id}`` route below.
+# FastAPI matches routes in registration order; if ``/{template_id}`` is first
+# it would swallow ``/library`` and try to coerce "library" to int, returning
+# HTTP 422 "Input is not a valid integer."
+# ---------------------------------------------------------------------------
+
+
+def _library_entry_to_response(entry: dict) -> CaseTemplateLibraryEntry:
+    """Convert a parsed-and-normalised library entry dict into its API shape."""
+    return CaseTemplateLibraryEntry(
+        key=entry["key"],
+        name=entry["name"],
+        description=entry.get("description"),
+        source=entry.get("source"),
+        tags=entry.get("tags", {}),
+        tasks=[CaseTemplateLibraryTask(**t) for t in entry.get("tasks", [])],
+        file_path=entry.get("_file_path"),
+    )
+
+
+@case_templates_router.get(
+    "/library",
+    response_model=CaseTemplateLibraryListResponse,
+    description=(
+        "List investigation-playbook entries available in the Case-Templates "
+        "library repo on GitHub. Read-only; nothing is persisted until an "
+        "admin clicks Import."
+    ),
+)
+async def list_library_entries_endpoint() -> CaseTemplateLibraryListResponse:
+    try:
+        entries = await template_library.list_library_entries()
+        return CaseTemplateLibraryListResponse(
+            entries=[_library_entry_to_response(e) for e in entries],
+            invalid_paths=template_library.template_library_cache.invalid_paths,
+            last_refresh=template_library.template_library_cache.last_refresh,
+            success=True,
+            message=f"Retrieved {len(entries)} library entr(ies)",
+        )
+    except Exception as e:
+        return CaseTemplateLibraryListResponse(
+            entries=[],
+            invalid_paths=[],
+            last_refresh=template_library.template_library_cache.last_refresh,
+            success=False,
+            message=f"Failed to load case-template library: {e}",
+        )
+
+
+@case_templates_router.post(
+    "/library/refresh",
+    response_model=CaseTemplateLibraryRefreshResponse,
+    description="Force a re-fetch of the Case-Templates library repo (bypasses the 30-minute cache).",
+)
+async def refresh_library_endpoint() -> CaseTemplateLibraryRefreshResponse:
+    try:
+        result = await template_library.refresh_library()
+        return CaseTemplateLibraryRefreshResponse(
+            loaded=result["loaded"],
+            invalid_paths=result["invalid_paths"],
+            last_refresh=result["last_refresh"],
+            success=True,
+            message=f"Library refreshed: {result['loaded']} entr(ies) loaded, {len(result['invalid_paths'])} skipped",
+        )
+    except Exception as e:
+        return CaseTemplateLibraryRefreshResponse(
+            loaded=0,
+            invalid_paths=[],
+            last_refresh=template_library.template_library_cache.last_refresh,
+            success=False,
+            message=f"Failed to refresh case-template library: {e}",
+        )
+
+
+@case_templates_router.post(
+    "/library/{key}/import",
+    response_model=CaseTemplateOperationResponse,
+    description=(
+        "Import a library entry as a new CaseTemplate row. Imports as a "
+        "**global** template (no customer_code, no source-scope) by default. "
+        "If a CaseTemplate already exists with the same name, returns HTTP 409 "
+        "— admins should rename or delete the existing one before re-importing."
+    ),
+)
+async def import_library_entry_endpoint(
+    key: str,
+    db: AsyncSession = Depends(get_db),
+    actor: str = Security(_require_admin_or_analyst),
+) -> CaseTemplateOperationResponse:
+    entry = await template_library.get_library_entry(key)
+    if entry is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Library entry '{key}' not found. Try POST /library/refresh if you just pushed it.",
+        )
+
+    existing = await db.execute(select(CaseTemplate).where(CaseTemplate.name == entry["name"]))
+    if existing.scalars().first() is not None:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"A case template named '{entry['name']}' already exists. "
+                "Rename or delete the existing template before re-importing this entry."
+            ),
+        )
+
+    payload = CaseTemplateCreate(
+        name=entry["name"],
+        description=entry.get("description"),
+        customer_code=None,
+        source=entry.get("source"),
+        is_default=False,
+        tasks=[
+            CaseTemplateTaskCreate(
+                title=t["title"],
+                description=t.get("description"),
+                guidelines=t.get("guidelines"),
+                mandatory=t.get("mandatory", False),
+                order_index=t["order_index"],
+            )
+            for t in entry.get("tasks", [])
+        ],
+    )
+    return await service.create_template(request=payload, actor=actor, session=db)
+
+
+# ---------------------------------------------------------------------------
+# Wildcard /{template_id} routes — must be declared AFTER the static
+# /library routes above for the same reason FastAPI route ordering matters.
+# ---------------------------------------------------------------------------
 
 
 @case_templates_router.get(

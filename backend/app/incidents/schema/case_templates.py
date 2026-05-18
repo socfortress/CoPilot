@@ -268,3 +268,61 @@ class CaseTimelineResponse(BaseModel):
     events: List[CaseEventResponse] = Field(default_factory=list)
     success: bool
     message: str
+
+
+# ---------------------------------------------------------------------------
+# Case Template Library — read-only catalog of playbooks pulled from
+# https://github.com/socfortress/CoPilot-Case-Templates.
+#
+# These models mirror the YAML schema documented in that repo's ``SCHEMA.md``.
+# A LibraryEntry is *not* a CaseTemplate row — it's the YAML view of a
+# playbook. Admins import an entry via ``POST /library/{key}/import`` which
+# in turn calls the existing ``create_template`` service, materialising a
+# normal CaseTemplate (+ task) row set.
+# ---------------------------------------------------------------------------
+
+
+class CaseTemplateLibraryTask(BaseModel):
+    """One task in a library entry. Mirrors ``CaseTemplateTaskCreate`` plus
+    explicit ``order_index`` (always present after the loader normalises)."""
+
+    title: str = Field(..., max_length=500)
+    description: Optional[str] = None
+    guidelines: Optional[str] = None
+    mandatory: bool = False
+    order_index: int = Field(..., ge=0)
+
+
+class CaseTemplateLibraryEntry(BaseModel):
+    """A single playbook surfaced from the Library repo. Display-only on its
+    own; becomes a CaseTemplate row when imported."""
+
+    key: str = Field(..., description="Stable identifier from the YAML; used for collision detection on import")
+    name: str = Field(..., max_length=255)
+    description: Optional[str] = None
+    source: Optional[str] = Field(None, max_length=50)
+    tags: Dict[str, Any] = Field(default_factory=dict, description="Library-only metadata; not persisted into the DB")
+    tasks: List[CaseTemplateLibraryTask] = Field(default_factory=list)
+    file_path: Optional[str] = Field(None, description="Path of the source YAML within the repo (for display only)")
+
+
+class CaseTemplateLibraryListResponse(BaseModel):
+    entries: List[CaseTemplateLibraryEntry] = Field(default_factory=list)
+    invalid_paths: List[str] = Field(
+        default_factory=list,
+        description="Repo paths that failed validation during the last refresh; surfaced so admins can fix upstream YAML.",
+    )
+    last_refresh: Optional[datetime] = Field(
+        None,
+        description="When the cache was last refreshed; null if the cache hasn't loaded yet.",
+    )
+    success: bool
+    message: str
+
+
+class CaseTemplateLibraryRefreshResponse(BaseModel):
+    loaded: int
+    invalid_paths: List[str] = Field(default_factory=list)
+    last_refresh: Optional[datetime] = None
+    success: bool
+    message: str
