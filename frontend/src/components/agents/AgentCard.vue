@@ -5,6 +5,7 @@
 		:embedded
 		:hoverable
 		:clickable
+		:highlighted="selected"
 		:class="{ critical: agent.critical_asset, selectable, selected }"
 		@click="$emit('click')"
 	>
@@ -36,7 +37,7 @@
 										@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
 									>
 										<template #icon>
-											<Icon :name="StarIcon" />
+											<Icon :name="CriticalIcon" />
 										</template>
 									</n-button>
 								</template>
@@ -63,9 +64,10 @@
 				</div>
 
 				<div v-if="showActions" class="agent-actions">
-					<div class="box">
-						<n-tooltip>
-							Delete
+					<div class="box flex items-center justify-end gap-2">
+						<slot name="actions-left" />
+						<n-tooltip to="body">
+							<span class="text-sm">Delete Agent</span>
 							<template #trigger>
 								<n-button quaternary circle type="error" @click.stop="handleDelete">
 									<template #icon>
@@ -112,7 +114,7 @@ const emit = defineEmits<{
 const { agent, showActions, embedded, hoverable, clickable, selectable, selected } = toRefs(props)
 
 const QuarantinedIcon = "ph:seal-warning-light"
-const StarIcon = "carbon:star"
+const CriticalIcon = "carbon:warning"
 const DeleteIcon = "ph:trash"
 const dFormats = useSettingsStore().dateFormat
 const loading = ref(false)
@@ -166,11 +168,6 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 <style lang="scss" scoped>
 .agent-card {
 	container-type: inline-size;
-
-	&.selected {
-		border-color: var(--primary-color);
-		background-color: var(--primary-color-opacity-1);
-	}
 
 	.card-content {
 		display: flex;

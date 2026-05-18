@@ -291,7 +291,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useCustomerHealthcheckFilters } from "@/composables/useCustomerHealthcheckFilters"
-import { getAvatar, getNameInitials, hashMD5 } from "@/utils"
+import { getAvatar, getNameInitials } from "@/utils"
 
 const props = defineProps<{
 	customer: Customer

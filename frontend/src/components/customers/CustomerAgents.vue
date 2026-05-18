@@ -16,9 +16,20 @@
 				embedded
 				show-actions
 				class="item-appear item-appear-bottom item-appear-005"
-				@delete="getAgents()"
-				@click="openAgentInNewTab(agent.agent_id)"
-			/>
+			>
+				<template #actions-left>
+					<n-tooltip to="body">
+						<span class="text-sm">Open in new tab</span>
+						<template #trigger>
+							<n-button quaternary circle type="primary" @click.stop="openAgentInNewTab(agent.agent_id)">
+								<template #icon>
+									<Icon name="carbon:launch" />
+								</template>
+							</n-button>
+						</template>
+					</n-tooltip>
+				</template>
+			</AgentCard>
 			<n-empty v-if="!sortedList.length" description="No Agents found" class="h-48 justify-center" />
 		</div>
 	</n-spin>
@@ -28,7 +39,10 @@
 // TODO-FE: refactor
 import type { Agent } from "@/types/agents.d"
 import type { Customer } from "@/types/customers.d"
-import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
+import { saveAs } from "file-saver"
+import _sortBy from "lodash/sortBy"
+import { NButton, NEmpty, NSpin, NTooltip, useMessage } from "naive-ui"
+import Papa from "papaparse"
 import { computed, onBeforeMount, ref, toRefs } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
@@ -41,18 +55,13 @@ const props = defineProps<{
 const { customer } = toRefs(props)
 
 const DownloadIcon = "carbon:download"
-const QUOTE_ESCAPE_REGEX = /"/g
 
 const loading = ref(false)
 const router = useRouter()
 const message = useMessage()
 const list = ref<Agent[] | []>([])
 
-const sortedList = computed(() => {
-	return list.value.toSorted((a, b) => {
-		return a.hostname.toLowerCase().localeCompare(b.hostname.toLowerCase())
-	})
-})
+const sortedList = computed(() => _sortBy(list.value, "critical_asset").reverse())
 
 function exportToCSV() {
 	if (!sortedList.value.length) {
@@ -60,46 +69,13 @@ function exportToCSV() {
 		return
 	}
 
-	// CSV headers
-	const headers = [
-		"customer_code",
-		"agent_id",
-		"hostname",
-		"ip_address",
-		"os",
-		"wazuh_last_seen",
-		"velociraptor_last_seen"
-	]
-
-	// Create CSV content
-	const csvContent = [
-		headers.join(","),
-		...sortedList.value.map(agent => {
-			return [
-				agent.customer_code || "",
-				agent.agent_id,
-				`"${agent.hostname.replace(QUOTE_ESCAPE_REGEX, '""')}"`, // Escape quotes in hostname
-				agent.ip_address,
-				`"${agent.os.replace(QUOTE_ESCAPE_REGEX, '""')}"`, // Escape quotes in OS
-				agent.wazuh_last_seen,
-				agent.velociraptor_last_seen || ""
-			].join(",")
-		})
-	].join("\n")
-
-	// Create blob and download
-	const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-	const link = document.createElement("a")
-	const url = URL.createObjectURL(blob)
+	const csv = Papa.unparse(sortedList.value, {
+		header: true
+	})
 
 	const filename = `agents_${customer.value.customer_code}_${new Date().toISOString().split("T")[0]}.csv`
-
-	link.setAttribute("href", url)
-	link.setAttribute("download", filename)
-	link.style.visibility = "hidden"
-	document.body.appendChild(link)
-	link.click()
-	document.body.removeChild(link)
+	const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+	saveAs(blob, filename)
 
 	message.success("Export completed successfully")
 }
