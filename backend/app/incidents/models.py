@@ -362,6 +362,16 @@ class CaseTask(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     case_id: int = Field(foreign_key="incident_management_case.id", nullable=False)
+    alert_id: Optional[int] = Field(
+        default=None,
+        foreign_key="incident_management_alert.id",
+        nullable=True,
+        index=True,
+        description=(
+            "Originating alert this task batch was materialized for. NULL = case-wide / general task. "
+            "Set to NULL ('orphaned') when the alert is unlinked from the case so task history survives."
+        ),
+    )
     template_task_id: Optional[int] = Field(
         default=None,
         foreign_key="incident_management_case_template_task.id",
