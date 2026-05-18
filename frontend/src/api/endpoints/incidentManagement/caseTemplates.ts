@@ -110,9 +110,13 @@ export default {
 			`/incidents/db_operations/case/tasks/${taskId}`
 		)
 	},
-	applyTemplateToCase(caseId: number, templateId: number) {
+	applyTemplateToCase(caseId: number, templateId: number, alertId?: number | null) {
+		const params: Record<string, number> = {}
+		if (alertId !== undefined && alertId !== null) params.alert_id = alertId
 		return HttpClient.post<FlaskBaseResponse & { tasks_added: number }>(
-			`/incidents/db_operations/case/${caseId}/apply-template/${templateId}`
+			`/incidents/db_operations/case/${caseId}/apply-template/${templateId}`,
+			undefined,
+			{ params }
 		)
 	},
 

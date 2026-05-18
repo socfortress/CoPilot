@@ -1467,12 +1467,14 @@ async def create_case_from_alert(
     Create a Case from an Alert and (Phase 3, issue #792) auto-apply a
     matching CaseTemplate.
 
-    Template selection (when ``template_id`` is not supplied):
-        first-alert-wins — pick by (alert.customer_code, alert.source)
-        with the priority order documented in
-        ``app.incidents.services.case_tasks.pick_template_for_case``.
-        If no template matches, no tasks are created and the case is
-        returned unchanged.
+    Template selection (when ``template_id`` is not supplied): pick by
+    ``(alert.customer_code, alert.source)`` using the priority order in
+    ``app.incidents.services.case_tasks.pick_template_for_case``. The
+    materialized tasks are stamped with the originating alert's id so
+    the Tasks UI can group them under that alert. Subsequent alerts
+    linked to this case retrigger per-alert auto-apply against their
+    own source. If no template matches, no tasks are created and the
+    case is returned unchanged.
 
     ``actor`` is the username performing the action; used as
     ``CaseTask.created_by`` for snapshot rows. Defaults to "system" when
@@ -1498,6 +1500,8 @@ async def create_case_from_alert(
 
         # Apply a case template (Phase 3, issue #792). Imported lazily to
         # avoid a circular import — case_tasks pulls from this module too.
+        # The originating alert id is stamped on the materialized tasks so
+        # the Tasks UI can group them under that alert.
         from app.incidents.services.case_tasks import apply_template_to_case
         from app.incidents.services.case_tasks import auto_apply_template_for_new_case
 
@@ -1508,6 +1512,7 @@ async def create_case_from_alert(
                 template_id=template_id,
                 actor=actor_name,
                 session=db,
+                alert_id=alert.id,
                 commit=False,
             )
         else:
@@ -1516,6 +1521,7 @@ async def create_case_from_alert(
                 actor=actor_name,
                 session=db,
                 source_hint=alert.source,
+                alert_id=alert.id,
             )
 
         await db.commit()
@@ -1525,7 +1531,28 @@ async def create_case_from_alert(
     return case
 
 
-async def create_case_alert_link(case_alert_link: CaseAlertLinkCreate, db: AsyncSession) -> CaseAlertLink:
+async def create_case_alert_link(
+    case_alert_link: CaseAlertLinkCreate,
+    db: AsyncSession,
+    *,
+    actor: Optional[str] = None,
+    auto_apply_template: bool = True,
+) -> CaseAlertLink:
+    """
+    Link an alert to a case.
+
+    When ``auto_apply_template`` is True (the default for analyst-driven
+    linking), the per-alert auto-apply rule runs: a matching CaseTemplate
+    is picked against the case's customer_code and the linked alert's
+    source, and any materialized tasks are stamped with that alert's id
+    so the Tasks UI can group them under their originating alert.
+
+    Pass ``auto_apply_template=False`` when the caller has already handled
+    template application for this alert (e.g., ``/case/from-alert`` runs
+    ``create_case_from_alert`` first, which does its own apply against the
+    originating alert — re-applying on the subsequent link would double the
+    tasks).
+    """
     # Check if the case exists
     result = await db.execute(select(Case).where(Case.id == case_alert_link.case_id))
     case = result.scalars().first()
@@ -1541,13 +1568,33 @@ async def create_case_alert_link(case_alert_link: CaseAlertLinkCreate, db: Async
     db_case_alert_link = CaseAlertLink(**case_alert_link.model_dump())
     db.add(db_case_alert_link)
     try:
+        await db.flush()
+        if auto_apply_template:
+            from app.incidents.services.case_tasks import auto_apply_template_for_new_case
+
+            await auto_apply_template_for_new_case(
+                case=case,
+                actor=actor or "system",
+                session=db,
+                source_hint=alert.source,
+                alert_id=alert.id,
+            )
         await db.commit()
     except IntegrityError:
+        await db.rollback()
         raise HTTPException(status_code=400, detail="Case alert link already exists")
     return db_case_alert_link
 
 
 async def case_alert_unlink(case_alert_unlink: CaseAlertUnLink, db: AsyncSession) -> CaseAlertUnLinkResponse:
+    """
+    Unlink an alert from a case.
+
+    Any CaseTask rows that were stamped with this alert id are *orphaned*
+    (alert_id set NULL) rather than deleted — analysts already accumulated
+    investigation evidence on them, and the snapshot-preserving spirit of
+    the case-templates feature says that history outlives the link.
+    """
     result = await db.execute(
         select(CaseAlertLink).where(
             (CaseAlertLink.case_id == case_alert_unlink.case_id) & (CaseAlertLink.alert_id == case_alert_unlink.alert_id),
@@ -1561,16 +1608,69 @@ async def case_alert_unlink(case_alert_unlink: CaseAlertUnLink, db: AsyncSession
             (CaseAlertLink.case_id == case_alert_unlink.case_id) & (CaseAlertLink.alert_id == case_alert_unlink.alert_id),
         ),
     )
+
+    from app.incidents.services.case_tasks import orphan_tasks_for_alert
+
+    orphaned = await orphan_tasks_for_alert(
+        case_id=case_alert_unlink.case_id,
+        alert_id=case_alert_unlink.alert_id,
+        session=db,
+        commit=False,
+    )
     await db.commit()
-    return CaseAlertUnLinkResponse(success=True, message="Case alert link deleted successfully")
+    return CaseAlertUnLinkResponse(
+        success=True,
+        message=(
+            f"Case alert link deleted successfully; {orphaned} task(s) orphaned"
+            if orphaned
+            else "Case alert link deleted successfully"
+        ),
+        tasks_orphaned=orphaned,
+    )
 
 
-async def create_case_alert_links_bulk(case_alert_links: CaseAlertLinksCreate, db: AsyncSession) -> List[CaseAlertLink]:
+async def create_case_alert_links_bulk(
+    case_alert_links: CaseAlertLinksCreate,
+    db: AsyncSession,
+    *,
+    actor: Optional[str] = None,
+    auto_apply_template: bool = True,
+) -> List[CaseAlertLink]:
+    """
+    Bulk-link multiple alerts to a single case.
+
+    Per-alert auto-apply runs once per linked alert (same matching rules as
+    the single-link path). 50 alerts of the same source → 50 task batches;
+    that's the model. Pass ``auto_apply_template=False`` to skip.
+    """
     db_case_alert_links = [CaseAlertLink(case_id=case_alert_links.case_id, alert_id=alert_id) for alert_id in case_alert_links.alert_ids]
     db.add_all(db_case_alert_links)
     try:
+        await db.flush()
+        if auto_apply_template and case_alert_links.alert_ids:
+            from app.incidents.services.case_tasks import auto_apply_template_for_new_case
+
+            case_result = await db.execute(select(Case).where(Case.id == case_alert_links.case_id))
+            case = case_result.scalars().first()
+            if case is None:
+                raise HTTPException(status_code=404, detail="Case not found")
+
+            alerts_result = await db.execute(
+                select(Alert).where(Alert.id.in_(case_alert_links.alert_ids)),
+            )
+            alerts = alerts_result.scalars().all()
+            actor_name = actor or "system"
+            for alert in alerts:
+                await auto_apply_template_for_new_case(
+                    case=case,
+                    actor=actor_name,
+                    session=db,
+                    source_hint=alert.source,
+                    alert_id=alert.id,
+                )
         await db.commit()
     except IntegrityError:
+        await db.rollback()
         raise HTTPException(status_code=400, detail="Case alert links already exist")
     return db_case_alert_links
 

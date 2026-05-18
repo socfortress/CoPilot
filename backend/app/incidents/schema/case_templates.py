@@ -172,6 +172,13 @@ class CaseTaskCreate(BaseModel):
     guidelines: Optional[str] = None
     mandatory: bool = False
     order_index: int = Field(0, ge=0)
+    alert_id: Optional[int] = Field(
+        None,
+        description=(
+            "Optional originating alert. When set, the alert must be linked to the case "
+            "or the request is rejected. Omit (or pass null) to create a case-wide / general task."
+        ),
+    )
 
 
 class CaseTaskUpdate(BaseModel):
@@ -199,6 +206,7 @@ class CaseTaskUpdate(BaseModel):
 class CaseTaskResponse(BaseModel):
     id: int
     case_id: int
+    alert_id: Optional[int] = None
     template_task_id: Optional[int] = None
     title: str
     description: Optional[str] = None

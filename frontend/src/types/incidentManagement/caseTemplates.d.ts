@@ -83,6 +83,7 @@ export interface CaseTemplateUpdatePayload {
 export interface CaseTask {
 	id: number
 	case_id: number
+	alert_id?: number | null
 	template_task_id?: number | null
 	title: string
 	description?: string | null
@@ -104,6 +105,9 @@ export interface CaseTaskCreatePayload {
 	guidelines?: string | null
 	mandatory?: boolean
 	order_index?: number
+	// When set, the alert must already be linked to the case or the backend
+	// rejects with 400. Omit / null for case-wide / general tasks.
+	alert_id?: number | null
 }
 
 export interface CaseTaskUpdatePayload {

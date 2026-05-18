@@ -983,7 +983,7 @@ async def create_case_alert_link_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    link = await create_case_alert_link(case_alert_link, db)
+    link = await create_case_alert_link(case_alert_link, db, actor=current_user.username)
 
     from app.incidents.schema.case_templates import CaseEventType
     from app.incidents.services.case_events import emit_case_event
@@ -1015,7 +1015,7 @@ async def create_case_alert_links_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    links = await create_case_alert_links_bulk(case_alert_links, db)
+    links = await create_case_alert_links_bulk(case_alert_links, db, actor=current_user.username)
 
     from app.incidents.schema.case_templates import CaseEventType
     from app.incidents.services.case_events import emit_case_event
@@ -1060,7 +1060,10 @@ async def case_alert_unlink_endpoint(
         case_id=case_alert_link.case_id,
         event_type=CaseEventType.ALERT_UNLINKED,
         actor=current_user.username,
-        payload=payload_alert_link(alert_id=case_alert_link.alert_id),
+        payload=payload_alert_link(
+            alert_id=case_alert_link.alert_id,
+            tasks_orphaned=response.tasks_orphaned,
+        ),
         commit=True,
     )
 
@@ -1078,8 +1081,10 @@ async def create_case_from_alert_endpoint(
         None,
         description=(
             "Optional CaseTemplate id to apply on creation. When omitted, the best matching "
-            "template is auto-selected from the alert's (customer_code, source). First-alert-wins "
-            "semantics: subsequent alerts linked to the case do not retrigger template selection."
+            "template is auto-selected from the alert's (customer_code, source). The materialized "
+            "tasks are stamped with the originating alert id so the Tasks UI can group them under "
+            "that alert. Subsequent alerts linked to the case retrigger per-alert auto-apply against "
+            "their own source — each linked alert gets its own task batch."
         ),
     ),
     current_user: User = Depends(AuthHandler().get_current_user),
@@ -1094,7 +1099,15 @@ async def create_case_from_alert_endpoint(
     if case is None:
         return CaseResponse(case=None, success=False, message="Case not created")
 
-    link = await create_case_alert_link(CaseAlertLinkCreate(case_id=case.id, alert_id=alert_id.alert_id), db)
+    # ``create_case_from_alert`` above already auto-applied the template
+    # against the originating alert and stamped its id on the tasks. Skip
+    # the per-alert auto-apply on this link so we don't double-create tasks.
+    link = await create_case_alert_link(
+        CaseAlertLinkCreate(case_id=case.id, alert_id=alert_id.alert_id),
+        db,
+        actor=current_user.username,
+        auto_apply_template=False,
+    )
 
     # Phase 4 audit emits: case_created + alert_linked (the originating
     # alert is the first link). template_applied / task_added events are
@@ -2654,24 +2667,43 @@ async def delete_case_task_endpoint(
     description=(
         "Manually apply a CaseTemplate to an existing case (snapshot-copies its tasks). "
         "Adds to existing tasks rather than replacing them — the analyst can apply multiple "
-        "templates over the life of an investigation. Admin/analyst only."
+        "templates over the life of an investigation. When ``alert_id`` is given, the "
+        "materialized tasks are stamped with that alert id so they group under that alert "
+        "in the Tasks UI; the alert must already be linked to the case. Admin/analyst only."
     ),
     dependencies=[_admin_analyst_dep],
 )
 async def apply_template_to_case_endpoint(
     case_id: int,
     template_id: int,
+    alert_id: Optional[int] = Query(
+        None,
+        description=(
+            "Optional linked alert id to scope the materialized tasks to. Tasks without an "
+            "alert_id appear in the case-wide / general group."
+        ),
+    ),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     from app.incidents.services.case_tasks import apply_template_to_case
+    from app.incidents.services.case_tasks import is_alert_linked_to_case
 
     await _ensure_case_access(case_id, current_user, db)
+    if alert_id is not None and not await is_alert_linked_to_case(case_id, alert_id, db):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Alert id={alert_id} is not linked to case id={case_id}; "
+                "link the alert first or omit alert_id to apply case-wide."
+            ),
+        )
     new_tasks = await apply_template_to_case(
         case_id=case_id,
         template_id=template_id,
         actor=current_user.username,
         session=db,
+        alert_id=alert_id,
         commit=True,
     )
     return {

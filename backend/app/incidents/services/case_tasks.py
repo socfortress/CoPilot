@@ -21,6 +21,7 @@ from typing import Tuple
 
 from loguru import logger
 from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -47,6 +48,7 @@ def _case_task_to_response(task: CaseTask) -> CaseTaskResponse:
     return CaseTaskResponse(
         id=task.id,
         case_id=task.case_id,
+        alert_id=task.alert_id,
         template_task_id=task.template_task_id,
         title=task.title,
         description=task.description,
@@ -146,6 +148,7 @@ async def apply_template_to_case(
     actor: str,
     session: AsyncSession,
     *,
+    alert_id: Optional[int] = None,
     commit: bool = True,
 ) -> List[CaseTask]:
     """
@@ -155,6 +158,12 @@ async def apply_template_to_case(
     Tasks are *snapshots* — editing the source template later does not
     mutate the CaseTask rows. ``template_task_id`` is preserved as a soft
     link for analytics / future "this came from template X" UI hints.
+
+    When ``alert_id`` is provided, every materialized CaseTask row is
+    stamped with that alert id (so the Tasks UI can group tasks under
+    their originating alert). The caller is responsible for ensuring the
+    alert is linked to the case; this function trusts the caller. ``None``
+    produces case-wide / general tasks.
 
     Set ``commit=False`` when calling from inside another transaction
     (e.g., immediately after a Case is created in the same flow); the
@@ -178,6 +187,7 @@ async def apply_template_to_case(
     for tmpl_task in sorted(template.tasks, key=lambda t: (t.order_index, t.id)):
         case_task = CaseTask(
             case_id=case_id,
+            alert_id=alert_id,
             template_task_id=tmpl_task.id,
             title=tmpl_task.title,
             description=tmpl_task.description,
@@ -203,16 +213,20 @@ async def apply_template_to_case(
 
     await session.flush()  # ensure case_task.id is populated for the audit payloads
 
+    template_applied_payload = payload_template_applied(
+        template_id=template.id,
+        template_name=template.name,
+        tasks_added=len(new_tasks),
+    )
+    if alert_id is not None:
+        template_applied_payload["alert_id"] = alert_id
+
     await emit_case_event(
         session=session,
         case_id=case_id,
         event_type=CaseEventType.TEMPLATE_APPLIED,
         actor=actor,
-        payload=payload_template_applied(
-            template_id=template.id,
-            template_name=template.name,
-            tasks_added=len(new_tasks),
-        ),
+        payload=template_applied_payload,
         commit=False,
     )
     for ct in new_tasks:
@@ -227,6 +241,7 @@ async def apply_template_to_case(
                 mandatory=ct.mandatory,
                 source="template",
                 template_id=template.id,
+                alert_id=alert_id,
             ),
             commit=False,
         )
@@ -252,12 +267,16 @@ async def auto_apply_template_for_new_case(
     session: AsyncSession,
     *,
     source_hint: Optional[str] = None,
+    alert_id: Optional[int] = None,
 ) -> Optional[Tuple[CaseTemplate, List[CaseTask]]]:
     """
-    Convenience wrapper used from ``create_case_from_alert`` and
-    ``create_case``. Picks the best matching template using the case's
-    customer_code and an optional ``source_hint`` (the originating
-    alert's source — first-alert-wins per Phase 3 design decision).
+    Convenience wrapper used from ``create_case_from_alert``,
+    ``create_case``, and the per-alert auto-apply path on alert-link.
+    Picks the best matching template using the case's customer_code and
+    an optional ``source_hint`` (the linked alert's source).
+
+    When ``alert_id`` is provided the materialized CaseTask rows are
+    stamped with it so the Tasks UI can group by originating alert.
 
     Returns (template, tasks) on success, or None if no template
     matched. ``commit=False`` so the caller's transaction stays in
@@ -276,6 +295,7 @@ async def auto_apply_template_for_new_case(
         template_id=template.id,
         actor=actor,
         session=session,
+        alert_id=alert_id,
         commit=False,
     )
     return template, tasks
@@ -305,13 +325,34 @@ async def list_case_tasks(case_id: int, session: AsyncSession) -> CaseTaskListRe
         )
 
 
+async def is_alert_linked_to_case(
+    case_id: int,
+    alert_id: int,
+    session: AsyncSession,
+) -> bool:
+    """True iff a CaseAlertLink row exists for this (case, alert) pair."""
+    stmt = (
+        select(CaseAlertLink.alert_id)
+        .where(CaseAlertLink.case_id == case_id)
+        .where(CaseAlertLink.alert_id == alert_id)
+        .limit(1)
+    )
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none() is not None
+
+
 async def add_case_task(
     case_id: int,
     request: CaseTaskCreate,
     actor: str,
     session: AsyncSession,
 ) -> CaseTaskOperationResponse:
-    """Add a custom task to a case mid-investigation. template_task_id is NULL."""
+    """Add a custom task to a case mid-investigation. template_task_id is NULL.
+
+    When ``request.alert_id`` is provided, validates the alert is currently
+    linked to the case — analysts shouldn't be able to attach tasks to alerts
+    that aren't part of the case. Otherwise the task is created as case-wide.
+    """
     try:
         case_result = await session.execute(select(Case).where(Case.id == case_id))
         if case_result.scalar_one_or_none() is None:
@@ -321,8 +362,20 @@ async def add_case_task(
                 message=f"Case id={case_id} not found",
             )
 
+        if request.alert_id is not None:
+            if not await is_alert_linked_to_case(case_id, request.alert_id, session):
+                return CaseTaskOperationResponse(
+                    task=None,
+                    success=False,
+                    message=(
+                        f"Alert id={request.alert_id} is not linked to case id={case_id}; "
+                        "link the alert first or omit alert_id for a case-wide task."
+                    ),
+                )
+
         task = CaseTask(
             case_id=case_id,
+            alert_id=request.alert_id,
             template_task_id=None,
             title=request.title,
             description=request.description,
@@ -348,6 +401,7 @@ async def add_case_task(
                 title=task.title,
                 mandatory=task.mandatory,
                 source="custom",
+                alert_id=task.alert_id,
             ),
             commit=False,
         )
@@ -555,6 +609,38 @@ def build_close_warning_response(incomplete: List[CaseTask]) -> CaseCloseWarning
 # ---------------------------------------------------------------------------
 # Convenience: derive first-linked-alert source for create_case path
 # ---------------------------------------------------------------------------
+
+
+async def orphan_tasks_for_alert(
+    case_id: int,
+    alert_id: int,
+    session: AsyncSession,
+    *,
+    commit: bool = True,
+) -> int:
+    """
+    Set ``alert_id = NULL`` on every CaseTask in this case that was attached
+    to the unlinked alert. Tasks survive (snapshot-preserving semantics) and
+    become case-wide / general tasks.
+
+    Returns the number of rows affected so the caller can include it in the
+    timeline payload for the unlink event.
+    """
+    stmt = (
+        update(CaseTask)
+        .where(CaseTask.case_id == case_id)
+        .where(CaseTask.alert_id == alert_id)
+        .values(alert_id=None, updated_at=datetime.utcnow())
+    )
+    result = await session.execute(stmt)
+    affected = result.rowcount or 0
+    if commit:
+        await session.commit()
+    if affected:
+        logger.info(
+            f"Orphaned {affected} task(s) on case id={case_id} when alert id={alert_id} was unlinked",
+        )
+    return affected
 
 
 async def get_first_alert_source_for_case(
