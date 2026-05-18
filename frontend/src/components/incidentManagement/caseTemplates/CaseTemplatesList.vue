@@ -1,22 +1,26 @@
 <template>
 	<div class="case-templates-list flex flex-col gap-4">
-		<!-- Header / actions -->
+		<!-- Page header — kept outside the tabs so context is always visible -->
 		<div class="flex flex-col gap-2">
-			<div class="flex items-center gap-4">
-				<h2>Case Templates</h2>
-				<n-button size="small" secondary type="primary" @click="openCreate">
-					<template #icon><Icon name="carbon:add" /></template>
-					New template
-				</n-button>
-			</div>
+			<h2>Case Templates</h2>
 			<p>
 				Reusable investigation playbooks. Templates are matched to new cases by customer + alert source on case
 				creation, with priority customer+source &gt; customer-only &gt; source-only &gt; global default.
 			</p>
 		</div>
 
-		<!-- Filters -->
-		<div class="@container mt-4 grid grid-cols-12 items-center gap-3">
+		<n-tabs v-model:value="activeTab" type="line" animated>
+			<n-tab-pane name="templates" tab="Templates">
+				<div class="flex flex-col gap-4">
+					<div>
+						<n-button size="small" secondary type="primary" @click="openCreate">
+							<template #icon><Icon name="carbon:add" /></template>
+							New template
+						</n-button>
+					</div>
+
+					<!-- Filters -->
+					<div class="@container mt-2 grid grid-cols-12 items-center gap-3">
 			<n-input
 				v-model:value="search"
 				size="small"
@@ -53,7 +57,14 @@
 			</n-checkbox>
 		</div>
 
-		<n-data-table :columns :data="filteredRows" :loading size="small" />
+					<n-data-table :columns :data="filteredRows" :loading size="small" />
+				</div>
+			</n-tab-pane>
+
+			<n-tab-pane name="library" tab="Library">
+				<CaseTemplatesLibrary @imported="onLibraryImported" />
+			</n-tab-pane>
+		</n-tabs>
 
 		<!-- Editor modal -->
 		<n-modal
@@ -75,7 +86,19 @@ import type { Customer } from "@/types/customers"
 import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
 import type { SourceName } from "@/types/incidentManagement/sources"
 import { useDebounceFn } from "@vueuse/core"
-import { NButton, NCheckbox, NDataTable, NInput, NModal, NSelect, NTag, useDialog, useMessage } from "naive-ui"
+import {
+	NButton,
+	NCheckbox,
+	NDataTable,
+	NInput,
+	NModal,
+	NSelect,
+	NTabPane,
+	NTabs,
+	NTag,
+	useDialog,
+	useMessage
+} from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -83,6 +106,7 @@ import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import CaseTemplateEditor from "./CaseTemplateEditor.vue"
+import CaseTemplatesLibrary from "./CaseTemplatesLibrary.vue"
 
 const message = useMessage()
 const dialog = useDialog()
@@ -108,6 +132,15 @@ const sourcesOptions = computed(() => configuredSourcesList.value.map(o => ({ la
 
 const showEditor = ref(false)
 const editing = ref<CaseTemplate | null>(null)
+
+const activeTab = ref<"templates" | "library">("templates")
+
+function onLibraryImported() {
+	// After a library import lands, jump the user back to the Templates tab and
+	// refetch so the freshly-imported row appears immediately.
+	activeTab.value = "templates"
+	fetchTemplates()
+}
 
 function renderCustomerCode(customerCode: string | null | undefined) {
 	if (customerCode) {

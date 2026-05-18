@@ -3,6 +3,19 @@
 		<n-form-item label="Title" path="title">
 			<n-input v-model:value="addForm.title" placeholder="What needs to be done?" />
 		</n-form-item>
+		<n-form-item
+			v-if="alertOptions.length"
+			label="Attach to alert (optional)"
+			path="alertId"
+		>
+			<n-select
+				v-model:value="addForm.alertId"
+				:options="alertOptions"
+				placeholder="Case-wide / general (no alert)"
+				clearable
+				:consistent-menu-width="false"
+			/>
+		</n-form-item>
 		<n-form-item path="mandatory" :show-label="false">
 			<n-checkbox v-model:checked="addForm.mandatory">Mandatory (blocks close-with-warning)</n-checkbox>
 		</n-form-item>
@@ -28,13 +41,15 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import { NButton, NCheckbox, NForm, NFormItem, NInput, useMessage } from "naive-ui"
+import type { Alert } from "@/types/incidentManagement/alerts.d"
+import { NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
-const { caseId } = defineProps<{
+const { caseId, linkedAlerts } = defineProps<{
 	caseId: number
+	linkedAlerts?: Alert[]
 }>()
 
 const emit = defineEmits<{
@@ -45,23 +60,37 @@ const message = useMessage()
 
 const submitting = ref(false)
 const addFormRef = ref<FormInst | null>(null)
-const addForm = ref({
+const addForm = ref<{
+	title: string
+	description: string
+	guidelines: string
+	mandatory: boolean
+	alertId: number | null
+}>({
 	title: "",
 	description: "",
 	guidelines: "",
-	mandatory: false
+	mandatory: false,
+	alertId: null
 })
 
 const addFormRules: FormRules = {
 	title: { required: true, message: "Title is required", trigger: "blur" }
 }
 
+const alertOptions = computed(() =>
+	(linkedAlerts || []).map(a => ({
+		label: `#${a.id} — ${a.alert_name} (${a.source})`,
+		value: a.id
+	}))
+)
+
 const isValid = computed(() => {
 	return addForm.value.title.trim() !== ""
 })
 
 function resetForm() {
-	addForm.value = { title: "", description: "", guidelines: "", mandatory: false }
+	addForm.value = { title: "", description: "", guidelines: "", mandatory: false, alertId: null }
 }
 
 async function submitAddTask() {
@@ -77,7 +106,8 @@ async function submitAddTask() {
 			title: addForm.value.title,
 			description: addForm.value.description || null,
 			guidelines: addForm.value.guidelines || null,
-			mandatory: addForm.value.mandatory
+			mandatory: addForm.value.mandatory,
+			alert_id: addForm.value.alertId
 		})
 		if (res.data.success && res.data.task) {
 			resetForm()

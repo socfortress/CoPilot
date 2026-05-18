@@ -36,6 +36,7 @@
 						:case-id="caseEntity.id"
 						:customer-code="caseEntity.customer_code"
 						:can-edit="canEditTasks"
+						:linked-alerts="caseEntity.alerts || []"
 					/>
 				</div>
 			</n-tab-pane>

@@ -42,6 +42,38 @@
 			<n-checkbox v-model:checked="form.is_default">Default for this (customer, source) scope</n-checkbox>
 		</n-form-item>
 
+		<!--
+		Conditional auto-apply. Both inputs must be filled (or both empty) — the
+		backend rejects half-set pairs because a partial condition would silently
+		never trigger. Example: field "data_win_system_eventID", value "1" applies
+		this template only to Sysmon Event ID 1 events.
+		-->
+		<n-card size="small" title="Conditional auto-apply (optional)">
+			<template #header-extra>
+				<div v-if="matchHalfSet" class="text-warning text-xs">
+					Both field and value are required
+				</div>
+			</template>
+			<p class="text-secondary mb-2 text-xs">
+				When set, auto-apply only fires if the originating Wazuh document has
+				<code>{{ form.match_field || "<field>" }}</code>
+				equal to
+				<code>{{ form.match_value || "<value>" }}</code>
+				. Leave blank for an unconditional template.
+			</p>
+			<div class="grid grid-cols-1 gap-3 @md:grid-cols-2">
+				<n-form-item label="Match field" path="match_field" :show-feedback="false">
+					<n-input
+						v-model:value="form.match_field"
+						placeholder="e.g., data_win_system_eventID"
+					/>
+				</n-form-item>
+				<n-form-item label="Match value" path="match_value" :show-feedback="false">
+					<n-input v-model:value="form.match_value" placeholder="e.g., 1" />
+				</n-form-item>
+			</div>
+		</n-card>
+
 		<n-card size="small" title="Tasks" content-class="flex flex-col gap-3">
 			<template #header-extra>
 				<div
@@ -158,6 +190,8 @@ interface FormModel {
 	customer_code: string | null
 	source: string | null
 	is_default: boolean
+	match_field: string | null
+	match_value: string | null
 }
 
 const props = defineProps<{
@@ -189,7 +223,15 @@ const form = ref<FormModel>({
 	description: null,
 	customer_code: null,
 	source: null,
-	is_default: false
+	is_default: false,
+	match_field: null,
+	match_value: null
+})
+
+const matchHalfSet = computed(() => {
+	const hasField = !!form.value.match_field?.trim()
+	const hasValue = !!form.value.match_value?.trim()
+	return hasField !== hasValue
 })
 const formRules: FormRules = {
 	name: { required: true, message: "Name is required", trigger: "blur" }
@@ -210,7 +252,9 @@ function loadFromTemplate(t: CaseTemplate | null) {
 			description: t.description ?? "",
 			customer_code: t.customer_code ?? "",
 			source: t.source ?? "",
-			is_default: t.is_default
+			is_default: t.is_default,
+			match_field: t.match_field ?? null,
+			match_value: t.match_value ?? null
 		}
 		tasks.value = (t.tasks ?? []).map(task => ({
 			_key: nextKey(),
@@ -222,7 +266,15 @@ function loadFromTemplate(t: CaseTemplate | null) {
 			order_index: task.order_index
 		}))
 	} else {
-		form.value = { name: null, description: null, customer_code: null, source: null, is_default: false }
+		form.value = {
+			name: null,
+			description: null,
+			customer_code: null,
+			source: null,
+			is_default: false,
+			match_field: null,
+			match_value: null
+		}
 		tasks.value = [
 			{
 				_key: nextKey(),
@@ -338,6 +390,11 @@ async function handleSave() {
 		return
 	}
 
+	if (matchHalfSet.value) {
+		message.warning("Match field and match value must both be set or both be empty.")
+		return
+	}
+
 	saving.value = true
 
 	const payload = {
@@ -345,7 +402,9 @@ async function handleSave() {
 		description: form.value.description || null,
 		customer_code: form.value.customer_code || null,
 		source: form.value.source || null,
-		is_default: form.value.is_default
+		is_default: form.value.is_default,
+		match_field: form.value.match_field?.trim() || null,
+		match_value: form.value.match_value?.trim() || null
 	}
 
 	try {

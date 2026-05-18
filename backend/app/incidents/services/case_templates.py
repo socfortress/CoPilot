@@ -61,11 +61,23 @@ def _template_to_response(template: CaseTemplate) -> CaseTemplateResponse:
         customer_code=template.customer_code,
         source=template.source,
         is_default=template.is_default,
+        match_field=template.match_field,
+        match_value=template.match_value,
         created_by=template.created_by,
         created_at=template.created_at,
         updated_at=template.updated_at,
         tasks=[_template_task_to_response(t) for t in tasks_sorted],
     )
+
+
+def _validate_match_pair(match_field: Optional[str], match_value: Optional[str]) -> None:
+    """Both-or-neither rule: a half-set match would silently never trigger,
+    which is a foot-gun. Reject the request rather than persist an inert state."""
+    if (match_field is None) != (match_value is None):
+        raise ValueError(
+            "match_field and match_value must both be set or both be null. "
+            "Set both to enable conditional auto-apply, or both to null for an unconditional template.",
+        )
 
 
 async def _load_template_with_tasks(
@@ -118,6 +130,8 @@ async def create_template(
     logger.info(f"Creating case template '{request.name}' by {actor}")
 
     try:
+        _validate_match_pair(request.match_field, request.match_value)
+
         if request.is_default:
             await _enforce_single_default(
                 customer_code=request.customer_code,
@@ -132,6 +146,8 @@ async def create_template(
             customer_code=request.customer_code,
             source=request.source,
             is_default=request.is_default,
+            match_field=request.match_field,
+            match_value=request.match_value,
             created_by=actor,
         )
         session.add(template)
@@ -278,6 +294,17 @@ async def update_template(
                     exclude_template_id=template.id,
                     session=session,
                 )
+
+        # Match-pair edits: a partial update can touch one, both, or neither
+        # field. Compute the post-update state and validate the pair before
+        # writing — protects against ending up with field-without-value or
+        # value-without-field.
+        if "match_field" in fields_set or "match_value" in fields_set:
+            new_field = request.match_field if "match_field" in fields_set else template.match_field
+            new_value = request.match_value if "match_value" in fields_set else template.match_value
+            _validate_match_pair(new_field, new_value)
+            template.match_field = new_field
+            template.match_value = new_value
 
         template.updated_at = datetime.utcnow()
         session.add(template)

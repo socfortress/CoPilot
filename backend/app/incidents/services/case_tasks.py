@@ -15,16 +15,20 @@ Authorization is enforced at the route layer; this module is auth-agnostic.
 """
 
 from datetime import datetime
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
 
 from loguru import logger
 from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.incidents.models import Alert
+from app.incidents.models import Asset
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseTask
@@ -47,6 +51,7 @@ def _case_task_to_response(task: CaseTask) -> CaseTaskResponse:
     return CaseTaskResponse(
         id=task.id,
         case_id=task.case_id,
+        alert_id=task.alert_id,
         template_task_id=task.template_task_id,
         title=task.title,
         description=task.description,
@@ -83,6 +88,12 @@ async def pick_template_for_case(
     3. ``source`` only (customer_code IS NULL), prefer is_default
     4. Global default (both NULL, is_default=True)
 
+    **Conditional templates are excluded from every tier.** A template with a
+    ``match_field`` set is saying "fire only when this condition matches" — it
+    participates in selection exclusively via ``pick_templates_for_alert``. If
+    its condition is rejected, it must not silently re-enter via the fallback
+    tier; that would defeat the whole point of having a condition.
+
     Returns the template with tasks eagerly loaded, or None if no match.
     """
 
@@ -90,6 +101,7 @@ async def pick_template_for_case(
         stmt = (
             select(CaseTemplate)
             .options(selectinload(CaseTemplate.tasks))
+            .where(CaseTemplate.match_field.is_(None))
             .where(customer_filter)
             .where(source_filter)
             .order_by(CaseTemplate.is_default.desc(), CaseTemplate.created_at.desc())
@@ -136,6 +148,119 @@ async def pick_template_for_case(
 
 
 # ---------------------------------------------------------------------------
+# Conditional template selection (field-match against the raw Wazuh document)
+# ---------------------------------------------------------------------------
+
+
+async def _fetch_raw_event_for_alert(
+    alert: Alert,
+    session: AsyncSession,
+) -> Optional[Dict[str, Any]]:
+    """
+    Return the raw Wazuh document for this alert's first asset, or None if
+    there is no asset or the OpenSearch fetch raises.
+
+    Picks the lowest-id asset deterministically; the original-event coordinates
+    are typically the same across an alert's assets, but if they diverge we
+    prefer the asset that landed first. Talks to the Wazuh indexer directly
+    rather than going through ``fetch_alert_details`` because we don't want
+    its syslog_type validation gate — for field-match we only need a key/value
+    bag.
+    """
+    asset_stmt = select(Asset).where(Asset.alert_linked == alert.id).order_by(Asset.id.asc()).limit(1)
+    asset = (await session.execute(asset_stmt)).scalars().first()
+    if asset is None:
+        logger.info(
+            f"pick_templates_for_alert: alert id={alert.id} has no asset row; " "field-match templates are skipped for this alert.",
+        )
+        return None
+
+    try:
+        from app.connectors.wazuh_indexer.utils.universal import (
+            create_wazuh_indexer_client_async,
+        )
+
+        es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+        doc = await es_client.get(index=asset.index_name, id=asset.index_id)
+        return doc.get("_source") or {}
+    except Exception as e:
+        logger.warning(
+            f"pick_templates_for_alert: raw-event fetch failed for alert id={alert.id} "
+            f"(index={asset.index_name}, id={asset.index_id}): {e}. "
+            "Falling back to non-field-match templates.",
+        )
+        return None
+
+
+async def pick_templates_for_alert(
+    case: Case,
+    alert: Alert,
+    session: AsyncSession,
+) -> List[CaseTemplate]:
+    """
+    Return every CaseTemplate that should auto-apply for this (case, alert).
+
+    Two-stage selection:
+
+    1. **Field-match templates** (both ``match_field`` and ``match_value``
+       set) scoped to this case's customer + alert's source are evaluated
+       against the raw Wazuh document fetched via the alert's first asset.
+       Every template whose ``document[match_field] == match_value`` is
+       included — they layer additively.
+    2. **Fallback.** If zero field-match templates fired (no candidates, no
+       matches, or the raw-event fetch raised), use the existing single-
+       template tier picker (``customer+source > customer > source > global
+       default``) and return its result as a one-element list.
+
+    This split is deliberate: a generic "wazuh global" template shouldn't
+    drown a specific "sysmon event 1" one. Returns an empty list if nothing
+    applies.
+    """
+    field_match_stmt = (
+        select(CaseTemplate)
+        .options(selectinload(CaseTemplate.tasks))
+        .where(CaseTemplate.match_field.is_not(None))
+        .where(CaseTemplate.match_value.is_not(None))
+        .where(
+            (CaseTemplate.customer_code == case.customer_code) | (CaseTemplate.customer_code.is_(None)),
+        )
+        .where(
+            (CaseTemplate.source == alert.source) | (CaseTemplate.source.is_(None)),
+        )
+    )
+    candidates = list((await session.execute(field_match_stmt)).scalars().all())
+
+    matched: List[CaseTemplate] = []
+    if candidates:
+        raw_event = await _fetch_raw_event_for_alert(alert, session)
+        if raw_event is not None:
+            for tmpl in candidates:
+                doc_value = raw_event.get(tmpl.match_field)
+                if doc_value is None:
+                    continue
+                # Wazuh top-level values arrive as strings already (numeric
+                # fields like data_win_system_eventID are quoted: "1"). Coerce
+                # defensively so a numeric value in the document still matches
+                # the string in match_value.
+                if str(doc_value) == tmpl.match_value:
+                    matched.append(tmpl)
+
+    if matched:
+        logger.info(
+            f"pick_templates_for_alert: {len(matched)} field-match template(s) fired "
+            f"for case id={case.id} alert id={alert.id}: {[t.id for t in matched]}",
+        )
+        return matched
+
+    fallback = await pick_template_for_case(
+        customer_code=case.customer_code,
+        source=alert.source,
+        session=session,
+    )
+    return [fallback] if fallback is not None else []
+
+
+# ---------------------------------------------------------------------------
 # Template application (snapshot copy)
 # ---------------------------------------------------------------------------
 
@@ -146,6 +271,7 @@ async def apply_template_to_case(
     actor: str,
     session: AsyncSession,
     *,
+    alert_id: Optional[int] = None,
     commit: bool = True,
 ) -> List[CaseTask]:
     """
@@ -155,6 +281,12 @@ async def apply_template_to_case(
     Tasks are *snapshots* — editing the source template later does not
     mutate the CaseTask rows. ``template_task_id`` is preserved as a soft
     link for analytics / future "this came from template X" UI hints.
+
+    When ``alert_id`` is provided, every materialized CaseTask row is
+    stamped with that alert id (so the Tasks UI can group tasks under
+    their originating alert). The caller is responsible for ensuring the
+    alert is linked to the case; this function trusts the caller. ``None``
+    produces case-wide / general tasks.
 
     Set ``commit=False`` when calling from inside another transaction
     (e.g., immediately after a Case is created in the same flow); the
@@ -178,6 +310,7 @@ async def apply_template_to_case(
     for tmpl_task in sorted(template.tasks, key=lambda t: (t.order_index, t.id)):
         case_task = CaseTask(
             case_id=case_id,
+            alert_id=alert_id,
             template_task_id=tmpl_task.id,
             title=tmpl_task.title,
             description=tmpl_task.description,
@@ -203,16 +336,20 @@ async def apply_template_to_case(
 
     await session.flush()  # ensure case_task.id is populated for the audit payloads
 
+    template_applied_payload = payload_template_applied(
+        template_id=template.id,
+        template_name=template.name,
+        tasks_added=len(new_tasks),
+    )
+    if alert_id is not None:
+        template_applied_payload["alert_id"] = alert_id
+
     await emit_case_event(
         session=session,
         case_id=case_id,
         event_type=CaseEventType.TEMPLATE_APPLIED,
         actor=actor,
-        payload=payload_template_applied(
-            template_id=template.id,
-            template_name=template.name,
-            tasks_added=len(new_tasks),
-        ),
+        payload=template_applied_payload,
         commit=False,
     )
     for ct in new_tasks:
@@ -227,6 +364,7 @@ async def apply_template_to_case(
                 mandatory=ct.mandatory,
                 source="template",
                 template_id=template.id,
+                alert_id=alert_id,
             ),
             commit=False,
         )
@@ -248,37 +386,35 @@ async def apply_template_to_case(
 
 async def auto_apply_template_for_new_case(
     case: Case,
+    alert: Alert,
     actor: str,
     session: AsyncSession,
-    *,
-    source_hint: Optional[str] = None,
-) -> Optional[Tuple[CaseTemplate, List[CaseTask]]]:
+) -> List[Tuple[CaseTemplate, List[CaseTask]]]:
     """
-    Convenience wrapper used from ``create_case_from_alert`` and
-    ``create_case``. Picks the best matching template using the case's
-    customer_code and an optional ``source_hint`` (the originating
-    alert's source — first-alert-wins per Phase 3 design decision).
+    Run the per-alert auto-apply selection for a case and apply every
+    template the new ``pick_templates_for_alert`` returns.
 
-    Returns (template, tasks) on success, or None if no template
-    matched. ``commit=False`` so the caller's transaction stays in
-    control; caller commits after this returns.
+    Field-match templates (when present and the raw event matches) layer
+    additively; otherwise the legacy tier picker contributes one fallback
+    template. All materialized CaseTask rows are stamped with ``alert.id``
+    so they group under the originating alert in the UI.
+
+    Returns the list of (template, tasks) pairs applied. ``commit=False`` on
+    each apply call — the caller's transaction stays in control.
     """
-    template = await pick_template_for_case(
-        customer_code=case.customer_code,
-        source=source_hint,
-        session=session,
-    )
-    if template is None:
-        return None
-
-    tasks = await apply_template_to_case(
-        case_id=case.id,
-        template_id=template.id,
-        actor=actor,
-        session=session,
-        commit=False,
-    )
-    return template, tasks
+    templates = await pick_templates_for_alert(case=case, alert=alert, session=session)
+    applied: List[Tuple[CaseTemplate, List[CaseTask]]] = []
+    for template in templates:
+        tasks = await apply_template_to_case(
+            case_id=case.id,
+            template_id=template.id,
+            actor=actor,
+            session=session,
+            alert_id=alert.id,
+            commit=False,
+        )
+        applied.append((template, tasks))
+    return applied
 
 
 # ---------------------------------------------------------------------------
@@ -305,13 +441,29 @@ async def list_case_tasks(case_id: int, session: AsyncSession) -> CaseTaskListRe
         )
 
 
+async def is_alert_linked_to_case(
+    case_id: int,
+    alert_id: int,
+    session: AsyncSession,
+) -> bool:
+    """True iff a CaseAlertLink row exists for this (case, alert) pair."""
+    stmt = select(CaseAlertLink.alert_id).where(CaseAlertLink.case_id == case_id).where(CaseAlertLink.alert_id == alert_id).limit(1)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none() is not None
+
+
 async def add_case_task(
     case_id: int,
     request: CaseTaskCreate,
     actor: str,
     session: AsyncSession,
 ) -> CaseTaskOperationResponse:
-    """Add a custom task to a case mid-investigation. template_task_id is NULL."""
+    """Add a custom task to a case mid-investigation. template_task_id is NULL.
+
+    When ``request.alert_id`` is provided, validates the alert is currently
+    linked to the case — analysts shouldn't be able to attach tasks to alerts
+    that aren't part of the case. Otherwise the task is created as case-wide.
+    """
     try:
         case_result = await session.execute(select(Case).where(Case.id == case_id))
         if case_result.scalar_one_or_none() is None:
@@ -321,8 +473,20 @@ async def add_case_task(
                 message=f"Case id={case_id} not found",
             )
 
+        if request.alert_id is not None:
+            if not await is_alert_linked_to_case(case_id, request.alert_id, session):
+                return CaseTaskOperationResponse(
+                    task=None,
+                    success=False,
+                    message=(
+                        f"Alert id={request.alert_id} is not linked to case id={case_id}; "
+                        "link the alert first or omit alert_id for a case-wide task."
+                    ),
+                )
+
         task = CaseTask(
             case_id=case_id,
+            alert_id=request.alert_id,
             template_task_id=None,
             title=request.title,
             description=request.description,
@@ -348,6 +512,7 @@ async def add_case_task(
                 title=task.title,
                 mandatory=task.mandatory,
                 source="custom",
+                alert_id=task.alert_id,
             ),
             commit=False,
         )
@@ -555,6 +720,38 @@ def build_close_warning_response(incomplete: List[CaseTask]) -> CaseCloseWarning
 # ---------------------------------------------------------------------------
 # Convenience: derive first-linked-alert source for create_case path
 # ---------------------------------------------------------------------------
+
+
+async def orphan_tasks_for_alert(
+    case_id: int,
+    alert_id: int,
+    session: AsyncSession,
+    *,
+    commit: bool = True,
+) -> int:
+    """
+    Set ``alert_id = NULL`` on every CaseTask in this case that was attached
+    to the unlinked alert. Tasks survive (snapshot-preserving semantics) and
+    become case-wide / general tasks.
+
+    Returns the number of rows affected so the caller can include it in the
+    timeline payload for the unlink event.
+    """
+    stmt = (
+        update(CaseTask)
+        .where(CaseTask.case_id == case_id)
+        .where(CaseTask.alert_id == alert_id)
+        .values(alert_id=None, updated_at=datetime.utcnow())
+    )
+    result = await session.execute(stmt)
+    affected = result.rowcount or 0
+    if commit:
+        await session.commit()
+    if affected:
+        logger.info(
+            f"Orphaned {affected} task(s) on case id={case_id} when alert id={alert_id} was unlinked",
+        )
+    return affected
 
 
 async def get_first_alert_source_for_case(
