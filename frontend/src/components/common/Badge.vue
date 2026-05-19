@@ -40,7 +40,7 @@ const { type, hintCursor, pointCursor, color, href, fluid, size } = defineProps<
 	align-items: center;
 	font-size: 14px;
 	padding: 0px 6px;
-	height: 26px;
+	height: 28px;
 	line-height: 1;
 	gap: 6px;
 	transition: all 0.3s var(--bezier-ease);
@@ -162,7 +162,7 @@ const { type, hintCursor, pointCursor, color, href, fluid, size } = defineProps<
 	}
 
 	&.fluid {
-		min-height: 26px;
+		min-height: 28px;
 		height: unset;
 
 		&.splitted {
@@ -180,7 +180,9 @@ const { type, hintCursor, pointCursor, color, href, fluid, size } = defineProps<
 
 	&.badge-size-small {
 		font-size: 12px;
-		height: 20px;
+		height: 22px;
+		min-height: 22px;
+		border-radius: var(--border-radius-small);
 	}
 }
 </style>
