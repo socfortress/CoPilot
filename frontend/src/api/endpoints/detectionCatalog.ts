@@ -4,6 +4,8 @@
 // under /catalog/* so they don't conflict with the rules-grid endpoints.
 
 import type {
+	CatalogComplianceFrameworksResponse,
+	CatalogComplianceResponse,
 	CatalogCoverageGapsResponse,
 	CatalogLogTestRequest,
 	CatalogLogTestResponse,
@@ -47,10 +49,16 @@ export default {
 	 * corpus (~3–5k rules) in a single shot — pagination/filtering happens
 	 * client-side. When the Wazuh Manager is unreachable, ``available=false``
 	 * and ``unavailable_reason`` carries the human-readable cause.
+	 *
+	 * Pass ``customerCode`` to scope the firing-stats columns (Hits 30d /
+	 * Hits 7d / Last fired) to a single customer's alerts. The rule list
+	 * itself is unchanged — every rule is still returned — but rules without
+	 * any hits for that customer get zeros.
 	 */
-	listWazuhRules() {
+	listWazuhRules(customerCode?: string) {
 		return HttpClient.get<FlaskBaseResponse & CatalogWazuhRulesResponse>(
-			`/copilot_searches/catalog/wazuh-rules`
+			`/copilot_searches/catalog/wazuh-rules`,
+			{ params: customerCode ? { customer_code: customerCode } : {} }
 		)
 	},
 
@@ -82,6 +90,24 @@ export default {
 		return HttpClient.post<FlaskBaseResponse & CatalogLogTestResponse>(
 			`/copilot_searches/catalog/wazuh-rules/test`,
 			payload
+		)
+	},
+
+	/** List the compliance frameworks the Compliance tab can pivot by. */
+	listComplianceFrameworks() {
+		return HttpClient.get<FlaskBaseResponse & CatalogComplianceFrameworksResponse>(
+			`/copilot_searches/catalog/compliance/frameworks`
+		)
+	},
+
+	/**
+	 * Wazuh rules grouped by control IDs for the given framework. Each group
+	 * carries rule count + total firing hits — the "what coverage do we have
+	 * for PCI 10.2.4?" answer in one round-trip.
+	 */
+	getCompliancePivot(framework: string) {
+		return HttpClient.get<FlaskBaseResponse & CatalogComplianceResponse>(
+			`/copilot_searches/catalog/compliance/${encodeURIComponent(framework)}`
 		)
 	}
 }

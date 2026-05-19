@@ -1,26 +1,52 @@
 <template>
-	<div class="coverage-gaps-index flex flex-col gap-3">
-		<div class="flex flex-wrap items-center justify-between gap-3">
-			<h3>Coverage Gaps</h3>
-			<div v-if="!loading" class="text-tertiary text-xs">
-				<strong>{{ gap_count }}</strong>
-				gap{{ gap_count === 1 ? "" : "s" }} across
-				<strong>{{ total_techniques }}</strong>
-				technique{{ total_techniques === 1 ? "" : "s" }}
-				· <strong>{{ coverage_pct }}%</strong> covered
+	<div class="coverage-gaps-index flex flex-col gap-4">
+		<!-- Title row + framing copy -->
+		<div class="flex flex-wrap items-end justify-between gap-3">
+			<div class="flex flex-col gap-1">
+				<h3 class="m-0 text-lg font-semibold">Coverage Gaps</h3>
+				<p class="text-secondary m-0 max-w-3xl text-sm">
+					MITRE ATT&amp;CK techniques no rule covers — across both the CoPilot Searches
+					corpus and the Wazuh ruleset. Sub-techniques are collapsed into their parents
+					(coverage of T1059.001 counts as coverage for T1059). Use this list to spot
+					where new detection authoring would expand your coverage.
+				</p>
 			</div>
+			<Badge type="splitted" color="primary">
+				<template #label>Showing</template>
+				<template #value>{{ filteredGaps.length }} / {{ gaps.length }}</template>
+			</Badge>
 		</div>
 
-		<p class="text-secondary text-sm">
-			MITRE ATT&amp;CK techniques no rule covers — across both CoPilot Searches and the Wazuh
-			ruleset. Sub-techniques are collapsed into their parents (a hit on T1059.001 counts as
-			coverage for T1059). Use this list to spot where new detections would expand coverage.
-		</p>
+		<!-- COVERAGE HERO STATS - tiles using the shared CatalogStatTile so
+		     visual identity matches the catalog header. -->
+		<div v-if="!loading" class="gaps-stats-grid">
+			<CatalogStatTile
+				label="Coverage"
+				:value="`${coverage_pct}%`"
+				:icon="ShieldIcon"
+				:accent="coveragePctAccent"
+				sub="Across both corpora"
+			/>
+			<CatalogStatTile
+				label="Covered techniques"
+				:value="covered_count"
+				:icon="CoveredIcon"
+				accent="success"
+				:sub="`of ${total_techniques} total`"
+			/>
+			<CatalogStatTile
+				label="Gaps"
+				:value="gap_count"
+				:icon="GapsIcon"
+				accent="danger"
+				sub="Techniques with no rule"
+			/>
+		</div>
 
 		<n-input
 			v-model:value="filter"
-			size="small"
-			placeholder="Filter by technique ID, name, tactic…"
+			size="medium"
+			placeholder="Filter by technique ID, name, or tactic…"
 			clearable
 		>
 			<template #prefix><Icon name="carbon:search" /></template>
@@ -33,7 +59,7 @@
 				:loading
 				size="small"
 				:pagination="pagination"
-				class="coverage-gaps-table"
+				class="catalog-table"
 			/>
 		</n-spin>
 	</div>
@@ -42,26 +68,31 @@
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
 import type { CatalogCoverageGapRow } from "@/types/detectionCatalog.d"
-import { NDataTable, NInput, NSpin, NTag, useMessage } from "naive-ui"
+import { NDataTable, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
+import CatalogStatTile from "./CatalogStatTile.vue"
 
 const message = useMessage()
 
 const gaps = ref<CatalogCoverageGapRow[]>([])
 const gap_count = ref(0)
 const total_techniques = ref(0)
+const covered_count = ref(0)
 const coverage_pct = ref(0)
 
 const loading = ref(false)
 const filter = ref("")
 
-// Same pagination defaults as the Wazuh tab — keeps the catalog feel
-// consistent across browse modes.
+const ShieldIcon = "carbon:shield-check"
+const CoveredIcon = "carbon:checkmark-outline"
+const GapsIcon = "carbon:warning-square"
+
 const pagination = {
-	pageSize: 50,
-	pageSizes: [25, 50, 100, 200],
+	pageSize: 25,
+	pageSizes: [10, 25, 50, 100],
 	showSizePicker: true
 }
 
@@ -76,11 +107,19 @@ const filteredGaps = computed<CatalogCoverageGapRow[]>(() => {
 	)
 })
 
+// Color the Coverage tile by quality bucket — green high, red low. Makes the
+// tile a glanceable health indicator.
+const coveragePctAccent = computed<"success" | "warning" | "danger">(() => {
+	if (coverage_pct.value >= 70) return "success"
+	if (coverage_pct.value >= 40) return "warning"
+	return "danger"
+})
+
 const columns: DataTableColumns<CatalogCoverageGapRow> = [
 	{
 		title: "Technique ID",
 		key: "technique_id",
-		width: 130,
+		width: 140,
 		sorter: (a, b) => a.technique_id.localeCompare(b.technique_id),
 		render: row =>
 			row.url
@@ -89,18 +128,19 @@ const columns: DataTableColumns<CatalogCoverageGapRow> = [
 						href={row.url}
 						target="_blank"
 						rel="noopener"
-						class="font-mono text-xs text-primary hover:underline"
+						class="technique-link"
 					>
 						{row.technique_id}
+						<Icon name="carbon:launch" size={11} />
 					</a>
 				)
-				: <span class="font-mono text-xs">{row.technique_id}</span>
+				: <span class="font-mono text-xs text-secondary">{row.technique_id}</span>
 	},
 	{
 		title: "Technique",
 		key: "technique_name",
 		sorter: (a, b) => a.technique_name.localeCompare(b.technique_name),
-		render: row => <span>{row.technique_name}</span>
+		render: row => <span class="font-medium">{row.technique_name}</span>
 	},
 	{
 		title: "Tactics",
@@ -110,11 +150,11 @@ const columns: DataTableColumns<CatalogCoverageGapRow> = [
 				? (
 					<div class="flex flex-wrap gap-1">
 						{row.tactics.map(t => (
-							<NTag key={t} size="tiny" type="warning" bordered={false}>{t}</NTag>
+							<span key={t} class="chip chip-tactic">{t.toUpperCase()}</span>
 						))}
 					</div>
 				)
-				: <em class="text-tertiary">—</em>
+				: <span class="text-tertiary text-xs">—</span>
 	}
 ]
 
@@ -127,6 +167,7 @@ function load() {
 				gaps.value = res.data.gaps || []
 				gap_count.value = res.data.gap_count
 				total_techniques.value = res.data.total_techniques
+				covered_count.value = res.data.covered_count
 				coverage_pct.value = res.data.coverage_pct
 			} else {
 				message.warning(res.data?.message || "Failed to load coverage gaps")
@@ -144,7 +185,62 @@ onBeforeMount(load)
 </script>
 
 <style scoped lang="scss">
-.coverage-gaps-table :deep(.n-data-table-tr:hover) {
-	background: rgba(var(--primary-color-rgb) / 0.04);
+.gaps-stats-grid {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+/* Catalog table reuse */
+.catalog-table :deep(.n-data-table-th) {
+	background-color: var(--bg-secondary-color);
+	font-weight: 600;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--fg-secondary-color);
+}
+.catalog-table :deep(.n-data-table-tr) {
+	transition: background-color 0.15s var(--bezier-ease);
+}
+.catalog-table :deep(.n-data-table-tr:hover) {
+	background-color: rgba(var(--primary-color-rgb) / 0.04);
+}
+.catalog-table :deep(.n-data-table-td) {
+	padding: 10px 12px;
+}
+
+:deep(.technique-link) {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-family: var(--font-family-mono);
+	font-size: 0.78rem;
+	font-weight: 500;
+	color: var(--primary-color);
+	transition: color 0.15s var(--bezier-ease);
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
+:deep(.chip) {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 8px;
+	font-size: 0.72rem;
+	font-weight: 500;
+	line-height: 1.4;
+	border-radius: 6px;
+	border: 1px solid transparent;
+	white-space: nowrap;
+}
+:deep(.chip-tactic) {
+	color: var(--warning-color);
+	background-color: rgba(var(--warning-color-rgb) / 0.08);
+	border-color: rgba(var(--warning-color-rgb) / 0.2);
+	font-weight: 600;
+	letter-spacing: 0.04em;
 }
 </style>

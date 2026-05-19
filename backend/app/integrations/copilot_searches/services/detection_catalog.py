@@ -29,6 +29,7 @@ from loguru import logger
 
 from app.integrations.copilot_searches.services.copilot_searches import rules_cache
 from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
+from app.integrations.copilot_searches.services.wazuh_firing_stats_cache import fetch_firing_stats_for_customer
 from app.integrations.copilot_searches.services.wazuh_firing_stats_cache import wazuh_firing_stats_cache
 from app.integrations.copilot_searches.services.wazuh_rules_cache import wazuh_rules_cache
 
@@ -345,6 +346,134 @@ async def get_catalog_stats() -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# Compliance pivot — group Wazuh rules by compliance framework control ID
+# ---------------------------------------------------------------------------
+
+
+# Frameworks we expose in the compliance pivot. Maps the API-friendly key
+# (also the URL query value) to the human-readable label + the Wazuh
+# rule-dict field name. Wazuh stores these as lists of control identifiers
+# per rule. New frameworks: add a row here, no other code change needed.
+COMPLIANCE_FRAMEWORKS: Dict[str, Dict[str, str]] = {
+    "pci_dss": {"label": "PCI DSS", "field": "pci_dss"},
+    "gdpr": {"label": "GDPR", "field": "gdpr"},
+    "hipaa": {"label": "HIPAA", "field": "hipaa"},
+    "nist_800_53": {"label": "NIST 800-53", "field": "nist_800_53"},
+    "tsc": {"label": "TSC", "field": "tsc"},
+    "gpg13": {"label": "GPG13", "field": "gpg13"},
+}
+
+
+def _rule_compliance_values(rule: Dict[str, Any], field: str) -> List[str]:
+    """Pull and normalize a compliance-array field off a cached Wazuh rule."""
+    raw = rule.get(field)
+    if isinstance(raw, list):
+        return [v for v in raw if isinstance(v, str) and v.strip()]
+    if isinstance(raw, str):
+        return [v.strip() for v in raw.split(",") if v.strip()]
+    return []
+
+
+async def list_compliance_pivot(framework: str) -> Dict[str, Any]:
+    """
+    Group every Wazuh rule by its values for the given compliance framework.
+
+    Output shape:
+        {
+          "framework": "pci_dss",
+          "framework_label": "PCI DSS",
+          "groups": [
+            {
+              "control": "10.2.4",
+              "rule_count": 23,
+              "total_hits_30d": 487,
+              "rule_ids": [5710, 5711, ...]
+            },
+            ...
+          ],
+          ...
+        }
+
+    Rules that don't carry ANY value for the framework field are excluded —
+    "no compliance tag" isn't a group, it's just absence. The frontend can
+    surface that count separately if useful, but for the pivot table itself
+    we only list real controls.
+
+    Groups are sorted by ``total_hits_30d`` descending, then by ``control``
+    alphabetically — the "what's actively firing for PCI 10.2.4?" question
+    is the most common analyst entry point.
+    """
+    framework_meta = COMPLIANCE_FRAMEWORKS.get(framework)
+    if not framework_meta:
+        raise ValueError(
+            f"Unknown compliance framework {framework!r}. Valid: {list(COMPLIANCE_FRAMEWORKS)}",
+        )
+
+    await wazuh_rules_cache.ensure_loaded()
+    await wazuh_firing_stats_cache.ensure_loaded()
+
+    field = framework_meta["field"]
+
+    # control_id -> {"rule_ids": [], "total_hits_30d": int}
+    grouped: Dict[str, Dict[str, Any]] = defaultdict(
+        lambda: {"rule_ids": [], "total_hits_30d": 0, "total_hits_7d": 0},
+    )
+    rules_with_compliance = 0
+
+    for raw_rule in wazuh_rules_cache.get_all_rules():
+        controls = _rule_compliance_values(raw_rule, field)
+        if not controls:
+            continue
+        rules_with_compliance += 1
+
+        rid = raw_rule.get("id")
+        stats = (
+            wazuh_firing_stats_cache.get(rid)
+            if isinstance(rid, int)
+            else {"hits_30d": 0, "hits_7d": 0}
+        )
+
+        for control in controls:
+            bucket = grouped[control]
+            if isinstance(rid, int):
+                bucket["rule_ids"].append(rid)
+            bucket["total_hits_30d"] += stats["hits_30d"]
+            bucket["total_hits_7d"] += stats["hits_7d"]
+
+    groups = [
+        {
+            "control": control,
+            "rule_count": len(bucket["rule_ids"]),
+            "rule_ids": sorted(bucket["rule_ids"]),
+            "total_hits_30d": bucket["total_hits_30d"],
+            "total_hits_7d": bucket["total_hits_7d"],
+        }
+        for control, bucket in grouped.items()
+    ]
+    # Most-noisy-controls first; ties broken by control ID alphabetical so
+    # the order is stable across calls.
+    groups.sort(key=lambda g: (-g["total_hits_30d"], g["control"]))
+
+    return {
+        "framework": framework,
+        "framework_label": framework_meta["label"],
+        "groups": groups,
+        "control_count": len(groups),
+        "rules_with_compliance": rules_with_compliance,
+        "total_rules": len(wazuh_rules_cache.get_all_rules()),
+        "firing_stats_available": wazuh_firing_stats_cache.is_available,
+    }
+
+
+def list_compliance_frameworks() -> List[Dict[str, str]]:
+    """List the frameworks the compliance pivot supports. Drives the UI selector."""
+    return [
+        {"key": key, "label": meta["label"]}
+        for key, meta in COMPLIANCE_FRAMEWORKS.items()
+    ]
+
+
+# ---------------------------------------------------------------------------
 # Logtest — "which rule would match this log line?"
 # ---------------------------------------------------------------------------
 
@@ -545,7 +674,11 @@ def _wazuh_row(rule: Dict[str, Any]) -> Dict[str, Any]:
     Hits column at all vs. hiding it because we can't tell.
     """
     rid = rule.get("id")
-    stats = wazuh_firing_stats_cache.get(rid) if isinstance(rid, int) else {"hits_30d": 0, "hits_7d": 0}
+    stats = (
+        wazuh_firing_stats_cache.get(rid)
+        if isinstance(rid, int)
+        else {"hits_30d": 0, "hits_7d": 0, "last_seen": None}
+    )
     return {
         "id": rid,
         "level": rule.get("level"),
@@ -557,10 +690,11 @@ def _wazuh_row(rule: Dict[str, Any]) -> Dict[str, Any]:
         "mitre": _wazuh_mitre_ids(rule),
         "hits_7d": stats["hits_7d"],
         "hits_30d": stats["hits_30d"],
+        "last_seen": stats.get("last_seen"),
     }
 
 
-async def list_wazuh_rules() -> Dict[str, Any]:
+async def list_wazuh_rules(customer_code: Optional[str] = None) -> Dict[str, Any]:
     """
     Return the full cached Wazuh ruleset projected to the index-table shape.
 
@@ -568,6 +702,13 @@ async def list_wazuh_rules() -> Dict[str, Any]:
     rules, ~3–5 MB JSON). Filtering and pagination happen client-side in the
     same pattern as the Stories index — keeps the API simple and the UX
     responsive (no round-trip per filter keystroke).
+
+    When ``customer_code`` is set, firing counts (hits_7d / hits_30d /
+    last_seen) are scoped to that customer's alerts via a fresh ES query
+    (not cached — see ``fetch_firing_stats_for_customer`` for rationale).
+    The rule list itself is the same — every rule is shown — but the hit
+    columns reflect "what's been firing for THIS customer." Rules without
+    any hits for the customer get zeros.
 
     Always returns a populated envelope. When Wazuh is unavailable, ``rules``
     is empty and ``available=False`` + ``unavailable_reason`` carries the
@@ -578,7 +719,34 @@ async def list_wazuh_rules() -> Dict[str, Any]:
     # so this is cheap. _wazuh_row reads from the firing-stats cache below.
     await wazuh_firing_stats_cache.ensure_loaded()
 
-    rows = [_wazuh_row(r) for r in wazuh_rules_cache.get_all_rules()]
+    # Per-customer override: fetch a fresh per-customer aggregation and
+    # splice it into each row in place of the global stats. We don't mutate
+    # the row builder — instead build rows with global stats, then patch the
+    # firing fields. Keeps _wazuh_row's semantics clean and isolated.
+    customer_stats: Dict[int, Dict[str, Any]] = {}
+    if customer_code:
+        customer_stats = await fetch_firing_stats_for_customer(customer_code)
+
+    rows: List[Dict[str, Any]] = []
+    for raw in wazuh_rules_cache.get_all_rules():
+        row = _wazuh_row(raw)
+        if customer_code:
+            # Override stats with the per-customer numbers. Missing rule_id
+            # in customer_stats means "this rule hasn't fired for this
+            # customer" — zero everything out rather than leaving the global
+            # numbers in place, which would be misleading.
+            rid = row.get("id")
+            cstats = customer_stats.get(rid) if isinstance(rid, int) else None
+            if cstats:
+                row["hits_7d"] = cstats["hits_7d"]
+                row["hits_30d"] = cstats["hits_30d"]
+                row["last_seen"] = cstats.get("last_seen")
+            else:
+                row["hits_7d"] = 0
+                row["hits_30d"] = 0
+                row["last_seen"] = None
+        rows.append(row)
+
     # Sort by integer ID for a stable, intuitive default order — operators
     # think of Wazuh rules numerically.
     rows.sort(key=lambda r: r["id"] if isinstance(r["id"], int) else 0)
@@ -595,6 +763,9 @@ async def list_wazuh_rules() -> Dict[str, Any]:
         "firing_stats_available": wazuh_firing_stats_cache.is_available,
         "firing_stats_unavailable_reason": wazuh_firing_stats_cache.unavailable_reason,
         "firing_stats_last_refresh": wazuh_firing_stats_cache.last_refresh,
+        # Echoes the request so the UI can confirm the scope it's showing.
+        # Empty string when the global view is being served.
+        "customer_code": customer_code or "",
     }
 
 
@@ -647,6 +818,7 @@ async def get_wazuh_rule_detail(rule_id: int) -> Optional[Dict[str, Any]]:
         # "indexer unreachable, no idea").
         "hits_7d": stats["hits_7d"],
         "hits_30d": stats["hits_30d"],
+        "last_seen": stats.get("last_seen"),
         "firing_stats_available": wazuh_firing_stats_cache.is_available,
         "firing_stats_unavailable_reason": wazuh_firing_stats_cache.unavailable_reason,
     }

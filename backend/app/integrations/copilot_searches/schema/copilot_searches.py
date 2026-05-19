@@ -523,6 +523,10 @@ class CatalogWazuhRuleRow(BaseModel):
     # ``firing_stats_available`` flag before treating 0 as "no hits".
     hits_7d: int = 0
     hits_30d: int = 0
+    # ISO timestamp of the most recent hit in the 30d window, or None when
+    # the rule hasn't fired / stats are unavailable. The UI renders this as
+    # relative time ("2 minutes ago").
+    last_seen: Optional[str] = None
 
 
 class CatalogWazuhRulesResponse(BaseModel):
@@ -547,6 +551,10 @@ class CatalogWazuhRulesResponse(BaseModel):
     firing_stats_available: bool = True
     firing_stats_unavailable_reason: Optional[str] = None
     firing_stats_last_refresh: Optional[datetime] = None
+    # Echoes the customer scope: empty string for the global view, customer
+    # code when scoped. Lets the UI display "Showing hits for customer X"
+    # and confirm the right slice was returned.
+    customer_code: str = ""
 
 
 class CatalogWazuhRuleCompliance(BaseModel):
@@ -590,6 +598,7 @@ class CatalogWazuhRuleDetailResponse(BaseModel):
     # Firing counts pulled from the Wazuh indexer aggregation cache.
     hits_7d: int = 0
     hits_30d: int = 0
+    last_seen: Optional[str] = None
     firing_stats_available: bool = True
     firing_stats_unavailable_reason: Optional[str] = None
 
@@ -618,6 +627,48 @@ class CatalogCoverageGapsResponse(BaseModel):
     covered_count: int = 0
     total_techniques: int = 0
     coverage_pct: float = 0.0
+
+
+# ---------------------------------------------------------------------------
+# Compliance pivot — Wazuh rules grouped by framework control ID
+# ---------------------------------------------------------------------------
+
+
+class CatalogComplianceFramework(BaseModel):
+    """One row in the framework selector dropdown."""
+
+    key: str  # API/URL value: pci_dss, hipaa, etc.
+    label: str  # Human-facing: "PCI DSS", "HIPAA", etc.
+
+
+class CatalogComplianceFrameworksResponse(BaseModel):
+    success: bool = True
+    message: str = "Frameworks listed successfully"
+    frameworks: list[CatalogComplianceFramework] = Field(default_factory=list)
+
+
+class CatalogComplianceGroupRow(BaseModel):
+    """One control bucket: e.g. PCI DSS 10.2.4 → 23 rules, 487 hits in 30d."""
+
+    control: str  # The control identifier itself, e.g. "10.2.4"
+    rule_count: int = 0
+    rule_ids: list[int] = Field(default_factory=list)
+    total_hits_30d: int = 0
+    total_hits_7d: int = 0
+
+
+class CatalogComplianceResponse(BaseModel):
+    """Compliance pivot for a single framework."""
+
+    success: bool = True
+    message: str = "Compliance pivot computed successfully"
+    framework: str  # echoes the request
+    framework_label: str
+    groups: list[CatalogComplianceGroupRow] = Field(default_factory=list)
+    control_count: int = 0
+    rules_with_compliance: int = 0  # rules carrying ≥1 control value for this framework
+    total_rules: int = 0  # total Wazuh rules in the cache (for "%" math)
+    firing_stats_available: bool = True
 
 
 # ---------------------------------------------------------------------------

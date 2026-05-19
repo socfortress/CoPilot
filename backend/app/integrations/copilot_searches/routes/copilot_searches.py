@@ -49,6 +49,8 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
 from app.integrations.copilot_searches.schema.copilot_searches import RefreshResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RuleDetailResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RuleListResponse
+from app.integrations.copilot_searches.schema.copilot_searches import CatalogComplianceFrameworksResponse
+from app.integrations.copilot_searches.schema.copilot_searches import CatalogComplianceResponse
 from app.integrations.copilot_searches.schema.copilot_searches import CatalogCoverageGapsResponse
 from app.integrations.copilot_searches.schema.copilot_searches import CatalogLogTestRequest
 from app.integrations.copilot_searches.schema.copilot_searches import CatalogLogTestResponse
@@ -83,6 +85,8 @@ from app.integrations.copilot_searches.services.copilot_searches import rules_ca
 from app.integrations.copilot_searches.services.detection_catalog import get_catalog_stats
 from app.integrations.copilot_searches.services.detection_catalog import get_story_detail
 from app.integrations.copilot_searches.services.detection_catalog import get_wazuh_rule_detail
+from app.integrations.copilot_searches.services.detection_catalog import list_compliance_frameworks
+from app.integrations.copilot_searches.services.detection_catalog import list_compliance_pivot
 from app.integrations.copilot_searches.services.detection_catalog import list_coverage_gaps
 from app.integrations.copilot_searches.services.detection_catalog import list_stories
 from app.integrations.copilot_searches.services.detection_catalog import list_wazuh_rules
@@ -958,9 +962,19 @@ async def get_catalog_story_detail_endpoint(story_name: str) -> CatalogStoryDeta
     ),
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def list_catalog_wazuh_rules_endpoint() -> CatalogWazuhRulesResponse:
+async def list_catalog_wazuh_rules_endpoint(
+    customer_code: Optional[str] = Query(
+        None,
+        description=(
+            "Optional customer code (e.g. ``00002``, ``lab``). When set, the "
+            "Hits 30d / Hits 7d / Last fired columns are scoped to this "
+            "customer's alerts only. When unset, the global firing-stats "
+            "cache is used."
+        ),
+    ),
+) -> CatalogWazuhRulesResponse:
     try:
-        payload = await list_wazuh_rules()
+        payload = await list_wazuh_rules(customer_code=customer_code)
         return CatalogWazuhRulesResponse(
             success=True,
             message=(
@@ -1028,6 +1042,64 @@ async def list_catalog_coverage_gaps_endpoint() -> CatalogCoverageGapsResponse:
         )
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Failed to compute coverage gaps: {str(e)}")
+
+
+# ---------------------------------------------------------------------------
+# Compliance pivot — Wazuh rules grouped by framework control ID
+#
+# Route ordering: static ``/catalog/compliance/frameworks`` MUST come before
+# the parameterized ``/catalog/compliance/{framework}`` so FastAPI doesn't
+# route the bare list path into the wildcard handler. (Same footgun as the
+# wazuh-rules routes — see CLAUDE.md "Things that bite".)
+# ---------------------------------------------------------------------------
+
+
+@copilot_searches_router.get(
+    "/catalog/compliance/frameworks",
+    response_model=CatalogComplianceFrameworksResponse,
+    description=(
+        "List the compliance frameworks the catalog can pivot Wazuh rules "
+        "by (PCI DSS, HIPAA, NIST 800-53, GDPR, TSC, GPG13). Drives the "
+        "framework selector dropdown on the Compliance tab."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def list_catalog_compliance_frameworks_endpoint() -> CatalogComplianceFrameworksResponse:
+    return CatalogComplianceFrameworksResponse(
+        success=True,
+        message="Frameworks listed successfully",
+        frameworks=list_compliance_frameworks(),
+    )
+
+
+@copilot_searches_router.get(
+    "/catalog/compliance/{framework}",
+    response_model=CatalogComplianceResponse,
+    description=(
+        "Group every Wazuh rule by its control IDs for the given framework "
+        "(e.g. ``pci_dss``, ``hipaa``, ``nist_800_53``). Each group reports "
+        "rule count + total firing hits — the answer to ``which rules cover "
+        "PCI DSS 10.2.4 and how active are they?`` in one round-trip. Rules "
+        "without any control values for the framework are excluded."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_catalog_compliance_endpoint(framework: str) -> CatalogComplianceResponse:
+    try:
+        payload = await list_compliance_pivot(framework)
+        return CatalogComplianceResponse(
+            success=True,
+            message=(
+                f"{payload['control_count']} control(s) across {payload['rules_with_compliance']} "
+                f"rule(s) tagged for {payload['framework_label']}"
+            ),
+            **payload,
+        )
+    except ValueError as ve:
+        # Unknown framework key — surface as 400, not 503.
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Failed to compute compliance pivot: {str(e)}")
 
 
 # ---------------------------------------------------------------------------

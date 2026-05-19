@@ -1,136 +1,174 @@
 <template>
 	<!--
 		Logtest panel. Sits above the Wazuh Rules table as a collapsible
-		card. Cleaner than its own tab — analysts who want to test a log
-		against the catalog stay in the same surface. Collapsed by default
-		so it's discoverable but doesn't push the table down on every load.
+		CardEntity — keeps the analyst's main workflow (browsing rules)
+		uncluttered while the test tool is one click away. Designed so the
+		collapsed header looks like a single CTA strip, not a fat empty card.
 	-->
-	<n-collapse :default-expanded-names="[]" arrow-placement="right">
-		<n-collapse-item title="Test a log line" name="logtest">
-			<template #header-extra>
-				<span class="text-tertiary text-xs">
-					Paste a log, see which Wazuh rule fires
-				</span>
-			</template>
+	<CardEntity size="small" hoverable :class="['logtest-card', { 'is-open': open }]">
+		<template #header>
+			<button type="button" class="logtest-toggle" @click="open = !open">
+				<div class="flex items-center gap-3">
+					<div class="logtest-icon">
+						<Icon name="carbon:test-tool" :size="16" />
+					</div>
+					<div class="flex flex-col items-start gap-0.5">
+						<div class="text-sm font-semibold">Test a log line</div>
+						<div class="text-tertiary text-xs">
+							Paste a raw log, see which Wazuh rule would fire (via Wazuh logtest)
+						</div>
+					</div>
+				</div>
+				<Icon
+					:name="open ? 'carbon:chevron-up' : 'carbon:chevron-down'"
+					:size="16"
+					class="text-tertiary"
+				/>
+			</button>
+		</template>
 
+		<template v-if="open" #default>
 			<div class="flex flex-col gap-3">
+				<!-- Recent tests strip. Persisted to localStorage so it survives
+				     reloads. Click any chip to restore the input + format. -->
+				<div v-if="history.length" class="flex flex-wrap items-center gap-2">
+					<span class="text-tertiary text-xs">Recent:</span>
+					<button
+						v-for="(item, idx) of history"
+						:key="idx"
+						type="button"
+						class="history-chip"
+						:title="item.event"
+						@click="restoreFromHistory(item)"
+					>
+						<span v-if="item.matched" class="history-rule-id">{{ item.rule_id ?? "?" }}</span>
+						<span v-else class="text-tertiary text-xs">no match</span>
+						<span class="history-preview">{{ truncate(item.event, 28) }}</span>
+					</button>
+					<button type="button" class="history-clear" @click="clearHistory">
+						Clear
+					</button>
+				</div>
+
 				<n-input
 					v-model:value="event"
 					type="textarea"
-					placeholder="Paste a single log line here — e.g. an auditd/syslog/Windows-EventChannel entry as the agent would forward it…"
+					placeholder="Paste a single log line — auditd / syslog / Windows EventChannel / Suricata eve.json etc."
 					:autosize="{ minRows: 3, maxRows: 8 }"
-					class="font-mono"
+					class="logtest-input"
 				/>
 
-				<div class="flex flex-wrap items-center gap-3">
+				<div class="flex flex-wrap items-center justify-between gap-3">
 					<div class="flex items-center gap-2">
 						<span class="text-tertiary text-xs">Format</span>
 						<n-select
 							v-model:value="logFormat"
 							:options="logFormatOptions"
 							size="small"
-							style="width: 160px"
+							style="min-width: 180px"
 						/>
 					</div>
 
-					<n-button
-						type="primary"
-						size="small"
-						:loading="testing"
-						:disabled="!event.trim()"
-						@click="runTest"
-					>
-						Test against Wazuh
-					</n-button>
-
-					<n-button v-if="result" size="small" quaternary @click="clearResult">
-						Clear
-					</n-button>
+					<div class="flex items-center gap-2">
+						<n-button v-if="result" size="small" quaternary @click="clearResult">
+							Clear result
+						</n-button>
+						<n-button
+							type="primary"
+							size="small"
+							:loading="testing"
+							:disabled="!event.trim()"
+							@click="runTest"
+						>
+							<template #icon><Icon name="carbon:play-filled-alt" /></template>
+							Test against Wazuh
+						</n-button>
+					</div>
 				</div>
 
-				<!-- Result panel. Three shapes:
-				     1. unavailable_reason set → render error alert
-				     2. matched=false → "No rule matched" + decoded preview if any
-				     3. matched=true → matched rule card with deep-link into the
-				        catalog modal for full detail -->
+				<!-- RESULT --------------------------------------------------- -->
 				<template v-if="result">
 					<n-alert v-if="result.unavailable_reason" type="error" :show-icon="true">
 						<template #header>Logtest failed</template>
 						{{ result.unavailable_reason }}
 					</n-alert>
 
-					<n-alert v-else-if="!result.matched" type="info" :show-icon="true">
-						<template #header>No rule matched</template>
-						Wazuh saw the log but no analyst-facing rule fired. This usually means the
-						decoder didn't recognize the format — try a different "Format" above, or
-						confirm the log shape matches what your agents actually forward.
-					</n-alert>
+					<CardEntity v-else-if="!result.matched" size="small" status="warning">
+						<template #default>
+							<div class="flex items-start gap-3">
+								<Icon name="carbon:information" :size="18" class="text-warning mt-0.5" />
+								<div class="flex flex-col gap-1">
+									<div class="text-sm font-semibold">No rule matched</div>
+									<div class="text-secondary text-xs leading-relaxed">
+										Wazuh saw the log but no analyst-facing rule fired. Try a different
+										"Format" — most agent-forwarded logs use <code>syslog</code>; pure
+										JSON payloads use <code>json</code>.
+									</div>
+								</div>
+							</div>
+						</template>
+					</CardEntity>
 
-					<div v-else-if="result.rule" class="match-card flex flex-col gap-3">
-						<div class="flex flex-wrap items-center gap-2">
-							<span class="font-semibold">Match:</span>
-							<n-tag type="success" :bordered="false">
-								Rule {{ result.rule.id }}
-							</n-tag>
-							<n-tag size="small" :bordered="false" :type="levelTagType(result.rule.level)">
-								Level {{ result.rule.level ?? "—" }}
-							</n-tag>
-							<n-button
-								v-if="result.rule.id !== null"
-								size="tiny"
-								quaternary
-								@click="emit('open-rule', result.rule.id!)"
-							>
-								<template #icon><Icon name="carbon:arrow-right" /></template>
-								View in catalog
-							</n-button>
-						</div>
+					<CardEntity v-else-if="result.rule" size="small" status="success">
+						<template #header>
+							<div class="flex flex-wrap items-center justify-between gap-2">
+								<div class="flex items-center gap-2">
+									<Icon name="carbon:checkmark-filled" :size="16" class="text-success" />
+									<span class="text-sm font-semibold uppercase tracking-wide">Match</span>
+									<Badge type="splitted" color="success">
+										<template #label>Rule</template>
+										<template #value>{{ result.rule.id }}</template>
+									</Badge>
+									<Badge type="splitted" :color="levelBadgeColor(result.rule.level)">
+										<template #label>Level</template>
+										<template #value>{{ result.rule.level ?? "—" }}</template>
+									</Badge>
+								</div>
+								<n-button
+									v-if="result.rule.id !== null"
+									size="tiny"
+									secondary
+									@click="emit('open-rule', result.rule.id!)"
+								>
+									<template #icon><Icon name="carbon:arrow-right" /></template>
+									View in catalog
+								</n-button>
+							</div>
+						</template>
 
-						<p class="text-secondary">{{ result.rule.description }}</p>
+						<template #default>
+							<div class="flex flex-col gap-3">
+								<div class="text-secondary text-sm leading-relaxed">
+									{{ result.rule.description }}
+								</div>
+								<div
+									v-if="result.rule.groups.length || result.rule.mitre.length || result.tactics.length"
+									class="flex flex-wrap gap-1.5"
+								>
+									<span v-for="g of result.rule.groups" :key="`g-${g}`" class="match-pill match-pill-group">
+										{{ g }}
+									</span>
+									<span v-for="t of result.rule.mitre" :key="`m-${t}`" class="match-pill match-pill-mitre">
+										{{ t }}
+									</span>
+									<span v-for="t of result.tactics" :key="`t-${t}`" class="match-pill match-pill-tactic">
+										{{ t.toUpperCase() }}
+									</span>
+								</div>
+							</div>
+						</template>
+					</CardEntity>
 
-						<div v-if="result.rule.groups.length" class="flex flex-wrap gap-1">
-							<n-tag
-								v-for="g of result.rule.groups"
-								:key="g"
-								size="tiny"
-								type="info"
-								:bordered="false"
-							>
-								{{ g }}
-							</n-tag>
-						</div>
-
-						<div
-							v-if="result.rule.mitre.length || result.tactics.length"
-							class="flex flex-wrap gap-1"
-						>
-							<n-tag v-for="t of result.rule.mitre" :key="t" size="tiny" :bordered="false">
-								{{ t }}
-							</n-tag>
-							<n-tag
-								v-for="t of result.tactics"
-								:key="t"
-								size="tiny"
-								type="warning"
-								:bordered="false"
-							>
-								{{ t }}
-							</n-tag>
-						</div>
-					</div>
-
-					<!-- Decoded alert envelope, collapsible — useful for debugging
-					     when an analyst expected a different rule and wants to see
-					     what Wazuh actually decoded. -->
-					<n-collapse v-if="result.alert">
+					<!-- Decoded alert envelope, optional collapsible block. -->
+					<n-collapse v-if="result.alert" arrow-placement="right">
 						<n-collapse-item title="Decoded alert envelope" name="alert">
 							<pre class="alert-envelope"><code>{{ formatAlert(result.alert) }}</code></pre>
 						</n-collapse-item>
 					</n-collapse>
 				</template>
 			</div>
-		</n-collapse-item>
-	</n-collapse>
+		</template>
+	</CardEntity>
 </template>
 
 <script setup lang="ts">
@@ -142,26 +180,36 @@ import {
 	NCollapseItem,
 	NInput,
 	NSelect,
-	NTag,
 	useMessage
 } from "naive-ui"
-import { ref } from "vue"
+import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 
-// Emits a "open-rule" event when the user clicks "View in catalog" on a
-// matched rule — parent (WazuhRulesIndex) handles opening the modal so we
-// don't duplicate the modal-mounting logic in two places.
-const emit = defineEmits<{
-	(e: "open-rule", ruleId: number): void
-}>()
+const HISTORY_STORAGE_KEY = "detectionCatalog.logtest.history"
+const HISTORY_MAX = 5
+
+interface LogTestHistoryItem {
+	event: string
+	log_format: string
+	matched: boolean
+	rule_id: number | null
+	rule_description: string
+	timestamp: string
+}
+
+const emit = defineEmits<{ (e: "open-rule", ruleId: number): void }>()
 
 const message = useMessage()
 
+const open = ref(false)
 const event = ref("")
-// Wazuh's most common log formats — covers ~95% of what analysts paste.
-// "syslog" is the safe default and works for most agent-forwarded logs.
 const logFormat = ref("syslog")
+
+// Wazuh's most common log formats. Covers ~95% of analyst pastes — full list
+// would have ~30 entries and feel overwhelming for a one-off test.
 const logFormatOptions = [
 	{ label: "syslog", value: "syslog" },
 	{ label: "json", value: "json" },
@@ -177,9 +225,68 @@ const logFormatOptions = [
 
 const testing = ref(false)
 const result = ref<CatalogLogTestResponse | null>(null)
+const history = ref<LogTestHistoryItem[]>([])
 
 function clearResult() {
 	result.value = null
+}
+
+function loadHistory() {
+	try {
+		const raw = localStorage.getItem(HISTORY_STORAGE_KEY)
+		if (!raw) return
+		const parsed = JSON.parse(raw)
+		if (Array.isArray(parsed)) {
+			history.value = parsed
+				.filter(item => typeof item?.event === "string" && typeof item?.log_format === "string")
+				.slice(0, HISTORY_MAX)
+		}
+	} catch {
+		/* localStorage corrupted or disabled — start fresh, non-fatal. */
+	}
+}
+
+function persistHistory() {
+	try {
+		localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history.value))
+	} catch {
+		/* QuotaExceeded / disabled — history is best-effort. */
+	}
+}
+
+function recordInHistory(res: CatalogLogTestResponse) {
+	const item: LogTestHistoryItem = {
+		event: event.value,
+		log_format: logFormat.value,
+		matched: res.matched,
+		rule_id: res.rule?.id ?? null,
+		rule_description: res.rule?.description ?? "",
+		timestamp: new Date().toISOString()
+	}
+	// De-dupe consecutive identical pastes.
+	const dup = history.value[0]
+	if (dup && dup.event === item.event && dup.log_format === item.log_format) {
+		history.value[0] = item
+	} else {
+		history.value = [item, ...history.value].slice(0, HISTORY_MAX)
+	}
+	persistHistory()
+}
+
+function restoreFromHistory(item: LogTestHistoryItem) {
+	event.value = item.event
+	logFormat.value = item.log_format
+	result.value = null
+}
+
+function clearHistory() {
+	history.value = []
+	persistHistory()
+}
+
+function truncate(s: string, n: number): string {
+	if (s.length <= n) return s
+	return s.slice(0, n - 1) + "…"
 }
 
 function runTest() {
@@ -194,6 +301,7 @@ function runTest() {
 		.then(res => {
 			if (res.data?.success) {
 				result.value = res.data
+				recordInHistory(res.data)
 			} else {
 				message.warning(res.data?.message || "Logtest returned an unexpected response")
 			}
@@ -207,33 +315,143 @@ function runTest() {
 		})
 }
 
-// Same level → tag colour mapping as WazuhRulesIndex — keep the visual
-// consistent across surfaces.
-function levelTagType(level: number | null): "default" | "info" | "warning" | "error" | "success" {
-	if (level === null || level === undefined) return "default"
-	if (level >= 12) return "error"
+function levelBadgeColor(level: number | null): "danger" | "warning" | "primary" | "success" | undefined {
+	if (level === null || level === undefined) return undefined
+	if (level >= 12) return "danger"
 	if (level >= 7) return "warning"
-	if (level >= 3) return "info"
-	return "default"
+	if (level >= 3) return "primary"
+	return "success"
 }
 
 function formatAlert(alert: Record<string, unknown>): string {
-	// Pretty-print 2-space indented JSON; matches what most operators see
-	// in their SIEM dashboards.
 	try {
 		return JSON.stringify(alert, null, 2)
 	} catch {
 		return String(alert)
 	}
 }
+
+onBeforeMount(loadHistory)
 </script>
 
 <style scoped lang="scss">
-.match-card {
-	padding: 12px 14px;
-	background: rgba(var(--primary-color-rgb) / 0.06);
-	border: 1px solid rgba(var(--primary-color-rgb) / 0.2);
-	border-radius: 6px;
+.logtest-card {
+	transition: border-color 0.2s var(--bezier-ease);
+
+	&.is-open {
+		border-color: rgba(var(--primary-color-rgb) / 0.3);
+	}
+}
+
+.logtest-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	padding: 4px 2px;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	color: var(--fg-default-color);
+}
+
+.logtest-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	background-color: rgba(var(--primary-color-rgb) / 0.1);
+	color: var(--primary-color);
+	flex-shrink: 0;
+}
+
+.logtest-input {
+	:deep(textarea) {
+		font-family: var(--font-family-mono);
+		font-size: 0.78rem;
+	}
+}
+
+/* History strip chips. Hover state mirrors the filter-chip pattern from
+   WazuhRulesIndex so the interactive vocabulary is consistent. */
+.history-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 8px;
+	font-size: 0.7rem;
+	color: var(--fg-default-color);
+	background-color: var(--bg-secondary-color);
+	border: 1px solid var(--border-color);
+	border-radius: 999px;
+	cursor: pointer;
+	transition: all 0.15s var(--bezier-ease);
+
+	&:hover {
+		border-color: rgba(var(--primary-color-rgb) / 0.4);
+		background-color: rgba(var(--primary-color-rgb) / 0.05);
+	}
+}
+
+.history-rule-id {
+	font-family: var(--font-family-mono);
+	font-weight: 600;
+	color: var(--primary-color);
+}
+
+.history-preview {
+	max-width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--fg-secondary-color);
+	font-family: var(--font-family-mono);
+}
+
+.history-clear {
+	background: transparent;
+	border: none;
+	color: var(--fg-secondary-color);
+	font-size: 0.7rem;
+	cursor: pointer;
+	padding: 3px 6px;
+
+	&:hover {
+		color: var(--fg-default-color);
+		text-decoration: underline;
+	}
+}
+
+/* Match-card chips - mirror the modal's groups/mitre/tactic pills so the
+   logtest result feels like a preview of the catalog modal. */
+.match-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 3px 10px;
+	font-size: 0.7rem;
+	font-weight: 500;
+	border-radius: 999px;
+	border: 1px solid transparent;
+}
+.match-pill-group {
+	color: var(--primary-color);
+	background-color: rgba(var(--primary-color-rgb) / 0.08);
+	border-color: rgba(var(--primary-color-rgb) / 0.18);
+}
+.match-pill-mitre {
+	color: var(--fg-default-color);
+	background-color: var(--bg-secondary-color);
+	border-color: var(--border-color);
+	font-family: var(--font-family-mono);
+}
+.match-pill-tactic {
+	color: var(--warning-color);
+	background-color: rgba(var(--warning-color-rgb) / 0.1);
+	border-color: rgba(var(--warning-color-rgb) / 0.25);
+	font-weight: 600;
+	letter-spacing: 0.04em;
 }
 
 .alert-envelope {
@@ -242,14 +460,13 @@ function formatAlert(alert: Record<string, unknown>): string {
 	max-height: 300px;
 	overflow: auto;
 	font-family: var(--font-family-mono);
-	font-size: 0.75rem;
+	font-size: 0.72rem;
 	line-height: 1.45;
 	color: var(--fg-default-color);
-	background: var(--bg-secondary-color);
+	background-color: var(--bg-secondary-color);
 	border: 1px solid var(--border-color);
 	border-radius: 6px;
 	white-space: pre;
-	word-break: normal;
 }
 .alert-envelope code {
 	display: block;

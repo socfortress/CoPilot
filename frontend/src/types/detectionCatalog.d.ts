@@ -77,6 +77,9 @@ export interface CatalogWazuhRuleRow {
 	mitre: string[]
 	hits_7d: number
 	hits_30d: number
+	// ISO timestamp of the rule's most recent firing in the 30d window,
+	// or null when the rule hasn't fired / firing stats are unavailable.
+	last_seen: string | null
 }
 
 export interface CatalogWazuhRulesResponse {
@@ -93,6 +96,8 @@ export interface CatalogWazuhRulesResponse {
 	firing_stats_available: boolean
 	firing_stats_unavailable_reason: string | null
 	firing_stats_last_refresh: string | null
+	// Echoes the customer scope: "" for global, customer code when scoped.
+	customer_code: string
 }
 
 export interface CatalogWazuhRuleCompliance {
@@ -128,6 +133,7 @@ export interface CatalogWazuhRuleDetailResponse {
 	// 0 only when firing_stats_available is true" semantics.
 	hits_7d: number
 	hits_30d: number
+	last_seen: string | null
 	firing_stats_available: boolean
 	firing_stats_unavailable_reason: string | null
 }
@@ -184,4 +190,39 @@ export interface CatalogLogTestResponse {
 	tactics: string[]
 	alert: Record<string, unknown> | null
 	unavailable_reason: string | null
+}
+
+// ---------------------------------------------------------------------------
+// Compliance pivot tab
+// ---------------------------------------------------------------------------
+
+export interface CatalogComplianceFramework {
+	key: string // API value: pci_dss, hipaa, etc.
+	label: string // UI: "PCI DSS", "HIPAA"
+}
+
+export interface CatalogComplianceFrameworksResponse {
+	success: boolean
+	message: string
+	frameworks: CatalogComplianceFramework[]
+}
+
+export interface CatalogComplianceGroupRow {
+	control: string
+	rule_count: number
+	rule_ids: number[]
+	total_hits_30d: number
+	total_hits_7d: number
+}
+
+export interface CatalogComplianceResponse {
+	success: boolean
+	message: string
+	framework: string
+	framework_label: string
+	groups: CatalogComplianceGroupRow[]
+	control_count: number
+	rules_with_compliance: number
+	total_rules: number
+	firing_stats_available: boolean
 }

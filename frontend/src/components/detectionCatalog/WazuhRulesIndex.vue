@@ -1,65 +1,86 @@
 <template>
-	<div class="wazuh-rules-index flex flex-col gap-3">
+	<div class="wazuh-rules-index flex flex-col gap-4">
 		<!-- Logtest panel — collapsible. Above the table so analysts find it
 		     when they're looking at the rules; collapsed by default so it
 		     doesn't push the table down for routine browsing. -->
 		<WazuhLogTest @open-rule="openRuleById" />
 
-		<div class="flex flex-wrap items-center justify-between gap-3">
-			<h3>Wazuh Rules</h3>
-			<div class="text-tertiary text-xs">
-				<strong>{{ filteredRules.length }}</strong>
-				/ {{ rules.length }}
+		<!-- HEADER ROW: title/blurb + toolbar (filter chips + counts) -->
+		<div class="flex flex-wrap items-end justify-between gap-3">
+			<div class="flex flex-col gap-1">
+				<h3 class="m-0 text-lg font-semibold">Wazuh Rules</h3>
+				<p class="text-secondary m-0 text-sm">
+					Every rule shipped by the Wazuh Manager. Sort by hits to spot noisy rules,
+					switch to "Dead" to find rules that never fire, or filter by customer to
+					see the picture for a specific tenant.
+				</p>
 			</div>
+			<Badge type="splitted" color="primary">
+				<template #label>Showing</template>
+				<template #value>{{ filteredRules.length }} / {{ rules.length }}</template>
+			</Badge>
 		</div>
 
-		<n-input
-			v-model:value="filter"
-			size="small"
-			placeholder="Filter by ID, description, group, MITRE ID, file…"
-			clearable
-		>
-			<template #prefix><Icon name="carbon:search" /></template>
-		</n-input>
+		<!-- TOOLBAR: search + customer scope -->
+		<div class="flex flex-wrap items-center gap-2">
+			<n-input
+				v-model:value="filter"
+				size="medium"
+				placeholder="Filter by ID, description, group, MITRE ID, or filename…"
+				clearable
+				class="flex-1"
+				style="min-width: 240px"
+			>
+				<template #prefix><Icon name="carbon:search" /></template>
+			</n-input>
 
-		<!-- Quick filter chips. Only shown when firing stats are available —
-		     these slice on hit counts, which we don't have when the indexer
-		     is unreachable. -->
-		<div v-if="firingStatsAvailable" class="flex flex-wrap items-center gap-2">
-			<span class="text-tertiary text-xs">Quick filters:</span>
-			<n-tag
-				:type="activeChip === 'all' ? 'primary' : 'default'"
-				:bordered="false"
-				size="small"
-				class="cursor-pointer"
+			<n-select
+				v-if="firingStatsAvailable"
+				v-model:value="customerScope"
+				:options="customerOptions"
+				:loading="loadingCustomers || refetchingForCustomer"
+				size="medium"
+				style="min-width: 220px"
+				:consistent-menu-width="false"
+				@update:value="onCustomerChange"
+			/>
+		</div>
+
+		<!-- QUICK FILTER CHIPS - segmented style with hit-count summaries -->
+		<div v-if="firingStatsAvailable" class="filter-bar">
+			<button
+				type="button"
+				class="filter-chip"
+				:class="{ active: activeChip === 'all' }"
 				@click="activeChip = 'all'"
 			>
-				All
-			</n-tag>
-			<n-tag
-				:type="activeChip === 'noisy' ? 'primary' : 'default'"
-				:bordered="false"
-				size="small"
-				class="cursor-pointer"
+				<Icon name="carbon:list" :size="13" />
+				<span>All</span>
+				<span class="chip-count">{{ rules.length }}</span>
+			</button>
+			<button
+				type="button"
+				class="filter-chip noisy"
+				:class="{ active: activeChip === 'noisy' }"
 				@click="activeChip = 'noisy'"
 			>
-				Top noisy (50)
-			</n-tag>
-			<n-tag
-				:type="activeChip === 'dead' ? 'primary' : 'default'"
-				:bordered="false"
-				size="small"
-				class="cursor-pointer"
+				<Icon name="carbon:flash" :size="13" />
+				<span>Top noisy</span>
+				<span class="chip-count">50</span>
+			</button>
+			<button
+				type="button"
+				class="filter-chip dead"
+				:class="{ active: activeChip === 'dead' }"
 				@click="activeChip = 'dead'"
 			>
-				Dead (0 hits 30d)
-			</n-tag>
+				<Icon name="carbon:warning" :size="13" />
+				<span>Dead (level ≥7)</span>
+				<span class="chip-count">{{ deadCount }}</span>
+			</button>
 		</div>
 
-		<!-- Unavailable state: Wazuh Manager not reachable / not configured.
-		     We DON'T render the table here — empty rows below an unhelpful
-		     header look like a bug. Show the reason inline so the operator
-		     knows it's a wiring problem, not a missing-data one. -->
+		<!-- Unavailable state: Wazuh Manager not reachable / not configured. -->
 		<n-alert v-if="!loading && !available" type="warning" :show-icon="true">
 			<template #header>Wazuh Manager not available</template>
 			{{ unavailableReason || "Could not reach the Wazuh Manager to load rules." }}
@@ -73,17 +94,15 @@
 				size="small"
 				:row-props="rowProps"
 				:pagination="pagination"
-				class="wazuh-rules-table"
+				class="catalog-table wazuh-rules-table"
 			/>
 		</n-spin>
 
-		<!-- Detail modal. Mounted at the index level (not inside the row click
-		     handler) so swapping rules is one prop change instead of a
-		     teardown+rebuild. -->
+		<!-- Detail modal -->
 		<n-modal
 			v-model:show="showDetailModal"
 			preset="card"
-			:style="{ maxWidth: 'min(820px, 92vw)', minHeight: 'min(540px, 90vh)' }"
+			:style="{ maxWidth: 'min(880px, 94vw)', minHeight: 'min(600px, 90vh)' }"
 			:title="modalTitle"
 			:bordered="false"
 			segmented
@@ -94,11 +113,12 @@
 </template>
 
 <script setup lang="tsx">
-import type { DataTableColumns } from "naive-ui"
+import type { DataTableColumns, SelectOption } from "naive-ui"
 import type { CatalogWazuhRuleRow } from "@/types/detectionCatalog.d"
-import { NAlert, NDataTable, NInput, NModal, NSpin, NTag, useMessage } from "naive-ui"
+import { NAlert, NDataTable, NInput, NModal, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import WazuhLogTest from "./WazuhLogTest.vue"
 import WazuhRuleDetail from "./WazuhRuleDetail.vue"
@@ -108,40 +128,35 @@ const rules = ref<CatalogWazuhRuleRow[]>([])
 const loading = ref(false)
 const filter = ref("")
 
-// Availability state from the envelope. When the Wazuh Manager is down we
-// show an inline alert instead of an empty table.
 const available = ref(true)
 const unavailableReason = ref<string | null>(null)
-
-// Firing-stats availability is separate — the indexer can be down even when
-// the manager is up. When stats are unavailable we hide the Hits column AND
-// the quick-filter chips (filtering "Top noisy" makes no sense if every
-// row shows 0 hits).
 const firingStatsAvailable = ref(true)
 
-// Quick-filter chip state. "all" = no chip filter, "noisy" = top 50 by
-// hits_30d desc, "dead" = hits_30d === 0.
 type ChipKey = "all" | "noisy" | "dead"
 const activeChip = ref<ChipKey>("all")
 
-// Detail modal state. modalRuleId is the integer rule ID; modalTitle is
-// computed off the row so we can show "Rule 31100 — sshd: brute force"
-// without a second fetch.
+const customerScope = ref<string>("")
+const customerOptions = ref<SelectOption[]>([{ label: "All customers", value: "" }])
+const loadingCustomers = ref(false)
+const refetchingForCustomer = ref(false)
+
 const showDetailModal = ref(false)
 const modalRuleId = ref<number | null>(null)
 const modalTitle = ref("Wazuh Rule")
 
-// Naive UI pagination — pageSize 50 is comfortable for the ~3–5k corpus.
-// `showSizePicker` lets analysts bump it up when they're hunting for
-// something specific.
 const pagination = {
 	pageSize: 50,
 	pageSizes: [25, 50, 100, 200],
 	showSizePicker: true
 }
 
+// Count of "dead" rules for the chip badge — keeps the analyst informed of
+// how many candidates the filter would surface before clicking.
+const deadCount = computed(
+	() => rules.value.filter(r => r.hits_30d === 0 && (r.level ?? 0) >= 7).length
+)
+
 const filteredRules = computed<CatalogWazuhRuleRow[]>(() => {
-	// Step 1: text filter (always applied)
 	const q = filter.value.trim().toLowerCase()
 	const textFiltered = !q
 		? rules.value
@@ -159,16 +174,11 @@ const filteredRules = computed<CatalogWazuhRuleRow[]>(() => {
 					.includes(q)
 			)
 
-	// Step 2: chip filter (applied on top of text filter)
 	if (activeChip.value === "noisy") {
-		// Top 50 by hits_30d desc. We sort a copy so we don't mutate the
-		// cached array reactively (would re-trigger this computed forever).
-		return [...textFiltered]
-			.sort((a, b) => b.hits_30d - a.hits_30d)
-			.slice(0, 50)
+		return [...textFiltered].sort((a, b) => b.hits_30d - a.hits_30d).slice(0, 50)
 	}
 	if (activeChip.value === "dead") {
-		return textFiltered.filter(r => r.hits_30d === 0)
+		return textFiltered.filter(r => r.hits_30d === 0 && (r.level ?? 0) >= 7)
 	}
 	return textFiltered
 })
@@ -180,11 +190,6 @@ function openRuleDetail(row: CatalogWazuhRuleRow) {
 	showDetailModal.value = true
 }
 
-// Open by ID — used when the logtest panel emits "View in catalog" on a
-// matched rule. We look up the row in the cached list to get the description
-// for the modal title; if the rule isn't in the cache (rare — usually a
-// custom rule on the live Wazuh that isn't yet in our cache) we still open
-// the modal which will fetch the detail by ID and show what it can.
 function openRuleById(ruleId: number) {
 	const row = rules.value.find(r => r.id === ruleId)
 	modalRuleId.value = ruleId
@@ -194,8 +199,6 @@ function openRuleById(ruleId: number) {
 	showDetailModal.value = true
 }
 
-// Row-click = open detail. Same pattern as the Stories table — the entire
-// row is the affordance.
 function rowProps(row: CatalogWazuhRuleRow) {
 	return {
 		style: "cursor: pointer;",
@@ -203,35 +206,72 @@ function rowProps(row: CatalogWazuhRuleRow) {
 	}
 }
 
-// Level colour — Wazuh's severity scale runs 0-15. We bucket it into the
-// three NTag colours we already use elsewhere for severity, so the visual
-// matches the rest of the SOC analyst UI without inventing a new palette.
-function levelTagType(level: number | null): "default" | "info" | "warning" | "error" {
-	if (level === null || level === undefined) return "default"
-	if (level >= 12) return "error"
-	if (level >= 7) return "warning"
-	if (level >= 3) return "info"
-	return "default"
+function levelTagClass(level: number | null): string {
+	if (level === null || level === undefined) return "level-pill level-none"
+	if (level >= 12) return "level-pill level-critical"
+	if (level >= 7) return "level-pill level-warning"
+	if (level >= 3) return "level-pill level-info"
+	return "level-pill level-low"
+}
+
+function loadCustomers() {
+	loadingCustomers.value = true
+	Api.customers
+		.getCustomers()
+		.then(res => {
+			const list = res.data?.customers || []
+			customerOptions.value = [
+				{ label: "All customers", value: "" },
+				...list.map(c => ({
+					label: c.customer_name ? `${c.customer_name} (${c.customer_code})` : c.customer_code,
+					value: c.customer_code
+				}))
+			]
+		})
+		.catch(() => {
+			/* Non-fatal — keep just "All customers" option. */
+		})
+		.finally(() => {
+			loadingCustomers.value = false
+		})
+}
+
+function onCustomerChange(value: string) {
+	customerScope.value = value
+	refetchingForCustomer.value = true
+	load(true)
 }
 
 // Hits column — only included when the indexer is reachable. Rendering "0"
-// for every row when stats are unavailable would mislead analysts into
-// thinking nothing has fired. Hiding it makes the absence visible.
+// everywhere when stats are unavailable would mislead, so we hide the column
+// entirely.
 const hitsColumn = computed(() => ({
-	title: "Hits 30d",
+	title: "Activity",
 	key: "hits_30d",
-	width: 110,
+	width: 140,
 	sorter: (a: CatalogWazuhRuleRow, b: CatalogWazuhRuleRow) => a.hits_30d - b.hits_30d,
-	defaultSortOrder: false as const,
 	render: (row: CatalogWazuhRuleRow) => {
 		if (row.hits_30d === 0) {
-			return <span class="text-tertiary text-xs">0</span>
+			return (
+				<div class="flex items-center gap-1.5">
+					<span class="dot dot-muted"></span>
+					<span class="text-tertiary text-xs">No hits 30d</span>
+				</div>
+			)
 		}
-		// Show 30d total + 7d sub-count so analysts can spot recent spikes.
+		// Color the indicator dot by intensity bucket so analysts can scan
+		// the column without reading numbers.
+		const dotClass =
+			row.hits_30d >= 10000 ? "dot-danger" :
+			row.hits_30d >= 1000 ? "dot-warning" :
+			row.hits_30d >= 100 ? "dot-info" : "dot-success"
 		return (
-			<div class="flex flex-col">
-				<span class="font-mono text-xs">{row.hits_30d.toLocaleString()}</span>
-				<span class="text-tertiary text-xs">{row.hits_7d.toLocaleString()} in 7d</span>
+			<div class="flex items-center gap-2">
+				<span class={`dot ${dotClass}`}></span>
+				<div class="flex flex-col leading-tight">
+					<span class="font-mono text-xs font-medium">{row.hits_30d.toLocaleString()}</span>
+					<span class="text-tertiary text-xs">{row.hits_7d.toLocaleString()} in 7d</span>
+				</div>
 			</div>
 		)
 	}
@@ -242,9 +282,9 @@ const columns = computed<DataTableColumns<CatalogWazuhRuleRow>>(() => {
 		{
 			title: "ID",
 			key: "id",
-			width: 90,
+			width: 100,
 			sorter: (a, b) => (a.id ?? 0) - (b.id ?? 0),
-			render: row => <span class="font-mono text-xs">{row.id ?? "—"}</span>
+			render: row => <span class="font-mono text-xs text-secondary">{row.id ?? "—"}</span>
 		},
 		{
 			title: "Level",
@@ -252,9 +292,7 @@ const columns = computed<DataTableColumns<CatalogWazuhRuleRow>>(() => {
 			width: 90,
 			sorter: (a, b) => (a.level ?? 0) - (b.level ?? 0),
 			render: row => (
-				<NTag size="small" bordered={false} type={levelTagType(row.level)}>
-					{row.level ?? "—"}
-				</NTag>
+				<span class={levelTagClass(row.level)}>{row.level ?? "—"}</span>
 			)
 		},
 		{
@@ -262,8 +300,8 @@ const columns = computed<DataTableColumns<CatalogWazuhRuleRow>>(() => {
 			key: "description",
 			render: row =>
 				row.description
-					? <span>{row.description}</span>
-					: <em class="text-tertiary">(no description)</em>
+					? <span class="leading-snug">{row.description}</span>
+					: <span class="text-tertiary text-xs">(no description)</span>
 		},
 		{
 			title: "Groups",
@@ -273,14 +311,14 @@ const columns = computed<DataTableColumns<CatalogWazuhRuleRow>>(() => {
 					? (
 						<div class="flex flex-wrap gap-1">
 							{row.groups.slice(0, 3).map(g => (
-								<NTag key={g} size="tiny" type="info" bordered={false}>{g}</NTag>
+								<span key={g} class="chip chip-info">{g}</span>
 							))}
 							{row.groups.length > 3 && (
-								<NTag size="tiny" bordered={false}>+{row.groups.length - 3}</NTag>
+								<span class="chip chip-muted">+{row.groups.length - 3}</span>
 							)}
 						</div>
 					)
-					: <em class="text-tertiary">—</em>
+					: <span class="text-tertiary text-xs">—</span>
 		},
 		{
 			title: "MITRE",
@@ -291,32 +329,28 @@ const columns = computed<DataTableColumns<CatalogWazuhRuleRow>>(() => {
 					? (
 						<div class="flex flex-wrap gap-1">
 							{row.mitre.map(t => (
-								<NTag key={t} size="tiny" bordered={false}>{t}</NTag>
+								<span key={t} class="chip chip-mitre">{t}</span>
 							))}
 						</div>
 					)
-					: <em class="text-tertiary">—</em>
+					: <span class="text-tertiary text-xs">—</span>
 		},
 		{
 			title: "File",
 			key: "filename",
-			width: 220,
+			width: 200,
 			ellipsis: { tooltip: true },
-			render: row => <span class="font-mono text-xs">{row.filename || "—"}</span>
+			render: row => <span class="font-mono text-xs text-tertiary">{row.filename || "—"}</span>
 		}
 	]
-	// Append the Hits column only when firing stats are available — see
-	// hitsColumn definition above for why we hide it instead of zeroing.
-	if (firingStatsAvailable.value) {
-		cols.push(hitsColumn.value)
-	}
+	if (firingStatsAvailable.value) cols.push(hitsColumn.value)
 	return cols
 })
 
-function load() {
-	loading.value = true
+function load(isCustomerChange = false) {
+	if (!isCustomerChange) loading.value = true
 	Api.detectionCatalog
-		.listWazuhRules()
+		.listWazuhRules(customerScope.value || undefined)
 		.then(res => {
 			if (res.data?.success) {
 				rules.value = res.data.rules || []
@@ -332,14 +366,173 @@ function load() {
 		})
 		.finally(() => {
 			loading.value = false
+			refetchingForCustomer.value = false
 		})
 }
 
-onBeforeMount(load)
+onBeforeMount(() => {
+	loadCustomers()
+	load()
+})
 </script>
 
 <style scoped lang="scss">
-.wazuh-rules-table :deep(.n-data-table-tr:hover) {
-	background: rgba(var(--primary-color-rgb) / 0.04);
+/* Filter bar with chip-style toggle buttons. Mimics segmented controls
+   without overcrowding — each chip has its own accent color so analysts
+   know what flavor of filter they're picking. */
+.filter-bar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.filter-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 12px;
+	font-size: 0.78rem;
+	font-weight: 500;
+	color: var(--fg-secondary-color);
+	background-color: var(--bg-secondary-color);
+	border: 1px solid var(--border-color);
+	border-radius: 999px;
+	cursor: pointer;
+	transition: all 0.15s var(--bezier-ease);
+
+	&:hover:not(.active) {
+		border-color: rgba(var(--primary-color-rgb) / 0.3);
+		color: var(--fg-default-color);
+	}
+
+	&.active {
+		color: var(--primary-color);
+		background-color: rgba(var(--primary-color-rgb) / 0.08);
+		border-color: rgba(var(--primary-color-rgb) / 0.35);
+	}
+
+	&.noisy.active {
+		color: var(--warning-color);
+		background-color: rgba(var(--warning-color-rgb) / 0.1);
+		border-color: rgba(var(--warning-color-rgb) / 0.35);
+	}
+
+	&.dead.active {
+		color: var(--error-color);
+		background-color: rgba(var(--error-color-rgb) / 0.08);
+		border-color: rgba(var(--error-color-rgb) / 0.3);
+	}
+
+	.chip-count {
+		font-family: var(--font-family-mono);
+		font-size: 0.7rem;
+		opacity: 0.7;
+		margin-left: 2px;
+	}
+}
+
+/* Level pill — small numeric badge with severity coloring. Replaces the
+   plain NTag with a uniform-width, monospace circle-ish for easier eye
+   scanning down the Level column. */
+:deep(.level-pill) {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 28px;
+	height: 22px;
+	padding: 0 6px;
+	font-size: 0.78rem;
+	font-weight: 600;
+	font-family: var(--font-family-mono);
+	border-radius: 5px;
+	border: 1px solid transparent;
+}
+:deep(.level-pill.level-none) {
+	color: var(--fg-secondary-color);
+	opacity: 0.6;
+	background-color: var(--bg-secondary-color);
+	border-color: var(--border-color);
+}
+:deep(.level-pill.level-low) {
+	color: var(--fg-secondary-color);
+	background-color: var(--bg-secondary-color);
+	border-color: var(--border-color);
+}
+:deep(.level-pill.level-info) {
+	color: var(--primary-color);
+	background-color: rgba(var(--primary-color-rgb) / 0.1);
+	border-color: rgba(var(--primary-color-rgb) / 0.25);
+}
+:deep(.level-pill.level-warning) {
+	color: var(--warning-color);
+	background-color: rgba(var(--warning-color-rgb) / 0.12);
+	border-color: rgba(var(--warning-color-rgb) / 0.3);
+}
+:deep(.level-pill.level-critical) {
+	color: var(--error-color);
+	background-color: rgba(var(--error-color-rgb) / 0.1);
+	border-color: rgba(var(--error-color-rgb) / 0.3);
+}
+
+/* Activity-column indicator dot — small color-coded dot left of the hit
+   counts. Lets analysts spot hot/cold rules without reading numbers. */
+:deep(.dot) {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+:deep(.dot-muted)   { background-color: var(--border-color); }
+:deep(.dot-success) { background-color: var(--success-color); }
+:deep(.dot-info)    { background-color: var(--primary-color); }
+:deep(.dot-warning) { background-color: var(--warning-color); }
+:deep(.dot-danger)  { background-color: var(--error-color); }
+
+/* Catalog table base — same rules as StoriesIndex. */
+.catalog-table :deep(.n-data-table-th) {
+	background-color: var(--bg-secondary-color);
+	font-weight: 600;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--fg-secondary-color);
+}
+.catalog-table :deep(.n-data-table-tr) {
+	transition: background-color 0.15s var(--bezier-ease);
+}
+.catalog-table :deep(.n-data-table-tr:hover) {
+	background-color: rgba(var(--primary-color-rgb) / 0.04);
+}
+.catalog-table :deep(.n-data-table-td) {
+	padding: 10px 12px;
+}
+
+:deep(.chip) {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 8px;
+	font-size: 0.72rem;
+	font-weight: 500;
+	line-height: 1.4;
+	border-radius: 6px;
+	border: 1px solid transparent;
+	white-space: nowrap;
+}
+:deep(.chip-info) {
+	color: var(--primary-color);
+	background-color: rgba(var(--primary-color-rgb) / 0.08);
+	border-color: rgba(var(--primary-color-rgb) / 0.18);
+}
+:deep(.chip-mitre) {
+	color: var(--fg-default-color);
+	background-color: var(--bg-secondary-color);
+	border-color: var(--border-color);
+	font-family: var(--font-family-mono);
+}
+:deep(.chip-muted) {
+	color: var(--fg-secondary-color);
+	background-color: rgba(var(--border-color-rgb) / 0.15);
+	border-color: var(--border-color);
 }
 </style>
