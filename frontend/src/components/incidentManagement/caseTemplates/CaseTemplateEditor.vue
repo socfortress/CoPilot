@@ -195,7 +195,7 @@ interface FormModel {
 }
 
 const props = defineProps<{
-	template: CaseTemplate | null
+	template?: CaseTemplate | null
 }>()
 
 const emit = defineEmits<{
@@ -245,7 +245,7 @@ function nextKey() {
 	return `t${Date.now()}-${keyCounter}`
 }
 
-function loadFromTemplate(t: CaseTemplate | null) {
+function loadFromTemplate(t?: CaseTemplate | null) {
 	if (t) {
 		form.value = {
 			name: t.name,
