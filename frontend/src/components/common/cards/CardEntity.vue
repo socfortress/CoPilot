@@ -22,14 +22,14 @@
 					</div>
 
 					<div
-						v-if="!$slots.header && ($slots.headerMain || $slots.headerExtra)"
+						v-if="!$slots.header && ($slots.headerMain || ($slots.headerExtra && !hideHeaderExtra))"
 						class="header-box flex flex-wrap items-center justify-between"
 						:class="headerBoxClass"
 					>
 						<div>
 							<slot name="headerMain" />
 						</div>
-						<div>
+						<div v-if="$slots.headerExtra && !hideHeaderExtra">
 							<slot name="headerExtra" />
 						</div>
 					</div>
@@ -39,16 +39,16 @@
 					</div>
 				</div>
 
-				<div v-if="$slots.mainExtra" class="extra-box">
+				<div v-if="$slots.mainExtra && !hideMainExtra" class="extra-box">
 					<slot name="mainExtra" />
 				</div>
 
-				<div v-if="$slots.footer" class="footer-box" :class="footerBoxClass">
+				<div v-if="$slots.footer && !hideFooter" class="footer-box" :class="footerBoxClass">
 					<slot name="footer" />
 				</div>
 
 				<div
-					v-if="!$slots.footer && ($slots.footerMain || ($slots.footerExtra && !hideFooterExtra))"
+					v-if="(!$slots.footer || hideFooter) && ($slots.footerMain || ($slots.footerExtra && !hideFooterExtra))"
 					class="footer-box flex flex-wrap items-start justify-between"
 					:class="footerBoxClass"
 				>
@@ -77,7 +77,10 @@ const {
 	disabled,
 	loading,
 	loadingDescription,
+	hideFooter,
 	hideFooterExtra,
+	hideHeaderExtra,
+	hideMainExtra,
 	mainBoxClass,
 	headerBoxClass,
 	cardEntityClass,
@@ -93,7 +96,10 @@ const {
 	disabled?: boolean
 	loading?: boolean
 	loadingDescription?: string
+	hideFooter?: boolean
 	hideFooterExtra?: boolean
+	hideHeaderExtra?: boolean
+	hideMainExtra?: boolean
 	mainBoxClass?: string
 	headerBoxClass?: string
 	cardEntityClass?: string
