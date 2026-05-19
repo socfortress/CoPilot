@@ -1,7 +1,7 @@
 <template>
 	<n-tabs type="line" animated :tabs-padding="24">
 		<n-tab-pane name="info" tab="Info" display-directive="show">
-			<div class="p-7 pt-4">
+			<div class="p-6 pt-3">
 				<div class="mb-2">
 					Id :
 					<code>{{ pipeline?.id }}</code>
@@ -25,7 +25,7 @@
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="source" tab="Source" display-directive="show">
-			<div class="p-7 pt-4">
+			<div class="p-6 pt-3">
 				<n-input
 					:value="pipeline?.source"
 					type="textarea"

@@ -36,7 +36,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy">
-					<div class="px-7 pt-4 pb-7">
+					<div class="px-6 pt-3 pb-6">
 						<SoftwareDetails :entity="softwareDetails" />
 					</div>
 				</n-tab-pane>
@@ -45,7 +45,7 @@
 					:tab="`Groups (${softwareDetails?.groups?.length || 0})`"
 					display-directive="show:lazy"
 				>
-					<div class="px-7 pt-4 pb-7">
+					<div class="px-6 pt-3 pb-6">
 						<GroupsList v-if="softwareDetails" :list="softwareDetails.groups" />
 					</div>
 				</n-tab-pane>
@@ -54,7 +54,7 @@
 					:tab="`Techniques (${softwareDetails?.techniques?.length || 0})`"
 					display-directive="show:lazy"
 				>
-					<div class="px-7 pt-4 pb-7">
+					<div class="px-6 pt-3 pb-6">
 						<TechniquesList v-if="softwareDetails" :list="softwareDetails.techniques" />
 					</div>
 				</n-tab-pane>

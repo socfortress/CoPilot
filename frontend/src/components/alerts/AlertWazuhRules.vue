@@ -1,12 +1,12 @@
 <template>
 	<n-tabs type="line" animated :tabs-padding="24">
 		<n-tab-pane name="Wazuh Rules" tab="Wazuh Rules" display-directive="show">
-			<div class="p-7 pt-4">
+			<div class="p-6 pt-3">
 				<CodeSource :code="wazuh_rule" lang="xml" />
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Explanation" tab="Explanation" display-directive="show">
-			<div class="p-7 pt-4">
+			<div class="p-6 pt-3">
 				<n-input
 					:value="data.explanation"
 					type="textarea"

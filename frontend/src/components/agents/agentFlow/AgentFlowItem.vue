@@ -82,7 +82,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
 						<CardKV v-for="(value, key) of properties" :key>
 							<template #key>
 								{{ key }}
@@ -94,7 +94,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Backtrace" tab="Backtrace" display-directive="show">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<n-input
 							:value="flow.backtrace"
 							type="textarea"
@@ -109,12 +109,12 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Timeline" tab="Timeline" display-directive="show:lazy">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<AgentFlowTimeline :flow />
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Logs" tab="Logs" display-directive="show:lazy">
-					<div v-if="flow.logs.length" class="p-7 pt-4">
+					<div v-if="flow.logs.length" class="p-6 pt-3">
 						<ul>
 							<li v-for="log of flow.logs" :key="log">
 								{{ log }}
@@ -124,7 +124,7 @@
 					<n-empty v-else description="No items found" class="h-48 justify-center" />
 				</n-tab-pane>
 				<n-tab-pane name="Uploaded files" tab="Uploaded files" display-directive="show:lazy">
-					<div v-if="flow.uploaded_files.length" class="p-7 pt-4">
+					<div v-if="flow.uploaded_files.length" class="p-6 pt-3">
 						<ul>
 							<li v-for="file of flow.uploaded_files" :key="file">
 								{{ file }}
@@ -134,7 +134,7 @@
 					<n-empty v-else description="No items found" class="h-48 justify-center" />
 				</n-tab-pane>
 				<n-tab-pane name="Query stats" tab="Query stats" display-directive="show:lazy">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<template v-if="flow.query_stats.length">
 							<AgentFlowQueryStat
 								v-for="stat of flow.query_stats"
@@ -148,7 +148,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Request" tab="Request" display-directive="show:lazy">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<SimpleJsonViewer
 							class="vuesjv-override"
 							:model-value="flow.request"

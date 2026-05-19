@@ -112,7 +112,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Details" tab="Details" display-directive="show">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<CodeSource :code="properties" decode />
 					</div>
 				</n-tab-pane>
@@ -122,7 +122,7 @@
 					tab="Whois"
 					display-directive="show"
 				>
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<div
 							v-if="virusTotalDataResponse.attributes.whois_date"
 							class="mb-4 text-right font-mono text-sm"

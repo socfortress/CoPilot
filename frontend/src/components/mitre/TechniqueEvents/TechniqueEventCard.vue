@@ -108,7 +108,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Agent" tab="Agent" display-directive="show">
-					<div v-if="agentProperties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+					<div v-if="agentProperties" class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
 						<CardKV v-for="(value, key) of agentProperties" :key>
 							<template #key>
 								{{ key }}
@@ -150,7 +150,7 @@
 						:tab="tabCard.tab"
 						display-directive="show"
 					>
-						<div v-if="tabCard.properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+						<div v-if="tabCard.properties" class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
 							<CardKV v-for="(value, key) of tabCard.properties" :key>
 								<template #key>
 									{{ key }}
@@ -163,7 +163,7 @@
 					</n-tab-pane>
 
 					<n-tab-pane name="DNS" tab="DNS" display-directive="show">
-						<div class="px-7 pt-4">
+						<div class="px-6 pt-3">
 							<CardKV v-if="alert.data_dns_answers">
 								<template #key>data_dns_answers</template>
 								<template #value>
@@ -171,7 +171,7 @@
 								</template>
 							</CardKV>
 						</div>
-						<div v-if="dnsProperties" class="grid-auto-fit-200 grid gap-2 p-7 pt-2">
+						<div v-if="dnsProperties" class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
 							<CardKV v-for="(value, key) of dnsProperties" :key>
 								<template #key>
 									{{ key }}
@@ -184,7 +184,7 @@
 					</n-tab-pane>
 
 					<n-tab-pane name="GL2" tab="GL2" display-directive="show">
-						<div class="px-7 pt-4">
+						<div class="px-6 pt-3">
 							<CardKV v-if="alert.gl2_processing_error">
 								<template #key>gl2_processing_error</template>
 								<template #value>
@@ -192,7 +192,7 @@
 								</template>
 							</CardKV>
 						</div>
-						<div v-if="gl2Properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-2">
+						<div v-if="gl2Properties" class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
 							<CardKV v-for="(value, key) of gl2Properties" :key>
 								<template #key>
 									{{ key }}
@@ -205,19 +205,19 @@
 					</n-tab-pane>
 
 					<n-tab-pane v-if="alert.message" name="Message" tab="Message" display-directive="show">
-						<div class="p-7 pt-4">
+						<div class="p-6 pt-3">
 							<CodeSource :code="alert.message" :decode="false" />
 						</div>
 					</n-tab-pane>
 
 					<n-tab-pane v-if="alert.location" name="Location" tab="Location" display-directive="show">
-						<div class="p-7 pt-4">
+						<div class="p-6 pt-3">
 							<CodeSource :code="alert.location" :decode="false" />
 						</div>
 					</n-tab-pane>
 
 					<n-tab-pane v-if="alert.streams?.length" name="Streams" tab="Streams" display-directive="show">
-						<div class="flex flex-wrap gap-3 p-7 pt-4">
+						<div class="flex flex-wrap gap-3 p-6 pt-3">
 							<ul>
 								<li v-for="stream of alert.streams" :key="stream">
 									<code>{{ stream }}</code>
@@ -228,7 +228,7 @@
 				</template>
 
 				<n-tab-pane name="Details" tab="Details" display-directive="show:lazy">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<CodeSource :code="alert" lang="json" :decode="false" />
 					</div>
 				</n-tab-pane>

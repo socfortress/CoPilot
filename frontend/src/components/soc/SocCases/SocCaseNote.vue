@@ -58,7 +58,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
 						<CardKV v-for="(value, key) of properties" :key>
 							<template #key>
 								{{ key }}
@@ -70,7 +70,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Content" tab="Content" display-directive="show">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<n-input
 							:value="note.note_details.note_content"
 							type="textarea"
@@ -85,7 +85,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="History" tab="History" display-directive="show:lazy">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<SocCaseNoteTimeline :note />
 					</div>
 				</n-tab-pane>
