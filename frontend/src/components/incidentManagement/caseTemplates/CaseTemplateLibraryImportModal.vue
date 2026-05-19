@@ -107,7 +107,7 @@
 <script setup lang="ts">
 import type { CaseTemplate, CaseTemplateLibraryEntry } from "@/types/incidentManagement/caseTemplates.d"
 import { NAlert, NButton, NModal, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"

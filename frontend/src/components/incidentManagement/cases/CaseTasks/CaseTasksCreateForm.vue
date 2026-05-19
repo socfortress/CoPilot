@@ -3,11 +3,7 @@
 		<n-form-item label="Title" path="title">
 			<n-input v-model:value="addForm.title" placeholder="What needs to be done?" />
 		</n-form-item>
-		<n-form-item
-			v-if="alertOptions.length"
-			label="Attach to alert (optional)"
-			path="alertId"
-		>
+		<n-form-item v-if="alertOptions.length" label="Attach to alert (optional)" path="alertId">
 			<n-select
 				v-model:value="addForm.alertId"
 				:options="alertOptions"

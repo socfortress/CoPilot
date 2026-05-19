@@ -44,11 +44,7 @@
 			title="Add custom task"
 			:style="{ maxWidth: 'min(600px, 90vw)', overflow: 'hidden' }"
 		>
-			<CaseTasksCreateForm
-				:case-id
-				:linked-alerts="linkedAlerts || []"
-				@success="handleAddTaskSuccess"
-			/>
+			<CaseTasksCreateForm :case-id :linked-alerts="linkedAlerts || []" @success="handleAddTaskSuccess" />
 		</n-modal>
 
 		<!-- Apply template modal -->

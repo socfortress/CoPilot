@@ -50,23 +50,18 @@
 		-->
 		<n-card size="small" class="my-4" title="Conditional auto-apply (optional)">
 			<template #header-extra>
-				<div v-if="matchHalfSet" class="text-warning text-xs">
-					Both field and value are required
-				</div>
+				<div v-if="matchHalfSet" class="text-warning text-xs">Both field and value are required</div>
 			</template>
 			<p class="text-secondary mb-2 text-xs">
 				When set, auto-apply only fires if the originating Wazuh document has
-				<code>{{ form.match_field || "<field>" }}</code>
+				<code>{{ form.match_field || "[field]" }}</code>
 				equal to
-				<code>{{ form.match_value || "<value>" }}</code>
+				<code>{{ form.match_value || "[value]" }}</code>
 				. Leave blank for an unconditional template.
 			</p>
 			<div class="grid grid-cols-1 gap-3 @md:grid-cols-2">
 				<n-form-item label="Match field" path="match_field" :show-feedback="false">
-					<n-input
-						v-model:value="form.match_field"
-						placeholder="e.g., data_win_system_eventID"
-					/>
+					<n-input v-model:value="form.match_field" placeholder="e.g., data_win_system_eventID" />
 				</n-form-item>
 				<n-form-item label="Match value" path="match_value" :show-feedback="false">
 					<n-input v-model:value="form.match_value" placeholder="e.g., 1" />
@@ -357,9 +352,9 @@ async function saveTask(idx: number) {
 	taskSaving.value = true
 
 	const payload = {
-		title: draft.title ?? '',
-		description: draft.description || '',
-		guidelines: draft.guidelines || '',
+		title: draft.title ?? "",
+		description: draft.description || "",
+		guidelines: draft.guidelines || "",
 		mandatory: draft.mandatory,
 		order_index: draft.order_index
 	}
@@ -418,9 +413,9 @@ async function handleSave() {
 			}
 		} else {
 			const cleanTasks = tasks.value
-				.filter(t => (t.title?.trim() || '').length > 0)
+				.filter(t => (t.title?.trim() || "").length > 0)
 				.map(t => ({
-					title: t.title ?? '',
+					title: t.title ?? "",
 					description: t.description || null,
 					guidelines: t.guidelines || null,
 					mandatory: t.mandatory,

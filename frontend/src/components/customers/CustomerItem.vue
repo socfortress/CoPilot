@@ -283,7 +283,6 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { Customer, CustomerMeta } from "@/types/customers.d"
-import _toSafeInteger from "lodash/toSafeInteger"
 import { NAvatar, NButton, NModal, NPopover, NScrollbar, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
