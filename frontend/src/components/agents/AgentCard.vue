@@ -28,8 +28,8 @@
 					<span class="text-sm">Toggle Critical Assets</span>
 					<template #trigger>
 						<n-button
-							:type="agent.critical_asset ? 'warning' : 'default'"
-							secondary
+							:type="agent.critical_asset ? 'error' : 'default'"
+							ghost
 							size="tiny"
 							@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
 						>

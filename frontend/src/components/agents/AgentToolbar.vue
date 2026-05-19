@@ -17,9 +17,11 @@
 						:options="customersOptions"
 						@select="emit('run', $event)"
 					>
-						<n-button :loading="syncing" secondary @click="load()">Sync</n-button>
+						<n-button :loading="syncing" secondary size="small" @click="load()">Sync</n-button>
 					</n-dropdown>
-					<n-button v-else :loading="syncing" secondary @click="emit('run', 'sync-agents')">Sync</n-button>
+					<n-button v-else :loading="syncing" secondary size="small" @click="emit('run', 'sync-agents')">
+						Sync
+					</n-button>
 				</div>
 				<n-input v-model:value="textFilter" placeholder="Search for an agent" clearable>
 					<template #prefix>
@@ -70,14 +72,16 @@
 							<small class="text-secondary font-mono">({{ agentsCritical.length }})</small>
 						</div>
 						<div class="flex flex-col gap-2">
-							<div
+							<n-tag
 								v-for="agent in agentsCritical"
 								:key="agent.agent_id"
-								class="border-warning hover:bg-hover cursor-pointer rounded-(--border-radius) border-2 px-3 py-2 text-sm font-bold"
+								type="error"
+								:bordered="false"
+								class="cursor-pointer!"
 								@click="emit('click', agent)"
 							>
 								{{ agent.hostname }}
-							</div>
+							</n-tag>
 						</div>
 					</div>
 					<div v-if="agentsOnline?.length">
@@ -86,14 +90,16 @@
 							<small class="text-secondary font-mono">({{ agentsOnline.length }})</small>
 						</div>
 						<div class="flex flex-col gap-2">
-							<div
+							<n-tag
 								v-for="agent in agentsOnline"
 								:key="agent.agent_id"
-								class="border-success hover:bg-hover cursor-pointer rounded-(--border-radius) border-2 px-3 py-2 text-sm font-bold"
+								type="success"
+								:bordered="false"
+								class="cursor-pointer!"
 								@click="emit('click', agent)"
 							>
 								{{ agent.hostname }}
-							</div>
+							</n-tag>
 						</div>
 					</div>
 				</n-scrollbar>
@@ -108,7 +114,7 @@ import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
 import type { Agent } from "@/types/agents.d"
 import type { Customer } from "@/types/customers.d"
 import { useWindowSize } from "@vueuse/core"
-import { NButton, NCard, NDropdown, NInput, NScrollbar, NSwitch, useMessage } from "naive-ui"
+import { NButton, NCard, NDropdown, NInput, NScrollbar, NSwitch, NTag, useMessage } from "naive-ui"
 import { computed, h, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
