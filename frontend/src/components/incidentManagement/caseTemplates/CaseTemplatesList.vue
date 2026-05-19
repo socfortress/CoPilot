@@ -6,11 +6,11 @@
 			</n-tab-pane>
 
 			<n-tab-pane name="library" tab="Library">
-				<CaseTemplatesLibrary @imported="onLibraryImported" />
+				<CaseTemplatesLibrary @imported="reloadTemplates" />
 			</n-tab-pane>
 
 			<template #suffix>
-				<CreateCaseTemplatesButton @success="onTemplateSaved" />
+				<CreateCaseTemplatesButton @success="reloadTemplates" />
 			</template>
 		</n-tabs>
 	</div>
@@ -24,16 +24,9 @@ import CaseTemplatesTable from "./CaseTemplatesTable.vue"
 import CreateCaseTemplatesButton from "./CreateCaseTemplatesButton.vue"
 
 const templatesTableRef = ref<InstanceType<typeof CaseTemplatesTable>>()
-
 const activeTab = ref<"templates" | "library">("templates")
 
-function onTemplateSaved() {
-	templatesTableRef.value?.fetchTemplates()
-}
-
-function onLibraryImported() {
-	// After a library import lands, jump the user back to the Templates tab and
-	// refetch so the freshly-imported row appears immediately.
+function reloadTemplates() {
 	activeTab.value = "templates"
 	templatesTableRef.value?.fetchTemplates()
 }

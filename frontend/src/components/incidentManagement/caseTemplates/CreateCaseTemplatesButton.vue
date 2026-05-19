@@ -12,7 +12,7 @@
 			display-directive="show"
 			style="max-width: 720px"
 		>
-			<CaseTemplateEditor @saved="handleSuccess" @cancel="handleCancel" />
+			<CaseTemplateEditor ref="editorRef" @saved="handleSuccess" @cancel="handleCancel" />
 		</n-modal>
 	</div>
 </template>
@@ -30,7 +30,7 @@ const emit = defineEmits<{
 }>()
 
 const showEditor = ref(false)
-const editing = ref<CaseTemplate | null>(null)
+const editorRef = ref<InstanceType<typeof CaseTemplateEditor>>()
 
 function handleSuccess(template: CaseTemplate) {
 	showEditor.value = false
@@ -43,7 +43,7 @@ function handleCancel() {
 }
 
 function openCreate() {
-	editing.value = null
 	showEditor.value = true
+	editorRef.value?.validate()
 }
 </script>

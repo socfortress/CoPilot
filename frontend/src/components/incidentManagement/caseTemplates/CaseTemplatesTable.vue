@@ -210,6 +210,7 @@ const columns: DataTableColumns<CaseTemplate> = [
 		title: "Actions",
 		key: "actions",
 		width: 120,
+		fixed: "right",
 		className: "whitespace-nowrap",
 		render: row => (
 			<div class="flex gap-2">

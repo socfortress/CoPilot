@@ -9,7 +9,7 @@
 						:href="REPO_URL"
 						target="_blank"
 						rel="noopener"
-						class="text-secondary text-xs"
+						class="text-secondary text-sm"
 						title="Source repository on GitHub"
 					>
 						{{ REPO_NAME }} ↗
@@ -18,7 +18,7 @@
 				<div class="flex items-center gap-2">
 					<div v-if="lastRefresh" class="text-tertiary text-xs">
 						Cached
-						{{ formatDate(lastRefresh, dFormats.datetimesec) }}
+						{{ formatDate(lastRefresh, dFormats.datetimesec, { tz: true }) }}
 					</div>
 					<n-button size="small" secondary :loading="refreshing" @click="refresh">
 						<template #icon><Icon name="carbon:renew" /></template>
@@ -26,40 +26,38 @@
 					</n-button>
 				</div>
 			</div>
+
 			<p class="text-secondary text-sm">
 				Read-only catalog of investigation playbooks. Click
 				<strong>Import</strong>
-				to materialise a playbook as a normal case template you can apply to cases. Edits made
-				in CoPilot after import don't flow back to the source repo, and changes pushed to the
-				repo don't retroactively update already-imported templates.
+				to materialise a playbook as a normal case template you can apply to cases. Edits made in CoPilot after
+				import don't flow back to the source repo, and changes pushed to the repo don't retroactively update
+				already-imported templates.
 			</p>
 
 			<n-alert v-if="invalidPaths.length" type="warning" :show-icon="false">
-				<template #header>
-					{{ invalidPaths.length }} library file(s) failed validation
-				</template>
-				<div class="text-xs">
-					<code v-for="p of invalidPaths" :key="p" class="mr-2">{{ p }}</code>
+				<template #header>{{ invalidPaths.length }} library file(s) failed validation</template>
+				<div class="flex flex-wrap gap-2 text-xs">
+					<code v-for="p of invalidPaths" :key="p">{{ p }}</code>
 				</div>
 			</n-alert>
 		</div>
 
 		<!-- Filter -->
-		<n-input
-			v-model:value="search"
-			size="small"
-			placeholder="Search by name, description, or source"
-			clearable
-			class="max-w-96"
-		>
-			<template #prefix><Icon name="carbon:search" /></template>
-		</n-input>
+		<div class="mt-2">
+			<n-input
+				v-model:value="search"
+				size="small"
+				placeholder="Search by name, description, or source"
+				clearable
+				class="max-w-96"
+			>
+				<template #prefix><Icon name="carbon:search" /></template>
+			</n-input>
+		</div>
 
 		<n-spin :show="loading">
-			<div
-				v-if="filteredEntries.length"
-				class="grid grid-cols-1 gap-3 @2xl:grid-cols-2 @5xl:grid-cols-3"
-			>
+			<div v-if="filteredEntries.length" class="grid grid-cols-1 gap-3 @2xl:grid-cols-2 @5xl:grid-cols-3">
 				<div v-for="entry of filteredEntries" :key="entry.key" class="library-card">
 					<div class="library-card-header flex items-start justify-between gap-2">
 						<div class="flex min-w-0 flex-col">
@@ -101,12 +99,7 @@
 						>
 							{{ entry.match_field }} == {{ entry.match_value }}
 						</n-tag>
-						<n-tag
-							v-for="tactic of mitreTactics(entry)"
-							:key="tactic"
-							size="tiny"
-							:bordered="false"
-						>
+						<n-tag v-for="tactic of mitreTactics(entry)" :key="tactic" size="tiny" :bordered="false">
 							{{ tactic }}
 						</n-tag>
 					</div>
@@ -123,18 +116,10 @@
 				</template>
 			</n-empty>
 
-			<n-empty
-				v-else-if="!loading"
-				description="No entries match your search."
-				class="h-32 justify-center"
-			/>
+			<n-empty v-else-if="!loading" description="No entries match your search." class="h-32 justify-center" />
 		</n-spin>
 
-		<CaseTemplateLibraryImportModal
-			v-model:show="showImport"
-			:entry="selectedEntry"
-			@imported="onImported"
-		/>
+		<CaseTemplateLibraryImportModal v-model:show="showImport" :entry="selectedEntry" @imported="onImported" />
 	</div>
 </template>
 
@@ -149,15 +134,14 @@ import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import CaseTemplateLibraryImportModal from "./CaseTemplateLibraryImportModal.vue"
 
+const emit = defineEmits<{
+	(e: "imported"): void
+}>()
 const REPO_NAME = "socfortress/CoPilot-Case-Templates"
 const REPO_URL = `https://github.com/${REPO_NAME}`
 
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
-
-const emit = defineEmits<{
-	(e: "imported"): void
-}>()
 
 const entries = ref<CaseTemplateLibraryEntry[]>([])
 const invalidPaths = ref<string[]>([])
@@ -249,7 +233,9 @@ onBeforeMount(load)
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius);
 	background: var(--bg-default-color);
-	transition: border-color 0.12s, box-shadow 0.12s;
+	transition:
+		border-color 0.12s,
+		box-shadow 0.12s;
 }
 .library-card:hover {
 	border-color: rgba(var(--primary-color-rgb) / 0.5);

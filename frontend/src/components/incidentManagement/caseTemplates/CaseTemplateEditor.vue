@@ -48,7 +48,7 @@
 		never trigger. Example: field "data_win_system_eventID", value "1" applies
 		this template only to Sysmon Event ID 1 events.
 		-->
-		<n-card size="small" title="Conditional auto-apply (optional)">
+		<n-card size="small" class="my-4" title="Conditional auto-apply (optional)">
 			<template #header-extra>
 				<div v-if="matchHalfSet" class="text-warning text-xs">
 					Both field and value are required
@@ -74,7 +74,7 @@
 			</div>
 		</n-card>
 
-		<n-card size="small" title="Tasks" content-class="flex flex-col gap-3">
+		<n-card size="small" class="my-4" title="Tasks" content-class="flex flex-col gap-3">
 			<template #header-extra>
 				<div
 					v-if="taskSaving"
@@ -152,7 +152,7 @@
 			</div>
 		</n-card>
 
-		<div class="mt-4 flex justify-end gap-2">
+		<div class="flex justify-end gap-2">
 			<n-button @click="emit('cancel')">Cancel</n-button>
 			<n-button type="primary" :loading="saving" @click="handleSave">
 				{{ props.template ? "Save changes" : "Create template" }}
@@ -177,9 +177,9 @@ import { getApiErrorMessage } from "@/utils"
 interface DraftTask {
 	_key: string // stable client-side key for v-for
 	id?: number // present when persisted (template_task_id from backend)
-	title: string
-	description: string
-	guidelines: string
+	title: string | null
+	description: string | null
+	guidelines: string | null
 	mandatory: boolean
 	order_index: number
 }
@@ -248,22 +248,22 @@ function nextKey() {
 function loadFromTemplate(t?: CaseTemplate | null) {
 	if (t) {
 		form.value = {
-			name: t.name,
-			description: t.description ?? "",
-			customer_code: t.customer_code ?? "",
-			source: t.source ?? "",
+			name: t.name ?? null,
+			description: t.description ?? null,
+			customer_code: t.customer_code ?? null,
+			source: t.source ?? null,
 			is_default: t.is_default,
 			match_field: t.match_field ?? null,
 			match_value: t.match_value ?? null
 		}
 		tasks.value = (t.tasks ?? []).map(task => ({
 			_key: nextKey(),
-			id: task.id,
-			title: task.title,
-			description: task.description ?? "",
-			guidelines: task.guidelines ?? "",
-			mandatory: task.mandatory,
-			order_index: task.order_index
+			id: task.id ?? null,
+			title: task.title ?? null,
+			description: task.description ?? null,
+			guidelines: task.guidelines ?? null,
+			mandatory: task.mandatory ?? false,
+			order_index: task.order_index ?? 0
 		}))
 	} else {
 		form.value = {
@@ -278,9 +278,9 @@ function loadFromTemplate(t?: CaseTemplate | null) {
 		tasks.value = [
 			{
 				_key: nextKey(),
-				title: "",
-				description: "",
-				guidelines: "",
+				title: null,
+				description: null,
+				guidelines: null,
 				mandatory: false,
 				order_index: 0
 			}
@@ -352,14 +352,14 @@ async function saveTask(idx: number) {
 
 	const draft = tasks.value[idx]
 
-	if (!draft.title.trim()) return // skip empty drafts; user is still typing
+	if (!draft.title?.trim()) return // skip empty drafts; user is still typing
 
 	taskSaving.value = true
 
 	const payload = {
-		title: draft.title,
-		description: draft.description || null,
-		guidelines: draft.guidelines || null,
+		title: draft.title ?? '',
+		description: draft.description || '',
+		guidelines: draft.guidelines || '',
 		mandatory: draft.mandatory,
 		order_index: draft.order_index
 	}
@@ -418,9 +418,9 @@ async function handleSave() {
 			}
 		} else {
 			const cleanTasks = tasks.value
-				.filter(t => t.title.trim().length > 0)
+				.filter(t => (t.title?.trim() || '').length > 0)
 				.map(t => ({
-					title: t.title,
+					title: t.title ?? '',
 					description: t.description || null,
 					guidelines: t.guidelines || null,
 					mandatory: t.mandatory,
@@ -488,5 +488,9 @@ watch(() => props.template, loadFromTemplate, { immediate: true })
 onBeforeMount(() => {
 	getCustomers()
 	getConfiguredSources()
+})
+
+defineExpose({
+	validate: () => formRef.value?.restoreValidation()
 })
 </script>
