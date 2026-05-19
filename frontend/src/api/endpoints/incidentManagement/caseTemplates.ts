@@ -6,6 +6,8 @@ import type {
 	CaseTaskUpdatePayload,
 	CaseTemplate,
 	CaseTemplateCreatePayload,
+	CaseTemplateLibraryListResponse,
+	CaseTemplateLibraryRefreshResponse,
 	CaseTemplateTask,
 	CaseTemplateTaskCreatePayload,
 	CaseTemplateTaskUpdatePayload,
@@ -108,9 +110,13 @@ export default {
 			`/incidents/db_operations/case/tasks/${taskId}`
 		)
 	},
-	applyTemplateToCase(caseId: number, templateId: number) {
+	applyTemplateToCase(caseId: number, templateId: number, alertId?: number | null) {
+		const params: Record<string, number> = {}
+		if (alertId !== undefined && alertId !== null) params.alert_id = alertId
 		return HttpClient.post<FlaskBaseResponse & { tasks_added: number }>(
-			`/incidents/db_operations/case/${caseId}/apply-template/${templateId}`
+			`/incidents/db_operations/case/${caseId}/apply-template/${templateId}`,
+			undefined,
+			{ params }
 		)
 	},
 
@@ -121,6 +127,29 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { case_id: number; events: CaseEvent[] }>(
 			`/incidents/db_operations/case/${caseId}/timeline`,
 			{ params: { limit, offset } }
+		)
+	},
+
+	// ---------------------------------------------------------------------------
+	// Case Template Library (admin/analyst only — backend gates by scope)
+	// Read-only catalog of YAML playbooks from
+	// https://github.com/socfortress/CoPilot-Case-Templates.
+	// ---------------------------------------------------------------------------
+	getLibrary() {
+		return HttpClient.get<FlaskBaseResponse & CaseTemplateLibraryListResponse>(
+			`/incidents/case_templates/library`
+		)
+	},
+	refreshLibrary() {
+		return HttpClient.post<FlaskBaseResponse & CaseTemplateLibraryRefreshResponse>(
+			`/incidents/case_templates/library/refresh`
+		)
+	},
+	importLibraryEntry(key: string) {
+		// Backend returns the standard CaseTemplateOperationResponse on success,
+		// or HTTP 409 if a CaseTemplate with the same name already exists.
+		return HttpClient.post<FlaskBaseResponse & { template: CaseTemplate | null }>(
+			`/incidents/case_templates/library/${encodeURIComponent(key)}/import`
 		)
 	}
 }

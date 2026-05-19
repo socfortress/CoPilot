@@ -44,7 +44,11 @@
 			title="Add custom task"
 			:style="{ maxWidth: 'min(600px, 90vw)', overflow: 'hidden' }"
 		>
-			<CaseTasksCreateForm :case-id @success="handleAddTaskSuccess" />
+			<CaseTasksCreateForm
+				:case-id
+				:linked-alerts="linkedAlerts || []"
+				@success="handleAddTaskSuccess"
+			/>
 		</n-modal>
 
 		<!-- Apply template modal -->
@@ -61,6 +65,7 @@
 </template>
 
 <script setup lang="ts">
+import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { CaseTask } from "@/types/incidentManagement/caseTemplates.d"
 import { NButton, NModal } from "naive-ui"
 import { computed, ref } from "vue"
@@ -74,6 +79,7 @@ const props = defineProps<{
 	customerCode?: string | null
 	canEdit: boolean
 	tasks: CaseTask[]
+	linkedAlerts?: Alert[]
 }>()
 
 const emit = defineEmits<{

@@ -138,8 +138,13 @@ def payload_escalation(escalated: bool) -> Dict[str, Any]:
     return {"escalated": escalated}
 
 
-def payload_alert_link(alert_id: int) -> Dict[str, Any]:
-    return {"alert_id": alert_id}
+def payload_alert_link(alert_id: int, **extra: Any) -> Dict[str, Any]:
+    """Used for both ``alert_linked`` and ``alert_unlinked``. The unlink path
+    passes ``tasks_orphaned=<count>`` so the timeline can show how many
+    tasks survived as case-wide tasks after the alert was detached."""
+    out: Dict[str, Any] = {"alert_id": alert_id}
+    out.update(extra)
+    return out
 
 
 def payload_alert_links_bulk(alert_ids: List[int]) -> Dict[str, Any]:

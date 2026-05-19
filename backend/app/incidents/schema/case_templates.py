@@ -110,6 +110,19 @@ class CaseTemplateCreate(BaseModel):
         False,
         description="If true, this template is the fallback within its (customer_code, source) scope.",
     )
+    match_field: Optional[str] = Field(
+        None,
+        max_length=255,
+        description=(
+            "Optional conditional auto-apply field name on the originating Wazuh document "
+            "(e.g., 'data_win_system_eventID'). Both match_field and match_value must be set "
+            "together — providing one without the other is rejected on create/update."
+        ),
+    )
+    match_value: Optional[str] = Field(
+        None,
+        description="Equality value compared against document[match_field] at auto-apply time.",
+    )
     tasks: List[CaseTemplateTaskCreate] = Field(
         default_factory=list,
         description="Initial task list. More can be added later via the task endpoints.",
@@ -125,6 +138,10 @@ class CaseTemplateUpdate(BaseModel):
     customer_code: Optional[str] = Field(None, max_length=50)
     source: Optional[str] = Field(None, max_length=50)
     is_default: Optional[bool] = None
+    # Explicit None clears the field (when present in the request); omitted field
+    # leaves the existing value alone. Handled in the service via __fields_set__.
+    match_field: Optional[str] = Field(None, max_length=255)
+    match_value: Optional[str] = None
 
 
 class CaseTemplateResponse(BaseModel):
@@ -134,6 +151,8 @@ class CaseTemplateResponse(BaseModel):
     customer_code: Optional[str] = None
     source: Optional[str] = None
     is_default: bool
+    match_field: Optional[str] = None
+    match_value: Optional[str] = None
     created_by: str
     created_at: datetime
     updated_at: datetime
@@ -172,6 +191,13 @@ class CaseTaskCreate(BaseModel):
     guidelines: Optional[str] = None
     mandatory: bool = False
     order_index: int = Field(0, ge=0)
+    alert_id: Optional[int] = Field(
+        None,
+        description=(
+            "Optional originating alert. When set, the alert must be linked to the case "
+            "or the request is rejected. Omit (or pass null) to create a case-wide / general task."
+        ),
+    )
 
 
 class CaseTaskUpdate(BaseModel):
@@ -199,6 +225,7 @@ class CaseTaskUpdate(BaseModel):
 class CaseTaskResponse(BaseModel):
     id: int
     case_id: int
+    alert_id: Optional[int] = None
     template_task_id: Optional[int] = None
     title: str
     description: Optional[str] = None
@@ -266,5 +293,72 @@ class CaseEventResponse(BaseModel):
 class CaseTimelineResponse(BaseModel):
     case_id: int
     events: List[CaseEventResponse] = Field(default_factory=list)
+    success: bool
+    message: str
+
+
+# ---------------------------------------------------------------------------
+# Case Template Library — read-only catalog of playbooks pulled from
+# https://github.com/socfortress/CoPilot-Case-Templates.
+#
+# These models mirror the YAML schema documented in that repo's ``SCHEMA.md``.
+# A LibraryEntry is *not* a CaseTemplate row — it's the YAML view of a
+# playbook. Admins import an entry via ``POST /library/{key}/import`` which
+# in turn calls the existing ``create_template`` service, materialising a
+# normal CaseTemplate (+ task) row set.
+# ---------------------------------------------------------------------------
+
+
+class CaseTemplateLibraryTask(BaseModel):
+    """One task in a library entry. Mirrors ``CaseTemplateTaskCreate`` plus
+    explicit ``order_index`` (always present after the loader normalises)."""
+
+    title: str = Field(..., max_length=500)
+    description: Optional[str] = None
+    guidelines: Optional[str] = None
+    mandatory: bool = False
+    order_index: int = Field(..., ge=0)
+
+
+class CaseTemplateLibraryEntry(BaseModel):
+    """A single playbook surfaced from the Library repo. Display-only on its
+    own; becomes a CaseTemplate row when imported."""
+
+    key: str = Field(..., description="Stable identifier from the YAML; used for collision detection on import")
+    name: str = Field(..., max_length=255)
+    description: Optional[str] = None
+    source: Optional[str] = Field(None, max_length=50)
+    match_field: Optional[str] = Field(
+        None,
+        max_length=255,
+        description="Optional conditional auto-apply field (from the YAML ``match.field``). Persisted on import.",
+    )
+    match_value: Optional[str] = Field(
+        None,
+        description="Optional conditional auto-apply value (from the YAML ``match.value``). Persisted on import.",
+    )
+    tags: Dict[str, Any] = Field(default_factory=dict, description="Library-only metadata; not persisted into the DB")
+    tasks: List[CaseTemplateLibraryTask] = Field(default_factory=list)
+    file_path: Optional[str] = Field(None, description="Path of the source YAML within the repo (for display only)")
+
+
+class CaseTemplateLibraryListResponse(BaseModel):
+    entries: List[CaseTemplateLibraryEntry] = Field(default_factory=list)
+    invalid_paths: List[str] = Field(
+        default_factory=list,
+        description="Repo paths that failed validation during the last refresh; surfaced so admins can fix upstream YAML.",
+    )
+    last_refresh: Optional[datetime] = Field(
+        None,
+        description="When the cache was last refreshed; null if the cache hasn't loaded yet.",
+    )
+    success: bool
+    message: str
+
+
+class CaseTemplateLibraryRefreshResponse(BaseModel):
+    loaded: int
+    invalid_paths: List[str] = Field(default_factory=list)
+    last_refresh: Optional[datetime] = None
     success: bool
     message: str

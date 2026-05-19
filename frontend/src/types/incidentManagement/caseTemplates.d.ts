@@ -55,6 +55,11 @@ export interface CaseTemplate {
 	customer_code?: string | null
 	source?: string | null
 	is_default: boolean
+	// Optional conditional auto-apply: both fields must be set together.
+	// When set, auto-apply runs only if document[match_field] == match_value
+	// on the originating Wazuh event.
+	match_field?: string | null
+	match_value?: string | null
 	created_by: string
 	created_at: string
 	updated_at: string
@@ -67,6 +72,8 @@ export interface CaseTemplateCreatePayload {
 	customer_code?: string | null
 	source?: string | null
 	is_default?: boolean
+	match_field?: string | null
+	match_value?: string | null
 	tasks?: CaseTemplateTaskCreatePayload[]
 }
 
@@ -76,6 +83,8 @@ export interface CaseTemplateUpdatePayload {
 	customer_code?: string | null
 	source?: string | null
 	is_default?: boolean
+	match_field?: string | null
+	match_value?: string | null
 }
 
 // ----- CaseTask (per-case instance) -----
@@ -83,6 +92,7 @@ export interface CaseTemplateUpdatePayload {
 export interface CaseTask {
 	id: number
 	case_id: number
+	alert_id?: number | null
 	template_task_id?: number | null
 	title: string
 	description?: string | null
@@ -104,6 +114,9 @@ export interface CaseTaskCreatePayload {
 	guidelines?: string | null
 	mandatory?: boolean
 	order_index?: number
+	// When set, the alert must already be linked to the case or the backend
+	// rejects with 400. Omit / null for case-wide / general tasks.
+	alert_id?: number | null
 }
 
 export interface CaseTaskUpdatePayload {
@@ -129,4 +142,48 @@ export interface CaseEvent {
 	actor: string
 	timestamp: string
 	payload?: Record<string, unknown> | null
+}
+
+// ----- Case Template Library -----
+// Mirrors the backend's CaseTemplateLibraryEntry / CaseTemplateLibraryListResponse
+// / CaseTemplateLibraryRefreshResponse from backend/app/incidents/schema/case_templates.py.
+//
+// A LibraryEntry is the YAML view of a playbook hosted in
+// https://github.com/socfortress/CoPilot-Case-Templates. It becomes a real
+// CaseTemplate row only on import.
+
+export interface CaseTemplateLibraryTask {
+	title: string
+	description?: string | null
+	guidelines?: string | null
+	mandatory: boolean
+	order_index: number
+}
+
+export interface CaseTemplateLibraryEntry {
+	key: string
+	name: string
+	description?: string | null
+	source?: string | null
+	match_field?: string | null
+	match_value?: string | null
+	tags: Record<string, unknown>
+	tasks: CaseTemplateLibraryTask[]
+	file_path?: string | null
+}
+
+export interface CaseTemplateLibraryListResponse {
+	entries: CaseTemplateLibraryEntry[]
+	invalid_paths: string[]
+	last_refresh: string | null
+	success: boolean
+	message: string
+}
+
+export interface CaseTemplateLibraryRefreshResponse {
+	loaded: number
+	invalid_paths: string[]
+	last_refresh: string | null
+	success: boolean
+	message: string
 }
