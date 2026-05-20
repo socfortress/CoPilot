@@ -19,6 +19,36 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
     BulkProvisionRuleResult,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogComplianceFrameworksResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogComplianceResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogCoverageGapsResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogLogTestRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogLogTestResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogStatsResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogStoryDetailResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogStoryListResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogWazuhRuleDetailResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogWazuhRulesResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
     ExecuteGraylogQueryRequest,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
@@ -49,16 +79,6 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
 from app.integrations.copilot_searches.schema.copilot_searches import RefreshResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RuleDetailResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RuleListResponse
-from app.integrations.copilot_searches.schema.copilot_searches import CatalogComplianceFrameworksResponse
-from app.integrations.copilot_searches.schema.copilot_searches import CatalogComplianceResponse
-from app.integrations.copilot_searches.schema.copilot_searches import CatalogCoverageGapsResponse
-from app.integrations.copilot_searches.schema.copilot_searches import CatalogLogTestRequest
-from app.integrations.copilot_searches.schema.copilot_searches import CatalogLogTestResponse
-from app.integrations.copilot_searches.schema.copilot_searches import CatalogStatsResponse
-from app.integrations.copilot_searches.schema.copilot_searches import CatalogStoryDetailResponse
-from app.integrations.copilot_searches.schema.copilot_searches import CatalogStoryListResponse
-from app.integrations.copilot_searches.schema.copilot_searches import CatalogWazuhRuleDetailResponse
-from app.integrations.copilot_searches.schema.copilot_searches import CatalogWazuhRulesResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RulesByIdsRequest
 from app.integrations.copilot_searches.schema.copilot_searches import RulesByIdsResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RuleSeverity
@@ -82,14 +102,28 @@ from app.integrations.copilot_searches.services.copilot_searches import (
     refresh_rules_cache,
 )
 from app.integrations.copilot_searches.services.copilot_searches import rules_cache
-from app.integrations.copilot_searches.services.detection_catalog import get_catalog_stats
-from app.integrations.copilot_searches.services.detection_catalog import get_story_detail
-from app.integrations.copilot_searches.services.detection_catalog import get_wazuh_rule_detail
-from app.integrations.copilot_searches.services.detection_catalog import list_compliance_frameworks
-from app.integrations.copilot_searches.services.detection_catalog import list_compliance_pivot
-from app.integrations.copilot_searches.services.detection_catalog import list_coverage_gaps
+from app.integrations.copilot_searches.services.detection_catalog import (
+    get_catalog_stats,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
+    get_story_detail,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
+    get_wazuh_rule_detail,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
+    list_compliance_frameworks,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
+    list_compliance_pivot,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
+    list_coverage_gaps,
+)
 from app.integrations.copilot_searches.services.detection_catalog import list_stories
-from app.integrations.copilot_searches.services.detection_catalog import list_wazuh_rules
+from app.integrations.copilot_searches.services.detection_catalog import (
+    list_wazuh_rules,
+)
 from app.integrations.copilot_searches.services.detection_catalog import run_log_test
 from app.integrations.copilot_searches.services.mitre_coverage import get_coverage
 from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
@@ -977,11 +1011,7 @@ async def list_catalog_wazuh_rules_endpoint(
         payload = await list_wazuh_rules(customer_code=customer_code)
         return CatalogWazuhRulesResponse(
             success=True,
-            message=(
-                f"Listed {payload['total']} Wazuh rule(s)"
-                if payload["available"]
-                else "Wazuh Manager not available"
-            ),
+            message=(f"Listed {payload['total']} Wazuh rule(s)" if payload["available"] else "Wazuh Manager not available"),
             **payload,
         )
     except Exception as e:

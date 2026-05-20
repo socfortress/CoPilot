@@ -81,14 +81,7 @@ CACHE_TTL_MINUTES = 15
 # defense — even if a vendor index sneaks in, non-Wazuh rule IDs (string
 # identifiers like ``"Office365_FailedLogin"``) get silently dropped.
 ALERT_INDEX_PATTERN = (
-    "*"
-    ",-.*"
-    ",-_*"
-    ",-wazuh-monitoring-*"
-    ",-wazuh-statistics-*"
-    ",-wazuh-states-*"
-    ",-wazuh-vulnerabilities-*"
-    ",-security-auditlog-*"
+    "*" ",-.*" ",-_*" ",-wazuh-monitoring-*" ",-wazuh-statistics-*" ",-wazuh-states-*" ",-wazuh-vulnerabilities-*" ",-security-auditlog-*"
 )
 
 # Equivalent regex list — used only by the introspection helper
@@ -236,11 +229,7 @@ class WazuhFiringStatsCache:
                         ignore_unavailable=True,
                         allow_no_indices=True,
                     )
-                    buckets = (
-                        response.get("aggregations", {})
-                        .get("by_rule", {})
-                        .get("buckets", [])
-                    )
+                    buckets = response.get("aggregations", {}).get("by_rule", {}).get("buckets", [])
                     if not buckets:
                         # Empty buckets = field exists but no docs, OR field
                         # doesn't exist. Either way, try the next one.
@@ -291,9 +280,7 @@ class WazuhFiringStatsCache:
                 # No field worked, or all returned empty. Treat as
                 # "unavailable" so the UI doesn't render a useless "0 hits"
                 # column for every rule when really we just can't tell.
-                self._unavailable_reason = (
-                    last_error or "No rule-ID field returned hits in the alerts index."
-                )
+                self._unavailable_reason = last_error or "No rule-ID field returned hits in the alerts index."
                 self._last_refresh = datetime.utcnow()
                 logger.warning(
                     f"Could not resolve a rule-ID field for firing stats. {self._unavailable_reason}",
@@ -394,11 +381,7 @@ async def fetch_firing_stats_for_customer(customer_code: str) -> Dict[int, Dict[
                     ignore_unavailable=True,
                     allow_no_indices=True,
                 )
-                buckets = (
-                    response.get("aggregations", {})
-                    .get("by_rule", {})
-                    .get("buckets", [])
-                )
+                buckets = response.get("aggregations", {}).get("by_rule", {}).get("buckets", [])
                 if not buckets:
                     continue
 
@@ -413,8 +396,7 @@ async def fetch_firing_stats_for_customer(customer_code: str) -> Dict[int, Dict[
                         "last_seen": (bucket.get("last_seen") or {}).get("value_as_string"),
                     }
                 logger.debug(
-                    f"Per-customer firing stats: {len(out)} rules for customer "
-                    f"{customer_code!r} via field {customer_field!r}",
+                    f"Per-customer firing stats: {len(out)} rules for customer " f"{customer_code!r} via field {customer_field!r}",
                 )
                 return out
             except Exception as exc:  # noqa: BLE001

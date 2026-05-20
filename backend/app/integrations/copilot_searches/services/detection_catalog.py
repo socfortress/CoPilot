@@ -29,9 +29,15 @@ from loguru import logger
 
 from app.integrations.copilot_searches.services.copilot_searches import rules_cache
 from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
-from app.integrations.copilot_searches.services.wazuh_firing_stats_cache import fetch_firing_stats_for_customer
-from app.integrations.copilot_searches.services.wazuh_firing_stats_cache import wazuh_firing_stats_cache
-from app.integrations.copilot_searches.services.wazuh_rules_cache import wazuh_rules_cache
+from app.integrations.copilot_searches.services.wazuh_firing_stats_cache import (
+    fetch_firing_stats_for_customer,
+)
+from app.integrations.copilot_searches.services.wazuh_firing_stats_cache import (
+    wazuh_firing_stats_cache,
+)
+from app.integrations.copilot_searches.services.wazuh_rules_cache import (
+    wazuh_rules_cache,
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -194,9 +200,7 @@ async def get_story_detail(story_name: str) -> Optional[Dict[str, Any]]:
     await mitre_matrix.ensure_loaded()
 
     target = story_name.strip()
-    members: List[Dict[str, Any]] = [
-        rule for rule in rules_cache.get_all_rules() if target in _rule_stories(rule)
-    ]
+    members: List[Dict[str, Any]] = [rule for rule in rules_cache.get_all_rules() if target in _rule_stories(rule)]
     if not members:
         return None
 
@@ -427,11 +431,7 @@ async def list_compliance_pivot(framework: str) -> Dict[str, Any]:
         rules_with_compliance += 1
 
         rid = raw_rule.get("id")
-        stats = (
-            wazuh_firing_stats_cache.get(rid)
-            if isinstance(rid, int)
-            else {"hits_30d": 0, "hits_7d": 0}
-        )
+        stats = wazuh_firing_stats_cache.get(rid) if isinstance(rid, int) else {"hits_30d": 0, "hits_7d": 0}
 
         for control in controls:
             bucket = grouped[control]
@@ -467,10 +467,7 @@ async def list_compliance_pivot(framework: str) -> Dict[str, Any]:
 
 def list_compliance_frameworks() -> List[Dict[str, str]]:
     """List the frameworks the compliance pivot supports. Drives the UI selector."""
-    return [
-        {"key": key, "label": meta["label"]}
-        for key, meta in COMPLIANCE_FRAMEWORKS.items()
-    ]
+    return [{"key": key, "label": meta["label"]} for key, meta in COMPLIANCE_FRAMEWORKS.items()]
 
 
 # ---------------------------------------------------------------------------
@@ -674,11 +671,7 @@ def _wazuh_row(rule: Dict[str, Any]) -> Dict[str, Any]:
     Hits column at all vs. hiding it because we can't tell.
     """
     rid = rule.get("id")
-    stats = (
-        wazuh_firing_stats_cache.get(rid)
-        if isinstance(rid, int)
-        else {"hits_30d": 0, "hits_7d": 0, "last_seen": None}
-    )
+    stats = wazuh_firing_stats_cache.get(rid) if isinstance(rid, int) else {"hits_30d": 0, "hits_7d": 0, "last_seen": None}
     return {
         "id": rid,
         "level": rule.get("level"),
@@ -861,8 +854,7 @@ def _synthesize_rule_xml(rule: Dict[str, Any]) -> str:
     # Header attributes — id + level only. Wazuh's other rule attributes
     # (frequency, timeframe, maxsize, …) live under ``details`` and are
     # rendered as child elements below for consistency.
-    header_parts = [f'id="{rid}"' if rid is not None else None,
-                    f'level="{level}"' if level is not None else None]
+    header_parts = [f'id="{rid}"' if rid is not None else None, f'level="{level}"' if level is not None else None]
     header = " ".join(p for p in header_parts if p)
 
     lines: List[str] = [f"<rule {header}>" if header else "<rule>"]
@@ -977,6 +969,7 @@ def _stringify_detail_value(value: Any) -> str:
     # Python's repr (which would emit single quotes and 'True'/'None').
     try:
         import json
+
         return json.dumps(value, separators=(",", ":"))
     except Exception:
         return str(value)
@@ -989,10 +982,4 @@ def _xml_escape(text: str) -> str:
     well (they appear inside attribute values, and we use both quote styles
     in synthesized output).
     """
-    return (
-        text.replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace('"', "&quot;")
-        .replace("'", "&apos;")
-    )
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;").replace("'", "&apos;")

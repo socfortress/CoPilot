@@ -113,8 +113,7 @@ class WazuhRulesCache:
             except Exception as exc:  # noqa: BLE001 — we deliberately catch all
                 self._unavailable_reason = _short_reason(exc)
                 logger.warning(
-                    f"Wazuh rules cache refresh failed: {self._unavailable_reason}. "
-                    "Keeping previously cached snapshot (if any).",
+                    f"Wazuh rules cache refresh failed: {self._unavailable_reason}. " "Keeping previously cached snapshot (if any).",
                 )
                 # Still mark refresh time so we don't hammer Wazuh on every
                 # request when it's down; user can force ``refresh()`` to retry.
