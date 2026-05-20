@@ -1,7 +1,10 @@
 <template>
 	<CardEntity
 		:status="taskData?.status === 'DONE' ? 'success' : taskData?.status === 'NOT_NECESSARY' ? 'warning' : undefined"
-		embedded
+		:embedded
+		:hide-header-extra="!taskData"
+		:hide-main-extra="!taskData"
+		:hide-footer="!taskData"
 	>
 		<template #headerMain>
 			<div class="flex flex-wrap items-center gap-3">
@@ -15,9 +18,9 @@
 				</n-tag>
 			</div>
 		</template>
-		<template v-if="taskData" #headerExtra>
+		<template #headerExtra>
 			<n-select
-				v-if="canEdit"
+				v-if="canEdit && taskData"
 				v-model:value="taskData.status"
 				:options="statusOptions"
 				:status="
@@ -28,7 +31,7 @@
 				:consistent-menu-width="false"
 				:loading="savingStatus"
 			/>
-			<n-tag v-else :bordered="false" :type="statusTagType(taskData.status)" size="small">
+			<n-tag v-else-if="taskData" :bordered="false" :type="statusTagType(taskData.status)" size="small">
 				{{ statusLabel(taskData.status) }}
 			</n-tag>
 		</template>
@@ -42,7 +45,7 @@
 				</details>
 			</div>
 		</template>
-		<template v-if="taskData" #mainExtra>
+		<template #mainExtra>
 			<div class="flex flex-col gap-1">
 				<div class="flex items-center justify-between">
 					<div class="text-secondary text-xs uppercase">Evidence / notes</div>
@@ -54,7 +57,7 @@
 						saving...
 					</div>
 				</div>
-				<div v-if="canEdit" class="flex flex-col gap-1">
+				<div v-if="canEdit && taskData" class="flex flex-col gap-1">
 					<n-input
 						v-model:value="taskData.evidence_comment"
 						type="textarea"
@@ -63,14 +66,14 @@
 						:autosize="{ minRows: 2, maxRows: 8 }"
 					/>
 				</div>
-				<p v-else-if="taskData.evidence_comment" class="text-sm whitespace-pre-line">
+				<p v-else-if="taskData?.evidence_comment" class="text-sm whitespace-pre-line">
 					{{ taskData.evidence_comment }}
 				</p>
 				<p v-else class="text-tertiary text-sm italic">No notes recorded</p>
 			</div>
 		</template>
-		<template v-if="taskData" #footer>
-			<div class="flex flex-wrap items-center justify-between gap-2">
+		<template #footer>
+			<div v-if="taskData" class="flex flex-wrap items-center justify-between gap-2">
 				<div class="text-secondary flex flex-wrap gap-x-4 gap-y-1 text-sm">
 					<span v-if="taskData.completed_by">
 						{{ task.status === "DONE" ? "Completed" : "Marked" }} by
@@ -125,6 +128,7 @@ const props = defineProps<{
 	task: CaseTask
 	caseId: number
 	canEdit: boolean
+	embedded?: boolean
 }>()
 
 const emit = defineEmits<{

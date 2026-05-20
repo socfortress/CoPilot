@@ -91,7 +91,7 @@
 				</n-tab-pane>
 				<n-tab-pane name="Context" tab="Context" display-directive="show">
 					<n-spin :show="loading" class="min-h-40">
-						<div v-if="alertContext" class="p-7 pt-4">
+						<div v-if="alertContext" class="p-6 pt-3">
 							<div class="mb-4 flex flex-wrap gap-3">
 								<Badge type="splitted">
 									<template #label>id</template>
@@ -115,7 +115,7 @@
 					tab="Investigate"
 					display-directive="show:lazy"
 				>
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<div class="flex flex-wrap gap-2">
 							<ThreatIntelProcessEvaluationProvider
 								v-for="pn of processNameList"
@@ -141,7 +141,7 @@
 					tab="CoPilot Searches"
 					display-directive="show:lazy"
 				>
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<AlertAssetSearches :asset />
 					</div>
 				</n-tab-pane>

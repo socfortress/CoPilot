@@ -136,9 +136,7 @@ export default {
 	// https://github.com/socfortress/CoPilot-Case-Templates.
 	// ---------------------------------------------------------------------------
 	getLibrary() {
-		return HttpClient.get<FlaskBaseResponse & CaseTemplateLibraryListResponse>(
-			`/incidents/case_templates/library`
-		)
+		return HttpClient.get<FlaskBaseResponse & CaseTemplateLibraryListResponse>(`/incidents/case_templates/library`)
 	},
 	refreshLibrary() {
 		return HttpClient.post<FlaskBaseResponse & CaseTemplateLibraryRefreshResponse>(

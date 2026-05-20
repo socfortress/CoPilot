@@ -1,15 +1,15 @@
 <template>
 	<n-tabs v-if="alert" type="line" animated :tabs-padding="24">
 		<n-tab-pane name="Context" tab="Context" display-directive="show:lazy">
-			<SocAlertItemContext :alert class="p-7 pt-4" />
+			<SocAlertItemContext :alert class="p-6 pt-3" />
 		</n-tab-pane>
 		<n-tab-pane name="Note" tab="Note" display-directive="show:lazy">
-			<div class="p-7 pt-4">
+			<div class="p-6 pt-3">
 				{{ alert.alert_note ?? "No notes for this alert" }}
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Customer" tab="Customer" display-directive="show:lazy">
-			<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+			<div class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
 				<CardKV v-for="(value, key) of alert.customer" :key>
 					<template #key>
 						{{ key }}
@@ -32,7 +32,7 @@
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Owner" tab="Owner" display-directive="show:lazy">
-			<div class="grid gap-2 px-7 pt-4">
+			<div class="grid gap-2 px-6 pt-3">
 				<Badge
 					type="active"
 					style="max-width: 145px"
@@ -45,7 +45,7 @@
 					<template #label>Go to users page</template>
 				</Badge>
 			</div>
-			<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+			<div class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
 				<CardKV>
 					<template #key>user_login</template>
 					<template #value>
@@ -75,12 +75,12 @@
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="History" tab="History" display-directive="show:lazy">
-			<div class="p-7 pt-4">
+			<div class="p-6 pt-3">
 				<SocAlertItemTimeline :alert />
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Details" tab="Details" display-directive="show:lazy">
-			<div class="p-7 pt-4">
+			<div class="p-6 pt-3">
 				<SimpleJsonViewer class="vuesjv-override" :model-value="socAlertDetail" :initial-expanded-depth="1" />
 			</div>
 		</n-tab-pane>

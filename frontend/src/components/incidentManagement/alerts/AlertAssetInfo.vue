@@ -1,5 +1,5 @@
 <template>
-	<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+	<div class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
 		<CardKV v-for="(value, key) of asset" :key>
 			<template #key>
 				{{ key }}
@@ -61,7 +61,7 @@
 		<n-spin :show="loading" class="min-h-40">
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+					<div class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
 						<CardKV v-for="(value, key) of alertDetailsInfo" :key>
 							<template #key>
 								{{ key }}
@@ -84,7 +84,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Source" tab="Source" display-directive="show">
-					<div v-if="alertDetailsSource" class="p-7 pt-4">
+					<div v-if="alertDetailsSource" class="p-6 pt-3">
 						<CodeSource :code="alertDetailsSource" lang="json" />
 					</div>
 				</n-tab-pane>

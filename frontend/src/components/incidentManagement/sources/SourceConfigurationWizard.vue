@@ -3,7 +3,7 @@
 		<div class="flex min-h-48 flex-col">
 			<div class="flex grow flex-col">
 				<n-scrollbar x-scrollable trigger="none">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<n-steps :current size="small" :status="currentStatus">
 							<n-step title="Source" />
 							<n-step title="Configuration" />

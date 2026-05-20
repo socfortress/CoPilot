@@ -41,7 +41,7 @@
 				:item-count="itemsFiltered.length"
 				:simple="simpleMode"
 			/>
-			<n-popover overlap placement="right" class="px-0!">
+			<n-popover overlap placement="right" class="px-0!" to="body">
 				<template #trigger>
 					<div class="bg-default rounded-lg">
 						<n-button size="small">

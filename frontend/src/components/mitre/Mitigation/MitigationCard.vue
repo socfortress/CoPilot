@@ -36,7 +36,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy">
-					<div class="px-7 pt-4 pb-7">
+					<div class="px-6 pt-3 pb-6">
 						<MitigationDetails :entity="mitigationDetails" />
 					</div>
 				</n-tab-pane>
@@ -45,7 +45,7 @@
 					:tab="`Techniques (${mitigationDetails?.techniques?.length || 0})`"
 					display-directive="show:lazy"
 				>
-					<div class="px-7 pt-4 pb-7">
+					<div class="px-6 pt-3 pb-6">
 						<TechniquesList v-if="mitigationDetails" :list="mitigationDetails.techniques" />
 					</div>
 				</n-tab-pane>

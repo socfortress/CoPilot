@@ -1,8 +1,8 @@
 <template>
 	<n-spin :show="loading" class="flex grow flex-col" content-class="flex grow flex-col">
 		<div class="flex grow flex-col justify-between gap-4">
-			<div class="content-box flex flex-col gap-4 py-3">
-				<div class="flex flex-col gap-4 px-7 sm:flex-row!">
+			<div class="content-box flex flex-col gap-4 px-6 py-3">
+				<div class="flex flex-col gap-4 sm:flex-row!">
 					<CardKV
 						:color="
 							caseData.case_status === 'OPEN'
@@ -86,18 +86,16 @@
 					</CardKV>
 				</div>
 
-				<div class="px-7">
-					<CardKV>
-						<template #key>description</template>
-						<template #value>
-							<span class="whitespace-pre-wrap">
-								{{ caseData.case_description ?? "-" }}
-							</span>
-						</template>
-					</CardKV>
-				</div>
+				<CardKV>
+					<template #key>description</template>
+					<template #value>
+						<span class="whitespace-pre-wrap">
+							{{ caseData.case_description ?? "-" }}
+						</span>
+					</template>
+				</CardKV>
 
-				<div class="grid-auto-fit-250 grid gap-2 px-7">
+				<div class="grid-auto-fit-250 grid gap-2">
 					<CardKV>
 						<template #key>id</template>
 						<template #value>#{{ caseData.id }}</template>
@@ -131,7 +129,7 @@
 				</div>
 			</div>
 
-			<div class="footer-box bg-secondary flex justify-end gap-3 px-7 py-4">
+			<div class="bg-secondary border-default flex justify-end gap-3 border-t px-6 py-4">
 				<n-button type="error" secondary @click="handleDelete()">
 					<template #icon>
 						<Icon :name="TrashIcon" />
@@ -201,9 +199,3 @@ function handleDelete() {
 	}
 }
 </script>
-
-<style lang="scss" scoped>
-.footer-box {
-	border-top: 1px solid var(--border-color);
-}
-</style>

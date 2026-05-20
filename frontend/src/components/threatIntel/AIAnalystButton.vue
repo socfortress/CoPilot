@@ -64,7 +64,7 @@
 			</template>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane v-if="analysisResponse?.analysis" name="Analysis" tab="Analysis" display-directive="show">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<Markdown :source="analysisResponse.analysis" />
 					</div>
 				</n-tab-pane>
@@ -74,7 +74,7 @@
 					tab="Base64 Decoded"
 					display-directive="show"
 				>
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<CodeSource :code="analysisResponse.base64_decoded" decode />
 					</div>
 				</n-tab-pane>
@@ -84,7 +84,7 @@
 					tab="Threat Indicators"
 					display-directive="show"
 				>
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<Markdown :source="analysisResponse.threat_indicators" />
 					</div>
 				</n-tab-pane>

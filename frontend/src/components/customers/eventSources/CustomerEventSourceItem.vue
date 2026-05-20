@@ -1,14 +1,18 @@
 <template>
 	<div>
-		<CardEntity hoverable :embedded>
-			<template #default>
-				<div class="flex items-center gap-3">
-					<Icon :name="SourceIcon" :size="18" />
-					<span class="font-semibold">{{ source.name }}</span>
-				</div>
+		<CardEntity hoverable :embedded header-box-class="text-default!">
+			<template #headerMain>
+				{{ source.name }}
 			</template>
-
-			<template #footerMain>
+			<template #headerExtra>
+				<Badge type="splitted" :color="source.enabled ? 'success' : 'danger'" bright>
+					<template #iconLeft>
+						<Icon :name="source.enabled ? 'carbon:checkmark' : 'carbon:close'" :size="13" />
+					</template>
+					<template #value>{{ source.enabled ? "Enabled" : "Disabled" }}</template>
+				</Badge>
+			</template>
+			<template #default>
 				<div class="flex flex-wrap items-center gap-3">
 					<Badge type="splitted" color="primary">
 						<template #iconLeft>
@@ -32,13 +36,6 @@
 						</template>
 						<template #label>Time Field</template>
 						<template #value>{{ source.time_field }}</template>
-					</Badge>
-
-					<Badge type="splitted" :color="source.enabled ? 'success' : 'danger'" bright>
-						<template #iconLeft>
-							<Icon :name="StatusIcon" :size="13" />
-						</template>
-						<template #value>{{ source.enabled ? "Enabled" : "Disabled" }}</template>
 					</Badge>
 				</div>
 			</template>
@@ -82,11 +79,9 @@ const emit = defineEmits<{
 	(e: "deleted"): void
 }>()
 
-const SourceIcon = "carbon:data-base"
 const TypeIcon = "carbon:category"
 const IndexIcon = "carbon:catalog"
 const TimeIcon = "carbon:time"
-const StatusIcon = "carbon:circle-dash"
 const EditIcon = "carbon:edit"
 const DeleteIcon = "ph:trash"
 

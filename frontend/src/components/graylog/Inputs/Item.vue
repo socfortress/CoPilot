@@ -72,7 +72,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="info" tab="Info" display-directive="show:lazy">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<div class="mb-2">
 							Id :
 							<code>{{ input.id }}</code>
@@ -98,7 +98,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="attributes" tab="Attributes" display-directive="show:lazy">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<SimpleJsonViewer
 							class="vuesjv-override"
 							:model-value="input.attributes"

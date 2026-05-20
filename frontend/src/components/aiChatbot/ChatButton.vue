@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="ai-chatbot-button-wrapper fixed right-0 bottom-10 h-10 w-15" @click="showDrawer = true">
+		<div class="ai-chatbot-button-wrapper fixed right-0 bottom-20 h-10 w-15" @click="showDrawer = true">
 			<n-tooltip trigger="hover" placement="left">
 				<template #trigger>
 					<n-float-button type="primary" class="ai-chatbot-button">

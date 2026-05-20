@@ -1,107 +1,90 @@
 <template>
 	<div class="page">
-		<div class="agent-toolbar">
-			<div class="back-btn" @click="routeAgent().navigate()">
-				<Icon :name="ArrowIcon" :size="16" />
-				<span>Agents list</span>
-			</div>
-			<div v-if="agent" class="delete-btn" @click.stop="handleDelete">Delete Agent</div>
+		<div class="flex items-center justify-between">
+			<n-button text size="small" :focusable="false" @click="routeAgent().navigate()">
+				<template #icon>
+					<Icon :name="ArrowIcon" :size="16" />
+				</template>
+				Back to agents list
+			</n-button>
+			<n-button v-if="agent" text size="small" :focusable="false" @click.stop="handleDelete">
+				<template #icon>
+					<Icon :name="DeleteIcon" :size="16" />
+				</template>
+				Delete Agent
+			</n-button>
 		</div>
-		<CardEntity
-			class="agent-header my-4"
-			:class="{ critical: agent?.critical_asset, online: isOnline }"
-			:loading="loadingAgent"
-		>
-			<div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-1">
-				<div class="info grow">
-					<div class="title">
-						<div v-if="agent" class="critical" :class="{ active: agent?.critical_asset }">
-							<n-tooltip>
-								Toggle Critical Assets
-								<template #trigger>
-									<n-button
-										text
-										:type="agent?.critical_asset ? 'warning' : 'default'"
-										circle
-										@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
-									>
-										<template #icon>
-											<Icon :name="StarIcon" />
-										</template>
-									</n-button>
-								</template>
-							</n-tooltip>
-						</div>
 
-						<h1 v-if="agent?.hostname">
-							{{ agent?.hostname }}
-						</h1>
-
-						<n-tag v-if="isOnline" type="success" round :bordered="false">ONLINE</n-tag>
-						<n-tag v-if="isQuarantined" type="warning" round :bordered="false">
-							<template #icon>
-								<Icon :name="QuarantinedIcon" />
-							</template>
-							<span>QUARANTINED</span>
-						</n-tag>
-					</div>
-					<div class="label text-secondary mt-2">Agent #{{ agent?.agent_id }}</div>
+		<CardEntity class="my-4" :highlighted="agent?.critical_asset" :loading="loadingAgent">
+			<template #headerMain>
+				<div v-if="agent" class="text-default text-xl font-bold">
+					{{ agent.hostname }}
 				</div>
-				<div class="actions flex grow items-center justify-end">
-					<n-button size="small" ghost type="primary" :loading="upgradingAgent" @click="upgradeWazuhAgent()">
+			</template>
+			<template #headerExtra>
+				<div class="flex items-center gap-2">
+					<n-tag :type="isOnline ? 'success' : 'default'" round class="rounded-lg!" :bordered="false">
+						{{ isOnline ? "ONLINE" : "OFFLINE" }}
+					</n-tag>
+
+					<n-tooltip v-if="agent">
+						<span class="text-sm">Toggle Critical Assets</span>
+						<template #trigger>
+							<n-button
+								:type="agent.critical_asset ? 'error' : 'default'"
+								ghost
+								size="small"
+								@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
+							>
+								<template #icon>
+									<Icon :name="agent.critical_asset ? 'carbon:warning-alt' : 'carbon:checkmark'" />
+								</template>
+								{{ agent.critical_asset ? "Critical Asset" : "Non-Critical Asset" }}
+							</n-button>
+						</template>
+					</n-tooltip>
+
+					<n-tag v-if="agent?.quarantined" type="warning" round class="rounded-lg!" :bordered="false">
+						Quarantined
+					</n-tag>
+
+					<n-button size="small" :loading="upgradingAgent" @click="upgradeWazuhAgent()">
 						Upgrade Wazuh Agent
 					</n-button>
 				</div>
-			</div>
+			</template>
 		</CardEntity>
-		<n-card class="px-4 py-1 pb-4" content-style="padding:0">
+
+		<n-card content-class="p-4! pt-1!">
 			<n-spin :show="loadingAgent">
-				<n-tabs type="line" animated default-value="Overview">
+				<n-tabs type="line" animated default-value="Overview" pane-wrapper-class="min-h-100">
 					<n-tab-pane name="Overview" tab="Overview" display-directive="show">
-						<div class="section">
-							<OverviewSection v-if="agent" :agent @updated="getAgent()" />
-						</div>
+						<OverviewSection v-if="agent" :agent @updated="getAgent()" />
 					</n-tab-pane>
 					<n-tab-pane name="Vulnerabilities" tab="Vulnerabilities" display-directive="show:lazy">
-						<div class="section">
-							<VulnerabilitiesGrid v-if="agent" :agent />
-						</div>
+						<VulnerabilitiesGrid v-if="agent" :agent />
 					</n-tab-pane>
 					<n-tab-pane name="SCA" tab="SCA" display-directive="show:lazy">
-						<div class="section">
-							<ScaTable v-if="agent" :agent />
-						</div>
+						<ScaTable v-if="agent" :agent />
 					</n-tab-pane>
 					<n-tab-pane name="Cases" tab="Cases" display-directive="show:lazy">
-						<div class="section">
-							<!--
-								<AgentCases v-if="agent" :agent />
-							-->
-							<CasesList
-								v-if="agent"
-								class="px-1"
-								:preset="{ type: 'hostname', value: agent.hostname }"
-								hide-filters
-							/>
-						</div>
+						<!--
+							<AgentCases v-if="agent" :agent />
+						-->
+						<CasesList v-if="agent" :preset="{ type: 'hostname', value: agent.hostname }" hide-filters />
 					</n-tab-pane>
 					<n-tab-pane name="Artifacts" tab="Artifacts" display-directive="show:lazy">
-						<div class="section">
-							<AgentFlowList v-if="agent" :agent />
-						</div>
+						<AgentFlowList v-if="agent" :agent />
 					</n-tab-pane>
 					<n-tab-pane name="Alerts" tab="Alerts" display-directive="show:lazy">
-						<div class="section">
-							<!--
-								<AlertsList v-if="agent" :agent-hostname="agent.hostname" />
-							-->
-							<AlertsList
-								v-if="agent"
-								class="px-1"
-								:preset="[{ type: 'assetName', value: agent.hostname }]"
-								:show-filters="false"
-							/>
-						</div>
+						<!--
+							<AlertsList v-if="agent" :agent-hostname="agent.hostname" />
+						-->
+						<AlertsList
+							v-if="agent"
+							:preset="[{ type: 'assetName', value: agent.hostname }]"
+							:show-filters="false"
+						/>
 					</n-tab-pane>
 					<n-tab-pane name="collect" tab="Collect" display-directive="show:lazy">
 						<ArtifactsCollect
@@ -182,9 +165,8 @@ const FileCollectionForm = defineAsyncComponent(
 	() => import("@/components/agents/fileCollection/FileCollectionForm.vue")
 )
 
-const StarIcon = "carbon:star"
-const QuarantinedIcon = "ph:seal-warning-light"
 const ArrowIcon = "carbon:arrow-left"
+const DeleteIcon = "ph:trash"
 
 const { routeAgent } = useNavigation()
 const message = useMessage()
@@ -200,10 +182,6 @@ const artifacts = ref<Artifact[]>([])
 
 const isOnline = computed(() => {
 	return agent.value?.wazuh_agent_status === AgentStatus.Active
-})
-
-const isQuarantined = computed(() => {
-	return !!agent.value?.quarantined
 })
 
 function getAgent() {
@@ -302,64 +280,3 @@ onBeforeMount(() => {
 	}
 })
 </script>
-
-<style lang="scss" scoped>
-.page {
-	.agent-toolbar {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-
-		.back-btn {
-			cursor: pointer;
-			opacity: 0.8;
-			font-size: 14px;
-
-			i {
-				font-size: 20px;
-			}
-
-			span {
-				position: relative;
-				top: -3px;
-				margin-left: 4px;
-			}
-		}
-
-		.delete-btn {
-			opacity: 0.8;
-			cursor: pointer;
-			font-size: 14px;
-		}
-	}
-
-	.agent-header {
-		.title {
-			display: flex;
-			align-items: center;
-			line-height: 1;
-			gap: calc(var(--spacing) * 4);
-
-			h1 {
-				margin: 0;
-				font-size: var(--text-2xl);
-				word-break: break-all;
-			}
-
-			.critical {
-				display: flex;
-				align-items: center;
-			}
-		}
-
-		&.critical {
-			border-color: var(--warning-color);
-		}
-	}
-
-	.section {
-		margin-top: calc(var(--spacing) * 2);
-		min-height: 200px;
-	}
-}
-</style>
