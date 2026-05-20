@@ -19,14 +19,15 @@
 					<template #header>
 						<div v-if="group.alert" class="flex flex-wrap items-center gap-2">
 							<span class="text-default text-base font-semibold">{{ group.alert.alert_name }}</span>
-							<code class="text-tertiary text-xs">{{ group.alert.source }}</code>
+							<n-tag size="small" :bordered="false">{{ group.alert.source }}</n-tag>
 							<n-tag size="small" :bordered="false">alert #{{ group.alert.id }}</n-tag>
+							<n-tag size="small" :bordered="false">{{ group.tasks.length }} task(s)</n-tag>
 						</div>
 						<div v-else class="flex flex-wrap items-center gap-2">
 							<span class="text-default text-base font-semibold">Case-wide / general</span>
 							<n-tag size="small" :bordered="false" type="info">not attached to any alert</n-tag>
+							<n-tag size="small" :bordered="false">{{ group.tasks.length }} task(s)</n-tag>
 						</div>
-						<n-tag size="small" :bordered="false">{{ group.tasks.length }} task(s)</n-tag>
 					</template>
 					<template #mainExtra>
 						<div class="flex flex-col gap-3">
