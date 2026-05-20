@@ -64,12 +64,12 @@
 
 		<n-spin :show="loading">
 			<n-data-table
-				:columns="columns"
+				:columns
 				:data="filteredGroups"
 				:loading
 				size="small"
-				:pagination="pagination"
-				:row-props="rowProps"
+				:pagination
+				:row-props
 				class="catalog-table"
 			/>
 		</n-spin>
@@ -216,15 +216,21 @@ const columns: DataTableColumns<CatalogComplianceGroupRow> = [
 				)
 			}
 			const dotClass =
-				row.total_hits_30d >= 10000 ? "dot-danger" :
-				row.total_hits_30d >= 1000 ? "dot-warning" :
+				row.total_hits_30d >= 10000
+? "dot-danger" :
+				row.total_hits_30d >= 1000
+? "dot-warning" :
 				row.total_hits_30d >= 100 ? "dot-info" : "dot-success"
 			return (
 				<div class="flex items-center gap-2">
 					<span class={`dot ${dotClass}`}></span>
 					<div class="flex flex-col leading-tight">
 						<span class="font-mono text-xs font-medium">{row.total_hits_30d.toLocaleString()}</span>
-						<span class="text-tertiary text-xs">{row.total_hits_7d.toLocaleString()} in 7d</span>
+						<span class="text-tertiary text-xs">
+{row.total_hits_7d.toLocaleString()}
+{' '}
+in 7d
+      </span>
 					</div>
 				</div>
 			)
@@ -239,7 +245,10 @@ const columns: DataTableColumns<CatalogComplianceGroupRow> = [
 					<span key={rid} class="chip chip-mitre">{rid}</span>
 				))}
 				{row.rule_ids.length > 10 && (
-					<span class="chip chip-muted">+{row.rule_ids.length - 10}</span>
+					<span class="chip chip-muted">
++
+{row.rule_ids.length - 10}
+     </span>
 				)}
 			</div>
 		)
@@ -253,7 +262,7 @@ function loadFrameworks() {
 		.then(res => {
 			if (res.data?.success) {
 				frameworks.value = res.data.frameworks || []
-				if (frameworks.value.length && !frameworks.value.find(f => f.key === selectedFramework.value)) {
+				if (frameworks.value.length && !frameworks.value.some(f => f.key === selectedFramework.value)) {
 					selectedFramework.value = frameworks.value[0].key
 				}
 			}

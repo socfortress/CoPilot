@@ -54,11 +54,11 @@
 
 		<n-spin :show="loading">
 			<n-data-table
-				:columns="columns"
+				:columns
 				:data="filteredGaps"
 				:loading
 				size="small"
-				:pagination="pagination"
+				:pagination
 				class="catalog-table"
 			/>
 		</n-spin>

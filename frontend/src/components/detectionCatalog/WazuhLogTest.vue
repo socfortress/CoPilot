@@ -5,7 +5,7 @@
 		uncluttered while the test tool is one click away. Designed so the
 		collapsed header looks like a single CTA strip, not a fat empty card.
 	-->
-	<CardEntity size="small" hoverable :class="['logtest-card', { 'is-open': open }]">
+	<CardEntity size="small" hoverable class="logtest-card" :class="[{ 'is-open': open }]">
 		<template #header>
 			<button type="button" class="logtest-toggle" @click="open = !open">
 				<div class="flex items-center gap-3">
@@ -19,11 +19,7 @@
 						</div>
 					</div>
 				</div>
-				<Icon
-					:name="open ? 'carbon:chevron-up' : 'carbon:chevron-down'"
-					:size="16"
-					class="text-tertiary"
-				/>
+				<Icon :name="open ? 'carbon:chevron-up' : 'carbon:chevron-down'" :size="16" class="text-tertiary" />
 			</button>
 		</template>
 
@@ -45,9 +41,7 @@
 						<span v-else class="text-tertiary text-xs">no match</span>
 						<span class="history-preview">{{ truncate(item.event, 28) }}</span>
 					</button>
-					<button type="button" class="history-clear" @click="clearHistory">
-						Clear
-					</button>
+					<button type="button" class="history-clear" @click="clearHistory">Clear</button>
 				</div>
 
 				<n-input
@@ -70,9 +64,7 @@
 					</div>
 
 					<div class="flex items-center gap-2">
-						<n-button v-if="result" size="small" quaternary @click="clearResult">
-							Clear result
-						</n-button>
+						<n-button v-if="result" size="small" quaternary @click="clearResult">Clear result</n-button>
 						<n-button
 							type="primary"
 							size="small"
@@ -88,7 +80,7 @@
 
 				<!-- RESULT --------------------------------------------------- -->
 				<template v-if="result">
-					<n-alert v-if="result.unavailable_reason" type="error" :show-icon="true">
+					<n-alert v-if="result.unavailable_reason" type="error" show-icon>
 						<template #header>Logtest failed</template>
 						{{ result.unavailable_reason }}
 					</n-alert>
@@ -100,9 +92,12 @@
 								<div class="flex flex-col gap-1">
 									<div class="text-sm font-semibold">No rule matched</div>
 									<div class="text-secondary text-xs leading-relaxed">
-										Wazuh saw the log but no analyst-facing rule fired. Try a different
-										"Format" — most agent-forwarded logs use <code>syslog</code>; pure
-										JSON payloads use <code>json</code>.
+										Wazuh saw the log but no analyst-facing rule fired. Try a different "Format" —
+										most agent-forwarded logs use
+										<code>syslog</code>
+										; pure JSON payloads use
+										<code>json</code>
+										.
 									</div>
 								</div>
 							</div>
@@ -114,7 +109,7 @@
 							<div class="flex flex-wrap items-center justify-between gap-2">
 								<div class="flex items-center gap-2">
 									<Icon name="carbon:checkmark-filled" :size="16" class="text-success" />
-									<span class="text-sm font-semibold uppercase tracking-wide">Match</span>
+									<span class="text-sm font-semibold tracking-wide uppercase">Match</span>
 									<Badge type="splitted" color="success">
 										<template #label>Rule</template>
 										<template #value>{{ result.rule.id }}</template>
@@ -142,16 +137,30 @@
 									{{ result.rule.description }}
 								</div>
 								<div
-									v-if="result.rule.groups.length || result.rule.mitre.length || result.tactics.length"
+									v-if="
+										result.rule.groups.length || result.rule.mitre.length || result.tactics.length
+									"
 									class="flex flex-wrap gap-1.5"
 								>
-									<span v-for="g of result.rule.groups" :key="`g-${g}`" class="match-pill match-pill-group">
+									<span
+										v-for="g of result.rule.groups"
+										:key="`g-${g}`"
+										class="match-pill match-pill-group"
+									>
 										{{ g }}
 									</span>
-									<span v-for="t of result.rule.mitre" :key="`m-${t}`" class="match-pill match-pill-mitre">
+									<span
+										v-for="t of result.rule.mitre"
+										:key="`m-${t}`"
+										class="match-pill match-pill-mitre"
+									>
 										{{ t }}
 									</span>
-									<span v-for="t of result.tactics" :key="`t-${t}`" class="match-pill match-pill-tactic">
+									<span
+										v-for="t of result.tactics"
+										:key="`t-${t}`"
+										class="match-pill match-pill-tactic"
+									>
 										{{ t.toUpperCase() }}
 									</span>
 								</div>
@@ -173,21 +182,14 @@
 
 <script setup lang="ts">
 import type { CatalogLogTestResponse } from "@/types/detectionCatalog.d"
-import {
-	NAlert,
-	NButton,
-	NCollapse,
-	NCollapseItem,
-	NInput,
-	NSelect,
-	useMessage
-} from "naive-ui"
+import { NAlert, NButton, NCollapse, NCollapseItem, NInput, NSelect, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 
+const emit = defineEmits<{ (e: "open-rule", ruleId: number): void }>()
 const HISTORY_STORAGE_KEY = "detectionCatalog.logtest.history"
 const HISTORY_MAX = 5
 
@@ -199,8 +201,6 @@ interface LogTestHistoryItem {
 	rule_description: string
 	timestamp: string
 }
-
-const emit = defineEmits<{ (e: "open-rule", ruleId: number): void }>()
 
 const message = useMessage()
 
@@ -286,7 +286,7 @@ function clearHistory() {
 
 function truncate(s: string, n: number): string {
 	if (s.length <= n) return s
-	return s.slice(0, n - 1) + "…"
+	return `${s.slice(0, n - 1)}…`
 }
 
 function runTest() {

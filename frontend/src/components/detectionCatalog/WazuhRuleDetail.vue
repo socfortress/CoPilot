@@ -14,12 +14,8 @@
 								{{ rule.level ?? "—" }}
 							</span>
 							<div class="flex flex-col gap-1">
-								<div class="text-tertiary text-xs uppercase tracking-wide">
-									Wazuh Rule
-								</div>
-								<div class="text-xl font-semibold leading-tight">
-									Rule {{ rule.id }}
-								</div>
+								<div class="text-tertiary text-xs tracking-wide uppercase">Wazuh Rule</div>
+								<div class="text-xl leading-tight font-semibold">Rule {{ rule.id }}</div>
 								<div v-if="rule.description" class="text-secondary text-sm leading-snug">
 									{{ rule.description }}
 								</div>
@@ -41,17 +37,15 @@
 								<template #label>Hits 7d</template>
 								<template #value>{{ rule.hits_7d.toLocaleString() }}</template>
 							</Badge>
-							<Badge
-								v-if="rule.firing_stats_available && rule.last_seen"
-								type="splitted"
-								color="primary"
-							>
+							<Badge v-if="rule.firing_stats_available && rule.last_seen" type="splitted" color="primary">
 								<template #label>Last fired</template>
 								<template #value>{{ formatRelativeTime(rule.last_seen) }}</template>
 							</Badge>
 							<Badge v-if="rule.filename" type="splitted">
 								<template #label>File</template>
-								<template #value><code>{{ rule.filename }}</code></template>
+								<template #value>
+									<code>{{ rule.filename }}</code>
+								</template>
 							</Badge>
 						</div>
 					</template>
@@ -97,18 +91,10 @@
 					</template>
 					<template #default>
 						<div class="compliance-grid">
-							<div
-								v-for="[label, values] of complianceEntries"
-								:key="label"
-								class="compliance-row"
-							>
-								<div class="compliance-label">{{ label }}</div>
+							<div v-for="[key, values] of complianceEntries" :key class="compliance-row">
+								<div class="compliance-label">{{ key }}</div>
 								<div class="flex flex-wrap gap-1">
-									<span
-										v-for="v of values"
-										:key="v"
-										class="compliance-control"
-									>
+									<span v-for="v of values" :key="v" class="compliance-control">
 										{{ v }}
 									</span>
 								</div>
@@ -159,6 +145,8 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 
+const props = defineProps<{ ruleId: number }>()
+
 // Tiny inline component for section labels — keeps the four section headers
 // visually identical without copy-pasting the markup.
 const SectionLabel = defineComponent({
@@ -167,16 +155,11 @@ const SectionLabel = defineComponent({
 		return () =>
 			h("div", { class: "flex items-center gap-2" }, [
 				props.icon ? h(Icon, { name: props.icon, size: 14 }) : null,
-				h(
-					"span",
-					{ class: "text-sm font-semibold uppercase tracking-wide" },
-					props.label
-				)
+				h("span", { class: "text-sm font-semibold uppercase tracking-wide" }, props.label)
 			])
 	}
 })
 
-const props = defineProps<{ ruleId: number }>()
 const message = useMessage()
 
 const rule = ref<CatalogWazuhRuleDetailResponse | null>(null)
@@ -290,7 +273,9 @@ function load(id: number) {
 			if (status === 404) {
 				message.warning(`Wazuh rule ${id} not found in the cache`)
 			} else {
-				message.error(err.response?.data?.detail || err.response?.data?.message || "Failed to load Wazuh rule detail")
+				message.error(
+					err.response?.data?.detail || err.response?.data?.message || "Failed to load Wazuh rule detail"
+				)
 			}
 		})
 		.finally(() => {
@@ -298,7 +283,10 @@ function load(id: number) {
 		})
 }
 
-watch(() => props.ruleId, id => load(id))
+watch(
+	() => props.ruleId,
+	id => load(id)
+)
 onBeforeMount(() => load(props.ruleId))
 </script>
 

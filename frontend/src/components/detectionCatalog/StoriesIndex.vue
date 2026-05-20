@@ -31,12 +31,12 @@
 
 		<n-spin :show="loading">
 			<n-data-table
-				:columns="columns"
+				:columns
 				:data="filteredStories"
 				:loading
 				size="small"
-				:row-props="rowProps"
-				:pagination="pagination"
+				:row-props
+				:pagination
 				class="catalog-table stories-table"
 			/>
 		</n-spin>
@@ -93,7 +93,10 @@ const columns: DataTableColumns<CatalogStoryRow> = [
 			<div class="flex flex-col gap-1 py-1">
 				<div class="font-semibold leading-snug">{row.name}</div>
 				<div class="text-tertiary text-xs">
-					{row.detection_count} detection{row.detection_count === 1 ? "" : "s"}
+					{row.detection_count}
+{' '}
+detection
+{row.detection_count === 1 ? "" : "s"}
 				</div>
 			</div>
 		)
@@ -109,7 +112,10 @@ const columns: DataTableColumns<CatalogStoryRow> = [
 							<span key={s} class="chip chip-info">{s}</span>
 						))}
 						{row.data_sources.length > 4 && (
-							<span class="chip chip-muted">+{row.data_sources.length - 4}</span>
+							<span class="chip chip-muted">
++
+{row.data_sources.length - 4}
+       </span>
 						)}
 					</div>
 				)

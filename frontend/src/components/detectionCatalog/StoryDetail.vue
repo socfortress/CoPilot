@@ -4,7 +4,7 @@
 		     native — no event interception or race conditions. The parent's
 		     watcher on route.query.story drives the v-if back to the index. -->
 		<div>
-			<RouterLink :to="{ name: 'DetectionCatalog', query: {} }" custom v-slot="{ navigate }">
+			<RouterLink v-slot="{ navigate }" :to="{ name: 'DetectionCatalog', query: {} }" custom>
 				<n-button size="small" quaternary @click="navigate">
 					<template #icon><Icon name="carbon:arrow-left" /></template>
 					Back to Detections Catalog
@@ -24,10 +24,8 @@
 								<Icon name="carbon:book" :size="20" />
 							</div>
 							<div class="flex flex-col gap-1">
-								<div class="text-tertiary text-xs uppercase tracking-wide">
-									Analytic Story
-								</div>
-								<h2 class="m-0 text-2xl font-semibold leading-tight">
+								<div class="text-tertiary text-xs tracking-wide uppercase">Analytic Story</div>
+								<h2 class="m-0 text-2xl leading-tight font-semibold">
 									{{ story.name }}
 								</h2>
 							</div>
@@ -62,7 +60,9 @@
 							</Badge>
 							<Badge v-if="story.id" type="splitted">
 								<template #label>ID</template>
-								<template #value><code>{{ story.id }}</code></template>
+								<template #value>
+									<code>{{ story.id }}</code>
+								</template>
 							</Badge>
 						</div>
 					</template>
@@ -76,7 +76,7 @@
 				<template #headerMain>
 					<div class="flex items-center gap-2">
 						<Icon name="carbon:document" :size="14" />
-						<span class="text-sm font-semibold uppercase tracking-wide">Description</span>
+						<span class="text-sm font-semibold tracking-wide uppercase">Description</span>
 					</div>
 				</template>
 				<template #default>
@@ -89,7 +89,7 @@
 				<template #headerMain>
 					<div class="flex items-center gap-2">
 						<Icon name="carbon:warning-alt" :size="14" />
-						<span class="text-sm font-semibold uppercase tracking-wide">Why It Matters</span>
+						<span class="text-sm font-semibold tracking-wide uppercase">Why It Matters</span>
 					</div>
 				</template>
 				<template #default>
@@ -102,9 +102,7 @@
 				<template #headerMain>
 					<div class="flex items-center gap-2">
 						<Icon name="carbon:flag" :size="14" />
-						<span class="text-sm font-semibold uppercase tracking-wide">
-							MITRE ATT&CK Tactics
-						</span>
+						<span class="text-sm font-semibold tracking-wide uppercase">MITRE ATT&CK Tactics</span>
 					</div>
 				</template>
 				<template #default>
@@ -122,7 +120,7 @@
 					<div class="flex flex-wrap items-center justify-between gap-2">
 						<div class="flex items-center gap-2">
 							<Icon name="carbon:radar" :size="14" />
-							<span class="text-sm font-semibold uppercase tracking-wide">Detections</span>
+							<span class="text-sm font-semibold tracking-wide uppercase">Detections</span>
 						</div>
 						<Badge type="splitted" color="primary">
 							<template #label>Count</template>
@@ -145,7 +143,7 @@
 				<template #headerMain>
 					<div class="flex items-center gap-2">
 						<Icon name="carbon:data-base" :size="14" />
-						<span class="text-sm font-semibold uppercase tracking-wide">Data Sources</span>
+						<span class="text-sm font-semibold tracking-wide uppercase">Data Sources</span>
 					</div>
 				</template>
 				<template #default>
@@ -154,9 +152,7 @@
 							{{ ds }}
 						</span>
 					</div>
-					<p v-else class="text-tertiary m-0 text-sm">
-						No data sources declared by member detections.
-					</p>
+					<p v-else class="text-tertiary m-0 text-sm">No data sources declared by member detections.</p>
 				</template>
 			</CardEntity>
 
@@ -165,21 +161,19 @@
 				<template #headerMain>
 					<div class="flex items-center gap-2">
 						<Icon name="carbon:link" :size="14" />
-						<span class="text-sm font-semibold uppercase tracking-wide">References</span>
+						<span class="text-sm font-semibold tracking-wide uppercase">References</span>
 					</div>
 				</template>
 				<template #default>
 					<ul v-if="story.references.length" class="reference-list">
-						<li v-for="ref of story.references" :key="ref">
-							<a :href="ref" target="_blank" rel="noopener">
+						<li v-for="item of story.references" :key="item">
+							<a :href="item" target="_blank" rel="noopener">
 								<Icon name="carbon:launch" :size="12" />
-								<span>{{ ref }}</span>
+								<span>{{ item }}</span>
 							</a>
 						</li>
 					</ul>
-					<p v-else class="text-tertiary m-0 text-sm">
-						No references provided by member detections.
-					</p>
+					<p v-else class="text-tertiary m-0 text-sm">No references provided by member detections.</p>
 				</template>
 			</CardEntity>
 		</template>
@@ -202,13 +196,9 @@
 
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
-import type {
-	CatalogStoryDetailResponse,
-	CatalogStoryDetection
-} from "@/types/detectionCatalog.d"
+import type { CatalogStoryDetailResponse, CatalogStoryDetection } from "@/types/detectionCatalog.d"
 import { NButton, NDataTable, NModal, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
-import { useRouter } from "vue-router"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -216,11 +206,6 @@ import Icon from "@/components/common/Icon.vue"
 import RuleCardContent from "@/components/copilotSearches/RuleCardContent.vue"
 
 const props = defineProps<{ storyName: string }>()
-// `back` emit kept for shell compat — parent listens to also reset state.
-// Real navigation is the RouterLink in the template.
-const emit = defineEmits<{ (e: "back"): void }>()
-
-const router = useRouter()
 const message = useMessage()
 const story = ref<CatalogStoryDetailResponse | null>(null)
 const loading = ref(false)
@@ -246,10 +231,7 @@ const detectionColumns: DataTableColumns<CatalogStoryDetection> = [
 		title: "Name",
 		key: "name",
 		render: row => (
-			<a
-				class="detection-name-link"
-				onClick={() => openRuleDetail(row.id)}
-			>
+			<a class="detection-name-link" onClick={() => openRuleDetail(row.id)}>
 				{row.name}
 			</a>
 		)
@@ -265,10 +247,14 @@ const detectionColumns: DataTableColumns<CatalogStoryDetection> = [
 			return (
 				<div class="flex flex-wrap gap-1">
 					{row.tactics.map(t => (
-						<span key={t} class="chip chip-tactic">{t.toUpperCase()}</span>
+						<span key={t} class="chip chip-tactic">
+							{t.toUpperCase()}
+						</span>
 					))}
 					{ids.map(id => (
-						<span key={id} class="chip chip-mitre">{id}</span>
+						<span key={id} class="chip chip-mitre">
+							{id}
+						</span>
 					))}
 				</div>
 			)
@@ -303,7 +289,9 @@ function load(name: string) {
 			if (status === 404) {
 				message.warning(`No detections found for story '${name}'`)
 			} else {
-				message.error(err.response?.data?.detail || err.response?.data?.message || "Failed to load story detail")
+				message.error(
+					err.response?.data?.detail || err.response?.data?.message || "Failed to load story detail"
+				)
 			}
 		})
 		.finally(() => {
@@ -311,7 +299,10 @@ function load(name: string) {
 		})
 }
 
-watch(() => props.storyName, name => load(name))
+watch(
+	() => props.storyName,
+	name => load(name)
+)
 onBeforeMount(() => load(props.storyName))
 </script>
 
