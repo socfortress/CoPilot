@@ -1,48 +1,48 @@
 <template>
-	<n-card title="Storage per Customer" :bordered>
+	<n-card title="Storage per Customer" segmented content-class="pr-2!">
 		<n-spin :show="loading">
-			<div v-if="customerSizes && customerSizes.length > 0" class="customer-list">
-				<div v-for="customer in customerSizes" :key="customer.customer" class="customer-item">
-					<div class="customer-header">
-						<div class="customer-name">
-							<n-text strong>{{ customer.customer }}</n-text>
-							<n-popover trigger="click" placement="bottom" :width="300">
-								<template #trigger>
-									<n-tag size="small" :bordered="false" type="info" class="clickable-tag">
-										{{ customer.index_count }}
-										{{ customer.index_count === 1 ? "index" : "indices" }}
-									</n-tag>
-								</template>
-								<div class="indices-popover">
-									<div class="popover-header">
-										<n-text strong>Indices for {{ customer.customer }}</n-text>
+			<div v-if="customerSizes && customerSizes.length > 0">
+				<n-scrollbar style="max-height: 200px" trigger="none" content-class="flex flex-col gap-4 pr-5!">
+					<div v-for="customer in customerSizes" :key="customer.customer" class="flex flex-col gap-1">
+						<div class="flex items-center justify-between gap-2">
+							<div class="flex items-center gap-2">
+								<div>{{ customer.customer }}</div>
+								<n-popover trigger="click" placement="bottom" :width="300">
+									<template #trigger>
+										<n-tag size="small" class="cursor-pointer!">
+											{{ customer.index_count }}
+											{{ customer.index_count === 1 ? "index" : "indices" }}
+										</n-tag>
+									</template>
+									<div class="flex flex-col gap-2">
+										<span class="text-sm font-semibold">Indices for {{ customer.customer }}</span>
+										<n-scrollbar style="max-height: 200px" trigger="none">
+											<ul>
+												<li
+													v-for="index in customer.indices"
+													:key="index"
+													class="hover:text-primary cursor-pointer font-mono text-sm transition-colors"
+													@click="selectIndex(index)"
+												>
+													{{ index }}
+												</li>
+											</ul>
+										</n-scrollbar>
 									</div>
-									<n-scrollbar style="max-height: 200px">
-										<div class="indices-list">
-											<div
-												v-for="index in customer.indices"
-												:key="index"
-												class="index-item"
-												@click="selectIndex(index)"
-											>
-												<n-text code class="index-link">{{ index }}</n-text>
-											</div>
-										</div>
-									</n-scrollbar>
-								</div>
-							</n-popover>
+								</n-popover>
+							</div>
+							<div class="font-mono font-bold">{{ customer.total_size_human }}</div>
 						</div>
-						<n-text class="customer-size">{{ customer.total_size_human }}</n-text>
+						<n-progress
+							type="line"
+							:percentage="getPercentage(customer.total_size_bytes)"
+							:show-indicator="false"
+							:height="8"
+							:border-radius="4"
+							:color="getProgressColor(customer.total_size_bytes)"
+						/>
 					</div>
-					<n-progress
-						type="line"
-						:percentage="getPercentage(customer.total_size_bytes)"
-						:show-indicator="false"
-						:height="8"
-						:border-radius="4"
-						:color="getProgressColor(customer.total_size_bytes)"
-					/>
-				</div>
+				</n-scrollbar>
 			</div>
 			<n-empty v-else-if="!loading" description="No customer data available" />
 		</n-spin>
@@ -62,10 +62,6 @@ interface CustomerIndicesSize {
 	index_count: number
 	indices: string[]
 }
-
-defineProps<{
-	bordered?: boolean
-}>()
 
 const emit = defineEmits<{
 	(e: "click", value: string): void
@@ -122,71 +118,3 @@ onBeforeMount(() => {
 	getCustomerIndicesSize()
 })
 </script>
-
-<style lang="scss" scoped>
-.customer-list {
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
-	max-height: 400px;
-	overflow-y: auto;
-
-	.customer-item {
-		.customer-header {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			margin-bottom: 6px;
-
-			.customer-name {
-				display: flex;
-				align-items: center;
-				gap: 8px;
-
-				.clickable-tag {
-					cursor: pointer;
-					transition: opacity 0.2s;
-
-					&:hover {
-						opacity: 0.8;
-					}
-				}
-			}
-
-			.customer-size {
-				font-weight: 600;
-				font-family: var(--font-family-mono);
-			}
-		}
-	}
-}
-
-.indices-popover {
-	.popover-header {
-		margin-bottom: 8px;
-		padding-bottom: 8px;
-		border-bottom: 1px solid var(--border-color);
-	}
-
-	.indices-list {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-
-		.index-item {
-			padding: 4px 0;
-			cursor: pointer;
-			border-radius: 4px;
-			transition: background-color 0.2s;
-
-			&:hover {
-				background-color: var(--hover-color);
-			}
-
-			.index-link {
-				cursor: pointer;
-			}
-		}
-	}
-}
-</style>
