@@ -10,9 +10,8 @@
 			<div class="flex flex-col gap-1">
 				<h3 class="m-0 text-lg font-semibold">Wazuh Rules</h3>
 				<p class="text-secondary m-0 text-sm">
-					Every rule shipped by the Wazuh Manager. Sort by hits to spot noisy rules,
-					switch to "Dead" to find rules that never fire, or filter by customer to
-					see the picture for a specific tenant.
+					Every rule shipped by the Wazuh Manager. Sort by hits to spot noisy rules, switch to "Dead" to find
+					rules that never fire, or filter by customer to see the picture for a specific tenant.
 				</p>
 			</div>
 			<Badge type="splitted" color="primary">
@@ -81,19 +80,19 @@
 		</div>
 
 		<!-- Unavailable state: Wazuh Manager not reachable / not configured. -->
-		<n-alert v-if="!loading && !available" type="warning" :show-icon="true">
+		<n-alert v-if="!loading && !available" type="warning" show-icon>
 			<template #header>Wazuh Manager not available</template>
 			{{ unavailableReason || "Could not reach the Wazuh Manager to load rules." }}
 		</n-alert>
 
 		<n-spin v-else :show="loading">
 			<n-data-table
-				:columns="columns"
+				:columns
 				:data="filteredRules"
 				:loading
 				size="small"
-				:row-props="rowProps"
-				:pagination="pagination"
+				:row-props
+				:pagination
 				class="catalog-table wazuh-rules-table"
 			/>
 		</n-spin>
@@ -152,9 +151,7 @@ const pagination = {
 
 // Count of "dead" rules for the chip badge — keeps the analyst informed of
 // how many candidates the filter would surface before clicking.
-const deadCount = computed(
-	() => rules.value.filter(r => r.hits_30d === 0 && (r.level ?? 0) >= 7).length
-)
+const deadCount = computed(() => rules.value.filter(r => r.hits_30d === 0 && (r.level ?? 0) >= 7).length)
 
 const filteredRules = computed<CatalogWazuhRuleRow[]>(() => {
 	const q = filter.value.trim().toLowerCase()
@@ -186,16 +183,14 @@ const filteredRules = computed<CatalogWazuhRuleRow[]>(() => {
 function openRuleDetail(row: CatalogWazuhRuleRow) {
 	if (typeof row.id !== "number") return
 	modalRuleId.value = row.id
-	modalTitle.value = `Rule ${row.id}${row.description ? " — " + row.description : ""}`
+	modalTitle.value = `Rule ${row.id}${row.description ? ` — ${row.description}` : ""}`
 	showDetailModal.value = true
 }
 
 function openRuleById(ruleId: number) {
 	const row = rules.value.find(r => r.id === ruleId)
 	modalRuleId.value = ruleId
-	modalTitle.value = row
-		? `Rule ${ruleId}${row.description ? " — " + row.description : ""}`
-		: `Rule ${ruleId}`
+	modalTitle.value = row ? `Rule ${ruleId}${row.description ? ` — ${row.description}` : ""}` : `Rule ${ruleId}`
 	showDetailModal.value = true
 }
 
@@ -212,6 +207,44 @@ function levelTagClass(level: number | null): string {
 	if (level >= 7) return "level-pill level-warning"
 	if (level >= 3) return "level-pill level-info"
 	return "level-pill level-low"
+}
+
+function renderRuleDescription(row: CatalogWazuhRuleRow) {
+	if (!row.description) {
+		return <span class="text-tertiary text-xs">(no description)</span>
+	}
+	return <span class="leading-snug">{row.description}</span>
+}
+
+function renderRuleGroups(row: CatalogWazuhRuleRow) {
+	if (!row.groups.length) {
+		return <span class="text-tertiary text-xs">—</span>
+	}
+	return (
+		<div class="flex flex-wrap gap-1">
+			{row.groups.slice(0, 3).map(g => (
+				<span key={g} class="chip chip-info">
+					{g}
+				</span>
+			))}
+			{row.groups.length > 3 && <span class="chip chip-muted">{`+${row.groups.length - 3}`}</span>}
+		</div>
+	)
+}
+
+function renderRuleMitre(row: CatalogWazuhRuleRow) {
+	if (!row.mitre.length) {
+		return <span class="text-tertiary text-xs">—</span>
+	}
+	return (
+		<div class="flex flex-wrap gap-1">
+			{row.mitre.map(t => (
+				<span key={t} class="chip chip-mitre">
+					{t}
+				</span>
+			))}
+		</div>
+	)
 }
 
 function loadCustomers() {
@@ -262,15 +295,19 @@ const hitsColumn = computed(() => ({
 		// Color the indicator dot by intensity bucket so analysts can scan
 		// the column without reading numbers.
 		const dotClass =
-			row.hits_30d >= 10000 ? "dot-danger" :
-			row.hits_30d >= 1000 ? "dot-warning" :
-			row.hits_30d >= 100 ? "dot-info" : "dot-success"
+			row.hits_30d >= 10000
+				? "dot-danger"
+				: row.hits_30d >= 1000
+					? "dot-warning"
+					: row.hits_30d >= 100
+						? "dot-info"
+						: "dot-success"
 		return (
 			<div class="flex items-center gap-2">
 				<span class={`dot ${dotClass}`}></span>
 				<div class="flex flex-col leading-tight">
 					<span class="font-mono text-xs font-medium">{row.hits_30d.toLocaleString()}</span>
-					<span class="text-tertiary text-xs">{row.hits_7d.toLocaleString()} in 7d</span>
+					<span class="text-tertiary text-xs">{`${row.hits_7d.toLocaleString()} in 7d`}</span>
 				</div>
 			</div>
 		)
@@ -284,63 +321,37 @@ const columns = computed<DataTableColumns<CatalogWazuhRuleRow>>(() => {
 			key: "id",
 			width: 100,
 			sorter: (a, b) => (a.id ?? 0) - (b.id ?? 0),
-			render: row => <span class="font-mono text-xs text-secondary">{row.id ?? "—"}</span>
+			render: row => <span class="text-secondary font-mono text-xs">{row.id ?? "—"}</span>
 		},
 		{
 			title: "Level",
 			key: "level",
 			width: 90,
 			sorter: (a, b) => (a.level ?? 0) - (b.level ?? 0),
-			render: row => (
-				<span class={levelTagClass(row.level)}>{row.level ?? "—"}</span>
-			)
+			render: row => <span class={levelTagClass(row.level)}>{row.level ?? "—"}</span>
 		},
 		{
 			title: "Description",
 			key: "description",
-			render: row =>
-				row.description
-					? <span class="leading-snug">{row.description}</span>
-					: <span class="text-tertiary text-xs">(no description)</span>
+			render: renderRuleDescription
 		},
 		{
 			title: "Groups",
 			key: "groups",
-			render: row =>
-				row.groups.length
-					? (
-						<div class="flex flex-wrap gap-1">
-							{row.groups.slice(0, 3).map(g => (
-								<span key={g} class="chip chip-info">{g}</span>
-							))}
-							{row.groups.length > 3 && (
-								<span class="chip chip-muted">+{row.groups.length - 3}</span>
-							)}
-						</div>
-					)
-					: <span class="text-tertiary text-xs">—</span>
+			render: renderRuleGroups
 		},
 		{
 			title: "MITRE",
 			key: "mitre",
 			width: 140,
-			render: row =>
-				row.mitre.length
-					? (
-						<div class="flex flex-wrap gap-1">
-							{row.mitre.map(t => (
-								<span key={t} class="chip chip-mitre">{t}</span>
-							))}
-						</div>
-					)
-					: <span class="text-tertiary text-xs">—</span>
+			render: renderRuleMitre
 		},
 		{
 			title: "File",
 			key: "filename",
 			width: 200,
 			ellipsis: { tooltip: true },
-			render: row => <span class="font-mono text-xs text-tertiary">{row.filename || "—"}</span>
+			render: row => <span class="text-tertiary font-mono text-xs">{row.filename || "—"}</span>
 		}
 	]
 	if (firingStatsAvailable.value) cols.push(hitsColumn.value)
@@ -483,11 +494,21 @@ onBeforeMount(() => {
 	border-radius: 50%;
 	flex-shrink: 0;
 }
-:deep(.dot-muted)   { background-color: var(--border-color); }
-:deep(.dot-success) { background-color: var(--success-color); }
-:deep(.dot-info)    { background-color: var(--primary-color); }
-:deep(.dot-warning) { background-color: var(--warning-color); }
-:deep(.dot-danger)  { background-color: var(--error-color); }
+:deep(.dot-muted) {
+	background-color: var(--border-color);
+}
+:deep(.dot-success) {
+	background-color: var(--success-color);
+}
+:deep(.dot-info) {
+	background-color: var(--primary-color);
+}
+:deep(.dot-warning) {
+	background-color: var(--warning-color);
+}
+:deep(.dot-danger) {
+	background-color: var(--error-color);
+}
 
 /* Catalog table base — same rules as StoriesIndex. */
 .catalog-table :deep(.n-data-table-th) {

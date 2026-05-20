@@ -5,9 +5,9 @@
 			<div class="flex flex-col gap-1">
 				<h3 class="m-0 text-lg font-semibold">Compliance Coverage</h3>
 				<p class="text-secondary m-0 max-w-3xl text-sm">
-					Wazuh rules grouped by control ID for the selected compliance framework. Each
-					row shows how many rules cover that control and how active they've been —
-					useful for auditor questions like "what coverage do we have for PCI DSS 10.2.4?".
+					Wazuh rules grouped by control ID for the selected compliance framework. Each row shows how many
+					rules cover that control and how active they've been — useful for auditor questions like "what
+					coverage do we have for PCI DSS 10.2.4?".
 				</p>
 			</div>
 			<Badge v-if="pivot" type="splitted" color="primary">
@@ -103,7 +103,7 @@
 					<template #headerMain>
 						<div class="flex items-center gap-2">
 							<Icon name="carbon:list" :size="14" />
-							<span class="text-sm font-semibold uppercase tracking-wide">Rule IDs</span>
+							<span class="text-sm font-semibold tracking-wide uppercase">Rule IDs</span>
 						</div>
 					</template>
 					<template #default>
@@ -161,9 +161,7 @@ const pagination = {
 	showSizePicker: true
 }
 
-const frameworkOptions = computed<SelectOption[]>(() =>
-	frameworks.value.map(f => ({ label: f.label, value: f.key }))
-)
+const frameworkOptions = computed<SelectOption[]>(() => frameworks.value.map(f => ({ label: f.label, value: f.key })))
 
 const filteredGroups = computed<CatalogComplianceGroupRow[]>(() => {
 	const groups = pivot.value?.groups || []
@@ -217,20 +215,18 @@ const columns: DataTableColumns<CatalogComplianceGroupRow> = [
 			}
 			const dotClass =
 				row.total_hits_30d >= 10000
-? "dot-danger" :
-				row.total_hits_30d >= 1000
-? "dot-warning" :
-				row.total_hits_30d >= 100 ? "dot-info" : "dot-success"
+					? "dot-danger"
+					: row.total_hits_30d >= 1000
+						? "dot-warning"
+						: row.total_hits_30d >= 100
+							? "dot-info"
+							: "dot-success"
 			return (
 				<div class="flex items-center gap-2">
 					<span class={`dot ${dotClass}`}></span>
 					<div class="flex flex-col leading-tight">
 						<span class="font-mono text-xs font-medium">{row.total_hits_30d.toLocaleString()}</span>
-						<span class="text-tertiary text-xs">
-{row.total_hits_7d.toLocaleString()}
-{' '}
-in 7d
-      </span>
+						<span class="text-tertiary text-xs">{`${row.total_hits_7d.toLocaleString()} in 7d`}</span>
 					</div>
 				</div>
 			)
@@ -242,14 +238,11 @@ in 7d
 		render: row => (
 			<div class="flex flex-wrap gap-1">
 				{row.rule_ids.slice(0, 10).map(rid => (
-					<span key={rid} class="chip chip-mitre">{rid}</span>
+					<span key={rid} class="chip chip-mitre">
+						{rid}
+					</span>
 				))}
-				{row.rule_ids.length > 10 && (
-					<span class="chip chip-muted">
-+
-{row.rule_ids.length - 10}
-     </span>
-				)}
+				{row.rule_ids.length > 10 && <span class="chip chip-muted">{`+${row.rule_ids.length - 10}`}</span>}
 			</div>
 		)
 	}
@@ -286,7 +279,9 @@ function load() {
 			else message.warning(res.data?.message || "Failed to load compliance pivot")
 		})
 		.catch(err => {
-			message.error(err.response?.data?.detail || err.response?.data?.message || "Failed to load compliance pivot")
+			message.error(
+				err.response?.data?.detail || err.response?.data?.message || "Failed to load compliance pivot"
+			)
 		})
 		.finally(() => {
 			loading.value = false
@@ -360,11 +355,21 @@ onBeforeMount(loadFrameworks)
 	border-radius: 50%;
 	flex-shrink: 0;
 }
-:deep(.dot-muted)   { background-color: var(--border-color); }
-:deep(.dot-success) { background-color: var(--success-color); }
-:deep(.dot-info)    { background-color: var(--primary-color); }
-:deep(.dot-warning) { background-color: var(--warning-color); }
-:deep(.dot-danger)  { background-color: var(--error-color); }
+:deep(.dot-muted) {
+	background-color: var(--border-color);
+}
+:deep(.dot-success) {
+	background-color: var(--success-color);
+}
+:deep(.dot-info) {
+	background-color: var(--primary-color);
+}
+:deep(.dot-warning) {
+	background-color: var(--warning-color);
+}
+:deep(.dot-danger) {
+	background-color: var(--error-color);
+}
 
 :deep(.chip) {
 	display: inline-flex;

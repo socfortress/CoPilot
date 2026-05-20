@@ -17,13 +17,12 @@
 						<h2 class="m-0 text-2xl font-semibold">Detections Catalog</h2>
 					</div>
 					<p class="text-secondary m-0 max-w-3xl text-sm">
-						Discovery surface for the CoPilot detection corpus and the Wazuh ruleset.
-						Browse the CoPilot Searches grouped by analytic story, inspect every Wazuh
-						rule shipped by the manager, see your MITRE coverage gaps, and pivot by
-						compliance framework.
+						Discovery surface for the CoPilot detection corpus and the Wazuh ruleset. Browse the CoPilot
+						Searches grouped by analytic story, inspect every Wazuh rule shipped by the manager, see your
+						MITRE coverage gaps, and pivot by compliance framework.
 					</p>
 				</div>
-				<div v-if="stats" class="text-tertiary text-xs flex items-center gap-2">
+				<div v-if="stats" class="text-tertiary flex items-center gap-2 text-xs">
 					<n-spin v-if="loadingStats" size="small" />
 					<span v-else>
 						Data refreshed
@@ -68,16 +67,8 @@
 					:icon="TacticIcon"
 					sub="Covered"
 				/>
-				<CatalogStatTile
-					label="Data sources"
-					:value="stats?.data_source_count ?? 0"
-					:icon="DataSourceIcon"
-				/>
-				<CatalogStatTile
-					label="Products"
-					:value="stats?.product_count ?? 0"
-					:icon="ProductIcon"
-				/>
+				<CatalogStatTile label="Data sources" :value="stats?.data_source_count ?? 0" :icon="DataSourceIcon" />
+				<CatalogStatTile label="Products" :value="stats?.product_count ?? 0" :icon="ProductIcon" />
 			</div>
 		</header>
 
@@ -177,7 +168,7 @@ const activeTab = computed<TabKey>(() => {
 	return "stories"
 })
 
-function setTab(next: TabKey) {
+function setTab(next: string) {
 	// `replace` so tab switching doesn't pile up history entries.
 	const nextQuery = { ...route.query }
 	if (next === "stories") delete nextQuery.tab

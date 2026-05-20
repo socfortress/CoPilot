@@ -9,9 +9,8 @@
 			<div class="flex flex-col gap-1">
 				<h3 class="m-0 text-lg font-semibold">Analytic Stories</h3>
 				<p class="text-secondary m-0 text-sm">
-					Each story is a threat narrative covered by one or more CoPilot Searches
-					detections. Click a row to see the member detections, data sources, and
-					references.
+					Each story is a threat narrative covered by one or more CoPilot Searches detections. Click a row to
+					see the member detections, data sources, and references.
 				</p>
 			</div>
 			<Badge type="splitted" color="primary">
@@ -91,12 +90,10 @@ const columns: DataTableColumns<CatalogStoryRow> = [
 		sorter: (a, b) => a.name.localeCompare(b.name),
 		render: row => (
 			<div class="flex flex-col gap-1 py-1">
-				<div class="font-semibold leading-snug">{row.name}</div>
+				<div class="leading-snug font-semibold">{row.name}</div>
 				<div class="text-tertiary text-xs">
-					{row.detection_count}
-{' '}
-detection
-{row.detection_count === 1 ? "" : "s"}
+					{row.detection_count} detection
+					{row.detection_count === 1 ? "" : "s"}
 				</div>
 			</div>
 		)
@@ -105,50 +102,51 @@ detection
 		title: "Data sources",
 		key: "data_sources",
 		render: row =>
-			row.data_sources.length
-				? (
-					<div class="flex flex-wrap gap-1">
-						{row.data_sources.slice(0, 4).map(s => (
-							<span key={s} class="chip chip-info">{s}</span>
-						))}
-						{row.data_sources.length > 4 && (
-							<span class="chip chip-muted">
-+
-{row.data_sources.length - 4}
-       </span>
-						)}
-					</div>
-				)
-				: <span class="text-tertiary text-xs">—</span>
+			row.data_sources.length ? (
+				<div class="flex flex-wrap gap-1">
+					{row.data_sources.slice(0, 4).map(s => (
+						<span key={s} class="chip chip-info">
+							{s}
+						</span>
+					))}
+					{row.data_sources.length > 4 && <span class="chip chip-muted">+{row.data_sources.length - 4}</span>}
+				</div>
+			) : (
+				<span class="text-tertiary text-xs">—</span>
+			)
 	},
 	{
 		title: "MITRE tactics",
 		key: "tactics",
 		render: row =>
-			row.tactics.length
-				? (
-					<div class="flex flex-wrap gap-1">
-						{row.tactics.map(t => (
-							<span key={t} class="chip chip-tactic">{t.toUpperCase()}</span>
-						))}
-					</div>
-				)
-				: <span class="text-tertiary text-xs">—</span>
+			row.tactics.length ? (
+				<div class="flex flex-wrap gap-1">
+					{row.tactics.map(t => (
+						<span key={t} class="chip chip-tactic">
+							{t.toUpperCase()}
+						</span>
+					))}
+				</div>
+			) : (
+				<span class="text-tertiary text-xs">—</span>
+			)
 	},
 	{
 		title: "Products",
 		key: "products",
 		width: 180,
 		render: row =>
-			row.products.length
-				? (
-					<div class="flex flex-wrap gap-1">
-						{row.products.map(p => (
-							<span key={p} class="chip chip-product">{p}</span>
-						))}
-					</div>
-				)
-				: <span class="text-tertiary text-xs">—</span>
+			row.products.length ? (
+				<div class="flex flex-wrap gap-1">
+					{row.products.map(p => (
+						<span key={p} class="chip chip-product">
+							{p}
+						</span>
+					))}
+				</div>
+			) : (
+				<span class="text-tertiary text-xs">—</span>
+			)
 	},
 	{
 		title: "Last updated",
@@ -156,9 +154,11 @@ detection
 		width: 130,
 		sorter: (a, b) => (a.date || "").localeCompare(b.date || ""),
 		render: row =>
-			row.date
-				? <span class="font-mono text-xs text-secondary">{row.date}</span>
-				: <span class="text-tertiary text-xs">—</span>
+			row.date ? (
+				<span class="text-secondary font-mono text-xs">{row.date}</span>
+			) : (
+				<span class="text-tertiary text-xs">—</span>
+			)
 	}
 ]
 
