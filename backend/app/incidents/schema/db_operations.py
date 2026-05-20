@@ -208,6 +208,7 @@ class CaseAlertLinkResponse(BaseModel):
 class CaseAlertUnLinkResponse(BaseModel):
     success: bool
     message: str
+    tasks_orphaned: int = 0
 
 
 class CaseAlertLinksResponse(BaseModel):

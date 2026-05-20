@@ -20,6 +20,7 @@ export type CaseEventType =
 export interface CaseTask {
 	id: number
 	case_id: number
+	alert_id?: number | null
 	template_task_id?: number | null
 	title: string
 	description?: string | null
