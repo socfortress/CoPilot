@@ -1,10 +1,9 @@
 <template>
 	<n-spin :show="loading">
 		<div class="flex flex-col gap-3">
-			<div class="flex flex-col gap-1">
-				<small class="ml-2">IOC Value:</small>
+			<n-form-item label="IOC Value" :show-feedback="false">
 				<n-input v-model:value.trim="iocValue" placeholder="IPv4, domain, or SHA256 hash" clearable />
-			</div>
+			</n-form-item>
 			<div class="flex justify-end">
 				<n-button type="primary" :disabled="!isValid" @click="create()">Submit</n-button>
 			</div>
@@ -76,7 +75,7 @@
 <script setup lang="ts">
 import type { ThreatIntelResponse } from "@/types/threatIntel.d"
 import _trim from "lodash/trim"
-import { NButton, NInput, NSpin, useMessage } from "naive-ui"
+import { NButton, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"

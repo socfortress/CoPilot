@@ -3,7 +3,7 @@
 		<div class="flex min-h-120 flex-col">
 			<div class="flex grow flex-col">
 				<n-scrollbar x-scrollable trigger="none">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<n-steps :current size="small" :status="currentStatus">
 							<n-step title="Operative System" />
 							<n-step title="Active Response" />
@@ -82,7 +82,7 @@
 				</div>
 			</div>
 
-			<div v-if="current !== 3" class="flex justify-between gap-4 p-7 pt-4">
+			<div v-if="current !== 3" class="flex justify-between gap-4 p-6 pt-3">
 				<div class="flex gap-4">
 					<n-button v-if="isPrevStepEnabled" @click.stop="prev()">
 						<template #icon>

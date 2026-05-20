@@ -6,7 +6,7 @@
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Rule Query" tab="Rule Query" display-directive="show:lazy">
-			<div class="p-7 pt-4">
+			<div class="p-6 pt-3">
 				<CodeSource :code="query.rule_query" lang="sql" />
 			</div>
 		</n-tab-pane>

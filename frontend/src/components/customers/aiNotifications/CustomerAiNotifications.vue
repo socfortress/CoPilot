@@ -12,7 +12,7 @@
 			>
 				<CustomerShuffleIntegrations :customer-code />
 			</n-tab-pane>
-			<n-tab-pane name="dispatch_log" tab="Dispatch log" display-directive="show:lazy" class="pt-4!">
+			<n-tab-pane name="dispatch_log" tab="Dispatch log" display-directive="show:lazy" class="pt-3!">
 				<CustomerAiNotificationDispatchLog :customer-code />
 			</n-tab-pane>
 		</n-tabs>

@@ -36,7 +36,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy">
-					<div class="px-7 pt-4 pb-7">
+					<div class="px-6 pt-3 pb-6">
 						<TechniqueAlertDetails :entity="techniqueDetails" />
 					</div>
 				</n-tab-pane>
@@ -45,7 +45,7 @@
 					:tab="`Tactics (${techniqueDetails?.tactics?.length || 0})`"
 					display-directive="show:lazy"
 				>
-					<div class="px-7 pt-4 pb-7">
+					<div class="px-6 pt-3 pb-6">
 						<TacticsList v-if="techniqueDetails" :list="techniqueDetails.tactics" />
 					</div>
 				</n-tab-pane>
@@ -54,7 +54,7 @@
 					:tab="`Mitigations (${techniqueDetails?.mitigations?.length || 0})`"
 					display-directive="show:lazy"
 				>
-					<div class="px-7 pt-4 pb-7">
+					<div class="px-6 pt-3 pb-6">
 						<MitigationsList v-if="techniqueDetails" :list="techniqueDetails.mitigations" />
 					</div>
 				</n-tab-pane>
@@ -64,7 +64,7 @@
 					:tab="`Techniques (${techniqueDetails?.techniques?.length || 0})`"
 					display-directive="show:lazy"
 				>
-					<div class="px-7 pt-4 pb-7">
+					<div class="px-6 pt-3 pb-6">
 						<TechniquesList :list="techniqueDetails.techniques" />
 					</div>
 				</n-tab-pane>
@@ -73,7 +73,7 @@
 					:tab="`Groups (${techniqueDetails?.groups?.length || 0})`"
 					display-directive="show:lazy"
 				>
-					<div class="px-7 pt-4 pb-7">
+					<div class="px-6 pt-3 pb-6">
 						<GroupsList v-if="techniqueDetails" :list="techniqueDetails.groups" />
 					</div>
 				</n-tab-pane>
@@ -82,7 +82,7 @@
 					:tab="`Software (${techniqueDetails?.software?.length || 0})`"
 					display-directive="show:lazy"
 				>
-					<div class="px-7 pt-4 pb-7">
+					<div class="px-6 pt-3 pb-6">
 						<SoftwareList v-if="techniqueDetails" :list="techniqueDetails.software" />
 					</div>
 				</n-tab-pane>

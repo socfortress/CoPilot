@@ -2,7 +2,7 @@
 	<div class="cases-list">
 		<div ref="header" class="header flex items-center justify-end gap-2">
 			<div class="info flex grow gap-2">
-				<n-popover overlap placement="left">
+				<n-popover overlap placement="left" to="body">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
 							<n-button size="small" class="cursor-help!">

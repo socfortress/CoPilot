@@ -15,17 +15,15 @@
 		:mask-closable="false"
 		display-directive="show"
 	>
-		<n-drawer-content title="Threat Intel" closable :native-scrollbar="false">
-			<div class="py-3">
-				<n-collapse default-expanded-names="1" accordion display-directive="show">
-					<n-collapse-item title="SOCFortress Threat Intel" name="1">
-						<ThreatIntelForm @mounted="threatIntelCTX = $event" />
-					</n-collapse-item>
-					<n-collapse-item title="Virus Total" name="2">
-						<VirusTotalForm @mounted="virusTotalCTX = $event" />
-					</n-collapse-item>
-				</n-collapse>
-			</div>
+		<n-drawer-content title="Threat Intel" closable :native-scrollbar="false" body-content-class="px-0! py-4!">
+			<n-collapse default-expanded-names="1" accordion display-directive="show">
+				<n-collapse-item title="SOCFortress Threat Intel" name="1" class="px-6">
+					<ThreatIntelForm @mounted="threatIntelCTX = $event" />
+				</n-collapse-item>
+				<n-collapse-item title="Virus Total" name="2" class="px-6">
+					<VirusTotalForm @mounted="virusTotalCTX = $event" />
+				</n-collapse-item>
+			</n-collapse>
 		</n-drawer-content>
 	</n-drawer>
 </template>

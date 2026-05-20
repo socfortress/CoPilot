@@ -14,7 +14,7 @@
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Alerts" tab="Alerts" display-directive="show:lazy">
-				<div class="flex flex-col gap-2 p-7 pt-4">
+				<div class="flex flex-col gap-2 p-6 pt-3">
 					<template v-if="caseEntity.alerts.length">
 						<AlertItem
 							v-for="alert of caseEntity.alerts"
@@ -31,7 +31,7 @@
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Tasks" tab="Tasks" display-directive="show:lazy">
-				<div class="p-7 pt-4">
+				<div class="p-6 pt-3">
 					<CaseTasksList
 						:case-id="caseEntity.id"
 						:customer-code="caseEntity.customer_code"
@@ -41,12 +41,12 @@
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Timeline" tab="Timeline" display-directive="show:lazy">
-				<div class="p-7 pt-4">
+				<div class="p-6 pt-3">
 					<CaseTimelineFeed :case-id="caseEntity.id" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Comments" tab="Comments" display-directive="show:lazy">
-				<div class="p-7 pt-4">
+				<div class="p-6 pt-3">
 					<CaseCommentsList
 						:comments="caseEntity.comments || []"
 						:case-id="caseEntity.id"
@@ -55,7 +55,7 @@
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Data Store" tab="Data Store" display-directive="show:lazy">
-				<div class="p-7 pt-4">
+				<div class="p-6 pt-3">
 					<CaseDataStore :case-id="caseEntity.id" />
 				</div>
 			</n-tab-pane>

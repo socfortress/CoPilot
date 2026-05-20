@@ -1,34 +1,32 @@
 <template>
-	<n-tabs type="line" animated :tabs-padding="24">
-		<n-tab-pane name="Details" tab="Details" display-directive="show" class="flex flex-col gap-4 py-8!">
-			<div class="px-7">
-				<n-card embedded class="overflow-hidden">
-					<div class="flex flex-wrap justify-between gap-8">
-						<n-statistic label="Checks" :value="sca.total_checks" tabular-nums />
-						<n-statistic label="Pass" :value="sca.pass" tabular-nums />
-						<n-statistic label="Fail" :value="sca.fail" tabular-nums />
-						<n-statistic label="Invalid" :value="sca.invalid" tabular-nums />
-						<n-statistic label="Score" :value="`${sca.score}%`" tabular-nums />
-					</div>
-				</n-card>
-			</div>
-			<div class="px-7">
-				<n-card embedded class="overflow-hidden">
-					<div class="xs:flex-row! flex flex-col justify-between gap-8">
-						<n-statistic
-							class="grow"
-							label="Start scan"
-							:value="formatDate(sca.start_scan, dFormats.datetime).toString()"
-						/>
-						<n-statistic
-							class="grow"
-							label="End scan"
-							:value="formatDate(sca.end_scan, dFormats.datetime).toString()"
-						/>
-					</div>
-				</n-card>
-			</div>
-			<div v-if="properties" class="grid-auto-fit-200 grid gap-2 px-7">
+	<n-tabs type="line" animated :tabs-padding="24" pane-class="min-h-100 p-6!">
+		<n-tab-pane name="Details" tab="Details" display-directive="show" class="flex flex-col gap-4">
+			<n-card embedded class="overflow-hidden">
+				<div class="flex flex-wrap justify-between gap-8">
+					<n-statistic label="Checks" :value="sca.total_checks" tabular-nums />
+					<n-statistic label="Pass" :value="sca.pass" tabular-nums />
+					<n-statistic label="Fail" :value="sca.fail" tabular-nums />
+					<n-statistic label="Invalid" :value="sca.invalid" tabular-nums />
+					<n-statistic label="Score" :value="`${sca.score}%`" tabular-nums />
+				</div>
+			</n-card>
+
+			<n-card embedded class="overflow-hidden">
+				<div class="xs:flex-row! flex flex-col justify-between gap-8">
+					<n-statistic
+						class="grow"
+						label="Start scan"
+						:value="formatDate(sca.start_scan, dFormats.datetime).toString()"
+					/>
+					<n-statistic
+						class="grow"
+						label="End scan"
+						:value="formatDate(sca.end_scan, dFormats.datetime).toString()"
+					/>
+				</div>
+			</n-card>
+
+			<div v-if="properties" class="grid-auto-fit-200 grid gap-2">
 				<CardKV v-for="(value, key) of properties" :key>
 					<template #key>
 						{{ key }}
@@ -56,24 +54,20 @@
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Description" tab="Description" display-directive="show">
-			<div class="p-7 pt-4">
-				<n-input
-					:value="sca.description"
-					type="textarea"
-					readonly
-					placeholder="Empty"
-					size="large"
-					:autosize="{
-						minRows: 3,
-						maxRows: 18
-					}"
-				/>
-			</div>
+			<n-input
+				:value="sca.description"
+				type="textarea"
+				readonly
+				placeholder="Empty"
+				size="large"
+				:autosize="{
+					minRows: 3,
+					maxRows: 18
+				}"
+			/>
 		</n-tab-pane>
 		<n-tab-pane name="SCA Results" tab="SCA Results" display-directive="show:lazy">
-			<div class="p-7 pt-4">
-				<ScaResults :sca :agent />
-			</div>
+			<ScaResults :sca :agent />
 		</n-tab-pane>
 	</n-tabs>
 </template>

@@ -85,7 +85,7 @@
 			</n-spin>
 		</n-tab-pane>
 		<n-tab-pane name="Fields" tab="Fields" display-directive="show:lazy">
-			<div class="p-7 pt-4">
+			<div class="p-6 pt-3">
 				<CardKV v-for="(val, key) in entity.field_matches" :key size="lg">
 					<template #key>{{ key }}</template>
 					<template #value>

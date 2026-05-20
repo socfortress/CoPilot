@@ -76,4 +76,15 @@
 		background-color: var(--primary-color);
 		box-shadow: 0 0 6px rgba(var(--primary-color-rgb) / 0.4);
 	}
+
+	[role="tablist"] {
+		button {
+			cursor: pointer;
+			.tabular-nums {
+				border: none;
+				font-size: var(--font-mono);
+				color: var(--fg-secondary-color);
+			}
+		}
+	}
 }

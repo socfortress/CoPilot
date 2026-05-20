@@ -41,7 +41,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="query" tab="Query" display-directive="show">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<n-input
 							:value="event?.config?.query"
 							type="textarea"
@@ -56,7 +56,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="fieldSpec" tab="Field Spec" display-directive="show:lazy">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<SimpleJsonViewer
 							class="vuesjv-override"
 							:model-value="event.field_spec"

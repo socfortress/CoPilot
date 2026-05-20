@@ -153,7 +153,7 @@
 								</code>
 							</div>
 						</div>
-						<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+						<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
 							<CardKV v-for="(value, key) of properties" :key>
 								<template #key>
 									{{ key }}
@@ -177,7 +177,7 @@
 					</n-spin>
 				</n-tab-pane>
 				<n-tab-pane name="Description" tab="Description" display-directive="show">
-					<div v-if="baseInfo" class="p-7 pt-4">
+					<div v-if="baseInfo" class="p-6 pt-3">
 						<n-input
 							:value="baseInfo.case_description"
 							type="textarea"
@@ -192,7 +192,7 @@
 				</n-tab-pane>
 				<n-tab-pane name="History" tab="History" display-directive="show:lazy">
 					<n-spin :show="loadingDetails">
-						<div class="p-7 pt-4">
+						<div class="p-6 pt-3">
 							<SocCaseTimeline v-if="extendedInfo" :case-data="extendedInfo" />
 						</div>
 					</n-spin>

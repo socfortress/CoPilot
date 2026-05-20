@@ -1,6 +1,6 @@
 <template>
 	<div :id="`customer-${customer.customer_code}`">
-		<CardEntity :loading :highlighted="!!highlight">
+		<CardEntity :loading :highlighted="!!highlight" :hide-footer-extra="!!hideCardActions">
 			<template #default>
 				<div class="flex items-start gap-4">
 					<n-avatar
@@ -123,7 +123,7 @@
 				</div>
 			</template>
 
-			<template v-if="!hideCardActions" #footerExtra>
+			<template #footerExtra>
 				<n-button size="small" @click.stop="showDetails = true">
 					<template #icon>
 						<Icon :name="DetailsIcon" />
@@ -207,7 +207,7 @@
 							name="AI Notifications"
 							tab="AI Notifications"
 							display-directive="show:lazy"
-							class="p-4!"
+							class="overflow-hidden p-4!"
 						>
 							<CustomerAiNotifications :customer-code="customer.customer_code" />
 						</n-tab-pane>
@@ -283,7 +283,6 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { Customer, CustomerMeta } from "@/types/customers.d"
-import _toSafeInteger from "lodash/toSafeInteger"
 import { NAvatar, NButton, NModal, NPopover, NScrollbar, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
@@ -291,7 +290,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useCustomerHealthcheckFilters } from "@/composables/useCustomerHealthcheckFilters"
-import { hashMD5 } from "@/utils"
+import { getAvatar, getNameInitials } from "@/utils"
 
 const props = defineProps<{
 	customer: Customer
@@ -339,20 +338,12 @@ const agentCount = ref<number | null>(null)
 const { healthcheckFilters } = useCustomerHealthcheckFilters()
 
 const loading = computed(() => loadingFull.value || loadingDelete.value)
+
 const fallbackAvatar = computed(() => {
-	let text = customer.value.customer_name.slice(0, 2).toUpperCase()
-
-	if (customer.value.customer_name.includes(" ")) {
-		const chunks = customer.value.customer_name.split(" ")
-		text = ((chunks[0]?.[0] ?? "") + (chunks[1]?.[0] ?? "")).toUpperCase()
-	}
-
-	const hash = hashMD5(customer.value.customer_code)
-	const uniq = hash.split("").find(o => _toSafeInteger(o).toString() === o)
-	const seed = hash.slice(0, _toSafeInteger(uniq))
-
-	return `https://avatar.vercel.sh/${seed}.svg?text=${text}`
+	const initials = getNameInitials(customer.value.customer_name)
+	return getAvatar({ seed: initials, text: initials })
 })
+
 const addressLabel = computed(
 	() => [customerInfo.value?.city, customerInfo.value?.state].filter(o => !!o).join(", ") || "-"
 )

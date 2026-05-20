@@ -114,6 +114,7 @@ export function getThemeOverrides(state: ThemeState): GlobalThemeOverrides {
 		Card: {
 			color: background,
 			colorEmbedded: backgroundSecondary,
+			colorEmbeddedModal: backgroundSecondary,
 			titleFontSizeSmall: state.fontSize.cardTitle,
 			titleFontSizeMedium: state.fontSize.cardTitle,
 			titleFontSizeLarge: state.fontSize.cardTitle,
@@ -128,6 +129,14 @@ export function getThemeOverrides(state: ThemeState): GlobalThemeOverrides {
 		},
 		LoadingBar: {
 			colorLoading: primary
+		},
+		Modal: {
+			peers: {
+				Card: {
+					color: background,
+					colorEmbedded: backgroundSecondary
+				}
+			}
 		},
 		Tag: {
 			colorBordered: "rgba(0, 0, 0, 0.1)"

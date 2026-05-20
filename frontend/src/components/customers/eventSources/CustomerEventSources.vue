@@ -10,7 +10,7 @@
 					@close="closeForm()"
 				/>
 			</div>
-			<div v-else>
+			<div v-else class="flex flex-col gap-4">
 				<div class="flex items-center justify-between gap-4">
 					<n-button size="small" type="primary" @click="openForm()">
 						<template #icon>

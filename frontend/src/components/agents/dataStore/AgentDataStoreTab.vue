@@ -114,7 +114,7 @@ import Icon from "@/components/common/Icon.vue"
 import ArtifactCard from "./ArtifactCard.vue"
 import ArtifactDetails from "./ArtifactDetails.vue"
 
-// TODO-FE: join AgentDataStoreTab + AgentDataStoreTabCompact
+// TODO-FE: join AgentDataStoreTab + AgentDataStoreTabCompact (Data Store Tab on Agent Details page)
 
 const props = defineProps<{
 	agent: Agent

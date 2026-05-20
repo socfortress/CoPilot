@@ -18,7 +18,7 @@
 					tab="Analysis"
 					display-directive="show"
 				>
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<Markdown :source="mcpResponse.structured_result.response" />
 					</div>
 				</n-tab-pane>
@@ -28,7 +28,7 @@
 					tab="Thinking Process"
 					display-directive="show:lazy"
 				>
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<Markdown :source="mcpResponse.structured_result.thinking_process" />
 					</div>
 				</n-tab-pane>
@@ -55,7 +55,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane v-if="evaluation" name="Intel" tab="Intel" display-directive="show:lazy">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<n-input
 							:value="evaluation.intel"
 							type="textarea"
@@ -71,7 +71,7 @@
 				</n-tab-pane>
 				<n-tab-pane v-if="evaluation?.hashes?.length" name="Hashes" tab="Hashes" display-directive="show:lazy">
 					<ListPercentage
-						class="p-7 pt-4"
+						class="p-6 pt-3"
 						:list="evaluation.hashes"
 						label-key="hash"
 						percentage-key="percentage"
@@ -84,7 +84,7 @@
 					display-directive="show:lazy"
 				>
 					<ListPercentage
-						class="p-7 pt-4"
+						class="p-6 pt-3"
 						:list="evaluation.network"
 						label-key="port"
 						percentage-key="usage"
@@ -97,7 +97,7 @@
 					display-directive="show:lazy"
 				>
 					<ListPercentage
-						class="p-7 pt-4"
+						class="p-6 pt-3"
 						:list="evaluation.parents"
 						label-key="name"
 						percentage-key="percentage"
@@ -105,7 +105,7 @@
 				</n-tab-pane>
 				<n-tab-pane v-if="evaluation?.paths?.length" name="Paths" tab="Paths" display-directive="show:lazy">
 					<ListPercentage
-						class="p-7 pt-4"
+						class="p-6 pt-3"
 						:list="evaluation.paths"
 						label-key="directory"
 						percentage-key="percentage"

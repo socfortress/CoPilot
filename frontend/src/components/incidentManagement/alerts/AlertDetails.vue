@@ -22,22 +22,22 @@
 						<span v-if="hasAiReport" class="bg-primary inline-block h-2 w-2 animate-pulse rounded-full" />
 					</div>
 				</template>
-				<div class="p-7 pt-4">
+				<div class="p-6 pt-3">
 					<AlertAiAnalyst :alert-id="alert.id" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Timeline" tab="Timeline" display-directive="show:lazy">
-				<div class="p-7 pt-4">
+				<div class="p-6 pt-3">
 					<AlertTimeline :alert />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Assets" tab="Assets" display-directive="show:lazy">
-				<div class="p-7 pt-4">
+				<div class="p-6 pt-3">
 					<AlertAssetsList :assets="alert.assets" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Comments" tab="Comments" display-directive="show:lazy">
-				<div class="p-7 pt-4">
+				<div class="p-6 pt-3">
 					<AlertCommentsList
 						:comments="alert.comments"
 						:alert-id="alert.id"
@@ -46,7 +46,7 @@
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="IoCs" tab="IoCs" display-directive="show:lazy">
-				<div class="p-7 pt-4">
+				<div class="p-6 pt-3">
 					<AlertIoCsList :iocs="alert.iocs" :alert-id="alert.id" @updated="updateIos($event)" />
 				</div>
 			</n-tab-pane>
@@ -57,7 +57,7 @@
 						<span>Try MCP</span>
 					</div>
 				</template>
-				<div class="p-7 pt-4">
+				<div class="p-6 pt-3">
 					<AlertTryMcp :alert />
 				</div>
 			</n-tab-pane>

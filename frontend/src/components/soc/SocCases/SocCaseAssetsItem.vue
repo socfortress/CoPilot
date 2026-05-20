@@ -65,7 +65,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+					<div v-if="properties" class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
 						<CardKV v-for="(value, key) of properties" :key>
 							<template #key>
 								{{ key }}
@@ -77,7 +77,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Description" tab="Description" display-directive="show">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<template v-if="isUrlLike(asset.asset_description)">
 							<a
 								:href="asset.asset_description"

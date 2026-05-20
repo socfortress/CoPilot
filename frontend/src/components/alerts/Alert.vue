@@ -129,7 +129,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane v-if="alert._id" name="Agent" tab="Agent" display-directive="show">
-					<div v-if="agentProperties" class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+					<div v-if="agentProperties" class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
 						<CardKV v-for="(value, key) of agentProperties" :key>
 							<template #key>
 								{{ key }}
@@ -168,7 +168,7 @@
 					tab="SOCFortress Response"
 					display-directive="show"
 				>
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<n-input
 							:value="alert._source.ask_socfortress_message"
 							type="textarea"
@@ -182,7 +182,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane v-if="alert._source.message" name="Message" tab="Message" display-directive="show">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<CodeSource :code="alert._source.message" :decode="false" />
 					</div>
 				</n-tab-pane>
@@ -192,7 +192,7 @@
 					tab="Data document"
 					display-directive="show"
 				>
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<n-input
 							:value="alert._source.data_document"
 							type="textarea"
@@ -206,7 +206,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Details" tab="Details" display-directive="show:lazy">
-					<div class="p-7 pt-4">
+					<div class="p-6 pt-3">
 						<CodeSource :code="alert._source" lang="json" :decode="false" />
 					</div>
 				</n-tab-pane>

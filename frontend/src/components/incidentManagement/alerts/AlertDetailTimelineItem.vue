@@ -15,7 +15,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid-auto-fit-200 grid gap-2 p-7 pt-4">
+					<div class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
 						<CardKV v-for="(value, key) of timelineDetailsInfo" :key>
 							<template #key>
 								{{ key }}
@@ -38,7 +38,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Source" tab="Source" display-directive="show">
-					<div v-if="timelineDetailsSource" class="p-7 pt-4">
+					<div v-if="timelineDetailsSource" class="p-6 pt-3">
 						<CodeSource :code="timelineDetailsSource" lang="json" />
 					</div>
 				</n-tab-pane>

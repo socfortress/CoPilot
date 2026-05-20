@@ -43,7 +43,7 @@
 			:bordered="false"
 			segmented
 		>
-			<div class="p-7 pt-4">
+			<div class="p-6 pt-3">
 				<div class="mb-2">
 					Created:
 					<code>{{ formatDateTime(rule.created_at) }}</code>

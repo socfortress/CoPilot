@@ -8,29 +8,17 @@
 				</template>
 			</CardKV>
 		</div>
-		<div v-if="epssList.length" class="flex flex-col gap-3">
+		<div v-if="epssList.length" class="@container flex flex-col gap-3">
 			<n-card
 				v-for="item of epssList"
 				:key="item.___id"
 				embedded
 				class="item-appear item-appear-bottom item-appear-005 overflow-hidden"
 			>
-				<div class="xs:flex!-row flex flex-col justify-between gap-8">
-					<n-statistic class="grow" label="Date">
-						<span class="stats-value whitespace-nowrap">
-							{{ formatDate(item.date, dFormats.date) }}
-						</span>
-					</n-statistic>
-					<n-statistic class="grow" label="EPSS">
-						<span class="stats-value">
-							{{ item.epss }}
-						</span>
-					</n-statistic>
-					<n-statistic class="grow" label="Percentile">
-						<span class="stats-value">
-							{{ item.percentile }}
-						</span>
-					</n-statistic>
+				<div class="flex flex-col justify-between gap-8 @md:flex-row">
+					<n-statistic class="grow" label="Date" :value="`${formatDate(item.date, dFormats.date)}`" />
+					<n-statistic class="grow" label="EPSS" :value="item.epss" tabular-nums />
+					<n-statistic class="grow" label="Percentile" :value="item.percentile" tabular-nums />
 				</div>
 			</n-card>
 			<p v-if="epssModelLink" class="w-full text-right">
@@ -96,10 +84,3 @@ onBeforeMount(() => {
 	getData()
 })
 </script>
-
-<style lang="scss" scoped>
-.stats-value {
-	font-family: var(--font-family-mono);
-	font-size: clamp(18px, 2.3vw, var(--n-value-font-size));
-}
-</style>
