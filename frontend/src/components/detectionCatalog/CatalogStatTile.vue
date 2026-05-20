@@ -19,7 +19,7 @@
 						{{ label }}
 					</div>
 					<div class="value flex items-baseline gap-2" :class="`accent-${accent}-value`">
-						<span class="font-display text-2xl font-semibold leading-none">
+						<span class="font-display text-2xl leading-none font-semibold">
 							{{ formattedValue }}
 						</span>
 						<span v-if="suffix" class="text-tertiary text-xs">{{ suffix }}</span>
@@ -58,9 +58,7 @@ const emit = defineEmits<{ (e: "navigate", to: string): void }>()
 const accent = computed<Accent>(() => props.accent ?? "default")
 
 // Format numbers with thousand separators; pass strings through untouched.
-const formattedValue = computed(() =>
-	typeof props.value === "number" ? props.value.toLocaleString() : props.value
-)
+const formattedValue = computed(() => (typeof props.value === "number" ? props.value.toLocaleString() : props.value))
 
 function onClick() {
 	if (props.to) emit("navigate", props.to)

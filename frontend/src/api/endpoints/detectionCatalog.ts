@@ -21,16 +21,12 @@ import { HttpClient } from "../httpClient"
 export default {
 	/** Top-level metrics for the catalog overview pane. */
 	getStats() {
-		return HttpClient.get<FlaskBaseResponse & CatalogStatsResponse>(
-			`/copilot_searches/catalog/stats`
-		)
+		return HttpClient.get<FlaskBaseResponse & CatalogStatsResponse>(`/copilot_searches/catalog/stats`)
 	},
 
 	/** List every analytic story with per-story aggregated summary fields. */
 	listStories() {
-		return HttpClient.get<FlaskBaseResponse & CatalogStoryListResponse>(
-			`/copilot_searches/catalog/stories`
-		)
+		return HttpClient.get<FlaskBaseResponse & CatalogStoryListResponse>(`/copilot_searches/catalog/stories`)
 	},
 
 	/**
@@ -56,10 +52,9 @@ export default {
 	 * any hits for that customer get zeros.
 	 */
 	listWazuhRules(customerCode?: string) {
-		return HttpClient.get<FlaskBaseResponse & CatalogWazuhRulesResponse>(
-			`/copilot_searches/catalog/wazuh-rules`,
-			{ params: customerCode ? { customer_code: customerCode } : {} }
-		)
+		return HttpClient.get<FlaskBaseResponse & CatalogWazuhRulesResponse>(`/copilot_searches/catalog/wazuh-rules`, {
+			params: customerCode ? { customer_code: customerCode } : {}
+		})
 	},
 
 	/** Full meta payload for one Wazuh rule (header, compliance, if-then details, …). */

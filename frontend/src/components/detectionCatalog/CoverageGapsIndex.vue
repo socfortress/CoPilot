@@ -5,10 +5,9 @@
 			<div class="flex flex-col gap-1">
 				<h3 class="m-0 text-lg font-semibold">Coverage Gaps</h3>
 				<p class="text-secondary m-0 max-w-3xl text-sm">
-					MITRE ATT&amp;CK techniques no rule covers — across both the CoPilot Searches
-					corpus and the Wazuh ruleset. Sub-techniques are collapsed into their parents
-					(coverage of T1059.001 counts as coverage for T1059). Use this list to spot
-					where new detection authoring would expand your coverage.
+					MITRE ATT&amp;CK techniques no rule covers — across both the CoPilot Searches corpus and the Wazuh
+					ruleset. Sub-techniques are collapsed into their parents (coverage of T1059.001 counts as coverage
+					for T1059). Use this list to spot where new detection authoring would expand your coverage.
 				</p>
 			</div>
 			<Badge type="splitted" color="primary">
@@ -43,24 +42,12 @@
 			/>
 		</div>
 
-		<n-input
-			v-model:value="filter"
-			size="medium"
-			placeholder="Filter by technique ID, name, or tactic…"
-			clearable
-		>
+		<n-input v-model:value="filter" size="medium" placeholder="Filter by technique ID, name, or tactic…" clearable>
 			<template #prefix><Icon name="carbon:search" /></template>
 		</n-input>
 
 		<n-spin :show="loading">
-			<n-data-table
-				:columns
-				:data="filteredGaps"
-				:loading
-				size="small"
-				:pagination
-				class="catalog-table"
-			/>
+			<n-data-table :columns :data="filteredGaps" :loading size="small" :pagination class="catalog-table" />
 		</n-spin>
 	</div>
 </template>
@@ -100,10 +87,7 @@ const filteredGaps = computed<CatalogCoverageGapRow[]>(() => {
 	const q = filter.value.trim().toLowerCase()
 	if (!q) return gaps.value
 	return gaps.value.filter(g =>
-		[g.technique_id, g.technique_name, ...(g.tactics || [])]
-			.join(" ")
-			.toLowerCase()
-			.includes(q)
+		[g.technique_id, g.technique_name, ...(g.tactics || [])].join(" ").toLowerCase().includes(q)
 	)
 })
 
@@ -122,19 +106,14 @@ const columns: DataTableColumns<CatalogCoverageGapRow> = [
 		width: 140,
 		sorter: (a, b) => a.technique_id.localeCompare(b.technique_id),
 		render: row =>
-			row.url
-				? (
-					<a
-						href={row.url}
-						target="_blank"
-						rel="noopener"
-						class="technique-link"
-					>
-						{row.technique_id}
-						<Icon name="carbon:launch" size={11} />
-					</a>
-				)
-				: <span class="font-mono text-xs text-secondary">{row.technique_id}</span>
+			row.url ? (
+				<a href={row.url} target="_blank" rel="noopener" class="technique-link">
+					{row.technique_id}
+					<Icon name="carbon:launch" size={11} />
+				</a>
+			) : (
+				<span class="text-secondary font-mono text-xs">{row.technique_id}</span>
+			)
 	},
 	{
 		title: "Technique",
@@ -146,15 +125,17 @@ const columns: DataTableColumns<CatalogCoverageGapRow> = [
 		title: "Tactics",
 		key: "tactics",
 		render: row =>
-			row.tactics.length
-				? (
-					<div class="flex flex-wrap gap-1">
-						{row.tactics.map(t => (
-							<span key={t} class="chip chip-tactic">{t.toUpperCase()}</span>
-						))}
-					</div>
-				)
-				: <span class="text-tertiary text-xs">—</span>
+			row.tactics.length ? (
+				<div class="flex flex-wrap gap-1">
+					{row.tactics.map(t => (
+						<span key={t} class="chip chip-tactic">
+							{t.toUpperCase()}
+						</span>
+					))}
+				</div>
+			) : (
+				<span class="text-tertiary text-xs">—</span>
+			)
 	}
 ]
 
