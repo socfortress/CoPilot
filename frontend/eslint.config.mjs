@@ -54,7 +54,8 @@ export default antfu(
 			"vue/quote-props": "off",
 			"vue/one-component-per-file": "off",
 			"vue/prefer-true-attribute-shorthand": "error",
-			"vue/v-bind-style": ["error", "shorthand", { sameNameShorthand: "always" }]
+			"vue/v-bind-style": ["error", "shorthand", { sameNameShorthand: "always" }],
+			"style/multiline-ternary": "off"
 		}
 	}
 )

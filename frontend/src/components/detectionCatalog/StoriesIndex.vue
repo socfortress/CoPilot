@@ -92,7 +92,7 @@ const columns: DataTableColumns<CatalogStoryRow> = [
 			<div class="flex flex-col gap-1 py-1">
 				<div class="leading-snug font-semibold">{row.name}</div>
 				<div class="text-tertiary text-xs">
-					{row.detection_count} detection
+					{`${row.detection_count} detection`}
 					{row.detection_count === 1 ? "" : "s"}
 				</div>
 			</div>
@@ -109,7 +109,9 @@ const columns: DataTableColumns<CatalogStoryRow> = [
 							{s}
 						</span>
 					))}
-					{row.data_sources.length > 4 && <span class="chip chip-muted">+{row.data_sources.length - 4}</span>}
+					{row.data_sources.length > 4 && (
+						<span class="chip chip-muted">{`+${row.data_sources.length - 4}`}</span>
+					)}
 				</div>
 			) : (
 				<span class="text-tertiary text-xs">—</span>
