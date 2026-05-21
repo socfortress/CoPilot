@@ -102,7 +102,7 @@ const chartOption = computed((): ChartOption => {
 		series: [
 			{
 				name: "Indices Health",
-				top: "-40%",
+				top: "-30%",
 				zlevel: 1,
 				type: "pie",
 				radius: [0, "20%"],
@@ -120,7 +120,7 @@ const chartOption = computed((): ChartOption => {
 			{
 				name: "Indices Size",
 				type: "pie",
-				top: "-30%",
+				top: "-20%",
 				bottom: "10%",
 				color: [...SIZE_COLORS],
 				tooltip: {
