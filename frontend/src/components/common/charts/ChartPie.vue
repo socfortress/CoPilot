@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import type { PieSeriesOption } from "echarts/charts"
 import type { LegendComponentOption, TitleComponentOption, TooltipComponentOption } from "echarts/components"
-import type { ComposeOption } from "echarts/core"
+import type { ComposeOption, ECElementEvent } from "echarts/core"
 import { PieChart } from "echarts/charts"
 import { GraphicComponent, LegendComponent, TitleComponent, TooltipComponent } from "echarts/components"
 import { use } from "echarts/core"
@@ -88,11 +88,11 @@ const chartOption = computed((): ChartOption => {
 			{
 				type: "text",
 				left: "center",
-				top: "40%",
+				top: "33%",
 				style: {
-					text: `Total\n${totalValue.value}`,
+					text: `Total\n\n${totalValue.value}`,
 					fill: fg,
-					fontSize: 12,
+					fontSize: 14,
 					fontFamily: ff,
 					textAlign: "center",
 					textVerticalAlign: "middle"
@@ -101,6 +101,7 @@ const chartOption = computed((): ChartOption => {
 		],
 		legend: {
 			show: true,
+			selectedMode: false,
 			type: "scroll",
 			orient: "horizontal",
 			bottom: 4,
@@ -146,10 +147,15 @@ const chartOption = computed((): ChartOption => {
 	}
 })
 
-function onChartClick(params: unknown) {
-	const p = params as { componentType?: string; name?: string; dataIndex?: number }
-	if (p.componentType !== "series") return
-	const name = p.name ?? props.labels[p.dataIndex ?? -1]
+function resolveClickedItemName(params: ECElementEvent): string | undefined {
+	if (params.componentType === "legend" || params.componentType === "series") {
+		return params.name ?? props.labels[params.dataIndex ?? -1]
+	}
+	return undefined
+}
+
+function onChartClick(params: ECElementEvent) {
+	const name = resolveClickedItemName(params)
 	if (name) emit("itemClick", { name })
 }
 </script>
