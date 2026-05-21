@@ -1,12 +1,12 @@
 <template>
-	<n-card title="Storage per Customer" segmented content-class="pr-2!">
+	<n-card title="Storage per Customer" segmented content-class="pr-1!">
 		<n-spin :show="loading">
 			<div v-if="customerSizes && customerSizes.length > 0">
 				<n-scrollbar style="max-height: 200px" trigger="none" content-class="flex flex-col gap-4 pr-5!">
 					<div v-for="customer in customerSizes" :key="customer.customer" class="flex flex-col gap-1">
 						<div class="flex items-center justify-between gap-2">
 							<div class="flex items-center gap-2">
-								<div>{{ customer.customer }}</div>
+								<div class="font-mono font-bold">{{ customer.customer }}</div>
 								<n-popover trigger="click" placement="bottom" :width="300">
 									<template #trigger>
 										<n-tag size="small" class="cursor-pointer!">
@@ -21,17 +21,22 @@
 												<li
 													v-for="index in customer.indices"
 													:key="index"
-													class="hover:text-primary cursor-pointer font-mono text-sm transition-colors"
 													@click="selectIndex(index)"
 												>
-													{{ index }}
+													<div
+														class="hover:text-primary flex cursor-pointer items-center gap-2 font-mono text-sm transition-colors"
+													>
+														{{ index }}
+
+														<Icon name="carbon:launch" />
+													</div>
 												</li>
 											</ul>
 										</n-scrollbar>
 									</div>
 								</n-popover>
 							</div>
-							<div class="font-mono font-bold">{{ customer.total_size_human }}</div>
+							<div class="text-secondary font-mono text-sm">{{ customer.total_size_human }}</div>
 						</div>
 						<n-progress
 							type="line"
@@ -50,10 +55,10 @@
 </template>
 
 <script lang="ts" setup>
-// TODO-FE: refactor
-import { NCard, NEmpty, NPopover, NProgress, NScrollbar, NSpin, NTag, NText, useMessage, useThemeVars } from "naive-ui"
+import { NCard, NEmpty, NPopover, NProgress, NScrollbar, NSpin, NTag, useMessage, useThemeVars } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 
 interface CustomerIndicesSize {
 	customer: string
@@ -87,7 +92,7 @@ function getProgressColor(sizeBytes: number): string {
 	const percentage = getPercentage(sizeBytes)
 	if (percentage >= 80) return themeVars.value.errorColor
 	if (percentage >= 60) return themeVars.value.warningColor
-	return themeVars.value.primaryColor
+	return themeVars.value.infoColor
 }
 
 function selectIndex(indexName: string) {
