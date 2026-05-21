@@ -30,45 +30,83 @@ use([CanvasRenderer, GaugeChart, TooltipComponent, GridComponent])
 
 type ChartOption = ComposeOption<TooltipComponentOption | GridComponentOption | GaugeSeriesOption>
 
+/** Arco a gradiente come nell'esempio gauge-grade. */
+const GRADE_AXIS_COLORS: [number, string][] = [
+	[0.25, "#FF6E76"],
+	[0.5, "#FDDD60"],
+	[0.75, "#58D9F9"],
+	[1, "#7CFFB2"]
+]
+
+const GAUGE_POINTER_ICON = "path://M12.8,0.7l12,40.1H0.7L12.8,0.7z"
+
 const { value, title, height } = toRefs(props)
 const style = computed(() => useThemeStore().style)
 
-const chartOption = computed((): ChartOption => ({
-	backgroundColor: "transparent",
-	series: [
-		{
-			type: "gauge",
-			startAngle: 220,
-			endAngle: -40,
-			min: 0,
-			max: 100,
-			detail: {
-				formatter: "{value}%",
-				fontSize: 18,
-				color: style.value["fg-default-color"],
-				offsetCenter: [0, "70%"]
-			},
-			data: [{ value: Math.round(value.value * 10) / 10, name: title.value }],
-			axisLine: {
-				lineStyle: {
-					width: 15,
-					color: [
-						[0.2, "#ef4444"],
-						[0.5, "#eab308"],
-						[1, "#22c55e"]
-					]
-				}
-			},
-			pointer: { length: "60%", width: 4, itemStyle: { color: style.value["primary-color"] } },
-			axisTick: { show: false },
-			splitLine: { length: 10, lineStyle: { color: style.value["border-color"] } },
-			axisLabel: { color: style.value["fg-secondary-color"], fontSize: 10 },
-			title: {
-				color: style.value["fg-secondary-color"],
-				fontSize: 12,
-				offsetCenter: [0, "90%"]
+const chartOption = computed((): ChartOption => {
+	const fgSecondary = style.value["fg-secondary-color"]
+	const gaugeValue = Math.min(1, Math.max(0, Math.round(value.value * 10) / 10 / 100))
+
+	return {
+		backgroundColor: "transparent",
+		series: [
+			{
+				type: "gauge",
+				startAngle: 180,
+				endAngle: 0,
+				center: ["50%", "75%"],
+				radius: "90%",
+				min: 0,
+				max: 1,
+				splitNumber: 8,
+				axisLine: {
+					lineStyle: {
+						width: 6,
+						color: GRADE_AXIS_COLORS
+					}
+				},
+				pointer: {
+					icon: GAUGE_POINTER_ICON,
+					length: "12%",
+					width: 20,
+					offsetCenter: [0, "-60%"],
+					itemStyle: { color: "auto" }
+				},
+				axisTick: {
+					length: 12,
+					lineStyle: { color: "auto", width: 2 }
+				},
+				splitLine: {
+					length: 20,
+					lineStyle: { color: "auto", width: 5 }
+				},
+				axisLabel: {
+					color: fgSecondary,
+					fontSize: 11,
+					distance: -48,
+					rotate: "tangential",
+					formatter: (axisValue: number) => {
+						if (axisValue === 0) return "0%"
+						if (axisValue === 0.5) return "50%"
+						if (axisValue === 1) return "100%"
+						return ""
+					}
+				},
+				title: {
+					color: fgSecondary,
+					fontSize: 13,
+					offsetCenter: [0, "-10%"]
+				},
+				detail: {
+					fontSize: 22,
+					offsetCenter: [0, "-35%"],
+					valueAnimation: true,
+					formatter: (detailValue: number) => `${Math.round(detailValue * 100)}%`,
+					color: "inherit"
+				},
+				data: [{ value: gaugeValue, name: title.value }]
 			}
-		}
-	]
-}))
+		]
+	}
+})
 </script>

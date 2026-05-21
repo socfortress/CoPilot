@@ -121,7 +121,7 @@ const chartOption = computed((): ChartOption => {
 				fontFamily: style.value["font-family"]
 			},
 			left: 10,
-			top: 5
+			top: 0
 		},
 		tooltip: {
 			trigger: "axis",
@@ -159,8 +159,8 @@ const chartOption = computed((): ChartOption => {
 		grid: {
 			left: 60,
 			right: 20,
-			top: 35,
-			bottom: seriesNames.length > 1 ? 40 : 20
+			top: 55,
+			bottom: 40
 		},
 		xAxis: {
 			type: "category",
