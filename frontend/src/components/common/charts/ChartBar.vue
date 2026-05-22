@@ -24,6 +24,7 @@ import { useThemeStore } from "@/stores/theme"
 import {
 	buildChartTooltipGlassBase,
 	CHART_COLORS,
+	CHART_GRID_CONTAIN_AXIS_LABELS,
 	chartTooltipThemeFromStyle,
 	formatChartTooltipAxisFirst
 } from "."
@@ -104,7 +105,7 @@ const chartOption = computed((): ChartOption => {
 			right: 16,
 			top: 8,
 			bottom: 8,
-			containLabel: true
+			...CHART_GRID_CONTAIN_AXIS_LABELS
 		},
 		tooltip: {
 			...buildChartTooltipGlassBase(chartTooltipThemeFromStyle(style), { trigger: "axis" }),

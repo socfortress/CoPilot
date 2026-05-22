@@ -123,7 +123,7 @@ const chartOption = computed((): ChartOption => {
 			{
 				name: "value",
 				type: "pie",
-				radius: ["55%", "75%"],
+				radius: ["40%", "55%"],
 				center: ["50%", "40%"],
 				avoidLabelOverlap: true,
 				itemStyle: { borderWidth: 0 },

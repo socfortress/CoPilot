@@ -1,4 +1,4 @@
-export { CHART_COLORS } from "./chartConstants"
+export { CHART_COLORS, CHART_GRID_CONTAIN_AXIS_LABELS } from "./chartConstants"
 export {
 	buildChartTooltipGlassBase,
 	chartTooltipThemeFromStyle,

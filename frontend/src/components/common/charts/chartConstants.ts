@@ -15,3 +15,9 @@ export const CHART_COLORS = [
 	"#ba4e00",
 	"#d4bbff"
 ] as const
+
+/** ECharts 6: equivalente a `grid.containLabel: true` senza il plugin legacy. */
+export const CHART_GRID_CONTAIN_AXIS_LABELS = {
+	outerBoundsMode: "same",
+	outerBoundsContain: "axisLabel"
+} as const

@@ -26,6 +26,7 @@ import dayjs from "@/utils/dayjs"
 import {
 	buildChartTooltipGlassBase,
 	CHART_COLORS,
+	CHART_GRID_CONTAIN_AXIS_LABELS,
 	chartTooltipThemeFromStyle,
 	formatChartTooltipAxisFirst
 } from "."
@@ -108,7 +109,7 @@ const chartOption = computed((): ChartOption => {
 			right: 8,
 			top: 8,
 			bottom: showXAxisLabels.value ? 56 : 16,
-			containLabel: true
+			...CHART_GRID_CONTAIN_AXIS_LABELS
 		},
 		tooltip: {
 			...buildChartTooltipGlassBase(chartTooltipThemeFromStyle(style), { trigger: "axis" }),
