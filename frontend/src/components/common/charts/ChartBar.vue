@@ -63,6 +63,15 @@ function updatePlotSize() {
 
 const yAxisLabelWidth = computed(() => (chartWidth.value === 0 || chartWidth.value >= 1080 ? 200 : 100))
 
+const sortedRows = computed(() =>
+	props.labels
+		.map((label, i) => ({
+			label,
+			value: Number(props.data[i] ?? 0)
+		}))
+		.sort((a, b) => b.value - a.value)
+)
+
 const chartOption = computed((): ChartOption => {
 	const style = themeStore.style
 	const fg = style["fg-default-color"]
@@ -83,8 +92,8 @@ const chartOption = computed((): ChartOption => {
 		}
 	}
 
-	const barData = props.labels.map((_, i) => ({
-		value: Number(props.data[i] ?? 0),
+	const barData = sortedRows.value.map((row, i) => ({
+		value: row.value,
 		itemStyle: {
 			color: palette[i % palette.length],
 			borderRadius: [0, 4, 4, 0]
@@ -125,7 +134,8 @@ const chartOption = computed((): ChartOption => {
 		},
 		yAxis: {
 			type: "category",
-			data: [...props.labels],
+			data: sortedRows.value.map(row => row.label),
+			inverse: true,
 			axisLine: { show: false },
 			axisTick: { show: false },
 			axisLabel: {
@@ -158,7 +168,7 @@ const chartOption = computed((): ChartOption => {
 
 function onChartClick(params: ECElementEvent) {
 	if (params.componentType !== "series" || params.dataIndex == null) return
-	const name = props.labels[params.dataIndex]
+	const name = sortedRows.value[params.dataIndex]?.label
 	if (name) emit("itemClick", { name })
 }
 </script>
