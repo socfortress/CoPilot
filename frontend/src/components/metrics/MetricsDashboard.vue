@@ -105,7 +105,7 @@
 						:series="memory.mem_used || {}"
 						:height="280"
 						y-axis-name="bytes"
-						format-bytes
+						use-format-bytes
 					/>
 				</n-card>
 			</section>
@@ -142,7 +142,7 @@
 							title="Disk I/O (bytes/s)"
 							:series="disks.disk_io || {}"
 							y-axis-name="B/s"
-							format-bytes
+							use-format-bytes
 						/>
 					</n-card>
 				</div>
@@ -175,7 +175,7 @@
 							:series="network.traffic || {}"
 							:height="280"
 							y-axis-name="B/s"
-							format-bytes
+							use-format-bytes
 						/>
 					</n-card>
 					<n-card>

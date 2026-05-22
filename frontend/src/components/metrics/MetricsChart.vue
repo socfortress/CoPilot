@@ -27,6 +27,7 @@ import { CanvasRenderer } from "echarts/renderers"
 import { computed, ref, toRefs } from "vue"
 import VChart from "vue-echarts"
 import { useThemeStore } from "@/stores/theme"
+import { formatBytes } from "@/utils/format"
 import {
 	buildChartTooltipGlassBase,
 	CHART_COLORS,
@@ -40,12 +41,12 @@ const props = withDefaults(
 		series: TimeSeriesData
 		height?: number
 		yAxisName?: string
-		formatBytes?: boolean
+		useFormatBytes?: boolean
 	}>(),
 	{
 		height: 250,
 		yAxisName: "",
-		formatBytes: false
+		useFormatBytes: false
 	}
 )
 
@@ -57,7 +58,7 @@ type ChartOption = ComposeOption<
 
 const GRID_HORIZONTAL_PADDING = 80
 
-const { title, series, height, yAxisName, formatBytes } = toRefs(props)
+const { title, series, height, yAxisName, useFormatBytes } = toRefs(props)
 const style = computed(() => useThemeStore().style)
 const chartRef = ref<InstanceType<typeof VChart> | null>(null)
 const plotWidth = ref(0)
@@ -84,18 +85,6 @@ const xAxisLabelFormatter = computed(() => {
 		})
 	}
 })
-
-function fmtBytes(bytes: number): string {
-	if (bytes === null || bytes === undefined) return "—"
-	const units = ["B", "KB", "MB", "GB", "TB"]
-	let i = 0
-	let v = Number(bytes)
-	while (v >= 1024 && i < units.length - 1) {
-		v /= 1024
-		i++
-	}
-	return `${v.toFixed(i === 0 ? 0 : 1)} ${units[i]}`
-}
 
 const chartOption = computed((): ChartOption => {
 	const seriesData = series.value || {}
@@ -145,8 +134,8 @@ const chartOption = computed((): ChartOption => {
 					},
 					formatRow: (p: CallbackDataParams) => {
 						const raw = Array.isArray(p.value) ? p.value[1] : p.value
-						const valueHtml = formatBytes.value
-							? fmtBytes(Number(raw))
+						const valueHtml = useFormatBytes.value
+							? `${formatBytes(`${raw}`)}`
 							: typeof raw === "number"
 								? raw.toFixed(2)
 								: String(raw ?? "")
@@ -189,7 +178,7 @@ const chartOption = computed((): ChartOption => {
 			axisLabel: {
 				color: fgSecondary,
 				fontSize: 10,
-				formatter: formatBytes.value ? (v: number) => fmtBytes(v) : undefined
+				formatter: useFormatBytes.value ? (v: number) => `${formatBytes(`${v}`)}` : undefined
 			},
 			splitLine: { lineStyle: { color: border, opacity: 0.3 } }
 		},
