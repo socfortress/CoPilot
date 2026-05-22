@@ -109,7 +109,13 @@ const chartOption = computed((): ChartOption => {
 		tooltip: {
 			...buildChartTooltipGlassBase(chartTooltipThemeFromStyle(style), { trigger: "axis" }),
 			axisPointer: { type: "shadow" },
-			formatter: formatChartTooltipAxisFirst
+			formatter: params =>
+				formatChartTooltipAxisFirst(params, {
+					resolveColor: p => {
+						const idx = p.dataIndex ?? 0
+						return palette[idx % palette.length]
+					}
+				})
 		},
 		xAxis: {
 			type: "value",

@@ -23,7 +23,12 @@ import VChart from "vue-echarts"
 import { useSettingsStore } from "@/stores/settings"
 import { useThemeStore } from "@/stores/theme"
 import dayjs from "@/utils/dayjs"
-import { CHART_COLORS } from "."
+import {
+	buildChartTooltipGlassBase,
+	CHART_COLORS,
+	chartTooltipThemeFromStyle,
+	formatChartTooltipAxisFirst
+} from "."
 
 const props = withDefaults(
 	defineProps<{
@@ -106,11 +111,15 @@ const chartOption = computed((): ChartOption => {
 			containLabel: true
 		},
 		tooltip: {
-			trigger: "axis",
+			...buildChartTooltipGlassBase(chartTooltipThemeFromStyle(style), { trigger: "axis" }),
 			axisPointer: { type: "shadow" },
-			backgroundColor: style["bg-default-color"],
-			borderColor: style["primary-color"],
-			textStyle: { color: fg, fontSize: 12, fontFamily: ff }
+			formatter: params =>
+				formatChartTooltipAxisFirst(params, {
+					resolveColor: p => {
+						const idx = p.dataIndex ?? 0
+						return palette[idx % palette.length]
+					}
+				})
 		},
 		xAxis: {
 			type: "category",

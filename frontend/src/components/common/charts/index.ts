@@ -9,4 +9,9 @@ export {
 	resolveChartItemColor,
 	resolveChartTooltipMarker
 } from "./chartTooltip"
-export type { ChartTooltipBorder, ChartTooltipGlassOptions, ChartTooltipTheme } from "./chartTooltip"
+export type {
+	ChartTooltipAxisFormatterOptions,
+	ChartTooltipBorder,
+	ChartTooltipPieFormatterOptions,
+	ChartTooltipTheme
+} from "./chartTooltip"

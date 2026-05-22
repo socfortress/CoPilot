@@ -84,17 +84,41 @@ export function formatChartTooltipWithMarker(options: {
 	</div>`
 }
 
-export function formatChartTooltipPieItem(params: CallbackDataParams | CallbackDataParams[] | undefined): string {
+export interface ChartTooltipPieFormatterOptions {
+	resolveColor?: (param: CallbackDataParams) => CallbackDataParams["color"]
+}
+
+export function formatChartTooltipPieItem(
+	params: CallbackDataParams | CallbackDataParams[] | undefined,
+	options?: ChartTooltipPieFormatterOptions
+): string {
 	if (!params || Array.isArray(params)) return ""
 	const val = typeof params.value === "number" ? params.value : 0
 	const pct = typeof params.percent === "number" ? params.percent : 0
-	return `${params.name ?? ""}<br/><strong>${val}</strong> (${pct.toFixed(1)}%)`
+	return formatChartTooltipWithMarker({
+		marker: params.marker,
+		color: options?.resolveColor?.(params) ?? params.color,
+		title: params.name ?? "",
+		lines: [`<strong>${val}</strong> (${pct.toFixed(1)}%)`]
+	})
 }
 
-export function formatChartTooltipAxisFirst(params: TopLevelFormatterParams): string {
+export interface ChartTooltipAxisFormatterOptions {
+	resolveColor?: (param: CallbackDataParams) => CallbackDataParams["color"]
+}
+
+export function formatChartTooltipAxisFirst(
+	params: TopLevelFormatterParams,
+	options?: ChartTooltipAxisFormatterOptions
+): string {
 	if (!Array.isArray(params) || params.length === 0) return ""
-	const p = params[0] as { name?: string; value?: number | number[] }
+	const p = params[0]
 	const raw = Array.isArray(p.value) ? p.value[0] : p.value
 	const val = typeof raw === "number" ? raw : 0
-	return `${p.name ?? ""}<br/><strong>${val}</strong>`
+	return formatChartTooltipWithMarker({
+		marker: p.marker,
+		color: options?.resolveColor?.(p) ?? p.color,
+		title: p.name ?? "",
+		lines: [`<strong>${val}</strong>`]
+	})
 }

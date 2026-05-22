@@ -13,12 +13,7 @@ import { CanvasRenderer } from "echarts/renderers"
 import { computed } from "vue"
 import VChart from "vue-echarts"
 import { useThemeStore } from "@/stores/theme"
-import {
-	buildChartTooltipGlassBase,
-	CHART_COLORS,
-	chartTooltipThemeFromStyle,
-	formatChartTooltipPieItem
-} from "."
+import { buildChartTooltipGlassBase, CHART_COLORS, chartTooltipThemeFromStyle, formatChartTooltipPieItem } from "."
 
 const props = withDefaults(
 	defineProps<{
@@ -76,11 +71,16 @@ const chartOption = computed((): ChartOption => {
 
 	return {
 		backgroundColor: "transparent",
-		// TODO-FE: refactor all echarts palette
 		color: palette,
 		tooltip: {
 			...buildChartTooltipGlassBase(chartTooltipThemeFromStyle(style)),
-			formatter: formatChartTooltipPieItem
+			formatter: params =>
+				formatChartTooltipPieItem(params, {
+					resolveColor: p => {
+						const idx = p.dataIndex ?? 0
+						return palette[idx % palette.length]
+					}
+				})
 		},
 		graphic: [
 			{
