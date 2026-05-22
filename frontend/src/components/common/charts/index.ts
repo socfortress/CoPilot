@@ -4,6 +4,7 @@ export {
 	chartTooltipThemeFromStyle,
 	formatChartTooltipAxisFirst,
 	formatChartTooltipPieItem,
+	formatChartTooltipTimeAxisFirst,
 	formatChartTooltipWithMarker,
 	getChartTooltipGlassExtraCss,
 	resolveChartItemColor,
@@ -13,5 +14,6 @@ export type {
 	ChartTooltipAxisFormatterOptions,
 	ChartTooltipBorder,
 	ChartTooltipPieFormatterOptions,
-	ChartTooltipTheme
+	ChartTooltipTheme,
+	ChartTooltipTimeAxisFormatterOptions
 } from "./chartTooltip"

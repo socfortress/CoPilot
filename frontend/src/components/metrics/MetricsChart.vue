@@ -26,6 +26,7 @@ import { CanvasRenderer } from "echarts/renderers"
 import { computed, ref, toRefs } from "vue"
 import VChart from "vue-echarts"
 import { useThemeStore } from "@/stores/theme"
+import { CHART_COLORS } from "../common/charts"
 
 const props = withDefaults(
 	defineProps<{
@@ -47,8 +48,6 @@ use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, LegendComponen
 type ChartOption = ComposeOption<
 	TitleComponentOption | TooltipComponentOption | LegendComponentOption | GridComponentOption | LineSeriesOption
 >
-
-const COLORS = ["#38bdf8", "#22c55e", "#eab308", "#ef4444", "#a855f7", "#f97316", "#06b6d4", "#ec4899"] as const
 
 const GRID_HORIZONTAL_PADDING = 80
 
@@ -106,7 +105,7 @@ const chartOption = computed((): ChartOption => {
 		symbol: "none",
 		lineStyle: { width: 1.5 },
 		areaStyle: { opacity: 0.08 },
-		itemStyle: { color: COLORS[i % COLORS.length] },
+		itemStyle: { color: CHART_COLORS[i % CHART_COLORS.length] },
 		data: (seriesData[name] || []).map(d => [new Date(d.time).getTime(), d.value])
 	}))
 

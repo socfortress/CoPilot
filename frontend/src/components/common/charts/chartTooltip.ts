@@ -122,3 +122,26 @@ export function formatChartTooltipAxisFirst(
 		lines: [`<strong>${val}</strong>`]
 	})
 }
+
+export interface ChartTooltipTimeAxisFormatterOptions extends ChartTooltipAxisFormatterOptions {
+	formatTime?: (timestamp: number) => string
+}
+
+/** Sparkline / asse `time`: titolo = timestamp formattato, corpo = valore. */
+export function formatChartTooltipTimeAxisFirst(
+	params: TopLevelFormatterParams,
+	options?: ChartTooltipTimeAxisFormatterOptions
+): string {
+	if (!Array.isArray(params) || params.length === 0) return ""
+	const p = params[0]
+	const time = Array.isArray(p.value) && typeof p.value[0] === "number" ? p.value[0] : null
+	const raw = Array.isArray(p.value) ? p.value[1] : p.value
+	const val = typeof raw === "number" ? raw : Number(raw) || 0
+	const timeLabel = time != null ? (options?.formatTime?.(time) ?? String(time)) : ""
+	return formatChartTooltipWithMarker({
+		marker: p.marker,
+		color: options?.resolveColor?.(p) ?? p.color,
+		title: timeLabel,
+		lines: [`<strong>${val}</strong>`]
+	})
+}

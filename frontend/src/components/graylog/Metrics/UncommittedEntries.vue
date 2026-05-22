@@ -39,6 +39,11 @@ import { CanvasRenderer } from "echarts/renderers"
 import { NButton } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import VChart from "vue-echarts"
+import {
+	buildChartTooltipGlassBase,
+	chartTooltipThemeFromStyle,
+	formatChartTooltipTimeAxisFirst
+} from "@/components/common/charts"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useHealthcheckStore } from "@/stores/healthcheck"
@@ -74,8 +79,6 @@ const enableAnimation = computed(() => dataPoints.value.length < CHART_ANIMATION
 
 const chartOption = computed((): ChartOption => {
 	const primary = style.value["primary-color"]
-	const fg = style.value["fg-default-color"]
-	const bg = style.value["bg-default-color"]
 
 	return {
 		backgroundColor: "transparent",
@@ -90,23 +93,18 @@ const chartOption = computed((): ChartOption => {
 			scale: true
 		},
 		tooltip: {
-			trigger: "axis",
-			backgroundColor: bg,
-			borderColor: primary,
-			textStyle: {
-				color: fg,
-				fontSize: 12,
-				fontFamily: style.value["font-family-mono"]
-			},
-			formatter(params) {
-				if (!Array.isArray(params) || params.length === 0) return ""
-				const first = params[0]
-				const time = Array.isArray(first.value) ? first.value[0] : null
-				const raw = Array.isArray(first.value) ? first.value[1] : first.value
-				const timeLabel = time != null ? dayjs(time).format("HH:mm:ss") : ""
-				const val = raw ?? 0
-				return `${timeLabel}<br/><strong>${val}</strong>`
-			}
+			...buildChartTooltipGlassBase(
+				chartTooltipThemeFromStyle({
+					...style.value,
+					"font-family": style.value["font-family-mono"]
+				}),
+				{ trigger: "axis" }
+			),
+			formatter: params =>
+				formatChartTooltipTimeAxisFirst(params, {
+					formatTime: ts => dayjs(ts).format("HH:mm:ss"),
+					resolveColor: () => primary
+				})
 		},
 		series: [
 			{
