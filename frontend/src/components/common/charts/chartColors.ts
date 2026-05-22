@@ -1,5 +1,5 @@
 /** Palette shared by dashboard charts (pie segments, etc.). */
-export const DASHBOARD_CHART_COLORS = [
+export const CHART_COLORS = [
 	"#8a3ffc",
 	"#33b1ff",
 	"#007d79",

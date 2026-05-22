@@ -13,7 +13,7 @@ import { CanvasRenderer } from "echarts/renderers"
 import { computed } from "vue"
 import VChart from "vue-echarts"
 import { useThemeStore } from "@/stores/theme"
-import { DASHBOARD_CHART_COLORS } from "./chartColors"
+import { CHART_COLORS } from "./chartColors"
 
 const props = withDefaults(
 	defineProps<{
@@ -54,7 +54,7 @@ const chartOption = computed((): ChartOption => {
 	const style = themeStore.style
 	const fg = style["fg-default-color"]
 	const ff = style["font-family"]
-	const palette = props.monochrome ? [DASHBOARD_CHART_COLORS[0]] : [...DASHBOARD_CHART_COLORS]
+	const palette = props.monochrome ? [CHART_COLORS[0]] : [...CHART_COLORS]
 	const hasData = props.labels.length > 0
 
 	if (!hasData) {
