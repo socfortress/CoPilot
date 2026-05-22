@@ -21,7 +21,12 @@ import { CanvasRenderer } from "echarts/renderers"
 import { computed, ref } from "vue"
 import VChart from "vue-echarts"
 import { useThemeStore } from "@/stores/theme"
-import { CHART_COLORS } from "./chartColors"
+import {
+	buildChartTooltipGlassBase,
+	CHART_COLORS,
+	chartTooltipThemeFromStyle,
+	formatChartTooltipAxisFirst
+} from "."
 
 const props = withDefaults(
 	defineProps<{
@@ -44,14 +49,6 @@ const emit = defineEmits<{
 use([CanvasRenderer, BarChart, TitleComponent, TooltipComponent, GridComponent])
 
 type ChartOption = ComposeOption<TitleComponentOption | TooltipComponentOption | GridComponentOption | BarSeriesOption>
-
-const TOOLTIP_GLASS_CSS = [
-	"backdrop-filter: blur(3px)",
-	"-webkit-backdrop-filter: blur(3px)",
-	"background-color: rgba(var(--bg-default-color-rgb) / 0.55) !important",
-	"border-radius: var(--border-radius)",
-	"box-shadow: 0 5px 10px -5px rgba(0,0,0,0.2), 0 5px 20px 0 rgba(0,0,0,0.2)"
-].join("; ")
 
 const themeStore = useThemeStore()
 const chartRef = ref<InstanceType<typeof VChart> | null>(null)
@@ -110,20 +107,9 @@ const chartOption = computed((): ChartOption => {
 			containLabel: true
 		},
 		tooltip: {
-			trigger: "axis",
+			...buildChartTooltipGlassBase(chartTooltipThemeFromStyle(style), { trigger: "axis" }),
 			axisPointer: { type: "shadow" },
-			backgroundColor: "transparent",
-			borderColor: style["primary-color"],
-			borderWidth: 1,
-			textStyle: { color: fg, fontSize: 12, fontFamily: ff },
-			extraCssText: TOOLTIP_GLASS_CSS,
-			formatter: params => {
-				if (!Array.isArray(params) || params.length === 0) return ""
-				const p = params[0]
-				const raw = Array.isArray(p.value) ? p.value[0] : p.value
-				const val = typeof raw === "number" ? raw : 0
-				return `${p.name ?? ""}<br/><strong>${val}</strong>`
-			}
+			formatter: formatChartTooltipAxisFirst
 		},
 		xAxis: {
 			type: "value",

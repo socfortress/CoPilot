@@ -23,7 +23,7 @@ import VChart from "vue-echarts"
 import { useSettingsStore } from "@/stores/settings"
 import { useThemeStore } from "@/stores/theme"
 import dayjs from "@/utils/dayjs"
-import { CHART_COLORS } from "./chartColors"
+import { CHART_COLORS } from "."
 
 const props = withDefaults(
 	defineProps<{

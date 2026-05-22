@@ -12,7 +12,6 @@
 import type { PieSeriesOption } from "echarts/charts"
 import type { GridComponentOption, LegendComponentOption, TooltipComponentOption } from "echarts/components"
 import type { ComposeOption } from "echarts/core"
-import type { CallbackDataParams } from "echarts/types/dist/shared"
 import type { IndexStats } from "@/types/indices.d"
 import bytes from "bytes"
 import { PieChart } from "echarts/charts"
@@ -23,9 +22,14 @@ import _ from "lodash"
 import { NCard, NSpin } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import VChart from "vue-echarts"
+import {
+	buildChartTooltipGlassBase,
+	CHART_COLORS,
+	chartTooltipThemeFromStyle,
+	formatChartTooltipWithMarker
+} from "@/components/common/charts"
 import { useThemeStore } from "@/stores/theme"
 import { IndexHealth } from "@/types/indices.d"
-import { CHART_COLORS } from "../common/charts/chartColors"
 
 const props = defineProps<{
 	indices: IndexStats[] | null
@@ -34,42 +38,6 @@ const props = defineProps<{
 use([CanvasRenderer, PieChart, TooltipComponent, LegendComponent, GridComponent])
 
 type ChartOption = ComposeOption<TooltipComponentOption | LegendComponentOption | GridComponentOption | PieSeriesOption>
-
-const TOOLTIP_GLASS_CSS = [
-	"backdrop-filter: blur(3px)",
-	"-webkit-backdrop-filter: blur(3px)",
-	"background-color: rgba(var(--bg-default-color-rgb) / 0.8) !important",
-	"border-radius: var(--border-radius)",
-	"box-shadow: 0 5px 10px -5px rgba(0,0,0,0.2), 0 5px 20px 0 rgba(0,0,0,0.2)",
-	"padding: 0px",
-	"overflow: hidden"
-].join("; ")
-
-function resolveItemColor(color: CallbackDataParams["color"]): string {
-	return typeof color === "string" ? color : "#000000"
-}
-
-function resolveTooltipMarker(marker: CallbackDataParams["marker"], color: CallbackDataParams["color"]): string {
-	if (typeof marker === "string") return marker
-	const fill = resolveItemColor(color)
-	return `<span style="display:inline-block;vertical-align:middle;width:10px;height:10px;border-radius:50%;background:${fill};"></span>`
-}
-
-function formatTooltipWithMarker(
-	marker: CallbackDataParams["marker"],
-	color: CallbackDataParams["color"],
-	title: string,
-	lines: string[]
-): string {
-	const dot = resolveTooltipMarker(marker, color)
-	return `
-	<div style="display:flex;align-items:center;gap:8px;background-color:var(--bg-default-color);padding: 4px 8px;">
-		${dot} ${title}
-	</div>
-	<div style="padding: 4px 8px;">
-		${lines.join("<br/>")}
-	</div>`
-}
 
 const { indices } = toRefs(props)
 
@@ -107,16 +75,8 @@ const chartOption = computed((): ChartOption => {
 
 	const fg = style.value["fg-default-color"]
 	const bg = style.value["bg-default-color"]
-	const ff = style.value["font-family"]
 
-	const tooltipBase = {
-		trigger: "item" as const,
-		backgroundColor: "transparent",
-		borderColor: "#000000",
-		borderWidth: 1,
-		textStyle: { color: fg, fontSize: 12, fontFamily: ff },
-		extraCssText: TOOLTIP_GLASS_CSS
-	}
+	const tooltipBase = buildChartTooltipGlassBase(chartTooltipThemeFromStyle(style.value))
 
 	return {
 		tooltip: {
@@ -125,9 +85,12 @@ const chartOption = computed((): ChartOption => {
 				if (!params || Array.isArray(params)) return ""
 				const value = typeof params.value === "number" ? params.value : 0
 				const percent = typeof params.percent === "number" ? params.percent : 0
-				return formatTooltipWithMarker(params.marker, params.color, params.seriesName ?? "", [
-					`${params.name}: <strong>${value}</strong> (${percent}%)`
-				])
+				return formatChartTooltipWithMarker({
+					marker: params.marker,
+					color: params.color,
+					title: params.seriesName ?? "",
+					lines: [`${params.name}: <strong>${value}</strong> (${percent}%)`]
+				})
 			}
 		},
 		legend: {
@@ -172,12 +135,15 @@ const chartOption = computed((): ChartOption => {
 						if (!params || Array.isArray(params)) return ""
 						const value = typeof params.value === "number" ? params.value : 0
 						const percent = typeof params.percent === "number" ? params.percent : 0
-						return formatTooltipWithMarker(params.marker, params.color, params.seriesName ?? "", [
-							`${params.name ?? ""}`,
-							`<strong>${bytes(value)}</strong> (${percent}%)`
-						])
+						return formatChartTooltipWithMarker({
+							marker: params.marker,
+							color: params.color,
+							title: params.seriesName ?? "",
+							lines: [`${params.name ?? ""}`, `<strong>${bytes(value)}</strong> (${percent}%)`]
+						})
 					}
 				},
+
 				avoidLabelOverlap: true,
 				radius: ["24%", "35%"],
 				minAngle: 5,

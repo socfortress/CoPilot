@@ -1,4 +1,4 @@
-/** Palette shared by dashboard charts (pie segments, etc.). */
+/** Palette condivisa per grafici dashboard (segmenti pie, barre distribuite, …). */
 export const CHART_COLORS = [
 	"#8a3ffc",
 	"#33b1ff",
@@ -14,4 +14,4 @@ export const CHART_COLORS = [
 	"#bae6ff",
 	"#ba4e00",
 	"#d4bbff"
-]
+] as const
