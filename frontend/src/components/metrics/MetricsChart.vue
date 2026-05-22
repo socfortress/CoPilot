@@ -18,6 +18,7 @@ import type {
 	TooltipComponentOption
 } from "echarts/components"
 import type { ComposeOption } from "echarts/core"
+import type { CallbackDataParams } from "echarts/types/dist/shared"
 import type { TimeSeriesData } from "@/types/metrics.d"
 import { LineChart } from "echarts/charts"
 import { GridComponent, LegendComponent, TitleComponent, TooltipComponent } from "echarts/components"
@@ -26,7 +27,12 @@ import { CanvasRenderer } from "echarts/renderers"
 import { computed, ref, toRefs } from "vue"
 import VChart from "vue-echarts"
 import { useThemeStore } from "@/stores/theme"
-import { CHART_COLORS } from "../common/charts"
+import {
+	buildChartTooltipGlassBase,
+	CHART_COLORS,
+	chartTooltipThemeFromStyle,
+	formatChartTooltipAxisMultiSeriesFromParams
+} from "../common/charts"
 
 const props = withDefaults(
 	defineProps<{
@@ -123,30 +129,30 @@ const chartOption = computed((): ChartOption => {
 			top: 0
 		},
 		tooltip: {
-			trigger: "axis",
-			backgroundColor: style.value["bg-default-color"],
-			borderColor: style.value["primary-color"],
-			textStyle: {
-				color: fg,
-				fontSize: 12,
-				fontFamily: style.value["font-family-mono"]
-			},
-			formatter(params) {
-				if (!Array.isArray(params) || params.length === 0) return ""
-				const first = params[0]
-				const time = Array.isArray(first.value) ? first.value[0] : null
-				let html = `<div style="font-size:11px;color:${fgSecondary};margin-bottom:4px">${time != null ? new Date(time).toLocaleString() : ""}</div>`
-				for (const p of params) {
-					const raw = Array.isArray(p.value) ? p.value[1] : p.value
-					const val = formatBytes.value
-						? fmtBytes(Number(raw))
-						: typeof raw === "number"
-							? raw.toFixed(2)
-							: String(raw ?? "")
-					html += `<div>${p.marker} ${p.seriesName}: <b>${val}</b></div>`
-				}
-				return html
-			}
+			...buildChartTooltipGlassBase(
+				chartTooltipThemeFromStyle({
+					...style.value,
+					"font-family": style.value["font-family-mono"]
+				}),
+				{ trigger: "axis" }
+			),
+			formatter: params =>
+				formatChartTooltipAxisMultiSeriesFromParams(params, {
+					titleMutedColor: fgSecondary,
+					formatTitle: (first: CallbackDataParams) => {
+						const time = Array.isArray(first.value) ? first.value[0] : null
+						return time != null ? new Date(time).toLocaleString() : ""
+					},
+					formatRow: (p: CallbackDataParams) => {
+						const raw = Array.isArray(p.value) ? p.value[1] : p.value
+						const valueHtml = formatBytes.value
+							? fmtBytes(Number(raw))
+							: typeof raw === "number"
+								? raw.toFixed(2)
+								: String(raw ?? "")
+						return { label: p.seriesName ?? "", valueHtml }
+					}
+				})
 		},
 		legend: {
 			bottom: 0,

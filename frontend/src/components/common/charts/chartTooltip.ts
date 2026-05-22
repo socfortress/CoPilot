@@ -127,6 +127,57 @@ export interface ChartTooltipTimeAxisFormatterOptions extends ChartTooltipAxisFo
 	formatTime?: (timestamp: number) => string
 }
 
+export interface ChartTooltipAxisMultiSeriesRow {
+	marker: CallbackDataParams["marker"]
+	color: CallbackDataParams["color"]
+	label: string
+	valueHtml: string
+}
+
+export interface ChartTooltipAxisMultiSeriesOptions {
+	/** Riga titolo senza marker (es. timestamp). */
+	title: string
+	/** Colore testo titolo; default `var(--fg-secondary-color)`. */
+	titleMutedColor?: string
+	rows: ChartTooltipAxisMultiSeriesRow[]
+}
+
+/** Asse multi-serie: titolo in alto, sotto righe `marker + label + valore`. */
+export function formatChartTooltipAxisMultiSeries(options: ChartTooltipAxisMultiSeriesOptions): string {
+	const titleColor = options.titleMutedColor ?? "var(--fg-secondary-color)"
+	const rowsHtml = options.rows
+		.map(row => {
+			const marker = resolveChartTooltipMarker({ marker: row.marker, color: row.color })
+			return `<div style="display:flex;align-items:center;gap:4px;line-height:1.5">${marker}<span>${row.label}: <b>${row.valueHtml}</b></span></div>`
+		})
+		.join("")
+	return `
+	<div style="font-size:11px;color:${titleColor};padding:4px 8px;background-color:var(--bg-default-color)">${options.title}</div>
+	<div style="padding:4px 8px">${rowsHtml}</div>`
+}
+
+export function formatChartTooltipAxisMultiSeriesFromParams(
+	params: TopLevelFormatterParams,
+	options: {
+		formatTitle: (first: CallbackDataParams) => string
+		formatRow: (param: CallbackDataParams) => { label: string; valueHtml: string }
+		titleMutedColor?: string
+	}
+): string {
+	if (!Array.isArray(params) || params.length === 0) return ""
+	const first = params[0]
+	return formatChartTooltipAxisMultiSeries({
+		title: options.formatTitle(first),
+		titleMutedColor: options.titleMutedColor,
+		rows: params.map(p => ({
+			marker: p.marker,
+			color: p.color,
+			label: p.seriesName ?? "",
+			valueHtml: options.formatRow(p).valueHtml
+		}))
+	})
+}
+
 /** Sparkline / asse `time`: titolo = timestamp formattato, corpo = valore. */
 export function formatChartTooltipTimeAxisFirst(
 	params: TopLevelFormatterParams,

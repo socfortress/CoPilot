@@ -3,6 +3,8 @@ export {
 	buildChartTooltipGlassBase,
 	chartTooltipThemeFromStyle,
 	formatChartTooltipAxisFirst,
+	formatChartTooltipAxisMultiSeries,
+	formatChartTooltipAxisMultiSeriesFromParams,
 	formatChartTooltipPieItem,
 	formatChartTooltipTimeAxisFirst,
 	formatChartTooltipWithMarker,
@@ -12,6 +14,8 @@ export {
 } from "./chartTooltip"
 export type {
 	ChartTooltipAxisFormatterOptions,
+	ChartTooltipAxisMultiSeriesOptions,
+	ChartTooltipAxisMultiSeriesRow,
 	ChartTooltipBorder,
 	ChartTooltipPieFormatterOptions,
 	ChartTooltipTheme,
