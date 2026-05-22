@@ -71,12 +71,22 @@ const chartOption = computed((): ChartOption => {
 
 	return {
 		backgroundColor: "transparent",
+		// TODO-FE: refactor all echarts palette
 		color: palette,
 		tooltip: {
 			trigger: "item",
-			backgroundColor: style["bg-default-color"],
+			backgroundColor: "transparent",
 			borderColor: style["primary-color"],
+			borderWidth: 1,
 			textStyle: { color: fg, fontSize: 12, fontFamily: ff },
+			// TODO-FE: refactor all echarts tooltips
+			extraCssText: [
+				"backdrop-filter: blur(3px)",
+				"-webkit-backdrop-filter: blur(3px)",
+				"background-color: rgba(var(--bg-default-color-rgb) / 0.55) !important",
+				"border-radius: var(--border-radius)",
+				"box-shadow: 0 5px 10px -5px rgba(0,0,0,0.2), 0 5px 20px 0 rgba(0,0,0,0.2)"
+			].join("; "),
 			formatter: params => {
 				if (!params || Array.isArray(params)) return ""
 				const val = typeof params.value === "number" ? params.value : 0
