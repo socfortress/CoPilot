@@ -32,38 +32,15 @@
 
 			<div class="grid grid-cols-1 gap-4 @md:grid-cols-2 @2xl:grid-cols-3 @7xl:grid-cols-6">
 				<CatalogStatTile
-					label="Detections"
-					:value="stats?.detection_count ?? 0"
-					:icon="DetectionIcon"
-					sub="CoPilot Searches"
-					to="stories"
+					v-for="tile in headerStatTiles"
+					:key="tile.id"
+					:label="tile.label"
+					:value="tile.value"
+					:icon="tile.icon"
+					:sub="tile.sub"
+					:to="tile.to"
 					@navigate="setTab"
 				/>
-				<CatalogStatTile
-					label="Stories"
-					:value="stats?.story_count ?? 0"
-					:icon="StoryIcon"
-					sub="Analytic stories"
-					to="stories"
-					@navigate="setTab"
-				/>
-				<CatalogStatTile
-					v-if="stats?.wazuh_available"
-					label="Wazuh rules"
-					:value="stats?.wazuh_rule_count ?? 0"
-					:icon="WazuhIcon"
-					sub="From Wazuh Manager"
-					to="wazuh"
-					@navigate="setTab"
-				/>
-				<CatalogStatTile
-					label="MITRE tactics"
-					:value="stats?.tactic_count ?? 0"
-					:icon="TacticIcon"
-					sub="Covered"
-				/>
-				<CatalogStatTile label="Data sources" :value="stats?.data_source_count ?? 0" :icon="DataSourceIcon" />
-				<CatalogStatTile label="Products" :value="stats?.product_count ?? 0" :icon="ProductIcon" />
 			</div>
 		</header>
 
@@ -139,6 +116,16 @@ import WazuhRulesIndex from "./WazuhRulesIndex.vue"
 
 type TabKey = "stories" | "wazuh" | "gaps" | "compliance"
 
+interface HeaderStatTileDef {
+	id: string
+	label: string
+	icon: string
+	sub?: string
+	to?: TabKey
+	value: (stats: CatalogStatsResponse | null) => number
+	show?: (stats: CatalogStatsResponse | null) => boolean
+}
+
 const route = useRoute()
 const router = useRouter()
 
@@ -157,6 +144,64 @@ const ComplianceIcon = "carbon:certificate-check"
 const TacticIcon = "carbon:flag"
 const DataSourceIcon = "carbon:data-base"
 const ProductIcon = "carbon:cube"
+
+const HEADER_STAT_TILE_DEFS: HeaderStatTileDef[] = [
+	{
+		id: "detections",
+		label: "Detections",
+		icon: DetectionIcon,
+		sub: "CoPilot Searches",
+		to: "stories",
+		value: s => s?.detection_count ?? 0
+	},
+	{
+		id: "stories",
+		label: "Stories",
+		icon: StoryIcon,
+		sub: "Analytic stories",
+		to: "stories",
+		value: s => s?.story_count ?? 0
+	},
+	{
+		id: "wazuh-rules",
+		label: "Wazuh rules",
+		icon: WazuhIcon,
+		sub: "From Wazuh Manager",
+		to: "wazuh",
+		show: s => !!s?.wazuh_available,
+		value: s => s?.wazuh_rule_count ?? 0
+	},
+	{
+		id: "mitre-tactics",
+		label: "MITRE tactics",
+		icon: TacticIcon,
+		sub: "Covered",
+		value: s => s?.tactic_count ?? 0
+	},
+	{
+		id: "data-sources",
+		label: "Data sources",
+		icon: DataSourceIcon,
+		value: s => s?.data_source_count ?? 0
+	},
+	{
+		id: "products",
+		label: "Products",
+		icon: ProductIcon,
+		value: s => s?.product_count ?? 0
+	}
+]
+
+const headerStatTiles = computed(() =>
+	HEADER_STAT_TILE_DEFS.filter(tile => !tile.show || tile.show(stats.value)).map(tile => ({
+		id: tile.id,
+		label: tile.label,
+		icon: tile.icon,
+		sub: tile.sub,
+		to: tile.to,
+		value: tile.value(stats.value)
+	}))
+)
 
 const activeTab = computed<TabKey>(() => {
 	const t = route.query.tab
