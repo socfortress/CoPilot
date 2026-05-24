@@ -48,47 +48,40 @@
 		     URL-synced via ?tab=<key>. When a story detail is open we hide
 		     the tabs entirely — that's its own dedicated surface.
 		-->
-		<n-tabs
-			v-if="!openStoryName"
-			:value="activeTab"
-			type="line"
-			animated
-			pane-wrapper-class="catalog-tab-pane-wrapper"
-			@update:value="setTab"
-		>
+		<n-tabs v-if="!openStoryName" :value="activeTab" type="line" animated @update:value="setTab">
 			<n-tab-pane name="stories">
 				<template #tab>
-					<span class="catalog-tab-label">
-						<Icon :name="StoryIcon" :size="14" />
+					<div class="flex items-center gap-2">
+						<Icon :name="StoryIcon" :size="15" />
 						CoPilot Searches
-					</span>
+					</div>
 				</template>
 				<StoriesIndex @open-story="openStory" />
 			</n-tab-pane>
 			<n-tab-pane name="wazuh">
 				<template #tab>
-					<span class="catalog-tab-label">
-						<Icon :name="WazuhIcon" :size="14" />
+					<div class="flex items-center gap-2">
+						<Icon :name="WazuhIcon" :size="15" />
 						Wazuh Rules
-					</span>
+					</div>
 				</template>
 				<WazuhRulesIndex />
 			</n-tab-pane>
 			<n-tab-pane name="gaps">
 				<template #tab>
-					<span class="catalog-tab-label">
-						<Icon :name="GapsIcon" :size="14" />
+					<div class="flex items-center gap-2">
+						<Icon :name="GapsIcon" :size="15" />
 						Coverage Gaps
-					</span>
+					</div>
 				</template>
 				<CoverageGapsIndex />
 			</n-tab-pane>
 			<n-tab-pane name="compliance">
 				<template #tab>
-					<span class="catalog-tab-label">
-						<Icon :name="ComplianceIcon" :size="14" />
+					<div class="flex items-center gap-2">
+						<Icon :name="ComplianceIcon" :size="15" />
 						Compliance
-					</span>
+					</div>
 				</template>
 				<ComplianceIndex />
 			</n-tab-pane>
@@ -191,12 +184,14 @@ const HEADER_STAT_TILE_DEFS: HeaderStatTileDef[] = [
 		id: "data-sources",
 		label: "Data sources",
 		icon: DataSourceIcon,
+		sub: "Distinct sources",
 		value: s => s?.data_source_count ?? 0
 	},
 	{
 		id: "products",
 		label: "Products",
 		icon: ProductIcon,
+		sub: "Distinct products",
 		value: s => s?.product_count ?? 0
 	}
 ]
@@ -276,24 +271,3 @@ function formatRelativeTime(iso: string): string {
 
 onBeforeMount(loadStats)
 </script>
-
-<style scoped lang="scss">
-.catalog-tab-label {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	font-size: 14px;
-}
-
-/* Pull the tab content slightly closer to the tab strip — naive-ui's default
-   spacing leaves an awkward gap in our denser layouts. */
-:deep(.catalog-tab-pane-wrapper) {
-	padding-top: 12px;
-}
-
-/* Tab divider styling: subtle bottom border on the tab strip for visual
-   separation from the content below. */
-:deep(.n-tabs-tab) {
-	transition: color 0.2s var(--bezier-ease);
-}
-</style>

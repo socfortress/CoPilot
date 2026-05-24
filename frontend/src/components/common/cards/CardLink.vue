@@ -13,6 +13,7 @@
 					:name="icon || 'carbon:arrow-up-right'"
 					class="group-hover:text-primary transition-colors"
 				/>
+				<Icon v-else-if="icon" :name="icon" />
 				<slot name="header-extra" />
 			</div>
 			<slot />
