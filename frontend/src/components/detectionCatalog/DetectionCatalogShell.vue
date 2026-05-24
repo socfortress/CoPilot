@@ -1,5 +1,5 @@
 <template>
-	<div class="detection-catalog-shell flex flex-col gap-6">
+	<div class="flex flex-col gap-6">
 		<!-- HERO HEADER ------------------------------------------------------
 		     Title row + descriptive blurb + responsive grid of stat tiles.
 		     The tiles double as navigation: click "Stories" tile → jump to
@@ -7,16 +7,14 @@
 		     header is hidden when a story is open so the detail page has
 		     room to breathe.
 		-->
-		<header v-if="!openStoryName" class="catalog-hero flex flex-col gap-4">
+		<header v-if="!openStoryName" class="@container flex flex-col gap-4">
 			<div class="flex flex-wrap items-end justify-between gap-3">
 				<div class="flex flex-col gap-1">
 					<div class="flex items-center gap-3">
-						<div class="hero-icon">
-							<Icon :name="CatalogIcon" :size="22" />
-						</div>
+						<Icon :name="CatalogIcon" :size="22" />
 						<h2 class="m-0 text-2xl font-semibold">Detections Catalog</h2>
 					</div>
-					<p class="text-secondary m-0 max-w-3xl text-sm">
+					<p class="text-sm">
 						Discovery surface for the CoPilot detection corpus and the Wazuh ruleset. Browse the CoPilot
 						Searches grouped by analytic story, inspect every Wazuh rule shipped by the manager, see your
 						MITRE coverage gaps, and pivot by compliance framework.
@@ -32,12 +30,11 @@
 				</div>
 			</div>
 
-			<div class="stats-grid">
+			<div class="grid grid-cols-1 gap-4 @md:grid-cols-2 @2xl:grid-cols-3 @7xl:grid-cols-6">
 				<CatalogStatTile
 					label="Detections"
 					:value="stats?.detection_count ?? 0"
 					:icon="DetectionIcon"
-					accent="primary"
 					sub="CoPilot Searches"
 					to="stories"
 					@navigate="setTab"
@@ -46,7 +43,6 @@
 					label="Stories"
 					:value="stats?.story_count ?? 0"
 					:icon="StoryIcon"
-					accent="primary"
 					sub="Analytic stories"
 					to="stories"
 					@navigate="setTab"
@@ -56,7 +52,6 @@
 					label="Wazuh rules"
 					:value="stats?.wazuh_rule_count ?? 0"
 					:icon="WazuhIcon"
-					accent="success"
 					sub="From Wazuh Manager"
 					to="wazuh"
 					@navigate="setTab"
@@ -134,6 +129,7 @@ import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import dayjs from "@/utils/dayjs"
 import CatalogStatTile from "./CatalogStatTile.vue"
 import ComplianceIndex from "./ComplianceIndex.vue"
 import CoverageGapsIndex from "./CoverageGapsIndex.vue"
@@ -216,47 +212,14 @@ watch(
 	{ immediate: true }
 )
 
-// Relative-time helper — same as the one in WazuhRuleDetail. Thin enough to
-// duplicate rather than create a util file for one use site each.
 function formatRelativeTime(iso: string): string {
-	const then = new Date(iso).getTime()
-	if (Number.isNaN(then)) return iso
-	const diffMs = Date.now() - then
-	if (diffMs < 0) return "just now"
-	const sec = Math.floor(diffMs / 1000)
-	if (sec < 60) return `${sec}s ago`
-	const min = Math.floor(sec / 60)
-	if (min < 60) return `${min}m ago`
-	const hr = Math.floor(min / 60)
-	if (hr < 24) return `${hr}h ago`
-	const day = Math.floor(hr / 24)
-	if (day < 30) return `${day}d ago`
-	return `${Math.floor(day / 30)}mo ago`
+	return dayjs(iso).fromNow()
 }
 
 onBeforeMount(loadStats)
 </script>
 
 <style scoped lang="scss">
-.catalog-hero {
-	.hero-icon {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 40px;
-		height: 40px;
-		border-radius: 10px;
-		background-color: rgba(var(--primary-color-rgb) / 0.1);
-		color: var(--primary-color);
-	}
-}
-
-.stats-grid {
-	display: grid;
-	gap: 12px;
-	grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-}
-
 .catalog-tab-label {
 	display: inline-flex;
 	align-items: center;
