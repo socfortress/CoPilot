@@ -10,7 +10,7 @@
 				</span>
 				<Icon
 					v-if="clickable"
-					name="carbon:arrow-up-right"
+					:name="icon || 'carbon:arrow-up-right'"
 					class="group-hover:text-primary transition-colors"
 				/>
 				<slot name="header-extra" />
@@ -36,5 +36,6 @@ defineProps<{
 	subtitle?: string | number
 	hoverable?: boolean
 	clickable?: boolean
+	icon?: string
 }>()
 </script>

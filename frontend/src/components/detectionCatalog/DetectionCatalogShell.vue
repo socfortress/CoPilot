@@ -31,15 +31,15 @@
 			</div>
 
 			<div class="grid grid-cols-1 gap-4 @md:grid-cols-2 @2xl:grid-cols-3 @7xl:grid-cols-6">
-				<CatalogStatTile
+				<CardLink
 					v-for="tile in headerStatTiles"
 					:key="tile.id"
-					:label="tile.label"
+					:title="tile.label"
 					:value="tile.value"
 					:icon="tile.icon"
-					:sub="tile.sub"
-					:to="tile.to"
-					@navigate="setTab"
+					:subtitle="tile.sub"
+					:clickable="!!tile.to"
+					@click="onHeaderTileClick(tile)"
 				/>
 			</div>
 		</header>
@@ -105,9 +105,9 @@ import { NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
+import CardLink from "@/components/common/cards/CardLink.vue"
 import Icon from "@/components/common/Icon.vue"
 import dayjs from "@/utils/dayjs"
-import CatalogStatTile from "./CatalogStatTile.vue"
 import ComplianceIndex from "./ComplianceIndex.vue"
 import CoverageGapsIndex from "./CoverageGapsIndex.vue"
 import StoriesIndex from "./StoriesIndex.vue"
@@ -119,11 +119,20 @@ type TabKey = "stories" | "wazuh" | "gaps" | "compliance"
 interface HeaderStatTileDef {
 	id: string
 	label: string
-	icon: string
+	icon?: string
 	sub?: string
 	to?: TabKey
 	value: (stats: CatalogStatsResponse | null) => number
 	show?: (stats: CatalogStatsResponse | null) => boolean
+}
+
+interface HeaderStatTile {
+	id: string
+	label: string
+	sub?: string
+	icon?: string
+	to?: TabKey
+	value: string
 }
 
 const route = useRoute()
@@ -192,16 +201,20 @@ const HEADER_STAT_TILE_DEFS: HeaderStatTileDef[] = [
 	}
 ]
 
-const headerStatTiles = computed(() =>
+const headerStatTiles = computed<HeaderStatTile[]>(() =>
 	HEADER_STAT_TILE_DEFS.filter(tile => !tile.show || tile.show(stats.value)).map(tile => ({
 		id: tile.id,
 		label: tile.label,
-		icon: tile.icon,
 		sub: tile.sub,
+		icon: tile.icon,
 		to: tile.to,
-		value: tile.value(stats.value)
+		value: tile.value(stats.value).toLocaleString()
 	}))
 )
+
+function onHeaderTileClick(tile: HeaderStatTile) {
+	if (tile.to) setTab(tile.to)
+}
 
 const activeTab = computed<TabKey>(() => {
 	const t = route.query.tab
