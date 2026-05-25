@@ -1,17 +1,5 @@
 <template>
 	<div class="story-detail flex flex-col gap-6">
-		<!-- Back nav. RouterLink with custom slot so navigation is router-
-		     native — no event interception or race conditions. The parent's
-		     watcher on route.query.story drives the v-if back to the index. -->
-		<div>
-			<RouterLink v-slot="{ navigate }" :to="{ name: 'DetectionCatalog', query: {} }" custom>
-				<n-button size="small" quaternary @click="navigate">
-					<template #icon><Icon name="carbon:arrow-left" /></template>
-					Back to Detections Catalog
-				</n-button>
-			</RouterLink>
-		</div>
-
 		<n-spin :show="loading">
 			<template v-if="story">
 				<!-- HERO ----------------------------------------------------
@@ -197,7 +185,7 @@
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
 import type { CatalogStoryDetailResponse, CatalogStoryDetection } from "@/types/detectionCatalog.d"
-import { NButton, NDataTable, NModal, NSpin, useMessage } from "naive-ui"
+import { NDataTable, NModal, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"

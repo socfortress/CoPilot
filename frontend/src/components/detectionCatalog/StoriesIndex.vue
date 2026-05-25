@@ -1,5 +1,5 @@
 <template>
-	<div class="stories-index flex flex-col gap-4">
+	<div class="flex flex-col gap-4">
 		<!-- TOOLBAR ----------------------------------------------------------
 		     Search + visible-count + framing copy. Same layout pattern the
 		     Wazuh and Coverage Gaps tabs use, so the analyst's eye doesn't
@@ -39,24 +39,39 @@
 				class="catalog-table stories-table"
 			/>
 		</n-spin>
+
+		<n-modal
+			v-model:show="showStoryModal"
+			preset="card"
+			:style="{ maxWidth: 'min(1080px, 94vw)', maxHeight: '92vh', overflow: 'hidden' }"
+			title="Analytic Story"
+			:bordered="false"
+			segmented
+			@after-leave="selectedStoryName = null"
+		>
+			<div class="max-h-[calc(92vh-120px)] overflow-y-auto pr-1">
+				<StoryDetail v-if="selectedStoryName" :story-name="selectedStoryName" />
+			</div>
+		</n-modal>
 	</div>
 </template>
 
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
 import type { CatalogStoryRow } from "@/types/detectionCatalog.d"
-import { NDataTable, NInput, NSpin, useMessage } from "naive-ui"
+import { NDataTable, NInput, NModal, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
-
-const emit = defineEmits<{ (e: "open-story", name: string): void }>()
+import StoryDetail from "./StoryDetail.vue"
 
 const message = useMessage()
 const stories = ref<CatalogStoryRow[]>([])
 const loading = ref(false)
 const filter = ref("")
+const showStoryModal = ref(false)
+const selectedStoryName = ref<string | null>(null)
 
 const pagination = {
 	pageSize: 25,
@@ -79,8 +94,13 @@ function rowProps(row: CatalogStoryRow) {
 	return {
 		class: "catalog-table-row",
 		style: "cursor: pointer;",
-		onClick: () => emit("open-story", row.name)
+		onClick: () => openStoryDetail(row.name)
 	}
+}
+
+function openStoryDetail(storyName: string) {
+	selectedStoryName.value = storyName
+	showStoryModal.value = true
 }
 
 const columns: DataTableColumns<CatalogStoryRow> = [
