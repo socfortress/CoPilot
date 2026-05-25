@@ -1,10 +1,22 @@
 <template>
-	<n-card size="small" :class="{ 'group cursor-pointer': clickable }" :hoverable>
-		<div class="flex flex-col gap-2">
+	<n-card
+		size="small"
+		:class="{ 'group cursor-pointer': clickable }"
+		:hoverable
+		content-class="flex items-center gap-2"
+	>
+		<div v-if="iconLeft">
+			<Icon :name="iconLeft" />
+		</div>
+		<div class="flex grow flex-col" :class="{ 'gap-1': size === 'small', 'gap-2': size === 'medium' }">
 			<div class="flex items-center justify-between gap-2">
 				<span
-					class="text-secondary text-sm transition-colors"
-					:class="{ 'group-hover:text-primary': clickable }"
+					class="text-secondary transition-colors"
+					:class="{
+						'group-hover:text-primary': clickable,
+						'text-xs uppercase': size === 'small',
+						'text-sm': size === 'medium'
+					}"
 				>
 					<slot name="title">{{ title }}</slot>
 				</span>
@@ -31,12 +43,19 @@
 import { NCard } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 
-defineProps<{
-	title?: string | number
-	value?: string | number
-	subtitle?: string | number
-	hoverable?: boolean
-	clickable?: boolean
-	icon?: string
-}>()
+withDefaults(
+	defineProps<{
+		title?: string | number
+		value?: string | number
+		subtitle?: string | number
+		hoverable?: boolean
+		clickable?: boolean
+		icon?: string
+		iconLeft?: string
+		size?: "small" | "medium"
+	}>(),
+	{
+		size: "medium"
+	}
+)
 </script>
