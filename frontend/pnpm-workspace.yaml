@@ -1,6 +1,7 @@
+minimumReleaseAge: 0
 shellEmulator: true
 
-trustPolicy: no-downgrade
+trustPolicy: off
 
 trustPolicyExclude:
   - chokidar
@@ -14,6 +15,7 @@ allowBuilds:
 
 overrides:
   "@mui/icons-material": ^7.3.9
+
 peerDependencyRules:
   allowedVersions:
     eslint: "10"

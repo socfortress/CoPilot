@@ -59,7 +59,7 @@ export default defineConfig(({ mode, command }) => {
 		},
 		optimizeDeps: {
 			exclude: ["xmllint-wasm"],
-			include: ["fast-deep-equal"],
+			// include: ["fast-deep-equal"],
 			rolldownOptions: {
 				onwarn: suppressRolldownIifeNameWarning
 			}

@@ -56,6 +56,7 @@ interface CoverageStatTile {
 	value: string
 	icon: string
 	sub: string
+	color: string
 }
 
 const message = useMessage()
