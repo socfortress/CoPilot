@@ -1,10 +1,5 @@
 <template>
 	<div class="flex flex-col gap-4">
-		<!-- TOOLBAR ----------------------------------------------------------
-		     Search + visible-count + framing copy. Same layout pattern the
-		     Wazuh and Coverage Gaps tabs use, so the analyst's eye doesn't
-		     have to re-learn the tab on each switch.
-		-->
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div class="flex flex-col gap-1">
 				<h3 class="m-0 text-lg font-semibold">Analytic Stories</h3>
@@ -13,45 +8,37 @@
 					see the member detections, data sources, and references.
 				</p>
 			</div>
-			<Badge type="splitted" color="primary">
+		</div>
+
+		<div class="flex flex-wrap items-center gap-2">
+			<n-input
+				v-model:value="filter"
+				size="small"
+				placeholder="Filter by story name, data source, tactic, or product…"
+				clearable
+				class="min-w-100 flex-1"
+				style="min-width: 440px"
+			>
+				<template #prefix><Icon name="carbon:search" /></template>
+			</n-input>
+			<Badge type="splitted" color="primary" class="shrink-0">
 				<template #label>Showing</template>
 				<template #value>{{ filteredStories.length }} / {{ stories.length }}</template>
 			</Badge>
 		</div>
 
-		<n-input
-			v-model:value="filter"
-			size="medium"
-			placeholder="Filter by story name, data source, tactic, or product…"
-			clearable
-		>
-			<template #prefix><Icon name="carbon:search" /></template>
-		</n-input>
-
-		<n-spin :show="loading">
-			<n-data-table
-				:columns
-				:data="filteredStories"
-				:loading
-				size="small"
-				:row-props
-				:pagination
-				class="catalog-table stories-table"
-			/>
-		</n-spin>
+		<n-data-table :columns :data="filteredStories" :loading size="small" :row-props :pagination :scroll-x="1200" />
 
 		<n-modal
 			v-model:show="showStoryModal"
 			preset="card"
-			:style="{ maxWidth: 'min(1080px, 94vw)', maxHeight: '92vh', overflow: 'hidden' }"
+			:style="{ maxWidth: 'min(1080px, 94vw)' }"
 			title="Analytic Story"
 			:bordered="false"
 			segmented
 			@after-leave="selectedStoryName = null"
 		>
-			<div class="max-h-[calc(92vh-120px)] overflow-y-auto pr-1">
-				<StoryDetail v-if="selectedStoryName" :story-name="selectedStoryName" />
-			</div>
+			<StoryDetail v-if="selectedStoryName" :story-name="selectedStoryName" />
 		</n-modal>
 	</div>
 </template>
@@ -59,12 +46,18 @@
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
 import type { CatalogStoryRow } from "@/types/detectionCatalog.d"
-import { NDataTable, NInput, NModal, NSpin, useMessage } from "naive-ui"
+import { NDataTable, NInput, NModal, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils/format"
 import StoryDetail from "./StoryDetail.vue"
+
+const MAX_SOURCES_TAG = 3
+const MAX_TACTICS_TAG = 3
+const MAX_PRODUCTS_TAG = 3
 
 const message = useMessage()
 const stories = ref<CatalogStoryRow[]>([])
@@ -72,6 +65,7 @@ const loading = ref(false)
 const filter = ref("")
 const showStoryModal = ref(false)
 const selectedStoryName = ref<string | null>(null)
+const dFormats = useSettingsStore().dateFormat
 
 const pagination = {
 	pageSize: 25,
@@ -81,7 +75,9 @@ const pagination = {
 
 const filteredStories = computed<CatalogStoryRow[]>(() => {
 	const q = filter.value.trim().toLowerCase()
+
 	if (!q) return stories.value
+
 	return stories.value.filter(s =>
 		[s.name, ...(s.data_sources || []), ...(s.tactics || []), ...(s.products || [])]
 			.join(" ")
@@ -92,8 +88,7 @@ const filteredStories = computed<CatalogStoryRow[]>(() => {
 
 function rowProps(row: CatalogStoryRow) {
 	return {
-		class: "catalog-table-row",
-		style: "cursor: pointer;",
+		class: "cursor-pointer",
 		onClick: () => openStoryDetail(row.name)
 	}
 }
@@ -107,11 +102,13 @@ const columns: DataTableColumns<CatalogStoryRow> = [
 	{
 		title: "Story",
 		key: "name",
+		fixed: "left",
+		width: 200,
 		sorter: (a, b) => a.name.localeCompare(b.name),
 		render: row => (
 			<div class="flex flex-col gap-1 py-1">
 				<div class="leading-snug font-semibold">{row.name}</div>
-				<div class="text-tertiary text-xs">
+				<div class="text-secondary font-mono text-xs uppercase">
 					{`${row.detection_count} detection`}
 					{row.detection_count === 1 ? "" : "s"}
 				</div>
@@ -124,13 +121,13 @@ const columns: DataTableColumns<CatalogStoryRow> = [
 		render: row =>
 			row.data_sources.length ? (
 				<div class="flex flex-wrap gap-1">
-					{row.data_sources.slice(0, 4).map(s => (
-						<span key={s} class="chip chip-info">
+					{row.data_sources.slice(0, MAX_SOURCES_TAG).map(s => (
+						<NTag size="small" type="primary" key={s}>
 							{s}
-						</span>
+						</NTag>
 					))}
-					{row.data_sources.length > 4 && (
-						<span class="chip chip-muted">{`+${row.data_sources.length - 4}`}</span>
+					{row.data_sources.length > MAX_SOURCES_TAG && (
+						<NTag size="small">{`+${row.data_sources.length - MAX_SOURCES_TAG}`}</NTag>
 					)}
 				</div>
 			) : (
@@ -143,11 +140,14 @@ const columns: DataTableColumns<CatalogStoryRow> = [
 		render: row =>
 			row.tactics.length ? (
 				<div class="flex flex-wrap gap-1">
-					{row.tactics.map(t => (
-						<span key={t} class="chip chip-tactic">
+					{row.tactics.slice(0, MAX_TACTICS_TAG).map(t => (
+						<NTag size="small" type="warning" key={t}>
 							{t.toUpperCase()}
-						</span>
+						</NTag>
 					))}
+					{row.tactics.length > MAX_TACTICS_TAG && (
+						<NTag size="small">{`+${row.tactics.length - MAX_TACTICS_TAG}`}</NTag>
+					)}
 				</div>
 			) : (
 				<span class="text-tertiary text-xs">—</span>
@@ -160,11 +160,14 @@ const columns: DataTableColumns<CatalogStoryRow> = [
 		render: row =>
 			row.products.length ? (
 				<div class="flex flex-wrap gap-1">
-					{row.products.map(p => (
-						<span key={p} class="chip chip-product">
+					{row.products.slice(0, MAX_PRODUCTS_TAG).map(p => (
+						<NTag size="small" key={p}>
 							{p}
-						</span>
+						</NTag>
 					))}
+					{row.products.length > MAX_PRODUCTS_TAG && (
+						<NTag size="small">{`+${row.products.length - MAX_PRODUCTS_TAG}`}</NTag>
+					)}
 				</div>
 			) : (
 				<span class="text-tertiary text-xs">—</span>
@@ -177,7 +180,7 @@ const columns: DataTableColumns<CatalogStoryRow> = [
 		sorter: (a, b) => (a.date || "").localeCompare(b.date || ""),
 		render: row =>
 			row.date ? (
-				<span class="text-secondary font-mono text-xs">{row.date}</span>
+				<span class="font-mono text-xs">{formatDate(row.date, dFormats.date)}</span>
 			) : (
 				<span class="text-tertiary text-xs">—</span>
 			)
@@ -186,6 +189,7 @@ const columns: DataTableColumns<CatalogStoryRow> = [
 
 function load() {
 	loading.value = true
+
 	Api.detectionCatalog
 		.listStories()
 		.then(res => {
@@ -202,42 +206,3 @@ function load() {
 
 onBeforeMount(load)
 </script>
-
-<style scoped lang="scss">
-/* Chip mini-component — used inline in render functions. Three variants
-   so different facets (data sources / tactics / products) have visually
-   distinct treatment without inventing custom NTag colors. */
-:deep(.chip) {
-	display: inline-flex;
-	align-items: center;
-	padding: 2px 8px;
-	font-size: 0.72rem;
-	font-weight: 500;
-	line-height: 1.4;
-	border-radius: 6px;
-	border: 1px solid transparent;
-	white-space: nowrap;
-}
-:deep(.chip-info) {
-	color: var(--primary-color);
-	background-color: rgba(var(--primary-color-rgb) / 0.08);
-	border-color: rgba(var(--primary-color-rgb) / 0.18);
-}
-:deep(.chip-tactic) {
-	color: var(--warning-color);
-	background-color: rgba(var(--warning-color-rgb) / 0.08);
-	border-color: rgba(var(--warning-color-rgb) / 0.2);
-	font-weight: 600;
-	letter-spacing: 0.04em;
-}
-:deep(.chip-product) {
-	color: var(--fg-default-color);
-	background-color: var(--bg-secondary-color);
-	border-color: var(--border-color);
-}
-:deep(.chip-muted) {
-	color: var(--fg-secondary-color);
-	background-color: rgba(var(--border-color-rgb) / 0.15);
-	border-color: var(--border-color);
-}
-</style>
