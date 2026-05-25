@@ -20,35 +20,48 @@
 						MITRE coverage gaps, and pivot by compliance framework.
 					</p>
 				</div>
-				<div v-if="stats" class="text-tertiary flex items-center gap-2 text-xs">
-					<n-spin v-if="loadingStats" size="small" />
-					<span v-else>
-						Data refreshed
-						<span v-if="stats.last_refresh">{{ formatRelativeTime(stats.last_refresh) }}</span>
-						<span v-else>just now</span>
-					</span>
-				</div>
 			</div>
 
-			<div class="grid grid-cols-1 gap-4 @md:grid-cols-2 @2xl:grid-cols-3 @7xl:grid-cols-6">
-				<CardLink
-					v-for="tile in headerStatTiles"
-					:key="tile.id"
-					:title="tile.label"
-					:value="tile.value"
-					:icon="tile.icon"
-					:subtitle="tile.sub"
-					:clickable="!!tile.to"
-					@click="onHeaderTileClick(tile)"
-				/>
+			<div class="flex items-center justify-end gap-2">
+				<span v-if="stats" class="text-tertiary text-xs">
+					Last refreshed
+					<span v-if="stats.last_refresh">{{ formatRelativeTime(stats.last_refresh) }}</span>
+					<span v-else>just now</span>
+				</span>
+				<n-button :loading="loadingStats" size="tiny" secondary @click="loadStats">
+					<template #icon><Icon :name="RefreshIcon" :size="15" /></template>
+					Refresh
+				</n-button>
 			</div>
+
+			<n-spin :show="loadingStats">
+				<div class="grid grid-cols-1 gap-4 @md:grid-cols-2 @2xl:grid-cols-3 @7xl:grid-cols-6">
+					<CardLink
+						v-for="tile in headerStatTiles"
+						:key="tile.id"
+						:title="tile.label"
+						:value="tile.value"
+						:icon="tile.icon"
+						:subtitle="tile.sub"
+						:clickable="!!tile.to"
+						@click="onHeaderTileClick(tile)"
+					/>
+				</div>
+			</n-spin>
 		</header>
 
 		<!-- TAB STRIP --------------------------------------------------------
 		     URL-synced via ?tab=<key>. When a story detail is open we hide
 		     the tabs entirely — that's its own dedicated surface.
 		-->
-		<n-tabs v-if="!openStoryName" :value="activeTab" type="line" animated @update:value="setTab">
+		<n-tabs
+			v-if="!openStoryName"
+			:value="activeTab"
+			type="line"
+			animated
+			display-directive="show:lazy"
+			@update:value="setTab"
+		>
 			<n-tab-pane name="stories">
 				<template #tab>
 					<div class="flex items-center gap-2">
@@ -94,7 +107,7 @@
 
 <script setup lang="ts">
 import type { CatalogStatsResponse } from "@/types/detectionCatalog.d"
-import { NSpin, NTabPane, NTabs } from "naive-ui"
+import { NButton, NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
@@ -146,6 +159,7 @@ const ComplianceIcon = "carbon:certificate-check"
 const TacticIcon = "carbon:flag"
 const DataSourceIcon = "carbon:data-base"
 const ProductIcon = "carbon:cube"
+const RefreshIcon = "carbon:renew"
 
 const HEADER_STAT_TILE_DEFS: HeaderStatTileDef[] = [
 	{

@@ -1,5 +1,5 @@
 <template>
-	<div class="coverage-gaps-index flex flex-col gap-4">
+	<div class="@container flex flex-col gap-4">
 		<!-- Title row + framing copy -->
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div class="flex flex-col gap-1">
@@ -16,29 +16,16 @@
 			</Badge>
 		</div>
 
-		<!-- COVERAGE HERO STATS - tiles using the shared CatalogStatTile so
-		     visual identity matches the catalog header. -->
-		<div v-if="!loading" class="gaps-stats-grid">
-			<CatalogStatTile
-				label="Coverage"
-				:value="`${coverage_pct}%`"
-				:icon="ShieldIcon"
-				:accent="coveragePctAccent"
-				sub="Across both corpora"
-			/>
-			<CatalogStatTile
-				label="Covered techniques"
-				:value="covered_count"
-				:icon="CoveredIcon"
-				accent="success"
-				:sub="`of ${total_techniques} total`"
-			/>
-			<CatalogStatTile
-				label="Gaps"
-				:value="gap_count"
-				:icon="GapsIcon"
-				accent="danger"
-				sub="Techniques with no rule"
+		<!-- COVERAGE HERO STATS - same CardLink pattern used by the catalog header. -->
+		<div v-if="!loading" class="grid grid-cols-1 gap-4 @2xl:grid-cols-3">
+			<CardLink
+				v-for="tile in coverageStatTiles"
+				:key="tile.id"
+				:title="tile.label"
+				:value="tile.value"
+				:icon-left="tile.icon"
+				:subtitle="tile.sub"
+				size="small"
 			/>
 		</div>
 
@@ -47,7 +34,7 @@
 		</n-input>
 
 		<n-spin :show="loading">
-			<n-data-table :columns :data="filteredGaps" :loading size="small" :pagination class="catalog-table" />
+			<n-data-table :columns :data="filteredGaps" :loading size="small" :pagination />
 		</n-spin>
 	</div>
 </template>
@@ -59,8 +46,16 @@ import { NDataTable, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import CardLink from "@/components/common/cards/CardLink.vue"
 import Icon from "@/components/common/Icon.vue"
-import CatalogStatTile from "./CatalogStatTile.vue"
+
+interface CoverageStatTile {
+	id: string
+	label: string
+	value: string
+	icon: string
+	sub: string
+}
 
 const message = useMessage()
 
@@ -73,7 +68,7 @@ const coverage_pct = ref(0)
 const loading = ref(false)
 const filter = ref("")
 
-const ShieldIcon = "carbon:shield-check"
+const ShieldIcon = "carbon:ibm-cloud-security-groups"
 const CoveredIcon = "carbon:checkmark-outline"
 const GapsIcon = "carbon:warning-square"
 
@@ -91,13 +86,29 @@ const filteredGaps = computed<CatalogCoverageGapRow[]>(() => {
 	)
 })
 
-// Color the Coverage tile by quality bucket — green high, red low. Makes the
-// tile a glanceable health indicator.
-const coveragePctAccent = computed<"success" | "warning" | "danger">(() => {
-	if (coverage_pct.value >= 70) return "success"
-	if (coverage_pct.value >= 40) return "warning"
-	return "danger"
-})
+const coverageStatTiles = computed<CoverageStatTile[]>(() => [
+	{
+		id: "coverage",
+		label: "Coverage",
+		value: `${coverage_pct.value}%`,
+		icon: ShieldIcon,
+		sub: "Across both corpora"
+	},
+	{
+		id: "covered-techniques",
+		label: "Covered techniques",
+		value: covered_count.value.toLocaleString(),
+		icon: CoveredIcon,
+		sub: `of ${total_techniques.value.toLocaleString()} total`
+	},
+	{
+		id: "gaps",
+		label: "Gaps",
+		value: gap_count.value.toLocaleString(),
+		icon: GapsIcon,
+		sub: "Techniques with no rule"
+	}
+])
 
 const columns: DataTableColumns<CatalogCoverageGapRow> = [
 	{
@@ -166,31 +177,6 @@ onBeforeMount(load)
 </script>
 
 <style scoped lang="scss">
-.gaps-stats-grid {
-	display: grid;
-	gap: 12px;
-	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
-/* Catalog table reuse */
-.catalog-table :deep(.n-data-table-th) {
-	background-color: var(--bg-secondary-color);
-	font-weight: 600;
-	font-size: 12px;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	color: var(--fg-secondary-color);
-}
-.catalog-table :deep(.n-data-table-tr) {
-	transition: background-color 0.15s var(--bezier-ease);
-}
-.catalog-table :deep(.n-data-table-tr:hover) {
-	background-color: rgba(var(--primary-color-rgb) / 0.04);
-}
-.catalog-table :deep(.n-data-table-td) {
-	padding: 10px 12px;
-}
-
 :deep(.technique-link) {
 	display: inline-flex;
 	align-items: center;

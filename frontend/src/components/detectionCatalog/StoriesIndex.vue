@@ -184,30 +184,6 @@ onBeforeMount(load)
 </script>
 
 <style scoped lang="scss">
-/* Catalog-wide table styling. Defined here but reused via the .catalog-table
-   class on all four tab tables — keeps the visual identity consistent across
-   Stories / Wazuh / Gaps / Compliance without a separate stylesheet. */
-.catalog-table :deep(.n-data-table-th) {
-	background-color: var(--bg-secondary-color);
-	font-weight: 600;
-	font-size: 12px;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	color: var(--fg-secondary-color);
-}
-
-.catalog-table :deep(.n-data-table-tr) {
-	transition: background-color 0.15s var(--bezier-ease);
-}
-
-.catalog-table :deep(.n-data-table-tr:hover) {
-	background-color: rgba(var(--primary-color-rgb) / 0.04);
-}
-
-.catalog-table :deep(.n-data-table-td) {
-	padding: 10px 12px;
-}
-
 /* Chip mini-component — used inline in render functions. Three variants
    so different facets (data sources / tactics / products) have visually
    distinct treatment without inventing custom NTag colors. */
