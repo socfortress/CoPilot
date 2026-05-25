@@ -42,6 +42,7 @@
 
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
+import type { CardLinkColor } from "@/components/common/cards/CardLink.vue"
 import type { CatalogCoverageGapRow } from "@/types/detectionCatalog.d"
 import { NDataTable, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
@@ -56,7 +57,7 @@ interface CoverageStatTile {
 	value: string
 	icon: string
 	sub: string
-	color: string
+	color: CardLinkColor
 }
 
 const message = useMessage()

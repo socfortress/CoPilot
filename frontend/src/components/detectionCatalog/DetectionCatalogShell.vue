@@ -19,40 +19,16 @@
 		</header>
 
 		<n-tabs type="line" animated>
-			<n-tab-pane name="stories" display-directive="show:lazy">
-				<template #tab>
-					<div class="flex items-center gap-2">
-						<Icon :name="StoryIcon" :size="15" />
-						CoPilot Searches
-					</div>
-				</template>
+			<n-tab-pane name="stories" tab="CoPilot Searches" display-directive="show:lazy">
 				<StoriesIndex />
 			</n-tab-pane>
-			<n-tab-pane name="wazuh" display-directive="show:lazy">
-				<template #tab>
-					<div class="flex items-center gap-2">
-						<Icon :name="WazuhIcon" :size="15" />
-						Wazuh Rules
-					</div>
-				</template>
+			<n-tab-pane name="wazuh" tab="Wazuh Rules" display-directive="show:lazy">
 				<WazuhRulesIndex />
 			</n-tab-pane>
-			<n-tab-pane name="gaps" display-directive="show:lazy">
-				<template #tab>
-					<div class="flex items-center gap-2">
-						<Icon :name="GapsIcon" :size="15" />
-						Coverage Gaps
-					</div>
-				</template>
+			<n-tab-pane name="gaps" tab="Coverage Gaps" display-directive="show:lazy">
 				<CoverageGapsIndex />
 			</n-tab-pane>
-			<n-tab-pane name="compliance" display-directive="show:lazy">
-				<template #tab>
-					<div class="flex items-center gap-2">
-						<Icon :name="ComplianceIcon" :size="15" />
-						Compliance
-					</div>
-				</template>
+			<n-tab-pane name="compliance" tab="Compliance" display-directive="show:lazy">
 				<ComplianceIndex />
 			</n-tab-pane>
 		</n-tabs>
@@ -69,8 +45,4 @@ import StoriesIndex from "./StoriesIndex.vue"
 import WazuhRulesIndex from "./WazuhRulesIndex.vue"
 
 const CatalogIcon = "carbon:catalog"
-const StoryIcon = "carbon:book"
-const WazuhIcon = "carbon:document-security"
-const GapsIcon = "carbon:warning-square"
-const ComplianceIcon = "carbon:certificate-check"
 </script>

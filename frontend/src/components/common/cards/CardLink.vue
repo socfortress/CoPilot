@@ -53,6 +53,9 @@
 import { NCard } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 
+export type CardLinkSize = "small" | "medium"
+export type CardLinkColor = "warning" | "success" | "danger" | "primary"
+
 withDefaults(
 	defineProps<{
 		title?: string | number
@@ -62,8 +65,8 @@ withDefaults(
 		clickable?: boolean
 		icon?: string
 		iconLeft?: string
-		size?: "small" | "medium"
-		color?: "warning" | "success" | "danger" | "primary"
+		size?: CardLinkSize
+		color?: CardLinkColor
 	}>(),
 	{
 		size: "medium"

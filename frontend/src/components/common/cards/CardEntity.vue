@@ -49,8 +49,8 @@
 
 				<div
 					v-if="
-						(!$slots.footer || hideFooter)
-							&& ($slots.footerMain || ($slots.footerExtra && !hideFooterExtra))
+						(!$slots.footer || hideFooter) &&
+						($slots.footerMain || ($slots.footerExtra && !hideFooterExtra))
 					"
 					class="footer-box flex flex-wrap items-start justify-between"
 					:class="footerBoxClass"
