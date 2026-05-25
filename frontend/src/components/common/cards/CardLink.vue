@@ -3,10 +3,20 @@
 		size="small"
 		:class="{ 'group cursor-pointer': clickable }"
 		:hoverable
-		content-class="flex items-center gap-2"
+		content-class="flex items-center gap-4"
 	>
-		<div v-if="iconLeft">
-			<Icon :name="iconLeft" />
+		<div
+			v-if="iconLeft"
+			class="flex size-12 shrink-0 items-center justify-center rounded-sm p-1"
+			:class="{
+				'bg-warning/10 text-warning': color === 'warning',
+				'bg-success/10 text-success': color === 'success',
+				'bg-error/10 text-error': color === 'danger',
+				'bg-primary/10 text-primary': color === 'primary',
+				'bg-secondary text-secondary': !color
+			}"
+		>
+			<Icon :name="iconLeft" :size="26" />
 		</div>
 		<div class="flex grow flex-col" :class="{ 'gap-1': size === 'small', 'gap-2': size === 'medium' }">
 			<div class="flex items-center justify-between gap-2">
@@ -53,6 +63,7 @@ withDefaults(
 		icon?: string
 		iconLeft?: string
 		size?: "small" | "medium"
+		color?: "warning" | "success" | "danger" | "primary"
 	}>(),
 	{
 		size: "medium"

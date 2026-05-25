@@ -1,5 +1,5 @@
 <template>
-	<div class="compliance-index flex flex-col gap-4">
+	<div class="@container flex flex-col gap-4">
 		<!-- Title row + framing copy -->
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div class="flex flex-col gap-1">
@@ -17,26 +17,16 @@
 		</div>
 
 		<!-- HERO STATS for the selected framework -->
-		<div v-if="!loading && pivot" class="compliance-stats-grid">
-			<CatalogStatTile
-				:label="`${pivot.framework_label} controls`"
-				:value="pivot.control_count"
-				:icon="ControlIcon"
-				accent="primary"
-				sub="Distinct control IDs"
-			/>
-			<CatalogStatTile
-				label="Rules tagged"
-				:value="pivot.rules_with_compliance"
-				:icon="RulesIcon"
-				:sub="`of ${pivot.total_rules} total Wazuh rules`"
-			/>
-			<CatalogStatTile
-				label="Rules without tag"
-				:value="pivot.total_rules - pivot.rules_with_compliance"
-				:icon="UntaggedIcon"
-				accent="warning"
-				sub="Not classified for this framework"
+		<div v-if="!loading && pivot" class="grid grid-cols-1 gap-4 @2xl:grid-cols-3">
+			<CardLink
+				v-for="tile in complianceStatTiles"
+				:key="tile.id"
+				:title="tile.label"
+				:value="tile.value"
+				:icon-left="tile.icon"
+				:color="tile.color"
+				:subtitle="tile.sub"
+				size="small"
 			/>
 		</div>
 
@@ -135,8 +125,17 @@ import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import CardLink from "@/components/common/cards/CardLink.vue"
 import Icon from "@/components/common/Icon.vue"
-import CatalogStatTile from "./CatalogStatTile.vue"
+
+interface ComplianceStatTile {
+	id: string
+	label: string
+	value: string
+	icon: string
+	sub: string
+	color?: "warning" | "success" | "danger" | "primary"
+}
 
 const message = useMessage()
 
@@ -168,6 +167,36 @@ const filteredGroups = computed<CatalogComplianceGroupRow[]>(() => {
 	const q = filter.value.trim().toLowerCase()
 	if (!q) return groups
 	return groups.filter(g => g.control.toLowerCase().includes(q))
+})
+
+const complianceStatTiles = computed<ComplianceStatTile[]>(() => {
+	if (!pivot.value) return []
+
+	return [
+		{
+			id: "controls",
+			label: `${pivot.value.framework_label} controls`,
+			value: pivot.value.control_count.toLocaleString(),
+			icon: ControlIcon,
+			sub: "Distinct control IDs",
+			color: "primary"
+		},
+		{
+			id: "rules-tagged",
+			label: "Rules tagged",
+			value: pivot.value.rules_with_compliance.toLocaleString(),
+			icon: RulesIcon,
+			sub: `of ${pivot.value.total_rules.toLocaleString()} total Wazuh rules`
+		},
+		{
+			id: "rules-without-tag",
+			label: "Rules without tag",
+			value: (pivot.value.total_rules - pivot.value.rules_with_compliance).toLocaleString(),
+			icon: UntaggedIcon,
+			sub: "Not classified for this framework",
+			color: "warning"
+		}
+	]
 })
 
 function openGroup(group: CatalogComplianceGroupRow) {

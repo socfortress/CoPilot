@@ -24,6 +24,7 @@
 				:title="tile.label"
 				:value="tile.value"
 				:icon-left="tile.icon"
+				:color="tile.color"
 				:subtitle="tile.sub"
 				size="small"
 			/>
@@ -92,21 +93,24 @@ const coverageStatTiles = computed<CoverageStatTile[]>(() => [
 		label: "Coverage",
 		value: `${coverage_pct.value}%`,
 		icon: ShieldIcon,
-		sub: "Across both corpora"
+		sub: "Across both corpora",
+		color: "warning"
 	},
 	{
 		id: "covered-techniques",
 		label: "Covered techniques",
 		value: covered_count.value.toLocaleString(),
 		icon: CoveredIcon,
-		sub: `of ${total_techniques.value.toLocaleString()} total`
+		sub: `of ${total_techniques.value.toLocaleString()} total`,
+		color: "success"
 	},
 	{
 		id: "gaps",
 		label: "Gaps",
 		value: gap_count.value.toLocaleString(),
 		icon: GapsIcon,
-		sub: "Techniques with no rule"
+		sub: "Techniques with no rule",
+		color: "danger"
 	}
 ])
 
