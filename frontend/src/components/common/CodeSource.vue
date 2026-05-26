@@ -19,15 +19,29 @@
 			}"
 		/>
 
-		<div v-if="showToggleButton" class="flex justify-end">
-			<n-button quaternary size="tiny" @click="showSource = !showSource">toggle source view</n-button>
+		<div v-if="showToggleButton" class="flex items-center justify-end gap-2">
+			<n-button v-if="isSupported" quaternary size="tiny" @click="copy(source)">
+				<template #icon>
+					<Icon name="carbon:copy" :size="12" />
+				</template>
+				{{ copied ? "copied!" : "copy source" }}
+			</n-button>
+
+			<n-button quaternary size="tiny" @click="showSource = !showSource">
+				<template #icon>
+					<Icon name="carbon:code" :size="14" />
+				</template>
+				toggle source view
+			</n-button>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
+import { useClipboard } from "@vueuse/core"
 import { NButton, NCard, NInput } from "naive-ui"
 import { computed, ref } from "vue"
+import Icon from "@/components/common/Icon.vue"
 import vShiki from "@/directives/v-shiki"
 
 const {
@@ -41,6 +55,8 @@ const {
 	decode?: boolean
 	showToggleButton?: boolean
 }>()
+
+const { copy, copied, isSupported } = useClipboard()
 
 const showSource = ref(false)
 const source = computed(() =>
