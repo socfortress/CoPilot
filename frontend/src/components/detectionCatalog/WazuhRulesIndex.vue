@@ -107,7 +107,13 @@
 			<WazuhRuleDetail v-if="modalRuleId !== null" :rule-id="modalRuleId" />
 		</n-modal>
 
-		<n-drawer v-model:show="showTestLogLineDrawer" :width="820" placement="right" display-directive="show">
+		<n-drawer
+			v-model:show="showTestLogLineDrawer"
+			:width="820"
+			class="max-w-[95vw]"
+			placement="right"
+			display-directive="show"
+		>
 			<n-drawer-content closable>
 				<template #header>Test a log line</template>
 				<WazuhLogTest @open-rule="openRuleById" />

@@ -1,75 +1,78 @@
 <template>
-	<div class="flex flex-col gap-3">
-		<p>Paste a raw log, see which Wazuh rule would fire (via Wazuh logtest)</p>
+	<div class="flex flex-col gap-6">
+		<div class="flex flex-col gap-2">
+			<p>Paste a raw log, see which Wazuh rule would fire (via Wazuh logtest)</p>
 
-		<div v-if="history.length" class="flex justify-end">
-			<n-popover placement="left-start" class="p-3!">
-				<template #trigger>
-					<div class="text-secondary flex items-center gap-2 text-xs">
-						<Icon name="carbon:time" />
-						History
-					</div>
-				</template>
-
-				<div class="flex flex-col gap-4">
-					<n-scrollbar trigger="none" style="max-height: 200px">
-						<div class="flex flex-col gap-2">
-							<Badge
-								v-for="(item, idx) of history"
-								:key="idx"
-								point-cursor
-								type="splitted"
-								@click="restoreFromHistory(item)"
-							>
-								<template #label>
-									<span
-										v-if="item.matched"
-										class="text-primary max-w-20 truncate font-mono text-xs"
-										:title="item.rule_id?.toString() ?? '?'"
-									>
-										{{ item.rule_id ?? "?" }}
-									</span>
-									<span v-else class="text-tertiary font-mono text-xs">no match</span>
-								</template>
-								<template #value>
-									<span class="text-secondary max-w-40 truncate text-xs" :title="item.event">
-										{{ item.event }}
-									</span>
-								</template>
-							</Badge>
+			<div v-if="history.length" class="flex justify-end">
+				<n-popover placement="left-start" class="p-3!">
+					<template #trigger>
+						<div class="text-secondary flex items-center gap-2 text-xs">
+							<Icon name="carbon:time" />
+							History
 						</div>
-					</n-scrollbar>
-					<div class="flex justify-end">
-						<n-button size="tiny" secondary @click="clearHistory">Clear history</n-button>
+					</template>
+
+					<div class="flex flex-col gap-4">
+						<n-scrollbar trigger="none" style="max-height: 200px">
+							<div class="flex flex-col gap-2">
+								<Badge
+									v-for="(item, idx) of history"
+									:key="idx"
+									point-cursor
+									type="splitted"
+									@click="restoreFromHistory(item)"
+								>
+									<template #label>
+										<span
+											v-if="item.matched"
+											class="text-primary max-w-20 truncate font-mono text-xs"
+											:title="item.rule_id?.toString() ?? '?'"
+										>
+											{{ item.rule_id ?? "?" }}
+										</span>
+										<span v-else class="text-tertiary font-mono text-xs">no match</span>
+									</template>
+									<template #value>
+										<span class="text-secondary max-w-40 truncate text-xs" :title="item.event">
+											{{ item.event }}
+										</span>
+									</template>
+								</Badge>
+							</div>
+						</n-scrollbar>
+						<div class="flex justify-end">
+							<n-button size="tiny" secondary @click="clearHistory">Clear history</n-button>
+						</div>
 					</div>
+				</n-popover>
+			</div>
+
+			<n-input
+				v-model:value="event"
+				type="textarea"
+				placeholder="Paste a single log line — auditd / syslog / Windows EventChannel / Suricata eve.json etc."
+				:autosize="{ minRows: 3, maxRows: 8 }"
+			/>
+
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<n-input-group size="small" class="flex-1">
+					<n-input-group-label size="small" class="text-secondary!">Format</n-input-group-label>
+					<n-select v-model:value="logFormat" :options="logFormatOptions" size="small" />
+				</n-input-group>
+
+				<div class="flex items-center gap-2">
+					<n-button type="primary" size="small" :loading="testing" :disabled="!event.trim()" @click="runTest">
+						<template #icon><Icon name="carbon:play" /></template>
+						Test against Wazuh
+					</n-button>
 				</div>
-			</n-popover>
-		</div>
-
-		<n-input
-			v-model:value="event"
-			type="textarea"
-			placeholder="Paste a single log line — auditd / syslog / Windows EventChannel / Suricata eve.json etc."
-			:autosize="{ minRows: 3, maxRows: 8 }"
-		/>
-
-		<div class="flex flex-wrap items-center justify-between gap-3">
-			<div class="flex items-center gap-2">
-				<span class="text-tertiary text-xs">Format</span>
-				<n-select v-model:value="logFormat" :options="logFormatOptions" size="small" style="min-width: 180px" />
-			</div>
-
-			<div class="flex items-center gap-2">
-				<n-button v-if="result" size="small" quaternary @click="clearResult">Clear result</n-button>
-				<n-button type="primary" size="small" :loading="testing" :disabled="!event.trim()" @click="runTest">
-					<template #icon><Icon name="carbon:play-filled-alt" /></template>
-					Test against Wazuh
-				</n-button>
 			</div>
 		</div>
 
-		<!-- RESULT --------------------------------------------------- -->
-		<template v-if="result">
+		<div v-if="result" class="flex flex-col gap-2">
+			<div class="flex justify-end">
+				<n-button size="tiny" quaternary @click="clearResult">Clear result</n-button>
+			</div>
 			<n-alert v-if="result.unavailable_reason" type="error" show-icon>
 				<template #header>Logtest failed</template>
 				{{ result.unavailable_reason }}
@@ -150,13 +153,25 @@
 					<CodeSource :code="result.alert" />
 				</n-collapse-item>
 			</n-collapse>
-		</template>
+		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { CatalogLogTestResponse } from "@/types/detectionCatalog.d"
-import { NAlert, NButton, NCollapse, NCollapseItem, NInput, NPopover, NScrollbar, NSelect, useMessage } from "naive-ui"
+import {
+	NAlert,
+	NButton,
+	NCollapse,
+	NCollapseItem,
+	NInput,
+	NInputGroup,
+	NInputGroupLabel,
+	NPopover,
+	NScrollbar,
+	NSelect,
+	useMessage
+} from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
