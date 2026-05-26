@@ -1,7 +1,5 @@
 <template>
-	<div class="wazuh-rules-index flex flex-col gap-4">
-		<WazuhLogTest @open-rule="openRuleById" />
-
+	<div class="flex flex-col gap-4">
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div class="flex flex-col gap-1">
 				<h3 class="m-0 text-lg font-semibold">Wazuh Rules</h3>
@@ -10,6 +8,10 @@
 					rules that never fire, or filter by customer to see the picture for a specific tenant.
 				</p>
 			</div>
+			<n-button secondary type="primary" @click="showTestLogLineDrawer = true">
+				<template #icon><Icon name="carbon:test-tool" /></template>
+				Test a log line
+			</n-button>
 		</div>
 
 		<div class="flex flex-wrap items-center gap-2">
@@ -104,13 +106,31 @@
 		>
 			<WazuhRuleDetail v-if="modalRuleId !== null" :rule-id="modalRuleId" />
 		</n-modal>
+
+		<n-drawer v-model:show="showTestLogLineDrawer" :width="520" placement="right" display-directive="show">
+			<n-drawer-content closable>
+				<template #header>Test a log line</template>
+				<WazuhLogTest @open-rule="openRuleById" />
+			</n-drawer-content>
+		</n-drawer>
 	</div>
 </template>
 
 <script setup lang="tsx">
 import type { DataTableColumns, SelectOption } from "naive-ui"
 import type { CatalogWazuhRuleRow } from "@/types/detectionCatalog.d"
-import { NAlert, NDataTable, NInput, NModal, NSelect, NSpin, useMessage } from "naive-ui"
+import {
+	NAlert,
+	NButton,
+	NDataTable,
+	NDrawer,
+	NDrawerContent,
+	NInput,
+	NModal,
+	NSelect,
+	NSpin,
+	useMessage
+} from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
@@ -135,6 +155,7 @@ const customerOptions = ref<SelectOption[]>([{ label: "All customers", value: ""
 const loadingCustomers = ref(false)
 const refetchingForCustomer = ref(false)
 
+const showTestLogLineDrawer = ref(false)
 const showDetailModal = ref(false)
 const modalRuleId = ref<number | null>(null)
 const modalTitle = ref("Wazuh Rule")
