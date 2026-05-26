@@ -1,11 +1,7 @@
 <template>
 	<div class="wazuh-rules-index flex flex-col gap-4">
-		<!-- Logtest panel — collapsible. Above the table so analysts find it
-		     when they're looking at the rules; collapsed by default so it
-		     doesn't push the table down for routine browsing. -->
 		<WazuhLogTest @open-rule="openRuleById" />
 
-		<!-- HEADER ROW: title/blurb + toolbar (filter chips + counts) -->
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div class="flex flex-col gap-1">
 				<h3 class="m-0 text-lg font-semibold">Wazuh Rules</h3>
@@ -14,21 +10,15 @@
 					rules that never fire, or filter by customer to see the picture for a specific tenant.
 				</p>
 			</div>
-			<Badge type="splitted" color="primary">
-				<template #label>Showing</template>
-				<template #value>{{ filteredRules.length }} / {{ rules.length }}</template>
-			</Badge>
 		</div>
 
-		<!-- TOOLBAR: search + customer scope -->
 		<div class="flex flex-wrap items-center gap-2">
 			<n-input
 				v-model:value="filter"
-				size="medium"
+				size="small"
 				placeholder="Filter by ID, description, group, MITRE ID, or filename…"
 				clearable
-				class="flex-1"
-				style="min-width: 240px"
+				class="min-w-80 flex-1"
 			>
 				<template #prefix><Icon name="carbon:search" /></template>
 			</n-input>
@@ -36,13 +26,19 @@
 			<n-select
 				v-if="firingStatsAvailable"
 				v-model:value="customerScope"
+				clearable
 				:options="customerOptions"
 				:loading="loadingCustomers || refetchingForCustomer"
-				size="medium"
-				style="min-width: 220px"
+				size="small"
+				class="min-w-80 flex-1"
 				:consistent-menu-width="false"
 				@update:value="onCustomerChange"
 			/>
+
+			<Badge type="splitted" color="primary" class="shrink-0">
+				<template #label>Showing</template>
+				<template #value>{{ filteredRules.length }} / {{ rules.length }}</template>
+			</Badge>
 		</div>
 
 		<!-- QUICK FILTER CHIPS - segmented style with hit-count summaries -->
@@ -508,25 +504,6 @@ onBeforeMount(() => {
 }
 :deep(.dot-danger) {
 	background-color: var(--error-color);
-}
-
-/* Catalog table base — same rules as StoriesIndex. */
-.catalog-table :deep(.n-data-table-th) {
-	background-color: var(--bg-secondary-color);
-	font-weight: 600;
-	font-size: 12px;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	color: var(--fg-secondary-color);
-}
-.catalog-table :deep(.n-data-table-tr) {
-	transition: background-color 0.15s var(--bezier-ease);
-}
-.catalog-table :deep(.n-data-table-tr:hover) {
-	background-color: rgba(var(--primary-color-rgb) / 0.04);
-}
-.catalog-table :deep(.n-data-table-td) {
-	padding: 10px 12px;
 }
 
 :deep(.chip) {

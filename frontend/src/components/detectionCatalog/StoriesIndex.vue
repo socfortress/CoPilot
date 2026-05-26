@@ -16,8 +16,7 @@
 				size="small"
 				placeholder="Filter by story name, data source, tactic, or product…"
 				clearable
-				class="min-w-100 flex-1"
-				style="min-width: 440px"
+				class="min-w-80 flex-1"
 			>
 				<template #prefix><Icon name="carbon:search" /></template>
 			</n-input>
