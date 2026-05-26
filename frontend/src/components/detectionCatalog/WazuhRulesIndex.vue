@@ -8,7 +8,7 @@
 					rules that never fire, or filter by customer to see the picture for a specific tenant.
 				</p>
 			</div>
-			<n-button secondary type="primary" @click="showTestLogLineDrawer = true">
+			<n-button secondary type="primary" size="small" @click="showTestLogLineDrawer = true">
 				<template #icon><Icon name="carbon:test-tool" /></template>
 				Test a log line
 			</n-button>
@@ -44,37 +44,61 @@
 		</div>
 
 		<!-- QUICK FILTER CHIPS - segmented style with hit-count summaries -->
-		<div v-if="firingStatsAvailable" class="filter-bar">
-			<button
-				type="button"
-				class="filter-chip"
-				:class="{ active: activeChip === 'all' }"
+		<div v-if="firingStatsAvailable" class="flex flex-wrap gap-2">
+			<n-tag
+				:type="activeChip === 'all' ? 'primary' : 'default'"
+				round
+				:bordered="activeChip !== 'all'"
+				class="cursor-pointer!"
 				@click="activeChip = 'all'"
 			>
-				<Icon name="carbon:list" :size="13" />
-				<span>All</span>
-				<span class="chip-count">{{ rules.length }}</span>
-			</button>
-			<button
-				type="button"
-				class="filter-chip noisy"
-				:class="{ active: activeChip === 'noisy' }"
+				<div class="flex items-center gap-2 text-xs">
+					<Icon name="carbon:list" :size="13" />
+					<span>All</span>
+					<span
+						class="text-secondary font-mono text-[11px] font-semibold"
+						:class="{ 'text-primary!': activeChip === 'all' }"
+					>
+						{{ rules.length }}
+					</span>
+				</div>
+			</n-tag>
+			<n-tag
+				:type="activeChip === 'noisy' ? 'warning' : 'default'"
+				round
+				:bordered="activeChip !== 'noisy'"
+				class="cursor-pointer!"
 				@click="activeChip = 'noisy'"
 			>
-				<Icon name="carbon:flash" :size="13" />
-				<span>Top noisy</span>
-				<span class="chip-count">50</span>
-			</button>
-			<button
-				type="button"
-				class="filter-chip dead"
-				:class="{ active: activeChip === 'dead' }"
+				<div class="flex items-center gap-2 text-xs">
+					<Icon name="carbon:flash" :size="13" />
+					<span>Top noisy</span>
+					<span
+						class="text-secondary font-mono text-[11px] font-semibold"
+						:class="{ 'text-warning!': activeChip === 'noisy' }"
+					>
+						50
+					</span>
+				</div>
+			</n-tag>
+			<n-tag
+				:type="activeChip === 'dead' ? 'error' : 'default'"
+				round
+				:bordered="activeChip !== 'dead'"
+				class="cursor-pointer!"
 				@click="activeChip = 'dead'"
 			>
-				<Icon name="carbon:warning" :size="13" />
-				<span>Dead (level ≥7)</span>
-				<span class="chip-count">{{ deadCount }}</span>
-			</button>
+				<div class="flex items-center gap-2 text-xs">
+					<Icon name="carbon:warning" :size="13" />
+					<span>Dead (level ≥7)</span>
+					<span
+						class="text-secondary font-mono text-[11px] font-semibold"
+						:class="{ 'text-error!': activeChip === 'dead' }"
+					>
+						{{ deadCount }}
+					</span>
+				</div>
+			</n-tag>
 		</div>
 
 		<!-- Unavailable state: Wazuh Manager not reachable / not configured. -->
@@ -83,17 +107,17 @@
 			{{ unavailableReason || "Could not reach the Wazuh Manager to load rules." }}
 		</n-alert>
 
-		<n-spin v-else :show="loading">
-			<n-data-table
-				:columns
-				:data="filteredRules"
-				:loading
-				size="small"
-				:row-props
-				:pagination
-				class="catalog-table wazuh-rules-table"
-			/>
-		</n-spin>
+		<n-data-table
+			v-else
+			:columns
+			:data="filteredRules"
+			:loading
+			size="small"
+			:row-props
+			:scroll-x="1400"
+			:pagination
+			class="catalog-table wazuh-rules-table"
+		/>
 
 		<!-- Detail modal -->
 		<n-modal
@@ -109,7 +133,7 @@
 
 		<n-drawer
 			v-model:show="showTestLogLineDrawer"
-			:width="820"
+			:width="700"
 			class="max-w-[95vw]"
 			placement="right"
 			display-directive="show"
@@ -123,7 +147,7 @@
 </template>
 
 <script setup lang="tsx">
-import type { DataTableColumns, SelectOption } from "naive-ui"
+import type { DataTableColumns, SelectOption, TagProps } from "naive-ui"
 import type { CatalogWazuhRuleRow } from "@/types/detectionCatalog.d"
 import {
 	NAlert,
@@ -135,6 +159,7 @@ import {
 	NModal,
 	NSelect,
 	NSpin,
+	NTag,
 	useMessage
 } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
@@ -206,7 +231,7 @@ const filteredRules = computed<CatalogWazuhRuleRow[]>(() => {
 function openRuleDetail(row: CatalogWazuhRuleRow) {
 	if (typeof row.id !== "number") return
 	modalRuleId.value = row.id
-	modalTitle.value = `Rule ${row.id}${row.description ? ` — ${row.description}` : ""}`
+	modalTitle.value = `Rule ${row.id}`
 	showDetailModal.value = true
 }
 
@@ -224,12 +249,12 @@ function rowProps(row: CatalogWazuhRuleRow) {
 	}
 }
 
-function levelTagClass(level: number | null): string {
-	if (level === null || level === undefined) return "level-pill level-none"
-	if (level >= 12) return "level-pill level-critical"
-	if (level >= 7) return "level-pill level-warning"
-	if (level >= 3) return "level-pill level-info"
-	return "level-pill level-low"
+function levelTagType(level: number | null): TagProps["type"] {
+	if (level === null || level === undefined) return "default"
+	if (level >= 12) return "error"
+	if (level >= 7) return "warning"
+	if (level >= 3) return "info"
+	return "default"
 }
 
 function renderRuleDescription(row: CatalogWazuhRuleRow) {
@@ -246,11 +271,11 @@ function renderRuleGroups(row: CatalogWazuhRuleRow) {
 	return (
 		<div class="flex flex-wrap gap-1">
 			{row.groups.slice(0, 3).map(g => (
-				<span key={g} class="chip chip-info">
+				<NTag key={g} type="primary" size="small">
 					{g}
-				</span>
+				</NTag>
 			))}
-			{row.groups.length > 3 && <span class="chip chip-muted">{`+${row.groups.length - 3}`}</span>}
+			{row.groups.length > 3 && <NTag size="small">{`+${row.groups.length - 3}`}</NTag>}
 		</div>
 	)
 }
@@ -262,9 +287,9 @@ function renderRuleMitre(row: CatalogWazuhRuleRow) {
 	return (
 		<div class="flex flex-wrap gap-1">
 			{row.mitre.map(t => (
-				<span key={t} class="chip chip-mitre">
+				<NTag key={t} size="small">
 					{t}
-				</span>
+				</NTag>
 			))}
 		</div>
 	)
@@ -311,7 +336,7 @@ const hitsColumn = computed(() => ({
 			return (
 				<div class="flex items-center gap-1.5">
 					<span class="dot dot-muted"></span>
-					<span class="text-tertiary text-xs">No hits 30d</span>
+					<span class="text-secondary text-xs">No hits 30d</span>
 				</div>
 			)
 		}
@@ -330,7 +355,7 @@ const hitsColumn = computed(() => ({
 				<span class={`dot ${dotClass}`}></span>
 				<div class="flex flex-col leading-tight">
 					<span class="font-mono text-xs font-medium">{row.hits_30d.toLocaleString()}</span>
-					<span class="text-tertiary text-xs">{`${row.hits_7d.toLocaleString()} in 7d`}</span>
+					<span class="text-secondary text-xs">{`${row.hits_7d.toLocaleString()} in 7d`}</span>
 				</div>
 			</div>
 		)
@@ -342,6 +367,7 @@ const columns = computed<DataTableColumns<CatalogWazuhRuleRow>>(() => {
 		{
 			title: "ID",
 			key: "id",
+			fixed: "left",
 			width: 100,
 			sorter: (a, b) => (a.id ?? 0) - (b.id ?? 0),
 			render: row => <span class="text-secondary font-mono text-xs">{row.id ?? "—"}</span>
@@ -351,16 +377,22 @@ const columns = computed<DataTableColumns<CatalogWazuhRuleRow>>(() => {
 			key: "level",
 			width: 90,
 			sorter: (a, b) => (a.level ?? 0) - (b.level ?? 0),
-			render: row => <span class={levelTagClass(row.level)}>{row.level ?? "—"}</span>
+			render: row => (
+				<NTag size="small" type={levelTagType(row.level)} bordered={false} class="font-mono font-bold">
+					{row.level ?? "—"}
+				</NTag>
+			)
 		},
 		{
 			title: "Description",
 			key: "description",
+			width: 400,
 			render: renderRuleDescription
 		},
 		{
 			title: "Groups",
 			key: "groups",
+			minWidth: 100,
 			render: renderRuleGroups
 		},
 		{
@@ -374,7 +406,7 @@ const columns = computed<DataTableColumns<CatalogWazuhRuleRow>>(() => {
 			key: "filename",
 			width: 200,
 			ellipsis: { tooltip: true },
-			render: row => <span class="text-tertiary font-mono text-xs">{row.filename || "—"}</span>
+			render: row => <span class="text-secondary font-mono text-xs">{row.filename || "—"}</span>
 		}
 	]
 	if (firingStatsAvailable.value) cols.push(hitsColumn.value)
@@ -411,105 +443,6 @@ onBeforeMount(() => {
 </script>
 
 <style scoped lang="scss">
-/* Filter bar with chip-style toggle buttons. Mimics segmented controls
-   without overcrowding — each chip has its own accent color so analysts
-   know what flavor of filter they're picking. */
-.filter-bar {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
-}
-
-.filter-chip {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	padding: 5px 12px;
-	font-size: 0.78rem;
-	font-weight: 500;
-	color: var(--fg-secondary-color);
-	background-color: var(--bg-secondary-color);
-	border: 1px solid var(--border-color);
-	border-radius: 999px;
-	cursor: pointer;
-	transition: all 0.15s var(--bezier-ease);
-
-	&:hover:not(.active) {
-		border-color: rgba(var(--primary-color-rgb) / 0.3);
-		color: var(--fg-default-color);
-	}
-
-	&.active {
-		color: var(--primary-color);
-		background-color: rgba(var(--primary-color-rgb) / 0.08);
-		border-color: rgba(var(--primary-color-rgb) / 0.35);
-	}
-
-	&.noisy.active {
-		color: var(--warning-color);
-		background-color: rgba(var(--warning-color-rgb) / 0.1);
-		border-color: rgba(var(--warning-color-rgb) / 0.35);
-	}
-
-	&.dead.active {
-		color: var(--error-color);
-		background-color: rgba(var(--error-color-rgb) / 0.08);
-		border-color: rgba(var(--error-color-rgb) / 0.3);
-	}
-
-	.chip-count {
-		font-family: var(--font-family-mono);
-		font-size: 0.7rem;
-		opacity: 0.7;
-		margin-left: 2px;
-	}
-}
-
-/* Level pill — small numeric badge with severity coloring. Replaces the
-   plain NTag with a uniform-width, monospace circle-ish for easier eye
-   scanning down the Level column. */
-:deep(.level-pill) {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 28px;
-	height: 22px;
-	padding: 0 6px;
-	font-size: 0.78rem;
-	font-weight: 600;
-	font-family: var(--font-family-mono);
-	border-radius: 5px;
-	border: 1px solid transparent;
-}
-:deep(.level-pill.level-none) {
-	color: var(--fg-secondary-color);
-	opacity: 0.6;
-	background-color: var(--bg-secondary-color);
-	border-color: var(--border-color);
-}
-:deep(.level-pill.level-low) {
-	color: var(--fg-secondary-color);
-	background-color: var(--bg-secondary-color);
-	border-color: var(--border-color);
-}
-:deep(.level-pill.level-info) {
-	color: var(--primary-color);
-	background-color: rgba(var(--primary-color-rgb) / 0.1);
-	border-color: rgba(var(--primary-color-rgb) / 0.25);
-}
-:deep(.level-pill.level-warning) {
-	color: var(--warning-color);
-	background-color: rgba(var(--warning-color-rgb) / 0.12);
-	border-color: rgba(var(--warning-color-rgb) / 0.3);
-}
-:deep(.level-pill.level-critical) {
-	color: var(--error-color);
-	background-color: rgba(var(--error-color-rgb) / 0.1);
-	border-color: rgba(var(--error-color-rgb) / 0.3);
-}
-
-/* Activity-column indicator dot — small color-coded dot left of the hit
-   counts. Lets analysts spot hot/cold rules without reading numbers. */
 :deep(.dot) {
 	display: inline-block;
 	width: 8px;
@@ -531,33 +464,5 @@ onBeforeMount(() => {
 }
 :deep(.dot-danger) {
 	background-color: var(--error-color);
-}
-
-:deep(.chip) {
-	display: inline-flex;
-	align-items: center;
-	padding: 2px 8px;
-	font-size: 0.72rem;
-	font-weight: 500;
-	line-height: 1.4;
-	border-radius: 6px;
-	border: 1px solid transparent;
-	white-space: nowrap;
-}
-:deep(.chip-info) {
-	color: var(--primary-color);
-	background-color: rgba(var(--primary-color-rgb) / 0.08);
-	border-color: rgba(var(--primary-color-rgb) / 0.18);
-}
-:deep(.chip-mitre) {
-	color: var(--fg-default-color);
-	background-color: var(--bg-secondary-color);
-	border-color: var(--border-color);
-	font-family: var(--font-family-mono);
-}
-:deep(.chip-muted) {
-	color: var(--fg-secondary-color);
-	background-color: rgba(var(--border-color-rgb) / 0.15);
-	border-color: var(--border-color);
 }
 </style>

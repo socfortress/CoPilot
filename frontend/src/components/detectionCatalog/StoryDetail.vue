@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="min-h-50">
-		<div v-if="story" class="story-detail flex flex-col gap-6">
+		<div v-if="story" class="flex flex-col gap-6">
 			<CardEntity>
 				<template #headerMain>
 					<div class="flex flex-col gap-1">
