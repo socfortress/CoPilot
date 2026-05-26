@@ -1,29 +1,29 @@
 <template>
-	<div class="wazuh-rule-detail flex flex-col gap-4">
-		<n-spin :show="loading">
-			<template v-if="rule">
-				<!-- HERO HEADER -----------------------------------------
-				     Big rule ID + description + key metadata badges in a
-				     compact card. The "card-status-*" variants tint the
-				     whole header by severity so the analyst's first glance
-				     conveys risk level. -->
-				<CardEntity size="medium" :status="hitsCardStatus">
-					<template #headerMain>
-						<div class="flex items-start gap-3">
-							<span :class="levelTagClass(rule.level)" class="rule-level-hero">
-								{{ rule.level ?? "—" }}
-							</span>
-							<div class="flex flex-col gap-1">
-								<div class="text-tertiary text-xs tracking-wide uppercase">Wazuh Rule</div>
-								<div class="text-xl leading-tight font-semibold">Rule {{ rule.id }}</div>
-								<div v-if="rule.description" class="text-secondary text-sm leading-snug">
-									{{ rule.description }}
-								</div>
-							</div>
+	<n-spin :show="loading" class="min-h-50">
+		<div v-if="rule" class="flex flex-col gap-4">
+			<CardEntity :status="hitsCardStatus">
+				<template #headerMain>
+					<div class="flex items-center gap-3">
+						<n-tag
+							size="large"
+							:type="levelTagType(rule.level)"
+							:bordered="false"
+							class="flex min-h-10 min-w-10 items-center justify-center font-mono font-bold"
+						>
+							{{ rule.level ?? "—" }}
+						</n-tag>
+						<div class="flex flex-col gap-0.5">
+							<div class="text-secondary text-xs tracking-wide uppercase">Wazuh Rule</div>
+							<div class="text-default text-lg leading-tight font-semibold">Rule {{ rule.id }}</div>
 						</div>
-					</template>
+					</div>
+				</template>
 
-					<template #default>
+				<template #default>
+					<div class="flex flex-col gap-2">
+						<div v-if="rule.description">
+							{{ rule.description }}
+						</div>
 						<div class="flex flex-wrap gap-2">
 							<Badge v-if="rule.status" type="splitted" color="success">
 								<template #label>Status</template>
@@ -43,102 +43,113 @@
 							</Badge>
 							<Badge v-if="rule.filename" type="splitted">
 								<template #label>File</template>
-								<template #value>
-									<code>{{ rule.filename }}</code>
-								</template>
+								<template #value>{{ rule.filename }}</template>
 							</Badge>
 						</div>
-					</template>
-				</CardEntity>
+					</div>
+				</template>
+			</CardEntity>
 
-				<!-- Groups -->
-				<CardEntity v-if="rule.groups.length" size="small">
-					<template #headerMain>
-						<SectionLabel icon="carbon:tag" label="Groups" />
-					</template>
-					<template #default>
-						<div class="flex flex-wrap gap-1.5">
-							<span v-for="g of rule.groups" :key="g" class="group-pill">
-								{{ g }}
-							</span>
+			<!-- Groups -->
+			<CardEntity v-if="rule.groups.length">
+				<template #headerMain>
+					<SectionLabel icon="carbon:tag" label="Groups" />
+				</template>
+				<template #default>
+					<div class="flex flex-wrap gap-1.5">
+						<n-tag v-for="g of rule.groups" :key="g" size="small" type="primary">
+							{{ g }}
+						</n-tag>
+					</div>
+				</template>
+			</CardEntity>
+
+			<!-- MITRE ATT&CK -->
+			<CardEntity v-if="rule.mitre.length">
+				<template #headerMain>
+					<SectionLabel icon="carbon:flag" label="MITRE ATT&CK" />
+				</template>
+				<template #default>
+					<div class="flex flex-col gap-2">
+						<div v-if="rule.mitre.length" class="flex flex-wrap gap-1.5">
+							<n-tag v-for="t of rule.mitre" :key="t" size="small" type="warning">
+								{{ t }}
+							</n-tag>
 						</div>
-					</template>
-				</CardEntity>
+					</div>
+				</template>
+			</CardEntity>
 
-				<!-- MITRE ATT&CK -->
-				<CardEntity v-if="rule.mitre.length || rule.tactics.length" size="small">
-					<template #headerMain>
-						<SectionLabel icon="carbon:flag" label="MITRE ATT&CK" />
-					</template>
-					<template #default>
-						<div class="flex flex-col gap-2">
-							<div v-if="rule.mitre.length" class="flex flex-wrap gap-1.5">
-								<span v-for="t of rule.mitre" :key="t" class="mitre-pill">{{ t }}</span>
-							</div>
-							<div v-if="rule.tactics.length" class="flex flex-wrap gap-1.5">
-								<span v-for="t of rule.tactics" :key="t" class="tactic-pill">
-									{{ t.toUpperCase() }}
+			<CardEntity v-if="rule.tactics.length">
+				<template #headerMain>
+					<SectionLabel icon="carbon:radar" label="Tactics" />
+				</template>
+				<template #default>
+					<div class="flex flex-col gap-2">
+						<div v-if="rule.tactics.length" class="flex flex-wrap gap-1.5">
+							<n-tag v-for="t of rule.tactics" :key="t" size="small">
+								{{ t.toUpperCase() }}
+							</n-tag>
+						</div>
+					</div>
+				</template>
+			</CardEntity>
+
+			<!-- Compliance — only render frameworks that actually have values. -->
+			<CardEntity v-if="hasCompliance">
+				<template #headerMain>
+					<SectionLabel icon="carbon:certificate-check" label="Compliance" />
+				</template>
+				<template #default>
+					<div class="compliance-grid">
+						<div v-for="[key, values] of complianceEntries" :key class="compliance-row">
+							<div class="compliance-label">{{ key }}</div>
+							<div class="flex flex-wrap gap-1">
+								<span v-for="v of values" :key="v" class="compliance-control">
+									{{ v }}
 								</span>
 							</div>
 						</div>
-					</template>
-				</CardEntity>
+					</div>
+				</template>
+			</CardEntity>
 
-				<!-- Compliance — only render frameworks that actually have values. -->
-				<CardEntity v-if="hasCompliance" size="small">
-					<template #headerMain>
-						<SectionLabel icon="carbon:certificate-check" label="Compliance" />
-					</template>
-					<template #default>
-						<div class="compliance-grid">
-							<div v-for="[key, values] of complianceEntries" :key class="compliance-row">
-								<div class="compliance-label">{{ key }}</div>
-								<div class="flex flex-wrap gap-1">
-									<span v-for="v of values" :key="v" class="compliance-control">
-										{{ v }}
-									</span>
-								</div>
-							</div>
-						</div>
-					</template>
-				</CardEntity>
-
-				<!-- Rule Source ---------------------------------------------
+			<!-- Rule Source ---------------------------------------------
 				     Reconstructed <rule> XML block. Copy button on the right
 				     for paste-into-rule-file workflows. -->
-				<CardEntity v-if="rule.source_xml" size="small">
-					<template #header>
-						<div class="flex items-center justify-between gap-2">
-							<SectionLabel icon="carbon:code" label="Rule Source" />
-							<n-button size="tiny" quaternary @click="copySource">
-								<template #icon><Icon name="carbon:copy" /></template>
-								{{ copied ? "Copied" : "Copy XML" }}
-							</n-button>
-						</div>
-					</template>
-					<template #default>
-						<pre class="rule-source"><code>{{ rule.source_xml }}</code></pre>
-					</template>
-				</CardEntity>
+			<CardEntity v-if="rule.source_xml" size="small">
+				<template #header>
+					<div class="flex items-center justify-between gap-2">
+						<SectionLabel icon="carbon:code" label="Rule Source" />
+						<n-button size="tiny" quaternary @click="copySource">
+							<template #icon><Icon name="carbon:copy" /></template>
+							{{ copied ? "Copied" : "Copy XML" }}
+						</n-button>
+					</div>
+				</template>
+				<template #default>
+					<pre class="rule-source"><code>{{ rule.source_xml }}</code></pre>
+				</template>
+			</CardEntity>
 
-				<!-- File location footer -->
-				<CardEntity v-if="rule.relative_dirname" size="small" embedded>
-					<template #default>
-						<div class="flex items-center gap-2 text-xs">
-							<Icon name="carbon:folder" :size="12" />
-							<span class="text-tertiary">Location:</span>
-							<code class="font-mono">{{ rule.relative_dirname }}/{{ rule.filename }}</code>
-						</div>
-					</template>
-				</CardEntity>
-			</template>
-		</n-spin>
-	</div>
+			<!-- File location footer -->
+			<CardEntity v-if="rule.relative_dirname" embedded>
+				<template #default>
+					<div class="flex items-center gap-2 text-xs">
+						<Icon name="carbon:folder" :size="12" />
+						<span class="text-secondary">Location:</span>
+						<code class="font-mono">{{ rule.relative_dirname }}/{{ rule.filename }}</code>
+					</div>
+				</template>
+			</CardEntity>
+		</div>
+	</n-spin>
 </template>
 
 <script setup lang="ts">
+import type { TagProps } from "naive-ui"
 import type { CatalogWazuhRuleDetailResponse } from "@/types/detectionCatalog.d"
-import { NButton, NSpin, useMessage } from "naive-ui"
+import { NButton, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, defineComponent, h, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
@@ -147,15 +158,13 @@ import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{ ruleId: number }>()
 
-// Tiny inline component for section labels — keeps the four section headers
-// visually identical without copy-pasting the markup.
 const SectionLabel = defineComponent({
 	props: { icon: String, label: String },
 	setup(props) {
 		return () =>
 			h("div", { class: "flex items-center gap-2" }, [
 				props.icon ? h(Icon, { name: props.icon, size: 14 }) : null,
-				h("span", { class: "text-sm font-semibold uppercase tracking-wide" }, props.label)
+				h("span", { class: "text-secondary text-xs font-semibold tracking-wide uppercase" }, props.label)
 			])
 	}
 })
@@ -170,12 +179,12 @@ let copyResetHandle: ReturnType<typeof setTimeout> | null = null
 
 // Severity classes for the big hero level badge — same buckets as the
 // index column. Single source of truth at the top so they stay in sync.
-function levelTagClass(level: number | null | undefined): string {
-	if (level === null || level === undefined) return "level-pill level-none"
-	if (level >= 12) return "level-pill level-critical"
-	if (level >= 7) return "level-pill level-warning"
-	if (level >= 3) return "level-pill level-info"
-	return "level-pill level-low"
+function levelTagType(level: number | null | undefined): TagProps["type"] {
+	if (level === null || level === undefined) return "default"
+	if (level >= 12) return "error"
+	if (level >= 7) return "warning"
+	if (level >= 3) return "info"
+	return "default"
 }
 
 // Pick a card status tint for the hero based on hit volume — lets the modal
@@ -291,55 +300,6 @@ onBeforeMount(() => load(props.ruleId))
 </script>
 
 <style scoped lang="scss">
-.rule-level-hero {
-	min-width: 44px !important;
-	height: 44px !important;
-	font-size: 1.25rem !important;
-	border-radius: 10px !important;
-	flex-shrink: 0;
-}
-
-/* Level pills — shared with the index table for consistency. */
-.level-pill {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 28px;
-	height: 22px;
-	padding: 0 6px;
-	font-size: 0.78rem;
-	font-weight: 600;
-	font-family: var(--font-family-mono);
-	border-radius: 5px;
-	border: 1px solid transparent;
-}
-.level-pill.level-none {
-	color: var(--fg-secondary-color);
-	opacity: 0.6;
-	background-color: var(--bg-secondary-color);
-	border-color: var(--border-color);
-}
-.level-pill.level-low {
-	color: var(--fg-secondary-color);
-	background-color: var(--bg-secondary-color);
-	border-color: var(--border-color);
-}
-.level-pill.level-info {
-	color: var(--primary-color);
-	background-color: rgba(var(--primary-color-rgb) / 0.1);
-	border-color: rgba(var(--primary-color-rgb) / 0.25);
-}
-.level-pill.level-warning {
-	color: var(--warning-color);
-	background-color: rgba(var(--warning-color-rgb) / 0.12);
-	border-color: rgba(var(--warning-color-rgb) / 0.3);
-}
-.level-pill.level-critical {
-	color: var(--error-color);
-	background-color: rgba(var(--error-color-rgb) / 0.1);
-	border-color: rgba(var(--error-color-rgb) / 0.3);
-}
-
 .group-pill {
 	display: inline-flex;
 	align-items: center;
