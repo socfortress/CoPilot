@@ -5,7 +5,7 @@
 				<template #headerMain>
 					<div class="flex flex-col gap-1">
 						<div class="text-secondary text-xs tracking-wide uppercase">Analytic Story</div>
-						<h2 class="text-default m-0 text-xl leading-tight font-semibold">
+						<h2 class="text-default text-xl leading-tight font-semibold">
 							{{ story.name }}
 						</h2>
 					</div>
@@ -125,7 +125,7 @@
 							{{ ds }}
 						</n-tag>
 					</div>
-					<p v-else class="m-0 text-sm">No data sources declared by member detections.</p>
+					<p v-else class="text-sm">No data sources declared by member detections.</p>
 				</template>
 			</CardEntity>
 
@@ -153,7 +153,7 @@
 							{{ item }}
 						</n-button>
 					</div>
-					<p v-else class="m-0 text-sm">No references provided by member detections.</p>
+					<p v-else class="text-sm">No references provided by member detections.</p>
 				</template>
 			</CardEntity>
 		</div>

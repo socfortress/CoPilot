@@ -3,8 +3,8 @@
 		<!-- Title row + framing copy -->
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div class="flex flex-col gap-1">
-				<h3 class="m-0 text-lg font-semibold">Coverage Gaps</h3>
-				<p class="text-secondary m-0 max-w-3xl text-sm">
+				<h3 class="text-lg font-semibold">Coverage Gaps</h3>
+				<p class="text-secondary max-w-3xl text-sm">
 					MITRE ATT&amp;CK techniques no rule covers — across both the CoPilot Searches corpus and the Wazuh
 					ruleset. Sub-techniques are collapsed into their parents (coverage of T1059.001 counts as coverage
 					for T1059). Use this list to spot where new detection authoring would expand your coverage.

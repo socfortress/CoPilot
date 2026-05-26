@@ -5,7 +5,7 @@
 				<div class="flex flex-col gap-1">
 					<div class="flex items-center gap-3">
 						<Icon :name="CatalogIcon" :size="22" />
-						<h2 class="m-0 text-2xl font-semibold">Detections Catalog</h2>
+						<h2 class="text-2xl font-semibold">Detections Catalog</h2>
 					</div>
 					<p class="text-sm">
 						Discovery surface for the CoPilot detection corpus and the Wazuh ruleset. Browse the CoPilot

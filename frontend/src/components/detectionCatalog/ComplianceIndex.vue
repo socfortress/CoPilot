@@ -3,8 +3,8 @@
 		<!-- Title row + framing copy -->
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div class="flex flex-col gap-1">
-				<h3 class="m-0 text-lg font-semibold">Compliance Coverage</h3>
-				<p class="text-secondary m-0 max-w-3xl text-sm">
+				<h3 class="text-lg font-semibold">Compliance Coverage</h3>
+				<p class="text-secondary max-w-3xl text-sm">
 					Wazuh rules grouped by control ID for the selected compliance framework. Each row shows how many
 					rules cover that control and how active they've been — useful for auditor questions like "what
 					coverage do we have for PCI DSS 10.2.4?".
@@ -105,7 +105,7 @@
 					</template>
 				</CardEntity>
 
-				<p class="text-tertiary m-0 text-xs">
+				<p class="text-tertiary text-xs">
 					Switch to the Wazuh Rules tab and search by ID for full rule details.
 				</p>
 			</div>

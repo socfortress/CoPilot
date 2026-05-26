@@ -2,8 +2,8 @@
 	<div class="flex flex-col gap-4">
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div class="flex flex-col gap-1">
-				<h3 class="m-0 text-lg font-semibold">Wazuh Rules</h3>
-				<p class="text-secondary m-0 text-sm">
+				<h3 class="text-lg font-semibold">Wazuh Rules</h3>
+				<p class="text-secondary text-sm">
 					Every rule shipped by the Wazuh Manager. Sort by hits to spot noisy rules, switch to "Dead" to find
 					rules that never fire, or filter by customer to see the picture for a specific tenant.
 				</p>
@@ -107,7 +107,7 @@
 			<WazuhRuleDetail v-if="modalRuleId !== null" :rule-id="modalRuleId" />
 		</n-modal>
 
-		<n-drawer v-model:show="showTestLogLineDrawer" :width="520" placement="right" display-directive="show">
+		<n-drawer v-model:show="showTestLogLineDrawer" :width="820" placement="right" display-directive="show">
 			<n-drawer-content closable>
 				<template #header>Test a log line</template>
 				<WazuhLogTest @open-rule="openRuleById" />

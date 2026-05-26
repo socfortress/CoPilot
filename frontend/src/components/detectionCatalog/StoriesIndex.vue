@@ -2,8 +2,8 @@
 	<div class="flex flex-col gap-4">
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div class="flex flex-col gap-1">
-				<h3 class="m-0 text-lg font-semibold">Analytic Stories</h3>
-				<p class="text-secondary m-0 text-sm">
+				<h3 class="text-lg font-semibold">Analytic Stories</h3>
+				<p class="text-secondary text-sm">
 					Each story is a threat narrative covered by one or more CoPilot Searches detections. Click a row to
 					see the member detections, data sources, and references.
 				</p>
