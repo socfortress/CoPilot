@@ -114,7 +114,7 @@
 			placement="right"
 			display-directive="show"
 		>
-			<n-drawer-content closable>
+			<n-drawer-content closable :native-scrollbar="false">
 				<template #header>Test a log line</template>
 				<WazuhLogTest @open-rule="openRuleById" />
 			</n-drawer-content>

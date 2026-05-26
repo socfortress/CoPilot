@@ -71,85 +71,105 @@
 
 		<div v-if="result" class="flex flex-col gap-2">
 			<div class="flex justify-end">
-				<n-button size="tiny" quaternary @click="clearResult">Clear result</n-button>
+				<n-button size="tiny" quaternary @click="clearResult">Clear test result</n-button>
 			</div>
+
 			<n-alert v-if="result.unavailable_reason" type="error" show-icon>
 				<template #header>Logtest failed</template>
 				{{ result.unavailable_reason }}
 			</n-alert>
 
 			<CardEntity v-else-if="!result.matched" size="small" status="warning">
+				<div class="flex items-start gap-3">
+					<Icon name="carbon:information" :size="18" class="text-warning mt-0.5" />
+					<div class="flex flex-col gap-1">
+						<div class="text-sm font-semibold">No rule matched</div>
+						<div class="text-secondary text-xs leading-relaxed">
+							Wazuh saw the log but no analyst-facing rule fired. Try a different "Format" — most
+							agent-forwarded logs use
+							<code>syslog</code>
+							; pure JSON payloads use
+							<code>json</code>
+							.
+						</div>
+					</div>
+				</div>
+			</CardEntity>
+
+			<CardEntity v-else-if="result.rule" size="small" status="success">
+				<template #headerMain>
+					<div class="flex flex-wrap items-center justify-between gap-2">
+						<div class="flex items-center gap-2">
+							<Icon name="carbon:checkmark-filled" :size="16" class="text-success" />
+							<span class="text-success text-sm font-semibold tracking-wide uppercase">Match</span>
+						</div>
+					</div>
+				</template>
+				<template #headerExtra>
+					<n-button
+						v-if="result.rule.id !== null"
+						size="tiny"
+						secondary
+						@click="emit('open-rule', result.rule.id)"
+					>
+						<template #icon><Icon name="carbon:view" /></template>
+						View in catalog
+					</n-button>
+				</template>
+
 				<template #default>
-					<div class="flex items-start gap-3">
-						<Icon name="carbon:information" :size="18" class="text-warning mt-0.5" />
-						<div class="flex flex-col gap-1">
-							<div class="text-sm font-semibold">No rule matched</div>
-							<div class="text-secondary text-xs leading-relaxed">
-								Wazuh saw the log but no analyst-facing rule fired. Try a different "Format" — most
-								agent-forwarded logs use
-								<code>syslog</code>
-								; pure JSON payloads use
-								<code>json</code>
-								.
+					<div class="flex flex-col gap-2">
+						<div class="text-sm">
+							{{ result.rule.description }}
+						</div>
+						<div class="flex items-center gap-2">
+							<Badge type="splitted" color="success" size="small">
+								<template #label>Rule</template>
+								<template #value>{{ result.rule.id }}</template>
+							</Badge>
+							<Badge type="splitted" :color="levelBadgeColor(result.rule.level)" size="small">
+								<template #label>Level</template>
+								<template #value>{{ result.rule.level ?? "—" }}</template>
+							</Badge>
+						</div>
+					</div>
+				</template>
+
+				<template #mainExtra>
+					<div class="flex flex-wrap gap-x-8 gap-y-5">
+						<div v-if="result.rule.groups.length" class="flex flex-col gap-1">
+							<span class="text-secondary text-[10px] tracking-wider uppercase">Groups</span>
+							<div class="flex flex-wrap gap-1.5">
+								<n-tag v-for="item of result.rule.groups" :key="item" size="small">
+									{{ item }}
+								</n-tag>
+							</div>
+						</div>
+						<div v-if="result.rule.mitre.length" class="flex flex-col gap-1">
+							<span class="text-secondary text-[10px] tracking-wider uppercase">MITRE ATT&CK</span>
+							<div class="flex flex-wrap gap-1.5">
+								<n-tag v-for="item of result.rule.mitre" :key="item" size="small">
+									{{ item }}
+								</n-tag>
+							</div>
+						</div>
+						<div v-if="result.tactics.length" class="flex flex-col gap-1">
+							<span class="text-secondary text-[10px] tracking-wider uppercase">Tactics</span>
+							<div class="flex flex-wrap gap-1.5">
+								<n-tag v-for="item of result.tactics" :key="item" size="small">
+									{{ item.toUpperCase() }}
+								</n-tag>
 							</div>
 						</div>
 					</div>
 				</template>
 			</CardEntity>
 
-			<CardEntity v-else-if="result.rule" size="small" status="success">
-				<template #header>
-					<div class="flex flex-wrap items-center justify-between gap-2">
-						<div class="flex items-center gap-2">
-							<Icon name="carbon:checkmark-filled" :size="16" class="text-success" />
-							<span class="text-sm font-semibold tracking-wide uppercase">Match</span>
-							<Badge type="splitted" color="success">
-								<template #label>Rule</template>
-								<template #value>{{ result.rule.id }}</template>
-							</Badge>
-							<Badge type="splitted" :color="levelBadgeColor(result.rule.level)">
-								<template #label>Level</template>
-								<template #value>{{ result.rule.level ?? "—" }}</template>
-							</Badge>
-						</div>
-						<n-button
-							v-if="result.rule.id !== null"
-							size="tiny"
-							secondary
-							@click="emit('open-rule', result.rule.id!)"
-						>
-							<template #icon><Icon name="carbon:arrow-right" /></template>
-							View in catalog
-						</n-button>
-					</div>
-				</template>
-
-				<template #default>
-					<div class="flex flex-col gap-3">
-						<div class="text-secondary text-sm leading-relaxed">
-							{{ result.rule.description }}
-						</div>
-						<div
-							v-if="result.rule.groups.length || result.rule.mitre.length || result.tactics.length"
-							class="flex flex-wrap gap-1.5"
-						>
-							<span v-for="g of result.rule.groups" :key="`g-${g}`" class="match-pill match-pill-group">
-								{{ g }}
-							</span>
-							<span v-for="t of result.rule.mitre" :key="`m-${t}`" class="match-pill match-pill-mitre">
-								{{ t }}
-							</span>
-							<span v-for="t of result.tactics" :key="`t-${t}`" class="match-pill match-pill-tactic">
-								{{ t.toUpperCase() }}
-							</span>
-						</div>
-					</div>
-				</template>
-			</CardEntity>
-
-			<!-- Decoded alert envelope, optional collapsible block. -->
 			<n-collapse v-if="result.alert" arrow-placement="right">
-				<n-collapse-item title="Decoded alert envelope" name="alert">
+				<n-collapse-item name="alert" class="[&_.n-collapse-item\_\_content-inner]:pt-2!">
+					<template #header>
+						<span class="text-secondary text-sm">Decoded alert envelope</span>
+					</template>
 					<CodeSource :code="result.alert" />
 				</n-collapse-item>
 			</n-collapse>
@@ -170,6 +190,7 @@ import {
 	NPopover,
 	NScrollbar,
 	NSelect,
+	NTag,
 	useMessage
 } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
@@ -309,35 +330,3 @@ function levelBadgeColor(level: number | null): "danger" | "warning" | "primary"
 
 onBeforeMount(loadHistory)
 </script>
-
-<style scoped lang="scss">
-/* Match-card chips - mirror the modal's groups/mitre/tactic pills so the
-   logtest result feels like a preview of the catalog modal. */
-.match-pill {
-	display: inline-flex;
-	align-items: center;
-	padding: 3px 10px;
-	font-size: 0.7rem;
-	font-weight: 500;
-	border-radius: 999px;
-	border: 1px solid transparent;
-}
-.match-pill-group {
-	color: var(--primary-color);
-	background-color: rgba(var(--primary-color-rgb) / 0.08);
-	border-color: rgba(var(--primary-color-rgb) / 0.18);
-}
-.match-pill-mitre {
-	color: var(--fg-default-color);
-	background-color: var(--bg-secondary-color);
-	border-color: var(--border-color);
-	font-family: var(--font-family-mono);
-}
-.match-pill-tactic {
-	color: var(--warning-color);
-	background-color: rgba(var(--warning-color-rgb) / 0.1);
-	border-color: rgba(var(--warning-color-rgb) / 0.25);
-	font-weight: 600;
-	letter-spacing: 0.04em;
-}
-</style>
