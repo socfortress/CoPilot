@@ -101,34 +101,29 @@
 					<SectionLabel icon="carbon:certificate-check" label="Compliance" />
 				</template>
 				<template #default>
-					<div class="compliance-grid">
-						<div v-for="[key, values] of complianceEntries" :key class="compliance-row">
-							<div class="compliance-label">{{ key }}</div>
+					<div class="divide-border flex flex-col gap-0 divide-y">
+						<div v-for="[key, values] of complianceEntries" :key class="flex items-start gap-3 py-2">
+							<div
+								class="text-secondary w-28 shrink-0 pt-0.5 text-xs font-semibold tracking-wide uppercase"
+							>
+								{{ key }}
+							</div>
 							<div class="flex flex-wrap gap-1">
-								<span v-for="v of values" :key="v" class="compliance-control">
+								<n-tag v-for="v of values" :key="v" size="small">
 									{{ v }}
-								</span>
+								</n-tag>
 							</div>
 						</div>
 					</div>
 				</template>
 			</CardEntity>
 
-			<!-- Rule Source ---------------------------------------------
-				     Reconstructed <rule> XML block. Copy button on the right
-				     for paste-into-rule-file workflows. -->
-			<CardEntity v-if="rule.source_xml" size="small">
+			<CardEntity v-if="rule.source_xml">
 				<template #header>
-					<div class="flex items-center justify-between gap-2">
-						<SectionLabel icon="carbon:code" label="Rule Source" />
-						<n-button size="tiny" quaternary @click="copySource">
-							<template #icon><Icon name="carbon:copy" /></template>
-							{{ copied ? "Copied" : "Copy XML" }}
-						</n-button>
-					</div>
+					<SectionLabel icon="carbon:code" label="Rule Source" />
 				</template>
 				<template #default>
-					<pre class="rule-source"><code>{{ rule.source_xml }}</code></pre>
+					<CodeSource :code="rule.source_xml" />
 				</template>
 			</CardEntity>
 
@@ -154,7 +149,9 @@ import { computed, defineComponent, h, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
+import dayjs from "@/utils/dayjs"
 
 const props = defineProps<{ ruleId: number }>()
 
@@ -173,9 +170,6 @@ const message = useMessage()
 
 const rule = ref<CatalogWazuhRuleDetailResponse | null>(null)
 const loading = ref(false)
-
-const copied = ref(false)
-let copyResetHandle: ReturnType<typeof setTimeout> | null = null
 
 // Severity classes for the big hero level badge — same buckets as the
 // index column. Single source of truth at the top so they stay in sync.
@@ -225,47 +219,7 @@ const complianceEntries = computed<[string, string[]][]>(() => {
 const hasCompliance = computed(() => complianceEntries.value.length > 0)
 
 function formatRelativeTime(iso: string): string {
-	const then = new Date(iso).getTime()
-	if (Number.isNaN(then)) return iso
-	const diffMs = Date.now() - then
-	if (diffMs < 0) return "just now"
-	const sec = Math.floor(diffMs / 1000)
-	if (sec < 60) return `${sec}s ago`
-	const min = Math.floor(sec / 60)
-	if (min < 60) return `${min}m ago`
-	const hr = Math.floor(min / 60)
-	if (hr < 24) return `${hr}h ago`
-	const day = Math.floor(hr / 24)
-	if (day < 30) return `${day}d ago`
-	return `${Math.floor(day / 30)}mo ago`
-}
-
-async function copySource() {
-	const xml = rule.value?.source_xml
-	if (!xml) return
-	try {
-		await navigator.clipboard.writeText(xml)
-	} catch {
-		// Clipboard API fails in HTTP-only contexts / no permission. Fallback
-		// via the hidden-textarea trick.
-		const ta = document.createElement("textarea")
-		ta.value = xml
-		ta.setAttribute("readonly", "")
-		ta.style.position = "absolute"
-		ta.style.left = "-9999px"
-		document.body.appendChild(ta)
-		ta.select()
-		try {
-			document.execCommand("copy")
-		} finally {
-			document.body.removeChild(ta)
-		}
-	}
-	copied.value = true
-	if (copyResetHandle) clearTimeout(copyResetHandle)
-	copyResetHandle = setTimeout(() => {
-		copied.value = false
-	}, 1500)
+	return dayjs(iso).fromNow()
 }
 
 function load(id: number) {
@@ -298,94 +252,3 @@ watch(
 )
 onBeforeMount(() => load(props.ruleId))
 </script>
-
-<style scoped lang="scss">
-.group-pill {
-	display: inline-flex;
-	align-items: center;
-	padding: 3px 10px;
-	font-size: 0.72rem;
-	font-weight: 500;
-	border-radius: 999px;
-	color: var(--primary-color);
-	background-color: rgba(var(--primary-color-rgb) / 0.08);
-	border: 1px solid rgba(var(--primary-color-rgb) / 0.18);
-}
-
-.mitre-pill {
-	display: inline-flex;
-	align-items: center;
-	padding: 3px 10px;
-	font-size: 0.72rem;
-	font-family: var(--font-family-mono);
-	font-weight: 500;
-	border-radius: 6px;
-	color: var(--fg-default-color);
-	background-color: var(--bg-secondary-color);
-	border: 1px solid var(--border-color);
-}
-
-.tactic-pill {
-	display: inline-flex;
-	align-items: center;
-	padding: 3px 10px;
-	font-size: 0.7rem;
-	font-weight: 600;
-	letter-spacing: 0.04em;
-	border-radius: 999px;
-	color: var(--warning-color);
-	background-color: rgba(var(--warning-color-rgb) / 0.1);
-	border: 1px solid rgba(var(--warning-color-rgb) / 0.25);
-}
-
-/* Compliance grid — framework labels on the left, control values on the right.
-   Grid columns let the labels align vertically when there are multiple. */
-.compliance-grid {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-}
-.compliance-row {
-	display: grid;
-	grid-template-columns: 110px 1fr;
-	align-items: start;
-	gap: 12px;
-}
-.compliance-label {
-	font-size: 0.72rem;
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	color: var(--fg-secondary-color);
-	padding-top: 3px;
-}
-.compliance-control {
-	display: inline-flex;
-	align-items: center;
-	padding: 2px 8px;
-	font-size: 0.72rem;
-	font-family: var(--font-family-mono);
-	border-radius: 5px;
-	color: var(--fg-default-color);
-	background-color: var(--bg-secondary-color);
-	border: 1px solid var(--border-color);
-}
-
-.rule-source {
-	margin: 0;
-	padding: 12px 14px;
-	max-height: 360px;
-	overflow: auto;
-	font-family: var(--font-family-mono);
-	font-size: 0.78rem;
-	line-height: 1.5;
-	color: var(--fg-default-color);
-	background-color: var(--bg-secondary-color);
-	border: 1px solid var(--border-color);
-	border-radius: 6px;
-	white-space: pre;
-}
-.rule-source code {
-	display: block;
-}
-</style>
