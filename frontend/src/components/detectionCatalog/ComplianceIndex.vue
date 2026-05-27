@@ -1,19 +1,12 @@
 <template>
 	<div class="@container flex flex-col gap-4">
-		<!-- Title row + framing copy -->
-		<div class="flex flex-wrap items-end justify-between gap-3">
-			<div class="flex flex-col gap-1">
-				<h3 class="text-lg font-semibold">Compliance Coverage</h3>
-				<p class="text-secondary max-w-3xl text-sm">
-					Wazuh rules grouped by control ID for the selected compliance framework. Each row shows how many
-					rules cover that control and how active they've been — useful for auditor questions like "what
-					coverage do we have for PCI DSS 10.2.4?".
-				</p>
-			</div>
-			<Badge v-if="pivot" type="splitted" color="primary">
-				<template #label>Showing</template>
-				<template #value>{{ filteredGroups.length }} / {{ pivot.groups.length }}</template>
-			</Badge>
+		<div class="flex flex-col gap-1">
+			<h3 class="text-lg font-semibold">Compliance Coverage</h3>
+			<p class="text-secondary text-sm">
+				Wazuh rules grouped by control ID for the selected compliance framework. Each row shows how many rules
+				cover that control and how active they've been — useful for auditor questions like "what coverage do we
+				have for PCI DSS 10.2.4?".
+			</p>
 		</div>
 
 		<!-- HERO STATS for the selected framework -->
@@ -36,33 +29,35 @@
 				v-model:value="selectedFramework"
 				:options="frameworkOptions"
 				:loading="loadingFrameworks"
-				size="medium"
-				style="min-width: 240px"
+				size="small"
+				class="min-w-80 flex-1"
 				@update:value="load"
 			/>
 			<n-input
 				v-model:value="filter"
-				size="medium"
+				size="small"
 				placeholder="Filter by control ID…"
 				clearable
-				class="flex-1"
-				style="min-width: 240px"
+				class="min-w-80 flex-1"
 			>
 				<template #prefix><Icon name="carbon:search" /></template>
 			</n-input>
+			<Badge v-if="pivot" type="splitted" color="primary" class="shrink-0">
+				<template #label>Showing</template>
+				<template #value>{{ filteredGroups.length }} / {{ pivot.groups.length }}</template>
+			</Badge>
 		</div>
 
-		<n-spin :show="loading">
-			<n-data-table
-				:columns
-				:data="filteredGroups"
-				:loading
-				size="small"
-				:pagination
-				:row-props
-				class="catalog-table"
-			/>
-		</n-spin>
+		<n-data-table
+			:columns
+			:data="filteredGroups"
+			:loading
+			size="small"
+			:pagination
+			:row-props
+			:scroll-x="1000"
+			class="catalog-table"
+		/>
 
 		<!-- Control drill-down modal -->
 		<n-modal
@@ -73,42 +68,7 @@
 			:bordered="false"
 			segmented
 		>
-			<div v-if="modalGroup" class="flex flex-col gap-4">
-				<div class="flex flex-wrap gap-2">
-					<Badge type="splitted" color="primary">
-						<template #label>Rules</template>
-						<template #value>{{ modalGroup.rule_count }}</template>
-					</Badge>
-					<Badge type="splitted" :color="modalGroup.total_hits_30d > 0 ? 'warning' : undefined">
-						<template #label>Hits 30d</template>
-						<template #value>{{ modalGroup.total_hits_30d.toLocaleString() }}</template>
-					</Badge>
-					<Badge type="splitted">
-						<template #label>Hits 7d</template>
-						<template #value>{{ modalGroup.total_hits_7d.toLocaleString() }}</template>
-					</Badge>
-				</div>
-
-				<CardEntity size="small">
-					<template #headerMain>
-						<div class="flex items-center gap-2">
-							<Icon name="carbon:list" :size="14" />
-							<span class="text-sm font-semibold tracking-wide uppercase">Rule IDs</span>
-						</div>
-					</template>
-					<template #default>
-						<div class="flex flex-wrap gap-1.5">
-							<span v-for="rid of modalGroup.rule_ids" :key="rid" class="rule-id-pill">
-								{{ rid }}
-							</span>
-						</div>
-					</template>
-				</CardEntity>
-
-				<p class="text-tertiary text-xs">
-					Switch to the Wazuh Rules tab and search by ID for full rule details.
-				</p>
-			</div>
+			<ComplianceDetail v-if="modalGroup" :group="modalGroup" />
 		</n-modal>
 	</div>
 </template>
@@ -120,13 +80,14 @@ import type {
 	CatalogComplianceGroupRow,
 	CatalogComplianceResponse
 } from "@/types/detectionCatalog.d"
-import { NDataTable, NInput, NModal, NSelect, NSpin, useMessage } from "naive-ui"
+import { NDataTable, NInput, NModal, NSelect, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import Icon from "@/components/common/Icon.vue"
+import ComplianceDetail from "./ComplianceDetail.vue"
 
 interface ComplianceStatTile {
 	id: string
@@ -214,23 +175,10 @@ function rowProps(row: CatalogComplianceGroupRow) {
 
 const columns: DataTableColumns<CatalogComplianceGroupRow> = [
 	{
-		title: "Control",
-		key: "control",
-		width: 200,
-		sorter: (a, b) => a.control.localeCompare(b.control),
-		render: row => <span class="font-mono text-sm font-medium">{row.control}</span>
-	},
-	{
-		title: "Rules",
-		key: "rule_count",
-		width: 100,
-		sorter: (a, b) => a.rule_count - b.rule_count,
-		render: row => <span class="rules-count-pill">{row.rule_count}</span>
-	},
-	{
 		title: "Activity",
 		key: "total_hits_30d",
 		width: 150,
+		fixed: "left",
 		defaultSortOrder: "descend",
 		sorter: (a, b) => a.total_hits_30d - b.total_hits_30d,
 		render: row => {
@@ -238,7 +186,7 @@ const columns: DataTableColumns<CatalogComplianceGroupRow> = [
 				return (
 					<div class="flex items-center gap-1.5">
 						<span class="dot dot-muted"></span>
-						<span class="text-tertiary text-xs">No hits 30d</span>
+						<span class="text-secondary text-xs">No hits 30d</span>
 					</div>
 				)
 			}
@@ -255,11 +203,29 @@ const columns: DataTableColumns<CatalogComplianceGroupRow> = [
 					<span class={`dot ${dotClass}`}></span>
 					<div class="flex flex-col leading-tight">
 						<span class="font-mono text-xs font-medium">{row.total_hits_30d.toLocaleString()}</span>
-						<span class="text-tertiary text-xs">{`${row.total_hits_7d.toLocaleString()} in 7d`}</span>
+						<span class="text-secondary text-xs">{`${row.total_hits_7d.toLocaleString()} in 7d`}</span>
 					</div>
 				</div>
 			)
 		}
+	},
+	{
+		title: "Control",
+		key: "control",
+		width: 200,
+		sorter: (a, b) => a.control.localeCompare(b.control),
+		render: row => <span class="font-mono text-sm font-medium">{row.control}</span>
+	},
+	{
+		title: "Rules",
+		key: "rule_count",
+		width: 100,
+		sorter: (a, b) => a.rule_count - b.rule_count,
+		render: row => (
+			<NTag size="small" type="primary">
+				{row.rule_count}
+			</NTag>
+		)
 	},
 	{
 		title: "Rule IDs (preview)",
@@ -267,11 +233,13 @@ const columns: DataTableColumns<CatalogComplianceGroupRow> = [
 		render: row => (
 			<div class="flex flex-wrap gap-1">
 				{row.rule_ids.slice(0, 10).map(rid => (
-					<span key={rid} class="chip chip-mitre">
+					<NTag key={rid} size="small">
 						{rid}
-					</span>
+					</NTag>
 				))}
-				{row.rule_ids.length > 10 && <span class="chip chip-muted">{`+${row.rule_ids.length - 10}`}</span>}
+				{row.rule_ids.length > 10 && (
+					<NTag size="small" type="default" bordered={false}>{`+${row.rule_ids.length - 10}`}</NTag>
+				)}
 			</div>
 		)
 	}
@@ -321,62 +289,6 @@ onBeforeMount(loadFrameworks)
 </script>
 
 <style scoped lang="scss">
-.compliance-stats-grid {
-	display: grid;
-	gap: 12px;
-	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
-.rule-id-pill {
-	display: inline-flex;
-	align-items: center;
-	padding: 3px 10px;
-	font-size: 0.72rem;
-	font-family: var(--font-family-mono);
-	font-weight: 500;
-	border-radius: 6px;
-	color: var(--fg-default-color);
-	background-color: var(--bg-secondary-color);
-	border: 1px solid var(--border-color);
-}
-
-/* Rule-count pill used in the "Rules" column of the compliance pivot. Small
-   monospace count in a neutral pill so the eye doesn't have to parse it as
-   a CTA. */
-:deep(.rules-count-pill) {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 32px;
-	height: 22px;
-	padding: 0 8px;
-	font-size: 0.78rem;
-	font-weight: 600;
-	font-family: var(--font-family-mono);
-	color: var(--primary-color);
-	background-color: rgba(var(--primary-color-rgb) / 0.08);
-	border: 1px solid rgba(var(--primary-color-rgb) / 0.2);
-	border-radius: 6px;
-}
-
-.catalog-table :deep(.n-data-table-th) {
-	background-color: var(--bg-secondary-color);
-	font-weight: 600;
-	font-size: 12px;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	color: var(--fg-secondary-color);
-}
-.catalog-table :deep(.n-data-table-tr) {
-	transition: background-color 0.15s var(--bezier-ease);
-}
-.catalog-table :deep(.n-data-table-tr:hover) {
-	background-color: rgba(var(--primary-color-rgb) / 0.04);
-}
-.catalog-table :deep(.n-data-table-td) {
-	padding: 10px 12px;
-}
-
 :deep(.dot) {
 	display: inline-block;
 	width: 8px;
@@ -398,28 +310,5 @@ onBeforeMount(loadFrameworks)
 }
 :deep(.dot-danger) {
 	background-color: var(--error-color);
-}
-
-:deep(.chip) {
-	display: inline-flex;
-	align-items: center;
-	padding: 2px 8px;
-	font-size: 0.72rem;
-	font-weight: 500;
-	line-height: 1.4;
-	border-radius: 6px;
-	border: 1px solid transparent;
-	white-space: nowrap;
-}
-:deep(.chip-mitre) {
-	color: var(--fg-default-color);
-	background-color: var(--bg-secondary-color);
-	border-color: var(--border-color);
-	font-family: var(--font-family-mono);
-}
-:deep(.chip-muted) {
-	color: var(--fg-secondary-color);
-	background-color: rgba(var(--border-color-rgb) / 0.15);
-	border-color: var(--border-color);
 }
 </style>
