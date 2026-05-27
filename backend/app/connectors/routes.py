@@ -58,7 +58,10 @@ async def get_connectors(
     "/{connector_id}",
     response_model=ConnectorListResponse,
     description="Fetch a specific connector",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    # Admin-only: this response includes plaintext connector_password / connector_api_key,
+    # so it must match the admin-only list endpoint above and must not be reachable by the
+    # analyst role. See GHSA-c5pw-2h98-r798.
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def get_connector(
     connector_id: int,
