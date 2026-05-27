@@ -67,6 +67,7 @@ import Api from "@/api"
 import Filters from "@/components/agents/Filters.vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -218,6 +219,8 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 
 let abortController = new AbortController()
 
+const customerFilterStore = useCustomerFilterStore()
+
 const loadAgents = useDebounceFn(async () => {
 	loading.value = true
 
@@ -225,7 +228,7 @@ const loadAgents = useDebounceFn(async () => {
 	abortController = new AbortController()
 
 	try {
-		const response = await Api.agents.getAgents()
+		const response = await Api.agents.getAgents(customerFilterStore.queryCustomerCodes)
 
 		data.value = response.data.agents || []
 		emit("loaded", data.value)
@@ -261,6 +264,17 @@ watch([() => pagination.value.pageSize, filters], resetPage, {
 	deep: true,
 	immediate: true
 })
+
+// The agents list is fetched once and filtered client-side, so a change to the
+// global customer filter must re-fetch (the backend scopes by customer_codes).
+watch(
+	() => customerFilterStore.selectedCustomerCodes,
+	() => {
+		pagination.value.page = 1
+		loadAgents()
+	},
+	{ deep: true }
+)
 
 onBeforeMount(() => {
 	loadAgents()

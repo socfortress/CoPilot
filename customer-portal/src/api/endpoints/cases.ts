@@ -80,12 +80,13 @@ export default {
 	getCasesByStatus(
 		status: CaseStatus,
 		{ page = 1, pageSize = 25, order = "desc" }: Pagination,
-		signal?: AbortSignal
+		signal?: AbortSignal,
+		customerCodes?: string[]
 	) {
-		return HttpClient.get<CommonResponse<CasesListResponse>>(`/incidents/db_operations/case/status/${status}`, {
-			params: { page, page_size: pageSize, order },
-			signal
-		})
+		return HttpClient.get<CommonResponse<CasesListResponse>>(
+			`/incidents/db_operations/case/status/${status}`,
+			withCustomerCodes(customerCodes, { params: { page, page_size: pageSize, order }, signal })
+		)
 	},
 
 	/**
@@ -94,14 +95,12 @@ export default {
 	getCasesByAssignedTo(
 		assignedTo: string,
 		{ page = 1, pageSize = 25, order = "desc" }: Pagination,
-		signal?: AbortSignal
+		signal?: AbortSignal,
+		customerCodes?: string[]
 	) {
 		return HttpClient.get<CommonResponse<CasesListResponse>>(
 			`/incidents/db_operations/case/assigned-to/${assignedTo}`,
-			{
-				params: { page, page_size: pageSize, order },
-				signal
-			}
+			withCustomerCodes(customerCodes, { params: { page, page_size: pageSize, order }, signal })
 		)
 	},
 

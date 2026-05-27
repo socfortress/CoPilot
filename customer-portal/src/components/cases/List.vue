@@ -195,14 +195,16 @@ const loadCases = useDebounceFn(async () => {
 					response = await Api.cases.getCasesByStatus(
 						filters.value.value as CaseStatus,
 						paginationPayload,
-						abortController.signal
+						abortController.signal,
+						customerFilterStore.queryCustomerCodes
 					)
 					break
 				case "assigned_to":
 					response = await Api.cases.getCasesByAssignedTo(
 						filters.value.value,
 						paginationPayload,
-						abortController.signal
+						abortController.signal,
+						customerFilterStore.queryCustomerCodes
 					)
 					break
 				default:
