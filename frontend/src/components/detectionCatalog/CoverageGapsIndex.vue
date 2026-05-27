@@ -49,7 +49,7 @@
 import type { DataTableColumns } from "naive-ui"
 import type { CardLinkColor } from "@/components/common/cards/CardLink.vue"
 import type { CatalogCoverageGapRow } from "@/types/detectionCatalog.d"
-import { NButton, NDataTable, NInput, NSpin, NTag, useMessage } from "naive-ui"
+import { NButton, NDataTable, NInput, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
@@ -132,7 +132,7 @@ const columns: DataTableColumns<CatalogCoverageGapRow> = [
 			row.url ? (
 				<NButton
 					tag="a"
-					// @ts-ignore tag="a" forwards native anchor attrs omitted from ButtonProps
+					// @ts-expect-error tag="a" forwards native anchor attrs omitted from ButtonProps
 					rel="noopener"
 					href={row.url}
 					target="_blank"

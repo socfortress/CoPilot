@@ -37,7 +37,7 @@
 			segmented
 			@after-leave="selectedStoryName = null"
 		>
-			<StoryDetail v-if="selectedStoryName" :story-name="selectedStoryName" />
+			<StoryDetail v-if="selectedStoryName" :story-name="selectedStoryName" @error="handleError" />
 		</n-modal>
 	</div>
 </template>
@@ -95,6 +95,11 @@ function rowProps(row: CatalogStoryRow) {
 function openStoryDetail(storyName: string) {
 	selectedStoryName.value = storyName
 	showStoryModal.value = true
+}
+
+function handleError() {
+	showStoryModal.value = false
+	selectedStoryName.value = null
 }
 
 const columns: DataTableColumns<CatalogStoryRow> = [

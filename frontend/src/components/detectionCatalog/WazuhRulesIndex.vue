@@ -1,7 +1,7 @@
 <template>
 	<div class="flex flex-col gap-4">
 		<div class="flex flex-wrap items-end justify-between gap-3">
-			<div class="flex flex-col gap-1">
+			<div class="flex min-w-110 flex-1 flex-col gap-1">
 				<h3 class="text-lg font-semibold">Wazuh Rules</h3>
 				<p class="text-secondary text-sm">
 					Every rule shipped by the Wazuh Manager. Sort by hits to spot noisy rules, switch to "Dead" to find

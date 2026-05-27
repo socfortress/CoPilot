@@ -182,9 +182,15 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import RuleCardContent from "@/components/copilotSearches/RuleCardContent.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const props = defineProps<{ storyName: string }>()
+
+const emits = defineEmits<{
+	(e: "error", message: string): void
+}>()
+
 const message = useMessage()
 const story = ref<CatalogStoryDetailResponse | null>(null)
 const loading = ref(false)
@@ -273,13 +279,15 @@ function load(name: string) {
 		})
 		.catch(err => {
 			const status = err.response?.status
+			let errorMessage = getApiErrorMessage(err) || "Failed to load story detail"
 			if (status === 404) {
-				message.warning(`No detections found for story '${name}'`)
+				errorMessage = `No detections found for story '${name}'`
+				message.warning(errorMessage)
 			} else {
-				message.error(
-					err.response?.data?.detail || err.response?.data?.message || "Failed to load story detail"
-				)
+				message.error(errorMessage)
 			}
+
+			emits("error", errorMessage)
 		})
 		.finally(() => {
 			loading.value = false
