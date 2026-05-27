@@ -162,3 +162,15 @@
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 	grid-auto-flow: row dense;
 }
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+	-webkit-text-fill-color: var(--fg-default-color);
+	transition: background-color 9999s ease-in-out 0s;
+	-webkit-box-shadow: 0 0 0px 1000px var(--bg-default-color) inset;
+	box-shadow: 0 0 0px 1000px var(--bg-default-color) inset;
+	caret-color: var(--fg-default-color);
+}

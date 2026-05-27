@@ -6,7 +6,7 @@
 					<Icon v-if="isWarning" :name="DangerIcon" />
 					<span>Uncommitted Journal Entries</span>
 				</div>
-				<apexchart height="70" :options :series></apexchart>
+				<VChart class="w-full" autoresize :option="chartOption" :style="{ height: '70px' }" />
 			</div>
 			<div class="value flex flex-col justify-center" :class="{ warning: isWarning }">
 				<span>{{ value }}</span>
@@ -29,20 +29,37 @@
 </template>
 
 <script setup lang="ts">
-import type { ApexOptions } from "apexcharts"
+import type { LineSeriesOption } from "echarts/charts"
+import type { GridComponentOption, TooltipComponentOption } from "echarts/components"
+import type { ComposeOption } from "echarts/core"
+import { LineChart } from "echarts/charts"
+import { GridComponent, TooltipComponent } from "echarts/components"
+import { use } from "echarts/core"
+import { CanvasRenderer } from "echarts/renderers"
 import { NButton } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
-import apexchart from "vue3-apexcharts"
+import VChart from "vue-echarts"
+import {
+	buildChartTooltipGlassBase,
+	chartTooltipThemeFromStyle,
+	formatChartTooltipTimeAxisFirst
+} from "@/components/common/charts"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useHealthcheckStore } from "@/stores/healthcheck"
 import { useThemeStore } from "@/stores/theme"
 import dayjs from "@/utils/dayjs"
-import "@/assets/scss/overrides/apexchart-override.scss"
 
 const props = defineProps<{
 	value: number
 }>()
+
+use([CanvasRenderer, LineChart, TooltipComponent, GridComponent])
+
+type ChartOption = ComposeOption<TooltipComponentOption | GridComponentOption | LineSeriesOption>
+
+const MAX_POINTS = 100
+const CHART_ANIMATION_MAX_POINTS = 100
 
 const UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD = useHealthcheckStore().uncommittedJournalEntriesThreshold
 
@@ -52,90 +69,64 @@ const LinkIcon = "carbon:launch"
 const DangerIcon = "majesticons:exclamation-line"
 
 const style = computed(() => useThemeStore().style)
-const isThemeDark = computed(() => useThemeStore().isThemeDark)
 const { routeGraylogManagement } = useNavigation()
 
-const isWarning = computed<boolean>(() => {
-	return value.value > UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD
-})
+const dataPoints = ref<[number, number][]>([])
 
-const series = ref<{ name: string; data: [Date, number][] }[]>([
-	{
-		name: "Entries",
-		data: []
-	}
-])
+const isWarning = computed<boolean>(() => value.value > UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD)
 
-const serieLength = computed<number>(() => series.value[0]?.data.length ?? 0)
+const enableAnimation = computed(() => dataPoints.value.length < CHART_ANIMATION_MAX_POINTS)
 
-function getOptions(): ApexOptions {
+const chartOption = computed((): ChartOption => {
+	const primary = style.value["primary-color"]
+
 	return {
-		chart: {
-			height: 70,
-			type: "area",
-			sparkline: {
-				enabled: true
-			},
-			animations: {
-				enabled: serieLength.value < 100,
-				dynamicAnimation: {
-					speed: 200
-				}
-			},
-			toolbar: {
-				show: false
-			},
-			zoom: {
-				enabled: false
-			}
+		backgroundColor: "transparent",
+		grid: { left: 0, right: 0, top: 2, bottom: 2 },
+		xAxis: {
+			type: "time",
+			show: false
 		},
-		dataLabels: {
-			enabled: false
+		yAxis: {
+			type: "value",
+			show: false,
+			scale: true
 		},
-		stroke: {
-			curve: "straight",
-			width: 3
-		},
-		xaxis: {
-			type: "datetime"
-		},
-		colors: [style.value["primary-color"]],
 		tooltip: {
-			x: {
-				formatter: (time: number) => {
-					return dayjs(time).format("HH:mm:ss")
-				}
-			},
-			y: {
-				formatter: (val: number) => {
-					return `${val}` || "&nbsp;0"
-				}
-			},
-			style: {
-				fontFamily: style.value["font-family-mono"]
-			},
-			theme: isThemeDark.value ? "dark" : "light"
-		}
+			...buildChartTooltipGlassBase(
+				chartTooltipThemeFromStyle({
+					...style.value,
+					"font-family": style.value["font-family-mono"]
+				}),
+				{ trigger: "axis" }
+			),
+			formatter: params =>
+				formatChartTooltipTimeAxisFirst(params, {
+					formatTime: ts => dayjs(ts).format("HH:mm:ss"),
+					resolveColor: () => primary
+				})
+		},
+		series: [
+			{
+				name: "Entries",
+				type: "line",
+				showSymbol: false,
+				smooth: false,
+				lineStyle: { width: 3, color: primary },
+				areaStyle: { color: primary, opacity: 0.12 },
+				animation: enableAnimation.value,
+				animationDurationUpdate: 200,
+				data: dataPoints.value
+			}
+		]
 	}
-}
-
-const options = ref(getOptions())
+})
 
 watch(value, val => {
-	if (serieLength.value > 100) {
-		series.value[0]?.data.shift()
-
-		if (options.value.chart?.animations?.enabled) {
-			options.value = getOptions()
-		}
+	if (dataPoints.value.length >= MAX_POINTS) {
+		dataPoints.value.shift()
 	}
-	if (series.value[0]) {
-		series.value[0].data.push([new Date(), val])
-	}
-})
-
-watch(isThemeDark, () => {
-	options.value = getOptions()
+	dataPoints.value.push([Date.now(), val])
 })
 </script>
 

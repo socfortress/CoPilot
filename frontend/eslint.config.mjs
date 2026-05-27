@@ -1,4 +1,7 @@
+import process from "node:process"
 import antfu from "@antfu/eslint-config"
+
+const isProduction = process.env.NODE_ENV === "production"
 
 export default antfu(
 	{
@@ -12,9 +15,10 @@ export default antfu(
 			quotes: "double"
 		},
 		rules: {
-			"e18e/ban-dependencies": ["error", { allowed: ["axios", "lodash", "depcheck", "fs-extra"] }],
-			"antfu/if-newline": "off",
 			"@typescript-eslint/no-non-null-assertion": "error",
+			"antfu/if-newline": "off",
+			"e18e/ban-dependencies": ["error", { allowed: ["axios", "lodash", "depcheck", "fs-extra"] }],
+			"pnpm/yaml-enforce-settings": isProduction ? "error" : "off",
 			"style/operator-linebreak": "off",
 			"style/arrow-parens": "off",
 			"style/brace-style": "off",
@@ -54,7 +58,8 @@ export default antfu(
 			"vue/quote-props": "off",
 			"vue/one-component-per-file": "off",
 			"vue/prefer-true-attribute-shorthand": "error",
-			"vue/v-bind-style": ["error", "shorthand", { sameNameShorthand: "always" }]
+			"vue/v-bind-style": ["error", "shorthand", { sameNameShorthand: "always" }],
+			"style/multiline-ternary": "off"
 		}
 	}
 )

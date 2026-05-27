@@ -426,3 +426,303 @@ class RulesByIdsResponse(BaseModel):
     message: str = "Rules fetched successfully"
     rules: list[RuleSummary]
     missing: list[str] = Field(default_factory=list, description="IDs that were requested but not found in cache")
+
+
+# =============================================================================
+# Detection Catalog — discovery surface over the rules cache.
+# See backend/app/integrations/copilot_searches/services/detection_catalog.py.
+# =============================================================================
+
+
+class CatalogStoryRow(BaseModel):
+    """One row in the Stories index table."""
+
+    name: str
+    data_sources: list[str] = Field(default_factory=list)
+    tactics: list[str] = Field(default_factory=list, description="MITRE tactic display names derived from member rules")
+    products: list[str] = Field(default_factory=list)
+    date: Optional[str] = Field(None, description="Most recent date string across member detections")
+    detection_count: int = 0
+
+
+class CatalogStoryListResponse(BaseModel):
+    success: bool = True
+    message: str = "Stories listed successfully"
+    stories: list[CatalogStoryRow] = Field(default_factory=list)
+
+
+class CatalogStoryDetection(BaseModel):
+    """One detection (rule) appearing inside a story's Detections table."""
+
+    id: str
+    name: str
+    type: str
+    severity: Optional[str] = None
+    mitre_attack_id: list[str] = Field(default_factory=list)
+    tactics: list[str] = Field(default_factory=list)
+    description: Optional[str] = None
+
+
+class CatalogStoryDetailResponse(BaseModel):
+    success: bool = True
+    message: str = "Story detail retrieved successfully"
+    name: str
+    id: str = Field(..., description="Stable slug for the story (URL-safe)")
+    description: str
+    why_it_matters: str = Field(..., description="Auto-generated until/unless curated narrative is added upstream")
+    detections: list[CatalogStoryDetection] = Field(default_factory=list)
+    data_sources: list[str] = Field(default_factory=list)
+    tactics: list[str] = Field(default_factory=list)
+    products: list[str] = Field(default_factory=list)
+    authors: list[str] = Field(default_factory=list)
+    references: list[str] = Field(default_factory=list)
+    date: Optional[str] = None
+    version: Optional[int] = None
+    detection_count: int = 0
+
+
+class CatalogStatsResponse(BaseModel):
+    success: bool = True
+    message: str = "Catalog stats retrieved successfully"
+    detection_count: int = 0
+    story_count: int = 0
+    product_count: int = 0
+    data_source_count: int = 0
+    tactic_count: int = 0
+    last_refresh: Optional[datetime] = None
+    # Wazuh-side counts — mirror of the wazuh_rules_cache state. Optional /
+    # defaulted so deployments that have never loaded the cache (or hit an
+    # outage on first load) still get a valid response shape.
+    wazuh_rule_count: int = 0
+    wazuh_last_refresh: Optional[datetime] = None
+    wazuh_available: bool = True
+    wazuh_unavailable_reason: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# Wazuh Rules tab — index row + list envelope + detail
+# ---------------------------------------------------------------------------
+
+
+class CatalogWazuhRuleRow(BaseModel):
+    """
+    One row in the Wazuh Rules index table. Mirror of the projection in
+    ``detection_catalog._wazuh_row``; keeps the OpenAPI doc honest.
+    """
+
+    id: Optional[int] = None
+    level: Optional[int] = None
+    status: Optional[str] = None
+    description: str = ""
+    filename: str = ""
+    relative_dirname: str = ""
+    groups: list[str] = Field(default_factory=list)
+    mitre: list[str] = Field(default_factory=list, description="MITRE ATT&CK technique IDs declared on the rule")
+    # Firing counts from the indexer. Always 0 when the firing-stats cache
+    # is unavailable — readers should check the envelope's
+    # ``firing_stats_available`` flag before treating 0 as "no hits".
+    hits_7d: int = 0
+    hits_30d: int = 0
+    # ISO timestamp of the most recent hit in the 30d window, or None when
+    # the rule hasn't fired / stats are unavailable. The UI renders this as
+    # relative time ("2 minutes ago").
+    last_seen: Optional[str] = None
+
+
+class CatalogWazuhRulesResponse(BaseModel):
+    """
+    Envelope for the full Wazuh rules list. ``available=False`` signals the
+    Wazuh Manager is unreachable / unconfigured — the UI should render an
+    inline empty state with ``unavailable_reason`` instead of erroring.
+
+    Firing-stats availability is reported separately because the Manager and
+    the Indexer are different services that can fail independently — you
+    could have rules loaded but no hit counts, or vice versa.
+    """
+
+    success: bool = True
+    message: str = "Wazuh rules listed successfully"
+    rules: list[CatalogWazuhRuleRow] = Field(default_factory=list)
+    total: int = 0
+    available: bool = True
+    unavailable_reason: Optional[str] = None
+    last_refresh: Optional[datetime] = None
+    # Indexer-side availability for the firing-stats column.
+    firing_stats_available: bool = True
+    firing_stats_unavailable_reason: Optional[str] = None
+    firing_stats_last_refresh: Optional[datetime] = None
+    # Echoes the customer scope: empty string for the global view, customer
+    # code when scoped. Lets the UI display "Showing hits for customer X"
+    # and confirm the right slice was returned.
+    customer_code: str = ""
+
+
+class CatalogWazuhRuleCompliance(BaseModel):
+    """
+    Compliance-framework arrays grouped under one nested object so the UI can
+    iterate frameworks without hard-coding the list.
+    """
+
+    pci_dss: list[str] = Field(default_factory=list)
+    gdpr: list[str] = Field(default_factory=list)
+    hipaa: list[str] = Field(default_factory=list)
+    nist_800_53: list[str] = Field(default_factory=list)
+    tsc: list[str] = Field(default_factory=list)
+    gpg13: list[str] = Field(default_factory=list)
+
+
+class CatalogWazuhRuleDetailResponse(BaseModel):
+    """Full meta payload for a single Wazuh rule — drives the detail modal."""
+
+    success: bool = True
+    message: str = "Wazuh rule detail retrieved successfully"
+    id: Optional[int] = None
+    level: Optional[int] = None
+    status: Optional[str] = None
+    description: str = ""
+    filename: str = ""
+    relative_dirname: str = ""
+    groups: list[str] = Field(default_factory=list)
+    mitre: list[str] = Field(default_factory=list)
+    tactics: list[str] = Field(default_factory=list, description="MITRE tactic display names resolved via mitre_matrix")
+    compliance: CatalogWazuhRuleCompliance = Field(default_factory=CatalogWazuhRuleCompliance)
+    # ``details`` is intentionally typed as a free-form dict: the keys Wazuh
+    # emits (if_sid, match, regex, decoded_as, info, group, …) vary per rule
+    # and we don't want to silently drop unknown ones. The frontend iterates
+    # whatever keys arrive.
+    details: dict = Field(default_factory=dict)
+    # Reconstructed ``<rule>...</rule>`` XML block, synthesized server-side
+    # from the cached fields above (no second Wazuh API call). Rendered by
+    # the modal as a code snippet so analysts can read the rule "as written".
+    source_xml: str = ""
+    # Firing counts pulled from the Wazuh indexer aggregation cache.
+    hits_7d: int = 0
+    hits_30d: int = 0
+    last_seen: Optional[str] = None
+    firing_stats_available: bool = True
+    firing_stats_unavailable_reason: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# Coverage Gaps — MITRE techniques not covered by either rule corpus
+# ---------------------------------------------------------------------------
+
+
+class CatalogCoverageGapRow(BaseModel):
+    """One uncovered MITRE technique."""
+
+    technique_id: str
+    technique_name: str
+    tactics: list[str] = Field(default_factory=list)
+    url: Optional[str] = None
+
+
+class CatalogCoverageGapsResponse(BaseModel):
+    """Envelope for the Coverage Gaps tab — gaps + coverage summary numbers."""
+
+    success: bool = True
+    message: str = "Coverage gaps computed successfully"
+    gaps: list[CatalogCoverageGapRow] = Field(default_factory=list)
+    gap_count: int = 0
+    covered_count: int = 0
+    total_techniques: int = 0
+    coverage_pct: float = 0.0
+
+
+# ---------------------------------------------------------------------------
+# Compliance pivot — Wazuh rules grouped by framework control ID
+# ---------------------------------------------------------------------------
+
+
+class CatalogComplianceFramework(BaseModel):
+    """One row in the framework selector dropdown."""
+
+    key: str  # API/URL value: pci_dss, hipaa, etc.
+    label: str  # Human-facing: "PCI DSS", "HIPAA", etc.
+
+
+class CatalogComplianceFrameworksResponse(BaseModel):
+    success: bool = True
+    message: str = "Frameworks listed successfully"
+    frameworks: list[CatalogComplianceFramework] = Field(default_factory=list)
+
+
+class CatalogComplianceGroupRow(BaseModel):
+    """One control bucket: e.g. PCI DSS 10.2.4 → 23 rules, 487 hits in 30d."""
+
+    control: str  # The control identifier itself, e.g. "10.2.4"
+    rule_count: int = 0
+    rule_ids: list[int] = Field(default_factory=list)
+    total_hits_30d: int = 0
+    total_hits_7d: int = 0
+
+
+class CatalogComplianceResponse(BaseModel):
+    """Compliance pivot for a single framework."""
+
+    success: bool = True
+    message: str = "Compliance pivot computed successfully"
+    framework: str  # echoes the request
+    framework_label: str
+    groups: list[CatalogComplianceGroupRow] = Field(default_factory=list)
+    control_count: int = 0
+    rules_with_compliance: int = 0  # rules carrying ≥1 control value for this framework
+    total_rules: int = 0  # total Wazuh rules in the cache (for "%" math)
+    firing_stats_available: bool = True
+
+
+# ---------------------------------------------------------------------------
+# Logtest — "which rule would match this log line?"
+# ---------------------------------------------------------------------------
+
+
+class CatalogLogTestRequest(BaseModel):
+    """Inputs for ``POST /catalog/wazuh-rules/test``."""
+
+    event: str = Field(..., description="Raw log line to evaluate (single line)")
+    log_format: str = Field(
+        default="syslog",
+        description="Wazuh log_format. Common: syslog, json, snort-full, squid, apache, iis",
+    )
+    location: str = Field(
+        default="logtest",
+        description="Pseudo-source label Wazuh records on the test. Keep generic to avoid location-conditional rule matches.",
+    )
+
+
+class CatalogLogTestRuleSummary(BaseModel):
+    """The matched rule's summary, normalized from Wazuh's logtest output."""
+
+    id: Optional[int] = None
+    level: Optional[int] = None
+    description: str = ""
+    groups: list[str] = Field(default_factory=list)
+    mitre: list[str] = Field(default_factory=list)
+    pci_dss: list[str] = Field(default_factory=list)
+    gdpr: list[str] = Field(default_factory=list)
+    hipaa: list[str] = Field(default_factory=list)
+    nist_800_53: list[str] = Field(default_factory=list)
+    firedtimes: Optional[int] = None
+
+
+class CatalogLogTestResponse(BaseModel):
+    """
+    Result envelope for a logtest run.
+
+    ``matched=False`` is a valid, successful outcome — it means Wazuh's
+    decoder/rule chain saw the event but no analyst-facing rule fired.
+    ``unavailable_reason`` is only populated when the logtest call itself
+    failed (Wazuh unreachable, invalid input, etc.).
+    """
+
+    success: bool = True
+    message: str = "Logtest executed"
+    matched: bool = False
+    rule: Optional[CatalogLogTestRuleSummary] = None
+    # Resolved tactic display names from the mitre_matrix — saves the UI
+    # from doing a second resolution pass on the frontend.
+    tactics: list[str] = Field(default_factory=list)
+    # Full Wazuh alert envelope (decoder, predecoder, data, full_log, …).
+    # Free-form dict because Wazuh's shape varies per decoder type.
+    alert: Optional[dict] = None
+    unavailable_reason: Optional[str] = None

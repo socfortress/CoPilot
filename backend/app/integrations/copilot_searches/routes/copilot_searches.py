@@ -19,6 +19,36 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
     BulkProvisionRuleResult,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogComplianceFrameworksResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogComplianceResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogCoverageGapsResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogLogTestRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogLogTestResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogStatsResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogStoryDetailResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogStoryListResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogWazuhRuleDetailResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogWazuhRulesResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
     ExecuteGraylogQueryRequest,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
@@ -72,6 +102,29 @@ from app.integrations.copilot_searches.services.copilot_searches import (
     refresh_rules_cache,
 )
 from app.integrations.copilot_searches.services.copilot_searches import rules_cache
+from app.integrations.copilot_searches.services.detection_catalog import (
+    get_catalog_stats,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
+    get_story_detail,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
+    get_wazuh_rule_detail,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
+    list_compliance_frameworks,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
+    list_compliance_pivot,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
+    list_coverage_gaps,
+)
+from app.integrations.copilot_searches.services.detection_catalog import list_stories
+from app.integrations.copilot_searches.services.detection_catalog import (
+    list_wazuh_rules,
+)
+from app.integrations.copilot_searches.services.detection_catalog import run_log_test
 from app.integrations.copilot_searches.services.mitre_coverage import get_coverage
 from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
 
@@ -840,3 +893,288 @@ async def provision_graylog_alert(request: ProvisionGraylogAlertRequest):
             status_code=500,
             detail=f"Failed to provision Graylog alert: {str(e)}",
         )
+
+
+# =============================================================================
+# Detection Catalog
+#
+# Read-only discovery surface over the rules already loaded by CoPilot Searches.
+# Same underlying cache, same refresh story (POST /refresh above). All three
+# endpoints walk the in-memory ``rules_cache`` and aggregate fresh per call;
+# they do not maintain a second cache layer.
+# =============================================================================
+
+
+@copilot_searches_router.get(
+    "/catalog/stats",
+    response_model=CatalogStatsResponse,
+    description="Catalog overview counts (detections, stories, products, data sources, tactics).",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_catalog_stats_endpoint() -> CatalogStatsResponse:
+    try:
+        stats = await get_catalog_stats()
+        return CatalogStatsResponse(**stats)
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Failed to build catalog stats: {str(e)}")
+
+
+@copilot_searches_router.get(
+    "/catalog/stories",
+    response_model=CatalogStoryListResponse,
+    description=(
+        "List every analytic story discovered across the loaded detections, with "
+        "per-story summary fields (data sources, tactics, products, latest date, "
+        "detection count). Mirrors Splunk's Analytic Stories index table."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def list_catalog_stories_endpoint() -> CatalogStoryListResponse:
+    try:
+        stories = await list_stories()
+        return CatalogStoryListResponse(
+            success=True,
+            message=f"Found {len(stories)} story(ies)",
+            stories=stories,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Failed to list catalog stories: {str(e)}")
+
+
+@copilot_searches_router.get(
+    "/catalog/stories/{story_name:path}",
+    response_model=CatalogStoryDetailResponse,
+    description=(
+        "Detail view for a single analytic story: aggregated description, "
+        "the detections it contains, deduplicated data sources, references, "
+        "and metadata. ``story_name`` is the raw tag value (case-sensitive); "
+        "the route accepts arbitrary characters including spaces."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_catalog_story_detail_endpoint(story_name: str) -> CatalogStoryDetailResponse:
+    try:
+        detail = await get_story_detail(story_name)
+        if detail is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No detections found for analytic story '{story_name}'",
+            )
+        return CatalogStoryDetailResponse(**detail)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Failed to load story detail: {str(e)}")
+
+
+# ---------------------------------------------------------------------------
+# Wazuh Rules tab — list + per-rule detail
+#
+# Route ordering note: the static ``/catalog/wazuh-rules`` MUST be declared
+# before ``/catalog/wazuh-rules/{rule_id}`` so FastAPI doesn't route the bare
+# list path into the wildcard handler and try to parse the empty path as an
+# int. (Same footgun documented in CLAUDE.md "Things that bite".)
+#
+# Auth note: we deliberately call the underlying ``list_wazuh_rules`` /
+# ``get_wazuh_rule_detail`` service functions instead of proxying the
+# wazuh_manager router (which is admin-only). Catalog viewers should be able
+# to *see* rule metadata without holding admin scope; the management surface
+# (enable / disable / upload) stays gated where it already is.
+# ---------------------------------------------------------------------------
+
+
+@copilot_searches_router.get(
+    "/catalog/wazuh-rules",
+    response_model=CatalogWazuhRulesResponse,
+    description=(
+        "List the full Wazuh Manager ruleset projected to the catalog's "
+        "index-table shape. Returns every rule in one shot — pagination "
+        "and filtering happen client-side in the same pattern as the "
+        "Analytic Stories tab. When the Wazuh Manager is unreachable the "
+        "response carries ``available=false`` + ``unavailable_reason`` so "
+        "the UI can render an inline empty state instead of erroring."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def list_catalog_wazuh_rules_endpoint(
+    customer_code: Optional[str] = Query(
+        None,
+        description=(
+            "Optional customer code (e.g. ``00002``, ``lab``). When set, the "
+            "Hits 30d / Hits 7d / Last fired columns are scoped to this "
+            "customer's alerts only. When unset, the global firing-stats "
+            "cache is used."
+        ),
+    ),
+) -> CatalogWazuhRulesResponse:
+    try:
+        payload = await list_wazuh_rules(customer_code=customer_code)
+        return CatalogWazuhRulesResponse(
+            success=True,
+            message=(f"Listed {payload['total']} Wazuh rule(s)" if payload["available"] else "Wazuh Manager not available"),
+            **payload,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Failed to list Wazuh rules: {str(e)}")
+
+
+@copilot_searches_router.get(
+    "/catalog/wazuh-rules/{rule_id}",
+    response_model=CatalogWazuhRuleDetailResponse,
+    description=(
+        "Full meta payload for a single Wazuh rule: header (id/level/status), "
+        "description, file location, groups, MITRE techniques + resolved "
+        "tactics, compliance frameworks, and the raw if-then logic dict "
+        "(if_sid / match / regex / decoded_as / etc.). Served entirely from "
+        "the in-memory cache — no second call to the Wazuh Manager."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_catalog_wazuh_rule_endpoint(rule_id: int) -> CatalogWazuhRuleDetailResponse:
+    try:
+        detail = await get_wazuh_rule_detail(rule_id)
+        if detail is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No Wazuh rule found with id {rule_id}",
+            )
+        return CatalogWazuhRuleDetailResponse(**detail)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Failed to load Wazuh rule detail: {str(e)}")
+
+
+# ---------------------------------------------------------------------------
+# Coverage Gaps tab — uncovered MITRE techniques across both corpora
+# ---------------------------------------------------------------------------
+
+
+@copilot_searches_router.get(
+    "/catalog/coverage-gaps",
+    response_model=CatalogCoverageGapsResponse,
+    description=(
+        "MITRE ATT&CK techniques not covered by any rule in either the "
+        "CoPilot Searches corpus or the Wazuh ruleset. Sub-techniques are "
+        "collapsed into their parents (a hit on T1059.001 counts as coverage "
+        "for T1059). Use this surface to spot detection gaps that warrant "
+        "new rule authoring."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def list_catalog_coverage_gaps_endpoint() -> CatalogCoverageGapsResponse:
+    try:
+        payload = await list_coverage_gaps()
+        return CatalogCoverageGapsResponse(
+            success=True,
+            message=f"{payload['gap_count']} gap(s) across {payload['total_techniques']} technique(s)",
+            **payload,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Failed to compute coverage gaps: {str(e)}")
+
+
+# ---------------------------------------------------------------------------
+# Compliance pivot — Wazuh rules grouped by framework control ID
+#
+# Route ordering: static ``/catalog/compliance/frameworks`` MUST come before
+# the parameterized ``/catalog/compliance/{framework}`` so FastAPI doesn't
+# route the bare list path into the wildcard handler. (Same footgun as the
+# wazuh-rules routes — see CLAUDE.md "Things that bite".)
+# ---------------------------------------------------------------------------
+
+
+@copilot_searches_router.get(
+    "/catalog/compliance/frameworks",
+    response_model=CatalogComplianceFrameworksResponse,
+    description=(
+        "List the compliance frameworks the catalog can pivot Wazuh rules "
+        "by (PCI DSS, HIPAA, NIST 800-53, GDPR, TSC, GPG13). Drives the "
+        "framework selector dropdown on the Compliance tab."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def list_catalog_compliance_frameworks_endpoint() -> CatalogComplianceFrameworksResponse:
+    return CatalogComplianceFrameworksResponse(
+        success=True,
+        message="Frameworks listed successfully",
+        frameworks=list_compliance_frameworks(),
+    )
+
+
+@copilot_searches_router.get(
+    "/catalog/compliance/{framework}",
+    response_model=CatalogComplianceResponse,
+    description=(
+        "Group every Wazuh rule by its control IDs for the given framework "
+        "(e.g. ``pci_dss``, ``hipaa``, ``nist_800_53``). Each group reports "
+        "rule count + total firing hits — the answer to ``which rules cover "
+        "PCI DSS 10.2.4 and how active are they?`` in one round-trip. Rules "
+        "without any control values for the framework are excluded."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_catalog_compliance_endpoint(framework: str) -> CatalogComplianceResponse:
+    try:
+        payload = await list_compliance_pivot(framework)
+        return CatalogComplianceResponse(
+            success=True,
+            message=(
+                f"{payload['control_count']} control(s) across {payload['rules_with_compliance']} "
+                f"rule(s) tagged for {payload['framework_label']}"
+            ),
+            **payload,
+        )
+    except ValueError as ve:
+        # Unknown framework key — surface as 400, not 503.
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Failed to compute compliance pivot: {str(e)}")
+
+
+# ---------------------------------------------------------------------------
+# Logtest — "which rule would match this log line?"
+#
+# POST'ed by the catalog UI when an analyst pastes a sample log line. The
+# heavy lifting is done by Wazuh's own logtest API (PUT /logtest) — we
+# wrap it so the catalog gets a stable, enriched response shape.
+# ---------------------------------------------------------------------------
+
+
+@copilot_searches_router.post(
+    "/catalog/wazuh-rules/test",
+    response_model=CatalogLogTestResponse,
+    description=(
+        "Submit a raw log line to Wazuh's logtest engine and return the "
+        "matched rule (if any) plus the full alert envelope (decoder, "
+        "predecoder, data, full_log). Stateless — no Wazuh session is "
+        "created or persisted. Wraps Wazuh's PUT /logtest with mitre_matrix "
+        "tactic-name enrichment so the result panel matches the catalog "
+        "elsewhere."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def run_catalog_logtest_endpoint(request: CatalogLogTestRequest) -> CatalogLogTestResponse:
+    try:
+        result = await run_log_test(
+            event=request.event,
+            log_format=request.log_format,
+            location=request.location,
+        )
+        # The service may return unavailable_reason — surface it on the
+        # envelope; success=True still because the call shape was valid.
+        return CatalogLogTestResponse(
+            success=True,
+            message=(
+                f"Matched rule {result['rule']['id']}"
+                if result.get("matched") and result.get("rule")
+                else "No rule matched"
+                if result.get("unavailable_reason") is None
+                else "Logtest unavailable"
+            ),
+            **result,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Failed to run logtest: {str(e)}")

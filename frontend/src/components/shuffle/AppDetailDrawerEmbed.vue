@@ -64,7 +64,7 @@ function render() {
 	)
 }
 
-watch([show.value, () => props.appName, () => props.width, () => props.anchor, isThemeDark], () => render())
+watch([show, () => props.appName, () => props.width, () => props.anchor, isThemeDark], () => render())
 
 onBeforeUnmount(() => {
 	if (root) {

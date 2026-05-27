@@ -1,76 +1,104 @@
 <template>
-	<n-card class="top-indices-chart-container" title="Top 8 indices size & health" segmented>
-		<n-spin style="height: 400px; overflow: hidden" :show="loading">
-			<div class="overflow-hidden">
-				<div id="top-indices-chart" style="max-width: 100%; height: 400px"></div>
+	<n-card class="box-border w-full overflow-hidden" title="Top 8 indices size & health" segmented>
+		<n-spin class="h-100 overflow-hidden" :show="loading">
+			<div class="h-100 max-w-full overflow-hidden">
+				<VChart ref="chartRef" class="h-full w-full" autoresize :option="chartOption" />
 			</div>
 		</n-spin>
 	</n-card>
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
-import type { ECharts } from "echarts/core"
+import type { PieSeriesOption } from "echarts/charts"
+import type { GridComponentOption, LegendComponentOption, TooltipComponentOption } from "echarts/components"
+import type { ComposeOption } from "echarts/core"
 import type { IndexStats } from "@/types/indices.d"
 import bytes from "bytes"
 import { PieChart } from "echarts/charts"
 import { GridComponent, LegendComponent, TooltipComponent } from "echarts/components"
-
-import { init as echartsInit, use as echartsUse } from "echarts/core"
+import { use } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import _ from "lodash"
 import { NCard, NSpin } from "naive-ui"
-import { computed, onMounted, ref, toRefs, watch } from "vue"
+import { computed, ref, toRefs } from "vue"
+import VChart from "vue-echarts"
+import {
+	buildChartTooltipGlassBase,
+	CHART_COLORS,
+	chartTooltipThemeFromStyle,
+	formatChartTooltipWithMarker
+} from "@/components/common/charts"
 import { useThemeStore } from "@/stores/theme"
 import { IndexHealth } from "@/types/indices.d"
 
 const props = defineProps<{
 	indices: IndexStats[] | null
 }>()
+
+use([CanvasRenderer, PieChart, TooltipComponent, LegendComponent, GridComponent])
+
+type ChartOption = ComposeOption<TooltipComponentOption | LegendComponentOption | GridComponentOption | PieSeriesOption>
+
 const { indices } = toRefs(props)
 
 const style = computed(() => useThemeStore().style)
-const loading = computed(() => !indices?.value || indices.value === null)
-const chartCtx = ref<ECharts | null>(null)
+const loading = computed(() => !indices.value)
+const chartRef = ref<InstanceType<typeof VChart> | null>(null)
 
-function getOptions() {
-	const data = _.chain(indices.value || [])
+const labelFontSize = computed(() => (window.innerWidth > 1000 ? 13 : 11))
+
+const chartOption = computed((): ChartOption => {
+	const list = indices.value ?? []
+
+	const data = _.chain(list)
 		.map(i => {
-			if (typeof i.store_size === "string") {
-				i.store_size_value = bytes(i.store_size) || undefined
+			const item = { ...i }
+			if (typeof item.store_size === "string") {
+				item.store_size_value = bytes(item.store_size) || undefined
 			} else {
-				i.store_size_value = i.store_size
+				item.store_size_value = item.store_size
 			}
-			return i
+			return item
 		})
 		.orderBy(["store_size"], ["desc"])
 		.slice(0, 8)
 		.value()
 
-	const green = (indices.value || []).filter(i => i.health === IndexHealth.GREEN).length
-	const yellow = (indices.value || []).filter(i => i.health === IndexHealth.YELLOW).length
-	const red = (indices.value || []).filter(i => i.health === IndexHealth.RED).length
+	const green = list.filter(i => i.health === IndexHealth.GREEN).length
+	const yellow = list.filter(i => i.health === IndexHealth.YELLOW).length
+	const red = list.filter(i => i.health === IndexHealth.RED).length
 
-	const sizeData: { value: number; name: string }[] = data.map(i => ({
+	const sizeData = data.map(i => ({
 		value: i.store_size_value || 0,
 		name: i.index
 	}))
 
+	const fg = style.value["fg-default-color"]
+	const bg = style.value["bg-default-color"]
+
+	const tooltipBase = buildChartTooltipGlassBase(chartTooltipThemeFromStyle(style.value))
+
 	return {
 		tooltip: {
-			trigger: "item",
-			formatter: "{a}<hr/>{b}: <strong>{c}</strong> ({d}%)"
+			...tooltipBase,
+			formatter: params => {
+				if (!params || Array.isArray(params)) return ""
+				const value = typeof params.value === "number" ? params.value : 0
+				const percent = typeof params.percent === "number" ? params.percent : 0
+				return formatChartTooltipWithMarker({
+					marker: params.marker,
+					color: params.color,
+					title: params.seriesName ?? "",
+					lines: [`${params.name}: <strong>${value}</strong> (${percent}%)`]
+				})
+			}
 		},
 		legend: {
 			data: sizeData.map(i => i.name),
 			left: "left",
 			type: "scroll",
-			textStyle: {
-				color: style.value["fg-default-color"]
-			},
-			pageTextStyle: {
-				color: style.value["fg-default-color"]
-			}
+			textStyle: { color: fg },
+			pageTextStyle: { color: fg }
 		},
 		grid: {
 			top: "0%",
@@ -80,16 +108,13 @@ function getOptions() {
 		series: [
 			{
 				name: "Indices Health",
-				top: "-35%",
-				bottom: "-50%",
+				top: "-30%",
 				zlevel: 1,
 				type: "pie",
 				radius: [0, "20%"],
-				label: {
-					show: false
-				},
+				label: { show: false },
 				itemStyle: {
-					borderColor: style.value["bg-default-color"],
+					borderColor: bg,
 					borderWidth: 2
 				},
 				data: [
@@ -101,26 +126,24 @@ function getOptions() {
 			{
 				name: "Indices Size",
 				type: "pie",
-				top: "-35%",
-				bottom: "-50%",
-				color: [
-					"#082f49",
-					"#0c4a6e",
-					"#075985",
-					"#0369a1",
-					"#0284c7",
-					"#0ea5e9",
-					"#38bdf8",
-					"#7dd3fc",
-					"#bae6fd"
-				],
+				top: "-20%",
+				bottom: "10%",
+				color: [...CHART_COLORS],
 				tooltip: {
-					formatter: (params: { seriesName: string; name: string; value: number; percent: number }) => {
-						return `${params.seriesName}<hr/>${params.name}<br/><strong>${bytes(params.value)}</strong>  (${
-							params.percent
-						}%)`
+					...tooltipBase,
+					formatter: params => {
+						if (!params || Array.isArray(params)) return ""
+						const value = typeof params.value === "number" ? params.value : 0
+						const percent = typeof params.percent === "number" ? params.percent : 0
+						return formatChartTooltipWithMarker({
+							marker: params.marker,
+							color: params.color,
+							title: params.seriesName ?? "",
+							lines: [`${params.name ?? ""}`, `<strong>${bytes(value)}</strong> (${percent}%)`]
+						})
 					}
 				},
+
 				avoidLabelOverlap: true,
 				radius: ["24%", "35%"],
 				minAngle: 5,
@@ -139,25 +162,28 @@ function getOptions() {
 					minMargin: 10,
 					edgeDistance: 10,
 					lineHeight: 15,
-					// alignTo: "edge",
 					rich: {
 						name: {
-							color: style.value["fg-default-color"],
-							fontSize: window.innerWidth > 1000 ? 13 : 11
+							color: fg,
+							fontSize: labelFontSize.value
 						},
 						per: {
-							fontSize: window.innerWidth > 1000 ? 13 : 11,
+							fontSize: labelFontSize.value,
 							fontWeight: "bold",
-							color: style.value["fg-default-color"]
+							color: fg
 						}
 					}
 				},
-				labelLayout(params: { labelLinePoints: Array<number[]>; labelRect: { x: number; width: number } }) {
-					const isLeft = chartCtx.value ? params.labelRect.x < chartCtx.value.getWidth() / 2 : false
+				labelLayout(params) {
+					const chartWidth = chartRef.value?.getWidth() ?? 0
 					const points = params.labelLinePoints
-					// Update the end point.
+					const labelRect = params.labelRect
+					if (!points || !labelRect) {
+						return {}
+					}
+					const isLeft = chartWidth > 0 ? labelRect.x < chartWidth / 2 : false
 					if (points[2]) {
-						points[2][0] = isLeft ? params.labelRect.x : params.labelRect.x + params.labelRect.width
+						points[2][0] = isLeft ? labelRect.x : labelRect.x + labelRect.width
 					}
 					return {
 						labelLinePoints: points,
@@ -167,56 +193,12 @@ function getOptions() {
 					}
 				},
 				itemStyle: {
-					borderColor: style.value["bg-default-color"],
+					borderColor: bg,
 					borderWidth: 1
 				},
 				data: sizeData
 			}
 		]
 	}
-}
-
-watch(indices, () => {
-	if (chartCtx.value) {
-		chartCtx.value.setOption(getOptions())
-	}
-})
-
-watch(style, () => {
-	if (chartCtx.value) {
-		chartCtx.value.setOption(getOptions())
-	}
-})
-
-onMounted(() => {
-	const chartDom = document.getElementById("top-indices-chart")
-
-	echartsUse([
-		TooltipComponent,
-		LegendComponent,
-		GridComponent,
-		PieChart,
-		CanvasRenderer // If you only need to use the canvas rendering mode, the bundle will not include the SVGRenderer module, which is not needed.
-	])
-
-	chartCtx.value = echartsInit(chartDom)
-
-	chartCtx.value.setOption(getOptions())
-
-	if (chartDom) {
-		new ResizeObserver(() => {
-			if (chartCtx.value) {
-				chartCtx.value.resize()
-			}
-		}).observe(chartDom)
-	}
 })
 </script>
-
-<style lang="scss" scoped>
-.top-indices-chart-container {
-	width: 100%;
-	overflow: hidden;
-	box-sizing: border-box;
-}
-</style>

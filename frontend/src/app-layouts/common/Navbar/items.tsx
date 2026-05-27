@@ -20,6 +20,7 @@ const ReportCreationIcon = "carbon:report-data"
 // const SchedulerIcon = "material-symbols:autoplay"
 // const CustomerPortalIcon = "streamline-ultimate:coding-apps-website-apps-browser"
 const AiAnalystIcon = "carbon:machine-learning-model"
+const DetectionCatalogIcon = "carbon:catalog"
 const ToolsIcon = "carbon:tool-box"
 // const EventSearchIcon = "carbon:search-locate"
 
@@ -53,6 +54,20 @@ export default function getItems(): MenuMixedOption[] {
 				),
 			key: "AiAnalyst",
 			icon: renderIcon(AiAnalystIcon)
+		},
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "DetectionCatalog"
+						}
+					},
+					{ default: () => "Detections Catalog" }
+				),
+			key: "DetectionCatalog",
+			icon: renderIcon(DetectionCatalogIcon)
 		},
 		{
 			label: () =>

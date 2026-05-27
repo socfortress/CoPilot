@@ -1,5 +1,5 @@
 <template>
-	<n-card class="unhealthy-indices" segmented>
+	<n-card class="unhealthy-indices" segmented content-class="pr-1!">
 		<template #header>
 			<div class="align-center flex justify-between">
 				<span>Unhealthy Indices</span>
@@ -8,7 +8,7 @@
 		</template>
 		<n-spin :show="loading">
 			<div class="min-h-14">
-				<n-scrollbar class="max-h-125" trigger="none">
+				<n-scrollbar class="max-h-125" trigger="none" content-class="pr-5!">
 					<template v-if="unhealthyIndices && unhealthyIndices.length">
 						<div
 							v-for="item of unhealthyIndices"
