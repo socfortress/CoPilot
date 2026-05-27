@@ -1206,19 +1206,20 @@ async def list_alerts_endpoint(
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", pattern="^(asc|desc)$"),
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the results to"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """List alerts with automatic customer and tag filtering"""
     logger.info(f"Listing alerts for user: {current_user.username} with role_id: {current_user.role_id}")
 
-    alerts = await list_alerts_for_user(current_user, db, page, page_size, order)
+    alerts = await list_alerts_for_user(current_user, db, page, page_size, order, customer_codes=customer_codes)
 
     # Get totals with both customer and tag filtering
-    total = await alert_total_for_user(current_user, db)
-    open_alerts = await alerts_open_for_user(current_user, db)
-    in_progress = await alerts_in_progress_for_user(current_user, db)
-    closed = await alerts_closed_for_user(current_user, db)
+    total = await alert_total_for_user(current_user, db, customer_codes=customer_codes)
+    open_alerts = await alerts_open_for_user(current_user, db, customer_codes=customer_codes)
+    in_progress = await alerts_in_progress_for_user(current_user, db, customer_codes=customer_codes)
+    closed = await alerts_closed_for_user(current_user, db, customer_codes=customer_codes)
 
     return AlertOutResponse(
         alerts=alerts,
@@ -1781,18 +1782,19 @@ async def list_cases_endpoint(
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", pattern="^(asc|desc)$"),
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the results to"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """List cases with automatic customer filtering and pagination"""
     logger.info(f"Listing cases for user: {current_user.username} with role_id: {current_user.role_id}")
 
-    cases = await list_cases_for_user(current_user, db, page, page_size, order)
+    cases = await list_cases_for_user(current_user, db, page, page_size, order, customer_codes=customer_codes)
 
-    total = await case_total_for_user(current_user, db)
-    open_cases = await cases_open_for_user(current_user, db)
-    in_progress = await cases_in_progress_for_user(current_user, db)
-    closed = await cases_closed_for_user(current_user, db)
+    total = await case_total_for_user(current_user, db, customer_codes=customer_codes)
+    open_cases = await cases_open_for_user(current_user, db, customer_codes=customer_codes)
+    in_progress = await cases_in_progress_for_user(current_user, db, customer_codes=customer_codes)
+    closed = await cases_closed_for_user(current_user, db, customer_codes=customer_codes)
 
     return CaseOutResponse(
         cases=cases,

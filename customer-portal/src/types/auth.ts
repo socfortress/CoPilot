@@ -26,6 +26,7 @@ export interface AuthUser {
 	role: AuthUserRole | string | null
 	username: string | null
 	customer_code: string | null
+	customer_codes: string[]
 }
 
 export interface AuthResponse {

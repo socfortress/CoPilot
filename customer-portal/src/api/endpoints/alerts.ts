@@ -2,6 +2,7 @@ import type { Alert, AlertsFilters, AlertsListResponse, AlertStatus } from "@/ty
 import type { CommentItem } from "@/types/comments"
 import type { CommonResponse, Pagination } from "@/types/common"
 import { HttpClient } from "../httpClient"
+import { withCustomerCodes } from "../params"
 
 export interface AlertCommentPayload {
 	alertId: number
@@ -14,11 +15,11 @@ export default {
 	/**
 	 * Get all alerts with customer access control
 	 */
-	getAlerts({ page = 1, pageSize = 25, order = "desc" }: Pagination, signal?: AbortSignal) {
-		return HttpClient.get<CommonResponse<AlertsListResponse>>("/incidents/db_operations/alerts", {
-			params: { page, page_size: pageSize, order },
-			signal
-		})
+	getAlerts({ page = 1, pageSize = 25, order = "desc" }: Pagination, signal?: AbortSignal, customerCodes?: string[]) {
+		return HttpClient.get<CommonResponse<AlertsListResponse>>(
+			"/incidents/db_operations/alerts",
+			withCustomerCodes(customerCodes, { params: { page, page_size: pageSize, order }, signal })
+		)
 	},
 
 	/**

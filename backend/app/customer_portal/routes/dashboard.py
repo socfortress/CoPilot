@@ -1,5 +1,9 @@
+from typing import List
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Query
 from loguru import logger
 from sqlalchemy import func
 from sqlalchemy import select
@@ -24,11 +28,12 @@ customer_portal_dashboard_router = APIRouter()
     response_model=CustomerDashboardStatsResponse,
 )
 async def get_customer_dashboard_stats(
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the stats to"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get total alerts, cases, and agents for the logged-in customer."""
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(current_user, customer_codes, db)
     logger.info(f"Fetching dashboard stats for user {current_user.username}, customers: {accessible_customers}")
 
     if "*" in accessible_customers:
@@ -58,11 +63,12 @@ async def get_customer_dashboard_stats(
     response_model=CustomerDashboardAlertStatsResponse,
 )
 async def get_customer_dashboard_alert_stats(
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the stats to"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get alert counts (total, open, in-progress, closed) for the logged-in customer."""
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(current_user, customer_codes, db)
     logger.info(f"Fetching dashboard alert stats for user {current_user.username}, customers: {accessible_customers}")
 
     if "*" in accessible_customers:
@@ -97,11 +103,12 @@ async def get_customer_dashboard_alert_stats(
     response_model=CustomerDashboardCaseStatsResponse,
 )
 async def get_customer_dashboard_case_stats(
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the stats to"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get case counts (total, open, in-progress, closed) for the logged-in customer."""
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(current_user, customer_codes, db)
     logger.info(f"Fetching dashboard case stats for user {current_user.username}, customers: {accessible_customers}")
 
     if "*" in accessible_customers:

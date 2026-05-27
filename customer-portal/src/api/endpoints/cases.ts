@@ -2,6 +2,7 @@ import type { Case, CaseDataStoreFile, CasesFilters, CasesListResponse, CaseStat
 import type { CommentItem } from "@/types/comments"
 import type { CommonResponse, Pagination } from "@/types/common"
 import { HttpClient } from "../httpClient"
+import { withCustomerCodes } from "../params"
 
 export interface CasePayload {
 	case_name: string
@@ -22,11 +23,11 @@ export default {
 	/**
 	 * Get all cases with customer access control
 	 */
-	getCases({ page = 1, pageSize = 25, order = "desc" }: Pagination, signal?: AbortSignal) {
-		return HttpClient.get<CommonResponse<CasesListResponse>>("/incidents/db_operations/cases", {
-			params: { page, page_size: pageSize, order },
-			signal
-		})
+	getCases({ page = 1, pageSize = 25, order = "desc" }: Pagination, signal?: AbortSignal, customerCodes?: string[]) {
+		return HttpClient.get<CommonResponse<CasesListResponse>>(
+			"/incidents/db_operations/cases",
+			withCustomerCodes(customerCodes, { params: { page, page_size: pageSize, order }, signal })
+		)
 	},
 
 	/**

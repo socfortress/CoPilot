@@ -64,7 +64,7 @@ import type { Alert, AlertsListResponse, AlertStatus } from "@/types/alerts"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
 import { useDebounceFn, useElementSize } from "@vueuse/core"
 import axios from "axios"
-import { NDataTable, NEllipsis, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
+import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef, watch } from "vue"
 import Api from "@/api"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
@@ -72,6 +72,7 @@ import AlertStatusSelect from "@/components/alerts/AlertStatusSelect.vue"
 import Filters from "@/components/alerts/Filters.vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -80,6 +81,7 @@ const message = useMessage()
 const data = ref<Alert[]>([])
 const loading = ref(false)
 const dFormats = useSettingsStore().dateFormat
+const customerFilterStore = useCustomerFilterStore()
 
 const { width: headerWidthRef } = useElementSize(useTemplateRef("headerRef"))
 const pageSizes = [10, 25, 50, 100]
@@ -207,7 +209,11 @@ const loadAlerts = useDebounceFn(async () => {
 					break
 			}
 		} else {
-			response = await Api.alerts.getAlerts(paginationPayload, abortController.signal)
+			response = await Api.alerts.getAlerts(
+				paginationPayload,
+				abortController.signal,
+				customerFilterStore.queryCustomerCodes
+			)
 		}
 
 		data.value = response.data.alerts
@@ -233,7 +239,7 @@ function handleStatusUpdateSuccess(payload: AlertStatusUpdateSuccessPayload) {
 	}
 }
 
-watch([() => pagination.value.pageSize, () => filters.value.value], resetPage, {
+watch([() => pagination.value.pageSize, () => filters.value.value, () => customerFilterStore.selectedCustomerCodes], resetPage, {
 	deep: true,
 	immediate: true
 })
