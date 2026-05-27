@@ -39,11 +39,12 @@
 import type { DashboardAlert, DashboardCase } from "@/components/overview/types"
 import type { ApiError } from "@/types/common"
 import { NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import OverviewRecentAlerts from "@/components/overview/OverviewRecentAlerts.vue"
 import OverviewRecentCases from "@/components/overview/OverviewRecentCases.vue"
 import OverviewStatsCards from "@/components/overview/OverviewStatsCards.vue"
+import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { getApiErrorMessage } from "@/utils"
 
 const loadingAlerts = ref(false)
@@ -51,13 +52,18 @@ const loadingCases = ref(false)
 const message = useMessage()
 const recentAlerts = ref<DashboardAlert[]>([])
 const recentCases = ref<DashboardCase[]>([])
+const customerFilterStore = useCustomerFilterStore()
 
 async function fetchAlerts() {
 	loadingAlerts.value = true
 
 	try {
 		// Fetch alerts, cases, and agents data using our API services
-		const alertsResponse = await Api.alerts.getAlerts({ page: 1, pageSize: 10, order: "desc" })
+		const alertsResponse = await Api.alerts.getAlerts(
+			{ page: 1, pageSize: 10, order: "desc" },
+			undefined,
+			customerFilterStore.queryCustomerCodes
+		)
 
 		const alerts = alertsResponse.data.alerts || []
 
@@ -84,7 +90,11 @@ async function fetchCases() {
 
 	try {
 		// Fetch alerts, cases, and agents data using our API services
-		const casesResponse = await Api.cases.getCases({ page: 1, pageSize: 10, order: "desc" })
+		const casesResponse = await Api.cases.getCases(
+			{ page: 1, pageSize: 10, order: "desc" },
+			undefined,
+			customerFilterStore.queryCustomerCodes
+		)
 
 		const cases = casesResponse.data.cases || []
 
@@ -111,4 +121,14 @@ onBeforeMount(() => {
 	fetchAlerts()
 	fetchCases()
 })
+
+// Refetch whenever the global customer filter changes.
+watch(
+	() => customerFilterStore.selectedCustomerCodes,
+	() => {
+		fetchAlerts()
+		fetchCases()
+	},
+	{ deep: true }
+)
 </script>

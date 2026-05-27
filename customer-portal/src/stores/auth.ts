@@ -6,6 +6,7 @@ import _capitalize from "lodash/capitalize"
 import _castArray from "lodash/castArray"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
+import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { RouteRole } from "@/types/auth"
 import { getAvatar } from "@/utils"
 import { jwtRoleToUserRole } from "@/utils/auth"
@@ -26,6 +27,7 @@ export const useAuthStore = defineStore("auth", {
 				refresh_token: payload.refresh_token,
 				username: jwtPayload.sub || "",
 				customer_code: jwtPayload.customer_codes?.[0] || null,
+				customer_codes: jwtPayload.customer_codes ?? [],
 				role: jwtRoleToUserRole(jwtPayload.scopes)
 			}
 		},
@@ -38,6 +40,7 @@ export const useAuthStore = defineStore("auth", {
 		setLogout() {
 			this.user = null
 
+			useCustomerFilterStore().clear()
 			removePersistentSessionKey()
 		},
 		async login(payload: LoginPayload) {
@@ -83,6 +86,9 @@ export const useAuthStore = defineStore("auth", {
 		},
 		userCustomerCode(state): string | null {
 			return state.user?.customer_code || null
+		},
+		accessibleCustomerCodes(state): string[] {
+			return state.user?.customer_codes ?? []
 		},
 		userName(state): string | null {
 			return state.user?.username || null

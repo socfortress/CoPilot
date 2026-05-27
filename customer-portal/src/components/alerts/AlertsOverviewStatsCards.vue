@@ -32,11 +32,12 @@
 import type { ApiError } from "@/types/common"
 import type { AlertsStats } from "@/types/portal"
 import { NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import CardStats from "@/components/common/cards/CardStats.vue"
 import Icon from "@/components/common/Icon.vue"
 import { ICONS } from "@/const"
+import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { getApiErrorMessage } from "@/utils"
 
 const stats = ref<AlertsStats>({
@@ -48,12 +49,13 @@ const stats = ref<AlertsStats>({
 
 const loading = ref(false)
 const message = useMessage()
+const customerFilterStore = useCustomerFilterStore()
 
 function fetchStats() {
 	loading.value = true
 
 	Api.portal
-		.alertsStats()
+		.alertsStats(customerFilterStore.queryCustomerCodes)
 		.then(res => {
 			stats.value = res.data
 		})
@@ -68,4 +70,7 @@ function fetchStats() {
 onBeforeMount(() => {
 	fetchStats()
 })
+
+// Refetch whenever the global customer filter changes.
+watch(() => customerFilterStore.selectedCustomerCodes, fetchStats, { deep: true })
 </script>

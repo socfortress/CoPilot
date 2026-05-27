@@ -76,6 +76,7 @@ import CreateCaseButton from "@/components/cases/CreateCaseButton.vue"
 import Filters from "@/components/cases/Filters.vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -84,6 +85,7 @@ const message = useMessage()
 const data = ref<Case[]>([])
 const loading = ref(false)
 const dFormats = useSettingsStore().dateFormat
+const customerFilterStore = useCustomerFilterStore()
 
 const { width: headerWidthRef } = useElementSize(useTemplateRef("headerRef"))
 const pageSizes = [10, 25, 50, 100]
@@ -204,11 +206,11 @@ const loadCases = useDebounceFn(async () => {
 					)
 					break
 				default:
-					response = await Api.cases.getCases(paginationPayload, abortController.signal)
+					response = await Api.cases.getCases(paginationPayload, abortController.signal, customerFilterStore.queryCustomerCodes)
 					break
 			}
 		} else {
-			response = await Api.cases.getCases(paginationPayload, abortController.signal)
+			response = await Api.cases.getCases(paginationPayload, abortController.signal, customerFilterStore.queryCustomerCodes)
 		}
 
 		data.value = response.data.cases
@@ -265,7 +267,7 @@ function handleStatusUpdateSuccess(payload: CaseStatusUpdateSuccessPayload) {
 	}
 }
 
-watch([() => pagination.value.pageSize, () => filters.value.value], resetPage, {
+watch([() => pagination.value.pageSize, () => filters.value.value, () => customerFilterStore.selectedCustomerCodes], resetPage, {
 	deep: true,
 	immediate: true
 })
