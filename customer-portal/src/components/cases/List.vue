@@ -210,7 +210,7 @@ const loadCases = useDebounceFn(async () => {
 					break
 			}
 		} else {
-			response = await Api.cases.getCases(paginationPayload, abortController.signal)
+			response = await Api.cases.getCases(paginationPayload, abortController.signal, customerFilterStore.queryCustomerCodes)
 		}
 
 		data.value = response.data.cases

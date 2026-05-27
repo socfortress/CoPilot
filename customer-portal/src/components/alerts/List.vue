@@ -205,7 +205,11 @@ const loadAlerts = useDebounceFn(async () => {
 					)
 					break
 				default:
-					response = await Api.alerts.getAlerts(paginationPayload, abortController.signal)
+					response = await Api.alerts.getAlerts(
+						paginationPayload,
+						abortController.signal,
+						customerFilterStore.queryCustomerCodes
+					)
 					break
 			}
 		} else {
