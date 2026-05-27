@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.carbonblack.schema.provision import ProvisionCarbonBlackRequest
 from app.integrations.carbonblack.schema.provision import ProvisionCarbonBlackResponse
@@ -20,6 +22,7 @@ integration_carbonblack_provision_scheduler_router = APIRouter()
     "/provision",
     response_model=ProvisionCarbonBlackResponse,
     description="Provision a CarbonBlack integration.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_carbonblack_route(
     provision_carbonblack_request: ProvisionCarbonBlackRequest,
@@ -58,6 +61,7 @@ async def provision_carbonblack_route(
     "/test",
     response_model=ProvisionCarbonBlackResponse,
     description="Invoke a CarbonBlack integration for testing",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def test() -> ProvisionCarbonBlackResponse:
     """

@@ -79,6 +79,7 @@ async def get_index_names_route() -> IndexNamesResponse:
 @incidents_alerts_router.get(
     "/alerts/not-created",
     description="Get alerts not created in CoPilot",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_alerts_not_created_route() -> AlertsPayload:
     """
@@ -217,6 +218,7 @@ async def create_alert_manual_route(
     "/create/auto",
     response_model=AutoCreateAlertResponse,
     description="Is invoked by the scheduler to create an incident alert in CoPilot",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_alert_auto_route(
     session: AsyncSession = Depends(get_db),
