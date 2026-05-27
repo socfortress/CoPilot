@@ -34,7 +34,7 @@
 									hoverable
 									clickable
 									class="item-appear item-appear-bottom item-appear-005"
-									@delete="syncAgents()"
+									@delete="getAgents()"
 									@click="handleAgentClick(agent)"
 									@toggle-selection="toggleAgentSelection(agent)"
 								/>
