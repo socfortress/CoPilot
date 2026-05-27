@@ -180,28 +180,32 @@ const loadAlerts = useDebounceFn(async () => {
 					response = await Api.alerts.getAlertsByStatus(
 						filters.value.value as AlertStatus,
 						paginationPayload,
-						abortController.signal
+						abortController.signal,
+						customerFilterStore.queryCustomerCodes
 					)
 					break
 				case "sources":
 					response = await Api.alerts.getAlertsBySource(
 						filters.value.value,
 						paginationPayload,
-						abortController.signal
+						abortController.signal,
+						customerFilterStore.queryCustomerCodes
 					)
 					break
 				case "assets":
 					response = await Api.alerts.getAlertsByAsset(
 						filters.value.value,
 						paginationPayload,
-						abortController.signal
+						abortController.signal,
+						customerFilterStore.queryCustomerCodes
 					)
 					break
 				case "tags":
 					response = await Api.alerts.getAlertsByTag(
 						filters.value.value,
 						paginationPayload,
-						abortController.signal
+						abortController.signal,
+						customerFilterStore.queryCustomerCodes
 					)
 					break
 				default:

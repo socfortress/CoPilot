@@ -7,6 +7,7 @@ import type {
 	PanelDataResponse
 } from "@/types/siem"
 import { HttpClient } from "../httpClient"
+import { withCustomerCodes } from "../params"
 
 export default {
 	getEventSources(customerCode: string) {
@@ -41,6 +42,13 @@ export default {
 	getEnabledDashboards(customerCode: string) {
 		return HttpClient.get<CommonResponse<{ enabled_dashboards: EnabledDashboard[] }>>(
 			`/siem/dashboards/enabled/${customerCode}`
+		)
+	},
+
+	getEnabledDashboardsForCustomers(customerCodes?: string[]) {
+		return HttpClient.get<CommonResponse<{ enabled_dashboards: EnabledDashboard[] }>>(
+			"/siem/dashboards/enabled",
+			withCustomerCodes(customerCodes)
 		)
 	},
 

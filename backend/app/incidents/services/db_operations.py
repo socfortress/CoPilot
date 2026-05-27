@@ -2466,6 +2466,7 @@ async def list_alerts_multiple_filters(
     assigned_to: Optional[str] = None,
     alert_title: Optional[str] = None,
     customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
     source: Optional[str] = None,
     asset_name: Optional[str] = None,
     status: Optional[str] = None,
@@ -2476,7 +2477,12 @@ async def list_alerts_multiple_filters(
     order: str = "desc",
     user: Optional[User] = None,  # New parameter for tag filtering
 ) -> List[AlertOut]:
-    """List alerts with multiple filters including tag-based RBAC"""
+    """List alerts with multiple filters including tag-based RBAC.
+
+    ``customer_code`` filters to a single customer; ``customer_codes`` filters to
+    a set (used to constrain scoped users to their accessible customers — passing
+    the caller's full accessible set prevents cross-tenant disclosure).
+    """
     from sqlalchemy import and_
     from sqlalchemy import exists
     from sqlalchemy import or_
@@ -2492,6 +2498,8 @@ async def list_alerts_multiple_filters(
         filters.append(Alert.alert_name.like(f"%{alert_title}%"))
     if customer_code:
         filters.append(Alert.customer_code == customer_code)
+    if customer_codes:
+        filters.append(Alert.customer_code.in_(customer_codes))
     if source:
         filters.append(Alert.source == source)
     if asset_name:

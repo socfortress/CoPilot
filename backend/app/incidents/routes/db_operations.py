@@ -833,7 +833,7 @@ async def list_alerts_by_ioc_value_endpoint(
         # Customer user - filter by accessible customers
         alerts = await list_alerts_multiple_filters(
             ioc_value=ioc_value,
-            customer_code=accessible_customers[0] if len(accessible_customers) == 1 else None,
+            customer_codes=accessible_customers,
             db=db,
             page=page,
             page_size=page_size,
@@ -886,14 +886,15 @@ async def list_alerts_by_tag_endpoint(
     tag: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the results to"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """List alerts by tag with customer access filtering"""
     logger.info(f"Listing alerts by tag {tag} for user: {current_user.username} with role_id: {current_user.role_id}")
 
-    # Get customer access filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    # Get customer access filtering (optionally narrowed to a requested subset)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(current_user, customer_codes, db)
 
     if "*" in accessible_customers:
         # Admin/analyst - no filtering needed
@@ -906,7 +907,7 @@ async def list_alerts_by_tag_endpoint(
         # Customer user - filter by accessible customers
         alerts = await list_alerts_multiple_filters(
             tags=[tag],
-            customer_code=accessible_customers[0] if len(accessible_customers) == 1 else None,
+            customer_codes=accessible_customers,
             db=db,
             page=page,
             page_size=page_size,
@@ -1403,6 +1404,7 @@ async def list_alerts_by_status_endpoint(
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", pattern="^(asc|desc)$"),
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the results to"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1412,8 +1414,8 @@ async def list_alerts_by_status_endpoint(
 
     logger.info(f"Listing alerts by status {status} for user: {current_user.username} with role_id: {current_user.role_id}")
 
-    # Get customer access filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    # Get customer access filtering (optionally narrowed to a requested subset)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(current_user, customer_codes, db)
 
     if "*" in accessible_customers:
         # Admin/analyst - no filtering needed
@@ -1428,7 +1430,7 @@ async def list_alerts_by_status_endpoint(
         # For now, let's use the multiple filters function with customer codes
         alerts = await list_alerts_multiple_filters(
             status=status.value,
-            customer_code=accessible_customers[0] if len(accessible_customers) == 1 else None,
+            customer_codes=accessible_customers,
             db=db,
             page=page,
             page_size=page_size,
@@ -1480,7 +1482,7 @@ async def list_alerts_by_assigned_to_endpoint(
         # Customer user - filter by accessible customers
         alerts = await list_alerts_multiple_filters(
             assigned_to=assigned_to,
-            customer_code=accessible_customers[0] if len(accessible_customers) == 1 else None,
+            customer_codes=accessible_customers,
             db=db,
             page=page,
             page_size=page_size,
@@ -1512,14 +1514,15 @@ async def list_alerts_by_asset_name_endpoint(
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", pattern="^(asc|desc)$"),
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the results to"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """List alerts by asset name with customer access filtering"""
     logger.info(f"Listing alerts by asset {asset_name} for user: {current_user.username} with role_id: {current_user.role_id}")
 
-    # Get customer access filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    # Get customer access filtering (optionally narrowed to a requested subset)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(current_user, customer_codes, db)
 
     if "*" in accessible_customers:
         # Admin/analyst - no filtering needed
@@ -1532,7 +1535,7 @@ async def list_alerts_by_asset_name_endpoint(
         # Customer user - filter by accessible customers
         alerts = await list_alerts_multiple_filters(
             asset_name=asset_name,
-            customer_code=accessible_customers[0] if len(accessible_customers) == 1 else None,
+            customer_codes=accessible_customers,
             db=db,
             page=page,
             page_size=page_size,
@@ -1584,7 +1587,7 @@ async def list_alerts_by_title_endpoint(
         # Customer user - filter by accessible customers
         alerts = await list_alerts_multiple_filters(
             alert_title=title,
-            customer_code=accessible_customers[0] if len(accessible_customers) == 1 else None,
+            customer_codes=accessible_customers,
             db=db,
             page=page,
             page_size=page_size,
@@ -1645,14 +1648,15 @@ async def list_alerts_by_source_endpoint(
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", pattern="^(asc|desc)$"),
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the results to"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """List alerts by source with customer access filtering"""
     logger.info(f"Listing alerts by source {source} for user: {current_user.username} with role_id: {current_user.role_id}")
 
-    # Get customer access filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    # Get customer access filtering (optionally narrowed to a requested subset)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(current_user, customer_codes, db)
 
     if "*" in accessible_customers:
         # Admin/analyst - no filtering needed
@@ -1665,7 +1669,7 @@ async def list_alerts_by_source_endpoint(
         # Customer user - filter by accessible customers
         alerts = await list_alerts_multiple_filters(
             source=source,
-            customer_code=accessible_customers[0] if len(accessible_customers) == 1 else None,
+            customer_codes=accessible_customers,
             db=db,
             page=page,
             page_size=page_size,
@@ -1739,6 +1743,9 @@ async def list_alerts_multiple_filters_endpoint(
         page=page,
         page_size=page_size,
         order=order,
+        # Constrain scoped users to their accessible customers (prevents cross-tenant
+        # disclosure when the user has >1 customer and no explicit customer_code).
+        customer_codes=None if "*" in accessible_customers else accessible_customers,
         user=current_user,  # Pass user for tag filtering
     )
 
@@ -2134,6 +2141,7 @@ async def list_cases_by_status_endpoint(
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", pattern="^(asc|desc)$"),
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the results to"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -2151,13 +2159,13 @@ async def list_cases_by_status_endpoint(
         cases = await list_cases_by_status(status.value, db, page=page, page_size=page_size, order=order)
     else:
         # Customer user - get paginated cases and filter by status
-        all_user_cases = await list_cases_for_user(current_user, db, page, page_size, order)
+        all_user_cases = await list_cases_for_user(current_user, db, page, page_size, order, customer_codes=customer_codes)
         cases = [case for case in all_user_cases if case.case_status == status.value]
 
-    total = await case_total_for_user(current_user, db)
-    open_cases = await cases_open_for_user(current_user, db)
-    in_progress = await cases_in_progress_for_user(current_user, db)
-    closed = await cases_closed_for_user(current_user, db)
+    total = await case_total_for_user(current_user, db, customer_codes=customer_codes)
+    open_cases = await cases_open_for_user(current_user, db, customer_codes=customer_codes)
+    in_progress = await cases_in_progress_for_user(current_user, db, customer_codes=customer_codes)
+    closed = await cases_closed_for_user(current_user, db, customer_codes=customer_codes)
 
     return CaseOutResponse(
         cases=cases,
@@ -2177,6 +2185,7 @@ async def list_cases_by_status_endpoint(
 )
 async def list_cases_by_assigned_to_endpoint(
     assigned_to: str,
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the results to"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -2191,7 +2200,7 @@ async def list_cases_by_assigned_to_endpoint(
         cases = await list_cases_by_assigned_to(assigned_to, db)
     else:
         # Customer user - filter by accessible customers
-        all_user_cases = await list_cases_for_user(current_user, db)
+        all_user_cases = await list_cases_for_user(current_user, db, customer_codes=customer_codes)
         cases = [case for case in all_user_cases if case.assigned_to == assigned_to]
 
     return CaseOutResponse(cases=cases, success=True, message="Cases retrieved successfully")

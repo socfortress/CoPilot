@@ -73,6 +73,23 @@ async def get_enabled_dashboards(
     return result.scalars().all()
 
 
+async def get_enabled_dashboards_for_customers(
+    customer_codes: List[str],
+    db: AsyncSession,
+) -> List[EnabledDashboards]:
+    """Fetch enabled dashboards across a set of customers.
+
+    ``customer_codes`` is the caller's already-resolved effective set: ``["*"]``
+    means all customers (admin/analyst), an empty list means none.
+    """
+    logger.info(f"Fetching enabled dashboards for customers {customer_codes}")
+    query = select(EnabledDashboards)
+    if "*" not in customer_codes:
+        query = query.where(EnabledDashboards.customer_code.in_(customer_codes))
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
 async def enable_dashboard(
     request: EnableDashboardRequest,
     db: AsyncSession,
