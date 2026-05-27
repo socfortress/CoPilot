@@ -179,6 +179,7 @@
 
 <script setup lang="ts">
 import type { CatalogLogTestResponse } from "@/types/detectionCatalog.d"
+import { useStorage } from "@vueuse/core"
 import {
 	NAlert,
 	NButton,
@@ -193,7 +194,7 @@ import {
 	NTag,
 	useMessage
 } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -235,30 +236,30 @@ const logFormatOptions = [
 
 const testing = ref(false)
 const result = ref<CatalogLogTestResponse | null>(null)
+const historyStorage = useStorage<unknown>(HISTORY_STORAGE_KEY, [], localStorage)
 const history = ref<LogTestHistoryItem[]>([])
 
 function clearResult() {
 	result.value = null
 }
 
-function loadHistory() {
+function syncHistoryFromStorage() {
 	try {
-		const raw = localStorage.getItem(HISTORY_STORAGE_KEY)
-		if (!raw) return
-		const parsed = JSON.parse(raw)
-		if (Array.isArray(parsed)) {
-			history.value = parsed
-				.filter(item => typeof item?.event === "string" && typeof item?.log_format === "string")
-				.slice(0, HISTORY_MAX)
-		}
+		const parsed = historyStorage.value
+		history.value = Array.isArray(parsed)
+			? parsed
+					.filter(item => typeof item?.event === "string" && typeof item?.log_format === "string")
+					.slice(0, HISTORY_MAX)
+			: []
 	} catch {
-		/* localStorage corrupted or disabled — start fresh, non-fatal. */
+		/* Storage unavailable/corrupted: history is best-effort. */
+		history.value = []
 	}
 }
 
 function persistHistory() {
 	try {
-		localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history.value))
+		historyStorage.value = history.value
 	} catch {
 		/* QuotaExceeded / disabled — history is best-effort. */
 	}
@@ -328,5 +329,11 @@ function levelBadgeColor(level: number | null): "danger" | "warning" | "primary"
 	return "success"
 }
 
-onBeforeMount(loadHistory)
+watch(
+	() => historyStorage.value,
+	() => {
+		syncHistoryFromStorage()
+	},
+	{ immediate: true }
+)
 </script>
