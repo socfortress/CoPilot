@@ -12,8 +12,11 @@ class WazuhGroup(BaseModel):
 
     name: str = Field(..., description="Group name")
     count: int = Field(..., description="Number of agents belonging to the group")
-    mergedSum: str = Field(..., description="Checksum of merged configuration files")
-    configSum: str = Field(..., description="Checksum of configuration files")
+    # Both checksum fields vary by Wazuh version: 4.9.0 returns only configSum, while
+    # other builds still return mergedSum. Keep them optional so the connector tolerates
+    # any Wazuh version (mirrors app/integrations/utils/schema.py). See issue #885.
+    mergedSum: Optional[str] = Field(None, description="Checksum of merged configuration files")
+    configSum: Optional[str] = Field(None, description="Checksum of configuration files")
     model_config = ConfigDict(extra="ignore")
 
 
