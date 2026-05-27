@@ -1,6 +1,7 @@
 import asyncio
 import csv
 import io
+import os
 from datetime import datetime
 from datetime import timedelta
 from typing import List
@@ -261,10 +262,29 @@ async def get_agents(current_user: User = Depends(AuthHandler().get_current_user
         raise HTTPException(status_code=500, detail=f"Failed to fetch agents: {e}")
 
 
+# Function to validate the Grafana shared-secret header.
+# Modeled on verify_graylog_header (app/active_response/routes/graylog.py), but
+# fails closed: it does NOT fall back to a hardcoded default secret. A default
+# baked into the open-source repo would let anyone reproduce it and bypass the
+# check (the same class of bug as the JWT_SECRET default in GHSA-4gxj-hw3c-3x2x).
+# GRAFANA_API_HEADER_VALUE must be set or the route is denied. See GHSA-xh98-w6qh-cr44.
+async def verify_grafana_header(grafana: Optional[str] = Header(None)):
+    """Verify that a Grafana-invoked request carries the correct shared-secret header."""
+    expected_header = os.getenv("GRAFANA_API_HEADER_VALUE")
+    if not expected_header:
+        logger.error("GRAFANA_API_HEADER_VALUE is not configured; denying Grafana dashboard request")
+        raise HTTPException(status_code=403, detail="Grafana header authentication is not configured")
+    if grafana != expected_header:
+        logger.error("Invalid or missing Grafana header")
+        raise HTTPException(status_code=403, detail="Invalid or missing Grafana header")
+    return grafana
+
+
 @agents_router.get(
     "/dashboard/agents",
     response_model=AgentsResponse,
     description="Get all Wazuh agents for a specific customer (Grafana dashboard use)",
+    dependencies=[Depends(verify_grafana_header)],
 )
 async def get_customer_agents_for_dashboard(
     customer_code: Optional[str] = Header(None, description="Customer code to filter agents by"),
