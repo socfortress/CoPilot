@@ -1,19 +1,13 @@
 <template>
 	<div class="@container flex flex-col gap-4">
 		<!-- Title row + framing copy -->
-		<div class="flex flex-wrap items-end justify-between gap-3">
-			<div class="flex flex-col gap-1">
-				<h3 class="text-lg font-semibold">Coverage Gaps</h3>
-				<p class="text-secondary max-w-3xl text-sm">
-					MITRE ATT&amp;CK techniques no rule covers — across both the CoPilot Searches corpus and the Wazuh
-					ruleset. Sub-techniques are collapsed into their parents (coverage of T1059.001 counts as coverage
-					for T1059). Use this list to spot where new detection authoring would expand your coverage.
-				</p>
-			</div>
-			<Badge type="splitted" color="primary">
-				<template #label>Showing</template>
-				<template #value>{{ filteredGaps.length }} / {{ gaps.length }}</template>
-			</Badge>
+		<div class="flex flex-col gap-1">
+			<h3 class="text-lg font-semibold">Coverage Gaps</h3>
+			<p class="text-secondary text-sm">
+				MITRE ATT&amp;CK techniques no rule covers — across both the CoPilot Searches corpus and the Wazuh
+				ruleset. Sub-techniques are collapsed into their parents (coverage of T1059.001 counts as coverage for
+				T1059). Use this list to spot where new detection authoring would expand your coverage.
+			</p>
 		</div>
 
 		<!-- COVERAGE HERO STATS - same CardLink pattern used by the catalog header. -->
@@ -30,13 +24,24 @@
 			/>
 		</div>
 
-		<n-input v-model:value="filter" size="medium" placeholder="Filter by technique ID, name, or tactic…" clearable>
-			<template #prefix><Icon name="carbon:search" /></template>
-		</n-input>
+		<div class="flex flex-wrap items-center gap-2">
+			<n-input
+				v-model:value="filter"
+				size="small"
+				placeholder="Filter by technique ID, name, or tactic…"
+				clearable
+				class="min-w-80 flex-1"
+			>
+				<template #prefix><Icon name="carbon:search" /></template>
+			</n-input>
 
-		<n-spin :show="loading">
-			<n-data-table :columns :data="filteredGaps" :loading size="small" :pagination />
-		</n-spin>
+			<Badge type="splitted" color="primary" class="shrink-0">
+				<template #label>Showing</template>
+				<template #value>{{ filteredGaps.length }} / {{ gaps.length }}</template>
+			</Badge>
+		</div>
+
+		<n-data-table :columns :data="filteredGaps" :loading size="small" :pagination :scroll-x="100" />
 	</div>
 </template>
 
@@ -44,7 +49,7 @@
 import type { DataTableColumns } from "naive-ui"
 import type { CardLinkColor } from "@/components/common/cards/CardLink.vue"
 import type { CatalogCoverageGapRow } from "@/types/detectionCatalog.d"
-import { NDataTable, NInput, NSpin, useMessage } from "naive-ui"
+import { NButton, NDataTable, NInput, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
@@ -120,14 +125,27 @@ const columns: DataTableColumns<CatalogCoverageGapRow> = [
 	{
 		title: "Technique ID",
 		key: "technique_id",
-		width: 140,
+		width: 150,
+		fixed: "left",
 		sorter: (a, b) => a.technique_id.localeCompare(b.technique_id),
 		render: row =>
 			row.url ? (
-				<a href={row.url} target="_blank" rel="noopener" class="technique-link">
+				<NButton
+					tag="a"
+					// @ts-ignore tag="a" forwards native anchor attrs omitted from ButtonProps
+					rel="noopener"
+					href={row.url}
+					target="_blank"
+					size="tiny"
+					icon-placement="right"
+					secondary
+					type="primary"
+					v-slots={{
+						icon: () => <Icon name="carbon:launch" />
+					}}
+				>
 					{row.technique_id}
-					<Icon name="carbon:launch" size={11} />
-				</a>
+				</NButton>
 			) : (
 				<span class="text-secondary font-mono text-xs">{row.technique_id}</span>
 			)
@@ -135,19 +153,20 @@ const columns: DataTableColumns<CatalogCoverageGapRow> = [
 	{
 		title: "Technique",
 		key: "technique_name",
-		sorter: (a, b) => a.technique_name.localeCompare(b.technique_name),
-		render: row => <span class="font-medium">{row.technique_name}</span>
+		width: 400,
+		sorter: (a, b) => a.technique_name.localeCompare(b.technique_name)
 	},
 	{
 		title: "Tactics",
 		key: "tactics",
+		minWidth: 300,
 		render: row =>
 			row.tactics.length ? (
 				<div class="flex flex-wrap gap-1">
 					{row.tactics.map(t => (
-						<span key={t} class="chip chip-tactic">
+						<NTag key={t} type="warning" size="small">
 							{t.toUpperCase()}
-						</span>
+						</NTag>
 					))}
 				</div>
 			) : (
@@ -181,39 +200,3 @@ function load() {
 
 onBeforeMount(load)
 </script>
-
-<style scoped lang="scss">
-:deep(.technique-link) {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	font-family: var(--font-family-mono);
-	font-size: 0.78rem;
-	font-weight: 500;
-	color: var(--primary-color);
-	transition: color 0.15s var(--bezier-ease);
-
-	&:hover {
-		text-decoration: underline;
-	}
-}
-
-:deep(.chip) {
-	display: inline-flex;
-	align-items: center;
-	padding: 2px 8px;
-	font-size: 0.72rem;
-	font-weight: 500;
-	line-height: 1.4;
-	border-radius: 6px;
-	border: 1px solid transparent;
-	white-space: nowrap;
-}
-:deep(.chip-tactic) {
-	color: var(--warning-color);
-	background-color: rgba(var(--warning-color-rgb) / 0.08);
-	border-color: rgba(var(--warning-color-rgb) / 0.2);
-	font-weight: 600;
-	letter-spacing: 0.04em;
-}
-</style>
