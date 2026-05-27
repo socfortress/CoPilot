@@ -61,7 +61,7 @@ import Api from "@/api"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/common/useNavigation"
-import { useAuthStore } from "@/stores/auth"
+import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -71,12 +71,11 @@ const emit = defineEmits<{
 	(e: "loading", value: boolean): void
 }>()
 
-const authStore = useAuthStore()
+const customerFilterStore = useCustomerFilterStore()
 const { routeDashboardViewer } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const dFormats = useSettingsStore().dateFormat
-const customerCode = computed(() => authStore.userCustomerCode || "")
 
 const { width: headerWidthRef } = useElementSize(useTemplateRef("headerRef"))
 const pageSizes = [10, 25, 50, 100]
@@ -107,6 +106,12 @@ const columns = computed<DataTableColumns<EnabledDashboard>>(() => [
 		fixed: simpleMode.value ? undefined : "left",
 		width: 280,
 		render: row => <div>{row.display_name}</div>
+	},
+	{
+		title: "Customer",
+		key: "customer_code",
+		width: 150,
+		render: row => <div>{row.customer_code}</div>
 	},
 	{
 		title: "Category",
@@ -153,7 +158,7 @@ const loadDashboards = useDebounceFn(async () => {
 	abortController = new AbortController()
 
 	try {
-		const response = await Api.siem.getEnabledDashboards(customerCode.value)
+		const response = await Api.siem.getEnabledDashboardsForCustomers(customerFilterStore.queryCustomerCodes)
 
 		data.value = response.data?.enabled_dashboards || []
 		emit("loaded", data.value)
@@ -182,6 +187,16 @@ watch([() => pagination.value.pageSize], resetPage, {
 	deep: true,
 	immediate: true
 })
+
+// Re-fetch when the global customer filter changes (the list is scoped server-side).
+watch(
+	() => customerFilterStore.selectedCustomerCodes,
+	() => {
+		pagination.value.page = 1
+		loadDashboards()
+	},
+	{ deep: true }
+)
 
 onBeforeMount(() => {
 	loadDashboards()
