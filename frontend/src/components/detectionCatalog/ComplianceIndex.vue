@@ -80,11 +80,10 @@ import type {
 	CatalogComplianceGroupRow,
 	CatalogComplianceResponse
 } from "@/types/detectionCatalog.d"
-import { NDataTable, NInput, NModal, NSelect, NSpin, NTag, useMessage } from "naive-ui"
+import { NDataTable, NInput, NModal, NSelect, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import Icon from "@/components/common/Icon.vue"
 import ComplianceDetail from "./ComplianceDetail.vue"
