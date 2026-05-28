@@ -108,39 +108,48 @@
 					<n-empty description="No exclusions configured" />
 				</div>
 
-				<n-table v-else :single-line="false">
-					<thead>
-						<tr>
-							<th>Check</th>
-							<th>Resource</th>
-							<th>Reason</th>
-							<th>Expires</th>
-							<th class="text-right!">Actions</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr v-for="exclusion in exclusions" :key="exclusion.id">
-							<td>{{ exclusion.check_id }}</td>
-							<td>{{ exclusion.resource_name || "All" }}</td>
-							<td>{{ exclusion.reason }}</td>
-							<td>
-								{{
-									exclusion.expires_at ? formatDate(exclusion.expires_at, dFormats.datetime) : "Never"
-								}}
-							</td>
-							<td>
-								<div class="flex items-center justify-end gap-2">
-									<n-button size="small" ghost type="error" @click="deleteExclusion(exclusion.id)">
-										<template #icon>
-											<Icon :name="DeleteIcon" />
-										</template>
-										Delete
-									</n-button>
-								</div>
-							</td>
-						</tr>
-					</tbody>
-				</n-table>
+				<div v-else class="scrollbar-styled overflow-x-auto">
+					<n-table :single-line="false" class="min-w-150">
+						<thead>
+							<tr>
+								<th>Check</th>
+								<th>Resource</th>
+								<th>Reason</th>
+								<th>Expires</th>
+								<th class="text-right!">Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="exclusion in exclusions" :key="exclusion.id">
+								<td>{{ exclusion.check_id }}</td>
+								<td>{{ exclusion.resource_name || "All" }}</td>
+								<td>{{ exclusion.reason }}</td>
+								<td>
+									{{
+										exclusion.expires_at
+											? formatDate(exclusion.expires_at, dFormats.datetime)
+											: "Never"
+									}}
+								</td>
+								<td>
+									<div class="flex items-center justify-end gap-2">
+										<n-button
+											size="small"
+											ghost
+											type="error"
+											@click="deleteExclusion(exclusion.id)"
+										>
+											<template #icon>
+												<Icon :name="DeleteIcon" />
+											</template>
+											Delete
+										</n-button>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</n-table>
+				</div>
 			</n-spin>
 		</n-tab-pane>
 	</n-tabs>

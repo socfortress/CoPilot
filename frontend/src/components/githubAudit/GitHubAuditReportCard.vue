@@ -1,7 +1,7 @@
 <template>
 	<CardEntity clickable hoverable :loading @click="$emit('click', report)">
-		<div class="flex items-start justify-between gap-4">
-			<div class="min-w-0 flex-1">
+		<div class="flex flex-wrap items-start justify-between gap-4">
+			<div class="min-w-0">
 				<div class="mb-1 flex items-center gap-2">
 					<span class="text-default truncate font-mono text-sm font-medium">
 						{{ report.report_name }}
