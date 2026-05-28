@@ -25,31 +25,47 @@
 					>
 						<div class="flex flex-col items-center justify-between gap-1 text-center">
 							<span class="text-xs">Security Score</span>
-							<span class="font-mono text-sm font-bold">{{ config.last_audit_score?.toFixed(1) }}%</span>
 						</div>
 					</n-progress>
-					<div class="flex flex-col gap-2">
-						<Badge type="splitted">
-							<template #label>Customer</template>
-							<template #value>{{ config.customer_code }}</template>
-						</Badge>
-						<Badge type="splitted">
-							<template #label>Last audit</template>
-							<template #value>
-								{{ config.last_audit_at ? formatDate(config.last_audit_at, dFormats.datetime) : "-" }}
-							</template>
-						</Badge>
-						<Badge type="splitted">
-							<template #label>Grade</template>
-							<template #value>
-								<GitHubAuditGradeBadge
+					<div class="flex min-w-0 flex-1 flex-col gap-3">
+						<div class="flex items-end justify-between gap-3">
+							<div class="min-w-0">
+								<p class="text-secondary mb-1 text-[10px] font-medium tracking-widest uppercase">
+									Grade
+								</p>
+								<p
 									v-if="config.last_audit_grade"
-									:grade="config.last_audit_grade"
-									:score="config.last_audit_score ?? undefined"
-								/>
-								<span v-else>-</span>
-							</template>
-						</Badge>
+									class="font-mono text-4xl leading-none font-bold tracking-tight"
+									:class="gradeTextClass"
+								>
+									{{ config.last_audit_grade }}
+								</p>
+								<p v-else class="text-tertiary font-mono text-3xl leading-none font-semibold">—</p>
+							</div>
+							<p
+								v-if="config.last_audit_score != null"
+								class="text-secondary shrink-0 font-mono text-xs tabular-nums"
+							>
+								{{ config.last_audit_score.toFixed(1) }}%
+							</p>
+						</div>
+
+						<dl class="border-border flex flex-col gap-2 border-t pt-3">
+							<div class="flex items-baseline justify-between gap-3">
+								<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Customer</dt>
+								<dd class="text-default min-w-0 truncate font-mono text-xs">
+									{{ config.customer_code }}
+								</dd>
+							</div>
+							<div class="flex items-baseline justify-between gap-3">
+								<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Last audit</dt>
+								<dd class="text-default min-w-0 truncate text-right font-mono text-xs tabular-nums">
+									{{
+										config.last_audit_at ? formatDate(config.last_audit_at, dFormats.datetime) : "—"
+									}}
+								</dd>
+							</div>
+						</dl>
 					</div>
 				</div>
 			</template>
@@ -160,7 +176,6 @@ import type { GitHubAuditConfig } from "@/types/githubAudit.d"
 import { NButton, NCard, NDivider, NIcon, NProgress, NTag, NTooltip, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
-import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
@@ -200,6 +215,16 @@ const scoreStatus = computed(() => {
 	if (score >= 80) return "success"
 	if (score >= 60) return "warning"
 	return "error"
+})
+
+const gradeTextClass = computed(() => {
+	const grade = props.config.last_audit_grade
+	if (!grade) return ""
+	if (grade === "A" || grade === "A+") return "text-success"
+	if (grade.startsWith("B")) return "text-info"
+	if (grade.startsWith("C")) return "text-warning"
+	if (grade === "D" || grade === "D+" || grade === "F") return "text-error"
+	return "text-tertiary"
 })
 
 async function runAudit() {
