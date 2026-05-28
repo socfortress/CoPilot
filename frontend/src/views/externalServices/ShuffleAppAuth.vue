@@ -23,12 +23,18 @@
 				class="h-full"
 			/>
 		</n-spin>
+
+		<n-empty
+			v-else
+			description="Select an organization to manage app authentication"
+			class="grow justify-center"
+		/>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { Organization } from "@/types/shuffle.d"
-import { NSelect, NSpin, useMessage } from "naive-ui"
+import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
