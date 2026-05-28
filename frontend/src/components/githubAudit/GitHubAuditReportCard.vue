@@ -1,43 +1,65 @@
 <template>
-	<n-card class="github-audit-report-card" hoverable size="small" @click="$emit('click', report)">
-		<div class="flex items-center justify-between">
-			<div class="flex-1">
+	<div
+		class="border-border hover:border-primary/30 group flex cursor-pointer flex-col gap-3 rounded-md border p-4 transition-colors"
+		@click="$emit('click', report)"
+	>
+		<div class="flex items-start justify-between gap-4">
+			<div class="min-w-0 flex-1">
 				<div class="mb-1 flex items-center gap-2">
-					<span class="font-medium">{{ report.report_name }}</span>
-					<n-tag :type="statusType" size="small">{{ report.status }}</n-tag>
+					<span class="text-default truncate font-mono text-sm font-medium">
+						{{ report.report_name }}
+					</span>
+					<span
+						class="shrink-0 font-mono text-[10px] tracking-wider uppercase"
+						:class="statusTextClass"
+					>
+						{{ report.status }}
+					</span>
 				</div>
-				<div class="text-secondary text-xs">
+				<p class="text-secondary font-mono text-xs tabular-nums">
 					{{ formatDate(report.audit_started_at, dFormats.datetime) }}
-					<span v-if="report.audit_duration_seconds">• {{ report.audit_duration_seconds.toFixed(1) }}s</span>
-				</div>
+					<template v-if="report.audit_duration_seconds != null">
+						<span class="text-tertiary mx-1.5">·</span>
+						{{ report.audit_duration_seconds.toFixed(1) }}s
+					</template>
+				</p>
 			</div>
 
-			<div class="flex items-center gap-4">
-				<div class="text-center">
-					<div class="text-2xl font-bold" :class="scoreClass">{{ report.score.toFixed(0) }}%</div>
-					<GitHubAuditGradeBadge :grade="report.grade" />
-				</div>
-
-				<div class="findings-summary text-xs">
-					<div v-if="report.critical_findings" class="text-error">
-						{{ report.critical_findings }} Critical
-					</div>
-					<div v-if="report.high_findings" class="text-warning">{{ report.high_findings }} High</div>
-					<div class="text-secondary">{{ report.passed_checks }}/{{ report.total_checks }} Passed</div>
-				</div>
+			<div class="shrink-0 text-right">
+				<p class="text-secondary mb-0.5 text-[10px] tracking-wider uppercase">Score</p>
+				<p class="font-mono text-2xl leading-none font-bold tabular-nums" :class="scoreClass">
+					{{ report.score.toFixed(0) }}%
+				</p>
+				<p class="mt-1 font-mono text-sm leading-none font-semibold" :class="gradeTextClass">
+					{{ report.grade }}
+				</p>
 			</div>
 		</div>
-	</n-card>
+
+		<dl class="border-border flex flex-wrap items-baseline gap-x-4 gap-y-1 border-t pt-3">
+			<div v-if="report.critical_findings" class="flex items-baseline gap-1.5">
+				<dt class="text-secondary text-[10px] tracking-wider uppercase">Critical</dt>
+				<dd class="text-error font-mono text-xs tabular-nums">{{ report.critical_findings }}</dd>
+			</div>
+			<div v-if="report.high_findings" class="flex items-baseline gap-1.5">
+				<dt class="text-secondary text-[10px] tracking-wider uppercase">High</dt>
+				<dd class="text-warning font-mono text-xs tabular-nums">{{ report.high_findings }}</dd>
+			</div>
+			<div class="flex items-baseline gap-1.5">
+				<dt class="text-secondary text-[10px] tracking-wider uppercase">Passed</dt>
+				<dd class="text-default font-mono text-xs tabular-nums">
+					{{ report.passed_checks }}/{{ report.total_checks }}
+				</dd>
+			</div>
+		</dl>
+	</div>
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { GitHubAuditReportSummary } from "@/types/githubAudit.d"
-import { NCard, NTag } from "naive-ui"
 import { computed } from "vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
-import GitHubAuditGradeBadge from "./GitHubAuditGradeBadge.vue"
 
 const props = defineProps<{
 	report: GitHubAuditReportSummary
@@ -49,16 +71,16 @@ defineEmits<{
 
 const dFormats = useSettingsStore().dateFormat
 
-const statusType = computed(() => {
+const statusTextClass = computed(() => {
 	switch (props.report.status) {
 		case "completed":
-			return "success"
+			return "text-success"
 		case "running":
-			return "info"
+			return "text-info"
 		case "failed":
-			return "error"
+			return "text-error"
 		default:
-			return "default"
+			return "text-tertiary"
 	}
 })
 
@@ -67,31 +89,13 @@ const scoreClass = computed(() => {
 	if (props.report.score >= 60) return "text-warning"
 	return "text-error"
 })
+
+const gradeTextClass = computed(() => {
+	const grade = props.report.grade
+	if (grade === "A" || grade === "A+") return "text-success"
+	if (grade.startsWith("B")) return "text-info"
+	if (grade.startsWith("C")) return "text-warning"
+	if (grade === "D" || grade === "D+" || grade === "F") return "text-error"
+	return "text-tertiary"
+})
 </script>
-
-<style scoped>
-.github-audit-report-card {
-	cursor: pointer;
-	transition: all 0.2s ease;
-}
-
-.github-audit-report-card:hover {
-	transform: translateY(-1px);
-}
-
-.text-secondary {
-	color: var(--text-color-3);
-}
-
-.text-success {
-	color: var(--success-color);
-}
-
-.text-warning {
-	color: var(--warning-color);
-}
-
-.text-error {
-	color: var(--error-color);
-}
-</style>

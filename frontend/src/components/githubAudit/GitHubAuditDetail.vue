@@ -73,7 +73,7 @@
 					</n-empty>
 				</div>
 
-				<div v-else class="space-y-3">
+				<div v-else class="flex flex-col gap-3">
 					<GitHubAuditReportCard
 						v-for="report in reports"
 						:key="report.id"
