@@ -112,7 +112,7 @@
 				<n-button @click="closeModal">Cancel</n-button>
 				<n-button type="error" :loading :disabled="!canDelete" @click="confirmDelete">
 					<template #icon>
-						<n-icon><Icon :name="DeleteIcon" /></n-icon>
+						<Icon :name="DeleteIcon" />
 					</template>
 					Delete Agents
 				</n-button>
@@ -159,7 +159,6 @@ import {
 	NDivider,
 	NForm,
 	NFormItem,
-	NIcon,
 	NInputNumber,
 	NModal,
 	NScrollbar,

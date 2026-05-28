@@ -97,7 +97,7 @@
 			<div class="mb-4">
 				<n-button type="primary" size="small" @click="showExclusionForm = true">
 					<template #icon>
-						<n-icon><Icon :name="AddIcon" /></n-icon>
+						<Icon :name="AddIcon" />
 					</template>
 					Add Exclusion
 				</n-button>
@@ -108,14 +108,14 @@
 					<n-empty description="No exclusions configured" />
 				</div>
 
-				<n-table v-else :bordered="false" :single-line="false">
+				<n-table v-else :single-line="false">
 					<thead>
 						<tr>
 							<th>Check</th>
 							<th>Resource</th>
 							<th>Reason</th>
 							<th>Expires</th>
-							<th>Actions</th>
+							<th class="text-right!">Actions</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -129,9 +129,14 @@
 								}}
 							</td>
 							<td>
-								<n-button text type="error" @click="deleteExclusion(exclusion.id)">
-									<n-icon><Icon :name="DeleteIcon" /></n-icon>
-								</n-button>
+								<div class="flex items-center justify-end gap-2">
+									<n-button size="small" ghost type="error" @click="deleteExclusion(exclusion.id)">
+										<template #icon>
+											<Icon :name="DeleteIcon" />
+										</template>
+										Delete
+									</n-button>
+								</div>
 							</td>
 						</tr>
 					</tbody>
@@ -140,12 +145,14 @@
 		</n-tab-pane>
 	</n-tabs>
 
-	<GitHubAuditExclusionForm
-		v-if="showExclusionForm"
-		v-model:show="showExclusionForm"
-		:config-id="config.id"
-		@saved="loadExclusions"
-	/>
+	<n-modal v-model:show="showExclusionForm" preset="dialog" title="Add Exclusion" style="width: 500px">
+		<GitHubAuditExclusionForm
+			v-if="showExclusionForm"
+			:config-id="config.id"
+			@saved="onExclusionSaved"
+			@cancel="showExclusionForm = false"
+		/>
+	</n-modal>
 
 	<n-drawer v-model:show="showReportDetail" :width="900" placement="right" class="max-w-[98vw]">
 		<n-drawer-content v-if="selectedReport" closable :native-scrollbar="false">
@@ -177,7 +184,7 @@ import {
 	NDrawer,
 	NDrawerContent,
 	NEmpty,
-	NIcon,
+	NModal,
 	NPagination,
 	NPopconfirm,
 	NSpin,
@@ -353,5 +360,10 @@ async function openReportDetail(report: GitHubAuditReportSummary) {
 function onReportDeleted() {
 	showReportDetail.value = false
 	loadReports()
+}
+
+function onExclusionSaved() {
+	showExclusionForm.value = false
+	loadExclusions()
 }
 </script>

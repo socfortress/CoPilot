@@ -1,5 +1,5 @@
 <template>
-	<n-modal v-model:show="showModal" preset="dialog" title="Add Exclusion" style="width: 500px">
+	<div class="flex flex-col gap-4">
 		<n-form ref="formRef" :model="formData" :rules label-placement="top">
 			<n-form-item label="Check to Exclude" path="check_id">
 				<n-select
@@ -35,49 +35,48 @@
 			</n-form-item>
 		</n-form>
 
-		<template #action>
-			<n-button @click="showModal = false">Cancel</n-button>
+		<div class="flex justify-end gap-3">
+			<n-button @click="emit('cancel')">Cancel</n-button>
 			<n-button type="primary" :loading="saving" @click="handleSubmit">Create</n-button>
-		</template>
-	</n-modal>
+		</div>
+	</div>
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { FormInst, FormRules } from "naive-ui"
 import type { GitHubAuditExclusionCreate } from "@/types/githubAudit.d"
-import { NButton, NDatePicker, NForm, NFormItem, NInput, NModal, NSelect, useMessage } from "naive-ui"
-import { computed, onBeforeMount, reactive, ref } from "vue"
+import { NButton, NDatePicker, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
+import { onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"
+import { useAuthStore } from "@/stores/auth"
+
+type ExclusionFormData = Omit<GitHubAuditExclusionCreate, "created_by" | "check_id" | "reason"> & {
+	check_id: string | null
+	reason: string | null
+}
 
 const props = defineProps<{
-	show: boolean
 	configId: number
 }>()
 
 const emit = defineEmits<{
-	(e: "update:show", value: boolean): void
 	(e: "saved"): void
+	(e: "cancel"): void
 }>()
 
 const message = useMessage()
+const authStore = useAuthStore()
 const formRef = ref<FormInst | null>(null)
 const saving = ref(false)
 const checkOptions = ref<{ label: string; value: string }[]>([])
 const expiresAtTimestamp = ref<number | null>(null)
 
-const showModal = computed({
-	get: () => props.show,
-	set: value => emit("update:show", value)
-})
-
-const formData = reactive<GitHubAuditExclusionCreate>({
-	check_id: "",
+const formData = reactive<ExclusionFormData>({
+	check_id: null,
 	resource_name: null,
-	reason: "",
+	reason: null,
 	approved_by: null,
-	expires_at: null,
-	created_by: "current_user" // TODO-FE: Get from auth context
+	expires_at: null
 })
 
 const rules: FormRules = {
@@ -94,16 +93,17 @@ async function handleSubmit() {
 
 	saving.value = true
 	try {
-		const data = {
+		const data: GitHubAuditExclusionCreate = {
 			...formData,
+			check_id: formData.check_id ?? "",
+			reason: formData.reason ?? "",
+			created_by: authStore.userName,
 			expires_at: expiresAtTimestamp.value ? new Date(expiresAtTimestamp.value).toISOString() : null
 		}
 		await Api.githubAudit.createExclusion(props.configId, data)
 		message.success("Exclusion created successfully")
 		emit("saved")
-		showModal.value = false
 
-		// Reset form
 		formData.check_id = ""
 		formData.resource_name = null
 		formData.reason = ""
