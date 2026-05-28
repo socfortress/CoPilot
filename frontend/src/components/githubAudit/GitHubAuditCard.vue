@@ -79,7 +79,7 @@
 		</template>
 		<template #footerExtra>
 			<div class="flex flex-wrap items-center justify-end gap-2">
-				<n-button type="primary" size="small" quaternary :loading="running" @click.stop="runAudit">
+				<n-button size="small" quaternary :loading="running" @click.stop="runAudit">
 					<template #icon>
 						<Icon :name="PlayIcon" />
 					</template>
@@ -90,6 +90,12 @@
 						<Icon :name="EditIcon" />
 					</template>
 					Edit
+				</n-button>
+				<n-button size="small" type="primary" secondary @click.stop="$emit('click', config)">
+					<template #icon>
+						<Icon :name="DetailIcon" />
+					</template>
+					View Details
 				</n-button>
 			</div>
 		</template>
@@ -127,6 +133,7 @@ const includeFlags: { key: IncludeFlagKey; shortLabel: string; label: string }[]
 
 const PlayIcon = "carbon:play"
 const EditIcon = "carbon:edit"
+const DetailIcon = "carbon:view"
 
 const message = useMessage()
 const running = ref(false)
