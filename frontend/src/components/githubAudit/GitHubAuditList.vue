@@ -73,7 +73,7 @@
 			</div>
 		</n-spin>
 
-		<n-drawer v-model:show="showForm" :width="600" placement="right">
+		<n-drawer v-model:show="showForm" :width="600" placement="right" class="max-w-[98vw]">
 			<n-drawer-content
 				:title="selectedConfig ? 'Edit Configuration' : 'New GitHub Audit Configuration'"
 				closable
@@ -88,7 +88,7 @@
 			</n-drawer-content>
 		</n-drawer>
 
-		<n-drawer v-model:show="showDetail" :width="800" placement="right">
+		<n-drawer v-model:show="showDetail" :width="800" placement="right" class="max-w-[98vw]">
 			<n-drawer-content v-if="selectedConfig" closable :native-scrollbar="false">
 				<template #header>
 					<div class="flex items-center gap-3">
@@ -107,7 +107,7 @@
 			</n-drawer-content>
 		</n-drawer>
 
-		<n-drawer v-model:show="showInfo" :width="700" placement="right">
+		<n-drawer v-model:show="showInfo" :width="700" placement="right" class="max-w-[98vw]">
 			<n-drawer-content closable :native-scrollbar="false">
 				<template #header>
 					<div class="flex items-center gap-3">

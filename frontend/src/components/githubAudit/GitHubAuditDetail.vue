@@ -147,7 +147,7 @@
 		@saved="loadExclusions"
 	/>
 
-	<n-drawer v-model:show="showReportDetail" :width="900" placement="right">
+	<n-drawer v-model:show="showReportDetail" :width="900" placement="right" class="max-w-[98vw]">
 		<n-drawer-content v-if="selectedReport" closable :native-scrollbar="false">
 			<template #header>
 				<div class="flex items-center gap-3">
