@@ -136,7 +136,6 @@ import GitHubAuditInfo from "./GitHubAuditInfo.vue"
 const AddIcon = "ion:add"
 const SearchIcon = "ion:search-outline"
 const InfoIcon = "ion:information-circle-outline"
-const GithubIcon = "carbon:logo-github"
 
 const message = useMessage()
 const loading = ref(false)

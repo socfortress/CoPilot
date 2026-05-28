@@ -1,6 +1,7 @@
 export { default as GitHubAuditButton } from "./GitHubAuditButton.vue"
 export { default as GitHubAuditCard } from "./GitHubAuditCard.vue"
 export { default as GitHubAuditConfigForm } from "./GitHubAuditConfigForm.vue"
+export { default as GitHubAuditConfigSummary } from "./GitHubAuditConfigSummary.vue"
 export { default as GitHubAuditDetail } from "./GitHubAuditDetail.vue"
 export { default as GitHubAuditExclusionForm } from "./GitHubAuditExclusionForm.vue"
 export { default as GitHubAuditGradeBadge } from "./GitHubAuditGradeBadge.vue"

@@ -19,47 +19,7 @@
 			</div>
 		</template>
 		<template #default>
-			<div class="flex items-center gap-6">
-				<n-progress
-					type="circle"
-					:percentage="config.last_audit_score ?? 0"
-					:status="scoreStatus"
-					gap-position="bottom"
-				>
-					<div class="flex flex-col items-center justify-between gap-1 text-center">
-						<span class="text-xs">Security Score</span>
-					</div>
-				</n-progress>
-				<div class="flex min-w-0 flex-1 flex-col gap-3">
-					<div class="flex items-end justify-between gap-3">
-						<div class="min-w-0">
-							<p class="text-secondary mb-1 text-[10px] font-medium tracking-widest uppercase">Grade</p>
-							<GitHubAuditGradeLabel :grade="config.last_audit_grade" />
-						</div>
-						<p
-							v-if="config.last_audit_score != null"
-							class="text-secondary shrink-0 font-mono text-xs tabular-nums"
-						>
-							{{ config.last_audit_score.toFixed(1) }}%
-						</p>
-					</div>
-
-					<dl class="border-border flex flex-col gap-2 border-t pt-3">
-						<div class="flex items-baseline justify-between gap-3">
-							<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Customer</dt>
-							<dd class="text-default min-w-0 truncate font-mono text-xs">
-								{{ config.customer_code }}
-							</dd>
-						</div>
-						<div class="flex items-baseline justify-between gap-3">
-							<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Last audit</dt>
-							<dd class="text-default min-w-0 truncate text-right font-mono text-xs tabular-nums">
-								{{ config.last_audit_at ? formatDate(config.last_audit_at, dFormats.datetime) : "—" }}
-							</dd>
-						</div>
-					</dl>
-				</div>
-			</div>
+			<GitHubAuditConfigSummary :config meta-fields="card" />
 		</template>
 		<template #footerMain>
 			<div class="border-border divide-border grid grid-cols-4 divide-x rounded-md border">
@@ -104,14 +64,12 @@
 
 <script setup lang="ts">
 import type { GitHubAuditConfig } from "@/types/githubAudit.d"
-import { NButton, NProgress, NTag, NTooltip, useMessage } from "naive-ui"
-import { computed, ref } from "vue"
+import { NButton, NTag, NTooltip, useMessage } from "naive-ui"
+import { ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils/format"
 import CardEntity from "../common/cards/CardEntity.vue"
-import GitHubAuditGradeLabel from "./GitHubAuditGradeLabel.vue"
+import GitHubAuditConfigSummary from "./GitHubAuditConfigSummary.vue"
 
 type IncludeFlagKey = "include_archived_repos" | "include_members" | "include_repos" | "include_workflows"
 
@@ -137,14 +95,6 @@ const DetailIcon = "carbon:view"
 
 const message = useMessage()
 const running = ref(false)
-const dFormats = useSettingsStore().dateFormat
-
-const scoreStatus = computed(() => {
-	const score = props.config.last_audit_score ?? 0
-	if (score >= 80) return "success"
-	if (score >= 60) return "warning"
-	return "error"
-})
 
 async function runAudit() {
 	running.value = true

@@ -2,68 +2,7 @@
 	<n-tabs v-model:value="activeTab" type="line" animated>
 		<n-tab-pane name="overview" tab="Overview">
 			<div class="flex flex-col gap-6">
-				<div class="flex items-center gap-6">
-					<n-progress
-						type="circle"
-						:percentage="config.last_audit_score ?? 0"
-						:status="scoreStatus"
-						gap-position="bottom"
-					>
-						<div class="flex flex-col items-center justify-between gap-1 text-center">
-							<span class="text-xs">Security Score</span>
-						</div>
-					</n-progress>
-
-					<div class="flex min-w-0 flex-1 flex-col gap-3">
-						<div class="flex items-end justify-between gap-3">
-							<div class="min-w-0">
-								<p class="text-secondary mb-1 text-[10px] font-medium tracking-widest uppercase">
-									Grade
-								</p>
-								<GitHubAuditGradeLabel :grade="config.last_audit_grade" />
-							</div>
-							<p
-								v-if="config.last_audit_score != null"
-								class="text-secondary shrink-0 font-mono text-xs tabular-nums"
-							>
-								{{ config.last_audit_score.toFixed(1) }}%
-							</p>
-						</div>
-
-						<dl class="border-border flex flex-col gap-2 border-t pt-3">
-							<div class="flex items-baseline justify-between gap-3">
-								<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Customer</dt>
-								<dd class="text-default min-w-0 truncate font-mono text-xs">
-									{{ config.customer_code }}
-								</dd>
-							</div>
-							<div class="flex items-baseline justify-between gap-3">
-								<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">
-									Organization
-								</dt>
-								<dd class="text-default min-w-0 truncate font-mono text-xs">
-									{{ config.organization }}
-								</dd>
-							</div>
-							<div class="flex items-baseline justify-between gap-3">
-								<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Last audit</dt>
-								<dd class="text-default min-w-0 truncate text-right font-mono text-xs tabular-nums">
-									{{
-										config.last_audit_at
-											? formatDate(config.last_audit_at, dFormats.datetime)
-											: "—"
-									}}
-								</dd>
-							</div>
-							<div class="flex items-baseline justify-between gap-3">
-								<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Token type</dt>
-								<dd class="text-default min-w-0 truncate text-right font-mono text-xs">
-									{{ tokenTypeLabel }}
-								</dd>
-							</div>
-						</dl>
-					</div>
-				</div>
+				<GitHubAuditConfigSummary :config />
 
 				<dl class="border-border flex flex-col gap-2 rounded-md border p-4">
 					<div class="flex items-baseline justify-between gap-3">
@@ -235,7 +174,6 @@ import {
 	NIcon,
 	NPagination,
 	NPopconfirm,
-	NProgress,
 	NSpin,
 	NTable,
 	NTabPane,
@@ -243,13 +181,13 @@ import {
 	NTooltip,
 	useMessage
 } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
+import GitHubAuditConfigSummary from "./GitHubAuditConfigSummary.vue"
 import GitHubAuditExclusionForm from "./GitHubAuditExclusionForm.vue"
-import GitHubAuditGradeLabel from "./GitHubAuditGradeLabel.vue"
 import GitHubAuditReportCard from "./GitHubAuditReportCard.vue"
 import GitHubAuditReportDetail from "./GitHubAuditReportDetail.vue"
 
@@ -279,17 +217,6 @@ const AddIcon = "ion:add"
 
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
-
-const scoreStatus = computed(() => {
-	const score = props.config.last_audit_score ?? 0
-	if (score >= 80) return "success"
-	if (score >= 60) return "warning"
-	return "error"
-})
-
-const tokenTypeLabel = computed(() =>
-	props.config.token_type === "pat" ? "Personal Access Token" : "GitHub App"
-)
 
 const activeTab = ref("overview")
 const running = ref(false)
