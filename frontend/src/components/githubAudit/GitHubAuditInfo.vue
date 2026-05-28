@@ -1,16 +1,5 @@
 <template>
-	<n-drawer v-model:show="showDrawer" :width="700" placement="right">
-		<n-drawer-content closable :native-scrollbar="false">
-			<template #header>
-				<div class="flex items-center gap-3">
-					<n-icon size="24">
-						<Icon name="ion:information-circle-outline" />
-					</n-icon>
-					<span>GitHub Audit Reference Guide</span>
-				</div>
-			</template>
-
-			<div class="space-y-6">
+	<div class="space-y-6">
 				<!-- Status Legend -->
 				<n-card size="small" title="Interpreting Results" embedded>
 					<div class="grid grid-cols-2 gap-3">
@@ -232,43 +221,13 @@
 						</div>
 					</n-collapse-item>
 				</n-collapse>
-			</div>
-		</n-drawer-content>
-	</n-drawer>
+	</div>
 </template>
 
 <script setup lang="ts">
 // TODO-FE: refactor
-import {
-	NAlert,
-	NCard,
-	NCollapse,
-	NCollapseItem,
-	NDivider,
-	NDrawer,
-	NDrawerContent,
-	NIcon,
-	NList,
-	NListItem,
-	NTabPane,
-	NTabs,
-	NTag
-} from "naive-ui"
-import { computed } from "vue"
+import { NCard, NCollapse, NCollapseItem, NDivider, NList, NListItem, NTabPane, NTabs, NTag } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-
-const props = defineProps<{
-	show: boolean
-}>()
-
-const emit = defineEmits<{
-	(e: "update:show", value: boolean): void
-}>()
-
-const showDrawer = computed({
-	get: () => props.show,
-	set: value => emit("update:show", value)
-})
 
 // Controls data
 const orgControls = [

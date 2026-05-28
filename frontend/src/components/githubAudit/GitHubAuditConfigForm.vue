@@ -1,11 +1,6 @@
 <template>
-	<n-drawer v-model:show="showDrawer" :width="600" placement="right">
-		<n-drawer-content
-			:title="isEdit ? 'Edit Configuration' : 'New GitHub Audit Configuration'"
-			closable
-			:native-scrollbar="false"
-		>
-			<n-form ref="formRef" :model="formData" :rules label-placement="top" :disabled="saving">
+	<div class="flex flex-col gap-4">
+		<n-form ref="formRef" :model="formData" :rules label-placement="top" :disabled="saving">
 				<n-divider title-placement="left" class="mt-2!">Basic Settings</n-divider>
 
 				<n-form-item label="Customer" path="customer_code">
@@ -129,18 +124,15 @@
 						style="width: 100px; margin-left: 16px"
 					/>
 				</n-form-item>
-			</n-form>
+		</n-form>
 
-			<template #footer>
-				<div class="flex justify-end gap-3">
-					<n-button @click="showDrawer = false">Cancel</n-button>
-					<n-button type="primary" :loading="saving" @click="handleSubmit">
-						{{ isEdit ? "Update" : "Create" }}
-					</n-button>
-				</div>
-			</template>
-		</n-drawer-content>
-	</n-drawer>
+		<div class="flex justify-end gap-3">
+			<n-button @click="emit('cancel')">Cancel</n-button>
+			<n-button type="primary" :loading="saving" @click="handleSubmit">
+				{{ isEdit ? "Update" : "Create" }}
+			</n-button>
+		</div>
+	</div>
 </template>
 
 <script setup lang="ts">
@@ -150,8 +142,6 @@ import type { GitHubAuditConfig, GitHubAuditConfigCreate, GitHubAuditConfigUpdat
 import {
 	NButton,
 	NDivider,
-	NDrawer,
-	NDrawerContent,
 	NDynamicTags,
 	NForm,
 	NFormItem,
@@ -180,24 +170,18 @@ interface GitHubAuditConfigFormData extends Omit<
 }
 
 const props = defineProps<{
-	show: boolean
 	config?: GitHubAuditConfig | null
 }>()
 
 const emit = defineEmits<{
-	(e: "update:show", value: boolean): void
 	(e: "saved"): void
+	(e: "cancel"): void
 }>()
 
 const message = useMessage()
 const formRef = ref<FormInst | null>(null)
 const saving = ref(false)
 const customerOptions = ref<{ label: string; value: string }[]>([])
-
-const showDrawer = computed({
-	get: () => props.show,
-	set: value => emit("update:show", value)
-})
 
 const isEdit = computed(() => !!props.config)
 
@@ -295,7 +279,6 @@ async function handleSubmit() {
 			message.success("Configuration created successfully")
 		}
 		emit("saved")
-		showDrawer.value = false
 	} catch (error: any) {
 		message.error(error.response?.data?.detail || "Failed to save configuration")
 	} finally {

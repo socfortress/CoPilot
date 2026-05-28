@@ -73,28 +73,58 @@
 			</div>
 		</n-spin>
 
-		<GitHubAuditConfigForm
-			v-if="showForm"
-			v-model:show="showForm"
-			:config="selectedConfig"
-			@saved="onConfigSaved"
-		/>
+		<n-drawer v-model:show="showForm" :width="600" placement="right">
+			<n-drawer-content
+				:title="selectedConfig ? 'Edit Configuration' : 'New GitHub Audit Configuration'"
+				closable
+				:native-scrollbar="false"
+			>
+				<GitHubAuditConfigForm
+					v-if="showForm"
+					:config="selectedConfig"
+					@saved="onConfigSaved"
+					@cancel="showForm = false"
+				/>
+			</n-drawer-content>
+		</n-drawer>
 
-		<GitHubAuditDetail
-			v-if="showDetail"
-			v-model:show="showDetail"
-			:config="selectedConfig"
-			@updated="loadConfigs"
-			@edit="openEditForm"
-		/>
+		<n-drawer v-model:show="showDetail" :width="800" placement="right">
+			<n-drawer-content v-if="selectedConfig" closable :native-scrollbar="false">
+				<template #header>
+					<div class="flex items-center gap-3">
+						<Icon name="codicon:organization" :size="24" />
+						<span>{{ selectedConfig.organization }}</span>
+						<n-tag v-if="!selectedConfig.enabled" type="warning" size="small">Disabled</n-tag>
+					</div>
+				</template>
 
-		<GitHubAuditInfo v-model:show="showInfo" />
+				<GitHubAuditDetail
+					:config="selectedConfig"
+					@updated="loadConfigs"
+					@edit="openEditForm"
+					@close="showDetail = false"
+				/>
+			</n-drawer-content>
+		</n-drawer>
+
+		<n-drawer v-model:show="showInfo" :width="700" placement="right">
+			<n-drawer-content closable :native-scrollbar="false">
+				<template #header>
+					<div class="flex items-center gap-3">
+						<Icon :name="InfoIcon" :size="24" />
+						<span>GitHub Audit Reference Guide</span>
+					</div>
+				</template>
+
+				<GitHubAuditInfo />
+			</n-drawer-content>
+		</n-drawer>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { GitHubAuditConfig } from "@/types/githubAudit.d"
-import { NButton, NEmpty, NInput, NSelect, NSpin, useMessage } from "naive-ui"
+import { NButton, NDrawer, NDrawerContent, NEmpty, NInput, NSelect, NSpin, NTag, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -106,6 +136,7 @@ import GitHubAuditInfo from "./GitHubAuditInfo.vue"
 const AddIcon = "ion:add"
 const SearchIcon = "ion:search-outline"
 const InfoIcon = "ion:information-circle-outline"
+const GithubIcon = "carbon:logo-github"
 
 const message = useMessage()
 const loading = ref(false)
