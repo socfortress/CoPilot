@@ -1,10 +1,10 @@
 <template>
 	<n-drawer v-model:show="showDrawer" :width="700" placement="right">
-		<n-drawer-content closable>
+		<n-drawer-content closable :native-scrollbar="false">
 			<template #header>
 				<div class="flex items-center gap-3">
 					<n-icon size="24">
-						<Icon :name="InfoIcon" />
+						<Icon name="ion:information-circle-outline" />
 					</n-icon>
 					<span>GitHub Audit Reference Guide</span>
 				</div>
@@ -12,7 +12,7 @@
 
 			<div class="space-y-6">
 				<!-- Status Legend -->
-				<n-card size="small" title="Interpreting Results">
+				<n-card size="small" title="Interpreting Results" embedded>
 					<div class="grid grid-cols-2 gap-3">
 						<div class="flex items-center gap-2">
 							<n-tag type="success" size="small">PASS</n-tag>
@@ -32,22 +32,22 @@
 						</div>
 					</div>
 					<n-divider />
-					<div class="text-sm text-gray-500">
-						<p class="mb-2"><strong>Skip Reasons:</strong></p>
-						<ul class="list-inside list-disc space-y-1">
-							<li>
+					<div class="flex flex-col gap-2 text-sm">
+						<strong>Skip Reasons:</strong>
+						<div class="flex flex-col gap-1">
+							<div>
 								<code>not_authorized</code>
-								— Token/user missing permission
-							</li>
-							<li>
+								<span class="text-secondary">— Token/user missing permission</span>
+							</div>
+							<div>
 								<code>not_supported</code>
-								— Plan/feature not available
-							</li>
-							<li>
+								<span class="text-secondary">— Plan/feature not available</span>
+							</div>
+							<div>
 								<code>error</code>
-								— Transient/API error; retry or inspect details
-							</li>
-						</ul>
+								<span class="text-secondary">— Transient/API error; retry or inspect details</span>
+							</div>
+						</div>
 					</div>
 				</n-card>
 
@@ -58,41 +58,51 @@
 							<n-tag size="small" type="info">What We Check</n-tag>
 						</template>
 
-						<n-card size="small" title="Organization-Level (Governance)" class="mb-3">
-							<n-list>
-								<n-list-item v-for="control in orgControls" :key="control.id">
-									<template #prefix>
-										<n-icon :color="control.critical ? '#e88080' : '#63e2b7'">
-											<Icon
-												:name="control.critical ? 'ion:alert-circle' : 'ion:checkmark-circle'"
-											/>
-										</n-icon>
-									</template>
-									<div>
-										<div class="font-medium">{{ control.name }}</div>
-										<div class="text-sm text-gray-500">{{ control.description }}</div>
-									</div>
-								</n-list-item>
-							</n-list>
-						</n-card>
+						<div class="flex flex-col gap-3">
+							<n-card size="small" title="Organization-Level (Governance)" embedded>
+								<div class="divide-border flex flex-col divide-y">
+									<div
+										v-for="control in orgControls"
+										:key="control.id"
+										class="flex items-start gap-2 py-2 first:pt-0 last:pb-0"
+									>
+										<Icon
+											class="mt-0.5"
+											:size="18"
+											:name="control.critical ? 'ion:alert-circle' : 'ion:checkmark-circle'"
+											:class="control.critical ? 'text-error' : 'text-success'"
+										/>
 
-						<n-card size="small" title="Repository-Level (Posture)">
-							<n-list>
-								<n-list-item v-for="control in repoControls" :key="control.id">
-									<template #prefix>
-										<n-icon :color="control.critical ? '#e88080' : '#63e2b7'">
-											<Icon
-												:name="control.critical ? 'ion:alert-circle' : 'ion:checkmark-circle'"
-											/>
-										</n-icon>
-									</template>
-									<div>
-										<div class="font-medium">{{ control.name }}</div>
-										<div class="text-sm text-gray-500">{{ control.description }}</div>
+										<div class="flex flex-col gap-0">
+											<div class="text-sm font-medium">{{ control.name }}</div>
+											<div class="text-secondary text-xs">{{ control.description }}</div>
+										</div>
 									</div>
-								</n-list-item>
-							</n-list>
-						</n-card>
+								</div>
+							</n-card>
+
+							<n-card size="small" title="Repository-Level (Posture)" embedded>
+								<div class="divide-border flex flex-col divide-y">
+									<div
+										v-for="control in repoControls"
+										:key="control.id"
+										class="flex items-start gap-2 py-2 first:pt-0 last:pb-0"
+									>
+										<Icon
+											class="mt-0.5"
+											:size="18"
+											:name="control.critical ? 'ion:alert-circle' : 'ion:checkmark-circle'"
+											:class="control.critical ? 'text-error' : 'text-success'"
+										/>
+
+										<div class="flex flex-col gap-0">
+											<div class="text-sm font-medium">{{ control.name }}</div>
+											<div class="text-secondary text-xs">{{ control.description }}</div>
+										</div>
+									</div>
+								</div>
+							</n-card>
+						</div>
 					</n-collapse-item>
 
 					<!-- API Permissions -->
@@ -101,78 +111,88 @@
 							<n-tag size="small" type="warning">Read-Only</n-tag>
 						</template>
 
-						<n-alert type="info" class="mb-4">
-							This audit is intentionally
-							<strong>read-only</strong>
-							. No write or admin scopes are required.
-						</n-alert>
+						<div class="flex flex-col gap-2">
+							<p class="*: flex items-center gap-2 text-sm">
+								<Icon name="carbon:information" />
+								This audit is intentionally
+								<strong>read-only</strong>
+								. No write or admin scopes are required.
+							</p>
 
-						<n-tabs type="segment" animated>
-							<n-tab-pane name="fine-grained" tab="Fine-Grained PAT (Recommended)">
-								<div class="space-y-4">
-									<p class="text-sm">
-										Create a fine-grained PAT restricted to only the target organization and repos
-										you intend to audit.
-									</p>
+							<n-tabs type="segment" animated>
+								<n-tab-pane name="fine-grained" tab="Fine-Grained PAT (Recommended)">
+									<div class="flex flex-col gap-3">
+										<p class="text-warning flex items-center gap-2 text-sm">
+											<Icon name="carbon:warning" class="text-warning" />
+											Create a fine-grained PAT restricted to only the target organization and
+											repos you intend to audit.
+										</p>
 
-									<n-card size="small" title="Organization Permissions (READ)">
-										<n-list>
-											<n-list-item v-for="perm in fineGrainedOrgPerms" :key="perm.name">
-												<template #prefix>
-													<n-tag :type="perm.required ? 'error' : 'default'" size="small">
-														{{ perm.required ? "Required" : "Optional" }}
-													</n-tag>
-												</template>
-												<div>
-													<div class="font-medium">{{ perm.name }}</div>
-													<div class="text-sm text-gray-500">{{ perm.description }}</div>
-												</div>
-											</n-list-item>
-										</n-list>
-									</n-card>
+										<n-card size="small" title="Organization Permissions (READ)" embedded>
+											<n-list class="bg-transparent!">
+												<n-list-item v-for="perm in fineGrainedOrgPerms" :key="perm.name">
+													<template #prefix>
+														<n-tag :type="perm.required ? 'error' : 'default'" size="small">
+															{{ perm.required ? "Required" : "Optional" }}
+														</n-tag>
+													</template>
+													<div>
+														<div class="text-sm font-medium">{{ perm.name }}</div>
+														<div class="text-secondary text-xs">{{ perm.description }}</div>
+													</div>
+												</n-list-item>
+											</n-list>
+										</n-card>
 
-									<n-card size="small" title="Repository Permissions (READ)">
-										<n-list>
-											<n-list-item v-for="perm in fineGrainedRepoPerms" :key="perm.name">
-												<template #prefix>
-													<n-tag :type="perm.required ? 'error' : 'default'" size="small">
-														{{ perm.required ? "Required" : "Optional" }}
-													</n-tag>
-												</template>
-												<div>
-													<div class="font-medium">{{ perm.name }}</div>
-													<div class="text-sm text-gray-500">{{ perm.description }}</div>
-												</div>
-											</n-list-item>
-										</n-list>
-									</n-card>
-								</div>
-							</n-tab-pane>
+										<n-card size="small" title="Repository Permissions (READ)" embedded>
+											<n-list class="bg-transparent!">
+												<n-list-item v-for="perm in fineGrainedRepoPerms" :key="perm.name">
+													<template #prefix>
+														<n-tag :type="perm.required ? 'error' : 'default'" size="small">
+															{{ perm.required ? "Required" : "Optional" }}
+														</n-tag>
+													</template>
+													<div>
+														<div class="text-sm font-medium">{{ perm.name }}</div>
+														<div class="text-secondary text-xs">{{ perm.description }}</div>
+													</div>
+												</n-list-item>
+											</n-list>
+										</n-card>
+									</div>
+								</n-tab-pane>
 
-							<n-tab-pane name="classic" tab="Classic PAT (Fallback)">
-								<div class="space-y-4">
-									<n-alert type="warning" class="mb-4">
-										Classic PATs have broader scope. Use fine-grained PATs when possible.
-									</n-alert>
+								<n-tab-pane name="classic" tab="Classic PAT (Fallback)">
+									<div class="flex flex-col gap-3">
+										<p class="text-warning flex items-center gap-2 text-sm">
+											<Icon name="carbon:warning" class="text-warning" />
+											Classic PATs have broader scope. Use fine-grained PATs when possible.
+										</p>
 
-									<n-card size="small" title="Required Scopes">
-										<n-list>
-											<n-list-item v-for="scope in classicScopes" :key="scope.name">
-												<template #prefix>
-													<n-tag :type="scope.required ? 'error' : 'default'" size="small">
-														{{ scope.required ? "Required" : "Optional" }}
-													</n-tag>
-												</template>
-												<div>
-													<div class="font-mono font-medium">{{ scope.name }}</div>
-													<div class="text-sm text-gray-500">{{ scope.description }}</div>
-												</div>
-											</n-list-item>
-										</n-list>
-									</n-card>
-								</div>
-							</n-tab-pane>
-						</n-tabs>
+										<n-card size="small" title="Required Scopes" embedded>
+											<n-list class="bg-transparent!">
+												<n-list-item v-for="scope in classicScopes" :key="scope.name">
+													<template #prefix>
+														<n-tag
+															:type="scope.required ? 'error' : 'default'"
+															size="small"
+														>
+															{{ scope.required ? "Required" : "Optional" }}
+														</n-tag>
+													</template>
+													<div>
+														<div class="text-sm font-medium">{{ scope.name }}</div>
+														<div class="text-secondary text-xs">
+															{{ scope.description }}
+														</div>
+													</div>
+												</n-list-item>
+											</n-list>
+										</n-card>
+									</div>
+								</n-tab-pane>
+							</n-tabs>
+						</div>
 					</n-collapse-item>
 
 					<!-- API Endpoints -->
@@ -181,33 +201,35 @@
 							<n-tag size="small">GET Only</n-tag>
 						</template>
 
-						<n-card size="small" title="Organization Endpoints" class="mb-3">
-							<n-list>
-								<n-list-item v-for="endpoint in orgEndpoints" :key="endpoint.path">
-									<div class="font-mono text-sm">
-										<span class="text-green-500">GET</span>
-										{{ endpoint.path }}
-									</div>
-									<div v-if="endpoint.note" class="mt-1 text-xs text-gray-500">
-										{{ endpoint.note }}
-									</div>
-								</n-list-item>
-							</n-list>
-						</n-card>
+						<div class="flex flex-col gap-3">
+							<n-card size="small" title="Organization Endpoints" embedded>
+								<n-list class="bg-transparent!">
+									<n-list-item v-for="endpoint in orgEndpoints" :key="endpoint.path">
+										<div class="font-mono text-sm">
+											<span class="text-green-500">GET</span>
+											{{ endpoint.path }}
+										</div>
+										<div v-if="endpoint.note" class="text-secondary mt-1 text-xs">
+											{{ endpoint.note }}
+										</div>
+									</n-list-item>
+								</n-list>
+							</n-card>
 
-						<n-card size="small" title="Repository Endpoints">
-							<n-list>
-								<n-list-item v-for="endpoint in repoEndpoints" :key="endpoint.path">
-									<div class="font-mono text-sm">
-										<span class="text-green-500">GET</span>
-										{{ endpoint.path }}
-									</div>
-									<div v-if="endpoint.note" class="mt-1 text-xs text-gray-500">
-										{{ endpoint.note }}
-									</div>
-								</n-list-item>
-							</n-list>
-						</n-card>
+							<n-card size="small" title="Repository Endpoints" embedded>
+								<n-list class="bg-transparent!">
+									<n-list-item v-for="endpoint in repoEndpoints" :key="endpoint.path">
+										<div class="font-mono text-sm">
+											<span class="text-green-500">GET</span>
+											{{ endpoint.path }}
+										</div>
+										<div v-if="endpoint.note" class="text-secondary mt-1 text-xs">
+											{{ endpoint.note }}
+										</div>
+									</n-list-item>
+								</n-list>
+							</n-card>
+						</div>
 					</n-collapse-item>
 				</n-collapse>
 			</div>
@@ -242,8 +264,6 @@ const props = defineProps<{
 const emit = defineEmits<{
 	(e: "update:show", value: boolean): void
 }>()
-
-const InfoIcon = "ion:information-circle-outline"
 
 const showDrawer = computed({
 	get: () => props.show,
@@ -408,18 +428,3 @@ const repoEndpoints = [
 	{ path: "/repos/{org}/{repo}/environments", note: null }
 ]
 </script>
-
-<style scoped>
-.space-y-6 > * + * {
-	margin-top: 1.5rem;
-}
-
-.space-y-4 > * + * {
-	margin-top: 1rem;
-}
-
-.grid-cols-2 {
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-}
-</style>
