@@ -5,7 +5,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import { NTag } from "naive-ui"
 import { computed } from "vue"
 

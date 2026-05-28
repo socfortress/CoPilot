@@ -16,67 +16,56 @@
 				</div>
 			</template>
 			<template #default>
-				<n-progress
-					type="circle"
-					:percentage="config.last_audit_score ?? 0"
-					:status="scoreStatus"
-					gap-position="bottom"
-				>
-					<div class="flex flex-col items-center justify-between gap-1 text-center">
-						<span class="text-xs">Security Score</span>
-						<span class="font-mono text-sm font-bold">{{ config.last_audit_score?.toFixed(1) }}%</span>
+				<div class="flex items-center gap-6">
+					<n-progress
+						type="circle"
+						:percentage="config.last_audit_score ?? 0"
+						:status="scoreStatus"
+						gap-position="bottom"
+					>
+						<div class="flex flex-col items-center justify-between gap-1 text-center">
+							<span class="text-xs">Security Score</span>
+							<span class="font-mono text-sm font-bold">{{ config.last_audit_score?.toFixed(1) }}%</span>
+						</div>
+					</n-progress>
+					<div class="flex flex-col gap-2">
+						<Badge type="splitted">
+							<template #label>Customer</template>
+							<template #value>{{ config.customer_code }}</template>
+						</Badge>
+						<Badge type="splitted">
+							<template #label>Last audit</template>
+							<template #value>
+								{{ config.last_audit_at ? formatDate(config.last_audit_at, dFormats.datetime) : "-" }}
+							</template>
+						</Badge>
+						<Badge type="splitted">
+							<template #label>Grade</template>
+							<template #value>
+								<GitHubAuditGradeBadge
+									v-if="config.last_audit_grade"
+									:grade="config.last_audit_grade"
+									:score="config.last_audit_score ?? undefined"
+								/>
+								<span v-else>-</span>
+							</template>
+						</Badge>
 					</div>
-				</n-progress>
+				</div>
 			</template>
 			<template #footerMain>
 				<div class="border-border divide-border grid grid-cols-4 divide-x rounded-md border">
-					<n-tooltip class="px-2! py-1!">
+					<n-tooltip v-for="flag in includeFlags" :key="flag.key" class="px-2! py-1!">
 						<template #trigger>
 							<div class="flex flex-col items-center justify-center gap-0 px-1 py-0.5">
-								<span class="text-xs">A</span>
+								<span class="text-xs">{{ flag.shortLabel }}</span>
 								<Icon
-									:name="config.include_archived_repos ? 'carbon:checkmark' : 'carbon:close'"
-									:class="config.include_archived_repos ? 'text-success' : 'text-error'"
+									:name="config[flag.key] ? 'carbon:checkmark' : 'carbon:close'"
+									:class="config[flag.key] ? 'text-success' : 'text-error'"
 								/>
 							</div>
 						</template>
-						<span class="text-xs">Include archived repos</span>
-					</n-tooltip>
-					<n-tooltip class="px-2! py-1!">
-						<template #trigger>
-							<div class="flex flex-col items-center justify-center gap-0 px-1 py-0.5">
-								<span class="text-xs">M</span>
-								<Icon
-									:name="config.include_members ? 'carbon:checkmark' : 'carbon:close'"
-									:class="config.include_members ? 'text-success' : 'text-error'"
-								/>
-							</div>
-						</template>
-						<span class="text-xs">Include members</span>
-					</n-tooltip>
-					<n-tooltip class="px-2! py-1!">
-						<template #trigger>
-							<div class="flex flex-col items-center justify-center gap-0 px-1 py-0.5">
-								<span class="text-xs">R</span>
-								<Icon
-									:name="config.include_repos ? 'carbon:checkmark' : 'carbon:close'"
-									:class="config.include_repos ? 'text-success' : 'text-error'"
-								/>
-							</div>
-						</template>
-						<span class="text-xs">Include repos</span>
-					</n-tooltip>
-					<n-tooltip class="px-2! py-1!">
-						<template #trigger>
-							<div class="flex flex-col items-center justify-center gap-0 px-1 py-0.5">
-								<span class="text-xs">W</span>
-								<Icon
-									:name="config.include_workflows ? 'carbon:checkmark' : 'carbon:close'"
-									:class="config.include_workflows ? 'text-success' : 'text-error'"
-								/>
-							</div>
-						</template>
-						<span class="text-xs">Include workflows</span>
+						<span class="text-xs">{{ flag.label }}</span>
 					</n-tooltip>
 				</div>
 			</template>
@@ -171,11 +160,14 @@ import type { GitHubAuditConfig } from "@/types/githubAudit.d"
 import { NButton, NCard, NDivider, NIcon, NProgress, NTag, NTooltip, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import CardEntity from "../common/cards/CardEntity.vue"
 import GitHubAuditGradeBadge from "./GitHubAuditGradeBadge.vue"
+
+type IncludeFlagKey = "include_archived_repos" | "include_members" | "include_repos" | "include_workflows"
 
 const props = defineProps<{
 	config: GitHubAuditConfig
@@ -185,6 +177,14 @@ const emit = defineEmits<{
 	(e: "edit", config: GitHubAuditConfig): void
 	(e: "audit-complete"): void
 }>()
+
+const includeFlags: { key: IncludeFlagKey; shortLabel: string; label: string }[] = [
+	{ key: "include_archived_repos", shortLabel: "A", label: "Include archived repos" },
+	{ key: "include_members", shortLabel: "M", label: "Include members" },
+	{ key: "include_repos", shortLabel: "R", label: "Include repos" },
+	{ key: "include_workflows", shortLabel: "W", label: "Include workflows" }
+]
+
 const GithubIcon = "carbon:logo-github"
 const ClockIcon = "carbon:time"
 const ScheduleIcon = "carbon:calendar"
