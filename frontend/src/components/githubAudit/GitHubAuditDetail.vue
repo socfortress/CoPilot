@@ -78,6 +78,7 @@
 						v-for="report in reports"
 						:key="report.id"
 						:report
+						:loading="loadingReportId === report.id"
 						@click="openReportDetail"
 					/>
 
@@ -146,7 +147,22 @@
 		@saved="loadExclusions"
 	/>
 
-	<GitHubAuditReportDetail v-if="showReportDetail" v-model:show="showReportDetail" :report="selectedReport" />
+	<n-drawer v-model:show="showReportDetail" :width="900" placement="right">
+		<n-drawer-content v-if="selectedReport" closable :native-scrollbar="false">
+			<template #header>
+				<div class="flex items-center gap-3">
+					<span>{{ selectedReport.report_name }}</span>
+					<n-tag :type="reportStatusType" size="small">{{ selectedReport.status }}</n-tag>
+				</div>
+			</template>
+
+			<GitHubAuditReportDetail
+				:report="selectedReport"
+				@close="showReportDetail = false"
+				@deleted="onReportDeleted"
+			/>
+		</n-drawer-content>
+	</n-drawer>
 </template>
 
 <script setup lang="ts">
@@ -156,8 +172,22 @@ import type {
 	GitHubAuditReport,
 	GitHubAuditReportSummary
 } from "@/types/githubAudit.d"
-import { NButton, NEmpty, NIcon, NPagination, NPopconfirm, NSpin, NTable, NTabPane, NTabs, useMessage } from "naive-ui"
-import { ref, watch } from "vue"
+import {
+	NButton,
+	NDrawer,
+	NDrawerContent,
+	NEmpty,
+	NIcon,
+	NPagination,
+	NPopconfirm,
+	NSpin,
+	NTable,
+	NTabPane,
+	NTabs,
+	NTag,
+	useMessage
+} from "naive-ui"
+import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -197,11 +227,25 @@ const currentPage = ref(1)
 const pageSize = 10
 const showReportDetail = ref(false)
 const selectedReport = ref<GitHubAuditReport | null>(null)
+const loadingReportId = ref<number | null>(null)
 
 // Exclusions
 const loadingExclusions = ref(false)
 const exclusions = ref<GitHubAuditCheckExclusion[]>([])
 const showExclusionForm = ref(false)
+
+const reportStatusType = computed(() => {
+	switch (selectedReport.value?.status) {
+		case "completed":
+			return "success"
+		case "running":
+			return "info"
+		case "failed":
+			return "error"
+		default:
+			return "default"
+	}
+})
 
 function resetAndLoad() {
 	activeTab.value = "overview"
@@ -292,6 +336,7 @@ function handleEdit() {
 }
 
 async function openReportDetail(report: GitHubAuditReportSummary) {
+	loadingReportId.value = report.id
 	try {
 		const response = await Api.githubAudit.getReport(report.id)
 		if (response.data.report) {
@@ -300,6 +345,13 @@ async function openReportDetail(report: GitHubAuditReportSummary) {
 		}
 	} catch {
 		message.error("Failed to load report details")
+	} finally {
+		loadingReportId.value = null
 	}
+}
+
+function onReportDeleted() {
+	showReportDetail.value = false
+	loadReports()
 }
 </script>

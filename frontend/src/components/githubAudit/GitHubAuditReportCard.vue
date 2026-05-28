@@ -1,5 +1,5 @@
 <template>
-	<CardEntity clickable hoverable @click="$emit('click', report)">
+	<CardEntity clickable hoverable :loading @click="$emit('click', report)">
 		<div class="flex items-start justify-between gap-4">
 			<div class="min-w-0 flex-1">
 				<div class="mb-1 flex items-center gap-2">
@@ -63,6 +63,7 @@ import GitHubAuditGradeLabel from "./GitHubAuditGradeLabel.vue"
 
 const props = defineProps<{
 	report: GitHubAuditReportSummary
+	loading?: boolean
 }>()
 
 defineEmits<{
