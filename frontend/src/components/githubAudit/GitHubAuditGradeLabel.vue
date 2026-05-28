@@ -1,12 +1,10 @@
 <template>
-	<p
-		v-if="grade"
-		class="font-mono text-4xl leading-none font-bold tracking-tight"
-		:class="gradeTextClass"
-	>
-		{{ grade }}
-	</p>
-	<p v-else class="text-tertiary font-mono text-3xl leading-none font-semibold">—</p>
+	<div>
+		<div v-if="grade" class="font-mono leading-none font-bold tracking-tight" :class="gradeTextClass">
+			{{ grade }}
+		</div>
+		<div v-else class="text-tertiary font-mono leading-none font-semibold">—</div>
+	</div>
 </template>
 
 <script setup lang="ts">

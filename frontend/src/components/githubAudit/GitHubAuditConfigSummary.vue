@@ -16,7 +16,7 @@
 			<div v-if="showGrade" class="flex items-end justify-between gap-3">
 				<div class="min-w-0">
 					<p class="text-secondary mb-1 text-[10px] font-medium tracking-widest uppercase">Grade</p>
-					<GitHubAuditGradeLabel :grade="config.last_audit_grade" />
+					<GitHubAuditGradeLabel :grade="config.last_audit_grade" class="text-4xl" />
 				</div>
 				<p
 					v-if="showScore && config.last_audit_score != null"
