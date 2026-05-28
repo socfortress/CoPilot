@@ -1,10 +1,10 @@
 <template>
-	<n-tabs v-model:value="activeTab" type="line" animated>
+	<n-tabs v-model:value="activeTab" type="segment" animated>
 		<n-tab-pane name="overview" tab="Overview">
-			<div class="flex flex-col gap-6">
+			<div class="flex flex-col gap-6 py-4">
 				<GitHubAuditConfigSummary :config />
 
-				<dl class="border-border flex flex-col gap-2 rounded-md border p-4">
+				<dl class="border-border bg-secondary flex flex-col gap-2 rounded-md border p-4">
 					<div class="flex items-baseline justify-between gap-3">
 						<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Enabled</dt>
 						<dd class="font-mono text-xs" :class="config.enabled ? 'text-success' : 'text-warning'">
@@ -30,40 +30,29 @@
 
 				<div class="flex flex-col gap-2">
 					<p class="text-secondary text-[10px] font-medium tracking-widest uppercase">Audit scope</p>
-					<div class="border-border divide-border grid grid-cols-4 divide-x rounded-md border">
-						<n-tooltip v-for="flag in includeFlags" :key="flag.key" class="px-2! py-1!">
-							<template #trigger>
-								<div class="flex flex-col items-center justify-center gap-0 px-1 py-0.5">
-									<span class="text-xs">{{ flag.shortLabel }}</span>
-									<Icon
-										:name="config[flag.key] ? 'carbon:checkmark' : 'carbon:close'"
-										:class="config[flag.key] ? 'text-success' : 'text-error'"
-									/>
-								</div>
-							</template>
-							<span class="text-xs">{{ flag.label }}</span>
-						</n-tooltip>
-					</div>
+					<GitHubAuditScopeFlags :config size="large" class="bg-secondary" />
 				</div>
 
-				<div class="flex flex-wrap gap-3 border-t border-border pt-4">
-					<n-button type="primary" :loading="running" @click="runAudit">
-						<template #icon>
-							<n-icon><Icon :name="PlayIcon" /></n-icon>
-						</template>
-						Run Audit Now
-					</n-button>
-					<n-button @click="handleEdit">
-						<template #icon>
-							<n-icon><Icon :name="EditIcon" /></n-icon>
-						</template>
-						Edit Configuration
-					</n-button>
+				<div class="border-border flex flex-wrap justify-between gap-3 border-t pt-6">
+					<div class="flex flex-wrap gap-3">
+						<n-button @click="handleEdit">
+							<template #icon>
+								<Icon :name="EditIcon" />
+							</template>
+							Edit Configuration
+						</n-button>
+						<n-button quaternary :loading="running" @click="runAudit">
+							<template #icon>
+								<Icon :name="PlayIcon" />
+							</template>
+							Run Audit Now
+						</n-button>
+					</div>
 					<n-popconfirm @positive-click="deleteConfig">
 						<template #trigger>
 							<n-button type="error" ghost>
 								<template #icon>
-									<n-icon><Icon :name="DeleteIcon" /></n-icon>
+									<Icon :name="DeleteIcon" />
 								</template>
 								Delete
 							</n-button>
@@ -161,26 +150,13 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type {
 	GitHubAuditCheckExclusion,
 	GitHubAuditConfig,
 	GitHubAuditReport,
 	GitHubAuditReportSummary
 } from "@/types/githubAudit.d"
-import {
-	NButton,
-	NEmpty,
-	NIcon,
-	NPagination,
-	NPopconfirm,
-	NSpin,
-	NTable,
-	NTabPane,
-	NTabs,
-	NTooltip,
-	useMessage
-} from "naive-ui"
+import { NButton, NEmpty, NIcon, NPagination, NPopconfirm, NSpin, NTable, NTabPane, NTabs, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -190,8 +166,7 @@ import GitHubAuditConfigSummary from "./GitHubAuditConfigSummary.vue"
 import GitHubAuditExclusionForm from "./GitHubAuditExclusionForm.vue"
 import GitHubAuditReportCard from "./GitHubAuditReportCard.vue"
 import GitHubAuditReportDetail from "./GitHubAuditReportDetail.vue"
-
-type IncludeFlagKey = "include_archived_repos" | "include_members" | "include_repos" | "include_workflows"
+import GitHubAuditScopeFlags from "./GitHubAuditScopeFlags.vue"
 
 const props = defineProps<{
 	config: GitHubAuditConfig
@@ -203,15 +178,8 @@ const emit = defineEmits<{
 	(e: "close"): void
 }>()
 
-const includeFlags: { key: IncludeFlagKey; shortLabel: string; label: string }[] = [
-	{ key: "include_archived_repos", shortLabel: "A", label: "Include archived repos" },
-	{ key: "include_members", shortLabel: "M", label: "Include members" },
-	{ key: "include_repos", shortLabel: "R", label: "Include repos" },
-	{ key: "include_workflows", shortLabel: "W", label: "Include workflows" }
-]
-
-const PlayIcon = "ion:play"
-const EditIcon = "ion:create-outline"
+const PlayIcon = "carbon:play"
+const EditIcon = "carbon:edit"
 const DeleteIcon = "ion:trash-outline"
 const AddIcon = "ion:add"
 

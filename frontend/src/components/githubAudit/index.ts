@@ -7,5 +7,6 @@ export { default as GitHubAuditExclusionForm } from "./GitHubAuditExclusionForm.
 export { default as GitHubAuditGradeBadge } from "./GitHubAuditGradeBadge.vue"
 export { default as GitHubAuditGradeLabel } from "./GitHubAuditGradeLabel.vue"
 export { default as GitHubAuditList } from "./GitHubAuditList.vue"
+export { default as GitHubAuditScopeFlags } from "./GitHubAuditScopeFlags.vue"
 export { default as GitHubAuditReportCard } from "./GitHubAuditReportCard.vue"
 export { default as GitHubAuditReportDetail } from "./GitHubAuditReportDetail.vue"
