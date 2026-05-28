@@ -1,81 +1,63 @@
 <template>
-	<n-card class="github-audit-card" hoverable @click="$emit('click', config)">
-		<div class="flex items-start justify-between">
-			<div class="flex-1">
-				<div class="mb-2 flex items-center gap-2">
-					<n-icon size="20" :color="config.enabled ? '#18a058' : '#999'">
-						<Icon :name="GithubIcon" />
-					</n-icon>
-					<h3 class="m-0 text-lg font-semibold">{{ config.organization }}</h3>
-					<n-tag v-if="!config.enabled" type="warning" size="small">Disabled</n-tag>
-				</div>
+	<CardEntity>
+		<template #headerMain>
+			<div class="flex items-center gap-3">
+				<Icon name="codicon:organization" :size="20" />
 
-				<div class="text-secondary mb-3 text-sm">
-					<span>Customer: {{ config.customer_code }}</span>
-				</div>
-
-				<div class="flex gap-4 text-sm">
-					<div v-if="config.last_audit_at" class="flex items-center gap-1">
-						<n-icon><Icon :name="ClockIcon" /></n-icon>
-						<span>Last audit: {{ formatDate(config.last_audit_at, dFormats.datetime) }}</span>
-					</div>
-					<div v-if="config.last_audit_grade" class="flex items-center gap-1">
-						<span>Grade:</span>
-						<GitHubAuditGradeBadge
-							:grade="config.last_audit_grade"
-							:score="config.last_audit_score ?? undefined"
-						/>
-					</div>
-					<div v-if="config.auto_audit_enabled" class="flex items-center gap-1">
-						<n-icon color="#18a058"><Icon :name="ScheduleIcon" /></n-icon>
-						<span>Scheduled</span>
-					</div>
+				<div class="text-default font-display text-lg font-semibold">
+					{{ config.organization }}
 				</div>
 			</div>
+		</template>
+		<template #headerExtra>
+			<div class="flex items-center justify-end gap-2">
+				<n-tag v-if="config.enabled" type="success" size="small">Enabled</n-tag>
+				<n-tag v-else type="error" size="small">Disabled</n-tag>
 
-			<div class="flex flex-col gap-2">
-				<n-button type="primary" size="small" :loading="running" @click.stop="runAudit">
+				<n-tag v-if="config.auto_audit_enabled" type="success" size="small">Scheduled</n-tag>
+				<n-tag v-else type="error" size="small">Not scheduled</n-tag>
+			</div>
+		</template>
+		<template #default>
+			<GitHubAuditConfigSummary :config meta-fields="card" />
+		</template>
+		<template #footerMain>
+			<GitHubAuditScopeFlags :config />
+		</template>
+		<template #footerExtra>
+			<div class="flex flex-wrap items-center justify-end gap-2">
+				<n-button size="small" quaternary :loading="running" @click.stop="runAudit">
 					<template #icon>
-						<n-icon><Icon :name="PlayIcon" /></n-icon>
+						<Icon :name="PlayIcon" />
 					</template>
 					Run Audit
 				</n-button>
 				<n-button size="small" @click.stop="$emit('edit', config)">
 					<template #icon>
-						<n-icon><Icon :name="EditIcon" /></n-icon>
+						<Icon :name="EditIcon" />
 					</template>
 					Edit
 				</n-button>
+				<n-button size="small" type="primary" secondary @click.stop="$emit('click', config)">
+					<template #icon>
+						<Icon :name="DetailIcon" />
+					</template>
+					View Details
+				</n-button>
 			</div>
-		</div>
-
-		<n-divider v-if="config.last_audit_score !== null" style="margin: 12px 0" />
-
-		<div v-if="config.last_audit_score !== null" class="audit-score-bar">
-			<div class="mb-1 flex justify-between">
-				<span class="text-sm">Security Score</span>
-				<span class="text-sm font-semibold">{{ config.last_audit_score?.toFixed(1) }}%</span>
-			</div>
-			<n-progress
-				type="line"
-				:percentage="config.last_audit_score ?? 0"
-				:status="scoreStatus"
-				:show-indicator="false"
-			/>
-		</div>
-	</n-card>
+		</template>
+	</CardEntity>
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { GitHubAuditConfig } from "@/types/githubAudit.d"
-import { NButton, NCard, NDivider, NIcon, NProgress, NTag, useMessage } from "naive-ui"
-import { computed, ref } from "vue"
+import { NButton, NTag, useMessage } from "naive-ui"
+import { ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils/format"
-import GitHubAuditGradeBadge from "./GitHubAuditGradeBadge.vue"
+import CardEntity from "../common/cards/CardEntity.vue"
+import GitHubAuditConfigSummary from "./GitHubAuditConfigSummary.vue"
+import GitHubAuditScopeFlags from "./GitHubAuditScopeFlags.vue"
 
 const props = defineProps<{
 	config: GitHubAuditConfig
@@ -85,22 +67,13 @@ const emit = defineEmits<{
 	(e: "edit", config: GitHubAuditConfig): void
 	(e: "audit-complete"): void
 }>()
-const GithubIcon = "carbon:logo-github"
-const ClockIcon = "carbon:time"
-const ScheduleIcon = "carbon:calendar"
-const PlayIcon = "carbon:play-filled"
+
+const PlayIcon = "carbon:play"
 const EditIcon = "carbon:edit"
+const DetailIcon = "carbon:view"
 
 const message = useMessage()
 const running = ref(false)
-const dFormats = useSettingsStore().dateFormat
-
-const scoreStatus = computed(() => {
-	const score = props.config.last_audit_score ?? 0
-	if (score >= 80) return "success"
-	if (score >= 60) return "warning"
-	return "error"
-})
 
 async function runAudit() {
 	running.value = true
@@ -115,18 +88,3 @@ async function runAudit() {
 	}
 }
 </script>
-
-<style scoped>
-.github-audit-card {
-	cursor: pointer;
-	transition: all 0.2s ease;
-}
-
-.github-audit-card:hover {
-	transform: translateY(-2px);
-}
-
-.text-secondary {
-	color: var(--text-color-3);
-}
-</style>

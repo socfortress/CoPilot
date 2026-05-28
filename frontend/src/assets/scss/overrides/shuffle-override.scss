@@ -1,0 +1,31 @@
+/* shuffle-mcp-theme-bridge.css */
+.shuffle-mcp-scope.dark,
+.shuffle-mcp-scope:not(.dark) {
+	--background: inherit !important;
+	--background-elevated: inherit !important;
+	--background-surface: inherit !important;
+	--foreground: inherit !important;
+	--card: inherit !important;
+	--card-foreground: inherit !important;
+	--popover: inherit !important;
+	--popover-foreground: inherit !important;
+	--primary: inherit !important;
+	--primary-foreground: inherit !important;
+	--secondary: inherit !important;
+	--secondary-foreground: inherit !important;
+	--muted: inherit !important;
+	--muted-foreground: inherit !important;
+	--accent: inherit !important;
+	--accent-foreground: inherit !important;
+	--destructive: inherit !important;
+	--destructive-foreground: inherit !important;
+	--border: inherit !important;
+	--input: inherit !important;
+	--ring: inherit !important;
+	--severity-info: inherit !important;
+	--severity-low: inherit !important;
+	--severity-medium: inherit !important;
+	--severity-high: inherit !important;
+	--severity-critical: inherit !important;
+	--infra-email: inherit !important;
+}

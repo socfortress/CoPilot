@@ -1,16 +1,17 @@
 <template>
-	<n-tag :type="gradeType" :bordered="false" round size="small">
+	<n-tag :type="gradeType" :bordered="false" round :size>
 		{{ grade }}
 	</n-tag>
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
+import type { TagSize } from "naive-ui"
 import { NTag } from "naive-ui"
 import { computed } from "vue"
 
 const props = defineProps<{
 	grade: string
+	size?: TagSize
 	score?: number
 }>()
 

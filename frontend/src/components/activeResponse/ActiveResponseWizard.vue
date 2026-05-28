@@ -14,7 +14,7 @@
 
 				<div class="mt-4 flex grow flex-col">
 					<Transition :name="`slide-form-${slideFormDirection}`">
-						<div v-if="current === 1" class="flex flex-col gap-2 px-7">
+						<div v-if="current === 1" class="flex flex-col gap-2 px-6">
 							<CardEntity embedded hoverable clickable @click.stop="setOs('linux')">
 								<div class="flex items-center gap-3">
 									<Icon :size="18" :name="iconFromOs('linux')" />
@@ -35,7 +35,7 @@
 							</CardEntity>
 						</div>
 
-						<div v-else-if="current === 2" class="px-7">
+						<div v-else-if="current === 2" class="px-6">
 							<n-spin :show="loadingActiveResponse">
 								<div class="flex flex-col gap-2">
 									<template v-if="activeResponseFiltered.length">
@@ -59,7 +59,7 @@
 								</div>
 							</n-spin>
 						</div>
-						<div v-else-if="current === 3" class="flex min-h-[401px] grow flex-col px-7 pb-7">
+						<div v-else-if="current === 3" class="flex min-h-[401px] grow flex-col px-6 pb-7">
 							<ActiveResponseInvokeForm
 								v-if="selectedActiveResponse"
 								:active-response="selectedActiveResponse"
