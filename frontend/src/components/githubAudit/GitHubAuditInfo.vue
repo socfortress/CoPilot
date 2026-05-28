@@ -222,7 +222,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import { NCard, NCollapse, NCollapseItem, NDivider, NList, NListItem, NTabPane, NTabs, NTag } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 

@@ -156,7 +156,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { GitHubAuditReport } from "@/types/githubAudit.d"
 import {
 	NAlert,
@@ -164,8 +163,6 @@ import {
 	NCard,
 	NCollapse,
 	NCollapseItem,
-	NGi,
-	NGrid,
 	NPopconfirm,
 	NSpace,
 	NStatistic,
