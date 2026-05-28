@@ -1,32 +1,32 @@
 <template>
-	<div class="github-audit-list">
-		<n-card>
-			<div class="mb-4 flex items-center justify-between">
-				<h2 class="m-0 text-xl font-semibold">GitHub Audit Configurations</h2>
-				<n-space>
-					<n-button quaternary @click="showInfo = true">
+	<div class="@container flex flex-col gap-8">
+		<div class="flex w-full flex-col gap-4">
+			<div class="flex flex-col justify-between gap-4 @2xl:flex-row @2xl:items-center">
+				<h2 class="text-xl font-semibold">GitHub Audit Configurations</h2>
+				<div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+					<n-button text @click="showInfo = true">
 						<template #icon>
-							<n-icon><Icon :name="InfoIcon" /></n-icon>
+							<Icon :name="InfoIcon" />
 						</template>
 						Reference Guide
 					</n-button>
 					<n-button type="primary" @click="openCreateForm">
 						<template #icon>
-							<n-icon><Icon :name="AddIcon" /></n-icon>
+							<Icon :name="AddIcon" />
 						</template>
 						New Configuration
 					</n-button>
-				</n-space>
+				</div>
 			</div>
 
-			<div class="github-audit-filters mb-4 flex flex-wrap items-center gap-4">
+			<div class="flex flex-wrap items-center gap-2">
 				<n-select
 					v-model:value="filterCustomerCode"
 					placeholder="Filter by Customer"
 					clearable
 					:options="customerOptions"
 					:loading="loadingCustomers"
-					style="min-width: 200px"
+					class="min-w-50 flex-1"
 					@update:value="loadConfigs"
 				/>
 				<n-select
@@ -34,44 +34,44 @@
 					placeholder="Filter by Status"
 					clearable
 					:options="statusOptions"
-					style="min-width: 150px"
+					class="min-w-50 flex-1"
 					@update:value="loadConfigs"
 				/>
 				<n-input
 					v-model:value="filterOrganization"
 					placeholder="Search organization..."
 					clearable
-					style="min-width: 200px"
+					class="min-w-80 flex-1"
 					@keyup.enter="loadConfigs"
 					@clear="loadConfigs"
 				>
 					<template #prefix>
-						<n-icon><Icon :name="SearchIcon" /></n-icon>
+						<Icon :name="SearchIcon" />
 					</template>
 				</n-input>
 			</div>
+		</div>
 
-			<n-spin :show="loading">
-				<div v-if="configs.length === 0 && !loading" class="py-8 text-center">
-					<n-empty description="No configurations found">
-						<template #extra>
-							<n-button type="primary" @click="openCreateForm">Create your first configuration</n-button>
-						</template>
-					</n-empty>
-				</div>
+		<n-spin :show="loading">
+			<div v-if="configs.length === 0 && !loading" class="py-8 text-center">
+				<n-empty description="No configurations found">
+					<template #extra>
+						<n-button type="primary" @click="openCreateForm">Create your first configuration</n-button>
+					</template>
+				</n-empty>
+			</div>
 
-				<n-grid v-else :cols="2" :x-gap="16" :y-gap="16">
-					<n-gi v-for="config in configs" :key="config.id">
-						<GitHubAuditCard
-							:config
-							@click="openDetail(config)"
-							@edit="openEditForm"
-							@audit-complete="loadConfigs"
-						/>
-					</n-gi>
-				</n-grid>
-			</n-spin>
-		</n-card>
+			<div v-else class="grid grid-cols-1 gap-4 @4xl:grid-cols-2">
+				<GitHubAuditCard
+					v-for="config in configs"
+					:key="config.id"
+					:config
+					@click="openDetail(config)"
+					@edit="openEditForm"
+					@audit-complete="loadConfigs"
+				/>
+			</div>
+		</n-spin>
 
 		<GitHubAuditConfigForm
 			v-if="showForm"
@@ -93,9 +93,8 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { GitHubAuditConfig } from "@/types/githubAudit.d"
-import { NButton, NCard, NEmpty, NGi, NGrid, NIcon, NInput, NSelect, NSpace, NSpin, useMessage } from "naive-ui"
+import { NButton, NEmpty, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"

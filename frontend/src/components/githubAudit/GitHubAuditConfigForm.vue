@@ -1,8 +1,12 @@
 <template>
 	<n-drawer v-model:show="showDrawer" :width="600" placement="right">
-		<n-drawer-content :title="isEdit ? 'Edit Configuration' : 'New GitHub Audit Configuration'" closable>
-			<n-form ref="formRef" :model="formData" :rules label-placement="top">
-				<n-divider title-placement="left">Basic Settings</n-divider>
+		<n-drawer-content
+			:title="isEdit ? 'Edit Configuration' : 'New GitHub Audit Configuration'"
+			closable
+			:native-scrollbar="false"
+		>
+			<n-form ref="formRef" :model="formData" :rules label-placement="top" :disabled="saving">
+				<n-divider title-placement="left" class="mt-2!">Basic Settings</n-divider>
 
 				<n-form-item label="Customer" path="customer_code">
 					<n-select
@@ -34,7 +38,7 @@
 					</n-radio-group>
 				</n-form-item>
 
-				<n-form-item label="Enabled">
+				<n-form-item label="Enabled" :show-feedback="false">
 					<n-switch v-model:value="formData.enabled" />
 				</n-form-item>
 
@@ -63,7 +67,7 @@
 					</n-gi>
 				</n-grid>
 
-				<n-form-item label="Repository Filter Mode">
+				<n-form-item label="Repository Filter Mode" :show-feedback="false">
 					<n-radio-group v-model:value="formData.repo_filter_mode">
 						<n-radio value="all">All Repositories</n-radio>
 						<n-radio value="include">Include Only</n-radio>
@@ -78,7 +82,7 @@
 
 				<n-divider title-placement="left">Schedule</n-divider>
 
-				<n-form-item label="Enable Scheduled Audits">
+				<n-form-item label="Enable Scheduled Audits" :show-feedback="false">
 					<n-switch v-model:value="formData.auto_audit_enabled" />
 				</n-form-item>
 
@@ -110,13 +114,13 @@
 					<n-input v-model:value="formData.notification_webhook_url" placeholder="https://..." />
 				</n-form-item>
 
-				<n-form-item label="Notification Email">
+				<n-form-item label="Notification Email" :show-feedback="false">
 					<n-input v-model:value="formData.notification_email" placeholder="security@example.com" />
 				</n-form-item>
 
 				<n-divider title-placement="left">Thresholds</n-divider>
 
-				<n-form-item label="Minimum Passing Score">
+				<n-form-item label="Minimum Passing Score" :show-feedback="false">
 					<n-slider v-model:value="formData.minimum_passing_score" :min="0" :max="100" :step="5" />
 					<n-input-number
 						v-model:value="formData.minimum_passing_score"
@@ -166,6 +170,15 @@ import {
 import { computed, onBeforeMount, reactive, ref, watch } from "vue"
 import Api from "@/api"
 
+interface GitHubAuditConfigFormData extends Omit<
+	GitHubAuditConfigCreate,
+	"customer_code" | "github_token" | "organization"
+> {
+	customer_code: string | null
+	github_token: string | null
+	organization: string | null
+}
+
 const props = defineProps<{
 	show: boolean
 	config?: GitHubAuditConfig | null
@@ -188,11 +201,11 @@ const showDrawer = computed({
 
 const isEdit = computed(() => !!props.config)
 
-function defaultFormData(): GitHubAuditConfigCreate {
+function defaultFormData(): GitHubAuditConfigFormData {
 	return {
-		customer_code: "",
-		github_token: "",
-		organization: "",
+		customer_code: null,
+		github_token: null,
+		organization: null,
 		token_type: "pat",
 		enabled: true,
 		auto_audit_enabled: false,
@@ -211,7 +224,7 @@ function defaultFormData(): GitHubAuditConfigCreate {
 	}
 }
 
-const formData = reactive<GitHubAuditConfigCreate>(defaultFormData())
+const formData = reactive<GitHubAuditConfigFormData>(defaultFormData())
 
 const rules: FormRules = {
 	customer_code: { required: true, message: "Customer is required", trigger: "blur" },
@@ -262,6 +275,7 @@ async function handleSubmit() {
 	}
 
 	saving.value = true
+
 	try {
 		if (isEdit.value && props.config) {
 			const updateData: GitHubAuditConfigUpdate = { ...formData }
@@ -271,7 +285,13 @@ async function handleSubmit() {
 			await Api.githubAudit.updateConfig(props.config.id, updateData)
 			message.success("Configuration updated successfully")
 		} else {
-			await Api.githubAudit.createConfig(formData)
+			const createData: GitHubAuditConfigCreate = {
+				...formData,
+				customer_code: formData.customer_code ?? "",
+				github_token: formData.github_token ?? "",
+				organization: formData.organization ?? ""
+			}
+			await Api.githubAudit.createConfig(createData)
 			message.success("Configuration created successfully")
 		}
 		emit("saved")
