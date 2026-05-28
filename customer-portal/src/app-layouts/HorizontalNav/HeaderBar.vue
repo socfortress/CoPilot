@@ -4,11 +4,13 @@
 		<n-scrollbar class="grow" x-scrollable>
 			<Navbar :collapsed="false" mode="horizontal" />
 		</n-scrollbar>
+		<CustomerFilter class="customer-filter-slot" />
 	</div>
 </template>
 
 <script lang="ts" setup>
 import { NScrollbar } from "naive-ui"
+import CustomerFilter from "@/app-layouts/common/CustomerFilter.vue"
 import Logo from "@/app-layouts/common/Logo.vue"
 import Navbar from "@/app-layouts/common/Navbar"
 </script>
@@ -29,6 +31,11 @@ import Navbar from "@/app-layouts/common/Navbar"
 
 	.nav {
 		padding-top: 10px;
+		margin-right: var(--view-padding);
+	}
+
+	.customer-filter-slot {
+		flex-shrink: 0;
 		margin-right: var(--view-padding);
 	}
 

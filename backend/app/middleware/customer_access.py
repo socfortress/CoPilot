@@ -39,19 +39,62 @@ class CustomerAccessHandler:
         # Specific customer access
         return customer_code in accessible_customers
 
-    async def filter_query_by_customer_access(self, user: User, session: AsyncSession, base_query, customer_code_field):
-        """Filter any query by user's customer access"""
+    async def resolve_effective_customers(
+        self,
+        user: User,
+        requested_customers: Optional[List[str]],
+        session: AsyncSession,
+    ) -> List[str]:
+        """Resolve the customer codes a query should be filtered to.
+
+        Combines the user's *accessible* customers with an optional *requested*
+        subset (e.g. a portal customer filter), so a caller can narrow the view
+        without ever escaping their own access scope.
+
+        Returns either:
+          - ``["*"]`` — no filtering needed (wildcard access and no requested subset), or
+          - a concrete list of customer codes to filter on. An empty list means the
+            requested subset resolved to nothing the user may see, and callers should
+            treat it as "match no rows" (``column.in_([])``).
+        """
         accessible_customers = await self.get_user_accessible_customers(user, session)
 
-        # Admin/analyst see everything
+        # No subset requested -> preserve existing behaviour (may be ["*"]).
+        if not requested_customers:
+            return accessible_customers
+
+        # Wildcard access (admin/analyst): any requested subset is allowed as-is.
+        if "*" in accessible_customers:
+            return list(requested_customers)
+
+        # Scoped user: only honor requested codes they actually have access to.
+        return [code for code in requested_customers if code in accessible_customers]
+
+    async def filter_query_by_customer_access(
+        self,
+        user: User,
+        session: AsyncSession,
+        base_query,
+        customer_code_field,
+        requested_customers: Optional[List[str]] = None,
+    ):
+        """Filter any query by user's customer access.
+
+        When ``requested_customers`` is provided, the query is further narrowed to
+        that subset (intersected with the user's access — see
+        ``resolve_effective_customers``).
+        """
+        accessible_customers = await self.resolve_effective_customers(user, requested_customers, session)
+
+        # Admin/analyst see everything (no subset requested)
         if "*" in accessible_customers:
             return base_query
 
-        # Customer users see only their data
+        # Customer users (or anyone with a requested subset) see only matching data
         if accessible_customers:
             return base_query.where(customer_code_field.in_(accessible_customers))
 
-        # No access - return empty result
+        # No access / requested subset resolved to nothing - return empty result
         return base_query.where(False)
 
     def require_customer_access(self, customer_code: Optional[str] = None):

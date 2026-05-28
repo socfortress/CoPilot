@@ -14,6 +14,7 @@ from fastapi import Depends
 from fastapi import Header
 from fastapi import HTTPException
 from fastapi import Path
+from fastapi import Query
 from fastapi import Security
 from fastapi.responses import StreamingResponse
 from loguru import logger
@@ -233,7 +234,11 @@ async def delete_agent_from_database(db: AsyncSession, agent_id: str):
     description="Get all agents currently synced to the database",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def get_agents(current_user: User = Depends(AuthHandler().get_current_user), db: AsyncSession = Depends(get_db)) -> AgentsResponse:
+async def get_agents(
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the results to"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> AgentsResponse:
     """
     Retrieve all agents currently synced to the database.
     Results are filtered based on user's customer access permissions.
@@ -246,9 +251,15 @@ async def get_agents(current_user: User = Depends(AuthHandler().get_current_user
     """
     logger.info("Fetching all agents")
     try:
-        # Apply customer access filtering
+        # Apply customer access filtering (optionally narrowed to a requested subset)
         base_query = select(Agents)
-        filtered_query = await customer_access_handler.filter_query_by_customer_access(current_user, db, base_query, Agents.customer_code)
+        filtered_query = await customer_access_handler.filter_query_by_customer_access(
+            current_user,
+            db,
+            base_query,
+            Agents.customer_code,
+            requested_customers=customer_codes,
+        )
 
         result = await db.execute(filtered_query)
         agents = result.scalars().all()

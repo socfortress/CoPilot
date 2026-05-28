@@ -1,18 +1,19 @@
 import type { CommonResponse } from "@/types/common"
 import type { AlertsStats, CasesStats, DashboardStats, PortalSettings } from "@/types/portal"
 import { HttpClient } from "../httpClient"
+import { withCustomerCodes } from "../params"
 
 export default {
 	getSettings() {
 		return HttpClient.get<CommonResponse<{ settings: PortalSettings }>>("/customer_portal/settings")
 	},
-	dashboardStats() {
-		return HttpClient.get<CommonResponse<DashboardStats>>("/customer_portal/dashboard/stats")
+	dashboardStats(customerCodes?: string[]) {
+		return HttpClient.get<CommonResponse<DashboardStats>>("/customer_portal/dashboard/stats", withCustomerCodes(customerCodes))
 	},
-	alertsStats() {
-		return HttpClient.get<CommonResponse<AlertsStats>>("/customer_portal/dashboard/alert-stats")
+	alertsStats(customerCodes?: string[]) {
+		return HttpClient.get<CommonResponse<AlertsStats>>("/customer_portal/dashboard/alert-stats", withCustomerCodes(customerCodes))
 	},
-	casesStats() {
-		return HttpClient.get<CommonResponse<CasesStats>>("/customer_portal/dashboard/case-stats")
+	casesStats(customerCodes?: string[]) {
+		return HttpClient.get<CommonResponse<CasesStats>>("/customer_portal/dashboard/case-stats", withCustomerCodes(customerCodes))
 	}
 }

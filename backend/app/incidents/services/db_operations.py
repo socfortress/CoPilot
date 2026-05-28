@@ -244,7 +244,7 @@ async def alerts_open_by_customer_codes(db: AsyncSession, customer_codes: List[s
     return len(result.scalars().all())
 
 
-async def alert_total_for_user(user: User, db: AsyncSession) -> int:
+async def alert_total_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
     """Get total alerts count with customer and tag filtering"""
     from sqlalchemy import and_
     from sqlalchemy import exists
@@ -253,7 +253,7 @@ async def alert_total_for_user(user: User, db: AsyncSession) -> int:
     filters = []
 
     # Customer filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, db)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, db)
     if "*" not in accessible_customers:
         filters.append(Alert.customer_code.in_(accessible_customers))
 
@@ -290,7 +290,7 @@ async def alert_total_for_user(user: User, db: AsyncSession) -> int:
     return result.scalar_one()
 
 
-async def alerts_open_for_user(user: User, db: AsyncSession) -> int:
+async def alerts_open_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
     """Get open alerts count with customer and tag filtering"""
     from sqlalchemy import and_
     from sqlalchemy import exists
@@ -299,7 +299,7 @@ async def alerts_open_for_user(user: User, db: AsyncSession) -> int:
     filters = [Alert.status == "OPEN"]
 
     # Customer filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, db)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, db)
     if "*" not in accessible_customers:
         filters.append(Alert.customer_code.in_(accessible_customers))
 
@@ -336,7 +336,7 @@ async def alerts_open_for_user(user: User, db: AsyncSession) -> int:
     return result.scalar_one()
 
 
-async def alerts_in_progress_for_user(user: User, db: AsyncSession) -> int:
+async def alerts_in_progress_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
     """Get in-progress alerts count with customer and tag filtering"""
     from sqlalchemy import and_
     from sqlalchemy import exists
@@ -345,7 +345,7 @@ async def alerts_in_progress_for_user(user: User, db: AsyncSession) -> int:
     filters = [Alert.status == "IN_PROGRESS"]
 
     # Customer filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, db)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, db)
     if "*" not in accessible_customers:
         filters.append(Alert.customer_code.in_(accessible_customers))
 
@@ -382,7 +382,7 @@ async def alerts_in_progress_for_user(user: User, db: AsyncSession) -> int:
     return result.scalar_one()
 
 
-async def alerts_closed_for_user(user: User, db: AsyncSession) -> int:
+async def alerts_closed_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
     """Get closed alerts count with customer and tag filtering"""
     from sqlalchemy import and_
     from sqlalchemy import exists
@@ -391,7 +391,7 @@ async def alerts_closed_for_user(user: User, db: AsyncSession) -> int:
     filters = [Alert.status == "CLOSED"]
 
     # Customer filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, db)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, db)
     if "*" not in accessible_customers:
         filters.append(Alert.customer_code.in_(accessible_customers))
 
@@ -2466,6 +2466,7 @@ async def list_alerts_multiple_filters(
     assigned_to: Optional[str] = None,
     alert_title: Optional[str] = None,
     customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
     source: Optional[str] = None,
     asset_name: Optional[str] = None,
     status: Optional[str] = None,
@@ -2476,7 +2477,12 @@ async def list_alerts_multiple_filters(
     order: str = "desc",
     user: Optional[User] = None,  # New parameter for tag filtering
 ) -> List[AlertOut]:
-    """List alerts with multiple filters including tag-based RBAC"""
+    """List alerts with multiple filters including tag-based RBAC.
+
+    ``customer_code`` filters to a single customer; ``customer_codes`` filters to
+    a set (used to constrain scoped users to their accessible customers — passing
+    the caller's full accessible set prevents cross-tenant disclosure).
+    """
     from sqlalchemy import and_
     from sqlalchemy import exists
     from sqlalchemy import or_
@@ -2492,6 +2498,8 @@ async def list_alerts_multiple_filters(
         filters.append(Alert.alert_name.like(f"%{alert_title}%"))
     if customer_code:
         filters.append(Alert.customer_code == customer_code)
+    if customer_codes:
+        filters.append(Alert.customer_code.in_(customer_codes))
     if source:
         filters.append(Alert.source == source)
     if asset_name:
@@ -2596,6 +2604,7 @@ async def list_alerts_for_user(
     page: int = 1,
     page_size: int = 25,
     order: str = "desc",
+    customer_codes: Optional[List[str]] = None,
 ) -> List[AlertOut]:
     """List alerts filtered by user's customer access and tag access"""
     from sqlalchemy import and_
@@ -2617,7 +2626,7 @@ async def list_alerts_for_user(
     filters = []
 
     # 1. Apply customer filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, session)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, session)
     if "*" not in accessible_customers:
         filters.append(Alert.customer_code.in_(accessible_customers))
 
@@ -2694,11 +2703,11 @@ async def list_alerts_for_user(
     return alerts_out
 
 
-async def case_total_for_user(user: User, session: AsyncSession) -> int:
+async def case_total_for_user(user: User, session: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
     """Get total cases count with customer filtering"""
     base_query = select(func.count(Case.id))
 
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, session)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, session)
     if "*" not in accessible_customers:
         base_query = base_query.where(Case.customer_code.in_(accessible_customers))
 
@@ -2706,11 +2715,11 @@ async def case_total_for_user(user: User, session: AsyncSession) -> int:
     return result.scalar_one()
 
 
-async def cases_open_for_user(user: User, session: AsyncSession) -> int:
+async def cases_open_for_user(user: User, session: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
     """Get open cases count with customer filtering"""
     base_query = select(func.count(Case.id)).where(Case.case_status == "OPEN")
 
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, session)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, session)
     if "*" not in accessible_customers:
         base_query = base_query.where(Case.customer_code.in_(accessible_customers))
 
@@ -2718,11 +2727,11 @@ async def cases_open_for_user(user: User, session: AsyncSession) -> int:
     return result.scalar_one()
 
 
-async def cases_in_progress_for_user(user: User, session: AsyncSession) -> int:
+async def cases_in_progress_for_user(user: User, session: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
     """Get in-progress cases count with customer filtering"""
     base_query = select(func.count(Case.id)).where(Case.case_status == "IN_PROGRESS")
 
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, session)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, session)
     if "*" not in accessible_customers:
         base_query = base_query.where(Case.customer_code.in_(accessible_customers))
 
@@ -2730,11 +2739,11 @@ async def cases_in_progress_for_user(user: User, session: AsyncSession) -> int:
     return result.scalar_one()
 
 
-async def cases_closed_for_user(user: User, session: AsyncSession) -> int:
+async def cases_closed_for_user(user: User, session: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
     """Get closed cases count with customer filtering"""
     base_query = select(func.count(Case.id)).where(Case.case_status == "CLOSED")
 
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, session)
+    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, session)
     if "*" not in accessible_customers:
         base_query = base_query.where(Case.customer_code.in_(accessible_customers))
 
@@ -2748,6 +2757,7 @@ async def list_cases_for_user(
     page: int = 1,
     page_size: int = 25,
     order: str = "desc",
+    customer_codes: Optional[List[str]] = None,
 ) -> List[CaseOut]:
     """List cases filtered by user's customer access with pagination"""
 
@@ -2763,8 +2773,14 @@ async def list_cases_for_user(
         selectinload(Case.comments),
     )
 
-    # Apply customer filtering
-    filtered_query = await customer_access_handler.filter_query_by_customer_access(user, session, base_query, Case.customer_code)
+    # Apply customer filtering (optionally narrowed to a requested subset)
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(
+        user,
+        session,
+        base_query,
+        Case.customer_code,
+        requested_customers=customer_codes,
+    )
 
     # Apply ordering and pagination
     final_query = filtered_query.order_by(order_by).offset(offset).limit(page_size)

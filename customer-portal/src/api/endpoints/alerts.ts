@@ -2,6 +2,7 @@ import type { Alert, AlertsFilters, AlertsListResponse, AlertStatus } from "@/ty
 import type { CommentItem } from "@/types/comments"
 import type { CommonResponse, Pagination } from "@/types/common"
 import { HttpClient } from "../httpClient"
+import { withCustomerCodes } from "../params"
 
 export interface AlertCommentPayload {
 	alertId: number
@@ -14,11 +15,11 @@ export default {
 	/**
 	 * Get all alerts with customer access control
 	 */
-	getAlerts({ page = 1, pageSize = 25, order = "desc" }: Pagination, signal?: AbortSignal) {
-		return HttpClient.get<CommonResponse<AlertsListResponse>>("/incidents/db_operations/alerts", {
-			params: { page, page_size: pageSize, order },
-			signal
-		})
+	getAlerts({ page = 1, pageSize = 25, order = "desc" }: Pagination, signal?: AbortSignal, customerCodes?: string[]) {
+		return HttpClient.get<CommonResponse<AlertsListResponse>>(
+			"/incidents/db_operations/alerts",
+			withCustomerCodes(customerCodes, { params: { page, page_size: pageSize, order }, signal })
+		)
 	},
 
 	/**
@@ -75,45 +76,58 @@ export default {
 	getAlertsByStatus(
 		status: AlertStatus,
 		{ page = 1, pageSize = 25, order = "desc" }: Pagination,
-		signal?: AbortSignal
+		signal?: AbortSignal,
+		customerCodes?: string[]
 	) {
-		return HttpClient.get<CommonResponse<AlertsListResponse>>(`/incidents/db_operations/alerts/status/${status}`, {
-			params: { page, page_size: pageSize, order },
-			signal
-		})
+		return HttpClient.get<CommonResponse<AlertsListResponse>>(
+			`/incidents/db_operations/alerts/status/${status}`,
+			withCustomerCodes(customerCodes, { params: { page, page_size: pageSize, order }, signal })
+		)
 	},
 
 	/**
 	 * Get alerts by asset name with customer filtering
 	 */
-	getAlertsByAsset(assetName: string, { page = 1, pageSize = 25, order = "desc" }: Pagination, signal?: AbortSignal) {
+	getAlertsByAsset(
+		assetName: string,
+		{ page = 1, pageSize = 25, order = "desc" }: Pagination,
+		signal?: AbortSignal,
+		customerCodes?: string[]
+	) {
 		return HttpClient.get<CommonResponse<AlertsListResponse>>(
 			`/incidents/db_operations/alerts/asset/${assetName}`,
-			{
-				params: { page, page_size: pageSize, order },
-				signal
-			}
+			withCustomerCodes(customerCodes, { params: { page, page_size: pageSize, order }, signal })
 		)
 	},
 
 	/**
 	 * Get alerts by tag with customer filtering
 	 */
-	getAlertsByTag(tag: string, { page = 1, pageSize = 25, order = "desc" }: Pagination, signal?: AbortSignal) {
-		return HttpClient.get<CommonResponse<AlertsListResponse>>(`/incidents/db_operations/alert/tag/${tag}`, {
-			params: { page, page_size: pageSize, order },
-			signal
-		})
+	getAlertsByTag(
+		tag: string,
+		{ page = 1, pageSize = 25, order = "desc" }: Pagination,
+		signal?: AbortSignal,
+		customerCodes?: string[]
+	) {
+		return HttpClient.get<CommonResponse<AlertsListResponse>>(
+			`/incidents/db_operations/alert/tag/${tag}`,
+			withCustomerCodes(customerCodes, { params: { page, page_size: pageSize, order }, signal })
+		)
 	},
 
 	/**
 	 * Get alerts by source with customer filtering
 	 */
-	getAlertsBySource(source: string, { page = 1, pageSize = 25, order = "desc" }: Pagination, signal?: AbortSignal) {
-		return HttpClient.get<CommonResponse<AlertsListResponse>>(`/incidents/db_operations/alerts/source/${source}`, {
-			params: { page, page_size: pageSize, order },
-			signal
-		})
+	getAlertsBySource(
+		source: string,
+		{ page = 1, pageSize = 25, order = "desc" }: Pagination,
+		signal?: AbortSignal,
+		customerCodes?: string[]
+	) {
+		return HttpClient.get<CommonResponse<AlertsListResponse>>(
+			`/incidents/db_operations/alerts/source/${source}`,
+			withCustomerCodes(customerCodes, { params: { page, page_size: pageSize, order }, signal })
+		)
 	},
 
 	/**

@@ -2,7 +2,13 @@
 	<div class="@container w-full">
 		<div class="grid grid-cols-1 gap-6 @md:grid-cols-2 @5xl:grid-cols-3">
 			<n-form-item label="Customer" :show-feedback="false">
-				<n-input v-model:value="selectedCustomerCode" disabled />
+				<n-select
+					v-model:value="selectedCustomerCode"
+					placeholder="Select Customer"
+					filterable
+					:options="customerOptions"
+					@update:value="onCustomerChange"
+				/>
 			</n-form-item>
 
 			<n-form-item label="Event Source" :show-feedback="false">
@@ -105,7 +111,6 @@ import {
 	NButton,
 	NDatePicker,
 	NFormItem,
-	NInput,
 	NInputGroup,
 	NInputNumber,
 	NMention,
@@ -118,6 +123,7 @@ import { useRoute } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
+import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 
@@ -152,10 +158,18 @@ const TRAILING_WHITESPACE_RE = /\s$/
 
 const route = useRoute()
 const authStore = useAuthStore()
+const customerFilterStore = useCustomerFilterStore()
 const message = useMessage()
 
 const customerCode = computed(() => authStore.userCustomerCode)
-const selectedCustomerCode = ref(customerCode.value || "")
+const customerOptions = computed(() => authStore.accessibleCustomerCodes.map(code => ({ label: code, value: code })))
+// Seed the searched customer from the global filter when it resolves to a single
+// customer, otherwise the user's primary / first accessible customer.
+const selectedCustomerCode = ref(
+	customerFilterStore.selectedCustomerCodes.length === 1
+		? customerFilterStore.selectedCustomerCodes[0]
+		: customerCode.value || authStore.accessibleCustomerCodes[0] || ""
+)
 
 const eventSources = ref<EventSourceItem[]>([])
 const loadingEventSources = ref(false)
@@ -222,6 +236,13 @@ async function loadEventSources(customerCode: string) {
 			customerCode,
 			eventSources: eventSources.value
 		})
+	}
+}
+
+function onCustomerChange(code: string) {
+	// Reload event sources for the newly selected customer (resets source + fields).
+	if (code) {
+		loadEventSources(code)
 	}
 }
 
@@ -294,7 +315,7 @@ function onMentionSelect(option: MentionOption, prefix: string) {
 
 // -- Lifecycle --
 async function applyRouteParams() {
-	const qCustomer = (route.query.customer_code || customerCode.value) as string
+	const qCustomer = (route.query.customer_code || selectedCustomerCode.value) as string
 	const qSource = route.query.source_name as string | undefined
 	const qQuery = route.query.query as string | undefined
 
@@ -327,6 +348,18 @@ watch(
 		}
 	},
 	{ immediate: true }
+)
+
+// Follow the global customer filter when it narrows to a single customer.
+watch(
+	() => customerFilterStore.selectedCustomerCodes,
+	codes => {
+		if (codes.length === 1 && codes[0] !== selectedCustomerCode.value) {
+			selectedCustomerCode.value = codes[0]
+			loadEventSources(codes[0])
+		}
+	},
+	{ deep: true }
 )
 
 onBeforeMount(() => {

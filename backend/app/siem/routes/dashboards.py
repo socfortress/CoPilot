@@ -1,6 +1,10 @@
+from typing import List
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Query
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,6 +28,7 @@ from app.siem.services.dashboards import disable_dashboard
 from app.siem.services.dashboards import enable_dashboard
 from app.siem.services.dashboards import get_category_detail
 from app.siem.services.dashboards import get_enabled_dashboards
+from app.siem.services.dashboards import get_enabled_dashboards_for_customers
 from app.siem.services.dashboards import get_panel_data
 from app.siem.services.dashboards import list_categories
 
@@ -77,6 +82,27 @@ async def get_dashboard_category(category_id: str) -> DashboardCategoryDetailRes
 
 
 # ── Enabled dashboards (per-customer, DB-backed) ────────────────
+
+
+@dashboards_router.get(
+    "/enabled",
+    response_model=EnabledDashboardsListResponse,
+    description="List enabled dashboards across the user's accessible customers (optionally narrowed to a subset via customer_codes).",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def list_enabled_dashboards_multi(
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the results to"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> EnabledDashboardsListResponse:
+    # Resolve the requested subset against the user's access (never widens scope).
+    effective_customers = await customer_access_handler.resolve_effective_customers(current_user, customer_codes, db)
+    rows = await get_enabled_dashboards_for_customers(effective_customers, db)
+    return EnabledDashboardsListResponse(
+        enabled_dashboards=[EnabledDashboardResponse.from_orm(r) for r in rows],
+        success=True,
+        message="Enabled dashboards retrieved successfully",
+    )
 
 
 @dashboards_router.get(
