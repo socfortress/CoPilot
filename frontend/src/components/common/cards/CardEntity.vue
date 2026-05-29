@@ -111,9 +111,7 @@ const {
 const slots = useSlots()
 
 const showFooterMainLayout = computed(
-	() =>
-		(!slots.footer || hideFooter) &&
-		(!!slots.footerMain || (!!slots.footerExtra && !hideFooterExtra))
+	() => (!slots.footer || hideFooter) && (!!slots.footerMain || (!!slots.footerExtra && !hideFooterExtra))
 )
 </script>
 

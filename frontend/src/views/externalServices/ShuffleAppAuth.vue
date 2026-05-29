@@ -24,11 +24,7 @@
 			/>
 		</n-spin>
 
-		<n-empty
-			v-else
-			description="Select an organization to manage app authentication"
-			class="grow justify-center"
-		/>
+		<n-empty v-else description="Select an organization to manage app authentication" class="grow justify-center" />
 	</div>
 </template>
 
