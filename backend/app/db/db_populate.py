@@ -346,6 +346,7 @@ def get_available_integrations_list():
         ("BitDefender", "Integrate BitDefender with SOCFortress."),
         ("CATO", "Integrate CATO NETWORKS with SOCFortress."),
         ("DefenderForEndpoint", "Integrate DefenderForEndpoint with SOCFortress."),
+        ("SOCFortress MDR", "Forward alerts to the SOCFortress MDR server for this customer."),
         # ... Add more available integrations as needed ...
     ]
 
@@ -488,6 +489,7 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
         ("DefenderForEndpoint", "CLIENT_ID"),
         ("DefenderForEndpoint", "CLIENT_SECRET"),
         ("DefenderForEndpoint", "SYSLOG_PORT"),
+        ("SOCFortress MDR", "COLLECTOR_UUID"),
         # ... Add more available integrations auth keys as needed ...
     ]
     logger.info("Getting available integrations auth keys.")

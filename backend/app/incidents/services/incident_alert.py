@@ -655,6 +655,17 @@ async def handle_customer_notifications(
             ),
         )
 
+    # Forward alerts (not cases) to SOCFortress MDR when the customer has the
+    # integration deployed. Best-effort: never breaks alert creation.
+    if type == "alert":
+        from app.incidents.services.mdr_forwarder import forward_alert_to_mdr
+
+        await forward_alert_to_mdr(
+            customer_code=customer_code,
+            alert_payload=alert_payload,
+            session=session,
+        )
+
 
 # ! OLD FUNCTION ! #
 # async def create_alert_full(

@@ -132,6 +132,12 @@ export default {
 			customer_code: customerCode,
 			integration_name: integrationName || "DefenderForEndpoint"
 		})
+	},
+	socfortressMdrProvision(customerCode: string, integrationName: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/socfortress_mdr/provision`, {
+			customer_code: customerCode,
+			integration_name: integrationName || "SOCFortress MDR"
+		})
 	}
 	// #endregion
 }

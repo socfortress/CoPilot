@@ -85,6 +85,7 @@ from app.routers import scheduler
 from app.routers import scoutsuite
 from app.routers import shuffle
 from app.routers import siem
+from app.routers import socfortress_mdr
 from app.routers import stack_provisioning
 from app.routers import sublime
 from app.routers import talon
@@ -214,6 +215,7 @@ api_router.include_router(carbonblack.router)
 api_router.include_router(network_connectors.router)
 api_router.include_router(crowdstrike.router)
 api_router.include_router(bitdefender.router)
+api_router.include_router(socfortress_mdr.router)
 api_router.include_router(scoutsuite.router)
 api_router.include_router(nuclei.router)
 api_router.include_router(duo.router)

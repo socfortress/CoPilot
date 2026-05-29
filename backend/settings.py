@@ -35,3 +35,15 @@ SQLALCHEMY_TRACK_MODIFICATIONS = env.bool(
     "SQLALCHEMY_TRACK_MODIFICATIONS",
     default=False,
 )
+
+# ---------------------------------------------------------------------------
+# SOCFortress MDR forwarding
+# ---------------------------------------------------------------------------
+# When enabled, newly-created alerts for customers that have the "SOCFortress
+# MDR" integration deployed are forwarded to the MDR server's
+# POST /api/v1/alerts/copilot endpoint. The MDR server then tasks the collector
+# to fetch the authoritative indexer document. One CoPilot stack maps to one
+# MDR collector, so the collector UUID and MDR base URL are global env values.
+MDR_ENABLED = env.bool("MDR_ENABLED", default=False)
+MDR_SERVER_URL = env.str("MDR_SERVER_URL", default="https://mdr-server.socfortress.co")
+MDR_COLLECTOR_UUID = env.str("MDR_COLLECTOR_UUID", default="")
