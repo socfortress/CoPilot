@@ -99,7 +99,7 @@
 						@click="searchEvents"
 					>
 						<template #icon>
-							<Icon :name="SearchIcon" />
+							<Icon name="carbon:search" />
 						</template>
 						Search
 					</n-button>
@@ -117,7 +117,18 @@ import type { VNodeChild } from "vue"
 import type { Customer } from "@/types/customers.d"
 import type { FieldMapping } from "@/types/events.d"
 import type { EventSource } from "@/types/eventSources.d"
-import { NAlert, NButton, NDatePicker, NFormItem, NInputGroup, NInputNumber, NMention, NSelect, NSpin, useMessage } from "naive-ui"
+import {
+	NAlert,
+	NButton,
+	NDatePicker,
+	NFormItem,
+	NInputGroup,
+	NInputNumber,
+	NMention,
+	NSelect,
+	NSpin,
+	useMessage
+} from "naive-ui"
 import { computed, h, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
@@ -158,8 +169,6 @@ const TRAILING_WHITESPACE_RE = /\s$/
 
 const route = useRoute()
 const message = useMessage()
-
-const SearchIcon = "carbon:search"
 
 const filterTimeRange = ref<{ unit: "h" | "d" | "w"; time: number }>({
 	unit: "h",

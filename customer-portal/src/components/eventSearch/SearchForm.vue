@@ -11,7 +11,7 @@
 						v-model:value="selectedCustomerCode"
 						placeholder="Select Customer"
 						filterable
-						:options="customerOptions"
+						:options="customersOptions"
 						@update:value="onCustomerChange"
 					/>
 				</n-form-item>
@@ -169,7 +169,7 @@ const customerFilterStore = useCustomerFilterStore()
 const message = useMessage()
 
 const customerCode = computed(() => authStore.userCustomerCode)
-const customerOptions = computed(() => authStore.accessibleCustomerCodes.map(code => ({ label: code, value: code })))
+const customersOptions = computed(() => authStore.accessibleCustomerCodes.map(code => ({ label: code, value: code })))
 // Seed the searched customer from the global filter when it resolves to a single
 // customer, otherwise the user's primary / first accessible customer.
 const selectedCustomerCode = ref(
