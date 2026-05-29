@@ -27,7 +27,13 @@
 			</n-button>
 		</div>
 
-		<n-drawer v-model:show="showConsolidation" :width="640" placement="right">
+		<n-drawer
+			v-model:show="showConsolidation"
+			:width="640"
+			placement="right"
+			display-directive="show"
+			class="max-w-[98vw]"
+		>
 			<n-drawer-content closable :native-scrollbar="false">
 				<template #header>
 					Palace consolidation

@@ -1,7 +1,12 @@
 <template>
 	<div class="flex flex-col gap-0.5">
 		<n-card v-if="!showSource" content-class="p-0!" embedded class="overflow-hidden">
-			<div v-shiki="{ lang, decode }" class="scrollbar-styled code-bg-transparent overflow-hidden">
+			<div
+				v-shiki="{ lang, decode }"
+				class="scrollbar-styled code-bg-transparent overflow-auto"
+				:class="codeClass"
+				:style="codeBlockStyle"
+			>
 				<pre v-html="source"></pre>
 			</div>
 		</n-card>
@@ -38,6 +43,7 @@
 </template>
 
 <script setup lang="ts">
+import type { HTMLAttributes } from "vue"
 import { useClipboard } from "@vueuse/core"
 import { NButton, NCard, NInput } from "naive-ui"
 import { computed, ref } from "vue"
@@ -48,12 +54,16 @@ const {
 	code,
 	lang,
 	decode,
-	showToggleButton = true
+	showToggleButton = true,
+	maxHeight,
+	codeClass
 } = defineProps<{
 	code: string | object | number
 	lang?: string
 	decode?: boolean
 	showToggleButton?: boolean
+	maxHeight?: string | number
+	codeClass?: HTMLAttributes["class"]
 }>()
 
 const { copy, copied, isSupported } = useClipboard()
@@ -62,4 +72,9 @@ const showSource = ref(false)
 const source = computed(() =>
 	typeof code === "string" || typeof code === "number" ? `${code}` : JSON.stringify(code, null, "\t")
 )
+
+const codeBlockStyle = computed(() => {
+	if (maxHeight == null) return undefined
+	return { maxHeight: typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight }
+})
 </script>
