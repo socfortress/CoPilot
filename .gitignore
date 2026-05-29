@@ -75,8 +75,6 @@ AGENTS.md
 skills-lock.json
 .ai-rulez/
 
-
-
 # BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
 .agents/agents/code-reviewer.md
 .agents/agents/devops-engineer.md

@@ -2,15 +2,6 @@
 	<div class="flex flex-col gap-6">
 		<SearchForm v-model:query="query" :loading @search="handleSearchFormSearch" @loaded="handleSearchFormLoaded" />
 
-		<!-- No Event Sources Warning -->
-		<n-alert
-			v-if="searchFormLoad?.customerCode && !loading && searchFormLoad?.eventSources.length === 0"
-			type="warning"
-			title="No Event Sources Configured"
-		>
-			No event sources are configured for this customer. Contact your administrator to set up event sources.
-		</n-alert>
-
 		<!-- Results -->
 		<div v-if="hasSearched">
 			<!-- Results Summary -->
@@ -62,7 +53,7 @@ import type { SearchFormLoad, SearchFormParams } from "@/components/eventSearch/
 import type { ApiError } from "@/types/common"
 import type { DisplayColumn, EventSearchQueryParams, EventSearchResult, EventSourceItem } from "@/types/siem"
 import { useElementSize } from "@vueuse/core"
-import { NAlert, NButton, NDataTable, NEmpty, useMessage } from "naive-ui"
+import { NButton, NDataTable, NEmpty, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
 import Api from "@/api"
 import Chip from "@/components/common/Chip.vue"
