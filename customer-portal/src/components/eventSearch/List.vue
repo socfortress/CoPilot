@@ -1,6 +1,6 @@
 <template>
 	<div class="flex flex-col gap-6">
-		<SearchForm v-model:query="query" :loading @search="handleSearchFormSearch" @loaded="handleSearchFormLoaded" />
+		<SearchForm v-model:query="query" :loading-events="loading" @search="handleSearchFormSearch" @loaded="handleSearchFormLoaded" />
 
 		<!-- Results -->
 		<div v-if="hasSearched">

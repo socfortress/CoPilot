@@ -91,7 +91,7 @@
 					<n-button
 						secondary
 						type="primary"
-						:loading
+						:loading="loadingEvents"
 						:disabled="!selectedCustomerCode || !selectedSourceName"
 						@click="searchEvents"
 					>
@@ -151,7 +151,7 @@ export interface SearchFormLoad {
 }
 
 defineProps<{
-	loading: boolean
+	loadingEvents: boolean
 }>()
 
 const emit = defineEmits<{
