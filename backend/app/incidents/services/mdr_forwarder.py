@@ -30,7 +30,9 @@ from sqlalchemy.orm import joinedload
 
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
-from app.integrations.models.customer_integration_settings import IntegrationSubscription
+from app.integrations.models.customer_integration_settings import (
+    IntegrationSubscription,
+)
 
 # Name of the customer integration that gates MDR forwarding. Must match the
 # integration_service_name stored in the customer_integrations table and the
@@ -109,8 +111,7 @@ async def forward_alert_to_mdr(
 
         if not config["server_url"]:
             logger.warning(
-                "MDR_ENABLED is set but MDR_SERVER_URL is not configured — "
-                "skipping MDR forward",
+                "MDR_ENABLED is set but MDR_SERVER_URL is not configured — " "skipping MDR forward",
             )
             return
 
@@ -145,8 +146,7 @@ async def forward_alert_to_mdr(
         }
 
         logger.info(
-            f"Forwarding CoPilot alert {alert_payload.alert_id} (customer {customer_code}) "
-            f"to MDR at {url}",
+            f"Forwarding CoPilot alert {alert_payload.alert_id} (customer {customer_code}) " f"to MDR at {url}",
         )
 
         async with httpx.AsyncClient(timeout=_MDR_TIMEOUT_S) as client:
@@ -154,14 +154,12 @@ async def forward_alert_to_mdr(
 
         if response.status_code >= 400:
             logger.error(
-                f"MDR forward failed for alert {alert_payload.alert_id} "
-                f"(HTTP {response.status_code}): {response.text[:300]}",
+                f"MDR forward failed for alert {alert_payload.alert_id} " f"(HTTP {response.status_code}): {response.text[:300]}",
             )
             return
 
         logger.info(
-            f"MDR forward accepted for alert {alert_payload.alert_id}: "
-            f"{response.text[:200]}",
+            f"MDR forward accepted for alert {alert_payload.alert_id}: " f"{response.text[:200]}",
         )
     except Exception as e:
         # Best-effort: never let MDR forwarding break alert creation.

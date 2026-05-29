@@ -47,7 +47,6 @@ from app.routers import alert_creation_settings
 from app.routers import auth
 from app.routers import bitdefender
 from app.routers import carbonblack
-from app.routers import socfortress_mdr
 from app.routers import cato
 from app.routers import connectors
 from app.routers import copilot_action
@@ -86,6 +85,7 @@ from app.routers import scheduler
 from app.routers import scoutsuite
 from app.routers import shuffle
 from app.routers import siem
+from app.routers import socfortress_mdr
 from app.routers import stack_provisioning
 from app.routers import sublime
 from app.routers import talon

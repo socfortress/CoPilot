@@ -45,5 +45,5 @@ SQLALCHEMY_TRACK_MODIFICATIONS = env.bool(
 # to fetch the authoritative indexer document. One CoPilot stack maps to one
 # MDR collector, so the collector UUID and MDR base URL are global env values.
 MDR_ENABLED = env.bool("MDR_ENABLED", default=False)
-MDR_SERVER_URL = env.str("MDR_SERVER_URL", default="")  # e.g. https://mdr-server.socfortress.co:8443
+MDR_SERVER_URL = env.str("MDR_SERVER_URL", default="https://mdr-server.socfortress.co")
 MDR_COLLECTOR_UUID = env.str("MDR_COLLECTOR_UUID", default="")

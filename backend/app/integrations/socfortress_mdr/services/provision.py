@@ -59,8 +59,7 @@ async def provision_socfortress_mdr(
         ProvisionSOCFortressMDRResponse
     """
     logger.info(
-        f"Provisioning SOCFortress MDR integration for customer {customer_code} "
-        f"(collector {collector_uuid})",
+        f"Provisioning SOCFortress MDR integration for customer {customer_code} " f"(collector {collector_uuid})",
     )
     await update_customer_integration_table(customer_code, session)
     return ProvisionSOCFortressMDRResponse(

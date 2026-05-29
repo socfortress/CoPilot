@@ -16,9 +16,7 @@ from app.integrations.socfortress_mdr.schema.provision import (
 from app.integrations.socfortress_mdr.schema.provision import (
     ProvisionSOCFortressMDRResponse,
 )
-from app.integrations.socfortress_mdr.services.provision import (
-    INTEGRATION_NAME,
-)
+from app.integrations.socfortress_mdr.services.provision import INTEGRATION_NAME
 from app.integrations.socfortress_mdr.services.provision import (
     provision_socfortress_mdr,
 )
