@@ -58,6 +58,7 @@ const isDarktrace = computed(() => serviceName.value === "Darktrace")
 const isBitdefender = computed(() => serviceName.value === "BitDefender")
 const isCato = computed(() => serviceName.value === "CATO")
 const isDefenderForEndpoint = computed(() => serviceName.value === "DefenderForEndpoint")
+const isSOCFortressMdr = computed(() => serviceName.value === "SOCFortress MDR")
 const isDeployEnabled = computed(
 	() =>
 		(isOffice365.value ||
@@ -67,7 +68,8 @@ const isDeployEnabled = computed(
 			isDarktrace.value ||
 			isBitdefender.value ||
 			isCato.value ||
-			isDefenderForEndpoint.value) &&
+			isDefenderForEndpoint.value ||
+			isSOCFortressMdr.value) &&
 		!integration.deployed
 )
 
@@ -105,6 +107,9 @@ function provision() {
 	}
 	if (isDefenderForEndpoint.value) {
 		apiCall = Api.integrations.defenderForEndpointProvision(customerCode.value, serviceName.value)
+	}
+	if (isSOCFortressMdr.value) {
+		apiCall = Api.integrations.socfortressMdrProvision(customerCode.value, serviceName.value)
 	}
 
 	if (!apiCall) {

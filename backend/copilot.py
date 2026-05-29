@@ -47,6 +47,7 @@ from app.routers import alert_creation_settings
 from app.routers import auth
 from app.routers import bitdefender
 from app.routers import carbonblack
+from app.routers import socfortress_mdr
 from app.routers import cato
 from app.routers import connectors
 from app.routers import copilot_action
@@ -214,6 +215,7 @@ api_router.include_router(carbonblack.router)
 api_router.include_router(network_connectors.router)
 api_router.include_router(crowdstrike.router)
 api_router.include_router(bitdefender.router)
+api_router.include_router(socfortress_mdr.router)
 api_router.include_router(scoutsuite.router)
 api_router.include_router(nuclei.router)
 api_router.include_router(duo.router)
