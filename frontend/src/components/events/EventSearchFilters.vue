@@ -6,106 +6,123 @@
 			tab to configure one.
 		</n-alert>
 
-		<div class="@container w-full">
-			<div class="grid grid-cols-1 gap-6 @md:grid-cols-2 @5xl:grid-cols-3">
-				<n-form-item label="Customer" :show-feedback="false">
-					<n-select
-						v-model:value="selectedCustomerCode"
-						placeholder="Select Customer"
-						filterable
-						:options="customersOptions"
-						:loading="loadingCustomers"
-						@update:value="onCustomerChange"
-					/>
-				</n-form-item>
-
-				<n-form-item label="Event Source" :show-feedback="false">
-					<n-select
-						v-model:value="selectedSourceName"
-						placeholder="Select Source"
-						filterable
-						:options="eventSourceOptions"
-						:disabled="!selectedCustomerCode"
-						:loading="loadingEventSources"
-					/>
-				</n-form-item>
-
-				<n-form-item label="Time Range" :show-feedback="false" class="col-span-full @5xl:col-span-1">
-					<n-input-group class="w-full">
-						<n-input-number
-							v-if="timerangeMode === 'relative'"
-							v-model:value="filterTimeRange.time"
-							:min="1"
-							placeholder="Time"
-							class="grow text-right [&_input]:pr-3!"
-						/>
-						<n-select
-							v-if="timerangeMode === 'relative'"
-							v-model:value="filterTimeRange.unit"
-							:options="unitOptions"
-							placeholder="Time unit"
-							class="w-40!"
-						/>
-						<n-date-picker
-							v-if="timerangeMode === 'absolute'"
-							v-model:value="daterange"
-							type="datetimerange"
-							clearable
-							class="grow"
-						/>
-						<n-button v-if="timerangeMode === 'relative'" secondary @click="timerangeMode = 'absolute'">
-							<template #icon>
-								<Icon name="carbon:calendar" />
-							</template>
-						</n-button>
-						<n-button v-if="timerangeMode === 'absolute'" secondary @click="timerangeMode = 'relative'">
-							<template #icon>
-								<Icon name="carbon:reset" />
-							</template>
-						</n-button>
-					</n-input-group>
-				</n-form-item>
-
-				<n-form-item label="Lucene Query" :show-feedback="false" class="col-span-full">
-					<div class="flex w-full flex-col gap-1">
-						<n-mention
-							v-model:value="query"
-							type="textarea"
-							separator=" "
-							:autosize="{ minRows: 3, maxRows: 8 }"
-							placeholder="e.g. agent_name:web-server AND rule_level:>=10"
-							:options="suggestionOptions"
-							:prefix="['#']"
-							:loading="loadingFieldMappings"
-							:render-label
-							@select="onMentionSelect"
-						>
-							<template #empty>
-								<n-spin :show="loadingFieldMappings">
-									<div class="text-secondary text-xs">No field mappings found</div>
-								</n-spin>
-							</template>
-						</n-mention>
+		<div class="@container flex w-full flex-col gap-3">
+			<div class="flex flex-col gap-2">
+				<div class="flex w-full flex-wrap items-center justify-between gap-2">
+					<div class="flex items-center gap-2">
+						Lucene Query
 						<p class="text-secondary text-xs">type # to autocomplete</p>
 					</div>
-				</n-form-item>
+					<div class="flex items-center gap-2">
+						<n-select
+							v-model:value="selectedCustomerCode"
+							placeholder="Select Customer"
+							filterable
+							size="tiny"
+							:options="customersOptions"
+							:loading="loadingCustomers"
+							:consistent-menu-width="false"
+							@update:value="onCustomerChange"
+						/>
 
-				<div class="col-span-full -mt-4 flex items-center justify-end gap-3">
+						<n-select
+							v-model:value="selectedSourceName"
+							placeholder="Select Source"
+							filterable
+							size="tiny"
+							:options="eventSourceOptions"
+							:disabled="!selectedCustomerCode"
+							:loading="loadingEventSources"
+							:consistent-menu-width="false"
+						/>
+					</div>
+				</div>
+
+				<n-mention
+					v-model:value="query"
+					type="textarea"
+					separator=" "
+					:autosize="{ minRows: 3, maxRows: 8 }"
+					placeholder="e.g. agent_name:web-server AND rule_level:>=10"
+					:options="suggestionOptions"
+					:prefix="['#']"
+					:loading="loadingFieldMappings"
+					:render-label
+					@select="onMentionSelect"
+				>
+					<template #empty>
+						<n-spin :show="loadingFieldMappings">
+							<div class="text-secondary text-xs">No field mappings found</div>
+						</n-spin>
+					</template>
+				</n-mention>
+			</div>
+
+			<div class="flex flex-wrap items-center justify-end gap-3">
+				<n-input-group class="flex flex-1 items-center justify-end">
+					<n-input-number
+						v-if="timerangeMode === 'relative'"
+						v-model:value="filterTimeRange.time"
+						:show-button="false"
+						:min="1"
+						size="small"
+						placeholder="Time"
+						class="max-w-15! min-w-10! text-center"
+					/>
+					<n-select
+						v-if="timerangeMode === 'relative'"
+						v-model:value="filterTimeRange.unit"
+						:options="unitOptions"
+						class="max-w-25!"
+						placeholder="Time unit"
+						:consistent-menu-width="false"
+						size="small"
+					/>
+					<n-date-picker
+						v-if="timerangeMode === 'absolute'"
+						v-model:value="daterange"
+						type="datetimerange"
+						class="min-w-70"
+						clearable
+						size="small"
+					/>
 					<n-button
+						v-if="timerangeMode === 'relative'"
 						secondary
-						type="primary"
-						:loading="loadingEvents"
-						:disabled="!selectedCustomerCode || !selectedSourceName"
-						@click="searchEvents"
+						size="small"
+						@click="timerangeMode = 'absolute'"
 					>
 						<template #icon>
-							<Icon name="carbon:search" />
+							<Icon name="carbon:calendar" />
 						</template>
-						Search
 					</n-button>
+					<n-button
+						v-if="timerangeMode === 'absolute'"
+						secondary
+						size="small"
+						@click="timerangeMode = 'relative'"
+					>
+						<template #icon>
+							<Icon name="carbon:reset" />
+						</template>
+					</n-button>
+				</n-input-group>
 
-					<n-select v-model:value="pageSize" :options="pageSizeOptions" class="w-36!" />
-				</div>
+				<n-select v-model:value="pageSize" :options="pageSizeOptions" size="small" class="w-33!" />
+
+				<n-button
+					secondary
+					size="small"
+					type="primary"
+					:loading="loadingEvents"
+					:disabled="!selectedCustomerCode || !selectedSourceName"
+					@click="searchEvents"
+				>
+					<template #icon>
+						<Icon name="carbon:search" />
+					</template>
+					Search
+				</n-button>
 			</div>
 		</div>
 	</div>
@@ -117,18 +134,7 @@ import type { VNodeChild } from "vue"
 import type { Customer } from "@/types/customers.d"
 import type { FieldMapping } from "@/types/events.d"
 import type { EventSource } from "@/types/eventSources.d"
-import {
-	NAlert,
-	NButton,
-	NDatePicker,
-	NFormItem,
-	NInputGroup,
-	NInputNumber,
-	NMention,
-	NSelect,
-	NSpin,
-	useMessage
-} from "naive-ui"
+import { NAlert, NButton, NDatePicker, NInputGroup, NInputNumber, NMention, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
