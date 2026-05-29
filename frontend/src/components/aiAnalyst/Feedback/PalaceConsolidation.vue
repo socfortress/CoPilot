@@ -23,25 +23,30 @@
 				<!-- Upcoming expirations -->
 				<CardEntity v-if="data.upcoming_expirations.length" size="small" embedded highlighted>
 					<template #headerMain>
-						<Icon :name="WarningIcon" :size="14" class="text-warning mr-1" />
+						<Icon :name="WarningIcon" :size="14" class="text-warning relative top-0.5 mr-1" />
 						Expiring soon ({{ data.upcoming_expirations.length }})
 					</template>
 					<template #default>
 						<div class="flex flex-col gap-2">
-							<div
-								v-for="ls of data.upcoming_expirations"
-								:key="ls.id"
-								class="border-color bg-secondary rounded border p-2 text-sm"
-							>
-								<div class="mb-1 flex flex-wrap items-center gap-2">
-									<Badge type="splitted" bright color="warning">
-										<template #label>{{ ls.lesson_type }}</template>
-										<template #value>{{ expiryLabel(ls.days_until_expiry) }}</template>
-									</Badge>
-									<span class="text-secondary text-xs">id {{ ls.id }}</span>
-								</div>
-								<div class="wrap-break-word whitespace-pre-wrap">{{ ls.lesson_text }}</div>
-							</div>
+							<CardEntity v-for="ls of data.upcoming_expirations" :key="ls.id" size="small">
+								<template #header>
+									<div class="text-default flex flex-wrap items-center gap-2">
+										<Badge type="splitted" bright size="small">
+											<template #label>ID</template>
+											<template #value>{{ ls.id }}</template>
+										</Badge>
+										<Badge type="splitted" color="warning" size="small">
+											<template #label>{{ ls.lesson_type }}</template>
+											<template #value>{{ expiryLabel(ls.days_until_expiry) }}</template>
+										</Badge>
+									</div>
+								</template>
+								<template #default>
+									<div class="text-sm">
+										{{ ls.lesson_text }}
+									</div>
+								</template>
+							</CardEntity>
 						</div>
 					</template>
 				</CardEntity>
@@ -51,30 +56,44 @@
 					<template #headerMain>Near-duplicate candidates ({{ data.duplicate_candidates.length }})</template>
 					<template #default>
 						<div class="flex flex-col gap-2">
-							<div
+							<CardEntity
 								v-for="pair of data.duplicate_candidates"
 								:key="`${pair.lesson_a_id}-${pair.lesson_b_id}`"
-								class="border-color bg-secondary rounded border p-2 text-sm"
+								size="small"
 							>
-								<div class="mb-1 flex flex-wrap items-center gap-2">
-									<Badge type="splitted" bright :color="simColor(pair.similarity)">
-										<template #label>{{ pair.room }}</template>
-										<template #value>{{ Math.round(pair.similarity * 100) }}%</template>
-									</Badge>
-								</div>
-								<div class="mb-1">
-									<span class="text-secondary text-xs">#{{ pair.lesson_a_id }}</span>
-									<span class="ml-1 wrap-break-word whitespace-pre-wrap">
-										{{ pair.lesson_a_text }}
-									</span>
-								</div>
-								<div>
-									<span class="text-secondary text-xs">#{{ pair.lesson_b_id }}</span>
-									<span class="ml-1 wrap-break-word whitespace-pre-wrap">
-										{{ pair.lesson_b_text }}
-									</span>
-								</div>
-							</div>
+								<template #header>
+									<div class="text-default flex flex-wrap items-center gap-2">
+										<Badge type="splitted" bright :color="simColor(pair.similarity)" size="small">
+											<template #label>{{ pair.room }}</template>
+											<template #value>{{ Math.round(pair.similarity * 100) }}%</template>
+										</Badge>
+									</div>
+								</template>
+								<template #default>
+									<dl class="mt-1 flex flex-col gap-2">
+										<div class="flex flex-col gap-1">
+											<dt class="text-secondary font-mono text-[10px] tracking-wider uppercase">
+												Lesson {{ pair.lesson_a_id }}
+											</dt>
+											<dd
+												class="text-default font-mono text-xs leading-snug wrap-break-word whitespace-pre-wrap"
+											>
+												{{ pair.lesson_a_text }}
+											</dd>
+										</div>
+										<div class="border-border flex flex-col gap-1 border-t pt-3">
+											<dt class="text-secondary font-mono text-[10px] tracking-wider uppercase">
+												Lesson {{ pair.lesson_b_id }}
+											</dt>
+											<dd
+												class="text-default font-mono text-xs leading-snug wrap-break-word whitespace-pre-wrap"
+											>
+												{{ pair.lesson_b_text }}
+											</dd>
+										</div>
+									</dl>
+								</template>
+							</CardEntity>
 						</div>
 					</template>
 				</CardEntity>
@@ -91,20 +110,22 @@
 						<n-collapse v-else>
 							<n-collapse-item v-for="group of data.rooms" :key="group.room" :name="group.room">
 								<template #header>
-									<div class="flex flex-wrap items-center gap-2">
+									<div class="flex w-full flex-wrap items-center justify-between gap-2">
 										<span class="font-medium">{{ group.room }}</span>
-										<Badge type="splitted">
-											<template #label>Total</template>
-											<template #value>{{ group.total }}</template>
-										</Badge>
-										<Badge type="splitted" color="success">
-											<template #label>Durable</template>
-											<template #value>{{ group.durable }}</template>
-										</Badge>
-										<Badge type="splitted" color="warning">
-											<template #label>One-off</template>
-											<template #value>{{ group.one_off }}</template>
-										</Badge>
+										<div class="ml-auto flex flex-wrap items-center gap-2">
+											<Badge type="splitted" size="small">
+												<template #label>Total</template>
+												<template #value>{{ group.total }}</template>
+											</Badge>
+											<Badge type="splitted" color="success" size="small">
+												<template #label>Durable</template>
+												<template #value>{{ group.durable }}</template>
+											</Badge>
+											<Badge type="splitted" color="warning" size="small">
+												<template #label>One-off</template>
+												<template #value>{{ group.one_off }}</template>
+											</Badge>
+										</div>
 									</div>
 								</template>
 								<div class="flex flex-col gap-2">
@@ -113,6 +134,7 @@
 											<div class="flex flex-wrap items-center gap-2">
 												<Badge
 													type="splitted"
+													size="small"
 													:color="ls.durability === 'durable' ? 'success' : 'warning'"
 												>
 													<template #label>{{ ls.durability }}</template>
@@ -124,15 +146,15 @@
 														}}
 													</template>
 												</Badge>
-												<Badge type="splitted" :color="statusColor(ls.status)">
+												<Badge type="splitted" size="small" :color="statusColor(ls.status)">
 													<template #label>Status</template>
 													<template #value>{{ ls.status }}</template>
 												</Badge>
-												<Badge type="splitted">
+												<Badge type="splitted" size="small">
 													<template #label>ID</template>
 													<template #value>{{ ls.id }}</template>
 												</Badge>
-												<Badge type="splitted">
+												<Badge type="splitted" size="small">
 													<template #label>Created at</template>
 													<template #value>
 														{{ formatDate(ls.created_at, "MMM D") }}
@@ -141,7 +163,9 @@
 											</div>
 										</template>
 										<template #mainExtra>
-											{{ ls.lesson_text }}
+											<div class="text-sm">
+												{{ ls.lesson_text }}
+											</div>
 										</template>
 									</CardEntity>
 								</div>
@@ -152,7 +176,7 @@
 
 				<n-collapse>
 					<n-collapse-item title="Markdown" name="markdown">
-						<CodeSource :code="data.markdown" lang="markdown" :max-height="500" code-class="p-4" />
+						<CodeSource :code="data.markdown" lang="markdown" :max-height="500" />
 					</n-collapse-item>
 				</n-collapse>
 
