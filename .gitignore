@@ -593,6 +593,7 @@ skills-lock.json
 .cursor/rules/context-preservation.mdc
 .cursor/rules/dead-code.mdc
 .cursor/rules/dependency-awareness.mdc
+.cursor/rules/design-system.mdc
 .cursor/rules/error-handling.mdc
 .cursor/rules/explain-reasoning.mdc
 .cursor/rules/github-workflow.mdc

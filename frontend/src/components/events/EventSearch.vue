@@ -27,7 +27,7 @@
 			style="max-width: 90vw; width: 600px"
 		>
 			<n-drawer-content title="Event Details" closable :native-scrollbar="false">
-				<EventDetailDrawer
+				<EventDetail
 					:event="selectedEvent"
 					@filter-add="addFilterFromDetail"
 					@filter-exclude="excludeFilterFromDetail"
@@ -43,7 +43,7 @@
 			:bordered="false"
 			:mask-closable="false"
 		>
-			<ColumnConfigModal
+			<ColumnConfig
 				ref="columnConfigRef"
 				:open="showColumnConfig"
 				:event-source="selectedEventSource"
@@ -54,9 +54,7 @@
 
 			<template #footer>
 				<div class="flex items-center justify-between gap-2">
-					<n-button quaternary type="warning" @click="columnConfigRef?.resetToDefaults()">
-						Reset to defaults
-					</n-button>
+					<n-button text @click="columnConfigRef?.resetToDefaults()">Reset to defaults</n-button>
 					<div class="flex gap-2">
 						<n-button @click="showColumnConfig = false">Cancel</n-button>
 						<n-button type="primary" :loading="columnConfigRef?.saving" @click="columnConfigRef?.onSave()">
@@ -76,8 +74,8 @@ import type { DisplayColumn } from "@/types/eventSources.d"
 import { NButton, NDrawer, NDrawerContent, NModal, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
 import Api from "@/api"
-import ColumnConfigModal from "./ColumnConfigModal.vue"
-import EventDetailDrawer from "./EventDetailDrawer.vue"
+import ColumnConfig from "./ColumnConfig.vue"
+import EventDetail from "./EventDetail.vue"
 import EventSearchFilters from "./EventSearchFilters.vue"
 import EventSearchResults from "./EventSearchResults.vue"
 
