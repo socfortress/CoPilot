@@ -29,60 +29,19 @@
 			:trap-focus="false"
 		>
 			<n-drawer-content closable :native-scrollbar="false">
-				<template #header>
-					<div class="flex w-full items-center justify-between gap-3 pr-6">
-						<div class="flex min-w-0 items-center gap-2">
-							<div
-								v-if="selectedCategoryMeta"
-								class="flex shrink-0 items-center justify-center"
-								:style="{ color: selectedCategoryMeta.color }"
-							>
-								<Icon :name="getDashboardIcon(selectedCategoryMeta.icon)" :size="19" />
-							</div>
-							<div class="min-w-0">
-								<p class="truncate font-medium">{{ drawerTitle }}</p>
-								<p v-if="selectedCategory" class="text-secondary text-xs">
-									{{ selectedCategory.templates.length }} template{{
-										selectedCategory.templates.length !== 1 ? "s" : ""
-									}}
-								</p>
-							</div>
-						</div>
-
-						<n-select
-							v-model:value="selectedEventSourceId"
-							:options="eventSourceOptions"
-							placeholder="Select Event Source"
-							filterable
-							:loading="loadingEventSources"
-							:disabled="!selectedCustomerCode"
-							clearable
-							size="small"
-							:consistent-menu-width="false"
-							class="w-48! shrink-0"
-						/>
-					</div>
-				</template>
-
-				<n-spin :show="loadingTemplates">
-					<div
-						v-if="selectedCategory?.templates.length"
-						class="grid grid-cols-1 gap-3 @xl:grid-cols-2 @3xl:grid-cols-3"
-					>
-						<DashboardTemplateCard
-							v-for="tpl in selectedCategory.templates"
-							:key="tpl.id"
-							:template="tpl"
-							:selected-customer-code
-							:selected-event-source-id
-							:selected-category-id
-							:enabled-dashboards
-							disabled-tooltip-text="Select an event source first"
-							@refresh-enabled-dashboards="emit('refreshEnabledDashboards')"
-						/>
-					</div>
-					<n-empty v-else-if="!loadingTemplates" description="No templates in this category" />
-				</n-spin>
+				<DashboardCategoryDrawerContent
+					v-model:selected-event-source-id="selectedEventSourceId"
+					:category="selectedCategory"
+					:category-meta="selectedCategoryMeta ?? null"
+					:title="drawerTitle"
+					:loading-templates
+					:selected-customer-code
+					:loading-event-sources
+					:event-sources-list
+					:selected-category-id
+					:enabled-dashboards
+					@refresh-enabled-dashboards="emit('refreshEnabledDashboards')"
+				/>
 			</n-drawer-content>
 		</n-drawer>
 	</div>
@@ -91,13 +50,11 @@
 <script setup lang="ts">
 import type { DashboardCategory, DashboardCategoryWithTemplates, EnabledDashboard } from "@/types/dashboards.d"
 import type { EventSource } from "@/types/eventSources.d"
-import { NDrawer, NDrawerContent, NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
+import { NDrawer, NDrawerContent, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import DashboardCategoryCard from "./DashboardCategoryCard.vue"
-import DashboardTemplateCard from "./DashboardTemplateCard.vue"
-import { getDashboardIcon } from "./utils"
+import DashboardCategoryDrawerContent from "./DashboardCategoryDrawerContent.vue"
 
 const props = defineProps<{
 	selectedCustomerCode: string | null
@@ -134,15 +91,6 @@ const showCategoryDrawer = computed({
 		}
 	}
 })
-
-const eventSourceOptions = computed(() =>
-	props.eventSourcesList
-		.filter(source => source.enabled)
-		.map(source => ({
-			label: `${source.name} (${source.event_type})`,
-			value: source.id
-		}))
-)
 
 function getCategories() {
 	loadingCategories.value = true

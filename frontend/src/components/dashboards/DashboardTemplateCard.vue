@@ -19,7 +19,13 @@
 		<template #footerExtra>
 			<n-tooltip v-if="!isEnabled" :disabled="!disabledTooltipText" class="px-2! py-1!">
 				<template #trigger>
-					<n-button size="small" type="primary" :disabled="!canEnable" @click="onEnable">
+					<n-button
+						size="small"
+						type="primary"
+						:disabled="!canEnable || toggling"
+						:loading="toggling"
+						@click="onEnable"
+					>
 						<template #icon>
 							<Icon :name="disabledTooltipText ? LockedIcon : EnableIcon" />
 						</template>
@@ -30,7 +36,7 @@
 					{{ disabledTooltipText }}
 				</div>
 			</n-tooltip>
-			<n-button v-else size="small" type="error" quaternary @click="onDisable">
+			<n-button v-else size="small" type="error" quaternary :loading="toggling" @click="onDisable">
 				<template #icon>
 					<Icon :name="DisableIcon" />
 				</template>
@@ -43,7 +49,7 @@
 <script setup lang="ts">
 import type { DashboardTemplate, EnabledDashboard } from "@/types/dashboards.d"
 import { NButton, NTooltip, useDialog, useMessage } from "naive-ui"
-import { computed } from "vue"
+import { computed, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -69,6 +75,8 @@ const EnableIcon = "carbon:add-alt"
 const DisableIcon = "carbon:subtract-alt"
 const LockedIcon = "carbon:locked"
 
+const toggling = ref(false)
+
 const canEnable = computed(() => !!props.selectedCustomerCode && !!props.selectedEventSourceId)
 
 const isEnabled = computed(() => {
@@ -87,6 +95,8 @@ function onEnable() {
 		message.warning("Please select a customer and event source first")
 		return
 	}
+
+	toggling.value = true
 
 	Api.siem
 		.enableDashboard({
@@ -107,6 +117,9 @@ function onEnable() {
 		.catch(err => {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
+		.finally(() => {
+			toggling.value = false
+		})
 }
 
 function onDisable() {
@@ -125,7 +138,9 @@ function onDisable() {
 		positiveText: "Disable",
 		negativeText: "Cancel",
 		onPositiveClick: () => {
-			Api.siem
+			toggling.value = true
+
+			return Api.siem
 				.disableDashboard(match.id)
 				.then(res => {
 					if (res.data.success) {
@@ -137,6 +152,9 @@ function onDisable() {
 				})
 				.catch(err => {
 					message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				})
+				.finally(() => {
+					toggling.value = false
 				})
 		}
 	})
