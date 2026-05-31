@@ -178,6 +178,8 @@ defineProps<{
 const emit = defineEmits<{
 	search: [params: EventSearchFiltersParams]
 	loaded: [load: EventSearchFiltersLoad]
+	"field-mappings": [mappings: FieldMapping[]]
+	"field-mappings-loading": [loading: boolean]
 }>()
 
 const query = defineModel<string>("query", { default: "" })
@@ -269,6 +271,8 @@ function getEventSources(customerCode: string) {
 	eventSources.value = []
 	selectedSourceName.value = null
 	fieldMappings.value = []
+	emit("field-mappings-loading", false)
+	emit("field-mappings", [])
 
 	return Api.siem
 		.getEventSources(customerCode)
@@ -293,6 +297,8 @@ async function loadFieldMappings() {
 
 	loadingFieldMappings.value = true
 	fieldMappings.value = []
+	emit("field-mappings-loading", true)
+	emit("field-mappings", [])
 
 	try {
 		const res = await Api.siem.getFieldMappings(selectedCustomerCode.value, selectedSourceName.value)
@@ -303,6 +309,8 @@ async function loadFieldMappings() {
 		fieldMappings.value = []
 	} finally {
 		loadingFieldMappings.value = false
+		emit("field-mappings-loading", false)
+		emit("field-mappings", fieldMappings.value)
 	}
 }
 

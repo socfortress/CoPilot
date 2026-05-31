@@ -82,22 +82,33 @@
 				</template>
 			</n-input>
 
-			<div class="border-border max-h-72 overflow-y-auto rounded-lg border">
-				<button
-					v-for="field in filteredFields"
-					:key="field.field"
-					type="button"
-					class="hover:bg-hover-005 flex w-full cursor-pointer items-center justify-between gap-3 border-b border-transparent px-3 py-2 text-left transition-colors last:border-b-0"
-					@click="addColumn(field.field)"
+			<n-card embedded content-class="p-0!">
+				<n-scrollbar
+					v-if="filteredFields.length"
+					class="max-h-72"
+					trigger="none"
+					content-class="flex flex-col gap-0 py-2"
 				>
-					<span class="text-default min-w-0 truncate font-mono text-xs">{{ field.field }}</span>
-					<span class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">{{ field.type }}</span>
-				</button>
+					<n-button
+						v-for="field in filteredFields"
+						:key="field.field"
+						quaternary
+						class="[&_.n-button\_\_content]:w-full"
+						@click="addColumn(field.field)"
+					>
+						<div class="flex w-full items-center justify-between gap-3">
+							<span class="text-default min-w-0 truncate font-mono text-xs">{{ field.field }}</span>
+							<span class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">
+								{{ field.type }}
+							</span>
+						</div>
+					</n-button>
+				</n-scrollbar>
 
-				<div v-if="!filteredFields.length" class="text-secondary px-3 py-6 text-center text-xs">
+				<div v-else class="text-secondary px-3 py-6 text-center text-xs">
 					{{ emptyFieldsMessage }}
 				</div>
-			</div>
+			</n-card>
 		</section>
 	</div>
 </template>
@@ -105,7 +116,7 @@
 <script setup lang="ts">
 import type { FieldMapping } from "@/types/events.d"
 import type { DisplayColumn, EventSource } from "@/types/eventSources.d"
-import { NButton, NEmpty, NInput, useMessage } from "naive-ui"
+import { NButton, NCard, NEmpty, NInput, NScrollbar, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -114,6 +125,7 @@ const props = defineProps<{
 	open: boolean
 	eventSource: EventSource | null
 	fieldMappings: FieldMapping[]
+	loadingFieldMappings?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -152,12 +164,13 @@ const usedKeys = computed(() => new Set(localColumns.value.map(c => c.key)))
 const filteredFields = computed(() => {
 	const q = fieldFilter.value.trim().toLowerCase()
 	const all = props.fieldMappings.filter(f => !usedKeys.value.has(f.field))
-	if (!q) return all.slice(0, 50)
-	return all.filter(f => f.field.toLowerCase().includes(q)).slice(0, 50)
+	if (!q) return all
+	return all.filter(f => f.field.toLowerCase().includes(q))
 })
 
 const emptyFieldsMessage = computed(() => {
-	if (!props.fieldMappings.length) return "Loading available fields…"
+	if (props.loadingFieldMappings) return "Loading available fields…"
+	if (!props.fieldMappings.length) return "No field mappings available for this source."
 	if (fieldFilter.value.trim()) return "No fields match your filter."
 	return "All mapped fields are already in the table."
 })

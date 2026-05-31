@@ -5,6 +5,8 @@
 			:loading-events
 			@search="handleFiltersSearch"
 			@loaded="handleFiltersLoaded"
+			@field-mappings="fieldMappings = $event"
+			@field-mappings-loading="fieldMappingsLoading = $event"
 		/>
 
 		<EventSearchResults
@@ -24,7 +26,7 @@
 			v-model:show="showDetailDrawer"
 			display-directive="show"
 			:trap-focus="false"
-			:style="{ maxWidth: 'min(600px, 90vw)' }"
+			:style="{ width: 'min(600px, 90vw)' }"
 		>
 			<n-drawer-content title="Event Details" closable :native-scrollbar="false">
 				<EventDetail
@@ -40,7 +42,7 @@
 			preset="card"
 			display-directive="show"
 			:title="`Configure columns: ${selectedEventSource?.name ?? ''}`"
-			:style="{ maxWidth: 'min(720px, 92vw)' }"
+			:style="{ width: 'min(720px, 92vw)' }"
 			:mask-closable="false"
 		>
 			<ColumnConfig
@@ -48,6 +50,7 @@
 				:open="showColumnConfig"
 				:event-source="selectedEventSource"
 				:field-mappings
+				:loading-field-mappings="fieldMappingsLoading"
 				@close="showColumnConfig = false"
 				@saved="onColumnsSaved"
 			/>
@@ -69,7 +72,7 @@
 
 <script setup lang="ts">
 import type { EventSearchFiltersLoad, EventSearchFiltersParams } from "./EventSearchFilters.vue"
-import type { EventSearchResult } from "@/types/events.d"
+import type { EventSearchResult, FieldMapping } from "@/types/events.d"
 import type { DisplayColumn } from "@/types/eventSources.d"
 import { NButton, NDrawer, NDrawerContent, NModal, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
@@ -84,6 +87,8 @@ const message = useMessage()
 const searchFormParams = ref<EventSearchFiltersParams | null>(null)
 const searchFormLoad = ref<EventSearchFiltersLoad | null>(null)
 const query = ref("")
+const fieldMappings = ref<FieldMapping[]>([])
+const fieldMappingsLoading = ref(false)
 
 const events = ref<EventSearchResult[]>([])
 const totalEvents = ref(0)
@@ -104,10 +109,9 @@ const selectedEventSource = computed(() => {
 	return sources.find(s => s.name === sourceName) ?? null
 })
 
-const fieldMappings = computed(() => searchFormParams.value?.fieldMappings ?? [])
-
 function handleFiltersSearch(params: EventSearchFiltersParams) {
 	searchFormParams.value = params
+	fieldMappings.value = params.fieldMappings
 	searchEvents()
 }
 
