@@ -10,13 +10,13 @@
 			</p>
 
 			<n-button
-				quaternary
+				text
 				:disabled="!eventSource"
 				title="Configure which columns to display for this event source"
 				@click="emit('configure-columns')"
 			>
 				<template #icon>
-					<Icon :name="SettingsIcon" :size="16" />
+					<Icon :name="SettingsIcon" :size="15" />
 				</template>
 				Columns
 			</n-button>
@@ -26,11 +26,10 @@
 			:columns
 			:loading="loadingEvents"
 			:data="events"
-			:single-line="false"
 			size="small"
+			:scroll-x
 			:row-key="(row: EventSearchResult) => row._id || JSON.stringify(row)"
 			:row-props
-			virtual-scroll
 			class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
 		>
 			<template #empty>
@@ -50,7 +49,7 @@
 import type { DataTableColumns } from "naive-ui"
 import type { EventSearchResult } from "@/types/events.d"
 import type { DisplayColumn, EventSource } from "@/types/eventSources.d"
-import { NButton, NCard, NDataTable, NEmpty, NSpin } from "naive-ui"
+import { NButton, NDataTable, NEmpty } from "naive-ui"
 import { computed, h } from "vue"
 import Icon from "@/components/common/Icon.vue"
 
@@ -70,7 +69,20 @@ const emit = defineEmits<{
 	"row-select": [event: EventSearchResult]
 }>()
 
+const MIN_COLUMN_WIDTH = 120
 const SettingsIcon = "carbon:settings"
+
+function resolveColumnWidth(width?: number | null): number {
+	if (width == null || width < MIN_COLUMN_WIDTH) return MIN_COLUMN_WIDTH
+	return width
+}
+
+function normalizeColumns(cols: DataTableColumns<EventSearchResult>): DataTableColumns<EventSearchResult> {
+	return cols.map(col => ({
+		...col,
+		width: resolveColumnWidth(typeof col.width === "number" ? col.width : undefined)
+	}))
+}
 
 const defaultColumns: DataTableColumns<EventSearchResult> = [
 	{
@@ -100,6 +112,7 @@ const defaultColumns: DataTableColumns<EventSearchResult> = [
 	{
 		title: "Rule",
 		key: "rule_description",
+		width: 200,
 		ellipsis: { tooltip: true },
 		render(row) {
 			return row.rule_description || row.rule_id || "-"
@@ -123,6 +136,7 @@ const defaultColumns: DataTableColumns<EventSearchResult> = [
 	{
 		title: "Summary",
 		key: "full_log",
+		width: 320,
 		ellipsis: { tooltip: true },
 		render(row) {
 			return row.full_log || row.data || row.message || "-"
@@ -150,7 +164,7 @@ function buildColumnFromConfig(col: DisplayColumn): DataTableColumns<EventSearch
 	return {
 		title: col.label || col.key,
 		key: col.key,
-		width: col.width || undefined,
+		width: resolveColumnWidth(col.width),
 		ellipsis: { tooltip: true },
 		render(row: EventSearchResult) {
 			return formatCellValue(getNestedValue(row, col.key))
@@ -161,10 +175,17 @@ function buildColumnFromConfig(col: DisplayColumn): DataTableColumns<EventSearch
 const columns = computed<DataTableColumns<EventSearchResult>>(() => {
 	const configured = props.eventSource?.displayed_columns
 	if (configured && configured.length > 0) {
-		return configured.map(buildColumnFromConfig)
+		return normalizeColumns(configured.map(buildColumnFromConfig))
 	}
-	return defaultColumns
+	return normalizeColumns(defaultColumns)
 })
+
+const scrollX = computed(() =>
+	columns.value.reduce(
+		(sum, col) => sum + resolveColumnWidth(typeof col.width === "number" ? col.width : undefined),
+		0
+	)
+)
 
 function rowProps(row: EventSearchResult) {
 	return {
