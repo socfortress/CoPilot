@@ -9,11 +9,8 @@
 				>
 					<Icon :name="getDashboardIcon(categoryMeta.icon)" :size="19" />
 				</div>
-				<div class="min-w-0">
-					<p class="truncate font-medium">{{ title }}</p>
-					<p v-if="category" class="text-secondary text-xs">
-						{{ category.templates.length }} template{{ category.templates.length !== 1 ? "s" : "" }}
-					</p>
+				<div v-if="category">
+					{{ category.templates.length }} template{{ category.templates.length !== 1 ? "s" : "" }}
 				</div>
 			</div>
 
@@ -62,7 +59,6 @@ import { getDashboardIcon } from "./utils"
 const props = defineProps<{
 	category: DashboardCategoryWithTemplates | null
 	categoryMeta: DashboardCategory | null
-	title: string
 	loadingTemplates: boolean
 	selectedCustomerCode: string | null
 	loadingEventSources: boolean

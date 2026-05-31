@@ -28,12 +28,11 @@
 			class="max-w-[92vw]"
 			:trap-focus="false"
 		>
-			<n-drawer-content closable :native-scrollbar="false">
+			<n-drawer-content :title="drawerTitle" closable :native-scrollbar="false">
 				<DashboardCategoryDrawerContent
 					v-model:selected-event-source-id="selectedEventSourceId"
 					:category="selectedCategory"
 					:category-meta="selectedCategoryMeta ?? null"
-					:title="drawerTitle"
 					:loading-templates
 					:selected-customer-code
 					:loading-event-sources
