@@ -1,25 +1,27 @@
 <template>
-	<n-card size="small" class="@container">
-		<template #header>Dashboard Categories</template>
-		<template #header-extra>
-			<span class="text-secondary text-sm">{{ categories.length }} available</span>
-		</template>
-
-		<n-spin :show="loadingCategories">
-			<div
-				v-if="categories.length"
-				class="grid grid-cols-1 gap-3 @xl:grid-cols-2 @3xl:grid-cols-3 @6xl:grid-cols-4"
-			>
-				<DashboardCategoryCard
-					v-for="cat in categories"
-					:key="cat.id"
-					:category="cat"
-					:selected="selectedCategoryId === cat.id"
-					@select="selectCategory(cat.id)"
-				/>
+	<div class="divide-border flex divide-x">
+		<div class="flex flex-col gap-2">
+			<div class="flex items-center justify-between">
+				<p class="text-secondary text-sm">Dashboard Categories</p>
+				<span class="text-secondary text-sm">{{ categories.length }} available</span>
 			</div>
-			<n-empty v-else-if="!loadingCategories" description="No dashboard categories found" />
-		</n-spin>
+
+			<n-spin :show="loadingCategories">
+				<div
+					v-if="categories.length"
+					class="grid grid-cols-1 gap-3 @xl:grid-cols-2 @3xl:grid-cols-3 @6xl:grid-cols-4"
+				>
+					<DashboardCategoryCard
+						v-for="cat in categories"
+						:key="cat.id"
+						:category="cat"
+						:selected="selectedCategoryId === cat.id"
+						@select="selectCategory(cat.id)"
+					/>
+				</div>
+				<n-empty v-else-if="!loadingCategories" description="No dashboard categories found" />
+			</n-spin>
+		</div>
 
 		<div v-if="selectedCategory" class="border-border mt-4 flex flex-col gap-4 border-t pt-4">
 			<div class="flex items-center justify-between gap-2">
@@ -71,7 +73,7 @@
 				<n-empty v-else-if="!loadingTemplates" description="No templates in this category" />
 			</n-spin>
 		</div>
-	</n-card>
+	</div>
 </template>
 
 <script setup lang="ts">

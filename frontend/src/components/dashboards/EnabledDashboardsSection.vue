@@ -1,9 +1,9 @@
 <template>
-	<n-card v-if="visible" ref="wrapperRef" size="small">
-		<template #header>Enabled Dashboards</template>
-		<template #header-extra>
+	<div v-if="visible" ref="wrapperRef" class="flex flex-col gap-2">
+		<div class="flex items-center justify-between">
+			<p class="text-secondary text-sm">Enabled Dashboards</p>
 			<span class="text-secondary text-sm">{{ enabledDashboards.length }} enabled</span>
-		</template>
+		</div>
 
 		<n-data-table
 			bordered
@@ -19,7 +19,7 @@
 				<n-empty description="No enabled dashboards" />
 			</template>
 		</n-data-table>
-	</n-card>
+	</div>
 </template>
 
 <script setup lang="ts">
