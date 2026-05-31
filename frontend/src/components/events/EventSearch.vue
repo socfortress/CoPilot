@@ -20,19 +20,52 @@
 			@row-select="openEventDetail"
 		/>
 
-		<EventDetailDrawer
+		<n-drawer
 			v-model:show="showDetailDrawer"
-			:event="selectedEvent"
-			@filter-add="addFilterFromDetail"
-			@filter-exclude="excludeFilterFromDetail"
-		/>
+			display-directive="show"
+			:trap-focus="false"
+			style="max-width: 90vw; width: 600px"
+		>
+			<n-drawer-content title="Event Details" closable :native-scrollbar="false">
+				<EventDetailDrawer
+					:event="selectedEvent"
+					@filter-add="addFilterFromDetail"
+					@filter-exclude="excludeFilterFromDetail"
+				/>
+			</n-drawer-content>
+		</n-drawer>
 
-		<ColumnConfigModal
+		<n-modal
 			v-model:show="showColumnConfig"
-			:event-source="selectedEventSource"
-			:field-mappings
-			@saved="onColumnsSaved"
-		/>
+			preset="card"
+			:title="`Configure columns: ${selectedEventSource?.name ?? ''}`"
+			style="width: 720px; max-width: 92vw"
+			:bordered="false"
+			:mask-closable="false"
+		>
+			<ColumnConfigModal
+				ref="columnConfigRef"
+				:open="showColumnConfig"
+				:event-source="selectedEventSource"
+				:field-mappings
+				@close="showColumnConfig = false"
+				@saved="onColumnsSaved"
+			/>
+
+			<template #footer>
+				<div class="flex items-center justify-between gap-2">
+					<n-button quaternary type="warning" @click="columnConfigRef?.resetToDefaults()">
+						Reset to defaults
+					</n-button>
+					<div class="flex gap-2">
+						<n-button @click="showColumnConfig = false">Cancel</n-button>
+						<n-button type="primary" :loading="columnConfigRef?.saving" @click="columnConfigRef?.onSave()">
+							Save
+						</n-button>
+					</div>
+				</div>
+			</template>
+		</n-modal>
 	</div>
 </template>
 
@@ -40,8 +73,8 @@
 import type { EventSearchFiltersLoad, EventSearchFiltersParams } from "./EventSearchFilters.vue"
 import type { EventSearchResult } from "@/types/events.d"
 import type { DisplayColumn } from "@/types/eventSources.d"
-import { useMessage } from "naive-ui"
-import { computed, ref } from "vue"
+import { NButton, NDrawer, NDrawerContent, NModal, useMessage } from "naive-ui"
+import { computed, ref, useTemplateRef } from "vue"
 import Api from "@/api"
 import ColumnConfigModal from "./ColumnConfigModal.vue"
 import EventDetailDrawer from "./EventDetailDrawer.vue"
@@ -64,6 +97,7 @@ const hasSearched = ref(false)
 const showColumnConfig = ref(false)
 const showDetailDrawer = ref(false)
 const selectedEvent = ref<EventSearchResult | null>(null)
+const columnConfigRef = useTemplateRef("columnConfigRef")
 
 const selectedEventSource = computed(() => {
 	const sourceName = searchFormParams.value?.sourceName
