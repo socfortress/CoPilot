@@ -9,17 +9,25 @@
 				events
 			</p>
 
-			<n-button
-				text
-				:disabled="!eventSource"
-				title="Configure which columns to display for this event source"
-				@click="emit('configure-columns')"
-			>
-				<template #icon>
-					<Icon :name="SettingsIcon" :size="15" />
-				</template>
-				Columns
-			</n-button>
+			<div class="flex flex-wrap items-center gap-3">
+				<n-tooltip class="px-2! py-1! text-xs!">
+					<template #trigger>
+						<Icon :name="InfoIcon" :size="15" class="cursor-help" />
+					</template>
+					Click table row to view event details
+				</n-tooltip>
+				<n-button
+					text
+					:disabled="!eventSource"
+					title="Configure which columns to display for this event source"
+					@click="emit('configure-columns')"
+				>
+					<template #icon>
+						<Icon :name="SettingsIcon" :size="15" />
+					</template>
+					Columns
+				</n-button>
+			</div>
 		</div>
 
 		<n-data-table
@@ -49,7 +57,7 @@
 import type { DataTableColumns } from "naive-ui"
 import type { EventSearchResult } from "@/types/events.d"
 import type { DisplayColumn, EventSource } from "@/types/eventSources.d"
-import { NButton, NDataTable, NEmpty } from "naive-ui"
+import { NButton, NDataTable, NEmpty, NTooltip } from "naive-ui"
 import { computed, h } from "vue"
 import Icon from "@/components/common/Icon.vue"
 
@@ -71,6 +79,7 @@ const emit = defineEmits<{
 
 const MIN_COLUMN_WIDTH = 120
 const SettingsIcon = "carbon:settings"
+const InfoIcon = "carbon:information"
 
 function resolveColumnWidth(width?: number | null): number {
 	if (width == null || width < MIN_COLUMN_WIDTH) return MIN_COLUMN_WIDTH
@@ -196,19 +205,3 @@ function rowProps(row: EventSearchResult) {
 	}
 }
 </script>
-
-<style scoped>
-.level-error {
-	color: var(--error-color, #e88080);
-	font-weight: 600;
-}
-
-.level-warning {
-	color: var(--warning-color, #f0a020);
-	font-weight: 600;
-}
-
-.level-info {
-	color: var(--info-color, #70c0e8);
-}
-</style>
