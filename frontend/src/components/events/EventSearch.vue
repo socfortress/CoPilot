@@ -24,7 +24,7 @@
 			v-model:show="showDetailDrawer"
 			display-directive="show"
 			:trap-focus="false"
-			style="max-width: 90vw; width: 600px"
+			:style="{ maxWidth: 'min(600px, 90vw)' }"
 		>
 			<n-drawer-content title="Event Details" closable :native-scrollbar="false">
 				<EventDetail
@@ -38,9 +38,9 @@
 		<n-modal
 			v-model:show="showColumnConfig"
 			preset="card"
+			display-directive="show"
 			:title="`Configure columns: ${selectedEventSource?.name ?? ''}`"
-			style="width: 720px; max-width: 92vw"
-			:bordered="false"
+			:style="{ maxWidth: 'min(720px, 92vw)' }"
 			:mask-closable="false"
 		>
 			<ColumnConfig

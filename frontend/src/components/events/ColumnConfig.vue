@@ -1,100 +1,111 @@
 <template>
-	<div class="flex flex-col gap-4">
+	<div class="flex flex-col gap-6">
 		<!-- Active columns -->
-		<div class="flex flex-col gap-2">
-			<div class="flex items-center justify-between">
-				<span class="text-sm font-medium">Active columns ({{ localColumns.length }})</span>
-				<span class="text-xs opacity-60">Order matches table left-to-right</span>
+		<section class="flex min-w-0 flex-col gap-3">
+			<div class="flex items-start justify-between gap-3">
+				<div>
+					<p class="text-secondary text-[10px] font-medium tracking-widest uppercase">Active columns</p>
+					<p class="text-secondary mt-1 text-xs">Order matches table left-to-right</p>
+				</div>
+				<span class="text-default shrink-0 font-mono text-xs tabular-nums">{{ localColumns.length }}</span>
 			</div>
 
-			<div
+			<n-empty
 				v-if="!localColumns.length"
-				class="rounded border border-dashed p-4 text-center text-sm opacity-60"
+				size="small"
+				description="No custom columns"
+				class="border-border rounded-lg border border-dashed py-6"
 			>
-				No columns configured. Defaults from the table will be shown.
-			</div>
+				<template #extra>
+					<p class="text-secondary max-w-56 text-center text-xs">
+						Default table columns will be shown until you add fields below.
+					</p>
+				</template>
+			</n-empty>
 
-			<div v-else class="flex flex-col gap-1">
+			<div v-else class="flex flex-col gap-1.5">
 				<div
 					v-for="(col, idx) in localColumns"
 					:key="col.key"
-					class="bg-default flex items-center gap-2 rounded border px-2 py-1.5"
+					class="bg-default hover:bg-hover-005 group flex items-center gap-2 rounded-md py-2 transition-colors"
 				>
-					<span class="text-xs opacity-50" style="width: 24px">{{ idx + 1 }}</span>
-					<n-input
-						v-model:value="col.label"
-						size="small"
-						placeholder="Column header"
-						style="flex: 1; max-width: 200px"
-					/>
-					<span
-						class="font-mono text-xs opacity-60"
-						style="
-							flex: 1;
-							min-width: 0;
-							overflow: hidden;
-							text-overflow: ellipsis;
-							white-space: nowrap;
-						"
-					>
+					<span class="text-secondary w-5 shrink-0 text-center font-mono text-[10px] tabular-nums">
+						{{ idx + 1 }}
+					</span>
+					<n-input v-model:value="col.label" size="small" placeholder="Header label" />
+					<span class="text-secondary min-w-0 flex-1 truncate font-mono text-xs" :title="col.key">
 						{{ col.key }}
 					</span>
-					<n-button size="tiny" :disabled="idx === 0" @click="moveColumn(idx, -1)">
-						<template #icon>
-							<Icon :name="ArrowUpIcon" :size="14" />
-						</template>
-					</n-button>
-					<n-button size="tiny" :disabled="idx === localColumns.length - 1" @click="moveColumn(idx, 1)">
-						<template #icon>
-							<Icon :name="ArrowDownIcon" :size="14" />
-						</template>
-					</n-button>
-					<n-button size="tiny" type="error" quaternary @click="removeColumn(idx)">
-						<template #icon>
-							<Icon :name="CloseIcon" :size="14" />
-						</template>
-					</n-button>
-				</div>
-			</div>
-		</div>
-
-		<!-- Add column from available fields -->
-		<div class="flex flex-col gap-2">
-			<span class="text-sm font-medium">Add a column</span>
-			<n-input v-model:value="fieldFilter" placeholder="Filter available fields..." clearable size="small">
-				<template #prefix>
-					<Icon :name="SearchIcon" :size="14" class="opacity-50" />
-				</template>
-			</n-input>
-			<div class="max-h-60 overflow-y-auto rounded border">
-				<div
-					v-for="field in filteredFields"
-					:key="field.field"
-					class="hover:bg-hover-005 flex cursor-pointer items-center justify-between gap-2 px-2 py-1.5 text-sm"
-					@click="addColumn(field.field)"
-				>
-					<span class="font-mono">{{ field.field }}</span>
-					<span class="flex items-center gap-2">
-						<span class="text-xs opacity-50">{{ field.type }}</span>
-						<n-button size="tiny" quaternary>
+					<div class="flex shrink-0 gap-0.5 opacity-60 transition-opacity group-hover:opacity-100">
+						<n-button
+							size="tiny"
+							quaternary
+							:disabled="idx === 0"
+							title="Move up"
+							@click="moveColumn(idx, -1)"
+						>
 							<template #icon>
-								<Icon :name="AddIcon" :size="14" />
+								<Icon :name="ArrowUpIcon" :size="14" />
 							</template>
 						</n-button>
-					</span>
-				</div>
-				<div v-if="!filteredFields.length" class="p-3 text-center text-sm opacity-60">
-					{{ fieldMappings.length ? "No fields match your filter." : "Loading available fields..." }}
+						<n-button
+							size="tiny"
+							quaternary
+							:disabled="idx === localColumns.length - 1"
+							title="Move down"
+							@click="moveColumn(idx, 1)"
+						>
+							<template #icon>
+								<Icon :name="ArrowDownIcon" :size="14" />
+							</template>
+						</n-button>
+						<n-button size="tiny" quaternary type="error" title="Remove column" @click="removeColumn(idx)">
+							<template #icon>
+								<Icon :name="CloseIcon" :size="14" />
+							</template>
+						</n-button>
+					</div>
 				</div>
 			</div>
-		</div>
+		</section>
+
+		<!-- Add column from available fields -->
+		<section class="flex min-w-0 flex-col gap-3">
+			<div>
+				<p class="text-secondary text-[10px] font-medium tracking-widest uppercase">Add column</p>
+				<p class="text-secondary mt-1 text-xs">Pick a mapped field not already in the table</p>
+			</div>
+
+			<n-input v-model:value="fieldFilter" placeholder="Filter fields…" clearable size="small">
+				<template #prefix>
+					<Icon :name="SearchIcon" :size="14" class="text-secondary" />
+				</template>
+			</n-input>
+
+			<div class="border-border max-h-72 overflow-y-auto rounded-lg border">
+				<button
+					v-for="field in filteredFields"
+					:key="field.field"
+					type="button"
+					class="hover:bg-hover-005 flex w-full cursor-pointer items-center justify-between gap-3 border-b border-transparent px-3 py-2 text-left transition-colors last:border-b-0"
+					@click="addColumn(field.field)"
+				>
+					<span class="text-default min-w-0 truncate font-mono text-xs">{{ field.field }}</span>
+					<span class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">{{ field.type }}</span>
+				</button>
+
+				<div v-if="!filteredFields.length" class="text-secondary px-3 py-6 text-center text-xs">
+					{{ emptyFieldsMessage }}
+				</div>
+			</div>
+		</section>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { FieldMapping } from "@/types/events.d"
 import type { DisplayColumn, EventSource } from "@/types/eventSources.d"
-import { NButton, NInput, useMessage } from "naive-ui"
+import { NButton, NEmpty, NInput, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -111,7 +122,6 @@ const emit = defineEmits<{
 }>()
 
 const SearchIcon = "carbon:search"
-const AddIcon = "carbon:add"
 const CloseIcon = "carbon:close"
 const ArrowUpIcon = "carbon:arrow-up"
 const ArrowDownIcon = "carbon:arrow-down"
@@ -144,6 +154,12 @@ const filteredFields = computed(() => {
 	const all = props.fieldMappings.filter(f => !usedKeys.value.has(f.field))
 	if (!q) return all.slice(0, 50)
 	return all.filter(f => f.field.toLowerCase().includes(q)).slice(0, 50)
+})
+
+const emptyFieldsMessage = computed(() => {
+	if (!props.fieldMappings.length) return "Loading available fields…"
+	if (fieldFilter.value.trim()) return "No fields match your filter."
+	return "All mapped fields are already in the table."
 })
 
 function defaultLabelFor(fieldPath: string): string {
