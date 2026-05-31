@@ -55,71 +55,83 @@
 				</n-mention>
 			</div>
 
-			<div class="flex flex-wrap items-center justify-end gap-3">
-				<n-input-group class="flex flex-1 items-center justify-end">
-					<n-input-number
-						v-if="timerangeMode === 'relative'"
-						v-model:value="filterTimeRange.time"
-						:show-button="false"
-						:min="1"
-						size="small"
-						placeholder="Time"
-						class="max-w-15! min-w-10! text-center"
-					/>
-					<n-select
-						v-if="timerangeMode === 'relative'"
-						v-model:value="filterTimeRange.unit"
-						:options="unitOptions"
-						class="max-w-25!"
-						placeholder="Time unit"
-						:consistent-menu-width="false"
-						size="small"
-					/>
-					<n-date-picker
-						v-if="timerangeMode === 'absolute'"
-						v-model:value="daterange"
-						type="datetimerange"
-						class="min-w-70"
-						clearable
-						size="small"
-					/>
+			<div class="flex flex-wrap justify-between gap-3">
+				<div class="text-secondary text-xs">
+					{{
+						!selectedCustomerCode
+							? "Select a customer to search"
+							: !selectedSourceName
+								? "Select a source to search"
+								: ""
+					}}
+				</div>
+
+				<div class="flex flex-wrap items-center justify-end gap-3">
+					<n-input-group class="flex flex-1 items-center justify-end">
+						<n-input-number
+							v-if="timerangeMode === 'relative'"
+							v-model:value="filterTimeRange.time"
+							:show-button="false"
+							:min="1"
+							size="small"
+							placeholder="Time"
+							class="max-w-15! min-w-10! text-center"
+						/>
+						<n-select
+							v-if="timerangeMode === 'relative'"
+							v-model:value="filterTimeRange.unit"
+							:options="unitOptions"
+							class="max-w-25!"
+							placeholder="Time unit"
+							:consistent-menu-width="false"
+							size="small"
+						/>
+						<n-date-picker
+							v-if="timerangeMode === 'absolute'"
+							v-model:value="daterange"
+							type="datetimerange"
+							class="min-w-70"
+							clearable
+							size="small"
+						/>
+						<n-button
+							v-if="timerangeMode === 'relative'"
+							secondary
+							size="small"
+							@click="timerangeMode = 'absolute'"
+						>
+							<template #icon>
+								<Icon name="carbon:calendar" />
+							</template>
+						</n-button>
+						<n-button
+							v-if="timerangeMode === 'absolute'"
+							secondary
+							size="small"
+							@click="timerangeMode = 'relative'"
+						>
+							<template #icon>
+								<Icon name="carbon:reset" />
+							</template>
+						</n-button>
+					</n-input-group>
+
+					<n-select v-model:value="pageSize" :options="pageSizeOptions" size="small" class="w-33!" />
+
 					<n-button
-						v-if="timerangeMode === 'relative'"
 						secondary
 						size="small"
-						@click="timerangeMode = 'absolute'"
+						type="primary"
+						:loading="loadingEvents"
+						:disabled="!selectedCustomerCode || !selectedSourceName"
+						@click="searchEvents"
 					>
 						<template #icon>
-							<Icon name="carbon:calendar" />
+							<Icon name="carbon:search" />
 						</template>
+						Search
 					</n-button>
-					<n-button
-						v-if="timerangeMode === 'absolute'"
-						secondary
-						size="small"
-						@click="timerangeMode = 'relative'"
-					>
-						<template #icon>
-							<Icon name="carbon:reset" />
-						</template>
-					</n-button>
-				</n-input-group>
-
-				<n-select v-model:value="pageSize" :options="pageSizeOptions" size="small" class="w-33!" />
-
-				<n-button
-					secondary
-					size="small"
-					type="primary"
-					:loading="loadingEvents"
-					:disabled="!selectedCustomerCode || !selectedSourceName"
-					@click="searchEvents"
-				>
-					<template #icon>
-						<Icon name="carbon:search" />
-					</template>
-					Search
-				</n-button>
+				</div>
 			</div>
 		</div>
 	</div>

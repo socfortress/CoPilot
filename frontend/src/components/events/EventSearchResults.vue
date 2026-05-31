@@ -1,46 +1,49 @@
 <template>
-	<n-spin :show="loadingEvents">
-		<n-card v-if="events.length || loadingEvents" size="small">
-			<div class="flex justify-between gap-3">
-				<div class="mb-2 flex items-center justify-between">
-					<span class="text-sm opacity-60">
-						{{ totalEvents }} event{{ totalEvents !== 1 ? "s" : "" }} found
-					</span>
-				</div>
+	<div class="flex flex-col gap-1">
+		<div class="flex items-end justify-between gap-3">
+			<p class="py-1 text-sm">
+				Showing
+				<span class="font-semibold">{{ events.length }}</span>
+				of
+				<span class="font-semibold">{{ totalEvents }}</span>
+				events
+			</p>
 
-				<n-button
-					quaternary
-					:disabled="!eventSource"
-					title="Configure which columns to display for this event source"
-					@click="emit('configure-columns')"
-				>
-					<template #icon>
-						<Icon :name="SettingsIcon" :size="16" />
-					</template>
-					Columns
-				</n-button>
-			</div>
-			<n-data-table
-				:columns
-				:data="events"
-				:bordered="false"
-				:single-line="false"
-				size="small"
-				:row-key="(row: EventSearchResult) => row._id || JSON.stringify(row)"
-				:row-props
-				max-height="calc(100vh - 360px)"
-				virtual-scroll
-			/>
-			<div v-if="scrollId && events.length < totalEvents" class="mt-3 flex justify-center">
-				<n-button :loading="loadingMore" @click="emit('load-more')">Load More</n-button>
-			</div>
-		</n-card>
-		<n-empty
-			v-else-if="!loadingEvents && hasSearched"
-			description="No events found"
-			class="h-48 justify-center"
-		/>
-	</n-spin>
+			<n-button
+				quaternary
+				:disabled="!eventSource"
+				title="Configure which columns to display for this event source"
+				@click="emit('configure-columns')"
+			>
+				<template #icon>
+					<Icon :name="SettingsIcon" :size="16" />
+				</template>
+				Columns
+			</n-button>
+		</div>
+
+		<n-data-table
+			:columns
+			:loading="loadingEvents"
+			:data="events"
+			:single-line="false"
+			size="small"
+			:row-key="(row: EventSearchResult) => row._id || JSON.stringify(row)"
+			:row-props
+			virtual-scroll
+			class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
+		>
+			<template #empty>
+				<n-empty description="No events found">
+					<template #extra>Try adjusting your query or expanding the time range</template>
+				</n-empty>
+			</template>
+		</n-data-table>
+
+		<div v-if="scrollId && events.length < totalEvents" class="mt-3 flex justify-center">
+			<n-button :loading="loadingMore" @click="emit('load-more')">Load More</n-button>
+		</div>
+	</div>
 </template>
 
 <script setup lang="ts">
