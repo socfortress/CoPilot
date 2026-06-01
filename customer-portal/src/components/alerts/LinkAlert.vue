@@ -1,5 +1,5 @@
 <template>
-	<n-popover trigger="click" :show-arrow="false" to="body" @update:show="loadList">
+	<n-popover trigger="click" :show-arrow="false" to="body" placement="left" @update:show="loadList">
 		<template #trigger>
 			<n-button :size :focusable="false" :loading="!!linkingCaseId || !!linkingAlertId" :secondary>
 				{{ label || "Link Alert" }}
