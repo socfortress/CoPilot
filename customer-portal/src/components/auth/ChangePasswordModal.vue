@@ -62,6 +62,7 @@ import { NButton, NForm, NFormItem, NInput, NModal, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
@@ -73,6 +74,7 @@ const isOpen = defineModel<boolean>("open", { default: false })
 const loading = defineModel<boolean>("loading", { default: false })
 
 const message = useMessage()
+const authStore = useAuthStore()
 const currentPassword = ref("")
 const newPassword = ref("")
 const confirmPassword = ref("")
@@ -104,29 +106,26 @@ async function handleSubmit() {
 		return
 	}
 
-	// Validate password length
-	if (newPassword.value.length < 8) {
-		message.error("Password must be at least 8 characters long")
+	// Mirror the backend complexity requirements so the user gets a clear message
+	// instead of an opaque 422 from the API.
+	if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,72}$/.test(newPassword.value)) {
+		message.error(
+			"Password must be 8-72 characters and include an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&#)"
+		)
+		return
+	}
+
+	const username = authStore.userName
+	if (!username) {
+		message.error("Authentication required. Please log in again.")
 		return
 	}
 
 	loading.value = true
 
 	try {
-		// Get token and username from localStorage
-		const token = localStorage.getItem("customer-portal-auth-token")
-		const userStr = localStorage.getItem("customer-portal-user")
-
-		if (!token || !userStr) {
-			message.error("Authentication required. Please log in again.")
-			return
-		}
-
-		const user = JSON.parse(userStr)
-		const username = user.username
-
-		// Call the reset-password/me endpoint
-		const response = await Api.auth.resetPassword(username, newPassword.value)
+		// Token is injected by the HTTP client from the auth store.
+		const response = await Api.auth.resetPassword(username, newPassword.value, currentPassword.value)
 
 		if (response.data.success) {
 			message.success("Password changed successfully!")
