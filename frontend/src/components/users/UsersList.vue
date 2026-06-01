@@ -153,7 +153,13 @@ function getRoleTagType(roleName: string | null | undefined) {
 	}
 }
 
-const options = [
+// Computed (not a static array) so the dropdown re-renders whenever `selectedUser`
+// changes. The render closures below read `selectedUser.value`, but the parent
+// template never references it directly — if `options` were a stable array
+// reference, NDropdown would never re-render and the child modals (kept mounted by
+// `display-directive="show"`) would keep a stale `user` prop, intermittently
+// showing the wrong user's data or nothing at all. See issue #899.
+const options = computed(() => [
 	{
 		key: "AssignRole",
 		type: "render",
@@ -202,7 +208,7 @@ const options = [
 				onLoading: updateLoadingDelete
 			})
 	}
-]
+])
 
 function updateLoadingDelete(value: boolean) {
 	loadingDelete.value = value

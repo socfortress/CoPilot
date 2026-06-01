@@ -146,4 +146,19 @@ watch(showModal, newVal => {
 		loadCurrentAccess()
 	}
 })
+
+// This instance is reused across table rows, so the bound user can change while
+// mounted. Reload that user's access if it changes while the modal is open, and
+// clear stale state otherwise so a previous user's data is never shown. See #899.
+watch(
+	() => props.user?.id,
+	() => {
+		if (showModal.value) {
+			loadCurrentAccess()
+		} else {
+			currentAccess.value = []
+			formModel.value.customerCodes = []
+		}
+	}
+)
 </script>
