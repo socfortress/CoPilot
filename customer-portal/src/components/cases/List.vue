@@ -208,11 +208,19 @@ const loadCases = useDebounceFn(async () => {
 					)
 					break
 				default:
-					response = await Api.cases.getCases(paginationPayload, abortController.signal, customerFilterStore.queryCustomerCodes)
+					response = await Api.cases.getCases(
+						paginationPayload,
+						abortController.signal,
+						customerFilterStore.queryCustomerCodes
+					)
 					break
 			}
 		} else {
-			response = await Api.cases.getCases(paginationPayload, abortController.signal, customerFilterStore.queryCustomerCodes)
+			response = await Api.cases.getCases(
+				paginationPayload,
+				abortController.signal,
+				customerFilterStore.queryCustomerCodes
+			)
 		}
 
 		data.value = response.data.cases
@@ -269,10 +277,14 @@ function handleStatusUpdateSuccess(payload: CaseStatusUpdateSuccessPayload) {
 	}
 }
 
-watch([() => pagination.value.pageSize, () => filters.value.value, () => customerFilterStore.selectedCustomerCodes], resetPage, {
-	deep: true,
-	immediate: true
-})
+watch(
+	[() => pagination.value.pageSize, () => filters.value.value, () => customerFilterStore.selectedCustomerCodes],
+	resetPage,
+	{
+		deep: true,
+		immediate: true
+	}
+)
 
 watch(() => pagination.value.page, loadCases, {
 	deep: true,
