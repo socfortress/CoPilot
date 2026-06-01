@@ -72,9 +72,6 @@ importers:
       algoliasearch:
         specifier: ^5.53.0
         version: 5.53.0
-      apexcharts:
-        specifier: ^5.13.0
-        version: 5.13.0
       axios:
         specifier: ^1.16.1
         version: 1.16.1(debug@4.4.3)
@@ -150,6 +147,9 @@ importers:
       remark-breaks:
         specifier: ^4.0.0
         version: 4.0.0
+      rolldown:
+        specifier: 1.0.1
+        version: 1.0.1
       secure-ls:
         specifier: ^2.0.0
         version: 2.0.0
@@ -186,9 +186,6 @@ importers:
       vue-sjv:
         specifier: ^0.0.6
         version: 0.0.6(vue@3.5.35(typescript@6.0.3))
-      vue3-apexcharts:
-        specifier: ^1.11.1
-        version: 1.11.1(apexcharts@5.13.0)(vue@3.5.35(typescript@6.0.3))
       vue3-marquee:
         specifier: ^4.2.2
         version: 4.2.2(vue@3.5.35(typescript@6.0.3))
@@ -1981,9 +1978,6 @@ packages:
   ansis@4.3.1:
     resolution: {integrity: sha512-BJ8/l4R5LRE7hW9WdSuGYrLSHi2ynxeFpDFbH0K/CgNeY/tyhk+vO6TYxXC5r5CpUhNVX310xzPsN/H9lCdfOA==}
     engines: {node: '>=14'}
-
-  apexcharts@5.13.0:
-    resolution: {integrity: sha512-PJuXT6zdiCbv0IkX5cqkKFVIIh+9v3kqP9zsOHEGpIWi7DfTgzvfOKc8icw6G3/ulR3V1alDDUtOVH0zWCWGEQ==}
 
   are-docs-informative@0.0.2:
     resolution: {integrity: sha512-ixiS0nLNNG5jNQzgZJNoUpBKdo9yTYZMGJ+QgT2jmjR7G7+QHRCc4v6LQ3NgE7EBJq+o0ams3waJwkrlBom8Ig==}
@@ -4908,12 +4902,6 @@ packages:
     peerDependencies:
       typescript: '>=5.0.0'
 
-  vue3-apexcharts@1.11.1:
-    resolution: {integrity: sha512-MbN3vg8bMG19wc0Lm1HkeQvODgLm56DgpIxtNUO0xpf/JCzYWVGE4jzXp2JISzy2s3Kul1yOxNQUYsLvKQ5L9g==}
-    peerDependencies:
-      apexcharts: '>=5.10.0'
-      vue: '>=3.0.0'
-
   vue3-marquee@4.2.2:
     resolution: {integrity: sha512-FeFvGUVInKfFilXFcnl8sDRBJBZCZSNLlQDquJErB9db6W2xICRVqbRV/jtdzsEP0rftarLQhx9MeEAU0+TPuQ==}
     engines: {node: '>=12'}
@@ -6939,8 +6927,6 @@ snapshots:
   ansi-styles@6.2.3: {}
 
   ansis@4.3.1: {}
-
-  apexcharts@5.13.0: {}
 
   are-docs-informative@0.0.2: {}
 
@@ -10144,11 +10130,6 @@ snapshots:
       '@volar/typescript': 2.4.28
       '@vue/language-core': 3.3.3
       typescript: 6.0.3
-
-  vue3-apexcharts@1.11.1(apexcharts@5.13.0)(vue@3.5.35(typescript@6.0.3)):
-    dependencies:
-      apexcharts: 5.13.0
-      vue: 3.5.35(typescript@6.0.3)
 
   vue3-marquee@4.2.2(vue@3.5.35(typescript@6.0.3)):
     dependencies:

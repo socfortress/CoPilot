@@ -5,7 +5,7 @@
 # RUN npm install -g pnpm
 
 FROM node:24 AS builder
-RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
+RUN corepack enable && corepack prepare pnpm@11.5.0 --activate
 
 # Drop root
 USER node
