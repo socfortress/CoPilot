@@ -20,23 +20,16 @@
 	}
 }
 
-.n-drawer--right-placement {
-	border-left: 1px solid var(--border-color);
-	box-shadow: 0px 0px 20px 10px rgba(0, 0, 0, 0.4) !important;
-}
-
 .n-drawer__resize-trigger {
 	&::before {
 		content: "::";
 		background-color: var(--bg-default-color);
-		border: 1px solid var(--border-color);
-		border-right: transparent;
 		width: 16px;
 		height: 26px;
 		display: flex;
 		position: absolute;
 		top: 50%;
-		right: 2px;
+		right: 0px;
 		text-align: center;
 		justify-content: center;
 		align-items: center;
@@ -52,7 +45,6 @@
 		&::before {
 			background-color: var(--primary-color);
 			color: var(--fg-tertiary-color);
-			border-color: transparent;
 		}
 	}
 }
@@ -113,45 +105,43 @@
 	}
 }
 
+.n-spin-container {
+	.n-spin-body {
+		inset: 0 !important;
+		transform: none !important;
+		display: block;
+
+		.n-base-loading {
+			position: sticky;
+			top: 50%;
+			margin-top: min(50%, 100px);
+			width: 100%;
+			display: flex;
+			justify-content: center;
+			transform: translateY(-70px);
+
+			.n-base-loading__transition-wrapper {
+				width: 1em;
+				height: 1em;
+			}
+		}
+
+		.n-spin-description {
+			position: sticky;
+			top: calc(50% + 50px);
+			left: 50%;
+			transform: translateX(-50%) translateY(-40px);
+			margin-top: 0;
+		}
+	}
+}
+
 .n-form-item {
-	.n-form-item-feedback-wrapper:not(:empty) {
-		transform: translateY(-7px);
-		padding-left: 0px !important;
-		padding-right: 0px !important;
-		padding-top: 0 !important;
-		z-index: 1;
-
+	.n-form-item-feedback-wrapper {
 		.n-form-item-feedback {
-			font-size: 13px;
-			line-height: 1.2;
-			padding: 3px 12px;
-			border-bottom-left-radius: var(--border-radius);
-			border-bottom-right-radius: var(--border-radius);
-			background: color-mix(in srgb, currentColor 5%, var(--bg-default-color) 95%);
-			border: 1px solid currentColor;
-			border-top: 0;
+			line-height: 1.1;
 		}
 	}
-
-	&.n-form-item--small-size {
-		.n-form-item-feedback-wrapper:not(:empty) {
-			transform: translateY(-6px);
-
-			.n-form-item-feedback {
-				font-size: 11px;
-				padding: 3px 10px;
-			}
-		}
-	}
-
-	&.n-form-item--small-large {
-		.n-form-item-feedback-wrapper:not(:empty) {
-			.n-form-item-feedback {
-				padding: 3px 14px;
-			}
-		}
-	}
-
 	.n-form-item-blank--error {
 		.n-upload-dragger {
 			border-color: var(--n-feedback-text-color-error);
