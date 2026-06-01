@@ -8,6 +8,7 @@ from app.connectors.graylog.services.pipelines import get_pipelines
 from app.connectors.graylog.utils.universal import send_delete_request
 from app.connectors.graylog.utils.universal import send_get_request
 from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.graylog.utils.universal import send_post_request_create_entity
 from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
@@ -160,9 +161,9 @@ async def send_event_stream_creation_request(
     """
     json_event_stream = json.dumps(event_stream.model_dump())
     logger.info(f"json_event_stream set: {json_event_stream}")
-    response_json = await send_post_request(
+    response_json = await send_post_request_create_entity(
         endpoint="/api/streams",
-        data=event_stream.model_dump(),
+        entity=event_stream.model_dump(),
     )
     return StreamCreationResponse(**response_json)
 

@@ -235,7 +235,14 @@ async def get_url_whitelist_entries() -> UrlWhitelistEntryResponse:
         UrlWhitelistEntryResponse: The response object containing the URL whitelist entries.
     """
     logger.info("Getting URL whitelist entries from Graylog")
-    response = await send_get_request(endpoint="/api/system/urlwhitelist")
+    # Graylog 7.0 renamed urlwhitelist -> urlallowlist. Try the 7.x path first and
+    # fall back to the 6.x path so both server versions are supported. GET is
+    # idempotent, so the fallback is safe.
+    try:
+        response = await send_get_request(endpoint="/api/system/urlallowlist")
+    except HTTPException:
+        logger.info("urlallowlist endpoint unavailable, falling back to legacy urlwhitelist (Graylog < 7.0)")
+        response = await send_get_request(endpoint="/api/system/urlwhitelist")
     logger.info(f"URL whitelist entries response: {response}")
     if response["success"]:
         try:

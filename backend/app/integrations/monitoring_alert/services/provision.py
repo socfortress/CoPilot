@@ -8,7 +8,7 @@ from app.connectors.graylog.routes.monitoring import get_all_event_notifications
 from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
 from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsResponse
 from app.connectors.graylog.services.collector import get_url_whitelist_entries
-from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.graylog.utils.universal import send_post_request_create_entity
 from app.connectors.graylog.utils.universal import send_put_request
 from app.integrations.monitoring_alert.schema.provision import (
     CustomMonitoringAlertProvisionModel,
@@ -219,9 +219,9 @@ async def provision_webhook(
     Returns:
         bool: True if the webhook was provisioned successfully, False otherwise.
     """
-    response = await send_post_request(
+    response = await send_post_request_create_entity(
         endpoint="/api/events/notifications",
-        data=webhook_model.model_dump(),
+        entity=webhook_model.model_dump(),
     )
     if response["success"]:
         logger.info(f"response: {response}")
@@ -249,9 +249,9 @@ async def provision_alert_definition(
         if hasattr(alert_definition_model.config, "event_limit"):
             delattr(alert_definition_model.config, "event_limit")
 
-    response = await send_post_request(
+    response = await send_post_request_create_entity(
         endpoint="/api/events/definitions",
-        data=alert_definition_model.model_dump(),
+        entity=alert_definition_model.model_dump(),
     )
     logger.info(f"Graylog alert definition provisioned response: {response}")
     if response["success"]:

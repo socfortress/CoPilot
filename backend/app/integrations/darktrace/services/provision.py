@@ -12,6 +12,7 @@ from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import create_grafana_client
 from app.connectors.graylog.services.management import start_stream
 from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.graylog.utils.universal import send_post_request_create_entity
 from app.connectors.wazuh_indexer.services.monitoring import (
     output_shard_number_to_be_set_based_on_nodes,
 )
@@ -170,9 +171,9 @@ async def send_event_stream_creation_request(
     """
     json_event_stream = json.dumps(event_stream.model_dump())
     logger.info(f"json_event_stream set: {json_event_stream}")
-    response_json = await send_post_request(
+    response_json = await send_post_request_create_entity(
         endpoint="/api/streams",
-        data=event_stream.model_dump(),
+        entity=event_stream.model_dump(),
     )
     return StreamCreationResponse(**response_json)
 
