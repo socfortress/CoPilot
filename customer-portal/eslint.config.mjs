@@ -1,4 +1,7 @@
+import process from "node:process"
 import antfu from "@antfu/eslint-config"
+
+const isProduction = process.env.NODE_ENV === "production"
 
 export default antfu(
 	{
@@ -14,6 +17,7 @@ export default antfu(
 		rules: {
 			"e18e/ban-dependencies": ["error", { allowed: ["axios", "lodash", "depcheck", "fs-extra"] }],
 			"antfu/if-newline": "off",
+			"pnpm/yaml-enforce-settings": isProduction ? "error" : "off",
 			"style/operator-linebreak": "off",
 			"style/arrow-parens": "off",
 			"style/brace-style": "off",

@@ -5,7 +5,7 @@
 # RUN npm install -g pnpm
 
 FROM node:22 as builder
-RUN npm install -g pnpm@10.33.2
+RUN npm install -g pnpm@11.5.0
 
 # Drop root
 USER node
