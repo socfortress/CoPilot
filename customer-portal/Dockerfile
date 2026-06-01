@@ -4,8 +4,8 @@
 # # Install pnpm globally
 # RUN npm install -g pnpm
 
-FROM node:22 as builder
-RUN npm install -g pnpm@11.5.0
+FROM node:24 as builder
+RUN corepack enable && corepack prepare pnpm@11.5.0 --activate
 
 # Drop root
 USER node
@@ -13,11 +13,11 @@ USER node
 # Set the working directory
 WORKDIR /app
 
-# Copy the package.json and pnpm-lock.yaml files into the working directory
-COPY package.json pnpm-lock.yaml ./
+# `pnpm-workspace.yaml` carries `allowBuilds` (required for @parcel/watcher native install).
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install project dependencies using pnpm
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # Copy project files into the working directory
 COPY --chown=node . .
@@ -25,7 +25,7 @@ COPY --chown=node . .
 # Run the Vue.js project build using pnpm
 RUN pnpm run build:only
 
-FROM node:21 as dev
+FROM node:24 as dev
 
 RUN apt-get update && apt-get install -y openssl
 
