@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import type { DashboardTemplate, EnabledDashboard } from "@/types/dashboards.d"
-import { NButton, NTooltip, useDialog, useMessage } from "naive-ui"
+import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
