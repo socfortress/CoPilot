@@ -24,7 +24,7 @@
 		<n-drawer
 			v-model:show="showCategoryDrawer"
 			display-directive="show"
-			:width="960"
+			:width="760"
 			class="max-w-[92vw]"
 			:trap-focus="false"
 		>
