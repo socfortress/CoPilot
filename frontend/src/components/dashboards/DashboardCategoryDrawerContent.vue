@@ -1,6 +1,6 @@
 <template>
 	<div class="flex flex-col gap-4">
-		<div class="flex items-center justify-between gap-3">
+		<div class="flex flex-wrap items-center justify-between gap-3">
 			<div class="flex min-w-0 items-center gap-2">
 				<div
 					v-if="categoryMeta"
@@ -14,18 +14,21 @@
 				</div>
 			</div>
 
-			<n-select
-				v-model:value="selectedEventSourceId"
-				:options="eventSourceOptions"
-				placeholder="Select Event Source"
-				filterable
-				:loading="loadingEventSources"
-				:disabled="!selectedCustomerCode"
-				clearable
-				size="small"
-				:consistent-menu-width="false"
-				class="w-48! shrink-0"
-			/>
+			<div class="flex items-center justify-end gap-3">
+				<p v-if="!selectedEventSourceId" class="text-xs">select event source to add a template</p>
+				<n-select
+					v-model:value="selectedEventSourceId"
+					:options="eventSourceOptions"
+					placeholder="Select Event Source"
+					filterable
+					:loading="loadingEventSources"
+					:disabled="!selectedCustomerCode"
+					clearable
+					size="small"
+					:consistent-menu-width="false"
+					class="w-48! shrink-0"
+				/>
+			</div>
 		</div>
 
 		<n-spin :show="loadingTemplates">
@@ -38,7 +41,6 @@
 					:selected-event-source-id
 					:selected-category-id
 					:enabled-dashboards
-					disabled-tooltip-text="Select an event source first"
 					@refresh-enabled-dashboards="emit('refreshEnabledDashboards')"
 				/>
 			</div>

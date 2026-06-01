@@ -17,30 +17,24 @@
 		</template>
 
 		<template #footerExtra>
-			<n-tooltip v-if="!isEnabled" :disabled="!disabledTooltipText" class="px-2! py-1!">
-				<template #trigger>
-					<n-button
-						size="small"
-						type="primary"
-						:disabled="!canEnable || toggling"
-						:loading="toggling"
-						@click="onEnable"
-					>
-						<template #icon>
-							<Icon :name="disabledTooltipText ? LockedIcon : EnableIcon" />
-						</template>
-						Enable
-					</n-button>
-				</template>
-				<div class="text-sm">
-					{{ disabledTooltipText }}
-				</div>
-			</n-tooltip>
-			<n-button v-else size="small" type="error" quaternary :loading="toggling" @click="onDisable">
+			<n-button v-if="isEnabled" size="small" type="error" quaternary :loading="toggling" @click="onDisable">
 				<template #icon>
 					<Icon :name="DisableIcon" />
 				</template>
 				Disable
+			</n-button>
+			<n-button
+				v-else
+				size="small"
+				type="primary"
+				:disabled="!canEnable || toggling"
+				:loading="toggling"
+				@click="onEnable"
+			>
+				<template #icon>
+					<Icon :name="selectedEventSourceId ? EnableIcon : LockedIcon" />
+				</template>
+				Enable
 			</n-button>
 		</template>
 	</CardEntity>
@@ -61,7 +55,6 @@ const props = defineProps<{
 	selectedEventSourceId: number | null
 	selectedCategoryId: string | null
 	enabledDashboards: EnabledDashboard[]
-	disabledTooltipText?: string
 }>()
 
 const emit = defineEmits<{
