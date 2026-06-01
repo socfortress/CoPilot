@@ -35,7 +35,7 @@ const themeStore = useThemeStore()
 const chartSeries = computed(() => [
 	{
 		name: "value",
-		data: props.labels.map((_, i) => Number(props.data[i] ?? 0))
+		data: (props.labels || []).map((_, i) => Number(props.data[i] ?? 0))
 	}
 ])
 
@@ -54,7 +54,7 @@ const chartOptions = computed<ApexOptions>(() => {
 			events: {
 				dataPointSelection(_event, _chartContext, config) {
 					const idx = config?.dataPointIndex ?? 0
-					const name = props.labels[idx]
+					const name = (props.labels || [])[idx]
 					if (name) emit("itemClick", { name })
 				}
 			}
@@ -104,7 +104,7 @@ const chartOptions = computed<ApexOptions>(() => {
 		},
 		stroke: { show: false },
 		xaxis: {
-			categories: [...props.labels],
+			categories: [...(props.labels || [])],
 			labels: {
 				style: { colors: fg, fontSize: "10px" }
 			},

@@ -42,7 +42,7 @@ type ChartOption = ComposeOption<
 const themeStore = useThemeStore()
 
 const pieData = computed(() =>
-	props.labels.map((label, i) => ({
+	(props.labels || []).map((label, i) => ({
 		name: label,
 		value: Number(props.data[i] ?? 0)
 	}))
@@ -55,7 +55,7 @@ const chartOption = computed((): ChartOption => {
 	const fg = style["fg-default-color"]
 	const ff = style["font-family"]
 	const palette = props.monochrome ? [CHART_COLORS[0]] : [...CHART_COLORS]
-	const hasData = props.labels.length > 0
+	const hasData = props.labels?.length > 0
 
 	if (!hasData) {
 		return {
@@ -147,7 +147,7 @@ const chartOption = computed((): ChartOption => {
 
 function resolveClickedItemName(params: ECElementEvent): string | undefined {
 	if (params.componentType === "legend" || params.componentType === "series") {
-		return params.name ?? props.labels[params.dataIndex ?? -1]
+		return params.name ?? (props.labels || [])[params.dataIndex ?? -1]
 	}
 	return undefined
 }

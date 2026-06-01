@@ -62,7 +62,7 @@ function updatePlotSize() {
 const yAxisLabelWidth = computed(() => (chartWidth.value === 0 || chartWidth.value >= 1080 ? 200 : 100))
 
 const sortedRows = computed(() =>
-	props.labels
+	(props.labels || [])
 		.map((label, i) => ({
 			label,
 			value: Number(props.data[i] ?? 0)
@@ -76,7 +76,7 @@ const chartOption = computed((): ChartOption => {
 	const bc = style["border-color"]
 	const ff = style["font-family"]
 	const palette = props.monochrome ? [CHART_COLORS[0]] : CHART_COLORS
-	const hasData = props.labels.length > 0
+	const hasData = props.labels?.length > 0
 
 	if (!hasData) {
 		return {

@@ -33,8 +33,8 @@ const emit = defineEmits<{
 const themeStore = useThemeStore()
 
 const chartSeries = computed<number[]>(() => {
-	if (!props.labels.length) return []
-	return props.labels.map((_, i) => Number(props.data[i] ?? 0))
+	if (!props.labels?.length) return []
+	return (props.labels || []).map((_, i) => Number(props.data[i] ?? 0))
 })
 
 const chartOptions = computed<ApexOptions>(() => {
@@ -51,12 +51,12 @@ const chartOptions = computed<ApexOptions>(() => {
 			events: {
 				dataPointSelection(_event, _chartContext, config) {
 					const idx = config?.dataPointIndex ?? 0
-					const name = props.labels[idx]
+					const name = (props.labels || [])[idx]
 					if (name) emit("itemClick", { name })
 				}
 			}
 		},
-		labels: [...props.labels],
+		labels: [...(props.labels || [])],
 		colors: props.monochrome ? [DASHBOARD_CHART_COLORS[0]] : DASHBOARD_CHART_COLORS,
 		states: {
 			active: {

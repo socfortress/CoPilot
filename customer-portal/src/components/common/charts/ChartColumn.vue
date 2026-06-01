@@ -39,7 +39,7 @@ const dFormats = useSettingsStore().dateFormat
 const chartSeries = computed(() => [
 	{
 		name: "value",
-		data: props.labels.map((_, i) => Number(props.data[i] ?? 0))
+		data: (props.labels || []).map((_, i) => Number(props.data[i] ?? 0))
 	}
 ])
 
@@ -58,7 +58,7 @@ const chartOptions = computed<ApexOptions>(() => {
 			events: {
 				dataPointSelection(_event, _chartContext, config) {
 					const idx = config?.dataPointIndex ?? 0
-					const name = props.labels[idx]
+					const name = (props.labels || [])[idx]
 					if (name) emit("itemClick", { name })
 				}
 			}
@@ -119,7 +119,7 @@ const chartOptions = computed<ApexOptions>(() => {
 		dataLabels: { enabled: false },
 		stroke: { show: false },
 		xaxis: {
-			categories: Array.from(props.labels, label => {
+			categories: Array.from(props.labels || [], label => {
 				return props.labelsDatetime
 					? [dayjs(label).format(dFormats.date), dayjs(label).format(dFormats.time)]
 					: label
