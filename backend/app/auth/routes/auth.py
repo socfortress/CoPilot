@@ -315,6 +315,8 @@ async def reset_password_me(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     await auth_handler.verify_reset_token_me(token, user)
+    if request.current_password is not None and not auth_handler.verify_password(request.current_password, user.password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
     hashed_pwd = auth_handler.get_password_hash(request.new_password)
     user.password = hashed_pwd
     session.add(user)

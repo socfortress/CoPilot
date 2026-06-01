@@ -200,6 +200,10 @@ class PasswordResetToken(BaseModel):
 
 class PasswordReset(BaseModel):
     username: str
+    # Optional: when supplied (e.g. customer-portal self-service flow) the route verifies it
+    # against the stored hash before changing the password. Admin/analyst reset flows that
+    # already prove identity via the JWT may omit it, preserving backwards compatibility.
+    current_password: Optional[str] = None
     # 8-72 chars — bcrypt's 72-byte input limit (matches UserInput).
     new_password: str = Field(
         max_length=72,

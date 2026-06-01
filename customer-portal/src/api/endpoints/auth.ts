@@ -18,9 +18,10 @@ export default {
 		return HttpClient.post<CommonResponse<AuthResponse>>("/auth/refresh", { refresh_token: refreshToken })
 	},
 
-	resetPassword(username: string, newPassword: string) {
+	resetPassword(username: string, newPassword: string, currentPassword: string) {
 		return HttpClient.post<CommonResponse>("/auth/reset-password/me", {
 			username,
+			current_password: currentPassword,
 			new_password: newPassword
 		})
 	}
