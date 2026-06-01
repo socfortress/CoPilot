@@ -1,6 +1,8 @@
+import time
 from typing import Any
 from typing import Dict
 from typing import Optional
+from typing import Tuple
 
 import requests
 from fastapi import HTTPException
@@ -11,6 +13,14 @@ from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 
 HEADERS = {"X-Requested-By": "CoPilot"}
+
+# Cache of the detected Graylog major version, keyed by connector name.
+# Graylog 7.0 introduced breaking changes to entity-creation POSTs (the
+# CreateEntityRequest wrapper) and renamed urlwhitelist -> urlallowlist, so we
+# branch on the server's major version. The short TTL lets an in-place Graylog
+# upgrade be picked up without restarting CoPilot.
+_GRAYLOG_VERSION_CACHE: Dict[str, Tuple[int, float]] = {}
+_GRAYLOG_VERSION_TTL_SECONDS = 300
 
 
 async def verify_graylog_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -334,3 +344,86 @@ async def send_put_request(
             "success": False,
             "message": f"Failed to send PUT request to {endpoint} with error: {e}",
         }
+
+
+async def get_graylog_major_version(connector_name: Optional[str] = None) -> int:
+    """
+    Detects the major version of the configured Graylog server.
+
+    Graylog 7.0 changed several entity-creation requests in a backwards-incompatible
+    way (see ``send_post_request_create_entity``). Callers use this to build the
+    correct request shape for the running server. The result is cached per connector
+    for a short TTL.
+
+    Falls back to major version ``6`` when the version cannot be determined, so
+    existing Graylog 6.x deployments keep working unchanged.
+
+    Args:
+        connector_name (Optional[str]): The connector to probe. Falls back to the
+            current context when not provided.
+
+    Returns:
+        int: The detected Graylog major version (e.g. ``6`` or ``7``).
+    """
+    if connector_name is None:
+        connector_name = get_current_graylog_connector()
+
+    cached = _GRAYLOG_VERSION_CACHE.get(connector_name)
+    now = time.monotonic()
+    if cached is not None and now - cached[1] < _GRAYLOG_VERSION_TTL_SECONDS:
+        return cached[0]
+
+    major = 6  # safe default — preserves pre-7.x behavior on detection failure
+    try:
+        response = await send_get_request(endpoint="/api/system", connector_name=connector_name)
+        # version looks like "7.0.1+abc123" or "6.1.4"
+        version_str = str(response["data"]["version"])
+        major = int(version_str.split("+")[0].split(".")[0].strip())
+    except Exception as e:
+        logger.warning(
+            f"Could not determine Graylog version for connector '{connector_name}', " f"defaulting to major version {major}: {e}",
+        )
+
+    _GRAYLOG_VERSION_CACHE[connector_name] = (major, now)
+    logger.info(f"Detected Graylog major version {major} for connector '{connector_name}'")
+    return major
+
+
+async def send_post_request_create_entity(
+    endpoint: str,
+    entity: Dict[str, Any],
+    share_request: Optional[Dict[str, Any]] = None,
+    connector_name: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Sends an entity-creation POST request, adapting the body to the Graylog version.
+
+    Graylog 7.0 wraps entity-creation payloads in a ``CreateEntityRequest``
+    (``{"entity": {...}, "share_request": {...}}``); Graylog 6.x expects the entity
+    fields at the top level. Neither version accepts the other's shape, so this
+    helper builds the correct body based on the detected server version, letting a
+    single call site support both Graylog 6 and Graylog 7.
+
+    Confirmed affected endpoints: ``POST /api/streams`` and content-pack installation
+    (``POST /api/system/content_packs/{id}/{revision}/installations``). Index-set
+    creation is NOT wrapped in either version and must keep using
+    ``send_post_request`` directly.
+
+    Args:
+        endpoint (str): The entity-creation endpoint.
+        entity (Dict[str, Any]): The entity fields (the flat Graylog 6.x body).
+        share_request (Optional[Dict[str, Any]]): Optional Graylog 7.x sharing
+            settings; omitted when ``None`` (it is nullable server-side).
+        connector_name (Optional[str]): The connector to use. Falls back to context.
+
+    Returns:
+        Dict[str, Any]: The response from the POST request.
+    """
+    major = await get_graylog_major_version(connector_name)
+    if major >= 7:
+        body: Dict[str, Any] = {"entity": entity}
+        if share_request is not None:
+            body["share_request"] = share_request
+    else:
+        body = entity
+    return await send_post_request(endpoint=endpoint, data=body, connector_name=connector_name)

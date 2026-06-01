@@ -8,6 +8,7 @@ from app.connectors.graylog.schema.content_packs import ContentPack
 from app.connectors.graylog.schema.content_packs import ContentPackList
 from app.connectors.graylog.utils.universal import send_get_request
 from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.graylog.utils.universal import send_post_request_create_entity
 
 
 async def get_content_packs() -> List[ContentPack]:
@@ -97,9 +98,9 @@ async def install_content_pack(content_pack_id: str, revision: int) -> bool:
     """
     logger.info(f"Installing content pack {content_pack_id} in Graylog")
     try:
-        content_pack_installed = await send_post_request(
+        content_pack_installed = await send_post_request_create_entity(
             endpoint=f"/api/system/content_packs/{content_pack_id}/{revision}/installations",
-            data={
+            entity={
                 "comment": "Installed by SOCFortress CoPilot",
             },
         )
