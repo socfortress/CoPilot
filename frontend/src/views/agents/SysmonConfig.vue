@@ -1,53 +1,62 @@
 <template>
 	<div class="page page-wrapped page-mobile-full page-without-footer flex flex-col">
 		<SegmentedPage
-			main-content-class="p-0! overflow-hidden grow flex h-full"
+			main-content-class="p-0! overflow-hidden grow flex flex-col h-full"
 			:use-main-scroll="false"
 			padding="18px"
 			enable-resize
 			toolbar-height="54px"
+			sidebar-content-class="p-0!"
 		>
 			<template #sidebar-header>Customers</template>
 			<template #sidebar-content>
 				<n-spin :show="loadingList">
 					<template v-if="customers.length">
-						<div class="flex flex-col gap-4">
-							<CardEntity
+						<div class="divide-border flex flex-col divide-y">
+							<div
 								v-for="customer of customers"
 								:key="customer"
-								hoverable
-								clickable
-								:highlighted="customer === currentConfig?.customer_code"
+								class="hover:text-warning flex cursor-pointer items-center justify-between px-4.5 py-2.5 text-sm break-all"
+								:class="{ 'bg-warning/10': customer === currentConfig?.customer_code }"
 								@click.stop="loadConfig(customer)"
 							>
-								<div class="flex items-center justify-between">
-									<div>{{ customer }}</div>
-									<n-button text @click.stop="routeCustomer({ code: customer }).navigate()">
-										<template #icon>
-											<Icon :size="14" :name="LinkIcon" />
-										</template>
-									</n-button>
-								</div>
-							</CardEntity>
+								<div class="font-mono">{{ customer }}</div>
+								<n-tooltip class="px-2! py-1.5! text-xs!">
+									<template #trigger>
+										<n-button
+											size="tiny"
+											secondary
+											@click.stop="routeCustomer({ code: customer }).navigate()"
+										>
+											<template #icon>
+												<Icon :name="LinkIcon" />
+											</template>
+										</n-button>
+									</template>
+									Go to Customer
+								</n-tooltip>
+							</div>
 						</div>
 					</template>
 					<template v-else>
 						<n-empty v-if="!loadingList" description="No items found" class="h-48 justify-center" />
 					</template>
-					<n-dropdown
-						v-if="hasCustomersAvailable"
-						placement="bottom-start"
-						trigger="click"
-						:options="customersOptions"
-						@select="newConfig($event)"
-					>
-						<n-button secondary class="mt-4! w-full!" size="large">
-							<template #icon>
-								<Icon :size="18" :name="NewConfigIcon" />
-							</template>
-							<span class="ml-1.5 truncate">Add new Configuration</span>
-						</n-button>
-					</n-dropdown>
+					<div class="p-4">
+						<n-dropdown
+							v-if="hasCustomersAvailable"
+							placement="bottom-start"
+							trigger="click"
+							:options="customersOptions"
+							@select="newConfig($event)"
+						>
+							<n-button secondary class="mt-4! w-full!" size="large">
+								<template #icon>
+									<Icon :size="18" :name="NewConfigIcon" />
+								</template>
+								<span class="ml-1.5 truncate">Add new Configuration</span>
+							</n-button>
+						</n-dropdown>
+					</div>
 				</n-spin>
 			</template>
 			<template #main-toolbar>
@@ -132,6 +141,9 @@
 				</div>
 			</template>
 			<template #main-content>
+				<div v-if="currentConfig" class="px-4.5 py-2.5 text-sm break-all">
+					<div class="font-mono">Customer: {{ currentConfig?.customer_code }}</div>
+				</div>
 				<n-spin
 					:show="loadingConfig || uploadingConfig || deployingConfig"
 					class="flex h-full w-full overflow-hidden"
@@ -160,10 +172,9 @@ import type { XMLEditorCtx, XMLError } from "@/components/common/XMLEditor.vue"
 import type { Customer } from "@/types/customers"
 import type { ConfigContent } from "@/types/sysmonConfig.d"
 import _clone from "lodash/cloneDeep"
-import { NButton, NDropdown, NEmpty, NPopover, NScrollbar, NSpin, useMessage } from "naive-ui"
+import { NButton, NDropdown, NEmpty, NPopover, NScrollbar, NSpin, NTooltip, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
