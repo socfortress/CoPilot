@@ -1,7 +1,9 @@
 <template>
 	<div class="flex flex-col gap-4">
 		<n-alert v-if="showNoSourcesWarning" title="No Event Sources Configured" type="warning" closable>
-			No event sources are configured for this customer. Contact your administrator to set up event sources.
+			An Event Source needs to be defined for this customer before events can be searched. Go to the customer's
+			<strong>Event Sources</strong>
+			tab to configure one.
 		</n-alert>
 
 		<div class="@container flex w-full flex-col gap-3">
@@ -18,6 +20,7 @@
 							filterable
 							size="tiny"
 							:options="customersOptions"
+							:loading="loadingCustomers"
 							:consistent-menu-width="false"
 							@update:value="onCustomerChange"
 						/>
@@ -54,7 +57,6 @@
 					</template>
 				</n-mention>
 			</div>
-
 			<div class="flex flex-wrap justify-between gap-3">
 				<div class="text-secondary text-xs">
 					{{
@@ -140,32 +142,33 @@
 <script setup lang="ts">
 import type { MentionOption } from "naive-ui"
 import type { VNodeChild } from "vue"
-import type { ApiError } from "@/types/common"
-import type { EventSearchQueryTimerange, EventSourceItem, FieldMapping } from "@/types/siem"
+import type { Customer } from "@/types/customers.d"
+import type { FieldMapping } from "@/types/events.d"
+import type { EventSource } from "@/types/eventSources.d"
 import { NAlert, NButton, NDatePicker, NInputGroup, NInputNumber, NMention, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { useAuthStore } from "@/stores/auth"
-import { useCustomerFilterStore } from "@/stores/customerFilter"
-import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 
-export interface SearchFormParams {
+export type EventSearchQueryTimerange = `${number}${"h" | "d" | "w"}`
+
+export interface EventSearchFiltersParams {
 	customerCode: string
-	sourceName: string | null
+	sourceName: string
 	query: string
 	timerange: EventSearchQueryTimerange
 	timeFrom: number | null
 	timeTo: number | null
 	timeMode: "relative" | "absolute"
 	pageSize: number
+	fieldMappings: FieldMapping[]
 }
 
-export interface SearchFormLoad {
+export interface EventSearchFiltersLoad {
 	customerCode: string
-	eventSources: EventSourceItem[]
+	eventSources: EventSource[]
 }
 
 defineProps<{
@@ -173,40 +176,18 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-	(e: "search", value: SearchFormParams): void
-	(e: "loaded", value: SearchFormLoad): void
+	search: [params: EventSearchFiltersParams]
+	loaded: [load: EventSearchFiltersLoad]
+	"field-mappings": [mappings: FieldMapping[]]
+	"field-mappings-loading": [loading: boolean]
 }>()
 
-const query = defineModel<string>("query")
+const query = defineModel<string>("query", { default: "" })
 
 const TRAILING_WHITESPACE_RE = /\s$/
 
 const route = useRoute()
-const authStore = useAuthStore()
-const customerFilterStore = useCustomerFilterStore()
 const message = useMessage()
-
-const customerCode = computed(() => authStore.userCustomerCode)
-const customersOptions = computed(() => authStore.accessibleCustomerCodes.map(code => ({ label: code, value: code })))
-// Seed the searched customer from the global filter when it resolves to a single
-// customer, otherwise the user's primary / first accessible customer.
-const selectedCustomerCode = ref(
-	customerFilterStore.selectedCustomerCodes.length === 1
-		? customerFilterStore.selectedCustomerCodes[0]
-		: customerCode.value || authStore.accessibleCustomerCodes[0] || ""
-)
-
-const eventSources = ref<EventSourceItem[]>([])
-const loadingEventSources = ref(false)
-const selectedSourceName = ref<string | null>(null)
-const enabledSources = computed(() => eventSources.value.filter(s => s.enabled))
-const eventSourceOptions = computed(() =>
-	enabledSources.value.map(s => ({ label: `${s.name} (${s.event_type})`, value: s.name }))
-)
-
-const showNoSourcesWarning = computed(
-	() => selectedCustomerCode.value && !loadingEventSources.value && eventSources.value.length === 0
-)
 
 const filterTimeRange = ref<{ unit: "h" | "d" | "w"; time: number }>({
 	unit: "h",
@@ -229,50 +210,86 @@ const pageSizeOptions = [
 	{ label: "100 per page", value: 100 },
 	{ label: "250 per page", value: 250 }
 ]
-const pageSize = ref(pageSizeOptions[1].value)
 
+const loadingCustomers = ref(false)
+const customersList = ref<Customer[]>([])
+const loadingEventSources = ref(false)
+const eventSources = ref<EventSource[]>([])
+const selectedCustomerCode = ref<string | null>(null)
+const selectedSourceName = ref<string | null>(null)
+const pageSize = ref(pageSizeOptions[1].value)
 const loadingFieldMappings = ref(false)
 const fieldMappings = ref<FieldMapping[]>([])
-const suggestionOptions = computed(() => {
-	return fieldMappings.value.map(f => ({ label: f.field, type: f.type, value: f.field }))
-})
+
+const customersOptions = computed(() =>
+	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
+)
+
+const eventSourceOptions = computed(() =>
+	eventSources.value.filter(s => s.enabled).map(s => ({ label: `${s.name} (${s.event_type})`, value: s.name }))
+)
+
+const showNoSourcesWarning = computed(
+	() => selectedCustomerCode.value && !loadingEventSources.value && eventSources.value.length === 0
+)
+
+const suggestionOptions = computed(() =>
+	fieldMappings.value.map(f => ({ label: f.field, type: f.type, value: f.field }))
+)
 
 function renderLabel(option: MentionOption): VNodeChild {
 	const label = String(option.label ?? "")
 	const type = String(option.type ?? "")
 
-	return h("div", { class: "flex items-center gap-2 justify-between w-full" }, [
-		h("div", { class: "text-sm font-medium" }, label),
-		h("div", { class: "text-xs text-secondary" }, type)
+	return h("div", { class: "flex w-full items-center justify-between gap-2" }, [
+		h("div", { class: "text-sm font-medium font-mono" }, label),
+		h("div", { class: "text-secondary text-xs" }, type)
 	])
 }
 
-async function loadEventSources(customerCode: string) {
+function getCustomers() {
+	loadingCustomers.value = true
+	return Api.customers
+		.getCustomers()
+		.then(res => {
+			if (res.data.success) {
+				customersList.value = res.data?.customers || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingCustomers.value = false
+		})
+}
+
+function getEventSources(customerCode: string) {
 	loadingEventSources.value = true
 	eventSources.value = []
 	selectedSourceName.value = null
 	fieldMappings.value = []
+	emit("field-mappings-loading", false)
+	emit("field-mappings", [])
 
-	try {
-		const response = await Api.siem.getEventSources(customerCode)
-		eventSources.value = response.data.event_sources
-	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to load event sources")
-	} finally {
-		loadingEventSources.value = false
-
-		emit("loaded", {
-			customerCode,
-			eventSources: eventSources.value
+	return Api.siem
+		.getEventSources(customerCode)
+		.then(res => {
+			if (res.data.success) {
+				eventSources.value = res.data?.event_sources || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
 		})
-	}
-}
-
-function onCustomerChange(code: string) {
-	// Reload event sources for the newly selected customer (resets source + fields).
-	if (code) {
-		loadEventSources(code)
-	}
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingEventSources.value = false
+			emit("loaded", { customerCode, eventSources: eventSources.value })
+		})
 }
 
 async function loadFieldMappings() {
@@ -280,17 +297,30 @@ async function loadFieldMappings() {
 
 	loadingFieldMappings.value = true
 	fieldMappings.value = []
+	emit("field-mappings-loading", true)
+	emit("field-mappings", [])
+
 	try {
-		const response = await Api.siem.getFieldMappings(selectedCustomerCode.value, selectedSourceName.value)
-		fieldMappings.value = response.data.fields
+		const res = await Api.siem.getFieldMappings(selectedCustomerCode.value, selectedSourceName.value)
+		if (res.data.success) {
+			fieldMappings.value = res.data.fields || []
+		}
 	} catch {
 		fieldMappings.value = []
 	} finally {
 		loadingFieldMappings.value = false
+		emit("field-mappings-loading", false)
+		emit("field-mappings", fieldMappings.value)
 	}
 }
 
-async function searchEvents() {
+function onCustomerChange(code: string) {
+	if (code) {
+		getEventSources(code)
+	}
+}
+
+function searchEvents() {
 	if (!selectedCustomerCode.value || !selectedSourceName.value) return
 
 	emit("search", {
@@ -301,20 +331,17 @@ async function searchEvents() {
 		timeFrom: timerangeMode.value === "absolute" ? daterange.value[0] : null,
 		timeTo: timerangeMode.value === "absolute" ? daterange.value[1] : null,
 		timeMode: timerangeMode.value,
-		pageSize: pageSize.value
+		pageSize: pageSize.value,
+		fieldMappings: fieldMappings.value
 	})
 }
 
 function onMentionSelect(option: MentionOption, prefix: string) {
-	// Current query text and the raw token as typed in the mention (e.g. "#field")
 	const currentQuery = query.value || ""
 	const target = `${prefix}${option.value}`
-
-	// Find the last occurrence of the typed token to replace it
 	const lastIndex = currentQuery.lastIndexOf(target)
 
 	if (lastIndex === -1) {
-		// If only the trigger is present (e.g. "... #"), replace the last trigger with "field:"
 		const lastPrefixIndex = currentQuery.lastIndexOf(prefix)
 		if (lastPrefixIndex !== -1) {
 			const before = currentQuery.slice(0, lastPrefixIndex)
@@ -325,46 +352,47 @@ function onMentionSelect(option: MentionOption, prefix: string) {
 			return
 		}
 
-		// If neither token nor trigger is found, append the field followed by ":" at the end of the query
 		const needsSpace = currentQuery.length > 0 && !TRAILING_WHITESPACE_RE.test(currentQuery)
 		query.value = `${currentQuery}${needsSpace ? " " : ""}${option.value}:`
 		return
 	}
 
-	// Split query around the matched token
 	const before = currentQuery.slice(0, lastIndex)
 	const after = currentQuery.slice(lastIndex + target.length)
-
-	// Rebuild query replacing the token with the plain field name followed by ":"
 	const needsSpace = before.length > 0 && !TRAILING_WHITESPACE_RE.test(before)
 	const replacement = `${needsSpace ? " " : ""}${option.value}:`
 
 	query.value = `${before}${replacement}${after}`
 }
 
-// -- Lifecycle --
 async function applyRouteParams() {
-	const qCustomer = (route.query.customer_code || selectedCustomerCode.value) as string
-	const qSource = route.query.source_name as string | undefined
-	const qQuery = route.query.query as string | undefined
+	const qp = route.query
+	if (!qp.customer_code) return
 
-	if (!qCustomer) return
+	const code = String(qp.customer_code)
+	selectedCustomerCode.value = code
 
-	selectedCustomerCode.value = qCustomer
-	await loadEventSources(qCustomer)
+	if (qp.query) {
+		query.value = String(qp.query)
+	}
 
-	if (qSource) {
-		const match = enabledSources.value.find(s => s.name === qSource)
+	await getEventSources(code)
+
+	const targetSource = qp.source_name ? String(qp.source_name) : null
+	if (targetSource) {
+		const match = eventSources.value.find(s => s.name === targetSource && s.enabled)
 		if (match) {
 			selectedSourceName.value = match.name
 		}
+	} else {
+		const edr = eventSources.value.find(s => s.event_type === "EDR" && s.enabled)
+		if (edr) {
+			selectedSourceName.value = edr.name
+		}
 	}
 
-	if (qQuery) {
-		query.value = qQuery
-	}
-
-	if (selectedCustomerCode.value && selectedSourceName.value) {
+	if (selectedSourceName.value) {
+		await loadFieldMappings()
 		searchEvents()
 	}
 }
@@ -379,19 +407,7 @@ watch(
 	{ immediate: true }
 )
 
-// Follow the global customer filter when it narrows to a single customer.
-watch(
-	() => customerFilterStore.selectedCustomerCodes,
-	codes => {
-		if (codes.length === 1 && codes[0] !== selectedCustomerCode.value) {
-			selectedCustomerCode.value = codes[0]
-			loadEventSources(codes[0])
-		}
-	},
-	{ deep: true }
-)
-
 onBeforeMount(() => {
-	applyRouteParams()
+	getCustomers().then(() => applyRouteParams())
 })
 </script>

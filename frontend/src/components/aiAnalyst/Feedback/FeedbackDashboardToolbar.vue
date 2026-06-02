@@ -27,18 +27,33 @@
 			</n-button>
 		</div>
 
-		<PalaceConsolidationDrawer v-if="customer" v-model:show="showConsolidation" :customer-code="customer" />
+		<n-drawer
+			v-model:show="showConsolidation"
+			:width="640"
+			placement="right"
+			display-directive="show"
+			class="max-w-[98vw]"
+		>
+			<n-drawer-content closable :native-scrollbar="false">
+				<template #header>
+					Palace consolidation
+					<code class="ml-2">{{ customer }}</code>
+				</template>
+
+				<PalaceConsolidation v-if="customer" :customer-code="customer" />
+			</n-drawer-content>
+		</n-drawer>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import { NButton, NSelect, useMessage } from "naive-ui"
+import { NButton, NDrawer, NDrawerContent, NSelect, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
-import PalaceConsolidationDrawer from "./PalaceConsolidationDrawer.vue"
+import PalaceConsolidation from "./PalaceConsolidation.vue"
 
 const emit = defineEmits<{
 	(e: "refresh"): void

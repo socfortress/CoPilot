@@ -8,12 +8,21 @@ export default {
 		return HttpClient.get<CommonResponse<{ settings: PortalSettings }>>("/customer_portal/settings")
 	},
 	dashboardStats(customerCodes?: string[]) {
-		return HttpClient.get<CommonResponse<DashboardStats>>("/customer_portal/dashboard/stats", withCustomerCodes(customerCodes))
+		return HttpClient.get<CommonResponse<DashboardStats>>(
+			"/customer_portal/dashboard/stats",
+			withCustomerCodes(customerCodes)
+		)
 	},
 	alertsStats(customerCodes?: string[]) {
-		return HttpClient.get<CommonResponse<AlertsStats>>("/customer_portal/dashboard/alert-stats", withCustomerCodes(customerCodes))
+		return HttpClient.get<CommonResponse<AlertsStats>>(
+			"/customer_portal/dashboard/alert-stats",
+			withCustomerCodes(customerCodes)
+		)
 	},
 	casesStats(customerCodes?: string[]) {
-		return HttpClient.get<CommonResponse<CasesStats>>("/customer_portal/dashboard/case-stats", withCustomerCodes(customerCodes))
+		return HttpClient.get<CommonResponse<CasesStats>>(
+			"/customer_portal/dashboard/case-stats",
+			withCustomerCodes(customerCodes)
+		)
 	}
 }

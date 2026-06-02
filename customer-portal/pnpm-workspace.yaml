@@ -14,9 +14,13 @@ allowBuilds:
   unrs-resolver: true
 
 overrides:
-  "@mui/icons-material": ^7.3.9
   rolldown: 1.0.1
 
+onlyBuiltDependencies:
+  - "@parcel/watcher"
+  - "@tailwindcss/oxide"
+  - esbuild
+  - unrs-resolver
 peerDependencyRules:
   allowedVersions:
     eslint: "10"

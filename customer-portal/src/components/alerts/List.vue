@@ -247,10 +247,14 @@ function handleStatusUpdateSuccess(payload: AlertStatusUpdateSuccessPayload) {
 	}
 }
 
-watch([() => pagination.value.pageSize, () => filters.value.value, () => customerFilterStore.selectedCustomerCodes], resetPage, {
-	deep: true,
-	immediate: true
-})
+watch(
+	[() => pagination.value.pageSize, () => filters.value.value, () => customerFilterStore.selectedCustomerCodes],
+	resetPage,
+	{
+		deep: true,
+		immediate: true
+	}
+)
 
 watch(() => pagination.value.page, loadAlerts, {
 	deep: true,

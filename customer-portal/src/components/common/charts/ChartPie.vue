@@ -1,16 +1,19 @@
 <template>
-	<div :style="{ height, width: '100%' }">
-		<apexchart width="100%" :height :options="chartOptions" :series="chartSeries" />
-	</div>
+	<VChart class="w-full" :style="{ height, width: '100%' }" autoresize :option="chartOption" @click="onChartClick" />
 </template>
 
 <script setup lang="ts">
-import type { ApexOptions } from "apexcharts"
+import type { PieSeriesOption } from "echarts/charts"
+import type { LegendComponentOption, TitleComponentOption, TooltipComponentOption } from "echarts/components"
+import type { ComposeOption, ECElementEvent } from "echarts/core"
+import { PieChart } from "echarts/charts"
+import { GraphicComponent, LegendComponent, TitleComponent, TooltipComponent } from "echarts/components"
+import { use } from "echarts/core"
+import { CanvasRenderer } from "echarts/renderers"
 import { computed } from "vue"
-import apexchart from "vue3-apexcharts"
+import VChart from "vue-echarts"
 import { useThemeStore } from "@/stores/theme"
-import { DASHBOARD_CHART_COLORS } from "./chartColors"
-import "@/assets/scss/overrides/apexchart-override.scss"
+import { buildChartTooltipGlassBase, CHART_COLORS, chartTooltipThemeFromStyle, formatChartTooltipPieItem } from "."
 
 const props = withDefaults(
 	defineProps<{
@@ -30,94 +33,127 @@ const emit = defineEmits<{
 	itemClick: [item: { name: string }]
 }>()
 
+use([CanvasRenderer, PieChart, LegendComponent, TooltipComponent, TitleComponent, GraphicComponent])
+
+type ChartOption = ComposeOption<
+	TitleComponentOption | TooltipComponentOption | LegendComponentOption | PieSeriesOption
+>
+
 const themeStore = useThemeStore()
 
-const chartSeries = computed<number[]>(() => {
-	if (!props.labels.length) return []
-	return props.labels.map((_, i) => Number(props.data[i] ?? 0))
-})
+const pieData = computed(() =>
+	(props.labels || []).map((label, i) => ({
+		name: label,
+		value: Number(props.data[i] ?? 0)
+	}))
+)
 
-const chartOptions = computed<ApexOptions>(() => {
+const totalValue = computed(() => pieData.value.reduce((sum, item) => sum + item.value, 0))
+
+const chartOption = computed((): ChartOption => {
 	const style = themeStore.style
 	const fg = style["fg-default-color"]
 	const ff = style["font-family"]
+	const palette = props.monochrome ? [CHART_COLORS[0]] : [...CHART_COLORS]
+	const hasData = props.labels?.length > 0
 
-	return {
-		chart: {
-			type: "donut",
-			fontFamily: ff,
-			toolbar: { show: false },
-			animations: { enabled: true },
-			events: {
-				dataPointSelection(_event, _chartContext, config) {
-					const idx = config?.dataPointIndex ?? 0
-					const name = props.labels[idx]
-					if (name) emit("itemClick", { name })
-				}
-			}
-		},
-		labels: [...props.labels],
-		colors: props.monochrome ? [DASHBOARD_CHART_COLORS[0]] : DASHBOARD_CHART_COLORS,
-		states: {
-			active: {
-				allowMultipleDataPointsSelection: false,
-				filter: {
-					type: "none"
-				}
-			}
-		},
-		plotOptions: {
-			pie: {
-				expandOnClick: false,
-				donut: {
-					size: "55%",
-					labels: {
-						show: true,
-						name: { fontFamily: ff, fontSize: "12px", offsetY: -2 },
-						value: { color: fg, fontFamily: ff, fontSize: "12px", offsetY: 0 },
-						total: { color: fg, fontFamily: ff, fontSize: "12px", offsetY: 2 }
-					}
-				}
-			}
-		},
-		dataLabels: {
-			enabled: true
-		},
-		stroke: {
-			show: false
-		},
-		legend: {
-			show: true,
-			position: "right",
-			fontSize: "11px",
-			fontFamily: ff,
-			labels: { colors: fg },
-			itemMargin: { vertical: 6, horizontal: 4 },
-			markers: {
-				size: 7,
-				strokeWidth: 0,
-				offsetX: -5
-			},
-			formatter: (seriesName, opts) => {
-				const series = opts?.w.globals.series as number[]
-				const value = series[opts?.seriesIndex ?? 0] ?? 0
-				const total = series.reduce((sum, v) => sum + v, 0)
-				const pct = total > 0 ? (value / total) * 100 : 0
-				return `${seriesName} - ${value} (${pct.toFixed(1)}%)`
-			}
-		},
-		tooltip: {
-			theme: themeStore.isThemeDark ? "dark" : "light"
-		},
-		noData: {
-			text: "No data",
-			align: "center",
-			style: {
-				color: fg,
-				fontSize: "16px",
-				fontFamily: ff
+	if (!hasData) {
+		return {
+			backgroundColor: "transparent",
+			title: {
+				text: "No data",
+				left: "center",
+				top: "center",
+				textStyle: { color: fg, fontSize: 16, fontFamily: ff }
 			}
 		}
 	}
+
+	return {
+		backgroundColor: "transparent",
+		color: palette,
+		tooltip: {
+			...buildChartTooltipGlassBase(chartTooltipThemeFromStyle(style)),
+			formatter: params =>
+				formatChartTooltipPieItem(params, {
+					resolveColor: p => {
+						const idx = p.dataIndex ?? 0
+						return palette[idx % palette.length]
+					}
+				})
+		},
+		graphic: [
+			{
+				type: "text",
+				left: "center",
+				top: "33%",
+				style: {
+					text: `Total\n\n${totalValue.value}`,
+					fill: fg,
+					fontSize: 14,
+					fontFamily: ff,
+					textAlign: "center",
+					textVerticalAlign: "middle"
+				}
+			}
+		],
+		legend: {
+			show: true,
+			selectedMode: false,
+			type: "scroll",
+			orient: "horizontal",
+			bottom: 4,
+			left: "center",
+			width: "92%",
+			textStyle: { color: fg, fontSize: 11, fontFamily: ff },
+			pageTextStyle: { color: fg },
+			pageIconColor: fg,
+			pageIconInactiveColor: style["fg-secondary-color"],
+			itemWidth: 7,
+			itemHeight: 7,
+			itemGap: 16,
+			formatter: (name: string) => {
+				const item = pieData.value.find(d => d.name === name)
+				const val = item?.value ?? 0
+				const pct = totalValue.value > 0 ? (val / totalValue.value) * 100 : 0
+				return `${name} - ${val} (${pct.toFixed(1)}%)`
+			}
+		},
+		series: [
+			{
+				name: "value",
+				type: "pie",
+				radius: ["40%", "55%"],
+				center: ["50%", "40%"],
+				avoidLabelOverlap: true,
+				itemStyle: { borderWidth: 0 },
+				label: {
+					show: true,
+					position: "outside",
+					color: fg,
+					fontSize: 11,
+					fontFamily: ff,
+					formatter: params => {
+						const pct = typeof params.percent === "number" ? params.percent : 0
+						return `${pct.toFixed(1)}%`
+					}
+				},
+				labelLine: { show: true, length: 10, length2: 6 },
+				data: pieData.value
+			}
+		]
+	}
 })
+
+function resolveClickedItemName(params: ECElementEvent): string | undefined {
+	if (params.componentType === "legend" || params.componentType === "series") {
+		return params.name ?? (props.labels || [])[params.dataIndex ?? -1]
+	}
+	return undefined
+}
+
+function onChartClick(params: ECElementEvent) {
+	const name = resolveClickedItemName(params)
+	if (name) emit("itemClick", { name })
+}
 </script>

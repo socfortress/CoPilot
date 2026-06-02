@@ -48,10 +48,7 @@
 				</div>
 
 				<div
-					v-if="
-						(!$slots.footer || hideFooter) &&
-						($slots.footerMain || ($slots.footerExtra && !hideFooterExtra))
-					"
+					v-if="showFooterMainLayout"
 					class="footer-box flex flex-wrap items-start justify-between"
 					:class="footerBoxClass"
 				>
@@ -69,6 +66,7 @@
 
 <script setup lang="ts">
 import { NCard, NSpin } from "naive-ui"
+import { computed, useSlots } from "vue"
 
 const {
 	size,
@@ -109,6 +107,12 @@ const {
 	cardEntityWrapperClass?: string
 	footerBoxClass?: string
 }>()
+
+const slots = useSlots()
+
+const showFooterMainLayout = computed(
+	() => (!slots.footer || hideFooter) && (!!slots.footerMain || (!!slots.footerExtra && !hideFooterExtra))
+)
 </script>
 
 <style lang="scss" scoped>
@@ -231,8 +235,10 @@ const {
 		border-color: rgba(var(--primary-color-rgb) / 0.3);
 
 		&:not(.disabled) {
-			&:hover {
-				box-shadow: 0px 0px 0px 1px var(--primary-color);
+			&.hoverable {
+				&:hover {
+					box-shadow: 0px 0px 0px 1px var(--primary-color);
+				}
 			}
 		}
 	}

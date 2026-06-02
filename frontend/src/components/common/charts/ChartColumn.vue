@@ -67,7 +67,7 @@ function updatePlotWidth() {
 }
 
 const categoryLabels = computed(() =>
-	props.labels.map(label =>
+	(props.labels || []).map(label =>
 		props.labelsDatetime ? `${dayjs(label).format(dFormats.date)}\n${dayjs(label).format(dFormats.time)}` : label
 	)
 )
@@ -80,7 +80,7 @@ const chartOption = computed((): ChartOption => {
 	const bc = style["border-color"]
 	const ff = style["font-family"]
 	const palette = props.monochrome ? [CHART_COLORS[0]] : CHART_COLORS
-	const hasData = props.labels.length > 0
+	const hasData = props.labels?.length > 0
 
 	if (!hasData) {
 		return {
@@ -94,7 +94,7 @@ const chartOption = computed((): ChartOption => {
 		}
 	}
 
-	const barData = props.labels.map((_, i) => ({
+	const barData = (props.labels || []).map((_, i) => ({
 		value: Number(props.data[i] ?? 0),
 		itemStyle: {
 			color: palette[i % palette.length],
@@ -157,7 +157,7 @@ const chartOption = computed((): ChartOption => {
 function onChartClick(params: unknown) {
 	const p = params as { componentType?: string; dataIndex?: number }
 	if (p.componentType !== "series" || p.dataIndex == null) return
-	const name = props.labels[p.dataIndex]
+	const name = (props.labels || [])[p.dataIndex]
 	if (name) emit("itemClick", { name })
 }
 </script>

@@ -39,7 +39,15 @@
 				<slot name="header-extra" />
 			</div>
 			<slot />
-			<div class="font-mono text-xl font-semibold">
+			<div
+				class="font-mono text-xl font-semibold"
+				:class="{
+					'text-warning': color === 'warning',
+					'text-success': color === 'success',
+					'text-error': color === 'danger',
+					'text-primary': color === 'primary'
+				}"
+			>
 				<slot name="value">{{ value }}</slot>
 			</div>
 			<div v-if="subtitle || $slots.subtitle" class="text-secondary text-xs">

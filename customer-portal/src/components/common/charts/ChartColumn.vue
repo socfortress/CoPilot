@@ -1,18 +1,35 @@
 <template>
-	<div :style="{ height, width: '100%' }">
-		<apexchart width="100%" :height :options="chartOptions" :series="chartSeries" />
-	</div>
+	<VChart
+		ref="chartRef"
+		class="w-full"
+		:style="{ height, width: '100%' }"
+		:autoresize="{ onResize: updatePlotWidth }"
+		:option="chartOption"
+		@finished="updatePlotWidth"
+		@click="onChartClick"
+	/>
 </template>
 
 <script setup lang="ts">
-import type { ApexOptions } from "apexcharts"
-import { computed } from "vue"
-import apexchart from "vue3-apexcharts"
+import type { BarSeriesOption } from "echarts/charts"
+import type { GridComponentOption, TitleComponentOption, TooltipComponentOption } from "echarts/components"
+import type { ComposeOption } from "echarts/core"
+import { BarChart } from "echarts/charts"
+import { GridComponent, TitleComponent, TooltipComponent } from "echarts/components"
+import { use } from "echarts/core"
+import { CanvasRenderer } from "echarts/renderers"
+import { computed, ref } from "vue"
+import VChart from "vue-echarts"
 import { useSettingsStore } from "@/stores/settings"
 import { useThemeStore } from "@/stores/theme"
 import dayjs from "@/utils/dayjs"
-import { DASHBOARD_CHART_COLORS } from "./chartColors"
-import "@/assets/scss/overrides/apexchart-override.scss"
+import {
+	buildChartTooltipGlassBase,
+	CHART_COLORS,
+	CHART_GRID_CONTAIN_AXIS_LABELS,
+	chartTooltipThemeFromStyle,
+	formatChartTooltipAxisFirst
+} from "."
 
 const props = withDefaults(
 	defineProps<{
@@ -33,136 +50,114 @@ const emit = defineEmits<{
 	itemClick: [item: { name: string }]
 }>()
 
+use([CanvasRenderer, BarChart, TitleComponent, TooltipComponent, GridComponent])
+
+type ChartOption = ComposeOption<TitleComponentOption | TooltipComponentOption | GridComponentOption | BarSeriesOption>
+
+const GRID_HORIZONTAL_PADDING = 48
+
 const themeStore = useThemeStore()
 const dFormats = useSettingsStore().dateFormat
+const chartRef = ref<InstanceType<typeof VChart> | null>(null)
+const plotWidth = ref(0)
 
-const chartSeries = computed(() => [
-	{
-		name: "value",
-		data: props.labels.map((_, i) => Number(props.data[i] ?? 0))
-	}
-])
+function updatePlotWidth() {
+	const chartWidth = chartRef.value?.getWidth() ?? 0
+	plotWidth.value = Math.max(0, chartWidth - GRID_HORIZONTAL_PADDING)
+}
 
-const chartOptions = computed<ApexOptions>(() => {
+const categoryLabels = computed(() =>
+	(props.labels || []).map(label =>
+		props.labelsDatetime ? `${dayjs(label).format(dFormats.date)}\n${dayjs(label).format(dFormats.time)}` : label
+	)
+)
+
+const showXAxisLabels = computed(() => plotWidth.value === 0 || plotWidth.value >= 500)
+
+const chartOption = computed((): ChartOption => {
 	const style = themeStore.style
 	const fg = style["fg-default-color"]
 	const bc = style["border-color"]
 	const ff = style["font-family"]
+	const palette = props.monochrome ? [CHART_COLORS[0]] : CHART_COLORS
+	const hasData = props.labels?.length > 0
 
-	return {
-		chart: {
-			type: "bar",
-			fontFamily: ff,
-			toolbar: { show: false },
-			animations: { enabled: true },
-			events: {
-				dataPointSelection(_event, _chartContext, config) {
-					const idx = config?.dataPointIndex ?? 0
-					const name = props.labels[idx]
-					if (name) emit("itemClick", { name })
-				}
-			}
-		},
-		responsive: [
-			{
-				breakpoint: 1100,
-				options: {
-					xaxis: {
-						tickAmount: 10,
-						labels: {
-							show: true
-						}
-					}
-				}
-			},
-			{
-				breakpoint: 750,
-				options: {
-					xaxis: {
-						tickAmount: 5,
-						labels: {
-							show: true
-						}
-					}
-				}
-			},
-			{
-				breakpoint: 500,
-				options: {
-					xaxis: {
-						labels: {
-							show: false
-						}
-					}
-				}
-			}
-		],
-		colors: props.monochrome ? [DASHBOARD_CHART_COLORS[0]] : DASHBOARD_CHART_COLORS,
-		states: {
-			active: {
-				allowMultipleDataPointsSelection: false,
-				filter: {
-					type: "none"
-				}
-			}
-		},
-		plotOptions: {
-			bar: {
-				expandOnClick: false,
-				horizontal: false,
-				distributed: true,
-				borderRadius: 4,
-				borderRadiusApplication: "end",
-				columnWidth: "60%"
-			}
-		},
-		dataLabels: { enabled: false },
-		stroke: { show: false },
-		xaxis: {
-			categories: Array.from(props.labels, label => {
-				return props.labelsDatetime
-					? [dayjs(label).format(dFormats.date), dayjs(label).format(dFormats.time)]
-					: label
-			}),
-			tickAmount: 20,
-			labels: {
-				show: true,
-				style: { colors: fg, fontSize: "11px" },
-				rotate: -50,
-				rotateAlways: true,
-				hideOverlappingLabels: true,
-				trim: false
-			},
-			axisBorder: { show: false },
-			axisTicks: { show: false }
-		},
-		yaxis: {
-			labels: {
-				style: { colors: fg, fontSize: "10px" }
-			}
-		},
-		grid: {
-			borderColor: bc,
-			strokeDashArray: 0,
-			xaxis: { lines: { show: false } },
-			yaxis: { lines: { show: true } }
-		},
-		legend: { show: false },
-		tooltip: {
-			theme: themeStore.isThemeDark ? "dark" : "light",
-			y: {
-				formatter: (val: number) => String(val)
-			}
-		},
-		noData: {
-			text: "No data",
-			align: "center",
-			style: {
-				color: fg,
-				fontSize: "16px",
-				fontFamily: ff
+	if (!hasData) {
+		return {
+			backgroundColor: "transparent",
+			title: {
+				text: "No data",
+				left: "center",
+				top: "center",
+				textStyle: { color: fg, fontSize: 16, fontFamily: ff }
 			}
 		}
 	}
+
+	const barData = (props.labels || []).map((_, i) => ({
+		value: Number(props.data[i] ?? 0),
+		itemStyle: {
+			color: palette[i % palette.length],
+			borderRadius: [4, 4, 0, 0]
+		}
+	}))
+
+	return {
+		backgroundColor: "transparent",
+		grid: {
+			left: 8,
+			right: 8,
+			top: 8,
+			bottom: showXAxisLabels.value ? 56 : 16,
+			...CHART_GRID_CONTAIN_AXIS_LABELS
+		},
+		tooltip: {
+			...buildChartTooltipGlassBase(chartTooltipThemeFromStyle(style), { trigger: "axis" }),
+			axisPointer: { type: "shadow" },
+			formatter: params =>
+				formatChartTooltipAxisFirst(params, {
+					resolveColor: p => {
+						const idx = p.dataIndex ?? 0
+						return palette[idx % palette.length]
+					}
+				})
+		},
+		xAxis: {
+			type: "category",
+			data: categoryLabels.value,
+			axisLine: { show: false },
+			axisTick: { show: false },
+			axisLabel: {
+				show: showXAxisLabels.value,
+				color: fg,
+				fontSize: 11,
+				interval: "auto",
+				hideOverlap: true
+			}
+		},
+		yAxis: {
+			type: "value",
+			axisLine: { show: false },
+			axisTick: { show: false },
+			axisLabel: { color: fg, fontSize: 10 },
+			splitLine: { lineStyle: { color: bc } }
+		},
+		series: [
+			{
+				name: "value",
+				type: "bar",
+				barWidth: "60%",
+				data: barData,
+				emphasis: { focus: "series" }
+			}
+		]
+	}
 })
+
+function onChartClick(params: unknown) {
+	const p = params as { componentType?: string; dataIndex?: number }
+	if (p.componentType !== "series" || p.dataIndex == null) return
+	const name = (props.labels || [])[p.dataIndex]
+	if (name) emit("itemClick", { name })
+}
 </script>

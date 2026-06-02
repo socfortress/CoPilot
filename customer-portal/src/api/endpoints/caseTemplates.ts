@@ -9,9 +9,7 @@ import { HttpClient } from "../httpClient"
 
 export default {
 	getCaseTasks(caseId: number) {
-		return HttpClient.get<CommonResponse<{ tasks: CaseTask[] }>>(
-			`/incidents/db_operations/case/${caseId}/tasks`
-		)
+		return HttpClient.get<CommonResponse<{ tasks: CaseTask[] }>>(`/incidents/db_operations/case/${caseId}/tasks`)
 	},
 	getCaseTimeline(caseId: number, limit = 500, offset = 0) {
 		return HttpClient.get<CommonResponse<{ case_id: number; events: CaseEvent[] }>>(
