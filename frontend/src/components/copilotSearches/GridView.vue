@@ -203,12 +203,22 @@
 			</div>
 		</Transition>
 
-		<BulkProvisionModal
+		<n-modal
 			v-model:show="showBulkProvisionModal"
-			:rule-ids="selectedRuleIdsWithGraylog"
-			:provisionable-count="provisionableSelectedCount"
-			@success="onBulkProvisionSuccess"
-		/>
+			preset="card"
+			:style="{ maxWidth: 'min(560px, 92vw)' }"
+			title="Bulk Provision Graylog Alerts"
+			:bordered="false"
+			segmented
+		>
+			<BulkProvisionForm
+				v-if="showBulkProvisionModal"
+				:rule-ids="selectedRuleIdsWithGraylog"
+				:provisionable-count="provisionableSelectedCount"
+				@close="showBulkProvisionModal = false"
+				@success="onBulkProvisionSuccess"
+			/>
+		</n-modal>
 	</div>
 </template>
 
@@ -229,6 +239,7 @@ import {
 	NCheckbox,
 	NEmpty,
 	NInput,
+	NModal,
 	NPagination,
 	NPopover,
 	NSelect,
@@ -239,7 +250,7 @@ import {
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import BulkProvisionModal from "./BulkProvisionModal.vue"
+import BulkProvisionForm from "./BulkProvisionForm.vue"
 import RuleCard from "./RuleCard.vue"
 
 const loading = ref(false)

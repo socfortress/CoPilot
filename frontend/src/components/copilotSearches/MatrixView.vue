@@ -301,12 +301,22 @@
 			</div>
 		</div>
 
-		<TechniqueDrawer
+		<n-drawer
 			v-model:show="drawerOpen"
-			:technique="selectedTechnique"
-			:sub-technique="selectedSubTechnique"
+			:width="techniqueDrawerWidth"
+			placement="right"
+			display-directive="show"
+			class="max-w-[92vw]"
 			@update:show="onDrawerToggle"
-		/>
+		>
+			<n-drawer-content :title="techniqueDrawerTitle" closable :native-scrollbar="false">
+				<TechniqueDetails
+					v-if="selectedTechnique"
+					:technique="selectedTechnique"
+					:sub-technique="selectedSubTechnique"
+				/>
+			</n-drawer-content>
+		</n-drawer>
 
 		<!-- Direct-from-hover rule detail modal: skips the drawer entirely
 		     when the user clicks a rule name inside the hover preview. -->
@@ -340,6 +350,8 @@ import {
 	NBadge,
 	NButton,
 	NCheckbox,
+	NDrawer,
+	NDrawerContent,
 	NEmpty,
 	NInput,
 	NModal,
@@ -355,7 +367,7 @@ import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import RuleCardContent from "./RuleCardContent.vue"
-import TechniqueDrawer from "./TechniqueDrawer.vue"
+import TechniqueDetails from "./TechniqueDetails.vue"
 
 const InfoIcon = "carbon:information"
 const SearchIcon = "carbon:search"
@@ -371,7 +383,7 @@ const message = useMessage()
 
 const matrixScrollWrapRef = useTemplateRef<HTMLDivElement>("matrixScrollWrapRef")
 const { top: matrixScrollWrapTop } = useElementBounding(matrixScrollWrapRef)
-const { height: viewportHeight } = useWindowSize()
+const { height: viewportHeight, width: viewportWidth } = useWindowSize()
 
 const matrixScrollWrapStyle = computed(() => {
 	const height = viewportHeight.value - matrixScrollWrapTop.value - 50
@@ -407,6 +419,16 @@ const drawerOpen = ref(false)
 const selectedTechnique = ref<MitreTechnique | null>(null)
 const selectedSubTechnique = ref<MitreSubTechnique | null>(null)
 const selectedTacticIdForDeepLink = ref<string | null>(null)
+
+const techniqueDrawerTitle = computed(() => {
+	if (!selectedTechnique.value) return "Technique"
+	if (selectedSubTechnique.value) {
+		return `${selectedSubTechnique.value.id} ${selectedSubTechnique.value.name}`
+	}
+	return `${selectedTechnique.value.id} ${selectedTechnique.value.name}`
+})
+
+const techniqueDrawerWidth = computed(() => Math.min(820, viewportWidth.value - 40))
 
 // Direct-from-hover rule modal
 const quickRuleOpen = ref(false)
@@ -766,9 +788,9 @@ onMounted(async () => {
 // the technique drawer.
 // ---------------------------------------------------------------------------
 const platformIcon: Record<string, string> = {
-	linux: "logos:linux-tux",
-	windows: "logos:microsoft-icon",
-	powershell: "vscode-icons:file-type-powershell",
+	linux: "proicons:linux",
+	windows: "mdi:microsoft",
+	powershell: "codicon:terminal-powershell",
 	cve: "carbon:security",
 	unknown: "carbon:help"
 }
