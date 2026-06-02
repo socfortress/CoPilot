@@ -1,5 +1,5 @@
 <template>
-	<div class="file-collection-form">
+	<div class="flex flex-col gap-4">
 		<n-form ref="formRef" :model="formData" :rules="formRules">
 			<n-form-item label="File Path" path="file_path">
 				<n-input
@@ -27,33 +27,31 @@
 				</n-input>
 			</n-form-item>
 
-			<n-form-item>
-				<div class="flex items-center gap-3">
-					<n-button
-						type="primary"
-						:loading
-						:disabled="!formData.file_path || !formData.root_disk"
-						@click="handleSubmit"
-					>
-						<template #icon>
-							<Icon :name="CollectIcon" />
-						</template>
-						Collect File
-					</n-button>
+			<div class="flex items-center gap-3">
+				<n-button
+					type="primary"
+					:loading
+					:disabled="!formData.file_path || !formData.root_disk"
+					@click="handleSubmit"
+				>
+					<template #icon>
+						<Icon :name="CollectIcon" />
+					</template>
+					Collect File
+				</n-button>
 
-					<n-button
-						v-if="formData.file_path || formData.root_disk"
-						secondary
-						:disabled="loading"
-						@click="handleReset"
-					>
-						Reset
-					</n-button>
-				</div>
-			</n-form-item>
+				<n-button
+					v-if="formData.file_path || formData.root_disk"
+					secondary
+					:disabled="loading"
+					@click="handleReset"
+				>
+					Reset
+				</n-button>
+			</div>
 		</n-form>
 
-		<n-divider v-if="result" class="my-4!" />
+		<n-divider v-if="result" class="my-0!" />
 
 		<n-alert
 			v-if="result"
@@ -203,23 +201,3 @@ defineExpose({
 	reset: handleReset
 })
 </script>
-
-<style lang="scss" scoped>
-// TODO-FE: remove style
-
-.file-collection-form {
-	max-width: 600px;
-
-	:deep(.n-form-item) {
-		margin-bottom: 20px;
-	}
-
-	code {
-		font-family: var(--font-family-mono);
-		font-size: 12px;
-		padding: 2px 6px;
-		background-color: var(--bg-secondary-color);
-		border-radius: 3px;
-	}
-}
-</style>
