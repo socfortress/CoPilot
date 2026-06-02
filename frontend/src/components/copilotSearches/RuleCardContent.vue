@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading">
+	<n-spin :show="loading" class="min-h-50">
 		<div v-if="rule" class="flex flex-col gap-4 pb-1">
 			<!-- Basic Information -->
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">

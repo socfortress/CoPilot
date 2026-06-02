@@ -1,16 +1,16 @@
 <template>
-	<div class="rule-card-wrap h-full" :class="{ 'is-selected': selectable && selected }">
+	<div class="relative h-full">
 		<n-checkbox
 			v-if="selectable"
 			:checked="selected"
-			class="rule-card-checkbox"
-			size="small"
+			class="bg-default absolute -top-1.75 -left-1.75 z-2"
 			@update:checked="emit('update:selected', $event)"
 			@click.stop
 		/>
 		<CardEntity
 			hoverable
 			clickable
+			:highlighted="selected"
 			:embedded
 			class="@container h-full"
 			main-box-class="grow"
@@ -48,10 +48,12 @@
 				<div class="text-default pt-.5 flex h-full items-center gap-2">
 					<n-tooltip v-if="provisioned">
 						<template #trigger>
-							<div class="provisioned-chip">
-								<Icon :name="ProvisionedIcon" :size="11" />
-								<span>in Graylog</span>
-							</div>
+							<n-tag type="success" size="tiny" :bordered="false">
+								<div class="flex items-center gap-1 leading-0">
+									<Icon :name="ProvisionedIcon" :size="11" />
+									<span class="text-[10px]">in Graylog</span>
+								</div>
+							</n-tag>
 						</template>
 						An event definition with this rule's title already exists in Graylog
 					</n-tooltip>
@@ -158,7 +160,7 @@
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
 import type { RuleSummary } from "@/types/copilotSearches.d"
-import { NButton, NCheckbox, NModal, NTooltip, useMessage } from "naive-ui"
+import { NButton, NCheckbox, NModal, NTag, NTooltip, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -227,53 +229,3 @@ function handleProvisionSuccess() {
 	showProvisionModal.value = false
 }
 </script>
-
-<style scoped lang="scss">
-.provisioned-chip {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 2px 6px;
-	font-size: 0.65rem;
-	font-weight: 600;
-	letter-spacing: 0.02em;
-	color: var(--success-color);
-	background: rgba(var(--success-color-rgb) / 0.1);
-	border: 1px solid rgba(var(--success-color-rgb) / 0.4);
-	border-radius: 3px;
-	white-space: nowrap;
-}
-
-.rule-card-wrap {
-	position: relative;
-}
-
-/* Sits just outside the card's top-left corner like a sticker so it never
-   overlaps the header badges. The card's own click handler still triggers
-   the rule-detail modal; the checkbox stops propagation. */
-.rule-card-checkbox {
-	position: absolute;
-	top: -7px;
-	left: -7px;
-	z-index: 2;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: var(--bg-default-color);
-	border: 1px solid var(--border-color);
-	border-radius: 4px;
-	padding: 2px;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-	transition:
-		border-color 0.12s,
-		box-shadow 0.12s;
-}
-.rule-card-wrap.is-selected .rule-card-checkbox {
-	border-color: rgba(var(--primary-color-rgb) / 0.6);
-	box-shadow: 0 1px 4px rgba(var(--primary-color-rgb) / 0.4);
-}
-
-.rule-card-wrap.is-selected :deep(.card-entity) {
-	box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb) / 0.6);
-}
-</style>

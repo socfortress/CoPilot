@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loadingRule">
+	<n-spin :show="loadingRule" class="min-h-50">
 		<div v-if="rule" class="flex flex-col gap-8">
 			<!-- Rule Info -->
 			<RuleHeader :rule-detail="rule" />
