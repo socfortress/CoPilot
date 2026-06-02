@@ -96,7 +96,7 @@
 				</n-popover>
 			</div>
 
-			<n-button size="small" :type="selectMode ? 'primary' : 'default'" @click="toggleSelectMode">
+			<n-button size="small" secondary :type="selectMode ? 'primary' : 'default'" @click="toggleSelectMode">
 				<template #icon>
 					<Icon :name="SelectIcon" />
 				</template>
@@ -154,7 +154,9 @@
 				<div class="text-default text-sm">
 					<strong>{{ selection.size }}</strong>
 					selected
-					<span class="text-tertiary ml-2 text-xs">({{ provisionableSelectedCount }} with Graylog query)</span>
+					<span class="text-tertiary ml-2 text-xs">
+						({{ provisionableSelectedCount }} with Graylog query)
+					</span>
 				</div>
 
 				<div class="ml-auto flex items-center gap-2">

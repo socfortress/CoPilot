@@ -1,5 +1,5 @@
 <template>
-	<div class="page">
+	<div class="page page-without-footer">
 		<List />
 	</div>
 </template>

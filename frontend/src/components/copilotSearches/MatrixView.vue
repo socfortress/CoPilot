@@ -44,7 +44,7 @@
 					</template>
 				</n-input>
 
-				<n-popover :show="showFilters" trigger="manual" overlap placement="bottom-start" class="px-0!">
+				<n-popover :show="showFilters" trigger="manual" overlap placement="top-end" class="px-0!">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
 							<n-badge :show="anyFiltersActive" dot type="success" :offset="[-4, 0]">
@@ -88,6 +88,9 @@
 							<n-checkbox v-model:checked="hasGraylogFilter" size="small">
 								<span class="text-xs">Graylog Only</span>
 							</n-checkbox>
+							<n-checkbox v-model:checked="onlyCovered" size="small">
+								<span class="text-xs">Only covered</span>
+							</n-checkbox>
 						</div>
 						<div class="flex justify-between gap-2 px-3 pt-2">
 							<n-button size="small" quaternary @click="showFilters = false">Close</n-button>
@@ -95,10 +98,6 @@
 						</div>
 					</div>
 				</n-popover>
-
-				<n-checkbox v-model:checked="onlyCovered" size="small" class="shrink-0! self-center whitespace-nowrap">
-					<span class="text-xs">Only covered</span>
-				</n-checkbox>
 			</div>
 
 			<n-tooltip placement="bottom-end">
@@ -146,7 +145,7 @@
 			</div>
 		</div>
 
-		<div class="matrix-scroll-wrap">
+		<div ref="matrixScrollWrapRef" class="matrix-scroll-wrap" :style="matrixScrollWrapStyle">
 			<!-- Subtle top progress bar replaces the heavy spin overlay during refetches. -->
 			<div v-if="loading && coverage" class="matrix-progress" />
 
@@ -336,7 +335,7 @@ import type {
 	RuleSeverity,
 	RuleStatus
 } from "@/types/copilotSearches.d"
-import { useLocalStorage, watchDebounced } from "@vueuse/core"
+import { useElementBounding, useLocalStorage, useWindowSize, watchDebounced } from "@vueuse/core"
 import {
 	NBadge,
 	NButton,
@@ -351,7 +350,7 @@ import {
 	NTooltip,
 	useMessage
 } from "naive-ui"
-import { computed, h, onMounted, ref, watch } from "vue"
+import { computed, h, onMounted, ref, useTemplateRef, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -369,6 +368,16 @@ const ChevronDown = "carbon:chevron-down"
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
+
+const matrixScrollWrapRef = useTemplateRef<HTMLDivElement>("matrixScrollWrapRef")
+const { top: matrixScrollWrapTop } = useElementBounding(matrixScrollWrapRef)
+const { height: viewportHeight } = useWindowSize()
+
+const matrixScrollWrapStyle = computed(() => {
+	const height = viewportHeight.value - matrixScrollWrapTop.value - 50
+	if (height <= 0) return undefined
+	return { height: `${Math.floor(height)}px` }
+})
 
 const loading = ref(false)
 const refreshing = ref(false)
@@ -868,6 +877,7 @@ function RulePreviewList(props: {
 
 .matrix-scroll-wrap {
 	position: relative;
+	min-height: 0;
 }
 
 /* Subtle indeterminate progress bar shown during filter refetches in place
@@ -905,12 +915,12 @@ function RulePreviewList(props: {
 }
 
 /* Matrix scrolls inside its own bounded box so the horizontal scrollbar
-   is always reachable without scrolling the whole page. Height adapts to
-   the viewport minus app chrome + our toolbar/legend rows. */
+   is always reachable without scrolling the whole page. Height is set on
+   .matrix-scroll-wrap from viewport minus top offset (see script). */
 .matrix-scroll {
 	overflow: auto;
-	max-height: calc(100vh - 260px);
-	min-height: 420px;
+	height: 100%;
+	min-height: 0;
 	padding-bottom: 4px;
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius);
