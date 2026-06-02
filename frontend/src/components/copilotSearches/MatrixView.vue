@@ -150,7 +150,7 @@
 			<!-- Subtle top progress bar replaces the heavy spin overlay during refetches. -->
 			<div v-if="loading && coverage" class="matrix-progress" />
 
-			<div class="matrix-scroll" :class="{ 'matrix-scroll-loading': loading && coverage }">
+			<div class="matrix-scroll scrollbar-styled" :class="{ 'matrix-scroll-loading': loading && coverage }">
 				<n-empty
 					v-if="!loading && coverage && filteredTactics.length === 0"
 					description="No techniques match your filters."

@@ -8,181 +8,167 @@
 			for details.
 		</n-alert>
 
-		<div class="flex flex-col">
-			<div class="flex flex-wrap items-center justify-end gap-2">
-				<n-button-group size="small">
-					<n-button :type="viewMode === 'grid' ? 'primary' : 'default'" @click="viewMode = 'grid'">
-						<template #icon>
-							<Icon :name="GridIcon" />
-						</template>
-						Rules
-					</n-button>
-					<n-button :type="viewMode === 'matrix' ? 'primary' : 'default'" @click="viewMode = 'matrix'">
-						<template #icon>
-							<Icon :name="MatrixIcon" />
-						</template>
-						MITRE Navigator
-					</n-button>
-				</n-button-group>
-
-				<div v-if="viewMode === 'grid'" class="flex min-w-80 grow gap-2">
-					<n-popover overlap placement="bottom-start">
-						<template #trigger>
-							<div class="bg-default rounded-lg">
-								<n-button size="small" class="cursor-help!">
-									<template #icon>
-										<Icon :name="InfoIcon" />
-									</template>
-								</n-button>
-							</div>
-						</template>
-						<div class="flex flex-col gap-2">
-							<div class="box">
-								Total Rules:
-								<code>{{ pagination.total }}</code>
-							</div>
-							<div class="box">
-								Filtered:
-								<code>{{ pagination.filtered }}</code>
-							</div>
-						</div>
-					</n-popover>
-
-					<n-input
-						v-model:value="searchQuery"
-						size="small"
-						placeholder="Search rules..."
-						class="max-w-120"
-						clearable
-					>
-						<template #prefix>
-							<Icon :name="SearchIcon" />
-						</template>
-					</n-input>
-
-					<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="px-0!">
-						<template #trigger>
-							<div class="bg-default rounded-lg">
-								<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
-									<n-button size="small" @click="showFilters = true">
-										<template #icon>
-											<Icon :name="FilterIcon" />
-										</template>
-									</n-button>
-								</n-badge>
-							</div>
-						</template>
-						<div class="divide-border flex w-50 flex-col gap-0 divide-y">
-							<div class="flex flex-col gap-2.5 px-3 pt-1 pb-3">
-								<n-select
-									v-model:value="selectedPlatform"
-									:options="platformOptions"
-									size="small"
-									placeholder="Platform"
-									class="w-full"
-									clearable
-									:consistent-menu-width="false"
-								/>
-
-								<n-select
-									v-model:value="selectedSeverity"
-									:options="severityOptions"
-									clearable
-									size="small"
-									placeholder="Severity"
-									class="w-full"
-									:consistent-menu-width="false"
-								/>
-
-								<n-select
-									v-model:value="selectedStatus"
-									:options="statusOptions"
-									clearable
-									size="small"
-									placeholder="Status"
-									class="w-full"
-									:consistent-menu-width="false"
-								/>
-
-								<n-checkbox v-model:checked="hasGraylogFilter" size="small">
-									<span class="text-xs">Graylog Only</span>
-								</n-checkbox>
-							</div>
-							<div class="flex justify-between gap-2 px-3 pt-2">
-								<div class="flex justify-start gap-2">
-									<n-button size="small" quaternary @click="showFilters = false">Close</n-button>
+		<n-tabs type="segment" animated tab-class="px-5!" class="[&_.n-tabs-nav]:mx-auto [&_.n-tabs-nav]:min-w-70">
+			<n-tab-pane name="grid" tab="Rules" display-directive="show:lazy">
+				<div class="flex flex-col">
+					<div class="flex flex-wrap items-center justify-end gap-2">
+						<div class="flex min-w-80 grow gap-2">
+							<n-popover overlap placement="bottom-start">
+								<template #trigger>
+									<div class="bg-default rounded-lg">
+										<n-button size="small" class="cursor-help!">
+											<template #icon>
+												<Icon :name="InfoIcon" />
+											</template>
+										</n-button>
+									</div>
+								</template>
+								<div class="flex flex-col gap-2">
+									<div class="box">
+										Total Rules:
+										<code>{{ pagination.total }}</code>
+									</div>
+									<div class="box">
+										Filtered:
+										<code>{{ pagination.filtered }}</code>
+									</div>
 								</div>
-								<div class="flex justify-end gap-2">
-									<n-button size="small" secondary @click="resetFilters()">Reset</n-button>
+							</n-popover>
+
+							<n-input
+								v-model:value="searchQuery"
+								size="small"
+								placeholder="Search rules..."
+								class="max-w-120"
+								clearable
+							>
+								<template #prefix>
+									<Icon :name="SearchIcon" />
+								</template>
+							</n-input>
+
+							<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="px-0!">
+								<template #trigger>
+									<div class="bg-default rounded-lg">
+										<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
+											<n-button size="small" @click="showFilters = true">
+												<template #icon>
+													<Icon :name="FilterIcon" />
+												</template>
+											</n-button>
+										</n-badge>
+									</div>
+								</template>
+								<div class="divide-border flex w-50 flex-col gap-0 divide-y">
+									<div class="flex flex-col gap-2.5 px-3 pt-1 pb-3">
+										<n-select
+											v-model:value="selectedPlatform"
+											:options="platformOptions"
+											size="small"
+											placeholder="Platform"
+											class="w-full"
+											clearable
+											:consistent-menu-width="false"
+										/>
+
+										<n-select
+											v-model:value="selectedSeverity"
+											:options="severityOptions"
+											clearable
+											size="small"
+											placeholder="Severity"
+											class="w-full"
+											:consistent-menu-width="false"
+										/>
+
+										<n-select
+											v-model:value="selectedStatus"
+											:options="statusOptions"
+											clearable
+											size="small"
+											placeholder="Status"
+											class="w-full"
+											:consistent-menu-width="false"
+										/>
+
+										<n-checkbox v-model:checked="hasGraylogFilter" size="small">
+											<span class="text-xs">Graylog Only</span>
+										</n-checkbox>
+									</div>
+									<div class="flex justify-between gap-2 px-3 pt-2">
+										<div class="flex justify-start gap-2">
+											<n-button size="small" quaternary @click="showFilters = false">
+												Close
+											</n-button>
+										</div>
+										<div class="flex justify-end gap-2">
+											<n-button size="small" secondary @click="resetFilters()">Reset</n-button>
+										</div>
+									</div>
 								</div>
-							</div>
+							</n-popover>
 						</div>
-					</n-popover>
-				</div>
 
-				<n-button
-					v-if="viewMode === 'grid'"
-					size="small"
-					:type="selectMode ? 'primary' : 'default'"
-					@click="toggleSelectMode"
-				>
-					<template #icon>
-						<Icon :name="SelectIcon" />
-					</template>
-					{{ selectMode ? "Exit select" : "Select" }}
-				</n-button>
+						<n-button size="small" :type="selectMode ? 'primary' : 'default'" @click="toggleSelectMode">
+							<template #icon>
+								<Icon :name="SelectIcon" />
+							</template>
+							{{ selectMode ? "Exit select" : "Select" }}
+						</n-button>
 
-				<n-button v-if="viewMode === 'grid'" size="small" :loading="refreshing" @click="handleRefresh">
-					<template #icon>
-						<Icon :name="RefreshIcon" />
-					</template>
-					Refresh Cache
-				</n-button>
+						<n-button size="small" :loading="refreshing" @click="handleRefresh">
+							<template #icon>
+								<Icon :name="RefreshIcon" />
+							</template>
+							Refresh Cache
+						</n-button>
 
-				<n-pagination
-					v-if="viewMode === 'grid'"
-					v-model:page="pagination.current"
-					:page-size="pagination.size"
-					:item-count="pagination.filtered"
-					:page-slot="5"
-				/>
-			</div>
-
-			<n-spin v-if="viewMode === 'grid'" :show="loading">
-				<div class="my-3">
-					<div
-						v-if="list.length"
-						class="grid grid-cols-1 gap-4 @2xl:grid-cols-2 @5xl:grid-cols-3 @6xl:grid-cols-4"
-					>
-						<RuleCard
-							v-for="rule of list"
-							:key="rule.id"
-							:rule
-							:provisioned="provisionedMap[rule.id] === true"
-							:selectable="selectMode"
-							:selected="selection.has(rule.id)"
-							@update:selected="v => toggleRuleSelected(rule.id, v)"
+						<n-pagination
+							v-model:page="pagination.current"
+							:page-size="pagination.size"
+							:item-count="pagination.filtered"
+							:page-slot="5"
 						/>
 					</div>
 
-					<template v-else>
-						<n-empty v-if="!loading" description="No rules found" class="h-48 justify-center" />
-					</template>
+					<n-spin :show="loading">
+						<div class="my-3">
+							<div
+								v-if="list.length"
+								class="grid grid-cols-1 gap-4 @2xl:grid-cols-2 @5xl:grid-cols-3 @6xl:grid-cols-4"
+							>
+								<RuleCard
+									v-for="rule of list"
+									:key="rule.id"
+									:rule
+									:provisioned="provisionedMap[rule.id] === true"
+									:selectable="selectMode"
+									:selected="selection.has(rule.id)"
+									@update:selected="v => toggleRuleSelected(rule.id, v)"
+								/>
+							</div>
+
+							<template v-else>
+								<n-empty v-if="!loading" description="No rules found" class="h-48 justify-center" />
+							</template>
+						</div>
+					</n-spin>
+
+					<div v-if="viewMode === 'grid'" class="flex justify-end">
+						<n-pagination
+							v-if="list.length > 3"
+							v-model:page="pagination.current"
+							:page-size="pagination.size"
+							:item-count="pagination.filtered"
+							:page-slot="6"
+						/>
+					</div>
 				</div>
-			</n-spin>
-
-			<MatrixView v-else class="my-3" />
-
-			<div v-if="viewMode === 'grid'" class="flex justify-end">
-				<n-pagination
-					v-if="list.length > 3"
-					v-model:page="pagination.current"
-					:page-size="pagination.size"
-					:item-count="pagination.filtered"
-					:page-slot="6"
-				/>
-			</div>
-		</div>
+			</n-tab-pane>
+			<n-tab-pane name="matrix" tab="Matrix" display-directive="show:lazy">
+				<MatrixView />
+			</n-tab-pane>
+		</n-tabs>
 
 		<!-- Floating selection footer — only shown in grid view, when in select mode AND at least 1 rule selected. -->
 		<Transition name="fade-up">
@@ -263,7 +249,6 @@ import {
 	NAlert,
 	NBadge,
 	NButton,
-	NButtonGroup,
 	NCheckbox,
 	NEmpty,
 	NInput,
@@ -271,6 +256,8 @@ import {
 	NPopover,
 	NSelect,
 	NSpin,
+	NTabPane,
+	NTabs,
 	NTooltip,
 	useMessage
 } from "naive-ui"
@@ -310,7 +297,7 @@ const FilterIcon = "carbon:filter-edit"
 const SearchIcon = "carbon:search"
 const RefreshIcon = "carbon:renew"
 const GridIcon = "carbon:grid"
-const MatrixIcon = "carbon:chart-network"
+const MatrixIcon = "fluent:grid-kanban-16-regular"
 const SelectIcon = "carbon:checkbox-checked"
 const ProvisionIcon = "carbon:add-alt"
 const ExportIcon = "carbon:download"

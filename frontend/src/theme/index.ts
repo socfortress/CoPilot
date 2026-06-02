@@ -111,6 +111,14 @@ export function getThemeOverrides(state: ThemeState): GlobalThemeOverrides {
 			hoverColor,
 			dividerColor: borderColor
 		},
+		Alert: {
+			padding: "10px",
+			iconSize: "16px",
+			iconMargin: "10px",
+			closeMargin: "10px",
+			fontSize: "14px",
+			lineHeight: "1.2"
+		},
 		Card: {
 			color: background,
 			colorEmbedded: backgroundSecondary,
