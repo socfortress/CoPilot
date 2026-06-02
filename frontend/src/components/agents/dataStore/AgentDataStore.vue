@@ -1,10 +1,14 @@
 <template>
 	<div class="flex flex-col gap-4">
-		<div
-			class="border-default bg-secondary/20 flex flex-wrap items-end justify-between gap-3 rounded-lg border p-3 @container"
-		>
-			<div class="flex flex-wrap items-end gap-2">
-				<n-input v-model:value="textFilter" placeholder="Search artifacts..." clearable size="small" class="w-64 max-w-full">
+		<div class="flex flex-wrap items-center gap-6">
+			<div class="flex grow items-center gap-2">
+				<n-input
+					v-model:value="textFilter"
+					placeholder="Search artifacts..."
+					clearable
+					size="small"
+					class="min-w-45"
+				>
 					<template #prefix>
 						<Icon :name="SearchIcon" :size="14" />
 					</template>
@@ -16,19 +20,20 @@
 					placeholder="Status"
 					size="small"
 					clearable
-					class="w-44 max-w-full"
+					class="max-w-40 min-w-20"
+					:consistent-menu-width="false"
 				/>
-
-				<n-button size="small" secondary :loading @click="getArtifacts()">
-					<template #icon>
-						<Icon :name="RefreshIcon" />
-					</template>
-				</n-button>
 			</div>
 
-			<div class="flex items-center gap-2 text-xs">
-				<n-tag size="small" :bordered="false">TOTAL {{ artifacts.length }}</n-tag>
-				<n-tag size="small" :bordered="false">FILTERED {{ artifactsFiltered.length }}</n-tag>
+			<div class="text-secondary ml-auto flex shrink-0 items-center gap-3 text-xs tracking-wide uppercase">
+				<span>
+					Total:
+					<strong class="text-default font-mono">{{ artifacts.length }}</strong>
+				</span>
+				<span>
+					Filtered:
+					<strong class="text-default font-mono">{{ artifactsFiltered.length }}</strong>
+				</span>
 			</div>
 		</div>
 
@@ -40,7 +45,6 @@
 						:key="artifact.id"
 						:artifact
 						show-actions
-						hoverable
 						@click="showArtifactDetails(artifact)"
 						@download="downloadArtifact(artifact)"
 						@delete="deleteArtifact(artifact)"
@@ -78,13 +82,12 @@ import type { SelectOption } from "naive-ui"
 import type { AgentArtifactData } from "@/types/agents.d"
 import { refDebounced } from "@vueuse/core"
 import { saveAs } from "file-saver"
-import { NButton, NEmpty, NInput, NModal, NPagination, NSelect, NSpin, NTag, useDialog, useMessage } from "naive-ui"
+import { NEmpty, NInput, NModal, NPagination, NSelect, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import AgentArtifactCard from "./AgentArtifactCard.vue"
 import ArtifactDetails from "./ArtifactDetails.vue"
-import { mockAgentArtifacts } from "./mockAgentArtifacts"
 
 const { agentId } = defineProps<{
 	agentId: string
@@ -94,7 +97,6 @@ const message = useMessage()
 const dialog = useDialog()
 
 const SearchIcon = "carbon:search"
-const RefreshIcon = "carbon:renew"
 
 const loading = ref(false)
 const artifacts = ref<AgentArtifactData[]>([])
@@ -137,15 +139,15 @@ function getArtifacts() {
 		.listAgentArtifacts(agentId)
 		.then(res => {
 			if (res.data.success) {
-				artifacts.value = mockAgentArtifacts
+				artifacts.value = res.data.data || []
 				return
 			}
 			message.error(res.data?.message || "An error occurred. Please try again later.")
-			artifacts.value = mockAgentArtifacts
+			artifacts.value = []
 		})
 		.catch(err => {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-			artifacts.value = mockAgentArtifacts
+			artifacts.value = []
 		})
 		.finally(() => {
 			loading.value = false
