@@ -264,7 +264,11 @@
 													</div>
 												</template>
 
-												<RulePreviewList :rule-ids="sub.rule_ids" :index="rulesIndex" />
+												<RulePreviewList
+													:rule-ids="sub.rule_ids"
+													:index="rulesIndex"
+													@open-rule="openQuickRule"
+												/>
 											</n-popover>
 
 											<div
@@ -286,6 +290,7 @@
 									:rule-ids="tech.rule_ids"
 									:index="rulesIndex"
 									:extra-via-subs="tech.total_rule_count - tech.rule_count"
+									@open-rule="openQuickRule"
 								/>
 							</n-popover>
 
@@ -334,6 +339,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO-FE: refactor
 import type {
 	MitreCoverageQuery,
 	MitreCoverageResponse,
@@ -362,11 +368,12 @@ import {
 	NTooltip,
 	useMessage
 } from "naive-ui"
-import { computed, h, onMounted, ref, useTemplateRef, watch } from "vue"
+import { computed, onMounted, ref, useTemplateRef, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import RuleCardContent from "./RuleCardContent.vue"
+import RulePreviewList from "./RulePreviewList.vue"
 import TechniqueDetails from "./TechniqueDetails.vue"
 
 const InfoIcon = "carbon:information"
@@ -781,82 +788,6 @@ onMounted(async () => {
 	await load({ preserveDeepLink: true })
 	ready.value = true
 })
-
-// ---------------------------------------------------------------------------
-// Hover preview list — inline component. Rule rows are clickable; clicking
-// one opens the existing rule-detail modal directly without going through
-// the technique drawer.
-// ---------------------------------------------------------------------------
-const platformIcon: Record<string, string> = {
-	linux: "proicons:linux",
-	windows: "mdi:microsoft",
-	powershell: "codicon:terminal-powershell",
-	cve: "carbon:security",
-	unknown: "carbon:help"
-}
-
-function RulePreviewList(props: {
-	ruleIds: string[]
-	index: Record<string, MitreRuleIndexEntry>
-	extraViaSubs?: number
-}) {
-	const ids = props.ruleIds || []
-	if (!ids.length) {
-		return h("div", { class: "preview-empty text-secondary text-xs" }, "No rules")
-	}
-	const shown = ids.slice(0, 6)
-	const remainder = ids.length - shown.length
-	return h("div", { class: "preview-wrap flex flex-col gap-1" }, [
-		h(
-			"div",
-			{ class: "text-tertiary text-xs uppercase tracking-wide" },
-			`${ids.length} rule${ids.length === 1 ? "" : "s"}${
-				props.extraViaSubs ? ` · +${props.extraViaSubs} via sub-techniques` : ""
-			}`
-		),
-		...shown.map(id => {
-			const entry = props.index[id]
-			const platform = (entry?.platform || "unknown").toLowerCase()
-			const iconName = platformIcon[platform] || platformIcon.unknown
-			const dataSources = entry?.data_sources || []
-			return h(
-				"div",
-				{
-					class: "preview-row flex flex-col gap-1",
-					key: id,
-					onClick: (e: MouseEvent) => {
-						e.stopPropagation()
-						openQuickRule(id)
-					},
-					title: "Click to open rule details"
-				},
-				[
-					h("div", { class: "flex items-center gap-2" }, [
-						h(Icon as any, { name: iconName, size: 14, class: "preview-platform shrink-0" }),
-						h("span", { class: "preview-name text-default text-xs" }, entry?.name || id),
-						entry?.severity
-							? h(
-									"span",
-									{ class: `preview-sev preview-sev-${entry.severity.toLowerCase()} text-xs` },
-									entry.severity
-								)
-							: null
-					]),
-					dataSources.length
-						? h(
-								"div",
-								{ class: "preview-sources flex flex-wrap items-center gap-1" },
-								dataSources.map(s => h("span", { class: "preview-source text-xs", key: s }, s))
-							)
-						: null
-				]
-			)
-		}),
-		remainder > 0
-			? h("div", { class: "text-tertiary text-xs" }, `+ ${remainder} more — click cell to view all`)
-			: null
-	])
-}
 </script>
 
 <style scoped lang="scss">
@@ -1168,77 +1099,5 @@ function RulePreviewList(props: {
 }
 .cov-4 {
 	background: rgba(var(--primary-color-rgb) / 0.45);
-}
-</style>
-
-<style lang="scss">
-/* Unscoped: applies to the inline RulePreviewList rendered inside n-popover bodies,
-   which sit outside the component tree. */
-.preview-wrap {
-	max-width: 360px;
-}
-.preview-row {
-	cursor: pointer;
-	padding: 2px 4px;
-	border-radius: 3px;
-	transition: background-color 0.1s;
-}
-.preview-row:hover {
-	background: rgba(var(--primary-color-rgb) / 0.1);
-}
-.preview-row:hover .preview-name {
-	color: var(--primary-color);
-}
-.preview-row .preview-name {
-	flex: 1;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-.preview-platform {
-	opacity: 0.85;
-}
-
-.preview-sources {
-	margin-left: 22px;
-}
-.preview-source {
-	font-size: 0.6rem;
-	font-weight: 500;
-	letter-spacing: 0.02em;
-	color: var(--fg-tertiary-color);
-	background: var(--bg-default-color);
-	border: 1px solid var(--border-color);
-	border-radius: 3px;
-	padding: 1px 5px;
-}
-.preview-sev {
-	font-size: 0.65rem;
-	font-weight: 600;
-	text-transform: uppercase;
-	padding: 1px 6px;
-	border-radius: 3px;
-	border: 1px solid var(--border-color);
-	color: var(--fg-secondary-color);
-}
-.preview-sev-low {
-	color: var(--info-color);
-	border-color: rgba(var(--info-color-rgb) / 0.4);
-	background: rgba(var(--info-color-rgb) / 0.1);
-}
-.preview-sev-medium {
-	color: var(--warning-color);
-	border-color: rgba(var(--warning-color-rgb) / 0.4);
-	background: rgba(var(--warning-color-rgb) / 0.1);
-}
-.preview-sev-high {
-	color: var(--error-color);
-	border-color: rgba(var(--error-color-rgb) / 0.4);
-	background: rgba(var(--error-color-rgb) / 0.1);
-}
-.preview-sev-critical {
-	color: var(--error-color);
-	border-color: var(--error-color);
-	background: rgba(var(--error-color-rgb) / 0.18);
 }
 </style>

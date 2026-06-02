@@ -1,19 +1,21 @@
 <template>
-	<div v-if="technique" class="flex flex-col">
-		<div class="mb-3 flex flex-col gap-1">
-			<div class="text-secondary text-sm">
-				<a v-if="technique.url" :href="technique.url" target="_blank" rel="noopener">
+	<div v-if="technique" class="flex flex-col gap-3">
+		<n-timeline>
+			<n-timeline-item v-if="technique.url">
+				<a :href="technique.url" target="_blank" rel="noopener">
 					{{ technique.id }} — view on attack.mitre.org ↗
 				</a>
-			</div>
-			<div v-if="subTechnique" class="text-secondary text-sm">
-				Sub-technique:
-				<a v-if="subTechnique.url" :href="subTechnique.url" target="_blank" rel="noopener">
-					{{ subTechnique.id }} {{ subTechnique.name }} ↗
-				</a>
-				<span v-else>{{ subTechnique.id }} {{ subTechnique.name }}</span>
-			</div>
-		</div>
+			</n-timeline-item>
+			<n-timeline-item v-if="subTechnique" type="info">
+				<div class="text-secondary text-sm">
+					Sub-technique:
+					<a v-if="subTechnique.url" :href="subTechnique.url" target="_blank" rel="noopener">
+						{{ subTechnique.id }} {{ subTechnique.name }} ↗
+					</a>
+					<span v-else>{{ subTechnique.id }} {{ subTechnique.name }}</span>
+				</div>
+			</n-timeline-item>
+		</n-timeline>
 
 		<div
 			v-if="provisionableCount > 0"
@@ -81,7 +83,7 @@ import type {
 	MitreTechnique,
 	RuleSummary
 } from "@/types/copilotSearches.d"
-import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
+import { NButton, NEmpty, NModal, NSpin, NTimeline, NTimelineItem, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
