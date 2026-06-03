@@ -1,90 +1,101 @@
 <template>
-	<n-popover
-		trigger="hover"
-		:delay="350"
-		:duration="80"
-		:show-arrow="false"
-		placement="right"
-		:disabled="tech.total_rule_count === 0"
+	<div
+		class="hover:border-primary/50 hover:bg-primary/6 border-default flex flex-col gap-1.5 rounded border px-2 py-1.5 text-xs"
+		:class="[
+			cellClass(tech),
+			hoveredTechniqueId === tech.id && hoveredTacticId !== tactic.id && 'ring-primary/45 ring-2'
+		]"
+		:title="cellTooltip(tech)"
+		@mouseenter="emit('technique-hover', tactic.id, tech.id)"
+		@mouseleave="emit('technique-leave')"
 	>
-		<template #trigger>
-			<div
-				class="hover:border-primary/50 hover:bg-primary/6 border-default cursor-pointer rounded border px-2 py-1.5 text-xs"
-				:class="[
-					cellClass(tech),
-					hoveredTechniqueId === tech.id && hoveredTacticId !== tactic.id && 'ring-primary/45 ring-2'
-				]"
-				:title="cellTooltip(tech)"
-				@click="emit('open-technique', tactic, tech)"
-				@mouseenter="emit('technique-hover', tactic.id, tech.id)"
-				@mouseleave="emit('technique-leave')"
-			>
-				<div class="flex items-center justify-between gap-1.5">
-					<div class="text-default font-mono text-xs font-semibold">{{ tech.id }}</div>
-					<n-tag
-						v-if="tech.total_rule_count > 0"
-						size="tiny"
-						:bordered="false"
-						class="px-1! font-mono text-[11px]!"
-					>
-						{{ tech.total_rule_count }}
-					</n-tag>
-				</div>
-				<div class="text-secondary mt-0.5 text-xs leading-tight">{{ tech.name }}</div>
-
-				<n-button
-					v-if="tech.subtechniques.length"
-					text
-					size="tiny"
-					@click.stop="toggleExpand(tactic.id, tech.id)"
+		<div class="flex items-center justify-between gap-1.5">
+			<div class="text-default font-mono text-xs font-semibold">{{ tech.id }}</div>
+			<div class="flex items-center gap-1">
+				<n-tag
+					size="small"
+					:bordered="false"
+					class="hover:text-primary! flex cursor-pointer! items-center px-1! font-mono text-[11px]! [&_.n-tag\_\_content]:flex [&_.n-tag\_\_content]:items-center"
+					@click="emit('open-technique', tactic, tech)"
 				>
-					<template #icon>
-						<Icon :name="expanded[tactic.id + tech.id] ? ChevronDown : ChevronRight" :size="12" />
+					<Icon name="carbon:view" :size="12" class="mx-0.5" />
+				</n-tag>
+				<n-popover
+					trigger="hover"
+					:delay="350"
+					:duration="80"
+					:show-arrow="false"
+					placement="right"
+					:disabled="tech.total_rule_count === 0"
+				>
+					<template #trigger>
+						<span>
+							<n-tag
+								v-if="tech.total_rule_count > 0"
+								size="small"
+								:bordered="false"
+								class="flex cursor-help! items-center px-1! font-mono text-[11px]! [&_.n-tag\_\_content]:flex [&_.n-tag\_\_content]:items-center"
+							>
+								<div class="flex items-center gap-1">
+									<Icon name="carbon:information" :size="11" />
+									{{ tech.total_rule_count }}
+								</div>
+							</n-tag>
+						</span>
 					</template>
-					{{ tech.subtechniques.length }} sub
-				</n-button>
 
-				<div
-					v-if="expanded[tactic.id + tech.id]"
-					class="bg-secondary border-default/70 mt-1 flex flex-col gap-0.5 rounded-sm border p-1"
-					@click.stop
-				>
-					<SubTechniqueCell
-						v-for="sub of visibleSubs(tech, expandKey)"
-						:key="sub.id"
-						:tactic
-						:tech
-						:sub
-						:rules-index
-						@open-sub-technique="
-							(t, technique, subTech) => emit('open-sub-technique', t, technique, subTech)
-						"
+					<RulePreviewList
+						:rule-ids="tech.rule_ids"
+						:index="rulesIndex"
+						:extra-via-subs="tech.total_rule_count - tech.rule_count"
 						@open-rule="ruleId => emit('open-rule', ruleId)"
 					/>
+				</n-popover>
+			</div>
+		</div>
 
-					<div
-						v-if="tech.subtechniques.length > SUB_PREVIEW_LIMIT"
-						class="border-default text-tertiary hover:border-primary/50 hover:bg-primary/6 hover:text-primary mt-0.5 cursor-pointer rounded-sm border border-dashed px-1.5 py-0.5 text-center text-xs select-none"
-						@click.stop="toggleShowAllSubs(expandKey)"
-					>
-						{{ showAllSubs[expandKey] ? `Show fewer` : `Show all ${tech.subtechniques.length}` }}
-					</div>
+		<div class="text-secondary mt-0.5 text-xs leading-tight">{{ tech.name }}</div>
+
+		<div v-if="tech.subtechniques.length">
+			<n-button text size="tiny" @click.stop="toggleExpand(tactic.id, tech.id)">
+				<template #icon>
+					<Icon :name="expanded[tactic.id + tech.id] ? ChevronDown : ChevronRight" :size="12" />
+				</template>
+				{{ tech.subtechniques.length }} sub
+			</n-button>
+		</div>
+
+		<n-collapse-transition :show="expanded[tactic.id + tech.id]">
+			<div
+				v-if="expanded[tactic.id + tech.id]"
+				class="bg-secondary border-default/70 mt-1 flex flex-col gap-1 rounded-lg border p-1"
+			>
+				<SubTechniqueCell
+					v-for="sub of visibleSubs(tech, expandKey)"
+					:key="sub.id"
+					:tactic
+					:tech
+					:sub
+					:rules-index
+					@open-sub-technique="(t, technique, subTech) => emit('open-sub-technique', t, technique, subTech)"
+					@open-rule="ruleId => emit('open-rule', ruleId)"
+				/>
+
+				<div
+					v-if="tech.subtechniques.length > SUB_PREVIEW_LIMIT"
+					class="border-default text-tertiary hover:border-primary/50 hover:bg-primary/6 hover:text-primary mt-0.5 cursor-pointer rounded-sm border border-dashed px-1.5 py-0.5 text-center text-xs select-none"
+					@click.stop="toggleShowAllSubs(expandKey)"
+				>
+					{{ showAllSubs[expandKey] ? `Show fewer` : `Show all ${tech.subtechniques.length}` }}
 				</div>
 			</div>
-		</template>
-
-		<RulePreviewList
-			:rule-ids="tech.rule_ids"
-			:index="rulesIndex"
-			:extra-via-subs="tech.total_rule_count - tech.rule_count"
-			@open-rule="ruleId => emit('open-rule', ruleId)"
-		/>
-	</n-popover>
+		</n-collapse-transition>
+	</div>
 </template>
 
 <script setup lang="ts">
 import type { MitreRuleIndexEntry, MitreSubTechnique, MitreTactic, MitreTechnique } from "@/types/copilotSearches.d"
-import { NButton, NPopover, NTag } from "naive-ui"
+import { NButton, NCollapseTransition, NPopover, NTag } from "naive-ui"
 import { computed, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import RulePreviewList from "../RulePreviewList.vue"

@@ -3,14 +3,14 @@
 	background: var(--bg-default-color);
 }
 .cov-1 {
-	background: rgba(var(--primary-color-rgb) / 0.05);
+	background: rgba(var(--success-color-rgb) / 0.05);
 }
 .cov-2 {
-	background: rgba(var(--primary-color-rgb) / 0.13);
+	background: rgba(var(--success-color-rgb) / 0.13);
 }
 .cov-3 {
-	background: rgba(var(--primary-color-rgb) / 0.23);
+	background: rgba(var(--success-color-rgb) / 0.23);
 }
 .cov-4 {
-	background: rgba(var(--primary-color-rgb) / 0.35);
+	background: rgba(var(--success-color-rgb) / 0.45);
 }

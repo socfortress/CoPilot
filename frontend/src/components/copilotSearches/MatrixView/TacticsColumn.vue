@@ -1,5 +1,5 @@
 <template>
-	<div class="flex w-50 shrink-0 flex-col">
+	<div class="flex w-60 shrink-0 flex-col">
 		<div
 			class="bg-secondary border-default sticky top-0 z-2 flex flex-col gap-1 rounded-t-md border border-b-2 px-2.5 py-2"
 			:class="{
