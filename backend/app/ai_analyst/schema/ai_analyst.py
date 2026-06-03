@@ -7,6 +7,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
+from pydantic import model_validator
 
 # --- Enums ---
 
@@ -116,6 +117,28 @@ class SubmitReportRequest(BaseModel):
         if v is None:
             return v
         return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", v)
+
+    @model_validator(mode="after")
+    def require_report_body(self):
+        """Reject reports missing any human-readable body field.
+
+        The agent populates these from CLAUDE.md context; when a long-lived
+        session compacts, the field list can drop out and the agent calls this
+        with only job_id/alert_id/customer_code. Without this guard the row
+        persists with NULL bodies and surfaces as an empty report in CoPilot.
+        Runs after strip_control_characters, so all-control-char values that
+        collapse to "" are caught here too.
+        """
+        missing = [
+            name
+            for name in ("severity_assessment", "summary", "report_markdown", "recommended_actions")
+            if not (getattr(self, name) and str(getattr(self, name)).strip())
+        ]
+        if missing:
+            raise ValueError(
+                f"Report body fields must be non-empty: {', '.join(missing)}. " "A report missing these persists a blank row in CoPilot.",
+            )
+        return self
 
 
 class SubmitIocRequest(BaseModel):
