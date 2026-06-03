@@ -8,6 +8,7 @@
 				v-model:selected-severity="selectedSeverity"
 				v-model:selected-status="selectedStatus"
 				v-model:has-graylog-filter="hasGraylogFilter"
+				hide-selection-switch
 				:pagination
 				:select-mode
 				:refreshing
@@ -190,7 +191,7 @@ watchDebounced(
 	}
 )
 
-const selectMode = ref(false)
+const selectMode = ref(true)
 const selection = ref<Set<string>>(new Set())
 const selectionCache = ref<Map<string, RuleSummary>>(new Map())
 

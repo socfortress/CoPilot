@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-wrap items-center justify-end gap-2">
+	<div class="flex flex-wrap items-center justify-between gap-2">
 		<div class="flex min-w-80 grow gap-2">
 			<n-popover overlap placement="bottom-start">
 				<template #trigger>
@@ -23,13 +23,7 @@
 				</div>
 			</n-popover>
 
-			<n-input
-				v-model:value="searchQuery"
-				size="small"
-				placeholder="Search rules..."
-				class="max-w-120"
-				clearable
-			>
+			<n-input v-model:value="searchQuery" size="small" placeholder="Search rules..." class="max-w-120" clearable>
 				<template #prefix>
 					<Icon :name="SearchIcon" />
 				</template>
@@ -95,12 +89,19 @@
 			</n-popover>
 		</div>
 
-		<n-button size="small" secondary :type="selectMode ? 'primary' : 'default'" @click="emit('toggle-select-mode')">
-			<template #icon>
-				<Icon :name="SelectIcon" />
-			</template>
-			{{ selectMode ? "Exit select" : "Select" }}
-		</n-button>
+		<div v-if="!hideSelectionSwitch">
+			<n-button
+				size="small"
+				secondary
+				:type="selectMode ? 'primary' : 'default'"
+				@click="emit('toggle-select-mode')"
+			>
+				<template #icon>
+					<Icon :name="SelectIcon" />
+				</template>
+				{{ selectMode ? "Exit select" : "Select" }}
+			</n-button>
+		</div>
 
 		<n-button size="small" :loading="refreshing" @click="emit('refresh')">
 			<template #icon>
@@ -122,6 +123,7 @@ import Icon from "@/components/common/Icon.vue"
 defineProps<{
 	pagination: { total: number; filtered: number }
 	selectMode: boolean
+	hideSelectionSwitch: boolean
 	refreshing: boolean
 }>()
 
