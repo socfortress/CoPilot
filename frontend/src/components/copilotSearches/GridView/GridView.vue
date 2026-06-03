@@ -137,6 +137,7 @@ import type {
 } from "@/types/copilotSearches.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
+import { saveAs } from "file-saver"
 import { NButton, NEmpty, NModal, NPagination, NSpin, NTooltip, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
@@ -310,17 +311,6 @@ function onBulkProvisionSuccess(res: BulkProvisionGraylogAlertResponse) {
 	provisionedMap.value = next
 }
 
-function downloadBlob(blob: Blob, filename: string) {
-	const url = URL.createObjectURL(blob)
-	const link = document.createElement("a")
-	link.href = url
-	link.download = filename
-	document.body.appendChild(link)
-	link.click()
-	document.body.removeChild(link)
-	URL.revokeObjectURL(url)
-}
-
 function exportSelectedCsv() {
 	const rules = Array.from(selectionCache.value.values())
 	if (!rules.length) return
@@ -348,7 +338,7 @@ function exportSelectedCsv() {
 		.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
 		.join("\n")
 	const stamp = new Date().toISOString().slice(0, 10)
-	downloadBlob(new Blob([csv], { type: "text/csv;charset=utf-8;" }), `copilot-searches-selected-${stamp}.csv`)
+	saveAs(new Blob([csv], { type: "text/csv;charset=utf-8;" }), `copilot-searches-selected-${stamp}.csv`)
 }
 
 function exportSelectedJson() {
@@ -356,7 +346,7 @@ function exportSelectedJson() {
 	if (!rules.length) return
 	const json = JSON.stringify(rules, null, 2)
 	const stamp = new Date().toISOString().slice(0, 10)
-	downloadBlob(
+	saveAs(
 		new Blob([json], { type: "application/json;charset=utf-8;" }),
 		`copilot-searches-selected-${stamp}.json`
 	)

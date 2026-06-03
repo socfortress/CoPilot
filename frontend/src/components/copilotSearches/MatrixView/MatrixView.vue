@@ -352,6 +352,7 @@ import type {
 	RuleStatus
 } from "@/types/copilotSearches.d"
 import { useElementBounding, useLocalStorage, useWindowSize, watchDebounced } from "@vueuse/core"
+import { saveAs } from "file-saver"
 import {
 	NBadge,
 	NButton,
@@ -615,15 +616,8 @@ function exportCoverageCsv() {
 		}
 	}
 	const csv = rows.map(r => r.map(cell => `"${cell.replace(/"/g, '""')}"`).join(",")).join("\n")
-	const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-	const url = URL.createObjectURL(blob)
-	const link = document.createElement("a")
-	link.href = url
-	link.download = `copilot-mitre-coverage-${new Date().toISOString().slice(0, 10)}.csv`
-	document.body.appendChild(link)
-	link.click()
-	document.body.removeChild(link)
-	URL.revokeObjectURL(url)
+	const stamp = new Date().toISOString().slice(0, 10)
+	saveAs(new Blob([csv], { type: "text/csv;charset=utf-8;" }), `copilot-mitre-coverage-${stamp}.csv`)
 }
 
 function onCellEnter(tacticId: string, techId: string) {
