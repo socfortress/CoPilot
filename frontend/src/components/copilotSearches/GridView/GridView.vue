@@ -1,58 +1,59 @@
 <template>
 	<div class="flex flex-col">
-		<GridViewToolbar
-			v-model:search-query="searchQuery"
-			v-model:show-filters="showFilters"
-			v-model:selected-platform="selectedPlatform"
-			v-model:selected-severity="selectedSeverity"
-			v-model:selected-status="selectedStatus"
-			v-model:has-graylog-filter="hasGraylogFilter"
-			:pagination
-			:select-mode
-			:refreshing
-			@refresh="handleRefresh"
-			@toggle-select-mode="toggleSelectMode"
-			@reset-filters="resetFilters"
-		>
-			<n-pagination
-				v-model:page="pagination.current"
-				:page-size="pagination.size"
-				:item-count="pagination.filtered"
-				:page-slot="5"
-			/>
-		</GridViewToolbar>
+		<div class="flex flex-col" :class="{ 'mb-30': selectedRules.length }">
+			<GridViewToolbar
+				v-model:search-query="searchQuery"
+				v-model:show-filters="showFilters"
+				v-model:selected-platform="selectedPlatform"
+				v-model:selected-severity="selectedSeverity"
+				v-model:selected-status="selectedStatus"
+				v-model:has-graylog-filter="hasGraylogFilter"
+				:pagination
+				:select-mode
+				:refreshing
+				@refresh="handleRefresh"
+				@toggle-select-mode="toggleSelectMode"
+				@reset-filters="resetFilters"
+			>
+				<n-pagination
+					v-model:page="pagination.current"
+					:page-size="pagination.size"
+					:item-count="pagination.filtered"
+					:page-slot="5"
+				/>
+			</GridViewToolbar>
 
-		<n-spin :show="loading">
-			<div class="my-3">
-				<div
-					v-if="list.length"
-					class="grid grid-cols-1 gap-4 @2xl:grid-cols-2 @5xl:grid-cols-3 @6xl:grid-cols-4"
-				>
-					<RuleCard
-						v-for="rule of list"
-						:key="rule.id"
-						:rule
-						:provisioned="provisionedMap[rule.id] === true"
-						:selectable="selectMode"
-						:selected="selection.has(rule.id)"
-						@update:selected="v => toggleRuleSelected(rule.id, v)"
-					/>
+			<n-spin :show="loading">
+				<div class="my-3">
+					<div
+						v-if="list.length"
+						class="grid grid-cols-1 gap-4 @2xl:grid-cols-2 @4xl:grid-cols-3 @6xl:grid-cols-4"
+					>
+						<RuleCard
+							v-for="rule of list"
+							:key="rule.id"
+							:rule
+							:provisioned="provisionedMap[rule.id] === true"
+							:selectable="selectMode"
+							:selected="selection.has(rule.id)"
+							@update:selected="v => toggleRuleSelected(rule.id, v)"
+						/>
+					</div>
+
+					<n-empty v-else-if="!loading" description="No rules found" class="h-48 justify-center" />
 				</div>
+			</n-spin>
 
-				<n-empty v-else-if="!loading" description="No rules found" class="h-48 justify-center" />
+			<div class="flex justify-end">
+				<n-pagination
+					v-if="list.length > 3"
+					v-model:page="pagination.current"
+					:page-size="pagination.size"
+					:item-count="pagination.filtered"
+					:page-slot="6"
+				/>
 			</div>
-		</n-spin>
-
-		<div class="flex justify-end">
-			<n-pagination
-				v-if="list.length > 3"
-				v-model:page="pagination.current"
-				:page-size="pagination.size"
-				:item-count="pagination.filtered"
-				:page-slot="6"
-			/>
 		</div>
-
 		<GridViewSelectionBar
 			:select-mode
 			:selected-rules

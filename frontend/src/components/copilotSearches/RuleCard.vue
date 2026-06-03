@@ -1,12 +1,5 @@
 <template>
 	<div class="relative h-full">
-		<n-checkbox
-			v-if="selectable"
-			:checked="selected"
-			class="bg-default absolute -top-1.75 -left-1.75 z-2"
-			@update:checked="emit('update:selected', $event)"
-			@click.stop
-		/>
 		<CardEntity
 			size="small"
 			hoverable
@@ -17,7 +10,17 @@
 			@click.stop="showDetails = true"
 		>
 			<template #headerMain>
-				<p class="text-default line-clamp-2 text-sm leading-snug font-semibold">{{ rule.name }}</p>
+				<div class="flex flex-wrap gap-2">
+					<n-checkbox
+						v-if="selectable"
+						:checked="selected"
+						@update:checked="emit('update:selected', $event)"
+						@click.stop
+					/>
+					<p class="text-default relative -top-0.5 line-clamp-2 flex-1 text-sm leading-snug font-semibold">
+						{{ rule.name }}
+					</p>
+				</div>
 			</template>
 
 			<template #default>

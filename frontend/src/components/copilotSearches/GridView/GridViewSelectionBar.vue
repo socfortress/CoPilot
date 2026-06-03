@@ -1,14 +1,14 @@
 <template>
 	<Transition name="fade-up">
-		<div v-if="selectMode && selectedRules.length > 0" class="selection-footer">
+		<div v-if="selectMode && selectedRules.length > 0" class="selection-footer flex flex-wrap justify-between">
 			<div class="text-default text-sm">
 				<strong>{{ selectedRules.length }}</strong>
 				selected
 				<span class="text-tertiary ml-2 text-xs">({{ provisionableCount }} with Graylog query)</span>
 			</div>
 
-			<div class="ml-auto flex items-center gap-2">
-				<n-tooltip placement="top">
+			<div class="ml-auto flex flex-wrap items-center gap-2">
+				<n-tooltip placement="top" class="max-w-120! px-2! py-1.5! text-xs!">
 					<template #trigger>
 						<n-button
 							size="small"
@@ -22,9 +22,7 @@
 							Provision selected
 						</n-button>
 					</template>
-					<template v-if="provisionableCount === 0">
-						None of the selected rules has a Graylog query.
-					</template>
+					<template v-if="provisionableCount === 0">None of the selected rules has a Graylog query.</template>
 					<template v-else>
 						Provision {{ provisionableCount }} rule{{ provisionableCount === 1 ? "" : "s" }} as Graylog
 						event definitions.
@@ -60,7 +58,7 @@
 		<BulkProvisionForm
 			v-if="showBulkProvisionModal"
 			:rule-ids="ruleIdsWithGraylog"
-			:provisionableCount
+			:provisionable-count
 			@close="showBulkProvisionModal = false"
 			@success="onBulkProvisionSuccess"
 		/>
@@ -92,9 +90,7 @@ const ExportIcon = "carbon:download"
 
 const provisionableCount = computed(() => props.selectedRules.filter(r => r.has_graylog_query).length)
 
-const ruleIdsWithGraylog = computed(() =>
-	props.selectedRules.filter(r => r.has_graylog_query).map(r => r.id)
-)
+const ruleIdsWithGraylog = computed(() => props.selectedRules.filter(r => r.has_graylog_query).map(r => r.id))
 
 function onBulkProvisionSuccess(result: BulkProvisionGraylogAlertResponse) {
 	emit("provision-success", result)
@@ -133,10 +129,7 @@ function exportSelectedJson() {
 	if (!props.selectedRules.length) return
 	const json = JSON.stringify(props.selectedRules, null, 2)
 	const stamp = new Date().toISOString().slice(0, 10)
-	saveAs(
-		new Blob([json], { type: "application/json;charset=utf-8;" }),
-		`copilot-searches-selected-${stamp}.json`
-	)
+	saveAs(new Blob([json], { type: "application/json;charset=utf-8;" }), `copilot-searches-selected-${stamp}.json`)
 }
 </script>
 
@@ -156,7 +149,7 @@ function exportSelectedJson() {
 	background: var(--bg-secondary-color);
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius);
-	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
 }
 
 .fade-up-enter-active,
