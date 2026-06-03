@@ -53,76 +53,12 @@
 			/>
 		</div>
 
-		<Transition name="fade-up">
-			<div v-if="selectMode && selection.size > 0" class="selection-footer">
-				<div class="text-default text-sm">
-					<strong>{{ selection.size }}</strong>
-					selected
-					<span class="text-tertiary ml-2 text-xs">
-						({{ provisionableSelectedCount }} with Graylog query)
-					</span>
-				</div>
-
-				<div class="ml-auto flex items-center gap-2">
-					<n-tooltip placement="top">
-						<template #trigger>
-							<n-button
-								size="small"
-								type="primary"
-								:disabled="provisionableSelectedCount === 0"
-								@click="openBulkProvisionModal"
-							>
-								<template #icon>
-									<Icon :name="ProvisionIcon" />
-								</template>
-								Provision selected
-							</n-button>
-						</template>
-						<template v-if="provisionableSelectedCount === 0">
-							None of the selected rules has a Graylog query.
-						</template>
-						<template v-else>
-							Provision {{ provisionableSelectedCount }} rule{{
-								provisionableSelectedCount === 1 ? "" : "s"
-							}}
-							as Graylog event definitions.
-						</template>
-					</n-tooltip>
-
-					<n-button size="small" @click="exportSelectedCsv">
-						<template #icon>
-							<Icon :name="ExportIcon" />
-						</template>
-						CSV
-					</n-button>
-					<n-button size="small" @click="exportSelectedJson">
-						<template #icon>
-							<Icon :name="ExportIcon" />
-						</template>
-						JSON
-					</n-button>
-
-					<n-button size="small" quaternary @click="clearSelection">Clear</n-button>
-				</div>
-			</div>
-		</Transition>
-
-		<n-modal
-			v-model:show="showBulkProvisionModal"
-			preset="card"
-			:style="{ maxWidth: 'min(560px, 92vw)' }"
-			title="Bulk Provision Graylog Alerts"
-			:bordered="false"
-			segmented
-		>
-			<BulkProvisionForm
-				v-if="showBulkProvisionModal"
-				:rule-ids="selectedRuleIdsWithGraylog"
-				:provisionable-count="provisionableSelectedCount"
-				@close="showBulkProvisionModal = false"
-				@success="onBulkProvisionSuccess"
-			/>
-		</n-modal>
+		<GridViewSelectionBar
+			:select-mode
+			:selected-rules
+			@clear="clearSelection"
+			@provision-success="onBulkProvisionSuccess"
+		/>
 	</div>
 </template>
 
@@ -137,13 +73,11 @@ import type {
 } from "@/types/copilotSearches.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
-import { saveAs } from "file-saver"
-import { NButton, NEmpty, NModal, NPagination, NSpin, NTooltip, useMessage } from "naive-ui"
+import { NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
-import BulkProvisionForm from "../BulkProvisionForm.vue"
 import RuleCard from "../RuleCard.vue"
+import GridViewSelectionBar from "./GridViewSelectionBar.vue"
 import GridViewToolbar from "./GridViewToolbar.vue"
 
 const loading = ref(false)
@@ -164,9 +98,6 @@ const selectedStatus = ref<RuleStatus | null>(null)
 const searchQuery = ref<string | null>(null)
 const hasGraylogFilter = ref(false)
 const showFilters = ref(false)
-
-const ProvisionIcon = "carbon:add-alt"
-const ExportIcon = "carbon:download"
 
 let abortController: AbortController | null = null
 
@@ -261,17 +192,8 @@ watchDebounced(
 const selectMode = ref(false)
 const selection = ref<Set<string>>(new Set())
 const selectionCache = ref<Map<string, RuleSummary>>(new Map())
-const showBulkProvisionModal = ref(false)
 
-const provisionableSelectedCount = computed(
-	() => Array.from(selectionCache.value.values()).filter(r => r.has_graylog_query).length
-)
-
-const selectedRuleIdsWithGraylog = computed(() =>
-	Array.from(selectionCache.value.values())
-		.filter(r => r.has_graylog_query)
-		.map(r => r.id)
-)
+const selectedRules = computed(() => Array.from(selectionCache.value.values()))
 
 function toggleSelectMode() {
 	selectMode.value = !selectMode.value
@@ -296,11 +218,6 @@ function clearSelection() {
 	selectionCache.value = new Map()
 }
 
-function openBulkProvisionModal() {
-	if (provisionableSelectedCount.value === 0) return
-	showBulkProvisionModal.value = true
-}
-
 function onBulkProvisionSuccess(res: BulkProvisionGraylogAlertResponse) {
 	const next = { ...provisionedMap.value }
 	for (const r of res.results) {
@@ -310,77 +227,4 @@ function onBulkProvisionSuccess(res: BulkProvisionGraylogAlertResponse) {
 	}
 	provisionedMap.value = next
 }
-
-function exportSelectedCsv() {
-	const rules = Array.from(selectionCache.value.values())
-	if (!rules.length) return
-	const header = [
-		"id",
-		"name",
-		"severity",
-		"platform",
-		"status",
-		"has_graylog_query",
-		"mitre_attack_id",
-		"description"
-	]
-	const rows = rules.map(r => [
-		r.id,
-		r.name,
-		r.severity,
-		r.platform,
-		r.status,
-		String(r.has_graylog_query),
-		(r.mitre_attack_id || []).join("|"),
-		(r.description || "").replace(/\s+/g, " ")
-	])
-	const csv = [header, ...rows]
-		.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-		.join("\n")
-	const stamp = new Date().toISOString().slice(0, 10)
-	saveAs(new Blob([csv], { type: "text/csv;charset=utf-8;" }), `copilot-searches-selected-${stamp}.csv`)
-}
-
-function exportSelectedJson() {
-	const rules = Array.from(selectionCache.value.values())
-	if (!rules.length) return
-	const json = JSON.stringify(rules, null, 2)
-	const stamp = new Date().toISOString().slice(0, 10)
-	saveAs(
-		new Blob([json], { type: "application/json;charset=utf-8;" }),
-		`copilot-searches-selected-${stamp}.json`
-	)
-}
 </script>
-
-<style scoped lang="scss">
-.selection-footer {
-	position: fixed;
-	bottom: 16px;
-	left: 50%;
-	transform: translateX(-50%);
-	z-index: 50;
-	display: flex;
-	align-items: center;
-	gap: 16px;
-	min-width: min(680px, 92vw);
-	max-width: 92vw;
-	padding: 10px 16px;
-	background: var(--bg-secondary-color);
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius);
-	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
-}
-
-.fade-up-enter-active,
-.fade-up-leave-active {
-	transition:
-		opacity 0.2s ease,
-		transform 0.2s ease;
-}
-.fade-up-enter-from,
-.fade-up-leave-to {
-	opacity: 0;
-	transform: translate(-50%, 12px);
-}
-</style>
