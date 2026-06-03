@@ -136,8 +136,7 @@ class SubmitReportRequest(BaseModel):
         ]
         if missing:
             raise ValueError(
-                f"Report body fields must be non-empty: {', '.join(missing)}. "
-                "A report missing these persists a blank row in CoPilot."
+                f"Report body fields must be non-empty: {', '.join(missing)}. " "A report missing these persists a blank row in CoPilot.",
             )
         return self
 

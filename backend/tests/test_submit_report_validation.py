@@ -28,9 +28,7 @@ def test_complete_report_is_accepted():
     assert req.report_markdown == "# Full report\n\nDetails."
 
 
-@pytest.mark.parametrize(
-    "field", ["severity_assessment", "summary", "report_markdown", "recommended_actions"]
-)
+@pytest.mark.parametrize("field", ["severity_assessment", "summary", "report_markdown", "recommended_actions"])
 def test_missing_body_field_is_rejected(field):
     payload = {k: v for k, v in COMPLETE.items() if k != field}
     with pytest.raises(ValidationError) as excinfo:
