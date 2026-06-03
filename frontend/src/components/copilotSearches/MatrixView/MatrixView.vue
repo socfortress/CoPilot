@@ -1,149 +1,21 @@
 <template>
 	<div class="flex flex-col gap-3">
-		<div class="flex flex-wrap items-center justify-end gap-2">
-			<div class="flex min-w-80 grow gap-2">
-				<n-popover overlap placement="bottom-start">
-					<template #trigger>
-						<div class="bg-default rounded-lg">
-							<n-button size="small" class="cursor-help!">
-								<template #icon>
-									<Icon :name="InfoIcon" />
-								</template>
-							</n-button>
-						</div>
-					</template>
-					<div v-if="coverage" class="flex flex-col gap-2">
-						<div class="box">
-							Tactics:
-							<code>{{ coverage.stats.total_tactics }}</code>
-						</div>
-						<div class="box">
-							Techniques:
-							<code>{{ coverage.stats.total_techniques }}</code>
-						</div>
-						<div class="box">
-							Covered:
-							<code>{{ coverage.stats.covered_techniques }}</code>
-						</div>
-						<div class="box">
-							Rules in scope:
-							<code>{{ coverage.stats.total_rules }}</code>
-						</div>
-					</div>
-				</n-popover>
+		<MatrixViewToolbar
+			v-model:search-query="searchQuery"
+			v-model:show-filters="showFilters"
+			v-model:selected-platform="selectedPlatform"
+			v-model:selected-severity="selectedSeverity"
+			v-model:selected-status="selectedStatus"
+			v-model:has-graylog-filter="hasGraylogFilter"
+			v-model:only-covered="onlyCovered"
+			:coverage
+			:refreshing
+			@export-csv="exportCoverageCsv"
+			@refresh="handleRefresh"
+			@reset-filters="resetFilters"
+		/>
 
-				<n-input
-					v-model:value="searchQuery"
-					size="small"
-					placeholder="Search techniques or rule names..."
-					class="max-w-120"
-					clearable
-				>
-					<template #prefix>
-						<Icon :name="SearchIcon" />
-					</template>
-				</n-input>
-
-				<n-popover :show="showFilters" trigger="manual" overlap placement="top-end" class="px-0!">
-					<template #trigger>
-						<div class="bg-default rounded-lg">
-							<n-badge :show="anyFiltersActive" dot type="success" :offset="[-4, 0]">
-								<n-button size="small" @click="showFilters = !showFilters">
-									<template #icon>
-										<Icon :name="FilterIcon" />
-									</template>
-								</n-button>
-							</n-badge>
-						</div>
-					</template>
-					<div class="divide-border flex w-50 flex-col gap-0 divide-y">
-						<div class="flex flex-col gap-2.5 px-3 pt-1 pb-3">
-							<n-select
-								v-model:value="selectedPlatform"
-								:options="platformOptions"
-								size="small"
-								placeholder="Platform"
-								class="w-full"
-								clearable
-								:consistent-menu-width="false"
-							/>
-							<n-select
-								v-model:value="selectedSeverity"
-								:options="severityOptions"
-								clearable
-								size="small"
-								placeholder="Severity"
-								class="w-full"
-								:consistent-menu-width="false"
-							/>
-							<n-select
-								v-model:value="selectedStatus"
-								:options="statusOptions"
-								clearable
-								size="small"
-								placeholder="Status"
-								class="w-full"
-								:consistent-menu-width="false"
-							/>
-							<n-checkbox v-model:checked="hasGraylogFilter" size="small">
-								<span class="text-xs">Graylog Only</span>
-							</n-checkbox>
-							<n-checkbox v-model:checked="onlyCovered" size="small">
-								<span class="text-xs">Only covered</span>
-							</n-checkbox>
-						</div>
-						<div class="flex justify-between gap-2 px-3 pt-2">
-							<n-button size="small" quaternary @click="showFilters = false">Close</n-button>
-							<n-button size="small" secondary @click="resetFilters">Reset</n-button>
-						</div>
-					</div>
-				</n-popover>
-			</div>
-
-			<n-tooltip placement="bottom-end" class="max-w-120! px-2! py-1.5! text-xs!">
-				<template #trigger>
-					<n-button size="small" :disabled="!coverage" @click="exportCoverageCsv">
-						<template #icon>
-							<Icon :name="ExportIcon" />
-						</template>
-						Export CSV
-					</n-button>
-				</template>
-				Download a CSV of the current coverage (one row per technique and sub-technique, with rule counts and
-				IDs).
-			</n-tooltip>
-
-			<n-tooltip placement="bottom-end" class="max-w-120! px-2! py-1.5! text-xs!">
-				<template #trigger>
-					<n-button size="small" :loading="refreshing" @click="handleRefresh">
-						<template #icon>
-							<Icon :name="RefreshIcon" />
-						</template>
-						Refresh Matrix
-					</n-button>
-				</template>
-				Force a re-fetch of the MITRE ATT&amp;CK STIX bundle from
-				<code>github.com/mitre/cti</code>
-				, bypassing the 24-hour cache. Use this if MITRE published a new release and you want the matrix to pick
-				it up immediately.
-			</n-tooltip>
-		</div>
-
-		<div class="legend">
-			<span class="text-tertiary text-xs">Rules:</span>
-			<div v-for="step of legendSteps" :key="step.label" class="legend-item">
-				<span class="legend-swatch" :class="step.cls" />
-				<span class="text-secondary text-xs">{{ step.label }}</span>
-			</div>
-			<div v-if="coverage" class="text-secondary ml-auto text-xs">
-				<strong>{{ coverage.stats.covered_techniques }}</strong>
-				/
-				<strong>{{ coverage.stats.total_techniques }}</strong>
-				techniques ·
-				<strong>{{ coverage.stats.total_rules }}</strong>
-				rules
-			</div>
-		</div>
+		<MatrixViewLegend :coverage />
 
 		<div ref="matrixScrollWrapRef" class="matrix-scroll-wrap" :style="matrixScrollWrapStyle">
 			<!-- Subtle top progress bar replaces the heavy spin overlay during refetches. -->
@@ -354,19 +226,14 @@ import type {
 import { useElementBounding, useLocalStorage, useWindowSize, watchDebounced } from "@vueuse/core"
 import { saveAs } from "file-saver"
 import {
-	NBadge,
 	NButton,
-	NCheckbox,
 	NDrawer,
 	NDrawerContent,
 	NEmpty,
-	NInput,
 	NModal,
 	NPopover,
-	NSelect,
 	NSpin,
 	NTag,
-	NTooltip,
 	useMessage
 } from "naive-ui"
 import { computed, onMounted, ref, useTemplateRef, watch } from "vue"
@@ -376,12 +243,9 @@ import Icon from "@/components/common/Icon.vue"
 import RuleCardContent from "../RuleCardContent.vue"
 import RulePreviewList from "../RulePreviewList.vue"
 import TechniqueDetails from "../TechniqueDetails.vue"
+import MatrixViewLegend from "./MatrixViewLegend.vue"
+import MatrixViewToolbar from "./MatrixViewToolbar.vue"
 
-const InfoIcon = "carbon:information"
-const SearchIcon = "carbon:search"
-const RefreshIcon = "carbon:renew"
-const FilterIcon = "carbon:filter-edit"
-const ExportIcon = "carbon:download"
 const ChevronRight = "carbon:chevron-right"
 const ChevronDown = "carbon:chevron-down"
 
@@ -453,28 +317,6 @@ const hoveredTacticId = ref<string | null>(null)
 // so we don't fire a duplicate fetch right after the first load.
 const ready = ref(false)
 
-const platformOptions = [
-	{ label: "Linux", value: "linux" },
-	{ label: "Windows", value: "windows" },
-	{ label: "PowerShell", value: "powershell" },
-	{ label: "CVE", value: "cve" }
-]
-const severityOptions = [
-	{ label: "Low", value: "low" },
-	{ label: "Medium", value: "medium" },
-	{ label: "High", value: "high" },
-	{ label: "Critical", value: "critical" }
-]
-const statusOptions = [
-	{ label: "Production", value: "production" },
-	{ label: "Experimental", value: "experimental" },
-	{ label: "Deprecated", value: "deprecated" }
-]
-
-const anyFiltersActive = computed(
-	() => !!selectedPlatform.value || !!selectedSeverity.value || !!selectedStatus.value || !!hasGraylogFilter.value
-)
-
 const rulesIndex = computed<Record<string, MitreRuleIndexEntry>>(() => coverage.value?.rules_index ?? {})
 
 /**
@@ -513,14 +355,6 @@ const filteredTactics = computed<MitreTactic[]>(() => {
 	// we keep empty tactics visible (they're informative on their own).
 	return q ? tactics.filter(t => t.techniques.length > 0) : tactics
 })
-
-const legendSteps = [
-	{ label: "0", cls: "cov-empty" },
-	{ label: "1", cls: "cov-1" },
-	{ label: "2-3", cls: "cov-2" },
-	{ label: "4-7", cls: "cov-3" },
-	{ label: "8+", cls: "cov-4" }
-] as const
 
 function tacticStats(tactic: MitreTactic) {
 	const source = coverage.value?.tactics.find(t => t.id === tactic.id)?.techniques ?? tactic.techniques
@@ -785,31 +619,6 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-.legend {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 10px;
-	padding: 6px 10px;
-	background: var(--bg-secondary-color);
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius);
-}
-
-.legend-item {
-	display: inline-flex;
-	align-items: center;
-	gap: 5px;
-}
-
-.legend-swatch {
-	display: inline-block;
-	width: 14px;
-	height: 14px;
-	border-radius: 3px;
-	border: 1px solid var(--border-color);
-}
-
 .tactic-coverage {
 	font-family: var(--font-family-mono, monospace);
 	font-size: 0.7rem;
