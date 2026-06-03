@@ -9,7 +9,7 @@
 	>
 		<template #trigger>
 			<div
-				class="bg-default border-default hover:border-primary/60 hover:bg-primary/8 cursor-pointer rounded-sm border px-1.5 py-1 text-xs"
+				class="hover:border-primary/50 hover:bg-primary/6 border-default cursor-pointer rounded-sm border px-1.5 py-1 text-xs"
 				:class="cellClass(sub)"
 				:title="cellTooltip(sub)"
 				@click="emit('open-sub-technique', tactic, tech, sub)"
@@ -18,12 +18,7 @@
 					<div class="text-default font-mono text-xs font-semibold">
 						{{ sub.id }}
 					</div>
-					<n-tag
-						v-if="sub.rule_count > 0"
-						size="tiny"
-						:bordered="false"
-						class="px-1! font-mono text-[11px]!"
-					>
+					<n-tag v-if="sub.rule_count > 0" size="tiny" :bordered="false" class="px-1! font-mono text-[11px]!">
 						{{ sub.rule_count }}
 					</n-tag>
 				</div>
@@ -42,12 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import type {
-	MitreRuleIndexEntry,
-	MitreSubTechnique,
-	MitreTactic,
-	MitreTechnique
-} from "@/types/copilotSearches.d"
+import type { MitreRuleIndexEntry, MitreSubTechnique, MitreTactic, MitreTechnique } from "@/types/copilotSearches.d"
 import { NPopover, NTag } from "naive-ui"
 import RulePreviewList from "../RulePreviewList.vue"
 

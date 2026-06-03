@@ -1,13 +1,13 @@
 <template>
 	<div class="flex w-50 shrink-0 flex-col">
 		<div
-			class="bg-secondary border-default sticky top-0 z-2 rounded-t-md border border-b-2 px-2.5 py-2"
+			class="bg-secondary border-default sticky top-0 z-2 flex flex-col gap-1 rounded-t-md border border-b-2 px-2.5 py-2"
 			:class="{
 				'border-warning/55 border-b-warning/70 bg-warning/6': isTacticUncovered
 			}"
 		>
-			<div class="flex items-center justify-between gap-2">
-				<div class="text-default text-sm font-semibold">{{ tactic.name }}</div>
+			<div class="flex justify-between gap-2">
+				<div class="text-default text-sm leading-tight font-medium">{{ tactic.name }}</div>
 				<n-tag
 					size="tiny"
 					:type="isTacticUncovered ? 'warning' : 'default'"
@@ -38,12 +38,7 @@
 				@technique-leave="emit('technique-leave')"
 			/>
 
-			<n-empty
-				v-if="!tactic.techniques.length"
-				description="No techniques"
-				class="py-4"
-				size="small"
-			/>
+			<n-empty v-if="!tactic.techniques.length" description="No techniques" class="py-4" size="small" />
 		</div>
 	</div>
 </template>
@@ -79,8 +74,7 @@ const emit = defineEmits<{
 const expanded = defineModel<Record<string, boolean>>("expanded", { required: true })
 
 const stats = computed(() => {
-	const source =
-		props.coverage?.tactics.find(t => t.id === props.tactic.id)?.techniques ?? props.tactic.techniques
+	const source = props.coverage?.tactics.find(t => t.id === props.tactic.id)?.techniques ?? props.tactic.techniques
 	const total = source.length
 	const covered = source.filter(t => t.total_rule_count > 0).length
 	return { total, covered }

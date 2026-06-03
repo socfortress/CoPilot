@@ -9,12 +9,10 @@
 	>
 		<template #trigger>
 			<div
-				class="bg-default border-default hover:border-primary/60 hover:bg-primary/8 cursor-pointer rounded border px-2 py-1.5 text-xs"
+				class="hover:border-primary/50 hover:bg-primary/6 border-default cursor-pointer rounded border px-2 py-1.5 text-xs"
 				:class="[
 					cellClass(tech),
-					hoveredTechniqueId === tech.id
-						&& hoveredTacticId !== tactic.id
-						&& 'ring-primary/45 ring-2'
+					hoveredTechniqueId === tech.id && hoveredTacticId !== tactic.id && 'ring-primary/45 ring-2'
 				]"
 				:title="cellTooltip(tech)"
 				@click="emit('open-technique', tactic, tech)"
@@ -41,17 +39,14 @@
 					@click.stop="toggleExpand(tactic.id, tech.id)"
 				>
 					<template #icon>
-						<Icon
-							:name="expanded[tactic.id + tech.id] ? ChevronDown : ChevronRight"
-							:size="12"
-						/>
+						<Icon :name="expanded[tactic.id + tech.id] ? ChevronDown : ChevronRight" :size="12" />
 					</template>
 					{{ tech.subtechniques.length }} sub
 				</n-button>
 
 				<div
 					v-if="expanded[tactic.id + tech.id]"
-					class="mt-1 flex flex-col gap-0.5"
+					class="bg-secondary border-default/70 mt-1 flex flex-col gap-0.5 rounded-sm border p-1"
 					@click.stop
 				>
 					<SubTechniqueCell
@@ -61,7 +56,9 @@
 						:tech
 						:sub
 						:rules-index
-						@open-sub-technique="(t, technique, subTech) => emit('open-sub-technique', t, technique, subTech)"
+						@open-sub-technique="
+							(t, technique, subTech) => emit('open-sub-technique', t, technique, subTech)
+						"
 						@open-rule="ruleId => emit('open-rule', ruleId)"
 					/>
 
@@ -70,11 +67,7 @@
 						class="border-default text-tertiary hover:border-primary/50 hover:bg-primary/6 hover:text-primary mt-0.5 cursor-pointer rounded-sm border border-dashed px-1.5 py-0.5 text-center text-xs select-none"
 						@click.stop="toggleShowAllSubs(expandKey)"
 					>
-						{{
-							showAllSubs[expandKey]
-								? `Show fewer`
-								: `Show all ${tech.subtechniques.length}`
-						}}
+						{{ showAllSubs[expandKey] ? `Show fewer` : `Show all ${tech.subtechniques.length}` }}
 					</div>
 				</div>
 			</div>
@@ -90,12 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import type {
-	MitreRuleIndexEntry,
-	MitreSubTechnique,
-	MitreTactic,
-	MitreTechnique
-} from "@/types/copilotSearches.d"
+import type { MitreRuleIndexEntry, MitreSubTechnique, MitreTactic, MitreTechnique } from "@/types/copilotSearches.d"
 import { NButton, NPopover, NTag } from "naive-ui"
 import { computed, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
