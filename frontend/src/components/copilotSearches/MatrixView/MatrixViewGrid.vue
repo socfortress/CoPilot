@@ -1,8 +1,11 @@
 <template>
-	<div ref="matrixScrollWrapRef" class="matrix-scroll-wrap" :style="matrixScrollWrapStyle">
-		<div v-if="loading && coverage" class="matrix-progress" />
+	<div ref="matrixScrollWrapRef" class="relative" :style="matrixScrollWrapStyle">
+		<n-spin v-if="loading && coverage" show class="absolute inset-0 flex items-center justify-center" />
 
-		<div class="matrix-scroll scrollbar-styled" :class="{ 'matrix-scroll-loading': loading && coverage }">
+		<div
+			class="scrollbar-styled bg-secondary border-default h-full overflow-auto rounded-lg border pb-1"
+			:class="{ 'opacity-55': loading && coverage }"
+		>
 			<n-empty
 				v-if="!loading && coverage && filteredTactics.length === 0"
 				description="No techniques match your filters."
@@ -13,11 +16,16 @@
 				</template>
 			</n-empty>
 
-			<n-spin v-else-if="loading && !coverage" show class="matrix-initial-load" />
+			<n-spin v-else-if="loading && !coverage" show class="flex min-h-96 w-full items-center justify-center" />
 
-			<div v-else class="matrix-grid">
-				<div v-for="tactic of filteredTactics" :key="tactic.id" class="tactic-column">
-					<div class="tactic-header" :class="{ 'tactic-uncovered': isTacticUncovered(tactic) }">
+			<div v-else class="flex min-w-max gap-1.5 p-1">
+				<div v-for="tactic of filteredTactics" :key="tactic.id" class="flex w-50 shrink-0 flex-col">
+					<div
+						class="bg-secondary border-default sticky top-0 z-2 rounded-t-md border border-b-2 px-2.5 py-2"
+						:class="{
+							'border-warning/55 border-b-warning/70 bg-warning/6': isTacticUncovered(tactic)
+						}"
+					>
 						<div class="flex items-center justify-between gap-2">
 							<div class="text-default text-sm font-semibold">{{ tactic.name }}</div>
 							<n-tag
@@ -49,10 +57,9 @@
 									class="bg-default border-default hover:border-primary/60 hover:bg-primary/8 cursor-pointer rounded border px-2 py-1.5 text-xs"
 									:class="[
 										cellClass(tech),
-										{
-											'cell-cross-tactic':
-												hoveredTechniqueId === tech.id && hoveredTacticId !== tactic.id
-										}
+										hoveredTechniqueId === tech.id &&
+											hoveredTacticId !== tactic.id &&
+											'ring-primary/45 ring-2'
 									]"
 									:title="cellTooltip(tech)"
 									@click="emit('open-technique', tactic, tech)"
@@ -104,7 +111,7 @@
 										>
 											<template #trigger>
 												<div
-													class="bg-default border-default hover:border-primary/60 hover:bg-primary/8 cursor-pointer rounded-sm border px-1.5 py-1 text-xs transition-colors duration-150"
+													class="bg-default border-default hover:border-primary/60 hover:bg-primary/8 cursor-pointer rounded-sm border px-1.5 py-1 text-xs"
 													:class="cellClass(sub)"
 													:title="subCellTooltip(sub)"
 													@click="emit('open-sub-technique', tactic, tech, sub)"
@@ -287,100 +294,6 @@ function onCellLeave() {
 </script>
 
 <style scoped lang="scss">
-.matrix-scroll-wrap {
-	position: relative;
-	min-height: 0;
-}
-
-.matrix-progress {
-	position: absolute;
-	left: 0;
-	right: 0;
-	top: 0;
-	height: 2px;
-	overflow: hidden;
-	background: rgba(var(--primary-color-rgb) / 0.1);
-	z-index: 3;
-	pointer-events: none;
-	border-radius: var(--border-radius) var(--border-radius) 0 0;
-}
-.matrix-progress::after {
-	content: "";
-	position: absolute;
-	top: 0;
-	left: -40%;
-	width: 40%;
-	height: 100%;
-	background: var(--primary-color);
-	animation: matrix-progress-slide 1.1s ease-in-out infinite;
-}
-@keyframes matrix-progress-slide {
-	0% {
-		left: -40%;
-	}
-	100% {
-		left: 100%;
-	}
-}
-
-.matrix-scroll {
-	overflow: auto;
-	height: 100%;
-	min-height: 0;
-	padding-bottom: 4px;
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius);
-	background: var(--bg-secondary-color);
-	transition: opacity 0.18s ease;
-}
-
-.matrix-scroll-loading {
-	opacity: 0.55;
-}
-
-.matrix-initial-load {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	min-height: 380px;
-	width: 100%;
-}
-
-.matrix-grid {
-	display: flex;
-	gap: 6px;
-	min-width: max-content;
-	padding: 4px;
-}
-
-.tactic-column {
-	width: 200px;
-	flex-shrink: 0;
-	display: flex;
-	flex-direction: column;
-}
-
-.tactic-header {
-	position: sticky;
-	top: 0;
-	z-index: 2;
-	padding: 8px 10px;
-	background: var(--bg-secondary-color);
-	border: 1px solid var(--border-color);
-	border-radius: 6px 6px 0 0;
-	border-bottom-width: 2px;
-}
-
-.tactic-header.tactic-uncovered {
-	border-color: rgba(var(--warning-color-rgb) / 0.55);
-	border-bottom-color: rgba(var(--warning-color-rgb) / 0.7);
-	background: rgba(var(--warning-color-rgb) / 0.06);
-}
-
-.cell-cross-tactic {
-	box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb) / 0.45);
-}
-
 .cov-empty {
 	background: var(--bg-default-color);
 }
