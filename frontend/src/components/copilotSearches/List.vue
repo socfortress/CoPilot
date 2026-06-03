@@ -29,8 +29,8 @@
 import { NAlert, NTabPane, NTabs } from "naive-ui"
 import { onMounted, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import GridView from "./GridView.vue"
-import MatrixView from "./MatrixView.vue"
+import GridView from "./GridView/GridView.vue"
+import MatrixView from "./MatrixView/MatrixView.vue"
 
 const viewMode = ref<"grid" | "matrix">("grid")
 

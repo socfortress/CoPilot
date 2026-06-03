@@ -100,7 +100,7 @@
 				</n-popover>
 			</div>
 
-			<n-tooltip placement="bottom-end">
+			<n-tooltip placement="bottom-end" class="max-w-120! px-2! py-1.5! text-xs!">
 				<template #trigger>
 					<n-button size="small" :disabled="!coverage" @click="exportCoverageCsv">
 						<template #icon>
@@ -113,7 +113,7 @@
 				IDs).
 			</n-tooltip>
 
-			<n-tooltip placement="bottom-end">
+			<n-tooltip placement="bottom-end" class="max-w-120! px-2! py-1.5! text-xs!">
 				<template #trigger>
 					<n-button size="small" :loading="refreshing" @click="handleRefresh">
 						<template #icon>
@@ -372,9 +372,9 @@ import { computed, onMounted, ref, useTemplateRef, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import RuleCardContent from "./RuleCardContent.vue"
-import RulePreviewList from "./RulePreviewList.vue"
-import TechniqueDetails from "./TechniqueDetails.vue"
+import RuleCardContent from "../RuleCardContent.vue"
+import RulePreviewList from "../RulePreviewList.vue"
+import TechniqueDetails from "../TechniqueDetails.vue"
 
 const InfoIcon = "carbon:information"
 const SearchIcon = "carbon:search"
