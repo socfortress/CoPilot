@@ -1,48 +1,66 @@
 <template>
-	<Transition name="fade-up">
-		<div v-if="selectMode && selectedRules.length > 0" class="selection-footer flex flex-wrap justify-between">
-			<div class="text-default text-sm">
-				<strong>{{ selectedRules.length }}</strong>
-				selected
-				<span class="text-tertiary ml-2 text-xs">({{ provisionableCount }} with Graylog query)</span>
-			</div>
+	<Transition name="selection-bar">
+		<div
+			v-if="selectMode && selectedRules.length > 0"
+			class="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-5"
+		>
+			<div
+				class="border-primary/35 bg-default ring-primary/20 pointer-events-auto flex w-full max-w-180 flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border px-4 py-3 shadow-xl ring-3"
+				role="toolbar"
+				aria-label="Selection actions"
+			>
+				<div class="flex min-w-0 flex-col gap-0.5">
+					<p class="text-default text-sm leading-tight">
+						<span class="text-primary font-mono font-semibold tabular-nums">
+							{{ selectedRules.length }}
+						</span>
+						{{ selectedRules.length === 1 ? " rule" : " rules" }}
+					</p>
+					<p class="text-tertiary text-xs leading-tight">
+						<span class="font-mono tabular-nums">{{ provisionableCount }}</span>
+						with Graylog query
+					</p>
+				</div>
 
-			<div class="ml-auto flex flex-wrap items-center gap-2">
-				<n-tooltip placement="top" class="max-w-120! px-2! py-1.5! text-xs!">
-					<template #trigger>
-						<n-button
-							size="small"
-							type="primary"
-							:disabled="provisionableCount === 0"
-							@click="showBulkProvisionModal = true"
-						>
-							<template #icon>
-								<Icon :name="ProvisionIcon" />
-							</template>
-							Provision selected
-						</n-button>
-					</template>
-					<template v-if="provisionableCount === 0">None of the selected rules has a Graylog query.</template>
-					<template v-else>
-						Provision {{ provisionableCount }} rule{{ provisionableCount === 1 ? "" : "s" }} as Graylog
-						event definitions.
-					</template>
-				</n-tooltip>
+				<div class="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
+					<n-tooltip placement="top" class="max-w-120! px-2! py-1.5! text-xs!">
+						<template #trigger>
+							<n-button
+								size="small"
+								type="primary"
+								:disabled="provisionableCount === 0"
+								@click="showBulkProvisionModal = true"
+							>
+								<template #icon>
+									<Icon :name="ProvisionIcon" />
+								</template>
+								Provision
+							</n-button>
+						</template>
+						<template v-if="provisionableCount === 0">
+							None of the selected rules has a Graylog query.
+						</template>
+						<template v-else>
+							Provision {{ provisionableCount }} rule{{ provisionableCount === 1 ? "" : "s" }} as Graylog
+							event definitions.
+						</template>
+					</n-tooltip>
 
-				<n-button size="small" @click="exportSelectedCsv">
-					<template #icon>
-						<Icon :name="ExportIcon" />
-					</template>
-					CSV
-				</n-button>
-				<n-button size="small" @click="exportSelectedJson">
-					<template #icon>
-						<Icon :name="ExportIcon" />
-					</template>
-					JSON
-				</n-button>
+					<n-button size="small" secondary @click="exportSelectedCsv">
+						<template #icon>
+							<Icon :name="ExportIcon" />
+						</template>
+						CSV
+					</n-button>
+					<n-button size="small" secondary @click="exportSelectedJson">
+						<template #icon>
+							<Icon :name="ExportIcon" />
+						</template>
+						JSON
+					</n-button>
 
-				<n-button size="small" quaternary @click="emit('clear')">Clear</n-button>
+					<n-button size="small" quaternary @click="emit('clear')">Clear</n-button>
+				</div>
 			</div>
 		</div>
 	</Transition>
@@ -134,33 +152,15 @@ function exportSelectedJson() {
 </script>
 
 <style scoped lang="scss">
-.selection-footer {
-	position: fixed;
-	bottom: 16px;
-	left: 50%;
-	transform: translateX(-50%);
-	z-index: 50;
-	display: flex;
-	align-items: center;
-	gap: 16px;
-	min-width: min(680px, 92vw);
-	max-width: 92vw;
-	padding: 10px 16px;
-	background: var(--bg-secondary-color);
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius);
-	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
-}
-
-.fade-up-enter-active,
-.fade-up-leave-active {
+.selection-bar-enter-active,
+.selection-bar-leave-active {
 	transition:
-		opacity 0.2s ease,
-		transform 0.2s ease;
+		opacity 0.22s ease,
+		transform 0.22s ease;
 }
-.fade-up-enter-from,
-.fade-up-leave-to {
+.selection-bar-enter-from,
+.selection-bar-leave-to {
 	opacity: 0;
-	transform: translate(-50%, 12px);
+	transform: translateY(16px);
 }
 </style>
