@@ -6,7 +6,7 @@
 			<n-empty
 				v-if="!loading && coverage && filteredTactics.length === 0"
 				description="No techniques match your filters."
-				class="matrix-empty"
+				class="min-h-96"
 			>
 				<template #extra>
 					<n-button size="small" @click="emit('clear-filters')">Clear filters</n-button>
@@ -33,7 +33,7 @@
 						<div class="text-tertiary text-xs">{{ tactic.techniques.length }} shown</div>
 					</div>
 
-					<div class="technique-list">
+					<div class="flex flex-col gap-1 pt-1">
 						<n-popover
 							v-for="tech of tactic.techniques"
 							:key="tactic.id + tech.id"
@@ -46,7 +46,7 @@
 						>
 							<template #trigger>
 								<div
-									class="technique-cell"
+									class="bg-default border-default hover:border-primary/60 hover:bg-primary/8 cursor-pointer rounded border px-2 py-1.5 text-xs"
 									:class="[
 										cellClass(tech),
 										{
@@ -59,33 +59,39 @@
 									@mouseenter="onCellEnter(tactic.id, tech.id)"
 									@mouseleave="onCellLeave"
 								>
-									<div class="technique-row">
-										<div class="technique-id">{{ tech.id }}</div>
+									<div class="flex items-center justify-between gap-1.5">
+										<div class="text-default font-mono text-xs font-semibold">{{ tech.id }}</div>
 										<n-tag
 											v-if="tech.total_rule_count > 0"
 											size="tiny"
-											round
 											:bordered="false"
-											class="count-tag"
+											class="px-1! font-mono text-[11px]!"
 										>
 											{{ tech.total_rule_count }}
 										</n-tag>
 									</div>
-									<div class="technique-name">{{ tech.name }}</div>
+									<div class="text-secondary mt-0.5 text-xs leading-tight">{{ tech.name }}</div>
 
-									<div
+									<n-button
 										v-if="tech.subtechniques.length"
-										class="technique-sub-toggle"
+										text
+										size="tiny"
 										@click.stop="toggleExpand(tactic.id, tech.id)"
 									>
-										<Icon
-											:name="expanded[tactic.id + tech.id] ? ChevronDown : ChevronRight"
-											:size="10"
-										/>
+										<template #icon>
+											<Icon
+												:name="expanded[tactic.id + tech.id] ? ChevronDown : ChevronRight"
+												:size="12"
+											/>
+										</template>
 										{{ tech.subtechniques.length }} sub
-									</div>
+									</n-button>
 
-									<div v-if="expanded[tactic.id + tech.id]" class="subtechnique-list" @click.stop>
+									<div
+										v-if="expanded[tactic.id + tech.id]"
+										class="mt-1 flex flex-col gap-0.5"
+										@click.stop
+									>
 										<n-popover
 											v-for="sub of visibleSubs(tech, tactic.id + tech.id)"
 											:key="sub.id"
@@ -98,24 +104,27 @@
 										>
 											<template #trigger>
 												<div
-													class="subtechnique-cell"
+													class="bg-default border-default hover:border-primary/60 hover:bg-primary/8 cursor-pointer rounded-sm border px-1.5 py-1 text-xs transition-colors duration-150"
 													:class="cellClass(sub)"
 													:title="subCellTooltip(sub)"
 													@click="emit('open-sub-technique', tactic, tech, sub)"
 												>
-													<div class="technique-row">
-														<div class="subtechnique-id">{{ sub.id }}</div>
+													<div class="flex items-center justify-between gap-1.5">
+														<div class="text-default font-mono text-xs font-semibold">
+															{{ sub.id }}
+														</div>
 														<n-tag
 															v-if="sub.rule_count > 0"
 															size="tiny"
-															round
 															:bordered="false"
-															class="count-tag"
+															class="px-1! font-mono text-[11px]!"
 														>
 															{{ sub.rule_count }}
 														</n-tag>
 													</div>
-													<div class="subtechnique-name">{{ sub.name }}</div>
+													<div class="text-secondary text-xs leading-tight">
+														{{ sub.name }}
+													</div>
 												</div>
 											</template>
 
@@ -128,7 +137,7 @@
 
 										<div
 											v-if="tech.subtechniques.length > SUB_PREVIEW_LIMIT"
-											class="show-all-subs"
+											class="border-default text-tertiary hover:border-primary/50 hover:bg-primary/6 hover:text-primary mt-0.5 cursor-pointer rounded-sm border border-dashed px-1.5 py-0.5 text-center text-xs select-none"
 											@click.stop="toggleShowAllSubs(tactic.id + tech.id)"
 										>
 											{{
@@ -329,14 +338,6 @@ function onCellLeave() {
 	opacity: 0.55;
 }
 
-.matrix-empty {
-	height: 100%;
-	min-height: 380px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
 .matrix-initial-load {
 	display: flex;
 	align-items: center;
@@ -376,135 +377,8 @@ function onCellLeave() {
 	background: rgba(var(--warning-color-rgb) / 0.06);
 }
 
-.technique-list {
-	display: flex;
-	flex-direction: column;
-	gap: 3px;
-	padding-top: 3px;
-}
-
-.technique-cell {
-	padding: 6px 8px;
-	border-radius: 4px;
-	cursor: pointer;
-	transition:
-		background-color 0.12s,
-		border-color 0.12s,
-		box-shadow 0.12s;
-	font-size: 0.75rem;
-	border: 1px solid var(--border-color);
-	background: var(--bg-default-color);
-}
-
-.technique-cell:hover {
-	border-color: rgba(var(--primary-color-rgb) / 0.6);
-	background: rgba(var(--primary-color-rgb) / 0.08);
-}
-
 .cell-cross-tactic {
 	box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb) / 0.45);
-}
-
-.technique-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 6px;
-}
-
-.technique-id {
-	font-weight: 600;
-	font-family: var(--font-family-mono, monospace);
-	color: var(--fg-default-color);
-	font-size: 0.72rem;
-}
-
-.technique-name {
-	font-size: 0.7rem;
-	color: var(--fg-secondary-color);
-	margin-top: 2px;
-	line-height: 1.25;
-}
-
-.count-tag {
-	font-weight: 700;
-	min-width: 22px;
-	justify-content: center;
-}
-
-.technique-sub-toggle {
-	margin-top: 4px;
-	font-size: 0.65rem;
-	color: var(--fg-tertiary-color);
-	cursor: pointer;
-	user-select: none;
-	display: inline-flex;
-	align-items: center;
-	gap: 3px;
-	padding: 2px 4px;
-	border-radius: 3px;
-	width: fit-content;
-}
-
-.technique-sub-toggle:hover {
-	color: var(--primary-color);
-	background: rgba(var(--primary-color-rgb) / 0.08);
-}
-
-.subtechnique-list {
-	margin-top: 4px;
-	padding-left: 6px;
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-	border-left: 2px solid var(--border-color);
-}
-
-.subtechnique-cell {
-	padding: 4px 6px;
-	border-radius: 3px;
-	cursor: pointer;
-	font-size: 0.7rem;
-	border: 1px solid var(--border-color);
-	background: var(--bg-default-color);
-	transition:
-		background-color 0.12s,
-		border-color 0.12s;
-}
-
-.subtechnique-cell:hover {
-	border-color: rgba(var(--primary-color-rgb) / 0.6);
-	background: rgba(var(--primary-color-rgb) / 0.08);
-}
-
-.subtechnique-id {
-	font-family: var(--font-family-mono, monospace);
-	font-weight: 600;
-	font-size: 0.65rem;
-	color: var(--fg-default-color);
-}
-
-.subtechnique-name {
-	font-size: 0.65rem;
-	color: var(--fg-secondary-color);
-	line-height: 1.25;
-}
-
-.show-all-subs {
-	margin-top: 2px;
-	padding: 3px 6px;
-	font-size: 0.65rem;
-	color: var(--fg-tertiary-color);
-	cursor: pointer;
-	border-radius: 3px;
-	user-select: none;
-	text-align: center;
-	border: 1px dashed var(--border-color);
-}
-.show-all-subs:hover {
-	color: var(--primary-color);
-	border-color: rgba(var(--primary-color-rgb) / 0.5);
-	background: rgba(var(--primary-color-rgb) / 0.06);
 }
 
 .cov-empty {
