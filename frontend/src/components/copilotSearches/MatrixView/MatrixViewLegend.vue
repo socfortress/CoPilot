@@ -31,21 +31,3 @@ const legendSteps = [
 	{ label: "8+", cls: "cov-4" }
 ] as const
 </script>
-
-<style scoped lang="scss">
-.cov-empty {
-	background: var(--bg-default-color);
-}
-.cov-1 {
-	background: rgba(var(--primary-color-rgb) / 0.07);
-}
-.cov-2 {
-	background: rgba(var(--primary-color-rgb) / 0.16);
-}
-.cov-3 {
-	background: rgba(var(--primary-color-rgb) / 0.28);
-}
-.cov-4 {
-	background: rgba(var(--primary-color-rgb) / 0.45);
-}
-</style>

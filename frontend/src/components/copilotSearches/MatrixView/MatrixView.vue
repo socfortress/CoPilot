@@ -84,6 +84,7 @@ import TechniqueDetails from "../TechniqueDetails.vue"
 import MatrixViewGrid from "./MatrixViewGrid.vue"
 import MatrixViewLegend from "./MatrixViewLegend.vue"
 import MatrixViewToolbar from "./MatrixViewToolbar.vue"
+import "./matrix-coverage.css"
 
 const route = useRoute()
 const router = useRouter()
