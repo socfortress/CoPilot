@@ -27,7 +27,8 @@
 						v-for="item of listValues"
 						:key="JSON.stringify(item)"
 						class="item flex items-center gap-3"
-						:class="item.status"
+						:class="[item.status, clickableItems && !item.isTotal && 'cursor-pointer']"
+						@click="onItemClick(item)"
 					>
 						<div class="label flex items-center gap-2 truncate">
 							<span class="badge"></span>
@@ -67,13 +68,19 @@ const {
 	values,
 	showTotal = true,
 	showZeroItems,
-	hovered
+	hovered,
+	clickableItems = false
 } = defineProps<{
 	title: string
 	values: ItemProps[]
 	showTotal?: boolean
 	showZeroItems?: boolean
 	hovered?: boolean
+	clickableItems?: boolean
+}>()
+
+const emit = defineEmits<{
+	(e: "item-click", item: ItemPropsExt): void
 }>()
 
 const ArrowRightIcon = "carbon:arrow-right"
@@ -102,6 +109,10 @@ const listValues = computed<ItemPropsExt[]>(() =>
 )
 
 const barValues = computed<ItemPropsExt[]>(() => sanitizedValues.value.filter(o => !o.isTotal && o.percentage))
+
+function onItemClick(item: ItemPropsExt) {
+	if (clickableItems && !item.isTotal) emit("item-click", item)
+}
 </script>
 
 <style scoped lang="scss">
@@ -217,6 +228,11 @@ const barValues = computed<ItemPropsExt[]>(() => sanitizedValues.value.filter(o 
 					.badge {
 						background-color: var(--primary-color);
 					}
+				}
+
+				&.cursor-pointer:hover {
+					background-color: rgba(var(--primary-color-rgb) / 0.08);
+					border-radius: var(--border-radius-small);
 				}
 			}
 		}
