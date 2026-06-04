@@ -70,7 +70,7 @@ import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
 import ListFilters from "./ListFilters.vue"
 import VulnerabilityCard from "./VulnerabilityCard.vue"
-import VulnerabilityStats from "./VulnerabilityStats.vue"
+import VulnerabilityStats from "./VulnerabilityStats/VulnerabilityStats.vue"
 
 const loading = ref(false)
 const message = useMessage()
