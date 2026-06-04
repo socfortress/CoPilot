@@ -1,44 +1,55 @@
 <template>
-	<n-popover
-		trigger="hover"
-		:delay="350"
-		:duration="80"
-		:show-arrow="false"
-		placement="right"
-		:disabled="sub.rule_count === 0"
+	<div
+		class="hover:border-primary/50 hover:bg-primary/6 border-default cursor-pointer rounded-sm border px-1.5 py-1 text-xs"
+		:class="cellClass(sub)"
+		:title="cellTooltip(sub)"
+		@click="emit('open-sub-technique', tactic, tech, sub)"
 	>
-		<template #trigger>
-			<div
-				class="hover:border-primary/50 hover:bg-primary/6 border-default cursor-pointer rounded-sm border px-1.5 py-1 text-xs"
-				:class="cellClass(sub)"
-				:title="cellTooltip(sub)"
-				@click="emit('open-sub-technique', tactic, tech, sub)"
-			>
-				<div class="flex items-center justify-between gap-1.5">
-					<div class="text-default font-mono text-xs font-semibold">
-						{{ sub.id }}
-					</div>
-					<n-tag v-if="sub.rule_count > 0" size="tiny" :bordered="false" class="px-1! font-mono text-[11px]!">
-						{{ sub.rule_count }}
-					</n-tag>
-				</div>
-				<div class="text-secondary text-xs leading-tight">
-					{{ sub.name }}
-				</div>
+		<div class="flex items-center justify-between gap-1.5">
+			<div class="text-default font-mono text-xs font-semibold">
+				{{ sub.id }}
 			</div>
-		</template>
+			<n-popover
+				trigger="hover"
+				:delay="350"
+				:duration="80"
+				:show-arrow="false"
+				placement="right"
+				:disabled="sub.rule_count === 0"
+			>
+				<template #trigger>
+					<span>
+						<n-tag
+							v-if="sub.rule_count > 0"
+							size="tiny"
+							:bordered="false"
+							class="flex cursor-help! items-center px-1! font-mono text-[11px]! [&_.n-tag\_\_content]:flex [&_.n-tag\_\_content]:items-center"
+						>
+							<div class="flex items-center gap-1">
+								<Icon name="carbon:information" :size="11" />
+								{{ sub.rule_count }}
+							</div>
+						</n-tag>
+					</span>
+				</template>
 
-		<RulePreviewList
-			:rule-ids="sub.rule_ids"
-			:index="rulesIndex"
-			@open-rule="ruleId => emit('open-rule', ruleId)"
-		/>
-	</n-popover>
+				<RulePreviewList
+					:rule-ids="sub.rule_ids"
+					:index="rulesIndex"
+					@open-rule="ruleId => emit('open-rule', ruleId)"
+				/>
+			</n-popover>
+		</div>
+		<div class="text-secondary text-xs leading-tight">
+			{{ sub.name }}
+		</div>
+	</div>
 </template>
 
 <script setup lang="ts">
 import type { MitreRuleIndexEntry, MitreSubTechnique, MitreTactic, MitreTechnique } from "@/types/copilotSearches.d"
 import { NPopover, NTag } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
 import RulePreviewList from "../RulePreviewList.vue"
 
 defineProps<{
