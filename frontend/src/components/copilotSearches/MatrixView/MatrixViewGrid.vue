@@ -28,11 +28,7 @@
 					:rules-index
 					:hovered-technique-id
 					:hovered-tactic-id
-					@open-technique="(t, tech) => emit('open-technique', t, tech)"
-					@open-sub-technique="(t, tech, sub) => emit('open-sub-technique', t, tech, sub)"
-					@open-rule="ruleId => emit('open-rule', ruleId)"
-					@technique-hover="onCellEnter"
-					@technique-leave="onCellLeave"
+					v-on="gridListeners"
 				/>
 			</div>
 		</div>
@@ -81,13 +77,18 @@ const matrixScrollWrapStyle = computed(() => {
 const hoveredTechniqueId = ref<string | null>(null)
 const hoveredTacticId = ref<string | null>(null)
 
-function onCellEnter(tacticId: string, techId: string) {
-	hoveredTacticId.value = tacticId
-	hoveredTechniqueId.value = techId
-}
-
-function onCellLeave() {
-	hoveredTacticId.value = null
-	hoveredTechniqueId.value = null
+const gridListeners = {
+	"open-technique": (t: MitreTactic, tech: MitreTechnique) => emit("open-technique", t, tech),
+	"open-sub-technique": (t: MitreTactic, tech: MitreTechnique, sub: MitreSubTechnique) =>
+		emit("open-sub-technique", t, tech, sub),
+	"open-rule": (ruleId: string) => emit("open-rule", ruleId),
+	"technique-hover": (tacticId: string, techId: string) => {
+		hoveredTacticId.value = tacticId
+		hoveredTechniqueId.value = techId
+	},
+	"technique-leave": () => {
+		hoveredTacticId.value = null
+		hoveredTechniqueId.value = null
+	}
 }
 </script>

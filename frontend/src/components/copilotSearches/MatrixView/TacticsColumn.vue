@@ -1,10 +1,8 @@
 <template>
 	<div class="flex w-60 shrink-0 flex-col">
 		<div
-			class="bg-secondary border-default sticky top-0 z-2 flex flex-col gap-1 rounded-t-md border border-b-2 px-2.5 py-2"
-			:class="{
-				'border-warning/55 border-b-warning/70 bg-warning/6': isTacticUncovered
-			}"
+			class="bg-secondary border-default sticky top-1 z-2 flex flex-col gap-1 rounded-t-md border border-b-2 px-2.5 py-2"
+			:class="{ 'border-warning/55 border-b-warning/70 bg-warning/6': isTacticUncovered }"
 		>
 			<div class="flex justify-between gap-2">
 				<div class="text-default text-sm leading-tight font-medium">{{ tactic.name }}</div>
@@ -31,13 +29,8 @@
 				:rules-index
 				:hovered-technique-id
 				:hovered-tactic-id
-				@open-technique="(t, technique) => emit('open-technique', t, technique)"
-				@open-sub-technique="(t, technique, sub) => emit('open-sub-technique', t, technique, sub)"
-				@open-rule="ruleId => emit('open-rule', ruleId)"
-				@technique-hover="(tacticId, techId) => emit('technique-hover', tacticId, techId)"
-				@technique-leave="emit('technique-leave')"
+				v-on="cellListeners"
 			/>
-
 			<n-empty v-if="!tactic.techniques.length" description="No techniques" class="py-4" size="small" />
 		</div>
 	</div>
@@ -75,13 +68,23 @@ const expanded = defineModel<Record<string, boolean>>("expanded", { required: tr
 
 const stats = computed(() => {
 	const source = props.coverage?.tactics.find(t => t.id === props.tactic.id)?.techniques ?? props.tactic.techniques
-	const total = source.length
-	const covered = source.filter(t => t.total_rule_count > 0).length
-	return { total, covered }
+	return {
+		total: source.length,
+		covered: source.filter(t => t.total_rule_count > 0).length
+	}
 })
 
 const isTacticUncovered = computed(() => {
 	const { covered, total } = stats.value
 	return total > 0 && covered === 0
 })
+
+const cellListeners = {
+	"open-technique": (t: MitreTactic, tech: MitreTechnique) => emit("open-technique", t, tech),
+	"open-sub-technique": (t: MitreTactic, tech: MitreTechnique, sub: MitreSubTechnique) =>
+		emit("open-sub-technique", t, tech, sub),
+	"open-rule": (ruleId: string) => emit("open-rule", ruleId),
+	"technique-hover": (tacticId: string, techId: string) => emit("technique-hover", tacticId, techId),
+	"technique-leave": () => emit("technique-leave")
+}
 </script>

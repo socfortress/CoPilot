@@ -1,11 +1,11 @@
 <template>
 	<div
-		class="hover:border-primary/50 hover:bg-primary/6 border-default flex flex-col gap-1.5 rounded border px-2 py-1.5 text-xs"
+		class="hover:border-primary/50 hover:bg-primary/6 border-default flex flex-col gap-1 rounded border px-2 py-1.5 text-xs"
 		:class="[
-			cellClass(tech),
+			coverageClass(tech.total_rule_count),
 			hoveredTechniqueId === tech.id && hoveredTacticId !== tactic.id && 'ring-primary/45 ring-2'
 		]"
-		:title="cellTooltip(tech)"
+		:title="techniqueCellTooltip(tech)"
 		@mouseenter="emit('technique-hover', tactic.id, tech.id)"
 		@mouseleave="emit('technique-leave')"
 	>
@@ -15,61 +15,40 @@
 				<n-tag
 					size="small"
 					:bordered="false"
-					class="hover:text-primary! flex cursor-pointer! items-center px-1! font-mono text-[11px]! [&_.n-tag\_\_content]:flex [&_.n-tag\_\_content]:items-center"
+					class="hover:text-primary! flex max-h-5 cursor-pointer! items-center px-1! font-mono text-[11px]! [&_.n-tag\_\_content]:flex [&_.n-tag\_\_content]:items-center"
 					@click="emit('open-technique', tactic, tech)"
 				>
 					<Icon name="carbon:view" :size="12" class="mx-0.5" />
 				</n-tag>
-				<n-popover
-					trigger="hover"
-					:delay="350"
-					:duration="80"
-					:show-arrow="false"
-					placement="right"
-					:disabled="tech.total_rule_count === 0"
-				>
-					<template #trigger>
-						<span>
-							<n-tag
-								v-if="tech.total_rule_count > 0"
-								size="small"
-								:bordered="false"
-								class="flex cursor-help! items-center px-1! font-mono text-[11px]! [&_.n-tag\_\_content]:flex [&_.n-tag\_\_content]:items-center"
-							>
-								<div class="flex items-center gap-1">
-									<Icon name="carbon:information" :size="11" />
-									{{ tech.total_rule_count }}
-								</div>
-							</n-tag>
-						</span>
-					</template>
-
-					<RulePreviewList
-						:rule-ids="tech.rule_ids"
-						:index="rulesIndex"
-						:extra-via-subs="tech.total_rule_count - tech.rule_count"
-						@open-rule="ruleId => emit('open-rule', ruleId)"
-					/>
-				</n-popover>
+				<MatrixRuleCountPopover
+					:rule-ids="tech.rule_ids"
+					:rule-count="tech.total_rule_count"
+					:index="rulesIndex"
+					tag-size="small"
+					:icon-size="11"
+					:extra-via-subs="tech.total_rule_count - tech.rule_count"
+					@open-rule="ruleId => emit('open-rule', ruleId)"
+				/>
 			</div>
 		</div>
 
 		<div class="text-secondary mt-0.5 text-xs leading-tight">{{ tech.name }}</div>
 
-		<div v-if="tech.subtechniques.length">
-			<n-button text size="tiny" @click.stop="toggleExpand(tactic.id, tech.id)">
-				<template #icon>
-					<Icon :name="expanded[tactic.id + tech.id] ? ChevronDown : ChevronRight" :size="12" />
-				</template>
-				{{ tech.subtechniques.length }} sub
-			</n-button>
-		</div>
+		<n-button
+			v-if="tech.subtechniques.length"
+			text
+			size="tiny"
+			class="max-h-4 w-fit!"
+			@click.stop="toggleExpand(tactic.id, tech.id)"
+		>
+			<template #icon>
+				<Icon :name="expanded[tactic.id + tech.id] ? ChevronDown : ChevronRight" :size="12" />
+			</template>
+			{{ tech.subtechniques.length }} sub
+		</n-button>
 
-		<n-collapse-transition :show="expanded[tactic.id + tech.id]">
-			<div
-				v-if="expanded[tactic.id + tech.id]"
-				class="bg-secondary border-default/70 mt-1 flex flex-col gap-1 rounded-lg border p-1"
-			>
+		<n-collapse-transition :show="!!expanded[expandKey]">
+			<div class="bg-secondary border-default/70 mt-1 flex flex-col gap-1 rounded-lg border p-1">
 				<SubTechniqueCell
 					v-for="sub of visibleSubs(tech, expandKey)"
 					:key="sub.id"
@@ -80,14 +59,14 @@
 					@open-sub-technique="(t, technique, subTech) => emit('open-sub-technique', t, technique, subTech)"
 					@open-rule="ruleId => emit('open-rule', ruleId)"
 				/>
-
-				<div
+				<button
 					v-if="tech.subtechniques.length > SUB_PREVIEW_LIMIT"
-					class="border-default text-tertiary hover:border-primary/50 hover:bg-primary/6 hover:text-primary mt-0.5 cursor-pointer rounded-sm border border-dashed px-1.5 py-0.5 text-center text-xs select-none"
+					type="button"
+					class="border-default text-tertiary hover:border-primary/50 hover:bg-primary/6 hover:text-primary mt-0.5 w-full cursor-pointer rounded-sm border border-dashed px-1.5 py-0.5 text-center text-xs select-none"
 					@click.stop="toggleShowAllSubs(expandKey)"
 				>
-					{{ showAllSubs[expandKey] ? `Show fewer` : `Show all ${tech.subtechniques.length}` }}
-				</div>
+					{{ showAllSubs[expandKey] ? "Show fewer" : `Show all ${tech.subtechniques.length}` }}
+				</button>
 			</div>
 		</n-collapse-transition>
 	</div>
@@ -95,10 +74,11 @@
 
 <script setup lang="ts">
 import type { MitreRuleIndexEntry, MitreSubTechnique, MitreTactic, MitreTechnique } from "@/types/copilotSearches.d"
-import { NButton, NCollapseTransition, NPopover, NTag } from "naive-ui"
+import { NButton, NCollapseTransition, NTag } from "naive-ui"
 import { computed, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
-import RulePreviewList from "../RulePreviewList.vue"
+import { coverageClass, techniqueCellTooltip } from "./matrixCoverage"
+import MatrixRuleCountPopover from "./MatrixRuleCountPopover.vue"
 import SubTechniqueCell from "./SubTechniqueCell.vue"
 
 const props = defineProps<{
@@ -121,37 +101,17 @@ const expanded = defineModel<Record<string, boolean>>("expanded", { required: tr
 
 const ChevronRight = "carbon:chevron-right"
 const ChevronDown = "carbon:chevron-down"
-
-const showAllSubs = ref<Record<string, boolean>>({})
-
 const SUB_PREVIEW_LIMIT = 5
 
+const showAllSubs = ref<Record<string, boolean>>({})
 const expandKey = computed(() => props.tactic.id + props.tech.id)
 
 function visibleSubs(tech: MitreTechnique, key: string) {
-	if (showAllSubs.value[key]) return tech.subtechniques
-	return tech.subtechniques.slice(0, SUB_PREVIEW_LIMIT)
+	return showAllSubs.value[key] ? tech.subtechniques : tech.subtechniques.slice(0, SUB_PREVIEW_LIMIT)
 }
 
 function toggleShowAllSubs(key: string) {
 	showAllSubs.value[key] = !showAllSubs.value[key]
-}
-
-function cellClass(technique: MitreTechnique) {
-	const count = technique.total_rule_count
-	if (count === 0) return "cov-empty"
-	if (count === 1) return "cov-1"
-	if (count <= 3) return "cov-2"
-	if (count <= 7) return "cov-3"
-	return "cov-4"
-}
-
-function cellTooltip(tech: MitreTechnique) {
-	if (tech.total_rule_count === 0) return `${tech.id} ${tech.name} — no CoPilot rules`
-	const subDelta = tech.total_rule_count - tech.rule_count
-	return subDelta
-		? `${tech.id} ${tech.name} — ${tech.rule_count} direct, +${subDelta} via sub-techniques`
-		: `${tech.id} ${tech.name} — ${tech.rule_count} rule(s)`
 }
 
 function toggleExpand(tacticId: string, techId: string) {
@@ -159,9 +119,7 @@ function toggleExpand(tacticId: string, techId: string) {
 	const willOpen = !expanded.value[k]
 	if (willOpen) {
 		for (const otherKey of Object.keys(expanded.value)) {
-			if (otherKey.startsWith(tacticId) && otherKey !== k) {
-				expanded.value[otherKey] = false
-			}
+			if (otherKey.startsWith(tacticId) && otherKey !== k) expanded.value[otherKey] = false
 		}
 	}
 	expanded.value[k] = willOpen
