@@ -1,126 +1,218 @@
 <template>
-	<n-card size="small" :bordered="false" class="filters-card">
-		<div class="filters-container">
-			<!-- Cycle Selector -->
-			<div class="filter-item">
-				<label class="filter-label">Cycle</label>
+	<div class="flex flex-wrap gap-3">
+		<div v-for="filter of filters" :key="filter.type">
+			<n-input-group v-if="filter.type === 'cycle'">
+				<n-input-group-label size="small" class="flex! items-center gap-2">
+					<Icon :name="CycleIcon" />
+					{{ getFilterLabel(filter.type) }}
+				</n-input-group-label>
 				<n-select
-					:value="filters.cycle"
+					:value="stringFilterValue(filter)"
+					size="small"
 					:options="cycleOptions"
+					placeholder="Select..."
 					:loading
-					placeholder="Select cycle"
-					style="min-width: 140px"
-					@update:value="updateFilter('cycle', $event)"
+					class="w-40!"
+					:consistent-menu-width="false"
+					@update:value="updateStringFilterValue(filter, $event)"
 				/>
-			</div>
-
-			<!-- Priority Filter -->
-			<div class="filter-item">
-				<label class="filter-label">Priority</label>
-				<n-select
-					:value="filters.priority"
-					:options="priorityOptions"
-					clearable
-					placeholder="All priorities"
-					style="min-width: 140px"
-					@update:value="updateFilter('priority', $event)"
-				/>
-			</div>
-
-			<!-- Family Filter -->
-			<div class="filter-item">
-				<label class="filter-label">Product Family</label>
-				<n-select
-					:value="filters.family"
-					:options="familyOptions"
-					clearable
-					placeholder="All families"
-					style="min-width: 160px"
-					@update:value="updateFilter('family', $event)"
-				/>
-			</div>
-
-			<!-- Severity Filter -->
-			<div class="filter-item">
-				<label class="filter-label">Severity</label>
-				<n-select
-					:value="filters.severity"
-					:options="severityOptions"
-					clearable
-					placeholder="All severities"
-					style="min-width: 140px"
-					@update:value="updateFilter('severity', $event)"
-				/>
-			</div>
-
-			<!-- Search -->
-			<div class="filter-item search-item">
-				<label class="filter-label">Search</label>
-				<n-input
-					:value="filters.searchQuery"
-					placeholder="CVE, title, or product..."
-					clearable
-					style="min-width: 200px"
-					@update:value="updateFilter('searchQuery', $event)"
-				>
-					<template #prefix>
-						<Icon :name="SearchIcon" />
-					</template>
-				</n-input>
-			</div>
-
-			<!-- KEV Only Toggle -->
-			<div class="filter-item toggle-item">
-				<n-tooltip trigger="hover">
-					<template #trigger>
-						<n-switch :value="filters.kevOnly" @update:value="updateFilter('kevOnly', $event)">
-							<template #checked>KEV</template>
-							<template #unchecked>KEV</template>
-						</n-switch>
-					</template>
-					Show only Known Exploited Vulnerabilities
-				</n-tooltip>
-			</div>
-
-			<!-- Clear Filters -->
-			<div class="filter-item">
-				<n-button quaternary size="small" @click="clearFilters">
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
-						<Icon :name="ClearIcon" />
+						<Icon :name="DelIcon" />
 					</template>
-					Clear
 				</n-button>
-			</div>
+			</n-input-group>
+
+			<n-input-group v-if="filter.type === 'priority'">
+				<n-input-group-label size="small" class="flex! items-center gap-2">
+					<Icon :name="PriorityIcon" />
+					{{ getFilterLabel(filter.type) }}
+				</n-input-group-label>
+				<n-select
+					:value="stringFilterValue(filter)"
+					size="small"
+					:options="priorityOptions"
+					placeholder="Select..."
+					clearable
+					class="w-44!"
+					:consistent-menu-width="false"
+					@update:value="updateStringFilterValue(filter, $event)"
+				/>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
+			<n-input-group v-if="filter.type === 'family'">
+				<n-input-group-label size="small" class="flex! items-center gap-2">
+					<Icon :name="FamilyIcon" />
+					{{ getFilterLabel(filter.type) }}
+				</n-input-group-label>
+				<n-select
+					:value="stringFilterValue(filter)"
+					size="small"
+					:options="familyOptions"
+					placeholder="Select..."
+					clearable
+					filterable
+					class="w-50!"
+					:consistent-menu-width="false"
+					@update:value="updateStringFilterValue(filter, $event)"
+				/>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
+			<n-input-group v-if="filter.type === 'severity'">
+				<n-input-group-label size="small" class="flex! items-center gap-2">
+					<Icon :name="SeverityIcon" />
+					{{ getFilterLabel(filter.type) }}
+				</n-input-group-label>
+				<n-select
+					:value="stringFilterValue(filter)"
+					size="small"
+					:options="severityOptions"
+					placeholder="Select..."
+					clearable
+					class="w-36!"
+					:consistent-menu-width="false"
+					@update:value="updateStringFilterValue(filter, $event)"
+				/>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
+			<n-input-group
+				v-if="filter.type === 'searchQuery' && (typeof filter.value === 'string' || filter.value === null)"
+			>
+				<n-input-group-label size="small" class="flex! items-center gap-2">
+					<Icon :name="SearchIcon" />
+					{{ getFilterLabel(filter.type) }}
+				</n-input-group-label>
+				<n-input
+					:value="stringFilterValue(filter)"
+					autosize
+					placeholder="CVE, title, or product..."
+					size="small"
+					class="min-w-60!"
+					@update:value="updateStringFilterValue(filter, $event)"
+				/>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
+			<n-input-group v-if="filter.type === 'kevOnly'">
+				<n-input-group-label size="small" class="flex! items-center gap-2">
+					<Icon :name="KevIcon" />
+					{{ getFilterLabel(filter.type) }}
+				</n-input-group-label>
+				<div class="border-color bg-default flex h-7 min-w-28 items-center px-3">
+					<n-switch
+						:value="booleanFilterValue(filter)"
+						size="small"
+						checked-value
+						:unchecked-value="false"
+						@update:value="updateBooleanFilterValue(filter, $event)"
+					>
+						<template #checked>On</template>
+						<template #unchecked>Off</template>
+					</n-switch>
+				</div>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
 		</div>
-	</n-card>
+
+		<n-dropdown
+			v-if="availableFilters.length"
+			placement="bottom-start"
+			trigger="click"
+			:options="availableFilters"
+			@select="addFilter"
+		>
+			<n-button size="small" dashed>
+				<template #icon>
+					<Icon :name="AddIcon" />
+				</template>
+				<span v-if="!filters.length">Add filter</span>
+			</n-button>
+		</n-dropdown>
+
+		<n-button v-if="filters.length && isDirty" size="small" secondary type="primary" @click="submit()">
+			Submit
+		</n-button>
+
+		<n-button v-if="filters.length" size="small" quaternary @click="reset()">Reset</n-button>
+	</div>
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
-import type { PatchTuesdayFilters } from "./types"
-import { NButton, NCard, NInput, NSelect, NSwitch, NTooltip } from "naive-ui"
-import { computed } from "vue"
+import type { PatchTuesdayFilterType, PatchTuesdayListFilter } from "./types"
+import _cloneDeep from "lodash/cloneDeep"
+import _isEqual from "lodash/isEqual"
+import {
+	NButton,
+	NDropdown,
+	NInput,
+	NInputGroup,
+	NInputGroupLabel,
+	NSelect,
+	NSwitch,
+	useMessage
+} from "naive-ui"
+import { computed, onMounted, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { PriorityLevel } from "@/types/patchTuesday.d"
 
 const props = defineProps<{
-	filters: PatchTuesdayFilters
 	cycles: string[]
 	families: string[]
 	loading?: boolean
 }>()
-const emit = defineEmits<{
-	(e: "update:filters", filters: PatchTuesdayFilters): void
-}>()
-const SearchIcon = "carbon:search"
-const ClearIcon = "carbon:close"
 
-const cycleOptions = computed(() =>
-	props.cycles.map(cycle => ({
-		label: cycle,
-		value: cycle
-	}))
-)
+const emit = defineEmits<{
+	(e: "submit", value: PatchTuesdayListFilter[]): void
+	(
+		e: "mounted",
+		value: {
+			setFilter: (payload: PatchTuesdayListFilter[]) => void
+		}
+	): void
+}>()
+
+const SearchIcon = "carbon:search"
+const CycleIcon = "carbon:calendar"
+const PriorityIcon = "carbon:warning-hex"
+const FamilyIcon = "carbon:category"
+const SeverityIcon = "carbon:warning"
+const KevIcon = "carbon:security"
+const AddIcon = "carbon:add"
+const DelIcon = "carbon:delete"
+
+const message = useMessage()
+
+const typeOptions: { label: string; value: PatchTuesdayFilterType }[] = [
+	{ label: "Cycle", value: "cycle" },
+	{ label: "Priority", value: "priority" },
+	{ label: "Product Family", value: "family" },
+	{ label: "Severity", value: "severity" },
+	{ label: "Search", value: "searchQuery" },
+	{ label: "KEV only", value: "kevOnly" }
+]
 
 const priorityOptions = [
 	{ label: "P0 - Emergency", value: PriorityLevel.P0 },
@@ -129,13 +221,6 @@ const priorityOptions = [
 	{ label: "P3 - Low", value: PriorityLevel.P3 }
 ]
 
-const familyOptions = computed(() =>
-	props.families.map(family => ({
-		label: family,
-		value: family
-	}))
-)
-
 const severityOptions = [
 	{ label: "Critical", value: "critical" },
 	{ label: "Important", value: "important" },
@@ -143,57 +228,96 @@ const severityOptions = [
 	{ label: "Low", value: "low" }
 ]
 
-function updateFilter<K extends keyof PatchTuesdayFilters>(key: K, value: PatchTuesdayFilters[K]) {
-	emit("update:filters", {
-		...props.filters,
-		[key]: value
-	})
+const filters = ref<PatchTuesdayListFilter[]>([])
+const lastFilters = ref<PatchTuesdayListFilter[]>([])
+
+const cycleOptions = computed(() => props.cycles.map(cycle => ({ label: cycle, value: cycle })))
+
+const familyOptions = computed(() => props.families.map(family => ({ label: family, value: family })))
+
+const availableFilters = computed(() =>
+	typeOptions
+		.filter(option => !filters.value.some(filter => filter.type === option.value))
+		.map(option => ({ key: option.value, label: option.label }))
+)
+
+const isDirty = computed(() => !_isEqual(filters.value, lastFilters.value))
+
+function getFilterLabel(type: PatchTuesdayFilterType): string {
+	return typeOptions.find(option => option.value === type)?.label || type
 }
 
-function clearFilters() {
-	emit("update:filters", {
-		cycle: props.filters.cycle, // Keep cycle selected
-		priority: null,
-		family: null,
-		severity: null,
-		searchQuery: "",
-		kevOnly: false
-	})
+function stringFilterValue(filter: PatchTuesdayListFilter): string | null {
+	return typeof filter.value === "string" ? filter.value : null
 }
+
+function updateStringFilterValue(filter: PatchTuesdayListFilter, value: string | null) {
+	filter.value = value
+}
+
+function booleanFilterValue(filter: PatchTuesdayListFilter): boolean {
+	return filter.value === true
+}
+
+function updateBooleanFilterValue(filter: PatchTuesdayListFilter, value: boolean) {
+	filter.value = value
+}
+
+function defaultValueForType(type: PatchTuesdayFilterType): string | boolean | null {
+	if (type === "kevOnly") return true
+	if (type === "searchQuery") return ""
+	return null
+}
+
+function addFilter(key: PatchTuesdayFilterType) {
+	if (key === "cycle" && !props.cycles.length) {
+		message.warning("No cycles available yet.")
+		return
+	}
+
+	if (key === "family" && !props.families.length) {
+		message.warning("No product families available yet.")
+		return
+	}
+
+	filters.value.push({ type: key, value: defaultValueForType(key) })
+}
+
+function delFilter(key: PatchTuesdayFilterType) {
+	filters.value = filters.value.filter(filter => filter.type !== key)
+	submit()
+}
+
+function setFilter(newFilters: PatchTuesdayListFilter[]) {
+	for (const newFilter of newFilters) {
+		const filterIndex = filters.value.findIndex(filter => filter.type === newFilter.type)
+
+		if (filterIndex !== -1) {
+			if (newFilter.value !== null && newFilter.value !== "" && filters.value[filterIndex]) {
+				filters.value[filterIndex].value = newFilter.value
+			} else {
+				delFilter(newFilter.type)
+			}
+		} else if (newFilter.value !== null && newFilter.value !== "") {
+			filters.value.push(newFilter)
+		}
+	}
+	submit()
+}
+
+function reset() {
+	filters.value = []
+	submit()
+}
+
+function submit() {
+	lastFilters.value = _cloneDeep(filters.value)
+	emit("submit", lastFilters.value)
+}
+
+onMounted(() => {
+	emit("mounted", {
+		setFilter
+	})
+})
 </script>
-
-<style scoped lang="scss">
-.filters-card {
-	background: var(--bg-secondary-color);
-	border-radius: 8px;
-
-	.filters-container {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: flex-end;
-		gap: 16px;
-	}
-
-	.filter-item {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-
-		.filter-label {
-			font-size: 0.75rem;
-			text-transform: uppercase;
-			letter-spacing: 0.5px;
-			opacity: 0.7;
-		}
-
-		&.search-item {
-			flex: 1;
-			min-width: 200px;
-		}
-
-		&.toggle-item {
-			padding-bottom: 4px;
-		}
-	}
-}
-</style>

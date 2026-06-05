@@ -1,37 +1,25 @@
 <template>
-	<div class="patch-tuesday-list">
+	<div class="flex flex-col gap-4">
 		<!-- Header -->
-		<div class="header mb-4 flex items-center justify-between gap-4">
-			<div class="flex items-center gap-3">
-				<Icon :name="CalendarIcon" :size="26" class="text-primary-color" />
-				<h1 class="text-2xl font-bold">Microsoft Patch Tuesday</h1>
-			</div>
-			<div class="flex items-center gap-2">
-				<n-button :loading :disabled="loading" type="primary" secondary @click="fetchData">
-					<template #icon>
-						<Icon :name="RefreshIcon" />
-					</template>
-					Refresh
-				</n-button>
-			</div>
+		<div class="flex items-center justify-between gap-4">
+			<h1 class="text-2xl font-bold">Microsoft Patch Tuesday</h1>
 		</div>
 
 		<!-- Stats Cards -->
-		<PatchTuesdayStats :summary :loading class="mb-4" />
+		<PatchTuesdayStats :summary :loading />
 
 		<!-- Filters -->
 		<PatchTuesdayFilters
-			v-model:filters="filters"
 			:cycles="availableCycles"
 			:families="availableFamilies"
 			:loading
-			class="mb-4"
-			@update:filters="handleFiltersChange"
+			@submit="applyFilters"
+			@mounted="filtersCTX = $event"
 		/>
 
 		<!-- Items List -->
 		<n-spin :show="loading">
-			<div v-if="filteredItems.length > 0" class="items-grid">
+			<div v-if="filteredItems.length > 0" class="grid-auto-fill-350 grid gap-4">
 				<PatchTuesdayCard
 					v-for="item in paginatedItems"
 					:key="`${item.cve}-${item.affected.product}`"
@@ -48,13 +36,13 @@
 		</n-spin>
 
 		<!-- Pagination -->
-		<div v-if="filteredItems.length > pageSize" class="mt-4 flex justify-center">
+		<div v-if="filteredItems.length > pageSize" class="flex justify-center">
 			<n-pagination v-model:page="currentPage" :page-count="totalPages" :page-size show-quick-jumper />
 		</div>
 
 		<!-- Detail Drawer -->
 		<n-drawer v-model:show="showDetail" :width="600" placement="right">
-			<n-drawer-content :title="selectedItem?.cve || 'Vulnerability Details'" closable>
+			<n-drawer-content :title="selectedItem?.cve || 'Vulnerability Details'" closable :native-scrollbar="false">
 				<PatchTuesdayDetail v-if="selectedItem" :item="selectedItem" />
 			</n-drawer-content>
 		</n-drawer>
@@ -62,20 +50,16 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
-import type { PatchTuesdayFilters as FiltersType } from "./types"
+import type { PatchTuesdayFilters as FiltersType, PatchTuesdayListFilter } from "./types"
 import type { PatchTuesdayItem, PatchTuesdaySummary } from "@/types/patchTuesday.d"
-import { NButton, NDrawer, NDrawerContent, NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref, watch } from "vue"
+import { NDrawer, NDrawerContent, NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
+import { computed, onMounted, ref } from "vue"
 import patchTuesdayApi from "@/api/endpoints/patchTuesday"
-import Icon from "@/components/common/Icon.vue"
 import PatchTuesdayCard from "./PatchTuesdayCard.vue"
 import PatchTuesdayDetail from "./PatchTuesdayDetail.vue"
 import PatchTuesdayFilters from "./PatchTuesdayFilters.vue"
 import PatchTuesdayStats from "./PatchTuesdayStats.vue"
-
-const CalendarIcon = "carbon:calendar"
-const RefreshIcon = "carbon:refresh"
+import { patchTuesdayListToFilters } from "./utils"
 
 const message = useMessage()
 
@@ -89,12 +73,13 @@ const pageSize = 24
 const showDetail = ref(false)
 const selectedItem = ref<PatchTuesdayItem | null>(null)
 
+const filtersCTX = ref<{ setFilter: (payload: PatchTuesdayListFilter[]) => void } | null>(null)
 const filters = ref<FiltersType>({
-	cycle: "",
+	cycle: null,
 	priority: null,
 	family: null,
 	severity: null,
-	searchQuery: "",
+	searchQuery: null,
 	kevOnly: false
 })
 
@@ -154,12 +139,21 @@ async function fetchCycles() {
 		const response = await patchTuesdayApi.getCycles()
 		if (response.data.success) {
 			availableCycles.value = response.data.cycles
-			if (!filters.value.cycle && response.data.current_cycle) {
+			if (!filters.value.cycle) {
+				filters.value.cycle = response.data.current_cycle
+			}
+		} else {
+			availableCycles.value = response.data.cycles
+			if (!filters.value.cycle) {
 				filters.value.cycle = response.data.current_cycle
 			}
 		}
 	} catch (error) {
 		console.error("Failed to fetch cycles:", error)
+		availableCycles.value = []
+		if (!filters.value.cycle) {
+			filters.value.cycle = ""
+		}
 	}
 }
 
@@ -188,9 +182,11 @@ async function fetchData() {
 	}
 }
 
-function handleFiltersChange() {
+function applyFilters(newFilters: PatchTuesdayListFilter[]) {
+	const prevCycle = filters.value.cycle
+	filters.value = patchTuesdayListToFilters(newFilters)
 	currentPage.value = 1
-	if (filters.value.cycle) {
+	if (filters.value.cycle && filters.value.cycle !== prevCycle) {
 		fetchData()
 	}
 }
@@ -200,28 +196,12 @@ function openItemDetail(item: PatchTuesdayItem) {
 	showDetail.value = true
 }
 
-// Watch for cycle changes
-watch(
-	() => filters.value.cycle,
-	newCycle => {
-		if (newCycle) {
-			fetchData()
-		}
-	}
-)
-
 // Lifecycle
-onBeforeMount(async () => {
+onMounted(async () => {
 	await fetchCycles()
+	if (filters.value.cycle) {
+		filtersCTX.value?.setFilter([{ type: "cycle", value: filters.value.cycle }])
+		await fetchData()
+	}
 })
 </script>
-
-<style scoped lang="scss">
-.patch-tuesday-list {
-	.items-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-		gap: 16px;
-	}
-}
-</style>

@@ -130,7 +130,7 @@ const priorityBorderClass = computed(() => {
 		case PriorityLevel.P1:
 			return "border-warning!"
 		case PriorityLevel.P2:
-			return "border-primary/60!"
+			return "border-info!"
 		case PriorityLevel.P3:
 			return "border-success!"
 		default:
