@@ -41,7 +41,7 @@
 		</div>
 
 		<!-- Detail Drawer -->
-		<n-drawer v-model:show="showDetail" :width="600" placement="right">
+		<n-drawer v-model:show="showDetail" :width="600" placement="right" class="max-w-[98vw]">
 			<n-drawer-content :title="selectedItem?.cve || 'Vulnerability Details'" closable :native-scrollbar="false">
 				<PatchTuesdayDetail v-if="selectedItem" :item="selectedItem" />
 			</n-drawer-content>
