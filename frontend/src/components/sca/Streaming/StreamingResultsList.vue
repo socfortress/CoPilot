@@ -1,35 +1,20 @@
 <template>
-	<div class="min-h-100">
-		<n-spin :show="isConnecting">
-			<n-empty
-				v-if="!isStreaming && !streamComplete && !hasResults"
-				description="Click 'Load SCA Data' to start collecting results"
-				class="py-12"
-			>
+	<n-data-table :columns :data :pagination :loading="isConnecting" :row-key striped :scroll-x="1000">
+		<template #empty>
+			<n-empty v-if="!isStreaming" description="Click 'Load SCA Data' to start collecting results" class="py-12">
 				<template #extra>
 					<n-button type="primary" @click="emit('start')">Load SCA Data</n-button>
 				</template>
 			</n-empty>
-
-			<n-data-table
-				v-else
-				:columns
-				:data
-				:pagination
-				:loading="isConnecting"
-				:row-key
-				striped
-			/>
-		</n-spin>
-	</div>
+		</template>
+	</n-data-table>
 </template>
 
 <script setup lang="ts">
 import type { DataTableColumns, PaginationProps } from "naive-ui"
 import type { AgentScaOverviewItem } from "@/types/sca.d"
-import { NButton, NDataTable, NEmpty, NSpin } from "naive-ui"
+import { NButton, NDataTable, NEmpty, NProgress } from "naive-ui"
 import { h } from "vue"
-import Badge from "@/components/common/Badge.vue"
 
 defineProps<{
 	isConnecting: boolean
@@ -48,6 +33,12 @@ function rowKey(row: AgentScaOverviewItem) {
 	return `${row.agent_id}-${row.policy_id}`
 }
 
+function scoreStatus(score: number): "success" | "warning" | "error" {
+	if (score >= 80) return "success"
+	if (score >= 60) return "warning"
+	return "error"
+}
+
 const columns: DataTableColumns<AgentScaOverviewItem> = [
 	{
 		title: "Agent",
@@ -63,6 +54,7 @@ const columns: DataTableColumns<AgentScaOverviewItem> = [
 	{
 		title: "Policy",
 		key: "policy_name",
+		minWidth: 200,
 		ellipsis: { tooltip: true }
 	},
 	{
@@ -88,18 +80,25 @@ const columns: DataTableColumns<AgentScaOverviewItem> = [
 	{
 		title: "Score",
 		key: "score",
-		width: 100,
+		width: 120,
 		align: "center",
 		sorter: (a, b) => a.score - b.score,
-		render: row =>
-			h(
-				Badge,
-				{
-					type: "splitted",
-					color: row.score >= 80 ? "success" : row.score >= 60 ? "warning" : "danger"
-				},
-				{ label: () => `${row.score}%` }
+		render: row => {
+			const status = scoreStatus(row.score)
+
+			return h(
+				"div",
+				{ class: "min-w-24 px-1" },
+				h(NProgress, {
+					type: "line",
+					percentage: row.score,
+					status,
+					indicatorPlacement: "inside",
+					height: 18,
+					class: ["font-mono font-bold", status === "error" && "**:text-default!"]
+				})
 			)
+		}
 	},
 	{
 		title: "Last Scan",

@@ -1,5 +1,7 @@
 <template>
-	<div class="sca-streaming-list">
+	<div class="flex flex-col gap-4">
+		<StreamingStatisticsSummary v-if="streamComplete && stats" :stats />
+
 		<StreamingProgressHeader
 			:is-connecting
 			:is-streaming
@@ -11,8 +13,6 @@
 			@start="startStream"
 			@stop="stopStream"
 		/>
-
-		<StreamingStatisticsSummary v-if="streamComplete && stats" :stats />
 
 		<StreamingFilters @submit="applyFilters" @mounted="filtersCTX = $event" />
 

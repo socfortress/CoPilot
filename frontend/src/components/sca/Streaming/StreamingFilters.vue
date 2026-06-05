@@ -1,5 +1,5 @@
 <template>
-	<div class="mb-4 flex flex-wrap gap-3">
+	<div class="flex flex-wrap gap-3">
 		<div v-for="filter of filters" :key="filter.type">
 			<n-input-group v-if="filter.type === 'customer_code'">
 				<n-input-group-label size="small" class="flex! items-center gap-2">
@@ -142,16 +142,7 @@ import type { ScaStreamingFilterType, ScaStreamingListFilter } from "./types.d"
 import type { Customer } from "@/types/customers.d"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
-import {
-	NButton,
-	NDropdown,
-	NInput,
-	NInputGroup,
-	NInputGroupLabel,
-	NInputNumber,
-	NSelect,
-	useMessage
-} from "naive-ui"
+import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NSelect, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
