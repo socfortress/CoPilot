@@ -1,245 +1,157 @@
 <template>
-	<n-card
+	<CardEntity
 		size="small"
-		:bordered="false"
+		embedded
 		hoverable
-		class="patch-tuesday-card"
-		:class="[`priority-${item.prioritization.priority.toLowerCase()}`]"
+		clickable
+		class="h-full"
+		main-box-class="grow"
+		card-entity-wrapper-class="h-full"
+		header-box-class="flex-nowrap! items-start"
+		:card-entity-class="priorityBorderClass"
 	>
-		<!-- Header -->
-		<div class="card-header">
-			<div class="cve-info">
-				<span class="cve-id">{{ item.cve }}</span>
+		<template #headerMain>
+			<span class="text-default font-mono font-semibold">{{ item.cve }}</span>
+		</template>
+
+		<template #headerExtra>
+			<div class="flex flex-wrap items-center justify-end gap-2">
 				<PatchTuesdayPriorityBadge :priority="item.prioritization.priority" />
-			</div>
-			<div class="badges">
-				<n-tag v-if="item.kev.in_kev" type="error" size="small" round>
-					<template #icon>
-						<Icon :name="AlertIcon" />
+				<Badge v-if="item.kev.in_kev" type="splitted" bright color="danger" size="small">
+					<template #label>
+						<Icon :name="AlertIcon" :size="12" />
+						KEV
 					</template>
-					KEV
-				</n-tag>
-				<n-tag v-if="item.severity" :type="getSeverityType(item.severity)" size="small">
-					{{ item.severity }}
-				</n-tag>
+				</Badge>
+				<Badge v-if="item.severity" type="splitted" bright :color="severityBadgeColor" size="small">
+					<template #label>{{ item.severity }}</template>
+				</Badge>
 			</div>
-		</div>
+		</template>
 
-		<!-- Title -->
-		<p class="card-title">{{ item.title || "No title available" }}</p>
+		<template #default>
+			<div class="flex flex-col gap-3">
+				<p class="line-clamp-2 text-sm leading-snug font-medium">
+					{{ item.title || "No title available" }}
+				</p>
 
-		<!-- Product Info -->
-		<div class="product-info">
-			<n-tag size="small" :bordered="false">
-				{{ item.affected.family }}
-			</n-tag>
-			<span class="product-name">{{ truncateProduct(item.affected.product) }}</span>
-		</div>
+				<div class="text-secondary flex min-w-0 flex-col gap-2 text-xs">
+					<div class="flex min-w-0 items-center gap-2">
+						<Icon :name="FamilyIcon" :size="14" class="shrink-0" />
+						<span class="truncate" :title="item.affected.family">{{ item.affected.family }}</span>
+					</div>
+					<div class="flex min-w-0 items-center gap-2">
+						<Icon :name="ProductIcon" :size="14" class="shrink-0" />
+						<span class="truncate" :title="item.affected.product">{{ truncatedProduct }}</span>
+					</div>
+					<div v-if="item.affected.component_hint" class="flex min-w-0 items-center gap-2">
+						<Icon :name="ComponentIcon" :size="14" class="shrink-0" />
+						<span class="truncate font-mono">{{ item.affected.component_hint }}</span>
+					</div>
+				</div>
+			</div>
+		</template>
 
-		<!-- Scores Row -->
-		<div class="scores-row">
-			<div v-if="item.cvss.base !== null" class="score-item">
-				<span class="score-label">CVSS</span>
-				<span class="score-value" :class="getCvssClass(item.cvss.base)">
-					{{ item.cvss.base.toFixed(1) }}
+		<template #footerMain>
+			<div class="flex flex-wrap items-center gap-2">
+				<Badge v-if="item.cvss.base !== null" type="splitted" size="small" :color="cvssBadgeColor">
+					<template #label>CVSS</template>
+					<template #value>{{ item.cvss.base.toFixed(1) }}</template>
+				</Badge>
+
+				<Badge v-if="item.epss.score !== null" type="splitted" size="small" color="warning">
+					<template #label>EPSS</template>
+					<template #value>{{ (item.epss.score * 100).toFixed(1) }}%</template>
+				</Badge>
+
+				<Badge v-if="item.epss.percentile !== null" type="splitted" size="small" color="warning">
+					<template #label>Percentile</template>
+					<template #value>{{ (item.epss.percentile * 100).toFixed(0) }}%</template>
+				</Badge>
+
+				<Badge v-if="item.remediation.kbs.length > 0" type="splitted" size="small">
+					<template #label>
+						<Icon :name="LinkIcon" :size="12" />
+						KB
+					</template>
+					<template #value>{{ kbSummary }}</template>
+				</Badge>
+			</div>
+		</template>
+
+		<template #footerExtra>
+			<div class="text-tertiary flex min-w-0 items-center gap-1.5 text-xs">
+				<Icon :name="ClockIcon" :size="14" class="shrink-0" />
+				<span class="truncate" :title="item.prioritization.suggested_sla">
+					{{ item.prioritization.suggested_sla }}
 				</span>
 			</div>
-			<div v-if="item.epss.score !== null" class="score-item">
-				<span class="score-label">EPSS</span>
-				<span class="score-value">{{ (item.epss.score * 100).toFixed(1) }}%</span>
-			</div>
-			<div v-if="item.epss.percentile !== null" class="score-item">
-				<span class="score-label">Percentile</span>
-				<span class="score-value">{{ (item.epss.percentile * 100).toFixed(0) }}%</span>
-			</div>
-		</div>
-
-		<!-- KB Articles -->
-		<div v-if="item.remediation.kbs.length > 0" class="kb-row">
-			<Icon :name="LinkIcon" :size="14" />
-			<span class="kb-list">{{ item.remediation.kbs.slice(0, 3).join(", ") }}</span>
-			<span v-if="item.remediation.kbs.length > 3" class="kb-more">
-				+{{ item.remediation.kbs.length - 3 }} more
-			</span>
-		</div>
-
-		<!-- SLA Hint -->
-		<div class="sla-hint">
-			<Icon :name="ClockIcon" :size="14" />
-			<span>{{ getSlaHint(item.prioritization.suggested_sla) }}</span>
-		</div>
-	</n-card>
+		</template>
+	</CardEntity>
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
+import type { BadgeColor } from "@/components/common/Badge.vue"
 import type { PatchTuesdayItem } from "@/types/patchTuesday.d"
-import { NCard, NTag } from "naive-ui"
+import { computed } from "vue"
+import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { PriorityLevel } from "@/types/patchTuesday.d"
 import PatchTuesdayPriorityBadge from "./PatchTuesdayPriorityBadge.vue"
 
-defineProps<{
+const { item } = defineProps<{
 	item: PatchTuesdayItem
 }>()
+
 const AlertIcon = "carbon:warning"
 const ClockIcon = "carbon:time"
 const LinkIcon = "carbon:link"
+const FamilyIcon = "carbon:category"
+const ProductIcon = "carbon:cube"
+const ComponentIcon = "carbon:chip"
 
-function getSeverityType(severity: string): "error" | "warning" | "info" | "default" {
-	const s = severity.toLowerCase()
-	if (s === "critical") return "error"
-	if (s === "important") return "warning"
-	if (s === "moderate") return "info"
-	return "default"
-}
+const truncatedProduct = computed(() => {
+	const product = item.affected.product
+	if (product.length <= 48) return product
+	return `${product.slice(0, 48)}…`
+})
 
-function getCvssClass(score: number): string {
-	if (score >= 9.0) return "critical"
-	if (score >= 7.0) return "high"
-	if (score >= 4.0) return "medium"
-	return "low"
-}
+const kbSummary = computed(() => {
+	const kbs = item.remediation.kbs
+	if (kbs.length <= 2) return kbs.join(", ")
+	return `${kbs.slice(0, 2).join(", ")} +${kbs.length - 2}`
+})
 
-function truncateProduct(product: string): string {
-	if (product.length <= 40) return product
-	return `${product.substring(0, 40)}...`
-}
+const priorityBorderClass = computed(() => {
+	switch (item.prioritization.priority) {
+		case PriorityLevel.P0:
+			return "border-error!"
+		case PriorityLevel.P1:
+			return "border-warning!"
+		case PriorityLevel.P2:
+			return "border-primary/60!"
+		case PriorityLevel.P3:
+			return "border-success!"
+		default:
+			return "border-border!"
+	}
+})
 
-function getSlaHint(sla: string): string {
-	if (sla.includes("immediately") || sla.includes("24h")) return "Patch immediately"
-	if (sla.includes("72h")) return "Patch within 72 hours"
-	if (sla.includes("7-14")) return "Patch within 7-14 days"
-	return "Patch within 30 days"
-}
+const severityBadgeColor = computed((): BadgeColor | undefined => {
+	const severity = item.severity?.toLowerCase()
+	if (severity === "critical") return "danger"
+	if (severity === "important") return "warning"
+	if (severity === "low") return "success"
+	return undefined
+})
+
+const cvssBadgeColor = computed((): BadgeColor | undefined => {
+	const score = item.cvss.base
+	if (score === null) return undefined
+	if (score >= 9) return "danger"
+	if (score >= 7) return "warning"
+	if (score >= 4) return "primary"
+	return "success"
+})
 </script>
-
-<style scoped lang="scss">
-.patch-tuesday-card {
-	border-radius: 8px;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	border-left: 4px solid transparent;
-	background: var(--bg-secondary-color);
-
-	&.priority-p0 {
-		border-left-color: #ef4444;
-	}
-
-	&.priority-p1 {
-		border-left-color: #f97316;
-	}
-
-	&.priority-p2 {
-		border-left-color: #eab308;
-	}
-
-	&.priority-p3 {
-		border-left-color: #22c55e;
-	}
-
-	.card-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		margin-bottom: 8px;
-
-		.cve-info {
-			display: flex;
-			align-items: center;
-			gap: 8px;
-
-			.cve-id {
-				font-weight: 600;
-				font-size: 0.95rem;
-				font-family: monospace;
-			}
-		}
-
-		.badges {
-			display: flex;
-			gap: 4px;
-		}
-	}
-
-	.card-title {
-		font-size: 0.875rem;
-		line-height: 1.4;
-		margin-bottom: 12px;
-		opacity: 0.9;
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-
-	.product-info {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		margin-bottom: 12px;
-
-		.product-name {
-			font-size: 0.8rem;
-			opacity: 0.7;
-		}
-	}
-
-	.scores-row {
-		display: flex;
-		gap: 16px;
-		margin-bottom: 12px;
-
-		.score-item {
-			display: flex;
-			flex-direction: column;
-
-			.score-label {
-				font-size: 0.7rem;
-				text-transform: uppercase;
-				opacity: 0.6;
-			}
-
-			.score-value {
-				font-weight: 600;
-				font-size: 0.9rem;
-
-				&.critical {
-					color: #ef4444;
-				}
-				&.high {
-					color: #f97316;
-				}
-				&.medium {
-					color: #eab308;
-				}
-				&.low {
-					color: #22c55e;
-				}
-			}
-		}
-	}
-
-	.kb-row {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-size: 0.8rem;
-		opacity: 0.7;
-		margin-bottom: 8px;
-
-		.kb-more {
-			opacity: 0.6;
-		}
-	}
-
-	.sla-hint {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-size: 0.75rem;
-		opacity: 0.6;
-		padding-top: 8px;
-		border-top: 1px solid var(--border-color);
-	}
-}
-</style>

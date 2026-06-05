@@ -2,7 +2,7 @@
 	<div class="@container flex flex-col gap-4">
 		<n-spin :show="loading">
 			<div class="flex flex-col gap-4">
-				<div class="grid grid-cols-1 gap-3 @sm:grid-cols-2 @xl:grid-cols-3 @4xl:grid-cols-5">
+				<div class="grid grid-cols-1 gap-3 @md:grid-cols-2 @2xl:grid-cols-3 @6xl:grid-cols-5">
 					<CardLink
 						v-for="tile of statTiles"
 						:key="tile.id"
@@ -49,7 +49,9 @@
 							</Badge>
 							<Badge type="splitted" bright>
 								<template #label>Generated</template>
-								<template #value>{{ formatDate(summary.generated_utc, "MMM D, YYYY HH:mm", { tz: true }) }}</template>
+								<template #value>
+									{{ formatDate(summary.generated_utc, "MMM D, YYYY HH:mm", { tz: true }) }}
+								</template>
 							</Badge>
 						</div>
 					</template>
