@@ -1,12 +1,6 @@
 import type { PatchTuesdayItem, PatchTuesdaySummary, PriorityLevel } from "@/types/patchTuesday.d"
 
-export type PatchTuesdayFilterType =
-	| "cycle"
-	| "priority"
-	| "family"
-	| "severity"
-	| "searchQuery"
-	| "kevOnly"
+export type PatchTuesdayFilterType = "cycle" | "priority" | "family" | "severity" | "searchQuery" | "kevOnly"
 
 export interface PatchTuesdayListFilter {
 	type: PatchTuesdayFilterType

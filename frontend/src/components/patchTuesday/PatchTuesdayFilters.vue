@@ -164,16 +164,7 @@
 import type { PatchTuesdayFilterType, PatchTuesdayListFilter } from "./types"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
-import {
-	NButton,
-	NDropdown,
-	NInput,
-	NInputGroup,
-	NInputGroupLabel,
-	NSelect,
-	NSwitch,
-	useMessage
-} from "naive-ui"
+import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, NSwitch, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { PriorityLevel } from "@/types/patchTuesday.d"
