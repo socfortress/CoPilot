@@ -2,12 +2,7 @@
 	<n-popover v-bind="MATRIX_RULE_POPOVER" :disabled="ruleCount === 0">
 		<template #trigger>
 			<span>
-				<n-tag
-					v-if="ruleCount > 0"
-					:size="tagSize"
-					:bordered="false"
-					:class="MATRIX_RULE_TAG_CLASS"
-				>
+				<n-tag v-if="ruleCount > 0" :size="tagSize" :bordered="false" :class="MATRIX_RULE_TAG_CLASS">
 					<div class="flex items-center gap-1">
 						<Icon name="carbon:information" :size="iconSize" />
 						{{ ruleCount }}
@@ -15,12 +10,7 @@
 				</n-tag>
 			</span>
 		</template>
-		<RulePreviewList
-			:rule-ids
-			:index
-			:extra-via-subs
-			@open-rule="ruleId => emit('open-rule', ruleId)"
-		/>
+		<RulePreviewList :rule-ids :index :extra-via-subs @open-rule="ruleId => emit('open-rule', ruleId)" />
 	</n-popover>
 </template>
 

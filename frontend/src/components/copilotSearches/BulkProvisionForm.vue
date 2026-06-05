@@ -33,13 +33,7 @@
 
 		<div class="flex justify-end gap-2">
 			<n-button size="small" quaternary :disabled="submitting" @click="emit('close')">Cancel</n-button>
-			<n-button
-				size="small"
-				type="primary"
-				:loading="submitting"
-				:disabled="!provisionableCount"
-				@click="submit"
-			>
+			<n-button size="small" type="primary" :loading="submitting" :disabled="!provisionableCount" @click="submit">
 				Provision {{ provisionableCount }} rule{{ provisionableCount === 1 ? "" : "s" }}
 			</n-button>
 		</div>
