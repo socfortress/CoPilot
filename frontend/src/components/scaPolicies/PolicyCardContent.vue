@@ -57,36 +57,31 @@
 			<template #value>
 				<n-spin :show="loadingAgents">
 					<div v-if="agentsLoaded">
-						<div v-if="agentsResponse && agentsResponse.matched_agents.length" class="flex flex-col gap-3">
-							<div class="text-xs opacity-60">
-								Found
-								<strong>{{ agentsResponse.total }}</strong>
-								agent(s) with
-								<strong>{{ agentsResponse.display_name }}</strong>
-								installed
+						<div v-if="agentsResponse && agentsResponse.matched_agents.length" class="flex flex-col gap-2">
+							<div class="flex flex-wrap items-center gap-2">
+								<Badge type="splitted" bright size="small" color="primary">
+									<template #label>Found</template>
+									<template #value>{{ agentsResponse.total }}</template>
+								</Badge>
+								<Badge type="splitted" size="small">
+									<template #label>Package</template>
+									<template #value>{{ agentsResponse.display_name }}</template>
+								</Badge>
 							</div>
-							<div class="grid grid-cols-1 gap-3 py-1 lg:grid-cols-2">
-								<CardEntity
+							<div class="grid grid-cols-1 gap-2">
+								<CardKV
 									v-for="agent in agentsResponse.matched_agents"
 									:key="`${agent.agent_id}-${agent.package_name}`"
-									embedded
-									size="small"
-									class="h-full"
-									main-box-class="grow"
-									card-entity-wrapper-class="h-full"
 								>
-									<template #headerMain>
-										<div class="text-default flex items-center gap-2">
-											<span class="text-sm font-semibold">
-												{{ agent.agent_name || "Unknown" }}
-											</span>
-											<Badge size="small">
-												<template #value>ID: {{ agent.agent_id }}</template>
-											</Badge>
-										</div>
+									<template #key>
+										<span class="font-semibold">{{ agent.agent_name || "Unknown" }}</span>
 									</template>
-									<template #default>
-										<div class="flex flex-wrap gap-2 text-xs">
+									<template #value>
+										<div class="flex flex-wrap gap-2">
+											<Badge type="splitted" size="small">
+												<template #label>ID</template>
+												<template #value>{{ agent.agent_id }}</template>
+											</Badge>
 											<Badge type="splitted" size="small">
 												<template #label>Package</template>
 												<template #value>{{ agent.package_name }}</template>
@@ -101,17 +96,23 @@
 											</Badge>
 										</div>
 									</template>
-								</CardEntity>
+								</CardKV>
 							</div>
 						</div>
 						<n-empty
 							v-else
 							description="No agents found with this package installed"
-							class="h-24 justify-center"
+							size="small"
+							class="min-h-16 justify-center"
 						/>
 					</div>
-					<div v-else class="text-secondary text-sm">
-						Click "Detect Agents" to search for agents running {{ policy.application }}
+					<div v-else class="text-secondary flex items-center gap-2 text-sm">
+						<Icon :name="SearchIcon" :size="14" class="shrink-0 opacity-60" />
+						<span>
+							Click
+							<strong>Detect Agents</strong>
+							to search for agents running {{ policy.application }}
+						</span>
 					</div>
 				</n-spin>
 			</template>
@@ -171,7 +172,6 @@ import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
