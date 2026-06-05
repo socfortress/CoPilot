@@ -1,12 +1,11 @@
 import type { PatchTuesdayItem, PatchTuesdaySummary, PriorityLevel } from "@/types/patchTuesday.d"
 
-// TODO-FE: refactor
 export interface PatchTuesdayFilters {
-	cycle: string
+	cycle: string | null
 	priority: PriorityLevel | null
 	family: string | null
 	severity: string | null
-	searchQuery: string
+	searchQuery: string | null
 	kevOnly: boolean
 }
 
