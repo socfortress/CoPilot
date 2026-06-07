@@ -1,102 +1,89 @@
 <template>
-	<div class="rule-card-wrap h-full" :class="{ 'is-selected': selectable && selected }">
-		<n-checkbox
-			v-if="selectable"
-			:checked="selected"
-			class="rule-card-checkbox"
-			size="small"
-			@update:checked="emit('update:selected', $event)"
-			@click.stop
-		/>
+	<div class="relative h-full">
 		<CardEntity
+			size="small"
 			hoverable
 			clickable
+			:highlighted="selected"
 			:embedded
-			class="@container h-full"
-			main-box-class="grow"
-			card-entity-wrapper-class="h-full"
-			header-box-class="flex-nowrap! items-start"
+			class="h-full"
 			@click.stop="showDetails = true"
 		>
 			<template #headerMain>
-				<div class="flex flex-wrap items-center gap-2">
-					<Badge v-if="rule.status" :color="getStatusColor(rule.status)" size="small">
-						<template #value>{{ rule.status }}</template>
-					</Badge>
+				<div class="flex flex-wrap gap-2">
+					<n-checkbox
+						v-if="selectable"
+						:checked="selected"
+						@update:checked="emit('update:selected', $event)"
+						@click.stop
+					/>
+					<p class="text-default relative -top-0.5 line-clamp-2 flex-1 text-sm leading-snug font-semibold">
+						{{ rule.name }}
+					</p>
+				</div>
+			</template>
 
-					<Badge v-if="rule.type" type="splitted" size="small">
-						<template #label>type</template>
-						<template #value>{{ rule.type }}</template>
-					</Badge>
+			<template #default>
+				<div class="flex flex-col gap-2">
+					<p v-if="rule.description" class="text-secondary line-clamp-3 text-xs leading-relaxed">
+						{{ rule.description }}
+					</p>
+					<p v-else class="text-secondary text-xs italic">No description available</p>
+					<div class="flex flex-wrap items-center gap-1.5">
+						<n-tag v-if="provisioned" size="small" type="success" round :bordered="false">In Graylog</n-tag>
+						<n-tag v-if="rule.has_graylog_query" size="small" round :bordered="false">Query ready</n-tag>
+					</div>
+				</div>
+			</template>
 
-					<div v-if="rule.mitre_attack_id?.length" class="flex items-center gap-1">
-						<Badge
-							v-for="mitre of rule.mitre_attack_id.slice(0, 2)"
-							:key="mitre"
-							size="small"
-							color="primary"
-						>
+			<template #mainExtra>
+				<div class="flex flex-col gap-2">
+					<span class="text-secondary text-[10px] font-medium tracking-wider uppercase">Metadata</span>
+					<div class="flex flex-wrap items-center gap-1.5">
+						<SeverityBadge v-if="rule.severity" :severity="rule.severity" size="small" />
+
+						<Badge v-if="rule.status" size="small" :color="getStatusColor(rule.status)">
+							<template #label>status</template>
+							<template #value>{{ rule.status }}</template>
+						</Badge>
+
+						<Badge v-if="rule.type" type="splitted" size="small">
+							<template #label>type</template>
+							<template #value>{{ rule.type }}</template>
+						</Badge>
+
+						<Badge type="splitted" size="small">
+							<template #iconLeft>
+								<Icon :name="platformInfo.icon" :size="11" />
+							</template>
+							<template #label>platform</template>
+							<template #value>{{ platformInfo.label }}</template>
+						</Badge>
+
+						<Badge v-for="mitre of visibleMitreIds" :key="mitre" size="small" color="primary">
 							<template #value>{{ mitre }}</template>
 						</Badge>
-						<Badge v-if="rule.mitre_attack_id.length > 2" size="small">
-							<template #value>+{{ rule.mitre_attack_id.length - 2 }}</template>
+						<Badge v-if="hiddenMitreCount > 0" size="small">
+							<template #value>+{{ hiddenMitreCount }}</template>
 						</Badge>
 					</div>
 				</div>
 			</template>
-			<template #headerExtra>
-				<div class="text-default pt-.5 flex h-full items-center gap-2">
-					<n-tooltip v-if="provisioned">
-						<template #trigger>
-							<div class="provisioned-chip">
-								<Icon :name="ProvisionedIcon" :size="11" />
-								<span>in Graylog</span>
-							</div>
-						</template>
-						An event definition with this rule's title already exists in Graylog
-					</n-tooltip>
-					<n-tooltip v-if="rule.has_graylog_query">
-						<template #trigger>
-							<Icon :name="GraylogIcon" :size="16" />
-						</template>
-						Has Graylog Query
-					</n-tooltip>
-				</div>
-			</template>
-			<template #default>
-				<div class="flex flex-col gap-2">
-					<div>{{ rule.name }}</div>
-					<p class="line-clamp-3 text-sm">
-						{{ rule.description }}
-					</p>
-				</div>
-			</template>
-			<template #mainExtra>
-				<div class="flex flex-wrap items-center justify-between gap-2">
-					<SeverityBadge :severity="rule.severity" />
-					<Badge>
-						<template #value>
-							<div class="flex items-center gap-2">
-								<Icon :name="platformInfo.icon" :size="14" />
-								<span class="whitespace-nowrap">{{ platformInfo.label }}</span>
-							</div>
-						</template>
-					</Badge>
-				</div>
-			</template>
-			<template #footerExtra>
+
+			<template #footer>
 				<div class="flex w-full items-center justify-end gap-2">
-					<n-tooltip v-if="rule.has_graylog_query">
-						<template #trigger>
-							<n-button size="small" secondary @click.stop="showProvisionModal = true">
-								<template #icon>
-									<Icon :name="ProvisionIcon" />
-								</template>
-							</n-button>
+					<n-button
+						v-if="rule.has_graylog_query"
+						size="small"
+						secondary
+						@click.stop="showProvisionModal = true"
+					>
+						<template #icon>
+							<Icon :name="ProvisionIcon" />
 						</template>
-						Provision Graylog Alert
-					</n-tooltip>
-					<n-button size="small" type="primary" secondary @click.stop="showExecuteModal = true">
+						Provision
+					</n-button>
+					<n-button size="small" type="primary" @click.stop="showExecuteModal = true">
 						<template #icon>
 							<Icon :name="PlayIcon" />
 						</template>
@@ -158,7 +145,7 @@
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
 import type { RuleSummary } from "@/types/copilotSearches.d"
-import { NButton, NCheckbox, NModal, NTooltip, useMessage } from "naive-ui"
+import { NButton, NCheckbox, NModal, NTag, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -187,8 +174,9 @@ const message = useMessage()
 
 const PlayIcon = "carbon:play"
 const ProvisionIcon = "carbon:add-alt"
-const GraylogIcon = "carbon:notification"
-const ProvisionedIcon = "carbon:checkmark-filled"
+
+const visibleMitreIds = computed(() => rule.mitre_attack_id?.slice(0, 2) ?? [])
+const hiddenMitreCount = computed(() => Math.max((rule.mitre_attack_id?.length ?? 0) - 2, 0))
 
 // Platform → icon + label mapping. Mirrors the platforms the CoPilot Searches
 // backend actually emits (linux, windows, powershell, cve, unknown). Done
@@ -227,53 +215,3 @@ function handleProvisionSuccess() {
 	showProvisionModal.value = false
 }
 </script>
-
-<style scoped lang="scss">
-.provisioned-chip {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 2px 6px;
-	font-size: 0.65rem;
-	font-weight: 600;
-	letter-spacing: 0.02em;
-	color: var(--success-color);
-	background: rgba(var(--success-color-rgb) / 0.1);
-	border: 1px solid rgba(var(--success-color-rgb) / 0.4);
-	border-radius: 3px;
-	white-space: nowrap;
-}
-
-.rule-card-wrap {
-	position: relative;
-}
-
-/* Sits just outside the card's top-left corner like a sticker so it never
-   overlaps the header badges. The card's own click handler still triggers
-   the rule-detail modal; the checkbox stops propagation. */
-.rule-card-checkbox {
-	position: absolute;
-	top: -7px;
-	left: -7px;
-	z-index: 2;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: var(--bg-default-color);
-	border: 1px solid var(--border-color);
-	border-radius: 4px;
-	padding: 2px;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-	transition:
-		border-color 0.12s,
-		box-shadow 0.12s;
-}
-.rule-card-wrap.is-selected .rule-card-checkbox {
-	border-color: rgba(var(--primary-color-rgb) / 0.6);
-	box-shadow: 0 1px 4px rgba(var(--primary-color-rgb) / 0.4);
-}
-
-.rule-card-wrap.is-selected :deep(.card-entity) {
-	box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb) / 0.6);
-}
-</style>

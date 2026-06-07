@@ -18,8 +18,15 @@
 		</n-alert>
 
 		<div class="flex flex-col">
-			<div class="flex flex-wrap items-center justify-end gap-2">
-				<div class="flex min-w-80 grow gap-2">
+			<ListToolbar
+				v-model:search-query="searchQuery"
+				v-model:selected-platform="selectedPlatform"
+				v-model:selected-application="selectedApplication"
+				:platform-options
+				:application-options
+				@reset-filters="resetFilters"
+			>
+				<template #info>
 					<n-popover overlap placement="bottom-start">
 						<template #trigger>
 							<div class="bg-default rounded-lg">
@@ -41,64 +48,8 @@
 							</div>
 						</div>
 					</n-popover>
-
-					<n-input
-						v-model:value="searchQuery"
-						size="small"
-						placeholder="Search policies..."
-						class="max-w-120"
-						clearable
-					>
-						<template #prefix>
-							<Icon :name="SearchIcon" />
-						</template>
-					</n-input>
-
-					<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="px-0!">
-						<template #trigger>
-							<div class="bg-default rounded-lg">
-								<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
-									<n-button size="small" @click="showFilters = true">
-										<template #icon>
-											<Icon :name="FilterIcon" />
-										</template>
-									</n-button>
-								</n-badge>
-							</div>
-						</template>
-						<div class="divide-border flex w-50 flex-col gap-0 divide-y">
-							<div class="flex flex-col gap-2.5 px-3 pt-1 pb-3">
-								<n-select
-									v-model:value="selectedPlatform"
-									:options="platformOptions"
-									size="small"
-									placeholder="Platform"
-									class="w-full"
-									clearable
-									:consistent-menu-width="false"
-								/>
-								<n-select
-									v-model:value="selectedApplication"
-									:options="applicationOptions"
-									clearable
-									size="small"
-									placeholder="Application"
-									class="w-full"
-									:consistent-menu-width="false"
-								/>
-							</div>
-							<div class="flex justify-between gap-2 px-3 pt-2">
-								<div class="flex justify-start gap-2">
-									<n-button size="small" quaternary @click="showFilters = false">Close</n-button>
-								</div>
-								<div class="flex justify-end gap-2">
-									<n-button size="small" secondary @click="resetFilters()">Reset</n-button>
-								</div>
-							</div>
-						</div>
-					</n-popover>
-				</div>
-			</div>
+				</template>
+			</ListToolbar>
 
 			<n-spin :show="loading">
 				<div class="my-3">
@@ -130,10 +81,11 @@
 
 <script setup lang="ts">
 import type { ScaPolicyItem } from "@/types/sca.d"
-import { NAlert, NBadge, NButton, NEmpty, NInput, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import { NAlert, NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import ListToolbar from "./ListToolbar.vue"
 import PolicyCard from "./PolicyCard.vue"
 
 const loading = ref(false)
@@ -143,15 +95,10 @@ const policies = ref<ScaPolicyItem[]>([])
 const searchQuery = ref<string | null>(null)
 const selectedPlatform = ref<string | null>(null)
 const selectedApplication = ref<string | null>(null)
-const showFilters = ref(false)
 const currentPage = ref(1)
 const pageSize = 24
 
-const filtered = computed(() => !!selectedPlatform.value || !!selectedApplication.value)
-
 const InfoIcon = "carbon:information"
-const FilterIcon = "carbon:filter-edit"
-const SearchIcon = "carbon:search"
 
 const platformOptions = computed(() => {
 	const platforms = [...new Set(policies.value.map(p => p.platform))].sort()
@@ -196,7 +143,6 @@ const paginatedPolicies = computed(() => {
 function resetFilters() {
 	selectedPlatform.value = null
 	selectedApplication.value = null
-	showFilters.value = false
 }
 
 async function loadPolicies() {

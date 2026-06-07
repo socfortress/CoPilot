@@ -33,7 +33,11 @@
 		<n-spin :show="loading">
 			<div class="my-3">
 				<div v-if="list.length" class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-					<VulnerabilityCard v-for="item of list" :key="JSON.stringify(item)" :vulnerability="item" />
+					<VulnerabilityCard
+						v-for="(item, index) of list"
+						:key="JSON.stringify(item) + index"
+						:vulnerability="item"
+					/>
 				</div>
 				<template v-else>
 					<n-empty v-if="!loading" description="No vulnerabilities found" class="h-48 justify-center" />
@@ -70,7 +74,7 @@ import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
 import ListFilters from "./ListFilters.vue"
 import VulnerabilityCard from "./VulnerabilityCard.vue"
-import VulnerabilityStats from "./VulnerabilityStats.vue"
+import VulnerabilityStats from "./VulnerabilityStats/VulnerabilityStats.vue"
 
 const loading = ref(false)
 const message = useMessage()

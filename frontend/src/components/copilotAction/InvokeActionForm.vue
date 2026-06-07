@@ -14,7 +14,7 @@
 			</template>
 		</n-alert>
 
-		<n-form-item label="Target Agents" path="agent_names" required>
+		<n-form-item label="Target Agents" path="agent_names" required label-placement="top">
 			<div class="flex w-full flex-col gap-2">
 				<n-select
 					v-model:value="formValue.agent_names"

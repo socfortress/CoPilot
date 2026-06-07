@@ -1,5 +1,5 @@
 <template>
-	<div class="alerts-filters flex flex-wrap gap-3">
+	<div class="flex flex-wrap gap-3">
 		<div v-for="filter of filters" :key="filter.type">
 			<n-input-group v-if="filter.type === 'customer_code'">
 				<n-input-group-label size="small" class="flex! items-center gap-2">

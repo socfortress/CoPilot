@@ -1,6 +1,6 @@
 <template>
 	<Badge :color="getTechnologyColor(action.technology)">
-		<template #iconLeft><TechnologyIcon :action :size="14" /></template>
+		<template #iconLeft><TechnologyIcon :technology="action.technology" :size="14" /></template>
 		<template #value>
 			<span class="whitespace-nowrap">{{ action.technology }}</span>
 		</template>

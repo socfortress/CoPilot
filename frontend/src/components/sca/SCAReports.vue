@@ -76,6 +76,7 @@
 import type { DataTableColumns } from "naive-ui"
 import type { Customer } from "@/types/customers"
 import type { SCAReport, SCAReportGenerateRequest } from "@/types/sca.d"
+import { saveAs } from "file-saver"
 import { NButton, NCard, NDataTable, NModal, NSelect, NSpace, NTag, NTooltip, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
@@ -279,14 +280,7 @@ async function handleDownload(report: SCAReport) {
 	try {
 		const response = await Api.sca.downloadReport(report.id)
 
-		const url = window.URL.createObjectURL(new Blob([response.data]))
-		const link = document.createElement("a")
-		link.href = url
-		link.setAttribute("download", report.file_name)
-		document.body.appendChild(link)
-		link.click()
-		link.remove()
-		window.URL.revokeObjectURL(url)
+		saveAs(new Blob([response.data]), report.file_name)
 
 		message.success("Report downloaded successfully")
 	} catch (error: any) {

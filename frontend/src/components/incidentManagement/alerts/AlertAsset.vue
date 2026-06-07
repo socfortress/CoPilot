@@ -185,7 +185,7 @@
 				</n-tab-pane>
 				<n-tab-pane v-if="isWazuhSource" name="Data Store" tab="Data Store" display-directive="show:lazy">
 					<div class="p-7 pt-2">
-						<AgentDataStoreTabCompact v-if="asset.agent_id" :agent-id="asset.agent_id" />
+						<AgentDataStore v-if="asset.agent_id" :agent-id="asset.agent_id" />
 						<n-empty v-else description="No agent associated with this asset" class="h-40" />
 					</div>
 				</n-tab-pane>
@@ -223,9 +223,7 @@ const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 const LicenseFeatureCheck = defineAsyncComponent(() => import("@/components/license/LicenseFeatureCheck.vue"))
-const AgentDataStoreTabCompact = defineAsyncComponent(
-	() => import("@/components/agents/dataStore/AgentDataStoreTabCompact.vue")
-)
+const AgentDataStore = defineAsyncComponent(() => import("@/components/agents/dataStore/AgentDataStore.vue"))
 const FileCollectionForm = defineAsyncComponent(
 	() => import("@/components/agents/fileCollection/FileCollectionForm.vue")
 )

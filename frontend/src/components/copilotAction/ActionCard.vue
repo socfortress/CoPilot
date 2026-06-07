@@ -77,7 +77,7 @@
 			segmented
 		>
 			<template #header>
-				<div class="flex flex-col gap-2">
+				<div class="flex flex-wrap items-center gap-2">
 					<div class="flex">
 						<TechnologyBadge :action />
 					</div>

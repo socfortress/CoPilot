@@ -1,220 +1,172 @@
 <template>
-	<div class="patch-tuesday-stats">
-		<n-grid :x-gap="16" :y-gap="16" cols="1 s:2 m:4 l:5">
-			<!-- Total CVEs -->
-			<n-grid-item>
-				<n-card size="small" :bordered="false" class="stat-card">
-					<div class="stat-content">
-						<div class="stat-icon total">
-							<Icon :name="ShieldIcon" :size="24" />
-						</div>
-						<div class="stat-info">
-							<span class="stat-value">{{ summary?.unique_cves ?? "-" }}</span>
-							<span class="stat-label">Unique CVEs</span>
-						</div>
-					</div>
-				</n-card>
-			</n-grid-item>
+	<div class="@container flex flex-col gap-4">
+		<n-spin :show="loading">
+			<div class="flex flex-col gap-4">
+				<div class="grid grid-cols-1 gap-3 @md:grid-cols-2 @2xl:grid-cols-3 @6xl:grid-cols-5">
+					<CardLink
+						v-for="tile of statTiles"
+						:key="tile.id"
+						size="small"
+						:title="tile.title"
+						:value="tile.value"
+						:subtitle="tile.subtitle"
+						:icon-left="tile.iconLeft"
+						:color="tile.color"
+					/>
+				</div>
 
-			<!-- P0 Emergency -->
-			<n-grid-item>
-				<n-card size="small" :bordered="false" class="stat-card priority-p0">
-					<div class="stat-content">
-						<div class="stat-icon p0">
-							<Icon :name="AlertIcon" :size="24" />
-						</div>
-						<div class="stat-info">
-							<span class="stat-value">{{ summary?.by_priority?.P0 ?? 0 }}</span>
-							<span class="stat-label">P0 Emergency</span>
-						</div>
-					</div>
-				</n-card>
-			</n-grid-item>
+				<div v-if="summary" class="grid grid-cols-1 gap-4 @lg:grid-cols-2">
+					<CardStatsBars
+						title="By severity"
+						class="min-w-0"
+						:values="severityValues"
+						show-zero-items
+						:show-total="false"
+					/>
+					<CardStatsBars
+						title="By product family"
+						class="min-w-0"
+						:values="familyValues"
+						show-zero-items
+						:show-total="false"
+					/>
+				</div>
 
-			<!-- P1 High -->
-			<n-grid-item>
-				<n-card size="small" :bordered="false" class="stat-card priority-p1">
-					<div class="stat-content">
-						<div class="stat-icon p1">
-							<Icon :name="UrgentIcon" :size="24" />
+				<CardEntity v-if="summary" size="small" embedded>
+					<template #default>
+						<div class="flex flex-wrap items-center gap-2">
+							<Badge type="splitted" bright>
+								<template #label>Cycle</template>
+								<template #value>{{ summary.cycle }}</template>
+							</Badge>
+							<Badge type="splitted" bright>
+								<template #label>Patch Tuesday</template>
+								<template #value>{{ formatDate(summary.patch_tuesday_date, "MMM D, YYYY") }}</template>
+							</Badge>
+							<Badge type="splitted" bright>
+								<template #label>Total records</template>
+								<template #value>{{ summary.total_records.toLocaleString() }}</template>
+							</Badge>
+							<Badge type="splitted" bright>
+								<template #label>Generated</template>
+								<template #value>
+									{{ formatDate(summary.generated_utc, "MMM D, YYYY HH:mm", { tz: true }) }}
+								</template>
+							</Badge>
 						</div>
-						<div class="stat-info">
-							<span class="stat-value">{{ summary?.by_priority?.P1 ?? 0 }}</span>
-							<span class="stat-label">P1 High</span>
-						</div>
-					</div>
-				</n-card>
-			</n-grid-item>
-
-			<!-- P2 Medium -->
-			<n-grid-item>
-				<n-card size="small" :bordered="false" class="stat-card priority-p2">
-					<div class="stat-content">
-						<div class="stat-icon p2">
-							<Icon :name="InfoIcon" :size="24" />
-						</div>
-						<div class="stat-info">
-							<span class="stat-value">{{ summary?.by_priority?.P2 ?? 0 }}</span>
-							<span class="stat-label">P2 Medium</span>
-						</div>
-					</div>
-				</n-card>
-			</n-grid-item>
-
-			<!-- P3 Low -->
-			<n-grid-item>
-				<n-card size="small" :bordered="false" class="stat-card priority-p3">
-					<div class="stat-content">
-						<div class="stat-icon p3">
-							<Icon :name="CheckIcon" :size="24" />
-						</div>
-						<div class="stat-info">
-							<span class="stat-value">{{ summary?.by_priority?.P3 ?? 0 }}</span>
-							<span class="stat-label">P3 Low</span>
-						</div>
-					</div>
-				</n-card>
-			</n-grid-item>
-		</n-grid>
-
-		<!-- Additional Info Bar -->
-		<div v-if="summary" class="info-bar mt-4">
-			<n-space :size="24">
-				<span class="info-item">
-					<Icon :name="CalendarIcon" class="mr-1" />
-					Patch Tuesday:
-					<strong>{{ formatDate(summary.patch_tuesday_date) }}</strong>
-				</span>
-				<span class="info-item">
-					<Icon :name="DatabaseIcon" class="mr-1" />
-					Total Records:
-					<strong>{{ summary.total_records }}</strong>
-				</span>
-				<span class="info-item">
-					<Icon :name="ClockIcon" class="mr-1" />
-					Generated:
-					<strong>{{ formatDateTime(summary.generated_utc) }}</strong>
-				</span>
-			</n-space>
-		</div>
+					</template>
+				</CardEntity>
+			</div>
+		</n-spin>
 	</div>
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
+import type { CardLinkColor } from "@/components/common/cards/CardLink.vue"
+import type { ItemProps } from "@/components/common/cards/CardStatsBars.vue"
 import type { PatchTuesdaySummary } from "@/types/patchTuesday.d"
-import { NCard, NGrid, NGridItem, NSpace } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
+import { NSpin } from "naive-ui"
+import { computed } from "vue"
+import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
+import CardLink from "@/components/common/cards/CardLink.vue"
+import CardStatsBars from "@/components/common/cards/CardStatsBars.vue"
+import { formatDate } from "@/utils/format"
 
-defineProps<{
+const props = defineProps<{
 	summary: PatchTuesdaySummary | null
 	loading?: boolean
 }>()
-const AlertIcon = "carbon:warning"
-const CalendarIcon = "carbon:calendar"
-const CheckIcon = "carbon:checkmark-filled"
-const ClockIcon = "carbon:time"
-const DatabaseIcon = "carbon:data-base"
-const InfoIcon = "carbon:information"
+
 const ShieldIcon = "carbon:security"
+const AlertIcon = "carbon:warning"
 const UrgentIcon = "carbon:warning-hex"
+const InfoIcon = "carbon:information"
+const CheckIcon = "carbon:checkmark-filled"
 
-function formatDate(dateStr: string): string {
-	if (!dateStr) return "-"
-	return new Date(dateStr).toLocaleDateString("en-US", {
-		year: "numeric",
-		month: "long",
-		day: "numeric"
-	})
+interface StatTile {
+	id: string
+	title: string
+	value: string | number
+	subtitle?: string
+	iconLeft: string
+	color?: CardLinkColor
 }
 
-function formatDateTime(dateStr: string): string {
-	if (!dateStr) return "-"
-	return new Date(dateStr).toLocaleString("en-US", {
-		month: "short",
-		day: "numeric",
-		hour: "2-digit",
-		minute: "2-digit"
-	})
+const statTiles = computed<StatTile[]>(() => {
+	const s = props.summary
+
+	return [
+		{
+			id: "total",
+			title: "Unique CVEs",
+			value: s?.unique_cves ?? "-",
+			subtitle: s ? `${s.total_records.toLocaleString()} total records` : undefined,
+			iconLeft: ShieldIcon,
+			color: "primary"
+		},
+		{
+			id: "p0",
+			title: "P0 Emergency",
+			value: s?.by_priority?.P0 ?? 0,
+			subtitle: "Patch within 72 hours",
+			iconLeft: AlertIcon,
+			color: "danger"
+		},
+		{
+			id: "p1",
+			title: "P1 High",
+			value: s?.by_priority?.P1 ?? 0,
+			subtitle: "Patch within 7 days",
+			iconLeft: UrgentIcon,
+			color: "warning"
+		},
+		{
+			id: "p2",
+			title: "P2 Medium",
+			value: s?.by_priority?.P2 ?? 0,
+			subtitle: "Patch within 30 days",
+			iconLeft: InfoIcon
+		},
+		{
+			id: "p3",
+			title: "P3 Low",
+			value: s?.by_priority?.P3 ?? 0,
+			subtitle: "Next maintenance window",
+			iconLeft: CheckIcon,
+			color: "success"
+		}
+	]
+})
+
+const severityStatusByLabel: Record<string, ItemProps["status"]> = {
+	Critical: "error",
+	Important: "warning",
+	Moderate: "muted",
+	Low: "success"
 }
+
+const severityValues = computed<ItemProps[]>(() => {
+	if (!props.summary?.by_severity) return []
+
+	return Object.entries(props.summary.by_severity)
+		.sort(([, a], [, b]) => b - a)
+		.map(([label, value]) => ({
+			label,
+			value,
+			status: severityStatusByLabel[label] ?? "muted"
+		}))
+})
+
+const familyValues = computed<ItemProps[]>(() => {
+	if (!props.summary?.by_family) return []
+
+	return Object.entries(props.summary.by_family)
+		.sort(([, a], [, b]) => b - a)
+		.map(([label, value]) => ({
+			label,
+			value,
+			status: "primary" as const
+		}))
+})
 </script>
-
-<style scoped lang="scss">
-.patch-tuesday-stats {
-	.stat-card {
-		border-radius: 8px;
-		background: var(--bg-secondary-color);
-
-		.stat-content {
-			display: flex;
-			align-items: center;
-			gap: 12px;
-		}
-
-		.stat-icon {
-			width: 48px;
-			height: 48px;
-			border-radius: 8px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-
-			&.total {
-				background: rgba(99, 102, 241, 0.15);
-				color: #6366f1;
-			}
-
-			&.p0 {
-				background: rgba(239, 68, 68, 0.15);
-				color: #ef4444;
-			}
-
-			&.p1 {
-				background: rgba(249, 115, 22, 0.15);
-				color: #f97316;
-			}
-
-			&.p2 {
-				background: rgba(234, 179, 8, 0.15);
-				color: #eab308;
-			}
-
-			&.p3 {
-				background: rgba(34, 197, 94, 0.15);
-				color: #22c55e;
-			}
-		}
-
-		.stat-info {
-			display: flex;
-			flex-direction: column;
-
-			.stat-value {
-				font-size: 1.5rem;
-				font-weight: 700;
-				line-height: 1.2;
-			}
-
-			.stat-label {
-				font-size: 0.75rem;
-				opacity: 0.7;
-				text-transform: uppercase;
-				letter-spacing: 0.5px;
-			}
-		}
-	}
-
-	.info-bar {
-		padding: 12px 16px;
-		background: var(--bg-secondary-color);
-		border-radius: 8px;
-
-		.info-item {
-			display: inline-flex;
-			align-items: center;
-			font-size: 0.875rem;
-			opacity: 0.8;
-		}
-	}
-}
-</style>

@@ -96,6 +96,7 @@ async def list_enabled_dashboards_multi(
     db: AsyncSession = Depends(get_db),
 ) -> EnabledDashboardsListResponse:
     # Resolve the requested subset against the user's access (never widens scope).
+    logger.info(f"Listing enabled dashboards for user {current_user.username} with requested customer_codes={customer_codes}")
     effective_customers = await customer_access_handler.resolve_effective_customers(current_user, customer_codes, db)
     rows = await get_enabled_dashboards_for_customers(effective_customers, db)
     return EnabledDashboardsListResponse(
