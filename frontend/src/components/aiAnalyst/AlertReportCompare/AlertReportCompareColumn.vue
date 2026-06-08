@@ -11,7 +11,7 @@
 			</Badge>
 			<Badge type="splitted">
 				<template #label>Created</template>
-				<template #value>{{ formatDate(report.created_at, "MMM D, YYYY HH:mm") }}</template>
+				<template #value>{{ formatDate(report.created_at, dFormats.datetime) }}</template>
 			</Badge>
 		</div>
 
@@ -53,6 +53,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import Markdown from "@/components/common/Markdown.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
@@ -70,4 +71,6 @@ const severityColor = computed(() => {
 	if (severity === "Low" || severity === "Informational") return "success"
 	return undefined
 })
+
+const dFormats = useSettingsStore().dateFormat
 </script>

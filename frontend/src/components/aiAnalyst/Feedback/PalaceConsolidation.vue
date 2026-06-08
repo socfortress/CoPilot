@@ -157,7 +157,7 @@
 												<Badge type="splitted" size="small">
 													<template #label>Created at</template>
 													<template #value>
-														{{ formatDate(ls.created_at, "MMM D") }}
+														{{ formatDate(ls.created_at, dFormats.date) }}
 													</template>
 												</Badge>
 											</div>
@@ -180,7 +180,7 @@
 					</n-collapse-item>
 				</n-collapse>
 
-				<p class="text-xs">Generated {{ formatDate(data.generated_at, "MMM D, YYYY HH:mm") }} UTC</p>
+				<p class="text-xs">Generated {{ formatDate(data.generated_at, dFormats.datetime) }} UTC</p>
 			</div>
 		</n-spin>
 
@@ -211,6 +211,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
@@ -218,6 +219,7 @@ const props = defineProps<{
 	customerCode: string
 }>()
 
+const dFormats = useSettingsStore().dateFormat
 const RefreshIcon = "carbon:renew"
 const WarningIcon = "carbon:warning"
 

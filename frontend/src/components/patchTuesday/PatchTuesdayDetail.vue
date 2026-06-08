@@ -50,7 +50,7 @@
 					<Badge type="splitted" bright size="small">
 						<template #label>Updated</template>
 						<template #value>
-							{{ formatDate(item.timestamp_utc, "MMM D, YYYY HH:mm", { tz: true }) }}
+							{{ formatDate(item.timestamp_utc, dFormats.datetime, { tz: true }) }}
 						</template>
 					</Badge>
 				</div>
@@ -149,11 +149,11 @@
 				<div class="grid grid-cols-1 gap-2 @md:grid-cols-2">
 					<CardKV v-if="item.kev.due_date" color="danger">
 						<template #key>Remediation Due</template>
-						<template #value>{{ formatDate(item.kev.due_date, "MMM D, YYYY") }}</template>
+						<template #value>{{ formatDate(item.kev.due_date, dFormats.date) }}</template>
 					</CardKV>
 					<CardKV v-if="item.kev.date_added">
 						<template #key>Date Added</template>
-						<template #value>{{ formatDate(item.kev.date_added, "MMM D, YYYY") }}</template>
+						<template #value>{{ formatDate(item.kev.date_added, dFormats.date) }}</template>
 					</CardKV>
 					<CardKV v-if="item.kev.known_ransomware_campaign_use" class="col-span-full">
 						<template #key>Ransomware Use</template>
@@ -257,6 +257,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { PriorityLevel } from "@/types/patchTuesday.d"
 import { formatDate } from "@/utils/format"
 import PatchTuesdayPriorityBadge from "./PatchTuesdayPriorityBadge.vue"
@@ -267,6 +268,7 @@ const props = defineProps<{
 
 const { item } = toRefs(props)
 
+const dFormats = useSettingsStore().dateFormat
 const AlertIcon = "carbon:warning"
 const ExternalLinkIcon = "carbon:launch"
 

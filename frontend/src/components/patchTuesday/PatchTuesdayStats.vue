@@ -41,7 +41,7 @@
 							</Badge>
 							<Badge type="splitted" bright>
 								<template #label>Patch Tuesday</template>
-								<template #value>{{ formatDate(summary.patch_tuesday_date, "MMM D, YYYY") }}</template>
+								<template #value>{{ formatDate(summary.patch_tuesday_date, dFormats.date) }}</template>
 							</Badge>
 							<Badge type="splitted" bright>
 								<template #label>Total records</template>
@@ -50,7 +50,7 @@
 							<Badge type="splitted" bright>
 								<template #label>Generated</template>
 								<template #value>
-									{{ formatDate(summary.generated_utc, "MMM D, YYYY HH:mm", { tz: true }) }}
+									{{ formatDate(summary.generated_utc, dFormats.datetime, { tz: true }) }}
 								</template>
 							</Badge>
 						</div>
@@ -71,6 +71,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import CardStatsBars from "@/components/common/cards/CardStatsBars.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
@@ -78,6 +79,7 @@ const props = defineProps<{
 	loading?: boolean
 }>()
 
+const dFormats = useSettingsStore().dateFormat
 const ShieldIcon = "carbon:security"
 const AlertIcon = "carbon:warning"
 const UrgentIcon = "carbon:warning-hex"

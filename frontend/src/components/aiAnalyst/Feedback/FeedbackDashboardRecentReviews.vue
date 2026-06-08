@@ -16,7 +16,7 @@
 				</template>
 				<template #headerExtra>
 					<span class="text-secondary text-sm">
-						{{ formatDate(r.updated_at ?? r.created_at, "MMM D, YYYY HH:mm") }}
+						{{ formatDate(r.updated_at ?? r.created_at, dFormats.datetime) }}
 					</span>
 				</template>
 				<template #default>
@@ -72,6 +72,7 @@ import { NCard } from "naive-ui"
 import { ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import FeedbackDashboardRecentReviewDetail from "./FeedbackDashboardRecentReviewDetail.vue"
 
@@ -81,6 +82,7 @@ const props = defineProps<{
 
 const { stats } = toRefs(props)
 
+const dFormats = useSettingsStore().dateFormat
 const showDrawer = ref(false)
 const drawerReview = ref<AiAnalystReview | null>(null)
 
