@@ -44,7 +44,7 @@ class Routing(BaseModel):
 class IndexInfo(BaseModel):
     all_shards: ShardInfo
     primary_shards: ShardInfo
-    reopened: bool
+    reopened: Optional[bool] = Field(None, description="Reopened")
     routing: List[Routing]
 
 
