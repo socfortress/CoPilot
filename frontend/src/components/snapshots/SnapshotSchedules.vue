@@ -1,45 +1,34 @@
 <template>
 	<div class="flex flex-col gap-4">
-		<div class="flex items-center justify-between">
-			<h2 class="text-lg font-semibold">Scheduled Snapshots</h2>
-			<div class="flex items-center gap-2">
-				<n-button :loading @click="fetchSchedules">
-					<template #icon>
-						<Icon :name="RefreshIcon" :size="16" />
-					</template>
-					Refresh
-				</n-button>
-				<n-button type="primary" @click="showCreateModal = true">
-					<template #icon>
-						<Icon :name="AddIcon" :size="16" />
-					</template>
-					Create Schedule
-				</n-button>
-			</div>
+		<div>
+			<n-button type="primary" size="small" @click="showCreateModal = true">
+				<template #icon>
+					<Icon :name="AddIcon" :size="16" />
+				</template>
+				Create Schedule
+			</n-button>
 		</div>
 
 		<n-spin :show="loading">
-			<n-card>
-				<n-data-table
-					:columns
-					:data="schedules"
-					:bordered="false"
-					:single-line="false"
-					size="small"
-					:row-key="(row: SnapshotScheduleResponse) => row.id"
+			<div v-if="schedules.length" class="flex flex-col gap-3">
+				<SnapshotScheduleCard
+					v-for="schedule in schedules"
+					:key="schedule.id"
+					:schedule
+					@toggle-enabled="enabled => toggleEnabled(schedule, enabled)"
+					@edit="openEditModal(schedule)"
+					@delete="deleteSchedule(schedule)"
 				/>
-			</n-card>
+			</div>
+
+			<n-empty v-else-if="!loading" description="No snapshot schedules configured" class="min-h-48 justify-center" />
 		</n-spin>
 
-		<n-empty v-if="!loading && schedules.length === 0" description="No snapshot schedules configured" />
-
-		<!-- Create Schedule Modal -->
-		<n-modal v-model:show="showCreateModal" preset="dialog" title="Create Snapshot Schedule" style="width: 600px">
+		<n-modal v-model:show="showCreateModal" preset="card" title="Create Snapshot Schedule" class="max-w-160!">
 			<SnapshotScheduleForm @success="onScheduleCreated" @cancel="showCreateModal = false" />
 		</n-modal>
 
-		<!-- Edit Schedule Modal -->
-		<n-modal v-model:show="showEditModal" preset="dialog" title="Edit Snapshot Schedule" style="width: 600px">
+		<n-modal v-model:show="showEditModal" preset="card" title="Edit Snapshot Schedule" class="max-w-160!">
 			<SnapshotScheduleForm
 				:schedule="selectedSchedule"
 				@success="onScheduleUpdated"
@@ -50,17 +39,15 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
-import type { DataTableColumns } from "naive-ui"
 import type { SnapshotScheduleResponse } from "@/types/snapshots.d"
-import { NButton, NCard, NDataTable, NEmpty, NModal, NPopconfirm, NSpin, NSwitch, NTag, useMessage } from "naive-ui"
-import { h, onBeforeMount, ref } from "vue"
+import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import SnapshotScheduleCard from "./SnapshotScheduleCard.vue"
 import SnapshotScheduleForm from "./SnapshotScheduleForm.vue"
 
 const AddIcon = "carbon:add"
-const RefreshIcon = "carbon:renew"
 
 const message = useMessage()
 const loading = ref(false)
@@ -68,137 +55,6 @@ const schedules = ref<SnapshotScheduleResponse[]>([])
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const selectedSchedule = ref<SnapshotScheduleResponse | null>(null)
-
-const columns: DataTableColumns<SnapshotScheduleResponse> = [
-	{
-		title: "Name",
-		key: "name",
-		sorter: "default"
-	},
-	{
-		title: "Index Pattern",
-		key: "index_pattern",
-		render(row) {
-			return h("code", { class: "text-sm" }, row.index_pattern)
-		}
-	},
-	{
-		title: "Repository",
-		key: "repository"
-	},
-	{
-		title: "Enabled",
-		key: "enabled",
-		render(row) {
-			return h(NSwitch, {
-				value: row.enabled,
-				onUpdateValue: (value: boolean) => toggleEnabled(row, value)
-			})
-		}
-	},
-	{
-		title: "Retention",
-		key: "retention_days",
-		render(row) {
-			return row.retention_days ? `${row.retention_days} days` : "Forever"
-		}
-	},
-	{
-		title: "Schedule",
-		key: "scheduled_hour",
-		render(row) {
-			const hour = row.scheduled_hour
-			const minute = row.scheduled_minute
-			const interval = row.interval_days ?? 1
-			const tz = row.timezone || "UTC"
-			const dow = row.day_of_week
-			// Python convention: Monday=0 ... Sunday=6.
-			const weekdayNames = ["Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays", "Sundays"]
-
-			let cadence: string
-			if (dow != null) {
-				const dayLabel = weekdayNames[dow] ?? `Day ${dow}`
-				cadence = interval > 1 ? `${dayLabel} every ${interval} days` : dayLabel
-			} else {
-				cadence = interval === 1 ? "Daily" : `Every ${interval} days`
-			}
-
-			if (hour == null) {
-				return h("div", { class: "flex flex-col" }, [
-					h("span", {}, cadence),
-					h("span", { class: "text-xs text-gray-500" }, "Any hour")
-				])
-			}
-
-			const hourStr = String(hour).padStart(2, "0")
-			const minStr = String(minute ?? 0).padStart(2, "0")
-
-			return h("div", { class: "flex flex-col" }, [
-				h("span", {}, `${cadence} at ${hourStr}:${minStr}`),
-				h("span", { class: "text-xs text-gray-500" }, tz)
-			])
-		}
-	},
-	{
-		title: "Last Execution",
-		key: "last_execution_time",
-		render(row) {
-			if (!row.last_execution_time) return "-"
-			const status = row.last_execution_status || ""
-			const tagType = status.startsWith("SUCCESS")
-				? "success"
-				: status.startsWith("SKIPPED") || status.startsWith("DEFERRED")
-					? "warning"
-					: "error"
-			return h("div", { class: "flex flex-col" }, [
-				h("span", {}, new Date(row.last_execution_time).toLocaleString()),
-				h(
-					NTag,
-					{
-						type: tagType,
-						size: "small",
-						class: "mt-1"
-					},
-					() => status.split(":")[0] || "Unknown"
-				)
-			])
-		}
-	},
-	{
-		title: "Last Snapshot",
-		key: "last_snapshot_name",
-		render(row) {
-			return row.last_snapshot_name || "-"
-		}
-	},
-	{
-		title: "Actions",
-		key: "actions",
-		width: 150,
-		render(row) {
-			return h("div", { class: "flex gap-2" }, [
-				h(
-					NButton,
-					{
-						size: "small",
-						onClick: () => openEditModal(row)
-					},
-					() => "Edit"
-				),
-				h(
-					NPopconfirm,
-					{
-						onPositiveClick: () => deleteSchedule(row)
-					},
-					{
-						trigger: () => h(NButton, { size: "small", type: "error" }, () => "Delete"),
-						default: () => "Are you sure you want to delete this schedule?"
-					}
-				)
-			])
-		}
-	}
-]
 
 function openEditModal(schedule: SnapshotScheduleResponse) {
 	selectedSchedule.value = schedule
