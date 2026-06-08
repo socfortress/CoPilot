@@ -1,8 +1,8 @@
 <template>
-	<div class="sca-reports">
-		<div class="header mb-6 flex items-center justify-between">
-			<div>
-				<h2 class="mb-2 text-2xl font-bold">SCA Reports</h2>
+	<div class="flex flex-col gap-4">
+		<div class="flex items-center justify-between gap-4">
+			<div class="flex flex-col gap-1">
+				<h2 class="text-2xl font-bold">SCA Reports</h2>
 				<p class="text-secondary">Generate, manage, and download Security Configuration Assessment reports</p>
 			</div>
 			<n-button type="primary" size="large" @click="showGenerateModal = true">
@@ -13,40 +13,42 @@
 			</n-button>
 		</div>
 
-		<!-- Filters -->
-		<n-card class="mb-6">
-			<div class="flex gap-4">
-				<n-select
-					v-model:value="filterCustomerCode"
-					:options="customerOptions"
-					placeholder="Filter by Customer"
-					clearable
-					filterable
-					class="flex-1"
-					@update:value="loadReports"
-				/>
-				<n-button :loading @click="loadReports">
-					<template #icon>
-						<Icon :name="RefreshIcon" />
-					</template>
-					Refresh
-				</n-button>
+		<n-select
+			v-model:value="filterCustomerCode"
+			:options="customerOptions"
+			placeholder="Filter by Customer"
+			clearable
+			filterable
+			@update:value="onFilterChange"
+		/>
+
+		<n-spin :show="loading">
+			<div v-if="reports.length" class="flex flex-col gap-4">
+				<div class="flex flex-col gap-3">
+					<SCAReportCard
+						v-for="report in paginatedReports"
+						:key="report.id"
+						:report
+						@download="handleDownload(report)"
+						@delete="handleDeleteClick(report)"
+					/>
+				</div>
+
+				<div v-if="reports.length > pageSize" class="flex justify-end">
+					<n-pagination
+						v-model:page="currentPage"
+						v-model:page-size="pageSize"
+						:item-count="reports.length"
+						:page-sizes="[10, 20, 50, 100]"
+						show-size-picker
+					/>
+				</div>
 			</div>
-		</n-card>
 
-		<!-- Reports Table -->
-		<n-card>
-			<n-data-table :columns :data="reports" :loading :pagination :row-key="(row: SCAReport) => row.id" />
-		</n-card>
+			<n-empty v-else description="No SCA reports found" class="min-h-48 justify-center" />
+		</n-spin>
 
-		<!-- Generate Report Modal -->
-		<n-modal
-			v-model:show="showGenerateModal"
-			preset="card"
-			title="Generate SCA Report"
-			style="width: 600px; max-width: 90vw"
-			closable
-		>
+		<n-modal v-model:show="showGenerateModal" preset="card" title="Generate SCA Report" class="max-w-160!" closable>
 			<GenerateReportForm
 				:customers
 				:loading="generating"
@@ -55,7 +57,6 @@
 			/>
 		</n-modal>
 
-		<!-- Delete Confirmation Modal -->
 		<n-modal
 			v-model:show="showDeleteModal"
 			preset="dialog"
@@ -72,29 +73,19 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
-import type { DataTableColumns } from "naive-ui"
 import type { Customer } from "@/types/customers"
 import type { SCAReport, SCAReportGenerateRequest } from "@/types/sca.d"
 import { saveAs } from "file-saver"
-import { NButton, NCard, NDataTable, NModal, NSelect, NSpace, NTag, NTooltip, useMessage } from "naive-ui"
-import { computed, h, onBeforeMount, ref } from "vue"
+import { NButton, NEmpty, NModal, NPagination, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { useSettingsStore } from "@/stores/settings"
-import { formatBytes, formatDate } from "@/utils/format"
 import GenerateReportForm from "./GenerateReportForm.vue"
+import SCAReportCard from "./SCAReportCard.vue"
 
 const AddIcon = "carbon:document-add"
-const RefreshIcon = "carbon:renew"
-const DownloadIcon = "carbon:download"
-const DeleteIcon = "carbon:trash-can"
-const CheckIcon = "carbon:checkmark-filled"
-const ErrorIcon = "carbon:warning-filled"
-const LoadingIcon = "eos-icons:loading"
 
 const message = useMessage()
-const dFormats = useSettingsStore().dateFormat
 
 const loading = ref(false)
 const generating = ref(false)
@@ -104,127 +95,24 @@ const showDeleteModal = ref(false)
 const reportToDelete = ref<SCAReport | null>(null)
 const filterCustomerCode = ref<string | null>(null)
 const customers = ref<Array<{ label: string; value: string }>>([])
+const currentPage = ref(1)
+const pageSize = ref(20)
 
 const customerOptions = computed(() => [...customers.value])
 
-const pagination = {
-	pageSize: 20,
-	showSizePicker: true,
-	pageSizes: [10, 20, 50, 100]
+const paginatedReports = computed(() => {
+	const start = (currentPage.value - 1) * pageSize.value
+	return reports.value.slice(start, start + pageSize.value)
+})
+
+function onFilterChange() {
+	currentPage.value = 1
+	loadReports()
 }
 
-const columns: DataTableColumns<SCAReport> = [
-	{
-		title: "Report Name",
-		key: "report_name",
-		ellipsis: {
-			tooltip: true
-		}
-	},
-	{
-		title: "Customer",
-		key: "customer_code",
-		width: 120
-	},
-	{
-		title: "Status",
-		key: "status",
-		width: 120,
-		render: (row: SCAReport) => {
-			const statusMap = {
-				completed: { type: "success", icon: CheckIcon, text: "Completed" },
-				processing: { type: "warning", icon: LoadingIcon, text: "Processing" },
-				failed: { type: "error", icon: ErrorIcon, text: "Failed" }
-			}
-			const status = statusMap[row.status]
-			return h(
-				NTag,
-				{ type: status.type as any, size: "small" },
-				{
-					default: () => status.text,
-					icon: () => h(Icon, { name: status.icon, size: 14 })
-				}
-			)
-		}
-	},
-	{
-		title: "Policies",
-		key: "total_policies",
-		width: 100,
-		render: (row: SCAReport) => row.total_policies.toLocaleString()
-	},
-	{
-		title: "Checks",
-		key: "total_checks",
-		width: 140,
-		render: (row: SCAReport) => {
-			return h(
-				NTooltip,
-				{},
-				{
-					trigger: () => row.total_checks.toLocaleString(),
-					default: () =>
-						h("div", {}, [
-							h("div", {}, `Passed: ${row.passed_count}`),
-							h("div", {}, `Failed: ${row.failed_count}`),
-							h("div", {}, `Invalid: ${row.invalid_count}`)
-						])
-				}
-			)
-		}
-	},
-	{
-		title: "File Size",
-		key: "file_size",
-		width: 120,
-		render: (row: SCAReport) => formatBytes(row.file_size)
-	},
-	{
-		title: "Generated",
-		key: "generated_at",
-		width: 180,
-		render: (row: SCAReport) => `${formatDate(row.generated_at, dFormats.datetime)}`
-	},
-	{
-		title: "Actions",
-		key: "actions",
-		width: 140,
-		render: (row: SCAReport) => {
-			return h(
-				NSpace,
-				{ size: "small" },
-				{
-					default: () => [
-						row.status === "completed"
-							? h(
-									NButton,
-									{
-										size: "small",
-										type: "primary",
-										onClick: () => handleDownload(row)
-									},
-									{
-										icon: () => h(Icon, { name: DownloadIcon })
-									}
-								)
-							: null,
-						h(
-							NButton,
-							{
-								size: "small",
-								type: "error",
-								onClick: () => handleDeleteClick(row)
-							},
-							{
-								icon: () => h(Icon, { name: DeleteIcon })
-							}
-						)
-					]
-				}
-			)
-		}
-	}
-]
+watch(pageSize, () => {
+	currentPage.value = 1
+})
 
 async function loadReports() {
 	loading.value = true
@@ -318,9 +206,3 @@ onBeforeMount(() => {
 	loadCustomers()
 })
 </script>
-
-<style scoped>
-.sca-reports {
-	padding: 20px;
-}
-</style>
