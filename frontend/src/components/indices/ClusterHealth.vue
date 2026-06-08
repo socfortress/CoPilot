@@ -1,30 +1,34 @@
 <template>
-	<n-card class="cluster-health" segmented>
+	<n-card segmented>
 		<template #header>
-			<div class="align-center flex justify-between">
+			<div class="flex items-center justify-between">
 				<span>Overall Health</span>
 				<IndexIcon v-if="cluster" :health="cluster.status" color />
 			</div>
 		</template>
 		<n-spin :show="loading">
 			<div v-if="cluster" class="min-h-14">
-				<n-scrollbar style="max-height: 500px" trigger="none">
-					<div class="card-wrap">
-						<div v-for="prop of propsOrder" :key="prop" class="box">
+				<n-scrollbar class="max-h-125" trigger="none">
+					<div class="columns-[12rem] gap-6 px-4 py-3">
+						<div
+							v-for="prop of propsOrder"
+							:key="prop"
+							class="mb-6 flex break-inside-avoid flex-col gap-1 overflow-hidden"
+						>
+							<div class="text-secondary font-mono text-xs uppercase">
+								{{ sanitizeLabel(prop) }}
+							</div>
 							<template v-if="prop === 'status'">
-								<div class="value align-center flex gap-2 uppercase">
+								<div class="flex items-center gap-2 font-bold whitespace-nowrap uppercase">
 									<IndexIcon :health="cluster.status" color />
 									{{ cluster.status }}
 								</div>
 							</template>
 							<template v-else>
-								<div class="value">
+								<div class="font-bold whitespace-nowrap">
 									{{ cluster[prop] }}
 								</div>
 							</template>
-							<div class="label">
-								{{ sanitizeLabel(prop) }}
-							</div>
 						</div>
 					</div>
 				</n-scrollbar>
@@ -105,31 +109,3 @@ onBeforeMount(() => {
 	getClusterHealth()
 })
 </script>
-
-<style lang="scss" scoped>
-.cluster-health {
-	.card-wrap {
-		gap: calc(var(--spacing) * 6);
-		column-gap: calc(var(--spacing) * 6);
-		padding-inline: calc(var(--spacing) * 4);
-		padding-block: calc(var(--spacing) * 3);
-		column-width: 12rem;
-		column-count: auto;
-
-		.box {
-			overflow: hidden;
-			margin-bottom: calc(var(--spacing) * 6);
-			.value {
-				font-weight: bold;
-				margin-bottom: 2px;
-				white-space: nowrap;
-			}
-			.label {
-				font-size: var(--text-xs);
-				font-family: var(--font-family-mono);
-				opacity: 0.8;
-			}
-		}
-	}
-}
-</style>

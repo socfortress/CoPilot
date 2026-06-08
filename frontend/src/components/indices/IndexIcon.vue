@@ -1,8 +1,8 @@
 <template>
 	<span class="index-icon" :class="[`health-${health}`, { color }]">
-		<Icon v-if="health === IndexHealth.GREEN" :name="ShieldIcon" :size="18" />
-		<Icon v-if="health === IndexHealth.YELLOW" :name="WarningIcon" :size="18" />
-		<Icon v-if="health === IndexHealth.RED" :name="DangerIcon" :size="18" />
+		<Icon v-if="health === IndexHealth.GREEN" :name="ShieldIcon" :size="size || 18" />
+		<Icon v-if="health === IndexHealth.YELLOW" :name="WarningIcon" :size="size || 18" />
+		<Icon v-if="health === IndexHealth.RED" :name="DangerIcon" :size="size || 18" />
 	</span>
 </template>
 
@@ -15,6 +15,7 @@ import { IndexHealth } from "@/types/indices.d"
 const props = defineProps<{
 	health: IndexStats["health"]
 	color?: boolean
+	size?: number
 }>()
 const ShieldIcon = "majesticons:shield-check-line"
 const WarningIcon = "majesticons:shield-exclamation-line"

@@ -1,74 +1,64 @@
 <template>
-	<CardEntity class="index-card" :loading :class="[`health-${index.health}`]">
-		<div class="wrapper">
-			<div class="group">
-				<div class="box">
-					<div class="value">
-						{{ index.index }}
-					</div>
-					<div class="label">name</div>
-				</div>
-				<div class="box">
-					<div class="value align-center flex gap-2 uppercase">
-						<IndexIcon :health="index.health" color />
-						{{ index.health }}
-					</div>
-					<div class="label">health</div>
-				</div>
+	<CardEntity size="small" embedded :loading :status="healthStatus" header-box-class="flex-nowrap! items-start">
+		<template #headerMain>
+			<span class="text-default truncate font-mono text-sm font-semibold" :title="index.index">
+				{{ index.index }}
+			</span>
+		</template>
+
+		<template #headerExtra>
+			<Badge type="splitted" bright size="small" :color="healthBadgeColor">
+				<template #label>
+					<span class="inline-flex items-center gap-1">
+						<IndexIcon :health="index.health" color :size="14" />
+						Health
+					</span>
+				</template>
+				<template #value>{{ index.health }}</template>
+			</Badge>
+		</template>
+
+		<template #footerMain>
+			<div class="flex flex-wrap items-center gap-2">
+				<Badge type="splitted" bright size="small">
+					<template #label>Store</template>
+					<template #value>{{ index.store_size }}</template>
+				</Badge>
+				<Badge type="splitted" bright size="small">
+					<template #label>Docs</template>
+					<template #value>{{ index.docs_count }}</template>
+				</Badge>
+				<Badge type="splitted" bright size="small">
+					<template #label>Replicas</template>
+					<template #value>{{ index.replica_count }}</template>
+				</Badge>
 			</div>
-			<div class="group">
-				<div class="box">
-					<div class="value">
-						{{ index.store_size }}
-					</div>
-					<div class="label">store_size</div>
-				</div>
-				<div class="box">
-					<div class="value">
-						{{ index.docs_count }}
-					</div>
-					<div class="label">docs_count</div>
-				</div>
-				<div class="box">
-					<div class="value">
-						{{ index.replica_count }}
-					</div>
-					<div class="label">replica_count</div>
-				</div>
-			</div>
-			<div v-if="showActions" class="actions group">
-				<div class="box">
-					<!--
-						<el-tooltip content="Rotate" placement="top" :show-arrow="false">
-							<el-button type="primary" :icon="RefreshIcon" circle />
-						</el-tooltip>
-					-->
-					<n-tooltip content="Delete">
-						Delete
-						<template #trigger>
-							<n-button quaternary circle type="error" @click.stop="handleDelete">
-								<template #icon>
-									<Icon :name="DeleteIcon" />
-								</template>
-							</n-button>
-						</template>
-					</n-tooltip>
-				</div>
-			</div>
-		</div>
+		</template>
+
+		<template v-if="showActions" #footerExtra>
+			<n-button quaternary type="error" size="small" @click.stop="handleDelete">
+				<template #icon>
+					<Icon :name="DeleteIcon" :size="15" />
+				</template>
+				Delete
+			</n-button>
+		</template>
 	</CardEntity>
 </template>
 
 <script setup lang="ts">
+import type { BadgeColor } from "@/components/common/Badge.vue"
 import type { IndexStats } from "@/types/indices.d"
-import { NButton, NTooltip, useDialog, useMessage } from "naive-ui"
-import { h, ref, toRefs } from "vue"
+import { NButton, useDialog, useMessage } from "naive-ui"
+import { computed, h, ref } from "vue"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
+import { IndexHealth } from "@/types/indices.d"
 
-const props = defineProps<{
+const { index, showActions } = defineProps<{
 	index: IndexStats
 	showActions?: boolean
 }>()
@@ -77,20 +67,44 @@ const emit = defineEmits<{
 	(e: "delete"): void
 }>()
 
-const DeleteIcon = "ph:trash"
-
-const { index, showActions } = toRefs(props)
+const DeleteIcon = "carbon:trash-can"
 
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)
+
+const healthStatus = computed(() => {
+	switch (index.health) {
+		case IndexHealth.GREEN:
+			return "success"
+		case IndexHealth.YELLOW:
+			return "warning"
+		case IndexHealth.RED:
+			return "error"
+		default:
+			return undefined
+	}
+})
+
+const healthBadgeColor = computed((): BadgeColor | undefined => {
+	switch (index.health) {
+		case IndexHealth.GREEN:
+			return "success"
+		case IndexHealth.YELLOW:
+			return "warning"
+		case IndexHealth.RED:
+			return "danger"
+		default:
+			return undefined
+	}
+})
 
 function handleDelete() {
 	dialog.warning({
 		title: "Confirm",
 		content: () =>
 			h("div", {
-				innerHTML: `Are you sure you want to delete the index:<br/><strong>${index.value.index}</strong> ?`
+				innerHTML: `Are you sure you want to delete the index:<br/><strong>${index.index}</strong> ?`
 			}),
 		positiveText: "Yes I'm sure",
 		negativeText: "Cancel",
@@ -107,7 +121,7 @@ function deleteIndex() {
 	loading.value = true
 
 	Api.graylog
-		.deleteIndex(index.value.index)
+		.deleteIndex(index.index)
 		.then(res => {
 			if (res.data.success) {
 				message.success("Index was successfully deleted.")
@@ -134,52 +148,3 @@ function deleteIndex() {
 		})
 }
 </script>
-
-<style lang="scss" scoped>
-.index-card {
-	.wrapper {
-		display: flex;
-		justify-content: space-between;
-		flex-wrap: wrap;
-		gap: calc(var(--spacing) * 6);
-
-		.group {
-			display: flex;
-			justify-content: space-between;
-			gap: calc(var(--spacing) * 6);
-			flex-grow: 1;
-			flex-wrap: wrap;
-
-			.box {
-				flex-grow: 1;
-
-				.value {
-					font-weight: bold;
-					margin-bottom: 2px;
-				}
-				.label {
-					white-space: nowrap;
-					font-size: var(--text-xs);
-					font-family: var(--font-family-mono);
-					opacity: 0.8;
-				}
-			}
-			&.actions {
-				flex-grow: 0;
-			}
-		}
-	}
-
-	&.health-green {
-		border-color: var(--success-color);
-	}
-
-	&.health-yellow {
-		border-color: var(--warning-color);
-	}
-
-	&.health-red {
-		border-color: var(--error-color);
-	}
-}
-</style>

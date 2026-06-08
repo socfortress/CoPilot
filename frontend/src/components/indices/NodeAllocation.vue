@@ -1,7 +1,7 @@
 <template>
-	<n-card class="cluster-health" segmented>
+	<n-card segmented>
 		<template #header>
-			<div class="align-center flex justify-between">
+			<div class="flex items-center justify-between">
 				<span>Nodes Allocation</span>
 				<span v-if="indicesAllocation.length" class="text-secondary font-mono">
 					{{ indicesAllocation.length }}
@@ -9,53 +9,55 @@
 			</div>
 		</template>
 		<n-spin :show="loading">
-			<div class="info min-h-14">
+			<div class="mx-[-5px] min-h-14">
 				<template v-if="indicesAllocation.length">
-					<n-scrollbar style="max-height: 500px" trigger="none">
-						<div
-							v-for="node of indicesAllocation"
-							:key="node.id"
-							class="item"
-							:class="[`percent-${getStatusPercent(node.disk_percent)}`, `node-${node.node}`]"
-						>
-							<div class="group">
-								<div class="box">
-									<div class="value">
-										{{ node.node }}
+					<n-scrollbar class="max-h-125" trigger="none">
+						<div class="flex flex-col gap-4">
+							<div
+								v-for="node of indicesAllocation"
+								:key="node.id"
+								class="flex flex-col overflow-hidden rounded-(--border-radius) border-2"
+								:class="getNodeBorderClass(node)"
+							>
+								<div class="flex grow flex-wrap justify-between gap-6 overflow-hidden px-4 py-3">
+									<div class="flex flex-col gap-1 overflow-hidden">
+										<div class="text-secondary font-mono text-xs uppercase">node</div>
+										<div class="font-bold">
+											{{ node.node }}
+										</div>
 									</div>
-									<div class="label">node</div>
 								</div>
-							</div>
-							<div class="group">
-								<div class="box">
-									<div class="value">
-										{{ node.disk_total || "-" }}
+								<div class="flex grow flex-wrap justify-between gap-6 overflow-hidden px-4 py-3">
+									<div class="flex flex-col gap-1 overflow-hidden">
+										<div class="text-secondary font-mono text-xs uppercase">disk_total</div>
+										<div class="font-bold">
+											{{ node.disk_total || "-" }}
+										</div>
 									</div>
-									<div class="label">disk_total</div>
-								</div>
-								<div class="box">
-									<div class="value">
-										{{ node.disk_used || "-" }}
+									<div class="flex flex-col gap-1 overflow-hidden">
+										<div class="text-secondary font-mono text-xs uppercase">disk_used</div>
+										<div class="font-bold">
+											{{ node.disk_used || "-" }}
+										</div>
 									</div>
-									<div class="label">disk_used</div>
-								</div>
-								<div class="box">
-									<div class="value">
-										{{ node.disk_available || "-" }}
+									<div class="flex flex-col gap-1 overflow-hidden">
+										<div class="text-secondary font-mono text-xs uppercase">disk_available</div>
+										<div class="font-bold">
+											{{ node.disk_available || "-" }}
+										</div>
 									</div>
-									<div class="label">disk_available</div>
 								</div>
-							</div>
-							<div v-if="node.disk_percent" class="disk-percent group">
-								<div class="box w-full">
-									<n-progress
-										type="line"
-										indicator-placement="inside"
-										border-radius="0"
-										:height="24"
-										:percentage="node.disk_percent_value"
-										:status="getStatusPercent(node.disk_percent_value)"
-									/>
+								<div v-if="node.disk_percent" class="overflow-hidden p-0">
+									<div class="w-full overflow-hidden">
+										<n-progress
+											type="line"
+											indicator-placement="inside"
+											border-radius="0"
+											:height="24"
+											:percentage="node.disk_percent_value"
+											:status="getStatusPercent(node.disk_percent_value)"
+										/>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -84,6 +86,14 @@ function getStatusPercent(percent: string | number | undefined | null) {
 	if (Number.parseFloat(percent?.toString() || "") > 90) return "error"
 	if (Number.parseFloat(percent?.toString() || "") > 80) return "warning"
 	return "success"
+}
+
+function getNodeBorderClass(node: IndexAllocation) {
+	if (node.node === "UNASSIGNED") return "border-info"
+	const status = getStatusPercent(node.disk_percent)
+	if (status === "error") return "border-error"
+	if (status === "warning") return "border-warning"
+	return "border-success"
 }
 
 function getIndicesAllocation() {
@@ -122,69 +132,3 @@ onBeforeMount(() => {
 	getIndicesAllocation()
 })
 </script>
-
-<style lang="scss" scoped>
-.cluster-health {
-	.info {
-		margin-left: -5px;
-		margin-right: -5px;
-
-		.item {
-			border: 2px solid transparent;
-			display: flex;
-			border-radius: var(--border-radius);
-			flex-direction: column;
-			overflow: hidden;
-
-			.group {
-				padding-inline: calc(var(--spacing) * 4);
-				padding-block: calc(var(--spacing) * 3);
-				gap: calc(var(--spacing) * 6);
-				display: flex;
-				justify-content: space-between;
-				flex-grow: 1;
-				flex-wrap: wrap;
-				overflow: hidden;
-
-				.box {
-					overflow: hidden;
-
-					.value {
-						font-weight: bold;
-						margin-bottom: 2px;
-					}
-					.label {
-						font-size: var(--text-xs);
-						font-family: var(--font-family-mono);
-						opacity: 0.8;
-					}
-				}
-
-				&.disk-percent {
-					padding: 0;
-				}
-			}
-
-			&.percent-success {
-				border-color: var(--success-color);
-			}
-
-			&.percent-warning {
-				border-color: var(--warning-color);
-			}
-
-			&.percent-error {
-				border-color: var(--error-color);
-			}
-
-			&.node-UNASSIGNED {
-				border-color: var(--info-color);
-			}
-
-			&:not(:last-child) {
-				margin-bottom: calc(var(--spacing) * 4);
-			}
-		}
-	}
-}
-</style>
