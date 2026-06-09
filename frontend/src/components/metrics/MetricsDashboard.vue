@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-col gap-4">
+	<div class="flex flex-col gap-12">
 		<MetricsDashboardFilters
 			v-model:selected-host="selectedHost"
 			v-model:selected-range="selectedRange"
