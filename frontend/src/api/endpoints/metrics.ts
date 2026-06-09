@@ -1,5 +1,15 @@
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { HostsResponse, MetricsResponse } from "@/types/metrics.d"
+import type {
+	HostsResponse,
+	MetricsCpuData,
+	MetricsDisksData,
+	MetricsKernelData,
+	MetricsMemoryData,
+	MetricsNetworkData,
+	MetricsProcessesData,
+	MetricsResponse,
+	MetricsSummaryData
+} from "@/types/metrics.d"
 import { HttpClient } from "../httpClient"
 
 export default {
@@ -8,43 +18,46 @@ export default {
 	},
 
 	getSummary(host: string, rangeH: string = "1") {
-		return HttpClient.get<FlaskBaseResponse & MetricsResponse>(`/influxdb/metrics/summary`, {
+		return HttpClient.get<FlaskBaseResponse & MetricsResponse<MetricsSummaryData>>(`/influxdb/metrics/summary`, {
 			params: { host, range_h: rangeH }
 		})
 	},
 
 	getCpu(host: string, rangeH: string = "1") {
-		return HttpClient.get<FlaskBaseResponse & MetricsResponse>(`/influxdb/metrics/cpu`, {
+		return HttpClient.get<FlaskBaseResponse & MetricsResponse<MetricsCpuData>>(`/influxdb/metrics/cpu`, {
 			params: { host, range_h: rangeH }
 		})
 	},
 
 	getMemory(host: string, rangeH: string = "1") {
-		return HttpClient.get<FlaskBaseResponse & MetricsResponse>(`/influxdb/metrics/memory`, {
+		return HttpClient.get<FlaskBaseResponse & MetricsResponse<MetricsMemoryData>>(`/influxdb/metrics/memory`, {
 			params: { host, range_h: rangeH }
 		})
 	},
 
 	getKernel(host: string, rangeH: string = "1") {
-		return HttpClient.get<FlaskBaseResponse & MetricsResponse>(`/influxdb/metrics/kernel`, {
+		return HttpClient.get<FlaskBaseResponse & MetricsResponse<MetricsKernelData>>(`/influxdb/metrics/kernel`, {
 			params: { host, range_h: rangeH }
 		})
 	},
 
 	getDisks(host: string, rangeH: string = "1") {
-		return HttpClient.get<FlaskBaseResponse & MetricsResponse>(`/influxdb/metrics/disks`, {
+		return HttpClient.get<FlaskBaseResponse & MetricsResponse<MetricsDisksData>>(`/influxdb/metrics/disks`, {
 			params: { host, range_h: rangeH }
 		})
 	},
 
 	getProcesses(host: string, rangeH: string = "1") {
-		return HttpClient.get<FlaskBaseResponse & MetricsResponse>(`/influxdb/metrics/processes`, {
-			params: { host, range_h: rangeH }
-		})
+		return HttpClient.get<FlaskBaseResponse & MetricsResponse<MetricsProcessesData>>(
+			`/influxdb/metrics/processes`,
+			{
+				params: { host, range_h: rangeH }
+			}
+		)
 	},
 
 	getNetwork(host: string, rangeH: string = "1") {
-		return HttpClient.get<FlaskBaseResponse & MetricsResponse>(`/influxdb/metrics/network`, {
+		return HttpClient.get<FlaskBaseResponse & MetricsResponse<MetricsNetworkData>>(`/influxdb/metrics/network`, {
 			params: { host, range_h: rangeH }
 		})
 	}
