@@ -22,21 +22,29 @@
 		<n-spin v-else-if="loading && !loaded" class="flex min-h-80 items-center justify-center" show />
 
 		<!-- Dashboard -->
-		<div v-else-if="loaded" class="flex flex-col gap-8">
-			<MetricsDashboardSummary :summary />
-
-			<MetricsDashboardCpu :cpu />
-
-			<MetricsDashboardMemory :memory />
-
-			<MetricsDashboardKernel :kernel />
-
-			<MetricsDashboardDisks :disks />
-
-			<MetricsDashboardProcesses :processes />
-
-			<MetricsDashboardNetwork :network />
-		</div>
+		<n-tabs v-else-if="loaded" type="line" animated>
+			<n-tab-pane name="summary" tab="Summary">
+				<MetricsDashboardSummary :summary :show-title="false" />
+			</n-tab-pane>
+			<n-tab-pane name="cpu" tab="CPU">
+				<MetricsDashboardCpu :cpu :show-title="false" />
+			</n-tab-pane>
+			<n-tab-pane name="memory" tab="Memory">
+				<MetricsDashboardMemory :memory :show-title="false" />
+			</n-tab-pane>
+			<n-tab-pane name="kernel" tab="Kernel">
+				<MetricsDashboardKernel :kernel :show-title="false" />
+			</n-tab-pane>
+			<n-tab-pane name="disks" tab="Disks">
+				<MetricsDashboardDisks :disks :show-title="false" />
+			</n-tab-pane>
+			<n-tab-pane name="processes" tab="Processes">
+				<MetricsDashboardProcesses :processes :show-title="false" />
+			</n-tab-pane>
+			<n-tab-pane name="network" tab="Network">
+				<MetricsDashboardNetwork :network :show-title="false" />
+			</n-tab-pane>
+		</n-tabs>
 	</div>
 </template>
 
@@ -51,7 +59,7 @@ import type {
 	MetricsProcessesData,
 	MetricsSummaryData
 } from "@/types/metrics.d"
-import { NCard, NEmpty, NSpin, useMessage } from "naive-ui"
+import { NCard, NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"

@@ -1,6 +1,8 @@
 <template>
 	<section class="@container flex flex-col gap-4">
-		<h3 class="text-lg font-semibold">Network</h3>
+		<div v-if="shouldShowSectionTitle">
+			<h3 class="text-lg font-semibold">{{ title }}</h3>
+		</div>
 
 		<div class="grid grid-cols-1 gap-3 @md:grid-cols-2">
 			<CardLink
@@ -42,9 +44,19 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import ChartArea from "@/components/common/charts/ChartArea.vue"
 
-const { network } = defineProps<{
-	network: MetricsNetworkData
-}>()
+const props = withDefaults(
+	defineProps<{
+		network: MetricsNetworkData
+		title?: string
+		showTitle?: boolean
+	}>(),
+	{
+		title: "Network",
+		showTitle: true
+	}
+)
+
+const shouldShowSectionTitle = computed(() => props.showTitle && Boolean(props.title.trim()))
 
 interface NetworkStatTile {
 	id: string
@@ -100,22 +112,22 @@ function errorsColor(value: number | null | undefined): CardLinkColor | undefine
 }
 
 const metricSeriesById = computed((): Record<NetworkChartId, TimeSeriesData | undefined> => ({
-	traffic: network.traffic,
-	errors: network.interface_errors
+	traffic: props.network.traffic,
+	errors: props.network.interface_errors
 }))
 
 const statTiles = computed<NetworkStatTile[]>(() => [
 	{
 		id: "tcp-established",
 		title: "TCP Sessions Established",
-		value: formatMetricNumber(network.tcp_established),
+		value: formatMetricNumber(props.network.tcp_established),
 		color: "primary"
 	},
 	{
 		id: "interface-errors",
 		title: "Interface Errors",
-		value: formatMetricNumber(latestSeriesValue(network.interface_errors)),
-		color: errorsColor(latestSeriesValue(network.interface_errors))
+		value: formatMetricNumber(latestSeriesValue(props.network.interface_errors)),
+		color: errorsColor(latestSeriesValue(props.network.interface_errors))
 	}
 ])
 

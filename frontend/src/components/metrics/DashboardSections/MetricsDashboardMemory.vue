@@ -1,6 +1,8 @@
 <template>
 	<section class="@container flex flex-col gap-4">
-		<h3 class="text-lg font-semibold">Memory</h3>
+		<div v-if="shouldShowSectionTitle">
+			<h3 class="text-lg font-semibold">{{ title }}</h3>
+		</div>
 
 		<div class="grid grid-cols-1 gap-3 @md:grid-cols-2">
 			<CardLink
@@ -40,9 +42,19 @@ import CardLink from "@/components/common/cards/CardLink.vue"
 import ChartArea from "@/components/common/charts/ChartArea.vue"
 import { formatBytes } from "@/utils/format"
 
-const { memory } = defineProps<{
-	memory: MetricsMemoryData
-}>()
+const props = withDefaults(
+	defineProps<{
+		memory: MetricsMemoryData
+		title?: string
+		showTitle?: boolean
+	}>(),
+	{
+		title: "Memory",
+		showTitle: true
+	}
+)
+
+const shouldShowSectionTitle = computed(() => props.showTitle && Boolean(props.title.trim()))
 
 interface MemoryStatTile {
 	id: string
@@ -83,16 +95,16 @@ const statTiles = computed<MemoryStatTile[]>(() => [
 	{
 		id: "swap-total",
 		title: "Swap Total",
-		value: formatMetricBytes(memory.swap_total),
+		value: formatMetricBytes(props.memory.swap_total),
 		color: "primary"
 	},
 	{
 		id: "swap-free",
 		title: "Swap Free",
-		value: formatMetricBytes(memory.swap_free),
-		color: swapFreeColor(memory.swap_free, memory.swap_total)
+		value: formatMetricBytes(props.memory.swap_free),
+		color: swapFreeColor(props.memory.swap_free, props.memory.swap_total)
 	}
 ])
 
-const memUsedChart = computed(() => transformSeries(memory.mem_used))
+const memUsedChart = computed(() => transformSeries(props.memory.mem_used))
 </script>

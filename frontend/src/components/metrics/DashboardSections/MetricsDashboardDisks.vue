@@ -1,6 +1,8 @@
 <template>
 	<section class="@container flex flex-col gap-4">
-		<h3 class="text-lg font-semibold">Disks</h3>
+		<div v-if="shouldShowSectionTitle">
+			<h3 class="text-lg font-semibold">{{ title }}</h3>
+		</div>
 
 		<div class="grid grid-cols-1 gap-3 @md:grid-cols-2">
 			<CardLink
@@ -43,9 +45,19 @@ import CardLink from "@/components/common/cards/CardLink.vue"
 import ChartArea from "@/components/common/charts/ChartArea.vue"
 import { formatBytes } from "@/utils/format"
 
-const { disks } = defineProps<{
-	disks: MetricsDisksData
-}>()
+const props = withDefaults(
+	defineProps<{
+		disks: MetricsDisksData
+		title?: string
+		showTitle?: boolean
+	}>(),
+	{
+		title: "Disks",
+		showTitle: true
+	}
+)
+
+const shouldShowSectionTitle = computed(() => props.showTitle && Boolean(props.title.trim()))
 
 interface DiskStatTile {
 	id: string
@@ -107,22 +119,22 @@ function usageColor(value: number | null | undefined): CardLinkColor | undefined
 }
 
 const metricSeriesById = computed((): Record<DiskChartId, TimeSeriesData | undefined> => ({
-	usage: disks.disk_usage,
-	io: disks.disk_io
+	usage: props.disks.disk_usage,
+	io: props.disks.disk_io
 }))
 
 const statTiles = computed<DiskStatTile[]>(() => [
 	{
 		id: "disk-total",
 		title: "Total Disk Size",
-		value: formatMetricBytes(disks.disk_total),
+		value: formatMetricBytes(props.disks.disk_total),
 		color: "primary"
 	},
 	{
 		id: "disk-usage",
 		title: "Disk Usage",
-		value: formatMetricPercent(latestSeriesValue(disks.disk_usage)),
-		color: usageColor(latestSeriesValue(disks.disk_usage))
+		value: formatMetricPercent(latestSeriesValue(props.disks.disk_usage)),
+		color: usageColor(latestSeriesValue(props.disks.disk_usage))
 	}
 ])
 

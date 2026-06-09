@@ -1,6 +1,8 @@
 <template>
 	<section class="@container flex flex-col gap-4">
-		<h3 class="text-lg font-semibold">CPU</h3>
+		<div v-if="shouldShowSectionTitle">
+			<h3 class="text-lg font-semibold">{{ title }}</h3>
+		</div>
 
 		<div class="grid grid-cols-1 gap-3 @md:grid-cols-2 @3xl:grid-cols-4">
 			<CardLink
@@ -41,9 +43,19 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import ChartArea from "@/components/common/charts/ChartArea.vue"
 
-const { cpu } = defineProps<{
-	cpu: MetricsCpuData
-}>()
+const props = withDefaults(
+	defineProps<{
+		cpu: MetricsCpuData
+		title?: string
+		showTitle?: boolean
+	}>(),
+	{
+		title: "CPU",
+		showTitle: true
+	}
+)
+
+const shouldShowSectionTitle = computed(() => props.showTitle && Boolean(props.title.trim()))
 
 interface CpuStatTile {
 	id: string
@@ -100,10 +112,10 @@ function usageColor(value: number | null | undefined): CardLinkColor | undefined
 }
 
 const metricSeriesById = computed((): Record<CpuMetricId, TimeSeriesData | undefined> => ({
-	system: cpu.cpu_usage_system,
-	user: cpu.cpu_usage_user,
-	iowait: cpu.cpu_iowait,
-	softirq: cpu.cpu_softirq
+	system: props.cpu.cpu_usage_system,
+	user: props.cpu.cpu_usage_user,
+	iowait: props.cpu.cpu_iowait,
+	softirq: props.cpu.cpu_softirq
 }))
 
 const statTiles = computed<CpuStatTile[]>(() =>

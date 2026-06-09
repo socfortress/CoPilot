@@ -1,8 +1,10 @@
 <template>
 	<section class="@container flex flex-col gap-4">
-		<h3 class="text-lg font-semibold">Metrics Summary</h3>
+		<div v-if="shouldShowSectionTitle">
+			<h3 class="text-lg font-semibold">{{ title }}</h3>
+		</div>
 
-		<div class="grid grid-cols-1 gap-3 @md:grid-cols-2 @3xl:grid-cols-4 @7xl:grid-cols-7">
+		<div class="grid grid-cols-1 gap-3 @md:grid-cols-2 @3xl:grid-cols-4 @7xl:grid-cols-6">
 			<CardLink
 				v-for="tile in statTiles"
 				:key="tile.id"
@@ -51,26 +53,36 @@ import ChartArea from "@/components/common/charts/ChartArea.vue"
 import ChartGauge from "@/components/common/charts/ChartGauge.vue"
 import { formatBytes } from "@/utils/format"
 
-const { summary } = defineProps<{
-	summary: MetricsSummaryData
-}>()
+const props = withDefaults(
+	defineProps<{
+		summary: MetricsSummaryData
+		title?: string
+		showTitle?: boolean
+	}>(),
+	{
+		title: "Metrics Summary",
+		showTitle: true
+	}
+)
 
-const cpuIdle = computed(() => summary.cpu_idle ?? 0)
+const shouldShowSectionTitle = computed(() => props.showTitle && Boolean(props.title.trim()))
+
+const cpuIdle = computed(() => props.summary.cpu_idle ?? 0)
 
 const loadLabels = computed(() => {
-	const load = summary.load ?? {}
+	const load = props.summary.load ?? {}
 	const firstSeries = Object.values(load)[0]
 	return firstSeries?.map(point => point.time) ?? []
 })
 
 const loadData = computed(() => {
-	const load = summary.load ?? {}
+	const load = props.summary.load ?? {}
 	const rows = Object.values(load).map(points => points.map(point => point.value))
 	if (rows.length <= 1) return rows[0] ?? []
 	return rows
 })
 
-const loadSeriesNames = computed(() => Object.keys(summary.load ?? {}))
+const loadSeriesNames = computed(() => Object.keys(props.summary.load ?? {}))
 
 interface SummaryStatTile {
 	id: string
@@ -83,39 +95,33 @@ const statTiles = computed<SummaryStatTile[]>(() => [
 	{
 		id: "uptime",
 		title: "Uptime",
-		value: formatUptime(summary.uptime),
+		value: formatUptime(props.summary.uptime),
 		color: "primary"
 	},
 	{
 		id: "total-mem",
 		title: "Total Memory",
-		value: formatMetricBytes(summary.total_mem)
+		value: formatMetricBytes(props.summary.total_mem)
 	},
 	{
 		id: "cpus",
 		title: "CPUs",
-		value: formatMetricNumber(summary.cpus)
+		value: formatMetricNumber(props.summary.cpus)
 	},
 	{
 		id: "processes",
 		title: "Processes",
-		value: formatMetricNumber(summary.total_processes)
-	},
-	{
-		id: "cpu-idle",
-		title: "CPU Idle",
-		value: formatMetricPercent(summary.cpu_idle),
-		color: cpuIdleColor(summary.cpu_idle)
+		value: formatMetricNumber(props.summary.total_processes)
 	},
 	{
 		id: "swap-free",
 		title: "Swap Free",
-		value: formatMetricBytes(summary.swap_free)
+		value: formatMetricBytes(props.summary.swap_free)
 	},
 	{
 		id: "users",
 		title: "Users Logged In",
-		value: formatMetricNumber(summary.logged_on_users)
+		value: formatMetricNumber(props.summary.logged_on_users)
 	}
 ])
 
@@ -129,11 +135,6 @@ function formatMetricBytes(value: number | null | undefined): string {
 	return formatBytes(value) ?? "—"
 }
 
-function formatMetricPercent(value: number | null | undefined): string {
-	if (value === null || value === undefined) return "—"
-	return `${Number(value).toFixed(1)}%`
-}
-
 function formatUptime(seconds: number | null | undefined): string {
 	if (seconds === null || seconds === undefined) return "—"
 	const total = Number(seconds)
@@ -143,12 +144,5 @@ function formatUptime(seconds: number | null | undefined): string {
 	if (d > 0) return `${d}d ${h}h ${m}m`
 	if (h > 0) return `${h}h ${m}m`
 	return `${m}m`
-}
-
-function cpuIdleColor(value: number | null | undefined): CardLinkColor | undefined {
-	if (value === null || value === undefined) return undefined
-	if (value < 20) return "danger"
-	if (value < 50) return "warning"
-	return "success"
 }
 </script>

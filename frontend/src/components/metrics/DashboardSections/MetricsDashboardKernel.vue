@@ -1,6 +1,8 @@
 <template>
 	<section class="@container flex flex-col gap-4">
-		<h3 class="text-lg font-semibold">Kernel</h3>
+		<div v-if="shouldShowSectionTitle">
+			<h3 class="text-lg font-semibold">{{ title }}</h3>
+		</div>
 
 		<div class="grid grid-cols-1 gap-3 @md:grid-cols-2">
 			<CardLink
@@ -41,9 +43,19 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import ChartArea from "@/components/common/charts/ChartArea.vue"
 
-const { kernel } = defineProps<{
-	kernel: MetricsKernelData
-}>()
+const props = withDefaults(
+	defineProps<{
+		kernel: MetricsKernelData
+		title?: string
+		showTitle?: boolean
+	}>(),
+	{
+		title: "Kernel",
+		showTitle: true
+	}
+)
+
+const shouldShowSectionTitle = computed(() => props.showTitle && Boolean(props.title.trim()))
 
 interface KernelStatTile {
 	id: string
@@ -91,8 +103,8 @@ function formatMetricRate(value: number | null | undefined): string {
 }
 
 const metricSeriesById = computed((): Record<KernelMetricId, TimeSeriesData | undefined> => ({
-	interrupts: kernel.interrupts,
-	"processes-forked": kernel.processes_forked
+	interrupts: props.kernel.interrupts,
+	"processes-forked": props.kernel.processes_forked
 }))
 
 const statTiles = computed<KernelStatTile[]>(() =>

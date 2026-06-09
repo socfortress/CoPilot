@@ -1,6 +1,8 @@
 <template>
 	<section class="@container flex flex-col gap-4">
-		<h3 class="text-lg font-semibold">Processes</h3>
+		<div v-if="shouldShowSectionTitle">
+			<h3 class="text-lg font-semibold">{{ title }}</h3>
+		</div>
 
 		<div class="grid grid-cols-1 gap-3 @md:grid-cols-2 @3xl:grid-cols-4">
 			<CardLink
@@ -38,9 +40,19 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import ChartArea from "@/components/common/charts/ChartArea.vue"
 
-const { processes } = defineProps<{
-	processes: MetricsProcessesData
-}>()
+const props = withDefaults(
+	defineProps<{
+		processes: MetricsProcessesData
+		title?: string
+		showTitle?: boolean
+	}>(),
+	{
+		title: "Processes",
+		showTitle: true
+	}
+)
+
+const shouldShowSectionTitle = computed(() => props.showTitle && Boolean(props.title.trim()))
 
 interface ProcessStatTile {
 	id: string
@@ -70,27 +82,27 @@ const statTiles = computed<ProcessStatTile[]>(() => [
 	{
 		id: "running",
 		title: "Running",
-		value: formatMetricNumber(processes.running),
+		value: formatMetricNumber(props.processes.running),
 		color: "success"
 	},
 	{
 		id: "sleeping",
 		title: "Sleeping",
-		value: formatMetricNumber(processes.sleeping)
+		value: formatMetricNumber(props.processes.sleeping)
 	},
 	{
 		id: "unknown",
 		title: "Unknown",
-		value: formatMetricNumber(processes.unknown),
-		color: processes.unknown && processes.unknown > 0 ? "warning" : undefined
+		value: formatMetricNumber(props.processes.unknown),
+		color: props.processes.unknown && props.processes.unknown > 0 ? "warning" : undefined
 	},
 	{
 		id: "zombies",
 		title: "Zombies",
-		value: formatMetricNumber(processes.zombies),
-		color: processes.zombies && processes.zombies > 0 ? "danger" : undefined
+		value: formatMetricNumber(props.processes.zombies),
+		color: props.processes.zombies && props.processes.zombies > 0 ? "danger" : undefined
 	}
 ])
 
-const statusChart = computed(() => transformSeries(processes.status))
+const statusChart = computed(() => transformSeries(props.processes.status))
 </script>
