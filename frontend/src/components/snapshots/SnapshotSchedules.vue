@@ -21,7 +21,11 @@
 				/>
 			</div>
 
-			<n-empty v-else-if="!loading" description="No snapshot schedules configured" class="min-h-48 justify-center" />
+			<n-empty
+				v-else-if="!loading"
+				description="No snapshot schedules configured"
+				class="min-h-48 justify-center"
+			/>
 		</n-spin>
 
 		<n-modal v-model:show="showCreateModal" preset="card" title="Create Snapshot Schedule" class="max-w-160!">

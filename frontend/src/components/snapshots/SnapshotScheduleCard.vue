@@ -151,19 +151,9 @@ const ScheduleIcon = "carbon:calendar"
 const TimeIcon = "carbon:time"
 const SnapshotIcon = "carbon:camera"
 
-const WEEKDAY_NAMES = [
-	"Mondays",
-	"Tuesdays",
-	"Wednesdays",
-	"Thursdays",
-	"Fridays",
-	"Saturdays",
-	"Sundays"
-] as const
+const WEEKDAY_NAMES = ["Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays", "Sundays"] as const
 
-const showExecutionMeta = computed(
-	() => Boolean(schedule.last_execution_time || schedule.last_snapshot_name)
-)
+const showExecutionMeta = computed(() => Boolean(schedule.last_execution_time || schedule.last_snapshot_name))
 
 function formatRetention(retentionDays?: number | null) {
 	return retentionDays ? `${retentionDays} days` : "Forever"

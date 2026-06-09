@@ -149,9 +149,7 @@ const statusFilter = ref<"all" | "active" | "cleared">("all")
 const excludeOk = ref(false)
 const checkNameFilter = ref<string | null>(null)
 
-const hasActiveFilters = computed(
-	() => !!checkNameFilter.value || statusFilter.value !== "all" || excludeOk.value
-)
+const hasActiveFilters = computed(() => !!checkNameFilter.value || statusFilter.value !== "all" || excludeOk.value)
 
 const statusOptions = [
 	{ label: "All", value: "all" },
