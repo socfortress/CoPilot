@@ -4,6 +4,7 @@
 		class="w-full"
 		:autoresize="{ onResize: updatePlotWidth }"
 		:option="chartOption"
+		:update-options="{ replaceMerge: ['title', 'series'] }"
 		:style="{ height: `${height}px`, width: '100%' }"
 		@finished="updatePlotWidth"
 	/>
@@ -132,11 +133,13 @@ const chartOption = computed((): ChartOption => {
 		return {
 			backgroundColor: "transparent",
 			title: {
+				show: true,
 				text: "No data",
 				left: "center",
 				top: "center",
 				textStyle: { color: fg, fontSize: 16, fontFamily: ff }
-			}
+			},
+			series: []
 		}
 	}
 
@@ -158,6 +161,7 @@ const chartOption = computed((): ChartOption => {
 		backgroundColor: "transparent",
 		title: showTitle
 			? {
+					show: true,
 					text: title.value,
 					textStyle: {
 						color: fg,
@@ -168,7 +172,7 @@ const chartOption = computed((): ChartOption => {
 					left: 10,
 					top: 0
 				}
-			: undefined,
+			: { show: false },
 		tooltip: {
 			...buildChartTooltipGlassBase(
 				chartTooltipThemeFromStyle({
