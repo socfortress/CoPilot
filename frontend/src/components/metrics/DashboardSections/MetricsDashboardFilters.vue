@@ -14,7 +14,6 @@
 				filterable
 				class="w-52!"
 				:consistent-menu-width="false"
-				@update:value="emit('refresh')"
 			/>
 		</n-input-group>
 
@@ -29,11 +28,10 @@
 				size="small"
 				class="w-44!"
 				:consistent-menu-width="false"
-				@update:value="emit('refresh')"
 			/>
 		</n-input-group>
 
-		<n-button size="small" type="primary" secondary :loading :disabled="!selectedHost" @click="emit('refresh')">
+		<n-button size="small" type="primary" secondary :disabled="!selectedHost" @click="emit('refresh')">
 			<template #icon>
 				<Icon :name="RefreshIcon" :size="14" />
 			</template>
@@ -43,14 +41,12 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, NInputGroup, NInputGroupLabel, NSelect } from "naive-ui"
+import type { ApiError } from "@/types/common.d"
+import { NButton, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
+import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-
-defineProps<{
-	hostOptions: Array<{ label: string; value: string }>
-	hostsLoading: boolean
-	loading: boolean
-}>()
+import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	refresh: []
@@ -58,6 +54,12 @@ const emit = defineEmits<{
 
 const selectedHost = defineModel<string | null>("selectedHost")
 const selectedRange = defineModel<string>("selectedRange", { default: "1" })
+
+const message = useMessage()
+const hostsLoading = ref(false)
+const hosts = ref<string[]>([])
+
+const hostOptions = computed(() => hosts.value.map(host => ({ label: host, value: host })))
 
 const HostIcon = "carbon:bare-metal-server"
 const TimeRangeIcon = "carbon:time"
@@ -72,4 +74,24 @@ const rangeOptions = [
 	{ label: "Last 2 Days", value: "48" },
 	{ label: "Last 7 Days", value: "168" }
 ]
+
+async function loadHosts() {
+	hostsLoading.value = true
+	try {
+		const res = await Api.metrics.getHosts()
+		if (res.data.success) {
+			hosts.value = res.data.hosts || []
+		} else {
+			message.warning(res.data.message || "Failed to load hosts")
+		}
+	} catch (err: unknown) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load hosts")
+	} finally {
+		hostsLoading.value = false
+	}
+}
+
+onBeforeMount(() => {
+	loadHosts()
+})
 </script>

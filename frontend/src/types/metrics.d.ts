@@ -63,3 +63,7 @@ export interface MetricsSummaryData {
 	swap_free?: number | null
 	load?: TimeSeriesData
 }
+
+export interface MetricsDashboardSectionExpose {
+	reload: () => Promise<void>
+}

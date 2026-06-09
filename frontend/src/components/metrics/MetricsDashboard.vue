@@ -3,13 +3,9 @@
 		<MetricsDashboardFilters
 			v-model:selected-host="selectedHost"
 			v-model:selected-range="selectedRange"
-			:host-options
-			:hosts-loading
-			:loading
-			@refresh="refresh"
+			@refresh="reloadMountedSections"
 		/>
 
-		<!-- Empty state -->
 		<n-card v-if="!selectedHost" class="p-12 text-center">
 			<n-empty description="Select a host to view performance metrics">
 				<template #icon>
@@ -18,52 +14,63 @@
 			</n-empty>
 		</n-card>
 
-		<!-- Loading -->
-		<n-spin v-else-if="loading && !loaded" class="flex min-h-80 items-center justify-center" show />
-
-		<!-- Dashboard -->
-		<n-tabs v-else-if="loaded" type="line" animated>
-			<n-tab-pane name="summary" tab="Summary">
-				<MetricsDashboardSummary :summary :show-title="false" />
+		<n-tabs v-else type="line" animated>
+			<n-tab-pane name="summary" tab="Summary" display-directive="show">
+				<MetricsDashboardSummary
+					ref="summaryRef"
+					:host="selectedHost"
+					:range="selectedRange"
+					:show-title="false"
+				/>
 			</n-tab-pane>
-			<n-tab-pane name="cpu" tab="CPU">
-				<MetricsDashboardCpu :cpu :show-title="false" />
+			<n-tab-pane name="cpu" tab="CPU" display-directive="show:lazy">
+				<MetricsDashboardCpu ref="cpuRef" :host="selectedHost" :range="selectedRange" :show-title="false" />
 			</n-tab-pane>
-			<n-tab-pane name="memory" tab="Memory">
-				<MetricsDashboardMemory :memory :show-title="false" />
+			<n-tab-pane name="memory" tab="Memory" display-directive="show:lazy">
+				<MetricsDashboardMemory
+					ref="memoryRef"
+					:host="selectedHost"
+					:range="selectedRange"
+					:show-title="false"
+				/>
 			</n-tab-pane>
-			<n-tab-pane name="kernel" tab="Kernel">
-				<MetricsDashboardKernel :kernel :show-title="false" />
+			<n-tab-pane name="kernel" tab="Kernel" display-directive="show:lazy">
+				<MetricsDashboardKernel
+					ref="kernelRef"
+					:host="selectedHost"
+					:range="selectedRange"
+					:show-title="false"
+				/>
 			</n-tab-pane>
-			<n-tab-pane name="disks" tab="Disks">
-				<MetricsDashboardDisks :disks :show-title="false" />
+			<n-tab-pane name="disks" tab="Disks" display-directive="show:lazy">
+				<MetricsDashboardDisks ref="disksRef" :host="selectedHost" :range="selectedRange" :show-title="false" />
 			</n-tab-pane>
-			<n-tab-pane name="processes" tab="Processes">
-				<MetricsDashboardProcesses :processes :show-title="false" />
+			<n-tab-pane name="processes" tab="Processes" display-directive="show:lazy">
+				<MetricsDashboardProcesses
+					ref="processesRef"
+					:host="selectedHost"
+					:range="selectedRange"
+					:show-title="false"
+				/>
 			</n-tab-pane>
-			<n-tab-pane name="network" tab="Network">
-				<MetricsDashboardNetwork :network :show-title="false" />
+			<n-tab-pane name="network" tab="Network" display-directive="show:lazy">
+				<MetricsDashboardNetwork
+					ref="networkRef"
+					:host="selectedHost"
+					:range="selectedRange"
+					:show-title="false"
+				/>
 			</n-tab-pane>
 		</n-tabs>
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { ApiError } from "@/types/common.d"
-import type {
-	MetricsCpuData,
-	MetricsDisksData,
-	MetricsKernelData,
-	MetricsMemoryData,
-	MetricsNetworkData,
-	MetricsProcessesData,
-	MetricsSummaryData
-} from "@/types/metrics.d"
-import { NCard, NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
-import Api from "@/api"
+import type { Ref } from "vue"
+import type { MetricsDashboardSectionExpose } from "@/types/metrics.d"
+import { NCard, NEmpty, NTabPane, NTabs } from "naive-ui"
+import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
-import { getApiErrorMessage } from "@/utils"
 import MetricsDashboardCpu from "./DashboardSections/MetricsDashboardCpu.vue"
 import MetricsDashboardDisks from "./DashboardSections/MetricsDashboardDisks.vue"
 import MetricsDashboardFilters from "./DashboardSections/MetricsDashboardFilters.vue"
@@ -75,83 +82,30 @@ import MetricsDashboardSummary from "./DashboardSections/MetricsDashboardSummary
 
 const ChartIcon = "carbon:chart-line"
 
-const message = useMessage()
-const loading = ref(false)
-const loaded = ref(false)
-const hostsLoading = ref(false)
-const hosts = ref<string[]>([])
 const selectedHost = ref<string | null>(null)
 const selectedRange = ref("1")
 
-const summary = ref<MetricsSummaryData>({})
-const cpu = ref<MetricsCpuData>({})
-const memory = ref<MetricsMemoryData>({})
-const kernel = ref<MetricsKernelData>({})
-const disks = ref<MetricsDisksData>({})
-const processes = ref<MetricsProcessesData>({})
-const network = ref<MetricsNetworkData>({})
+const summaryRef = ref<MetricsDashboardSectionExpose | null>(null)
+const cpuRef = ref<MetricsDashboardSectionExpose | null>(null)
+const memoryRef = ref<MetricsDashboardSectionExpose | null>(null)
+const kernelRef = ref<MetricsDashboardSectionExpose | null>(null)
+const disksRef = ref<MetricsDashboardSectionExpose | null>(null)
+const processesRef = ref<MetricsDashboardSectionExpose | null>(null)
+const networkRef = ref<MetricsDashboardSectionExpose | null>(null)
 
-const hostOptions = computed(() => hosts.value.map(h => ({ label: h, value: h })))
+const sectionRefs: Array<Ref<MetricsDashboardSectionExpose | null>> = [
+	summaryRef,
+	cpuRef,
+	memoryRef,
+	kernelRef,
+	disksRef,
+	processesRef,
+	networkRef
+]
 
-async function loadHosts() {
-	hostsLoading.value = true
-	try {
-		const res = await Api.metrics.getHosts()
-		if (res.data.success) {
-			hosts.value = res.data.hosts || []
-		} else {
-			message.warning(res.data?.message || "Failed to load hosts")
-		}
-	} catch (err: unknown) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to load hosts")
-	} finally {
-		hostsLoading.value = false
+function reloadMountedSections() {
+	for (const sectionRef of sectionRefs) {
+		sectionRef.value?.reload()
 	}
 }
-
-async function refresh() {
-	if (!selectedHost.value) return
-	loading.value = true
-
-	const host = selectedHost.value
-	const range = selectedRange.value
-
-	try {
-		const [sumRes, cpuRes, memRes, kerRes, dskRes, prcRes, netRes] = await Promise.all([
-			Api.metrics.getSummary(host, range),
-			Api.metrics.getCpu(host, range),
-			Api.metrics.getMemory(host, range),
-			Api.metrics.getKernel(host, range),
-			Api.metrics.getDisks(host, range),
-			Api.metrics.getProcesses(host, range),
-			Api.metrics.getNetwork(host, range)
-		])
-
-		for (const res of [sumRes, cpuRes, memRes, kerRes, dskRes, prcRes, netRes]) {
-			if (!res.data.success) {
-				message.warning(res.data?.message || "Error fetching metrics")
-				loading.value = false
-				return
-			}
-		}
-
-		summary.value = sumRes.data.data || {}
-		cpu.value = cpuRes.data.data || {}
-		memory.value = memRes.data.data || {}
-		kernel.value = kerRes.data.data || {}
-		disks.value = dskRes.data.data || {}
-		processes.value = prcRes.data.data || {}
-		network.value = netRes.data.data || {}
-
-		loaded.value = true
-	} catch (err: unknown) {
-		message.error(getApiErrorMessage(err as ApiError) || "Error fetching metrics")
-	} finally {
-		loading.value = false
-	}
-}
-
-onBeforeMount(() => {
-	loadHosts()
-})
 </script>
