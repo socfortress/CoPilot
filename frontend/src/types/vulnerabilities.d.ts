@@ -71,12 +71,12 @@ export interface VulnerabilityReport {
 }
 
 export interface VulnerabilityReportGenerateRequest {
-	customer_code: string
+	customer_code?: string | null
 	report_name?: string
-	agent_name?: string
+	agent_name?: string | null
 	severity?: VulnerabilitySeverity
-	cve_id?: string
-	package_name?: string
+	cve_id?: string | null
+	package_name?: string | null
 	include_epss?: boolean
 }
 

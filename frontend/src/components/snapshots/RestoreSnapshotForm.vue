@@ -5,12 +5,14 @@
 		</n-form-item>
 
 		<n-form-item label="Indices in Snapshot">
-			<n-tag v-for="index in snapshot?.indices.slice(0, 5)" :key="index" size="small" class="mr-1 mb-1">
-				{{ index }}
-			</n-tag>
-			<n-tag v-if="(snapshot?.indices.length || 0) > 5" size="small">
-				+{{ (snapshot?.indices.length || 0) - 5 }} more
-			</n-tag>
+			<div class="flex flex-wrap gap-1">
+				<n-tag v-for="index in snapshot?.indices.slice(0, 5)" :key="index" size="small">
+					{{ index }}
+				</n-tag>
+				<n-tag v-if="(snapshot?.indices.length || 0) > 5" size="small">
+					+{{ (snapshot?.indices.length || 0) - 5 }} more
+				</n-tag>
+			</div>
 		</n-form-item>
 
 		<n-form-item label="Indices to Restore" path="indices">
@@ -18,7 +20,7 @@
 				v-model:value="indicesInput"
 				placeholder="Leave empty to restore all indices, or enter specific indices (comma-separated)"
 				type="textarea"
-				:rows="2"
+				:rows="4"
 			/>
 		</n-form-item>
 

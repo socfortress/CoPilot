@@ -2,7 +2,7 @@
 	<div class="healthcheck-list">
 		<div ref="header" class="header flex items-center justify-end gap-2">
 			<div class="info flex grow gap-2">
-				<n-popover overlap placement="bottom-start">
+				<n-popover overlap to="body">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
 							<n-button size="small" class="cursor-help!">
@@ -32,26 +32,54 @@
 					</div>
 				</n-popover>
 			</div>
-			<div class="flex items-center gap-2">
-				<n-select
-					v-model:value="checkNameFilter"
-					:options="checkNameOptions"
-					size="small"
-					class="w-48!"
-					placeholder="Filter by check name"
-					clearable
-					filterable
-					@update:value="getData"
-				/>
-				<n-select
-					v-model:value="statusFilter"
-					:options="statusOptions"
-					size="small"
-					class="w-32!"
-					@update:value="getData"
-				/>
-				<n-checkbox v-model:checked="excludeOk" size="small" @update:checked="getData">Exclude OK</n-checkbox>
-			</div>
+			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="px-0!">
+				<template #trigger>
+					<div class="bg-default rounded-lg">
+						<n-badge :show="hasActiveFilters" dot type="success" :offset="[-4, 0]">
+							<n-button size="small" @click="showFilters = true">
+								<template #icon>
+									<Icon :name="FilterIcon" />
+								</template>
+							</n-button>
+						</n-badge>
+					</div>
+				</template>
+				<div class="divide-border flex w-50 flex-col gap-0 divide-y">
+					<div class="flex flex-col gap-2.5 px-3 pt-1 pb-3">
+						<n-select
+							v-model:value="checkNameFilter"
+							:options="checkNameOptions"
+							size="small"
+							placeholder="Check name"
+							class="w-full"
+							clearable
+							filterable
+							:consistent-menu-width="false"
+						/>
+
+						<n-select
+							v-model:value="statusFilter"
+							:options="statusOptions"
+							size="small"
+							placeholder="Status"
+							class="w-full"
+							:consistent-menu-width="false"
+						/>
+
+						<n-checkbox v-model:checked="excludeOk" size="small">
+							<span class="text-xs">Exclude OK</span>
+						</n-checkbox>
+					</div>
+					<div class="flex justify-between gap-2 px-3 pt-2">
+						<div class="flex justify-start gap-2">
+							<n-button size="small" quaternary @click="showFilters = false">Close</n-button>
+						</div>
+						<div class="flex justify-end gap-2">
+							<n-button size="small" secondary @click="resetFilters">Reset</n-button>
+						</div>
+					</div>
+				</div>
+			</n-popover>
 			<n-pagination
 				v-model:page="currentPage"
 				v-model:page-size="pageSize"
@@ -94,8 +122,8 @@
 import type { InfluxDBAlert, InfluxDBAlertResponse } from "@/types/healthchecks.d"
 import { useResizeObserver } from "@vueuse/core"
 import _orderBy from "lodash/orderBy"
-import { NButton, NCheckbox, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { NBadge, NButton, NCheckbox, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { InfluxDBAlertSeverity } from "@/types/healthchecks.d"
@@ -116,9 +144,12 @@ const header = ref()
 const pageSlot = ref(8)
 
 // Filters
+const showFilters = ref(false)
 const statusFilter = ref<"all" | "active" | "cleared">("all")
 const excludeOk = ref(false)
 const checkNameFilter = ref<string | null>(null)
+
+const hasActiveFilters = computed(() => !!checkNameFilter.value || statusFilter.value !== "all" || excludeOk.value)
 
 const statusOptions = [
 	{ label: "All", value: "all" },
@@ -157,6 +188,7 @@ const itemsPaginated = computed(() => {
 })
 
 const InfoIcon = "carbon:information"
+const FilterIcon = "carbon:filter-edit"
 
 const total = computed<number>(() => {
 	return healthcheckList.value.length || 0
@@ -164,6 +196,17 @@ const total = computed<number>(() => {
 
 const criticalTotal = computed<number>(() => {
 	return healthcheckList.value.filter(o => o.severity === InfluxDBAlertSeverity.Critical).length || 0
+})
+
+function resetFilters() {
+	checkNameFilter.value = null
+	statusFilter.value = "all"
+	excludeOk.value = false
+}
+
+watch([checkNameFilter, statusFilter, excludeOk], () => {
+	currentPage.value = 1
+	getData()
 })
 
 function getCheckNames() {

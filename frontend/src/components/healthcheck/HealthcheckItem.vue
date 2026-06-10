@@ -1,83 +1,82 @@
 <template>
-	<div>
-		<CardEntity :status="statusType">
-			<template #headerMain>
-				<div class="flex items-center gap-2">
-					<span>{{ alert.check_name }}</span>
-					<n-tag
-						v-if="alert.status === InfluxDBAlertStatus.Active"
-						type="error"
-						size="small"
-						:bordered="false"
-					>
-						Active
-					</n-tag>
-					<n-tag v-else type="success" size="small" :bordered="false">Cleared</n-tag>
-				</div>
-			</template>
-			<template #headerExtra>
-				<div class="flex items-center gap-2">
-					<n-tag v-if="alert.severity" :type="severityTagType" size="small" :bordered="false">
-						{{ alert.severity.toUpperCase() }}
-					</n-tag>
-					<span>{{ formatDate(alert.time) }}</span>
-				</div>
-			</template>
-			<template #default>
-				<div class="flex items-center gap-3">
-					<div class="mt-1">
-						<Icon :name="severityIcon" :size="20" :class="severityIconClass" />
-					</div>
-					<div class="grow">
-						<div class="font-mono text-sm" v-html="formattedMessage"></div>
-						<div v-if="alert.sensor_type" class="mt-1 text-xs opacity-50">
-							Sensor: {{ alert.sensor_type }}
-						</div>
-					</div>
-				</div>
-			</template>
-		</CardEntity>
-	</div>
+	<CardEntity
+		size="small"
+		embedded
+		main-box-class="gap-2"
+		header-box-class="flex-nowrap! items-start text-default!"
+		:status="cardStatus"
+	>
+		<template #headerMain>
+			<span class="line-clamp-2 text-sm leading-snug font-semibold" :title="alert.check_name">
+				{{ alert.check_name }}
+			</span>
+		</template>
+
+		<template #headerExtra>
+			<Badge type="splitted" bright size="small" :color="severityBadgeColor">
+				<template #label>
+					<Icon :name="severityIcon" :size="12" />
+					Severity
+				</template>
+				<template #value>{{ severityLabel }}</template>
+			</Badge>
+		</template>
+
+		<template #default>
+			<p class="text-secondary font-mono text-xs leading-relaxed" :title="alert.message">
+				{{ formattedMessage }}
+			</p>
+		</template>
+
+		<template #footerMain>
+			<div class="flex flex-wrap items-center gap-2">
+				<Badge type="splitted" bright size="small" :color="alertStatusBadgeColor">
+					<template #label>
+						<Icon :name="alertStatusIcon" :size="12" />
+						Status
+					</template>
+					<template #value>{{ alertStatusLabel }}</template>
+				</Badge>
+				<Badge v-if="alert.sensor_type" type="splitted" bright size="small">
+					<template #label>Sensor</template>
+					<template #value>{{ alert.sensor_type }}</template>
+				</Badge>
+				<Badge type="splitted" bright size="small">
+					<template #label>Detected</template>
+					<template #value>{{ formatDate(alert.time, dFormats.datetime, { utc: true }) }}</template>
+				</Badge>
+			</div>
+		</template>
+	</CardEntity>
 </template>
 
 <script setup lang="ts">
+import type { BadgeColor } from "@/components/common/Badge.vue"
 import type { InfluxDBAlert } from "@/types/healthchecks.d"
-import { NTag } from "naive-ui"
 import { computed } from "vue"
+import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { InfluxDBAlertSeverity, InfluxDBAlertStatus } from "@/types/healthchecks.d"
-import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils/format"
 
 const { alert } = defineProps<{ alert: InfluxDBAlert }>()
 
 const NEWLINE_REGEX = /\r?\n/g
 
-const formattedMessage = computed(() => {
-	return alert.message.replace(NEWLINE_REGEX, " <span class='mx-1'>•</span> ")
-})
+const dFormats = useSettingsStore().dateFormat
 
-const statusType = computed(() => {
-	if (alert.severity === InfluxDBAlertSeverity.Critical) {
-		return "error"
-	} else if (alert.severity === InfluxDBAlertSeverity.Warning) {
-		return "warning"
-	}
-	return undefined
-})
+const formattedMessage = computed(() => alert.message.replace(NEWLINE_REGEX, " • "))
 
-const severityTagType = computed(() => {
-	switch (alert.severity) {
-		case InfluxDBAlertSeverity.Critical:
-			return "error"
-		case InfluxDBAlertSeverity.Warning:
-			return "warning"
-		case InfluxDBAlertSeverity.Info:
-			return "info"
-		default:
-			return "success"
+const severityLabel = computed(() => {
+	const labels: Record<InfluxDBAlertSeverity, string> = {
+		[InfluxDBAlertSeverity.Critical]: "Critical",
+		[InfluxDBAlertSeverity.Warning]: "Warning",
+		[InfluxDBAlertSeverity.Info]: "Info",
+		[InfluxDBAlertSeverity.Ok]: "OK"
 	}
+	return labels[alert.severity] ?? alert.severity
 })
 
 const severityIcon = computed(() => {
@@ -93,22 +92,32 @@ const severityIcon = computed(() => {
 	}
 })
 
-const severityIconClass = computed(() => {
+const severityBadgeColor = computed((): BadgeColor | undefined => {
 	switch (alert.severity) {
 		case InfluxDBAlertSeverity.Critical:
-			return "text-error-500"
+			return "danger"
 		case InfluxDBAlertSeverity.Warning:
-			return "text-warning-500"
+			return "warning"
 		case InfluxDBAlertSeverity.Info:
-			return "text-info-500"
+			return "primary"
 		default:
-			return "text-success-500"
+			return "success"
 	}
 })
 
-const dFormats = useSettingsStore().dateFormat
+const cardStatus = computed((): "error" | "warning" | undefined => {
+	if (alert.severity === InfluxDBAlertSeverity.Critical) return "error"
+	if (alert.severity === InfluxDBAlertSeverity.Warning) return "warning"
+	return undefined
+})
 
-function formatDate(timestamp: string | number | Date, utc: boolean = true): string {
-	return dayjs(timestamp).utc(utc).format(dFormats.datetime)
-}
+const alertStatusLabel = computed(() => (alert.status === InfluxDBAlertStatus.Active ? "Active" : "Cleared"))
+
+const alertStatusIcon = computed(() =>
+	alert.status === InfluxDBAlertStatus.Active ? "carbon:warning-filled" : "carbon:checkmark-filled"
+)
+
+const alertStatusBadgeColor = computed((): BadgeColor | undefined =>
+	alert.status === InfluxDBAlertStatus.Active ? "danger" : "success"
+)
 </script>

@@ -41,7 +41,7 @@
 									<span class="text-secondary text-xs">{{ formatBytes(tpl.size_bytes) }}</span>
 								</div>
 								<span class="text-secondary text-xs">
-									updated {{ formatDate(tpl.modified_at, "MMM D, YYYY HH:mm") }}
+									updated {{ formatDate(tpl.modified_at, dFormats.datetime) }}
 								</span>
 							</div>
 						</n-radio>
@@ -68,6 +68,7 @@ import { NButton, NEmpty, NModal, NRadio, NRadioGroup, NSpin, useMessage } from 
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { formatBytes, formatDate } from "@/utils/format"
 
 const props = defineProps<{
@@ -80,6 +81,7 @@ const emit = defineEmits<{
 	(e: "replayed", data: Record<string, unknown> | undefined): void
 }>()
 
+const dFormats = useSettingsStore().dateFormat
 const message = useMessage()
 const loading = ref(false)
 const submitting = ref(false)

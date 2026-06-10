@@ -72,12 +72,12 @@ const emit = defineEmits<{
 
 const formRef = ref<FormInst | null>(null)
 const formData = ref<VulnerabilityReportGenerateRequest>({
-	customer_code: "",
-	report_name: "",
-	agent_name: "",
+	customer_code: null,
+	report_name: undefined,
+	agent_name: null,
 	severity: undefined,
-	cve_id: "",
-	package_name: "",
+	cve_id: null,
+	package_name: null,
 	include_epss: false
 })
 

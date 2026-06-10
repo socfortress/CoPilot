@@ -92,7 +92,7 @@ export interface SCAReport {
 }
 
 export interface SCAReportGenerateRequest {
-	customer_code: string
+	customer_code?: string | null
 	report_name?: string
 	agent_name?: string
 	policy_id?: string

@@ -105,37 +105,6 @@
 	}
 }
 
-.n-spin-container {
-	.n-spin-body {
-		inset: 0 !important;
-		transform: none !important;
-		display: block;
-
-		.n-base-loading {
-			position: sticky;
-			top: 50%;
-			margin-top: min(50%, 100px);
-			width: 100%;
-			display: flex;
-			justify-content: center;
-			transform: translateY(-70px);
-
-			.n-base-loading__transition-wrapper {
-				width: 1em;
-				height: 1em;
-			}
-		}
-
-		.n-spin-description {
-			position: sticky;
-			top: calc(50% + 50px);
-			left: 50%;
-			transform: translateX(-50%) translateY(-40px);
-			margin-top: 0;
-		}
-	}
-}
-
 .n-form-item {
 	.n-form-item-feedback-wrapper {
 		.n-form-item-feedback {

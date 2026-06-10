@@ -86,7 +86,7 @@ interface Props {
 
 const formRef = ref<FormInst | null>(null)
 const formValue = ref<SCAReportGenerateRequest>({
-	customer_code: "",
+	customer_code: null,
 	report_name: undefined,
 	agent_name: undefined,
 	policy_id: undefined,
@@ -129,9 +129,3 @@ async function handleGenerate() {
 	}
 }
 </script>
-
-<style scoped>
-.w-full {
-	width: 100%;
-}
-</style>

@@ -9,13 +9,13 @@
 				v-model:value="indicesInput"
 				placeholder="Enter index patterns (comma-separated, e.g., wazuh_*)"
 				type="textarea"
-				:rows="2"
+				:rows="4"
 			/>
 		</n-form-item>
 
 		<n-form-item label="Skip Write Indices" path="skip_write_indices">
 			<n-switch v-model:value="formData.skip_write_indices" />
-			<span class="ml-2 text-sm text-gray-500">Skip indices currently being written to</span>
+			<span class="text-secondary ml-2 text-sm">Skip indices currently being written to</span>
 		</n-form-item>
 
 		<n-form-item label="Include Global State" path="include_global_state">
@@ -28,7 +28,7 @@
 
 		<n-form-item label="Wait for Completion" path="wait_for_completion">
 			<n-switch v-model:value="formData.wait_for_completion" />
-			<span class="ml-2 text-sm text-gray-500">Wait for snapshot to complete before returning</span>
+			<span class="text-secondary ml-2 text-sm">Wait for snapshot to complete before returning</span>
 		</n-form-item>
 
 		<div class="mt-4 flex justify-end gap-2">
