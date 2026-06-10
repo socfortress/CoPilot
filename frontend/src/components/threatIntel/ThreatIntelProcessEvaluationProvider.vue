@@ -127,13 +127,13 @@ import _toSafeInteger from "lodash/toSafeInteger"
 import { NCard, NEmpty, NInput, NModal, NSpin, NStatistic, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"
 import Api from "@/api"
+import Markdown from "@/components/common/Markdown.vue"
 
 const { processName } = defineProps<{
 	processName: string
 }>()
 
 const ListPercentage = defineAsyncComponent(() => import("@/components/common/ListPercentage.vue"))
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const evaluation = ref<EvaluationData | null>(null)
 const mcpResponse = ref<MCPQueryResponse | null>(null)

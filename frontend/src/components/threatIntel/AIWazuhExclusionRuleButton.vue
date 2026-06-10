@@ -64,6 +64,7 @@ import { NButton, NEmpty, NModal, useMessage } from "naive-ui"
 import { defineAsyncComponent, ref, watchEffect } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import Markdown from "@/components/common/Markdown.vue"
 import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"
 
 const {
@@ -81,7 +82,6 @@ const {
 }>()
 
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const LockIcon = "carbon:locked"
 const AiIcon = "mage:stars-c"

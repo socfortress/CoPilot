@@ -79,11 +79,13 @@
 <script setup lang="ts">
 import type { CaseComment } from "@/types/incidentManagement/cases.d"
 import { NAvatar, NButton, NInput, NPopconfirm, useMessage } from "naive-ui"
-import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
+import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import Markdown from "@/components/common/Markdown.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getAvatar, getNameInitials } from "@/utils"
+
 import { formatDate } from "@/utils/format"
 
 type Mode = "view" | "edit"
@@ -94,8 +96,6 @@ const emit = defineEmits<{
 	(e: "deleted"): void
 	(e: "updated", value: CaseComment): void
 }>()
-
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const { comment, embedded } = toRefs(props)
 

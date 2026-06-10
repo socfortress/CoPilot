@@ -58,10 +58,12 @@
 // TODO-FE: refactor
 import type { MitreMitigationDetails } from "@/types/mitre.d"
 import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
-import { defineAsyncComponent, onBeforeMount, ref } from "vue"
+import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import Markdown from "@/components/common/Markdown.vue"
 import TechniquesList from "../Technique/TechniquesList.vue"
+
 import MitigationDetails from "./MitigationDetails.vue"
 
 const { id, entity } = defineProps<{
@@ -72,8 +74,6 @@ const { id, entity } = defineProps<{
 const emit = defineEmits<{
 	(e: "loaded", value: MitreMitigationDetails): void
 }>()
-
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const showDetails = ref(false)
 const message = useMessage()

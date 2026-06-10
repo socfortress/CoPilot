@@ -51,10 +51,12 @@
 <script setup lang="ts">
 import type { ServiceItemData, ServiceItemType } from "./types"
 import { NButton, NModal, NRadio } from "naive-ui"
-import { defineAsyncComponent, ref, toRefs } from "vue"
+import { ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+
+import Markdown from "@/components/common/Markdown.vue"
 
 const props = defineProps<{
 	data: ServiceItemData
@@ -64,8 +66,6 @@ const props = defineProps<{
 	selectable?: boolean
 	disabled?: boolean
 }>()
-
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const { data, embedded, checked, selectable, disabled } = toRefs(props)
 

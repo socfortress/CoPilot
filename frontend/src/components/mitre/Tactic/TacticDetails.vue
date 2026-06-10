@@ -71,19 +71,19 @@ import type { MitreTacticDetails } from "@/types/mitre.d"
 import { useElementBounding, useRafFn } from "@vueuse/core"
 import { useMotionProperties } from "@vueuse/motion"
 import { NCard, NSpin, useMessage } from "naive-ui"
-import { defineAsyncComponent, onBeforeMount, ref, watch } from "vue"
+import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import Markdown from "@/components/common/Markdown.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
+
 import References from "../common/References.vue"
 
 const { externalId, entity } = defineProps<{
 	externalId?: string
 	entity?: MitreTacticDetails
 }>()
-
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const dFormats = useSettingsStore().dateFormat
 const message = useMessage()

@@ -14,14 +14,14 @@
 <script setup lang="ts">
 import type { ActiveResponseDetails, SupportedActiveResponse } from "@/types/activeResponse.d"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
-import { defineAsyncComponent, onBeforeMount, ref } from "vue"
+import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
+
+import Markdown from "@/components/common/Markdown.vue"
 
 const { activeResponse } = defineProps<{
 	activeResponse: SupportedActiveResponse
 }>()
-
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const message = useMessage()
 const loadingActiveResponse = ref(false)
