@@ -12,8 +12,8 @@
 					{{ formatDate(comment.created_at, dFormats.datetime) }}
 				</div>
 			</div>
-			<div v-if="mode === 'view'" class="comment-message">
-				<Markdown :source="comment.comment" />
+			<div v-if="mode === 'view'" class="comment-message whitespace-pre-wrap">
+				{{ comment.comment }}
 			</div>
 
 			<n-input
@@ -82,7 +82,6 @@ import { NAvatar, NButton, NInput, NPopconfirm, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import Markdown from "@/components/common/Markdown.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getAvatar, getNameInitials } from "@/utils"
 
@@ -202,7 +201,7 @@ onBeforeMount(() => {
 			border-radius: var(--border-radius);
 			background-color: var(--bg-default-color);
 			border: 1px solid var(--border-color);
-			padding: 6px 10px;
+			padding: 8px 10px;
 		}
 	}
 
