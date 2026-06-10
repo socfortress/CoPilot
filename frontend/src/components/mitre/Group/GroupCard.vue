@@ -67,11 +67,13 @@
 // TODO-FE: refactor
 import type { MitreGroupDetails } from "@/types/mitre.d"
 import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
-import { defineAsyncComponent, onBeforeMount, ref } from "vue"
+import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import Markdown from "@/components/common/Markdown.vue"
 import SoftwareList from "../Software/SoftwareList.vue"
 import TechniquesList from "../Technique/TechniquesList.vue"
+
 import GroupDetails from "./GroupDetails.vue"
 
 const { id, entity } = defineProps<{
@@ -82,8 +84,6 @@ const { id, entity } = defineProps<{
 const emit = defineEmits<{
 	(e: "loaded", value: MitreGroupDetails): void
 }>()
-
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const showDetails = ref(false)
 const message = useMessage()

@@ -28,11 +28,18 @@ export function removePersistentSessionKey() {
 	}
 }
 
+/** secure-ls returns parsed values; Storage adapters expect JSON strings. */
+function normalizeStorageGetItem(value: unknown): string | null {
+	if (value == null) return null
+	if (typeof value === "string") return value === "" ? null : value
+	return JSON.stringify(value)
+}
+
 export function secureLocalStorage(options?: { session?: boolean }) {
 	return {
 		getItem(key: string) {
 			try {
-				return secureLS.get(persistentKey({ session: options?.session })(key))
+				return normalizeStorageGetItem(secureLS.get(persistentKey({ session: options?.session })(key)))
 			} catch (err) {
 				console.warn(`[secureLocalStorage] Failed to get "${key}"`, err)
 				return null
@@ -59,7 +66,14 @@ export function secureLocalStorage(options?: { session?: boolean }) {
 
 export function piniaStorage(options?: { session?: boolean }) {
 	return {
-		getItem: (key: string) => secureLS.get(persistentKey({ session: options?.session })(key)),
+		getItem: (key: string) => {
+			try {
+				return normalizeStorageGetItem(secureLS.get(persistentKey({ session: options?.session })(key)))
+			} catch (err) {
+				console.warn(`[piniaStorage] Failed to get "${key}"`, err)
+				return null
+			}
+		},
 		setItem: (key: string, value: unknown) => secureLS.set(persistentKey({ session: options?.session })(key), value)
 	}
 }

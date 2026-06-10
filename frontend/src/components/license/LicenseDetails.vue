@@ -89,12 +89,14 @@
 import type { License, LicenseFeatures } from "@/types/license.d"
 import _startCase from "lodash/startCase"
 import { NSpin, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, onBeforeMount, onMounted, ref, toRefs } from "vue"
+import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
+import Markdown from "@/components/common/Markdown.vue"
 import { useSettingsStore } from "@/stores/settings"
+
 import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
@@ -113,8 +115,6 @@ const emit = defineEmits<{
 		}
 	): void
 }>()
-
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const { licenseData, featuresData, hideKey, hideFeatures } = toRefs(props)
 

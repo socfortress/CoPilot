@@ -12,8 +12,8 @@
 					{{ formatDate(comment.created_at, dFormats.datetime) }}
 				</div>
 			</div>
-			<div v-if="mode === 'view'" class="comment-message">
-				<Markdown :source="comment.comment" />
+			<div v-if="mode === 'view'" class="comment-message whitespace-pre-wrap">
+				{{ comment.comment }}
 			</div>
 
 			<n-input
@@ -79,11 +79,12 @@
 <script setup lang="ts">
 import type { AlertComment } from "@/types/incidentManagement/alerts.d"
 import { NAvatar, NButton, NInput, NPopconfirm, useMessage } from "naive-ui"
-import { defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
+import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getAvatar, getNameInitials } from "@/utils"
+
 import { formatDate } from "@/utils/format"
 
 type Mode = "view" | "edit"
@@ -94,8 +95,6 @@ const emit = defineEmits<{
 	(e: "deleted"): void
 	(e: "updated", value: AlertComment): void
 }>()
-
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const { comment, embedded } = toRefs(props)
 
@@ -202,7 +201,7 @@ onBeforeMount(() => {
 			border-radius: var(--border-radius);
 			background-color: var(--bg-default-color);
 			border: 1px solid var(--border-color);
-			padding: 6px 10px;
+			padding: 8px 10px;
 		}
 	}
 

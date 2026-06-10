@@ -13,14 +13,14 @@
 
 <script setup lang="ts">
 import { NEmpty, NSpin, useMessage } from "naive-ui"
-import { defineAsyncComponent, onBeforeMount, ref } from "vue"
+import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
+
+import Markdown from "@/components/common/Markdown.vue"
 
 const { techniqueId } = defineProps<{
 	techniqueId: string
 }>()
-
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const message = useMessage()
 const loading = ref(false)
