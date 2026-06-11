@@ -10,6 +10,7 @@ import type {
 	PalaceSearchHit,
 	QueuePalaceLessonPayload,
 	ReplayPayload,
+	SearchPalaceLessonsQuery,
 	SubmitReviewPayload
 } from "@/types/aiAnalyst.d"
 import type { FlaskBaseResponse } from "@/types/flask.d"
@@ -180,7 +181,7 @@ export default {
 	 * Preview similar lessons already stored in MemPalace — debounced against
 	 * the lesson-text textarea so the reviewer can see overlap before queueing.
 	 */
-	searchPalaceLessons(customerCode: string, query: string, room?: string, limit = 5) {
+	searchPalaceLessons({ customerCode, query, room, limit = 5 }: SearchPalaceLessonsQuery) {
 		return HttpClient.get<FlaskBaseResponse & { lessons: PalaceSearchHit[] }>(
 			`/ai_analyst/palace_lessons/customer/${customerCode}`,
 			{

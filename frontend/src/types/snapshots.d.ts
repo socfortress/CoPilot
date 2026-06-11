@@ -37,6 +37,11 @@ export interface SnapshotStatus {
 	indices: Record<string, SnapshotIndexStatus>
 }
 
+export interface SnapshotStatusQuery {
+	repository?: string
+	snapshot?: string
+}
+
 export interface SnapshotStatusResponse {
 	snapshots: SnapshotStatus[]
 	success: boolean

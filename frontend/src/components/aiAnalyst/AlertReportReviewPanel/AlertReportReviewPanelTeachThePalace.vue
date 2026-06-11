@@ -155,12 +155,12 @@ function scheduleSimilarSearch() {
 
 	similarTimer = setTimeout(async () => {
 		try {
-			const res = await Api.aiAnalyst.searchPalaceLessons(
-				report.value.customer_code,
-				text,
-				lesson.value.lesson_type ?? undefined,
-				5
-			)
+			const res = await Api.aiAnalyst.searchPalaceLessons({
+				customerCode: report.value.customer_code,
+				query: text,
+				room: lesson.value.lesson_type ?? undefined,
+				limit: 5
+			})
 			if (res.data.success) similarLessons.value = res.data.lessons || []
 			else similarLessons.value = []
 		} catch {

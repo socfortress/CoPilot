@@ -37,6 +37,14 @@ export enum IndexShardState {
 	UNASSIGNED = "UNASSIGNED"
 }
 
+export interface CustomerIndicesSize {
+	customer: string
+	total_size_bytes: number
+	total_size_human: string
+	index_count: number
+	indices: string[]
+}
+
 export interface ClusterHealth {
 	active_primary_shards: number
 	active_shards: number

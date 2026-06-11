@@ -353,7 +353,7 @@ function getData() {
 	}
 
 	Api.incidentManagement.cases
-		.getCasesList(query, {
+		.getCasesList(query || {}, {
 			page: currentPage.value,
 			pageSize: pageSize.value,
 			order: sort.value

@@ -35,8 +35,14 @@ export type CaseCommentPayload = Omit<CaseComment, "id">
 
 export type CaseCommentUpdatePayload = Omit<CaseComment, "id"> & { comment_id: number }
 
+export interface ExportCasesQuery {
+	customerCode?: string
+	year?: number
+	month?: number
+}
+
 export default {
-	getCasesList(filters?: Partial<UnionToIntersection<CasesFilter>>, pagination?: CasesPaginationParams) {
+	getCasesList(filters: Partial<UnionToIntersection<CasesFilter>>, pagination?: CasesPaginationParams) {
 		let url = `/incidents/db_operations/cases`
 
 		if (filters?.status) {
@@ -126,7 +132,7 @@ export default {
 	deleteCase(caseId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case/${caseId}`)
 	},
-	exportCases(customerCode?: string, year?: number, month?: number) {
+	exportCases({ customerCode, year, month }: ExportCasesQuery = {}) {
 		let url = `/incidents/report/generate-report-csv`
 
 		if (customerCode) {

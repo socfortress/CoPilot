@@ -38,7 +38,6 @@ export interface AlertIocPayload {
 	ioc_description: string
 }
 
-// TODO-FE: refactor
 export default {
 	getAlertsList(args: Partial<AlertsQuery>, signal?: AbortSignal) {
 		let url = `/incidents/db_operations/alerts`
@@ -65,8 +64,12 @@ export default {
 			url = `/incidents/db_operations/alerts/source/${args.filter.source}`
 		}
 
-		// TODO-FE: remove any
-		const params: any = {
+		const params: {
+			page: number
+			page_size: number
+			order: "asc" | "desc"
+			[key: string]: unknown
+		} = {
 			page: args.page || 1,
 			page_size: args.pageSize || 25,
 			order: args.sort || "desc"

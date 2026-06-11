@@ -104,7 +104,11 @@ function exportCases(key: string) {
 			: `cases_customer:${key}${monthSuffix}_${formatDate(new Date(), dFormats.datetimesec)}.csv`
 
 	Api.incidentManagement.cases
-		.exportCases(key === "--all--" ? undefined : key, year, month)
+		.exportCases({
+			customerCode: key === "--all--" ? undefined : key,
+			year,
+			month
+		})
 		.then(res => {
 			if (res.data) {
 				saveAs(new Blob([res.data], { type: "text/csv;charset=utf-8" }), fileName)

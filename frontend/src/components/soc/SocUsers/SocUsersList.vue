@@ -100,7 +100,7 @@ function getAlerts() {
 	loadingAlerts.value = true
 
 	Api.soc
-		.getAlerts()
+		.getAlerts({})
 		.then(res => {
 			if (res.data.success) {
 				alertsList.value = res.data?.alerts || []

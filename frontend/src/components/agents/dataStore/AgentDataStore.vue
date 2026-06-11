@@ -136,7 +136,7 @@ function getArtifacts() {
 	loading.value = true
 
 	Api.agents
-		.listAgentArtifacts(agentId)
+		.listAgentArtifacts({ agentId })
 		.then(res => {
 			if (res.data.success) {
 				artifacts.value = res.data.data || []
