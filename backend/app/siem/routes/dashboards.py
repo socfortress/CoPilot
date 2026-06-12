@@ -178,10 +178,11 @@ async def disable_dashboard_endpoint(
 )
 async def panel_data_endpoint(
     request: PanelDataRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> PanelDataResponse:
     logger.info(f"Fetching panel data for dashboard {request.dashboard_id} (timerange={request.timerange})")
-    data = await get_panel_data(request.dashboard_id, request.timerange, db)
+    data = await get_panel_data(request.dashboard_id, request.timerange, db, current_user)
     return PanelDataResponse(
         panels=data["results"],
         template=data["template"],

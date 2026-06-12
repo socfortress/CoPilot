@@ -94,7 +94,12 @@ async def get_alerts_not_created_route() -> AlertsPayload:
 @incidents_alerts_router.post(
     "/alert/details",
     description="Get the details of a single alert",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    # NOTE: customer_user is intentionally excluded. This reads an arbitrary
+    # index_name + alert_id directly from the indexer with no per-tenant check,
+    # so allowing the multi-tenant portal role enabled cross-tenant SIEM reads
+    # (GHSA-ch48-63px-6wp2). admin/analyst are all-tenant by design; the customer
+    # portal never calls this route (it uses /incidents/db_operations/* instead).
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_single_alert_details_route(
     create_alert_request: CreateAlertRequestRoute,
@@ -121,7 +126,12 @@ async def get_single_alert_details_route(
 @incidents_alerts_router.post(
     "/alert/timeline",
     description="Get the timeline of an alert",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    # NOTE: customer_user is intentionally excluded. This reads an arbitrary
+    # index_name + alert_id directly from the indexer with no per-tenant check,
+    # so allowing the multi-tenant portal role enabled cross-tenant SIEM reads
+    # (GHSA-ch48-63px-6wp2). admin/analyst are all-tenant by design; the customer
+    # portal never calls this route (it uses /incidents/db_operations/* instead).
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_alert_timeline_route(
     alert: CreateAlertRequestRoute,

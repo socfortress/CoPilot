@@ -556,7 +556,12 @@ async def refresh_rules():
     "/execute",
     response_model=ExecuteSearchResponse,
     description="Execute a detection rule search against the Wazuh indexer",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    # NOTE: customer_user is intentionally excluded. This endpoint passes a
+    # caller-supplied index_pattern and CUSTOMER_CODE straight to the indexer
+    # with no per-tenant restriction, so allowing the multi-tenant portal role
+    # enabled cross-tenant SIEM reads (GHSA-ch48-63px-6wp2). admin/analyst are
+    # all-tenant by design; the customer portal never calls this route.
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def execute_search(request: ExecuteSearchRequest):
     """
