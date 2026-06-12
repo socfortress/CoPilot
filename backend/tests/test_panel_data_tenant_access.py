@@ -25,9 +25,10 @@ import pytest
 
 os.environ.setdefault("JWT_SECRET", "test-only-secret-not-the-compromised-default")
 
+from fastapi import HTTPException  # noqa: E402
+
 from app.auth.models.users import RoleEnum  # noqa: E402
 from app.siem.services.dashboards import get_panel_data  # noqa: E402
-from fastapi import HTTPException  # noqa: E402
 
 DASHBOARD_CUSTOMER = "TENANT_B"
 
@@ -53,10 +54,12 @@ def test_customer_user_without_access_is_denied():
     user = SimpleNamespace(id=42, role_id=RoleEnum.customer_user.value)
     # 1st execute: dashboard load. 2nd execute: the user's customer-access lookup
     # (assigned only to TENANT_A, NOT the dashboard's TENANT_B).
-    session = _session([
-        _scalar_result(first=dashboard),
-        _scalar_result(all_=["TENANT_A"]),
-    ])
+    session = _session(
+        [
+            _scalar_result(first=dashboard),
+            _scalar_result(all_=["TENANT_A"]),
+        ],
+    )
 
     with pytest.raises(HTTPException) as exc:
         asyncio.run(get_panel_data(dashboard_id=1, timerange="24h", db=session, current_user=user))
@@ -69,11 +72,13 @@ def test_customer_user_with_access_passes_the_gate():
     user = SimpleNamespace(id=7, role_id=RoleEnum.customer_user.value)
     # Assigned to the dashboard's own tenant -> gate passes -> falls through to
     # the event-source load, which we stub as missing (404).
-    session = _session([
-        _scalar_result(first=dashboard),
-        _scalar_result(all_=[DASHBOARD_CUSTOMER]),
-        _scalar_result(first=None),  # event source not found
-    ])
+    session = _session(
+        [
+            _scalar_result(first=dashboard),
+            _scalar_result(all_=[DASHBOARD_CUSTOMER]),
+            _scalar_result(first=None),  # event source not found
+        ],
+    )
 
     with pytest.raises(HTTPException) as exc:
         asyncio.run(get_panel_data(dashboard_id=1, timerange="24h", db=session, current_user=user))
@@ -85,10 +90,12 @@ def test_admin_passes_the_gate_for_any_tenant():
     user = SimpleNamespace(id=1, role_id=RoleEnum.admin.value)
     # Admin is wildcard: no access-lookup query is issued, so the 2nd execute is
     # the event-source load (stubbed missing).
-    session = _session([
-        _scalar_result(first=dashboard),
-        _scalar_result(first=None),  # event source not found
-    ])
+    session = _session(
+        [
+            _scalar_result(first=dashboard),
+            _scalar_result(first=None),  # event source not found
+        ],
+    )
 
     with pytest.raises(HTTPException) as exc:
         asyncio.run(get_panel_data(dashboard_id=1, timerange="24h", db=session, current_user=user))
