@@ -181,6 +181,13 @@ class AuthHandler:
         """
         try:
             payload = jwt.decode(token, self.secret, algorithms=["HS256"])
+            # Reject the short-lived "2fa_pending" token issued by /auth/token when
+            # 2FA is required. It is signed with the same JWT_SECRET as a real session
+            # token, but the second factor has NOT been completed yet, so it must never
+            # be accepted as a session. Only /auth/2fa/validate (via _decode_temp_token)
+            # may consume it. See GHSA-5m69-7h2p-6qfw.
+            if payload.get("type") == "2fa_pending":
+                return "2FA pending", []
             return payload["sub"], payload.get("scopes", [])
         except jwt.ExpiredSignatureError:
             return "Expired signature", []
@@ -226,6 +233,12 @@ class AuthHandler:
                 raise HTTPException(
                     status_code=401,
                     detail="Invalid token",
+                    headers={"WWW-Authenticate": authenticate_value},
+                )
+            if username == "2FA pending":
+                raise HTTPException(
+                    status_code=401,
+                    detail="Two-factor authentication required. Complete 2FA verification to obtain a session token.",
                     headers={"WWW-Authenticate": authenticate_value},
                 )
         except Exception as e:
@@ -304,6 +317,12 @@ class AuthHandler:
                 raise HTTPException(
                     status_code=401,
                     detail="Invalid token",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            if username == "2FA pending":
+                raise HTTPException(
+                    status_code=401,
+                    detail="Two-factor authentication required. Complete 2FA verification to obtain a session token.",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
