@@ -246,7 +246,7 @@ incidents_db_operations_router = APIRouter()
 @incidents_db_operations_router.get(
     "/ai_trigger/{customer_code}",
     response_model=AITriggerResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_customer_ai_trigger_endpoint(
     customer_code: str,
@@ -263,7 +263,7 @@ async def get_customer_ai_trigger_endpoint(
 @incidents_db_operations_router.put(
     "/ai_trigger",
     response_model=AITriggerResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def put_customer_ai_trigger_endpoint(
     notification: PutAITrigger,
@@ -281,7 +281,7 @@ async def put_customer_ai_trigger_endpoint(
 @incidents_db_operations_router.get(
     "/notification/{customer_code}",
     response_model=NotificationResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_customer_notification_endpoint(
     customer_code: str,
@@ -298,7 +298,7 @@ async def get_customer_notification_endpoint(
 @incidents_db_operations_router.put(
     "/notification",
     response_model=NotificationResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def put_customer_notification_endpoint(
     notification: PutNotification,
@@ -316,7 +316,7 @@ async def put_customer_notification_endpoint(
 @incidents_db_operations_router.get(
     "/available-source/{index_name}",
     response_model=AvailableSourcesResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_available_source_values(index_name: str, session: AsyncSession = Depends(get_db)):
     return AvailableSourcesResponse(source=await get_index_source(index_name), success=True, message="Source retrieved successfully")
@@ -325,7 +325,7 @@ async def get_available_source_values(index_name: str, session: AsyncSession = D
 @incidents_db_operations_router.get(
     "/available-indices/{source}",
     response_model=AvailableIndicesResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_available_indices(source: str, session: AsyncSession = Depends(get_db)):
     return AvailableIndicesResponse(
@@ -338,7 +338,7 @@ async def get_available_indices(source: str, session: AsyncSession = Depends(get
 @incidents_db_operations_router.get(
     "/socfortress/recommends/wazuh",
     response_model=SocfortressRecommendsWazuhResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_socfortress_recommends_wazuh(session: AsyncSession = Depends(get_db)):
     return SocfortressRecommendsWazuhResponse(
@@ -356,7 +356,7 @@ async def get_socfortress_recommends_wazuh(session: AsyncSession = Depends(get_d
 @incidents_db_operations_router.get(
     "/configured/sources",
     response_model=ConfiguredSourcesResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_configured_sources(session: AsyncSession = Depends(get_db)):
     query = select(FieldName.source).distinct()
@@ -366,7 +366,7 @@ async def get_configured_sources(session: AsyncSession = Depends(get_db)):
 
 @incidents_db_operations_router.delete(
     "/configured/sources/{source}",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_configured_source(source: str, session: AsyncSession = Depends(get_db)):
     # Fully deletes the configured sources `field_names`, `asset_name`, timefield_name`, alert_title_name`
@@ -403,7 +403,7 @@ async def delete_configured_source(source: str, session: AsyncSession = Depends(
 @incidents_db_operations_router.get(
     "/mappings/fields-assets-title-and-timefield",
     response_model=MappingsResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_wazuh_fields_and_assets(index_name: str, session: AsyncSession = Depends(get_db)):
     index_mapping = await get_index_mappings_key_names(index_name)
@@ -413,7 +413,7 @@ async def get_wazuh_fields_and_assets(index_name: str, session: AsyncSession = D
 @incidents_db_operations_router.get(
     "/fields-assets-title-and-timefield",
     response_model=FieldAndAssetNamesResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_source_fields_and_assets(source: str, session: AsyncSession = Depends(get_db)):
     await validate_source_exists(source, session)
@@ -431,7 +431,7 @@ async def get_source_fields_and_assets(source: str, session: AsyncSession = Depe
 
 @incidents_db_operations_router.post(
     "/fields-assets-title-and-timefield",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_wazuh_fields_and_assets(names: FieldAndAssetNames, session: AsyncSession = Depends(get_db)):
     for field_name in names.field_names:
@@ -456,7 +456,7 @@ async def create_wazuh_fields_and_assets(names: FieldAndAssetNames, session: Asy
 
 @incidents_db_operations_router.put(
     "/fields-assets-title-and-timefield",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def update_fields_and_assets(names: FieldAndAssetNames, session: AsyncSession = Depends(get_db)):
     await replace_field_name(names.source, names.field_names, session)
@@ -474,7 +474,7 @@ async def update_fields_and_assets(names: FieldAndAssetNames, session: AsyncSess
 
 @incidents_db_operations_router.delete(
     "/delete-fields-assets-title-and-timefield",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_wazuh_fields_and_assets(names: FieldAndAssetNames, session: AsyncSession = Depends(get_db)):
     for field_name in names.field_names:
@@ -499,7 +499,7 @@ async def delete_wazuh_fields_and_assets(names: FieldAndAssetNames, session: Asy
 @incidents_db_operations_router.delete(
     "/field_name/{field_name}/{source}",
     deprecated=True,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_field_name_endpoint(field_name: str, source: str, db: AsyncSession = Depends(get_db)):
     return await delete_field_name(source, field_name, db)
@@ -508,7 +508,7 @@ async def delete_field_name_endpoint(field_name: str, source: str, db: AsyncSess
 @incidents_db_operations_router.delete(
     "/asset_name/{asset_name}/{source}",
     deprecated=True,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_asset_name_endpoint(asset_name: str, source: str, db: AsyncSession = Depends(get_db)):
     return await delete_asset_name(source, asset_name, db)
@@ -517,7 +517,7 @@ async def delete_asset_name_endpoint(asset_name: str, source: str, db: AsyncSess
 @incidents_db_operations_router.delete(
     "/timefield_name/{timefield_name}/{source}",
     deprecated=True,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_timefield_name_endpoint(timefield_name: str, source: str, db: AsyncSession = Depends(get_db)):
     return await delete_timefield_name(source, timefield_name, db)
@@ -526,7 +526,7 @@ async def delete_timefield_name_endpoint(timefield_name: str, source: str, db: A
 @incidents_db_operations_router.delete(
     "/alert_title_name/{alert_title_name}/{source}",
     deprecated=True,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_alert_title_name_endpoint(alert_title_name: str, source: str, db: AsyncSession = Depends(get_db)):
     return await delete_alert_title_name(source, alert_title_name, db)
@@ -535,7 +535,7 @@ async def delete_alert_title_name_endpoint(alert_title_name: str, source: str, d
 @incidents_db_operations_router.post(
     "/alert",
     response_model=Alert,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_alert_endpoint(alert: AlertCreate, db: AsyncSession = Depends(get_db)):
     return await create_alert(alert, db)
@@ -546,7 +546,14 @@ async def create_alert_endpoint(alert: AlertCreate, db: AsyncSession = Depends(g
     response_model=AlertResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def update_alert_status_endpoint(alert_status: UpdateAlertStatus, db: AsyncSession = Depends(get_db)):
+async def update_alert_status_endpoint(
+    alert_status: UpdateAlertStatus,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    # Enforce per-object ownership: resolve the alert's customer and reject a
+    # caller who is not entitled to it (GHSA-wjpw-xrg8-vmf9).
+    await _ensure_alert_access(alert_status.alert_id, current_user, db)
     return AlertResponse(alert=await update_alert_status(alert_status, db), success=True, message="Alert status updated successfully")
 
 
@@ -732,7 +739,7 @@ async def delete_case_comment_endpoint(
 @incidents_db_operations_router.get(
     "/alert/available-users",
     response_model=AvailableUsersResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_available_users(db: AsyncSession = Depends(get_db)):
     all_users = await select_all_users()
@@ -746,7 +753,7 @@ async def get_available_users(db: AsyncSession = Depends(get_db)):
 @incidents_db_operations_router.put(
     "/alert/assigned-to",
     response_model=AlertResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def update_assigned_to_endpoint(assigned_to: AssignedToAlert, db: AsyncSession = Depends(get_db)):
     all_users = await select_all_users()
@@ -763,7 +770,7 @@ async def update_assigned_to_endpoint(assigned_to: AssignedToAlert, db: AsyncSes
 @incidents_db_operations_router.post(
     "/alert/context",
     response_model=AlertContextResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_alert_context_endpoint(alert_context: AlertContextCreate, db: AsyncSession = Depends(get_db)):
     return AlertContextResponse(
@@ -776,7 +783,7 @@ async def create_alert_context_endpoint(alert_context: AlertContextCreate, db: A
 @incidents_db_operations_router.get(
     "/alert/context/{alert_context_id}",
     response_model=AlertContextResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_alert_context_by_id_endpoint(alert_context_id: int, db: AsyncSession = Depends(get_db)):
     return AlertContextResponse(
@@ -789,7 +796,7 @@ async def get_alert_context_by_id_endpoint(alert_context_id: int, db: AsyncSessi
 @incidents_db_operations_router.post(
     "/alert/asset",
     response_model=AssetResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_asset_endpoint(asset: AssetCreate, db: AsyncSession = Depends(get_db)):
     return AssetResponse(asset=await create_asset(asset, db), success=True, message="Asset created successfully")
@@ -798,7 +805,7 @@ async def create_asset_endpoint(asset: AssetCreate, db: AsyncSession = Depends(g
 @incidents_db_operations_router.post(
     "/alert/ioc",
     response_model=AlertIoCResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_alert_ioc_endpoint(ioc: AlertIoCCreate, db: AsyncSession = Depends(get_db)):
     return AlertIoCResponse(alert_ioc=await create_alert_ioc(ioc, db), success=True, message="Alert IoC created successfully")
@@ -858,7 +865,7 @@ async def list_alerts_by_ioc_value_endpoint(
 @incidents_db_operations_router.delete(
     "/alert/ioc",
     response_model=AlertIoCResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_alert_ioc_endpoint(ioc: AlertIoCDelete, db: AsyncSession = Depends(get_db)):
     return AlertIoCResponse(
@@ -871,7 +878,7 @@ async def delete_alert_ioc_endpoint(ioc: AlertIoCDelete, db: AsyncSession = Depe
 @incidents_db_operations_router.post(
     "/alert/tag",
     response_model=AlertTagResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession = Depends(get_db)):
     return AlertTagResponse(alert_tag=await create_alert_tag(alert_tag, db), success=True, message="Alert tag created successfully")
@@ -932,7 +939,7 @@ async def list_alerts_by_tag_endpoint(
 @incidents_db_operations_router.delete(
     "/alert/tag",
     response_model=AlertTagResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_alert_tag_endpoint(alert_tag: AlertTagDelete, db: AsyncSession = Depends(get_db)):
     return AlertTagResponse(
@@ -956,6 +963,11 @@ async def create_case_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # Enforce ownership: a caller may only create a case under a customer they
+    # are entitled to (GHSA-wjpw-xrg8-vmf9). Scoped callers cannot pass a blank
+    # customer_code; admin/analyst keep wildcard access.
+    await _ensure_customer_access(case.customer_code, current_user, db)
+
     created = await create_case(case, db, actor=current_user.username, template_id=template_id)
 
     # Phase 4 audit emit
@@ -984,6 +996,11 @@ async def create_case_alert_link_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # Enforce ownership on BOTH ends of the link (GHSA-wjpw-xrg8-vmf9): the
+    # caller must be entitled to the case and to the alert being attached.
+    await _ensure_case_access(case_alert_link.case_id, current_user, db)
+    await _ensure_alert_access(case_alert_link.alert_id, current_user, db)
+
     link = await create_case_alert_link(case_alert_link, db, actor=current_user.username)
 
     from app.incidents.schema.case_templates import CaseEventType
@@ -1009,7 +1026,7 @@ async def create_case_alert_link_endpoint(
 @incidents_db_operations_router.post(
     "/case/alert-links",
     response_model=CaseAlertLinksResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_case_alert_links_endpoint(
     case_alert_links: CaseAlertLinksCreate,
@@ -1050,6 +1067,10 @@ async def case_alert_unlink_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # Enforce ownership: the caller must be entitled to the case being modified
+    # (GHSA-wjpw-xrg8-vmf9).
+    await _ensure_case_access(case_alert_link.case_id, current_user, db)
+
     response = await case_alert_unlink(case_alert_link, db)
 
     from app.incidents.schema.case_templates import CaseEventType
@@ -1091,6 +1112,10 @@ async def create_case_from_alert_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # Enforce ownership: the new case inherits the alert's customer_code, so the
+    # caller must be entitled to that alert (GHSA-wjpw-xrg8-vmf9).
+    await _ensure_alert_access(alert_id.alert_id, current_user, db)
+
     case = await create_case_from_alert(
         alert_id.alert_id,
         db,
@@ -1283,7 +1308,7 @@ async def delete_alert_endpoint(
 @incidents_db_operations_router.delete(
     "/alerts",
     response_model=DeleteAlertsResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_alerts_endpoint(request: DeleteAlertsRequest, db: AsyncSession = Depends(get_db)):
     """
@@ -2262,7 +2287,7 @@ async def list_cases_by_customer_code_endpoint(
 @incidents_db_operations_router.get(
     "/case/data-store",
     response_model=ListCaseDataStoreResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def list_all_case_data_store_files_endpoint(db: AsyncSession = Depends(get_db)):
     logger.info("Listing all files in the data store")
@@ -2463,7 +2488,7 @@ async def create_case_notification_endpoint(
 @incidents_db_operations_router.get(
     "/case-report-template",
     response_model=CaseReportTemplateDataStoreListResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def list_case_report_template_data_store_files_endpoint(db: AsyncSession = Depends(get_db)):
     logger.info("Listing all files in the data store")
@@ -2476,7 +2501,7 @@ async def list_case_report_template_data_store_files_endpoint(db: AsyncSession =
 
 @incidents_db_operations_router.get(
     "/case-report-template/do-default-template-exists",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def check_default_case_report_template_exists_endpoint(db: AsyncSession = Depends(get_db)):
     """
@@ -2499,7 +2524,7 @@ async def check_default_case_report_template_exists_endpoint(db: AsyncSession = 
 @incidents_db_operations_router.post(
     "/case-report-template/default-template",
     response_model=CaseReportTemplateDataStoreListResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_default_case_report_template_endpoint(db: AsyncSession = Depends(get_db)):
     """
@@ -2521,7 +2546,7 @@ async def create_default_case_report_template_endpoint(db: AsyncSession = Depend
 
 @incidents_db_operations_router.get(
     "/case-report-template/download/{file_name}",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def download_case_report_template_endpoint(file_name: str, db: AsyncSession = Depends(get_db)) -> StreamingResponse:
     file_bytes, file_content_type = await download_report_template(file_name, db)
@@ -2535,7 +2560,7 @@ async def download_case_report_template_endpoint(file_name: str, db: AsyncSessio
 @incidents_db_operations_router.post(
     "/case-report-template/upload",
     response_model=CaseReportTemplateDataStoreResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def upload_case_report_template_endpoint(
     file: UploadFile = File(...),
@@ -2587,6 +2612,31 @@ async def _ensure_case_access(case_id: int, current_user: User, db: AsyncSession
         raise HTTPException(
             status_code=403,
             detail=f"Access denied to case {case_id} - insufficient customer permissions",
+        )
+
+
+async def _ensure_alert_access(alert_id: int, current_user: User, db: AsyncSession):
+    """Shared helper: 404 if alert missing, 403 if user lacks customer access. Returns the alert."""
+    alert = await get_alert_by_id(alert_id, db, user=current_user)
+    if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to alert {alert_id} - insufficient customer permissions",
+        )
+    return alert
+
+
+async def _ensure_customer_access(customer_code: str, current_user: User, db: AsyncSession) -> None:
+    """Shared helper: 403 if the user lacks access to ``customer_code``.
+
+    ``customer_code`` is taken from request input; this asserts the caller is
+    actually entitled to that tenant. A None/blank code resolves to "no access"
+    for scoped (customer_user) callers while admin/analyst keep wildcard access.
+    """
+    if not await customer_access_handler.check_customer_access(current_user, customer_code, db):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied to customer {customer_code} - insufficient customer permissions",
         )
 
 
