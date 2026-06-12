@@ -43,7 +43,9 @@ def _user(role_id=4):
 def test_ensure_alert_access_denies_foreign_tenant():
     alert = SimpleNamespace(id=3, customer_code=VICTIM)
     with patch.object(dbo, "get_alert_by_id", AsyncMock(return_value=alert)), patch.object(
-        dbo.customer_access_handler, "check_customer_access", AsyncMock(return_value=False)
+        dbo.customer_access_handler,
+        "check_customer_access",
+        AsyncMock(return_value=False),
     ):
         with pytest.raises(HTTPException) as exc:
             import asyncio
@@ -58,7 +60,9 @@ def test_ensure_alert_access_allows_own_tenant():
 
     alert = SimpleNamespace(id=3, customer_code="TENANT_A")
     with patch.object(dbo, "get_alert_by_id", AsyncMock(return_value=alert)), patch.object(
-        dbo.customer_access_handler, "check_customer_access", AsyncMock(return_value=True)
+        dbo.customer_access_handler,
+        "check_customer_access",
+        AsyncMock(return_value=True),
     ):
         result = asyncio.run(dbo._ensure_alert_access(3, _user(), db=AsyncMock()))
     assert result is alert
@@ -72,7 +76,9 @@ def test_ensure_case_access_denies_foreign_tenant():
 
     case = SimpleNamespace(id=7, customer_code=VICTIM)
     with patch.object(dbo, "get_case_by_id", AsyncMock(return_value=case)), patch.object(
-        dbo.customer_access_handler, "check_customer_access", AsyncMock(return_value=False)
+        dbo.customer_access_handler,
+        "check_customer_access",
+        AsyncMock(return_value=False),
     ):
         with pytest.raises(HTTPException) as exc:
             asyncio.run(dbo._ensure_case_access(7, _user(), db=AsyncMock()))
@@ -151,11 +157,7 @@ PORTAL_FORBIDDEN = [
 def test_portal_forbidden_routes_drop_customer_user():
     src = open(dbo.__file__).read()
     scopes = _route_scopes(src)
-    offenders = [
-        (method, path)
-        for method, path in PORTAL_FORBIDDEN
-        if "customer_user" in scopes.get((method, path), "")
-    ]
+    offenders = [(method, path) for method, path in PORTAL_FORBIDDEN if "customer_user" in scopes.get((method, path), "")]
     assert not offenders, f"these routes still admit customer_user: {offenders}"
 
 
@@ -175,9 +177,5 @@ PORTAL_REQUIRED = [
 def test_portal_required_routes_keep_customer_user():
     src = open(dbo.__file__).read()
     scopes = _route_scopes(src)
-    missing = [
-        (method, path)
-        for method, path in PORTAL_REQUIRED
-        if "customer_user" not in scopes.get((method, path), "")
-    ]
+    missing = [(method, path) for method, path in PORTAL_REQUIRED if "customer_user" not in scopes.get((method, path), "")]
     assert not missing, f"these portal routes lost customer_user: {missing}"
