@@ -7,6 +7,19 @@
 				<Chip size="small" :value="loading ? 'Loading...' : paginatedTotal" label="items" />
 
 				<div class="flex items-center gap-2 whitespace-nowrap">
+					<n-button
+						size="small"
+						secondary
+						:disabled="loading || !paginatedTotal"
+						:focusable="false"
+						@click="exportCsv"
+					>
+						<template #icon>
+							<Icon name="carbon:download" />
+						</template>
+						Export CSV
+					</n-button>
+
 					<n-pagination
 						v-model:page="pagination.page"
 						v-model:page-size="pagination.pageSize"
@@ -61,7 +74,7 @@ import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import { useDebounceFn, useElementSize } from "@vueuse/core"
 import axios from "axios"
-import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
+import { NButton, NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, useTemplateRef, watch } from "vue"
 import Api from "@/api"
 import Filters from "@/components/agents/Filters.vue"
@@ -69,7 +82,7 @@ import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage, getStatusColor } from "@/utils"
+import { downloadCsv, getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
 import AgentCriticalSelect from "./AgentCriticalSelect.vue"
 import AgentDetailsButton from "./AgentDetailsButton.vue"
@@ -240,6 +253,44 @@ const loadAgents = useDebounceFn(async () => {
 		}
 	}
 }, 400)
+
+function exportCsv() {
+	// Export the currently-filtered set so the download reflects what the user
+	// sees (active filters/search), not just the current page.
+	const rows = dataFiltered.value
+	if (!rows.length) {
+		message.warning("No assets to export")
+		return
+	}
+
+	const headers = [
+		"Hostname",
+		"Agent ID",
+		"IP Address",
+		"Operating System",
+		"Status",
+		"Last Seen",
+		"Critical Asset",
+		"Agent Version",
+		"Customer Code"
+	]
+
+	const csvRows = rows.map(agent => [
+		agent.hostname,
+		agent.agent_id,
+		agent.ip_address,
+		agent.os,
+		agent.wazuh_agent_status,
+		agent.wazuh_last_seen ? String(formatDate(agent.wazuh_last_seen, dFormats.datetime)) : "",
+		agent.critical_asset ? "Yes" : "No",
+		agent.wazuh_agent_version,
+		agent.customer_code
+	])
+
+	const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")
+	downloadCsv(`assets-export-${stamp}.csv`, headers, csvRows)
+	message.success(`Exported ${rows.length} asset${rows.length === 1 ? "" : "s"} to CSV`)
+}
 
 function handleCriticalAssetUpdated(payload: AgentCriticalUpdateSuccessPayload) {
 	const agent = data.value.find(a => a.agent_id === payload.agentId)
