@@ -352,6 +352,14 @@ async def add_alert_to_document(
     Returns:
     - True if the update is successful, False otherwise.
     """
+    # Defense in depth (issue #909): never touch the "not_applicable" sentinel.
+    # It is not a real index — an es_client.update against it would auto-create
+    # a stray `not_applicable` index on the indexer. Velociraptor Sigma alerts
+    # with no backing Wazuh document carry this sentinel.
+    if alert.index_name == "not_applicable" or alert.alert_id == "not_applicable":
+        logger.info("Skipping document write-back for 'not_applicable' sentinel index/id")
+        return None
+
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
     try:
         await es_client.update(
@@ -868,8 +876,16 @@ async def create_alert_full(
                         session=session,
                     )
 
-            # Update the document reference if needed
-            if alert_payload.index_name and alert_payload.index_id:
+            # Update the document reference if needed. Skip the "not_applicable"
+            # sentinel (Velociraptor Sigma alerts with no backing Wazuh document
+            # use it) — writing to it would auto-create a stray `not_applicable`
+            # index on the indexer (issue #909).
+            if (
+                alert_payload.index_name
+                and alert_payload.index_id
+                and alert_payload.index_name != "not_applicable"
+                and alert_payload.index_id != "not_applicable"
+            ):
                 await add_alert_to_document(
                     CreateAlertRequest(index_name=alert_payload.index_name, alert_id=alert_payload.index_id),
                     existing_alert_id,
