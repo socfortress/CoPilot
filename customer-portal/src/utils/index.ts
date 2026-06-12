@@ -3,6 +3,7 @@ import type { ApiError, OsTypesFull, Severity } from "@/types/common"
 import type { SafeAny } from "@/types/utils"
 import process from "node:process"
 import { isMobile as detectMobile } from "detect-touch-device"
+import { saveAs } from "file-saver"
 import isDateObject from "lodash/isDate"
 import _trim from "lodash/trim"
 import { h } from "vue"
@@ -427,4 +428,39 @@ export function trendClass(trend: string, invert?: boolean) {
 		return invert ? "text-error" : "text-success"
 	}
 	return "text-secondary"
+}
+
+type CsvCell = string | number | boolean | null | undefined
+
+/**
+ * Build a CSV string from headers + rows and trigger a browser download.
+ *
+ * Cells are RFC-4180 quoted when they contain commas/quotes/newlines, and any
+ * cell that would be interpreted as a formula by a spreadsheet app (leading
+ * `= + - @` or control chars) is prefixed with a single quote to neutralise
+ * CSV/formula injection. A UTF-8 BOM is prepended so Excel detects the encoding.
+ */
+export function downloadCsv(filename: string, headers: string[], rows: CsvCell[][]): void {
+	const formatCell = (value: CsvCell): string => {
+		if (value === null || value === undefined) {
+			return ""
+		}
+		let str = String(value)
+		// Neutralise spreadsheet formula injection.
+		if (/^[=+\-@\t\r]/.test(str)) {
+			str = `'${str}`
+		}
+		// RFC 4180 quoting.
+		if (/[",\r\n]/.test(str)) {
+			str = `"${str.replace(/"/g, '""')}"`
+		}
+		return str
+	}
+
+	const lines = [headers, ...rows].map(row => row.map(formatCell).join(","))
+	// Prepend a UTF-8 BOM so Excel detects the encoding (escaped, not a literal
+	// BOM char, to satisfy no-irregular-whitespace).
+	const csv = `\uFEFF${lines.join("\r\n")}`
+	const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+	saveAs(blob, filename)
 }
