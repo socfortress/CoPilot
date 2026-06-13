@@ -17,12 +17,16 @@ from unittest.mock import patch
 
 os.environ.setdefault("JWT_SECRET", "test-only-secret-not-the-compromised-default")
 
-from app.connectors.velociraptor.schema.artifacts import QuarantineArtifactsEnum  # noqa: E402
+from app.connectors.velociraptor.schema.artifacts import (  # noqa: E402
+    QuarantineArtifactsEnum,
+)
 from app.connectors.velociraptor.services.artifacts import (  # noqa: E402
     DEFAULT_LINUX_QUARANTINE_ARTIFACT,
-    DEFAULT_WINDOWS_QUARANTINE_ARTIFACT,
-    resolve_quarantine_artifact,
 )
+from app.connectors.velociraptor.services.artifacts import (
+    DEFAULT_WINDOWS_QUARANTINE_ARTIFACT,
+)
+from app.connectors.velociraptor.services.artifacts import resolve_quarantine_artifact
 
 CUSTOM_LINUX = "Custom.Linux.Remediation.Quarantine"
 
