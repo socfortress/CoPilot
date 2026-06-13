@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from typing import Dict
 from typing import List
@@ -989,6 +990,36 @@ async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResp
         )
 
 
+# Built-in Velociraptor quarantine artifacts. Velociraptor 0.76.x+ added a
+# "forbidden connection test" step to the built-in Linux artifact that reaches an
+# external URL after applying nftables rules; when that test fails in locked-down
+# environments the artifact rolls the quarantine back even though the firewall
+# rules applied correctly. Velociraptor won't let you override a built-in
+# artifact, so operators ship a Custom.Linux.Remediation.Quarantine that drops
+# the test. The env vars below let a deployment redirect CoPilot at the custom
+# artifact with no code or frontend change. See issue #913.
+DEFAULT_LINUX_QUARANTINE_ARTIFACT = "Linux.Remediation.Quarantine"
+DEFAULT_WINDOWS_QUARANTINE_ARTIFACT = "Windows.Remediation.Quarantine"
+
+
+def resolve_quarantine_artifact(requested_artifact) -> str:
+    """Map a built-in quarantine artifact name to its configured override.
+
+    The frontend always sends the built-in name (Linux/Windows). A deployment can
+    redirect either one to a custom artifact via the
+    ``VELOCIRAPTOR_LINUX_QUARANTINE_ARTIFACT`` / ``VELOCIRAPTOR_WINDOWS_QUARANTINE_ARTIFACT``
+    env vars. Any other (already-custom) name is returned unchanged, so the
+    function is idempotent and safe to call more than once per request. Accepts
+    either the ``QuarantineArtifactsEnum`` or a plain string.
+    """
+    name = requested_artifact.value if hasattr(requested_artifact, "value") else str(requested_artifact)
+    if name == DEFAULT_LINUX_QUARANTINE_ARTIFACT:
+        return os.environ.get("VELOCIRAPTOR_LINUX_QUARANTINE_ARTIFACT", "").strip() or DEFAULT_LINUX_QUARANTINE_ARTIFACT
+    if name == DEFAULT_WINDOWS_QUARANTINE_ARTIFACT:
+        return os.environ.get("VELOCIRAPTOR_WINDOWS_QUARANTINE_ARTIFACT", "").strip() or DEFAULT_WINDOWS_QUARANTINE_ARTIFACT
+    return name
+
+
 async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse:
     """
     Quarantine a host.
@@ -1001,7 +1032,9 @@ async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse
     """
     velociraptor_service = await UniversalService.create("Velociraptor")
     try:
-        quarantine_body.artifact_name = quarantine_body.artifact_name.value
+        # Resolve any configured custom-artifact override (idempotent if the
+        # route already resolved it). See issue #913.
+        quarantine_body.artifact_name = resolve_quarantine_artifact(quarantine_body.artifact_name)
         quarantine_body.action = quarantine_body.action.value
         if quarantine_body.action == "quarantine":
             query = create_query(
