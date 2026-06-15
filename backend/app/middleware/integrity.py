@@ -106,8 +106,7 @@ def run_integrity_check() -> None:
         return
 
     logger.warning(
-        f"Enforcement module integrity check FAILED for: {', '.join(tampered)} - "
-        "the licensing logic may have been modified",
+        f"Enforcement module integrity check FAILED for: {', '.join(tampered)} - " "the licensing logic may have been modified",
     )
     if os.getenv("INTEGRITY_ENFORCE", "false").lower() in ("1", "true", "yes"):
         raise RuntimeError(f"Integrity enforcement enabled and tampering detected in: {', '.join(tampered)}")
