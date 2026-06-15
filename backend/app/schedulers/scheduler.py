@@ -15,6 +15,9 @@ from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
 from app.schedulers.services.invoke_alert_creation import invoke_alert_creation_collect
+from app.schedulers.services.invoke_wazuh_alert_ingestion import (
+    invoke_wazuh_alert_ingestion_collect,
+)
 from app.schedulers.services.invoke_carbonblack import (
     invoke_carbonblack_integration_collect,
 )
@@ -152,6 +155,12 @@ async def initialize_job_metadata():
                 "time_interval": 5,
                 "function": invoke_alert_creation_collect,
                 "description": "Invokes alert creation collection.",
+            },
+            {
+                "job_id": "invoke_wazuh_alert_ingestion_collect",
+                "time_interval": 5,
+                "function": invoke_wazuh_alert_ingestion_collect,
+                "description": "Ingests Wazuh alerts from Wazuh Indexer into CoPilot incident management.",
             },
             {
                 "job_id": "invoke_snapshot_schedules",
@@ -303,6 +312,7 @@ def get_function_by_name(function_name: str):
         "invoke_duo_integration_collect": invoke_duo_integration_collect,
         "invoke_darktrace_integration_collect": invoke_darktrace_integration_collect,
         "invoke_carbonblack_integration_collection": invoke_carbonblack_integration_collect,
+        "invoke_wazuh_alert_ingestion_collect": invoke_wazuh_alert_ingestion_collect,
         "invoke_palace_lesson_drainer": invoke_palace_lesson_drainer,
         "invoke_palace_lesson_sweeper": invoke_palace_lesson_sweeper,
         # Add other function mappings here

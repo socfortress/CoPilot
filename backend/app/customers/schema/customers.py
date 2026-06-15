@@ -10,8 +10,8 @@ from pydantic import Field
 class CustomerRequestBody(BaseModel):
     customer_code: str = Field(..., description="Unique code for the customer")
     customer_name: str = Field(..., description="Name of the customer")
-    contact_last_name: str = Field(..., description="Last name of the contact person")
-    contact_first_name: str = Field(..., description="First name of the contact person")
+    contact_last_name: Optional[str] = Field(None, description="Last name of the contact person")
+    contact_first_name: Optional[str] = Field(None, description="First name of the contact person")
 
     parent_customer_code: Optional[str] = Field(
         None,
