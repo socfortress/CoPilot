@@ -10,12 +10,14 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import User
 from app.connectors.wazuh_indexer.utils.universal import AlertsQueryBuilder
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
 )
 from app.db.universal_models import EnabledDashboards
 from app.db.universal_models import EventSources
+from app.middleware.customer_access import customer_access_handler
 from app.siem.schema.dashboards import DashboardCategory
 from app.siem.schema.dashboards import DashboardCategoryWithTemplates
 from app.siem.schema.dashboards import DashboardTemplate
@@ -201,6 +203,7 @@ async def get_panel_data(
     dashboard_id: int,
     timerange: str,
     db: AsyncSession,
+    current_user: User,
 ) -> Dict[str, Any]:
     """Execute each panel's query and return aggregated data for ECharts."""
 
@@ -211,6 +214,14 @@ async def get_panel_data(
     dashboard = result.scalars().first()
     if not dashboard:
         raise HTTPException(status_code=404, detail="Enabled dashboard not found")
+
+    # Enforce per-tenant access BEFORE running any indexer query. The dashboard's
+    # customer_code is resolved server-side from the id, so a caller could
+    # otherwise enumerate dashboard ids to read another tenant's panel data
+    # (GHSA-ch48-63px-6wp2). admin/analyst are all-tenant; customer_user is
+    # limited to their assigned customers.
+    if not await customer_access_handler.check_customer_access(current_user, dashboard.customer_code, db):
+        raise HTTPException(status_code=403, detail=f"Access denied to customer {dashboard.customer_code}")
 
     # Load the event source to get index_pattern + time_field
     es_result = await db.execute(

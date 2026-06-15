@@ -27,6 +27,7 @@ from app.connectors.velociraptor.services.artifacts import (
 )
 from app.connectors.velociraptor.services.artifacts import get_artifacts
 from app.connectors.velociraptor.services.artifacts import quarantine_host
+from app.connectors.velociraptor.services.artifacts import resolve_quarantine_artifact
 from app.connectors.velociraptor.services.artifacts import run_artifact_collection
 from app.connectors.velociraptor.services.artifacts import run_file_collection
 from app.connectors.velociraptor.services.artifacts import run_remote_command
@@ -538,11 +539,17 @@ async def quarantine(
     logger.info(f"Received request to quarantine host {quarantine_body}")
     result = await get_all_artifacts_for_hostname(quarantine_body.hostname, session)
     artifact_names = [artifact.name for artifact in result.artifacts]
-    if quarantine_body.artifact_name not in artifact_names:
+    # Resolve any configured custom-artifact override (e.g.
+    # Custom.Linux.Remediation.Quarantine) BEFORE validating existence, so we
+    # check that the artifact CoPilot will actually invoke is present on the host
+    # rather than the built-in name it replaces. See issue #913.
+    effective_artifact = resolve_quarantine_artifact(quarantine_body.artifact_name)
+    if effective_artifact not in artifact_names:
         raise HTTPException(
             status_code=400,
-            detail=f"Artifact name {quarantine_body.artifact_name.value} does not apply for hostname {quarantine_body.hostname} or does not exist",
+            detail=f"Artifact name {effective_artifact} does not apply for hostname {quarantine_body.hostname} or does not exist",
         )
+    quarantine_body.artifact_name = effective_artifact
     # Add the velociraptor_id to the run_command_body object
     # Add the velociraptor_id to the quarantine_body object
     quarantine_body.velociraptor_id = await get_velociraptor_id(

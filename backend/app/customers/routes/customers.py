@@ -29,6 +29,7 @@ from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
 from app.healthchecks.agents.schema.agents import TimeCriteriaModel
 from app.healthchecks.agents.services.agents import velociraptor_agents_healthcheck
 from app.healthchecks.agents.services.agents import wazuh_agents_healthcheck
+from app.middleware.license import get_license_seat_allowance
 from app.middleware.license import is_feature_enabled
 
 customers_router = APIRouter()
@@ -140,9 +141,11 @@ async def mssp_license_check(session: AsyncSession):
     """
     Check if the current number of provisioned customers is within the allowed range based on the MSSP license type.
     - First customer is free (no license check)
-    - MSSP Unlimited: No limit
-    - MSSP 10: Up to 10 customers (0-9 current customers)
-    - MSSP 5: Up to 5 customers (0-4 current customers)
+    - Preferred: numeric "MSSP Seats" allowance (supports stacked seat packs, e.g. two MSSP 10 packs -> 20 seats)
+      and "MSSP Unlimited" (no limit).
+    - Legacy fallback (licenses provisioned before seat packs): boolean MSSP tiers
+      - MSSP 10: Up to 10 customers (0-9 current customers)
+      - MSSP 5: Up to 5 customers (0-4 current customers)
     """
     stmt = select(Customers)
     result = await session.execute(stmt)
@@ -155,6 +158,20 @@ async def mssp_license_check(session: AsyncSession):
         return
 
     error_message = "You have reached the maximum number of customers allowed for your license type. Please upgrade your license to provision more customers."
+
+    # Preferred path: numeric seat allowance. None means this license predates
+    # seat packs, so fall through to the legacy boolean tier ladder below.
+    seat_allowance = await get_license_seat_allowance(session)
+    if seat_allowance is not None:
+        if provisioned_customers < seat_allowance:
+            return
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"You have reached your licensed customer limit ({provisioned_customers}/{int(seat_allowance)} seats). "
+                "Please purchase additional MSSP seats to provision more customers."
+            ),
+        )
 
     # Try most permissive license first
     try:
