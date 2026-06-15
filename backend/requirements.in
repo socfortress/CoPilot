@@ -58,6 +58,7 @@ SQLAlchemy
 sqlmodel
 starlette
 uvicorn[standard]
+webauthn
 werkzeug
 xmltodict
 zipp>=3.19.1  # security floor — Snyk-flagged transitive CVE
