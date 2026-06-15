@@ -52,7 +52,9 @@ export function getDefaultPasskeyDeviceName(): string {
 		const browserBrand = uaData.brands.find(
 			({ brand }: { brand: string }) => !IGNORED_UA_BRANDS.has(brand.toLowerCase())
 		)?.brand
-		const browser = browserBrand ? normalizeLabel(browserBrand).replace(/^google /, "") : detectBrowserName(navigator.userAgent)
+		const browser = browserBrand
+			? normalizeLabel(browserBrand).replace(/^google /, "")
+			: detectBrowserName(navigator.userAgent)
 		const platform = uaData.platform ? normalizeLabel(uaData.platform) : detectPlatformName(navigator.userAgent)
 		return `${browser} ${platform}`
 	}

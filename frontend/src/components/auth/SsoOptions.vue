@@ -29,7 +29,7 @@
 
 <script lang="ts" setup>
 import type { SSOPublicStatus } from "@/api/endpoints/sso"
-import { NButton, NCollapseTransition, NDivider, useMessage } from "naive-ui"
+import { NButton, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
