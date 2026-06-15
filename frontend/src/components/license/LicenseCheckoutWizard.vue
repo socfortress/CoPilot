@@ -115,7 +115,10 @@ const subscriptionsLoaded = ref<SubscriptionFeature[]>([])
 const features = computed(() => featuresLoaded.value || featuresData?.value || [])
 const subscriptions = computed(() => subscriptionsLoaded.value || subscriptionsData?.value || [])
 const availableSubscriptions = computed<SubscriptionFeature[]>(() =>
-	subscriptions.value.filter(o => !features.value.includes(o.name))
+	// Stackable seat packs (mssp_seats set) stay purchasable even when the tier
+	// is already owned, so an existing MSSP customer can buy another pack;
+	// every other feature is hidden once owned.
+	subscriptions.value.filter(o => o.mssp_seats != null || !features.value.includes(o.name))
 )
 const isValid = computed(() => {
 	if (!checkoutForm.value.company_name) {

@@ -10,8 +10,13 @@
 		>
 			<template #headerMain>{{ subscription.name }}</template>
 			<template #headerExtra>
-				<div class="text-primary">
-					{{ price(subscription.price) }}
+				<div class="flex items-center gap-2">
+					<n-tag v-if="subscription.mssp_seats" size="small" :bordered="false" type="success" round>
+						Stackable
+					</n-tag>
+					<div class="text-primary">
+						{{ price(subscription.price) }}
+					</div>
 				</div>
 			</template>
 			<template v-if="!hideDetails" #default>
@@ -85,7 +90,7 @@
 <script setup lang="ts">
 import type { CancelSubscriptionPayload } from "@/api/endpoints/license"
 import type { License, SubscriptionFeature } from "@/types/license.d"
-import { NButton, NModal, NPopconfirm, NSpin, useMessage } from "naive-ui"
+import { NButton, NModal, NPopconfirm, NSpin, NTag, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

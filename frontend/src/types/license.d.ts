@@ -63,6 +63,8 @@ export interface SubscriptionFeature {
 	info: string
 	short_description: string
 	full_description: string
+	/** Set on stackable one-time seat packs (MSSP); null/undefined on other features. */
+	mssp_seats?: number
 }
 
 export interface CheckoutPayload {
