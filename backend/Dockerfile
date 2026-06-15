@@ -54,6 +54,23 @@ COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
 RUN chmod +x /usr/local/bin/wait-for-it.sh && mkdir -p file-store
 
 # ───────────────
+# Compile to bytecode (tamper resistance)
+# Strips readable .py from app/ so the licensing / customer-onboarding logic
+# can't be trivially edited in a running container, then pins the compiled
+# enforcement modules in an integrity manifest. copilot.py (entrypoint) and
+# alembic/ (migration discovery scans for .py) stay as source. Build with
+# --build-arg COMPILE_BYTECODE=false for a debuggable source image.
+# ───────────────
+ARG COMPILE_BYTECODE=true
+RUN if [ "$COMPILE_BYTECODE" = "true" ]; then \
+        python -m compileall -b -q app && \
+        find app -name '*.py' -type f -delete && \
+        find app -type d -name '__pycache__' -exec rm -rf {} + && \
+        python -c "from app.middleware.integrity import write_manifest; write_manifest()" && \
+        echo "Bytecode compilation complete; .py stripped from app/"; \
+    fi
+
+# ───────────────
 # Expose API Port
 # ───────────────
 EXPOSE 5000
