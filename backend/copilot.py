@@ -38,6 +38,7 @@ from app.db.db_setup import ensure_scheduler_user_removed
 from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.exception_handlers import value_error_handler
+from app.middleware.integrity import run_integrity_check
 
 # from app.routers import ask_socfortress
 from app.routers import active_response
@@ -112,6 +113,7 @@ environment = os.getenv("ENVIRONMENT", "PRODUCTION")
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     # ── startup ──
+    run_integrity_check()
     logger.info("Initializing database")
     if environment == "PRODUCTION":
         await create_database_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_name="copilot")
