@@ -611,6 +611,48 @@ async def is_feature_enabled(feature_name: str, session: AsyncSession, message: 
         raise HTTPException(status_code=500, detail=f"Unable to verify license: {str(e)}")
 
 
+# Name of the numeric data object on the license that carries the total MSSP
+# customer-seat allowance, and the boolean "unlimited" tier.
+SEATS_FEATURE_NAME = "MSSP Seats"
+UNLIMITED_FEATURE_NAME = "MSSP Unlimited"
+
+
+async def get_license_seat_allowance(session: AsyncSession) -> Optional[float]:
+    """
+    Return the numeric MSSP customer-seat allowance for the active license.
+
+    Reads the license fresh from the license server (so a just-completed seat
+    purchase is reflected immediately, bypassing the 1h feature cache) and
+    inspects its dataObjects:
+
+    - "MSSP Unlimited" enabled -> float("inf")
+    - "MSSP Seats" present     -> its intValue (total purchased seats)
+    - neither present          -> None, signalling the caller to fall back to
+      the legacy boolean MSSP tier ladder (licenses provisioned before seat
+      packs existed).
+
+    Returns None (rather than raising) on any license-server error so the
+    caller can decide how to degrade.
+    """
+    license = await get_license(session)
+
+    try:
+        result = await send_post_request("verify-license", data={"license_key": license.license_key})
+        normalized_result = normalize_api_response(result)
+        data_objects = normalized_result["data"]["license"].get("dataObjects", [])
+    except Exception as e:
+        logger.error(f"Unable to read MSSP seat allowance from license server: {str(e)}")
+        return None
+
+    seats = None
+    for data_object in data_objects:
+        if data_object.get("name") == UNLIMITED_FEATURE_NAME and data_object.get("intValue", 0) >= 1:
+            return float("inf")
+        if data_object.get("name") == SEATS_FEATURE_NAME:
+            seats = data_object.get("intValue")
+    return seats
+
+
 async def send_get_request(endpoint: str) -> Dict[str, Any]:
     """
     Sends a GET request to the Shuffle service.
