@@ -168,6 +168,10 @@ class Feature(BaseModel):
     info: str
     short_description: str
     full_description: str
+    # Stackable one-time seat packs (MSSP) carry the per-pack seat count; other
+    # features leave it null. Surfaced so the frontend can keep seat packs
+    # purchasable even when the tier is already owned.
+    mssp_seats: Optional[int] = None
 
 
 class GetSubscriptionCatalogFeaturesResponse(BaseModel):
