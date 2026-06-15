@@ -51,6 +51,7 @@
 		"@mui/material": "^9.1.1",
 		"@shikijs/markdown-it": "^4.2.0",
 		"@shuffleio/shuffle-mcps": "^0.0.33",
+		"@simplewebauthn/browser": "^13.3.0",
 		"@types/codemirror": "^5.60.17",
 		"@vueuse/core": "^14.3.0",
 		"@vueuse/motion": "^3.0.3",

@@ -188,6 +188,7 @@ import {
 	NAlert,
 	NButton,
 	NCard,
+	NCode,
 	NInput,
 	NInputOtp,
 	NModal,

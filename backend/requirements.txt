@@ -205,6 +205,7 @@ uvloop==0.22.1
 verlib2==0.3.2
 wassima==2.0.6
 watchfiles==1.1.1
+webauthn==2.7.1
 websockets==16.0
 werkzeug==3.1.8
 xmltodict==1.0.4

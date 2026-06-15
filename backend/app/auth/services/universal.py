@@ -65,6 +65,17 @@ async def find_user(name: str):
         return None
 
 
+async def find_user_by_id(user_id: int):
+    """Find a user by primary key."""
+    try:
+        async with AsyncSession(async_engine) as session:
+            result = await session.execute(select(User).where(User.id == user_id))
+            return result.scalars().first()
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        return None
+
+
 async def get_role(name: str):
     """
     Retrieve the role name for a given user name.

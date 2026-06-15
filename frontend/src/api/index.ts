@@ -41,6 +41,7 @@ import sysmonConfig from "./endpoints/sysmonConfig"
 import tagRbac from "./endpoints/tagRbac"
 import talon from "./endpoints/talon"
 import threatIntel from "./endpoints/threatIntel"
+import passkey from "./endpoints/passkey"
 import totp from "./endpoints/totp"
 import users from "./endpoints/users"
 import version from "./endpoints/version"
@@ -99,5 +100,6 @@ export default {
 	tagRbac,
 	talon,
 	sso,
-	totp
+	totp,
+	passkey
 }
