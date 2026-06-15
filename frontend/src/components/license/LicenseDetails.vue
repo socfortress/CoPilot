@@ -1,6 +1,14 @@
 <template>
 	<n-spin :show="loading" content-class="flex grow flex-col" class="flex flex-col overflow-hidden">
 		<div v-if="license" class="flex flex-col gap-4">
+			<div class="flex items-center justify-end">
+				<n-button size="small" secondary :loading="refreshing" @click="refreshLicense">
+					<template #icon>
+						<Icon :name="RefreshIcon" :size="14" />
+					</template>
+					Refresh license
+				</n-button>
+			</div>
 			<CardKV v-if="!hideKey">
 				<template #key>
 					<span class="flex items-center gap-3">
@@ -88,7 +96,7 @@
 <script setup lang="ts">
 import type { License, LicenseFeatures } from "@/types/license.d"
 import _startCase from "lodash/startCase"
-import { NSpin, useMessage } from "naive-ui"
+import { NButton, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
@@ -124,11 +132,13 @@ const CustomerIcon = "carbon:user"
 const CheckIcon = "carbon:checkmark-outline"
 const FeaturesIcon = "material-symbols:checklist"
 const ConfigIcon = "carbon:settings"
+const RefreshIcon = "carbon:renew"
 
 const message = useMessage()
 const loadingLicense = ref(false)
 const loadingFeatures = ref(false)
 const loadingDockerCompose = ref(false)
+const refreshing = ref(false)
 const dFormats = useSettingsStore().dateFormat
 
 const licenseLoaded = ref<License | null>(null)
@@ -210,15 +220,37 @@ function retrieveDockerCompose() {
 		})
 }
 
-function load() {
-	if (!license.value) {
+function load(force = false) {
+	if (force || !license.value) {
 		getLicense()
 	}
-	if (!hideFeatures.value && !features.value.length) {
+	if (!hideFeatures.value && (force || !features.value.length)) {
 		getLicenseFeatures()
 	}
 
 	retrieveDockerCompose()
+}
+
+function refreshLicense() {
+	refreshing.value = true
+
+	Api.license
+		.invalidateCache()
+		.then(res => {
+			if (res.data.success) {
+				message.success("License cache refreshed")
+				// Re-fetch so newly-purchased features / MSSP seats show immediately.
+				load(true)
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			refreshing.value = false
+		})
 }
 
 function sanitizeKey(text: string) {

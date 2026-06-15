@@ -59,6 +59,10 @@ export default {
 	retrieveDockerCompose() {
 		return HttpClient.post<FlaskBaseResponse & { docker_compose: string }>(`/license/retrieve-docker-compose`)
 	},
+	/** Force-clear the server-side license feature cache so a just-completed purchase (e.g. extra MSSP seats) is reflected immediately instead of after the 1h TTL. */
+	invalidateCache() {
+		return HttpClient.post<FlaskBaseResponse>(`/license/invalidate_cache`)
+	},
 	// TODO-FE: remove, deprecated
 	/** @deprecated */
 	extendLicense(period: number) {
