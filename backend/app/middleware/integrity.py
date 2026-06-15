@@ -7,14 +7,6 @@ shipped as sourceless ``.pyc`` and a manifest of their hashes is written at
 build time. At startup we re-hash those files and compare against the manifest,
 so tampering with the compiled enforcement logic inside a running container is
 detected (and, when ``INTEGRITY_ENFORCE=true``, blocks boot).
-
-Honest limitations (this is a tripwire, not a lock):
-- The repository is public, so the check itself can be removed by anyone
-  rebuilding from source. Its value is catching casual in-container edits
-  (e.g. editing ``customers.py`` in a running container to drop the seat
-  check) and producing a tamper-evident signal.
-- Source / development builds carry no manifest, so the check is skipped
-  entirely there.
 """
 import hashlib
 import json
