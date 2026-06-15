@@ -351,6 +351,37 @@ def normalize_api_response(response: Dict[str, Any]) -> Dict[str, Any]:
         return {"data": response, "success": response.get("success", True), "message": response.get("message", "Success")}
 
 
+def extract_license_payload(normalized: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Pull the license object out of a normalized verify-license response.
+
+    The license server returns an error-shaped body (e.g.
+    ``{"message": "Internal server error"}``) when it — or its upstream
+    Cryptolens — is unhealthy. ``normalize_api_response`` defaults ``success``
+    to True for that shape, so callers that blindly index ``["license"]`` crash
+    with ``KeyError: 'license'``. This helper detects the missing payload and
+    raises a clean 502 instead.
+
+    Args:
+        normalized: Result of ``normalize_api_response``.
+
+    Returns:
+        The license dict.
+
+    Raises:
+        HTTPException: 502 when no license payload is present.
+    """
+    data = normalized.get("data")
+    if isinstance(data, dict) and isinstance(data.get("license"), dict):
+        return data["license"]
+    if isinstance(normalized.get("license"), dict):
+        return normalized["license"]
+
+    message = (data or {}).get("message") or normalized.get("message") or "License server returned an unexpected response"
+    logger.error(f"No license payload in license-server response: {normalized}")
+    raise HTTPException(status_code=502, detail=f"License server error: {message}")
+
+
 async def check_if_license_exists(session: AsyncSession):
     # Get the first row and raise HTTPException stating license already exists
     result = await session.execute(select(License))
@@ -584,8 +615,9 @@ async def is_feature_enabled(feature_name: str, session: AsyncSession, message: 
         # Cache the results
         await cache_license_features(session, license.license_key, normalized_result)
 
-        # Check if feature is enabled
-        data_objects = normalized_result["data"]["license"].get("dataObjects", [])
+        # Check if feature is enabled (raises a clean 502 if the license server
+        # returned an error body instead of a license).
+        data_objects = extract_license_payload(normalized_result).get("dataObjects", [])
         for data_object in data_objects:
             if data_object["name"] == feature_name and data_object["intValue"] == 1:
                 logger.info(f"Feature '{feature_name}' is enabled (from API)")
@@ -948,15 +980,16 @@ async def verify_license_key(session: AsyncSession = Depends(get_db)) -> VerifyL
     if not normalized_results.get("success", True):
         raise HTTPException(status_code=400, detail=normalized_results.get("message", "License verification failed"))
 
-    # Handle both response formats for return value
-    if "data" in normalized_results and "license" in normalized_results["data"]:
-        license_obj = normalized_results["data"]["license"]
-        success = normalized_results["data"]["success"]
-        message = normalized_results["data"]["message"]
-    else:
-        license_obj = normalized_results["license"]
-        success = normalized_results.get("success", True)
-        message = normalized_results.get("message", "License verified successfully")
+    # Handle both response formats for return value (raises a clean 502 if the
+    # license server returned an error body instead of a license).
+    license_obj = extract_license_payload(normalized_results)
+    container = (
+        normalized_results["data"]
+        if isinstance(normalized_results.get("data"), dict) and "license" in normalized_results["data"]
+        else normalized_results
+    )
+    success = container.get("success", True)
+    message = container.get("message", "License verified successfully")
 
     return VerifyLicenseResponse(
         license=license_obj,
@@ -1008,8 +1041,26 @@ async def send_post_request(endpoint: str, data: Dict[str, Any] = None) -> Dict[
 
         if response.status_code == 204:
             return {"success": True, "message": "No content"}
-        else:
-            return response.json()
+
+        # Parse defensively - the license server (or a proxy in front of it)
+        # can return a non-JSON body on error.
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = {"message": response.text or "Unknown license server response"}
+
+        # Surface upstream server errors (5xx) as a clean 502 so callers don't
+        # parse an error body as a valid license. 4xx responses pass through so
+        # callers can still handle not-found / validation cases.
+        if response.status_code >= 500:
+            upstream_message = payload.get("message") or payload.get("detail") or "Internal server error"
+            logger.error(f"License server error ({response.status_code}) on {endpoint}: {upstream_message}")
+            raise HTTPException(status_code=502, detail=f"License server error: {upstream_message}")
+
+        return payload
+    except HTTPException:
+        # Already a clean, intentional error - don't wrap it as a 500.
+        raise
     except Exception as e:
         logger.error(f"Failed to send POST request to {endpoint} with error: {e}")
         raise HTTPException(
@@ -1165,6 +1216,14 @@ async def retrieve_docker_compose(session: AsyncSession = Depends(get_db)) -> Re
     logger.info(f"Results: {results}")
     if not results.get("success", True):
         raise HTTPException(status_code=400, detail=results.get("message", "Failed to retrieve Docker Compose"))
+
+    # An error-shaped body (e.g. {"message": "Internal server error"}) defaults
+    # success to True above; treat a missing compose payload as an upstream error.
+    if "docker_compose" not in results:
+        raise HTTPException(
+            status_code=502,
+            detail=f"License server error: {results.get('message', 'Failed to retrieve Docker Compose')}",
+        )
 
     return RetrieveDockerCompose(
         docker_compose=results.get("docker_compose", ""),
