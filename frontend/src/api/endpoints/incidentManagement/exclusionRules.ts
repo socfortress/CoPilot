@@ -24,8 +24,11 @@ export interface ExclusionRulePayload {
 
 export default {
 	getExclusionRulesList(args: Partial<ExclusionRulesQuery>, signal?: AbortSignal) {
-		// TODO-FE: remove any
-		const params: any = {
+		const params: {
+			skip: number
+			limit: number
+			enabled_only?: boolean
+		} = {
 			skip: args.pagination?.skip || 0,
 			limit: args.pagination?.limit || 25
 		}

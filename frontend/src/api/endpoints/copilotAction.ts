@@ -30,17 +30,17 @@ export default {
 	/**
 	 * Get inventory of available active response scripts
 	 */
-	getInventory(query?: CopilotActionInventoryQuery, signal?: AbortSignal) {
+	getInventory(query: CopilotActionInventoryQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & CopilotActionListResponse>(`/copilot_action/inventory`, {
 			params: {
-				technology: query?.technology,
-				category: query?.category,
-				tag: query?.tag,
+				technology: query.technology,
+				category: query.category,
+				tag: query.tag,
 				q: query?.q,
-				limit: query?.limit || 100,
-				offset: query?.offset || 0,
-				refresh: query?.refresh || false,
-				include: query?.include
+				limit: query.limit || 100,
+				offset: query.offset || 0,
+				refresh: query.refresh || false,
+				include: query.include
 			},
 			signal
 		})

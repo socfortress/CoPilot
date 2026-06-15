@@ -22,14 +22,14 @@ type TimeUnit = "hours" | "days" | "weeks"
 
 export default {
 	// #region Alerts
-	getAlerts(filters?: Partial<AlertsFilter>, signal?: AbortSignal) {
+	getAlerts(filters: Partial<AlertsFilter>, signal?: AbortSignal) {
 		return HttpClient.post<FlaskBaseResponse & { alerts: SocAlert[] }>(
 			`/soc/alerts`,
 			{
-				per_page: filters?.pageSize || 1000,
-				page: filters?.page || 1,
-				sort: filters?.sort || "desc",
-				alert_title: filters?.alertTitle || ""
+				per_page: filters.pageSize || 1000,
+				page: filters.page || 1,
+				sort: filters.sort || "desc",
+				alert_title: filters.alertTitle || ""
 			},
 			signal ? { signal } : {}
 		)

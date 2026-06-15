@@ -63,7 +63,7 @@ export default {
 	invalidateCache() {
 		return HttpClient.post<FlaskBaseResponse>(`/license/invalidate_cache`)
 	},
-	// TODO-FE: remove, deprecated
+
 	/** @deprecated */
 	extendLicense(period: number) {
 		return HttpClient.post<FlaskBaseResponse>(
@@ -74,7 +74,7 @@ export default {
 			}
 		)
 	},
-	// TODO-FE: remove, deprecated
+
 	/** @deprecated */
 	createLicense({ name, email, companyName }: NewLicensePayload) {
 		return HttpClient.post<FlaskBaseResponse>(`/license/create_new_key`, {

@@ -43,7 +43,7 @@ function getData() {
 	loading.value = true
 
 	Api.soc
-		.getAlerts()
+		.getAlerts({})
 		.then(res => {
 			if (res.data.success) {
 				alerts.value = res.data?.alerts || []

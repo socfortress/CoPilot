@@ -25,6 +25,7 @@ import metrics from "./endpoints/metrics"
 import monitoringAlerts from "./endpoints/monitoringAlerts"
 import networkConnectors from "./endpoints/networkConnectors"
 import notifications from "./endpoints/notifications"
+import passkey from "./endpoints/passkey"
 import patchTuesday from "./endpoints/patchTuesday"
 import portainer from "./endpoints/portainer"
 import reporting from "./endpoints/reporting"
@@ -99,5 +100,6 @@ export default {
 	tagRbac,
 	talon,
 	sso,
-	totp
+	totp,
+	passkey
 }

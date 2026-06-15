@@ -290,6 +290,11 @@ export interface MitreRuleIndexEntry {
 	data_sources: string[]
 }
 
+export interface RulesByMitreQuery {
+	techniqueId: string
+	platform?: PlatformFilter
+}
+
 export interface MitreCoverageQuery {
 	platform?: PlatformFilter
 	severity?: RuleSeverity

@@ -257,6 +257,7 @@ async function executeDelete() {
 			message.warning(response.data.message)
 		}
 	} catch (err: any) {
+		// TODO-FE: usare getApiErrorMessage in tutte queste casistiche
 		message.error(err.response?.data?.detail || err.response?.data?.message || "Failed to delete agents")
 	} finally {
 		loading.value = false

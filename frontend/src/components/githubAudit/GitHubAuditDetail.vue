@@ -301,7 +301,7 @@ async function loadExclusions() {
 
 	loadingExclusions.value = true
 	try {
-		const response = await Api.githubAudit.getExclusions(props.config.id)
+		const response = await Api.githubAudit.getExclusions({ configId: props.config.id })
 		exclusions.value = response.data.exclusions || []
 	} catch (error: any) {
 		console.error("Failed to load exclusions:", error)

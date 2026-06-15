@@ -7,6 +7,8 @@ from sqlmodel import SQLModel
 from alembic import context
 
 # from app.db.all_models import *
+from app.auth.models.passkey import UserPasskey
+from app.auth.models.passkey import WebAuthnChallenge
 from app.auth.models.users import User
 from app.connectors.models import Connectors
 from app.connectors.wazuh_indexer.models.sigma import SigmaQuery

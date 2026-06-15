@@ -19,7 +19,25 @@ import { HttpClient } from "../httpClient"
 
 const BASE_PATH = "/github-audit"
 
-// TODO-FE: refactor
+export interface GitHubAuditReportsQuery {
+	customerCode?: string
+	configId?: number
+	organization?: string
+	status?: string
+	limit?: number
+	offset?: number
+}
+
+export interface GitHubAuditBaselinesQuery {
+	configId: number
+	activeOnly?: boolean
+}
+
+export interface GitHubAuditExclusionsQuery {
+	configId: number
+	includeExpired?: boolean
+}
+
 export default {
 	// ==================== Configuration Endpoints ====================
 
@@ -33,9 +51,9 @@ export default {
 	/**
 	 * Get all GitHub Audit configurations
 	 */
-	getConfigs(customerCode?: string, signal?: AbortSignal) {
+	getConfigs(customerCode?: string) {
 		const params = customerCode ? { customer_code: customerCode } : undefined
-		return HttpClient.get<GitHubAuditConfigResponse>(`${BASE_PATH}/config`, { params, signal })
+		return HttpClient.get<GitHubAuditConfigResponse>(`${BASE_PATH}/config`, { params })
 	},
 
 	/**
@@ -98,24 +116,14 @@ export default {
 	/**
 	 * Get list of GitHub audit reports with optional filters
 	 */
-	getReports(
-		options?: {
-			customerCode?: string
-			configId?: number
-			organization?: string
-			status?: string
-			limit?: number
-			offset?: number
-		},
-		signal?: AbortSignal
-	) {
+	getReports(options: GitHubAuditReportsQuery, signal?: AbortSignal) {
 		const params: Record<string, string | number> = {}
-		if (options?.customerCode) params.customer_code = options.customerCode
-		if (options?.configId) params.config_id = options.configId
-		if (options?.organization) params.organization = options.organization
-		if (options?.status) params.status = options.status
-		if (options?.limit) params.limit = options.limit
-		if (options?.offset) params.offset = options.offset
+		if (options.customerCode) params.customer_code = options.customerCode
+		if (options.configId) params.config_id = options.configId
+		if (options.organization) params.organization = options.organization
+		if (options.status) params.status = options.status
+		if (options.limit) params.limit = options.limit
+		if (options.offset) params.offset = options.offset
 
 		return HttpClient.get<GitHubAuditReportListResponse>(`${BASE_PATH}/reports`, {
 			params,
@@ -153,7 +161,7 @@ export default {
 	/**
 	 * Get all exclusion rules for a configuration
 	 */
-	getExclusions(configId: number, includeExpired?: boolean, signal?: AbortSignal) {
+	getExclusions({ configId, includeExpired }: GitHubAuditExclusionsQuery, signal?: AbortSignal) {
 		const params = includeExpired !== undefined ? { include_expired: includeExpired } : undefined
 		return HttpClient.get<GitHubAuditExclusionResponse>(`${BASE_PATH}/config/${configId}/exclusions`, {
 			params,
@@ -193,7 +201,7 @@ export default {
 	/**
 	 * Get all baselines for a configuration
 	 */
-	getBaselines(configId: number, activeOnly?: boolean, signal?: AbortSignal) {
+	getBaselines({ configId, activeOnly }: GitHubAuditBaselinesQuery, signal?: AbortSignal) {
 		const params = activeOnly !== undefined ? { active_only: activeOnly } : undefined
 		return HttpClient.get<GitHubAuditBaselineResponse>(`${BASE_PATH}/config/${configId}/baselines`, {
 			params,

@@ -58,7 +58,7 @@ function getGraylogQueryByFilter(filter?: Partial<GraylogAlertsQuery>): GraylogA
 }
 
 export default {
-	getGraylogAlertsList(filter?: Partial<GraylogAlertsQuery>, signal?: AbortSignal) {
+	getGraylogAlertsList(filter: Partial<GraylogAlertsQuery>, signal?: AbortSignal) {
 		const query = getGraylogQueryByFilter(filter)
 
 		return HttpClient.post<FlaskBaseResponse & { alerts_summary: AlertsSummary[] }>(
@@ -67,7 +67,7 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
-	getAll(filter?: AlertsSummaryQuery, signal?: AbortSignal) {
+	getAll(filter: AlertsSummaryQuery, signal?: AbortSignal) {
 		const query = getQueryByFilter(filter)
 
 		let url = "/alerts"
@@ -85,7 +85,7 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
-	getCountByHost(filter?: AlertsSummaryQuery, signal?: AbortSignal) {
+	getCountByHost(filter: AlertsSummaryQuery, signal?: AbortSignal) {
 		const query = getQueryByFilter(filter)
 		return HttpClient.post<FlaskBaseResponse & { alerts_by_host: AlertsByHost[] }>(
 			`/alerts/hosts/all`,
@@ -93,7 +93,7 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
-	getCountByRule(filter?: AlertsSummaryQuery, signal?: AbortSignal) {
+	getCountByRule(filter: AlertsSummaryQuery, signal?: AbortSignal) {
 		const query = getQueryByFilter(filter)
 		return HttpClient.post<FlaskBaseResponse & { alerts_by_rule: AlertsByRule[] }>(
 			`/alerts/rules/all`,
@@ -101,7 +101,7 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
-	getCountByRuleHost(filter?: AlertsSummaryQuery, signal?: AbortSignal) {
+	getCountByRuleHost(filter: AlertsSummaryQuery, signal?: AbortSignal) {
 		const query = getQueryByFilter(filter)
 		return HttpClient.post<FlaskBaseResponse & { alerts_by_rule_per_host: AlertsByRulePerHost[] }>(
 			`/alerts/rules/hosts/all`,

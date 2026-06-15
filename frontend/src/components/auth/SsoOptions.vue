@@ -1,49 +1,43 @@
 <template>
-	<n-collapse-transition :show>
-		<div class="flex flex-col">
-			<n-divider>
-				<span class="text-secondary text-xs">or sign in with</span>
-			</n-divider>
-			<div class="flex flex-col gap-3">
-				<n-button v-if="ssoStatus?.azure_enabled" size="large" class="w-full!" @click="loginWithAzure">
-					<template #icon>
-						<Icon :name="AzureIcon" :size="15" />
-					</template>
-					Microsoft Azure
-				</n-button>
-				<n-button v-if="ssoStatus?.google_enabled" size="large" class="w-full!" @click="loginWithGoogle">
-					<template #icon>
-						<Icon :name="GoogleIcon" :size="16" />
-					</template>
-					Google
-				</n-button>
-				<n-button
-					v-if="ssoStatus?.cf_enabled"
-					size="large"
-					class="w-full!"
-					:loading="cfLoading"
-					@click="loginWithCloudflare"
-				>
-					<template #icon>
-						<Icon :name="CloudflareIcon" :size="18" />
-					</template>
-					Cloudflare Access
-				</n-button>
-			</div>
-		</div>
-	</n-collapse-transition>
+	<div class="flex flex-col gap-3">
+		<n-button v-if="ssoStatus?.azure_enabled" size="large" class="w-full!" @click="loginWithAzure">
+			<template #icon>
+				<Icon :name="AzureIcon" :size="15" />
+			</template>
+			Microsoft Azure
+		</n-button>
+		<n-button v-if="ssoStatus?.google_enabled" size="large" class="w-full!" @click="loginWithGoogle">
+			<template #icon>
+				<Icon :name="GoogleIcon" :size="16" />
+			</template>
+			Google
+		</n-button>
+		<n-button
+			v-if="ssoStatus?.cf_enabled"
+			size="large"
+			class="w-full!"
+			:loading="cfLoading"
+			@click="loginWithCloudflare"
+		>
+			<template #icon>
+				<Icon :name="CloudflareIcon" :size="18" />
+			</template>
+			Cloudflare Access
+		</n-button>
+	</div>
 </template>
 
 <script lang="ts" setup>
 import type { SSOPublicStatus } from "@/api/endpoints/sso"
-import { NButton, NCollapseTransition, NDivider, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { NButton, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 
 const emit = defineEmits<{
 	(e: "show2faForm", value: string): void
 	(e: "loginSuccess", value: string): void
+	(e: "available", value: boolean): void
 }>()
 
 const AzureIcon = "devicon-plain:azure"
@@ -60,6 +54,10 @@ const show = computed(() => {
 			(ssoStatus.value.azure_enabled || ssoStatus.value.google_enabled || ssoStatus.value.cf_enabled)) ||
 		false
 	)
+})
+
+watch(show, val => {
+	emit("available", val)
 })
 
 function loginWithAzure() {

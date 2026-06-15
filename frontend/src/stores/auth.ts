@@ -7,6 +7,7 @@ import _toLower from "lodash/toLower"
 import _toNumber from "lodash/toNumber"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
+import { loginWithPasskey as performPasskeyLogin } from "@/composables/usePasskey"
 import { AuthUserRole, RouteRole } from "@/types/auth.d"
 import { getAvatar, getNameInitials } from "@/utils"
 import { jwtRoleToUserRole } from "@/utils/auth"
@@ -67,6 +68,25 @@ export const useAuthStore = defineStore("auth", {
 				}
 
 				return response.data
+			} catch (err) {
+				const error = err as ApiError
+				throw error.response?.data
+			}
+		},
+		async loginWithPasskey(username?: string) {
+			try {
+				const data = await performPasskeyLogin(username)
+
+				if (data.requires_2fa) {
+					return data
+				}
+
+				if (data.access_token) {
+					this.setLogged(data.access_token)
+					this.getEmail()
+				}
+
+				return data
 			} catch (err) {
 				const error = err as ApiError
 				throw error.response?.data

@@ -55,18 +55,11 @@
 </template>
 
 <script lang="ts" setup>
+import type { CustomerIndicesSize } from "@/types/indices.d"
 import { NCard, NEmpty, NPopover, NProgress, NScrollbar, NSpin, NTag, useMessage, useThemeVars } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-
-interface CustomerIndicesSize {
-	customer: string
-	total_size_bytes: number
-	total_size_human: string
-	index_count: number
-	indices: string[]
-}
 
 const emit = defineEmits<{
 	(e: "click", value: string): void

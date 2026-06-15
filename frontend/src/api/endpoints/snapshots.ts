@@ -9,11 +9,11 @@ import type {
 	SnapshotScheduleListResponse,
 	SnapshotScheduleOperationResponse,
 	SnapshotScheduleUpdate,
+	SnapshotStatusQuery,
 	SnapshotStatusResponse
 } from "@/types/snapshots.d"
 import { HttpClient } from "../httpClient"
 
-// TODO-FE: refactor
 export default {
 	// Repository endpoints
 	getRepositories() {
@@ -21,7 +21,7 @@ export default {
 	},
 
 	// Snapshot endpoints
-	getSnapshotStatus(repository?: string, snapshot?: string) {
+	getSnapshotStatus({ repository, snapshot }: SnapshotStatusQuery = {}) {
 		const params = new URLSearchParams()
 		if (repository) params.append("repository", repository)
 		if (snapshot) params.append("snapshot", snapshot)

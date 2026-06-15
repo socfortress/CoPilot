@@ -25,6 +25,11 @@ export interface CaseTemplateListFilters {
 	includeGlobal?: boolean
 }
 
+export interface CaseTimelineQuery {
+	limit?: number
+	offset?: number
+}
+
 export default {
 	listTemplates(filters: CaseTemplateListFilters = {}) {
 		const params: Record<string, string | boolean> = {}
@@ -123,7 +128,7 @@ export default {
 	// ---------------------------------------------------------------------------
 	// Timeline (read-only for everyone with case access)
 	// ---------------------------------------------------------------------------
-	getCaseTimeline(caseId: number, limit = 500, offset = 0) {
+	getCaseTimeline(caseId: number, { limit = 500, offset = 0 }: CaseTimelineQuery = {}) {
 		return HttpClient.get<FlaskBaseResponse & { case_id: number; events: CaseEvent[] }>(
 			`/incidents/db_operations/case/${caseId}/timeline`,
 			{ params: { limit, offset } }

@@ -128,6 +128,13 @@ export interface ReplayPayload {
 	sender?: string
 }
 
+export interface SearchPalaceLessonsQuery {
+	customerCode: string
+	query: string
+	room?: string
+	limit?: number
+}
+
 export interface PalaceSearchHit {
 	id: string | null
 	room: string | null

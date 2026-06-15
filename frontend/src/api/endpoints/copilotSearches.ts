@@ -8,7 +8,6 @@ import type {
 	GraylogQueryResponse,
 	MitreCoverageQuery,
 	MitreCoverageResponse,
-	PlatformFilter,
 	ProvisionGraylogAlertRequest,
 	ProvisionGraylogAlertResponse,
 	RefreshResponse,
@@ -17,6 +16,7 @@ import type {
 	RuleListResponse,
 	RulesByIdsRequest,
 	RulesByIdsResponse,
+	RulesByMitreQuery,
 	RuleStatsResponse
 } from "@/types/copilotSearches.d"
 import type { FlaskBaseResponse } from "@/types/flask.d"
@@ -26,17 +26,17 @@ export default {
 	/**
 	 * List all detection rules with optional filtering
 	 */
-	getRules(query?: RuleListQuery, signal?: AbortSignal) {
+	getRules(query: RuleListQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & RuleListResponse>(`/copilot_searches`, {
 			params: {
-				platform: query?.platform,
-				status: query?.status,
-				severity: query?.severity,
-				mitre_id: query?.mitre_id,
-				search: query?.search,
-				has_graylog: query?.has_graylog,
-				skip: query?.skip || 0,
-				limit: query?.limit || 100
+				platform: query.platform,
+				status: query.status,
+				severity: query.severity,
+				mitre_id: query.mitre_id,
+				search: query.search,
+				has_graylog: query.has_graylog,
+				skip: query.skip || 0,
+				limit: query.limit || 100
 			},
 			signal
 		})
@@ -45,16 +45,16 @@ export default {
 	/**
 	 * List all Linux detection rules
 	 */
-	getLinuxRules(query?: Omit<RuleListQuery, "platform">, signal?: AbortSignal) {
+	getLinuxRules(query: Omit<RuleListQuery, "platform">, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & RuleListResponse>(`/copilot_searches/linux`, {
 			params: {
-				status: query?.status,
-				severity: query?.severity,
-				mitre_id: query?.mitre_id,
-				search: query?.search,
-				has_graylog: query?.has_graylog,
-				skip: query?.skip || 0,
-				limit: query?.limit || 100
+				status: query.status,
+				severity: query.severity,
+				mitre_id: query.mitre_id,
+				search: query.search,
+				has_graylog: query.has_graylog,
+				skip: query.skip || 0,
+				limit: query.limit || 100
 			},
 			signal
 		})
@@ -63,16 +63,16 @@ export default {
 	/**
 	 * List all Windows detection rules
 	 */
-	getWindowsRules(query?: Omit<RuleListQuery, "platform">, signal?: AbortSignal) {
+	getWindowsRules(query: Omit<RuleListQuery, "platform">, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & RuleListResponse>(`/copilot_searches/windows`, {
 			params: {
-				status: query?.status,
-				severity: query?.severity,
-				mitre_id: query?.mitre_id,
-				search: query?.search,
-				has_graylog: query?.has_graylog,
-				skip: query?.skip || 0,
-				limit: query?.limit || 100
+				status: query.status,
+				severity: query.severity,
+				mitre_id: query.mitre_id,
+				search: query.search,
+				has_graylog: query.has_graylog,
+				skip: query.skip || 0,
+				limit: query.limit || 100
 			},
 			signal
 		})
@@ -81,16 +81,16 @@ export default {
 	/**
 	 * List all PowerShell detection rules
 	 */
-	getPowershellRules(query?: Omit<RuleListQuery, "platform">, signal?: AbortSignal) {
+	getPowershellRules(query: Omit<RuleListQuery, "platform">, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & RuleListResponse>(`/copilot_searches/powershell`, {
 			params: {
-				status: query?.status,
-				severity: query?.severity,
-				mitre_id: query?.mitre_id,
-				search: query?.search,
-				has_graylog: query?.has_graylog,
-				skip: query?.skip || 0,
-				limit: query?.limit || 100
+				status: query.status,
+				severity: query.severity,
+				mitre_id: query.mitre_id,
+				search: query.search,
+				has_graylog: query.has_graylog,
+				skip: query.skip || 0,
+				limit: query.limit || 100
 			},
 			signal
 		})
@@ -99,16 +99,16 @@ export default {
 	/**
 	 * List all detection rules that have CVE tags
 	 */
-	getCveRules(query?: Omit<RuleListQuery, "platform">, signal?: AbortSignal) {
+	getCveRules(query: Omit<RuleListQuery, "platform">, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & RuleListResponse>(`/copilot_searches/cve`, {
 			params: {
-				status: query?.status,
-				severity: query?.severity,
-				mitre_id: query?.mitre_id,
-				search: query?.search,
-				has_graylog: query?.has_graylog,
-				skip: query?.skip || 0,
-				limit: query?.limit || 100
+				status: query.status,
+				severity: query.severity,
+				mitre_id: query.mitre_id,
+				search: query.search,
+				has_graylog: query.has_graylog,
+				skip: query.skip || 0,
+				limit: query.limit || 100
 			},
 			signal
 		})
@@ -147,10 +147,10 @@ export default {
 	/**
 	 * Get all rules that detect a specific MITRE ATT&CK technique
 	 */
-	getRulesByMitre(techniqueId: string, platform?: PlatformFilter, signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & RuleListResponse>(`/copilot_searches/mitre/${techniqueId}`, {
+	getRulesByMitre(query: RulesByMitreQuery, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & RuleListResponse>(`/copilot_searches/mitre/${query.techniqueId}`, {
 			params: {
-				platform
+				platform: query.platform
 			},
 			signal
 		})
@@ -223,14 +223,14 @@ export default {
 	 * MITRE ATT&CK matrix annotated with per-technique CoPilot Search rule coverage.
 	 * Optional filters narrow which rules contribute to coverage (e.g. Windows-only).
 	 */
-	getMitreCoverage(query?: MitreCoverageQuery, signal?: AbortSignal) {
+	getMitreCoverage(query: MitreCoverageQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & MitreCoverageResponse>(`/copilot_searches/mitre/coverage`, {
 			params: {
-				platform: query?.platform,
-				severity: query?.severity,
-				status: query?.status,
-				has_graylog: query?.has_graylog,
-				search: query?.search
+				platform: query.platform,
+				severity: query.severity,
+				status: query.status,
+				has_graylog: query.has_graylog,
+				search: query.search
 			},
 			signal
 		})

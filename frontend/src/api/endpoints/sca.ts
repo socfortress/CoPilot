@@ -18,17 +18,17 @@ export default {
 	/**
 	 * Search SCA results across all agents with filtering and pagination
 	 */
-	searchScaOverview(query?: ScaOverviewQuery, signal?: AbortSignal) {
+	searchScaOverview(query: ScaOverviewQuery, signal?: AbortSignal) {
 		return HttpClient.get<ScaOverviewResponse>(`/sca/overview`, {
 			params: {
-				customer_code: query?.customer_code,
-				agent_name: query?.agent_name,
-				policy_id: query?.policy_id,
-				policy_name: query?.policy_name,
-				min_score: query?.min_score,
-				max_score: query?.max_score,
-				page: query?.page || 1,
-				page_size: query?.page_size || 50
+				customer_code: query.customer_code,
+				agent_name: query.agent_name,
+				policy_id: query.policy_id,
+				policy_name: query.policy_name,
+				min_score: query.min_score,
+				max_score: query.max_score,
+				page: query.page || 1,
+				page_size: query.page_size || 50
 			},
 			signal
 		})
@@ -38,7 +38,7 @@ export default {
 	 * Stream SCA results using SSE client (token + params gestiti automaticamente)
 	 */
 	async streamScaOverview(
-		query: ScaOverviewQuery | undefined,
+		query: ScaOverviewQuery,
 		handlers: {
 			onStart?: (data: any) => void
 			onAgentResult?: (data: any) => void

@@ -5,14 +5,25 @@
 			<div class="flex flex-col">
 				<n-form ref="formRef" :model :rules>
 					<n-form-item path="username" label="Username">
-						<n-input
-							v-model:value="model.username"
-							placeholder="Insert your username"
-							:input-props="{ autocomplete: 'username' }"
-							size="large"
-							@keydown.enter="signIn"
-						/>
+						<div class="flex w-full items-end gap-3">
+							<n-input
+								v-model:value="model.username"
+								class="w-full! grow"
+								placeholder="Insert your username"
+								:input-props="{ autocomplete: 'username' }"
+								size="large"
+								@keydown.enter="signIn"
+							/>
+							<PasskeySignIn
+								:username="model.username || undefined"
+								show-tooltip
+								icon-only
+								@show2fa-form="handleShow2faForm"
+								@login-success="handleLoginSuccess"
+							/>
+						</div>
 					</n-form-item>
+
 					<n-form-item path="password" label="Password">
 						<n-input
 							v-model:value="model.password"
@@ -24,6 +35,7 @@
 							@keydown.enter="signIn"
 						/>
 					</n-form-item>
+
 					<div class="flex flex-col items-end gap-6">
 						<div class="w-full">
 							<n-button
@@ -34,13 +46,24 @@
 								:disabled="!isValid"
 								@click="signIn"
 							>
-								Sign in
+								Sign in with password
 							</n-button>
 						</div>
 					</div>
 				</n-form>
 
-				<SsoOptions @show2fa-form="handleShow2faForm" @login-success="handleLoginSuccess" />
+				<CollapseKeepAlive :show="ssoAvailable">
+					<div class="flex flex-col">
+						<n-divider>
+							<span class="text-secondary text-xs">or sign in with</span>
+						</n-divider>
+						<SsoOptions
+							@show2fa-form="handleShow2faForm"
+							@login-success="handleLoginSuccess"
+							@available="ssoAvailable = $event"
+						/>
+					</div>
+				</CollapseKeepAlive>
 			</div>
 		</n-collapse-transition>
 
@@ -53,10 +76,12 @@
 <script lang="ts" setup>
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { LoginPayload } from "@/types/auth.d"
-import { NButton, NCollapseTransition, NForm, NFormItem, NInput, useMessage } from "naive-ui"
+import { NButton, NCollapseTransition, NDivider, NForm, NFormItem, NInput, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRouter } from "vue-router"
+import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import { useAuthStore } from "@/stores/auth"
+import PasskeySignIn from "./PasskeySignIn.vue"
 import SsoOptions from "./SsoOptions.vue"
 import TotpForm from "./TotpForm.vue"
 
@@ -77,6 +102,7 @@ const model = ref<ModelType>({
 })
 const show2fa = ref(false)
 const twoFaTempToken = ref("")
+const ssoAvailable = ref(false)
 
 const rules: FormRules = {
 	username: [

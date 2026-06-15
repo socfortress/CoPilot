@@ -17,9 +17,13 @@ export interface AgentPayload {
 	velociraptor_id: string
 }
 
+export interface AgentArtifactsQuery {
+	agentId: string
+	flowId?: string
+}
+
 export type VulnerabilitySeverityType = "Low" | "Medium" | "High" | "Critical" | "All"
 
-// TODO-FE: refactor
 export default {
 	getAgents(agentId?: string) {
 		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(`/agents${agentId ? `/${agentId}` : ""}`)
@@ -102,20 +106,15 @@ export default {
 		return HttpClient.post<FlaskBaseResponse>(`/agents/${agentId}/wazuh/upgrade`)
 	},
 	// Agent Data Store / Artifact Collection Methods
-	/**
-	 * List all artifact files for a specific agent
-	 * @param agentId - The agent ID
-	 * @param flowId - Optional flow ID to filter artifacts
-	 * @param signal - Optional AbortSignal for request cancellation
-	 */
-	listAgentArtifacts(agentId: string, flowId?: string, signal?: AbortSignal) {
-		const params = flowId ? { flow_id: flowId } : {}
+	/** List all artifact files for a specific agent. */
+	listAgentArtifacts(query: AgentArtifactsQuery, signal?: AbortSignal) {
+		const params = query.flowId ? { flow_id: query.flowId } : {}
 		return HttpClient.get<
 			FlaskBaseResponse & {
 				data: AgentArtifactData[]
 				total: number
 			}
-		>(`/agent_data_store/agent/${agentId}/artifacts`, signal ? { signal, params } : { params })
+		>(`/agent_data_store/agent/${query.agentId}/artifacts`, signal ? { signal, params } : { params })
 	},
 
 	/**

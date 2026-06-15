@@ -54,7 +54,6 @@ export interface SentinelOneProvisionPayload extends SentinelOneProvision {
 	integration_name: string
 }
 
-// TODO-FE: refactor
 export default {
 	// #region Network Connector
 	getAvailableNetworkConnectors() {
