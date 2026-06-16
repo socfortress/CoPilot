@@ -5,7 +5,8 @@ import type {
 	CustomerDecommissionedData,
 	CustomerMeta,
 	CustomerProvision,
-	CustomerProvisioningDefaultSettings
+	CustomerProvisioningDefaultSettings,
+	EDRInstallCommands
 } from "@/types/customers.d"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
@@ -23,6 +24,11 @@ export interface ProvisioningDefaultSettingsPayload {
 	masterIp: string
 	grafanaUrl: string
 	wazuhWorkerHostname: string
+	repoUrl: string
+	repoUsername: string
+	repoPassword: string
+	windowsEdrInstaller: string
+	wazuhDomain: string
 }
 
 export default {
@@ -150,7 +156,12 @@ export default {
 			cluster_key: payload.clusterKey,
 			master_ip: payload.masterIp,
 			grafana_url: payload.grafanaUrl,
-			wazuh_worker_hostname: payload.wazuhWorkerHostname
+			wazuh_worker_hostname: payload.wazuhWorkerHostname,
+			repo_url: payload.repoUrl,
+			repo_username: payload.repoUsername,
+			repo_password: payload.repoPassword,
+			windows_edr_installer: payload.windowsEdrInstaller,
+			wazuh_domain: payload.wazuhDomain
 		})
 	},
 	updateProvisioningDefaultSettings(payload: ProvisioningDefaultSettingsPayload) {
@@ -162,8 +173,18 @@ export default {
 			cluster_key: payload.clusterKey,
 			master_ip: payload.masterIp,
 			grafana_url: payload.grafanaUrl,
-			wazuh_worker_hostname: payload.wazuhWorkerHostname
+			wazuh_worker_hostname: payload.wazuhWorkerHostname,
+			repo_url: payload.repoUrl,
+			repo_username: payload.repoUsername,
+			repo_password: payload.repoPassword,
+			windows_edr_installer: payload.windowsEdrInstaller,
+			wazuh_domain: payload.wazuhDomain
 		})
+	},
+	getEdrInstallCommands(customerCode: string) {
+		return HttpClient.get<FlaskBaseResponse & { customer_code: string; commands: EDRInstallCommands }>(
+			`/customer_provisioning/edr_install_commands/${customerCode}`
+		)
 	}
 	// #endregion
 }
