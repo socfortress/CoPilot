@@ -104,4 +104,14 @@ export interface CustomerProvisioningDefaultSettings {
 	master_ip: string
 	grafana_url: string
 	wazuh_worker_hostname: string
+	repo_url?: string | null
+	repo_username?: string | null
+	repo_password?: string | null
+	windows_edr_installer?: string | null
+	wazuh_domain?: string | null
+}
+
+export interface EDRInstallCommands {
+	windows: string
+	linux: string
 }

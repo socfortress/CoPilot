@@ -10,6 +10,7 @@ from sqlalchemy.future import select
 from app.auth.utils import AuthHandler
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.schema.dashboards import WazuhDashboard
+from app.customer_provisioning.schema.edr_install import EDRInstallCommandsResponse
 from app.customer_provisioning.schema.provision import CustomerProvisionResponse
 from app.customer_provisioning.schema.provision import CustomersMetaResponse
 from app.customer_provisioning.schema.provision import CustomerSubsctipion
@@ -22,6 +23,7 @@ from app.customer_provisioning.schema.provision import UpdateOffice365OrgIdReque
 from app.customer_provisioning.schema.provision import UpdateOffice365OrgIdResponse
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
+from app.customer_provisioning.services.edr_install import generate_edr_install_commands
 from app.customer_provisioning.services.provision import provision_dashboards
 from app.customer_provisioning.services.provision import provision_wazuh_customer
 from app.customer_provisioning.services.provision import provision_wazuh_worker
@@ -404,4 +406,38 @@ async def update_office_365_org_id(
     return UpdateOffice365OrgIdResponse(
         message="Office 365 organization ID updated successfully",
         success=True,
+    )
+
+
+@customer_provisioning_router.get(
+    "/edr_install_commands/{customer_code}",
+    response_model=EDRInstallCommandsResponse,
+    description="Generate the Windows and Linux EDR agent install commands for a customer",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_edr_install_commands(
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Generate ready-to-run Windows and Linux EDR agent install commands for a customer.
+
+    Commands are rendered on demand from the deployment-wide artifact-repo settings
+    (``customer_provisioning_default_settings``) and the customer's enrollment
+    metadata (``customersmeta``): registration port, log ingestion port, and
+    registration password.
+
+    Args:
+        customer_code (str): The code of the customer to generate commands for.
+        session (AsyncSession): The database session.
+
+    Returns:
+        EDRInstallCommandsResponse: The generated Windows and Linux install commands.
+    """
+    commands = await generate_edr_install_commands(customer_code, session)
+    return EDRInstallCommandsResponse(
+        message="EDR install commands generated successfully",
+        success=True,
+        customer_code=customer_code,
+        commands=commands,
     )

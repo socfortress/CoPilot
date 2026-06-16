@@ -233,6 +233,11 @@
 								<CustomerAgents v-if="customerInfo" :customer="customerInfo" />
 							</n-scrollbar>
 						</n-tab-pane>
+						<n-tab-pane name="Deploy Agent" tab="Deploy Agent" display-directive="show:lazy" class="p-4! pr-0!">
+							<n-scrollbar style="max-height: 470px" trigger="none" class="pr-4">
+								<CustomerEdrInstall :customer-code="customer.customer_code" />
+							</n-scrollbar>
+						</n-tab-pane>
 						<n-tab-pane
 							name="Healthcheck Wazuh"
 							tab="Healthcheck Wazuh"
@@ -302,6 +307,7 @@ const emit = defineEmits<{
 }>()
 const CustomerInfo = defineAsyncComponent(() => import("./CustomerInfo.vue"))
 const CustomerAgents = defineAsyncComponent(() => import("./CustomerAgents.vue"))
+const CustomerEdrInstall = defineAsyncComponent(() => import("./CustomerEdrInstall.vue"))
 const CustomerProvision = defineAsyncComponent(() => import("./provision/CustomerProvision.vue"))
 const CustomerHealthcheckList = defineAsyncComponent(() => import("./healthcheck/CustomerHealthcheckList.vue"))
 const CustomerIntegrations = defineAsyncComponent(() => import("./integrations/CustomerIntegrations.vue"))
