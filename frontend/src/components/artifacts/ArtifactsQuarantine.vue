@@ -78,7 +78,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { QuarantineRequest } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact, QuarantineResult } from "@/types/artifacts.d"

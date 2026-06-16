@@ -61,7 +61,7 @@
 				/>
 			</div>
 
-			<n-spin :show="loading">
+			<n-spin :show="loading" class="min-h-52">
 				<div class="my-3">
 					<div v-if="list.length" class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 						<ActionCard v-for="item of list" :key="item.copilot_action_name" :action="item" />
