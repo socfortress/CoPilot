@@ -1,11 +1,5 @@
 <template>
-	<n-modal
-		v-model:show="showModal"
-		preset="card"
-		title="Bulk Delete Agents"
-		class="bulk-delete-modal"
-		:style="{ maxWidth: '600px' }"
-	>
+	<n-modal v-model:show="showModal" preset="card" title="Bulk Delete Agents" class="max-w-160!">
 		<n-tabs v-model:value="activeTab" type="line">
 			<n-tab-pane name="selection" tab="By Selection">
 				<div class="tab-content">
@@ -76,37 +70,6 @@
 			</n-tab-pane>
 		</n-tabs>
 
-		<!-- Results Section -->
-		<template v-if="deleteResults">
-			<n-divider />
-			<div class="results-section">
-				<n-alert :type="deleteResults.success ? 'success' : 'warning'" class="mb-4">
-					{{ deleteResults.message }}
-				</n-alert>
-				<div class="results-stats mb-4">
-					<n-space>
-						<n-tag type="info">Total: {{ deleteResults.total_requested }}</n-tag>
-						<n-tag type="success">Successful: {{ deleteResults.successful_deletions }}</n-tag>
-						<n-tag v-if="deleteResults.failed_deletions > 0" type="error">
-							Failed: {{ deleteResults.failed_deletions }}
-						</n-tag>
-					</n-space>
-				</div>
-				<n-collapse v-if="deleteResults.results.length > 0">
-					<n-collapse-item title="Deletion Details" name="details">
-						<n-scrollbar style="max-height: 200px">
-							<div v-for="result in deleteResults.results" :key="result.agent_id" class="result-item">
-								<n-tag :type="result.success ? 'success' : 'error'" size="small">
-									{{ result.success ? "✓" : "✗" }}
-								</n-tag>
-								<span class="ml-2">{{ result.agent_id }}: {{ result.message }}</span>
-							</div>
-						</n-scrollbar>
-					</n-collapse-item>
-				</n-collapse>
-			</div>
-		</template>
-
 		<template #footer>
 			<n-space justify="end">
 				<n-button @click="closeModal">Cancel</n-button>
@@ -146,18 +109,70 @@
 			<n-button type="error" :loading @click="executeDelete">Confirm Delete</n-button>
 		</template>
 	</n-modal>
+
+	<!-- Results Modal -->
+	<n-modal v-model:show="showResultsModal" preset="card" title="Deletion Results" class="max-w-140!">
+		<div v-if="deleteResults" class="flex flex-col gap-4">
+			<n-alert :type="deleteResults.success ? 'success' : 'warning'">
+				{{ deleteResults.message }}
+			</n-alert>
+
+			<CardStatsBars
+				v-if="deleteResults.total_requested > 0"
+				title="Outcome"
+				embedded
+				:values="outcomeBarValues"
+				show-zero-items
+			/>
+
+			<section v-if="deleteResults.results.length > 0">
+				<h4 class="text-tertiary mb-3 text-xs font-medium tracking-wide uppercase">Deletion Details</h4>
+				<n-scrollbar class="max-h-50">
+					<div class="flex flex-col gap-2 pr-3">
+						<CardEntity
+							v-for="result in deleteResults.results"
+							:key="result.agent_id"
+							embedded
+							:status="result.success ? 'success' : 'error'"
+						>
+							<template #headerMain>
+								ID:
+								<span class="text-default font-mono text-sm">{{ result.agent_id }}</span>
+							</template>
+							<template #headerExtra>
+								<Badge
+									type="splitted"
+									bright
+									class="text-default uppercase"
+									size="small"
+									:color="result.success ? 'success' : 'danger'"
+								>
+									<template #label>{{ result.success ? "Deleted" : "Failed" }}</template>
+								</Badge>
+							</template>
+							<template #default>
+								<div class="text-sm">{{ result.message }}</div>
+							</template>
+						</CardEntity>
+					</div>
+				</n-scrollbar>
+			</section>
+		</div>
+		<template #footer>
+			<n-space justify="end">
+				<n-button @click="closeResultsModal">Close</n-button>
+			</n-space>
+		</template>
+	</n-modal>
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
+import type { ItemProps } from "@/components/common/cards/CardStatsBars.vue"
 import type { Agent, BulkDeleteAgentsResponse, BulkDeleteFilterRequest } from "@/types/agents.d"
 import type { ApiError } from "@/types/common"
 import {
 	NAlert,
 	NButton,
-	NCollapse,
-	NCollapseItem,
-	NDivider,
 	NForm,
 	NFormItem,
 	NInputNumber,
@@ -172,6 +187,11 @@ import {
 } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
+import CardStats from "@/components/common/cards/CardStats.vue"
+import CardStatsBars from "@/components/common/cards/CardStatsBars.vue"
+import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 
@@ -198,6 +218,7 @@ const showModal = computed({
 const activeTab = ref<"selection" | "filter">("selection")
 const loading = ref(false)
 const showConfirmDialog = ref(false)
+const showResultsModal = ref(false)
 const deleteResults = ref<BulkDeleteAgentsResponse | null>(null)
 
 const filterForm = ref<BulkDeleteFilterRequest>({
@@ -227,8 +248,34 @@ const canDelete = computed(() => {
 	return hasFilters.value
 })
 
+const outcomeBarValues = computed<ItemProps[]>(() => {
+	if (!deleteResults.value) return []
+
+	return [
+		{
+			label: "Requested",
+			value: deleteResults.value.total_requested,
+			isTotal: true
+		},
+		{
+			label: "Successful",
+			value: deleteResults.value.successful_deletions,
+			status: "success"
+		},
+		{
+			label: "Failed",
+			value: deleteResults.value.failed_deletions,
+			status: "error"
+		}
+	]
+})
+
 function closeModal() {
 	showModal.value = false
+}
+
+function closeResultsModal() {
+	showResultsModal.value = false
 	deleteResults.value = null
 }
 
@@ -251,6 +298,7 @@ async function executeDelete() {
 		}
 
 		deleteResults.value = response.data
+		showModal.value = false
 
 		if (response.data.success) {
 			message.success(response.data.message)
@@ -258,6 +306,8 @@ async function executeDelete() {
 		} else {
 			message.warning(response.data.message)
 		}
+
+		showResultsModal.value = true
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError) || "Failed to delete agents")
 	} finally {
@@ -273,7 +323,6 @@ watch(showModal, newVal => {
 			status: undefined,
 			disconnected_days: undefined
 		}
-		deleteResults.value = null
 	}
 })
 
@@ -290,18 +339,3 @@ watch(
 	{ immediate: true }
 )
 </script>
-
-<style lang="scss" scoped>
-.bulk-delete-modal {
-	.result-item {
-		display: flex;
-		align-items: center;
-		padding: 4px 0;
-		border-bottom: 1px solid var(--border-color);
-
-		&:last-child {
-			border-bottom: none;
-		}
-	}
-}
-</style>
