@@ -18,8 +18,8 @@
 							<strong>{{ selectedAgents.length }}</strong>
 							selected agent(s).
 						</p>
-						<n-scrollbar style="max-height: 200px" class="mb-4">
-							<div class="selected-agents-list">
+						<n-scrollbar class="mb-4 max-h-50">
+							<div class="flex flex-wrap">
 								<n-tag
 									v-for="agent in selectedAgents"
 									:key="agent.agent_id"
@@ -283,22 +283,16 @@ watch(
 	len => {
 		if (len > 0) {
 			activeTab.value = "selection"
+		} else {
+			activeTab.value = "filter"
 		}
-	}
+	},
+	{ immediate: true }
 )
 </script>
 
 <style lang="scss" scoped>
 .bulk-delete-modal {
-	.tab-content {
-		padding-top: 16px;
-	}
-
-	.selected-agents-list {
-		display: flex;
-		flex-wrap: wrap;
-	}
-
 	.result-item {
 		display: flex;
 		align-items: center;
@@ -308,10 +302,6 @@ watch(
 		&:last-child {
 			border-bottom: none;
 		}
-	}
-
-	.w-full {
-		width: 100%;
 	}
 }
 </style>

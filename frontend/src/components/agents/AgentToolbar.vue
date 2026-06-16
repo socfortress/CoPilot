@@ -45,13 +45,7 @@
 				</p>
 
 				<div class="flex items-center justify-between gap-2">
-					<n-button
-						type="error"
-						secondary
-						size="small"
-						:disabled="syncing || !selectedCount"
-						@click="emit('bulk-delete')"
-					>
+					<n-button type="error" secondary size="small" :disabled="syncing" @click="emit('bulk-delete')">
 						<template #icon>
 							<Icon :name="DeleteIcon" />
 						</template>
