@@ -13,12 +13,11 @@
 							selected agent(s).
 						</p>
 						<n-scrollbar class="mb-4 max-h-50">
-							<div class="flex flex-wrap">
+							<div class="flex flex-wrap gap-2">
 								<n-tag
 									v-for="agent in selectedAgents"
 									:key="agent.agent_id"
 									closable
-									class="mr-2 mb-2"
 									@close="$emit('remove-selection', agent)"
 								>
 									{{ agent.hostname }} ({{ agent.agent_id }})
@@ -86,23 +85,61 @@
 	<!-- Confirmation Dialog -->
 	<n-modal v-model:show="showConfirmDialog" preset="dialog" type="warning" title="Confirm Bulk Deletion">
 		<template #default>
-			<p>Are you sure you want to delete these agents?</p>
-			<p class="mt-2 text-red-500">This action cannot be undone.</p>
-			<template v-if="activeTab === 'filter'">
-				<p class="mt-2">
-					<strong>Filters:</strong>
-				</p>
-				<ul class="ml-4 list-disc">
-					<li v-if="filterForm.customer_code">Customer: {{ filterForm.customer_code }}</li>
-					<li v-if="filterForm.status">Status: {{ filterForm.status }}</li>
-					<li v-if="filterForm.disconnected_days">
-						Disconnected for: {{ filterForm.disconnected_days }}+ days
-					</li>
-				</ul>
-			</template>
-			<template v-else>
-				<p class="mt-2">{{ selectedAgents.length }} agent(s) will be deleted.</p>
-			</template>
+			<div class="flex flex-col gap-4">
+				<p>Are you sure you want to delete these agents?</p>
+
+				<n-alert type="error" :bordered="false">This action cannot be undone.</n-alert>
+
+				<CardEntity v-if="activeTab === 'filter'" embedded status="warning">
+					<template #headerMain>
+						<span class="text-tertiary text-xs font-medium tracking-wide uppercase">Active Filters</span>
+					</template>
+					<template #default>
+						<div class="flex flex-wrap gap-2">
+							<Badge
+								v-for="item in confirmFilterItems"
+								:key="item.label"
+								type="splitted"
+								bright
+								class="text-default"
+							>
+								<template #label>{{ item.label }}</template>
+								<template #value>{{ item.value }}</template>
+							</Badge>
+						</div>
+						<p class="text-secondary mt-3 text-sm">All agents matching these filters will be deleted.</p>
+					</template>
+				</CardEntity>
+
+				<template v-else>
+					<CardKV color="danger">
+						<template #key>Agents selected</template>
+						<template #value>{{ selectedAgents.length }}</template>
+					</CardKV>
+
+					<n-scrollbar v-if="selectedAgents.length" class="max-h-30">
+						<div class="flex flex-col gap-2 pr-2">
+							<CardEntity
+								v-for="agent in selectedAgents"
+								:key="agent.agent_id"
+								embedded
+								size="small"
+								status="error"
+							>
+								<template #headerMain>
+									<span class="text-default text-sm">{{ agent.hostname }}</span>
+								</template>
+								<template #headerExtra>
+									<Badge type="splitted" bright size="small" class="text-default font-mono">
+										<template #label>ID</template>
+										<template #value>{{ agent.agent_id }}</template>
+									</Badge>
+								</template>
+							</CardEntity>
+						</div>
+					</n-scrollbar>
+				</template>
+			</div>
 		</template>
 		<template #action>
 			<n-button @click="showConfirmDialog = false">Cancel</n-button>
@@ -189,9 +226,8 @@ import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import CardStats from "@/components/common/cards/CardStats.vue"
+import CardKV from "@/components/common/cards/CardKV.vue"
 import CardStatsBars from "@/components/common/cards/CardStatsBars.vue"
-import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 
@@ -246,6 +282,26 @@ const canDelete = computed(() => {
 		return props.selectedAgents.length > 0
 	}
 	return hasFilters.value
+})
+
+const confirmFilterItems = computed(() => {
+	const items: { label: string; value: string }[] = []
+
+	if (filterForm.value.customer_code) {
+		items.push({ label: "Customer", value: filterForm.value.customer_code })
+	}
+
+	if (filterForm.value.status) {
+		const statusLabel =
+			statusOptions.find(option => option.value === filterForm.value.status)?.label ?? filterForm.value.status
+		items.push({ label: "Status", value: statusLabel })
+	}
+
+	if (filterForm.value.disconnected_days) {
+		items.push({ label: "Disconnected", value: `${filterForm.value.disconnected_days}+ days` })
+	}
+
+	return items
 })
 
 const outcomeBarValues = computed<ItemProps[]>(() => {
