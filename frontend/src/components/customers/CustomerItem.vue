@@ -233,10 +233,13 @@
 								<CustomerAgents v-if="customerInfo" :customer="customerInfo" />
 							</n-scrollbar>
 						</n-tab-pane>
-						<n-tab-pane name="Deploy Agent" tab="Deploy Agent" display-directive="show:lazy" class="p-4! pr-0!">
-							<n-scrollbar style="max-height: 470px" trigger="none" class="pr-4">
-								<CustomerEdrInstall :customer-code="customer.customer_code" />
-							</n-scrollbar>
+						<n-tab-pane
+							name="Deploy Agent"
+							tab="Deploy Agent"
+							display-directive="show:lazy"
+							class="overflow-hidden p-4!"
+						>
+							<CustomerEdrInstall :customer-code="customer.customer_code" />
 						</n-tab-pane>
 						<n-tab-pane
 							name="Healthcheck Wazuh"
@@ -287,7 +290,6 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { Customer, CustomerMeta } from "@/types/customers.d"
 import { NAvatar, NButton, NModal, NPopover, NScrollbar, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } from "vue"

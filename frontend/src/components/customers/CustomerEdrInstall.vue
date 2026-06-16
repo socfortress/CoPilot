@@ -1,66 +1,74 @@
 <template>
-	<div class="customer-edr-install flex flex-col gap-4">
+	<div class="flex max-w-full flex-col gap-4 overflow-hidden">
 		<n-spin :show="loading" class="min-h-48">
 			<template v-if="commands">
-				<div class="flex flex-col gap-2">
-					<p class="text-secondary text-sm">
+				<div class="flex flex-col gap-4">
+					<n-alert type="info" :bordered="false">
 						Run the matching command on the endpoint to install and enroll the EDR agent for
-						<strong>{{ customerCode }}</strong>
-						.
-					</p>
+						<Badge type="splitted" color="primary" size="small" class="mx-1 inline-flex align-middle">
+							<template #label>Customer</template>
+							<template #value>{{ customerCode }}</template>
+						</Badge>
+					</n-alert>
 
-					<div class="flex flex-col gap-1">
-						<div class="flex items-center gap-2 font-medium">
-							<Icon name="mdi:microsoft-windows" :size="16" />
-							Windows (PowerShell)
-						</div>
-						<CodeSource :code="commands.windows" lang="powershell" :max-height="220" />
-					</div>
-
-					<div class="mt-2 flex flex-col gap-1">
-						<div class="flex items-center gap-2 font-medium">
-							<Icon name="mdi:linux" :size="16" />
-							Linux (Bash)
-						</div>
-						<CodeSource :code="commands.linux" lang="bash" :max-height="220" />
-					</div>
+					<CardEntity v-for="section in installCommandSections" :key="section.platform" embedded size="small">
+						<template #headerMain>
+							<PlatformBadge :platform="section.platform" />
+						</template>
+						<template #headerExtra>
+							<Badge type="splitted" size="small">
+								<template #label>Shell</template>
+								<template #value>{{ section.shell }}</template>
+							</Badge>
+						</template>
+						<template #default>
+							<CodeSource :code="section.code" :lang="section.lang" :max-height="220" />
+						</template>
+					</CardEntity>
 				</div>
 			</template>
 
 			<template v-else>
-				<n-empty v-if="!loading" class="h-48 justify-center" :description="errorMessage || 'No install commands available'">
-					<div class="flex flex-col items-center gap-4">
-						<n-button size="small" type="primary" @click="getCommands()">
-							<template #icon>
-								<Icon :name="RetryIcon" :size="14" />
-							</template>
-							Retry
-						</n-button>
-					</div>
-				</n-empty>
+				<n-empty
+					v-if="!loading"
+					class="h-48 justify-center"
+					:description="errorMessage || 'No install commands available'"
+				/>
 			</template>
 		</n-spin>
 	</div>
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { EDRInstallCommands } from "@/types/customers.d"
-import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { NAlert, NEmpty, NSpin, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
-import Icon from "@/components/common/Icon.vue"
+import PlatformBadge from "@/components/common/PlatformBadge.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const { customerCode } = defineProps<{
 	customerCode: string
 }>()
 
-const RetryIcon = "carbon:restart"
-
 const message = useMessage()
 const loading = ref(false)
 const commands = ref<EDRInstallCommands | null>(null)
 const errorMessage = ref<string | null>(null)
+
+const installCommandSections = computed(() => {
+	const cmds = commands.value
+	if (!cmds) return []
+
+	return [
+		{ platform: "windows", shell: "PowerShell", lang: "powershell", code: cmds.windows },
+		{ platform: "linux", shell: "Bash", lang: "bash", code: cmds.linux }
+	]
+})
 
 function getCommands() {
 	loading.value = true
@@ -79,7 +87,7 @@ function getCommands() {
 		})
 		.catch(err => {
 			commands.value = null
-			errorMessage.value = err.response?.data?.message || "An error occurred. Please try again later."
+			errorMessage.value = getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later."
 		})
 		.finally(() => {
 			loading.value = false
