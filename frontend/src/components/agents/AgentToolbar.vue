@@ -103,7 +103,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
 import type { Agent } from "@/types/agents.d"
 import type { ApiError } from "@/types/common"

@@ -88,7 +88,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { Agent, AgentSca, ScaPolicyResult } from "@/types/agents.d"
 import type { ApiError } from "@/types/common"
 import { useResizeObserver } from "@vueuse/core"
@@ -111,11 +110,11 @@ const total = computed(() => resultsList.value.length)
 const totalFailed = computed(() => resultsList.value.filter(o => o.result === "failed").length)
 const totalNA = computed(() => resultsList.value.filter(o => o.result === "not applicable").length)
 const totalPassed = computed(() => resultsList.value.filter(o => o.result === "passed").length)
-const pageSize = ref(25)
 const currentPage = ref(1)
 const simpleMode = ref(false)
 const showSizePicker = ref(true)
 const pageSizes = [10, 25, 50, 100]
+const pageSize = ref(pageSizes[0])
 const header = ref()
 const pageSlot = ref(8)
 const resultFilter = ref<null | string>(null)

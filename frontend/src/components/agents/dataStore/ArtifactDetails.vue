@@ -135,18 +135,3 @@ const fields = computed(() => [
 
 const visibleFields = computed(() => fields.value.filter(field => field.condition !== false))
 </script>
-
-<style lang="scss" scoped>
-// TODO-FE: remove style
-.artifact-details {
-	:deep() {
-		code {
-			font-family: var(--font-family-mono);
-			font-size: 12px;
-			padding: 2px 4px;
-			background-color: var(--bg-secondary-color);
-			border-radius: 3px;
-		}
-	}
-}
-</style>
