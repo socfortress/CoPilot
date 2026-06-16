@@ -26,9 +26,9 @@ WINDOWS_TEMPLATE = (
     "Invoke-RestMethod -Uri '__REPO_URL__/repository/__REPO_USERNAME__/prod/__WINDOWS_INSTALLER__' "
     '-Headers $Headers -OutFile "$env:TMP\\__WINDOWS_INSTALLER__"; '
     'Start-Process -FilePath "$env:TMP\\__WINDOWS_INSTALLER__" '
-    "-ArgumentList '/q WAZUHMANAGER=\"__WAZUH_DOMAIN__\" WAZUHPASSWORD=\"__REGISTRATION_PASSWORD__\" "
+    '-ArgumentList \'/q WAZUHMANAGER="__WAZUH_DOMAIN__" WAZUHPASSWORD="__REGISTRATION_PASSWORD__" '
     'CUSTOMERCODE="Windows___CUSTOMER_CODE__" WAZUHREGISTRATIONPORT="__REGISTRATION_PORT__" '
-    "WAZUHMANAGERPORT=\"__LOGS_PORT__\"';"
+    'WAZUHMANAGERPORT="__LOGS_PORT__"\';'
 )
 
 LINUX_TEMPLATE = (
@@ -93,9 +93,7 @@ async def generate_edr_install_commands(
     logger.info(f"Generating EDR install commands for customer {customer_code}")
 
     # Confirm the customer exists for a clearer error than a missing-meta 404.
-    customer = (
-        await session.execute(select(Customers).filter(Customers.customer_code == customer_code))
-    ).scalars().first()
+    customer = (await session.execute(select(Customers).filter(Customers.customer_code == customer_code))).scalars().first()
     if not customer:
         raise HTTPException(
             status_code=404,
