@@ -45,11 +45,13 @@
 
 <script setup lang="ts">
 import type { FormInst } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { User } from "@/types/user.d"
 import { NButton, NForm, NFormItem, NModal, NSelect, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	user?: User
@@ -101,8 +103,8 @@ function handleAssignRole() {
 				} else {
 					message.error(res.data.message || "Failed to assign role")
 				}
-			} catch (err: any) {
-				message.error(err.response?.data?.message || "Failed to assign role")
+			} catch (err) {
+				message.error(getApiErrorMessage(err as ApiError) || "Failed to assign role")
 			} finally {
 				loading.value = false
 			}

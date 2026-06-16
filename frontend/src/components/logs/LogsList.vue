@@ -116,6 +116,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { Log, LogsQuery, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/types/logs.d"
 import type { User } from "@/types/user.d"
@@ -127,6 +128,7 @@ import { computed, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { LogEventType } from "@/types/logs.d"
+import { getApiErrorMessage } from "@/utils"
 import LogItem from "./LogItem.vue"
 import LogsFilters from "./LogsFilters.vue"
 
@@ -208,7 +210,7 @@ function purge() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingPurge.value = false
@@ -237,7 +239,7 @@ function getData() {
 		.catch(err => {
 			logsList.value = []
 
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

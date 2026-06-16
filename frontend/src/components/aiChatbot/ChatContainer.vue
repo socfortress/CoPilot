@@ -47,6 +47,7 @@
 import type { ScrollbarInst } from "naive-ui"
 import type { ChatBubble } from "./ChatBubble.vue"
 import type { Message } from "./ChatQuery.vue"
+import type { ApiError } from "@/types/common"
 import { useStorage } from "@vueuse/core"
 import axios from "axios"
 import { NScrollbar, useMessage } from "naive-ui"
@@ -55,6 +56,7 @@ import { nextTick, onBeforeMount, onMounted, ref } from "vue"
 import Api from "@/api"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import { secureLocalStorage } from "@/utils/secure-storage"
 import ChatBubbleBlock from "./ChatBubble.vue"
 import ChatQuery from "./ChatQuery.vue"
@@ -175,7 +177,7 @@ function sendQuery(payload: Message) {
 		})
 		.catch(err => {
 			if (!axios.isCancel(err)) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {

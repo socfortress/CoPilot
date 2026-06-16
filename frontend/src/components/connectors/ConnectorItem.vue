@@ -97,6 +97,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { Connector } from "@/types/connectors.d"
 import { NAvatar, NButton, NCard, NModal, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
@@ -104,6 +105,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import ConfigForm from "./ConfigForm"
 
 const props = defineProps<{
@@ -151,7 +153,7 @@ function verify(connector: Connector) {
 			emit("verified")
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingVerify.value = false

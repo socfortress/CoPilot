@@ -90,6 +90,7 @@
 
 <script setup lang="ts">
 import type { AlertsFilter } from "@/api/endpoints/soc"
+import type { ApiError } from "@/types/common"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
@@ -99,6 +100,7 @@ import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, toR
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import PaginationIndeterminate from "@/components/common/PaginationIndeterminate.vue"
+import { getApiErrorMessage } from "@/utils"
 import SocAlertItem from "./SocAlertItem/SocAlertItem.vue"
 // MOCK
 // import { alerts as alertsMock } from "./mock"
@@ -189,7 +191,7 @@ function getAlerts() {
 		})
 		.catch(err => {
 			if (!axios.isCancel(err)) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -266,7 +268,7 @@ function deleteMultipleAlerts() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingPurge.value = false
@@ -288,7 +290,7 @@ function purge() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingPurge.value = false

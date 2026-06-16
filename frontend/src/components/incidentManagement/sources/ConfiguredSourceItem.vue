@@ -34,11 +34,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { SourceName } from "@/types/incidentManagement/sources.d"
 import { NButton, NModal, NPopconfirm, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import { getApiErrorMessage } from "@/utils"
 import SourceConfigurationDetails from "./SourceConfigurationDetails.vue"
 
 const { source } = defineProps<{ source: SourceName }>()
@@ -66,7 +68,7 @@ function deleteSourceConfiguration() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			canceling.value = false

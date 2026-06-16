@@ -15,12 +15,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { SocNote } from "@/types/soc/note.d"
 import { refDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NEmpty, NInput, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import SocCaseNote from "./SocCaseNote.vue"
 
 const props = defineProps<{ caseId: string | number }>()
@@ -57,7 +59,7 @@ function getNotes() {
 		})
 		.catch(err => {
 			if (!axios.isCancel(err)) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {

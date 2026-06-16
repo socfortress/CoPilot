@@ -114,6 +114,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
 import { NButton, NCard, NModal, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, toRefs } from "vue"
@@ -123,6 +124,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import ExclusionRuleDetails from "./ExclusionRuleDetails.vue"
 import ExclusionRuleForm from "./ExclusionRuleForm.vue"
@@ -196,7 +198,7 @@ function deleteExclusionRules() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingDelete.value = false

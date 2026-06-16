@@ -278,6 +278,7 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { FormInst, FormItemRule, FormRules, FormValidationError, StepsProps } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers.d"
 import _uniqBy from "lodash/uniqBy"
 import {
@@ -301,6 +302,7 @@ import isURL from "validator/es/lib/isURL"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	customerCode: string
@@ -561,7 +563,7 @@ function getSubscriptions() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingSubscriptions.value = false
@@ -584,7 +586,7 @@ function getDashboards() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingDashboards.value = false
@@ -649,7 +651,7 @@ async function submit() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

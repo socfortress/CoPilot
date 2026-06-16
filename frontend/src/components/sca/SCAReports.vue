@@ -73,6 +73,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import type { SCAReport, SCAReportGenerateRequest } from "@/types/sca.d"
 import { saveAs } from "file-saver"
@@ -80,6 +81,7 @@ import { NButton, NEmpty, NModal, NPagination, NSelect, NSpin, useMessage } from
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import GenerateReportForm from "./GenerateReportForm.vue"
 import SCAReportCard from "./SCAReportCard.vue"
 
@@ -124,7 +126,7 @@ async function loadReports() {
 			message.error(response.data.message || "Failed to load reports")
 		}
 	} catch (error: any) {
-		message.error(error?.response?.data?.detail || "Failed to load reports")
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to load reports")
 	} finally {
 		loading.value = false
 	}
@@ -158,7 +160,7 @@ async function handleGenerateReport(request: SCAReportGenerateRequest) {
 			message.error(response.data.error || "Failed to generate report")
 		}
 	} catch (error: any) {
-		message.error(error?.response?.data?.detail || "Failed to generate report")
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to generate report")
 	} finally {
 		generating.value = false
 	}
@@ -172,7 +174,7 @@ async function handleDownload(report: SCAReport) {
 
 		message.success("Report downloaded successfully")
 	} catch (error: any) {
-		message.error(error?.response?.data?.detail || "Failed to download report")
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to download report")
 	}
 }
 
@@ -194,7 +196,7 @@ async function confirmDelete() {
 			message.error("Failed to delete report")
 		}
 	} catch (error: any) {
-		message.error(error?.response?.data?.detail || "Failed to delete report")
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to delete report")
 	} finally {
 		showDeleteModal.value = false
 		reportToDelete.value = null

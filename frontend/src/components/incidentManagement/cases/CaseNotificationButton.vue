@@ -18,10 +18,12 @@
 
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import { NButton, NTooltip, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const { size, caseId, notificationInvokedNumber } = defineProps<{
 	size?: ButtonSize
@@ -51,7 +53,7 @@ function invoke() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			invoking.value = false

@@ -162,6 +162,7 @@
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { SelectBaseOption } from "naive-ui/es/select/src/interface"
 import type { RegisterPayload } from "@/types/auth.d"
+import type { ApiError } from "@/types/common"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, NStep, NSteps, useMessage } from "naive-ui"
 import PasswordValidator from "password-validator"
@@ -170,6 +171,7 @@ import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { AuthUserRole } from "@/types/auth.d"
+import { getApiErrorMessage } from "@/utils"
 // import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 
 interface ModelType {
@@ -405,7 +407,7 @@ function signUp(e: Event) {
 					}
 				})
 				.catch(err => {
-					message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+					message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				})
 				.finally(() => {
 					loading.value = false

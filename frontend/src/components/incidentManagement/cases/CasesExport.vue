@@ -23,6 +23,7 @@
 import type { ButtonSize } from "naive-ui"
 import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
 import type { Ref } from "vue"
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
 import { useWindowSize } from "@vueuse/core"
 import { saveAs } from "file-saver"
@@ -31,6 +32,7 @@ import { computed, h, inject, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const { size, showIcon } = defineProps<{ size?: ButtonSize; showIcon?: boolean }>()
@@ -117,7 +119,7 @@ function exportCases(key: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			exporting.value = false
@@ -137,7 +139,7 @@ function getCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCustomersList.value = false

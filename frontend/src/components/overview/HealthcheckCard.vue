@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import type { ItemProps } from "@/components/common/cards/CardStatsMulti.vue"
+import type { ApiError } from "@/types/common"
 import type { InfluxDBAlert } from "@/types/healthchecks.d"
 import { NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
@@ -30,6 +31,7 @@ import CardStatsMulti from "@/components/common/cards/CardStatsMulti.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useThemeStore } from "@/stores/theme"
 import { InfluxDBAlertSeverity } from "@/types/healthchecks.d"
+import { getApiErrorMessage } from "@/utils"
 
 const HealthcheckIcon = "ph:heartbeat"
 const { routeHealthcheck } = useNavigation()
@@ -70,7 +72,7 @@ function getData() {
 		.catch(err => {
 			healthcheck.value = []
 
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

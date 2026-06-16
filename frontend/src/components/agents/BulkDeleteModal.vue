@@ -151,6 +151,7 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { Agent, BulkDeleteAgentsResponse, BulkDeleteFilterRequest } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import {
 	NAlert,
 	NButton,
@@ -172,6 +173,7 @@ import {
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	show: boolean
@@ -256,9 +258,8 @@ async function executeDelete() {
 		} else {
 			message.warning(response.data.message)
 		}
-	} catch (err: any) {
-		// TODO-FE: usare getApiErrorMessage in tutte queste casistiche
-		message.error(err.response?.data?.detail || err.response?.data?.message || "Failed to delete agents")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to delete agents")
 	} finally {
 		loading.value = false
 	}

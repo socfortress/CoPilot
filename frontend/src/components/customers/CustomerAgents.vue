@@ -39,6 +39,7 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { Agent } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
 import { saveAs } from "file-saver"
 import _sortBy from "lodash/sortBy"
@@ -49,6 +50,7 @@ import { useRouter } from "vue-router"
 import Api from "@/api"
 import AgentCard from "@/components/agents/AgentCard.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	customer: Customer
@@ -99,7 +101,7 @@ function getAgents() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

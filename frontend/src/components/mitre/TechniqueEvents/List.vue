@@ -66,6 +66,7 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { MitreEventsQuery, MitreTechniquesAlertsQueryTimeRange } from "@/api/endpoints/wazuh/mitre"
+import type { ApiError } from "@/types/common"
 import type { MitreEventDetails } from "@/types/mitre.d"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import axios from "axios"
@@ -73,6 +74,7 @@ import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import Filters from "./Filters.vue"
 import TechniqueEventCard from "./TechniqueEventCard.vue"
 
@@ -130,7 +132,7 @@ function getList() {
 		})
 		.catch(err => {
 			if (!axios.isCancel(err)) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				loading.value = false
 			}
 		})

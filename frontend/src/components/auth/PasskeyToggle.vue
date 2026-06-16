@@ -97,11 +97,13 @@
 
 <script lang="ts" setup>
 import type { PasskeyItem } from "@/api/endpoints/passkey"
+import type { ApiError } from "@/types/common"
 import { NAlert, NButton, NCard, NFormItem, NInput, NModal, NPopconfirm, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getDefaultPasskeyDeviceName, registerPasskey, usePasskeySupport } from "@/composables/usePasskey"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const message = useMessage()
@@ -150,12 +152,12 @@ async function registerNewPasskey() {
 		showRegisterModal.value = false
 		message.success("Passkey added successfully")
 		await loadStatus()
-	} catch (err: any) {
+	} catch (err) {
 		if (err?.name === "NotAllowedError") {
 			message.warning("Passkey registration was cancelled.")
 			return
 		}
-		const detail = err?.response?.data?.detail || err?.message || "Failed to register passkey"
+		const detail = getApiErrorMessage(err as ApiError) || "Failed to register passkey"
 		if (typeof detail === "string" && detail.toLowerCase().includes("invalid domain")) {
 			message.error(`Passkeys require localhost. Open ${localhostUrl}`)
 			return
@@ -173,8 +175,8 @@ async function removePasskey(passkeyId: number) {
 		await Api.passkey.remove(passkeyId)
 		message.success("Passkey removed")
 		await loadStatus()
-	} catch (err: any) {
-		message.error(err?.response?.data?.detail || "Failed to remove passkey")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to remove passkey")
 	} finally {
 		removingId.value = null
 	}

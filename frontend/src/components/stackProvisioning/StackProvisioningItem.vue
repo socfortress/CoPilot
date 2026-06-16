@@ -24,12 +24,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { AvailableContentPack } from "@/types/stackProvisioning.d"
 import { NButton, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const { contentPack } = defineProps<{ contentPack: AvailableContentPack }>()
 
@@ -55,7 +57,7 @@ function provision(contentPackName: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingProvision.value = false

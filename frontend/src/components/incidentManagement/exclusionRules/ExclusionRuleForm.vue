@@ -105,6 +105,7 @@
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { ExclusionRulePayload } from "@/api/endpoints/incidentManagement/exclusionRules"
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
 import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules"
 import _get from "lodash/get"
@@ -113,6 +114,7 @@ import { NAlert, NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, NSpin, u
 import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 interface FieldMatch {
 	id: string
@@ -297,7 +299,7 @@ function getCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCustomers.value = false
@@ -333,7 +335,7 @@ function submit() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { AlertComment } from "@/types/incidentManagement/alerts.d"
 import _trim from "lodash/trim"
 import { NButton, NEmpty, NInput, NSpin, useMessage } from "naive-ui"
@@ -53,6 +54,7 @@ import { computed, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
+import { getApiErrorMessage } from "@/utils"
 import AlertCommentItem from "./AlertComment.vue"
 
 const props = defineProps<{ comments: AlertComment[]; alertId: number }>()
@@ -110,7 +112,7 @@ function submit() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				submitting.value = false

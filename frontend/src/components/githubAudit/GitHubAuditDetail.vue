@@ -182,6 +182,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type {
 	GitHubAuditCheckExclusion,
 	GitHubAuditConfig,
@@ -207,6 +208,7 @@ import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import GitHubAuditConfigSummary from "./GitHubAuditConfigSummary.vue"
 import GitHubAuditExclusionForm from "./GitHubAuditExclusionForm.vue"
@@ -320,7 +322,7 @@ async function runAudit() {
 		await loadReports()
 		emit("updated")
 	} catch (error: any) {
-		message.error(error.response?.data?.detail || "Failed to run audit")
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to run audit")
 	} finally {
 		running.value = false
 	}
@@ -333,7 +335,7 @@ async function deleteConfig() {
 		emit("close")
 		emit("updated")
 	} catch (error: any) {
-		message.error(error.response?.data?.detail || "Failed to delete configuration")
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to delete configuration")
 	}
 }
 

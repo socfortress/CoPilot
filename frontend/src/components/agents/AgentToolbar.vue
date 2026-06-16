@@ -112,12 +112,14 @@
 // TODO-FE: refactor
 import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
 import type { Agent } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
 import { useWindowSize } from "@vueuse/core"
 import { NButton, NCard, NDropdown, NInput, NScrollbar, NSwitch, NTag, useMessage } from "naive-ui"
 import { computed, h, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	modelValue: string
@@ -224,7 +226,7 @@ function getCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCustomersList.value = false

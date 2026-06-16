@@ -29,11 +29,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { Organization } from "@/types/shuffle.d"
 import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const loadingList = ref(false)
 const loadingToken = ref(false)
@@ -56,7 +58,7 @@ function getOrganizations() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingList.value = false
@@ -76,7 +78,7 @@ function getOrganization(id: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingToken.value = false

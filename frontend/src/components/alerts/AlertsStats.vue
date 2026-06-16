@@ -72,10 +72,12 @@
 <script setup lang="ts">
 import type { AlertsSummaryQuery } from "@/api/endpoints/alerts"
 import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost } from "@/types/alerts.d"
+import type { ApiError } from "@/types/common"
 import axios from "axios"
 import { NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { onBeforeMount, onBeforeUnmount, onMounted, ref, toRefs } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import AlertsStatsItem from "./AlertsStatsItem.vue"
 // import { alerts_by_host, alerts_by_rule, alerts_by_rule_per_host } from "./mock"
 
@@ -121,7 +123,7 @@ function getCountByHost() {
 			if (!axios.isCancel(err)) {
 				countByHost.value = []
 
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -147,7 +149,7 @@ function getCountByRule() {
 			if (!axios.isCancel(err)) {
 				countByRule.value = []
 
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -173,7 +175,7 @@ function getCountByRuleHost() {
 			if (!axios.isCancel(err)) {
 				countByRuleHost.value = []
 
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {

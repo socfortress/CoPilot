@@ -90,11 +90,13 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { Agent, AgentSca, ScaPolicyResult } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import ScaResultItem from "./ScaResultItem.vue"
 
 const { sca, agent } = defineProps<{ sca: AgentSca; agent: Agent }>()
@@ -156,7 +158,7 @@ function getSCAResults(agentId: string, policyId: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

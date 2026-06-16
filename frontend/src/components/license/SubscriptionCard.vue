@@ -89,13 +89,14 @@
 
 <script setup lang="ts">
 import type { CancelSubscriptionPayload } from "@/api/endpoints/license"
+import type { ApiError } from "@/types/common"
 import type { License, SubscriptionFeature } from "@/types/license.d"
 import { NButton, NModal, NPopconfirm, NSpin, NTag, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { price } from "@/utils"
+import { getApiErrorMessage, price } from "@/utils"
 
 const props = defineProps<{
 	subscription: SubscriptionFeature
@@ -141,7 +142,7 @@ function cancelSubscription() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			canceling.value = false

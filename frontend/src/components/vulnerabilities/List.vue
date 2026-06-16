@@ -60,6 +60,7 @@
 
 <script setup lang="ts">
 import type { VulnerabilitiesListFilter } from "./types"
+import type { ApiError } from "@/types/common"
 import type {
 	VulnerabilitySearchItem,
 	VulnerabilitySearchQuery,
@@ -72,6 +73,7 @@ import { computed, ref } from "vue"
 import Api from "@/api"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import ListFilters from "./ListFilters.vue"
 import VulnerabilityCard from "./VulnerabilityCard.vue"
 import VulnerabilityStats from "./VulnerabilityStats/VulnerabilityStats.vue"
@@ -132,7 +134,7 @@ function getList() {
 		})
 		.catch(err => {
 			if (!axios.isCancel(err)) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				loading.value = false
 			}
 		})

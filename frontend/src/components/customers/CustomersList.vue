@@ -37,11 +37,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { Customer } from "@/types/customers.d"
 import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import CustomerItem from "./CustomerItem.vue"
 
 const props = defineProps<{ highlight: string | null | undefined; reload?: boolean }>()
@@ -94,7 +96,7 @@ function getCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCustomers.value = false

@@ -91,6 +91,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { Stream } from "@/types/graylog/stream.d"
 import { useResizeObserver } from "@vueuse/core"
@@ -98,6 +99,7 @@ import { NButton, NDivider, NEmpty, NPagination, NPopover, NSelect, NSpin, useMe
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import StreamItem from "./Item.vue"
 
 const FilterIcon = "carbon:filter-edit"
@@ -168,7 +170,7 @@ function getData() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

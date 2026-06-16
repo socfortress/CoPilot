@@ -23,11 +23,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { ExampleQuestion } from "@/types/copilotMCP.d"
 import { NScrollbar, useMessage } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import BlurEffect from "@/components/common/BlurEffect.vue"
+import { getApiErrorMessage } from "@/utils"
 import ChatQuestion from "./ChatQuestion.vue"
 
 const props = defineProps<{ server: string }>()
@@ -67,7 +69,7 @@ function getExampleQuestions(server: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingExampleQuestions.value = false

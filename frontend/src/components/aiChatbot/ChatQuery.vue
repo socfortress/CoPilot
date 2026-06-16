@@ -96,6 +96,7 @@
 import type { RemovableRef } from "@vueuse/core"
 import type { SelectOption } from "naive-ui"
 import type { VNode } from "vue"
+import type { ApiError } from "@/types/common"
 import type { MCPServer } from "@/types/copilotMCP.d"
 import { useStorage } from "@vueuse/core"
 import _trim from "lodash/trim"
@@ -103,6 +104,7 @@ import { NButton, NCollapseTransition, NInput, NPopover, NSelect, NSwitch, NTag,
 import { computed, h, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 export interface Message {
 	input: string
@@ -165,7 +167,7 @@ function getList() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingServers.value = false

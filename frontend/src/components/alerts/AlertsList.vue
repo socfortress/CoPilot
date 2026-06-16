@@ -138,12 +138,14 @@ import type { AlertsStatsCTX } from "./AlertsStats.vue"
 import type { AlertsSummaryExt } from "./AlertsSummary.vue"
 import type { AlertsSummaryQuery } from "@/api/endpoints/alerts"
 import type { Agent } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import type { IndexStats } from "@/types/indices.d"
 import axios from "axios"
 import { NButton, NDrawer, NDrawerContent, NEmpty, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import AlertsFilters from "./AlertsFilters.vue"
 import AlertsStats from "./AlertsStats.vue"
 import AlertsSummaryItem from "./AlertsSummary.vue"
@@ -234,7 +236,7 @@ function getData() {
 			if (!axios.isCancel(err)) {
 				alertsSummaryList.value = []
 
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -261,13 +263,13 @@ function getIndices() {
 		.catch(err => {
 			if (err.response?.status === 401) {
 				message.error(
-					err.response?.data?.message ||
+					getApiErrorMessage(err as ApiError) ||
 						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
 				)
 			} else if (err.response?.status === 404) {
-				message.error(err.response?.data?.message || "No indices were found.")
+				message.error(getApiErrorMessage(err as ApiError) || "No indices were found.")
 			} else {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -288,7 +290,7 @@ function getAgents() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAgents.value = false

@@ -52,6 +52,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { Customer } from "@/types/customers.d"
 import type { User } from "@/types/user.d"
@@ -59,6 +60,7 @@ import { NButton, NForm, NFormItem, NModal, NSelect, NTag, useMessage } from "na
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	user?: User
@@ -133,7 +135,7 @@ function handleAssignCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "Failed to assign customer access")
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to assign customer access")
 		})
 		.finally(() => {
 			loading.value = false

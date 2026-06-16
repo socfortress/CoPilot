@@ -76,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { AlertsEventElement, AlertsQuery } from "@/types/graylog/alerts.d"
 import { useResizeObserver } from "@vueuse/core"
@@ -83,6 +84,7 @@ import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } fr
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 import AlertsEventItem from "./Item.vue"
 
@@ -179,7 +181,7 @@ function getData(page: number, pageSize: number, timerange: number) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

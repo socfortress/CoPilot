@@ -16,6 +16,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { SocAlert } from "@/types/soc/alert.d"
 import { NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs } from "vue"
@@ -23,6 +24,7 @@ import Api from "@/api"
 import CardStats from "@/components/common/cards/CardStats.vue"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import { useNavigation } from "@/composables/useNavigation"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	vertical?: boolean
@@ -52,7 +54,7 @@ function getData() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

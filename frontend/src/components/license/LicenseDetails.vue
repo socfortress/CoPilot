@@ -94,6 +94,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { License, LicenseFeatures } from "@/types/license.d"
 import _startCase from "lodash/startCase"
 import { NButton, NSpin, useMessage } from "naive-ui"
@@ -103,8 +104,9 @@ import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import Markdown from "@/components/common/Markdown.vue"
-import { useSettingsStore } from "@/stores/settings"
 
+import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
@@ -168,7 +170,7 @@ function getLicense() {
 		})
 		.catch(err => {
 			if (err.response.status !== 404) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -190,7 +192,7 @@ function getLicenseFeatures() {
 		})
 		.catch(err => {
 			if (err.response.status !== 404) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -212,7 +214,7 @@ function retrieveDockerCompose() {
 		})
 		.catch(err => {
 			if (err.response.status !== 404) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -246,7 +248,7 @@ function refreshLicense() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			refreshing.value = false

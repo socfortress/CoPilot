@@ -17,11 +17,13 @@
 
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const { alert, size } = defineProps<{
 	alert: MonitoringAlert
@@ -86,7 +88,7 @@ function invoke() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingInvoke.value = false
@@ -122,7 +124,7 @@ function deleteAlert() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingDelete.value = false

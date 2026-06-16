@@ -44,6 +44,7 @@
 
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { CatalogStoryRow } from "@/types/detectionCatalog.d"
 import { NDataTable, NInput, NModal, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
@@ -51,6 +52,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import StoryDetail from "./StoryDetail.vue"
 
@@ -201,7 +203,7 @@ function load() {
 			else message.warning(res.data?.message || "Failed to load analytic stories")
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "Failed to load analytic stories")
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to load analytic stories")
 		})
 		.finally(() => {
 			loading.value = false

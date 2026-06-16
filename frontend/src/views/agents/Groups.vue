@@ -163,6 +163,7 @@
 
 <script setup lang="ts">
 import type { XMLEditorCtx, XMLError } from "@/components/common/XMLEditor.vue"
+import type { ApiError } from "@/types/common"
 import type { WazuhGroup, WazuhGroupFileDetails } from "@/types/wazuh/groups.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
@@ -173,6 +174,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const message = useMessage()
 const loadingRefresh = ref(false)
@@ -251,7 +253,7 @@ function getGroups() {
 		.catch(err => {
 			if (!axios.isCancel(err)) {
 				groupsList.value = []
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				loadingGroups.value = false
 			}
 		})
@@ -271,7 +273,7 @@ function loadGroupFile(groupId: string, filename: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingFile.value = false
@@ -294,7 +296,7 @@ function updateGroupConfiguration() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				uploadingConfig.value = false

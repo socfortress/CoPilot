@@ -129,12 +129,14 @@
 import type { ArtifactsQuery } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact } from "@/types/artifacts.d"
+import type { ApiError } from "@/types/common"
 import { useResizeObserver } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"
 import { NBadge, NButton, NEmpty, NInputGroup, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import ArtifactItem from "./ArtifactItem.vue"
 
 const props = defineProps<{ agentHostname?: string; agents?: Agent[]; artifacts?: Artifact[] }>()
@@ -230,7 +232,7 @@ function getData(cb?: (artifacts: Artifact[]) => void) {
 			artifactsList.value = artifact_list
 			*/
 
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false
@@ -254,7 +256,7 @@ function getAgents(cb?: (agents: Agent[]) => void) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAgents.value = false

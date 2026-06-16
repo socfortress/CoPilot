@@ -116,6 +116,7 @@
 
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { ProvisionGraylogAlertRequest, RuleDetail } from "@/types/copilotSearches.d"
 import {
 	NAlert,
@@ -134,6 +135,7 @@ import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import RuleHeader from "./RuleHeader.vue"
 
 const props = defineProps<{
@@ -249,8 +251,8 @@ async function loadRule(ruleId: string) {
 		} else {
 			message.error(res.data?.message || "Failed to load rule details")
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to load rule details")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load rule details")
 	} finally {
 		loadingRule.value = false
 	}
@@ -292,8 +294,8 @@ async function handleProvision() {
 		} else {
 			message.error(res.data?.message || "Failed to provision alert")
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to provision Graylog alert")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to provision Graylog alert")
 	} finally {
 		provisioning.value = false
 	}

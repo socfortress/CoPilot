@@ -37,6 +37,7 @@
 </template>
 
 <script lang="ts" setup>
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { IndexStats } from "@/types/indices.d"
 import { NCard, useMessage } from "naive-ui"
@@ -49,6 +50,7 @@ import Details from "@/components/indices/Details.vue"
 import IndicesMarquee from "@/components/indices/Marquee.vue"
 import NodeAllocation from "@/components/indices/NodeAllocation.vue"
 import UnhealthyIndices from "@/components/indices/UnhealthyIndices.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const TopIndices = defineAsyncComponent(() => import("@/components/indices/TopIndices.vue"))
 
@@ -85,13 +87,13 @@ function getIndices(cb?: () => void) {
 		.catch(err => {
 			if (err.response?.status === 401) {
 				message.error(
-					err.response?.data?.message ||
+					getApiErrorMessage(err as ApiError) ||
 						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
 				)
 			} else if (err.response?.status === 404) {
-				message.error(err.response?.data?.message || "No indices were found.")
+				message.error(getApiErrorMessage(err as ApiError) || "No indices were found.")
 			} else {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {

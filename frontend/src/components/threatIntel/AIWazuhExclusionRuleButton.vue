@@ -59,6 +59,7 @@
 
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { AiWazuhExclusionRuleResponse } from "@/types/threatIntel.d"
 import { NButton, NEmpty, NModal, useMessage } from "naive-ui"
 import { defineAsyncComponent, ref, watchEffect } from "vue"
@@ -66,6 +67,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import Markdown from "@/components/common/Markdown.vue"
 import LicenseFeatureCheck from "@/components/license/LicenseFeatureCheck.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const {
 	indexName,
@@ -121,7 +123,7 @@ function analysis() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

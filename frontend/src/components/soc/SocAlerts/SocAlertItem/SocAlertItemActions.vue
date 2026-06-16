@@ -51,11 +51,13 @@
 
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import { NButton, NModal, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SocCaseItem from "@/components/soc/SocCases/SocCaseItem.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const { alertId, caseId, size } = defineProps<{
 	alertId?: string | number | null
@@ -112,7 +114,7 @@ function createCase() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loadingCaseCreation.value = false
@@ -150,7 +152,7 @@ function deleteAlert() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				emit("deleted")

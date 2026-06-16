@@ -85,10 +85,12 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { FileCollection } from "@/types/artifacts.d"
+import type { ApiError } from "@/types/common"
 import { NAlert, NButton, NDivider, NForm, NFormItem, NInput, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 interface FileCollectionResult extends FileCollection {
 	success: boolean
@@ -174,7 +176,7 @@ async function handleSubmit() {
 			}
 		})
 		.catch(err => {
-			const errorMessage = err.response?.data?.message || "An error occurred during file collection"
+			const errorMessage = getApiErrorMessage(err as ApiError) || "An error occurred during file collection"
 			result.value = {
 				success: false,
 				message: errorMessage

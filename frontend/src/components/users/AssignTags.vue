@@ -41,6 +41,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { AlertTag } from "@/types/tags"
 import type { User } from "@/types/user.d"
@@ -48,6 +49,7 @@ import { NButton, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	user: User | undefined
@@ -143,7 +145,7 @@ async function saveTags() {
 			message.error(res.data.message || "Failed to update tag access")
 		}
 	} catch (error: any) {
-		message.error(error.response?.data?.message || "Failed to update tag access")
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to update tag access")
 	} finally {
 		saving.value = false
 	}
@@ -163,7 +165,7 @@ async function clearAllTags() {
 			emit("success")
 		}
 	} catch (error: any) {
-		message.error(error.response?.data?.message || "Failed to clear tags")
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to clear tags")
 	} finally {
 		saving.value = false
 	}

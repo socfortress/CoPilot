@@ -41,11 +41,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { ClusterHealth } from "@/types/indices.d"
 import { NCard, NEmpty, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const message = useMessage()
 const cluster = ref<ClusterHealth | null>(null)
@@ -91,13 +93,13 @@ function getClusterHealth() {
 		.catch(err => {
 			if (err.response?.status === 401) {
 				message.error(
-					err.response?.data?.message ||
+					getApiErrorMessage(err as ApiError) ||
 						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
 				)
 			} else if (err.response?.status === 404) {
-				message.error(err.response?.data?.message || "No alerts were found.")
+				message.error(getApiErrorMessage(err as ApiError) || "No alerts were found.")
 			} else {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {

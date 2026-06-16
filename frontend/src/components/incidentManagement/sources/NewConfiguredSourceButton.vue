@@ -27,11 +27,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { SourceName } from "@/types/incidentManagement/sources.d"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import SourceConfigurationWizard from "./SourceConfigurationWizard.vue"
 
 const { disabledSources } = defineProps<{ disabledSources?: SourceName[] }>()
@@ -60,7 +62,7 @@ function getConfiguredSources() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

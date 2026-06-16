@@ -143,6 +143,7 @@ import type { ScrollbarInst, StepsProps } from "naive-ui"
 import type { CollectRequest } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { MatchingParameter } from "@/types/artifacts.d"
+import type { ApiError } from "@/types/common"
 import { NButton, NScrollbar, NSkeleton, NStep, NSteps, useMessage } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
 import Api from "@/api"
@@ -150,7 +151,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { getOS, iconFromOs } from "@/utils"
+import { getApiErrorMessage, getOS, iconFromOs } from "@/utils"
 import { formatDate } from "@/utils/format"
 import AgentsList from "./AgentsList.vue"
 import ParametersList from "./ParametersList.vue"
@@ -293,7 +294,7 @@ function submit() {
 
 				throw err
 				*/
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loading.value = false

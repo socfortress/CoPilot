@@ -50,12 +50,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { CaseTask } from "@/types/incidentManagement/caseTemplates.d"
 import { NEmpty, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import { getApiErrorMessage } from "@/utils"
 import CaseTaskItem from "./CaseTaskItem.vue"
 import CaseTasksToolbar from "./CaseTasksToolbar.vue"
 
@@ -118,7 +120,7 @@ function fetchTasks() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "Failed to load case tasks")
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to load case tasks")
 		})
 		.finally(() => {
 			loading.value = false

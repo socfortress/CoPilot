@@ -32,12 +32,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
 import axios from "axios"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, onBeforeUnmount, onMounted, ref, toRefs } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import SocAlertItem from "./SocAlertItem/SocAlertItem.vue"
 
 const props = defineProps<{
@@ -86,7 +88,7 @@ function getBookmarks() {
 		})
 		.catch(err => {
 			if (!axios.isCancel(err)) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {

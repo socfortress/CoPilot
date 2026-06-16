@@ -38,6 +38,7 @@ import { NButton, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import SourceConfigurationForm from "./SourceConfigurationForm.vue"
 import SourceConfigurationViewer from "./SourceConfigurationViewer.vue"
 
@@ -72,7 +73,7 @@ function getSourceConfiguration() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false
@@ -102,7 +103,7 @@ function updateSourceConfiguration(payload: SourceConfiguration) {
 			}
 		})
 		.catch((err: ApiError) => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			submitting.value = formCTX.value?.toggleSubmittingFlag() || false

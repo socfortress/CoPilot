@@ -48,6 +48,7 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
+import type { ApiError } from "@/types/common"
 import type { IndexStats } from "@/types/indices.d"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref } from "vue"
@@ -57,6 +58,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
 import { IndexHealth } from "@/types/indices.d"
+import { getApiErrorMessage } from "@/utils"
 
 const { index, showActions } = defineProps<{
 	index: IndexStats
@@ -134,13 +136,13 @@ function deleteIndex() {
 		.catch(err => {
 			if (err.response?.status === 401) {
 				message.error(
-					err.response?.data?.message ||
+					getApiErrorMessage(err as ApiError) ||
 						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
 				)
 			} else if (err.response?.status === 404) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			} else {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {

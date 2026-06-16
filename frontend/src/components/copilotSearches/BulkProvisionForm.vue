@@ -75,11 +75,13 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
+import type { ApiError } from "@/types/common"
 import type { BulkProvisionGraylogAlertResponse, BulkProvisionRuleStatus } from "@/types/copilotSearches.d"
 import { NAlert, NButton, NInputNumber, NSelect, useMessage } from "naive-ui"
 import { computed, reactive, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	/** Rule IDs to provision. Caller should pass only IDs that have a Graylog query if known. */
@@ -128,9 +130,9 @@ async function submit() {
 		emit("success", res.data)
 		if (res.data.failed_count === 0) message.success(res.data.message)
 		else message.warning(res.data.message)
-	} catch (err: unknown) {
+	} catch (err) {
 		const error = err as { response?: { data?: { message?: string } } }
-		message.error(error.response?.data?.message || "Bulk provision failed")
+		message.error(getApiErrorMessage(error as ApiError) || "Bulk provision failed")
 	} finally {
 		submitting.value = false
 	}

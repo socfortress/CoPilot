@@ -18,12 +18,13 @@
 
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
-import type { ApiCommonResponse } from "@/types/common.d"
+import type { ApiCommonResponse, ApiError } from "@/types/common"
 import type { CustomerIntegration } from "@/types/integrations.d"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import { handleDeleteIntegration } from "./utils"
 
 const { integration, hideDeleteButton, size } = defineProps<{
@@ -128,7 +129,7 @@ function provision() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingProvision.value = false

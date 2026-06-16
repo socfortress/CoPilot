@@ -16,12 +16,14 @@
 
 <script setup lang="ts">
 import type { ItemProps } from "@/components/common/cards/CardStatsBars.vue"
+import type { ApiError } from "@/types/common"
 import { NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardStatsBars from "@/components/common/cards/CardStatsBars.vue"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import { useNavigation } from "@/composables/useNavigation"
+import { getApiErrorMessage } from "@/utils"
 
 const AlertsIcon = "carbon:warning-hex"
 const { routeIncidentManagementAlerts } = useNavigation()
@@ -58,7 +60,7 @@ function getData() {
 			loading.value = false
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

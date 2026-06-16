@@ -167,11 +167,13 @@ import type { FortinetModel } from "./provisions/FortinetForm.vue"
 import type { SentinelOneModel } from "./provisions/SentinelOneForm.vue"
 import type { SonicWallModel } from "./provisions/SonicwallForm.vue"
 import type { FortinetProvision, SentinelOneProvision, SonicwallProvision } from "@/api/endpoints/networkConnectors"
+import type { ApiError } from "@/types/common"
 import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 import { NButton, NModal, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import FortinetForm from "./provisions/FortinetForm.vue"
 import SentinelOneForm from "./provisions/SentinelOneForm.vue"
 import SonicwallForm from "./provisions/SonicwallForm.vue"
@@ -298,7 +300,7 @@ function fortinetProvision() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingFortinetProvision.value = false
@@ -326,7 +328,7 @@ function sonicwallProvision() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingSonicwallProvision.value = false
@@ -354,7 +356,7 @@ function sentinelOneProvision() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingSentinelOneProvision.value = false
@@ -393,7 +395,7 @@ function deleteNetworkConnector() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingDelete.value = false
@@ -414,7 +416,7 @@ function decommissionNetworkConnector() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingDecommission.value = false

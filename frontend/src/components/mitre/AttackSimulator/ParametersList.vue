@@ -29,12 +29,13 @@
 
 <script setup lang="ts">
 import type { MatchingParameter } from "@/types/artifacts"
+import type { ApiError } from "@/types/common"
 import _uniq from "lodash/uniqBy"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import { getOS } from "@/utils"
+import { getApiErrorMessage, getOS } from "@/utils"
 
 const { techniqueId, parametersList, osList } = defineProps<{
 	techniqueId: string
@@ -75,9 +76,9 @@ async function getList() {
 
 		list.value = _uniq(fullList, "name")
 		emit("loaded", list.value)
-	} catch (err: any) {
+	} catch (err) {
 		// TODO-FE: remove any
-		message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 	} finally {
 		loading.value = false
 	}

@@ -127,6 +127,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { SigmaQuery } from "@/types/sigma.d"
 import { useResizeObserver, useStorage } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"
@@ -136,6 +137,7 @@ import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import QueriesActions from "./QueriesActions.vue"
 import QueryItem from "./QueryItem.vue"
 
@@ -238,7 +240,7 @@ function getData() {
 		.catch(err => {
 			queriesList.value = []
 
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

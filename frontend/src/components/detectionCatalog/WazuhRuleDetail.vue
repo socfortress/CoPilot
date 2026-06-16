@@ -143,6 +143,7 @@
 
 <script setup lang="ts">
 import type { TagProps } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { CatalogWazuhRuleDetailResponse } from "@/types/detectionCatalog.d"
 import { NSpin, NTag, useMessage } from "naive-ui"
 import { computed, defineComponent, h, onBeforeMount, ref, watch } from "vue"
@@ -151,6 +152,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 
 const props = defineProps<{ ruleId: number }>()
@@ -236,9 +238,7 @@ function load(id: number) {
 			if (status === 404) {
 				message.warning(`Wazuh rule ${id} not found in the cache`)
 			} else {
-				message.error(
-					err.response?.data?.detail || err.response?.data?.message || "Failed to load Wazuh rule detail"
-				)
+				message.error(getApiErrorMessage(err as ApiError) || "Failed to load Wazuh rule detail")
 			}
 		})
 		.finally(() => {

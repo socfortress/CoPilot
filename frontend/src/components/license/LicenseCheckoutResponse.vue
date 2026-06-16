@@ -30,12 +30,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { LicenseKey } from "@/types/license.d"
 import { NButton, NCard, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{ type: "success" | "error"; data?: { email?: string } }>()
 const { type, data } = toRefs(props)
@@ -62,7 +64,7 @@ function getLicense(email: string) {
 		})
 		.catch(err => {
 			if (err.response.status !== 404) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {

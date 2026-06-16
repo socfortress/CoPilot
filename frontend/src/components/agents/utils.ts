@@ -1,8 +1,10 @@
 import type { DialogApiInjection } from "naive-ui/es/dialog/src/DialogProvider"
 import type { MessageApiInjection } from "naive-ui/es/message/src/MessageProvider"
 import type { Agent } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import { h } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 
 export function isAgentOnline(lastSeen: string) {
@@ -55,9 +57,9 @@ export function toggleAgentCritical({
 		})
 		.catch(err => {
 			if (err.response?.status === 401) {
-				message.error(err.response?.data?.message || "Agent Criticality Update returned Unauthorized.")
+				message.error(getApiErrorMessage(err as ApiError) || "Agent Criticality Update returned Unauthorized.")
 			} else {
-				message.error(err.response?.data?.message || "Failed to Update Agent Criticality")
+				message.error(getApiErrorMessage(err as ApiError) || "Failed to Update Agent Criticality")
 			}
 
 			if (cbError && typeof cbError === "function") {
@@ -131,9 +133,9 @@ export function deleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError, mess
 		})
 		.catch(err => {
 			if (err.response?.status === 401) {
-				message.error(err.response?.data?.message || "Agent Delete returned Unauthorized.")
+				message.error(getApiErrorMessage(err as ApiError) || "Agent Delete returned Unauthorized.")
 			} else {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 
 			if (cbError && typeof cbError === "function") {

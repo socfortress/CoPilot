@@ -67,6 +67,7 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { CustomerAgentsHealthcheckQuery } from "@/api/endpoints/customers"
+import type { ApiError } from "@/types/common"
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
 import { watchDebounced } from "@vueuse/core"
 import _get from "lodash/get"
@@ -74,6 +75,7 @@ import { NCollapse, NCollapseItem, NEmpty, NInputGroup, NInputNumber, NSelect, N
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import CustomerHealthcheckItem from "./CustomerHealthcheckItem.vue"
 
 const props = defineProps<{
@@ -159,7 +161,7 @@ function getList() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

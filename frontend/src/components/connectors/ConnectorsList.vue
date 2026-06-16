@@ -28,10 +28,12 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { Connector } from "@/types/connectors.d"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import ConnectorItem from "./ConnectorItem.vue"
 
 const message = useMessage()
@@ -55,7 +57,7 @@ function getConnectors() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingConnectors.value = false

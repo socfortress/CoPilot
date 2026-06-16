@@ -48,7 +48,7 @@ async function loadStats() {
 			message.warning(res.data.message || "Failed to load stats")
 			stats.value = null
 		}
-	} catch (err: unknown) {
+	} catch (err) {
 		message.error(getApiErrorMessage(err as never) || "Failed to load stats")
 		stats.value = null
 	} finally {

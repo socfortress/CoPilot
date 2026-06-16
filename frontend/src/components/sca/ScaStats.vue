@@ -163,6 +163,7 @@
 
 <script setup lang="ts">
 import type { ScaOverviewFilter, ScaOverviewFilterTypes } from "./types"
+import type { ApiError } from "@/types/common"
 import type { AgentScaOverviewItem, ScaOverviewQuery, ScaOverviewResponse } from "@/types/sca.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
@@ -173,6 +174,7 @@ import { computed, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { ScaComplianceLevel } from "@/types/sca.d"
+import { getApiErrorMessage } from "@/utils"
 import ScaLevelBadge from "./ScaLevelBadge.vue"
 import ScaLevelIcon from "./ScaLevelIcon.vue"
 import { getComplianceLevel } from "./utils"
@@ -352,7 +354,7 @@ function getList() {
 		})
 		.catch(err => {
 			if (!axios.isCancel(err)) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				loading.value = false
 			}
 		})

@@ -91,6 +91,7 @@
 <script setup lang="ts">
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { Ref } from "vue"
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
 import type { Case, CasePayload, CaseStatus } from "@/types/incidentManagement/cases.d"
 import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
@@ -99,6 +100,7 @@ import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, inject, onBeforeMount, onMounted, ref, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
@@ -264,7 +266,7 @@ function submit() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			submitting.value = false
@@ -306,7 +308,7 @@ function getAvailableUsers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAvailableUsers.value = false
@@ -326,7 +328,7 @@ function getCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCustomersList.value = false

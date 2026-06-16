@@ -30,6 +30,7 @@
 <script setup lang="ts">
 import type { VulnerabilitySeverityType } from "@/api/endpoints/agents"
 import type { Agent, AgentVulnerabilities } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import axios from "axios"
 import { saveAs } from "file-saver"
 import { NButton, NEmpty, NFormItem, NSelect, NSpin, useMessage } from "naive-ui"
@@ -37,6 +38,7 @@ import { nanoid } from "nanoid"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import VulnerabilityCard from "./VulnerabilityCard.vue"
 
@@ -93,7 +95,7 @@ function getVulnerabilities(id: string) {
 			if (!axios.isCancel(err)) {
 				vulnerabilitiesCache.value[severity.value] = []
 
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				loading.value = false
 			}
 		})
@@ -117,7 +119,7 @@ function vulnerabilitiesDownload(id: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			downloading.value = false

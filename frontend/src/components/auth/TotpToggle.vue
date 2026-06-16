@@ -184,6 +184,7 @@
 
 <script lang="ts" setup>
 import type { TOTPSetupResponse } from "@/api/endpoints/totp"
+import type { ApiError } from "@/types/common"
 import {
 	NAlert,
 	NButton,
@@ -203,6 +204,7 @@ import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import BackupCodesPanel from "@/components/auth/BackupCodesPanel.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const message = useMessage()
 
@@ -241,8 +243,8 @@ async function startSetup() {
 		const res = await Api.totp.setup()
 		setupData.value = res.data
 		setupStep.value = 1
-	} catch (err: any) {
-		message.error(err.response?.data?.detail || "Failed to start 2FA setup")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to start 2FA setup")
 	} finally {
 		twoFaLoading.value = false
 	}
@@ -256,8 +258,8 @@ async function confirmSetup() {
 		twoFaEnabled.value = true
 		setupStep.value = 3
 		message.success("Two-factor authentication enabled!")
-	} catch (err: any) {
-		message.error(err.response?.data?.message || err.response?.data?.detail || "Invalid code. Try again.")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Invalid code. Try again.")
 	} finally {
 		verifying.value = false
 	}
@@ -279,8 +281,8 @@ async function disableTwoFa() {
 		showDisableModal.value = false
 		disableCode.value = ""
 		message.success("Two-factor authentication disabled")
-	} catch (err: any) {
-		message.error(err.response?.data?.message || err.response?.data?.detail || "Failed to disable 2FA")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to disable 2FA")
 	} finally {
 		disabling.value = false
 	}
@@ -294,8 +296,8 @@ async function regenBackupCodes() {
 		regenCodes.value = res.data.backup_codes
 		regenCode.value = []
 		message.success("Backup codes regenerated")
-	} catch (err: any) {
-		message.error(err.response?.data?.message || err.response?.data?.detail || "Failed to regenerate codes")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to regenerate codes")
 	} finally {
 		regenerating.value = false
 	}

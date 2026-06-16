@@ -77,6 +77,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type {
 	BulkProvisionGraylogAlertResponse,
 	MitreSubTechnique,
@@ -87,6 +88,7 @@ import { NButton, NEmpty, NModal, NSpin, NTimeline, NTimelineItem, useMessage } 
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import BulkProvisionForm from "./BulkProvisionForm.vue"
 import RuleCard from "./RuleCard.vue"
 
@@ -166,9 +168,9 @@ async function loadRules() {
 		if (statusRes?.data?.success && !statusRes.data.warning) {
 			provisionedMap.value = statusRes.data.provisioned || {}
 		}
-	} catch (err: unknown) {
+	} catch (err) {
 		const error = err as { response?: { data?: { message?: string } } }
-		message.error(error.response?.data?.message || "Failed to load rules for this technique")
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to load rules for this technique")
 	} finally {
 		loading.value = false
 	}

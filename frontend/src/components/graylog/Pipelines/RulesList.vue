@@ -10,10 +10,12 @@
 
 <script setup lang="ts">
 import type { ScrollbarInst } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { PipelineRule } from "@/types/graylog/pipelines.d"
 import { NScrollbar, NSpin, useMessage } from "naive-ui"
 import { nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import Rule from "./Rule.vue"
 
 const props = defineProps<{ highlight: string | null | undefined }>()
@@ -59,7 +61,7 @@ function getRules() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

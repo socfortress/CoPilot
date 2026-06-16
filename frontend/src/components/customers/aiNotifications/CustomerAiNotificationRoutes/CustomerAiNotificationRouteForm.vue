@@ -220,7 +220,7 @@ async function loadIntegrations() {
 		if (res.data.success) {
 			integrations.value = res.data.integrations
 		}
-	} catch (err: unknown) {
+	} catch (err) {
 		message.error(getApiErrorMessage(err as never) || "Failed to load Shuffle integrations")
 	} finally {
 		loadingIntegrations.value = false
@@ -238,7 +238,7 @@ async function loadApps(integrationId: number) {
 			apps.value = []
 			appsError.value = res.data.message || "Failed to load apps"
 		}
-	} catch (err: unknown) {
+	} catch (err) {
 		apps.value = []
 		appsError.value = getApiErrorMessage(err as never) || "Failed to load apps"
 	} finally {
@@ -331,7 +331,7 @@ async function submit() {
 		} else {
 			message.warning(res.data.message || "Failed to save route")
 		}
-	} catch (err: unknown) {
+	} catch (err) {
 		message.error(getApiErrorMessage(err as never) || "Failed to save route")
 	} finally {
 		submitting.value = false

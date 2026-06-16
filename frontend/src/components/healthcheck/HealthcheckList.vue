@@ -118,6 +118,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { InfluxDBAlert, InfluxDBAlertResponse } from "@/types/healthchecks.d"
 import { useResizeObserver } from "@vueuse/core"
@@ -127,6 +128,7 @@ import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { InfluxDBAlertSeverity } from "@/types/healthchecks.d"
+import { getApiErrorMessage } from "@/utils"
 import HealthcheckItem from "./HealthcheckItem.vue"
 
 const message = useMessage()
@@ -244,7 +246,7 @@ function getData() {
 			healthcheckList.value = []
 			stats.value = null
 
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

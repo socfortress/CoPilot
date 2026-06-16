@@ -38,12 +38,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { h, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import CustomerForm from "./CustomerForm.vue"
 
 const props = defineProps<{
@@ -84,7 +86,7 @@ function deleteCustomer() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingDelete.value = false

@@ -281,6 +281,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { Customer, CustomerMeta } from "@/types/customers.d"
 import { NAvatar, NButton, NModal, NPopover, NScrollbar, NTabPane, NTabs, useMessage } from "naive-ui"
@@ -290,7 +291,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useCustomerHealthcheckFilters } from "@/composables/useCustomerHealthcheckFilters"
-import { getAvatar, getNameInitials } from "@/utils"
+import { getApiErrorMessage, getAvatar, getNameInitials } from "@/utils"
 
 const props = defineProps<{
 	customer: Customer
@@ -362,7 +363,7 @@ function getFull() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingFull.value = false

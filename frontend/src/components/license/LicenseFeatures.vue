@@ -104,11 +104,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { License, LicenseFeatures, LicenseKey, SubscriptionFeature } from "@/types/license.d"
 import { NButton, NEmpty, NModal, NPopover, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import LicenseCheckoutWizard from "./LicenseCheckoutWizard.vue"
 import LicenseDetails from "./LicenseDetails.vue"
 import LicenseLoadForm from "./LicenseLoadForm.vue"
@@ -170,7 +172,7 @@ function getLicense() {
 		})
 		.catch(err => {
 			if (err.response.status !== 404) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -195,7 +197,7 @@ function getLicenseFeatures() {
 		})
 		.catch(err => {
 			if (err.response.status !== 404) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -216,7 +218,7 @@ function getSubscriptionFeatures() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingSubscriptions.value = false

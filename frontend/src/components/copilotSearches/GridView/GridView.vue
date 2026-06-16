@@ -65,6 +65,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type {
 	BulkProvisionGraylogAlertResponse,
 	PlatformFilter,
@@ -78,6 +79,7 @@ import axios from "axios"
 import { NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import RuleCard from "../RuleCard.vue"
 import GridViewSelectionBar from "./GridViewSelectionBar.vue"
 import GridViewToolbar from "./GridViewToolbar.vue"
@@ -157,7 +159,7 @@ function getList() {
 		})
 		.catch(err => {
 			if (!axios.isCancel(err)) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				loading.value = false
 			}
 		})
@@ -173,9 +175,9 @@ async function handleRefresh() {
 		} else {
 			message.warning(res.data?.message || "Failed to refresh cache")
 		}
-	} catch (err: unknown) {
+	} catch (err) {
 		const error = err as { response?: { data?: { message?: string } } }
-		message.error(error.response?.data?.message || "Failed to refresh cache")
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to refresh cache")
 	} finally {
 		refreshing.value = false
 	}

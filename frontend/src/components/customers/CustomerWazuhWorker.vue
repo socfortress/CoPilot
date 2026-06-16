@@ -136,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SafeAny } from "@/types/common.d"
+import type { ApiError, SafeAny } from "@/types/common"
 import type { PortainerStack } from "@/types/portainer.d"
 import _castArray from "lodash/castArray"
 import _pick from "lodash/pick"
@@ -150,6 +150,7 @@ import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { PortainerStackStatus } from "@/types/portainer.d"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import "@/assets/scss/overrides/vuesjv-override.scss"
 
@@ -214,7 +215,7 @@ function getPortainerStack() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingList.value = false
@@ -235,7 +236,7 @@ function stop() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAction.value = false
@@ -256,7 +257,7 @@ function start() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAction.value = false

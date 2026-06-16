@@ -44,6 +44,7 @@
 // TODO-FE: refactor
 import type { CustomerPortalSettingsPayload } from "@/api/endpoints/customerPortal"
 import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
+import type { ApiError } from "@/types/common"
 import type { CustomerPortalSettings } from "@/types/customerPortal"
 import _split from "lodash/split"
 import { NButton, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
@@ -51,6 +52,7 @@ import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import ImageCropper from "@/components/common/ImageCropper.vue"
+import { getApiErrorMessage } from "@/utils"
 
 export interface SettingsModel {
 	title: string | null
@@ -128,8 +130,7 @@ function save() {
 			}
 		})
 		.catch(err => {
-			const errorMsg = err.response?.data?.message || "An error occurred while updating metadata"
-			message.error(errorMsg)
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred while updating metadata")
 		})
 		.finally(() => {
 			loading.value = false
@@ -150,7 +151,7 @@ function getSettings() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

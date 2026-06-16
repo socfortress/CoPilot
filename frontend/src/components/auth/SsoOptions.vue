@@ -29,10 +29,12 @@
 
 <script lang="ts" setup>
 import type { SSOPublicStatus } from "@/api/endpoints/sso"
+import type { ApiError } from "@/types/common"
 import { NButton, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "show2faForm", value: string): void
@@ -79,11 +81,10 @@ async function loginWithCloudflare() {
 		} else if (res.data?.access_token) {
 			emit("loginSuccess", res.data.access_token)
 		}
-	} catch (err: any) {
+	} catch (err) {
 		message.error(
-			err.response?.data?.message || err.response?.data?.detail
-				? (err.response?.data?.message || err.response?.data?.detail)?.toString()
-				: "Cloudflare Access authentication failed. Make sure you are behind Cloudflare Access."
+			getApiErrorMessage(err as ApiError) ||
+				"Cloudflare Access authentication failed. Make sure you are behind Cloudflare Access."
 		)
 	} finally {
 		cfLoading.value = false

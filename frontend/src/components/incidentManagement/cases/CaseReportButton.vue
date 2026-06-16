@@ -54,7 +54,7 @@
 <script setup lang="ts">
 import type { ButtonSize, FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { CaseReportPayload } from "@/api/endpoints/incidentManagement/cases"
-import type { DeepNullable } from "@/types/common"
+import type { ApiError, DeepNullable } from "@/types/common"
 import { saveAs } from "file-saver"
 import {
 	NButton,
@@ -72,6 +72,7 @@ import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import CaseReportTemplateSelect from "./CaseReportTemplateSelect.vue"
 
@@ -190,7 +191,7 @@ function exportCases() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			exporting.value = false

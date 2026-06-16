@@ -44,13 +44,14 @@
 
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
-import { iconFromOs } from "@/utils"
+import { getApiErrorMessage, iconFromOs } from "@/utils"
 
 const { agentsList, filter } = defineProps<{
 	agentsList?: Agent[] | null
@@ -85,7 +86,7 @@ function getList() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

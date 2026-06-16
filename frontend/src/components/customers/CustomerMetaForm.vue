@@ -31,6 +31,7 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { CustomerMeta } from "@/types/customers.d"
 import _get from "lodash/get"
 import _toSafeInteger from "lodash/toSafeInteger"
@@ -38,6 +39,7 @@ import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 type CustomerMetaModel = { [K in keyof CustomerMeta]: string }
 
@@ -277,7 +279,7 @@ function submit() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

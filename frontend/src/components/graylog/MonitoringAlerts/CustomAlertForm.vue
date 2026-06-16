@@ -157,6 +157,7 @@
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
 import type { CustomProvisionPayload } from "@/api/endpoints/monitoringAlerts"
+import type { ApiError } from "@/types/common"
 import type { Stream } from "@/types/graylog/stream.d"
 import _get from "lodash/get"
 import _toSafeInteger from "lodash/toSafeInteger"
@@ -166,6 +167,7 @@ import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { CustomProvisionPriority } from "@/types/monitoringAlerts.d"
+import { getApiErrorMessage } from "@/utils"
 
 interface CustomProvisionForm {
 	alert_name: string
@@ -418,7 +420,7 @@ function submit() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			submittingCustomAlert.value = false
@@ -442,7 +444,7 @@ function getStreams() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingStreams.value = false

@@ -51,11 +51,13 @@
 
 <script setup lang="ts">
 import type { ReportTimeRange, RowPanelTimeUnit } from "@/api/endpoints/reporting"
+import type { ApiError } from "@/types/common"
 import type { Dashboard, Org, Panel } from "@/types/reporting.d"
 import { useStorage } from "@vueuse/core"
 import { NForm, NFormItem, NInputGroup, NInputNumber, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	hidePanelsSelect?: boolean
@@ -174,7 +176,7 @@ function getOrgs() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingOrgs.value = false
@@ -195,7 +197,7 @@ function getDashboards() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loadingDashboards.value = false
@@ -217,7 +219,7 @@ function getPanels() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loadingPanels.value = false

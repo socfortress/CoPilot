@@ -31,10 +31,12 @@
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { InvokeRequest, InvokeRequestAction } from "@/api/endpoints/activeResponse"
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
+import type { ApiError } from "@/types/common"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import isIP from "validator/es/lib/isIP"
 import { computed, onMounted, ref, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 interface InvokeForm {
 	action: null | InvokeRequestAction
@@ -155,7 +157,7 @@ function submit() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

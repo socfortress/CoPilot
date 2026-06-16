@@ -12,11 +12,13 @@
 
 <script setup lang="ts">
 import type { CSSProperties } from "vue"
+import type { ApiError } from "@/types/common"
 import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
 import { NSwitch, useMessage } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import { useThemeStore } from "@/stores/theme"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	entity: ExclusionRule
@@ -63,7 +65,7 @@ function toggleExclusionRuleStatus() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			updatingStatus.value = false

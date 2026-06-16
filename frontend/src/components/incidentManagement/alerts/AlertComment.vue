@@ -77,14 +77,15 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { AlertComment } from "@/types/incidentManagement/alerts.d"
 import { NAvatar, NButton, NInput, NPopconfirm, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { getAvatar, getNameInitials } from "@/utils"
 
+import { getApiErrorMessage, getAvatar, getNameInitials } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 type Mode = "view" | "edit"
@@ -140,7 +141,7 @@ function updateAlertComment() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			saving.value = false
@@ -161,7 +162,7 @@ function deleteAlertComment() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			canceling.value = false

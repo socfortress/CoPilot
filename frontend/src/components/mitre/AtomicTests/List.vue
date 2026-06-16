@@ -67,6 +67,7 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { MitreAtomicOsCategory, MitreAtomicTestsQuery } from "@/api/endpoints/wazuh/mitre"
+import type { ApiError } from "@/types/common"
 import type { MitreAtomicTest } from "@/types/mitre.d"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import axios from "axios"
@@ -74,6 +75,7 @@ import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } fr
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import TechniqueCard from "./TechniqueCard.vue"
 
 const loading = ref(false)
@@ -124,7 +126,7 @@ function getList() {
 		})
 		.catch(err => {
 			if (!axios.isCancel(err)) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				loading.value = false
 			}
 		})

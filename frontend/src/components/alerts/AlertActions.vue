@@ -89,11 +89,13 @@
 import type { ButtonSize } from "naive-ui"
 import type { SocAlertField } from "./type.d"
 import type { Alert, WazuhRuleExclude } from "@/types/alerts.d"
+import type { ApiError } from "@/types/common"
 import { NButton, NInput, NModal, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import AlertWazuhRules from "./AlertWazuhRules.vue"
 
 const { alert, size, socAlertField } = defineProps<{
@@ -182,7 +184,7 @@ function askSOCFortress() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAskSoc.value = false
@@ -212,7 +214,7 @@ function wazuhManagerRuleExclude() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingWazuhRuleExclude.value = false
@@ -235,7 +237,7 @@ function createAlert() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingSocAlert.value = false

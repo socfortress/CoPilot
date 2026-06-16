@@ -55,12 +55,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { IndexShard, IndexStats } from "@/types/indices.d"
 import { NCard, NScrollbar, NSelect, NSpin, NTable, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import IndexCard from "@/components/indices/IndexCard.vue"
+import { getApiErrorMessage } from "@/utils"
 
 type IndexModel = IndexStats | null | ""
 
@@ -130,13 +132,13 @@ function getShards() {
 		.catch(err => {
 			if (err.response?.status === 401) {
 				message.error(
-					err.response?.data?.message ||
+					getApiErrorMessage(err as ApiError) ||
 						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
 				)
 			} else if (err.response?.status === 404) {
-				message.error(err.response?.data?.message || "No alerts were found.")
+				message.error(getApiErrorMessage(err as ApiError) || "No alerts were found.")
 			} else {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {

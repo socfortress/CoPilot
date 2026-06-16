@@ -193,6 +193,7 @@
 import type { ArtifactsQuery, CollectRequest } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact, ArtifactParameter, CollectResult } from "@/types/artifacts.d"
+import type { ApiError } from "@/types/common"
 import {
 	NAlert,
 	NButton,
@@ -212,6 +213,7 @@ import { nanoid } from "nanoid"
 import { computed, nextTick, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import CollectItem from "./CollectItem.vue"
 
 const props = defineProps<{
@@ -309,8 +311,8 @@ async function onArtifactSelect(artifactName: string | null) {
 				})
 			}
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to load artifact parameters")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load artifact parameters")
 	} finally {
 		loadingParameters.value = false
 	}
@@ -366,7 +368,7 @@ function getData() {
 			.catch(err => {
 				collectList.value = []
 
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loading.value = false
@@ -391,7 +393,7 @@ function getAgents(cb?: (agents: Agent[]) => void) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAgents.value = false
@@ -415,7 +417,7 @@ function getArtifacts(cb?: (artifacts: Artifact[]) => void) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingArtifacts.value = false

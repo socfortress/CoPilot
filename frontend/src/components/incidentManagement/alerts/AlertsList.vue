@@ -273,6 +273,7 @@
 // TODO-FE: refactor
 import type { AlertsListFilter } from "./types.d"
 import type { AlertsQuery } from "@/api/endpoints/incidentManagement/alerts"
+import type { ApiError } from "@/types/common"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
 import { useResizeObserver, useStorage } from "@vueuse/core"
@@ -299,6 +300,7 @@ import { computed, defineAsyncComponent, nextTick, onBeforeMount, provide, ref, 
 import Api from "@/api"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import AlertItem from "./AlertItem.vue"
 import AlertsFilters from "./AlertsFilters.vue"
 
@@ -484,7 +486,7 @@ function getData() {
 			if (!axios.isCancel(err)) {
 				alertsList.value = []
 
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				loading.value = false
 			}
 		})
@@ -501,7 +503,7 @@ function getAvailableUsers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 }
 
@@ -516,7 +518,7 @@ function getCases() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 }
 
@@ -547,7 +549,7 @@ function deleteAlerts() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			deleting.value = false
@@ -594,7 +596,7 @@ function deleteAlertsByTitle() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			deletingByTitle.value = false

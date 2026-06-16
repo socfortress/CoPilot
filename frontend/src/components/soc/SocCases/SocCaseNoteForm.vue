@@ -23,10 +23,12 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { SocNewNote } from "@/types/soc/note.d"
 import { NButton, NInput, NSpin, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 const { caseId } = defineProps<{ caseId: string | number }>()
 
@@ -63,7 +65,7 @@ function addNote() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

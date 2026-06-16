@@ -86,7 +86,7 @@ async function reload() {
 			return
 		}
 		summary.value = res.data.data || {}
-	} catch (err: unknown) {
+	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError) || "Error fetching summary metrics")
 		summary.value = {}
 	} finally {

@@ -44,11 +44,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { EventSource } from "@/types/eventSources.d"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import CustomerEventSourceForm from "./CustomerEventSourceForm.vue"
 import CustomerEventSourceItem from "./CustomerEventSourceItem.vue"
 
@@ -77,7 +79,7 @@ function getEventSources() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

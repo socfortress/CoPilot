@@ -67,6 +67,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
 import type { EnabledDashboard } from "@/types/dashboards.d"
 import type { EventSource } from "@/types/eventSources.d"
@@ -74,6 +75,7 @@ import { NAlert, NButton, NDrawer, NDrawerContent, NEmpty, NFormItem, NSelect, u
 import { computed, onBeforeMount, ref, useTemplateRef, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import DashboardCategoriesSection from "./DashboardCategoriesSection.vue"
 import EnabledDashboardsSection from "./EnabledDashboardsSection.vue"
 
@@ -107,7 +109,7 @@ function getCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCustomers.value = false
@@ -136,7 +138,7 @@ function getEventSources(customerCode: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingEventSources.value = false

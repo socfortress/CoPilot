@@ -64,6 +64,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { MitreGroupDetails } from "@/types/mitre.d"
 import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
@@ -71,9 +72,10 @@ import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Markdown from "@/components/common/Markdown.vue"
+import { getApiErrorMessage } from "@/utils"
+
 import SoftwareList from "../Software/SoftwareList.vue"
 import TechniquesList from "../Technique/TechniquesList.vue"
-
 import GroupDetails from "./GroupDetails.vue"
 
 const { id, entity } = defineProps<{
@@ -106,7 +108,7 @@ function getDetails(id: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingDetails.value = false

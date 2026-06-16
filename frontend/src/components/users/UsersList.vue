@@ -106,6 +106,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { User } from "@/types/user.d"
 import { NButton, NDropdown, NModal, NScrollbar, NSpin, NTable, NTag, useMessage } from "naive-ui"
@@ -113,6 +114,7 @@ import { computed, defineAsyncComponent, h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
+import { getApiErrorMessage } from "@/utils"
 
 const { highlight } = defineProps<{ highlight: string | null | undefined }>()
 const ChangePassword = defineAsyncComponent(() => import("./ChangePassword.vue"))
@@ -234,7 +236,7 @@ function getUsers() {
 		.catch(err => {
 			usersList.value = []
 
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingUsers.value = false

@@ -76,7 +76,7 @@ async function reload() {
 			return
 		}
 		kernel.value = res.data.data || {}
-	} catch (err: unknown) {
+	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError) || "Error fetching kernel metrics")
 		kernel.value = {}
 	} finally {

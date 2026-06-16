@@ -31,10 +31,12 @@
 <script setup lang="ts">
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { IncidentNotificationPayload } from "@/api/endpoints/incidentManagement/notification"
+import type { ApiError } from "@/types/common"
 import type { IncidentNotification } from "@/types/incidentManagement/notifications.d"
 import { NButton, NForm, NFormItem, NInput, NSpin, NSwitch, useMessage } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 interface IncidentNotificationForm {
 	shuffle_workflow_id: string
@@ -134,7 +136,7 @@ function submit() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

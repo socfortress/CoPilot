@@ -42,6 +42,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { IndexStats } from "@/types/indices.d"
 import { NCard, NEmpty, NSpin, useMessage } from "naive-ui"
@@ -50,6 +51,7 @@ import { Vue3Marquee } from "vue3-marquee"
 import Api from "@/api"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
 import { useThemeStore } from "@/stores/theme"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	indices?: IndexStats[] | null
@@ -81,13 +83,13 @@ function getIndices() {
 		.catch(err => {
 			if (err.response?.status === 401) {
 				message.error(
-					err.response?.data?.message ||
+					getApiErrorMessage(err as ApiError) ||
 						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
 				)
 			} else if (err.response?.status === 404) {
-				message.error(err.response?.data?.message || "No indices were found.")
+				message.error(getApiErrorMessage(err as ApiError) || "No indices were found.")
 			} else {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {

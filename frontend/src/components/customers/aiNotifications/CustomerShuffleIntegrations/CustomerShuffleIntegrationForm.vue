@@ -187,7 +187,7 @@ async function submit() {
 		} else {
 			message.warning(res.data.message || "Failed to save integration")
 		}
-	} catch (err: unknown) {
+	} catch (err) {
 		message.error(getApiErrorMessage(err as never) || "Failed to save integration")
 	} finally {
 		submitting.value = false

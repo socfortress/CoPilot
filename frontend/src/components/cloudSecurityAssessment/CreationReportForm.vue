@@ -71,6 +71,7 @@ import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "n
 import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 import { ScoutSuiteReportType } from "@/types/cloudSecurityAssessment.d"
+import { getApiErrorMessage } from "@/utils"
 import AwsTypeForm from "./FormTypes/AwsTypeForm.vue"
 import AzureTypeForm from "./FormTypes/AzureTypeForm.vue"
 import GcpTypeForm from "./FormTypes/GcpTypeForm.vue"
@@ -237,7 +238,7 @@ function submit() {
 			}
 		})
 		.catch((err: ApiError) => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			submitting.value = false
@@ -261,7 +262,7 @@ function getScoutSuiteReportGenerationOptions() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingOptions.value = false

@@ -80,12 +80,14 @@
 <script setup lang="ts">
 import type { SelectOption } from "naive-ui"
 import type { AgentArtifactData } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import { refDebounced } from "@vueuse/core"
 import { saveAs } from "file-saver"
 import { NEmpty, NInput, NModal, NPagination, NSelect, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import AgentArtifactCard from "./AgentArtifactCard.vue"
 import ArtifactDetails from "./ArtifactDetails.vue"
 
@@ -146,7 +148,7 @@ function getArtifacts() {
 			artifacts.value = []
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			artifacts.value = []
 		})
 		.finally(() => {
@@ -163,7 +165,7 @@ function downloadArtifact(artifact: AgentArtifactData) {
 			message.success(`Downloaded ${artifact.file_name}`)
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "Failed to download artifact")
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to download artifact")
 		})
 }
 
@@ -185,7 +187,7 @@ function deleteArtifact(artifact: AgentArtifactData) {
 					message.error(res.data?.message || "Failed to delete artifact")
 				})
 				.catch(err => {
-					message.error(err.response?.data?.message || "Failed to delete artifact")
+					message.error(getApiErrorMessage(err as ApiError) || "Failed to delete artifact")
 				})
 		}
 	})

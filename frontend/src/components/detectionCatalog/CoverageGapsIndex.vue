@@ -48,6 +48,7 @@
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
 import type { CardLinkColor } from "@/components/common/cards/CardLink.vue"
+import type { ApiError } from "@/types/common"
 import type { CatalogCoverageGapRow } from "@/types/detectionCatalog.d"
 import { NButton, NDataTable, NInput, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
@@ -55,6 +56,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 interface CoverageStatTile {
 	id: string
@@ -191,7 +193,7 @@ function load() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.detail || err.response?.data?.message || "Failed to load coverage gaps")
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to load coverage gaps")
 		})
 		.finally(() => {
 			loading.value = false

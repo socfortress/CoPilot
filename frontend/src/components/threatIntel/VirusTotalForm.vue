@@ -211,6 +211,7 @@
 
 <script setup lang="ts">
 import type { UploadFileInfo } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { VirusTotalAnalysis, VirusTotalFileCheckResponse } from "@/types/threatIntel.d"
 import { useClipboard } from "@vueuse/core"
 import _isEmpty from "lodash/isEmpty"
@@ -229,6 +230,7 @@ import {
 import { computed, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(
@@ -299,7 +301,7 @@ function submit() {
 			}
 		})
 		.catch(err => {
-			error.value = err.response?.data?.message || "An error occurred. Please try again later."
+			error.value = getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later."
 			message.error(error.value)
 		})
 		.finally(() => {
@@ -328,7 +330,7 @@ function analysis() {
 			}
 		})
 		.catch(err => {
-			error.value = err.response?.data?.message || "An error occurred. Please try again later."
+			error.value = getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later."
 			message.error(error.value)
 		})
 		.finally(() => {

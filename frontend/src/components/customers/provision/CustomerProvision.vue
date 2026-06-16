@@ -42,6 +42,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { CustomerMeta } from "@/types/customers.d"
 import { NButton, useDialog, useMessage } from "naive-ui"
@@ -49,6 +50,7 @@ import { computed, h, ref, toRefs } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import CustomerProvisionWizard from "./CustomerProvisionWizard.vue"
 
 const props = defineProps<{
@@ -105,7 +107,7 @@ function decommissionCustomer() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingDelete.value = false
