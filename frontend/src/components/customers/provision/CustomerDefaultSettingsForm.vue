@@ -83,6 +83,10 @@ const rules: FormRules = {
 	wazuh_worker_hostname: {
 		message: "Please input the Wazuh Worker Hostname",
 		trigger: ["input", "blur"]
+	},
+	repo_url: {
+		validator: validateUrl,
+		trigger: ["blur"]
 	}
 }
 
@@ -106,6 +110,26 @@ const fieldsMeta = {
 	wazuh_worker_hostname: {
 		label: "Wazuh Worker Hostname",
 		placeholder: "Insert the Wazuh Worker Hostname"
+	},
+	repo_url: {
+		label: "EDR Repo URL",
+		placeholder: "e.g. https://repo.socfortress.co"
+	},
+	repo_username: {
+		label: "EDR Repo Username",
+		placeholder: "Insert the EDR Repo Username"
+	},
+	repo_password: {
+		label: "EDR Repo Password",
+		placeholder: "Insert the EDR Repo Password"
+	},
+	windows_edr_installer: {
+		label: "Windows EDR Installer",
+		placeholder: "e.g. Customer_EDR.exe"
+	},
+	wazuh_domain: {
+		label: "Wazuh Domain",
+		placeholder: "e.g. wazuh.example.com"
 	}
 }
 
@@ -142,7 +166,12 @@ function getClearForm(settings?: Partial<CustomerProvisioningDefaultSettings>) {
 		cluster_key: settings?.cluster_key || "",
 		master_ip: settings?.master_ip || "",
 		grafana_url: settings?.grafana_url || "",
-		wazuh_worker_hostname: settings?.wazuh_worker_hostname || ""
+		wazuh_worker_hostname: settings?.wazuh_worker_hostname || "",
+		repo_url: settings?.repo_url || "",
+		repo_username: settings?.repo_username || "",
+		repo_password: settings?.repo_password || "",
+		windows_edr_installer: settings?.windows_edr_installer || "",
+		wazuh_domain: settings?.wazuh_domain || ""
 	}
 	return payload
 }
@@ -169,7 +198,12 @@ function submit() {
 		clusterKey: form.value.cluster_key,
 		masterIp: form.value.master_ip,
 		grafanaUrl: form.value.grafana_url,
-		wazuhWorkerHostname: form.value.wazuh_worker_hostname
+		wazuhWorkerHostname: form.value.wazuh_worker_hostname,
+		repoUrl: form.value.repo_url || "",
+		repoUsername: form.value.repo_username || "",
+		repoPassword: form.value.repo_password || "",
+		windowsEdrInstaller: form.value.windows_edr_installer || "",
+		wazuhDomain: form.value.wazuh_domain || ""
 	}
 
 	Api.customers[method](payload)
