@@ -15,6 +15,7 @@
 								@keydown.enter="signIn"
 							/>
 							<PasskeySignIn
+								v-if="!!model.username"
 								:username="model.username || undefined"
 								show-tooltip
 								icon-only
