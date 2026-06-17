@@ -65,9 +65,8 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { CustomerAgentsHealthcheckQuery } from "@/api/endpoints/customers"
-import type { ApiError } from "@/types/common"
+import type { ApiCommonResponse, ApiError } from "@/types/common"
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
 import { watchDebounced } from "@vueuse/core"
 import _get from "lodash/get"
@@ -119,43 +118,43 @@ const filterUnit = computed({
 	set: value => emit("update:filters", { ...props.filters, unit: value })
 })
 
-function getList() {
-	loading.value = true
-
-	const params = {
-		method: "" as "getCustomerAgentsHealthcheckWazuh" | "getCustomerAgentsHealthcheckVelociraptor",
-		healthy: "",
-		unhealthy: ""
+function buildHealthcheckQuery(): CustomerAgentsHealthcheckQuery | undefined {
+	if (filters.value.time && filters.value.unit) {
+		return { [filters.value.unit]: filters.value.time }
 	}
+
+	return undefined
+}
+
+function getList() {
+	let apiCall: Promise<ApiCommonResponse> | null = null
+	let healthyKey = ""
+	let unhealthyKey = ""
 
 	switch (source) {
 		case "wazuh":
-			params.method = "getCustomerAgentsHealthcheckWazuh"
-			params.healthy = "healthy_wazuh_agents"
-			params.unhealthy = "unhealthy_wazuh_agents"
+			apiCall = Api.customers.getCustomerAgentsHealthcheckWazuh(customerCode, buildHealthcheckQuery())
+			healthyKey = "healthy_wazuh_agents"
+			unhealthyKey = "unhealthy_wazuh_agents"
 			break
 		case "velociraptor":
-			params.method = "getCustomerAgentsHealthcheckVelociraptor"
-			params.healthy = "healthy_velociraptor_agents"
-			params.unhealthy = "unhealthy_velociraptor_agents"
+			apiCall = Api.customers.getCustomerAgentsHealthcheckVelociraptor(customerCode, buildHealthcheckQuery())
+			healthyKey = "healthy_velociraptor_agents"
+			unhealthyKey = "unhealthy_velociraptor_agents"
 			break
 	}
 
-	if (!params.method) {
+	if (!apiCall) {
 		return
 	}
 
-	let query: CustomerAgentsHealthcheckQuery | undefined
-	if (filters.value.time && filters.value.unit) {
-		query = {}
-		query[filters.value.unit] = filters.value.time
-	}
+	loading.value = true
 
-	Api.customers[params.method](customerCode, query)
+	apiCall
 		.then(res => {
 			if (res.data.success) {
-				healthyList.value = _get(res, `data.${params.healthy}`, [])
-				unhealthyList.value = _get(res, `data.${params.unhealthy}`, [])
+				healthyList.value = _get(res, `data.${healthyKey}`, [])
+				unhealthyList.value = _get(res, `data.${unhealthyKey}`, [])
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

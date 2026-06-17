@@ -74,7 +74,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { StepsProps } from "naive-ui"
 import type { NewIntegration } from "@/api/endpoints/integrations"
 import type { ServiceItemData } from "@/components/services/types"

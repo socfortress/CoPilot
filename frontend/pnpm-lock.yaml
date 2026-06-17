@@ -126,6 +126,9 @@ importers:
       papaparse:
         specifier: ^5.5.3
         version: 5.5.3
+      password-generator:
+        specifier: ^3.0.0
+        version: 3.0.0
       password-validator:
         specifier: ^5.3.0
         version: 5.3.0
@@ -3840,6 +3843,11 @@ packages:
 
   parse5@8.0.1:
     resolution: {integrity: sha512-z1e/HMG90obSGeidlli3hj7cbocou0/wa5HacvI3ASx34PecNjNQeaHNo5WIZpWofN9kgkqV1q5YvXe3F0FoPw==}
+
+  password-generator@3.0.0:
+    resolution: {integrity: sha512-si0IXGjiLJBpNYHmowDpti6TKuvvbKVq4HhJPzXp/C+GDGdml8PeUjUZiMGaOwlFNpwDZNRhTVpdGZA3ksVfRQ==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   password-validator@5.3.0:
     resolution: {integrity: sha512-Q+bSEM5pjokZqzWGoQaoylkeWeH4+9uMYlVImiPD0EOJClQ2RPBhrJ5h0OjhMKtwOmu5rRcLaTZo5Gk9RBl0ig==}
@@ -8971,6 +8979,8 @@ snapshots:
   parse5@8.0.1:
     dependencies:
       entities: 8.0.0
+
+  password-generator@3.0.0: {}
 
   password-validator@5.3.0: {}
 

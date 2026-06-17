@@ -70,7 +70,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { CustomerPortalSettingsPayload } from "@/api/endpoints/customerPortal"
 import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import type { ApiError } from "@/types/common"

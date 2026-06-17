@@ -29,7 +29,7 @@
 						</template>
 					</Badge>
 
-					<Badge v-if="source === 'velociraptor'" type="splitted">
+					<Badge v-if="source === 'velociraptor' && healthData.velociraptor_id" type="splitted">
 						<template #label>Velociraptor Id</template>
 						<template #value>
 							{{ healthData.velociraptor_id }}
