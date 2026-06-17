@@ -114,4 +114,5 @@ export interface CustomerProvisioningDefaultSettings {
 export interface EDRInstallCommands {
 	windows: string
 	linux: string
+	macos: string
 }

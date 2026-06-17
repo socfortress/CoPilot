@@ -24,6 +24,14 @@
 						</div>
 						<CodeSource :code="commands.linux" lang="bash" :max-height="220" />
 					</div>
+
+					<div class="mt-2 flex flex-col gap-1">
+						<div class="flex items-center gap-2 font-medium">
+							<Icon name="mdi:apple" :size="16" />
+							macOS (Bash)
+						</div>
+						<CodeSource :code="commands.macos" lang="bash" :max-height="220" />
+					</div>
 				</div>
 			</template>
 

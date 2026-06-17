@@ -10,9 +10,10 @@ from app.customer_provisioning.schema.edr_install import EDRInstallCommands
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
 
-# The Linux installer artifact name is fixed by the repo layout, so it is not a
-# configurable default-settings column (unlike the Windows installer filename).
+# The Linux/macOS installer artifact names are fixed by the repo layout, so they
+# are not configurable default-settings columns (unlike the Windows installer filename).
 LINUX_INSTALLER_FILENAME = "Client_EDR_install.bash"
+MACOS_INSTALLER_FILENAME = "macOS_kickstart.sh"
 
 # Tokens are substituted via str.replace (not str.format) because the PowerShell
 # template legitimately contains literal "{" / "}" (e.g. "@{ Authorization = ... }")
@@ -40,6 +41,13 @@ LINUX_TEMPLATE = (
     "dos2unix ~/__LINUX_INSTALLER__ && "
     "CLIENT_USER=__REPO_USERNAME__ CLIENT_PASS=__REPO_PASSWORD__ bash ~/__LINUX_INSTALLER__ "
     "-i __WAZUH_DOMAIN__ __LOGS_PORT__ __REGISTRATION_PORT__ __REGISTRATION_PASSWORD__ Linux___CUSTOMER_CODE__"
+)
+
+# The macOS kickstart script self-configures, so it only needs the repo
+# credentials (no Wazuh domain/ports/customer-code arguments).
+MACOS_TEMPLATE = (
+    "curl -fsSL -u '__REPO_USERNAME__:__REPO_PASSWORD__' "
+    "'__REPO_URL__/repository/__REPO_USERNAME__/installer/__MACOS_INSTALLER__' | sudo bash -s -- --no-stagger"
 )
 
 
@@ -82,7 +90,7 @@ async def generate_edr_install_commands(
     session: AsyncSession,
 ) -> EDRInstallCommands:
     """
-    Render the Windows and Linux EDR agent install commands for a customer.
+    Render the Windows, Linux and macOS EDR agent install commands for a customer.
 
     Pulls deployment-wide artifact-repo settings from
     ``customer_provisioning_default_settings`` and per-customer enrollment values
@@ -122,6 +130,7 @@ async def generate_edr_install_commands(
         "__REPO_PASSWORD__": settings.repo_password,
         "__WINDOWS_INSTALLER__": settings.windows_edr_installer,
         "__LINUX_INSTALLER__": LINUX_INSTALLER_FILENAME,
+        "__MACOS_INSTALLER__": MACOS_INSTALLER_FILENAME,
         "__WAZUH_DOMAIN__": settings.wazuh_domain,
         "__REGISTRATION_PASSWORD__": customer_meta.customer_meta_wazuh_auth_password,
         "__REGISTRATION_PORT__": str(customer_meta.customer_meta_wazuh_registration_port),
@@ -131,8 +140,10 @@ async def generate_edr_install_commands(
 
     windows = WINDOWS_TEMPLATE
     linux = LINUX_TEMPLATE
+    macos = MACOS_TEMPLATE
     for token, value in replacements.items():
         windows = windows.replace(token, value)
         linux = linux.replace(token, value)
+        macos = macos.replace(token, value)
 
-    return EDRInstallCommands(windows=windows, linux=linux)
+    return EDRInstallCommands(windows=windows, linux=linux, macos=macos)
