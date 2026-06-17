@@ -7,8 +7,22 @@
 					<strong class="font-mono">{{ totalCustomers }}</strong>
 				</div>
 				<div class="flex items-center gap-2">
-					<span class="text-sm">Sort by:</span>
-					<n-select v-model:value="sortOption" :options="sortOptions" style="width: 120px" size="small" />
+					<span class="shrink-0 text-sm">Sort by:</span>
+					<n-select
+						v-model:value="sortField"
+						:options="sortFieldOptions"
+						size="small"
+						class="w-30"
+						:consistent-menu-width="false"
+					/>
+					<n-select
+						v-model:value="sortOrder"
+						:options="sortOrderOptions"
+						size="small"
+						:show-checkmark="false"
+						class="max-w-20"
+						:consistent-menu-width="false"
+					/>
 				</div>
 			</div>
 			<div class="flex items-center gap-3">
@@ -38,7 +52,6 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { Customer } from "@/types/customers.d"
 import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
@@ -56,11 +69,17 @@ const { highlight, reload } = toRefs(props)
 const message = useMessage()
 const loadingCustomers = ref(false)
 const customersList = ref<Customer[]>([])
-const sortOption = ref<string>("ID")
+const sortField = ref<"id" | "name">("id")
+const sortOrder = ref<"asc" | "desc">("asc")
 
-const sortOptions = [
-	{ label: "ID", value: "ID" },
-	{ label: "A-Z", value: "A-Z" }
+const sortFieldOptions = [
+	{ label: "ID", value: "id" },
+	{ label: "Name", value: "name" }
+]
+
+const sortOrderOptions = [
+	{ label: "Asc", value: "asc" },
+	{ label: "Desc", value: "desc" }
 ]
 
 const totalCustomers = computed<number>(() => {
@@ -70,16 +89,14 @@ const totalCustomers = computed<number>(() => {
 const sortedCustomersList = computed<Customer[]>(() => {
 	const customers = [...customersList.value]
 
-	if (sortOption.value === "A-Z") {
+	if (sortField.value === "name") {
 		return customers.sort((a, b) => {
-			const nameA = a.customer_name.toLowerCase()
-			const nameB = b.customer_name.toLowerCase()
-			return nameA.localeCompare(nameB)
+			const cmp = a.customer_name.toLowerCase().localeCompare(b.customer_name.toLowerCase())
+			return sortOrder.value === "asc" ? cmp : -cmp
 		})
 	}
 
-	// For "ID" option, return original order (by creation/ID)
-	return customers
+	return sortOrder.value === "desc" ? customers.reverse() : customers
 })
 
 function getCustomers() {

@@ -29,7 +29,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { CustomerMeta } from "@/types/customers.d"
@@ -306,6 +305,7 @@ onBeforeMount(() => {
 	}
 })
 
+// TODO: casistiche come questa devono essere sostituite da defineExpose
 onMounted(() => {
 	emit("mounted", {
 		reset

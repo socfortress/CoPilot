@@ -37,7 +37,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { Agent } from "@/types/agents.d"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
