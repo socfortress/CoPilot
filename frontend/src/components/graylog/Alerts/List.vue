@@ -1,28 +1,24 @@
 <template>
 	<n-spin :show="loading">
-		<div ref="header" class="header flex items-center justify-end gap-2">
-			<div class="info flex grow gap-5">
-				<n-popover overlap placement="bottom-start">
-					<template #trigger>
-						<div class="bg-default rounded-lg">
-							<n-button size="small" class="cursor-help!">
-								<template #icon>
-									<Icon :name="InfoIcon" />
-								</template>
-							</n-button>
-						</div>
+		<div ref="header" class="header flex flex-wrap items-center justify-end gap-2">
+			<div class="flex min-w-0 grow flex-wrap items-center gap-2">
+				<Badge type="splitted" color="primary" size="small">
+					<template #label>Total</template>
+					<template #value>
+						<span class="font-mono">{{ total }}</span>
 					</template>
-					<div class="flex flex-col gap-2">
-						<div class="box">
-							Total:
-							<code>{{ total }}</code>
-						</div>
-						<div class="box">
-							Indicies:
-							<code>{{ usedIndicies }}</code>
-						</div>
+				</Badge>
+
+				<template v-if="usedIndices.length">
+					<span class="text-secondary text-xs font-medium uppercase">Indices</span>
+					<div class="flex flex-wrap gap-1.5">
+						<Badge v-for="index of usedIndices" :key="index" size="small">
+							<template #value>
+								<span class="font-mono text-xs">{{ index }}</span>
+							</template>
+						</Badge>
 					</div>
-				</n-popover>
+				</template>
 			</div>
 			<n-pagination
 				v-model:page="currentPage"
@@ -77,12 +73,12 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { AlertsEventElement, AlertsQuery } from "@/types/graylog/alerts.d"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
@@ -104,10 +100,9 @@ const simpleMode = ref(false)
 const showSizePicker = computed(() => !compactMode.value)
 const pageSizes = [25, 50, 100, 150, 200]
 const pageSlot = ref(8)
-const usedIndicies = ref("")
+const usedIndices = ref<string[]>([])
 
 const FilterIcon = "carbon:filter-edit"
-const InfoIcon = "carbon:information"
 
 const hour = 60 * 60
 const day = hour * 24
@@ -175,7 +170,7 @@ function getData(page: number, pageSize: number, timerange: number) {
 			if (res.data.success) {
 				alertsEvents.value = res.data?.alerts?.events || []
 				total.value = res.data?.alerts?.total_events || 0
-				usedIndicies.value = res.data?.alerts?.used_indices?.join(", ")
+				usedIndices.value = res.data?.alerts?.used_indices || []
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
