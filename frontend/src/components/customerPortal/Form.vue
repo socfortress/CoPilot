@@ -1,34 +1,63 @@
 <template>
 	<n-spin :show="loading" content-class="flex grow flex-col">
-		<div class="flex flex-col gap-10">
-			<n-form-item label="Title" path="title" :show-feedback="false">
-				<n-input v-model:value="model.title" clearable />
-			</n-form-item>
+		<div class="flex flex-col gap-4">
+			<n-alert type="info" :bordered="false">
+				Customize the customer portal login page title and logo shown to end customers.
+			</n-alert>
 
-			<div class="flex gap-3">
-				<div v-if="model.logo" class="relative">
-					<div
-						class="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/10 opacity-0 transition-opacity duration-300 hover:opacity-100"
-						@click="model.logo = null"
-					>
-						<Icon :name="RemoveIcon" :size="30" class="text-secondary drop-shadow-md/90" />
+			<CardEntity embedded size="small">
+				<template #headerMain>
+					<span class="text-xs font-semibold uppercase opacity-60">Portal branding</span>
+				</template>
+
+				<template #default>
+					<div class="flex flex-col gap-4">
+						<n-form-item label="Title" path="title" :show-feedback="false">
+							<n-input v-model:value="model.title" clearable placeholder="CoPilot" />
+						</n-form-item>
+
+						<div class="flex flex-col gap-2">
+							<span class="text-secondary text-xs font-medium">Logo</span>
+							<div class="flex flex-wrap items-center gap-4">
+								<div
+									v-if="model.logo"
+									class="group border-border relative size-17 shrink-0 overflow-hidden rounded-lg border"
+								>
+									<img :src="model.logo" alt="Portal logo preview" class="size-full object-cover" />
+									<button
+										type="button"
+										class="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+										@click="model.logo = null"
+									>
+										<Icon :name="RemoveIcon" :size="20" class="text-white" />
+									</button>
+								</div>
+								<div
+									v-else
+									class="border-border bg-secondary flex size-17 shrink-0 items-center justify-center rounded-lg border border-dashed"
+								>
+									<Icon :name="LogoIcon" :size="24" class="text-secondary opacity-50" />
+								</div>
+
+								<ImageCropper
+									v-slot="{ openCropper }"
+									placeholder="Select a Logo"
+									@crop="setCroppedImage"
+								>
+									<n-button secondary @click="openCropper()">
+										<template #icon>
+											<Icon :name="EditIcon" />
+										</template>
+										{{ model.logo ? "Change logo" : "Upload logo" }}
+									</n-button>
+								</ImageCropper>
+							</div>
+						</div>
 					</div>
+				</template>
+			</CardEntity>
 
-					<img :src="model.logo" width="66" height="66" class="object-cover" />
-				</div>
-				<n-form-item label="Logo" path="logo" :show-feedback="false">
-					<ImageCropper v-slot="{ openCropper }" placeholder="Select a Logo" @crop="setCroppedImage">
-						<n-button @click="openCropper()">
-							<template #icon>
-								<Icon :name="EditIcon" />
-							</template>
-							Edit Logo Image
-						</n-button>
-					</ImageCropper>
-				</n-form-item>
-			</div>
-
-			<div>
+			<div class="flex justify-end">
 				<n-button type="primary" :loading @click="save()">
 					<template #icon>
 						<Icon :name="SaveIcon" />
@@ -47,9 +76,10 @@ import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import type { ApiError } from "@/types/common"
 import type { CustomerPortalSettings } from "@/types/customerPortal"
 import _split from "lodash/split"
-import { NButton, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
+import { NAlert, NButton, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import ImageCropper from "@/components/common/ImageCropper.vue"
 import { getApiErrorMessage } from "@/utils"
@@ -67,6 +97,7 @@ const emit = defineEmits<{
 const SaveIcon = "carbon:save"
 const EditIcon = "uil:image-edit"
 const RemoveIcon = "carbon:trash-can"
+const LogoIcon = "carbon:image"
 const message = useMessage()
 const loading = ref(false)
 const settings = ref<CustomerPortalSettings | null>(null)
@@ -123,7 +154,6 @@ function save() {
 		.then(res => {
 			if (res.data.success) {
 				message.success(res.data?.message || "Customer Portal settings updated successfully")
-				// Reload the data to show updated values
 				emit("success")
 			} else {
 				message.warning(res.data?.message || "Failed to update metadata")
