@@ -1,35 +1,35 @@
 <template>
-	<div class="page">
-		<div class="section">
+	<div class="flex flex-col">
+		<div class="mb-6">
 			<IndicesMarquee :indices @click="setIndex" />
 		</div>
 
-		<div class="section">
+		<div class="mb-6">
 			<Details v-model="currentIndex" :indices />
 		</div>
 
-		<div class="section">
-			<div class="columns flex">
-				<div class="col basis-1/2">
-					<ClusterHealth class="stretchy" />
+		<div class="mb-6">
+			<div class="flex gap-6 max-[1000px]:flex-col">
+				<div class="basis-1/2">
+					<ClusterHealth class="h-full" />
 				</div>
-				<div class="col basis-1/2">
-					<UnhealthyIndices :indices class="stretchy" @click="setIndex" />
+				<div class="basis-1/2">
+					<UnhealthyIndices :indices class="h-full" @click="setIndex" />
 				</div>
 			</div>
 		</div>
 
-		<div class="section">
+		<div class="mb-6">
 			<CustomerIndicesSize @click="setIndex" />
 		</div>
 
-		<n-card class="section overflow-hidden" content-style="padding:0">
-			<div class="columns column-1200 flex gap-0!">
-				<div class="col basis-2/5">
-					<NodeAllocation class="stretchy" style="border-radius: 0" :bordered="false" />
+		<n-card class="mb-6 overflow-hidden" content-class="p-0!">
+			<div class="flex gap-0! max-[1200px]:flex-col">
+				<div class="basis-2/5">
+					<NodeAllocation class="h-full rounded-none" :bordered="false" />
 				</div>
-				<div class="col basis-3/5 overflow-hidden">
-					<TopIndices :indices style="border-radius: 0" :bordered="false" />
+				<div class="basis-3/5 overflow-hidden">
+					<TopIndices :indices class="rounded-none" :bordered="false" />
 				</div>
 			</div>
 		</n-card>
@@ -38,7 +38,6 @@
 
 <script lang="ts" setup>
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { IndexStats } from "@/types/indices.d"
 import { NCard, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"
@@ -111,35 +110,3 @@ onBeforeMount(() => {
 	})
 })
 </script>
-
-<style lang="scss" scoped>
-.page {
-	.section {
-		margin-bottom: calc(var(--spacing) * 6);
-
-		.columns {
-			display: flex;
-			gap: calc(var(--spacing) * 6);
-
-			.stretchy {
-				height: 100%;
-			}
-		}
-	}
-
-	@media (max-width: 1000px) {
-		.section {
-			.columns {
-				flex-direction: column;
-			}
-		}
-	}
-	@media (max-width: 1200px) {
-		.section {
-			.columns.column-1200 {
-				flex-direction: column;
-			}
-		}
-	}
-}
-</style>

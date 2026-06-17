@@ -7,7 +7,7 @@
 		</template>
 
 		<template #headerExtra>
-			<Badge type="splitted" bright size="small" :color="healthBadgeColor">
+			<Badge type="splitted" bright size="small" :color="healthBadgeColor" class="text-default">
 				<template #label>
 					<span class="inline-flex items-center gap-1">
 						<IndexIcon :health="index.health" color :size="14" />
