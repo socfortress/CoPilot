@@ -270,7 +270,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { AlertsListFilter } from "./types.d"
 import type { AlertsQuery } from "@/api/endpoints/incidentManagement/alerts"
 import type { ApiError } from "@/types/common"

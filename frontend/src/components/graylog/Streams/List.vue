@@ -92,7 +92,6 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { Stream } from "@/types/graylog/stream.d"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NDivider, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"

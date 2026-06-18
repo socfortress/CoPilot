@@ -1,6 +1,6 @@
 <template>
-	<div class="healthcheck-list">
-		<div ref="header" class="header flex items-center justify-end gap-2">
+	<div class="flex flex-col gap-2">
+		<div ref="header" class="flex items-center justify-end gap-2">
 			<div class="info flex grow gap-2">
 				<n-popover overlap to="body">
 					<template #trigger>
@@ -119,7 +119,6 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { InfluxDBAlert, InfluxDBAlertResponse } from "@/types/healthchecks.d"
 import { useResizeObserver } from "@vueuse/core"
 import _orderBy from "lodash/orderBy"

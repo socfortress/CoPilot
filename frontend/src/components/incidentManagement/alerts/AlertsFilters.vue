@@ -153,7 +153,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { Ref } from "vue"
 import type { AlertsListFilter } from "./types.d"
 import type { AlertsFilterTypes, AlertsListFilterValue } from "@/api/endpoints/incidentManagement/alerts"

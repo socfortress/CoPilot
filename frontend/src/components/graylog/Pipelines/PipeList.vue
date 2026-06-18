@@ -47,7 +47,6 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { PipelineFull } from "@/types/graylog/pipelines.d"
 import { NButton, NCard, NCollapse, NCollapseItem, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"

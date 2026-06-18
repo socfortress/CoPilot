@@ -65,7 +65,6 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
 import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
