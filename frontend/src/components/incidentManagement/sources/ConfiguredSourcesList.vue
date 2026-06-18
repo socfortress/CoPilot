@@ -1,39 +1,25 @@
 <template>
-	<div class="configured-sources-list">
-		<div v-if="showToolbar" class="mb-3 flex items-center justify-end gap-2">
-			<div class="info flex grow gap-5">
-				<n-popover overlap placement="bottom-start">
-					<template #trigger>
-						<div class="bg-default rounded-lg">
-							<n-button size="small" class="cursor-help!">
-								<template #icon>
-									<Icon :name="InfoIcon" />
-								</template>
-							</n-button>
-						</div>
+	<div class="flex flex-col gap-3">
+		<div v-if="showToolbar" class="flex flex-wrap items-center justify-end gap-2">
+			<div class="flex min-w-0 grow flex-wrap items-center gap-2">
+				<Badge type="splitted" color="primary" size="small">
+					<template #label>Total</template>
+					<template #value>
+						<span class="font-mono">{{ totalConfiguredSources }}</span>
 					</template>
-					<div class="flex flex-col gap-2">
-						<div class="box">
-							Total:
-							<code>{{ totalConfiguredSources }}</code>
-						</div>
-					</div>
-				</n-popover>
+				</Badge>
 			</div>
-			<div class="actions flex items-center gap-2">
-				<NewConfiguredSourceButton
-					:disabled-sources="configuredSourcesList"
-					@success="getConfiguredSources()"
-				/>
-			</div>
+
+			<NewConfiguredSourceButton :disabled-sources="configuredSourcesList" @success="getConfiguredSources()" />
 		</div>
+
 		<n-spin :show="loading" class="min-h-32">
-			<div v-if="configuredSourcesList.length" class="list grid-auto-fill-250 grid gap-4">
+			<div v-if="configuredSourcesList.length" class="flex flex-col gap-4">
 				<ConfiguredSourceItem
 					v-for="source of configuredSourcesList"
 					:key="source"
 					:source
-					class="item-appear item-appear-bottom item-appear-005"
+					class="animate-fade-up"
 					@deleted="getConfiguredSources()"
 				/>
 			</div>
@@ -47,10 +33,10 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { SourceName } from "@/types/incidentManagement/sources.d"
-import { NButton, NEmpty, NPopover, NSpin, useMessage } from "naive-ui"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
+import Badge from "@/components/common/Badge.vue"
 import { getApiErrorMessage } from "@/utils"
 import ConfiguredSourceItem from "./ConfiguredSourceItem.vue"
 import NewConfiguredSourceButton from "./NewConfiguredSourceButton.vue"
@@ -67,7 +53,6 @@ const emit = defineEmits<{
 	(e: "loaded", value: number): void
 }>()
 
-const InfoIcon = "carbon:information"
 const message = useMessage()
 const loading = ref(false)
 const configuredSourcesList = ref<SourceName[]>([])

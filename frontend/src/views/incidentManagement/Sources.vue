@@ -1,6 +1,6 @@
 <template>
 	<div ref="page" class="page">
-		<n-tabs type="line" animated :tabs-padding="24">
+		<n-tabs type="line" animated>
 			<n-tab-pane
 				name="ConfiguredSources"
 				:tab="
