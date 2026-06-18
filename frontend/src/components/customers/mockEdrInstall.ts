@@ -5,6 +5,7 @@ const MOCK_REPO_USERNAME = "socfortress"
 const MOCK_REPO_PASSWORD = "changeme"
 const MOCK_WINDOWS_INSTALLER = "WazuhAgentSetup.exe"
 const MOCK_LINUX_INSTALLER = "Client_EDR_install.bash"
+const MOCK_MACOS_INSTALLER = "macOS_kickstart.sh"
 const MOCK_WAZUH_DOMAIN = "wazuh-manager.example.local"
 const MOCK_REGISTRATION_PASSWORD = "registration-secret"
 const MOCK_REGISTRATION_PORT = "1515"
@@ -37,6 +38,11 @@ export function buildMockEdrInstallCommands(customerCode: string): EDRInstallCom
 			`dos2unix ~/${MOCK_LINUX_INSTALLER} &&`,
 			`CLIENT_USER=${MOCK_REPO_USERNAME} CLIENT_PASS=${MOCK_REPO_PASSWORD} bash ~/${MOCK_LINUX_INSTALLER}`,
 			`-i ${MOCK_WAZUH_DOMAIN} ${MOCK_LOGS_PORT} ${MOCK_REGISTRATION_PORT} ${MOCK_REGISTRATION_PASSWORD} ${linuxCustomerCode}`
+		].join(" "),
+		macos: [
+			`curl -fsSL -u '${MOCK_REPO_USERNAME}:${MOCK_REPO_PASSWORD}'`,
+			`'${MOCK_REPO_URL}/repository/${MOCK_REPO_USERNAME}/installer/${MOCK_MACOS_INSTALLER}'`,
+			"| sudo bash -s -- --no-stagger"
 		].join(" ")
 	}
 }

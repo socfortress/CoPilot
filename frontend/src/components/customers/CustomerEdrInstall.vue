@@ -66,7 +66,8 @@ const installCommandSections = computed(() => {
 
 	return [
 		{ platform: "windows", shell: "PowerShell", lang: "powershell", code: cmds.windows },
-		{ platform: "linux", shell: "Bash", lang: "bash", code: cmds.linux }
+		{ platform: "linux", shell: "Bash", lang: "bash", code: cmds.linux },
+		{ platform: "macos", shell: "Bash", lang: "bash", code: cmds.macos }
 	]
 })
 
