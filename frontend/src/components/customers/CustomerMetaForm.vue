@@ -305,8 +305,8 @@ onBeforeMount(() => {
 	}
 })
 
-// TODO: casistiche come questa devono essere sostituite da defineExpose
 onMounted(() => {
+	// TODO: casistiche come questa devono essere sostituite da defineExpose
 	emit("mounted", {
 		reset
 	})

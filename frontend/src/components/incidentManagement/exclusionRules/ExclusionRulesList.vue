@@ -93,7 +93,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { ExclusionRulesQuery } from "@/api/endpoints/incidentManagement/exclusionRules"
 import type { ApiError } from "@/types/common"
 import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"

@@ -13,32 +13,34 @@
 				</n-button>
 			</template>
 
-			<template v-if="sourceConfiguration" #mainExtra>
-				<div class="flex flex-wrap items-center gap-1.5">
-					<Badge type="splitted" color="primary">
-						<template #label>Fields</template>
-						<template #value>{{ sourceConfiguration.field_names.length }}</template>
-					</Badge>
+			<template v-if="sourceConfiguration || loadingConfig" #mainExtra>
+				<n-spin :show="loadingConfig" class="min-h-5">
+					<div v-if="sourceConfiguration" class="flex flex-wrap items-center gap-1.5">
+						<Badge type="splitted" color="primary">
+							<template #label>Fields</template>
+							<template #value>{{ sourceConfiguration.field_names.length }}</template>
+						</Badge>
 
-					<Badge v-if="sourceConfiguration.ioc_field_names?.length" type="splitted" color="warning">
-						<template #label>IOC</template>
-						<template #value>{{ sourceConfiguration.ioc_field_names.length }}</template>
-					</Badge>
+						<Badge v-if="sourceConfiguration.ioc_field_names?.length" type="splitted" color="warning">
+							<template #label>IOC</template>
+							<template #value>{{ sourceConfiguration.ioc_field_names.length }}</template>
+						</Badge>
 
-					<Badge v-if="sourceConfiguration.asset_name" type="splitted">
-						<template #label>Asset</template>
-						<template #value>
-							<span class="font-mono">{{ sourceConfiguration.asset_name }}</span>
-						</template>
-					</Badge>
+						<Badge v-if="sourceConfiguration.asset_name" type="splitted">
+							<template #label>Asset</template>
+							<template #value>
+								<span class="font-mono">{{ sourceConfiguration.asset_name }}</span>
+							</template>
+						</Badge>
 
-					<Badge v-if="sourceConfiguration.timefield_name" type="splitted">
-						<template #label>Time</template>
-						<template #value>
-							<span class="font-mono">{{ sourceConfiguration.timefield_name }}</span>
-						</template>
-					</Badge>
-				</div>
+						<Badge v-if="sourceConfiguration.timefield_name" type="splitted">
+							<template #label>Time</template>
+							<template #value>
+								<span class="font-mono">{{ sourceConfiguration.timefield_name }}</span>
+							</template>
+						</Badge>
+					</div>
+				</n-spin>
 			</template>
 		</CardEntity>
 
@@ -76,7 +78,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
-import { NButton, NCard, NModal, useDialog, useMessage } from "naive-ui"
+import { NButton, NCard, NModal, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
@@ -101,7 +103,7 @@ const deleting = ref(false)
 const showDetails = ref(false)
 const sourceConfiguration = ref<SourceConfiguration | null>(null)
 
-const loading = computed(() => loadingConfig.value || deleting.value)
+const loading = computed(() => deleting.value)
 
 function getSourceConfiguration() {
 	loadingConfig.value = true
