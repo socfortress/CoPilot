@@ -183,7 +183,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { CasesFilter, CasesFilterTypes } from "@/api/endpoints/incidentManagement/cases"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
