@@ -11,6 +11,10 @@ class EDRInstallCommands(BaseModel):
         ...,
         description="Bash one-liner that downloads and runs the Linux EDR agent installer.",
     )
+    macos: str = Field(
+        ...,
+        description="Bash one-liner that downloads and runs the macOS EDR agent kickstart installer.",
+    )
 
 
 class EDRInstallCommandsResponse(BaseModel):
