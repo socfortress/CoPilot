@@ -12,6 +12,7 @@
 							v-model:value="selectValue"
 							placeholder="Indices list"
 							clearable
+							:consistent-menu-width="false"
 							filterable
 							:options="selectOptions"
 						></n-select>

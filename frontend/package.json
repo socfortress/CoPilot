@@ -95,7 +95,6 @@
 		"vue-i18n": "^11.4.5",
 		"vue-router": "^5.1.0",
 		"vue-sjv": "^0.0.6",
-		"vue3-marquee": "^4.2.2",
 		"vuedraggable": "^4.1.0",
 		"xmllint": "^0.1.1",
 		"xmllint-wasm": "^5.2.0"
