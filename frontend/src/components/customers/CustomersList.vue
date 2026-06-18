@@ -2,12 +2,12 @@
 	<div class="customers-list">
 		<div class="header mb-4 flex items-center justify-between gap-2">
 			<div class="flex items-center gap-4">
-				<div>
+				<div class="flex shrink-0 items-center gap-2">
 					Total:
 					<strong class="font-mono">{{ totalCustomers }}</strong>
 				</div>
-				<div class="flex items-center gap-2">
-					<span class="shrink-0 text-sm">Sort by:</span>
+				<n-input-group>
+					<n-input-group-label size="small">Sort by</n-input-group-label>
 					<n-select
 						v-model:value="sortField"
 						:options="sortFieldOptions"
@@ -23,7 +23,7 @@
 						class="max-w-20"
 						:consistent-menu-width="false"
 					/>
-				</div>
+				</n-input-group>
 			</div>
 			<div class="flex items-center gap-3">
 				<slot></slot>
@@ -53,7 +53,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
-import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
+import { NEmpty, NInputGroup, NInputGroupLabel, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
