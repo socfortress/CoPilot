@@ -192,9 +192,6 @@ importers:
       vue-sjv:
         specifier: ^0.0.6
         version: 0.0.6(vue@3.5.38(typescript@6.0.3))
-      vue3-marquee:
-        specifier: ^4.2.2
-        version: 4.2.2(vue@3.5.38(typescript@6.0.3))
       vuedraggable:
         specifier: ^4.1.0
         version: 4.1.0(vue@3.5.38(typescript@6.0.3))
@@ -4822,12 +4819,6 @@ packages:
     hasBin: true
     peerDependencies:
       typescript: '>=5.0.0'
-
-  vue3-marquee@4.2.2:
-    resolution: {integrity: sha512-FeFvGUVInKfFilXFcnl8sDRBJBZCZSNLlQDquJErB9db6W2xICRVqbRV/jtdzsEP0rftarLQhx9MeEAU0+TPuQ==}
-    engines: {node: '>=12'}
-    peerDependencies:
-      vue: ^3.2
 
   vue@3.5.38:
     resolution: {integrity: sha512-vAMKHfImQlYSy0C+PBue4s3ERZ2xGKfgZg5GXAsLInq1dyh2H78ILVP5sK0KPFPVW4kv+OGCIvBEondcjpZp7A==}
@@ -9926,10 +9917,6 @@ snapshots:
       '@volar/typescript': 2.4.28
       '@vue/language-core': 3.3.5
       typescript: 6.0.3
-
-  vue3-marquee@4.2.2(vue@3.5.38(typescript@6.0.3)):
-    dependencies:
-      vue: 3.5.38(typescript@6.0.3)
 
   vue@3.5.38(typescript@6.0.3):
     dependencies:
