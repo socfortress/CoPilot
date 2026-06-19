@@ -13,7 +13,7 @@
 <script setup lang="ts">
 import type { CSSProperties } from "vue"
 import type { ApiError } from "@/types/common"
-import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
+import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules"
 import { NSwitch, useMessage } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"

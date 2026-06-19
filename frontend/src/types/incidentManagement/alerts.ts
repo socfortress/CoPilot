@@ -1,4 +1,4 @@
-import type { Case } from "./cases.d"
+import type { Case } from "./cases"
 
 export type AlertsFilter =
 	| { status: AlertStatus }

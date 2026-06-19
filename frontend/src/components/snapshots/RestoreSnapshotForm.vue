@@ -63,7 +63,7 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { FormRules } from "naive-ui"
-import type { RestoreSnapshotRequest, SnapshotInfo } from "@/types/snapshots.d"
+import type { RestoreSnapshotRequest, SnapshotInfo } from "@/types/snapshots"
 import { NAlert, NButton, NForm, NFormItem, NInput, NSwitch, NTag, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"

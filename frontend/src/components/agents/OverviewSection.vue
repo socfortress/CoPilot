@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Agent } from "@/types/agents.d"
+import type { Agent } from "@/types/agents"
 import { computed, toRefs } from "vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"

@@ -271,7 +271,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { Alert } from "@/types/incidentManagement/alerts.d"
+import type { Alert } from "@/types/incidentManagement/alerts"
 import _clone from "lodash/cloneDeep"
 import _truncate from "lodash/truncate"
 import { NButton, NCard, NCheckbox, NModal, NPopover, NSpin, NTooltip, useDialog, useMessage } from "naive-ui"

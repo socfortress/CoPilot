@@ -89,7 +89,7 @@
 <script setup lang="ts">
 import type { CopilotActionInventoryQuery } from "@/api/endpoints/copilotAction"
 import type { ApiError } from "@/types/common"
-import type { CopilotAction } from "@/types/copilotAction.d"
+import type { CopilotAction } from "@/types/copilotAction"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NAlert, NButton, NEmpty, NInput, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"

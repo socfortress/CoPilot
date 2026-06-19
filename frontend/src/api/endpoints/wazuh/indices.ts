@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { ClusterHealth, CustomerIndicesSize, IndexAllocation, IndexShard, IndexStats } from "@/types/indices.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { ClusterHealth, CustomerIndicesSize, IndexAllocation, IndexShard, IndexStats } from "@/types/indices"
 import { HttpClient } from "../../httpClient"
 
 export default {

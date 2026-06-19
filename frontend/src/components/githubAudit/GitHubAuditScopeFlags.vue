@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GitHubAuditConfig } from "@/types/githubAudit.d"
+import type { GitHubAuditConfig } from "@/types/githubAudit"
 import { NTooltip } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 

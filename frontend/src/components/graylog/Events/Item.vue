@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import type { EventDefinition } from "@/types/graylog/event-definition.d"
+import type { EventDefinition } from "@/types/graylog/event-definition"
 import { NInput, NModal, NTabPane, NTabs, NTooltip } from "naive-ui"
 import { ref, toRefs } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"

@@ -1,6 +1,6 @@
 import type { DialogApiInjection } from "naive-ui/es/dialog/src/DialogProvider"
 import type { MessageApiInjection } from "naive-ui/es/message/src/MessageProvider"
-import type { Agent } from "@/types/agents.d"
+import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import { h } from "vue"
 import Api from "@/api"

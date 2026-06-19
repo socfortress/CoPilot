@@ -43,7 +43,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { CustomerMeta } from "@/types/customers.d"
+import type { CustomerMeta } from "@/types/customers"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, toRefs } from "vue"
 import Api from "@/api"

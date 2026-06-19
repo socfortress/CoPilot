@@ -1,5 +1,5 @@
 import type { KeysOfUnion, UnionToIntersection } from "type-fest"
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	Alert,
 	AlertComment,
@@ -9,7 +9,7 @@ import type {
 	AlertStatus,
 	AlertTag,
 	AlertTimeline
-} from "@/types/incidentManagement/alerts.d"
+} from "@/types/incidentManagement/alerts"
 import _castArray from "lodash/castArray"
 import { HttpClient } from "../../httpClient"
 

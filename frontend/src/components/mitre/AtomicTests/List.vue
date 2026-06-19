@@ -68,7 +68,7 @@
 // TODO-FE: refactor
 import type { MitreAtomicOsCategory, MitreAtomicTestsQuery } from "@/api/endpoints/wazuh/mitre"
 import type { ApiError } from "@/types/common"
-import type { MitreAtomicTest } from "@/types/mitre.d"
+import type { MitreAtomicTest } from "@/types/mitre"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"

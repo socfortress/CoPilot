@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AgentScaOverviewItem } from "@/types/sca.d"
+import type { AgentScaOverviewItem } from "@/types/sca"
 import { NModal } from "naive-ui"
 import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"

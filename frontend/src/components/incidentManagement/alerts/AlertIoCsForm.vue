@@ -57,7 +57,7 @@
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { AlertIocPayload } from "@/api/endpoints/incidentManagement/alerts"
 import type { ApiError, DeepNullable } from "@/types/common"
-import type { AlertIOC } from "@/types/incidentManagement/alerts.d"
+import type { AlertIOC } from "@/types/incidentManagement/alerts"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"

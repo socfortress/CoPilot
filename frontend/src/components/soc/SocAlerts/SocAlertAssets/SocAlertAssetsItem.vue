@@ -141,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SocAlertAsset } from "@/types/soc/asset.d"
+import type { SocAlertAsset } from "@/types/soc/asset"
 import _omit from "lodash/omit"
 import { NModal, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"

@@ -105,7 +105,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { License, LicenseFeatures, LicenseKey, SubscriptionFeature } from "@/types/license.d"
+import type { License, LicenseFeatures, LicenseKey, SubscriptionFeature } from "@/types/license"
 import { NButton, NEmpty, NModal, NPopover, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"

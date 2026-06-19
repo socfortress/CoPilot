@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SocAlert } from "@/types/soc/alert.d"
+import type { SocAlert } from "@/types/soc/alert"
 import _toNumber from "lodash/toSafeInteger"
 import { NTimeline, NTimelineItem } from "naive-ui"
 import { onBeforeMount, ref } from "vue"

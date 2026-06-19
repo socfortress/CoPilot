@@ -168,7 +168,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { ScaPackageAgentsResponse, ScaPolicyItem } from "@/types/sca.d"
+import type { ScaPackageAgentsResponse, ScaPolicyItem } from "@/types/sca"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"

@@ -40,13 +40,13 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { IndexStats } from "@/types/indices.d"
+import type { IndexStats } from "@/types/indices"
 import { NCard, NEmpty, NMarquee, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
-import { IndexHealth } from "@/types/indices.d"
+import { IndexHealth } from "@/types/indices"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{

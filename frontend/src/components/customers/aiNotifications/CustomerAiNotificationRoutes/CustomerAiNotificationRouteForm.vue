@@ -105,7 +105,7 @@ import type {
 	NotificationTrigger,
 	ShuffleApp,
 	ShuffleIntegration
-} from "@/types/notifications.d"
+} from "@/types/notifications"
 import { NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"

@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import type { DashboardCategory } from "@/types/dashboards.d"
+import type { DashboardCategory } from "@/types/dashboards"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"

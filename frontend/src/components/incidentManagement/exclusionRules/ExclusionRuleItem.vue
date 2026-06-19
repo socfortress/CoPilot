@@ -115,7 +115,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
+import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules"
 import { NButton, NCard, NModal, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, toRefs } from "vue"
 import Api from "@/api"

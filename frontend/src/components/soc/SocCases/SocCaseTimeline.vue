@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SocCaseExt } from "@/types/soc/case.d"
+import type { SocCaseExt } from "@/types/soc/case"
 import _toNumber from "lodash/toSafeInteger"
 import { NTimeline, NTimelineItem } from "naive-ui"
 import { onBeforeMount, ref } from "vue"

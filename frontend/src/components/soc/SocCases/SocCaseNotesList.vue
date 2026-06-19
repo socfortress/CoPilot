@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SocNote } from "@/types/soc/note.d"
+import type { SocNote } from "@/types/soc/note"
 import { refDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NEmpty, NInput, NSpin, useMessage } from "naive-ui"

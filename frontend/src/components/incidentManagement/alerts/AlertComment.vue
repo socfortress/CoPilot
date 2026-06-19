@@ -78,7 +78,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { AlertComment } from "@/types/incidentManagement/alerts.d"
+import type { AlertComment } from "@/types/incidentManagement/alerts"
 import { NAvatar, NButton, NInput, NPopconfirm, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"

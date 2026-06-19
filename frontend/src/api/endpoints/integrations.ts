@@ -1,10 +1,10 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	AvailableIntegration,
 	CustomerIntegration,
 	CustomerIntegrationMetaCommon,
 	CustomerIntegrationMetaResponse
-} from "@/types/integrations.d"
+} from "@/types/integrations"
 import { HttpClient } from "../httpClient"
 
 export interface IntegrationAuthKeyPairs {

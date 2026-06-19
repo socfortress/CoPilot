@@ -203,8 +203,8 @@
 
 <script setup lang="ts">
 import type { ArtifactsQuery, CollectRequest } from "@/api/endpoints/artifacts"
-import type { Agent } from "@/types/agents.d"
-import type { Artifact, ArtifactParameter, CollectResult } from "@/types/artifacts.d"
+import type { Agent } from "@/types/agents"
+import type { Artifact, ArtifactParameter, CollectResult } from "@/types/artifacts"
 import type { ApiError } from "@/types/common"
 import {
 	NAlert,

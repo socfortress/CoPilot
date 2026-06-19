@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SigmaQuery } from "@/types/sigma.d"
+import type { SigmaQuery } from "@/types/sigma"
 import { NButton, NCard, NModal, NSpin } from "naive-ui"
 import { ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"

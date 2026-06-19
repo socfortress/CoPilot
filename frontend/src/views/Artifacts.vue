@@ -33,8 +33,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Agent } from "@/types/agents.d"
-import type { Artifact } from "@/types/artifacts.d"
+import type { Agent } from "@/types/agents"
+import type { Artifact } from "@/types/artifacts"
 import { NTabPane, NTabs } from "naive-ui"
 import { defineAsyncComponent, ref } from "vue"
 

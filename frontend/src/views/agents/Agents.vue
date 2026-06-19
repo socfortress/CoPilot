@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Agent } from "@/types/agents.d"
+import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import _debounce from "lodash/debounce"
 import _split from "lodash/split"
@@ -79,7 +79,7 @@ import AgentCard from "@/components/agents/AgentCard.vue"
 import AgentToolbar from "@/components/agents/AgentToolbar.vue"
 import BulkDeleteModal from "@/components/agents/BulkDeleteModal.vue"
 import { useNavigation } from "@/composables/useNavigation"
-import { AgentStatus } from "@/types/agents.d"
+import { AgentStatus } from "@/types/agents"
 import { getApiErrorMessage } from "@/utils"
 
 const message = useMessage()

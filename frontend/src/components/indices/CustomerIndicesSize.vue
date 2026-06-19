@@ -56,7 +56,7 @@
 
 <script lang="ts" setup>
 import type { ApiError } from "@/types/common"
-import type { CustomerIndicesSize } from "@/types/indices.d"
+import type { CustomerIndicesSize } from "@/types/indices"
 import { NCard, NEmpty, NPopover, NProgress, NScrollbar, NSpin, NTag, useMessage, useThemeVars } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

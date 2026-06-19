@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources"
 import { HttpClient } from "../../httpClient"
 
 export default {

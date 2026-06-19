@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SocAlert } from "@/types/soc/alert.d"
+import type { SocAlert } from "@/types/soc/alert"
 import { NPopover } from "naive-ui"
 import { toRefs } from "vue"
 import Icon from "@/components/common/Icon.vue"

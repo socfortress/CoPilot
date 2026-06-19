@@ -36,8 +36,8 @@
 
 <script setup lang="ts">
 import type { CardLinkColor } from "@/components/common/cards/CardLink.vue"
-import type { ApiError } from "@/types/common.d"
-import type { MetricsProcessesData, TimeSeriesData } from "@/types/metrics.d"
+import type { ApiError } from "@/types/common"
+import type { MetricsProcessesData, TimeSeriesData } from "@/types/metrics"
 import { NSpin, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"

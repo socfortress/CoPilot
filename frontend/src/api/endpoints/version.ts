@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { VersionCheckResponse } from "@/types/version.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { VersionCheckResponse } from "@/types/version"
 import { HttpClient } from "../httpClient"
 
 export default {

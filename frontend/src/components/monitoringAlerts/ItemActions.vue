@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
+import type { MonitoringAlert } from "@/types/monitoringAlerts"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"

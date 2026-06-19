@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { IncidentNotification } from "@/types/incidentManagement/notifications.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { IncidentNotification } from "@/types/incidentManagement/notifications"
 import { HttpClient } from "../../httpClient"
 
 export interface IncidentNotificationPayload {

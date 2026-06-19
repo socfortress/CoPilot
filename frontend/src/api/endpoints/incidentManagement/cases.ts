@@ -1,5 +1,5 @@
 import type { KeysOfUnion, UnionToIntersection } from "type-fest"
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	Case,
 	CaseComment,
@@ -8,7 +8,7 @@ import type {
 	CaseReportTemplateDataStore,
 	CasesListResponse,
 	CaseStatus
-} from "@/types/incidentManagement/cases.d"
+} from "@/types/incidentManagement/cases"
 import { HttpClient } from "../../httpClient"
 
 export type CasesFilter =

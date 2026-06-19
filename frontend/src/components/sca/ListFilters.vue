@@ -130,9 +130,9 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { ScaOverviewFilter, ScaOverviewFilterTypes } from "./types.d"
-import type { Agent } from "@/types/agents.d"
+import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
-import type { Customer } from "@/types/customers.d"
+import type { Customer } from "@/types/customers"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
 import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NSelect, useMessage } from "naive-ui"

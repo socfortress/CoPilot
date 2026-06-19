@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { TalonInvestigateRequest, TalonJobData, TalonTemplate } from "@/types/talon.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { TalonInvestigateRequest, TalonJobData, TalonTemplate } from "@/types/talon"
 import { useAuthStore } from "@/stores/auth"
 import { HttpClient } from "../httpClient"
 

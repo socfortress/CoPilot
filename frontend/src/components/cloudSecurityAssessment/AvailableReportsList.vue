@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ScoutSuiteReport } from "@/types/cloudSecurityAssessment.d"
+import type { ScoutSuiteReport } from "@/types/cloudSecurityAssessment"
 import type { ApiError } from "@/types/common"
 import { NButton, NEmpty, NModal, NPopover, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"

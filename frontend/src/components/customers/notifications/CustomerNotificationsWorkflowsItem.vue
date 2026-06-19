@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import type { IncidentNotification } from "@/types/incidentManagement/notifications.d"
+import type { IncidentNotification } from "@/types/incidentManagement/notifications"
 import { NModal } from "naive-ui"
 import { defineAsyncComponent, ref, toRefs, watch } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

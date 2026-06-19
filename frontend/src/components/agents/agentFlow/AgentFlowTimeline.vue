@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FlowResult } from "@/types/flow.d"
+import type { FlowResult } from "@/types/flow"
 import { NTimeline, NTimelineItem } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"

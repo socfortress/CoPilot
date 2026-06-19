@@ -96,7 +96,7 @@
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { AiAnalysisResponse } from "@/types/threatIntel.d"
+import type { AiAnalysisResponse } from "@/types/threatIntel"
 import { NButton, NModal, NTabPane, NTabs, useMessage } from "naive-ui"
 import { defineAsyncComponent, ref, watchEffect } from "vue"
 import Api from "@/api"

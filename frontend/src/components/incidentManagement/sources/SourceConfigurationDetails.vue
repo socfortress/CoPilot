@@ -32,8 +32,8 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiError } from "@/types/common.d"
-import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
+import type { ApiError } from "@/types/common"
+import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources"
 import { NButton, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"

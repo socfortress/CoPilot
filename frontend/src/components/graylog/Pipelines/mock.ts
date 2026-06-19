@@ -1,4 +1,4 @@
-import type { PipelineFull } from "@/types/graylog/pipelines.d"
+import type { PipelineFull } from "@/types/graylog/pipelines"
 
 export const pipeline_full: PipelineFull[] = [
 	{

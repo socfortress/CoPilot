@@ -1,4 +1,4 @@
-import type { ScaOverviewQuery } from "@/types/sca.d"
+import type { ScaOverviewQuery } from "@/types/sca"
 
 export type ScaStreamingFilterType = "customer_code" | "agent_name" | "policy_name" | "min_score" | "max_score"
 

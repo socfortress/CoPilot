@@ -80,7 +80,7 @@ import type {
 	CatalogComplianceFramework,
 	CatalogComplianceGroupRow,
 	CatalogComplianceResponse
-} from "@/types/detectionCatalog.d"
+} from "@/types/detectionCatalog"
 import { NDataTable, NInput, NModal, NSelect, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

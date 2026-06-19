@@ -108,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SocCaseAsset } from "@/types/soc/asset.d"
+import type { SocCaseAsset } from "@/types/soc/asset"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
 import _upperFirst from "lodash/upperFirst"

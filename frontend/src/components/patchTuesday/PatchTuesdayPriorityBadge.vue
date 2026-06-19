@@ -8,7 +8,7 @@
 // TODO-FE: refactor
 import { NTag } from "naive-ui"
 import { computed } from "vue"
-import { PriorityLevel } from "@/types/patchTuesday.d"
+import { PriorityLevel } from "@/types/patchTuesday"
 
 const props = defineProps<{
 	priority: PriorityLevel | string

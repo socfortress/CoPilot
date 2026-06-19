@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CollectResult } from "@/types/artifacts.d"
+import type { CollectResult } from "@/types/artifacts"
 import _isNumber from "lodash/isNumber"
 import _isString from "lodash/isString"
 import { NButton, NModal } from "naive-ui"

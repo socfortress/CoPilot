@@ -66,8 +66,8 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SocCaseAssetLink } from "@/types/soc/asset.d"
-import type { SocCase } from "@/types/soc/case.d"
+import type { SocCaseAssetLink } from "@/types/soc/asset"
+import type { SocCase } from "@/types/soc/case"
 import { NCollapse, NCollapseItem, NEmpty, NSpin, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"

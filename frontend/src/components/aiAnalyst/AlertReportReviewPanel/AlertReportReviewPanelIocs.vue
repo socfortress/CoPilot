@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AiAnalystIoc, AiAnalystReport } from "@/types/aiAnalyst.d"
+import type { AiAnalystIoc, AiAnalystReport } from "@/types/aiAnalyst"
 import type { ApiError } from "@/types/common"
 import { NCard, NEmpty, NInput, NSpin, NSwitch, NTooltip, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"

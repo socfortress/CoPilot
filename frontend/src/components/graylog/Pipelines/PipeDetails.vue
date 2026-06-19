@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import type { RuleExtended } from "./RulesSmallList.vue"
-import type { PipelineFull, PipelineFullStage } from "@/types/graylog/pipelines.d"
+import type { PipelineFull, PipelineFullStage } from "@/types/graylog/pipelines"
 import { NButton, NPopover, NScrollbar, NTimeline, NTimelineItem } from "naive-ui"
 import { computed, toRefs } from "vue"
 import Icon from "@/components/common/Icon.vue"

@@ -73,7 +73,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { IndexAllocation } from "@/types/indices.d"
+import type { IndexAllocation } from "@/types/indices"
 import { NCard, NEmpty, NProgress, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { onBeforeMount, ref } from "vue"

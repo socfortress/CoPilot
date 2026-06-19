@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { AITrigger } from "@/types/incidentManagement/aiTriggers.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { AITrigger } from "@/types/incidentManagement/aiTriggers"
 import { HttpClient } from "../../httpClient"
 
 export interface AITriggerPayload {

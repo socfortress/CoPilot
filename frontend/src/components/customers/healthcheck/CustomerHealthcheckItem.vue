@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
+import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers"
 import { NModal, NPopover } from "naive-ui"
 import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"

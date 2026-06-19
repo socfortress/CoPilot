@@ -76,7 +76,7 @@
 
 <script lang="ts" setup>
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
-import type { LoginPayload } from "@/types/auth.d"
+import type { LoginPayload } from "@/types/auth"
 import { NButton, NCollapseTransition, NDivider, NForm, NFormItem, NInput, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRouter } from "vue-router"

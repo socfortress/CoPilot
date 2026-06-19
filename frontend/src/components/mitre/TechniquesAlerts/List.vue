@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import type { MitreTechniquesAlertsQuery, MitreTechniquesAlertsQueryTimeRange } from "@/api/endpoints/wazuh/mitre"
 import type { ApiError } from "@/types/common"
-import type { MitreTechnique } from "@/types/mitre.d"
+import type { MitreTechnique } from "@/types/mitre"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NCheckbox, NEmpty, NInput, NSpin, useMessage } from "naive-ui"

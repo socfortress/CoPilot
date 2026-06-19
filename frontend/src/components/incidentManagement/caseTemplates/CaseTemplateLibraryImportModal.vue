@@ -107,7 +107,7 @@
 <script setup lang="ts">
 import type { AxiosError } from "axios"
 import type { ApiError } from "@/types/common"
-import type { CaseTemplate, CaseTemplateLibraryEntry } from "@/types/incidentManagement/caseTemplates.d"
+import type { CaseTemplate, CaseTemplateLibraryEntry } from "@/types/incidentManagement/caseTemplates"
 import { NAlert, NButton, NModal, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"

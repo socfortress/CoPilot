@@ -1,5 +1,5 @@
 import type { Component } from "vue"
-import type { ApiError, OsTypesFull, SafeAny } from "@/types/common.d"
+import type { ApiError, OsTypesFull, SafeAny } from "@/types/common"
 import { isMobile as detectMobile } from "detect-touch-device"
 import { md5 } from "js-md5"
 import isDateObject from "lodash/isDate"

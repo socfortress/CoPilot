@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ShuffleIntegration } from "@/types/notifications.d"
+import type { ShuffleIntegration } from "@/types/notifications"
 import { NAlert, NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"

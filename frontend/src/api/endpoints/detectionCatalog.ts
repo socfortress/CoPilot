@@ -14,8 +14,8 @@ import type {
 	CatalogStoryListResponse,
 	CatalogWazuhRuleDetailResponse,
 	CatalogWazuhRulesResponse
-} from "@/types/detectionCatalog.d"
-import type { FlaskBaseResponse } from "@/types/flask.d"
+} from "@/types/detectionCatalog"
+import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../httpClient"
 
 export default {

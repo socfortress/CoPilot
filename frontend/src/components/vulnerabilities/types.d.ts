@@ -1,4 +1,4 @@
-import type { VulnerabilitySearchQuery } from "@/types/vulnerabilities.d"
+import type { VulnerabilitySearchQuery } from "@/types/vulnerabilities"
 
 export type VulnerabilitiesFilterTypes = keyof Omit<VulnerabilitySearchQuery, "page" | "page_size" | "include_epss">
 

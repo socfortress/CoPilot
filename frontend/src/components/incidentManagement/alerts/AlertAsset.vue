@@ -196,7 +196,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts.d"
+import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts"
 import _truncate from "lodash/truncate"
 import { NCard, NDivider, NEmpty, NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, watch } from "vue"

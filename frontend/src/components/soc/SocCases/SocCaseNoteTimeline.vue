@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SocNote } from "@/types/soc/note.d"
+import type { SocNote } from "@/types/soc/note"
 import { NTimeline, NTimelineItem } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import { useSettingsStore } from "@/stores/settings"

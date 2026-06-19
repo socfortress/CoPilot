@@ -217,7 +217,7 @@
 
 <script setup lang="ts">
 import type { SocAlertField } from "./type.d"
-import type { Alert } from "@/types/alerts.d"
+import type { Alert } from "@/types/alerts"
 import _pick from "lodash/pick"
 import { NInput, NModal, NPopover, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, inject, ref, toRefs } from "vue"

@@ -6,7 +6,7 @@ import type {
 	PatchTuesdaySearchQuery,
 	PatchTuesdaySummaryQuery,
 	PatchTuesdaySummaryResponse
-} from "@/types/patchTuesday.d"
+} from "@/types/patchTuesday"
 import { HttpClient } from "../httpClient"
 
 const BASE_PATH = "/patch-tuesday"

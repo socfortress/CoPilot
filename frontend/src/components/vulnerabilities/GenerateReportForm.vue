@@ -53,10 +53,10 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { FormInst, FormRules } from "naive-ui"
-import type { VulnerabilityReportGenerateRequest } from "@/types/vulnerabilities.d"
+import type { VulnerabilityReportGenerateRequest } from "@/types/vulnerabilities"
 import { NButton, NDivider, NForm, NFormItem, NInput, NSelect, NSwitch } from "naive-ui"
 import { ref } from "vue"
-import { VulnerabilitySeverity } from "@/types/vulnerabilities.d"
+import { VulnerabilitySeverity } from "@/types/vulnerabilities"
 
 interface Props {
 	customers: Array<{ label: string; value: string }>

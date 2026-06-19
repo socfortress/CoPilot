@@ -1,4 +1,4 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	HostsResponse,
 	MetricsCpuData,
@@ -9,7 +9,7 @@ import type {
 	MetricsProcessesData,
 	MetricsResponse,
 	MetricsSummaryData
-} from "@/types/metrics.d"
+} from "@/types/metrics"
 import { HttpClient } from "../httpClient"
 
 export default {

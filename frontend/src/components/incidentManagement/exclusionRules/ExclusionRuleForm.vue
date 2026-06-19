@@ -106,7 +106,7 @@
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { ExclusionRulePayload } from "@/api/endpoints/incidentManagement/exclusionRules"
 import type { ApiError } from "@/types/common"
-import type { Customer } from "@/types/customers.d"
+import type { Customer } from "@/types/customers"
 import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules"
 import _get from "lodash/get"
 import _trim from "lodash/trim"

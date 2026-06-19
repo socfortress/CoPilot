@@ -158,7 +158,7 @@
 import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
 import type { CustomProvisionPayload } from "@/api/endpoints/monitoringAlerts"
 import type { ApiError } from "@/types/common"
-import type { Stream } from "@/types/graylog/stream.d"
+import type { Stream } from "@/types/graylog/stream"
 import _get from "lodash/get"
 import _toSafeInteger from "lodash/toSafeInteger"
 import _trim from "lodash/trim"
@@ -166,7 +166,7 @@ import { NButton, NCard, NForm, NFormItem, NInput, NInputNumber, NSelect, NSpin,
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { CustomProvisionPriority } from "@/types/monitoringAlerts.d"
+import { CustomProvisionPriority } from "@/types/monitoringAlerts"
 import { getApiErrorMessage } from "@/utils"
 
 interface CustomProvisionForm {

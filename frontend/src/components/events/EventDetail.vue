@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import type { EventSearchResult } from "@/types/events.d"
+import type { EventSearchResult } from "@/types/events"
 import { NButton, NEmpty, NTooltip } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"

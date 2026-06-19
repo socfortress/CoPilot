@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { GitHubAuditConfig } from "@/types/githubAudit.d"
+import type { GitHubAuditConfig } from "@/types/githubAudit"
 import { NButton, NTag, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"

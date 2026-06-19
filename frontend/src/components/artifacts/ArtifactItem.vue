@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Artifact } from "@/types/artifacts.d"
+import type { Artifact } from "@/types/artifacts"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 
 const { artifact } = defineProps<{ artifact: Artifact }>()

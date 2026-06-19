@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import type { NotificationRoute } from "@/types/notifications.d"
+import type { NotificationRoute } from "@/types/notifications"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"

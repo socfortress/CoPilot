@@ -144,7 +144,7 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
-import type { RuleSummary } from "@/types/copilotSearches.d"
+import type { RuleSummary } from "@/types/copilotSearches"
 import { NButton, NCheckbox, NModal, NTag, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"

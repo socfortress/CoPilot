@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SocAlert } from "@/types/soc/alert.d"
+import type { SocAlert } from "@/types/soc/alert"
 import axios from "axios"
 import { NModal, NSpin, NTooltip, useMessage } from "naive-ui"
 import { onBeforeMount, onBeforeUnmount, ref } from "vue"

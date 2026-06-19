@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreTechniqueDetails } from "@/types/mitre.d"
+import type { MitreTechniqueDetails } from "@/types/mitre"
 import { NEmpty, NPagination } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import TechniqueCard from "./TechniqueCard.vue"

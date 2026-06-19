@@ -238,7 +238,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreEventDetails } from "@/types/mitre.d"
+import type { MitreEventDetails } from "@/types/mitre"
 import _pick from "lodash/pick"
 import { NModal, NPopover, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref, toRefs } from "vue"

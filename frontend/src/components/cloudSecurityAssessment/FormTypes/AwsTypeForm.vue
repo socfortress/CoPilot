@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
-import type { ScoutSuiteAwsReportPayload } from "@/types/cloudSecurityAssessment.d"
+import type { ScoutSuiteAwsReportPayload } from "@/types/cloudSecurityAssessment"
 import { NForm, NFormItem, NInput } from "naive-ui"
 import { computed, ref, watch } from "vue"
 

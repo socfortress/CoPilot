@@ -90,7 +90,7 @@
 <script setup lang="ts">
 import type { CancelSubscriptionPayload } from "@/api/endpoints/license"
 import type { ApiError } from "@/types/common"
-import type { License, SubscriptionFeature } from "@/types/license.d"
+import type { License, SubscriptionFeature } from "@/types/license"
 import { NButton, NModal, NPopconfirm, NSpin, NTag, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import Api from "@/api"

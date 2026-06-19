@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SocAlert } from "@/types/soc/alert.d"
+import type { SocAlert } from "@/types/soc/alert"
 import { useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import Api from "@/api"

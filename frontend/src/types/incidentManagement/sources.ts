@@ -9,7 +9,10 @@ export interface SourceConfiguration {
 	ioc_field_names: string[]
 }
 
-export interface SourceConfigurationModel extends SourceConfiguration {
+export interface SourceConfigurationModel extends Omit<
+	SourceConfiguration,
+	"asset_name" | "timefield_name" | "alert_title_name" | "source"
+> {
 	index_name?: string | null
 	asset_name: string | null
 	asset_name_array?: string[]

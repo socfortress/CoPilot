@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import type { QuarantineResult } from "@/types/artifacts.d"
+import type { QuarantineResult } from "@/types/artifacts"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"

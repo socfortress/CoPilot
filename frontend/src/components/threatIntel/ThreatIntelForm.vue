@@ -74,7 +74,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { ThreatIntelResponse } from "@/types/threatIntel.d"
+import type { ThreatIntelResponse } from "@/types/threatIntel"
 import _trim from "lodash/trim"
 import { NButton, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"

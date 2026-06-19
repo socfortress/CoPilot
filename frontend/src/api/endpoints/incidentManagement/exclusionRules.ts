@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules"
 import { HttpClient } from "../../httpClient"
 
 export interface ExclusionRulesQuery {

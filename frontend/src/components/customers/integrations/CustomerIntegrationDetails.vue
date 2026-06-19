@@ -72,7 +72,7 @@
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { IntegrationAuthKeyPairs, UpdateIntegrationPayload } from "@/api/endpoints/integrations"
 import type { ApiError } from "@/types/common"
-import type { CustomerIntegration } from "@/types/integrations.d"
+import type { CustomerIntegration } from "@/types/integrations"
 import _uniqBy from "lodash/uniqBy"
 import { NButton, NCollapseTransition, NForm, NFormItem, NInput, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, ref } from "vue"

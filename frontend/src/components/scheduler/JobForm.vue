@@ -32,7 +32,7 @@
 import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
 import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
 import type { ApiError } from "@/types/common"
-import type { Job } from "@/types/scheduler.d"
+import type { Job } from "@/types/scheduler"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInputNumber, NSpin, useMessage } from "naive-ui"

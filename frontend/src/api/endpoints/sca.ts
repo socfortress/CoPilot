@@ -10,7 +10,7 @@ import type {
 	SCAReportGenerateResponse,
 	SCAReportListResponse,
 	ScaStatsResponse
-} from "@/types/sca.d"
+} from "@/types/sca"
 import { HttpClient } from "../httpClient"
 import { createSSEStream } from "../sseClient"
 

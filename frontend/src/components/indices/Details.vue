@@ -57,7 +57,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { IndexShard, IndexStats } from "@/types/indices.d"
+import type { IndexShard, IndexStats } from "@/types/indices"
 import { NCard, NScrollbar, NSelect, NSpin, NTable, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"

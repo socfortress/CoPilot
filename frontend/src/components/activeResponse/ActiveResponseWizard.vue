@@ -101,7 +101,7 @@
 
 <script setup lang="ts">
 import type { StepsProps } from "naive-ui"
-import type { SupportedActiveResponse } from "@/types/activeResponse.d"
+import type { SupportedActiveResponse } from "@/types/activeResponse"
 import type { ApiError, OsTypesLower } from "@/types/common"
 import { NButton, NEmpty, NScrollbar, NSpin, NStep, NSteps, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"

@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { SigmaQuery, SigmaRuleLevels, SigmaTimeInterval } from "@/types/sigma.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { SigmaQuery, SigmaRuleLevels, SigmaTimeInterval } from "@/types/sigma"
 import { HttpClient } from "../httpClient"
 
 export default {

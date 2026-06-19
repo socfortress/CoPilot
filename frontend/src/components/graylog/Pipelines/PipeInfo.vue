@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Pipeline } from "@/types/graylog/pipelines.d"
+import type { Pipeline } from "@/types/graylog/pipelines"
 import { NInput, NTabPane, NTabs } from "naive-ui"
 import { toRefs } from "vue"
 import { useSettingsStore } from "@/stores/settings"

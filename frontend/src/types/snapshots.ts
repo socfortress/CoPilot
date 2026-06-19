@@ -1,4 +1,4 @@
-import type { SafeAny } from "./common.d"
+import type { SafeAny } from "./common"
 
 export interface SnapshotRepository {
 	name: string

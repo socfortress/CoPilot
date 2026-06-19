@@ -83,7 +83,7 @@ import type {
 	MitreSubTechnique,
 	MitreTechnique,
 	RuleSummary
-} from "@/types/copilotSearches.d"
+} from "@/types/copilotSearches"
 import { NButton, NEmpty, NModal, NSpin, NTimeline, NTimelineItem, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"

@@ -1,4 +1,4 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	CaseEvent,
 	CaseTask,
@@ -12,7 +12,7 @@ import type {
 	CaseTemplateTaskCreatePayload,
 	CaseTemplateTaskUpdatePayload,
 	CaseTemplateUpdatePayload
-} from "@/types/incidentManagement/caseTemplates.d"
+} from "@/types/incidentManagement/caseTemplates"
 import { HttpClient } from "../../httpClient"
 
 // ---------------------------------------------------------------------------

@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { User } from "@/types/user.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { User } from "@/types/user"
 import { HttpClient } from "../httpClient"
 
 export default {

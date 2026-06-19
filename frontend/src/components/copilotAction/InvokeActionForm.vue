@@ -114,9 +114,9 @@
 
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
-import type { Agent } from "@/types/agents.d"
+import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
-import type { CopilotAction } from "@/types/copilotAction.d"
+import type { CopilotAction } from "@/types/copilotAction"
 import {
 	NAlert,
 	NButton,

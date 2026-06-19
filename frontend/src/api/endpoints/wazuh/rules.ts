@@ -1,6 +1,6 @@
-import type { AlertSourceContent, WazuhRuleExclude } from "@/types/alerts.d"
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { WazuhFileDetails, WazuhFileItem } from "@/types/wazuh/rules.d"
+import type { AlertSourceContent, WazuhRuleExclude } from "@/types/alerts"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { WazuhFileDetails, WazuhFileItem } from "@/types/wazuh/rules"
 import { HttpClient } from "../../httpClient"
 
 // Interface for rules query parameters

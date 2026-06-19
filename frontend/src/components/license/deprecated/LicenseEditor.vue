@@ -116,7 +116,7 @@ import type { FormInst, FormItemRule, FormRules, FormValidationError } from "nai
 /** @deprecated */
 import type { NewLicensePayload } from "@/api/endpoints/license"
 import type { ApiError } from "@/types/common"
-import type { LicenseKey } from "@/types/license.d"
+import type { LicenseKey } from "@/types/license"
 import { NButton, NForm, NFormItem, NInput, NInputNumber, NSpin, useMessage } from "naive-ui"
 import isEmail from "validator/es/lib/isEmail"
 import { computed, onBeforeMount, ref } from "vue"

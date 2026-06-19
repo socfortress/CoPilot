@@ -95,7 +95,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { License, LicenseFeatures } from "@/types/license.d"
+import type { License, LicenseFeatures } from "@/types/license"
 import _startCase from "lodash/startCase"
 import { NButton, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs } from "vue"

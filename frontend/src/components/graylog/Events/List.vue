@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import type { SelectMixedOption } from "naive-ui/es/select/src/interface"
 import type { ApiError } from "@/types/common"
-import type { EventDefinition } from "@/types/graylog/event-definition.d"
+import type { EventDefinition } from "@/types/graylog/event-definition"
 import { NButton, NEmpty, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"

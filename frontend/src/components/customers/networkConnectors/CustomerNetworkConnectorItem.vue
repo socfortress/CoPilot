@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
+import type { CustomerNetworkConnector } from "@/types/networkConnectors"
 import _uniqBy from "lodash/uniqBy"
 import { NButton, NModal } from "naive-ui"
 import { computed, ref, toRefs } from "vue"

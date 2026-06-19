@@ -203,7 +203,7 @@
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { SourceConfiguration, SourceConfigurationModel, SourceName } from "@/types/incidentManagement/sources.d"
+import type { SourceConfiguration, SourceConfigurationModel, SourceName } from "@/types/incidentManagement/sources"
 import _intersection from "lodash/intersection"
 import {
 	NAlert,

@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost } from "@/types/alerts.d"
+import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost } from "@/types/alerts"
 
 const { summary } = defineProps<{ summary: Partial<AlertsByHost & AlertsByRule & AlertsByRulePerHost> }>()
 </script>

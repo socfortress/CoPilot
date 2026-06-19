@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GitHubAuditReportSummary } from "@/types/githubAudit.d"
+import type { GitHubAuditReportSummary } from "@/types/githubAudit"
 import { computed } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

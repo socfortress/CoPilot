@@ -79,7 +79,7 @@
 import type { FormRules, FormValidationError } from "naive-ui"
 import type { ProvisionsMonitoringAlertParams } from "@/api/endpoints/monitoringAlerts"
 import type { ApiError } from "@/types/common"
-import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
+import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts"
 import { NButton, NForm, NFormItem, NInputNumber, NModal, NSpin, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"

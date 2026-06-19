@@ -95,7 +95,7 @@
 <script setup lang="ts">
 import type { ExclusionRulesQuery } from "@/api/endpoints/incidentManagement/exclusionRules"
 import type { ApiError } from "@/types/common"
-import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
+import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules"
 import { useResizeObserver } from "@vueuse/core"
 import { NBadge, NButton, NCheckbox, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"

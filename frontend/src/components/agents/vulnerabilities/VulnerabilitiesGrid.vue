@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import type { VulnerabilitySeverityType } from "@/api/endpoints/agents"
-import type { Agent, AgentVulnerabilities } from "@/types/agents.d"
+import type { Agent, AgentVulnerabilities } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import axios from "axios"
 import { saveAs } from "file-saver"

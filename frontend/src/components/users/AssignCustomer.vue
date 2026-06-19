@@ -54,8 +54,8 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
-import type { Customer } from "@/types/customers.d"
-import type { User } from "@/types/user.d"
+import type { Customer } from "@/types/customers"
+import type { User } from "@/types/user"
 import { NButton, NForm, NFormItem, NModal, NSelect, NTag, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"

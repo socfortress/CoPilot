@@ -1,4 +1,4 @@
-import type { SafeAny } from "@/types/common.d"
+import type { SafeAny } from "@/types/common"
 
 export interface Log {
 	event_type: LogEventType

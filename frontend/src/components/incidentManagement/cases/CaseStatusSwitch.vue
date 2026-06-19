@@ -46,8 +46,8 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { Case, CaseStatus } from "@/types/incidentManagement/cases.d"
-import type { CaseTask, CaseTaskStatus } from "@/types/incidentManagement/caseTemplates.d"
+import type { Case, CaseStatus } from "@/types/incidentManagement/cases"
+import type { CaseTask, CaseTaskStatus } from "@/types/incidentManagement/caseTemplates"
 import { NButton, NModal, NPopselect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"

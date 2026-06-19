@@ -1,4 +1,4 @@
-import type { Artifact } from "@/types/artifacts.d"
+import type { Artifact } from "@/types/artifacts"
 
 export const MOCK_ARTIFACTS_LIST: Artifact[] = [
 	{

@@ -173,7 +173,7 @@
 
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
-import type { CatalogStoryDetailResponse, CatalogStoryDetection } from "@/types/detectionCatalog.d"
+import type { CatalogStoryDetailResponse, CatalogStoryDetection } from "@/types/detectionCatalog"
 import { NButton, NDataTable, NModal, NSpin, NTag, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"

@@ -163,7 +163,7 @@
 <script setup lang="ts">
 import type { XMLEditorCtx, XMLError } from "@/components/common/XMLEditor.vue"
 import type { ApiError } from "@/types/common"
-import type { WazuhFileDetails, WazuhFileItem } from "@/types/wazuh/rules.d"
+import type { WazuhFileDetails, WazuhFileItem } from "@/types/wazuh/rules"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import _clone from "lodash/cloneDeep"

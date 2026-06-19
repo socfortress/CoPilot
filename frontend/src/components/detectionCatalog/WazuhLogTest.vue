@@ -179,7 +179,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { CatalogLogTestResponse } from "@/types/detectionCatalog.d"
+import type { CatalogLogTestResponse } from "@/types/detectionCatalog"
 import { useStorage } from "@vueuse/core"
 import {
 	NAlert,

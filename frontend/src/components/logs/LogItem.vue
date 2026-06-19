@@ -63,14 +63,14 @@
 
 <script setup lang="ts">
 // TODO-FE: refactor
-import type { Log } from "@/types/logs.d"
-import type { User } from "@/types/user.d"
+import type { Log } from "@/types/logs"
+import type { User } from "@/types/user"
 import { computed } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { LogEventType } from "@/types/logs.d"
+import { LogEventType } from "@/types/logs"
 import dayjs from "@/utils/dayjs"
 
 const { log, users } = defineProps<{ log: Log; users?: User[] }>()

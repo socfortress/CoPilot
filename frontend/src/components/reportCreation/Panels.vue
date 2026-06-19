@@ -199,7 +199,7 @@
 import type { PrintSettingsData } from "./PrintSettings.vue"
 import type { GenerateReportPayload, ReportTimeRange } from "@/api/endpoints/reporting"
 import type { ApiError } from "@/types/common"
-import type { Dashboard, Org, Panel } from "@/types/reporting.d"
+import type { Dashboard, Org, Panel } from "@/types/reporting"
 import { useStorage } from "@vueuse/core"
 import { saveAs } from "file-saver"
 import _kebabCase from "lodash/kebabCase"

@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreRuleIndexEntry } from "@/types/copilotSearches.d"
+import type { MitreRuleIndexEntry } from "@/types/copilotSearches"
 import { NPopover, NTag } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import RulePreviewList from "../RulePreviewList.vue"

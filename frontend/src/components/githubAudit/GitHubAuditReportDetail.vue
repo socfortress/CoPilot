@@ -156,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GitHubAuditReport } from "@/types/githubAudit.d"
+import type { GitHubAuditReport } from "@/types/githubAudit"
 import {
 	NAlert,
 	NButton,
@@ -172,7 +172,7 @@ import {
 } from "naive-ui"
 import { computed } from "vue"
 import Api from "@/api"
-import { AuditStatus, SeverityLevel } from "@/types/githubAudit.d"
+import { AuditStatus, SeverityLevel } from "@/types/githubAudit"
 import GitHubAuditGradeBadge from "./GitHubAuditGradeBadge.vue"
 
 const props = defineProps<{

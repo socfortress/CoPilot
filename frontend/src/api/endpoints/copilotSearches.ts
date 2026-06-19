@@ -18,8 +18,8 @@ import type {
 	RulesByIdsResponse,
 	RulesByMitreQuery,
 	RuleStatsResponse
-} from "@/types/copilotSearches.d"
-import type { FlaskBaseResponse } from "@/types/flask.d"
+} from "@/types/copilotSearches"
+import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../httpClient"
 
 export default {

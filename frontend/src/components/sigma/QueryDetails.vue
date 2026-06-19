@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SigmaQuery } from "@/types/sigma.d"
+import type { SigmaQuery } from "@/types/sigma"
 import { NTabPane, NTabs } from "naive-ui"
 import { defineAsyncComponent, toRefs } from "vue"
 

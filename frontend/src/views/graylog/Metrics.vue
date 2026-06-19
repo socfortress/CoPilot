@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { ThroughputMetric } from "@/types/graylog/metrics.d"
+import type { ThroughputMetric } from "@/types/graylog/metrics"
 import { useStorage } from "@vueuse/core"
 import { NButton, NSelect, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, onBeforeUnmount, ref, watch } from "vue"

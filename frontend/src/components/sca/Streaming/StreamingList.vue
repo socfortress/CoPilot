@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 import type { ScaStreamingFilters, ScaStreamingListFilter } from "./types.d"
-import type { AgentScaOverviewItem, ScaStreamComplete, ScaStreamProgress } from "@/types/sca.d"
+import type { AgentScaOverviewItem, ScaStreamComplete, ScaStreamProgress } from "@/types/sca"
 import { NAlert, useMessage } from "naive-ui"
 import { computed, onBeforeUnmount, reactive, ref } from "vue"
 import Api from "@/api"

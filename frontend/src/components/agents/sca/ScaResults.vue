@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Agent, AgentSca, ScaPolicyResult } from "@/types/agents.d"
+import type { Agent, AgentSca, ScaPolicyResult } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"

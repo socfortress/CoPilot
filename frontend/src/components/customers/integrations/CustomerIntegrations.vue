@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { CustomerIntegration } from "@/types/integrations.d"
+import type { CustomerIntegration } from "@/types/integrations"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

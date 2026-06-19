@@ -205,7 +205,7 @@
 
 <script setup lang="ts">
 import type { ItemProps } from "@/components/common/cards/CardStatsBars.vue"
-import type { Agent, BulkDeleteAgentsResponse, BulkDeleteFilterRequest } from "@/types/agents.d"
+import type { Agent, BulkDeleteAgentsResponse, BulkDeleteFilterRequest } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import {
 	NAlert,

@@ -144,7 +144,7 @@
 <script setup lang="ts">
 import type { TagProps } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { CatalogWazuhRuleDetailResponse } from "@/types/detectionCatalog.d"
+import type { CatalogWazuhRuleDetailResponse } from "@/types/detectionCatalog"
 import { NSpin, NTag, useMessage } from "naive-ui"
 import { computed, defineComponent, h, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"

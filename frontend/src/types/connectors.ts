@@ -13,7 +13,6 @@ export interface Connector {
 	connector_last_updated: string
 	connector_name: string
 	connector_password?: string
-	connector_supports?: string
 	connector_type: string
 	connector_url: string
 	connector_username?: string

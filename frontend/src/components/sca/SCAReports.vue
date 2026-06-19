@@ -75,7 +75,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import type { SCAReport, SCAReportGenerateRequest } from "@/types/sca.d"
+import type { SCAReport, SCAReportGenerateRequest } from "@/types/sca"
 import { saveAs } from "file-saver"
 import { NButton, NEmpty, NModal, NPagination, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"

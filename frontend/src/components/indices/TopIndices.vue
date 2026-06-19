@@ -12,7 +12,7 @@
 import type { PieSeriesOption } from "echarts/charts"
 import type { GridComponentOption, LegendComponentOption, TooltipComponentOption } from "echarts/components"
 import type { ComposeOption } from "echarts/core"
-import type { IndexStats } from "@/types/indices.d"
+import type { IndexStats } from "@/types/indices"
 import bytes from "bytes"
 import { PieChart } from "echarts/charts"
 import { GridComponent, LegendComponent, TooltipComponent } from "echarts/components"
@@ -29,7 +29,7 @@ import {
 	formatChartTooltipWithMarker
 } from "@/components/common/charts"
 import { useThemeStore } from "@/stores/theme"
-import { IndexHealth } from "@/types/indices.d"
+import { IndexHealth } from "@/types/indices"
 
 const props = defineProps<{
 	indices: IndexStats[] | null

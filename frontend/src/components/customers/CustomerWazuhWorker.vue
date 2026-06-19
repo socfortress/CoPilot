@@ -137,7 +137,7 @@
 
 <script setup lang="ts">
 import type { ApiError, SafeAny } from "@/types/common"
-import type { PortainerStack } from "@/types/portainer.d"
+import type { PortainerStack } from "@/types/portainer"
 import _castArray from "lodash/castArray"
 import _pick from "lodash/pick"
 import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
@@ -149,7 +149,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { PortainerStackStatus } from "@/types/portainer.d"
+import { PortainerStackStatus } from "@/types/portainer"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import "@/assets/scss/overrides/vuesjv-override.scss"

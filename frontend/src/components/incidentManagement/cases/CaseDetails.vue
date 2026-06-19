@@ -65,13 +65,13 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { Case, CaseComment } from "@/types/incidentManagement/cases.d"
+import type { Case, CaseComment } from "@/types/incidentManagement/cases"
 import _clone from "lodash/cloneDeep"
 import { NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import { useAuthStore } from "@/stores/auth"
-import { AuthUserRole } from "@/types/auth.d"
+import { AuthUserRole } from "@/types/auth"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{

@@ -5,7 +5,7 @@ import type {
 	VulnerabilityReportListResponse,
 	VulnerabilitySearchQuery,
 	VulnerabilitySearchResponse
-} from "@/types/vulnerabilities.d"
+} from "@/types/vulnerabilities"
 import { HttpClient } from "../httpClient"
 
 export default {

@@ -101,14 +101,14 @@
 </template>
 
 <script setup lang="ts">
-import type { Agent } from "@/types/agents.d"
+import type { Agent } from "@/types/agents"
 import { NButton, NCheckbox, NTag, NTooltip, useDialog, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { AgentStatus } from "@/types/agents.d"
+import { AgentStatus } from "@/types/agents"
 import { iconFromOs } from "@/utils"
 import dayjs from "@/utils/dayjs"
 import { handleDeleteAgent, toggleAgentCritical } from "./utils"

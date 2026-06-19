@@ -278,7 +278,7 @@
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError, StepsProps } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers.d"
+import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers"
 import _uniqBy from "lodash/uniqBy"
 import {
 	NButton,

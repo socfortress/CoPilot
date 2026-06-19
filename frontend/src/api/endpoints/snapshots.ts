@@ -11,7 +11,7 @@ import type {
 	SnapshotScheduleUpdate,
 	SnapshotStatusQuery,
 	SnapshotStatusResponse
-} from "@/types/snapshots.d"
+} from "@/types/snapshots"
 import { HttpClient } from "../httpClient"
 
 export default {

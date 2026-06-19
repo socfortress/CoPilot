@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ActiveResponseDetails, SupportedActiveResponse } from "@/types/activeResponse.d"
+import type { ActiveResponseDetails, SupportedActiveResponse } from "@/types/activeResponse"
 import type { ApiError } from "@/types/common"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"

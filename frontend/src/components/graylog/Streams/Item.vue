@@ -101,7 +101,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { Stream } from "@/types/graylog/stream.d"
+import type { Stream } from "@/types/graylog/stream"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"

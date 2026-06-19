@@ -1,4 +1,4 @@
-import { ScaComplianceLevel } from "@/types/sca.d"
+import { ScaComplianceLevel } from "@/types/sca"
 
 export function getComplianceLevel(score: number): ScaComplianceLevel {
 	if (score >= 90) return ScaComplianceLevel.Excellent

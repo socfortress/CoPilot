@@ -125,7 +125,7 @@
 <script setup lang="ts">
 import type { SelectOption } from "naive-ui"
 import type { BadgeColor } from "@/components/common/Badge.vue"
-import type { SnapshotInfo, SnapshotRepository } from "@/types/snapshots.d"
+import type { SnapshotInfo, SnapshotRepository } from "@/types/snapshots"
 import { NButton, NEmpty, NModal, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"

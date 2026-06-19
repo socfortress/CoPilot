@@ -55,8 +55,8 @@
 
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
-import type { EventSearchResult } from "@/types/events.d"
-import type { DisplayColumn, EventSource } from "@/types/eventSources.d"
+import type { EventSearchResult } from "@/types/events"
+import type { DisplayColumn, EventSource } from "@/types/eventSources"
 import { NButton, NDataTable, NEmpty, NTooltip } from "naive-ui"
 import { computed, h } from "vue"
 import Icon from "@/components/common/Icon.vue"

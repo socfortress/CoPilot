@@ -1,6 +1,6 @@
 import type { GlobalThemeOverrides, ThemeCommonVars } from "naive-ui"
 import type { BuiltInGlobalTheme } from "naive-ui/es/themes/interface"
-import type { Layout, RouterTransition } from "@/types/theme.d"
+import type { Layout, RouterTransition } from "@/types/theme"
 import { useWindowSize } from "@vueuse/core"
 import _get from "lodash/get"
 import _set from "lodash/set"
@@ -8,7 +8,7 @@ import { darkTheme, lightTheme } from "naive-ui"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import { watch } from "vue"
 import { getCssVars, getDefaultState, getThemeOverrides } from "@/theme"
-import { ThemeNameEnum } from "@/types/theme.d"
+import { ThemeNameEnum } from "@/types/theme"
 
 export const useThemeStore = defineStore("theme", {
 	state: () => getDefaultState(),

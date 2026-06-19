@@ -1,5 +1,5 @@
-import type { LoginPayload, RegisterPayload } from "@/types/auth.d"
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { LoginPayload, RegisterPayload } from "@/types/auth"
+import type { FlaskBaseResponse } from "@/types/flask"
 import jsonToFormData from "@ajoelp/json-to-formdata"
 import { HttpClient } from "../httpClient"
 

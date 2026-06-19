@@ -128,7 +128,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SigmaQuery } from "@/types/sigma.d"
+import type { SigmaQuery } from "@/types/sigma"
 import { useResizeObserver, useStorage } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"
 import _orderBy from "lodash/orderBy"

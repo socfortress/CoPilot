@@ -67,7 +67,7 @@
 // TODO-FE: refactor
 import type { MitreEventsQuery, MitreTechniquesAlertsQueryTimeRange } from "@/api/endpoints/wazuh/mitre"
 import type { ApiError } from "@/types/common"
-import type { MitreEventDetails } from "@/types/mitre.d"
+import type { MitreEventDetails } from "@/types/mitre"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"

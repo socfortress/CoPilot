@@ -71,7 +71,7 @@
 
 <script setup lang="ts">
 import type { AlertsSummaryQuery } from "@/api/endpoints/alerts"
-import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost } from "@/types/alerts.d"
+import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost } from "@/types/alerts"
 import type { ApiError } from "@/types/common"
 import axios from "axios"
 import { NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"

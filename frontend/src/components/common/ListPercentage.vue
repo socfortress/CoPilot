@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SafeAny } from "@/types/common.d"
+import type { SafeAny } from "@/types/common"
 import { NEmpty, NProgress } from "naive-ui"
 import { computed } from "vue"
 import { useThemeStore } from "@/stores/theme"

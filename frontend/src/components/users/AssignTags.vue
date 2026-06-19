@@ -44,7 +44,7 @@
 import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { AlertTag } from "@/types/tags"
-import type { User } from "@/types/user.d"
+import type { User } from "@/types/user"
 import { NButton, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"

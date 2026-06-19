@@ -32,7 +32,7 @@
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { IncidentNotificationPayload } from "@/api/endpoints/incidentManagement/notification"
 import type { ApiError } from "@/types/common"
-import type { IncidentNotification } from "@/types/incidentManagement/notifications.d"
+import type { IncidentNotification } from "@/types/incidentManagement/notifications"
 import { NButton, NForm, NFormItem, NInput, NSpin, NSwitch, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"

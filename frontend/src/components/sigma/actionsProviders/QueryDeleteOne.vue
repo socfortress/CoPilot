@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SigmaQuery } from "@/types/sigma.d"
+import type { SigmaQuery } from "@/types/sigma"
 import { NButton, NPopover, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import Api from "@/api"

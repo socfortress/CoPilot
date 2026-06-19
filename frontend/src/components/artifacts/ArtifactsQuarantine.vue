@@ -79,8 +79,8 @@
 
 <script setup lang="ts">
 import type { QuarantineRequest } from "@/api/endpoints/artifacts"
-import type { Agent } from "@/types/agents.d"
-import type { Artifact, QuarantineResult } from "@/types/artifacts.d"
+import type { Agent } from "@/types/agents"
+import type { Artifact, QuarantineResult } from "@/types/artifacts"
 import type { ApiError } from "@/types/common"
 import { NButton, NEmpty, NInput, NInputGroup, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs } from "vue"

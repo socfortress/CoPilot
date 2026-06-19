@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
-import type { Recommendation } from "@/types/artifacts.d"
+import type { Recommendation } from "@/types/artifacts"
 import type { ApiError, OsTypesFull } from "@/types/common"
 import _uniqBy from "lodash/uniqBy"
 import { NButton, NCard, NDivider, NEmpty, NModal, NSelect, NSpin, useMessage } from "naive-ui"

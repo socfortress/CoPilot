@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { AITrigger } from "@/types/incidentManagement/aiTriggers.d"
+import type { AITrigger } from "@/types/incidentManagement/aiTriggers"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"

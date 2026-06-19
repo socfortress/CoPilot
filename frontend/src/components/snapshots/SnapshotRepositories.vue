@@ -63,7 +63,7 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
-import type { SafeAny } from "@/types/common.d"
+import type { SafeAny } from "@/types/common"
 import type { SnapshotRepository } from "@/types/snapshots"
 import { NAlert, NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"

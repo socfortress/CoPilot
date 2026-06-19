@@ -147,7 +147,7 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { ExecuteSearchResponse, RuleDetail, RuleSummary } from "@/types/copilotSearches.d"
+import type { ExecuteSearchResponse, RuleDetail, RuleSummary } from "@/types/copilotSearches"
 import type { AlertAsset } from "@/types/incidentManagement/alerts"
 import {
 	NButton,

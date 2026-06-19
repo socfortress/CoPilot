@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { CustomerMeta } from "@/types/customers.d"
+import type { CustomerMeta } from "@/types/customers"
 import _get from "lodash/get"
 import _toSafeInteger from "lodash/toSafeInteger"
 import _trim from "lodash/trim"

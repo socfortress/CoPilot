@@ -4,8 +4,8 @@ import type {
 	ScoutSuiteGcpReportPayload,
 	ScoutSuiteReport,
 	ScoutSuiteReportPayload
-} from "@/types/cloudSecurityAssessment.d"
-import type { FlaskBaseResponse } from "@/types/flask.d"
+} from "@/types/cloudSecurityAssessment"
+import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../httpClient"
 
 export default {

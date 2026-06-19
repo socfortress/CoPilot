@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AiAnalystReport, AiAnalystReview } from "@/types/aiAnalyst.d"
+import type { AiAnalystReport, AiAnalystReview } from "@/types/aiAnalyst"
 import { NButton, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"

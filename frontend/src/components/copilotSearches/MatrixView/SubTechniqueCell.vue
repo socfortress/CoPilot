@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreRuleIndexEntry, MitreSubTechnique, MitreTactic, MitreTechnique } from "@/types/copilotSearches.d"
+import type { MitreRuleIndexEntry, MitreSubTechnique, MitreTactic, MitreTechnique } from "@/types/copilotSearches"
 import { coverageClass, subTechniqueCellTooltip } from "./matrixCoverage"
 import MatrixRuleCountPopover from "./MatrixRuleCountPopover.vue"
 

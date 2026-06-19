@@ -133,7 +133,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { CaseTemplateLibraryEntry } from "@/types/incidentManagement/caseTemplates.d"
+import type { CaseTemplateLibraryEntry } from "@/types/incidentManagement/caseTemplates"
 import { NAlert, NButton, NEmpty, NInput, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

@@ -1,4 +1,4 @@
-import type { MitreSubTechnique, MitreTechnique } from "@/types/copilotSearches.d"
+import type { MitreSubTechnique, MitreTechnique } from "@/types/copilotSearches"
 
 export const MATRIX_RULE_POPOVER = {
 	trigger: "hover" as const,

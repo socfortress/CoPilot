@@ -67,7 +67,7 @@
 <script setup lang="ts">
 import type { CustomerAgentsHealthcheckQuery } from "@/api/endpoints/customers"
 import type { ApiCommonResponse, ApiError } from "@/types/common"
-import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
+import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers"
 import { watchDebounced } from "@vueuse/core"
 import _get from "lodash/get"
 import { NCollapse, NCollapseItem, NEmpty, NInputGroup, NInputNumber, NSelect, NSpin, useMessage } from "naive-ui"

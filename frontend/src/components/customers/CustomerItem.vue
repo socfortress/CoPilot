@@ -290,7 +290,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { Customer, CustomerMeta } from "@/types/customers.d"
+import type { Customer, CustomerMeta } from "@/types/customers"
 import { NAvatar, NButton, NModal, NPopover, NScrollbar, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"

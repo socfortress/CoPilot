@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
-import type { NotificationDispatchLogEntry as DispatchLogEntry } from "@/types/notifications.d"
+import type { NotificationDispatchLogEntry as DispatchLogEntry } from "@/types/notifications"
 import { NButton, NDataTable, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, ref } from "vue"
 import Api from "@/api"

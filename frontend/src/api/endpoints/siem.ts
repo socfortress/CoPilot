@@ -4,10 +4,10 @@ import type {
 	EnableDashboardPayload,
 	EnabledDashboard,
 	PanelDataResponse
-} from "@/types/dashboards.d"
-import type { EventSearchResult, FieldMapping } from "@/types/events.d"
-import type { DisplayColumn, EventSource } from "@/types/eventSources.d"
-import type { FlaskBaseResponse } from "@/types/flask.d"
+} from "@/types/dashboards"
+import type { EventSearchResult, FieldMapping } from "@/types/events"
+import type { DisplayColumn, EventSource } from "@/types/eventSources"
+import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../httpClient"
 
 export interface EventSourceCreatePayload {

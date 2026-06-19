@@ -125,7 +125,7 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
-import type { SnapshotScheduleResponse } from "@/types/snapshots.d"
+import type { SnapshotScheduleResponse } from "@/types/snapshots"
 import { NButton, NPopconfirm, NSwitch } from "naive-ui"
 import { computed } from "vue"
 import Badge from "@/components/common/Badge.vue"

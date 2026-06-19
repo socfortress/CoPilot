@@ -80,8 +80,8 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SocAlert } from "@/types/soc/alert.d"
-import type { SocUser } from "@/types/soc/user.d"
+import type { SocAlert } from "@/types/soc/alert"
+import type { SocUser } from "@/types/soc/user"
 import { useResizeObserver } from "@vueuse/core"
 import { NBackTop, NButton, NDrawer, NDrawerContent, NSplit, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"

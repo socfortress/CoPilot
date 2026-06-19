@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { CollectResult, FlowResult } from "@/types/flow.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { CollectResult, FlowResult } from "@/types/flow"
 import { HttpClient } from "../httpClient"
 
 export default {

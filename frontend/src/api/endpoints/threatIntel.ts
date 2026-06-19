@@ -1,4 +1,4 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	AiAnalysisResponse,
 	AiVelociraptorArtifactRecommendationResponse,
@@ -10,7 +10,7 @@ import type {
 	VirusTotalAnalysis,
 	VirusTotalFileCheckResponse,
 	VirusTotalResponse
-} from "@/types/threatIntel.d"
+} from "@/types/threatIntel"
 import { HttpClient } from "../httpClient"
 
 export default {

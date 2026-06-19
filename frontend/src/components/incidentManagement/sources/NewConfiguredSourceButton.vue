@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SourceName } from "@/types/incidentManagement/sources.d"
+import type { SourceName } from "@/types/incidentManagement/sources"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"

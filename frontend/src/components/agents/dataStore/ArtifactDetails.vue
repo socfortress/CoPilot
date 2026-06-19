@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import type { BadgeProps } from "naive-ui"
-import type { AgentArtifactData } from "@/types/agents.d"
+import type { AgentArtifactData } from "@/types/agents"
 import bytes from "bytes"
 import { NBadge, NDescriptions, NDescriptionsItem } from "naive-ui"
 import { computed } from "vue"

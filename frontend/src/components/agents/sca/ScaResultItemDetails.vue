@@ -125,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ScaPolicyResult } from "@/types/agents.d"
+import type { ScaPolicyResult } from "@/types/agents"
 import _pick from "lodash/pick"
 import { NCard, NInput, NStatistic, NTabPane, NTabs } from "naive-ui"
 import { computed } from "vue"

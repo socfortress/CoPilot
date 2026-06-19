@@ -64,7 +64,7 @@
 // TODO-FE: refactor
 import type { ScaOverviewFilter, ScaOverviewFilterTypes } from "./types.d"
 import type { ApiError } from "@/types/common"
-import type { AgentScaOverviewItem, ScaOverviewQuery } from "@/types/sca.d"
+import type { AgentScaOverviewItem, ScaOverviewQuery } from "@/types/sca"
 import { useResizeObserver, useStorage, watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import _set from "lodash/set"

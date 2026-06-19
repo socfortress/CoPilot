@@ -1,4 +1,4 @@
-import type { Alert, AlertStatus } from "./alerts.d"
+import type { Alert, AlertStatus } from "./alerts"
 
 export interface Case {
 	id: number

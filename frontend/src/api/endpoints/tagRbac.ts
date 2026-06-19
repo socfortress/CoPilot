@@ -1,4 +1,4 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { FlaskBaseResponse } from "@/types/flask"
 import type { AlertTag, EffectiveAccessResponse, TagAccessSettings, TagAccessSettingsItem } from "@/types/tags"
 import { HttpClient } from "../httpClient"
 

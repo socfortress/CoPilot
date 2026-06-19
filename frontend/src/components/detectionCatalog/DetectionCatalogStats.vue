@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CatalogStatsResponse } from "@/types/detectionCatalog.d"
+import type { CatalogStatsResponse } from "@/types/detectionCatalog"
 import { NButton, NSpin } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

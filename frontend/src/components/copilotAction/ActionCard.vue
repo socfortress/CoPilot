@@ -92,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CopilotAction } from "@/types/copilotAction.d"
+import type { CopilotAction } from "@/types/copilotAction"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"

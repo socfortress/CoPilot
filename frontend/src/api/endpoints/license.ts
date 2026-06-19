@@ -1,4 +1,4 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	CheckoutPayload,
 	License,
@@ -6,7 +6,7 @@ import type {
 	LicenseFeatures,
 	LicenseKey,
 	SubscriptionFeature
-} from "@/types/license.d"
+} from "@/types/license"
 import { HttpClient } from "../httpClient"
 
 export interface NewLicensePayload {

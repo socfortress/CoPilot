@@ -73,12 +73,12 @@ import type {
 	ConnectorFormOptionKeys,
 	ConnectorFormOptions,
 	ConnectorRequestPayload
-} from "@/types/connectors.d"
+} from "@/types/connectors"
 import _pick from "lodash/pick"
 import { NAvatar, NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref, toRefs, watch } from "vue"
 import Api from "@/api"
-import { ConnectorFormType } from "@/types/connectors.d"
+import { ConnectorFormType } from "@/types/connectors"
 import CredentialsType from "./FormTypes/CredentialsType.vue"
 import FileType from "./FormTypes/FileType.vue"
 import HostType from "./FormTypes/HostType.vue"

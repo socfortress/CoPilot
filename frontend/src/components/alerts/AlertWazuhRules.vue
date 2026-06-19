@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import type { WazuhRuleExclude } from "@/types/alerts.d"
+import type { WazuhRuleExclude } from "@/types/alerts"
 import { NInput, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, toRefs } from "vue"
 

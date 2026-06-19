@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Pipeline } from "@/types/graylog/pipelines.d"
+import type { Pipeline } from "@/types/graylog/pipelines"
 import { NTooltip } from "naive-ui"
 import { computed, toRefs } from "vue"
 import Icon from "@/components/common/Icon.vue"

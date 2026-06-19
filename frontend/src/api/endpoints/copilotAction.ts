@@ -3,8 +3,8 @@ import type {
 	CopilotActionInvokeResponse,
 	CopilotActionListResponse,
 	InvokeCopilotActionRequest
-} from "@/types/copilotAction.d"
-import type { FlaskBaseResponse } from "@/types/flask.d"
+} from "@/types/copilotAction"
+import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../httpClient"
 
 export interface CopilotActionInventoryQuery {

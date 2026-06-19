@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import type { PipelineRule } from "@/types/graylog/pipelines.d"
+import type { PipelineRule } from "@/types/graylog/pipelines"
 import { NInput, NModal, NPopover, NTimeline, NTimelineItem } from "naive-ui"
 import { ref, toRefs } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

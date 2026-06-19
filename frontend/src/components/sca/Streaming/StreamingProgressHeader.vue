@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ScaStreamProgress } from "@/types/sca.d"
+import type { ScaStreamProgress } from "@/types/sca"
 import { NButton, NProgress } from "naive-ui"
 import { computed } from "vue"
 import Badge from "@/components/common/Badge.vue"

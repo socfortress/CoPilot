@@ -68,9 +68,9 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { Customer } from "@/types/customers.d"
-import type { EnabledDashboard } from "@/types/dashboards.d"
-import type { EventSource } from "@/types/eventSources.d"
+import type { Customer } from "@/types/customers"
+import type { EnabledDashboard } from "@/types/dashboards"
+import type { EventSource } from "@/types/eventSources"
 import { NAlert, NButton, NDrawer, NDrawerContent, NEmpty, NFormItem, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, useTemplateRef, watch } from "vue"
 import Api from "@/api"

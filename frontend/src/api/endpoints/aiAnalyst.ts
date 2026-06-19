@@ -12,8 +12,8 @@ import type {
 	ReplayPayload,
 	SearchPalaceLessonsQuery,
 	SubmitReviewPayload
-} from "@/types/aiAnalyst.d"
-import type { FlaskBaseResponse } from "@/types/flask.d"
+} from "@/types/aiAnalyst"
+import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../httpClient"
 
 export default {

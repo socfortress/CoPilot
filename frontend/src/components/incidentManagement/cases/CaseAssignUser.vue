@@ -15,7 +15,7 @@
 <script setup lang="ts">
 import type { Ref } from "vue"
 import type { ApiError } from "@/types/common"
-import type { Case } from "@/types/incidentManagement/cases.d"
+import type { Case } from "@/types/incidentManagement/cases"
 import { NPopselect, useMessage } from "naive-ui"
 import { computed, inject, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"

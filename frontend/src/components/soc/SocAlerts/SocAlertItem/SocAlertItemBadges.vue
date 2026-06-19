@@ -84,8 +84,8 @@
 </template>
 
 <script setup lang="ts">
-import type { SocAlert } from "@/types/soc/alert.d"
-import type { SocUser } from "@/types/soc/user.d"
+import type { SocAlert } from "@/types/soc/alert"
+import type { SocUser } from "@/types/soc/user"
 import { NSpin, NTooltip } from "naive-ui"
 import { computed, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"

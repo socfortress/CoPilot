@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { PortainerStack } from "@/types/portainer.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { PortainerStack } from "@/types/portainer"
 import { HttpClient } from "../httpClient"
 
 export default {

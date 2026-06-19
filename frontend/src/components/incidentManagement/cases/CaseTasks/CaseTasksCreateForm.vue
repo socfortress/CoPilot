@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { Alert } from "@/types/incidentManagement/alerts.d"
+import type { Alert } from "@/types/incidentManagement/alerts"
 import { NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"

@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import type { PatchTuesdayFilters as FiltersType, PatchTuesdayListFilter } from "./types"
-import type { PatchTuesdayItem, PatchTuesdaySummary } from "@/types/patchTuesday.d"
+import type { PatchTuesdayItem, PatchTuesdaySummary } from "@/types/patchTuesday"
 import { NDrawer, NDrawerContent, NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import patchTuesdayApi from "@/api/endpoints/patchTuesday"

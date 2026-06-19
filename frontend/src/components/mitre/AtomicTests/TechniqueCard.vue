@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreAtomicTest } from "@/types/mitre.d"
+import type { MitreAtomicTest } from "@/types/mitre"
 import { NModal } from "naive-ui"
 import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"

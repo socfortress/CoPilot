@@ -19,7 +19,7 @@
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
 import type { ApiCommonResponse, ApiError } from "@/types/common"
-import type { CustomerIntegration } from "@/types/integrations.d"
+import type { CustomerIntegration } from "@/types/integrations"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"

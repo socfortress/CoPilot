@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ScaPolicyResult } from "@/types/agents.d"
+import type { ScaPolicyResult } from "@/types/agents"
 import { NButton, NModal } from "naive-ui"
 import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"

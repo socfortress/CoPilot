@@ -77,8 +77,8 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { PlatformFilter, RuleSummary } from "@/types/copilotSearches.d"
-import type { AlertAsset } from "@/types/incidentManagement/alerts.d"
+import type { PlatformFilter, RuleSummary } from "@/types/copilotSearches"
+import type { AlertAsset } from "@/types/incidentManagement/alerts"
 import { NCard, NEmpty, NInput, NModal, NScrollbar, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"

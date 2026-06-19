@@ -1,4 +1,4 @@
-import type { AlertSourceContent } from "../alerts.d"
+import type { AlertSourceContent } from "../alerts"
 
 export interface SocAlert {
 	alert_classification_id: string | null
@@ -49,7 +49,7 @@ export interface AlertContext {
 	rule_mitre_id: string
 	rule_mitre_tactic: string
 	rule_mitre_technique: string
-	[key: string]: string | number | boolean
+	[key: string]: string | number | boolean | undefined
 }
 
 export enum AlertSource {

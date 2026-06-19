@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SocNote } from "@/types/soc/note.d"
+import type { SocNote } from "@/types/soc/note"
 import _omit from "lodash/omit"
 import { NInput, NModal, NPopover, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"

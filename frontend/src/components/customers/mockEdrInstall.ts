@@ -1,4 +1,4 @@
-import type { EDRInstallCommands } from "@/types/customers.d"
+import type { EDRInstallCommands } from "@/types/customers"
 
 const MOCK_REPO_URL = "https://artifacts.example.local"
 const MOCK_REPO_USERNAME = "socfortress"

@@ -26,9 +26,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Agent } from "@/types/agents.d"
+import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
-import type { FlowResult } from "@/types/flow.d"
+import type { FlowResult } from "@/types/flow"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { onBeforeMount, ref, toRefs } from "vue"

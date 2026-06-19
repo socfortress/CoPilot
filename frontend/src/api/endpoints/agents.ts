@@ -9,8 +9,8 @@ import type {
 	OutdatedVelociraptorAgents,
 	OutdatedWazuhAgents,
 	ScaPolicyResult
-} from "@/types/agents.d"
-import type { FlaskBaseResponse } from "@/types/flask.d"
+} from "@/types/agents"
+import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../httpClient"
 
 export interface AgentPayload {

@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import type { VersionCheckResponse } from "@/types/version.d"
+import type { VersionCheckResponse } from "@/types/version"
 import { useStorage } from "@vueuse/core"
 import { NAlert, NButton, NCard, NCollapseTransition, NScrollbar } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"

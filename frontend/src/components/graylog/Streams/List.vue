@@ -92,7 +92,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { Stream } from "@/types/graylog/stream.d"
+import type { Stream } from "@/types/graylog/stream"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NDivider, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"

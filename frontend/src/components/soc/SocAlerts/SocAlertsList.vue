@@ -91,8 +91,8 @@
 <script setup lang="ts">
 import type { AlertsFilter } from "@/api/endpoints/soc"
 import type { ApiError } from "@/types/common"
-import type { SocAlert } from "@/types/soc/alert.d"
-import type { SocUser } from "@/types/soc/user.d"
+import type { SocAlert } from "@/types/soc/alert"
+import type { SocUser } from "@/types/soc/user"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NEmpty, NInput, NPopover, NSpin, useDialog, useMessage } from "naive-ui"

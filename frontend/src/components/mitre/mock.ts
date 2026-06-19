@@ -1,4 +1,4 @@
-import type { MitreEventDetails, MitreTechniqueDetails } from "@/types/mitre.d"
+import type { MitreEventDetails, MitreTechniqueDetails } from "@/types/mitre"
 
 export const techniques = [
 	{

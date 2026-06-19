@@ -224,7 +224,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { Case } from "@/types/incidentManagement/cases.d"
+import type { Case } from "@/types/incidentManagement/cases"
 import _clone from "lodash/cloneDeep"
 import _truncate from "lodash/truncate"
 import { NButton, NCard, NCollapse, NCollapseItem, NEmpty, NModal, NSpin, useDialog, useMessage } from "naive-ui"

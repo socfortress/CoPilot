@@ -61,11 +61,7 @@
 <script setup lang="ts">
 import type { VulnerabilitiesListFilter } from "./types"
 import type { ApiError } from "@/types/common"
-import type {
-	VulnerabilitySearchItem,
-	VulnerabilitySearchQuery,
-	VulnerabilitySeverity
-} from "@/types/vulnerabilities.d"
+import type { VulnerabilitySearchItem, VulnerabilitySearchQuery, VulnerabilitySeverity } from "@/types/vulnerabilities"
 import { useResizeObserver, useStorage, watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NAlert, NBadge, NButton, NEmpty, NPagination, NSpin, useMessage } from "naive-ui"

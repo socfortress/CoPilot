@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import type { ItemProps } from "@/components/common/cards/CardStatsMulti.vue"
-import type { Agent } from "@/types/agents.d"
+import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import { NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
@@ -18,7 +18,7 @@ import Api from "@/api"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import CardStatsMulti from "@/components/common/cards/CardStatsMulti.vue"
 import { useNavigation } from "@/composables/useNavigation"
-import { AgentStatus } from "@/types/agents.d"
+import { AgentStatus } from "@/types/agents"
 import { getApiErrorMessage } from "@/utils"
 
 const AgentsIcon = "carbon:network-3"

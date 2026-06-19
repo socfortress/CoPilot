@@ -1,3 +1,5 @@
+import type { JWTPayload as JoseJWTPayload } from "jose"
+
 export interface RouteMetaAuth {
 	checkAuth?: boolean
 	authRedirect?: string
@@ -19,7 +21,7 @@ export enum AuthUserRole {
 
 export type RouteMetaAuthRole = AuthUserRole | RouteRole
 
-export interface JWTPayload extends jose.JWTPayload {
+export interface JWTPayload extends JoseJWTPayload {
 	scopes: JWTRole[]
 }
 

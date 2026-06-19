@@ -134,8 +134,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Agent } from "@/types/agents.d"
-import type { Artifact } from "@/types/artifacts.d"
+import type { Agent } from "@/types/agents"
+import type { Artifact } from "@/types/artifacts"
 import type { ApiError } from "@/types/common"
 import { NButton, NCard, NSpin, NTabPane, NTabs, NTag, NTooltip, useDialog, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, nextTick, onBeforeMount, ref } from "vue"
@@ -145,7 +145,7 @@ import { handleDeleteAgent, toggleAgentCritical } from "@/components/agents/util
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
-import { AgentStatus } from "@/types/agents.d"
+import { AgentStatus } from "@/types/agents"
 import { getApiErrorMessage } from "@/utils"
 
 const VulnerabilitiesGrid = defineAsyncComponent(

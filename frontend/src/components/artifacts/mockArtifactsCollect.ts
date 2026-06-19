@@ -1,4 +1,4 @@
-import type { ArtifactParameter, CollectResult } from "@/types/artifacts.d"
+import type { ArtifactParameter, CollectResult } from "@/types/artifacts"
 
 export const MOCK_SELECTED_ARTIFACT_PARAMETERS: ArtifactParameter[] = [
 	{

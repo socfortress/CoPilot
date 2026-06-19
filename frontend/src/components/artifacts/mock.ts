@@ -1,4 +1,4 @@
-import type { Artifact, CollectResult, CommandResult, QuarantineResult } from "@/types/artifacts.d"
+import type { Artifact, CollectResult, CommandResult, QuarantineResult } from "@/types/artifacts"
 
 export const collectResult: CollectResult[] = [
 	{

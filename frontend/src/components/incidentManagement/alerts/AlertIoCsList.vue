@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertIOC } from "@/types/incidentManagement/alerts.d"
+import type { AlertIOC } from "@/types/incidentManagement/alerts"
 import { NButton, NCollapseTransition, NEmpty } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"

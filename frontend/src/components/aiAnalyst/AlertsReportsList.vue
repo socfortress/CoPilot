@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertWithReport } from "@/types/aiAnalyst.d"
+import type { AlertWithReport } from "@/types/aiAnalyst"
 import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"

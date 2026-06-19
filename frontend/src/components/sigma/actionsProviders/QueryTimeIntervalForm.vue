@@ -44,7 +44,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
-import type { SigmaQuery, SigmaTimeInterval, SigmaTimeIntervalUnit } from "@/types/sigma.d"
+import type { SigmaQuery, SigmaTimeInterval, SigmaTimeIntervalUnit } from "@/types/sigma"
 import { NButton, NInputGroup, NInputNumber, NPopover, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"

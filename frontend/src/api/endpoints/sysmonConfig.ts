@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { ConfigContent, DeployConfigResponse, UploadConfigFileResponse } from "@/types/sysmonConfig.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { ConfigContent, DeployConfigResponse, UploadConfigFileResponse } from "@/types/sysmonConfig"
 import { HttpClient } from "../httpClient"
 
 export default {

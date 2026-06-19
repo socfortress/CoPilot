@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import type { PipelineFull } from "@/types/graylog/pipelines.d"
+import type { PipelineFull } from "@/types/graylog/pipelines"
 import { NButton, NDrawer, NDrawerContent, NModal } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"

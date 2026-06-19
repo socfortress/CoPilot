@@ -1,10 +1,10 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	WazuhGroup,
 	WazuhGroupConfigurationUpdate,
 	WazuhGroupFile,
 	WazuhGroupFileDetails
-} from "@/types/wazuh/groups.d"
+} from "@/types/wazuh/groups"
 import { HttpClient } from "../../httpClient"
 
 // Interface for groups query parameters

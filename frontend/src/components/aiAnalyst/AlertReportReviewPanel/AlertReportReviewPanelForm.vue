@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AiAnalystReport } from "@/types/aiAnalyst.d"
+import type { AiAnalystReport } from "@/types/aiAnalyst"
 import { NCard, NFormItem, NInput, NRadio, NRadioButton, NRadioGroup, NSlider } from "naive-ui"
 import { toRefs } from "vue"
 import Icon from "@/components/common/Icon.vue"

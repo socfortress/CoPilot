@@ -143,7 +143,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Case } from "@/types/incidentManagement/cases.d"
+import type { Case } from "@/types/incidentManagement/cases"
 import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import CardKV from "@/components/common/cards/CardKV.vue"

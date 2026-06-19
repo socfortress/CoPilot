@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ExampleQuestion } from "@/types/copilotMCP.d"
+import type { ExampleQuestion } from "@/types/copilotMCP"
 import { NTag } from "naive-ui"
 
 const { entity } = defineProps<{ entity: ExampleQuestion }>()

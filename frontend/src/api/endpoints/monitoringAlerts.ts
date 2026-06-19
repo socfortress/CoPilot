@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { AvailableMonitoringAlert, CustomProvisionPriority, MonitoringAlert } from "@/types/monitoringAlerts.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { AvailableMonitoringAlert, CustomProvisionPriority, MonitoringAlert } from "@/types/monitoringAlerts"
 import { HttpClient } from "../httpClient"
 
 export interface ProvisionsMonitoringAlertParams {

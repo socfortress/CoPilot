@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { Job } from "@/types/scheduler.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { Job } from "@/types/scheduler"
 import { HttpClient } from "../httpClient"
 
 export interface UpdateJobPayload {

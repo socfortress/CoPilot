@@ -25,8 +25,8 @@
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { EnabledDashboard } from "@/types/dashboards.d"
-import type { EventSource } from "@/types/eventSources.d"
+import type { EnabledDashboard } from "@/types/dashboards"
+import type { EventSource } from "@/types/eventSources"
 import { useElementSize } from "@vueuse/core"
 import { NButton, NDataTable, NEmpty, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, useTemplateRef, watch } from "vue"

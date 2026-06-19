@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { Alert } from "@/types/incidentManagement/alerts.d"
+import type { Alert } from "@/types/incidentManagement/alerts"
 import { NButton, NPopover, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, watch } from "vue"
 import Api from "@/api"

@@ -98,7 +98,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { NotificationRoute } from "@/types/notifications.d"
+import type { NotificationRoute } from "@/types/notifications"
 import _split from "lodash/split"
 import { NButton, NPopconfirm, useMessage } from "naive-ui"
 import { computed, ref } from "vue"

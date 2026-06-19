@@ -47,7 +47,7 @@
 import type { ButtonSize } from "naive-ui"
 import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
 import type { ApiError } from "@/types/common"
-import type { Job } from "@/types/scheduler.d"
+import type { Job } from "@/types/scheduler"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import Api from "@/api"

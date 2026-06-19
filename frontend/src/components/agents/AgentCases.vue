@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Agent } from "@/types/agents.d"
+import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import axios from "axios"
 import { NEmpty, NSpin, useMessage } from "naive-ui"

@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AiAnalystReport } from "@/types/aiAnalyst.d"
+import type { AiAnalystReport } from "@/types/aiAnalyst"
 import { NButton, NCollapseTransition, NEmpty } from "naive-ui"
 import { computed, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"

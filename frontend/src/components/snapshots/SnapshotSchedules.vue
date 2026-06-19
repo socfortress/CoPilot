@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SnapshotScheduleResponse } from "@/types/snapshots.d"
+import type { SnapshotScheduleResponse } from "@/types/snapshots"
 import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
