@@ -30,12 +30,14 @@
 
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { SocCase, SocCaseExt } from "@/types/soc/case.d"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { StateName } from "@/types/soc/case.d"
+import { getApiErrorMessage } from "@/utils"
 
 const { caseData, size } = defineProps<{
 	caseData: SocCase | SocCaseExt | null
@@ -87,7 +89,7 @@ function closeCase() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loadingCaseClose.value = false
@@ -110,7 +112,7 @@ function reopenCase() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loadingCaseReopen.value = false
@@ -148,7 +150,7 @@ function deleteCase() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				emit("deleted")

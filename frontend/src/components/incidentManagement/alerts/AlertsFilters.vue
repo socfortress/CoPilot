@@ -153,10 +153,10 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { Ref } from "vue"
 import type { AlertsListFilter } from "./types.d"
 import type { AlertsFilterTypes, AlertsListFilterValue } from "@/api/endpoints/incidentManagement/alerts"
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
 import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
 import type { SourceName } from "@/types/incidentManagement/sources.d"
@@ -167,6 +167,7 @@ import { computed, inject, onBeforeMount, onMounted, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const { useQueryString, preset } = defineProps<{ useQueryString?: boolean; preset?: AlertsListFilter[] }>()
 
@@ -302,7 +303,7 @@ function getAvailableUsers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAvailableUsers.value = false
@@ -322,7 +323,7 @@ function getCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCustomers.value = false
@@ -342,7 +343,7 @@ function getConfiguredSources() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingConfiguredSources.value = false

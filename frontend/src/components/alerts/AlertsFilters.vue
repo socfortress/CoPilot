@@ -56,7 +56,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { SelectOption } from "naive-ui"
 import type { VNodeChild } from "vue"
 import type { AlertsQueryTimeRange, AlertsSummaryQuery } from "@/api/endpoints/alerts"

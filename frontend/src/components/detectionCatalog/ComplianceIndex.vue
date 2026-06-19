@@ -75,6 +75,7 @@
 
 <script setup lang="tsx">
 import type { DataTableColumns, SelectOption } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type {
 	CatalogComplianceFramework,
 	CatalogComplianceGroupRow,
@@ -86,6 +87,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import ComplianceDetail from "./ComplianceDetail.vue"
 
 interface ComplianceStatTile {
@@ -275,9 +277,7 @@ function load() {
 			else message.warning(res.data?.message || "Failed to load compliance pivot")
 		})
 		.catch(err => {
-			message.error(
-				err.response?.data?.detail || err.response?.data?.message || "Failed to load compliance pivot"
-			)
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to load compliance pivot")
 		})
 		.finally(() => {
 			loading.value = false

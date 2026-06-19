@@ -181,6 +181,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { RuleDetail } from "@/types/copilotSearches.d"
 import _pick from "lodash/pick"
 import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
@@ -192,6 +193,7 @@ import CardKV from "@/components/common/cards/CardKV.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
 import PropsList from "@/components/common/PropsList.vue"
+import { getApiErrorMessage } from "@/utils"
 import ProvisionGraylogForm from "./ProvisionGraylogForm.vue"
 
 const props = defineProps<{
@@ -224,8 +226,8 @@ async function loadRule(ruleId: string) {
 		} else {
 			message.error(res.data?.message || "Failed to load rule details")
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to load rule details")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load rule details")
 	} finally {
 		loading.value = false
 	}

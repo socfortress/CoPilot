@@ -219,7 +219,7 @@ async function toggleEnabled() {
 		} else {
 			message.warning(res.data.message || "Failed to toggle integration")
 		}
-	} catch (err: unknown) {
+	} catch (err) {
 		message.error(getApiErrorMessage(err as never) || "Failed to toggle integration")
 	}
 }
@@ -236,7 +236,7 @@ async function confirmDelete() {
 		} else {
 			message.warning(res.data.message || "Failed to delete integration")
 		}
-	} catch (err: unknown) {
+	} catch (err) {
 		message.error(getApiErrorMessage(err as never) || "Failed to delete integration")
 	}
 }

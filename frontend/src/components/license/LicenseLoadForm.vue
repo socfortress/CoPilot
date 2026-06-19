@@ -13,11 +13,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { LicenseKey } from "@/types/license.d"
 import { NButton, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "uploaded"): void
@@ -48,7 +50,7 @@ function replaceLicense() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingReplace.value = false

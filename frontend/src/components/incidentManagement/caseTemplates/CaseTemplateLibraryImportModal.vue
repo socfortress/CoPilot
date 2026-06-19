@@ -105,12 +105,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { CaseTemplate, CaseTemplateLibraryEntry } from "@/types/incidentManagement/caseTemplates.d"
 import { NAlert, NButton, NModal, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	entry: CaseTemplateLibraryEntry | null
@@ -139,11 +141,10 @@ async function submit() {
 		} else {
 			message.warning(res.data?.message || "Failed to import library entry")
 		}
-	} catch (err: any) {
+	} catch (err) {
 		// Backend returns HTTP 409 on name collision with a useful detail message.
 		const status = err.response?.status
-		const detail =
-			err.response?.data?.detail || err.response?.data?.message || err.message || "Failed to import library entry"
+		const detail = getApiErrorMessage(err as ApiError) || "Failed to import library entry"
 		if (status === 409) {
 			message.warning(detail)
 		} else {

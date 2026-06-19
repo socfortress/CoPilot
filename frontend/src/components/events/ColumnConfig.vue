@@ -114,12 +114,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { FieldMapping } from "@/types/events.d"
 import type { DisplayColumn, EventSource } from "@/types/eventSources.d"
 import { NButton, NCard, NEmpty, NInput, NScrollbar, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	open: boolean
@@ -222,7 +224,7 @@ function onSave() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "Failed to save columns")
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to save columns")
 		})
 		.finally(() => {
 			saving.value = false

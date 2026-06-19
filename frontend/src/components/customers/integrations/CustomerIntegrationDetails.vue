@@ -71,6 +71,7 @@
 <script setup lang="ts">
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { IntegrationAuthKeyPairs, UpdateIntegrationPayload } from "@/api/endpoints/integrations"
+import type { ApiError } from "@/types/common"
 import type { CustomerIntegration } from "@/types/integrations.d"
 import _uniqBy from "lodash/uniqBy"
 import { NButton, NCollapseTransition, NForm, NFormItem, NInput, NSpin, useDialog, useMessage } from "naive-ui"
@@ -78,6 +79,7 @@ import { computed, ref } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import { handleDeleteIntegration } from "./utils"
 
 const props = defineProps<{
@@ -236,7 +238,7 @@ function updateIntegration() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			updating.value = false

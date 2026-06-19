@@ -73,12 +73,13 @@
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
 import type { Recommendation } from "@/types/artifacts.d"
-import type { OsTypesFull } from "@/types/common.d"
+import type { ApiError, OsTypesFull } from "@/types/common"
 import _uniqBy from "lodash/uniqBy"
 import { NButton, NCard, NDivider, NEmpty, NModal, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 interface RecommendationStore {
 	os: OsTypesFull
@@ -131,7 +132,7 @@ function getRecommendations() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loading.value = false

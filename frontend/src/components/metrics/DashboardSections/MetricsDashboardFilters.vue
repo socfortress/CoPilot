@@ -84,7 +84,7 @@ async function loadHosts() {
 		} else {
 			message.warning(res.data.message || "Failed to load hosts")
 		}
-	} catch (err: unknown) {
+	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError) || "Failed to load hosts")
 	} finally {
 		hostsLoading.value = false

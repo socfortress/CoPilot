@@ -72,11 +72,13 @@
 
 <script setup lang="ts">
 import type { EventSearchFiltersLoad, EventSearchFiltersParams } from "./EventSearchFilters.vue"
+import type { ApiError } from "@/types/common"
 import type { EventSearchResult, FieldMapping } from "@/types/events.d"
 import type { DisplayColumn } from "@/types/eventSources.d"
 import { NButton, NDrawer, NDrawerContent, NModal, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import ColumnConfig from "./ColumnConfig.vue"
 import EventDetail from "./EventDetail.vue"
 import EventSearchFilters from "./EventSearchFilters.vue"
@@ -157,7 +159,7 @@ function searchEvents() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingEvents.value = false
@@ -183,7 +185,7 @@ function loadMoreEvents() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingMore.value = false

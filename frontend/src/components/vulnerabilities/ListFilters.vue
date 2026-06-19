@@ -122,6 +122,7 @@
 <script setup lang="ts">
 import type { VulnerabilitiesFilterTypes, VulnerabilitiesListFilter } from "./types.d"
 import type { Agent } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
@@ -130,6 +131,7 @@ import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { VulnerabilitySeverity } from "@/types/vulnerabilities.d"
+import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "submit", value: VulnerabilitiesListFilter[]): void
@@ -238,7 +240,7 @@ function getAgents() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "Failed to load agents.")
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to load agents.")
 		})
 		.finally(() => {
 			loadingAgents.value = false
@@ -258,7 +260,7 @@ function getCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCustomers.value = false

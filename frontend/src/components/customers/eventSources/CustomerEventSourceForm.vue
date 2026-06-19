@@ -36,10 +36,12 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { EventSource } from "@/types/eventSources.d"
 import { NButton, NFormItem, NInput, NSelect, NSwitch, useMessage } from "naive-ui"
 import { computed, reactive, ref } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	customerCode: string
@@ -98,7 +100,7 @@ function submit() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loading.value = false
@@ -122,7 +124,7 @@ function submit() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loading.value = false

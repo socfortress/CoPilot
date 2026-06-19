@@ -64,13 +64,14 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
+import type { ApiError } from "@/types/common"
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
 import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import CustomAlertButton from "./CustomAlertButton.vue"
 import MonitoringAlert from "./Item.vue"
 
@@ -132,7 +133,7 @@ function getData() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAlerts.value = false
@@ -152,7 +153,7 @@ function getEvents() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingEvents.value = false

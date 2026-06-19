@@ -57,11 +57,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { MitreTechniqueDetails } from "@/types/mitre.d"
 import { NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import TechniqueCardContent from "../AtomicTests/TechniqueCardContent.vue"
 import GroupsList from "../Group/GroupsList.vue"
 import MitigationsList from "../Mitigation/MitigationsList.vue"
@@ -93,7 +95,7 @@ function getDetails(id: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingDetails.value = false

@@ -79,6 +79,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
 import { useResizeObserver } from "@vueuse/core"
@@ -86,6 +87,7 @@ import { NBackTop, NButton, NDrawer, NDrawerContent, NSplit, useMessage } from "
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import SocAlertsBookmarks from "./SocAlertsBookmarks.vue"
 import SocAlertsList from "./SocAlertsList.vue"
 
@@ -133,7 +135,7 @@ function getUsers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 }
 

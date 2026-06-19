@@ -288,7 +288,7 @@ async function load() {
 			message.warning(res.data.message || "Failed to build consolidation")
 			data.value = null
 		}
-	} catch (err: unknown) {
+	} catch (err) {
 		message.error(getApiErrorMessage(err as never) || "Failed to build consolidation")
 		data.value = null
 	} finally {

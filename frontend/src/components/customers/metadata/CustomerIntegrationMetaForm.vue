@@ -46,11 +46,13 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { UpdateMetaAutoRequest } from "@/api/endpoints/integrations"
+import type { ApiError } from "@/types/common"
 import type { CustomerIntegrationMetaNetwork, CustomerIntegrationMetaThirdParty } from "@/types/integrations.d"
 import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import { getMetaFieldLabel } from "./utils"
 
 const { integrationData, showResetButton } = defineProps<{
@@ -138,8 +140,7 @@ function save() {
 				}
 			})
 			.catch(err => {
-				const errorMsg = err.response?.data?.message || "An error occurred while updating metadata"
-				message.error(errorMsg)
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred while updating metadata")
 			})
 			.finally(() => {
 				loading.value = false

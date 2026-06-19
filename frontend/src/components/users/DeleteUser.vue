@@ -9,11 +9,13 @@
 
 <script setup lang="ts">
 import type { ButtonSize, ButtonType } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { User } from "@/types/user"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const {
 	type = "error",
@@ -51,7 +53,7 @@ function deleteCustomer() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

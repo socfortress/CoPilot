@@ -1,8 +1,10 @@
 import type { DialogApiInjection } from "naive-ui/es/dialog/src/DialogProvider"
 import type { MessageApiInjection } from "naive-ui/es/message/src/MessageProvider"
+import type { ApiError } from "@/types/common"
 import type { CustomerIntegration } from "@/types/integrations.d"
 import { h } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 export interface DeleteIntegrationParams {
 	integration: CustomerIntegration
@@ -71,9 +73,9 @@ export function deleteIntegration({
 		})
 		.catch(err => {
 			if (err.response?.status === 401) {
-				message.error(err.response?.data?.message || "Agent Delete returned Unauthorized.")
+				message.error(getApiErrorMessage(err as ApiError) || "Agent Delete returned Unauthorized.")
 			} else {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 
 			if (cbError && typeof cbError === "function") {

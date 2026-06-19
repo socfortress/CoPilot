@@ -56,12 +56,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { CustomerIntegrationMetaNetwork, CustomerIntegrationMetaThirdParty } from "@/types/integrations.d"
 import { NButton, NCollapseTransition, NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import CustomerIntegrationMetaForm from "./CustomerIntegrationMetaForm.vue"
 import { getMetaFieldLabel } from "./utils"
 
@@ -112,8 +114,7 @@ function loadMetaData() {
 			}
 		})
 		.catch(err => {
-			const errorMsg = err.response?.data?.message || "An error occurred while loading metadata"
-			message.error(errorMsg)
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred while loading metadata")
 			integrationData.value = null
 		})
 		.finally(() => {

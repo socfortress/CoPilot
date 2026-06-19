@@ -232,6 +232,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { SocCase, SocCaseExt } from "@/types/soc/case.d"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
@@ -258,6 +259,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { StateName } from "@/types/soc/case.d"
+import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 
 const { caseData, caseId, embedded, hideSocCaseAction, hideSocAlertLink } = defineProps<{
@@ -414,7 +416,7 @@ function getDetails() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loadingDetails.value = false

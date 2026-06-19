@@ -80,11 +80,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { ScaPolicyItem } from "@/types/sca.d"
 import { NAlert, NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import ListToolbar from "./ListToolbar.vue"
 import PolicyCard from "./PolicyCard.vue"
 
@@ -154,8 +156,8 @@ async function loadPolicies() {
 		} else {
 			message.warning(res.data?.message || "Failed to load SCA policies")
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to load SCA policies")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load SCA policies")
 	} finally {
 		loading.value = false
 	}

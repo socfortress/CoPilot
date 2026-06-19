@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
+import type { ApiError } from "@/types/common"
 import type { PipelineFull } from "@/types/graylog/pipelines.d"
 import { NButton, NCard, NCollapse, NCollapseItem, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
@@ -55,6 +55,7 @@ import Icon from "@/components/common/Icon.vue"
 import PipeDetails from "@/components/graylog/Pipelines/PipeDetails.vue"
 import PipeInfo from "@/components/graylog/Pipelines/PipeInfo.vue"
 import PipeTitle from "@/components/graylog/Pipelines/PipeTitle.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "openRule", value: string): void
@@ -96,7 +97,7 @@ function getPipelines() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

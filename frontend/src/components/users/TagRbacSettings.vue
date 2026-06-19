@@ -121,6 +121,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { AlertTag } from "@/types/tags"
 import {
@@ -138,6 +139,7 @@ import {
 } from "naive-ui"
 import { computed, onBeforeMount, reactive, ref, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 interface TagAccessSettings {
 	enabled: boolean
@@ -239,7 +241,7 @@ async function saveSettings() {
 		}
 	} catch (error: any) {
 		console.error("Failed to save settings:", error)
-		message.error(error.response?.data?.message || "Failed to save settings")
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to save settings")
 	} finally {
 		saving.value = false
 	}

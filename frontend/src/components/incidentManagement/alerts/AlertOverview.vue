@@ -169,6 +169,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, toRefs } from "vue"
@@ -176,6 +177,7 @@ import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
+import { getApiErrorMessage } from "@/utils"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import AlertAssignUser from "./AlertAssignUser.vue"
@@ -246,7 +248,7 @@ function handleInvestigate() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "Failed to trigger investigation")
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to trigger investigation")
 		})
 		.finally(() => {
 			investigating.value = false

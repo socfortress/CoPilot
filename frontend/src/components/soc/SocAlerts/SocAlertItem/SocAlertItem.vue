@@ -108,6 +108,7 @@
 
 <script setup lang="ts">
 import type { Alert } from "@/types/alerts.d"
+import type { ApiError } from "@/types/common"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
 import { NCheckbox, NCollapse, NCollapseItem, NCollapseTransition, NModal, useMessage } from "naive-ui"
@@ -115,6 +116,7 @@ import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } fro
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import SocAlertItemActions from "./SocAlertItemActions.vue"
 import SocAlertItemBookmarkToggler from "./SocAlertItemBookmarkToggler.vue"
 import SocAlertItemTime from "./SocAlertItemTime.vue"
@@ -196,7 +198,7 @@ function getAlert(id: string | number, cb?: () => void) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingData.value = false

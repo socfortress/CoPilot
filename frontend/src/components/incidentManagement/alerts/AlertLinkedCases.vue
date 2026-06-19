@@ -32,12 +32,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import { NButton, NPopover, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{ alert: Alert }>()
 
@@ -82,7 +84,7 @@ function unlink(caseId: number) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingId.value = false

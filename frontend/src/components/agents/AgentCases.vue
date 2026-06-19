@@ -27,11 +27,13 @@
 
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import axios from "axios"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, onBeforeUnmount, ref, toRefs } from "vue"
 import Api from "@/api"
 import SocCaseItem from "@/components/soc/SocCases/SocCaseItem.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	agent: Agent
@@ -59,7 +61,7 @@ function getData() {
 		})
 		.catch(err => {
 			if (!axios.isCancel(err)) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {

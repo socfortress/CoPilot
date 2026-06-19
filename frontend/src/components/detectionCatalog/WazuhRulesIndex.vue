@@ -148,6 +148,7 @@
 
 <script setup lang="tsx">
 import type { DataTableColumns, SelectOption, TagProps } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { CatalogWazuhRuleRow } from "@/types/detectionCatalog.d"
 import {
 	NAlert,
@@ -165,6 +166,7 @@ import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import WazuhLogTest from "./WazuhLogTest.vue"
 import WazuhRuleDetail from "./WazuhRuleDetail.vue"
 
@@ -427,7 +429,7 @@ function load(isCustomerChange = false) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.detail || err.response?.data?.message || "Failed to load Wazuh rules")
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to load Wazuh rules")
 		})
 		.finally(() => {
 			loading.value = false

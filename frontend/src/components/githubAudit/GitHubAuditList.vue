@@ -123,11 +123,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { GitHubAuditConfig } from "@/types/githubAudit.d"
 import { NButton, NDrawer, NDrawerContent, NEmpty, NInput, NSelect, NSpin, NTag, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import GitHubAuditCard from "./GitHubAuditCard.vue"
 import GitHubAuditConfigForm from "./GitHubAuditConfigForm.vue"
 import GitHubAuditDetail from "./GitHubAuditDetail.vue"
@@ -200,7 +202,7 @@ async function loadConfigs() {
 			configs.value = filteredConfigs
 		}
 	} catch (error: any) {
-		message.error(error.response?.data?.detail || "Failed to load configurations")
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to load configurations")
 		configs.value = []
 	} finally {
 		loading.value = false

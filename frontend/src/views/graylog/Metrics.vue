@@ -39,6 +39,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { ThroughputMetric } from "@/types/graylog/metrics.d"
 import { useStorage } from "@vueuse/core"
 import { NButton, NSelect, useMessage } from "naive-ui"
@@ -48,6 +49,7 @@ import Icon from "@/components/common/Icon.vue"
 import MetricsList from "@/components/graylog/Metrics/List.vue"
 import UncommittedEntries from "@/components/graylog/Metrics/UncommittedEntries.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const UpdatedIcon = "carbon:update-now"
@@ -104,7 +106,7 @@ function getData() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

@@ -115,12 +115,14 @@
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 /** @deprecated */
 import type { NewLicensePayload } from "@/api/endpoints/license"
+import type { ApiError } from "@/types/common"
 import type { LicenseKey } from "@/types/license.d"
 import { NButton, NForm, NFormItem, NInput, NInputNumber, NSpin, useMessage } from "naive-ui"
 import isEmail from "validator/es/lib/isEmail"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "updated"): void
@@ -197,7 +199,7 @@ function getLicense() {
 		})
 		.catch(err => {
 			if (err.response.status !== 404) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -222,7 +224,7 @@ function replaceLicense() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loadingReplace.value = false
@@ -246,7 +248,7 @@ function extendLicense() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loadingExtend.value = false
@@ -270,7 +272,7 @@ function createLicense() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCreation.value = false

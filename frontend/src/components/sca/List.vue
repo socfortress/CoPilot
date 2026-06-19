@@ -63,6 +63,7 @@
 <script setup lang="ts">
 // TODO-FE: refactor
 import type { ScaOverviewFilter, ScaOverviewFilterTypes } from "./types.d"
+import type { ApiError } from "@/types/common"
 import type { AgentScaOverviewItem, ScaOverviewQuery } from "@/types/sca.d"
 import { useResizeObserver, useStorage, watchDebounced } from "@vueuse/core"
 import axios from "axios"
@@ -73,6 +74,7 @@ import { computed, ref } from "vue"
 import Api from "@/api"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import ListFilters from "./ListFilters.vue"
 import ScaCard from "./ScaCard.vue"
 import ScaStats from "./ScaStats.vue"
@@ -138,7 +140,7 @@ function getList() {
 		})
 		.catch(err => {
 			if (!axios.isCancel(err)) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				loading.value = false
 			}
 		})

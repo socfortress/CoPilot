@@ -27,11 +27,13 @@
 
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import type { FlowResult } from "@/types/flow.d"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import AgentFlowItem from "./AgentFlowItem.vue"
 
 interface FlowResultExt extends FlowResult {
@@ -63,7 +65,7 @@ function getData() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 
 			// MOCK
 			/*

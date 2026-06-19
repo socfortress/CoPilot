@@ -76,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { PlatformFilter, RuleSummary } from "@/types/copilotSearches.d"
 import type { AlertAsset } from "@/types/incidentManagement/alerts.d"
 import { NCard, NEmpty, NInput, NModal, NScrollbar, NSelect, NSpin, useMessage } from "naive-ui"
@@ -84,6 +85,7 @@ import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import PlatformBadge from "@/components/common/PlatformBadge.vue"
+import { getApiErrorMessage } from "@/utils"
 import ExecuteSearchForm from "./ExecuteSearchForm.vue"
 import SeverityBadge from "./SeverityBadge.vue"
 
@@ -133,8 +135,8 @@ async function loadRules() {
 		if (res.data.success) {
 			rules.value = res.data.rules
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to load rules")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load rules")
 	} finally {
 		loadingRules.value = false
 	}

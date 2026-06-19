@@ -169,6 +169,7 @@
 <script setup lang="ts">
 import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
 import type { XMLEditorCtx, XMLError } from "@/components/common/XMLEditor.vue"
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import type { ConfigContent } from "@/types/sysmonConfig.d"
 import _clone from "lodash/cloneDeep"
@@ -179,6 +180,7 @@ import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
 import { useNavigation } from "@/composables/useNavigation"
+import { getApiErrorMessage } from "@/utils"
 
 const message = useMessage()
 const { routeCustomer } = useNavigation()
@@ -236,7 +238,7 @@ function getCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCustomersList.value = false
@@ -283,7 +285,7 @@ function getList() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingList.value = false
@@ -304,7 +306,7 @@ function getConfigContent(customerCode: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingConfig.value = false
@@ -334,7 +336,7 @@ function uploadConfigFile() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				uploadingConfig.value = false
@@ -356,7 +358,7 @@ function deployConfig() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				deployingConfig.value = false

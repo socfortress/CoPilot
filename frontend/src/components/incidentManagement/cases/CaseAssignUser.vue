@@ -14,10 +14,12 @@
 
 <script setup lang="ts">
 import type { Ref } from "vue"
+import type { ApiError } from "@/types/common"
 import type { Case } from "@/types/incidentManagement/cases.d"
 import { NPopselect, useMessage } from "naive-ui"
 import { computed, inject, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	caseData: Case
@@ -55,7 +57,7 @@ function getUsers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingUsers.value = false
@@ -76,7 +78,7 @@ function assignUser() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loadingUsers.value = false

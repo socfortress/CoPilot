@@ -55,12 +55,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
 import { NScrollbar, NSpin, NTable, NTooltip, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import SocUserAlerts from "./SocUserAlerts.vue"
 
 const props = defineProps<{ highlight: string | null | undefined }>()
@@ -89,7 +91,7 @@ function getUsers() {
 		.catch(err => {
 			usersList.value = []
 
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingUsers.value = false
@@ -109,7 +111,7 @@ function getAlerts() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAlerts.value = false

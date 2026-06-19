@@ -23,9 +23,11 @@
 <script setup lang="ts">
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import type { Agent } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import ActiveResponseItem from "./ActiveResponseItem.vue"
 
 const { embedded, agent } = defineProps<{
@@ -54,7 +56,7 @@ function getAvailableIntegrations() {
 			*/
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingActiveResponse.value = false

@@ -73,12 +73,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { ThreatIntelResponse } from "@/types/threatIntel.d"
 import _trim from "lodash/trim"
 import { NButton, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const emit = defineEmits<{
@@ -128,7 +130,7 @@ function create() {
 			}
 		})
 		.catch(err => {
-			error.value = err.response?.data?.message || "An error occurred. Please try again later."
+			error.value = getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later."
 			message.error(error.value)
 		})
 		.finally(() => {

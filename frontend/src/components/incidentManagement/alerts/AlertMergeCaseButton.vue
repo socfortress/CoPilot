@@ -56,6 +56,7 @@
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
 import type { Ref } from "vue"
+import type { ApiError } from "@/types/common"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { Case } from "@/types/incidentManagement/cases.d"
 import _orderBy from "lodash/orderBy"
@@ -63,6 +64,7 @@ import { NButton, NEmpty, NModal, NScrollbar, NSpin, useMessage } from "naive-ui
 import { inject, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import CaseItem from "../cases/CaseItem.vue"
 
 const { alerts, size } = defineProps<{ alerts: Alert[]; size?: ButtonSize }>()
@@ -119,7 +121,7 @@ function getCasesList() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCases.value = false
@@ -166,7 +168,7 @@ function linkCase() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				merging.value = false

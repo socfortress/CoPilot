@@ -31,14 +31,15 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	customer?: Customer
@@ -229,7 +230,7 @@ function submit() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

@@ -33,6 +33,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { EpssScore } from "@/types/threatIntel.d"
 import { NCard, NEmpty, NSpin, NStatistic, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
@@ -40,6 +41,7 @@ import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 interface EpssScoreExt extends EpssScore {
@@ -73,7 +75,7 @@ function getData() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

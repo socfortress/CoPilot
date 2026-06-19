@@ -1,34 +1,33 @@
 <template>
-	<n-card class="unhealthy-indices" segmented content-class="pr-1!">
+	<n-card segmented content-class="pr-1!">
 		<template #header>
-			<div class="align-center flex justify-between">
+			<div class="flex items-center justify-between">
 				<span>Unhealthy Indices</span>
 				<span class="text-secondary font-mono">{{ unhealthyIndices.length }}</span>
 			</div>
 		</template>
-		<n-spin :show="loading">
-			<div class="min-h-14">
-				<n-scrollbar class="max-h-125" trigger="none" content-class="pr-5!">
-					<template v-if="unhealthyIndices && unhealthyIndices.length">
+		<n-spin :show="loading" class="min-h-14">
+			<n-scrollbar class="max-h-125" trigger="none" content-class="pr-5!">
+				<template v-if="unhealthyIndices && unhealthyIndices.length">
+					<div class="flex flex-col gap-3">
 						<div
 							v-for="item of unhealthyIndices"
 							:key="item.index"
-							class="item"
-							:class="item.health"
+							class="cursor-pointer"
 							title="Click for details"
 							@click="emit('click', item)"
 						>
 							<IndexCard :index="item" />
 						</div>
+					</div>
+				</template>
+				<n-empty v-else description="No Unhealthy Indices found">
+					<template #icon>
+						<Icon :name="ShieldIcon" />
 					</template>
-					<n-empty v-else description="No Unhealthy Indices found">
-						<template #icon>
-							<Icon :name="ShieldIcon" />
-						</template>
-						<template #extra>Great, all indices are healthy!</template>
-					</n-empty>
-				</n-scrollbar>
-			</div>
+					<template #extra>Great, all indices are healthy!</template>
+				</n-empty>
+			</n-scrollbar>
 		</n-spin>
 	</n-card>
 </template>
@@ -61,15 +60,3 @@ const unhealthyIndices = computed(() =>
 	)
 )
 </script>
-
-<style lang="scss" scoped>
-.unhealthy-indices {
-	.item {
-		cursor: pointer;
-
-		&:not(:last-child) {
-			margin-bottom: calc(var(--spacing) * 3);
-		}
-	}
-}
-</style>

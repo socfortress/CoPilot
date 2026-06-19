@@ -116,12 +116,14 @@
 import type { CommandRequest } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact, CommandResult } from "@/types/artifacts.d"
+import type { ApiError } from "@/types/common"
 import { NButton, NEmpty, NInput, NSelect, NSpin, NTooltip, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
 import CommandItem from "./CommandItem.vue"
@@ -197,7 +199,7 @@ function getData() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				responseTime.value = new Date()
@@ -223,7 +225,7 @@ function getAgents(cb?: (agents: Agent[]) => void) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAgents.value = false
@@ -247,7 +249,7 @@ function getArtifacts(cb?: (artifacts: Artifact[]) => void) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingArtifacts.value = false

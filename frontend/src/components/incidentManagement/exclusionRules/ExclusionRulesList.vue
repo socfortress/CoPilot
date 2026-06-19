@@ -93,14 +93,15 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { ExclusionRulesQuery } from "@/api/endpoints/incidentManagement/exclusionRules"
+import type { ApiError } from "@/types/common"
 import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules.d"
 import { useResizeObserver } from "@vueuse/core"
 import { NBadge, NButton, NCheckbox, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import ExclusionRuleItem from "./ExclusionRuleItem.vue"
 import NewExclusionRuleButton from "./NewExclusionRuleButton.vue"
 
@@ -160,7 +161,7 @@ function getData() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

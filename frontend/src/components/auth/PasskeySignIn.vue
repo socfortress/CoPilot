@@ -72,7 +72,7 @@ async function signInWithPasskey() {
 
 		emit("loginSuccess", res.access_token)
 		router.push({ path: "/", replace: true })
-	} catch (err: any) {
+	} catch (err) {
 		if (err?.name === "NotAllowedError") {
 			message.warning("Passkey sign-in was cancelled.")
 			return

@@ -64,6 +64,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { Case, CaseComment } from "@/types/incidentManagement/cases.d"
 import _clone from "lodash/cloneDeep"
 import { NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
@@ -71,6 +72,7 @@ import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import { useAuthStore } from "@/stores/auth"
 import { AuthUserRole } from "@/types/auth.d"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	caseData?: Case
@@ -124,7 +126,7 @@ function getCase(caseId: number) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

@@ -44,11 +44,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { AITrigger } from "@/types/incidentManagement/aiTriggers.d"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const { customerCode } = defineProps<{
 	customerCode: string
@@ -77,7 +79,7 @@ function getAITriggers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

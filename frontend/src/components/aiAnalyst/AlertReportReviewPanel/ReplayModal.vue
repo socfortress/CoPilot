@@ -63,12 +63,14 @@
 
 <script setup lang="ts">
 import type { AiAnalystReport } from "@/types/aiAnalyst.d"
+import type { ApiError } from "@/types/common"
 import type { TalonTemplate } from "@/types/talon.d"
 import { NButton, NEmpty, NModal, NRadio, NRadioGroup, NSpin, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatBytes, formatDate } from "@/utils/format"
 
 const props = defineProps<{
@@ -105,9 +107,9 @@ async function loadTemplates() {
 			message.warning(res.data.message || "Failed to load templates")
 			templates.value = []
 		}
-	} catch (err: unknown) {
+	} catch (err) {
 		const e = err as { response?: { data?: { message?: string } }; message?: string }
-		message.error(e.response?.data?.message || e.message || "Failed to load templates")
+		message.error(getApiErrorMessage(e as ApiError) || "Failed to load templates")
 		templates.value = []
 	} finally {
 		loading.value = false
@@ -132,9 +134,9 @@ async function handleReplay() {
 		} else {
 			message.warning(res.data.message || "Failed to trigger replay")
 		}
-	} catch (err: unknown) {
+	} catch (err) {
 		const e = err as { response?: { data?: { message?: string } }; message?: string }
-		message.error(e.response?.data?.message || e.message || "Failed to trigger replay")
+		message.error(getApiErrorMessage(e as ApiError) || "Failed to trigger replay")
 	} finally {
 		submitting.value = false
 	}

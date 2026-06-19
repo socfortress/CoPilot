@@ -10,11 +10,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { RuleDetail, RuleSummary } from "@/types/copilotSearches.d"
 import { useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import PlatformBadge from "@/components/common/PlatformBadge.vue"
+import { getApiErrorMessage } from "@/utils"
 import SeverityBadge from "./SeverityBadge.vue"
 
 const props = defineProps<{
@@ -43,8 +45,8 @@ async function loadRule(ruleId: string) {
 		} else {
 			message.error(res.data?.message || "Failed to load rule details")
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to load rule details")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load rule details")
 	} finally {
 		loading.value = false
 	}

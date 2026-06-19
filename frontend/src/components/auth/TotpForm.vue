@@ -49,10 +49,12 @@
 <script lang="ts" setup>
 import type { InputOtpInst } from "naive-ui"
 import type { TOTPValidateRequest } from "@/api/endpoints/totp"
+import type { ApiError } from "@/types/common"
 import { NButton, NCollapseTransition, NInput, NInputOtp, useMessage } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
+import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "cancel"): void
@@ -105,7 +107,7 @@ async function verify2fa(params?: { useBackupCode?: boolean }) {
 			router.push({ path: "/", replace: true })
 		})
 		.catch(err => {
-			message.error(err?.message || err.response?.data?.detail || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			twoFaLoading.value = false

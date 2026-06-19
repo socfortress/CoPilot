@@ -132,6 +132,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { CaseTemplateLibraryEntry } from "@/types/incidentManagement/caseTemplates.d"
 import { NAlert, NButton, NEmpty, NInput, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
@@ -140,6 +141,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import CaseTemplateLibraryImportModal from "./CaseTemplateLibraryImportModal.vue"
 
@@ -200,7 +202,7 @@ function load() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "Failed to load case-template library")
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to load case-template library")
 		})
 		.finally(() => {
 			loading.value = false
@@ -218,8 +220,8 @@ async function refresh() {
 			message.warning(res.data.message)
 		}
 		load()
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to refresh case-template library")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to refresh case-template library")
 	} finally {
 		refreshing.value = false
 	}

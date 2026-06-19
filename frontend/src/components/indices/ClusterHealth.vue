@@ -1,38 +1,37 @@
 <template>
-	<n-card segmented>
+	<n-card segmented content-class="pr-1!">
 		<template #header>
 			<div class="flex items-center justify-between">
 				<span>Overall Health</span>
 				<IndexIcon v-if="cluster" :health="cluster.status" color />
 			</div>
 		</template>
-		<n-spin :show="loading">
-			<div v-if="cluster" class="min-h-14">
-				<n-scrollbar class="max-h-125" trigger="none">
-					<div class="columns-[12rem] gap-6 px-4 py-3">
-						<div
-							v-for="prop of propsOrder"
-							:key="prop"
-							class="mb-6 flex break-inside-avoid flex-col gap-1 overflow-hidden"
-						>
-							<div class="text-secondary font-mono text-xs uppercase">
-								{{ sanitizeLabel(prop) }}
-							</div>
-							<template v-if="prop === 'status'">
-								<div class="flex items-center gap-2 font-bold whitespace-nowrap uppercase">
-									<IndexIcon :health="cluster.status" color />
-									{{ cluster.status }}
-								</div>
-							</template>
-							<template v-else>
-								<div class="font-bold whitespace-nowrap">
-									{{ cluster[prop] }}
-								</div>
-							</template>
+		<n-spin :show="loading" class="min-h-14">
+			<n-scrollbar v-if="cluster" class="max-h-125" trigger="none" content-class="pr-5!">
+				<div class="columns-[12rem] gap-6">
+					<div
+						v-for="prop of propsOrder"
+						:key="prop"
+						class="mb-6 flex break-inside-avoid flex-col gap-1 overflow-hidden"
+					>
+						<div class="text-secondary font-mono text-xs uppercase">
+							{{ sanitizeLabel(prop) }}
 						</div>
+						<template v-if="prop === 'status'">
+							<div class="flex items-center gap-2 font-bold whitespace-nowrap uppercase">
+								<IndexIcon :health="cluster.status" color />
+								{{ cluster.status }}
+							</div>
+						</template>
+						<template v-else>
+							<div class="font-bold whitespace-nowrap">
+								{{ cluster[prop] }}
+							</div>
+						</template>
 					</div>
-				</n-scrollbar>
-			</div>
+				</div>
+			</n-scrollbar>
+
 			<template v-else>
 				<n-empty v-if="!loading" description="No cluster found" class="h-48 justify-center" />
 			</template>
@@ -41,11 +40,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { ClusterHealth } from "@/types/indices.d"
 import { NCard, NEmpty, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const message = useMessage()
 const cluster = ref<ClusterHealth | null>(null)
@@ -91,13 +92,13 @@ function getClusterHealth() {
 		.catch(err => {
 			if (err.response?.status === 401) {
 				message.error(
-					err.response?.data?.message ||
+					getApiErrorMessage(err as ApiError) ||
 						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
 				)
 			} else if (err.response?.status === 404) {
-				message.error(err.response?.data?.message || "No alerts were found.")
+				message.error(getApiErrorMessage(err as ApiError) || "No alerts were found.")
 			} else {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {

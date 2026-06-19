@@ -22,11 +22,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { SocCaseAsset, SocCaseAssetsState } from "@/types/soc/asset.d"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 import SocCaseAssetsItem from "./SocCaseAssetsItem.vue"
 
@@ -58,7 +60,7 @@ function getAssets() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAssets.value = false

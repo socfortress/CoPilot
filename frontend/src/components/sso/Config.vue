@@ -369,6 +369,7 @@
 
 <script setup lang="ts">
 import type { SSOConfigUpdate } from "@/api/endpoints/sso"
+import type { ApiError } from "@/types/common"
 import {
 	NAlert,
 	NButton,
@@ -389,6 +390,7 @@ import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
+import { getApiErrorMessage } from "@/utils"
 
 const AzureIcon = "devicon-plain:azure"
 const GoogleIcon = "devicon-plain:google"
@@ -469,8 +471,8 @@ async function saveSettings() {
 		azureSecretSet.value = res.data.azure_client_secret_set
 		googleSecretSet.value = res.data.google_client_secret_set
 		message.success("SSO settings saved successfully")
-	} catch (err: any) {
-		message.error(err.response?.data?.message || err.response?.data?.detail || "Failed to save SSO settings")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to save SSO settings")
 	} finally {
 		saving.value = false
 	}

@@ -73,7 +73,7 @@ async function reload() {
 			return
 		}
 		processes.value = res.data.data || {}
-	} catch (err: unknown) {
+	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError) || "Error fetching process metrics")
 		processes.value = {}
 	} finally {

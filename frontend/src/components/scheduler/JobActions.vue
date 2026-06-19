@@ -46,11 +46,13 @@
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
 import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
+import type { ApiError } from "@/types/common"
 import type { Job } from "@/types/scheduler.d"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import JobForm from "./JobForm.vue"
 
 const props = defineProps<{ job: Job; size?: ButtonSize; inline?: boolean }>()
@@ -83,7 +85,7 @@ function toggleState() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAction.value = false
@@ -105,7 +107,7 @@ function run() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingRun.value = false

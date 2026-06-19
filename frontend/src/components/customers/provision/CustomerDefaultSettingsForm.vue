@@ -36,6 +36,7 @@
 
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { CustomerProvisioningDefaultSettings } from "@/types/customers.d"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
@@ -44,6 +45,7 @@ import isIP from "validator/es/lib/isIP"
 import isURL from "validator/es/lib/isURL"
 import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
@@ -216,7 +218,7 @@ function submit() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			submittingDefaultSettings.value = false

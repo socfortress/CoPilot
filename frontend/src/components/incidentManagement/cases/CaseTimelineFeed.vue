@@ -40,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { CaseEvent } from "@/types/incidentManagement/caseTemplates.d"
 import { NButton, NEmpty, NSpin, NTag, NTimeline, NTimelineItem, useMessage } from "naive-ui"
 import { h, onBeforeMount, ref } from "vue"
@@ -47,6 +48,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
@@ -71,7 +73,7 @@ function fetchTimeline() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "Failed to load case timeline")
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to load case timeline")
 		})
 		.finally(() => {
 			loading.value = false

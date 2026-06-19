@@ -135,6 +135,7 @@
 
 <script setup lang="ts">
 import type { UploadFileInfo } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import saveAs from "file-saver"
 import {
 	NButton,
@@ -152,6 +153,7 @@ import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useCaseReportTemplateStore } from "@/stores/caseReportTemplate"
+import { getApiErrorMessage } from "@/utils"
 
 const UploadIcon = "carbon:cloud-upload"
 const DownloadIcon = "carbon:document-download"
@@ -195,7 +197,7 @@ function uploadCustomTemplate() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			uploading.value = false
@@ -216,7 +218,7 @@ function uploadDefaultTemplate() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			uploading.value = false
@@ -236,7 +238,7 @@ function checkDefaultCaseReportTemplateExists() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			checkingDefaultTemplate.value = false
@@ -256,7 +258,7 @@ function downloadTemplate(templateName: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			downloading.value = false
@@ -276,7 +278,7 @@ function deleteTemplate(templateName: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			canceling.value = false
@@ -285,7 +287,7 @@ function deleteTemplate(templateName: string) {
 
 function refreshTemplates() {
 	caseReportTemplateStore.refreshTemplates().catch(err => {
-		message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 	})
 }
 

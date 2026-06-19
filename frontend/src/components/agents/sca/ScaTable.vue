@@ -99,6 +99,7 @@
 
 <script setup lang="ts">
 import type { Agent, AgentSca } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import { saveAs } from "file-saver"
 import _truncate from "lodash/truncate"
 import { NButton, NEmpty, NModal, NPopover, NScrollbar, NSpin, NTable, NTooltip, useMessage } from "naive-ui"
@@ -106,6 +107,7 @@ import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import ScaItem from "./ScaItem.vue"
 
@@ -152,7 +154,7 @@ function getSCA(agentId: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false
@@ -179,7 +181,7 @@ function scaDownload(sca: SCAExt) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			sca.downloading = false

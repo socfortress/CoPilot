@@ -32,10 +32,12 @@
 
 <script setup lang="ts">
 import type { UploadFileInfo } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import { NButton, NPopover, NUpload, NUploadDragger, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "updated"): void
@@ -79,7 +81,7 @@ function uploadQueries() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loading.value = false

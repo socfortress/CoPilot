@@ -35,11 +35,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { LicenseKey } from "@/types/license.d"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import LicenseCheckoutWizard from "./LicenseCheckoutWizard.vue"
 
 const emit = defineEmits<{
@@ -77,7 +79,7 @@ function getLicense() {
 		})
 		.catch(err => {
 			if (err.response.status !== 404) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {

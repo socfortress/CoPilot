@@ -142,6 +142,7 @@
 <script setup lang="ts">
 import type { MentionOption } from "naive-ui"
 import type { VNodeChild } from "vue"
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
 import type { FieldMapping } from "@/types/events.d"
 import type { EventSource } from "@/types/eventSources.d"
@@ -150,6 +151,7 @@ import { computed, h, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 
 export type EventSearchQueryTimerange = `${number}${"h" | "d" | "w"}`
@@ -259,7 +261,7 @@ function getCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCustomers.value = false
@@ -284,7 +286,7 @@ function getEventSources(customerCode: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingEventSources.value = false

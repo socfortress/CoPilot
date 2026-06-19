@@ -1,6 +1,5 @@
-<!-- filepath: /Users/taylor/Desktop/Repos/CoPilot/frontend/src/components/common/AccessDenied.vue -->
 <template>
-	<div class="access-denied-container">
+	<div class="flex min-h-[60vh] items-center justify-center">
 		<n-result
 			status="403"
 			title="Access Denied"
@@ -27,7 +26,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import { useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 
@@ -47,12 +45,3 @@ function goHome() {
 	router.push("/")
 }
 </script>
-
-<style scoped>
-.access-denied-container {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	min-height: 60vh;
-}
-</style>

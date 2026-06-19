@@ -136,6 +136,7 @@
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
 import type { Artifact } from "@/types/artifacts.d"
+import type { ApiError } from "@/types/common"
 import { NButton, NCard, NSpin, NTabPane, NTabs, NTag, NTooltip, useDialog, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, nextTick, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
@@ -145,6 +146,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { AgentStatus } from "@/types/agents.d"
+import { getApiErrorMessage } from "@/utils"
 
 const VulnerabilitiesGrid = defineAsyncComponent(
 	() => import("@/components/agents/vulnerabilities/VulnerabilitiesGrid.vue")
@@ -199,7 +201,7 @@ function getAgent() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				routeAgent().navigate()
 			})
 			.finally(() => {
@@ -222,7 +224,7 @@ function upgradeWazuhAgent() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				upgradingAgent.value = false

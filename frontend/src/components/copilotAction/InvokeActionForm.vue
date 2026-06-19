@@ -113,9 +113,9 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { FormInst, FormRules } from "naive-ui"
 import type { Agent } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import type { CopilotAction } from "@/types/copilotAction.d"
 import {
 	NAlert,
@@ -134,6 +134,7 @@ import {
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import TechnologyIcon from "./TechnologyIcon.vue"
 
 const { action } = defineProps<{
@@ -289,8 +290,8 @@ async function getAgents() {
 		} else {
 			message.error(res.data?.message || "Failed to load agents")
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to load agents")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load agents")
 	} finally {
 		loadingAgents.value = false
 	}
@@ -328,8 +329,8 @@ async function handleInvoke() {
 		} else {
 			message.warning(res.data?.message || "Failed to invoke action")
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to invoke action")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to invoke action")
 	} finally {
 		loading.value = false
 	}

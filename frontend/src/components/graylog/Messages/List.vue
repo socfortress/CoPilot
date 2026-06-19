@@ -43,12 +43,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { MessageExtended } from "@/types/graylog/messages.d"
 import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import MessageItem from "./Item.vue"
 
 const InfoIcon = "carbon:information"
@@ -79,7 +81,7 @@ function getData(page: number) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

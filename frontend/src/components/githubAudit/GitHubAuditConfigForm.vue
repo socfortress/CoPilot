@@ -135,6 +135,7 @@
 
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { GitHubAuditConfig, GitHubAuditConfigCreate, GitHubAuditConfigUpdate } from "@/types/githubAudit.d"
 import {
 	NButton,
@@ -156,6 +157,7 @@ import {
 } from "naive-ui"
 import { computed, onBeforeMount, reactive, ref, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 interface GitHubAuditConfigFormData extends Omit<
 	GitHubAuditConfigCreate,
@@ -277,7 +279,7 @@ async function handleSubmit() {
 		}
 		emit("saved")
 	} catch (error: any) {
-		message.error(error.response?.data?.detail || "Failed to save configuration")
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to save configuration")
 	} finally {
 		saving.value = false
 	}

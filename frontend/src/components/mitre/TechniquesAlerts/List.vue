@@ -64,6 +64,7 @@
 
 <script setup lang="ts">
 import type { MitreTechniquesAlertsQuery, MitreTechniquesAlertsQueryTimeRange } from "@/api/endpoints/wazuh/mitre"
+import type { ApiError } from "@/types/common"
 import type { MitreTechnique } from "@/types/mitre.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
@@ -72,6 +73,7 @@ import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
+import { getApiErrorMessage } from "@/utils"
 import TechniqueAlertCard from "../TechniqueAlert/TechniqueAlertCard.vue"
 
 const props = defineProps<{
@@ -198,7 +200,7 @@ function getList() {
 		})
 		.catch(err => {
 			if (!axios.isCancel(err)) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				loading.value = false
 			}
 		})

@@ -55,11 +55,13 @@
 </template>
 
 <script lang="ts" setup>
+import type { ApiError } from "@/types/common"
 import type { CustomerIndicesSize } from "@/types/indices.d"
 import { NCard, NEmpty, NPopover, NProgress, NScrollbar, NSpin, NTag, useMessage, useThemeVars } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "click", value: string): void
@@ -105,7 +107,7 @@ function getCustomerIndicesSize() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "Failed to retrieve customer indices size.")
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to retrieve customer indices size.")
 		})
 		.finally(() => {
 			loading.value = false

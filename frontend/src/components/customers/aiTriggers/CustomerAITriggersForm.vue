@@ -23,10 +23,12 @@
 
 <script setup lang="ts">
 import type { AITriggerPayload } from "@/api/endpoints/incidentManagement/aiTriggers"
+import type { ApiError } from "@/types/common"
 import type { AITrigger } from "@/types/incidentManagement/aiTriggers.d"
 import { NButton, NForm, NFormItem, NSpin, NSwitch, useMessage } from "naive-ui"
 import { onMounted, ref, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 interface AITriggerForm {
 	enabled: boolean
@@ -92,7 +94,7 @@ function submit() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

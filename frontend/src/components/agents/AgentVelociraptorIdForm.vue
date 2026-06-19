@@ -30,10 +30,12 @@
 
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import { NButton, NInput, NInputGroup, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	agent: Agent
@@ -79,7 +81,7 @@ function updateAgent() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loading.value = false

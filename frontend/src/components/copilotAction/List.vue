@@ -61,7 +61,7 @@
 				/>
 			</div>
 
-			<n-spin :show="loading">
+			<n-spin :show="loading" class="min-h-52">
 				<div class="my-3">
 					<div v-if="list.length" class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 						<ActionCard v-for="item of list" :key="item.copilot_action_name" :action="item" />
@@ -88,6 +88,7 @@
 
 <script setup lang="ts">
 import type { CopilotActionInventoryQuery } from "@/api/endpoints/copilotAction"
+import type { ApiError } from "@/types/common"
 import type { CopilotAction } from "@/types/copilotAction.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
@@ -95,6 +96,7 @@ import { NAlert, NButton, NEmpty, NInput, NPagination, NPopover, NSelect, NSpin,
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import ActionCard from "./ActionCard.vue"
 
 const loading = ref(false)
@@ -141,7 +143,7 @@ function getList() {
 		})
 		.catch(err => {
 			if (!axios.isCancel(err)) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				loading.value = false
 			}
 		})
@@ -160,7 +162,7 @@ function getTechnologies() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingTechnologies.value = false

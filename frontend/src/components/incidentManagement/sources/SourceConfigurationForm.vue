@@ -202,6 +202,7 @@
 
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { SourceConfiguration, SourceConfigurationModel, SourceName } from "@/types/incidentManagement/sources.d"
 import _intersection from "lodash/intersection"
 import {
@@ -220,6 +221,7 @@ import {
 import { computed, h, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	sourceConfigurationModel?: SourceConfigurationModel
@@ -550,7 +552,7 @@ function getSocfortressRecommendsWazuh() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingSocfortressRecommendsWazuh.value = false
@@ -576,7 +578,7 @@ function getAvailableMappings(indexName: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAvailableMappings.value = false
@@ -601,7 +603,7 @@ function getAvailableIndices(source: SourceName) {
 		})
 		.catch(err => {
 			resetSource()
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingIndexNames.value = false
@@ -623,7 +625,7 @@ function getSourceByIndex(indexName: string) {
 		})
 		.catch(err => {
 			resetSource()
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingSource.value = false

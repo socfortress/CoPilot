@@ -80,12 +80,14 @@
 
 <script setup lang="ts">
 import type { FormItemRule, FormRules } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { CheckoutPayload, License, LicenseCustomer, LicenseFeatures, SubscriptionFeature } from "@/types/license.d"
 import { NButton, NEmpty, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import isEmail from "validator/es/lib/isEmail"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import SubscriptionCard from "./SubscriptionCard.vue"
 
 const props = defineProps<{
@@ -191,7 +193,7 @@ function getLicenseFeatures() {
 		.catch(err => {
 			if (err.response.status !== 404) {
 				errorMessage.value = "We're sorry, there was an issue loading your license"
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -212,7 +214,7 @@ function getSubscriptionFeatures() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingSubscriptions.value = false
@@ -234,7 +236,7 @@ function getLicense() {
 		})
 		.catch(err => {
 			if (err.response.status !== 404) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -262,7 +264,7 @@ function createCheckoutSession() {
 		})
 		.catch(err => {
 			if (err.response.status !== 404) {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {

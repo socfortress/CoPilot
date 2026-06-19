@@ -98,7 +98,7 @@ export default {
 			}
 
 			onDone()
-		} catch (err: unknown) {
+		} catch (err) {
 			if (err instanceof DOMException && err.name === "AbortError") return
 			onError(err instanceof Error ? err.message : "An error occurred")
 		}

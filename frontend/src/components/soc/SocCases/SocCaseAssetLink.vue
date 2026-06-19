@@ -65,6 +65,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { SocCaseAssetLink } from "@/types/soc/asset.d"
 import type { SocCase } from "@/types/soc/case.d"
 import { NCollapse, NCollapseItem, NEmpty, NSpin, useMessage } from "naive-ui"
@@ -74,6 +75,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 import SocCaseItem from "./SocCaseItem.vue"
 
@@ -110,7 +112,7 @@ function getSocCase(caseId: string | number) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingCase.value = false

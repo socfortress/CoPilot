@@ -78,14 +78,15 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { QuarantineRequest } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact, QuarantineResult } from "@/types/artifacts.d"
+import type { ApiError } from "@/types/common"
 import { NButton, NEmpty, NInput, NInputGroup, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import QuarantineItem from "./QuarantineItem.vue"
 
 const props = defineProps<{
@@ -153,7 +154,7 @@ function getData() {
 			.catch(err => {
 				quarantineList.value = []
 
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loading.value = false
@@ -178,7 +179,7 @@ function getAgents(cb?: (agents: Agent[]) => void) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAgents.value = false
@@ -202,7 +203,7 @@ function getArtifacts(cb?: (artifacts: Artifact[]) => void) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingArtifacts.value = false

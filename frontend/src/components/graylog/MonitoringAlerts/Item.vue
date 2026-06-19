@@ -76,9 +76,9 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { FormRules, FormValidationError } from "naive-ui"
 import type { ProvisionsMonitoringAlertParams } from "@/api/endpoints/monitoringAlerts"
+import type { ApiError } from "@/types/common"
 import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
 import { NButton, NForm, NFormItem, NInputNumber, NModal, NSpin, useMessage } from "naive-ui"
 import { ref } from "vue"
@@ -86,6 +86,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const { alert, isEnabled } = defineProps<{ alert: AvailableMonitoringAlert; isEnabled: boolean }>()
 
@@ -170,7 +171,7 @@ function provisionsMonitoringAlert() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loadingProvision.value = false

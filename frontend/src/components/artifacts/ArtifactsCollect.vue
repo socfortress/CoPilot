@@ -84,51 +84,67 @@
 			</div>
 		</div>
 
-		<!-- Parameters Section -->
-		<div v-if="selectedArtifactParameters.length" class="parameters-section my-4">
-			<n-card title="Artifact Parameters" size="small">
-				<template #header-extra>
-					<n-tag size="small" type="info">
-						{{ selectedArtifactParameters.length }} parameter{{
-							selectedArtifactParameters.length !== 1 ? "s" : ""
-						}}
-					</n-tag>
-				</template>
-				<n-spin :show="loadingParameters">
-					<n-scrollbar style="max-height: 400px">
-						<div class="parameters-grid">
-							<div v-for="param in selectedArtifactParameters" :key="param.name" class="parameter-field">
-								<div class="parameter-header">
-									<div class="flex items-center gap-2">
-										<span class="parameter-name">{{ param.name }}</span>
-										<n-tag v-if="param.type" size="tiny" :bordered="false">
-											{{ param.type }}
-										</n-tag>
-									</div>
-									<n-popover v-if="param.description" trigger="hover" placement="top">
-										<template #trigger>
-											<Icon
-												:name="InfoIcon"
-												:size="16"
-												class="cursor-help text-gray-400 hover:text-gray-600"
-											/>
-										</template>
-										<div class="parameter-tooltip">
-											<div class="mb-2 font-medium">{{ param.name }}</div>
-											<div class="text-sm">{{ param.description }}</div>
-											<div v-if="param.default" class="mt-2 text-xs opacity-70">
-												Default:
-												<code class="rounded bg-gray-100 px-1">{{ param.default }}</code>
-											</div>
-										</div>
-									</n-popover>
+		<CardEntity
+			v-if="selectedArtifactParameters.length"
+			embedded
+			size="small"
+			:loading="loadingParameters"
+			class="my-4"
+		>
+			<template #headerMain>
+				<span class="text-xs font-semibold uppercase">Artifact Parameters</span>
+			</template>
+			<template #headerExtra>
+				<Badge type="splitted" size="small">
+					<template #label>Parameters</template>
+					<template #value>
+						<span class="text-xs">{{ selectedArtifactParameters.length }}</span>
+					</template>
+				</Badge>
+			</template>
+
+			<n-scrollbar class="max-h-100">
+				<div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+					<CardEntity
+						v-for="param in selectedArtifactParameters"
+						:key="param.name"
+						embedded
+						size="small"
+						class="h-full"
+						main-box-class="grow"
+						card-entity-wrapper-class="h-full"
+					>
+						<template #headerMain>
+							<span class="font-mono text-sm font-semibold">{{ param.name }}</span>
+						</template>
+						<template v-if="param.type" #headerExtra>
+							<Badge size="small">
+								<template #value>
+									<span class="text-xs">{{ param.type }}</span>
+								</template>
+							</Badge>
+						</template>
+
+						<template v-if="param.description" #default>
+							<p class="text-secondary text-xs leading-relaxed">{{ param.description }}</p>
+						</template>
+
+						<template #footer>
+							<div class="flex flex-col gap-2">
+								<div
+									v-if="param.default !== null && param.default !== undefined && param.default !== ''"
+									class="text-xs opacity-60"
+								>
+									<span class="font-medium">Default:</span>
+									<code class="code-block ml-1 rounded px-1 py-0.5 font-mono text-xs">
+										{{ param.default }}
+									</code>
 								</div>
 								<n-input
 									v-model:value="parameterValues[param.name]"
 									:placeholder="param.default?.toString() || 'Enter value...'"
 									size="small"
 									clearable
-									class="mt-2"
 								>
 									<template v-if="param.default" #suffix>
 										<n-tooltip trigger="hover" placement="top">
@@ -149,15 +165,12 @@
 										</n-tooltip>
 									</template>
 								</n-input>
-								<div v-if="param.description" class="parameter-description">
-									{{ param.description }}
-								</div>
 							</div>
-						</div>
-					</n-scrollbar>
-				</n-spin>
-			</n-card>
-		</div>
+						</template>
+					</CardEntity>
+				</div>
+			</n-scrollbar>
+		</CardEntity>
 
 		<n-spin :show="loading">
 			<div class="my-7 flex min-h-52 flex-col gap-3">
@@ -189,14 +202,13 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { ArtifactsQuery, CollectRequest } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact, ArtifactParameter, CollectResult } from "@/types/artifacts.d"
+import type { ApiError } from "@/types/common"
 import {
 	NAlert,
 	NButton,
-	NCard,
 	NCheckbox,
 	NEmpty,
 	NInput,
@@ -204,14 +216,16 @@ import {
 	NScrollbar,
 	NSelect,
 	NSpin,
-	NTag,
 	NTooltip,
 	useMessage
 } from "naive-ui"
 import { nanoid } from "nanoid"
 import { computed, nextTick, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import CollectItem from "./CollectItem.vue"
 
 const props = defineProps<{
@@ -309,8 +323,8 @@ async function onArtifactSelect(artifactName: string | null) {
 				})
 			}
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to load artifact parameters")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load artifact parameters")
 	} finally {
 		loadingParameters.value = false
 	}
@@ -366,7 +380,7 @@ function getData() {
 			.catch(err => {
 				collectList.value = []
 
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loading.value = false
@@ -391,7 +405,7 @@ function getAgents(cb?: (agents: Agent[]) => void) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAgents.value = false
@@ -415,7 +429,7 @@ function getArtifacts(cb?: (artifacts: Artifact[]) => void) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingArtifacts.value = false
@@ -453,69 +467,3 @@ onBeforeMount(() => {
 	})
 })
 </script>
-
-<style scoped>
-.parameters-grid {
-	display: grid;
-	gap: 1rem;
-	padding: 0.5rem;
-}
-
-.parameter-field {
-	background-color: #f9fafb;
-	border: 1px solid #e5e7eb;
-	border-radius: 8px;
-	padding: 1rem;
-	transition: all 0.2s ease;
-}
-
-.parameter-field:hover {
-	border-color: #d1d5db;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.parameter-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 0.5rem;
-}
-
-.parameter-name {
-	font-weight: 600;
-	font-size: 0.875rem;
-	color: #374151;
-}
-
-.parameter-description {
-	font-size: 0.75rem;
-	color: #6b7280;
-	margin-top: 0.5rem;
-	line-height: 1.4;
-}
-
-.parameter-tooltip {
-	max-width: 400px;
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-	.parameter-field {
-		background-color: #1f2937;
-		border-color: #374151;
-	}
-
-	.parameter-field:hover {
-		border-color: #4b5563;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-	}
-
-	.parameter-name {
-		color: #f3f4f6;
-	}
-
-	.parameter-description {
-		color: #9ca3af;
-	}
-}
-</style>

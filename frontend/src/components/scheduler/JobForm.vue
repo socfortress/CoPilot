@@ -31,12 +31,14 @@
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
 import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
+import type { ApiError } from "@/types/common"
 import type { Job } from "@/types/scheduler.d"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInputNumber, NSpin, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{ job: Job }>()
 const emit = defineEmits<{
@@ -139,7 +141,7 @@ function submit() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			submitting.value = false

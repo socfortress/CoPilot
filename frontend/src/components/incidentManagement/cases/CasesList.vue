@@ -1,6 +1,6 @@
 <template>
-	<div class="cases-list">
-		<div ref="header" class="header flex items-center justify-end gap-2">
+	<div class="flex flex-col gap-2">
+		<div ref="header" class="flex flex-wrap items-center justify-end gap-2">
 			<div class="info flex grow gap-2">
 				<n-popover overlap placement="left" to="body">
 					<template #trigger>
@@ -183,8 +183,8 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { CasesFilter, CasesFilterTypes } from "@/api/endpoints/incidentManagement/cases"
+import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.d"
 import type { Case, CaseStatus } from "@/types/incidentManagement/cases.d"
 import { useResizeObserver } from "@vueuse/core"
@@ -204,6 +204,7 @@ import {
 import { computed, nextTick, onBeforeMount, provide, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import CaseCreationButton from "./CaseCreationButton.vue"
 import CaseItem from "./CaseItem.vue"
 import CasesExport from "./CasesExport.vue"
@@ -372,7 +373,7 @@ function getData() {
 		.catch(err => {
 			casesList.value = []
 
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false
@@ -390,7 +391,7 @@ function getAvailableUsers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 }
 
@@ -405,7 +406,7 @@ function getCustomers() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 }
 

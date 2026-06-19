@@ -1,29 +1,48 @@
 <template>
 	<div class="@container">
 		<CardEntity :embedded hoverable size="small">
-			<div class="grid-auto-fit-200 flex flex-col gap-2 @lg:grid">
-				<CardKV v-for="prop of displayData" :key="prop.key" :class="{ 'hidden @lg:flex': prop.hideMobile }">
-					<template #key>
-						{{ prop.key }}
+			<template v-if="primaryProp" #headerMain>
+				<div class="flex min-w-0 flex-col gap-0">
+					<p class="text-secondary font-mono text-xs">{{ primaryProp.key }}</p>
+					<p class="text-default truncate text-sm font-semibold">{{ primaryProp.value }}</p>
+				</div>
+			</template>
+
+			<template #headerExtra>
+				<n-button size="small" @click.stop="showDetails = true">
+					<template #icon>
+						<Icon :name="DetailsIcon" />
 					</template>
-					<template #value>
-						{{ prop.value }}
-					</template>
-				</CardKV>
-				<CardKV class="hover:border-primary! cursor-pointer" @click="showDetails = true">
-					<template #value>
-						<div class="flex h-full w-full items-center justify-center text-center">view more...</div>
-					</template>
-				</CardKV>
-			</div>
+					Details
+				</n-button>
+			</template>
+
+			<template v-if="badgeProps.length" #default>
+				<div class="flex flex-wrap gap-2">
+					<Badge
+						v-for="prop of badgeProps"
+						:key="prop.key"
+						type="splitted"
+						size="small"
+						:class="{ 'hidden @lg:flex': prop.hideMobile }"
+					>
+						<template #label>{{ prop.key }}</template>
+						<template #value>
+							<span class="font-mono">{{ prop.value }}</span>
+						</template>
+					</Badge>
+				</div>
+			</template>
 		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(800px, 90vw)', overflow: 'hidden' }"
 			:bordered="false"
 			title="Collected Item"
+			segmented
 		>
 			<SimpleJsonViewer class="vuesjv-override" :model-value="jsonData" :initial-expanded-depth="2" />
 		</n-modal>
@@ -34,11 +53,12 @@
 import type { CollectResult } from "@/types/artifacts.d"
 import _isNumber from "lodash/isNumber"
 import _isString from "lodash/isString"
-import { NModal } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { NButton, NModal } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
+import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import CardKV from "@/components/common/cards/CardKV.vue"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
@@ -57,6 +77,11 @@ const displayData = ref<Prop[]>([])
 
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
+
+const DetailsIcon = "carbon:information"
+
+const primaryProp = computed(() => displayData.value[0] ?? null)
+const badgeProps = computed(() => displayData.value.slice(1))
 
 onBeforeMount(() => {
 	for (const key in collect) {

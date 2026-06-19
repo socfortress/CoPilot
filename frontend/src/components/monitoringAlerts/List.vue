@@ -74,6 +74,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 // TODO-FE: refactor
 import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
 import { useResizeObserver } from "@vueuse/core"
@@ -81,6 +82,7 @@ import { NButton, NEmpty, NPagination, NPopover, NSpin, useDialog, useMessage } 
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import Alert from "./Item.vue"
 
 const dialog = useDialog()
@@ -126,7 +128,7 @@ function getData() {
 		.catch(err => {
 			monitoringAlerts.value = []
 
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false
@@ -162,7 +164,7 @@ function purge() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingPurge.value = false

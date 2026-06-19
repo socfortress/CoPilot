@@ -62,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type {
 	MitreCoverageQuery,
 	MitreCoverageResponse,
@@ -79,6 +80,7 @@ import { NDrawer, NDrawerContent, NModal, useMessage } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 import RuleCardContent from "../RuleCardContent.vue"
 import TechniqueDetails from "../TechniqueDetails.vue"
 import MatrixViewGrid from "./MatrixViewGrid.vue"
@@ -332,8 +334,8 @@ async function load(opts: { preserveDeepLink?: boolean } = {}) {
 		} else {
 			message.warning(res.data?.message || "Failed to load MITRE coverage")
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to load MITRE coverage")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load MITRE coverage")
 	} finally {
 		loading.value = false
 	}
@@ -345,8 +347,8 @@ async function handleRefresh() {
 		await Api.copilotSearches.refreshMitreMatrix()
 		await load()
 		message.success("MITRE matrix refreshed")
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to refresh MITRE matrix")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to refresh MITRE matrix")
 	} finally {
 		refreshing.value = false
 	}

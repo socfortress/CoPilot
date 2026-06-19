@@ -276,8 +276,8 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { FormInst, FormItemRule, FormRules, FormValidationError, StepsProps } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers.d"
 import _uniqBy from "lodash/uniqBy"
 import {
@@ -295,12 +295,14 @@ import {
 	NSwitch,
 	useMessage
 } from "naive-ui"
+import { generatePassword } from "password-generator"
 import isIP from "validator/es/lib/isIP"
 import isPort from "validator/es/lib/isPort"
 import isURL from "validator/es/lib/isURL"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	customerCode: string
@@ -561,7 +563,7 @@ function getSubscriptions() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingSubscriptions.value = false
@@ -584,7 +586,7 @@ function getDashboards() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingDashboards.value = false
@@ -649,38 +651,14 @@ async function submit() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false
 		})
 }
 
-function generateRandomPassword(length: number = 20): string {
-	const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	const lowercase = "abcdefghijklmnopqrstuvwxyz"
-	const numbers = "0123456789"
-	const allChars = uppercase + lowercase + numbers
-
-	let password = ""
-	// Ensure at least one of each character type
-	password += uppercase[Math.floor(Math.random() * uppercase.length)]
-	password += lowercase[Math.floor(Math.random() * lowercase.length)]
-	password += numbers[Math.floor(Math.random() * numbers.length)]
-
-	// Fill the rest randomly
-	for (let i = password.length; i < length; i++) {
-		password += allChars[Math.floor(Math.random() * allChars.length)]
-	}
-
-	// Shuffle the password to randomize the guaranteed characters
-	return password
-		.split("")
-		.sort(() => Math.random() - 0.5)
-		.join("")
-}
-
-function formPreset(step: number) {
+async function formPreset(step: number) {
 	switch (step) {
 		case 2:
 			if (!form.value.customer_index_name) {
@@ -689,7 +667,7 @@ function formPreset(step: number) {
 			break
 		case 5:
 			if (!form.value.wazuh_auth_password) {
-				form.value.wazuh_auth_password = generateRandomPassword()
+				form.value.wazuh_auth_password = await generatePassword(20, false, /[0-9a-z]/i)
 			}
 			break
 	}

@@ -87,6 +87,7 @@
 
 <script setup lang="ts">
 import type { SSOAllowedEmail } from "@/api/endpoints/sso"
+import type { ApiError } from "@/types/common"
 import {
 	NButton,
 	NCard,
@@ -107,6 +108,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const { routeSSOConfig } = useNavigation()
@@ -165,8 +167,8 @@ async function addEmail() {
 		newEmail.value = { email: "", role_id: 2 }
 		showAddEmail.value = false
 		loadEmails()
-	} catch (err: any) {
-		message.error(err.response?.data?.message || err.response?.data?.detail || "Failed to add email")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to add email")
 	} finally {
 		addingEmail.value = false
 	}
@@ -177,8 +179,8 @@ async function removeEmail(id: number) {
 		await Api.sso.removeAllowedEmail(id)
 		message.success("Email removed from allowlist")
 		loadEmails()
-	} catch (err: any) {
-		message.error(err.response?.data?.message || err.response?.data?.detail || "Failed to remove email")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to remove email")
 	}
 }
 

@@ -146,6 +146,7 @@
 
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { ExecuteSearchResponse, RuleDetail, RuleSummary } from "@/types/copilotSearches.d"
 import type { AlertAsset } from "@/types/incidentManagement/alerts"
 import {
@@ -170,6 +171,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import RuleHeader from "./RuleHeader.vue"
 
 const props = defineProps<{
@@ -254,8 +256,8 @@ async function loadRule(ruleId: string) {
 		} else {
 			message.error(res.data?.message || "Failed to load rule details")
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to load rule details")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load rule details")
 	} finally {
 		loadingRule.value = false
 	}
@@ -287,8 +289,8 @@ async function executeSearch() {
 		} else {
 			message.warning(res.data?.message || "Search failed")
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Search execution failed")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Search execution failed")
 	} finally {
 		executing.value = false
 	}

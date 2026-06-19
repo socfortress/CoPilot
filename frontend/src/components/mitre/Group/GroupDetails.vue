@@ -88,6 +88,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { MitreGroupDetails } from "@/types/mitre.d"
 import { useElementBounding, useRafFn } from "@vueuse/core"
 import { useMotionProperties } from "@vueuse/motion"
@@ -98,8 +99,9 @@ import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Markdown from "@/components/common/Markdown.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils/format"
 
+import { getApiErrorMessage } from "@/utils"
+import { formatDate } from "@/utils/format"
 import References from "../common/References.vue"
 
 const { externalId, entity } = defineProps<{
@@ -142,7 +144,7 @@ function getDetails(id: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingDetails.value = false

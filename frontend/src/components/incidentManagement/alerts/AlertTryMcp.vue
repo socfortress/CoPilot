@@ -66,6 +66,7 @@
 
 <script setup lang="ts">
 import type { AppSelectedEvent } from "@shuffleio/shuffle-mcps"
+import type { ApiError } from "@/types/common"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 import type { ShuffleIntegration } from "@/types/notifications.d"
 import { NAlert, NButton, NCollapseTransition, useMessage } from "naive-ui"
@@ -75,6 +76,7 @@ import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
 import ShuffleMCPEmbed from "@/components/shuffle/ShuffleMCPEmbed.vue"
 import TryMcpEmbed from "@/components/shuffle/TryMcpEmbed.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{ alert: Alert }>()
 
@@ -108,9 +110,8 @@ async function loadIntegrations() {
 		} else {
 			message.warning(res.data?.message || "Failed to load Shuffle integrations.")
 		}
-	} catch (err: unknown) {
-		const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-		message.error(msg || "Failed to load Shuffle integrations.")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load Shuffle integrations.")
 	} finally {
 		loadingIntegration.value = false
 	}
@@ -129,9 +130,8 @@ async function loadOrgToken(orgId: string) {
 		} else {
 			tokenError.value = res.data.message || "Failed to fetch org auth token."
 		}
-	} catch (err: unknown) {
-		const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-		tokenError.value = msg || "Failed to fetch org auth token."
+	} catch (err) {
+		tokenError.value = getApiErrorMessage(err as ApiError) || "Failed to fetch org auth token."
 	} finally {
 		loadingToken.value = false
 	}

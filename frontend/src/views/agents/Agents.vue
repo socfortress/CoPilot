@@ -69,6 +69,7 @@
 
 <script setup lang="ts">
 import type { Agent } from "@/types/agents.d"
+import type { ApiError } from "@/types/common"
 import _debounce from "lodash/debounce"
 import _split from "lodash/split"
 import { NEmpty, NPagination, NScrollbar, NSpin, useMessage } from "naive-ui"
@@ -79,6 +80,7 @@ import AgentToolbar from "@/components/agents/AgentToolbar.vue"
 import BulkDeleteModal from "@/components/agents/BulkDeleteModal.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { AgentStatus } from "@/types/agents.d"
+import { getApiErrorMessage } from "@/utils"
 
 const message = useMessage()
 const { routeAgent } = useNavigation()
@@ -191,7 +193,7 @@ function getAgents() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAgents.value = false
@@ -213,9 +215,9 @@ function syncAgents() {
 		})
 		.catch(err => {
 			if (err.response?.status === 401) {
-				message.error(err.response?.data?.message || "Sync returned Unauthorized.")
+				message.error(getApiErrorMessage(err as ApiError) || "Sync returned Unauthorized.")
 			} else {
-				message.error(err.response?.data?.message || "Failed to Sync Agents")
+				message.error(getApiErrorMessage(err as ApiError) || "Failed to Sync Agents")
 			}
 		})
 		.finally(() => {
@@ -238,9 +240,9 @@ function syncVulnerabilities(customerCode: string) {
 		})
 		.catch(err => {
 			if (err.response?.status === 401) {
-				message.error(err.response?.data?.message || "Sync returned Unauthorized.")
+				message.error(getApiErrorMessage(err as ApiError) || "Sync returned Unauthorized.")
 			} else {
-				message.error(err.response?.data?.message || "Failed to Sync Agents")
+				message.error(getApiErrorMessage(err as ApiError) || "Failed to Sync Agents")
 			}
 		})
 		.finally(() => {

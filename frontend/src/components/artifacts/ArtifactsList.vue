@@ -1,7 +1,7 @@
 <template>
-	<div class="artifacts-list">
-		<div ref="header" class="header flex items-center justify-end gap-2">
-			<div class="info flex grow gap-2">
+	<div class="flex flex-col">
+		<div ref="header" class="flex items-center justify-end gap-2">
+			<div class="flex grow gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-default rounded-lg">
@@ -12,8 +12,8 @@
 							</n-button>
 						</div>
 					</template>
-					<div class="flex flex-col gap-2">
-						<div class="box">
+					<div class="flex flex-col gap-2 text-sm">
+						<div>
 							Total :
 							<code>{{ totalArtifacts }}</code>
 						</div>
@@ -48,10 +48,11 @@
 				</template>
 				<div class="flex flex-col gap-2 py-1">
 					<div class="px-3">
-						<n-input-group class="artifacts-list-filter-combo" :class="{ 'filters-active': filterType }">
+						<n-input-group class="w-full" :class="filterType ? 'w-1/2 max-w-100 min-w-68' : undefined">
 							<n-select
 								v-model:value="filterType"
-								class="artifacts-list-filter-type"
+								class="shrink-0"
+								:class="filterType ? 'max-w-25 min-w-25' : 'max-w-32 min-w-32'"
 								:options="[
 									{
 										label: 'Agent ',
@@ -80,6 +81,7 @@
 								clearable
 								filterable
 								:loading="loadingAgents"
+								class="min-w-0 grow"
 							/>
 							<n-select
 								v-if="filterType === 'os'"
@@ -87,6 +89,7 @@
 								:options="osOptions"
 								clearable
 								placeholder="Select OS"
+								class="min-w-0 grow"
 							/>
 						</n-input-group>
 					</div>
@@ -104,7 +107,7 @@
 						v-for="artifact of itemsPaginated"
 						:key="artifact.name"
 						:artifact
-						class="item-appear item-appear-bottom item-appear-005"
+						class="animate-fade-up"
 					/>
 				</template>
 				<template v-else>
@@ -112,7 +115,7 @@
 				</template>
 			</div>
 		</n-spin>
-		<div class="footer flex justify-end">
+		<div class="flex justify-end">
 			<n-pagination
 				v-if="itemsPaginated.length > 3"
 				v-model:page="currentPage"
@@ -125,16 +128,17 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { ArtifactsQuery } from "@/api/endpoints/artifacts"
 import type { Agent } from "@/types/agents.d"
 import type { Artifact } from "@/types/artifacts.d"
+import type { ApiError } from "@/types/common"
 import { useResizeObserver } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"
 import { NBadge, NButton, NEmpty, NInputGroup, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import ArtifactItem from "./ArtifactItem.vue"
 
 const props = defineProps<{ agentHostname?: string; agents?: Agent[]; artifacts?: Artifact[] }>()
@@ -225,12 +229,7 @@ function getData(cb?: (artifacts: Artifact[]) => void) {
 		.catch(err => {
 			artifactsList.value = []
 
-			// MOCK
-			/*
-			artifactsList.value = artifact_list
-			*/
-
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false
@@ -254,7 +253,7 @@ function getAgents(cb?: (agents: Agent[]) => void) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingAgents.value = false
@@ -298,23 +297,3 @@ onBeforeMount(() => {
 	})
 })
 </script>
-
-<style lang="scss">
-.artifacts-list-filter-combo {
-	.artifacts-list-filter-type {
-		min-width: 130px;
-		max-width: 130px;
-	}
-
-	&.filters-active {
-		min-width: 270px;
-		width: 50vw;
-		max-width: 400px;
-
-		.artifacts-list-filter-type {
-			min-width: 100px;
-			max-width: 100px;
-		}
-	}
-}
-</style>

@@ -23,3 +23,5 @@ app.mount("#app")
 
 // TODO-FE: Rename all files to file-case. For example: activeResponse.ts -> active-response.ts
 // TODO-FE: use .ts files instead of .d.ts files
+// TODO-FE: search for all <style/> tags and replace them with tailwind classes
+// TODO-FE: remove all :tabs-padding="24"

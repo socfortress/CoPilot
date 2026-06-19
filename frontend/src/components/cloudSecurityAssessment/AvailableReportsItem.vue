@@ -21,11 +21,12 @@
 
 <script setup lang="ts">
 import type { ScoutSuiteReport } from "@/types/cloudSecurityAssessment.d"
+import type { ApiError } from "@/types/common"
 import { NButton, NPopconfirm, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import { getBaseUrl } from "@/utils"
+import { getApiErrorMessage, getBaseUrl } from "@/utils"
 
 const { report } = defineProps<{ report: ScoutSuiteReport }>()
 
@@ -51,7 +52,7 @@ function deleteScoutSuiteReport() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			canceling.value = false

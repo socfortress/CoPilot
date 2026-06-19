@@ -1,24 +1,24 @@
 <template>
-	<div class="metrics-list">
+	<div class="flex flex-col">
 		<n-card
 			v-for="group of sanitizedMetrics"
 			:key="group.groupName"
 			:title="group.groupName"
 			size="small"
 			segmented
-			class="metrics-group"
-			content-style="padding:0"
+			class="mb-6 overflow-hidden last:mb-0"
+			content-class="p-0!"
 		>
-			<div class="list">
+			<div class="bg-secondary divide-border divide-y">
 				<div
 					v-for="metric of group.throughputMetrics"
 					:key="metric.metric"
-					class="metric-wrap flex items-center gap-4"
+					class="flex items-center gap-4 px-4 py-3"
 				>
-					<div class="metric basis-2/3">
+					<div class="basis-2/3 leading-tight">
 						{{ metric.metric }}
 					</div>
-					<div class="value basis-1/3">
+					<div class="basis-1/3">
 						<n-progress type="line" status="success" :percentage="metric.percentage">
 							<span class="font-mono">
 								{{ metric.value }}
@@ -32,7 +32,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { ThroughputMetric } from "@/types/graylog/metrics.d"
 import _groupBy from "lodash/groupBy"
 import _map from "lodash/map"
@@ -83,28 +82,3 @@ function sanitizeMetrics(metrics: ThroughputMetric[]): Metrics[] {
 	})
 }
 </script>
-
-<style lang="scss" scoped>
-.metrics-list {
-	.metrics-group {
-		margin-bottom: calc(var(--spacing) * 6);
-		overflow: hidden;
-
-		.list {
-			background-color: var(--bg-secondary-color);
-			.metric-wrap {
-				padding-inline: calc(var(--spacing) * 4);
-				padding-block: calc(var(--spacing) * 3);
-
-				.metric {
-					line-height: 1.1;
-				}
-
-				&:not(:last-child) {
-					border-bottom: 1px solid var(--border-color);
-				}
-			}
-		}
-	}
-}
-</style>

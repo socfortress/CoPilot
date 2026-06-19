@@ -113,6 +113,7 @@
 
 <script setup lang="ts">
 import type { CasesFilter } from "@/api/endpoints/soc"
+import type { ApiError } from "@/types/common"
 import type { DateFormatted, SocCase } from "@/types/soc/case.d"
 import { useResizeObserver } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"
@@ -133,6 +134,7 @@ import {
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 import SocCaseItem from "./SocCaseItem.vue"
 
@@ -212,7 +214,7 @@ function getData() {
 		.catch(err => {
 			casesList.value = []
 
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false
@@ -248,7 +250,7 @@ function purge() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingPurge.value = false

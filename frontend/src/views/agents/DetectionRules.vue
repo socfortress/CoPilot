@@ -162,6 +162,7 @@
 
 <script setup lang="ts">
 import type { XMLEditorCtx, XMLError } from "@/components/common/XMLEditor.vue"
+import type { ApiError } from "@/types/common"
 import type { WazuhFileDetails, WazuhFileItem } from "@/types/wazuh/rules.d"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
@@ -172,6 +173,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const message = useMessage()
 const loadingManager = ref(false)
@@ -224,7 +226,7 @@ function reloadManager() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingManager.value = false
@@ -263,7 +265,7 @@ function getList() {
 			if (!axios.isCancel(err)) {
 				fileList.value = []
 
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 				loadingList.value = false
 			}
 		})
@@ -283,7 +285,7 @@ function getFile(filename: string) {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingFile.value = false
@@ -312,7 +314,7 @@ function uploadFileFile() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				uploadingFile.value = false

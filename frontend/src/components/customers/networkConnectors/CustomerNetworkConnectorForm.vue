@@ -74,15 +74,16 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { StepsProps } from "naive-ui"
 import type { NewNetworkConnector } from "@/api/endpoints/networkConnectors"
 import type { ServiceItemData } from "@/components/services/types"
+import type { ApiError } from "@/types/common"
 import { NButton, NFormItem, NInput, NScrollbar, NSelect, NStep, NSteps, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import NetworkConnectorsList from "@/components/networkConnectors/NetworkConnectorsList.vue"
+import { getApiErrorMessage } from "@/utils"
 
 interface AuthKeysInput {
 	key: string
@@ -178,7 +179,7 @@ function submit() {
 				}
 			})
 			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
 				loading.value = false

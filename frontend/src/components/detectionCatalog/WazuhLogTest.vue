@@ -178,6 +178,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { CatalogLogTestResponse } from "@/types/detectionCatalog.d"
 import { useStorage } from "@vueuse/core"
 import {
@@ -200,6 +201,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{ (e: "open-rule", ruleId: number): void }>()
 const HISTORY_STORAGE_KEY = "detectionCatalog.logtest.history"
@@ -313,8 +315,7 @@ function runTest() {
 			}
 		})
 		.catch(err => {
-			const detail = err.response?.data?.detail || err.response?.data?.message
-			message.error(detail || "Logtest request failed")
+			message.error(getApiErrorMessage(err as ApiError) || "Logtest request failed")
 		})
 		.finally(() => {
 			testing.value = false

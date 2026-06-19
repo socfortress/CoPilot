@@ -1,8 +1,10 @@
 import type { DialogApiInjection } from "naive-ui/es/dialog/src/DialogProvider"
 import type { MessageApiInjection } from "naive-ui/es/message/src/MessageProvider"
+import type { ApiError } from "@/types/common"
 import type { Case } from "@/types/incidentManagement/cases.d"
 import { h } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 export interface DeleteCaseParams {
 	caseData: Case
@@ -64,9 +66,9 @@ export function deleteAlert({ caseData, cbBefore, cbSuccess, cbAfter, cbError, m
 		})
 		.catch(err => {
 			if (err.response?.status === 401) {
-				message.error(err.response?.data?.message || "Case Delete returned Unauthorized.")
+				message.error(getApiErrorMessage(err as ApiError) || "Case Delete returned Unauthorized.")
 			} else {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 			}
 
 			if (cbError && typeof cbError === "function") {

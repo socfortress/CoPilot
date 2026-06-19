@@ -198,6 +198,7 @@
 <script setup lang="ts">
 import type { PrintSettingsData } from "./PrintSettings.vue"
 import type { GenerateReportPayload, ReportTimeRange } from "@/api/endpoints/reporting"
+import type { ApiError } from "@/types/common"
 import type { Dashboard, Org, Panel } from "@/types/reporting.d"
 import { useStorage } from "@vueuse/core"
 import { saveAs } from "file-saver"
@@ -208,6 +209,7 @@ import draggable from "vuedraggable"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import * as defaultSettings from "./defaultSettings"
 import PrintSettings from "./PrintSettings.vue"
@@ -411,7 +413,7 @@ function print() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingPrint.value = false

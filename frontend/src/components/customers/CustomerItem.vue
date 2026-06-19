@@ -233,10 +233,13 @@
 								<CustomerAgents v-if="customerInfo" :customer="customerInfo" />
 							</n-scrollbar>
 						</n-tab-pane>
-						<n-tab-pane name="Deploy Agent" tab="Deploy Agent" display-directive="show:lazy" class="p-4! pr-0!">
-							<n-scrollbar style="max-height: 470px" trigger="none" class="pr-4">
-								<CustomerEdrInstall :customer-code="customer.customer_code" />
-							</n-scrollbar>
+						<n-tab-pane
+							name="Deploy Agent"
+							tab="Deploy Agent"
+							display-directive="show:lazy"
+							class="overflow-hidden p-4!"
+						>
+							<CustomerEdrInstall :customer-code="customer.customer_code" />
 						</n-tab-pane>
 						<n-tab-pane
 							name="Healthcheck Wazuh"
@@ -286,7 +289,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
+import type { ApiError } from "@/types/common"
 import type { Customer, CustomerMeta } from "@/types/customers.d"
 import { NAvatar, NButton, NModal, NPopover, NScrollbar, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } from "vue"
@@ -295,7 +298,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useCustomerHealthcheckFilters } from "@/composables/useCustomerHealthcheckFilters"
-import { getAvatar, getNameInitials } from "@/utils"
+import { getApiErrorMessage, getAvatar, getNameInitials } from "@/utils"
 
 const props = defineProps<{
 	customer: Customer
@@ -368,7 +371,7 @@ function getFull() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingFull.value = false

@@ -167,6 +167,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { ScaPackageAgentsResponse, ScaPolicyItem } from "@/types/sca.d"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
@@ -176,6 +177,7 @@ import CardKV from "@/components/common/cards/CardKV.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
 import PropsList from "@/components/common/PropsList.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{ policy: ScaPolicyItem }>()
 
@@ -248,8 +250,8 @@ async function detectAgents() {
 		} else {
 			message.warning(res.data?.message || "Failed to detect agents")
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to detect agents")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to detect agents")
 	} finally {
 		loadingAgents.value = false
 		agentsLoaded.value = true
@@ -265,8 +267,8 @@ async function loadYamlContent() {
 		} else {
 			message.warning(res.data?.message || "Failed to load policy content")
 		}
-	} catch (err: any) {
-		message.error(err.response?.data?.message || "Failed to load policy content")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to load policy content")
 	} finally {
 		loadingYaml.value = false
 		yamlLoaded.value = true

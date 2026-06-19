@@ -79,6 +79,7 @@ import { NButton, NScrollbar, NSelect, NSpin, NStep, NSteps, useMessage } from "
 import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 import SourceConfigurationForm from "./SourceConfigurationForm.vue"
 
 const props = defineProps<{ disabledSources?: SourceName[] }>()
@@ -197,7 +198,7 @@ function getIndices() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loadingIndices.value = false
@@ -219,7 +220,7 @@ function createSourceConfiguration(payload: SourceConfiguration) {
 			}
 		})
 		.catch((err: ApiError) => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			submitting.value = formCTX.value?.toggleSubmittingFlag() || false

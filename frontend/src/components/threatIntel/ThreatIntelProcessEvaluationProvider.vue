@@ -122,12 +122,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { EvaluationData, MCPQueryResponse } from "@/types/threatIntel.d"
 import _toSafeInteger from "lodash/toSafeInteger"
 import { NCard, NEmpty, NInput, NModal, NSpin, NStatistic, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"
 import Api from "@/api"
 import Markdown from "@/components/common/Markdown.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const { processName } = defineProps<{
 	processName: string
@@ -170,7 +172,7 @@ function getEvaluation() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

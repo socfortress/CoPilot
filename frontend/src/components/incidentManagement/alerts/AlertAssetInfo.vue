@@ -94,6 +94,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common"
 import type { AlertAsset, AlertDetails } from "@/types/incidentManagement/alerts.d"
 import _omit from "lodash/omit"
 import { NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
@@ -102,6 +103,7 @@ import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{ asset: AlertAsset }>()
 
@@ -164,7 +166,7 @@ function getAlertDetails(indexId: string, indexName: string) {
 		})
 		.catch(err => {
 			closeAlertDetails()
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false

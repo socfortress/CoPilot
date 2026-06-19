@@ -50,12 +50,14 @@
 
 <script setup lang="ts">
 import type { AiAnalystIoc, AiAnalystReport } from "@/types/aiAnalyst.d"
+import type { ApiError } from "@/types/common"
 import { NCard, NEmpty, NInput, NSpin, NSwitch, NTooltip, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
+import { getApiErrorMessage } from "@/utils"
 
 export interface IocState {
 	verdict_correct: boolean
@@ -114,9 +116,9 @@ async function loadIocs() {
 		const iocsRes = await Api.aiAnalyst.getIocsByReport(report.value.id)
 		if (iocsRes.data.success) iocs.value = iocsRes.data.iocs || []
 		seedIocDefaults()
-	} catch (err: unknown) {
+	} catch (err) {
 		const e = err as { response?: { data?: { message?: string } }; message?: string }
-		message.error(e.response?.data?.message || e.message || "Failed to load review data")
+		message.error(getApiErrorMessage(e as ApiError) || "Failed to load review data")
 	} finally {
 		loading.value = false
 	}

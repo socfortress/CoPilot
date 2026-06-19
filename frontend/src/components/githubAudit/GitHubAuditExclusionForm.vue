@@ -44,11 +44,13 @@
 
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { GitHubAuditExclusionCreate } from "@/types/githubAudit.d"
 import { NButton, NDatePicker, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"
 import { useAuthStore } from "@/stores/auth"
+import { getApiErrorMessage } from "@/utils"
 
 type ExclusionFormData = Omit<GitHubAuditExclusionCreate, "created_by" | "check_id" | "reason"> & {
 	check_id: string | null
@@ -110,7 +112,7 @@ async function handleSubmit() {
 		formData.approved_by = null
 		expiresAtTimestamp.value = null
 	} catch (error: any) {
-		message.error(error.response?.data?.detail || "Failed to create exclusion")
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to create exclusion")
 	} finally {
 		saving.value = false
 	}
