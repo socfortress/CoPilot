@@ -62,8 +62,8 @@
 						<div v-else-if="current === 3" class="flex min-h-[401px] grow flex-col px-6 pb-7">
 							<ActiveResponseInvokeForm
 								v-if="selectedActiveResponse"
+								ref="activeResponseInvokeFormRef"
 								:active-response="selectedActiveResponse"
-								@mounted="activeResponseInvokeFormCTX = $event"
 								@submitted="reset()"
 								@start-loading="loadingActiveResponseInvoke = true"
 								@stop-loading="loadingActiveResponseInvoke = false"
@@ -104,7 +104,7 @@ import type { StepsProps } from "naive-ui"
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import type { ApiError, OsTypesLower } from "@/types/common"
 import { NButton, NEmpty, NScrollbar, NSpin, NStep, NSteps, useMessage } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -114,12 +114,6 @@ import ActiveResponseItem from "./ActiveResponseItem.vue"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
-	(
-		e: "mounted",
-		value: {
-			reset: () => void
-		}
-	): void
 }>()
 
 const ArrowLeftIcon = "carbon:arrow-left"
@@ -134,7 +128,7 @@ const current = ref<number>(1)
 const currentStatus = ref<StepsProps["status"]>("process")
 const selectedOS = ref<OsTypesLower | null>(null)
 const selectedActiveResponse = ref<SupportedActiveResponse | null>(null)
-const activeResponseInvokeFormCTX = ref<{ reset: () => void } | null>(null)
+const activeResponseInvokeFormRef = ref<InstanceType<typeof ActiveResponseInvokeForm> | null>(null)
 
 watch(loading, val => {
 	emit("update:loading", val)
@@ -158,7 +152,7 @@ function prev() {
 	currentStatus.value = "process"
 	slideFormDirection.value = "left"
 	current.value--
-	activeResponseInvokeFormCTX.value?.reset()
+	activeResponseInvokeFormRef.value?.reset()
 }
 
 function reset() {
@@ -168,7 +162,7 @@ function reset() {
 		current.value = 1
 		selectedOS.value = null
 		selectedActiveResponse.value = null
-		activeResponseInvokeFormCTX.value?.reset()
+		activeResponseInvokeFormRef.value?.reset()
 	}
 }
 
@@ -206,10 +200,8 @@ onBeforeMount(() => {
 	getActiveResponseList()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		reset
-	})
+defineExpose({
+	reset
 })
 </script>
 

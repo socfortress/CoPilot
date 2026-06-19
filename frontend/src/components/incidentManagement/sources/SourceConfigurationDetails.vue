@@ -13,10 +13,10 @@
 
 		<SourceConfigurationForm
 			v-if="sourceConfiguration"
+			ref="formRef"
 			v-show="editing"
 			:source-configuration-model="sourceConfiguration"
 			show-index-name-field
-			@mounted="formCTX = $event"
 			@submitted="updateSourceConfiguration($event)"
 		>
 			<template #additionalActions>
@@ -51,7 +51,7 @@ const ArrowIcon = "carbon:arrow-left"
 const EditIcon = "uil:edit-alt"
 const sourceConfiguration = ref<SourceConfiguration | null>(null)
 const editing = ref(false)
-const formCTX = ref<{ reset: () => void; toggleSubmittingFlag: () => boolean } | null>(null)
+const formRef = ref<{ reset: () => void; toggleSubmittingFlag: () => boolean } | null>(null)
 
 function getSourceConfiguration() {
 	loading.value = true
@@ -81,7 +81,7 @@ function getSourceConfiguration() {
 }
 
 function setEditMode() {
-	formCTX.value?.reset()
+	formRef.value?.reset()
 	editing.value = true
 }
 function setViewMode() {
@@ -89,7 +89,7 @@ function setViewMode() {
 }
 
 function updateSourceConfiguration(payload: SourceConfiguration) {
-	submitting.value = formCTX.value?.toggleSubmittingFlag() || true
+	submitting.value = formRef.value?.toggleSubmittingFlag() || true
 
 	Api.incidentManagement.sources
 		.updateSourceConfiguration(payload)
@@ -106,7 +106,7 @@ function updateSourceConfiguration(payload: SourceConfiguration) {
 			message.error(getApiErrorMessage(err) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
-			submitting.value = formCTX.value?.toggleSubmittingFlag() || false
+			submitting.value = formRef.value?.toggleSubmittingFlag() || false
 		})
 }
 

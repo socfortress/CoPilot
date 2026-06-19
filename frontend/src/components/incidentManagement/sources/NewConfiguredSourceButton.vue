@@ -18,9 +18,9 @@
 			segmented
 		>
 			<SourceConfigurationWizard
+				ref="sourceConfigurationWizardRef"
 				:disabled-sources="configuredSourcesList"
 				@submitted="submitted()"
-				@mounted="formCTX = $event"
 			/>
 		</n-modal>
 	</div>
@@ -47,7 +47,7 @@ const message = useMessage()
 const showWizard = ref(false)
 const loading = ref(false)
 const configuredSourcesList = ref<SourceName[]>([])
-const formCTX = ref<{ reset: () => void } | null>(null)
+const sourceConfigurationWizardRef = ref<{ reset: () => void } | null>(null)
 
 function getConfiguredSources() {
 	loading.value = true
@@ -76,7 +76,7 @@ function submitted() {
 
 watch(showWizard, val => {
 	if (val) {
-		formCTX.value?.reset()
+		sourceConfigurationWizardRef.value?.reset()
 	}
 })
 

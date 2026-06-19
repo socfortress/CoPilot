@@ -44,12 +44,6 @@ import NewConfiguredSourceButton from "./NewConfiguredSourceButton.vue"
 const { showToolbar = true } = defineProps<{ showToolbar?: boolean }>()
 
 const emit = defineEmits<{
-	(
-		e: "mounted",
-		value: {
-			reload: () => void
-		}
-	): void
 	(e: "loaded", value: number): void
 }>()
 
@@ -81,9 +75,7 @@ function getConfiguredSources() {
 
 onBeforeMount(() => {
 	getConfiguredSources()
-
-	emit("mounted", {
-		reload: getConfiguredSources
-	})
 })
+
+defineExpose({ reload: getConfiguredSources })
 </script>

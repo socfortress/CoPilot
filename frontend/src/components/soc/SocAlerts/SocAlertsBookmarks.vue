@@ -37,7 +37,7 @@ import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
 import axios from "axios"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, onBeforeUnmount, onMounted, ref, toRefs } from "vue"
+import { onBeforeMount, onBeforeUnmount, ref, toRefs } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 import SocAlertItem from "./SocAlertItem/SocAlertItem.vue"
@@ -49,12 +49,6 @@ const emit = defineEmits<{
 	(e: "bookmark"): void
 	(e: "deleted", value?: string): void
 	(e: "loaded", value: SocAlert[]): void
-	(
-		e: "mounted",
-		value: {
-			reload: () => void
-		}
-	): void
 }>()
 
 const { usersList } = toRefs(props)
@@ -117,13 +111,7 @@ onBeforeMount(() => {
 	getBookmarks()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		reload: () => {
-			safeReload()
-		}
-	})
-})
+defineExpose({ reload: safeReload })
 
 onBeforeUnmount(() => {
 	abortController?.abort()

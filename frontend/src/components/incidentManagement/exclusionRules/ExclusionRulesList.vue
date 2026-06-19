@@ -111,12 +111,6 @@ const { showCreationButton = true, showInfoPopover = true } = defineProps<{
 }>()
 
 const emit = defineEmits<{
-	(
-		e: "mounted",
-		value: {
-			reload: () => void
-		}
-	): void
 	(e: "loaded", value: number): void
 }>()
 
@@ -189,9 +183,7 @@ watch([currentPage, pageSize, () => filters.value.enabledOnly], () => {
 
 onBeforeMount(() => {
 	getData()
-
-	emit("mounted", {
-		reload: getData
-	})
 })
+
+defineExpose({ reload: getData })
 </script>

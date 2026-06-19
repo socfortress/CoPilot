@@ -79,7 +79,7 @@
 import type { SetupContext } from "vue"
 import { onClickOutside, useWindowSize } from "@vueuse/core"
 import { NButton, NScrollbar, NSplit } from "naive-ui"
-import { computed, onMounted, ref, useSlots, watch } from "vue"
+import { computed, ref, useSlots, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 
 type SidebarPosition = "left" | "right"
@@ -127,7 +127,6 @@ const {
 }>()
 
 const emit = defineEmits<{
-	(e: "mounted", value: CtxSegmentedPage): void
 	(e: "sidebar", value: boolean): void
 }>()
 
@@ -181,12 +180,10 @@ watch(
 	{ immediate: true }
 )
 
-onMounted(() => {
-	emit("mounted", {
-		mainScrollbar: mainScrollbar.value,
-		closeSidebar,
-		openSidebar
-	})
+defineExpose({
+	mainScrollbar,
+	closeSidebar,
+	openSidebar
 })
 </script>
 

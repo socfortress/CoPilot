@@ -23,23 +23,23 @@
 
 				<AwsTypeForm
 					v-if="baseForm.report_type === ScoutSuiteReportType.AWS"
+					ref="typeFormComponentRef"
 					@model="typeForm = $event"
 					@valid="typeFormValid = $event"
-					@mounted="typeFormRef = $event"
 				/>
 
 				<AzureTypeForm
 					v-if="baseForm.report_type === ScoutSuiteReportType.Azure"
+					ref="typeFormComponentRef"
 					@model="typeForm = $event"
 					@valid="typeFormValid = $event"
-					@mounted="typeFormRef = $event"
 				/>
 
 				<GcpTypeForm
 					v-if="baseForm.report_type === ScoutSuiteReportType.Gcp"
+					ref="typeFormComponentRef"
 					@model="typeForm = $event"
 					@valid="typeFormValid = $event"
-					@mounted="typeFormRef = $event"
 				/>
 
 				<div class="mt-8 flex justify-between gap-4">
@@ -68,7 +68,7 @@ import type {
 } from "@/types/cloudSecurityAssessment.d"
 import type { ApiCommonResponse, ApiError } from "@/types/common.d"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import { ScoutSuiteReportType } from "@/types/cloudSecurityAssessment.d"
 import { getApiErrorMessage } from "@/utils"
@@ -81,12 +81,6 @@ type TypeFormPayload = Partial<ScoutSuiteAwsReportPayload | ScoutSuiteAzureRepor
 
 const emit = defineEmits<{
 	(e: "submitted"): void
-	(
-		e: "mounted",
-		value: {
-			reset: () => void
-		}
-	): void
 }>()
 
 const submitting = ref(false)
@@ -97,7 +91,7 @@ const baseForm = ref<BaseFormPayload>(getClearBaseForm())
 const typeForm = ref<TypeFormPayload | null>(null)
 const typeFormValid = ref<boolean>(false)
 const baseFormRef = ref<FormInst | null>(null)
-const typeFormRef = ref<FormInst | null>(null)
+const typeFormComponentRef = ref<InstanceType<typeof AwsTypeForm> | null>(null)
 
 const availableTypes = ["aws", "azure", "gcp"]
 
@@ -137,19 +131,18 @@ watch(
 	() => baseForm.value.report_type,
 	() => {
 		typeForm.value = null
-		typeFormRef.value = null
 		typeFormValid.value = false
 	}
 )
 
 function validate(cb?: () => void) {
-	if (!baseFormRef.value || !typeFormRef.value) return
+	if (!baseFormRef.value || !typeFormComponentRef.value?.formRef) return
 
 	baseFormRef.value.validate((errors?: Array<FormValidationError>) => {
 		if (!errors) {
 			validationMessage?.destroy()
 			validationMessage = null
-			;(typeFormRef.value as FormInst).validate((errors?: Array<FormValidationError>) => {
+			typeFormComponentRef.value!.formRef!.validate((errors?: Array<FormValidationError>) => {
 				if (!errors) {
 					validationMessage?.destroy()
 					validationMessage = null
@@ -273,9 +266,7 @@ onBeforeMount(() => {
 	getScoutSuiteReportGenerationOptions()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		reset
-	})
+defineExpose({
+	reset
 })
 </script>

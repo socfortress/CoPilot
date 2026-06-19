@@ -144,19 +144,13 @@ import type { Customer } from "@/types/customers.d"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
 import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NSelect, useMessage } from "naive-ui"
-import { computed, onMounted, ref } from "vue"
+import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "submit", value: ScaStreamingListFilter[]): void
-	(
-		e: "mounted",
-		value: {
-			setFilter: (payload: ScaStreamingListFilter[]) => void
-		}
-	): void
 }>()
 
 const AgentsIcon = "carbon:network-3"
@@ -283,9 +277,5 @@ function loadCustomers() {
 		})
 }
 
-onMounted(() => {
-	emit("mounted", {
-		setFilter
-	})
-})
+defineExpose({ setFilter })
 </script>

@@ -40,7 +40,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	(e: "click", value: PointerEvent): void
-	(e: "mounted"): void
 }>()
 
 const highlighter = ref<HighlighterGeneric<string, string> | null>(null)
@@ -85,7 +84,6 @@ const mdOptions = computed(() => ({
 
 onMounted(async () => {
 	highlighter.value = (await getHighlighter()) as unknown as HighlighterGeneric<string, string>
-	emit("mounted")
 })
 </script>
 

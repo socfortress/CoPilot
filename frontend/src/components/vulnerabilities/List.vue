@@ -26,7 +26,7 @@
 		</div>
 
 		<CollapseKeepAlive :show="showFiltersView" embedded arrow="top-right">
-			<ListFilters class="p-3" @submit="applyFilters" @mounted="filtersCTX = $event" />
+			<ListFilters ref="filtersRef" class="p-3" @submit="applyFilters" />
 		</CollapseKeepAlive>
 
 		<!-- Vulnerability List -->
@@ -88,7 +88,7 @@ const showSizePicker = ref(true)
 const header = ref()
 const showFiltersView = useStorage<boolean>("agents-vulnerability-list-filters-view-state", false, localStorage)
 
-const filtersCTX = ref<{ setFilter: (payload: VulnerabilitiesListFilter[]) => void } | null>(null)
+const filtersRef = ref<{ setFilter: (payload: VulnerabilitiesListFilter[]) => void } | null>(null)
 const filters = ref<VulnerabilitiesListFilter[]>([])
 
 const filtered = computed<boolean>(() => {
@@ -142,12 +142,12 @@ function getList() {
 
 function selectSeverity(value: VulnerabilitySeverity) {
 	showFiltersView.value = true
-	filtersCTX.value?.setFilter([{ type: "severity", value }])
+	filtersRef.value?.setFilter([{ type: "severity", value }])
 }
 
 function selectPackage(value: string) {
 	showFiltersView.value = true
-	filtersCTX.value?.setFilter([{ type: "package_name", value }])
+	filtersRef.value?.setFilter([{ type: "package_name", value }])
 }
 
 function applyFilters(newFilters: VulnerabilitiesListFilter[]) {

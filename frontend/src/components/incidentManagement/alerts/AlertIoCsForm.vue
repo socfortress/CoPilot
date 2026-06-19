@@ -63,7 +63,7 @@ import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import isIP from "validator/es/lib/isIP"
 import isURL from "validator/es/lib/isURL"
-import { computed, onMounted, ref, toRefs, watch } from "vue"
+import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
@@ -71,12 +71,6 @@ const props = defineProps<{ alertId: number }>()
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
 	(e: "submitted", value: AlertIOC): void
-	(
-		e: "mounted",
-		value: {
-			reset: () => void
-		}
-	): void
 }>()
 
 const { alertId } = toRefs(props)
@@ -216,9 +210,7 @@ watch(submitting, val => {
 	emit("update:loading", val)
 })
 
-onMounted(() => {
-	emit("mounted", {
-		reset
-	})
+defineExpose({
+	reset
 })
 </script>

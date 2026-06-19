@@ -24,9 +24,9 @@
 				<template #header>
 					<div class="mr-4 flex items-center justify-between gap-4">
 						<span>AI Chatbot</span>
-						<n-tooltip v-if="chatContainerCTX">
+						<n-tooltip v-if="chatContainerRef">
 							<template #trigger>
-								<n-button text @click="chatContainerCTX.clearHistory()">
+								<n-button text @click="chatContainerRef.clearHistory()">
 									<Icon name="mdi:broom" :size="18" />
 								</n-button>
 							</template>
@@ -34,7 +34,7 @@
 						</n-tooltip>
 					</div>
 				</template>
-				<ChatContainer class="grow" @mounted="chatContainerCTX = $event" />
+				<ChatContainer ref="chatContainerRef" class="grow" />
 			</n-drawer-content>
 		</n-drawer>
 	</div>
@@ -47,7 +47,7 @@ import Icon from "@/components/common/Icon.vue"
 import ChatContainer from "./ChatContainer.vue"
 
 const showDrawer = ref(false)
-const chatContainerCTX = ref<{ clearHistory: () => void } | null>(null)
+const chatContainerRef = ref<{ clearHistory: () => void } | null>(null)
 </script>
 
 <style lang="scss" scoped>

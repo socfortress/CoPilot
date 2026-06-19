@@ -10,7 +10,7 @@
 import type { FormInst, FormItemRule, FormRules } from "naive-ui"
 import { NForm, NFormItem, NInput } from "naive-ui"
 import isURL from "validator/es/lib/isURL"
-import { onMounted, ref, toRefs } from "vue"
+import { ref, toRefs } from "vue"
 
 export interface IHostForm {
 	connector_url: string
@@ -18,10 +18,6 @@ export interface IHostForm {
 
 const props = defineProps<{
 	form: IHostForm
-}>()
-
-const emit = defineEmits<{
-	(e: "mounted", value: FormInst): void
 }>()
 
 const { form } = toRefs(props)
@@ -43,9 +39,7 @@ const rules: FormRules = {
 	connector_url: [{ required: true, validator: validateUrl, trigger: "blur" }]
 }
 
-onMounted(() => {
-	if (formRef.value) {
-		emit("mounted", formRef.value)
-	}
+defineExpose({
+	formRef
 })
 </script>

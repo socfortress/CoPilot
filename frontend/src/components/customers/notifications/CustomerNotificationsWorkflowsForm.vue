@@ -34,7 +34,7 @@ import type { IncidentNotificationPayload } from "@/api/endpoints/incidentManage
 import type { ApiError } from "@/types/common"
 import type { IncidentNotification } from "@/types/incidentManagement/notifications.d"
 import { NButton, NForm, NFormItem, NInput, NSpin, NSwitch, useMessage } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
@@ -52,12 +52,6 @@ const emit = defineEmits<{
 	(e: "submitted", value: IncidentNotification): void
 	(e: "startLoading"): void
 	(e: "stopLoading"): void
-	(
-		e: "mounted",
-		value: {
-			reset: () => void
-		}
-	): void
 }>()
 
 const message = useMessage()
@@ -143,9 +137,7 @@ function submit() {
 		})
 }
 
-onMounted(() => {
-	emit("mounted", {
-		reset
-	})
+defineExpose({
+	reset
 })
 </script>

@@ -26,9 +26,9 @@
 			segmented
 		>
 			<CustomerNotificationsWorkflowsForm
+				ref="formRef"
 				:incident-notification
 				:customer-code="incidentNotification.customer_code"
-				@mounted="formCTX = $event"
 				@submitted="emitUpdate"
 			/>
 		</n-modal>
@@ -60,12 +60,12 @@ const { incidentNotification, embedded } = toRefs(props)
 const EnabledIcon = "carbon:circle-solid"
 const DisabledIcon = "carbon:subtract-alt"
 
-const formCTX = ref<{ reset: (incidentNotification?: IncidentNotification) => void } | null>(null)
+const formRef = ref<{ reset: (incidentNotification?: IncidentNotification) => void } | null>(null)
 const showForm = ref(false)
 
 watch(showForm, val => {
 	if (val) {
-		formCTX.value?.reset(incidentNotification.value)
+		formRef.value?.reset(incidentNotification.value)
 	}
 })
 

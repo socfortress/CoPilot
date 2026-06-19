@@ -10,11 +10,11 @@
 
 		<!-- Filters -->
 		<PatchTuesdayFilters
+			ref="filtersRef"
 			:cycles="availableCycles"
 			:families="availableFamilies"
 			:loading
 			@submit="applyFilters"
-			@mounted="filtersCTX = $event"
 		/>
 
 		<!-- Items List -->
@@ -73,7 +73,7 @@ const pageSize = 24
 const showDetail = ref(false)
 const selectedItem = ref<PatchTuesdayItem | null>(null)
 
-const filtersCTX = ref<{ setFilter: (payload: PatchTuesdayListFilter[]) => void } | null>(null)
+const filtersRef = ref<{ setFilter: (payload: PatchTuesdayListFilter[]) => void } | null>(null)
 const filters = ref<FiltersType>({
 	cycle: null,
 	priority: null,
@@ -200,7 +200,7 @@ function openItemDetail(item: PatchTuesdayItem) {
 onMounted(async () => {
 	await fetchCycles()
 	if (filters.value.cycle) {
-		filtersCTX.value?.setFilter([{ type: "cycle", value: filters.value.cycle }])
+		filtersRef.value?.setFilter([{ type: "cycle", value: filters.value.cycle }])
 		await fetchData()
 	}
 })

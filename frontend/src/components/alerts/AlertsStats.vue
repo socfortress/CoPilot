@@ -75,7 +75,7 @@ import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost } from "@/types/al
 import type { ApiError } from "@/types/common"
 import axios from "axios"
 import { NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
-import { onBeforeMount, onBeforeUnmount, onMounted, ref, toRefs } from "vue"
+import { onBeforeMount, onBeforeUnmount, ref, toRefs } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 import AlertsStatsItem from "./AlertsStatsItem.vue"
@@ -84,10 +84,6 @@ import AlertsStatsItem from "./AlertsStatsItem.vue"
 const props = withDefaults(defineProps<{ filters?: AlertsSummaryQuery }>(), {
 	filters: () => ({})
 })
-const emit = defineEmits<{
-	(e: "mounted", value: AlertsStatsCTX): void
-}>()
-
 const { filters } = toRefs(props)
 
 export interface AlertsStatsCTX {
@@ -209,11 +205,7 @@ onBeforeMount(() => {
 	startSearch()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		startSearch
-	})
-})
+defineExpose({ startSearch })
 
 onBeforeUnmount(() => {
 	cancelSearch()

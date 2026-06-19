@@ -43,18 +43,12 @@ import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import isIP from "validator/es/lib/isIP"
 import isURL from "validator/es/lib/isURL"
-import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
-	(
-		e: "mounted",
-		value: {
-			load: () => void
-		}
-	): void
 }>()
 
 const loadingDefaultSettings = ref(false)
@@ -275,9 +269,7 @@ onBeforeMount(() => {
 	getProvisioningDefaultSettings()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		load
-	})
+defineExpose({
+	load
 })
 </script>

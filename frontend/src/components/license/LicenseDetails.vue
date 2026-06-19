@@ -98,7 +98,7 @@ import type { ApiError } from "@/types/common"
 import type { License, LicenseFeatures } from "@/types/license.d"
 import _startCase from "lodash/startCase"
 import { NButton, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
+import { computed, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
@@ -118,12 +118,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	(e: "licenseLoaded", value: License): void
-	(
-		e: "mounted",
-		value: {
-			reload: () => void
-		}
-	): void
 }>()
 
 const { licenseData, featuresData, hideKey, hideFeatures } = toRefs(props)
@@ -263,9 +257,5 @@ onBeforeMount(() => {
 	load()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		reload: load
-	})
-})
+defineExpose({ reload: load })
 </script>

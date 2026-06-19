@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, UploadFileInfo } from "naive-ui"
 import { NForm, NFormItem, NUpload, NUploadDragger } from "naive-ui"
-import { onMounted, ref, toRefs } from "vue"
+import { ref, toRefs } from "vue"
 import Icon from "@/components/common/Icon.vue"
 
 export interface IFileForm {
@@ -33,10 +33,6 @@ export interface IFileForm {
 
 const props = defineProps<{
 	form: IFileForm
-}>()
-
-const emit = defineEmits<{
-	(e: "mounted", value: FormInst): void
 }>()
 
 const UploadIcon = "carbon:cloud-upload"
@@ -72,9 +68,7 @@ const rules: FormRules = {
 	connector_file: [{ required: true, validator: validateFile, trigger: "blur" }]
 }
 
-onMounted(() => {
-	if (formRef.value) {
-		emit("mounted", formRef.value)
-	}
+defineExpose({
+	formRef
 })
 </script>

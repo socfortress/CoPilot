@@ -163,7 +163,7 @@ import _get from "lodash/get"
 import _toSafeInteger from "lodash/toSafeInteger"
 import _trim from "lodash/trim"
 import { NButton, NCard, NForm, NFormItem, NInput, NInputNumber, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { CustomProvisionPriority } from "@/types/monitoringAlerts.d"
@@ -186,12 +186,6 @@ interface CustomProvisionForm {
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
-	(
-		e: "mounted",
-		value: {
-			reset: () => void
-		}
-	): void
 }>()
 
 const RemoveIcon = "ph:trash"
@@ -459,9 +453,7 @@ onBeforeMount(() => {
 	getStreams()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		reset
-	})
+defineExpose({
+	reset
 })
 </script>

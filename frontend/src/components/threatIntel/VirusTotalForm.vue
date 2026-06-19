@@ -227,19 +227,10 @@ import {
 	NUploadDragger,
 	useMessage
 } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
-
-const emit = defineEmits<{
-	(
-		e: "mounted",
-		value: {
-			restore: () => void
-		}
-	): void
-}>()
 
 const LinkIcon = "carbon:launch"
 const RefreshIcon = "carbon:renew"
@@ -346,10 +337,8 @@ watch(isPasswordProtected, () => {
 	filePassword.value = null
 })
 
-onMounted(() => {
-	emit("mounted", {
-		restore
-	})
+defineExpose({
+	restore
 })
 </script>
 

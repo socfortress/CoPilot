@@ -62,10 +62,6 @@ import ChatBubbleBlock from "./ChatBubble.vue"
 import ChatQuery from "./ChatQuery.vue"
 import ChatQuestions from "./ChatQuestions.vue"
 
-const emit = defineEmits<{
-	(e: "mounted", value: { clearHistory: () => void }): void
-}>()
-
 const message = useMessage()
 
 const list = useStorage<ChatBubble[]>("ai-chatbot-list-messages", [], secureLocalStorage({ session: true }))
@@ -195,7 +191,7 @@ onBeforeMount(() => {
 
 onMounted(() => {
 	scrollChat()
-
-	emit("mounted", { clearHistory })
 })
+
+defineExpose({ clearHistory })
 </script>

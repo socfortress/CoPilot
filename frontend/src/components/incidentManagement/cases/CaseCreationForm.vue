@@ -98,19 +98,13 @@ import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, h, inject, onBeforeMount, onMounted, ref, watch } from "vue"
+import { computed, h, inject, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
 	(e: "submitted", value: Case): void
-	(
-		e: "mounted",
-		value: {
-			load: () => void
-		}
-	): void
 }>()
 
 const loadingAvailableUsers = ref(false)
@@ -364,9 +358,7 @@ onBeforeMount(() => {
 	load()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		load
-	})
+defineExpose({
+	load
 })
 </script>

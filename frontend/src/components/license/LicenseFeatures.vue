@@ -107,7 +107,7 @@
 import type { ApiError } from "@/types/common"
 import type { License, LicenseFeatures, LicenseKey, SubscriptionFeature } from "@/types/license.d"
 import { NButton, NEmpty, NModal, NPopover, NScrollbar, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
+import { computed, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
@@ -123,12 +123,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	(e: "licenseKeyLoaded", value: LicenseKey): void
-	(
-		e: "mounted",
-		value: {
-			reload: () => void
-		}
-	): void
 }>()
 
 const { hideKey, licenseData } = toRefs(props)
@@ -243,11 +237,7 @@ onBeforeMount(() => {
 	load()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		reload: load
-	})
-})
+defineExpose({ reload: load })
 </script>
 
 <style lang="scss" scoped>

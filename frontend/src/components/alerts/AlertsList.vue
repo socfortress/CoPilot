@@ -66,7 +66,7 @@
 			display-directive="show"
 		>
 			<n-drawer-content title="Alerts stats" closable body-content-style="padding:0" :native-scrollbar="false">
-				<AlertsStats :filters @mounted="alertsStatsCTX = $event" />
+				<AlertsStats ref="alertsStatsRef" :filters />
 			</n-drawer-content>
 		</n-drawer>
 
@@ -172,7 +172,7 @@ const InfoIcon = "carbon:information"
 const FilterIcon = "carbon:filter-edit"
 const StatsIcon = "carbon:chart-column"
 
-const alertsStatsCTX = ref<AlertsStatsCTX | null>(null)
+const alertsStatsRef = ref<AlertsStatsCTX | null>(null)
 
 const totalAlertsSummary = computed<number>(() => {
 	return alertsSummaryList.value.length || 0
@@ -313,7 +313,7 @@ function startSearch(closeDrawer?: boolean) {
 
 		const statsFiltersString = getStatsFiltersString()
 		if (lastStatsFilters !== statsFiltersString) {
-			alertsStatsCTX.value?.startSearch()
+			alertsStatsRef.value?.startSearch()
 			lastStatsFilters = statsFiltersString
 		}
 	}, 200)

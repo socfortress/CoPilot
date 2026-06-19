@@ -37,7 +37,7 @@ import type { Customer } from "@/types/customers.d"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
@@ -51,12 +51,6 @@ const props = defineProps<{
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
 	(e: "submitted", value: Customer): void
-	(
-		e: "mounted",
-		value: {
-			reset: () => void
-		}
-	): void
 }>()
 
 const { customer, resetOnSubmit, lockCode } = toRefs(props)
@@ -257,9 +251,7 @@ onBeforeMount(() => {
 	}
 })
 
-onMounted(() => {
-	emit("mounted", {
-		reset
-	})
+defineExpose({
+	reset
 })
 </script>

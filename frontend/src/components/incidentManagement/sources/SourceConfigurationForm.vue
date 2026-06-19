@@ -218,7 +218,7 @@ import {
 	NTag,
 	useMessage
 } from "naive-ui"
-import { computed, h, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+import { computed, h, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
@@ -236,13 +236,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	(e: "submitted", value: SourceConfiguration): void
-	(
-		e: "mounted",
-		value: {
-			reset: () => void
-			toggleSubmittingFlag: () => boolean
-		}
-	): void
 }>()
 
 const AddIcon = "carbon:add"
@@ -649,11 +642,9 @@ onBeforeMount(() => {
 	init()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		reset,
-		toggleSubmittingFlag
-	})
+defineExpose({
+	reset,
+	toggleSubmittingFlag
 })
 </script>
 

@@ -34,7 +34,7 @@ import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import type { ApiError } from "@/types/common"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import isIP from "validator/es/lib/isIP"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
@@ -52,12 +52,6 @@ const emit = defineEmits<{
 	(e: "submitted"): void
 	(e: "startLoading"): void
 	(e: "stopLoading"): void
-	(
-		e: "mounted",
-		value: {
-			reset: () => void
-		}
-	): void
 }>()
 
 const message = useMessage()
@@ -164,9 +158,7 @@ function submit() {
 		})
 }
 
-onMounted(() => {
-	emit("mounted", {
-		reset
-	})
+defineExpose({
+	reset
 })
 </script>

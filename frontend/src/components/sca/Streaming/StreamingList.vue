@@ -14,7 +14,7 @@
 			@stop="stopStream"
 		/>
 
-		<StreamingFilters @submit="applyFilters" @mounted="filtersCTX = $event" />
+		<StreamingFilters @submit="applyFilters" />
 
 		<StreamingResultsList
 			:is-connecting
@@ -63,8 +63,6 @@ const progress = reactive<ScaStreamProgress>({
 	results_so_far: 0,
 	percent_complete: 0
 })
-
-const filtersCTX = ref<{ setFilter: (payload: ScaStreamingListFilter[]) => void } | null>(null)
 
 const filters = reactive<ScaStreamingFilters>({
 	customer_code: undefined,

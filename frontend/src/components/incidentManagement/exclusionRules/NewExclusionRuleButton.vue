@@ -17,7 +17,7 @@
 			content-class="flex flex-col"
 			segmented
 		>
-			<ExclusionRuleForm reset-on-submit @submitted="submitted()" @mounted="formCTX = $event" />
+			<ExclusionRuleForm ref="formRef" reset-on-submit @submitted="submitted()" />
 		</n-modal>
 	</div>
 </template>
@@ -38,7 +38,7 @@ const { hideButtonExtendedLabel } = toRefs(props)
 
 const NewNewExclusionRuleIcon = "ic:outline-do-not-disturb-on"
 const showForm = ref(false)
-const formCTX = ref<{ reset: () => void } | null>(null)
+const formRef = ref<{ reset: () => void } | null>(null)
 
 function submitted() {
 	emit("success")
@@ -47,7 +47,7 @@ function submitted() {
 
 watch(showForm, val => {
 	if (val) {
-		formCTX.value?.reset()
+		formRef.value?.reset()
 	}
 })
 </script>

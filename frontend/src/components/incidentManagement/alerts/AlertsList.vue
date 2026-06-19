@@ -41,7 +41,7 @@
 					</n-popover>
 				</div>
 				<div class="hidden grow items-center gap-1 text-sm @6xl:flex">
-					<n-button quaternary size="small" @click="filtersCTX?.setFilter([{ type: 'status', value: null }])">
+					<n-button quaternary size="small" @click="filtersRef?.setFilter([{ type: 'status', value: null }])">
 						<div class="flex items-center gap-2">
 							<span>Total</span>
 							<code class="py-1">
@@ -58,7 +58,7 @@
 					<n-button
 						quaternary
 						size="small"
-						@click="filtersCTX?.setFilter([{ type: 'status', value: 'OPEN' }])"
+						@click="filtersRef?.setFilter([{ type: 'status', value: 'OPEN' }])"
 					>
 						<div class="flex items-center gap-2">
 							<span>Open</span>
@@ -69,7 +69,7 @@
 					<n-button
 						quaternary
 						size="small"
-						@click="filtersCTX?.setFilter([{ type: 'status', value: 'IN_PROGRESS' }])"
+						@click="filtersRef?.setFilter([{ type: 'status', value: 'IN_PROGRESS' }])"
 					>
 						<div class="flex items-center gap-2">
 							<span>In Progress</span>
@@ -80,7 +80,7 @@
 					<n-button
 						quaternary
 						size="small"
-						@click="filtersCTX?.setFilter([{ type: 'status', value: 'CLOSED' }])"
+						@click="filtersRef?.setFilter([{ type: 'status', value: 'CLOSED' }])"
 					>
 						<div class="flex items-center gap-2">
 							<span>Close</span>
@@ -127,11 +127,11 @@
 
 		<CollapseKeepAlive v-if="showFilters" :show="showFiltersView" embedded arrow="top-right">
 			<AlertsFilters
+				ref="filtersRef"
 				:use-query-string="!preset?.length"
 				:preset
 				class="p-3"
 				@submit="applyFilters"
-				@mounted="filtersCTX = $event"
 			/>
 		</CollapseKeepAlive>
 
@@ -352,7 +352,7 @@ const statusOpenTotal = ref(0)
 const statusInProgressTotal = ref(0)
 const statusCloseTotal = ref(0)
 
-const filtersCTX = ref<{ setFilter: (payload: AlertsListFilter[]) => void } | null>(null)
+const filtersRef = ref<{ setFilter: (payload: AlertsListFilter[]) => void } | null>(null)
 const filters = ref<AlertsListFilter[]>([])
 
 const filtered = computed<boolean>(() => {

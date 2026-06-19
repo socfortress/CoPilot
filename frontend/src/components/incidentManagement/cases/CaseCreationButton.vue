@@ -16,8 +16,8 @@
 		segmented
 	>
 		<CaseCreationForm
+			ref="formRef"
 			v-model:loading="loading"
-			@mounted="formCTX = $event"
 			@submitted="emit('submitted', $event)"
 		/>
 	</n-modal>
@@ -38,13 +38,13 @@ const emit = defineEmits<{
 }>()
 
 const NewCaseIcon = "carbon:fetch-upload-cloud"
-const formCTX = ref<{ load: () => void } | null>(null)
+const formRef = ref<{ load: () => void } | null>(null)
 const showForm = ref(false)
 const loading = ref(false)
 
 watch(showForm, val => {
 	if (val) {
-		formCTX.value?.load()
+		formRef.value?.load()
 	}
 })
 </script>

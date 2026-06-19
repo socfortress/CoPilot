@@ -20,23 +20,23 @@
 			<div class="connector-form-type">
 				<CredentialsType
 					v-if="connectorFormType === ConnectorFormType.CREDENTIALS"
+					ref="connectorTypeFormRef"
 					:form="connectorForm"
-					@mounted="formRef = $event"
 				/>
 				<FileType
 					v-if="connectorFormType === ConnectorFormType.FILE"
+					ref="connectorTypeFormRef"
 					:form="connectorForm"
-					@mounted="formRef = $event"
 				/>
 				<TokenType
 					v-if="connectorFormType === ConnectorFormType.TOKEN"
+					ref="connectorTypeFormRef"
 					:form="connectorForm"
-					@mounted="formRef = $event"
 				/>
 				<HostType
 					v-if="connectorFormType === ConnectorFormType.HOST"
+					ref="connectorTypeFormRef"
 					:form="connectorForm"
-					@mounted="formRef = $event"
 				/>
 			</div>
 			<div class="connector-form-options">
@@ -112,7 +112,7 @@ const formOptionsRef = ref<FormInst>()
 const connectorFormType = computed<ConnectorFormType>(() => getConnectorFormType(connector.value))
 const connectorFormOptions = computed<ConnectorFormOptions>(() => getConnectorFormOptions(connector.value))
 const isConnectorConfigured = computed<boolean>(() => connector.value.connector_configured)
-const formRef = ref<FormInst | null>(null)
+const connectorTypeFormRef = ref<{ formRef: FormInst } | null>(null)
 const loading = ref<boolean>(false)
 
 const formOptionsCheckRequired = computed<boolean>(() => {
@@ -168,11 +168,12 @@ function getConnectorFormOptions(connector: Connector): ConnectorFormOptions {
 }
 
 function saveConnector() {
-	if (!formRef.value) return
+	const typeForm = connectorTypeFormRef.value?.formRef
+	if (!typeForm) return
 
 	let messageSent = false
 
-	formRef.value.validate((errors?: Array<FormValidationError>) => {
+	typeForm.validate((errors?: Array<FormValidationError>) => {
 		if (!errors) {
 			if (formOptionsRef.value && formOptionsCheckRequired.value) {
 				formOptionsRef.value.validate((errors?: Array<FormValidationError>) => {

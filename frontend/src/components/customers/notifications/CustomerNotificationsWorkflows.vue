@@ -4,8 +4,8 @@
 			<div v-if="showForm" class="flex flex-col gap-4">
 				<h4>Create a Notification</h4>
 				<CustomerNotificationsWorkflowsForm
+					ref="formRef"
 					:customer-code
-					@mounted="formCTX = $event"
 					@submitted="refreshList()"
 				>
 					<template #additionalActions="{ loading: loadingForm }">
@@ -72,7 +72,7 @@ const message = useMessage()
 const showForm = ref(false)
 const loading = ref(false)
 const list = ref<IncidentNotification[]>([])
-const formCTX = ref<{ reset: (incidentNotification?: IncidentNotification) => void } | null>(null)
+const formRef = ref<{ reset: (incidentNotification?: IncidentNotification) => void } | null>(null)
 
 function getCustomerNetworkConnectors() {
 	loading.value = true
@@ -99,6 +99,7 @@ function openForm() {
 }
 
 function closeForm() {
+	formRef.value?.reset()
 	showForm.value = false
 }
 

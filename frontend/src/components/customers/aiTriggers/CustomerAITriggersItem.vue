@@ -26,9 +26,9 @@
 			segmented
 		>
 			<CustomerAITriggersForm
+				ref="formRef"
 				:ai-trigger
 				:customer-code="aiTrigger.customer_code"
-				@mounted="formCTX = $event"
 				@submitted="emitUpdate"
 			/>
 		</n-modal>
@@ -58,12 +58,12 @@ const { aiTrigger } = toRefs(props)
 const EnabledIcon = "carbon:circle-solid"
 const DisabledIcon = "carbon:subtract-alt"
 
-const formCTX = ref<{ reset: (aiTrigger?: AITrigger) => void } | null>(null)
+const formRef = ref<{ reset: (aiTrigger?: AITrigger) => void } | null>(null)
 const showForm = ref(false)
 
 watch(showForm, val => {
 	if (val) {
-		formCTX.value?.reset(aiTrigger.value)
+		formRef.value?.reset(aiTrigger.value)
 	}
 })
 

@@ -55,7 +55,7 @@
 			:bordered="false"
 			segmented
 		>
-			<CreationReportForm @submitted="getReports()" @mounted="formCTX = $event" />
+			<CreationReportForm ref="formRef" @submitted="getReports()" />
 		</n-modal>
 	</div>
 </template>
@@ -78,7 +78,7 @@ const showForm = ref(false)
 const loading = ref(false)
 const reportsList = ref<ScoutSuiteReport[]>([])
 const totalReports = computed(() => reportsList.value.length)
-const formCTX = ref<{ reset: () => void } | null>(null)
+const formRef = ref<{ reset: () => void } | null>(null)
 
 function getReports() {
 	loading.value = true
@@ -102,7 +102,7 @@ function getReports() {
 
 watch(showForm, val => {
 	if (val) {
-		formCTX.value?.reset()
+		formRef.value?.reset()
 	}
 })
 

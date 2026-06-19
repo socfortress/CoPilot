@@ -145,7 +145,7 @@ import type { Agent } from "@/types/agents.d"
 import type { MatchingParameter } from "@/types/artifacts.d"
 import type { ApiError } from "@/types/common"
 import { NButton, NScrollbar, NSkeleton, NStep, NSteps, useMessage } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -176,7 +176,6 @@ const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
 	(e: "close"): void
 	(e: "submitted"): void
-	(e: "mounted", value: { reset: () => void }): void
 }>()
 
 const ArrowRightIcon = "carbon:arrow-right"
@@ -376,10 +375,8 @@ watch([current, parametersList, agentsList], () => {
 	}
 })
 
-onMounted(() => {
-	emit("mounted", {
-		reset
-	})
+defineExpose({
+	reset
 })
 </script>
 
