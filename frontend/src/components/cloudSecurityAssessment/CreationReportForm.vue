@@ -142,18 +142,21 @@ function validate(cb?: () => void) {
 		if (!errors) {
 			validationMessage?.destroy()
 			validationMessage = null
-			typeFormComponentRef.value!.formRef!.validate((errors?: Array<FormValidationError>) => {
-				if (!errors) {
-					validationMessage?.destroy()
-					validationMessage = null
-					if (cb) cb()
-				} else {
-					if (!validationMessage) {
-						validationMessage = message.warning("You must fill in the required fields correctly.")
+
+			if (typeFormComponentRef.value?.formRef) {
+				typeFormComponentRef.value.formRef.validate((errors?: Array<FormValidationError>) => {
+					if (!errors) {
+						validationMessage?.destroy()
+						validationMessage = null
+						if (cb) cb()
+					} else {
+						if (!validationMessage) {
+							validationMessage = message.warning("You must fill in the required fields correctly.")
+						}
+						return false
 					}
-					return false
-				}
-			})
+				})
+			}
 		} else {
 			if (!validationMessage) {
 				validationMessage = message.warning("You must fill in the required fields correctly.")

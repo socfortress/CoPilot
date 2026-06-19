@@ -146,10 +146,10 @@
 				>
 					<template v-if="currentGroup && currentFile">
 						<XMLEditor
+							ref="xmlEditorRef"
 							v-model="currentFile.content"
 							class="scrollbar-styled text-sm"
 							@errors="xmlErrors = $event"
-							ref="xmlEditorRef"
 						/>
 					</template>
 					<template v-else>

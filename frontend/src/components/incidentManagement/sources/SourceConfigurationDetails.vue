@@ -13,8 +13,8 @@
 
 		<SourceConfigurationForm
 			v-if="sourceConfiguration"
-			ref="formRef"
 			v-show="editing"
+			ref="formRef"
 			:source-configuration-model="sourceConfiguration"
 			show-index-name-field
 			@submitted="updateSourceConfiguration($event)"

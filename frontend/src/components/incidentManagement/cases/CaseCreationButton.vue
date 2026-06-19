@@ -15,11 +15,7 @@
 		:bordered="false"
 		segmented
 	>
-		<CaseCreationForm
-			ref="formRef"
-			v-model:loading="loading"
-			@submitted="emit('submitted', $event)"
-		/>
+		<CaseCreationForm ref="formRef" v-model:loading="loading" @submitted="emit('submitted', $event)" />
 	</n-modal>
 </template>
 

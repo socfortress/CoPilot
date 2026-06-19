@@ -11,12 +11,7 @@
 
 		<CollapseKeepAlive :show="showForm">
 			<div class="flex flex-col gap-2">
-				<AlertIoCsForm
-					ref="formRef"
-					v-model:loading="submitting"
-					:alert-id
-					@submitted="addIoc($event)"
-				>
+				<AlertIoCsForm ref="formRef" v-model:loading="submitting" :alert-id @submitted="addIoc($event)">
 					<template #additionalActions>
 						<n-button secondary :disabled="submitting" @click="closeForm()">Close</n-button>
 					</template>

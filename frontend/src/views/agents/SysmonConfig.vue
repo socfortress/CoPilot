@@ -151,10 +151,10 @@
 				>
 					<template v-if="currentConfig">
 						<XMLEditor
+							ref="xmlEditorRef"
 							v-model="currentConfig.config_content"
 							class="scrollbar-styled text-sm"
 							@errors="xmlErrors = $event"
-							ref="xmlEditorRef"
 						/>
 					</template>
 					<template v-else>

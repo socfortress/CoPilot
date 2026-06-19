@@ -3,11 +3,7 @@
 		<transition name="form-fade" mode="out-in">
 			<div v-if="showForm" class="flex flex-col gap-4">
 				<h4>Create a Notification</h4>
-				<CustomerNotificationsWorkflowsForm
-					ref="formRef"
-					:customer-code
-					@submitted="refreshList()"
-				>
+				<CustomerNotificationsWorkflowsForm ref="formRef" :customer-code @submitted="refreshList()">
 					<template #additionalActions="{ loading: loadingForm }">
 						<n-button :disabled="loadingForm" @click="closeForm()">Close</n-button>
 					</template>

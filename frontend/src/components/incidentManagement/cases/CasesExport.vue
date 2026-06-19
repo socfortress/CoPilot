@@ -150,7 +150,11 @@ async function handleExport() {
 		form.period = null
 		form.customerCodes = []
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || (err as Error).message || "An error occurred. Please try again later.")
+		message.error(
+			getApiErrorMessage(err as ApiError) ||
+				(err as Error).message ||
+				"An error occurred. Please try again later."
+		)
 	} finally {
 		exporting.value = false
 	}
