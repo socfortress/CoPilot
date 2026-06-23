@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import shutil
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
@@ -67,14 +68,18 @@ async def generate_gcp_report_background(request: GCPScoutSuiteReportRequest):
     logger.info("Generating GCP ScoutSuite report in the background")
 
     command = construct_gcp_command(request)
-    await run_command_in_background(command)
-
-    # Delete the file after the report is generated
     try:
-        os.remove(request.file_path)
-        logger.info(f"Deleted GCP credentials file: {request.file_path}")
-    except Exception as e:
-        logger.error(f"Error deleting GCP credentials file: {e}")
+        await run_command_in_background(command)
+    finally:
+        # Always remove the uploaded credential, even if the scan fails or raises, so the
+        # service-account key never lingers on disk (GHSA-pm2w-mmc3-h8hc). The key lives in
+        # its own private temp directory; remove the whole directory.
+        cred_dir = os.path.dirname(request.file_path)
+        try:
+            shutil.rmtree(cred_dir, ignore_errors=True)
+            logger.info("Deleted GCP credentials temp directory")
+        except Exception as e:
+            logger.error(f"Error deleting GCP credentials temp directory: {e}")
 
 
 def construct_gcp_command(request: GCPScoutSuiteReportRequest):
