@@ -6,8 +6,9 @@ from typing import Optional
 
 import pdfkit
 from fastapi.responses import FileResponse
-from jinja2 import Environment
 from jinja2 import FileSystemLoader
+from jinja2 import select_autoescape
+from jinja2.sandbox import SandboxedEnvironment
 
 from app.data_store.data_store_operations import download_data_store
 
@@ -78,11 +79,22 @@ def create_case_context_pdf(case) -> Dict[str, Dict[str, str]]:
 
 
 def render_html_template(template_path: str, context: Dict[str, Dict[str, str]]) -> str:
-    """Render the Jinja HTML template with the provided context."""
+    """Render the Jinja HTML template with the provided context.
+
+    The template body is attacker-controllable (case-report templates can be
+    uploaded by privileged users and rendered later). Use a
+    ``SandboxedEnvironment`` so template expressions cannot reach Python
+    internals / ``os`` and achieve remote code execution, and enable
+    autoescaping so context values cannot inject HTML/script into the
+    rendered report (GHSA-7q83-228r-wfh5).
+    """
     template_dir = os.path.dirname(template_path)
     template_name = os.path.basename(template_path)
 
-    env = Environment(loader=FileSystemLoader(template_dir))
+    env = SandboxedEnvironment(
+        loader=FileSystemLoader(template_dir),
+        autoescape=select_autoescape(["html", "htm", "xml"], default=True),
+    )
     template = env.get_template(template_name)
     rendered_html = template.render(context)
 
@@ -127,8 +139,12 @@ def convert_html_to_pdf(html_path: str) -> str:
         if path_to_wkhtmltopdf is None:
             raise FileNotFoundError("No valid wkhtmltopdf executable found. Ensure wkhtmltopdf is installed and accessible.")
 
-        # Generate the PDF from HTML using the valid wkhtmltopdf path
-        pdfkit.from_file(html_path, pdf_path, configuration=config)
+        # Generate the PDF from HTML using the valid wkhtmltopdf path.
+        # Disable local file access so a malicious template cannot read files
+        # off the backend host or reach internal services (SSRF) via the
+        # renderer (GHSA-7q83-228r-wfh5).
+        options = {"disable-local-file-access": None}
+        pdfkit.from_file(html_path, pdf_path, configuration=config, options=options)
     except Exception as e:
         raise RuntimeError(f"Failed to convert HTML to PDF: {str(e)}")
 
