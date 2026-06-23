@@ -9,7 +9,7 @@
 				type="textarea"
 				:autosize="{ minRows: 3, maxRows: 10 }"
 			/>
-			<div v-else v-html="commentHtml"></div>
+			<div v-else class="whitespace-pre-wrap">{{ comment.comment }}</div>
 		</template>
 		<template #footer-extra>
 			<div v-if="editMode" class="flex items-center gap-2">
@@ -62,7 +62,7 @@
 import type { CommentItem } from "@/types/comments"
 import type { ApiError } from "@/types/common"
 import { NButton, NInput, NPopconfirm, useMessage } from "naive-ui"
-import { computed, ref } from "vue"
+import { ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -88,11 +88,6 @@ const editMode = ref(false)
 const newComment = ref<string | null>(null)
 const updating = ref(false)
 const deleting = ref(false)
-const NEWLINE_REGEX = /\n/g
-
-const commentHtml = computed(() => {
-	return comment.comment.replace(NEWLINE_REGEX, "<br>")
-})
 
 function setEditMode(mode: boolean) {
 	editMode.value = mode

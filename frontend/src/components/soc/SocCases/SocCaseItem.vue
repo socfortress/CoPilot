@@ -37,7 +37,7 @@
 			</template>
 			<template #default>
 				<div class="flex flex-col gap-1">
-					<div v-html="baseInfo?.case_name"></div>
+					<div>{{ baseInfo?.case_name }}</div>
 					<p v-if="baseInfo?.case_description">
 						{{ excerpt }}
 					</p>
