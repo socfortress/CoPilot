@@ -1,5 +1,5 @@
 import io
-import mimetypes
+import os
 from typing import List
 from typing import Optional
 
@@ -2566,11 +2566,33 @@ async def upload_case_report_template_endpoint(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
 ):
-    # Check if the file type is a .docx or .html
-    mime_type, _ = mimetypes.guess_type(file.filename)
-    allowed_mime_types = ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/html"]  # .docx  # .html
-    if mime_type not in allowed_mime_types:
+    # Validate by extension AND by actual file content, not just the
+    # filename-guessed MIME type. The rendered template body is executed by a
+    # Jinja2 engine when a privileged user later generates a report, so we must
+    # ensure the uploaded bytes really are the file type they claim to be
+    # (GHSA-7q83-228r-wfh5).
+    file_name = file.filename or ""
+    extension = os.path.splitext(file_name)[1].lower()
+    if extension not in (".docx", ".html"):
         raise HTTPException(status_code=400, detail="Invalid file type. Only .docx and .html files are allowed.")
+
+    header = await file.read(8)
+    await file.seek(0)
+
+    if extension == ".docx":
+        # .docx is an OOXML package -> a ZIP archive (PK\x03\x04 / empty/spanned variants).
+        if not header.startswith((b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08")):
+            raise HTTPException(status_code=400, detail="File content does not match a valid .docx document.")
+    else:  # .html
+        # Reject binary/archive content masquerading as HTML.
+        if header.startswith((b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08")):
+            raise HTTPException(status_code=400, detail="File content does not match a valid .html document.")
+        try:
+            (await file.read()).decode("utf-8")
+        except UnicodeDecodeError:
+            raise HTTPException(status_code=400, detail="File content does not match a valid .html document.")
+        finally:
+            await file.seek(0)
 
     if await report_template_exists(file.filename, db):
         raise HTTPException(status_code=400, detail="File name already exists for this template")
@@ -2584,7 +2606,7 @@ async def upload_case_report_template_endpoint(
 
 @incidents_db_operations_router.delete(
     "/case-report-template/{file_name}",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_case_report_template_endpoint(file_name: str, db: AsyncSession = Depends(get_db)):
     await delete_report_template(file_name, db)

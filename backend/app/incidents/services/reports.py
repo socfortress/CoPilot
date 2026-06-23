@@ -5,6 +5,7 @@ from typing import Optional
 
 from docxtpl import DocxTemplate
 from fastapi.responses import FileResponse
+from jinja2.sandbox import SandboxedEnvironment
 
 from app.data_store.data_store_operations import download_data_store
 
@@ -79,9 +80,18 @@ def save_template_to_tempfile(template_file_content: bytes) -> str:
 
 
 def render_document_with_context(template_path: str, context: Dict[str, Dict[str, str]]) -> str:
-    """Load and render the document template with the given context."""
+    """Load and render the document template with the given context.
+
+    The template body is attacker-controllable (case-report templates can be
+    uploaded by privileged users and rendered later). Render through a
+    Jinja2 ``SandboxedEnvironment`` so that template expressions cannot reach
+    Python internals / ``os`` and achieve remote code execution
+    (GHSA-7q83-228r-wfh5). ``autoescape`` is enabled because docxtpl inserts
+    rendered values into the document's XML.
+    """
     doc = DocxTemplate(template_path)
-    doc.render(context)
+    jinja_env = SandboxedEnvironment(autoescape=True)
+    doc.render(context, jinja_env=jinja_env)
     with NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
         doc.save(tmp.name)
         return tmp.name
