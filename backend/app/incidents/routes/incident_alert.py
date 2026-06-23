@@ -49,11 +49,16 @@ incidents_alerts_router = APIRouter()
 
 
 # Function to validate the Velociraptor header
+# Fails closed: VELOCIRAPTOR_API_HEADER_VALUE must be configured or the route is denied for
+# everyone. Previously this fell back to a constant hardcoded here and shipped in
+# .env.example, so any default deployment could inject alerts unauthenticated
+# (GHSA-x8gc-f8p4-frc2). Mirrors verify_grafana_header (GHSA-xh98-w6qh-cr44).
 async def verify_velociraptor_header(velociraptor: str = Header(None)):
     """Verify that the request has the correct Velociraptor header."""
-    # Get the header value from environment variable or use "ab73de7a-6f61-4dde-87cd-3af5175a7281" as default
-    expected_header = os.getenv("VELOCIRAPTOR_API_HEADER_VALUE", "ab73de7a-6f61-4dde-87cd-3af5175a7281")
-
+    expected_header = os.getenv("VELOCIRAPTOR_API_HEADER_VALUE")
+    if not expected_header:
+        logger.error("VELOCIRAPTOR_API_HEADER_VALUE is not configured; denying Velociraptor webhook request")
+        raise HTTPException(status_code=403, detail="Velociraptor header authentication is not configured")
     if velociraptor != expected_header:
         logger.error("Invalid or missing Velociraptor header")
         raise HTTPException(status_code=403, detail="Invalid or missing Velociraptor header")
