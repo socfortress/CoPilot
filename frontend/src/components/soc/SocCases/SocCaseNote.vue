@@ -20,7 +20,7 @@
 
 			<template #default>
 				<div class="flex flex-col gap-1">
-					<div v-html="note.note_title"></div>
+					<div>{{ note.note_title }}</div>
 					<p v-if="note.note_details.note_content">
 						{{ excerpt }}
 					</p>
