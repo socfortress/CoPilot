@@ -1,0 +1,39 @@
+import type { RouteRecordRaw } from "vue-router"
+import { RouteRole } from "@/types/auth"
+
+export const assessmentsRoutes: RouteRecordRaw[] = [
+	{
+		path: "/scheduler",
+		name: "Scheduler",
+		component: () => import("@/views/Scheduler.vue"),
+		meta: { title: "Scheduler", auth: true, roles: RouteRole.All }
+	},
+	{
+		path: "/cloud-security-assessment",
+		name: "CloudSecurityAssessment",
+		component: () => import("@/views/CloudSecurityAssessment.vue"),
+		meta: { title: "Cloud Sec. Assess.", auth: true, roles: RouteRole.All }
+	},
+	{
+		path: "/web-vulnerability-assessment",
+		name: "WebVulnerabilityAssessment",
+		component: () => import("@/views/WebVulnerabilityAssessment.vue"),
+		meta: { title: "Web Vuln. Assess.", auth: true, roles: RouteRole.All }
+	},
+	{
+		path: "/github-audit",
+		name: "GitHubAudit",
+		component: () => import("@/views/GitHubAuditOverview.vue"),
+		meta: {
+			title: "GitHub Audit",
+			auth: true,
+			roles: RouteRole.All
+		}
+	},
+	{
+		path: "/customer-portal",
+		name: "CustomerPortal",
+		component: () => import("@/views/CustomerPortal.vue"),
+		meta: { title: "Customer Portal", auth: true, roles: RouteRole.All }
+	}
+]
