@@ -1,11 +1,10 @@
 <template>
-	<n-tag :type="tagType" size="small" round :bordered="false" class="priority-badge">
+	<n-tag :type="tagType" size="small" round :bordered="false" class="text-xs font-semibold">
 		{{ label }}
 	</n-tag>
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import { NTag } from "naive-ui"
 import { computed } from "vue"
 import { PriorityLevel } from "@/types/patchTuesday"
@@ -44,10 +43,3 @@ const label = computed(() => {
 	}
 })
 </script>
-
-<style scoped lang="scss">
-.priority-badge {
-	font-weight: 600;
-	font-size: 0.7rem;
-}
-</style>

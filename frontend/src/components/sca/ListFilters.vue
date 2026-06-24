@@ -128,7 +128,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { ScaOverviewFilter, ScaOverviewFilterTypes } from "./types.d"
 import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"

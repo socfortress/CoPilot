@@ -53,7 +53,6 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { Customer } from "@/types/customers"
 import type { User } from "@/types/user"
 import { NButton, NForm, NFormItem, NModal, NSelect, NTag, useMessage } from "naive-ui"

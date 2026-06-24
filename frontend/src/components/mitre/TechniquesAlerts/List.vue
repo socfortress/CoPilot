@@ -1,13 +1,13 @@
 <template>
 	<SegmentedPage toolbar-height="60px" toolbar-height-mobile="50px" padding="16px" enable-resize>
 		<template #sidebar-header>
-			<n-button v-if="areAllTacticsSelected" :focusable="false" @click="toggleAllTactics(false)">
+			<n-button v-if="areAllTacticsSelected" :focusable="false" text @click="toggleAllTactics(false)">
 				<template #icon>
 					<Icon name="carbon:checkbox" :size="16" />
 				</template>
 				Unselect all
 			</n-button>
-			<n-button v-else type="primary" :focusable="false" @click="toggleAllTactics(true)">
+			<n-button v-else type="primary" :focusable="false" text @click="toggleAllTactics(true)">
 				<template #icon>
 					<Icon name="carbon:checkbox-checked" :size="16" />
 				</template>
@@ -41,7 +41,7 @@
 				</n-input>
 				<div v-if="hasNoCountAlerts" class="max-w-32 min-w-32">
 					<n-checkbox v-model:checked="hideNoAlertsTechniques" class="items-center!" size="large">
-						<span class="text-xs/tight">Hide techniques with no alerts</span>
+						<div class="text-xs/tight">Hide techniques with no alerts</div>
 					</n-checkbox>
 				</div>
 			</div>

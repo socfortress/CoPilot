@@ -63,7 +63,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { FormInst, FormRules } from "naive-ui"
 import type { SCAReportGenerateRequest } from "@/types/sca"
 import { NButton, NDivider, NForm, NFormItem, NInput, NInputNumber, NSelect, NSpace } from "naive-ui"
