@@ -7,7 +7,7 @@
 		<n-form-item label="Customer" path="customer_code" required>
 			<n-select
 				v-model:value="formData.customer_code"
-				:options="customers"
+				:options="customersOptions"
 				placeholder="Select customer"
 				filterable
 			/>
@@ -51,26 +51,31 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { FormInst, FormRules } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { VulnerabilityReportGenerateRequest } from "@/types/vulnerabilities"
-import { NButton, NDivider, NForm, NFormItem, NInput, NSelect, NSwitch } from "naive-ui"
-import { ref } from "vue"
+import { NButton, NDivider, NForm, NFormItem, NInput, NSelect, NSwitch, useMessage } from "naive-ui"
+import { computed, ref } from "vue"
+import Api from "@/api"
 import { VulnerabilitySeverity } from "@/types/vulnerabilities"
+import { getApiErrorMessage } from "@/utils"
 
 interface Props {
-	customers: Array<{ label: string; value: string }>
-	loading?: boolean
+	customersOptions: Array<{ label: string; value: string }>
+	loadingCustomers?: boolean
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
-	(e: "generate", value: VulnerabilityReportGenerateRequest): void
+	(e: "generated", reportId: number): void
 	(e: "cancel"): void
 }>()
 
+const message = useMessage()
+
 const formRef = ref<FormInst | null>(null)
+const generating = ref(false)
 const formData = ref<VulnerabilityReportGenerateRequest>({
 	customer_code: null,
 	report_name: undefined,
@@ -80,6 +85,8 @@ const formData = ref<VulnerabilityReportGenerateRequest>({
 	package_name: null,
 	include_epss: false
 })
+
+const loading = computed(() => generating.value || props.loadingCustomers || false)
 
 const severityOptions = [
 	{ label: "Critical", value: VulnerabilitySeverity.Critical },
@@ -126,7 +133,21 @@ async function handleSubmit() {
 			request.package_name = formData.value.package_name.trim()
 		}
 
-		emit("generate", request)
+		generating.value = true
+		try {
+			const response = await Api.vulnerabilities.generateReportBackground(request)
+
+			if (response.data.success) {
+				message.success(response.data.message)
+				emit("generated", response.data.report_id)
+			} else {
+				message.error("Failed to queue report generation")
+			}
+		} catch (error) {
+			message.error(getApiErrorMessage(error as ApiError) || "Failed to generate report")
+		} finally {
+			generating.value = false
+		}
 	} catch (error) {
 		console.error("Form validation failed:", error)
 	}
