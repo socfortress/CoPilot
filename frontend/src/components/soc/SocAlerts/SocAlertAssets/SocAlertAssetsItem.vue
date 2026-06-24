@@ -120,7 +120,7 @@
 							</a>
 						</template>
 						<template v-else>
-							<div v-html="descriptionFull"></div>
+							<div class="whitespace-pre-wrap">{{ descriptionFull }}</div>
 						</template>
 					</div>
 				</n-tab-pane>
@@ -164,7 +164,6 @@ const { routeAgent } = useNavigation()
 const showDetails = ref(false)
 
 const dFormats = useSettingsStore().dateFormat
-const ASSET_NEWLINE_REGEX = /\n/g
 
 const excerpt = computed(() => {
 	const text = asset.asset_description
@@ -174,9 +173,7 @@ const excerpt = computed(() => {
 })
 
 const descriptionFull = computed(() => {
-	const text = asset.asset_description
-
-	return text.replace(ASSET_NEWLINE_REGEX, "<br>") || "Empty"
+	return asset.asset_description || "Empty"
 })
 
 const properties = computed(() => {

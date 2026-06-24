@@ -1,4 +1,5 @@
 import os
+import tempfile
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -161,11 +162,15 @@ async def generate_gcp_report(
     data = await read_json_file(contents)
     validate_json_data(data)
 
-    # Save the file to the scoutsuite-report directory
-    directory = os.path.join(os.getcwd(), "scoutsuite-report")
-    file_path = await save_file_to_directory(contents, directory, file.filename)
+    # Write the uploaded service-account key to a private temp directory, NOT the
+    # web-served `scoutsuite-report` directory. Writing the credential into the static
+    # mount made it readable unauthenticated for the duration of the scan
+    # (GHSA-pm2w-mmc3-h8hc). Use a generated filename to avoid path traversal from the
+    # caller-supplied file.filename.
+    directory = tempfile.mkdtemp(prefix="scoutsuite-gcp-cred-")
+    file_path = await save_file_to_directory(contents, directory, "gcp-service-account.json")
 
-    logger.info(f"File saved to: {file_path}")
+    logger.info("GCP credentials written to private temp path for scan")
     request = GCPScoutSuiteReportRequest(report_name=report_name, file_path=file_path)
     logger.info(f"Request: {request}")
     background_tasks.add_task(generate_gcp_report_background, request)

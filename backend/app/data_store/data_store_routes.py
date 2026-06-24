@@ -33,7 +33,13 @@ agent_data_store_router = APIRouter()
     "/upload",
     response_model=FileUploadResponse,
     description="Upload a file to the data store",
-    dependencies=[Depends(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    # Restricted to admin/analyst: this route accepts caller-controlled
+    # bucket_name and object_name with no allow-list, tenant prefix, or content
+    # validation, so a customer_user could overwrite any object in any bucket
+    # cross-tenant (GHSA-6j26-wcv6-gp3f). The customer portal uploads case files
+    # via /incidents/db_operations/case/data-store/upload, not this route, so
+    # removing customer_user here does not affect the portal.
+    dependencies=[Depends(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def upload_file(
     file: UploadFile = File(...),

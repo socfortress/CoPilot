@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from typing import Any
 from typing import Dict
@@ -7,6 +8,14 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_validator
+
+# Active-response command names are bare script identifiers (e.g. "domain_sinkhole",
+# "windows_firewall", or any custom script an operator deploys). They are forwarded to the
+# Wazuh manager active-response API, so constrain them to a safe token shape — no shell
+# metacharacters, path separators, or whitespace — while still allowing arbitrary
+# operator-defined script names (GHSA-x8gc-f8p4-frc2).
+COMMAND_NAME_PATTERN = re.compile(r"[A-Za-z0-9_-]{1,64}")
 
 
 class ReplayInfo(BaseModel):
@@ -25,6 +34,13 @@ class GraylogEventFields(BaseModel):
     # Allow additional fields
     additional_fields: Dict[str, Any] = Field(default_factory=dict, alias="__extra__")
     model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    @field_validator("COMMAND")
+    @classmethod
+    def _validate_command(cls, v: str) -> str:
+        if not COMMAND_NAME_PATTERN.fullmatch(v):
+            raise ValueError("COMMAND must be a bare active-response script name (letters, digits, '_' or '-', max 64 chars)")
+        return v
 
 
 class GraylogThresholdEventFields(BaseModel):

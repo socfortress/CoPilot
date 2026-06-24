@@ -4,7 +4,7 @@
 			<template #headerMain>#{{ asset.asset_id }} - {{ asset.asset_uuid }}</template>
 			<template #default>
 				<div class="flex flex-col gap-1">
-					<div v-html="asset.asset_name"></div>
+					<div>{{ asset.asset_name }}</div>
 					<p v-if="asset.asset_description">
 						<template v-if="isUrlLike(asset.asset_description)">
 							<a
@@ -90,7 +90,7 @@
 							</a>
 						</template>
 						<template v-else>
-							<div v-html="descriptionFull"></div>
+							<div class="whitespace-pre-wrap">{{ descriptionFull }}</div>
 						</template>
 					</div>
 				</n-tab-pane>
@@ -135,12 +135,8 @@ const excerpt = computed(() => {
 	return truncated + (truncated !== text ? "..." : "")
 })
 
-const NEWLINE_REGEX = /\n/g
-
 const descriptionFull = computed(() => {
-	const text = asset.asset_description
-
-	return text.replace(NEWLINE_REGEX, "<br>") || "Empty"
+	return asset.asset_description || "Empty"
 })
 
 const tags = computed<{ key: string; value?: string }[]>(() => {

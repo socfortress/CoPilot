@@ -1,12 +1,14 @@
 import asyncio
 import json
 import os
+import shutil
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
 import aiofiles
 from fastapi import HTTPException
 from loguru import logger
+from werkzeug.utils import secure_filename
 
 from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest
 from app.integrations.scoutsuite.schema.scoutsuite import AzureScoutSuiteReportRequest
@@ -67,14 +69,18 @@ async def generate_gcp_report_background(request: GCPScoutSuiteReportRequest):
     logger.info("Generating GCP ScoutSuite report in the background")
 
     command = construct_gcp_command(request)
-    await run_command_in_background(command)
-
-    # Delete the file after the report is generated
     try:
-        os.remove(request.file_path)
-        logger.info(f"Deleted GCP credentials file: {request.file_path}")
-    except Exception as e:
-        logger.error(f"Error deleting GCP credentials file: {e}")
+        await run_command_in_background(command)
+    finally:
+        # Always remove the uploaded credential, even if the scan fails or raises, so the
+        # service-account key never lingers on disk (GHSA-pm2w-mmc3-h8hc). The key lives in
+        # its own private temp directory; remove the whole directory.
+        cred_dir = os.path.dirname(request.file_path)
+        try:
+            shutil.rmtree(cred_dir, ignore_errors=True)
+            logger.info("Deleted GCP credentials temp directory")
+        except Exception as e:
+            logger.error(f"Error deleting GCP credentials temp directory: {e}")
 
 
 def construct_gcp_command(request: GCPScoutSuiteReportRequest):
@@ -129,12 +135,33 @@ def validate_json_data(data: dict):
 
 
 async def save_file_to_directory(contents: bytes, directory: str, filename: str) -> str:
-    """Save the uploaded file to the specified directory."""
+    """Save the uploaded file to the specified directory.
+
+    The filename is sanitized and the resolved path is confirmed to stay inside
+    ``directory`` before writing. An unsanitized filename here was an arbitrary
+    file-write-as-root primitive: ``os.path.join(directory, "../../x")`` escapes the
+    intended directory (GHSA-q3g8-3cf7-744f). Mirrors the secure_filename pattern used by
+    the connector-upload route.
+    """
     try:
+        # Strip any directory components, then run secure_filename to drop "..", separators,
+        # and other unsafe characters. Reject anything that doesn't reduce to a safe name.
+        safe_filename = secure_filename(os.path.basename(filename or ""))
+        if not safe_filename:
+            raise HTTPException(status_code=400, detail="Invalid file name")
+
         os.makedirs(directory, exist_ok=True)
-        file_path = os.path.join(directory, filename)
+        base_dir = os.path.realpath(directory)
+        file_path = os.path.realpath(os.path.join(base_dir, safe_filename))
+
+        # Defense in depth: confirm the resolved path is still inside the intended directory.
+        if os.path.commonpath([base_dir, file_path]) != base_dir:
+            raise HTTPException(status_code=400, detail="Invalid file name")
+
         async with aiofiles.open(file_path, "wb") as out_file:
             await out_file.write(contents)
         return file_path
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
