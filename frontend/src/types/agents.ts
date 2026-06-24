@@ -1,4 +1,3 @@
-// TODO-FE: refactor
 export interface Agent {
 	id?: number
 	agent_id: string
@@ -37,9 +36,9 @@ export interface AgentVulnerabilities {
 	name: string
 	published: string
 	severity: VulnerabilitySeverity
-	status: VulnerabilityStatus
+	status: string
 	title: string
-	type: VulnerabilityType
+	type: string
 	updated: string
 	version: string
 }
@@ -50,14 +49,6 @@ export enum VulnerabilitySeverity {
 	Low = "Low",
 	Medium = "Medium",
 	Untriaged = "Untriaged"
-}
-
-export enum VulnerabilityStatus {
-	Valid = "VALID"
-}
-
-export enum VulnerabilityType {
-	Package = "PACKAGE"
 }
 
 export type OutdatedWazuhAgents = Agent[]
@@ -143,8 +134,6 @@ export interface BulkDeleteAgentResult {
 }
 
 export interface BulkDeleteAgentsResponse {
-	success: boolean
-	message: string
 	total_requested: number
 	successful_deletions: number
 	failed_deletions: number

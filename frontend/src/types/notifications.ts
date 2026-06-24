@@ -103,8 +103,6 @@ export interface ShuffleOrg {
 }
 
 export interface ShuffleVerifyResult {
-	success: boolean
-	message: string
 	org_id: string
 	app_count: number | null
 	error: string | null

@@ -26,7 +26,9 @@
 						<n-radio value="default_tag">
 							<div class="flex flex-col">
 								<span class="font-medium">Default Tag</span>
-								<span class="text-xs opacity-70">Assign untagged alerts to users with a specific tag</span>
+								<span class="text-xs opacity-70">
+									Assign untagged alerts to users with a specific tag
+								</span>
 							</div>
 						</n-radio>
 					</n-space>
@@ -55,7 +57,9 @@
 
 			<n-alert v-if="settings.enabled" type="info" title="How Tag RBAC Works">
 				<div>
-					<p class="m-0 mb-3 font-medium">Tag RBAC controls which alerts users can see based on assigned tags.</p>
+					<p class="m-0 mb-3 font-medium">
+						Tag RBAC controls which alerts users can see based on assigned tags.
+					</p>
 
 					<div class="mb-3">
 						<strong class="mb-1 block">User Access Rules:</strong>

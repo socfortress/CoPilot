@@ -1,6 +1,6 @@
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	AvailableChecksResponse,
-	DeleteResponse,
 	GitHubAuditBaselineCreate,
 	GitHubAuditBaselineResponse,
 	GitHubAuditConfigCreate,
@@ -78,7 +78,7 @@ export default {
 	 * Delete a GitHub Audit configuration
 	 */
 	deleteConfig(configId: number, signal?: AbortSignal) {
-		return HttpClient.delete<DeleteResponse>(`${BASE_PATH}/config/${configId}`, { signal })
+		return HttpClient.delete<FlaskBaseResponse>(`${BASE_PATH}/config/${configId}`, { signal })
 	},
 
 	// ==================== Audit Execution Endpoints ====================
@@ -144,7 +144,7 @@ export default {
 	 * Delete a GitHub audit report
 	 */
 	deleteReport(reportId: number, signal?: AbortSignal) {
-		return HttpClient.delete<DeleteResponse>(`${BASE_PATH}/reports/${reportId}`, { signal })
+		return HttpClient.delete<FlaskBaseResponse>(`${BASE_PATH}/reports/${reportId}`, { signal })
 	},
 
 	// ==================== Exclusion Endpoints ====================
@@ -182,7 +182,7 @@ export default {
 	 * Delete an exclusion rule
 	 */
 	deleteExclusion(exclusionId: number, signal?: AbortSignal) {
-		return HttpClient.delete<DeleteResponse>(`${BASE_PATH}/exclusions/${exclusionId}`, {
+		return HttpClient.delete<FlaskBaseResponse>(`${BASE_PATH}/exclusions/${exclusionId}`, {
 			signal
 		})
 	},
@@ -213,7 +213,7 @@ export default {
 	 * Delete a baseline
 	 */
 	deleteBaseline(baselineId: number, signal?: AbortSignal) {
-		return HttpClient.delete<DeleteResponse>(`${BASE_PATH}/baselines/${baselineId}`, { signal })
+		return HttpClient.delete<FlaskBaseResponse>(`${BASE_PATH}/baselines/${baselineId}`, { signal })
 	},
 
 	// ==================== Reference Endpoints ====================

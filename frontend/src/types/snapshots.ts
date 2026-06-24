@@ -8,8 +8,6 @@ export interface SnapshotRepository {
 
 export interface SnapshotRepositoryListResponse {
 	repositories: SnapshotRepository[]
-	success: boolean
-	message: string
 }
 
 export interface SnapshotShardStatus {
@@ -44,8 +42,6 @@ export interface SnapshotStatusQuery {
 
 export interface SnapshotStatusResponse {
 	snapshots: SnapshotStatus[]
-	success: boolean
-	message: string
 }
 
 export interface SnapshotInfo {
@@ -68,8 +64,6 @@ export interface SnapshotInfo {
 export interface SnapshotListResponse {
 	repository: string
 	snapshots: SnapshotInfo[]
-	success: boolean
-	message: string
 }
 
 export interface RestoreSnapshotRequest {
@@ -95,8 +89,6 @@ export interface RestoreSnapshotResponse {
 	repository: string
 	indices: string[]
 	shards: RestoreShardInfo
-	success: boolean
-	message: string
 }
 
 export interface CreateSnapshotRequest {
@@ -120,8 +112,6 @@ export interface CreateSnapshotResponse {
 	skipped_write_indices: string[]
 	shards?: RestoreShardInfo
 	accepted: boolean
-	success: boolean
-	message: string
 }
 
 // Snapshot Schedule Types
@@ -181,14 +171,10 @@ export interface SnapshotScheduleResponse {
 
 export interface SnapshotScheduleListResponse {
 	schedules: SnapshotScheduleResponse[]
-	success: boolean
-	message: string
 }
 
 export interface SnapshotScheduleOperationResponse {
 	schedule?: SnapshotScheduleResponse | null
-	success: boolean
-	message: string
 }
 
 export interface ScheduledSnapshotExecutionResponse {
@@ -198,6 +184,4 @@ export interface ScheduledSnapshotExecutionResponse {
 	indices_snapshotted: string[]
 	skipped_write_indices: string[]
 	already_snapshotted_indices: string[]
-	success: boolean
-	message: string
 }

@@ -18,8 +18,6 @@ export interface WazuhGroupFileDetails {
 }
 
 export interface WazuhGroupConfigurationUpdate {
-	success: boolean
-	message: string
 	group_id: string
 	filename: string
 }

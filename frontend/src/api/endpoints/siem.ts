@@ -98,7 +98,7 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse>(`/siem/dashboards/disable/${dashboardId}`)
 	},
 	getPanelData(dashboardId: number, timerange: string, signal?: AbortSignal) {
-		return HttpClient.post<PanelDataResponse>(
+		return HttpClient.post<FlaskBaseResponse & PanelDataResponse>(
 			`/siem/dashboards/panel-data`,
 			{
 				dashboard_id: dashboardId,

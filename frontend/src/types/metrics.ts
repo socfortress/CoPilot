@@ -10,8 +10,6 @@ export interface MetricsCpuData {
 }
 
 export interface HostsResponse {
-	success: boolean
-	message: string
 	hosts: string[]
 }
 

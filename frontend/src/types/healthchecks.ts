@@ -21,8 +21,6 @@ export enum InfluxDBAlertStatus {
 }
 
 export interface InfluxDBAlertResponse {
-	success: boolean
-	message: string
 	alerts: InfluxDBAlert[]
 	total_count: number
 	filtered_count: number
@@ -41,8 +39,6 @@ export interface InfluxDBAlertQueryParams {
 }
 
 export interface InfluxDBCheckNamesResponse {
-	success: boolean
-	message: string
 	check_names: string[]
 	total_count: number
 }

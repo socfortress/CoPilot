@@ -24,7 +24,7 @@ export default {
 		const body = {
 			process_name: processName
 		}
-		return HttpClient.post<(FlaskBaseResponse & { data: EvaluationData }) | MCPQueryResponse>(
+		return HttpClient.post<FlaskBaseResponse & (MCPQueryResponse | { data: EvaluationData })>(
 			`/threat_intel/process_name`,
 			body
 		)

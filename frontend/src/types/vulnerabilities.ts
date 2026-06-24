@@ -28,8 +28,6 @@ export interface VulnerabilitySearchResponse {
 	total_pages: number
 	has_next: boolean
 	has_previous: boolean
-	success: boolean
-	message: string
 	filters_applied: Record<string, string | number | boolean>
 }
 
@@ -81,22 +79,25 @@ export interface VulnerabilityReportGenerateRequest {
 }
 
 export interface VulnerabilityReportGenerateResponse {
-	success: boolean
-	message: string
 	report?: VulnerabilityReport
 	error?: string
 }
 
+export interface VulnerabilityReportGenerateBackgroundResponse {
+	report_id: number
+	report_name: string
+	customer_code: string
+	status: VulnerabilityReport["status"]
+	check_status_url: string
+	download_url: string
+}
+
 export interface VulnerabilityReportListResponse {
-	success: boolean
-	message: string
 	reports: VulnerabilityReport[]
 	total_count: number
 }
 
 export interface VulnerabilityReportDeleteResponse {
-	success: boolean
-	message: string
 	report_id: number
 	report_name: string
 	customer_code: string

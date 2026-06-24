@@ -1,3 +1,4 @@
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	ScaOverviewQuery,
 	ScaOverviewResponse,
@@ -5,7 +6,6 @@ import type {
 	ScaPackageRegistryResponse,
 	ScaPoliciesIndexResponse,
 	ScaPolicyContentResponse,
-	SCAReportDeleteResponse,
 	SCAReportGenerateRequest,
 	SCAReportGenerateResponse,
 	SCAReportListResponse,
@@ -19,7 +19,7 @@ export default {
 	 * Search SCA results across all agents with filtering and pagination
 	 */
 	searchScaOverview(query: ScaOverviewQuery, signal?: AbortSignal) {
-		return HttpClient.get<ScaOverviewResponse>(`/sca/overview`, {
+		return HttpClient.get<FlaskBaseResponse & ScaOverviewResponse>(`/sca/overview`, {
 			params: {
 				customer_code: query.customer_code,
 				agent_name: query.agent_name,
@@ -79,7 +79,7 @@ export default {
 	 * Get SCA statistics
 	 */
 	getScaStats(customer_code?: string) {
-		return HttpClient.get<ScaStatsResponse>(`/sca/stats`, {
+		return HttpClient.get<FlaskBaseResponse & ScaStatsResponse>(`/sca/stats`, {
 			params: customer_code ? { customer_code } : undefined
 		})
 	},
@@ -88,14 +88,14 @@ export default {
 	 * Generate an SCA report (synchronous)
 	 */
 	generateReport(request: SCAReportGenerateRequest) {
-		return HttpClient.post<SCAReportGenerateResponse>(`/sca/reports/generate`, request)
+		return HttpClient.post<FlaskBaseResponse & SCAReportGenerateResponse>(`/sca/reports/generate`, request)
 	},
 
 	/**
 	 * List all SCA reports
 	 */
 	listReports(customer_code?: string) {
-		return HttpClient.get<SCAReportListResponse>(`/sca/reports`, {
+		return HttpClient.get<FlaskBaseResponse & SCAReportListResponse>(`/sca/reports`, {
 			params: customer_code ? { customer_code } : undefined
 		})
 	},
@@ -113,34 +113,36 @@ export default {
 	 * Delete an SCA report
 	 */
 	deleteReport(reportId: number) {
-		return HttpClient.delete<SCAReportDeleteResponse>(`/sca/reports/${reportId}`)
+		return HttpClient.delete<FlaskBaseResponse>(`/sca/reports/${reportId}`)
 	},
 
 	/**
 	 * List all available SCA policies from the CoPilot-SCA repository
 	 */
 	getPolicies() {
-		return HttpClient.get<ScaPoliciesIndexResponse>(`/sca/policies`)
+		return HttpClient.get<FlaskBaseResponse & ScaPoliciesIndexResponse>(`/sca/policies`)
 	},
 
 	/**
 	 * Fetch the YAML content of a specific SCA policy
 	 */
 	getPolicyContent(policyId: string) {
-		return HttpClient.get<ScaPolicyContentResponse>(`/sca/policies/${policyId}`)
+		return HttpClient.get<FlaskBaseResponse & ScaPolicyContentResponse>(`/sca/policies/${policyId}`)
 	},
 
 	/**
 	 * List all tracked SCA-relevant package categories
 	 */
 	getPackageRegistry() {
-		return HttpClient.get<ScaPackageRegistryResponse>(`/sca/packages/registry`)
+		return HttpClient.get<FlaskBaseResponse & ScaPackageRegistryResponse>(`/sca/packages/registry`)
 	},
 
 	/**
 	 * Detect agents running a tracked SCA-relevant package
 	 */
 	getAgentsForPackage(registryKey: string) {
-		return HttpClient.get<ScaPackageAgentsResponse>(`/sca/packages/registry/${registryKey}/agents`)
+		return HttpClient.get<FlaskBaseResponse & ScaPackageAgentsResponse>(
+			`/sca/packages/registry/${registryKey}/agents`
+		)
 	}
 }

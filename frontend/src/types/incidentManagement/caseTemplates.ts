@@ -127,9 +127,7 @@ export interface CaseTaskUpdatePayload {
 // ----- Soft-warning close response -----
 
 export interface CaseCloseWarningResponse {
-	success: false
 	requires_confirmation: true
-	message: string
 	incomplete_mandatory_tasks: CaseTask[]
 }
 
@@ -176,14 +174,10 @@ export interface CaseTemplateLibraryListResponse {
 	entries: CaseTemplateLibraryEntry[]
 	invalid_paths: string[]
 	last_refresh: string | null
-	success: boolean
-	message: string
 }
 
 export interface CaseTemplateLibraryRefreshResponse {
 	loaded: number
 	invalid_paths: string[]
 	last_refresh: string | null
-	success: boolean
-	message: string
 }

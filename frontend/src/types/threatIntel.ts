@@ -17,8 +17,6 @@ export interface StructuredAgentResponse {
 }
 
 export interface MCPQueryResponse {
-	message: string
-	success: boolean
 	result?: SafeAny
 	structured_result?: StructuredAgentResponse
 	execution_time?: number

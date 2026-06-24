@@ -1,4 +1,3 @@
-// TODO-FE: refactor
 export interface Artifact {
 	description: string
 	name: string

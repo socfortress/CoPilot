@@ -1,4 +1,3 @@
-// TODO-FE: refactor
 export interface CVSSInfo {
 	base: number | null
 	vector: string | null
@@ -80,22 +79,16 @@ export interface PatchTuesdaySummary {
 }
 
 export interface PatchTuesdayResponse {
-	success: boolean
-	message: string
 	summary: PatchTuesdaySummary | null
 	items: PatchTuesdayItem[]
 }
 
 export interface PatchTuesdaySummaryResponse {
-	success: boolean
-	message: string
 	summary: PatchTuesdaySummary | null
 	top_items: PatchTuesdayItem[]
 }
 
 export interface AvailableCyclesResponse {
-	success: boolean
-	message: string
 	cycles: string[]
 	current_cycle: string
 	next_patch_tuesday: string

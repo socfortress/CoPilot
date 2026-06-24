@@ -12,8 +12,6 @@ export interface CatalogStoryRow {
 }
 
 export interface CatalogStoryListResponse {
-	success: boolean
-	message: string
 	stories: CatalogStoryRow[]
 }
 
@@ -28,8 +26,6 @@ export interface CatalogStoryDetection {
 }
 
 export interface CatalogStoryDetailResponse {
-	success: boolean
-	message: string
 	name: string
 	id: string
 	description: string
@@ -46,8 +42,6 @@ export interface CatalogStoryDetailResponse {
 }
 
 export interface CatalogStatsResponse {
-	success: boolean
-	message: string
 	detection_count: number
 	story_count: number
 	product_count: number
@@ -83,8 +77,6 @@ export interface CatalogWazuhRuleRow {
 }
 
 export interface CatalogWazuhRulesResponse {
-	success: boolean
-	message: string
 	rules: CatalogWazuhRuleRow[]
 	total: number
 	available: boolean
@@ -110,8 +102,6 @@ export interface CatalogWazuhRuleCompliance {
 }
 
 export interface CatalogWazuhRuleDetailResponse {
-	success: boolean
-	message: string
 	id: number | null
 	level: number | null
 	status: string | null
@@ -150,8 +140,6 @@ export interface CatalogCoverageGapRow {
 }
 
 export interface CatalogCoverageGapsResponse {
-	success: boolean
-	message: string
 	gaps: CatalogCoverageGapRow[]
 	gap_count: number
 	covered_count: number
@@ -183,8 +171,6 @@ export interface CatalogLogTestRuleSummary {
 }
 
 export interface CatalogLogTestResponse {
-	success: boolean
-	message: string
 	matched: boolean
 	rule: CatalogLogTestRuleSummary | null
 	tactics: string[]
@@ -202,8 +188,6 @@ export interface CatalogComplianceFramework {
 }
 
 export interface CatalogComplianceFrameworksResponse {
-	success: boolean
-	message: string
 	frameworks: CatalogComplianceFramework[]
 }
 
@@ -216,8 +200,6 @@ export interface CatalogComplianceGroupRow {
 }
 
 export interface CatalogComplianceResponse {
-	success: boolean
-	message: string
 	framework: string
 	framework_label: string
 	groups: CatalogComplianceGroupRow[]

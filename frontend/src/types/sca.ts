@@ -32,8 +32,6 @@ export interface ScaOverviewResponse {
 	total_pages: number
 	has_next: boolean
 	has_previous: boolean
-	success: boolean
-	message: string
 	filters_applied: Record<string, string | number | boolean>
 }
 
@@ -68,8 +66,6 @@ export interface ScaStatsResponse {
 			total_invalid: number
 		}
 	>
-	success: boolean
-	message: string
 }
 
 export interface SCAReport {
@@ -101,22 +97,13 @@ export interface SCAReportGenerateRequest {
 }
 
 export interface SCAReportGenerateResponse {
-	success: boolean
-	message: string
 	report?: SCAReport
 	error?: string
 }
 
 export interface SCAReportListResponse {
-	success: boolean
-	message: string
 	reports: SCAReport[]
 	total_count: number
-}
-
-export interface SCAReportDeleteResponse {
-	success: boolean
-	message: string
 }
 
 export enum ScaComplianceLevel {
@@ -189,16 +176,12 @@ export interface ScaPoliciesIndexResponse {
 	version: string
 	last_updated: string
 	policies: ScaPolicyItem[]
-	success: boolean
-	message: string
 }
 
 export interface ScaPolicyContentResponse {
 	policy_id: string
 	file_path: string
 	content: string
-	success: boolean
-	message: string
 }
 
 // ── SCA Package Registry & Agent Detection ──
@@ -213,8 +196,6 @@ export interface ScaPackageRegistryItem {
 export interface ScaPackageRegistryResponse {
 	entries: ScaPackageRegistryItem[]
 	total: number
-	success: boolean
-	message: string
 }
 
 export interface AgentPackageMatch {
@@ -232,6 +213,4 @@ export interface ScaPackageAgentsResponse {
 	matched_agents: AgentPackageMatch[]
 	total: number
 	applicable_policies: ScaPolicyItem[]
-	success: boolean
-	message: string
 }

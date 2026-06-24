@@ -207,6 +207,7 @@
 import type { ItemProps } from "@/components/common/cards/CardStatsBars.vue"
 import type { Agent, BulkDeleteAgentsResponse, BulkDeleteFilterRequest } from "@/types/agents"
 import type { ApiError } from "@/types/common"
+import type { FlaskBaseResponse } from "@/types/flask"
 import {
 	NAlert,
 	NButton,
@@ -255,7 +256,7 @@ const activeTab = ref<"selection" | "filter">("selection")
 const loading = ref(false)
 const showConfirmDialog = ref(false)
 const showResultsModal = ref(false)
-const deleteResults = ref<BulkDeleteAgentsResponse | null>(null)
+const deleteResults = ref<(FlaskBaseResponse & BulkDeleteAgentsResponse) | null>(null)
 
 const filterForm = ref<BulkDeleteFilterRequest>({
 	customer_code: undefined,

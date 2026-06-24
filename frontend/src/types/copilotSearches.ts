@@ -86,8 +86,6 @@ export interface RuleTags {
 }
 
 export interface RuleListResponse {
-	success: boolean
-	message: string
 	total: number
 	filtered: number
 	platform: string
@@ -95,14 +93,10 @@ export interface RuleListResponse {
 }
 
 export interface RuleDetailResponse {
-	success: boolean
-	message: string
 	rule: RuleDetail
 }
 
 export interface RuleStatsResponse {
-	success: boolean
-	message: string
 	total_rules: number
 	by_platform: Record<string, number>
 	by_status: Record<string, number>
@@ -114,8 +108,6 @@ export interface RuleStatsResponse {
 }
 
 export interface RefreshResponse {
-	success: boolean
-	message: string
 	rules_loaded: number
 	timestamp: string
 }
@@ -137,8 +129,6 @@ export interface SearchHit {
 }
 
 export interface ExecuteSearchResponse {
-	success: boolean
-	message: string
 	rule_id: string
 	rule_name: string
 	total_hits: number
@@ -146,18 +136,6 @@ export interface ExecuteSearchResponse {
 	took_ms: number
 	hits: SearchHit[]
 	query_executed: Record<string, unknown>
-}
-
-export interface SearchValidationError {
-	parameter: string
-	message: string
-}
-
-export interface ExecuteSearchErrorResponse {
-	success: boolean
-	message: string
-	rule_id?: string
-	validation_errors: SearchValidationError[]
 }
 
 // Graylog Query Types
@@ -168,8 +146,6 @@ export interface ExecuteGraylogQueryRequest {
 }
 
 export interface GraylogQueryResponse {
-	success: boolean
-	message: string
 	rule_id: string
 	rule_name: string
 	graylog_query: string
@@ -189,8 +165,6 @@ export interface ProvisionGraylogAlertRequest {
 }
 
 export interface ProvisionGraylogAlertResponse {
-	success: boolean
-	message: string
 	rule_id: string
 	rule_name: string
 	alert_title: string
@@ -217,8 +191,6 @@ export interface BulkProvisionRuleResult {
 }
 
 export interface BulkProvisionGraylogAlertResponse {
-	success: boolean
-	message: string
 	provisioned_count: number
 	skipped_count: number
 	failed_count: number
@@ -226,7 +198,6 @@ export interface BulkProvisionGraylogAlertResponse {
 }
 
 export interface GraylogProvisioningStatusResponse {
-	success: boolean
 	provisioned: Record<string, boolean>
 	warning: string | null
 }
@@ -304,8 +275,6 @@ export interface MitreCoverageQuery {
 }
 
 export interface MitreCoverageResponse {
-	success: boolean
-	message: string
 	tactics: MitreTactic[]
 	rules_index: Record<string, MitreRuleIndexEntry>
 	stats: MitreCoverageStats
@@ -318,8 +287,6 @@ export interface RulesByIdsRequest {
 }
 
 export interface RulesByIdsResponse {
-	success: boolean
-	message: string
 	rules: RuleSummary[]
 	missing: string[]
 }

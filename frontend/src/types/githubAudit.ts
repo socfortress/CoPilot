@@ -270,8 +270,6 @@ export interface AuditSummary {
 // ==================== Response Types ====================
 
 export interface GitHubAuditResponse {
-	success: boolean
-	message: string
 	summary: AuditSummary | null
 	organization_results: OrganizationAuditResult | null
 	repository_results: RepositoryAuditResult[]
@@ -281,53 +279,34 @@ export interface GitHubAuditResponse {
 }
 
 export interface GitHubAuditSummaryResponse {
-	success: boolean
-	message: string
 	summary: AuditSummary | null
 	top_findings: AuditCheck[]
 }
 
 export interface GitHubAuditConfigResponse {
-	success: boolean
-	message: string
 	config?: GitHubAuditConfig | null
 	configs?: GitHubAuditConfig[] | null
 }
 
 export interface GitHubAuditReportListResponse {
-	success: boolean
-	message: string
 	reports: GitHubAuditReportSummary[]
 	total_count: number
 }
 
 export interface GitHubAuditReportResponse {
-	success: boolean
-	message: string
 	report: GitHubAuditReport | null
 }
 
 export interface GitHubAuditExclusionResponse {
-	success: boolean
-	message: string
 	exclusion?: GitHubAuditCheckExclusion | null
 	exclusions?: GitHubAuditCheckExclusion[] | null
 }
 
 export interface GitHubAuditBaselineResponse {
-	success: boolean
-	message: string
 	baseline?: GitHubAuditBaseline | null
 	baselines?: GitHubAuditBaseline[] | null
 }
 
 export interface AvailableChecksResponse {
-	success: boolean
-	message: string
 	checks: AvailableCheck[]
-}
-
-export interface DeleteResponse {
-	success: boolean
-	message: string
 }

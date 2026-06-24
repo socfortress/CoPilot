@@ -43,7 +43,7 @@ export default {
 	 */
 	bulkDeleteAgents(agentIds: string[]) {
 		const payload: BulkDeleteAgentRequest = { agent_ids: agentIds }
-		return HttpClient.post<BulkDeleteAgentsResponse>(`/agents/bulk/delete`, payload)
+		return HttpClient.post<FlaskBaseResponse & BulkDeleteAgentsResponse>(`/agents/bulk/delete`, payload)
 	},
 	/**
 	 * Bulk delete agents based on filter conditions
@@ -51,7 +51,7 @@ export default {
 	 * @param filters - Filter conditions (customer_code, status, disconnected_days)
 	 */
 	bulkDeleteAgentsByFilter(filters: BulkDeleteFilterRequest) {
-		return HttpClient.post<BulkDeleteAgentsResponse>(`/agents/bulk/delete/filter`, filters)
+		return HttpClient.post<FlaskBaseResponse & BulkDeleteAgentsResponse>(`/agents/bulk/delete/filter`, filters)
 	},
 	syncAgents() {
 		return HttpClient.post<FlaskBaseResponse>(`/agents/sync`)

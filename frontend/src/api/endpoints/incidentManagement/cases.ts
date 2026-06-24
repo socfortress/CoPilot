@@ -69,7 +69,7 @@ export default {
 			params.order = pagination.order
 		}
 
-		return HttpClient.get<CasesListResponse>(url, { params })
+		return HttpClient.get<FlaskBaseResponse & CasesListResponse>(url, { params })
 	},
 	getCase(caseId: number) {
 		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(`/incidents/db_operations/case/${caseId}`)

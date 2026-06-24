@@ -1,3 +1,4 @@
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	CreateSnapshotRequest,
 	CreateSnapshotResponse,
@@ -17,7 +18,7 @@ import { HttpClient } from "../httpClient"
 export default {
 	// Repository endpoints
 	getRepositories() {
-		return HttpClient.get<SnapshotRepositoryListResponse>("/snapshots/repositories")
+		return HttpClient.get<FlaskBaseResponse & SnapshotRepositoryListResponse>("/snapshots/repositories")
 	},
 
 	// Snapshot endpoints
@@ -26,39 +27,52 @@ export default {
 		if (repository) params.append("repository", repository)
 		if (snapshot) params.append("snapshot", snapshot)
 		const queryString = params.toString()
-		return HttpClient.get<SnapshotStatusResponse>(`/snapshots/status${queryString ? `?${queryString}` : ""}`)
+		return HttpClient.get<FlaskBaseResponse & SnapshotStatusResponse>(
+			`/snapshots/status${queryString ? `?${queryString}` : ""}`
+		)
 	},
 
 	listSnapshots(repository: string) {
-		return HttpClient.get<SnapshotListResponse>(`/snapshots/repositories/${repository}/snapshots`)
+		return HttpClient.get<FlaskBaseResponse & SnapshotListResponse>(
+			`/snapshots/repositories/${repository}/snapshots`
+		)
 	},
 
 	createSnapshot(request: CreateSnapshotRequest) {
-		return HttpClient.post<CreateSnapshotResponse>("/snapshots/create", request)
+		return HttpClient.post<FlaskBaseResponse & CreateSnapshotResponse>("/snapshots/create", request)
 	},
 
 	restoreSnapshot(request: RestoreSnapshotRequest) {
-		return HttpClient.post<RestoreSnapshotResponse>("/snapshots/restore", request)
+		return HttpClient.post<FlaskBaseResponse & RestoreSnapshotResponse>("/snapshots/restore", request)
 	},
 
 	// Schedule endpoints
 	getSchedules(enabledOnly: boolean = false) {
-		return HttpClient.get<SnapshotScheduleListResponse>(`/snapshots/schedules?enabled_only=${enabledOnly}`)
+		return HttpClient.get<FlaskBaseResponse & SnapshotScheduleListResponse>(
+			`/snapshots/schedules?enabled_only=${enabledOnly}`
+		)
 	},
 
 	getSchedule(scheduleId: number) {
-		return HttpClient.get<SnapshotScheduleOperationResponse>(`/snapshots/schedules/${scheduleId}`)
+		return HttpClient.get<FlaskBaseResponse & SnapshotScheduleOperationResponse>(
+			`/snapshots/schedules/${scheduleId}`
+		)
 	},
 
 	createSchedule(request: SnapshotScheduleCreate) {
-		return HttpClient.post<SnapshotScheduleOperationResponse>("/snapshots/schedules", request)
+		return HttpClient.post<FlaskBaseResponse & SnapshotScheduleOperationResponse>("/snapshots/schedules", request)
 	},
 
 	updateSchedule(scheduleId: number, request: SnapshotScheduleUpdate) {
-		return HttpClient.put<SnapshotScheduleOperationResponse>(`/snapshots/schedules/${scheduleId}`, request)
+		return HttpClient.put<FlaskBaseResponse & SnapshotScheduleOperationResponse>(
+			`/snapshots/schedules/${scheduleId}`,
+			request
+		)
 	},
 
 	deleteSchedule(scheduleId: number) {
-		return HttpClient.delete<SnapshotScheduleOperationResponse>(`/snapshots/schedules/${scheduleId}`)
+		return HttpClient.delete<FlaskBaseResponse & SnapshotScheduleOperationResponse>(
+			`/snapshots/schedules/${scheduleId}`
+		)
 	}
 }

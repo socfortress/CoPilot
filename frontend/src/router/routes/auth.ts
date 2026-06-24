@@ -1,5 +1,5 @@
-import type { FormType } from "@/components/auth/types.d"
 import type { RouteRecordRaw } from "vue-router"
+import type { FormType } from "@/components/auth/types.d"
 import { Layout } from "@/types/theme"
 import AuthPage from "@/views/Auth.vue"
 
