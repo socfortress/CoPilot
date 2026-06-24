@@ -56,7 +56,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { LogsQueryEventType, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/types/logs"
 import type { User } from "@/types/user"
 import _cloneDeep from "lodash/cloneDeep"

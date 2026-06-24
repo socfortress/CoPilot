@@ -8,10 +8,10 @@
 					:status="eventTypeLower === 'error' ? 'error' : undefined"
 				>
 					<div class="flex flex-wrap gap-3 font-mono">
-						<div :class="`status-cat-${statusCategory}`">
+						<div :class="statusColorClass">
 							<code>{{ log.status_code }}</code>
 						</div>
-						<div :class="`method-${methodLower}`">
+						<div :class="methodColorClass">
 							<strong>{{ log.method }}</strong>
 						</div>
 						<div class="text-sm">
@@ -62,7 +62,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { Log } from "@/types/logs"
 import type { User } from "@/types/user"
 import { computed } from "vue"
@@ -92,43 +91,38 @@ const username = computed(() => {
 	return user?.username || ""
 })
 
+const statusColorClass = computed(() => {
+	if (statusCategory.value === "2" || statusCategory.value === "3") {
+		return "text-success"
+	}
+	if (statusCategory.value === "4") {
+		return "text-warning"
+	}
+	if (statusCategory.value === "5") {
+		return "text-error"
+	}
+	return ""
+})
+
+const methodColorClass = computed(() => {
+	switch (methodLower.value) {
+		case "get":
+			return "text-extra-1"
+		case "option":
+			return "text-extra-3"
+		case "put":
+			return "text-extra-2"
+		case "post":
+			return "text-primary"
+		case "delete":
+			return "text-error"
+		default:
+			return ""
+	}
+})
+
 function formatDate(timestamp: string | number | Date): string {
 	// Parse as UTC (since backend stores in UTC without 'Z' suffix - maybe address later), then convert to local
 	return dayjs.utc(timestamp).local().format(dFormats.datetime)
 }
 </script>
-
-<style lang="scss" scoped>
-.status {
-	&-cat-2 {
-		color: var(--success-color);
-	}
-	&-cat-3 {
-		color: var(--success-color);
-	}
-	&-cat-4 {
-		color: var(--warning-color);
-	}
-	&-cat-5 {
-		color: var(--error-color);
-	}
-}
-
-.method {
-	&-get {
-		color: var(--extra1-color);
-	}
-	&-option {
-		color: var(--extra3-color);
-	}
-	&-put {
-		color: var(--extra2-color);
-	}
-	&-post {
-		color: var(--primary-color);
-	}
-	&-delete {
-		color: var(--error-color);
-	}
-}
-</style>

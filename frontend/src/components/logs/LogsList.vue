@@ -117,7 +117,6 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { Log, LogsQuery, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/types/logs"
 import type { User } from "@/types/user"
 import { useResizeObserver } from "@vueuse/core"

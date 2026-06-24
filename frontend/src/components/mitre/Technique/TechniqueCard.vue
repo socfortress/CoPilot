@@ -93,7 +93,6 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { MitreTechniqueDetails } from "@/types/mitre"
 import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"

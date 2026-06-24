@@ -65,7 +65,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { MitreAtomicOsCategory, MitreAtomicTestsQuery } from "@/api/endpoints/wazuh/mitre"
 import type { ApiError } from "@/types/common"
 import type { MitreAtomicTest } from "@/types/mitre"
