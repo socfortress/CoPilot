@@ -42,7 +42,6 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { AlertTag } from "@/types/tags"
 import type { User } from "@/types/user"
 import { NButton, NSelect, NSpin, useMessage } from "naive-ui"

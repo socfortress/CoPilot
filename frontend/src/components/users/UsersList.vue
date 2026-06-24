@@ -107,7 +107,6 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { User } from "@/types/user"
 import { NButton, NDropdown, NModal, NScrollbar, NSpin, NTable, NTag, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, h, onBeforeMount, ref } from "vue"
