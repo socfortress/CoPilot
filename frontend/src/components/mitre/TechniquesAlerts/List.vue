@@ -15,7 +15,7 @@
 			</n-button>
 		</template>
 		<template #sidebar-content>
-			<n-spin :show="loading">
+			<n-spin :show="loading" class="min-h-48">
 				<div class="flex flex-col gap-4">
 					<div v-for="tactic of tacticsList" :key="tactic.id" class="flex items-center gap-3">
 						<n-checkbox
@@ -47,7 +47,7 @@
 			</div>
 		</template>
 		<template #main-content>
-			<n-spin :show="loading">
+			<n-spin :show="loading" class="min-h-48">
 				<div class="grid-auto-fill-250 grid gap-2">
 					<TechniqueAlertCard
 						v-for="technique of filteredTechniques"

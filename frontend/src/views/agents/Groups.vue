@@ -35,7 +35,7 @@
 				</div>
 			</template>
 			<template #sidebar-content>
-				<n-spin :show="loadingGroups">
+				<n-spin :show="loadingGroups" class="min-h-48">
 					<template v-if="groupsList.length">
 						<div class="divide-border flex flex-col divide-y">
 							<div

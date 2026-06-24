@@ -10,7 +10,7 @@
 		>
 			<template #sidebar-header>Customers</template>
 			<template #sidebar-content>
-				<n-spin :show="loadingList">
+				<n-spin :show="loadingList" class="min-h-48">
 					<template v-if="customers.length">
 						<div class="divide-border flex flex-col divide-y">
 							<div
