@@ -470,7 +470,12 @@ async def process_sigma_alert(alert: VelociraptorSigmaAlert, session: AsyncSessi
 )
 async def create_exclusion(
     exclusion: VeloSigmaExclusionCreate,
-    current_user: str = Depends(AuthHandler().return_username_for_logging),
+    # SECURITY: require a VALID admin/analyst token. The previous dependency
+    # (return_username_for_logging) decoded the token but never validated it, so any request
+    # carrying an arbitrary/forged Bearer header could create detection-suppression rules
+    # unauthenticated (GHSA-c6jc-rh4j-wg88). require_any_scope validates the token and returns
+    # the authenticated username, which we use for created_by.
+    current_user: str = Security(AuthHandler().require_any_scope("admin", "analyst")),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new exclusion rule for Velociraptor Sigma alerts."""
@@ -498,11 +503,11 @@ async def create_exclusion(
     "/create/velo-sigma/exclusion/{exclusion_id}",
     response_model=VeloSigmaExlcusionRouteResponse,
     summary="Get an exclusion rule by ID",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_exclusion(
     exclusion_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: str = Depends(AuthHandler().get_current_user),
 ):
     """Retrieve details of a specific exclusion rule."""
     service = VeloSigmaExclusionService(db)
@@ -522,13 +527,13 @@ async def get_exclusion(
     "/create/velo-sigma/exclusion",
     response_model=VeloSigmaExclusionListResponse,
     summary="List all exclusion rules",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def list_exclusions(
     skip: int = Query(0, description="Number of items to skip for pagination"),
     limit: int = Query(100, description="Maximum number of items to return"),
     enabled_only: bool = Query(False, description="Only return enabled exclusions"),
     db: AsyncSession = Depends(get_db),
-    current_user: str = Depends(AuthHandler().get_current_user),
 ):
     """List all exclusion rules with pagination."""
     service = VeloSigmaExclusionService(db)
@@ -548,12 +553,12 @@ async def list_exclusions(
     "/create/velo-sigma/exclusion/{exclusion_id}",
     response_model=VeloSigmaExlcusionRouteResponse,
     summary="Update an exclusion rule",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def update_exclusion(
     exclusion_id: int,
     exclusion: VeloSigmaExclusionUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: str = Depends(AuthHandler().get_current_user),
 ):
     """Update an existing exclusion rule."""
     service = VeloSigmaExclusionService(db)
@@ -570,11 +575,14 @@ async def update_exclusion(
     )
 
 
-@incidents_alerts_router.delete("/create/velo-sigma/exclusion/{exclusion_id}", summary="Delete an exclusion rule")
+@incidents_alerts_router.delete(
+    "/create/velo-sigma/exclusion/{exclusion_id}",
+    summary="Delete an exclusion rule",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def delete_exclusion(
     exclusion_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: str = Depends(AuthHandler().get_current_user),
 ):
     """Delete an exclusion rule."""
     service = VeloSigmaExclusionService(db)
@@ -590,11 +598,11 @@ async def delete_exclusion(
     "/velo-sigma/exclusion/{exclusion_id}/toggle",
     response_model=VeloSigmaExlcusionRouteResponse,
     summary="Toggle an exclusion rule's enabled status",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def toggle_exclusion(
     exclusion_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: str = Depends(AuthHandler().get_current_user),
 ):
     """Enable or disable an exclusion rule."""
     service = VeloSigmaExclusionService(db)
