@@ -142,7 +142,7 @@ let abortController: AbortController | null = null
 const checkedCount = computed(() => checkedList.value.length)
 
 function isBookmarked(alert: SocAlert): boolean {
-	return !!(bookmarksList.value || []).filter(o => o.alert_id === alert.alert_id).length
+	return (bookmarksList.value ?? []).some(o => o.alert_id === alert.alert_id)
 }
 
 function bookmark() {
@@ -307,7 +307,7 @@ function toggleCheckedList(alertId: string, value: boolean) {
 }
 
 function isChecked(alertId: string) {
-	return checkedList.value.filter(o => o === alertId).length !== 0
+	return checkedList.value.some(o => o === alertId)
 }
 
 function clearChecked(alertId?: string) {

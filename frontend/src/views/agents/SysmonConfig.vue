@@ -204,8 +204,8 @@ const xmlErrors = ref<XMLError[]>([])
 
 const loadingCustomersList = ref(false)
 const customersList = ref<Customer[]>([])
-const hasCustomersAvailable = computed<boolean>(
-	() => !!customersList.value.filter(o => !customers.value.includes(o.customer_code)).length
+const hasCustomersAvailable = computed<boolean>(() =>
+	customersList.value.some(o => !customers.value.includes(o.customer_code))
 )
 
 const customersOptions = computed(() => {

@@ -131,7 +131,7 @@ const areAllTacticsSelected = computed(() => {
 	return selectedTactics.value.length === tacticsList.value.length
 })
 
-const hasNoCountAlerts = computed(() => !!techniquesList.value.filter(o => !o.count).length)
+const hasNoCountAlerts = computed(() => techniquesList.value.some(o => !o.count))
 
 function isTacticSelected(id: string) {
 	return selectedTactics.value.includes(id)

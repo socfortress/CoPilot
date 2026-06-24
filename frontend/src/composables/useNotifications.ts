@@ -32,7 +32,7 @@ export interface PrependOptions {
 const list = useStorage<Notification[]>("notifications-list", [], secureLocalStorage({ session: true }))
 
 export function useNotifications() {
-	const hasUnread = computed(() => list.value.filter(o => !o.read).length !== 0)
+	const hasUnread = computed(() => list.value.some(o => !o.read))
 	const hasNotifications = computed(() => list.value.length !== 0)
 	const dFormats = useSettingsStore().dateFormat
 

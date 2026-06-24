@@ -72,7 +72,7 @@ function deleteTag(tagId: number) {
 function newAlertTag(text: string): string | { label: string; value: string } {
 	const tag = _trim(text)
 
-	if (tag && alert.value.tags.filter(o => o.tag.toLowerCase() === tag.toLowerCase()).length === 0) {
+	if (tag && !alert.value.tags.some(o => o.tag.toLowerCase() === tag.toLowerCase())) {
 		creatingTag.value = true
 
 		Api.incidentManagement.alerts
