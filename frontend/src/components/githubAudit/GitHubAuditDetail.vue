@@ -290,7 +290,7 @@ async function loadReports() {
 		})
 		reports.value = response.data.reports || []
 		totalReports.value = response.data.total_count || 0
-	} catch (error: any) {
+	} catch (error) {
 		console.error("Failed to load reports:", error)
 		message.error("Failed to load reports")
 	} finally {
@@ -305,7 +305,7 @@ async function loadExclusions() {
 	try {
 		const response = await Api.githubAudit.getExclusions({ configId: props.config.id })
 		exclusions.value = response.data.exclusions || []
-	} catch (error: any) {
+	} catch (error) {
 		console.error("Failed to load exclusions:", error)
 		message.error("Failed to load exclusions")
 	} finally {
@@ -321,7 +321,7 @@ async function runAudit() {
 		// Reload reports after audit completes
 		await loadReports()
 		emit("updated")
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to run audit")
 	} finally {
 		running.value = false
@@ -334,7 +334,7 @@ async function deleteConfig() {
 		message.success("Configuration deleted")
 		emit("close")
 		emit("updated")
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to delete configuration")
 	}
 }

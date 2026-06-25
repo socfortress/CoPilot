@@ -83,7 +83,7 @@ async function runAudit() {
 		await Api.githubAudit.runAuditFromConfig(props.config.id)
 		message.success("Audit completed successfully")
 		emit("audit-complete")
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to run audit")
 	} finally {
 		running.value = false

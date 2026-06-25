@@ -278,7 +278,7 @@ async function handleSubmit() {
 			message.success("Configuration created successfully")
 		}
 		emit("saved")
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to save configuration")
 	} finally {
 		saving.value = false

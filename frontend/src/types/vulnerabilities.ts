@@ -1,4 +1,3 @@
-// TODO-FE: refactor
 export interface VulnerabilitySearchItem {
 	cve_id: string
 	severity: VulnerabilitySeverity

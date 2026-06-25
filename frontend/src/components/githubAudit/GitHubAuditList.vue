@@ -201,7 +201,7 @@ async function loadConfigs() {
 
 			configs.value = filteredConfigs
 		}
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to load configurations")
 		configs.value = []
 	} finally {

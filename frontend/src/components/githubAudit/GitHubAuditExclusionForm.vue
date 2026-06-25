@@ -111,7 +111,7 @@ async function handleSubmit() {
 		formData.reason = ""
 		formData.approved_by = null
 		expiresAtTimestamp.value = null
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to create exclusion")
 	} finally {
 		saving.value = false

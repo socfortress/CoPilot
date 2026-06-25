@@ -242,8 +242,7 @@ async function saveSettings() {
 		} else {
 			message.error(res.data.message || "Failed to save settings")
 		}
-	} catch (error: any) {
-		console.error("Failed to save settings:", error)
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to save settings")
 	} finally {
 		saving.value = false

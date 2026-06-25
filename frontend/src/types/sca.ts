@@ -1,4 +1,3 @@
-// TODO-FE: refactor
 export interface AgentScaOverviewItem {
 	agent_id: string
 	agent_name: string
