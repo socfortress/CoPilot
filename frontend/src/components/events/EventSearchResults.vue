@@ -158,16 +158,16 @@ const defaultColumns: DataTableColumns<EventSearchResult> = [
 	}
 ]
 
-function getNestedValue(obj: EventSearchResult, path: string): unknown {
-	return path.split(".").reduce<unknown>((acc, segment) => {
-		if (acc && typeof acc === "object") {
-			return (acc as Record<string, unknown>)[segment]
+function getNestedValue(obj: EventSearchResult, path: string): SafeAny | undefined {
+	return path.split(".").reduce<SafeAny | undefined>((acc, segment) => {
+		if (acc != null && typeof acc === "object") {
+			return (acc as Record<string, SafeAny>)[segment]
 		}
 		return undefined
 	}, obj)
 }
 
-function formatCellValue(val: unknown): string {
+function formatCellValue(val: SafeAny | undefined): string {
 	if (val === undefined || val === null || val === "") return "-"
 	if (Array.isArray(val)) return val.map(v => (v === null || v === undefined ? "" : String(v))).join(", ")
 	if (typeof val === "object") return JSON.stringify(val)

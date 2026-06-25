@@ -49,6 +49,7 @@
 </template>
 
 <script setup lang="ts">
+import type { SafeAny } from "@/types/common"
 import type { EventSearchResult } from "@/types/events"
 import { NButton, NEmpty, NTooltip } from "naive-ui"
 import { computed } from "vue"
@@ -73,7 +74,7 @@ const sortedFields = computed(() => {
 		.sort(([a], [b]) => a.localeCompare(b))
 })
 
-function formatValue(value: unknown): string {
+function formatValue(value: SafeAny): string {
 	if (value === null || value === undefined) return "—"
 	if (typeof value === "object") return JSON.stringify(value)
 	return String(value)
