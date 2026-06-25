@@ -185,11 +185,9 @@ async function startStream() {
 					message.success(data.message)
 				},
 				onError(error) {
-					const errorMessage =
-						error instanceof Error ? error.message : error.message || error.error || "Unknown error"
-					console.warn("Stream error:", error)
+					const errorMessage = "error" in error ? error.error : getApiErrorMessage(error as ApiError)
 					if (!streamComplete.value) {
-						streamError.value = errorMessage
+						streamError.value = errorMessage || "Unknown error"
 					}
 					progress.failed++
 				}
