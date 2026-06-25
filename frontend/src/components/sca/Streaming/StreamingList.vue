@@ -35,10 +35,12 @@
 
 <script setup lang="ts">
 import type { ScaStreamingFilters, ScaStreamingListFilter } from "./types.d"
+import type { ApiError } from "@/types/common.ts"
 import type { AgentScaOverviewItem, ScaStreamComplete, ScaStreamProgress } from "@/types/sca"
 import { NAlert, useMessage } from "naive-ui"
 import { computed, onBeforeUnmount, reactive, ref } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils/index.ts"
 import StreamingFilters from "./StreamingFilters.vue"
 import StreamingProgressHeader from "./StreamingProgressHeader.vue"
 import StreamingResultsList from "./StreamingResultsList.vue"
@@ -182,10 +184,11 @@ async function startStream() {
 			},
 			abortController.value
 		)
-	} catch (error: any) {
-		if (error.name !== "AbortError") {
-			streamError.value = error.message || "Connection error"
-			console.error("Stream connection error:", error)
+	} catch (error) {
+		const errorMessage = getApiErrorMessage(error as ApiError)
+		if (errorMessage !== "AbortError") {
+			streamError.value = errorMessage || "Connection error"
+			console.error("Stream connection error:", errorMessage)
 		}
 	} finally {
 		isStreaming.value = false

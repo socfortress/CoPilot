@@ -125,6 +125,7 @@
 <script setup lang="ts">
 import type { SelectOption } from "naive-ui"
 import type { BadgeColor } from "@/components/common/Badge.vue"
+import type { ApiError } from "@/types/common.ts"
 import type { SnapshotInfo, SnapshotRepository } from "@/types/snapshots"
 import { NButton, NEmpty, NModal, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
@@ -134,6 +135,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
+import { getApiErrorMessage } from "@/utils/index.ts"
 import CreateSnapshotForm from "./CreateSnapshotForm.vue"
 import RestoreSnapshotForm from "./RestoreSnapshotForm.vue"
 
@@ -230,8 +232,8 @@ async function fetchRepositories() {
 			message.error(response.data.message)
 			applyRepositories([])
 		}
-	} catch (error: any) {
-		message.error(error.message || "Failed to fetch repositories")
+	} catch (error) {
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to fetch repositories")
 		applyRepositories([])
 	}
 }
@@ -265,8 +267,8 @@ async function fetchSnapshots() {
 			message.error(response.data.message)
 			snapshots.value = []
 		}
-	} catch (error: any) {
-		message.error(error.message || "Failed to fetch snapshots")
+	} catch (error) {
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to fetch snapshots")
 		snapshots.value = []
 	} finally {
 		loading.value = false

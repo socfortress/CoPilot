@@ -43,11 +43,13 @@
 </template>
 
 <script setup lang="ts">
+import type { ApiError } from "@/types/common.ts"
 import type { SnapshotScheduleResponse } from "@/types/snapshots"
 import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils/index.ts"
 import SnapshotScheduleCard from "./SnapshotScheduleCard.vue"
 import SnapshotScheduleForm from "./SnapshotScheduleForm.vue"
 
@@ -74,8 +76,8 @@ async function toggleEnabled(schedule: SnapshotScheduleResponse, enabled: boolea
 		} else {
 			message.error(response.data.message)
 		}
-	} catch (error: any) {
-		message.error(error.message || "Failed to update schedule")
+	} catch (error) {
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to update schedule")
 	}
 }
 
@@ -88,8 +90,8 @@ async function deleteSchedule(schedule: SnapshotScheduleResponse) {
 		} else {
 			message.error(response.data.message)
 		}
-	} catch (error: any) {
-		message.error(error.message || "Failed to delete schedule")
+	} catch (error) {
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to delete schedule")
 	}
 }
 
@@ -102,8 +104,8 @@ async function fetchSchedules() {
 		} else {
 			message.error(response.data.message)
 		}
-	} catch (error: any) {
-		message.error(error.message || "Failed to fetch schedules")
+	} catch (error) {
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to fetch schedules")
 	} finally {
 		loading.value = false
 	}

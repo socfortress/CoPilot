@@ -62,10 +62,12 @@
 
 <script setup lang="ts">
 import type { FormRules } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { RestoreSnapshotRequest, SnapshotInfo } from "@/types/snapshots"
 import { NAlert, NButton, NForm, NFormItem, NInput, NSwitch, NTag, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	repository: string | null
@@ -123,8 +125,8 @@ async function handleSubmit() {
 		} else {
 			message.error(response.data.message)
 		}
-	} catch (error: any) {
-		message.error(error.message || "Failed to restore snapshot")
+	} catch (error) {
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to restore snapshot")
 	} finally {
 		loading.value = false
 	}
