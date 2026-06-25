@@ -9,6 +9,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.audit.services.retention import prune_audit_log
 from app.db.db_session import async_engine
 from app.db.db_session import sync_engine
 from app.schedulers.models.scheduler import CreateSchedulerRequest
@@ -175,6 +176,14 @@ async def initialize_job_metadata():
                 "function": invoke_palace_lesson_sweeper,
                 "description": "Forgets expired one-off AI analyst palace lessons via NanoClaw /palace/forget.",
             },
+            {
+                "job_id": "prune_audit_log",
+                # Daily. Deletes audit_log rows older than AUDIT_LOG_RETENTION_DAYS (default 90)
+                # so the append-only audit trail can't grow without bound. See issue #943.
+                "time_interval": 1440,
+                "function": prune_audit_log,
+                "description": "Prunes audit_log entries older than the configured retention window (AUDIT_LOG_RETENTION_DAYS).",
+            },
             # ! Mirgrated SIGMA to VELO ! #
             # {
             #     "job_id": "invoke_sigma_queries_collect",
@@ -282,6 +291,7 @@ def get_function_by_name(function_name: str):
     """
     function_map = {
         "agent_sync": agent_sync,
+        "prune_audit_log": prune_audit_log,
         # "wazuh_index_fields_resize": resize_wazuh_index_fields,
         "resize_wazuh_index_fields": resize_wazuh_index_fields,
         "invoke_alert_creation_collect": invoke_alert_creation_collect,
