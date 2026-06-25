@@ -11,6 +11,11 @@ from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
 
 from app.connectors.utils import get_connector_info_from_db
+from app.connectors.velociraptor.utils.validation import validate_artifact_name
+from app.connectors.velociraptor.utils.validation import validate_client_id
+from app.connectors.velociraptor.utils.validation import validate_flow_id
+from app.connectors.velociraptor.utils.validation import validate_hostname
+from app.connectors.velociraptor.utils.validation import validate_org_id
 from app.db.db_session import AsyncSessionLocal
 from app.db.db_session import get_db_session
 
@@ -151,6 +156,12 @@ class UniversalService:
         Returns:
             VQLCollectorArgs: The VQLCollectorArgs object with given VQL query.
         """
+        # Central choke point for every executed VQL: org_id reaches the API verbatim and is
+        # also interpolated into VQL by callers, so reject any non-identifier value here
+        # (GHSA-5542-j2fc-gqjm). Coalesce a falsy org to the default "root" first so callers
+        # that pass None/"" keep working (and protobuf never receives None).
+        org_id = org_id or "root"
+        validate_org_id(org_id)
         return api_pb2.VQLCollectorArgs(
             max_wait=1,
             org_id=org_id,
@@ -216,6 +227,7 @@ class UniversalService:
         Returns:
             dict: A dictionary with the success status and a message.
         """
+        validate_flow_id(flow_id)
         vql = f"SELECT * FROM watch_monitoring(artifact='System.Flow.Completion') WHERE FlowId='{flow_id}' LIMIT 1"
         logger.info(f"Watching flow {flow_id} for completion")
         return self.execute_query(vql, org_id)
@@ -238,6 +250,9 @@ class UniversalService:
         Returns:
             dict: A dictionary with the success status, a message, and potentially the results.
         """
+        validate_client_id(client_id)
+        validate_flow_id(flow_id)
+        validate_artifact_name(artifact)
         vql = f"SELECT * FROM source(client_id='{client_id}', flow_id='{flow_id}', artifact='{artifact}')"
         return self.execute_query(vql, org_id)
 
@@ -253,6 +268,7 @@ class UniversalService:
         """
         # Formulate queries
         try:
+            validate_hostname(client_name)
             vql_client_id = f"select client_id,os_info from clients(search='host:{client_name}')"
             vql_last_seen_at = f"select last_seen_at from clients(search='host:{client_name}')"
 
