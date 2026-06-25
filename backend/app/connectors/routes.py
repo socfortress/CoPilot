@@ -5,11 +5,15 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import File
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import Security
 from fastapi import UploadFile
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.audit.models.audit import AuditAction
+from app.audit.services.audit import record_audit_event
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.schema import ConnectorListResponse
 from app.connectors.schema import ConnectorResponse
@@ -152,6 +156,8 @@ async def verify_connector(
 async def update_connector(
     connector_id: int,
     connector: UpdateConnector,
+    request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> ConnectorListResponse:
     """
@@ -176,6 +182,18 @@ async def update_connector(
     )
     if updated_connector is not None:
         await ConnectorServices.verify_connector_by_id(connector_id, session=session)
+        # Audit the change WITHOUT recording connector values — connector config holds
+        # secrets (API keys, passwords). Capture only identity (GHSA-aligned: no secrets in
+        # audit records).
+        await record_audit_event(
+            action=AuditAction.CONNECTOR_UPDATE,
+            actor_user_id=current_user.id,
+            actor_username=current_user.username,
+            entity_type="connector",
+            entity_id=str(connector_id),
+            details=f"Connector '{getattr(updated_connector, 'connector_name', connector_id)}' configuration updated",
+            request=request,
+        )
         return {
             "connector": updated_connector,
             "success": True,

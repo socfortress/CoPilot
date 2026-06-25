@@ -217,12 +217,19 @@ async def refresh_token(current_user: User = Depends(auth_handler.get_current_us
     description="Register new user",
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
-async def register(user: UserInput, session: AsyncSession = Depends(get_db)):
+async def register(
+    user: UserInput,
+    http_request: Request,
+    current_user: User = Depends(auth_handler.get_current_user),
+    session: AsyncSession = Depends(get_db),
+):
     """
     Register a new user.
 
     Args:
         user (UserInput): The user input data.
+        http_request (Request): The incoming request (used for audit source IP).
+        current_user (User): The admin performing the action.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
@@ -243,6 +250,15 @@ async def register(user: UserInput, session: AsyncSession = Depends(get_db)):
     logger.info(f"User: {u}")
     session.add(u)
     await session.commit()
+    await record_audit_event(
+        action=AuditAction.USER_CREATE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        entity_type="user",
+        entity_id=u.username,
+        new_value={"username": u.username, "email": u.email, "role_id": u.role_id},
+        request=http_request,
+    )
     return {"message": "User created successfully", "success": True}
 
 
@@ -338,6 +354,8 @@ async def get_users(session: AsyncSession = Depends(get_db)):
 )
 async def reset_password_via_username(
     request: PasswordReset,
+    http_request: Request,
+    current_user: User = Depends(auth_handler.get_current_user),
     session: AsyncSession = Depends(get_db),
 ):
     """
@@ -345,6 +363,8 @@ async def reset_password_via_username(
 
     Args:
         request (PasswordReset): The password reset data.
+        http_request (Request): The incoming request (used for audit source IP).
+        current_user (User): The admin performing the action.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
@@ -357,6 +377,15 @@ async def reset_password_via_username(
     user.password = hashed_pwd
     session.add(user)
     await session.commit()
+    await record_audit_event(
+        action=AuditAction.USER_UPDATE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        entity_type="user",
+        entity_id=user.username,
+        details="Password reset by admin",
+        request=http_request,
+    )
     return {"message": "Password reset successfully", "success": True}
 
 
@@ -369,6 +398,7 @@ async def reset_password_via_username(
 )
 async def reset_password_me(
     request: PasswordReset,
+    http_request: Request,
     token: str = Depends(AuthHandler().security),
     session: AsyncSession = Depends(get_db),
 ):
@@ -377,6 +407,7 @@ async def reset_password_me(
 
     Args:
         request (PasswordReset): The password reset data.
+        http_request (Request): The incoming request (used for audit source IP).
         token (str, optional): The authentication token. Defaults to Depends(AuthHandler().security).
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
@@ -393,6 +424,15 @@ async def reset_password_me(
     user.password = hashed_pwd
     session.add(user)
     await session.commit()
+    await record_audit_event(
+        action=AuditAction.USER_UPDATE,
+        actor_user_id=user.id,
+        actor_username=user.username,
+        entity_type="user",
+        entity_id=user.username,
+        details="Self-service password change",
+        request=http_request,
+    )
     return {"message": "Password reset successfully", "success": True}
 
 
@@ -405,6 +445,8 @@ async def reset_password_me(
 )
 async def delete_user_by_username(
     user_id: int,
+    http_request: Request,
+    current_user: User = Depends(auth_handler.get_current_user),
     session: AsyncSession = Depends(get_db),
 ):
     """
@@ -412,12 +454,30 @@ async def delete_user_by_username(
 
     Args:
         user_id (int): The ID of the user to delete.
+        http_request (Request): The incoming request (used for audit source IP).
+        current_user (User): The admin performing the action.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
         dict: A dictionary containing the message and success status.
     """
-    return await delete_user(user_id, session)
+    # Snapshot the target before deletion so the audit record retains who was removed.
+    target = await session.get(User, user_id)
+    old_value = {"username": target.username, "role_id": target.role_id} if target else None
+    target_username = target.username if target else str(user_id)
+
+    result = await delete_user(user_id, session)
+
+    await record_audit_event(
+        action=AuditAction.USER_DELETE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        entity_type="user",
+        entity_id=target_username,
+        old_value=old_value,
+        request=http_request,
+    )
+    return result
 
 
 @auth_router.put(
@@ -429,6 +489,8 @@ async def delete_user_by_username(
 async def update_user_role_by_name(
     user_id: int,
     request: UpdateUserRoleRequest,
+    http_request: Request,
+    current_user: User = Depends(auth_handler.get_current_user),
     session: AsyncSession = Depends(get_db),
 ):
     """
@@ -437,6 +499,8 @@ async def update_user_role_by_name(
     Args:
         user_id (int): The ID of the user to update.
         request (UpdateUserRoleRequest): The role update request containing role name.
+        http_request (Request): The incoming request (used for audit source IP).
+        current_user (User): The admin performing the action.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
@@ -446,6 +510,7 @@ async def update_user_role_by_name(
     user = await session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    old_role_id = user.role_id
 
     # Map role names to IDs
     role_mapping = {
@@ -465,6 +530,18 @@ async def update_user_role_by_name(
     user.role_id = role_id
     session.add(user)
     await session.commit()
+
+    await record_audit_event(
+        action=AuditAction.USER_ROLE_CHANGE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        entity_type="user",
+        entity_id=user.username,
+        old_value={"role_id": old_role_id},
+        new_value={"role_id": role_id},
+        details=f"Role changed to {request.role_name}",
+        request=http_request,
+    )
 
     return {
         "message": f"User {user.username} role updated successfully to {request.role_name}",
