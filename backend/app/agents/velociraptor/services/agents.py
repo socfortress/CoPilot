@@ -6,6 +6,8 @@ from loguru import logger
 from app.agents.schema.agents import AgentModifyResponse
 from app.agents.velociraptor.schema.agents import VelociraptorAgent
 from app.connectors.velociraptor.utils.universal import UniversalService
+from app.connectors.velociraptor.utils.validation import validate_client_id
+from app.connectors.velociraptor.utils.validation import validate_org_id
 
 
 def create_query(query: str) -> str:
@@ -28,6 +30,10 @@ async def collect_velociraptor_clients(org_id: str) -> list:
     Returns:
         list: A list of all clients.
     """
+    # org_id is interpolated into VQL here but execute_query runs with the default org, so
+    # validate it explicitly (the central create_vql_request check would only see "root").
+    # GHSA-5542-j2fc-gqjm.
+    validate_org_id(org_id)
     velociraptor_service = await UniversalService.create("Velociraptor")
     # query = create_query(
     #     "SELECT * FROM clients()",
@@ -262,6 +268,7 @@ async def delete_client(client_id: str) -> dict:
     Returns:
         dict: A dictionary containing the result of the deletion operation.
     """
+    validate_client_id(client_id)
     universal_service = await UniversalService.create("Velociraptor")
     try:
         query = create_query(

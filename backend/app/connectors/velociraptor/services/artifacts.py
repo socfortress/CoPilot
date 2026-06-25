@@ -24,6 +24,10 @@ from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
 from app.connectors.velociraptor.schema.artifacts import RunCommandBody
 from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
 from app.connectors.velociraptor.utils.universal import UniversalService
+from app.connectors.velociraptor.utils.validation import validate_artifact_name
+from app.connectors.velociraptor.utils.validation import validate_client_id
+from app.connectors.velociraptor.utils.validation import validate_flow_id
+from app.connectors.velociraptor.utils.validation import validate_org_id
 
 
 def create_query(query: str) -> str:
@@ -127,6 +131,7 @@ async def get_artifact_by_name(artifact_name: str) -> ArtifactsResponse:
         ArtifactsResponse: A response containing the specific artifact.
     """
     logger.info(f"Fetching artifact '{artifact_name}' from Velociraptor")
+    validate_artifact_name(artifact_name)
     velociraptor_service = await UniversalService.create("Velociraptor")
 
     # Query for a specific artifact by name
@@ -455,6 +460,13 @@ async def run_artifact_collection(
     from app.db.universal_models import AgentDataStore
     from app.db.universal_models import Agents
 
+    # Validate the identifier fields that get interpolated into VQL (GHSA-5542-j2fc-gqjm).
+    # Note: artifact `parameters`/`env` values are free-form and are NOT validated here;
+    # those are secured by parameterized VQL (follow-up), not format rejection.
+    validate_org_id(collect_artifact_body.velociraptor_org)
+    validate_client_id(collect_artifact_body.velociraptor_id)
+    validate_artifact_name(collect_artifact_body.artifact_name)
+
     velociraptor_service = await UniversalService.create("Velociraptor")
     try:
         # Get agent details from database
@@ -648,6 +660,13 @@ async def run_file_collection(
     from app.db.universal_models import AgentDataStore
     from app.db.universal_models import Agents
 
+    # Validate the identifier fields interpolated into VQL (GHSA-5542-j2fc-gqjm). The `file`
+    # and `root_disk` values are free-form and are NOT validated here; those are secured by
+    # parameterized VQL (follow-up).
+    validate_org_id(collect_artifact_body.velociraptor_org)
+    validate_client_id(collect_artifact_body.velociraptor_id)
+    validate_artifact_name(collect_artifact_body.artifact_name)
+
     velociraptor_service = await UniversalService.create("Velociraptor")
 
     try:
@@ -786,6 +805,11 @@ async def fetch_file_from_filestore(
     import os
 
     from app.data_store.data_store_operations import upload_agent_artifact_file
+
+    # Validate identifier fields interpolated into VQL (GHSA-5542-j2fc-gqjm). org_id is
+    # validated centrally in create_vql_request.
+    validate_client_id(client_id)
+    validate_flow_id(flow_id)
 
     velociraptor_service = await UniversalService.create("Velociraptor")
 
@@ -948,6 +972,11 @@ async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResp
     velociraptor_service = await UniversalService.create("Velociraptor")
     try:
         run_command_body.artifact_name = run_command_body.artifact_name.value
+        # Validate the identifier fields interpolated into VQL (GHSA-5542-j2fc-gqjm). The
+        # `command` value is free-form by design and is NOT validated here; it is secured by
+        # parameterized VQL (follow-up). artifact_name is already an enum.
+        validate_org_id(run_command_body.velociraptor_org)
+        validate_client_id(run_command_body.velociraptor_id)
         logger.info(f"Running remote command on {run_command_body}")
         query = create_query(
             (
@@ -1036,6 +1065,10 @@ async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse
         # route already resolved it). See issue #913.
         quarantine_body.artifact_name = resolve_quarantine_artifact(quarantine_body.artifact_name)
         quarantine_body.action = quarantine_body.action.value
+        # Validate the identifier fields interpolated into VQL (GHSA-5542-j2fc-gqjm).
+        validate_org_id(quarantine_body.velociraptor_org)
+        validate_client_id(quarantine_body.velociraptor_id)
+        validate_artifact_name(quarantine_body.artifact_name)
         if quarantine_body.action == "quarantine":
             query = create_query(
                 (

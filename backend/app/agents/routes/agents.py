@@ -54,6 +54,7 @@ from app.auth.models.users import User
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
+from app.connectors.velociraptor.utils.validation import validate_client_id
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.db.db_session import get_db
 
@@ -1242,6 +1243,10 @@ async def update_agent(
         AgentModifyResponse: The response indicating the success or failure of the update.
     """
     logger.info(f"Updating agent {agent_id} with Velociraptor ID: {velociraptor_id}")
+    # Validate the velociraptor_id format BEFORE persisting. This value is later read back
+    # into VQL client_id positions and executed on the Velociraptor server, so a crafted
+    # value (containing a quote) was a stored VQL-injection -> RCE sink (GHSA-5542-j2fc-gqjm).
+    validate_client_id(velociraptor_id)
     try:
         # Check customer access - first find the agent
         base_query = select(Agents).filter(Agents.agent_id == agent_id)
