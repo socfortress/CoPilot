@@ -33,7 +33,7 @@
 				@update:page-size="onPageSizeChange()"
 			/>
 
-			<n-popover :show="showFilters" trigger="manual" overlap placement="left-start" class="px-0!">
+			<n-popover :show="showFilters" trigger="manual" placement="bottom-end" class="px-0!" to="body">
 				<template #trigger>
 					<div class="bg-default rounded-lg">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
