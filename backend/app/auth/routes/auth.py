@@ -4,12 +4,16 @@ from datetime import timedelta
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import Security
 from fastapi import status
 from fastapi.security import OAuth2PasswordRequestForm
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.audit.models.audit import AuditAction
+from app.audit.models.audit import AuditResult
+from app.audit.services.audit import record_audit_event
 from app.auth.models.users import PasswordReset
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
@@ -24,6 +28,7 @@ from app.auth.services.totp import is_2fa_enabled
 from app.auth.services.universal import delete_user
 from app.auth.services.universal import find_user
 from app.auth.services.universal import select_all_users
+from app.auth.services.universal import update_last_login
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 
@@ -34,11 +39,16 @@ auth_handler = AuthHandler()
 
 
 @auth_router.post("/token")
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(get_db)):
+async def login_for_access_token(
+    request: Request,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(get_db),
+):
     """
     Authenticates a user and generates an access token.
 
     Args:
+        request (Request): The incoming request (used for audit source IP).
         form_data (OAuth2PasswordRequestForm): The form data containing the username and password.
         session (AsyncSession): The database session.
 
@@ -50,6 +60,15 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     """
     user = await auth_handler.authenticate_user(form_data.username, form_data.password)
     if not user:
+        await record_audit_event(
+            action=AuditAction.AUTH_LOGIN_FAILED,
+            actor_username=form_data.username,
+            entity_type="user",
+            entity_id=form_data.username,
+            result=AuditResult.FAILURE,
+            details="Invalid username or password (main portal)",
+            request=request,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -59,13 +78,24 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     # Check if user is customer_user role
     if user.role_id == RoleEnum.customer_user.value:
         logger.warning(f"Customer user {user.username} attempted to log in to main portal")
+        await record_audit_event(
+            action=AuditAction.AUTH_LOGIN_FAILED,
+            actor_user_id=user.id,
+            actor_username=user.username,
+            entity_type="user",
+            entity_id=user.username,
+            result=AuditResult.FAILURE,
+            details="customer_user role denied access to the main portal",
+            request=request,
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This account is registered for the Customer Portal only. Please log in at the Customer Portal to access your account.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Check if user has 2FA enabled
+    # Check if user has 2FA enabled — login is not yet complete; it finishes at /2fa/validate,
+    # which is where the auth.login event + last_login are recorded for 2FA users.
     if await is_2fa_enabled(user.id):
         from app.auth.routes.totp import _create_temp_token
 
@@ -80,16 +110,36 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await auth_handler.encode_token(user.username, access_token_expires)
     logger.info(f"User {user.username} logged in successfully")
+    await update_last_login(user.id)
+    await record_audit_event(
+        action=AuditAction.AUTH_LOGIN,
+        actor_user_id=user.id,
+        actor_username=user.username,
+        entity_type="user",
+        entity_id=user.username,
+        details="Main portal login",
+        request=request,
+    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @auth_router.post("/token/customer-portal", response_model=Token)
 async def login_for_customer_portal(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_db),
 ):
     user = await auth_handler.authenticate_user(form_data.username, form_data.password)
     if not user:
+        await record_audit_event(
+            action=AuditAction.AUTH_LOGIN_FAILED,
+            actor_username=form_data.username,
+            entity_type="user",
+            entity_id=form_data.username,
+            result=AuditResult.FAILURE,
+            details="Invalid username or password (customer portal)",
+            request=request,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -97,6 +147,16 @@ async def login_for_customer_portal(
         )
 
     if user.role_id != RoleEnum.customer_user.value:
+        await record_audit_event(
+            action=AuditAction.AUTH_LOGIN_FAILED,
+            actor_user_id=user.id,
+            actor_username=user.username,
+            entity_type="user",
+            entity_id=user.username,
+            result=AuditResult.FAILURE,
+            details="Non customer_user role denied access to the customer portal",
+            request=request,
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This account does not have access to the Customer Portal.",
@@ -116,6 +176,17 @@ async def login_for_customer_portal(
         user.username,
         access_token_expires,
         extra_claims={"customer_codes": customer_codes},
+    )
+    await update_last_login(user.id)
+    await record_audit_event(
+        action=AuditAction.AUTH_LOGIN,
+        actor_user_id=user.id,
+        actor_username=user.username,
+        customer_code=customer_codes[0] if customer_codes else None,
+        entity_type="user",
+        entity_id=user.username,
+        details="Customer portal login",
+        request=request,
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -247,6 +318,7 @@ async def get_users(session: AsyncSession = Depends(get_db)):
             "email": user.email,
             "role_id": user.role_id,
             "role_name": user.role.name if user.role else None,
+            "last_login_at": user.last_login_at,
         }
         user_list.append(user_dict)
 
