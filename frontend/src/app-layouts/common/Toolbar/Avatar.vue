@@ -15,6 +15,7 @@ const UserIcon = "ion:person-outline"
 const LicenseIcon = "carbon:license"
 const LogoutIcon = "ion:log-out-outline"
 const LogsIcon = "carbon:cloud-logging"
+const AuditIcon = "carbon:document-security"
 const ContactIcon = "ic:outline-alternate-email"
 const DocsIcon = "carbon:document"
 const UsersIcon = "carbon:group-security"
@@ -72,6 +73,15 @@ const options = ref([
 		key: "route-Logs",
 		icon: renderIcon(LogsIcon)
 	},
+	...(authStore.isAdmin
+		? [
+				{
+					label: "Audit Log",
+					key: "route-Audit",
+					icon: renderIcon(AuditIcon)
+				}
+			]
+		: []),
 	{
 		type: "divider",
 		key: "divider-2"
