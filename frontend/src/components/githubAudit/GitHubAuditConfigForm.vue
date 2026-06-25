@@ -136,6 +136,7 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
+import type { Customer } from "@/types/customers"
 import type { GitHubAuditConfig, GitHubAuditConfigCreate, GitHubAuditConfigUpdate } from "@/types/githubAudit"
 import {
 	NButton,
@@ -289,7 +290,7 @@ onBeforeMount(async () => {
 	try {
 		const response = await Api.customers.getCustomers()
 		if (response.data.customers) {
-			customerOptions.value = response.data.customers.map((c: any) => ({
+			customerOptions.value = response.data.customers.map((c: Customer) => ({
 				label: `${c.customer_name} (${c.customer_code})`,
 				value: c.customer_code
 			}))

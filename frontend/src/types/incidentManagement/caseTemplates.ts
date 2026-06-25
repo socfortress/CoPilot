@@ -126,9 +126,13 @@ export interface CaseTaskUpdatePayload {
 
 // ----- Soft-warning close response -----
 
-export interface CaseCloseWarningResponse {
-	requires_confirmation: true
+export interface CaseStatusUpdateResponse {
+	requires_confirmation: boolean
 	incomplete_mandatory_tasks: CaseTask[]
+}
+
+export interface CaseCloseWarningResponse extends CaseStatusUpdateResponse {
+	requires_confirmation: true
 }
 
 // ----- Timeline -----

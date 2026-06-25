@@ -156,7 +156,18 @@ async function startStream() {
 							agent_id: data.agent_id,
 							agent_name: data.agent_name,
 							customer_code: data.customer_code,
-							...policy
+							policy_id: policy.policy_id,
+							policy_name: policy.policy_name,
+							description: policy.description,
+							total_checks: policy.total_checks,
+							pass: policy.pass_count,
+							fail: policy.fail_count,
+							invalid: policy.invalid_count,
+							score: policy.score,
+							start_scan: policy.start_scan,
+							end_scan: policy.end_scan,
+							references: policy.references,
+							hash_file: policy.hash_file
 						})
 					}
 				},
@@ -174,7 +185,8 @@ async function startStream() {
 					message.success(data.message)
 				},
 				onError(error) {
-					const errorMessage = error?.message || error?.error || "Unknown error"
+					const errorMessage =
+						error instanceof Error ? error.message : error.message || error.error || "Unknown error"
 					console.warn("Stream error:", error)
 					if (!streamComplete.value) {
 						streamError.value = errorMessage

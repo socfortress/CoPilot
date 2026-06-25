@@ -9,6 +9,7 @@ import type {
 	CasesListResponse,
 	CaseStatus
 } from "@/types/incidentManagement/cases"
+import type { CaseStatusUpdateResponse } from "@/types/incidentManagement/caseTemplates"
 import { HttpClient } from "../../httpClient"
 
 export type CasesFilter =
@@ -114,7 +115,7 @@ export default {
 		})
 	},
 	updateCaseStatus(caseId: number, status: CaseStatus, force = false) {
-		return HttpClient.put<FlaskBaseResponse>(
+		return HttpClient.put<FlaskBaseResponse & CaseStatusUpdateResponse>(
 			`/incidents/db_operations/case/status`,
 			{
 				case_id: caseId,

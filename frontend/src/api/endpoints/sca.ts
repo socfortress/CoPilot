@@ -9,7 +9,14 @@ import type {
 	SCAReportGenerateRequest,
 	SCAReportGenerateResponse,
 	SCAReportListResponse,
-	ScaStatsResponse
+	ScaStatsResponse,
+	ScaStreamAgentEmpty,
+	ScaStreamAgentResult,
+	ScaStreamComplete,
+	ScaStreamError,
+	ScaStreamOverviewHandlers,
+	ScaStreamProgress,
+	ScaStreamStartEvent
 } from "@/types/sca"
 import { HttpClient } from "../httpClient"
 import { createSSEStream } from "../sseClient"
@@ -39,14 +46,7 @@ export default {
 	 */
 	async streamScaOverview(
 		query: ScaOverviewQuery,
-		handlers: {
-			onStart?: (data: any) => void
-			onAgentResult?: (data: any) => void
-			onAgentEmpty?: (data: any) => void
-			onProgress?: (data: any) => void
-			onComplete?: (data: any) => void
-			onError?: (error: any) => void
-		},
+		handlers: ScaStreamOverviewHandlers,
 		abortController?: AbortController
 	): Promise<void> {
 		await createSSEStream({
@@ -63,14 +63,14 @@ export default {
 				: undefined,
 			signal: abortController?.signal,
 			handlers: {
-				start: data => handlers.onStart?.(data),
-				agent_result: data => handlers.onAgentResult?.(data),
-				agent_empty: data => handlers.onAgentEmpty?.(data),
-				progress: data => handlers.onProgress?.(data),
-				complete: data => handlers.onComplete?.(data),
-				error: data => handlers.onError?.(data),
-				agent_error: data => handlers.onError?.(data),
-				onError: err => handlers.onError?.(err)
+				start: data => handlers.onStart?.(data as ScaStreamStartEvent),
+				agent_result: data => handlers.onAgentResult?.(data as ScaStreamAgentResult),
+				agent_empty: data => handlers.onAgentEmpty?.(data as ScaStreamAgentEmpty),
+				progress: data => handlers.onProgress?.(data as ScaStreamProgress),
+				complete: data => handlers.onComplete?.(data as ScaStreamComplete),
+				error: data => handlers.onError?.(data as ScaStreamError),
+				agent_error: data => handlers.onError?.(data as ScaStreamError),
+				onError: err => handlers.onError?.(err as Error)
 			}
 		})
 	},

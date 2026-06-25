@@ -119,12 +119,34 @@ export interface ScaStreamStartEvent {
 	message: string
 }
 
+/** Policy row nested in an `agent_result` SSE event (no agent fields; uses *_count keys from the stream). */
+export interface ScaStreamAgentPolicy {
+	policy_id: string
+	policy_name: string
+	description: string
+	total_checks: number
+	pass_count: number
+	fail_count: number
+	invalid_count: number
+	score: number
+	start_scan: string
+	end_scan: string
+	references?: string | null
+	hash_file?: string | null
+}
+
 export interface ScaStreamAgentResult {
 	agent_id: string
 	agent_name: string
 	customer_code: string | null
 	policy_count: number
-	policies: AgentScaOverviewItem[]
+	policies: ScaStreamAgentPolicy[]
+}
+
+export interface ScaStreamAgentEmpty {
+	agent_id: string
+	agent_name: string
+	message: string
 }
 
 export interface ScaStreamProgress {
@@ -156,6 +178,15 @@ export interface ScaStreamError {
 	message: string
 	agent_id?: string
 	agent_name?: string
+}
+
+export interface ScaStreamOverviewHandlers {
+	onStart?: (data: ScaStreamStartEvent) => void
+	onAgentResult?: (data: ScaStreamAgentResult) => void
+	onAgentEmpty?: (data: ScaStreamAgentEmpty) => void
+	onProgress?: (data: ScaStreamProgress) => void
+	onComplete?: (data: ScaStreamComplete) => void
+	onError?: (error: ScaStreamError | Error) => void
 }
 
 // ── SCA Policies (from CoPilot-SCA GitHub repo) ──

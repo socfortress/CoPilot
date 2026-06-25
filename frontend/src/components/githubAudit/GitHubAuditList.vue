@@ -124,6 +124,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
+import type { Customer } from "@/types/customers.ts"
 import type { GitHubAuditConfig } from "@/types/githubAudit"
 import { NButton, NDrawer, NDrawerContent, NEmpty, NInput, NSelect, NSpin, NTag, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
@@ -166,7 +167,7 @@ async function loadCustomers() {
 	try {
 		const response = await Api.customers.getCustomers()
 		if (response.data.customers) {
-			customerOptions.value = response.data.customers.map((c: any) => ({
+			customerOptions.value = response.data.customers.map((c: Customer) => ({
 				label: `${c.customer_name} (${c.customer_code})`,
 				value: c.customer_code
 			}))

@@ -46,8 +46,9 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
+import type { FlaskBaseResponse } from "@/types/flask"
 import type { Case, CaseStatus } from "@/types/incidentManagement/cases"
-import type { CaseTask, CaseTaskStatus } from "@/types/incidentManagement/caseTemplates"
+import type { CaseStatusUpdateResponse, CaseTask, CaseTaskStatus } from "@/types/incidentManagement/caseTemplates"
 import { NButton, NModal, NPopselect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
@@ -89,7 +90,7 @@ async function callUpdate(target: CaseStatus, force = false) {
 	loading.value = true
 	try {
 		const res = await Api.incidentManagement.cases.updateCaseStatus(caseData.value.id, target, force)
-		const data: any = res.data
+		const data: FlaskBaseResponse & CaseStatusUpdateResponse = res.data
 
 		// Soft-warning shape from backend: success=false, requires_confirmation=true,
 		// incomplete_mandatory_tasks=[]. Treat as a confirmation flow rather than an error.
