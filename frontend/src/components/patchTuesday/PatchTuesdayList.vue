@@ -51,10 +51,12 @@
 
 <script setup lang="ts">
 import type { PatchTuesdayFilters as FiltersType, PatchTuesdayListFilter } from "./types"
+import type { ApiError } from "@/types/common.ts"
 import type { PatchTuesdayItem, PatchTuesdaySummary } from "@/types/patchTuesday"
 import { NDrawer, NDrawerContent, NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import patchTuesdayApi from "@/api/endpoints/patchTuesday"
+import { getApiErrorMessage } from "@/utils/index.ts"
 import PatchTuesdayCard from "./PatchTuesdayCard.vue"
 import PatchTuesdayDetail from "./PatchTuesdayDetail.vue"
 import PatchTuesdayFilters from "./PatchTuesdayFilters.vue"
@@ -174,9 +176,8 @@ async function fetchData() {
 		} else {
 			message.error(response.data.message || "Failed to fetch Patch Tuesday data")
 		}
-	} catch (error: unknown) {
-		const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-		message.error(`Error fetching data: ${errorMessage}`)
+	} catch (error) {
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to fetch Patch Tuesday data")
 	} finally {
 		loading.value = false
 	}

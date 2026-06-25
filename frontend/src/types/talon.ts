@@ -1,3 +1,5 @@
+import type { SafeAny } from "./common"
+
 export interface TalonMessageRequest {
 	message: string
 	sender?: string
@@ -10,7 +12,7 @@ export interface TalonInvestigateRequest {
 }
 
 export interface TalonStatusData {
-	[key: string]: unknown
+	[key: string]: SafeAny
 }
 
 export interface TalonTemplate {

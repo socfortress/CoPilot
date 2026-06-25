@@ -36,7 +36,7 @@
 			:data="events"
 			size="small"
 			:scroll-x
-			:row-key="(row: EventSearchResult) => row._id || JSON.stringify(row)"
+			:row-key="(row: EventSearchResult) => String(row._id ?? JSON.stringify(row))"
 			:row-props
 			class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
 		>
@@ -55,11 +55,14 @@
 
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
+import type { SafeAny } from "@/types/common"
 import type { EventSearchResult } from "@/types/events"
 import type { DisplayColumn, EventSource } from "@/types/eventSources"
 import { NButton, NDataTable, NEmpty, NTooltip } from "naive-ui"
 import { computed, h } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
 	events: EventSearchResult[]
@@ -81,6 +84,8 @@ const MIN_COLUMN_WIDTH = 120
 const SettingsIcon = "carbon:settings"
 const InfoIcon = "carbon:information"
 
+const dFormats = useSettingsStore().dateFormat
+
 function resolveColumnWidth(width?: number | null): number {
 	if (width == null || width < MIN_COLUMN_WIDTH) return MIN_COLUMN_WIDTH
 	return width
@@ -99,14 +104,14 @@ const defaultColumns: DataTableColumns<EventSearchResult> = [
 		key: "timestamp",
 		width: 180,
 		sorter: (a, b) => {
-			const timeA = a.timestamp || a["@timestamp"] || ""
-			const timeB = b.timestamp || b["@timestamp"] || ""
+			const timeA = String(a.timestamp || a["@timestamp"] || "")
+			const timeB = String(b.timestamp || b["@timestamp"] || "")
 			return new Date(timeA).getTime() - new Date(timeB).getTime()
 		},
 		render(row) {
 			const ts = row.timestamp || row["@timestamp"]
 			if (!ts) return "-"
-			return new Date(ts).toLocaleString()
+			return `${formatDate(`${ts}`, dFormats.datetime)}`
 		}
 	},
 	{
@@ -115,7 +120,7 @@ const defaultColumns: DataTableColumns<EventSearchResult> = [
 		width: 140,
 		ellipsis: { tooltip: true },
 		render(row) {
-			return row.agent_name || row.source || "-"
+			return formatCellValue(row.agent_name || row.source)
 		}
 	},
 	{
@@ -124,7 +129,7 @@ const defaultColumns: DataTableColumns<EventSearchResult> = [
 		width: 200,
 		ellipsis: { tooltip: true },
 		render(row) {
-			return row.rule_description || row.rule_id || "-"
+			return formatCellValue(row.rule_description || row.rule_id)
 		}
 	},
 	{
@@ -148,7 +153,7 @@ const defaultColumns: DataTableColumns<EventSearchResult> = [
 		width: 320,
 		ellipsis: { tooltip: true },
 		render(row) {
-			return row.full_log || row.data || row.message || "-"
+			return formatCellValue(row.full_log || row.data || row.message)
 		}
 	}
 ]
