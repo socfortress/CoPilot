@@ -1,5 +1,5 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { AuditLogEntry, AuditLogFilters, AuditLogPagination, AuditVocabularies } from "@/types/audit.d"
+import type { FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 
 export default {

@@ -44,3 +44,15 @@ export interface AuditVocabularies {
 	actions: string[]
 	results: string[]
 }
+
+/** UI-side filter state (the view converts dateRange -> start_time/end_time ISO strings). */
+export interface AuditUiFilters {
+	action: string | null
+	result: string | null
+	entity_type: string | null
+	actor_username: string | null
+	customer_code: string | null
+	search: string | null
+	/** [startMs, endMs] from the date-range picker, or null */
+	dateRange: [number, number] | null
+}
