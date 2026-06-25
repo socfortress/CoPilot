@@ -19,8 +19,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from sqlalchemy import Column
 from sqlalchemy import JSON
+from sqlalchemy import Column
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
