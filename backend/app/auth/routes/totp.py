@@ -8,9 +8,13 @@ import jwt
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import Security
 from loguru import logger
 
+from app.audit.models.audit import AuditAction
+from app.audit.models.audit import AuditResult
+from app.audit.services.audit import record_audit_event
 from app.auth.models.totp import TOTPBackupCodesResponse
 from app.auth.models.totp import TOTPDisableRequest
 from app.auth.models.totp import TOTPSetupResponse
@@ -24,6 +28,7 @@ from app.auth.services.totp import setup_totp
 from app.auth.services.totp import validate_totp
 from app.auth.services.totp import verify_setup
 from app.auth.services.universal import find_user
+from app.auth.services.universal import update_last_login
 from app.auth.utils import AuthHandler
 
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
@@ -167,7 +172,7 @@ async def disable_2fa(
 
 
 @totp_router.post("/2fa/validate")
-async def validate_2fa_login(body: TOTPValidateRequest):
+async def validate_2fa_login(body: TOTPValidateRequest, request: Request):
     """
     Validate a TOTP code or backup code during login.
     Accepts the temp_token issued by /auth/token when 2FA is required.
@@ -188,12 +193,32 @@ async def validate_2fa_login(body: TOTPValidateRequest):
     try:
         await validate_totp(user.id, code=body.code, backup_code=body.backup_code)
     except ValueError as e:
+        await record_audit_event(
+            action=AuditAction.AUTH_LOGIN_FAILED,
+            actor_user_id=user.id,
+            actor_username=user.username,
+            entity_type="user",
+            entity_id=user.username,
+            result=AuditResult.FAILURE,
+            details="Failed second-factor (2FA) verification",
+            request=request,
+        )
         raise HTTPException(status_code=401, detail=str(e))
 
-    # Issue full access token
+    # Issue full access token — this is where login completes for 2FA-enabled users.
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await auth_handler.encode_token(user.username, access_token_expires)
     logger.info(f"2FA login completed for {user.username}")
+    await update_last_login(user.id)
+    await record_audit_event(
+        action=AuditAction.AUTH_LOGIN,
+        actor_user_id=user.id,
+        actor_username=user.username,
+        entity_type="user",
+        entity_id=user.username,
+        details="Main portal login (2FA)",
+        request=request,
+    )
 
     return {"access_token": access_token, "token_type": "bearer"}
 
