@@ -18,8 +18,8 @@ import type {
 	ScaStreamProgress,
 	ScaStreamStartEvent
 } from "@/types/sca"
-import { HttpClient } from "../httpClient"
-import { createSSEStream } from "../sseClient"
+import { HttpClient } from "../http-client"
+import { createSSEStream } from "../sse-client"
 
 export default {
 	/**

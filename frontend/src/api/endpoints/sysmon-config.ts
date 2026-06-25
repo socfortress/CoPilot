@@ -1,6 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
-import type { ConfigContent, DeployConfigResponse, UploadConfigFileResponse } from "@/types/sysmonConfig"
-import { HttpClient } from "../httpClient"
+import type { ConfigContent, DeployConfigResponse, UploadConfigFileResponse } from "@/types/sysmon-config"
+import { HttpClient } from "../http-client"
 
 export default {
 	getAll() {

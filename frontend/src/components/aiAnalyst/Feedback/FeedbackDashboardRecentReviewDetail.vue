@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AiAnalystReview } from "@/types/aiAnalyst"
+import type { AiAnalystReview } from "@/types/ai-analyst"
 import { NCard, NDrawer, NDrawerContent } from "naive-ui"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

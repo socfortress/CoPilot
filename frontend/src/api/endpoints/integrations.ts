@@ -5,7 +5,7 @@ import type {
 	CustomerIntegrationMetaCommon,
 	CustomerIntegrationMetaResponse
 } from "@/types/integrations"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export interface IntegrationAuthKeyPairs {
 	auth_key_name: string

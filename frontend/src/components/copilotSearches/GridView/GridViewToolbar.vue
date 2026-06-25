@@ -115,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import type { PlatformFilter, RuleSeverity, RuleStatus } from "@/types/copilotSearches"
+import type { PlatformFilter, RuleSeverity, RuleStatus } from "@/types/copilot-searches"
 import { NBadge, NButton, NCheckbox, NInput, NPopover, NSelect } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"

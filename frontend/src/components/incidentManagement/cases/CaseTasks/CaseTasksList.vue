@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { Alert } from "@/types/incidentManagement/alerts"
-import type { CaseTask } from "@/types/incidentManagement/caseTemplates"
+import type { CaseTask } from "@/types/incidentManagement/case-templates"
 import { NEmpty, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

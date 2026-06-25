@@ -7,7 +7,7 @@ import type { Message } from "@/types/graylog/messages"
 import type { ThroughputMetric } from "@/types/graylog/metrics"
 import type { Pipeline, PipelineFull, PipelineRule } from "@/types/graylog/pipelines"
 import type { Stream } from "@/types/graylog/stream"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export default {
 	// #region Messages

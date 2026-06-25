@@ -20,8 +20,8 @@ import { createElement } from "react"
 import { createRoot } from "react-dom/client"
 import { onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useThemeStore } from "@/stores/theme"
-import { fetchShuffleConnectorCredentials } from "@/utils/shuffle/shuffleConnectorCredentials"
-import { MuiProvider } from "@/utils/shuffle/shuffleMuiTheme"
+import { fetchShuffleConnectorCredentials } from "@/utils/shuffle/shuffle-connector-credentials"
+import { MuiProvider } from "@/utils/shuffle/shuffle-mui-theme"
 
 interface Props {
 	appName: string | null

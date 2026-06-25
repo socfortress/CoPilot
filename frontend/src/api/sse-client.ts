@@ -1,6 +1,6 @@
 import { fetchEventSource } from "@microsoft/fetch-event-source"
 import { useAuthStore } from "@/stores/auth"
-import { HttpClient } from "./httpClient"
+import { HttpClient } from "./http-client"
 
 const TRAILING_SLASH_REGEX = /\/$/
 

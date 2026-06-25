@@ -1,6 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources"
-import { HttpClient } from "../../httpClient"
+import { HttpClient } from "../../http-client"
 
 export default {
 	getConfiguredSources() {

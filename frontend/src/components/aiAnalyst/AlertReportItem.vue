@@ -86,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertWithReport } from "@/types/aiAnalyst"
+import type { AlertWithReport } from "@/types/ai-analyst"
 import _truncate from "lodash/truncate"
 import { NModal } from "naive-ui"
 import { computed, ref, toRefs } from "vue"

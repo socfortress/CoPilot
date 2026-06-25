@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import type { CardLinkColor } from "@/components/common/cards/CardLink.vue"
-import type { AiAnalystReviewStats } from "@/types/aiAnalyst"
+import type { AiAnalystReviewStats } from "@/types/ai-analyst"
 import { computed, toRefs } from "vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 

@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GitHubAuditConfig } from "@/types/githubAudit"
+import type { GitHubAuditConfig } from "@/types/github-audit"
 import { NProgress } from "naive-ui"
 import { computed } from "vue"
 import { useSettingsStore } from "@/stores/settings"

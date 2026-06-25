@@ -10,8 +10,8 @@ import type {
 	VirusTotalAnalysis,
 	VirusTotalFileCheckResponse,
 	VirusTotalResponse
-} from "@/types/threatIntel"
-import { HttpClient } from "../httpClient"
+} from "@/types/threat-intel"
+import { HttpClient } from "../http-client"
 
 export default {
 	create(iocValue: string) {

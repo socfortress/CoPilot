@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AiAnalystReport } from "@/types/aiAnalyst"
+import type { AiAnalystReport } from "@/types/ai-analyst"
 import type { ApiError } from "@/types/common"
 import type { TalonTemplate } from "@/types/talon"
 import { NButton, NEmpty, NModal, NRadio, NRadioGroup, NSpin, useMessage } from "naive-ui"

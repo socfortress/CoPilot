@@ -1,7 +1,7 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type { TalonInvestigateRequest, TalonJobData, TalonTemplate } from "@/types/talon"
 import { useAuthStore } from "@/stores/auth"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export default {
 	investigate(payload: TalonInvestigateRequest) {

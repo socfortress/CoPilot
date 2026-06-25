@@ -1,6 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type { AlertTag, EffectiveAccessResponse, TagAccessSettings, TagAccessSettingsItem } from "@/types/tags"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export default {
 	// Get tag RBAC settings

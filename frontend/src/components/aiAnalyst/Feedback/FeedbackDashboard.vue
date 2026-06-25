@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AiAnalystReviewStats } from "@/types/aiAnalyst"
+import type { AiAnalystReviewStats } from "@/types/ai-analyst"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"

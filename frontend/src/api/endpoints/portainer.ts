@@ -1,6 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type { PortainerStack } from "@/types/portainer"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export default {
 	getCustomerStackId(customerName: string) {

@@ -1,6 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type { User } from "@/types/user"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export default {
 	getUsers() {

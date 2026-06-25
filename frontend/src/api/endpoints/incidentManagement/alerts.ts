@@ -11,7 +11,7 @@ import type {
 	AlertTimeline
 } from "@/types/incidentManagement/alerts"
 import _castArray from "lodash/castArray"
-import { HttpClient } from "../../httpClient"
+import { HttpClient } from "../../http-client"
 
 export type AlertsListFilterValue = string | string[] | AlertStatus | null
 export type AlertsFilterTypes = KeysOfUnion<AlertsFilter>

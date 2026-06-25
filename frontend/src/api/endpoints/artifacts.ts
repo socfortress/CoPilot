@@ -9,7 +9,7 @@ import type {
 } from "@/types/artifacts"
 import type { OsTypesFull, OsTypesLower } from "@/types/common"
 import type { FlaskBaseResponse } from "@/types/flask"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export interface ArtifactsQuery {
 	os?: OsTypesLower

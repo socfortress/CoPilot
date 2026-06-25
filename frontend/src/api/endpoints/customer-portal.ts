@@ -1,6 +1,6 @@
-import type { CustomerPortalSettings } from "@/types/customerPortal"
+import type { CustomerPortalSettings } from "@/types/customer-portal"
 import type { FlaskBaseResponse } from "@/types/flask"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export interface CustomerPortalSettingsPayload {
 	title: string | null

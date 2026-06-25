@@ -98,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules"
+import type { ExclusionRule } from "@/types/incidentManagement/exclusion-rules"
 import _pick from "lodash/pick"
 import { NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, ref, toRefs } from "vue"

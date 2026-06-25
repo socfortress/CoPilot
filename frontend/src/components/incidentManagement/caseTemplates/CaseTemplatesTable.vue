@@ -64,7 +64,7 @@
 import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates"
+import type { CaseTemplate } from "@/types/incidentManagement/case-templates"
 import type { SourceName } from "@/types/incidentManagement/sources"
 import { useDebounceFn } from "@vueuse/core"
 import { NButton, NCheckbox, NDataTable, NInput, NModal, NSelect, NTag, useDialog, useMessage } from "naive-ui"

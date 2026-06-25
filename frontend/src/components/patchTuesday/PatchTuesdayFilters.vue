@@ -167,7 +167,7 @@ import _isEqual from "lodash/isEqual"
 import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, NSwitch, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
-import { PriorityLevel } from "@/types/patchTuesday"
+import { PriorityLevel } from "@/types/patch-tuesday"
 
 const props = defineProps<{
 	cycles: string[]

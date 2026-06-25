@@ -156,7 +156,7 @@
 
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
-import type { CustomProvisionPayload } from "@/api/endpoints/monitoringAlerts"
+import type { CustomProvisionPayload } from "@/api/endpoints/monitoring-alerts"
 import type { ApiError } from "@/types/common"
 import type { Stream } from "@/types/graylog/stream"
 import _get from "lodash/get"
@@ -166,7 +166,7 @@ import { NButton, NCard, NForm, NFormItem, NInput, NInputNumber, NSelect, NSpin,
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { CustomProvisionPriority } from "@/types/monitoringAlerts"
+import { CustomProvisionPriority } from "@/types/monitoring-alerts"
 import { getApiErrorMessage } from "@/utils"
 
 interface CustomProvisionForm {

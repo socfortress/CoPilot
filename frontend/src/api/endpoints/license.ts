@@ -7,7 +7,7 @@ import type {
 	LicenseKey,
 	SubscriptionFeature
 } from "@/types/license"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export interface NewLicensePayload {
 	name: string

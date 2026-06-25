@@ -1,6 +1,6 @@
-import type { ActiveResponseDetails, SupportedActiveResponse } from "@/types/activeResponse"
+import type { ActiveResponseDetails, SupportedActiveResponse } from "@/types/active-response"
 import type { FlaskBaseResponse } from "@/types/flask"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export type InvokeRequestAction = "block" | "unblock"
 

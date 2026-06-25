@@ -249,7 +249,7 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
-import type { PatchTuesdayItem } from "@/types/patchTuesday"
+import type { PatchTuesdayItem } from "@/types/patch-tuesday"
 import { NEmpty } from "naive-ui"
 import { computed, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
@@ -258,7 +258,7 @@ import CardKV from "@/components/common/cards/CardKV.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { PriorityLevel } from "@/types/patchTuesday"
+import { PriorityLevel } from "@/types/patch-tuesday"
 import { formatDate } from "@/utils/format"
 import PatchTuesdayPriorityBadge from "./PatchTuesdayPriorityBadge.vue"
 

@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import type { DashboardCategory, DashboardCategoryWithTemplates, EnabledDashboard } from "@/types/dashboards"
-import type { EventSource } from "@/types/eventSources"
+import type { EventSource } from "@/types/event-sources"
 import { NEmpty, NSelect, NSpin } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"

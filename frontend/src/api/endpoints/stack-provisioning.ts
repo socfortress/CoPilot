@@ -1,6 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
-import type { AvailableContentPack } from "@/types/stackProvisioning"
-import { HttpClient } from "../httpClient"
+import type { AvailableContentPack } from "@/types/stack-provisioning"
+import { HttpClient } from "../http-client"
 
 export default {
 	getAvailableContentPacks() {

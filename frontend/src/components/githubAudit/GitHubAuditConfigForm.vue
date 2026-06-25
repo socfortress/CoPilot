@@ -137,7 +137,7 @@
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import type { GitHubAuditConfig, GitHubAuditConfigCreate, GitHubAuditConfigUpdate } from "@/types/githubAudit"
+import type { GitHubAuditConfig, GitHubAuditConfigCreate, GitHubAuditConfigUpdate } from "@/types/github-audit"
 import {
 	NButton,
 	NDivider,

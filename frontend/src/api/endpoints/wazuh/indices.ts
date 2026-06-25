@@ -1,6 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type { ClusterHealth, CustomerIndicesSize, IndexAllocation, IndexShard, IndexStats } from "@/types/indices"
-import { HttpClient } from "../../httpClient"
+import { HttpClient } from "../../http-client"
 
 export default {
 	getAllocation() {

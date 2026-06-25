@@ -1,4 +1,4 @@
-import type { PatchTuesdayItem, PatchTuesdaySummary, PriorityLevel } from "@/types/patchTuesday"
+import type { PatchTuesdayItem, PatchTuesdaySummary, PriorityLevel } from "@/types/patch-tuesday"
 
 export type PatchTuesdayFilterType = "cycle" | "priority" | "family" | "severity" | "searchQuery" | "kevOnly"
 

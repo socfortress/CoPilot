@@ -4,7 +4,7 @@ import type { SocAlertAsset, SocCaseAsset, SocCaseAssetsState } from "@/types/so
 import type { SocCase, SocCaseExt } from "@/types/soc/case"
 import type { SocNewNote, SocNote } from "@/types/soc/note"
 import type { SocUser } from "@/types/soc/user"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export interface CasesFilter {
 	olderThan: number

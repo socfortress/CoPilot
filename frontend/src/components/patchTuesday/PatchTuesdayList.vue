@@ -52,10 +52,10 @@
 <script setup lang="ts">
 import type { PatchTuesdayFilters as FiltersType, PatchTuesdayListFilter } from "./types"
 import type { ApiError } from "@/types/common.ts"
-import type { PatchTuesdayItem, PatchTuesdaySummary } from "@/types/patchTuesday"
+import type { PatchTuesdayItem, PatchTuesdaySummary } from "@/types/patch-tuesday"
 import { NDrawer, NDrawerContent, NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
-import patchTuesdayApi from "@/api/endpoints/patchTuesday"
+import patchTuesdayApi from "@/api/endpoints/patch-tuesday"
 import { getApiErrorMessage } from "@/utils/index.ts"
 import PatchTuesdayCard from "./PatchTuesdayCard.vue"
 import PatchTuesdayDetail from "./PatchTuesdayDetail.vue"

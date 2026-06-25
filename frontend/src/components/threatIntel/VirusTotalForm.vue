@@ -212,7 +212,7 @@
 <script setup lang="ts">
 import type { UploadFileInfo } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { VirusTotalAnalysis, VirusTotalFileCheckResponse } from "@/types/threatIntel"
+import type { VirusTotalAnalysis, VirusTotalFileCheckResponse } from "@/types/threat-intel"
 import { useClipboard } from "@vueuse/core"
 import _isEmpty from "lodash/isEmpty"
 import {

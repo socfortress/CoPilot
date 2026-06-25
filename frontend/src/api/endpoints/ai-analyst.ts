@@ -12,9 +12,9 @@ import type {
 	ReplayPayload,
 	SearchPalaceLessonsQuery,
 	SubmitReviewPayload
-} from "@/types/aiAnalyst"
+} from "@/types/ai-analyst"
 import type { FlaskBaseResponse } from "@/types/flask"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export default {
 	// Jobs

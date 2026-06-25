@@ -11,7 +11,7 @@ import type {
 	ShuffleOrg,
 	ShuffleVerifyResult
 } from "@/types/notifications"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 // Per-customer notification routing — wraps app/notifications/routes/notifications.py.
 // Used by the Customer detail page's "AI Notifications" tab to manage who

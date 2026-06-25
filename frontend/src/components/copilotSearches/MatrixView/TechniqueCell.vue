@@ -73,11 +73,11 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreRuleIndexEntry, MitreSubTechnique, MitreTactic, MitreTechnique } from "@/types/copilotSearches"
+import type { MitreRuleIndexEntry, MitreSubTechnique, MitreTactic, MitreTechnique } from "@/types/copilot-searches"
 import { NButton, NCollapseTransition, NTag } from "naive-ui"
 import { computed, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
-import { coverageClass, techniqueCellTooltip } from "./matrixCoverage"
+import { coverageClass, techniqueCellTooltip } from "./matrix-coverage"
 import MatrixRuleCountPopover from "./MatrixRuleCountPopover.vue"
 import SubTechniqueCell from "./SubTechniqueCell.vue"
 

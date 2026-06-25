@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AiAnalystReport, AiAnalystReview, Durability, LessonType, PalaceSearchHit } from "@/types/aiAnalyst"
+import type { AiAnalystReport, AiAnalystReview, Durability, LessonType, PalaceSearchHit } from "@/types/ai-analyst"
 import type { ApiError } from "@/types/common"
 import { NButton, NCard, NFormItem, NInput, NSelect, NSwitch, useMessage } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"

@@ -3,9 +3,9 @@ import type {
 	CopilotActionInvokeResponse,
 	CopilotActionListResponse,
 	InvokeCopilotActionRequest
-} from "@/types/copilotAction"
+} from "@/types/copilot-action"
 import type { FlaskBaseResponse } from "@/types/flask"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export interface CopilotActionInventoryQuery {
 	/** Filter by technology type */

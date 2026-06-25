@@ -18,7 +18,7 @@
 
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, UploadFileInfo } from "naive-ui"
-import type { ScoutSuiteGcpReportPayload } from "@/types/cloudSecurityAssessment"
+import type { ScoutSuiteGcpReportPayload } from "@/types/cloud-security-assessment"
 import { NForm, NFormItem, NUpload, NUploadDragger } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"

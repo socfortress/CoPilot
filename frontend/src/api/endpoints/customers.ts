@@ -9,7 +9,7 @@ import type {
 	EDRInstallCommands
 } from "@/types/customers"
 import type { FlaskBaseResponse } from "@/types/flask"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export interface CustomerAgentsHealthcheckQuery {
 	minutes?: number

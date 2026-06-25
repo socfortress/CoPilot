@@ -8,7 +8,7 @@ import type {
 	VulnerabilitySearchQuery,
 	VulnerabilitySearchResponse
 } from "@/types/vulnerabilities"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export default {
 	/**

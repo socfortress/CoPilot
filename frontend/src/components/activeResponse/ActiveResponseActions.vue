@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
-import type { SupportedActiveResponse } from "@/types/activeResponse"
+import type { SupportedActiveResponse } from "@/types/active-response"
 import { NButton, NModal } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"

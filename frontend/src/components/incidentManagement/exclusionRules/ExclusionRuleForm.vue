@@ -104,10 +104,10 @@
 
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
-import type { ExclusionRulePayload } from "@/api/endpoints/incidentManagement/exclusionRules"
+import type { ExclusionRulePayload } from "@/api/endpoints/incidentManagement/exclusion-rules"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules"
+import type { ExclusionRule } from "@/types/incidentManagement/exclusion-rules"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NAlert, NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"

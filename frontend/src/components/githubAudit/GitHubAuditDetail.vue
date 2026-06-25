@@ -188,7 +188,7 @@ import type {
 	GitHubAuditConfig,
 	GitHubAuditReport,
 	GitHubAuditReportSummary
-} from "@/types/githubAudit"
+} from "@/types/github-audit"
 import {
 	NButton,
 	NDrawer,

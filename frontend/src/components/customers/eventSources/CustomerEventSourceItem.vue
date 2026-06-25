@@ -62,7 +62,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { EventSource } from "@/types/eventSources"
+import type { EventSource } from "@/types/event-sources"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"

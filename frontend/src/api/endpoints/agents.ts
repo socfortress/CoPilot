@@ -11,7 +11,7 @@ import type {
 	ScaPolicyResult
 } from "@/types/agents"
 import type { FlaskBaseResponse } from "@/types/flask"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export interface AgentPayload {
 	velociraptor_id: string

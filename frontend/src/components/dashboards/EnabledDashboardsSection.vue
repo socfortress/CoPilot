@@ -26,7 +26,7 @@
 import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { EnabledDashboard } from "@/types/dashboards"
-import type { EventSource } from "@/types/eventSources"
+import type { EventSource } from "@/types/event-sources"
 import { useElementSize } from "@vueuse/core"
 import { NButton, NDataTable, NEmpty, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, useTemplateRef, watch } from "vue"

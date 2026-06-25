@@ -1,6 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type { IncidentNotification } from "@/types/incidentManagement/notifications"
-import { HttpClient } from "../../httpClient"
+import { HttpClient } from "../../http-client"
 
 export interface IncidentNotificationPayload {
 	customer_code: string

@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MonitoringAlert } from "@/types/monitoringAlerts"
+import type { MonitoringAlert } from "@/types/monitoring-alerts"
 import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

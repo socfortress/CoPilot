@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import type { BulkProvisionGraylogAlertResponse, RuleSummary } from "@/types/copilotSearches"
+import type { BulkProvisionGraylogAlertResponse, RuleSummary } from "@/types/copilot-searches"
 import { saveAs } from "file-saver"
 import { NButton, NModal, NTooltip } from "naive-ui"
 import { computed, ref } from "vue"

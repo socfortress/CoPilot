@@ -65,12 +65,12 @@ import type {
 	ScoutSuiteAzureReportPayload,
 	ScoutSuiteGcpReportPayload,
 	ScoutSuiteReportPayload
-} from "@/types/cloudSecurityAssessment"
+} from "@/types/cloud-security-assessment"
 import type { ApiCommonResponse, ApiError } from "@/types/common"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
-import { ScoutSuiteReportType } from "@/types/cloudSecurityAssessment"
+import { ScoutSuiteReportType } from "@/types/cloud-security-assessment"
 import { getApiErrorMessage } from "@/utils"
 import AwsTypeForm from "./FormTypes/AwsTypeForm.vue"
 import AzureTypeForm from "./FormTypes/AzureTypeForm.vue"

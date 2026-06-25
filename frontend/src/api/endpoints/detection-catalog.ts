@@ -14,9 +14,9 @@ import type {
 	CatalogStoryListResponse,
 	CatalogWazuhRuleDetailResponse,
 	CatalogWazuhRulesResponse
-} from "@/types/detectionCatalog"
+} from "@/types/detection-catalog"
 import type { FlaskBaseResponse } from "@/types/flask"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export default {
 	/** Top-level metrics for the catalog overview pane. */

@@ -1,6 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
-import type { AITrigger } from "@/types/incidentManagement/aiTriggers"
-import { HttpClient } from "../../httpClient"
+import type { AITrigger } from "@/types/incidentManagement/ai-triggers"
+import { HttpClient } from "../../http-client"
 
 export interface AITriggerPayload {
 	customer_code: string

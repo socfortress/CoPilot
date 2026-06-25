@@ -211,7 +211,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
-import * as defaultSettings from "./defaultSettings"
+import * as defaultSettings from "./default-settings"
 import PrintSettings from "./PrintSettings.vue"
 
 const props = defineProps<{

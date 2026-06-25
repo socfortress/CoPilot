@@ -29,8 +29,8 @@
 
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
-import type { InvokeRequest, InvokeRequestAction } from "@/api/endpoints/activeResponse"
-import type { SupportedActiveResponse } from "@/types/activeResponse"
+import type { InvokeRequest, InvokeRequestAction } from "@/api/endpoints/active-response"
+import type { SupportedActiveResponse } from "@/types/active-response"
 import type { ApiError } from "@/types/common"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import isIP from "validator/es/lib/isIP"

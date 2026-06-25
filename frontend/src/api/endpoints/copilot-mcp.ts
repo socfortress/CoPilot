@@ -1,6 +1,6 @@
-import type { ExampleQuestion, MCPServer, QueryResult } from "@/types/copilotMCP"
+import type { ExampleQuestion, MCPServer, QueryResult } from "@/types/copilot-mcp"
 import type { FlaskBaseResponse } from "@/types/flask"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export interface QueryPayload {
 	input: string

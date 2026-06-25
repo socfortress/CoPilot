@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { NTag } from "naive-ui"
 import { computed } from "vue"
-import { PriorityLevel } from "@/types/patchTuesday"
+import { PriorityLevel } from "@/types/patch-tuesday"
 
 const props = defineProps<{
 	priority: PriorityLevel | string

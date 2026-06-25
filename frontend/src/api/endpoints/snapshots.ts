@@ -13,7 +13,7 @@ import type {
 	SnapshotStatusQuery,
 	SnapshotStatusResponse
 } from "@/types/snapshots"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export default {
 	// Repository endpoints

@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AITrigger } from "@/types/incidentManagement/aiTriggers"
+import type { AITrigger } from "@/types/incidentManagement/ai-triggers"
 import { NModal } from "naive-ui"
 import { defineAsyncComponent, ref, toRefs, watch } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

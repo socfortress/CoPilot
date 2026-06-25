@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreRuleIndexEntry } from "@/types/copilotSearches"
+import type { MitreRuleIndexEntry } from "@/types/copilot-searches"
 import { NTag } from "naive-ui"
 import { computed } from "vue"
 import PlatformIcon from "@/components/common/PlatformIcon.vue"

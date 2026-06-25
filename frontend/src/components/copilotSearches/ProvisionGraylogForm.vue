@@ -117,7 +117,7 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { ProvisionGraylogAlertRequest, RuleDetail } from "@/types/copilotSearches"
+import type { ProvisionGraylogAlertRequest, RuleDetail } from "@/types/copilot-searches"
 import {
 	NAlert,
 	NButton,

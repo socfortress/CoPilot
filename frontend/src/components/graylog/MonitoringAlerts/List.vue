@@ -66,7 +66,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { EventDefinition } from "@/types/graylog/event-definition"
-import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts"
+import type { AvailableMonitoringAlert } from "@/types/monitoring-alerts"
 import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

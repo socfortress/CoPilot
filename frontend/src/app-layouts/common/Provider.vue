@@ -38,7 +38,7 @@ import { computed, onBeforeMount } from "vue"
 import GlobalListener from "@/app-layouts/common/GlobalListener.vue"
 import { useLocalesStore } from "@/stores/i18n"
 import { useThemeStore } from "@/stores/theme"
-import { rtlStyles } from "./rtlProvider"
+import { rtlStyles } from "./rtl-provider"
 
 const localesStore = useLocalesStore()
 const themeStore = useThemeStore()

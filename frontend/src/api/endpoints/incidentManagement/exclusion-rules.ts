@@ -1,6 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
-import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules"
-import { HttpClient } from "../../httpClient"
+import type { ExclusionRule } from "@/types/incidentManagement/exclusion-rules"
+import { HttpClient } from "../../http-client"
 
 export interface ExclusionRulesQuery {
 	pagination: {

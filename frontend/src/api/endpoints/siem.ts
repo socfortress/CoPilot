@@ -5,10 +5,10 @@ import type {
 	EnabledDashboard,
 	PanelDataResponse
 } from "@/types/dashboards"
+import type { DisplayColumn, EventSource } from "@/types/event-sources"
 import type { EventSearchResult, FieldMapping } from "@/types/events"
-import type { DisplayColumn, EventSource } from "@/types/eventSources"
 import type { FlaskBaseResponse } from "@/types/flask"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export interface EventSourceCreatePayload {
 	customer_code: string

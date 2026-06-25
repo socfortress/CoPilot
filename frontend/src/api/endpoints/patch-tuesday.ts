@@ -7,8 +7,8 @@ import type {
 	PatchTuesdaySearchQuery,
 	PatchTuesdaySummaryQuery,
 	PatchTuesdaySummaryResponse
-} from "@/types/patchTuesday"
-import { HttpClient } from "../httpClient"
+} from "@/types/patch-tuesday"
+import { HttpClient } from "../http-client"
 
 const BASE_PATH = "/patch-tuesday"
 

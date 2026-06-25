@@ -43,7 +43,7 @@ import type {
 	MitreSubTechnique,
 	MitreTactic,
 	MitreTechnique
-} from "@/types/copilotSearches"
+} from "@/types/copilot-searches"
 import { NEmpty, NTag } from "naive-ui"
 import { computed } from "vue"
 import TechniqueCell from "./TechniqueCell.vue"

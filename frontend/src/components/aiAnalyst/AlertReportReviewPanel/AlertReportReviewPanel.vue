@@ -45,7 +45,7 @@ import type {
 	AiAnalystReview,
 	IocVerdictCorrection,
 	SubmitReviewPayload
-} from "@/types/aiAnalyst"
+} from "@/types/ai-analyst"
 import type { ApiError } from "@/types/common"
 import { NButton, NCollapseTransition, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs } from "vue"

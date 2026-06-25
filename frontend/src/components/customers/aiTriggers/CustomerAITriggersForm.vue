@@ -22,9 +22,9 @@
 </template>
 
 <script setup lang="ts">
-import type { AITriggerPayload } from "@/api/endpoints/incidentManagement/aiTriggers"
+import type { AITriggerPayload } from "@/api/endpoints/incidentManagement/ai-triggers"
 import type { ApiError } from "@/types/common"
-import type { AITrigger } from "@/types/incidentManagement/aiTriggers"
+import type { AITrigger } from "@/types/incidentManagement/ai-triggers"
 import { NButton, NForm, NFormItem, NSpin, NSwitch, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"

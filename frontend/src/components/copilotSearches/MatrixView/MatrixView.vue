@@ -73,7 +73,7 @@ import type {
 	PlatformFilter,
 	RuleSeverity,
 	RuleStatus
-} from "@/types/copilotSearches"
+} from "@/types/copilot-searches"
 import { useLocalStorage, useWindowSize, watchDebounced } from "@vueuse/core"
 import { saveAs } from "file-saver"
 import { NDrawer, NDrawerContent, NModal, useMessage } from "naive-ui"

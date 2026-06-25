@@ -5,7 +5,7 @@ import type {
 	WazuhGroupFile,
 	WazuhGroupFileDetails
 } from "@/types/wazuh/groups"
-import { HttpClient } from "../../httpClient"
+import { HttpClient } from "../../http-client"
 
 // Interface for groups query parameters
 export interface GroupsQueryParams {

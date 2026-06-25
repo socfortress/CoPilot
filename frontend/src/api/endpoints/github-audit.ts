@@ -14,8 +14,8 @@ import type {
 	GitHubAuditRequest,
 	GitHubAuditResponse,
 	GitHubAuditSummaryResponse
-} from "@/types/githubAudit"
-import { HttpClient } from "../httpClient"
+} from "@/types/github-audit"
+import { HttpClient } from "../http-client"
 
 const BASE_PATH = "/github-audit"
 

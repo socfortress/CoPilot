@@ -1,6 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
-import type { AvailableMonitoringAlert, CustomProvisionPriority, MonitoringAlert } from "@/types/monitoringAlerts"
-import { HttpClient } from "../httpClient"
+import type { AvailableMonitoringAlert, CustomProvisionPriority, MonitoringAlert } from "@/types/monitoring-alerts"
+import { HttpClient } from "../http-client"
 
 export interface ProvisionsMonitoringAlertParams {
 	searchWithinLast: number

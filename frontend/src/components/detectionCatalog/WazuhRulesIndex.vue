@@ -149,7 +149,7 @@
 <script setup lang="tsx">
 import type { DataTableColumns, SelectOption, TagProps } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { CatalogWazuhRuleRow } from "@/types/detectionCatalog"
+import type { CatalogWazuhRuleRow } from "@/types/detection-catalog"
 import {
 	NAlert,
 	NButton,

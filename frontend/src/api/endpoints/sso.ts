@@ -1,5 +1,5 @@
 import type { FlaskBaseResponse } from "@/types/flask"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export interface SSOConfigResponse {
 	sso_enabled: boolean

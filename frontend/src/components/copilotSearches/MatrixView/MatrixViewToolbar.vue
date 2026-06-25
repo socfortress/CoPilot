@@ -129,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreCoverageResponse, PlatformFilter, RuleSeverity, RuleStatus } from "@/types/copilotSearches"
+import type { MitreCoverageResponse, PlatformFilter, RuleSeverity, RuleStatus } from "@/types/copilot-searches"
 import { NBadge, NButton, NCheckbox, NInput, NPopover, NSelect, NTooltip } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"

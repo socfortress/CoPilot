@@ -115,8 +115,8 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
+import type { DisplayColumn, EventSource } from "@/types/event-sources"
 import type { FieldMapping } from "@/types/events"
-import type { DisplayColumn, EventSource } from "@/types/eventSources"
 import { NButton, NCard, NEmpty, NInput, NScrollbar, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"

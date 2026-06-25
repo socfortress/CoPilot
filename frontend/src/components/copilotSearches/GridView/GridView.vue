@@ -73,7 +73,7 @@ import type {
 	RuleSeverity,
 	RuleStatus,
 	RuleSummary
-} from "@/types/copilotSearches"
+} from "@/types/copilot-searches"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NEmpty, NPagination, NSpin, useMessage } from "naive-ui"

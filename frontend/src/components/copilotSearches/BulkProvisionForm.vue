@@ -76,7 +76,7 @@
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
 import type { ApiError } from "@/types/common"
-import type { BulkProvisionGraylogAlertResponse, BulkProvisionRuleStatus } from "@/types/copilotSearches"
+import type { BulkProvisionGraylogAlertResponse, BulkProvisionRuleStatus } from "@/types/copilot-searches"
 import { NAlert, NButton, NInputNumber, NSelect, useMessage } from "naive-ui"
 import { computed, reactive, ref, watch } from "vue"
 import Api from "@/api"

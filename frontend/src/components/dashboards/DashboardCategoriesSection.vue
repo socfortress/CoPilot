@@ -49,7 +49,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { DashboardCategory, DashboardCategoryWithTemplates, EnabledDashboard } from "@/types/dashboards"
-import type { EventSource } from "@/types/eventSources"
+import type { EventSource } from "@/types/event-sources"
 import { NDrawer, NDrawerContent, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"

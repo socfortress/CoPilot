@@ -1,6 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type { InfluxDBAlertQueryParams, InfluxDBAlertResponse, InfluxDBCheckNamesResponse } from "@/types/healthchecks"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export default {
 	getHealthchecks(params?: InfluxDBAlertQueryParams) {

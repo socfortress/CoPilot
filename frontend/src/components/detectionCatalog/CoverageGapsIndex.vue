@@ -49,7 +49,7 @@
 import type { DataTableColumns } from "naive-ui"
 import type { CardLinkColor } from "@/components/common/cards/CardLink.vue"
 import type { ApiError } from "@/types/common"
-import type { CatalogCoverageGapRow } from "@/types/detectionCatalog"
+import type { CatalogCoverageGapRow } from "@/types/detection-catalog"
 import { NButton, NDataTable, NInput, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

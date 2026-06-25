@@ -10,7 +10,7 @@ import type {
 	MetricsResponse,
 	MetricsSummaryData
 } from "@/types/metrics"
-import { HttpClient } from "../httpClient"
+import { HttpClient } from "../http-client"
 
 export default {
 	getHosts() {

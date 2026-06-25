@@ -77,9 +77,9 @@
 
 <script setup lang="ts">
 import type { FormRules, FormValidationError } from "naive-ui"
-import type { ProvisionsMonitoringAlertParams } from "@/api/endpoints/monitoringAlerts"
+import type { ProvisionsMonitoringAlertParams } from "@/api/endpoints/monitoring-alerts"
 import type { ApiError } from "@/types/common"
-import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts"
+import type { AvailableMonitoringAlert } from "@/types/monitoring-alerts"
 import { NButton, NForm, NFormItem, NInputNumber, NModal, NSpin, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"

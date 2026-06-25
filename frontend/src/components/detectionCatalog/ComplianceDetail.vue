@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="tsx">
-import type { CatalogComplianceGroupRow } from "@/types/detectionCatalog"
+import type { CatalogComplianceGroupRow } from "@/types/detection-catalog"
 import { NModal, NTag } from "naive-ui"
 import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"

@@ -45,7 +45,7 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { GitHubAuditExclusionCreate } from "@/types/githubAudit"
+import type { GitHubAuditExclusionCreate } from "@/types/github-audit"
 import { NButton, NDatePicker, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"

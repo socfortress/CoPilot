@@ -202,7 +202,7 @@
 
 <script setup lang="ts">
 import type { CardLinkColor } from "@/components/common/cards/CardLink.vue"
-import type { PalaceConsolidation } from "@/types/aiAnalyst"
+import type { PalaceConsolidation } from "@/types/ai-analyst"
 import { NButton, NCollapse, NCollapseItem, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"

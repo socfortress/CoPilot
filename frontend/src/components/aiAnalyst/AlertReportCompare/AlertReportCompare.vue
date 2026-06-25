@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AiAnalystReport } from "@/types/aiAnalyst"
+import type { AiAnalystReport } from "@/types/ai-analyst"
 import type { ApiError } from "@/types/common"
 import { NEmpty, NFormItem, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, ref, toRefs, watch } from "vue"

@@ -116,7 +116,7 @@
 import type { FormInst, FormRules } from "naive-ui"
 import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
-import type { CopilotAction } from "@/types/copilotAction"
+import type { CopilotAction } from "@/types/copilot-action"
 import {
 	NAlert,
 	NButton,

@@ -12,8 +12,8 @@ import type {
 	CaseTemplateTaskCreatePayload,
 	CaseTemplateTaskUpdatePayload,
 	CaseTemplateUpdatePayload
-} from "@/types/incidentManagement/caseTemplates"
-import { HttpClient } from "../../httpClient"
+} from "@/types/incidentManagement/case-templates"
+import { HttpClient } from "../../http-client"
 
 // ---------------------------------------------------------------------------
 // Case template management (admin/analyst only — backend gates by scope)
