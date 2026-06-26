@@ -70,6 +70,7 @@
 				<n-tab-pane name="security">
 					<div class="flex flex-col gap-4">
 						<ChangePasswordCard />
+						<TotpToggle />
 					</div>
 				</n-tab-pane>
 			</n-tabs>
@@ -82,6 +83,7 @@ import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import { NAvatar, NButton, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
 import { ref } from "vue"
 import ChangePasswordCard from "@/components/auth/ChangePasswordCard.vue"
+import TotpToggle from "@/components/auth/TotpToggle.vue"
 import Icon from "@/components/common/Icon.vue"
 import ImageCropper from "@/components/common/ImageCropper.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"

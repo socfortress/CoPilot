@@ -33,6 +33,11 @@ export interface AuthResponse {
 	access_token: string
 	refresh_token: string
 	token_type: string
+	/**
+	 * Set by the login endpoint when the account has 2FA enabled. When true, `access_token`
+	 * is a short-lived temp token to be exchanged at /auth/2fa/validate rather than a session.
+	 */
+	requires_2fa?: boolean
 }
 
 export interface JWTPayload extends jose.JWTPayload {

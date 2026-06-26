@@ -21,6 +21,7 @@ from app.auth.models.totp import TOTPSetupResponse
 from app.auth.models.totp import TOTPStatusResponse
 from app.auth.models.totp import TOTPValidateRequest
 from app.auth.models.totp import TOTPVerifyRequest
+from app.auth.models.users import RoleEnum
 from app.auth.services.totp import disable_totp
 from app.auth.services.totp import is_2fa_enabled
 from app.auth.services.totp import regenerate_backup_codes
@@ -75,7 +76,7 @@ def _decode_temp_token(token: str) -> str:
 @totp_router.get(
     "/2fa/status",
     response_model=TOTPStatusResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_2fa_status(
     token: str = Depends(AuthHandler().security),
@@ -96,7 +97,7 @@ async def get_2fa_status(
 @totp_router.post(
     "/2fa/setup",
     response_model=TOTPSetupResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def start_2fa_setup(
     token: str = Depends(AuthHandler().security),
@@ -120,7 +121,7 @@ async def start_2fa_setup(
 
 @totp_router.post(
     "/2fa/verify-setup",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def verify_2fa_setup(
     body: TOTPVerifyRequest,
@@ -145,7 +146,7 @@ async def verify_2fa_setup(
 
 @totp_router.delete(
     "/2fa/disable",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def disable_2fa(
     body: TOTPDisableRequest,
@@ -206,17 +207,38 @@ async def validate_2fa_login(body: TOTPValidateRequest, request: Request):
         raise HTTPException(status_code=401, detail=str(e))
 
     # Issue full access token — this is where login completes for 2FA-enabled users.
+    # Customer-portal users (role customer_user) authenticate against /token/customer-portal,
+    # whose non-2FA path attaches a customer_codes claim used for tenant scoping. When 2FA is
+    # enabled the session token is minted here instead, so we must replicate that claim — without
+    # it the customer portal would have no accessible customers after a 2FA login.
+    extra_claims = None
+    customer_code = None
+    login_detail = "Main portal login (2FA)"
+    if user.role_id == RoleEnum.customer_user.value:
+        from sqlalchemy import select
+
+        from app.auth.models.users import UserCustomerAccess
+        from app.db.db_session import get_session
+
+        async with get_session() as session:
+            result = await session.execute(select(UserCustomerAccess.customer_code).where(UserCustomerAccess.user_id == user.id))
+            customer_codes = result.scalars().all()
+        extra_claims = {"customer_codes": customer_codes}
+        customer_code = customer_codes[0] if customer_codes else None
+        login_detail = "Customer portal login (2FA)"
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = await auth_handler.encode_token(user.username, access_token_expires)
+    access_token = await auth_handler.encode_token(user.username, access_token_expires, extra_claims=extra_claims)
     logger.info(f"2FA login completed for {user.username}")
     await update_last_login(user.id)
     await record_audit_event(
         action=AuditAction.AUTH_LOGIN,
         actor_user_id=user.id,
         actor_username=user.username,
+        customer_code=customer_code,
         entity_type="user",
         entity_id=user.username,
-        details="Main portal login (2FA)",
+        details=login_detail,
         request=request,
     )
 
@@ -229,7 +251,7 @@ async def validate_2fa_login(body: TOTPValidateRequest, request: Request):
 @totp_router.post(
     "/2fa/backup-codes/regenerate",
     response_model=TOTPBackupCodesResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def regenerate_2fa_backup_codes(
     body: TOTPVerifyRequest,
