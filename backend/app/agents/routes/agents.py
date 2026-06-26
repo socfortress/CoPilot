@@ -15,6 +15,7 @@ from fastapi import Header
 from fastapi import HTTPException
 from fastapi import Path
 from fastapi import Query
+from fastapi import Request
 from fastapi import Security
 from fastapi.responses import StreamingResponse
 from loguru import logger
@@ -50,10 +51,13 @@ from app.agents.wazuh.services.sca import collect_agent_sca_policy_results
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities_new
 from app.agents.wazuh.services.vulnerabilities import sync_agent_vulnerabilities
+from app.audit.models.audit import AuditAction
+from app.audit.services.audit import record_audit_event
 from app.auth.models.users import User
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
+from app.connectors.velociraptor.utils.validation import validate_client_id
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.db.db_session import get_db
 
@@ -1242,6 +1246,10 @@ async def update_agent(
         AgentModifyResponse: The response indicating the success or failure of the update.
     """
     logger.info(f"Updating agent {agent_id} with Velociraptor ID: {velociraptor_id}")
+    # Validate the velociraptor_id format BEFORE persisting. This value is later read back
+    # into VQL client_id positions and executed on the Velociraptor server, so a crafted
+    # value (containing a quote) was a stored VQL-injection -> RCE sink (GHSA-5542-j2fc-gqjm).
+    validate_client_id(velociraptor_id)
     try:
         # Check customer access - first find the agent
         base_query = select(Agents).filter(Agents.agent_id == agent_id)
@@ -1281,6 +1289,7 @@ async def update_agent(
 )
 async def delete_agent(
     agent_id: str,
+    request: Request,
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> AgentModifyResponse:
@@ -1290,6 +1299,7 @@ async def delete_agent(
 
     Args:
         agent_id (str): The ID of the agent to be deleted.
+        request (Request): The incoming request (used for audit source IP).
         current_user (User): The authenticated user.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
@@ -1307,6 +1317,10 @@ async def delete_agent(
 
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found or access denied")
+
+    # Snapshot the agent before deletion for the audit record.
+    agent_customer_code = agent.customer_code
+    agent_snapshot = {"hostname": agent.hostname, "customer_code": agent.customer_code, "velociraptor_id": agent.velociraptor_id}
 
     upstream_errors: list[str] = []
 
@@ -1326,6 +1340,18 @@ async def delete_agent(
         upstream_errors.append(f"Velociraptor: {e}")
 
     await delete_agent_from_database(db=session, agent_id=agent_id)
+
+    await record_audit_event(
+        action=AuditAction.AGENT_DELETE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        customer_code=agent_customer_code,
+        entity_type="agent",
+        entity_id=agent_id,
+        old_value=agent_snapshot,
+        details="; ".join(upstream_errors) if upstream_errors else None,
+        request=request,
+    )
 
     if upstream_errors:
         return AgentModifyResponse(

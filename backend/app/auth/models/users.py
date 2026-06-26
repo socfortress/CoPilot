@@ -68,6 +68,10 @@ class User(SQLModel, table=True):
     email: EmailStr
     created_at: datetime.datetime = datetime.datetime.now()
     role_id: Optional[int] = Field(foreign_key="role.id")
+    # Timestamp of the user's most recent successful login (set on /auth/token,
+    # /auth/token/customer-portal and 2FA completion). Surfaced for audit/last-login
+    # visibility (issue #943). Nullable: existing users have never logged in under this field.
+    last_login_at: Optional[datetime.datetime] = Field(default=None, nullable=True)
 
     role: Optional["Role"] = Relationship(back_populates="user")
     customer_access: List["UserCustomerAccess"] = Relationship(back_populates="user")

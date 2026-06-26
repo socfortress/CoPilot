@@ -4,12 +4,16 @@ from datetime import timedelta
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import Security
 from fastapi import status
 from fastapi.security import OAuth2PasswordRequestForm
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.audit.models.audit import AuditAction
+from app.audit.models.audit import AuditResult
+from app.audit.services.audit import record_audit_event
 from app.auth.models.users import PasswordReset
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
@@ -24,6 +28,7 @@ from app.auth.services.totp import is_2fa_enabled
 from app.auth.services.universal import delete_user
 from app.auth.services.universal import find_user
 from app.auth.services.universal import select_all_users
+from app.auth.services.universal import update_last_login
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 
@@ -34,11 +39,16 @@ auth_handler = AuthHandler()
 
 
 @auth_router.post("/token")
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(get_db)):
+async def login_for_access_token(
+    request: Request,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(get_db),
+):
     """
     Authenticates a user and generates an access token.
 
     Args:
+        request (Request): The incoming request (used for audit source IP).
         form_data (OAuth2PasswordRequestForm): The form data containing the username and password.
         session (AsyncSession): The database session.
 
@@ -50,6 +60,15 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     """
     user = await auth_handler.authenticate_user(form_data.username, form_data.password)
     if not user:
+        await record_audit_event(
+            action=AuditAction.AUTH_LOGIN_FAILED,
+            actor_username=form_data.username,
+            entity_type="user",
+            entity_id=form_data.username,
+            result=AuditResult.FAILURE,
+            details="Invalid username or password (main portal)",
+            request=request,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -59,13 +78,24 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     # Check if user is customer_user role
     if user.role_id == RoleEnum.customer_user.value:
         logger.warning(f"Customer user {user.username} attempted to log in to main portal")
+        await record_audit_event(
+            action=AuditAction.AUTH_LOGIN_FAILED,
+            actor_user_id=user.id,
+            actor_username=user.username,
+            entity_type="user",
+            entity_id=user.username,
+            result=AuditResult.FAILURE,
+            details="customer_user role denied access to the main portal",
+            request=request,
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This account is registered for the Customer Portal only. Please log in at the Customer Portal to access your account.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Check if user has 2FA enabled
+    # Check if user has 2FA enabled — login is not yet complete; it finishes at /2fa/validate,
+    # which is where the auth.login event + last_login are recorded for 2FA users.
     if await is_2fa_enabled(user.id):
         from app.auth.routes.totp import _create_temp_token
 
@@ -80,16 +110,36 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await auth_handler.encode_token(user.username, access_token_expires)
     logger.info(f"User {user.username} logged in successfully")
+    await update_last_login(user.id)
+    await record_audit_event(
+        action=AuditAction.AUTH_LOGIN,
+        actor_user_id=user.id,
+        actor_username=user.username,
+        entity_type="user",
+        entity_id=user.username,
+        details="Main portal login",
+        request=request,
+    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @auth_router.post("/token/customer-portal", response_model=Token)
 async def login_for_customer_portal(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_db),
 ):
     user = await auth_handler.authenticate_user(form_data.username, form_data.password)
     if not user:
+        await record_audit_event(
+            action=AuditAction.AUTH_LOGIN_FAILED,
+            actor_username=form_data.username,
+            entity_type="user",
+            entity_id=form_data.username,
+            result=AuditResult.FAILURE,
+            details="Invalid username or password (customer portal)",
+            request=request,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -97,6 +147,16 @@ async def login_for_customer_portal(
         )
 
     if user.role_id != RoleEnum.customer_user.value:
+        await record_audit_event(
+            action=AuditAction.AUTH_LOGIN_FAILED,
+            actor_user_id=user.id,
+            actor_username=user.username,
+            entity_type="user",
+            entity_id=user.username,
+            result=AuditResult.FAILURE,
+            details="Non customer_user role denied access to the customer portal",
+            request=request,
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This account does not have access to the Customer Portal.",
@@ -116,6 +176,17 @@ async def login_for_customer_portal(
         user.username,
         access_token_expires,
         extra_claims={"customer_codes": customer_codes},
+    )
+    await update_last_login(user.id)
+    await record_audit_event(
+        action=AuditAction.AUTH_LOGIN,
+        actor_user_id=user.id,
+        actor_username=user.username,
+        customer_code=customer_codes[0] if customer_codes else None,
+        entity_type="user",
+        entity_id=user.username,
+        details="Customer portal login",
+        request=request,
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -146,12 +217,19 @@ async def refresh_token(current_user: User = Depends(auth_handler.get_current_us
     description="Register new user",
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
-async def register(user: UserInput, session: AsyncSession = Depends(get_db)):
+async def register(
+    user: UserInput,
+    http_request: Request,
+    current_user: User = Depends(auth_handler.get_current_user),
+    session: AsyncSession = Depends(get_db),
+):
     """
     Register a new user.
 
     Args:
         user (UserInput): The user input data.
+        http_request (Request): The incoming request (used for audit source IP).
+        current_user (User): The admin performing the action.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
@@ -172,6 +250,15 @@ async def register(user: UserInput, session: AsyncSession = Depends(get_db)):
     logger.info(f"User: {u}")
     session.add(u)
     await session.commit()
+    await record_audit_event(
+        action=AuditAction.USER_CREATE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        entity_type="user",
+        entity_id=u.username,
+        new_value={"username": u.username, "email": u.email, "role_id": u.role_id},
+        request=http_request,
+    )
     return {"message": "User created successfully", "success": True}
 
 
@@ -247,6 +334,7 @@ async def get_users(session: AsyncSession = Depends(get_db)):
             "email": user.email,
             "role_id": user.role_id,
             "role_name": user.role.name if user.role else None,
+            "last_login_at": user.last_login_at,
         }
         user_list.append(user_dict)
 
@@ -266,6 +354,8 @@ async def get_users(session: AsyncSession = Depends(get_db)):
 )
 async def reset_password_via_username(
     request: PasswordReset,
+    http_request: Request,
+    current_user: User = Depends(auth_handler.get_current_user),
     session: AsyncSession = Depends(get_db),
 ):
     """
@@ -273,6 +363,8 @@ async def reset_password_via_username(
 
     Args:
         request (PasswordReset): The password reset data.
+        http_request (Request): The incoming request (used for audit source IP).
+        current_user (User): The admin performing the action.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
@@ -285,6 +377,15 @@ async def reset_password_via_username(
     user.password = hashed_pwd
     session.add(user)
     await session.commit()
+    await record_audit_event(
+        action=AuditAction.USER_UPDATE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        entity_type="user",
+        entity_id=user.username,
+        details="Password reset by admin",
+        request=http_request,
+    )
     return {"message": "Password reset successfully", "success": True}
 
 
@@ -297,6 +398,7 @@ async def reset_password_via_username(
 )
 async def reset_password_me(
     request: PasswordReset,
+    http_request: Request,
     token: str = Depends(AuthHandler().security),
     session: AsyncSession = Depends(get_db),
 ):
@@ -305,6 +407,7 @@ async def reset_password_me(
 
     Args:
         request (PasswordReset): The password reset data.
+        http_request (Request): The incoming request (used for audit source IP).
         token (str, optional): The authentication token. Defaults to Depends(AuthHandler().security).
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
@@ -321,6 +424,15 @@ async def reset_password_me(
     user.password = hashed_pwd
     session.add(user)
     await session.commit()
+    await record_audit_event(
+        action=AuditAction.USER_UPDATE,
+        actor_user_id=user.id,
+        actor_username=user.username,
+        entity_type="user",
+        entity_id=user.username,
+        details="Self-service password change",
+        request=http_request,
+    )
     return {"message": "Password reset successfully", "success": True}
 
 
@@ -333,6 +445,8 @@ async def reset_password_me(
 )
 async def delete_user_by_username(
     user_id: int,
+    http_request: Request,
+    current_user: User = Depends(auth_handler.get_current_user),
     session: AsyncSession = Depends(get_db),
 ):
     """
@@ -340,12 +454,30 @@ async def delete_user_by_username(
 
     Args:
         user_id (int): The ID of the user to delete.
+        http_request (Request): The incoming request (used for audit source IP).
+        current_user (User): The admin performing the action.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
         dict: A dictionary containing the message and success status.
     """
-    return await delete_user(user_id, session)
+    # Snapshot the target before deletion so the audit record retains who was removed.
+    target = await session.get(User, user_id)
+    old_value = {"username": target.username, "role_id": target.role_id} if target else None
+    target_username = target.username if target else str(user_id)
+
+    result = await delete_user(user_id, session)
+
+    await record_audit_event(
+        action=AuditAction.USER_DELETE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        entity_type="user",
+        entity_id=target_username,
+        old_value=old_value,
+        request=http_request,
+    )
+    return result
 
 
 @auth_router.put(
@@ -357,6 +489,8 @@ async def delete_user_by_username(
 async def update_user_role_by_name(
     user_id: int,
     request: UpdateUserRoleRequest,
+    http_request: Request,
+    current_user: User = Depends(auth_handler.get_current_user),
     session: AsyncSession = Depends(get_db),
 ):
     """
@@ -365,6 +499,8 @@ async def update_user_role_by_name(
     Args:
         user_id (int): The ID of the user to update.
         request (UpdateUserRoleRequest): The role update request containing role name.
+        http_request (Request): The incoming request (used for audit source IP).
+        current_user (User): The admin performing the action.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
@@ -374,6 +510,7 @@ async def update_user_role_by_name(
     user = await session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    old_role_id = user.role_id
 
     # Map role names to IDs
     role_mapping = {
@@ -393,6 +530,18 @@ async def update_user_role_by_name(
     user.role_id = role_id
     session.add(user)
     await session.commit()
+
+    await record_audit_event(
+        action=AuditAction.USER_ROLE_CHANGE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        entity_type="user",
+        entity_id=user.username,
+        old_value={"role_id": old_role_id},
+        new_value={"role_id": role_id},
+        details=f"Role changed to {request.role_name}",
+        request=http_request,
+    )
 
     return {
         "message": f"User {user.username} role updated successfully to {request.role_name}",

@@ -76,6 +76,24 @@ async def find_user_by_id(user_id: int):
         return None
 
 
+async def update_last_login(user_id: int) -> None:
+    """Stamp the user's last successful-login time (issue #943).
+
+    Best-effort, in its own session: a failure here (e.g. the column not yet migrated) is
+    logged and swallowed so it can never break the login flow itself.
+    """
+    import datetime
+
+    from sqlalchemy import update
+
+    try:
+        async with AsyncSession(async_engine) as session:
+            await session.execute(update(User).where(User.id == user_id).values(last_login_at=datetime.datetime.utcnow()))
+            await session.commit()
+    except Exception as e:
+        logger.error(f"Failed to update last_login_at for user {user_id}: {e}")
+
+
 async def get_role(name: str):
     """
     Retrieve the role name for a given user name.

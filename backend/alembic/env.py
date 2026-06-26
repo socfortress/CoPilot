@@ -7,6 +7,7 @@ from sqlmodel import SQLModel
 from alembic import context
 
 # from app.db.all_models import *
+from app.audit.models.audit import AuditLog
 from app.auth.models.passkey import UserPasskey
 from app.auth.models.passkey import WebAuthnChallenge
 from app.auth.models.users import User

@@ -3,11 +3,15 @@ from typing import List
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.audit.models.audit import AuditAction
+from app.audit.services.audit import record_audit_event
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.velociraptor.schema.artifacts import ArtifactParametersResponse
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
@@ -429,6 +433,8 @@ async def get_all_artifacts_for_hostname(
 )
 async def collect_artifact(
     collect_artifact_body: CollectArtifactBody,
+    request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> CollectArtifactResponse:
     """
@@ -470,6 +476,15 @@ async def collect_artifact(
         collect_artifact_body.hostname,
     )
 
+    await record_audit_event(
+        action=AuditAction.ARTIFACT_COLLECT,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        entity_type="agent",
+        entity_id=collect_artifact_body.hostname,
+        new_value={"artifact_name": collect_artifact_body.artifact_name, "velociraptor_id": collect_artifact_body.velociraptor_id},
+        request=request,
+    )
     # Assuming run_artifact_collection is an async function and takes a session as a parameter
     return await run_artifact_collection(collect_artifact_body, session)
 
@@ -482,6 +497,8 @@ async def collect_artifact(
 )
 async def run_command(
     run_command_body: RunCommandBody,
+    request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> RunCommandResponse:
     """
@@ -512,6 +529,19 @@ async def run_command(
         session,
         run_command_body.hostname,
     )
+    await record_audit_event(
+        action=AuditAction.RESPONSE_COMMAND_EXECUTE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        entity_type="agent",
+        entity_id=run_command_body.hostname,
+        # Record the artifact + host only; the raw command is intentionally NOT stored.
+        new_value={
+            "artifact_name": getattr(run_command_body.artifact_name, "value", run_command_body.artifact_name),
+            "velociraptor_id": run_command_body.velociraptor_id,
+        },
+        request=request,
+    )
     # Run the command
     return await run_remote_command(run_command_body)
 
@@ -524,6 +554,8 @@ async def run_command(
 )
 async def quarantine(
     quarantine_body: QuarantineBody,
+    request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> QuarantineResponse:
     """
@@ -567,6 +599,20 @@ async def quarantine(
 
     # If the host was successfully quarantined, update the database
     await update_agent_quarantine_status(session, quarantine_body, quarantine_response)
+
+    await record_audit_event(
+        action=AuditAction.RESPONSE_QUARANTINE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        entity_type="agent",
+        entity_id=quarantine_body.hostname,
+        new_value={
+            "action": getattr(quarantine_body.action, "value", quarantine_body.action),
+            "artifact_name": quarantine_body.artifact_name,
+            "velociraptor_id": quarantine_body.velociraptor_id,
+        },
+        request=request,
+    )
 
     return quarantine_response
 

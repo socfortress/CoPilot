@@ -14,7 +14,6 @@ const { collapsed = false } = defineProps<{
 	collapsed?: boolean
 }>()
 
-const BuyIcon = "carbon:shopping-cart"
 const DocsIcon = "ion:book-outline"
 const menuOptions = ref([
 	{
@@ -22,28 +21,14 @@ const menuOptions = ref([
 			h(
 				"a",
 				{
-					href: "https://pinx-docs.vercel.app/",
+					href: "https://docs.socfortress.co",
 					target: "_blank",
-					rel: "noopenner noreferrer"
+					rel: "noopener noreferrer"
 				},
 				"Documentation"
 			),
 		key: "documentation",
 		icon: renderIcon(DocsIcon)
-	},
-	{
-		label: () =>
-			h(
-				"a",
-				{
-					href: "https://themeforest.net/item/pinx-vuejs-admin-template/47799543",
-					target: "_blank",
-					rel: "noopenner noreferrer"
-				},
-				"Buy now"
-			),
-		key: "buy-now",
-		icon: renderIcon(BuyIcon)
 	}
 ])
 

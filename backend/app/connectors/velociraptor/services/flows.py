@@ -6,6 +6,8 @@ from app.connectors.velociraptor.schema.flows import FlowClientSession
 from app.connectors.velociraptor.schema.flows import FlowResponse
 from app.connectors.velociraptor.schema.flows import RetrieveFlowRequest
 from app.connectors.velociraptor.utils.universal import UniversalService
+from app.connectors.velociraptor.utils.validation import validate_client_id
+from app.connectors.velociraptor.utils.validation import validate_flow_id
 
 
 def create_query(query: str) -> str:
@@ -29,6 +31,7 @@ async def get_flows(velociraptor_id: str, velociraptor_org: str = "root") -> Flo
         ArtifactsResponse: A dictionary containing the artifacts.
     """
     logger.info("Fetching artifacts from Velociraptor")
+    validate_client_id(velociraptor_id)
     velociraptor_service = await UniversalService.create("Velociraptor")
     query = create_query(
         f"SELECT * FROM flows(client_id='{velociraptor_id}')",
@@ -65,6 +68,8 @@ async def get_flow(retrieve_flow_request: RetrieveFlowRequest, velociraptor_org:
         ArtifactsResponse: A dictionary containing the artifacts.
     """
     logger.info("Fetching artifacts from Velociraptor")
+    validate_client_id(retrieve_flow_request.client_id)
+    validate_flow_id(retrieve_flow_request.session_id)
     velociraptor_service = await UniversalService.create("Velociraptor")
     query = create_query(
         f"SELECT * FROM flow_results(client_id='{retrieve_flow_request.client_id}', flow_id='{retrieve_flow_request.session_id}')",

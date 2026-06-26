@@ -4,6 +4,7 @@ import aiAnalyst from "./endpoints/ai-analyst"
 import alerts from "./endpoints/alerts"
 import artifacts from "./endpoints/artifacts"
 import askSocfortress from "./endpoints/ask-socfortress"
+import audit from "./endpoints/audit"
 import auth from "./endpoints/auth"
 import cloudSecurityAssessment from "./endpoints/cloud-security-assessment"
 import connectors from "./endpoints/connectors"
@@ -56,6 +57,7 @@ export default {
 	alerts,
 	artifacts,
 	auth,
+	audit,
 	connectors,
 	copilotAction,
 	graylog,

@@ -8,6 +8,7 @@ from fastapi import Depends
 from fastapi import File
 from fastapi import HTTPException
 from fastapi import Query
+from fastapi import Request
 from fastapi import Security
 from fastapi import UploadFile
 from fastapi.responses import StreamingResponse
@@ -15,6 +16,8 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.audit.models.audit import AuditAction
+from app.audit.services.audit import record_audit_event
 from app.auth.models.users import User
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
@@ -956,6 +959,7 @@ async def delete_alert_tag_endpoint(alert_tag: AlertTagDelete, db: AsyncSession 
 )
 async def create_case_endpoint(
     case: CaseCreate,
+    request: Request,
     template_id: Optional[int] = Query(
         None,
         description="Optional CaseTemplate id to apply on creation. Skips auto-selection (manual path has no alert source).",
@@ -969,6 +973,17 @@ async def create_case_endpoint(
     await _ensure_customer_access(case.customer_code, current_user, db)
 
     created = await create_case(case, db, actor=current_user.username, template_id=template_id)
+
+    await record_audit_event(
+        action=AuditAction.CASE_CREATE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        customer_code=case.customer_code,
+        entity_type="case",
+        entity_id=created.id,
+        new_value={"case_name": created.case_name, "customer_code": case.customer_code},
+        request=request,
+    )
 
     # Phase 4 audit emit
     from app.incidents.schema.case_templates import CaseEventType
@@ -2356,6 +2371,7 @@ async def download_case_data_store_file_endpoint(
 )
 async def upload_case_data_store_endpoint(
     case_id: int,
+    request: Request,
     file: UploadFile = File(...),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -2373,8 +2389,21 @@ async def upload_case_data_store_endpoint(
     if await file_exists(case_id, file.filename, db):
         raise HTTPException(status_code=400, detail="File name already exists for this case")
 
+    result = await upload_file_to_case(case_id, file, db)
+
+    await record_audit_event(
+        action=AuditAction.DATASTORE_FILE_CREATE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        customer_code=case.customer_code,
+        entity_type="case_file",
+        entity_id=file.filename,
+        new_value={"case_id": case_id, "file_name": file.filename},
+        request=request,
+    )
+
     return CaseDataStoreResponse(
-        case_data_store=await upload_file_to_case(case_id, file, db),
+        case_data_store=result,
         success=True,
         message="File uploaded successfully",
     )
@@ -2387,6 +2416,7 @@ async def upload_case_data_store_endpoint(
 async def delete_case_data_store_file_endpoint(
     case_id: int,
     file_name: str,
+    request: Request,
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -2401,6 +2431,17 @@ async def delete_case_data_store_file_endpoint(
         raise HTTPException(status_code=403, detail=f"Access denied to case {case_id} - insufficient customer permissions")
 
     await delete_file_from_case(case_id, file_name, db)
+
+    await record_audit_event(
+        action=AuditAction.DATASTORE_FILE_DELETE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        customer_code=case.customer_code,
+        entity_type="case_file",
+        entity_id=file_name,
+        old_value={"case_id": case_id, "file_name": file_name},
+        request=request,
+    )
     return {"message": "File deleted successfully", "success": True}
 
 

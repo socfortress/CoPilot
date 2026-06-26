@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 from typing import Optional
 
@@ -11,6 +12,7 @@ class UserBase(BaseModel):
     email: EmailStr
     role_id: Optional[int] = None
     role_name: Optional[str] = None
+    last_login_at: Optional[datetime] = None
 
 
 class UserBaseResponse(BaseModel):
