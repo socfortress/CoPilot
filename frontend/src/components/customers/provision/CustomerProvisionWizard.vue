@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading" class="customer-provision-wizard">
+	<n-spin :show="loading">
 		<div class="flex min-h-120 flex-col gap-4">
 			<div class="flex grow flex-col gap-6">
 				<n-scrollbar x-scrollable trigger="none">
@@ -23,7 +23,7 @@
 				</n-scrollbar>
 
 				<n-form ref="formRef" :label-width="80" :model="form" :rules class="form-container">
-					<Transition :name="`slide-form-${slideFormDirection}`">
+					<Transition :name="`transition-slide-${slideFormDirection}`">
 						<div v-if="current === 1" class="flex flex-col gap-3">
 							<div class="flex flex-wrap gap-3">
 								<n-form-item label="Customer Code" path="customer_code" class="grow">
@@ -692,32 +692,3 @@ onBeforeMount(() => {
 	getDashboards()
 })
 </script>
-
-<style lang="scss" scoped>
-.customer-provision-wizard {
-	.slide-form-right-enter-active,
-	.slide-form-right-leave-active,
-	.slide-form-left-enter-active,
-	.slide-form-left-leave-active {
-		transition: all 0.2s ease-out;
-		position: absolute;
-		width: 100%;
-	}
-
-	.slide-form-left-enter-from {
-		transform: translateX(-100%);
-	}
-
-	.slide-form-left-leave-to {
-		transform: translateX(100%);
-	}
-
-	.slide-form-right-enter-from {
-		transform: translateX(100%);
-	}
-
-	.slide-form-right-leave-to {
-		transform: translateX(-100%);
-	}
-}
-</style>

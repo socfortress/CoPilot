@@ -1,6 +1,6 @@
 <template>
-	<div class="customer-network-connectors flex flex-col gap-4">
-		<transition name="form-fade" mode="out-in">
+	<div class="flex flex-col gap-4">
+		<transition name="transition-fade-move" mode="out-in">
 			<div v-if="showForm">
 				<CustomerNetworkConnectorForm
 					:customer-code
@@ -109,22 +109,3 @@ onBeforeMount(() => {
 	getCustomerNetworkConnectors()
 })
 </script>
-
-<style lang="scss" scoped>
-.customer-network-connectors {
-	.form-fade-enter-active,
-	.form-fade-leave-active {
-		transition:
-			opacity 0.2s ease-in-out,
-			transform 0.3s ease-in-out;
-	}
-	.form-fade-enter-from {
-		opacity: 0;
-		transform: translateY(10px);
-	}
-	.form-fade-leave-to {
-		opacity: 0;
-		transform: translateY(-10px);
-	}
-}
-</style>

@@ -3,7 +3,7 @@
 		<n-breadcrumb-item @click="goto({ path: '/' })">
 			<Icon :size="16" :name="HomeIcon" />
 		</n-breadcrumb-item>
-		<TransitionGroup name="anim">
+		<TransitionGroup name="anim-breadcrumb">
 			<n-breadcrumb-item
 				v-for="(item, index) of items"
 				:key="item.key"
@@ -86,8 +86,8 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .breadcrumb {
-	.anim-move,
-	.anim-enter-active {
+	.anim-breadcrumb-move,
+	.anim-breadcrumb-enter-active {
 		transition: all 0.5s var(--bezier-ease);
 
 		@for $i from 0 through 10 {
@@ -97,11 +97,11 @@ onBeforeMount(() => {
 		}
 	}
 
-	.anim-leave-active {
+	.anim-breadcrumb-leave-active {
 		display: none;
 	}
 
-	.anim-enter-from {
+	.anim-breadcrumb-enter-from {
 		opacity: 0;
 		transform: translateX(-5px);
 	}

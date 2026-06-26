@@ -1,5 +1,5 @@
 <template>
-	<div class="customer-integration-form flex min-h-120 flex-col gap-6 overflow-hidden">
+	<div class="flex min-h-120 flex-col gap-6 overflow-hidden">
 		<div>
 			<n-scrollbar x-scrollable trigger="none">
 				<div class="p-1 pr-4">
@@ -16,7 +16,7 @@
 		</div>
 
 		<div class="flex grow flex-col gap-2 overflow-hidden">
-			<Transition :name="`slide-form-${slideFormDirection}`">
+			<Transition :name="`transition-slide-${slideFormDirection}`">
 				<div v-if="current === 1" class="available-list grow overflow-hidden">
 					<n-scrollbar class="max-h-100" trigger="none">
 						<IntegrationsList
@@ -213,32 +213,3 @@ function prev() {
 	current.value--
 }
 </script>
-
-<style lang="scss" scoped>
-.customer-integration-form {
-	.slide-form-right-enter-active,
-	.slide-form-right-leave-active,
-	.slide-form-left-enter-active,
-	.slide-form-left-leave-active {
-		transition: all 0.2s ease-out;
-		position: absolute;
-		width: 100%;
-	}
-
-	.slide-form-left-enter-from {
-		transform: translateX(-100%);
-	}
-
-	.slide-form-left-leave-to {
-		transform: translateX(100%);
-	}
-
-	.slide-form-right-enter-from {
-		transform: translateX(100%);
-	}
-
-	.slide-form-right-leave-to {
-		transform: translateX(-100%);
-	}
-}
-</style>
