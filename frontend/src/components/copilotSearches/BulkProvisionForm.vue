@@ -41,29 +41,29 @@
 
 	<div v-else class="flex flex-col gap-3">
 		<div class="grid grid-cols-3 gap-2">
-			<div class="result-stat" :class="{ 'is-active result-provisioned': result.provisioned_count > 0 }">
-				<div class="result-num">{{ result.provisioned_count }}</div>
-				<div class="result-label">Provisioned</div>
-			</div>
-			<div class="result-stat" :class="{ 'is-active': result.skipped_count > 0 }">
-				<div class="result-num">{{ result.skipped_count }}</div>
-				<div class="result-label">Skipped</div>
-			</div>
-			<div class="result-stat" :class="{ 'is-active result-failed': result.failed_count > 0 }">
-				<div class="result-num">{{ result.failed_count }}</div>
-				<div class="result-label">Failed</div>
+			<div v-for="stat in resultStats" :key="stat.key" :class="resultStatClasses(stat.kind, stat.count)">
+				<div :class="resultNumClasses(stat.kind, stat.count)">{{ stat.count }}</div>
+				<div class="text-tertiary mt-1 text-xs tracking-wide uppercase">{{ stat.label }}</div>
 			</div>
 		</div>
 
-		<div class="bulk-results-list">
-			<div v-for="r of result.results" :key="r.rule_id" class="bulk-result-row">
+		<div
+			class="divide-border bg-default border-default flex max-h-80 flex-col divide-y overflow-y-auto rounded-lg border"
+		>
+			<div
+				v-for="r of result.results"
+				:key="r.rule_id"
+				class="hover:bg-primary/4 flex items-center justify-between gap-3 px-3 py-2"
+			>
 				<div class="flex min-w-0 flex-col">
 					<div class="text-default truncate text-sm">{{ r.rule_name || r.rule_id }}</div>
 					<div v-if="r.reason" class="text-tertiary truncate text-xs">{{ r.reason }}</div>
 				</div>
-				<Badge :color="statusBadgeColor(r.status)" size="small">
-					<template #value>{{ r.status }}</template>
-				</Badge>
+				<span class="shrink-0 whitespace-nowrap">
+					<Badge :color="statusBadgeColor(r.status)" size="small">
+						<template #value>{{ r.status }}</template>
+					</Badge>
+				</span>
 			</div>
 		</div>
 
@@ -115,6 +115,41 @@ const priorityOptions = [
 
 const provisionableCount = computed(() => props.provisionableCount ?? props.ruleIds.length)
 
+type ResultStatKind = "provisioned" | "skipped" | "failed"
+
+const resultStats = computed(() => {
+	if (!result.value) return []
+
+	return [
+		{
+			key: "provisioned",
+			label: "Provisioned",
+			count: result.value.provisioned_count,
+			kind: "provisioned" as const
+		},
+		{ key: "skipped", label: "Skipped", count: result.value.skipped_count, kind: "skipped" as const },
+		{ key: "failed", label: "Failed", count: result.value.failed_count, kind: "failed" as const }
+	]
+})
+
+function resultStatClasses(kind: ResultStatKind, count: number) {
+	const base = "rounded-lg border border-default bg-default p-2.5 text-center"
+
+	if (count <= 0) return `${base} text-secondary`
+	if (kind === "provisioned") return `${base} border-success/45 bg-success/6 text-default`
+	if (kind === "failed") return `${base} border-error/45 bg-error/6 text-default`
+	return `${base} text-default`
+}
+
+function resultNumClasses(kind: ResultStatKind, count: number) {
+	const base = "text-xl leading-none font-bold"
+
+	if (count <= 0) return base
+	if (kind === "provisioned") return `${base} text-success`
+	if (kind === "failed") return `${base} text-error`
+	return base
+}
+
 async function submit() {
 	if (!props.ruleIds.length) return
 	submitting.value = true
@@ -164,75 +199,3 @@ function statusBadgeColor(status: BulkProvisionRuleStatus): BadgeColor | undefin
 	}
 }
 </script>
-
-<style scoped lang="scss">
-.result-stat {
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius);
-	background: var(--bg-default-color);
-	padding: 10px;
-	text-align: center;
-	color: var(--fg-secondary-color);
-}
-.result-stat.is-active {
-	color: var(--fg-default-color);
-}
-.result-stat.result-provisioned.is-active {
-	border-color: rgba(var(--success-color-rgb) / 0.45);
-	background: rgba(var(--success-color-rgb) / 0.06);
-}
-.result-stat.result-failed.is-active {
-	border-color: rgba(var(--error-color-rgb) / 0.45);
-	background: rgba(var(--error-color-rgb) / 0.06);
-}
-.result-num {
-	font-size: 1.4rem;
-	font-weight: 700;
-	line-height: 1;
-}
-.result-stat.is-active .result-num {
-	color: inherit;
-}
-.result-stat.result-provisioned.is-active .result-num {
-	color: var(--success-color);
-}
-.result-stat.result-failed.is-active .result-num {
-	color: var(--error-color);
-}
-.result-label {
-	font-size: 0.7rem;
-	color: var(--fg-tertiary-color);
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	margin-top: 4px;
-}
-
-.bulk-results-list {
-	max-height: 320px;
-	overflow-y: auto;
-	display: flex;
-	flex-direction: column;
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius);
-	background: var(--bg-default-color);
-}
-
-.bulk-result-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	padding: 8px 12px;
-}
-.bulk-result-row + .bulk-result-row {
-	border-top: 1px solid var(--border-color);
-}
-.bulk-result-row:hover {
-	background: rgba(var(--primary-color-rgb) / 0.04);
-}
-
-.bulk-result-row :deep(.badge) {
-	flex-shrink: 0;
-	white-space: nowrap;
-}
-</style>

@@ -1,6 +1,13 @@
 <template>
-	<div class="pagination-indeterminate flex items-center gap-2">
-		<n-input-number v-model:value="page" size="small" :min="1" button-placement="both" class="page" :disabled>
+	<div class="flex items-center gap-2">
+		<n-input-number
+			v-model:value="page"
+			size="small"
+			:min="1"
+			button-placement="both"
+			class="w-22.5 text-center"
+			:disabled
+		>
 			<template #minus-icon>
 				<Icon :name="ArrowBackIcon" />
 			</template>
@@ -14,7 +21,7 @@
 			size="small"
 			:options="pageSizesOptions"
 			:show-checkmark="false"
-			class="page-sizes"
+			class="w-auto"
 			:disabled
 		/>
 		<n-select
@@ -23,7 +30,7 @@
 			size="small"
 			:options="sortOptions"
 			:show-checkmark="false"
-			class="sort"
+			class="w-auto"
 			:disabled
 		/>
 	</div>
@@ -59,18 +66,3 @@ watch(page, val => {
 	}
 })
 </script>
-
-<style lang="scss" scoped>
-.pagination-indeterminate {
-	.page {
-		width: 90px;
-		text-align: center;
-	}
-	.page-sizes {
-		width: auto;
-	}
-	.sort {
-		width: auto;
-	}
-}
-</style>

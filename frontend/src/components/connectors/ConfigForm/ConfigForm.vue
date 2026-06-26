@@ -1,9 +1,9 @@
 <template>
-	<div class="connector-form">
+	<div>
 		<n-spin :show="loading">
-			<div class="connector-header">
+			<div class="mb-7 flex items-center gap-5">
 				<n-avatar
-					class="connector-image"
+					class="border-default border-2"
 					object-fit="contain"
 					round
 					:size="60"
@@ -290,18 +290,3 @@ onMounted(() => {
 	setUpForm()
 })
 </script>
-
-<style lang="scss" scoped>
-.connector-form {
-	.connector-header {
-		display: flex;
-		align-items: center;
-		margin-bottom: calc(var(--spacing) * 7);
-		gap: calc(var(--spacing) * 5);
-
-		.connector-image {
-			border: 2px solid var(--bg-body-color);
-		}
-	}
-}
-</style>
