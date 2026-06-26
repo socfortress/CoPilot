@@ -65,7 +65,7 @@
 			:trap-focus="false"
 			display-directive="show"
 		>
-			<n-drawer-content title="Alerts stats" closable body-content-style="padding:0" :native-scrollbar="false">
+			<n-drawer-content title="Alerts stats" closable body-content-class="p-0!" :native-scrollbar="false">
 				<AlertsStats ref="alertsStatsRef" :filters />
 			</n-drawer-content>
 		</n-drawer>

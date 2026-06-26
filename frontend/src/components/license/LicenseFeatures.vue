@@ -1,6 +1,6 @@
 <template>
-	<div class="license-features" :class="{ loading }">
-		<div class="license-features-box flex items-center justify-center">
+	<div class="flex flex-col overflow-hidden" :class="{ 'min-h-75 min-w-75': loading }">
+		<div class="bg-default flex grow items-center justify-center overflow-hidden rounded-lg border border-default p-4.5">
 			<n-spin :show="loading" class="h-full w-full" content-class="h-full">
 				<div v-if="!loading" class="wrapper flex h-full flex-col gap-4">
 					<div class="flex items-center justify-between gap-4">
@@ -50,16 +50,16 @@
 			</n-spin>
 		</div>
 
-		<div v-if="!hideKey && !loading" class="footer mt-3">
+		<div v-if="!hideKey && !loading" class="mt-3 w-full text-center text-xs">
 			<template v-if="license">
-				<span class="cursor-pointer" @click="showLicenseDetails = true">
+				<span class="hover:text-primary cursor-pointer" @click="showLicenseDetails = true">
 					Your license:
 					<strong>{{ license }}</strong>
 					<Icon :name="InfoIcon" :size="14" class="relative top-0.5 ml-1" />
 				</span>
 			</template>
 			<template v-else>
-				<span class="cursor-pointer" @click="showLicenseUpload = true">
+				<span class="hover:text-primary cursor-pointer" @click="showLicenseUpload = true">
 					If you possess a license, you may load it by clicking here
 				</span>
 			</template>
@@ -239,36 +239,3 @@ onBeforeMount(() => {
 
 defineExpose({ reload: load })
 </script>
-
-<style lang="scss" scoped>
-.license-features {
-	display: flex;
-	flex-direction: column;
-	overflow: hidden;
-
-	&.loading {
-		min-height: 300px;
-		min-width: 300px;
-	}
-
-	.license-features-box {
-		background-color: var(--bg-default-color);
-		border-radius: var(--border-radius);
-		border: 1px solid var(--border-color);
-		padding: 18px;
-		flex-grow: 1;
-		overflow: hidden;
-	}
-	.footer {
-		width: 100%;
-		text-align: center;
-		font-size: 12px;
-
-		.cursor-pointer {
-			&:hover {
-				color: var(--primary-color);
-			}
-		}
-	}
-}
-</style>

@@ -1,5 +1,5 @@
 <template>
-	<span class="index-icon" :class="[`health-${health}`, { color }]">
+	<span :class="iconClass">
 		<Icon v-if="health === IndexHealth.GREEN" :name="ShieldIcon" :size="size || 18" />
 		<Icon v-if="health === IndexHealth.YELLOW" :name="WarningIcon" :size="size || 18" />
 		<Icon v-if="health === IndexHealth.RED" :name="DangerIcon" :size="size || 18" />
@@ -8,7 +8,7 @@
 
 <script setup lang="ts">
 import type { IndexStats } from "@/types/indices"
-import { toRefs } from "vue"
+import { computed, toRefs } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { IndexHealth } from "@/types/indices"
 
@@ -22,24 +22,21 @@ const WarningIcon = "majesticons:shield-exclamation-line"
 const DangerIcon = "majesticons:exclamation-line"
 
 const { health, color } = toRefs(props)
-</script>
 
-<style lang="scss" scoped>
-.index-icon {
-	display: flex;
-	align-items: center;
-	&.color {
-		&.health-green {
-			color: var(--success-color);
-		}
+const iconClass = computed(() => {
+	const base = "flex items-center"
 
-		&.health-yellow {
-			color: var(--warning-color);
-		}
+	if (!color.value) return base
 
-		&.health-red {
-			color: var(--error-color);
-		}
+	switch (health.value) {
+		case IndexHealth.GREEN:
+			return `${base} text-success`
+		case IndexHealth.YELLOW:
+			return `${base} text-warning`
+		case IndexHealth.RED:
+			return `${base} text-error`
+		default:
+			return base
 	}
-}
-</style>
+})
+</script>

@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<div class="license-box" :class="{ loading: loadingLicense && !licenseKey }">
+		<div :class="{ 'min-h-25': loadingLicense && !licenseKey }">
 			<p v-if="loadingLicense || licenseKey" class="flex items-center gap-4">
 				<span>your license:</span>
 				<Icon v-if="loadingLicense" :name="LoadingIcon" />
@@ -344,11 +344,3 @@ onBeforeMount(() => {
 	getLicense()
 })
 </script>
-
-<style lang="scss" scoped>
-.license-box {
-	&.loading {
-		min-height: 100px;
-	}
-}
-</style>

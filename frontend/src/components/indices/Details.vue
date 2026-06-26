@@ -1,13 +1,15 @@
 <template>
 	<n-spin :show="loading">
-		<n-card class="index-details-box" segmented>
+		<n-card segmented>
 			<template #header>
-				<div class="box-header">
-					<div class="title">
+				<div
+					class="max-mobile:flex-col max-mobile:items-start max-mobile:gap-2 flex items-center justify-between gap-4"
+				>
+					<div>
 						<span v-if="currentIndex">Below the details for index</span>
 						<span v-else>Select an index to see the details</span>
 					</div>
-					<div v-if="indices && indices.length" class="select-box">
+					<div v-if="indices && indices.length" class="max-mobile:w-full">
 						<n-select
 							v-model:value="selectValue"
 							placeholder="Indices list"
@@ -20,11 +22,11 @@
 				</div>
 			</template>
 
-			<div v-if="currentIndex" class="details-box">
-				<div class="info">
+			<div v-if="currentIndex">
+				<div>
 					<IndexCard :index="currentIndex" show-actions @delete="clearCurrentIndex()" />
 				</div>
-				<n-card class="shards overflow-hidden" content-style="padding:0">
+				<n-card class="mt-4 overflow-hidden" content-class="p-0!">
 					<n-scrollbar x-scrollable style="width: 100%">
 						<n-table :bordered="false" class="min-w-max">
 							<thead>
@@ -41,7 +43,7 @@
 									<td>{{ shard.shard || "-" }}</td>
 									<td>{{ shard.size || "-" }}</td>
 									<td>
-										<span class="shard-state" :class="shard.state">
+										<span class="font-bold" :class="shardStateClass(shard.state)">
 											{{ shard.state || "-" }}
 										</span>
 									</td>
@@ -116,6 +118,17 @@ function clearCurrentIndex() {
 	currentIndex.value = null
 }
 
+function shardStateClass(state?: string) {
+	switch (state) {
+		case "STARTED":
+			return "text-success"
+		case "UNASSIGNED":
+			return "text-warning"
+		default:
+			return ""
+	}
+}
+
 function getShards() {
 	loadingShards.value = true
 	Api.wazuh.indices
@@ -151,42 +164,3 @@ onBeforeMount(() => {
 	getShards()
 })
 </script>
-
-<style lang="scss" scoped>
-.index-details-box {
-	.box-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: calc(var(--spacing) * 4);
-	}
-
-	.details-box {
-		.shards {
-			margin-top: calc(var(--spacing) * 4);
-
-			.shard-state {
-				font-weight: bold;
-				&.STARTED {
-					color: var(--success-color);
-				}
-				&.UNASSIGNED {
-					color: var(--warning-color);
-				}
-			}
-		}
-	}
-
-	@media (max-width: 700px) {
-		.box-header {
-			flex-direction: column;
-			align-items: flex-start;
-			gap: calc(var(--spacing) * 2);
-
-			.select-box {
-				width: 100%;
-			}
-		}
-	}
-}
-</style>

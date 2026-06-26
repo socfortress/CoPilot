@@ -1,5 +1,5 @@
 <template>
-	<div class="license-box flex items-center justify-between gap-1">
+	<div class="bg-default flex items-center justify-between gap-1 rounded-lg px-4.5 py-3.5">
 		<div class="flex flex-col gap-1">
 			<p class="flex items-center gap-4">
 				<span>license</span>
@@ -91,29 +91,3 @@ onBeforeMount(() => {
 	getLicense()
 })
 </script>
-
-<style lang="scss" scoped>
-.license-box {
-	background-color: var(--bg-default-color);
-	border-radius: var(--border-radius);
-	padding: 14px 18px;
-	.section {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-		.label {
-			display: flex;
-			align-items: center;
-			gap: 10px;
-			color: var(--fg-secondary-color);
-			font-family: var(--font-family-mono);
-			font-size: 14px;
-		}
-
-		.value {
-			font-size: 16px;
-			font-weight: bold;
-		}
-	}
-}
-</style>
