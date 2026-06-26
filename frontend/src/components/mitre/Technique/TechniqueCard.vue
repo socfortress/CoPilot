@@ -12,7 +12,7 @@
 				<div v-if="techniqueDetails">
 					{{ techniqueDetails.name }}
 				</div>
-				<n-skeleton v-else text style="width: 60%" :height="20" />
+				<n-skeleton v-else text class="w-3/4" :height="20" />
 			</template>
 			<template #footer>
 				<p v-if="techniqueDetails" class="cursor-text" @click.stop="() => {}">
@@ -20,7 +20,7 @@
 				</p>
 				<div v-else>
 					<n-skeleton text :repeat="2" :height="16" />
-					<n-skeleton text style="width: 40%" :height="16" />
+					<n-skeleton text class="w-2/4" :height="16" />
 				</div>
 			</template>
 		</CardEntity>

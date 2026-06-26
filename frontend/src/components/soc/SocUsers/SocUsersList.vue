@@ -1,7 +1,7 @@
 <template>
 	<div class="overflow-hidden rounded-lg">
 		<n-spin :show="loadingUsers">
-			<n-scrollbar x-scrollable style="width: 100%">
+			<n-scrollbar x-scrollable class="w-full">
 				<n-table :bordered="false" class="min-w-max">
 					<thead>
 						<tr>
@@ -9,7 +9,7 @@
 							<th>Login</th>
 							<th>Name</th>
 							<th>Active</th>
-							<th style="max-width: 300px">Alerts</th>
+							<th class="max-w-75">Alerts</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -19,7 +19,7 @@
 							class="group hover:[&_td]:bg-primary/5"
 							:class="
 								highlight === user.user_id.toString()
-									? '[&_td]:border-y [&_td]:border-primary/30 [&_td]:bg-primary/5'
+									? '[&_td]:border-primary/30 [&_td]:bg-primary/5 [&_td]:border-y'
 									: ''
 							"
 						>
@@ -45,7 +45,7 @@
 									{{ user.user_active ? "Yes" : "No" }}
 								</strong>
 							</td>
-							<td style="max-width: 300px">
+							<td class="max-w-75">
 								<SocUserAlerts :user-id="user.user_id" />
 							</td>
 						</tr>

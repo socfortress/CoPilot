@@ -1,7 +1,7 @@
 <template>
-	<div class="soc-alerts-bookmarks">
-		<div class="header flex items-center">
-			<div class="info">
+	<div class="flex flex-col">
+		<div class="flex h-12.5 items-center">
+			<div class="flex items-center gap-2">
 				Bookmarked:
 				<code>
 					<strong>{{ bookmarksList.length }}</strong>
@@ -117,11 +117,3 @@ onBeforeUnmount(() => {
 	abortController?.abort()
 })
 </script>
-
-<style lang="scss" scoped>
-.soc-alerts-bookmarks {
-	.header {
-		height: 50px;
-	}
-}
-</style>

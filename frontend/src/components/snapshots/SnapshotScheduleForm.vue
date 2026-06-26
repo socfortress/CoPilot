@@ -45,7 +45,7 @@
 				:max="365"
 				placeholder="Leave empty for no retention limit"
 				clearable
-				style="width: 100%"
+				class="w-full"
 			/>
 			<template #feedback>
 				Automatically delete snapshots older than this many days. Leave empty to keep forever.
@@ -69,7 +69,7 @@
 				:max="23"
 				placeholder="Leave empty for any hour"
 				clearable
-				style="width: 100%"
+				class="w-full"
 			/>
 			<template #feedback>
 				Hour of day (0-23) when this schedule is allowed to run. Leave empty to allow any hour (legacy behavior
@@ -84,7 +84,7 @@
 				:max="59"
 				placeholder="Leave empty for any minute"
 				clearable
-				style="width: 100%"
+				class="w-full"
 				:disabled="formData.scheduled_hour == null"
 			/>
 			<template #feedback>
@@ -94,7 +94,7 @@
 		</n-form-item>
 
 		<n-form-item label="Interval (Days)" path="interval_days">
-			<n-input-number v-model:value="formData.interval_days" :min="1" :max="365" style="width: 100%" />
+			<n-input-number v-model:value="formData.interval_days" :min="1" :max="365" class="w-full" />
 			<template #feedback>Minimum number of days between executions. Default 1 = at most once per day.</template>
 		</n-form-item>
 

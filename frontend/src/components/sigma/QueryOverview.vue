@@ -106,7 +106,7 @@
 				</div>
 			</div>
 
-			<div class="footer-box bg-secondary flex items-center gap-2 px-7 py-4">
+			<div class="border-default bg-secondary flex items-center gap-2 border-t px-7 py-4">
 				<div class="grow"></div>
 
 				<QueryDeleteOne
@@ -160,9 +160,3 @@ function updateQuery(updatedQuery: SigmaQuery) {
 	emit("updated", updatedQuery)
 }
 </script>
-
-<style lang="scss" scoped>
-.footer-box {
-	border-top: 1px solid var(--border-color);
-}
-</style>

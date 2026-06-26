@@ -6,7 +6,7 @@
 		indent-with-tab
 		:tab-size="4"
 		:extensions
-		:style="{ height: '100%' }"
+		class="h-full"
 		@ready="handleReady"
 	/>
 </template>

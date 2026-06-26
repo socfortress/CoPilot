@@ -1,6 +1,6 @@
 <template>
-	<div class="license-viewer flex items-center justify-center gap-4" :class="{ 'has-side': !!key }">
-		<div class="main-box">
+	<div class="flex h-full justify-center gap-4 max-[800px]:flex-col" :class="key ? 'items-stretch' : 'items-center'">
+		<div class="w-112.5 min-w-75 max-[800px]:w-auto max-[800px]:max-w-none max-[800px]:min-w-0">
 			<LicenseFeatures
 				:hide-key="!!key"
 				:license-data="details"
@@ -9,8 +9,8 @@
 				@license-key-loaded="licenseKeyLoaded"
 			/>
 		</div>
-		<div class="side-box">
-			<n-scrollbar style="max-width: 100%">
+		<div class="overflow-hidden rounded-lg transition-all duration-300" :class="{ grow: key }">
+			<n-scrollbar class="w-full">
 				<LicenseDetails v-if="key" hide-features class="min-h-full" @license-loaded="licenseLoaded" />
 			</n-scrollbar>
 		</div>
@@ -40,35 +40,3 @@ function licenseLoaded(license: License) {
 	details.value = license
 }
 </script>
-
-<style lang="scss" scoped>
-.license-viewer {
-	height: 100%;
-
-	.main-box {
-		width: 450px;
-		min-width: 300px;
-	}
-	.side-box {
-		overflow: hidden;
-		transition: all 0.3s var(--bezier-ease);
-		border-radius: var(--border-radius);
-	}
-	&.has-side {
-		align-items: stretch;
-		.side-box {
-			flex-grow: 1;
-		}
-	}
-
-	@media (max-width: 800px) {
-		flex-direction: column;
-
-		.main-box {
-			width: unset;
-			min-width: unset;
-			max-width: unset;
-		}
-	}
-}
-</style>

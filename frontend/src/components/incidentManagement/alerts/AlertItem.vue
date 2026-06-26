@@ -27,14 +27,7 @@
 
 			<template v-if="alert?.alert_creation_time" #headerExtra>
 				<div :class="{ 'hidden sm:block': !compact }">
-					<n-popover
-						v-if="!compact"
-						overlap
-						placement="top-end"
-						style="max-height: 240px"
-						scrollable
-						to="body"
-					>
+					<n-popover v-if="!compact" overlap placement="top-end" class="max-h-60" scrollable to="body">
 						<template #trigger>
 							<div class="flex cursor-help items-center gap-2">
 								<span v-if="alert.alert_creation_time">

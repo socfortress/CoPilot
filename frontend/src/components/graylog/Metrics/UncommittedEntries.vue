@@ -1,12 +1,12 @@
 <template>
 	<div class="flex w-full flex-col gap-3">
-		<div class="flex rounded-lg border border-default bg-default">
+		<div class="border-default bg-default flex rounded-lg border">
 			<div class="grow">
 				<div class="flex grow items-center gap-3 px-5.5 py-4.5 text-lg font-bold">
 					<Icon v-if="isWarning" :name="DangerIcon" class="text-warning" />
 					<span>Uncommitted Journal Entries</span>
 				</div>
-				<VChart class="w-full" autoresize :option="chartOption" :style="{ height: '70px' }" />
+				<VChart class="h-17.5 w-full" autoresize :option="chartOption" />
 			</div>
 			<div
 				class="flex min-w-20 flex-col justify-center rounded-r-lg px-5.5 py-4.5 text-center font-mono text-xl"

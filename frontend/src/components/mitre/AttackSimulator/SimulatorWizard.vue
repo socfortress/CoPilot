@@ -15,7 +15,7 @@
 		<div class="flex grow flex-col overflow-hidden">
 			<Transition :name="`slide-form-${slideFormDirection}`">
 				<div v-if="current === 1" class="grow overflow-hidden">
-					<n-scrollbar ref="parametersScroll" style="max-height: 350px" trigger="none">
+					<n-scrollbar ref="parametersScroll" class="max-h-87.5" trigger="none">
 						<ParametersList
 							v-model:selected="selectedAttack"
 							:technique-id
@@ -27,7 +27,7 @@
 					</n-scrollbar>
 				</div>
 				<div v-else-if="current === 2" class="grow overflow-hidden">
-					<n-scrollbar ref="agentsScroll" style="max-height: 350px" trigger="none">
+					<n-scrollbar ref="agentsScroll" class="max-h-87.5" trigger="none">
 						<AgentsList
 							v-model:selected="selectedAgent"
 							class="px-7"

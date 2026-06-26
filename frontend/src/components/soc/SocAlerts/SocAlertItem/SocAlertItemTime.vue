@@ -1,5 +1,5 @@
 <template>
-	<n-popover overlap placement="top-end" style="max-height: 240px" scrollable to="body" :disabled="hideTimeline">
+	<n-popover overlap placement="top-end" class="max-h-60" scrollable to="body" :disabled="hideTimeline">
 		<template #trigger>
 			<div
 				class="text-secondary flex items-center gap-2 font-mono"

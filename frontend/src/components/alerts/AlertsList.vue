@@ -61,7 +61,7 @@
 		<n-drawer
 			v-model:show="showStatsDrawer"
 			:width="700"
-			style="max-width: 90vw"
+			class="max-w-[90vw]!"
 			:trap-focus="false"
 			display-directive="show"
 		>
@@ -74,7 +74,7 @@
 			v-model:show="showFiltersDrawer"
 			display-directive="show"
 			:trap-focus="false"
-			style="max-width: 90vw; width: 500px"
+			class="w-125! max-w-[90vw]"
 			:show-mask="loadingFilters ? 'transparent' : undefined"
 			:class="{ 'opacity-0': loadingFilters }"
 		>

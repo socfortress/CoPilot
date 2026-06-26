@@ -34,7 +34,7 @@
 				clearable
 				placeholder="State..."
 				size="small"
-				style="width: 125px"
+				class="w-31.25"
 			/>
 		</div>
 		<n-scrollbar class="my-3">

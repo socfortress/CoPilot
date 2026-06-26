@@ -33,12 +33,7 @@
 		</n-tab-pane>
 		<n-tab-pane name="Owner" tab="Owner" display-directive="show:lazy">
 			<div class="grid gap-2 px-6 pt-3">
-				<Badge
-					type="active"
-					style="max-width: 145px"
-					class="cursor-pointer"
-					@click="routeSocUsers(ownerId).navigate()"
-				>
+				<Badge type="active" class="max-w-37.5 cursor-pointer" @click="routeSocUsers(ownerId).navigate()">
 					<template #iconRight>
 						<Icon :name="LinkIcon" :size="14" />
 					</template>

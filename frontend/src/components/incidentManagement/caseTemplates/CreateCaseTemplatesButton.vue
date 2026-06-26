@@ -10,7 +10,7 @@
 			preset="card"
 			title="New template"
 			display-directive="show"
-			style="max-width: 720px"
+			class="max-w-180!"
 		>
 			<CaseTemplateEditor ref="editorRef" @saved="handleSuccess" @cancel="handleCancel" />
 		</n-modal>

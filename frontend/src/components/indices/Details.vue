@@ -27,7 +27,7 @@
 					<IndexCard :index="currentIndex" show-actions @delete="clearCurrentIndex()" />
 				</div>
 				<n-card class="mt-4 overflow-hidden" content-class="p-0!">
-					<n-scrollbar x-scrollable style="width: 100%">
+					<n-scrollbar x-scrollable class="w-full">
 						<n-table :bordered="false" class="min-w-max">
 							<thead>
 								<tr>

@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading">
+	<n-spin :show="loading" content-class="h-full">
 		<CardStatsMulti title="Agents" hovered class="h-full cursor-pointer" :values @click="routeAgent().navigate()">
 			<template #icon>
 				<CardStatsIcon :icon-name="AgentsIcon" boxed :box-size="30"></CardStatsIcon>
@@ -61,13 +61,3 @@ onBeforeMount(() => {
 	getData()
 })
 </script>
-
-<style lang="scss" scoped>
-.n-spin-container {
-	:deep() {
-		.n-spin-content {
-			height: 100%;
-		}
-	}
-}
-</style>

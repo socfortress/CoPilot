@@ -115,12 +115,7 @@
 
 			<n-form-item label="Minimum Passing Score" :show-feedback="false">
 				<n-slider v-model:value="formData.minimum_passing_score" :min="0" :max="100" :step="5" />
-				<n-input-number
-					v-model:value="formData.minimum_passing_score"
-					:min="0"
-					:max="100"
-					style="width: 100px; margin-left: 16px"
-				/>
+				<n-input-number v-model:value="formData.minimum_passing_score" :min="0" :max="100" class="ml-4 w-25" />
 			</n-form-item>
 		</n-form>
 

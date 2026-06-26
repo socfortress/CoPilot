@@ -18,7 +18,7 @@
 		v-model:show="showWarning"
 		preset="card"
 		title="Mandatory tasks incomplete"
-		style="max-width: 560px"
+		class="max-w-140!"
 		display-directive="show"
 	>
 		<p>

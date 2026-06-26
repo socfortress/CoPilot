@@ -6,7 +6,7 @@
 				<n-input v-model:value="alertTitle" size="small" placeholder="Search by title..." clearable />
 			</div>
 			<div class="delete-box">
-				<n-popover v-if="checkedCount" :width="200" placement="bottom" style="max-height: 240px" scrollable>
+				<n-popover v-if="checkedCount" :width="200" placement="bottom" class="max-h-60" scrollable>
 					<template #trigger>
 						<n-button
 							size="small"
