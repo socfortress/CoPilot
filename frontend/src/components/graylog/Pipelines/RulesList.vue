@@ -1,7 +1,7 @@
 <template>
-	<n-spin :show="loading" class="rules-list">
+	<n-spin :show="loading" class="box-border h-full max-h-full overflow-hidden" content-class="flex h-full flex-col">
 		<n-scrollbar ref="scrollContent">
-			<div class="list flex min-h-52 flex-col gap-2">
+			<div class="flex min-h-52 flex-col gap-2 p-(--n-body-padding) pb-[50vh]">
 				<Rule v-for="rule of rules" :key="rule.id" :rule :highlight="highlight === rule.id" embedded />
 			</div>
 		</n-scrollbar>
@@ -82,26 +82,3 @@ onBeforeMount(() => {
 	getRules()
 })
 </script>
-
-<style lang="scss" scoped>
-.rules-list {
-	height: 100%;
-	max-height: 100%;
-	overflow: hidden;
-	box-sizing: border-box;
-
-	:deep() {
-		.n-spin-content {
-			height: 100%;
-			box-sizing: border-box;
-			display: flex;
-			flex-direction: column;
-		}
-	}
-
-	.list {
-		padding: var(--n-body-padding);
-		padding-bottom: 50vh;
-	}
-}
-</style>

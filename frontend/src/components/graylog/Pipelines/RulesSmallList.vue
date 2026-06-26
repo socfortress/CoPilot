@@ -1,14 +1,25 @@
 <template>
-	<div class="rules-list flex flex-col">
-		<n-button v-for="rule of rules" :key="rule.id" quaternary size="tiny" @click="emit('click', rule.id)">
-			<div class="btn-wrap flex items-center">
-				<span class="spacer">
-					<Icon :name="ViewIcon" :size="16" />
+	<div class="flex flex-col">
+		<n-button
+			v-for="rule of rules"
+			:key="rule.id"
+			quaternary
+			size="tiny"
+			class="group min-w-full [&_.n-button__content]:min-w-full"
+			@click="emit('click', rule.id)"
+		>
+			<div class="flex max-w-67.5 items-center overflow-hidden">
+				<span class="min-w-6">
+					<Icon
+						:name="ViewIcon"
+						:size="16"
+						class="opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+					/>
 				</span>
-				<span class="title grow">
+				<span class="grow truncate">
 					{{ rule.title }}
 				</span>
-				<span class="spacer small"></span>
+				<span class="min-w-5"></span>
 			</div>
 		</n-button>
 	</div>
@@ -34,45 +45,3 @@ const { rules } = toRefs(props)
 
 const ViewIcon = "iconoir:eye-solid"
 </script>
-
-<style lang="scss" scoped>
-.rules-list {
-	.n-button {
-		min-width: 100%;
-
-		:deep(.n-button__content) {
-			min-width: 100%;
-		}
-
-		.btn-wrap {
-			max-width: 270px;
-			overflow: hidden;
-
-			.title {
-				overflow: hidden;
-				text-overflow: ellipsis;
-				white-space: nowrap;
-			}
-
-			.spacer {
-				min-width: 24px;
-
-				&.small {
-					min-width: 20px;
-				}
-			}
-		}
-
-		i {
-			opacity: 0;
-			transition: opacity 0.2s;
-		}
-
-		&:hover {
-			i {
-				opacity: 1;
-			}
-		}
-	}
-}
-</style>
