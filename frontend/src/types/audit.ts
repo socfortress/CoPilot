@@ -40,6 +40,11 @@ export interface AuditLogFilters {
 	search?: string
 }
 
+export interface AuditLogsListResponse {
+	audit_logs: AuditLogEntry[]
+	pagination: AuditLogPagination
+}
+
 export interface AuditVocabularies {
 	actions: string[]
 	results: string[]
