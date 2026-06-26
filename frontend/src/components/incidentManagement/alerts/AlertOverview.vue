@@ -138,7 +138,7 @@
 				</div>
 			</div>
 
-			<div class="footer-box bg-secondary flex items-center gap-2 px-7 py-4">
+			<div class="bg-secondary flex items-center gap-2 border-t border-default px-7 py-4">
 				<AlertCreateCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
 
 				<AlertMergeCaseButton v-if="!linkedCases.length" :alerts="[alert]" @updated="updateAlert" />
@@ -255,9 +255,3 @@ function handleInvestigate() {
 		})
 }
 </script>
-
-<style lang="scss" scoped>
-.footer-box {
-	border-top: 1px solid var(--border-color);
-}
-</style>

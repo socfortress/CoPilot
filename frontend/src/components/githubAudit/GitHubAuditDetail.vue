@@ -6,13 +6,13 @@
 
 				<dl class="border-border bg-secondary flex flex-col gap-2 rounded-md border p-4">
 					<div class="flex items-baseline justify-between gap-3">
-						<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Enabled</dt>
+						<dt class="text-secondary text-3xs shrink-0 tracking-wider uppercase">Enabled</dt>
 						<dd class="font-mono text-xs" :class="config.enabled ? 'text-success' : 'text-warning'">
 							{{ config.enabled ? "Active" : "Disabled" }}
 						</dd>
 					</div>
 					<div class="flex items-baseline justify-between gap-3">
-						<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Scheduled</dt>
+						<dt class="text-secondary text-3xs shrink-0 tracking-wider uppercase">Scheduled</dt>
 						<dd
 							class="font-mono text-xs"
 							:class="config.auto_audit_enabled ? 'text-success' : 'text-tertiary'"
@@ -21,7 +21,7 @@
 						</dd>
 					</div>
 					<div v-if="config.auto_audit_enabled" class="flex items-baseline justify-between gap-3">
-						<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Cron</dt>
+						<dt class="text-secondary text-3xs shrink-0 tracking-wider uppercase">Cron</dt>
 						<dd class="text-default min-w-0 truncate text-right font-mono text-xs tabular-nums">
 							{{ config.audit_schedule_cron || "—" }}
 						</dd>
@@ -29,7 +29,7 @@
 				</dl>
 
 				<div class="flex flex-col gap-2">
-					<p class="text-secondary text-[10px] font-medium tracking-widest uppercase">Audit scope</p>
+					<p class="text-secondary text-3xs font-medium tracking-widest uppercase">Audit scope</p>
 					<GitHubAuditScopeFlags :config size="large" class="bg-secondary" />
 				</div>
 

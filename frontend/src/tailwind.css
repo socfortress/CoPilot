@@ -35,6 +35,9 @@
 	--text-color-secondary: var(--fg-secondary-color);
 	--text-color-tertiary: var(--fg-tertiary-color);
 
+	--text-2xs: 0.675rem; /* 11px */
+	--text-3xs: 0.625rem; /* 10px */
+
 	--breakpoint-xs: 460px;
 	--breakpoint-mobile: 701px;
 

@@ -6,7 +6,7 @@
 					<span class="text-default truncate font-mono text-sm font-medium">
 						{{ report.report_name }}
 					</span>
-					<span class="shrink-0 font-mono text-[10px] tracking-wider uppercase" :class="statusTextClass">
+					<span class="text-3xs shrink-0 font-mono tracking-wider uppercase" :class="statusTextClass">
 						{{ report.status }}
 					</span>
 				</div>
@@ -21,13 +21,13 @@
 
 			<div class="flex shrink-0 items-end gap-4 text-right">
 				<div>
-					<p class="text-secondary mb-0.5 text-[10px] tracking-wider uppercase">Score</p>
+					<p class="text-secondary text-3xs mb-0.5 tracking-wider uppercase">Score</p>
 					<p class="font-mono text-2xl leading-none font-bold tabular-nums" :class="scoreClass">
 						{{ report.score.toFixed(0) }}%
 					</p>
 				</div>
 				<div>
-					<p class="text-secondary mb-0.5 text-[10px] tracking-wider uppercase">Grade</p>
+					<p class="text-secondary text-3xs mb-0.5 tracking-wider uppercase">Grade</p>
 					<GitHubAuditGradeLabel :grade="report.grade" class="text-2xl" />
 				</div>
 			</div>

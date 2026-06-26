@@ -47,7 +47,7 @@
 
 		<template #mainExtra>
 			<div class="flex flex-col gap-2">
-				<span class="text-secondary text-[10px] font-medium tracking-wider uppercase">Configuration</span>
+				<span class="text-secondary text-3xs font-medium tracking-wider uppercase">Configuration</span>
 				<div class="flex flex-wrap gap-2">
 					<Badge type="splitted" bright size="small" color="primary">
 						<template #label>

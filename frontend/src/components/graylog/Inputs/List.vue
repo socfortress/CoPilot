@@ -1,6 +1,10 @@
 <template>
-	<n-spin :show="loading" class="flex flex-col">
-		<div class="header flex items-center justify-end gap-2">
+	<n-spin
+		:show="loading"
+		content-class="box-border flex h-full flex-col"
+		class="box-border h-full max-h-full overflow-hidden"
+	>
+		<div class="box-border flex items-center justify-end gap-2 p-(--n-header-padding) pb-0">
 			<div class="info flex grow gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -34,7 +38,7 @@
 			/>
 		</div>
 		<n-scrollbar class="my-3">
-			<div class="list flex min-h-52 flex-col gap-2">
+			<div class="box-border flex min-h-52 flex-col gap-2 p-(--n-body-padding) pt-0 pb-0">
 				<template v-if="itemsFiltered.length">
 					<InputItem
 						v-for="input of itemsFiltered"
@@ -140,32 +144,3 @@ onBeforeMount(() => {
 	getData("running")
 })
 </script>
-
-<style lang="scss" scoped>
-.n-spin-container {
-	height: 100%;
-	max-height: 100%;
-	overflow: hidden;
-	box-sizing: border-box;
-
-	:deep() {
-		.n-spin-content {
-			height: 100%;
-			box-sizing: border-box;
-			display: flex;
-			flex-direction: column;
-		}
-	}
-}
-
-.header {
-	padding: var(--n-header-padding);
-	box-sizing: border-box;
-	padding-bottom: 0;
-}
-.list {
-	padding: var(--n-body-padding);
-	padding-top: 0;
-	padding-bottom: 0;
-}
-</style>

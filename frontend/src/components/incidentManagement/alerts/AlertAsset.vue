@@ -1,7 +1,7 @@
 <template>
 	<div>
-		<div v-if="badge" class="alert-assets-badge" @click="showDetails = true">
-			<code>
+		<div v-if="badge" class="text-primary cursor-pointer leading-none" @click="showDetails = true">
+			<code class="flex items-center gap-1.75 px-1.25 py-0.5">
 				<span>{{ asset.asset_name }}</span>
 				<Icon :name="ViewIcon" :size="14" />
 			</code>
@@ -274,18 +274,3 @@ function getAlertContext(alertContextId: number) {
 		})
 }
 </script>
-
-<style lang="scss" scoped>
-.alert-assets-badge {
-	color: var(--primary-color);
-	line-height: 1;
-	cursor: pointer;
-
-	code {
-		display: flex;
-		align-items: center;
-		gap: 7px;
-		padding: 2px 5px;
-	}
-}
-</style>

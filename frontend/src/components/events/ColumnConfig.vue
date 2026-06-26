@@ -4,7 +4,7 @@
 		<section class="flex min-w-0 flex-col gap-3">
 			<div class="flex items-start justify-between gap-3">
 				<div>
-					<p class="text-secondary text-[10px] font-medium tracking-widest uppercase">Active columns</p>
+					<p class="text-secondary text-3xs font-medium tracking-widest uppercase">Active columns</p>
 					<p class="text-secondary mt-1 text-xs">Order matches table left-to-right</p>
 				</div>
 				<span class="text-default shrink-0 font-mono text-xs tabular-nums">{{ localColumns.length }}</span>
@@ -29,7 +29,7 @@
 					:key="col.key"
 					class="bg-default hover:bg-hover-005 group flex items-center gap-2 rounded-md py-2 transition-colors"
 				>
-					<span class="text-secondary w-5 shrink-0 text-center font-mono text-[10px] tabular-nums">
+					<span class="text-secondary text-3xs w-5 shrink-0 text-center font-mono tabular-nums">
 						{{ idx + 1 }}
 					</span>
 					<n-input v-model:value="col.label" size="small" placeholder="Header label" />
@@ -72,7 +72,7 @@
 		<!-- Add column from available fields -->
 		<section class="flex min-w-0 flex-col gap-3">
 			<div>
-				<p class="text-secondary text-[10px] font-medium tracking-widest uppercase">Add column</p>
+				<p class="text-secondary text-3xs font-medium tracking-widest uppercase">Add column</p>
 				<p class="text-secondary mt-1 text-xs">Pick a mapped field not already in the table</p>
 			</div>
 
@@ -98,7 +98,7 @@
 					>
 						<div class="flex w-full items-center justify-between gap-3">
 							<span class="text-default min-w-0 truncate font-mono text-xs">{{ field.field }}</span>
-							<span class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">
+							<span class="text-secondary text-3xs shrink-0 tracking-wider uppercase">
 								{{ field.type }}
 							</span>
 						</div>

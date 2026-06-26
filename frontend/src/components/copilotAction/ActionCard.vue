@@ -25,7 +25,7 @@
 
 			<template #mainExtra>
 				<div class="flex flex-col gap-2">
-					<span class="text-secondary text-[10px] font-medium tracking-wider uppercase">Metadata</span>
+					<span class="text-secondary text-3xs font-medium tracking-wider uppercase">Metadata</span>
 					<div class="flex flex-wrap items-center gap-1.5">
 						<Badge v-if="action.category" size="small">
 							<template #value>{{ action.category }}</template>

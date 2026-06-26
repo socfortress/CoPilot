@@ -48,7 +48,7 @@
 											v-for="item of selectedServerDetails.capabilities"
 											:key="item"
 											size="small"
-											class="text-[10px] [&_.n-tag\_\_content]:pb-0.5 [&_.n-tag\_\_content]:leading-0"
+											class="text-3xs [&_.n-tag\_\_content]:pb-0.5 [&_.n-tag\_\_content]:leading-0"
 										>
 											{{ item }}
 										</n-tag>

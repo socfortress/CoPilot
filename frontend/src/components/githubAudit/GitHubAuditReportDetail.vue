@@ -33,7 +33,7 @@
 					class="flex flex-col items-center gap-1 px-3 py-4"
 					:class="stat.bgClass"
 				>
-					<p class="text-secondary text-[10px] tracking-wider uppercase">{{ stat.label }}</p>
+					<p class="text-secondary text-3xs tracking-wider uppercase">{{ stat.label }}</p>
 					<p class="font-mono text-2xl leading-none font-bold tabular-nums" :class="stat.numberClass">
 						{{ report[stat.key] }}
 					</p>

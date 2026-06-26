@@ -1,7 +1,7 @@
 <template>
 	<div v-if="event" class="flex flex-col gap-3">
 		<div class="flex items-center justify-between gap-3">
-			<p class="text-secondary text-[10px] font-medium tracking-widest uppercase">Event fields</p>
+			<p class="text-secondary text-3xs font-medium tracking-widest uppercase">Event fields</p>
 			<span class="text-default font-mono text-xs tabular-nums">{{ sortedFields.length }}</span>
 		</div>
 

@@ -9,7 +9,7 @@ export const MATRIX_RULE_POPOVER = {
 }
 
 export const MATRIX_RULE_TAG_CLASS =
-	"flex cursor-help! items-center px-1! font-mono text-[11px]! [&_.n-tag__content]:flex [&_.n-tag__content]:items-center max-h-5"
+	"flex cursor-help! items-center px-1! font-mono text-2xs! [&_.n-tag__content]:flex [&_.n-tag__content]:items-center max-h-5"
 
 export function coverageClass(count: number): string {
 	if (count === 0) return "cov-empty"

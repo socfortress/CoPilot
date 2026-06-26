@@ -5,7 +5,9 @@
 				<div class="flex items-center gap-3">
 					<n-tooltip trigger="hover">
 						<template #trigger>
-							<div class="priority cursor-help">
+							<div
+								class="bg-hover-005 border-default text-2xs flex size-5 cursor-help items-center justify-center rounded-full border"
+							>
 								{{ event.priority }}
 							</div>
 						</template>
@@ -82,16 +84,3 @@ const { event, highlight } = toRefs(props)
 
 const showDetails = ref(false)
 </script>
-
-<style lang="scss" scoped>
-.priority {
-	background-color: rgba(var(--hover-color-rgb) / 0.05);
-	border: 1px solid var(--border-color);
-	width: 20px;
-	height: 20px;
-	border-radius: 99999px;
-	text-align: center;
-	line-height: 19px;
-	font-size: 11px;
-}
-</style>

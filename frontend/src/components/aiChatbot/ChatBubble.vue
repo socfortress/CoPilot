@@ -43,7 +43,7 @@
 
 			<div v-if="thought && isThoughtVisible">
 				<CollapseKeepAlive :show="!isThoughtCollapsed">
-					<div class="text-secondary bg-secondary mb-2 rounded-md p-2 **:text-[10px]">
+					<div class="text-secondary bg-secondary **:text-3xs mb-2 rounded-md p-2">
 						<Markdown :source="thought" class="animate-fade overflow-hidden" />
 					</div>
 				</CollapseKeepAlive>

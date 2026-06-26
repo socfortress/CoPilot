@@ -3,9 +3,9 @@
 
 	<div v-else class="flex max-w-90 flex-col gap-2">
 		<header class="border-default flex flex-col gap-0.5 border-b pb-2">
-			<span class="text-tertiary text-[10px] font-medium tracking-wider uppercase">Rules</span>
+			<span class="text-tertiary text-3xs font-medium tracking-wider uppercase">Rules</span>
 			<span class="text-default font-mono text-xs leading-none">{{ headerCount }}</span>
-			<span v-if="extraViaSubs" class="text-tertiary font-mono text-[10px]">
+			<span v-if="extraViaSubs" class="text-tertiary text-3xs font-mono">
 				+{{ extraViaSubs }} via sub-techniques
 			</span>
 		</header>
@@ -32,7 +32,7 @@
 							size="tiny"
 							:bordered="false"
 							:type="severityTagType(entryFor(id)!.severity)"
-							class="shrink-0 font-mono text-[10px]! uppercase"
+							class="text-3xs! shrink-0 font-mono uppercase"
 						>
 							{{ entryFor(id)!.severity }}
 						</n-tag>
@@ -42,7 +42,7 @@
 						<span
 							v-for="source in entryFor(id)!.data_sources"
 							:key="source"
-							class="text-tertiary border-default bg-default rounded-sm border px-1.5 py-px font-mono text-[10px] tracking-wide uppercase"
+							class="text-tertiary border-default bg-default text-3xs rounded-sm border px-1.5 py-px font-mono tracking-wide uppercase"
 						>
 							{{ source }}
 						</span>
@@ -51,7 +51,7 @@
 			</li>
 		</ul>
 
-		<p v-if="remainder > 0" class="text-tertiary text-[10px] leading-snug">
+		<p v-if="remainder > 0" class="text-tertiary text-3xs leading-snug">
 			+{{ remainder }} more · click sub-technique cell for full list
 		</p>
 	</div>

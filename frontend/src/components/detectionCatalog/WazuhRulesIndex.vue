@@ -56,7 +56,7 @@
 					<Icon name="carbon:list" :size="13" />
 					<span>All</span>
 					<span
-						class="text-secondary font-mono text-[11px] font-semibold"
+						class="text-secondary text-2xs font-mono font-semibold"
 						:class="{ 'text-primary!': activeChip === 'all' }"
 					>
 						{{ rules.length }}
@@ -74,7 +74,7 @@
 					<Icon name="carbon:flash" :size="13" />
 					<span>Top noisy</span>
 					<span
-						class="text-secondary font-mono text-[11px] font-semibold"
+						class="text-secondary text-2xs font-mono font-semibold"
 						:class="{ 'text-warning!': activeChip === 'noisy' }"
 					>
 						50
@@ -92,7 +92,7 @@
 					<Icon name="carbon:warning" :size="13" />
 					<span>Dead (level ≥7)</span>
 					<span
-						class="text-secondary font-mono text-[11px] font-semibold"
+						class="text-secondary text-2xs font-mono font-semibold"
 						:class="{ 'text-error!': activeChip === 'dead' }"
 					>
 						{{ deadCount }}

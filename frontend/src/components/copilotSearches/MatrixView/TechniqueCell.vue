@@ -15,7 +15,7 @@
 				<n-tag
 					size="small"
 					:bordered="false"
-					class="hover:text-primary! flex max-h-5 cursor-pointer! items-center px-1! font-mono text-[11px]! [&_.n-tag\_\_content]:flex [&_.n-tag\_\_content]:items-center"
+					class="hover:text-primary! text-2xs! flex max-h-5 cursor-pointer! items-center px-1! font-mono [&_.n-tag\_\_content]:flex [&_.n-tag\_\_content]:items-center"
 					@click="emit('open-technique', tactic, tech)"
 				>
 					<Icon name="carbon:view" :size="12" class="mx-0.5" />
