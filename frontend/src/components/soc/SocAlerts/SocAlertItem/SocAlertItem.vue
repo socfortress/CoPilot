@@ -44,7 +44,7 @@
 					<div>
 						<div
 							v-if="showBadgesToggle"
-							class="flex cursor-pointer items-center gap-2 text-sm transition-colors duration-200 hover:text-primary"
+							class="hover:text-primary flex cursor-pointer items-center gap-2 text-sm transition-colors duration-200"
 							@click.stop="showBadges = !showBadges"
 						>
 							{{ showBadges ? "Less info" : "More info" }}

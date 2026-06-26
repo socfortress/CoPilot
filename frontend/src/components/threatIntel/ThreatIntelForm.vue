@@ -15,7 +15,7 @@
 				<div v-if="error" class="px-4 py-2.5">
 					{{ error }}
 				</div>
-				<div v-else class="divide-y divide-border">
+				<div v-else class="divide-border divide-y">
 					<div class="px-4 py-2.5">
 						<div class="text-secondary mb-0.5 font-mono text-xs">type</div>
 						<div>

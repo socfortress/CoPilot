@@ -1,111 +1,329 @@
 <template>
-	<div class="flex w-80! flex-col gap-3 py-1">
-		<div class="px-3">
-			<small class="text-secondary">Filter audit log by:</small>
+	<div class="audit-filters flex flex-wrap gap-3">
+		<div v-for="filter of filters" :key="filter.type">
+			<n-input-group v-if="filter.type === 'action'">
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
+				<n-select
+					v-model:value="filter.value"
+					size="small"
+					:options="actionOptions"
+					placeholder="Select..."
+					filterable
+					class="min-w-48!"
+					:loading="loadingVocabularies || !actionOptions.length"
+				/>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
+			<n-input-group v-if="filter.type === 'result'">
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
+				<n-select
+					v-model:value="filter.value"
+					size="small"
+					:options="resultOptions"
+					placeholder="Select..."
+					class="w-32!"
+					:loading="loadingVocabularies || !resultOptions.length"
+				/>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
+			<n-input-group
+				v-if="filter.type === 'actor_username' && (typeof filter.value === 'string' || filter.value === null)"
+			>
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
+				<n-input v-model:value="filter.value" autosize placeholder="Input..." size="small" class="min-w-40!" />
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
+			<n-input-group
+				v-if="filter.type === 'entity_type' && (typeof filter.value === 'string' || filter.value === null)"
+			>
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
+				<n-input
+					v-model:value="filter.value"
+					autosize
+					placeholder="e.g. agent, user"
+					size="small"
+					class="min-w-40!"
+				/>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
+			<n-input-group
+				v-if="filter.type === 'customer_code' && (typeof filter.value === 'string' || filter.value === null)"
+			>
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
+				<n-input v-model:value="filter.value" autosize placeholder="Input..." size="small" class="min-w-40!" />
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
+			<n-input-group
+				v-if="filter.type === 'search' && (typeof filter.value === 'string' || filter.value === null)"
+			>
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
+				<n-input
+					v-model:value="filter.value"
+					autosize
+					placeholder="Details / username / entity"
+					size="small"
+					class="min-w-48!"
+				/>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
+			<n-input-group v-if="filter.type === 'dateRange'">
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
+				<n-date-picker
+					:value="dateRangeValue(filter)"
+					type="datetimerange"
+					size="small"
+					clearable
+					class="min-w-72!"
+					@update:value="setDateRangeValue(filter, $event)"
+				/>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
 		</div>
 
-		<div class="flex flex-col gap-2 px-3">
-			<n-select
-				v-model:value="local.action"
-				:options="actionOptions"
-				placeholder="Action"
-				size="small"
-				clearable
-				filterable
-			/>
-			<n-select
-				v-model:value="local.result"
-				:options="resultOptions"
-				placeholder="Result"
-				size="small"
-				clearable
-			/>
-			<n-input v-model:value="local.actor_username" placeholder="Actor username" size="small" clearable />
-			<n-input
-				v-model:value="local.entity_type"
-				placeholder="Entity type (e.g. agent, user)"
-				size="small"
-				clearable
-			/>
-			<n-input v-model:value="local.customer_code" placeholder="Customer code" size="small" clearable />
-			<n-input
-				v-model:value="local.search"
-				placeholder="Search (details / username / entity)"
-				size="small"
-				clearable
-			/>
-			<n-date-picker
-				v-model:value="local.dateRange"
-				type="datetimerange"
-				size="small"
-				clearable
-				placeholder="Date range"
-			/>
-		</div>
+		<n-dropdown
+			v-if="availableFilters.length"
+			placement="bottom-start"
+			trigger="click"
+			:options="availableFilters"
+			@select="addFilter"
+		>
+			<n-button size="small" dashed @click="load()">
+				<template #icon>
+					<Icon :name="AddIcon" />
+				</template>
+				<span v-if="!filters.length">Add filter</span>
+			</n-button>
+		</n-dropdown>
 
-		<div class="flex justify-between gap-2 px-3">
-			<n-button size="small" quaternary @click="reset()">Reset</n-button>
-			<div class="flex gap-2">
-				<n-button size="small" secondary @click="close()">Close</n-button>
-				<n-button size="small" type="primary" secondary @click="submit()">Apply</n-button>
-			</div>
-		</div>
+		<n-button v-if="filters.length && isDirty" size="small" secondary type="primary" @click="submit()">
+			Submit
+		</n-button>
+
+		<n-button v-if="filters.length" size="small" quaternary @click="reset()">Reset</n-button>
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { AuditUiFilters } from "@/types/audit"
+import type { AuditFilterTypes, AuditListFilter, AuditListFilterValue } from "./types"
+import type { ApiError } from "@/types/common"
 import _cloneDeep from "lodash/cloneDeep"
-import { NButton, NDatePicker, NInput, NSelect } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import _isEqual from "lodash/isEqual"
+import { NButton, NDatePicker, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
+import { useRoute, useRouter } from "vue-router"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
-const props = defineProps<{ actions: string[]; results: string[] }>()
+const { useQueryString, preset } = defineProps<{ useQueryString?: boolean; preset?: AuditListFilter[] }>()
 
 const emit = defineEmits<{
-	(e: "close"): void
-	(e: "submit"): void
+	(e: "submit", value: AuditListFilter[]): void
 }>()
 
-const filters = defineModel<AuditUiFilters>("filters", { required: true })
+const AddIcon = "carbon:add"
+const DelIcon = "carbon:delete"
 
-function emptyFilters(): AuditUiFilters {
-	return {
-		action: null,
-		result: null,
-		entity_type: null,
-		actor_username: null,
-		customer_code: null,
-		search: null,
-		dateRange: null
-	}
+const router = useRouter()
+const route = useRoute()
+const message = useMessage()
+
+const loadingVocabularies = ref(false)
+const actionsList = ref<string[]>([])
+const resultsList = ref<string[]>([])
+
+const actionOptions = computed(() => actionsList.value.map(a => ({ label: a, value: a })))
+const resultOptions = computed(() => resultsList.value.map(r => ({ label: r, value: r })))
+
+const typeOptions: { label: string; value: AuditFilterTypes }[] = [
+	{ label: "Action", value: "action" },
+	{ label: "Result", value: "result" },
+	{ label: "Actor", value: "actor_username" },
+	{ label: "Entity type", value: "entity_type" },
+	{ label: "Customer", value: "customer_code" },
+	{ label: "Search", value: "search" },
+	{ label: "Date range", value: "dateRange" }
+]
+
+const filters = ref<AuditListFilter[]>([])
+const lastFilters = ref<AuditListFilter[]>([])
+
+const availableFilters = computed(() =>
+	typeOptions
+		.filter(o => !filters.value.map(f => f.type).includes(o.value))
+		.map(t => ({ key: t.value, label: t.label }))
+)
+
+const isDirty = computed(() => !_isEqual(filters.value, lastFilters.value))
+
+function getFilterLabel(type: AuditFilterTypes): string {
+	return typeOptions.find(o => o.value === type)?.label || type
 }
 
-const local = ref<AuditUiFilters>(emptyFilters())
+function dateRangeValue(filter: AuditListFilter): [number, number] | null {
+	if (filter.type !== "dateRange" || !Array.isArray(filter.value)) return null
+	return filter.value
+}
 
-const actionOptions = props.actions.map(a => ({ label: a, value: a }))
-const resultOptions = props.results.map(r => ({ label: r, value: r }))
+function setDateRangeValue(filter: AuditListFilter, value: [number, number] | null) {
+	filter.value = value
+}
 
-function close() {
-	emit("close")
+function isKnownFilterType(type: string): type is AuditFilterTypes {
+	return typeOptions.some(o => o.value === type)
+}
+
+function parseQueryValue(type: AuditFilterTypes, raw: string | string[]): AuditListFilterValue {
+	if (type === "dateRange") {
+		const value = Array.isArray(raw) ? raw[0] : raw
+		if (!value) return null
+
+		const parts = value.split(",").map(Number)
+		if (parts.length === 2 && parts.every(n => !Number.isNaN(n))) {
+			return parts as [number, number]
+		}
+		return null
+	}
+
+	return (Array.isArray(raw) ? raw[0] : raw) || null
+}
+
+function addFilter(key: AuditFilterTypes) {
+	filters.value.push({ type: key, value: null })
+}
+
+function delFilter(key: AuditFilterTypes) {
+	filters.value = filters.value.filter(o => o.type !== key)
+	submit()
+}
+
+function setFilter(newFilters: AuditListFilter[]) {
+	for (const newFilter of newFilters) {
+		const filterIndex = filters.value.findIndex(o => o.type === newFilter.type)
+
+		if (filterIndex !== -1) {
+			if (newFilter.value && filters.value[filterIndex]) {
+				filters.value[filterIndex].value = newFilter.value
+			} else {
+				delFilter(newFilter.type)
+			}
+		} else if (newFilter.value) {
+			filters.value.push(newFilter)
+		}
+	}
+	submit()
 }
 
 function reset() {
-	local.value = emptyFilters()
-	filters.value = _cloneDeep(local.value)
-	emit("submit")
+	filters.value = []
+	submit()
 }
 
 function submit() {
-	// Normalise empty strings to null so they don't become no-op query params.
-	const normalised: AuditUiFilters = { ...local.value }
-	for (const key of ["action", "result", "entity_type", "actor_username", "customer_code", "search"] as const) {
-		if (!normalised[key]) normalised[key] = null
+	lastFilters.value = _cloneDeep(filters.value)
+	emit("submit", lastFilters.value)
+	setQueryString()
+}
+
+function setQueryString() {
+	if (!useQueryString) return
+
+	const query = filters.value
+		.filter(filter => filter.value)
+		.reduce<Record<string, string>>((acc, filter) => {
+			if (filter.type === "dateRange" && Array.isArray(filter.value)) {
+				acc[filter.type] = filter.value.join(",")
+			} else {
+				acc[filter.type] = filter.value as string
+			}
+			return acc
+		}, {})
+
+	router.replace({ query })
+}
+
+function getQueryString() {
+	if (!useQueryString) return
+
+	filters.value = Object.entries(route.query)
+		.filter((entry): entry is [AuditFilterTypes, string | string[]] => isKnownFilterType(entry[0]) && !!entry[1])
+		.map(([type, value]) => ({
+			type,
+			value: parseQueryValue(type, value)
+		}))
+		.filter(filter => filter.value !== null)
+}
+
+function getVocabularies() {
+	loadingVocabularies.value = true
+
+	Api.audit
+		.getAuditVocabularies()
+		.then(res => {
+			if (res.data.success) {
+				actionsList.value = res.data.actions || []
+				resultsList.value = res.data.results || []
+			}
+		})
+		.catch(err => {
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to load audit filter options")
+		})
+		.finally(() => {
+			loadingVocabularies.value = false
+		})
+}
+
+function load() {
+	if (!actionsList.value.length || !resultsList.value.length) {
+		getVocabularies()
 	}
-	filters.value = _cloneDeep(normalised)
-	emit("submit")
 }
 
 onBeforeMount(() => {
-	local.value = _cloneDeep(filters.value) ?? emptyFilters()
+	if (preset?.length) {
+		filters.value = preset
+	} else {
+		getQueryString()
+	}
+
+	if ((useQueryString || preset?.length) && filters.value.length) {
+		submit()
+	}
 })
+
+defineExpose({ setFilter })
 </script>

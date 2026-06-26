@@ -40,7 +40,7 @@
 							class="group hover:[&_td]:bg-primary/5"
 							:class="
 								highlight === user.id.toString()
-									? '[&_td]:border-y [&_td]:border-primary/30 [&_td]:bg-primary/5'
+									? '[&_td]:border-primary/30 [&_td]:bg-primary/5 [&_td]:border-y'
 									: ''
 							"
 						>

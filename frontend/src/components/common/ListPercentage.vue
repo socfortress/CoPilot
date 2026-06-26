@@ -3,10 +3,10 @@
 		<n-empty v-if="!list.length" description="No items found" class="h-48 justify-center" />
 
 		<div class="text-secondary flex items-center justify-between gap-4 font-mono text-sm">
-			<div class="basis-2/3 truncate border-b border-default pb-1">
+			<div class="border-default basis-2/3 truncate border-b pb-1">
 				{{ labelKey }}
 			</div>
-			<div class="grow border-b border-default pb-1">
+			<div class="border-default grow border-b pb-1">
 				{{ percentageKey }}
 			</div>
 		</div>

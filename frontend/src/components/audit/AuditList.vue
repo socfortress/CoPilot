@@ -1,59 +1,60 @@
 <template>
-	<div class="flex flex-col gap-2">
-		<div ref="header" class="flex items-center justify-end gap-2">
-			<div class="info flex grow gap-2">
-				<n-popover overlap placement="bottom-start">
-					<template #trigger>
-						<div class="bg-default rounded-lg">
-							<n-button size="small" class="cursor-help!">
-								<template #icon>
-									<Icon :name="InfoIcon" />
-								</template>
-							</n-button>
+	<div class="audit-list @container">
+		<div ref="header" class="flex items-center justify-between gap-2">
+			<div class="flex grow items-center gap-2">
+				<div class="flex grow gap-2 @6xl:hidden!">
+					<n-popover overlap placement="left">
+						<template #trigger>
+							<div class="bg-default rounded-lg">
+								<n-button size="small" class="cursor-help!">
+									<template #icon>
+										<Icon :name="InfoIcon" />
+									</template>
+								</n-button>
+							</div>
+						</template>
+						<div class="flex flex-col gap-2">
+							<div class="box">
+								Total matching :
+								<code>{{ total }}</code>
+							</div>
 						</div>
-					</template>
-					<div class="flex flex-col gap-2">
-						<div class="box">
-							Total matching :
-							<code>{{ total }}</code>
+					</n-popover>
+				</div>
+				<div class="hidden grow items-center gap-1 text-sm @6xl:flex">
+					<n-button quaternary size="small">
+						<div class="flex items-center gap-2">
+							<span>Total matching</span>
+							<code class="py-1">{{ total }}</code>
 						</div>
-					</div>
-				</n-popover>
+					</n-button>
+				</div>
 			</div>
 
-			<n-pagination
-				v-model:page="currentPage"
-				v-model:page-size="pageSize"
-				:page-slot
-				:show-size-picker
-				:page-sizes
-				:item-count="total"
-				:simple="simpleMode"
-				@update:page="getData()"
-				@update:page-size="onPageSizeChange()"
-			/>
-
-			<n-popover :show="showFilters" trigger="manual" placement="bottom-end" class="px-0!" to="body">
-				<template #trigger>
-					<div class="bg-default rounded-lg">
-						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
-							<n-button size="small" @click="showFilters = true">
-								<template #icon>
-									<Icon :name="FilterIcon" />
-								</template>
-							</n-button>
-						</n-badge>
-					</div>
-				</template>
-				<AuditFilters
-					v-model:filters="filters"
-					:actions
-					:results
-					@submit="applyFilters()"
-					@close="showFilters = false"
+			<div class="flex items-center justify-end gap-2 whitespace-nowrap">
+				<n-pagination
+					v-model:page="currentPage"
+					v-model:page-size="pageSize"
+					:page-slot
+					:show-size-picker
+					:page-sizes
+					:item-count="total"
+					:simple="simpleMode"
 				/>
-			</n-popover>
+
+				<n-badge v-if="showFilters" :show="filtered" dot type="success" :offset="[-4, 0]">
+					<n-button size="small" secondary @click="showFiltersView = !showFiltersView">
+						<template #icon>
+							<Icon :name="FilterIcon" />
+						</template>
+					</n-button>
+				</n-badge>
+			</div>
 		</div>
+
+		<CollapseKeepAlive v-if="showFilters" :show="showFiltersView" embedded arrow="top-right">
+			<AuditFilters :use-query-string="!preset?.length" :preset class="p-3" @submit="applyFilters" />
+		</CollapseKeepAlive>
 
 		<n-spin :show="loading">
 			<div class="my-3 flex min-h-52 flex-col gap-2">
@@ -78,33 +79,39 @@
 				:page-size
 				:item-count="total"
 				:page-slot="6"
-				@update:page="getData()"
 			/>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { AuditLogEntry, AuditLogFilters, AuditUiFilters } from "@/types/audit"
+import type { AuditListFilter } from "./types"
+import type { AuditLogEntry, AuditLogFilters } from "@/types/audit"
 import type { ApiError } from "@/types/common"
-import { useResizeObserver } from "@vueuse/core"
+import { useResizeObserver, useStorage } from "@vueuse/core"
 import { NBadge, NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import AuditFilters from "./AuditFilters.vue"
 import AuditItem from "./AuditItem.vue"
+
+const { preset, showFilters = true } = defineProps<{
+	preset?: AuditListFilter[]
+	showFilters?: boolean
+}>()
+
+const FilterIcon = "carbon:filter-edit"
+const InfoIcon = "carbon:information"
 
 const message = useMessage()
 
 const loading = ref(false)
 const list = ref<AuditLogEntry[]>([])
 const total = ref(0)
-const showFilters = ref(false)
-
-const actions = ref<string[]>([])
-const results = ref<string[]>([])
+const showFiltersView = useStorage<boolean>("audit-list-filters-view-state", false, localStorage)
 
 const pageSize = ref(25)
 const currentPage = ref(1)
@@ -114,42 +121,47 @@ const pageSizes = [10, 25, 50, 100]
 const header = ref()
 const pageSlot = ref(8)
 
-const FilterIcon = "carbon:filter-edit"
-const InfoIcon = "carbon:information"
+const filters = ref<AuditListFilter[]>([])
 
-const filters = ref<AuditUiFilters>({
-	action: null,
-	result: null,
-	entity_type: null,
-	actor_username: null,
-	customer_code: null,
-	search: null,
-	dateRange: null
-})
-
-const filtered = computed(() => {
-	const f = filters.value
-	return Boolean(
-		f.action || f.result || f.entity_type || f.actor_username || f.customer_code || f.search || f.dateRange
-	)
-})
+const filtered = computed(() => !!filters.value.length)
 
 function buildApiFilters(): AuditLogFilters {
-	const f = filters.value
 	const api: AuditLogFilters = {
 		skip: (currentPage.value - 1) * pageSize.value,
 		limit: pageSize.value
 	}
-	if (f.action) api.action = f.action
-	if (f.result) api.result = f.result
-	if (f.entity_type) api.entity_type = f.entity_type
-	if (f.actor_username) api.actor_username = f.actor_username
-	if (f.customer_code) api.customer_code = f.customer_code
-	if (f.search) api.search = f.search
-	if (f.dateRange) {
-		api.start_time = new Date(f.dateRange[0]).toISOString()
-		api.end_time = new Date(f.dateRange[1]).toISOString()
+
+	for (const filter of filters.value) {
+		if (!filter.value) continue
+
+		switch (filter.type) {
+			case "action":
+				api.action = filter.value as string
+				break
+			case "result":
+				api.result = filter.value as string
+				break
+			case "actor_username":
+				api.actor_username = filter.value as string
+				break
+			case "entity_type":
+				api.entity_type = filter.value as string
+				break
+			case "customer_code":
+				api.customer_code = filter.value as string
+				break
+			case "search":
+				api.search = filter.value as string
+				break
+			case "dateRange": {
+				const range = filter.value as [number, number]
+				api.start_time = new Date(range[0]).toISOString()
+				api.end_time = new Date(range[1]).toISOString()
+				break
+			}
+		}
 	}
+
 	return api
 }
 
@@ -175,30 +187,23 @@ function getData() {
 		})
 }
 
-function applyFilters() {
-	showFilters.value = false
+function applyFilters(newFilters: AuditListFilter[]) {
+	filters.value = newFilters
 	currentPage.value = 1
 	getData()
 }
 
-function onPageSizeChange() {
-	currentPage.value = 1
+watch(currentPage, () => {
 	getData()
-}
+})
 
-function getVocabularies() {
-	Api.audit
-		.getAuditVocabularies()
-		.then(res => {
-			if (res.data.success) {
-				actions.value = res.data.actions || []
-				results.value = res.data.results || []
-			}
-		})
-		.catch(() => {
-			// Non-fatal: filter dropdowns simply stay empty.
-		})
-}
+watch(pageSize, () => {
+	if (currentPage.value === 1) {
+		getData()
+	} else {
+		currentPage.value = 1
+	}
+})
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
@@ -211,7 +216,10 @@ useResizeObserver(header, entries => {
 })
 
 onBeforeMount(() => {
-	getVocabularies()
+	if (!showFilters && preset?.length) {
+		filters.value = preset
+	}
+
 	getData()
 })
 </script>
