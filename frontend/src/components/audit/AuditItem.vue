@@ -3,34 +3,50 @@
 		size="small"
 		embedded
 		main-box-class="gap-2"
-		header-box-class="flex-nowrap! items-start text-default!"
+		header-box-class="font-display! text-default!"
 		:status="isFailure ? 'error' : undefined"
 	>
-		<template #headerMain>
-			<div class="flex flex-wrap items-center gap-2">
-				<span class="text-primary font-mono text-sm leading-snug font-semibold">{{ entry.action }}</span>
-				<Badge v-if="entityLabel" type="splitted" bright size="small">
-					<template #label>Entity</template>
-					<template #value>{{ entityLabel }}</template>
-				</Badge>
-			</div>
-		</template>
+		<template #header>
+			<div class="flex flex-col gap-1.5">
+				<div class="flex items-start justify-between gap-4">
+					<div class="flex min-w-0 items-center gap-2">
+						<span class="text-default truncate text-sm leading-snug font-semibold">
+							{{ entry.action }}
+						</span>
+					</div>
+					<time
+						:datetime="entry.timestamp"
+						class="text-secondary shrink-0 font-mono text-xs leading-snug tabular-nums"
+						:title="formattedTimestamp"
+					>
+						{{ formattedTimestamp }}
+					</time>
+				</div>
 
-		<template #headerExtra>
-			<Badge type="splitted" bright size="small">
-				<template #label>
-					<Icon :name="TimeIcon" :size="12" />
-					Time
-				</template>
-				<template #value>{{ formattedTimestamp }}</template>
-			</Badge>
+				<dl v-if="hasEntity" class="flex min-w-0 items-baseline gap-2 text-xs">
+					<dt class="text-secondary shrink-0 tracking-wider uppercase">Entity</dt>
+					<dd class="text-default min-w-0 truncate font-mono">
+						<span v-if="entry.entity_type">{{ entry.entity_type }}</span>
+						<template v-if="entry.entity_type && entry.entity_id">
+							<span class="text-secondary mx-1">·</span>
+						</template>
+						<span v-if="entry.entity_id" class="text-primary font-medium">{{ entry.entity_id }}</span>
+					</dd>
+				</dl>
+			</div>
 		</template>
 
 		<template #default>
 			<div class="flex flex-col gap-2">
-				<p v-if="entry.details" class="text-secondary text-sm leading-relaxed">
-					{{ entry.details }}
-				</p>
+				<div
+					v-if="entry.details"
+					class="border-default bg-secondary flex flex-col gap-1 rounded-md border px-2.5 py-2"
+				>
+					<span class="text-secondary text-3xs tracking-wider uppercase">Details</span>
+					<span class="mt-0.5 block font-mono text-xs leading-relaxed wrap-break-word">
+						{{ entry.details }}
+					</span>
+				</div>
 
 				<div v-if="showValueDiff" class="flex flex-col gap-1.5">
 					<div
@@ -105,16 +121,12 @@ const { entry } = defineProps<{ entry: AuditLogEntry }>()
 const UserIcon = "carbon:user"
 const OkIcon = "carbon:checkmark-filled"
 const FailIcon = "carbon:warning-filled"
-const TimeIcon = "carbon:time"
 
 const dFormats = useSettingsStore().dateFormat
 
 const isFailure = computed(() => entry.result?.toLowerCase() === "failure")
 const actorLabel = computed(() => entry.actor_username || (entry.actor_user_id ? `#${entry.actor_user_id}` : ""))
-const entityLabel = computed(() => {
-	if (!entry.entity_type) return ""
-	return entry.entity_id ? `${entry.entity_type}: ${entry.entity_id}` : entry.entity_type
-})
+const hasEntity = computed(() => Boolean(entry.entity_type || entry.entity_id))
 const showValueDiff = computed(() => Boolean(entry.old_value || entry.new_value))
 const formattedTimestamp = computed(() => String(formatDate(entry.timestamp, dFormats.datetime, { tz: true })))
 </script>
