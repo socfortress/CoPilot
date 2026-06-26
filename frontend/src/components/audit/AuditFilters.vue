@@ -21,9 +21,19 @@
 				clearable
 			/>
 			<n-input v-model:value="local.actor_username" placeholder="Actor username" size="small" clearable />
-			<n-input v-model:value="local.entity_type" placeholder="Entity type (e.g. agent, user)" size="small" clearable />
+			<n-input
+				v-model:value="local.entity_type"
+				placeholder="Entity type (e.g. agent, user)"
+				size="small"
+				clearable
+			/>
 			<n-input v-model:value="local.customer_code" placeholder="Customer code" size="small" clearable />
-			<n-input v-model:value="local.search" placeholder="Search (details / username / entity)" size="small" clearable />
+			<n-input
+				v-model:value="local.search"
+				placeholder="Search (details / username / entity)"
+				size="small"
+				clearable
+			/>
 			<n-date-picker
 				v-model:value="local.dateRange"
 				type="datetimerange"
@@ -44,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AuditUiFilters } from "@/types/audit.d"
+import type { AuditUiFilters } from "@/types/audit"
 import _cloneDeep from "lodash/cloneDeep"
 import { NButton, NDatePicker, NInput, NSelect } from "naive-ui"
 import { onBeforeMount, ref } from "vue"

@@ -1,6 +1,6 @@
 <template>
-	<div class="audit-list">
-		<div ref="header" class="header flex items-center justify-end gap-2">
+	<div class="flex flex-col gap-2">
+		<div ref="header" class="flex items-center justify-end gap-2">
 			<div class="info flex grow gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AuditLogEntry, AuditLogFilters, AuditUiFilters } from "@/types/audit.d"
+import type { AuditLogEntry, AuditLogFilters, AuditUiFilters } from "@/types/audit"
 import type { ApiError } from "@/types/common"
 import { useResizeObserver } from "@vueuse/core"
 import { NBadge, NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
