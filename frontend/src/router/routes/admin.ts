@@ -9,6 +9,12 @@ export const adminRoutes: RouteRecordRaw[] = [
 		meta: { title: "Customers", auth: true, roles: RouteRole.All }
 	},
 	{
+		path: "/audit",
+		name: "Audit",
+		component: () => import("@/views/Audit.vue"),
+		meta: { title: "Audit", auth: true, roles: RouteRole.All }
+	},
+	{
 		path: "/logs",
 		name: "Logs",
 		component: () => import("@/views/Logs.vue"),
