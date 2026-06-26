@@ -33,11 +33,11 @@
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { Customer } from "@/types/customers.d"
+import type { Customer } from "@/types/customers"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
@@ -51,12 +51,6 @@ const props = defineProps<{
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
 	(e: "submitted", value: Customer): void
-	(
-		e: "mounted",
-		value: {
-			reset: () => void
-		}
-	): void
 }>()
 
 const { customer, resetOnSubmit, lockCode } = toRefs(props)
@@ -216,9 +210,11 @@ function reset() {
 function submit() {
 	loading.value = true
 
-	const method = customer.value?.customer_code ? "updateCustomer" : "createCustomer"
+	const method = customer.value?.customer_code
+		? Api.customers.updateCustomer(form.value, customer.value?.customer_code)
+		: Api.customers.createCustomer(form.value)
 
-	Api.customers[method](form.value, customer.value?.customer_code)
+	method
 		.then(res => {
 			if (res.data.success) {
 				emit("submitted", res.data.customer)
@@ -257,9 +253,7 @@ onBeforeMount(() => {
 	}
 })
 
-onMounted(() => {
-	emit("mounted", {
-		reset
-	})
+defineExpose({
+	reset
 })
 </script>

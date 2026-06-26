@@ -13,7 +13,7 @@
 
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
-import type { AiAnalystReviewStats, ReviewStatsTemplate } from "@/types/aiAnalyst.d"
+import type { AiAnalystReviewStats, ReviewStatsTemplate } from "@/types/ai-analyst"
 import { NCard, NDataTable, NEmpty } from "naive-ui"
 import { computed, toRefs } from "vue"
 

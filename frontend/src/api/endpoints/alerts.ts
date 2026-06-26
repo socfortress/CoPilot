@@ -1,6 +1,6 @@
-import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost, AlertsSummary } from "@/types/alerts.d"
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
+import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost, AlertsSummary } from "@/types/alerts"
+import type { FlaskBaseResponse } from "@/types/flask"
+import { HttpClient } from "../http-client"
 
 export type AlertsQueryTimeRange = `${number}${"h" | "d" | "w"}`
 

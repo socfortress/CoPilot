@@ -157,13 +157,13 @@ import type { Ref } from "vue"
 import type { AlertsListFilter } from "./types.d"
 import type { AlertsFilterTypes, AlertsListFilterValue } from "@/api/endpoints/incidentManagement/alerts"
 import type { ApiError } from "@/types/common"
-import type { Customer } from "@/types/customers.d"
-import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
-import type { SourceName } from "@/types/incidentManagement/sources.d"
+import type { Customer } from "@/types/customers"
+import type { AlertStatus } from "@/types/incidentManagement/alerts"
+import type { SourceName } from "@/types/incidentManagement/sources"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
 import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
-import { computed, inject, onBeforeMount, onMounted, ref } from "vue"
+import { computed, inject, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -173,12 +173,6 @@ const { useQueryString, preset } = defineProps<{ useQueryString?: boolean; prese
 
 const emit = defineEmits<{
 	(e: "submit", value: AlertsListFilter[]): void
-	(
-		e: "mounted",
-		value: {
-			setFilter: (payload: AlertsListFilter[]) => void
-		}
-	): void
 }>()
 
 const AddIcon = "carbon:add"
@@ -374,9 +368,5 @@ onBeforeMount(() => {
 	}
 })
 
-onMounted(() => {
-	emit("mounted", {
-		setFilter
-	})
-})
+defineExpose({ setFilter })
 </script>

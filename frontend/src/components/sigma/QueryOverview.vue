@@ -127,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SigmaQuery } from "@/types/sigma.d"
+import type { SigmaQuery } from "@/types/sigma"
 import { NButton, NSpin } from "naive-ui"
 import { ref, toRefs } from "vue"
 import CardKV from "@/components/common/cards/CardKV.vue"

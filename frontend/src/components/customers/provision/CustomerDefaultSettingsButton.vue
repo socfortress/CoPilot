@@ -15,7 +15,7 @@
 		:bordered="false"
 		segmented
 	>
-		<CustomerDefaultSettingsForm v-model:loading="loading" @mounted="settingsFormCTX = $event" />
+		<CustomerDefaultSettingsForm ref="settingsFormRef" v-model:loading="loading" />
 	</n-modal>
 </template>
 
@@ -26,13 +26,13 @@ import Icon from "@/components/common/Icon.vue"
 import CustomerDefaultSettingsForm from "./CustomerDefaultSettingsForm.vue"
 
 const SettingsIcon = "carbon:settings-edit"
-const settingsFormCTX = ref<{ load: () => void } | null>(null)
+const settingsFormRef = ref<{ load: () => void } | null>(null)
 const showForm = ref(false)
 const loading = ref(false)
 
 watch(showForm, val => {
 	if (val) {
-		settingsFormCTX.value?.load()
+		settingsFormRef.value?.load()
 	}
 })
 </script>

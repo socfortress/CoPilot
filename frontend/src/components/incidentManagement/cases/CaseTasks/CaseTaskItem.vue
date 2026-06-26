@@ -112,7 +112,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { CaseTask, CaseTaskStatus } from "@/types/incidentManagement/caseTemplates.d"
+import type { CaseTask, CaseTaskStatus } from "@/types/incidentManagement/case-templates"
 import { useDebounceFn } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NInput, NSelect, NTag, useDialog, useMessage } from "naive-ui"

@@ -61,8 +61,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Alert } from "@/types/incidentManagement/alerts.d"
-import type { CaseTask } from "@/types/incidentManagement/caseTemplates.d"
+import type { Alert } from "@/types/incidentManagement/alerts"
+import type { CaseTask } from "@/types/incidentManagement/case-templates"
 import { NButton, NModal } from "naive-ui"
 import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"

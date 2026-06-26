@@ -165,9 +165,9 @@ import type { PatchTuesdayFilterType, PatchTuesdayListFilter } from "./types"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
 import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, NSwitch, useMessage } from "naive-ui"
-import { computed, onMounted, ref } from "vue"
+import { computed, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
-import { PriorityLevel } from "@/types/patchTuesday.d"
+import { PriorityLevel } from "@/types/patch-tuesday"
 
 const props = defineProps<{
 	cycles: string[]
@@ -177,12 +177,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	(e: "submit", value: PatchTuesdayListFilter[]): void
-	(
-		e: "mounted",
-		value: {
-			setFilter: (payload: PatchTuesdayListFilter[]) => void
-		}
-	): void
 }>()
 
 const SearchIcon = "carbon:search"
@@ -306,9 +300,5 @@ function submit() {
 	emit("submit", lastFilters.value)
 }
 
-onMounted(() => {
-	emit("mounted", {
-		setFilter
-	})
-})
+defineExpose({ setFilter })
 </script>

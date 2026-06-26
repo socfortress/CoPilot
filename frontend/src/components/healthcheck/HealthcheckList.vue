@@ -119,14 +119,14 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { InfluxDBAlert, InfluxDBAlertResponse } from "@/types/healthchecks.d"
+import type { InfluxDBAlert, InfluxDBAlertResponse } from "@/types/healthchecks"
 import { useResizeObserver } from "@vueuse/core"
 import _orderBy from "lodash/orderBy"
 import { NBadge, NButton, NCheckbox, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { InfluxDBAlertSeverity } from "@/types/healthchecks.d"
+import { InfluxDBAlertSeverity } from "@/types/healthchecks"
 import { getApiErrorMessage } from "@/utils"
 import HealthcheckItem from "./HealthcheckItem.vue"
 

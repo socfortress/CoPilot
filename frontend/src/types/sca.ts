@@ -1,0 +1,246 @@
+export interface AgentScaOverviewItem {
+	agent_id: string
+	agent_name: string
+	customer_code?: string | null
+	policy_id: string
+	policy_name: string
+	description: string
+	total_checks: number
+	pass: number
+	fail: number
+	invalid: number
+	score: number
+	start_scan: string
+	end_scan: string
+	references?: string | null
+	hash_file?: string | null
+}
+
+export interface ScaOverviewResponse {
+	sca_results: AgentScaOverviewItem[]
+	total_count: number
+	total_agents: number
+	total_policies: number
+	average_score: number
+	total_checks_all_agents: number
+	total_passes_all_agents: number
+	total_fails_all_agents: number
+	total_invalid_all_agents: number
+	page: number
+	page_size: number
+	total_pages: number
+	has_next: boolean
+	has_previous: boolean
+	filters_applied: Record<string, string | number | boolean>
+}
+
+export interface ScaOverviewQuery {
+	customer_code?: string
+	agent_name?: string
+	policy_id?: string
+	policy_name?: string
+	min_score?: number
+	max_score?: number
+	page?: number
+	page_size?: number
+}
+
+export interface ScaStatsResponse {
+	total_agents_with_sca: number
+	total_policies: number
+	average_score_across_all: number
+	total_checks_all_agents: number
+	total_passes_all_agents: number
+	total_fails_all_agents: number
+	total_invalid_all_agents: number
+	by_customer: Record<
+		string,
+		{
+			total_agents: number
+			total_policies: number
+			average_score: number
+			total_checks: number
+			total_passes: number
+			total_fails: number
+			total_invalid: number
+		}
+	>
+}
+
+export interface SCAReport {
+	id: number
+	report_name: string
+	customer_code: string
+	file_name: string
+	file_size: number
+	generated_at: string
+	generated_by: number
+	total_policies: number
+	total_checks: number
+	passed_count: number
+	failed_count: number
+	invalid_count: number
+	filters_applied: Record<string, string | number | boolean>
+	status: "processing" | "completed" | "failed"
+	error_message?: string | null
+	download_url: string
+}
+
+export interface SCAReportGenerateRequest {
+	customer_code?: string | null
+	report_name?: string
+	agent_name?: string
+	policy_id?: string
+	min_score?: number
+	max_score?: number
+}
+
+export interface SCAReportGenerateResponse {
+	report?: SCAReport
+	error?: string
+}
+
+export interface SCAReportListResponse {
+	reports: SCAReport[]
+	total_count: number
+}
+
+export enum ScaComplianceLevel {
+	Excellent = "Excellent", // 90-100%
+	Good = "Good", // 80-89%
+	Average = "Average", // 70-79%
+	Poor = "Poor", // 60-69%
+	Critical = "Critical" // <60%
+}
+
+// Streaming event types
+export interface ScaStreamStartEvent {
+	total_agents: number
+	message: string
+}
+
+/** Policy row nested in an `agent_result` SSE event (no agent fields; uses *_count keys from the stream). */
+export interface ScaStreamAgentPolicy {
+	policy_id: string
+	policy_name: string
+	description: string
+	total_checks: number
+	pass_count: number
+	fail_count: number
+	invalid_count: number
+	score: number
+	start_scan: string
+	end_scan: string
+	references?: string | null
+	hash_file?: string | null
+}
+
+export interface ScaStreamAgentResult {
+	agent_id: string
+	agent_name: string
+	customer_code: string | null
+	policy_count: number
+	policies: ScaStreamAgentPolicy[]
+}
+
+export interface ScaStreamAgentEmpty {
+	agent_id: string
+	agent_name: string
+	message: string
+}
+
+export interface ScaStreamProgress {
+	processed: number
+	total: number
+	successful: number
+	failed: number
+	results_so_far: number
+	percent_complete: number
+}
+
+export interface ScaStreamComplete {
+	total_results: number
+	total_agents: number
+	total_policies: number
+	average_score: number
+	total_checks: number
+	total_passes: number
+	total_fails: number
+	total_invalid: number
+	agents_processed: number
+	agents_successful: number
+	agents_failed: number
+	message: string
+}
+
+export interface ScaStreamError {
+	error?: string
+	message: string
+	agent_id?: string
+	agent_name?: string
+}
+
+export interface ScaStreamOverviewHandlers {
+	onStart?: (data: ScaStreamStartEvent) => void
+	onAgentResult?: (data: ScaStreamAgentResult) => void
+	onAgentEmpty?: (data: ScaStreamAgentEmpty) => void
+	onProgress?: (data: ScaStreamProgress) => void
+	onComplete?: (data: ScaStreamComplete) => void
+	onError?: (error: ScaStreamError | Error) => void
+}
+
+// ── SCA Policies (from CoPilot-SCA GitHub repo) ──
+
+export interface ScaPolicyItem {
+	id: string
+	name: string
+	description: string
+	file: string
+	application: string
+	app_version: string
+	platform: string
+	cis_version: string
+}
+
+export interface ScaPoliciesIndexResponse {
+	version: string
+	last_updated: string
+	policies: ScaPolicyItem[]
+}
+
+export interface ScaPolicyContentResponse {
+	policy_id: string
+	file_path: string
+	content: string
+}
+
+// ── SCA Package Registry & Agent Detection ──
+
+export interface ScaPackageRegistryItem {
+	key: string
+	display_name: string
+	sca_application: string
+	package_patterns: string[]
+}
+
+export interface ScaPackageRegistryResponse {
+	entries: ScaPackageRegistryItem[]
+	total: number
+}
+
+export interface AgentPackageMatch {
+	agent_id: string | null
+	agent_name: string | null
+	package_name: string | null
+	package_version: string | null
+	package_architecture: string | null
+}
+
+export interface ScaPackageAgentsResponse {
+	registry_key: string
+	display_name: string
+	sca_application: string
+	matched_agents: AgentPackageMatch[]
+	total: number
+	applicable_policies: ScaPolicyItem[]
+}

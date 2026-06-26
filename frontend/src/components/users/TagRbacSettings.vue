@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<div class="settings-form flex flex-col gap-4">
+		<div class="flex flex-col gap-4">
 			<n-form-item label="Enable Tag RBAC" :show-feedback="false">
 				<n-switch v-model:value="settings.enabled">
 					<template #checked>On</template>
@@ -12,21 +12,23 @@
 				<n-radio-group v-model:value="settings.untagged_alert_behavior">
 					<n-space vertical>
 						<n-radio value="visible_to_all">
-							<div class="radio-label">
-								<span class="label">Visible to All</span>
-								<span class="description">Users can see alerts without tags</span>
+							<div class="flex flex-col">
+								<span class="font-medium">Visible to All</span>
+								<span class="text-xs opacity-70">Users can see alerts without tags</span>
 							</div>
 						</n-radio>
 						<n-radio value="admin_only">
-							<div class="radio-label">
-								<span class="label">Admin Only</span>
-								<span class="description">Only admins can see untagged alerts</span>
+							<div class="flex flex-col">
+								<span class="font-medium">Admin Only</span>
+								<span class="text-xs opacity-70">Only admins can see untagged alerts</span>
 							</div>
 						</n-radio>
 						<n-radio value="default_tag">
-							<div class="radio-label">
-								<span class="label">Default Tag</span>
-								<span class="description">Assign untagged alerts to users with a specific tag</span>
+							<div class="flex flex-col">
+								<span class="font-medium">Default Tag</span>
+								<span class="text-xs opacity-70">
+									Assign untagged alerts to users with a specific tag
+								</span>
 							</div>
 						</n-radio>
 					</n-space>
@@ -54,54 +56,56 @@
 			<n-divider v-if="settings.enabled" class="my-2!" />
 
 			<n-alert v-if="settings.enabled" type="info" title="How Tag RBAC Works">
-				<div class="info-content">
-					<p class="intro">Tag RBAC controls which alerts users can see based on assigned tags.</p>
+				<div>
+					<p class="m-0 mb-3 font-medium">
+						Tag RBAC controls which alerts users can see based on assigned tags.
+					</p>
 
-					<div class="section">
-						<strong>User Access Rules:</strong>
-						<ul class="info-list">
-							<li>
+					<div class="mb-3">
+						<strong class="mb-1 block">User Access Rules:</strong>
+						<ul class="m-0 pl-5">
+							<li class="mb-1">
 								<strong>No tags assigned</strong>
 								→ User can see
-								<em>all alerts</em>
+								<em class="not-italic underline">all alerts</em>
 								(no restrictions)
 							</li>
-							<li>
+							<li class="mb-1">
 								<strong>Tags assigned</strong>
 								→ User can
-								<em>only</em>
+								<em class="not-italic underline">only</em>
 								see alerts with matching tags
 							</li>
-							<li>
+							<li class="mb-1">
 								<strong>Admins &amp; Schedulers</strong>
 								→ Always have full access
 							</li>
 						</ul>
 					</div>
 
-					<div class="section">
-						<strong>Untagged Alert Behavior:</strong>
-						<ul class="info-list">
-							<li>
+					<div class="mb-3">
+						<strong class="mb-1 block">Untagged Alert Behavior:</strong>
+						<ul class="m-0 pl-5">
+							<li class="mb-1">
 								<strong>Visible to All:</strong>
 								Everyone sees untagged alerts
 							</li>
-							<li>
+							<li class="mb-1">
 								<strong>Admin Only:</strong>
 								Only admins see untagged alerts
 							</li>
-							<li>
+							<li class="mb-1">
 								<strong>Default Tag:</strong>
 								Users with the selected tag can see untagged alerts
 							</li>
 						</ul>
 					</div>
 
-					<n-divider class="!my-3" />
+					<n-divider class="my-3!" />
 
-					<div class="example">
-						<strong>Example:</strong>
-						<p>
+					<div class="rounded bg-black/5 p-2.5">
+						<strong class="mb-1 block">Example:</strong>
+						<p class="m-0 text-[13px] leading-normal">
 							If analyst "John" is assigned the tag "Network", John will only see alerts tagged "Network".
 							If untagged behavior is set to "Admin Only", John won't see any untagged alerts. If set to
 							"Default Tag: Network", John will also see untagged alerts.
@@ -122,7 +126,6 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { AlertTag } from "@/types/tags"
 import {
 	NAlert,
@@ -239,8 +242,7 @@ async function saveSettings() {
 		} else {
 			message.error(res.data.message || "Failed to save settings")
 		}
-	} catch (error: any) {
-		console.error("Failed to save settings:", error)
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to save settings")
 	} finally {
 		saving.value = false
@@ -271,68 +273,3 @@ onBeforeMount(async () => {
 	}
 })
 </script>
-
-<style scoped lang="scss">
-.settings-form {
-	.radio-label {
-		display: flex;
-		flex-direction: column;
-
-		.label {
-			font-weight: 500;
-		}
-
-		.description {
-			font-size: 12px;
-			opacity: 0.7;
-		}
-	}
-
-	.info-content {
-		.intro {
-			margin: 0 0 12px 0;
-			font-weight: 500;
-		}
-
-		.section {
-			margin-bottom: 12px;
-
-			> strong {
-				display: block;
-				margin-bottom: 4px;
-			}
-		}
-
-		.info-list {
-			margin: 0;
-			padding-left: 20px;
-
-			li {
-				margin-bottom: 4px;
-
-				em {
-					font-style: normal;
-					text-decoration: underline;
-				}
-			}
-		}
-
-		.example {
-			background: rgba(0, 0, 0, 0.05);
-			border-radius: 4px;
-			padding: 10px;
-
-			> strong {
-				display: block;
-				margin-bottom: 4px;
-			}
-
-			p {
-				margin: 0;
-				font-size: 13px;
-				line-height: 1.5;
-			}
-		}
-	}
-}
-</style>

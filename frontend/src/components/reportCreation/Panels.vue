@@ -199,7 +199,7 @@
 import type { PrintSettingsData } from "./PrintSettings.vue"
 import type { GenerateReportPayload, ReportTimeRange } from "@/api/endpoints/reporting"
 import type { ApiError } from "@/types/common"
-import type { Dashboard, Org, Panel } from "@/types/reporting.d"
+import type { Dashboard, Org, Panel } from "@/types/reporting"
 import { useStorage } from "@vueuse/core"
 import { saveAs } from "file-saver"
 import _kebabCase from "lodash/kebabCase"
@@ -211,7 +211,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
-import * as defaultSettings from "./defaultSettings"
+import * as defaultSettings from "./default-settings"
 import PrintSettings from "./PrintSettings.vue"
 
 const props = defineProps<{

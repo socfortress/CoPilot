@@ -15,7 +15,7 @@
 		:bordered="false"
 		segmented
 	>
-		<CustomAlertForm v-model:loading="loading" @mounted="formCTX = $event" />
+		<CustomAlertForm ref="formRef" v-model:loading="loading" />
 	</n-modal>
 </template>
 
@@ -27,13 +27,13 @@ import CustomAlertForm from "./CustomAlertForm.vue"
 
 const DangerIcon = "majesticons:exclamation-line"
 
-const formCTX = ref<{ reset: () => void } | null>(null)
+const formRef = ref<{ reset: () => void } | null>(null)
 const showForm = ref(false)
 const loading = ref(false)
 
 watch(showForm, val => {
 	if (val) {
-		formCTX.value?.reset()
+		formRef.value?.reset()
 	}
 })
 </script>

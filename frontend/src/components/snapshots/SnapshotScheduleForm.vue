@@ -121,12 +121,13 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { FormInst, FormRules, SelectOption } from "naive-ui"
-import type { SnapshotRepository, SnapshotScheduleCreate, SnapshotScheduleResponse } from "@/types/snapshots.d"
+import type { ApiError } from "@/types/common"
+import type { SnapshotRepository, SnapshotScheduleCreate, SnapshotScheduleResponse } from "@/types/snapshots"
 import { NButton, NDivider, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	schedule?: SnapshotScheduleResponse | null
@@ -242,8 +243,8 @@ async function fetchRepositories() {
 		if (response.data.success) {
 			repositories.value = response.data.repositories
 		}
-	} catch (error: any) {
-		message.error(error.message || "Failed to fetch repositories")
+	} catch (error) {
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to fetch repositories")
 	} finally {
 		loadingRepositories.value = false
 	}
@@ -270,8 +271,8 @@ async function handleSubmit() {
 		} else {
 			message.error(response.data.message)
 		}
-	} catch (error: any) {
-		message.error(error.message || "Failed to save schedule")
+	} catch (error) {
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to save schedule")
 	} finally {
 		loading.value = false
 	}

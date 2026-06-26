@@ -98,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Agent, AgentSca } from "@/types/agents.d"
+import type { Agent, AgentSca } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import { saveAs } from "file-saver"
 import _truncate from "lodash/truncate"

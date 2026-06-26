@@ -37,9 +37,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Agent } from "@/types/agents.d"
+import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
-import type { Customer } from "@/types/customers.d"
+import type { Customer } from "@/types/customers"
 import { saveAs } from "file-saver"
 import _sortBy from "lodash/sortBy"
 import { NButton, NEmpty, NSpin, NTooltip, useMessage } from "naive-ui"

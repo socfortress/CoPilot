@@ -65,8 +65,8 @@
 			:trap-focus="false"
 			display-directive="show"
 		>
-			<n-drawer-content title="Alerts stats" closable body-content-style="padding:0" :native-scrollbar="false">
-				<AlertsStats :filters @mounted="alertsStatsCTX = $event" />
+			<n-drawer-content title="Alerts stats" closable body-content-class="p-0!" :native-scrollbar="false">
+				<AlertsStats ref="alertsStatsRef" :filters />
 			</n-drawer-content>
 		</n-drawer>
 
@@ -132,14 +132,14 @@
 <script setup lang="ts">
 // MOCK
 // import { alerts_summary } from "./mock"
-// import type { AlertsSummary } from "@/types/alerts.d"
+// import type { AlertsSummary } from "@/types/alerts"
 
 import type { AlertsStatsCTX } from "./AlertsStats.vue"
 import type { AlertsSummaryExt } from "./AlertsSummary.vue"
 import type { AlertsSummaryQuery } from "@/api/endpoints/alerts"
-import type { Agent } from "@/types/agents.d"
+import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
-import type { IndexStats } from "@/types/indices.d"
+import type { IndexStats } from "@/types/indices"
 import axios from "axios"
 import { NButton, NDrawer, NDrawerContent, NEmpty, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, toRefs } from "vue"
@@ -172,7 +172,7 @@ const InfoIcon = "carbon:information"
 const FilterIcon = "carbon:filter-edit"
 const StatsIcon = "carbon:chart-column"
 
-const alertsStatsCTX = ref<AlertsStatsCTX | null>(null)
+const alertsStatsRef = ref<AlertsStatsCTX | null>(null)
 
 const totalAlertsSummary = computed<number>(() => {
 	return alertsSummaryList.value.length || 0
@@ -313,7 +313,7 @@ function startSearch(closeDrawer?: boolean) {
 
 		const statsFiltersString = getStatsFiltersString()
 		if (lastStatsFilters !== statsFiltersString) {
-			alertsStatsCTX.value?.startSearch()
+			alertsStatsRef.value?.startSearch()
 			lastStatsFilters = statsFiltersString
 		}
 	}, 200)

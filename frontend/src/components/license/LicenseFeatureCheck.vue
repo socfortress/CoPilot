@@ -75,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import type { LicenseFeatures } from "@/types/license.d"
+import type { LicenseFeatures } from "@/types/license"
 import { NButton, NCard, NModal, NTooltip } from "naive-ui"
 import { ref, watch, watchEffect } from "vue"
 import Api from "@/api"

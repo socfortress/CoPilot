@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TalonJobData } from "@/types/talon.d"
+import type { TalonJobData } from "@/types/talon"
 import { NSelect, NSpin, NTabPane, NTabs, NTag } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

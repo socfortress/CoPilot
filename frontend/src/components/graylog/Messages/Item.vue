@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Message } from "@/types/graylog/messages.d"
+import type { Message } from "@/types/graylog/messages"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"

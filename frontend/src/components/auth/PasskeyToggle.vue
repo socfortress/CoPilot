@@ -153,7 +153,7 @@ async function registerNewPasskey() {
 		message.success("Passkey added successfully")
 		await loadStatus()
 	} catch (err) {
-		if (err?.name === "NotAllowedError") {
+		if (typeof err === "object" && err !== null && "name" in err && err.name === "NotAllowedError") {
 			message.warning("Passkey registration was cancelled.")
 			return
 		}

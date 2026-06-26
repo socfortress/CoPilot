@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SourceConfiguration } from "@/types/incidentManagement/sources.d"
+import type { SourceConfiguration } from "@/types/incidentManagement/sources"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 

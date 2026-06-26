@@ -80,12 +80,13 @@ import type {
 	CatalogComplianceFramework,
 	CatalogComplianceGroupRow,
 	CatalogComplianceResponse
-} from "@/types/detectionCatalog.d"
+} from "@/types/detection-catalog"
 import { NDataTable, NInput, NModal, NSelect, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
+import Dot, { hitsToDotVariant } from "@/components/common/Dot.vue"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import ComplianceDetail from "./ComplianceDetail.vue"
@@ -186,22 +187,14 @@ const columns: DataTableColumns<CatalogComplianceGroupRow> = [
 			if (row.total_hits_30d === 0) {
 				return (
 					<div class="flex items-center gap-1.5">
-						<span class="dot dot-muted"></span>
+						<Dot variant="muted" />
 						<span class="text-secondary text-xs">No hits 30d</span>
 					</div>
 				)
 			}
-			const dotClass =
-				row.total_hits_30d >= 10000
-					? "dot-danger"
-					: row.total_hits_30d >= 1000
-						? "dot-warning"
-						: row.total_hits_30d >= 100
-							? "dot-info"
-							: "dot-success"
 			return (
 				<div class="flex items-center gap-2">
-					<span class={`dot ${dotClass}`}></span>
+					<Dot variant={hitsToDotVariant(row.total_hits_30d)} />
 					<div class="flex flex-col leading-tight">
 						<span class="font-mono text-xs font-medium">{row.total_hits_30d.toLocaleString()}</span>
 						<span class="text-secondary text-xs">{`${row.total_hits_7d.toLocaleString()} in 7d`}</span>
@@ -286,28 +279,3 @@ function load() {
 
 onBeforeMount(loadFrameworks)
 </script>
-
-<style scoped lang="scss">
-:deep(.dot) {
-	display: inline-block;
-	width: 8px;
-	height: 8px;
-	border-radius: 50%;
-	flex-shrink: 0;
-}
-:deep(.dot-muted) {
-	background-color: var(--border-color);
-}
-:deep(.dot-success) {
-	background-color: var(--success-color);
-}
-:deep(.dot-info) {
-	background-color: var(--primary-color);
-}
-:deep(.dot-warning) {
-	background-color: var(--warning-color);
-}
-:deep(.dot-danger) {
-	background-color: var(--error-color);
-}
-</style>

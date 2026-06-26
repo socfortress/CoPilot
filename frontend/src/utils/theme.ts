@@ -64,7 +64,7 @@ export function getColorAlphaShades(color: string): { [key in ColorShade]: strin
 }
 
 export function getTypeValue(origin: object, val: string) {
-	if (val && val.indexOf("{") === 0) {
+	if (val && val.startsWith("{")) {
 		const path = val.replace("{", "").replace("}", "")
 		return _get(origin, path)
 	}

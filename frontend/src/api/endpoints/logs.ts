@@ -1,7 +1,7 @@
 import type { UnionToIntersection } from "type-fest"
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { Log, LogsQuery, LogsQueryTimeRange } from "@/types/logs.d"
-import { HttpClient } from "../httpClient"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { Log, LogsQuery, LogsQueryTimeRange } from "@/types/logs"
+import { HttpClient } from "../http-client"
 
 export default {
 	getLogs(query?: Partial<UnionToIntersection<LogsQuery>>) {

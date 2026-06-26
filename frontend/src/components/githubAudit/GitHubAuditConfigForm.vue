@@ -136,7 +136,8 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { GitHubAuditConfig, GitHubAuditConfigCreate, GitHubAuditConfigUpdate } from "@/types/githubAudit.d"
+import type { Customer } from "@/types/customers"
+import type { GitHubAuditConfig, GitHubAuditConfigCreate, GitHubAuditConfigUpdate } from "@/types/github-audit"
 import {
 	NButton,
 	NDivider,
@@ -278,7 +279,7 @@ async function handleSubmit() {
 			message.success("Configuration created successfully")
 		}
 		emit("saved")
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to save configuration")
 	} finally {
 		saving.value = false
@@ -289,7 +290,7 @@ onBeforeMount(async () => {
 	try {
 		const response = await Api.customers.getCustomers()
 		if (response.data.customers) {
-			customerOptions.value = response.data.customers.map((c: any) => ({
+			customerOptions.value = response.data.customers.map((c: Customer) => ({
 				label: `${c.customer_name} (${c.customer_code})`,
 				value: c.customer_code
 			}))

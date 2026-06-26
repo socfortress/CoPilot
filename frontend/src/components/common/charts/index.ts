@@ -1,4 +1,4 @@
-export { CHART_COLORS, CHART_GRID_CONTAIN_AXIS_LABELS } from "./chartConstants"
+export { CHART_COLORS, CHART_GRID_CONTAIN_AXIS_LABELS } from "./chart-constants"
 export {
 	buildChartTooltipGlassBase,
 	chartTooltipThemeFromStyle,
@@ -11,7 +11,7 @@ export {
 	getChartTooltipGlassExtraCss,
 	resolveChartItemColor,
 	resolveChartTooltipMarker
-} from "./chartTooltip"
+} from "./chart-tooltip"
 export type {
 	ChartTooltipAxisFormatterOptions,
 	ChartTooltipAxisMultiSeriesOptions,
@@ -20,4 +20,4 @@ export type {
 	ChartTooltipPieFormatterOptions,
 	ChartTooltipTheme,
 	ChartTooltipTimeAxisFormatterOptions
-} from "./chartTooltip"
+} from "./chart-tooltip"

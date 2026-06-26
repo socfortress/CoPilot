@@ -6,10 +6,10 @@ import type {
 	MatchingParameter,
 	QuarantineResult,
 	Recommendation
-} from "@/types/artifacts.d"
-import type { OsTypesFull, OsTypesLower } from "@/types/common.d"
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
+} from "@/types/artifacts"
+import type { OsTypesFull, OsTypesLower } from "@/types/common"
+import type { FlaskBaseResponse } from "@/types/flask"
+import { HttpClient } from "../http-client"
 
 export interface ArtifactsQuery {
 	os?: OsTypesLower

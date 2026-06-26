@@ -9,7 +9,7 @@
 			</div>
 		</div>
 		<div>
-			<n-tag size="small" class="text-[10px]! [&_.n-tag\_\_content]:p-0! [&_.n-tag\_\_content]:leading-0">
+			<n-tag size="small" class="text-3xs! [&_.n-tag\_\_content]:p-0! [&_.n-tag\_\_content]:leading-0">
 				{{ entity.category }}
 			</n-tag>
 		</div>
@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ExampleQuestion } from "@/types/copilotMCP.d"
+import type { ExampleQuestion } from "@/types/copilot-mcp"
 import { NTag } from "naive-ui"
 
 const { entity } = defineProps<{ entity: ExampleQuestion }>()

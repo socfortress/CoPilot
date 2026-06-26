@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import type { DataTableColumns, PaginationProps } from "naive-ui"
-import type { AgentScaOverviewItem } from "@/types/sca.d"
+import type { AgentScaOverviewItem } from "@/types/sca"
 import { NButton, NDataTable, NEmpty, NProgress } from "naive-ui"
 import { h } from "vue"
 

@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { AlertComment } from "@/types/incidentManagement/alerts.d"
+import type { AlertComment } from "@/types/incidentManagement/alerts"
 import _trim from "lodash/trim"
 import { NButton, NEmpty, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"

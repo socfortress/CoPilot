@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertTimeline } from "@/types/incidentManagement/alerts.d"
+import type { AlertTimeline } from "@/types/incidentManagement/alerts"
 import _omit from "lodash/omit"
 import { NModal, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref, toRefs } from "vue"

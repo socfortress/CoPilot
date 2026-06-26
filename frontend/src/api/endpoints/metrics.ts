@@ -1,4 +1,4 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	HostsResponse,
 	MetricsCpuData,
@@ -9,8 +9,8 @@ import type {
 	MetricsProcessesData,
 	MetricsResponse,
 	MetricsSummaryData
-} from "@/types/metrics.d"
-import { HttpClient } from "../httpClient"
+} from "@/types/metrics"
+import { HttpClient } from "../http-client"
 
 export default {
 	getHosts() {

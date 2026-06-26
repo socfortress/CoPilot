@@ -16,7 +16,7 @@
 		content-class="flex flex-col p-0!"
 		segmented
 	>
-		<ActiveResponseWizard v-model:loading="loading" @mounted="activeResponseWizardCTX = $event" />
+		<ActiveResponseWizard ref="activeResponseWizardRef" v-model:loading="loading" />
 	</n-modal>
 </template>
 
@@ -35,7 +35,7 @@ defineProps<{
 
 const InvokeIcon = "solar:playback-speed-outline"
 const showInvokeWizard = ref(false)
-const activeResponseWizardCTX = ref<{ reset: () => void } | null>(null)
+const activeResponseWizardRef = ref<{ reset: () => void } | null>(null)
 const loading = ref(false)
 
 function openModal() {
@@ -47,7 +47,7 @@ function closeModal() {
 }
 
 watch(showInvokeWizard, () => {
-	activeResponseWizardCTX.value?.reset()
+	activeResponseWizardRef.value?.reset()
 })
 
 defineExpose({

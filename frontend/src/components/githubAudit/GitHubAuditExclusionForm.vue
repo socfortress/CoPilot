@@ -45,7 +45,7 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { GitHubAuditExclusionCreate } from "@/types/githubAudit.d"
+import type { GitHubAuditExclusionCreate } from "@/types/github-audit"
 import { NButton, NDatePicker, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"
@@ -111,7 +111,7 @@ async function handleSubmit() {
 		formData.reason = ""
 		formData.approved_by = null
 		expiresAtTimestamp.value = null
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to create exclusion")
 	} finally {
 		saving.value = false

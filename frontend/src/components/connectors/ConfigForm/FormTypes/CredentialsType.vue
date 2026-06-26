@@ -22,7 +22,7 @@
 import type { FormInst, FormItemRule, FormRules } from "naive-ui"
 import { NForm, NFormItem, NInput } from "naive-ui"
 import isURL from "validator/es/lib/isURL"
-import { onMounted, ref, toRefs } from "vue"
+import { ref, toRefs } from "vue"
 
 export interface ICredentialsForm {
 	connector_url: string
@@ -32,10 +32,6 @@ export interface ICredentialsForm {
 
 const props = defineProps<{
 	form: ICredentialsForm
-}>()
-
-const emit = defineEmits<{
-	(e: "mounted", value: FormInst): void
 }>()
 
 const { form } = toRefs(props)
@@ -59,9 +55,7 @@ const rules: FormRules = {
 	connector_password: [{ required: true, message: "Please input a valid Password", trigger: "blur" }]
 }
 
-onMounted(() => {
-	if (formRef.value) {
-		emit("mounted", formRef.value)
-	}
+defineExpose({
+	formRef
 })
 </script>

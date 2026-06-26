@@ -24,7 +24,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { ExampleQuestion } from "@/types/copilotMCP.d"
+import type { ExampleQuestion } from "@/types/copilot-mcp"
 import { NScrollbar, useMessage } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"

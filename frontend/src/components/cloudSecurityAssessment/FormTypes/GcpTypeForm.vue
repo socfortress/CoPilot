@@ -18,13 +18,12 @@
 
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, UploadFileInfo } from "naive-ui"
-import type { ScoutSuiteGcpReportPayload } from "@/types/cloudSecurityAssessment.d"
+import type { ScoutSuiteGcpReportPayload } from "@/types/cloud-security-assessment"
 import { NForm, NFormItem, NUpload, NUploadDragger } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 
 const emit = defineEmits<{
-	(e: "mounted", value: FormInst): void
 	(e: "model", value: Partial<ScoutSuiteGcpReportPayload>): void
 	(e: "valid", value: boolean): void
 }>()
@@ -69,9 +68,7 @@ watch(form, val => emit("model", val), { deep: true, immediate: true })
 
 watch(isValid, val => emit("valid", val), { immediate: true })
 
-onMounted(() => {
-	if (formRef.value) {
-		emit("mounted", formRef.value)
-	}
+defineExpose({
+	formRef
 })
 </script>

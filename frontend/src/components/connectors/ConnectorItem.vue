@@ -98,7 +98,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { Connector } from "@/types/connectors.d"
+import type { Connector } from "@/types/connectors"
 import { NAvatar, NButton, NCard, NModal, useMessage } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import Api from "@/api"

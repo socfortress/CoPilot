@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AiAnalystReviewStats } from "@/types/aiAnalyst.d"
+import type { AiAnalystReviewStats } from "@/types/ai-analyst"
 import { NCard } from "naive-ui"
 import { computed, toRefs } from "vue"
 import TemplateChoiceBar from "./FeedbackTemplateChoiceBar.vue"

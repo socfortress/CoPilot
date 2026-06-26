@@ -138,7 +138,7 @@
 				<template #mainExtra>
 					<div class="flex flex-wrap gap-x-8 gap-y-5">
 						<div v-if="result.rule.groups.length" class="flex flex-col gap-1">
-							<span class="text-secondary text-[10px] tracking-wider uppercase">Groups</span>
+							<span class="text-secondary text-3xs tracking-wider uppercase">Groups</span>
 							<div class="flex flex-wrap gap-1.5">
 								<n-tag v-for="item of result.rule.groups" :key="item" size="small">
 									{{ item }}
@@ -146,7 +146,7 @@
 							</div>
 						</div>
 						<div v-if="result.rule.mitre.length" class="flex flex-col gap-1">
-							<span class="text-secondary text-[10px] tracking-wider uppercase">MITRE ATT&CK</span>
+							<span class="text-secondary text-3xs tracking-wider uppercase">MITRE ATT&CK</span>
 							<div class="flex flex-wrap gap-1.5">
 								<n-tag v-for="item of result.rule.mitre" :key="item" size="small">
 									{{ item }}
@@ -154,7 +154,7 @@
 							</div>
 						</div>
 						<div v-if="result.tactics.length" class="flex flex-col gap-1">
-							<span class="text-secondary text-[10px] tracking-wider uppercase">Tactics</span>
+							<span class="text-secondary text-3xs tracking-wider uppercase">Tactics</span>
 							<div class="flex flex-wrap gap-1.5">
 								<n-tag v-for="item of result.tactics" :key="item" size="small">
 									{{ item.toUpperCase() }}
@@ -179,7 +179,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { CatalogLogTestResponse } from "@/types/detectionCatalog.d"
+import type { CatalogLogTestResponse } from "@/types/detection-catalog"
 import { useStorage } from "@vueuse/core"
 import {
 	NAlert,

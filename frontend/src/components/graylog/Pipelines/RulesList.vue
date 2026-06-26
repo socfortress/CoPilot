@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import type { ScrollbarInst } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { PipelineRule } from "@/types/graylog/pipelines.d"
+import type { PipelineRule } from "@/types/graylog/pipelines"
 import { NScrollbar, NSpin, useMessage } from "naive-ui"
 import { nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"

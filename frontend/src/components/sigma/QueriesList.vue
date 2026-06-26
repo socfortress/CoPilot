@@ -128,7 +128,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SigmaQuery } from "@/types/sigma.d"
+import type { SigmaQuery } from "@/types/sigma"
 import { useResizeObserver, useStorage } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"
 import _orderBy from "lodash/orderBy"
@@ -227,9 +227,13 @@ function getData() {
 
 	lastFilters.value = _cloneDeep(filters.value)
 
-	const method = !filtered.value ? "getAvailable" : filters.value.active === "active" ? "getActive" : "getInactive"
+	const method = !filtered.value
+		? Api.sigma.getAvailable()
+		: filters.value.active === "active"
+			? Api.sigma.getActive()
+			: Api.sigma.getInactive()
 
-	Api.sigma[method]()
+	method
 		.then(res => {
 			if (res.data.success) {
 				queriesList.value = res.data?.sigma_queries || []

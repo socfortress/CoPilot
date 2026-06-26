@@ -1,14 +1,17 @@
 <template>
-	<div class="uncommitted-entries-wrap flex flex-col gap-3">
-		<div class="uncommitted-entries">
-			<div class="chart grow">
-				<div class="label flex items-center gap-3">
-					<Icon v-if="isWarning" :name="DangerIcon" />
+	<div class="flex w-full flex-col gap-3">
+		<div class="flex rounded-lg border border-default bg-default">
+			<div class="grow">
+				<div class="flex grow items-center gap-3 px-5.5 py-4.5 text-lg font-bold">
+					<Icon v-if="isWarning" :name="DangerIcon" class="text-warning" />
 					<span>Uncommitted Journal Entries</span>
 				</div>
 				<VChart class="w-full" autoresize :option="chartOption" :style="{ height: '70px' }" />
 			</div>
-			<div class="value flex flex-col justify-center" :class="{ warning: isWarning }">
+			<div
+				class="flex min-w-20 flex-col justify-center rounded-r-lg px-5.5 py-4.5 text-center font-mono text-xl"
+				:class="isWarning ? 'bg-warning/5 text-warning' : 'bg-secondary'"
+			>
 				<span>{{ value }}</span>
 			</div>
 		</div>
@@ -129,42 +132,3 @@ watch(value, val => {
 	dataPoints.value.push([Date.now(), val])
 })
 </script>
-
-<style lang="scss" scoped>
-.uncommitted-entries-wrap {
-	width: 100%;
-
-	.uncommitted-entries {
-		background-color: var(--bg-default-color);
-		display: flex;
-		border-radius: var(--border-radius);
-		border: 1px solid var(--border-color);
-
-		.label {
-			padding: 18px 22px;
-			font-size: 18px;
-			flex-grow: 1;
-			font-weight: 700;
-
-			i {
-				color: var(--warning-color);
-			}
-		}
-		.value {
-			padding: 18px 22px;
-			background-color: var(--bg-secondary-color);
-			font-size: 20px;
-			font-family: var(--font-family-mono);
-			min-width: 80px;
-			text-align: center;
-			border-top-right-radius: var(--border-radius);
-			border-bottom-right-radius: var(--border-radius);
-
-			&.warning {
-				color: var(--warning-color);
-				background-color: rgba(var(--warning-color-rgb) / 0.05);
-			}
-		}
-	}
-}
-</style>

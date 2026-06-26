@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ScoutSuiteReport } from "@/types/cloudSecurityAssessment.d"
+import type { ScoutSuiteReport } from "@/types/cloud-security-assessment"
 import type { ApiError } from "@/types/common"
 import { NButton, NPopconfirm, useMessage } from "naive-ui"
 import { ref } from "vue"

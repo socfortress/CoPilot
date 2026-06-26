@@ -77,7 +77,6 @@ async function getList() {
 		list.value = _uniq(fullList, "name")
 		emit("loaded", list.value)
 	} catch (err) {
-		// TODO-FE: remove any
 		message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 	} finally {
 		loading.value = false

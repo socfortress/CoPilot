@@ -121,26 +121,20 @@
 
 <script setup lang="ts">
 import type { VulnerabilitiesFilterTypes, VulnerabilitiesListFilter } from "./types.d"
-import type { Agent } from "@/types/agents.d"
+import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
-import type { Customer } from "@/types/customers.d"
+import type { Customer } from "@/types/customers"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
 import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
-import { computed, onMounted, ref } from "vue"
+import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { VulnerabilitySeverity } from "@/types/vulnerabilities.d"
+import { VulnerabilitySeverity } from "@/types/vulnerabilities"
 import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "submit", value: VulnerabilitiesListFilter[]): void
-	(
-		e: "mounted",
-		value: {
-			setFilter: (payload: VulnerabilitiesListFilter[]) => void
-		}
-	): void
 }>()
 
 const SearchIcon = "carbon:search"
@@ -272,9 +266,5 @@ function load() {
 	getCustomers()
 }
 
-onMounted(() => {
-	emit("mounted", {
-		setFilter
-	})
-})
+defineExpose({ setFilter })
 </script>

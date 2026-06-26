@@ -52,13 +52,13 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
-import type { InfluxDBAlert } from "@/types/healthchecks.d"
+import type { InfluxDBAlert } from "@/types/healthchecks"
 import { computed } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { InfluxDBAlertSeverity, InfluxDBAlertStatus } from "@/types/healthchecks.d"
+import { InfluxDBAlertSeverity, InfluxDBAlertStatus } from "@/types/healthchecks"
 import { formatDate } from "@/utils/format"
 
 const { alert } = defineProps<{ alert: InfluxDBAlert }>()

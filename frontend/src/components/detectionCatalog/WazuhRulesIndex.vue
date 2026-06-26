@@ -56,7 +56,7 @@
 					<Icon name="carbon:list" :size="13" />
 					<span>All</span>
 					<span
-						class="text-secondary font-mono text-[11px] font-semibold"
+						class="text-secondary text-2xs font-mono font-semibold"
 						:class="{ 'text-primary!': activeChip === 'all' }"
 					>
 						{{ rules.length }}
@@ -74,7 +74,7 @@
 					<Icon name="carbon:flash" :size="13" />
 					<span>Top noisy</span>
 					<span
-						class="text-secondary font-mono text-[11px] font-semibold"
+						class="text-secondary text-2xs font-mono font-semibold"
 						:class="{ 'text-warning!': activeChip === 'noisy' }"
 					>
 						50
@@ -92,7 +92,7 @@
 					<Icon name="carbon:warning" :size="13" />
 					<span>Dead (level ≥7)</span>
 					<span
-						class="text-secondary font-mono text-[11px] font-semibold"
+						class="text-secondary text-2xs font-mono font-semibold"
 						:class="{ 'text-error!': activeChip === 'dead' }"
 					>
 						{{ deadCount }}
@@ -149,7 +149,7 @@
 <script setup lang="tsx">
 import type { DataTableColumns, SelectOption, TagProps } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { CatalogWazuhRuleRow } from "@/types/detectionCatalog.d"
+import type { CatalogWazuhRuleRow } from "@/types/detection-catalog"
 import {
 	NAlert,
 	NButton,
@@ -165,6 +165,7 @@ import {
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import Dot, { hitsToDotVariant } from "@/components/common/Dot.vue"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import WazuhLogTest from "./WazuhLogTest.vue"
@@ -336,24 +337,14 @@ const hitsColumn = computed(() => ({
 		if (row.hits_30d === 0) {
 			return (
 				<div class="flex items-center gap-1.5">
-					<span class="dot dot-muted"></span>
+					<Dot variant="muted" />
 					<span class="text-secondary text-xs">No hits 30d</span>
 				</div>
 			)
 		}
-		// Color the indicator dot by intensity bucket so analysts can scan
-		// the column without reading numbers.
-		const dotClass =
-			row.hits_30d >= 10000
-				? "dot-danger"
-				: row.hits_30d >= 1000
-					? "dot-warning"
-					: row.hits_30d >= 100
-						? "dot-info"
-						: "dot-success"
 		return (
 			<div class="flex items-center gap-2">
-				<span class={`dot ${dotClass}`}></span>
+				<Dot variant={hitsToDotVariant(row.hits_30d)} />
 				<div class="flex flex-col leading-tight">
 					<span class="font-mono text-xs font-medium">{row.hits_30d.toLocaleString()}</span>
 					<span class="text-secondary text-xs">{`${row.hits_7d.toLocaleString()} in 7d`}</span>
@@ -442,28 +433,3 @@ onBeforeMount(() => {
 	load()
 })
 </script>
-
-<style scoped lang="scss">
-:deep(.dot) {
-	display: inline-block;
-	width: 8px;
-	height: 8px;
-	border-radius: 50%;
-	flex-shrink: 0;
-}
-:deep(.dot-muted) {
-	background-color: var(--border-color);
-}
-:deep(.dot-success) {
-	background-color: var(--success-color);
-}
-:deep(.dot-info) {
-	background-color: var(--primary-color);
-}
-:deep(.dot-warning) {
-	background-color: var(--warning-color);
-}
-:deep(.dot-danger) {
-	background-color: var(--error-color);
-}
-</style>

@@ -47,7 +47,7 @@
 import type { ButtonSize } from "naive-ui"
 import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
 import type { ApiError } from "@/types/common"
-import type { Job } from "@/types/scheduler.d"
+import type { Job } from "@/types/scheduler"
 import { NButton, NModal, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import Api from "@/api"
@@ -99,7 +99,6 @@ function run() {
 		.jobAction(job.value.id, "run")
 		.then(res => {
 			if (res.data.success) {
-				// TODO-FE: check timezone with Taylor
 				job.value.last_success = new Date()
 				message.success(res.data?.message || "Job executed successfully.")
 			} else {

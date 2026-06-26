@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { AlertAsset, AlertTimeline } from "@/types/incidentManagement/alerts.d"
+import type { AlertAsset, AlertTimeline } from "@/types/incidentManagement/alerts"
 import { NSpin, NTimeline, NTimelineItem, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"

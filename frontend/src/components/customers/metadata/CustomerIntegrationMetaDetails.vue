@@ -57,7 +57,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { CustomerIntegrationMetaNetwork, CustomerIntegrationMetaThirdParty } from "@/types/integrations.d"
+import type { CustomerIntegrationMetaNetwork, CustomerIntegrationMetaThirdParty } from "@/types/integrations"
 import { NButton, NCollapseTransition, NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"

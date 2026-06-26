@@ -100,7 +100,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { MitreSoftwareDetails } from "@/types/mitre.d"
+import type { MitreSoftwareDetails } from "@/types/mitre"
 import { useElementBounding, useRafFn } from "@vueuse/core"
 import { useMotionProperties } from "@vueuse/motion"
 import { NCard, NSpin, useMessage } from "naive-ui"

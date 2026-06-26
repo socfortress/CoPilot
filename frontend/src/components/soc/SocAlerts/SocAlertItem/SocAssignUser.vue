@@ -14,8 +14,8 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SocAlert } from "@/types/soc/alert.d"
-import type { SocUser } from "@/types/soc/user.d"
+import type { SocAlert } from "@/types/soc/alert"
+import type { SocUser } from "@/types/soc/user"
 import { NPopselect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
@@ -69,10 +69,12 @@ function assignUser() {
 	if (userSelected.value !== ownerId.value) {
 		loadingUsers.value = true
 
-		const method = userSelected.value ? "assignUserToAlert" : "removeUserAlertAssign"
 		const userId = userSelected.value ? userSelected.value : ownerId.value || 0
+		const method = userSelected.value
+			? Api.soc.assignUserToAlert(alert.value.alert_id.toString(), userId.toString())
+			: Api.soc.removeUserAlertAssign(alert.value.alert_id.toString(), userId.toString())
 
-		Api.soc[method](alert.value.alert_id.toString(), userId.toString())
+		method
 			.then(res => {
 				if (res.data.success) {
 					emit("updated", res.data.alert)

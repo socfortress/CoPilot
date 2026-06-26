@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AiAnalystJob } from "@/types/aiAnalyst.d"
+import type { AiAnalystJob } from "@/types/ai-analyst"
 import type { ApiError } from "@/types/common"
 import { useElementSize } from "@vueuse/core"
 import { NAlert, NEmpty, NSpin, NTimeline, NTimelineItem, useMessage } from "naive-ui"

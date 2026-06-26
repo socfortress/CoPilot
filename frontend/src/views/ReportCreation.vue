@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 import type { ReportTimeRange } from "@/api/endpoints/reporting"
-import type { Dashboard, Org, Panel } from "@/types/reporting.d"
+import type { Dashboard, Org, Panel } from "@/types/reporting"
 import { NAlert, NSpin } from "naive-ui"
 import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"

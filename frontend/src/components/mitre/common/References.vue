@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreReference } from "@/types/mitre.d"
+import type { MitreReference } from "@/types/mitre"
 
 const { references } = defineProps<{
 	references: MitreReference[]

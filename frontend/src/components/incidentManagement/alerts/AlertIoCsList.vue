@@ -11,12 +11,7 @@
 
 		<CollapseKeepAlive :show="showForm">
 			<div class="flex flex-col gap-2">
-				<AlertIoCsForm
-					v-model:loading="submitting"
-					:alert-id
-					@mounted="formCTX = $event"
-					@submitted="addIoc($event)"
-				>
+				<AlertIoCsForm ref="formRef" v-model:loading="submitting" :alert-id @submitted="addIoc($event)">
 					<template #additionalActions>
 						<n-button secondary :disabled="submitting" @click="closeForm()">Close</n-button>
 					</template>
@@ -50,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertIOC } from "@/types/incidentManagement/alerts.d"
+import type { AlertIOC } from "@/types/incidentManagement/alerts"
 import { NButton, NCollapseTransition, NEmpty } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
@@ -71,7 +66,7 @@ const showForm = ref(false)
 const submitting = ref(false)
 const deleting = ref(false)
 const loading = computed(() => submitting.value || deleting.value)
-const formCTX = ref<{ reset: (force?: boolean) => void } | null>(null)
+const formRef = ref<{ reset: (force?: boolean) => void } | null>(null)
 
 function openForm() {
 	showForm.value = true
@@ -80,7 +75,7 @@ function openForm() {
 function closeForm(doReset?: boolean) {
 	showForm.value = false
 	if (doReset) {
-		formCTX.value?.reset(true)
+		formRef.value?.reset(true)
 	}
 }
 

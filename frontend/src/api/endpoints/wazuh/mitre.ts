@@ -1,5 +1,5 @@
 /* eslint-disable jsdoc/no-multi-asterisks */
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	MitreAtomicTest,
 	MitreEventDetails,
@@ -9,8 +9,8 @@ import type {
 	MitreTacticDetails,
 	MitreTechnique,
 	MitreTechniqueDetails
-} from "@/types/mitre.d"
-import { HttpClient } from "../../httpClient"
+} from "@/types/mitre"
+import { HttpClient } from "../../http-client"
 
 export type MitreTechniquesAlertsQueryTimeRange = `${number}${"h" | "d" | "w"}`
 

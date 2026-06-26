@@ -34,7 +34,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { EpssScore } from "@/types/threatIntel.d"
+import type { EpssScore } from "@/types/threat-intel"
 import { NCard, NEmpty, NSpin, NStatistic, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { onBeforeMount, ref } from "vue"

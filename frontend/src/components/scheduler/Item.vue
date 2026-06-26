@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Job } from "@/types/scheduler.d"
+import type { Job } from "@/types/scheduler"
 import { NTooltip } from "naive-ui"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

@@ -117,7 +117,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { ShuffleIntegration } from "@/types/notifications.d"
+import type { ShuffleIntegration } from "@/types/notifications"
 import { NButton, NPopconfirm, NTooltip, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"

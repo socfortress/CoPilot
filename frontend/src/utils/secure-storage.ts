@@ -1,3 +1,4 @@
+import type { SafeAny } from "@/types/common"
 import SecureLSModule from "secure-ls"
 
 type SecureLSConstructor = typeof SecureLSModule
@@ -29,7 +30,7 @@ export function removePersistentSessionKey() {
 }
 
 /** secure-ls returns parsed values; Storage adapters expect JSON strings. */
-function normalizeStorageGetItem(value: unknown): string | null {
+function normalizeStorageGetItem(value: SafeAny): string | null {
 	if (value == null) return null
 	if (typeof value === "string") return value === "" ? null : value
 	return JSON.stringify(value)
@@ -74,7 +75,7 @@ export function piniaStorage(options?: { session?: boolean }) {
 				return null
 			}
 		},
-		setItem: (key: string, value: unknown) => secureLS.set(persistentKey({ session: options?.session })(key), value)
+		setItem: (key: string, value: SafeAny) => secureLS.set(persistentKey({ session: options?.session })(key), value)
 	}
 }
 

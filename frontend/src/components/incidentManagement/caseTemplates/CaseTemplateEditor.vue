@@ -160,7 +160,7 @@
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
+import type { CaseTemplate } from "@/types/incidentManagement/case-templates"
 import type { SourceName } from "@/types/incidentManagement/sources"
 import { NButton, NButtonGroup, NCard, NCheckbox, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"

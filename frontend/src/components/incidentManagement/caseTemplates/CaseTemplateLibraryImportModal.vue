@@ -105,8 +105,9 @@
 </template>
 
 <script setup lang="ts">
+import type { AxiosError } from "axios"
 import type { ApiError } from "@/types/common"
-import type { CaseTemplate, CaseTemplateLibraryEntry } from "@/types/incidentManagement/caseTemplates.d"
+import type { CaseTemplate, CaseTemplateLibraryEntry } from "@/types/incidentManagement/case-templates"
 import { NAlert, NButton, NModal, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
@@ -143,7 +144,7 @@ async function submit() {
 		}
 	} catch (err) {
 		// Backend returns HTTP 409 on name collision with a useful detail message.
-		const status = err.response?.status
+		const status = (err as AxiosError).response?.status
 		const detail = getApiErrorMessage(err as ApiError) || "Failed to import library entry"
 		if (status === 409) {
 			message.warning(detail)

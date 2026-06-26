@@ -1,9 +1,9 @@
-import type { InfluxDBAlert } from "@/types/healthchecks.d"
+import type { InfluxDBAlert } from "@/types/healthchecks"
 import _toNumber from "lodash/toNumber"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
-import { InfluxDBAlertSeverity } from "@/types/healthchecks.d"
-import { IndexHealth } from "@/types/indices.d"
+import { InfluxDBAlertSeverity } from "@/types/healthchecks"
+import { IndexHealth } from "@/types/indices"
 import { useAuthStore } from "./auth"
 
 export const useHealthcheckStore = defineStore("healthcheck", {

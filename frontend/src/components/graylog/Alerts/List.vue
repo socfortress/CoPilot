@@ -73,7 +73,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { AlertsEventElement, AlertsQuery } from "@/types/graylog/alerts.d"
+import type { AlertsEventElement, AlertsQuery } from "@/types/graylog/alerts"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"

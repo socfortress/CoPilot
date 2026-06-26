@@ -10,11 +10,11 @@
 
 		<!-- Filters -->
 		<PatchTuesdayFilters
+			ref="filtersRef"
 			:cycles="availableCycles"
 			:families="availableFamilies"
 			:loading
 			@submit="applyFilters"
-			@mounted="filtersCTX = $event"
 		/>
 
 		<!-- Items List -->
@@ -51,10 +51,12 @@
 
 <script setup lang="ts">
 import type { PatchTuesdayFilters as FiltersType, PatchTuesdayListFilter } from "./types"
-import type { PatchTuesdayItem, PatchTuesdaySummary } from "@/types/patchTuesday.d"
+import type { ApiError } from "@/types/common.ts"
+import type { PatchTuesdayItem, PatchTuesdaySummary } from "@/types/patch-tuesday"
 import { NDrawer, NDrawerContent, NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
-import patchTuesdayApi from "@/api/endpoints/patchTuesday"
+import patchTuesdayApi from "@/api/endpoints/patch-tuesday"
+import { getApiErrorMessage } from "@/utils/index.ts"
 import PatchTuesdayCard from "./PatchTuesdayCard.vue"
 import PatchTuesdayDetail from "./PatchTuesdayDetail.vue"
 import PatchTuesdayFilters from "./PatchTuesdayFilters.vue"
@@ -73,7 +75,7 @@ const pageSize = 24
 const showDetail = ref(false)
 const selectedItem = ref<PatchTuesdayItem | null>(null)
 
-const filtersCTX = ref<{ setFilter: (payload: PatchTuesdayListFilter[]) => void } | null>(null)
+const filtersRef = ref<{ setFilter: (payload: PatchTuesdayListFilter[]) => void } | null>(null)
 const filters = ref<FiltersType>({
 	cycle: null,
 	priority: null,
@@ -174,9 +176,8 @@ async function fetchData() {
 		} else {
 			message.error(response.data.message || "Failed to fetch Patch Tuesday data")
 		}
-	} catch (error: unknown) {
-		const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-		message.error(`Error fetching data: ${errorMessage}`)
+	} catch (error) {
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to fetch Patch Tuesday data")
 	} finally {
 		loading.value = false
 	}
@@ -200,7 +201,7 @@ function openItemDetail(item: PatchTuesdayItem) {
 onMounted(async () => {
 	await fetchCycles()
 	if (filters.value.cycle) {
-		filtersCTX.value?.setFilter([{ type: "cycle", value: filters.value.cycle }])
+		filtersRef.value?.setFilter([{ type: "cycle", value: filters.value.cycle }])
 		await fetchData()
 	}
 })

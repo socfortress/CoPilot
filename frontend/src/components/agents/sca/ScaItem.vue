@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Agent, AgentSca } from "@/types/agents.d"
+import type { Agent, AgentSca } from "@/types/agents"
 import _pick from "lodash/pick"
 import { NCard, NInput, NStatistic, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent } from "vue"

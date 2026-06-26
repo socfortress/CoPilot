@@ -44,6 +44,7 @@
 						<div v-else-if="current === 2" class="flex min-h-[401px] grow flex-col px-7 pb-7">
 							<SourceConfigurationForm
 								v-if="sourceConfigurationModel"
+								ref="sourceConfigurationFormRef"
 								:source-configuration-model
 								show-source-field
 								disable-source-field
@@ -51,7 +52,6 @@
 								:arbitrary-source-field
 								disable-index-name-field
 								:disabled-sources
-								@mounted="formCTX = $event"
 								@submitted="createSourceConfiguration($event)"
 							>
 								<template #additionalActions>
@@ -73,10 +73,10 @@
 
 <script setup lang="ts">
 import type { StepsProps } from "naive-ui"
-import type { ApiError } from "@/types/common.d"
-import type { SourceConfiguration, SourceConfigurationModel, SourceName } from "@/types/incidentManagement/sources.d"
+import type { ApiError } from "@/types/common"
+import type { SourceConfiguration, SourceConfigurationModel, SourceName } from "@/types/incidentManagement/sources"
 import { NButton, NScrollbar, NSelect, NSpin, NStep, NSteps, useMessage } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
@@ -87,12 +87,6 @@ const props = defineProps<{ disabledSources?: SourceName[] }>()
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
 	(e: "submitted"): void
-	(
-		e: "mounted",
-		value: {
-			reset: () => void
-		}
-	): void
 }>()
 
 const { disabledSources } = toRefs(props)
@@ -106,7 +100,7 @@ const slideFormDirection = ref<"right" | "left">("right")
 const message = useMessage()
 const current = ref<number>(1)
 const currentStatus = ref<StepsProps["status"]>("process")
-const formCTX = ref<{ reset: () => void; toggleSubmittingFlag: () => boolean } | null>(null)
+const sourceConfigurationFormRef = ref<InstanceType<typeof SourceConfigurationForm> | null>(null)
 const selectedIndex = ref<string | null>(null)
 const sourceConfigurationModel = ref<SourceConfigurationModel | null>(null)
 const indexNamesOptions = ref<{ label: string; value: string }[]>([])
@@ -143,7 +137,7 @@ function prev() {
 	currentStatus.value = "process"
 	slideFormDirection.value = "left"
 	current.value--
-	formCTX.value?.reset()
+	sourceConfigurationFormRef.value?.reset()
 }
 
 function reset(force?: boolean) {
@@ -153,7 +147,7 @@ function reset(force?: boolean) {
 		current.value = 1
 		selectedIndex.value = null
 		sourceConfigurationModel.value = null
-		formCTX.value?.reset()
+		sourceConfigurationFormRef.value?.reset()
 	}
 }
 
@@ -206,7 +200,7 @@ function getIndices() {
 }
 
 function createSourceConfiguration(payload: SourceConfiguration) {
-	submitting.value = formCTX.value?.toggleSubmittingFlag() || true
+	submitting.value = sourceConfigurationFormRef.value?.toggleSubmittingFlag() || true
 
 	Api.incidentManagement.sources
 		.createSourceConfiguration(payload)
@@ -223,7 +217,7 @@ function createSourceConfiguration(payload: SourceConfiguration) {
 			message.error(getApiErrorMessage(err) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
-			submitting.value = formCTX.value?.toggleSubmittingFlag() || false
+			submitting.value = sourceConfigurationFormRef.value?.toggleSubmittingFlag() || false
 		})
 }
 
@@ -231,10 +225,8 @@ onBeforeMount(() => {
 	getIndices()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		reset
-	})
+defineExpose({
+	reset
 })
 </script>
 

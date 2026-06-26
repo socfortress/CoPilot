@@ -38,7 +38,7 @@
 
 			<template #mainExtra>
 				<div class="flex flex-col gap-2">
-					<span class="text-secondary text-[10px] font-medium tracking-wider uppercase">Metadata</span>
+					<span class="text-secondary text-3xs font-medium tracking-wider uppercase">Metadata</span>
 					<div class="flex flex-wrap items-center gap-1.5">
 						<SeverityBadge v-if="rule.severity" :severity="rule.severity" size="small" />
 
@@ -144,7 +144,7 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
-import type { RuleSummary } from "@/types/copilotSearches.d"
+import type { RuleSummary } from "@/types/copilot-searches"
 import { NButton, NCheckbox, NModal, NTag, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"

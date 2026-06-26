@@ -1,10 +1,10 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { SocAlert, SocAlertCaseResponse } from "@/types/soc/alert.d"
-import type { SocAlertAsset, SocCaseAsset, SocCaseAssetsState } from "@/types/soc/asset.d"
-import type { SocCase, SocCaseExt } from "@/types/soc/case.d"
-import type { SocNewNote, SocNote } from "@/types/soc/note.d"
-import type { SocUser } from "@/types/soc/user.d"
-import { HttpClient } from "../httpClient"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { SocAlert, SocAlertCaseResponse } from "@/types/soc/alert"
+import type { SocAlertAsset, SocCaseAsset, SocCaseAssetsState } from "@/types/soc/asset"
+import type { SocCase, SocCaseExt } from "@/types/soc/case"
+import type { SocNewNote, SocNote } from "@/types/soc/note"
+import type { SocUser } from "@/types/soc/user"
+import { HttpClient } from "../http-client"
 
 export interface CasesFilter {
 	olderThan: number

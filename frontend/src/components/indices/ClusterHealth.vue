@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { ClusterHealth } from "@/types/indices.d"
+import type { ClusterHealth } from "@/types/indices"
 import { NCard, NEmpty, NScrollbar, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"

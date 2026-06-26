@@ -13,7 +13,7 @@
 <script setup lang="ts">
 import type { BarSeriesOption } from "echarts/charts"
 import type { GridComponentOption, TitleComponentOption, TooltipComponentOption } from "echarts/components"
-import type { ComposeOption } from "echarts/core"
+import type { ComposeOption, ECElementEvent } from "echarts/core"
 import { BarChart } from "echarts/charts"
 import { GridComponent, TitleComponent, TooltipComponent } from "echarts/components"
 import { use } from "echarts/core"
@@ -154,10 +154,9 @@ const chartOption = computed((): ChartOption => {
 	}
 })
 
-function onChartClick(params: unknown) {
-	const p = params as { componentType?: string; dataIndex?: number }
-	if (p.componentType !== "series" || p.dataIndex == null) return
-	const name = (props.labels || [])[p.dataIndex]
+function onChartClick(params: ECElementEvent) {
+	if (params.componentType !== "series" || params.dataIndex == null) return
+	const name = (props.labels || [])[params.dataIndex]
 	if (name) emit("itemClick", { name })
 }
 </script>

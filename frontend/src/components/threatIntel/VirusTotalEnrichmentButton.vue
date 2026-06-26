@@ -535,7 +535,7 @@
 import type { ButtonSize } from "naive-ui"
 import type { ItemProps } from "@/components/common/cards/CardStatsBars.vue"
 import type { ApiError } from "@/types/common"
-import type { VirusTotalData } from "@/types/threatIntel.d"
+import type { VirusTotalData } from "@/types/threat-intel"
 import _pick from "lodash/pick"
 import { NButton, NEmpty, NInput, NModal, NStatistic, NTable, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"

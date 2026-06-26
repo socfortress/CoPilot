@@ -54,7 +54,7 @@
 import type { ButtonSize } from "naive-ui"
 import type { Ref } from "vue"
 import type { ApiError } from "@/types/common"
-import type { Customer } from "@/types/customers.d"
+import type { Customer } from "@/types/customers"
 import { saveAs } from "file-saver"
 import { NButton, NDatePicker, NForm, NFormItem, NModal, NSelect, useMessage } from "naive-ui"
 import { computed, inject, reactive, ref } from "vue"
@@ -150,7 +150,11 @@ async function handleExport() {
 		form.period = null
 		form.customerCodes = []
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || (err as Error).message || "An error occurred. Please try again later.")
+		message.error(
+			getApiErrorMessage(err as ApiError) ||
+				(err as Error).message ||
+				"An error occurred. Please try again later."
+		)
 	} finally {
 		exporting.value = false
 	}

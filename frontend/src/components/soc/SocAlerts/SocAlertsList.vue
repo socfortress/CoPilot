@@ -91,12 +91,12 @@
 <script setup lang="ts">
 import type { AlertsFilter } from "@/api/endpoints/soc"
 import type { ApiError } from "@/types/common"
-import type { SocAlert } from "@/types/soc/alert.d"
-import type { SocUser } from "@/types/soc/user.d"
+import type { SocAlert } from "@/types/soc/alert"
+import type { SocUser } from "@/types/soc/user"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NEmpty, NInput, NPopover, NSpin, useDialog, useMessage } from "naive-ui"
-import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, toRefs, watch } from "vue"
+import { computed, nextTick, onBeforeMount, onBeforeUnmount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import PaginationIndeterminate from "@/components/common/PaginationIndeterminate.vue"
@@ -113,13 +113,6 @@ const props = defineProps<{
 const emit = defineEmits<{
 	(e: "bookmark"): void
 	(e: "deleted", value?: string): void
-	(
-		e: "mounted",
-		value: {
-			reload: () => void
-			itemDeleted: (alertId: string, noEmit?: boolean) => void
-		}
-	): void
 }>()
 
 const { highlight, bookmarksList, usersList } = toRefs(props)
@@ -149,7 +142,7 @@ let abortController: AbortController | null = null
 const checkedCount = computed(() => checkedList.value.length)
 
 function isBookmarked(alert: SocAlert): boolean {
-	return !!(bookmarksList.value || []).filter(o => o.alert_id === alert.alert_id).length
+	return (bookmarksList.value ?? []).some(o => o.alert_id === alert.alert_id)
 }
 
 function bookmark() {
@@ -314,7 +307,7 @@ function toggleCheckedList(alertId: string, value: boolean) {
 }
 
 function isChecked(alertId: string) {
-	return checkedList.value.filter(o => o === alertId).length !== 0
+	return checkedList.value.some(o => o === alertId)
 }
 
 function clearChecked(alertId?: string) {
@@ -384,13 +377,9 @@ onBeforeMount(() => {
 	getAlerts()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		reload: () => {
-			safeReload()
-		},
-		itemDeleted
-	})
+defineExpose({
+	reload: safeReload,
+	itemDeleted
 })
 
 onBeforeUnmount(() => {

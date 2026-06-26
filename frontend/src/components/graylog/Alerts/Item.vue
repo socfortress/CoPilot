@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertsEventElement } from "@/types/graylog/alerts.d"
+import type { AlertsEventElement } from "@/types/graylog/alerts"
 import { NButton, NModal, NPopover, NTimeline, NTimelineItem } from "naive-ui"
 import { ref } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

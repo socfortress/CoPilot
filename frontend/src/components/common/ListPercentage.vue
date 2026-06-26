@@ -2,11 +2,11 @@
 	<div class="flex flex-col gap-2">
 		<n-empty v-if="!list.length" description="No items found" class="h-48 justify-center" />
 
-		<div class="list-header text-secondary flex items-center justify-between gap-4 font-mono text-sm">
-			<div class="borde basis-2/3 truncate">
+		<div class="text-secondary flex items-center justify-between gap-4 font-mono text-sm">
+			<div class="basis-2/3 truncate border-b border-default pb-1">
 				{{ labelKey }}
 			</div>
-			<div class="grow">
+			<div class="grow border-b border-default pb-1">
 				{{ percentageKey }}
 			</div>
 		</div>
@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SafeAny } from "@/types/common.d"
+import type { SafeAny } from "@/types/common"
 import { NEmpty, NProgress } from "naive-ui"
 import { computed } from "vue"
 import { useThemeStore } from "@/stores/theme"
@@ -49,12 +49,3 @@ const themeStore = useThemeStore()
 
 const style = computed(() => themeStore.style)
 </script>
-
-<style scoped lang="scss">
-.list-header {
-	& > * {
-		border-bottom: 1px solid var(--border-color);
-		padding-bottom: calc(var(--spacing) * 1);
-	}
-}
-</style>

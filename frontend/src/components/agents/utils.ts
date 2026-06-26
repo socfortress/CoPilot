@@ -1,6 +1,6 @@
 import type { DialogApiInjection } from "naive-ui/es/dialog/src/DialogProvider"
 import type { MessageApiInjection } from "naive-ui/es/message/src/MessageProvider"
-import type { Agent } from "@/types/agents.d"
+import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import { h } from "vue"
 import Api from "@/api"
@@ -37,9 +37,9 @@ export function toggleAgentCritical({
 	if (cbBefore && typeof cbBefore === "function") {
 		cbBefore()
 	}
-	const method = criticalStatus ? "markNonCritical" : "markCritical"
+	const method = criticalStatus ? Api.agents.markNonCritical(agentId) : Api.agents.markCritical(agentId)
 
-	Api.agents[method](agentId)
+	method
 		.then(res => {
 			if (res.data.success) {
 				message.success("Agent Criticality Updated Successfully")

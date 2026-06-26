@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreCoverageResponse } from "@/types/copilotSearches.d"
+import type { MitreCoverageResponse } from "@/types/copilot-searches"
 
 defineProps<{
 	coverage: MitreCoverageResponse | null

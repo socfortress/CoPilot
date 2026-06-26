@@ -1,19 +1,21 @@
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	VulnerabilityReportDeleteResponse,
+	VulnerabilityReportGenerateBackgroundResponse,
 	VulnerabilityReportGenerateRequest,
 	VulnerabilityReportGenerateResponse,
 	VulnerabilityReportListResponse,
 	VulnerabilitySearchQuery,
 	VulnerabilitySearchResponse
-} from "@/types/vulnerabilities.d"
-import { HttpClient } from "../httpClient"
+} from "@/types/vulnerabilities"
+import { HttpClient } from "../http-client"
 
 export default {
 	/**
 	 * Search vulnerabilities directly from Wazuh indexer with filtering and pagination
 	 */
 	searchVulnerabilities(query: VulnerabilitySearchQuery, signal?: AbortSignal) {
-		return HttpClient.get<VulnerabilitySearchResponse>(`/vulnerabilities/search`, {
+		return HttpClient.get<FlaskBaseResponse & VulnerabilitySearchResponse>(`/vulnerabilities/search`, {
 			params: {
 				customer_code: query.customer_code,
 				agent_name: query.agent_name,
@@ -32,30 +34,27 @@ export default {
 	 * Generate a vulnerability report (synchronous)
 	 */
 	generateReport(request: VulnerabilityReportGenerateRequest) {
-		return HttpClient.post<VulnerabilityReportGenerateResponse>(`/vulnerabilities/reports/generate`, request)
+		return HttpClient.post<FlaskBaseResponse & VulnerabilityReportGenerateResponse>(
+			`/vulnerabilities/reports/generate`,
+			request
+		)
 	},
 
 	/**
 	 * Generate a vulnerability report (background task)
 	 */
 	generateReportBackground(request: VulnerabilityReportGenerateRequest) {
-		return HttpClient.post<{
-			success: boolean
-			message: string
-			report_id: number
-			report_name: string
-			customer_code: string
-			status: string
-			check_status_url: string
-			download_url: string
-		}>(`/vulnerabilities/reports/generate/background`, request)
+		return HttpClient.post<FlaskBaseResponse & VulnerabilityReportGenerateBackgroundResponse>(
+			`/vulnerabilities/reports/generate/background`,
+			request
+		)
 	},
 
 	/**
 	 * List all vulnerability reports
 	 */
 	listReports(customer_code?: string) {
-		return HttpClient.get<VulnerabilityReportListResponse>(`/vulnerabilities/reports`, {
+		return HttpClient.get<FlaskBaseResponse & VulnerabilityReportListResponse>(`/vulnerabilities/reports`, {
 			params: customer_code ? { customer_code } : undefined
 		})
 	},
@@ -73,6 +72,8 @@ export default {
 	 * Delete a vulnerability report
 	 */
 	deleteReport(reportId: number) {
-		return HttpClient.delete<VulnerabilityReportDeleteResponse>(`/vulnerabilities/reports/${reportId}`)
+		return HttpClient.delete<FlaskBaseResponse & VulnerabilityReportDeleteResponse>(
+			`/vulnerabilities/reports/${reportId}`
+		)
 	}
 }

@@ -10,7 +10,7 @@
 		>
 			<template #sidebar-header>Customers</template>
 			<template #sidebar-content>
-				<n-spin :show="loadingList">
+				<n-spin :show="loadingList" class="min-h-48">
 					<template v-if="customers.length">
 						<div class="divide-border flex flex-col divide-y">
 							<div
@@ -63,10 +63,10 @@
 				<div v-if="currentConfig" class="@container flex items-center justify-between">
 					<div class="flex items-center gap-2 md:gap-3">
 						<n-button
-							v-if="xmlEditorCTX"
+							v-if="xmlEditorRef"
 							size="small"
-							:disabled="!xmlEditorCTX.canUndo()"
-							@click="xmlEditorCTX.undo"
+							:disabled="!xmlEditorRef.canUndo()"
+							@click="xmlEditorRef.undo"
 						>
 							<div class="flex items-center gap-2">
 								<Icon :name="UndoIcon" />
@@ -74,10 +74,10 @@
 							</div>
 						</n-button>
 						<n-button
-							v-if="xmlEditorCTX"
+							v-if="xmlEditorRef"
 							size="small"
-							:disabled="!xmlEditorCTX.canRedo()"
-							@click="xmlEditorCTX.redo"
+							:disabled="!xmlEditorRef.canRedo()"
+							@click="xmlEditorRef.redo"
 						>
 							<div class="flex items-center gap-2">
 								<span class="hidden @sm:flex">Redo</span>
@@ -86,7 +86,7 @@
 						</n-button>
 					</div>
 					<div class="flex items-center gap-2 md:gap-3">
-						<n-popover v-if="xmlErrors.length && xmlEditorCTX" class="p-1!">
+						<n-popover v-if="xmlErrors.length && xmlEditorRef" class="p-1!">
 							<template #trigger>
 								<div class="flex items-center justify-end gap-2">
 									<Icon
@@ -104,7 +104,7 @@
 										v-for="item of xmlErrors"
 										:key="JSON.stringify(item)"
 										class="bg-secondary hover:bg-body flex cursor-pointer flex-col gap-0.5 rounded-sm p-1 font-mono"
-										@click="xmlEditorCTX.scrollToLine(item.line)"
+										@click="xmlEditorRef.scrollToLine(item.line)"
 									>
 										<div class="text-secondary text-[8px]">line: {{ item.line }}</div>
 										<div class="text-xs">{{ item.message }}</div>
@@ -151,10 +151,10 @@
 				>
 					<template v-if="currentConfig">
 						<XMLEditor
+							ref="xmlEditorRef"
 							v-model="currentConfig.config_content"
 							class="scrollbar-styled text-sm"
 							@errors="xmlErrors = $event"
-							@mounted="xmlEditorCTX = $event"
 						/>
 					</template>
 					<template v-else>
@@ -171,7 +171,7 @@ import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
 import type { XMLEditorCtx, XMLError } from "@/components/common/XMLEditor.vue"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import type { ConfigContent } from "@/types/sysmonConfig.d"
+import type { ConfigContent } from "@/types/sysmon-config"
 import _clone from "lodash/cloneDeep"
 import { NButton, NDropdown, NEmpty, NPopover, NScrollbar, NSpin, NTooltip, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, ref } from "vue"
@@ -191,7 +191,7 @@ const deployingConfig = ref(false)
 const customers = ref<string[]>([])
 const currentConfig = ref<ConfigContent | null>(null)
 const backupConfig = ref<ConfigContent | null>(null)
-const xmlEditorCTX = ref<XMLEditorCtx | null>(null)
+const xmlEditorRef = ref<XMLEditorCtx | null>(null)
 const UndoIcon = "carbon:undo"
 const RedoIcon = "carbon:redo"
 const LinkIcon = "carbon:launch"
@@ -204,8 +204,8 @@ const xmlErrors = ref<XMLError[]>([])
 
 const loadingCustomersList = ref(false)
 const customersList = ref<Customer[]>([])
-const hasCustomersAvailable = computed<boolean>(
-	() => !!customersList.value.filter(o => !customers.value.includes(o.customer_code)).length
+const hasCustomersAvailable = computed<boolean>(() =>
+	customersList.value.some(o => !customers.value.includes(o.customer_code))
 )
 
 const customersOptions = computed(() => {

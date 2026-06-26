@@ -1,6 +1,6 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { VersionCheckResponse } from "@/types/version.d"
-import { HttpClient } from "../httpClient"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { VersionCheckResponse } from "@/types/version"
+import { HttpClient } from "../http-client"
 
 export default {
 	checkVersion() {

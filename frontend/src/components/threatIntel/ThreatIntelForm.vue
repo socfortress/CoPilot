@@ -7,59 +7,63 @@
 			<div class="flex justify-end">
 				<n-button type="primary" :disabled="!isValid" @click="create()">Submit</n-button>
 			</div>
-			<div v-if="error || !!response" class="response bg-secondary" :class="{ error }">
-				<div v-if="error" class="message">
+			<div
+				v-if="error || !!response"
+				class="bg-secondary rounded-lg border"
+				:class="error ? 'border-error' : 'border-success'"
+			>
+				<div v-if="error" class="px-4 py-2.5">
 					{{ error }}
 				</div>
-				<div v-else class="list">
-					<div class="item">
-						<div class="key">type</div>
-						<div class="value">
+				<div v-else class="divide-y divide-border">
+					<div class="px-4 py-2.5">
+						<div class="text-secondary mb-0.5 font-mono text-xs">type</div>
+						<div>
 							{{ response?.type || "-" }}
 						</div>
 					</div>
-					<div class="item">
-						<div class="key">value</div>
-						<div class="value">
+					<div class="px-4 py-2.5">
+						<div class="text-secondary mb-0.5 font-mono text-xs">value</div>
+						<div>
 							{{ response?.value || "-" }}
 						</div>
 					</div>
-					<div class="item">
-						<div class="key">ioc_source</div>
-						<div class="value">
+					<div class="px-4 py-2.5">
+						<div class="text-secondary mb-0.5 font-mono text-xs">ioc_source</div>
+						<div>
 							{{ response?.ioc_source || "-" }}
 						</div>
 					</div>
-					<div class="item">
-						<div class="key">comment</div>
-						<div class="value">
+					<div class="px-4 py-2.5">
+						<div class="text-secondary mb-0.5 font-mono text-xs">comment</div>
+						<div>
 							{{ response?.comment || "-" }}
 						</div>
 					</div>
-					<div class="item">
-						<div class="key">score</div>
-						<div class="value">
+					<div class="px-4 py-2.5">
+						<div class="text-secondary mb-0.5 font-mono text-xs">score</div>
+						<div>
 							{{ response?.score || "-" }}
 						</div>
 					</div>
-					<div class="item">
-						<div class="key">timestamp</div>
-						<div class="value">
+					<div class="px-4 py-2.5">
+						<div class="text-secondary mb-0.5 font-mono text-xs">timestamp</div>
+						<div>
 							{{ response?.timestamp ? formatDate(response.timestamp, dFormats.datetime) : "-" }}
 						</div>
 					</div>
-					<div class="item">
-						<div class="key">report_url</div>
-						<div class="value">
+					<div class="px-4 py-2.5">
+						<div class="text-secondary mb-0.5 font-mono text-xs">report_url</div>
+						<div>
 							<a v-if="response?.report_url" :href="response.report_url" target="_blank">
 								{{ response.report_url }}
 							</a>
 							<span v-else>-</span>
 						</div>
 					</div>
-					<div class="item">
-						<div class="key">virustotal_url</div>
-						<div class="value">
+					<div class="px-4 py-2.5">
+						<div class="text-secondary mb-0.5 font-mono text-xs">virustotal_url</div>
+						<div>
 							<a v-if="response?.virustotal_url" :href="response.virustotal_url" target="_blank">
 								{{ response.virustotal_url }}
 							</a>
@@ -74,23 +78,14 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { ThreatIntelResponse } from "@/types/threatIntel.d"
+import type { ThreatIntelResponse } from "@/types/threat-intel"
 import _trim from "lodash/trim"
 import { NButton, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
-import { computed, onMounted, ref } from "vue"
+import { computed, ref } from "vue"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
-
-const emit = defineEmits<{
-	(
-		e: "mounted",
-		value: {
-			restore: () => void
-		}
-	): void
-}>()
 
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
@@ -138,41 +133,7 @@ function create() {
 		})
 }
 
-onMounted(() => {
-	emit("mounted", {
-		restore
-	})
+defineExpose({
+	restore
 })
 </script>
-
-<style scoped lang="scss">
-.response {
-	border-radius: var(--border-radius);
-	border: 1px solid var(--success-color);
-
-	.message {
-		padding: 10px 16px;
-	}
-
-	.list {
-		.item {
-			padding: 10px 16px;
-
-			.key {
-				color: var(--fg-secondary-color);
-				font-size: 12px;
-				margin-bottom: 2px;
-				font-family: var(--font-family-mono);
-			}
-
-			&:not(:last-child) {
-				border-bottom: 1px solid var(--border-color);
-			}
-		}
-	}
-
-	&.error {
-		border-color: var(--error-color);
-	}
-}
-</style>

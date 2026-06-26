@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SupportedActiveResponse } from "@/types/activeResponse.d"
+import type { SupportedActiveResponse } from "@/types/active-response"
 import { NButton, NModal } from "naive-ui"
 import { ref, toRefs } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

@@ -15,7 +15,7 @@
 		<div v-if="showGrade || hasMetaFields" class="flex min-w-0 flex-1 flex-col gap-3">
 			<div v-if="showGrade" class="flex items-end justify-between gap-3">
 				<div class="min-w-0">
-					<p class="text-secondary mb-1 text-[10px] font-medium tracking-widest uppercase">Grade</p>
+					<p class="text-secondary text-3xs mb-1 font-medium tracking-widest uppercase">Grade</p>
 					<GitHubAuditGradeLabel :grade="config.last_audit_grade" class="text-4xl" />
 				</div>
 				<p
@@ -28,25 +28,25 @@
 
 			<dl v-if="hasMetaFields" class="border-border flex flex-col gap-2" :class="{ 'border-t pt-3': showGrade }">
 				<div v-if="showCustomer" class="flex items-baseline justify-between gap-3">
-					<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Customer</dt>
+					<dt class="text-secondary text-3xs shrink-0 tracking-wider uppercase">Customer</dt>
 					<dd class="text-default min-w-0 truncate font-mono text-xs">
 						{{ config.customer_code }}
 					</dd>
 				</div>
 				<div v-if="showOrganization" class="flex items-baseline justify-between gap-3">
-					<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Organization</dt>
+					<dt class="text-secondary text-3xs shrink-0 tracking-wider uppercase">Organization</dt>
 					<dd class="text-default min-w-0 truncate font-mono text-xs">
 						{{ config.organization }}
 					</dd>
 				</div>
 				<div v-if="showLastAudit" class="flex items-baseline justify-between gap-3">
-					<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Last audit</dt>
+					<dt class="text-secondary text-3xs shrink-0 tracking-wider uppercase">Last audit</dt>
 					<dd class="text-default min-w-0 truncate text-right font-mono text-xs tabular-nums">
 						{{ config.last_audit_at ? formatDate(config.last_audit_at, dFormats.datetime) : "—" }}
 					</dd>
 				</div>
 				<div v-if="showTokenType" class="flex items-baseline justify-between gap-3">
-					<dt class="text-secondary shrink-0 text-[10px] tracking-wider uppercase">Token type</dt>
+					<dt class="text-secondary text-3xs shrink-0 tracking-wider uppercase">Token type</dt>
 					<dd class="text-default min-w-0 truncate text-right font-mono text-xs">
 						{{ tokenTypeLabel }}
 					</dd>
@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GitHubAuditConfig } from "@/types/githubAudit.d"
+import type { GitHubAuditConfig } from "@/types/github-audit"
 import { NProgress } from "naive-ui"
 import { computed } from "vue"
 import { useSettingsStore } from "@/stores/settings"

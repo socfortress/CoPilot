@@ -37,7 +37,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { EventSource } from "@/types/eventSources.d"
+import type { EventSource } from "@/types/event-sources"
 import { NButton, NFormItem, NInput, NSelect, NSwitch, useMessage } from "naive-ui"
 import { computed, reactive, ref } from "vue"
 import Api from "@/api"

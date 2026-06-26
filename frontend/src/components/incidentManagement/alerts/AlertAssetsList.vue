@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertAsset } from "@/types/incidentManagement/alerts.d"
+import type { AlertAsset } from "@/types/incidentManagement/alerts"
 import { NEmpty } from "naive-ui"
 import { toRefs } from "vue"
 import AlertAssetItem from "./AlertAsset.vue"

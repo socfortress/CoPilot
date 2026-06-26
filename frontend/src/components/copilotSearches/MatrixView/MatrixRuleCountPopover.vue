@@ -15,11 +15,11 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreRuleIndexEntry } from "@/types/copilotSearches.d"
+import type { MitreRuleIndexEntry } from "@/types/copilot-searches"
 import { NPopover, NTag } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import RulePreviewList from "../RulePreviewList.vue"
-import { MATRIX_RULE_POPOVER, MATRIX_RULE_TAG_CLASS } from "./matrixCoverage"
+import { MATRIX_RULE_POPOVER, MATRIX_RULE_TAG_CLASS } from "./matrix-coverage"
 
 withDefaults(
 	defineProps<{

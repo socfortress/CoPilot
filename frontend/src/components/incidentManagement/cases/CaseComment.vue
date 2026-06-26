@@ -1,18 +1,22 @@
 <template>
-	<div class="case-comment-item flex gap-3" :class="{ embedded }">
-		<div v-if="userPic" class="user-pic">
+	<div class="flex w-full gap-3">
+		<div v-if="userPic" class="pt-0.5">
 			<n-avatar round :size="32" :src="userPic" />
 		</div>
-		<div class="comment flex grow flex-col gap-1 overflow-hidden">
-			<div class="user flex items-center gap-3">
-				<div class="user-name">
+		<div class="flex grow flex-col gap-1 overflow-hidden">
+			<div class="ml-0.5 flex items-center gap-3">
+				<div class="font-semibold">
 					{{ comment.user_name }}
 				</div>
-				<div class="comment-time">
+				<div class="text-secondary text-2xs font-mono">
 					{{ formatDate(comment.created_at, dFormats.datetime) }}
 				</div>
 			</div>
-			<div v-if="mode === 'view'" class="comment-message whitespace-pre-wrap">
+			<div
+				v-if="mode === 'view'"
+				class="border-default rounded-lg border px-2.5 py-2 whitespace-pre-wrap"
+				:class="embedded ? 'bg-secondary' : 'bg-default'"
+			>
 				{{ comment.comment }}
 			</div>
 
@@ -78,7 +82,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { CaseComment } from "@/types/incidentManagement/cases.d"
+import type { CaseComment } from "@/types/incidentManagement/cases"
 import { NAvatar, NButton, NInput, NPopconfirm, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
@@ -174,44 +178,3 @@ onBeforeMount(() => {
 	userPic.value = getAvatar({ seed: initials, text: initials, size: 64 })
 })
 </script>
-
-<style lang="scss" scoped>
-.case-comment-item {
-	width: 100%;
-
-	.user-pic {
-		padding-top: 2px;
-	}
-
-	.comment {
-		.user {
-			margin-left: 2px;
-
-			.user-name {
-				font-weight: 600;
-			}
-
-			.comment-time {
-				font-size: 11px;
-				color: var(--fg-secondary-color);
-				font-family: var(--font-family-mono);
-			}
-		}
-
-		.comment-message {
-			border-radius: var(--border-radius);
-			background-color: var(--bg-default-color);
-			border: 1px solid var(--border-color);
-			padding: 8px 10px;
-		}
-	}
-
-	&.embedded {
-		.comment {
-			.comment-message {
-				background-color: var(--bg-secondary-color);
-			}
-		}
-	}
-}
-</style>

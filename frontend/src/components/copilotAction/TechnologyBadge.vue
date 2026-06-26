@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
-import type { CopilotAction } from "@/types/copilotAction.d"
+import type { CopilotAction } from "@/types/copilot-action"
 import Badge from "@/components/common/Badge.vue"
 import TechnologyIcon from "./TechnologyIcon.vue"
 

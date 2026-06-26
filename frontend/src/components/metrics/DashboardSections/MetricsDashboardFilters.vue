@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiError } from "@/types/common.d"
+import type { ApiError } from "@/types/common"
 import { NButton, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

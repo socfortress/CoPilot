@@ -156,9 +156,12 @@ function submit(e: Event) {
 		if (!errors) {
 			loading.value = true
 
-			const method = username.value === storedUserName ? "resetOwnPassword" : "resetPassword"
+			const method =
+				username.value === storedUserName
+					? Api.auth.resetOwnPassword(username.value, model.value.password || "")
+					: Api.auth.resetPassword(username.value, model.value.password || "")
 
-			Api.auth[method](username.value, model.value.password || "")
+			method
 				.then(res => {
 					if (res.data.success) {
 						clear()

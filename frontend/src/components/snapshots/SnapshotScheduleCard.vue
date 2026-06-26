@@ -47,7 +47,7 @@
 
 		<template #mainExtra>
 			<div class="flex flex-col gap-2">
-				<span class="text-secondary text-[10px] font-medium tracking-wider uppercase">Configuration</span>
+				<span class="text-secondary text-3xs font-medium tracking-wider uppercase">Configuration</span>
 				<div class="flex flex-wrap gap-2">
 					<Badge type="splitted" bright size="small" color="primary">
 						<template #label>
@@ -125,7 +125,7 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
-import type { SnapshotScheduleResponse } from "@/types/snapshots.d"
+import type { SnapshotScheduleResponse } from "@/types/snapshots"
 import { NButton, NPopconfirm, NSwitch } from "naive-ui"
 import { computed } from "vue"
 import Badge from "@/components/common/Badge.vue"

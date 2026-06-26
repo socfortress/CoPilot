@@ -42,7 +42,7 @@ import type {
 	MitreSubTechnique,
 	MitreTactic,
 	MitreTechnique
-} from "@/types/copilotSearches.d"
+} from "@/types/copilot-searches"
 import { useElementBounding, useWindowSize } from "@vueuse/core"
 import { NButton, NEmpty, NSpin } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"

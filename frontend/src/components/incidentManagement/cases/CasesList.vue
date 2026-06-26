@@ -185,8 +185,8 @@
 <script setup lang="ts">
 import type { CasesFilter, CasesFilterTypes } from "@/api/endpoints/incidentManagement/cases"
 import type { ApiError } from "@/types/common"
-import type { Customer } from "@/types/customers.d"
-import type { Case, CaseStatus } from "@/types/incidentManagement/cases.d"
+import type { Customer } from "@/types/customers"
+import type { Case, CaseStatus } from "@/types/incidentManagement/cases"
 import { useResizeObserver } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"
 import {

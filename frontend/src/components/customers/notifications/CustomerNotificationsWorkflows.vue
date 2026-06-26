@@ -3,11 +3,7 @@
 		<transition name="form-fade" mode="out-in">
 			<div v-if="showForm" class="flex flex-col gap-4">
 				<h4>Create a Notification</h4>
-				<CustomerNotificationsWorkflowsForm
-					:customer-code
-					@mounted="formCTX = $event"
-					@submitted="refreshList()"
-				>
+				<CustomerNotificationsWorkflowsForm ref="formRef" :customer-code @submitted="refreshList()">
 					<template #additionalActions="{ loading: loadingForm }">
 						<n-button :disabled="loadingForm" @click="closeForm()">Close</n-button>
 					</template>
@@ -49,7 +45,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { IncidentNotification } from "@/types/incidentManagement/notifications.d"
+import type { IncidentNotification } from "@/types/incidentManagement/notifications"
 import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"
@@ -72,7 +68,7 @@ const message = useMessage()
 const showForm = ref(false)
 const loading = ref(false)
 const list = ref<IncidentNotification[]>([])
-const formCTX = ref<{ reset: (incidentNotification?: IncidentNotification) => void } | null>(null)
+const formRef = ref<{ reset: (incidentNotification?: IncidentNotification) => void } | null>(null)
 
 function getCustomerNetworkConnectors() {
 	loading.value = true
@@ -99,6 +95,7 @@ function openForm() {
 }
 
 function closeForm() {
+	formRef.value?.reset()
 	showForm.value = false
 }
 

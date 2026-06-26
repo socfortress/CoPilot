@@ -47,7 +47,7 @@
 import type { FormInst, FormRules } from "naive-ui"
 import type { UpdateMetaAutoRequest } from "@/api/endpoints/integrations"
 import type { ApiError } from "@/types/common"
-import type { CustomerIntegrationMetaNetwork, CustomerIntegrationMetaThirdParty } from "@/types/integrations.d"
+import type { CustomerIntegrationMetaNetwork, CustomerIntegrationMetaThirdParty } from "@/types/integrations"
 import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"

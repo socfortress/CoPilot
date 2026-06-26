@@ -28,13 +28,13 @@
 			<div class="mb-2 flex justify-end">
 				<n-button type="primary" :disabled="!isValid" :loading="uploading" @click="submit()">Submit</n-button>
 			</div>
-			<div v-if="error" class="response bg-secondary error">
+			<div v-if="error" class="bg-secondary rounded-lg border border-error">
 				<div class="px-4 py-2.5">
 					{{ error }}
 				</div>
 			</div>
 			<div v-else class="flex flex-col gap-3">
-				<div v-if="fileResponse" class="response bg-secondary p-4">
+				<div v-if="fileResponse" class="bg-secondary rounded-lg border border-success p-4">
 					<div class="flex flex-col gap-4 text-sm">
 						<div class="font-semibold">
 							This link gives you access to the instance created from your uploaded file.
@@ -84,13 +84,13 @@
 				</div>
 				<div
 					v-if="fileResponse && !analysisResponse"
-					class="response bg-secondary flex flex-wrap items-center gap-2 p-4"
+					class="bg-secondary flex flex-wrap items-center gap-2 rounded-lg border border-success p-4"
 				>
 					<Icon :name="LoadingIcon" :size="16" class="relative top-0.5" />
 					analyzing...
 				</div>
 				<n-spin v-if="analysisResponse" :show="loading">
-					<div class="response bg-secondary overflow-hidden">
+					<div class="bg-secondary overflow-hidden rounded-lg border border-success">
 						<div class="bg-default flex items-center justify-between p-4">
 							<div>Analysis</div>
 							<n-button :loading secondary size="small" @click="analysis()">
@@ -212,7 +212,7 @@
 <script setup lang="ts">
 import type { UploadFileInfo } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { VirusTotalAnalysis, VirusTotalFileCheckResponse } from "@/types/threatIntel.d"
+import type { VirusTotalAnalysis, VirusTotalFileCheckResponse } from "@/types/threat-intel"
 import { useClipboard } from "@vueuse/core"
 import _isEmpty from "lodash/isEmpty"
 import {
@@ -227,19 +227,10 @@ import {
 	NUploadDragger,
 	useMessage
 } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
-
-const emit = defineEmits<{
-	(
-		e: "mounted",
-		value: {
-			restore: () => void
-		}
-	): void
-}>()
 
 const LinkIcon = "carbon:launch"
 const RefreshIcon = "carbon:renew"
@@ -346,20 +337,7 @@ watch(isPasswordProtected, () => {
 	filePassword.value = null
 })
 
-onMounted(() => {
-	emit("mounted", {
-		restore
-	})
+defineExpose({
+	restore
 })
 </script>
-
-<style scoped lang="scss">
-.response {
-	border-radius: var(--border-radius);
-	border: 1px solid var(--success-color);
-
-	&.error {
-		border-color: var(--error-color);
-	}
-}
-</style>

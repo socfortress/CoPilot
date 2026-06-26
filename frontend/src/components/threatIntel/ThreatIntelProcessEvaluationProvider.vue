@@ -123,7 +123,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { EvaluationData, MCPQueryResponse } from "@/types/threatIntel.d"
+import type { EvaluationData, MCPQueryResponse } from "@/types/threat-intel"
 import _toSafeInteger from "lodash/toSafeInteger"
 import { NCard, NEmpty, NInput, NModal, NSpin, NStatistic, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"

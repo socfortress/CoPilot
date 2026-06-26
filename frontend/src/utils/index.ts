@@ -1,5 +1,5 @@
 import type { Component } from "vue"
-import type { ApiError, OsTypesFull, SafeAny } from "@/types/common.d"
+import type { ApiError, OsTypesFull, SafeAny } from "@/types/common"
 import { isMobile as detectMobile } from "detect-touch-device"
 import { md5 } from "js-md5"
 import isDateObject from "lodash/isDate"
@@ -183,6 +183,7 @@ export function formatCompactNumber(value: number | null | undefined): string {
 }
 
 export function getApiErrorMessage(err: ApiError): string {
+	const axiosName = err.name
 	const axiosMessage = err.message
 	const message = err.response?.data?.message
 	const detail = err.response?.data?.detail
@@ -197,6 +198,10 @@ export function getApiErrorMessage(err: ApiError): string {
 		return `${message.replace(TRAILING_DOT_REGEX, "")}.`
 	}
 
-	// Fallback to axios message
-	return `${axiosMessage.replace(TRAILING_DOT_REGEX, "")}.`
+	if (axiosMessage) {
+		return `${axiosMessage.replace(TRAILING_DOT_REGEX, "")}.`
+	}
+
+	// Fallback to axios error name
+	return `${axiosName.replace(TRAILING_DOT_REGEX, "")}.`
 }

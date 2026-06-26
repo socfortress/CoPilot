@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertsEventElement } from "@/types/graylog/alerts.d"
+import type { AlertsEventElement } from "@/types/graylog/alerts"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"

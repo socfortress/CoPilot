@@ -15,7 +15,7 @@
 				<n-tag
 					size="small"
 					:bordered="false"
-					class="hover:text-primary! flex max-h-5 cursor-pointer! items-center px-1! font-mono text-[11px]! [&_.n-tag\_\_content]:flex [&_.n-tag\_\_content]:items-center"
+					class="hover:text-primary! text-2xs! flex max-h-5 cursor-pointer! items-center px-1! font-mono [&_.n-tag\_\_content]:flex [&_.n-tag\_\_content]:items-center"
 					@click="emit('open-technique', tactic, tech)"
 				>
 					<Icon name="carbon:view" :size="12" class="mx-0.5" />
@@ -73,11 +73,11 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreRuleIndexEntry, MitreSubTechnique, MitreTactic, MitreTechnique } from "@/types/copilotSearches.d"
+import type { MitreRuleIndexEntry, MitreSubTechnique, MitreTactic, MitreTechnique } from "@/types/copilot-searches"
 import { NButton, NCollapseTransition, NTag } from "naive-ui"
 import { computed, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
-import { coverageClass, techniqueCellTooltip } from "./matrixCoverage"
+import { coverageClass, techniqueCellTooltip } from "./matrix-coverage"
 import MatrixRuleCountPopover from "./MatrixRuleCountPopover.vue"
 import SubTechniqueCell from "./SubTechniqueCell.vue"
 

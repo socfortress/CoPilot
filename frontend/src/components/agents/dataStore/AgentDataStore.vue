@@ -79,7 +79,7 @@
 
 <script setup lang="ts">
 import type { SelectOption } from "naive-ui"
-import type { AgentArtifactData } from "@/types/agents.d"
+import type { AgentArtifactData } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import { refDebounced } from "@vueuse/core"
 import { saveAs } from "file-saver"

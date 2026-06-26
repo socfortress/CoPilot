@@ -17,7 +17,7 @@
 // EVALUATE: https://www.npmjs.com/package/@guolao/vue-monaco-editor
 
 import type { Diagnostic } from "@codemirror/lint"
-import type { Extension } from "@codemirror/state"
+import type { EditorState, Extension } from "@codemirror/state"
 import { redo, redoDepth, undo, undoDepth } from "@codemirror/commands"
 import { xml } from "@codemirror/lang-xml"
 import { linter } from "@codemirror/lint"
@@ -28,7 +28,7 @@ import _isEqual from "lodash/isEqual"
 import _trim from "lodash/trim"
 import _uniqWith from "lodash/uniqWith"
 import { tomorrow } from "thememirror"
-import { computed, onMounted, ref, shallowRef, watch } from "vue"
+import { computed, ref, shallowRef, watch } from "vue"
 import { Codemirror } from "vue-codemirror"
 import * as xmllint from "xmllint-wasm"
 import { useThemeStore } from "@/stores/theme"
@@ -49,7 +49,6 @@ export interface XMLError {
 }
 
 const emit = defineEmits<{
-	(e: "mounted", value: XMLEditorCtx): void
 	(e: "errors", value: XMLError[]): void
 }>()
 
@@ -205,8 +204,8 @@ function updateHistoryState() {
 	canRedo.value = cmView.value ? !!redoDepth(cmView.value.state) : false
 }
 
-function handleReady({ view }: { view: EditorView }) {
-	cmView.value = view
+function handleReady(payload: { view: EditorView; state: EditorState; container: HTMLDivElement }) {
+	cmView.value = payload.view
 }
 
 function handleUndo() {
@@ -241,13 +240,11 @@ watch(code, () => {
 	updateHistoryState()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		undo: handleUndo,
-		redo: handleRedo,
-		scrollToLine,
-		canRedo: () => canRedo.value,
-		canUndo: () => canUndo.value
-	})
+defineExpose({
+	undo: handleUndo,
+	redo: handleRedo,
+	scrollToLine,
+	canRedo: () => canRedo.value,
+	canUndo: () => canUndo.value
 })
 </script>

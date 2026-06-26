@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CommandResult } from "@/types/artifacts.d"
+import type { CommandResult } from "@/types/artifacts"
 import { NInput } from "naive-ui"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"

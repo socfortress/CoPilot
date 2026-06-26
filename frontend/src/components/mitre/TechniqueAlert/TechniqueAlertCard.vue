@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreTechnique } from "@/types/mitre.d"
+import type { MitreTechnique } from "@/types/mitre"
 import { NModal, NTooltip } from "naive-ui"
 import { ref } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

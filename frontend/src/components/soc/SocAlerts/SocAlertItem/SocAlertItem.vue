@@ -107,10 +107,10 @@
 </template>
 
 <script setup lang="ts">
-import type { Alert } from "@/types/alerts.d"
+import type { Alert } from "@/types/alerts"
 import type { ApiError } from "@/types/common"
-import type { SocAlert } from "@/types/soc/alert.d"
-import type { SocUser } from "@/types/soc/user.d"
+import type { SocAlert } from "@/types/soc/alert"
+import type { SocUser } from "@/types/soc/user"
 import { NCheckbox, NCollapse, NCollapseItem, NCollapseTransition, NModal, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"

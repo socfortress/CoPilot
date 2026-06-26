@@ -105,7 +105,7 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
-import type { SCAReport } from "@/types/sca.d"
+import type { SCAReport } from "@/types/sca"
 import { NButton } from "naive-ui"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

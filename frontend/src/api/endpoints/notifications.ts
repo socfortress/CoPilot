@@ -1,4 +1,4 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	NotificationDispatchLogEntry,
 	NotificationRoute,
@@ -10,8 +10,8 @@ import type {
 	ShuffleIntegrationUpdatePayload,
 	ShuffleOrg,
 	ShuffleVerifyResult
-} from "@/types/notifications.d"
-import { HttpClient } from "../httpClient"
+} from "@/types/notifications"
+import { HttpClient } from "../http-client"
 
 // Per-customer notification routing — wraps app/notifications/routes/notifications.py.
 // Used by the Customer detail page's "AI Notifications" tab to manage who

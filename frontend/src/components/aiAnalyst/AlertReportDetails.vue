@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertWithReport } from "@/types/aiAnalyst.d"
+import type { AlertWithReport } from "@/types/ai-analyst"
 import { NEmpty, NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
 import Badge from "@/components/common/Badge.vue"

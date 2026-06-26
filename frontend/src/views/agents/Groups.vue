@@ -35,7 +35,7 @@
 				</div>
 			</template>
 			<template #sidebar-content>
-				<n-spin :show="loadingGroups">
+				<n-spin :show="loadingGroups" class="min-h-48">
 					<template v-if="groupsList.length">
 						<div class="divide-border flex flex-col divide-y">
 							<div
@@ -70,10 +70,10 @@
 				<div class="@container flex items-center justify-between">
 					<div class="flex items-center gap-2 md:gap-3">
 						<n-button
-							v-if="xmlEditorCTX"
+							v-if="xmlEditorRef"
 							size="small"
-							:disabled="!xmlEditorCTX.canUndo()"
-							@click="xmlEditorCTX.undo"
+							:disabled="!xmlEditorRef.canUndo()"
+							@click="xmlEditorRef.undo"
 						>
 							<div class="flex items-center gap-2">
 								<Icon :name="UndoIcon" />
@@ -81,10 +81,10 @@
 							</div>
 						</n-button>
 						<n-button
-							v-if="xmlEditorCTX"
+							v-if="xmlEditorRef"
 							size="small"
-							:disabled="!xmlEditorCTX.canRedo()"
-							@click="xmlEditorCTX.redo"
+							:disabled="!xmlEditorRef.canRedo()"
+							@click="xmlEditorRef.redo"
 						>
 							<div class="flex items-center gap-2">
 								<span class="hidden @sm:flex">Redo</span>
@@ -93,7 +93,7 @@
 						</n-button>
 					</div>
 					<div class="flex items-center gap-2 md:gap-3">
-						<n-popover v-if="xmlErrors.length && xmlEditorCTX" class="p-1!">
+						<n-popover v-if="xmlErrors.length && xmlEditorRef" class="p-1!">
 							<template #trigger>
 								<div class="flex items-center justify-end gap-2">
 									<Icon
@@ -111,7 +111,7 @@
 										v-for="item of xmlErrors"
 										:key="JSON.stringify(item)"
 										class="bg-secondary hover:bg-body flex cursor-pointer flex-col gap-0.5 rounded-sm p-1 font-mono"
-										@click="xmlEditorCTX.scrollToLine(item.line)"
+										@click="xmlEditorRef.scrollToLine(item.line)"
 									>
 										<div class="text-secondary text-[8px]">line: {{ item.line }}</div>
 										<div class="text-xs">{{ item.message }}</div>
@@ -146,10 +146,10 @@
 				>
 					<template v-if="currentGroup && currentFile">
 						<XMLEditor
+							ref="xmlEditorRef"
 							v-model="currentFile.content"
 							class="scrollbar-styled text-sm"
 							@errors="xmlErrors = $event"
-							@mounted="xmlEditorCTX = $event"
 						/>
 					</template>
 					<template v-else>
@@ -164,7 +164,7 @@
 <script setup lang="ts">
 import type { XMLEditorCtx, XMLError } from "@/components/common/XMLEditor.vue"
 import type { ApiError } from "@/types/common"
-import type { WazuhGroup, WazuhGroupFileDetails } from "@/types/wazuh/groups.d"
+import type { WazuhGroup, WazuhGroupFileDetails } from "@/types/wazuh/groups"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import _clone from "lodash/cloneDeep"
@@ -185,7 +185,7 @@ const groupsList = ref<WazuhGroup[]>([])
 const currentGroup = ref<WazuhGroup | null>(null)
 const currentFile = ref<WazuhGroupFileDetails | null>(null)
 const backupFile = ref<WazuhGroupFileDetails | null>(null)
-const xmlEditorCTX = ref<XMLEditorCtx | null>(null)
+const xmlEditorRef = ref<XMLEditorCtx | null>(null)
 const UndoIcon = "carbon:undo"
 const RedoIcon = "carbon:redo"
 const SearchIcon = "ion:search-outline"

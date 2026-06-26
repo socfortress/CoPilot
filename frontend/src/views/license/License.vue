@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import type { LicenseKey } from "@/types/license.d"
+import type { LicenseKey } from "@/types/license"
 import { ref } from "vue"
 import LicenseViewer from "@/components/license/LicenseViewer.vue"
 

@@ -45,7 +45,7 @@
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { CatalogStoryRow } from "@/types/detectionCatalog.d"
+import type { CatalogStoryRow } from "@/types/detection-catalog"
 import { NDataTable, NInput, NModal, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { Alert } from "@/types/incidentManagement/alerts.d"
+import type { Alert } from "@/types/incidentManagement/alerts"
 import _trim from "lodash/trim"
 import { NButton, NDynamicTags, NSpin, NTag, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
@@ -72,7 +72,7 @@ function deleteTag(tagId: number) {
 function newAlertTag(text: string): string | { label: string; value: string } {
 	const tag = _trim(text)
 
-	if (tag && alert.value.tags.filter(o => o.tag.toLowerCase() === tag.toLowerCase()).length === 0) {
+	if (tag && !alert.value.tags.some(o => o.tag.toLowerCase() === tag.toLowerCase())) {
 		creatingTag.value = true
 
 		Api.incidentManagement.alerts

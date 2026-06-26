@@ -18,10 +18,10 @@
 		<n-drawer-content title="Threat Intel" closable :native-scrollbar="false" body-content-class="px-0! py-4!">
 			<n-collapse default-expanded-names="1" accordion display-directive="show">
 				<n-collapse-item title="SOCFortress Threat Intel" name="1" class="px-6">
-					<ThreatIntelForm @mounted="threatIntelCTX = $event" />
+					<ThreatIntelForm ref="threatIntelRef" />
 				</n-collapse-item>
 				<n-collapse-item title="Virus Total" name="2" class="px-6">
-					<VirusTotalForm @mounted="virusTotalCTX = $event" />
+					<VirusTotalForm ref="virusTotalRef" />
 				</n-collapse-item>
 			</n-collapse>
 		</n-drawer-content>
@@ -44,8 +44,8 @@ defineProps<{
 
 const ThreatIcon = "mynaui:info-waves"
 const showThreatIntelDrawer = ref(false)
-const threatIntelCTX = ref<{ restore: () => void } | null>(null)
-const virusTotalCTX = ref<{ restore: () => void } | null>(null)
+const threatIntelRef = ref<{ restore: () => void } | null>(null)
+const virusTotalRef = ref<{ restore: () => void } | null>(null)
 
 function openDrawer() {
 	showThreatIntelDrawer.value = true
@@ -55,8 +55,8 @@ function closeDrawer() {
 }
 
 watch(showThreatIntelDrawer, () => {
-	threatIntelCTX.value?.restore()
-	virusTotalCTX.value?.restore()
+	threatIntelRef.value?.restore()
+	virusTotalRef.value?.restore()
 })
 
 defineExpose({

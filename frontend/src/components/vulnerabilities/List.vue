@@ -26,7 +26,7 @@
 		</div>
 
 		<CollapseKeepAlive :show="showFiltersView" embedded arrow="top-right">
-			<ListFilters class="p-3" @submit="applyFilters" @mounted="filtersCTX = $event" />
+			<ListFilters ref="filtersRef" class="p-3" @submit="applyFilters" />
 		</CollapseKeepAlive>
 
 		<!-- Vulnerability List -->
@@ -61,11 +61,7 @@
 <script setup lang="ts">
 import type { VulnerabilitiesListFilter } from "./types"
 import type { ApiError } from "@/types/common"
-import type {
-	VulnerabilitySearchItem,
-	VulnerabilitySearchQuery,
-	VulnerabilitySeverity
-} from "@/types/vulnerabilities.d"
+import type { VulnerabilitySearchItem, VulnerabilitySearchQuery, VulnerabilitySeverity } from "@/types/vulnerabilities"
 import { useResizeObserver, useStorage, watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NAlert, NBadge, NButton, NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
@@ -88,7 +84,7 @@ const showSizePicker = ref(true)
 const header = ref()
 const showFiltersView = useStorage<boolean>("agents-vulnerability-list-filters-view-state", false, localStorage)
 
-const filtersCTX = ref<{ setFilter: (payload: VulnerabilitiesListFilter[]) => void } | null>(null)
+const filtersRef = ref<{ setFilter: (payload: VulnerabilitiesListFilter[]) => void } | null>(null)
 const filters = ref<VulnerabilitiesListFilter[]>([])
 
 const filtered = computed<boolean>(() => {
@@ -142,12 +138,12 @@ function getList() {
 
 function selectSeverity(value: VulnerabilitySeverity) {
 	showFiltersView.value = true
-	filtersCTX.value?.setFilter([{ type: "severity", value }])
+	filtersRef.value?.setFilter([{ type: "severity", value }])
 }
 
 function selectPackage(value: string) {
 	showFiltersView.value = true
-	filtersCTX.value?.setFilter([{ type: "package_name", value }])
+	filtersRef.value?.setFilter([{ type: "package_name", value }])
 }
 
 function applyFilters(newFilters: VulnerabilitiesListFilter[]) {

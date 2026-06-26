@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SocCaseAsset, SocCaseAssetsState } from "@/types/soc/asset.d"
+import type { SocCaseAsset, SocCaseAssetsState } from "@/types/soc/asset"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"

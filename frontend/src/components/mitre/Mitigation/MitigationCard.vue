@@ -56,8 +56,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
-import type { MitreMitigationDetails } from "@/types/mitre.d"
+import type { MitreMitigationDetails } from "@/types/mitre"
 import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"

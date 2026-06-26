@@ -75,8 +75,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
-import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
+import type { MonitoringAlert } from "@/types/monitoring-alerts"
 import { useResizeObserver } from "@vueuse/core"
 import { NButton, NEmpty, NPagination, NPopover, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"

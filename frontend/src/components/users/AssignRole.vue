@@ -46,7 +46,7 @@
 <script setup lang="ts">
 import type { FormInst } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { User } from "@/types/user.d"
+import type { User } from "@/types/user"
 import { NButton, NForm, NFormItem, NModal, NSelect, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"

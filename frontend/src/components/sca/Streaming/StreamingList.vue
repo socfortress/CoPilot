@@ -14,7 +14,7 @@
 			@stop="stopStream"
 		/>
 
-		<StreamingFilters @submit="applyFilters" @mounted="filtersCTX = $event" />
+		<StreamingFilters @submit="applyFilters" />
 
 		<StreamingResultsList
 			:is-connecting
@@ -35,10 +35,12 @@
 
 <script setup lang="ts">
 import type { ScaStreamingFilters, ScaStreamingListFilter } from "./types.d"
-import type { AgentScaOverviewItem, ScaStreamComplete, ScaStreamProgress } from "@/types/sca.d"
+import type { ApiError } from "@/types/common.ts"
+import type { AgentScaOverviewItem, ScaStreamComplete, ScaStreamProgress } from "@/types/sca"
 import { NAlert, useMessage } from "naive-ui"
 import { computed, onBeforeUnmount, reactive, ref } from "vue"
 import Api from "@/api"
+import { getApiErrorMessage } from "@/utils/index.ts"
 import StreamingFilters from "./StreamingFilters.vue"
 import StreamingProgressHeader from "./StreamingProgressHeader.vue"
 import StreamingResultsList from "./StreamingResultsList.vue"
@@ -63,8 +65,6 @@ const progress = reactive<ScaStreamProgress>({
 	results_so_far: 0,
 	percent_complete: 0
 })
-
-const filtersCTX = ref<{ setFilter: (payload: ScaStreamingListFilter[]) => void } | null>(null)
 
 const filters = reactive<ScaStreamingFilters>({
 	customer_code: undefined,
@@ -156,7 +156,18 @@ async function startStream() {
 							agent_id: data.agent_id,
 							agent_name: data.agent_name,
 							customer_code: data.customer_code,
-							...policy
+							policy_id: policy.policy_id,
+							policy_name: policy.policy_name,
+							description: policy.description,
+							total_checks: policy.total_checks,
+							pass: policy.pass_count,
+							fail: policy.fail_count,
+							invalid: policy.invalid_count,
+							score: policy.score,
+							start_scan: policy.start_scan,
+							end_scan: policy.end_scan,
+							references: policy.references,
+							hash_file: policy.hash_file
 						})
 					}
 				},
@@ -174,20 +185,20 @@ async function startStream() {
 					message.success(data.message)
 				},
 				onError(error) {
-					const errorMessage = error?.message || error?.error || "Unknown error"
-					console.warn("Stream error:", error)
+					const errorMessage = "error" in error ? error.error : getApiErrorMessage(error as ApiError)
 					if (!streamComplete.value) {
-						streamError.value = errorMessage
+						streamError.value = errorMessage || "Unknown error"
 					}
 					progress.failed++
 				}
 			},
 			abortController.value
 		)
-	} catch (error: any) {
-		if (error.name !== "AbortError") {
-			streamError.value = error.message || "Connection error"
-			console.error("Stream connection error:", error)
+	} catch (error) {
+		const errorMessage = getApiErrorMessage(error as ApiError)
+		if (errorMessage !== "AbortError") {
+			streamError.value = errorMessage || "Connection error"
+			console.error("Stream connection error:", errorMessage)
 		}
 	} finally {
 		isStreaming.value = false

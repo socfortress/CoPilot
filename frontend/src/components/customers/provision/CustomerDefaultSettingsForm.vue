@@ -37,24 +37,18 @@
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { CustomerProvisioningDefaultSettings } from "@/types/customers.d"
+import type { CustomerProvisioningDefaultSettings } from "@/types/customers"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import isIP from "validator/es/lib/isIP"
 import isURL from "validator/es/lib/isURL"
-import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
-	(
-		e: "mounted",
-		value: {
-			load: () => void
-		}
-	): void
 }>()
 
 const loadingDefaultSettings = ref(false)
@@ -192,8 +186,6 @@ function resetForm() {
 function submit() {
 	submittingDefaultSettings.value = true
 
-	const method = entityId.value ? "updateProvisioningDefaultSettings" : "setProvisioningDefaultSettings"
-
 	const payload = {
 		id: entityId.value || 0,
 		clusterName: form.value.cluster_name,
@@ -208,7 +200,11 @@ function submit() {
 		wazuhDomain: form.value.wazuh_domain || ""
 	}
 
-	Api.customers[method](payload)
+	const method = entityId.value
+		? Api.customers.updateProvisioningDefaultSettings(payload)
+		: Api.customers.setProvisioningDefaultSettings(payload)
+
+	method
 		.then(res => {
 			if (res.data.success) {
 				entityId.value = res.data.customer_provisioning_default_settings.id
@@ -275,9 +271,7 @@ onBeforeMount(() => {
 	getProvisioningDefaultSettings()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		load
-	})
+defineExpose({
+	load
 })
 </script>

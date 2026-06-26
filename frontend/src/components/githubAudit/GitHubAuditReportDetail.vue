@@ -33,7 +33,7 @@
 					class="flex flex-col items-center gap-1 px-3 py-4"
 					:class="stat.bgClass"
 				>
-					<p class="text-secondary text-[10px] tracking-wider uppercase">{{ stat.label }}</p>
+					<p class="text-secondary text-3xs tracking-wider uppercase">{{ stat.label }}</p>
 					<p class="font-mono text-2xl leading-none font-bold tabular-nums" :class="stat.numberClass">
 						{{ report[stat.key] }}
 					</p>
@@ -156,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GitHubAuditReport } from "@/types/githubAudit.d"
+import type { GitHubAuditReport } from "@/types/github-audit"
 import {
 	NAlert,
 	NButton,
@@ -172,7 +172,7 @@ import {
 } from "naive-ui"
 import { computed } from "vue"
 import Api from "@/api"
-import { AuditStatus, SeverityLevel } from "@/types/githubAudit.d"
+import { AuditStatus, SeverityLevel } from "@/types/github-audit"
 import GitHubAuditGradeBadge from "./GitHubAuditGradeBadge.vue"
 
 const props = defineProps<{

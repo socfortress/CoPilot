@@ -104,14 +104,14 @@
 
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
-import type { ExclusionRulePayload } from "@/api/endpoints/incidentManagement/exclusionRules"
+import type { ExclusionRulePayload } from "@/api/endpoints/incidentManagement/exclusion-rules"
 import type { ApiError } from "@/types/common"
-import type { Customer } from "@/types/customers.d"
-import type { ExclusionRule } from "@/types/incidentManagement/exclusionRules"
+import type { Customer } from "@/types/customers"
+import type { ExclusionRule } from "@/types/incidentManagement/exclusion-rules"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NAlert, NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
@@ -134,12 +134,6 @@ const props = defineProps<{
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
 	(e: "submitted", value: ExclusionRule): void
-	(
-		e: "mounted",
-		value: {
-			reset: () => void
-		}
-	): void
 }>()
 
 const { entity, resetOnSubmit } = toRefs(props)
@@ -364,9 +358,7 @@ onBeforeMount(() => {
 	getCustomers()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		reset
-	})
+defineExpose({
+	reset
 })
 </script>

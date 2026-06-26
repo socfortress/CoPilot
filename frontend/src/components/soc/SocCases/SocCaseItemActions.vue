@@ -31,12 +31,12 @@
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { SocCase, SocCaseExt } from "@/types/soc/case.d"
+import type { SocCase, SocCaseExt } from "@/types/soc/case"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { StateName } from "@/types/soc/case.d"
+import { StateName } from "@/types/soc/case"
 import { getApiErrorMessage } from "@/utils"
 
 const { caseData, size } = defineProps<{

@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { MessageExtended } from "@/types/graylog/messages.d"
+import type { MessageExtended } from "@/types/graylog/messages"
 import { NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
 import { onBeforeMount, ref, watch } from "vue"

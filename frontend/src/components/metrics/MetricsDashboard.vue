@@ -67,7 +67,7 @@
 
 <script setup lang="ts">
 import type { Ref } from "vue"
-import type { MetricsDashboardSectionExpose } from "@/types/metrics.d"
+import type { MetricsDashboardSectionExpose } from "@/types/metrics"
 import { NCard, NEmpty, NTabPane, NTabs } from "naive-ui"
 import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"

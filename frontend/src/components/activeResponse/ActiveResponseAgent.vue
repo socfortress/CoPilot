@@ -21,8 +21,8 @@
 </template>
 
 <script setup lang="ts">
-import type { SupportedActiveResponse } from "@/types/activeResponse.d"
-import type { Agent } from "@/types/agents.d"
+import type { SupportedActiveResponse } from "@/types/active-response"
+import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"

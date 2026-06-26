@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="tsx">
-import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
+import type { CaseTemplate } from "@/types/incidentManagement/case-templates"
 import { NButton, NModal } from "naive-ui"
 import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"

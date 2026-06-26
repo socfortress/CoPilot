@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { GitHubAuditConfig } from "@/types/githubAudit.d"
+import type { GitHubAuditConfig } from "@/types/github-audit"
 import { NButton, NTag, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
@@ -83,7 +83,7 @@ async function runAudit() {
 		await Api.githubAudit.runAuditFromConfig(props.config.id)
 		message.success("Audit completed successfully")
 		emit("audit-complete")
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to run audit")
 	} finally {
 		running.value = false

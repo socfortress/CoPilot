@@ -92,25 +92,19 @@
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { Ref } from "vue"
 import type { ApiError } from "@/types/common"
-import type { Customer } from "@/types/customers.d"
-import type { Case, CasePayload, CaseStatus } from "@/types/incidentManagement/cases.d"
-import type { CaseTemplate } from "@/types/incidentManagement/caseTemplates.d"
+import type { Customer } from "@/types/customers"
+import type { CaseTemplate } from "@/types/incidentManagement/case-templates"
+import type { Case, CasePayload, CaseStatus } from "@/types/incidentManagement/cases"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, h, inject, onBeforeMount, onMounted, ref, watch } from "vue"
+import { computed, h, inject, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
 	(e: "submitted", value: Case): void
-	(
-		e: "mounted",
-		value: {
-			load: () => void
-		}
-	): void
 }>()
 
 const loadingAvailableUsers = ref(false)
@@ -364,9 +358,7 @@ onBeforeMount(() => {
 	load()
 })
 
-onMounted(() => {
-	emit("mounted", {
-		load
-	})
+defineExpose({
+	load
 })
 </script>

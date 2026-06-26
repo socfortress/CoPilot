@@ -32,7 +32,7 @@
 		</div>
 
 		<CollapseKeepAlive :show="showFiltersView" embedded arrow="top-right">
-			<ListFilters class="p-3" @submit="applyFilters" @mounted="filtersCTX = $event" />
+			<ListFilters ref="filtersRef" class="p-3" @submit="applyFilters" />
 		</CollapseKeepAlive>
 
 		<!-- SCA Results List -->
@@ -61,10 +61,9 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
 import type { ScaOverviewFilter, ScaOverviewFilterTypes } from "./types.d"
 import type { ApiError } from "@/types/common"
-import type { AgentScaOverviewItem, ScaOverviewQuery } from "@/types/sca.d"
+import type { AgentScaOverviewItem, ScaOverviewQuery } from "@/types/sca"
 import { useResizeObserver, useStorage, watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import _set from "lodash/set"
@@ -89,7 +88,7 @@ const showSizePicker = ref(true)
 const header = ref()
 const showFiltersView = useStorage<boolean>("agents-sca-list-filters-view-state", false, localStorage)
 
-const filtersCTX = ref<{ setFilter: (payload: ScaOverviewFilter[]) => void } | null>(null)
+const filtersRef = ref<{ setFilter: (payload: ScaOverviewFilter[]) => void } | null>(null)
 const filters = ref<ScaOverviewFilter[]>([])
 
 const filtered = computed<boolean>(() => {
@@ -148,17 +147,17 @@ function getList() {
 
 function selectPolicyID(value: string) {
 	showFiltersView.value = true
-	filtersCTX.value?.setFilter([{ type: "policy_id", value }])
+	filtersRef.value?.setFilter([{ type: "policy_id", value }])
 }
 
 function selectMinScore(value: number) {
 	showFiltersView.value = true
-	filtersCTX.value?.setFilter([{ type: "min_score", value }])
+	filtersRef.value?.setFilter([{ type: "min_score", value }])
 }
 
 function selectMaxScore(value: number) {
 	showFiltersView.value = true
-	filtersCTX.value?.setFilter([{ type: "max_score", value }])
+	filtersRef.value?.setFilter([{ type: "max_score", value }])
 }
 
 function applyFilters(newFilters: ScaOverviewFilter[]) {

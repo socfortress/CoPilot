@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { AvailableContentPack } from "@/types/stackProvisioning.d"
+import type { AvailableContentPack } from "@/types/stack-provisioning"
 import { NButton, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"

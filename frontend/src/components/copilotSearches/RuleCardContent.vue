@@ -182,7 +182,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { RuleDetail } from "@/types/copilotSearches.d"
+import type { RuleDetail } from "@/types/copilot-searches"
 import _pick from "lodash/pick"
 import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"

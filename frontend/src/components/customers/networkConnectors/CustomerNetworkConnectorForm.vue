@@ -75,7 +75,7 @@
 
 <script setup lang="ts">
 import type { StepsProps } from "naive-ui"
-import type { NewNetworkConnector } from "@/api/endpoints/networkConnectors"
+import type { NewNetworkConnector } from "@/api/endpoints/network-connectors"
 import type { ServiceItemData } from "@/components/services/types"
 import type { ApiError } from "@/types/common"
 import { NButton, NFormItem, NInput, NScrollbar, NSelect, NStep, NSteps, useMessage } from "naive-ui"

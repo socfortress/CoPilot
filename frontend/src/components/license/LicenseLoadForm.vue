@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { LicenseKey } from "@/types/license.d"
+import type { LicenseKey } from "@/types/license"
 import { NButton, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"

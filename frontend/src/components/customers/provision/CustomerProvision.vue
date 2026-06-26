@@ -42,8 +42,8 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiError } from "@/types/common"
-import type { CustomerMeta } from "@/types/customers.d"
+import type { ApiError, SafeAny } from "@/types/common"
+import type { CustomerMeta } from "@/types/customers"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, toRefs } from "vue"
 import Api from "@/api"
@@ -75,17 +75,17 @@ const message = useMessage()
 
 const customerNameSanitized = computed<string>(() => customerName.value || customerMeta.value?.customer_name || "")
 
-function formatValue(key: string, value: any): string {
+function formatValue(key: string, value: SafeAny): string {
 	if (!value) return "-"
 
 	// Add field-specific formatting rules here
-	const formatRules: Record<string, (val: any) => string> = {
+	const formatRules: Record<string, (val: SafeAny) => string> = {
 		customer_meta_index_retention: val => `${val} days`
 		// Add more formatting rules as needed:
 		// another_field: (val) => `${val} units`,
 	}
 
-	return formatRules[key] ? formatRules[key](value) : value
+	return formatRules[key] ? formatRules[key](value) : String(value)
 }
 
 function submitted(newData: CustomerMeta) {

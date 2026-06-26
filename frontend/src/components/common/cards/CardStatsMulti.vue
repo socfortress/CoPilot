@@ -1,26 +1,33 @@
 <template>
-	<n-card content-class="p-0!" :class="{ hovered }">
+	<n-card content-class="p-0!" class="overflow-hidden" :class="{ 'hover:border-primary': hovered }">
 		<div class="flex h-full flex-col overflow-hidden">
-			<div class="card-header flex items-center justify-between gap-4">
-				<div class="title flex grow items-center gap-2">
+			<div class="border-default flex items-center justify-between gap-4 overflow-hidden border-b px-4 py-2.5">
+				<div class="flex grow items-center gap-2 overflow-hidden text-base">
 					<span class="truncate">{{ title }}</span>
 					<Icon v-if="hovered" :name="ArrowRightIcon" :size="12" />
 				</div>
-				<div class="icon">
+				<div>
 					<slot name="icon"></slot>
 				</div>
 			</div>
-			<div class="card-content divide-border grid grow grid-cols-[repeat(auto-fit,minmax(0,1fr))] divide-x">
+			<div class="divide-border flex grow divide-x">
 				<div
 					v-for="item of values"
 					:key="JSON.stringify(item)"
-					class="value-box flex flex-col"
-					:class="[item.status, values.length !== 1 ? `basis-1/${values.length}` : 'grow']"
+					class="flex flex-1 flex-col overflow-hidden text-center"
+					:class="values.length !== 1 ? `basis-1/${values.length}` : 'grow'"
 				>
-					<div class="value flex grow items-center justify-center">
+					<div
+						class="font-display flex grow items-center justify-center truncate px-1.5 py-2.5 text-xl leading-none font-bold"
+						:class="statusColorClass(item.status)"
+					>
 						{{ item.value }}
 					</div>
-					<div v-if="item.label" class="label">
+					<div
+						v-if="item.label"
+						class="border-default bg-secondary truncate border-t p-1.5 font-mono text-xs leading-none uppercase"
+						:class="item.status ? statusColorClass(item.status) : 'text-secondary'"
+					>
 						{{ item.label }}
 					</div>
 				</div>
@@ -48,91 +55,17 @@ const props = defineProps<{
 const { title, values, hovered } = toRefs(props)
 
 const ArrowRightIcon = "carbon:arrow-right"
-</script>
 
-<style scoped lang="scss">
-.n-card {
-	overflow: hidden;
-
-	.card-header {
-		border-bottom: 1px solid var(--border-color);
-		overflow: hidden;
-		padding: 10px 16px;
-
-		.title {
-			font-size: 16px;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-			overflow: hidden;
-		}
-	}
-
-	.card-content {
-		.value-box {
-			text-align: center;
-			overflow: hidden;
-
-			.value {
-				font-family: var(--font-family-display);
-				padding: 10px 6px;
-				font-size: 22px;
-				text-overflow: ellipsis;
-				white-space: nowrap;
-				overflow: hidden;
-				font-weight: bold;
-				text-overflow: ellipsis;
-				white-space: nowrap;
-				line-height: 1;
-				overflow: hidden;
-			}
-
-			.label {
-				font-family: var(--font-family-mono);
-				border-top: 1px solid var(--border-color);
-				color: var(--fg-secondary-color);
-				font-size: 13px;
-				padding: 6px;
-				line-height: 1;
-				background-color: var(--bg-secondary-color);
-				text-overflow: ellipsis;
-				white-space: nowrap;
-				overflow: hidden;
-				text-transform: uppercase;
-			}
-
-			&.success {
-				.value {
-					color: var(--success-color);
-				}
-				.label {
-					color: var(--success-color);
-				}
-			}
-
-			&.warning {
-				.value {
-					color: var(--warning-color);
-				}
-				.label {
-					color: var(--warning-color);
-				}
-			}
-
-			&.error {
-				.value {
-					color: var(--error-color);
-				}
-				.label {
-					color: var(--error-color);
-				}
-			}
-		}
-	}
-
-	&.hovered {
-		&:hover {
-			border-color: var(--primary-color);
-		}
+function statusColorClass(status?: ItemProps["status"]) {
+	switch (status) {
+		case "success":
+			return "text-success"
+		case "warning":
+			return "text-warning"
+		case "error":
+			return "text-error"
+		default:
+			return ""
 	}
 }
-</style>
+</script>

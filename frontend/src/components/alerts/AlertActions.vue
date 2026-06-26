@@ -88,7 +88,7 @@
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
 import type { SocAlertField } from "./type.d"
-import type { Alert, WazuhRuleExclude } from "@/types/alerts.d"
+import type { Alert, WazuhRuleExclude } from "@/types/alerts"
 import type { ApiError } from "@/types/common"
 import { NButton, NInput, NModal, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"

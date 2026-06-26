@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { Organization } from "@/types/shuffle.d"
+import type { Organization } from "@/types/shuffle"
 import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"

@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import type { EventDefinition } from "@/types/graylog/event-definition.d"
+import type { EventDefinition } from "@/types/graylog/event-definition"
 import { NButton, NDrawer, NDrawerContent, NTabPane, NTabs } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"

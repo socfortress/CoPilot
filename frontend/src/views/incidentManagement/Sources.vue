@@ -11,16 +11,16 @@
 				display-directive="show"
 			>
 				<ConfiguredSourcesList
+					ref="configuredSourcesListRef"
 					:show-toolbar="showConfiguredSourcesListToolbar"
-					@mounted="configuredSourcesListCTX = $event"
 					@loaded="configuredSourcesListTotal = $event"
 				/>
 			</n-tab-pane>
 			<n-tab-pane name="ExclusionRules" tab="Exclusion Rules" display-directive="show">
 				<ExclusionRulesList
+					ref="exclusionRulesListRef"
 					:show-creation-button="showExclusionRulesListCreationButton"
 					:show-info-popover="showExclusionRulesListInfoPopover"
-					@mounted="exclusionRulesListCTX = $event"
 				/>
 			</n-tab-pane>
 
@@ -51,8 +51,8 @@ import ConfiguredSourcesList from "@/components/incidentManagement/sources/Confi
 import NewConfiguredSourceButton from "@/components/incidentManagement/sources/NewConfiguredSourceButton.vue"
 
 const configuredSourcesListTotal = ref(0)
-const configuredSourcesListCTX = ref<{ reload: () => void } | null>(null)
-const exclusionRulesListCTX = ref<{ reload: () => void } | null>(null)
+const configuredSourcesListRef = ref<{ reload: () => void } | null>(null)
+const exclusionRulesListRef = ref<{ reload: () => void } | null>(null)
 const page = ref()
 
 const showConfiguredSourcesListToolbar = ref(false)
@@ -60,15 +60,11 @@ const showExclusionRulesListCreationButton = ref(false)
 const showExclusionRulesListInfoPopover = ref(false)
 
 function reloadConfiguredSourcesList() {
-	if (configuredSourcesListCTX.value) {
-		configuredSourcesListCTX.value.reload()
-	}
+	configuredSourcesListRef.value?.reload()
 }
 
 function reloadExclusionRulesList() {
-	if (exclusionRulesListCTX.value) {
-		exclusionRulesListCTX.value.reload()
-	}
+	exclusionRulesListRef.value?.reload()
 }
 
 useResizeObserver(page, entries => {

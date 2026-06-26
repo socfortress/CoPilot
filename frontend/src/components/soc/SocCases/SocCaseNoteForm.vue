@@ -24,7 +24,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SocNewNote } from "@/types/soc/note.d"
+import type { SocNewNote } from "@/types/soc/note"
 import { NButton, NInput, NSpin, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"

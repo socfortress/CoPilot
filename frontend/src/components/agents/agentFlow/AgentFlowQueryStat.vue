@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FlowQueryStat } from "@/types/flow.d"
+import type { FlowQueryStat } from "@/types/flow"
 import _pick from "lodash/pick"
 import { NInput, NModal, NTabPane, NTabs } from "naive-ui"
 import { computed, ref } from "vue"

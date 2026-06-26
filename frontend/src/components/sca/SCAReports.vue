@@ -75,7 +75,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import type { SCAReport, SCAReportGenerateRequest } from "@/types/sca.d"
+import type { SCAReport, SCAReportGenerateRequest } from "@/types/sca"
 import { saveAs } from "file-saver"
 import { NButton, NEmpty, NModal, NPagination, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
@@ -125,7 +125,7 @@ async function loadReports() {
 		} else {
 			message.error(response.data.message || "Failed to load reports")
 		}
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to load reports")
 	} finally {
 		loading.value = false
@@ -141,7 +141,7 @@ async function loadCustomers() {
 			label: `${c.customer_name} (${c.customer_code})`,
 			value: c.customer_code
 		}))
-	} catch (error: any) {
+	} catch (error) {
 		console.error("Failed to load customers:", error)
 		message.error("Failed to load customers list")
 	}
@@ -159,7 +159,7 @@ async function handleGenerateReport(request: SCAReportGenerateRequest) {
 		} else {
 			message.error(response.data.error || "Failed to generate report")
 		}
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to generate report")
 	} finally {
 		generating.value = false
@@ -173,7 +173,7 @@ async function handleDownload(report: SCAReport) {
 		saveAs(new Blob([response.data]), report.file_name)
 
 		message.success("Report downloaded successfully")
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to download report")
 	}
 }
@@ -195,7 +195,7 @@ async function confirmDelete() {
 		} else {
 			message.error("Failed to delete report")
 		}
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to delete report")
 	} finally {
 		showDeleteModal.value = false

@@ -114,7 +114,7 @@
 <script setup lang="ts">
 import type { CasesFilter } from "@/api/endpoints/soc"
 import type { ApiError } from "@/types/common"
-import type { DateFormatted, SocCase } from "@/types/soc/case.d"
+import type { DateFormatted, SocCase } from "@/types/soc/case"
 import { useResizeObserver } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"
 import _orderBy from "lodash/orderBy"

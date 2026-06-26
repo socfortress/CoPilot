@@ -1,11 +1,11 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	AvailableIntegration,
 	CustomerIntegration,
 	CustomerIntegrationMetaCommon,
 	CustomerIntegrationMetaResponse
-} from "@/types/integrations.d"
-import { HttpClient } from "../httpClient"
+} from "@/types/integrations"
+import { HttpClient } from "../http-client"
 
 export interface IntegrationAuthKeyPairs {
 	auth_key_name: string

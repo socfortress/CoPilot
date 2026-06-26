@@ -69,7 +69,7 @@
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { AiVelociraptorArtifactRecommendationResponse } from "@/types/threatIntel.d"
+import type { AiVelociraptorArtifactRecommendationResponse } from "@/types/threat-intel"
 import { NButton, NEmpty, NModal, useMessage } from "naive-ui"
 import { ref, watchEffect } from "vue"
 import Api from "@/api"

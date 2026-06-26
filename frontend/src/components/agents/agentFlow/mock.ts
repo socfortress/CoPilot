@@ -1,4 +1,4 @@
-import type { CollectResult } from "@/types/flow.d"
+import type { CollectResult } from "@/types/flow"
 
 export const flow_results = [
 	{

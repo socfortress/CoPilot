@@ -38,7 +38,7 @@
 
 <script lang="ts" setup>
 import type { ApiError } from "@/types/common"
-import type { IndexStats } from "@/types/indices.d"
+import type { IndexStats } from "@/types/indices"
 import { NCard, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"

@@ -11,9 +11,9 @@
 					:type="isTacticUncovered ? 'warning' : 'default'"
 					:title="`${stats.covered} of ${stats.total} techniques covered by CoPilot rules`"
 				>
-					<span class="font-mono text-[10px]">{{ stats.covered }}</span>
+					<span class="text-3xs font-mono">{{ stats.covered }}</span>
 					<span class="text-tertiary mx-1 text-xs">/</span>
-					<span class="font-mono text-[10px]">{{ stats.total }}</span>
+					<span class="text-3xs font-mono">{{ stats.total }}</span>
 				</n-tag>
 			</div>
 			<div class="text-tertiary text-xs">{{ tactic.techniques.length }} shown</div>
@@ -43,7 +43,7 @@ import type {
 	MitreSubTechnique,
 	MitreTactic,
 	MitreTechnique
-} from "@/types/copilotSearches.d"
+} from "@/types/copilot-searches"
 import { NEmpty, NTag } from "naive-ui"
 import { computed } from "vue"
 import TechniqueCell from "./TechniqueCell.vue"

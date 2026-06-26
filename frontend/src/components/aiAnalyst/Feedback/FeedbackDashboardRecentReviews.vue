@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AiAnalystReview, AiAnalystReviewStats } from "@/types/aiAnalyst.d"
+import type { AiAnalystReview, AiAnalystReviewStats } from "@/types/ai-analyst"
 import { NCard } from "naive-ui"
 import { ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"

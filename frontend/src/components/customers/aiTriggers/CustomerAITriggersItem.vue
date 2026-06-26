@@ -26,9 +26,9 @@
 			segmented
 		>
 			<CustomerAITriggersForm
+				ref="formRef"
 				:ai-trigger
 				:customer-code="aiTrigger.customer_code"
-				@mounted="formCTX = $event"
 				@submitted="emitUpdate"
 			/>
 		</n-modal>
@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AITrigger } from "@/types/incidentManagement/aiTriggers.d"
+import type { AITrigger } from "@/types/incidentManagement/ai-triggers"
 import { NModal } from "naive-ui"
 import { defineAsyncComponent, ref, toRefs, watch } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -58,12 +58,12 @@ const { aiTrigger } = toRefs(props)
 const EnabledIcon = "carbon:circle-solid"
 const DisabledIcon = "carbon:subtract-alt"
 
-const formCTX = ref<{ reset: (aiTrigger?: AITrigger) => void } | null>(null)
+const formRef = ref<{ reset: (aiTrigger?: AITrigger) => void } | null>(null)
 const showForm = ref(false)
 
 watch(showForm, val => {
 	if (val) {
-		formCTX.value?.reset(aiTrigger.value)
+		formRef.value?.reset(aiTrigger.value)
 	}
 })
 

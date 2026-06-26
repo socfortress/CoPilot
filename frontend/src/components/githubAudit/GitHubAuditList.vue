@@ -124,7 +124,8 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { GitHubAuditConfig } from "@/types/githubAudit.d"
+import type { Customer } from "@/types/customers.ts"
+import type { GitHubAuditConfig } from "@/types/github-audit"
 import { NButton, NDrawer, NDrawerContent, NEmpty, NInput, NSelect, NSpin, NTag, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
@@ -166,7 +167,7 @@ async function loadCustomers() {
 	try {
 		const response = await Api.customers.getCustomers()
 		if (response.data.customers) {
-			customerOptions.value = response.data.customers.map((c: any) => ({
+			customerOptions.value = response.data.customers.map((c: Customer) => ({
 				label: `${c.customer_name} (${c.customer_code})`,
 				value: c.customer_code
 			}))
@@ -201,7 +202,7 @@ async function loadConfigs() {
 
 			configs.value = filteredConfigs
 		}
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to load configurations")
 		configs.value = []
 	} finally {

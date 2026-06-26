@@ -1,13 +1,13 @@
 <template>
 	<SegmentedPage toolbar-height="60px" toolbar-height-mobile="50px" padding="16px" enable-resize>
 		<template #sidebar-header>
-			<n-button v-if="areAllTacticsSelected" :focusable="false" @click="toggleAllTactics(false)">
+			<n-button v-if="areAllTacticsSelected" :focusable="false" text @click="toggleAllTactics(false)">
 				<template #icon>
 					<Icon name="carbon:checkbox" :size="16" />
 				</template>
 				Unselect all
 			</n-button>
-			<n-button v-else type="primary" :focusable="false" @click="toggleAllTactics(true)">
+			<n-button v-else type="primary" :focusable="false" text @click="toggleAllTactics(true)">
 				<template #icon>
 					<Icon name="carbon:checkbox-checked" :size="16" />
 				</template>
@@ -15,7 +15,7 @@
 			</n-button>
 		</template>
 		<template #sidebar-content>
-			<n-spin :show="loading">
+			<n-spin :show="loading" class="min-h-48">
 				<div class="flex flex-col gap-4">
 					<div v-for="tactic of tacticsList" :key="tactic.id" class="flex items-center gap-3">
 						<n-checkbox
@@ -41,13 +41,13 @@
 				</n-input>
 				<div v-if="hasNoCountAlerts" class="max-w-32 min-w-32">
 					<n-checkbox v-model:checked="hideNoAlertsTechniques" class="items-center!" size="large">
-						<span class="text-xs/tight">Hide techniques with no alerts</span>
+						<div class="text-xs/tight">Hide techniques with no alerts</div>
 					</n-checkbox>
 				</div>
 			</div>
 		</template>
 		<template #main-content>
-			<n-spin :show="loading">
+			<n-spin :show="loading" class="min-h-48">
 				<div class="grid-auto-fill-250 grid gap-2">
 					<TechniqueAlertCard
 						v-for="technique of filteredTechniques"
@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import type { MitreTechniquesAlertsQuery, MitreTechniquesAlertsQueryTimeRange } from "@/api/endpoints/wazuh/mitre"
 import type { ApiError } from "@/types/common"
-import type { MitreTechnique } from "@/types/mitre.d"
+import type { MitreTechnique } from "@/types/mitre"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NCheckbox, NEmpty, NInput, NSpin, useMessage } from "naive-ui"
@@ -131,7 +131,7 @@ const areAllTacticsSelected = computed(() => {
 	return selectedTactics.value.length === tacticsList.value.length
 })
 
-const hasNoCountAlerts = computed(() => !!techniquesList.value.filter(o => !o.count).length)
+const hasNoCountAlerts = computed(() => techniquesList.value.some(o => !o.count))
 
 function isTacticSelected(id: string) {
 	return selectedTactics.value.includes(id)

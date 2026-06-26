@@ -84,7 +84,7 @@
 
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
-import type { FileCollection } from "@/types/artifacts.d"
+import type { FileCollection } from "@/types/artifacts"
 import type { ApiError } from "@/types/common"
 import { NAlert, NButton, NDivider, NForm, NFormItem, NInput, useMessage } from "naive-ui"
 import { ref } from "vue"

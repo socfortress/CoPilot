@@ -70,10 +70,10 @@
 </template>
 
 <script setup lang="ts">
-import type { CustomerPortalSettingsPayload } from "@/api/endpoints/customerPortal"
+import type { CustomerPortalSettingsPayload } from "@/api/endpoints/customer-portal"
 import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import type { ApiError } from "@/types/common"
-import type { CustomerPortalSettings } from "@/types/customerPortal"
+import type { CustomerPortalSettings } from "@/types/customer-portal"
 import _split from "lodash/split"
 import { NAlert, NButton, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"

@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertStatus } from "@/types/incidentManagement/alerts.d"
+import type { AlertStatus } from "@/types/incidentManagement/alerts"
 import { toRefs } from "vue"
 import Icon from "@/components/common/Icon.vue"
 

@@ -18,9 +18,9 @@
 			segmented
 		>
 			<ActiveResponseInvokeForm
+				ref="activeResponseInvokeFormRef"
 				:active-response
 				:agent-id
-				@mounted="activeResponseInvokeFormCTX = $event"
 				@submitted="close()"
 				@start-loading="loadingInvoke = true"
 				@stop-loading="loadingInvoke = false"
@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
-import type { SupportedActiveResponse } from "@/types/activeResponse.d"
+import type { SupportedActiveResponse } from "@/types/active-response"
 import { NButton, NModal } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
@@ -56,7 +56,7 @@ const InvokeIcon = "solar:playback-speed-outline"
 const showInvokeForm = ref(false)
 const loadingInvoke = ref(false)
 const loading = computed(() => loadingInvoke.value)
-const activeResponseInvokeFormCTX = ref<{ reset: () => void } | null>(null)
+const activeResponseInvokeFormRef = ref<{ reset: () => void } | null>(null)
 
 watch(loading, val => {
 	if (val) {
@@ -67,7 +67,7 @@ watch(loading, val => {
 })
 
 function close() {
-	activeResponseInvokeFormCTX.value?.reset()
+	activeResponseInvokeFormRef.value?.reset()
 	showInvokeForm.value = false
 }
 </script>

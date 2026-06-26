@@ -1,4 +1,4 @@
-import type { ScaOverviewQuery } from "@/types/sca.d"
+import type { ScaOverviewQuery } from "@/types/sca"
 
 export type ScaOverviewFilterTypes = keyof Omit<ScaOverviewQuery, "page" | "page_size">
 

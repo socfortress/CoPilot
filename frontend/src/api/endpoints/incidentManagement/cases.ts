@@ -1,5 +1,6 @@
 import type { KeysOfUnion, UnionToIntersection } from "type-fest"
-import type { FlaskBaseResponse } from "@/types/flask.d"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { CaseStatusUpdateResponse } from "@/types/incidentManagement/case-templates"
 import type {
 	Case,
 	CaseComment,
@@ -8,8 +9,8 @@ import type {
 	CaseReportTemplateDataStore,
 	CasesListResponse,
 	CaseStatus
-} from "@/types/incidentManagement/cases.d"
-import { HttpClient } from "../../httpClient"
+} from "@/types/incidentManagement/cases"
+import { HttpClient } from "../../http-client"
 
 export type CasesFilter =
 	| { status: CaseStatus }
@@ -69,7 +70,7 @@ export default {
 			params.order = pagination.order
 		}
 
-		return HttpClient.get<CasesListResponse>(url, { params })
+		return HttpClient.get<FlaskBaseResponse & CasesListResponse>(url, { params })
 	},
 	getCase(caseId: number) {
 		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(`/incidents/db_operations/case/${caseId}`)
@@ -114,7 +115,7 @@ export default {
 		})
 	},
 	updateCaseStatus(caseId: number, status: CaseStatus, force = false) {
-		return HttpClient.put<FlaskBaseResponse>(
+		return HttpClient.put<FlaskBaseResponse & CaseStatusUpdateResponse>(
 			`/incidents/db_operations/case/status`,
 			{
 				case_id: caseId,

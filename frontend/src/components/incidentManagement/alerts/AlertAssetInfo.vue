@@ -95,7 +95,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { AlertAsset, AlertDetails } from "@/types/incidentManagement/alerts.d"
+import type { AlertAsset, AlertDetails } from "@/types/incidentManagement/alerts"
 import _omit from "lodash/omit"
 import { NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"

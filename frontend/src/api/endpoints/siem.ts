@@ -4,11 +4,11 @@ import type {
 	EnableDashboardPayload,
 	EnabledDashboard,
 	PanelDataResponse
-} from "@/types/dashboards.d"
-import type { EventSearchResult, FieldMapping } from "@/types/events.d"
-import type { DisplayColumn, EventSource } from "@/types/eventSources.d"
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
+} from "@/types/dashboards"
+import type { DisplayColumn, EventSource } from "@/types/event-sources"
+import type { EventSearchResult, FieldMapping } from "@/types/events"
+import type { FlaskBaseResponse } from "@/types/flask"
+import { HttpClient } from "../http-client"
 
 export interface EventSourceCreatePayload {
 	customer_code: string
@@ -98,7 +98,7 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse>(`/siem/dashboards/disable/${dashboardId}`)
 	},
 	getPanelData(dashboardId: number, timerange: string, signal?: AbortSignal) {
-		return HttpClient.post<PanelDataResponse>(
+		return HttpClient.post<FlaskBaseResponse & PanelDataResponse>(
 			`/siem/dashboards/panel-data`,
 			{
 				dashboard_id: dashboardId,

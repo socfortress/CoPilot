@@ -73,11 +73,15 @@ async function signInWithPasskey() {
 		emit("loginSuccess", res.access_token)
 		router.push({ path: "/", replace: true })
 	} catch (err) {
-		if (err?.name === "NotAllowedError") {
+		if (typeof err === "object" && err !== null && "name" in err && err.name === "NotAllowedError") {
 			message.warning("Passkey sign-in was cancelled.")
 			return
 		}
-		const detail = err?.detail || err?.message || "Passkey sign-in failed"
+		const detail = `${
+			(typeof err === "object" && err !== null && "detail" in err ? err.detail : null) ||
+			(typeof err === "object" && err !== null && "message" in err ? err.message : null) ||
+			"Passkey sign-in failed"
+		}`
 		if (typeof detail === "string" && detail.toLowerCase().includes("invalid domain")) {
 			message.error(`Passkeys require localhost. Open ${localhostUrl}`)
 			return

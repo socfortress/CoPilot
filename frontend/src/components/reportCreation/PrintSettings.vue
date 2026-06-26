@@ -45,7 +45,7 @@ import { NAvatar, NButton, NFormItem, NInput, NRadioButton, NRadioGroup, NSwitch
 import { onMounted, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import ImageCropper from "@/components/common/ImageCropper.vue"
-import * as defaultSettings from "./defaultSettings"
+import * as defaultSettings from "./default-settings"
 
 export interface PrintSettingsData {
 	logo: string

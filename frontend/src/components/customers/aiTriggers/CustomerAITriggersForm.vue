@@ -22,11 +22,11 @@
 </template>
 
 <script setup lang="ts">
-import type { AITriggerPayload } from "@/api/endpoints/incidentManagement/aiTriggers"
+import type { AITriggerPayload } from "@/api/endpoints/incidentManagement/ai-triggers"
 import type { ApiError } from "@/types/common"
-import type { AITrigger } from "@/types/incidentManagement/aiTriggers.d"
+import type { AITrigger } from "@/types/incidentManagement/ai-triggers"
 import { NButton, NForm, NFormItem, NSpin, NSwitch, useMessage } from "naive-ui"
-import { onMounted, ref, watch } from "vue"
+import { ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
@@ -43,12 +43,6 @@ const emit = defineEmits<{
 	(e: "submitted", value: AITrigger): void
 	(e: "startLoading"): void
 	(e: "stopLoading"): void
-	(
-		e: "mounted",
-		value: {
-			reset: () => void
-		}
-	): void
 }>()
 
 const message = useMessage()
@@ -101,9 +95,7 @@ function submit() {
 		})
 }
 
-onMounted(() => {
-	emit("mounted", {
-		reset
-	})
+defineExpose({
+	reset
 })
 </script>

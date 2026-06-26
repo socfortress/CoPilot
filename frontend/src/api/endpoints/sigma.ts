@@ -1,6 +1,6 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { SigmaQuery, SigmaRuleLevels, SigmaTimeInterval } from "@/types/sigma.d"
-import { HttpClient } from "../httpClient"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { SigmaQuery, SigmaRuleLevels, SigmaTimeInterval } from "@/types/sigma"
+import { HttpClient } from "../http-client"
 
 export default {
 	/** client-side pagination (1k+ items) */

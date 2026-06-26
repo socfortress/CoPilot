@@ -130,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CopilotAction } from "@/types/copilotAction.d"
+import type { CopilotAction } from "@/types/copilot-action"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"

@@ -64,7 +64,7 @@
 <script setup lang="ts">
 import type { CardLinkColor } from "@/components/common/cards/CardLink.vue"
 import type { ItemProps } from "@/components/common/cards/CardStatsBars.vue"
-import type { PatchTuesdaySummary } from "@/types/patchTuesday.d"
+import type { PatchTuesdaySummary } from "@/types/patch-tuesday"
 import { NSpin } from "naive-ui"
 import { computed } from "vue"
 import Badge from "@/components/common/Badge.vue"

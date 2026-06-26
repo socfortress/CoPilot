@@ -73,7 +73,7 @@
 <script setup lang="ts">
 import type { UploadFileInfo } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { CaseDataStore } from "@/types/incidentManagement/cases.d"
+import type { CaseDataStore } from "@/types/incidentManagement/cases"
 import { NButton, NCollapseTransition, NEmpty, NSpin, NUpload, NUploadDragger, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

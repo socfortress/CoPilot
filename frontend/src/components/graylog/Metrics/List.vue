@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ThroughputMetric } from "@/types/graylog/metrics.d"
+import type { ThroughputMetric } from "@/types/graylog/metrics"
 import _groupBy from "lodash/groupBy"
 import _map from "lodash/map"
 import _trim from "lodash/trim"

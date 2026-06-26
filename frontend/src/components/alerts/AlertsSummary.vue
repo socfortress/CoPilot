@@ -49,8 +49,8 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertsSummary } from "@/types/alerts.d"
-import type { IndexStats } from "@/types/indices.d"
+import type { AlertsSummary } from "@/types/alerts"
+import type { IndexStats } from "@/types/indices"
 import { NButton, NScrollbar } from "naive-ui"
 import { ref } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

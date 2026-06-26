@@ -50,8 +50,8 @@
 </template>
 
 <script setup lang="ts">
-import type { DashboardCategory, DashboardCategoryWithTemplates, EnabledDashboard } from "@/types/dashboards.d"
-import type { EventSource } from "@/types/eventSources.d"
+import type { DashboardCategory, DashboardCategoryWithTemplates, EnabledDashboard } from "@/types/dashboards"
+import type { EventSource } from "@/types/event-sources"
 import { NEmpty, NSelect, NSpin } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"

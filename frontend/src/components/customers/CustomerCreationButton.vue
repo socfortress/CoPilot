@@ -47,7 +47,7 @@
 			display-directive="show"
 		>
 			<n-drawer-content title="Add Customer" closable :native-scrollbar="false">
-				<CustomerForm reset-on-submit @mounted="customerFormCTX = $event" @submitted="emit('submitted')" />
+				<CustomerForm ref="customerFormRef" reset-on-submit @submitted="emit('submitted')" />
 			</n-drawer-content>
 		</n-drawer>
 	</div>
@@ -75,7 +75,7 @@ const openForm = defineModel<boolean | undefined>("openForm", { default: false }
 
 const LockIcon = "carbon:locked"
 const AddUserIcon = "carbon:user-follow"
-const customerFormCTX = ref<{ reset: () => void } | null>(null)
+const customerFormRef = ref<{ reset: () => void } | null>(null)
 const showAddCustomer = ref(false)
 const isMSSP5Enabled = ref<null | boolean>(null)
 const isMSSP10Enabled = ref<null | boolean>(null)
@@ -108,7 +108,7 @@ watch(showAddCustomer, val => {
 	if (!val) {
 		openForm.value = false
 	}
-	customerFormCTX.value?.reset()
+	customerFormRef.value?.reset()
 })
 
 watch(

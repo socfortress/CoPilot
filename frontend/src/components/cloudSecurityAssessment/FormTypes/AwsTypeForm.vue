@@ -25,12 +25,11 @@
 
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
-import type { ScoutSuiteAwsReportPayload } from "@/types/cloudSecurityAssessment.d"
+import type { ScoutSuiteAwsReportPayload } from "@/types/cloud-security-assessment"
 import { NForm, NFormItem, NInput } from "naive-ui"
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, ref, watch } from "vue"
 
 const emit = defineEmits<{
-	(e: "mounted", value: FormInst): void
 	(e: "model", value: Partial<ScoutSuiteAwsReportPayload>): void
 	(e: "valid", value: boolean): void
 }>()
@@ -64,9 +63,7 @@ watch(form, val => emit("model", val), { deep: true, immediate: true })
 
 watch(isValid, val => emit("valid", val), { immediate: true })
 
-onMounted(() => {
-	if (formRef.value) {
-		emit("mounted", formRef.value)
-	}
+defineExpose({
+	formRef
 })
 </script>

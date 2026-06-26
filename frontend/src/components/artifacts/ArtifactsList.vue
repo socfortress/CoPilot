@@ -129,8 +129,8 @@
 
 <script setup lang="ts">
 import type { ArtifactsQuery } from "@/api/endpoints/artifacts"
-import type { Agent } from "@/types/agents.d"
-import type { Artifact } from "@/types/artifacts.d"
+import type { Agent } from "@/types/agents"
+import type { Artifact } from "@/types/artifacts"
 import type { ApiError } from "@/types/common"
 import { useResizeObserver } from "@vueuse/core"
 import _cloneDeep from "lodash/cloneDeep"

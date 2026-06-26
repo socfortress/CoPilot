@@ -1,5 +1,5 @@
 <template>
-	<div class="users-list">
+	<div class="overflow-hidden rounded-lg">
 		<div class="mb-4 flex items-center justify-between gap-5">
 			<div>
 				Total:
@@ -37,7 +37,12 @@
 						<tr
 							v-for="user of usersList"
 							:key="user.id"
-							:class="{ highlight: highlight === user.id.toString() }"
+							class="group hover:[&_td]:bg-primary/5"
+							:class="
+								highlight === user.id.toString()
+									? '[&_td]:border-y [&_td]:border-primary/30 [&_td]:bg-primary/5'
+									: ''
+							"
 						>
 							<td>#{{ user.id }}</td>
 							<td>
@@ -53,19 +58,7 @@
 							</td>
 							<td class="max-w-75">
 								<div v-if="isAdmin" class="flex justify-end">
-									<n-dropdown
-										trigger="click"
-										:options
-										display-directive="show"
-										:keyboard="false"
-										@click="selectedUser = user"
-									>
-										<n-button text>
-											<template #icon>
-												<Icon :name="DropdownIcon" :size="24" />
-											</template>
-										</n-button>
-									</n-dropdown>
+									<UserDropdown :user @success="getUsers" @loading="updateLoadingDelete" />
 								</div>
 							</td>
 						</tr>
@@ -107,27 +100,21 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
-import type { User } from "@/types/user.d"
-import { NButton, NDropdown, NModal, NScrollbar, NSpin, NTable, NTag, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, h, onBeforeMount, ref } from "vue"
+import type { User } from "@/types/user"
+import { NButton, NModal, NScrollbar, NSpin, NTable, NTag, useMessage } from "naive-ui"
+import { computed, defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import UserDropdown from "@/components/users/UserDropdown.vue"
 import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
 
 const { highlight } = defineProps<{ highlight: string | null | undefined }>()
-const ChangePassword = defineAsyncComponent(() => import("./ChangePassword.vue"))
-const DeleteUser = defineAsyncComponent(() => import("./DeleteUser.vue"))
-const AssignRole = defineAsyncComponent(() => import("./AssignRole.vue"))
-const AssignCustomer = defineAsyncComponent(() => import("./AssignCustomer.vue"))
-const AssignTags = defineAsyncComponent(() => import("./AssignTags.vue"))
 const TagRbacSettings = defineAsyncComponent(() => import("./TagRbacSettings.vue"))
 const SignUp = defineAsyncComponent(() => import("@/components/auth/SignUp.vue"))
 
 const UserAddIcon = "carbon:user-follow"
 const SettingsIcon = "carbon:settings"
-const DropdownIcon = "carbon:overflow-menu-horizontal"
 const message = useMessage()
 const loadingUsers = ref(false)
 const loadingDelete = ref(false)
@@ -135,7 +122,6 @@ const showForm = ref(false)
 const showTagRbacSettings = ref(false)
 const usersList = ref<User[]>([])
 const isAdmin = useAuthStore().isAdmin
-const selectedUser = ref<User | null>(null)
 const loading = computed(() => loadingUsers.value || loadingDelete.value)
 const usernameList = computed(() => usersList.value.map(user => user.username))
 const emailList = computed(() => usersList.value.map(user => user.email))
@@ -154,63 +140,6 @@ function getRoleTagType(roleName: string | null | undefined) {
 			return "default"
 	}
 }
-
-// Computed (not a static array) so the dropdown re-renders whenever `selectedUser`
-// changes. The render closures below read `selectedUser.value`, but the parent
-// template never references it directly — if `options` were a stable array
-// reference, NDropdown would never re-render and the child modals (kept mounted by
-// `display-directive="show"`) would keep a stale `user` prop, intermittently
-// showing the wrong user's data or nothing at all. See issue #899.
-const options = computed(() => [
-	{
-		key: "AssignRole",
-		type: "render",
-		render: () =>
-			h(AssignRole, {
-				user: selectedUser.value || undefined,
-				onSuccess: getUsers
-			})
-	},
-	{
-		key: "AssignCustomer",
-		type: "render",
-		render: () =>
-			h(AssignCustomer, {
-				user: selectedUser.value || undefined,
-				onSuccess: getUsers
-			})
-	},
-	{
-		key: "AssignTags",
-		type: "render",
-		render: () =>
-			// TODO-FE: use button + modal (see AssignCustomer, AssignRole)
-			h(AssignTags, {
-				user: selectedUser.value || undefined,
-				onSuccess: getUsers
-			})
-	},
-	{
-		key: "ChangePassword",
-		type: "render",
-		render: () =>
-			h(ChangePassword, {
-				user: selectedUser.value || undefined,
-				quaternary: true,
-				className: "w-full! justify-start!"
-			})
-	},
-	{
-		key: "DeleteUser",
-		type: "render",
-		render: () =>
-			h(DeleteUser, {
-				user: selectedUser.value || undefined,
-				onSuccess: getUsers,
-				onLoading: updateLoadingDelete
-			})
-	}
-])
 
 function updateLoadingDelete(value: boolean) {
 	loadingDelete.value = value
@@ -247,24 +176,3 @@ onBeforeMount(() => {
 	getUsers()
 })
 </script>
-
-<style lang="scss" scoped>
-.users-list {
-	border-radius: var(--border-radius);
-	overflow: hidden;
-
-	tr:hover {
-		td {
-			background-color: rgba(var(--primary-color-rgb) / 0.05);
-		}
-	}
-
-	.highlight {
-		td {
-			border-top: 1px solid rgba(var(--primary-color-rgb) / 0.3);
-			border-bottom: 1px solid rgba(var(--primary-color-rgb) / 0.3);
-			background-color: rgba(var(--primary-color-rgb) / 0.05);
-		}
-	}
-}
-</style>

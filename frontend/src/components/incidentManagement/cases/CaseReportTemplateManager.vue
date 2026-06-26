@@ -152,7 +152,7 @@ import {
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { useCaseReportTemplateStore } from "@/stores/caseReportTemplate"
+import { useCaseReportTemplateStore } from "@/stores/case-report-template"
 import { getApiErrorMessage } from "@/utils"
 
 const UploadIcon = "carbon:cloud-upload"

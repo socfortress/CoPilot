@@ -63,7 +63,7 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
-import type { SafeAny } from "@/types/common.d"
+import type { ApiError, SafeAny } from "@/types/common"
 import type { SnapshotRepository } from "@/types/snapshots"
 import { NAlert, NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
@@ -71,6 +71,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
 	loaded: [repositories: SnapshotRepository[]]
@@ -116,8 +117,8 @@ async function fetchRepositories() {
 			message.error(response.data.message)
 			repositories.value = []
 		}
-	} catch (error: any) {
-		message.error(error.message || "Failed to fetch repositories")
+	} catch (error) {
+		message.error(getApiErrorMessage(error as ApiError) || "Failed to fetch repositories")
 		repositories.value = []
 	} finally {
 		loading.value = false

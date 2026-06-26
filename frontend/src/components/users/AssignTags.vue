@@ -1,75 +1,111 @@
 <template>
-	<div class="assign-tags-box flex flex-col gap-2 px-3 py-2">
-		<div class="title flex items-center gap-2">
-			<Icon :name="TagIcon" :size="16" />
-			<span>Assign Tags</span>
-		</div>
-
-		<n-spin :show="loading" size="small">
-			<div v-if="!tagRbacEnabled" class="text-xs opacity-70">Tag RBAC is disabled</div>
-
-			<div v-else class="flex flex-col gap-2">
-				<n-select
-					v-model:value="selectedTagIds"
-					multiple
-					filterable
-					clearable
-					size="small"
-					placeholder="No restrictions (full access)"
-					:options="tagOptions"
-					:loading="loadingTags"
-					:disabled="saving"
-				/>
-
-				<div class="flex gap-2">
-					<n-button size="small" type="primary" :loading="saving" :disabled="!hasChanges" @click="saveTags">
-						Save
-					</n-button>
-					<n-button
-						v-if="selectedTagIds.length > 0"
-						size="small"
-						quaternary
-						:disabled="saving"
-						@click="clearAllTags"
-					>
-						Clear All
-					</n-button>
-				</div>
+	<div class="flex flex-col gap-0.5">
+		<n-button quaternary class="w-full! justify-start!" @click="showModal = true">
+			<template #icon>
+				<Icon :name="TagIcon" :size="14" />
+			</template>
+			<div class="flex flex-col items-start gap-0.5">
+				<span>Assign Tags</span>
+				<n-spin :show="loadingPreview" size="small">
+					<div v-if="!tagRbacEnabled" class="text-secondary text-xs">Tag RBAC is disabled</div>
+					<div v-else-if="accessibleTags.length > 0" class="flex flex-wrap gap-1">
+						<n-tag v-for="tag in accessibleTags" :key="tag.id" type="info" size="tiny">
+							{{ tag.tag }}
+						</n-tag>
+					</div>
+					<div v-else class="text-secondary text-xs">No restrictions (full access)</div>
+				</n-spin>
 			</div>
-		</n-spin>
+		</n-button>
+
+		<n-modal
+			v-model:show="showModal"
+			display-directive="show"
+			preset="card"
+			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 60vh)' }"
+			title="Assign Tag Access"
+			:bordered="false"
+			content-class="flex flex-col"
+			segmented
+		>
+			<div class="flex flex-col gap-4">
+				<div>
+					<strong>User:</strong>
+					{{ user?.username }}
+				</div>
+
+				<template v-if="tagRbacEnabled">
+					<n-form :model="formModel">
+						<n-form-item label="Select Tags">
+							<n-select
+								v-model:value="formModel.tagIds"
+								multiple
+								filterable
+								clearable
+								placeholder="No restrictions (full access)"
+								:options="tagOptions"
+								:loading="loadingTags"
+								:disabled="saving"
+							/>
+						</n-form-item>
+
+						<n-form-item label="Current Access">
+							<div v-if="accessibleTags.length > 0" class="flex flex-wrap gap-2">
+								<n-tag v-for="tag in accessibleTags" :key="tag.id" type="info" size="small">
+									{{ tag.tag }}
+								</n-tag>
+							</div>
+							<div v-else class="text-secondary">No restrictions (full access)</div>
+						</n-form-item>
+					</n-form>
+
+					<div class="flex justify-end gap-3">
+						<n-button @click="showModal = false">Cancel</n-button>
+						<n-button type="primary" :loading="saving" :disabled="!hasChanges" @click="saveTags">
+							Save
+						</n-button>
+					</div>
+				</template>
+
+				<div v-else class="text-secondary">Tag RBAC is disabled</div>
+			</div>
+		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-// TODO-FE: refactor
 import type { AlertTag } from "@/types/tags"
-import type { User } from "@/types/user.d"
-import { NButton, NSelect, NSpin, useMessage } from "naive-ui"
+import type { User } from "@/types/user"
+import { NButton, NForm, NFormItem, NModal, NSelect, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
-	user: User | undefined
+	user?: User
 }>()
 
 const emit = defineEmits<{
-	(e: "success"): void
+	success: []
 }>()
 
 const TagIcon = "carbon:tag"
 
 const message = useMessage()
 
-const loading = ref(false)
+const showModal = ref(false)
+const loadingPreview = ref(false)
 const loadingTags = ref(false)
 const saving = ref(false)
 const tagRbacEnabled = ref(false)
 const availableTags = ref<AlertTag[]>([])
-const selectedTagIds = ref<number[]>([])
-const originalTagIds = ref<number[]>([])
+const accessibleTags = ref<AlertTag[]>([])
+
+const formModel = ref({
+	tagIds: [] as number[]
+})
 
 const tagOptions = computed(() =>
 	availableTags.value.map((tag: AlertTag) => ({
@@ -78,12 +114,18 @@ const tagOptions = computed(() =>
 	}))
 )
 
+const savedTagIds = computed(() => accessibleTags.value.map(tag => tag.id))
+
 const hasChanges = computed(() => {
-	if (selectedTagIds.value.length !== originalTagIds.value.length) return true
-	const sorted1 = selectedTagIds.value.toSorted()
-	const sorted2 = originalTagIds.value.toSorted()
+	if (formModel.value.tagIds.length !== savedTagIds.value.length) return true
+	const sorted1 = formModel.value.tagIds.toSorted()
+	const sorted2 = savedTagIds.value.toSorted()
 	return sorted1.some((val, idx) => val !== sorted2[idx])
 })
+
+function syncFormFromAccess() {
+	formModel.value.tagIds = accessibleTags.value.map(tag => tag.id)
+}
 
 async function loadSettings() {
 	try {
@@ -113,19 +155,16 @@ async function loadAvailableTags() {
 async function loadUserTags() {
 	if (!props.user?.id) return
 
-	loading.value = true
+	loadingPreview.value = true
 	try {
 		const res = await Api.tagRbac.getUserTags(props.user.id)
 		if (res.data.success) {
-			// Backend returns accessible_tags, not tag_ids
-			const tagIds = res.data.accessible_tags.map(tag => tag.id)
-			selectedTagIds.value = tagIds
-			originalTagIds.value = [...tagIds]
+			accessibleTags.value = res.data.accessible_tags
 		}
 	} catch (error) {
 		console.error("Failed to load user tags:", error)
 	} finally {
-		loading.value = false
+		loadingPreview.value = false
 	}
 }
 
@@ -134,70 +173,53 @@ async function saveTags() {
 
 	saving.value = true
 	try {
-		const res = await Api.tagRbac.assignUserTags(props.user.id, selectedTagIds.value)
+		const res = await Api.tagRbac.assignUserTags(props.user.id, formModel.value.tagIds)
 		if (res.data.success) {
 			message.success("Tag access updated")
-			// Update original from response
-			const tagIds = res.data.accessible_tags.map(tag => tag.id)
-			originalTagIds.value = [...tagIds]
+			accessibleTags.value = res.data.accessible_tags
+			showModal.value = false
 			emit("success")
 		} else {
 			message.error(res.data.message || "Failed to update tag access")
 		}
-	} catch (error: any) {
+	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to update tag access")
 	} finally {
 		saving.value = false
 	}
 }
 
-async function clearAllTags() {
-	if (!props.user?.id) return
-
-	saving.value = true
-	try {
-		// Use assignUserTags with empty array to clear all
-		const res = await Api.tagRbac.assignUserTags(props.user.id, [])
-		if (res.data.success) {
-			message.success("Tag restrictions cleared")
-			selectedTagIds.value = []
-			originalTagIds.value = []
-			emit("success")
-		}
-	} catch (error: any) {
-		message.error(getApiErrorMessage(error as ApiError) || "Failed to clear tags")
-	} finally {
-		saving.value = false
+watch(showModal, newVal => {
+	if (newVal && tagRbacEnabled.value) {
+		loadAvailableTags()
+		loadUserTags().then(syncFormFromAccess)
 	}
-}
+})
 
+// This instance is reused across table rows, so the bound user can change while
+// mounted. Reload that user's tags if it changes while the modal is open, and
+// clear stale state otherwise so a previous user's data is never shown.
 watch(
 	() => props.user?.id,
-	() => {
-		if (props.user?.id) {
-			loadUserTags()
+	async () => {
+		if (showModal.value) {
+			await loadUserTags()
+			syncFormFromAccess()
+		} else {
+			formModel.value.tagIds = []
+			if (props.user?.id && tagRbacEnabled.value) {
+				await loadUserTags()
+			} else {
+				accessibleTags.value = []
+			}
 		}
 	}
 )
 
 onBeforeMount(async () => {
 	await loadSettings()
-	if (tagRbacEnabled.value) {
-		await loadAvailableTags()
-		if (props.user?.id) {
-			await loadUserTags()
-		}
+	if (tagRbacEnabled.value && props.user?.id) {
+		await loadUserTags()
 	}
 })
 </script>
-
-<style scoped lang="scss">
-.assign-tags-box {
-	min-width: 250px;
-
-	.title {
-		font-size: 14px;
-		font-weight: 500;
-	}
-}
-</style>

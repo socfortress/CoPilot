@@ -169,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AgentScaOverviewItem } from "@/types/sca.d"
+import type { AgentScaOverviewItem } from "@/types/sca"
 import _toNumber from "lodash/toNumber"
 import { NCard, NProgress, NStatistic, NTabPane, NTabs } from "naive-ui"
 import CardKV from "@/components/common/cards/CardKV.vue"

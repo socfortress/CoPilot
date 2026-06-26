@@ -1,4 +1,4 @@
-import type { Agent } from "@/types/agents.d"
+import type { Agent } from "@/types/agents"
 import type {
 	Customer,
 	CustomerAgentHealth,
@@ -7,9 +7,9 @@ import type {
 	CustomerProvision,
 	CustomerProvisioningDefaultSettings,
 	EDRInstallCommands
-} from "@/types/customers.d"
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
+} from "@/types/customers"
+import type { FlaskBaseResponse } from "@/types/flask"
+import { HttpClient } from "../http-client"
 
 export interface CustomerAgentsHealthcheckQuery {
 	minutes?: number

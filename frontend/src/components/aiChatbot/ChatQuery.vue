@@ -48,7 +48,7 @@
 											v-for="item of selectedServerDetails.capabilities"
 											:key="item"
 											size="small"
-											class="text-[10px] [&_.n-tag\_\_content]:pb-0.5 [&_.n-tag\_\_content]:leading-0"
+											class="text-3xs [&_.n-tag\_\_content]:pb-0.5 [&_.n-tag\_\_content]:leading-0"
 										>
 											{{ item }}
 										</n-tag>
@@ -97,7 +97,7 @@ import type { RemovableRef } from "@vueuse/core"
 import type { SelectOption } from "naive-ui"
 import type { VNode } from "vue"
 import type { ApiError } from "@/types/common"
-import type { MCPServer } from "@/types/copilotMCP.d"
+import type { MCPServer } from "@/types/copilot-mcp"
 import { useStorage } from "@vueuse/core"
 import _trim from "lodash/trim"
 import { NButton, NCollapseTransition, NInput, NPopover, NSelect, NSwitch, NTag, NTooltip, useMessage } from "naive-ui"

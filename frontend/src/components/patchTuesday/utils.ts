@@ -1,5 +1,5 @@
 import type { PatchTuesdayFilters, PatchTuesdayListFilter } from "./types.d"
-import type { PriorityLevel } from "@/types/patchTuesday.d"
+import type { PriorityLevel } from "@/types/patch-tuesday"
 
 export function patchTuesdayListToFilters(list: PatchTuesdayListFilter[]): PatchTuesdayFilters {
 	return {

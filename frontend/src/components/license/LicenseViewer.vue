@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import type { License, LicenseKey } from "@/types/license.d"
+import type { License, LicenseKey } from "@/types/license"
 import { NScrollbar } from "naive-ui"
 import { ref } from "vue"
 import LicenseDetails from "./LicenseDetails.vue"

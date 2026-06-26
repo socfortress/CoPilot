@@ -49,7 +49,7 @@
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
 import type { ApiError } from "@/types/common"
-import type { IndexStats } from "@/types/indices.d"
+import type { IndexStats } from "@/types/indices"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref } from "vue"
 import Api from "@/api"
@@ -57,7 +57,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
-import { IndexHealth } from "@/types/indices.d"
+import { IndexHealth } from "@/types/indices"
 import { getApiErrorMessage } from "@/utils"
 
 const { index, showActions } = defineProps<{

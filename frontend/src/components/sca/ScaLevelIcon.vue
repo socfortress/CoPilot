@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
-import { ScaComplianceLevel } from "@/types/sca.d"
+import { ScaComplianceLevel } from "@/types/sca"
 
 const { level, size } = defineProps<{ level: ScaComplianceLevel; size?: number }>()
 

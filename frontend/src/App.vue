@@ -26,7 +26,7 @@
 <script lang="ts" setup>
 import type { Component } from "vue"
 import type { RouteLocationNormalized } from "vue-router"
-import type { Layout, RouterTransition, ThemeNameEnum } from "@/types/theme.d"
+import type { Layout, RouterTransition, ThemeNameEnum } from "@/types/theme"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Blank from "@/app-layouts/Blank"

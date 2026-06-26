@@ -60,7 +60,7 @@
 <script setup lang="ts">
 import type { CardLinkColor } from "@/components/common/cards/CardLink.vue"
 import type { ItemProps } from "@/components/common/cards/CardStatsBars.vue"
-import type { ScaStreamComplete } from "@/types/sca.d"
+import type { ScaStreamComplete } from "@/types/sca"
 import { computed } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"

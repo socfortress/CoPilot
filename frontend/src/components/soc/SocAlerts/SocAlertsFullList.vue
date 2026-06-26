@@ -10,21 +10,21 @@
 		>
 			<template #1>
 				<SocAlertsBookmarks
+					ref="socAlertsBookmarksRef"
 					:users-list
 					@bookmark="reloadAlerts()"
 					@deleted="itemDeleted($event)"
 					@loaded="bookmarksList = $event"
-					@mounted="socAlertsBookmarksCTX = $event"
 				/>
 			</template>
 			<template #2>
 				<SocAlertsList
+					ref="socAlertsRef"
 					:highlight
 					:bookmarks-list
 					:users-list
 					@bookmark="reloadBookmarks()"
 					@deleted="reloadBookmarks()"
-					@mounted="socAlertsCTX = $event"
 				/>
 			</template>
 			<template #resize-trigger>
@@ -38,12 +38,12 @@
 
 		<template v-else>
 			<SocAlertsList
+				ref="socAlertsRef"
 				:highlight
 				:bookmarks-list
 				:users-list
 				@bookmark="reloadBookmarks()"
 				@deleted="reloadBookmarks()"
-				@mounted="socAlertsCTX = $event"
 			>
 				<template #header>
 					<n-button size="small" @click="showBookmarkedDrawer = true">
@@ -64,11 +64,11 @@
 			>
 				<n-drawer-content title="Alerts list" closable :native-scrollbar="false">
 					<SocAlertsBookmarks
+						ref="socAlertsBookmarksRef"
 						:users-list
 						@bookmark="reloadAlerts()"
 						@deleted="itemDeleted($event)"
 						@loaded="bookmarksList = $event"
-						@mounted="socAlertsBookmarksCTX = $event"
 					/>
 				</n-drawer-content>
 			</n-drawer>
@@ -80,8 +80,8 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SocAlert } from "@/types/soc/alert.d"
-import type { SocUser } from "@/types/soc/user.d"
+import type { SocAlert } from "@/types/soc/alert"
+import type { SocUser } from "@/types/soc/user"
 import { useResizeObserver } from "@vueuse/core"
 import { NBackTop, NButton, NDrawer, NDrawerContent, NSplit, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
@@ -100,8 +100,8 @@ const StarIcon = "carbon:star-filled"
 const message = useMessage()
 const bookmarksList = ref<SocAlert[]>([])
 const usersList = ref<SocUser[]>([])
-const socAlertsBookmarksCTX = ref<{ reload: () => void } | null>(null)
-const socAlertsCTX = ref<{ reload: () => void; itemDeleted: (alertId: string, noEmit?: boolean) => void } | null>(null)
+const socAlertsBookmarksRef = ref<{ reload: () => void } | null>(null)
+const socAlertsRef = ref<{ reload: () => void; itemDeleted: (alertId: string, noEmit?: boolean) => void } | null>(null)
 
 const list = ref(null)
 const showBookmarkedDrawer = ref(false)
@@ -111,16 +111,16 @@ const splitMax = ref(0.75)
 const splitDefault = ref(0.3)
 
 function reloadBookmarks() {
-	socAlertsBookmarksCTX.value?.reload()
+	socAlertsBookmarksRef.value?.reload()
 }
 
 function reloadAlerts() {
-	socAlertsCTX.value?.reload()
+	socAlertsRef.value?.reload()
 }
 
 function itemDeleted(alertId?: string) {
 	if (alertId) {
-		socAlertsCTX.value?.itemDeleted(alertId, true)
+		socAlertsRef.value?.itemDeleted(alertId, true)
 	}
 }
 

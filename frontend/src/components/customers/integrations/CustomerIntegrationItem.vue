@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CustomerIntegration } from "@/types/integrations.d"
+import type { CustomerIntegration } from "@/types/integrations"
 import { NButton, NModal } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"

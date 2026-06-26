@@ -4,8 +4,8 @@ import type {
 	PublicKeyCredentialRequestOptionsJSON,
 	RegistrationResponseJSON
 } from "@simplewebauthn/browser"
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "../httpClient"
+import type { FlaskBaseResponse } from "@/types/flask"
+import { HttpClient } from "../http-client"
 
 export interface PasskeyStatusResponse {
 	enabled: boolean

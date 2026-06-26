@@ -1,6 +1,6 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { CollectResult, FlowResult } from "@/types/flow.d"
-import { HttpClient } from "../httpClient"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { CollectResult, FlowResult } from "@/types/flow"
+import { HttpClient } from "../http-client"
 
 export default {
 	getAllByAgent(hostname: string) {

@@ -1,7 +1,7 @@
 <template>
 	<div v-if="event" class="flex flex-col gap-3">
 		<div class="flex items-center justify-between gap-3">
-			<p class="text-secondary text-[10px] font-medium tracking-widest uppercase">Event fields</p>
+			<p class="text-secondary text-3xs font-medium tracking-widest uppercase">Event fields</p>
 			<span class="text-default font-mono text-xs tabular-nums">{{ sortedFields.length }}</span>
 		</div>
 
@@ -49,7 +49,8 @@
 </template>
 
 <script setup lang="ts">
-import type { EventSearchResult } from "@/types/events.d"
+import type { SafeAny } from "@/types/common"
+import type { EventSearchResult } from "@/types/events"
 import { NButton, NEmpty, NTooltip } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
@@ -73,7 +74,7 @@ const sortedFields = computed(() => {
 		.sort(([a], [b]) => a.localeCompare(b))
 })
 
-function formatValue(value: unknown): string {
+function formatValue(value: SafeAny): string {
 	if (value === null || value === undefined) return "—"
 	if (typeof value === "object") return JSON.stringify(value)
 	return String(value)

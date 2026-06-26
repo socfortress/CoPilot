@@ -73,8 +73,8 @@
 <script setup lang="ts">
 import type { EventSearchFiltersLoad, EventSearchFiltersParams } from "./EventSearchFilters.vue"
 import type { ApiError } from "@/types/common"
-import type { EventSearchResult, FieldMapping } from "@/types/events.d"
-import type { DisplayColumn } from "@/types/eventSources.d"
+import type { DisplayColumn } from "@/types/event-sources"
+import type { EventSearchResult, FieldMapping } from "@/types/events"
 import { NButton, NDrawer, NDrawerContent, NModal, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
 import Api from "@/api"

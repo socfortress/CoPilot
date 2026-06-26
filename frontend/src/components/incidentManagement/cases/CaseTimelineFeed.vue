@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { CaseEvent } from "@/types/incidentManagement/caseTemplates.d"
+import type { CaseEvent } from "@/types/incidentManagement/case-templates"
 import { NButton, NEmpty, NSpin, NTag, NTimeline, NTimelineItem, useMessage } from "naive-ui"
 import { h, onBeforeMount, ref } from "vue"
 import Api from "@/api"

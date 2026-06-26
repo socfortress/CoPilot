@@ -1,5 +1,5 @@
 <template>
-	<div class="soc-users-list">
+	<div class="overflow-hidden rounded-lg">
 		<n-spin :show="loadingUsers">
 			<n-scrollbar x-scrollable style="width: 100%">
 				<n-table :bordered="false" class="min-w-max">
@@ -16,7 +16,12 @@
 						<tr
 							v-for="user of usersList"
 							:key="user.user_id"
-							:class="{ highlight: highlight === user.user_id.toString() }"
+							class="group hover:[&_td]:bg-primary/5"
+							:class="
+								highlight === user.user_id.toString()
+									? '[&_td]:border-y [&_td]:border-primary/30 [&_td]:bg-primary/5'
+									: ''
+							"
 						>
 							<td>
 								<div class="flex items-center gap-3">
@@ -36,10 +41,7 @@
 								{{ user.user_name }}
 							</td>
 							<td>
-								<strong
-									class="active-field"
-									:class="{ success: user.user_active, warning: !user.user_active }"
-								>
+								<strong :class="user.user_active ? 'text-success' : 'text-warning'">
 									{{ user.user_active ? "Yes" : "No" }}
 								</strong>
 							</td>
@@ -56,8 +58,8 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SocAlert } from "@/types/soc/alert.d"
-import type { SocUser } from "@/types/soc/user.d"
+import type { SocAlert } from "@/types/soc/alert"
+import type { SocUser } from "@/types/soc/user"
 import { NScrollbar, NSpin, NTable, NTooltip, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
@@ -123,32 +125,3 @@ onBeforeMount(() => {
 	getAlerts()
 })
 </script>
-
-<style lang="scss" scoped>
-.soc-users-list {
-	border-radius: var(--border-radius);
-	overflow: hidden;
-	.active-field {
-		&.success {
-			color: var(--success-color);
-		}
-		&.warning {
-			color: var(--warning-color);
-		}
-	}
-
-	tr:hover {
-		td {
-			background-color: rgba(var(--primary-color-rgb) / 0.05);
-		}
-	}
-
-	.highlight {
-		td {
-			border-top: 1px solid rgba(var(--primary-color-rgb) / 0.3);
-			border-bottom: 1px solid rgba(var(--primary-color-rgb) / 0.3);
-			background-color: rgba(var(--primary-color-rgb) / 0.05);
-		}
-	}
-}
-</style>

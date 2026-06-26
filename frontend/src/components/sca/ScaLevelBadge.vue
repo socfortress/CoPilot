@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
 import Badge from "@/components/common/Badge.vue"
-import { ScaComplianceLevel } from "@/types/sca.d"
+import { ScaComplianceLevel } from "@/types/sca"
 import ScaLevelIcon from "./ScaLevelIcon.vue"
 import { getComplianceLevel } from "./utils"
 

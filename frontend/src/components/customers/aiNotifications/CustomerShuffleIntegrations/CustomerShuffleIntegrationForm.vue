@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { ShuffleIntegration, ShuffleIntegrationPayload, ShuffleOrg } from "@/types/notifications.d"
+import type { ShuffleIntegration, ShuffleIntegrationPayload, ShuffleOrg } from "@/types/notifications"
 import { NButton, NCheckbox, NCollapseTransition, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"

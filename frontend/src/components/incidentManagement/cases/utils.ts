@@ -1,7 +1,7 @@
 import type { DialogApiInjection } from "naive-ui/es/dialog/src/DialogProvider"
 import type { MessageApiInjection } from "naive-ui/es/message/src/MessageProvider"
 import type { ApiError } from "@/types/common"
-import type { Case } from "@/types/incidentManagement/cases.d"
+import type { Case } from "@/types/incidentManagement/cases"
 import { h } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"

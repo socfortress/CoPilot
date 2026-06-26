@@ -1,6 +1,6 @@
 <template>
-	<div class="alerts-stats-item flex items-stretch">
-		<div class="info flex grow flex-col justify-center gap-1">
+	<div class="flex items-stretch overflow-hidden rounded-lg border border-default bg-secondary">
+		<div class="flex grow flex-col justify-center gap-1 border-r border-default px-5 py-4">
 			<div
 				v-if="summary.agent_name"
 				class="agent"
@@ -12,7 +12,7 @@
 				{{ summary.rule }}
 			</div>
 		</div>
-		<div class="count flex items-center justify-center font-mono">
+		<div class="flex min-w-12.5 items-center justify-center bg-default font-mono font-bold">
 			<span v-if="summary.number_of_alerts">
 				{{ summary.number_of_alerts }}
 			</span>
@@ -21,27 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost } from "@/types/alerts.d"
+import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost } from "@/types/alerts"
 
 const { summary } = defineProps<{ summary: Partial<AlertsByHost & AlertsByRule & AlertsByRulePerHost> }>()
 </script>
-
-<style lang="scss" scoped>
-.alerts-stats-item {
-	border-radius: var(--border-radius);
-	overflow: hidden;
-	background-color: var(--bg-secondary-color);
-	border: 1px solid var(--border-color);
-
-	.info {
-		border-right: 1px solid var(--border-color);
-		padding: 16px 20px;
-	}
-
-	.count {
-		min-width: 50px;
-		background-color: var(--bg-default-color);
-		font-weight: bold;
-	}
-}
-</style>

@@ -169,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FlowResult } from "@/types/flow.d"
+import type { FlowResult } from "@/types/flow"
 import _pick from "lodash/pick"
 import { NEmpty, NInput, NModal, NPopover, NScrollbar, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref } from "vue"

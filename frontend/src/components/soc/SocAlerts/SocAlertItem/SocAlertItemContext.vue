@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SocAlert } from "@/types/soc/alert.d"
+import type { SocAlert } from "@/types/soc/alert"
 import _compact from "lodash/compact"
 import _split from "lodash/split"
 import _uniq from "lodash/uniq"

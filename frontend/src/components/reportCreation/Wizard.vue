@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import type { ReportTimeRange, RowPanelTimeUnit } from "@/api/endpoints/reporting"
 import type { ApiError } from "@/types/common"
-import type { Dashboard, Org, Panel } from "@/types/reporting.d"
+import type { Dashboard, Org, Panel } from "@/types/reporting"
 import { useStorage } from "@vueuse/core"
 import { NForm, NFormItem, NInputGroup, NInputNumber, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"

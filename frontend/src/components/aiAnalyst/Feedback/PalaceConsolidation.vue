@@ -72,7 +72,7 @@
 								<template #default>
 									<dl class="mt-1 flex flex-col gap-2">
 										<div class="flex flex-col gap-1">
-											<dt class="text-secondary font-mono text-[10px] tracking-wider uppercase">
+											<dt class="text-secondary text-3xs font-mono tracking-wider uppercase">
 												Lesson {{ pair.lesson_a_id }}
 											</dt>
 											<dd
@@ -82,7 +82,7 @@
 											</dd>
 										</div>
 										<div class="border-border flex flex-col gap-1 border-t pt-3">
-											<dt class="text-secondary font-mono text-[10px] tracking-wider uppercase">
+											<dt class="text-secondary text-3xs font-mono tracking-wider uppercase">
 												Lesson {{ pair.lesson_b_id }}
 											</dt>
 											<dd
@@ -202,7 +202,7 @@
 
 <script setup lang="ts">
 import type { CardLinkColor } from "@/components/common/cards/CardLink.vue"
-import type { PalaceConsolidation } from "@/types/aiAnalyst.d"
+import type { PalaceConsolidation } from "@/types/ai-analyst"
 import { NButton, NCollapse, NCollapseItem, NEmpty, NSpin, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"

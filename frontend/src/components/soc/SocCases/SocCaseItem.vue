@@ -233,7 +233,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { SocCase, SocCaseExt } from "@/types/soc/case.d"
+import type { SocCase, SocCaseExt } from "@/types/soc/case"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
 import {
@@ -258,7 +258,7 @@ import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { StateName } from "@/types/soc/case.d"
+import { StateName } from "@/types/soc/case"
 import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 

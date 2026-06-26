@@ -67,8 +67,8 @@
 <script setup lang="ts">
 import type { AppSelectedEvent } from "@shuffleio/shuffle-mcps"
 import type { ApiError } from "@/types/common"
-import type { Alert } from "@/types/incidentManagement/alerts.d"
-import type { ShuffleIntegration } from "@/types/notifications.d"
+import type { Alert } from "@/types/incidentManagement/alerts"
+import type { ShuffleIntegration } from "@/types/notifications"
 import { NAlert, NButton, NCollapseTransition, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"

@@ -1,6 +1,6 @@
-import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { Organization } from "@/types/shuffle.d"
-import { HttpClient } from "../httpClient"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { Organization } from "@/types/shuffle"
+import { HttpClient } from "../http-client"
 
 export interface ShuffleConnectorCredentials {
 	base_url: string

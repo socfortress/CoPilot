@@ -56,15 +56,14 @@
 </template>
 
 <script setup lang="ts">
-// TODO-FE: refactor
-import type { LogsQueryEventType, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/types/logs.d"
-import type { User } from "@/types/user.d"
+import type { LogsQueryEventType, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/types/logs"
+import type { User } from "@/types/user"
 import _cloneDeep from "lodash/cloneDeep"
 import _toSafeInteger from "lodash/toSafeInteger"
 import { NButton, NInput, NInputGroup, NInputNumber, NSelect } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
-import { LogEventType } from "@/types/logs.d"
+import { LogEventType } from "@/types/logs"
 
 const props = defineProps<{ users?: User[]; fetchingUsers?: boolean }>()
 

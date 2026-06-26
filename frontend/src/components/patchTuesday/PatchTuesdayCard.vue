@@ -92,12 +92,12 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
-import type { PatchTuesdayItem } from "@/types/patchTuesday.d"
+import type { PatchTuesdayItem } from "@/types/patch-tuesday"
 import { computed } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { PriorityLevel } from "@/types/patchTuesday.d"
+import { PriorityLevel } from "@/types/patch-tuesday"
 import PatchTuesdayPriorityBadge from "./PatchTuesdayPriorityBadge.vue"
 
 const { item } = defineProps<{
