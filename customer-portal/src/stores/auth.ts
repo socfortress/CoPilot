@@ -1,4 +1,5 @@
 import type { LoginPayload } from "@/api/endpoints/auth"
+import type { TOTPValidateRequest } from "@/api/endpoints/totp"
 import type { AuthResponse, AuthUser, AuthUserRole, JWTPayload, RouteMetaAuthRole } from "@/types/auth"
 import type { ApiError } from "@/types/common"
 import * as jose from "jose"
@@ -47,8 +48,27 @@ export const useAuthStore = defineStore("auth", {
 			try {
 				const response = await Api.auth.login(payload)
 
-				if (response.data) {
+				// When 2FA is enabled the response carries a short-lived temp token and
+				// `requires_2fa: true`. Do NOT treat it as a session — the caller hands the
+				// temp token to the 2FA challenge and completes login via verify2fa().
+				if (response.data && !response.data.requires_2fa) {
 					this.setLogged(response.data)
+				}
+
+				return response.data
+			} catch (err) {
+				const error = err as ApiError
+				throw error.response?.data
+			}
+		},
+		async verify2fa(payload: TOTPValidateRequest) {
+			try {
+				const response = await Api.totp.validate(payload)
+
+				// The validate endpoint returns the same {access_token, token_type} shape as the
+				// customer-portal login Token (no refresh_token), so cast through unknown.
+				if (response.data) {
+					this.setLogged(response.data as unknown as AuthResponse)
 				}
 
 				return response.data

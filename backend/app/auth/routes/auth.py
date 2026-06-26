@@ -123,7 +123,7 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@auth_router.post("/token/customer-portal", response_model=Token)
+@auth_router.post("/token/customer-portal")
 async def login_for_customer_portal(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -162,6 +162,20 @@ async def login_for_customer_portal(
             detail="This account does not have access to the Customer Portal.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Check if user has 2FA enabled — login is not yet complete; it finishes at /2fa/validate,
+    # which is where the auth.login event + last_login are recorded for 2FA users (and where the
+    # customer_codes claim is attached to the issued session token for customer_user accounts).
+    if await is_2fa_enabled(user.id):
+        from app.auth.routes.totp import _create_temp_token
+
+        temp_token = _create_temp_token(user.username)
+        logger.info(f"Customer user {user.username} requires 2FA verification")
+        return {
+            "access_token": temp_token,
+            "token_type": "bearer",
+            "requires_2fa": True,
+        }
 
     # Fetch assigned customer codes
     from sqlalchemy import select

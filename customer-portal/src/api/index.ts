@@ -5,6 +5,7 @@ import cases from "./endpoints/cases"
 import caseTemplates from "./endpoints/caseTemplates"
 import portal from "./endpoints/portal"
 import siem from "./endpoints/siem"
+import totp from "./endpoints/totp"
 
 export default {
 	auth,
@@ -13,5 +14,6 @@ export default {
 	cases,
 	caseTemplates,
 	siem,
-	portal
+	portal,
+	totp
 }

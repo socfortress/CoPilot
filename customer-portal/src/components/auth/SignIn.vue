@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<n-form ref="formRef" :model :rules :disabled="loading">
+		<n-form v-if="!show2faForm" ref="formRef" :model :rules :disabled="loading">
 			<n-form-item path="username" label="Username">
 				<n-input
 					v-model:value="model.username"
@@ -29,6 +29,8 @@
 				</div>
 			</div>
 		</n-form>
+
+		<TotpForm v-else v-model:two-fa-temp-token="twoFaTempToken" @cancel="show2faForm = false" />
 	</div>
 </template>
 
@@ -38,6 +40,7 @@ import type { LoginPayload } from "@/api/endpoints/auth"
 import { NButton, NForm, NFormItem, NInput, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import { useRouter } from "vue-router"
+import TotpForm from "@/components/auth/TotpForm.vue"
 import { useAuthStore } from "@/stores/auth"
 
 interface ModelType {
@@ -54,6 +57,11 @@ const model = ref<ModelType>({
 	password: null
 })
 const authStore = useAuthStore()
+
+// 2FA challenge state — when login returns `requires_2fa`, we swap the credentials
+// form for the TOTP challenge and hand it the short-lived temp token.
+const show2faForm = ref(false)
+const twoFaTempToken = ref("")
 
 const rules: FormRules = {
 	username: [
@@ -89,7 +97,14 @@ function signIn(e: Event) {
 
 			authStore
 				.login(payload)
-				.then(() => {
+				.then(res => {
+					if (res?.requires_2fa) {
+						// Credentials accepted but a second factor is required. Carry the temp
+						// token into the TOTP challenge; login completes in TotpForm.
+						twoFaTempToken.value = res.access_token
+						show2faForm.value = true
+						return
+					}
 					router.push({ path: "/", replace: true })
 				})
 				.catch(err => {
