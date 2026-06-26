@@ -1,7 +1,10 @@
 <template>
 	<n-popover overlap placement="top-end" style="max-height: 240px" scrollable to="body" :disabled="hideTimeline">
 		<template #trigger>
-			<div class="time flex items-center gap-2" :class="{ hover: !hideTimeline }">
+			<div
+				class="text-secondary flex items-center gap-2 font-mono"
+				:class="{ 'hover:text-primary cursor-help': !hideTimeline }"
+			>
 				<span>
 					{{ formatDate(alert.alert_source_event_time) }}
 				</span>
@@ -37,18 +40,3 @@ function formatDate(timestamp: string | number, utc: boolean = true): string {
 	return dayjs(timestamp).utc(utc).format(dFormats.datetimesec)
 }
 </script>
-
-<style lang="scss" scoped>
-.time {
-	color: var(--fg-secondary-color);
-	font-family: var(--font-family-mono);
-
-	&.hover {
-		cursor: help;
-
-		&:hover {
-			color: var(--primary-color);
-		}
-	}
-}
-</style>

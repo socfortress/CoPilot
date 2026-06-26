@@ -37,9 +37,9 @@ export function toggleAgentCritical({
 	if (cbBefore && typeof cbBefore === "function") {
 		cbBefore()
 	}
-	const method = criticalStatus ? "markNonCritical" : "markCritical"
+	const method = criticalStatus ? Api.agents.markNonCritical(agentId) : Api.agents.markCritical(agentId)
 
-	Api.agents[method](agentId)
+	method
 		.then(res => {
 			if (res.data.success) {
 				message.success("Agent Criticality Updated Successfully")

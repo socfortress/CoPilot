@@ -69,10 +69,12 @@ function assignUser() {
 	if (userSelected.value !== ownerId.value) {
 		loadingUsers.value = true
 
-		const method = userSelected.value ? "assignUserToAlert" : "removeUserAlertAssign"
 		const userId = userSelected.value ? userSelected.value : ownerId.value || 0
+		const method = userSelected.value
+			? Api.soc.assignUserToAlert(alert.value.alert_id.toString(), userId.toString())
+			: Api.soc.removeUserAlertAssign(alert.value.alert_id.toString(), userId.toString())
 
-		Api.soc[method](alert.value.alert_id.toString(), userId.toString())
+		method
 			.then(res => {
 				if (res.data.success) {
 					emit("updated", res.data.alert)

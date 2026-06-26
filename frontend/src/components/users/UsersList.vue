@@ -1,5 +1,5 @@
 <template>
-	<div class="users-list">
+	<div class="overflow-hidden rounded-lg">
 		<div class="mb-4 flex items-center justify-between gap-5">
 			<div>
 				Total:
@@ -37,7 +37,12 @@
 						<tr
 							v-for="user of usersList"
 							:key="user.id"
-							:class="{ highlight: highlight === user.id.toString() }"
+							class="group hover:[&_td]:bg-primary/5"
+							:class="
+								highlight === user.id.toString()
+									? '[&_td]:border-y [&_td]:border-primary/30 [&_td]:bg-primary/5'
+									: ''
+							"
 						>
 							<td>#{{ user.id }}</td>
 							<td>
@@ -171,24 +176,3 @@ onBeforeMount(() => {
 	getUsers()
 })
 </script>
-
-<style lang="scss" scoped>
-.users-list {
-	border-radius: var(--border-radius);
-	overflow: hidden;
-
-	tr:hover {
-		td {
-			background-color: rgba(var(--primary-color-rgb) / 0.05);
-		}
-	}
-
-	.highlight {
-		td {
-			border-top: 1px solid rgba(var(--primary-color-rgb) / 0.3);
-			border-bottom: 1px solid rgba(var(--primary-color-rgb) / 0.3);
-			background-color: rgba(var(--primary-color-rgb) / 0.05);
-		}
-	}
-}
-</style>

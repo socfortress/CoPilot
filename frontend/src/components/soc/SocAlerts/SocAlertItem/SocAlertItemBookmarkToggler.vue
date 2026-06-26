@@ -2,8 +2,8 @@
 	<Icon
 		:name="loadingBookmark ? LoadingIcon : isBookmark ? StarActiveIcon : StarIcon"
 		:size="16"
-		class="toggler-bookmark"
-		:class="{ active: isBookmark }"
+		class="hover:text-primary"
+		:class="{ 'text-primary': isBookmark }"
 		@click.stop="toggleBookmark()"
 	/>
 </template>
@@ -39,12 +39,14 @@ function toggleBookmark() {
 	if (alert.value?.alert_id) {
 		loadingBookmark.value = true
 
-		const method = isBookmark.value ? "removeAlertBookmark" : "addAlertBookmark"
+		const method = isBookmark.value
+			? Api.soc.removeAlertBookmark(alert.value.alert_id.toString())
+			: Api.soc.addAlertBookmark(alert.value.alert_id.toString())
 
-		Api.soc[method](alert.value.alert_id.toString())
+		method
 			.then(res => {
 				if (res.data.success) {
-					emit("bookmark", method !== "removeAlertBookmark")
+					emit("bookmark", !isBookmark.value)
 					message.success(res.data?.message || "Stream started.")
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
@@ -59,14 +61,3 @@ function toggleBookmark() {
 	}
 }
 </script>
-
-<style lang="scss" scoped>
-.toggler-bookmark {
-	&.active {
-		color: var(--primary-color);
-	}
-	&:hover {
-		color: var(--primary-color);
-	}
-}
-</style>

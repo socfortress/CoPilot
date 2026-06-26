@@ -210,9 +210,11 @@ function reset() {
 function submit() {
 	loading.value = true
 
-	const method = customer.value?.customer_code ? "updateCustomer" : "createCustomer"
+	const method = customer.value?.customer_code
+		? Api.customers.updateCustomer(form.value, customer.value?.customer_code)
+		: Api.customers.createCustomer(form.value)
 
-	Api.customers[method](form.value, customer.value?.customer_code)
+	method
 		.then(res => {
 			if (res.data.success) {
 				emit("submitted", res.data.customer)

@@ -1,13 +1,13 @@
 <template>
 	<n-spin :show="loadingAlerts" :size="14">
-		<div v-if="!loadingAlerts" class="alert-list flex items-center gap-3">
+		<div v-if="!loadingAlerts" class="flex max-w-50 items-center gap-3">
 			<span :class="{ 'text-secondary': !alertsList.length, 'font-bold': alertsList.length }">
 				{{ alertsList.length || "No Alters" }}
 			</span>
 			<div class="flex flex-wrap gap-2">
 				<n-tooltip v-for="alert of alertsList" :key="alert.alert_id">
 					<template #trigger>
-						<code class="alert-btn" @click="openSocAlert(alert.alert_id)">#{{ alert.alert_id }}</code>
+						<code class="hover:text-primary cursor-pointer underline" @click="openSocAlert(alert.alert_id)">#{{ alert.alert_id }}</code>
 					</template>
 					{{ alert.alert_title }}
 				</n-tooltip>
@@ -95,17 +95,3 @@ onBeforeUnmount(() => {
 	abortController?.abort()
 })
 </script>
-
-<style lang="scss" scoped>
-.alert-list {
-	max-width: 200px;
-	.alert-btn {
-		cursor: pointer;
-		text-decoration: underline;
-
-		&:hover {
-			color: var(--primary-color);
-		}
-	}
-}
-</style>

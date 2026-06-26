@@ -186,8 +186,6 @@ function resetForm() {
 function submit() {
 	submittingDefaultSettings.value = true
 
-	const method = entityId.value ? "updateProvisioningDefaultSettings" : "setProvisioningDefaultSettings"
-
 	const payload = {
 		id: entityId.value || 0,
 		clusterName: form.value.cluster_name,
@@ -202,7 +200,11 @@ function submit() {
 		wazuhDomain: form.value.wazuh_domain || ""
 	}
 
-	Api.customers[method](payload)
+	const method = entityId.value
+		? Api.customers.updateProvisioningDefaultSettings(payload)
+		: Api.customers.setProvisioningDefaultSettings(payload)
+
+	method
 		.then(res => {
 			if (res.data.success) {
 				entityId.value = res.data.customer_provisioning_default_settings.id

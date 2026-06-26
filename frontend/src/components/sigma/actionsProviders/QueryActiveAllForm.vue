@@ -50,9 +50,9 @@ function closePopup() {
 function updateActive(active: boolean) {
 	loading.value = true
 
-	const methods = active ? "activateAllQueries" : "deactivateAllQueries"
+	const method = active ? Api.sigma.activateAllQueries() : Api.sigma.deactivateAllQueries()
 
-	Api.sigma[methods]()
+	method
 		.then(res => {
 			if (res.data.success) {
 				emit("updated")

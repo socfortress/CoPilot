@@ -227,9 +227,13 @@ function getData() {
 
 	lastFilters.value = _cloneDeep(filters.value)
 
-	const method = !filtered.value ? "getAvailable" : filters.value.active === "active" ? "getActive" : "getInactive"
+	const method = !filtered.value
+		? Api.sigma.getAvailable()
+		: filters.value.active === "active"
+			? Api.sigma.getActive()
+			: Api.sigma.getInactive()
 
-	Api.sigma[method]()
+	method
 		.then(res => {
 			if (res.data.success) {
 				queriesList.value = res.data?.sigma_queries || []
