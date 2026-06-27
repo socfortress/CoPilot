@@ -28,7 +28,7 @@ import { useRoute, useRouter } from "vue-router"
 import CustomerCreationButton from "@/components/customers/CustomerCreationButton.vue"
 import CustomersList from "@/components/customers/CustomersList.vue"
 import CustomerDefaultSettingsButton from "@/components/customers/provision/CustomerDefaultSettingsButton.vue"
-import { emitter } from "@/emitter"
+import { useSearchDialog } from "@/composables/useSearchDialog"
 
 const route = useRoute()
 const router = useRouter()
@@ -56,10 +56,12 @@ onBeforeMount(() => {
 	}
 })
 
+let unregisterAddCustomer: (() => void) | undefined
+
 onMounted(() => {
-	emitter.on("action:add-customer", setOpenForm)
+	unregisterAddCustomer = useSearchDialog().registerAddCustomer(setOpenForm)
 })
 onUnmounted(() => {
-	emitter.off("action:add-customer", setOpenForm)
+	unregisterAddCustomer?.()
 })
 </script>

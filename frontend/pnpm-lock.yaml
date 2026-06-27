@@ -19,9 +19,6 @@ importers:
       '@codemirror/commands':
         specifier: ^6.10.4
         version: 6.10.4
-      '@codemirror/lang-javascript':
-        specifier: ^6.2.5
-        version: 6.2.5
       '@codemirror/lang-xml':
         specifier: ^6.1.0
         version: 6.1.0
@@ -64,27 +61,18 @@ importers:
       '@simplewebauthn/browser':
         specifier: ^13.3.0
         version: 13.3.0
-      '@types/codemirror':
-        specifier: ^5.60.17
-        version: 5.60.17
       '@vueuse/core':
         specifier: ^14.3.0
         version: 14.3.0(vue@3.5.38(typescript@6.0.3))
       '@vueuse/motion':
         specifier: ^3.0.3
         version: 3.0.3(vue@3.5.38(typescript@6.0.3))
-      algoliasearch:
-        specifier: ^5.55.1
-        version: 5.55.1
       axios:
         specifier: ^1.18.1
         version: 1.18.1(debug@4.4.3)
       bytes:
         specifier: ^3.1.2
         version: 3.1.2
-      codemirror:
-        specifier: ~6.0.2
-        version: 6.0.2
       colord:
         specifier: ^2.9.3
         version: 2.9.3
@@ -115,9 +103,6 @@ importers:
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
-      mitt:
-        specifier: ^3.0.1
-        version: 3.0.1
       naive-ui:
         specifier: ^2.44.1
         version: 2.44.1(vue@3.5.38(typescript@6.0.3))
@@ -145,18 +130,6 @@ importers:
       react-dom:
         specifier: ^19.2.7
         version: 19.2.7(react@19.2.7)
-      react-router-dom:
-        specifier: ^7.18.0
-        version: 7.18.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      react18-json-view:
-        specifier: ^0.2.10
-        version: 0.2.10(react@19.2.7)
-      remark-breaks:
-        specifier: ^4.0.0
-        version: 4.0.0
-      rolldown:
-        specifier: ^1.1.2
-        version: 1.1.2
       secure-ls:
         specifier: ^2.0.0
         version: 2.0.0
@@ -196,9 +169,6 @@ importers:
       vuedraggable:
         specifier: ^4.1.0
         version: 4.1.0(vue@3.5.38(typescript@6.0.3))
-      xmllint:
-        specifier: ^0.1.1
-        version: 0.1.1
       xmllint-wasm:
         specifier: ^5.2.0
         version: 5.2.0(@types/node@26.0.0)
@@ -293,6 +263,9 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: ^0.8.0
         version: 0.8.0(prettier@3.8.4)
+      rolldown:
+        specifier: ^1.1.2
+        version: 1.1.2
       sass:
         specifier: ^1.101.0
         version: 1.101.0
@@ -671,9 +644,6 @@ packages:
   '@codemirror/commands@6.10.4':
     resolution: {integrity: sha512-Ryk9y9T0FFVF0cUGhAknveAyUOl/A1qReTFi+qPKtOh2Z9F4AUBz3XOrYD4ZEgZirdugVzHvd/2/Wcwy5OliTg==}
 
-  '@codemirror/lang-javascript@6.2.5':
-    resolution: {integrity: sha512-zD4e5mS+50htS7F+TYjBPsiIFGanfVqg4HyUz6WNFikgOPf2BgKlx+TQedI1w6n/IqRBVBbBWmGFdLB/7uxO4A==}
-
   '@codemirror/lang-xml@6.1.0':
     resolution: {integrity: sha512-3z0blhicHLfwi2UgkZYRPioSgVTo9PV5GP5ducFH6FaHy0IAJRg+ixj5gTR1gnT/glAIC8xv4w2VL1LoZfs+Jg==}
 
@@ -1001,9 +971,6 @@ packages:
 
   '@lezer/highlight@1.2.3':
     resolution: {integrity: sha512-qXdH7UqTvGfdVBINrgKhDsVTJTxactNNxLk7+UMwZhU13lMHaOBlJe9Vqp907ya56Y3+ed2tlqzys7jDkTmW0g==}
-
-  '@lezer/javascript@1.5.4':
-    resolution: {integrity: sha512-vvYx3MhWqeZtGPwDStM2dwgljd5smolYD2lR2UyFcHfxbBQebqx8yjmFmxtJ/E6nN6u1D9srOiVWm3Rb4tmcUA==}
 
   '@lezer/lr@1.4.10':
     resolution: {integrity: sha512-rnCpTIBafOx4mRp43xOxDJbFipJm/c0cia/V5TiGlhmMa+wsSdoGmUN3w5Bqrks/09Q/D4tNAmWaT8p6NRi77A==}
@@ -1502,9 +1469,6 @@ packages:
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
 
-  '@types/codemirror@5.60.17':
-    resolution: {integrity: sha512-AZq2FIsUHVMlp7VSe2hTfl5w4pcUkoFkM3zVsRKsn1ca8CXRDYvnin04+HP2REkwsxemuHqvDofdlhUWNpbwfw==}
-
   '@types/debug@4.1.13':
     resolution: {integrity: sha512-KSVgmQmzMwPlmtljOomayoR89W4FynCAi3E8PPs7vmDVPe84hT+vGPKkJfThkmXs0x0jAaa9U8uW8bbfyS2fWw==}
 
@@ -1592,9 +1556,6 @@ packages:
 
   '@types/react@19.2.17':
     resolution: {integrity: sha512-MXfmqaVPEVgkBT/aY0aGCkRWWtByiYQXo3xdQ8r5RzuFrPiRn8Gar2tQdXSUQ2GKV3bkXckek89V8wQBY2Q/Aw==}
-
-  '@types/tern@0.23.9':
-    resolution: {integrity: sha512-ypzHFE/wBzh+BlH6rrBgS5I/Z7RD21pGhZ2rltb/+ZrVM1awdZwjx7hE5XfuYgHWk9uvV5HLZN3SloevCAp3Bw==}
 
   '@types/tough-cookie@4.0.5':
     resolution: {integrity: sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==}
@@ -4865,9 +4826,6 @@ packages:
     peerDependencies:
       '@types/node': '>=16'
 
-  xmllint@0.1.1:
-    resolution: {integrity: sha512-yXa09o/w2E+OLQVbgRyuz1n5o4ZodV8n/iBXwLKQNR6GcfWL8vF8uApjBFKTzhq7sCABtkRXCwEE3+vtkm/Wqg==}
-
   y18n@5.0.8:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
     engines: {node: '>=10'}
@@ -5332,16 +5290,6 @@ snapshots:
       '@codemirror/view': 6.43.2
       '@lezer/common': 1.5.2
 
-  '@codemirror/lang-javascript@6.2.5':
-    dependencies:
-      '@codemirror/autocomplete': 6.20.3
-      '@codemirror/language': 6.12.3
-      '@codemirror/lint': 6.9.7
-      '@codemirror/state': 6.7.0
-      '@codemirror/view': 6.43.2
-      '@lezer/common': 1.5.2
-      '@lezer/javascript': 1.5.4
-
   '@codemirror/lang-xml@6.1.0':
     dependencies:
       '@codemirror/autocomplete': 6.20.3
@@ -5718,12 +5666,6 @@ snapshots:
   '@lezer/highlight@1.2.3':
     dependencies:
       '@lezer/common': 1.5.2
-
-  '@lezer/javascript@1.5.4':
-    dependencies:
-      '@lezer/common': 1.5.2
-      '@lezer/highlight': 1.2.3
-      '@lezer/lr': 1.4.10
 
   '@lezer/lr@1.4.10':
     dependencies:
@@ -6152,10 +6094,6 @@ snapshots:
       '@types/deep-eql': 4.0.2
       assertion-error: 2.0.1
 
-  '@types/codemirror@5.60.17':
-    dependencies:
-      '@types/tern': 0.23.9
-
   '@types/debug@4.1.13':
     dependencies:
       '@types/ms': 2.1.0
@@ -6244,10 +6182,6 @@ snapshots:
   '@types/react@19.2.17':
     dependencies:
       csstype: 3.2.3
-
-  '@types/tern@0.23.9':
-    dependencies:
-      '@types/estree': 1.0.9
 
   '@types/tough-cookie@4.0.5': {}
 
@@ -9848,8 +9782,6 @@ snapshots:
   xmllint-wasm@5.2.0(@types/node@26.0.0):
     dependencies:
       '@types/node': 26.0.0
-
-  xmllint@0.1.1: {}
 
   y18n@5.0.8: {}
 

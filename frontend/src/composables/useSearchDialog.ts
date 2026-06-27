@@ -1,6 +1,8 @@
 import { ref } from "vue"
 
-const listener = ref()
+const listener = ref<(() => void) | undefined>()
+let addCustomerHandler: (() => void) | undefined
+
 export function useSearchDialog() {
 	return {
 		trigger: (cb: () => void): void => {
@@ -8,6 +10,17 @@ export function useSearchDialog() {
 		},
 		open: (): void => {
 			listener.value?.()
+		},
+		registerAddCustomer: (handler: () => void): (() => void) => {
+			addCustomerHandler = handler
+			return () => {
+				if (addCustomerHandler === handler) {
+					addCustomerHandler = undefined
+				}
+			}
+		},
+		openAddCustomer: (): void => {
+			addCustomerHandler?.()
 		}
 	}
 }
