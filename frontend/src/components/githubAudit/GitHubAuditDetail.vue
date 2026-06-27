@@ -154,7 +154,7 @@
 		</n-tab-pane>
 	</n-tabs>
 
-	<n-modal v-model:show="showExclusionForm" preset="dialog" title="Add Exclusion" style="width: 500px">
+	<n-modal v-model:show="showExclusionForm" preset="dialog" title="Add Exclusion" class="max-w-125!">
 		<GitHubAuditExclusionForm
 			v-if="showExclusionForm"
 			:config-id="config.id"

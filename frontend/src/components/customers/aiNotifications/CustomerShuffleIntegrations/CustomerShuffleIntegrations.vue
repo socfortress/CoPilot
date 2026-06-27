@@ -1,6 +1,6 @@
 <template>
 	<div class="customer-shuffle-integrations">
-		<transition name="fade" mode="out-in">
+		<transition name="transition-fade" mode="out-in">
 			<div v-if="showForm" class="flex flex-col gap-4">
 				<h4>
 					{{ editingIntegration ? `Edit ${editingIntegration.display_name}` : "Add Shuffle integration" }}
@@ -141,14 +141,3 @@ function openAppsDrawer(integration: ShuffleIntegration) {
 
 onBeforeMount(refreshList)
 </script>
-
-<style lang="scss" scoped>
-.fade-enter-active,
-.fade-leave-active {
-	transition: opacity 0.2s ease-in-out;
-}
-.fade-enter-from,
-.fade-leave-to {
-	opacity: 0;
-}
-</style>

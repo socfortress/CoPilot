@@ -1,6 +1,6 @@
 <template>
-	<div class="flex items-stretch overflow-hidden rounded-lg border border-default bg-secondary">
-		<div class="flex grow flex-col justify-center gap-1 border-r border-default px-5 py-4">
+	<div class="border-default bg-secondary flex items-stretch overflow-hidden rounded-lg border">
+		<div class="border-default flex grow flex-col justify-center gap-1 border-r px-5 py-4">
 			<div
 				v-if="summary.agent_name"
 				class="agent"
@@ -12,7 +12,7 @@
 				{{ summary.rule }}
 			</div>
 		</div>
-		<div class="flex min-w-12.5 items-center justify-center bg-default font-mono font-bold">
+		<div class="bg-default flex min-w-12.5 items-center justify-center font-mono font-bold">
 			<span v-if="summary.number_of_alerts">
 				{{ summary.number_of_alerts }}
 			</span>

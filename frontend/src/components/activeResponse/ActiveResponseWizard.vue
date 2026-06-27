@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading" class="active-response-wizard">
+	<n-spin :show="loading">
 		<div class="flex min-h-120 flex-col">
 			<div class="flex grow flex-col">
 				<n-scrollbar x-scrollable trigger="none">
@@ -13,7 +13,7 @@
 				</n-scrollbar>
 
 				<div class="mt-4 flex grow flex-col">
-					<Transition :name="`slide-form-${slideFormDirection}`">
+					<Transition :name="`transition-slide-${slideFormDirection}`">
 						<div v-if="current === 1" class="flex flex-col gap-2 px-6">
 							<CardEntity embedded hoverable clickable @click.stop="setOs('linux')">
 								<div class="flex items-center gap-3">
@@ -204,32 +204,3 @@ defineExpose({
 	reset
 })
 </script>
-
-<style lang="scss" scoped>
-.active-response-wizard {
-	.slide-form-right-enter-active,
-	.slide-form-right-leave-active,
-	.slide-form-left-enter-active,
-	.slide-form-left-leave-active {
-		transition: all 0.2s ease-out;
-		position: absolute;
-		width: 100%;
-	}
-
-	.slide-form-left-enter-from {
-		transform: translateX(-100%);
-	}
-
-	.slide-form-left-leave-to {
-		transform: translateX(100%);
-	}
-
-	.slide-form-right-enter-from {
-		transform: translateX(100%);
-	}
-
-	.slide-form-right-leave-to {
-		transform: translateX(-100%);
-	}
-}
-</style>

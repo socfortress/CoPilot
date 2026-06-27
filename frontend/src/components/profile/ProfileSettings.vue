@@ -1,8 +1,8 @@
 <template>
-	<n-spin class="settings" :show="loading">
+	<n-spin :show="loading">
 		<n-card>
 			<n-form ref="formRef" :label-width="80" :model="formValue" :rules="formRules">
-				<div class="title">General</div>
+				<div class="mt-5 mb-5 text-xl first:mt-0">General</div>
 				<div class="flex flex-col md:flex-row md:gap-6">
 					<n-form-item label="Date Format" path="dateFormat" class="basis-1/3">
 						<n-select v-model:value="formValue.dateFormat" :options="dateFormatsAvailable" />
@@ -78,16 +78,3 @@ function save() {
 	})
 }
 </script>
-
-<style lang="scss" scoped>
-.settings {
-	.title {
-		font-size: 20px;
-		margin-bottom: 20px;
-
-		&:not(:first-child) {
-			margin-top: 20px;
-		}
-	}
-}
-</style>

@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading">
+	<n-spin :show="loading" content-class="h-full">
 		<CardStatsBars
 			title="Cases"
 			hovered
@@ -69,13 +69,3 @@ onBeforeMount(() => {
 	getData()
 })
 </script>
-
-<style lang="scss" scoped>
-.n-spin-container {
-	:deep() {
-		.n-spin-content {
-			height: 100%;
-		}
-	}
-}
-</style>

@@ -1,6 +1,6 @@
 <template>
 	<div class="pinned-pages flex items-center gap-5">
-		<TransitionGroup name="anim" tag="div" class="latest-list flex items-center gap-4 overflow-hidden">
+		<TransitionGroup name="anim-pin" tag="div" class="latest-list flex items-center gap-4 overflow-hidden">
 			<n-tag
 				v-for="page of latestSanitized"
 				:key="page.name"
@@ -20,7 +20,7 @@
 			</n-tag>
 		</TransitionGroup>
 
-		<Transition name="anim" tag="div" class="shortcuts-container flex items-center">
+		<Transition name="anim-pin" tag="div" class="shortcuts-container flex items-center">
 			<div v-if="pinned.length" class="flex items-center">
 				<n-popover :show-arrow="false" placement="bottom" trigger="hover" class="p-1!">
 					<template #trigger>
@@ -236,19 +236,19 @@ router.afterEach(route => {
 		}
 	}
 
-	.anim-move,
-	.anim-enter-active,
-	.anim-leave-active {
+	.anim-pin-move,
+	.anim-pin-enter-active,
+	.anim-pin-leave-active {
 		transition: all 0.5s var(--bezier-ease);
 	}
 
-	.anim-enter-from,
-	.anim-leave-to {
+	.anim-pin-enter-from,
+	.anim-pin-leave-to {
 		opacity: 0;
 		transform: scale(0);
 	}
 
-	.anim-leave-active {
+	.anim-pin-leave-active {
 		position: absolute;
 	}
 

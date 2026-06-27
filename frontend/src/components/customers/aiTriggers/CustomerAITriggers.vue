@@ -1,6 +1,6 @@
 <template>
-	<div class="customer-ai-triggers flex flex-col gap-4">
-		<transition name="form-fade" mode="out-in">
+	<div class="flex flex-col gap-4">
+		<transition name="transition-fade-move" mode="out-in">
 			<div v-if="showForm" class="flex flex-col gap-4">
 				<h4>Create an AI Trigger</h4>
 				<CustomerAITriggersForm ref="formRef" :customer-code @submitted="refreshList()">
@@ -104,22 +104,3 @@ onBeforeMount(() => {
 	getAITriggers()
 })
 </script>
-
-<style lang="scss" scoped>
-.customer-ai-triggers {
-	.form-fade-enter-active,
-	.form-fade-leave-active {
-		transition:
-			opacity 0.2s ease-in-out,
-			transform 0.3s ease-in-out;
-	}
-	.form-fade-enter-from {
-		opacity: 0;
-		transform: translateY(10px);
-	}
-	.form-fade-leave-to {
-		opacity: 0;
-		transform: translateY(-10px);
-	}
-}
-</style>

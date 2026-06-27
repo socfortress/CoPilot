@@ -2,7 +2,7 @@
 	<n-card title="Storage per Customer" segmented content-class="pr-1!">
 		<n-spin :show="loading">
 			<div v-if="customerSizes && customerSizes.length > 0">
-				<n-scrollbar style="max-height: 200px" trigger="none" content-class="flex flex-col gap-4 pr-5!">
+				<n-scrollbar class="max-h-50" trigger="none" content-class="flex flex-col gap-4 pr-5!">
 					<div v-for="customer in customerSizes" :key="customer.customer" class="flex flex-col gap-1">
 						<div class="flex items-center justify-between gap-2">
 							<div class="flex items-center gap-2">
@@ -16,7 +16,7 @@
 									</template>
 									<div class="flex flex-col gap-2">
 										<span class="text-sm font-semibold">Indices for {{ customer.customer }}</span>
-										<n-scrollbar style="max-height: 200px" trigger="none">
+										<n-scrollbar class="max-h-50" trigger="none">
 											<ul>
 												<li
 													v-for="index in customer.indices"

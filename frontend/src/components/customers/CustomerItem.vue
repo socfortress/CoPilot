@@ -229,7 +229,7 @@
 						:pane-style="{ minHeight: 'min(450px, 90vh)' }"
 					>
 						<n-tab-pane name="Agents" tab="Agents" display-directive="show" class="p-4! pr-0!">
-							<n-scrollbar style="max-height: 470px" trigger="none" class="pr-4">
+							<n-scrollbar trigger="none" class="max-h-117.5 pr-4">
 								<CustomerAgents v-if="customerInfo" :customer="customerInfo" />
 							</n-scrollbar>
 						</n-tab-pane>
@@ -247,7 +247,7 @@
 							display-directive="show:lazy"
 							class="p-4! pr-0!"
 						>
-							<n-scrollbar style="max-height: 470px" trigger="none" class="pr-4">
+							<n-scrollbar trigger="none" class="max-h-117.5 pr-4">
 								<CustomerHealthcheckList
 									v-model:filters="healthcheckFilters"
 									source="wazuh"
@@ -261,7 +261,7 @@
 							display-directive="show:lazy"
 							class="p-4! pr-0!"
 						>
-							<n-scrollbar style="max-height: 470px" trigger="none" class="pr-4">
+							<n-scrollbar trigger="none" class="max-h-117.5 pr-4">
 								<CustomerHealthcheckList
 									v-model:filters="healthcheckFilters"
 									source="velociraptor"

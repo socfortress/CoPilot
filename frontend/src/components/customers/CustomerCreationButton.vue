@@ -42,7 +42,7 @@
 		<n-drawer
 			v-model:show="showAddCustomer"
 			:width="500"
-			style="max-width: 90vw"
+			class="max-w-[90vw]!"
 			:trap-focus="false"
 			display-directive="show"
 		>

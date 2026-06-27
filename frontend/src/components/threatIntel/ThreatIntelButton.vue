@@ -9,7 +9,7 @@
 	<n-drawer
 		v-model:show="showThreatIntelDrawer"
 		:width="500"
-		style="max-width: 90vw"
+		class="max-w-[90vw]!"
 		:trap-focus="false"
 		:close-on-esc="false"
 		:mask-closable="false"

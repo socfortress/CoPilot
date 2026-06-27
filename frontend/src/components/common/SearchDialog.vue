@@ -70,6 +70,7 @@
 </template>
 
 <script lang="ts" setup>
+// TODO-FE: replace vue-highlight-words with n-highlight
 import type { ScrollbarInst } from "naive-ui"
 import { useMagicKeys, whenever } from "@vueuse/core"
 import { NAvatar, NCard, NDivider, NModal, NScrollbar, NText } from "naive-ui"
@@ -80,7 +81,6 @@ import { useFullscreenSwitch } from "@/composables/useFullscreenSwitch"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSearchDialog } from "@/composables/useSearchDialog"
 import { useThemeSwitch } from "@/composables/useThemeSwitch"
-import { emitter } from "@/emitter"
 import { getNavigatorOS } from "@/utils"
 
 interface GroupItem {
@@ -131,7 +131,7 @@ const groups = ref<Groups>([
 				label: "Shortcut",
 				action() {
 					routeCustomer({ action: "add-customer" }).navigate()
-					emitter.emit("action:add-customer")
+					useSearchDialog().openAddCustomer()
 				}
 			},
 			{

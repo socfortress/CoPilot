@@ -12,7 +12,7 @@
 	</div>
 
 	<n-scrollbar x-scrollable trigger="none" class="mt-5">
-		<n-timeline horizontal size="large" style="width: max-content" class="mb-4">
+		<n-timeline horizontal size="large" class="mb-4 w-max">
 			<n-timeline-item
 				v-for="stage of stages"
 				:key="stage.stage"
@@ -22,7 +22,7 @@
 				<p class="mb-1">
 					{{ stage.match }}
 				</p>
-				<n-popover trigger="click" style="max-height: 240px" scrollable placement="bottom">
+				<n-popover trigger="click" class="max-h-60" scrollable placement="bottom">
 					<template #trigger>
 						<n-button size="tiny">
 							<template #icon>
@@ -33,7 +33,7 @@
 						</n-button>
 					</template>
 
-					<RulesSmallList :rules="stage.rules" style="margin: 0 -10px" @click="emit('clickRule', $event)" />
+					<RulesSmallList :rules="stage.rules" class="-mx-2.5 my-0" @click="emit('clickRule', $event)" />
 				</n-popover>
 			</n-timeline-item>
 		</n-timeline>

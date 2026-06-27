@@ -7,7 +7,9 @@
 			<div class="flex flex-wrap gap-2">
 				<n-tooltip v-for="alert of alertsList" :key="alert.alert_id">
 					<template #trigger>
-						<code class="hover:text-primary cursor-pointer underline" @click="openSocAlert(alert.alert_id)">#{{ alert.alert_id }}</code>
+						<code class="hover:text-primary cursor-pointer underline" @click="openSocAlert(alert.alert_id)">
+							#{{ alert.alert_id }}
+						</code>
 					</template>
 					{{ alert.alert_title }}
 				</n-tooltip>

@@ -53,7 +53,7 @@
 			preset="card"
 			:title="editing ? `Edit template — ${editing.name}` : 'New template'"
 			display-directive="show"
-			style="max-width: 720px"
+			class="max-w-180!"
 		>
 			<CaseTemplateEditor :template="editing" @saved="onTemplateSaved" @cancel="showEditor = false" />
 		</n-modal>

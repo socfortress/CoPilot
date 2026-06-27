@@ -13,7 +13,7 @@
 					</template>
 
 					<div class="flex flex-col gap-4">
-						<n-scrollbar trigger="none" style="max-height: 200px">
+						<n-scrollbar trigger="none" class="max-h-50">
 							<div class="flex flex-col gap-2">
 								<Badge
 									v-for="(item, idx) of history"

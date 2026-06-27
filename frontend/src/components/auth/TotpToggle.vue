@@ -129,7 +129,7 @@
 		</n-card>
 
 		<!-- Disable 2FA Modal -->
-		<n-modal v-model:show="showDisableModal" preset="card" title="Disable 2FA" :style="{ maxWidth: '400px' }">
+		<n-modal v-model:show="showDisableModal" preset="card" title="Disable 2FA" class="max-w-100!">
 			<p class="mb-4">Enter your TOTP code or a backup code to disable 2FA:</p>
 			<n-input
 				v-model:value="disableCode"
@@ -146,12 +146,8 @@
 		</n-modal>
 
 		<!-- Regenerate Backup Codes Modal -->
-		<n-modal
-			v-model:show="showRegenModal"
-			preset="card"
-			title="Regenerate Backup Codes"
-			:style="{ maxWidth: '500px' }"
-		>
+		<n-modal v-model:show="showRegenModal" preset="card" title="Regenerate Backup Codes" class="max-w-125!">
+			> >
 			<div v-if="!regenCodes" class="flex flex-col gap-4">
 				<p>Enter your TOTP code to generate new backup codes. Old codes will be invalidated.</p>
 				<n-input-otp

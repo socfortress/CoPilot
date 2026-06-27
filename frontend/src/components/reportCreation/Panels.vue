@@ -3,7 +3,7 @@
 		<div v-if="org" class="report-panels flex h-full w-full gap-2">
 			<div class="panels-container flex h-full grow flex-col gap-4">
 				<div class="rows-container">
-					<n-scrollbar style="max-height: 100%" trigger="none">
+					<n-scrollbar class="max-h-full" trigger="none">
 						<div class="drag-wrapper">
 							<draggable
 								v-model="rows"
@@ -140,7 +140,7 @@
 			</div>
 
 			<div class="panels-sidebar bg-secondary h-full">
-				<n-scrollbar v-if="dashboard && panelsList.length" style="max-height: 100%" trigger="none">
+				<n-scrollbar v-if="dashboard && panelsList.length" class="max-h-full" trigger="none">
 					<div class="p-3">
 						<draggable
 							class="flex flex-col gap-3"
@@ -183,7 +183,7 @@
 		<n-drawer
 			v-model:show="settingDrawerOpen"
 			:width="500"
-			style="max-width: 90vw"
+			class="max-w-[90vw]!"
 			:trap-focus="false"
 			:class="{ 'opacity-0': preloadingPrintSettings }"
 			display-directive="show"

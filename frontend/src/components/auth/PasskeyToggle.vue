@@ -73,7 +73,7 @@
 			</template>
 		</n-spin>
 
-		<n-modal v-model:show="showRegisterModal" preset="card" title="Add passkey" :style="{ maxWidth: '420px' }">
+		<n-modal v-model:show="showRegisterModal" preset="card" title="Add passkey" class="max-w-105!">
 			<div class="flex flex-col gap-4">
 				<p class="text-secondary">
 					Give this passkey a name so you can recognize the device later (e.g. MacBook, YubiKey).

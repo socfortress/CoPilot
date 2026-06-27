@@ -28,13 +28,13 @@
 			<div class="mb-2 flex justify-end">
 				<n-button type="primary" :disabled="!isValid" :loading="uploading" @click="submit()">Submit</n-button>
 			</div>
-			<div v-if="error" class="bg-secondary rounded-lg border border-error">
+			<div v-if="error" class="bg-secondary border-error rounded-lg border">
 				<div class="px-4 py-2.5">
 					{{ error }}
 				</div>
 			</div>
 			<div v-else class="flex flex-col gap-3">
-				<div v-if="fileResponse" class="bg-secondary rounded-lg border border-success p-4">
+				<div v-if="fileResponse" class="bg-secondary border-success rounded-lg border p-4">
 					<div class="flex flex-col gap-4 text-sm">
 						<div class="font-semibold">
 							This link gives you access to the instance created from your uploaded file.
@@ -84,13 +84,13 @@
 				</div>
 				<div
 					v-if="fileResponse && !analysisResponse"
-					class="bg-secondary flex flex-wrap items-center gap-2 rounded-lg border border-success p-4"
+					class="bg-secondary border-success flex flex-wrap items-center gap-2 rounded-lg border p-4"
 				>
 					<Icon :name="LoadingIcon" :size="16" class="relative top-0.5" />
 					analyzing...
 				</div>
 				<n-spin v-if="analysisResponse" :show="loading">
-					<div class="bg-secondary overflow-hidden rounded-lg border border-success">
+					<div class="bg-secondary border-success overflow-hidden rounded-lg border">
 						<div class="bg-default flex items-center justify-between p-4">
 							<div>Analysis</div>
 							<n-button :loading secondary size="small" @click="analysis()">

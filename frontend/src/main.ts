@@ -22,4 +22,3 @@ app.use(router)
 app.mount("#app")
 
 // TODO-FE: search for all <style/> tags and replace them with tailwind classes
-// TODO-FE: remove all :tabs-padding="24"

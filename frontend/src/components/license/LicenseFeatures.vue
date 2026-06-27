@@ -1,6 +1,8 @@
 <template>
 	<div class="flex flex-col overflow-hidden" :class="{ 'min-h-75 min-w-75': loading }">
-		<div class="bg-default flex grow items-center justify-center overflow-hidden rounded-lg border border-default p-4.5">
+		<div
+			class="bg-default border-default flex grow items-center justify-center overflow-hidden rounded-lg border p-4.5"
+		>
 			<n-spin :show="loading" class="h-full w-full" content-class="h-full">
 				<div v-if="!loading" class="wrapper flex h-full flex-col gap-4">
 					<div class="flex items-center justify-between gap-4">

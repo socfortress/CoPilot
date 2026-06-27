@@ -10,13 +10,13 @@
 						<template v-if="isUrlLike(asset.asset_description)">
 							<a
 								:href="asset.asset_description"
-								class="asset-url"
+								class="block"
 								target="_blank"
 								alt="asset url"
 								rel="nofollow noopener noreferrer"
 							>
-								<code class="text-primary">
-									<span>
+								<code class="text-primary flex gap-2.5 px-3 py-2">
+									<span class="min-w-0 grow truncate">
 										{{ asset.asset_description }}
 									</span>
 									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
@@ -111,7 +111,7 @@
 						<template v-if="isUrlLike(asset.asset_description)">
 							<a
 								:href="asset.asset_description"
-								class="asset-url"
+								class="block"
 								target="_blank"
 								alt="asset url"
 								rel="nofollow noopener noreferrer"
@@ -198,22 +198,3 @@ function formatDate(date: string, useSec = false) {
 	return datejs.format(useSec ? dFormats.datetimesec : dFormats.datetime)
 }
 </script>
-
-<style lang="scss" scoped>
-.asset-url {
-	display: block;
-
-	code {
-		padding: 8px 12px;
-		display: flex;
-		gap: 10px;
-
-		span {
-			white-space: nowrap;
-			flex-grow: 1;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
-	}
-}
-</style>

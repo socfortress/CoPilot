@@ -61,7 +61,7 @@
 		</n-card>
 
 		<!-- Add Email Modal -->
-		<n-modal v-model:show="showAddEmail" preset="card" title="Add SSO Allowed Email" :style="{ maxWidth: '450px' }">
+		<n-modal v-model:show="showAddEmail" preset="card" title="Add SSO Allowed Email" class="max-w-113!">
 			<n-form :model="newEmail" label-placement="top">
 				<n-form-item label="Email Address">
 					<n-input v-model:value="newEmail.email" placeholder="user@company.com" />

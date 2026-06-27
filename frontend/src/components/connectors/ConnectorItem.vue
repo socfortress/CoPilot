@@ -84,7 +84,7 @@
 			:close-on-esc="false"
 			width="600px"
 		>
-			<n-card style="width: 90vw; max-width: 500px">
+			<n-card class="w-[90vw] max-w-125!">
 				<ConfigForm
 					v-if="showConfigDialog"
 					:connector

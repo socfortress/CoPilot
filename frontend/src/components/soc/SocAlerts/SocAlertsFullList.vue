@@ -57,7 +57,7 @@
 			<n-drawer
 				v-model:show="showBookmarkedDrawer"
 				:width="700"
-				style="max-width: 90vw"
+				class="max-w-[90vw]!"
 				:trap-focus="false"
 				display-directive="show"
 				placement="left"

@@ -1,6 +1,6 @@
 <template>
 	<div class="customer-ai-notification-routes flex flex-col gap-4">
-		<transition name="fade" mode="out-in">
+		<transition name="transition-fade" mode="out-in">
 			<div v-if="showForm" class="flex flex-col gap-4">
 				<h4>{{ editingRoute ? `Edit ${editingRoute.name}` : "Create a notification route" }}</h4>
 				<CustomerAiNotificationRouteForm
@@ -110,14 +110,3 @@ function onFormSubmitted() {
 
 onBeforeMount(refreshList)
 </script>
-
-<style lang="scss" scoped>
-.fade-enter-active,
-.fade-leave-active {
-	transition: opacity 0.2s ease-in-out;
-}
-.fade-enter-from,
-.fade-leave-to {
-	opacity: 0;
-}
-</style>

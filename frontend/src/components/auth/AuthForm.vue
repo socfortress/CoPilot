@@ -10,7 +10,7 @@
 			</div>
 		</div>
 
-		<transition name="form-fade" mode="out-in" appear class="my-10">
+		<transition name="transition-fade-move" mode="out-in" appear class="my-10">
 			<SignIn v-if="type === 'signin'" key="signin" />
 		</transition>
 	</div>
@@ -41,20 +41,3 @@ onBeforeMount(() => {
 	}
 })
 </script>
-
-<style lang="scss" scoped>
-.form-fade-enter-active,
-.form-fade-leave-active {
-	transition:
-		opacity 0.2s ease-in-out,
-		transform 0.3s ease-in-out;
-}
-.form-fade-enter-from {
-	opacity: 0;
-	transform: translateX(10px);
-}
-.form-fade-leave-to {
-	opacity: 0;
-	transform: translateX(-10px);
-}
-</style>

@@ -1,5 +1,5 @@
 <template>
-	<div class="simulator-windows-attack-wizard flex min-h-120 flex-col gap-4 overflow-hidden">
+	<div class="flex min-h-120 flex-col gap-4 overflow-hidden">
 		<div>
 			<n-scrollbar x-scrollable trigger="none">
 				<div class="px-7 pt-4 pb-2">
@@ -13,9 +13,9 @@
 		</div>
 
 		<div class="flex grow flex-col overflow-hidden">
-			<Transition :name="`slide-form-${slideFormDirection}`">
+			<Transition :name="`transition-slide-${slideFormDirection}`">
 				<div v-if="current === 1" class="grow overflow-hidden">
-					<n-scrollbar ref="parametersScroll" style="max-height: 350px" trigger="none">
+					<n-scrollbar ref="parametersScroll" class="max-h-87.5" trigger="none">
 						<ParametersList
 							v-model:selected="selectedAttack"
 							:technique-id
@@ -27,7 +27,7 @@
 					</n-scrollbar>
 				</div>
 				<div v-else-if="current === 2" class="grow overflow-hidden">
-					<n-scrollbar ref="agentsScroll" style="max-height: 350px" trigger="none">
+					<n-scrollbar ref="agentsScroll" class="max-h-87.5" trigger="none">
 						<AgentsList
 							v-model:selected="selectedAgent"
 							class="px-7"
@@ -379,32 +379,3 @@ defineExpose({
 	reset
 })
 </script>
-
-<style lang="scss" scoped>
-.simulator-windows-attack-wizard {
-	.slide-form-right-enter-active,
-	.slide-form-right-leave-active,
-	.slide-form-left-enter-active,
-	.slide-form-left-leave-active {
-		transition: all 0.2s ease-out;
-		position: absolute;
-		width: 100%;
-	}
-
-	.slide-form-left-enter-from {
-		transform: translateX(-100%);
-	}
-
-	.slide-form-left-leave-to {
-		transform: translateX(100%);
-	}
-
-	.slide-form-right-enter-from {
-		transform: translateX(100%);
-	}
-
-	.slide-form-right-leave-to {
-		transform: translateX(-100%);
-	}
-}
-</style>
