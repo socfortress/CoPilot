@@ -141,7 +141,7 @@
 				<n-spin
 					:show="loadingFile || uploadingFile"
 					class="flex h-full w-full overflow-hidden"
-					content-class="flex h-full grow flex-col justify-center overflow-hidden"
+					content-class="flex h-full grow flex-col overflow-hidden"
 				>
 					<template v-if="currentFile">
 						<XMLEditor
