@@ -167,6 +167,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Dot, { hitsToDotVariant } from "@/components/common/Dot.vue"
 import Icon from "@/components/common/Icon.vue"
+import { globalCustomerSingleDefault } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 import WazuhLogTest from "./WazuhLogTest.vue"
 import WazuhRuleDetail from "./WazuhRuleDetail.vue"
@@ -299,7 +300,7 @@ function renderRuleMitre(row: CatalogWazuhRuleRow) {
 
 function loadCustomers() {
 	loadingCustomers.value = true
-	Api.customers
+	return Api.customers
 		.getCustomers()
 		.then(res => {
 			const list = res.data?.customers || []
@@ -429,7 +430,12 @@ function load(isCustomerChange = false) {
 }
 
 onBeforeMount(() => {
-	loadCustomers()
-	load()
+	loadCustomers().then(() => {
+		const code = globalCustomerSingleDefault()
+		if (code) {
+			customerScope.value = code
+		}
+		load()
+	})
 })
 </script>

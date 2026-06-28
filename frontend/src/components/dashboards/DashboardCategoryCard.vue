@@ -5,7 +5,9 @@
 				<div class="flex h-full items-center justify-center" :style="{ color: category.color }">
 					<Icon :name="getDashboardIcon(category.icon)" :size="16" />
 				</div>
-				{{ category.title }}
+				<span class="text-default">
+					{{ category.title }}
+				</span>
 			</div>
 		</template>
 		<template #default>

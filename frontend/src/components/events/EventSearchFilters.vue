@@ -151,6 +151,7 @@ import { computed, h, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { globalCustomerSingleDefault } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 
@@ -410,6 +411,15 @@ watch(
 )
 
 onBeforeMount(() => {
-	getCustomers().then(() => applyRouteParams())
+	getCustomers().then(() => {
+		if (!route.query.customer_code) {
+			const code = globalCustomerSingleDefault()
+			if (code) {
+				selectedCustomerCode.value = code
+				getEventSources(code)
+			}
+		}
+		applyRouteParams()
+	})
 })
 </script>
