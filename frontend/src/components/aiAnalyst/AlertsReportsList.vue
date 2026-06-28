@@ -57,13 +57,14 @@ import type { AlertWithReport } from "@/types/ai-analyst"
 import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import { globalCustomerSingleDefault } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 import AlertReportItem from "./AlertReportItem.vue"
 
 const message = useMessage()
 const loading = ref(false)
 const alertsList = ref<AlertWithReport[]>([])
-const customerFilter = ref<string | null>(null)
+const customerFilter = ref<string | null>(globalCustomerSingleDefault())
 
 const sort = ref<"desc" | "asc">("desc")
 const sortOptions = [

@@ -8,6 +8,7 @@ import _toNumber from "lodash/toNumber"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
 import { loginWithPasskey as performPasskeyLogin } from "@/composables/usePasskey"
+import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { AuthUserRole, RouteRole } from "@/types/auth"
 import { getAvatar, getNameInitials } from "@/utils"
 import { jwtRoleToUserRole } from "@/utils/auth"
@@ -51,6 +52,7 @@ export const useAuthStore = defineStore("auth", {
 				role: AuthUserRole.Unknown
 			}
 
+			useCustomerFilterStore().clear()
 			removePersistentSessionKey()
 		},
 		async login(payload: LoginPayload) {

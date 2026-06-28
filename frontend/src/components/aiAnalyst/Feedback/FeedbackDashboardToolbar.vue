@@ -52,6 +52,7 @@ import { NButton, NDrawer, NDrawerContent, NSelect, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { globalCustomerSingleDefault } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 import PalaceConsolidation from "./PalaceConsolidation.vue"
 
@@ -83,10 +84,13 @@ async function bootstrapCustomers() {
 			customerOptions.value = Array.from(codes)
 				.sort()
 				.map(c => ({ label: c, value: c }))
-			if (customerOptions.value.length && !customer.value) {
-				// The watch(customer, loadStats) below picks this up — no
-				// need to call loadStats() explicitly from bootstrap.
-				customer.value = customerOptions.value[0].value
+			if (!customer.value) {
+				const globalCode = globalCustomerSingleDefault()
+				if (globalCode && codes.has(globalCode)) {
+					customer.value = globalCode
+				} else if (customerOptions.value.length) {
+					customer.value = customerOptions.value[0].value
+				}
 			}
 		}
 	} catch (err) {
