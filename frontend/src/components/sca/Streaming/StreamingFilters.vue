@@ -212,17 +212,12 @@ function updateNumberFilterValue(filter: ScaStreamingListFilter, value: number |
 	filter.value = value
 }
 
-function defaultValueForType(type: ScaStreamingFilterType): string | number | null {
-	if (type === "min_score" || type === "max_score") return null
-	return ""
-}
-
 function addFilter(key: ScaStreamingFilterType) {
 	if (key === "customer_code" && !customersList.value.length) {
 		loadCustomers()
 	}
 
-	filters.value.push({ type: key, value: defaultValueForType(key) })
+	filters.value.push({ type: key, value: null })
 }
 
 function delFilter(key: ScaStreamingFilterType) {

@@ -107,7 +107,9 @@ const statTiles = computed<StatTile[]>(() => {
 			id: "agents",
 			title: "Total Agents",
 			value: s.total_agents?.toLocaleString() ?? "-",
-			subtitle: s.agents_successful?.toLocaleString() ? `${s.agents_successful.toLocaleString()} successful` : "",
+			subtitle: s.agents_successful?.toLocaleString()
+				? `${s.agents_successful.toLocaleString()} successful`
+				: "No agents found",
 			iconLeft: AgentsIcon,
 			color: "primary"
 		},
@@ -121,7 +123,7 @@ const statTiles = computed<StatTile[]>(() => {
 		{
 			id: "score",
 			title: "Average Score",
-			value: `${s.average_score}%`,
+			value: s.average_score ? `${s.average_score}%` : "-",
 			subtitle: "Across collected policies",
 			iconLeft: ScoreIcon,
 			color: averageScoreColor.value
@@ -153,14 +155,14 @@ const statTiles = computed<StatTile[]>(() => {
 })
 
 const checkResultValues = computed<ItemProps[]>(() => [
-	{ label: "Passed", value: props.stats.total_passes, status: "success" },
-	{ label: "Failed", value: props.stats.total_fails, status: "error" },
-	{ label: "Invalid", value: props.stats.total_invalid, status: "muted" }
+	{ label: "Passed", value: props.stats.total_passes ?? 0, status: "success" },
+	{ label: "Failed", value: props.stats.total_fails ?? 0, status: "error" },
+	{ label: "Invalid", value: props.stats.total_invalid ?? 0, status: "muted" }
 ])
 
 const agentCollectionValues = computed<ItemProps[]>(() => [
-	{ label: "Processed", value: props.stats.agents_processed, status: "primary" },
-	{ label: "Successful", value: props.stats.agents_successful, status: "success" },
-	{ label: "Failed", value: props.stats.agents_failed, status: "error" }
+	{ label: "Processed", value: props.stats.agents_processed ?? 0, status: "primary" },
+	{ label: "Successful", value: props.stats.agents_successful ?? 0, status: "success" },
+	{ label: "Failed", value: props.stats.agents_failed ?? 0, status: "error" }
 ])
 </script>
