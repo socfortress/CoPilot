@@ -48,7 +48,14 @@
 			<n-empty v-else description="No SCA reports found" class="min-h-48 justify-center" />
 		</n-spin>
 
-		<n-modal v-model:show="showGenerateModal" preset="card" title="Generate SCA Report" class="max-w-160!" closable>
+		<n-modal
+			v-model:show="showGenerateModal"
+			preset="card"
+			title="Generate SCA Report"
+			class="max-w-160!"
+			closable
+			display-directive="show"
+		>
 			<GenerateReportForm
 				:customers
 				:loading="generating"
@@ -76,11 +83,13 @@
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import type { SCAReport, SCAReportGenerateRequest } from "@/types/sca"
+import axios from "axios"
 import { saveAs } from "file-saver"
 import { NButton, NEmpty, NModal, NPagination, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
 import { getApiErrorMessage } from "@/utils"
 import GenerateReportForm from "./GenerateReportForm.vue"
 import SCAReportCard from "./SCAReportCard.vue"
@@ -88,6 +97,7 @@ import SCAReportCard from "./SCAReportCard.vue"
 const AddIcon = "carbon:document-add"
 
 const message = useMessage()
+const { globalCustomerCode } = useGlobalCustomerFilter()
 
 const loading = ref(false)
 const generating = ref(false)
@@ -99,6 +109,7 @@ const filterCustomerCode = ref<string | null>(null)
 const customers = ref<Array<{ label: string; value: string }>>([])
 const currentPage = ref(1)
 const pageSize = ref(20)
+let abortController: AbortController | null = null
 
 const customerOptions = computed(() => [...customers.value])
 
@@ -117,18 +128,23 @@ watch(pageSize, () => {
 })
 
 async function loadReports() {
+	abortController?.abort()
+	abortController = new AbortController()
+
 	loading.value = true
 	try {
-		const response = await Api.sca.listReports(filterCustomerCode.value || undefined)
+		const response = await Api.sca.listReports(filterCustomerCode.value || null, abortController.signal)
 		if (response.data.success) {
 			reports.value = response.data.reports
 		} else {
 			message.error(response.data.message || "Failed to load reports")
 		}
-	} catch (error) {
-		message.error(getApiErrorMessage(error as ApiError) || "Failed to load reports")
-	} finally {
 		loading.value = false
+	} catch (error) {
+		if (!axios.isCancel(error)) {
+			message.error(getApiErrorMessage(error as ApiError) || "Failed to load reports")
+			loading.value = false
+		}
 	}
 }
 
@@ -203,8 +219,17 @@ async function confirmDelete() {
 	}
 }
 
+function applyGlobalCustomerCodeFilter() {
+	if (globalCustomerCode.value && !filterCustomerCode.value) {
+		filterCustomerCode.value = globalCustomerCode.value
+		onFilterChange()
+	}
+}
+
 onBeforeMount(() => {
 	loadReports()
-	loadCustomers()
+	loadCustomers().then(() => {
+		applyGlobalCustomerCodeFilter()
+	})
 })
 </script>

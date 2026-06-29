@@ -53,7 +53,7 @@ export default {
 	/**
 	 * List all vulnerability reports
 	 */
-	listReports(customer_code?: string, signal?: AbortSignal) {
+	listReports(customer_code: string | null, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & VulnerabilityReportListResponse>(`/vulnerabilities/reports`, {
 			params: customer_code ? { customer_code } : undefined,
 			signal
