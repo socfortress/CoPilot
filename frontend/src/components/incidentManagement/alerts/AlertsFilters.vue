@@ -167,7 +167,8 @@ import { computed, inject, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { useCustomerFilterStore } from "@/stores/customerFilter"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
+import { useCustomerFilterStore } from "@/stores/customer-filter"
 import { getApiErrorMessage } from "@/utils"
 
 const { useQueryString, preset } = defineProps<{ useQueryString?: boolean; preset?: AlertsListFilter[] }>()
@@ -180,6 +181,7 @@ const AddIcon = "carbon:add"
 const DelIcon = "carbon:delete"
 const router = useRouter()
 const route = useRoute()
+const { globalCustomerCodes } = useGlobalCustomerFilter()
 const message = useMessage()
 const loadingAvailableUsers = ref(false)
 const loadingConfiguredSources = ref(false)
@@ -349,7 +351,7 @@ function applyGlobalCustomerCodeFilter() {
 	if (filters.value.some(f => f.type === "customerCode" && f.value)) {
 		return false
 	}
-	const codes = useCustomerFilterStore().selectedCustomerCodes
+	const codes = globalCustomerCodes.value
 	if (!codes.length) {
 		return false
 	}

@@ -151,7 +151,7 @@ import { computed, h, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { globalCustomerSingleDefault } from "@/composables/useGlobalCustomerFilter"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 
@@ -191,6 +191,7 @@ const TRAILING_WHITESPACE_RE = /\s$/
 
 const route = useRoute()
 const message = useMessage()
+const { globalCustomerCode } = useGlobalCustomerFilter()
 
 const filterTimeRange = ref<{ unit: "h" | "d" | "w"; time: number }>({
 	unit: "h",
@@ -413,7 +414,7 @@ watch(
 onBeforeMount(() => {
 	getCustomers().then(() => {
 		if (!route.query.customer_code) {
-			const code = globalCustomerSingleDefault()
+			const code = globalCustomerCode.value
 			if (code) {
 				selectedCustomerCode.value = code
 				getEventSources(code)

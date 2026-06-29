@@ -27,11 +27,7 @@ export const useCustomerFilterStore = defineStore("customer-filter", {
 	},
 	getters: {
 		isFiltering(state): boolean {
-			return state.selectedCustomerCodes.length > 0
-		},
-		/** Selected subset, or `undefined` when nothing is selected (= all accessible). */
-		queryCustomerCodes(state): string[] | undefined {
-			return state.selectedCustomerCodes.length ? state.selectedCustomerCodes : undefined
+			return !!state.selectedCustomerCodes.length
 		}
 	},
 	persist: {

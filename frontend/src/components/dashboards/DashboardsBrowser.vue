@@ -75,12 +75,13 @@ import { NAlert, NButton, NDrawer, NDrawerContent, NEmpty, NFormItem, NSelect, u
 import { computed, onBeforeMount, ref, useTemplateRef, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { globalCustomerSingleDefault } from "@/composables/useGlobalCustomerFilter"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
 import { getApiErrorMessage } from "@/utils"
 import DashboardCategoriesSection from "./DashboardCategoriesSection.vue"
 import EnabledDashboardsSection from "./EnabledDashboardsSection.vue"
 
 const message = useMessage()
+const { globalCustomerCode } = useGlobalCustomerFilter()
 
 // ── Customer selection ──────────────────────────────────────────
 const loadingCustomers = ref(false)
@@ -161,7 +162,7 @@ watch(selectedCustomerCode, code => {
 
 onBeforeMount(() => {
 	getCustomers().then(() => {
-		const code = globalCustomerSingleDefault()
+		const code = globalCustomerCode.value
 		if (code) {
 			selectedCustomerCode.value = code
 		}

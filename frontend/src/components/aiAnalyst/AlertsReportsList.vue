@@ -57,14 +57,15 @@ import type { AlertWithReport } from "@/types/ai-analyst"
 import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
-import { globalCustomerSingleDefault } from "@/composables/useGlobalCustomerFilter"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
 import { getApiErrorMessage } from "@/utils"
 import AlertReportItem from "./AlertReportItem.vue"
 
 const message = useMessage()
+const { getAvailableGlobalCustomerValue } = useGlobalCustomerFilter()
 const loading = ref(false)
 const alertsList = ref<AlertWithReport[]>([])
-const customerFilter = ref<string | null>(globalCustomerSingleDefault())
+const customerFilter = ref<string | null>(null)
 
 const sort = ref<"desc" | "asc">("desc")
 const sortOptions = [
@@ -91,7 +92,7 @@ const customerOptions = computed(() => {
 function getData() {
 	loading.value = true
 
-	Api.aiAnalyst
+	return Api.aiAnalyst
 		.getAlertsWithReports(customerFilter.value || undefined)
 		.then(res => {
 			if (res.data.success) {
@@ -119,6 +120,9 @@ watch(customerFilter, () => {
 })
 
 onBeforeMount(() => {
-	getData()
+	getData().then(() => {
+		customerFilter.value =
+			getAvailableGlobalCustomerValue(Array.from(new Set(alertsList.value.map(a => a.customer_code)))) || null
+	})
 })
 </script>

@@ -167,12 +167,13 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Dot, { hitsToDotVariant } from "@/components/common/Dot.vue"
 import Icon from "@/components/common/Icon.vue"
-import { globalCustomerSingleDefault } from "@/composables/useGlobalCustomerFilter"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
 import { getApiErrorMessage } from "@/utils"
 import WazuhLogTest from "./WazuhLogTest.vue"
 import WazuhRuleDetail from "./WazuhRuleDetail.vue"
 
 const message = useMessage()
+const { globalCustomerCode } = useGlobalCustomerFilter()
 const rules = ref<CatalogWazuhRuleRow[]>([])
 const loading = ref(false)
 const filter = ref("")
@@ -431,7 +432,7 @@ function load(isCustomerChange = false) {
 
 onBeforeMount(() => {
 	loadCustomers().then(() => {
-		const code = globalCustomerSingleDefault()
+		const code = globalCustomerCode.value
 		if (code) {
 			customerScope.value = code
 		}

@@ -1,40 +1,46 @@
 import { computed } from "vue"
-import { useCustomerFilterStore } from "@/stores/customerFilter"
-
-/** Single-code default for single-select page filters (empty when global has 0 or 2+ codes). */
-export function globalCustomerSingleDefault(): string | null {
-	const codes = useCustomerFilterStore().selectedCustomerCodes
-	return codes.length === 1 ? codes[0] : null
-}
-
-/** Push a customer filter row when global has exactly one code and none is set yet. */
-export function applyGlobalCustomerPrefill<T extends { type: string; value: unknown }>(
-	customerFilterType: string,
-	filters: T[]
-): boolean {
-	if (filters.some(f => f.type === customerFilterType && f.value)) {
-		return false
-	}
-	const code = globalCustomerSingleDefault()
-	if (!code) {
-		return false
-	}
-	filters.push({ type: customerFilterType, value: code } as T)
-	return true
-}
+import { useCustomerFilterStore } from "@/stores/customer-filter.ts"
 
 export function useGlobalCustomerFilter() {
 	const store = useCustomerFilterStore()
-
-	const queryCustomerCodes = computed(() => store.queryCustomerCodes)
+	const globalCustomerCodes = computed(() => store.selectedCustomerCodes)
+	const globalCustomerCode = computed(() => globalCustomerCodes.value?.[0] || null)
 	const isFiltering = computed(() => store.isFiltering)
 
-	function filterByGlobal<T extends { customer_code: string }>(items: T[]): T[] {
-		if (!store.selectedCustomerCodes.length) {
-			return items
+	function applyGlobalCustomerPrefill(
+		customerFilterType: string,
+		filters: Record<string, unknown>,
+		options?: {
+			availableCustomerCodes?: string[]
+			multiple?: boolean
 		}
-		return items.filter(i => store.selectedCustomerCodes.includes(i.customer_code))
+	) {
+		const codes = options?.availableCustomerCodes?.length
+			? globalCustomerCodes.value.filter(c => (options.availableCustomerCodes || []).includes(c))
+			: globalCustomerCodes.value
+
+		if (!filters[customerFilterType]) {
+			filters[customerFilterType] = options?.multiple ? codes : codes[0]
+		}
+
+		return filters
 	}
 
-	return { store, queryCustomerCodes, isFiltering, filterByGlobal, globalCustomerSingleDefault }
+	function getAvailableGlobalCustomerValue(availableCustomerCodes: string[], multiple: true): string[]
+	function getAvailableGlobalCustomerValue(availableCustomerCodes: string[], multiple?: false): string | undefined
+	function getAvailableGlobalCustomerValue(
+		availableCustomerCodes: string[],
+		multiple?: boolean
+	): string[] | string | undefined {
+		const codes = globalCustomerCodes.value.filter(c => availableCustomerCodes.includes(c))
+		return multiple ? codes : codes[0]
+	}
+
+	return {
+		globalCustomerCodes,
+		globalCustomerCode,
+		isFiltering,
+		applyGlobalCustomerPrefill,
+		getAvailableGlobalCustomerValue
+	}
 }

@@ -60,7 +60,7 @@ import { NButton, NDatePicker, NForm, NFormItem, NModal, NSelect, useMessage } f
 import { computed, inject, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { useCustomerFilterStore } from "@/stores/customerFilter"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -73,6 +73,7 @@ const dFormats = useSettingsStore().dateFormat
 const exporting = ref(false)
 const showModal = ref(false)
 const message = useMessage()
+const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
 const customersList = inject<Ref<Customer[]>>("customers-list", ref([]))
 
 const form = ref<{ period: number | null; customerCodes: string[] }>({
@@ -181,21 +182,10 @@ function getCustomers() {
 		})
 }
 
-function applyGlobalCustomerPrefill() {
-	if (form.value.customerCodes.length) {
-		return
-	}
-	const codes = useCustomerFilterStore().selectedCustomerCodes
-	if (!codes.length) {
-		return
-	}
-	form.value.customerCodes = codes
-}
-
 function load() {
 	if (!customersList.value.length) {
 		getCustomers()
 	}
-	applyGlobalCustomerPrefill()
+	applyGlobalCustomerPrefill("customerCodes", form.value, { multiple: true })
 }
 </script>

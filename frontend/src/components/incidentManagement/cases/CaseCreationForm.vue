@@ -100,7 +100,7 @@ import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, inject, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
-import { useCustomerFilterStore } from "@/stores/customerFilter"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
@@ -111,6 +111,7 @@ const emit = defineEmits<{
 const loadingAvailableUsers = ref(false)
 const loadingCustomersList = ref(false)
 const loadingTemplates = ref(false)
+const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
 const submitting = ref(false)
 const loading = computed(
 	() => loadingAvailableUsers.value || loadingCustomersList.value || loadingTemplates.value || submitting.value
@@ -219,17 +220,6 @@ function reset(force?: boolean) {
 		resetForm()
 		formRef.value?.restoreValidation()
 	}
-}
-
-function applyGlobalCustomerPrefill() {
-	if (form.value.customer_code) {
-		return
-	}
-	const codes = useCustomerFilterStore().selectedCustomerCodes
-	if (!codes.length) {
-		return
-	}
-	form.value.customer_code = codes[0]
 }
 
 function resetForm() {
@@ -350,7 +340,7 @@ function load() {
 	}
 	getTemplates(form.value.customer_code)
 	reset()
-	applyGlobalCustomerPrefill()
+	applyGlobalCustomerPrefill("customer_code", form.value)
 }
 
 // Re-fetch templates when the customer changes so the picker only offers

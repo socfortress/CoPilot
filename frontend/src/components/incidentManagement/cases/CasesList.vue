@@ -205,7 +205,7 @@ import {
 import { computed, nextTick, onBeforeMount, provide, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { globalCustomerSingleDefault } from "@/composables/useGlobalCustomerFilter.ts"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
 import { getApiErrorMessage } from "@/utils"
 import CaseCreationButton from "./CaseCreationButton.vue"
 import CaseItem from "./CaseItem.vue"
@@ -220,6 +220,7 @@ const props = defineProps<{ highlight?: string | null; preset?: CasesListFilter;
 const { highlight, preset, hideFilters } = toRefs(props)
 
 const message = useMessage()
+const { globalCustomerCode } = useGlobalCustomerFilter()
 const loading = ref(false)
 const showFilters = ref(false)
 const casesList = ref<Case[]>([])
@@ -450,7 +451,7 @@ onBeforeMount(() => {
 	getData()
 	getAvailableUsers()
 	getCustomers().then(() => {
-		const customerCode = globalCustomerSingleDefault() || customersList.value?.[0]?.customer_code || null
+		const customerCode = globalCustomerCode.value || customersList.value?.[0]?.customer_code || null
 
 		if ((!filters.value.type || (filters.value.type === "customerCode" && !filters.value.value)) && customerCode) {
 			filters.value.type = "customerCode"
