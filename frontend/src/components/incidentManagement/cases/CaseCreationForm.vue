@@ -100,6 +100,7 @@ import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, inject, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
@@ -220,6 +221,17 @@ function reset(force?: boolean) {
 	}
 }
 
+function applyGlobalCustomerPrefill() {
+	if (form.value.customer_code) {
+		return
+	}
+	const codes = useCustomerFilterStore().selectedCustomerCodes
+	if (!codes.length) {
+		return
+	}
+	form.value.customer_code = codes[0]
+}
+
 function resetForm() {
 	form.value = getForm()
 }
@@ -338,6 +350,7 @@ function load() {
 	}
 	getTemplates(form.value.customer_code)
 	reset()
+	applyGlobalCustomerPrefill()
 }
 
 // Re-fetch templates when the customer changes so the picker only offers
