@@ -112,7 +112,7 @@ function getCasesList() {
 	loadingCases.value = true
 
 	Api.incidentManagement.cases
-		.getCasesList({}, { page: 1, pageSize: 9999 })
+		.getCasesList({ page: 1, pageSize: 9999 })
 		.then(res => {
 			if (res.data.success) {
 				linkableCases.value = _orderBy(res.data?.cases || [], ["id"], ["desc"])

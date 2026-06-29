@@ -188,6 +188,7 @@ import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import type { Case, CaseStatus } from "@/types/incidentManagement/cases"
 import { useResizeObserver } from "@vueuse/core"
+import axios from "axios"
 import _cloneDeep from "lodash/cloneDeep"
 import {
 	NBadge,
@@ -204,6 +205,7 @@ import {
 import { computed, nextTick, onBeforeMount, provide, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { globalCustomerSingleDefault } from "@/composables/useGlobalCustomerFilter.ts"
 import { getApiErrorMessage } from "@/utils"
 import CaseCreationButton from "./CaseCreationButton.vue"
 import CaseItem from "./CaseItem.vue"
@@ -277,6 +279,8 @@ const customersOptions = computed(() =>
 const highlightedItemFound = ref(!highlight.value)
 const highlightedItemOpened = ref(!highlight.value)
 
+let abortController: AbortController | null = null
+
 watch([currentPage, sort], () => {
 	getData()
 })
@@ -342,6 +346,9 @@ function updateCase(updatedCase: Case) {
 }
 
 function getData() {
+	abortController?.abort()
+	abortController = new AbortController()
+
 	showFilters.value = false
 	loading.value = true
 
@@ -354,12 +361,18 @@ function getData() {
 	}
 
 	Api.incidentManagement.cases
-		.getCasesList(query || {}, {
-			page: currentPage.value,
-			pageSize: pageSize.value,
-			order: sort.value
-		})
+		.getCasesList(
+			{
+				...(query || {}),
+				page: currentPage.value,
+				pageSize: pageSize.value,
+				order: sort.value
+			},
+			abortController.signal
+		)
 		.then(res => {
+			loading.value = false
+
 			if (res.data.success) {
 				casesList.value = res.data?.cases || []
 				total.value = res.data.total || 0
@@ -371,12 +384,11 @@ function getData() {
 			}
 		})
 		.catch(err => {
-			casesList.value = []
-
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loading.value = false
+			if (!axios.isCancel(err)) {
+				casesList.value = []
+				loading.value = false
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+			}
 		})
 }
 
@@ -396,7 +408,7 @@ function getAvailableUsers() {
 }
 
 function getCustomers() {
-	Api.customers
+	return Api.customers
 		.getCustomers()
 		.then(res => {
 			if (res.data.success) {
@@ -426,11 +438,29 @@ useResizeObserver(header, entries => {
 onBeforeMount(() => {
 	if (preset.value?.type && preset.value.value) {
 		filters.value.type = preset.value.type
-		filters.value.value = preset.value.value
+
+		nextTick(() => {
+			if (preset.value?.value) {
+				filters.value.value = preset.value.value
+				getData()
+			}
+		})
 	}
 
 	getData()
 	getAvailableUsers()
-	getCustomers()
+	getCustomers().then(() => {
+		const customerCode = globalCustomerSingleDefault() || customersList.value?.[0]?.customer_code || null
+
+		if ((!filters.value.type || (filters.value.type === "customerCode" && !filters.value.value)) && customerCode) {
+			filters.value.type = "customerCode"
+
+			nextTick(() => {
+				filters.value.value = customerCode
+
+				getData()
+			})
+		}
+	})
 })
 </script>

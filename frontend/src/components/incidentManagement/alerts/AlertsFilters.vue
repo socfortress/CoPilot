@@ -167,6 +167,7 @@ import { computed, inject, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { getApiErrorMessage } from "@/utils"
 
 const { useQueryString, preset } = defineProps<{ useQueryString?: boolean; preset?: AlertsListFilter[] }>()
@@ -344,6 +345,18 @@ function getConfiguredSources() {
 		})
 }
 
+function applyGlobalCustomerCodeFilter() {
+	if (filters.value.some(f => f.type === "customerCode" && f.value)) {
+		return false
+	}
+	const codes = useCustomerFilterStore().selectedCustomerCodes
+	if (!codes.length) {
+		return false
+	}
+	filters.value.push({ type: "customerCode", value: codes[0] })
+	return true
+}
+
 function load() {
 	if (!availableUsers.value.length) {
 		getAvailableUsers()
@@ -361,9 +374,10 @@ onBeforeMount(() => {
 		filters.value = preset
 	} else {
 		getQueryString()
+		applyGlobalCustomerCodeFilter()
 	}
 
-	if ((useQueryString || preset?.length) && filters.value.length) {
+	if (filters.value.length) {
 		submit()
 	}
 })
