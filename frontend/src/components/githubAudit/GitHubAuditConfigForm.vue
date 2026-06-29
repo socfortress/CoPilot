@@ -153,6 +153,7 @@ import {
 } from "naive-ui"
 import { computed, onBeforeMount, reactive, ref, watch } from "vue"
 import Api from "@/api"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 
 interface GitHubAuditConfigFormData extends Omit<
@@ -174,6 +175,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
 const formRef = ref<FormInst | null>(null)
 const saving = ref(false)
 const customerOptions = ref<{ label: string; value: string }[]>([])
@@ -203,7 +205,7 @@ function defaultFormData(): GitHubAuditConfigFormData {
 	}
 }
 
-const formData = reactive<GitHubAuditConfigFormData>(defaultFormData())
+const formData = ref<GitHubAuditConfigFormData>(defaultFormData())
 
 const rules: FormRules = {
 	customer_code: { required: true, message: "Customer is required", trigger: "blur" },
@@ -257,7 +259,7 @@ async function handleSubmit() {
 
 	try {
 		if (isEdit.value && props.config) {
-			const updateData: GitHubAuditConfigUpdate = { ...formData }
+			const updateData: GitHubAuditConfigUpdate = { ...formData.value }
 			if (!updateData.github_token) {
 				delete updateData.github_token
 			}
@@ -266,9 +268,9 @@ async function handleSubmit() {
 		} else {
 			const createData: GitHubAuditConfigCreate = {
 				...formData,
-				customer_code: formData.customer_code ?? "",
-				github_token: formData.github_token ?? "",
-				organization: formData.organization ?? ""
+				customer_code: formData.value.customer_code ?? "",
+				github_token: formData.value.github_token ?? "",
+				organization: formData.value.organization ?? ""
 			}
 			await Api.githubAudit.createConfig(createData)
 			message.success("Configuration created successfully")
@@ -292,6 +294,10 @@ onBeforeMount(async () => {
 		}
 	} catch (error) {
 		console.error("Failed to load customers:", error)
+	}
+
+	if (!props.config) {
+		applyGlobalCustomerPrefill("customer_code", formData.value)
 	}
 })
 </script>

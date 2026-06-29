@@ -51,9 +51,9 @@ export default {
 	/**
 	 * Get all GitHub Audit configurations
 	 */
-	getConfigs(customerCode?: string) {
+	getConfigs(customerCode: string | null, signal?: AbortSignal) {
 		const params = customerCode ? { customer_code: customerCode } : undefined
-		return HttpClient.get<GitHubAuditConfigResponse>(`${BASE_PATH}/config`, { params })
+		return HttpClient.get<GitHubAuditConfigResponse>(`${BASE_PATH}/config`, { params, signal })
 	},
 
 	/**
