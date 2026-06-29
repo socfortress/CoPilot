@@ -26,7 +26,7 @@
 				clearable
 				placeholder="Priority..."
 				size="small"
-				class="w-27.5"
+				class="max-w-50"
 			/>
 		</div>
 		<div class="my-3 flex min-h-52 flex-col gap-2">

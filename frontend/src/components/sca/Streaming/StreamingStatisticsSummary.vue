@@ -123,7 +123,7 @@ const statTiles = computed<StatTile[]>(() => {
 		{
 			id: "score",
 			title: "Average Score",
-			value: s.average_score ? `${s.average_score}%` : "-",
+			value: s.average_score != null ? `${s.average_score}%` : "-",
 			subtitle: "Across collected policies",
 			iconLeft: ScoreIcon,
 			color: averageScoreColor.value
