@@ -28,6 +28,7 @@
 
 	--background-color-default: var(--bg-default-color);
 	--background-color-secondary: var(--bg-secondary-color);
+	--background-color-tertiary: var(--bg-tertiary-color);
 	--background-color-body: var(--bg-body-color);
 	--background-color-sidebar: var(--bg-sidebar-color);
 

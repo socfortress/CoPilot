@@ -72,6 +72,7 @@
 								<CardKV
 									v-for="agent in agentsResponse.matched_agents"
 									:key="`${agent.agent_id}-${agent.package_name}`"
+									embedded
 								>
 									<template #key>
 										<span class="font-semibold">{{ agent.agent_name || "Unknown" }}</span>
