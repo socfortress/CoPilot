@@ -127,9 +127,10 @@ import type { Customer } from "@/types/customers"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
 import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
-import { computed, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { VulnerabilitySeverity } from "@/types/vulnerabilities"
 import { getApiErrorMessage } from "@/utils"
 
@@ -150,7 +151,7 @@ const loadingAgents = ref(false)
 const loadingCustomers = ref(false)
 const agentsList = ref<Agent[]>([])
 const customersList = ref<Customer[]>([])
-
+const { globalCustomerCodes } = useGlobalCustomerFilter()
 const customersOptions = computed(() =>
 	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
 )
@@ -244,7 +245,7 @@ function getAgents() {
 function getCustomers() {
 	loadingCustomers.value = true
 
-	Api.customers
+	return Api.customers
 		.getCustomers()
 		.then(res => {
 			if (res.data.success) {
@@ -261,10 +262,31 @@ function getCustomers() {
 		})
 }
 
+function applyGlobalCustomerCodeFilter() {
+	if (filters.value.some(f => f.type === "customer_code" && f.value)) {
+		return false
+	}
+	const codes = globalCustomerCodes.value
+	if (!codes.length) {
+		return false
+	}
+	filters.value.push({ type: "customer_code", value: codes[0] })
+	return true
+}
+
 function load() {
 	getAgents()
-	getCustomers()
+	getCustomers().then(() => {
+		applyGlobalCustomerCodeFilter()
+		submit()
+	})
 }
+
+onBeforeMount(() => {
+	if (globalCustomerCodes.value.length) {
+		load()
+	}
+})
 
 defineExpose({ setFilter })
 </script>

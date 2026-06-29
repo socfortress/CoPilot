@@ -114,6 +114,7 @@ import { NAlert, NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, NSpin, u
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 
 interface FieldMatch {
@@ -137,7 +138,7 @@ const emit = defineEmits<{
 }>()
 
 const { entity, resetOnSubmit } = toRefs(props)
-
+const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
 const DelIcon = "carbon:close-filled"
 const AddIcon = "carbon:add"
 const loading = ref(false)
@@ -283,7 +284,7 @@ function delField(index: number) {
 function getCustomers() {
 	loadingCustomers.value = true
 
-	Api.customers
+	return Api.customers
 		.getCustomers()
 		.then(res => {
 			if (res.data.success) {
@@ -355,7 +356,9 @@ watch(
 )
 
 onBeforeMount(() => {
-	getCustomers()
+	getCustomers().then(() => {
+		applyGlobalCustomerPrefill("customer_code", model.value)
+	})
 })
 
 defineExpose({
