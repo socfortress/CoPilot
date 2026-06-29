@@ -24,7 +24,7 @@
 				/>
 			</GridViewToolbar>
 
-			<n-spin :show="loading">
+			<n-spin :show="loading" class="min-h-52">
 				<div class="my-3">
 					<div
 						v-if="list.length"
