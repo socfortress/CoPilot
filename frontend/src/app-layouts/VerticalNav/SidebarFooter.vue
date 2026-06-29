@@ -25,7 +25,7 @@ import type { Customer } from "@/types/customers"
 import { NSelect } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
-import { useCustomerFilterStore } from "@/stores/customerFilter"
+import { useCustomerFilterStore } from "@/stores/customer-filter"
 import { getApiErrorMessage } from "@/utils"
 
 const { collapsed = false } = defineProps<{

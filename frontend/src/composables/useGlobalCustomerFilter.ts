@@ -1,5 +1,5 @@
 import { computed } from "vue"
-import { useCustomerFilterStore } from "@/stores/customer-filter.ts"
+import { useCustomerFilterStore } from "@/stores/customer-filter"
 
 export function useGlobalCustomerFilter() {
 	const store = useCustomerFilterStore()
@@ -19,7 +19,7 @@ export function useGlobalCustomerFilter() {
 			? globalCustomerCodes.value.filter(c => (options.availableCustomerCodes || []).includes(c))
 			: globalCustomerCodes.value
 
-		if (!filters[customerFilterType]) {
+		if (!filters[customerFilterType] || (options?.multiple && !(filters[customerFilterType] as string[])?.length)) {
 			filters[customerFilterType] = options?.multiple ? codes : codes[0]
 		}
 

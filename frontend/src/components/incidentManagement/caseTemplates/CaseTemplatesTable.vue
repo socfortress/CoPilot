@@ -71,6 +71,7 @@ import { NButton, NCheckbox, NDataTable, NInput, NModal, NSelect, NTag, useDialo
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -78,6 +79,7 @@ import CaseTemplateEditor from "./CaseTemplateEditor.vue"
 
 const message = useMessage()
 const dialog = useDialog()
+const { globalCustomerCodes } = useGlobalCustomerFilter()
 
 const dFormats = useSettingsStore().dateFormat
 const templates = ref<CaseTemplate[]>([])
@@ -341,6 +343,17 @@ function onTemplateSaved() {
 	fetchTemplates()
 }
 
+function applyGlobalCustomerCodeFilter() {
+	if (customerFilter.value) {
+		return false
+	}
+	const codes = globalCustomerCodes.value
+	if (!codes.length) {
+		return false
+	}
+	customerFilter.value = codes[0]
+}
+
 // Re-fetch when scope filters change so the result set follows the
 // backend's customer+source filtering semantics.
 watch([customerFilter, sourceFilter, includeGlobal], () => {
@@ -351,6 +364,7 @@ onBeforeMount(() => {
 	fetchTemplates()
 	getCustomers()
 	getConfiguredSources()
+	applyGlobalCustomerCodeFilter()
 })
 
 defineExpose({

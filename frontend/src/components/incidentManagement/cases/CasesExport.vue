@@ -165,7 +165,7 @@ async function handleExport() {
 function getCustomers() {
 	loadingCustomersList.value = true
 
-	Api.customers
+	return Api.customers
 		.getCustomers()
 		.then(res => {
 			if (res.data.success) {
@@ -184,7 +184,9 @@ function getCustomers() {
 
 function load() {
 	if (!customersList.value.length) {
-		getCustomers()
+		getCustomers().then(() => {
+			applyGlobalCustomerPrefill("customerCodes", form.value, { multiple: true })
+		})
 	}
 	applyGlobalCustomerPrefill("customerCodes", form.value, { multiple: true })
 }
