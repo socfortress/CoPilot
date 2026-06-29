@@ -224,6 +224,7 @@ function applyFilters(newFilters: ScaStreamingListFilter[]) {
 	filters.min_score = nextFilters.min_score
 	filters.max_score = nextFilters.max_score
 	pagination.page = 1
+	startStream()
 }
 
 onBeforeUnmount(() => {

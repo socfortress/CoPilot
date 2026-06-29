@@ -144,9 +144,10 @@ import type { Customer } from "@/types/customers"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
 import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NSelect, useMessage } from "naive-ui"
-import { computed, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
@@ -161,6 +162,7 @@ const AddIcon = "carbon:add"
 const DelIcon = "carbon:delete"
 
 const message = useMessage()
+const { globalCustomerCodes } = useGlobalCustomerFilter()
 const loadingCustomers = ref(false)
 const customersList = ref<Customer[]>([])
 
@@ -276,6 +278,26 @@ function loadCustomers() {
 			loadingCustomers.value = false
 		})
 }
+
+function applyGlobalCustomerCodeFilter() {
+	if (filters.value.some(f => f.type === "customer_code" && f.value)) {
+		return false
+	}
+	const codes = globalCustomerCodes.value
+	if (!codes.length) {
+		return false
+	}
+	filters.value.push({ type: "customer_code", value: codes[0] })
+	return true
+}
+
+onBeforeMount(() => {
+	if (globalCustomerCodes.value.length) {
+		applyGlobalCustomerCodeFilter()
+		loadCustomers()
+		submit()
+	}
+})
 
 defineExpose({ setFilter })
 </script>

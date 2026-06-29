@@ -32,7 +32,9 @@ import { NButton, NDataTable, NEmpty, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, useTemplateRef, watch } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
+import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
 	customerCode: string | null
@@ -43,7 +45,7 @@ const props = defineProps<{
 const enabledDashboards = defineModel<EnabledDashboard[]>("enabledDashboards", { default: () => [] })
 
 const loadingEnabled = ref(false)
-
+const dFormats = useSettingsStore().dateFormat
 const message = useMessage()
 const dialog = useDialog()
 const { width: headerWidthRef } = useElementSize(useTemplateRef("wrapperRef"))
@@ -112,7 +114,7 @@ const enabledColumns = computed<DataTableColumns<EnabledDashboard>>(() => [
 		key: "created_at",
 		width: 180,
 		render(row) {
-			return new Date(row.created_at).toLocaleString()
+			return `${formatDate(row.created_at, dFormats.datetime)}`
 		}
 	},
 	{
