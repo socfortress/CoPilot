@@ -89,6 +89,7 @@ import type { AuditListFilter } from "./types"
 import type { AuditLogEntry, AuditLogFilters } from "@/types/audit"
 import type { ApiError } from "@/types/common"
 import { useResizeObserver, useStorage } from "@vueuse/core"
+import axios from "axios"
 import { NBadge, NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
@@ -122,6 +123,8 @@ const header = ref()
 const pageSlot = ref(8)
 
 const filters = ref<AuditListFilter[]>([])
+
+let abortController: AbortController | null = null
 
 const filtered = computed(() => !!filters.value.length)
 
@@ -166,10 +169,13 @@ function buildApiFilters(): AuditLogFilters {
 }
 
 function getData() {
+	abortController?.abort()
+	abortController = new AbortController()
+
 	loading.value = true
 
 	Api.audit
-		.getAuditLogs(buildApiFilters())
+		.getAuditLogs(buildApiFilters(), abortController.signal)
 		.then(res => {
 			if (res.data.success) {
 				list.value = res.data.audit_logs || []
@@ -177,13 +183,14 @@ function getData() {
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
+			loading.value = false
 		})
 		.catch(err => {
-			list.value = []
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loading.value = false
+			if (!axios.isCancel(err)) {
+				list.value = []
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+				loading.value = false
+			}
 		})
 }
 
