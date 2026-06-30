@@ -139,12 +139,10 @@ function formatMetricRate(value: number | null | undefined): string {
 	return `${Number(value).toLocaleString(undefined, { maximumFractionDigits: 1 })}/s`
 }
 
-const metricSeriesById = computed(
-	(): Record<KernelMetricId, TimeSeriesData | undefined> => ({
-		interrupts: kernel.value.interrupts,
-		"processes-forked": kernel.value.processes_forked
-	})
-)
+const metricSeriesById = computed((): Record<KernelMetricId, TimeSeriesData | undefined> => ({
+	interrupts: kernel.value.interrupts,
+	"processes-forked": kernel.value.processes_forked
+}))
 
 const statTiles = computed<KernelStatTile[]>(() =>
 	kernelMetrics.map(metric => ({

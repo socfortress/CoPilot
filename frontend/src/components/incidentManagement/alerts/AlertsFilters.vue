@@ -168,7 +168,6 @@ import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
-import { useCustomerFilterStore } from "@/stores/customer-filter"
 import { getApiErrorMessage } from "@/utils"
 
 const { useQueryString, preset } = defineProps<{ useQueryString?: boolean; preset?: AlertsListFilter[] }>()

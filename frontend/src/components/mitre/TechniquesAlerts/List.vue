@@ -174,8 +174,7 @@ function getList() {
 
 	const query: MitreTechniquesAlertsQuery = {
 		time_range: filters.value?.find(o => o.type === "time_range")?.value as
-			| MitreTechniquesAlertsQueryTimeRange
-			| undefined,
+			MitreTechniquesAlertsQueryTimeRange | undefined,
 		size: 300,
 		page: currentPage.value,
 		rule_level: filters.value?.find(o => o.type === "rule_level")?.value,

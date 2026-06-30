@@ -148,12 +148,10 @@ function errorsColor(value: number | null | undefined): CardLinkColor | undefine
 	return "warning"
 }
 
-const metricSeriesById = computed(
-	(): Record<NetworkChartId, TimeSeriesData | undefined> => ({
-		traffic: network.value.traffic,
-		errors: network.value.interface_errors
-	})
-)
+const metricSeriesById = computed((): Record<NetworkChartId, TimeSeriesData | undefined> => ({
+	traffic: network.value.traffic,
+	errors: network.value.interface_errors
+}))
 
 const statTiles = computed<NetworkStatTile[]>(() => [
 	{

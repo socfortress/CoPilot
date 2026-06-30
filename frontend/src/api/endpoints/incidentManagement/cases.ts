@@ -13,10 +13,7 @@ import type {
 import { HttpClient } from "../../http-client"
 
 export type CasesFilter =
-	| { status: CaseStatus }
-	| { assignedTo: string }
-	| { hostname: string }
-	| { customerCode: string }
+	{ status: CaseStatus } | { assignedTo: string } | { hostname: string } | { customerCode: string }
 
 export type CasesFilterTypes = KeysOfUnion<CasesFilter>
 
