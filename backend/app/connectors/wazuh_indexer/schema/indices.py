@@ -15,6 +15,8 @@ class IndexConfigModel(BaseModel):
         default={
             "wazuh-statistics": True,
             "wazuh-monitoring": True,
+            "wazuh-states-inventory": True,
+            "wazuh-states-vulnerabilities": True,
             ".opendistro": True,
             ".opensearch": True,
             ".kibana": True,
@@ -22,7 +24,6 @@ class IndexConfigModel(BaseModel):
             "filebeat": True,
             ".tasks": True,
             ".task": True,
-            "wazuh-states-vulnerabilities": True,
             ".plugins": True,
             ".ql": True,
         },

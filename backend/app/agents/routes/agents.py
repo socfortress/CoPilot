@@ -652,7 +652,10 @@ async def sync_all_agents() -> SyncedAgentsResponse:
     logger.info("Syncing agents as part of scheduled job")
     loop = asyncio.get_event_loop()
     await loop.create_task(sync_agents_wazuh())
-    await loop.create_task(sync_agents_velociraptor())
+    try:
+        await loop.create_task(sync_agents_velociraptor())
+    except Exception as e:
+        logger.error(f"Failed to sync agents from Velociraptor: {e}")
     return SyncedAgentsResponse(
         success=True,
         message="Agents synced started successfully",

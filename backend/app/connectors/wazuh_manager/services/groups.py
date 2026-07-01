@@ -102,9 +102,24 @@ async def get_wazuh_group_file(group_id: str, filename: str, **params) -> WazuhG
             error_detail = response.get("message", f"Failed to fetch group file '{filename}' for group '{group_id}'")
             logger.error(f"Wazuh API error: {error_detail}")
 
-            # Handle specific errors
-            if "not found" in error_detail.lower():
-                raise HTTPException(status_code=404, detail=f"Group file '{filename}' not found in group '{group_id}'")
+            # Wazuh returns 400 when the file simply hasn't been created yet for
+            # a group (error 1006 – "File/directory does not exist").  Treat that
+            # as "no content" so the UI can show an empty editor instead of an
+            # error banner.
+            missing_keywords = ("not found", "does not exist", "no such file")
+            if any(kw in error_detail.lower() for kw in missing_keywords):
+                logger.info(
+                    f"Group file '{filename}' does not exist for group '{group_id}' – returning empty content"
+                )
+                return WazuhGroupFileResponse(
+                    success=True,
+                    message=f"Group file '{filename}' does not exist for group '{group_id}' yet",
+                    group_id=group_id,
+                    filename=filename,
+                    content="",
+                    is_raw=True,
+                    total_items=0,
+                )
             else:
                 raise HTTPException(status_code=500, detail=error_detail)
 
