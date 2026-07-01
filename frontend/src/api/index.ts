@@ -33,6 +33,7 @@ import reporting from "./endpoints/reporting"
 import sca from "./endpoints/sca"
 import scheduler from "./endpoints/scheduler"
 import shuffle from "./endpoints/shuffle"
+import sidebarContext from "./endpoints/sidebar-context"
 import siem from "./endpoints/siem"
 import sigma from "./endpoints/sigma"
 import snapshots from "./endpoints/snapshots"
@@ -98,6 +99,7 @@ export default {
 	copilotMCP,
 	customerPortal,
 	version,
+	sidebarContext,
 	snapshots,
 	tagRbac,
 	talon,

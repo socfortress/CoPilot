@@ -1,6 +1,6 @@
 <template>
 	<div class="sidebar-footer bg-body rounded-lg p-2" :class="{ collapsed }">
-		<div v-if="collapsed" class="flex items-center justify-center py-1">
+		<div v-if="collapsed" class="flex flex-col items-center gap-2 py-1">
 			<n-badge
 				:value="selected?.length || 0"
 				class="[&_.n-badge-sup]:text-2xs! [&_.n-badge-sup]:bg-default! [&_.n-badge-sup]:border-default! [&_.n-badge-sup]:border!"
@@ -24,6 +24,8 @@
 				:loading
 			/>
 		</div>
+
+		<SidebarContextPanel :collapsed />
 	</div>
 </template>
 
@@ -33,6 +35,7 @@ import type { Customer } from "@/types/customers"
 import { NBadge, NSelect } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import SidebarContextPanel from "@/app-layouts/VerticalNav/SidebarContextPanel.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useCustomerFilterStore } from "@/stores/customer-filter"
 import { getApiErrorMessage } from "@/utils"

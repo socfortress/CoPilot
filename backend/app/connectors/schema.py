@@ -27,6 +27,7 @@ class ConnectorResponse(BaseModel):
     connector_supports: Optional[str] = None
     connector_configured: bool
     connector_verified: bool
+    connector_enabled: bool
     connector_accepts_host_only: bool
     connector_accepts_api_key: bool
     connector_accepts_username_password: bool
