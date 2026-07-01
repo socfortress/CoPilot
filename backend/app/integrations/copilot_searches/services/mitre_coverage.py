@@ -12,7 +12,7 @@ from app.integrations.copilot_searches.schema.copilot_searches import RuleSeveri
 from app.integrations.copilot_searches.schema.copilot_searches import RuleStatus
 from app.integrations.copilot_searches.services.copilot_searches import rules_cache
 
-MITRE_STIX_URL = "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
+MITRE_STIX_URL = "https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/enterprise-attack/enterprise-attack.json"
 MITRE_CACHE_TTL_HOURS = 24
 
 
