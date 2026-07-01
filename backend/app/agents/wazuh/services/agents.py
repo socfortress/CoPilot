@@ -50,13 +50,14 @@ async def collect_wazuh_agents() -> WazuhAgentsList:
             wazuh_agents_list = []
             for agent in agents_collected.get("data", {}).get("data", {}).get("affected_items", []):
                 os_name = agent.get("os", {}).get("name", "Unknown")
+                os_hostname = agent.get("os", {}).get("hostname", agent.get("name", "Unknown"))
                 last_keep_alive = agent.get("lastKeepAlive", "Unknown")
                 agent_group_list = agent.get("group", [])
                 agent_group = agent_group_list[0] if agent_group_list else "Unknown"
 
                 wazuh_agent = WazuhAgent(
                     agent_id=agent.get("id", "Unknown"),
-                    agent_name=agent.get("name", "Unknown"),
+                    agent_name=os_hostname,
                     agent_ip=agent.get("ip", "Unknown"),
                     agent_os=os_name,
                     agent_label=agent_group,
