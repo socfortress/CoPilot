@@ -90,13 +90,13 @@ def get_connectors_list():
             "Connection to Velociraptor. Make sure you have generated the api file first.",
         ),
         ("Sublime", "3", "api_key", "Connection to Sublime."),
-        (
-            "InfluxDB",
-            "3",
-            "api_key",
-            "Connection to InfluxDB.",
-            "INFLUXDB_ORG_AND_BUCKET",
-        ),
+        # (
+        #     "InfluxDB",
+        #     "3",
+        #     "api_key",
+        #     "Connection to InfluxDB.",
+        #     "INFLUXDB_ORG_AND_BUCKET",
+        # ),
         # (
         #     "AskSocfortress",
         #     "3",
