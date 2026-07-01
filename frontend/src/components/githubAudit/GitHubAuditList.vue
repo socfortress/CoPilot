@@ -73,7 +73,7 @@
 			</div>
 		</n-spin>
 
-		<n-drawer v-model:show="showForm" :width="600" placement="right" class="max-w-[98vw]">
+		<n-drawer v-model:show="showForm" :width="600" placement="right" class="max-w-[98vw]" display-directive="show">
 			<n-drawer-content
 				:title="selectedConfig ? 'Edit Configuration' : 'New GitHub Audit Configuration'"
 				closable
@@ -88,7 +88,13 @@
 			</n-drawer-content>
 		</n-drawer>
 
-		<n-drawer v-model:show="showDetail" :width="800" placement="right" class="max-w-[98vw]">
+		<n-drawer
+			v-model:show="showDetail"
+			:width="800"
+			placement="right"
+			class="max-w-[98vw]"
+			display-directive="show"
+		>
 			<n-drawer-content v-if="selectedConfig" closable :native-scrollbar="false">
 				<template #header>
 					<div class="flex items-center gap-3">
@@ -107,7 +113,7 @@
 			</n-drawer-content>
 		</n-drawer>
 
-		<n-drawer v-model:show="showInfo" :width="700" placement="right" class="max-w-[98vw]">
+		<n-drawer v-model:show="showInfo" :width="700" placement="right" class="max-w-[98vw]" display-directive="show">
 			<n-drawer-content closable :native-scrollbar="false">
 				<template #header>
 					<div class="flex items-center gap-3">
@@ -126,10 +132,12 @@
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.ts"
 import type { GitHubAuditConfig } from "@/types/github-audit"
+import axios from "axios"
 import { NButton, NDrawer, NDrawerContent, NEmpty, NInput, NSelect, NSpin, NTag, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
 import { getApiErrorMessage } from "@/utils"
 import GitHubAuditCard from "./GitHubAuditCard.vue"
 import GitHubAuditConfigForm from "./GitHubAuditConfigForm.vue"
@@ -141,6 +149,7 @@ const SearchIcon = "ion:search-outline"
 const InfoIcon = "ion:information-circle-outline"
 
 const message = useMessage()
+const { globalCustomerCode } = useGlobalCustomerFilter()
 const loading = ref(false)
 const configs = ref<GitHubAuditConfig[]>([])
 const showForm = ref(false)
@@ -159,6 +168,8 @@ const statusOptions = [
 	{ label: "Enabled", value: "enabled" },
 	{ label: "Disabled", value: "disabled" }
 ]
+
+let abortController: AbortController | null = null
 
 async function loadCustomers() {
 	if (loadingCustomers.value) return
@@ -180,11 +191,12 @@ async function loadCustomers() {
 }
 
 async function loadConfigs() {
-	if (loading.value) return
+	abortController?.abort()
+	abortController = new AbortController()
 
 	loading.value = true
 	try {
-		const response = await Api.githubAudit.getConfigs(filterCustomerCode.value || undefined)
+		const response = await Api.githubAudit.getConfigs(filterCustomerCode.value || null, abortController.signal)
 		if (response.data.configs) {
 			let filteredConfigs = response.data.configs
 
@@ -202,11 +214,13 @@ async function loadConfigs() {
 
 			configs.value = filteredConfigs
 		}
-	} catch (error) {
-		message.error(getApiErrorMessage(error as ApiError) || "Failed to load configurations")
-		configs.value = []
-	} finally {
 		loading.value = false
+	} catch (error) {
+		if (!axios.isCancel(error)) {
+			message.error(getApiErrorMessage(error as ApiError) || "Failed to load configurations")
+			configs.value = []
+			loading.value = false
+		}
 	}
 }
 
@@ -231,8 +245,16 @@ function onConfigSaved() {
 	loadConfigs()
 }
 
+function applyGlobalCustomerCodeFilter() {
+	if (globalCustomerCode.value && !filterCustomerCode.value) {
+		filterCustomerCode.value = globalCustomerCode.value
+		loadConfigs()
+	}
+}
+
 onBeforeMount(() => {
-	loadCustomers()
 	loadConfigs()
+	loadCustomers()
+	applyGlobalCustomerCodeFilter()
 })
 </script>

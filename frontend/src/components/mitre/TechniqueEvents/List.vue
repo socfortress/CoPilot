@@ -107,8 +107,7 @@ function getList() {
 	const query: MitreEventsQuery = {
 		technique_id: externalId,
 		time_range: filters.value?.find(o => o.type === "time_range")?.value as
-			| MitreTechniquesAlertsQueryTimeRange
-			| undefined,
+			MitreTechniquesAlertsQueryTimeRange | undefined,
 		size: pageSize.value,
 		page: currentPage.value,
 		rule_level: filters.value?.find(o => o.type === "rule_level")?.value,

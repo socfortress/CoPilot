@@ -1,7 +1,9 @@
 <template>
 	<CardEntity hoverable size="small">
 		<template #headerMain>
-			{{ template.title }}
+			<span class="text-default">
+				{{ template.title }}
+			</span>
 		</template>
 		<template #default>
 			<p class="text-xs">

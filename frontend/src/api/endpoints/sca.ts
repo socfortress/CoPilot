@@ -94,9 +94,10 @@ export default {
 	/**
 	 * List all SCA reports
 	 */
-	listReports(customer_code?: string) {
+	listReports(customer_code: string | null, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & SCAReportListResponse>(`/sca/reports`, {
-			params: customer_code ? { customer_code } : undefined
+			params: customer_code ? { customer_code } : undefined,
+			signal
 		})
 	},
 

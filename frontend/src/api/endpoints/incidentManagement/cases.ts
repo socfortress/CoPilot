@@ -13,10 +13,7 @@ import type {
 import { HttpClient } from "../../http-client"
 
 export type CasesFilter =
-	| { status: CaseStatus }
-	| { assignedTo: string }
-	| { hostname: string }
-	| { customerCode: string }
+	{ status: CaseStatus } | { assignedTo: string } | { hostname: string } | { customerCode: string }
 
 export type CasesFilterTypes = KeysOfUnion<CasesFilter>
 
@@ -25,6 +22,8 @@ export interface CasesPaginationParams {
 	pageSize?: number
 	order?: "asc" | "desc"
 }
+
+export type CasesListQuery = Partial<UnionToIntersection<CasesFilter>> & CasesPaginationParams
 
 export interface CaseReportPayload {
 	case_id: number
@@ -43,34 +42,34 @@ export interface ExportCasesQuery {
 }
 
 export default {
-	getCasesList(filters: Partial<UnionToIntersection<CasesFilter>>, pagination?: CasesPaginationParams) {
+	getCasesList(query: CasesListQuery = {}, signal?: AbortSignal) {
 		let url = `/incidents/db_operations/cases`
 
-		if (filters?.status) {
-			url = `/incidents/db_operations/case/status/${filters.status}`
+		if (query.status) {
+			url = `/incidents/db_operations/case/status/${query.status}`
 		}
-		if (filters?.assignedTo) {
-			url = `/incidents/db_operations/case/assigned-to/${filters.assignedTo}`
+		if (query.assignedTo) {
+			url = `/incidents/db_operations/case/assigned-to/${query.assignedTo}`
 		}
-		if (filters?.customerCode) {
-			url = `/incidents/db_operations/case/customer/${filters.customerCode}`
+		if (query.customerCode) {
+			url = `/incidents/db_operations/case/customer/${query.customerCode}`
 		}
-		if (filters?.hostname) {
-			url = `/agents/${filters.hostname}/cases`
+		if (query.hostname) {
+			url = `/agents/${query.hostname}/cases`
 		}
 
 		const params: Record<string, number | string> = {}
-		if (pagination?.page !== undefined) {
-			params.page = pagination.page
+		if (query.page !== undefined) {
+			params.page = query.page
 		}
-		if (pagination?.pageSize !== undefined) {
-			params.page_size = pagination.pageSize
+		if (query.pageSize !== undefined) {
+			params.page_size = query.pageSize
 		}
-		if (pagination?.order !== undefined) {
-			params.order = pagination.order
+		if (query.order !== undefined) {
+			params.order = query.order
 		}
 
-		return HttpClient.get<FlaskBaseResponse & CasesListResponse>(url, { params })
+		return HttpClient.get<FlaskBaseResponse & CasesListResponse>(url, { params, signal })
 	},
 	getCase(caseId: number) {
 		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(`/incidents/db_operations/case/${caseId}`)

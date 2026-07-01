@@ -161,7 +161,7 @@ function close() {
 }
 
 // Reset result whenever the modal opens fresh OR the selected entry changes.
-watch([show.value, () => props.entry?.key], ([open]) => {
+watch([show, () => props.entry?.key], ([open]) => {
 	if (open) result.value = null
 })
 </script>

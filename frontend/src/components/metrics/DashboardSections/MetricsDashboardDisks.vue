@@ -155,12 +155,10 @@ function usageColor(value: number | null | undefined): CardLinkColor | undefined
 	return "success"
 }
 
-const metricSeriesById = computed(
-	(): Record<DiskChartId, TimeSeriesData | undefined> => ({
-		usage: disks.value.disk_usage,
-		io: disks.value.disk_io
-	})
-)
+const metricSeriesById = computed((): Record<DiskChartId, TimeSeriesData | undefined> => ({
+	usage: disks.value.disk_usage,
+	io: disks.value.disk_io
+}))
 
 const statTiles = computed<DiskStatTile[]>(() => [
 	{

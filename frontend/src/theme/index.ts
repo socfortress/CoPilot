@@ -165,6 +165,7 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 
 	const bgColor = naive.baseColor
 	const bgSecondaryColor = state.colors[state.themeName].backgroundSecondary
+	const bgTertiaryColor = state.colors[state.themeName].backgroundTertiary
 	const fgColor = state.colors[state.themeName].text
 	const fgSecondaryColor = state.colors[state.themeName].textSecondary
 	const fgTertiaryColor = state.colors[state.themeName].textTertiary
@@ -202,6 +203,7 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 		"fg-tertiary-color": `${fgTertiaryColor}`,
 		"bg-default-color": `${bgColor}`,
 		"bg-secondary-color": `${bgSecondaryColor}`,
+		"bg-tertiary-color": `${bgTertiaryColor}`,
 
 		"bezier-ease": `${bezierEase}`,
 		"router-transition-duration": `${routerTransitionDuration}s`,

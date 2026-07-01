@@ -15,6 +15,8 @@ import type { DataTableColumns, PaginationProps } from "naive-ui"
 import type { AgentScaOverviewItem } from "@/types/sca"
 import { NButton, NDataTable, NEmpty, NProgress } from "naive-ui"
 import { h } from "vue"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils/format"
 
 defineProps<{
 	isConnecting: boolean
@@ -32,6 +34,8 @@ const emit = defineEmits<{
 function rowKey(row: AgentScaOverviewItem) {
 	return `${row.agent_id}-${row.policy_id}`
 }
+
+const dFormats = useSettingsStore().dateFormat
 
 function scoreStatus(score: number): "success" | "warning" | "error" {
 	if (score >= 80) return "success"
@@ -104,7 +108,7 @@ const columns: DataTableColumns<AgentScaOverviewItem> = [
 		title: "Last Scan",
 		key: "end_scan",
 		width: 160,
-		render: row => new Date(row.end_scan).toLocaleString()
+		render: row => `${formatDate(row.end_scan, dFormats.datetime)}`
 	}
 ]
 </script>

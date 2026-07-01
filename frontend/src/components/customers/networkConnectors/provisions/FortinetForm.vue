@@ -37,11 +37,11 @@ export interface FortinetModel {
 }
 
 const options = defineModel<FortinetModel>("options", {
-	default: {
+	default: () => ({
 		protocol: "tcp",
 		hot_data_retention: 1,
 		index_replicas: 0
-	}
+	})
 })
 
 const protocolOptions = [

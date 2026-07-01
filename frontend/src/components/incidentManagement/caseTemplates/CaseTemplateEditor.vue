@@ -167,6 +167,7 @@ import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 
 interface DraftTask {
@@ -199,6 +200,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
 const formRef = ref<FormInst | null>(null)
 const saving = ref(false)
 const taskSaving = ref(false)
@@ -441,7 +443,7 @@ async function handleSave() {
 function getCustomers() {
 	loadingCustomers.value = true
 
-	Api.customers
+	return Api.customers
 		.getCustomers()
 		.then(res => {
 			if (res.data.success) {
@@ -481,7 +483,11 @@ function getConfiguredSources() {
 watch(() => props.template, loadFromTemplate, { immediate: true })
 
 onBeforeMount(() => {
-	getCustomers()
+	getCustomers().then(() => {
+		if (!props.template) {
+			applyGlobalCustomerPrefill("customer_code", form.value)
+		}
+	})
 	getConfiguredSources()
 })
 

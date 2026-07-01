@@ -1,5 +1,5 @@
 <template>
-	<div class="kv-card" :class="[`kv-color-${color}`, `kv-size-${size}`]">
+	<div class="kv-card" :class="[`kv-color-${color}`, `kv-size-${size}`, { embedded }]">
 		<div v-if="$slots.key" class="key">
 			<slot name="key"></slot>
 		</div>
@@ -14,6 +14,7 @@ const { color, size, valueClass } = defineProps<{
 	color?: "danger" | "warning" | "success" | "primary"
 	size?: "lg"
 	valueClass?: string
+	embedded?: boolean
 }>()
 </script>
 
@@ -39,6 +40,14 @@ const { color, size, valueClass } = defineProps<{
 		height: 100%;
 		flex-grow: 1;
 		word-break: break-word;
+	}
+
+	&.embedded {
+		background-color: var(--bg-tertiary-color);
+
+		.value {
+			background-color: var(--bg-secondary-color);
+		}
 	}
 
 	&.kv-size- {

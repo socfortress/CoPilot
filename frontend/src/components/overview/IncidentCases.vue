@@ -46,7 +46,7 @@ function getData() {
 	loading.value = true
 
 	Api.incidentManagement.cases
-		.getCasesList({}, { page: 1, pageSize: 1 })
+		.getCasesList({ page: 1, pageSize: 1 })
 		.then(res => {
 			if (res.data.success) {
 				total.value = res.data.total || 0

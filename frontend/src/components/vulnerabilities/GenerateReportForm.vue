@@ -55,8 +55,9 @@ import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { VulnerabilityReportGenerateRequest } from "@/types/vulnerabilities"
 import { NButton, NDivider, NForm, NFormItem, NInput, NSelect, NSwitch, useMessage } from "naive-ui"
-import { computed, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { VulnerabilitySeverity } from "@/types/vulnerabilities"
 import { getApiErrorMessage } from "@/utils"
 
@@ -73,6 +74,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
 
 const formRef = ref<FormInst | null>(null)
 const generating = ref(false)
@@ -152,4 +154,8 @@ async function handleSubmit() {
 		console.error("Form validation failed:", error)
 	}
 }
+
+onBeforeMount(() => {
+	applyGlobalCustomerPrefill("customer_code", formData.value)
+})
 </script>

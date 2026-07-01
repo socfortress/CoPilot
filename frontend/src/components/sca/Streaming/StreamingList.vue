@@ -1,6 +1,6 @@
 <template>
 	<div class="flex flex-col gap-4">
-		<StreamingStatisticsSummary v-if="streamComplete && stats" :stats />
+		<StreamingStatisticsSummary v-if="isStatsValid && stats" :stats />
 
 		<StreamingProgressHeader
 			:is-connecting
@@ -56,6 +56,10 @@ const streamError = ref<string | null>(null)
 const results = ref<AgentScaOverviewItem[]>([])
 const stats = ref<ScaStreamComplete | null>(null)
 const abortController = ref<AbortController | null>(null)
+
+const isStatsValid = computed(() => {
+	return stats.value && stats.value?.message?.toLowerCase() !== "no agents found" && streamComplete.value
+})
 
 const progress = reactive<ScaStreamProgress>({
 	processed: 0,
@@ -224,6 +228,7 @@ function applyFilters(newFilters: ScaStreamingListFilter[]) {
 	filters.min_score = nextFilters.min_score
 	filters.max_score = nextFilters.max_score
 	pagination.page = 1
+	startStream()
 }
 
 onBeforeUnmount(() => {

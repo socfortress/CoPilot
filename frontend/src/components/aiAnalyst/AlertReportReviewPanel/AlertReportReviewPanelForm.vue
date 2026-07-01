@@ -87,7 +87,7 @@ const props = defineProps<{
 const { report } = toRefs(props)
 
 const form = defineModel<FormState>("form", {
-	default: {
+	default: () => ({
 		overall_verdict: null,
 		template_choice: null,
 		rating_instructions: 3,
@@ -95,7 +95,7 @@ const form = defineModel<FormState>("form", {
 		rating_severity: 3,
 		missing_steps: "",
 		suggested_edits: ""
-	}
+	})
 })
 
 const ThumbUpIcon = "mdi:thumb-up-outline"

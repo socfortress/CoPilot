@@ -147,6 +147,7 @@ import { computed, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 
 const { useQueryString, preset } = defineProps<{ useQueryString?: boolean; preset?: AuditListFilter[] }>()
@@ -161,6 +162,7 @@ const DelIcon = "carbon:delete"
 const router = useRouter()
 const route = useRoute()
 const message = useMessage()
+const { globalCustomerCodes } = useGlobalCustomerFilter()
 
 const loadingVocabularies = ref(false)
 const actionsList = ref<string[]>([])
@@ -313,14 +315,27 @@ function load() {
 	}
 }
 
+function applyGlobalCustomerCodeFilter() {
+	if (filters.value.some(f => f.type === "customer_code" && f.value)) {
+		return false
+	}
+	const codes = globalCustomerCodes.value
+	if (!codes.length) {
+		return false
+	}
+	filters.value.push({ type: "customer_code", value: codes[0] })
+	return true
+}
+
 onBeforeMount(() => {
 	if (preset?.length) {
 		filters.value = preset
 	} else {
 		getQueryString()
+		applyGlobalCustomerCodeFilter()
 	}
 
-	if ((useQueryString || preset?.length) && filters.value.length) {
+	if (filters.value.length) {
 		submit()
 	}
 })

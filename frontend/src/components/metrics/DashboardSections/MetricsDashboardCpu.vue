@@ -148,14 +148,12 @@ function usageColor(value: number | null | undefined): CardLinkColor | undefined
 	return "success"
 }
 
-const metricSeriesById = computed(
-	(): Record<CpuMetricId, TimeSeriesData | undefined> => ({
-		system: cpu.value.cpu_usage_system,
-		user: cpu.value.cpu_usage_user,
-		iowait: cpu.value.cpu_iowait,
-		softirq: cpu.value.cpu_softirq
-	})
-)
+const metricSeriesById = computed((): Record<CpuMetricId, TimeSeriesData | undefined> => ({
+	system: cpu.value.cpu_usage_system,
+	user: cpu.value.cpu_usage_user,
+	iowait: cpu.value.cpu_iowait,
+	softirq: cpu.value.cpu_softirq
+}))
 
 const statTiles = computed<CpuStatTile[]>(() =>
 	cpuMetrics.map(metric => {

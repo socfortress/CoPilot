@@ -36,20 +36,20 @@
 					<div class="flex flex-wrap items-center gap-1.5">
 						<Badge type="splitted" bright size="small">
 							<template #label>Results</template>
-							<template #value>{{ stats.total_results.toLocaleString() }}</template>
+							<template #value>{{ stats.total_results?.toLocaleString() ?? "-" }}</template>
 						</Badge>
 						<Badge type="splitted" bright size="small" color="success">
 							<template #label>Pass</template>
-							<template #value>{{ passRateLabel }}</template>
+							<template #value>{{ passRateLabel ?? "-" }}</template>
 						</Badge>
 						<Badge v-if="stats.total_invalid > 0" type="splitted" bright size="small">
 							<template #label>Invalid</template>
-							<template #value>{{ stats.total_invalid.toLocaleString() }}</template>
+							<template #value>{{ stats.total_invalid?.toLocaleString() ?? "-" }}</template>
 						</Badge>
 					</div>
 					<span class="text-tertiary text-xs">·</span>
 					<p class="text-secondary min-w-0 flex-1 truncate text-xs" :title="stats.message">
-						{{ stats.message }}
+						{{ stats.message ?? "-" }}
 					</p>
 				</div>
 			</template>
@@ -106,22 +106,24 @@ const statTiles = computed<StatTile[]>(() => {
 		{
 			id: "agents",
 			title: "Total Agents",
-			value: s.total_agents.toLocaleString(),
-			subtitle: `${s.agents_successful.toLocaleString()} successful`,
+			value: s.total_agents?.toLocaleString() ?? "-",
+			subtitle: s.agents_successful?.toLocaleString()
+				? `${s.agents_successful.toLocaleString()} successful`
+				: "No agents found",
 			iconLeft: AgentsIcon,
 			color: "primary"
 		},
 		{
 			id: "policies",
 			title: "Total Policies",
-			value: s.total_policies.toLocaleString(),
-			subtitle: `${s.total_results.toLocaleString()} policy rows`,
+			value: s.total_policies?.toLocaleString() ?? "-",
+			subtitle: s.total_results?.toLocaleString() ? `${s.total_results.toLocaleString()} policy rows` : "",
 			iconLeft: PolicyIcon
 		},
 		{
 			id: "score",
 			title: "Average Score",
-			value: `${s.average_score}%`,
+			value: s.average_score != null ? `${s.average_score}%` : "-",
 			subtitle: "Across collected policies",
 			iconLeft: ScoreIcon,
 			color: averageScoreColor.value
@@ -129,14 +131,14 @@ const statTiles = computed<StatTile[]>(() => {
 		{
 			id: "checks",
 			title: "Checks",
-			value: s.total_checks.toLocaleString(),
+			value: s.total_checks?.toLocaleString() ?? "-",
 			subtitle: "Total evaluated rules",
 			iconLeft: ChecksIcon
 		},
 		{
 			id: "passed",
 			title: "Passed",
-			value: s.total_passes.toLocaleString(),
+			value: s.total_passes?.toLocaleString() ?? "-",
 			subtitle: passRateLabel.value !== "—" ? `${passRateLabel.value} pass rate` : "pass rate N/D",
 			iconLeft: PassedIcon,
 			color: "success"
@@ -144,7 +146,7 @@ const statTiles = computed<StatTile[]>(() => {
 		{
 			id: "failed",
 			title: "Failed",
-			value: s.total_fails.toLocaleString(),
+			value: s.total_fails?.toLocaleString() ?? "-",
 			subtitle: `${s.agents_failed || 0} agent errors`,
 			iconLeft: FailedIcon,
 			color: "danger"
@@ -153,14 +155,14 @@ const statTiles = computed<StatTile[]>(() => {
 })
 
 const checkResultValues = computed<ItemProps[]>(() => [
-	{ label: "Passed", value: props.stats.total_passes, status: "success" },
-	{ label: "Failed", value: props.stats.total_fails, status: "error" },
-	{ label: "Invalid", value: props.stats.total_invalid, status: "muted" }
+	{ label: "Passed", value: props.stats.total_passes ?? 0, status: "success" },
+	{ label: "Failed", value: props.stats.total_fails ?? 0, status: "error" },
+	{ label: "Invalid", value: props.stats.total_invalid ?? 0, status: "muted" }
 ])
 
 const agentCollectionValues = computed<ItemProps[]>(() => [
-	{ label: "Processed", value: props.stats.agents_processed, status: "primary" },
-	{ label: "Successful", value: props.stats.agents_successful, status: "success" },
-	{ label: "Failed", value: props.stats.agents_failed, status: "error" }
+	{ label: "Processed", value: props.stats.agents_processed ?? 0, status: "primary" },
+	{ label: "Successful", value: props.stats.agents_successful ?? 0, status: "success" },
+	{ label: "Failed", value: props.stats.agents_failed ?? 0, status: "error" }
 ])
 </script>

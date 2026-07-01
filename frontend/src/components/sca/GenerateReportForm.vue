@@ -66,8 +66,9 @@
 import type { FormInst, FormRules } from "naive-ui"
 import type { SCAReportGenerateRequest } from "@/types/sca"
 import { NButton, NDivider, NForm, NFormItem, NInput, NInputNumber, NSelect, NSpace } from "naive-ui"
-import { ref } from "vue"
+import { onBeforeMount, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 
 defineProps<Props>()
 
@@ -75,6 +76,8 @@ const emit = defineEmits<{
 	generate: [request: SCAReportGenerateRequest]
 	cancel: []
 }>()
+
+const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
 
 const GenerateIcon = "carbon:document-add"
 
@@ -127,4 +130,8 @@ async function handleGenerate() {
 		console.error("Form validation failed:", error)
 	}
 }
+
+onBeforeMount(() => {
+	applyGlobalCustomerPrefill("customer_code", formValue.value)
+})
 </script>

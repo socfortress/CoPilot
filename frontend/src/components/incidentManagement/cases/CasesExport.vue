@@ -57,9 +57,10 @@ import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import { saveAs } from "file-saver"
 import { NButton, NDatePicker, NForm, NFormItem, NModal, NSelect, useMessage } from "naive-ui"
-import { computed, inject, reactive, ref } from "vue"
+import { computed, inject, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -72,11 +73,12 @@ const dFormats = useSettingsStore().dateFormat
 const exporting = ref(false)
 const showModal = ref(false)
 const message = useMessage()
+const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
 const customersList = inject<Ref<Customer[]>>("customers-list", ref([]))
 
-const form = reactive({
-	period: null as number | null,
-	customerCodes: [] as string[]
+const form = ref<{ period: number | null; customerCodes: string[] }>({
+	period: null,
+	customerCodes: []
 })
 
 const customerOptions = computed(() =>
@@ -114,7 +116,7 @@ function parsePeriod(period: number | null) {
 }
 
 async function exportCasesFile(customerCode: string | undefined, fileName: string) {
-	const { year, month } = parsePeriod(form.period)
+	const { year, month } = parsePeriod(form.value.period)
 
 	const res = await Api.incidentManagement.cases.exportCases({
 		customerCode,
@@ -133,22 +135,22 @@ async function exportCasesFile(customerCode: string | undefined, fileName: strin
 async function handleExport() {
 	exporting.value = true
 
-	const { year, month } = parsePeriod(form.period)
+	const { year, month } = parsePeriod(form.value.period)
 	const monthSuffix = year && month ? `_${year}-${String(month).padStart(2, "0")}` : ""
 	const timestamp = formatDate(new Date(), dFormats.datetimesec)
 
 	try {
-		if (!form.customerCodes.length) {
+		if (!form.value.customerCodes.length) {
 			await exportCasesFile(undefined, `cases${monthSuffix}_${timestamp}.csv`)
 		} else {
-			for (const customerCode of form.customerCodes) {
+			for (const customerCode of form.value.customerCodes) {
 				await exportCasesFile(customerCode, `cases_customer:${customerCode}${monthSuffix}_${timestamp}.csv`)
 			}
 		}
 
 		showModal.value = false
-		form.period = null
-		form.customerCodes = []
+		form.value.period = null
+		form.value.customerCodes = []
 	} catch (err) {
 		message.error(
 			getApiErrorMessage(err as ApiError) ||
@@ -163,7 +165,7 @@ async function handleExport() {
 function getCustomers() {
 	loadingCustomersList.value = true
 
-	Api.customers
+	return Api.customers
 		.getCustomers()
 		.then(res => {
 			if (res.data.success) {
@@ -182,7 +184,10 @@ function getCustomers() {
 
 function load() {
 	if (!customersList.value.length) {
-		getCustomers()
+		getCustomers().then(() => {
+			applyGlobalCustomerPrefill("customerCodes", form.value, { multiple: true })
+		})
 	}
+	applyGlobalCustomerPrefill("customerCodes", form.value, { multiple: true })
 }
 </script>
