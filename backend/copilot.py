@@ -89,6 +89,7 @@ from app.routers import shuffle
 from app.routers import siem
 from app.routers import socfortress_mdr
 from app.routers import stack_provisioning
+from app.routers import status
 from app.routers import sublime
 from app.routers import talon
 from app.routers import threat_intel
@@ -193,6 +194,7 @@ api_router.include_router(logs.router)
 api_router.include_router(audit.router)
 api_router.include_router(influxdb.router)
 api_router.include_router(version.router)
+api_router.include_router(status.router)
 api_router.include_router(grafana.router)
 api_router.include_router(customer_provisioning.router)
 api_router.include_router(threat_intel.router)

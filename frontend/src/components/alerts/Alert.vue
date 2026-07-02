@@ -148,7 +148,9 @@
 									<code
 										class="text-primary cursor-pointer"
 										@click.stop="
-											routeCustomer(value ? { code: value.toString() } : undefined).navigate()
+											routeCustomer(
+												value ? { code: value?.toString() ?? undefined } : undefined
+											).navigate()
 										"
 									>
 										{{ value }}
