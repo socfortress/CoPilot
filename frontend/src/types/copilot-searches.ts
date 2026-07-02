@@ -1,4 +1,4 @@
-export type PlatformFilter = "all" | "linux" | "windows" | "powershell" | "cve"
+export type PlatformFilter = "all" | "linux" | "windows" | "powershell" | "cve" | "cloud" | "office365" | "web"
 export type RuleStatus = "production" | "experimental" | "deprecated"
 export type RuleSeverity = "low" | "medium" | "high" | "critical"
 

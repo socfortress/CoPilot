@@ -154,7 +154,10 @@ const platformOptions = [
 	{ label: "Linux", value: "linux" },
 	{ label: "Windows", value: "windows" },
 	{ label: "PowerShell", value: "powershell" },
-	{ label: "CVE", value: "cve" }
+	{ label: "CVE", value: "cve" },
+	{ label: "Cloud", value: "cloud" },
+	{ label: "Office 365", value: "office365" },
+	{ label: "Web", value: "web" }
 ]
 
 const severityOptions = [

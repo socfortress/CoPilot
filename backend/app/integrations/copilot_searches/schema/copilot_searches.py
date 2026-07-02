@@ -5,6 +5,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
+from pydantic import model_validator
 
 
 class PlatformFilter(str, Enum):
@@ -15,6 +17,9 @@ class PlatformFilter(str, Enum):
     WINDOWS = "windows"
     POWERSHELL = "powershell"
     CVE = "cve"
+    CLOUD = "cloud"
+    OFFICE365 = "office365"
+    WEB = "web"
 
 
 class RuleStatus(str, Enum):
@@ -51,6 +56,68 @@ class GraylogQuery(BaseModel):
     query: str = Field(..., description="The Graylog search query string")
 
 
+class AggregationFunction(str, Enum):
+    """Supported aggregation functions for threshold detections."""
+
+    COUNT = "count"
+    DISTINCT_COUNT = "distinct_count"
+
+
+class AggregationConfig(BaseModel):
+    """
+    Optional aggregation / threshold block on a detection.
+
+    When present with ``enabled=True`` the rule is provisioned as a Graylog
+    aggregation event definition — ``count()`` or ``card()`` over ``group_by``
+    within ``window``, firing when the series meets ``condition`` ``threshold``.
+    When the block is absent or ``enabled=False`` the rule provisions exactly as
+    before: a single-event filter alert. This keeps every existing detection
+    backward compatible.
+    """
+
+    enabled: bool = False
+    function: AggregationFunction = AggregationFunction.COUNT
+    field: Optional[str] = Field(
+        default=None,
+        description="Field to run card() over. Required when function=distinct_count; ignored for count.",
+    )
+    group_by: list[str] = Field(
+        default_factory=list,
+        description="Fields to group the aggregation by (empty = global aggregation).",
+    )
+    window: str = Field(
+        default="5m",
+        description="Search window, e.g. '10m', '1h', '30s', '1d', or a bare number of seconds.",
+    )
+    execute_every: Optional[str] = Field(
+        default=None,
+        description="How often Graylog runs the aggregation. Defaults to the provision request cadence when unset.",
+    )
+    threshold: int = Field(
+        default=1,
+        ge=1,
+        description="Numeric threshold the aggregation series is compared against.",
+    )
+    condition: str = Field(
+        default=">",
+        description="Comparison operator: one of >, >=, <, <=, ==.",
+    )
+
+    @field_validator("condition")
+    @classmethod
+    def _validate_condition(cls, v: str) -> str:
+        allowed = {">", ">=", "<", "<=", "=="}
+        if v not in allowed:
+            raise ValueError(f"condition must be one of {sorted(allowed)}, got {v!r}")
+        return v
+
+    @model_validator(mode="after")
+    def _require_field_for_distinct_count(self) -> "AggregationConfig":
+        if self.function == AggregationFunction.DISTINCT_COUNT and not self.field:
+            raise ValueError("aggregation.field is required when function is 'distinct_count'")
+        return self
+
+
 class RuleSummary(BaseModel):
     """Lightweight rule summary for list endpoints."""
 
@@ -70,6 +137,7 @@ class RuleSummary(BaseModel):
     cve: list[str] = []
     file_path: str
     has_graylog_query: bool = False
+    has_aggregation: bool = False
 
 
 class RuleDetail(BaseModel):
@@ -95,6 +163,7 @@ class RuleDetail(BaseModel):
     file_path: str
     raw_yaml: str
     graylog: Optional[GraylogQuery] = None
+    aggregation: Optional[AggregationConfig] = None
 
 
 class RuleListResponse(BaseModel):
