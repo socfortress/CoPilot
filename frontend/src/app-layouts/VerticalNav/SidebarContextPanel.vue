@@ -93,7 +93,7 @@
 					{{ loadError }}
 				</div>
 
-				<n-scrollbar v-else class="max-h-56" trigger="none">
+				<n-scrollbar v-else class="max-h-36 rounded-lg" trigger="none">
 					<div
 						v-if="allHealthy && !showAllIndicators"
 						class="text-secondary flex items-center gap-2 px-1 py-1 text-xs"
@@ -102,43 +102,52 @@
 						All monitored systems are healthy.
 					</div>
 
-					<div v-for="group in groupedIndicators" v-else :key="group.key" class="mb-2 last:mb-0">
-						<div v-if="groupedIndicators.length > 1" class="text-secondary text-2xs mb-1 px-px uppercase">
-							{{ group.label }}
-						</div>
-						<ul class="flex flex-col gap-1">
-							<li v-for="indicator in group.items" :key="indicator.id">
-								<component
-									:is="indicatorLink(indicator.id) ? 'router-link' : 'div'"
-									:to="indicatorLink(indicator.id)"
-									class="hover:bg-secondary/10 flex items-start gap-2 rounded-md px-1 py-1 transition-colors"
-									:class="{ 'cursor-pointer': indicatorLink(indicator.id) }"
-								>
-									<Icon
-										:name="statusIcon(indicator.status)"
-										:size="14"
-										:class="statusClass(indicator.status)"
-									/>
-									<div class="min-w-0 flex-1">
-										<div class="flex items-center gap-1 text-xs leading-tight">
-											<span>{{ indicator.label }}</span>
-											<span
-												v-if="indicator.count && indicator.count > 0"
-												class="bg-default text-secondary text-2xs rounded px-1 font-mono"
+					<div v-else class="flex flex-col gap-2">
+						<n-card
+							v-for="group in groupedIndicators"
+							:key="group.key"
+							content-class="flex flex-col gap-2 px-2! py-1.5!"
+						>
+							<div class="text-2xs">{{ group.label }}</div>
+
+							<div class="flex flex-col gap-3">
+								<div v-for="indicator in group.items" :key="indicator.id">
+									<div class="flex items-start gap-2">
+										<Icon
+											:name="statusIcon(indicator.status)"
+											:size="14"
+											:class="statusClass(indicator.status)"
+											class="mt-px"
+										/>
+										<div class="min-w-0 flex-1">
+											<div class="flex items-center gap-1 text-xs leading-tight">
+												<component
+													:is="indicatorLink(indicator.id) ? 'router-link' : 'div'"
+													:to="indicatorLink(indicator.id)"
+													:class="{ 'cursor-pointer': indicatorLink(indicator.id) }"
+												>
+													<span>{{ indicator.label }}</span>
+												</component>
+												<span
+													v-if="indicator.count && indicator.count > 0"
+													class="bg-secondary text-secondary text-2xs rounded px-1 font-mono"
+												>
+													{{ indicator.count }}
+												</span>
+											</div>
+											<p
+												v-if="
+													indicator.detail && (indicator.status !== 'ok' || showAllIndicators)
+												"
+												class="text-secondary text-2xs mt-0.5 line-clamp-2 leading-snug"
 											>
-												{{ indicator.count }}
-											</span>
+												{{ indicator.detail }}
+											</p>
 										</div>
-										<p
-											v-if="indicator.detail && (indicator.status !== 'ok' || showAllIndicators)"
-											class="text-secondary text-2xs mt-0.5 line-clamp-2 leading-snug"
-										>
-											{{ indicator.detail }}
-										</p>
 									</div>
-								</component>
-							</li>
-						</ul>
+								</div>
+							</div>
+						</n-card>
 					</div>
 				</n-scrollbar>
 			</div>
@@ -149,7 +158,7 @@
 <script lang="ts" setup>
 import type { RouteLocationRaw } from "vue-router"
 import type { SidebarHealthIndicator, SidebarIndicatorStatus } from "@/types/sidebar-context"
-import { NScrollbar, NSpin, NTag, NTooltip } from "naive-ui"
+import { NCard, NScrollbar, NSpin, NTag, NTooltip } from "naive-ui"
 import { computed, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSidebarContext } from "@/composables/useSidebarContext"
