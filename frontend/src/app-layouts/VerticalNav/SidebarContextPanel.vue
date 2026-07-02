@@ -76,7 +76,7 @@
 				</div>
 			</div>
 
-			<div class="flex flex-col gap-1">
+			<div v-if="indicators?.length" class="flex flex-col gap-1">
 				<div class="flex items-center justify-between gap-2 px-px">
 					<div class="text-secondary text-2xs uppercase">Health</div>
 					<button
