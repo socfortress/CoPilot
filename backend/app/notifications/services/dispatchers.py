@@ -15,10 +15,17 @@ Channels:
               downstream provider's terminal state. Email, Slack,
               Teams, etc. all flow through this single channel via
               Shuffle's catalog of authenticated apps.
+  - webhook : Direct HTTP POST/PUT to any URL the customer configures
+              on the route (automation platforms, chat incoming
+              webhooks, a custom endpoint, …). No Shuffle in the path.
+              By default sends a structured JSON object; if the route
+              supplies a rendered template, that string is sent as the
+              raw body instead so provider-specific shapes work.
 """
 
 from __future__ import annotations
 
+import json
 import time
 from typing import Any
 from typing import Dict
@@ -39,6 +46,102 @@ ShuffleDispatchResult = Tuple[str, Optional[str], int, Optional[str]]
 # 30s leaves enough headroom for those without letting a stuck request
 # stall the dispatch loop indefinitely.
 _SHUFFLE_TIMEOUT_S = 30.0
+
+# Webhook delivery is fire-and-record like Shuffle. 15s is plenty for a
+# healthy automation endpoint (most respond in well under a
+# second); a slow target shouldn't stall the whole dispatch loop.
+_WEBHOOK_TIMEOUT_S = 15.0
+
+# The webhook dispatcher returns the same 4-tuple shape as Shuffle for a
+# uniform call site, but the 4th slot (a provider execution id) is always
+# None for webhooks — there's no async run to correlate to.
+WebhookDispatchResult = Tuple[str, Optional[str], int, Optional[str]]
+
+
+# ---------------------------------------------------------------------------
+# Webhook dispatcher (direct HTTP)
+# ---------------------------------------------------------------------------
+
+
+async def dispatch_webhook(
+    *,
+    url: str,
+    method: str = "POST",
+    headers: Optional[Dict[str, str]] = None,
+    structured_payload: Dict[str, Any],
+    rendered_template: Optional[str] = None,
+) -> WebhookDispatchResult:
+    """Deliver a notification by direct HTTP request to `url`.
+
+    Body selection:
+      - When `rendered_template` is set, that string is the body. If it
+        parses as JSON we send it with `Content-Type: application/json`
+        (so Discord's `{"content": …}` / Slack's `{"text": …}` work);
+        otherwise it goes out as `text/plain`. This lets a route target
+        a provider with a strict body shape without a code change.
+      - Otherwise we POST `structured_payload` as JSON — the default
+        shape for automation platforms that consume discrete fields.
+
+    User-supplied `headers` are merged last so they can override the
+    default Content-Type when a target needs something specific.
+
+    Returns (status, error_message, latency_ms, None) — the 4th slot is
+    always None (no provider execution id for a direct webhook); it
+    exists only to match the Shuffle dispatcher's tuple shape so the
+    dispatch loop has one call-site contract.
+    """
+    method = (method or "POST").upper()
+    if method not in ("POST", "PUT"):
+        return ("failed", f"Unsupported webhook method: {method}", 0, None)
+
+    # Build the body + default content-type.
+    request_headers: Dict[str, str] = {"Accept": "application/json"}
+    content: Optional[str] = None
+    json_body: Optional[Dict[str, Any]] = None
+
+    if rendered_template is not None:
+        # Custom template path — send verbatim, JSON if it parses.
+        try:
+            parsed = json.loads(rendered_template)
+            json_body = parsed if isinstance(parsed, (dict, list)) else None
+        except ValueError:
+            json_body = None
+        if json_body is None:
+            content = rendered_template
+            request_headers["Content-Type"] = "text/plain; charset=utf-8"
+        else:
+            request_headers["Content-Type"] = "application/json"
+    else:
+        json_body = structured_payload
+        request_headers["Content-Type"] = "application/json"
+
+    # Caller headers win (auth tokens, content-type overrides, …).
+    if headers:
+        request_headers.update({str(k): str(v) for k, v in headers.items()})
+
+    started = time.monotonic()
+    try:
+        async with httpx.AsyncClient(timeout=_WEBHOOK_TIMEOUT_S) as client:
+            if json_body is not None:
+                response = await client.request(method, url, headers=request_headers, json=json_body)
+            else:
+                response = await client.request(method, url, headers=request_headers, content=content)
+        latency_ms = int((time.monotonic() - started) * 1000)
+
+        if response.status_code >= 400:
+            return (
+                "failed",
+                f"Webhook returned {response.status_code}: {response.text[:200]}",
+                latency_ms,
+                None,
+            )
+        # Any 2xx/3xx is treated as accepted — fire-and-record, we don't
+        # interpret the target's response body.
+        return ("sent", None, latency_ms, None)
+    except Exception as e:  # noqa: BLE001
+        latency_ms = int((time.monotonic() - started) * 1000)
+        logger.warning(f"Webhook dispatch failed: {e!r}")
+        return ("failed", f"{type(e).__name__}: {e}", latency_ms, None)
 
 
 # ---------------------------------------------------------------------------

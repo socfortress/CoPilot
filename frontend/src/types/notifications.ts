@@ -8,7 +8,7 @@
 // analyst-review / IOC-enrichment / scheduled sweeps.
 export type NotificationTrigger = "investigation_complete"
 
-export type NotificationChannel = "shuffle"
+export type NotificationChannel = "shuffle" | "webhook"
 
 export type NotificationSeverity = "Critical" | "High" | "Medium" | "Low" | "Informational"
 
@@ -33,19 +33,30 @@ export interface NotificationRoute {
 	shuffle_integration_id: number | null
 	shuffle_app_id: string | null
 	shuffle_app_name: string | null
+	// Populated only when channel === "webhook"
+	webhook_url: string | null
+	webhook_method: string | null
+	webhook_headers: Record<string, string> | null
+	// Webhook only — inline the full AI report (markdown + recommended actions + IOCs) in the payload.
+	include_full_report: boolean
 }
 
 export interface NotificationRoutePayload {
 	name: string
 	trigger: NotificationTrigger
 	channel: NotificationChannel
-	destination: string
+	// Optional for webhook routes (the URL is the real target); required for shuffle.
+	destination?: string | null
 	min_severity: NotificationSeverity
 	format_template?: string | null
 	enabled: boolean
 	shuffle_integration_id?: number | null
 	shuffle_app_id?: string | null
 	shuffle_app_name?: string | null
+	webhook_url?: string | null
+	webhook_method?: string | null
+	webhook_headers?: Record<string, string> | null
+	include_full_report?: boolean
 }
 
 export type NotificationRouteUpdatePayload = Partial<NotificationRoutePayload>

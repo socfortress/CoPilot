@@ -13,7 +13,10 @@ log row is what gives us idempotency — re-dispatching the same
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -25,6 +28,8 @@ from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.ai_analyst.services.ai_analyst import list_iocs_by_alert
+from app.ai_analyst.services.ai_analyst import list_reports_by_alert
 from app.connectors.utils import get_connector_info_from_db
 from app.db.universal_models import CustomerNotificationRoute
 from app.db.universal_models import CustomerShuffleIntegration
@@ -43,6 +48,7 @@ from app.notifications.schema.notifications import ShuffleIntegrationCreate
 from app.notifications.schema.notifications import ShuffleIntegrationUpdate
 from app.notifications.schema.notifications import ShuffleOrg
 from app.notifications.services.dispatchers import dispatch_shuffle
+from app.notifications.services.dispatchers import dispatch_webhook
 from app.notifications.services.dispatchers import (
     list_shuffle_apps as shuffle_apps_client,
 )
@@ -132,7 +138,9 @@ async def create_route(
         name=payload.name,
         trigger=payload.trigger.value,
         channel=payload.channel.value,
-        destination=payload.destination,
+        # `destination` is non-null in the DB; webhook routes may omit it,
+        # so coalesce to empty string rather than NULL.
+        destination=payload.destination or "",
         min_severity=payload.min_severity.value,
         format_template=payload.format_template,
         enabled=payload.enabled,
@@ -140,6 +148,16 @@ async def create_route(
         shuffle_integration_id=payload.shuffle_integration_id,
         shuffle_app_id=payload.shuffle_app_id,
         shuffle_app_name=payload.shuffle_app_name,
+        # Only persist webhook columns for webhook routes — leave them
+        # NULL on shuffle routes so a read-back doesn't surface a
+        # spurious method/url on a route that doesn't use them.
+        webhook_url=payload.webhook_url if payload.channel == NotificationChannel.WEBHOOK else None,
+        webhook_method=(payload.webhook_method or "POST") if payload.channel == NotificationChannel.WEBHOOK else None,
+        # Headers are stored as a JSON string in a Text column.
+        webhook_headers=(
+            json.dumps(payload.webhook_headers) if payload.channel == NotificationChannel.WEBHOOK and payload.webhook_headers else None
+        ),
+        include_full_report=(payload.include_full_report if payload.channel == NotificationChannel.WEBHOOK else False),
     )
     session.add(route)
     await session.commit()
@@ -176,6 +194,14 @@ async def update_route(
         # Enums: write the underlying string into the DB column.
         if hasattr(value, "value"):
             value = value.value
+        # webhook_headers is a dict in the schema but a JSON-string
+        # column in the DB — encode on the way in.
+        if field == "webhook_headers":
+            value = json.dumps(value) if value else None
+        # destination is NOT NULL in the DB; a webhook PATCH legitimately
+        # sends it as null (webhooks don't use it) — coalesce to "".
+        if field == "destination" and value is None:
+            value = ""
         setattr(route, field, value)
     route.updated_at = datetime.utcnow()
 
@@ -484,6 +510,66 @@ def _format_default_body(req: DispatchRequest) -> str:
     return "\n".join(parts)
 
 
+def _decode_webhook_headers(raw: Optional[str]) -> Optional[Dict[str, str]]:
+    """Deserialize the route's JSON-string `webhook_headers` column.
+
+    Returns a flat str→str dict, or None when unset/blank/malformed.
+    Failing closed (None) rather than raising keeps a bad row from
+    aborting the whole dispatch — the request just goes out with the
+    dispatcher's default headers.
+    """
+    if not raw:
+        return None
+    try:
+        parsed = json.loads(raw)
+    except ValueError:
+        logger.warning(f"Malformed webhook_headers JSON, ignoring: {raw[:120]!r}")
+        return None
+    if not isinstance(parsed, dict):
+        return None
+    return {str(k): str(v) for k, v in parsed.items()}
+
+
+async def _build_full_report(alert_id: int, session: AsyncSession) -> Optional[Dict[str, Any]]:
+    """Fetch the alert's latest AI report's *extra* fields as a flat dict.
+
+    Returns only the fields NOT already present at the top level of the
+    webhook payload — i.e. it deliberately omits `summary` and the
+    severity (those are already sent as `summary`/`severity`) to avoid
+    duplicating them. The dispatcher merges this flat into the payload.
+
+    Reuses the ai_analyst service layer (the canonical read path) so the
+    shape stays in sync with the AI Analyst API. Returns None when no
+    report exists yet — the dispatcher then sends the base payload
+    unchanged, so a webhook never fails just because the report
+    write-back hasn't landed.
+
+    `list_reports_by_alert` returns newest-first, so element 0 is the
+    report this dispatch is about. IOCs are scoped to the same alert.
+    """
+    reports = await list_reports_by_alert(alert_id, session)
+    if not reports:
+        return None
+    report = reports[0]
+    iocs = await list_iocs_by_alert(alert_id, session)
+    return {
+        "report_id": report.id,
+        "recommended_actions": report.recommended_actions,
+        "report_markdown": report.report_markdown,
+        "report_created_at": report.created_at.isoformat() if report.created_at else None,
+        "iocs": [
+            {
+                "ioc_value": i.ioc_value,
+                "ioc_type": i.ioc_type,
+                "vt_verdict": i.vt_verdict,
+                "vt_score": i.vt_score,
+                "details": i.details,
+            }
+            for i in iocs
+        ],
+    }
+
+
 def _render_body(route: CustomerNotificationRoute, req: DispatchRequest) -> str:
     """Apply the route's `format_template` if set, else fall back.
 
@@ -645,6 +731,11 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
         route_destination = route.destination
         route_shuffle_app_id = route.shuffle_app_id
         route_shuffle_integration_id = route.shuffle_integration_id
+        route_has_template = bool(route.format_template)
+        route_webhook_url = route.webhook_url
+        route_webhook_method = route.webhook_method
+        route_webhook_headers = route.webhook_headers
+        route_include_full_report = bool(route.include_full_report)
 
         body = _render_body(route, req)
         body_preview = body[:500]
@@ -711,6 +802,61 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
                             app_id=route_shuffle_app_id,
                             input_text=input_text,
                         )
+            elif route_channel == NotificationChannel.WEBHOOK.value:
+                # Direct HTTP webhook. Fire-and-record — POST/PUT to the
+                # route's URL with either a structured JSON payload
+                # (default) or the rendered template (when the route sets
+                # one), and treat any 2xx/3xx as `sent`.
+                if not route_webhook_url:
+                    result_status = "failed"
+                    error_message = "Route has no webhook_url (data integrity issue)"
+                    latency_ms = 0
+                else:
+                    # Structured default payload — automation platforms
+                    # consume these fields directly.
+                    structured_payload: Dict[str, Any] = {
+                        "customer_code": req.customer_code,
+                        "alert_id": req.alert_id,
+                        "alert_name": req.alert_name,
+                        "severity": req.severity_assessment.value,
+                        "summary": req.summary,
+                        "report_url": req.report_url,
+                        "text": body,
+                    }
+                    # Two mutually-exclusive body modes (enforced in the UI,
+                    # guarded here):
+                    #   1. include_full_report → merge the report's extra
+                    #      fields (recommended actions, full markdown, IOCs)
+                    #      flat into the structured payload. Template ignored.
+                    #   2. custom template → that rendered string is the body.
+                    #      If it contains the `{{report}}` token, inject the
+                    #      same report fields as a JSON object at that spot.
+                    rendered_template: Optional[str] = None
+                    if route_include_full_report:
+                        report_fields = await _build_full_report(req.alert_id, session)
+                        if report_fields is not None:
+                            structured_payload.update(report_fields)
+                    elif route_has_template:
+                        rendered_template = body
+                        if "{{report}}" in rendered_template:
+                            report_fields = await _build_full_report(req.alert_id, session)
+                            rendered_template = rendered_template.replace(
+                                "{{report}}",
+                                json.dumps(report_fields) if report_fields is not None else "null",
+                            )
+                    headers = _decode_webhook_headers(route_webhook_headers)
+                    (
+                        result_status,
+                        error_message,
+                        latency_ms,
+                        _,
+                    ) = await dispatch_webhook(
+                        url=route_webhook_url,
+                        method=route_webhook_method or "POST",
+                        headers=headers,
+                        structured_payload=structured_payload,
+                        rendered_template=rendered_template,
+                    )
             else:
                 # Unknown channel — preserved as a failure rather than
                 # silently dropped so a misconfigured row surfaces in
