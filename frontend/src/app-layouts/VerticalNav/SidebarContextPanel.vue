@@ -1,6 +1,6 @@
 <template>
-	<div class="flex flex-col gap-2 border-t border-default pt-2">
-		<div v-if="collapsed" class="flex flex-col items-center gap-2 py-1">
+	<div class="flex flex-col gap-2">
+		<div v-if="collapsed" class="flex flex-col items-center gap-2">
 			<n-tooltip placement="right">
 				<template #trigger>
 					<div class="flex items-center justify-center">
@@ -13,6 +13,9 @@
 				</template>
 				<div class="max-w-56 text-xs">
 					<div class="font-mono">v{{ context?.current_version ?? "—" }}</div>
+					<div v-if="context?.environment" class="text-secondary mt-0.5 uppercase">
+						{{ context.environment }}
+					</div>
 					<div v-if="context?.is_outdated" class="text-warning mt-1">
 						Update available: v{{ context?.latest_version }}
 					</div>
@@ -23,16 +26,16 @@
 				<template #trigger>
 					<button
 						type="button"
-						class="flex items-center justify-center rounded-md p-1 transition-colors hover:bg-secondary/10"
+						class="hover:bg-secondary/10 flex items-center justify-center rounded-md p-1 transition-colors"
 						@click="refresh"
 					>
 						<Icon :name="healthIcon" :size="18" :class="healthIconClass" />
 					</button>
 				</template>
-				<div class="max-w-64 text-xs">
+				<div class="max-w-72 text-xs">
 					<div class="mb-1 font-medium">{{ healthSummary }}</div>
-					<ul v-if="issueIndicators.length" class="flex flex-col gap-1">
-						<li v-for="indicator in issueIndicators" :key="indicator.id">
+					<ul v-if="issueIndicators.length" class="flex max-h-48 flex-col gap-1 overflow-y-auto">
+						<li v-for="indicator in issueIndicators.slice(0, 12)" :key="indicator.id">
 							<span class="font-medium">{{ indicator.label }}:</span>
 							{{ indicator.detail }}
 						</li>
@@ -51,7 +54,7 @@
 							:href="context.release_url"
 							target="_blank"
 							rel="noopener noreferrer"
-							class="text-warning hover:text-warning/80 inline-flex items-center gap-1 text-2xs font-medium"
+							class="text-warning hover:text-warning/80 text-2xs inline-flex items-center gap-1 font-medium"
 						>
 							<Icon :name="UpdateIcon" :size="12" />
 							Update
@@ -63,53 +66,85 @@
 
 			<div class="flex items-center gap-2 px-px">
 				<span class="font-mono text-xs">v{{ context?.current_version ?? "—" }}</span>
+				<n-tag v-if="context?.environment" size="small" :bordered="false" class="text-2xs uppercase">
+					{{ context.environment }}
+				</n-tag>
 				<n-spin v-if="loading" :size="12" />
 			</div>
 
-			<div class="text-secondary text-2xs px-px uppercase">Health</div>
+			<div class="flex items-center justify-between gap-2 px-px">
+				<div class="text-secondary text-2xs uppercase">Health</div>
+				<button
+					v-if="indicators.length"
+					type="button"
+					class="text-secondary hover:text-primary text-2xs"
+					@click="showAllIndicators = !showAllIndicators"
+				>
+					{{ showAllIndicators ? "Compact view" : `Show all (${indicators.length})` }}
+				</button>
+			</div>
 
 			<div v-if="loadError" class="text-error text-2xs px-px">
 				{{ loadError }}
 			</div>
 
-			<ul v-else class="flex flex-col gap-1">
-				<li v-for="indicator in indicators" :key="indicator.id">
-					<component
-						:is="indicatorLink(indicator.id) ? 'router-link' : 'div'"
-						:to="indicatorLink(indicator.id)"
-						class="hover:bg-secondary/10 flex items-start gap-2 rounded-md px-1 py-1 transition-colors"
-						:class="{ 'cursor-pointer': indicatorLink(indicator.id) }"
-					>
-						<Icon :name="statusIcon(indicator.status)" :size="14" :class="statusClass(indicator.status)" />
-						<div class="min-w-0 flex-1">
-							<div class="flex items-center gap-1 text-xs leading-tight">
-								<span>{{ indicator.label }}</span>
-								<span
-									v-if="indicator.count && indicator.count > 0"
-									class="bg-default text-secondary rounded px-1 text-2xs font-mono"
-								>
-									{{ indicator.count }}
-								</span>
-							</div>
-							<p
-								v-if="indicator.detail && indicator.status !== 'ok'"
-								class="text-secondary mt-0.5 line-clamp-2 text-2xs leading-snug"
+			<div v-else class="max-h-56 overflow-y-auto pr-0.5">
+				<div
+					v-if="allHealthy && !showAllIndicators"
+					class="text-secondary flex items-center gap-2 px-1 py-1 text-xs"
+				>
+					<Icon :name="OkIcon" :size="14" class="text-success shrink-0" />
+					All monitored systems are healthy.
+				</div>
+
+				<div v-for="group in groupedIndicators" v-else :key="group.key" class="mb-2 last:mb-0">
+					<div v-if="groupedIndicators.length > 1" class="text-secondary text-2xs mb-1 px-px uppercase">
+						{{ group.label }}
+					</div>
+					<ul class="flex flex-col gap-1">
+						<li v-for="indicator in group.items" :key="indicator.id">
+							<component
+								:is="indicatorLink(indicator.id) ? 'router-link' : 'div'"
+								:to="indicatorLink(indicator.id)"
+								class="hover:bg-secondary/10 flex items-start gap-2 rounded-md px-1 py-1 transition-colors"
+								:class="{ 'cursor-pointer': indicatorLink(indicator.id) }"
 							>
-								{{ indicator.detail }}
-							</p>
-						</div>
-					</component>
-				</li>
-			</ul>
+								<Icon
+									:name="statusIcon(indicator.status)"
+									:size="14"
+									:class="statusClass(indicator.status)"
+								/>
+								<div class="min-w-0 flex-1">
+									<div class="flex items-center gap-1 text-xs leading-tight">
+										<span>{{ indicator.label }}</span>
+										<span
+											v-if="indicator.count && indicator.count > 0"
+											class="bg-default text-secondary text-2xs rounded px-1 font-mono"
+										>
+											{{ indicator.count }}
+										</span>
+									</div>
+									<p
+										v-if="indicator.detail && (indicator.status !== 'ok' || showAllIndicators)"
+										class="text-secondary text-2xs mt-0.5 line-clamp-2 leading-snug"
+									>
+										{{ indicator.detail }}
+									</p>
+								</div>
+							</component>
+						</li>
+					</ul>
+				</div>
+			</div>
 		</template>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import type { SidebarIndicatorStatus } from "@/types/sidebar-context"
 import type { RouteLocationRaw } from "vue-router"
-import { NSpin, NTooltip } from "naive-ui"
-import { computed } from "vue"
+import type { SidebarHealthIndicator, SidebarIndicatorStatus } from "@/types/sidebar-context"
+import { NSpin, NTag, NTooltip } from "naive-ui"
+import { computed, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSidebarContext } from "@/composables/useSidebarContext"
 
@@ -123,7 +158,53 @@ const OkIcon = "carbon:checkmark-filled"
 const WarningIcon = "carbon:warning-filled"
 const ErrorIcon = "carbon:error-filled"
 
+const showAllIndicators = ref(false)
+
+const categoryLabels: Record<string, string> = {
+	triage: "Triage",
+	ai: "AI & automation",
+	operations: "Operations",
+	infrastructure: "Infrastructure",
+	platform: "Platform"
+}
+
+const categoryOrder = ["triage", "ai", "operations", "infrastructure", "platform"]
+
 const { context, loading, loadError, indicators, issueIndicators, overallStatus, refresh } = useSidebarContext()
+
+const visibleIndicators = computed(() => {
+	if (showAllIndicators.value) {
+		return indicators.value
+	}
+	if (issueIndicators.value.length === 0) {
+		return []
+	}
+	return issueIndicators.value
+})
+
+const allHealthy = computed(() => issueIndicators.value.length === 0 && indicators.value.length > 0)
+
+const groupedIndicators = computed(() => {
+	const groups = new Map<string, SidebarHealthIndicator[]>()
+
+	for (const indicator of visibleIndicators.value) {
+		const key = indicator.category || "other"
+		const current = groups.get(key) ?? []
+		current.push(indicator)
+		groups.set(key, current)
+	}
+
+	const orderedKeys = [
+		...categoryOrder.filter(key => groups.has(key)),
+		...Array.from(groups.keys()).filter(key => !categoryOrder.includes(key))
+	]
+
+	return orderedKeys.map(key => ({
+		key,
+		label: categoryLabels[key] ?? key,
+		items: groups.get(key) ?? []
+	}))
+})
 
 const healthIcon = computed(() => {
 	if (overallStatus.value === "error") {
@@ -169,15 +250,25 @@ function statusClass(status: SidebarIndicatorStatus) {
 }
 
 function indicatorLink(id: string): RouteLocationRaw | undefined {
-	if (id === "connectors") {
-		return { name: "Connectors" }
+	const routes: Record<string, RouteLocationRaw> = {
+		open_alerts: { name: "IncidentManagement-Alerts" },
+		my_open_cases: { name: "IncidentManagement-Cases" },
+		tag_rbac: { name: "Users" },
+		ai_analyst_jobs: { name: "AiAnalyst" },
+		mem_palace: { name: "AiAnalyst" },
+		notification_dispatch: { name: "Customers" },
+		connectors: { name: "Connectors" },
+		talon: { name: "Connectors" },
+		core_soc_tools: { name: "Connectors" },
+		wazuh_indexer: { name: "Indices" },
+		wazuh_catalog: { name: "DetectionCatalog" },
+		influx_health: { name: "Healthcheck" },
+		scheduler: { name: "Scheduler" },
+		agent_sync: { name: "Scheduler" },
+		license: { name: "License" },
+		platform_storage: { name: "Connectors" }
 	}
-	if (id === "scheduler") {
-		return { name: "Scheduler" }
-	}
-	if (id === "wazuh_catalog") {
-		return { name: "DetectionCatalog" }
-	}
-	return undefined
+
+	return routes[id]
 }
 </script>

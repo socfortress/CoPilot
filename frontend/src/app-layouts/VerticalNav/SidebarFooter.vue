@@ -1,11 +1,11 @@
 <template>
-	<div class="sidebar-footer bg-body rounded-lg p-2" :class="{ collapsed }">
+	<div class="sidebar-footer bg-body flex flex-col gap-4 rounded-lg p-2" :class="{ 'collapsed gap-2!': collapsed }">
 		<div v-if="collapsed" class="flex flex-col items-center gap-2 py-1">
 			<n-badge
 				:value="selected?.length || 0"
 				class="[&_.n-badge-sup]:text-2xs! [&_.n-badge-sup]:bg-default! [&_.n-badge-sup]:border-default! [&_.n-badge-sup]:border!"
 			>
-				<Icon name="carbon:user-sponsor" :size="20" />
+				<Icon name="carbon:edit-filter" :size="18" class="text-secondary" />
 			</n-badge>
 		</div>
 		<div v-else class="flex flex-col gap-1">

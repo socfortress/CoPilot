@@ -5,7 +5,6 @@ from typing import Optional
 
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
@@ -13,30 +12,32 @@ from app.connectors.services import ConnectorServices
 from app.integrations.copilot_searches.services.wazuh_rules_cache import (
     wazuh_rules_cache,
 )
-from app.schedulers.models.scheduler import JobMetadata
-from app.schedulers.scheduler import get_scheduler_instance
 from app.status.schema.context import SidebarContextResponse
 from app.status.schema.context import SidebarHealthIndicator
+from app.status.services.context_indicators import build_agent_sync_indicator
+from app.status.services.context_indicators import build_ai_analyst_jobs_indicator
+from app.status.services.context_indicators import build_core_soc_tools_indicator
+from app.status.services.context_indicators import build_influx_health_indicator
+from app.status.services.context_indicators import build_license_indicator
+from app.status.services.context_indicators import build_mem_palace_indicator
+from app.status.services.context_indicators import build_my_open_cases_indicator
+from app.status.services.context_indicators import build_notification_dispatch_indicator
+from app.status.services.context_indicators import build_open_alerts_indicator
+from app.status.services.context_indicators import build_platform_storage_indicator
+from app.status.services.context_indicators import (
+    build_scheduler_indicator_excluding_agent_sync,
+)
+from app.status.services.context_indicators import build_tag_rbac_indicator
+from app.status.services.context_indicators import build_talon_indicator
+from app.status.services.context_indicators import build_wazuh_indexer_indicator
+from app.status.services.context_indicators import get_environment_name
+from app.status.services.context_indicators import safe_build
 from app.version.services.version import CURRENT_VERSION
 from app.version.services.version import check_version_outdated
 
 _VERSION_CACHE: Optional[dict] = None
 _VERSION_CACHE_AT: Optional[datetime] = None
 _VERSION_CACHE_MINUTES = 30
-
-
-def _is_scheduler_job_stale(
-    *,
-    last_success: Optional[datetime],
-    time_interval_minutes: int,
-    now: datetime,
-) -> bool:
-    if time_interval_minutes <= 0:
-        return False
-    if last_success is None:
-        return True
-    threshold = timedelta(minutes=time_interval_minutes * 2)
-    return (now - last_success) > threshold
 
 
 async def _get_version_fields() -> dict:
@@ -77,6 +78,8 @@ async def _build_connector_indicator(session: AsyncSession) -> SidebarHealthIndi
     issues: List[str] = []
     for connector in connectors:
         name = connector.connector_name
+        if connector.connector_name in {"Talon", "Graylog", "Velociraptor"}:
+            continue
         if connector.connector_enabled and not connector.connector_configured:
             issues.append(f"{name} (not configured)")
         elif connector.connector_configured and not connector.connector_verified:
@@ -88,8 +91,9 @@ async def _build_connector_indicator(session: AsyncSession) -> SidebarHealthIndi
             id="connectors",
             status="ok",
             label="Connectors",
-            detail="All enabled connectors are configured and verified.",
+            detail="All other enabled connectors are configured and verified.",
             count=0,
+            category="infrastructure",
         )
 
     preview = ", ".join(issues[:3])
@@ -102,46 +106,7 @@ async def _build_connector_indicator(session: AsyncSession) -> SidebarHealthIndi
         label="Connectors",
         detail=preview,
         count=count,
-    )
-
-
-async def _build_scheduler_indicator(session: AsyncSession) -> SidebarHealthIndicator:
-    scheduler = await get_scheduler_instance()
-    now = datetime.utcnow()
-    stale_jobs: List[str] = []
-
-    for job in scheduler.get_jobs():
-        result = await session.execute(select(JobMetadata).filter_by(job_id=job.id))
-        metadata = result.scalars().first()
-        if metadata is None or not metadata.enabled:
-            continue
-        if _is_scheduler_job_stale(
-            last_success=metadata.last_success,
-            time_interval_minutes=metadata.time_interval,
-            now=now,
-        ):
-            stale_jobs.append(job.id)
-
-    count = len(stale_jobs)
-    if count == 0:
-        return SidebarHealthIndicator(
-            id="scheduler",
-            status="ok",
-            label="Scheduler",
-            detail="All enabled jobs ran within their expected interval.",
-            count=0,
-        )
-
-    preview = ", ".join(stale_jobs[:3])
-    if count > 3:
-        preview = f"{preview}, +{count - 3} more"
-
-    return SidebarHealthIndicator(
-        id="scheduler",
-        status="warning" if count == 1 else "error",
-        label="Scheduler",
-        detail=preview,
-        count=count,
+        category="infrastructure",
     )
 
 
@@ -155,6 +120,7 @@ async def _build_wazuh_catalog_indicator() -> SidebarHealthIndicator:
             label="Wazuh catalog",
             detail=f"{wazuh_rules_cache.rules_count} rules loaded.",
             count=0,
+            category="infrastructure",
         )
 
     reason = wazuh_rules_cache.unavailable_reason or "Wazuh Manager rules are unavailable."
@@ -164,6 +130,7 @@ async def _build_wazuh_catalog_indicator() -> SidebarHealthIndicator:
         label="Wazuh catalog",
         detail=reason,
         count=1,
+        category="infrastructure",
     )
 
 
@@ -173,16 +140,54 @@ async def build_sidebar_context(
     user: User,
 ) -> SidebarContextResponse:
     version_fields = await _get_version_fields()
-    indicators: List[SidebarHealthIndicator] = []
 
     is_admin = user.role_id == RoleEnum.admin.value
     is_analyst_or_admin = user.role_id in (RoleEnum.admin.value, RoleEnum.analyst.value)
+    is_customer_user = user.role_id == RoleEnum.customer_user.value
+
+    builders = []
+
+    if is_analyst_or_admin or is_customer_user:
+        builders.extend(
+            [
+                (build_open_alerts_indicator, (session, user), {}),
+                (build_my_open_cases_indicator, (session, user), {}),
+            ],
+        )
+
+    if is_analyst_or_admin:
+        builders.extend(
+            [
+                (build_tag_rbac_indicator, (session,), {}),
+                (build_ai_analyst_jobs_indicator, (session,), {}),
+                (build_mem_palace_indicator, (session,), {}),
+                (build_notification_dispatch_indicator, (session,), {}),
+                (build_scheduler_indicator_excluding_agent_sync, (session,), {}),
+                (build_agent_sync_indicator, (session,), {}),
+                (build_talon_indicator, (session,), {}),
+                (build_core_soc_tools_indicator, (session,), {}),
+                (build_wazuh_indexer_indicator, (), {}),
+                (_build_wazuh_catalog_indicator, (), {}),
+                (build_influx_health_indicator, (session,), {}),
+            ],
+        )
+    elif is_customer_user:
+        builders.append((_build_wazuh_catalog_indicator, (), {}))
 
     if is_admin:
-        indicators.append(await _build_connector_indicator(session))
-    if is_analyst_or_admin:
-        indicators.append(await _build_scheduler_indicator(session))
-    indicators.append(await _build_wazuh_catalog_indicator())
+        builders.extend(
+            [
+                (_build_connector_indicator, (session,), {}),
+                (build_license_indicator, (session,), {}),
+                (build_platform_storage_indicator, (session,), {}),
+            ],
+        )
+
+    indicators: List[SidebarHealthIndicator] = []
+    for builder, args, kwargs in builders:
+        indicator = await safe_build(builder, *args, **kwargs)
+        if indicator is not None:
+            indicators.append(indicator)
 
     return SidebarContextResponse(
         success=True,
@@ -191,5 +196,6 @@ async def build_sidebar_context(
         latest_version=version_fields.get("latest_version"),
         is_outdated=version_fields.get("is_outdated", False),
         release_url=version_fields.get("release_url"),
+        environment=get_environment_name(),
         indicators=indicators,
     )

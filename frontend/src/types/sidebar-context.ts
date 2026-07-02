@@ -6,6 +6,7 @@ export interface SidebarHealthIndicator {
 	label: string
 	detail?: string | null
 	count?: number | null
+	category?: string | null
 }
 
 export interface SidebarContextResponse {
@@ -15,5 +16,6 @@ export interface SidebarContextResponse {
 	latest_version: string | null
 	is_outdated: boolean
 	release_url?: string | null
+	environment: string
 	indicators: SidebarHealthIndicator[]
 }

@@ -4,7 +4,7 @@
 			<template #default>
 				<div class="flex items-start gap-4">
 					<n-avatar
-						class="mt-0.5"
+						class="mt-0.5 shrink-0"
 						object-fit="contain"
 						round
 						:size="40"

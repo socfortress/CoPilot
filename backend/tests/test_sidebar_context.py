@@ -1,7 +1,7 @@
 from datetime import datetime
 from datetime import timedelta
 
-from app.status.services.context import _is_scheduler_job_stale
+from app.status.services.context_indicators import _is_scheduler_job_stale
 
 
 def test_scheduler_job_stale_when_never_ran() -> None:

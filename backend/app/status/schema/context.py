@@ -15,6 +15,10 @@ class SidebarHealthIndicator(BaseModel):
     label: str
     detail: Optional[str] = None
     count: Optional[int] = None
+    category: Optional[str] = Field(
+        default=None,
+        description="UI grouping hint: triage | ai | operations | infrastructure | platform",
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -26,6 +30,7 @@ class SidebarContextResponse(BaseModel):
     latest_version: Optional[str] = None
     is_outdated: bool = False
     release_url: Optional[str] = None
+    environment: str = "PRODUCTION"
     indicators: List[SidebarHealthIndicator] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
