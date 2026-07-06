@@ -25,9 +25,7 @@ def _github_headers() -> dict[str, str]:
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
 )
-from app.integrations.copilot_searches.schema.copilot_searches import (
-    AggregationConfig,
-)
+from app.integrations.copilot_searches.schema.copilot_searches import AggregationConfig
 from app.integrations.copilot_searches.schema.copilot_searches import (
     AggregationFunction,
 )
