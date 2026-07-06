@@ -36,7 +36,6 @@
 		</CardEntity>
 
 		<n-modal
-			v-if="!isIntegration"
 			v-model:show="showDetails"
 			preset="card"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(400px, 90vh)', overflow: 'hidden' }"
@@ -44,7 +43,8 @@
 			:bordered="false"
 			segmented
 		>
-			<Markdown :source="data.details" />
+			<IntegrationDetails v-if="isIntegration" :integration="data" />
+			<Markdown v-else :source="data.details" />
 		</n-modal>
 	</div>
 </template>
@@ -57,6 +57,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Markdown from "@/components/common/Markdown.vue"
+import IntegrationDetails from "@/components/integrations/IntegrationDetails.vue"
 import { useNavigation } from "@/composables/useNavigation"
 
 const props = defineProps<{
