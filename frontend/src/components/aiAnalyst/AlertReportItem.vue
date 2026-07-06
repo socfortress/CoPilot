@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<CardEntity hoverable clickable @click="openDetails()">
+		<CardEntity hoverable>
 			<template v-if="alert" #headerMain>#{{ alert.alert_id }} - {{ alert.source }}</template>
 
 			<template v-if="alert?.alert_creation_time" #headerExtra>
@@ -64,6 +64,14 @@
 					<span>Report generated {{ formatDate(alert.report.created_at, dFormats.datetime) }}</span>
 				</div>
 			</template>
+
+			<template v-if="alert" #footerExtra>
+				<EntityDetailsButton
+					size="tiny"
+					:url="routeAiAnalystReport(alert.report.id).fullUrl()"
+					@view="openDetails()"
+				/>
+			</template>
 		</CardEntity>
 
 		<n-modal
@@ -92,7 +100,9 @@ import { NModal } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import AlertReportDetails from "./AlertReportDetails.vue"
@@ -102,6 +112,8 @@ const props = defineProps<{
 }>()
 
 const { alertData } = toRefs(props)
+
+const { routeAiAnalystReport } = useNavigation()
 
 const TimeIcon = "carbon:time"
 const StatusIcon = "carbon:circle-dash"

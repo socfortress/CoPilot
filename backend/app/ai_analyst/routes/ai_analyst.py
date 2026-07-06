@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai_analyst.schema.ai_analyst import AlertAnalysisResponse
 from app.ai_analyst.schema.ai_analyst import AlertsWithReportsListResponse
+from app.ai_analyst.schema.ai_analyst import AlertWithReportDetailResponse
 from app.ai_analyst.schema.ai_analyst import CreateJobRequest
 from app.ai_analyst.schema.ai_analyst import CreateJobResponse
 from app.ai_analyst.schema.ai_analyst import IocListResponse
@@ -35,6 +36,8 @@ from app.ai_analyst.schema.ai_analyst import UpdateJobRequest
 from app.ai_analyst.schema.ai_analyst import UpdateJobResponse
 from app.ai_analyst.services.ai_analyst import create_job
 from app.ai_analyst.services.ai_analyst import get_alert_analysis
+from app.ai_analyst.services.ai_analyst import get_alert_with_report_by_alert_id
+from app.ai_analyst.services.ai_analyst import get_alert_with_report_by_report_id
 from app.ai_analyst.services.ai_analyst import get_job
 from app.ai_analyst.services.ai_analyst import get_my_review
 from app.ai_analyst.services.ai_analyst import get_palace_consolidation
@@ -250,6 +253,42 @@ async def list_alerts_with_reports_route(
         success=True,
         message=f"{len(alerts)} alerts with reports found",
         alerts=alerts,
+    )
+
+
+@ai_analyst_router.get(
+    "/alerts_with_reports/{alert_id}",
+    response_model=AlertWithReportDetailResponse,
+    description="Fetch a single alert with its latest AI analyst report",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_alert_with_report_by_alert_id_route(
+    alert_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> AlertWithReportDetailResponse:
+    alert = await get_alert_with_report_by_alert_id(alert_id, session)
+    return AlertWithReportDetailResponse(
+        success=True,
+        message="Alert with report retrieved",
+        alert=alert,
+    )
+
+
+@ai_analyst_router.get(
+    "/reports/{report_id}",
+    response_model=AlertWithReportDetailResponse,
+    description="Fetch alert metadata for a single AI analyst report",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_alert_with_report_by_report_id_route(
+    report_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> AlertWithReportDetailResponse:
+    alert = await get_alert_with_report_by_report_id(report_id, session)
+    return AlertWithReportDetailResponse(
+        success=True,
+        message="Alert with report retrieved",
+        alert=alert,
     )
 
 

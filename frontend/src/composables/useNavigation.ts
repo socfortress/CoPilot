@@ -112,6 +112,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "AiAnalyst" })
 	}
 
+	function routeAiAnalystReport(reportId?: number) {
+		if (reportId != null) {
+			return routerConstructor({
+				name: "AiAnalystReport",
+				params: { id: reportId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "AiAnalyst" })
+	}
+
 	return {
 		routeCustomer,
 		routeAgent,
@@ -130,6 +141,7 @@ export function useNavigation() {
 		routeIncidentManagementCases,
 		routeEventSearch,
 		routeSSOConfig,
-		routeAiAnalystFeedbackReview
+		routeAiAnalystFeedbackReview,
+		routeAiAnalystReport
 	}
 }

@@ -106,6 +106,17 @@ export default {
 			params: customerCode ? { customer_code: customerCode } : {}
 		})
 	},
+	getAlertWithReportByAlertId(alertId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { alert: AlertWithReport }>(
+			`/ai_analyst/alerts_with_reports/${alertId}`,
+			{ signal }
+		)
+	},
+	getAlertWithReportByReportId(reportId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { alert: AlertWithReport }>(`/ai_analyst/reports/${reportId}`, {
+			signal
+		})
+	},
 
 	// Combined alert analysis
 	getAlertAnalysis(alertId: number) {

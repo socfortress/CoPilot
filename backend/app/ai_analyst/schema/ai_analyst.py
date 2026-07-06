@@ -258,6 +258,12 @@ class AlertsWithReportsListResponse(BaseModel):
     alerts: List[AlertWithReportResponse]
 
 
+class AlertWithReportDetailResponse(BaseModel):
+    success: bool
+    message: str
+    alert: Optional[AlertWithReportResponse] = None
+
+
 class AlertAnalysisResponse(BaseModel):
     success: bool
     message: str

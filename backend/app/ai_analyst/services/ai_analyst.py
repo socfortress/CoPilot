@@ -373,6 +373,55 @@ async def list_alerts_with_reports(
     ]
 
 
+async def get_alert_with_report_by_report_id(
+    report_id: int,
+    session: AsyncSession,
+) -> AlertWithReportResponse:
+    result = await session.execute(
+        select(Alert, AiAnalystReport).join(AiAnalystReport, AiAnalystReport.alert_id == Alert.id).where(AiAnalystReport.id == report_id),
+    )
+    row = result.first()
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
+    alert, report = row
+    return AlertWithReportResponse(
+        alert_id=alert.id,
+        alert_name=alert.alert_name,
+        customer_code=alert.customer_code,
+        status=alert.status,
+        source=alert.source,
+        assigned_to=alert.assigned_to,
+        alert_creation_time=alert.alert_creation_time,
+        report=_report_to_response(report),
+    )
+
+
+async def get_alert_with_report_by_alert_id(
+    alert_id: int,
+    session: AsyncSession,
+) -> AlertWithReportResponse:
+    result = await session.execute(
+        select(Alert, AiAnalystReport)
+        .join(AiAnalystReport, AiAnalystReport.alert_id == Alert.id)
+        .where(Alert.id == alert_id)
+        .order_by(AiAnalystReport.created_at.desc()),
+    )
+    row = result.first()
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
+    alert, report = row
+    return AlertWithReportResponse(
+        alert_id=alert.id,
+        alert_name=alert.alert_name,
+        customer_code=alert.customer_code,
+        status=alert.status,
+        source=alert.source,
+        assigned_to=alert.assigned_to,
+        alert_creation_time=alert.alert_creation_time,
+        report=_report_to_response(report),
+    )
+
+
 # --- Combined alert analysis lookup ---
 
 

@@ -9,6 +9,20 @@ export const analystRoutes: RouteRecordRaw[] = [
 		meta: { title: "AI Analyst", auth: true, roles: RouteRole.All }
 	},
 	{
+		path: "/ai-analyst/reports",
+		redirect: "/ai-analyst"
+	},
+	{
+		path: "/ai-analyst/reports/:id",
+		name: "AiAnalystReport",
+		component: () => import("@/views/aiAnalyst/AiAnalystReport.vue"),
+		meta: { title: "AI Analyst Report", auth: true, roles: RouteRole.All }
+	},
+	{
+		path: "/ai-analyst/feedback",
+		redirect: "/ai-analyst"
+	},
+	{
 		path: "/ai-analyst/feedback/:id",
 		name: "AiAnalystFeedbackReview",
 		component: () => import("@/views/aiAnalyst/AiAnalystFeedbackReview.vue"),
