@@ -101,6 +101,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "SSOConfig" })
 	}
 
+	function routeUser(userId?: number) {
+		if (userId != null) {
+			return routerConstructor({
+				name: "UserView",
+				params: { id: userId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "Users" })
+	}
+
 	function routeAiAnalystFeedbackReview(reviewId?: number) {
 		if (reviewId != null) {
 			return routerConstructor({
@@ -141,6 +152,7 @@ export function useNavigation() {
 		routeIncidentManagementCases,
 		routeEventSearch,
 		routeSSOConfig,
+		routeUser,
 		routeAiAnalystFeedbackReview,
 		routeAiAnalystReport
 	}

@@ -24,9 +24,11 @@ from app.auth.schema.auth import UpdateUserRoleRequest
 from app.auth.schema.auth import UserLoginResponse
 from app.auth.schema.auth import UserResponse
 from app.auth.schema.user import UserBaseResponse
+from app.auth.schema.user import UserDetailResponse
 from app.auth.services.totp import is_2fa_enabled
 from app.auth.services.universal import delete_user
 from app.auth.services.universal import find_user
+from app.auth.services.universal import get_user_by_id
 from app.auth.services.universal import select_all_users
 from app.auth.services.universal import update_last_login
 from app.auth.utils import AuthHandler
@@ -356,6 +358,21 @@ async def get_users(session: AsyncSession = Depends(get_db)):
         users=user_list,
         message="Users retrieved successfully",
         success=True,
+    )
+
+
+@auth_router.get(
+    "/users/{user_id}",
+    response_model=UserDetailResponse,
+    description="Get a single user by id",
+    dependencies=[Security(AuthHandler().require_any_scope("analyst", "admin"))],
+)
+async def get_user_route(user_id: int) -> UserDetailResponse:
+    user = await get_user_by_id(user_id)
+    return UserDetailResponse(
+        success=True,
+        message="User retrieved successfully",
+        user=user,
     )
 
 
