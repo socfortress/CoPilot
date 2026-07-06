@@ -24,6 +24,12 @@ class AvailableNetworkConnectorsResponse(BaseModel):
     success: bool
 
 
+class AvailableNetworkConnectorDetailResponse(BaseModel):
+    network_connector: NetworkConnectorsWithAuthKeys
+    message: str
+    success: bool
+
+
 class CreateNetworkConnectorsService(BaseModel):
     auth_type: str = Field(
         ...,

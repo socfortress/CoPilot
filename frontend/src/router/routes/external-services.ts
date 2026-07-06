@@ -29,6 +29,12 @@ export const externalServicesRoutes: RouteRecordRaw[] = [
 				meta: { title: "Network Connectors" }
 			},
 			{
+				path: "network-connectors/:id",
+				name: "ExternalServices-NetworkConnector",
+				component: () => import("@/views/externalServices/NetworkConnector.vue"),
+				meta: { title: "Network Connector" }
+			},
+			{
 				path: "shuffle-app-auth",
 				name: "ExternalServices-ShuffleAppAuth",
 				component: () => import("@/views/externalServices/ShuffleAppAuth.vue"),

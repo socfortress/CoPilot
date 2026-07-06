@@ -123,6 +123,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "ExternalServices-ThirdPartyIntegrations" })
 	}
 
+	function routeNetworkConnector(networkConnectorId?: number) {
+		if (networkConnectorId != null) {
+			return routerConstructor({
+				name: "ExternalServices-NetworkConnector",
+				params: { id: networkConnectorId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "ExternalServices-NetworkConnectors" })
+	}
+
 	function routeSchedulerJob(jobId?: string) {
 		if (jobId) {
 			return routerConstructor({
@@ -187,6 +198,7 @@ export function useNavigation() {
 		routeSSOConfig,
 		routeAudit,
 		routeThirdPartyIntegration,
+		routeNetworkConnector,
 		routeSchedulerJob,
 		routeUser,
 		routeAiAnalystFeedbackReview,
