@@ -101,6 +101,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "SSOConfig" })
 	}
 
+	function routeAiAnalystFeedbackReview(reviewId?: number) {
+		if (reviewId != null) {
+			return routerConstructor({
+				name: "AiAnalystFeedbackReview",
+				params: { id: reviewId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "AiAnalyst" })
+	}
+
 	return {
 		routeCustomer,
 		routeAgent,
@@ -118,6 +129,7 @@ export function useNavigation() {
 		routeIncidentManagementAlerts,
 		routeIncidentManagementCases,
 		routeEventSearch,
-		routeSSOConfig
+		routeSSOConfig,
+		routeAiAnalystFeedbackReview
 	}
 }

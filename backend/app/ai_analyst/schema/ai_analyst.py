@@ -350,6 +350,12 @@ class ReviewListResponse(BaseModel):
     reviews: List[ReviewResponse]
 
 
+class ReviewDetailResponse(BaseModel):
+    success: bool
+    message: str
+    review: Optional[ReviewResponse] = None
+
+
 class QueuePalaceLessonRequest(BaseModel):
     customer_code: str = Field(..., max_length=64, description="Customer code this lesson applies to")
     lesson_type: LessonType = Field(..., description="MemPalace room / category")

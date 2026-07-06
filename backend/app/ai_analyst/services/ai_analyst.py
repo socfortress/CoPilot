@@ -665,6 +665,19 @@ async def list_reviews_by_customer(
     return [_review_to_response(r) for r in reviews]
 
 
+async def get_review_by_id(
+    review_id: int,
+    session: AsyncSession,
+) -> ReviewResponse:
+    result = await session.execute(
+        select(AiAnalystReview).where(AiAnalystReview.id == review_id).options(selectinload(AiAnalystReview.ioc_reviews)),
+    )
+    review = result.scalars().first()
+    if review is None:
+        raise HTTPException(status_code=404, detail=f"Review {review_id} not found")
+    return _review_to_response(review)
+
+
 def _pct(numerator: int, denominator: int) -> Optional[float]:
     """Percentage helper — None when the denominator is 0 so the UI can
     render a dash instead of a misleading '0%'."""

@@ -144,6 +144,11 @@ export default {
 			`/ai_analyst/reviews/customer/${customerCode}`
 		)
 	},
+	getReview(reviewId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { review: AiAnalystReview }>(`/ai_analyst/reviews/${reviewId}`, {
+			signal
+		})
+	},
 	/**
 	 * SQL-side feedback dashboard rollup — counts, averages, template
 	 * breakdown, IOC accuracy, and embedded recent reviews for drill-in.

@@ -22,6 +22,7 @@ from app.ai_analyst.schema.ai_analyst import QueuePalaceLessonResponse
 from app.ai_analyst.schema.ai_analyst import ReplayRequest
 from app.ai_analyst.schema.ai_analyst import ReplayResponse
 from app.ai_analyst.schema.ai_analyst import ReportListResponse
+from app.ai_analyst.schema.ai_analyst import ReviewDetailResponse
 from app.ai_analyst.schema.ai_analyst import ReviewListResponse
 from app.ai_analyst.schema.ai_analyst import ReviewStatsResponse
 from app.ai_analyst.schema.ai_analyst import SubmitIocsRequest
@@ -37,6 +38,7 @@ from app.ai_analyst.services.ai_analyst import get_alert_analysis
 from app.ai_analyst.services.ai_analyst import get_job
 from app.ai_analyst.services.ai_analyst import get_my_review
 from app.ai_analyst.services.ai_analyst import get_palace_consolidation
+from app.ai_analyst.services.ai_analyst import get_review_by_id
 from app.ai_analyst.services.ai_analyst import get_review_stats
 from app.ai_analyst.services.ai_analyst import list_alerts_with_reports
 from app.ai_analyst.services.ai_analyst import list_iocs_by_alert
@@ -380,6 +382,25 @@ async def queue_palace_lesson_route(
 ) -> QueuePalaceLessonResponse:
     logger.info(f"Queuing palace lesson for customer {request.customer_code}")
     return await queue_palace_lesson(request, session)
+
+
+@ai_analyst_router.get(
+    "/reviews/{review_id}",
+    response_model=ReviewDetailResponse,
+    description="Fetch a single review by id (with nested IOC reviews)",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_review_by_id_route(
+    review_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> ReviewDetailResponse:
+    logger.info(f"Fetching review {review_id}")
+    review = await get_review_by_id(review_id, session)
+    return ReviewDetailResponse(
+        success=True,
+        message="Review retrieved",
+        review=review,
+    )
 
 
 @ai_analyst_router.get(
