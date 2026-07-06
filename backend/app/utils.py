@@ -16,6 +16,7 @@ from fastapi import Security
 from fastapi.exceptions import RequestValidationError
 from loguru import logger
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
@@ -149,6 +150,12 @@ class LogEntryModel(BaseModel):
 
 
 class LogRetrieveModel(LogEntryModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    # DB allows NULL on these columns; keep LogEntryModel strict for inserts
+    route: Optional[str] = None
+    method: Optional[str] = None
+    message: Optional[str] = None
     timestamp: datetime = Field(..., examples=[datetime.now()], description="Timestamp")
 
 
@@ -299,7 +306,12 @@ class Logger:
         Returns:
             None
         """
-        log_entry = LogEntry(**log_entry_model.model_dump())
+        data = log_entry_model.model_dump()
+        # ponytail: log_entries.message/additional_info are varchar(5024) — truncate here once for all callers
+        for field in ("message", "additional_info"):
+            if data.get(field):
+                data[field] = data[field][:5024]
+        log_entry = LogEntry(**data)
         self.session.add(log_entry)
         await self.session.commit()
 
