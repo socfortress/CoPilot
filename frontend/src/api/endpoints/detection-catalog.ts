@@ -34,9 +34,10 @@ export default {
 	 * detections table, data sources, references). The backend uses ``{story_name:path}``
 	 * so spaces and other characters are tolerated — we encodeURIComponent here too.
 	 */
-	getStory(storyName: string) {
+	getStory(storyName: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & CatalogStoryDetailResponse>(
-			`/copilot_searches/catalog/stories/${encodeURIComponent(storyName)}`
+			`/copilot_searches/catalog/stories/${encodeURIComponent(storyName)}`,
+			{ signal }
 		)
 	},
 

@@ -33,5 +33,11 @@ export const analystRoutes: RouteRecordRaw[] = [
 		name: "DetectionCatalog",
 		component: () => import("@/views/aiAnalyst/DetectionCatalog.vue"),
 		meta: { title: "Detections Catalog", auth: true, roles: RouteRole.All }
+	},
+	{
+		path: "/detection-catalog/stories/:name",
+		name: "DetectionCatalogStory",
+		component: () => import("@/views/aiAnalyst/DetectionCatalogStory.vue"),
+		meta: { title: "Analytic Story", auth: true, roles: RouteRole.All }
 	}
 ]

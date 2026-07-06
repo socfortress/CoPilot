@@ -156,6 +156,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "Users" })
 	}
 
+	function routeDetectionCatalogStory(storyName?: string) {
+		if (storyName) {
+			return routerConstructor({
+				name: "DetectionCatalogStory",
+				params: { name: storyName }
+			})
+		}
+
+		return routerConstructor({ name: "DetectionCatalog" })
+	}
+
 	function routeAiAnalystFeedbackReview(reviewId?: number) {
 		if (reviewId != null) {
 			return routerConstructor({
@@ -201,6 +212,7 @@ export function useNavigation() {
 		routeNetworkConnector,
 		routeSchedulerJob,
 		routeUser,
+		routeDetectionCatalogStory,
 		routeAiAnalystFeedbackReview,
 		routeAiAnalystReport
 	}
