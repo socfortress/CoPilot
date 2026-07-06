@@ -1,9 +1,21 @@
+from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
+
+
+def _normalize_encrypted_value(value: Any) -> Optional[str]:
+    """Graylog 7.x returns encrypted attribute values (e.g. ``tls_key_password``)
+    as an ``EncryptedValue`` dict like ``{"is_set": true}`` instead of a plain
+    string. Collapse that shape back to a string so the schema stays ``str``.
+    """
+    if isinstance(value, dict):
+        return "***" if value.get("is_set") else None
+    return value
 
 
 class Document(BaseModel):
@@ -80,6 +92,8 @@ class ConfiguredInputAttributes(BaseModel):
     charset_name: Optional[str] = None
     allow_override_date: Optional[bool] = None
 
+    _normalize_tls_key_password = field_validator("tls_key_password", mode="before")(_normalize_encrypted_value)
+
 
 class ConfiguredInput(BaseModel):
     title: str
@@ -109,6 +123,8 @@ class MessageInputAttributes(BaseModel):
     tls_key_password: Optional[str] = None
     max_message_size: Optional[int] = None
     tls_client_auth: Optional[str] = Field(None, description="TLS client authentication")
+
+    _normalize_tls_key_password = field_validator("tls_key_password", mode="before")(_normalize_encrypted_value)
 
 
 class MessageInput(BaseModel):
