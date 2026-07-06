@@ -2,9 +2,13 @@ import type { FlaskBaseResponse } from "@/types/flask"
 import type { AvailableMonitoringAlert, CustomProvisionPriority, MonitoringAlert } from "@/types/monitoring-alerts"
 import { HttpClient } from "../http-client"
 
+/** Target Graylog instance for provisioning. "network" targets Graylog02 (Graylog-Network). */
+export type GraylogInstance = "default" | "network"
+
 export interface ProvisionsMonitoringAlertParams {
 	searchWithinLast: number
 	executeEvery: number
+	graylogInstance?: GraylogInstance
 }
 
 export interface CustomProvisionPayload {
@@ -19,6 +23,7 @@ export interface CustomProvisionPayload {
 	}[]
 	search_within_ms: number
 	execute_every_ms: number
+	graylog_instance?: GraylogInstance
 }
 
 export default {
@@ -31,7 +36,8 @@ export default {
 		return HttpClient.post<FlaskBaseResponse>(`/monitoring_alert/provision`, {
 			search_within_last: params.searchWithinLast,
 			execute_every: params.executeEvery,
-			alert_name: alertName
+			alert_name: alertName,
+			graylog_instance: params.graylogInstance ?? "default"
 		})
 	},
 	customProvision(payload: CustomProvisionPayload) {

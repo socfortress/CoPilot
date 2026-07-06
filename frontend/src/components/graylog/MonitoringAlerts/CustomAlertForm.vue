@@ -20,6 +20,9 @@
 					</n-form-item>
 				</div>
 				<div class="flex flex-col gap-2">
+					<n-form-item label="Graylog Instance" path="graylog_instance">
+						<n-select v-model:value="form.graylog_instance" :options="graylogInstanceOptions" />
+					</n-form-item>
 					<n-form-item label="Description" path="alert_description">
 						<n-input
 							v-model:value.trim="form.alert_description"
@@ -156,7 +159,7 @@
 
 <script setup lang="ts">
 import type { FormInst, FormItemRule, FormRules, FormValidationError, MessageReactive } from "naive-ui"
-import type { CustomProvisionPayload } from "@/api/endpoints/monitoring-alerts"
+import type { CustomProvisionPayload, GraylogInstance } from "@/api/endpoints/monitoring-alerts"
 import type { ApiError } from "@/types/common"
 import type { Stream } from "@/types/graylog/stream"
 import _get from "lodash/get"
@@ -182,6 +185,7 @@ interface CustomProvisionForm {
 	search_within_seconds: number
 	execute_every_seconds: number
 	streams: string[]
+	graylog_instance: GraylogInstance
 }
 
 const emit = defineEmits<{
@@ -227,6 +231,11 @@ const alertPriorityOptions: { label: string; value: CustomProvisionPriority }[] 
 	{ label: "Low", value: CustomProvisionPriority.LOW },
 	{ label: "Medium", value: CustomProvisionPriority.MEDIUM },
 	{ label: "High", value: CustomProvisionPriority.HIGH }
+]
+
+const graylogInstanceOptions: { label: string; value: GraylogInstance }[] = [
+	{ label: "Default (Graylog01)", value: "default" },
+	{ label: "Network (Graylog02)", value: "network" }
 ]
 
 const rules: FormRules = {
@@ -372,7 +381,8 @@ function getClearForm(): CustomProvisionForm {
 		custom_fields: [],
 		search_within_seconds: 1,
 		execute_every_seconds: 1,
-		streams: []
+		streams: [],
+		graylog_instance: "default"
 	}
 }
 
@@ -398,7 +408,8 @@ function submit() {
 		custom_fields: form.value.custom_fields,
 		search_within_ms: _toSafeInteger(form.value.search_within_seconds) * 1000,
 		execute_every_ms: _toSafeInteger(form.value.execute_every_seconds) * 1000,
-		streams: form.value.streams || []
+		streams: form.value.streams || [],
+		graylog_instance: form.value.graylog_instance
 	}
 
 	Api.monitoringAlerts

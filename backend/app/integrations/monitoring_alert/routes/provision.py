@@ -12,9 +12,13 @@ from app.auth.routes.auth import AuthHandler
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from app.connectors.graylog.services.streams import get_streams
+from app.connectors.graylog.utils.routing import GraylogContext
+from app.connectors.graylog.utils.routing import clear_graylog_context
+from app.connectors.graylog.utils.routing import set_graylog_context
 from app.db.db_session import get_db
 from app.db.universal_models import CustomersMeta
 from app.integrations.monitoring_alert.schema.provision import AvailableMonitoringAlerts
+from app.integrations.monitoring_alert.schema.provision import GraylogInstance
 from app.integrations.monitoring_alert.schema.provision import (
     AvailableMonitoringAlertsResponse,
 )
@@ -639,6 +643,25 @@ PROVISION_FUNCTIONS = {
 }
 
 
+def graylog_context_for_instance(instance: GraylogInstance) -> GraylogContext:
+    """
+    Map the requested Graylog instance to its connector context.
+
+    Network sources (Fortinet/SonicWall/syslog) are ingested by Graylog02, so
+    their event definitions must be provisioned on the Graylog-Network connector
+    or they never fire. Everything else defaults to Graylog01.
+
+    Args:
+        instance (GraylogInstance): The requested target instance.
+
+    Returns:
+        GraylogContext: The Graylog connector context to use for the request.
+    """
+    if instance == GraylogInstance.NETWORK:
+        return GraylogContext.NETWORK
+    return GraylogContext.WAZUH
+
+
 async def check_if_event_definition_exists(event_definition: str) -> bool:
     """
     Check if the event definition exists.
@@ -696,19 +719,25 @@ async def get_available_monitoring_alerts_route() -> AvailableMonitoringAlertsRe
 async def provision_monitoring_alert_route(
     request: ProvisionMonitoringAlertRequest,
 ) -> ProvisionWazuhMonitoringAlertResponse:
-    await check_if_event_definition_exists(request.alert_name.replace("_", " "))
+    # Route every downstream Graylog call (existence check + event-definition
+    # creation) to the requested instance. Network sources land on Graylog02.
+    set_graylog_context(graylog_context_for_instance(request.graylog_instance))
+    try:
+        await check_if_event_definition_exists(request.alert_name.replace("_", " "))
 
-    # Look up the provision function based on request.alert_name
-    provision_function = PROVISION_FUNCTIONS.get(request.alert_name)
+        # Look up the provision function based on request.alert_name
+        provision_function = PROVISION_FUNCTIONS.get(request.alert_name)
 
-    if provision_function is None:
-        raise HTTPException(
-            status_code=400,
-            detail=f"No provision function found for alert name {request.alert_name}",
-        )
+        if provision_function is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"No provision function found for alert name {request.alert_name}",
+            )
 
-    # Invoke the provision function
-    await provision_function(request)
+        # Invoke the provision function
+        await provision_function(request)
+    finally:
+        clear_graylog_context()
 
     return ProvisionWazuhMonitoringAlertResponse(success=True, message=f"Monitoring alert {request.alert_name} provisioned successfully.")
 
@@ -723,23 +752,29 @@ async def provision_custom_monitoring_alert_route(
     request: CustomMonitoringAlertProvisionModel,
     session: AsyncSession = Depends(get_db),
 ) -> ProvisionWazuhMonitoringAlertResponse:
-    await check_if_event_definition_exists(request.alert_name.replace("_", " "))
-    # ! This is commented out because it is not used in the code. Will revisit later ! #
-    # customer_code = next((field.value for field in request.custom_fields if field.name == "CUSTOMER_CODE"), None)
-    # await get_customer_meta(customer_code=customer_code, session=session)
-    # Look up the provision function based on request.alert_name
-    provision_function = PROVISION_FUNCTIONS.get("CUSTOM")
+    # Route every downstream Graylog call (existence check + event-definition
+    # creation) to the requested instance. Network sources land on Graylog02.
+    set_graylog_context(graylog_context_for_instance(request.graylog_instance))
+    try:
+        await check_if_event_definition_exists(request.alert_name.replace("_", " "))
+        # ! This is commented out because it is not used in the code. Will revisit later ! #
+        # customer_code = next((field.value for field in request.custom_fields if field.name == "CUSTOMER_CODE"), None)
+        # await get_customer_meta(customer_code=customer_code, session=session)
+        # Look up the provision function based on request.alert_name
+        provision_function = PROVISION_FUNCTIONS.get("CUSTOM")
 
-    logger.info(f"Provisioning custom alert {request}")
+        logger.info(f"Provisioning custom alert {request}")
 
-    if provision_function is None:
-        raise HTTPException(
-            status_code=400,
-            detail=f"No provision function found for alert name {request.alert_name}",
-        )
+        if provision_function is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"No provision function found for alert name {request.alert_name}",
+            )
 
-    # Invoke the provision function
-    await provision_function(request)
+        # Invoke the provision function
+        await provision_function(request)
+    finally:
+        clear_graylog_context()
 
     return ProvisionWazuhMonitoringAlertResponse(success=True, message=f"Monitoring alert {request.alert_name} provisioned successfully.")
 
