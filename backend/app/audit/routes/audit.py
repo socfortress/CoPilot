@@ -15,8 +15,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.models.audit import AuditAction
 from app.audit.models.audit import AuditResult
+from app.audit.schema.audit import AuditLogDetailResponse
 from app.audit.schema.audit import AuditLogEntry
 from app.audit.schema.audit import AuditLogResponse
+from app.audit.services.query import get_audit_log_by_id
 from app.audit.services.query import list_audit_logs
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
@@ -83,4 +85,22 @@ async def get_audit_logs(
         pagination={"total": total, "skip": skip, "limit": limit},
         success=True,
         message=f"Retrieved {len(rows)} of {total} audit log entries",
+    )
+
+
+@audit_router.get(
+    "/{audit_id}",
+    response_model=AuditLogDetailResponse,
+    description="Get a single audit log entry by id",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
+async def get_audit_log(
+    audit_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> AuditLogDetailResponse:
+    row = await get_audit_log_by_id(session, audit_id)
+    return AuditLogDetailResponse(
+        audit_log=AuditLogEntry.model_validate(row),
+        success=True,
+        message="Audit log entry retrieved successfully",
     )

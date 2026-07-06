@@ -101,6 +101,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "SSOConfig" })
 	}
 
+	function routeAudit(auditId?: number) {
+		if (auditId != null) {
+			return routerConstructor({
+				name: "AuditEntry",
+				params: { id: auditId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "Audit" })
+	}
+
 	function routeSchedulerJob(jobId?: string) {
 		if (jobId) {
 			return routerConstructor({
@@ -163,6 +174,7 @@ export function useNavigation() {
 		routeIncidentManagementCases,
 		routeEventSearch,
 		routeSSOConfig,
+		routeAudit,
 		routeSchedulerJob,
 		routeUser,
 		routeAiAnalystFeedbackReview,
