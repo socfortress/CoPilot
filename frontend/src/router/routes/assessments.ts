@@ -9,6 +9,12 @@ export const assessmentsRoutes: RouteRecordRaw[] = [
 		meta: { title: "Scheduler", auth: true, roles: RouteRole.All }
 	},
 	{
+		path: "/scheduler/:id",
+		name: "SchedulerJob",
+		component: () => import("@/views/SchedulerJob.vue"),
+		meta: { title: "Scheduler Job", auth: true, roles: RouteRole.All }
+	},
+	{
 		path: "/cloud-security-assessment",
 		name: "CloudSecurityAssessment",
 		component: () => import("@/views/CloudSecurityAssessment.vue"),

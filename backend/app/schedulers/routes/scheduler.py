@@ -15,6 +15,7 @@ from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.scheduler import get_function_by_name
 from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler
+from app.schedulers.schema.scheduler import JobDetailResponse
 from app.schedulers.schema.scheduler import JobsNextRunResponse
 from app.schedulers.schema.scheduler import JobsResponse
 
@@ -84,6 +85,28 @@ async def manage_job_metadata(session, job_id, action, **kwargs):
     return job_metadata
 
 
+def build_job_payload(job, job_metadata: JobMetadata | None) -> dict:
+    return {
+        "id": job.id,
+        "name": job.name,
+        "time_interval": job_metadata.time_interval if job_metadata else 0,
+        "enabled": job_metadata.enabled if job_metadata else job.next_run_time is not None,
+        "description": job_metadata.job_description if job_metadata else None,
+        "last_success": job_metadata.last_success if job_metadata else None,
+    }
+
+
+async def get_job_payload(job_id: str, session: AsyncSession) -> dict:
+    scheduler = await get_scheduler_instance()
+    job = await find_job_by_id(scheduler, job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    job_metadata = await session.execute(select(JobMetadata).filter_by(job_id=job_id))
+    job_metadata = job_metadata.scalars().first()
+    return build_job_payload(job, job_metadata)
+
+
 @scheduler_router.get("", response_model=JobsResponse, description="Get all jobs")
 async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
     """
@@ -105,21 +128,22 @@ async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
         )
         job_metadata = job_metadata.scalars().first()
         logger.info(f"job_metadata: {job_metadata}")
-        apscheduler_jobs.append(
-            {
-                "id": job.id,
-                "name": job.name,
-                "time_interval": job_metadata.time_interval,
-                "enabled": job_metadata.enabled,
-                "description": job_metadata.job_description,
-                "last_success": job_metadata.last_success,
-            },
-        )
+        apscheduler_jobs.append(build_job_payload(job, job_metadata))
     logger.info(f"apscheduler_jobs: {apscheduler_jobs}")
     return JobsResponse(
         jobs=apscheduler_jobs,
         success=True,
         message="Jobs successfully retrieved.",
+    )
+
+
+@scheduler_router.get("/{job_id}", response_model=JobDetailResponse, description="Get a single job by id")
+async def get_job(job_id: str, session: AsyncSession = Depends(get_db)) -> JobDetailResponse:
+    job = await get_job_payload(job_id, session)
+    return JobDetailResponse(
+        job=job,
+        success=True,
+        message="Job successfully retrieved.",
     )
 
 

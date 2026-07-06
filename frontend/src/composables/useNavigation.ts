@@ -101,6 +101,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "SSOConfig" })
 	}
 
+	function routeSchedulerJob(jobId?: string) {
+		if (jobId) {
+			return routerConstructor({
+				name: "SchedulerJob",
+				params: { id: jobId }
+			})
+		}
+
+		return routerConstructor({ name: "Scheduler" })
+	}
+
 	function routeUser(userId?: number) {
 		if (userId != null) {
 			return routerConstructor({
@@ -152,6 +163,7 @@ export function useNavigation() {
 		routeIncidentManagementCases,
 		routeEventSearch,
 		routeSSOConfig,
+		routeSchedulerJob,
 		routeUser,
 		routeAiAnalystFeedbackReview,
 		routeAiAnalystReport
