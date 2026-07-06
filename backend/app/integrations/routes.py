@@ -36,6 +36,7 @@ from app.integrations.models.customer_integration_settings import (
     IntegrationSubscription,
 )
 from app.integrations.schema import AuthKey
+from app.integrations.schema import AvailableIntegrationDetailResponse
 from app.integrations.schema import AvailableIntegrationsResponse
 from app.integrations.schema import CreateIntegrationAuthKeys
 from app.integrations.schema import CreateIntegrationService
@@ -99,6 +100,25 @@ async def fetch_available_integrations(session: AsyncSession):
         integrations_with_auth_keys.append(integration_data)
 
     return integrations_with_auth_keys
+
+
+async def fetch_available_integration_by_id(session: AsyncSession, integration_id: int) -> IntegrationWithAuthKeys:
+    stmt = (
+        select(AvailableIntegrations).options(joinedload(AvailableIntegrations.auth_keys)).where(AvailableIntegrations.id == integration_id)
+    )
+    result = await session.execute(stmt)
+    integration = result.unique().scalar_one_or_none()
+    if integration is None:
+        raise HTTPException(status_code=404, detail=f"Integration {integration_id} not found")
+
+    auth_keys = [AuthKey(auth_key_name=key.auth_key_name) for key in integration.auth_keys]
+    return IntegrationWithAuthKeys(
+        id=integration.id,
+        integration_name=integration.integration_name,
+        description=integration.description,
+        integration_details=integration.integration_details,
+        auth_keys=auth_keys,
+    )
 
 
 async def validate_integration_name(integration_name: str, session: AsyncSession):
@@ -600,6 +620,24 @@ async def get_available_integrations(
     return AvailableIntegrationsResponse(
         available_integrations=available_integrations,
         message="Available integrations successfully retrieved.",
+        success=True,
+    )
+
+
+@integration_settings_router.get(
+    "/available_integrations/{integration_id}",
+    response_model=AvailableIntegrationDetailResponse,
+    description="Get a single available integration by id.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_available_integration(
+    integration_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> AvailableIntegrationDetailResponse:
+    integration = await fetch_available_integration_by_id(session, integration_id)
+    return AvailableIntegrationDetailResponse(
+        available_integration=integration,
+        message="Available integration successfully retrieved.",
         success=True,
     )
 

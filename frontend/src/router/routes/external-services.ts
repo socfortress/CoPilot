@@ -17,6 +17,12 @@ export const externalServicesRoutes: RouteRecordRaw[] = [
 				meta: { title: "Third Party Integrations" }
 			},
 			{
+				path: "third-party-integrations/:id",
+				name: "ExternalServices-ThirdPartyIntegration",
+				component: () => import("@/views/externalServices/ThirdPartyIntegration.vue"),
+				meta: { title: "Third Party Integration" }
+			},
+			{
 				path: "network-connectors",
 				name: "ExternalServices-NetworkConnectors",
 				component: () => import("@/views/externalServices/NetworkConnectors.vue"),

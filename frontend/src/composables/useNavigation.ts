@@ -112,6 +112,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "Audit" })
 	}
 
+	function routeThirdPartyIntegration(integrationId?: number) {
+		if (integrationId != null) {
+			return routerConstructor({
+				name: "ExternalServices-ThirdPartyIntegration",
+				params: { id: integrationId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "ExternalServices-ThirdPartyIntegrations" })
+	}
+
 	function routeSchedulerJob(jobId?: string) {
 		if (jobId) {
 			return routerConstructor({
@@ -175,6 +186,7 @@ export function useNavigation() {
 		routeEventSearch,
 		routeSSOConfig,
 		routeAudit,
+		routeThirdPartyIntegration,
 		routeSchedulerJob,
 		routeUser,
 		routeAiAnalystFeedbackReview,

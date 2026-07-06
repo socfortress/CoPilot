@@ -26,16 +26,17 @@
 				</div>
 			</template>
 			<template #footerExtra>
-				<n-button size="small" @click.stop="showDetails = true">
-					<template #icon>
-						<Icon :name="InfoIcon" />
-					</template>
-					Details
-				</n-button>
+				<EntityDetailsButton
+					v-if="isIntegration"
+					size="tiny"
+					:url="routeThirdPartyIntegration(data.id).fullUrl()"
+					@view="showDetails = true"
+				/>
 			</template>
 		</CardEntity>
 
 		<n-modal
+			v-if="!isIntegration"
 			v-model:show="showDetails"
 			preset="card"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(400px, 90vh)', overflow: 'hidden' }"
@@ -50,13 +51,13 @@
 
 <script setup lang="ts">
 import type { ServiceItemData, ServiceItemType } from "./types"
-import { NButton, NModal, NRadio } from "naive-ui"
-import { ref, toRefs } from "vue"
+import { NModal, NRadio } from "naive-ui"
+import { computed, ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import Icon from "@/components/common/Icon.vue"
-
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Markdown from "@/components/common/Markdown.vue"
+import { useNavigation } from "@/composables/useNavigation"
 
 const props = defineProps<{
 	data: ServiceItemData
@@ -69,7 +70,8 @@ const props = defineProps<{
 
 const { data, embedded, checked, selectable, disabled } = toRefs(props)
 
-const InfoIcon = "carbon:information"
+const { routeThirdPartyIntegration } = useNavigation()
 
 const showDetails = ref(false)
+const isIntegration = computed(() => props.type === "integration")
 </script>
