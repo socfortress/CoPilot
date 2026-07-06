@@ -18,13 +18,13 @@ from app.connectors.graylog.utils.routing import set_graylog_context
 from app.db.db_session import get_db
 from app.db.universal_models import CustomersMeta
 from app.integrations.monitoring_alert.schema.provision import AvailableMonitoringAlerts
-from app.integrations.monitoring_alert.schema.provision import GraylogInstance
 from app.integrations.monitoring_alert.schema.provision import (
     AvailableMonitoringAlertsResponse,
 )
 from app.integrations.monitoring_alert.schema.provision import (
     CustomMonitoringAlertProvisionModel,
 )
+from app.integrations.monitoring_alert.schema.provision import GraylogInstance
 from app.integrations.monitoring_alert.schema.provision import (
     ProvisionMonitoringAlertRequest,
 )
