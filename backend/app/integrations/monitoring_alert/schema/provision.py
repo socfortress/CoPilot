@@ -9,6 +9,24 @@ from pydantic import Field
 from pydantic import field_validator
 
 
+class GraylogInstance(str, Enum):
+    """
+    The target Graylog instance a monitoring alert should be provisioned on.
+
+    Some log sources are ingested by a separate "network" Graylog (Graylog02,
+    the ``Graylog-Network`` connector) rather than the default Graylog01 that
+    handles Wazuh and third-party integrations. Fortinet/SonicWall/syslog
+    sources typically land on Graylog02, so their event definitions must be
+    created there or they never fire.
+
+    DEFAULT: Graylog01 (``Graylog`` connector) -- Wazuh + 3rd-party integrations.
+    NETWORK: Graylog02 (``Graylog-Network`` connector) -- network/syslog sources.
+    """
+
+    DEFAULT = "default"
+    NETWORK = "network"
+
+
 class AvailableMonitoringAlerts(str, Enum):
     """
     The available monitoring alerts.
@@ -292,6 +310,14 @@ class ProvisionMonitoringAlertRequest(BaseModel):
         "WAZUH_SYSLOG_LEVEL_ALERT",
         description="The name of the alert to provision.",
     )
+    graylog_instance: GraylogInstance = Field(
+        GraylogInstance.DEFAULT,
+        description=(
+            "The Graylog instance to provision the alert on. Use 'network' for "
+            "sources ingested by Graylog02 (the Graylog-Network connector, e.g. "
+            "Fortinet/SonicWall/syslog); defaults to 'default' (Graylog01)."
+        ),
+    )
 
     @field_validator("alert_name")
     @classmethod
@@ -490,6 +516,14 @@ class CustomMonitoringAlertProvisionModel(BaseModel):
         ...,
         description="The time in milliseconds to execute the alert search.",
         examples=[300000],
+    )
+    graylog_instance: GraylogInstance = Field(
+        GraylogInstance.DEFAULT,
+        description=(
+            "The Graylog instance to provision the alert on. Use 'network' for "
+            "sources ingested by Graylog02 (the Graylog-Network connector, e.g. "
+            "Fortinet/SonicWall/syslog); defaults to 'default' (Graylog01)."
+        ),
     )
 
     # ! I think I can remove the requirement for the CUSTOMER_CODE field.
