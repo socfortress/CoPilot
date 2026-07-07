@@ -180,10 +180,26 @@ async def send_post_request(
                 "message": "Successfully completed request with no content",
             }
         else:
+            body = response.json()
+            # Shuffle frequently answers HTTP 200 while signalling a logical
+            # failure in the body via `{"success": false, "reason": "..."}`
+            # (e.g. a workflow that can't be retrieved because the connector
+            # points at the wrong region). Fold that in-body flag into our
+            # wrapper `success` so callers don't mistake a 200 for a real
+            # execution. See GitHub issue #963.
+            http_ok = response.status_code < 400
+            body_ok = not (isinstance(body, dict) and body.get("success") is False)
+            success = http_ok and body_ok
+            if success:
+                message = "Successfully retrieved data"
+            elif isinstance(body, dict) and body.get("reason"):
+                message = f"Shuffle returned success=false: {body['reason']}"
+            else:
+                message = "Failed to retrieve data"
             return {
-                "data": response.json(),
-                "success": False if response.status_code >= 400 else True,
-                "message": "Successfully retrieved data" if response.status_code < 400 else "Failed to retrieve data",
+                "data": body,
+                "success": success,
+                "message": message,
             }
     except Exception as e:
         logger.debug(f"Response: {response}")

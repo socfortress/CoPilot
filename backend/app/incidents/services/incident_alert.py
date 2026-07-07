@@ -648,20 +648,28 @@ async def handle_customer_notifications(
     customer_notifications = await get_customer_notification(customer_code, session)
     if customer_notifications and customer_notifications[0].enabled:
         logger.info(f"Executing workflow for customer code {customer_code}")
-        await execute_workflow(
-            ExecuteWorkflowRequest(
-                workflow_id=customer_notifications[0].shuffle_workflow_id,
-                execution_arguments={
-                    "type": type,
-                    "customer_code": customer_code,
-                    "asset_name": asset_name,
-                    "alert_context_payload": alert_payload.alert_context_payload,
-                    "alert_title": alert_payload.alert_title_payload,
-                    "alert_id": alert_payload.alert_id,
-                },
-                start="",
-            ),
-        )
+        # Best-effort: this runs inside the alert-ingestion path, so a Shuffle
+        # failure (e.g. workflow not retrievable because of a wrong regional
+        # endpoint) must never abort alert creation. `execute_workflow` now
+        # raises on failure (issue #963), so we log and swallow it here — the
+        # analyst-driven case path deliberately lets it propagate instead.
+        try:
+            await execute_workflow(
+                ExecuteWorkflowRequest(
+                    workflow_id=customer_notifications[0].shuffle_workflow_id,
+                    execution_arguments={
+                        "type": type,
+                        "customer_code": customer_code,
+                        "asset_name": asset_name,
+                        "alert_context_payload": alert_payload.alert_context_payload,
+                        "alert_title": alert_payload.alert_title_payload,
+                        "alert_id": alert_payload.alert_id,
+                    },
+                    start="",
+                ),
+            )
+        except Exception as e:
+            logger.error(f"Failed to execute customer notification workflow for customer code {customer_code}: {e}")
 
     # Forward alerts (not cases) to SOCFortress MDR when the customer has the
     # integration deployed. Best-effort: never breaks alert creation.
