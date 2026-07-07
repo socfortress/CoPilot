@@ -325,6 +325,13 @@ async def list_iocs_by_alert(alert_id: int, session: AsyncSession) -> List[IocRe
     return [_ioc_to_response(i) for i in iocs]
 
 
+async def get_ioc_by_id(ioc_id: int, session: AsyncSession) -> IocResponse:
+    ioc = await session.get(AiAnalystIoc, ioc_id)
+    if ioc is None:
+        raise HTTPException(status_code=404, detail=f"IOC {ioc_id} not found")
+    return _ioc_to_response(ioc)
+
+
 async def list_iocs_by_customer(
     customer_code: str,
     session: AsyncSession,

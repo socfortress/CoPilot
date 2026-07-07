@@ -182,6 +182,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "DetectionCatalog" })
 	}
 
+	function routeAiAnalystIoc(iocId?: number) {
+		if (iocId != null) {
+			return routerConstructor({
+				name: "AiAnalystIoc",
+				params: { id: iocId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "AiAnalyst" })
+	}
+
 	function routeAiAnalystFeedbackReview(reviewId?: number) {
 		if (reviewId != null) {
 			return routerConstructor({
@@ -230,6 +241,7 @@ export function useNavigation() {
 		routeUserNew,
 		routeDetectionCatalogStory,
 		routeDetectionCatalogDetection,
+		routeAiAnalystIoc,
 		routeAiAnalystFeedbackReview,
 		routeAiAnalystReport
 	}

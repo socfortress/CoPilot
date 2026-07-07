@@ -13,6 +13,7 @@ from app.ai_analyst.schema.ai_analyst import AlertsWithReportsListResponse
 from app.ai_analyst.schema.ai_analyst import AlertWithReportDetailResponse
 from app.ai_analyst.schema.ai_analyst import CreateJobRequest
 from app.ai_analyst.schema.ai_analyst import CreateJobResponse
+from app.ai_analyst.schema.ai_analyst import IocDetailResponse
 from app.ai_analyst.schema.ai_analyst import IocListResponse
 from app.ai_analyst.schema.ai_analyst import JobListResponse
 from app.ai_analyst.schema.ai_analyst import MyReviewResponse
@@ -38,6 +39,7 @@ from app.ai_analyst.services.ai_analyst import create_job
 from app.ai_analyst.services.ai_analyst import get_alert_analysis
 from app.ai_analyst.services.ai_analyst import get_alert_with_report_by_alert_id
 from app.ai_analyst.services.ai_analyst import get_alert_with_report_by_report_id
+from app.ai_analyst.services.ai_analyst import get_ioc_by_id
 from app.ai_analyst.services.ai_analyst import get_job
 from app.ai_analyst.services.ai_analyst import get_my_review
 from app.ai_analyst.services.ai_analyst import get_palace_consolidation
@@ -233,6 +235,20 @@ async def list_iocs_by_customer_route(
 ) -> IocListResponse:
     iocs = await list_iocs_by_customer(customer_code, session, vt_verdict=vt_verdict)
     return IocListResponse(success=True, message="IOCs retrieved", iocs=iocs)
+
+
+@ai_analyst_router.get(
+    "/iocs/{ioc_id}",
+    response_model=IocDetailResponse,
+    description="Get a single IOC by id",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_ioc_route(
+    ioc_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> IocDetailResponse:
+    ioc = await get_ioc_by_id(ioc_id, session)
+    return IocDetailResponse(success=True, message="IOC retrieved", ioc=ioc)
 
 
 # --- Alerts with reports ---

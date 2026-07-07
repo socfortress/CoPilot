@@ -27,5 +27,15 @@ export const analystRoutes: RouteRecordRaw[] = [
 		name: "AiAnalystFeedbackReview",
 		component: () => import("@/views/aiAnalyst/AiAnalystFeedbackReview.vue"),
 		meta: { title: "AI Analyst Feedback Review", auth: true, roles: RouteRole.All }
+	},
+	{
+		path: "/ai-analyst/iocs",
+		redirect: "/ai-analyst"
+	},
+	{
+		path: "/ai-analyst/iocs/:id",
+		name: "AiAnalystIoc",
+		component: () => import("@/views/aiAnalyst/AiAnalystIoc.vue"),
+		meta: { title: "AI Analyst IOC", auth: true, roles: RouteRole.All }
 	}
 ]

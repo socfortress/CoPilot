@@ -91,6 +91,9 @@ export default {
 	getIocsByAlert(alertId: number) {
 		return HttpClient.get<FlaskBaseResponse & { iocs: AiAnalystIoc[] }>(`/ai_analyst/iocs/alert/${alertId}`)
 	},
+	getIoc(iocId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { ioc: AiAnalystIoc }>(`/ai_analyst/iocs/${iocId}`, { signal })
+	},
 	getIocsByCustomer(customerCode: string, vtVerdict?: string) {
 		return HttpClient.get<FlaskBaseResponse & { iocs: AiAnalystIoc[] }>(
 			`/ai_analyst/iocs/customer/${customerCode}`,

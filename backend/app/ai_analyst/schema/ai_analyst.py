@@ -241,6 +241,12 @@ class IocListResponse(BaseModel):
     iocs: List[IocResponse]
 
 
+class IocDetailResponse(BaseModel):
+    success: bool
+    message: str
+    ioc: IocResponse
+
+
 class AlertWithReportResponse(BaseModel):
     alert_id: int
     alert_name: str
