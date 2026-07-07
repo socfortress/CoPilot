@@ -7,7 +7,7 @@
 			Back
 		</n-button>
 
-		<CoverageGapDetails v-if="techniqueId" :technique-id="techniqueId" :embedded="false" />
+		<CoverageGapDetails v-if="techniqueId" :technique-id :embedded="false" />
 		<n-empty v-else description="Invalid technique ID" class="h-48 justify-center" />
 	</div>
 </template>
@@ -16,8 +16,8 @@
 import { NButton, NEmpty } from "naive-ui"
 import { computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import CoverageGapDetails from "@/components/detectionCatalog/CoverageGapDetails.vue"
 import Icon from "@/components/common/Icon.vue"
+import CoverageGapDetails from "@/components/detectionCatalog/CoverageGapDetails.vue"
 
 const route = useRoute()
 const router = useRouter()

@@ -71,8 +71,8 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertTag } from "@/types/tags"
 import type { ApiError } from "@/types/common"
+import type { AlertTag } from "@/types/tags"
 import type { User } from "@/types/user"
 import axios from "axios"
 import { NCard, NSpin, NTag, useMessage } from "naive-ui"
@@ -82,8 +82,8 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils/format"
 import { getApiErrorMessage } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
 	user?: User | null

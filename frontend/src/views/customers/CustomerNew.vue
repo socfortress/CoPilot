@@ -17,8 +17,8 @@
 import type { Customer } from "@/types/customers"
 import { NButton } from "naive-ui"
 import { useRouter } from "vue-router"
-import CustomerForm from "@/components/customers/CustomerForm.vue"
 import Icon from "@/components/common/Icon.vue"
+import CustomerForm from "@/components/customers/CustomerForm.vue"
 
 const BackIcon = "carbon:arrow-left"
 const router = useRouter()

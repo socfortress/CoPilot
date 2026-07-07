@@ -7,7 +7,7 @@
 			Back
 		</n-button>
 
-		<JobDetails v-if="jobId" :job-id="jobId" :embedded="false" />
+		<JobDetails v-if="jobId" :job-id :embedded="false" />
 		<n-empty v-else description="Invalid job ID" class="h-48 justify-center" />
 	</div>
 </template>

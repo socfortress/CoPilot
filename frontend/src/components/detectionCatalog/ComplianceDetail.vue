@@ -3,7 +3,7 @@
 		<div v-if="resolvedGroup" class="flex flex-col gap-4">
 			<div v-if="!embedded && resolvedFrameworkLabel" class="flex flex-col gap-1">
 				<div class="text-secondary text-xs tracking-wide uppercase">Compliance Control</div>
-				<div class="text-default text-lg leading-tight font-semibold font-mono">
+				<div class="text-default font-mono text-lg leading-tight font-semibold">
 					{{ resolvedFrameworkLabel }} {{ resolvedGroup.control }}
 				</div>
 			</div>
@@ -60,8 +60,8 @@
 </template>
 
 <script setup lang="tsx">
-import type { CatalogComplianceGroupRow } from "@/types/detection-catalog"
 import type { ApiError } from "@/types/common"
+import type { CatalogComplianceGroupRow } from "@/types/detection-catalog"
 import axios from "axios"
 import { NModal, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"

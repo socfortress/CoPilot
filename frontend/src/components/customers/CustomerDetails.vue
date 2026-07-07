@@ -2,12 +2,12 @@
 	<n-spin :show="loading">
 		<CustomerDetailsTabs
 			v-if="tabCustomer"
+			v-model:loading-delete="loadingDelete"
 			:customer="tabCustomer"
 			:customer-info
 			:customer-meta
 			:customer-portainer-stack-id
 			:use-max-height
-			v-model:loading-delete="loadingDelete"
 			@delete="emit('delete')"
 			@update:customer-info="customerInfo = $event"
 			@update:customer-meta="customerMeta = $event"
@@ -113,10 +113,7 @@ function ensureLoaded() {
 		customerInfo.value = props.customer
 	}
 
-	if (
-		!customerInfo.value?.customer_name ||
-		!customerMeta.value?.customer_meta_graylog_index
-	) {
+	if (!customerInfo.value?.customer_name || !customerMeta.value?.customer_meta_graylog_index) {
 		getFull()
 	}
 

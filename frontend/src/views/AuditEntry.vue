@@ -7,7 +7,7 @@
 			Back to audit
 		</n-button>
 
-		<AuditDetails v-if="entryId != null" :entry-id="entryId" :embedded="false" />
+		<AuditDetails v-if="entryId != null" :entry-id :embedded="false" />
 		<n-empty v-else description="Invalid audit entry ID" class="h-48 justify-center" />
 	</div>
 </template>

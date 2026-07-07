@@ -131,8 +131,8 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import vShiki from "@/directives/v-shiki"
 import { useSettingsStore } from "@/stores/settings"
-import { formatDate } from "@/utils/format"
 import { getApiErrorMessage } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const props = withDefaults(
 	defineProps<{
@@ -165,16 +165,10 @@ const actorLabel = computed(
 		resolvedEntry.value?.actor_username ||
 		(resolvedEntry.value?.actor_user_id ? `#${resolvedEntry.value.actor_user_id}` : "")
 )
-const hasEntity = computed(
-	() => Boolean(resolvedEntry.value?.entity_type || resolvedEntry.value?.entity_id)
-)
-const showValueDiff = computed(
-	() => Boolean(resolvedEntry.value?.old_value || resolvedEntry.value?.new_value)
-)
+const hasEntity = computed(() => Boolean(resolvedEntry.value?.entity_type || resolvedEntry.value?.entity_id))
+const showValueDiff = computed(() => Boolean(resolvedEntry.value?.old_value || resolvedEntry.value?.new_value))
 const formattedTimestamp = computed(() =>
-	resolvedEntry.value
-		? String(formatDate(resolvedEntry.value.timestamp, dFormats.datetime, { tz: true }))
-		: ""
+	resolvedEntry.value ? String(formatDate(resolvedEntry.value.timestamp, dFormats.datetime, { tz: true })) : ""
 )
 
 function loadEntry(entryId: number) {

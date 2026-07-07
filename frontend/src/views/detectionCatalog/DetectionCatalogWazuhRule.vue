@@ -7,7 +7,7 @@
 			Back
 		</n-button>
 
-		<WazuhRuleDetail v-if="ruleId != null" :rule-id="ruleId" />
+		<WazuhRuleDetail v-if="ruleId != null" :rule-id />
 		<n-empty v-else description="Invalid Wazuh rule ID" class="h-48 justify-center" />
 	</div>
 </template>
@@ -16,8 +16,8 @@
 import { NButton, NEmpty } from "naive-ui"
 import { computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import WazuhRuleDetail from "@/components/detectionCatalog/WazuhRuleDetail.vue"
 import Icon from "@/components/common/Icon.vue"
+import WazuhRuleDetail from "@/components/detectionCatalog/WazuhRuleDetail.vue"
 
 const route = useRoute()
 const router = useRouter()

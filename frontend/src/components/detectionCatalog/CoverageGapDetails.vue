@@ -4,7 +4,7 @@
 			<template #headerMain>
 				<div class="flex flex-col gap-1">
 					<div class="text-secondary text-xs tracking-wide uppercase">MITRE ATT&amp;CK Gap</div>
-					<div class="text-default text-lg leading-tight font-semibold font-mono">
+					<div class="text-default font-mono text-lg leading-tight font-semibold">
 						{{ resolvedGap.technique_id }}
 					</div>
 				</div>
@@ -45,8 +45,8 @@
 </template>
 
 <script setup lang="ts">
-import type { CatalogCoverageGapRow } from "@/types/detection-catalog"
 import type { ApiError } from "@/types/common"
+import type { CatalogCoverageGapRow } from "@/types/detection-catalog"
 import axios from "axios"
 import { NButton, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"

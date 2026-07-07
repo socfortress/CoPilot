@@ -7,7 +7,7 @@
 			Back to scheduler
 		</n-button>
 
-		<JobDetails v-if="jobId" :job-id="jobId" />
+		<JobDetails v-if="jobId" :job-id />
 		<n-empty v-else description="Invalid job ID" class="h-48 justify-center" />
 	</div>
 </template>

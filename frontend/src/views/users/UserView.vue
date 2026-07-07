@@ -7,7 +7,7 @@
 			Back to users
 		</n-button>
 
-		<UserDetails v-if="userId != null" :user-id="userId" @deleted="router.push({ name: 'Users' })" />
+		<UserDetails v-if="userId != null" :user-id @deleted="router.push({ name: 'Users' })" />
 		<n-empty v-else description="Invalid user ID" class="h-48 justify-center" />
 	</div>
 </template>

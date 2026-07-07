@@ -7,12 +7,7 @@
 			Back
 		</n-button>
 
-		<ComplianceDetail
-			v-if="framework && control"
-			:framework="framework"
-			:control="control"
-			:embedded="false"
-		/>
+		<ComplianceDetail v-if="framework && control" :framework :control :embedded="false" />
 		<n-empty v-else description="Invalid compliance control" class="h-48 justify-center" />
 	</div>
 </template>
@@ -21,8 +16,8 @@
 import { NButton, NEmpty } from "naive-ui"
 import { computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import ComplianceDetail from "@/components/detectionCatalog/ComplianceDetail.vue"
 import Icon from "@/components/common/Icon.vue"
+import ComplianceDetail from "@/components/detectionCatalog/ComplianceDetail.vue"
 
 const route = useRoute()
 const router = useRouter()

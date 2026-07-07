@@ -16,8 +16,8 @@
 import { NButton, NEmpty } from "naive-ui"
 import { computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import NetworkConnectorDetails from "@/components/networkConnectors/NetworkConnectorDetails.vue"
 import Icon from "@/components/common/Icon.vue"
+import NetworkConnectorDetails from "@/components/networkConnectors/NetworkConnectorDetails.vue"
 
 const route = useRoute()
 const router = useRouter()
