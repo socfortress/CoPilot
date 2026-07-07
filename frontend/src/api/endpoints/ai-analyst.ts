@@ -39,8 +39,8 @@ export default {
 	) {
 		return HttpClient.patch<FlaskBaseResponse & { job: AiAnalystJob }>(`/ai_analyst/jobs/${jobId}`, payload)
 	},
-	getJob(jobId: string) {
-		return HttpClient.get<FlaskBaseResponse & { job: AiAnalystJob }>(`/ai_analyst/jobs/${jobId}`)
+	getJob(jobId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { job: AiAnalystJob }>(`/ai_analyst/jobs/${jobId}`, { signal })
 	},
 	getJobsByAlert(alertId: number) {
 		return HttpClient.get<FlaskBaseResponse & { jobs: AiAnalystJob[] }>(`/ai_analyst/jobs/alert/${alertId}`)

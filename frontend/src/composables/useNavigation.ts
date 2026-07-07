@@ -182,6 +182,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "DetectionCatalog" })
 	}
 
+	function routeAiAnalystJob(jobId?: string) {
+		if (jobId) {
+			return routerConstructor({
+				name: "AiAnalystJob",
+				params: { id: jobId }
+			})
+		}
+
+		return routerConstructor({ name: "AiAnalyst" })
+	}
+
 	function routeAiAnalystIoc(iocId?: number) {
 		if (iocId != null) {
 			return routerConstructor({
@@ -241,6 +252,7 @@ export function useNavigation() {
 		routeUserNew,
 		routeDetectionCatalogStory,
 		routeDetectionCatalogDetection,
+		routeAiAnalystJob,
 		routeAiAnalystIoc,
 		routeAiAnalystFeedbackReview,
 		routeAiAnalystReport
