@@ -7,6 +7,7 @@ import { assessmentsRoutes } from "./assessments"
 import { authRoutes } from "./auth"
 import { connectorsRoutes } from "./connectors"
 import { coreRoutes } from "./core"
+import { customersRoutes } from "./customers"
 import { dashboardsRoutes } from "./dashboards"
 import { detectionCatalogRoutes } from "./detection-catalog"
 import { externalServicesRoutes } from "./external-services"
@@ -33,6 +34,7 @@ export const routes: RouteRecordRaw[] = [
 	...analystRoutes,
 	...detectionCatalogRoutes,
 	...healthcheckRoutes,
+	...customersRoutes,
 	...adminRoutes,
 	...usersRoutes,
 	...schedulerRoutes,

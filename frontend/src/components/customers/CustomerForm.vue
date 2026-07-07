@@ -2,7 +2,7 @@
 	<n-spin :show="loading" class="customer-form">
 		<n-form ref="formRef" :label-width="80" :model="form" :rules>
 			<div class="flex flex-col gap-4">
-				<h4>Edit Customer</h4>
+				<h4>{{ formTitle }}</h4>
 				<div class="flex flex-wrap gap-4">
 					<div v-for="(val, key) of fieldsMeta" :key class="grow">
 						<n-form-item :label="val.label" :path="key" class="grow">
@@ -152,6 +152,8 @@ const fieldsMeta = {
 		placeholder: "Logo file for the customer"
 	}
 }
+
+const formTitle = computed(() => (customer.value?.customer_code ? "Edit Customer" : "Add Customer"))
 
 const isValid = computed(() => {
 	let valid = true

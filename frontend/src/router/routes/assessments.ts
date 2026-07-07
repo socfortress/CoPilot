@@ -23,11 +23,5 @@ export const assessmentsRoutes: RouteRecordRaw[] = [
 			auth: true,
 			roles: RouteRole.All
 		}
-	},
-	{
-		path: "/customer-portal",
-		name: "CustomerPortal",
-		component: () => import("@/views/CustomerPortal.vue"),
-		meta: { title: "Customer Portal", auth: true, roles: RouteRole.All }
 	}
 ]

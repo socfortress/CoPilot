@@ -7,11 +7,7 @@
 			Back
 		</n-button>
 
-		<CustomerDetails
-			v-if="customerCode"
-			:customer-code="customerCode"
-			@delete="router.push({ name: 'Customers' })"
-		/>
+		<CustomerDetails v-if="customerCode" :customer-code @delete="router.push({ name: 'Customers' })" />
 		<n-empty v-else description="Invalid customer code" class="h-48 justify-center" />
 	</div>
 </template>
@@ -20,8 +16,8 @@
 import { NButton, NEmpty } from "naive-ui"
 import { computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import CustomerDetails from "@/components/customers/CustomerDetails.vue"
 import Icon from "@/components/common/Icon.vue"
+import CustomerDetails from "@/components/customers/CustomerDetails.vue"
 
 const route = useRoute()
 const router = useRouter()
