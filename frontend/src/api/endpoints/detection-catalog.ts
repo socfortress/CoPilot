@@ -6,6 +6,7 @@
 import type {
 	CatalogComplianceFrameworksResponse,
 	CatalogComplianceResponse,
+	CatalogCoverageGapRow,
 	CatalogCoverageGapsResponse,
 	CatalogLogTestRequest,
 	CatalogLogTestResponse,
@@ -73,6 +74,12 @@ export default {
 	listCoverageGaps() {
 		return HttpClient.get<FlaskBaseResponse & CatalogCoverageGapsResponse>(
 			`/copilot_searches/catalog/coverage-gaps`
+		)
+	},
+	getCoverageGap(techniqueId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { gap: CatalogCoverageGapRow }>(
+			`/copilot_searches/catalog/coverage-gaps/${encodeURIComponent(techniqueId)}`,
+			{ signal }
 		)
 	},
 

@@ -37,5 +37,15 @@ export const detectionCatalogRoutes: RouteRecordRaw[] = [
 		name: "DetectionCatalogWazuhRule",
 		component: () => import("@/views/detectionCatalog/DetectionCatalogWazuhRule.vue"),
 		meta: { title: "Wazuh Rule", auth: true, roles: RouteRole.All }
+	},
+	{
+		path: "/detection-catalog/coverage-gaps",
+		redirect: "/detection-catalog"
+	},
+	{
+		path: "/detection-catalog/coverage-gaps/:techniqueId",
+		name: "DetectionCatalogCoverageGap",
+		component: () => import("@/views/detectionCatalog/DetectionCatalogCoverageGap.vue"),
+		meta: { title: "Coverage Gap", auth: true, roles: RouteRole.All }
 	}
 ]

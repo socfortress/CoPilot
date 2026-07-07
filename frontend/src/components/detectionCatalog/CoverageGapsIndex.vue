@@ -41,7 +41,19 @@
 			</Badge>
 		</div>
 
-		<n-data-table :columns :data="filteredGaps" :loading size="small" :pagination :scroll-x="100" />
+		<n-data-table :columns :data="filteredGaps" :loading size="small" :pagination :scroll-x="900" />
+
+		<n-modal
+			v-model:show="showDetailModal"
+			preset="card"
+			:style="{ maxWidth: 'min(720px, 94vw)', minHeight: 'min(400px, 90vh)' }"
+			:title="modalTitle"
+			:bordered="false"
+			segmented
+			@after-leave="selectedGap = null"
+		>
+			<CoverageGapDetails v-if="selectedGap" :gap="selectedGap" />
+		</n-modal>
 	</div>
 </template>
 
@@ -50,13 +62,16 @@ import type { DataTableColumns } from "naive-ui"
 import type { CardLinkColor } from "@/components/common/cards/CardLink.vue"
 import type { ApiError } from "@/types/common"
 import type { CatalogCoverageGapRow } from "@/types/detection-catalog"
-import { NButton, NDataTable, NInput, NTag, useMessage } from "naive-ui"
+import { NButton, NDataTable, NInput, NModal, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
+import CoverageGapDetails from "./CoverageGapDetails.vue"
 
 interface CoverageStatTile {
 	id: string
@@ -68,6 +83,7 @@ interface CoverageStatTile {
 }
 
 const message = useMessage()
+const { routeDetectionCatalogCoverageGap } = useNavigation()
 
 const gaps = ref<CatalogCoverageGapRow[]>([])
 const gap_count = ref(0)
@@ -77,6 +93,9 @@ const coverage_pct = ref(0)
 
 const loading = ref(false)
 const filter = ref("")
+const showDetailModal = ref(false)
+const selectedGap = ref<CatalogCoverageGapRow | null>(null)
+const modalTitle = ref("Coverage Gap")
 
 const ShieldIcon = "carbon:ibm-cloud-security-groups"
 const CoveredIcon = "carbon:checkmark-outline"
@@ -122,6 +141,12 @@ const coverageStatTiles = computed<CoverageStatTile[]>(() => [
 		color: "danger"
 	}
 ])
+
+function openGapDetail(row: CatalogCoverageGapRow) {
+	selectedGap.value = row
+	modalTitle.value = `${row.technique_id} — ${row.technique_name}`
+	showDetailModal.value = true
+}
 
 const columns: DataTableColumns<CatalogCoverageGapRow> = [
 	{
@@ -174,6 +199,21 @@ const columns: DataTableColumns<CatalogCoverageGapRow> = [
 			) : (
 				<span class="text-tertiary text-xs">—</span>
 			)
+	},
+	{
+		title: "",
+		key: "actions",
+		width: 110,
+		fixed: "right",
+		render: row => (
+			<div onClick={e => e.stopPropagation()}>
+				<EntityDetailsButton
+					size="tiny"
+					url={routeDetectionCatalogCoverageGap(row.technique_id).fullUrl()}
+					onView={() => openGapDetail(row)}
+				/>
+			</div>
+		)
 	}
 ]
 

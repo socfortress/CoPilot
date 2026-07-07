@@ -698,6 +698,12 @@ class CatalogCoverageGapsResponse(BaseModel):
     coverage_pct: float = 0.0
 
 
+class CatalogCoverageGapDetailResponse(BaseModel):
+    success: bool = True
+    message: str = "Coverage gap retrieved successfully"
+    gap: CatalogCoverageGapRow
+
+
 # ---------------------------------------------------------------------------
 # Compliance pivot — Wazuh rules grouped by framework control ID
 # ---------------------------------------------------------------------------

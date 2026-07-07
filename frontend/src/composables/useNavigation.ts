@@ -182,6 +182,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "DetectionCatalog" })
 	}
 
+	function routeDetectionCatalogCoverageGap(techniqueId?: string) {
+		if (techniqueId) {
+			return routerConstructor({
+				name: "DetectionCatalogCoverageGap",
+				params: { techniqueId }
+			})
+		}
+
+		return routerConstructor({ name: "DetectionCatalog" })
+	}
+
 	function routeDetectionCatalogWazuhRule(ruleId?: number) {
 		if (ruleId != null) {
 			return routerConstructor({
@@ -264,6 +275,7 @@ export function useNavigation() {
 		routeDetectionCatalogStory,
 		routeDetectionCatalogDetection,
 		routeDetectionCatalogWazuhRule,
+		routeDetectionCatalogCoverageGap,
 		routeAiAnalystJob,
 		routeAiAnalystIoc,
 		routeAiAnalystFeedbackReview,

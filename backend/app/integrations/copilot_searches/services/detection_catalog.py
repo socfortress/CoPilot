@@ -613,6 +613,15 @@ async def list_coverage_gaps() -> Dict[str, Any]:
     }
 
 
+async def get_coverage_gap(technique_id: str) -> Dict[str, Any] | None:
+    payload = await list_coverage_gaps()
+    tid = technique_id.strip().upper()
+    for gap in payload["gaps"]:
+        if gap["technique_id"].upper() == tid:
+            return gap
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Wazuh Rules tab — list + single-rule detail
 # ---------------------------------------------------------------------------

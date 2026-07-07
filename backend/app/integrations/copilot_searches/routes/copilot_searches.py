@@ -25,6 +25,9 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
     CatalogComplianceResponse,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogCoverageGapDetailResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
     CatalogCoverageGapsResponse,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
@@ -104,6 +107,9 @@ from app.integrations.copilot_searches.services.copilot_searches import (
 from app.integrations.copilot_searches.services.copilot_searches import rules_cache
 from app.integrations.copilot_searches.services.detection_catalog import (
     get_catalog_stats,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
+    get_coverage_gap,
 )
 from app.integrations.copilot_searches.services.detection_catalog import (
     get_story_detail,
@@ -1077,6 +1083,23 @@ async def list_catalog_coverage_gaps_endpoint() -> CatalogCoverageGapsResponse:
         )
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Failed to compute coverage gaps: {str(e)}")
+
+
+@copilot_searches_router.get(
+    "/catalog/coverage-gaps/{technique_id}",
+    response_model=CatalogCoverageGapDetailResponse,
+    description="Get a single MITRE coverage gap by technique ID.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_catalog_coverage_gap_endpoint(technique_id: str) -> CatalogCoverageGapDetailResponse:
+    gap = await get_coverage_gap(technique_id)
+    if gap is None:
+        raise HTTPException(status_code=404, detail=f"Coverage gap {technique_id} not found")
+    return CatalogCoverageGapDetailResponse(
+        success=True,
+        message="Coverage gap retrieved successfully",
+        gap=gap,
+    )
 
 
 # ---------------------------------------------------------------------------
