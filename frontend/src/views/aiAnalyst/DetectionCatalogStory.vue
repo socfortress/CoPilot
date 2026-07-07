@@ -7,7 +7,7 @@
 			Back to catalog
 		</n-button>
 
-		<StoryDetail v-if="storyName" :story-name="storyName" @error="handleError" />
+		<StoryDetail v-if="storyName" :story-name @error="handleError" />
 		<n-empty v-else description="Invalid story name" class="h-48 justify-center" />
 	</div>
 </template>
@@ -16,8 +16,8 @@
 import { NButton, NEmpty, useMessage } from "naive-ui"
 import { computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import StoryDetail from "@/components/detectionCatalog/StoryDetail.vue"
 import Icon from "@/components/common/Icon.vue"
+import StoryDetail from "@/components/detectionCatalog/StoryDetail.vue"
 
 const route = useRoute()
 const router = useRouter()

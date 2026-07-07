@@ -173,8 +173,8 @@
 
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
-import type { CatalogStoryDetailResponse, CatalogStoryDetection } from "@/types/detection-catalog"
 import type { ApiError } from "@/types/common"
+import type { CatalogStoryDetailResponse, CatalogStoryDetection } from "@/types/detection-catalog"
 import axios from "axios"
 import { NButton, NDataTable, NModal, NSpin, NTag, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
@@ -201,6 +201,8 @@ const message = useMessage()
 const story = ref<CatalogStoryDetailResponse | null>(null)
 const loading = ref(false)
 const dFormats = useSettingsStore().dateFormat
+const { routeDetectionCatalogDetection } = useNavigation()
+
 const showRuleModal = ref(false)
 const modalRuleId = ref<string | null>(null)
 
@@ -228,9 +230,11 @@ const detectionColumns: DataTableColumns<CatalogStoryDetection> = [
 		title: "Name",
 		key: "name",
 		render: row => (
-			<span class="text-primary cursor-pointer underline" onClick={() => openRuleDetail(row.id)}>
+
+
 				{row.name}
-			</span>
+
+
 		)
 	},
 	{
@@ -270,6 +274,20 @@ const detectionColumns: DataTableColumns<CatalogStoryDetection> = [
 				</NTag>
 			)
 		}
+	},
+	{
+		title: "",
+		key: "actions",
+		width: 110,
+		render: row => (
+			<div onClick={e => e.stopPropagation()}>
+				<EntityDetailsButton
+					size="tiny"
+					url={routeDetectionCatalogDetection(row.id).fullUrl()}
+					onRule={() => openRuleDetail(row.id)}
+				/>
+			</div>
+		)
 	}
 ]
 
