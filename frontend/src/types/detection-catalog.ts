@@ -208,3 +208,10 @@ export interface CatalogComplianceResponse {
 	total_rules: number
 	firing_stats_available: boolean
 }
+
+export interface CatalogComplianceGroupDetailResponse {
+	framework: string
+	framework_label: string
+	group: CatalogComplianceGroupRow
+	firing_stats_available: boolean
+}

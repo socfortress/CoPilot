@@ -47,5 +47,15 @@ export const detectionCatalogRoutes: RouteRecordRaw[] = [
 		name: "DetectionCatalogCoverageGap",
 		component: () => import("@/views/detectionCatalog/DetectionCatalogCoverageGap.vue"),
 		meta: { title: "Coverage Gap", auth: true, roles: RouteRole.All }
+	},
+	{
+		path: "/detection-catalog/compliance",
+		redirect: "/detection-catalog"
+	},
+	{
+		path: "/detection-catalog/compliance/:framework/:control",
+		name: "DetectionCatalogComplianceGroup",
+		component: () => import("@/views/detectionCatalog/DetectionCatalogComplianceGroup.vue"),
+		meta: { title: "Compliance Control", auth: true, roles: RouteRole.All }
 	}
 ]

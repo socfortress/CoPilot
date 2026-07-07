@@ -746,6 +746,15 @@ class CatalogComplianceResponse(BaseModel):
     firing_stats_available: bool = True
 
 
+class CatalogComplianceGroupDetailResponse(BaseModel):
+    success: bool = True
+    message: str = "Compliance group retrieved successfully"
+    framework: str
+    framework_label: str
+    group: CatalogComplianceGroupRow
+    firing_stats_available: bool = True
+
+
 # ---------------------------------------------------------------------------
 # Logtest — "which rule would match this log line?"
 # ---------------------------------------------------------------------------

@@ -5,6 +5,7 @@
 
 import type {
 	CatalogComplianceFrameworksResponse,
+	CatalogComplianceGroupDetailResponse,
 	CatalogComplianceResponse,
 	CatalogCoverageGapRow,
 	CatalogCoverageGapsResponse,
@@ -111,6 +112,13 @@ export default {
 	getCompliancePivot(framework: string) {
 		return HttpClient.get<FlaskBaseResponse & CatalogComplianceResponse>(
 			`/copilot_searches/catalog/compliance/${encodeURIComponent(framework)}`
+		)
+	},
+
+	getComplianceGroup(framework: string, control: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & CatalogComplianceGroupDetailResponse>(
+			`/copilot_searches/catalog/compliance/${encodeURIComponent(framework)}/${encodeURIComponent(control)}`,
+			{ signal }
 		)
 	}
 }

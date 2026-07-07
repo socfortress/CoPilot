@@ -22,6 +22,9 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
     CatalogComplianceFrameworksResponse,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogComplianceGroupDetailResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
     CatalogComplianceResponse,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
@@ -107,6 +110,9 @@ from app.integrations.copilot_searches.services.copilot_searches import (
 from app.integrations.copilot_searches.services.copilot_searches import rules_cache
 from app.integrations.copilot_searches.services.detection_catalog import (
     get_catalog_stats,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
+    get_compliance_group,
 )
 from app.integrations.copilot_searches.services.detection_catalog import (
     get_coverage_gap,
@@ -1158,6 +1164,37 @@ async def get_catalog_compliance_endpoint(framework: str) -> CatalogComplianceRe
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Failed to compute compliance pivot: {str(e)}")
+
+
+@copilot_searches_router.get(
+    "/catalog/compliance/{framework}/{control:path}",
+    response_model=CatalogComplianceGroupDetailResponse,
+    description=(
+        "Detail payload for one compliance control bucket within a framework "
+        "(e.g. PCI DSS 10.2.4 → rule IDs + firing hits). Uses ``{control:path}`` "
+        "so dotted control IDs are tolerated."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_catalog_compliance_group_endpoint(
+    framework: str,
+    control: str,
+) -> CatalogComplianceGroupDetailResponse:
+    try:
+        payload = await get_compliance_group(framework, control)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Failed to load compliance group: {str(e)}")
+
+    if payload is None:
+        raise HTTPException(status_code=404, detail=f"Compliance control {control!r} not found for {framework!r}")
+
+    return CatalogComplianceGroupDetailResponse(
+        success=True,
+        message="Compliance group retrieved successfully",
+        **payload,
+    )
 
 
 # ---------------------------------------------------------------------------

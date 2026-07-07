@@ -465,6 +465,20 @@ async def list_compliance_pivot(framework: str) -> Dict[str, Any]:
     }
 
 
+async def get_compliance_group(framework: str, control: str) -> Dict[str, Any] | None:
+    payload = await list_compliance_pivot(framework)
+    control_key = control.strip()
+    for group in payload["groups"]:
+        if group["control"] == control_key:
+            return {
+                "framework": payload["framework"],
+                "framework_label": payload["framework_label"],
+                "firing_stats_available": payload["firing_stats_available"],
+                "group": group,
+            }
+    return None
+
+
 def list_compliance_frameworks() -> List[Dict[str, str]]:
     """List the frameworks the compliance pivot supports. Drives the UI selector."""
     return [{"key": key, "label": meta["label"]} for key, meta in COMPLIANCE_FRAMEWORKS.items()]

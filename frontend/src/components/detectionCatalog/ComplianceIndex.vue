@@ -54,8 +54,7 @@
 			:loading
 			size="small"
 			:pagination
-			:row-props
-			:scroll-x="1000"
+			:scroll-x="1110"
 			class="catalog-table"
 		/>
 
@@ -87,7 +86,9 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import Dot, { hitsToDotVariant } from "@/components/common/Dot.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import ComplianceDetail from "./ComplianceDetail.vue"
 
@@ -101,6 +102,7 @@ interface ComplianceStatTile {
 }
 
 const message = useMessage()
+const { routeDetectionCatalogComplianceGroup } = useNavigation()
 
 const frameworks = ref<CatalogComplianceFramework[]>([])
 const selectedFramework = ref<string>("pci_dss")
@@ -168,13 +170,6 @@ function openGroup(group: CatalogComplianceGroupRow) {
 	showGroupModal.value = true
 }
 
-function rowProps(row: CatalogComplianceGroupRow) {
-	return {
-		style: "cursor: pointer;",
-		onClick: () => openGroup(row)
-	}
-}
-
 const columns: DataTableColumns<CatalogComplianceGroupRow> = [
 	{
 		title: "Activity",
@@ -234,6 +229,21 @@ const columns: DataTableColumns<CatalogComplianceGroupRow> = [
 				{row.rule_ids.length > 10 && (
 					<NTag size="small" type="default" bordered={false}>{`+${row.rule_ids.length - 10}`}</NTag>
 				)}
+			</div>
+		)
+	},
+	{
+		title: "",
+		key: "actions",
+		width: 110,
+		fixed: "right",
+		render: row => (
+			<div onClick={e => e.stopPropagation()}>
+				<EntityDetailsButton
+					size="tiny"
+					url={routeDetectionCatalogComplianceGroup(selectedFramework.value, row.control).fullUrl()}
+					onView={() => openGroup(row)}
+				/>
 			</div>
 		)
 	}

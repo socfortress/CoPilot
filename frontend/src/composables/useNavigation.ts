@@ -193,6 +193,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "DetectionCatalog" })
 	}
 
+	function routeDetectionCatalogComplianceGroup(framework?: string, control?: string) {
+		if (framework && control) {
+			return routerConstructor({
+				name: "DetectionCatalogComplianceGroup",
+				params: { framework, control }
+			})
+		}
+
+		return routerConstructor({ name: "DetectionCatalog" })
+	}
+
 	function routeDetectionCatalogWazuhRule(ruleId?: number) {
 		if (ruleId != null) {
 			return routerConstructor({
@@ -276,6 +287,7 @@ export function useNavigation() {
 		routeDetectionCatalogDetection,
 		routeDetectionCatalogWazuhRule,
 		routeDetectionCatalogCoverageGap,
+		routeDetectionCatalogComplianceGroup,
 		routeAiAnalystJob,
 		routeAiAnalystIoc,
 		routeAiAnalystFeedbackReview,
