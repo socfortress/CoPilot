@@ -45,11 +45,11 @@ function invoke() {
 	Api.incidentManagement.cases
 		.createCaseNotification(caseId)
 		.then(res => {
-			if (res.data) {
+			if (res.data?.success) {
 				emit("invoked")
 				message.success(res.data.message || "Case notification created successfully.")
 			} else {
-				message.warning("An error occurred. Please try again later.")
+				message.warning(res.data?.message || "The notification workflow was not executed. Please try again later.")
 			}
 		})
 		.catch(err => {
