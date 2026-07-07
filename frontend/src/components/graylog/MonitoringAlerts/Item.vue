@@ -43,6 +43,13 @@
 		>
 			<n-spin :show="loadingProvision">
 				<n-form ref="formRef" :model="formModel" :rules="formRules">
+					<n-form-item path="graylogInstance" label="Graylog Instance">
+						<n-select
+							v-model:value="formModel.graylogInstance"
+							:options="graylogInstanceOptions"
+							class="w-full"
+						/>
+					</n-form-item>
 					<n-form-item path="searchWithinLast" label="Search Within Last (time in seconds)">
 						<n-input-number
 							v-model:value="formModel.searchWithinLast"
@@ -77,10 +84,10 @@
 
 <script setup lang="ts">
 import type { FormRules, FormValidationError } from "naive-ui"
-import type { ProvisionsMonitoringAlertParams } from "@/api/endpoints/monitoring-alerts"
+import type { GraylogInstance, ProvisionsMonitoringAlertParams } from "@/api/endpoints/monitoring-alerts"
 import type { ApiError } from "@/types/common"
 import type { AvailableMonitoringAlert } from "@/types/monitoring-alerts"
-import { NButton, NForm, NFormItem, NInputNumber, NModal, NSpin, useMessage } from "naive-ui"
+import { NButton, NForm, NFormItem, NInputNumber, NModal, NSelect, NSpin, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
@@ -103,7 +110,11 @@ const showFormDialog = ref(false)
 const message = useMessage()
 
 const formRef = ref()
-const formModel = ref<{ searchWithinLast: null | number; executeEvery: null | number }>(getClearFormModel())
+const formModel = ref<{
+	searchWithinLast: null | number
+	executeEvery: null | number
+	graylogInstance: GraylogInstance
+}>(getClearFormModel())
 const formRules: FormRules = {
 	searchWithinLast: [
 		{
@@ -117,10 +128,16 @@ const formRules: FormRules = {
 	]
 }
 
+const graylogInstanceOptions: { label: string; value: GraylogInstance }[] = [
+	{ label: "Default (Graylog01)", value: "default" },
+	{ label: "Network (Graylog02)", value: "network" }
+]
+
 function getClearFormModel() {
 	return {
 		searchWithinLast: null,
-		executeEvery: null
+		executeEvery: null,
+		graylogInstance: "default" as GraylogInstance
 	}
 }
 
@@ -157,7 +174,8 @@ function provisionsMonitoringAlert() {
 
 		const params: ProvisionsMonitoringAlertParams = {
 			searchWithinLast: formModel.value.searchWithinLast,
-			executeEvery: formModel.value.executeEvery
+			executeEvery: formModel.value.executeEvery,
+			graylogInstance: formModel.value.graylogInstance
 		}
 
 		Api.monitoringAlerts

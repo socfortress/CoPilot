@@ -86,12 +86,26 @@ In Shuffle:
 1. Go to **User Account / Settings**
 2. Copy the **API key**
 
-### Step 2 — Add the Shuffle API key to CoPilot
+### Step 2 — Add the Shuffle connector URL + API key to CoPilot
 In CoPilot:
 
 1. Navigate to **Connectors**
 2. Locate **Shuffle**
-3. Paste the API key and **verify**
+3. Set the **connector URL** to the API endpoint for the region where your Shuffle organization resides (see below)
+4. Paste the API key and **verify**
+
+> ⚠️ **The connector URL must be region-specific for Shuffle Cloud.**
+> Shuffle Cloud runs multiple regional backends, and an API key/org only exists on the backend where it was created. Pointing the connector at the wrong region lets the connection "verify" (the API key is accepted) but **workflow lookups silently fail** — CoPilot can't find your Workflow ID, so notifications never run even though the UI looks fine.
+>
+> Use the endpoint that matches your Shuffle org's region:
+>
+> | Region | Connector URL |
+> |---|---|
+> | US | `https://shuffler.io` |
+> | EU | `https://eu.shuffler.io` |
+> | Self-hosted | `https://<your-shuffle-host>` (your own deployment URL) |
+>
+> If you're unsure which region your org is in, check the URL in your browser while logged into the Shuffle UI, or the Shuffle API documentation for the current list of regional endpoints. Older setup guides/videos that show only `https://shuffler.io` may be out of date if your org lives in another region.
 
 ### Step 3 — Create a Shuffle workflow to receive CoPilot notifications
 Create a workflow in Shuffle (example: `SIEM Alert — <customer>`). The workflow will receive the CoPilot payload as input.
@@ -143,8 +157,12 @@ So when you want to automate enrichment in Shuffle (e.g., look up related events
 3. **Is the Source configured correctly?**
    - Ensure the Source matches the event’s `syslog_type` and correct field mapping.
 4. **Is the Shuffle connector verified in CoPilot?**
-5. **Is the customer’s Shuffle Workflow ID set?**
-6. **Check Shuffle runs** for the workflow.
+5. **Is the connector URL pointed at the correct Shuffle region?**
+   - A verified connection only proves the API key is valid on that backend. If the workflow won't run and you see `Shuffle returned success=false: Can't retrieve data` (or `Failed to retrieve data`), the connector URL is almost certainly pointing at the wrong region — the workflow lives on a different Shuffle backend. Update the connector URL to the region-specific endpoint (see Step 2).
+6. **Is the customer’s Shuffle Workflow ID set?**
+7. **Check Shuffle runs** for the workflow.
+
+> **Where do errors show up now?** When you click **Invoke Customer Notification** on a case, CoPilot surfaces the real result. If Shuffle can't retrieve or execute the workflow, the UI shows the failure (e.g. `Shuffle returned success=false: Can't retrieve data`) instead of a false success. Automatic (alert-driven) notifications remain best-effort — a Shuffle failure is logged in the backend but never blocks alert creation.
 
 ---
 

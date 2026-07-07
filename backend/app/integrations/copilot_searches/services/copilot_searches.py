@@ -11,6 +11,7 @@ from typing import Optional
 import httpx
 import yaml
 from loguru import logger
+from pydantic import ValidationError
 
 
 def _github_headers() -> dict[str, str]:
@@ -23,6 +24,10 @@ def _github_headers() -> dict[str, str]:
 
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import AggregationConfig
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    AggregationFunction,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
     ExecuteGraylogQueryRequest,
@@ -231,10 +236,13 @@ class RulesCache:
             return None
 
     def _detect_platform(self, file_path: str, rule_data: dict) -> str:
-        """Detect the platform (Linux/Windows) for a rule."""
+        """Detect the platform / source category for a rule."""
         path_lower = file_path.lower()
 
-        # Check path first
+        # Check path first (folder-based classification). The endpoint/* subfolders
+        # map to the OS platforms; the top-level Cloud / Office 365 / Web folders
+        # map to their own categories. "office 365" is matched with and without the
+        # space so a folder rename doesn't silently break classification.
         if "/linux/" in path_lower:
             return "linux"
         if "/windows/" in path_lower:
@@ -243,9 +251,16 @@ class RulesCache:
             return "powershell"
         if "/cve/" in path_lower:
             return "cve"
+        if "/office 365/" in path_lower or "/office365/" in path_lower:
+            return "office365"
+        if "/cloud/" in path_lower:
+            return "cloud"
+        if "/web/" in path_lower:
+            return "web"
 
         # Check tags
-        asset_type = rule_data.get("tags", {}).get("asset_type", "").lower()
+        tags = rule_data.get("tags", {})
+        asset_type = tags.get("asset_type", "").lower()
         if "linux" in asset_type:
             return "linux"
         if "windows" in asset_type:
@@ -261,6 +276,16 @@ class RulesCache:
             return "linux"
         if "windows" in name_lower:
             return "windows"
+
+        # SaaS / cloud metadata fallback for rules not filed under the
+        # Cloud / Office 365 folders (the folder-path checks above win).
+        products = tags.get("product", [])
+        product_text = " ".join(products).lower() if isinstance(products, list) else str(products).lower()
+        security_domain = str(tags.get("security_domain", "")).lower()
+        if any(key in product_text for key in ("office 365", "office365", "o365", "m365")):
+            return "office365"
+        if "cloud" in asset_type or security_domain == "cloud":
+            return "cloud"
 
         return "unknown"
 
@@ -395,6 +420,9 @@ def rule_to_summary(rule: dict) -> RuleSummary:
     tags = rule.get("tags", {})
     response = rule.get("response", {})
 
+    aggregation = rule.get("aggregation")
+    has_aggregation = bool(isinstance(aggregation, dict) and aggregation.get("enabled"))
+
     return RuleSummary(
         id=rule.get("id", ""),
         name=rule.get("name", ""),
@@ -412,6 +440,7 @@ def rule_to_summary(rule: dict) -> RuleSummary:
         cve=tags.get("cve", []),
         file_path=rule.get("_file_path", ""),
         has_graylog_query=rule.get("_has_graylog", False),
+        has_aggregation=has_aggregation,
     )
 
 
@@ -437,6 +466,16 @@ def rule_to_detail(rule: dict) -> RuleDetail:
     if graylog_data and isinstance(graylog_data, dict) and graylog_data.get("query"):
         graylog = GraylogQuery(query=graylog_data.get("query", ""))
 
+    # Parse aggregation block if present. Tolerant here — a malformed block must
+    # not break the detail view; provisioning is where it's strictly validated.
+    aggregation = None
+    aggregation_data = rule.get("aggregation")
+    if isinstance(aggregation_data, dict):
+        try:
+            aggregation = AggregationConfig(**aggregation_data)
+        except ValidationError:
+            aggregation = None
+
     return RuleDetail(
         id=rule.get("id", ""),
         name=rule.get("name", ""),
@@ -458,6 +497,7 @@ def rule_to_detail(rule: dict) -> RuleDetail:
         file_path=rule.get("_file_path", ""),
         raw_yaml=rule.get("_raw_yaml", ""),
         graylog=graylog,
+        aggregation=aggregation,
     )
 
 
@@ -510,6 +550,97 @@ def _get_priority_from_severity(severity: str) -> int:
         "critical": 3,
     }
     return severity_map.get(severity.lower(), 2)
+
+
+# =============================================================================
+# Aggregation helpers
+# =============================================================================
+
+
+def _parse_duration_to_ms(value: Any) -> int:
+    """
+    Parse a duration into milliseconds.
+
+    Accepts an int/float (treated as seconds) or a string with an optional unit
+    suffix — ``s`` seconds, ``m`` minutes, ``h`` hours, ``d`` days. A bare
+    numeric string is treated as seconds. Raises ValueError on anything else.
+    """
+    # bool is an int subclass — reject it explicitly so True/False can't slip through.
+    if isinstance(value, bool):
+        raise ValueError(f"Invalid duration: {value!r}")
+    if isinstance(value, (int, float)):
+        seconds = float(value)
+    else:
+        text = str(value).strip().lower()
+        if not text:
+            raise ValueError("Duration must not be empty")
+        units = {"s": 1, "m": 60, "h": 3600, "d": 86400}
+        try:
+            if text[-1] in units:
+                seconds = float(text[:-1]) * units[text[-1]]
+            else:
+                seconds = float(text)
+        except ValueError:
+            raise ValueError(f"Invalid duration: {value!r}")
+    if seconds <= 0:
+        raise ValueError(f"Duration must be positive: {value!r}")
+    return int(seconds * 1000)
+
+
+def _get_rule_aggregation(rule: dict) -> Optional[AggregationConfig]:
+    """
+    Parse and validate the optional ``aggregation`` block on a rule.
+
+    Returns a validated ``AggregationConfig`` when the block is present and
+    ``enabled=True``. Returns None when the block is missing or disabled — in
+    which case the rule provisions as a plain single-event filter alert. Raises
+    ValueError (surfaced as HTTP 400 by the route) when the block is present but
+    malformed, so a bad detection fails loudly instead of silently degrading.
+    """
+    raw = rule.get("aggregation")
+    if not isinstance(raw, dict):
+        return None
+    try:
+        config = AggregationConfig(**raw)
+    except ValidationError as exc:
+        raise ValueError(f"Invalid aggregation block: {exc}")
+    return config if config.enabled else None
+
+
+def _build_aggregation_series_and_conditions(
+    aggregation: AggregationConfig,
+) -> tuple[list[dict], dict]:
+    """
+    Translate an ``AggregationConfig`` into a Graylog ``series`` list and
+    ``conditions`` expression for an ``aggregation-v1`` event definition.
+
+    - ``count``          -> series type ``count`` (no field)
+    - ``distinct_count`` -> series type ``card`` over ``aggregation.field``
+
+    The condition compares the single series against ``threshold`` using the
+    configured operator, e.g. ``count() > 21``. The series ``id`` and the
+    condition's ``ref`` must match — Graylog resolves the threshold against the
+    series by that id.
+    """
+    series_id = "copilot-agg-0"
+    if aggregation.function == AggregationFunction.DISTINCT_COUNT:
+        series = [{"id": series_id, "type": "card", "field": aggregation.field}]
+    else:
+        series = [{"id": series_id, "type": "count", "field": None}]
+
+    # Graylog Expr type ids (org.graylog.events.conditions.Expr) are exact:
+    # a numeric literal is "number" (NOT "number-value"), a series reference is
+    # "number-ref", and the operator is the raw symbol (">", ">=", ...). Graylog
+    # rejects any other id with "Could not resolve type id ... as a subtype of
+    # NumberExpression".
+    conditions = {
+        "expression": {
+            "expr": aggregation.condition,
+            "left": {"expr": "number-ref", "ref": series_id},
+            "right": {"expr": "number", "value": aggregation.threshold},
+        },
+    }
+    return series, conditions
 
 
 # =============================================================================
@@ -1017,6 +1148,33 @@ async def provision_graylog_alert_from_rule(
 
     logger.info(f"Provisioning Graylog alert for rule '{request.rule_id}' with title '{alert_title}'")
 
+    # Resolve aggregation vs single-event provisioning. A rule carrying an
+    # `aggregation` block with enabled=True becomes a Graylog aggregation event
+    # definition (count()/card() over group_by, within `window`, firing on the
+    # threshold condition). Any other rule keeps the original per-event
+    # filter-alert shape byte-for-byte (empty series/group_by, no condition).
+    aggregation = _get_rule_aggregation(rule)
+    if aggregation is not None:
+        agg_series, agg_conditions = _build_aggregation_series_and_conditions(aggregation)
+        agg_group_by = aggregation.group_by
+        search_within_ms = _parse_duration_to_ms(aggregation.window)
+        execute_every_ms = (
+            _parse_duration_to_ms(aggregation.execute_every)
+            if aggregation.execute_every
+            else _convert_seconds_to_milliseconds(request.execute_every_seconds)
+        )
+        logger.info(
+            f"Rule '{request.rule_id}' provisioned as AGGREGATION event definition "
+            f"(function={aggregation.function.value}, group_by={agg_group_by}, "
+            f"search_within_ms={search_within_ms}, condition={aggregation.condition} {aggregation.threshold})",
+        )
+    else:
+        agg_series = []
+        agg_group_by = []
+        agg_conditions = {"expression": None}
+        search_within_ms = _convert_seconds_to_milliseconds(request.search_within_seconds)
+        execute_every_ms = _convert_seconds_to_milliseconds(request.execute_every_seconds)
+
     # Build the Graylog event definition model
     alert_model = GraylogAlertProvisionModel(
         title=alert_title,
@@ -1027,13 +1185,11 @@ async def provision_graylog_alert_from_rule(
             query=graylog_query,
             query_parameters=[],
             streams=request.streams,
-            group_by=[],
-            series=[],
-            conditions={
-                "expression": None,
-            },
-            search_within_ms=_convert_seconds_to_milliseconds(request.search_within_seconds),
-            execute_every_ms=_convert_seconds_to_milliseconds(request.execute_every_seconds),
+            group_by=agg_group_by,
+            series=agg_series,
+            conditions=agg_conditions,
+            search_within_ms=search_within_ms,
+            execute_every_ms=execute_every_ms,
             event_limit=request.event_limit,
         ),
         field_spec={
