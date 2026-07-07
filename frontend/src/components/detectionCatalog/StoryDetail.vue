@@ -181,8 +181,10 @@ import { ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import RuleCardContent from "@/components/copilotSearches/RuleCardContent.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -229,13 +231,7 @@ const detectionColumns: DataTableColumns<CatalogStoryDetection> = [
 	{
 		title: "Name",
 		key: "name",
-		render: row => (
-
-
-				{row.name}
-
-
-		)
+		render: row => row.name
 	},
 	{
 		title: "Technique",
@@ -284,7 +280,7 @@ const detectionColumns: DataTableColumns<CatalogStoryDetection> = [
 				<EntityDetailsButton
 					size="tiny"
 					url={routeDetectionCatalogDetection(row.id).fullUrl()}
-					onRule={() => openRuleDetail(row.id)}
+					onView={() => openRuleDetail(row.id)}
 				/>
 			</div>
 		)

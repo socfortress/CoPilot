@@ -3,18 +3,6 @@ import { RouteRole } from "@/types/auth"
 
 export const assessmentsRoutes: RouteRecordRaw[] = [
 	{
-		path: "/scheduler",
-		name: "Scheduler",
-		component: () => import("@/views/Scheduler.vue"),
-		meta: { title: "Scheduler", auth: true, roles: RouteRole.All }
-	},
-	{
-		path: "/scheduler/:id",
-		name: "SchedulerJob",
-		component: () => import("@/views/SchedulerJob.vue"),
-		meta: { title: "Scheduler Job", auth: true, roles: RouteRole.All }
-	},
-	{
 		path: "/cloud-security-assessment",
 		name: "CloudSecurityAssessment",
 		component: () => import("@/views/CloudSecurityAssessment.vue"),

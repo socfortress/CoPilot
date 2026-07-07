@@ -8,6 +8,7 @@ import { authRoutes } from "./auth"
 import { connectorsRoutes } from "./connectors"
 import { coreRoutes } from "./core"
 import { dashboardsRoutes } from "./dashboards"
+import { detectionCatalogRoutes } from "./detection-catalog"
 import { externalServicesRoutes } from "./external-services"
 import { fallbackRoutes } from "./fallback"
 import { graylogRoutes } from "./graylog"
@@ -16,7 +17,9 @@ import { incidentManagementRoutes } from "./incident-management"
 import { indicesRoutes } from "./indices"
 import { licenseRoutes } from "./license"
 import { reportCreationRoutes } from "./report-creation"
+import { schedulerRoutes } from "./scheduler"
 import { settingsRoutes } from "./settings"
+import { usersRoutes } from "./users"
 
 export const routes: RouteRecordRaw[] = [
 	...coreRoutes,
@@ -28,8 +31,11 @@ export const routes: RouteRecordRaw[] = [
 	...dashboardsRoutes,
 	...incidentManagementRoutes,
 	...analystRoutes,
+	...detectionCatalogRoutes,
 	...healthcheckRoutes,
 	...adminRoutes,
+	...usersRoutes,
+	...schedulerRoutes,
 	...externalServicesRoutes,
 	...reportCreationRoutes,
 	...assessmentsRoutes,
