@@ -182,6 +182,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "DetectionCatalog" })
 	}
 
+	function routeDetectionCatalogWazuhRule(ruleId?: number) {
+		if (ruleId != null) {
+			return routerConstructor({
+				name: "DetectionCatalogWazuhRule",
+				params: { id: ruleId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "DetectionCatalog" })
+	}
+
 	function routeAiAnalystJob(jobId?: string) {
 		if (jobId) {
 			return routerConstructor({
@@ -252,6 +263,7 @@ export function useNavigation() {
 		routeUserNew,
 		routeDetectionCatalogStory,
 		routeDetectionCatalogDetection,
+		routeDetectionCatalogWazuhRule,
 		routeAiAnalystJob,
 		routeAiAnalystIoc,
 		routeAiAnalystFeedbackReview,

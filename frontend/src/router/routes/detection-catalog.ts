@@ -27,5 +27,15 @@ export const detectionCatalogRoutes: RouteRecordRaw[] = [
 		name: "DetectionCatalogDetection",
 		component: () => import("@/views/detectionCatalog/DetectionCatalogDetection.vue"),
 		meta: { title: "Detection Rule", auth: true, roles: RouteRole.All }
+	},
+	{
+		path: "/detection-catalog/wazuh-rules",
+		redirect: "/detection-catalog"
+	},
+	{
+		path: "/detection-catalog/wazuh-rules/:id",
+		name: "DetectionCatalogWazuhRule",
+		component: () => import("@/views/detectionCatalog/DetectionCatalogWazuhRule.vue"),
+		meta: { title: "Wazuh Rule", auth: true, roles: RouteRole.All }
 	}
 ]
