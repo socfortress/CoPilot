@@ -1,7 +1,6 @@
 <template>
 	<div class="page">
 		<CustomersList
-			:highlight
 			:reload
 			@loaded="
 				(() => {
@@ -28,12 +27,13 @@ import { useRoute, useRouter } from "vue-router"
 import CustomerCreationButton from "@/components/customers/CustomerCreationButton.vue"
 import CustomersList from "@/components/customers/CustomersList.vue"
 import CustomerDefaultSettingsButton from "@/components/customers/provision/CustomerDefaultSettingsButton.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSearchDialog } from "@/composables/useSearchDialog"
 
 const route = useRoute()
 const router = useRouter()
+const { routeCustomer } = useNavigation()
 
-const highlight = ref<string | undefined>(undefined)
 const reload = ref(false)
 const firstLoad = ref(false)
 const openForm = ref(false)
@@ -48,7 +48,8 @@ function setOpenForm() {
 
 onBeforeMount(() => {
 	if (route.query?.code) {
-		highlight.value = route.query.code.toString()
+		router.replace(routeCustomer({ code: route.query.code.toString() }).valueOf())
+		return
 	}
 
 	if (route.query?.action === "add-customer") {

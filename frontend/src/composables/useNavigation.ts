@@ -19,7 +19,10 @@ export function useNavigation() {
 
 	function routeCustomer(params?: { code?: string | number; action?: "add-customer" }) {
 		if (params?.code) {
-			return routerConstructor({ name: "Customers", query: { code: params.code.toString() } })
+			return routerConstructor({
+				name: "Customer",
+				params: { code: params.code.toString() }
+			})
 		} else if (params?.action) {
 			return routerConstructor({ name: "Customers", query: { action: params.action.toString() } })
 		} else {

@@ -59,7 +59,7 @@ import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 import CustomerItem from "./CustomerItem.vue"
 
-const props = defineProps<{ highlight: string | null | undefined; reload?: boolean }>()
+const props = defineProps<{ highlight?: string | null | undefined; reload?: boolean }>()
 const emit = defineEmits<{
 	(e: "loaded", value: number): void
 }>()

@@ -53,6 +53,10 @@ export const detectionCatalogRoutes: RouteRecordRaw[] = [
 		redirect: "/detection-catalog"
 	},
 	{
+		path: "/detection-catalog/compliance/:framework",
+		redirect: "/detection-catalog"
+	},
+	{
 		path: "/detection-catalog/compliance/:framework/:control",
 		name: "DetectionCatalogComplianceGroup",
 		component: () => import("@/views/detectionCatalog/DetectionCatalogComplianceGroup.vue"),

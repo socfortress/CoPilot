@@ -124,12 +124,11 @@
 			</template>
 
 			<template #footerExtra>
-				<n-button size="small" @click.stop="showDetails = true">
-					<template #icon>
-						<Icon :name="DetailsIcon" />
-					</template>
-					Details
-				</n-button>
+				<EntityDetailsButton
+					size="small"
+					:url="routeCustomer({ code: customer.customer_code }).fullUrl()"
+					@view="showDetails = true"
+				/>
 			</template>
 		</CardEntity>
 
@@ -142,163 +141,24 @@
 			:bordered="false"
 			segmented
 		>
-			<n-tabs type="line" animated :tabs-padding="24" class="h-full">
-				<n-tab-pane name="Customer" tab="Customer" display-directive="show" class="pt-0!">
-					<n-tabs
-						type="line"
-						animated
-						:tabs-padding="24"
-						class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-99"
-						placement="left"
-						:pane-style="{ minHeight: 'min(450px, 90vh)' }"
-					>
-						<n-tab-pane name="Info" tab="Info" display-directive="show:lazy" class="p-4!">
-							<CustomerInfo
-								v-if="customerInfo"
-								v-model:loading="loadingDelete"
-								:customer="customerInfo"
-								@delete="deletedItem()"
-								@submitted="customerInfo = $event"
-							/>
-						</n-tab-pane>
-						<n-tab-pane name="Provision" tab="Provision" display-directive="show:lazy" class="p-4!">
-							<CustomerProvision
-								:customer-meta
-								:customer-code="customer.customer_code"
-								:customer-name="customer.customer_name"
-								@delete="customerMeta = null"
-								@submitted="customerMeta = $event"
-							/>
-						</n-tab-pane>
-						<n-tab-pane
-							name="3rd Party Integrations"
-							tab="3rd Party Integrations"
-							display-directive="show:lazy"
-							class="p-4!"
-						>
-							<CustomerIntegrations
-								:customer-code="customer.customer_code"
-								:customer-name="customer.customer_name"
-							/>
-						</n-tab-pane>
-						<n-tab-pane
-							name="Network Connectors"
-							tab="Network Connectors"
-							display-directive="show:lazy"
-							class="p-4!"
-						>
-							<CustomerNetworkConnectors
-								:customer-code="customer.customer_code"
-								:customer-name="customer.customer_name"
-							/>
-						</n-tab-pane>
-						<n-tab-pane
-							name="Notification Workflows"
-							tab="Notification Workflows"
-							display-directive="show:lazy"
-							class="p-4!"
-						>
-							<CustomerNotificationsWorkflows :customer-code="customer.customer_code" />
-						</n-tab-pane>
-						<n-tab-pane name="AI Triggers" tab="AI Triggers" display-directive="show:lazy" class="p-4!">
-							<CustomerAITriggers :customer-code="customer.customer_code" />
-						</n-tab-pane>
-						<n-tab-pane
-							name="AI Notifications"
-							tab="AI Notifications"
-							display-directive="show:lazy"
-							class="overflow-hidden p-4!"
-						>
-							<CustomerAiNotifications :customer-code="customer.customer_code" />
-						</n-tab-pane>
-						<n-tab-pane name="Event Sources" tab="Event Sources" display-directive="show:lazy" class="p-4!">
-							<CustomerEventSources :customer-code="customer.customer_code" />
-						</n-tab-pane>
-
-						<template #suffix><div class="h-4 w-full"></div></template>
-					</n-tabs>
-				</n-tab-pane>
-
-				<n-tab-pane name="Agents" tab="Agents" display-directive="show" class="pt-0!">
-					<n-tabs
-						type="line"
-						animated
-						:tabs-padding="24"
-						class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-99"
-						placement="left"
-						:pane-style="{ minHeight: 'min(450px, 90vh)' }"
-					>
-						<n-tab-pane name="Agents" tab="Agents" display-directive="show" class="p-4! pr-0!">
-							<n-scrollbar trigger="none" class="max-h-117.5 pr-4">
-								<CustomerAgents v-if="customerInfo" :customer="customerInfo" />
-							</n-scrollbar>
-						</n-tab-pane>
-						<n-tab-pane
-							name="Deploy Agent"
-							tab="Deploy Agent"
-							display-directive="show:lazy"
-							class="overflow-hidden p-4!"
-						>
-							<CustomerEdrInstall :customer-code="customer.customer_code" />
-						</n-tab-pane>
-						<n-tab-pane
-							name="Healthcheck Wazuh"
-							tab="Healthcheck Wazuh"
-							display-directive="show:lazy"
-							class="p-4! pr-0!"
-						>
-							<n-scrollbar trigger="none" class="max-h-117.5 pr-4">
-								<CustomerHealthcheckList
-									v-model:filters="healthcheckFilters"
-									source="wazuh"
-									:customer-code="customer.customer_code"
-								/>
-							</n-scrollbar>
-						</n-tab-pane>
-						<n-tab-pane
-							name="Healthcheck Velociraptor"
-							tab="Healthcheck Velociraptor"
-							display-directive="show:lazy"
-							class="p-4! pr-0!"
-						>
-							<n-scrollbar trigger="none" class="max-h-117.5 pr-4">
-								<CustomerHealthcheckList
-									v-model:filters="healthcheckFilters"
-									source="velociraptor"
-									:customer-code="customer.customer_code"
-								/>
-							</n-scrollbar>
-						</n-tab-pane>
-
-						<template #suffix><div class="h-4 w-full"></div></template>
-					</n-tabs>
-				</n-tab-pane>
-
-				<n-tab-pane
-					v-if="customerPortainerStackId !== null"
-					name="Wazuh Worker"
-					tab="Wazuh Worker"
-					display-directive="show"
-					class="p-4!"
-				>
-					<CustomerWazuhWorker :stack-id="customerPortainerStackId" />
-				</n-tab-pane>
-			</n-tabs>
+			<CustomerDetails v-if="showDetails" :customer use-max-height @delete="deletedItem()" />
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { Customer, CustomerMeta } from "@/types/customers"
-import { NAvatar, NButton, NModal, NPopover, NScrollbar, NTabPane, NTabs, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } from "vue"
+import type { Customer } from "@/types/customers"
+import { NAvatar, NModal, NPopover, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useCustomerHealthcheckFilters } from "@/composables/useCustomerHealthcheckFilters"
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage, getAvatar, getNameInitials } from "@/utils"
+import CustomerDetails from "./CustomerDetails.vue"
 
 const props = defineProps<{
 	customer: Customer
@@ -308,26 +168,9 @@ const props = defineProps<{
 const emit = defineEmits<{
 	(e: "delete"): void
 }>()
-const CustomerInfo = defineAsyncComponent(() => import("./CustomerInfo.vue"))
-const CustomerAgents = defineAsyncComponent(() => import("./CustomerAgents.vue"))
-const CustomerEdrInstall = defineAsyncComponent(() => import("./CustomerEdrInstall.vue"))
-const CustomerProvision = defineAsyncComponent(() => import("./provision/CustomerProvision.vue"))
-const CustomerHealthcheckList = defineAsyncComponent(() => import("./healthcheck/CustomerHealthcheckList.vue"))
-const CustomerIntegrations = defineAsyncComponent(() => import("./integrations/CustomerIntegrations.vue"))
-const CustomerNetworkConnectors = defineAsyncComponent(
-	() => import("./networkConnectors/CustomerNetworkConnectors.vue")
-)
-const CustomerNotificationsWorkflows = defineAsyncComponent(
-	() => import("./notifications/CustomerNotificationsWorkflows.vue")
-)
-const CustomerAITriggers = defineAsyncComponent(() => import("./aiTriggers/CustomerAITriggers.vue"))
-const CustomerAiNotifications = defineAsyncComponent(() => import("./aiNotifications/CustomerAiNotifications.vue"))
-const CustomerEventSources = defineAsyncComponent(() => import("./eventSources/CustomerEventSources.vue"))
-const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWorker.vue"))
 
 const { customer, highlight, hideCardActions } = toRefs(props)
 
-const DetailsIcon = "carbon:settings-adjust"
 const UserTypeIcon = "solar:shield-user-linear"
 const ParentIcon = "material-symbols-light:supervisor-account-outline-rounded"
 const InfoIcon = "carbon:information"
@@ -336,17 +179,14 @@ const PhoneIcon = "carbon:phone"
 const ProvisionIcon = "carbon:network-3"
 const AgentsIcon = "carbon:devices"
 
+const { routeCustomer } = useNavigation()
 const showDetails = ref(false)
 const loadingFull = ref(false)
-const loadingDelete = ref(false)
 const message = useMessage()
 const customerInfo = ref<Customer | null>(null)
-const customerMeta = ref<CustomerMeta | null>(null)
-const customerPortainerStackId = ref<number | null>(null)
 const agentCount = ref<number | null>(null)
-const { healthcheckFilters } = useCustomerHealthcheckFilters()
 
-const loading = computed(() => loadingFull.value || loadingDelete.value)
+const loading = computed(() => loadingFull.value)
 
 const fallbackAvatar = computed(() => {
 	const initials = getNameInitials(customer.value.customer_name)
@@ -365,7 +205,6 @@ function getFull() {
 		.then(res => {
 			if (res.data.success) {
 				customerInfo.value = res.data.customer
-				customerMeta.value = res.data.customer_meta || null
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -376,16 +215,6 @@ function getFull() {
 		.finally(() => {
 			loadingFull.value = false
 		})
-}
-
-function getPortainerStackId() {
-	Api.portainer.getCustomerStackId(customer.value.customer_name).then(res => {
-		if (res.data.success) {
-			customerPortainerStackId.value = res.data.stack_id || null
-		} else {
-			message.warning(res.data?.message || "An error occurred. Please try again later.")
-		}
-	})
 }
 
 function getAgentCount() {
@@ -405,21 +234,6 @@ function deletedItem() {
 	showDetails.value = false
 	emit("delete")
 }
-
-watch(showDetails, val => {
-	if (val) {
-		if (
-			customer.value.customer_code &&
-			(!customer.value.customer_name || !customerMeta.value?.customer_meta_graylog_index)
-		) {
-			getFull()
-		}
-
-		if (!customerPortainerStackId.value) {
-			getPortainerStackId()
-		}
-	}
-})
 
 onBeforeMount(() => {
 	customerInfo.value = customer.value
