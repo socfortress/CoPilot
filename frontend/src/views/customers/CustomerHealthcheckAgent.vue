@@ -1,11 +1,26 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<n-button quaternary class="self-start" @click="goBack">
-			<template #icon>
-				<Icon :name="BackIcon" />
-			</template>
-			Back
-		</n-button>
+		<div class="flex flex-wrap items-center gap-3">
+			<n-button quaternary class="self-start" @click="goBack">
+				<template #icon>
+					<Icon :name="BackIcon" />
+				</template>
+				Back
+			</n-button>
+
+			<Badge v-if="headerHealth" type="splitted">
+				<template #label>Agent</template>
+				<template #value>#{{ headerHealth.agent_id }}</template>
+			</Badge>
+			<Badge v-if="headerHealth" type="splitted">
+				<template #label>Label</template>
+				<template #value>{{ headerHealth.label }}</template>
+			</Badge>
+			<Badge v-if="headerHealth" type="splitted">
+				<template #label>IP address</template>
+				<template #value>{{ headerHealth.ip_address }}</template>
+			</Badge>
+		</div>
 
 		<CustomerHealthcheckDetails
 			v-if="customerCode && source && agentId"
@@ -13,23 +28,27 @@
 			:source
 			:agent-id
 			:embedded="false"
+			@loaded="onLoadedHealth"
 		/>
 		<n-empty v-else description="Invalid health check agent" class="h-48 justify-center" />
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { CustomerHealthcheckSource } from "@/types/customers"
+import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers"
 import { NButton, NEmpty } from "naive-ui"
-import { computed } from "vue"
+import { computed, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import CustomerHealthcheckDetails from "@/components/customers/healthcheck/CustomerHealthcheckDetails.vue"
+import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
+import CustomerHealthcheckDetails from "@/components/customers/healthcheck/CustomerHealthcheckDetails.vue"
 
 const route = useRoute()
 const router = useRouter()
 
 const BackIcon = "carbon:arrow-left"
+
+const headerHealth = ref<CustomerAgentHealth | null>(null)
 
 const customerCode = computed(() => {
 	const raw = route.params.code
@@ -49,6 +68,10 @@ const agentId = computed(() => {
 	if (!raw) return null
 	return Array.isArray(raw) ? raw[0] : String(raw)
 })
+
+function onLoadedHealth(health: CustomerAgentHealth) {
+	headerHealth.value = health
+}
 
 function goBack() {
 	if (window.history.length > 1) {
