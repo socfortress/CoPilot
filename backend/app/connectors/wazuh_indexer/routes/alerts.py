@@ -5,7 +5,9 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRulePerHostResponse
@@ -25,6 +27,8 @@ from app.connectors.wazuh_indexer.services.alerts import get_graylog_alerts
 from app.connectors.wazuh_indexer.services.alerts import get_host_alerts
 from app.connectors.wazuh_indexer.services.alerts import get_index_alerts
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
+from app.db.db_session import get_db
+from app.middleware.customer_access import customer_access_handler
 
 # App specific imports
 
@@ -206,8 +210,24 @@ async def get_all_alerts_by_rule_per_host(
     description="Get alerts that are configured Via Graylog",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_alerts_not_created_in_copilot(request: GraylogAlertsSearchBody) -> AlertsSearchResponse:
+async def get_alerts_not_created_in_copilot(
+    request: GraylogAlertsSearchBody,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> AlertsSearchResponse:
     """
     Get the Graylog event indices. Then get all the results from the list of indices, where `copilot_alert_id` does not exist.
     """
-    return AlertsSearchResponse(success=True, message="Alerts retrieved", alerts_summary=await get_graylog_alerts(request))
+    effective_customers = await customer_access_handler.resolve_effective_customers(
+        current_user,
+        request.customer_codes,
+        db,
+    )
+    scoped_customers = None if "*" in effective_customers else effective_customers
+
+    alerts_summary = await get_graylog_alerts(
+        request,
+        customer_codes=scoped_customers,
+        session=db,
+    )
+    return AlertsSearchResponse(success=True, message="Alerts retrieved", alerts_summary=alerts_summary)

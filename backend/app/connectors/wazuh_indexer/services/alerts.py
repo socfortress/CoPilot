@@ -13,8 +13,8 @@ from elasticsearch7.exceptions import NotFoundError
 from elasticsearch7.exceptions import RequestError
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
-# from app.connectors.wazuh_indexer.schema.alerts import Alert
 from app.connectors.wazuh_indexer.schema.alerts import AlertNotFound
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHost
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
@@ -31,6 +31,12 @@ from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import SkippableWazuhIndexerClientErrors
+
+# from app.connectors.wazuh_indexer.schema.alerts import Alert
+from app.connectors.wazuh_indexer.utils.customer_index import (
+    build_customer_index_matchers,
+)
+from app.connectors.wazuh_indexer.utils.customer_index import index_matches_customer
 from app.connectors.wazuh_indexer.utils.universal import AlertsQueryBuilder
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
@@ -590,7 +596,9 @@ async def process_alert_hits(hits: List[Dict], es_client: AsyncElasticsearch) ->
 
 async def get_graylog_alerts(
     request: GraylogAlertsSearchBody,
-) -> AlertsSearchResponse:
+    customer_codes: Optional[List[str]] = None,
+    session: Optional[AsyncSession] = None,
+) -> List[Dict]:
     """
     Retrieves alerts from the Graylog Alert Index.
     Looks up the actual alert details via the origin_context field.
@@ -604,4 +612,17 @@ async def get_graylog_alerts(
     hits = await fetch_alerts_from_graylog(request.index_prefix, request.size, request.timerange)
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
 
-    return await process_alert_hits(hits, es_client)
+    alerts = await process_alert_hits(hits, es_client)
+
+    if customer_codes:
+        if session is None:
+            logger.warning("Graylog customer filter requested without DB session; skipping filter")
+            return alerts
+
+        matchers = await build_customer_index_matchers(session, customer_codes)
+        if not matchers:
+            return []
+
+        return [alert for alert in alerts if index_matches_customer(alert.get("index_name"), matchers)]
+
+    return alerts

@@ -1,7 +1,7 @@
 <template>
 	<n-card class="agent-toolbar @container w-full max-w-full min-w-85 overflow-hidden" content-class="p-0!">
 		<div class="flex h-full flex-col gap-6 overflow-hidden px-4 py-3">
-			<div class="flex flex-col gap-2">
+			<div class="flex flex-col gap-3">
 				<div class="flex items-center justify-between gap-2">
 					<div class="text-secondary">
 						<strong v-if="agentsFilteredLength !== agentsLength">{{ agentsFilteredLength }}</strong>
@@ -14,7 +14,7 @@
 						v-if="enableSyncVulnerabilitiesDropdown"
 						placement="bottom-start"
 						trigger="click"
-						:options="customersOptions"
+						:options="syncDropdownOptions"
 						@select="emit('run', $event)"
 					>
 						<n-button :loading="syncing" secondary size="small" @click="load()">Sync</n-button>
@@ -28,6 +28,18 @@
 						<Icon :name="SearchIcon" />
 					</template>
 				</n-input>
+				<n-form-item label="Customer" :show-feedback="false" class="mt-2 mb-0!">
+					<n-select
+						v-model:value="customerCodes"
+						:options="customersOptions"
+						:loading="loadingCustomersList"
+						placeholder="All customers"
+						multiple
+						filterable
+						clearable
+						size="small"
+					/>
+				</n-form-item>
 			</div>
 
 			<!-- Selection Mode & Bulk Delete Section -->
@@ -108,10 +120,11 @@ import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import { useWindowSize } from "@vueuse/core"
-import { NButton, NCard, NDropdown, NInput, NScrollbar, NSwitch, NTag, useMessage } from "naive-ui"
-import { computed, h, ref, toRefs } from "vue"
+import { NButton, NCard, NDropdown, NFormItem, NInput, NScrollbar, NSelect, NSwitch, NTag, useMessage } from "naive-ui"
+import { computed, h, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
@@ -150,6 +163,9 @@ const {
 const SearchIcon = "carbon:search"
 const DeleteIcon = "carbon:trash-can"
 const message = useMessage()
+const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
+
+const customerCodes = defineModel<string[]>("customerCodes", { default: () => [] })
 
 const textFilter = computed<string>({
 	get() {
@@ -166,7 +182,11 @@ const loadingCustomersList = ref(false)
 const customersList = ref<Customer[]>([])
 const { width: winWidth } = useWindowSize()
 
-const customersOptions = computed(() => {
+const customersOptions = computed(() =>
+	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
+)
+
+const syncDropdownOptions = computed(() => {
 	const options: DropdownMixedOption[] = [
 		{
 			label: "Sync Agents",
@@ -231,4 +251,11 @@ function load() {
 		getCustomers()
 	}
 }
+
+onBeforeMount(() => {
+	getCustomers()
+	const draft = { customerCodes: customerCodes.value }
+	applyGlobalCustomerPrefill("customerCodes", draft, { multiple: true })
+	customerCodes.value = (draft.customerCodes as string[]) || []
+})
 </script>

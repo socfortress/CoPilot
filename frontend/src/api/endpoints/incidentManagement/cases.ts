@@ -23,7 +23,10 @@ export interface CasesPaginationParams {
 	order?: "asc" | "desc"
 }
 
-export type CasesListQuery = Partial<UnionToIntersection<CasesFilter>> & CasesPaginationParams
+export type CasesListQuery = Partial<UnionToIntersection<CasesFilter>> &
+	CasesPaginationParams & {
+		customerCodes?: string[]
+	}
 
 export interface CaseReportPayload {
 	case_id: number
@@ -58,7 +61,7 @@ export default {
 			url = `/agents/${query.hostname}/cases`
 		}
 
-		const params: Record<string, number | string> = {}
+		const params: Record<string, number | string | string[]> = {}
 		if (query.page !== undefined) {
 			params.page = query.page
 		}
@@ -68,8 +71,17 @@ export default {
 		if (query.order !== undefined) {
 			params.order = query.order
 		}
+		if (query.customerCodes?.length && url === `/incidents/db_operations/cases`) {
+			params.customer_codes = query.customerCodes
+		}
 
-		return HttpClient.get<FlaskBaseResponse & CasesListResponse>(url, { params, signal })
+		return HttpClient.get<FlaskBaseResponse & CasesListResponse>(url, {
+			params,
+			paramsSerializer: {
+				indexes: null
+			},
+			signal
+		})
 	},
 	getCase(caseId: number) {
 		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(`/incidents/db_operations/case/${caseId}`)

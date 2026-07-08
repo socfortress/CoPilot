@@ -17,6 +17,11 @@ export interface AgentPayload {
 	velociraptor_id: string
 }
 
+export interface GetAgentsQuery {
+	agentId?: string
+	customerCodes?: string[]
+}
+
 export interface AgentArtifactsQuery {
 	agentId: string
 	flowId?: string
@@ -25,8 +30,40 @@ export interface AgentArtifactsQuery {
 export type VulnerabilitySeverityType = "Low" | "Medium" | "High" | "Critical" | "All"
 
 export default {
-	getAgents(agentId?: string) {
-		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(`/agents${agentId ? `/${agentId}` : ""}`)
+	getAgents(arg?: string | GetAgentsQuery, signal?: AbortSignal) {
+		// Support legacy signature getAgents(agentId?: string)
+		if (typeof arg === "string") {
+			return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(
+				`/agents/${arg}`,
+				signal ? { signal } : undefined
+			)
+		}
+
+		const agentId = arg?.agentId
+		const customerCodes = arg?.customerCodes
+
+		const url = `/agents${agentId ? `/${agentId}` : ""}`
+
+		const config =
+			customerCodes && customerCodes.length
+				? {
+						params: {
+							customer_codes: customerCodes
+						},
+						paramsSerializer: {
+							indexes: null
+						}
+				  }
+				: undefined
+
+		const requestConfig =
+			signal && config
+				? { ...config, signal }
+				: signal
+					? { signal }
+					: config
+
+		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(url, requestConfig)
 	},
 	markCritical(agentId: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/agents/${agentId}/critical`)

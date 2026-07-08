@@ -6,13 +6,17 @@
 		</div>
 
 		<div class="section flex justify-end gap-3 @[70rem]:justify-between">
-			<div class="left-box hidden gap-3 @[70rem]:flex">
+			<div class="left-box hidden items-center gap-3 @[70rem]:flex">
 				<StackProvisioningButton size="small" type="primary" secondary />
 				<CloudSecurityAssessmentButton size="small" type="primary" secondary />
 				<WebVulnerabilityAssessmentButton size="small" type="primary" secondary />
 				<GitHubAuditButton size="small" type="primary" secondary />
 			</div>
-			<div class="right-box hidden gap-3 @[70rem]:flex">
+			<div class="right-box hidden items-center gap-3 @[70rem]:flex">
+				<div class="flex items-center gap-2">
+					<span class="text-secondary text-xs">Use Global Customer Filter</span>
+					<n-switch v-model:value="useGlobalCustomerFilterToggle" size="small" />
+				</div>
 				<ActiveResponseWizardButton size="small" type="primary" secondary />
 				<ThreatIntelButton size="small" type="primary" secondary />
 			</div>
@@ -28,7 +32,7 @@
 		<div class="section">
 			<div class="grid grid-flow-row-dense grid-cols-12 gap-6">
 				<div class="xs:col-span-12 col-span-12 sm:col-span-4 min-[75rem]:col-span-2">
-					<AgentsCard class="h-full" />
+					<AgentsCard class="h-full" :customer-codes="effectiveCustomerCodes" />
 				</div>
 				<div class="xs:col-span-6 col-span-12 sm:col-span-4 min-[75rem]:col-span-2">
 					<HealthcheckCard class="h-full" />
@@ -37,10 +41,10 @@
 					<CustomersCard class="h-full" />
 				</div>
 				<div class="col-span-12 sm:col-span-6 min-[75rem]:col-span-3">
-					<IncidentAlerts class="h-full" />
+					<IncidentAlerts class="h-full" :customer-codes="effectiveCustomerCodes" />
 				</div>
 				<div class="col-span-12 sm:col-span-6 min-[75rem]:col-span-3">
-					<IncidentCases class="h-full" />
+					<IncidentCases class="h-full" :customer-codes="effectiveCustomerCodes" />
 				</div>
 			</div>
 		</div>
@@ -84,8 +88,8 @@
 
 <script setup lang="ts">
 import { useResizeObserver } from "@vueuse/core"
-import { NButton, NDrawer, NDrawerContent } from "naive-ui"
-import { defineAsyncComponent, ref } from "vue"
+import { NButton, NDrawer, NDrawerContent, NSwitch } from "naive-ui"
+import { computed, defineAsyncComponent, onMounted, ref } from "vue"
 import ActiveResponseWizardButton from "@/components/activeResponse/ActiveResponseWizardButton.vue"
 import CloudSecurityAssessmentButton from "@/components/cloudSecurityAssessment/CloudSecurityAssessmentButton.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -103,6 +107,7 @@ import IncidentCases from "@/components/overview/IncidentCases.vue"
 import StackProvisioningButton from "@/components/stackProvisioning/StackProvisioningButton.vue"
 import WebVulnerabilityAssessmentButton from "@/components/webVulnerabilityAssessment/WebVulnerabilityAssessmentButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 
 const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 
@@ -111,6 +116,12 @@ const page = ref()
 const cardDirection = ref<"horizontal" | "vertical">("horizontal")
 const showQuickActions = ref(false)
 const { routeIndex, routeGraylogPipelines } = useNavigation()
+const { globalCustomerCodes, isFiltering } = useGlobalCustomerFilter()
+const useGlobalCustomerFilterToggle = ref(false)
+
+const effectiveCustomerCodes = computed(() =>
+	useGlobalCustomerFilterToggle.value ? globalCustomerCodes.value : []
+)
 
 useResizeObserver(page, entries => {
 	const entry = entries[0]
@@ -119,6 +130,12 @@ useResizeObserver(page, entries => {
 	const { width } = entry.contentRect
 
 	cardDirection.value = width > 500 ? "horizontal" : "vertical"
+})
+
+onMounted(() => {
+	if (isFiltering.value) {
+		useGlobalCustomerFilterToggle.value = true
+	}
 })
 </script>
 

@@ -1,8 +1,11 @@
 import re
 from typing import Dict
+from typing import List
+from typing import Optional
 from typing import Union
 
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealth
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse
@@ -14,6 +17,9 @@ from app.connectors.wazuh_indexer.schema.monitoring import NodeAllocation
 from app.connectors.wazuh_indexer.schema.monitoring import NodeAllocationResponse
 from app.connectors.wazuh_indexer.schema.monitoring import Shards
 from app.connectors.wazuh_indexer.schema.monitoring import ShardsResponse
+from app.connectors.wazuh_indexer.utils.customer_index import (
+    filter_index_dicts_by_customers,
+)
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.connectors.wazuh_indexer.utils.universal import format_indices_stats
 from app.connectors.wazuh_indexer.utils.universal import format_node_allocation
@@ -77,7 +83,10 @@ async def node_allocation() -> Union[NodeAllocationResponse, Dict[str, bool]]:
         raise Exception(str(e))
 
 
-async def indices_stats() -> Union[IndicesStatsResponse, Dict[str, str]]:
+async def indices_stats(
+    customer_codes: Optional[List[str]] = None,
+    session: Optional[AsyncSession] = None,
+) -> Union[IndicesStatsResponse, Dict[str, str]]:
     """
     Returns the indices stats of the Wazuh Indexer service.
 
@@ -87,7 +96,7 @@ async def indices_stats() -> Union[IndicesStatsResponse, Dict[str, str]]:
     Raises:
         Exception: An exception is raised if the indices stats cannot be retrieved.
     """
-    logger.info("Collecting Wazuh Indexer indices stats")
+    logger.info(f"Collecting Wazuh Indexer indices stats (customer_codes={customer_codes or 'all'})")
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
         raw_indices_stats_data = es_client.cat.indices(format="json")
@@ -95,6 +104,16 @@ async def indices_stats() -> Union[IndicesStatsResponse, Dict[str, str]]:
         formatted_indices_stats_data = await format_indices_stats(
             raw_indices_stats_data,
         )
+
+        if customer_codes is not None:
+            if session is None:
+                logger.warning("Indices customer filter requested without DB session; skipping filter")
+            else:
+                formatted_indices_stats_data = await filter_index_dicts_by_customers(
+                    formatted_indices_stats_data,
+                    customer_codes,
+                    session,
+                )
 
         indices_stats_models = [IndicesStats(**index) for index in formatted_indices_stats_data]
 
@@ -222,7 +241,10 @@ def extract_customer_from_index(index_name: str) -> str:
     return "unknown"
 
 
-async def indices_size_per_customer() -> Union[CustomerIndicesSizeResponse, Dict[str, str]]:
+async def indices_size_per_customer(
+    customer_codes: Optional[List[str]] = None,
+    session: Optional[AsyncSession] = None,
+) -> Union[CustomerIndicesSizeResponse, Dict[str, str]]:
     """
     Returns the total indices size aggregated per customer.
 
@@ -232,12 +254,22 @@ async def indices_size_per_customer() -> Union[CustomerIndicesSizeResponse, Dict
     Raises:
         Exception: An exception is raised if the indices stats cannot be retrieved.
     """
-    logger.info("Collecting Wazuh Indexer indices size per customer")
+    logger.info(f"Collecting Wazuh Indexer indices size per customer (customer_codes={customer_codes or 'all'})")
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
         raw_indices_stats_data = es_client.cat.indices(format="json")
 
         formatted_indices_stats_data = await format_indices_stats(raw_indices_stats_data)
+
+        if customer_codes is not None:
+            if session is None:
+                logger.warning("Indices size-per-customer filter requested without DB session; skipping filter")
+            else:
+                formatted_indices_stats_data = await filter_index_dicts_by_customers(
+                    formatted_indices_stats_data,
+                    customer_codes,
+                    session,
+                )
 
         # Aggregate by customer
         customer_data: Dict[str, Dict] = {}
