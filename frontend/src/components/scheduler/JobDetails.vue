@@ -2,7 +2,11 @@
 	<n-spin :show="loading">
 		<div v-if="resolvedJob" class="flex flex-col gap-4">
 			<CardEntity embedded>
-				<template #headerMain>{{ resolvedJob.id }}</template>
+				<template #headerMain>
+					<span class="text-default text-lg font-bold">
+						{{ resolvedJob.id }}
+					</span>
+				</template>
 				<template #headerExtra>
 					<n-tag :type="resolvedJob.enabled ? 'success' : 'warning'" size="small">
 						{{ resolvedJob.enabled ? "Enabled" : "Paused" }}

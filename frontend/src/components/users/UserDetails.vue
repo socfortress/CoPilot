@@ -2,7 +2,11 @@
 	<n-spin :show="loading">
 		<div v-if="resolvedUser" class="flex flex-col gap-4">
 			<CardEntity embedded>
-				<template #headerMain>{{ resolvedUser.username }}</template>
+				<template #headerMain>
+					<span class="text-default text-lg font-bold">
+						{{ resolvedUser.username }}
+					</span>
+				</template>
 				<template #headerExtra>
 					<n-tag :type="roleTagType" size="small">
 						{{ resolvedUser.role_name || "No Role" }}

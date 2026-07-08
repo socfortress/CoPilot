@@ -1,7 +1,11 @@
 <template>
 	<n-spin :show="loading">
 		<CardEntity v-if="resolvedConnector" :embedded>
-			<template #headerMain>{{ resolvedConnector.name }}</template>
+			<template #headerMain>
+				<span class="text-default text-lg font-bold">
+					{{ resolvedConnector.name }}
+				</span>
+			</template>
 
 			<template #default>
 				<p v-if="resolvedConnector.description" class="text-secondary mb-4">
