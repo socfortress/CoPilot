@@ -33,16 +33,17 @@ import { IndexHealth } from "@/types/indices"
 
 const props = defineProps<{
 	indices: IndexStats[] | null
+	loading?: boolean
 }>()
 
 use([CanvasRenderer, PieChart, TooltipComponent, LegendComponent, GridComponent])
 
 type ChartOption = ComposeOption<TooltipComponentOption | LegendComponentOption | GridComponentOption | PieSeriesOption>
 
-const { indices } = toRefs(props)
+const { indices, loading: indicesLoading } = toRefs(props)
 
 const style = computed(() => useThemeStore().style)
-const loading = computed(() => !indices.value)
+const loading = computed(() => indicesLoading.value || !indices.value)
 const chartRef = ref<InstanceType<typeof VChart> | null>(null)
 
 const labelFontSize = computed(() => (window.innerWidth > 1000 ? 13 : 11))

@@ -1,7 +1,7 @@
 <template>
 	<div class="flex flex-col">
 		<div class="mb-4 flex justify-end">
-			<n-form-item label="Customer" :show-feedback="false" class="mb-0! w-full max-w-100">
+			<n-form-item label="Customer" :show-feedback="false" class="mb-0! w-full max-w-100" label-placement="left">
 				<n-select
 					v-model:value="customerCodesFilter"
 					:options="customersOptions"
@@ -15,11 +15,16 @@
 		</div>
 
 		<div class="mb-6">
-			<IndicesMarquee :indices @click="setIndex" />
+			<IndicesMarquee
+				:indices
+				:customer-codes="customerCodesFilter"
+				:loading="loadingIndex"
+				@click="setIndex"
+			/>
 		</div>
 
 		<div class="mb-6">
-			<Details v-model="currentIndex" :indices />
+			<Details v-model="currentIndex" :indices :loading="loadingIndex" />
 		</div>
 
 		<div class="mb-6">
@@ -28,7 +33,7 @@
 					<ClusterHealth class="h-full" />
 				</div>
 				<div class="basis-1/2">
-					<UnhealthyIndices :indices class="h-full" @click="setIndex" />
+					<UnhealthyIndices :indices :loading="loadingIndex" class="h-full" @click="setIndex" />
 				</div>
 			</div>
 		</div>
@@ -43,7 +48,7 @@
 					<NodeAllocation class="h-full rounded-none" :bordered="false" />
 				</div>
 				<div class="basis-3/5 overflow-hidden">
-					<TopIndices :indices class="rounded-none" :bordered="false" />
+					<TopIndices :indices :loading="loadingIndex" class="rounded-none" :bordered="false" />
 				</div>
 			</div>
 		</n-card>
@@ -54,8 +59,9 @@
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import type { IndexStats } from "@/types/indices"
+import axios from "axios"
 import { NCard, NFormItem, NSelect, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, onBeforeMount, ref, watch } from "vue"
+import { computed, defineAsyncComponent, onBeforeMount, onBeforeUnmount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import ClusterHealth from "@/components/indices/ClusterHealth.vue"
@@ -79,6 +85,7 @@ const currentIndex = ref<IndexStats | null>(null)
 const requestedIndex = ref<string | null>(null)
 const customerCodesFilter = ref<string[]>([])
 const customersList = ref<Customer[]>([])
+let abortController: AbortController | null = null
 
 const customersOptions = computed(() =>
 	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
@@ -113,13 +120,20 @@ function getCustomers() {
 		})
 }
 
+function cancelGetIndices() {
+	abortController?.abort()
+}
+
 function getIndices(cb?: () => void) {
+	cancelGetIndices()
 	loadingIndex.value = true
+
+	abortController = new AbortController()
 
 	const query = customerCodesFilter.value.length ? { customerCodes: customerCodesFilter.value } : undefined
 
 	Api.wazuh.indices
-		.getIndices(query)
+		.getIndices(query, abortController.signal)
 		.then(res => {
 			if (res.data.success) {
 				indices.value = res.data.indices_stats
@@ -128,21 +142,22 @@ function getIndices(cb?: () => void) {
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
+			loadingIndex.value = false
 		})
 		.catch(err => {
-			if (err.response?.status === 401) {
-				message.error(
-					getApiErrorMessage(err as ApiError) ||
-						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
-				)
-			} else if (err.response?.status === 404) {
-				message.error(getApiErrorMessage(err as ApiError) || "No indices were found.")
-			} else {
-				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+			if (!axios.isCancel(err)) {
+				if (err.response?.status === 401) {
+					message.error(
+						getApiErrorMessage(err as ApiError) ||
+							"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
+					)
+				} else if (err.response?.status === 404) {
+					message.error(getApiErrorMessage(err as ApiError) || "No indices were found.")
+				} else {
+					message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+				}
+				loadingIndex.value = false
 			}
-		})
-		.finally(() => {
-			loadingIndex.value = false
 		})
 }
 
@@ -171,4 +186,8 @@ watch(
 	},
 	{ immediate: true }
 )
+
+onBeforeUnmount(() => {
+	cancelGetIndices()
+})
 </script>

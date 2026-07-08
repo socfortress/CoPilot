@@ -72,18 +72,21 @@ type IndexModel = IndexStats | null | ""
 const props = defineProps<{
 	indices: IndexStats[] | null
 	modelValue: IndexModel
+	loading?: boolean
 }>()
 
 const emit = defineEmits<{
 	(e: "update:modelValue", value: IndexModel): void
 }>()
 
-const { indices, modelValue } = toRefs(props)
+const { indices, modelValue, loading: indicesLoading } = toRefs(props)
 
 const message = useMessage()
 const shards = ref<IndexShard[]>([])
 const loadingShards = ref(false)
-const loading = computed(() => !indices?.value || indices.value === null || loadingShards.value)
+const loading = computed(
+	() => indicesLoading.value || !indices?.value || indices.value === null || loadingShards.value
+)
 
 const currentIndex = computed<IndexModel>({
 	get() {

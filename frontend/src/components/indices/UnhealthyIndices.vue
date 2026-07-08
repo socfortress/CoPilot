@@ -42,6 +42,7 @@ import { IndexHealth } from "@/types/indices"
 
 const props = defineProps<{
 	indices: IndexStats[] | null
+	loading?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -50,9 +51,9 @@ const emit = defineEmits<{
 
 const ShieldIcon = "fluent:shield-task-20-regular"
 
-const { indices } = toRefs(props)
+const { indices, loading: indicesLoading } = toRefs(props)
 
-const loading = computed(() => !indices?.value || indices.value === null)
+const loading = computed(() => indicesLoading.value || !indices?.value || indices.value === null)
 
 const unhealthyIndices = computed(() =>
 	(indices.value || []).filter(
