@@ -1,4 +1,5 @@
 import type { RouteLocationRaw } from "vue-router"
+import type { CustomerHealthcheckSource } from "@/types/customers"
 import { useRouter } from "vue-router"
 
 export function useNavigation() {
@@ -28,6 +29,25 @@ export function useNavigation() {
 		} else {
 			return routerConstructor({ name: "Customers" })
 		}
+	}
+
+	function routeCustomerHealthcheckAgent(
+		customerCode?: string,
+		source?: CustomerHealthcheckSource,
+		agentId?: string
+	) {
+		if (customerCode && source && agentId) {
+			return routerConstructor({
+				name: "CustomerHealthcheckAgent",
+				params: { code: customerCode, source, agentId }
+			})
+		}
+
+		if (customerCode) {
+			return routerConstructor({ name: "Customer", params: { code: customerCode } })
+		}
+
+		return routerConstructor({ name: "Customers" })
 	}
 
 	function routeAgent(agentId?: string | number) {
@@ -264,6 +284,7 @@ export function useNavigation() {
 
 	return {
 		routeCustomer,
+		routeCustomerHealthcheckAgent,
 		routeAgent,
 		routeIndex,
 		routeLicense,

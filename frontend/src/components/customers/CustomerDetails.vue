@@ -111,6 +111,7 @@ function ensureLoaded() {
 
 	if (props.customer?.customer_name) {
 		customerInfo.value = props.customer
+		emit("loaded", props.customer)
 	}
 
 	if (!customerInfo.value?.customer_name || !customerMeta.value?.customer_meta_graylog_index) {
