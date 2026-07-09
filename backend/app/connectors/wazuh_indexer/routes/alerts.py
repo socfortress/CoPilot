@@ -7,6 +7,8 @@ from fastapi import Security
 from loguru import logger
 
 from app.auth.utils import AuthHandler
+from app.connectors.wazuh_indexer.schema.alerts import AlertByIdResponse
+from app.connectors.wazuh_indexer.schema.alerts import AlertByIdSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRulePerHostResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRuleResponse
@@ -18,6 +20,7 @@ from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchResponse
+from app.connectors.wazuh_indexer.services.alerts import get_alert_by_id
 from app.connectors.wazuh_indexer.services.alerts import get_alerts
 from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_host
 from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule
@@ -70,6 +73,23 @@ async def verify_index_name(
             detail=f"Index name '{index_alerts_search_body.index_name}' is not managed by Wazuh Indexer or no longer exists.",
         )
     return index_alerts_search_body
+
+
+@wazuh_indexer_alerts_router.post(
+    "/by-id",
+    response_model=AlertByIdResponse,
+    description="Get a single Wazuh indexer alert by index name and document id",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_alert_by_index_and_id(request: AlertByIdSearchBody) -> AlertByIdResponse:
+    logger.info(f"Fetching alert {request.alert_id} from index {request.index_name}")
+    alert = await get_alert_by_id(request.index_name, request.alert_id)
+    not_found = alert.get("_source", {}).get("message") == "alert not found"
+    return AlertByIdResponse(
+        success=not not_found,
+        message="Alert retrieved" if not not_found else f"Alert {request.alert_id} not found in index {request.index_name}",
+        alert=alert,
+    )
 
 
 @wazuh_indexer_alerts_router.post(

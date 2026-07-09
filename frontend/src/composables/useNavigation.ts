@@ -107,6 +107,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "Alerts-SIEM" })
 	}
 
+	function routeAlertsSiemAlert(indexName?: string, alertId?: string) {
+		if (indexName && alertId) {
+			return routerConstructor({
+				name: "Alerts-SIEM-Alert",
+				params: { indexName, alertId }
+			})
+		}
+
+		return routerConstructor({ name: "Alerts-SIEM" })
+	}
+
 	function routeConnectors() {
 		return routerConstructor({ name: "Connectors" })
 	}
@@ -312,6 +323,7 @@ export function useNavigation() {
 		routeSocUsers,
 		routeAlerts,
 		routeAlertsSiemSummary,
+		routeAlertsSiemAlert,
 		routeConnectors,
 		routeIncidentManagementAlerts,
 		routeIncidentManagementCases,

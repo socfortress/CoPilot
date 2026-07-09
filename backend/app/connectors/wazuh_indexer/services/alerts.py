@@ -519,6 +519,11 @@ async def get_single_alert_details(
         return AlertNotFound(_index=index_name, _id=index_id, _source={"message": "alert not found"}).to_dict()
 
 
+async def get_alert_by_id(index_name: str, alert_id: str) -> Dict:
+    es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+    return await get_single_alert_details(es_client, index_name.strip(), alert_id.strip())
+
+
 async def fetch_alerts_from_graylog(index_prefix: str, size: int, timerange: str) -> List[Dict]:
     """
     Fetches alerts from the Graylog Alert Index.
