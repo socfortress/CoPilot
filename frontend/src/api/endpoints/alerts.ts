@@ -10,6 +10,10 @@ export interface GraylogAlertsQuery {
 	index_prefix: string
 }
 
+export interface GraylogIndexAlertsQuery extends GraylogAlertsQuery {
+	index_name: string
+}
+
 interface AlertsQuery {
 	size: number
 	timerange: AlertsQueryTimeRange
@@ -63,6 +67,13 @@ export default {
 
 		return HttpClient.post<FlaskBaseResponse & { alerts_summary: AlertsSummary[] }>(
 			`/alerts/alerts/graylog`,
+			query,
+			signal ? { signal } : {}
+		)
+	},
+	getGraylogAlertsSummary(query: GraylogIndexAlertsQuery, signal?: AbortSignal) {
+		return HttpClient.post<FlaskBaseResponse & { alerts_summary: AlertsSummary[] }>(
+			`/alerts/alerts/graylog/index`,
 			query,
 			signal ? { signal } : {}
 		)

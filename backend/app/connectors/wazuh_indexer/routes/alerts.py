@@ -13,6 +13,7 @@ from app.connectors.wazuh_indexer.schema.alerts import AlertsByRuleResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import GraylogAlertsSearchBody
+from app.connectors.wazuh_indexer.schema.alerts import GraylogIndexAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
@@ -22,6 +23,7 @@ from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_host
 from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule
 from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule_per_host
 from app.connectors.wazuh_indexer.services.alerts import get_graylog_alerts
+from app.connectors.wazuh_indexer.services.alerts import get_graylog_alerts_for_index
 from app.connectors.wazuh_indexer.services.alerts import get_host_alerts
 from app.connectors.wazuh_indexer.services.alerts import get_index_alerts
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
@@ -198,6 +200,22 @@ async def get_all_alerts_by_rule_per_host(
     """
     logger.info("Fetching number of all alerts for all rules per host")
     return await get_alerts_by_rule_per_host(alerts_search_body)
+
+
+@wazuh_indexer_alerts_router.post(
+    "/alerts/graylog/index",
+    response_model=AlertsSearchResponse,
+    description="Get Graylog SIEM alerts for a single Wazuh indexer index",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_graylog_alerts_for_single_index(request: GraylogIndexAlertsSearchBody) -> AlertsSearchResponse:
+    logger.info(f"Fetching Graylog alerts for index {request.index_name}")
+    alerts_summary = await get_graylog_alerts_for_index(request)
+    return AlertsSearchResponse(
+        success=len(alerts_summary) > 0,
+        message="Alerts retrieved" if alerts_summary else f"No alerts found for index {request.index_name}",
+        alerts_summary=alerts_summary,
+    )
 
 
 @wazuh_indexer_alerts_router.post(

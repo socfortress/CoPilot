@@ -143,7 +143,7 @@ function loadAlert() {
 
 watch(
 	() => [props.alert, props.alertId, props.reportId] as const,
-		([alert, alertId, reportId]) => {
+	([alert, alertId, reportId]) => {
 		if (alert) {
 			abortController?.abort()
 			fetchedAlert.value = null

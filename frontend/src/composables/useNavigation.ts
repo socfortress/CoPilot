@@ -92,6 +92,21 @@ export function useNavigation() {
 		return routerConstructor({ name: "Alerts" })
 	}
 
+	function routeAlertsSiemSummary(
+		indexName?: string,
+		query?: Partial<{ size: number; timerange: string; index_prefix: string }>
+	) {
+		if (indexName) {
+			return routerConstructor({
+				name: "Alerts-SIEM-Summary",
+				params: { indexName },
+				query: query ?? {}
+			})
+		}
+
+		return routerConstructor({ name: "Alerts-SIEM" })
+	}
+
 	function routeConnectors() {
 		return routerConstructor({ name: "Connectors" })
 	}
@@ -296,6 +311,7 @@ export function useNavigation() {
 		routeGraylogPipelines,
 		routeSocUsers,
 		routeAlerts,
+		routeAlertsSiemSummary,
 		routeConnectors,
 		routeIncidentManagementAlerts,
 		routeIncidentManagementCases,

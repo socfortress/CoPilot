@@ -12,7 +12,7 @@
 				<span v-if="customer?.customer_name" class="truncate text-lg font-semibold">
 					{{ customer.customer_name }}
 				</span>
-				<span class="font-mono text-sm text-secondary">#{{ customer?.customer_code ?? customerCode }}</span>
+				<span class="text-secondary font-mono text-sm">#{{ customer?.customer_code ?? customerCode }}</span>
 			</div>
 		</div>
 

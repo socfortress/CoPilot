@@ -26,6 +26,7 @@ from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import CollectAlertsResponse
 from app.connectors.wazuh_indexer.schema.alerts import GraylogAlertsSearchBody
+from app.connectors.wazuh_indexer.schema.alerts import GraylogIndexAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
@@ -590,7 +591,7 @@ async def process_alert_hits(hits: List[Dict], es_client: AsyncElasticsearch) ->
 
 async def get_graylog_alerts(
     request: GraylogAlertsSearchBody,
-) -> AlertsSearchResponse:
+) -> List[Dict]:
     """
     Retrieves alerts from the Graylog Alert Index.
     Looks up the actual alert details via the origin_context field.
@@ -605,3 +606,17 @@ async def get_graylog_alerts(
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
 
     return await process_alert_hits(hits, es_client)
+
+
+async def get_graylog_alerts_for_index(
+    request: GraylogIndexAlertsSearchBody,
+) -> List[Dict]:
+    """Return the Graylog SIEM alert summary for a single Wazuh indexer index."""
+    graylog_request = GraylogAlertsSearchBody(
+        size=request.size,
+        timerange=request.timerange,
+        index_prefix=request.index_prefix,
+    )
+    index_name = request.index_name.strip()
+    alerts_summary = await get_graylog_alerts(graylog_request)
+    return [summary for summary in alerts_summary if summary["index_name"] == index_name]

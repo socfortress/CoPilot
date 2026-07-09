@@ -10,18 +10,12 @@
 
 			<div v-if="alert" class="flex min-w-0 flex-wrap items-baseline gap-2">
 				<span class="truncate text-lg font-semibold">{{ alert.alert_name }}</span>
-				<span class="font-mono text-sm text-secondary">#{{ alert.alert_id }}</span>
-				<span class="text-sm text-secondary">{{ alert.source }}</span>
+				<span class="text-secondary font-mono text-sm">#{{ alert.alert_id }}</span>
+				<span class="text-secondary text-sm">{{ alert.source }}</span>
 			</div>
 		</div>
 
-		<AlertReportDetails
-			v-if="reportId != null"
-			:report-id
-			class="grow"
-			full-width
-			@loaded="alert = $event"
-		/>
+		<AlertReportDetails v-if="reportId != null" :report-id class="grow" full-width @loaded="alert = $event" />
 		<n-empty v-else description="Invalid report ID" class="h-48 justify-center" />
 	</div>
 </template>

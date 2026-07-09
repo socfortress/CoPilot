@@ -120,24 +120,24 @@
 		"eslint": "~10.6.0",
 		"flourite": "^1.3.0",
 		"fs-extra": "^11.3.6",
-		"jscpd": "^5.0.11",
+		"jscpd": "^5.0.12",
 		"jsdom": "^29.1.1",
 		"npm-run-all2": "^9.0.2",
 		"prettier": "^3.9.4",
 		"prettier-plugin-tailwindcss": "^0.8.0",
-		"rolldown": "^1.1.4",
+		"rolldown": "^1.1.5",
 		"sass": "^1.101.0",
 		"start-server-and-test": "^3.0.11",
 		"tailwindcss": "^4.3.2",
 		"taze": "^19.14.1",
 		"type-fest": "^5.8.0",
 		"typescript": "~6.0.3",
-		"vite": "^8.1.3",
+		"vite": "^8.1.4",
 		"vite-bundle-visualizer": "^1.2.1",
 		"vite-plugin-inspect": "^11.4.1",
 		"vite-plugin-vue-devtools": "^8.1.5",
 		"vite-svg-loader": "^5.1.1",
 		"vitest": "^4.1.10",
-		"vue-tsc": "^3.3.6"
+		"vue-tsc": "^3.3.7"
 	}
 }
