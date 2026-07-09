@@ -131,7 +131,14 @@ export function useNavigation() {
 	}
 
 	function routeIncidentManagementAlerts(alertId?: number) {
-		return routerConstructor({ name: "IncidentManagement-Alerts", query: alertId ? { alert_id: alertId } : {} })
+		if (alertId != null) {
+			return routerConstructor({
+				name: "IncidentManagement-Alert",
+				params: { id: alertId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "IncidentManagement-Alerts" })
 	}
 
 	function routeIncidentManagementCases(caseId?: number) {

@@ -14,13 +14,8 @@
 					<div v-if="selectable">
 						<n-checkbox :checked @click.stop="emit('check', !checked)" />
 					</div>
-					<div
-						class="flex cursor-pointer items-center gap-2"
-						:class="{ 'hover:text-primary cursor-pointer': !compact }"
-						@click="compact ? undefined : openDetails()"
-					>
+					<div class="flex items-center gap-2">
 						<span>#{{ alert.id }} - {{ alert.source }}</span>
-						<Icon v-if="!compact" :name="InfoIcon" :size="16" />
 					</div>
 				</div>
 			</template>
@@ -243,7 +238,14 @@
 			</template>
 
 			<template v-if="alert && !compact" #footerExtra>
-				<n-button quaternary size="tiny" @click.stop="handleDelete()">Delete</n-button>
+				<div class="flex flex-wrap items-center justify-end gap-2">
+					<EntityDetailsButton
+						size="tiny"
+						:url="routeIncidentManagementAlerts(alert.id).fullUrl()"
+						@view="openDetails()"
+					/>
+					<n-button quaternary size="tiny" @click.stop="handleDelete()">Delete</n-button>
+				</div>
 			</template>
 		</CardEntity>
 
@@ -277,6 +279,7 @@ import { computed, defineAsyncComponent, onMounted, ref, toRefs, watch } from "v
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
@@ -313,7 +316,6 @@ const AlertLinkedCases = defineAsyncComponent(() => import("./AlertLinkedCases.v
 
 const { alertData, alertId, compact, embedded, detailsOnMounted, highlight, selectable, checked } = toRefs(props)
 
-const InfoIcon = "carbon:information"
 const LinkIcon = "carbon:launch"
 const TimeIcon = "carbon:time"
 const EditIcon = "uil:edit-alt"
@@ -321,7 +323,7 @@ const CommentsIcon = "carbon:chat"
 const AssetsIcon = "carbon:document-security"
 const IoCsIcon = "carbon:ibm-watson-discovery"
 
-const { routeCustomer } = useNavigation()
+const { routeCustomer, routeIncidentManagementAlerts } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)

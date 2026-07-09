@@ -2,7 +2,7 @@
 	<n-spin :show="loading" class="flex grow flex-col" content-class="flex grow flex-col">
 		<div class="flex grow flex-col justify-between gap-4">
 			<div class="content-box flex flex-col gap-4 py-3">
-				<div class="flex flex-col gap-4 px-7 sm:flex-row!">
+				<div class="flex flex-col gap-4 sm:flex-row!">
 					<CardKV
 						:color="
 							alert.status === 'OPEN' ? 'danger' : alert.status === 'IN_PROGRESS' ? 'warning' : 'success'
@@ -80,16 +80,14 @@
 					</CardKV>
 				</div>
 
-				<div class="px-7">
-					<CardKV>
-						<template #key>description</template>
-						<template #value>
-							{{ alert.alert_description ?? "-" }}
-						</template>
-					</CardKV>
-				</div>
+				<CardKV>
+					<template #key>description</template>
+					<template #value>
+						{{ alert.alert_description ?? "-" }}
+					</template>
+				</CardKV>
 
-				<div class="grid-auto-fit-250 grid gap-2 px-7">
+				<div class="grid-auto-fit-250 grid gap-2">
 					<CardKV>
 						<template #key>id</template>
 						<template #value>#{{ alert.id }}</template>
@@ -138,7 +136,10 @@
 				</div>
 			</div>
 
-			<div class="bg-secondary border-default flex items-center gap-2 border-t px-7 py-4">
+			<div
+				class="border-default flex items-center gap-2 border-t py-4"
+				:class="[useFooterBackground && 'bg-secondary']"
+			>
 				<AlertCreateCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
 
 				<AlertMergeCaseButton v-if="!linkedCases.length" :alerts="[alert]" @updated="updateAlert" />
@@ -185,7 +186,7 @@ import AlertStatusSwitch from "./AlertStatusSwitch.vue"
 import AlertTags from "./AlertTags.vue"
 import { handleDeleteAlert } from "./utils"
 
-const props = defineProps<{ alert: Alert }>()
+const props = defineProps<{ alert: Alert; useFooterBackground?: boolean }>()
 const emit = defineEmits<{
 	(e: "deleted"): void
 	(e: "updated", value: Alert): void
