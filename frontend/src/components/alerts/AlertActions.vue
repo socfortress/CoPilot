@@ -2,7 +2,7 @@
 	<div class="flex flex-wrap justify-end gap-2">
 		<n-button v-if="socAlertFieldValue" type="success" secondary :size @click.stop="gotoSocAlertUrl()">
 			<template #icon>
-				<Icon :name="ViewIcon" />
+				<Icon :name="LinkIcon" />
 			</template>
 			View SOC Alert
 		</n-button>
@@ -92,9 +92,9 @@ import type { Alert, WazuhRuleExclude } from "@/types/alerts"
 import type { ApiError } from "@/types/common"
 import { NButton, NInput, NModal, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
-import { useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import AlertWazuhRules from "./AlertWazuhRules.vue"
 
@@ -115,9 +115,10 @@ const emit = defineEmits<{
 const DangerIcon = "majesticons:exclamation-line"
 const AskIcon = "majesticons:question-mark-circle-line"
 const ViewIcon = "iconoir:eye-solid"
+const LinkIcon = "carbon:launch"
 // const RulesIcon = "carbon:rule-cancelled"
 
-const router = useRouter()
+const { routeIncidentManagementAlerts } = useNavigation()
 const message = useMessage()
 const showSocResponse = ref(false)
 const showWazuhRuleExclude = ref(false)
@@ -166,7 +167,7 @@ function gotoSocAlertUrl() {
 	if (socAlertField === "alert_url") {
 		window.open(alertUrl.value, "_blank")
 	} else if (socAlertField === "alert_id") {
-		router.push({ name: "IncidentManagement-Alerts", query: alertId.value ? { alert_id: alertId.value } : {} })
+		routeIncidentManagementAlerts(alertId.value || undefined).navigate()
 	}
 }
 
