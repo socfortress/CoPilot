@@ -25,6 +25,13 @@
 					Alerts:
 					<strong class="ml-2 font-mono">{{ alertsSummary.total_alerts }}</strong>
 				</span>
+				<EntityDetailsButton
+					v-if="!hideOpen"
+					size="tiny"
+					:order="['open']"
+					open-show-label
+					:url="summaryOpenUrl"
+				/>
 			</div>
 		</template>
 		<template #mainExtra>
@@ -45,14 +52,6 @@
 				</div>
 			</div>
 		</template>
-		<template v-if="!hideOpen" #footerExtra>
-			<EntityDetailsButton
-				size="tiny"
-				:order="['open']"
-				open-show-label
-				:url="summaryOpenUrl"
-			/>
-		</template>
 	</CardEntity>
 </template>
 
@@ -72,7 +71,11 @@ export interface AlertsSummaryExt extends AlertsSummary {
 	indexStats?: IndexStats
 }
 
-const { alertsSummary, hideOpen = false, initialExpanded = false } = defineProps<{
+const {
+	alertsSummary,
+	hideOpen = false,
+	initialExpanded = false
+} = defineProps<{
 	alertsSummary: AlertsSummaryExt
 	hideOpen?: boolean
 	initialExpanded?: boolean
@@ -85,9 +88,7 @@ const LinkIcon = "carbon:launch"
 const showAllAlerts = ref(initialExpanded)
 const { routeIndex, routeAlertsSiemSummary } = useNavigation()
 
-const summaryOpenUrl = computed(() =>
-	routeAlertsSiemSummary(alertsSummary.index_name).fullUrl()
-)
+const summaryOpenUrl = computed(() => routeAlertsSiemSummary(alertsSummary.index_name).fullUrl())
 </script>
 
 <style lang="scss" scoped>
