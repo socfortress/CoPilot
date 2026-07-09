@@ -7,11 +7,7 @@
 			Back
 		</n-button>
 
-		<AlertDetails
-			v-if="indexName && alertId"
-			:index-name="indexName"
-			:alert-id="alertId"
-		/>
+		<AlertDetails v-if="indexName && alertId" :index-name :alert-id />
 		<n-empty v-else description="Invalid alert reference" class="h-48 justify-center" />
 	</div>
 </template>
@@ -22,9 +18,11 @@ import { computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import AlertDetails from "@/components/alerts/AlertDetails.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 
 const route = useRoute()
 const router = useRouter()
+const { routeAlertsSiemSummary } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 
@@ -48,11 +46,6 @@ function goBack() {
 		return
 	}
 
-	if (indexName.value) {
-		router.push({ name: "Alerts-SIEM-Summary", params: { indexName: indexName.value } })
-		return
-	}
-
-	router.push({ name: "Alerts-SIEM" })
+	routeAlertsSiemSummary(indexName.value ?? undefined).navigate()
 }
 </script>

@@ -11,16 +11,27 @@ export const alertsRoutes: RouteRecordRaw[] = [
 		},
 		children: [
 			{
-				path: "siem",
-				name: "Alerts-SIEM",
-				component: () => import("@/views/alerts/AlertsGraylog.vue"),
-				meta: { title: "SIEM" }
-			},
-			{
 				path: "siem/alert/:indexName/:alertId",
 				name: "Alerts-SIEM-Alert",
 				component: () => import("@/views/alerts/AlertsSiemAlert.vue"),
 				meta: { title: "SIEM Alert" }
+			},
+			{
+				path: "siem/alert/:indexName",
+				redirect: to => ({
+					name: "Alerts-SIEM-Summary",
+					params: { indexName: to.params.indexName }
+				})
+			},
+			{
+				path: "siem/alert",
+				redirect: { name: "Alerts-SIEM" }
+			},
+			{
+				path: "siem",
+				name: "Alerts-SIEM",
+				component: () => import("@/views/alerts/AlertsGraylog.vue"),
+				meta: { title: "SIEM" }
 			},
 			{
 				path: "siem/:indexName",
