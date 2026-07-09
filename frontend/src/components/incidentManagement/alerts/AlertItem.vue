@@ -175,9 +175,14 @@
 
 			<template v-if="alert && !compact" #footerMain>
 				<div class="flex flex-wrap items-center gap-3">
-					<Badge v-if="alert.alert_creation_time" type="splitted" :class="{ 'flex sm:hidden!': !compact }">
+					<Badge
+						v-if="alert.alert_creation_time"
+						type="splitted"
+						:class="{ 'flex sm:hidden!': !compact }"
+						size="small"
+					>
 						<template #iconLeft>
-							<Icon :name="TimeIcon" :size="16" />
+							<Icon :name="TimeIcon" :size="14" />
 						</template>
 						<template #value>
 							{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
@@ -186,9 +191,9 @@
 
 					<n-tooltip trigger="hover">
 						<template #trigger>
-							<Badge type="splitted" class="xs:flex! hidden!">
+							<Badge type="splitted" class="xs:flex! hidden!" size="small">
 								<template #iconLeft>
-									<Icon :name="AssetsIcon" :size="16" />
+									<Icon :name="AssetsIcon" :size="14" />
 								</template>
 								<template #value>
 									{{ alert.assets?.length || 0 }}
@@ -200,9 +205,9 @@
 
 					<n-tooltip trigger="hover">
 						<template #trigger>
-							<Badge type="splitted" class="xs:flex! hidden!">
+							<Badge type="splitted" class="xs:flex! hidden!" size="small">
 								<template #iconLeft>
-									<Icon :name="CommentsIcon" :size="16" />
+									<Icon :name="CommentsIcon" :size="14" />
 								</template>
 								<template #value>
 									{{ alert.comments?.length || 0 }}
@@ -214,9 +219,9 @@
 
 					<n-tooltip trigger="hover">
 						<template #trigger>
-							<Badge type="splitted" class="xs:flex! hidden!">
+							<Badge type="splitted" class="xs:flex! hidden!" size="small">
 								<template #iconLeft>
-									<Icon :name="IoCsIcon" :size="16" />
+									<Icon :name="IoCsIcon" :size="14" />
 								</template>
 								<template #value>
 									{{ alert.iocs?.length || 0 }}

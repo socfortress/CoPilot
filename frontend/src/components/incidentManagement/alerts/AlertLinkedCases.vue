@@ -6,7 +6,7 @@
 				<Icon :name="MenuIcon" :size="14" class="relative top-0.5" />
 			</code>
 		</template>
-		<div class="flex flex-col gap-3 px-1 py-2">
+		<div class="flex max-w-96 flex-col gap-3 px-1 py-2">
 			<CaseItem
 				:case-data="{ ...linkedCase, alerts: alert ? [alert] : [] }"
 				compact
