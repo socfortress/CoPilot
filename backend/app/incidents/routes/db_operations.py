@@ -2511,10 +2511,19 @@ async def create_case_notification_endpoint(
                 if alert.assets
                 else None,  # Populate with actual alert context data
                 asset_payload=alert.assets[0].asset_name if alert.assets else "",  # Populate with actual asset data
-                timefield_payload="",  # Populate with actual timefield data
+                # The CoPilot alert-creation time is set from the configured Timefield during
+                # ingest (see update_alert_creation_time), so it's the case-side equivalent of
+                # the automatic alert payload's timefield_payload. Issue #979 Bug 1.
+                timefield_payload=alert.alert_creation_time or "",
                 alert_title_payload=alert.alert_name,  # Populate with actual alert title data
                 ioc_payload={ioc.value: ioc.type for ioc in alert.iocs} if alert.iocs else {},  # Populate with actual IoC data if available
                 source=alert.source,
+                # Carry the CoPilot alert ID and the raw-event index pointer so downstream
+                # notifications can deeplink back to the alert and pivot to the source event
+                # in Graylog/OpenSearch. Issue #979 Bugs 2 & 3.
+                alert_id=alert.id,
+                index_name=alert.assets[0].index_name if alert.assets else None,
+                index_id=alert.assets[0].index_id if alert.assets else None,
             )
             for alert in case_details.alerts
         ],
