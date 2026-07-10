@@ -241,6 +241,8 @@ from app.incidents.services.db_operations import upload_report_template
 from app.incidents.services.db_operations import upload_report_template_to_data_store
 from app.incidents.services.db_operations import validate_source_exists
 from app.incidents.services.incident_case import handle_customer_notifications_case
+from app.incidents.services.notification_enrichment import extract_rule_level
+from app.incidents.services.notification_enrichment import severity_from_rule_level
 from app.middleware.customer_access import customer_access_handler
 
 incidents_db_operations_router = APIRouter()
@@ -2501,15 +2503,17 @@ async def create_case_notification_endpoint(
     if not await customer_access_handler.check_customer_access(current_user, case_details.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to case {request.case_id} - insufficient customer permissions")
 
-    case_notification_payload = CreatedCaseNotificationPayload(
-        case_name=case_details.case_name,
-        case_description=case_details.case_description,
-        case_creation_time=case_details.case_creation_time,
-        alerts=[
+    case_alert_payloads = []
+    for alert in case_details.alerts:
+        # Fetch the stored alert context once and reuse it for both the payload
+        # body and the derived rule_level/severity (issue #980).
+        alert_context = (await get_alert_context_by_id(alert.assets[0].alert_context_id, db)).context if alert.assets else None
+        # Non-Wazuh sources (e.g. firewall events) carry no rule level, so this
+        # stays None rather than failing.
+        rule_level = extract_rule_level(alert_context)
+        case_alert_payloads.append(
             CreatedAlertPayload(
-                alert_context_payload=(await get_alert_context_by_id(alert.assets[0].alert_context_id, db)).context
-                if alert.assets
-                else None,  # Populate with actual alert context data
+                alert_context_payload=alert_context,  # Populate with actual alert context data
                 asset_payload=alert.assets[0].asset_name if alert.assets else "",  # Populate with actual asset data
                 # The CoPilot alert-creation time is set from the configured Timefield during
                 # ingest (see update_alert_creation_time), so it's the case-side equivalent of
@@ -2524,9 +2528,17 @@ async def create_case_notification_endpoint(
                 alert_id=alert.id,
                 index_name=alert.assets[0].index_name if alert.assets else None,
                 index_id=alert.assets[0].index_id if alert.assets else None,
-            )
-            for alert in case_details.alerts
-        ],
+                # Default rule level + normalized severity (issue #980).
+                rule_level=rule_level,
+                severity=severity_from_rule_level(rule_level),
+            ),
+        )
+
+    case_notification_payload = CreatedCaseNotificationPayload(
+        case_name=case_details.case_name,
+        case_description=case_details.case_description,
+        case_creation_time=case_details.case_creation_time,
+        alerts=case_alert_payloads,
     )
 
     logger.info(f"Creating case notification for case {case_notification_payload}")
