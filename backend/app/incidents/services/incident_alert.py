@@ -46,6 +46,8 @@ from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_ioc_names
 from app.incidents.services.db_operations import get_timefield_names
+from app.incidents.services.notification_enrichment import extract_rule_level
+from app.incidents.services.notification_enrichment import severity_from_rule_level
 from app.incidents.services.threshold_alert import retrieve_threshold_alert_timeline
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
@@ -626,6 +628,11 @@ async def build_alert_payload(
     raw_alert_title = alert_payload.get(field_names.alert_title_name)
     cleaned_alert_title = clean_alert_title(raw_alert_title) if raw_alert_title else None
 
+    # Surface the Wazuh rule level + normalized severity by default (issue #980).
+    # Non-Wazuh sources (e.g. firewall events) have no rule level, so this stays
+    # None and callers simply omit/null the field rather than failing.
+    rule_level = extract_rule_level(alert_payload)
+
     return CreatedAlertPayload(
         alert_context_payload=await build_alert_context_payload(alert_payload, field_names),
         asset_payload=asset_name_value,
@@ -635,6 +642,8 @@ async def build_alert_payload(
         source=syslog_type,
         index_name=index_name,
         index_id=index_id,
+        rule_level=rule_level,
+        severity=severity_from_rule_level(rule_level),
     )
 
 
@@ -664,6 +673,10 @@ async def handle_customer_notifications(
                         "alert_context_payload": alert_payload.alert_context_payload,
                         "alert_title": alert_payload.alert_title_payload,
                         "alert_id": alert_payload.alert_id,
+                        # Default rule level + normalized severity (issue #980).
+                        # Null for non-Wazuh sources that carry no rule level.
+                        "rule_level": alert_payload.rule_level,
+                        "severity": alert_payload.severity,
                     },
                     start="",
                 ),
