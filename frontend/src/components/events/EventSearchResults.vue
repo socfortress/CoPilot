@@ -54,6 +54,7 @@ import type { EventSearchResult } from "@/types/events"
 import { NButton, NDataTable, NEmpty } from "naive-ui"
 import { computed, h } from "vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
+import ExpandableText from "@/components/common/ExpandableText.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
@@ -148,9 +149,11 @@ const defaultColumns: DataTableColumns<EventSearchResult> = [
 		title: "Summary",
 		key: "full_log",
 		width: 320,
-		ellipsis: { tooltip: true },
 		render(row) {
-			return formatCellValue(row.full_log || row.data || row.message)
+			return h(ExpandableText, {
+				text: formatCellValue(row.full_log || row.data || row.message),
+				maxLength: 100
+			})
 		}
 	}
 ]
@@ -195,7 +198,7 @@ const columns = computed<DataTableColumns<EventSearchResult>>(() => {
 		{
 			title: "",
 			key: "actions",
-			width: 90,
+			width: 100,
 			fixed: "right",
 			render(row: EventSearchResult) {
 				const openUrl = eventOpenUrl(row)

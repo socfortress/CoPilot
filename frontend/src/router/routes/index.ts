@@ -10,6 +10,7 @@ import { coreRoutes } from "./core"
 import { customersRoutes } from "./customers"
 import { dashboardsRoutes } from "./dashboards"
 import { detectionCatalogRoutes } from "./detection-catalog"
+import { eventSearchRoutes } from "./event-search"
 import { externalServicesRoutes } from "./external-services"
 import { fallbackRoutes } from "./fallback"
 import { graylogRoutes } from "./graylog"
@@ -29,6 +30,7 @@ export const routes: RouteRecordRaw[] = [
 	...agentsRoutes,
 	...graylogRoutes,
 	...alertsRoutes,
+	...eventSearchRoutes,
 	...dashboardsRoutes,
 	...incidentManagementRoutes,
 	...analystRoutes,

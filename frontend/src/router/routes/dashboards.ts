@@ -3,18 +3,6 @@ import { RouteRole } from "@/types/auth"
 
 export const dashboardsRoutes: RouteRecordRaw[] = [
 	{
-		path: "/event-search/:customerCode/:sourceName/:indexName/:eventId",
-		name: "EventSearch-Event",
-		component: () => import("@/views/events/Event.vue"),
-		meta: { title: "Event", auth: true, roles: RouteRole.All }
-	},
-	{
-		path: "/event-search",
-		name: "EventSearch",
-		component: () => import("@/views/EventSearch.vue"),
-		meta: { title: "Event Search", auth: true, roles: RouteRole.All }
-	},
-	{
 		path: "/dashboards",
 		name: "Dashboards",
 		component: () => import("@/views/dashboards/Dashboards.vue"),
