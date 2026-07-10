@@ -153,6 +153,27 @@ export function useNavigation() {
 		return routerConstructor({ name: "EventSearch", query: routeQuery })
 	}
 
+	function routeEventSearchEvent(
+		customerCode?: string,
+		sourceName?: string,
+		indexName?: string,
+		eventId?: string
+	) {
+		if (customerCode && sourceName && indexName && eventId) {
+			return routerConstructor({
+				name: "EventSearch-Event",
+				params: {
+					customerCode,
+					sourceName,
+					indexName: encodeURIComponent(indexName),
+					eventId: encodeURIComponent(eventId)
+				}
+			})
+		}
+
+		return routerConstructor({ name: "EventSearch" })
+	}
+
 	function routeSSOConfig() {
 		return routerConstructor({ name: "SSOConfig" })
 	}
@@ -335,6 +356,7 @@ export function useNavigation() {
 		routeIncidentManagementAlerts,
 		routeIncidentManagementCases,
 		routeEventSearch,
+		routeEventSearchEvent,
 		routeSSOConfig,
 		routeAudit,
 		routeThirdPartyIntegration,

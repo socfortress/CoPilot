@@ -29,6 +29,11 @@ export interface EventSourceUpdatePayload {
 	displayed_columns?: DisplayColumn[] | null
 }
 
+export interface SiemEventDocumentQuery {
+	index_name: string
+	event_id: string
+}
+
 export default {
 	getEventSources(customerCode: string) {
 		return HttpClient.get<FlaskBaseResponse & { event_sources: EventSource[] }>(
@@ -67,6 +72,12 @@ export default {
 				page_size: number
 			}
 		>(`/siem/events/${customerCode}/${sourceName}`, { params })
+	},
+	getEvent(customerCode: string, sourceName: string, query: SiemEventDocumentQuery, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { event: EventSearchResult }>(
+			`/siem/events/${customerCode}/${sourceName}/document`,
+			signal ? { params: query, signal } : { params: query }
+		)
 	},
 	getFieldMappings(customerCode: string, sourceName: string) {
 		return HttpClient.get<FlaskBaseResponse & { fields: FieldMapping[]; total: number; index_pattern: string }>(

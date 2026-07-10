@@ -39,3 +39,9 @@ class FieldMappingsResponse(BaseModel):
     index_pattern: str
     success: bool
     message: str
+
+
+class EventDocumentResponse(BaseModel):
+    event: Dict[str, Any]
+    success: bool
+    message: str
