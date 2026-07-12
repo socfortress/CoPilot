@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<CardEntity embedded clickable hoverable size="small" :loading="loadingDetails" @click="showDetails = true">
+		<CardEntity embedded hoverable size="small" :loading="loadingDetails">
 			<template #headerMain>{{ id }}</template>
 			<template #headerExtra>
 				<span v-if="mitigationDetails" class="text-default">
@@ -14,7 +14,7 @@
 				</div>
 				<n-skeleton v-else text class="w-3/4" :height="20" />
 			</template>
-			<template #footer>
+			<template #footerMain>
 				<p v-if="mitigationDetails" class="cursor-text" @click.stop="() => {}">
 					<Markdown :source="mitigationDetails.description" />
 				</p>
@@ -22,6 +22,13 @@
 					<n-skeleton text :repeat="2" :height="16" />
 					<n-skeleton text class="w-2/4" :height="16" />
 				</div>
+			</template>
+			<template #footerExtra>
+				<EntityDetailsButton
+					size="small"
+					:url="routeAlertsMitreMitigation(id).fullUrl()"
+					@view="showDetails = true"
+				/>
 			</template>
 		</CardEntity>
 		<n-modal
@@ -46,8 +53,9 @@ import { NModal, NSkeleton, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Markdown from "@/components/common/Markdown.vue"
-
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import MitigationOverview from "./MitigationOverview.vue"
 
@@ -59,6 +67,8 @@ const { id, entity } = defineProps<{
 const emit = defineEmits<{
 	(e: "loaded", value: MitreMitigationDetails): void
 }>()
+
+const { routeAlertsMitreMitigation } = useNavigation()
 
 const showDetails = ref(false)
 const message = useMessage()
