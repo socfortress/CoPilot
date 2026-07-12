@@ -46,6 +46,10 @@ export const alertsRoutes: RouteRecordRaw[] = [
 				meta: { title: "MITRE Group" }
 			},
 			{
+				path: "mitre/groups",
+				redirect: { name: "Alerts-Mitre" }
+			},
+			{
 				path: "mitre/:techniqueId",
 				name: "Alerts-Mitre-Technique",
 				component: () => import("@/views/alerts/MitreTechniqueAlert.vue"),
