@@ -118,6 +118,21 @@ export function useNavigation() {
 		return routerConstructor({ name: "Alerts-SIEM" })
 	}
 
+	function routeAlertsMitre() {
+		return routerConstructor({ name: "Alerts-Mitre" })
+	}
+
+	function routeAlertsMitreTechnique(techniqueId?: string) {
+		if (techniqueId) {
+			return routerConstructor({
+				name: "Alerts-Mitre-Technique",
+				params: { techniqueId }
+			})
+		}
+
+		return routerConstructor({ name: "Alerts-Mitre" })
+	}
+
 	function routeConnectors() {
 		return routerConstructor({ name: "Connectors" })
 	}
@@ -352,6 +367,8 @@ export function useNavigation() {
 		routeAlerts,
 		routeAlertsSiemSummary,
 		routeAlertsSiemAlert,
+		routeAlertsMitre,
+		routeAlertsMitreTechnique,
 		routeConnectors,
 		routeIncidentManagementAlerts,
 		routeIncidentManagementCases,
