@@ -155,6 +155,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "Alerts-Mitre" })
 	}
 
+	function routeAlertsMitreSoftware(softwareId?: string) {
+		if (softwareId) {
+			return routerConstructor({
+				name: "Alerts-Mitre-Software",
+				params: { softwareId }
+			})
+		}
+
+		return routerConstructor({ name: "Alerts-Mitre" })
+	}
+
 	function routeConnectors() {
 		return routerConstructor({ name: "Connectors" })
 	}
@@ -393,6 +404,7 @@ export function useNavigation() {
 		routeAlertsMitreTechnique,
 		routeAlertsMitreGroup,
 		routeAlertsMitreMitigation,
+		routeAlertsMitreSoftware,
 		routeConnectors,
 		routeIncidentManagementAlerts,
 		routeIncidentManagementCases,

@@ -40,6 +40,16 @@ export const alertsRoutes: RouteRecordRaw[] = [
 				meta: { title: "SIEM Alert Summary" }
 			},
 			{
+				path: "mitre/software/:softwareId",
+				name: "Alerts-Mitre-Software",
+				component: () => import("@/views/alerts/MitreSoftware.vue"),
+				meta: { title: "MITRE Software" }
+			},
+			{
+				path: "mitre/software",
+				redirect: { name: "Alerts-Mitre" }
+			},
+			{
 				path: "mitre/mitigations/:mitigationId",
 				name: "Alerts-Mitre-Mitigation",
 				component: () => import("@/views/alerts/MitreMitigation.vue"),
