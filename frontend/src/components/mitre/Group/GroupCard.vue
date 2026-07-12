@@ -34,31 +34,7 @@
 			:bordered="false"
 			segmented
 		>
-			<n-tabs type="line" animated :tabs-padding="24">
-				<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy">
-					<div class="px-6 pt-3 pb-6">
-						<GroupDetails :entity="groupDetails" />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					name="Software"
-					:tab="`Software (${groupDetails?.software?.length || 0})`"
-					display-directive="show:lazy"
-				>
-					<div class="px-6 pt-3 pb-6">
-						<SoftwareList v-if="groupDetails" :list="groupDetails.software" />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					name="Techniques"
-					:tab="`Techniques (${groupDetails?.techniques?.length || 0})`"
-					display-directive="show:lazy"
-				>
-					<div class="px-6 pt-3 pb-6">
-						<TechniquesList v-if="groupDetails" :list="groupDetails.techniques" />
-					</div>
-				</n-tab-pane>
-			</n-tabs>
+			<GroupOverview :entity="groupDetails" />
 		</n-modal>
 	</div>
 </template>
@@ -66,16 +42,14 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { MitreGroupDetails } from "@/types/mitre"
-import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
+import { NModal, NSkeleton, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Markdown from "@/components/common/Markdown.vue"
 import { getApiErrorMessage } from "@/utils"
 
-import SoftwareList from "../Software/SoftwareList.vue"
-import TechniquesList from "../Technique/TechniquesList.vue"
-import GroupDetails from "./GroupDetails.vue"
+import GroupOverview from "./GroupOverview.vue"
 
 const { id, entity } = defineProps<{
 	id: string

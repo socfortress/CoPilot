@@ -1,8 +1,8 @@
 <template>
 	<n-spin :show="loadingDetails">
-		<n-tabs type="line" animated :tabs-padding="24">
+		<n-tabs type="line" animated :tabs-padding="fullWidth ? 0 : 24">
 			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy">
-				<div class="px-6 pt-3 pb-6">
+				<div :class="fullWidth ? 'p-0' : 'px-6 pt-3 pb-6'">
 					<TechniqueAlertDetails v-if="techniqueDetails" :entity="techniqueDetails" />
 				</div>
 			</n-tab-pane>
@@ -11,7 +11,7 @@
 				:tab="`Groups (${techniqueDetails?.groups?.length || 0})`"
 				display-directive="show:lazy"
 			>
-				<div class="px-6 pt-3 pb-6">
+				<div :class="fullWidth ? 'p-0' : 'px-6 pt-3 pb-6'">
 					<GroupsList v-if="techniqueDetails" :list="techniqueDetails.groups" />
 				</div>
 			</n-tab-pane>
@@ -20,7 +20,7 @@
 				:tab="`Mitigations (${techniqueDetails?.mitigations?.length || 0})`"
 				display-directive="show:lazy"
 			>
-				<div class="px-6 pt-3 pb-6">
+				<div :class="fullWidth ? 'p-0' : 'px-6 pt-3 pb-6'">
 					<MitigationsList v-if="techniqueDetails" :list="techniqueDetails.mitigations" />
 				</div>
 			</n-tab-pane>
@@ -29,7 +29,7 @@
 				:tab="`Software (${techniqueDetails?.software?.length || 0})`"
 				display-directive="show:lazy"
 			>
-				<div class="px-6 pt-3 pb-6">
+				<div :class="fullWidth ? 'p-0' : 'px-6 pt-3 pb-6'">
 					<SoftwareList v-if="techniqueDetails" :list="techniqueDetails.software" />
 				</div>
 			</n-tab-pane>
@@ -38,17 +38,17 @@
 				:tab="`Tactics (${techniqueDetails?.tactics?.length || 0})`"
 				display-directive="show:lazy"
 			>
-				<div class="px-6 pt-3 pb-6">
+				<div :class="fullWidth ? 'p-0' : 'px-6 pt-3 pb-6'">
 					<TacticsList v-if="techniqueDetails" :list="techniqueDetails.tactics" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Alerts" tab="Alerts" display-directive="show:lazy">
-				<div class="px-6 pt-3 pb-6">
+				<div :class="fullWidth ? 'p-0' : 'px-6 pt-3 pb-6'">
 					<TechniqueEventsList v-if="techniqueDetails" :external-id />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Atomic test" tab="Atomic test" display-directive="show:lazy">
-				<div class="px-6 pt-3 pb-6">
+				<div :class="fullWidth ? 'p-0' : 'px-6 pt-3 pb-6'">
 					<TechniqueCardContent :technique-id="externalId" />
 				</div>
 			</n-tab-pane>
@@ -73,6 +73,7 @@ import TechniqueAlertDetails from "./TechniqueAlertDetails.vue"
 
 const { externalId } = defineProps<{
 	externalId: string
+	fullWidth?: boolean
 }>()
 
 const message = useMessage()

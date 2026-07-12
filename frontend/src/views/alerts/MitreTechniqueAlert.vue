@@ -7,7 +7,7 @@
 			Back
 		</n-button>
 
-		<TechniqueAlertOverview v-if="techniqueId" :external-id="techniqueId" />
+		<TechniqueAlertOverview v-if="techniqueId" :external-id="techniqueId" full-width />
 		<n-empty v-else description="Invalid MITRE technique ID" class="h-48 justify-center" />
 	</div>
 </template>
