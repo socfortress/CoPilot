@@ -133,6 +133,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "Alerts-Mitre" })
 	}
 
+	function routeAlertsMitreGroup(groupId?: string) {
+		if (groupId) {
+			return routerConstructor({
+				name: "Alerts-Mitre-Group",
+				params: { groupId }
+			})
+		}
+
+		return routerConstructor({ name: "Alerts-Mitre" })
+	}
+
 	function routeConnectors() {
 		return routerConstructor({ name: "Connectors" })
 	}
@@ -369,6 +380,7 @@ export function useNavigation() {
 		routeAlertsSiemAlert,
 		routeAlertsMitre,
 		routeAlertsMitreTechnique,
+		routeAlertsMitreGroup,
 		routeConnectors,
 		routeIncidentManagementAlerts,
 		routeIncidentManagementCases,
