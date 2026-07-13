@@ -16,6 +16,7 @@ from fastapi import Security
 from fastapi.exceptions import RequestValidationError
 from loguru import logger
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
@@ -133,14 +134,20 @@ class ValidationErrorResponse(BaseModel):
 
 
 ################## ! LOGGING TO `log_entry` table ! ##################
+# Matches the varchar(5024) width of log_entries.message / .additional_info.
+_LOG_TEXT_MAX_LENGTH = 5024
+
+
 # #######! MODELS !########
 class LogEntryModel(BaseModel):
-    event_type: str = Field(..., examples=["Info"], description="Event type")
+    event_type: str = Field("Info", examples=["Info"], description="Event type")
     user_id: Optional[int] = Field(None, examples=[1], description="User ID")
-    route: str = Field(..., examples=["/wazuh_indexer/health"], description="Route")
-    method: str = Field(..., examples=["GET"], description="Method")
+    # route/method/message are nullable in the log_entries table, so keep them optional
+    # here — a legacy row with a NULL column must not fail validation for the whole page.
+    route: Optional[str] = Field(None, examples=["/wazuh_indexer/health"], description="Route")
+    method: Optional[str] = Field(None, examples=["GET"], description="Method")
     status_code: int = Field(..., examples=[200], description="Status code")
-    message: str = Field(..., examples=["Route accessed"], description="Message")
+    message: Optional[str] = Field(None, examples=["Route accessed"], description="Message")
     additional_info: Optional[str] = Field(
         None,
         examples=["Additional details here"],
@@ -149,6 +156,11 @@ class LogEntryModel(BaseModel):
 
 
 class LogRetrieveModel(LogEntryModel):
+    # from_attributes lets Pydantic v2 validate directly from SQLModel/SQLAlchemy ORM
+    # rows (LogEntry). Without it, building LogsResponse from ORM instances raises
+    # "Input should be a valid dictionary or instance of LogRetrieveModel" for every row.
+    model_config = ConfigDict(from_attributes=True)
+
     timestamp: datetime = Field(..., examples=[datetime.now()], description="Timestamp")
 
 
@@ -299,7 +311,15 @@ class Logger:
         Returns:
             None
         """
-        log_entry = LogEntry(**log_entry_model.model_dump())
+        data = log_entry_model.model_dump()
+        # The message/additional_info columns are varchar(5024); an over-long value
+        # (e.g. a giant validation traceback) otherwise raises DataError 1406
+        # "Data too long for column" and turns a logged error into a second 500.
+        for column in ("message", "additional_info"):
+            value = data.get(column)
+            if value is not None and len(value) > _LOG_TEXT_MAX_LENGTH:
+                data[column] = value[: _LOG_TEXT_MAX_LENGTH - 3] + "..."
+        log_entry = LogEntry(**data)
         self.session.add(log_entry)
         await self.session.commit()
 
