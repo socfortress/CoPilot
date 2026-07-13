@@ -96,7 +96,15 @@
 					<CardKV>
 						<template #key>source</template>
 						<template #value>
-							{{ alert.source ?? "-" }}
+							<code
+								v-if="alert.source"
+								class="text-primary cursor-pointer"
+								@click="routeIncidentManagementSource(alert.source).navigate()"
+							>
+								{{ alert.source }}
+								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+							</code>
+							<span v-else>-</span>
 						</template>
 					</CardKV>
 
@@ -201,7 +209,7 @@ const TrashIcon = "carbon:trash-can"
 const LinkIcon = "carbon:launch"
 const EditIcon = "uil:edit-alt"
 
-const { routeCustomer } = useNavigation()
+const { routeCustomer, routeIncidentManagementSource } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)
