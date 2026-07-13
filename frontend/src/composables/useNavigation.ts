@@ -260,6 +260,10 @@ export function useNavigation() {
 		return routerConstructor({ name: "IncidentManagement-Sources" })
 	}
 
+	function routeIncidentManagementExclusionRuleNew() {
+		return routerConstructor({ name: "IncidentManagement-ExclusionRuleNew" })
+	}
+
 	function routeIncidentManagementSourceNew() {
 		return routerConstructor({ name: "IncidentManagement-SourceNew" })
 	}
@@ -492,6 +496,7 @@ export function useNavigation() {
 		routeIncidentManagementAlerts,
 		routeIncidentManagementCases,
 		routeIncidentManagementSources,
+		routeIncidentManagementExclusionRuleNew,
 		routeIncidentManagementSourceNew,
 		routeIncidentManagementSource,
 		routeEventSearch,
