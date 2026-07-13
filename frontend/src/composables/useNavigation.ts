@@ -264,6 +264,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "IncidentManagement-ExclusionRuleNew" })
 	}
 
+	function routeIncidentManagementExclusionRule(exclusionId?: number) {
+		if (exclusionId != null) {
+			return routerConstructor({
+				name: "IncidentManagement-ExclusionRule",
+				params: { id: exclusionId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "IncidentManagement-Sources" })
+	}
+
 	function routeIncidentManagementSourceNew() {
 		return routerConstructor({ name: "IncidentManagement-SourceNew" })
 	}
@@ -497,6 +508,7 @@ export function useNavigation() {
 		routeIncidentManagementCases,
 		routeIncidentManagementSources,
 		routeIncidentManagementExclusionRuleNew,
+		routeIncidentManagementExclusionRule,
 		routeIncidentManagementSourceNew,
 		routeIncidentManagementSource,
 		routeEventSearch,

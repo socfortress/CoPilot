@@ -53,6 +53,12 @@ export const incidentManagementRoutes: RouteRecordRaw[] = [
 				meta: { title: "Create Exclusion Rule" }
 			},
 			{
+				path: "exclusion-rules/:id",
+				name: "IncidentManagement-ExclusionRule",
+				component: () => import("@/views/incidentManagement/ExclusionRule.vue"),
+				meta: { title: "Exclusion Rule" }
+			},
+			{
 				path: "sources/new",
 				name: "IncidentManagement-SourceNew",
 				component: () => import("@/views/incidentManagement/ConfiguredSourceNew.vue"),

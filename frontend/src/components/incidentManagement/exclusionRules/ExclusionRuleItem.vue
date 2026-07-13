@@ -59,12 +59,11 @@
 						/>
 					</div>
 
-					<n-button size="small" @click.stop="openDetails()">
-						<template #icon>
-							<Icon :name="DetailsIcon" />
-						</template>
-						Details
-					</n-button>
+					<EntityDetailsButton
+						size="small"
+						:url="routeIncidentManagementExclusionRule(entity.id).fullUrl()"
+						@view="openDetails()"
+					/>
 				</div>
 			</template>
 		</CardEntity>
@@ -83,51 +82,24 @@
 				role="modal"
 				@close="closeDetails()"
 			>
-				<n-spin :show="loadingDelete">
-					<ExclusionRuleForm v-if="editing" :entity class="p-6" @submitted="updateEntity($event)">
-						<template #additionalActions>
-							<n-button v-if="editing" @click="editing = false">Close</n-button>
-						</template>
-					</ExclusionRuleForm>
-					<ExclusionRuleDetails v-else :entity />
-				</n-spin>
-
-				<template #footer>
-					<div v-if="!editing" class="flex items-center justify-end gap-4">
-						<n-button text type="error" ghost :loading="loadingDelete" @click="handleDelete">
-							<template #icon>
-								<Icon :name="DeleteIcon" :size="15" />
-							</template>
-							Delete
-						</n-button>
-						<n-button :disabled="loadingDelete" @click="editing = true">
-							<template #icon>
-								<Icon :name="EditIcon" :size="14" />
-							</template>
-							Edit
-						</n-button>
-					</div>
-				</template>
+				<ExclusionRuleOverview :entity @deleted="handleDeleted()" @updated="emit('updated')" />
 			</n-card>
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { ApiError } from "@/types/common"
 import type { ExclusionRule } from "@/types/incidentManagement/exclusion-rules"
-import { NButton, NCard, NModal, NSpin, useDialog, useMessage } from "naive-ui"
-import { computed, h, ref, toRefs } from "vue"
-import Api from "@/api"
+import { NCard, NModal } from "naive-ui"
+import { computed, ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
-import ExclusionRuleDetails from "./ExclusionRuleDetails.vue"
-import ExclusionRuleForm from "./ExclusionRuleForm.vue"
+import ExclusionRuleOverview from "./ExclusionRuleOverview.vue"
 import ExclusionRuleStatusToggler from "./ExclusionRuleStatusToggler.vue"
 
 const props = defineProps<{
@@ -140,23 +112,16 @@ const emit = defineEmits<{
 	(e: "updated"): void
 }>()
 
-const { entity, embedded } = toRefs(props)
+const { entity } = toRefs(props)
 
 const TimeIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
-const DetailsIcon = "carbon:settings-adjust"
-const DeleteIcon = "ph:trash"
-const EditIcon = "uil:edit-alt"
 const TargetIcon = "zondicons:target"
 
-const message = useMessage()
-const dialog = useDialog()
 const updatingStatus = ref(false)
-const loadingDelete = ref(false)
-const loading = computed(() => updatingStatus.value || loadingDelete.value)
-const editing = ref(false)
+const loading = computed(() => updatingStatus.value)
 const showDetails = ref(false)
-const { routeCustomer } = useNavigation()
+const { routeCustomer, routeIncidentManagementExclusionRule } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
 
 function openDetails() {
@@ -171,55 +136,8 @@ function setStatus(value: ExclusionRule) {
 	entity.value.enabled = value.enabled
 }
 
-function updateEntity(value: ExclusionRule) {
-	entity.value.name = value.name
-	entity.value.description = value.description
-	entity.value.channel = value.channel
-	entity.value.title = value.title
-	entity.value.field_matches = value.field_matches
-	entity.value.enabled = value.enabled
-	entity.value.customer_code = value.customer_code
-
-	editing.value = false
-	emit("updated")
-}
-
-function deleteExclusionRules() {
-	loadingDelete.value = true
-
-	Api.incidentManagement.exclusionRules
-		.deleteExclusionRules(entity.value.id)
-		.then(res => {
-			if (res.data.success) {
-				showDetails.value = false
-				emit("deleted")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingDelete.value = false
-		})
-}
-
-function handleDelete() {
-	dialog.warning({
-		title: "Confirm",
-		content: () =>
-			h("div", {
-				innerHTML: `Are you sure you want to delete the Exclusion Rule: <strong>${entity.value.name}</strong> ?`
-			}),
-		positiveText: "Yes I'm sure",
-		negativeText: "Cancel",
-		onPositiveClick: () => {
-			deleteExclusionRules()
-		},
-		onNegativeClick: () => {
-			message.info("Delete canceled")
-		}
-	})
+function handleDeleted() {
+	showDetails.value = false
+	emit("deleted")
 }
 </script>
