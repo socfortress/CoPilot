@@ -78,6 +78,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "Graylog-Metrics" })
 	}
 
+	function routeDashboard(dashboardId?: number | string) {
+		if (dashboardId != null) {
+			return routerConstructor({
+				name: "DashboardView",
+				params: { id: dashboardId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "Dashboards" })
+	}
+
 	function routeGraylogManagement(
 		tabName?: "messages" | "alerts" | "events" | "streams" | "provisioning" | "inputs"
 	) {
@@ -419,6 +430,7 @@ export function useNavigation() {
 		routeHealthcheck,
 		routeMetrics,
 		routeGraylogMetrics,
+		routeDashboard,
 		routeGraylogManagement,
 		routeSocAlerts,
 		routeGraylogPipelines,
