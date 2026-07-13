@@ -133,6 +133,21 @@ export function useNavigation() {
 		return routerConstructor({ name: "Alerts-Mitre" })
 	}
 
+	function routeAlertsMitreEvent(techniqueId?: string, eventId?: string) {
+		if (techniqueId && eventId) {
+			return routerConstructor({
+				name: "Alerts-Mitre-Technique-Event",
+				params: { techniqueId, eventId }
+			})
+		}
+
+		if (techniqueId) {
+			return routeAlertsMitreTechnique(techniqueId)
+		}
+
+		return routerConstructor({ name: "Alerts-Mitre" })
+	}
+
 	function routeAlertsMitreGroup(groupId?: string) {
 		if (groupId) {
 			return routerConstructor({
@@ -160,6 +175,17 @@ export function useNavigation() {
 			return routerConstructor({
 				name: "Alerts-Mitre-Software",
 				params: { softwareId }
+			})
+		}
+
+		return routerConstructor({ name: "Alerts-Mitre" })
+	}
+
+	function routeAlertsMitreTactic(tacticId?: string) {
+		if (tacticId) {
+			return routerConstructor({
+				name: "Alerts-Mitre-Tactic",
+				params: { tacticId }
 			})
 		}
 
@@ -402,9 +428,11 @@ export function useNavigation() {
 		routeAlertsSiemAlert,
 		routeAlertsMitre,
 		routeAlertsMitreTechnique,
+		routeAlertsMitreEvent,
 		routeAlertsMitreGroup,
 		routeAlertsMitreMitigation,
 		routeAlertsMitreSoftware,
+		routeAlertsMitreTactic,
 		routeConnectors,
 		routeIncidentManagementAlerts,
 		routeIncidentManagementCases,

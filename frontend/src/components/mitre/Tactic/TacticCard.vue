@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<CardEntity embedded clickable hoverable size="small" :loading="loadingDetails" @click="showDetails = true">
+		<CardEntity embedded hoverable size="small" :loading="loadingDetails">
 			<template #headerMain>{{ id }}</template>
 			<template #headerExtra>
 				<span v-if="tacticDetails" class="text-default">
@@ -14,7 +14,7 @@
 				</div>
 				<n-skeleton v-else text class="w-3/4" :height="20" />
 			</template>
-			<template #footer>
+			<template #footerMain>
 				<p v-if="tacticDetails" class="cursor-text" @click.stop="() => {}">
 					<Markdown :source="tacticDetails.description" />
 				</p>
@@ -22,6 +22,13 @@
 					<n-skeleton text :repeat="2" :height="16" />
 					<n-skeleton text class="w-2/4" :height="16" />
 				</div>
+			</template>
+			<template #footerExtra>
+				<EntityDetailsButton
+					size="small"
+					:url="routeAlertsMitreTactic(id).fullUrl()"
+					@view="showDetails = true"
+				/>
 			</template>
 		</CardEntity>
 		<n-modal
@@ -34,22 +41,7 @@
 			:bordered="false"
 			segmented
 		>
-			<n-tabs type="line" animated :tabs-padding="24">
-				<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy">
-					<div class="px-6 pt-3 pb-6">
-						<TacticDetails :entity="tacticDetails" />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					name="Techniques"
-					:tab="`Techniques (${tacticDetails?.techniques?.length || 0})`"
-					display-directive="show:lazy"
-				>
-					<div class="px-6 pt-3 pb-6">
-						<TechniquesList v-if="tacticDetails" :list="tacticDetails.techniques" />
-					</div>
-				</n-tab-pane>
-			</n-tabs>
+			<TacticOverview :entity="tacticDetails" />
 		</n-modal>
 	</div>
 </template>
@@ -57,15 +49,15 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { MitreTacticDetails } from "@/types/mitre"
-import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
+import { NModal, NSkeleton, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Markdown from "@/components/common/Markdown.vue"
-
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
-import TechniquesList from "../Technique/TechniquesList.vue"
-import TacticDetails from "./TacticDetails.vue"
+import TacticOverview from "./TacticOverview.vue"
 
 const { id, entity } = defineProps<{
 	id: string
@@ -75,6 +67,8 @@ const { id, entity } = defineProps<{
 const emit = defineEmits<{
 	(e: "loaded", value: MitreTacticDetails): void
 }>()
+
+const { routeAlertsMitreTactic } = useNavigation()
 
 const showDetails = ref(false)
 const message = useMessage()

@@ -2,10 +2,14 @@
 	<n-spin :show="loadingDetails" content-class="min-h-40">
 		<div v-if="tacticDetails" class="flex flex-col gap-4 md:flex-row">
 			<div class="flex grow flex-col gap-3">
-				<code class="self-start">
-					{{ tacticDetails.id ?? "—" }}
-				</code>
-
+				<CardKV>
+					<template #key>id</template>
+					<template #value>
+						<span class="whitespace-pre-wrap">
+							{{ tacticDetails.id ?? "—" }}
+						</span>
+					</template>
+				</CardKV>
 				<CardKV>
 					<template #key>name</template>
 					<template #value>

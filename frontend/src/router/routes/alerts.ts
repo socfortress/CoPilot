@@ -40,6 +40,16 @@ export const alertsRoutes: RouteRecordRaw[] = [
 				meta: { title: "SIEM Alert Summary" }
 			},
 			{
+				path: "mitre/tactics/:tacticId",
+				name: "Alerts-Mitre-Tactic",
+				component: () => import("@/views/alerts/MitreTactic.vue"),
+				meta: { title: "MITRE Tactic" }
+			},
+			{
+				path: "mitre/tactics",
+				redirect: { name: "Alerts-Mitre" }
+			},
+			{
 				path: "mitre/software/:softwareId",
 				name: "Alerts-Mitre-Software",
 				component: () => import("@/views/alerts/MitreSoftware.vue"),
@@ -68,6 +78,12 @@ export const alertsRoutes: RouteRecordRaw[] = [
 			{
 				path: "mitre/groups",
 				redirect: { name: "Alerts-Mitre" }
+			},
+			{
+				path: "mitre/:techniqueId/events/:eventId",
+				name: "Alerts-Mitre-Technique-Event",
+				component: () => import("@/views/alerts/MitreTechniqueEvent.vue"),
+				meta: { title: "MITRE Technique Alert" }
 			},
 			{
 				path: "mitre/:techniqueId",

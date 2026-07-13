@@ -41,6 +41,7 @@
 							v-for="alert of alertsList"
 							:key="alert.id"
 							:alert
+							:technique-id="externalId"
 							embedded
 							use-details-tab
 						/>

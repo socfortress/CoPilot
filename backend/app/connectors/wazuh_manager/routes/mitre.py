@@ -460,6 +460,7 @@ async def get_mitre_technique_alerts(
     rule_group: Optional[str] = Query(None, description="Filter by rule group"),
     mitre_field: Optional[str] = Query(None, description="Override the field containing MITRE IDs"),
     index_pattern: str = Query("wazuh-*", description="Index pattern to search"),
+    alert_id: Optional[str] = Query(None, description="Filter by alert document id"),
 ) -> MitreTechniqueAlertsResponse:
     """Get alert documents for a specific MITRE ATT&CK technique."""
     logger.info(f"Request for alerts related to MITRE technique {technique_id} from {time_range} (page {page}, size {size})")
@@ -478,6 +479,9 @@ async def get_mitre_technique_alerts(
 
     if rule_group is not None:
         additional_filters.append({"match_phrase": {"rule_groups": {"query": rule_group}}})
+
+    if alert_id is not None:
+        additional_filters.append({"term": {"id": alert_id}})
 
     # Get the alerts
     results = await get_alerts_by_mitre_id(
