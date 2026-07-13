@@ -9,17 +9,22 @@
 			:highlighted="highlight"
 		>
 			<template v-if="caseEntity" #headerMain>
-				<div
-					class="flex items-center gap-2 wrap-break-word"
-					:class="{ 'hover:text-primary cursor-pointer': !compact }"
-					@click="compact ? undefined : openDetails()"
-				>
+				<div class="flex items-center gap-2 wrap-break-word">
 					<span>#{{ caseEntity.id }}</span>
-					<Icon v-if="!compact" :name="InfoIcon" :size="16" />
 				</div>
 			</template>
-			<template v-if="caseEntity?.case_creation_time" #headerExtra>
-				{{ formatDate(caseEntity.case_creation_time, dFormats.datetime) }}
+			<template #headerExtra>
+				<div class="flex items-center gap-3">
+					<span v-if="caseEntity?.case_creation_time">
+						{{ formatDate(caseEntity.case_creation_time, dFormats.datetime) }}
+					</span>
+					<EntityDetailsButton
+						v-if="!compact && caseEntity?.id"
+						size="tiny"
+						:url="routeIncidentManagementCases(caseEntity.id).fullUrl()"
+						@view="openDetails()"
+					/>
+				</div>
 			</template>
 
 			<template v-if="caseEntity" #default>
@@ -149,6 +154,14 @@
 				</div>
 			</template>
 
+			<template v-if="caseEntity && !compact" #footerExtra>
+				<EntityDetailsButton
+					size="small"
+					:url="routeIncidentManagementCases(caseEntity.id).fullUrl()"
+					@view="openDetails()"
+				/>
+			</template>
+
 			<template v-if="caseEntity && !compact" #footer>
 				<div class="flex items-center justify-between">
 					<n-collapse :trigger-areas="['main', 'arrow']">
@@ -232,6 +245,7 @@ import { computed, onBeforeMount, onMounted, ref, toRefs } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
@@ -264,10 +278,9 @@ const emit = defineEmits<{
 const { caseData, caseId, compact, embedded, detailsOnMounted, highlight } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
-const InfoIcon = "carbon:information"
 const EditIcon = "uil:edit-alt"
 
-const { routeCustomer } = useNavigation()
+const { routeCustomer, routeIncidentManagementCases } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat

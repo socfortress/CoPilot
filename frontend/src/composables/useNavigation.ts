@@ -268,7 +268,14 @@ export function useNavigation() {
 	}
 
 	function routeIncidentManagementCases(caseId?: number) {
-		return routerConstructor({ name: "IncidentManagement-Cases", query: caseId ? { case_id: caseId } : {} })
+		if (caseId != null) {
+			return routerConstructor({
+				name: "IncidentManagement-Case",
+				params: { id: caseId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "IncidentManagement-Cases" })
 	}
 
 	function routeIncidentManagementSources() {

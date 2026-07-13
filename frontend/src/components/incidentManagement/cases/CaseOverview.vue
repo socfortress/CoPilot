@@ -1,8 +1,8 @@
 <template>
 	<n-spin :show="loading" class="flex grow flex-col" content-class="flex grow flex-col">
 		<div class="flex grow flex-col justify-between gap-4">
-			<div class="content-box flex flex-col gap-4 px-6 py-3">
-				<div class="flex flex-col gap-4 sm:flex-row!">
+			<div class="content-box flex flex-col gap-4 py-3">
+				<div class="flex flex-col gap-4 sm:flex-row">
 					<CardKV
 						:color="
 							caseData.case_status === 'OPEN'
@@ -129,7 +129,10 @@
 				</div>
 			</div>
 
-			<div class="bg-secondary border-default flex justify-end gap-3 border-t px-6 py-4">
+			<div
+				class="border-default flex justify-end gap-3 border-t py-4"
+				:class="[useFooterBackground && 'bg-secondary']"
+			>
 				<n-button type="error" secondary @click="handleDelete()">
 					<template #icon>
 						<Icon :name="TrashIcon" />
@@ -158,13 +161,13 @@ import CaseReportButton from "./CaseReportButton.vue"
 import CaseStatusSwitch from "./CaseStatusSwitch.vue"
 import { handleDeleteCase } from "./utils"
 
-const props = defineProps<{ caseData: Case }>()
+const props = defineProps<{ caseData: Case; useFooterBackground?: boolean }>()
 const emit = defineEmits<{
 	(e: "deleted"): void
 	(e: "updated", value: Case): void
 }>()
 
-const { caseData } = toRefs(props)
+const { caseData, useFooterBackground = true } = toRefs(props)
 
 const TrashIcon = "carbon:trash-can"
 const LinkIcon = "carbon:launch"
