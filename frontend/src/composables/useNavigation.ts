@@ -252,6 +252,21 @@ export function useNavigation() {
 		return routerConstructor({ name: "IncidentManagement-Alerts" })
 	}
 
+	function routeIncidentManagementAlertAsset(alertId?: number, assetId?: number) {
+		if (alertId != null && assetId != null) {
+			return routerConstructor({
+				name: "IncidentManagement-AlertAsset",
+				params: { alertId: alertId.toString(), assetId: assetId.toString() }
+			})
+		}
+
+		if (alertId != null) {
+			return routeIncidentManagementAlerts(alertId)
+		}
+
+		return routerConstructor({ name: "IncidentManagement-Alerts" })
+	}
+
 	function routeIncidentManagementCases(caseId?: number) {
 		return routerConstructor({ name: "IncidentManagement-Cases", query: caseId ? { case_id: caseId } : {} })
 	}
@@ -505,6 +520,7 @@ export function useNavigation() {
 		routeAlertsAtomicRedTeamTechnique,
 		routeConnectors,
 		routeIncidentManagementAlerts,
+		routeIncidentManagementAlertAsset,
 		routeIncidentManagementCases,
 		routeIncidentManagementSources,
 		routeIncidentManagementExclusionRuleNew,

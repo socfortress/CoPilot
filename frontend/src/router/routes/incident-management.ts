@@ -83,6 +83,12 @@ export const incidentManagementRoutes: RouteRecordRaw[] = [
 				meta: { title: "Incident Alerts" }
 			},
 			{
+				path: "alerts/:alertId/assets/:assetId",
+				name: "IncidentManagement-AlertAsset",
+				component: () => import("@/views/incidentManagement/AlertLinkedAsset.vue"),
+				meta: { title: "Alert Asset" }
+			},
+			{
 				path: "alerts/:id",
 				name: "IncidentManagement-Alert",
 				component: () => import("@/views/incidentManagement/Alert.vue"),
