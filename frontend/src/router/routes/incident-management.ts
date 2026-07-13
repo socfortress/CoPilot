@@ -47,16 +47,22 @@ export const incidentManagementRoutes: RouteRecordRaw[] = [
 		},
 		children: [
 			{
-				path: "sources/:source",
-				name: "IncidentManagement-Source",
-				component: () => import("@/views/incidentManagement/ConfiguredSource.vue"),
-				meta: { title: "Incident Source" }
+				path: "sources/new",
+				name: "IncidentManagement-SourceNew",
+				component: () => import("@/views/incidentManagement/ConfiguredSourceNew.vue"),
+				meta: { title: "Create Source Configuration" }
 			},
 			{
 				path: "sources",
 				name: "IncidentManagement-Sources",
 				component: () => import("@/views/incidentManagement/Sources.vue"),
 				meta: { title: "Incident Sources" }
+			},
+			{
+				path: "sources/:source",
+				name: "IncidentManagement-Source",
+				component: () => import("@/views/incidentManagement/ConfiguredSource.vue"),
+				meta: { title: "Incident Source" }
 			},
 			{
 				path: "alerts",

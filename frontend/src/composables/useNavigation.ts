@@ -260,6 +260,10 @@ export function useNavigation() {
 		return routerConstructor({ name: "IncidentManagement-Sources" })
 	}
 
+	function routeIncidentManagementSourceNew() {
+		return routerConstructor({ name: "IncidentManagement-SourceNew" })
+	}
+
 	function routeIncidentManagementSource(source?: string) {
 		if (source) {
 			return routerConstructor({
@@ -488,6 +492,7 @@ export function useNavigation() {
 		routeIncidentManagementAlerts,
 		routeIncidentManagementCases,
 		routeIncidentManagementSources,
+		routeIncidentManagementSourceNew,
 		routeIncidentManagementSource,
 		routeEventSearch,
 		routeEventSearchEvent,

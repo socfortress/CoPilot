@@ -3,7 +3,7 @@
 		<div class="flex min-h-48 flex-col">
 			<div class="flex grow flex-col">
 				<n-scrollbar x-scrollable trigger="none">
-					<div class="p-6 pt-3">
+					<div :class="fullWidth ? 'p-0.5' : 'p-6 pt-3'">
 						<n-steps :current size="small" :status="currentStatus">
 							<n-step title="Source" />
 							<n-step title="Configuration" />
@@ -13,7 +13,10 @@
 
 				<div class="mt-4 flex grow flex-col">
 					<Transition :name="`transition-slide-${slideFormDirection}`">
-						<div v-if="current === 1" class="flex flex-col gap-4 px-7">
+						<div
+							v-if="current === 1"
+							:class="fullWidth ? 'flex flex-col gap-4' : 'flex flex-col gap-4 px-7'"
+						>
 							<n-select
 								v-model:value="selectedIndex"
 								placeholder="Indices list"
@@ -41,7 +44,14 @@
 							</div>
 						</div>
 
-						<div v-else-if="current === 2" class="flex min-h-[401px] grow flex-col px-7 pb-7">
+						<div
+							v-else-if="current === 2"
+							:class="
+								fullWidth
+									? 'flex min-h-[401px] grow flex-col pb-7'
+									: 'flex min-h-[401px] grow flex-col px-7 pb-7'
+							"
+						>
 							<SourceConfigurationForm
 								v-if="sourceConfigurationModel"
 								ref="sourceConfigurationFormRef"
@@ -82,7 +92,7 @@ import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import SourceConfigurationForm from "./SourceConfigurationForm.vue"
 
-const props = defineProps<{ disabledSources?: SourceName[] }>()
+const props = defineProps<{ disabledSources?: SourceName[]; fullWidth?: boolean }>()
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
