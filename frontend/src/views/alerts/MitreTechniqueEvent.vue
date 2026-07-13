@@ -1,41 +1,47 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<n-button quaternary class="self-start" @click="goBack">
-			<template #icon>
-				<Icon :name="BackIcon" />
-			</template>
-			Back
-		</n-button>
+		<div class="flex min-w-0 items-center gap-4">
+			<n-button quaternary class="shrink-0" @click="goBack">
+				<template #icon>
+					<Icon :name="BackIcon" />
+				</template>
+				Back
+			</n-button>
 
-		<n-spin :show="loading">
-			<TechniqueEventOverview v-if="alertDetails" :alert="alertDetails" full-width />
-			<n-empty v-else-if="!loading" description="Alert not found" class="h-48 justify-center" />
-		</n-spin>
+			<div v-if="alert" class="flex min-w-0 flex-wrap items-baseline gap-2">
+				<span class="truncate text-lg font-semibold">{{ alert.rule_description }}</span>
+				<span class="text-secondary text-sm">{{ alert.rule_mitre_technique }}</span>
+			</div>
+		</div>
+
+		<TechniqueEventOverview
+			v-if="techniqueId && eventId"
+			:key="`${techniqueId}-${eventId}`"
+			:technique-id
+			:event-id
+			:time-range
+			full-width
+			@loaded="alert = $event"
+		/>
+		<n-empty v-else description="Invalid MITRE alert ID" class="h-48 justify-center" />
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { MitreEventsQuery } from "@/api/endpoints/wazuh/mitre"
-import type { ApiError } from "@/types/common"
 import type { MitreEventDetails } from "@/types/mitre"
-import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { NButton, NEmpty } from "naive-ui"
+import { computed, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import TechniqueEventOverview from "@/components/mitre/TechniqueEvents/TechniqueEventOverview.vue"
 import { useNavigation } from "@/composables/useNavigation"
-import { getApiErrorMessage } from "@/utils"
 
 const route = useRoute()
 const router = useRouter()
 const { routeAlertsMitreTechnique } = useNavigation()
-const message = useMessage()
 
 const BackIcon = "carbon:arrow-left"
-
-const loading = ref(false)
-const alertDetails = ref<MitreEventDetails | undefined>(undefined)
+const alert = ref<MitreEventDetails | null>(null)
 
 const techniqueId = computed(() => {
 	const raw = route.params.techniqueId
@@ -49,36 +55,11 @@ const eventId = computed(() => {
 	return Array.isArray(raw) ? raw[0] : String(raw)
 })
 
-function getDetails() {
-	if (!techniqueId.value || !eventId.value) return
+const timeRange = computed(() => (typeof route.query.time_range === "string" ? route.query.time_range : "now-7d"))
 
-	loading.value = true
-
-	const query: MitreEventsQuery = {
-		technique_id: techniqueId.value,
-		alert_id: eventId.value,
-		size: 1,
-		page: 1,
-		index_pattern: "*",
-		time_range: typeof route.query.time_range === "string" ? route.query.time_range : "now-7d"
-	}
-
-	Api.wazuh.mitre
-		.getMitreEvents(query)
-		.then(res => {
-			if (res.data.success) {
-				alertDetails.value = res.data.alerts?.[0]
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loading.value = false
-		})
-}
+watch([techniqueId, eventId], () => {
+	alert.value = null
+})
 
 function goBack() {
 	if (window.history.length > 1) {
@@ -93,8 +74,4 @@ function goBack() {
 
 	router.push({ name: "Alerts-Mitre" })
 }
-
-onBeforeMount(() => {
-	getDetails()
-})
 </script>
