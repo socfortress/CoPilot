@@ -36,7 +36,10 @@
 				<Badge type="splitted" color="primary">
 					<template #label>agent_id</template>
 					<template #value>
-						<code class="text-primary cursor-pointer" @click.stop="routeAgent(alert._source.agent_id).navigate()">
+						<code
+							class="text-primary cursor-pointer"
+							@click.stop="routeAgent(alert._source.agent_id).navigate()"
+						>
 							{{ alert._source.agent_id }}
 						</code>
 					</template>
@@ -75,7 +78,10 @@
 				<div class="flex flex-col gap-1">
 					<div>
 						agent_id:
-						<code class="text-primary cursor-pointer" @click.stop="routeAgent(alert._source.agent_id).navigate()">
+						<code
+							class="text-primary cursor-pointer"
+							@click.stop="routeAgent(alert._source.agent_id).navigate()"
+						>
 							{{ alert._source.agent_id }}
 							<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 						</code>
@@ -135,7 +141,11 @@ import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 
-const { alert, expanded = false, part = "all" } = defineProps<{
+const {
+	alert,
+	expanded = false,
+	part = "all"
+} = defineProps<{
 	alert: Alert
 	expanded?: boolean
 	part?: "all" | "meta" | "badges"

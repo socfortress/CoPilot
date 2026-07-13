@@ -1,11 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<AlertsSummaryItem
-			v-if="alertsSummary"
-			:alerts-summary
-			hide-open
-			initial-expanded
-		/>
+		<AlertsSummaryItem v-if="alertsSummary" :alerts-summary hide-open initial-expanded />
 		<n-empty v-else-if="!loading" description="No alerts summary found" class="h-48 justify-center" />
 	</n-spin>
 </template>

@@ -279,12 +279,7 @@ export function useNavigation() {
 		return routerConstructor({ name: "EventSearch", query: routeQuery })
 	}
 
-	function routeEventSearchEvent(
-		customerCode?: string,
-		sourceName?: string,
-		indexName?: string,
-		eventId?: string
-	) {
+	function routeEventSearchEvent(customerCode?: string, sourceName?: string, indexName?: string, eventId?: string) {
 		if (customerCode && sourceName && indexName && eventId) {
 			return routerConstructor({
 				name: "EventSearch-Event",

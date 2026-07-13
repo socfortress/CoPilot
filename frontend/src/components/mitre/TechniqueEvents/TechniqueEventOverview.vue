@@ -2,125 +2,146 @@
 	<n-spin :show="loadingDetails">
 		<n-tabs v-if="resolvedAlert" type="line" animated :tabs-padding="fullWidth ? 0 : 24">
 			<n-tab-pane name="Agent" tab="Agent" display-directive="show">
-				<div v-if="agentProperties" class="grid-auto-fit-200 grid gap-2" :class="fullWidth ? 'p-0' : 'p-6 pt-3'">
-				<CardKV v-for="(value, key) of agentProperties" :key>
-					<template #key>
-						{{ key }}
-					</template>
-					<template #value>
-						<template v-if="key === 'agent_id'">
-							<code class="text-primary cursor-pointer" @click.stop="routeAgent(`${value}`).navigate()">
-								{{ value }}
-								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
-							</code>
-						</template>
-						<template v-else-if="key === 'agent_labels_customer'">
-							<code
-								class="text-primary cursor-pointer"
-								@click.stop="routeCustomer(value ? { code: value.toString() } : undefined).navigate()"
-							>
-								{{ value }}
-								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
-							</code>
-						</template>
-						<template v-else>
-							{{ value || "-" }}
-						</template>
-					</template>
-				</CardKV>
-			</div>
-		</n-tab-pane>
-
-		<template v-if="!useDetailsTab">
-			<n-tab-pane
-				v-for="tabCard of tabsCards"
-				:key="tabCard.tab"
-				:name="tabCard.tab"
-				:tab="tabCard.tab"
-				display-directive="show"
-			>
-				<div v-if="tabCard.properties" class="grid-auto-fit-200 grid gap-2" :class="fullWidth ? 'p-0' : 'p-6 pt-3'">
-					<CardKV v-for="(value, key) of tabCard.properties" :key>
+				<div
+					v-if="agentProperties"
+					class="grid-auto-fit-200 grid gap-2"
+					:class="fullWidth ? 'p-0' : 'p-6 pt-3'"
+				>
+					<CardKV v-for="(value, key) of agentProperties" :key>
 						<template #key>
 							{{ key }}
 						</template>
 						<template #value>
-							{{ value || "-" }}
+							<template v-if="key === 'agent_id'">
+								<code
+									class="text-primary cursor-pointer"
+									@click.stop="routeAgent(`${value}`).navigate()"
+								>
+									{{ value }}
+									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+								</code>
+							</template>
+							<template v-else-if="key === 'agent_labels_customer'">
+								<code
+									class="text-primary cursor-pointer"
+									@click.stop="
+										routeCustomer(value ? { code: value.toString() } : undefined).navigate()
+									"
+								>
+									{{ value }}
+									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+								</code>
+							</template>
+							<template v-else>
+								{{ value || "-" }}
+							</template>
 						</template>
 					</CardKV>
 				</div>
 			</n-tab-pane>
 
-			<n-tab-pane name="DNS" tab="DNS" display-directive="show">
-				<div :class="fullWidth ? 'p-0' : 'px-6 pt-3'">
-					<CardKV v-if="resolvedAlert.data_dns_answers">
-						<template #key>data_dns_answers</template>
-						<template #value>
-							<CodeSource :code="resolvedAlert.data_dns_answers" :decode="false" />
-						</template>
-					</CardKV>
-				</div>
-				<div v-if="dnsProperties" class="grid-auto-fit-200 grid gap-2" :class="fullWidth ? 'p-0' : 'p-6 pt-3'">
-					<CardKV v-for="(value, key) of dnsProperties" :key>
-						<template #key>
-							{{ key }}
-						</template>
-						<template #value>
-							{{ value || "-" }}
-						</template>
-					</CardKV>
-				</div>
-			</n-tab-pane>
+			<template v-if="!useDetailsTab">
+				<n-tab-pane
+					v-for="tabCard of tabsCards"
+					:key="tabCard.tab"
+					:name="tabCard.tab"
+					:tab="tabCard.tab"
+					display-directive="show"
+				>
+					<div
+						v-if="tabCard.properties"
+						class="grid-auto-fit-200 grid gap-2"
+						:class="fullWidth ? 'p-0' : 'p-6 pt-3'"
+					>
+						<CardKV v-for="(value, key) of tabCard.properties" :key>
+							<template #key>
+								{{ key }}
+							</template>
+							<template #value>
+								{{ value || "-" }}
+							</template>
+						</CardKV>
+					</div>
+				</n-tab-pane>
 
-			<n-tab-pane name="GL2" tab="GL2" display-directive="show">
-				<div :class="fullWidth ? 'p-0' : 'px-6 pt-3'">
-					<CardKV v-if="resolvedAlert.gl2_processing_error">
-						<template #key>gl2_processing_error</template>
-						<template #value>
-							{{ resolvedAlert.gl2_processing_error }}
-						</template>
-					</CardKV>
-				</div>
-				<div v-if="gl2Properties" class="grid-auto-fit-200 grid gap-2" :class="fullWidth ? 'p-0' : 'p-6 pt-3'">
-					<CardKV v-for="(value, key) of gl2Properties" :key>
-						<template #key>
-							{{ key }}
-						</template>
-						<template #value>
-							{{ value || "-" }}
-						</template>
-					</CardKV>
-				</div>
-			</n-tab-pane>
+				<n-tab-pane name="DNS" tab="DNS" display-directive="show">
+					<div :class="fullWidth ? 'p-0' : 'px-6 pt-3'">
+						<CardKV v-if="resolvedAlert.data_dns_answers">
+							<template #key>data_dns_answers</template>
+							<template #value>
+								<CodeSource :code="resolvedAlert.data_dns_answers" :decode="false" />
+							</template>
+						</CardKV>
+					</div>
+					<div
+						v-if="dnsProperties"
+						class="grid-auto-fit-200 grid gap-2"
+						:class="fullWidth ? 'p-0' : 'p-6 pt-3'"
+					>
+						<CardKV v-for="(value, key) of dnsProperties" :key>
+							<template #key>
+								{{ key }}
+							</template>
+							<template #value>
+								{{ value || "-" }}
+							</template>
+						</CardKV>
+					</div>
+				</n-tab-pane>
 
-			<n-tab-pane v-if="resolvedAlert.message" name="Message" tab="Message" display-directive="show">
+				<n-tab-pane name="GL2" tab="GL2" display-directive="show">
+					<div :class="fullWidth ? 'p-0' : 'px-6 pt-3'">
+						<CardKV v-if="resolvedAlert.gl2_processing_error">
+							<template #key>gl2_processing_error</template>
+							<template #value>
+								{{ resolvedAlert.gl2_processing_error }}
+							</template>
+						</CardKV>
+					</div>
+					<div
+						v-if="gl2Properties"
+						class="grid-auto-fit-200 grid gap-2"
+						:class="fullWidth ? 'p-0' : 'p-6 pt-3'"
+					>
+						<CardKV v-for="(value, key) of gl2Properties" :key>
+							<template #key>
+								{{ key }}
+							</template>
+							<template #value>
+								{{ value || "-" }}
+							</template>
+						</CardKV>
+					</div>
+				</n-tab-pane>
+
+				<n-tab-pane v-if="resolvedAlert.message" name="Message" tab="Message" display-directive="show">
+					<div :class="fullWidth ? 'p-0' : 'p-6 pt-3'">
+						<CodeSource :code="resolvedAlert.message" :decode="false" />
+					</div>
+				</n-tab-pane>
+
+				<n-tab-pane v-if="resolvedAlert.location" name="Location" tab="Location" display-directive="show">
+					<div :class="fullWidth ? 'p-0' : 'p-6 pt-3'">
+						<CodeSource :code="resolvedAlert.location" :decode="false" />
+					</div>
+				</n-tab-pane>
+
+				<n-tab-pane v-if="resolvedAlert.streams?.length" name="Streams" tab="Streams" display-directive="show">
+					<div class="flex flex-wrap gap-3" :class="fullWidth ? 'p-0' : 'p-6 pt-3'">
+						<ul>
+							<li v-for="stream of resolvedAlert.streams" :key="stream">
+								<code>{{ stream }}</code>
+							</li>
+						</ul>
+					</div>
+				</n-tab-pane>
+			</template>
+
+			<n-tab-pane name="Details" tab="Details" display-directive="show:lazy">
 				<div :class="fullWidth ? 'p-0' : 'p-6 pt-3'">
-					<CodeSource :code="resolvedAlert.message" :decode="false" />
+					<CodeSource :code="resolvedAlert" lang="json" :decode="false" />
 				</div>
 			</n-tab-pane>
-
-			<n-tab-pane v-if="resolvedAlert.location" name="Location" tab="Location" display-directive="show">
-				<div :class="fullWidth ? 'p-0' : 'p-6 pt-3'">
-					<CodeSource :code="resolvedAlert.location" :decode="false" />
-				</div>
-			</n-tab-pane>
-
-			<n-tab-pane v-if="resolvedAlert.streams?.length" name="Streams" tab="Streams" display-directive="show">
-				<div class="flex flex-wrap gap-3" :class="fullWidth ? 'p-0' : 'p-6 pt-3'">
-					<ul>
-						<li v-for="stream of resolvedAlert.streams" :key="stream">
-							<code>{{ stream }}</code>
-						</li>
-					</ul>
-				</div>
-			</n-tab-pane>
-		</template>
-
-		<n-tab-pane name="Details" tab="Details" display-directive="show:lazy">
-			<div :class="fullWidth ? 'p-0' : 'p-6 pt-3'">
-				<CodeSource :code="resolvedAlert" lang="json" :decode="false" />
-			</div>
-		</n-tab-pane>
 		</n-tabs>
 	</n-spin>
 </template>
@@ -208,92 +229,96 @@ const tabsCards = computed(() => {
 	if (!resolvedAlert.value) return []
 
 	return [
-	{
-		tab: "Host",
-		properties: _pick(resolvedAlert.value, [
-			"data_host_architecture",
-			"data_host_id",
-			"data_host_mac",
-			"data_host_name",
-			"data_host_hostname",
-			"data_host_containerized",
-			"data_host_ip",
-			"data_host_os_codename",
-			"data_host_os_family",
-			"data_host_os_kernel",
-			"data_host_os_name",
-			"data_host_os_platform",
-			"data_host_os_type",
-			"data_host_os_version"
-		])
-	},
-	{
-		tab: "Network",
-		properties: _pick(resolvedAlert.value, [
-			"data_network_protocol",
-			"data_network_transport",
-			"data_network_type",
-			"data_network_bytes",
-			"data_network_direction",
-			"data_network_community_id",
-			"traffic_direction"
-		])
-	},
-	{
-		tab: "Event",
-		properties: _pick(resolvedAlert.value, [
-			"data_event_category",
-			"data_event_dataset",
-			"data_event_duration",
-			"data_event_end",
-			"data_event_kind",
-			"data_event_start",
-			"data_event_type",
-			"data_type"
-		])
-	},
-	{
-		tab: "Timestamp",
-		properties: _pick(resolvedAlert.value, ["timestamp", "timestamp_utc", "data_@timestamp", "msg_timestamp"])
-	},
-	{
-		tab: "Source",
-		properties: _pick(resolvedAlert.value, ["data_source_ip", "data_source_port", "data_source_bytes"])
-	},
-	{
-		tab: "Destination",
-		properties: _pick(resolvedAlert.value, ["data_destination_ip", "data_destination_port", "data_destination_bytes"])
-	},
-	{
-		tab: "Client",
-		properties: _pick(resolvedAlert.value, ["data_client_ip", "data_client_port", "data_client_bytes"])
-	},
-	{
-		tab: "Server",
-		properties: _pick(resolvedAlert.value, ["data_server_ip", "data_server_port", "data_server_bytes"])
-	},
-	{
-		tab: "Cluster",
-		properties: _pick(resolvedAlert.value, ["cluster_name", "cluster_node"])
-	},
-	{
-		tab: "Rule",
-		properties: _pick(resolvedAlert.value, [
-			"rule_id",
-			"rule_level",
-			"rule_mail",
-			"rule_mitre_id",
-			"rule_mitre_tactic",
-			"rule_mitre_technique",
-			"rule_description",
-			"rule_firedtimes",
-			"rule_groups",
-			"rule_group1",
-			"rule_group2",
-			"rule_group3"
-		])
-	}
-]
+		{
+			tab: "Host",
+			properties: _pick(resolvedAlert.value, [
+				"data_host_architecture",
+				"data_host_id",
+				"data_host_mac",
+				"data_host_name",
+				"data_host_hostname",
+				"data_host_containerized",
+				"data_host_ip",
+				"data_host_os_codename",
+				"data_host_os_family",
+				"data_host_os_kernel",
+				"data_host_os_name",
+				"data_host_os_platform",
+				"data_host_os_type",
+				"data_host_os_version"
+			])
+		},
+		{
+			tab: "Network",
+			properties: _pick(resolvedAlert.value, [
+				"data_network_protocol",
+				"data_network_transport",
+				"data_network_type",
+				"data_network_bytes",
+				"data_network_direction",
+				"data_network_community_id",
+				"traffic_direction"
+			])
+		},
+		{
+			tab: "Event",
+			properties: _pick(resolvedAlert.value, [
+				"data_event_category",
+				"data_event_dataset",
+				"data_event_duration",
+				"data_event_end",
+				"data_event_kind",
+				"data_event_start",
+				"data_event_type",
+				"data_type"
+			])
+		},
+		{
+			tab: "Timestamp",
+			properties: _pick(resolvedAlert.value, ["timestamp", "timestamp_utc", "data_@timestamp", "msg_timestamp"])
+		},
+		{
+			tab: "Source",
+			properties: _pick(resolvedAlert.value, ["data_source_ip", "data_source_port", "data_source_bytes"])
+		},
+		{
+			tab: "Destination",
+			properties: _pick(resolvedAlert.value, [
+				"data_destination_ip",
+				"data_destination_port",
+				"data_destination_bytes"
+			])
+		},
+		{
+			tab: "Client",
+			properties: _pick(resolvedAlert.value, ["data_client_ip", "data_client_port", "data_client_bytes"])
+		},
+		{
+			tab: "Server",
+			properties: _pick(resolvedAlert.value, ["data_server_ip", "data_server_port", "data_server_bytes"])
+		},
+		{
+			tab: "Cluster",
+			properties: _pick(resolvedAlert.value, ["cluster_name", "cluster_node"])
+		},
+		{
+			tab: "Rule",
+			properties: _pick(resolvedAlert.value, [
+				"rule_id",
+				"rule_level",
+				"rule_mail",
+				"rule_mitre_id",
+				"rule_mitre_tactic",
+				"rule_mitre_technique",
+				"rule_description",
+				"rule_firedtimes",
+				"rule_groups",
+				"rule_group1",
+				"rule_group2",
+				"rule_group3"
+			])
+		}
+	]
 })
 
 const agentProperties = computed(() => {

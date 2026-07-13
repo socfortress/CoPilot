@@ -14,13 +14,7 @@
 			</div>
 		</div>
 
-		<SoftwareOverview
-			v-if="softwareId"
-			:id="softwareId"
-			:key="softwareId"
-			full-width
-			@loaded="software = $event"
-		/>
+		<SoftwareOverview v-if="softwareId" :id="softwareId" :key="softwareId" full-width @loaded="software = $event" />
 		<n-empty v-else description="Invalid MITRE software ID" class="h-48 justify-center" />
 	</div>
 </template>

@@ -14,13 +14,7 @@
 			</div>
 		</div>
 
-		<TacticOverview
-			v-if="tacticId"
-			:id="tacticId"
-			:key="tacticId"
-			full-width
-			@loaded="tactic = $event"
-		/>
+		<TacticOverview v-if="tacticId" :id="tacticId" :key="tacticId" full-width @loaded="tactic = $event" />
 		<n-empty v-else description="Invalid MITRE tactic ID" class="h-48 justify-center" />
 	</div>
 </template>

@@ -7,7 +7,7 @@
 			Back
 		</n-button>
 
-		<AlertsSummaryDetails v-if="indexName" :index-name="indexName" :query="summaryQuery" />
+		<AlertsSummaryDetails v-if="indexName" :index-name :query="summaryQuery" />
 		<n-empty v-else description="Invalid index name" class="h-48 justify-center" />
 	</div>
 </template>

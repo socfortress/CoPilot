@@ -1,4 +1,4 @@
-import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost, AlertsSummary, Alert } from "@/types/alerts"
+import type { Alert, AlertsByHost, AlertsByRule, AlertsByRulePerHost, AlertsSummary } from "@/types/alerts"
 import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
 

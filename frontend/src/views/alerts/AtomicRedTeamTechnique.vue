@@ -11,7 +11,7 @@
 			<span v-if="techniqueId" class="text-secondary font-mono text-sm">{{ techniqueId }}</span>
 		</div>
 
-		<TechniqueCardContent v-if="techniqueId" :technique-id="techniqueId" />
+		<TechniqueCardContent v-if="techniqueId" :technique-id />
 		<n-empty v-else description="Invalid technique ID" class="h-48 justify-center" />
 	</div>
 </template>

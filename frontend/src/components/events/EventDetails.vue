@@ -30,11 +30,7 @@
 					</div>
 				</template>
 
-				<EventDetail
-					:event="resolvedEvent"
-					@filter-add="onFilterAdd"
-					@filter-exclude="onFilterExclude"
-				/>
+				<EventDetail :event="resolvedEvent" @filter-add="onFilterAdd" @filter-exclude="onFilterExclude" />
 			</CardEntity>
 		</template>
 
@@ -121,12 +117,7 @@ function loadEvent() {
 	loading.value = true
 
 	Api.siem
-		.getEvent(
-			customerCode,
-			sourceName,
-			{ index_name: indexName, event_id: eventId },
-			abortController.signal
-		)
+		.getEvent(customerCode, sourceName, { index_name: indexName, event_id: eventId }, abortController.signal)
 		.then(res => {
 			loading.value = false
 

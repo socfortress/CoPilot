@@ -38,7 +38,6 @@ import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import { getApiErrorMessage } from "@/utils"
-import ConfiguredSourceItem from "./ConfiguredSourceItem.vue"
 import NewConfiguredSourceButton from "./NewConfiguredSourceButton.vue"
 
 const { showToolbar = true } = defineProps<{ showToolbar?: boolean }>()

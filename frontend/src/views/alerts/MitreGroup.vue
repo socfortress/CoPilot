@@ -14,13 +14,7 @@
 			</div>
 		</div>
 
-		<GroupOverview
-			v-if="groupId"
-			:id="groupId"
-			:key="groupId"
-			full-width
-			@loaded="group = $event"
-		/>
+		<GroupOverview v-if="groupId" :id="groupId" :key="groupId" full-width @loaded="group = $event" />
 		<n-empty v-else description="Invalid MITRE group ID" class="h-48 justify-center" />
 	</div>
 </template>
