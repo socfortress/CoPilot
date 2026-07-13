@@ -144,6 +144,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "Alerts-Mitre" })
 	}
 
+	function routeAlertsMitreTechniques(techniqueId?: string) {
+		if (techniqueId) {
+			return routerConstructor({
+				name: "Alerts-Mitre-Techniques",
+				params: { techniqueId }
+			})
+		}
+
+		return routerConstructor({ name: "Alerts-Mitre" })
+	}
+
 	function routeAlertsMitreEvent(techniqueId?: string, eventId?: string) {
 		if (techniqueId && eventId) {
 			return routerConstructor({
@@ -440,6 +451,7 @@ export function useNavigation() {
 		routeAlertsSiemAlert,
 		routeAlertsMitre,
 		routeAlertsMitreTechnique,
+		routeAlertsMitreTechniques,
 		routeAlertsMitreEvent,
 		routeAlertsMitreGroup,
 		routeAlertsMitreMitigation,
