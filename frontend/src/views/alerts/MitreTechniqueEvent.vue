@@ -59,6 +59,7 @@ function getDetails() {
 		alert_id: eventId.value,
 		size: 1,
 		page: 1,
+		index_pattern: "*",
 		time_range: typeof route.query.time_range === "string" ? route.query.time_range : "now-7d"
 	}
 
