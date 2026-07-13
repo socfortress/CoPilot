@@ -76,6 +76,10 @@ const { externalId } = defineProps<{
 	fullWidth?: boolean
 }>()
 
+const emit = defineEmits<{
+	(e: "loaded", value: MitreTechniqueDetails): void
+}>()
+
 const message = useMessage()
 const loadingDetails = ref(false)
 const techniqueDetails = ref<MitreTechniqueDetails | undefined>(undefined)
@@ -89,6 +93,7 @@ function getDetails(id: string) {
 			if (res.data.success) {
 				if (res.data.results?.[0]) {
 					techniqueDetails.value = res.data.results[0]
+					emit("loaded", res.data.results[0])
 				}
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")

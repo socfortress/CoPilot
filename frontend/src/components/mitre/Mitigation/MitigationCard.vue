@@ -1,12 +1,22 @@
 <template>
 	<div>
 		<CardEntity embedded hoverable size="small" :loading="loadingDetails">
-			<template #headerMain>{{ id }}</template>
+			<template #headerMain>
+				<div class="flex items-center gap-2">
+					<span v-if="mitigationDetails" class="text-default">
+						{{ mitigationDetails.external_id }}
+					</span>
+					<span>
+						{{ id }}
+					</span>
+				</div>
+			</template>
 			<template #headerExtra>
-				<span v-if="mitigationDetails" class="text-default">
-					{{ mitigationDetails.external_id }}
-				</span>
-				<n-skeleton v-else text :width="100" :height="18" />
+				<EntityDetailsButton
+					size="tiny"
+					:url="routeAlertsMitreMitigation(id).fullUrl()"
+					@view="showDetails = true"
+				/>
 			</template>
 			<template #default>
 				<div v-if="mitigationDetails">
@@ -22,13 +32,6 @@
 					<n-skeleton text :repeat="2" :height="16" />
 					<n-skeleton text class="w-2/4" :height="16" />
 				</div>
-			</template>
-			<template #footerExtra>
-				<EntityDetailsButton
-					size="small"
-					:url="routeAlertsMitreMitigation(id).fullUrl()"
-					@view="showDetails = true"
-				/>
 			</template>
 		</CardEntity>
 		<n-modal
