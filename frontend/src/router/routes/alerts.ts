@@ -115,6 +115,12 @@ export const alertsRoutes: RouteRecordRaw[] = [
 				meta: { title: "MITRE ATT&CK" }
 			},
 			{
+				path: "atomic-red-team/:techniqueId",
+				name: "Alerts-AtomicRedTeam-Technique",
+				component: () => import("@/views/alerts/AtomicRedTeamTechnique.vue"),
+				meta: { title: "Atomic Red Team Technique" }
+			},
+			{
 				path: "atomic-red-team",
 				name: "Alerts-AtomicRedTeam",
 				component: () => import("@/views/alerts/AtomicRedTeam.vue"),

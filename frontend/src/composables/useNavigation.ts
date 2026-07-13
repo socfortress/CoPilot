@@ -214,6 +214,21 @@ export function useNavigation() {
 		return routerConstructor({ name: "Alerts-Mitre" })
 	}
 
+	function routeAlertsAtomicRedTeam() {
+		return routerConstructor({ name: "Alerts-AtomicRedTeam" })
+	}
+
+	function routeAlertsAtomicRedTeamTechnique(techniqueId?: string) {
+		if (techniqueId) {
+			return routerConstructor({
+				name: "Alerts-AtomicRedTeam-Technique",
+				params: { techniqueId }
+			})
+		}
+
+		return routerConstructor({ name: "Alerts-AtomicRedTeam" })
+	}
+
 	function routeConnectors() {
 		return routerConstructor({ name: "Connectors" })
 	}
@@ -457,6 +472,8 @@ export function useNavigation() {
 		routeAlertsMitreMitigation,
 		routeAlertsMitreSoftware,
 		routeAlertsMitreTactic,
+		routeAlertsAtomicRedTeam,
+		routeAlertsAtomicRedTeamTechnique,
 		routeConnectors,
 		routeIncidentManagementAlerts,
 		routeIncidentManagementCases,
