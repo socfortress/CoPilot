@@ -142,6 +142,6 @@ def get_index_config_for_source(source: str) -> Tuple[str, str]:
     )
     raise ValueError(
         f"No index mapping configured for threshold alert source '{source}'. "
-        f"Add it to the {_ENV_MAPPING_VAR} env var (e.g. '{{\"{key}\": \"{key}-*\"}}') "
+        f'Add it to the {_ENV_MAPPING_VAR} env var (e.g. \'{{"{key}": "{key}-*"}}\') '
         f"or enable {_ENV_FALLBACK_VAR}.",
     )
