@@ -1,16 +1,15 @@
 <template>
 	<div>
-		<CardEntity :loading hoverable embedded>
+		<CardEntity hoverable embedded>
 			<template #headerMain>
 				<span class="text-default font-semibold">{{ source }}</span>
 			</template>
 			<template #headerExtra>
-				<n-button size="small" @click.stop="openDetails()">
-					<template #icon>
-						<Icon :name="DetailsIcon" />
-					</template>
-					Details
-				</n-button>
+				<EntityDetailsButton
+					size="tiny"
+					:url="routeIncidentManagementSource(source).fullUrl()"
+					@view="openDetails()"
+				/>
 			</template>
 
 			<template v-if="sourceConfiguration || loadingConfig" #mainExtra>
@@ -58,18 +57,7 @@
 				role="modal"
 				@close="closeDetails()"
 			>
-				<SourceConfigurationDetails :source />
-
-				<template #footer>
-					<div class="flex justify-end">
-						<n-button text type="error" ghost :loading="deleting" @click="handleDelete()">
-							<template #icon>
-								<Icon :name="DeleteIcon" :size="15" />
-							</template>
-							Delete
-						</n-button>
-					</div>
-				</template>
+				<SourceConfigurationDetails deletable :source @deleted="handleDeleted()" />
 			</n-card>
 		</n-modal>
 	</div>
@@ -78,12 +66,13 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources"
-import { NButton, NCard, NModal, NSpin, useDialog, useMessage } from "naive-ui"
-import { computed, h, onBeforeMount, ref } from "vue"
+import { NCard, NModal, NSpin, useMessage } from "naive-ui"
+import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import Icon from "@/components/common/Icon.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import SourceConfigurationDetails from "./SourceConfigurationDetails.vue"
 
@@ -93,17 +82,11 @@ const emit = defineEmits<{
 	(e: "deleted"): void
 }>()
 
-const DetailsIcon = "carbon:settings-adjust"
-const DeleteIcon = "ph:trash"
-
 const message = useMessage()
-const dialog = useDialog()
+const { routeIncidentManagementSource } = useNavigation()
 const loadingConfig = ref(false)
-const deleting = ref(false)
 const showDetails = ref(false)
 const sourceConfiguration = ref<SourceConfiguration | null>(null)
-
-const loading = computed(() => deleting.value)
 
 function getSourceConfiguration() {
 	loadingConfig.value = true
@@ -138,44 +121,9 @@ function closeDetails() {
 	showDetails.value = false
 }
 
-function deleteSourceConfiguration() {
-	deleting.value = true
-
-	Api.incidentManagement.sources
-		.deleteSourceConfiguration(source)
-		.then(res => {
-			if (res.data.success) {
-				message.success(res.data?.message || "Source Configuration deleted successfully")
-				showDetails.value = false
-				emit("deleted")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			deleting.value = false
-		})
-}
-
-function handleDelete() {
-	dialog.warning({
-		title: "Confirm",
-		content: () =>
-			h("div", {
-				innerHTML: `Are you sure you want to delete the source configuration for <strong>${source}</strong>?`
-			}),
-		positiveText: "Yes I'm sure",
-		negativeText: "Cancel",
-		onPositiveClick: () => {
-			deleteSourceConfiguration()
-		},
-		onNegativeClick: () => {
-			message.info("Delete canceled")
-		}
-	})
+function handleDeleted() {
+	showDetails.value = false
+	emit("deleted")
 }
 
 onBeforeMount(() => {

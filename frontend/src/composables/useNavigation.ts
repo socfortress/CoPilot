@@ -256,6 +256,21 @@ export function useNavigation() {
 		return routerConstructor({ name: "IncidentManagement-Cases", query: caseId ? { case_id: caseId } : {} })
 	}
 
+	function routeIncidentManagementSources() {
+		return routerConstructor({ name: "IncidentManagement-Sources" })
+	}
+
+	function routeIncidentManagementSource(source?: string) {
+		if (source) {
+			return routerConstructor({
+				name: "IncidentManagement-Source",
+				params: { source }
+			})
+		}
+
+		return routerConstructor({ name: "IncidentManagement-Sources" })
+	}
+
 	function routeEventSearch(params?: { customer_code?: string; source_name?: string; query?: string }) {
 		const routeQuery: Record<string, string> = {}
 		if (params?.customer_code) routeQuery.customer_code = params.customer_code
@@ -477,6 +492,8 @@ export function useNavigation() {
 		routeConnectors,
 		routeIncidentManagementAlerts,
 		routeIncidentManagementCases,
+		routeIncidentManagementSources,
+		routeIncidentManagementSource,
 		routeEventSearch,
 		routeEventSearchEvent,
 		routeSSOConfig,
