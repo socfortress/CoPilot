@@ -1,17 +1,17 @@
 <template>
-	<div class="grid-auto-fit-200 grid gap-2 p-6 pt-3">
+	<div class="grid-auto-fit-200 grid gap-2">
 		<CardKV v-for="(value, key) of asset" :key>
 			<template #key>
 				{{ key }}
 			</template>
 			<template #value>
-				<div v-if="key === 'id'">#{{ value }}</div>
+				<div v-if="key === 'id'">{{ value }}</div>
 				<div v-else-if="key === 'customer_code'">
 					<code
 						class="text-primary cursor-pointer"
 						@click.stop="routeCustomer({ code: asset.customer_code }).navigate()"
 					>
-						#{{ asset.customer_code }}
+						{{ asset.customer_code }}
 						<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
@@ -27,14 +27,16 @@
 						<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
 					</code>
 				</div>
-				<div v-else-if="key === 'index_id'">
-					<code class="text-primary cursor-pointer" @click.stop="openAlertDetails()">
-						{{ asset.index_id }}
-						<Icon :name="ViewIcon" :size="14" class="relative top-0.5" />
-					</code>
+				<div v-else-if="key === 'index_id'" class="flex flex-col gap-1">
+					<code class="leading-none">{{ asset.index_id }}</code>
+					<EntityDetailsButton
+						size="tiny"
+						:url="routeAlertsSiemAlert(asset.index_name, asset.index_id).fullUrl()"
+						@view="openAlertDetails()"
+					/>
 				</div>
 				<div v-else-if="key === 'alert_linked'">
-					<div class="flex items-center gap-2">
+					<div class="flex flex-col gap-2">
 						<span>{{ value }}</span>
 						<code class="text-primary cursor-pointer" @click.stop="openEventSearch()">
 							View in Event Search
@@ -101,6 +103,7 @@ import { NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
@@ -112,8 +115,7 @@ const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSo
 const { asset } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
-const ViewIcon = "iconoir:eye-solid"
-const { routeAgent, routeIndex, routeCustomer, routeEventSearch } = useNavigation()
+const { routeAgent, routeIndex, routeCustomer, routeEventSearch, routeAlertsSiemAlert } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const showAlertDetails = ref(false)

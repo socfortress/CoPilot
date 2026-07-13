@@ -43,7 +43,9 @@
 
 		<n-tabs type="line" animated :tabs-padding="fullWidth ? 0 : 24">
 			<n-tab-pane name="Info" tab="Info" display-directive="show">
-				<AlertAssetInfo v-if="resolvedAsset" :asset="resolvedAsset" />
+				<div v-if="alertContext" :class="fullWidth ? 'pt-3' : 'p-6 pt-3'">
+					<AlertAssetInfo v-if="resolvedAsset" :asset="resolvedAsset" />
+				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Context" tab="Context" display-directive="show">
 				<n-spin :show="loadingContext" class="min-h-40">
@@ -91,7 +93,12 @@
 					</div>
 				</div>
 			</n-tab-pane>
-			<n-tab-pane v-if="isWazuhSource" name="CoPilot Searches" tab="CoPilot Searches" display-directive="show:lazy">
+			<n-tab-pane
+				v-if="isWazuhSource"
+				name="CoPilot Searches"
+				tab="CoPilot Searches"
+				display-directive="show:lazy"
+			>
 				<div :class="fullWidth ? 'pt-3' : 'p-6 pt-3'">
 					<AlertAssetSearches v-if="resolvedAsset" :asset="resolvedAsset" />
 				</div>
@@ -144,7 +151,12 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import { getApiErrorMessage } from "@/utils"
 
-const { asset, alertId, assetId, fullWidth = false } = defineProps<{
+const {
+	asset,
+	alertId,
+	assetId,
+	fullWidth = false
+} = defineProps<{
 	asset?: AlertAsset
 	alertId?: number
 	assetId?: number
