@@ -87,6 +87,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
 	(e: "deleted"): void
+	(e: "loaded", value: Alert): void
 	(e: "updated", value: Alert): void
 }>()
 const AlertTimeline = defineAsyncComponent(() => import("./AlertTimeline.vue"))
@@ -145,6 +146,7 @@ function getAlert(alertId: number) {
 		.then(res => {
 			if (res.data.success) {
 				alert.value = res.data?.alerts?.[0] || null
+				if (alert.value) emit("loaded", alert.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -163,6 +165,7 @@ onBeforeMount(() => {
 		checkAiReport(alertId.value)
 	} else if (alertData.value) {
 		alert.value = _clone(alertData.value)
+		emit("loaded", alert.value)
 		checkAiReport(alertData.value.id)
 	}
 })
