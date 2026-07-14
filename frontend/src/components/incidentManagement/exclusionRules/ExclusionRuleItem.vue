@@ -4,11 +4,7 @@
 			<template #headerMain>{{ entity.name }}</template>
 			<template #headerExtra>
 				<div class="hidden font-sans sm:block">
-					<ExclusionRuleStatusToggler
-						:entity
-						@loading="loading = $event"
-						@updated="setStatus($event)"
-					/>
+					<ExclusionRuleStatusToggler :entity @loading="loading = $event" @updated="setStatus($event)" />
 				</div>
 			</template>
 			<template #default>
@@ -52,11 +48,7 @@
 			<template #footerExtra>
 				<div class="flex items-center gap-3">
 					<div class="block sm:hidden">
-						<ExclusionRuleStatusToggler
-							:entity
-							@loading="loading = $event"
-							@updated="setStatus($event)"
-						/>
+						<ExclusionRuleStatusToggler :entity @loading="loading = $event" @updated="setStatus($event)" />
 					</div>
 
 					<EntityDetailsButton

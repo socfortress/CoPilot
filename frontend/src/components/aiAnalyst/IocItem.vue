@@ -1,12 +1,7 @@
 <template>
 	<IocDetails :ioc>
 		<template #footerExtra>
-			<EntityDetailsButton
-				size="tiny"
-				:order="['open']"
-				open-show-label
-				:route="routeAiAnalystIoc(ioc.id)"
-			/>
+			<EntityDetailsButton size="tiny" :order="['open']" open-show-label :route="routeAiAnalystIoc(ioc.id)" />
 		</template>
 	</IocDetails>
 </template>

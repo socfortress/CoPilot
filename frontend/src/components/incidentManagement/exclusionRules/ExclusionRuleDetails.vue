@@ -1,5 +1,11 @@
 <template>
-	<n-tabs type="line" animated :tabs-padding="fullWidth ? 0 : 24" class="grow" pane-wrapper-class="flex grow flex-col">
+	<n-tabs
+		type="line"
+		animated
+		:tabs-padding="fullWidth ? 0 : 24"
+		class="grow"
+		pane-wrapper-class="flex grow flex-col"
+	>
 		<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex grow flex-col">
 			<n-spin :show="loading" class="flex grow flex-col" content-class="flex grow flex-col">
 				<div class="flex flex-col gap-4" :class="fullWidth ? 'p-0' : 'p-5 pt-3'">

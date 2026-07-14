@@ -66,11 +66,7 @@
 			</template>
 
 			<template v-if="alert" #footerExtra>
-				<EntityDetailsButton
-					size="tiny"
-					:route="routeAiAnalystReport(alert.report.id)"
-					@view="openDetails()"
-				/>
+				<EntityDetailsButton size="tiny" :route="routeAiAnalystReport(alert.report.id)" @view="openDetails()" />
 			</template>
 		</CardEntity>
 

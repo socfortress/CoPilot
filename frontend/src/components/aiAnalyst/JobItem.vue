@@ -1,12 +1,7 @@
 <template>
 	<JobDetails :job>
 		<template #headerExtra>
-			<EntityDetailsButton
-				size="small"
-				:order="['open']"
-				open-show-label
-				:route="routeAiAnalystJob(job.id)"
-			/>
+			<EntityDetailsButton size="small" :order="['open']" open-show-label :route="routeAiAnalystJob(job.id)" />
 		</template>
 	</JobDetails>
 </template>

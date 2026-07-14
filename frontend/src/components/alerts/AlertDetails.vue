@@ -60,7 +60,11 @@ const dFormats = useSettingsStore().dateFormat
 
 const socAlertCreationField = ref(inject<SocAlertField>("soc-alert-creation-field", "alert_url"))
 
-const { loading, entity: resolvedAlert, reload } = useEntityDetails<Alert, string>({
+const {
+	loading,
+	entity: resolvedAlert,
+	reload
+} = useEntityDetails<Alert, string>({
 	entity: () => props.alert,
 	id: () => (props.indexName && props.alertId ? `${props.indexName}|${props.alertId}` : null),
 	fetch: (_id, signal) =>

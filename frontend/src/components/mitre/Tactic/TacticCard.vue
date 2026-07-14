@@ -12,11 +12,7 @@
 				</div>
 			</template>
 			<template #headerExtra>
-				<EntityDetailsButton
-					size="tiny"
-					:route="routeAlertsMitreTactic(id)"
-					@view="showDetails = true"
-				/>
+				<EntityDetailsButton size="tiny" :route="routeAlertsMitreTactic(id)" @view="showDetails = true" />
 			</template>
 			<template #default>
 				<div v-if="tacticDetails">

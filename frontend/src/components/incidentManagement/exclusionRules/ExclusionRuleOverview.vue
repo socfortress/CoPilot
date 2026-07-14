@@ -14,7 +14,11 @@
 			<ExclusionRuleDetails v-else-if="resolvedEntity" :entity="resolvedEntity" :full-width />
 		</n-spin>
 
-		<div v-if="!editing && resolvedEntity" class="flex items-center justify-end gap-4" :class="fullWidth ? 'pt-4' : 'p-6'">
+		<div
+			v-if="!editing && resolvedEntity"
+			class="flex items-center justify-end gap-4"
+			:class="fullWidth ? 'pt-4' : 'p-6'"
+		>
 			<n-button text type="error" ghost :loading="loadingDelete" @click="handleDelete">
 				<template #icon>
 					<Icon :name="DeleteIcon" :size="15" />
@@ -43,7 +47,11 @@ import { getApiErrorMessage } from "@/utils"
 import ExclusionRuleDetails from "./ExclusionRuleDetails.vue"
 import ExclusionRuleForm from "./ExclusionRuleForm.vue"
 
-const { entity, exclusionId, fullWidth = false } = defineProps<{
+const {
+	entity,
+	exclusionId,
+	fullWidth = false
+} = defineProps<{
 	entity?: ExclusionRule
 	exclusionId?: number
 	fullWidth?: boolean

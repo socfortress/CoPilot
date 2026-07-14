@@ -5,11 +5,7 @@
 				<span class="text-default font-semibold">{{ source }}</span>
 			</template>
 			<template #headerExtra>
-				<EntityDetailsButton
-					size="tiny"
-					:route="routeIncidentManagementSource(source)"
-					@view="openDetails()"
-				/>
+				<EntityDetailsButton size="tiny" :route="routeIncidentManagementSource(source)" @view="openDetails()" />
 			</template>
 
 			<template v-if="sourceConfiguration || loadingConfig" #mainExtra>

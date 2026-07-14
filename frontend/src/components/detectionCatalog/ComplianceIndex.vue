@@ -120,9 +120,7 @@ const showGroupModal = computed({
 	}
 })
 const modalTitle = computed(() =>
-	modalGroup.value
-		? `${pivot.value?.framework_label ?? ""} ${modalGroup.value.control}`
-		: "Compliance Control"
+	modalGroup.value ? `${pivot.value?.framework_label ?? ""} ${modalGroup.value.control}` : "Compliance Control"
 )
 
 const ControlIcon = "carbon:certificate-check"

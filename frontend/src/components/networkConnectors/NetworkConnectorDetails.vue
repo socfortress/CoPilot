@@ -78,9 +78,7 @@ const { loading, entity: resolvedConnector } = useEntityDetails<ServiceItemData,
 	fetch: (id, signal) =>
 		Api.networkConnectors.getAvailableNetworkConnector(id, signal).then(res => ({
 			entity:
-				res.data.success && res.data.network_connector
-					? toServiceItemData(res.data.network_connector)
-					: null,
+				res.data.success && res.data.network_connector ? toServiceItemData(res.data.network_connector) : null,
 			message: res.data.message
 		})),
 	notFoundMessage: "Network connector not found.",
