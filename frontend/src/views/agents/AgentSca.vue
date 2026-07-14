@@ -16,7 +16,7 @@
 		</div>
 
 		<n-spin v-if="agentId && policyId" :show="loading" class="min-h-40">
-			<ScaItem v-if="sca && agent" :sca :agent />
+			<ScaItem v-if="sca && agent" :sca :agent full-width />
 			<n-empty v-else-if="!loading" description="SCA policy not found" class="h-32 justify-center" />
 		</n-spin>
 		<n-empty v-else description="Invalid SCA policy" class="h-48 justify-center" />
@@ -45,12 +45,11 @@ const sca = ref<AgentSca | null>(null)
 const agentId = useRouteParam("id")
 const policyId = useRouteParam("policyId")
 
-// ScaItem needs the whole agent (its results tab queries by agent), and there is
-// no by-policy endpoint — we fetch the agent's SCA list and pick the policy
+// ScaItem needs the whole agent too — its results tab queries by agent
 function load(id: string, policy: string) {
 	loading.value = true
 
-	Promise.all([Api.agents.getAgents(id), Api.agents.getSCA(id)])
+	Promise.all([Api.agents.getAgents(id), Api.agents.getSCA(id, policy)])
 		.then(([agentRes, scaRes]) => {
 			if (agentRes.data.success) {
 				agent.value = agentRes.data.agents?.[0] || null
@@ -59,7 +58,7 @@ function load(id: string, policy: string) {
 			}
 
 			if (scaRes.data.success) {
-				sca.value = (scaRes.data.sca || []).find(item => item.policy_id === policy) || null
+				sca.value = scaRes.data.sca?.[0] || null
 
 				if (!sca.value) {
 					message.warning("SCA policy not found")

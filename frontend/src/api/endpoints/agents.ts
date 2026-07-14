@@ -87,11 +87,13 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
-	getSCA(agentId: string | number, signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { sca: AgentSca[] }>(
-			`/agents/${agentId}/sca`,
-			signal ? { signal } : {}
-		)
+	getSCA(agentId: string | number, policyId?: string, signal?: AbortSignal) {
+		// policyId narrows the Wazuh query to one policy — the detail view must not
+		// pull the agent's whole SCA list just to render a single one
+		return HttpClient.get<FlaskBaseResponse & { sca: AgentSca[] }>(`/agents/${agentId}/sca`, {
+			params: policyId ? { policy_id: policyId } : {},
+			...(signal ? { signal } : {})
+		})
 	},
 	getSCAResults(agentId: string | number, policyId: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { sca_policy_results: ScaPolicyResult[] }>(

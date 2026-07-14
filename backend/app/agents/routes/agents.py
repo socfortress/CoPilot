@@ -1022,6 +1022,7 @@ async def get_agent_vulnerabilities_csv(
 )
 async def get_agent_sca(
     agent_id: str,
+    policy_id: Optional[str] = Query(None, description="Return only this SCA policy instead of the agent's whole list."),
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> WazuhAgentScaResponse:
@@ -1031,6 +1032,7 @@ async def get_agent_sca(
 
     Args:
         agent_id (str): The ID of the agent.
+        policy_id (str): Optional single-policy filter, used by the SCA detail view.
         current_user (User): The authenticated user.
         session (AsyncSession): The database session.
 
@@ -1049,7 +1051,7 @@ async def get_agent_sca(
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found or access denied")
 
-    return await collect_agent_sca(agent_id)
+    return await collect_agent_sca(agent_id, policy_id=policy_id)
 
 
 @agents_router.get(

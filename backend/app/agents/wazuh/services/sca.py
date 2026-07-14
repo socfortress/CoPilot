@@ -10,12 +10,27 @@ from app.agents.wazuh.schema.agents import WazuhAgentScaResults
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 
 
-async def collect_agent_sca(agent_id: str):
+def _is_no_sca_data_error(message: str) -> bool:
+    """
+    Wazuh answers ``GET /sca/{agent_id}`` with a 4xx when the agent simply has no
+    SCA data — e.g. ``400 {"title": "Wazuh Cluster Error", "detail": "Unknown node ID",
+    "error": 3022}`` for an agent that has never run a scan. That's an empty result,
+    not a server fault, so it must not surface as a 500.
+
+    ``send_get_request`` collapses the HTTP error into its message string and drops
+    Wazuh's JSON body, so the status code in that string is all we have to go on.
+    """
+    return "400 Client Error" in message or "404 Client Error" in message
+
+
+async def collect_agent_sca(agent_id: str, policy_id: str = None):
     """
     Collect agent sca from Wazuh Manager.
 
     Args:
         agent_id (str): The ID of the agent.
+        policy_id (str): When set, Wazuh returns only that policy — the SCA detail
+            view needs one policy and shouldn't have to pull the agent's whole list.
 
     Returns:
         WazuhAgentVulnerabilitiesResponse: An object containing the collected sca.
@@ -26,8 +41,16 @@ async def collect_agent_sca(agent_id: str):
     logger.info(f"Collecting agent {agent_id} sca from Wazuh Manager")
     agent_sca = await send_get_request(
         endpoint=f"/sca/{agent_id}",
+        params={"q": f"policy_id={policy_id}"} if policy_id else None,
     )
     if agent_sca["success"] is False:
+        if _is_no_sca_data_error(agent_sca["message"]):
+            logger.info(f"Agent {agent_id} has no SCA data: {agent_sca['message']}")
+            return WazuhAgentScaResponse(
+                sca=[],
+                success=True,
+                message="No SCA results available for this agent",
+            )
         raise HTTPException(status_code=500, detail=agent_sca["message"])
 
     processed_sca = process_agent_sca(
@@ -88,6 +111,13 @@ async def collect_agent_sca_policy_results(agent_id: str, policy_id: str):
         endpoint=f"/sca/{agent_id}/checks/{policy_id}",
     )
     if agent_sca_policy_results["success"] is False:
+        if _is_no_sca_data_error(agent_sca_policy_results["message"]):
+            logger.info(f"Agent {agent_id} has no SCA checks for policy {policy_id}: {agent_sca_policy_results['message']}")
+            return WazuhAgentScaPolicyResultsResponse(
+                sca_policy_results=[],
+                success=True,
+                message="No SCA checks available for this policy",
+            )
         raise HTTPException(status_code=500, detail=agent_sca_policy_results["message"])
 
     processed_sca_policy_results = process_agent_sca_policy_results(
