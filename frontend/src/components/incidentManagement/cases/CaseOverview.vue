@@ -79,6 +79,13 @@
 										>
 											<Icon :name="EditIcon" />
 										</n-spin>
+										<EntityDetailsButton
+											v-if="assignedUserId"
+											:order="['open']"
+											size="tiny"
+											open-show-label
+											:route="routeUser(assignedUserId)"
+										/>
 									</div>
 								</CaseAssignUser>
 							</div>
@@ -148,8 +155,10 @@
 <script setup lang="ts">
 import type { Case } from "@/types/incidentManagement/cases"
 import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
-import { ref, toRefs } from "vue"
+import { ref, toRefs, watch } from "vue"
+import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
@@ -173,11 +182,26 @@ const TrashIcon = "carbon:trash-can"
 const LinkIcon = "carbon:launch"
 const EditIcon = "uil:edit-alt"
 
-const { routeCustomer } = useNavigation()
+const { routeCustomer, routeUser } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
 const loading = ref(false)
+const assignedUserId = ref<number | null>(null)
+
+function resolveAssignedUserId(username: string | null) {
+	if (!username) {
+		assignedUserId.value = null
+		return
+	}
+
+	Api.users.getUsers().then(res => {
+		const user = res.data.users?.find(u => u.username === username)
+		assignedUserId.value = user?.id ?? null
+	})
+}
+
+watch(() => caseData.value.assigned_to, resolveAssignedUserId, { immediate: true })
 
 function updateCase(updatedAlert: Case) {
 	emit("updated", updatedAlert)
