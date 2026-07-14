@@ -108,6 +108,34 @@ export function useNavigation() {
 		}
 	}
 
+	function routeAgentVulnerability(agentId?: string, cve?: string, packageName?: string, packageVersion?: string) {
+		if (agentId && cve) {
+			// package name + version disambiguate a CVE affecting several packages on one agent
+			const query: Record<string, string> = {}
+			if (packageName) query.package = packageName
+			if (packageVersion) query.version = packageVersion
+
+			return routerConstructor({
+				name: "AgentVulnerability",
+				params: { id: agentId, cve },
+				query
+			})
+		}
+
+		return routeAgent(agentId)
+	}
+
+	function routeAgentSca(agentId?: string, policyId?: string) {
+		if (agentId && policyId) {
+			return routerConstructor({
+				name: "AgentSca",
+				params: { id: agentId, policyId }
+			})
+		}
+
+		return routeAgent(agentId)
+	}
+
 	function routeIndex(indexName?: string) {
 		return routerConstructor({ name: "Indices", query: indexName ? { index_name: indexName } : {} })
 	}
@@ -609,6 +637,8 @@ export function useNavigation() {
 		routeCustomer,
 		routeCustomerHealthcheckAgent,
 		routeAgent,
+		routeAgentVulnerability,
+		routeAgentSca,
 		routeIndex,
 		routeLicense,
 		routeHealthcheck,
