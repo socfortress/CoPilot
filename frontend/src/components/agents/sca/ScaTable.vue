@@ -140,8 +140,8 @@ function getSCA(agentId: string) {
 					return {
 						...o,
 						downloading: false,
-						end_scan_text: formatDate(o.end_scan, dFormats.datetime).toString(),
-						extract: _truncate(o.description, {
+						end_scan_text: o.end_scan ? formatDate(o.end_scan, dFormats.datetime).toString() : "-",
+						extract: _truncate(o.description ?? "", {
 							length: 50,
 							omission: ""
 						})

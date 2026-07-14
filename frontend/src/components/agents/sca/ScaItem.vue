@@ -16,12 +16,12 @@
 					<n-statistic
 						class="grow"
 						label="Start scan"
-						:value="formatDate(sca.start_scan, dFormats.datetime).toString()"
+						:value="sca.start_scan ? formatDate(sca.start_scan, dFormats.datetime).toString() : '-'"
 					/>
 					<n-statistic
 						class="grow"
 						label="End scan"
-						:value="formatDate(sca.end_scan, dFormats.datetime).toString()"
+						:value="sca.end_scan ? formatDate(sca.end_scan, dFormats.datetime).toString() : '-'"
 					/>
 				</div>
 			</n-card>

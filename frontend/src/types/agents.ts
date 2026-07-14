@@ -56,17 +56,18 @@ export type OutdatedWazuhAgents = Agent[]
 export type OutdatedVelociraptorAgents = Agent[]
 
 export interface AgentSca {
-	description: string
+	// only policy_id is guaranteed — Wazuh omits the rest on some policies
+	policy_id: string
+	description: string | null
 	fail: number
-	start_scan: Date
-	references: string
-	name: string
+	start_scan: Date | null
+	references: string | null
+	name: string | null
 	pass: number
 	score: number
-	end_scan: Date
-	policy_id: string
+	end_scan: Date | null
 	total_checks: number
-	hash_file: string
+	hash_file: string | null
 	invalid: number
 }
 
