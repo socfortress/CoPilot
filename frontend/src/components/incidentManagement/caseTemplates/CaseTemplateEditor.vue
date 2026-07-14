@@ -147,11 +147,23 @@
 			</div>
 		</n-card>
 
-		<div class="flex justify-end gap-2">
-			<n-button @click="emit('cancel')">Cancel</n-button>
-			<n-button type="primary" :loading="saving" @click="handleSave">
-				{{ props.template ? "Save changes" : "Create template" }}
+		<div class="flex justify-between gap-2">
+			<n-button
+				v-if="deletable && props.template"
+				type="error"
+				secondary
+				:loading="deleting"
+				@click="confirmDelete()"
+			>
+				<template #icon><Icon name="carbon:trash-can" /></template>
+				Delete
 			</n-button>
+			<div class="flex grow justify-end gap-2">
+				<n-button @click="emit('cancel')">Cancel</n-button>
+				<n-button type="primary" :loading="saving" @click="handleSave">
+					{{ props.template ? "Save changes" : "Create template" }}
+				</n-button>
+			</div>
 		</div>
 	</n-form>
 </template>
@@ -162,7 +174,7 @@ import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import type { CaseTemplate } from "@/types/incidentManagement/case-templates"
 import type { SourceName } from "@/types/incidentManagement/sources"
-import { NButton, NButtonGroup, NCard, NCheckbox, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
+import { NButton, NButtonGroup, NCard, NCheckbox, NForm, NFormItem, NInput, NSelect, useDialog, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -192,17 +204,22 @@ interface FormModel {
 
 const props = defineProps<{
 	template?: CaseTemplate | null
+	/** Opt-in Delete action — used by the template detail page, not by the list's modal. */
+	deletable?: boolean
 }>()
 
 const emit = defineEmits<{
 	(e: "saved", template: CaseTemplate): void
 	(e: "cancel"): void
+	(e: "deleted", template: CaseTemplate): void
 }>()
 
 const message = useMessage()
+const dialog = useDialog()
 const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
 const formRef = ref<FormInst | null>(null)
 const saving = ref(false)
+const deleting = ref(false)
 const taskSaving = ref(false)
 
 const loadingCustomers = ref(false)
@@ -438,6 +455,39 @@ async function handleSave() {
 	} finally {
 		saving.value = false
 	}
+}
+
+function confirmDelete() {
+	const template = props.template
+	if (!template) return
+
+	dialog.warning({
+		title: `Delete template "${template.name}" ?`,
+		content:
+			"Deleting the template removes its task definitions. Existing CaseTask snapshots on real cases are preserved (they're independent of the template).",
+		positiveText: "Delete",
+		negativeText: "Cancel",
+		onPositiveClick: () => {
+			deleting.value = true
+
+			Api.incidentManagement.caseTemplates
+				.deleteTemplate(template.id)
+				.then(res => {
+					if (res.data.success) {
+						message.success(`Deleted "${template.name}"`)
+						emit("deleted", template)
+					} else {
+						message.warning(res.data.message)
+					}
+				})
+				.catch(err => {
+					message.error(getApiErrorMessage(err as ApiError) || "Failed to delete template")
+				})
+				.finally(() => {
+					deleting.value = false
+				})
+		}
+	})
 }
 
 function getCustomers() {

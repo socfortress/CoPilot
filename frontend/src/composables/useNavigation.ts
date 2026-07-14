@@ -358,6 +358,32 @@ export function useNavigation() {
 		return routerConstructor({ name: "IncidentManagement-CaseNew" })
 	}
 
+	function routeIncidentManagementCaseTemplates() {
+		return routerConstructor({ name: "IncidentManagement-CaseTemplates" })
+	}
+
+	function routeIncidentManagementCaseTemplate(templateId?: number) {
+		if (templateId != null) {
+			return routerConstructor({
+				name: "IncidentManagement-CaseTemplate",
+				params: { id: templateId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "IncidentManagement-CaseTemplates" })
+	}
+
+	function routeIncidentManagementCaseTemplateLibraryEntry(key?: string) {
+		if (key) {
+			return routerConstructor({
+				name: "IncidentManagement-CaseTemplateLibraryEntry",
+				params: { key }
+			})
+		}
+
+		return routerConstructor({ name: "IncidentManagement-CaseTemplates" })
+	}
+
 	function routeIncidentManagementSources() {
 		return routerConstructor({ name: "IncidentManagement-Sources" })
 	}
@@ -609,6 +635,9 @@ export function useNavigation() {
 		routeIncidentManagementAlertIocNew,
 		routeIncidentManagementCases,
 		routeIncidentManagementCaseNew,
+		routeIncidentManagementCaseTemplates,
+		routeIncidentManagementCaseTemplate,
+		routeIncidentManagementCaseTemplateLibraryEntry,
 		routeIncidentManagementSources,
 		routeIncidentManagementExclusionRuleNew,
 		routeIncidentManagementExclusionRule,

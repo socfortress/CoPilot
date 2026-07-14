@@ -70,8 +70,10 @@ import { useDebounceFn } from "@vueuse/core"
 import { NButton, NCheckbox, NDataTable, NInput, NModal, NSelect, NTag, useDialog, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -80,6 +82,7 @@ import CaseTemplateEditor from "./CaseTemplateEditor.vue"
 const message = useMessage()
 const dialog = useDialog()
 const { globalCustomerCodes } = useGlobalCustomerFilter()
+const { routeIncidentManagementCaseTemplate } = useNavigation()
 
 const dFormats = useSettingsStore().dateFormat
 const templates = ref<CaseTemplate[]>([])
@@ -216,14 +219,12 @@ const columns: DataTableColumns<CaseTemplate> = [
 		className: "whitespace-nowrap",
 		render: row => (
 			<div class="flex gap-2">
-				<NButton
+				<EntityDetailsButton
 					size="small"
-					secondary
-					onClick={() => openEdit(row)}
-					v-slots={{ icon: () => <Icon name="carbon:edit" size={14} /> }}
-				>
-					Edit
-				</NButton>
+					viewLabel="Edit"
+					route={routeIncidentManagementCaseTemplate(row.id)}
+					onView={() => openEdit(row)}
+				/>
 				<NButton
 					size="small"
 					secondary

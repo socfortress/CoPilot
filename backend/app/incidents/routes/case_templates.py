@@ -23,6 +23,7 @@ from app.db.db_session import get_db
 from app.incidents.models import CaseTemplate
 from app.incidents.schema.case_templates import CaseTemplateCreate
 from app.incidents.schema.case_templates import CaseTemplateLibraryEntry
+from app.incidents.schema.case_templates import CaseTemplateLibraryEntryResponse
 from app.incidents.schema.case_templates import CaseTemplateLibraryListResponse
 from app.incidents.schema.case_templates import CaseTemplateLibraryRefreshResponse
 from app.incidents.schema.case_templates import CaseTemplateLibraryTask
@@ -145,6 +146,26 @@ async def list_library_entries_endpoint() -> CaseTemplateLibraryListResponse:
             success=False,
             message=f"Failed to load case-template library: {e}",
         )
+
+
+@case_templates_router.get(
+    "/library/{key}",
+    response_model=CaseTemplateLibraryEntryResponse,
+    description="Fetch a single library entry by its key. Read-only; serves the library entry detail page. 404 when the key isn't cached.",
+)
+async def get_library_entry_endpoint(key: str) -> CaseTemplateLibraryEntryResponse:
+    entry = await template_library.get_library_entry(key)
+    if entry is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Library entry '{key}' not found. Try POST /library/refresh if you just pushed it.",
+        )
+
+    return CaseTemplateLibraryEntryResponse(
+        entry=_library_entry_to_response(entry),
+        success=True,
+        message=f"Retrieved library entry '{key}'",
+    )
 
 
 @case_templates_router.post(
