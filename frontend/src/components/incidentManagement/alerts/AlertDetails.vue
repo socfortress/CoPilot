@@ -11,12 +11,7 @@
 		>
 			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex grow flex-col">
 				<div :class="fullWidth ? 'p-0 pt-1' : 'p-6 pt-1'">
-					<AlertOverview
-						:alert
-						:use-footer-background="!fullWidth"
-						@updated="updateAlert($event)"
-						@deleted="emit('deleted')"
-					/>
+					<AlertOverview :alert @updated="updateAlert($event)" @deleted="emit('deleted')" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="AiAnalyst" display-directive="show:lazy">
