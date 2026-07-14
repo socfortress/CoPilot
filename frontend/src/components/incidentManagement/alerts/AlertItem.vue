@@ -5,9 +5,7 @@
 			:embedded
 			hoverable
 			:size="compact ? 'small' : 'medium'"
-			:clickable="compact"
 			:highlighted="highlight"
-			@click="compact ? openDetails() : undefined"
 		>
 			<template v-if="alert" #headerMain>
 				<div class="flex items-center gap-4">
@@ -46,42 +44,49 @@
 			</template>
 
 			<template v-if="alert" #mainExtra>
-				<div v-if="compact" class="flex flex-wrap items-center gap-3">
-					<Badge
-						type="splitted"
-						class="cursor-pointer"
-						bright
-						:color="
-							alert.status === 'OPEN' ? 'danger' : alert.status === 'IN_PROGRESS' ? 'warning' : 'success'
-						"
-					>
-						<template #iconLeft>
-							<StatusIcon :status="alert.status" />
-						</template>
-						<template #label>Status</template>
-						<template #value>
-							<div class="flex items-center gap-2">
-								{{ alert.status || "n/d" }}
-							</div>
-						</template>
-					</Badge>
+				<div v-if="compact" class="flex flex-wrap items-center justify-between gap-3">
+					<div class="flex flex-wrap items-center gap-3">
+						<Badge
+							type="splitted"
+							size="small"
+							bright
+							:color="
+								alert.status === 'OPEN'
+									? 'danger'
+									: alert.status === 'IN_PROGRESS'
+										? 'warning'
+										: 'success'
+							"
+						>
+							<template #iconLeft>
+								<StatusIcon :status="alert.status" />
+							</template>
+							<template #label>Status</template>
+							<template #value>
+								<div class="flex items-center gap-2">
+									{{ alert.status || "n/d" }}
+								</div>
+							</template>
+						</Badge>
 
-					<Badge
-						type="splitted"
-						class="cursor-pointer"
-						bright
-						:color="alert.assigned_to ? 'success' : undefined"
-					>
-						<template #iconLeft>
-							<AssigneeIcon :assignee="alert.assigned_to" />
-						</template>
-						<template #label>Assignee</template>
-						<template #value>
-							<div class="flex items-center gap-2">
-								{{ alert.assigned_to || "n/d" }}
-							</div>
-						</template>
-					</Badge>
+						<Badge type="splitted" size="small" bright :color="alert.assigned_to ? 'success' : undefined">
+							<template #iconLeft>
+								<AssigneeIcon :assignee="alert.assigned_to" />
+							</template>
+							<template #label>Assignee</template>
+							<template #value>
+								<div class="flex items-center gap-2">
+									{{ alert.assigned_to || "n/d" }}
+								</div>
+							</template>
+						</Badge>
+					</div>
+
+					<EntityDetailsButton
+						size="tiny"
+						:route="routeIncidentManagementAlerts(alert.id)"
+						@view="openDetails()"
+					/>
 				</div>
 				<div v-else class="flex flex-wrap items-center gap-3">
 					<AlertStatusSwitch v-slot="{ loading: loadingStatus }" :alert @updated="updateAlert($event)">

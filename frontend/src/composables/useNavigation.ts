@@ -354,6 +354,10 @@ export function useNavigation() {
 		return routerConstructor({ name: "IncidentManagement-Cases" })
 	}
 
+	function routeIncidentManagementCaseNew() {
+		return routerConstructor({ name: "IncidentManagement-CaseNew" })
+	}
+
 	function routeIncidentManagementSources() {
 		return routerConstructor({ name: "IncidentManagement-Sources" })
 	}
@@ -604,6 +608,7 @@ export function useNavigation() {
 		routeIncidentManagementAlertIoc,
 		routeIncidentManagementAlertIocNew,
 		routeIncidentManagementCases,
+		routeIncidentManagementCaseNew,
 		routeIncidentManagementSources,
 		routeIncidentManagementExclusionRuleNew,
 		routeIncidentManagementExclusionRule,

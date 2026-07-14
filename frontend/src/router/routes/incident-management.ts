@@ -121,6 +121,12 @@ export const incidentManagementRoutes: RouteRecordRaw[] = [
 				meta: { title: "Incident Alert" }
 			},
 			{
+				path: "cases/new",
+				name: "IncidentManagement-CaseNew",
+				component: () => import("@/views/incidentManagement/CaseNew.vue"),
+				meta: { title: "Create Case" }
+			},
+			{
 				path: "cases/:id",
 				name: "IncidentManagement-Case",
 				component: () => import("@/views/incidentManagement/Case.vue"),
