@@ -373,6 +373,10 @@ export function useNavigation() {
 		return routerConstructor({ name: "IncidentManagement-CaseTemplates" })
 	}
 
+	function routeIncidentManagementCaseTemplateNew() {
+		return routerConstructor({ name: "IncidentManagement-CaseTemplateNew" })
+	}
+
 	function routeIncidentManagementCaseTemplateLibraryEntry(key?: string) {
 		if (key) {
 			return routerConstructor({
@@ -637,6 +641,7 @@ export function useNavigation() {
 		routeIncidentManagementCaseNew,
 		routeIncidentManagementCaseTemplates,
 		routeIncidentManagementCaseTemplate,
+		routeIncidentManagementCaseTemplateNew,
 		routeIncidentManagementCaseTemplateLibraryEntry,
 		routeIncidentManagementSources,
 		routeIncidentManagementExclusionRuleNew,

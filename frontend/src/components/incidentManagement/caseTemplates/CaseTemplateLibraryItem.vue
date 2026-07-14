@@ -1,46 +1,50 @@
 <template>
-	<CardEntity size="small">
+	<CardEntity size="small" hoverable card-entity-class="h-full" main-box-class="grow">
 		<template #headerMain>
-			<div class="text-default text-base font-semibold">
+			<div class="text-default text-base leading-snug font-semibold text-balance">
 				{{ entry.name }}
 			</div>
 		</template>
 		<template #headerExtra>
-			<div class="flex items-center gap-2">
-				<n-button
-					size="small"
-					type="primary"
-					secondary
-					:disabled="importDisabled"
-					:loading="importing"
-					@click="emit('import', entry)"
-				>
-					<template #icon><Icon name="carbon:download" /></template>
-					Import
-				</n-button>
+			<Badge type="splitted" size="small">
+				<template #label>Source</template>
+				<template #value>{{ entry.source || "any" }}</template>
+			</Badge>
+		</template>
 
-				<EntityDetailsButton
-					v-if="!hideDetailsButton"
-					:order="['open']"
-					size="small"
-					open-show-label
-					:route="routeIncidentManagementCaseTemplateLibraryEntry(entry.key)"
-				/>
+		<template #default>
+			<div class="flex flex-col gap-3">
+				<p v-if="entry.description" class="text-secondary text-sm" :class="{ 'line-clamp-3': !expanded }">
+					{{ entry.description }}
+				</p>
+				<p v-else class="text-tertiary text-sm italic">No description</p>
+
+				<div v-if="entry.match_field || mitreTactics.length" class="flex flex-wrap items-center gap-2">
+					<n-tag
+						v-if="entry.match_field && entry.match_value"
+						:bordered="false"
+						size="small"
+						type="success"
+						:title="`Conditional: applies when ${entry.match_field} == ${entry.match_value}`"
+					>
+						<template #icon>
+							<Icon :name="ConditionIcon" :size="13" />
+						</template>
+						{{ entry.match_field }} == {{ entry.match_value }}
+					</n-tag>
+					<n-tag v-for="tactic of mitreTactics" :key="tactic" size="small" :bordered="false">
+						{{ tactic }}
+					</n-tag>
+				</div>
 			</div>
 		</template>
-		<template #default>
-			<p v-if="entry.description" class="text-secondary text-sm" :class="{ 'line-clamp-3': !expanded }">
-				{{ entry.description }}
-			</p>
-		</template>
 
-		<template #footer>
-			<div class="flex flex-wrap items-center gap-2 text-xs">
+		<template #footerMain>
+			<div class="flex h-full flex-wrap items-center gap-2">
 				<Badge type="splitted" size="small">
-					<template #label>Source</template>
-					<template #value>{{ entry.source || "—" }}</template>
-				</Badge>
-				<Badge type="splitted" size="small">
+					<template #iconLeft>
+						<Icon :name="TasksIcon" :size="13" />
+					</template>
 					<template #label>Tasks</template>
 					<template #value>{{ entry.tasks.length }}</template>
 				</Badge>
@@ -48,18 +52,32 @@
 					<template #label>Mandatory</template>
 					<template #value>{{ mandatoryCount }}</template>
 				</Badge>
-				<n-tag
-					v-if="entry.match_field && entry.match_value"
-					:bordered="false"
-					size="small"
-					type="success"
-					:title="`Conditional: applies when ${entry.match_field} == ${entry.match_value}`"
+			</div>
+		</template>
+
+		<template #footerExtra>
+			<div class="flex flex-wrap items-center justify-end gap-2">
+				<n-button
+					size="tiny"
+					type="primary"
+					secondary
+					:disabled="importDisabled"
+					:loading="importing"
+					@click="emit('import', entry)"
 				>
-					{{ entry.match_field }} == {{ entry.match_value }}
-				</n-tag>
-				<n-tag v-for="tactic of mitreTactics" :key="tactic" size="small" :bordered="false">
-					{{ tactic }}
-				</n-tag>
+					<template #icon>
+						<Icon :name="ImportIcon" />
+					</template>
+					Import
+				</n-button>
+
+				<EntityDetailsButton
+					v-if="!hideDetailsButton"
+					:order="['open']"
+					size="tiny"
+					open-show-label
+					:route="routeIncidentManagementCaseTemplateLibraryEntry(entry.key)"
+				/>
 			</div>
 		</template>
 	</CardEntity>
@@ -87,6 +105,10 @@ const { entry, importing, importDisabled, hideDetailsButton, expanded } = define
 const emit = defineEmits<{
 	(e: "import", value: CaseTemplateLibraryEntry): void
 }>()
+
+const ImportIcon = "carbon:download"
+const TasksIcon = "carbon:task"
+const ConditionIcon = "carbon:filter"
 
 const { routeIncidentManagementCaseTemplateLibraryEntry } = useNavigation()
 

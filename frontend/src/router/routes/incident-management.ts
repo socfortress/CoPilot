@@ -149,6 +149,16 @@ export const incidentManagementRoutes: RouteRecordRaw[] = [
 				}
 			},
 			{
+				path: "case-templates/new",
+				name: "IncidentManagement-CaseTemplateNew",
+				component: () => import("@/views/incidentManagement/CaseTemplateNew.vue"),
+				meta: {
+					title: "Create Case Template",
+					// same gate as the templates list — SOC-team-managed playbooks
+					roles: [AuthUserRole.Admin, AuthUserRole.Analyst]
+				}
+			},
+			{
 				path: "case-templates/library/:key",
 				name: "IncidentManagement-CaseTemplateLibraryEntry",
 				component: () => import("@/views/incidentManagement/CaseTemplateLibraryEntry.vue"),
