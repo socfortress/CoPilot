@@ -332,6 +332,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "IncidentManagement-Alerts" })
 	}
 
+	function routeIncidentManagementAlertIocNew(alertId?: number) {
+		if (alertId != null) {
+			return routerConstructor({
+				name: "IncidentManagement-AlertIocNew",
+				params: { alertId: alertId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "IncidentManagement-Alerts" })
+	}
+
 	function routeIncidentManagementCases(caseId?: number) {
 		if (caseId != null) {
 			return routerConstructor({
@@ -591,6 +602,7 @@ export function useNavigation() {
 		routeIncidentManagementAlerts,
 		routeIncidentManagementAlertAsset,
 		routeIncidentManagementAlertIoc,
+		routeIncidentManagementAlertIocNew,
 		routeIncidentManagementCases,
 		routeIncidentManagementSources,
 		routeIncidentManagementExclusionRuleNew,
