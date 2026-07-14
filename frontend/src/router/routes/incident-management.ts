@@ -96,6 +96,19 @@ export const incidentManagementRoutes: RouteRecordRaw[] = [
 				meta: { title: "Alert Asset" }
 			},
 			{
+				path: "alerts/:alertId/iocs",
+				redirect: to => ({
+					name: "IncidentManagement-Alert",
+					params: { id: to.params.alertId }
+				})
+			},
+			{
+				path: "alerts/:alertId/iocs/:iocId",
+				name: "IncidentManagement-AlertIoc",
+				component: () => import("@/views/incidentManagement/AlertLinkedIoc.vue"),
+				meta: { title: "Alert IoC" }
+			},
+			{
 				path: "alerts/:id",
 				name: "IncidentManagement-Alert",
 				component: () => import("@/views/incidentManagement/Alert.vue"),
