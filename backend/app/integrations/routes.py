@@ -69,6 +69,17 @@ NETWORK_INTEGRATIONS = [
 ]
 
 
+def _to_integration_with_auth_keys(integration: AvailableIntegrations) -> IntegrationWithAuthKeys:
+    """Map an AvailableIntegrations ORM row (with auth_keys loaded) to its response schema."""
+    return IntegrationWithAuthKeys(
+        id=integration.id,
+        integration_name=integration.integration_name,
+        description=integration.description,
+        integration_details=integration.integration_details,
+        auth_keys=[AuthKey(auth_key_name=key.auth_key_name) for key in integration.auth_keys],
+    )
+
+
 async def fetch_available_integrations(session: AsyncSession):
     """
     Fetches available integrations and their auth keys from the database.
@@ -87,19 +98,7 @@ async def fetch_available_integrations(session: AsyncSession):
     # Use unique() to avoid duplicates caused by joined eager loading
     unique_integrations = result.unique().scalars().all()
 
-    integrations_with_auth_keys = []
-    for integration in unique_integrations:
-        auth_keys = [AuthKey(auth_key_name=key.auth_key_name) for key in integration.auth_keys]
-        integration_data = IntegrationWithAuthKeys(
-            id=integration.id,
-            integration_name=integration.integration_name,
-            description=integration.description,
-            integration_details=integration.integration_details,
-            auth_keys=auth_keys,
-        )
-        integrations_with_auth_keys.append(integration_data)
-
-    return integrations_with_auth_keys
+    return [_to_integration_with_auth_keys(integration) for integration in unique_integrations]
 
 
 async def fetch_available_integration_by_id(session: AsyncSession, integration_id: int) -> IntegrationWithAuthKeys:
@@ -111,14 +110,7 @@ async def fetch_available_integration_by_id(session: AsyncSession, integration_i
     if integration is None:
         raise HTTPException(status_code=404, detail=f"Integration {integration_id} not found")
 
-    auth_keys = [AuthKey(auth_key_name=key.auth_key_name) for key in integration.auth_keys]
-    return IntegrationWithAuthKeys(
-        id=integration.id,
-        integration_name=integration.integration_name,
-        description=integration.description,
-        integration_details=integration.integration_details,
-        auth_keys=auth_keys,
-    )
+    return _to_integration_with_auth_keys(integration)
 
 
 async def validate_integration_name(integration_name: str, session: AsyncSession):

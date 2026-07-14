@@ -7,7 +7,7 @@
 			<template #headerExtra>
 				<EntityDetailsButton
 					size="tiny"
-					:url="routeIncidentManagementSource(source).fullUrl()"
+					:route="routeIncidentManagementSource(source)"
 					@view="openDetails()"
 				/>
 			</template>

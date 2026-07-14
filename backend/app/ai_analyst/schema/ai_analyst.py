@@ -267,7 +267,7 @@ class AlertsWithReportsListResponse(BaseModel):
 class AlertWithReportDetailResponse(BaseModel):
     success: bool
     message: str
-    alert: Optional[AlertWithReportResponse] = None
+    alert: AlertWithReportResponse
 
 
 class AlertAnalysisResponse(BaseModel):
@@ -365,7 +365,7 @@ class ReviewListResponse(BaseModel):
 class ReviewDetailResponse(BaseModel):
     success: bool
     message: str
-    review: Optional[ReviewResponse] = None
+    review: ReviewResponse
 
 
 class QueuePalaceLessonRequest(BaseModel):

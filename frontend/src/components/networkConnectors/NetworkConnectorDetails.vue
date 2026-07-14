@@ -33,16 +33,13 @@
 
 <script setup lang="ts">
 import type { ServiceItemData } from "@/components/services/types"
-import type { ApiError } from "@/types/common"
 import type { NetworkConnector } from "@/types/network-connectors"
-import axios from "axios"
-import { NEmpty, NSpin, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { NEmpty, NSpin } from "naive-ui"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Markdown from "@/components/common/Markdown.vue"
-import { getApiErrorMessage } from "@/utils"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 
 const props = withDefaults(
 	defineProps<{
@@ -56,12 +53,6 @@ const props = withDefaults(
 const emit = defineEmits<{
 	(e: "loaded", value: ServiceItemData): void
 }>()
-
-const message = useMessage()
-const loading = ref(false)
-const fetchedConnector = ref<ServiceItemData | null>(null)
-
-let abortController: AbortController | null = null
 
 function toServiceItemData(connector: NetworkConnector): ServiceItemData {
 	return {
@@ -81,61 +72,21 @@ function normalizeConnector(connector: ServiceItemData | NetworkConnector): Serv
 	return connector
 }
 
-const resolvedConnector = computed(() => {
-	if (props.connector) {
-		return normalizeConnector(props.connector)
-	}
-
-	return fetchedConnector.value
+const { loading, entity: resolvedConnector } = useEntityDetails<ServiceItemData, number>({
+	entity: () => (props.connector ? normalizeConnector(props.connector) : null),
+	id: () => props.connectorId,
+	fetch: (id, signal) =>
+		Api.networkConnectors.getAvailableNetworkConnector(id, signal).then(res => ({
+			entity:
+				res.data.success && res.data.network_connector
+					? toServiceItemData(res.data.network_connector)
+					: null,
+			message: res.data.message
+		})),
+	notFoundMessage: "Network connector not found.",
+	errorMessage: "Failed to load network connector.",
+	onLoaded: value => emit("loaded", value)
 })
-
-function loadConnector(connectorId: number) {
-	abortController?.abort()
-	abortController = new AbortController()
-	loading.value = true
-
-	Api.networkConnectors
-		.getAvailableNetworkConnector(connectorId, abortController.signal)
-		.then(res => {
-			loading.value = false
-
-			if (res.data.success && res.data.network_connector) {
-				const item = toServiceItemData(res.data.network_connector)
-				fetchedConnector.value = item
-				emit("loaded", item)
-			} else {
-				message.warning(res.data?.message || "Network connector not found.")
-			}
-		})
-		.catch(err => {
-			if (!axios.isCancel(err)) {
-				message.error(getApiErrorMessage(err as ApiError) || "Failed to load network connector.")
-				loading.value = false
-			}
-		})
-}
-
-watch(
-	() => [props.connector, props.connectorId] as const,
-	([connector, connectorId]) => {
-		if (connector) {
-			abortController?.abort()
-			fetchedConnector.value = null
-			loading.value = false
-			return
-		}
-
-		if (connectorId != null) {
-			loadConnector(connectorId)
-			return
-		}
-
-		abortController?.abort()
-		fetchedConnector.value = null
-		loading.value = false
-	},
-	{ immediate: true }
-)
 
 defineExpose({ loading, resolvedConnector })
 </script>

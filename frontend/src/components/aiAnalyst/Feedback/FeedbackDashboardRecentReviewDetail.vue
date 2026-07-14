@@ -57,15 +57,12 @@
 
 <script setup lang="ts">
 import type { AiAnalystReview } from "@/types/ai-analyst"
-import type { ApiError } from "@/types/common"
-import axios from "axios"
-import { NCard, NSpin, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { NCard, NSpin } from "naive-ui"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
-import { getApiErrorMessage } from "@/utils"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 
 const props = defineProps<{
 	review?: AiAnalystReview | null
@@ -76,60 +73,18 @@ const emit = defineEmits<{
 	(e: "loaded", value: AiAnalystReview): void
 }>()
 
-const message = useMessage()
-const loading = ref(false)
-const fetchedReview = ref<AiAnalystReview | null>(null)
-
-let abortController: AbortController | null = null
-
-const resolvedReview = computed(() => props.review ?? fetchedReview.value)
-
-function loadReview(reviewId: number) {
-	abortController?.abort()
-	abortController = new AbortController()
-	loading.value = true
-
-	Api.aiAnalyst
-		.getReview(reviewId, abortController.signal)
-		.then(res => {
-			loading.value = false
-
-			if (res.data.success && res.data.review) {
-				fetchedReview.value = res.data.review
-				emit("loaded", res.data.review)
-			} else {
-				message.warning(res.data?.message || "Review not found.")
-			}
-		})
-		.catch(err => {
-			if (!axios.isCancel(err)) {
-				message.error(getApiErrorMessage(err as ApiError) || "Failed to load review.")
-				loading.value = false
-			}
-		})
-}
-
-watch(
-	() => [props.review, props.reviewId] as const,
-	([review, reviewId]) => {
-		if (review) {
-			abortController?.abort()
-			fetchedReview.value = null
-			loading.value = false
-			return
-		}
-
-		if (reviewId != null) {
-			loadReview(reviewId)
-			return
-		}
-
-		abortController?.abort()
-		fetchedReview.value = null
-		loading.value = false
-	},
-	{ immediate: true }
-)
+const { loading, entity: resolvedReview } = useEntityDetails<AiAnalystReview, number>({
+	entity: () => props.review,
+	id: () => props.reviewId,
+	fetch: (id, signal) =>
+		Api.aiAnalyst.getReview(id, signal).then(res => ({
+			entity: res.data.success ? (res.data.review ?? null) : null,
+			message: res.data.message
+		})),
+	notFoundMessage: "Review not found.",
+	errorMessage: "Failed to load review.",
+	onLoaded: value => emit("loaded", value)
+})
 
 defineExpose({ loading, resolvedReview })
 </script>

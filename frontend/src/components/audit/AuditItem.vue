@@ -1,7 +1,7 @@
 <template>
 	<AuditDetails :entry>
 		<template #footerExtra>
-			<EntityDetailsButton size="tiny" :order="['open']" open-show-label :url="routeAudit(entry.id).fullUrl()" />
+			<EntityDetailsButton size="tiny" :order="['open']" open-show-label :route="routeAudit(entry.id)" />
 		</template>
 	</AuditDetails>
 </template>

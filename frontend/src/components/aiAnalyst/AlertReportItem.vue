@@ -68,7 +68,7 @@
 			<template v-if="alert" #footerExtra>
 				<EntityDetailsButton
 					size="tiny"
-					:url="routeAiAnalystReport(alert.report.id).fullUrl()"
+					:route="routeAiAnalystReport(alert.report.id)"
 					@view="openDetails()"
 				/>
 			</template>

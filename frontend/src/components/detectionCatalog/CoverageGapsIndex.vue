@@ -50,7 +50,6 @@
 			:title="modalTitle"
 			:bordered="false"
 			segmented
-			@after-leave="selectedGap = null"
 		>
 			<CoverageGapDetails v-if="selectedGap" :gap="selectedGap" />
 		</n-modal>
@@ -93,9 +92,17 @@ const coverage_pct = ref(0)
 
 const loading = ref(false)
 const filter = ref("")
-const showDetailModal = ref(false)
 const selectedGap = ref<CatalogCoverageGapRow | null>(null)
-const modalTitle = ref("Coverage Gap")
+// The modal is open exactly when a gap is selected — closing it clears the selection.
+const showDetailModal = computed({
+	get: () => selectedGap.value !== null,
+	set: (open: boolean) => {
+		if (!open) selectedGap.value = null
+	}
+})
+const modalTitle = computed(() =>
+	selectedGap.value ? `${selectedGap.value.technique_id} — ${selectedGap.value.technique_name}` : "Coverage Gap"
+)
 
 const ShieldIcon = "carbon:ibm-cloud-security-groups"
 const CoveredIcon = "carbon:checkmark-outline"
@@ -144,8 +151,6 @@ const coverageStatTiles = computed<CoverageStatTile[]>(() => [
 
 function openGapDetail(row: CatalogCoverageGapRow) {
 	selectedGap.value = row
-	modalTitle.value = `${row.technique_id} — ${row.technique_name}`
-	showDetailModal.value = true
 }
 
 const columns: DataTableColumns<CatalogCoverageGapRow> = [
@@ -209,7 +214,7 @@ const columns: DataTableColumns<CatalogCoverageGapRow> = [
 			<div onClick={e => e.stopPropagation()}>
 				<EntityDetailsButton
 					size="tiny"
-					url={routeDetectionCatalogCoverageGap(row.technique_id).fullUrl()}
+					route={routeDetectionCatalogCoverageGap(row.technique_id)}
 					onView={() => openGapDetail(row)}
 				/>
 			</div>

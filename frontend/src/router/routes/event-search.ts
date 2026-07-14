@@ -1,14 +1,10 @@
 import type { RouteRecordRaw } from "vue-router"
 import { RouteRole } from "@/types/auth"
 
-function decodeRouteParam(raw: string | string[] | undefined): string {
+/** vue-router already decodes path params — this only flattens the repeated-param shape. */
+function routeParam(raw: string | string[] | undefined): string {
 	if (!raw) return ""
-	const value = Array.isArray(raw) ? raw[0] : raw
-	try {
-		return decodeURIComponent(value)
-	} catch {
-		return value
-	}
+	return Array.isArray(raw) ? raw[0] : raw
 }
 
 export const eventSearchRoutes: RouteRecordRaw[] = [
@@ -23,8 +19,8 @@ export const eventSearchRoutes: RouteRecordRaw[] = [
 		redirect: to => ({
 			name: "EventSearch",
 			query: {
-				customer_code: decodeRouteParam(to.params.customerCode),
-				source_name: decodeRouteParam(to.params.sourceName)
+				customer_code: routeParam(to.params.customerCode),
+				source_name: routeParam(to.params.sourceName)
 			}
 		})
 	},
@@ -33,8 +29,8 @@ export const eventSearchRoutes: RouteRecordRaw[] = [
 		redirect: to => ({
 			name: "EventSearch",
 			query: {
-				customer_code: decodeRouteParam(to.params.customerCode),
-				source_name: decodeRouteParam(to.params.sourceName)
+				customer_code: routeParam(to.params.customerCode),
+				source_name: routeParam(to.params.sourceName)
 			}
 		})
 	},
@@ -43,7 +39,7 @@ export const eventSearchRoutes: RouteRecordRaw[] = [
 		redirect: to => ({
 			name: "EventSearch",
 			query: {
-				customer_code: decodeRouteParam(to.params.customerCode)
+				customer_code: routeParam(to.params.customerCode)
 			}
 		})
 	},

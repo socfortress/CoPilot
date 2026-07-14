@@ -93,9 +93,13 @@ function getFull() {
 		})
 }
 
-function getPortainerStackId() {
-	const name = customerInfo.value?.customer_name || props.customer?.customer_name
-	if (!name) return
+// the customerInfo watcher is the single owner of this call: getFull() re-assigns customerInfo,
+// so without a guard the same request went out 2-3 times per customer open
+let requestedStackName: string | null = null
+
+function getPortainerStackId(name: string) {
+	if (requestedStackName === name) return
+	requestedStackName = name
 
 	Api.portainer.getCustomerStackId(name).then(res => {
 		if (res.data.success) {
@@ -117,10 +121,6 @@ function ensureLoaded() {
 	if (!customerInfo.value?.customer_name || !customerMeta.value?.customer_meta_graylog_index) {
 		getFull()
 	}
-
-	if (customerPortainerStackId.value === null) {
-		getPortainerStackId()
-	}
 }
 
 watch(
@@ -129,6 +129,7 @@ watch(
 		customerInfo.value = customer?.customer_name ? customer : null
 		customerMeta.value = null
 		customerPortainerStackId.value = null
+		requestedStackName = null
 
 		if (customer || customerCode) {
 			ensureLoaded()
@@ -137,11 +138,15 @@ watch(
 	{ immediate: true }
 )
 
-watch(customerInfo, info => {
-	if (info?.customer_name && customerPortainerStackId.value === null) {
-		getPortainerStackId()
-	}
-})
+watch(
+	customerInfo,
+	info => {
+		if (info?.customer_name && customerPortainerStackId.value === null) {
+			getPortainerStackId(info.customer_name)
+		}
+	},
+	{ immediate: true }
+)
 
 defineExpose({ loading, customerInfo, customerMeta })
 </script>

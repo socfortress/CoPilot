@@ -48,6 +48,7 @@
 
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
+import type { EntityRoute } from "@/composables/useNavigation"
 import type { SafeAny } from "@/types/common"
 import type { DisplayColumn, EventSource } from "@/types/event-sources"
 import type { EventSearchResult } from "@/types/events"
@@ -201,8 +202,8 @@ const columns = computed<DataTableColumns<EventSearchResult>>(() => {
 			width: 100,
 			fixed: "right",
 			render(row: EventSearchResult) {
-				const openUrl = eventOpenUrl(row)
-				if (!openUrl) {
+				const eventRoute = eventDetailRoute(row)
+				if (!eventRoute) {
 					return h("span", { class: "text-tertiary text-xs" }, "—")
 				}
 
@@ -211,7 +212,7 @@ const columns = computed<DataTableColumns<EventSearchResult>>(() => {
 					{ onClick: (e: Event) => e.stopPropagation() },
 					h(EntityDetailsButton, {
 						size: "tiny",
-						url: openUrl,
+						route: eventRoute,
 						onView: () => emit("row-select", row)
 					})
 				)
@@ -220,9 +221,9 @@ const columns = computed<DataTableColumns<EventSearchResult>>(() => {
 	]
 })
 
-function eventOpenUrl(row: EventSearchResult): string | undefined {
+function eventDetailRoute(row: EventSearchResult): EntityRoute | undefined {
 	if (!row._id || !row._index || !props.customerCode || !props.sourceName) return undefined
-	return routeEventSearchEvent(props.customerCode, props.sourceName, String(row._index), String(row._id)).fullUrl()
+	return routeEventSearchEvent(props.customerCode, props.sourceName, String(row._index), String(row._id))
 }
 
 const scrollX = computed(() =>

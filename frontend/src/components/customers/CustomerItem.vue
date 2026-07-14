@@ -126,7 +126,7 @@
 			<template #footerExtra>
 				<EntityDetailsButton
 					size="small"
-					:url="routeCustomer({ code: customer.customer_code }).fullUrl()"
+					:route="routeCustomer({ code: customer.customer_code })"
 					@view="showDetails = true"
 				/>
 			</template>
@@ -181,12 +181,10 @@ const AgentsIcon = "carbon:devices"
 
 const { routeCustomer } = useNavigation()
 const showDetails = ref(false)
-const loadingFull = ref(false)
+const loading = ref(false)
 const message = useMessage()
 const customerInfo = ref<Customer | null>(null)
 const agentCount = ref<number | null>(null)
-
-const loading = computed(() => loadingFull.value)
 
 const fallbackAvatar = computed(() => {
 	const initials = getNameInitials(customer.value.customer_name)
@@ -198,7 +196,7 @@ const addressLabel = computed(
 )
 
 function getFull() {
-	loadingFull.value = true
+	loading.value = true
 
 	Api.customers
 		.getCustomerFull(customer.value.customer_code)
@@ -213,7 +211,7 @@ function getFull() {
 			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
-			loadingFull.value = false
+			loading.value = false
 		})
 }
 

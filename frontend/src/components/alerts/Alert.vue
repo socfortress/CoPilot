@@ -14,9 +14,9 @@
 			<template v-if="!hideActions || !hideOpen" #footerExtra>
 				<div class="flex flex-wrap items-center justify-end gap-2">
 					<EntityDetailsButton
-						v-if="!hideOpen && alertOpenUrl"
+						v-if="!hideOpen && alertRoute"
 						size="small"
-						:url="alertOpenUrl"
+						:route="alertRoute"
 						@view="showDetails = true"
 					/>
 					<AlertActions
@@ -79,8 +79,8 @@ const dFormats = useSettingsStore().dateFormat
 
 const socAlertCreationField = ref(inject<SocAlertField>("soc-alert-creation-field", "alert_url"))
 
-const alertOpenUrl = computed(() => {
+const alertRoute = computed(() => {
 	if (!alert.value._index || !alert.value._id) return undefined
-	return routeAlertsSiemAlert(alert.value._index, alert.value._id).fullUrl()
+	return routeAlertsSiemAlert(alert.value._index, alert.value._id)
 })
 </script>

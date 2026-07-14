@@ -55,7 +55,7 @@
 				<template #footerExtra>
 					<EntityDetailsButton
 						size="tiny"
-						:url="routeAiAnalystFeedbackReview(r.id).fullUrl()"
+						:route="routeAiAnalystFeedbackReview(r.id)"
 						@view="openDrawer(r)"
 					/>
 				</template>

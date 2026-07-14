@@ -111,9 +111,19 @@ const loadingFrameworks = ref(false)
 const loading = ref(false)
 const filter = ref("")
 
-const showGroupModal = ref(false)
 const modalGroup = ref<CatalogComplianceGroupRow | null>(null)
-const modalTitle = ref("Compliance Control")
+// The modal is open exactly when a control group is selected — closing it clears the selection.
+const showGroupModal = computed({
+	get: () => modalGroup.value !== null,
+	set: (open: boolean) => {
+		if (!open) modalGroup.value = null
+	}
+})
+const modalTitle = computed(() =>
+	modalGroup.value
+		? `${pivot.value?.framework_label ?? ""} ${modalGroup.value.control}`
+		: "Compliance Control"
+)
 
 const ControlIcon = "carbon:certificate-check"
 const RulesIcon = "carbon:document-security"
@@ -166,8 +176,6 @@ const complianceStatTiles = computed<ComplianceStatTile[]>(() => {
 
 function openGroup(group: CatalogComplianceGroupRow) {
 	modalGroup.value = group
-	modalTitle.value = `${pivot.value?.framework_label ?? ""} ${group.control}`
-	showGroupModal.value = true
 }
 
 const columns: DataTableColumns<CatalogComplianceGroupRow> = [
@@ -241,7 +249,7 @@ const columns: DataTableColumns<CatalogComplianceGroupRow> = [
 			<div onClick={e => e.stopPropagation()}>
 				<EntityDetailsButton
 					size="tiny"
-					url={routeDetectionCatalogComplianceGroup(selectedFramework.value, row.control).fullUrl()}
+					route={routeDetectionCatalogComplianceGroup(selectedFramework.value, row.control)}
 					onView={() => openGroup(row)}
 				/>
 			</div>

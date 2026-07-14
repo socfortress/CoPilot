@@ -1,6 +1,6 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<n-button quaternary class="self-start" @click="goBack">
+		<n-button quaternary class="self-start" @click="goBack(routeAlertsSiemSummary())">
 			<template #icon>
 				<Icon :name="BackIcon" />
 			</template>
@@ -16,21 +16,17 @@
 import type { AlertsQueryTimeRange, GraylogIndexAlertsQuery } from "@/api/endpoints/alerts"
 import { NButton, NEmpty } from "naive-ui"
 import { computed } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { useRoute } from "vue-router"
 import AlertsSummaryDetails from "@/components/alerts/AlertsSummaryDetails.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
 const route = useRoute()
-const router = useRouter()
+const { goBack, routeAlertsSiemSummary } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 
-const indexName = computed(() => {
-	const raw = route.params.indexName
-	if (!raw) return null
-	const value = Array.isArray(raw) ? raw[0] : raw
-	return decodeURIComponent(value)
-})
+const indexName = useRouteParam("indexName")
 
 const summaryQuery = computed<Partial<GraylogIndexAlertsQuery>>(() => {
 	const { size, timerange, index_prefix } = route.query
@@ -49,13 +45,4 @@ const summaryQuery = computed<Partial<GraylogIndexAlertsQuery>>(() => {
 
 	return query
 })
-
-function goBack() {
-	if (window.history.length > 1) {
-		router.back()
-		return
-	}
-
-	router.push({ name: "Alerts-SIEM" })
-}
 </script>

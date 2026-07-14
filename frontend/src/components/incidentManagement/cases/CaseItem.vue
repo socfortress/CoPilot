@@ -21,7 +21,7 @@
 					<EntityDetailsButton
 						v-if="!compact && caseEntity?.id"
 						size="tiny"
-						:url="routeIncidentManagementCases(caseEntity.id).fullUrl()"
+						:route="routeIncidentManagementCases(caseEntity.id)"
 						@view="openDetails()"
 					/>
 				</div>
@@ -157,7 +157,7 @@
 			<template v-if="caseEntity && !compact" #footerExtra>
 				<EntityDetailsButton
 					size="small"
-					:url="routeIncidentManagementCases(caseEntity.id).fullUrl()"
+					:route="routeIncidentManagementCases(caseEntity.id)"
 					@view="openDetails()"
 				/>
 			</template>

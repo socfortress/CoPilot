@@ -307,7 +307,7 @@ class Logger:
             None
         """
         data = log_entry_model.model_dump()
-        # ponytail: log_entries.message/additional_info are varchar(5024) — truncate here once for all callers
+        # log_entries.message/additional_info are varchar(5024) — truncate here once for all callers
         for field in ("message", "additional_info"):
             if data.get(field):
                 data[field] = data[field][:5024]

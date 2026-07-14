@@ -6,7 +6,7 @@
 				<div class="hidden font-sans sm:block">
 					<ExclusionRuleStatusToggler
 						:entity
-						@loading="updatingStatus = $event"
+						@loading="loading = $event"
 						@updated="setStatus($event)"
 					/>
 				</div>
@@ -54,14 +54,14 @@
 					<div class="block sm:hidden">
 						<ExclusionRuleStatusToggler
 							:entity
-							@loading="updatingStatus = $event"
+							@loading="loading = $event"
 							@updated="setStatus($event)"
 						/>
 					</div>
 
 					<EntityDetailsButton
 						size="small"
-						:url="routeIncidentManagementExclusionRule(entity.id).fullUrl()"
+						:route="routeIncidentManagementExclusionRule(entity.id)"
 						@view="openDetails()"
 					/>
 				</div>
@@ -91,7 +91,7 @@
 <script setup lang="ts">
 import type { ExclusionRule } from "@/types/incidentManagement/exclusion-rules"
 import { NCard, NModal } from "naive-ui"
-import { computed, ref, toRefs } from "vue"
+import { ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
@@ -118,8 +118,7 @@ const TimeIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
 const TargetIcon = "zondicons:target"
 
-const updatingStatus = ref(false)
-const loading = computed(() => updatingStatus.value)
+const loading = ref(false)
 const showDetails = ref(false)
 const { routeCustomer, routeIncidentManagementExclusionRule } = useNavigation()
 const dFormats = useSettingsStore().dateFormat

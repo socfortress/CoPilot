@@ -35,14 +35,12 @@
 <script setup lang="ts">
 import type { SocAlertField } from "./type.d"
 import type { Alert } from "@/types/alerts"
-import type { ApiError } from "@/types/common"
-import axios from "axios"
-import { NCard, NEmpty, NSpin, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, inject, onBeforeMount, onBeforeUnmount, ref, toRefs, watch } from "vue"
+import { NCard, NEmpty, NSpin } from "naive-ui"
+import { defineAsyncComponent, inject, ref, toRefs } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import AlertDetailTabs from "./AlertDetailTabs.vue"
 import AlertOverview from "./AlertOverview.vue"
@@ -54,60 +52,27 @@ const props = defineProps<{
 	hideActions?: boolean
 }>()
 
-const { alert, indexName, alertId, hideActions } = toRefs(props)
+const { hideActions } = toRefs(props)
 
 const AlertActions = defineAsyncComponent(() => import("./AlertActions.vue"))
 
-const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
-const loading = ref(false)
-const fetchedAlert = ref<Alert | null>(null)
-let abortController: AbortController | null = null
 
 const socAlertCreationField = ref(inject<SocAlertField>("soc-alert-creation-field", "alert_url"))
 
-const resolvedAlert = computed(() => alert.value ?? fetchedAlert.value)
-
-function load() {
-	if (alert.value || !indexName.value || !alertId.value) return
-
-	abortController?.abort()
-	abortController = new AbortController()
-	loading.value = true
-
-	Api.alerts
-		.getById({ index_name: indexName.value, alert_id: alertId.value }, abortController.signal)
-		.then(res => {
-			if (res.data.success && res.data.alert) {
-				fetchedAlert.value = res.data.alert as Alert
-			} else {
-				fetchedAlert.value = null
-				message.warning(res.data?.message || "Alert not found")
-			}
-		})
-		.catch(err => {
-			if (!axios.isCancel(err)) {
-				fetchedAlert.value = null
-				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-			}
-		})
-		.finally(() => {
-			loading.value = false
-		})
-}
-
-onBeforeMount(() => {
-	load()
+const { loading, entity: resolvedAlert, reload } = useEntityDetails<Alert, string>({
+	entity: () => props.alert,
+	id: () => (props.indexName && props.alertId ? `${props.indexName}|${props.alertId}` : null),
+	fetch: (_id, signal) =>
+		Api.alerts
+			.getById({ index_name: props.indexName as string, alert_id: props.alertId as string }, signal)
+			.then(res => ({
+				entity: res.data.success ? ((res.data.alert as Alert) ?? null) : null,
+				message: res.data.message
+			})),
+	notFoundMessage: "Alert not found",
+	errorMessage: "An error occurred. Please try again later."
 })
 
-watch([indexName, alertId], () => {
-	fetchedAlert.value = null
-	load()
-})
-
-onBeforeUnmount(() => {
-	abortController?.abort()
-})
-
-defineExpose({ reload: load })
+defineExpose({ reload })
 </script>

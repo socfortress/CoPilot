@@ -1,7 +1,7 @@
 <template>
 	<div class="page flex flex-col gap-4 pb-0!">
 		<div class="flex min-w-0 items-start gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack">
+			<n-button quaternary class="shrink-0" @click="goBack(routeIncidentManagementAlerts())">
 				<template #icon>
 					<Icon :name="BackIcon" />
 				</template>
@@ -34,38 +34,21 @@
 <script setup lang="ts">
 import type { Alert } from "@/types/incidentManagement/alerts"
 import { NButton, NEmpty } from "naive-ui"
-import { computed, ref, watch } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import AlertDetails from "@/components/incidentManagement/alerts/AlertDetails.vue"
-import { useNavigation } from "@/composables/useNavigation"
+import { useNavigation, useRouteIdParam } from "@/composables/useNavigation"
 
-const route = useRoute()
-const router = useRouter()
-const { routeIncidentManagementAlerts } = useNavigation()
+const { goBack, routeIncidentManagementAlerts } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 const alert = ref<Alert | null>(null)
 
-const alertId = computed(() => {
-	const raw = route.params.id
-	const value = Array.isArray(raw) ? raw[0] : raw
-	const parsed = Number.parseInt(value, 10)
-	return Number.isFinite(parsed) ? parsed : null
-})
+const alertId = useRouteIdParam("id")
 
 watch(alertId, () => {
 	alert.value = null
 })
-
-function goBack() {
-	if (window.history.length > 1) {
-		router.back()
-		return
-	}
-
-	routeIncidentManagementAlerts().navigate()
-}
 
 function onDeleted() {
 	routeIncidentManagementAlerts().navigate()

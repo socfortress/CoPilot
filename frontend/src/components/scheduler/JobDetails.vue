@@ -56,16 +56,13 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiError } from "@/types/common"
 import type { Job } from "@/types/scheduler"
-import axios from "axios"
-import { NCard, NSpin, NTag, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { NCard, NSpin, NTag } from "naive-ui"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import JobActions from "./JobActions.vue"
 import NextJobTimeTooltip from "./NextJobTimeTooltip.vue"
@@ -79,68 +76,30 @@ const emit = defineEmits<{
 	(e: "loaded", value: Job): void
 }>()
 
-const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
-const loading = ref(false)
-const fetchedJob = ref<Job | null>(null)
 
-let abortController: AbortController | null = null
-
-const resolvedJob = computed(() => props.job ?? fetchedJob.value)
-
-function loadJob(jobId: string) {
-	abortController?.abort()
-	abortController = new AbortController()
-	loading.value = true
-
-	Api.scheduler
-		.getJob(jobId, abortController.signal)
-		.then(res => {
-			loading.value = false
-
-			if (res.data.success && res.data.job) {
-				fetchedJob.value = res.data.job
-				emit("loaded", res.data.job)
-			} else {
-				message.warning(res.data?.message || "Job not found.")
-			}
-		})
-		.catch(err => {
-			if (!axios.isCancel(err)) {
-				message.error(getApiErrorMessage(err as ApiError) || "Failed to load job.")
-				loading.value = false
-			}
-		})
-}
+const {
+	loading,
+	entity: resolvedJob,
+	reload: reloadJob
+} = useEntityDetails<Job, string>({
+	entity: () => props.job,
+	id: () => props.jobId || null,
+	fetch: (id, signal) =>
+		Api.scheduler.getJob(id, signal).then(res => ({
+			entity: res.data.success ? (res.data.job ?? null) : null,
+			message: res.data.message
+		})),
+	notFoundMessage: "Job not found.",
+	errorMessage: "Failed to load job.",
+	onLoaded: value => emit("loaded", value)
+})
 
 function reload() {
-	const id = resolvedJob.value?.id
-	if (!id) return
+	if (!resolvedJob.value?.id) return
 	if (props.job) return
-	loadJob(id)
+	reloadJob()
 }
-
-watch(
-	() => [props.job, props.jobId] as const,
-	([job, jobId]) => {
-		if (job) {
-			abortController?.abort()
-			fetchedJob.value = null
-			loading.value = false
-			return
-		}
-
-		if (jobId) {
-			loadJob(jobId)
-			return
-		}
-
-		abortController?.abort()
-		fetchedJob.value = null
-		loading.value = false
-	},
-	{ immediate: true }
-)
 
 defineExpose({ loading, resolvedJob, reload })
 </script>

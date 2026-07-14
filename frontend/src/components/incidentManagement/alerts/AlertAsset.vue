@@ -4,7 +4,7 @@
 			<code class="text-primary leading-none">{{ asset.asset_name }}</code>
 			<EntityDetailsButton
 				size="tiny"
-				:url="routeIncidentManagementAlertAsset(asset.alert_linked, asset.id).fullUrl()"
+				:route="routeIncidentManagementAlertAsset(asset.alert_linked, asset.id)"
 				@view="openDetails()"
 			/>
 		</div>
@@ -46,7 +46,7 @@
 
 					<EntityDetailsButton
 						size="small"
-						:url="routeIncidentManagementAlertAsset(asset.alert_linked, asset.id).fullUrl()"
+						:route="routeIncidentManagementAlertAsset(asset.alert_linked, asset.id)"
 						@view="openDetails()"
 					/>
 				</div>

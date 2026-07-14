@@ -241,7 +241,7 @@
 				<div class="flex flex-wrap items-center justify-end gap-2">
 					<EntityDetailsButton
 						size="tiny"
-						:url="routeIncidentManagementAlerts(alert.id).fullUrl()"
+						:route="routeIncidentManagementAlerts(alert.id)"
 						@view="openDetails()"
 					/>
 					<n-button quaternary size="tiny" @click.stop="handleDelete()">Delete</n-button>

@@ -5,7 +5,7 @@
 				size="tiny"
 				:order="['open']"
 				open-show-label
-				:url="routeAiAnalystIoc(ioc.id).fullUrl()"
+				:route="routeAiAnalystIoc(ioc.id)"
 			/>
 		</template>
 	</IocDetails>

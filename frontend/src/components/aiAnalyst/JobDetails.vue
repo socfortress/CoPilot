@@ -75,16 +75,14 @@
 
 <script setup lang="ts">
 import type { AiAnalystJob } from "@/types/ai-analyst"
-import type { ApiError } from "@/types/common"
 import { useElementSize } from "@vueuse/core"
-import axios from "axios"
-import { NAlert, NSpin, NTimeline, NTimelineItem, useMessage } from "naive-ui"
-import { computed, ref, useTemplateRef, watch } from "vue"
+import { NAlert, NSpin, NTimeline, NTimelineItem } from "naive-ui"
+import { computed, useTemplateRef } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const props = withDefaults(
@@ -100,16 +98,23 @@ const emit = defineEmits<{
 	(e: "loaded", value: AiAnalystJob): void
 }>()
 
-const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
-const loading = ref(false)
-const fetchedJob = ref<AiAnalystJob | null>(null)
 const timelineRef = useTemplateRef("timelineRef")
 const { width: timelineWidth } = useElementSize(timelineRef)
 
-let abortController: AbortController | null = null
+const { loading, entity: resolvedJob } = useEntityDetails<AiAnalystJob, string>({
+	entity: () => props.job,
+	id: () => props.jobId || null,
+	fetch: (id, signal) =>
+		Api.aiAnalyst.getJob(id, signal).then(res => ({
+			entity: res.data.success ? (res.data.job ?? null) : null,
+			message: res.data.message
+		})),
+	notFoundMessage: "Job not found.",
+	errorMessage: "Failed to load job.",
+	onLoaded: value => emit("loaded", value)
+})
 
-const resolvedJob = computed(() => props.job ?? fetchedJob.value)
 const horizontalMode = computed(() => timelineWidth.value > 550)
 
 function statusColor(status: string) {
@@ -118,53 +123,6 @@ function statusColor(status: string) {
 	if (status === "failed") return "danger"
 	return undefined
 }
-
-function loadJob(jobId: string) {
-	abortController?.abort()
-	abortController = new AbortController()
-	loading.value = true
-
-	Api.aiAnalyst
-		.getJob(jobId, abortController.signal)
-		.then(res => {
-			loading.value = false
-
-			if (res.data.success && res.data.job) {
-				fetchedJob.value = res.data.job
-				emit("loaded", res.data.job)
-			} else {
-				message.warning(res.data?.message || "Job not found.")
-			}
-		})
-		.catch(err => {
-			if (!axios.isCancel(err)) {
-				message.error(getApiErrorMessage(err as ApiError) || "Failed to load job.")
-				loading.value = false
-			}
-		})
-}
-
-watch(
-	() => [props.job, props.jobId] as const,
-	([job, jobId]) => {
-		if (job) {
-			abortController?.abort()
-			fetchedJob.value = null
-			loading.value = false
-			return
-		}
-
-		if (jobId) {
-			loadJob(jobId)
-			return
-		}
-
-		abortController?.abort()
-		fetchedJob.value = null
-		loading.value = false
-	},
-	{ immediate: true }
-)
 
 defineExpose({ loading, resolvedJob })
 </script>

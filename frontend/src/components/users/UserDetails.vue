@@ -75,18 +75,16 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiError } from "@/types/common"
 import type { AlertTag } from "@/types/tags"
 import type { User } from "@/types/user"
-import axios from "axios"
-import { NCard, NSpin, NTag, useMessage } from "naive-ui"
+import { NCard, NSpin, NTag } from "naive-ui"
 import { computed, defineAsyncComponent, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
@@ -105,22 +103,35 @@ const AssignTags = defineAsyncComponent(() => import("./AssignTags.vue"))
 const ChangePassword = defineAsyncComponent(() => import("./ChangePassword.vue"))
 const DeleteUser = defineAsyncComponent(() => import("./DeleteUser.vue"))
 
-const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
 const isAdmin = useAuthStore().isAdmin
 
-const loading = ref(false)
 const loadingCustomers = ref(false)
 const loadingTags = ref(false)
 const deleting = ref(false)
-const fetchedUser = ref<User | null>(null)
 const customerCodes = ref<string[]>([])
 const accessibleTags = ref<AlertTag[]>([])
 const tagRbacEnabled = ref(false)
 
-let abortController: AbortController | null = null
-
-const resolvedUser = computed(() => props.user ?? fetchedUser.value)
+const {
+	loading,
+	entity: resolvedUser,
+	reload: reloadUser
+} = useEntityDetails<User, number>({
+	entity: () => props.user,
+	id: () => props.userId,
+	fetch: (id, signal) =>
+		Api.users.getUser(id, signal).then(res => ({
+			entity: res.data.success ? (res.data.user ?? null) : null,
+			message: res.data.message
+		})),
+	notFoundMessage: "User not found.",
+	errorMessage: "Failed to load user.",
+	onLoaded: value => {
+		emit("loaded", value)
+		loadAccessData(value.id)
+	}
+})
 
 const roleTagType = computed(() => {
 	switch (resolvedUser.value?.role_name?.toLowerCase()) {
@@ -137,32 +148,6 @@ const roleTagType = computed(() => {
 	}
 })
 
-function loadUser(userId: number) {
-	abortController?.abort()
-	abortController = new AbortController()
-	loading.value = true
-
-	Api.users
-		.getUser(userId, abortController.signal)
-		.then(res => {
-			loading.value = false
-
-			if (res.data.success && res.data.user) {
-				fetchedUser.value = res.data.user
-				emit("loaded", res.data.user)
-				loadAccessData(res.data.user.id)
-			} else {
-				message.warning(res.data?.message || "User not found.")
-			}
-		})
-		.catch(err => {
-			if (!axios.isCancel(err)) {
-				message.error(getApiErrorMessage(err as ApiError) || "Failed to load user.")
-				loading.value = false
-			}
-		})
-}
-
 async function loadTagSettings() {
 	try {
 		const res = await Api.tagRbac.getSettings()
@@ -177,7 +162,7 @@ async function loadTagSettings() {
 function loadCustomerAccess(userId: number) {
 	loadingCustomers.value = true
 
-	Api.auth
+	return Api.auth
 		.getUserCustomerAccess(userId)
 		.then(res => {
 			if (res.data.success) {
@@ -216,8 +201,8 @@ function loadTagAccess(userId: number) {
 }
 
 async function loadAccessData(userId: number) {
-	await loadTagSettings()
-	loadCustomerAccess(userId)
+	// customer access does not depend on the tag settings, only tag access does
+	await Promise.all([loadTagSettings(), loadCustomerAccess(userId)])
 	loadTagAccess(userId)
 }
 
@@ -228,7 +213,7 @@ function reload() {
 		loadAccessData(id)
 		return
 	}
-	loadUser(id)
+	reloadUser()
 }
 
 function handleDeleted() {
@@ -239,23 +224,14 @@ watch(
 	() => [props.user, props.userId] as const,
 	([user, userId]) => {
 		if (user) {
-			abortController?.abort()
-			fetchedUser.value = null
-			loading.value = false
 			loadAccessData(user.id)
 			return
 		}
 
-		if (userId != null) {
-			loadUser(userId)
-			return
+		if (userId == null) {
+			customerCodes.value = []
+			accessibleTags.value = []
 		}
-
-		abortController?.abort()
-		fetchedUser.value = null
-		customerCodes.value = []
-		accessibleTags.value = []
-		loading.value = false
 	},
 	{ immediate: true }
 )

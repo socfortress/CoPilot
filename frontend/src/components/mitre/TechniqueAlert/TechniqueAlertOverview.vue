@@ -57,12 +57,10 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiError } from "@/types/common"
 import type { MitreTechniqueDetails } from "@/types/mitre"
-import { NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { NSpin, NTabPane, NTabs } from "naive-ui"
 import Api from "@/api"
-import { getApiErrorMessage } from "@/utils"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 import TechniqueCardContent from "../AtomicTests/TechniqueCardContent.vue"
 import GroupsList from "../Group/GroupsList.vue"
 import MitigationsList from "../Mitigation/MitigationsList.vue"
@@ -71,7 +69,7 @@ import TacticsList from "../Tactic/TacticsList.vue"
 import TechniqueEventsList from "../TechniqueEvents/List.vue"
 import TechniqueAlertDetails from "./TechniqueAlertDetails.vue"
 
-const { externalId } = defineProps<{
+const props = defineProps<{
 	externalId: string
 	fullWidth?: boolean
 }>()
@@ -80,38 +78,16 @@ const emit = defineEmits<{
 	(e: "loaded", value: MitreTechniqueDetails): void
 }>()
 
-const message = useMessage()
-const loadingDetails = ref(false)
-const techniqueDetails = ref<MitreTechniqueDetails | undefined>(undefined)
-
-function getDetails(id: string) {
-	loadingDetails.value = true
-
-	Api.wazuh.mitre
-		.getMitreTechniques({ external_id: id })
-		.then(res => {
-			if (res.data.success) {
-				if (res.data.results?.[0]) {
-					techniqueDetails.value = res.data.results[0]
-					emit("loaded", res.data.results[0])
-				}
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingDetails.value = false
-		})
-}
-
-onBeforeMount(() => {
-	getDetails(externalId)
-	// MOCK
-	/*
-	techniqueDetails.value = techniqueResultDetails
-	*/
+const { loading: loadingDetails, entity: techniqueDetails } = useEntityDetails<MitreTechniqueDetails, string>({
+	entity: () => null,
+	id: () => props.externalId,
+	fetch: id =>
+		Api.wazuh.mitre.getMitreTechniques({ external_id: id }).then(res => ({
+			entity: res.data.success ? (res.data.results?.[0] ?? null) : null,
+			message: res.data.message
+		})),
+	notFoundMessage: "An error occurred. Please try again later.",
+	errorMessage: "An error occurred. Please try again later.",
+	onLoaded: value => emit("loaded", value)
 })
 </script>

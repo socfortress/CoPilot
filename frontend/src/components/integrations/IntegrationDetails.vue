@@ -33,16 +33,13 @@
 
 <script setup lang="ts">
 import type { ServiceItemData } from "@/components/services/types"
-import type { ApiError } from "@/types/common"
 import type { AvailableIntegration } from "@/types/integrations"
-import axios from "axios"
-import { NEmpty, NSpin, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { NEmpty, NSpin } from "naive-ui"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Markdown from "@/components/common/Markdown.vue"
-import { getApiErrorMessage } from "@/utils"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 
 const props = withDefaults(
 	defineProps<{
@@ -56,12 +53,6 @@ const props = withDefaults(
 const emit = defineEmits<{
 	(e: "loaded", value: ServiceItemData): void
 }>()
-
-const message = useMessage()
-const loading = ref(false)
-const fetchedIntegration = ref<ServiceItemData | null>(null)
-
-let abortController: AbortController | null = null
 
 function toServiceItemData(integration: AvailableIntegration): ServiceItemData {
 	return {
@@ -81,61 +72,21 @@ function normalizeIntegration(integration: ServiceItemData | AvailableIntegratio
 	return integration
 }
 
-const resolvedIntegration = computed(() => {
-	if (props.integration) {
-		return normalizeIntegration(props.integration)
-	}
-
-	return fetchedIntegration.value
+const { loading, entity: resolvedIntegration } = useEntityDetails<ServiceItemData, number>({
+	entity: () => (props.integration ? normalizeIntegration(props.integration) : null),
+	id: () => props.integrationId,
+	fetch: (id, signal) =>
+		Api.integrations.getAvailableIntegration(id, signal).then(res => ({
+			entity:
+				res.data.success && res.data.available_integration
+					? toServiceItemData(res.data.available_integration)
+					: null,
+			message: res.data.message
+		})),
+	notFoundMessage: "Integration not found.",
+	errorMessage: "Failed to load integration.",
+	onLoaded: value => emit("loaded", value)
 })
-
-function loadIntegration(integrationId: number) {
-	abortController?.abort()
-	abortController = new AbortController()
-	loading.value = true
-
-	Api.integrations
-		.getAvailableIntegration(integrationId, abortController.signal)
-		.then(res => {
-			loading.value = false
-
-			if (res.data.success && res.data.available_integration) {
-				const item = toServiceItemData(res.data.available_integration)
-				fetchedIntegration.value = item
-				emit("loaded", item)
-			} else {
-				message.warning(res.data?.message || "Integration not found.")
-			}
-		})
-		.catch(err => {
-			if (!axios.isCancel(err)) {
-				message.error(getApiErrorMessage(err as ApiError) || "Failed to load integration.")
-				loading.value = false
-			}
-		})
-}
-
-watch(
-	() => [props.integration, props.integrationId] as const,
-	([integration, integrationId]) => {
-		if (integration) {
-			abortController?.abort()
-			fetchedIntegration.value = null
-			loading.value = false
-			return
-		}
-
-		if (integrationId != null) {
-			loadIntegration(integrationId)
-			return
-		}
-
-		abortController?.abort()
-		fetchedIntegration.value = null
-		loading.value = false
-	},
-	{ immediate: true }
-)
 
 defineExpose({ loading, resolvedIntegration })
 </script>

@@ -1,6 +1,6 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<n-button quaternary class="self-start" @click="router.push({ name: 'ExternalServices-NetworkConnectors' })">
+		<n-button quaternary class="self-start" @click="routeNetworkConnector().navigate()">
 			<template #icon>
 				<Icon :name="BackIcon" />
 			</template>
@@ -14,18 +14,13 @@
 
 <script setup lang="ts">
 import { NButton, NEmpty } from "naive-ui"
-import { computed } from "vue"
-import { useRoute, useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 import NetworkConnectorDetails from "@/components/networkConnectors/NetworkConnectorDetails.vue"
+import { useNavigation, useRouteIdParam } from "@/composables/useNavigation"
 
-const route = useRoute()
-const router = useRouter()
+const { routeNetworkConnector } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 
-const connectorId = computed(() => {
-	const id = Number(route.params.id)
-	return Number.isFinite(id) ? id : null
-})
+const connectorId = useRouteIdParam("id")
 </script>

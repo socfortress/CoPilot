@@ -1,7 +1,7 @@
 <template>
 	<div class="page flex flex-col gap-4">
 		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack">
+			<n-button quaternary class="shrink-0" @click="goBack(routeAiAnalystIoc())">
 				<template #icon>
 					<Icon :name="BackIcon" />
 				</template>
@@ -23,32 +23,19 @@
 <script setup lang="ts">
 import type { AiAnalystIoc } from "@/types/ai-analyst"
 import { NButton, NEmpty } from "naive-ui"
-import { computed, ref, watch } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { ref, watch } from "vue"
 import IocDetails from "@/components/aiAnalyst/IocDetails.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation, useRouteIdParam } from "@/composables/useNavigation"
 
-const route = useRoute()
-const router = useRouter()
+const { goBack, routeAiAnalystIoc } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 const ioc = ref<AiAnalystIoc | null>(null)
 
-const iocId = computed(() => {
-	const id = Number(route.params.id)
-	return Number.isFinite(id) ? id : null
-})
+const iocId = useRouteIdParam("id")
 
 watch(iocId, () => {
 	ioc.value = null
 })
-
-function goBack() {
-	if (window.history.length > 1) {
-		router.back()
-		return
-	}
-
-	router.push({ name: "AiAnalyst" })
-}
 </script>

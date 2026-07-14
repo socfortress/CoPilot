@@ -31,7 +31,7 @@
 					<code class="leading-none">{{ asset.index_id }}</code>
 					<EntityDetailsButton
 						size="tiny"
-						:url="routeAlertsSiemAlert(asset.index_name, asset.index_id).fullUrl()"
+						:route="routeAlertsSiemAlert(asset.index_name, asset.index_id)"
 						@view="openAlertDetails()"
 					/>
 				</div>

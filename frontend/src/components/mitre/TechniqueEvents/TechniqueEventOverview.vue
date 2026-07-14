@@ -148,16 +148,15 @@
 
 <script setup lang="ts">
 import type { MitreEventsQuery } from "@/api/endpoints/wazuh/mitre"
-import type { ApiError } from "@/types/common"
 import type { MitreEventDetails } from "@/types/mitre"
 import _pick from "lodash/pick"
-import { NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs } from "vue"
+import { NSpin, NTabPane, NTabs } from "naive-ui"
+import { computed, defineAsyncComponent, toRefs } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useNavigation } from "@/composables/useNavigation"
-import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	alert?: MitreEventDetails
@@ -174,55 +173,33 @@ const emit = defineEmits<{
 
 const { useDetailsTab } = toRefs(props)
 
-const message = useMessage()
-const loadingDetails = ref(false)
-const fetchedAlert = ref<MitreEventDetails | undefined>(undefined)
-
-const resolvedAlert = computed(() => props.alert ?? fetchedAlert.value)
-
 const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
 
 const LinkIcon = "carbon:launch"
 
 const { routeCustomer, routeAgent } = useNavigation()
 
-function getDetails() {
-	if (!props.techniqueId || !props.eventId) return
-
-	loadingDetails.value = true
-
-	const query: MitreEventsQuery = {
-		technique_id: props.techniqueId,
-		alert_id: props.eventId,
-		size: 1,
-		page: 1,
-		index_pattern: "*",
-		time_range: props.timeRange ?? "now-7d"
-	}
-
-	Api.wazuh.mitre
-		.getMitreEvents(query)
-		.then(res => {
-			if (res.data.success) {
-				if (res.data.alerts?.[0]) {
-					fetchedAlert.value = res.data.alerts[0]
-					emit("loaded", res.data.alerts[0])
+const { loading: loadingDetails, entity: resolvedAlert } = useEntityDetails<MitreEventDetails, MitreEventsQuery>({
+	entity: () => props.alert,
+	id: () =>
+		props.techniqueId && props.eventId
+			? {
+					technique_id: props.techniqueId,
+					alert_id: props.eventId,
+					size: 1,
+					page: 1,
+					index_pattern: "*",
+					time_range: props.timeRange ?? "now-7d"
 				}
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingDetails.value = false
-		})
-}
-
-onBeforeMount(() => {
-	if (props.alert) return
-	if (props.techniqueId && props.eventId) getDetails()
+			: null,
+	fetch: (query, signal) =>
+		Api.wazuh.mitre.getMitreEvents(query, signal).then(res => ({
+			entity: res.data.success ? (res.data.alerts?.[0] ?? null) : null,
+			message: res.data.message
+		})),
+	notFoundMessage: "An error occurred. Please try again later.",
+	errorMessage: "An error occurred. Please try again later.",
+	onLoaded: value => emit("loaded", value)
 })
 
 const tabsCards = computed(() => {

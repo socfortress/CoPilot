@@ -78,7 +78,7 @@
 											:order="['open']"
 											size="tiny"
 											open-show-label
-											:url="routeUser(assignedUserId).fullUrl()"
+											:route="routeUser(assignedUserId)"
 										/>
 									</div>
 								</AlertAssignUser>

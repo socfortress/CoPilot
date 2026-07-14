@@ -14,7 +14,7 @@
 			<template #headerExtra>
 				<EntityDetailsButton
 					size="tiny"
-					:url="routeAlertsMitreSoftware(id).fullUrl()"
+					:route="routeAlertsMitreSoftware(id)"
 					@view="showDetails = true"
 				/>
 			</template>

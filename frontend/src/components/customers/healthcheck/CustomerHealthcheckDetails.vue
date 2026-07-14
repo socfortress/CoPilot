@@ -15,14 +15,11 @@
 
 <script setup lang="ts">
 import type { CustomerAgentsHealthcheckQuery } from "@/api/endpoints/customers"
-import type { ApiError } from "@/types/common"
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers"
-import axios from "axios"
-import { NSpin, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { NSpin } from "naive-ui"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
-import { getApiErrorMessage } from "@/utils"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 
 const props = withDefaults(
 	defineProps<{
@@ -38,14 +35,6 @@ const props = withDefaults(
 const emit = defineEmits<{
 	(e: "loaded", value: CustomerAgentHealth): void
 }>()
-
-const message = useMessage()
-const loading = ref(false)
-const fetchedHealthData = ref<CustomerAgentHealth | null>(null)
-
-let abortController: AbortController | null = null
-
-const resolvedHealthData = computed(() => props.healthData ?? fetchedHealthData.value)
 
 function findAgentInResponse(
 	data: {
@@ -72,63 +61,40 @@ function findAgentInResponse(
 	)
 }
 
-function loadHealthData(customerCode: string, source: CustomerHealthcheckSource, agentId: string) {
-	abortController?.abort()
-	abortController = new AbortController()
-	loading.value = true
-
+// the backend has no by-id endpoint: we fetch the whole healthcheck agent list and pick the agent client-side
+function loadHealthData(customerCode: string, source: CustomerHealthcheckSource, agentId: string, signal: AbortSignal) {
 	const query: CustomerAgentsHealthcheckQuery | undefined = undefined
 	const apiCall =
 		source === "wazuh"
-			? Api.customers.getCustomerAgentsHealthcheckWazuh(customerCode, query, abortController.signal)
-			: Api.customers.getCustomerAgentsHealthcheckVelociraptor(customerCode, query, abortController.signal)
+			? Api.customers.getCustomerAgentsHealthcheckWazuh(customerCode, query, signal)
+			: Api.customers.getCustomerAgentsHealthcheckVelociraptor(customerCode, query, signal)
 
-	apiCall
-		.then(res => {
-			loading.value = false
+	return apiCall.then(res => {
+		if (!res.data.success) {
+			return { entity: null, message: res.data?.message }
+		}
 
-			if (!res.data.success) {
-				message.warning(res.data?.message || "Health check agent not found.")
-				return
-			}
-
-			const agent = findAgentInResponse(res.data, source, agentId)
-			if (agent) {
-				fetchedHealthData.value = agent
-				emit("loaded", agent)
-			} else {
-				message.warning("Health check agent not found.")
-			}
-		})
-		.catch(err => {
-			if (!axios.isCancel(err)) {
-				message.error(getApiErrorMessage(err as ApiError) || "Failed to load health check agent.")
-				loading.value = false
-			}
-		})
+		return { entity: findAgentInResponse(res.data, source, agentId) }
+	})
 }
 
-watch(
-	() => [props.healthData, props.customerCode, props.source, props.agentId] as const,
-	([healthData, customerCode, source, agentId]) => {
-		if (healthData) {
-			abortController?.abort()
-			fetchedHealthData.value = null
-			loading.value = false
-			return
-		}
-
-		if (customerCode && source && agentId) {
-			loadHealthData(customerCode, source, agentId)
-			return
-		}
-
-		abortController?.abort()
-		fetchedHealthData.value = null
-		loading.value = false
-	},
-	{ immediate: true }
-)
+const { loading, entity: resolvedHealthData } = useEntityDetails<CustomerAgentHealth, string>({
+	entity: () => props.healthData,
+	id: () =>
+		props.customerCode && props.source && props.agentId
+			? `${props.customerCode}|${props.source}|${props.agentId}`
+			: null,
+	fetch: (_id, signal) =>
+		loadHealthData(
+			props.customerCode as string,
+			props.source as CustomerHealthcheckSource,
+			props.agentId as string,
+			signal
+		),
+	notFoundMessage: "Health check agent not found.",
+	errorMessage: "Failed to load health check agent.",
+	onLoaded: value => emit("loaded", value)
+})
 
 defineExpose({ loading, resolvedHealthData })
 </script>

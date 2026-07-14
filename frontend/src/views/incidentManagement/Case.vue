@@ -1,7 +1,7 @@
 <template>
 	<div class="page flex flex-col gap-4 pb-0!">
 		<div class="flex min-w-0 items-start gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack">
+			<n-button quaternary class="shrink-0" @click="goBack(routeIncidentManagementCases())">
 				<template #icon>
 					<Icon :name="BackIcon" />
 				</template>
@@ -34,38 +34,21 @@
 <script setup lang="ts">
 import type { Case } from "@/types/incidentManagement/cases"
 import { NButton, NEmpty } from "naive-ui"
-import { computed, ref, watch } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import CaseDetails from "@/components/incidentManagement/cases/CaseDetails.vue"
-import { useNavigation } from "@/composables/useNavigation"
+import { useNavigation, useRouteIdParam } from "@/composables/useNavigation"
 
-const route = useRoute()
-const router = useRouter()
-const { routeIncidentManagementCases } = useNavigation()
+const { goBack, routeIncidentManagementCases } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 const caseData = ref<Case | null>(null)
 
-const caseId = computed(() => {
-	const raw = route.params.id
-	const value = Array.isArray(raw) ? raw[0] : raw
-	const parsed = Number.parseInt(value, 10)
-	return Number.isFinite(parsed) ? parsed : null
-})
+const caseId = useRouteIdParam("id")
 
 watch(caseId, () => {
 	caseData.value = null
 })
-
-function goBack() {
-	if (window.history.length > 1) {
-		router.back()
-		return
-	}
-
-	routeIncidentManagementCases().navigate()
-}
 
 function onDeleted() {
 	routeIncidentManagementCases().navigate()

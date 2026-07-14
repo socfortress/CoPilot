@@ -1,6 +1,6 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<n-button quaternary class="self-start" @click="router.push({ name: 'Users' })">
+		<n-button quaternary class="self-start" @click="routeUser().navigate()">
 			<template #icon>
 				<Icon :name="BackIcon" />
 			</template>
@@ -23,15 +23,15 @@ import type { ApiError } from "@/types/common"
 import type { User } from "@/types/user"
 import { NButton, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref } from "vue"
-import { useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 
 const SignUp = defineAsyncComponent(() => import("@/components/auth/SignUp.vue"))
 
 const BackIcon = "carbon:arrow-left"
-const router = useRouter()
+const { routeUser } = useNavigation()
 const message = useMessage()
 const usersList = ref<User[]>([])
 
@@ -39,7 +39,7 @@ const usernameList = computed(() => usersList.value.map(user => user.username))
 const emailList = computed(() => usersList.value.map(user => user.email))
 
 function onSuccess() {
-	router.push({ name: "Users" })
+	routeUser().navigate()
 }
 
 function getUsers() {

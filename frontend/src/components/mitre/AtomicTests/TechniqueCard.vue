@@ -26,7 +26,7 @@
 					<SimulatorButton :technique-id="entity.technique_id" size="small" :os-list="entity.categories" />
 					<EntityDetailsButton
 						size="small"
-						:url="routeAlertsAtomicRedTeamTechnique(entity.technique_id).fullUrl()"
+						:route="routeAlertsAtomicRedTeamTechnique(entity.technique_id)"
 						@view="showDetails = true"
 					/>
 				</div>

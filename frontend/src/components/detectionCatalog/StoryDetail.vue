@@ -279,7 +279,7 @@ const detectionColumns: DataTableColumns<CatalogStoryDetection> = [
 			<div onClick={e => e.stopPropagation()}>
 				<EntityDetailsButton
 					size="tiny"
-					url={routeDetectionCatalogDetection(row.id).fullUrl()}
+					route={routeDetectionCatalogDetection(row.id)}
 					onView={() => openRuleDetail(row.id)}
 				/>
 			</div>

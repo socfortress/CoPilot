@@ -1,21 +1,71 @@
 import type { RouteLocationRaw } from "vue-router"
 import type { CustomerHealthcheckSource } from "@/types/customers"
-import { useRouter } from "vue-router"
+import { computed } from "vue"
+import { useRoute, useRouter } from "vue-router"
+
+/** A resolved application route, as returned by every `route*()` helper below. */
+export interface EntityRoute {
+	navigate: () => void
+	replace: () => void
+	valueOf: () => string
+	toString: () => string
+	/** Relative href — use for `<a>` targets so middle-click / open-in-new-tab work. */
+	href: () => string
+	/** Absolute URL — use only for copy-link / share UI. */
+	fullUrl: () => string
+}
+
+/**
+ * Reads a route path param as a string, ignoring repeated params.
+ * Returns null when the param is absent or empty.
+ */
+export function useRouteParam(name: string) {
+	const route = useRoute()
+
+	return computed(() => {
+		const raw = route.params[name]
+		const value = Array.isArray(raw) ? raw[0] : raw
+		return value ? String(value) : null
+	})
+}
+
+/** Reads a route path param as an integer. Returns null when absent or not a whole number. */
+export function useRouteIdParam(name: string) {
+	const param = useRouteParam(name)
+
+	return computed(() => {
+		if (param.value === null) return null
+
+		const parsed = Number.parseInt(param.value, 10)
+		return Number.isSafeInteger(parsed) ? parsed : null
+	})
+}
 
 export function useNavigation() {
 	const router = useRouter()
 
-	function routerConstructor(route: RouteLocationRaw) {
+	function routerConstructor(route: RouteLocationRaw): EntityRoute {
 		return {
 			navigate: () => router.push(route),
 			replace: () => router.replace(route),
 			valueOf: () => router.resolve(route).href,
 			toString: () => router.resolve(route).href,
+			href: () => router.resolve(route).href,
 			fullUrl: () => {
 				const resolved = router.resolve(route)
 				return `${window.location.protocol}//${window.location.host}${resolved.href}`
 			}
 		}
+	}
+
+	/** Returns to the previous page, falling back to the given route on a cold load (deep link). */
+	function goBack(fallback?: EntityRoute) {
+		if (window.history.length > 1) {
+			router.back()
+			return
+		}
+
+		fallback?.navigate()
 	}
 
 	function routeCustomer(params?: { code?: string | number; action?: "add-customer" }) {
@@ -322,14 +372,10 @@ export function useNavigation() {
 
 	function routeEventSearchEvent(customerCode?: string, sourceName?: string, indexName?: string, eventId?: string) {
 		if (customerCode && sourceName && indexName && eventId) {
+			// vue-router percent-encodes params on resolve and decodes them on read — do not pre-encode
 			return routerConstructor({
 				name: "EventSearch-Event",
-				params: {
-					customerCode,
-					sourceName,
-					indexName: encodeURIComponent(indexName),
-					eventId: encodeURIComponent(eventId)
-				}
+				params: { customerCode, sourceName, indexName, eventId }
 			})
 		}
 
@@ -499,6 +545,7 @@ export function useNavigation() {
 	}
 
 	return {
+		goBack,
 		routeCustomer,
 		routeCustomerHealthcheckAgent,
 		routeAgent,

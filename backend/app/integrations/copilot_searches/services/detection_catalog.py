@@ -466,17 +466,56 @@ async def list_compliance_pivot(framework: str) -> Dict[str, Any]:
 
 
 async def get_compliance_group(framework: str, control: str) -> Dict[str, Any] | None:
-    payload = await list_compliance_pivot(framework)
+    """
+    Single-control slice of the compliance pivot.
+
+    Deliberately does NOT call ``list_compliance_pivot`` — grouping every rule
+    for every control just to read one row is O(all) work for an O(1) read.
+    We walk the rule corpus once and only accumulate the requested control.
+    """
+    framework_meta = COMPLIANCE_FRAMEWORKS.get(framework)
+    if not framework_meta:
+        raise ValueError(
+            f"Unknown compliance framework {framework!r}. Valid: {list(COMPLIANCE_FRAMEWORKS)}",
+        )
+
+    await wazuh_rules_cache.ensure_loaded()
+    await wazuh_firing_stats_cache.ensure_loaded()
+
+    field = framework_meta["field"]
     control_key = control.strip()
-    for group in payload["groups"]:
-        if group["control"] == control_key:
-            return {
-                "framework": payload["framework"],
-                "framework_label": payload["framework_label"],
-                "firing_stats_available": payload["firing_stats_available"],
-                "group": group,
-            }
-    return None
+
+    rule_ids: List[int] = []
+    total_hits_30d = 0
+    total_hits_7d = 0
+    matched = False
+
+    for raw_rule in wazuh_rules_cache.get_all_rules():
+        if control_key not in _rule_compliance_values(raw_rule, field):
+            continue
+        matched = True
+        rid = raw_rule.get("id")
+        stats = wazuh_firing_stats_cache.get(rid) if isinstance(rid, int) else {"hits_30d": 0, "hits_7d": 0}
+        if isinstance(rid, int):
+            rule_ids.append(rid)
+        total_hits_30d += stats["hits_30d"]
+        total_hits_7d += stats["hits_7d"]
+
+    if not matched:
+        return None
+
+    return {
+        "framework": framework,
+        "framework_label": framework_meta["label"],
+        "firing_stats_available": wazuh_firing_stats_cache.is_available,
+        "group": {
+            "control": control_key,
+            "rule_count": len(rule_ids),
+            "rule_ids": sorted(rule_ids),
+            "total_hits_30d": total_hits_30d,
+            "total_hits_7d": total_hits_7d,
+        },
+    }
 
 
 def list_compliance_frameworks() -> List[Dict[str, str]]:
@@ -551,6 +590,43 @@ async def run_log_test(
 # ---------------------------------------------------------------------------
 
 
+def _gap_entry(
+    tid: str,
+    meta: Dict[str, Any],
+    tactics_by_short: Dict[str, str],
+) -> Dict[str, Any]:
+    """Shape one uncovered technique into the coverage-gap row the UI renders."""
+    tactic_names: List[str] = []
+    for short in meta.get("tactic_short_names", []):
+        display = tactics_by_short.get(short)
+        if display and display not in tactic_names:
+            tactic_names.append(display)
+
+    return {
+        "technique_id": tid,
+        "technique_name": meta.get("name", tid),
+        "tactics": tactic_names,
+        "url": meta.get("url"),
+    }
+
+
+def _is_technique_covered(base_tid: str) -> bool:
+    """
+    True when any rule in either corpus declares this base technique (or a
+    sub-technique of it). Short-circuits on the first hit — no need to build
+    the full covered-set just to answer one technique.
+    """
+    for rule in rules_cache.get_all_rules():
+        for tid in _rule_mitre_ids(rule):
+            if tid.split(".")[0].strip().upper() == base_tid:
+                return True
+    for rule in wazuh_rules_cache.get_all_rules():
+        for tid in _wazuh_mitre_ids(rule):
+            if tid.split(".")[0].strip().upper() == base_tid:
+                return True
+    return False
+
+
 async def list_coverage_gaps() -> Dict[str, Any]:
     """
     Return every MITRE ATT&CK technique that is NOT covered by any rule in
@@ -598,20 +674,7 @@ async def list_coverage_gaps() -> Dict[str, Any]:
         if tid in covered_ids:
             continue
 
-        tactic_names: List[str] = []
-        for short in meta.get("tactic_short_names", []):
-            display = tactics_by_short.get(short)
-            if display and display not in tactic_names:
-                tactic_names.append(display)
-
-        gaps.append(
-            {
-                "technique_id": tid,
-                "technique_name": meta.get("name", tid),
-                "tactics": tactic_names,
-                "url": meta.get("url"),
-            },
-        )
+        gaps.append(_gap_entry(tid, meta, tactics_by_short))
 
     gaps.sort(key=lambda g: g["technique_id"])
 
@@ -628,12 +691,27 @@ async def list_coverage_gaps() -> Dict[str, Any]:
 
 
 async def get_coverage_gap(technique_id: str) -> Dict[str, Any] | None:
-    payload = await list_coverage_gaps()
+    """
+    Single-technique lookup. Returns the gap row when the technique is a base
+    technique that no rule in either corpus covers, else None (unknown ID,
+    sub-technique, or already covered) — same semantics as scanning the full
+    gap list, without materializing it.
+    """
+    await rules_cache.ensure_loaded()
+    await mitre_matrix.ensure_loaded()
+    await wazuh_rules_cache.ensure_loaded()
+
     tid = technique_id.strip().upper()
-    for gap in payload["gaps"]:
-        if gap["technique_id"].upper() == tid:
-            return gap
-    return None
+    meta = mitre_matrix.techniques.get(tid)
+    # Unknown technique, or a sub-technique (collapsed into its parent in the
+    # gap list, so never a gap row of its own).
+    if not meta or meta.get("is_subtechnique"):
+        return None
+    if _is_technique_covered(tid):
+        return None
+
+    tactics_by_short = {t["short_name"]: t["name"] for t in mitre_matrix.tactics}
+    return _gap_entry(tid, meta, tactics_by_short)
 
 
 # ---------------------------------------------------------------------------

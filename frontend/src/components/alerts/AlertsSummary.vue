@@ -30,7 +30,7 @@
 					size="tiny"
 					:order="['open']"
 					open-show-label
-					:url="summaryOpenUrl"
+					:route="summaryRoute"
 				/>
 			</div>
 		</template>
@@ -88,7 +88,7 @@ const LinkIcon = "carbon:launch"
 const showAllAlerts = ref(initialExpanded)
 const { routeIndex, routeAlertsSiemSummary } = useNavigation()
 
-const summaryOpenUrl = computed(() => routeAlertsSiemSummary(alertsSummary.index_name).fullUrl())
+const summaryRoute = computed(() => routeAlertsSiemSummary(alertsSummary.index_name))
 </script>
 
 <style lang="scss" scoped>

@@ -1,7 +1,7 @@
 <template>
 	<div class="page flex flex-col gap-4">
 		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack">
+			<n-button quaternary class="shrink-0" @click="goBack(routeAlertsMitre())">
 				<template #icon>
 					<Icon :name="BackIcon" />
 				</template>
@@ -22,35 +22,19 @@
 <script setup lang="ts">
 import type { MitreGroupDetails } from "@/types/mitre"
 import { NButton, NEmpty } from "naive-ui"
-import { computed, ref, watch } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import GroupOverview from "@/components/mitre/Group/GroupOverview.vue"
-import { useNavigation } from "@/composables/useNavigation"
+import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
-const route = useRoute()
-const router = useRouter()
-const { routeAlertsMitre } = useNavigation()
+const { goBack, routeAlertsMitre } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 const group = ref<MitreGroupDetails | null>(null)
 
-const groupId = computed(() => {
-	const raw = route.params.groupId
-	if (!raw) return null
-	return Array.isArray(raw) ? raw[0] : String(raw)
-})
+const groupId = useRouteParam("groupId")
 
 watch(groupId, () => {
 	group.value = null
 })
-
-function goBack() {
-	if (window.history.length > 1) {
-		router.back()
-		return
-	}
-
-	routeAlertsMitre().navigate()
-}
 </script>

@@ -78,6 +78,19 @@ def _report_to_response(report: AiAnalystReport) -> ReportResponse:
     )
 
 
+def _alert_with_report_to_response(alert: Alert, report: AiAnalystReport) -> AlertWithReportResponse:
+    return AlertWithReportResponse(
+        alert_id=alert.id,
+        alert_name=alert.alert_name,
+        customer_code=alert.customer_code,
+        status=alert.status,
+        source=alert.source,
+        assigned_to=alert.assigned_to,
+        alert_creation_time=alert.alert_creation_time,
+        report=_report_to_response(report),
+    )
+
+
 def _ioc_to_response(ioc: AiAnalystIoc) -> IocResponse:
     return IocResponse(
         id=ioc.id,
@@ -365,19 +378,7 @@ async def list_alerts_with_reports(
     result = await session.execute(query)
     rows = result.all()
 
-    return [
-        AlertWithReportResponse(
-            alert_id=alert.id,
-            alert_name=alert.alert_name,
-            customer_code=alert.customer_code,
-            status=alert.status,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            alert_creation_time=alert.alert_creation_time,
-            report=_report_to_response(report),
-        )
-        for alert, report in rows
-    ]
+    return [_alert_with_report_to_response(alert, report) for alert, report in rows]
 
 
 async def get_alert_with_report_by_report_id(
@@ -391,16 +392,7 @@ async def get_alert_with_report_by_report_id(
     if row is None:
         raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
     alert, report = row
-    return AlertWithReportResponse(
-        alert_id=alert.id,
-        alert_name=alert.alert_name,
-        customer_code=alert.customer_code,
-        status=alert.status,
-        source=alert.source,
-        assigned_to=alert.assigned_to,
-        alert_creation_time=alert.alert_creation_time,
-        report=_report_to_response(report),
-    )
+    return _alert_with_report_to_response(alert, report)
 
 
 async def get_alert_with_report_by_alert_id(
@@ -411,22 +403,14 @@ async def get_alert_with_report_by_alert_id(
         select(Alert, AiAnalystReport)
         .join(AiAnalystReport, AiAnalystReport.alert_id == Alert.id)
         .where(Alert.id == alert_id)
-        .order_by(AiAnalystReport.created_at.desc()),
+        .order_by(AiAnalystReport.created_at.desc())
+        .limit(1),
     )
     row = result.first()
     if row is None:
         raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
     alert, report = row
-    return AlertWithReportResponse(
-        alert_id=alert.id,
-        alert_name=alert.alert_name,
-        customer_code=alert.customer_code,
-        status=alert.status,
-        source=alert.source,
-        assigned_to=alert.assigned_to,
-        alert_creation_time=alert.alert_creation_time,
-        report=_report_to_response(report),
-    )
+    return _alert_with_report_to_response(alert, report)
 
 
 # --- Combined alert analysis lookup ---

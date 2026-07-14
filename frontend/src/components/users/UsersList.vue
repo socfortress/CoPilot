@@ -62,7 +62,7 @@
 										size="tiny"
 										:order="['open']"
 										open-show-label
-										:url="routeUser(user.id).fullUrl()"
+										:route="routeUser(user.id)"
 										@view="routeUser(user.id).navigate()"
 									/>
 									<UserDropdown

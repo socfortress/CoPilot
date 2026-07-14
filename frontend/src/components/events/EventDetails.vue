@@ -39,17 +39,15 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiError } from "@/types/common"
 import type { EventSearchResult } from "@/types/events"
-import axios from "axios"
-import { NEmpty, NSpin, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { NEmpty, NSpin } from "naive-ui"
+import { computed, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import EventDetail from "./EventDetail.vue"
 
@@ -69,16 +67,31 @@ const emit = defineEmits<{
 	loaded: [event: EventSearchResult]
 }>()
 
-const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
 const { routeEventSearch } = useNavigation()
 
-const loading = ref(false)
-const fetchedEvent = ref<EventSearchResult | null>(null)
-
-let abortController: AbortController | null = null
-
-const resolvedEvent = computed(() => props.event ?? fetchedEvent.value)
+const { loading, entity: resolvedEvent } = useEntityDetails<EventSearchResult, string>({
+	entity: () => props.event,
+	id: () =>
+		props.customerCode && props.sourceName && props.indexName && props.eventId
+			? `${props.customerCode}|${props.sourceName}|${props.indexName}|${props.eventId}`
+			: null,
+	fetch: (_id, signal) =>
+		Api.siem
+			.getEvent(
+				props.customerCode as string,
+				props.sourceName as string,
+				{ index_name: props.indexName as string, event_id: props.eventId as string },
+				signal
+			)
+			.then(res => ({
+				entity: res.data.success ? (res.data.event ?? null) : null,
+				message: res.data.message
+			})),
+	notFoundMessage: "Event not found.",
+	errorMessage: "Failed to load event.",
+	onLoaded: value => emit("loaded", value)
+})
 
 const displayId = computed(() => resolvedEvent.value?._id || resolvedEvent.value?.id || "—")
 
@@ -104,38 +117,6 @@ const ruleLevelColor = computed(() => {
 	return undefined
 })
 
-function loadEvent() {
-	const customerCode = props.customerCode
-	const sourceName = props.sourceName
-	const indexName = props.indexName
-	const eventId = props.eventId
-
-	if (props.event || !customerCode || !sourceName || !indexName || !eventId) return
-
-	abortController?.abort()
-	abortController = new AbortController()
-	loading.value = true
-
-	Api.siem
-		.getEvent(customerCode, sourceName, { index_name: indexName, event_id: eventId }, abortController.signal)
-		.then(res => {
-			loading.value = false
-
-			if (res.data.success && res.data.event) {
-				fetchedEvent.value = res.data.event
-				emit("loaded", res.data.event)
-			} else {
-				message.warning(res.data?.message || "Event not found.")
-			}
-		})
-		.catch(err => {
-			if (!axios.isCancel(err)) {
-				message.error(getApiErrorMessage(err as ApiError) || "Failed to load event.")
-				loading.value = false
-			}
-		})
-}
-
 function buildSearchQuery(field: string, value: string, exclude = false) {
 	return exclude ? `NOT ${field}:"${value}"` : `${field}:"${value}"`
 }
@@ -159,17 +140,11 @@ function onFilterExclude(field: string, value: string) {
 }
 
 watch(
-	() => [props.event, props.customerCode, props.sourceName, props.indexName, props.eventId] as const,
-	([event]) => {
+	() => props.event,
+	event => {
 		if (event) {
-			abortController?.abort()
-			fetchedEvent.value = null
-			loading.value = false
 			emit("loaded", event)
-			return
 		}
-
-		loadEvent()
 	},
 	{ immediate: true }
 )

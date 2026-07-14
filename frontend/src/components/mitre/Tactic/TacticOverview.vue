@@ -20,16 +20,14 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiError } from "@/types/common"
 import type { MitreTacticDetails } from "@/types/mitre"
-import { NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { NSpin, NTabPane, NTabs } from "naive-ui"
 import Api from "@/api"
-import { getApiErrorMessage } from "@/utils"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 import TechniquesList from "../Technique/TechniquesList.vue"
 import TacticDetails from "./TacticDetails.vue"
 
-const { entity, id } = defineProps<{
+const props = defineProps<{
 	entity?: MitreTacticDetails
 	id?: string
 	fullWidth?: boolean
@@ -39,37 +37,16 @@ const emit = defineEmits<{
 	(e: "loaded", value: MitreTacticDetails): void
 }>()
 
-const message = useMessage()
-const loadingDetails = ref(false)
-const fetchedTactic = ref<MitreTacticDetails | undefined>(undefined)
-
-const resolvedEntity = computed(() => entity ?? fetchedTactic.value)
-
-function getDetails(tacticId: string) {
-	loadingDetails.value = true
-
-	Api.wazuh.mitre
-		.getMitreTactics({ id: tacticId })
-		.then(res => {
-			if (res.data.success) {
-				if (res.data.results?.[0]) {
-					fetchedTactic.value = res.data.results[0]
-					emit("loaded", res.data.results[0])
-				}
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingDetails.value = false
-		})
-}
-
-onBeforeMount(() => {
-	if (entity) return
-	if (id) getDetails(id)
+const { loading: loadingDetails, entity: resolvedEntity } = useEntityDetails<MitreTacticDetails, string>({
+	entity: () => props.entity,
+	id: () => props.id,
+	fetch: id =>
+		Api.wazuh.mitre.getMitreTactics({ id }).then(res => ({
+			entity: res.data.success ? (res.data.results?.[0] ?? null) : null,
+			message: res.data.message
+		})),
+	notFoundMessage: "An error occurred. Please try again later.",
+	errorMessage: "An error occurred. Please try again later.",
+	onLoaded: value => emit("loaded", value)
 })
 </script>

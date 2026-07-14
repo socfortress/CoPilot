@@ -98,7 +98,7 @@
 			<template v-if="!hideActions" #footerExtra>
 				<EntityDetailsButton
 					size="small"
-					:url="routeAlertsMitreEvent(techniqueId, alert.id).fullUrl()"
+					:route="routeAlertsMitreEvent(techniqueId, alert.id)"
 					@view="showDetails = true"
 				/>
 			</template>

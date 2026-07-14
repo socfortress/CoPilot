@@ -45,15 +45,12 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiError } from "@/types/common"
 import type { CatalogCoverageGapRow } from "@/types/detection-catalog"
-import axios from "axios"
-import { NButton, NSpin, NTag, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { NButton, NSpin, NTag } from "naive-ui"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { getApiErrorMessage } from "@/utils"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 
 const props = withDefaults(
 	defineProps<{
@@ -68,60 +65,18 @@ const emit = defineEmits<{
 	(e: "loaded", value: CatalogCoverageGapRow): void
 }>()
 
-const message = useMessage()
-const loading = ref(false)
-const fetchedGap = ref<CatalogCoverageGapRow | null>(null)
-
-let abortController: AbortController | null = null
-
-const resolvedGap = computed(() => props.gap ?? fetchedGap.value)
-
-function loadGap(techniqueId: string) {
-	abortController?.abort()
-	abortController = new AbortController()
-	loading.value = true
-
-	Api.detectionCatalog
-		.getCoverageGap(techniqueId, abortController.signal)
-		.then(res => {
-			loading.value = false
-
-			if (res.data.success && res.data.gap) {
-				fetchedGap.value = res.data.gap
-				emit("loaded", res.data.gap)
-			} else {
-				message.warning(res.data?.message || "Coverage gap not found.")
-			}
-		})
-		.catch(err => {
-			if (!axios.isCancel(err)) {
-				message.error(getApiErrorMessage(err as ApiError) || "Failed to load coverage gap.")
-				loading.value = false
-			}
-		})
-}
-
-watch(
-	() => [props.gap, props.techniqueId] as const,
-	([gap, techniqueId]) => {
-		if (gap) {
-			abortController?.abort()
-			fetchedGap.value = null
-			loading.value = false
-			return
-		}
-
-		if (techniqueId) {
-			loadGap(techniqueId)
-			return
-		}
-
-		abortController?.abort()
-		fetchedGap.value = null
-		loading.value = false
-	},
-	{ immediate: true }
-)
+const { loading, entity: resolvedGap } = useEntityDetails<CatalogCoverageGapRow, string>({
+	entity: () => props.gap,
+	id: () => props.techniqueId || null,
+	fetch: (id, signal) =>
+		Api.detectionCatalog.getCoverageGap(id, signal).then(res => ({
+			entity: res.data.success ? (res.data.gap ?? null) : null,
+			message: res.data.message
+		})),
+	notFoundMessage: "Coverage gap not found.",
+	errorMessage: "Failed to load coverage gap.",
+	onLoaded: value => emit("loaded", value)
+})
 
 defineExpose({ loading, resolvedGap })
 </script>

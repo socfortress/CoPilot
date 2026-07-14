@@ -52,16 +52,13 @@
 
 <script setup lang="ts">
 import type { AiAnalystIoc } from "@/types/ai-analyst"
-import type { ApiError } from "@/types/common"
-import axios from "axios"
-import { NSpin, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { NSpin } from "naive-ui"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CodeSource from "@/components/common/CodeSource.vue"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const props = withDefaults(
@@ -77,14 +74,20 @@ const emit = defineEmits<{
 	(e: "loaded", value: AiAnalystIoc): void
 }>()
 
-const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
-const loading = ref(false)
-const fetchedIoc = ref<AiAnalystIoc | null>(null)
 
-let abortController: AbortController | null = null
-
-const resolvedIoc = computed(() => props.ioc ?? fetchedIoc.value)
+const { loading, entity: resolvedIoc } = useEntityDetails<AiAnalystIoc, number>({
+	entity: () => props.ioc,
+	id: () => props.iocId,
+	fetch: (id, signal) =>
+		Api.aiAnalyst.getIoc(id, signal).then(res => ({
+			entity: res.data.success ? (res.data.ioc ?? null) : null,
+			message: res.data.message
+		})),
+	notFoundMessage: "IOC not found.",
+	errorMessage: "Failed to load IOC.",
+	onLoaded: value => emit("loaded", value)
+})
 
 function verdictColor(verdict: string) {
 	if (verdict === "malicious") return "danger"
@@ -92,53 +95,6 @@ function verdictColor(verdict: string) {
 	if (verdict === "clean") return "success"
 	return undefined
 }
-
-function loadIoc(iocId: number) {
-	abortController?.abort()
-	abortController = new AbortController()
-	loading.value = true
-
-	Api.aiAnalyst
-		.getIoc(iocId, abortController.signal)
-		.then(res => {
-			loading.value = false
-
-			if (res.data.success && res.data.ioc) {
-				fetchedIoc.value = res.data.ioc
-				emit("loaded", res.data.ioc)
-			} else {
-				message.warning(res.data?.message || "IOC not found.")
-			}
-		})
-		.catch(err => {
-			if (!axios.isCancel(err)) {
-				message.error(getApiErrorMessage(err as ApiError) || "Failed to load IOC.")
-				loading.value = false
-			}
-		})
-}
-
-watch(
-	() => [props.ioc, props.iocId] as const,
-	([ioc, iocId]) => {
-		if (ioc) {
-			abortController?.abort()
-			fetchedIoc.value = null
-			loading.value = false
-			return
-		}
-
-		if (iocId != null) {
-			loadIoc(iocId)
-			return
-		}
-
-		abortController?.abort()
-		fetchedIoc.value = null
-		loading.value = false
-	},
-	{ immediate: true }
-)
 
 defineExpose({ loading, resolvedIoc })
 </script>

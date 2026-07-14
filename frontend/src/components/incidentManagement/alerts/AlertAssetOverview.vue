@@ -146,9 +146,10 @@
 import type { ApiError } from "@/types/common"
 import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts"
 import { NCard, NDivider, NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, onBeforeMount, ref, watch } from "vue"
+import { computed, defineAsyncComponent, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 import { getApiErrorMessage } from "@/utils"
 
 const {
@@ -189,14 +190,29 @@ const FileCollectionForm = defineAsyncComponent(
 )
 
 const message = useMessage()
-const loadingDetails = ref(false)
 const loadingContext = ref(false)
-const fetchedAsset = ref<AlertAsset | undefined>(undefined)
 const alertContext = ref<AlertContext | null>(null)
 const licenseChecked = ref(false)
 const licenseResponse = ref(false)
 
-const resolvedAsset = computed(() => asset ?? fetchedAsset.value)
+// no by-id endpoint for a single asset: we fetch the whole alert and pick the asset client-side
+const { loading: loadingDetails, entity: resolvedAsset } = useEntityDetails<AlertAsset, string>({
+	entity: () => asset,
+	id: () => (alertId != null && assetId != null ? `${alertId}|${assetId}` : null),
+	// the endpoint takes no abort signal, so the request itself is not cancellable
+	fetch: () =>
+		Api.incidentManagement.alerts.getAlert(alertId as number).then(res => {
+			if (!res.data.success) {
+				return { entity: null, message: res.data?.message || "An error occurred. Please try again later." }
+			}
+
+			return { entity: res.data.alerts?.[0]?.assets?.find(item => item.id === assetId) ?? null }
+		}),
+	notFoundMessage: "Asset not found",
+	errorMessage: "An error occurred. Please try again later.",
+	onLoaded: value => emit("loaded", value)
+})
+
 const processNameList = computed<string[]>(() => alertContext.value?.context?.process_name || [])
 const isInvestigationAvailable = computed(() => processNameList.value.length)
 const isWazuhSource = computed(() => alertContext.value?.source?.toLowerCase() === "wazuh")
@@ -230,35 +246,4 @@ function getAlertContext(alertContextId: number) {
 			loadingContext.value = false
 		})
 }
-
-function getDetails(parentAlertId: number, targetAssetId: number) {
-	loadingDetails.value = true
-
-	Api.incidentManagement.alerts
-		.getAlert(parentAlertId)
-		.then(res => {
-			if (res.data.success) {
-				const match = res.data.alerts?.[0]?.assets?.find(item => item.id === targetAssetId)
-				if (match) {
-					fetchedAsset.value = match
-					emit("loaded", match)
-				} else {
-					message.warning("Asset not found")
-				}
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingDetails.value = false
-		})
-}
-
-onBeforeMount(() => {
-	if (asset) return
-	if (alertId != null && assetId != null) getDetails(alertId, assetId)
-})
 </script>

@@ -1,7 +1,7 @@
 <template>
 	<div class="page flex flex-col gap-4 pb-0!">
 		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack">
+			<n-button quaternary class="shrink-0" @click="goBack(routeAiAnalystReport())">
 				<template #icon>
 					<Icon :name="BackIcon" />
 				</template>
@@ -23,32 +23,19 @@
 <script setup lang="ts">
 import type { AlertWithReport } from "@/types/ai-analyst"
 import { NButton, NEmpty } from "naive-ui"
-import { computed, ref, watch } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { ref, watch } from "vue"
 import AlertReportDetails from "@/components/aiAnalyst/AlertReportDetails.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation, useRouteIdParam } from "@/composables/useNavigation"
 
-const route = useRoute()
-const router = useRouter()
+const { goBack, routeAiAnalystReport } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 const alert = ref<AlertWithReport | null>(null)
 
-const reportId = computed(() => {
-	const id = Number(route.params.id)
-	return Number.isFinite(id) ? id : null
-})
+const reportId = useRouteIdParam("id")
 
 watch(reportId, () => {
 	alert.value = null
 })
-
-function goBack() {
-	if (window.history.length > 1) {
-		router.back()
-		return
-	}
-
-	router.push({ name: "AiAnalyst" })
-}
 </script>

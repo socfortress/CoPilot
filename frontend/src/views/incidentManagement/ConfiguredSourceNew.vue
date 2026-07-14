@@ -1,7 +1,7 @@
 <template>
 	<div class="page flex flex-col gap-4">
 		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack">
+			<n-button quaternary class="shrink-0" @click="goBack(routeIncidentManagementSources())">
 				<template #icon>
 					<Icon :name="BackIcon" />
 				</template>
@@ -20,7 +20,6 @@ import type { ApiError } from "@/types/common"
 import type { SourceName } from "@/types/incidentManagement/sources"
 import { NButton, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
-import { useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SourceConfigurationWizard from "@/components/incidentManagement/sources/SourceConfigurationWizard.vue"
@@ -28,9 +27,8 @@ import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 
 const BackIcon = "carbon:arrow-left"
-const router = useRouter()
 const message = useMessage()
-const { routeIncidentManagementSources } = useNavigation()
+const { goBack, routeIncidentManagementSources } = useNavigation()
 const configuredSourcesList = ref<SourceName[]>([])
 
 function getConfiguredSources() {
@@ -46,15 +44,6 @@ function getConfiguredSources() {
 		.catch(err => {
 			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
-}
-
-function goBack() {
-	if (window.history.length > 1) {
-		router.back()
-		return
-	}
-
-	routeIncidentManagementSources().navigate()
 }
 
 function onSubmitted() {

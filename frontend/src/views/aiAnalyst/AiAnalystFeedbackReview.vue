@@ -1,7 +1,7 @@
 <template>
 	<div class="page flex flex-col gap-4">
 		<div class="flex flex-wrap items-center gap-3">
-			<n-button quaternary class="self-start" @click="goBack">
+			<n-button quaternary class="self-start" @click="goBack(routeAiAnalystFeedbackReview())">
 				<template #icon>
 					<Icon :name="BackIcon" />
 				</template>
@@ -34,34 +34,21 @@
 <script setup lang="ts">
 import type { AiAnalystReview } from "@/types/ai-analyst"
 import { NButton, NEmpty } from "naive-ui"
-import { computed, ref } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { ref } from "vue"
 import FeedbackDashboardRecentReviewDetail from "@/components/aiAnalyst/Feedback/FeedbackDashboardRecentReviewDetail.vue"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation, useRouteIdParam } from "@/composables/useNavigation"
 
-const route = useRoute()
-const router = useRouter()
+const { goBack, routeAiAnalystFeedbackReview } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 
 const headerReview = ref<AiAnalystReview | null>(null)
 
-const reviewIdParam = computed(() => {
-	const id = Number(route.params.id)
-	return Number.isFinite(id) ? id : null
-})
+const reviewIdParam = useRouteIdParam("id")
 
 function onLoadedReview(review: AiAnalystReview) {
 	headerReview.value = review
-}
-
-function goBack() {
-	if (window.history.length > 1) {
-		router.back()
-		return
-	}
-
-	router.push({ name: "AiAnalyst" })
 }
 </script>

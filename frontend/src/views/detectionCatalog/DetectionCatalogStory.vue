@@ -1,6 +1,6 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<n-button quaternary class="self-start" @click="router.push({ name: 'DetectionCatalog' })">
+		<n-button quaternary class="self-start" @click="routeDetectionCatalogStory().navigate()">
 			<template #icon>
 				<Icon :name="BackIcon" />
 			</template>
@@ -14,22 +14,16 @@
 
 <script setup lang="ts">
 import { NButton, NEmpty, useMessage } from "naive-ui"
-import { computed } from "vue"
-import { useRoute, useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 import StoryDetail from "@/components/detectionCatalog/StoryDetail.vue"
+import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
-const route = useRoute()
-const router = useRouter()
+const { routeDetectionCatalogStory } = useNavigation()
 const message = useMessage()
 
 const BackIcon = "carbon:arrow-left"
 
-const storyName = computed(() => {
-	const raw = route.params.name
-	if (!raw) return null
-	return Array.isArray(raw) ? raw.join("/") : String(raw)
-})
+const storyName = useRouteParam("name")
 
 function handleError(errorMessage: string) {
 	message.warning(errorMessage)

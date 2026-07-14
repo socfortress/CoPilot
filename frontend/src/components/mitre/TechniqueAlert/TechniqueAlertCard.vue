@@ -27,7 +27,7 @@
 			<template #footerExtra>
 				<EntityDetailsButton
 					size="tiny"
-					:url="routeAlertsMitreTechnique(entity.technique_id).fullUrl()"
+					:route="routeAlertsMitreTechnique(entity.technique_id)"
 					@view="showDetails = true"
 				/>
 			</template>

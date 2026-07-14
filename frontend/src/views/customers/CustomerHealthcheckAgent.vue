@@ -1,7 +1,11 @@
 <template>
 	<div class="page flex flex-col gap-4">
 		<div class="flex flex-wrap items-center gap-3">
-			<n-button quaternary class="self-start" @click="goBack">
+			<n-button
+				quaternary
+				class="self-start"
+				@click="goBack(routeCustomerHealthcheckAgent(customerCode ?? undefined))"
+			>
 				<template #icon>
 					<Icon :name="BackIcon" />
 				</template>
@@ -38,52 +42,27 @@
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers"
 import { NButton, NEmpty } from "naive-ui"
 import { computed, ref } from "vue"
-import { useRoute, useRouter } from "vue-router"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import CustomerHealthcheckDetails from "@/components/customers/healthcheck/CustomerHealthcheckDetails.vue"
+import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
-const route = useRoute()
-const router = useRouter()
+const { goBack, routeCustomerHealthcheckAgent } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 
 const headerHealth = ref<CustomerAgentHealth | null>(null)
 
-const customerCode = computed(() => {
-	const raw = route.params.code
-	if (!raw) return null
-	return Array.isArray(raw) ? raw[0] : String(raw)
-})
+const customerCode = useRouteParam("code")
+const agentId = useRouteParam("agentId")
+const sourceParam = useRouteParam("source")
 
 const source = computed<CustomerHealthcheckSource | null>(() => {
-	const raw = route.params.source
-	if (!raw) return null
-	const value = Array.isArray(raw) ? raw[0] : String(raw)
+	const value = sourceParam.value
 	return value === "wazuh" || value === "velociraptor" ? value : null
-})
-
-const agentId = computed(() => {
-	const raw = route.params.agentId
-	if (!raw) return null
-	return Array.isArray(raw) ? raw[0] : String(raw)
 })
 
 function onLoadedHealth(health: CustomerAgentHealth) {
 	headerHealth.value = health
-}
-
-function goBack() {
-	if (window.history.length > 1) {
-		router.back()
-		return
-	}
-
-	if (customerCode.value) {
-		router.push({ name: "Customer", params: { code: customerCode.value } })
-		return
-	}
-
-	router.push({ name: "Customers" })
 }
 </script>

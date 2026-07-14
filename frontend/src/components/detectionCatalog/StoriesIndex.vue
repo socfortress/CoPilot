@@ -196,7 +196,7 @@ const columns: DataTableColumns<CatalogStoryRow> = [
 			<div onClick={e => e.stopPropagation()}>
 				<EntityDetailsButton
 					size="tiny"
-					url={routeDetectionCatalogStory(row.name).fullUrl()}
+					route={routeDetectionCatalogStory(row.name)}
 					onView={() => openStoryDetail(row.name)}
 				/>
 			</div>

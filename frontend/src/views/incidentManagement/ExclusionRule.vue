@@ -1,7 +1,7 @@
 <template>
 	<div class="page flex flex-col gap-4">
 		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack">
+			<n-button quaternary class="shrink-0" @click="goBack(routeIncidentManagementSources())">
 				<template #icon>
 					<Icon :name="BackIcon" />
 				</template>
@@ -29,38 +29,21 @@
 <script setup lang="ts">
 import type { ExclusionRule } from "@/types/incidentManagement/exclusion-rules"
 import { NButton, NEmpty } from "naive-ui"
-import { computed, ref, watch } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import ExclusionRuleOverview from "@/components/incidentManagement/exclusionRules/ExclusionRuleOverview.vue"
-import { useNavigation } from "@/composables/useNavigation"
+import { useNavigation, useRouteIdParam } from "@/composables/useNavigation"
 
-const route = useRoute()
-const router = useRouter()
-const { routeIncidentManagementSources } = useNavigation()
+const { goBack, routeIncidentManagementSources } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 const exclusionRule = ref<ExclusionRule | null>(null)
 
-const exclusionId = computed(() => {
-	const raw = route.params.id
-	const value = Array.isArray(raw) ? raw[0] : raw
-	const parsed = Number.parseInt(value, 10)
-	return Number.isFinite(parsed) ? parsed : null
-})
+const exclusionId = useRouteIdParam("id")
 
 watch(exclusionId, () => {
 	exclusionRule.value = null
 })
-
-function goBack() {
-	if (window.history.length > 1) {
-		router.back()
-		return
-	}
-
-	routeIncidentManagementSources().navigate()
-}
 
 function onDeleted() {
 	routeIncidentManagementSources().navigate()

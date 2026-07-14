@@ -1,10 +1,6 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<n-button
-			quaternary
-			class="self-start"
-			@click="router.push({ name: 'ExternalServices-ThirdPartyIntegrations' })"
-		>
+		<n-button quaternary class="self-start" @click="routeThirdPartyIntegration().navigate()">
 			<template #icon>
 				<Icon :name="BackIcon" />
 			</template>
@@ -18,18 +14,13 @@
 
 <script setup lang="ts">
 import { NButton, NEmpty } from "naive-ui"
-import { computed } from "vue"
-import { useRoute, useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 import IntegrationDetails from "@/components/integrations/IntegrationDetails.vue"
+import { useNavigation, useRouteIdParam } from "@/composables/useNavigation"
 
-const route = useRoute()
-const router = useRouter()
+const { routeThirdPartyIntegration } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 
-const integrationId = computed(() => {
-	const id = Number(route.params.id)
-	return Number.isFinite(id) ? id : null
-})
+const integrationId = useRouteIdParam("id")
 </script>

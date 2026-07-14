@@ -129,7 +129,7 @@ const enabledColumns = computed<DataTableColumns<EnabledDashboard>>(() => [
 					size: "small",
 					order: ["open"],
 					openShowLabel: true,
-					url: routeDashboard(row.id).fullUrl()
+					route: routeDashboard(row.id)
 				}),
 				h(
 					NButton,

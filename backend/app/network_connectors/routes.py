@@ -49,6 +49,17 @@ from app.network_connectors.schema import UpdateCustomerNetworkConnectors
 network_connector_settings_router = APIRouter()
 
 
+def _to_network_connector_with_auth_keys(network_connector: AvailableNetworkConnectors) -> NetworkConnectorsWithAuthKeys:
+    """Map an AvailableNetworkConnectors ORM row (with keys loaded) to its response schema."""
+    return NetworkConnectorsWithAuthKeys(
+        id=network_connector.id,
+        network_connector_name=network_connector.network_connector_name,
+        description=network_connector.description,
+        network_connector_details=network_connector.network_connector_details,
+        network_connector_keys=[AuthKey(auth_key_name=key.auth_key_name) for key in network_connector.network_connector_keys],
+    )
+
+
 async def fetch_available_network_connectors(session: AsyncSession):
     """
     Fetches available network_connectors and their auth keys from the database.
@@ -67,19 +78,7 @@ async def fetch_available_network_connectors(session: AsyncSession):
     # Use unique() to avoid duplicates caused by joined eager loading
     unique_network_connectors = result.unique().scalars().all()
 
-    network_connectors_with_auth_keys = []
-    for network_connector in unique_network_connectors:
-        auth_keys = [AuthKey(auth_key_name=key.auth_key_name) for key in network_connector.network_connector_keys]
-        network_connector_data = NetworkConnectorsWithAuthKeys(
-            id=network_connector.id,
-            network_connector_name=network_connector.network_connector_name,
-            description=network_connector.description,
-            network_connector_details=network_connector.network_connector_details,
-            network_connector_keys=auth_keys,
-        )
-        network_connectors_with_auth_keys.append(network_connector_data)
-
-    return network_connectors_with_auth_keys
+    return [_to_network_connector_with_auth_keys(network_connector) for network_connector in unique_network_connectors]
 
 
 async def fetch_available_network_connector_by_id(
@@ -96,14 +95,7 @@ async def fetch_available_network_connector_by_id(
     if network_connector is None:
         raise HTTPException(status_code=404, detail=f"Network connector {network_connector_id} not found")
 
-    auth_keys = [AuthKey(auth_key_name=key.auth_key_name) for key in network_connector.network_connector_keys]
-    return NetworkConnectorsWithAuthKeys(
-        id=network_connector.id,
-        network_connector_name=network_connector.network_connector_name,
-        description=network_connector.description,
-        network_connector_details=network_connector.network_connector_details,
-        network_connector_keys=auth_keys,
-    )
+    return _to_network_connector_with_auth_keys(network_connector)
 
 
 async def validate_network_connector_name(network_connector_name: str, session: AsyncSession):

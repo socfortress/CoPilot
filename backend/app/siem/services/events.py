@@ -23,7 +23,7 @@ def _event_from_hit(hit: dict) -> dict:
 
 
 def _index_matches_pattern(index_name: str, index_pattern: str) -> bool:
-    # ponytail: fnmatch only — ES comma/exclusion patterns need a richer matcher later.
+    # fnmatch only — ES comma-separated / exclusion (`-foo-*`) patterns are not supported here.
     return fnmatch.fnmatchcase(index_name, index_pattern)
 
 
@@ -254,14 +254,6 @@ async def get_field_mappings(
         raise HTTPException(status_code=500, detail=f"Error retrieving field mappings: {e}")
     finally:
         await es_client.close()
-
-
-def _assert_event_helpers() -> None:
-    hit = {"_id": "doc-1", "_index": "wazuh-alerts-4", "_source": {"id": "evt-1"}}
-    event = _event_from_hit(hit)
-    assert event["_id"] == "doc-1" and event["id"] == "evt-1"
-    assert _index_matches_pattern("wazuh-alerts-4-2026.07.10", "wazuh-alerts-*")
-    assert not _index_matches_pattern("office365-foo", "wazuh-alerts-*")
 
 
 def _flatten_properties(properties: dict, prefix: str, fields: list) -> None:

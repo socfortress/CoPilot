@@ -35,9 +35,10 @@
 import type { ApiError } from "@/types/common"
 import type { ExclusionRule } from "@/types/incidentManagement/exclusion-rules"
 import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
-import { computed, h, onBeforeMount, ref } from "vue"
+import { h, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 import { getApiErrorMessage } from "@/utils"
 import ExclusionRuleDetails from "./ExclusionRuleDetails.vue"
 import ExclusionRuleForm from "./ExclusionRuleForm.vue"
@@ -59,33 +60,22 @@ const EditIcon = "uil:edit-alt"
 
 const message = useMessage()
 const dialog = useDialog()
-const loadingDetails = ref(false)
 const loadingDelete = ref(false)
 const editing = ref(false)
-const fetchedEntity = ref<ExclusionRule | undefined>(undefined)
 
-const resolvedEntity = computed(() => entity ?? fetchedEntity.value)
-
-function getDetails(id: number) {
-	loadingDetails.value = true
-
-	Api.incidentManagement.exclusionRules
-		.getExclusionRule(id)
-		.then(res => {
-			if (res.data.success && res.data.exclusion_response) {
-				fetchedEntity.value = res.data.exclusion_response
-				emit("loaded", res.data.exclusion_response)
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingDetails.value = false
-		})
-}
+const { loading: loadingDetails, entity: resolvedEntity } = useEntityDetails<ExclusionRule, number>({
+	entity: () => entity,
+	id: () => exclusionId,
+	// the endpoint takes no abort signal, so the request itself is not cancellable
+	fetch: id =>
+		Api.incidentManagement.exclusionRules.getExclusionRule(id).then(res => ({
+			entity: res.data.success ? (res.data.exclusion_response ?? null) : null,
+			message: res.data.message
+		})),
+	notFoundMessage: "An error occurred. Please try again later.",
+	errorMessage: "An error occurred. Please try again later.",
+	onLoaded: value => emit("loaded", value)
+})
 
 function updateEntity(value: ExclusionRule) {
 	if (resolvedEntity.value) {
@@ -136,9 +126,4 @@ function handleDelete() {
 		}
 	})
 }
-
-onBeforeMount(() => {
-	if (entity) return
-	if (exclusionId != null) getDetails(exclusionId)
-})
 </script>

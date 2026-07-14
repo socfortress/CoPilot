@@ -1,6 +1,6 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<n-button quaternary class="self-start" @click="router.push({ name: 'Scheduler' })">
+		<n-button quaternary class="self-start" @click="routeSchedulerJob().navigate()">
 			<template #icon>
 				<Icon :name="BackIcon" />
 			</template>
@@ -14,18 +14,13 @@
 
 <script setup lang="ts">
 import { NButton, NEmpty } from "naive-ui"
-import { computed } from "vue"
-import { useRoute, useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 import JobDetails from "@/components/scheduler/JobDetails.vue"
+import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
-const route = useRoute()
-const router = useRouter()
+const { routeSchedulerJob } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 
-const jobId = computed(() => {
-	const id = route.params.id
-	return typeof id === "string" && id.length > 0 ? id : null
-})
+const jobId = useRouteParam("id")
 </script>

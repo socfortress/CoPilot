@@ -41,7 +41,7 @@
 					size="small"
 					:order="['open']"
 					open-show-label
-					:url="routeSchedulerJob(job.id).fullUrl()"
+					:route="routeSchedulerJob(job.id)"
 					@view="routeSchedulerJob(job.id).navigate()"
 				/>
 				<JobActions :job size="small" />

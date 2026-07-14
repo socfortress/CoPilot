@@ -121,17 +121,15 @@
 
 <script setup lang="ts">
 import type { AuditLogEntry } from "@/types/audit"
-import type { ApiError } from "@/types/common"
-import axios from "axios"
-import { NSpin, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { NSpin } from "naive-ui"
+import { computed } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 import vShiki from "@/directives/v-shiki"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const props = withDefaults(
@@ -147,18 +145,25 @@ const emit = defineEmits<{
 	(e: "loaded", value: AuditLogEntry): void
 }>()
 
-const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
-const loading = ref(false)
-const fetchedEntry = ref<AuditLogEntry | null>(null)
-
-let abortController: AbortController | null = null
 
 const UserIcon = "carbon:user"
 const OkIcon = "carbon:checkmark-filled"
 const FailIcon = "carbon:warning-filled"
 
-const resolvedEntry = computed(() => props.entry ?? fetchedEntry.value)
+const { loading, entity: resolvedEntry } = useEntityDetails<AuditLogEntry, number>({
+	entity: () => props.entry,
+	id: () => props.entryId,
+	fetch: (id, signal) =>
+		Api.audit.getAuditLog(id, signal).then(res => ({
+			entity: res.data.success ? (res.data.audit_log ?? null) : null,
+			message: res.data.message
+		})),
+	notFoundMessage: "Audit entry not found.",
+	errorMessage: "Failed to load audit entry.",
+	onLoaded: value => emit("loaded", value)
+})
+
 const isFailure = computed(() => resolvedEntry.value?.result?.toLowerCase() === "failure")
 const actorLabel = computed(
 	() =>
@@ -169,53 +174,6 @@ const hasEntity = computed(() => Boolean(resolvedEntry.value?.entity_type || res
 const showValueDiff = computed(() => Boolean(resolvedEntry.value?.old_value || resolvedEntry.value?.new_value))
 const formattedTimestamp = computed(() =>
 	resolvedEntry.value ? String(formatDate(resolvedEntry.value.timestamp, dFormats.datetime, { tz: true })) : ""
-)
-
-function loadEntry(entryId: number) {
-	abortController?.abort()
-	abortController = new AbortController()
-	loading.value = true
-
-	Api.audit
-		.getAuditLog(entryId, abortController.signal)
-		.then(res => {
-			loading.value = false
-
-			if (res.data.success && res.data.audit_log) {
-				fetchedEntry.value = res.data.audit_log
-				emit("loaded", res.data.audit_log)
-			} else {
-				message.warning(res.data?.message || "Audit entry not found.")
-			}
-		})
-		.catch(err => {
-			if (!axios.isCancel(err)) {
-				message.error(getApiErrorMessage(err as ApiError) || "Failed to load audit entry.")
-				loading.value = false
-			}
-		})
-}
-
-watch(
-	() => [props.entry, props.entryId] as const,
-	([entry, entryId]) => {
-		if (entry) {
-			abortController?.abort()
-			fetchedEntry.value = null
-			loading.value = false
-			return
-		}
-
-		if (entryId != null) {
-			loadEntry(entryId)
-			return
-		}
-
-		abortController?.abort()
-		fetchedEntry.value = null
-		loading.value = false
-	},
-	{ immediate: true }
 )
 
 defineExpose({ loading, resolvedEntry })

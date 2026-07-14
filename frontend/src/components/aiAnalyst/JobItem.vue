@@ -5,7 +5,7 @@
 				size="small"
 				:order="['open']"
 				open-show-label
-				:url="routeAiAnalystJob(job.id).fullUrl()"
+				:route="routeAiAnalystJob(job.id)"
 			/>
 		</template>
 	</JobDetails>

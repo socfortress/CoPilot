@@ -60,16 +60,14 @@
 </template>
 
 <script setup lang="tsx">
-import type { ApiError } from "@/types/common"
 import type { CatalogComplianceGroupRow } from "@/types/detection-catalog"
-import axios from "axios"
-import { NModal, NSpin, NTag, useMessage } from "naive-ui"
+import { NModal, NSpin, NTag } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
-import { getApiErrorMessage } from "@/utils"
+import { useEntityDetails } from "@/composables/useEntityDetails"
 import WazuhRuleDetail from "./WazuhRuleDetail.vue"
 
 const props = withDefaults(
@@ -86,75 +84,50 @@ const emit = defineEmits<{
 	(e: "loaded", value: CatalogComplianceGroupRow): void
 }>()
 
-const message = useMessage()
-const loading = ref(false)
-const fetchedGroup = ref<CatalogComplianceGroupRow | null>(null)
 const fetchedFrameworkLabel = ref<string | null>(null)
 
 const showDetailModal = ref(false)
 const modalTitle = ref("Compliance Control")
 const modalRuleId = ref<number | null>(null)
 
-let abortController: AbortController | null = null
+const { loading, entity: resolvedGroup } = useEntityDetails<CatalogComplianceGroupRow, string>({
+	entity: () => props.group,
+	id: () => (props.framework && props.control ? `${props.framework}|${props.control}` : null),
+	fetch: (_id, signal) =>
+		Api.detectionCatalog
+			.getComplianceGroup(props.framework as string, props.control as string, signal)
+			.then(res => {
+				if (res.data.success && res.data.group) {
+					fetchedFrameworkLabel.value = res.data.framework_label
+				}
 
-const resolvedGroup = computed(() => props.group ?? fetchedGroup.value)
+				return {
+					entity: res.data.success ? (res.data.group ?? null) : null,
+					message: res.data.message
+				}
+			}),
+	notFoundMessage: "Compliance control not found.",
+	errorMessage: "Failed to load compliance control.",
+	onLoaded: value => emit("loaded", value)
+})
+
 const resolvedFrameworkLabel = computed(() => fetchedFrameworkLabel.value)
+
+watch(
+	() => [props.group, props.framework, props.control] as const,
+	([group, framework, control]) => {
+		if (group || !framework || !control) {
+			fetchedFrameworkLabel.value = null
+		}
+	},
+	{ immediate: true }
+)
 
 function openRuleDetail(rid: number) {
 	modalRuleId.value = rid
 	modalTitle.value = `Rule ${rid}`
 	showDetailModal.value = true
 }
-
-function loadGroup(framework: string, control: string) {
-	abortController?.abort()
-	abortController = new AbortController()
-	loading.value = true
-
-	Api.detectionCatalog
-		.getComplianceGroup(framework, control, abortController.signal)
-		.then(res => {
-			loading.value = false
-
-			if (res.data.success && res.data.group) {
-				fetchedGroup.value = res.data.group
-				fetchedFrameworkLabel.value = res.data.framework_label
-				emit("loaded", res.data.group)
-			} else {
-				message.warning(res.data?.message || "Compliance control not found.")
-			}
-		})
-		.catch(err => {
-			if (!axios.isCancel(err)) {
-				message.error(getApiErrorMessage(err as ApiError) || "Failed to load compliance control.")
-				loading.value = false
-			}
-		})
-}
-
-watch(
-	() => [props.group, props.framework, props.control] as const,
-	([group, framework, control]) => {
-		if (group) {
-			abortController?.abort()
-			fetchedGroup.value = null
-			fetchedFrameworkLabel.value = null
-			loading.value = false
-			return
-		}
-
-		if (framework && control) {
-			loadGroup(framework, control)
-			return
-		}
-
-		abortController?.abort()
-		fetchedGroup.value = null
-		fetchedFrameworkLabel.value = null
-		loading.value = false
-	},
-	{ immediate: true }
-)
 
 defineExpose({ loading, resolvedGroup, resolvedFrameworkLabel })
 </script>

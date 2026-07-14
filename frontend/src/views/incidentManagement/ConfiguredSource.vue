@@ -1,7 +1,7 @@
 <template>
 	<div class="page flex flex-col gap-4">
 		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack">
+			<n-button quaternary class="shrink-0" @click="goBack(routeIncidentManagementSources())">
 				<template #icon>
 					<Icon :name="BackIcon" />
 				</template>
@@ -24,32 +24,15 @@
 
 <script setup lang="ts">
 import { NButton, NEmpty } from "naive-ui"
-import { computed } from "vue"
-import { useRoute, useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 import SourceConfigurationDetails from "@/components/incidentManagement/sources/SourceConfigurationDetails.vue"
-import { useNavigation } from "@/composables/useNavigation"
+import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
-const route = useRoute()
-const router = useRouter()
-const { routeIncidentManagementSources } = useNavigation()
+const { goBack, routeIncidentManagementSources } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 
-const sourceName = computed(() => {
-	const raw = route.params.source
-	if (!raw) return null
-	return Array.isArray(raw) ? raw[0] : String(raw)
-})
-
-function goBack() {
-	if (window.history.length > 1) {
-		router.back()
-		return
-	}
-
-	routeIncidentManagementSources().navigate()
-}
+const sourceName = useRouteParam("source")
 
 function onDeleted() {
 	routeIncidentManagementSources().navigate()

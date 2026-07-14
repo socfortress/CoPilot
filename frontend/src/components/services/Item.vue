@@ -26,7 +26,7 @@
 				</div>
 			</template>
 			<template #footerExtra>
-				<EntityDetailsButton size="small" :url="detailRoute.fullUrl()" @view="showDetails = true" />
+				<EntityDetailsButton size="small" :route="detailRoute" @view="showDetails = true" />
 			</template>
 		</CardEntity>
 

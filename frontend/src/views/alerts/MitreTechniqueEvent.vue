@@ -1,7 +1,7 @@
 <template>
 	<div class="page flex flex-col gap-4">
 		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack">
+			<n-button quaternary class="shrink-0" @click="goBack(routeAlertsMitreEvent(techniqueId ?? undefined))">
 				<template #icon>
 					<Icon :name="BackIcon" />
 				</template>
@@ -31,47 +31,23 @@
 import type { MitreEventDetails } from "@/types/mitre"
 import { NButton, NEmpty } from "naive-ui"
 import { computed, ref, watch } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { useRoute } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 import TechniqueEventOverview from "@/components/mitre/TechniqueEvents/TechniqueEventOverview.vue"
-import { useNavigation } from "@/composables/useNavigation"
+import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
 const route = useRoute()
-const router = useRouter()
-const { routeAlertsMitreTechnique } = useNavigation()
+const { goBack, routeAlertsMitreEvent } = useNavigation()
 
 const BackIcon = "carbon:arrow-left"
 const alert = ref<MitreEventDetails | null>(null)
 
-const techniqueId = computed(() => {
-	const raw = route.params.techniqueId
-	if (!raw) return null
-	return Array.isArray(raw) ? raw[0] : String(raw)
-})
-
-const eventId = computed(() => {
-	const raw = route.params.eventId
-	if (!raw) return null
-	return Array.isArray(raw) ? raw[0] : String(raw)
-})
+const techniqueId = useRouteParam("techniqueId")
+const eventId = useRouteParam("eventId")
 
 const timeRange = computed(() => (typeof route.query.time_range === "string" ? route.query.time_range : "now-7d"))
 
 watch([techniqueId, eventId], () => {
 	alert.value = null
 })
-
-function goBack() {
-	if (window.history.length > 1) {
-		router.back()
-		return
-	}
-
-	if (techniqueId.value) {
-		routeAlertsMitreTechnique(techniqueId.value).navigate()
-		return
-	}
-
-	router.push({ name: "Alerts-Mitre" })
-}
 </script>

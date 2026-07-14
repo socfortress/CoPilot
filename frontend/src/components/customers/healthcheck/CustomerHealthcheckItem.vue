@@ -70,7 +70,7 @@
 				</div>
 			</template>
 			<template #footerExtra>
-				<EntityDetailsButton size="tiny" :url="detailRoute.fullUrl()" @view="showDetails = true" />
+				<EntityDetailsButton size="tiny" :route="detailRoute" @view="showDetails = true" />
 			</template>
 		</CardEntity>
 
