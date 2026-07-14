@@ -65,6 +65,19 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
+	agentVulnerabilityByCve(
+		agentId: string,
+		cve: string,
+		params?: { package?: string; version?: string },
+		signal?: AbortSignal
+	) {
+		// dedicated single-CVE lookup — the severity list endpoint scrolls every
+		// vulnerability document of the agent and takes minutes on real data
+		return HttpClient.get<FlaskBaseResponse & { vulnerabilities: AgentVulnerabilities[] }>(
+			`/agents/${agentId}/vulnerabilities/cve/${encodeURIComponent(cve)}`,
+			{ params: params ?? {}, ...(signal ? { signal } : {}) }
+		)
+	},
 	agentVulnerabilitiesDownload(agentId: string, severity: VulnerabilitySeverityType) {
 		return HttpClient.get<string>(`/agents/${agentId}/csv/vulnerabilities/${severity}`)
 	},

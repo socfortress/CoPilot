@@ -15,6 +15,10 @@ from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
 
+# Resolved server-side by the indexer — cheaper and shorter than enumerating the
+# concrete indices client-side (see `collect_indices`).
+VULNERABILITY_STATES_INDEX_PATTERN = "wazuh-states-vulnerabilities-*"
+
 
 async def collect_agent_vulnerabilities(agent_id: str, vulnerability_severity: str):
     """
@@ -107,6 +111,89 @@ async def collect_agent_vulnerabilities_new(agent_id: str, vulnerability_severit
         vulnerabilities=processed_vulnerabilities,
         success=True,
         message="Vulnerabilities collected successfully",
+    )
+
+
+async def collect_agent_vulnerability_by_cve(
+    agent_id: str,
+    cve: str,
+    package_name: str = None,
+    package_version: str = None,
+    wazuh_new: bool = True,
+) -> WazuhAgentVulnerabilitiesResponse:
+    """
+    Collect a single vulnerability of an agent, identified by its CVE (plus the
+    affected package when the same CVE hits more than one package on the agent).
+
+    The severity-based endpoints scroll every vulnerability document of the agent
+    across all ``wazuh-states-vulnerabilities-*`` indices, which takes minutes on
+    real deployments. The detail view only needs one document, so this issues a
+    single filtered search instead.
+
+    ``wazuh_new`` is the caller's ``check_wazuh_manager_version()`` result (the
+    helper lives in the routes module — importing it here would be circular).
+    When False we fall back to the Wazuh Manager API and filter by CVE in Python,
+    since the indexer-backed states indices don't exist before manager 4.8.0.
+    """
+    logger.info(f"Collecting agent {agent_id} vulnerability {cve}")
+
+    if wazuh_new is not True:
+        # legacy path: the manager API has no CVE filter, so fetch and filter here
+        response = await collect_agent_vulnerabilities(agent_id, "All")
+        matches = [vuln for vuln in response.vulnerabilities if vuln.cve == cve]
+        return _single_vulnerability_response(matches, cve, package_name, package_version)
+
+    es = await create_wazuh_indexer_client("Wazuh-Indexer")
+
+    must = [
+        {"match": {"agent.id": agent_id}},
+        {"match": {"vulnerability.id": cve}},
+    ]
+    if package_name:
+        must.append({"match": {"package.name": package_name}})
+    if package_version:
+        must.append({"match": {"package.version": package_version}})
+
+    query = {"query": {"bool": {"must": must}}}
+
+    # let the indexer resolve the pattern server-side rather than enumerating indices
+    response = es.search(
+        index=VULNERABILITY_STATES_INDEX_PATTERN,
+        body=query,
+        size=10,
+        ignore_unavailable=True,
+        allow_no_indices=True,
+    )
+
+    hits = [hit["_source"] for hit in response["hits"]["hits"]]
+    matches = process_agent_vulnerabilities_new(hits)
+
+    return _single_vulnerability_response(matches, cve, package_name, package_version)
+
+
+def _single_vulnerability_response(
+    matches: List[WazuhAgentVulnerabilities],
+    cve: str,
+    package_name: str = None,
+    package_version: str = None,
+) -> WazuhAgentVulnerabilitiesResponse:
+    """Narrow the matches down to the requested package, keeping the first hit as fallback."""
+    if not matches:
+        raise HTTPException(status_code=404, detail=f"Vulnerability {cve} not found for this agent")
+
+    exact = next(
+        (
+            vuln
+            for vuln in matches
+            if (not package_name or vuln.name == package_name) and (not package_version or vuln.version == package_version)
+        ),
+        None,
+    )
+
+    return WazuhAgentVulnerabilitiesResponse(
+        vulnerabilities=[exact or matches[0]],
+        success=True,
+        message="Vulnerability collected successfully",
     )
 
 
