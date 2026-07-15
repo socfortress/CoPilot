@@ -158,6 +158,14 @@ class ScaPoliciesIndexResponse(BaseModel):
     message: str
 
 
+class ScaPolicyMetadataResponse(BaseModel):
+    """Response for fetching a single SCA policy's index metadata by id"""
+
+    policy: Optional[ScaPolicyItem] = None
+    success: bool
+    message: str
+
+
 class ScaPolicyContentResponse(BaseModel):
     """Response for fetching the raw YAML content of a single SCA policy"""
 

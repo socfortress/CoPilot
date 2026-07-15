@@ -20,6 +20,7 @@ from app.agents.sca.schema.sca import ScaPackageAgentsResponse
 from app.agents.sca.schema.sca import ScaPackageRegistryResponse
 from app.agents.sca.schema.sca import ScaPoliciesIndexResponse
 from app.agents.sca.schema.sca import ScaPolicyContentResponse
+from app.agents.sca.schema.sca import ScaPolicyMetadataResponse
 from app.agents.sca.schema.sca import SCAReportGenerateRequest
 from app.agents.sca.schema.sca import SCAReportGenerateResponse
 from app.agents.sca.schema.sca import SCAReportListResponse
@@ -28,6 +29,7 @@ from app.agents.sca.services.sca import delete_sca_report
 from app.agents.sca.services.sca import detect_agents_for_sca_package
 from app.agents.sca.services.sca import fetch_sca_policies_index
 from app.agents.sca.services.sca import fetch_sca_policy_content
+from app.agents.sca.services.sca import fetch_sca_policy_metadata
 from app.agents.sca.services.sca import generate_sca_csv_report
 from app.agents.sca.services.sca import get_sca_report_download
 from app.agents.sca.services.sca import get_sca_statistics
@@ -597,6 +599,23 @@ async def list_available_sca_policies() -> ScaPoliciesIndexResponse:
     - Review available policy versions before deployment
     """
     return await fetch_sca_policies_index()
+
+
+@sca_router.get(
+    "/policies/{policy_id}/metadata",
+    response_model=ScaPolicyMetadataResponse,
+    description="Fetch a single SCA policy's index metadata by id",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_sca_policy_metadata(policy_id: str) -> ScaPolicyMetadataResponse:
+    """
+    Fetch a single SCA policy's metadata (name, application, platform, CIS
+    version, …) by id, without returning the whole policy catalog.
+
+    Backs the SCA policy detail page — the ``policy_id`` must match an id from
+    the ``/policies`` listing (e.g. ``cis_iis_10_win``).
+    """
+    return await fetch_sca_policy_metadata(policy_id)
 
 
 @sca_router.get(

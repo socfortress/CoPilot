@@ -141,6 +141,12 @@ export const agentsRoutes: RouteRecordRaw[] = [
 				meta: { title: "SCA Overview" }
 			},
 			{
+				path: "sca-policies/:policyId",
+				name: "ScaPolicy",
+				component: () => import("@/views/agents/ScaPolicy.vue"),
+				meta: { title: "SCA Policy", skipPin: true }
+			},
+			{
 				path: "sca-policies",
 				name: "ScaPolicies",
 				component: () => import("@/views/agents/ScaPolicies.vue"),

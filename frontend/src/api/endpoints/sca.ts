@@ -6,6 +6,7 @@ import type {
 	ScaPackageRegistryResponse,
 	ScaPoliciesIndexResponse,
 	ScaPolicyContentResponse,
+	ScaPolicyItem,
 	SCAReportGenerateRequest,
 	SCAReportGenerateResponse,
 	SCAReportListResponse,
@@ -122,6 +123,17 @@ export default {
 	 */
 	getPolicies() {
 		return HttpClient.get<FlaskBaseResponse & ScaPoliciesIndexResponse>(`/sca/policies`)
+	},
+
+	/**
+	 * Fetch a single SCA policy's index metadata by id (detail view — avoids
+	 * downloading the whole policy catalog)
+	 */
+	getPolicyMetadata(policyId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { policy: ScaPolicyItem | null }>(
+			`/sca/policies/${policyId}/metadata`,
+			signal ? { signal } : {}
+		)
 	},
 
 	/**

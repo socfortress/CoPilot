@@ -180,6 +180,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "VulnerabilityOverview" })
 	}
 
+	function routeScaPolicy(policyId?: string) {
+		if (policyId) {
+			return routerConstructor({
+				name: "ScaPolicy",
+				params: { policyId }
+			})
+		}
+
+		return routerConstructor({ name: "ScaPolicies" })
+	}
+
 	function routePatchTuesdayItem(cycle?: string, cve?: string, product?: string | null) {
 		if (cycle && cve) {
 			// a CVE can affect several products in a cycle — product picks the exact row
@@ -722,6 +733,7 @@ export function useNavigation() {
 		routeAgentScaCheck,
 		routeVulnerabilityOverviewItem,
 		routePatchTuesdayItem,
+		routeScaPolicy,
 		routeIndex,
 		routeLicense,
 		routeHealthcheck,
