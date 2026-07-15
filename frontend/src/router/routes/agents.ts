@@ -119,6 +119,10 @@ export const agentsRoutes: RouteRecordRaw[] = [
 				}
 			},
 			{
+				path: "vulnerability-overview/:agentName",
+				redirect: { name: "VulnerabilityOverview" }
+			},
+			{
 				path: "vulnerability-overview/:agentName/:cve",
 				name: "VulnerabilityOverviewItem",
 				component: () => import("@/views/agents/VulnerabilityOverviewItem.vue"),
