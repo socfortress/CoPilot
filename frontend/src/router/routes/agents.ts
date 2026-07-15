@@ -23,6 +23,13 @@ export const agentsRoutes: RouteRecordRaw[] = [
 				})
 			},
 			{
+				path: ":id/data-store",
+				redirect: to => ({
+					name: "Agent",
+					params: { id: to.params.id }
+				})
+			},
+			{
 				path: ":id/data-store/:artifactId",
 				name: "AgentArtifact",
 				component: () => import("@/views/agents/AgentArtifact.vue"),
