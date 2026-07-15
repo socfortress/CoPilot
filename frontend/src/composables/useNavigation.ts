@@ -340,6 +340,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "CopilotActions" })
 	}
 
+	function routeCopilotSearchRule(ruleId?: string) {
+		if (ruleId) {
+			return routerConstructor({
+				name: "CopilotSearchRule",
+				params: { ruleId }
+			})
+		}
+
+		return routerConstructor({ name: "CopilotSearches" })
+	}
+
 	function routeConnectors() {
 		return routerConstructor({ name: "Connectors" })
 	}
@@ -699,6 +710,7 @@ export function useNavigation() {
 		routeAlertsAtomicRedTeamTechnique,
 		routeConnectors,
 		routeCopilotAction,
+		routeCopilotSearchRule,
 		routeIncidentManagementAlerts,
 		routeIncidentManagementAlertAsset,
 		routeIncidentManagementAlertIoc,

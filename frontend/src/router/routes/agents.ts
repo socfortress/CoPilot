@@ -105,6 +105,12 @@ export const agentsRoutes: RouteRecordRaw[] = [
 				meta: { title: "CoPilot Action", skipPin: true }
 			},
 			{
+				path: "/copilot-searches/:ruleId",
+				name: "CopilotSearchRule",
+				component: () => import("@/views/agents/CopilotSearchRule.vue"),
+				meta: { title: "CoPilot Search Rule", skipPin: true }
+			},
+			{
 				path: "/copilot-searches",
 				name: "CopilotSearches",
 				component: () => import("@/views/agents/CopilotSearches.vue"),

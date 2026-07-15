@@ -71,7 +71,13 @@
 			</template>
 
 			<template #footer>
-				<div class="flex w-full items-center justify-end gap-2">
+				<div class="flex w-full flex-wrap items-center justify-end gap-2">
+					<EntityDetailsButton
+						size="small"
+						view-label="Details"
+						:route="routeCopilotSearchRule(rule.id)"
+						@view="showDetails = true"
+					/>
 					<n-button
 						v-if="rule.has_graylog_query"
 						size="small"
@@ -149,7 +155,9 @@ import { NButton, NCheckbox, NModal, NTag, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import ExecuteSearchForm from "./ExecuteSearchForm.vue"
 import ProvisionGraylogForm from "./ProvisionGraylogForm.vue"
 import RuleCardContent from "./RuleCardContent.vue"
@@ -166,6 +174,8 @@ const { rule } = defineProps<{
 const emit = defineEmits<{
 	(e: "update:selected", value: boolean): void
 }>()
+
+const { routeCopilotSearchRule } = useNavigation()
 
 const showDetails = ref(false)
 const showExecuteModal = ref(false)
