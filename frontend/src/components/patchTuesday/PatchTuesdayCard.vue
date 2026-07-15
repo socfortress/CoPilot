@@ -52,39 +52,38 @@
 			</div>
 		</template>
 
-		<template #footerMain>
-			<div class="flex flex-wrap items-center gap-2">
-				<Badge v-if="item.cvss.base !== null" type="splitted" size="small" :color="cvssBadgeColor">
-					<template #label>CVSS</template>
-					<template #value>{{ item.cvss.base.toFixed(1) }}</template>
-				</Badge>
+		<template #footer>
+			<div class="flex flex-col gap-2">
+				<div class="flex flex-wrap items-center gap-2">
+					<Badge v-if="item.cvss.base !== null" type="splitted" size="small" :color="cvssBadgeColor">
+						<template #label>CVSS</template>
+						<template #value>{{ item.cvss.base.toFixed(1) }}</template>
+					</Badge>
 
-				<Badge v-if="item.epss.score !== null" type="splitted" size="small" color="warning">
-					<template #label>EPSS</template>
-					<template #value>{{ (item.epss.score * 100).toFixed(1) }}%</template>
-				</Badge>
+					<Badge v-if="item.epss.score !== null" type="splitted" size="small" color="warning">
+						<template #label>EPSS</template>
+						<template #value>{{ (item.epss.score * 100).toFixed(1) }}%</template>
+					</Badge>
 
-				<Badge v-if="item.epss.percentile !== null" type="splitted" size="small" color="warning">
-					<template #label>Percentile</template>
-					<template #value>{{ (item.epss.percentile * 100).toFixed(0) }}%</template>
-				</Badge>
+					<Badge v-if="item.epss.percentile !== null" type="splitted" size="small" color="warning">
+						<template #label>Percentile</template>
+						<template #value>{{ (item.epss.percentile * 100).toFixed(0) }}%</template>
+					</Badge>
 
-				<Badge v-if="item.remediation.kbs.length > 0" type="splitted" size="small">
-					<template #label>
-						<Icon :name="LinkIcon" :size="12" />
-						KB
-					</template>
-					<template #value>{{ kbSummary }}</template>
-				</Badge>
-			</div>
-		</template>
-
-		<template #footerExtra>
-			<div class="text-tertiary flex min-w-0 items-center gap-1.5 text-xs">
-				<Icon :name="ClockIcon" :size="14" class="shrink-0" />
-				<span class="truncate" :title="item.prioritization.suggested_sla">
-					{{ item.prioritization.suggested_sla }}
-				</span>
+					<Badge v-if="item.remediation.kbs.length > 0" type="splitted" size="small">
+						<template #label>
+							<Icon :name="LinkIcon" :size="12" />
+							KB
+						</template>
+						<template #value>{{ kbSummary }}</template>
+					</Badge>
+				</div>
+				<div class="text-tertiary flex min-w-0 items-center gap-1.5 text-xs">
+					<Icon :name="ClockIcon" :size="14" class="shrink-0" />
+					<span class="truncate" :title="item.prioritization.suggested_sla">
+						{{ item.prioritization.suggested_sla }}
+					</span>
+				</div>
 			</div>
 		</template>
 	</CardEntity>
