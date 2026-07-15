@@ -29,6 +29,20 @@ export function useRouteParam(name: string) {
 	})
 }
 
+/**
+ * Reads a route query param as a string. Returns undefined when absent or empty.
+ * Mirrors `useRouteParam` for the `?key=value` disambiguators on detail routes.
+ */
+export function useRouteQueryParam(name: string) {
+	const route = useRoute()
+
+	return computed(() => {
+		const raw = route.query[name]
+		const value = Array.isArray(raw) ? raw[0] : raw
+		return value ? String(value) : undefined
+	})
+}
+
 /** Reads a route path param as an integer. Returns null when absent or not a whole number. */
 export function useRouteIdParam(name: string) {
 	const param = useRouteParam(name)

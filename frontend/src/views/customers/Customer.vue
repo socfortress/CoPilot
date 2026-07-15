@@ -1,6 +1,6 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<DetailPageHeader :title="customer?.customer_name || undefined" :back-route="routeCustomer()">
+		<DetailPageHeader :title="customer?.customer_name" :back-route="routeCustomer()">
 			<template v-if="customerCode" #meta>
 				<span class="text-secondary font-mono text-sm">#{{ customer?.customer_code ?? customerCode }}</span>
 			</template>

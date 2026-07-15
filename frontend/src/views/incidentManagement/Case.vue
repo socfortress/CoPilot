@@ -15,7 +15,7 @@
 			full-width
 			@loaded="caseData = $event"
 			@updated="caseData = $event"
-			@deleted="onDeleted"
+			@deleted="routeIncidentManagementCases().navigate()"
 		/>
 		<n-empty v-else description="Invalid case ID" class="h-48 justify-center" />
 	</div>
@@ -38,8 +38,4 @@ const caseId = useRouteIdParam("id")
 watch(caseId, () => {
 	caseData.value = null
 })
-
-function onDeleted() {
-	routeIncidentManagementCases().navigate()
-}
 </script>

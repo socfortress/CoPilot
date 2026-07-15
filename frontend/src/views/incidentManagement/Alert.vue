@@ -15,7 +15,7 @@
 			full-width
 			@loaded="alert = $event"
 			@updated="alert = $event"
-			@deleted="onDeleted"
+			@deleted="routeIncidentManagementAlerts().navigate()"
 		/>
 		<n-empty v-else description="Invalid alert ID" class="h-48 justify-center" />
 	</div>
@@ -38,8 +38,4 @@ const alertId = useRouteIdParam("id")
 watch(alertId, () => {
 	alert.value = null
 })
-
-function onDeleted() {
-	routeIncidentManagementAlerts().navigate()
-}
 </script>

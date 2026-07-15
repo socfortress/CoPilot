@@ -66,9 +66,10 @@ export default {
 	deleteCustomerMeta(code: string) {
 		return HttpClient.delete<FlaskBaseResponse & { customer_meta: CustomerMeta }>(`/customers/${code}/meta`)
 	},
-	getCustomerFull(code: string) {
+	getCustomerFull(code: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { customer: Customer; customer_meta?: CustomerMeta }>(
-			`/customers/${code}/full`
+			`/customers/${code}/full`,
+			signal ? { signal } : {}
 		)
 	},
 	getCustomerAgents(code: string) {

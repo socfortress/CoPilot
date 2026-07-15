@@ -7,7 +7,7 @@
 			:key="sourceName"
 			deletable
 			:source="sourceName"
-			@deleted="onDeleted"
+			@deleted="routeIncidentManagementSources().navigate()"
 		/>
 		<n-empty v-else description="Invalid source name" class="h-48 justify-center" />
 	</div>
@@ -22,8 +22,4 @@ import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 const { routeIncidentManagementSources } = useNavigation()
 
 const sourceName = useRouteParam("source")
-
-function onDeleted() {
-	routeIncidentManagementSources().navigate()
-}
 </script>

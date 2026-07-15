@@ -18,6 +18,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { Customer, CustomerMeta } from "@/types/customers"
+import axios from "axios"
 import { NSpin, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
@@ -68,14 +69,22 @@ const tabCustomer = computed<Customer | null>(() => {
 	return null
 })
 
+let fullAbortController: AbortController | null = null
+
 function getFull() {
 	const code = resolvedCode.value
 	if (!code) return
 
+	// cancel any in-flight request so switching customers on the bookmarkable route
+	// can't let a stale response overwrite the current one
+	fullAbortController?.abort()
+	const controller = new AbortController()
+	fullAbortController = controller
+
 	loading.value = true
 
 	Api.customers
-		.getCustomerFull(code)
+		.getCustomerFull(code, controller.signal)
 		.then(res => {
 			if (res.data.success) {
 				customerInfo.value = res.data.customer
@@ -86,10 +95,14 @@ function getFull() {
 			}
 		})
 		.catch(err => {
+			if (axios.isCancel(err)) return
 			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
-			loading.value = false
+			// only the latest request clears the spinner (a superseded one already aborted)
+			if (fullAbortController === controller) {
+				loading.value = false
+			}
 		})
 }
 

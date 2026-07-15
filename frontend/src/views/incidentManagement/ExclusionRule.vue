@@ -12,7 +12,7 @@
 			:exclusion-id
 			full-width
 			@loaded="exclusionRule = $event"
-			@deleted="onDeleted"
+			@deleted="routeIncidentManagementSources().navigate()"
 		/>
 		<n-empty v-else description="Invalid exclusion rule ID" class="h-48 justify-center" />
 	</div>
@@ -35,8 +35,4 @@ const exclusionId = useRouteIdParam("id")
 watch(exclusionId, () => {
 	exclusionRule.value = null
 })
-
-function onDeleted() {
-	routeIncidentManagementSources().navigate()
-}
 </script>

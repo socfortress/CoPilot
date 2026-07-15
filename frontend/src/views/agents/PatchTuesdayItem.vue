@@ -21,21 +21,18 @@
 <script setup lang="ts">
 import type { PatchTuesdayItem } from "@/types/patch-tuesday"
 import { NEmpty, NSpin } from "naive-ui"
-import { computed } from "vue"
-import { useRoute } from "vue-router"
 import patchTuesdayApi from "@/api/endpoints/patch-tuesday"
 import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import PatchTuesdayDetail from "@/components/patchTuesday/PatchTuesdayDetail.vue"
 import { useEntityDetails } from "@/composables/useEntityDetails"
-import { useNavigation, useRouteParam } from "@/composables/useNavigation"
+import { useNavigation, useRouteParam, useRouteQueryParam } from "@/composables/useNavigation"
 
-const route = useRoute()
 const { routePatchTuesdayItem } = useNavigation()
 
 const cycle = useRouteParam("cycle")
 const cve = useRouteParam("cve")
 // product disambiguates a CVE that affects several products in the same cycle
-const product = computed(() => (route.query.product ? String(route.query.product) : undefined))
+const product = useRouteQueryParam("product")
 
 // no by-id endpoint: search the CVE within its cycle, filtered to this product
 const { loading, entity: item } = useEntityDetails<PatchTuesdayItem, string>({
