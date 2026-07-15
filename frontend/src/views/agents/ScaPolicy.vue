@@ -1,18 +1,10 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack(routeScaPolicy())">
-				<template #icon>
-					<Icon :name="BackIcon" />
-				</template>
-				Back
-			</n-button>
-
-			<div v-if="policy" class="flex min-w-0 flex-wrap items-baseline gap-2">
-				<span class="truncate text-lg font-semibold">{{ policy.name }}</span>
+		<DetailPageHeader :title="policy?.name" :back-route="routeScaPolicy()">
+			<template v-if="policy" #meta>
 				<span class="text-secondary font-mono text-sm">{{ policy.id }}</span>
-			</div>
-		</div>
+			</template>
+		</DetailPageHeader>
 
 		<n-spin v-if="policyId" :show="loading" class="min-h-40">
 			<PolicyCardContent v-if="policy" :policy />
@@ -24,16 +16,14 @@
 
 <script setup lang="ts">
 import type { ScaPolicyItem } from "@/types/sca"
-import { NButton, NEmpty, NSpin } from "naive-ui"
+import { NEmpty, NSpin } from "naive-ui"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import PolicyCardContent from "@/components/scaPolicies/PolicyCardContent.vue"
 import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
-const { goBack, routeScaPolicy } = useNavigation()
-
-const BackIcon = "carbon:arrow-left"
+const { routeScaPolicy } = useNavigation()
 
 const policyId = useRouteParam("policyId")
 

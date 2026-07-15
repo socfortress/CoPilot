@@ -1,11 +1,6 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<n-button quaternary class="self-start" @click="routeNetworkConnector().navigate()">
-			<template #icon>
-				<Icon :name="BackIcon" />
-			</template>
-			Back to network connectors
-		</n-button>
+		<DetailPageHeader :back-route="routeNetworkConnector()" />
 
 		<NetworkConnectorDetails v-if="connectorId != null" :connector-id :embedded="false" />
 		<n-empty v-else description="Invalid network connector ID" class="h-48 justify-center" />
@@ -13,14 +8,12 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, NEmpty } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
+import { NEmpty } from "naive-ui"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import NetworkConnectorDetails from "@/components/networkConnectors/NetworkConnectorDetails.vue"
 import { useNavigation, useRouteIdParam } from "@/composables/useNavigation"
 
 const { routeNetworkConnector } = useNavigation()
-
-const BackIcon = "carbon:arrow-left"
 
 const connectorId = useRouteIdParam("id")
 </script>

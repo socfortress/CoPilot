@@ -1,18 +1,10 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack(routeIncidentManagementCaseTemplates())">
-				<template #icon>
-					<Icon :name="BackIcon" />
-				</template>
-				Back
-			</n-button>
-
-			<div v-if="template" class="flex min-w-0 flex-wrap items-baseline gap-2">
-				<span class="truncate text-lg font-semibold">{{ template.name }}</span>
+		<DetailPageHeader :title="template?.name" :back-route="routeIncidentManagementCaseTemplates()">
+			<template v-if="template" #meta>
 				<span class="text-secondary font-mono text-sm">#{{ template.id }}</span>
-			</div>
-		</div>
+			</template>
+		</DetailPageHeader>
 
 		<n-spin v-if="templateId != null" :show="loading" class="min-h-40">
 			<CaseTemplateEditor
@@ -31,16 +23,15 @@
 
 <script setup lang="ts">
 import type { CaseTemplate } from "@/types/incidentManagement/case-templates"
-import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import CaseTemplateEditor from "@/components/incidentManagement/caseTemplates/CaseTemplateEditor.vue"
 import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useNavigation, useRouteIdParam } from "@/composables/useNavigation"
 
 const { goBack, routeIncidentManagementCaseTemplates } = useNavigation()
 
-const BackIcon = "carbon:arrow-left"
 const message = useMessage()
 
 const templateId = useRouteIdParam("id")

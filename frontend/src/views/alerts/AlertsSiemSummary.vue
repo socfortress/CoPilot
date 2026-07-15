@@ -1,11 +1,6 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<n-button quaternary class="self-start" @click="goBack(routeAlertsSiemSummary())">
-			<template #icon>
-				<Icon :name="BackIcon" />
-			</template>
-			Back
-		</n-button>
+		<DetailPageHeader :back-route="routeAlertsSiemSummary()" />
 
 		<AlertsSummaryDetails v-if="indexName" :index-name :query="summaryQuery" />
 		<n-empty v-else description="Invalid index name" class="h-48 justify-center" />
@@ -14,17 +9,15 @@
 
 <script setup lang="ts">
 import type { AlertsQueryTimeRange, GraylogIndexAlertsQuery } from "@/api/endpoints/alerts"
-import { NButton, NEmpty } from "naive-ui"
+import { NEmpty } from "naive-ui"
 import { computed } from "vue"
 import { useRoute } from "vue-router"
 import AlertsSummaryDetails from "@/components/alerts/AlertsSummaryDetails.vue"
-import Icon from "@/components/common/Icon.vue"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
 const route = useRoute()
-const { goBack, routeAlertsSiemSummary } = useNavigation()
-
-const BackIcon = "carbon:arrow-left"
+const { routeAlertsSiemSummary } = useNavigation()
 
 const indexName = useRouteParam("indexName")
 

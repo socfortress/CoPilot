@@ -1,15 +1,6 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack(routeIncidentManagementCaseTemplates())">
-				<template #icon>
-					<Icon :name="BackIcon" />
-				</template>
-				Back
-			</n-button>
-
-			<span class="truncate text-lg font-semibold">New template</span>
-		</div>
+		<DetailPageHeader title="New template" :back-route="routeIncidentManagementCaseTemplates()" />
 
 		<CaseTemplateEditor @saved="onSaved($event)" @cancel="goBack(routeIncidentManagementCaseTemplates())" />
 	</div>
@@ -17,14 +8,13 @@
 
 <script setup lang="ts">
 import type { CaseTemplate } from "@/types/incidentManagement/case-templates"
-import { NButton, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
+import { useMessage } from "naive-ui"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import CaseTemplateEditor from "@/components/incidentManagement/caseTemplates/CaseTemplateEditor.vue"
 import { useNavigation } from "@/composables/useNavigation"
 
 const { goBack, routeIncidentManagementCaseTemplates, routeIncidentManagementCaseTemplate } = useNavigation()
 
-const BackIcon = "carbon:arrow-left"
 const message = useMessage()
 
 function onSaved(saved: CaseTemplate) {

@@ -1,18 +1,10 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack(routeIncidentManagementCaseTemplates())">
-				<template #icon>
-					<Icon :name="BackIcon" />
-				</template>
-				Back
-			</n-button>
-
-			<div v-if="entry" class="flex min-w-0 flex-wrap items-baseline gap-2">
-				<span class="truncate text-lg font-semibold">{{ entry.name }}</span>
+		<DetailPageHeader :title="entry?.name" :back-route="routeIncidentManagementCaseTemplates()">
+			<template v-if="entry" #meta>
 				<span class="text-secondary font-mono text-sm">{{ entry.key }}</span>
-			</div>
-		</div>
+			</template>
+		</DetailPageHeader>
 
 		<n-spin v-if="entryKey" :show="loading" class="min-h-40" content-class="flex flex-col gap-4">
 			<template v-if="entry">
@@ -66,21 +58,20 @@
 
 <script setup lang="ts">
 import type { CaseTemplateLibraryEntry } from "@/types/incidentManagement/case-templates"
-import { NButton, NEmpty, NSpin } from "naive-ui"
+import { NEmpty, NSpin } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
-import Icon from "@/components/common/Icon.vue"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import CaseTemplateLibraryImportModal from "@/components/incidentManagement/caseTemplates/CaseTemplateLibraryImportModal.vue"
 import CaseTemplateLibraryItem from "@/components/incidentManagement/caseTemplates/CaseTemplateLibraryItem.vue"
 import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
-const { goBack, routeIncidentManagementCaseTemplates } = useNavigation()
+const { routeIncidentManagementCaseTemplates } = useNavigation()
 
-const BackIcon = "carbon:arrow-left"
 const showImport = ref(false)
 
 const entryKey = useRouteParam("key")

@@ -1,20 +1,10 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack(routeCustomer())">
-				<template #icon>
-					<Icon :name="BackIcon" />
-				</template>
-				Back
-			</n-button>
-
-			<div v-if="customerCode" class="flex min-w-0 flex-wrap items-baseline gap-2">
-				<span v-if="customer?.customer_name" class="truncate text-lg font-semibold">
-					{{ customer.customer_name }}
-				</span>
+		<DetailPageHeader :title="customer?.customer_name || undefined" :back-route="routeCustomer()">
+			<template v-if="customerCode" #meta>
 				<span class="text-secondary font-mono text-sm">#{{ customer?.customer_code ?? customerCode }}</span>
-			</div>
-		</div>
+			</template>
+		</DetailPageHeader>
 
 		<CustomerDetails
 			v-if="customerCode"
@@ -28,15 +18,14 @@
 
 <script setup lang="ts">
 import type { Customer } from "@/types/customers"
-import { NButton, NEmpty } from "naive-ui"
+import { NEmpty } from "naive-ui"
 import { ref, watch } from "vue"
-import Icon from "@/components/common/Icon.vue"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import CustomerDetails from "@/components/customers/CustomerDetails.vue"
 import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
-const { goBack, routeCustomer } = useNavigation()
+const { routeCustomer } = useNavigation()
 
-const BackIcon = "carbon:arrow-left"
 const customer = ref<Customer | null>(null)
 
 const customerCode = useRouteParam("code")

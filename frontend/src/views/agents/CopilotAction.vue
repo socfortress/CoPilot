@@ -1,30 +1,18 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<div class="flex min-w-0 flex-wrap items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack(routeCopilotAction())">
-				<template #icon>
-					<Icon :name="BackIcon" />
-				</template>
-				Back
-			</n-button>
-
-			<div class="flex min-w-0 flex-wrap items-baseline gap-2">
-				<span class="truncate text-lg font-semibold">{{ action?.copilot_action_name || actionName }}</span>
+		<DetailPageHeader :title="action?.copilot_action_name || actionName || undefined" :back-route="routeCopilotAction()">
+			<template #meta>
 				<span v-if="action?.version" class="text-secondary font-mono text-sm">v{{ action.version }}</span>
-			</div>
-
-			<n-button
-				v-if="action"
-				class="ml-auto shrink-0"
-				type="primary"
-				@click="showInvokeModal = true"
-			>
-				<template #icon>
-					<Icon :name="PlayIcon" />
-				</template>
-				Invoke
-			</n-button>
-		</div>
+			</template>
+			<template #actions>
+				<n-button v-if="action" class="shrink-0" type="primary" @click="showInvokeModal = true">
+					<template #icon>
+						<Icon :name="PlayIcon" />
+					</template>
+					Invoke
+				</n-button>
+			</template>
+		</DetailPageHeader>
 
 		<n-spin v-if="actionName" :show="loading" class="min-h-40">
 			<ActionCardContent v-if="action" :action />
@@ -52,15 +40,15 @@ import type { CopilotAction } from "@/types/copilot-action"
 import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import Icon from "@/components/common/Icon.vue"
 import ActionCardContent from "@/components/copilotAction/ActionCardContent.vue"
 import InvokeActionForm from "@/components/copilotAction/InvokeActionForm.vue"
 import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
-const { goBack, routeCopilotAction } = useNavigation()
+const { routeCopilotAction } = useNavigation()
 
-const BackIcon = "carbon:arrow-left"
 const PlayIcon = "carbon:play"
 
 const message = useMessage()

@@ -1,18 +1,10 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack(routeAlertsMitreEvent(techniqueId ?? undefined))">
-				<template #icon>
-					<Icon :name="BackIcon" />
-				</template>
-				Back
-			</n-button>
-
-			<div v-if="alert" class="flex min-w-0 flex-wrap items-baseline gap-2">
-				<span class="truncate text-lg font-semibold">{{ alert.rule_description }}</span>
+		<DetailPageHeader :title="alert?.rule_description" :back-route="routeAlertsMitreEvent(techniqueId ?? undefined)">
+			<template v-if="alert" #meta>
 				<span class="text-secondary text-sm">{{ alert.rule_mitre_technique }}</span>
-			</div>
-		</div>
+			</template>
+		</DetailPageHeader>
 
 		<TechniqueEventOverview
 			v-if="techniqueId && eventId"
@@ -29,17 +21,16 @@
 
 <script setup lang="ts">
 import type { MitreEventDetails } from "@/types/mitre"
-import { NButton, NEmpty } from "naive-ui"
+import { NEmpty } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import { useRoute } from "vue-router"
-import Icon from "@/components/common/Icon.vue"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import TechniqueEventOverview from "@/components/mitre/TechniqueEvents/TechniqueEventOverview.vue"
 import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
 const route = useRoute()
-const { goBack, routeAlertsMitreEvent } = useNavigation()
+const { routeAlertsMitreEvent } = useNavigation()
 
-const BackIcon = "carbon:arrow-left"
 const alert = ref<MitreEventDetails | null>(null)
 
 const techniqueId = useRouteParam("techniqueId")

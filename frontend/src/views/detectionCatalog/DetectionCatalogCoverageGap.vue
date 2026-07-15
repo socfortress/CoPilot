@@ -1,11 +1,6 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<n-button quaternary class="self-start" @click="goBack(routeDetectionCatalogCoverageGap())">
-			<template #icon>
-				<Icon :name="BackIcon" />
-			</template>
-			Back
-		</n-button>
+		<DetailPageHeader :back-route="routeDetectionCatalogCoverageGap()" />
 
 		<CoverageGapDetails v-if="techniqueId" :technique-id :embedded="false" />
 		<n-empty v-else description="Invalid technique ID" class="h-48 justify-center" />
@@ -13,14 +8,12 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, NEmpty } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
+import { NEmpty } from "naive-ui"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import CoverageGapDetails from "@/components/detectionCatalog/CoverageGapDetails.vue"
 import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
-const { goBack, routeDetectionCatalogCoverageGap } = useNavigation()
-
-const BackIcon = "carbon:arrow-left"
+const { routeDetectionCatalogCoverageGap } = useNavigation()
 
 const techniqueId = useRouteParam("techniqueId")
 </script>

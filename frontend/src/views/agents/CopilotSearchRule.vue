@@ -1,19 +1,10 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<div class="flex min-w-0 flex-wrap items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack(routeCopilotSearchRule())">
-				<template #icon>
-					<Icon :name="BackIcon" />
-				</template>
-				Back
-			</n-button>
-
-			<div class="flex min-w-0 flex-wrap items-baseline gap-2">
-				<span class="truncate text-lg font-semibold">{{ rule?.name || ruleId }}</span>
-				<span v-if="rule?.version" class="text-secondary font-mono text-sm">v{{ rule.version }}</span>
-			</div>
-
-			<div v-if="rule" class="ml-auto flex shrink-0 items-center gap-2">
+		<DetailPageHeader :title="rule?.name || ruleId || undefined" :back-route="routeCopilotSearchRule()">
+			<template v-if="rule?.version" #meta>
+				<span class="text-secondary font-mono text-sm">v{{ rule.version }}</span>
+			</template>
+			<template v-if="rule" #actions>
 				<n-button v-if="rule.graylog?.query" secondary @click="showProvisionModal = true">
 					<template #icon>
 						<Icon :name="ProvisionIcon" />
@@ -26,8 +17,8 @@
 					</template>
 					Execute
 				</n-button>
-			</div>
-		</div>
+			</template>
+		</DetailPageHeader>
 
 		<n-spin v-if="ruleId" :show="loading" class="min-h-40">
 			<RuleCardContent v-if="rule" :rule-data="rule" />
@@ -72,6 +63,7 @@ import type { RuleDetail } from "@/types/copilot-searches"
 import { NButton, NEmpty, NModal, NSpin } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import Icon from "@/components/common/Icon.vue"
 import ExecuteSearchForm from "@/components/copilotSearches/ExecuteSearchForm.vue"
 import ProvisionGraylogForm from "@/components/copilotSearches/ProvisionGraylogForm.vue"
@@ -79,9 +71,8 @@ import RuleCardContent from "@/components/copilotSearches/RuleCardContent.vue"
 import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
-const { goBack, routeCopilotSearchRule } = useNavigation()
+const { routeCopilotSearchRule } = useNavigation()
 
-const BackIcon = "carbon:arrow-left"
 const PlayIcon = "carbon:play"
 const ProvisionIcon = "carbon:add-alt"
 

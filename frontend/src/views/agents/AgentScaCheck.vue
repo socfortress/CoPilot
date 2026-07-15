@@ -1,22 +1,13 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<div class="flex min-w-0 items-center gap-4">
-			<n-button
-				quaternary
-				class="shrink-0"
-				@click="goBack(routeAgentSca(agentId ?? undefined, policyId ?? undefined))"
-			>
-				<template #icon>
-					<Icon :name="BackIcon" />
-				</template>
-				Back
-			</n-button>
-
-			<div class="flex min-w-0 flex-wrap items-baseline gap-2">
-				<span class="truncate text-lg font-semibold">{{ check?.title || `Check #${checkId}` }}</span>
+		<DetailPageHeader
+			:title="check?.title || `Check #${checkId}`"
+			:back-route="routeAgentSca(agentId ?? undefined, policyId ?? undefined)"
+		>
+			<template #meta>
 				<span class="text-secondary font-mono text-sm">{{ policyId }}</span>
-			</div>
-		</div>
+			</template>
+		</DetailPageHeader>
 
 		<n-spin v-if="agentId && policyId && checkId != null" :show="loading" class="min-h-40">
 			<ScaResultItemDetails v-if="check" :data="check" full-width />
@@ -28,16 +19,14 @@
 
 <script setup lang="ts">
 import type { ScaPolicyResult } from "@/types/agents"
-import { NButton, NEmpty, NSpin } from "naive-ui"
+import { NEmpty, NSpin } from "naive-ui"
 import Api from "@/api"
 import ScaResultItemDetails from "@/components/agents/sca/ScaResultItemDetails.vue"
-import Icon from "@/components/common/Icon.vue"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useNavigation, useRouteIdParam, useRouteParam } from "@/composables/useNavigation"
 
-const { goBack, routeAgentSca } = useNavigation()
-
-const BackIcon = "carbon:arrow-left"
+const { routeAgentSca } = useNavigation()
 
 const agentId = useRouteParam("id")
 const policyId = useRouteParam("policyId")

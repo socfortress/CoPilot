@@ -1,11 +1,6 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<n-button quaternary class="self-start" @click="routeUser().navigate()">
-			<template #icon>
-				<Icon :name="BackIcon" />
-			</template>
-			Back to users
-		</n-button>
+		<DetailPageHeader :back-route="routeUser()" />
 
 		<div class="w-full">
 			<h1 class="font-display mb-4 text-xl font-semibold">Add a new User</h1>
@@ -21,16 +16,15 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { User } from "@/types/user"
-import { NButton, useMessage } from "naive-ui"
+import { useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 
 const SignUp = defineAsyncComponent(() => import("@/components/auth/SignUp.vue"))
 
-const BackIcon = "carbon:arrow-left"
 const { routeUser } = useNavigation()
 const message = useMessage()
 const usersList = ref<User[]>([])

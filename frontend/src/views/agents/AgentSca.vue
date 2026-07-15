@@ -1,19 +1,11 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack(routeAgent(agentId ?? undefined))">
-				<template #icon>
-					<Icon :name="BackIcon" />
-				</template>
-				Back
-			</n-button>
-
-			<div class="flex min-w-0 flex-wrap items-baseline gap-2">
-				<span class="truncate text-lg font-semibold">{{ sca?.name || policyId }}</span>
+		<DetailPageHeader :title="sca?.name || policyId || undefined" :back-route="routeAgent(agentId ?? undefined)">
+			<template #meta>
 				<span class="text-secondary font-mono text-sm">{{ policyId }}</span>
 				<span v-if="agent" class="text-secondary text-sm">{{ agent.hostname }}</span>
-			</div>
-		</div>
+			</template>
+		</DetailPageHeader>
 
 		<n-spin v-if="agentId && policyId" :show="loading" class="min-h-40">
 			<ScaItem v-if="sca && agent" :sca :agent full-width />
@@ -26,17 +18,16 @@
 <script setup lang="ts">
 import type { Agent, AgentSca } from "@/types/agents"
 import type { ApiError } from "@/types/common"
-import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
+import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
 import ScaItem from "@/components/agents/sca/ScaItem.vue"
-import Icon from "@/components/common/Icon.vue"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 
-const { goBack, routeAgent } = useNavigation()
+const { routeAgent } = useNavigation()
 
-const BackIcon = "carbon:arrow-left"
 const message = useMessage()
 const loading = ref(false)
 const agent = ref<Agent | null>(null)

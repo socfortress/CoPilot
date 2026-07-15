@@ -1,32 +1,25 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack(routeAgent(agentId ?? undefined))">
-				<template #icon>
-					<Icon :name="BackIcon" />
-				</template>
-				Back
-			</n-button>
-
-			<div v-if="artifact" class="flex min-w-0 flex-wrap items-baseline gap-2">
-				<span class="truncate text-lg font-semibold">{{ artifact.artifact_name }}</span>
+		<DetailPageHeader :title="artifact?.artifact_name" :back-route="routeAgent(agentId ?? undefined)">
+			<template v-if="artifact" #meta>
 				<span class="text-secondary font-mono text-sm">#{{ artifact.id }}</span>
-			</div>
-
-			<n-button
-				v-if="artifact"
-				class="ml-auto shrink-0"
-				size="small"
-				secondary
-				:loading="downloading"
-				@click="downloadArtifact()"
-			>
-				<template #icon>
-					<Icon :name="DownloadIcon" :size="14" />
-				</template>
-				Download
-			</n-button>
-		</div>
+			</template>
+			<template #actions>
+				<n-button
+					v-if="artifact"
+					class="shrink-0"
+					size="small"
+					secondary
+					:loading="downloading"
+					@click="downloadArtifact()"
+				>
+					<template #icon>
+						<Icon :name="DownloadIcon" :size="14" />
+					</template>
+					Download
+				</n-button>
+			</template>
+		</DetailPageHeader>
 
 		<n-spin v-if="agentId && artifactId != null" :show="loading" class="min-h-40">
 			<ArtifactDetails v-if="artifact" :artifact />
@@ -44,14 +37,14 @@ import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import ArtifactDetails from "@/components/agents/dataStore/ArtifactDetails.vue"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useNavigation, useRouteIdParam, useRouteParam } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 
-const { goBack, routeAgent } = useNavigation()
+const { routeAgent } = useNavigation()
 
-const BackIcon = "carbon:arrow-left"
 const DownloadIcon = "carbon:download"
 
 const message = useMessage()

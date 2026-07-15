@@ -1,21 +1,11 @@
 <template>
 	<div class="page flex flex-col gap-4 pb-0!">
-		<div class="flex min-w-0 items-start gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack(routeIncidentManagementAlerts())">
-				<template #icon>
-					<Icon :name="BackIcon" />
-				</template>
-				Back
-			</n-button>
-
-			<div v-if="alert" class="flex min-w-0 flex-col gap-0.5 pt-1">
-				<span class="truncate text-lg font-semibold">{{ alert.alert_name }}</span>
-				<div class="flex items-center gap-2">
-					<span class="text-secondary font-mono text-sm">#{{ alert.id }}</span>
-					<span class="text-secondary text-sm">{{ alert.source }}</span>
-				</div>
-			</div>
-		</div>
+		<DetailPageHeader :title="alert?.alert_name" :back-route="routeIncidentManagementAlerts()">
+			<template v-if="alert" #meta>
+				<span class="text-secondary font-mono text-sm">#{{ alert.id }}</span>
+				<span class="text-secondary text-sm">{{ alert.source }}</span>
+			</template>
+		</DetailPageHeader>
 
 		<AlertDetails
 			v-if="alertId"
@@ -33,15 +23,14 @@
 
 <script setup lang="ts">
 import type { Alert } from "@/types/incidentManagement/alerts"
-import { NButton, NEmpty } from "naive-ui"
+import { NEmpty } from "naive-ui"
 import { ref, watch } from "vue"
-import Icon from "@/components/common/Icon.vue"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import AlertDetails from "@/components/incidentManagement/alerts/AlertDetails.vue"
 import { useNavigation, useRouteIdParam } from "@/composables/useNavigation"
 
-const { goBack, routeIncidentManagementAlerts } = useNavigation()
+const { routeIncidentManagementAlerts } = useNavigation()
 
-const BackIcon = "carbon:arrow-left"
 const alert = ref<Alert | null>(null)
 
 const alertId = useRouteIdParam("id")

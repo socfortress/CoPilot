@@ -1,18 +1,10 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack(routeIncidentManagementSources())">
-				<template #icon>
-					<Icon :name="BackIcon" />
-				</template>
-				Back
-			</n-button>
-
-			<div v-if="exclusionRule" class="flex min-w-0 flex-wrap items-baseline gap-2">
-				<span class="truncate text-lg font-semibold">{{ exclusionRule.name }}</span>
+		<DetailPageHeader :title="exclusionRule?.name" :back-route="routeIncidentManagementSources()">
+			<template v-if="exclusionRule" #meta>
 				<span class="text-secondary font-mono text-sm">#{{ exclusionRule.id }}</span>
-			</div>
-		</div>
+			</template>
+		</DetailPageHeader>
 
 		<ExclusionRuleOverview
 			v-if="exclusionId != null"
@@ -28,15 +20,14 @@
 
 <script setup lang="ts">
 import type { ExclusionRule } from "@/types/incidentManagement/exclusion-rules"
-import { NButton, NEmpty } from "naive-ui"
+import { NEmpty } from "naive-ui"
 import { ref, watch } from "vue"
-import Icon from "@/components/common/Icon.vue"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import ExclusionRuleOverview from "@/components/incidentManagement/exclusionRules/ExclusionRuleOverview.vue"
 import { useNavigation, useRouteIdParam } from "@/composables/useNavigation"
 
-const { goBack, routeIncidentManagementSources } = useNavigation()
+const { routeIncidentManagementSources } = useNavigation()
 
-const BackIcon = "carbon:arrow-left"
 const exclusionRule = ref<ExclusionRule | null>(null)
 
 const exclusionId = useRouteIdParam("id")

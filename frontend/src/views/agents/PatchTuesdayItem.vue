@@ -1,19 +1,14 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack(routePatchTuesdayItem())">
-				<template #icon>
-					<Icon :name="BackIcon" />
-				</template>
-				Back
-			</n-button>
-
-			<div class="flex min-w-0 flex-wrap items-baseline gap-2">
+		<DetailPageHeader :back-route="routePatchTuesdayItem()">
+			<template #title>
 				<span class="truncate font-mono text-lg font-semibold">{{ cve }}</span>
+			</template>
+			<template #meta>
 				<span v-if="item" class="text-secondary text-sm">{{ item.affected.product }}</span>
 				<span class="text-secondary font-mono text-sm">{{ cycle }}</span>
-			</div>
-		</div>
+			</template>
+		</DetailPageHeader>
 
 		<n-spin v-if="cycle && cve" :show="loading" class="min-h-40">
 			<PatchTuesdayDetail v-if="item" :item />
@@ -25,19 +20,17 @@
 
 <script setup lang="ts">
 import type { PatchTuesdayItem } from "@/types/patch-tuesday"
-import { NButton, NEmpty, NSpin } from "naive-ui"
+import { NEmpty, NSpin } from "naive-ui"
 import { computed } from "vue"
 import { useRoute } from "vue-router"
 import patchTuesdayApi from "@/api/endpoints/patch-tuesday"
-import Icon from "@/components/common/Icon.vue"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import PatchTuesdayDetail from "@/components/patchTuesday/PatchTuesdayDetail.vue"
 import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useNavigation, useRouteParam } from "@/composables/useNavigation"
 
 const route = useRoute()
-const { goBack, routePatchTuesdayItem } = useNavigation()
-
-const BackIcon = "carbon:arrow-left"
+const { routePatchTuesdayItem } = useNavigation()
 
 const cycle = useRouteParam("cycle")
 const cve = useRouteParam("cve")
