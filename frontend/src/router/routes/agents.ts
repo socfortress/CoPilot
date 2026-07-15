@@ -147,6 +147,16 @@ export const agentsRoutes: RouteRecordRaw[] = [
 				meta: { title: "SCA Policies" }
 			},
 			{
+				path: "/patch-tuesday/:cycle",
+				redirect: { name: "PatchTuesday" }
+			},
+			{
+				path: "/patch-tuesday/:cycle/:cve",
+				name: "PatchTuesdayItem",
+				component: () => import("@/views/agents/PatchTuesdayItem.vue"),
+				meta: { title: "Patch Tuesday CVE", skipPin: true }
+			},
+			{
 				path: "/patch-tuesday",
 				name: "PatchTuesday",
 				component: () => import("@/views/agents/PatchTuesdayOverview.vue"),

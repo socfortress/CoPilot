@@ -24,7 +24,6 @@
 					v-for="item in paginatedItems"
 					:key="`${item.cve}-${item.affected.product}`"
 					:item
-					@click="openItemDetail(item)"
 				/>
 			</div>
 
@@ -39,13 +38,6 @@
 		<div v-if="filteredItems.length > pageSize" class="flex justify-center">
 			<n-pagination v-model:page="currentPage" :page-count="totalPages" :page-size show-quick-jumper />
 		</div>
-
-		<!-- Detail Drawer -->
-		<n-drawer v-model:show="showDetail" :width="600" placement="right" class="max-w-[98vw]">
-			<n-drawer-content :title="selectedItem?.cve || 'Vulnerability Details'" closable :native-scrollbar="false">
-				<PatchTuesdayDetail v-if="selectedItem" :item="selectedItem" />
-			</n-drawer-content>
-		</n-drawer>
 	</div>
 </template>
 
@@ -53,12 +45,11 @@
 import type { PatchTuesdayFilters as FiltersType, PatchTuesdayListFilter } from "./types"
 import type { ApiError } from "@/types/common.ts"
 import type { PatchTuesdayItem, PatchTuesdaySummary } from "@/types/patch-tuesday"
-import { NDrawer, NDrawerContent, NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
+import { NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import patchTuesdayApi from "@/api/endpoints/patch-tuesday"
 import { getApiErrorMessage } from "@/utils/index.ts"
 import PatchTuesdayCard from "./PatchTuesdayCard.vue"
-import PatchTuesdayDetail from "./PatchTuesdayDetail.vue"
 import PatchTuesdayFilters from "./PatchTuesdayFilters.vue"
 import PatchTuesdayStats from "./PatchTuesdayStats.vue"
 import { patchTuesdayListToFilters } from "./utils"
@@ -72,8 +63,6 @@ const summary = ref<PatchTuesdaySummary | null>(null)
 const availableCycles = ref<string[]>([])
 const currentPage = ref(1)
 const pageSize = 24
-const showDetail = ref(false)
-const selectedItem = ref<PatchTuesdayItem | null>(null)
 
 const filtersRef = ref<{ setFilter: (payload: PatchTuesdayListFilter[]) => void } | null>(null)
 const filters = ref<FiltersType>({
@@ -190,11 +179,6 @@ function applyFilters(newFilters: PatchTuesdayListFilter[]) {
 	if (filters.value.cycle && filters.value.cycle !== prevCycle) {
 		fetchData()
 	}
-}
-
-function openItemDetail(item: PatchTuesdayItem) {
-	selectedItem.value = item
-	showDetail.value = true
 }
 
 // Lifecycle

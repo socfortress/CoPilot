@@ -180,6 +180,19 @@ export function useNavigation() {
 		return routerConstructor({ name: "VulnerabilityOverview" })
 	}
 
+	function routePatchTuesdayItem(cycle?: string, cve?: string, product?: string | null) {
+		if (cycle && cve) {
+			// a CVE can affect several products in a cycle — product picks the exact row
+			return routerConstructor({
+				name: "PatchTuesdayItem",
+				params: { cycle, cve },
+				query: product ? { product } : {}
+			})
+		}
+
+		return routerConstructor({ name: "PatchTuesday" })
+	}
+
 	function routeIndex(indexName?: string) {
 		return routerConstructor({ name: "Indices", query: indexName ? { index_name: indexName } : {} })
 	}
@@ -708,6 +721,7 @@ export function useNavigation() {
 		routeAgentSca,
 		routeAgentScaCheck,
 		routeVulnerabilityOverviewItem,
+		routePatchTuesdayItem,
 		routeIndex,
 		routeLicense,
 		routeHealthcheck,
