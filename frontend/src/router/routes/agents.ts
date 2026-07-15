@@ -98,6 +98,13 @@ export const agentsRoutes: RouteRecordRaw[] = [
 				meta: { title: "CoPilot Actions" }
 			},
 			{
+				// action names contain dots/spaces — :path converter keeps them intact
+				path: "copilot-actions/:name(.*)",
+				name: "CopilotAction",
+				component: () => import("@/views/agents/CopilotAction.vue"),
+				meta: { title: "CoPilot Action", skipPin: true }
+			},
+			{
 				path: "/copilot-searches",
 				name: "CopilotSearches",
 				component: () => import("@/views/agents/CopilotSearches.vue"),

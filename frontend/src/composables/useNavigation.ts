@@ -329,6 +329,17 @@ export function useNavigation() {
 		return routerConstructor({ name: "Alerts-AtomicRedTeam" })
 	}
 
+	function routeCopilotAction(actionName?: string) {
+		if (actionName) {
+			return routerConstructor({
+				name: "CopilotAction",
+				params: { name: actionName }
+			})
+		}
+
+		return routerConstructor({ name: "CopilotActions" })
+	}
+
 	function routeConnectors() {
 		return routerConstructor({ name: "Connectors" })
 	}
@@ -687,6 +698,7 @@ export function useNavigation() {
 		routeAlertsAtomicRedTeam,
 		routeAlertsAtomicRedTeamTechnique,
 		routeConnectors,
+		routeCopilotAction,
 		routeIncidentManagementAlerts,
 		routeIncidentManagementAlertAsset,
 		routeIncidentManagementAlertIoc,

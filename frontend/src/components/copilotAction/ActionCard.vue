@@ -55,7 +55,13 @@
 				<TechnologyBadge :action />
 			</template>
 			<template #footerExtra>
-				<div class="flex w-full items-center justify-end">
+				<div class="flex w-full items-center justify-end gap-2">
+					<EntityDetailsButton
+						size="small"
+						view-label="Details"
+						:route="routeCopilotAction(action.copilot_action_name)"
+						@view="showDetails = true"
+					/>
 					<n-button size="small" type="primary" @click.stop="showInvokeModal = true">
 						<template #icon>
 							<Icon :name="PlayIcon" />
@@ -97,12 +103,16 @@ import { NButton, NModal, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import ActionCardContent from "./ActionCardContent.vue"
 import InvokeActionForm from "./InvokeActionForm.vue"
 import TechnologyBadge from "./TechnologyBadge.vue"
 
 const { action } = defineProps<{ action: CopilotAction; embedded?: boolean }>()
+
+const { routeCopilotAction } = useNavigation()
 
 const showDetails = ref(false)
 const showInvokeModal = ref(false)
