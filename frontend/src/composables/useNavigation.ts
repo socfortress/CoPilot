@@ -147,6 +147,17 @@ export function useNavigation() {
 		return routeAgentSca(agentId, policyId)
 	}
 
+	function routeAgentArtifact(agentId?: string, artifactId?: number | string) {
+		if (agentId && artifactId != null) {
+			return routerConstructor({
+				name: "AgentArtifact",
+				params: { id: agentId, artifactId: artifactId.toString() }
+			})
+		}
+
+		return routeAgent(agentId)
+	}
+
 	function routeIndex(indexName?: string) {
 		return routerConstructor({ name: "Indices", query: indexName ? { index_name: indexName } : {} })
 	}
@@ -648,6 +659,7 @@ export function useNavigation() {
 		routeCustomer,
 		routeCustomerHealthcheckAgent,
 		routeAgent,
+		routeAgentArtifact,
 		routeAgentVulnerability,
 		routeAgentSca,
 		routeAgentScaCheck,
