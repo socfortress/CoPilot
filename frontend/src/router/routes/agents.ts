@@ -23,6 +23,12 @@ export const agentsRoutes: RouteRecordRaw[] = [
 				})
 			},
 			{
+				path: ":id/sca/:policyId/checks/:checkId",
+				name: "AgentScaCheck",
+				component: () => import("@/views/agents/AgentScaCheck.vue"),
+				meta: { title: "Agent SCA Check", skipPin: true }
+			},
+			{
 				path: ":id/sca/:policyId",
 				name: "AgentSca",
 				component: () => import("@/views/agents/AgentSca.vue"),

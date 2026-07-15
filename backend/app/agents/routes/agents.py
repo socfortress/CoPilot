@@ -1063,6 +1063,7 @@ async def get_agent_sca(
 async def get_agent_sca_policy_results(
     agent_id: str,
     policy_id: str,
+    check_id: Optional[int] = Query(None, description="Return only this SCA check instead of the whole policy's checks."),
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> WazuhAgentScaPolicyResultsResponse:
@@ -1073,6 +1074,7 @@ async def get_agent_sca_policy_results(
     Args:
         agent_id (str): The ID of the agent.
         policy_id (str): The ID of the policy.
+        check_id (int): Optional single-check filter, used by the SCA check detail view.
         current_user (User): The authenticated user.
         session (AsyncSession): The database session.
 
@@ -1091,7 +1093,7 @@ async def get_agent_sca_policy_results(
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found or access denied")
 
-    return await collect_agent_sca_policy_results(agent_id, policy_id)
+    return await collect_agent_sca_policy_results(agent_id, policy_id, check_id=check_id)
 
 
 @agents_router.get(

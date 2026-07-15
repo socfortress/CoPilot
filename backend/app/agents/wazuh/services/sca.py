@@ -93,12 +93,15 @@ def process_agent_sca(
 
 
 ########## ! SCA POLICY RESULTS ! #########
-async def collect_agent_sca_policy_results(agent_id: str, policy_id: str):
+async def collect_agent_sca_policy_results(agent_id: str, policy_id: str, check_id: int = None):
     """
     Collect agent sca from Wazuh Manager.
 
     Args:
         agent_id (str): The ID of the agent.
+        policy_id (str): The ID of the policy.
+        check_id (int): When set, Wazuh returns only that check — the SCA check
+            detail view needs one check and shouldn't have to pull the whole list.
 
     Returns:
         WazuhAgentScaPolicyResultsResponse: An object containing the collected sca.
@@ -109,6 +112,7 @@ async def collect_agent_sca_policy_results(agent_id: str, policy_id: str):
     logger.info(f"Collecting agent {agent_id} sca from Wazuh Manager")
     agent_sca_policy_results = await send_get_request(
         endpoint=f"/sca/{agent_id}/checks/{policy_id}",
+        params={"q": f"id={check_id}"} if check_id is not None else None,
     )
     if agent_sca_policy_results["success"] is False:
         if _is_no_sca_data_error(agent_sca_policy_results["message"]):

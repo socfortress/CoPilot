@@ -136,6 +136,17 @@ export function useNavigation() {
 		return routeAgent(agentId)
 	}
 
+	function routeAgentScaCheck(agentId?: string, policyId?: string, checkId?: number | string) {
+		if (agentId && policyId && checkId != null) {
+			return routerConstructor({
+				name: "AgentScaCheck",
+				params: { id: agentId, policyId, checkId: checkId.toString() }
+			})
+		}
+
+		return routeAgentSca(agentId, policyId)
+	}
+
 	function routeIndex(indexName?: string) {
 		return routerConstructor({ name: "Indices", query: indexName ? { index_name: indexName } : {} })
 	}
@@ -639,6 +650,7 @@ export function useNavigation() {
 		routeAgent,
 		routeAgentVulnerability,
 		routeAgentSca,
+		routeAgentScaCheck,
 		routeIndex,
 		routeLicense,
 		routeHealthcheck,
