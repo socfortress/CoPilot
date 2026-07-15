@@ -23,5 +23,27 @@ export const assessmentsRoutes: RouteRecordRaw[] = [
 			auth: true,
 			roles: RouteRole.All
 		}
+	},
+	{
+		path: "/github-audit/new",
+		name: "GitHubAuditConfigNew",
+		component: () => import("@/views/GitHubAuditConfigNew.vue"),
+		meta: {
+			title: "New GitHub Audit Config",
+			auth: true,
+			roles: RouteRole.All,
+			skipPin: true
+		}
+	},
+	{
+		path: "/github-audit/:configId",
+		name: "GitHubAuditConfig",
+		component: () => import("@/views/GitHubAuditConfig.vue"),
+		meta: {
+			title: "GitHub Audit Config",
+			auth: true,
+			roles: RouteRole.All,
+			skipPin: true
+		}
 	}
 ]

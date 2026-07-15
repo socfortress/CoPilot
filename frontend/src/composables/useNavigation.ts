@@ -180,6 +180,21 @@ export function useNavigation() {
 		return routerConstructor({ name: "VulnerabilityOverview" })
 	}
 
+	function routeGitHubAuditConfig(configId?: number | string) {
+		if (configId != null && configId !== "") {
+			return routerConstructor({
+				name: "GitHubAuditConfig",
+				params: { configId: configId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "GitHubAudit" })
+	}
+
+	function routeGitHubAuditConfigNew() {
+		return routerConstructor({ name: "GitHubAuditConfigNew" })
+	}
+
 	function routeScaPolicy(policyId?: string) {
 		if (policyId) {
 			return routerConstructor({
@@ -734,6 +749,8 @@ export function useNavigation() {
 		routeVulnerabilityOverviewItem,
 		routePatchTuesdayItem,
 		routeScaPolicy,
+		routeGitHubAuditConfig,
+		routeGitHubAuditConfigNew,
 		routeIndex,
 		routeLicense,
 		routeHealthcheck,
