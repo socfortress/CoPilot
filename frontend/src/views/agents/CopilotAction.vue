@@ -1,6 +1,9 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<DetailPageHeader :title="action?.copilot_action_name || actionName || undefined" :back-route="routeCopilotAction()">
+		<DetailPageHeader
+			:title="action?.copilot_action_name || actionName || undefined"
+			:back-route="routeCopilotAction()"
+		>
 			<template #meta>
 				<span v-if="action?.version" class="text-secondary font-mono text-sm">v{{ action.version }}</span>
 			</template>

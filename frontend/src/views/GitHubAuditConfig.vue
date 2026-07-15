@@ -22,7 +22,12 @@
 		<!-- Edit drawer (self-contained, like the card) -->
 		<n-drawer v-model:show="showEdit" :width="600" placement="right" class="max-w-[98vw]" display-directive="show">
 			<n-drawer-content title="Edit Configuration" closable :native-scrollbar="false">
-				<GitHubAuditConfigForm v-if="showEdit && config" :config @saved="onSaved()" @cancel="showEdit = false" />
+				<GitHubAuditConfigForm
+					v-if="showEdit && config"
+					:config
+					@saved="onSaved()"
+					@cancel="showEdit = false"
+				/>
 			</n-drawer-content>
 		</n-drawer>
 	</div>

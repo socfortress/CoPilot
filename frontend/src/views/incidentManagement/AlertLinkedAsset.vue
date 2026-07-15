@@ -1,6 +1,9 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<DetailPageHeader :title="asset?.asset_name" :back-route="routeIncidentManagementAlertAsset(alertId ?? undefined)">
+		<DetailPageHeader
+			:title="asset?.asset_name"
+			:back-route="routeIncidentManagementAlertAsset(alertId ?? undefined)"
+		>
 			<template v-if="asset" #meta>
 				<span class="text-secondary font-mono text-sm">#{{ asset.id }}</span>
 			</template>

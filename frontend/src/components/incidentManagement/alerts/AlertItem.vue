@@ -1,12 +1,6 @@
 <template>
 	<div>
-		<CardEntity
-			:loading
-			:embedded
-			hoverable
-			:size="compact ? 'small' : 'medium'"
-			:highlighted="highlight"
-		>
+		<CardEntity :loading :embedded hoverable :size="compact ? 'small' : 'medium'" :highlighted="highlight">
 			<template v-if="alert" #headerMain>
 				<div class="flex items-center gap-4">
 					<div v-if="selectable">

@@ -50,7 +50,13 @@
 		</CardEntity>
 
 		<!-- Detail drawer (owned by the card) -->
-		<n-drawer v-model:show="showDetail" :width="800" placement="right" class="max-w-[98vw]" display-directive="show">
+		<n-drawer
+			v-model:show="showDetail"
+			:width="800"
+			placement="right"
+			class="max-w-[98vw]"
+			display-directive="show"
+		>
 			<n-drawer-content closable :native-scrollbar="false">
 				<template #header>
 					<div class="flex items-center gap-3">
@@ -60,12 +66,7 @@
 					</div>
 				</template>
 
-				<GitHubAuditDetail
-					:config
-					@updated="emit('updated')"
-					@edit="openEdit()"
-					@close="showDetail = false"
-				/>
+				<GitHubAuditDetail :config @updated="emit('updated')" @edit="openEdit()" @close="showDetail = false" />
 			</n-drawer-content>
 		</n-drawer>
 

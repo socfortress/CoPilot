@@ -20,11 +20,7 @@
 		<!-- Items List -->
 		<n-spin :show="loading">
 			<div v-if="filteredItems.length > 0" class="grid-auto-fill-350 grid gap-4">
-				<PatchTuesdayCard
-					v-for="item in paginatedItems"
-					:key="`${item.cve}-${item.affected.product}`"
-					:item
-				/>
+				<PatchTuesdayCard v-for="item in paginatedItems" :key="`${item.cve}-${item.affected.product}`" :item />
 			</div>
 
 			<n-empty

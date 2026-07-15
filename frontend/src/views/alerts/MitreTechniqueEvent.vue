@@ -1,6 +1,9 @@
 <template>
 	<div class="page flex flex-col gap-4">
-		<DetailPageHeader :title="alert?.rule_description" :back-route="routeAlertsMitreEvent(techniqueId ?? undefined)">
+		<DetailPageHeader
+			:title="alert?.rule_description"
+			:back-route="routeAlertsMitreEvent(techniqueId ?? undefined)"
+		>
 			<template v-if="alert" #meta>
 				<span class="text-secondary text-sm">{{ alert.rule_mitre_technique }}</span>
 			</template>
