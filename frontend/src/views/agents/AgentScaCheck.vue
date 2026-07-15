@@ -1,7 +1,11 @@
 <template>
 	<div class="page flex flex-col gap-4">
 		<div class="flex min-w-0 items-center gap-4">
-			<n-button quaternary class="shrink-0" @click="goBack(routeAgentSca(agentId ?? undefined, policyId ?? undefined))">
+			<n-button
+				quaternary
+				class="shrink-0"
+				@click="goBack(routeAgentSca(agentId ?? undefined, policyId ?? undefined))"
+			>
 				<template #icon>
 					<Icon :name="BackIcon" />
 				</template>
@@ -15,7 +19,7 @@
 		</div>
 
 		<n-spin v-if="agentId && policyId && checkId != null" :show="loading" class="min-h-40">
-			<ScaResultItemDetails v-if="check" :data="check" />
+			<ScaResultItemDetails v-if="check" :data="check" full-width />
 			<n-empty v-else-if="!loading" description="SCA check not found" class="h-32 justify-center" />
 		</n-spin>
 		<n-empty v-else description="Invalid SCA check" class="h-48 justify-center" />
@@ -41,12 +45,17 @@ const checkId = useRouteIdParam("checkId")
 
 const { loading, entity: check } = useEntityDetails<ScaPolicyResult, string>({
 	entity: () => null,
-	id: () => (agentId.value && policyId.value && checkId.value != null ? `${agentId.value}|${policyId.value}|${checkId.value}` : null),
+	id: () =>
+		agentId.value && policyId.value && checkId.value != null
+			? `${agentId.value}|${policyId.value}|${checkId.value}`
+			: null,
 	fetch: (_id, signal) =>
-		Api.agents.getSCAResults(agentId.value as string, policyId.value as string, checkId.value as number, signal).then(res => ({
-			entity: res.data.success ? (res.data.sca_policy_results?.[0] ?? null) : null,
-			message: res.data.message
-		})),
+		Api.agents
+			.getSCAResults(agentId.value as string, policyId.value as string, checkId.value as number, signal)
+			.then(res => ({
+				entity: res.data.success ? (res.data.sca_policy_results?.[0] ?? null) : null,
+				message: res.data.message
+			})),
 	notFoundMessage: "SCA check not found",
 	errorMessage: "An error occurred. Please try again later."
 })

@@ -23,6 +23,13 @@ export const agentsRoutes: RouteRecordRaw[] = [
 				})
 			},
 			{
+				path: ":id/sca/:policyId/checks",
+				redirect: to => ({
+					name: "AgentSca",
+					params: { id: to.params.id, policyId: to.params.policyId }
+				})
+			},
+			{
 				path: ":id/sca/:policyId/checks/:checkId",
 				name: "AgentScaCheck",
 				component: () => import("@/views/agents/AgentScaCheck.vue"),
