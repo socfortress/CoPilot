@@ -63,7 +63,7 @@ Navigate to the **Fields** tab of the Event Definition and add the following:
 | Field name | Type | Required | Description |
 |---|---|---|---|
 | `CUSTOMER_CODE` | `string` | ✅ | The customer code this alert belongs to (must match a customer in CoPilot). |
-| `SOURCE` | `string` | ✅ | The source/integration name (e.g., `office365`, `wazuh`, `custom`). |
+| `SOURCE` | `string` | ✅ | The source/integration name (e.g., `office365`, `wazuh`, `bitwarden`). Also drives which OpenSearch index CoPilot searches to resolve the underlying events — see [The `SOURCE` field and index resolution](#the-source-field-and-index-resolution). |
 | `ALERT_DESCRIPTION` | `string` | ✅ | A human-readable description of what was detected. |
 | `ASSET_NAME` | `string` | ✅ | The name of the affected asset (hostname, username, IP — whatever is most relevant). |
 
@@ -113,6 +113,47 @@ Check with your CoPilot administrator that the Graylog header verification is co
 
 ---
 
+## The `SOURCE` field and index resolution
+
+The `SOURCE` custom field does more than label the alert — CoPilot uses it to find the **underlying events** behind the threshold, so it can populate the alert's asset/title and build the event timeline.
+
+### Why CoPilot needs a mapping
+
+A Graylog threshold/aggregation event **does not include the source index pattern** in the payload it sends. CoPilot receives the replay query (Lucene) and the group-by fields, but *not* the OpenSearch index the original messages live in — Graylog keeps that internal. To go back and pull the contributing events, CoPilot has to be told which index pattern a given `SOURCE` maps to.
+
+> This is *not* the same as the ingest-side [Incident Sources](./incident-sources.md) mapping. Those describe per-source field names; this maps a `SOURCE` value to the physical index a threshold replay query should target.
+
+### How a `SOURCE` is resolved
+
+CoPilot resolves the index pattern for a `SOURCE` in this priority order:
+
+1. **`.env` mapping** (`THRESHOLD_SOURCE_INDEX_MAPPING`) — explicit, operator-defined mappings. Highest priority.
+2. **Built-in defaults** — `wazuh` → `wazuh-*` and `office365` → `office365-*`, shipped out of the box.
+3. **Convention fallback** — for any other `SOURCE`, CoPilot derives `<source>-*` with a `timestamp` time field. So a `SOURCE` of `bitwarden` automatically resolves to the `bitwarden-*` index with **no configuration required**, as long as your index follows the `<source>-*` naming convention.
+
+In most cases, **you don't need to configure anything** — set the `SOURCE` field to match your index prefix and the convention fallback handles it.
+
+### Configuring custom sources (`.env`)
+
+Use the `THRESHOLD_SOURCE_INDEX_MAPPING` environment variable when your index name does **not** follow the `<source>-*` convention, or when the time field isn't `timestamp`. It is a JSON object mapping each `SOURCE` to either an index-pattern string or a `[index_pattern, time_field]` pair:
+
+```bash
+# Simple: SOURCE "bitwarden" -> index "bw-logs-*" (time field defaults to "timestamp")
+# Advanced: SOURCE "dellswitch" -> index "dellswitch-*" with a custom time field
+THRESHOLD_SOURCE_INDEX_MAPPING={"bitwarden": "bw-logs-*", "dellswitch": ["dellswitch-*", "@timestamp"]}
+```
+
+Entries here **merge over and override** the built-in defaults (so you can, for example, repoint `wazuh` at a custom index). Malformed JSON or malformed entries are logged and ignored rather than breaking the threshold flow.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `THRESHOLD_SOURCE_INDEX_MAPPING` | *(empty)* | JSON object of `SOURCE` → index pattern (or `[pattern, time_field]`). Merges over the built-in defaults. |
+| `THRESHOLD_SOURCE_INDEX_FALLBACK_ENABLED` | `true` | When `true`, an unmapped `SOURCE` falls back to `<source>-*` / `timestamp`. Set `false` for strict behavior (no guessing — an unmapped source resolves to no underlying events). |
+
+> After changing these variables, restart the CoPilot backend so the new configuration is picked up.
+
+---
+
 ## How it works end-to-end
 
 ```
@@ -159,6 +200,8 @@ Check with your CoPilot administrator that the Graylog header verification is co
 | `403 Forbidden` from CoPilot | Graylog header mismatch | Verify `GRAYLOG_API_HEADER_VALUE` matches between CoPilot and Graylog |
 | `422 Unprocessable Entity` | Missing required custom fields | Ensure all four fields (`CUSTOMER_CODE`, `SOURCE`, `ALERT_DESCRIPTION`, `ASSET_NAME`) are defined |
 | Alert created but missing context | Template variable not resolving | Check that your field templates reference valid event fields (use Graylog's Preview) |
+| Alert created but no timeline / underlying events | `SOURCE` doesn't resolve to a valid index | Set the `SOURCE` field to match your index prefix (`<source>-*`), or map it explicitly via `THRESHOLD_SOURCE_INDEX_MAPPING` — see [The `SOURCE` field and index resolution](#the-source-field-and-index-resolution) |
+| Log warning: `No index mapping configured for threshold alert source '<x>'` | Convention fallback disabled and source not mapped | Add `<x>` to `THRESHOLD_SOURCE_INDEX_MAPPING`, or set `THRESHOLD_SOURCE_INDEX_FALLBACK_ENABLED=true` |
 | Used *Custom HTTP Notification* type | Wrong notification type | Delete and recreate using the standard **HTTP Notification** type |
 
 ---

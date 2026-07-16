@@ -31,6 +31,13 @@ async def handle_customer_notifications_case(
         )
 
     logger.info(f"Executing workflow for customer code {customer_code}")
+
+    # Shuffle's variable-substitution engine can't index into arrays
+    # ($exec...alerts.0.asset_payload returns the whole array), so also expose
+    # the primary (first) alert's fields at the payload root. Issue #980 Feature 1.
+    primary_alert = case_payload.alerts[0] if case_payload.alerts else None
+    primary_context = primary_alert.alert_context_payload if primary_alert else None
+
     await execute_workflow(
         ExecuteWorkflowRequest(
             workflow_id=customer_notifications[0].shuffle_workflow_id,
@@ -38,6 +45,16 @@ async def handle_customer_notifications_case(
                 "type": type,
                 "customer_code": customer_code,
                 "case_name": case_payload.case_name,
+                "primary_asset": primary_alert.asset_payload if primary_alert else None,
+                "primary_source": primary_alert.source if primary_alert else None,
+                "primary_alert_title": primary_alert.alert_title_payload if primary_alert else None,
+                "primary_timefield": primary_alert.timefield_payload if primary_alert else None,
+                "primary_alert_id": primary_alert.alert_id if primary_alert else None,
+                "primary_mitre_id": (primary_context or {}).get("rule_mitre_id") if primary_context else None,
+                # Default rule level + normalized severity, from the primary alert
+                # (null for non-Wazuh sources with no rule level). Issue #980 Feature 3.
+                "rule_level": primary_alert.rule_level if primary_alert else None,
+                "severity": primary_alert.severity if primary_alert else None,
                 "alerts": case_payload.alerts,
             },
             start="",

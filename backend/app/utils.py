@@ -134,14 +134,20 @@ class ValidationErrorResponse(BaseModel):
 
 
 ################## ! LOGGING TO `log_entry` table ! ##################
+# Matches the varchar(5024) width of log_entries.message / .additional_info.
+_LOG_TEXT_MAX_LENGTH = 5024
+
+
 # #######! MODELS !########
 class LogEntryModel(BaseModel):
-    event_type: str = Field(..., examples=["Info"], description="Event type")
+    event_type: str = Field("Info", examples=["Info"], description="Event type")
     user_id: Optional[int] = Field(None, examples=[1], description="User ID")
-    route: str = Field(..., examples=["/wazuh_indexer/health"], description="Route")
-    method: str = Field(..., examples=["GET"], description="Method")
+    # route/method/message are nullable in the log_entries table, so keep them optional
+    # here — a legacy row with a NULL column must not fail validation for the whole page.
+    route: Optional[str] = Field(None, examples=["/wazuh_indexer/health"], description="Route")
+    method: Optional[str] = Field(None, examples=["GET"], description="Method")
     status_code: int = Field(..., examples=[200], description="Status code")
-    message: str = Field(..., examples=["Route accessed"], description="Message")
+    message: Optional[str] = Field(None, examples=["Route accessed"], description="Message")
     additional_info: Optional[str] = Field(
         None,
         examples=["Additional details here"],
