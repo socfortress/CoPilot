@@ -65,6 +65,19 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
+	agentVulnerabilityByCve(
+		agentId: string,
+		cve: string,
+		params?: { package?: string; version?: string },
+		signal?: AbortSignal
+	) {
+		// dedicated single-CVE lookup — the severity list endpoint scrolls every
+		// vulnerability document of the agent and takes minutes on real data
+		return HttpClient.get<FlaskBaseResponse & { vulnerabilities: AgentVulnerabilities[] }>(
+			`/agents/${agentId}/vulnerabilities/cve/${encodeURIComponent(cve)}`,
+			{ params: params ?? {}, ...(signal ? { signal } : {}) }
+		)
+	},
 	agentVulnerabilitiesDownload(agentId: string, severity: VulnerabilitySeverityType) {
 		return HttpClient.get<string>(`/agents/${agentId}/csv/vulnerabilities/${severity}`)
 	},
@@ -74,16 +87,23 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
-	getSCA(agentId: string | number, signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { sca: AgentSca[] }>(
-			`/agents/${agentId}/sca`,
-			signal ? { signal } : {}
-		)
+	getSCA(agentId: string | number, policyId?: string, signal?: AbortSignal) {
+		// policyId narrows the Wazuh query to one policy — the detail view must not
+		// pull the agent's whole SCA list just to render a single one
+		return HttpClient.get<FlaskBaseResponse & { sca: AgentSca[] }>(`/agents/${agentId}/sca`, {
+			params: policyId ? { policy_id: policyId } : {},
+			...(signal ? { signal } : {})
+		})
 	},
-	getSCAResults(agentId: string | number, policyId: string, signal?: AbortSignal) {
+	getSCAResults(agentId: string | number, policyId: string, checkId?: number, signal?: AbortSignal) {
+		// checkId narrows the Wazuh query to one check — the check detail view must
+		// not pull the policy's whole check list just to render a single one
 		return HttpClient.get<FlaskBaseResponse & { sca_policy_results: ScaPolicyResult[] }>(
 			`/agents/${agentId}/sca/${policyId}`,
-			signal ? { signal } : {}
+			{
+				params: checkId != null ? { check_id: checkId } : {},
+				...(signal ? { signal } : {})
+			}
 		)
 	},
 	scaResultsDownload(agentId: string | number, policyId: string) {

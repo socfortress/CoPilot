@@ -1,8 +1,9 @@
 import type { SafeAny } from "./common"
 
-export interface EventSearchResult {
-	[key: string]: SafeAny
-}
+export type EventSearchResult = {
+	_id?: string
+	_index?: string
+} & Record<string, SafeAny>
 
 export interface FieldMapping {
 	field: string

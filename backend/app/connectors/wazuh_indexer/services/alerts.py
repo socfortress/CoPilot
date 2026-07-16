@@ -26,6 +26,7 @@ from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import CollectAlertsResponse
 from app.connectors.wazuh_indexer.schema.alerts import GraylogAlertsSearchBody
+from app.connectors.wazuh_indexer.schema.alerts import GraylogIndexAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
@@ -518,6 +519,14 @@ async def get_single_alert_details(
         return AlertNotFound(_index=index_name, _id=index_id, _source={"message": "alert not found"}).to_dict()
 
 
+async def get_alert_by_id(index_name: str, alert_id: str) -> Dict:
+    es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+    try:
+        return await get_single_alert_details(es_client, index_name.strip(), alert_id.strip())
+    finally:
+        await es_client.close()
+
+
 async def fetch_alerts_from_graylog(index_prefix: str, size: int, timerange: str) -> List[Dict]:
     """
     Fetches alerts from the Graylog Alert Index.
@@ -553,7 +562,18 @@ async def fetch_alerts_from_graylog(index_prefix: str, size: int, timerange: str
     return response["hits"]["hits"]
 
 
-async def process_alert_hits(hits: List[Dict], es_client: AsyncElasticsearch) -> List[Dict]:
+async def process_alert_hits(
+    hits: List[Dict],
+    es_client: AsyncElasticsearch,
+    index_filter: Optional[str] = None,
+) -> List[Dict]:
+    """
+    Hydrate Graylog alert hits with their original alert documents.
+
+    When ``index_filter`` is supplied, hits whose ``origin_context`` points at a
+    different index are dropped *before* the per-hit detail lookup — the caller
+    only wants that one index, so there's no point paying for the rest.
+    """
     alerts_dict = defaultdict(lambda: {"total_alerts": 0, "alerts": []})
 
     tasks = []
@@ -566,6 +586,8 @@ async def process_alert_hits(hits: List[Dict], es_client: AsyncElasticsearch) ->
             index_name, index_id = await get_original_alert_id(origin_context)
         except Exception as e:
             logger.warning(f"Skipping alert hit due to error parsing origin_context '{origin_context}': {e}")
+            continue
+        if index_filter is not None and index_name != index_filter:
             continue
         logger.info(f"Fetching alert details for index {index_name} and id {index_id}")
         task = get_single_alert_details(es_client, index_name, index_id)
@@ -590,7 +612,8 @@ async def process_alert_hits(hits: List[Dict], es_client: AsyncElasticsearch) ->
 
 async def get_graylog_alerts(
     request: GraylogAlertsSearchBody,
-) -> AlertsSearchResponse:
+    index_filter: Optional[str] = None,
+) -> List[Dict]:
     """
     Retrieves alerts from the Graylog Alert Index.
     Looks up the actual alert details via the origin_context field.
@@ -598,10 +621,25 @@ async def get_graylog_alerts(
     Example: urn:graylog:message:es:huntress_00002_0:b4d2c721-f690-11ee-ac73-8600007a2218
     Looks up each alert by the index name and id.
     Adds each alert to the response.
+
+    ``index_filter`` restricts the result (and the per-hit detail lookups) to a
+    single origin index.
     """
     logger.info(f"Fetching Graylog alerts for request: {request}")
 
     hits = await fetch_alerts_from_graylog(request.index_prefix, request.size, request.timerange)
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
 
-    return await process_alert_hits(hits, es_client)
+    return await process_alert_hits(hits, es_client, index_filter=index_filter)
+
+
+async def get_graylog_alerts_for_index(
+    request: GraylogIndexAlertsSearchBody,
+) -> List[Dict]:
+    """Return the Graylog SIEM alert summary for a single Wazuh indexer index."""
+    graylog_request = GraylogAlertsSearchBody(
+        size=request.size,
+        timerange=request.timerange,
+        index_prefix=request.index_prefix,
+    )
+    return await get_graylog_alerts(graylog_request, index_filter=request.index_name.strip())

@@ -2,14 +2,7 @@
 	<n-card size="small" title="Recent reviews" embedded>
 		<p v-if="!stats.recent_reviews.length" class="text-sm">No reviews yet.</p>
 		<div v-else class="flex flex-col gap-2">
-			<CardEntity
-				v-for="r of stats.recent_reviews"
-				:key="r.id"
-				size="small"
-				hoverable
-				clickable
-				@click="openDrawer(r)"
-			>
+			<CardEntity v-for="r of stats.recent_reviews" :key="r.id" size="small" hoverable>
 				<template #headerMain>
 					Report #{{ r.report_id }}
 					<span v-if="r.template_used" class="text-secondary ml-2 text-sm">· {{ r.template_used }}</span>
@@ -59,19 +52,33 @@
 						</Badge>
 					</div>
 				</template>
+				<template #footerExtra>
+					<EntityDetailsButton
+						size="tiny"
+						:route="routeAiAnalystFeedbackReview(r.id)"
+						@view="openDrawer(r)"
+					/>
+				</template>
 			</CardEntity>
 		</div>
 
-		<FeedbackDashboardRecentReviewDetail v-model:show="showDrawer" :review="drawerReview" />
+		<n-drawer v-model:show="showDrawer" :width="520" placement="right">
+			<n-drawer-content v-if="drawerReview" closable>
+				<template #header>Review for report #{{ drawerReview.report_id }}</template>
+				<FeedbackDashboardRecentReviewDetail :review="drawerReview" />
+			</n-drawer-content>
+		</n-drawer>
 	</n-card>
 </template>
 
 <script setup lang="ts">
 import type { AiAnalystReview, AiAnalystReviewStats } from "@/types/ai-analyst"
-import { NCard } from "naive-ui"
+import { NCard, NDrawer, NDrawerContent } from "naive-ui"
 import { ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import FeedbackDashboardRecentReviewDetail from "./FeedbackDashboardRecentReviewDetail.vue"
@@ -82,6 +89,7 @@ const props = defineProps<{
 
 const { stats } = toRefs(props)
 
+const { routeAiAnalystFeedbackReview } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
 const showDrawer = ref(false)
 const drawerReview = ref<AiAnalystReview | null>(null)

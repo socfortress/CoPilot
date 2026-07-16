@@ -107,6 +107,8 @@ export interface PatchTuesdaySummaryQuery extends PatchTuesdayQuery {
 export interface PatchTuesdaySearchQuery {
 	cve_ids: string[]
 	cycle?: string
+	/** Narrow to a single affected product — a CVE spans multiple product rows. */
+	product?: string
 }
 
 export interface PatchTuesdayPriorityQuery extends PatchTuesdayQuery {

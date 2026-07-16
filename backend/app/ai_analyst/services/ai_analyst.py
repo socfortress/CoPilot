@@ -78,6 +78,19 @@ def _report_to_response(report: AiAnalystReport) -> ReportResponse:
     )
 
 
+def _alert_with_report_to_response(alert: Alert, report: AiAnalystReport) -> AlertWithReportResponse:
+    return AlertWithReportResponse(
+        alert_id=alert.id,
+        alert_name=alert.alert_name,
+        customer_code=alert.customer_code,
+        status=alert.status,
+        source=alert.source,
+        assigned_to=alert.assigned_to,
+        alert_creation_time=alert.alert_creation_time,
+        report=_report_to_response(report),
+    )
+
+
 def _ioc_to_response(ioc: AiAnalystIoc) -> IocResponse:
     return IocResponse(
         id=ioc.id,
@@ -325,6 +338,13 @@ async def list_iocs_by_alert(alert_id: int, session: AsyncSession) -> List[IocRe
     return [_ioc_to_response(i) for i in iocs]
 
 
+async def get_ioc_by_id(ioc_id: int, session: AsyncSession) -> IocResponse:
+    ioc = await session.get(AiAnalystIoc, ioc_id)
+    if ioc is None:
+        raise HTTPException(status_code=404, detail=f"IOC {ioc_id} not found")
+    return _ioc_to_response(ioc)
+
+
 async def list_iocs_by_customer(
     customer_code: str,
     session: AsyncSession,
@@ -358,19 +378,39 @@ async def list_alerts_with_reports(
     result = await session.execute(query)
     rows = result.all()
 
-    return [
-        AlertWithReportResponse(
-            alert_id=alert.id,
-            alert_name=alert.alert_name,
-            customer_code=alert.customer_code,
-            status=alert.status,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            alert_creation_time=alert.alert_creation_time,
-            report=_report_to_response(report),
-        )
-        for alert, report in rows
-    ]
+    return [_alert_with_report_to_response(alert, report) for alert, report in rows]
+
+
+async def get_alert_with_report_by_report_id(
+    report_id: int,
+    session: AsyncSession,
+) -> AlertWithReportResponse:
+    result = await session.execute(
+        select(Alert, AiAnalystReport).join(AiAnalystReport, AiAnalystReport.alert_id == Alert.id).where(AiAnalystReport.id == report_id),
+    )
+    row = result.first()
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
+    alert, report = row
+    return _alert_with_report_to_response(alert, report)
+
+
+async def get_alert_with_report_by_alert_id(
+    alert_id: int,
+    session: AsyncSession,
+) -> AlertWithReportResponse:
+    result = await session.execute(
+        select(Alert, AiAnalystReport)
+        .join(AiAnalystReport, AiAnalystReport.alert_id == Alert.id)
+        .where(Alert.id == alert_id)
+        .order_by(AiAnalystReport.created_at.desc())
+        .limit(1),
+    )
+    row = result.first()
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
+    alert, report = row
+    return _alert_with_report_to_response(alert, report)
 
 
 # --- Combined alert analysis lookup ---
@@ -663,6 +703,19 @@ async def list_reviews_by_customer(
     )
     reviews = result.scalars().all()
     return [_review_to_response(r) for r in reviews]
+
+
+async def get_review_by_id(
+    review_id: int,
+    session: AsyncSession,
+) -> ReviewResponse:
+    result = await session.execute(
+        select(AiAnalystReview).where(AiAnalystReview.id == review_id).options(selectinload(AiAnalystReview.ioc_reviews)),
+    )
+    review = result.scalars().first()
+    if review is None:
+        raise HTTPException(status_code=404, detail=f"Review {review_id} not found")
+    return _review_to_response(review)
 
 
 def _pct(numerator: int, denominator: int) -> Optional[float]:

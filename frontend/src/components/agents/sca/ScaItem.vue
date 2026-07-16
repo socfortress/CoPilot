@@ -1,5 +1,10 @@
 <template>
-	<n-tabs type="line" animated :tabs-padding="24" pane-class="min-h-100 p-6!">
+	<n-tabs
+		type="line"
+		animated
+		:tabs-padding="fullWidth ? 0 : 24"
+		:pane-class="fullWidth ? 'min-h-100 p-0! pt-3!' : 'min-h-100 p-6!'"
+	>
 		<n-tab-pane name="Details" tab="Details" display-directive="show" class="flex flex-col gap-4">
 			<n-card embedded class="overflow-hidden">
 				<div class="flex flex-wrap justify-between gap-8">
@@ -16,12 +21,12 @@
 					<n-statistic
 						class="grow"
 						label="Start scan"
-						:value="formatDate(sca.start_scan, dFormats.datetime).toString()"
+						:value="sca.start_scan ? formatDate(sca.start_scan, dFormats.datetime).toString() : '-'"
 					/>
 					<n-statistic
 						class="grow"
 						label="End scan"
-						:value="formatDate(sca.end_scan, dFormats.datetime).toString()"
+						:value="sca.end_scan ? formatDate(sca.end_scan, dFormats.datetime).toString() : '-'"
 					/>
 				</div>
 			</n-card>
@@ -82,7 +87,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 
-const { sca, agent } = defineProps<{ sca: AgentSca; agent: Agent }>()
+const { sca, agent, fullWidth = false } = defineProps<{ sca: AgentSca; agent: Agent; fullWidth?: boolean }>()
 
 const ScaResults = defineAsyncComponent(() => import("./ScaResults.vue"))
 

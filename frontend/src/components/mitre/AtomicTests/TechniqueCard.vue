@@ -1,10 +1,12 @@
 <template>
 	<div>
-		<CardEntity hoverable clickable :embedded class="@container" @click.stop="showDetails = true">
+		<CardEntity hoverable :embedded class="@container">
 			<template #headerMain>#{{ entity.technique_id }}</template>
 			<template #headerExtra>
-				test count:
-				<code>{{ entity.test_count }}</code>
+				<span class="text-xs whitespace-nowrap">
+					test count:
+					<code>{{ entity.test_count }}</code>
+				</span>
 			</template>
 			<template #default>{{ entity.technique_name }}</template>
 			<template #footerMain>
@@ -20,19 +22,29 @@
 				</div>
 			</template>
 			<template #footerExtra>
-				<SimulatorButton :technique-id="entity.technique_id" size="small" :os-list="entity.categories" />
+				<div class="flex flex-wrap items-center gap-2">
+					<SimulatorButton :technique-id="entity.technique_id" size="small" :os-list="entity.categories" />
+					<EntityDetailsButton
+						size="small"
+						:route="routeAlertsAtomicRedTeamTechnique(entity.technique_id)"
+						@view="showDetails = true"
+					/>
+				</div>
 			</template>
 		</CardEntity>
 
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
+			content-class="p-0!"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
 			:title="`Technique: ${entity.technique_name}`"
 			:bordered="false"
 			segmented
 		>
-			<TechniqueCardContent :technique-id="entity.technique_id" />
+			<div class="p-6">
+				<TechniqueCardContent :technique-id="entity.technique_id" />
+			</div>
 		</n-modal>
 	</div>
 </template>
@@ -43,12 +55,16 @@ import { NModal } from "naive-ui"
 import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { iconFromOs } from "@/utils"
 import SimulatorButton from "../AttackSimulator/SimulatorButton.vue"
 import TechniqueCardContent from "./TechniqueCardContent.vue"
 
 const { entity } = defineProps<{ entity: MitreAtomicTest; embedded?: boolean }>()
+
+const { routeAlertsAtomicRedTeamTechnique } = useNavigation()
 
 const showDetails = ref(false)
 </script>

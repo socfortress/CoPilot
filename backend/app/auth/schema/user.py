@@ -19,3 +19,9 @@ class UserBaseResponse(BaseModel):
     users: List[UserBase]
     message: str
     success: bool
+
+
+class UserDetailResponse(BaseModel):
+    success: bool
+    message: str
+    user: UserBase

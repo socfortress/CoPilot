@@ -1,12 +1,18 @@
 <template>
 	<div>
-		<CardEntity embedded clickable hoverable size="small" :loading="loadingDetails" @click="showDetails = true">
-			<template #headerMain>{{ id }}</template>
+		<CardEntity embedded hoverable size="small" :loading="loadingDetails">
+			<template #headerMain>
+				<div class="flex items-center gap-2">
+					<span v-if="techniqueDetails" class="text-default">
+						{{ techniqueDetails.external_id }}
+					</span>
+					<span>
+						{{ id }}
+					</span>
+				</div>
+			</template>
 			<template #headerExtra>
-				<span v-if="techniqueDetails" class="text-default">
-					{{ techniqueDetails.external_id }}
-				</span>
-				<n-skeleton v-else text :width="100" :height="18" />
+				<EntityDetailsButton size="tiny" :route="routeAlertsMitreTechniques(id)" @view="showDetails = true" />
 			</template>
 			<template #default>
 				<div v-if="techniqueDetails">
@@ -14,7 +20,7 @@
 				</div>
 				<n-skeleton v-else text class="w-3/4" :height="20" />
 			</template>
-			<template #footer>
+			<template #footerMain>
 				<p v-if="techniqueDetails" class="cursor-text" @click.stop="() => {}">
 					<Markdown :source="techniqueDetails.description" />
 				</p>
@@ -34,59 +40,7 @@
 			:bordered="false"
 			segmented
 		>
-			<n-tabs type="line" animated :tabs-padding="24">
-				<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy">
-					<div class="px-6 pt-3 pb-6">
-						<TechniqueAlertDetails :entity="techniqueDetails" />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					name="Tactics"
-					:tab="`Tactics (${techniqueDetails?.tactics?.length || 0})`"
-					display-directive="show:lazy"
-				>
-					<div class="px-6 pt-3 pb-6">
-						<TacticsList v-if="techniqueDetails" :list="techniqueDetails.tactics" />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					name="Mitigations"
-					:tab="`Mitigations (${techniqueDetails?.mitigations?.length || 0})`"
-					display-directive="show:lazy"
-				>
-					<div class="px-6 pt-3 pb-6">
-						<MitigationsList v-if="techniqueDetails" :list="techniqueDetails.mitigations" />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					v-if="techniqueDetails?.techniques?.length"
-					name="Techniques"
-					:tab="`Techniques (${techniqueDetails?.techniques?.length || 0})`"
-					display-directive="show:lazy"
-				>
-					<div class="px-6 pt-3 pb-6">
-						<TechniquesList :list="techniqueDetails.techniques" />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					name="Groups"
-					:tab="`Groups (${techniqueDetails?.groups?.length || 0})`"
-					display-directive="show:lazy"
-				>
-					<div class="px-6 pt-3 pb-6">
-						<GroupsList v-if="techniqueDetails" :list="techniqueDetails.groups" />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					name="Software"
-					:tab="`Software (${techniqueDetails?.software?.length || 0})`"
-					display-directive="show:lazy"
-				>
-					<div class="px-6 pt-3 pb-6">
-						<SoftwareList v-if="techniqueDetails" :list="techniqueDetails.software" />
-					</div>
-				</n-tab-pane>
-			</n-tabs>
+			<TechniqueOverview :entity="techniqueDetails" />
 		</n-modal>
 	</div>
 </template>
@@ -94,19 +48,15 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { MitreTechniqueDetails } from "@/types/mitre"
-import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
+import { NModal, NSkeleton, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Markdown from "@/components/common/Markdown.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
-import GroupsList from "../Group/GroupsList.vue"
-import MitigationsList from "../Mitigation/MitigationsList.vue"
-import SoftwareList from "../Software/SoftwareList.vue"
-
-import TacticsList from "../Tactic/TacticsList.vue"
-import TechniqueAlertDetails from "../TechniqueAlert/TechniqueAlertDetails.vue"
-import TechniquesList from "./TechniquesList.vue"
+import TechniqueOverview from "./TechniqueOverview.vue"
 
 const { id, entity } = defineProps<{
 	id: string
@@ -116,6 +66,8 @@ const { id, entity } = defineProps<{
 const emit = defineEmits<{
 	(e: "loaded", value: MitreTechniqueDetails): void
 }>()
+
+const { routeAlertsMitreTechniques } = useNavigation()
 
 const showDetails = ref(false)
 const message = useMessage()

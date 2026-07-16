@@ -156,11 +156,12 @@ class LogEntryModel(BaseModel):
 
 
 class LogRetrieveModel(LogEntryModel):
-    # from_attributes lets Pydantic v2 validate directly from SQLModel/SQLAlchemy ORM
-    # rows (LogEntry). Without it, building LogsResponse from ORM instances raises
-    # "Input should be a valid dictionary or instance of LogRetrieveModel" for every row.
     model_config = ConfigDict(from_attributes=True)
 
+    # DB allows NULL on these columns; keep LogEntryModel strict for inserts
+    route: Optional[str] = None
+    method: Optional[str] = None
+    message: Optional[str] = None
     timestamp: datetime = Field(..., examples=[datetime.now()], description="Timestamp")
 
 
@@ -312,13 +313,10 @@ class Logger:
             None
         """
         data = log_entry_model.model_dump()
-        # The message/additional_info columns are varchar(5024); an over-long value
-        # (e.g. a giant validation traceback) otherwise raises DataError 1406
-        # "Data too long for column" and turns a logged error into a second 500.
-        for column in ("message", "additional_info"):
-            value = data.get(column)
-            if value is not None and len(value) > _LOG_TEXT_MAX_LENGTH:
-                data[column] = value[: _LOG_TEXT_MAX_LENGTH - 3] + "..."
+        # log_entries.message/additional_info are varchar(5024) — truncate here once for all callers
+        for field in ("message", "additional_info"):
+            if data.get(field):
+                data[field] = data[field][:5024]
         log_entry = LogEntry(**data)
         self.session.add(log_entry)
         await self.session.commit()

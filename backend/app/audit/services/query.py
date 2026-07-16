@@ -8,6 +8,7 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
+from fastapi import HTTPException
 from sqlalchemy import desc
 from sqlalchemy import func
 from sqlalchemy import or_
@@ -80,3 +81,10 @@ async def list_audit_logs(
     rows = (await session.execute(stmt)).scalars().all()
 
     return list(rows), total
+
+
+async def get_audit_log_by_id(session: AsyncSession, audit_id: int) -> AuditLog:
+    row = await session.get(AuditLog, audit_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"Audit log {audit_id} not found")
+    return row

@@ -59,8 +59,12 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & PatchTuesdayResponse>(`${BASE_PATH}/search`, {
 			params: {
 				cve_ids: query.cve_ids,
-				cycle: query.cycle
+				cycle: query.cycle,
+				product: query.product
 			},
+			// FastAPI's List[str] = Query(...) expects repeated `cve_ids=` params;
+			// axios' default array format (`cve_ids[]=`) 422s, so drop the brackets
+			paramsSerializer: { indexes: null },
 			signal
 		})
 	},

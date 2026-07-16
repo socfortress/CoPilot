@@ -17,6 +17,8 @@
 			:has-searched
 			:scroll-id
 			:event-source="selectedEventSource"
+			:customer-code="searchFormParams?.customerCode ?? null"
+			:source-name="searchFormParams?.sourceName ?? null"
 			@load-more="loadMoreEvents"
 			@configure-columns="showColumnConfig = true"
 			@row-select="openEventDetail"

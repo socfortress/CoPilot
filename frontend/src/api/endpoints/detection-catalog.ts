@@ -5,7 +5,9 @@
 
 import type {
 	CatalogComplianceFrameworksResponse,
+	CatalogComplianceGroupDetailResponse,
 	CatalogComplianceResponse,
+	CatalogCoverageGapRow,
 	CatalogCoverageGapsResponse,
 	CatalogLogTestRequest,
 	CatalogLogTestResponse,
@@ -34,9 +36,10 @@ export default {
 	 * detections table, data sources, references). The backend uses ``{story_name:path}``
 	 * so spaces and other characters are tolerated — we encodeURIComponent here too.
 	 */
-	getStory(storyName: string) {
+	getStory(storyName: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & CatalogStoryDetailResponse>(
-			`/copilot_searches/catalog/stories/${encodeURIComponent(storyName)}`
+			`/copilot_searches/catalog/stories/${encodeURIComponent(storyName)}`,
+			{ signal }
 		)
 	},
 
@@ -74,6 +77,12 @@ export default {
 			`/copilot_searches/catalog/coverage-gaps`
 		)
 	},
+	getCoverageGap(techniqueId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { gap: CatalogCoverageGapRow }>(
+			`/copilot_searches/catalog/coverage-gaps/${encodeURIComponent(techniqueId)}`,
+			{ signal }
+		)
+	},
 
 	/**
 	 * Run a raw log line through Wazuh's logtest engine. Returns the matched
@@ -103,6 +112,13 @@ export default {
 	getCompliancePivot(framework: string) {
 		return HttpClient.get<FlaskBaseResponse & CatalogComplianceResponse>(
 			`/copilot_searches/catalog/compliance/${encodeURIComponent(framework)}`
+		)
+	},
+
+	getComplianceGroup(framework: string, control: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & CatalogComplianceGroupDetailResponse>(
+			`/copilot_searches/catalog/compliance/${encodeURIComponent(framework)}/${encodeURIComponent(control)}`,
+			{ signal }
 		)
 	}
 }

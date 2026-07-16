@@ -5,13 +5,47 @@ export const analystRoutes: RouteRecordRaw[] = [
 	{
 		path: "/ai-analyst",
 		name: "AiAnalyst",
-		component: () => import("@/views/AiAnalyst.vue"),
+		component: () => import("@/views/aiAnalyst/AiAnalyst.vue"),
 		meta: { title: "AI Analyst", auth: true, roles: RouteRole.All }
 	},
 	{
-		path: "/detection-catalog",
-		name: "DetectionCatalog",
-		component: () => import("@/views/DetectionCatalog.vue"),
-		meta: { title: "Detections Catalog", auth: true, roles: RouteRole.All }
+		path: "/ai-analyst/reports",
+		redirect: "/ai-analyst"
+	},
+	{
+		path: "/ai-analyst/reports/:id",
+		name: "AiAnalystReport",
+		component: () => import("@/views/aiAnalyst/AiAnalystReport.vue"),
+		meta: { title: "AI Analyst Report", auth: true, roles: RouteRole.All }
+	},
+	{
+		path: "/ai-analyst/feedback",
+		redirect: "/ai-analyst"
+	},
+	{
+		path: "/ai-analyst/feedback/:id",
+		name: "AiAnalystFeedbackReview",
+		component: () => import("@/views/aiAnalyst/AiAnalystFeedbackReview.vue"),
+		meta: { title: "AI Analyst Feedback Review", auth: true, roles: RouteRole.All }
+	},
+	{
+		path: "/ai-analyst/iocs",
+		redirect: "/ai-analyst"
+	},
+	{
+		path: "/ai-analyst/iocs/:id",
+		name: "AiAnalystIoc",
+		component: () => import("@/views/aiAnalyst/AiAnalystIoc.vue"),
+		meta: { title: "AI Analyst IOC", auth: true, roles: RouteRole.All }
+	},
+	{
+		path: "/ai-analyst/jobs",
+		redirect: "/ai-analyst"
+	},
+	{
+		path: "/ai-analyst/jobs/:id",
+		name: "AiAnalystJob",
+		component: () => import("@/views/aiAnalyst/AiAnalystJob.vue"),
+		meta: { title: "AI Analyst Job", auth: true, roles: RouteRole.All }
 	}
 ]

@@ -25,6 +25,13 @@
 					Alerts:
 					<strong class="ml-2 font-mono">{{ alertsSummary.total_alerts }}</strong>
 				</span>
+				<EntityDetailsButton
+					v-if="!hideOpen"
+					size="tiny"
+					:order="['open']"
+					open-show-label
+					:route="summaryRoute"
+				/>
 			</div>
 		</template>
 		<template #mainExtra>
@@ -52,8 +59,9 @@
 import type { AlertsSummary } from "@/types/alerts"
 import type { IndexStats } from "@/types/indices"
 import { NButton, NScrollbar } from "naive-ui"
-import { ref } from "vue"
+import { computed, ref } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
 import { useNavigation } from "@/composables/useNavigation"
@@ -63,14 +71,24 @@ export interface AlertsSummaryExt extends AlertsSummary {
 	indexStats?: IndexStats
 }
 
-const { alertsSummary } = defineProps<{ alertsSummary: AlertsSummaryExt }>()
+const {
+	alertsSummary,
+	hideOpen = false,
+	initialExpanded = false
+} = defineProps<{
+	alertsSummary: AlertsSummaryExt
+	hideOpen?: boolean
+	initialExpanded?: boolean
+}>()
 
 const ExpandIcon = "carbon:chevron-down"
 const PlaceholderIcon = "ph:question"
 const LinkIcon = "carbon:launch"
 
-const showAllAlerts = ref(false)
-const { routeIndex } = useNavigation()
+const showAllAlerts = ref(initialExpanded)
+const { routeIndex, routeAlertsSiemSummary } = useNavigation()
+
+const summaryRoute = computed(() => routeAlertsSiemSummary(alertsSummary.index_name))
 </script>
 
 <style lang="scss" scoped>

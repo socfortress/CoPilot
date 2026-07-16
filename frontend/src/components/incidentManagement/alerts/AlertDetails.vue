@@ -5,12 +5,12 @@
 			v-model:value="activeTab"
 			type="line"
 			animated
-			:tabs-padding="24"
+			:tabs-padding="fullWidth ? 0 : 24"
 			class="grow"
 			pane-wrapper-class="flex grow flex-col"
 		>
 			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex grow flex-col">
-				<div class="pt-1">
+				<div :class="fullWidth ? 'p-0 pt-1' : 'p-6 pt-1'">
 					<AlertOverview :alert @updated="updateAlert($event)" @deleted="emit('deleted')" />
 				</div>
 			</n-tab-pane>
@@ -22,22 +22,22 @@
 						<span v-if="hasAiReport" class="bg-primary inline-block h-2 w-2 animate-pulse rounded-full" />
 					</div>
 				</template>
-				<div class="p-6 pt-3">
+				<div :class="fullWidth ? 'p-0 pt-3' : 'p-6 pt-3'">
 					<AlertAiAnalyst :alert-id="alert.id" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Timeline" tab="Timeline" display-directive="show:lazy">
-				<div class="p-6 pt-3">
+				<div :class="fullWidth ? 'p-0 pt-3' : 'p-6 pt-3'">
 					<AlertTimeline :alert />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Assets" tab="Assets" display-directive="show:lazy">
-				<div class="p-6 pt-3">
+				<div :class="fullWidth ? 'p-0 pt-3' : 'p-6 pt-3'">
 					<AlertAssetsList :assets="alert.assets" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Comments" tab="Comments" display-directive="show:lazy">
-				<div class="p-6 pt-3">
+				<div :class="fullWidth ? 'p-0 pt-3' : 'p-6 pt-3'">
 					<AlertCommentsList
 						:comments="alert.comments"
 						:alert-id="alert.id"
@@ -46,7 +46,7 @@
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="IoCs" tab="IoCs" display-directive="show:lazy">
-				<div class="p-6 pt-3">
+				<div :class="fullWidth ? 'p-0 pt-3' : 'p-6 pt-3'">
 					<AlertIoCsList :iocs="alert.iocs" :alert-id="alert.id" @updated="updateIos($event)" />
 				</div>
 			</n-tab-pane>
@@ -57,7 +57,7 @@
 						<span>Try MCP</span>
 					</div>
 				</template>
-				<div class="p-6 pt-3">
+				<div :class="fullWidth ? 'p-0 pt-3' : 'p-6 pt-3'">
 					<AlertTryMcp :alert />
 				</div>
 			</n-tab-pane>
@@ -78,9 +78,11 @@ import { getApiErrorMessage } from "@/utils"
 const props = defineProps<{
 	alertData?: Alert
 	alertId?: number
+	fullWidth?: boolean
 }>()
 const emit = defineEmits<{
 	(e: "deleted"): void
+	(e: "loaded", value: Alert): void
 	(e: "updated", value: Alert): void
 }>()
 const AlertTimeline = defineAsyncComponent(() => import("./AlertTimeline.vue"))
@@ -139,6 +141,7 @@ function getAlert(alertId: number) {
 		.then(res => {
 			if (res.data.success) {
 				alert.value = res.data?.alerts?.[0] || null
+				if (alert.value) emit("loaded", alert.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -157,6 +160,7 @@ onBeforeMount(() => {
 		checkAiReport(alertId.value)
 	} else if (alertData.value) {
 		alert.value = _clone(alertData.value)
+		emit("loaded", alert.value)
 		checkAiReport(alertData.value.id)
 	}
 })

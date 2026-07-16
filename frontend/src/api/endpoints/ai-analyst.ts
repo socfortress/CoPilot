@@ -39,8 +39,8 @@ export default {
 	) {
 		return HttpClient.patch<FlaskBaseResponse & { job: AiAnalystJob }>(`/ai_analyst/jobs/${jobId}`, payload)
 	},
-	getJob(jobId: string) {
-		return HttpClient.get<FlaskBaseResponse & { job: AiAnalystJob }>(`/ai_analyst/jobs/${jobId}`)
+	getJob(jobId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { job: AiAnalystJob }>(`/ai_analyst/jobs/${jobId}`, { signal })
 	},
 	getJobsByAlert(alertId: number) {
 		return HttpClient.get<FlaskBaseResponse & { jobs: AiAnalystJob[] }>(`/ai_analyst/jobs/alert/${alertId}`)
@@ -91,6 +91,9 @@ export default {
 	getIocsByAlert(alertId: number) {
 		return HttpClient.get<FlaskBaseResponse & { iocs: AiAnalystIoc[] }>(`/ai_analyst/iocs/alert/${alertId}`)
 	},
+	getIoc(iocId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { ioc: AiAnalystIoc }>(`/ai_analyst/iocs/${iocId}`, { signal })
+	},
 	getIocsByCustomer(customerCode: string, vtVerdict?: string) {
 		return HttpClient.get<FlaskBaseResponse & { iocs: AiAnalystIoc[] }>(
 			`/ai_analyst/iocs/customer/${customerCode}`,
@@ -104,6 +107,17 @@ export default {
 	getAlertsWithReports(customerCode?: string) {
 		return HttpClient.get<FlaskBaseResponse & { alerts: AlertWithReport[] }>(`/ai_analyst/alerts_with_reports`, {
 			params: customerCode ? { customer_code: customerCode } : {}
+		})
+	},
+	getAlertWithReportByAlertId(alertId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { alert: AlertWithReport }>(
+			`/ai_analyst/alerts_with_reports/${alertId}`,
+			{ signal }
+		)
+	},
+	getAlertWithReportByReportId(reportId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { alert: AlertWithReport }>(`/ai_analyst/reports/${reportId}`, {
+			signal
 		})
 	},
 
@@ -143,6 +157,11 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { reviews: AiAnalystReview[] }>(
 			`/ai_analyst/reviews/customer/${customerCode}`
 		)
+	},
+	getReview(reviewId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { review: AiAnalystReview }>(`/ai_analyst/reviews/${reviewId}`, {
+			signal
+		})
 	},
 	/**
 	 * SQL-side feedback dashboard rollup — counts, averages, template

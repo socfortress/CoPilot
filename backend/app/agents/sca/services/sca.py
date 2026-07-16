@@ -27,6 +27,7 @@ from app.agents.sca.schema.sca import ScaPackageRegistryResponse
 from app.agents.sca.schema.sca import ScaPoliciesIndexResponse
 from app.agents.sca.schema.sca import ScaPolicyContentResponse
 from app.agents.sca.schema.sca import ScaPolicyItem
+from app.agents.sca.schema.sca import ScaPolicyMetadataResponse
 from app.agents.sca.schema.sca import SCAReportGenerateRequest
 from app.agents.sca.schema.sca import SCAReportGenerateResponse
 from app.agents.sca.schema.sca import SCAReportListResponse
@@ -1263,6 +1264,33 @@ async def fetch_sca_policies_index() -> ScaPoliciesIndexResponse:
     except Exception as e:
         logger.error(f"Error fetching SCA policies index: {e}")
         raise HTTPException(status_code=502, detail=f"Failed to fetch SCA policies index: {e}")
+
+
+async def fetch_sca_policy_metadata(policy_id: str) -> ScaPolicyMetadataResponse:
+    """
+    Fetch a single SCA policy's index metadata by id.
+
+    The GitHub index is a single file, so this reads it server-side but returns
+    only the matching ``ScaPolicyItem`` — the detail view thus receives one policy
+    instead of the whole catalog.
+
+    Args:
+        policy_id: The policy identifier (e.g. ``cis_iis_10_win``).
+
+    Returns:
+        ScaPolicyMetadataResponse with the matching policy, or 404 if not found.
+    """
+    index = await fetch_sca_policies_index()
+    policy = next((p for p in index.policies if p.id == policy_id), None)
+
+    if policy is None:
+        raise HTTPException(status_code=404, detail=f"SCA policy '{policy_id}' not found")
+
+    return ScaPolicyMetadataResponse(
+        policy=policy,
+        success=True,
+        message=f"Successfully fetched SCA policy '{policy_id}'",
+    )
 
 
 async def fetch_sca_policy_content(policy_id: str) -> ScaPolicyContentResponse:

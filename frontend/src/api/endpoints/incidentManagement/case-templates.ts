@@ -6,6 +6,7 @@ import type {
 	CaseTaskUpdatePayload,
 	CaseTemplate,
 	CaseTemplateCreatePayload,
+	CaseTemplateLibraryEntry,
 	CaseTemplateLibraryListResponse,
 	CaseTemplateLibraryRefreshResponse,
 	CaseTemplateTask,
@@ -142,6 +143,11 @@ export default {
 	// ---------------------------------------------------------------------------
 	getLibrary() {
 		return HttpClient.get<FlaskBaseResponse & CaseTemplateLibraryListResponse>(`/incidents/case_templates/library`)
+	},
+	getLibraryEntry(key: string) {
+		return HttpClient.get<FlaskBaseResponse & { entry: CaseTemplateLibraryEntry | null }>(
+			`/incidents/case_templates/library/${encodeURIComponent(key)}`
+		)
 	},
 	refreshLibrary() {
 		return HttpClient.post<FlaskBaseResponse & CaseTemplateLibraryRefreshResponse>(

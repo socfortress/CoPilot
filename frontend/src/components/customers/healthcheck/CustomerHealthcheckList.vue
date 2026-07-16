@@ -29,6 +29,7 @@
 							v-for="item of healthyList"
 							:key="item.id"
 							:health-data="item"
+							:customer-code
 							:source
 							type="healthy"
 							embedded
@@ -51,6 +52,7 @@
 							v-for="item of unhealthyList"
 							:key="item.id"
 							:health-data="item"
+							:customer-code
 							:source
 							type="unhealthy"
 							embedded

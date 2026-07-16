@@ -50,6 +50,7 @@ from app.agents.wazuh.services.sca import collect_agent_sca
 from app.agents.wazuh.services.sca import collect_agent_sca_policy_results
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities_new
+from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerability_by_cve
 from app.agents.wazuh.services.vulnerabilities import sync_agent_vulnerabilities
 from app.audit.models.audit import AuditAction
 from app.audit.services.audit import record_audit_event
@@ -831,6 +832,47 @@ async def upgrade_wazuh_agent_route(
 
 
 @agents_router.get(
+    "/{agent_id}/vulnerabilities/cve/{cve}",
+    response_model=WazuhAgentVulnerabilitiesResponse,
+    description="Get a single agent vulnerability by CVE (optionally narrowed to one package).",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_agent_vulnerability_by_cve(
+    agent_id: str,
+    cve: str = Path(..., description="The CVE identifier of the vulnerability to fetch."),
+    package: Optional[str] = Query(None, description="Package name — disambiguates a CVE affecting several packages."),
+    package_version: Optional[str] = Query(None, alias="version", description="Package version."),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> WazuhAgentVulnerabilitiesResponse:
+    """
+    Fetches one vulnerability of an agent. Backs the vulnerability detail page,
+    which would otherwise have to pull the agent's whole "All" severity list.
+    User must have access to the agent's customer.
+    """
+    logger.info(f"Fetching agent {agent_id} vulnerability {cve}")
+
+    base_query = select(Agents).filter(Agents.agent_id == agent_id)
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(current_user, session, base_query, Agents.customer_code)
+
+    result = await session.execute(filtered_query)
+    agent = result.scalars().first()
+
+    if not agent:
+        raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found or access denied")
+
+    wazuh_new = await check_wazuh_manager_version()
+
+    return await collect_agent_vulnerability_by_cve(
+        agent_id=agent_id,
+        cve=cve,
+        package_name=package,
+        package_version=package_version,
+        wazuh_new=wazuh_new,
+    )
+
+
+@agents_router.get(
     "/{agent_id}/vulnerabilities/{vulnerability_severity}",
     response_model=WazuhAgentVulnerabilitiesResponse,
     description="Get agent vulnerabilities",
@@ -980,6 +1022,7 @@ async def get_agent_vulnerabilities_csv(
 )
 async def get_agent_sca(
     agent_id: str,
+    policy_id: Optional[str] = Query(None, description="Return only this SCA policy instead of the agent's whole list."),
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> WazuhAgentScaResponse:
@@ -989,6 +1032,7 @@ async def get_agent_sca(
 
     Args:
         agent_id (str): The ID of the agent.
+        policy_id (str): Optional single-policy filter, used by the SCA detail view.
         current_user (User): The authenticated user.
         session (AsyncSession): The database session.
 
@@ -1007,7 +1051,7 @@ async def get_agent_sca(
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found or access denied")
 
-    return await collect_agent_sca(agent_id)
+    return await collect_agent_sca(agent_id, policy_id=policy_id)
 
 
 @agents_router.get(
@@ -1019,6 +1063,7 @@ async def get_agent_sca(
 async def get_agent_sca_policy_results(
     agent_id: str,
     policy_id: str,
+    check_id: Optional[int] = Query(None, description="Return only this SCA check instead of the whole policy's checks."),
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> WazuhAgentScaPolicyResultsResponse:
@@ -1029,6 +1074,7 @@ async def get_agent_sca_policy_results(
     Args:
         agent_id (str): The ID of the agent.
         policy_id (str): The ID of the policy.
+        check_id (int): Optional single-check filter, used by the SCA check detail view.
         current_user (User): The authenticated user.
         session (AsyncSession): The database session.
 
@@ -1047,7 +1093,7 @@ async def get_agent_sca_policy_results(
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found or access denied")
 
-    return await collect_agent_sca_policy_results(agent_id, policy_id)
+    return await collect_agent_sca_policy_results(agent_id, policy_id, check_id=check_id)
 
 
 @agents_router.get(

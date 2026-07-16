@@ -10,8 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai_analyst.schema.ai_analyst import AlertAnalysisResponse
 from app.ai_analyst.schema.ai_analyst import AlertsWithReportsListResponse
+from app.ai_analyst.schema.ai_analyst import AlertWithReportDetailResponse
 from app.ai_analyst.schema.ai_analyst import CreateJobRequest
 from app.ai_analyst.schema.ai_analyst import CreateJobResponse
+from app.ai_analyst.schema.ai_analyst import IocDetailResponse
 from app.ai_analyst.schema.ai_analyst import IocListResponse
 from app.ai_analyst.schema.ai_analyst import JobListResponse
 from app.ai_analyst.schema.ai_analyst import MyReviewResponse
@@ -22,6 +24,7 @@ from app.ai_analyst.schema.ai_analyst import QueuePalaceLessonResponse
 from app.ai_analyst.schema.ai_analyst import ReplayRequest
 from app.ai_analyst.schema.ai_analyst import ReplayResponse
 from app.ai_analyst.schema.ai_analyst import ReportListResponse
+from app.ai_analyst.schema.ai_analyst import ReviewDetailResponse
 from app.ai_analyst.schema.ai_analyst import ReviewListResponse
 from app.ai_analyst.schema.ai_analyst import ReviewStatsResponse
 from app.ai_analyst.schema.ai_analyst import SubmitIocsRequest
@@ -34,9 +37,13 @@ from app.ai_analyst.schema.ai_analyst import UpdateJobRequest
 from app.ai_analyst.schema.ai_analyst import UpdateJobResponse
 from app.ai_analyst.services.ai_analyst import create_job
 from app.ai_analyst.services.ai_analyst import get_alert_analysis
+from app.ai_analyst.services.ai_analyst import get_alert_with_report_by_alert_id
+from app.ai_analyst.services.ai_analyst import get_alert_with_report_by_report_id
+from app.ai_analyst.services.ai_analyst import get_ioc_by_id
 from app.ai_analyst.services.ai_analyst import get_job
 from app.ai_analyst.services.ai_analyst import get_my_review
 from app.ai_analyst.services.ai_analyst import get_palace_consolidation
+from app.ai_analyst.services.ai_analyst import get_review_by_id
 from app.ai_analyst.services.ai_analyst import get_review_stats
 from app.ai_analyst.services.ai_analyst import list_alerts_with_reports
 from app.ai_analyst.services.ai_analyst import list_iocs_by_alert
@@ -230,6 +237,20 @@ async def list_iocs_by_customer_route(
     return IocListResponse(success=True, message="IOCs retrieved", iocs=iocs)
 
 
+@ai_analyst_router.get(
+    "/iocs/{ioc_id}",
+    response_model=IocDetailResponse,
+    description="Get a single IOC by id",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_ioc_route(
+    ioc_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> IocDetailResponse:
+    ioc = await get_ioc_by_id(ioc_id, session)
+    return IocDetailResponse(success=True, message="IOC retrieved", ioc=ioc)
+
+
 # --- Alerts with reports ---
 
 
@@ -248,6 +269,42 @@ async def list_alerts_with_reports_route(
         success=True,
         message=f"{len(alerts)} alerts with reports found",
         alerts=alerts,
+    )
+
+
+@ai_analyst_router.get(
+    "/alerts_with_reports/{alert_id}",
+    response_model=AlertWithReportDetailResponse,
+    description="Fetch a single alert with its latest AI analyst report",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_alert_with_report_by_alert_id_route(
+    alert_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> AlertWithReportDetailResponse:
+    alert = await get_alert_with_report_by_alert_id(alert_id, session)
+    return AlertWithReportDetailResponse(
+        success=True,
+        message="Alert with report retrieved",
+        alert=alert,
+    )
+
+
+@ai_analyst_router.get(
+    "/reports/{report_id}",
+    response_model=AlertWithReportDetailResponse,
+    description="Fetch alert metadata for a single AI analyst report",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_alert_with_report_by_report_id_route(
+    report_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> AlertWithReportDetailResponse:
+    alert = await get_alert_with_report_by_report_id(report_id, session)
+    return AlertWithReportDetailResponse(
+        success=True,
+        message="Alert with report retrieved",
+        alert=alert,
     )
 
 
@@ -380,6 +437,25 @@ async def queue_palace_lesson_route(
 ) -> QueuePalaceLessonResponse:
     logger.info(f"Queuing palace lesson for customer {request.customer_code}")
     return await queue_palace_lesson(request, session)
+
+
+@ai_analyst_router.get(
+    "/reviews/{review_id}",
+    response_model=ReviewDetailResponse,
+    description="Fetch a single review by id (with nested IOC reviews)",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_review_by_id_route(
+    review_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> ReviewDetailResponse:
+    logger.info(f"Fetching review {review_id}")
+    review = await get_review_by_id(review_id, session)
+    return ReviewDetailResponse(
+        success=True,
+        message="Review retrieved",
+        review=review,
+    )
 
 
 @ai_analyst_router.get(

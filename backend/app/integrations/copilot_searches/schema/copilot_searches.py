@@ -698,6 +698,12 @@ class CatalogCoverageGapsResponse(BaseModel):
     coverage_pct: float = 0.0
 
 
+class CatalogCoverageGapDetailResponse(BaseModel):
+    success: bool = True
+    message: str = "Coverage gap retrieved successfully"
+    gap: CatalogCoverageGapRow
+
+
 # ---------------------------------------------------------------------------
 # Compliance pivot — Wazuh rules grouped by framework control ID
 # ---------------------------------------------------------------------------
@@ -737,6 +743,15 @@ class CatalogComplianceResponse(BaseModel):
     control_count: int = 0
     rules_with_compliance: int = 0  # rules carrying ≥1 control value for this framework
     total_rules: int = 0  # total Wazuh rules in the cache (for "%" math)
+    firing_stats_available: bool = True
+
+
+class CatalogComplianceGroupDetailResponse(BaseModel):
+    success: bool = True
+    message: str = "Compliance group retrieved successfully"
+    framework: str
+    framework_label: str
+    group: CatalogComplianceGroupRow
     firing_stats_available: bool = True
 
 

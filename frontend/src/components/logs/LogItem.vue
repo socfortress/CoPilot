@@ -1,36 +1,7 @@
 <template>
 	<CardEntity>
-		<template #headerExtra>{{ formatDate(log.timestamp) }}</template>
-		<template #default>
-			<div class="flex flex-col gap-2">
-				<CardEntity
-					:embedded="eventTypeLower !== 'error'"
-					:status="eventTypeLower === 'error' ? 'error' : undefined"
-				>
-					<div class="flex flex-wrap gap-3 font-mono">
-						<div :class="statusColorClass">
-							<code>{{ log.status_code }}</code>
-						</div>
-						<div :class="methodColorClass">
-							<strong>{{ log.method }}</strong>
-						</div>
-						<div class="text-sm">
-							{{ log.route }}
-						</div>
-					</div>
-				</CardEntity>
-				<div class="flex flex-col gap-1 px-1">
-					{{ log.message }}
-
-					<p v-if="log.additional_info">
-						{{ log.additional_info }}
-					</p>
-				</div>
-			</div>
-		</template>
-
-		<template #mainExtra>
-			<div class="flex flex-wrap items-center gap-3">
+		<template #headerMain>
+			<div class="text-default flex flex-wrap items-center gap-3">
 				<Badge type="splitted" :color="eventTypeLower === LogEventType.ERROR ? 'danger' : 'primary'">
 					<template #iconLeft>
 						<Icon :name="eventTypeLower === LogEventType.ERROR ? ErrorIcon : InfoIcon" :size="14" />
@@ -58,12 +29,43 @@
 				</Badge>
 			</div>
 		</template>
+		<template #headerExtra>{{ formatDate(log.timestamp) }}</template>
+		<template #default>
+			<div class="flex flex-col gap-2">
+				<CardEntity
+					:embedded="eventTypeLower !== 'error'"
+					:status="eventTypeLower === 'error' ? 'error' : undefined"
+				>
+					<div class="flex flex-wrap gap-3 font-mono">
+						<div :class="statusColorClass">
+							<code>{{ log.status_code }}</code>
+						</div>
+						<div :class="methodColorClass">
+							<strong>{{ log.method ?? "—" }}</strong>
+						</div>
+						<div class="text-sm">
+							{{ log.route ?? "—" }}
+						</div>
+					</div>
+				</CardEntity>
+				<n-card embedded size="small">
+					<div class="flex flex-col gap-1">
+						{{ log.message }}
+
+						<p v-if="log.additional_info">
+							{{ log.additional_info }}
+						</p>
+					</div>
+				</n-card>
+			</div>
+		</template>
 	</CardEntity>
 </template>
 
 <script setup lang="ts">
 import type { Log } from "@/types/logs"
 import type { User } from "@/types/user"
+import { NCard } from "naive-ui"
 import { computed } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -81,7 +83,7 @@ const ErrorIcon = "majesticons:exclamation-line"
 const dFormats = useSettingsStore().dateFormat
 
 const statusCategory = computed(() => log.status_code.toString()[0]?.toLowerCase())
-const methodLower = computed(() => log.method.toLowerCase())
+const methodLower = computed(() => log.method?.toLowerCase() ?? "")
 const eventTypeLower = computed(() => log.event_type.toLowerCase())
 const username = computed(() => {
 	if (!users?.length) return ""

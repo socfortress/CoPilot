@@ -3,10 +3,10 @@ import type { SafeAny } from "@/types/common"
 export interface Log {
 	event_type: LogEventType
 	user_id: number | null
-	route: string
-	method: LogMethod
+	route: string | null
+	method: LogMethod | null
 	status_code: number
-	message: string
+	message: string | null
 	additional_info: string | null
 	timestamp: string
 }

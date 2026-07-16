@@ -66,14 +66,34 @@ async def find_user(name: str):
 
 
 async def find_user_by_id(user_id: int):
-    """Find a user by primary key."""
+    """Find a user by primary key with role loaded."""
     try:
         async with AsyncSession(async_engine) as session:
-            result = await session.execute(select(User).where(User.id == user_id))
+            result = await session.execute(
+                select(User).where(User.id == user_id).options(selectinload(User.role)),
+            )
             return result.scalars().first()
     except Exception as e:
         logger.error(f"Error: {e}")
         return None
+
+
+def user_to_base_dict(user: User) -> dict:
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "role_id": user.role_id,
+        "role_name": user.role.name if user.role else None,
+        "last_login_at": user.last_login_at,
+    }
+
+
+async def get_user_by_id(user_id: int) -> dict:
+    user = await find_user_by_id(user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail=f"User {user_id} not found")
+    return user_to_base_dict(user)
 
 
 async def update_last_login(user_id: int) -> None:

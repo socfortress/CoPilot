@@ -1,5 +1,10 @@
 <template>
-	<n-tabs type="line" animated :tabs-padding="24" pane-class="min-h-100 p-6!">
+	<n-tabs
+		type="line"
+		animated
+		:tabs-padding="fullWidth ? 0 : 24"
+		:pane-class="fullWidth ? 'min-h-100 p-0! pt-3!' : 'min-h-100 p-6!'"
+	>
 		<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col gap-4">
 			<n-card embedded class="overflow-hidden">
 				<div class="flex flex-wrap justify-between gap-8">
@@ -134,6 +139,7 @@ import vShiki from "@/directives/v-shiki"
 
 const { data } = defineProps<{
 	data: ScaPolicyResult
+	fullWidth?: boolean
 }>()
 
 const properties = computed(() => {

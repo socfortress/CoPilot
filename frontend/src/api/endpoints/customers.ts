@@ -66,15 +66,16 @@ export default {
 	deleteCustomerMeta(code: string) {
 		return HttpClient.delete<FlaskBaseResponse & { customer_meta: CustomerMeta }>(`/customers/${code}/meta`)
 	},
-	getCustomerFull(code: string) {
+	getCustomerFull(code: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { customer: Customer; customer_meta?: CustomerMeta }>(
-			`/customers/${code}/full`
+			`/customers/${code}/full`,
+			signal ? { signal } : {}
 		)
 	},
 	getCustomerAgents(code: string) {
 		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(`/customers/${code}/agents`)
 	},
-	getCustomerAgentsHealthcheckWazuh(code: string, query?: CustomerAgentsHealthcheckQuery) {
+	getCustomerAgentsHealthcheckWazuh(code: string, query?: CustomerAgentsHealthcheckQuery, signal?: AbortSignal) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
 				healthy_wazuh_agents: CustomerAgentHealth[]
@@ -85,10 +86,15 @@ export default {
 				minutes: query?.minutes || 0,
 				hours: query?.hours || 0,
 				days: query?.days || 0
-			}
+			},
+			signal
 		})
 	},
-	getCustomerAgentsHealthcheckVelociraptor(code: string, query?: CustomerAgentsHealthcheckQuery) {
+	getCustomerAgentsHealthcheckVelociraptor(
+		code: string,
+		query?: CustomerAgentsHealthcheckQuery,
+		signal?: AbortSignal
+	) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
 				healthy_velociraptor_agents: CustomerAgentHealth[]
@@ -99,7 +105,8 @@ export default {
 				minutes: query?.minutes || 0,
 				hours: query?.hours || 0,
 				days: query?.days || 0
-			}
+			},
+			signal
 		})
 	},
 	// #endregion

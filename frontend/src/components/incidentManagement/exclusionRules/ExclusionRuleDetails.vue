@@ -1,8 +1,14 @@
 <template>
-	<n-tabs type="line" animated :tabs-padding="24" class="grow" pane-wrapper-class="flex grow flex-col">
+	<n-tabs
+		type="line"
+		animated
+		:tabs-padding="fullWidth ? 0 : 24"
+		class="grow"
+		pane-wrapper-class="flex grow flex-col"
+	>
 		<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex grow flex-col">
 			<n-spin :show="loading" class="flex grow flex-col" content-class="flex grow flex-col">
-				<div class="flex flex-col gap-4 p-5 pt-3">
+				<div class="flex flex-col gap-4" :class="fullWidth ? 'p-0' : 'p-5 pt-3'">
 					<div class="grid grid-cols-6 gap-4">
 						<CardKV class="col-span-6 md:col-span-2">
 							<template #key>name</template>
@@ -85,7 +91,7 @@
 			</n-spin>
 		</n-tab-pane>
 		<n-tab-pane name="Fields" tab="Fields" display-directive="show:lazy">
-			<div class="p-6 pt-3">
+			<div :class="fullWidth ? 'p-0' : 'p-6 pt-3'">
 				<CardKV v-for="(val, key) in entity.field_matches" :key size="lg">
 					<template #key>{{ key }}</template>
 					<template #value>
@@ -113,9 +119,10 @@ import ExclusionRuleStatusToggler from "./ExclusionRuleStatusToggler.vue"
 
 const props = defineProps<{
 	entity: ExclusionRule
+	fullWidth?: boolean
 }>()
 
-const { entity } = toRefs(props)
+const { entity, fullWidth } = toRefs(props)
 
 const TimeIcon = "carbon:time"
 const LinkIcon = "carbon:launch"

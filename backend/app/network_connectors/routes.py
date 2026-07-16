@@ -32,6 +32,7 @@ from app.network_connectors.models.network_connectors import (
     NetworkConnectorsSubscription,
 )
 from app.network_connectors.schema import AuthKey
+from app.network_connectors.schema import AvailableNetworkConnectorDetailResponse
 from app.network_connectors.schema import AvailableNetworkConnectorsResponse
 from app.network_connectors.schema import CreateNetworkConnectorsAuthKeys
 from app.network_connectors.schema import CreateNetworkConnectorsService
@@ -46,6 +47,17 @@ from app.network_connectors.schema import NetworkConnectorsWithAuthKeys
 from app.network_connectors.schema import UpdateCustomerNetworkConnectors
 
 network_connector_settings_router = APIRouter()
+
+
+def _to_network_connector_with_auth_keys(network_connector: AvailableNetworkConnectors) -> NetworkConnectorsWithAuthKeys:
+    """Map an AvailableNetworkConnectors ORM row (with keys loaded) to its response schema."""
+    return NetworkConnectorsWithAuthKeys(
+        id=network_connector.id,
+        network_connector_name=network_connector.network_connector_name,
+        description=network_connector.description,
+        network_connector_details=network_connector.network_connector_details,
+        network_connector_keys=[AuthKey(auth_key_name=key.auth_key_name) for key in network_connector.network_connector_keys],
+    )
 
 
 async def fetch_available_network_connectors(session: AsyncSession):
@@ -66,19 +78,24 @@ async def fetch_available_network_connectors(session: AsyncSession):
     # Use unique() to avoid duplicates caused by joined eager loading
     unique_network_connectors = result.unique().scalars().all()
 
-    network_connectors_with_auth_keys = []
-    for network_connector in unique_network_connectors:
-        auth_keys = [AuthKey(auth_key_name=key.auth_key_name) for key in network_connector.network_connector_keys]
-        network_connector_data = NetworkConnectorsWithAuthKeys(
-            id=network_connector.id,
-            network_connector_name=network_connector.network_connector_name,
-            description=network_connector.description,
-            network_connector_details=network_connector.network_connector_details,
-            network_connector_keys=auth_keys,
-        )
-        network_connectors_with_auth_keys.append(network_connector_data)
+    return [_to_network_connector_with_auth_keys(network_connector) for network_connector in unique_network_connectors]
 
-    return network_connectors_with_auth_keys
+
+async def fetch_available_network_connector_by_id(
+    session: AsyncSession,
+    network_connector_id: int,
+) -> NetworkConnectorsWithAuthKeys:
+    stmt = (
+        select(AvailableNetworkConnectors)
+        .options(joinedload(AvailableNetworkConnectors.network_connector_keys))
+        .where(AvailableNetworkConnectors.id == network_connector_id)
+    )
+    result = await session.execute(stmt)
+    network_connector = result.unique().scalar_one_or_none()
+    if network_connector is None:
+        raise HTTPException(status_code=404, detail=f"Network connector {network_connector_id} not found")
+
+    return _to_network_connector_with_auth_keys(network_connector)
 
 
 async def validate_network_connector_name(network_connector_name: str, session: AsyncSession):
@@ -535,6 +552,24 @@ async def get_available_network_connectors(
     return AvailableNetworkConnectorsResponse(
         network_connector_keys=available_network_connectors,
         message="Available network_connectors successfully retrieved.",
+        success=True,
+    )
+
+
+@network_connector_settings_router.get(
+    "/available_network_connectors/{network_connector_id}",
+    response_model=AvailableNetworkConnectorDetailResponse,
+    description="Get a single available network connector by id.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_available_network_connector(
+    network_connector_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> AvailableNetworkConnectorDetailResponse:
+    network_connector = await fetch_available_network_connector_by_id(session, network_connector_id)
+    return AvailableNetworkConnectorDetailResponse(
+        network_connector=network_connector,
+        message="Available network connector successfully retrieved.",
         success=True,
     )
 

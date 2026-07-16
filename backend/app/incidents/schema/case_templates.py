@@ -356,6 +356,12 @@ class CaseTemplateLibraryListResponse(BaseModel):
     message: str
 
 
+class CaseTemplateLibraryEntryResponse(BaseModel):
+    entry: Optional[CaseTemplateLibraryEntry] = None
+    success: bool
+    message: str
+
+
 class CaseTemplateLibraryRefreshResponse(BaseModel):
     loaded: int
     invalid_paths: List[str] = Field(default_factory=list)

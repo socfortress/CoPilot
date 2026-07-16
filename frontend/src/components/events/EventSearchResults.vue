@@ -10,12 +10,6 @@
 			</p>
 
 			<div class="flex flex-wrap items-center gap-3">
-				<n-tooltip class="px-2! py-1! text-xs!">
-					<template #trigger>
-						<Icon :name="InfoIcon" :size="15" class="cursor-help" />
-					</template>
-					Click table row to view event details
-				</n-tooltip>
 				<n-button
 					text
 					:disabled="!eventSource"
@@ -37,7 +31,6 @@
 			size="small"
 			:scroll-x
 			:row-key="(row: EventSearchResult) => String(row._id ?? JSON.stringify(row))"
-			:row-props
 			class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
 		>
 			<template #empty>
@@ -55,12 +48,16 @@
 
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
+import type { EntityRoute } from "@/composables/useNavigation"
 import type { SafeAny } from "@/types/common"
 import type { DisplayColumn, EventSource } from "@/types/event-sources"
 import type { EventSearchResult } from "@/types/events"
-import { NButton, NDataTable, NEmpty, NTooltip } from "naive-ui"
+import { NButton, NDataTable, NEmpty } from "naive-ui"
 import { computed, h } from "vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
+import ExpandableText from "@/components/common/ExpandableText.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 
@@ -72,6 +69,8 @@ const props = defineProps<{
 	hasSearched: boolean
 	scrollId: string | null
 	eventSource: EventSource | null
+	customerCode: string | null
+	sourceName: string | null
 }>()
 
 const emit = defineEmits<{
@@ -82,8 +81,8 @@ const emit = defineEmits<{
 
 const MIN_COLUMN_WIDTH = 120
 const SettingsIcon = "carbon:settings"
-const InfoIcon = "carbon:information"
 
+const { routeEventSearchEvent } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
 
 function resolveColumnWidth(width?: number | null): number {
@@ -151,9 +150,11 @@ const defaultColumns: DataTableColumns<EventSearchResult> = [
 		title: "Summary",
 		key: "full_log",
 		width: 320,
-		ellipsis: { tooltip: true },
 		render(row) {
-			return formatCellValue(row.full_log || row.data || row.message)
+			return h(ExpandableText, {
+				text: formatCellValue(row.full_log || row.data || row.message),
+				maxLength: 100
+			})
 		}
 	}
 ]
@@ -188,11 +189,42 @@ function buildColumnFromConfig(col: DisplayColumn): DataTableColumns<EventSearch
 
 const columns = computed<DataTableColumns<EventSearchResult>>(() => {
 	const configured = props.eventSource?.displayed_columns
-	if (configured && configured.length > 0) {
-		return normalizeColumns(configured.map(buildColumnFromConfig))
-	}
-	return normalizeColumns(defaultColumns)
+	const dataColumns =
+		configured && configured.length > 0
+			? normalizeColumns(configured.map(buildColumnFromConfig))
+			: normalizeColumns(defaultColumns)
+
+	return [
+		...dataColumns,
+		{
+			title: "",
+			key: "actions",
+			width: 100,
+			fixed: "right",
+			render(row: EventSearchResult) {
+				const eventRoute = eventDetailRoute(row)
+				if (!eventRoute) {
+					return h("span", { class: "text-tertiary text-xs" }, "—")
+				}
+
+				return h(
+					"div",
+					{ onClick: (e: Event) => e.stopPropagation() },
+					h(EntityDetailsButton, {
+						size: "tiny",
+						route: eventRoute,
+						onView: () => emit("row-select", row)
+					})
+				)
+			}
+		}
+	]
 })
+
+function eventDetailRoute(row: EventSearchResult): EntityRoute | undefined {
+	if (!row._id || !row._index || !props.customerCode || !props.sourceName) return undefined
+	return routeEventSearchEvent(props.customerCode, props.sourceName, String(row._index), String(row._id))
+}
 
 const scrollX = computed(() =>
 	columns.value.reduce(
@@ -200,13 +232,4 @@ const scrollX = computed(() =>
 		0
 	)
 )
-
-function rowProps(row: EventSearchResult) {
-	return {
-		style: "cursor: pointer",
-		onClick: () => {
-			emit("row-select", row)
-		}
-	}
-}
 </script>

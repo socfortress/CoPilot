@@ -113,8 +113,7 @@
 			:data="filteredRules"
 			:loading
 			size="small"
-			:row-props
-			:scroll-x="1400"
+			:scroll-x="1510"
 			:pagination
 			class="catalog-table wazuh-rules-table"
 		/>
@@ -166,13 +165,16 @@ import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Dot, { hitsToDotVariant } from "@/components/common/Dot.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import WazuhLogTest from "./WazuhLogTest.vue"
 import WazuhRuleDetail from "./WazuhRuleDetail.vue"
 
 const message = useMessage()
+const { routeDetectionCatalogWazuhRule } = useNavigation()
 const { globalCustomerCode } = useGlobalCustomerFilter()
 const rules = ref<CatalogWazuhRuleRow[]>([])
 const loading = ref(false)
@@ -191,9 +193,20 @@ const loadingCustomers = ref(false)
 const refetchingForCustomer = ref(false)
 
 const showTestLogLineDrawer = ref(false)
-const showDetailModal = ref(false)
 const modalRuleId = ref<number | null>(null)
-const modalTitle = ref("Wazuh Rule")
+// The modal is open exactly when a rule is selected — closing it clears the selection.
+const showDetailModal = computed({
+	get: () => modalRuleId.value !== null,
+	set: (open: boolean) => {
+		if (!open) modalRuleId.value = null
+	}
+})
+const modalTitle = computed(() => {
+	if (modalRuleId.value === null) return "Wazuh Rule"
+
+	const row = rules.value.find(r => r.id === modalRuleId.value)
+	return `Rule ${modalRuleId.value}${row?.description ? ` — ${row.description}` : ""}`
+})
 
 const pagination = {
 	pageSize: 50,
@@ -235,22 +248,10 @@ const filteredRules = computed<CatalogWazuhRuleRow[]>(() => {
 function openRuleDetail(row: CatalogWazuhRuleRow) {
 	if (typeof row.id !== "number") return
 	modalRuleId.value = row.id
-	modalTitle.value = `Rule ${row.id}`
-	showDetailModal.value = true
 }
 
 function openRuleById(ruleId: number) {
-	const row = rules.value.find(r => r.id === ruleId)
 	modalRuleId.value = ruleId
-	modalTitle.value = row ? `Rule ${ruleId}${row.description ? ` — ${row.description}` : ""}` : `Rule ${ruleId}`
-	showDetailModal.value = true
-}
-
-function rowProps(row: CatalogWazuhRuleRow) {
-	return {
-		style: "cursor: pointer;",
-		onClick: () => openRuleDetail(row)
-	}
 }
 
 function levelTagType(level: number | null): TagProps["type"] {
@@ -404,6 +405,27 @@ const columns = computed<DataTableColumns<CatalogWazuhRuleRow>>(() => {
 		}
 	]
 	if (firingStatsAvailable.value) cols.push(hitsColumn.value)
+	cols.push({
+		title: "",
+		key: "actions",
+		width: 110,
+		fixed: "right",
+		render: row => {
+			if (typeof row.id !== "number") {
+				return <span class="text-tertiary text-xs">—</span>
+			}
+
+			return (
+				<div onClick={e => e.stopPropagation()}>
+					<EntityDetailsButton
+						size="tiny"
+						route={routeDetectionCatalogWazuhRule(row.id)}
+						onView={() => openRuleDetail(row)}
+					/>
+				</div>
+			)
+		}
+	})
 	return cols
 })
 

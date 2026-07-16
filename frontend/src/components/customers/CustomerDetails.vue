@@ -1,0 +1,165 @@
+<template>
+	<n-spin :show="loading">
+		<CustomerDetailsTabs
+			v-if="tabCustomer"
+			v-model:loading-delete="loadingDelete"
+			:customer="tabCustomer"
+			:customer-info
+			:customer-meta
+			:customer-portainer-stack-id
+			:use-max-height
+			@delete="emit('delete')"
+			@update:customer-info="customerInfo = $event"
+			@update:customer-meta="customerMeta = $event"
+		/>
+	</n-spin>
+</template>
+
+<script setup lang="ts">
+import type { ApiError } from "@/types/common"
+import type { Customer, CustomerMeta } from "@/types/customers"
+import axios from "axios"
+import { NSpin, useMessage } from "naive-ui"
+import { computed, ref, watch } from "vue"
+import Api from "@/api"
+import { getApiErrorMessage } from "@/utils"
+import CustomerDetailsTabs from "./CustomerDetailsTabs.vue"
+
+const props = defineProps<{
+	customer?: Customer | null
+	customerCode?: string | null
+	useMaxHeight?: boolean
+}>()
+
+const emit = defineEmits<{
+	(e: "delete"): void
+	(e: "loaded", value: Customer): void
+}>()
+
+const message = useMessage()
+const loading = ref(false)
+const loadingDelete = ref(false)
+const customerInfo = ref<Customer | null>(null)
+const customerMeta = ref<CustomerMeta | null>(null)
+const customerPortainerStackId = ref<number | null>(null)
+
+const resolvedCode = computed(() => props.customer?.customer_code ?? props.customerCode ?? null)
+
+const tabCustomer = computed<Customer | null>(() => {
+	if (customerInfo.value) return customerInfo.value
+	if (props.customer) return props.customer
+	if (resolvedCode.value) {
+		return {
+			customer_code: resolvedCode.value,
+			customer_name: "",
+			contact_last_name: "",
+			contact_first_name: "",
+			parent_customer_code: null,
+			phone: "",
+			address_line1: "",
+			address_line2: "",
+			city: "",
+			state: "",
+			postal_code: "",
+			country: "",
+			customer_type: "",
+			logo_file: ""
+		}
+	}
+	return null
+})
+
+let fullAbortController: AbortController | null = null
+
+function getFull() {
+	const code = resolvedCode.value
+	if (!code) return
+
+	// cancel any in-flight request so switching customers on the bookmarkable route
+	// can't let a stale response overwrite the current one
+	fullAbortController?.abort()
+	const controller = new AbortController()
+	fullAbortController = controller
+
+	loading.value = true
+
+	Api.customers
+		.getCustomerFull(code, controller.signal)
+		.then(res => {
+			if (res.data.success) {
+				customerInfo.value = res.data.customer
+				customerMeta.value = res.data.customer_meta || null
+				emit("loaded", res.data.customer)
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			if (axios.isCancel(err)) return
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			// only the latest request clears the spinner (a superseded one already aborted)
+			if (fullAbortController === controller) {
+				loading.value = false
+			}
+		})
+}
+
+// the customerInfo watcher is the single owner of this call: getFull() re-assigns customerInfo,
+// so without a guard the same request went out 2-3 times per customer open
+let requestedStackName: string | null = null
+
+function getPortainerStackId(name: string) {
+	if (requestedStackName === name) return
+	requestedStackName = name
+
+	Api.portainer.getCustomerStackId(name).then(res => {
+		if (res.data.success) {
+			customerPortainerStackId.value = res.data.stack_id || null
+		} else {
+			message.warning(res.data?.message || "An error occurred. Please try again later.")
+		}
+	})
+}
+
+function ensureLoaded() {
+	if (!resolvedCode.value) return
+
+	if (props.customer?.customer_name) {
+		customerInfo.value = props.customer
+		emit("loaded", props.customer)
+	}
+
+	if (!customerInfo.value?.customer_name || !customerMeta.value?.customer_meta_graylog_index) {
+		getFull()
+	}
+}
+
+watch(
+	() => [props.customer, props.customerCode] as const,
+	([customer, customerCode]) => {
+		customerInfo.value = customer?.customer_name ? customer : null
+		customerMeta.value = null
+		customerPortainerStackId.value = null
+		requestedStackName = null
+
+		if (customer || customerCode) {
+			ensureLoaded()
+		}
+	},
+	{ immediate: true }
+)
+
+watch(
+	customerInfo,
+	info => {
+		if (info?.customer_name && customerPortainerStackId.value === null) {
+			getPortainerStackId(info.customer_name)
+		}
+	},
+	{ immediate: true }
+)
+
+defineExpose({ loading, customerInfo, customerMeta })
+</script>

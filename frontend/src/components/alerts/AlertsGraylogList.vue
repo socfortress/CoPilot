@@ -81,6 +81,7 @@ import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import AlertsGraylogFilters from "./AlertsGraylogFilters.vue"
 import AlertsSummaryItem from "./AlertsSummary.vue"
+// import { alerts_summary } from "./mock"
 
 const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 

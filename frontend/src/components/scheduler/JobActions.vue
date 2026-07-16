@@ -1,6 +1,6 @@
 <template>
-	<div class="contents gap-3">
-		<div class="flex items-center gap-3">
+	<div class="flex flex-wrap items-center gap-3">
+		<div class="flex items-center justify-start gap-3">
 			<n-button
 				:size
 				:type="job.enabled ? 'warning' : 'success'"

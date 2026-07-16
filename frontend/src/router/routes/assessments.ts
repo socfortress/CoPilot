@@ -3,12 +3,6 @@ import { RouteRole } from "@/types/auth"
 
 export const assessmentsRoutes: RouteRecordRaw[] = [
 	{
-		path: "/scheduler",
-		name: "Scheduler",
-		component: () => import("@/views/Scheduler.vue"),
-		meta: { title: "Scheduler", auth: true, roles: RouteRole.All }
-	},
-	{
 		path: "/cloud-security-assessment",
 		name: "CloudSecurityAssessment",
 		component: () => import("@/views/CloudSecurityAssessment.vue"),
@@ -31,9 +25,25 @@ export const assessmentsRoutes: RouteRecordRaw[] = [
 		}
 	},
 	{
-		path: "/customer-portal",
-		name: "CustomerPortal",
-		component: () => import("@/views/CustomerPortal.vue"),
-		meta: { title: "Customer Portal", auth: true, roles: RouteRole.All }
+		path: "/github-audit/new",
+		name: "GitHubAuditConfigNew",
+		component: () => import("@/views/GitHubAuditConfigNew.vue"),
+		meta: {
+			title: "New GitHub Audit Config",
+			auth: true,
+			roles: RouteRole.All,
+			skipPin: true
+		}
+	},
+	{
+		path: "/github-audit/:configId",
+		name: "GitHubAuditConfig",
+		component: () => import("@/views/GitHubAuditConfig.vue"),
+		meta: {
+			title: "GitHub Audit Config",
+			auth: true,
+			roles: RouteRole.All,
+			skipPin: true
+		}
 	}
 ]

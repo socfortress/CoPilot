@@ -34,3 +34,9 @@ class AuditLogResponse(BaseModel):
     pagination: dict
     success: bool
     message: str
+
+
+class AuditLogDetailResponse(BaseModel):
+    audit_log: AuditLogEntry
+    success: bool
+    message: str

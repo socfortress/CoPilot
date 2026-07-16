@@ -1,6 +1,23 @@
 <template>
 	<n-spin :show="loading" class="min-h-50">
 		<div v-if="rule" class="flex flex-col gap-4 pb-1">
+			<CardEntity embedded size="small">
+				<template #headerMain>
+					<div class="flex flex-col gap-1">
+						<div class="text-secondary text-xs tracking-wide uppercase">Detection Rule</div>
+						<h2 class="text-default text-xl leading-tight font-semibold">
+							{{ rule.name }}
+						</h2>
+					</div>
+				</template>
+				<template v-if="rule.id" #default>
+					<Badge type="splitted">
+						<template #label>ID</template>
+						<template #value>{{ rule.id }}</template>
+					</Badge>
+				</template>
+			</CardEntity>
+
 			<!-- Basic Information -->
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 				<PropsList :list="infoFields" embedded title="Information" />

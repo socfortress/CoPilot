@@ -1,12 +1,18 @@
 <template>
 	<div>
-		<CardEntity embedded clickable hoverable size="small" :loading="loadingDetails" @click="showDetails = true">
-			<template #headerMain>{{ id }}</template>
+		<CardEntity embedded hoverable size="small" :loading="loadingDetails">
+			<template #headerMain>
+				<div class="flex items-center gap-2">
+					<span v-if="groupDetails" class="text-default">
+						{{ groupDetails.external_id }}
+					</span>
+					<span>
+						{{ id }}
+					</span>
+				</div>
+			</template>
 			<template #headerExtra>
-				<span v-if="groupDetails" class="text-default">
-					{{ groupDetails.external_id }}
-				</span>
-				<n-skeleton v-else text :width="100" :height="18" />
+				<EntityDetailsButton size="tiny" :route="routeAlertsMitreGroup(id)" @view="showDetails = true" />
 			</template>
 			<template #default>
 				<div v-if="groupDetails">
@@ -14,7 +20,7 @@
 				</div>
 				<n-skeleton v-else text class="w-3/4" :height="20" />
 			</template>
-			<template #footer>
+			<template #footerMain>
 				<p v-if="groupDetails" class="cursor-text" @click.stop="() => {}">
 					<Markdown :source="groupDetails.description" />
 				</p>
@@ -34,31 +40,7 @@
 			:bordered="false"
 			segmented
 		>
-			<n-tabs type="line" animated :tabs-padding="24">
-				<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy">
-					<div class="px-6 pt-3 pb-6">
-						<GroupDetails :entity="groupDetails" />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					name="Software"
-					:tab="`Software (${groupDetails?.software?.length || 0})`"
-					display-directive="show:lazy"
-				>
-					<div class="px-6 pt-3 pb-6">
-						<SoftwareList v-if="groupDetails" :list="groupDetails.software" />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					name="Techniques"
-					:tab="`Techniques (${groupDetails?.techniques?.length || 0})`"
-					display-directive="show:lazy"
-				>
-					<div class="px-6 pt-3 pb-6">
-						<TechniquesList v-if="groupDetails" :list="groupDetails.techniques" />
-					</div>
-				</n-tab-pane>
-			</n-tabs>
+			<GroupOverview :entity="groupDetails" />
 		</n-modal>
 	</div>
 </template>
@@ -66,16 +48,16 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { MitreGroupDetails } from "@/types/mitre"
-import { NModal, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
+import { NModal, NSkeleton, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Markdown from "@/components/common/Markdown.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 
-import SoftwareList from "../Software/SoftwareList.vue"
-import TechniquesList from "../Technique/TechniquesList.vue"
-import GroupDetails from "./GroupDetails.vue"
+import GroupOverview from "./GroupOverview.vue"
 
 const { id, entity } = defineProps<{
 	id: string
@@ -85,6 +67,8 @@ const { id, entity } = defineProps<{
 const emit = defineEmits<{
 	(e: "loaded", value: MitreGroupDetails): void
 }>()
+
+const { routeAlertsMitreGroup } = useNavigation()
 
 const showDetails = ref(false)
 const message = useMessage()

@@ -7,21 +7,26 @@ from fastapi import Security
 from loguru import logger
 
 from app.auth.utils import AuthHandler
+from app.connectors.wazuh_indexer.schema.alerts import AlertByIdResponse
+from app.connectors.wazuh_indexer.schema.alerts import AlertByIdSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRulePerHostResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRuleResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import GraylogAlertsSearchBody
+from app.connectors.wazuh_indexer.schema.alerts import GraylogIndexAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchResponse
+from app.connectors.wazuh_indexer.services.alerts import get_alert_by_id
 from app.connectors.wazuh_indexer.services.alerts import get_alerts
 from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_host
 from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule
 from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule_per_host
 from app.connectors.wazuh_indexer.services.alerts import get_graylog_alerts
+from app.connectors.wazuh_indexer.services.alerts import get_graylog_alerts_for_index
 from app.connectors.wazuh_indexer.services.alerts import get_host_alerts
 from app.connectors.wazuh_indexer.services.alerts import get_index_alerts
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
@@ -68,6 +73,23 @@ async def verify_index_name(
             detail=f"Index name '{index_alerts_search_body.index_name}' is not managed by Wazuh Indexer or no longer exists.",
         )
     return index_alerts_search_body
+
+
+@wazuh_indexer_alerts_router.post(
+    "/by-id",
+    response_model=AlertByIdResponse,
+    description="Get a single Wazuh indexer alert by index name and document id",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_alert_by_index_and_id(request: AlertByIdSearchBody) -> AlertByIdResponse:
+    logger.info(f"Fetching alert {request.alert_id} from index {request.index_name}")
+    alert = await get_alert_by_id(request.index_name, request.alert_id)
+    not_found = alert.get("_source", {}).get("message") == "alert not found"
+    return AlertByIdResponse(
+        success=not not_found,
+        message="Alert retrieved" if not not_found else f"Alert {request.alert_id} not found in index {request.index_name}",
+        alert=alert,
+    )
 
 
 @wazuh_indexer_alerts_router.post(
@@ -198,6 +220,22 @@ async def get_all_alerts_by_rule_per_host(
     """
     logger.info("Fetching number of all alerts for all rules per host")
     return await get_alerts_by_rule_per_host(alerts_search_body)
+
+
+@wazuh_indexer_alerts_router.post(
+    "/alerts/graylog/index",
+    response_model=AlertsSearchResponse,
+    description="Get Graylog SIEM alerts for a single Wazuh indexer index",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_graylog_alerts_for_single_index(request: GraylogIndexAlertsSearchBody) -> AlertsSearchResponse:
+    logger.info(f"Fetching Graylog alerts for index {request.index_name}")
+    alerts_summary = await get_graylog_alerts_for_index(request)
+    return AlertsSearchResponse(
+        success=len(alerts_summary) > 0,
+        message="Alerts retrieved" if alerts_summary else f"No alerts found for index {request.index_name}",
+        alerts_summary=alerts_summary,
+    )
 
 
 @wazuh_indexer_alerts_router.post(

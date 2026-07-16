@@ -2,7 +2,7 @@
 	<n-spin :show="loading" class="flex grow flex-col" content-class="flex grow flex-col">
 		<div class="flex grow flex-col justify-between gap-4">
 			<div class="content-box flex flex-col gap-4 py-3">
-				<div class="flex flex-col gap-4 px-7 sm:flex-row!">
+				<div class="flex flex-col gap-4 sm:flex-row!">
 					<CardKV
 						:color="
 							alert.status === 'OPEN' ? 'danger' : alert.status === 'IN_PROGRESS' ? 'warning' : 'success'
@@ -73,6 +73,13 @@
 										>
 											<Icon :name="EditIcon" />
 										</n-spin>
+										<EntityDetailsButton
+											v-if="assignedUserId"
+											:order="['open']"
+											size="tiny"
+											open-show-label
+											:route="routeUser(assignedUserId)"
+										/>
 									</div>
 								</AlertAssignUser>
 							</div>
@@ -80,16 +87,14 @@
 					</CardKV>
 				</div>
 
-				<div class="px-7">
-					<CardKV>
-						<template #key>description</template>
-						<template #value>
-							{{ alert.alert_description ?? "-" }}
-						</template>
-					</CardKV>
-				</div>
+				<CardKV>
+					<template #key>description</template>
+					<template #value>
+						{{ alert.alert_description ?? "-" }}
+					</template>
+				</CardKV>
 
-				<div class="grid-auto-fit-250 grid gap-2 px-7">
+				<div class="grid-auto-fit-250 grid gap-2">
 					<CardKV>
 						<template #key>id</template>
 						<template #value>#{{ alert.id }}</template>
@@ -98,7 +103,15 @@
 					<CardKV>
 						<template #key>source</template>
 						<template #value>
-							{{ alert.source ?? "-" }}
+							<code
+								v-if="alert.source"
+								class="text-primary cursor-pointer"
+								@click="routeIncidentManagementSource(alert.source).navigate()"
+							>
+								{{ alert.source }}
+								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+							</code>
+							<span v-else>-</span>
 						</template>
 					</CardKV>
 
@@ -138,7 +151,10 @@
 				</div>
 			</div>
 
-			<div class="bg-secondary border-default flex items-center gap-2 border-t px-7 py-4">
+			<div
+				class="border-default flex items-center gap-2 border-t py-4"
+				:class="[useFooterBackground && 'bg-secondary']"
+			>
 				<AlertCreateCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
 
 				<AlertMergeCaseButton v-if="!linkedCases.length" :alerts="[alert]" @updated="updateAlert" />
@@ -172,9 +188,10 @@
 import type { ApiError } from "@/types/common"
 import type { Alert } from "@/types/incidentManagement/alerts"
 import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, ref, toRefs } from "vue"
+import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
@@ -185,7 +202,7 @@ import AlertStatusSwitch from "./AlertStatusSwitch.vue"
 import AlertTags from "./AlertTags.vue"
 import { handleDeleteAlert } from "./utils"
 
-const props = defineProps<{ alert: Alert }>()
+const props = defineProps<{ alert: Alert; useFooterBackground?: boolean }>()
 const emit = defineEmits<{
 	(e: "deleted"): void
 	(e: "updated", value: Alert): void
@@ -200,12 +217,27 @@ const TrashIcon = "carbon:trash-can"
 const LinkIcon = "carbon:launch"
 const EditIcon = "uil:edit-alt"
 
-const { routeCustomer } = useNavigation()
+const { routeCustomer, routeIncidentManagementSource, routeUser } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)
 const investigating = ref(false)
+const assignedUserId = ref<number | null>(null)
 const linkedCases = computed(() => alert.value.linked_cases)
+
+function resolveAssignedUserId(username: string | null) {
+	if (!username) {
+		assignedUserId.value = null
+		return
+	}
+
+	Api.users.getUsers().then(res => {
+		const user = res.data.users?.find(u => u.username === username)
+		assignedUserId.value = user?.id ?? null
+	})
+}
+
+watch(() => alert.value.assigned_to, resolveAssignedUserId, { immediate: true })
 
 function updateAlert(updatedAlert: Alert) {
 	emit("updated", updatedAlert)

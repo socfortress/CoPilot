@@ -30,8 +30,9 @@ import type { EventSource } from "@/types/event-sources"
 import { useElementSize } from "@vueuse/core"
 import { NButton, NDataTable, NEmpty, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, useTemplateRef, watch } from "vue"
-import { useRouter } from "vue-router"
 import Api from "@/api"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -49,7 +50,7 @@ const dFormats = useSettingsStore().dateFormat
 const message = useMessage()
 const dialog = useDialog()
 const { width: headerWidthRef } = useElementSize(useTemplateRef("wrapperRef"))
-const router = useRouter()
+const { routeDashboard } = useNavigation()
 const simpleMode = computed(() => headerWidthRef.value < 600)
 
 function fetchEnabledDashboards(customerCode: string) {
@@ -124,18 +125,12 @@ const enabledColumns = computed<DataTableColumns<EnabledDashboard>>(() => [
 		fixed: simpleMode.value ? undefined : "right",
 		render(row) {
 			return h("div", { class: "flex gap-2" }, [
-				h(
-					NButton,
-					{
-						size: "small",
-						type: "primary",
-						quaternary: true,
-						onClick: () => {
-							router.push({ name: "DashboardView", params: { id: String(row.id) } })
-						}
-					},
-					{ default: () => "View" }
-				),
+				h(EntityDetailsButton, {
+					size: "small",
+					order: ["open"],
+					openShowLabel: true,
+					route: routeDashboard(row.id)
+				}),
 				h(
 					NButton,
 					{

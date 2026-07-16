@@ -40,6 +40,12 @@ export default {
 			`/integrations/available_integrations`
 		)
 	},
+	getAvailableIntegration(integrationId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { available_integration: AvailableIntegration }>(
+			`/integrations/available_integrations/${integrationId}`,
+			{ signal }
+		)
+	},
 	getMetaAuto(customerCode: string, integrationName: string) {
 		return HttpClient.get<FlaskBaseResponse & CustomerIntegrationMetaResponse>(
 			`/integrations/meta_auto/${customerCode}/${integrationName}`

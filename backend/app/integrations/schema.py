@@ -24,6 +24,12 @@ class AvailableIntegrationsResponse(BaseModel):
     success: bool
 
 
+class AvailableIntegrationDetailResponse(BaseModel):
+    available_integration: IntegrationWithAuthKeys
+    message: str
+    success: bool
+
+
 class CreateIntegrationService(BaseModel):
     auth_type: str = Field(
         ...,
