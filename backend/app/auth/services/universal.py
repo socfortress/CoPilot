@@ -180,10 +180,21 @@ async def create_admin_user(session: AsyncSession):
         session,
     ):  # The check function needs to be passed the session as well
         # Create the admin user
-        password_model = Password.generate(length=24)
+        import os
+        import bcrypt
+        
+        env_password = os.getenv("COPILOT_ADMIN_PASSWORD")
+        if env_password:
+            hashed_pw = bcrypt.hashpw(env_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+            password_log = "Admin user password set from COPILOT_ADMIN_PASSWORD environment variable."
+        else:
+            password_model = Password.generate(length=24)
+            hashed_pw = password_model.hashed
+            password_log = f"Admin user password: {password_model.plain}"
+
         admin_user = User(
             username="admin",
-            password=password_model.hashed,  # Assuming you store the hashed password
+            password=hashed_pw,  # Assuming you store the hashed password
             email="admin@admin.com",
             role_id=1,  # Make sure the role_id corresponds to the admin role in your DB
         )
@@ -191,7 +202,7 @@ async def create_admin_user(session: AsyncSession):
         admin_username = admin_user.username
         await session.commit()
         logger.info(f"Added new admin user with username: {admin_username}")
-        logger.info(f"Admin user password: {password_model}")
+        logger.info(password_log)
     else:
         logger.info("Admin user already exists.")
     return

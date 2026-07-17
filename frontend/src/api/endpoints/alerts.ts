@@ -42,7 +42,7 @@ function getQueryByFilter(filter?: AlertsSummaryQuery): AlertsQuery {
 	const query: AlertsQuery = {
 		size: filter?.maxAlerts || 10,
 		timerange: filter?.timerange || "24h",
-		timestamp_field: "timestamp_utc"
+	timestamp_field: "@timestamp"
 	}
 
 	filter?.agentHostname && (query.agent_name = filter.agentHostname)
@@ -60,7 +60,7 @@ function getGraylogQueryByFilter(filter?: Partial<GraylogAlertsQuery>): GraylogA
 	const query: GraylogAlertsQuery = {
 		size: filter?.size || 10,
 		timerange: filter?.timerange || "24h",
-		index_prefix: "gl-events*"
+		index_prefix: "wazuh-alerts-*"
 	}
 
 	return query
