@@ -5,22 +5,22 @@
 			<VersionUpdateBanner />
 		</div>
 
-		<div class="section flex justify-end gap-3 @[70rem]:justify-between">
-			<div class="left-box hidden items-center gap-3 @[70rem]:flex">
+		<div class="section flex justify-between gap-3">
+			<div class="flex items-center gap-3">
+				<div class="flex items-center gap-2">
+					<div class="text-secondary min-w-22 text-xs">Use Global Customer Filter</div>
+					<n-switch v-model:value="useGlobalCustomerFilterToggle" size="small" />
+				</div>
+			</div>
+			<div class="hidden items-center gap-3 @[77rem]:flex">
 				<StackProvisioningButton size="small" type="primary" secondary />
 				<CloudSecurityAssessmentButton size="small" type="primary" secondary />
 				<WebVulnerabilityAssessmentButton size="small" type="primary" secondary />
 				<GitHubAuditButton size="small" type="primary" secondary />
-			</div>
-			<div class="right-box hidden items-center gap-3 @[70rem]:flex">
-				<div class="flex items-center gap-2">
-					<span class="text-secondary text-xs">Use Global Customer Filter</span>
-					<n-switch v-model:value="useGlobalCustomerFilterToggle" size="small" />
-				</div>
 				<ActiveResponseWizardButton size="small" type="primary" secondary />
 				<ThreatIntelButton size="small" type="primary" secondary />
 			</div>
-			<div class="mobile-box block @[70rem]:hidden">
+			<div class="mobile-box block @[77rem]:hidden">
 				<n-button size="small" type="primary" secondary @click="showQuickActions = true">
 					<template #icon>
 						<Icon :name="QuickActionsIcon" />
@@ -119,9 +119,7 @@ const { routeIndex, routeGraylogPipelines } = useNavigation()
 const { globalCustomerCodes, isFiltering } = useGlobalCustomerFilter()
 const useGlobalCustomerFilterToggle = ref(false)
 
-const effectiveCustomerCodes = computed(() =>
-	useGlobalCustomerFilterToggle.value ? globalCustomerCodes.value : []
-)
+const effectiveCustomerCodes = computed(() => (useGlobalCustomerFilterToggle.value ? globalCustomerCodes.value : []))
 
 useResizeObserver(page, entries => {
 	const entry = entries[0]
