@@ -69,6 +69,7 @@ from app.db.universal_models import Agents
 from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.services.db_operations import list_cases_by_asset_name
 from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_query import customer_codes_query
 from app.threat_intel.schema.epss import EpssThreatIntelRequest
 from app.threat_intel.services.epss import collect_epss_score
 
@@ -240,7 +241,7 @@ async def delete_agent_from_database(db: AsyncSession, agent_id: str):
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_agents(
-    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the results to"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AgentsResponse:
@@ -254,7 +255,7 @@ async def get_agents(
     Raises:
         HTTPException: If there is an error while fetching the agents.
     """
-    logger.info("Fetching all agents")
+    logger.info(f"Fetching agents (customer_codes={customer_codes or 'all'})")
     try:
         # Apply customer access filtering (optionally narrowed to a requested subset)
         base_query = select(Agents)

@@ -13,13 +13,17 @@ import type { ItemProps } from "@/components/common/cards/CardStatsMulti.vue"
 import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import { NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import CardStatsMulti from "@/components/common/cards/CardStatsMulti.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { AgentStatus } from "@/types/agents"
 import { getApiErrorMessage } from "@/utils"
+
+const props = defineProps<{
+	customerCodes?: string[]
+}>()
 
 const AgentsIcon = "carbon:network-3"
 const { routeAgent } = useNavigation()
@@ -41,7 +45,11 @@ function getData() {
 	loading.value = true
 
 	Api.agents
-		.getAgents()
+		.getAgents(
+			props.customerCodes && props.customerCodes.length
+				? { customerCodes: props.customerCodes }
+				: undefined
+		)
 		.then(res => {
 			if (res.data.success) {
 				agents.value = res.data.agents || []
@@ -60,4 +68,11 @@ function getData() {
 onBeforeMount(() => {
 	getData()
 })
+
+watch(
+	() => (props.customerCodes || []).slice(),
+	() => {
+		getData()
+	}
+)
 </script>
