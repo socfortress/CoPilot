@@ -1,5 +1,6 @@
 import type { Component } from "vue"
 import type { ApiError, OsTypesFull, SafeAny } from "@/types/common"
+import { createAvatar, palettes } from "@oreo-design/avatar"
 import { isMobile as detectMobile } from "detect-touch-device"
 import { md5 } from "js-md5"
 import isDateObject from "lodash/isDate"
@@ -138,10 +139,39 @@ export function getNameInitials(name: string, cap?: number) {
 	return (cap ? initials.slice(0, cap) : initials).toUpperCase()
 }
 
-export function getAvatar(params: { seed: string; text?: string; size?: number; format?: "png" | "svg" }) {
-	const format: "png" | "svg" = params.text ? "svg" : params.format || "svg"
+/**
+ * Deterministic Silk-theme avatar as a data URI, drawn with `@oreo-design/avatar`.
+ * The palette is picked from the seed; the initials are rendered in white.
+ *
+ * The initials markup mirrors the library's own (unreleased) `initials` support
+ * exactly, so this collapses to the native `initials` option once a version that
+ * ships it is published: https://github.com/BIAsia/oreo-design-avatar/blob/main/src/core/svg.ts
+ */
+export function getAvatar(params: { seed: string; text?: string; size?: number }): string {
+	const seed = params.seed || ""
+	let hash = 0
+	for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0
 
-	return `https://avatar.vercel.sh/${params.seed}.${format}?text=${params.text || ""}&size=${params.size || 32}`
+	const avatar = createAvatar({
+		shape: "silk",
+		palette: palettes[Math.abs(hash) % palettes.length].id,
+		appearance: "dark",
+		tone: { lightness: -0.2 },
+		variantId: seed,
+		size: params.size || 32,
+		title: params.text ? `${params.text} avatar` : "Avatar"
+	})
+
+	const initials = (params.text ?? "").trim().toUpperCase().slice(0, 2)
+	if (!initials) return avatar.toDataUri()
+
+	const escaped = initials.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+	const text =
+		`<text x="32" y="32" text-anchor="middle" dominant-baseline="central" fill="#ffffff" fill-opacity="0.92" ` +
+		`font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" ` +
+		`font-size="${initials.length === 1 ? 23 : 19}" font-weight="600" letter-spacing="-0.6">${escaped}</text>`
+
+	return `data:image/svg+xml;utf8,${encodeURIComponent(avatar.svg.replace("</svg>", `${text}</svg>`))}`
 }
 
 const NUMERIC_TIMESTAMP_REGEX = /^\d{10,}$/

@@ -52,6 +52,9 @@ importers:
       '@mui/material':
         specifier: ^9.2.0
         version: 9.2.0(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.7))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.7))(@types/react@19.2.17)(react@19.2.7))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@oreo-design/avatar':
+        specifier: ^0.1.0
+        version: 0.1.0(react@19.2.7)
       '@shikijs/markdown-it':
         specifier: ^4.3.1
         version: 4.3.1
@@ -1086,6 +1089,16 @@ packages:
 
   '@one-ini/wasm@0.1.1':
     resolution: {integrity: sha512-XuySG1E38YScSJoMlqovLru4KTUNSjgVTIjyh7qMX6aNN5HY5Ct5LhRJdxO79JtTzKfzV/bnWpz+zquYrISsvw==}
+
+  '@oreo-design/avatar@0.1.0':
+    resolution: {integrity: sha512-+CF6a5r7C0tuDu2+dFlwj/txrrVvmZbKD9BiBzGGIjrwJxHV/qs3Y/6q2jpgo8on1GVOpv9HvTg/g6Fk/zEUSw==}
+    engines: {node: '>=20'}
+    hasBin: true
+    peerDependencies:
+      react: '>=18'
+    peerDependenciesMeta:
+      react:
+        optional: true
 
   '@ota-meshi/ast-token-store@0.3.0':
     resolution: {integrity: sha512-XRO0zi2NIUKq2lUk3T1ecFSld1fMWRKE6naRFGkgkdeosx7IslyUKNv5Dcb5PJTja9tHJoFu0v/7yEpAkrkrTg==}
@@ -5940,6 +5953,10 @@ snapshots:
     optional: true
 
   '@one-ini/wasm@0.1.1': {}
+
+  '@oreo-design/avatar@0.1.0(react@19.2.7)':
+    optionalDependencies:
+      react: 19.2.7
 
   '@ota-meshi/ast-token-store@0.3.0': {}
 

@@ -48,6 +48,7 @@
 		"@fontsource/public-sans": "^5.2.7",
 		"@microsoft/fetch-event-source": "^2.0.1",
 		"@mui/material": "^9.2.0",
+		"@oreo-design/avatar": "^0.1.0",
 		"@shikijs/markdown-it": "^4.3.1",
 		"@shuffleio/shuffle-mcps": "^0.0.33",
 		"@simplewebauthn/browser": "^13.3.0",
