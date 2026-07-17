@@ -42,7 +42,7 @@
 import type { ApiError } from "@/types/common"
 import type { IndexStats } from "@/types/indices"
 import { NCard, NEmpty, NMarquee, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref, toRefs, watch } from "vue"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
@@ -51,6 +51,8 @@ import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
 	indices?: IndexStats[] | null
+	customerCodes?: string[]
+	loading?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -58,10 +60,11 @@ const emit = defineEmits<{
 }>()
 
 const InfoIcon = "carbon:information"
-const { indices } = toRefs(props)
+const { indices, customerCodes, loading: parentLoading } = toRefs(props)
 const list = ref(indices.value)
 const message = useMessage()
-const loading = ref(false)
+const internalLoading = ref(false)
+const loading = computed(() => parentLoading.value ?? internalLoading.value)
 
 function healthClass(health: IndexStats["health"]) {
 	switch (health) {
@@ -75,10 +78,12 @@ function healthClass(health: IndexStats["health"]) {
 }
 
 function getIndices() {
-	loading.value = true
+	internalLoading.value = true
+
+	const query = customerCodes.value?.length ? { customerCodes: customerCodes.value } : undefined
 
 	Api.wazuh.indices
-		.getIndices()
+		.getIndices(query)
 		.then(res => {
 			if (res.data.success) {
 				list.value = res.data.indices_stats
@@ -99,13 +104,23 @@ function getIndices() {
 			}
 		})
 		.finally(() => {
-			loading.value = false
+			internalLoading.value = false
 		})
 }
 
 watch(indices, val => {
 	list.value = val
 })
+
+watch(
+	() => customerCodes.value,
+	() => {
+		if (indices.value === undefined) {
+			getIndices()
+		}
+	},
+	{ deep: true }
+)
 
 onBeforeMount(() => {
 	if (indices.value === undefined) {

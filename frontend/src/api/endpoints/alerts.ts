@@ -7,7 +7,8 @@ export type AlertsQueryTimeRange = `${number}${"h" | "d" | "w"}`
 export interface GraylogAlertsQuery {
 	size: number
 	timerange: AlertsQueryTimeRange
-	index_prefix: string
+	index_prefix?: string
+	customer_codes?: string[]
 }
 
 export interface GraylogIndexAlertsQuery extends GraylogAlertsQuery {
@@ -60,7 +61,11 @@ function getGraylogQueryByFilter(filter?: Partial<GraylogAlertsQuery>): GraylogA
 	const query: GraylogAlertsQuery = {
 		size: filter?.size || 10,
 		timerange: filter?.timerange || "24h",
-		index_prefix: "gl-events*"
+		index_prefix: filter?.index_prefix || "gl-events*"
+	}
+
+	if (filter?.customer_codes?.length) {
+		query.customer_codes = filter.customer_codes
 	}
 
 	return query

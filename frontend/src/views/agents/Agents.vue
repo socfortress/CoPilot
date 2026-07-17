@@ -4,6 +4,7 @@
 			<div class="sidebar p-px">
 				<AgentToolbar
 					v-model="textFilter"
+					v-model:customer-codes="customerCodesFilter"
 					:syncing="loadingSync"
 					:agents-length="agents.length"
 					:agents-filtered-length="agentsFiltered.length"
@@ -70,10 +71,11 @@
 <script setup lang="ts">
 import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
+import axios from "axios"
 import _debounce from "lodash/debounce"
 import _split from "lodash/split"
 import { NEmpty, NPagination, NScrollbar, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref, watch } from "vue"
+import { computed, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import AgentCard from "@/components/agents/AgentCard.vue"
 import AgentToolbar from "@/components/agents/AgentToolbar.vue"
@@ -87,6 +89,7 @@ const { routeAgent } = useNavigation()
 const loadingAgents = ref(false)
 const loadingSync = ref(false)
 const agents = ref<Agent[]>([])
+const customerCodesFilter = ref<string[]>([])
 const textFilter = ref("")
 const page = ref(1)
 const pageSize = ref(20)
@@ -97,6 +100,7 @@ const selectedAgents = ref<Agent[]>([])
 const showBulkDeleteModal = ref(false)
 
 const textFilterDebounced = ref("")
+let abortController: AbortController | null = null
 
 const update = _debounce(value => {
 	textFilterDebounced.value = value
@@ -180,23 +184,34 @@ function runCommand(command: string) {
 	}
 }
 
+function cancelGetAgents() {
+	abortController?.abort()
+}
+
 function getAgents() {
+	cancelGetAgents()
 	loadingAgents.value = true
 
+	abortController = new AbortController()
+
 	Api.agents
-		.getAgents()
+		.getAgents(
+			customerCodesFilter.value.length ? { customerCodes: customerCodesFilter.value } : undefined,
+			abortController.signal
+		)
 		.then(res => {
 			if (res.data.success) {
 				agents.value = res.data.agents || []
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
+			loadingAgents.value = false
 		})
 		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingAgents.value = false
+			if (!axios.isCancel(err)) {
+				message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+				loadingAgents.value = false
+			}
 		})
 }
 
@@ -249,9 +264,16 @@ function syncVulnerabilities(customerCode: string) {
 			loadingSync.value = false
 		})
 }
+watch(
+	() => customerCodesFilter.value,
+	() => {
+		getAgents()
+	},
+	{ immediate: true }
+)
 
-onBeforeMount(() => {
-	getAgents()
+onBeforeUnmount(() => {
+	cancelGetAgents()
 })
 </script>
 

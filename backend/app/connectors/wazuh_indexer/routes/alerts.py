@@ -5,7 +5,9 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.schema.alerts import AlertByIdResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertByIdSearchBody
@@ -30,6 +32,8 @@ from app.connectors.wazuh_indexer.services.alerts import get_graylog_alerts_for_
 from app.connectors.wazuh_indexer.services.alerts import get_host_alerts
 from app.connectors.wazuh_indexer.services.alerts import get_index_alerts
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
+from app.db.db_session import get_db
+from app.middleware.customer_access import customer_access_handler
 
 # App specific imports
 
@@ -228,9 +232,24 @@ async def get_all_alerts_by_rule_per_host(
     description="Get Graylog SIEM alerts for a single Wazuh indexer index",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_graylog_alerts_for_single_index(request: GraylogIndexAlertsSearchBody) -> AlertsSearchResponse:
+async def get_graylog_alerts_for_single_index(
+    request: GraylogIndexAlertsSearchBody,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> AlertsSearchResponse:
     logger.info(f"Fetching Graylog alerts for index {request.index_name}")
-    alerts_summary = await get_graylog_alerts_for_index(request)
+    effective_customers = await customer_access_handler.resolve_effective_customers(
+        current_user,
+        request.customer_codes,
+        db,
+    )
+    scoped_customers = None if "*" in effective_customers else effective_customers
+
+    alerts_summary = await get_graylog_alerts_for_index(
+        request,
+        customer_codes=scoped_customers,
+        session=db,
+    )
     return AlertsSearchResponse(
         success=len(alerts_summary) > 0,
         message="Alerts retrieved" if alerts_summary else f"No alerts found for index {request.index_name}",
@@ -244,8 +263,24 @@ async def get_graylog_alerts_for_single_index(request: GraylogIndexAlertsSearchB
     description="Get alerts that are configured Via Graylog",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_alerts_not_created_in_copilot(request: GraylogAlertsSearchBody) -> AlertsSearchResponse:
+async def get_alerts_not_created_in_copilot(
+    request: GraylogAlertsSearchBody,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> AlertsSearchResponse:
     """
     Get the Graylog event indices. Then get all the results from the list of indices, where `copilot_alert_id` does not exist.
     """
-    return AlertsSearchResponse(success=True, message="Alerts retrieved", alerts_summary=await get_graylog_alerts(request))
+    effective_customers = await customer_access_handler.resolve_effective_customers(
+        current_user,
+        request.customer_codes,
+        db,
+    )
+    scoped_customers = None if "*" in effective_customers else effective_customers
+
+    alerts_summary = await get_graylog_alerts(
+        request,
+        customer_codes=scoped_customers,
+        session=db,
+    )
+    return AlertsSearchResponse(success=True, message="Alerts retrieved", alerts_summary=alerts_summary)

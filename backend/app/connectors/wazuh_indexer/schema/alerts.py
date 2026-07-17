@@ -130,6 +130,10 @@ class GraylogAlertsSearchBody(BaseModel):
         "gl-events*",
         description="The index prefix to search alerts in.",
     )
+    customer_codes: Optional[List[str]] = Field(
+        None,
+        description="Optional subset of customer codes to scope alert indices to.",
+    )
 
     @field_validator("timerange")
     @classmethod
