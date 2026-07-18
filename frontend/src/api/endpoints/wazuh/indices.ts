@@ -1,6 +1,7 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type { ClusterHealth, CustomerIndicesSize, IndexAllocation, IndexShard, IndexStats } from "@/types/indices"
 import { HttpClient } from "../../http-client"
+import { searchLimitParams } from "../../params"
 
 export interface IndicesQuery {
 	customerCodes?: string[]
@@ -11,10 +12,10 @@ export interface IndicesQuery {
 }
 
 function indicesParams(query?: IndicesQuery) {
-	const params: Record<string, number | string | string[]> = {}
-	if (query?.customerCodes?.length) params.customer_codes = query.customerCodes
-	if (query?.search) params.search = query.search
-	if (query?.limit !== undefined) params.limit = query.limit
+	const params: Record<string, number | string | string[]> = {
+		...(query?.customerCodes?.length ? { customer_codes: query.customerCodes } : {}),
+		...searchLimitParams(query ?? {})
+	}
 
 	if (!Object.keys(params).length) return undefined
 

@@ -5,7 +5,6 @@ from typing import Union
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Query
 from fastapi import Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,6 +29,9 @@ from app.connectors.wazuh_indexer.utils.universal import resize_wazuh_index_fiel
 from app.db.db_session import get_db
 from app.middleware.customer_access import customer_access_handler
 from app.middleware.customer_query import customer_codes_query
+from app.middleware.search_query import SearchParams
+from app.middleware.search_query import filter_and_limit
+from app.middleware.search_query import search_query
 
 wazuh_indexer_router = APIRouter()
 
@@ -95,8 +97,7 @@ async def get_node_allocation() -> Union[NodeAllocationResponse, HTTPException]:
 )
 async def get_indices_stats(
     customer_codes: Optional[List[str]] = Depends(customer_codes_query),
-    search: Optional[str] = Query(None, description="Case-insensitive substring match on index name"),
-    limit: Optional[int] = Query(None, ge=1, le=1000, description="Cap the number of returned indices (used by the search palette)"),
+    search_params: SearchParams = Depends(search_query),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Union[IndicesStatsResponse, HTTPException]:
@@ -104,9 +105,9 @@ async def get_indices_stats(
     Fetch Wazuh Indexer indices stats.
 
     This endpoint retrieves the indices stats of the Wazuh Indexer service.
-    ``search`` narrows the result to indices whose name contains the string and
-    ``limit`` caps the count — both let the global search palette query by name
-    server-side instead of pulling the whole (often 1500+) index list.
+    ``search``/``limit`` (see ``search_query``) narrow the result to indices whose
+    name contains the string and cap the count — so the global search palette can
+    query by name instead of pulling the whole (often 1500+) index list.
 
     Returns:
         ElasticsearchResponse: A Pydantic model representing the indices stats of the Wazuh Indexer service.
@@ -125,14 +126,12 @@ async def get_indices_stats(
     if indices_stats_response is None:
         raise HTTPException(status_code=500, detail="Failed to retrieve indices stats.")
 
-    if (search or limit is not None) and indices_stats_response.indices_stats:
-        rows = indices_stats_response.indices_stats
-        if search:
-            needle = search.lower()
-            rows = [row for row in rows if needle in row.index.lower()]
-        if limit is not None:
-            rows = rows[:limit]
-        indices_stats_response.indices_stats = rows
+    if indices_stats_response.indices_stats:
+        indices_stats_response.indices_stats = filter_and_limit(
+            indices_stats_response.indices_stats,
+            search_params,
+            key=lambda row: row.index,
+        )
 
     return indices_stats_response
 

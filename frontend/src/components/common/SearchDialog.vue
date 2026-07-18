@@ -80,7 +80,7 @@ import { computed, onMounted, reactive, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { entityCandidates, fuzzyFilter, toKeywords } from "@/components/common/searchDialog.helpers"
+import { createFuse, entityCandidates, searchFuse, toKeywords } from "@/components/common/searchDialog.helpers"
 import { useFullscreenSwitch } from "@/composables/useFullscreenSwitch"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSearchDialog } from "@/composables/useSearchDialog"
@@ -132,7 +132,6 @@ const REMOTE_MAX_ITEMS = 5
 interface RecentEntry {
 	key: string
 	title: string
-	label: string
 	iconName: string | null
 	kind: ItemKind
 	target: string
@@ -276,46 +275,28 @@ function goToRoute(name: string) {
 	router.push({ name })
 }
 
-/** Rebuilds and runs a persisted target (used by Recent items). */
-function runTarget(kind: ItemKind, target: string) {
-	switch (kind) {
-		case "route":
-			goToRoute(target)
-			break
-		case "alert":
-			routeIncidentManagementAlerts(Number(target)).navigate()
-			break
-		case "case":
-			routeIncidentManagementCases(Number(target)).navigate()
-			break
-		case "customer":
-			routeCustomer({ code: target }).navigate()
-			break
-		case "agent":
-			routeAgent(target).navigate()
-			break
-		case "copilotRule":
-			routeCopilotSearchRule(target).navigate()
-			break
-		case "wazuhRule":
-			routeDetectionCatalogWazuhRule(Number(target)).navigate()
-			break
-		case "user":
-			routeUser(Number(target)).navigate()
-			break
-		case "story":
-			routeDetectionCatalogStory(target).navigate()
-			break
-		case "schedulerJob":
-			routeSchedulerJob(target).navigate()
-			break
-		case "index":
-			routeIndex(target).navigate()
-			break
-	}
+/** kind → navigator. Sibling to ENTITY_ICONS; keeps the kind mapping in one table. */
+const ENTITY_NAV: Record<ItemKind, (target: string) => void> = {
+	route: goToRoute,
+	alert: target => routeIncidentManagementAlerts(Number(target)).navigate(),
+	case: target => routeIncidentManagementCases(Number(target)).navigate(),
+	customer: target => routeCustomer({ code: target }).navigate(),
+	agent: target => routeAgent(target).navigate(),
+	copilotRule: target => routeCopilotSearchRule(target).navigate(),
+	wazuhRule: target => routeDetectionCatalogWazuhRule(Number(target)).navigate(),
+	user: target => routeUser(Number(target)).navigate(),
+	story: target => routeDetectionCatalogStory(target).navigate(),
+	schedulerJob: target => routeSchedulerJob(target).navigate(),
+	index: target => routeIndex(target).navigate()
 }
 
-const navigateGroup = computed<Group>(() => ({
+/** Rebuilds and runs a persisted target (used by Recent items). */
+function runTarget(kind: ItemKind, target: string) {
+	ENTITY_NAV[kind](target)
+}
+
+// Static groups — built once (route helpers are stable), fuzzy-filtered via a memoized Fuse index.
+const navigateGroup: Group = {
 	name: "Navigate",
 	items: NAV_LINKS.map(link => ({
 		iconName: link.icon,
@@ -327,9 +308,9 @@ const navigateGroup = computed<Group>(() => ({
 		recent: { kind: "route", target: link.routeName },
 		action: () => goToRoute(link.routeName)
 	}))
-}))
+}
 
-const actionsGroup = computed<Group>(() => ({
+const actionsGroup: Group = {
 	name: "Actions",
 	items: [
 		{
@@ -408,7 +389,17 @@ const actionsGroup = computed<Group>(() => ({
 			action: () => useThemeSwitch().toggle()
 		}
 	]
-}))
+}
+
+const STATIC_GROUPS = [navigateGroup, actionsGroup]
+const staticFuses = STATIC_GROUPS.map(group => createFuse(group.items, ["title", "tags"]))
+
+/** Fuzzy-filtered nav/action groups. Depends only on `search`, so remote results don't rebuild the Fuse indexes. */
+const filteredStaticGroups = computed<Group[]>(() =>
+	STATIC_GROUPS.map((group, i) => ({ name: group.name, items: searchFuse(staticFuses[i], search.value, group.items) })).filter(
+		group => group.items.length
+	)
+)
 
 const ENTITY_ICONS: Record<ItemKind, string> = {
 	route: RecentIcon,
@@ -438,6 +429,11 @@ function entityItem(kind: ItemKind, target: string, title: string, label: string
 	}
 }
 
+/** Maps API rows to entity items; `pick` returns `[target, title, label]` for one row. */
+function toEntityItems<T>(kind: ItemKind, rows: T[], pick: (row: T) => [string, string, string]): GroupItem[] {
+	return rows.map(row => entityItem(kind, ...pick(row)))
+}
+
 /** Dynamic "jump to entity by ID" quick items, derived from a numeric query. */
 const entityItems = computed<GroupItem[]>(() =>
 	entityCandidates(search.value).map(({ kind, target, title }) => entityItem(kind, target, title, "Jump"))
@@ -447,14 +443,14 @@ const entityItems = computed<GroupItem[]>(() =>
 // Every provider searches through an API — the palette never downloads a full
 // entity list to filter it client-side.
 
+const SEARCH_LIMIT = { limit: REMOTE_MAX_ITEMS }
+
 const REMOTE_PROVIDERS: RemoteProvider[] = [
 	{
 		name: "Customers",
 		async search(query, signal) {
 			const res = await Api.customers.searchCustomers(query, REMOTE_MAX_ITEMS, signal)
-			return (res.data.customers ?? []).map(c =>
-				entityItem("customer", c.customer_code, c.customer_name, c.customer_code)
-			)
+			return toEntityItems("customer", res.data.customers ?? [], c => [c.customer_code, c.customer_name, c.customer_code])
 		}
 	},
 	{
@@ -464,75 +460,67 @@ const REMOTE_PROVIDERS: RemoteProvider[] = [
 				{ filter: { title: query }, page: 1, pageSize: REMOTE_MAX_ITEMS },
 				signal
 			)
-			return res.data.alerts.map(a => entityItem("alert", String(a.id), a.alert_name, `#${a.id}`))
+			return toEntityItems("alert", res.data.alerts, a => [String(a.id), a.alert_name, `#${a.id}`])
 		}
 	},
 	{
 		name: "Cases",
 		async search(query, signal) {
-			const res = await Api.incidentManagement.cases.searchCasesByName(
-				query,
-				{ page: 1, pageSize: REMOTE_MAX_ITEMS },
-				signal
-			)
-			return res.data.cases.map(c => entityItem("case", String(c.id), c.case_name, `#${c.id}`))
+			const res = await Api.incidentManagement.cases.searchCasesByName(query, { page: 1, pageSize: REMOTE_MAX_ITEMS }, signal)
+			return toEntityItems("case", res.data.cases, c => [String(c.id), c.case_name, `#${c.id}`])
 		}
 	},
 	{
 		name: "Agents",
 		async search(query, signal) {
-			const res = await Api.agents.getAgents({ search: query, limit: REMOTE_MAX_ITEMS }, signal)
-			return res.data.agents.map(a =>
-				entityItem("agent", a.agent_id, a.hostname || a.label || a.agent_id, a.customer_code ?? a.ip_address)
-			)
+			const res = await Api.agents.getAgents({ search: query, ...SEARCH_LIMIT }, signal)
+			return toEntityItems("agent", res.data.agents, a => [
+				a.agent_id,
+				a.hostname || a.label || a.agent_id,
+				a.customer_code ?? a.ip_address
+			])
 		}
 	},
 	{
 		name: "Users",
 		async search(query, signal) {
-			const res = await Api.users.getUsers({ search: query, limit: REMOTE_MAX_ITEMS }, signal)
-			return res.data.users.map(u => entityItem("user", String(u.id), u.username, u.email))
+			const res = await Api.users.getUsers({ search: query, ...SEARCH_LIMIT }, signal)
+			return toEntityItems("user", res.data.users, u => [String(u.id), u.username, u.email])
 		}
 	},
 	{
 		name: "Detection Rules",
 		async search(query, signal) {
-			const res = await Api.copilotSearches.getRules({ search: query, limit: REMOTE_MAX_ITEMS }, signal)
-			return res.data.rules.map(r => entityItem("copilotRule", r.id, r.name, r.severity))
+			const res = await Api.copilotSearches.getRules({ search: query, ...SEARCH_LIMIT }, signal)
+			return toEntityItems("copilotRule", res.data.rules, r => [r.id, r.name, r.severity])
 		}
 	},
 	{
 		name: "Wazuh Rules",
 		async search(query, signal) {
-			const res = await Api.detectionCatalog.listWazuhRules(
-				undefined,
-				{ search: query, limit: REMOTE_MAX_ITEMS },
-				signal
-			)
-			return res.data.rules
-				.filter(r => r.id != null)
-				.map(r => entityItem("wazuhRule", String(r.id), r.description, `#${r.id}`))
+			const res = await Api.detectionCatalog.listWazuhRules(undefined, { search: query, ...SEARCH_LIMIT }, signal)
+			return toEntityItems("wazuhRule", res.data.rules.filter(r => r.id != null), r => [String(r.id), r.description, `#${r.id}`])
 		}
 	},
 	{
 		name: "Detection Stories",
 		async search(query, signal) {
-			const res = await Api.detectionCatalog.listStories({ search: query, limit: REMOTE_MAX_ITEMS }, signal)
-			return res.data.stories.map(s => entityItem("story", s.name, s.name, `${s.detection_count} detections`))
+			const res = await Api.detectionCatalog.listStories({ search: query, ...SEARCH_LIMIT }, signal)
+			return toEntityItems("story", res.data.stories, s => [s.name, s.name, `${s.detection_count} detections`])
 		}
 	},
 	{
 		name: "Scheduler Jobs",
 		async search(query, signal) {
-			const res = await Api.scheduler.getAllJobs(query, signal)
-			return res.data.jobs.slice(0, REMOTE_MAX_ITEMS).map(j => entityItem("schedulerJob", j.id, j.name, j.id))
+			const res = await Api.scheduler.getAllJobs({ search: query, ...SEARCH_LIMIT }, signal)
+			return toEntityItems("schedulerJob", res.data.jobs, j => [j.id, j.name, j.id])
 		}
 	},
 	{
 		name: "Indices",
 		async search(query, signal) {
-			const res = await Api.indices.getIndices({ search: query, limit: REMOTE_MAX_ITEMS }, signal)
-			return res.data.indices_stats.map(i => entityItem("index", i.index, i.index, `${i.docs_count} docs`))
+			const res = await Api.indices.getIndices({ search: query, ...SEARCH_LIMIT }, signal)
+			return toEntityItems("index", res.data.indices_stats, i => [i.index, i.index, `${i.docs_count} docs`])
 		}
 	}
 ]
@@ -599,7 +587,7 @@ const filteredGroups = computed<Group[]>(() => {
 	if (!kws.length) {
 		const groups: Group[] = []
 		if (recentItems.value.length) groups.push({ name: "Recent", items: recentItems.value })
-		groups.push(navigateGroup.value, actionsGroup.value)
+		groups.push(...STATIC_GROUPS)
 		return groups
 	}
 
@@ -613,17 +601,12 @@ const filteredGroups = computed<Group[]>(() => {
 		}
 	}
 
-	for (const group of [navigateGroup.value, actionsGroup.value]) {
-		const items = fuzzyFilter(group.items, search.value, ["title", "tags"])
-		if (items.length) groups.push({ name: group.name, items })
-	}
+	groups.push(...filteredStaticGroups.value)
 
 	return groups
 })
 
-const filteredFlattenItems = computed<GroupItem[]>(() => {
-	return filteredGroups.value.reduce((acc, group) => [...acc, ...group.items], [] as GroupItem[])
-})
+const filteredFlattenItems = computed<GroupItem[]>(() => filteredGroups.value.flatMap(group => group.items))
 
 // Keep a valid highlight and pre-select the first result while typing, so Enter fires immediately.
 watch(filteredFlattenItems, items => {
@@ -642,7 +625,6 @@ function recordRecent(item: GroupItem) {
 	const entry: RecentEntry = {
 		key: `${item.recent.kind}:${item.recent.target}`,
 		title: item.title,
-		label: item.label,
 		iconName: item.iconName,
 		kind: item.recent.kind,
 		target: item.recent.target

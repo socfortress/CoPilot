@@ -4,7 +4,6 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Query
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +11,9 @@ from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.middleware.search_query import SearchParams
+from app.middleware.search_query import filter_and_limit
+from app.middleware.search_query import search_query
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.scheduler import get_function_by_name
 from app.schedulers.scheduler import get_scheduler_instance
@@ -110,15 +112,15 @@ async def get_job_payload(job_id: str, session: AsyncSession) -> dict:
 
 @scheduler_router.get("", response_model=JobsResponse, description="Get all jobs")
 async def get_all_jobs(
-    search: Optional[str] = Query(None, description="Case-insensitive substring match on job id or name"),
+    search_params: SearchParams = Depends(search_query),
     session: AsyncSession = Depends(get_db),
 ) -> JobsResponse:
     """
     Retrieve jobs from the scheduler.
 
-    ``search`` narrows the (small, in-memory) job set to those whose id or name
-    contains the string — used by the global search palette so the client never
-    pulls the whole job list to filter it locally.
+    ``search``/``limit`` (see ``search_query``) narrow the (small, in-memory) job set
+    to those whose id or name contains the string and cap the count — used by the
+    global search palette so the client never pulls the whole job list to filter it.
 
     Args:
         session (AsyncSession): The database session.
@@ -128,10 +130,7 @@ async def get_all_jobs(
 
     """
     scheduler = await get_scheduler_instance()
-    jobs = scheduler.get_jobs()
-    if search:
-        needle = search.lower()
-        jobs = [job for job in jobs if needle in (job.id or "").lower() or needle in (job.name or "").lower()]
+    jobs = filter_and_limit(scheduler.get_jobs(), search_params, key=lambda job: f"{job.id or ''} {job.name or ''}")
     apscheduler_jobs = []
     for job in jobs:
         job_metadata = await session.execute(

@@ -12,6 +12,7 @@ import type {
 } from "@/types/agents"
 import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
+import { searchLimitParams } from "../params"
 
 export interface AgentPayload {
 	velociraptor_id: string
@@ -46,10 +47,10 @@ export default {
 		const agentId = arg?.agentId
 		const url = `/agents${agentId ? `/${agentId}` : ""}`
 
-		const params: Record<string, number | string | string[]> = {}
-		if (arg?.customerCodes?.length) params.customer_codes = arg.customerCodes
-		if (arg?.search) params.search = arg.search
-		if (arg?.limit !== undefined) params.limit = arg.limit
+		const params: Record<string, number | string | string[]> = {
+			...(arg?.customerCodes?.length ? { customer_codes: arg.customerCodes } : {}),
+			...searchLimitParams(arg ?? {})
+		}
 
 		const requestConfig = {
 			...(Object.keys(params).length ? { params, paramsSerializer: { indexes: null } } : {}),

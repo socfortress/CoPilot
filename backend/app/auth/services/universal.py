@@ -3,7 +3,6 @@ from typing import Optional
 
 from fastapi import HTTPException
 from loguru import logger
-from sqlalchemy import or_
 
 # ! New with Async
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +15,8 @@ from app.auth.models.users import Role
 from app.auth.models.users import User
 from app.auth.models.users import UserCustomerAccess
 from app.db.db_session import async_engine
+from app.middleware.search_query import SearchParams
+from app.middleware.search_query import apply_search_limit
 
 passwords_in_memory = {}
 
@@ -47,11 +48,7 @@ async def select_all_users(search: Optional[str] = None, limit: Optional[int] = 
     """
     async with AsyncSession(async_engine) as session:
         statement = select(User).options(selectinload(User.role))
-        if search:
-            term = f"%{search}%"
-            statement = statement.where(or_(User.username.like(term), User.email.like(term)))
-        if limit is not None:
-            statement = statement.limit(limit)
+        statement = apply_search_limit(statement, SearchParams(search=search, limit=limit), User.username, User.email)
         result = await session.execute(statement)
         return result.scalars().all()
 

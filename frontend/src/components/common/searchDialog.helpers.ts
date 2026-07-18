@@ -2,25 +2,34 @@
 import type { IFuseOptions } from "fuse.js"
 import Fuse from "fuse.js"
 
-/** What an entity jump points at. Mirrors `ItemKind` in SearchDialog.vue. */
-export type EntityKind = "alert" | "case" | "customer" | "agent"
+/** The two entity kinds `entityCandidates` can emit; a subset of SearchDialog's `ItemKind`. */
+export type EntityCandidateKind = "alert" | "case"
 
 export interface EntityCandidate {
-	kind: EntityKind
+	kind: EntityCandidateKind
 	target: string
 	title: string
 }
 
+const FUSE_OPTIONS = { threshold: 0.4, ignoreLocation: true }
+
+/** Builds a reusable Fuse index over a stable list — construct once, `searchFuse` many times. */
+export function createFuse<T>(items: T[], keys: IFuseOptions<T>["keys"]): Fuse<T> {
+	return new Fuse(items, { keys, ...FUSE_OPTIONS })
+}
+
+/** Runs a query against a pre-built Fuse index; an empty query returns `all` unchanged. */
+export function searchFuse<T>(fuse: Fuse<T>, query: string, all: T[]): T[] {
+	if (!query.trim()) return all
+	return fuse.search(query).map(result => result.item)
+}
+
 /**
- * Ranked fuzzy filter over a list, backed by Fuse.js. An empty query returns the
- * list unchanged; otherwise results come back in Fuse's relevance order.
- * `ignoreLocation` so a match late in the string still counts.
+ * Ranked fuzzy filter over a list, backed by Fuse.js. Convenience wrapper that builds a
+ * fresh index each call — use `createFuse` + `searchFuse` on hot paths over stable lists.
  */
 export function fuzzyFilter<T>(items: T[], query: string, keys: IFuseOptions<T>["keys"]): T[] {
-	if (!query.trim()) return items
-
-	const fuse = new Fuse(items, { keys, threshold: 0.4, ignoreLocation: true })
-	return fuse.search(query).map(result => result.item)
+	return searchFuse(createFuse(items, keys), query, items)
 }
 
 /** Splits a raw query into keywords (whitespace-separated, empties dropped) for highlighting. */
@@ -41,7 +50,7 @@ export function entityCandidates(search: string): EntityCandidate[] {
 	if (!/^\d+$/.test(numeric)) return []
 
 	return [
-		{ kind: "alert", target: numeric, title: `Go to Alert #${numeric}` },
-		{ kind: "case", target: numeric, title: `Go to Case #${numeric}` }
+		{ kind: "alert" as const, target: numeric, title: `Go to Alert #${numeric}` },
+		{ kind: "case" as const, target: numeric, title: `Go to Case #${numeric}` }
 	]
 }

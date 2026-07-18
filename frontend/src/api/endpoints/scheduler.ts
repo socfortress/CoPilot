@@ -1,6 +1,7 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type { Job } from "@/types/scheduler"
 import { HttpClient } from "../http-client"
+import { searchLimitParams } from "../params"
 
 export interface UpdateJobPayload {
 	/** minutes */
@@ -9,9 +10,9 @@ export interface UpdateJobPayload {
 }
 
 export default {
-	getAllJobs(search?: string, signal?: AbortSignal) {
+	getAllJobs(query: { search?: string; limit?: number } = {}, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { jobs: Job[] }>(`/scheduler`, {
-			params: search ? { search } : {},
+			params: searchLimitParams(query),
 			signal
 		})
 	},

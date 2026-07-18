@@ -1,12 +1,9 @@
-from typing import Optional
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
 from loguru import logger
-from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -34,6 +31,9 @@ from app.healthchecks.agents.services.agents import velociraptor_agents_healthch
 from app.healthchecks.agents.services.agents import wazuh_agents_healthcheck
 from app.middleware.license import get_license_seat_allowance
 from app.middleware.license import is_feature_enabled
+from app.middleware.search_query import SearchParams
+from app.middleware.search_query import apply_search_limit
+from app.middleware.search_query import search_query
 
 customers_router = APIRouter()
 
@@ -248,16 +248,15 @@ async def create_customer(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_customers(
-    search: Optional[str] = Query(None, description="Case-insensitive substring match on customer code or name"),
-    limit: Optional[int] = Query(None, ge=1, le=1000, description="Cap the number of returned customers (used by the search palette)"),
+    search_params: SearchParams = Depends(search_query),
     session: AsyncSession = Depends(get_db),
 ) -> CustomersResponse:
     """
     Fetches customers from the database.
 
-    ``search`` narrows the result to customers whose code or name contains the
-    string, and ``limit`` caps the count — both power the global search palette
-    so it never pulls the whole customer list to filter client-side.
+    ``search``/``limit`` (see ``search_query``) narrow the result to customers whose
+    code or name contains the string and cap the count — so the global search palette
+    never pulls the whole customer list to filter client-side.
 
     Args:
         session (AsyncSession): The async session object used to interact with the database.
@@ -265,15 +264,9 @@ async def get_customers(
     Returns:
         CustomersResponse: The response containing the list of customers fetched successfully.
     """
-    logger.info(f"Fetching customers (search={search or 'none'})")
+    logger.info(f"Fetching customers (search={search_params.search or 'none'})")
 
-    query = select(Customers)
-    if search:
-        term = f"%{search}%"
-        query = query.where(or_(Customers.customer_code.like(term), Customers.customer_name.like(term)))
-    if limit is not None:
-        query = query.limit(limit)
-
+    query = apply_search_limit(select(Customers), search_params, Customers.customer_code, Customers.customer_name)
     result = await session.execute(query)
     customers = result.scalars().all()
 

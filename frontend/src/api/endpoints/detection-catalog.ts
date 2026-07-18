@@ -19,6 +19,7 @@ import type {
 } from "@/types/detection-catalog"
 import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
+import { searchLimitParams } from "../params"
 
 export default {
 	/** Top-level metrics for the catalog overview pane. */
@@ -31,12 +32,8 @@ export default {
 	 * ``search``/``limit`` to filter server-side (used by the global search palette).
 	 */
 	listStories(query: { search?: string; limit?: number } = {}, signal?: AbortSignal) {
-		const params: Record<string, number | string> = {}
-		if (query.search) params.search = query.search
-		if (query.limit !== undefined) params.limit = query.limit
-
 		return HttpClient.get<FlaskBaseResponse & CatalogStoryListResponse>(`/copilot_searches/catalog/stories`, {
-			params,
+			params: searchLimitParams(query),
 			signal
 		})
 	},
@@ -65,13 +62,8 @@ export default {
 	 * any hits for that customer get zeros.
 	 */
 	listWazuhRules(customerCode?: string, query: { search?: string; limit?: number } = {}, signal?: AbortSignal) {
-		const params: Record<string, number | string> = {}
-		if (customerCode) params.customer_code = customerCode
-		if (query.search) params.search = query.search
-		if (query.limit !== undefined) params.limit = query.limit
-
 		return HttpClient.get<FlaskBaseResponse & CatalogWazuhRulesResponse>(`/copilot_searches/catalog/wazuh-rules`, {
-			params,
+			params: { ...(customerCode ? { customer_code: customerCode } : {}), ...searchLimitParams(query) },
 			signal
 		})
 	},
