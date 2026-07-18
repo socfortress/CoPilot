@@ -21,6 +21,7 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from packaging import version
 from sqlalchemy import delete
+from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -242,6 +243,8 @@ async def delete_agent_from_database(db: AsyncSession, agent_id: str):
 )
 async def get_agents(
     customer_codes: Optional[List[str]] = Depends(customer_codes_query),
+    search: Optional[str] = Query(None, description="Case-insensitive substring match on hostname, label, IP, or agent id"),
+    limit: Optional[int] = Query(None, ge=1, le=1000, description="Cap the number of returned agents (used by the search palette)"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AgentsResponse:
@@ -249,13 +252,17 @@ async def get_agents(
     Retrieve all agents currently synced to the database.
     Results are filtered based on user's customer access permissions.
 
+    An optional ``search`` narrows the result to agents whose hostname, label,
+    IP, or agent id contains the string; ``limit`` caps the count. Both power the
+    global search palette so it never has to pull the whole agent fleet.
+
     Returns:
         AgentsResponse: The response containing the list of agents, success status, and message.
 
     Raises:
         HTTPException: If there is an error while fetching the agents.
     """
-    logger.info(f"Fetching agents (customer_codes={customer_codes or 'all'})")
+    logger.info(f"Fetching agents (customer_codes={customer_codes or 'all'}, search={search or 'none'})")
     try:
         # Apply customer access filtering (optionally narrowed to a requested subset)
         base_query = select(Agents)
@@ -266,6 +273,20 @@ async def get_agents(
             Agents.customer_code,
             requested_customers=customer_codes,
         )
+
+        if search:
+            term = f"%{search}%"
+            filtered_query = filtered_query.where(
+                or_(
+                    Agents.hostname.like(term),
+                    Agents.label.like(term),
+                    Agents.ip_address.like(term),
+                    Agents.agent_id.like(term),
+                ),
+            )
+
+        if limit is not None:
+            filtered_query = filtered_query.limit(limit)
 
         result = await db.execute(filtered_query)
         agents = result.scalars().all()

@@ -218,6 +218,7 @@ from app.incidents.services.db_operations import list_all_files
 from app.incidents.services.db_operations import list_cases_by_asset_name
 from app.incidents.services.db_operations import list_cases_by_assigned_to
 from app.incidents.services.db_operations import list_cases_by_customer_code
+from app.incidents.services.db_operations import list_cases_by_name
 from app.incidents.services.db_operations import list_cases_by_status
 from app.incidents.services.db_operations import list_cases_for_user
 from app.incidents.services.db_operations import list_files_by_case_id
@@ -2212,6 +2213,47 @@ async def list_cases_by_status_endpoint(
     return CaseOutResponse(
         cases=cases,
         total=total,
+        open=open_cases,
+        in_progress=in_progress,
+        closed=closed,
+        success=True,
+        message="Cases retrieved successfully",
+    )
+
+
+@incidents_db_operations_router.get(
+    "/case/name/{name}",
+    response_model=CaseOutResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def list_cases_by_name_endpoint(
+    name: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List cases whose name matches ``name`` (substring), with customer access filtering.
+
+    Backs the global search palette's case lookup; cases have no other text-search route.
+    """
+    logger.info(f"Listing cases by name '{name}' for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    cases = await list_cases_by_name(name, db, page=page, page_size=page_size, order=order)
+
+    # Cases carry a string customer_code with no FK — scope customer users in Python.
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    if "*" not in accessible_customers:
+        cases = [case for case in cases if case.customer_code in accessible_customers]
+
+    open_cases = sum(1 for case in cases if case.case_status == "OPEN")
+    in_progress = sum(1 for case in cases if case.case_status == "IN_PROGRESS")
+    closed = sum(1 for case in cases if case.case_status == "CLOSED")
+
+    return CaseOutResponse(
+        cases=cases,
+        total=len(cases),
         open=open_cases,
         in_progress=in_progress,
         closed=closed,

@@ -20,6 +20,10 @@ export interface AgentPayload {
 export interface GetAgentsQuery {
 	agentId?: string
 	customerCodes?: string[]
+	/** Server-side substring match on hostname, label, IP, or agent id. */
+	search?: string
+	/** Cap the number of returned agents (used by the search palette). */
+	limit?: number
 }
 
 export interface AgentArtifactsQuery {
@@ -40,28 +44,17 @@ export default {
 		}
 
 		const agentId = arg?.agentId
-		const customerCodes = arg?.customerCodes
-
 		const url = `/agents${agentId ? `/${agentId}` : ""}`
 
-		const config =
-			customerCodes && customerCodes.length
-				? {
-						params: {
-							customer_codes: customerCodes
-						},
-						paramsSerializer: {
-							indexes: null
-						}
-				  }
-				: undefined
+		const params: Record<string, number | string | string[]> = {}
+		if (arg?.customerCodes?.length) params.customer_codes = arg.customerCodes
+		if (arg?.search) params.search = arg.search
+		if (arg?.limit !== undefined) params.limit = arg.limit
 
-		const requestConfig =
-			signal && config
-				? { ...config, signal }
-				: signal
-					? { signal }
-					: config
+		const requestConfig = {
+			...(Object.keys(params).length ? { params, paramsSerializer: { indexes: null } } : {}),
+			...(signal ? { signal } : {})
+		}
 
 		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(url, requestConfig)
 	},

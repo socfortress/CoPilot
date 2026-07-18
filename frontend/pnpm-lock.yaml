@@ -94,6 +94,9 @@ importers:
       file-saver:
         specifier: ^2.0.5
         version: 2.0.5
+      fuse.js:
+        specifier: ^7.5.0
+        version: 7.5.0
       html-entities:
         specifier: ^2.6.0
         version: 2.6.0
@@ -157,9 +160,6 @@ importers:
       vue-echarts:
         specifier: ^8.0.1
         version: 8.0.1(echarts@6.1.0)(vue@3.5.40(typescript@6.0.3))
-      vue-highlight-words:
-        specifier: ^3.0.1
-        version: 3.0.1(vue@3.5.40(typescript@6.0.3))
       vue-i18n:
         specifier: ^11.4.6
         version: 11.4.6(vue@3.5.40(typescript@6.0.3))
@@ -2911,6 +2911,10 @@ packages:
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
 
+  fuse.js@7.5.0:
+    resolution: {integrity: sha512-sQtrEfA+ez/3G0cCZecF70oqpCRttCexYUG4mUrtWL49ULUzUyxokt5kyqwtKzj1270RaKih+hcP3qLcumccow==}
+    engines: {node: '>=10'}
+
   fzf@0.5.2:
     resolution: {integrity: sha512-Tt4kuxLXFKHy8KT40zwsUPUkg1CrsgY25FxA2U/j/0WgEDCk3ddc/zLTCCcbSHX9FcKtLuVaDGtGE/STWC+j3Q==}
 
@@ -3012,9 +3016,6 @@ packages:
 
   hey-listen@1.0.8:
     resolution: {integrity: sha512-COpmrF2NOg4TBWUJ5UVyaCU2A88wEMkUPK4hNqyCkqHbxT92BbvfjoSozkAIIm6XhicGlJHhFdullInrdhwU8Q==}
-
-  highlight-words-core@1.2.3:
-    resolution: {integrity: sha512-m1O9HW3/GNHxzSIXWw1wCNXXsgLlxrP0OI6+ycGUhiUHkikqW3OrwVHz+lxeNBe5yqLESdIcj8PowHQ2zLvUvQ==}
 
   highlight.js@11.11.1:
     resolution: {integrity: sha512-Xwwo44whKBVCYoliBQwaPvtd/2tYFkRQtXDWj1nackaV2JPXx3L0+Jvd8/qCJ2p+ML0/XVkJ2q+Mr+UVdpJK5w==}
@@ -4817,11 +4818,6 @@ packages:
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
-
-  vue-highlight-words@3.0.1:
-    resolution: {integrity: sha512-t6L0+KRaMzX5RVubWl6Sog+Aa+U0kHsbUlDIrln1VfajR2SEg+zQYfXov8UmX3MLNOfd6cv7MCM6LclqNlW4ww==}
-    peerDependencies:
-      vue: ^3.0.0
 
   vue-i18n@11.4.6:
     resolution: {integrity: sha512-l0gE7Rfy0phCa5ChKYkOq543Wgd39BCK6hkktfr1Ed4D99oRkgPK9ffShASZdeC8OJxGfdWmpYoAaAH6iLEuIg==}
@@ -7786,6 +7782,8 @@ snapshots:
 
   function-bind@1.1.2: {}
 
+  fuse.js@7.5.0: {}
+
   fzf@0.5.2: {}
 
   gensync@1.0.0-beta.2: {}
@@ -7914,8 +7912,6 @@ snapshots:
       '@types/hast': 3.0.5
 
   hey-listen@1.0.8: {}
-
-  highlight-words-core@1.2.3: {}
 
   highlight.js@11.11.1: {}
 
@@ -9866,11 +9862,6 @@ snapshots:
       semver: 7.8.5
     transitivePeerDependencies:
       - supports-color
-
-  vue-highlight-words@3.0.1(vue@3.5.40(typescript@6.0.3)):
-    dependencies:
-      highlight-words-core: 1.2.3
-      vue: 3.5.40(typescript@6.0.3)
 
   vue-i18n@11.4.6(vue@3.5.40(typescript@6.0.3)):
     dependencies:
