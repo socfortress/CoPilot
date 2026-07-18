@@ -4,15 +4,22 @@ import { HttpClient } from "../../http-client"
 
 export interface IndicesQuery {
 	customerCodes?: string[]
+	/** Server-side substring match on index name (used by the search palette). */
+	search?: string
+	/** Cap the number of returned indices. */
+	limit?: number
 }
 
 function indicesParams(query?: IndicesQuery) {
-	if (!query?.customerCodes?.length) return undefined
+	const params: Record<string, number | string | string[]> = {}
+	if (query?.customerCodes?.length) params.customer_codes = query.customerCodes
+	if (query?.search) params.search = query.search
+	if (query?.limit !== undefined) params.limit = query.limit
+
+	if (!Object.keys(params).length) return undefined
 
 	return {
-		params: {
-			customer_codes: query.customerCodes
-		},
+		params,
 		paramsSerializer: {
 			indexes: null
 		}

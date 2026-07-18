@@ -4,6 +4,7 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Query
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -108,9 +109,16 @@ async def get_job_payload(job_id: str, session: AsyncSession) -> dict:
 
 
 @scheduler_router.get("", response_model=JobsResponse, description="Get all jobs")
-async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
+async def get_all_jobs(
+    search: Optional[str] = Query(None, description="Case-insensitive substring match on job id or name"),
+    session: AsyncSession = Depends(get_db),
+) -> JobsResponse:
     """
-    Retrieve all jobs from the scheduler.
+    Retrieve jobs from the scheduler.
+
+    ``search`` narrows the (small, in-memory) job set to those whose id or name
+    contains the string — used by the global search palette so the client never
+    pulls the whole job list to filter it locally.
 
     Args:
         session (AsyncSession): The database session.
@@ -121,6 +129,9 @@ async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
     """
     scheduler = await get_scheduler_instance()
     jobs = scheduler.get_jobs()
+    if search:
+        needle = search.lower()
+        jobs = [job for job in jobs if needle in (job.id or "").lower() or needle in (job.name or "").lower()]
     apscheduler_jobs = []
     for job in jobs:
         job_metadata = await session.execute(

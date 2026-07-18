@@ -946,9 +946,17 @@ async def get_catalog_stats_endpoint() -> CatalogStatsResponse:
     ),
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def list_catalog_stories_endpoint() -> CatalogStoryListResponse:
+async def list_catalog_stories_endpoint(
+    search: Optional[str] = Query(None, description="Case-insensitive substring match on story name"),
+    limit: Optional[int] = Query(None, ge=1, le=1000, description="Cap the number of returned stories (used by the search palette)"),
+) -> CatalogStoryListResponse:
     try:
         stories = await list_stories()
+        if search:
+            needle = search.lower()
+            stories = [story for story in stories if needle in str(story.get("name", "")).lower()]
+        if limit is not None:
+            stories = stories[:limit]
         return CatalogStoryListResponse(
             success=True,
             message=f"Found {len(stories)} story(ies)",
@@ -1023,9 +1031,25 @@ async def list_catalog_wazuh_rules_endpoint(
             "cache is used."
         ),
     ),
+    search: Optional[str] = Query(None, description="Case-insensitive substring match on rule description or id"),
+    limit: Optional[int] = Query(None, ge=1, le=1000, description="Cap the number of returned rules (used by the search palette)"),
 ) -> CatalogWazuhRulesResponse:
     try:
         payload = await list_wazuh_rules(customer_code=customer_code)
+
+        # Server-side filter so the palette never pulls the whole ruleset to search it client-side.
+        if search:
+            needle = search.lower()
+            payload["rules"] = [
+                rule
+                for rule in payload["rules"]
+                if needle in str(rule.get("description", "")).lower() or needle in str(rule.get("id", "")).lower()
+            ]
+        if limit is not None:
+            payload["rules"] = payload["rules"][:limit]
+        if search or limit is not None:
+            payload["total"] = len(payload["rules"])
+
         return CatalogWazuhRulesResponse(
             success=True,
             message=(f"Listed {payload['total']} Wazuh rule(s)" if payload["available"] else "Wazuh Manager not available"),

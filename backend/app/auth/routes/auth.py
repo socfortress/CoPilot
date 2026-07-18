@@ -1,9 +1,11 @@
 import os
 from datetime import timedelta
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Query
 from fastapi import Request
 from fastapi import Security
 from fastapi import status
@@ -326,9 +328,16 @@ async def login(user: UserLogin, session: AsyncSession = Depends(get_db)):
     description="Get all users",
     dependencies=[Security(AuthHandler().require_any_scope("analyst", "admin"))],
 )
-async def get_users(session: AsyncSession = Depends(get_db)):
+async def get_users(
+    search: Optional[str] = Query(None, description="Case-insensitive substring match on username or email"),
+    limit: Optional[int] = Query(None, ge=1, le=1000, description="Cap the number of returned users (used by the search palette)"),
+    session: AsyncSession = Depends(get_db),
+):
     """
-    Retrieve all users from the database.
+    Retrieve users from the database.
+
+    ``search`` narrows the result to users whose username or email contains the
+    string, and ``limit`` caps the count — both used by the global search palette.
 
     Parameters:
     - session: AsyncSession - The database session.
@@ -340,7 +349,7 @@ async def get_users(session: AsyncSession = Depends(get_db)):
     - None
 
     """
-    users = await select_all_users()
+    users = await select_all_users(search=search, limit=limit)
 
     # Transform users to include role_name — single source of truth for the mapping
     user_list = [user_to_base_dict(user) for user in users]

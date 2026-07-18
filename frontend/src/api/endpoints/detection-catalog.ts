@@ -26,9 +26,19 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & CatalogStatsResponse>(`/copilot_searches/catalog/stats`)
 	},
 
-	/** List every analytic story with per-story aggregated summary fields. */
-	listStories() {
-		return HttpClient.get<FlaskBaseResponse & CatalogStoryListResponse>(`/copilot_searches/catalog/stories`)
+	/**
+	 * List analytic stories with per-story aggregated summary fields. Pass
+	 * ``search``/``limit`` to filter server-side (used by the global search palette).
+	 */
+	listStories(query: { search?: string; limit?: number } = {}, signal?: AbortSignal) {
+		const params: Record<string, number | string> = {}
+		if (query.search) params.search = query.search
+		if (query.limit !== undefined) params.limit = query.limit
+
+		return HttpClient.get<FlaskBaseResponse & CatalogStoryListResponse>(`/copilot_searches/catalog/stories`, {
+			params,
+			signal
+		})
 	},
 
 	/**
@@ -54,9 +64,15 @@ export default {
 	 * itself is unchanged — every rule is still returned — but rules without
 	 * any hits for that customer get zeros.
 	 */
-	listWazuhRules(customerCode?: string) {
+	listWazuhRules(customerCode?: string, query: { search?: string; limit?: number } = {}, signal?: AbortSignal) {
+		const params: Record<string, number | string> = {}
+		if (customerCode) params.customer_code = customerCode
+		if (query.search) params.search = query.search
+		if (query.limit !== undefined) params.limit = query.limit
+
 		return HttpClient.get<FlaskBaseResponse & CatalogWazuhRulesResponse>(`/copilot_searches/catalog/wazuh-rules`, {
-			params: customerCode ? { customer_code: customerCode } : {}
+			params,
+			signal
 		})
 	},
 

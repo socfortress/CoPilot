@@ -1,9 +1,12 @@
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
 from loguru import logger
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -244,9 +247,17 @@ async def create_customer(
     description="Get all customers",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_customers(session: AsyncSession = Depends(get_db)) -> CustomersResponse:
+async def get_customers(
+    search: Optional[str] = Query(None, description="Case-insensitive substring match on customer code or name"),
+    limit: Optional[int] = Query(None, ge=1, le=1000, description="Cap the number of returned customers (used by the search palette)"),
+    session: AsyncSession = Depends(get_db),
+) -> CustomersResponse:
     """
-    Fetches all customers from the database.
+    Fetches customers from the database.
+
+    ``search`` narrows the result to customers whose code or name contains the
+    string, and ``limit`` caps the count — both power the global search palette
+    so it never pulls the whole customer list to filter client-side.
 
     Args:
         session (AsyncSession): The async session object used to interact with the database.
@@ -254,10 +265,16 @@ async def get_customers(session: AsyncSession = Depends(get_db)) -> CustomersRes
     Returns:
         CustomersResponse: The response containing the list of customers fetched successfully.
     """
-    logger.info("Fetching all customers")
+    logger.info(f"Fetching customers (search={search or 'none'})")
 
-    # Asynchronous query to fetch all customers
-    result = await session.execute(select(Customers))
+    query = select(Customers)
+    if search:
+        term = f"%{search}%"
+        query = query.where(or_(Customers.customer_code.like(term), Customers.customer_name.like(term)))
+    if limit is not None:
+        query = query.limit(limit)
+
+    result = await session.execute(query)
     customers = result.scalars().all()
 
     # Fetch all customer meta records to check provisioning status

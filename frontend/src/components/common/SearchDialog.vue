@@ -25,7 +25,7 @@
 										@click="callAction(item)"
 										@mouseenter="activeItem = item.key"
 									>
-										<div class="icon">
+										<div class="icon min-w-7">
 											<n-avatar
 												v-if="item.iconImage"
 												round
@@ -88,7 +88,18 @@ import { useThemeSwitch } from "@/composables/useThemeSwitch"
 import { getNavigatorOS } from "@/utils"
 
 /** What a recorded/rebuilt palette selection points at. `route` is a plain page jump. */
-type ItemKind = "route" | "alert" | "case" | "customer" | "agent" | "copilotRule" | "wazuhRule"
+type ItemKind =
+	| "route"
+	| "alert"
+	| "case"
+	| "customer"
+	| "agent"
+	| "copilotRule"
+	| "wazuhRule"
+	| "user"
+	| "story"
+	| "schedulerJob"
+	| "index"
 
 interface GroupItem {
 	iconName: string | null
@@ -142,6 +153,10 @@ const CustomerEntityIcon = "carbon:user"
 const AgentEntityIcon = "carbon:network-3"
 const CopilotRuleEntityIcon = "carbon:search-locate"
 const WazuhRuleEntityIcon = "carbon:rule"
+const UserEntityIcon = "carbon:user-avatar"
+const StoryEntityIcon = "carbon:book"
+const SchedulerJobEntityIcon = "carbon:calendar"
+const IndexEntityIcon = "carbon:data-base"
 const AddCustomerIcon = "carbon:user-follow"
 const ConnectorsIcon = "carbon:hybrid-networking"
 const NewCaseIcon = "carbon:folder-add"
@@ -248,7 +263,11 @@ const {
 	routeIncidentManagementExclusionRuleNew,
 	routeUserNew,
 	routeCopilotSearchRule,
-	routeDetectionCatalogWazuhRule
+	routeDetectionCatalogWazuhRule,
+	routeUser,
+	routeDetectionCatalogStory,
+	routeSchedulerJob,
+	routeIndex
 } = useNavigation()
 
 const recentStore = useStorage<RecentEntry[]>("copilot-search-recent", [])
@@ -280,6 +299,18 @@ function runTarget(kind: ItemKind, target: string) {
 			break
 		case "wazuhRule":
 			routeDetectionCatalogWazuhRule(Number(target)).navigate()
+			break
+		case "user":
+			routeUser(Number(target)).navigate()
+			break
+		case "story":
+			routeDetectionCatalogStory(target).navigate()
+			break
+		case "schedulerJob":
+			routeSchedulerJob(target).navigate()
+			break
+		case "index":
+			routeIndex(target).navigate()
 			break
 	}
 }
@@ -386,7 +417,11 @@ const ENTITY_ICONS: Record<ItemKind, string> = {
 	customer: CustomerEntityIcon,
 	agent: AgentEntityIcon,
 	copilotRule: CopilotRuleEntityIcon,
-	wazuhRule: WazuhRuleEntityIcon
+	wazuhRule: WazuhRuleEntityIcon,
+	user: UserEntityIcon,
+	story: StoryEntityIcon,
+	schedulerJob: SchedulerJobEntityIcon,
+	index: IndexEntityIcon
 }
 
 /** Builds a selectable, recent-tracked entity item that navigates to a detail page. */
@@ -409,37 +444,17 @@ const entityItems = computed<GroupItem[]>(() =>
 )
 
 // --- Remote entity search --------------------------------------------------
-
-/** Customers and Wazuh rules have no server-side text search; fetch once, filter locally. */
-const customersCache = ref<Awaited<ReturnType<typeof Api.customers.getCustomers>>["data"]["customers"] | null>(null)
-const wazuhRulesCache = ref<Awaited<ReturnType<typeof Api.detectionCatalog.listWazuhRules>>["data"]["rules"] | null>(
-	null
-)
-
-async function loadCustomers() {
-	if (!customersCache.value) {
-		const res = await Api.customers.getCustomers()
-		customersCache.value = res.data.customers ?? []
-	}
-	return customersCache.value
-}
-
-async function loadWazuhRules() {
-	if (!wazuhRulesCache.value) {
-		const res = await Api.detectionCatalog.listWazuhRules()
-		wazuhRulesCache.value = res.data.rules ?? []
-	}
-	return wazuhRulesCache.value
-}
+// Every provider searches through an API — the palette never downloads a full
+// entity list to filter it client-side.
 
 const REMOTE_PROVIDERS: RemoteProvider[] = [
 	{
 		name: "Customers",
-		async search(query) {
-			const customers = await loadCustomers()
-			return fuzzyFilter(customers, query, ["customer_name", "customer_code"])
-				.slice(0, REMOTE_MAX_ITEMS)
-				.map(c => entityItem("customer", c.customer_code, c.customer_name, c.customer_code))
+		async search(query, signal) {
+			const res = await Api.customers.searchCustomers(query, REMOTE_MAX_ITEMS, signal)
+			return (res.data.customers ?? []).map(c =>
+				entityItem("customer", c.customer_code, c.customer_name, c.customer_code)
+			)
 		}
 	},
 	{
@@ -473,6 +488,13 @@ const REMOTE_PROVIDERS: RemoteProvider[] = [
 		}
 	},
 	{
+		name: "Users",
+		async search(query, signal) {
+			const res = await Api.users.getUsers({ search: query, limit: REMOTE_MAX_ITEMS }, signal)
+			return res.data.users.map(u => entityItem("user", String(u.id), u.username, u.email))
+		}
+	},
+	{
 		name: "Detection Rules",
 		async search(query, signal) {
 			const res = await Api.copilotSearches.getRules({ search: query, limit: REMOTE_MAX_ITEMS }, signal)
@@ -481,15 +503,36 @@ const REMOTE_PROVIDERS: RemoteProvider[] = [
 	},
 	{
 		name: "Wazuh Rules",
-		async search(query) {
-			const rules = await loadWazuhRules()
-			return fuzzyFilter(
-				rules.filter(r => r.id != null),
-				query,
-				["description", "id"]
+		async search(query, signal) {
+			const res = await Api.detectionCatalog.listWazuhRules(
+				undefined,
+				{ search: query, limit: REMOTE_MAX_ITEMS },
+				signal
 			)
-				.slice(0, REMOTE_MAX_ITEMS)
+			return res.data.rules
+				.filter(r => r.id != null)
 				.map(r => entityItem("wazuhRule", String(r.id), r.description, `#${r.id}`))
+		}
+	},
+	{
+		name: "Detection Stories",
+		async search(query, signal) {
+			const res = await Api.detectionCatalog.listStories({ search: query, limit: REMOTE_MAX_ITEMS }, signal)
+			return res.data.stories.map(s => entityItem("story", s.name, s.name, `${s.detection_count} detections`))
+		}
+	},
+	{
+		name: "Scheduler Jobs",
+		async search(query, signal) {
+			const res = await Api.scheduler.getAllJobs(query, signal)
+			return res.data.jobs.slice(0, REMOTE_MAX_ITEMS).map(j => entityItem("schedulerJob", j.id, j.name, j.id))
+		}
+	},
+	{
+		name: "Indices",
+		async search(query, signal) {
+			const res = await Api.indices.getIndices({ search: query, limit: REMOTE_MAX_ITEMS }, signal)
+			return res.data.indices_stats.map(i => entityItem("index", i.index, i.index, `${i.docs_count} docs`))
 		}
 	}
 ]

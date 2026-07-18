@@ -1,7 +1,9 @@
 from typing import List
+from typing import Optional
 
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy import or_
 
 # ! New with Async
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,15 +34,24 @@ def select_all_users_sync(session: Session) -> List[User]:
     return result.all()
 
 
-async def select_all_users():
+async def select_all_users(search: Optional[str] = None, limit: Optional[int] = None):
     """
-    Async version: Retrieves all Users from the database with their role information.
+    Async version: Retrieves Users from the database with their role information.
+
+    ``search`` narrows the result to users whose username or email contains the
+    string; ``limit`` caps the count. Both power the global search palette so it
+    never pulls the whole user list to filter client-side.
 
     Returns:
-        List[User]: A list of all Users in the database with role information loaded.
+        List[User]: A list of Users in the database with role information loaded.
     """
     async with AsyncSession(async_engine) as session:
         statement = select(User).options(selectinload(User.role))
+        if search:
+            term = f"%{search}%"
+            statement = statement.where(or_(User.username.like(term), User.email.like(term)))
+        if limit is not None:
+            statement = statement.limit(limit)
         result = await session.execute(statement)
         return result.scalars().all()
 

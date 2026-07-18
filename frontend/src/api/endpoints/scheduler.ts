@@ -9,8 +9,11 @@ export interface UpdateJobPayload {
 }
 
 export default {
-	getAllJobs() {
-		return HttpClient.get<FlaskBaseResponse & { jobs: Job[] }>(`/scheduler`)
+	getAllJobs(search?: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { jobs: Job[] }>(`/scheduler`, {
+			params: search ? { search } : {},
+			signal
+		})
 	},
 	getJob(jobId: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { job: Job }>(`/scheduler/${encodeURIComponent(jobId)}`, { signal })

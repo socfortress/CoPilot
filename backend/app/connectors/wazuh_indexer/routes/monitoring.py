@@ -5,6 +5,7 @@ from typing import Union
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Query
 from fastapi import Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -94,6 +95,8 @@ async def get_node_allocation() -> Union[NodeAllocationResponse, HTTPException]:
 )
 async def get_indices_stats(
     customer_codes: Optional[List[str]] = Depends(customer_codes_query),
+    search: Optional[str] = Query(None, description="Case-insensitive substring match on index name"),
+    limit: Optional[int] = Query(None, ge=1, le=1000, description="Cap the number of returned indices (used by the search palette)"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Union[IndicesStatsResponse, HTTPException]:
@@ -101,6 +104,9 @@ async def get_indices_stats(
     Fetch Wazuh Indexer indices stats.
 
     This endpoint retrieves the indices stats of the Wazuh Indexer service.
+    ``search`` narrows the result to indices whose name contains the string and
+    ``limit`` caps the count — both let the global search palette query by name
+    server-side instead of pulling the whole (often 1500+) index list.
 
     Returns:
         ElasticsearchResponse: A Pydantic model representing the indices stats of the Wazuh Indexer service.
@@ -116,10 +122,19 @@ async def get_indices_stats(
     scoped_customers = None if "*" in effective_customers else effective_customers
 
     indices_stats_response = await indices_stats(customer_codes=scoped_customers, session=db)
-    if indices_stats_response is not None:
-        return indices_stats_response
-    else:
+    if indices_stats_response is None:
         raise HTTPException(status_code=500, detail="Failed to retrieve indices stats.")
+
+    if (search or limit is not None) and indices_stats_response.indices_stats:
+        rows = indices_stats_response.indices_stats
+        if search:
+            needle = search.lower()
+            rows = [row for row in rows if needle in row.index.lower()]
+        if limit is not None:
+            rows = rows[:limit]
+        indices_stats_response.indices_stats = rows
+
+    return indices_stats_response
 
 
 @wazuh_indexer_router.get(
