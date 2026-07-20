@@ -33,8 +33,7 @@ export default {
 	},
 	getIndices(query?: IndicesQuery, signal?: AbortSignal) {
 		const config = indicesParams(query)
-		const requestConfig =
-			signal && config ? { ...config, signal } : signal ? { signal } : config
+		const requestConfig = signal && config ? { ...config, signal } : signal ? { signal } : config
 
 		return HttpClient.get<FlaskBaseResponse & { indices_stats: IndexStats[] }>(
 			"/wazuh_indexer/indices",
@@ -49,8 +48,7 @@ export default {
 	},
 	getIndicesSizePerCustomer(query?: IndicesQuery, signal?: AbortSignal) {
 		const config = indicesParams(query)
-		const requestConfig =
-			signal && config ? { ...config, signal } : signal ? { signal } : config
+		const requestConfig = signal && config ? { ...config, signal } : signal ? { signal } : config
 
 		return HttpClient.get<FlaskBaseResponse & { customer_sizes: CustomerIndicesSize[] }>(
 			`/wazuh_indexer/indices/size-per-customer`,

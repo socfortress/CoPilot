@@ -396,9 +396,10 @@ const staticFuses = STATIC_GROUPS.map(group => createFuse(group.items, ["title",
 
 /** Fuzzy-filtered nav/action groups. Depends only on `search`, so remote results don't rebuild the Fuse indexes. */
 const filteredStaticGroups = computed<Group[]>(() =>
-	STATIC_GROUPS.map((group, i) => ({ name: group.name, items: searchFuse(staticFuses[i], search.value, group.items) })).filter(
-		group => group.items.length
-	)
+	STATIC_GROUPS.map((group, i) => ({
+		name: group.name,
+		items: searchFuse(staticFuses[i], search.value, group.items)
+	})).filter(group => group.items.length)
 )
 
 const ENTITY_ICONS: Record<ItemKind, string> = {
@@ -450,7 +451,11 @@ const REMOTE_PROVIDERS: RemoteProvider[] = [
 		name: "Customers",
 		async search(query, signal) {
 			const res = await Api.customers.searchCustomers(query, REMOTE_MAX_ITEMS, signal)
-			return toEntityItems("customer", res.data.customers ?? [], c => [c.customer_code, c.customer_name, c.customer_code])
+			return toEntityItems("customer", res.data.customers ?? [], c => [
+				c.customer_code,
+				c.customer_name,
+				c.customer_code
+			])
 		}
 	},
 	{
@@ -466,7 +471,11 @@ const REMOTE_PROVIDERS: RemoteProvider[] = [
 	{
 		name: "Cases",
 		async search(query, signal) {
-			const res = await Api.incidentManagement.cases.searchCasesByName(query, { page: 1, pageSize: REMOTE_MAX_ITEMS }, signal)
+			const res = await Api.incidentManagement.cases.searchCasesByName(
+				query,
+				{ page: 1, pageSize: REMOTE_MAX_ITEMS },
+				signal
+			)
 			return toEntityItems("case", res.data.cases, c => [String(c.id), c.case_name, `#${c.id}`])
 		}
 	},
@@ -499,7 +508,11 @@ const REMOTE_PROVIDERS: RemoteProvider[] = [
 		name: "Wazuh Rules",
 		async search(query, signal) {
 			const res = await Api.detectionCatalog.listWazuhRules(undefined, { search: query, ...SEARCH_LIMIT }, signal)
-			return toEntityItems("wazuhRule", res.data.rules.filter(r => r.id != null), r => [String(r.id), r.description, `#${r.id}`])
+			return toEntityItems(
+				"wazuhRule",
+				res.data.rules.filter(r => r.id != null),
+				r => [String(r.id), r.description, `#${r.id}`]
+			)
 		}
 	},
 	{
