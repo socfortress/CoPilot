@@ -83,6 +83,17 @@ export default {
 			signal
 		})
 	},
+	searchCasesByName(name: string, query: CasesPaginationParams = {}, signal?: AbortSignal) {
+		const params: Record<string, number | string> = {}
+		if (query.page !== undefined) params.page = query.page
+		if (query.pageSize !== undefined) params.page_size = query.pageSize
+		if (query.order !== undefined) params.order = query.order
+
+		return HttpClient.get<FlaskBaseResponse & CasesListResponse>(
+			`/incidents/db_operations/case/name/${encodeURIComponent(name)}`,
+			{ params, signal }
+		)
+	},
 	getCase(caseId: number) {
 		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(`/incidents/db_operations/case/${caseId}`)
 	},

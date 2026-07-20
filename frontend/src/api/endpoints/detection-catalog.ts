@@ -19,6 +19,7 @@ import type {
 } from "@/types/detection-catalog"
 import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
+import { searchLimitParams } from "../params"
 
 export default {
 	/** Top-level metrics for the catalog overview pane. */
@@ -26,9 +27,15 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & CatalogStatsResponse>(`/copilot_searches/catalog/stats`)
 	},
 
-	/** List every analytic story with per-story aggregated summary fields. */
-	listStories() {
-		return HttpClient.get<FlaskBaseResponse & CatalogStoryListResponse>(`/copilot_searches/catalog/stories`)
+	/**
+	 * List analytic stories with per-story aggregated summary fields. Pass
+	 * ``search``/``limit`` to filter server-side (used by the global search palette).
+	 */
+	listStories(query: { search?: string; limit?: number } = {}, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & CatalogStoryListResponse>(`/copilot_searches/catalog/stories`, {
+			params: searchLimitParams(query),
+			signal
+		})
 	},
 
 	/**
@@ -54,9 +61,10 @@ export default {
 	 * itself is unchanged — every rule is still returned — but rules without
 	 * any hits for that customer get zeros.
 	 */
-	listWazuhRules(customerCode?: string) {
+	listWazuhRules(customerCode?: string, query: { search?: string; limit?: number } = {}, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & CatalogWazuhRulesResponse>(`/copilot_searches/catalog/wazuh-rules`, {
-			params: customerCode ? { customer_code: customerCode } : {}
+			params: { ...(customerCode ? { customer_code: customerCode } : {}), ...searchLimitParams(query) },
+			signal
 		})
 	},
 

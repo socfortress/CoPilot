@@ -46,9 +46,7 @@ function getData() {
 
 	Api.agents
 		.getAgents(
-			props.customerCodes && props.customerCodes.length
-				? { customerCodes: props.customerCodes }
-				: undefined
+			props.customerCodes && props.customerCodes.length ? { customerCodes: props.customerCodes } : undefined
 		)
 		.then(res => {
 			if (res.data.success) {

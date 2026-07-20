@@ -1,18 +1,26 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type { ClusterHealth, CustomerIndicesSize, IndexAllocation, IndexShard, IndexStats } from "@/types/indices"
 import { HttpClient } from "../../http-client"
+import { searchLimitParams } from "../../params"
 
 export interface IndicesQuery {
 	customerCodes?: string[]
+	/** Server-side substring match on index name (used by the search palette). */
+	search?: string
+	/** Cap the number of returned indices. */
+	limit?: number
 }
 
 function indicesParams(query?: IndicesQuery) {
-	if (!query?.customerCodes?.length) return undefined
+	const params: Record<string, number | string | string[]> = {
+		...(query?.customerCodes?.length ? { customer_codes: query.customerCodes } : {}),
+		...searchLimitParams(query ?? {})
+	}
+
+	if (!Object.keys(params).length) return undefined
 
 	return {
-		params: {
-			customer_codes: query.customerCodes
-		},
+		params,
 		paramsSerializer: {
 			indexes: null
 		}
@@ -25,8 +33,7 @@ export default {
 	},
 	getIndices(query?: IndicesQuery, signal?: AbortSignal) {
 		const config = indicesParams(query)
-		const requestConfig =
-			signal && config ? { ...config, signal } : signal ? { signal } : config
+		const requestConfig = signal && config ? { ...config, signal } : signal ? { signal } : config
 
 		return HttpClient.get<FlaskBaseResponse & { indices_stats: IndexStats[] }>(
 			"/wazuh_indexer/indices",
@@ -41,8 +48,7 @@ export default {
 	},
 	getIndicesSizePerCustomer(query?: IndicesQuery, signal?: AbortSignal) {
 		const config = indicesParams(query)
-		const requestConfig =
-			signal && config ? { ...config, signal } : signal ? { signal } : config
+		const requestConfig = signal && config ? { ...config, signal } : signal ? { signal } : config
 
 		return HttpClient.get<FlaskBaseResponse & { customer_sizes: CustomerIndicesSize[] }>(
 			`/wazuh_indexer/indices/size-per-customer`,

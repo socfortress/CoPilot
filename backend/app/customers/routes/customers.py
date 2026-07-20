@@ -31,6 +31,9 @@ from app.healthchecks.agents.services.agents import velociraptor_agents_healthch
 from app.healthchecks.agents.services.agents import wazuh_agents_healthcheck
 from app.middleware.license import get_license_seat_allowance
 from app.middleware.license import is_feature_enabled
+from app.middleware.search_query import SearchParams
+from app.middleware.search_query import apply_search_limit
+from app.middleware.search_query import search_query
 
 customers_router = APIRouter()
 
@@ -244,9 +247,16 @@ async def create_customer(
     description="Get all customers",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_customers(session: AsyncSession = Depends(get_db)) -> CustomersResponse:
+async def get_customers(
+    search_params: SearchParams = Depends(search_query),
+    session: AsyncSession = Depends(get_db),
+) -> CustomersResponse:
     """
-    Fetches all customers from the database.
+    Fetches customers from the database.
+
+    ``search``/``limit`` (see ``search_query``) narrow the result to customers whose
+    code or name contains the string and cap the count — so the global search palette
+    never pulls the whole customer list to filter client-side.
 
     Args:
         session (AsyncSession): The async session object used to interact with the database.
@@ -254,10 +264,10 @@ async def get_customers(session: AsyncSession = Depends(get_db)) -> CustomersRes
     Returns:
         CustomersResponse: The response containing the list of customers fetched successfully.
     """
-    logger.info("Fetching all customers")
+    logger.info(f"Fetching customers (search={search_params.search or 'none'})")
 
-    # Asynchronous query to fetch all customers
-    result = await session.execute(select(Customers))
+    query = apply_search_limit(select(Customers), search_params, Customers.customer_code, Customers.customer_name)
+    result = await session.execute(query)
     customers = result.scalars().all()
 
     # Fetch all customer meta records to check provisioning status

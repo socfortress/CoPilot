@@ -15,12 +15,7 @@
 		</div>
 
 		<div class="mb-6">
-			<IndicesMarquee
-				:indices
-				:customer-codes="customerCodesFilter"
-				:loading="loadingIndex"
-				@click="setIndex"
-			/>
+			<IndicesMarquee :indices :customer-codes="customerCodesFilter" :loading="loadingIndex" @click="setIndex" />
 		</div>
 
 		<div class="mb-6">

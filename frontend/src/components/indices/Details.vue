@@ -84,9 +84,7 @@ const { indices, modelValue, loading: indicesLoading } = toRefs(props)
 const message = useMessage()
 const shards = ref<IndexShard[]>([])
 const loadingShards = ref(false)
-const loading = computed(
-	() => indicesLoading.value || !indices?.value || indices.value === null || loadingShards.value
-)
+const loading = computed(() => indicesLoading.value || !indices?.value || indices.value === null || loadingShards.value)
 
 const currentIndex = computed<IndexModel>({
 	get() {

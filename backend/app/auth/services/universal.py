@@ -1,4 +1,5 @@
 from typing import List
+from typing import Optional
 
 from fastapi import HTTPException
 from loguru import logger
@@ -14,6 +15,8 @@ from app.auth.models.users import Role
 from app.auth.models.users import User
 from app.auth.models.users import UserCustomerAccess
 from app.db.db_session import async_engine
+from app.middleware.search_query import SearchParams
+from app.middleware.search_query import apply_search_limit
 
 passwords_in_memory = {}
 
@@ -32,15 +35,20 @@ def select_all_users_sync(session: Session) -> List[User]:
     return result.all()
 
 
-async def select_all_users():
+async def select_all_users(search: Optional[str] = None, limit: Optional[int] = None):
     """
-    Async version: Retrieves all Users from the database with their role information.
+    Async version: Retrieves Users from the database with their role information.
+
+    ``search`` narrows the result to users whose username or email contains the
+    string; ``limit`` caps the count. Both power the global search palette so it
+    never pulls the whole user list to filter client-side.
 
     Returns:
-        List[User]: A list of all Users in the database with role information loaded.
+        List[User]: A list of Users in the database with role information loaded.
     """
     async with AsyncSession(async_engine) as session:
         statement = select(User).options(selectinload(User.role))
+        statement = apply_search_limit(statement, SearchParams(search=search, limit=limit), User.username, User.email)
         result = await session.execute(statement)
         return result.scalars().all()
 
