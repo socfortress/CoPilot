@@ -28,8 +28,16 @@ class TagAccessHandler:
     Both filters are applied (AND logic) when tag RBAC is enabled.
     """
 
-    # Roles that bypass tag restrictions (full access)
-    UNRESTRICTED_ROLES = {RoleEnum.admin.value, RoleEnum.scheduler.value}
+    # Roles that bypass tag restrictions entirely.
+    # customer_user is included by policy: a customer must ALWAYS see every alert
+    # (and everything linked to it) for their own customer, regardless of tags.
+    # Their per-tenant scoping is still enforced separately by customer_access_handler,
+    # so this never widens visibility beyond the customer's own data.
+    UNRESTRICTED_ROLES = {
+        RoleEnum.admin.value,
+        RoleEnum.scheduler.value,
+        RoleEnum.customer_user.value,
+    }
 
     async def is_tag_rbac_enabled(self, db: AsyncSession) -> bool:
         """Check if tag-based RBAC is enabled globally."""
@@ -223,8 +231,8 @@ class TagAccessHandler:
         if not await self.is_tag_rbac_enabled(db):
             return {"accessible_tags": {"*"}, "include_untagged": True, "default_tag_id": None}
 
-        # Admins and schedulers have full access
-        if user.role_id in [RoleEnum.admin.value, RoleEnum.scheduler.value]:
+        # Unrestricted roles (admin, scheduler, customer_user) have full tag access.
+        if user.role_id in self.UNRESTRICTED_ROLES:
             return {"accessible_tags": {"*"}, "include_untagged": True, "default_tag_id": None}
 
         # Get user's accessible tags
