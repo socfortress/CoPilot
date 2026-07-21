@@ -134,6 +134,7 @@ msrestazure==0.6.4.post1
 multidict==6.7.1
 netaddr==1.3.0
 niquests==3.18.7
+numpy==1.26.4  # pinned <2.0: elasticsearch7==7.10.1 uses np.float_ (removed in NumPy 2.0); matplotlib pulls numpy transitively
 oauth2client==4.1.3
 oauthlib==3.3.1
 oci==2.9.0
