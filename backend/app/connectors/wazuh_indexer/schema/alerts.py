@@ -24,13 +24,13 @@ class Alert(BaseModel):
 class AlertsSearchBody(BaseModel):
     size: int = Field(10, description="The number of alerts to return.")
     timerange: str = Field("24h", description="The time range to search alerts in.")
-    alert_field: str = Field(
-        "syslog_level",
-        description="The field to search alerts in.",
+    alert_field: Optional[str] = Field(
+        None,
+        description="The field to search alerts in. If None, no field filter is applied.",
     )
-    alert_value: str = Field("ALERT", description="The value to search alerts for.")
+    alert_value: Optional[str] = Field(None, description="The value to search alerts for.")
     timestamp_field: str = Field(
-        "timestamp_utc",
+        "@timestamp",
         description="The timestamp field to search alerts in.",
     )
 
@@ -127,7 +127,7 @@ class GraylogAlertsSearchBody(BaseModel):
     size: int = Field(10, description="The number of alerts to return.")
     timerange: str = Field("24h", description="The time range to search alerts in.")
     index_prefix: str = Field(
-        "gl-events*",
+        "wazuh-alerts-*",
         description="The index prefix to search alerts in.",
     )
     customer_codes: Optional[List[str]] = Field(

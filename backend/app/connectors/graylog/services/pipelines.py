@@ -36,15 +36,25 @@ async def get_pipelines() -> GraylogPipelinesResponse:
                 success=True,
                 message="Pipelines collected successfully",
             )
+        return GraylogPipelinesResponse(
+            pipelines=[],
+            success=False,
+            message=pipelines_collected.get("message", "Failed to collect pipelines"),
+        )
     except KeyError as e:
         logger.error(f"Failed to collect pipelines key: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to collect pipelines key: {e}",
+        return GraylogPipelinesResponse(
+            pipelines=[],
+            success=False,
+            message=f"Failed to collect pipelines key: {e}",
         )
     except Exception as e:
         logger.error(f"Failed to collect pipelines: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to collect pipelines: {e}")
+        return GraylogPipelinesResponse(
+            pipelines=[],
+            success=False,
+            message=f"Failed to collect pipelines: {e}",
+        )
 
 
 async def get_pipeline_rules() -> PipelineRulesResponse:
@@ -66,17 +76,24 @@ async def get_pipeline_rules() -> PipelineRulesResponse:
                 success=True,
                 message="Pipeline rules collected successfully",
             )
+        return PipelineRulesResponse(
+            pipeline_rules=[],
+            success=False,
+            message=pipeline_rules_collected.get("message", "Failed to collect pipeline rules"),
+        )
     except KeyError as e:
         logger.error(f"Failed to collect pipeline rules key: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to collect pipeline rules key: {e}",
+        return PipelineRulesResponse(
+            pipeline_rules=[],
+            success=False,
+            message=f"Failed to collect pipeline rules key: {e}",
         )
     except Exception as e:
         logger.error(f"Failed to collect pipeline rules: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to collect pipeline rules: {e}",
+        return PipelineRulesResponse(
+            pipeline_rules=[],
+            success=False,
+            message=f"Failed to collect pipeline rules: {e}",
         )
 
 
@@ -106,17 +123,24 @@ async def get_pipeline_rule_by_id(rule_id) -> PipelineRulesResponse:
                 success=True,
                 message="Pipeline rules collected successfully",
             )
+        return PipelineRulesResponse(
+            pipeline_rules=[],
+            success=False,
+            message=pipeline_rules_collected.get("message", "Failed to collect pipeline rules"),
+        )
     except KeyError as e:
         logger.error(f"Failed to collect pipeline rules key: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to collect pipeline rules key: {e}",
+        return PipelineRulesResponse(
+            pipeline_rules=[],
+            success=False,
+            message=f"Failed to collect pipeline rules key: {e}",
         )
     except Exception as e:
         logger.error(f"Failed to collect pipeline rules: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to collect pipeline rules: {e}",
+        return PipelineRulesResponse(
+            pipeline_rules=[],
+            success=False,
+            message=f"Failed to collect pipeline rules: {e}",
         )
 
 

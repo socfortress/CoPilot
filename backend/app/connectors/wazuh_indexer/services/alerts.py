@@ -119,7 +119,8 @@ async def collect_alerts_generic(
             timerange=body.timerange,
             timestamp_field=body.timestamp_field,
         )
-        query_builder.add_matches(matches=[(body.alert_field, body.alert_value)])
+        if body.alert_field and body.alert_value:
+            query_builder.add_matches(matches=[(body.alert_field, body.alert_value)])
         query_builder.add_sort(body.timestamp_field)
 
         if is_host_specific:
