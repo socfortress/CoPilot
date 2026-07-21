@@ -71,6 +71,18 @@
 				<n-tab-pane name="Event Sources" tab="Event Sources" display-directive="show:lazy" class="p-4!">
 					<CustomerEventSources :customer-code="customer.customer_code" />
 				</n-tab-pane>
+				<n-tab-pane name="Reporting" tab="Reporting" display-directive="show:lazy" class="p-4!">
+					<CustomerReporting :customer-code="customer.customer_code" />
+				</n-tab-pane>
+				<n-tab-pane
+					v-if="isAdmin"
+					name="Security"
+					tab="Security"
+					display-directive="show:lazy"
+					class="p-4!"
+				>
+					<CustomerSecurity :customer-code="customer.customer_code" />
+				</n-tab-pane>
 
 				<template #suffix><div class="h-4 w-full"></div></template>
 			</n-tabs>
@@ -148,6 +160,7 @@ import type { Customer, CustomerMeta } from "@/types/customers"
 import { NScrollbar, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent } from "vue"
 import { useCustomerHealthcheckFilters } from "@/composables/useCustomerHealthcheckFilters"
+import { useAuthStore } from "@/stores/auth"
 
 const props = defineProps<{
 	customer: Customer
@@ -180,9 +193,13 @@ const CustomerNotificationsWorkflows = defineAsyncComponent(
 const CustomerAITriggers = defineAsyncComponent(() => import("./aiTriggers/CustomerAITriggers.vue"))
 const CustomerAiNotifications = defineAsyncComponent(() => import("./aiNotifications/CustomerAiNotifications.vue"))
 const CustomerEventSources = defineAsyncComponent(() => import("./eventSources/CustomerEventSources.vue"))
+const CustomerReporting = defineAsyncComponent(() => import("./reporting/CustomerReporting.vue"))
+const CustomerSecurity = defineAsyncComponent(() => import("./security/CustomerSecurity.vue"))
 const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWorker.vue"))
 
 const { healthcheckFilters } = useCustomerHealthcheckFilters()
+
+const isAdmin = computed(() => useAuthStore().isAdmin)
 
 const loadingDeleteModel = computed({
 	get: () => props.loadingDelete ?? false,
