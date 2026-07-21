@@ -844,6 +844,21 @@ class CustomerNotificationRoute(SQLModel, table=True):
     shuffle_app_id: Optional[str] = Field(default=None, max_length=64)
     shuffle_app_name: Optional[str] = Field(default=None, max_length=128)
 
+    # ----- Direct webhook channel routing -----
+    # Populated when channel='webhook'. NULL for shuffle routes. The
+    # dispatch service POSTs/PUTs to `webhook_url` with either a
+    # structured JSON payload (default) or the rendered format_template
+    # (when set). `webhook_headers` is a JSON-encoded string of custom
+    # request headers (auth tokens etc.) — stored as text for portability
+    # across the MySQL/SQLite backends rather than a native JSON column.
+    webhook_url: Optional[str] = Field(sa_column=Column(Text), default=None)
+    webhook_method: Optional[str] = Field(default=None, max_length=8)
+    webhook_headers: Optional[str] = Field(sa_column=Column(Text), default=None)
+    # Webhook-only: inline the full AI analyst report (markdown + recommended
+    # actions + IOCs) in the dispatched JSON payload. Default False; NULL on
+    # legacy/shuffle rows reads back as falsy.
+    include_full_report: Optional[bool] = Field(default=False)
+
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
     updated_at: Optional[datetime] = Field(default=None)
 

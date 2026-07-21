@@ -38,6 +38,12 @@ export default {
 			`/customers${code ? `/${code}` : ""}`
 		)
 	},
+	searchCustomers(search: string, limit?: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { customers?: Customer[] }>(`/customers`, {
+			params: { search, ...(limit !== undefined ? { limit } : {}) },
+			signal
+		})
+	},
 	createCustomer(customer: Customer) {
 		return HttpClient.post<FlaskBaseResponse & { customer: Customer }>(`/customers`, customer)
 	},

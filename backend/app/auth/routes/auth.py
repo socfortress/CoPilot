@@ -34,6 +34,8 @@ from app.auth.services.universal import update_last_login
 from app.auth.services.universal import user_to_base_dict
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.middleware.search_query import SearchParams
+from app.middleware.search_query import search_query
 
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
@@ -326,9 +328,15 @@ async def login(user: UserLogin, session: AsyncSession = Depends(get_db)):
     description="Get all users",
     dependencies=[Security(AuthHandler().require_any_scope("analyst", "admin"))],
 )
-async def get_users(session: AsyncSession = Depends(get_db)):
+async def get_users(
+    search_params: SearchParams = Depends(search_query),
+    session: AsyncSession = Depends(get_db),
+):
     """
-    Retrieve all users from the database.
+    Retrieve users from the database.
+
+    ``search``/``limit`` (see ``search_query``) narrow the result to users whose
+    username or email contains the string and cap the count — used by the search palette.
 
     Parameters:
     - session: AsyncSession - The database session.
@@ -340,7 +348,7 @@ async def get_users(session: AsyncSession = Depends(get_db)):
     - None
 
     """
-    users = await select_all_users()
+    users = await select_all_users(search=search_params.search, limit=search_params.limit)
 
     # Transform users to include role_name — single source of truth for the mapping
     user_list = [user_to_base_dict(user) for user in users]

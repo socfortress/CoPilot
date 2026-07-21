@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
+from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -52,9 +53,20 @@ class NotificationChannel(str, Enum):
     columns. Email, chat, ticketing, and the rest of the catalog all
     flow through this single channel — there's no separate direct SMTP
     path because Shuffle's email apps cover that surface.
+
+    `webhook` is a direct HTTP POST to any URL the customer chooses
+    (automation platforms, chat incoming webhooks, a custom automation
+    endpoint, …) — no Shuffle org in the path. Routes referencing
+    `webhook` MUST populate `webhook_url`. By default the dispatcher
+    sends a structured JSON object; if the route sets a `format_template`
+    that template's rendered output is sent as the raw body instead, so
+    provider-specific shapes (Discord's `{"content": …}`, Slack's
+    `{"text": …}`) work without a code change. Optional `webhook_headers`
+    carry auth (Authorization / X-API-Key / …).
     """
 
     SHUFFLE = "shuffle"
+    WEBHOOK = "webhook"
 
 
 class NotificationSeverity(str, Enum):
@@ -117,14 +129,15 @@ class NotificationRouteBase(BaseModel):
             return NotificationTrigger.INVESTIGATION_COMPLETE.value
         return v
 
-    # For SMTP: comma-separated recipient emails. For Shuffle: free-form
-    # destination hint (e.g. '#soc-alerts', 'ir@corp.com') that gets
-    # injected into Shuffle's natural-language input — Shuffle's app
-    # agent figures out how to route it within the authenticated app.
-    destination: str = Field(
-        ...,
-        min_length=1,
-        description="Destination hint for the Shuffle app (channel name, email address, handle).",
+    # For Shuffle: free-form destination hint (e.g. '#soc-alerts',
+    # 'ir@corp.com') that gets injected into Shuffle's natural-language
+    # input — Shuffle's app agent figures out how to route it within the
+    # authenticated app. For webhook: optional, unused by the dispatcher
+    # (the URL is the real target); kept as a human label only. Required
+    # for Shuffle, optional for webhook — enforced in the model validator.
+    destination: Optional[str] = Field(
+        default=None,
+        description="Destination hint for the Shuffle app (channel name, email address, handle). Optional for webhook routes.",
     )
     min_severity: NotificationSeverity = NotificationSeverity.MEDIUM
     format_template: Optional[str] = Field(
@@ -147,18 +160,73 @@ class NotificationRouteBase(BaseModel):
         description="Human-readable Shuffle app name cached for the UI list (e.g. 'Slack').",
     )
 
+    # Webhook routing target. Required when channel='webhook'. The
+    # dispatcher POSTs (or PUTs) to `webhook_url` with the structured
+    # payload, or the rendered `format_template` if one is set. Custom
+    # headers carry auth (Authorization / X-API-Key / …).
+    webhook_url: Optional[str] = Field(
+        default=None,
+        description="Target URL for direct webhook delivery (required when channel='webhook'). Must be http(s).",
+    )
+    # Optional (not just defaulted) so reading back a non-webhook route —
+    # whose column is NULL — doesn't fail validation. New webhook routes
+    # that omit it fall back to POST at dispatch time.
+    webhook_method: Optional[str] = Field(
+        default="POST",
+        pattern="^(POST|PUT)$",
+        description="HTTP method for webhook delivery. POST (default) or PUT.",
+    )
+    webhook_headers: Optional[Dict[str, str]] = Field(
+        default=None,
+        description="Optional custom request headers for webhook delivery (e.g. {'Authorization': 'Bearer …'}).",
+    )
+    # When True (webhook channel only), the dispatcher looks up the alert's
+    # latest AI analyst report + IOCs and merges the extra fields
+    # (recommended_actions, report_markdown, iocs, …) flat into the JSON
+    # payload — for downstream automation that wants the full analysis and
+    # IOC list rather than just the one-line summary. Default off so
+    # chat-target routes and the base payload stay lean.
+    include_full_report: bool = Field(
+        default=False,
+        description="Webhook only — inline the full AI report (markdown, recommended actions, IOCs) in the payload.",
+    )
+
     @field_validator("destination")
     @classmethod
-    def _strip_destination(cls, v: str) -> str:
-        return v.strip()
+    def _strip_destination(cls, v: Optional[str]) -> Optional[str]:
+        return v.strip() if v is not None else v
+
+    @field_validator("webhook_url")
+    @classmethod
+    def _strip_webhook_url(cls, v: Optional[str]) -> Optional[str]:
+        return v.strip() if v is not None else v
+
+    @field_validator("include_full_report", mode="before")
+    @classmethod
+    def _coerce_null_full_report(cls, v):
+        """Treat a NULL column value as False on read.
+
+        The column is nullable; the migration backfills `false`, but a
+        hand-edited or pre-backfill row could be NULL. Pydantic 2 would
+        reject NULL against the `bool` field and 500 the list endpoint,
+        so coerce it here rather than surface a strictness error.
+        """
+        return False if v is None else v
 
     @model_validator(mode="after")
-    def _shuffle_fields_required(self):
+    def _channel_fields_required(self):
         if self.channel == NotificationChannel.SHUFFLE:
             if not self.shuffle_integration_id:
                 raise ValueError("shuffle_integration_id is required when channel='shuffle'")
             if not self.shuffle_app_id:
                 raise ValueError("shuffle_app_id is required when channel='shuffle'")
+            if not self.destination:
+                raise ValueError("destination is required when channel='shuffle'")
+        elif self.channel == NotificationChannel.WEBHOOK:
+            if not self.webhook_url:
+                raise ValueError("webhook_url is required when channel='webhook'")
+            if not self.webhook_url.lower().startswith(("http://", "https://")):
+                raise ValueError("webhook_url must start with http:// or https://")
         return self
 
 
@@ -182,6 +250,12 @@ class NotificationRouteUpdate(BaseModel):
     shuffle_integration_id: Optional[int] = None
     shuffle_app_id: Optional[str] = None
     shuffle_app_name: Optional[str] = None
+    # Webhook target — included on PATCH so admins can re-point a route
+    # at a different URL / method / headers without recreating it.
+    webhook_url: Optional[str] = None
+    webhook_method: Optional[str] = Field(default=None, pattern="^(POST|PUT)$")
+    webhook_headers: Optional[Dict[str, str]] = None
+    include_full_report: Optional[bool] = None
 
 
 class NotificationRouteRead(NotificationRouteBase):
@@ -193,6 +267,32 @@ class NotificationRouteRead(NotificationRouteBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("webhook_headers", mode="before")
+    @classmethod
+    def _parse_webhook_headers(cls, v):
+        """Deserialize the DB's JSON-string column into a dict.
+
+        The `webhook_headers` ORM column stores a JSON string; this Read
+        schema exposes it as a dict. Pydantic 2 won't coerce a JSON
+        string to a dict on its own, so we parse it here. Tolerates the
+        already-dict case (when the schema is built from a payload
+        rather than an ORM row) and bad/empty values (→ None).
+        """
+        if v is None or isinstance(v, dict):
+            return v
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                return None
+            try:
+                import json
+
+                parsed = json.loads(v)
+                return parsed if isinstance(parsed, dict) else None
+            except ValueError:
+                return None
+        return None
 
 
 # ---------------------------------------------------------------------------

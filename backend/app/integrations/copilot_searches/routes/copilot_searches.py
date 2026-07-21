@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
@@ -139,6 +140,9 @@ from app.integrations.copilot_searches.services.detection_catalog import (
 from app.integrations.copilot_searches.services.detection_catalog import run_log_test
 from app.integrations.copilot_searches.services.mitre_coverage import get_coverage
 from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
+from app.middleware.search_query import SearchParams
+from app.middleware.search_query import filter_and_limit
+from app.middleware.search_query import search_query
 
 copilot_searches_router = APIRouter()
 
@@ -946,9 +950,11 @@ async def get_catalog_stats_endpoint() -> CatalogStatsResponse:
     ),
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def list_catalog_stories_endpoint() -> CatalogStoryListResponse:
+async def list_catalog_stories_endpoint(
+    search_params: SearchParams = Depends(search_query),
+) -> CatalogStoryListResponse:
     try:
-        stories = await list_stories()
+        stories = filter_and_limit(await list_stories(), search_params, key=lambda story: story.get("name", ""))
         return CatalogStoryListResponse(
             success=True,
             message=f"Found {len(stories)} story(ies)",
@@ -1023,9 +1029,20 @@ async def list_catalog_wazuh_rules_endpoint(
             "cache is used."
         ),
     ),
+    search_params: SearchParams = Depends(search_query),
 ) -> CatalogWazuhRulesResponse:
     try:
         payload = await list_wazuh_rules(customer_code=customer_code)
+
+        # Server-side filter so the palette never pulls the whole ruleset to search it client-side.
+        if search_params.search or search_params.limit is not None:
+            payload["rules"] = filter_and_limit(
+                payload["rules"],
+                search_params,
+                key=lambda rule: f"{rule.get('description', '')} {rule.get('id', '')}",
+            )
+            payload["total"] = len(payload["rules"])
+
         return CatalogWazuhRulesResponse(
             success=True,
             message=(f"Listed {payload['total']} Wazuh rule(s)" if payload["available"] else "Wazuh Manager not available"),

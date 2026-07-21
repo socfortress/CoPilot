@@ -1869,6 +1869,82 @@ async def list_cases_by_status(status: str, db: AsyncSession, page: int = 1, pag
     return cases_out
 
 
+def _case_to_out(case: Case) -> CaseOut:
+    """Map a Case ORM row (with alerts/comments eager-loaded) to its CaseOut schema."""
+    alerts_out = []
+    for case_alert_link in case.alerts:
+        alert = case_alert_link.alert
+        comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+        assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+        tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        linked_cases = [LinkedCaseCreate(**link.case.__dict__) for link in alert.cases]
+        iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
+        alerts_out.append(
+            AlertOut(
+                id=alert.id,
+                alert_creation_time=alert.alert_creation_time,
+                time_closed=alert.time_closed,
+                alert_name=alert.alert_name,
+                alert_description=alert.alert_description,
+                status=alert.status,
+                customer_code=alert.customer_code,
+                source=alert.source,
+                assigned_to=alert.assigned_to,
+                escalated=alert.escalated,
+                comments=comments,
+                assets=assets,
+                tags=tags,
+                linked_cases=linked_cases,
+                iocs=iocs,
+            ),
+        )
+
+    case_comments = [CaseCommentBase(**comment.__dict__) for comment in case.comments]
+
+    return CaseOut(
+        id=case.id,
+        case_name=case.case_name,
+        case_description=case.case_description,
+        assigned_to=case.assigned_to,
+        alerts=alerts_out,
+        case_creation_time=case.case_creation_time,
+        case_status=case.case_status,
+        customer_code=case.customer_code,
+        notification_invoked_number=case.notification_invoked_number or 0,
+        comments=case_comments,
+        escalated=case.escalated,
+    )
+
+
+async def list_cases_by_name(
+    case_name: str,
+    db: AsyncSession,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
+) -> List[CaseOut]:
+    """List cases whose name contains ``case_name`` (case-insensitive substring)."""
+    offset = (page - 1) * page_size
+    order_by = asc(Case.id) if order == "asc" else desc(Case.id)
+
+    result = await db.execute(
+        select(Case)
+        .where(Case.case_name.like(f"%{case_name}%"))
+        .options(
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.cases).selectinload(CaseAlertLink.case),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
+            selectinload(Case.comments),
+        )
+        .order_by(order_by)
+        .offset(offset)
+        .limit(page_size),
+    )
+    return [_case_to_out(case) for case in result.scalars().all()]
+
+
 async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[CaseOut]:
     result = await db.execute(
         select(Case)

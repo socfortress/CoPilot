@@ -25,11 +25,23 @@
 		<template #default>
 			<div class="flex flex-col gap-3 text-sm">
 				<div class="flex flex-col gap-0.5 text-sm">
-					<div class="flex flex-wrap gap-1">
+					<div v-if="isWebhook" class="flex flex-wrap gap-1">
+						<span class="font-medium">{{ route.webhook_method || "POST" }} to:</span>
+						<code class="break-all">{{ route.webhook_url }}</code>
+					</div>
+					<div v-else class="flex flex-wrap gap-1">
 						<span class="font-medium">Destination:</span>
 						<span class="flex flex-wrap gap-1">
 							<code v-for="destination in destinationList" :key="destination">{{ destination }}</code>
 						</span>
+					</div>
+					<div v-if="isWebhook && hasCustomHeaders" class="flex flex-wrap gap-1">
+						<span class="font-medium">Custom headers:</span>
+						<span class="italic">configured</span>
+					</div>
+					<div v-if="isWebhook && route.include_full_report" class="flex flex-wrap gap-1">
+						<span class="font-medium">Full AI report:</span>
+						<span class="italic">included</span>
 					</div>
 					<div v-if="route.format_template" class="flex flex-wrap gap-1">
 						<span class="font-medium">Custom template:</span>
@@ -130,13 +142,25 @@ const loadingDelete = ref(false)
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
 
-// All current routes are Shuffle-routed; the underlying Shuffle app
-// name is cached on the route row at form-submit time so we don't
-// need to roundtrip to Shuffle on every list render.
-const channelIcon = computed(() => "carbon:integration")
-const channelLabel = computed(() =>
-	props.route.shuffle_app_name ? `Shuffle · ${props.route.shuffle_app_name}` : "Shuffle"
+const isWebhook = computed(() => props.route.channel === "webhook")
+const hasCustomHeaders = computed(
+	() => props.route.webhook_headers !== null && Object.keys(props.route.webhook_headers ?? {}).length > 0
 )
+
+// Shuffle routes cache the app name on the row at form-submit time so we
+// can render "Shuffle · Slack" without a roundtrip; webhook routes show
+// the URL host so the list is scannable at a glance.
+const channelIcon = computed(() => (isWebhook.value ? "carbon:webhook" : "carbon:integration"))
+const channelLabel = computed(() => {
+	if (isWebhook.value) {
+		try {
+			return `Webhook · ${new URL(props.route.webhook_url ?? "").host}`
+		} catch {
+			return "Webhook"
+		}
+	}
+	return props.route.shuffle_app_name ? `Shuffle · ${props.route.shuffle_app_name}` : "Shuffle"
+})
 
 const severityColor = computed<"danger" | "warning" | "success">(() => {
 	if (props.route.min_severity === "Critical" || props.route.min_severity === "High") return "danger"

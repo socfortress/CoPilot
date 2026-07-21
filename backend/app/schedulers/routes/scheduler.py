@@ -11,6 +11,9 @@ from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.middleware.search_query import SearchParams
+from app.middleware.search_query import filter_and_limit
+from app.middleware.search_query import search_query
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.scheduler import get_function_by_name
 from app.schedulers.scheduler import get_scheduler_instance
@@ -108,9 +111,16 @@ async def get_job_payload(job_id: str, session: AsyncSession) -> dict:
 
 
 @scheduler_router.get("", response_model=JobsResponse, description="Get all jobs")
-async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
+async def get_all_jobs(
+    search_params: SearchParams = Depends(search_query),
+    session: AsyncSession = Depends(get_db),
+) -> JobsResponse:
     """
-    Retrieve all jobs from the scheduler.
+    Retrieve jobs from the scheduler.
+
+    ``search``/``limit`` (see ``search_query``) narrow the (small, in-memory) job set
+    to those whose id or name contains the string and cap the count — used by the
+    global search palette so the client never pulls the whole job list to filter it.
 
     Args:
         session (AsyncSession): The database session.
@@ -120,7 +130,7 @@ async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
 
     """
     scheduler = await get_scheduler_instance()
-    jobs = scheduler.get_jobs()
+    jobs = filter_and_limit(scheduler.get_jobs(), search_params, key=lambda job: f"{job.id or ''} {job.name or ''}")
     apscheduler_jobs = []
     for job in jobs:
         job_metadata = await session.execute(
