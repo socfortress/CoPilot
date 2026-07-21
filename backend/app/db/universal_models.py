@@ -377,6 +377,7 @@ class CustomerPortalSettings(SQLModel, table=True):
     title: str = Field(max_length=255, default="CoPilot")
     logo_base64: Optional[str] = Field(default=None, sa_column=Column(LONGTEXT))  # Use TEXT column for large base64 data
     logo_mime_type: Optional[str] = Field(default=None, max_length=50)  # e.g., "image/png", "image/jpeg"
+    brand_color: Optional[str] = Field(default=None, max_length=9)  # e.g., "#RRGGBB" - used to theme customer-branded reports
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
@@ -385,6 +386,7 @@ class CustomerPortalSettings(SQLModel, table=True):
         title: Optional[str] = None,
         logo_base64: Optional[str] = None,
         logo_mime_type: Optional[str] = None,
+        brand_color: Optional[str] = None,
         user_id: Optional[int] = None,
     ) -> None:
         """
@@ -412,6 +414,12 @@ class CustomerPortalSettings(SQLModel, table=True):
         elif logo_mime_type is None and hasattr(self, "_explicit_none_mime"):
             self.logo_mime_type = defaults["logo_mime_type"]
 
+        # Update brand_color - if None is passed, restore to default
+        if brand_color is not None:
+            self.brand_color = brand_color
+        elif brand_color is None and hasattr(self, "_explicit_none_brand_color"):
+            self.brand_color = defaults["brand_color"]
+
         self.updated_by = user_id
         self.updated_at = datetime.now()
 
@@ -422,6 +430,7 @@ class CustomerPortalSettings(SQLModel, table=True):
             "title": "CoPilot",
             "logo_base64": None,
             "logo_mime_type": None,
+            "brand_color": None,
         }
 
     @classmethod
@@ -432,6 +441,7 @@ class CustomerPortalSettings(SQLModel, table=True):
             title=defaults["title"],
             logo_base64=defaults["logo_base64"],
             logo_mime_type=defaults["logo_mime_type"],
+            brand_color=defaults["brand_color"],
         )
 
 

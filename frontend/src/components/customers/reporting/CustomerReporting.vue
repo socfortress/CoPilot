@@ -23,6 +23,7 @@
 						:key="report.id"
 						:report
 						:loading-visibility="visibilityLoadingId === report.id"
+						:loading="deletingId === report.id"
 						@download="handleDownload(report)"
 						@delete="handleDeleteClick(report)"
 						@toggle-visibility="handleToggleVisibility(report, $event)"
@@ -48,7 +49,7 @@
 			preset="card"
 			title="Generate Incident Management Report"
 			class="max-w-160!"
-			display-directive="show"
+			display-directive="if"
 			closable
 		>
 			<GenerateIncidentReportForm
@@ -64,7 +65,7 @@
 			title="Delete Report"
 			positive-text="Delete"
 			negative-text="Cancel"
-			@positive-click="confirmDelete"
+			@positive-click="handleDeleteConfirm"
 			@negative-click="showDeleteModal = false"
 		>
 			<p>Are you sure you want to delete the report "{{ reportToDelete?.report_name }}"?</p>
@@ -102,6 +103,7 @@ const reportToDelete = ref<IncidentCustomerReport | null>(null)
 const currentPage = ref(1)
 const pageSize = ref(20)
 const visibilityLoadingId = ref<number | null>(null)
+const deletingId = ref<number | null>(null)
 let abortController: AbortController | null = null
 
 const paginatedReports = computed(() => {
@@ -195,11 +197,18 @@ async function handleToggleVisibility(report: IncidentCustomerReport, visible: b
 	}
 }
 
-async function confirmDelete() {
-	if (!reportToDelete.value) return
+function handleDeleteConfirm() {
+	// Close the confirmation immediately; the card itself shows the loading state.
+	const report = reportToDelete.value
+	showDeleteModal.value = false
+	reportToDelete.value = null
+	if (report) deleteReport(report)
+}
 
+async function deleteReport(report: IncidentCustomerReport) {
+	deletingId.value = report.id
 	try {
-		const response = await Api.incidentReports.deleteReport(reportToDelete.value.id)
+		const response = await Api.incidentReports.deleteReport(report.id)
 
 		if (response.data.success) {
 			message.success(response.data.message)
@@ -210,8 +219,7 @@ async function confirmDelete() {
 	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to delete report")
 	} finally {
-		showDeleteModal.value = false
-		reportToDelete.value = null
+		deletingId.value = null
 	}
 }
 

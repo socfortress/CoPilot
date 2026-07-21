@@ -9,24 +9,42 @@
 		</n-form-item>
 
 		<n-form-item v-if="formData.range === 'custom'" label="Custom Date Range" path="customRange">
-			<n-date-picker
-				v-model:value="formData.customRange"
-				type="daterange"
-				clearable
-				class="w-full"
-			/>
+			<n-date-picker v-model:value="formData.customRange" type="daterange" clearable class="w-full" />
+		</n-form-item>
+
+		<n-form-item label="Report branding" path="brandTheme">
+			<div class="flex flex-col gap-1">
+				<n-radio-group v-model:value="formData.brandTheme">
+					<n-radio-button value="customer">Customer portal</n-radio-button>
+					<n-radio-button value="socfortress">SOCFortress</n-radio-button>
+				</n-radio-group>
+				<span class="text-secondary text-xs">
+					{{
+						formData.brandTheme === "socfortress"
+							? "SOCFortress logo and green color scheme"
+							: "Customer portal logo and brand color"
+					}}
+				</span>
+			</div>
 		</n-form-item>
 
 		<n-form-item label="Visible to customer" path="visibleToCustomer">
 			<div class="flex items-center gap-2">
 				<n-switch v-model:value="formData.visibleToCustomer" />
 				<span class="text-secondary text-xs">
-					{{ formData.visibleToCustomer ? "The customer will see this report in their portal" : "Hidden from the customer portal (you can share it later)" }}
+					{{
+						formData.visibleToCustomer
+							? "The customer will see this report in their portal"
+							: "Hidden from the customer portal (you can share it later)"
+					}}
 				</span>
 			</div>
 		</n-form-item>
 
-		<div class="text-secondary text-xs">Customer: <span class="font-mono">{{ customerCode }}</span></div>
+		<div class="text-secondary text-xs">
+			Customer:
+			<span class="font-mono">{{ customerCode }}</span>
+		</div>
 
 		<div class="mt-6 flex justify-end gap-3">
 			<n-button @click="$emit('cancel')">Cancel</n-button>
@@ -38,8 +56,19 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { IncidentCustomerReportGenerateRequest } from "@/types/incidentReports"
-import { NButton, NDatePicker, NForm, NFormItem, NInput, NSelect, NSwitch, useMessage } from "naive-ui"
+import type { IncidentCustomerReportGenerateRequest, IncidentReportBrandTheme } from "@/types/incidentReports"
+import {
+	NButton,
+	NDatePicker,
+	NForm,
+	NFormItem,
+	NInput,
+	NRadioButton,
+	NRadioGroup,
+	NSelect,
+	NSwitch,
+	useMessage
+} from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
@@ -55,19 +84,35 @@ const emit = defineEmits<{
 
 const message = useMessage()
 
-const formRef = ref<FormInst | null>(null)
-const generating = ref(false)
-const formData = ref<{
-	report_name?: string
+interface GenerateFormData {
+	report_name: string
 	range: "30d" | "90d" | "custom"
 	customRange: [number, number] | null
 	visibleToCustomer: boolean
-}>({
-	report_name: undefined,
-	range: "30d",
-	customRange: null,
-	visibleToCustomer: false
-})
+	brandTheme: IncidentReportBrandTheme
+}
+
+function getDefaultFormData(): GenerateFormData {
+	return {
+		report_name: "",
+		range: "30d",
+		customRange: null,
+		visibleToCustomer: false,
+		brandTheme: "customer"
+	}
+}
+
+const formRef = ref<FormInst | null>(null)
+const generating = ref(false)
+const formData = ref<GenerateFormData>(getDefaultFormData())
+
+/** Reset every field back to its default and clear validation state. */
+function resetForm() {
+	Object.assign(formData.value, getDefaultFormData())
+	formRef.value?.restoreValidation()
+}
+
+defineExpose({ resetForm })
 
 const loading = computed(() => generating.value)
 
@@ -121,7 +166,8 @@ async function handleSubmit() {
 			customer_code: props.customerCode,
 			date_from,
 			date_to,
-			visible_to_customer: formData.value.visibleToCustomer
+			visible_to_customer: formData.value.visibleToCustomer,
+			brand_theme: formData.value.brandTheme
 		}
 		if (formData.value.report_name?.trim()) {
 			request.report_name = formData.value.report_name.trim()
@@ -133,6 +179,7 @@ async function handleSubmit() {
 
 			if (response.data.success) {
 				message.success(response.data.message)
+				resetForm()
 				emit("generated", response.data.report_id)
 			} else {
 				message.error("Failed to queue report generation")

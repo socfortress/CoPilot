@@ -20,11 +20,14 @@ export interface IncidentCustomerReport {
 	download_url?: string | null
 }
 
+export type IncidentReportBrandTheme = "socfortress" | "customer"
+
 export interface IncidentCustomerReportGenerateRequest {
 	customer_code: string
 	date_from: string
 	date_to: string
 	report_name?: string
+	brand_theme?: IncidentReportBrandTheme
 }
 
 export interface IncidentCustomerReportGenerateBackgroundResponse {

@@ -35,12 +35,12 @@ from app.auth.models.users import User
 from app.data_store.data_store_operations import delete_file_from_minio
 from app.data_store.data_store_operations import retrieve_file_from_minio
 from app.data_store.data_store_operations import store_file_in_minio
-from app.db.universal_models import CustomerPortalSettings
 from app.db.universal_models import Customers
 from app.db.universal_models import IncidentManagementCustomerReport
 from app.incidents.schema.customer_report import CustomerReportGenerateRequest
 from app.incidents.schema.customer_report import CustomerReportResponse
 from app.incidents.services import customer_report_aggregations as agg
+from app.incidents.services.customer_report_branding import resolve_theme
 from app.incidents.services.customer_report_charts import donut_png
 from app.incidents.services.customer_report_charts import evolution_png
 from app.incidents.services.customer_report_charts import hbar_png
@@ -143,23 +143,6 @@ def _build_case_card(case) -> Dict[str, Any]:
     }
 
 
-async def _load_branding(session: AsyncSession) -> Dict[str, Any]:
-    """Return branding (logo data-URI + title) from customer_portal_settings."""
-    result = await session.execute(select(CustomerPortalSettings).limit(1))
-    settings = result.scalars().first()
-    logo = None
-    title = "CoPilot"
-    if settings:
-        title = settings.title or "CoPilot"
-        if settings.logo_base64:
-            if settings.logo_base64.startswith("data:"):
-                logo = settings.logo_base64
-            else:
-                mime = settings.logo_mime_type or "image/png"
-                logo = f"data:{mime};base64,{settings.logo_base64}"
-    return {"logo": logo, "title": title}
-
-
 async def build_report_context(
     session: AsyncSession,
     customer: Customers,
@@ -190,7 +173,7 @@ async def build_report_context(
     open_cards = [_build_case_card(c) for c in open_cases_rows]
     closed_cards = [_build_case_card(c) for c in closed_cases_rows]
 
-    branding = await _load_branding(session)
+    theme = await resolve_theme(session, request.brand_theme)
 
     months = [row["month"] for row in trend]
     show_evolution = len(trend) >= 2
@@ -199,8 +182,9 @@ async def build_report_context(
         "generated_at": _fmt_dt(datetime.utcnow()),
         "customer": {"code": customer.customer_code, "name": customer.customer_name},
         "period": {"from": _fmt_date(date_from), "to": _fmt_date(date_to)},
-        "brand": branding["title"],
-        "logo": branding["logo"],
+        "brand": theme["footer_brand"],
+        "logo": theme["logo"],
+        "theme": theme,
         "tlp": "TLP:RED",
         "metrics": {
             "total_alerts": total_alerts,
@@ -214,10 +198,14 @@ async def build_report_context(
         "charts": {
             "alerts_by_status": donut_png(by_status, status_aware=True) if total_alerts else None,
             "alerts_by_source": donut_png(by_source) if total_alerts else None,
-            "top_alert_names": hbar_png(top_alert_names) if top_alert_names else None,
-            "top_tags": hbar_png(top_alert_tags) if top_alert_tags else None,
-            "evolution_alerts": evolution_png(months, [row["alerts"] for row in trend], color="#6c8be0") if show_evolution else None,
-            "evolution_cases": evolution_png(months, [row["cases"] for row in trend], color="#7c6fd6") if show_evolution else None,
+            "top_alert_names": hbar_png(top_alert_names, color=theme["chart_bar"]) if top_alert_names else None,
+            "top_tags": hbar_png(top_alert_tags, color=theme["chart_bar"]) if top_alert_tags else None,
+            "evolution_alerts": evolution_png(months, [row["alerts"] for row in trend], color=theme["chart_evo_alerts"])
+            if show_evolution
+            else None,
+            "evolution_cases": evolution_png(months, [row["cases"] for row in trend], color=theme["chart_evo_cases"])
+            if show_evolution
+            else None,
         },
         "monthly_trend": trend,
         "open_cases": open_cards,
@@ -371,7 +359,11 @@ async def generate_customer_report(
             raise RuntimeError(f"Failed to store report in MinIO: {upload.get('error')}")
 
         filters_json = json.dumps(
-            {"date_from": request.date_from.isoformat(), "date_to": request.date_to.isoformat()},
+            {
+                "date_from": request.date_from.isoformat(),
+                "date_to": request.date_to.isoformat(),
+                "brand_theme": request.brand_theme,
+            },
         )
 
         if report is None:

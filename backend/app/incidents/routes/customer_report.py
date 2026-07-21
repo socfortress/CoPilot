@@ -104,7 +104,13 @@ async def generate_report_background(
         generated_by_role=role_name,
         date_from=request.date_from,
         date_to=request.date_to,
-        filters_json=json.dumps({"date_from": request.date_from.isoformat(), "date_to": request.date_to.isoformat()}),
+        filters_json=json.dumps(
+            {
+                "date_from": request.date_from.isoformat(),
+                "date_to": request.date_to.isoformat(),
+                "brand_theme": request.brand_theme,
+            },
+        ),
         # Customer-generated reports are always visible to the customer; otherwise
         # honour the analyst/admin's choice from the generation form.
         visible_to_customer=(role_name == "customer_user") or request.visible_to_customer,

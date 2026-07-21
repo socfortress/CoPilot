@@ -2,11 +2,16 @@ from datetime import datetime
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import model_validator
+
+# Branding theme for the generated report: SOCFortress branding (logo + green
+# scheme) or the customer portal branding (portal logo + customer brand color).
+BrandTheme = Literal["socfortress", "customer"]
 
 
 class CustomerReportGenerateRequest(BaseModel):
@@ -19,6 +24,8 @@ class CustomerReportGenerateRequest(BaseModel):
     # Whether the generated report is immediately shared with the customer portal.
     # Ignored for customer-generated reports (those are always visible to the customer).
     visible_to_customer: bool = False
+    # Which branding to apply to the report. Defaults to the customer portal branding.
+    brand_theme: BrandTheme = "customer"
 
     @model_validator(mode="after")
     def _validate_range(self) -> "CustomerReportGenerateRequest":

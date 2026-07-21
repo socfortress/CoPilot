@@ -5,6 +5,8 @@
 		main-box-class="gap-2"
 		header-box-class="flex-nowrap! items-start"
 		:status="reportCardStatus(report.status)"
+		:loading
+		loading-description="Deleting report…"
 	>
 		<template #headerMain>
 			<span class="text-default line-clamp-2 text-sm leading-snug font-semibold" :title="report.report_name">
@@ -88,6 +90,13 @@
 					<template #label>Generated</template>
 					<template #value>{{ formatDate(report.generated_at, dFormats.datetime) }}</template>
 				</Badge>
+				<Badge type="splitted" :color="brandColor">
+					<template #label>
+						<Icon :name="BrandIcon" :size="12" />
+						Branding
+					</template>
+					<template #value>{{ brandLabel }}</template>
+				</Badge>
 			</div>
 		</template>
 
@@ -127,9 +136,10 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatBytes, formatDate } from "@/utils/format"
 
-const { report, loadingVisibility = false } = defineProps<{
+const { report, loadingVisibility = false, loading = false } = defineProps<{
 	report: IncidentCustomerReport
 	loadingVisibility?: boolean
+	loading?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -144,8 +154,17 @@ const CheckIcon = "carbon:checkmark-filled"
 const ErrorIcon = "carbon:warning-filled"
 const LoadingIcon = "eos-icons:loading"
 const VisibilityIcon = "carbon:view"
+const BrandIcon = "carbon:color-palette"
 
 const isCustomerGenerated = computed(() => report.generated_by_role === "customer_user")
+
+// Reports generated before branding was recorded always used the customer portal
+// look, so default to it when the field is absent — the badge is always shown.
+const brandLabel = computed(() => (report.filters_applied?.brand_theme === "socfortress" ? "SOCFortress" : "Customer portal"))
+
+const brandColor = computed<BadgeColor | undefined>(() =>
+	report.filters_applied?.brand_theme === "socfortress" ? "warning" : "primary"
+)
 
 function onToggleVisibility(visible: boolean) {
 	emit("toggleVisibility", visible)

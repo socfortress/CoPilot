@@ -149,10 +149,12 @@ def donut_png(data: List[Tuple[str, int]], status_aware: bool = False, width_in:
     return _fig_to_data_uri(fig)
 
 
-def hbar_png(data: List[Tuple[str, int]], width_in: float = 8.4, max_label: int = 60) -> str:
-    """Horizontal bar chart (periwinkle) with a top axis, gridlines and value labels.
+def hbar_png(data: List[Tuple[str, int]], width_in: float = 8.4, max_label: int = 60, color: Optional[str] = None) -> str:
+    """Horizontal bar chart with a top axis, gridlines and value labels.
 
     Mirrors the reference "Top títulos de alertas" / "Top taxonomías" charts.
+    ``color`` overrides the bar fill (used to theme the report with a customer
+    brand color); it defaults to the neutral periwinkle reference fill.
     """
     data = [(str(label), int(value)) for label, value in data if value is not None]
     if not data:
@@ -166,8 +168,10 @@ def hbar_png(data: List[Tuple[str, int]], width_in: float = 8.4, max_label: int 
     height_in = max(1.4, 0.34 * len(data) + 0.6)
     fig, ax = plt.subplots(figsize=(width_in, height_in))
 
+    fill = color or _BAR_FILL
+    edge = color or "#6f77d6"
     y = range(len(values))
-    ax.barh(list(y), values, color=_BAR_FILL, edgecolor="#6f77d6", linewidth=0.4, height=0.68)
+    ax.barh(list(y), values, color=fill, edgecolor=edge, linewidth=0.4, height=0.68)
 
     ax.set_yticks(list(y))
     ax.set_yticklabels(labels, fontproperties=_FONT, fontsize=8, color=_TEXT)

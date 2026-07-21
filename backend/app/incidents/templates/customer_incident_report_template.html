@@ -24,7 +24,7 @@
     /* Cover */
     .cover { text-align: center; padding-top: 150px; }
     .cover .logo { max-height: 70px; max-width: 300px; margin-bottom: 34px; }
-    .cover .eyebrow { color: #12c46a; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; font-size: 13px; }
+    .cover .eyebrow { color: {{ theme.accent }}; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; font-size: 13px; }
     .cover .title { font-size: 30px; font-weight: 800; color: #0f172a; margin-top: 10px; }
     .cover .customer { font-size: 17px; color: #334155; margin-top: 12px; font-weight: 700; }
     .cover .meta { margin-top: 34px; font-size: 12.5px; color: #475569; line-height: 2; }
@@ -34,7 +34,7 @@
 
     /* Section heading: green "eyebrow" number + black title */
     .section-heading { margin: 4px 0 14px 0; }
-    .section-heading .n { color: #12c46a; font-weight: 800; font-size: 20px; }
+    .section-heading .n { color: {{ theme.accent }}; font-weight: 800; font-size: 20px; }
     .section-heading .t { color: #0f172a; font-weight: 800; font-size: 20px; margin-left: 8px; }
     .section-sub { color: #64748b; font-size: 12px; margin: -8px 0 14px 0; }
     .lead { font-size: 11px; color: #334155; margin: 0 0 12px 0; }
@@ -61,7 +61,7 @@
 
     /* Case summary tables (green sub-header, colour-coded cells) */
     table.cases { margin-top: 4px; }
-    table.cases th { background: #35d07f; color: #0b3d24; font-weight: 800; font-size: 10px; text-transform: uppercase;
+    table.cases th { background: {{ theme.accent_strong }}; color: {{ theme.accent_text }}; font-weight: 800; font-size: 10px; text-transform: uppercase;
                      letter-spacing: .03em; padding: 7px 8px; text-align: left; }
     table.cases td { padding: 7px 8px; border-bottom: 1px solid #eef1f5; font-size: 10.5px; vertical-align: top; }
     table.cases td.c { text-align: center; }
@@ -88,12 +88,12 @@
     .case-card table.kv { width: 100%; }
     .case-card table.kv td { padding: 5px 10px; font-size: 10.5px; border-bottom: 1px solid #f1f5f9; }
     .case-card table.kv td.lbl { font-weight: 700; width: 90px; color: #0f172a; }
-    .band { background: #35d07f; color: #0b3d24; font-weight: 800; font-size: 10px; text-transform: uppercase;
+    .band { background: {{ theme.accent_strong }}; color: {{ theme.accent_text }}; font-weight: 800; font-size: 10px; text-transform: uppercase;
             letter-spacing: .04em; padding: 6px 10px; }
     .body-text { padding: 10px 10px; font-size: 10.5px; color: #334155; white-space: pre-wrap; word-break: break-word; }
     .alert-list { margin: 4px 0 0 0; padding-left: 18px; }
     .alert-list li { font-size: 10.5px; color: #334155; margin: 1px 0; }
-    .comment { font-size: 10.5px; color: #334155; margin: 3px 0; padding-left: 8px; border-left: 2px solid #d9f2e3; }
+    .comment { font-size: 10.5px; color: #334155; margin: 3px 0; padding-left: 8px; border-left: 2px solid {{ theme.accent_soft }}; }
     .comment .m { color: #94a3b8; font-size: 9.5px; }
     .empty { color: #64748b; font-style: italic; padding: 10px 0; }
 
