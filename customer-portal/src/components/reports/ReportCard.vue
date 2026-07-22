@@ -39,7 +39,7 @@
 						<template #icon><Icon :name="DownloadIcon" :size="14" /></template>
 						Download
 					</n-button>
-					<n-button size="small" type="error" secondary @click="emit('delete')">
+					<n-button v-if="isCustomerGenerated" size="small" type="error" secondary @click="emit('delete')">
 						<template #icon><Icon :name="DeleteIcon" :size="14" /></template>
 						Delete
 					</n-button>
@@ -72,6 +72,10 @@ const DeleteIcon = "carbon:trash-can"
 const PeriodIcon = "carbon:calendar"
 
 const dFormats = useSettingsStore().dateFormat
+
+// Customers may only delete reports they generated themselves; analyst/admin
+// reports shared into the portal are read-only here (download still allowed).
+const isCustomerGenerated = computed(() => report.generated_by_role === "customer_user")
 
 const authorText = computed(() => {
 	const roleLabels: Record<string, string> = {
