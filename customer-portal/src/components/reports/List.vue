@@ -56,20 +56,6 @@
 					<n-date-picker v-model:value="formData.customRange" type="daterange" clearable class="w-full" />
 				</n-form-item>
 
-				<n-form-item label="Report branding" path="brandTheme">
-					<div class="flex flex-col gap-1">
-						<n-radio-group v-model:value="formData.brandTheme">
-							<n-radio-button value="customer">Customer branding</n-radio-button>
-							<n-radio-button value="socfortress">SOCFortress</n-radio-button>
-						</n-radio-group>
-						<span class="text-secondary text-xs">
-							{{ formData.brandTheme === "socfortress"
-								? "SOCFortress logo and green color scheme"
-								: "Your portal logo and brand color" }}
-						</span>
-					</div>
-				</n-form-item>
-
 				<div class="mt-6 flex justify-end gap-3">
 					<n-button @click="showGenerateModal = false">Cancel</n-button>
 					<n-button type="primary" :loading="generating" @click="handleGenerate">Generate Report</n-button>
@@ -95,23 +81,10 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { IncidentCustomerReport, IncidentCustomerReportGenerateRequest, IncidentReportBrandTheme } from "@/types/reports"
+import type { IncidentCustomerReport, IncidentCustomerReportGenerateRequest } from "@/types/reports"
 import axios from "axios"
 import { saveAs } from "file-saver"
-import {
-	NButton,
-	NDatePicker,
-	NEmpty,
-	NForm,
-	NFormItem,
-	NInput,
-	NModal,
-	NRadioButton,
-	NRadioGroup,
-	NSelect,
-	NSpin,
-	useMessage
-} from "naive-ui"
+import { NButton, NDatePicker, NEmpty, NForm, NFormItem, NInput, NModal, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -140,7 +113,6 @@ interface GenerateFormData {
 	customer_code: string | null
 	range: "30d" | "90d" | "custom"
 	customRange: [number, number] | null
-	brandTheme: IncidentReportBrandTheme
 }
 
 function getDefaultFormData(): GenerateFormData {
@@ -148,8 +120,7 @@ function getDefaultFormData(): GenerateFormData {
 		report_name: undefined,
 		customer_code: authStore.userCustomerCode,
 		range: "30d",
-		customRange: null,
-		brandTheme: "customer"
+		customRange: null
 	}
 }
 
@@ -252,11 +223,12 @@ async function handleGenerate() {
 	}
 
 	const { date_from, date_to } = resolveRange()
+	// Customers can only ever generate reports with their own portal branding.
 	const request: IncidentCustomerReportGenerateRequest = {
 		customer_code: customerCode,
 		date_from,
 		date_to,
-		brand_theme: formData.value.brandTheme
+		brand_theme: "customer"
 	}
 	if (formData.value.report_name?.trim()) {
 		request.report_name = formData.value.report_name.trim()
