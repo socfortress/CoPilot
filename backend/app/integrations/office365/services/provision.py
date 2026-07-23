@@ -954,9 +954,9 @@ async def provision_office365(
         ),
     )
 
-    await update_customer_integration_table(customer_code, session)
-    await update_customermeta_table(customer_code, session, provision_office365_auth_keys.TENANT_ID)
-
+    # The metadata entry is written *before* the integration is flagged as deployed: the UI
+    # hides the Deploy button once `deployed` is true, so a failure here would otherwise leave
+    # the integration undeployable and its infrastructure untracked.
     await create_integration_meta_entry(
         CustomerIntegrationsMetaSchema(
             customer_code=customer_code,
@@ -975,6 +975,9 @@ async def provision_office365(
         ),
         session,
     )
+
+    await update_customer_integration_table(customer_code, session)
+    await update_customermeta_table(customer_code, session, provision_office365_auth_keys.TENANT_ID)
 
     return ProvisionOffice365Response(
         success=True,

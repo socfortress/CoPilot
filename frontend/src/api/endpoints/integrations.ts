@@ -77,9 +77,12 @@ export default {
 		return HttpClient.put<FlaskBaseResponse>(`/integrations/update_meta_auto`, payload)
 	},
 	deleteIntegration(customerCode: string, integrationName: string) {
-		return HttpClient.delete<FlaskBaseResponse>(`/integrations/delete_integration`, {
-			data: { customer_code: customerCode, integration_name: integrationName }
-		})
+		return HttpClient.delete<FlaskBaseResponse & { additional_info: string | null }>(
+			`/integrations/delete_integration`,
+			{
+				data: { customer_code: customerCode, integration_name: integrationName }
+			}
+		)
 	},
 	// #endregion
 
