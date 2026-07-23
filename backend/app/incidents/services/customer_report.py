@@ -297,6 +297,11 @@ def _render_pdf(context: Dict[str, Any], template: str = DEFAULT_TEMPLATE) -> by
                 "margin-left": "14mm",
                 "margin-right": "14mm",
                 "encoding": "UTF-8",
+                # Render at 1:1 (96dpi) so the light full-page cover's pixel heights
+                # map predictably; smart-shrinking would rescale the page and leave
+                # the cover short of the page bottom.
+                "disable-smart-shrinking": None,
+                "dpi": "96",
             },
         )
         with open(pdf_path, "rb") as fh:
