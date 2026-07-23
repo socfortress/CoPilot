@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_validator
 
 
 class AuthKey(BaseModel):
@@ -243,6 +244,29 @@ class CustomerIntegrationsMetaSchema(BaseModel):
     grafana_dashboard_folder_id: str
     grafana_datasource_uid: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator(
+        "graylog_input_id",
+        "graylog_index_id",
+        "graylog_stream_id",
+        "grafana_org_id",
+        "grafana_dashboard_folder_id",
+        "grafana_datasource_uid",
+        mode="before",
+    )
+    @classmethod
+    def coerce_external_ids_to_str(cls, value):
+        """Grafana and Graylog hand back numeric IDs; these columns are varchars.
+
+        Provisioning flows pass the raw Grafana folder ID (an `int`) straight through.
+        Pydantic v1 coerced that to a string silently, v2 raises `string_type`, which
+        blew up *after* the infrastructure had already been provisioned and left the
+        integration deployed with no metadata row. Normalize here rather than at every
+        provisioning call site.
+        """
+        if isinstance(value, int) and not isinstance(value, bool):
+            return str(value)
+        return value
 
 
 class CustomerIntegrationsMetaResponse(BaseModel):

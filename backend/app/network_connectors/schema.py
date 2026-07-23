@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_validator
 
 
 class AuthKey(BaseModel):
@@ -235,6 +236,25 @@ class CustomerNetworkConnectorsMetaSchema(BaseModel):
     grafana_org_id: str
     grafana_dashboard_folder_id: str
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator(
+        "graylog_input_id",
+        "graylog_index_id",
+        "graylog_stream_id",
+        "grafana_org_id",
+        "grafana_dashboard_folder_id",
+        mode="before",
+    )
+    @classmethod
+    def coerce_external_ids_to_str(cls, value):
+        """Grafana and Graylog hand back numeric IDs; these columns are varchars.
+
+        Mirrors `CustomerIntegrationsMetaSchema.coerce_external_ids_to_str` — Pydantic v2
+        no longer coerces `int` -> `str`, so normalize here instead of at each call site.
+        """
+        if isinstance(value, int) and not isinstance(value, bool):
+            return str(value)
+        return value
 
 
 class CustomerNetworkConnectorsMetaResponse(BaseModel):

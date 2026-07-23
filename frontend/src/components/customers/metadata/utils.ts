@@ -13,6 +13,7 @@ export function getMetaFieldLabel(key: string): string {
 		graylog_content_pack_input_id: "Graylog Content Pack Input ID",
 		graylog_content_pack_stream_id: "Graylog Content Pack Stream ID",
 		grafana_org_id: "Grafana Org ID",
+		grafana_dashboard_folder_id: "Grafana Dashboard Folder ID",
 		grafana_datasource_uid: "Grafana Datasource UID"
 	}
 

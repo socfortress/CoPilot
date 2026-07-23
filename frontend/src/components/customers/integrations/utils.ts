@@ -60,6 +60,11 @@ export function deleteIntegration({
 			if (res.data.success) {
 				message.success(res.data?.message || "Customer integration successfully deleted.")
 
+				// Manual follow-up steps and any resource the cleanup could not remove
+				if (res.data?.additional_info) {
+					message.info(res.data.additional_info, { duration: 0, closable: true })
+				}
+
 				if (cbSuccess && typeof cbSuccess === "function") {
 					cbSuccess()
 				}
