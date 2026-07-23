@@ -81,12 +81,23 @@ const dFormats = useSettingsStore().dateFormat
 // Which report layout was used. Reports generated before templates existed have no
 // field, so default to the complete report (the only layout available back then).
 const templateMeta: Record<string, { label: string; description: string }> = {
-	full: { label: "Complete", description: "Executive summary, charts & trends, and open/closed cases with assets & IOCs" },
+	full: {
+		label: "Complete",
+		description: "Executive summary, charts & trends, and open/closed cases with assets & IOCs"
+	},
 	executive: { label: "Executive", description: "One-look synthesis: KPIs, service metrics and a status chart" },
-	operational: { label: "Operational", description: "Case-centric: open/closed cases in full detail (assets, IOCs, resolution)" },
-	analytics: { label: "Analytics", description: "Metrics-centric: executive summary, all charts and the monthly trend table" }
+	operational: {
+		label: "Operational",
+		description: "Case-centric: open/closed cases in full detail (assets, IOCs, resolution)"
+	},
+	analytics: {
+		label: "Analytics",
+		description: "Metrics-centric: executive summary, all charts and the monthly trend table"
+	}
 }
-const templateInfo = computed(() => templateMeta[String(report.filters_applied?.report_template ?? "full")] ?? templateMeta.full)
+const templateInfo = computed(
+	() => templateMeta[String(report.filters_applied?.report_template ?? "full")] ?? templateMeta.full
+)
 const templateLabel = computed(() => templateInfo.value.label)
 const templateDescription = computed(() => templateInfo.value.description)
 

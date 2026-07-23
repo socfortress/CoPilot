@@ -88,7 +88,11 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { IncidentCustomerReport, IncidentCustomerReportGenerateRequest, IncidentReportTemplate } from "@/types/reports"
+import type {
+	IncidentCustomerReport,
+	IncidentCustomerReportGenerateRequest,
+	IncidentReportTemplate
+} from "@/types/reports"
 import axios from "axios"
 import { saveAs } from "file-saver"
 import { NButton, NDatePicker, NEmpty, NForm, NFormItem, NInput, NModal, NSelect, NSpin, useMessage } from "naive-ui"
@@ -160,7 +164,8 @@ const templateOptions: { label: string; value: IncidentReportTemplate; descripti
 	{
 		label: "Analytics — trends",
 		value: "analytics",
-		description: "Metrics-centric: executive summary plus all distribution charts and the monthly trend table. No case detail."
+		description:
+			"Metrics-centric: executive summary plus all distribution charts and the monthly trend table. No case detail."
 	}
 ]
 

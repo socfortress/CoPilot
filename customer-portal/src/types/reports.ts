@@ -22,8 +22,10 @@ export interface IncidentCustomerReport {
 
 export type IncidentReportBrandTheme = "socfortress" | "customer"
 
-/** Report layout: full = everything, executive = one-look synthesis,
- *  operational = case detail w/ assets & IOCs, analytics = charts & trends. */
+/**
+ * Report layout: full = everything, executive = one-look synthesis,
+ *  operational = case detail w/ assets & IOCs, analytics = charts & trends.
+ */
 export type IncidentReportTemplate = "full" | "executive" | "operational" | "analytics"
 
 export interface IncidentCustomerReportGenerateRequest {
