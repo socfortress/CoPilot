@@ -109,6 +109,7 @@ async def generate_report_background(
                 "date_from": request.date_from.isoformat(),
                 "date_to": request.date_to.isoformat(),
                 "brand_theme": request.brand_theme,
+                "report_template": request.report_template,
             },
         ),
         # Customer-generated reports are always visible to the customer; otherwise

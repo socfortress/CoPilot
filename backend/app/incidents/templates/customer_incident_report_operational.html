@@ -1,0 +1,74 @@
+{# OPERATIONAL report — the case-centric half: every open & closed case in full
+   technical detail (assets + IOCs + resolution notes). No charts/trends — that is
+   the ANALYTICS report's job. #}
+{% extends "_report_base.html" %}
+{% from "_report_macros.html" import priority_chip, case_summary_row, case_card with context %}
+
+{% block cover_eyebrow %}Case Detail Report{% endblock %}
+{% block cover_title %}Incident Case Detail{% endblock %}
+{% block cover_kind %}<div class="kind">Operational — Cases</div>{% endblock %}
+
+{% block content %}
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">›</span><span class="t">Case Overview</span></div>
+  <div class="section-sub">{{ period.from }} — {{ period.to }}</div>
+  <p class="lead">
+    Operational detail of the incident cases handled for {{ customer.name }} during the period.
+    Each case lists its linked alerts, affected assets and observed indicators of compromise.
+  </p>
+
+  <table class="metrics">
+    <tr class="grp"><td>Cases reported in period</td><td class="v">{{ metrics.reported_cases }}</td></tr>
+    <tr class="grp"><td>Cases open at period end</td><td class="v">{{ metrics.open_cases }}</td></tr>
+    <tr class="grp"><td>Cases closed in period</td><td class="v">{{ metrics.closed_cases }}</td></tr>
+  </table>
+
+  <!-- ================= OPEN CASES ================= -->
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">1.</span><span class="t">Open Cases</span></div>
+  <p class="lead">
+    Cases that were open at the end of the period ({{ period.to }}), whether newly created or
+    carried over from previous periods.
+  </p>
+
+  {% if open_cases %}
+    <div class="bar">Open Cases Summary</div>
+    <table class="cases">
+      <thead><tr><th>Case</th><th>Type</th><th>Title</th><th>Priority</th><th>Reported</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for case in open_cases %}{{ case_summary_row(case, customer.code, false) }}{% endfor %}
+      </tbody>
+    </table>
+    {% if open_overflow %}<div class="muted" style="margin-top:6px;">…and {{ open_overflow }} more open cases (not listed; narrow the date range).</div>{% endif %}
+
+    {% for case in open_cases %}
+      {{ case_card(case, customer.code, false) }}
+    {% endfor %}
+  {% else %}
+    <div class="empty">There were no open cases for this customer at the end of the period.</div>
+  {% endif %}
+
+  <!-- ================= CLOSED CASES ================= -->
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">2.</span><span class="t">Closed Cases</span></div>
+  <p class="lead">
+    Cases that were closed during the reporting period, regardless of their creation date.
+  </p>
+
+  {% if closed_cases %}
+    <div class="bar">Closed Cases Summary</div>
+    <table class="cases">
+      <thead><tr><th>Case</th><th>Type</th><th>Title</th><th>Priority</th><th>Reported / Closed</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for case in closed_cases %}{{ case_summary_row(case, customer.code, true) }}{% endfor %}
+      </tbody>
+    </table>
+    {% if closed_overflow %}<div class="muted" style="margin-top:6px;">…and {{ closed_overflow }} more closed cases (not listed; narrow the date range).</div>{% endif %}
+
+    {% for case in closed_cases %}
+      {{ case_card(case, customer.code, true) }}
+    {% endfor %}
+  {% else %}
+    <div class="empty">No cases were closed for this customer in the selected period.</div>
+  {% endif %}
+{% endblock %}

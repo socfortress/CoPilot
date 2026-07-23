@@ -56,6 +56,13 @@
 					<n-date-picker v-model:value="formData.customRange" type="daterange" clearable class="w-full" />
 				</n-form-item>
 
+				<n-form-item label="Report template" path="reportTemplate">
+					<div class="flex w-full flex-col gap-1">
+						<n-select v-model:value="formData.reportTemplate" :options="templateOptions" />
+						<span class="text-secondary text-xs">{{ selectedTemplateDescription }}</span>
+					</div>
+				</n-form-item>
+
 				<div class="mt-6 flex justify-end gap-3">
 					<n-button @click="showGenerateModal = false">Cancel</n-button>
 					<n-button type="primary" :loading="generating" @click="handleGenerate">Generate Report</n-button>
@@ -81,7 +88,7 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { IncidentCustomerReport, IncidentCustomerReportGenerateRequest } from "@/types/reports"
+import type { IncidentCustomerReport, IncidentCustomerReportGenerateRequest, IncidentReportTemplate } from "@/types/reports"
 import axios from "axios"
 import { saveAs } from "file-saver"
 import { NButton, NDatePicker, NEmpty, NForm, NFormItem, NInput, NModal, NSelect, NSpin, useMessage } from "naive-ui"
@@ -113,6 +120,7 @@ interface GenerateFormData {
 	customer_code: string | null
 	range: "30d" | "90d" | "custom"
 	customRange: [number, number] | null
+	reportTemplate: IncidentReportTemplate
 }
 
 function getDefaultFormData(): GenerateFormData {
@@ -120,7 +128,8 @@ function getDefaultFormData(): GenerateFormData {
 		report_name: undefined,
 		customer_code: authStore.userCustomerCode,
 		range: "30d",
-		customRange: null
+		customRange: null,
+		reportTemplate: "full"
 	}
 }
 
@@ -131,6 +140,33 @@ const rangeOptions = [
 	{ label: "Last 3 months", value: "90d" },
 	{ label: "Custom range", value: "custom" }
 ]
+
+const templateOptions: { label: string; value: IncidentReportTemplate; description: string }[] = [
+	{
+		label: "Complete report",
+		value: "full",
+		description: "Everything: executive summary, charts & trends, and open/closed cases with assets & IOCs."
+	},
+	{
+		label: "Executive summary",
+		value: "executive",
+		description: "One-look synthesis: headline KPIs, service metrics and a status chart. No case detail."
+	},
+	{
+		label: "Operational — cases",
+		value: "operational",
+		description: "Case-centric: every open/closed case in full detail (assets, IOCs, resolution). No charts."
+	},
+	{
+		label: "Analytics — trends",
+		value: "analytics",
+		description: "Metrics-centric: executive summary plus all distribution charts and the monthly trend table. No case detail."
+	}
+]
+
+const selectedTemplateDescription = computed(
+	() => templateOptions.find(o => o.value === formData.value.reportTemplate)?.description ?? ""
+)
 
 const rules: FormRules = {
 	customer_code: [{ required: true, message: "Please select a customer", trigger: ["blur", "change"] }],
@@ -228,7 +264,8 @@ async function handleGenerate() {
 		customer_code: customerCode,
 		date_from,
 		date_to,
-		brand_theme: "customer"
+		brand_theme: "customer",
+		report_template: formData.value.reportTemplate
 	}
 	if (formData.value.report_name?.trim()) {
 		request.report_name = formData.value.report_name.trim()

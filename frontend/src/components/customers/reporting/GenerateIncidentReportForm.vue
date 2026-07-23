@@ -12,6 +12,13 @@
 			<n-date-picker v-model:value="formData.customRange" type="daterange" clearable class="w-full" />
 		</n-form-item>
 
+		<n-form-item label="Report template" path="reportTemplate">
+			<div class="flex w-full flex-col gap-1">
+				<n-select v-model:value="formData.reportTemplate" :options="templateOptions" />
+				<span class="text-secondary text-xs">{{ selectedTemplateDescription }}</span>
+			</div>
+		</n-form-item>
+
 		<n-form-item label="Report branding" path="brandTheme">
 			<div class="flex flex-col gap-1">
 				<n-radio-group v-model:value="formData.brandTheme">
@@ -56,7 +63,7 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { IncidentCustomerReportGenerateRequest, IncidentReportBrandTheme } from "@/types/incidentReports"
+import type { IncidentCustomerReportGenerateRequest, IncidentReportBrandTheme, IncidentReportTemplate } from "@/types/incidentReports"
 import {
 	NButton,
 	NDatePicker,
@@ -90,6 +97,7 @@ interface GenerateFormData {
 	customRange: [number, number] | null
 	visibleToCustomer: boolean
 	brandTheme: IncidentReportBrandTheme
+	reportTemplate: IncidentReportTemplate
 }
 
 function getDefaultFormData(): GenerateFormData {
@@ -98,7 +106,8 @@ function getDefaultFormData(): GenerateFormData {
 		range: "30d",
 		customRange: null,
 		visibleToCustomer: false,
-		brandTheme: "customer"
+		brandTheme: "customer",
+		reportTemplate: "full"
 	}
 }
 
@@ -121,6 +130,33 @@ const rangeOptions = [
 	{ label: "Last 3 months", value: "90d" },
 	{ label: "Custom range", value: "custom" }
 ]
+
+const templateOptions: { label: string; value: IncidentReportTemplate; description: string }[] = [
+	{
+		label: "Complete report",
+		value: "full",
+		description: "Everything: executive summary, charts & trends, and open/closed cases with assets & IOCs."
+	},
+	{
+		label: "Executive summary",
+		value: "executive",
+		description: "One-look synthesis for management: headline KPIs, service metrics and a status chart. No case detail."
+	},
+	{
+		label: "Operational — cases",
+		value: "operational",
+		description: "Case-centric: every open/closed case in full detail (assets, IOCs, resolution). No charts."
+	},
+	{
+		label: "Analytics — trends",
+		value: "analytics",
+		description: "Metrics-centric: executive summary plus all distribution charts and the monthly trend table. No case detail."
+	}
+]
+
+const selectedTemplateDescription = computed(
+	() => templateOptions.find(o => o.value === formData.value.reportTemplate)?.description ?? ""
+)
 
 const rules: FormRules = {
 	customRange: [
@@ -167,7 +203,8 @@ async function handleSubmit() {
 			date_from,
 			date_to,
 			visible_to_customer: formData.value.visibleToCustomer,
-			brand_theme: formData.value.brandTheme
+			brand_theme: formData.value.brandTheme,
+			report_template: formData.value.reportTemplate
 		}
 		if (formData.value.report_name?.trim()) {
 			request.report_name = formData.value.report_name.trim()

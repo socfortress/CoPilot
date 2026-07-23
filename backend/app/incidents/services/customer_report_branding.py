@@ -45,6 +45,11 @@ SOCF_FOOTER_BRAND = "SOCFortress"
 # Text colours used on filled backgrounds (picked by contrast, never both).
 _DARK_TEXT = "#0f172a"  # slate-900
 _WHITE_TEXT = "#ffffff"
+# Brand-neutral dark tones for the modern cover / section chrome. These are fixed
+# (not brand-derived) so the dark backgrounds read the same for every customer; the
+# brand colour rides on top of them via ``accent_on_dark``.
+_INK = "#0b1220"  # near-black slate for the cover background
+_INK_SOFT = "#0f1a30"  # slightly lifted ink for the cover gradient
 # Minimum contrast ratio for coloured text on the white page (WCAG AA large text
 # is 3:1; we aim a little higher so normal-weight labels stay comfortable).
 _MIN_TEXT_ON_WHITE = 3.5
@@ -154,6 +159,26 @@ def _readable_on_white(value: str, min_ratio: float = _MIN_TEXT_ON_WHITE) -> str
     return _DARK_TEXT
 
 
+def _readable_on_dark(value: str, background: str, min_ratio: float = 4.0) -> str:
+    """Lighten ``value`` until it clears ``min_ratio`` contrast against a dark ``background``.
+
+    Used for the accent colour drawn on the dark cover / card headers so any brand
+    colour (including a dark navy) stays legible. Falls back to white.
+    """
+    bg = _hex_to_rgb(background) or (0, 0, 0)
+    base = _hex_to_rgb(value)
+    if not base:
+        return _WHITE_TEXT
+    if _contrast_ratio(base, bg) >= min_ratio:
+        return _rgb_to_hex(base)
+    for step in range(1, 21):
+        candidate = _lighten(value, step * 0.05)
+        rgb = _hex_to_rgb(candidate)
+        if rgb and _contrast_ratio(rgb, bg) >= min_ratio:
+            return candidate
+    return _WHITE_TEXT
+
+
 def _derive_color_from_logo(logo_base64: Optional[str], mime_type: Optional[str]) -> Optional[str]:
     """Extract a representative dominant colour from a raster logo via Pillow.
 
@@ -234,6 +259,12 @@ def _build_palette(base: Optional[str], logo: Optional[str], title: str, footer_
         "accent_strong": base,
         "accent_text": _contrast_text(base),
         "accent_soft": _lighten(base, 0.82),
+        # Deeper brand tone for gradients / depth on light surfaces.
+        "accent_dark": _darken(base, 0.30),
+        # Dark cover / header chrome (brand-neutral) + a brand accent legible on it.
+        "ink": _INK,
+        "ink_soft": _INK_SOFT,
+        "accent_on_dark": _readable_on_dark(base, _INK),
         # Mono-colour charts follow the brand; two evolution shades stay distinct.
         "chart_bar": base,
         "chart_evo_alerts": base,

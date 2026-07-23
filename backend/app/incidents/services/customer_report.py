@@ -48,7 +48,19 @@ from app.incidents.services.reports_pdf import convert_html_to_pdf
 
 BUCKET_NAME = "incident-management-reports"
 TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
-TEMPLATE_NAME = "customer_incident_report_template.html"
+# Report layout -> Jinja template file. All four share `build_report_context`;
+# they only render different subsets of it (see schema.ReportTemplate). "full"
+# keeps the original filename for backward-compatibility.
+TEMPLATE_FILES = {
+    "full": "customer_incident_report_template.html",
+    "executive": "customer_incident_report_executive.html",
+    "operational": "customer_incident_report_operational.html",
+    "analytics": "customer_incident_report_analytics.html",
+}
+DEFAULT_TEMPLATE = "full"
+# Cap on assets / IOCs surfaced per case card (full & operational reports).
+MAX_CASE_ASSETS = 20
+MAX_CASE_IOCS = 25
 MAX_CASE_SHEETS = 50
 DOWNLOAD_URL_TEMPLATE = "/api/v1/incidents/customer_reports/{report_id}/download"
 
@@ -121,6 +133,25 @@ def _build_case_card(case) -> Dict[str, Any]:
                 tags.append(link.tag.tag)
     comments = sorted(case.comments or [], key=lambda c: c.created_at or datetime.min)
     case_type = _case_type(case.case_name)
+
+    # Distinct affected assets + observed IOCs across the linked alerts. These are
+    # eager-loaded by the aggregation queries and surfaced only in the technical
+    # reports (full / operational); executive & analytics ignore these keys.
+    assets: List[Dict[str, Any]] = []
+    seen_assets = set()
+    iocs: List[Dict[str, Any]] = []
+    seen_iocs = set()
+    for alert in linked_alerts:
+        for asset in alert.assets or []:
+            if asset.asset_name and asset.asset_name not in seen_assets:
+                seen_assets.add(asset.asset_name)
+                assets.append({"name": asset.asset_name, "agent_id": asset.agent_id})
+        for link in alert.iocs or []:
+            ioc = link.ioc
+            if ioc and ioc.value and ioc.value not in seen_iocs:
+                seen_iocs.add(ioc.value)
+                iocs.append({"value": ioc.value, "type": ioc.type, "description": ioc.description})
+
     return {
         "id": case.id,
         "name": case.case_name,
@@ -139,6 +170,10 @@ def _build_case_card(case) -> Dict[str, Any]:
         "linked_alert_count": len(linked_alerts),
         "linked_alert_titles": alert_titles[:15],
         "linked_alert_overflow": max(0, len(alert_titles) - 15),
+        "assets": assets[:MAX_CASE_ASSETS],
+        "asset_overflow": max(0, len(assets) - MAX_CASE_ASSETS),
+        "iocs": iocs[:MAX_CASE_IOCS],
+        "ioc_overflow": max(0, len(iocs) - MAX_CASE_IOCS),
         "comments": [{"user_name": c.user_name, "created_at": _fmt_dt(c.created_at), "comment": c.comment} for c in comments],
     }
 
@@ -224,19 +259,21 @@ async def build_report_context(
     return context
 
 
-def _render_pdf(context: Dict[str, Any]) -> bytes:
-    """Render the in-repo Jinja template and convert it to PDF bytes.
+def _render_pdf(context: Dict[str, Any], template: str = DEFAULT_TEMPLATE) -> bytes:
+    """Render the selected in-repo Jinja template and convert it to PDF bytes.
 
-    Autoescaping is on; the only ``|safe`` values in the template are the
-    server-generated chart images (base64 PNG data URIs), which contain no
-    caller-controlled markup. The repeating footer (brand line + TLP + page
-    number) is drawn by wkhtmltopdf so it appears on every page.
+    ``template`` is one of ``schema.ReportTemplate``; an unknown value falls back
+    to the full report. Autoescaping is on; the only ``|safe`` values in the
+    template are the server-generated chart images (base64 PNG data URIs), which
+    contain no caller-controlled markup. The repeating footer (brand line + TLP +
+    page number) is drawn by wkhtmltopdf so it appears on every page.
     """
     env = SandboxedEnvironment(
         loader=FileSystemLoader(TEMPLATE_DIR),
         autoescape=select_autoescape(["html", "htm", "xml"], default=True),
     )
-    rendered_html = env.get_template(TEMPLATE_NAME).render(context)
+    template_name = TEMPLATE_FILES.get(template, TEMPLATE_FILES[DEFAULT_TEMPLATE])
+    rendered_html = env.get_template(template_name).render(context)
 
     brand = context.get("brand") or "CoPilot"
     tlp = context.get("tlp") or "TLP:RED"
@@ -341,7 +378,7 @@ async def generate_customer_report(
             raise ValueError(f"Customer {request.customer_code} not found")
 
         context = await build_report_context(session, customer, request)
-        pdf_bytes = _render_pdf(context)
+        pdf_bytes = _render_pdf(context, template=request.report_template)
         stats = context["_stats"]
 
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
@@ -363,6 +400,7 @@ async def generate_customer_report(
                 "date_from": request.date_from.isoformat(),
                 "date_to": request.date_to.isoformat(),
                 "brand_theme": request.brand_theme,
+                "report_template": request.report_template,
             },
         )
 

@@ -13,6 +13,14 @@ from pydantic import model_validator
 # scheme) or the customer portal branding (portal logo + customer brand color).
 BrandTheme = Literal["socfortress", "customer"]
 
+# Which report layout to render. All four share the same aggregated data; they
+# differ only in which sections/detail they surface (see the templates dir):
+#   full        - everything: summary + charts + open/closed cases w/ assets & IOCs
+#   executive   - one-look synthesis: KPIs + service metrics + a single status donut
+#   operational - case-centric: open/closed case detail incl. assets & IOCs, no charts
+#   analytics   - metrics-centric: executive summary + all charts + trend table, no cases
+ReportTemplate = Literal["full", "executive", "operational", "analytics"]
+
 
 class CustomerReportGenerateRequest(BaseModel):
     """Request body for generating a customer incident-management PDF report."""
@@ -26,6 +34,8 @@ class CustomerReportGenerateRequest(BaseModel):
     visible_to_customer: bool = False
     # Which branding to apply to the report. Defaults to the customer portal branding.
     brand_theme: BrandTheme = "customer"
+    # Which report layout to render. Defaults to the complete report.
+    report_template: ReportTemplate = "full"
 
     @model_validator(mode="after")
     def _validate_range(self) -> "CustomerReportGenerateRequest":

@@ -22,12 +22,17 @@ export interface IncidentCustomerReport {
 
 export type IncidentReportBrandTheme = "socfortress" | "customer"
 
+/** Report layout: full = everything, executive = one-look synthesis,
+ *  operational = case detail w/ assets & IOCs, analytics = charts & trends. */
+export type IncidentReportTemplate = "full" | "executive" | "operational" | "analytics"
+
 export interface IncidentCustomerReportGenerateRequest {
 	customer_code: string
 	date_from: string
 	date_to: string
 	report_name?: string
 	brand_theme?: IncidentReportBrandTheme
+	report_template?: IncidentReportTemplate
 }
 
 export interface IncidentCustomerReportGenerateBackgroundResponse {

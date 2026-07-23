@@ -1,176 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Incident Management Report — {{ customer.name }}</title>
-  <style>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; }
-    body {
-      font-family: Helvetica, Arial, sans-serif;
-      color: #1e293b;
-      font-size: 11px;
-      line-height: 1.45;
-    }
-    h1, h2, h3 { margin: 0; color: #0f172a; }
-    .muted { color: #64748b; }
-    .page-break { page-break-before: always; }
-    .avoid-break { page-break-inside: avoid; }
+{# FULL report — the complete picture: executive summary + charts/trends +
+   open & closed cases with per-case technical detail (assets + IOCs). #}
+{% extends "_report_base.html" %}
+{% from "_report_macros.html" import priority_chip, case_summary_row, case_card with context %}
 
-    /* TLP badge */
-    .tlp { display: inline-block; background: #0a0a0a; color: #ff2b2b; font-weight: 800;
-           font-size: 11px; letter-spacing: .04em; padding: 3px 9px; border-radius: 2px; }
+{% block cover_kind %}<div class="kind">Complete Report</div>{% endblock %}
 
-    /* Cover */
-    .cover { text-align: center; padding-top: 150px; }
-    .cover .logo { max-height: 70px; max-width: 300px; margin-bottom: 34px; }
-    .cover .eyebrow { color: {{ theme.accent }}; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; font-size: 13px; }
-    .cover .title { font-size: 30px; font-weight: 800; color: #0f172a; margin-top: 10px; }
-    .cover .customer { font-size: 17px; color: #334155; margin-top: 12px; font-weight: 700; }
-    .cover .meta { margin-top: 34px; font-size: 12.5px; color: #475569; line-height: 2; }
-    .cover .tlp-wrap { margin-top: 30px; }
-    .cover .confidential { margin-top: 70px; font-size: 9.5px; color: #94a3b8; max-width: 460px;
-                           margin-left: auto; margin-right: auto; line-height: 1.6; }
-
-    /* Section heading: green "eyebrow" number + black title */
-    .section-heading { margin: 4px 0 14px 0; }
-    .section-heading .n { color: {{ theme.accent }}; font-weight: 800; font-size: 20px; }
-    .section-heading .t { color: #0f172a; font-weight: 800; font-size: 20px; margin-left: 8px; }
-    .section-sub { color: #64748b; font-size: 12px; margin: -8px 0 14px 0; }
-    .lead { font-size: 11px; color: #334155; margin: 0 0 12px 0; }
-
-    /* Black bar header (table titles) */
-    .bar { background: #141414; color: #fff; font-weight: 800; text-transform: uppercase;
-           letter-spacing: .05em; font-size: 11px; text-align: center; padding: 8px 10px; }
-
-    /* Metrics table */
-    table { border-collapse: collapse; width: 100%; }
-    table.metrics td { padding: 6px 10px; border-bottom: 1px solid #eef1f5; font-size: 12px; }
-    table.metrics .grp td { font-weight: 800; color: #0f172a; border-bottom: none; padding-top: 12px; }
-    table.metrics .sub td.k { padding-left: 30px; color: #334155; }
-    table.metrics td.v { text-align: right; font-weight: 700; width: 90px; }
-
-    /* Charts */
-    .chart-block { text-align: center; page-break-inside: avoid; margin: 14px 0 6px 0; }
-    .chart-block img { max-width: 100%; }
-    .chart-cap { font-style: italic; color: #475569; font-size: 10.5px; margin-top: 4px; }
-
-    /* Generic data table */
-    table.data th, table.data td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 10.5px; text-align: left; }
-    table.data th { background: #f1f5f9; color: #334155; font-weight: 700; }
-
-    /* Case summary tables (green sub-header, colour-coded cells) */
-    table.cases { margin-top: 4px; }
-    table.cases th { background: {{ theme.accent_strong }}; color: {{ theme.accent_text }}; font-weight: 800; font-size: 10px; text-transform: uppercase;
-                     letter-spacing: .03em; padding: 7px 8px; text-align: left; }
-    table.cases td { padding: 7px 8px; border-bottom: 1px solid #eef1f5; font-size: 10.5px; vertical-align: top; }
-    table.cases td.c { text-align: center; }
-    .type-tag { color: #ee7b1f; font-weight: 800; }
-
-    /* Priority / status colour chips */
-    .chip { display: inline-block; font-weight: 800; font-size: 10px; padding: 2px 8px; border-radius: 3px;
-            text-transform: uppercase; letter-spacing: .02em; }
-    .p-critica { background: #141414; color: #fff; }
-    .p-alta    { background: #ee4b3b; color: #fff; }
-    .p-media   { background: #f4d03f; color: #4a3c00; }
-    .p-baja    { background: #a7d8ec; color: #0b3d52; }
-    .p-info    { background: #e2e8f0; color: #334155; }
-    .p-none    { background: #e2e8f0; color: #64748b; }
-    .st-pend { color: #b45309; font-weight: 800; }
-    .st-cerr { color: #166534; font-weight: 800; }
-
-    /* Case detail card */
-    .case-card { border: 1px solid #d9dee6; border-radius: 4px; margin: 14px 0; page-break-inside: avoid; }
-    .case-card .hd { background: #141414; color: #fff; display: table; width: 100%; }
-    .case-card .hd .code { display: table-cell; font-weight: 800; padding: 8px 10px; width: 110px; font-size: 11px; }
-    .case-card .hd .ttl  { display: table-cell; font-weight: 700; padding: 8px 6px; font-size: 11px; vertical-align: middle; }
-    .case-card .hd .stt  { display: table-cell; text-align: right; padding: 8px 10px; width: 90px; font-weight: 800; font-size: 10px; vertical-align: middle; }
-    .case-card table.kv { width: 100%; }
-    .case-card table.kv td { padding: 5px 10px; font-size: 10.5px; border-bottom: 1px solid #f1f5f9; }
-    .case-card table.kv td.lbl { font-weight: 700; width: 90px; color: #0f172a; }
-    .band { background: {{ theme.accent_strong }}; color: {{ theme.accent_text }}; font-weight: 800; font-size: 10px; text-transform: uppercase;
-            letter-spacing: .04em; padding: 6px 10px; }
-    .body-text { padding: 10px 10px; font-size: 10.5px; color: #334155; white-space: pre-wrap; word-break: break-word; }
-    .alert-list { margin: 4px 0 0 0; padding-left: 18px; }
-    .alert-list li { font-size: 10.5px; color: #334155; margin: 1px 0; }
-    .comment { font-size: 10.5px; color: #334155; margin: 3px 0; padding-left: 8px; border-left: 2px solid {{ theme.accent_soft }}; }
-    .comment .m { color: #94a3b8; font-size: 9.5px; }
-    .empty { color: #64748b; font-style: italic; padding: 10px 0; }
-
-    /* TOC */
-    table.toc td { padding: 4px 0; font-size: 12px; }
-    table.toc td.num { width: 26px; font-weight: 800; }
-  </style>
-</head>
-<body>
-{# ---------------- Reusable macros (defined before use) ---------------- #}
-{% macro priority_chip(priority) -%}
-  {%- if priority == "CRITICA" -%}<span class="chip p-critica">Critical</span>
-  {%- elif priority == "ALTA" -%}<span class="chip p-alta">High</span>
-  {%- elif priority == "MEDIA" -%}<span class="chip p-media">Medium</span>
-  {%- elif priority == "BAJA" -%}<span class="chip p-baja">Low</span>
-  {%- elif priority == "INFO" -%}<span class="chip p-info">Info</span>
-  {%- else -%}<span class="chip p-none">—</span>{%- endif -%}
-{%- endmacro %}
-
-{% macro case_card(case, customer_code, closed) %}
-<div class="case-card">
-  <div class="hd">
-    <span class="code">{{ customer_code }}-{{ case.id }}</span>
-    <span class="ttl">{{ case.name }}</span>
-    <span class="stt">{{ case.status_label }}</span>
-  </div>
-  <table class="kv">
-    <tr>
-      <td class="lbl">Type</td><td><span class="type-tag">{{ case.type_label or (case.type or "—") }}</span></td>
-      <td class="lbl">Date</td><td>{{ case.creation_time }}</td>
-    </tr>
-    <tr>
-      <td class="lbl">Priority</td><td>{{ priority_chip(case.priority) }}</td>
-      <td class="lbl">Closed</td><td>{{ case.closed_time }}</td>
-    </tr>
-    <tr>
-      <td class="lbl">Taxonomy</td><td colspan="3">{{ case.taxonomy or "—" }}</td>
-    </tr>
-  </table>
-  <div class="band">Description</div>
-  <div class="body-text">{% if case.description %}{{ case.description }}{% else %}<span class="muted">No description recorded.</span>{% endif %}
-{% if case.linked_alert_titles %}
-
-Linked alerts ({{ case.linked_alert_count }}):{% for t in case.linked_alert_titles %}
-  • {{ t }}{% endfor %}{% if case.linked_alert_overflow %}
-  • …and {{ case.linked_alert_overflow }} more{% endif %}{% endif %}</div>
-  {% if closed %}
-  <div class="band">Resolution</div>
-  <div class="body-text"><strong>Closed:</strong> {{ case.closed_time }}
-{% if case.comments %}{% for c in case.comments %}
-{{ c.comment }}  — {{ c.user_name }} · {{ c.created_at }}{% endfor %}{% else %}
-<span class="muted">No resolution notes recorded.</span>{% endif %}</div>
-  {% endif %}
-</div>
-{% endmacro %}
-
-  <!-- ================= COVER ================= -->
-  <div class="cover">
-    {% if logo %}<img class="logo" src="{{ logo }}" alt="logo" />{% endif %}
-    <div class="eyebrow">Incident Management Report</div>
-    <div class="title">SOC Activity Summary</div>
-    <div class="customer">{{ customer.name }} <span class="muted">({{ customer.code }})</span></div>
-    <div class="meta">
-      <div><strong>Reporting period:</strong> {{ period.from }} &nbsp;&rarr;&nbsp; {{ period.to }}</div>
-      <div><strong>Generated:</strong> {{ generated_at }} UTC</div>
-    </div>
-    <div class="tlp-wrap"><span class="tlp">{{ tlp }}</span></div>
-    <div class="confidential">
-      Confidential document intended solely for the named customer. It summarizes the security
-      activity derived from the Incident Management records for the stated period.
-      Unauthorized distribution is prohibited.
-    </div>
-  </div>
-
+{% block content %}
   <!-- ================= TABLE OF CONTENTS ================= -->
   <div class="page-break"></div>
-  <h2 style="font-size:24px;font-weight:800;margin-bottom:16px;">Table of Contents</h2>
+  <div class="toc-title">Table of Contents</div>
   <table class="toc">
     <tr><td class="num">1.</td><td>Executive Summary</td></tr>
     <tr><td class="num">2.</td><td>Distribution &amp; Trends (charts)</td></tr>
@@ -257,16 +95,7 @@ Linked alerts ({{ case.linked_alert_count }}):{% for t in case.linked_alert_titl
     <table class="cases">
       <thead><tr><th>Case</th><th>Type</th><th>Title</th><th>Priority</th><th>Reported</th><th>Status</th></tr></thead>
       <tbody>
-        {% for case in open_cases %}
-        <tr>
-          <td class="c">{{ customer.code }}-{{ case.id }}</td>
-          <td>{% if case.type %}<span class="type-tag">{{ case.type }}</span>{% else %}—{% endif %}</td>
-          <td>{{ case.name }}</td>
-          <td>{{ priority_chip(case.priority) }}</td>
-          <td>{{ case.reported_short }}</td>
-          <td class="st-pend">Open</td>
-        </tr>
-        {% endfor %}
+        {% for case in open_cases %}{{ case_summary_row(case, customer.code, false) }}{% endfor %}
       </tbody>
     </table>
     {% if open_overflow %}<div class="muted" style="margin-top:6px;">…and {{ open_overflow }} more open cases (not listed; narrow the date range).</div>{% endif %}
@@ -291,16 +120,7 @@ Linked alerts ({{ case.linked_alert_count }}):{% for t in case.linked_alert_titl
     <table class="cases">
       <thead><tr><th>Case</th><th>Type</th><th>Title</th><th>Priority</th><th>Reported / Closed</th><th>Status</th></tr></thead>
       <tbody>
-        {% for case in closed_cases %}
-        <tr>
-          <td class="c">{{ customer.code }}-{{ case.id }}</td>
-          <td>{% if case.type %}<span class="type-tag">{{ case.type }}</span>{% else %}—{% endif %}</td>
-          <td>{{ case.name }}</td>
-          <td>{{ priority_chip(case.priority) }}</td>
-          <td>{{ case.reported_short }}<br />{{ case.closed_short }}</td>
-          <td class="st-cerr">Closed</td>
-        </tr>
-        {% endfor %}
+        {% for case in closed_cases %}{{ case_summary_row(case, customer.code, true) }}{% endfor %}
       </tbody>
     </table>
     {% if closed_overflow %}<div class="muted" style="margin-top:6px;">…and {{ closed_overflow }} more closed cases (not listed; narrow the date range).</div>{% endif %}
@@ -311,6 +131,4 @@ Linked alerts ({{ case.linked_alert_count }}):{% for t in case.linked_alert_titl
   {% else %}
     <div class="empty">No cases were closed for this customer in the selected period.</div>
   {% endif %}
-
-</body>
-</html>
+{% endblock %}
