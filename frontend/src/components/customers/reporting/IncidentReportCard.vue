@@ -110,6 +110,10 @@
 					<Icon :name="BrandIcon" :size="13" :style="{ color: brandColorVar }" />
 					{{ brandLabel }}
 				</span>
+				<span class="inline-flex items-center gap-1" :title="templateDescription">
+					<Icon :name="TemplateIcon" :size="13" />
+					{{ templateLabel }}
+				</span>
 			</div>
 		</template>
 
@@ -166,6 +170,7 @@ const AuthorIcon = "carbon:user"
 const FileIcon = "carbon:document-pdf"
 const ClockIcon = "carbon:time"
 const BrandIcon = "carbon:color-palette"
+const TemplateIcon = "carbon:document-multiple-01"
 const VisibleIcon = "carbon:view"
 const HiddenIcon = "carbon:view-off"
 const CheckIcon = "carbon:checkmark-filled"
@@ -211,6 +216,18 @@ const authorColorVar = computed(() =>
 const isSocfortressBrand = computed(() => report.filters_applied?.brand_theme === "socfortress")
 const brandLabel = computed(() => (isSocfortressBrand.value ? "SOCFortress" : "Customer portal"))
 const brandColorVar = computed(() => (isSocfortressBrand.value ? "var(--warning-color)" : "var(--primary-color)"))
+
+// Which report layout was used. Reports generated before templates existed have no
+// field, so default to the complete report (the only layout available back then).
+const templateMeta: Record<string, { label: string; description: string }> = {
+	full: { label: "Complete", description: "Executive summary, charts & trends, and open/closed cases with assets & IOCs" },
+	executive: { label: "Executive", description: "One-look synthesis: KPIs, service metrics and a status chart" },
+	operational: { label: "Operational", description: "Case-centric: open/closed cases in full detail (assets, IOCs, resolution)" },
+	analytics: { label: "Analytics", description: "Metrics-centric: executive summary, all charts and the monthly trend table" }
+}
+const templateInfo = computed(() => templateMeta[String(report.filters_applied?.report_template ?? "full")] ?? templateMeta.full)
+const templateLabel = computed(() => templateInfo.value.label)
+const templateDescription = computed(() => templateInfo.value.description)
 
 function onToggleVisibility(visible: boolean) {
 	emit("toggleVisibility", visible)

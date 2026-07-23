@@ -11,6 +11,10 @@
 				<Icon :name="PeriodIcon" :size="14" />
 				{{ formatDate(report.date_from, dFormats.date) }} → {{ formatDate(report.date_to, dFormats.date) }}
 			</div>
+			<div class="text-secondary flex items-center gap-2 text-xs" :title="templateDescription">
+				<Icon :name="TemplateIcon" :size="14" />
+				{{ templateLabel }} report
+			</div>
 			<div class="flex flex-wrap gap-2">
 				<Chip size="small" :value="`${report.total_alerts}`" label="alerts" />
 				<Chip size="small" :value="`${report.total_cases}`" label="cases" />
@@ -70,8 +74,21 @@ const emit = defineEmits<{
 const DownloadIcon = "carbon:download"
 const DeleteIcon = "carbon:trash-can"
 const PeriodIcon = "carbon:calendar"
+const TemplateIcon = "carbon:document-multiple-01"
 
 const dFormats = useSettingsStore().dateFormat
+
+// Which report layout was used. Reports generated before templates existed have no
+// field, so default to the complete report (the only layout available back then).
+const templateMeta: Record<string, { label: string; description: string }> = {
+	full: { label: "Complete", description: "Executive summary, charts & trends, and open/closed cases with assets & IOCs" },
+	executive: { label: "Executive", description: "One-look synthesis: KPIs, service metrics and a status chart" },
+	operational: { label: "Operational", description: "Case-centric: open/closed cases in full detail (assets, IOCs, resolution)" },
+	analytics: { label: "Analytics", description: "Metrics-centric: executive summary, all charts and the monthly trend table" }
+}
+const templateInfo = computed(() => templateMeta[String(report.filters_applied?.report_template ?? "full")] ?? templateMeta.full)
+const templateLabel = computed(() => templateInfo.value.label)
+const templateDescription = computed(() => templateInfo.value.description)
 
 // Customers may only delete reports they generated themselves; analyst/admin
 // reports shared into the portal are read-only here (download still allowed).
