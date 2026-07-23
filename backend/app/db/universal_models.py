@@ -377,6 +377,7 @@ class CustomerPortalSettings(SQLModel, table=True):
     title: str = Field(max_length=255, default="CoPilot")
     logo_base64: Optional[str] = Field(default=None, sa_column=Column(LONGTEXT))  # Use TEXT column for large base64 data
     logo_mime_type: Optional[str] = Field(default=None, max_length=50)  # e.g., "image/png", "image/jpeg"
+    brand_color: Optional[str] = Field(default=None, max_length=9)  # e.g., "#RRGGBB" - used to theme customer-branded reports
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
@@ -385,6 +386,7 @@ class CustomerPortalSettings(SQLModel, table=True):
         title: Optional[str] = None,
         logo_base64: Optional[str] = None,
         logo_mime_type: Optional[str] = None,
+        brand_color: Optional[str] = None,
         user_id: Optional[int] = None,
     ) -> None:
         """
@@ -412,6 +414,12 @@ class CustomerPortalSettings(SQLModel, table=True):
         elif logo_mime_type is None and hasattr(self, "_explicit_none_mime"):
             self.logo_mime_type = defaults["logo_mime_type"]
 
+        # Update brand_color - if None is passed, restore to default
+        if brand_color is not None:
+            self.brand_color = brand_color
+        elif brand_color is None and hasattr(self, "_explicit_none_brand_color"):
+            self.brand_color = defaults["brand_color"]
+
         self.updated_by = user_id
         self.updated_at = datetime.now()
 
@@ -422,6 +430,7 @@ class CustomerPortalSettings(SQLModel, table=True):
             "title": "CoPilot",
             "logo_base64": None,
             "logo_mime_type": None,
+            "brand_color": None,
         }
 
     @classmethod
@@ -432,6 +441,7 @@ class CustomerPortalSettings(SQLModel, table=True):
             title=defaults["title"],
             logo_base64=defaults["logo_base64"],
             logo_mime_type=defaults["logo_mime_type"],
+            brand_color=defaults["brand_color"],
         )
 
 
@@ -502,6 +512,52 @@ class SCAReport(SQLModel, table=True):
     passed_count: int = Field(default=0)  # Sum of passed checks
     failed_count: int = Field(default=0)  # Sum of failed checks
     invalid_count: int = Field(default=0)  # Sum of invalid/not applicable checks
+
+    # Status tracking (for background generation)
+    status: str = Field(max_length=50, default="processing", index=True)  # processing, completed, failed
+    error_message: Optional[str] = Field(sa_column=Column(Text, nullable=True))
+
+    # Relationship to Customers table
+    customer: Optional["Customers"] = Relationship()
+
+
+class IncidentManagementCustomerReport(SQLModel, table=True):
+    __tablename__ = "incident_management_customer_reports"
+
+    id: Optional[int] = Field(primary_key=True)
+
+    # Report metadata
+    report_name: str = Field(max_length=255, nullable=False)
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=50, index=True, nullable=False)
+
+    # MinIO storage details (standard blob-pointer set)
+    bucket_name: str = Field(max_length=255, nullable=False, default="incident-management-reports")
+    object_key: str = Field(max_length=1024, nullable=False)  # Path: customer_code/report_name_timestamp.pdf
+    file_name: str = Field(max_length=255, nullable=False)  # PDF filename
+    file_size: int = Field(nullable=False, default=0)  # File size in bytes
+    file_hash: str = Field(max_length=128, nullable=False, default="pending")  # SHA-256 hash
+
+    # Report generation details
+    generated_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    generated_by: int = Field(nullable=False)  # User ID who generated the report
+    generated_by_role: Optional[str] = Field(max_length=50, default=None)  # admin | analyst | customer_user
+
+    # Reporting period (naive UTC, matches incident_management_* timestamps)
+    date_from: datetime = Field(nullable=False)
+    date_to: datetime = Field(nullable=False)
+
+    # Report filters applied
+    filters_json: Optional[str] = Field(sa_column=Column(Text, nullable=True))  # JSON string of filters used
+
+    # Snapshot statistics (so the UI can preview without opening the PDF)
+    total_alerts: int = Field(default=0)
+    total_cases: int = Field(default=0)
+    open_cases: int = Field(default=0)
+    closed_cases: int = Field(default=0)
+
+    # Whether an analyst/admin-generated report is shared with the customer portal.
+    # Customer-generated reports are always visible to the customer regardless of this flag.
+    visible_to_customer: bool = Field(default=False)
 
     # Status tracking (for background generation)
     status: str = Field(max_length=50, default="processing", index=True)  # processing, completed, failed

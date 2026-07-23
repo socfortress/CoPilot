@@ -82,6 +82,20 @@ export default function getItems(): MenuMixedOption[] {
 					RouterLink,
 					{
 						to: {
+							name: "ReportsList"
+						}
+					},
+					{ default: () => "Reports" }
+				),
+			key: "ReportsList",
+			icon: renderIcon(ICONS.reports)
+		},
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
 							name: "DashboardsList"
 						}
 					},

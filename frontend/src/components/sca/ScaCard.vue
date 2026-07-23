@@ -3,11 +3,11 @@
 		<CardEntity
 			clickable
 			:embedded
-			class="h-full"
+			class="h-full transition-all duration-300"
 			main-box-class="grow"
 			card-entity-wrapper-class="h-full"
 			header-box-class="flex-nowrap! items-start"
-			:class="`${getComplianceBorderClass(sca.score)} transition-all duration-300`"
+			:class="getComplianceBorderClass(sca.score)"
 			@click.stop="showDetails = true"
 		>
 			<template #headerMain>{{ sca.policy_name }}</template>

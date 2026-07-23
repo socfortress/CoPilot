@@ -11,13 +11,12 @@
 				</template>
 
 				<template #default>
-					<div class="flex flex-col gap-4">
+					<div class="flex flex-col gap-6">
 						<n-form-item label="Title" path="title" :show-feedback="false">
 							<n-input v-model:value="model.title" clearable placeholder="CoPilot" />
 						</n-form-item>
 
-						<div class="flex flex-col gap-2">
-							<span class="text-secondary text-xs font-medium">Logo</span>
+						<n-form-item label="Logo" path="logo" :show-feedback="false">
 							<div class="flex flex-wrap items-center gap-4">
 								<div
 									v-if="model.logo"
@@ -52,7 +51,23 @@
 									</n-button>
 								</ImageCropper>
 							</div>
-						</div>
+						</n-form-item>
+
+						<n-form-item label="Brand color" path="brand_color" :show-feedback="false">
+							<n-color-picker
+								v-model:value="model.brand_color"
+								:show-alpha="false"
+								:modes="['hex']"
+								:swatches="brandSwatches"
+							/>
+							<n-button v-if="model.brand_color" quaternary size="tiny" @click="model.brand_color = null">
+								Reset
+							</n-button>
+						</n-form-item>
+
+						<span class="text-secondary text-xs">
+							Used to theme customer-branded PDF reports. Leave empty to derive it from the logo.
+						</span>
 					</div>
 				</template>
 			</CardEntity>
@@ -75,7 +90,7 @@ import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import type { ApiError } from "@/types/common"
 import type { CustomerPortalSettings } from "@/types/customer-portal"
 import _split from "lodash/split"
-import { NAlert, NButton, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
+import { NAlert, NButton, NColorPicker, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -86,6 +101,7 @@ import { getApiErrorMessage } from "@/utils"
 export interface SettingsModel {
 	title: string | null
 	logo: string | null
+	brand_color: string | null
 }
 
 const emit = defineEmits<{
@@ -97,6 +113,7 @@ const SaveIcon = "carbon:save"
 const EditIcon = "uil:image-edit"
 const RemoveIcon = "carbon:trash-can"
 const LogoIcon = "carbon:image"
+const brandSwatches = ["#fc862e", "#12c46a", "#215ac8", "#ee4b3b", "#8c6fe0", "#22c1dc", "#0f172a"]
 const message = useMessage()
 const loading = ref(false)
 const settings = ref<CustomerPortalSettings | null>(null)
@@ -113,7 +130,8 @@ function getDefaultModel(entity?: CustomerPortalSettings): SettingsModel {
 		logo:
 			entity?.logo_base64 && entity?.logo_mime_type
 				? `data:${entity.logo_mime_type};base64,${entity.logo_base64}`
-				: null
+				: null,
+		brand_color: entity?.brand_color ?? null
 	}
 }
 
@@ -145,7 +163,8 @@ function save() {
 	const payload: CustomerPortalSettingsPayload = {
 		title: model.value.title || null,
 		logo_base64: getLogoMeta(model.value.logo).base64,
-		logo_mime_type: getLogoMeta(model.value.logo).mime_type
+		logo_mime_type: getLogoMeta(model.value.logo).mime_type,
+		brand_color: model.value.brand_color || null
 	}
 
 	Api.customerPortal

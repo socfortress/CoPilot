@@ -104,8 +104,13 @@ def render_html_template(template_path: str, context: Dict[str, Dict[str, str]])
         return tmp.name
 
 
-def convert_html_to_pdf(html_path: str) -> str:
-    """Convert the HTML file to a PDF using wkhtmltopdf via pdfkit, with dynamic path detection for different platforms."""
+def convert_html_to_pdf(html_path: str, extra_options: Optional[Dict[str, object]] = None) -> str:
+    """Convert the HTML file to a PDF using wkhtmltopdf via pdfkit, with dynamic path detection for different platforms.
+
+    ``extra_options`` is merged into the base pdfkit options (e.g. footer page
+    numbers / page margins for multi-page aggregate reports). The security-critical
+    ``disable-local-file-access`` flag is always applied and cannot be overridden.
+    """
     pdf_path = html_path.replace(".html", ".pdf")
     wkhtmltopdf_paths = []
 
@@ -144,6 +149,10 @@ def convert_html_to_pdf(html_path: str) -> str:
         # off the backend host or reach internal services (SSRF) via the
         # renderer (GHSA-7q83-228r-wfh5).
         options = {"disable-local-file-access": None}
+        if extra_options:
+            options.update(extra_options)
+            # Never allow a caller to re-enable local file access.
+            options["disable-local-file-access"] = None
         pdfkit.from_file(html_path, pdf_path, configuration=config, options=options)
     except Exception as e:
         raise RuntimeError(f"Failed to convert HTML to PDF: {str(e)}")

@@ -6,6 +6,7 @@ export interface CustomerPortalSettingsPayload {
 	title: string | null
 	logo_base64: string | null
 	logo_mime_type: string | null
+	brand_color: string | null
 }
 
 export default {

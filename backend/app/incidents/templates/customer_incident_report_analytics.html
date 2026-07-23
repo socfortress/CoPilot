@@ -1,0 +1,70 @@
+{# ANALYTICS report — the metrics-centric half: executive summary + every chart +
+   the monthly trend table. No per-case detail — that is the OPERATIONAL report's
+   job. Complementary to it; together they equal the FULL report. #}
+{% extends "_report_base.html" %}
+
+{% block cover_eyebrow %}Trends & Analytics Report{% endblock %}
+{% block cover_title %}SOC Activity Analytics{% endblock %}
+{% block cover_kind %}<div class="kind">Analytics — Trends</div>{% endblock %}
+
+{% block content %}
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">1.</span><span class="t">Executive Summary</span></div>
+  <div class="section-sub">{{ period.from }} — {{ period.to }}</div>
+  <p class="lead">
+    Aggregate metrics and distribution trends for the SOC monitoring service of {{ customer.name }}
+    during the reporting period.
+  </p>
+
+  <div class="bar">Service Metrics</div>
+  <table class="metrics">
+    <tr class="grp"><td>Total alerts received</td><td class="v">{{ metrics.total_alerts }}</td></tr>
+    {% for source, count in alerts_by_source %}
+    <tr class="sub"><td class="k">• {{ source }}</td><td class="v">{{ count }}</td></tr>
+    {% endfor %}
+
+    <tr class="grp"><td>Cases reported</td><td class="v">{{ metrics.reported_cases }}</td></tr>
+    <tr class="grp"><td>Cases closed in period</td><td class="v">{{ metrics.closed_cases }}</td></tr>
+    <tr class="grp"><td>Cases pending resolution</td><td class="v">{{ metrics.open_cases }}</td></tr>
+  </table>
+
+  <!-- ================= CHARTS ================= -->
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">2.</span><span class="t">Distribution &amp; Trends</span></div>
+  <div class="section-sub">{{ period.from }} — {{ period.to }}</div>
+
+  {% if has_alerts %}
+    {% set illus = namespace(n=0) %}
+    {% if charts.alerts_by_status %}{% set illus.n = illus.n + 1 %}
+    <div class="chart-block"><img src="{{ charts.alerts_by_status }}" alt="alerts by status" />
+      <div class="chart-cap">Figure {{ illus.n }}: Alert distribution by status</div></div>{% endif %}
+    {% if charts.alerts_by_source %}{% set illus.n = illus.n + 1 %}
+    <div class="chart-block"><img src="{{ charts.alerts_by_source }}" alt="alerts by source" />
+      <div class="chart-cap">Figure {{ illus.n }}: Alert distribution by source</div></div>{% endif %}
+    {% if charts.top_alert_names %}{% set illus.n = illus.n + 1 %}
+    <div class="chart-block"><img src="{{ charts.top_alert_names }}" alt="top alert titles" />
+      <div class="chart-cap">Figure {{ illus.n }}: Top alert titles</div></div>{% endif %}
+    {% if charts.top_tags %}{% set illus.n = illus.n + 1 %}
+    <div class="chart-block"><img src="{{ charts.top_tags }}" alt="top tags" />
+      <div class="chart-cap">Figure {{ illus.n }}: Top alert tags / classifications</div></div>{% endif %}
+    {% if charts.evolution_alerts %}{% set illus.n = illus.n + 1 %}
+    <div class="chart-block"><img src="{{ charts.evolution_alerts }}" alt="alert trend" />
+      <div class="chart-cap">Figure {{ illus.n }}: Monthly alert trend</div></div>{% endif %}
+    {% if charts.evolution_cases %}{% set illus.n = illus.n + 1 %}
+    <div class="chart-block"><img src="{{ charts.evolution_cases }}" alt="case trend" />
+      <div class="chart-cap">Figure {{ illus.n }}: Monthly case trend</div></div>{% endif %}
+
+    {% if monthly_trend|length >= 2 %}
+    <table class="data avoid-break" style="margin-top:14px;">
+      <thead><tr><th>Month</th><th>Alerts</th><th>Cases</th><th>Case/alert ratio</th></tr></thead>
+      <tbody>
+        {% for row in monthly_trend %}
+        <tr><td>{{ row.month }}</td><td>{{ row.alerts }}</td><td>{{ row.cases }}</td><td>{{ row.ratio }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  {% else %}
+    <div class="empty">No alerts were recorded for this customer in the selected period.</div>
+  {% endif %}
+{% endblock %}

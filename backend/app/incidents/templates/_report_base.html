@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+{# Base layout shared by every customer incident-management report template.
+   Children `{% extends "_report_base.html" %}` and fill the `content` block; the
+   cover eyebrow/title are overridable blocks so each report type is self-labelling.
+   Modern "tech" design language: a dark full-page cover, monospace for data/codes,
+   hairline-accented section headers, refined cards. Theme colours are injected as
+   literal hex (wkhtmltopdf's WebKit lacks CSS var()); gradients always ship with a
+   solid fallback for older WebKit builds. #}
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Incident Management Report — {{ customer.name }}</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      font-size: 11px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3 { margin: 0; color: #0f172a; }
+    .muted { color: #64748b; }
+    .mono { font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; }
+    .page-break { page-break-before: always; }
+    .avoid-break { page-break-inside: avoid; }
+
+    /* ============================ COVER (light, minimal) ============================ */
+    /* Pure-white full-page cover — no panels or borders, so it blends into the page
+       (never reads as a "box"). Just typographic composition: logo, big title, one
+       accent tick, monospace micro-labels, and a hairline meta row anchored bottom. */
+    .cover { position: relative; min-height: 986px; background: #ffffff; color: #0f172a; }
+    .cover-top { display: table; width: 100%; padding-top: 6px; margin-bottom: 224px; }
+    .cover-top .logo { display: table-cell; vertical-align: middle; }
+    .cover-top .logo img { max-height: 44px; max-width: 240px; }
+    .cover-top .tlp-cell { display: table-cell; vertical-align: middle; text-align: right; }
+    .cover .tlp { font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace;
+                  color: #e11d2a; font-weight: 700; font-size: 10px; letter-spacing: .1em; }
+    .cover .tlp .dot { display: inline-block; width: 7px; height: 7px; background: #e11d2a; border-radius: 2px;
+                       margin-right: 6px; vertical-align: middle; }
+    .cover .eyebrow { font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace;
+                      color: {{ theme.accent }}; font-weight: 700; letter-spacing: .34em;
+                      text-transform: uppercase; font-size: 11px; }
+    .cover .title { font-size: 46px; font-weight: 800; color: #0f172a; margin-top: 16px; letter-spacing: -.02em; line-height: 1.06; }
+    .cover .tick { width: 60px; height: 3px; border-radius: 2px; margin-top: 26px; background: {{ theme.accent_strong }}; }
+    .cover .kind { margin-top: 26px; font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace;
+                   color: #475569; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: .14em;
+                   border-left: 3px solid {{ theme.accent_strong }}; padding-left: 11px; }
+    /* Bottom meta — anchored to the page bottom, hairline only (no box) */
+    .cover-meta { position: absolute; left: 0; right: 0; bottom: 0; }
+    .cover-meta .rule { height: 1px; background: #e5e9f1; margin-bottom: 22px; }
+    .cover-meta .grid { display: table; width: 100%; }
+    .cover-meta .cell { display: table-cell; width: 34%; vertical-align: top; padding-right: 20px; }
+    .cover-meta .k { font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace;
+                     text-transform: uppercase; letter-spacing: .16em; font-size: 8.5px; color: #94a3b8; }
+    .cover-meta .v { color: #0f172a; font-size: 13px; font-weight: 600; margin-top: 7px; }
+    .cover-meta .v.code { font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace;
+                          color: {{ theme.accent }}; font-weight: 700; font-size: 12px; letter-spacing: .06em; margin-top: 3px; }
+    .cover-meta .confidential { margin-top: 26px; font-size: 8.5px; color: #94a3b8; line-height: 1.7; max-width: 620px; }
+
+    /* ==================== SECTION CHROME (content) ==================== */
+    .section-heading { margin: 2px 0 4px 0; padding-bottom: 9px; border-bottom: 2px solid {{ theme.accent_strong }}; }
+    .section-heading .n { font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace;
+                          color: {{ theme.accent }}; font-weight: 700; font-size: 13px; letter-spacing: .06em; }
+    .section-heading .t { color: #0f172a; font-weight: 800; font-size: 19px; letter-spacing: -.01em; margin-left: 9px; }
+    .section-sub { font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace;
+                   text-transform: uppercase; letter-spacing: .16em; color: #94a3b8; font-size: 9.5px; margin: 10px 0 16px 0; }
+    .lead { font-size: 11px; color: #475569; margin: 0 0 14px 0; }
+
+    /* Table title bar: dark ink w/ accent left rule, left-aligned mono label */
+    .bar { background: {{ theme.ink }}; color: #fff; font-weight: 700; text-transform: uppercase;
+           letter-spacing: .14em; font-size: 9.5px; text-align: left; padding: 9px 12px;
+           border-left: 3px solid {{ theme.accent_strong }}; border-radius: 3px; margin-top: 4px;
+           font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; }
+
+    /* ============================ TABLES ============================ */
+    table { border-collapse: collapse; width: 100%; }
+
+    /* Metrics table */
+    table.metrics { margin-top: 6px; }
+    table.metrics td { padding: 8px 12px; border-bottom: 1px solid #eef1f5; font-size: 11.5px; }
+    table.metrics .grp td { font-weight: 700; color: #0f172a; border-bottom: none; padding-top: 14px; }
+    table.metrics .sub td.k { padding-left: 30px; color: #475569; }
+    table.metrics td.v { text-align: right; font-weight: 700; width: 90px;
+                         font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; }
+
+    /* KPI cards (executive summary) */
+    .kpi-row { display: table; width: 100%; border-spacing: 9px; margin: 4px 0 20px 0; }
+    .kpi { display: table-cell; width: 25%; background: #ffffff; border: 1px solid #e6eaf1;
+           border-top: 2px solid {{ theme.accent_strong }}; border-radius: 8px; padding: 15px 13px 14px; text-align: left; }
+    .kpi .num { font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace;
+                font-size: 30px; font-weight: 700; color: #0f172a; line-height: 1; letter-spacing: -.02em; }
+    .kpi .lbl { font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace;
+                font-size: 8.5px; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-top: 9px; }
+
+    /* Charts */
+    .chart-block { text-align: center; page-break-inside: avoid; margin: 16px 0 8px 0; }
+    .chart-block img { max-width: 100%; }
+    .chart-cap { font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace;
+                 color: #94a3b8; font-size: 9px; text-transform: uppercase; letter-spacing: .1em; margin-top: 6px; }
+
+    /* Generic data table */
+    table.data { margin-top: 8px; }
+    table.data th { background: #f4f7fb; color: #475569; font-weight: 700; text-transform: uppercase;
+                    letter-spacing: .07em; font-size: 9px; padding: 8px 10px; border-bottom: 2px solid #e2e8f0; text-align: left; }
+    table.data td { padding: 7px 10px; border-bottom: 1px solid #eef1f5; font-size: 10.5px; text-align: left; }
+    table.data td + td { font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; color: #334155; }
+
+    /* Case summary tables (neutral slate header, colour-coded cells) */
+    table.cases { margin-top: 4px; }
+    table.cases th { background: #f4f7fb; color: #475569; font-weight: 700; font-size: 9px; text-transform: uppercase;
+                     letter-spacing: .07em; padding: 8px 9px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+    table.cases td { padding: 8px 9px; border-bottom: 1px solid #eef1f5; font-size: 10.5px; vertical-align: top; }
+    table.cases td.c { text-align: left; font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; color: #0f172a; font-weight: 700; }
+    .type-tag { font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace;
+                color: {{ theme.accent }}; font-weight: 700; font-size: 10px; }
+
+    /* Priority / status colour chips */
+    .chip { display: inline-block; font-weight: 700; font-size: 9px; padding: 2px 9px; border-radius: 20px;
+            text-transform: uppercase; letter-spacing: .05em; }
+    .p-critica { background: #141414; color: #fff; }
+    .p-alta    { background: #ee4b3b; color: #fff; }
+    .p-media   { background: #f4d03f; color: #4a3c00; }
+    .p-baja    { background: #a7d8ec; color: #0b3d52; }
+    .p-info    { background: #e2e8f0; color: #334155; }
+    .p-none    { background: #eef2f7; color: #94a3b8; }
+    .st-pend { color: #b45309; font-weight: 700; }
+    .st-cerr { color: #166534; font-weight: 700; }
+
+    /* ========================= CASE DETAIL CARD ========================= */
+    .case-card { border: 1px solid #e6eaf1; border-radius: 8px; margin: 14px 0; page-break-inside: avoid; overflow: hidden; }
+    .case-card .hd { background: {{ theme.ink }}; color: #fff; display: table; width: 100%; border-left: 3px solid {{ theme.accent_strong }}; }
+    .case-card .hd .code { display: table-cell; font-weight: 700; padding: 9px 11px; width: 116px; font-size: 11px; vertical-align: middle;
+                           font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; color: #fff; }
+    .case-card .hd .ttl  { display: table-cell; font-weight: 600; padding: 9px 6px; font-size: 11px; vertical-align: middle; color: #dbe4f1; }
+    .case-card .hd .stt  { display: table-cell; text-align: right; padding: 9px 12px; width: 84px; font-weight: 700; font-size: 9px; vertical-align: middle;
+                           text-transform: uppercase; letter-spacing: .1em; color: {{ theme.accent_on_dark }};
+                           font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; }
+    .case-card table.kv { width: 100%; }
+    .case-card table.kv td { padding: 6px 11px; font-size: 10.5px; border-bottom: 1px solid #f1f5f9; }
+    .case-card table.kv td.lbl { font-weight: 700; width: 78px; color: #64748b; text-transform: uppercase; font-size: 8.5px; letter-spacing: .06em;
+                                 font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; }
+    /* Sub-section band inside a card: light surface + accent left rule */
+    .band { background: #f6f8fc; color: #475569; font-weight: 700; font-size: 8.5px; text-transform: uppercase;
+            letter-spacing: .14em; padding: 7px 11px; border-left: 3px solid {{ theme.accent_strong }}; border-top: 1px solid #eef1f5;
+            font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; }
+    .body-text { padding: 11px; font-size: 10.5px; color: #334155; white-space: pre-wrap; word-break: break-word; }
+    .alert-list { margin: 4px 0 0 0; padding-left: 18px; }
+    .alert-list li { font-size: 10.5px; color: #334155; margin: 1px 0; }
+    .comment { font-size: 10.5px; color: #334155; margin: 3px 0; padding-left: 8px; border-left: 2px solid {{ theme.accent_soft }}; }
+    .comment .m { color: #94a3b8; font-size: 9.5px; }
+    .empty { color: #94a3b8; font-style: italic; padding: 12px 0; font-size: 10.5px; }
+
+    /* Affected assets + IOC bands (technical case detail) */
+    .chips-wrap { padding: 9px 11px; }
+    .mini-chip { display: inline-block; background: #f4f7fb; border: 1px solid #e2e8f0; border-radius: 5px;
+                 padding: 3px 8px; margin: 2px 4px 2px 0; font-size: 9.5px; color: #334155;
+                 font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; }
+    table.ioc td { padding: 5px 11px; border-bottom: 1px solid #f1f5f9; font-size: 10px; vertical-align: top; }
+    table.ioc td.t { width: 118px; }
+    table.ioc td.v { word-break: break-all; color: #334155;
+                     font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; }
+    .ioc-type { color: {{ theme.accent }}; font-weight: 700; text-transform: uppercase; font-size: 8.5px; letter-spacing: .06em;
+                font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; }
+
+    /* ============================== TOC ============================== */
+    .toc-title { font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace;
+                 text-transform: uppercase; letter-spacing: .2em; color: #94a3b8; font-size: 11px; font-weight: 700; margin-bottom: 14px; }
+    table.toc td { padding: 9px 0; font-size: 12.5px; color: #0f172a; border-bottom: 1px solid #eef1f5; }
+    table.toc td.num { width: 40px; font-weight: 700; color: {{ theme.accent }};
+                       font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; }
+  </style>
+</head>
+<body>
+  <!-- ================= COVER ================= -->
+  <div class="cover">
+    <div class="cover-top">
+      <div class="logo">{% if logo %}<img src="{{ logo }}" alt="logo" />{% endif %}</div>
+      <div class="tlp-cell"><span class="tlp"><span class="dot"></span>{{ tlp }}</span></div>
+    </div>
+
+    <div class="eyebrow">{% block cover_eyebrow %}Incident Management Report{% endblock %}</div>
+    <div class="title">{% block cover_title %}SOC Activity Summary{% endblock %}</div>
+    <div class="tick"></div>
+    {% block cover_kind %}{% endblock %}
+
+    <div class="cover-meta">
+      <div class="rule"></div>
+      <div class="grid">
+        <div class="cell">
+          <div class="k">Customer</div>
+          <div class="v">{{ customer.name }}</div>
+          <div class="v code">{{ customer.code }}</div>
+        </div>
+        <div class="cell">
+          <div class="k">Reporting period</div>
+          <div class="v">{{ period.from }} &rarr; {{ period.to }}</div>
+        </div>
+        <div class="cell">
+          <div class="k">Generated</div>
+          <div class="v">{{ generated_at }} UTC</div>
+        </div>
+      </div>
+      <div class="confidential">
+        Confidential document intended solely for the named customer. It summarizes the security activity
+        derived from the Incident Management records for the stated period. Unauthorized distribution is prohibited.
+      </div>
+    </div>
+  </div>
+
+  {% block content %}{% endblock %}
+</body>
+</html>

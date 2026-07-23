@@ -1,0 +1,74 @@
+{# Shared macros for the customer incident-management report templates.
+   Imported by each report template with `{% from "_report_macros.html" import ... with context %}`.
+   The CSS classes these emit are defined in `_report_base.html`. #}
+
+{% macro priority_chip(priority) -%}
+  {%- if priority == "CRITICA" -%}<span class="chip p-critica">Critical</span>
+  {%- elif priority == "ALTA" -%}<span class="chip p-alta">High</span>
+  {%- elif priority == "MEDIA" -%}<span class="chip p-media">Medium</span>
+  {%- elif priority == "BAJA" -%}<span class="chip p-baja">Low</span>
+  {%- elif priority == "INFO" -%}<span class="chip p-info">Info</span>
+  {%- else -%}<span class="chip p-none">—</span>{%- endif -%}
+{%- endmacro %}
+
+{# Case summary row, reused by the open/closed summary tables. #}
+{% macro case_summary_row(case, customer_code, closed) %}
+<tr>
+  <td class="c">{{ customer_code }}-{{ case.id }}</td>
+  <td>{% if case.type %}<span class="type-tag">{{ case.type }}</span>{% else %}—{% endif %}</td>
+  <td>{{ case.name }}</td>
+  <td>{{ priority_chip(case.priority) }}</td>
+  {% if closed %}<td>{{ case.reported_short }}<br />{{ case.closed_short }}</td><td class="st-cerr">Closed</td>
+  {% else %}<td>{{ case.reported_short }}</td><td class="st-pend">Open</td>{% endif %}
+</tr>
+{% endmacro %}
+
+{# Full per-case detail card. When `technical` is true the card also renders the
+   affected-assets and IOC bands (available on `full` and `operational` reports). #}
+{% macro case_card(case, customer_code, closed, technical=true) %}
+<div class="case-card">
+  <div class="hd">
+    <span class="code">{{ customer_code }}-{{ case.id }}</span>
+    <span class="ttl">{{ case.name }}</span>
+    <span class="stt">{{ case.status_label }}</span>
+  </div>
+  <table class="kv">
+    <tr>
+      <td class="lbl">Type</td><td><span class="type-tag">{{ case.type_label or (case.type or "—") }}</span></td>
+      <td class="lbl">Date</td><td>{{ case.creation_time }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Priority</td><td>{{ priority_chip(case.priority) }}</td>
+      <td class="lbl">Closed</td><td>{{ case.closed_time }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Taxonomy</td><td colspan="3">{{ case.taxonomy or "—" }}</td>
+    </tr>
+  </table>
+  <div class="band">Description</div>
+  <div class="body-text">{% if case.description %}{{ case.description }}{% else %}<span class="muted">No description recorded.</span>{% endif %}
+{% if case.linked_alert_titles %}
+
+Linked alerts ({{ case.linked_alert_count }}):{% for t in case.linked_alert_titles %}
+  • {{ t }}{% endfor %}{% if case.linked_alert_overflow %}
+  • …and {{ case.linked_alert_overflow }} more{% endif %}{% endif %}</div>
+  {% if technical and case.assets %}
+  <div class="band">Affected Assets</div>
+  <div class="chips-wrap">{% for a in case.assets %}<span class="mini-chip">{{ a.name }}{% if a.agent_id %} <span class="muted">· {{ a.agent_id }}</span>{% endif %}</span>{% endfor %}{% if case.asset_overflow %}<span class="mini-chip">…+{{ case.asset_overflow }} more</span>{% endif %}</div>
+  {% endif %}
+  {% if technical and case.iocs %}
+  <div class="band">Indicators of Compromise</div>
+  <table class="ioc">
+    {% for i in case.iocs %}<tr><td class="t"><span class="ioc-type">{{ i.type }}</span></td><td class="v">{{ i.value }}</td></tr>{% endfor %}
+  </table>
+  {% if case.ioc_overflow %}<div class="muted" style="padding:3px 10px;">…and {{ case.ioc_overflow }} more indicators.</div>{% endif %}
+  {% endif %}
+  {% if closed %}
+  <div class="band">Resolution</div>
+  <div class="body-text"><strong>Closed:</strong> {{ case.closed_time }}
+{% if case.comments %}{% for c in case.comments %}
+{{ c.comment }}  — {{ c.user_name }} · {{ c.created_at }}{% endfor %}{% else %}
+<span class="muted">No resolution notes recorded.</span>{% endif %}</div>
+  {% endif %}
+</div>
+{% endmacro %}
