@@ -2,14 +2,13 @@
 	<div class="flex flex-col gap-4">
 		<div class="flex flex-col gap-1">
 			<h3 class="text-lg font-bold">Security</h3>
-			<p class="text-secondary text-sm">
-				Manage 2FA and passwords for the user accounts scoped to this customer
-			</p>
+			<p class="text-secondary text-sm">Manage 2FA and passwords for the user accounts scoped to this customer</p>
 		</div>
 
 		<n-alert v-if="!smtpConfigured" type="warning" :bordered="false" class="text-xs">
 			SMTP is not configured, so sending a temporary password by email is disabled. Set the
-			<code>SMTP_*</code> variables in the backend environment to enable it. All other actions work.
+			<code>SMTP_*</code>
+			variables in the backend environment to enable it. All other actions work.
 		</n-alert>
 
 		<n-spin :show="loading">
@@ -82,7 +81,11 @@
 				</tbody>
 			</n-table>
 
-			<n-empty v-else description="No customer users are scoped to this customer" class="min-h-32 justify-center" />
+			<n-empty
+				v-else
+				description="No customer users are scoped to this customer"
+				class="min-h-32 justify-center"
+			/>
 		</n-spin>
 
 		<n-modal
@@ -95,8 +98,9 @@
 		>
 			<n-form ref="pwFormRef" :model="pwForm" :rules="pwRules" label-placement="top">
 				<p class="text-secondary mb-3 text-sm">
-					Overwrite the password for <strong>{{ passwordTarget?.username }}</strong>. The user will need to
-					sign in with this new password.
+					Overwrite the password for
+					<strong>{{ passwordTarget?.username }}</strong>
+					. The user will need to sign in with this new password.
 				</p>
 				<n-form-item label="New password" path="newPassword">
 					<n-input

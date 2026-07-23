@@ -27,7 +27,9 @@
 					Direct HTTP POST/PUT to a URL you control — automation platforms, chat incoming webhooks, custom
 					endpoints, etc. No Shuffle org required.
 				</span>
-				<span v-else>Shuffle proxies to 3,000+ integrations through a customer's authenticated Shuffle org.</span>
+				<span v-else>
+					Shuffle proxies to 3,000+ integrations through a customer's authenticated Shuffle org.
+				</span>
 			</template>
 		</n-form-item>
 
@@ -98,11 +100,7 @@
 			</div>
 
 			<n-form-item label="Custom headers (optional)" :show-feedback="false">
-				<n-dynamic-input
-					v-model:value="headerPairs"
-					:on-create="() => ({ key: '', value: '' })"
-					class="w-full"
-				>
+				<n-dynamic-input v-model:value="headerPairs" :on-create="() => ({ key: '', value: '' })" class="w-full">
 					<template #default="{ value }">
 						<div class="flex w-full items-center gap-2">
 							<n-input v-model:value="value.key" placeholder="Header name (e.g. Authorization)" />
@@ -125,14 +123,16 @@
 				</n-checkbox>
 			</n-form-item>
 			<div class="text-secondary mb-2 text-xs">
-				Adds the full AI report to the payload — the recommended actions, the full markdown write-up, and the IOC
-				list — for automation agents that need more than the summary. Leave off for chat targets to keep the
+				Adds the full AI report to the payload — the recommended actions, the full markdown write-up, and the
+				IOC list — for automation agents that need more than the summary. Leave off for chat targets to keep the
 				payload small.
 				<template v-if="fullReportDisabled">
 					<br />
-					<em>Unavailable while a custom template is set — use the
+					<em>
+						Unavailable while a custom template is set — use the
 						<code>{{ reportToken }}</code>
-						token in the template instead.</em>
+						token in the template instead.
+					</em>
 				</template>
 			</div>
 		</template>
@@ -148,15 +148,28 @@
 		</n-form-item>
 		<div class="text-secondary mb-2 text-xs">
 			<template v-if="templateDisabled">
-				<em>Unavailable while
+				<em>
+					Unavailable while
 					<strong>Include full AI report</strong>
-					is ticked — the full structured payload is sent. Untick it to write a custom body.</em>
+					is ticked — the full structured payload is sent. Untick it to write a custom body.
+				</em>
 			</template>
 			<template v-else-if="isWebhook">
-				Leave empty to send a structured JSON payload (<code>customer_code</code>, <code>alert_id</code>,
-				<code>severity</code>, <code>summary</code>, <code>report_url</code>, <code>text</code>). Set a template to
-				send a custom body instead — if it's valid JSON it's sent as JSON (e.g.
-				<code>{"content": "…"}</code>), otherwise as plain text. Available tokens:
+				Leave empty to send a structured JSON payload (
+				<code>customer_code</code>
+				,
+				<code>alert_id</code>
+				,
+				<code>severity</code>
+				,
+				<code>summary</code>
+				,
+				<code>report_url</code>
+				,
+				<code>text</code>
+				). Set a template to send a custom body instead — if it's valid JSON it's sent as JSON (e.g.
+				<code>{"content": "…"}</code>
+				), otherwise as plain text. Available tokens:
 				<code>{{ substitutionTokens }}</code>
 				. To include the full AI report, place
 				<code>{{ reportToken }}</code>
@@ -194,16 +207,7 @@ import type {
 	ShuffleApp,
 	ShuffleIntegration
 } from "@/types/notifications"
-import {
-	NButton,
-	NCheckbox,
-	NDynamicInput,
-	NForm,
-	NFormItem,
-	NInput,
-	NSelect,
-	useMessage
-} from "naive-ui"
+import { NButton, NCheckbox, NDynamicInput, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
@@ -223,7 +227,8 @@ const formRef = ref<FormInst | null>(null)
 const submitting = ref(false)
 
 const editing = computed(() => props.editingRoute !== null)
-type FeedbackField = "channel" | "destination" | "min_severity" | "shuffle_app_id" | "shuffle_integration_id" | "webhook_url"
+type FeedbackField =
+	"channel" | "destination" | "min_severity" | "shuffle_app_id" | "shuffle_integration_id" | "webhook_url"
 
 const fieldErrors = reactive<Partial<Record<FeedbackField, string>>>({})
 
@@ -464,9 +469,10 @@ const rules: FormRules = {
 }
 
 function buildHeaders(): Record<string, string> | null {
-	const entries = headerPairs.value
-		.map(p => [p.key.trim(), p.value])
-		.filter(([k]) => k.length > 0) as [string, string][]
+	const entries = headerPairs.value.map(p => [p.key.trim(), p.value]).filter(([k]) => k.length > 0) as [
+		string,
+		string
+	][]
 	return entries.length ? Object.fromEntries(entries) : null
 }
 

@@ -63,7 +63,11 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { IncidentCustomerReportGenerateRequest, IncidentReportBrandTheme, IncidentReportTemplate } from "@/types/incidentReports"
+import type {
+	IncidentCustomerReportGenerateRequest,
+	IncidentReportBrandTheme,
+	IncidentReportTemplate
+} from "@/types/incidentReports"
 import {
 	NButton,
 	NDatePicker,
@@ -140,7 +144,8 @@ const templateOptions: { label: string; value: IncidentReportTemplate; descripti
 	{
 		label: "Executive summary",
 		value: "executive",
-		description: "One-look synthesis for management: headline KPIs, service metrics and a status chart. No case detail."
+		description:
+			"One-look synthesis for management: headline KPIs, service metrics and a status chart. No case detail."
 	},
 	{
 		label: "Operational — cases",
@@ -150,7 +155,8 @@ const templateOptions: { label: string; value: IncidentReportTemplate; descripti
 	{
 		label: "Analytics — trends",
 		value: "analytics",
-		description: "Metrics-centric: executive summary plus all distribution charts and the monthly trend table. No case detail."
+		description:
+			"Metrics-centric: executive summary plus all distribution charts and the monthly trend table. No case detail."
 	}
 ]
 
