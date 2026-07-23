@@ -1395,9 +1395,7 @@ async def update_meta_auto(
         result = await session.execute(stmt)
         existing_record = result.scalars().first()
 
-        update_data = {
-            field: getattr(update_request, field) for field in editable_fields if getattr(update_request, field) is not None
-        }
+        update_data = {field: getattr(update_request, field) for field in editable_fields if getattr(update_request, field) is not None}
 
         if not update_data:
             return UpdateMetaResponse(success=False, message="No fields provided for update")
