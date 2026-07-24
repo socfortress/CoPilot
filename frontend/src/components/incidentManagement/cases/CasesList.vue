@@ -45,6 +45,12 @@
 					<div class="flex flex-col gap-2 py-1">
 						<CasesExport show-icon size="small" />
 						<CaseCreationButton show-icon size="small" @submitted="getData()" />
+						<GenerateIncidentReportButton
+							size="small"
+							secondary
+							default-template="operational"
+							@generated="handleReportGenerated"
+						/>
 					</div>
 				</n-popover>
 
@@ -55,6 +61,14 @@
 					:show-icon="caseCreationButtonShowIcon"
 					size="small"
 					@submitted="getData()"
+				/>
+
+				<GenerateIncidentReportButton
+					v-if="!showMobileMenu"
+					size="small"
+					secondary
+					default-template="operational"
+					@generated="handleReportGenerated"
 				/>
 			</div>
 			<n-pagination
@@ -150,6 +164,28 @@
 				</div>
 			</n-popover>
 		</div>
+		<n-modal
+			v-model:show="showReportGeneratedModal"
+			preset="card"
+			title="Report generated"
+			class="max-w-120!"
+			closable
+		>
+			<p class="text-secondary text-sm">
+				The incident report
+				<span v-if="generatedReport?.reportName" class="text-default font-medium">
+					"{{ generatedReport.reportName }}"
+				</span>
+				has been queued for generation. You can track progress in the customer reports list.
+			</p>
+			<template #footer>
+				<div class="flex flex-wrap justify-end gap-2">
+					<n-button @click="showReportGeneratedModal = false">Close</n-button>
+					<n-button type="primary" @click="goToReportsList">Go to reports list</n-button>
+				</div>
+			</template>
+		</n-modal>
+
 		<n-spin :show="loading">
 			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="casesList.length">
@@ -187,6 +223,7 @@ import type { CasesFilter, CasesFilterTypes } from "@/api/endpoints/incidentMana
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import type { Case, CaseStatus } from "@/types/incidentManagement/cases"
+import type { IncidentReportGeneratedPayload } from "@/types/incidentReports"
 import { useResizeObserver } from "@vueuse/core"
 import axios from "axios"
 import _cloneDeep from "lodash/cloneDeep"
@@ -196,6 +233,7 @@ import {
 	NEmpty,
 	NInput,
 	NInputGroup,
+	NModal,
 	NPagination,
 	NPopover,
 	NSelect,
@@ -205,7 +243,9 @@ import {
 import { computed, nextTick, onBeforeMount, provide, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import GenerateIncidentReportButton from "@/components/customers/reporting/GenerateIncidentReportButton.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import CaseCreationButton from "./CaseCreationButton.vue"
 import CaseItem from "./CaseItem.vue"
@@ -221,8 +261,11 @@ const { highlight, preset, hideFilters } = toRefs(props)
 
 const message = useMessage()
 const { globalCustomerCode } = useGlobalCustomerFilter()
+const { routeCustomer } = useNavigation()
 const loading = ref(false)
 const showFilters = ref(false)
+const showReportGeneratedModal = ref(false)
+const generatedReport = ref<IncidentReportGeneratedPayload | null>(null)
 const casesList = ref<Case[]>([])
 const availableUsers = ref<string[]>([])
 const customersList = ref<Customer[]>([])
@@ -337,6 +380,17 @@ function resetFilters() {
 	filters.value.type = undefined
 	showFilters.value = false
 	getData()
+}
+
+function handleReportGenerated(payload: IncidentReportGeneratedPayload) {
+	generatedReport.value = payload
+	showReportGeneratedModal.value = true
+}
+
+function goToReportsList() {
+	if (!generatedReport.value) return
+	showReportGeneratedModal.value = false
+	routeCustomer({ code: generatedReport.value.customerCode, tab: "Reporting" }).navigate()
 }
 
 function updateCase(updatedCase: Case) {

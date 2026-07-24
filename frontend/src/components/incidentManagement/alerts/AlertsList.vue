@@ -2,7 +2,7 @@
 	<div class="alerts-list @container">
 		<div ref="header" class="flex items-center justify-between gap-2">
 			<div class="flex items-center gap-2">
-				<div class="flex grow gap-2 @6xl:hidden!">
+				<div class="flex grow gap-2 @7xl:hidden!">
 					<n-popover overlap placement="left">
 						<template #trigger>
 							<div class="bg-default rounded-lg">
@@ -40,7 +40,7 @@
 						</div>
 					</n-popover>
 				</div>
-				<div class="hidden grow items-center gap-1 text-sm @6xl:flex">
+				<div class="hidden grow items-center gap-1 text-sm @7xl:flex">
 					<n-button quaternary size="small" @click="filtersRef?.setFilter([{ type: 'status', value: null }])">
 						<div class="flex items-center gap-2">
 							<span>Total</span>
@@ -88,13 +88,46 @@
 						</div>
 					</n-button>
 				</div>
-				<n-button size="small" secondary type="error" @click="showDeleteByTitleModal = true">
+				<n-popover class="@5xl:hidden!" overlap placement="left" display-directive="show">
+					<template #trigger>
+						<div class="bg-default rounded-lg">
+							<n-button size="small">
+								<template #icon>
+									<Icon :name="MenuIcon" />
+								</template>
+							</n-button>
+						</div>
+					</template>
+					<div class="flex flex-col gap-2 py-1">
+						<n-button size="small" secondary type="error" @click="showDeleteByTitleModal = true">
+							<template #icon>
+								<Icon :name="TrashIcon" />
+							</template>
+							Bulk Delete
+						</n-button>
+						<GenerateIncidentReportButton
+							size="small"
+							secondary
+							default-template="analytics"
+							@generated="handleReportGenerated"
+						/>
+					</div>
+				</n-popover>
+
+				<n-button
+					class="hidden @5xl:inline-flex!"
+					size="small"
+					secondary
+					type="error"
+					@click="showDeleteByTitleModal = true"
+				>
 					<template #icon>
 						<Icon :name="TrashIcon" />
 					</template>
 					Bulk Delete
 				</n-button>
 				<GenerateIncidentReportButton
+					class="hidden @5xl:inline-flex!"
 					size="small"
 					secondary
 					default-template="analytics"
@@ -348,6 +381,7 @@ const AlertMergeCaseButton = defineAsyncComponent(() => import("./AlertMergeCase
 
 const FilterIcon = "carbon:filter-edit"
 const TrashIcon = "carbon:trash-can"
+const MenuIcon = "carbon:overflow-menu-horizontal"
 const InfoIcon = "carbon:information"
 
 const { routeCustomer } = useNavigation()
