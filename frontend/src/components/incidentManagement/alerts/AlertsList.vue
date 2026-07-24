@@ -89,10 +89,10 @@
 					</n-button>
 				</div>
 				<n-button size="small" secondary type="error" @click="showDeleteByTitleModal = true">
-					<div class="flex items-center gap-2">
+					<template #icon>
 						<Icon :name="TrashIcon" />
-						<span class="hidden @3xl:inline">Bulk Delete</span>
-					</div>
+					</template>
+					Bulk Delete
 				</n-button>
 				<GenerateIncidentReportButton
 					size="small"
