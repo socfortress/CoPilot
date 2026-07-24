@@ -75,12 +75,7 @@
 				<n-tab-pane name="Reporting" tab="Reporting" display-directive="show:lazy" class="p-4!">
 					<CustomerReporting :customer-code="customer.customer_code" />
 				</n-tab-pane>
-				<n-tab-pane
-					name="Portal Branding"
-					tab="Portal Branding"
-					display-directive="show:lazy"
-					class="p-4!"
-				>
+				<n-tab-pane name="Portal Branding" tab="Portal Branding" display-directive="show:lazy" class="p-4!">
 					<CustomerPortalBranding :customer-code="customer.customer_code" />
 				</n-tab-pane>
 				<n-tab-pane v-if="isAdmin" name="Security" tab="Security" display-directive="show:lazy" class="p-4!">
