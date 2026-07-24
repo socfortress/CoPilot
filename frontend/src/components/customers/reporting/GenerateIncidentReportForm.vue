@@ -1,5 +1,15 @@
 <template>
 	<n-form ref="formRef" :model="formData" :rules label-placement="top">
+		<n-form-item v-if="!customerCode" label="Customer" path="customer_code">
+			<n-select
+				v-model:value="formData.customer_code"
+				:options="customersOptions"
+				:loading="loadingCustomers"
+				placeholder="Select customer"
+				filterable
+			/>
+		</n-form-item>
+
 		<n-form-item label="Report Name" path="report_name">
 			<n-input v-model:value="formData.report_name" placeholder="Leave empty for auto-generated name" clearable />
 		</n-form-item>
@@ -48,7 +58,7 @@
 			</div>
 		</n-form-item>
 
-		<div class="text-secondary text-xs">
+		<div v-if="customerCode" class="text-secondary text-xs">
 			Customer:
 			<span class="font-mono">{{ customerCode }}</span>
 		</div>
@@ -66,6 +76,7 @@ import type { ApiError } from "@/types/common"
 import type {
 	IncidentCustomerReportGenerateRequest,
 	IncidentReportBrandTheme,
+	IncidentReportGeneratedPayload,
 	IncidentReportTemplate
 } from "@/types/incidentReports"
 import {
@@ -80,22 +91,29 @@ import {
 	NSwitch,
 	useMessage
 } from "naive-ui"
-import { computed, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 
-const props = defineProps<{
-	customerCode: string
-}>()
+const props = withDefaults(
+	defineProps<{
+		customerCode?: string
+		defaultTemplate?: IncidentReportTemplate
+	}>(),
+	{ defaultTemplate: "full" }
+)
 
 const emit = defineEmits<{
-	(e: "generated", reportId: number): void
+	(e: "generated", payload: IncidentReportGeneratedPayload): void
 	(e: "cancel"): void
 }>()
 
 const message = useMessage()
+const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
 
 interface GenerateFormData {
+	customer_code: string | null
 	report_name: string
 	range: "30d" | "90d" | "custom"
 	customRange: [number, number] | null
@@ -106,28 +124,34 @@ interface GenerateFormData {
 
 function getDefaultFormData(): GenerateFormData {
 	return {
+		customer_code: props.customerCode ?? null,
 		report_name: "",
 		range: "30d",
 		customRange: null,
 		visibleToCustomer: false,
 		brandTheme: "customer",
-		reportTemplate: "full"
+		reportTemplate: props.defaultTemplate
 	}
 }
 
 const formRef = ref<FormInst | null>(null)
 const generating = ref(false)
+const loadingCustomers = ref(false)
+const customersOptions = ref<{ label: string; value: string }[]>([])
 const formData = ref<GenerateFormData>(getDefaultFormData())
 
 /** Reset every field back to its default and clear validation state. */
 function resetForm() {
 	Object.assign(formData.value, getDefaultFormData())
+	if (!props.customerCode) {
+		applyGlobalCustomerPrefill("customer_code", formData.value)
+	}
 	formRef.value?.restoreValidation()
 }
 
 defineExpose({ resetForm })
 
-const loading = computed(() => generating.value)
+const loading = computed(() => generating.value || loadingCustomers.value)
 
 const rangeOptions = [
 	{ label: "Last 30 days", value: "30d" },
@@ -165,6 +189,17 @@ const selectedTemplateDescription = computed(
 )
 
 const rules: FormRules = {
+	customer_code: [
+		{
+			validator: () => {
+				if (!props.customerCode && !formData.value.customer_code) {
+					return new Error("Please select a customer")
+				}
+				return true
+			},
+			trigger: ["change", "blur"]
+		}
+	],
 	customRange: [
 		{
 			validator: () => {
@@ -203,9 +238,12 @@ async function handleSubmit() {
 	try {
 		await formRef.value.validate()
 
+		const customer_code = props.customerCode || formData.value.customer_code
+		if (!customer_code) return
+
 		const { date_from, date_to } = resolveRange()
 		const request: IncidentCustomerReportGenerateRequest = {
-			customer_code: props.customerCode,
+			customer_code,
 			date_from,
 			date_to,
 			visible_to_customer: formData.value.visibleToCustomer,
@@ -223,7 +261,11 @@ async function handleSubmit() {
 			if (response.data.success) {
 				message.success(response.data.message)
 				resetForm()
-				emit("generated", response.data.report_id)
+				emit("generated", {
+					reportId: response.data.report_id,
+					customerCode: response.data.customer_code,
+					reportName: response.data.report_name
+				})
 			} else {
 				message.error("Failed to queue report generation")
 			}
@@ -236,4 +278,27 @@ async function handleSubmit() {
 		console.error("Form validation failed:", error)
 	}
 }
+
+onBeforeMount(() => {
+	if (props.customerCode) return
+
+	loadingCustomers.value = true
+	Api.customers
+		.getCustomers()
+		.then(res => {
+			if (res.data.success) {
+				customersOptions.value = (res.data.customers || []).map(c => ({
+					label: `#${c.customer_code} - ${c.customer_name}`,
+					value: c.customer_code
+				}))
+				applyGlobalCustomerPrefill("customer_code", formData.value)
+			}
+		})
+		.catch(err => {
+			message.error(getApiErrorMessage(err as ApiError) || "Failed to load customers")
+		})
+		.finally(() => {
+			loadingCustomers.value = false
+		})
+})
 </script>

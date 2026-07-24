@@ -48,6 +48,12 @@ export interface IncidentCustomerReportGenerateBackgroundResponse {
 	download_url: string
 }
 
+export interface IncidentReportGeneratedPayload {
+	reportId: number
+	customerCode: string
+	reportName: string
+}
+
 export interface IncidentCustomerReportListResponse {
 	reports: IncidentCustomerReport[]
 	total_count: number

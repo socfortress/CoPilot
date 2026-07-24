@@ -1,7 +1,8 @@
 <template>
-	<n-tabs type="line" animated :tabs-padding="24" class="h-full">
+	<n-tabs v-model:value="mainTab" type="line" animated :tabs-padding="24" class="h-full">
 		<n-tab-pane name="Customer" tab="Customer" display-directive="show" class="pt-0!">
 			<n-tabs
+				v-model:value="customerSubTab"
 				type="line"
 				animated
 				:tabs-padding="24"
@@ -160,8 +161,9 @@
 <script setup lang="ts">
 import type { Customer, CustomerMeta } from "@/types/customers"
 import { NScrollbar, NTabPane, NTabs } from "naive-ui"
-import { computed, defineAsyncComponent } from "vue"
+import { computed, defineAsyncComponent, ref, watch } from "vue"
 import { useCustomerHealthcheckFilters } from "@/composables/useCustomerHealthcheckFilters"
+import { useRouteQueryParam } from "@/composables/useNavigation"
 import { useAuthStore } from "@/stores/auth"
 
 const props = defineProps<{
@@ -211,4 +213,38 @@ const loadingDeleteModel = computed({
 })
 
 const scrollbarClass = computed(() => (props.useMaxHeight ? "max-h-117.5 pr-4" : undefined))
+
+const CUSTOMER_SUB_TABS = new Set([
+	"Info",
+	"Provision",
+	"3rd Party Integrations",
+	"Network Connectors",
+	"Notification Workflows",
+	"AI Triggers",
+	"AI Notifications",
+	"Event Sources",
+	"Reporting",
+	"Portal Branding",
+	"Security"
+])
+
+const MAIN_TABS = new Set(["Customer", "Agents", "Wazuh Worker"])
+
+const tabQuery = useRouteQueryParam("tab")
+const mainTab = ref("Customer")
+const customerSubTab = ref("Info")
+
+watch(
+	tabQuery,
+	tab => {
+		if (!tab) return
+		if (CUSTOMER_SUB_TABS.has(tab)) {
+			mainTab.value = "Customer"
+			customerSubTab.value = tab
+		} else if (MAIN_TABS.has(tab)) {
+			mainTab.value = tab
+		}
+	},
+	{ immediate: true }
+)
 </script>

@@ -1,5 +1,5 @@
 <template>
-	<n-button type="primary" @click="showModal = true">
+	<n-button type="primary" :size @click="showModal = true">
 		<template #icon>
 			<Icon :name="AddIcon" />
 		</template>
@@ -14,29 +14,37 @@
 		display-directive="show"
 		closable
 	>
-		<GenerateIncidentReportForm :customer-code @generated="handleGenerated" @cancel="showModal = false" />
+		<GenerateIncidentReportForm
+			:customer-code
+			:default-template
+			@generated="handleGenerated"
+			@cancel="showModal = false"
+		/>
 	</n-modal>
 </template>
 
 <script setup lang="ts">
+import type { IncidentReportGeneratedPayload, IncidentReportTemplate } from "@/types/incidentReports"
 import { NButton, NModal } from "naive-ui"
 import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import GenerateIncidentReportForm from "./GenerateIncidentReportForm.vue"
 
 defineProps<{
-	customerCode: string
+	customerCode?: string
+	defaultTemplate?: IncidentReportTemplate
+	size?: "tiny" | "small" | "medium" | "large"
 }>()
 
 const emit = defineEmits<{
-	generated: [reportId: number]
+	generated: [payload: IncidentReportGeneratedPayload]
 }>()
 
 const AddIcon = "carbon:document-add"
 const showModal = ref(false)
 
-function handleGenerated(reportId: number) {
+function handleGenerated(payload: IncidentReportGeneratedPayload) {
 	showModal.value = false
-	emit("generated", reportId)
+	emit("generated", payload)
 }
 </script>

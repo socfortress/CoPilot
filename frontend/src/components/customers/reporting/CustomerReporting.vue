@@ -112,7 +112,7 @@ async function loadReports() {
 	}
 }
 
-async function handleReportGenerated(reportId: number) {
+async function handleReportGenerated({ reportId }: { reportId: number }) {
 	await loadReports()
 	startStatusPolling(reportId)
 }

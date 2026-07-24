@@ -23,9 +23,19 @@
 					<span class="text-xs font-semibold uppercase opacity-60">Branding mode</span>
 				</template>
 				<template #headerExtra>
-					<n-tag v-if="effective" :bordered="false" size="small" :type="brandingTagType">
-						Currently: {{ effective.source === "custom" ? "Custom" : "Global defaults" }}
-					</n-tag>
+					<Badge
+						v-if="effective"
+						type="splitted"
+						size="small"
+						bright
+						class="text-default"
+						:color="brandingBadgeColor"
+					>
+						<template #label>Currently</template>
+						<template #value>
+							{{ effective.source === "custom" ? "Custom" : "Global defaults" }}
+						</template>
+					</Badge>
 				</template>
 
 				<template #default>
@@ -77,7 +87,11 @@
 										v-if="model.logo"
 										class="group border-border relative size-17 shrink-0 overflow-hidden rounded-lg border"
 									>
-										<img :src="model.logo" alt="Portal logo preview" class="size-full object-cover" />
+										<img
+											:src="model.logo"
+											alt="Portal logo preview"
+											class="size-full object-cover"
+										/>
 										<button
 											type="button"
 											class="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
@@ -93,7 +107,11 @@
 										<Icon :name="LogoIcon" :size="24" class="text-secondary opacity-50" />
 									</div>
 
-									<ImageCropper v-slot="{ openCropper }" placeholder="Select a Logo" @crop="setCroppedImage">
+									<ImageCropper
+										v-slot="{ openCropper }"
+										placeholder="Select a Logo"
+										@crop="setCroppedImage"
+									>
 										<n-button secondary @click="openCropper()">
 											<template #icon>
 												<Icon :name="EditIcon" />
@@ -164,11 +182,11 @@ import {
 	NRadioButton,
 	NRadioGroup,
 	NSpin,
-	NTag,
 	useMessage
 } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import ImageCropper from "@/components/common/ImageCropper.vue"
@@ -224,7 +242,7 @@ const effective = ref<CustomerPortalEffectiveBranding | null>(null)
 const globalDefaults = ref<SettingsModel>(getDefaultModel())
 
 const showFields = computed(() => !isCustomerScope.value || mode.value === "custom")
-const brandingTagType = computed(() => (effective.value?.source === "custom" ? "success" : "default"))
+const brandingBadgeColor = computed(() => (effective.value?.source === "custom" ? "success" : undefined))
 const fallbackTitle = computed(() => globalDefaults.value.title || "CoPilot")
 
 // What the portal will actually render: the edited values where set, otherwise the

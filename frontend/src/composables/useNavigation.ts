@@ -82,11 +82,12 @@ export function useNavigation() {
 		fallback?.navigate()
 	}
 
-	function routeCustomer(params?: { code?: string | number; action?: "add-customer" }) {
+	function routeCustomer(params?: { code?: string | number; action?: "add-customer"; tab?: string }) {
 		if (params?.code) {
 			return routerConstructor({
 				name: "Customer",
-				params: { code: params.code.toString() }
+				params: { code: params.code.toString() },
+				query: params.tab ? { tab: params.tab } : undefined
 			})
 		} else if (params?.action) {
 			return routerConstructor({ name: "Customers", query: { action: params.action.toString() } })
