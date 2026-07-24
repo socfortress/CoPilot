@@ -2,7 +2,11 @@
 	<n-spin :show="loading" content-class="flex grow flex-col">
 		<div class="flex flex-col gap-4">
 			<n-alert type="info" :bordered="false">
-				Customize the customer portal login page title and logo shown to end customers.
+				Customize the customer portal login page title and logo shown to end customers. These are the
+				<b>defaults</b>
+				for every customer — a single customer can override them from its
+				<b>Portal Branding</b>
+				tab.
 			</n-alert>
 
 			<CardEntity embedded size="small">
@@ -65,7 +69,7 @@
 							</n-button>
 						</n-form-item>
 
-						<span class="text-secondary text-xs">
+						<span class="text-secondary -mt-3 text-xs">
 							Used to theme customer-branded PDF reports. Leave empty to derive it from the logo.
 						</span>
 					</div>

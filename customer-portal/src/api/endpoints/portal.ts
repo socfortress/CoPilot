@@ -1,11 +1,18 @@
 import type { CommonResponse } from "@/types/common"
-import type { AlertsStats, CasesStats, DashboardStats, PortalSettings } from "@/types/portal"
+import type { AlertsStats, CasesStats, DashboardStats, EffectivePortalBranding, PortalSettings } from "@/types/portal"
 import { HttpClient } from "../httpClient"
 import { withCustomerCodes } from "../params"
 
 export default {
+	/** Global defaults — public, used before login when no customer is known yet. */
 	getSettings() {
 		return HttpClient.get<CommonResponse<{ settings: PortalSettings }>>("/customer_portal/settings")
+	},
+	/** Branding for the authenticated user (per-customer override, else the global defaults). */
+	getEffectiveSettings() {
+		return HttpClient.get<CommonResponse<{ settings: EffectivePortalBranding }>>(
+			"/customer_portal/settings/effective"
+		)
 	},
 	dashboardStats(customerCodes?: string[]) {
 		return HttpClient.get<CommonResponse<DashboardStats>>(

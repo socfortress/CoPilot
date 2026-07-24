@@ -5,12 +5,13 @@ A report can be rendered with one of two brand themes (see ``BrandTheme`` in
 
 - ``"socfortress"`` — the SOCFortress logo + the SOCFortress brand colour
   (``#fc862e``, the orange of the wordmark).
-- ``"customer"`` — the customer portal logo/title (from ``customer_portal_settings``)
-  and the customer *brand color*. The brand color is taken from the new
-  ``customer_portal_settings.brand_color`` field; when it is unset we fall back to
-  the dominant color derived from the portal logo (via Pillow), and if that also
-  fails (e.g. an SVG logo Pillow cannot rasterise, or no logo at all) we fall back
-  to the SOCFortress orange so the report always renders.
+- ``"customer"`` — the portal logo/title/brand color that resolves for the report's
+  customer: their ``customer_portal_branding`` override where set, otherwise the
+  global ``customer_portal_settings`` (resolved field by field in
+  ``app.customer_portal.services.branding``). When the brand color is unset we fall
+  back to the dominant color derived from the portal logo (via Pillow), and if that
+  also fails (e.g. an SVG logo Pillow cannot rasterise, or no logo at all) we fall
+  back to the SOCFortress orange so the report always renders.
 
 Both themes build their full palette from a single *base* brand colour via
 ``_build_palette``. The color values are injected as *literal* hex strings into
@@ -33,9 +34,9 @@ from typing import Tuple
 
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
-from app.db.universal_models import CustomerPortalSettings
+from app.customer_portal.schema.branding import EffectiveBranding
+from app.customer_portal.services.branding import resolve_effective_branding
 
 # --- SOCFortress brand constants ---------------------------------------------
 SOCF_BASE = "#fc862e"  # the orange of the SOCFortress wordmark
@@ -231,7 +232,7 @@ def _derive_color_from_logo(logo_base64: Optional[str], mime_type: Optional[str]
         return None
 
 
-def _customer_logo_data_uri(settings: Optional[CustomerPortalSettings]) -> Optional[str]:
+def _customer_logo_data_uri(settings: Optional[EffectiveBranding]) -> Optional[str]:
     if not settings or not settings.logo_base64:
         return None
     if settings.logo_base64.startswith("data:"):
@@ -276,7 +277,7 @@ def _socfortress_theme() -> Dict[str, Any]:
     return _build_palette(SOCF_BASE, _load_socfortress_logo(), SOCF_TITLE, SOCF_FOOTER_BRAND)
 
 
-def _customer_theme(settings: Optional[CustomerPortalSettings]) -> Dict[str, Any]:
+def _customer_theme(settings: Optional[EffectiveBranding]) -> Dict[str, Any]:
     title = (settings.title if settings and settings.title else None) or "CoPilot"
     logo = _customer_logo_data_uri(settings)
 
@@ -293,8 +294,13 @@ def _customer_theme(settings: Optional[CustomerPortalSettings]) -> Dict[str, Any
     return _build_palette(base, logo, title, title)
 
 
-async def resolve_theme(session: AsyncSession, brand_theme: str) -> Dict[str, Any]:
+async def resolve_theme(session: AsyncSession, brand_theme: str, customer_code: Optional[str] = None) -> Dict[str, Any]:
     """Resolve the branding dict for a report given the requested ``brand_theme``.
+
+    When ``customer_code`` is supplied the ``"customer"`` theme honours that
+    customer's portal branding override (title / logo / brand color), falling back
+    to the global portal settings field by field — the same resolution the portal
+    itself uses. Without a customer code the global defaults are used.
 
     Always returns a fully-populated theme (falls back to the SOCFortress orange
     for any missing colour) so the template can render unconditionally.
@@ -302,6 +308,5 @@ async def resolve_theme(session: AsyncSession, brand_theme: str) -> Dict[str, An
     if brand_theme == "socfortress":
         return _socfortress_theme()
 
-    result = await session.execute(select(CustomerPortalSettings).limit(1))
-    settings = result.scalars().first()
-    return _customer_theme(settings)
+    branding = await resolve_effective_branding(session, customer_code)
+    return _customer_theme(branding)

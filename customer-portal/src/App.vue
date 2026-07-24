@@ -31,6 +31,7 @@ import Blank from "@/app-layouts/Blank"
 import Provider from "@/app-layouts/common/Provider.vue"
 import SplashScreen from "@/app-layouts/common/SplashScreen.vue"
 import HorizontalNav from "@/app-layouts/HorizontalNav"
+import { useAuthStore } from "@/stores/auth"
 import { useMainStore } from "@/stores/main"
 import { useThemeStore } from "@/stores/theme"
 import { usePortalSettingsStore } from "./stores/portalSettings"
@@ -48,6 +49,7 @@ const loading = ref(true)
 const portalSettingsStore = usePortalSettingsStore()
 const themeStore = useThemeStore()
 const mainStore = useMainStore()
+const authStore = useAuthStore()
 
 const routeName = computed<string>(() => route?.name?.toString() || "")
 const forceRefresh = computed<number>(() => mainStore.forceRefresh)
@@ -92,12 +94,22 @@ watch(layoutComponentName, () => {
 	loading.value = false
 })
 
+// Re-resolve branding whenever the session changes: signing in may swap in the
+// customer's own branding, signing out must fall back to the global defaults.
+watch(
+	() => authStore.isLogged,
+	() => {
+		portalSettingsStore.syncBranding()
+	}
+)
+
 router.afterEach(currentRoute => {
 	checkThemeOverrides(currentRoute)
 })
 
 onBeforeMount(async () => {
 	await portalSettingsStore.fetchSettings()
+	await portalSettingsStore.syncBranding()
 
 	checkThemeOverrides(route)
 

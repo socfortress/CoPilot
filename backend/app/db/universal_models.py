@@ -445,6 +445,34 @@ class CustomerPortalSettings(SQLModel, table=True):
         )
 
 
+class CustomerPortalBranding(SQLModel, table=True):
+    """Per-customer branding override for the Customer Portal.
+
+    ``customer_portal_settings`` (above) stays the *global default* for every
+    customer. A row here is an optional override for one customer: when
+    ``enabled`` is true the populated fields win, and any field left empty still
+    falls back to the global default (so an override can customise only the
+    title, only the logo, …). Flipping ``enabled`` to false — or deleting the row
+    entirely — reverts the customer to the global defaults.
+
+    Resolution lives in ``app/customer_portal/services/branding.py``; nothing
+    should read this table directly.
+    """
+
+    __tablename__ = "customer_portal_branding"
+
+    id: Optional[int] = Field(primary_key=True)
+    # One override per customer. Hard FK: an override for a deleted customer is meaningless.
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=50, index=True, unique=True, nullable=False)
+    enabled: bool = Field(default=True, nullable=False)
+    title: Optional[str] = Field(default=None, max_length=255)
+    logo_base64: Optional[str] = Field(default=None, sa_column=Column(LONGTEXT))  # LONGTEXT: base64 payloads are large
+    logo_mime_type: Optional[str] = Field(default=None, max_length=50)  # e.g. "image/png", "image/jpeg"
+    brand_color: Optional[str] = Field(default=None, max_length=9)  # e.g. "#RRGGBB"
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_by: Optional[int] = Field(default=None)  # User ID who last updated
+
+
 class VulnerabilityReport(SQLModel, table=True):
     __tablename__ = "vulnerability_reports"
 

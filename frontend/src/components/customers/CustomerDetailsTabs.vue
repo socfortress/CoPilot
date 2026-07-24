@@ -74,6 +74,14 @@
 				<n-tab-pane name="Reporting" tab="Reporting" display-directive="show:lazy" class="p-4!">
 					<CustomerReporting :customer-code="customer.customer_code" />
 				</n-tab-pane>
+				<n-tab-pane
+					name="Portal Branding"
+					tab="Portal Branding"
+					display-directive="show:lazy"
+					class="p-4!"
+				>
+					<CustomerPortalBranding :customer-code="customer.customer_code" />
+				</n-tab-pane>
 				<n-tab-pane v-if="isAdmin" name="Security" tab="Security" display-directive="show:lazy" class="p-4!">
 					<CustomerSecurity :customer-code="customer.customer_code" />
 				</n-tab-pane>
@@ -188,6 +196,7 @@ const CustomerAITriggers = defineAsyncComponent(() => import("./aiTriggers/Custo
 const CustomerAiNotifications = defineAsyncComponent(() => import("./aiNotifications/CustomerAiNotifications.vue"))
 const CustomerEventSources = defineAsyncComponent(() => import("./eventSources/CustomerEventSources.vue"))
 const CustomerReporting = defineAsyncComponent(() => import("./reporting/CustomerReporting.vue"))
+const CustomerPortalBranding = defineAsyncComponent(() => import("./portalBranding/CustomerPortalBranding.vue"))
 const CustomerSecurity = defineAsyncComponent(() => import("./security/CustomerSecurity.vue"))
 const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWorker.vue"))
 
