@@ -88,51 +88,48 @@
 						</div>
 					</n-button>
 				</div>
-				<n-popover class="@5xl:hidden!" overlap placement="left" display-directive="show">
-					<template #trigger>
-						<div class="bg-default rounded-lg">
-							<n-button size="small">
+				<div class="@5xl:hidden!">
+					<n-popover overlap placement="left" display-directive="show">
+						<template #trigger>
+							<div class="bg-default rounded-lg">
+								<n-button size="small">
+									<template #icon>
+										<Icon :name="MenuIcon" />
+									</template>
+								</n-button>
+							</div>
+						</template>
+						<div class="flex flex-col gap-2 py-1">
+							<n-button size="small" secondary type="error" @click="showDeleteByTitleModal = true">
 								<template #icon>
-									<Icon :name="MenuIcon" />
+									<Icon :name="TrashIcon" />
 								</template>
+								Bulk Delete
 							</n-button>
+							<GenerateIncidentReportButton
+								size="small"
+								secondary
+								default-template="analytics"
+								@generated="handleReportGenerated"
+							/>
 						</div>
-					</template>
-					<div class="flex flex-col gap-2 py-1">
-						<n-button size="small" secondary type="error" @click="showDeleteByTitleModal = true">
-							<template #icon>
-								<Icon :name="TrashIcon" />
-							</template>
-							Bulk Delete
-						</n-button>
-						<GenerateIncidentReportButton
-							size="small"
-							secondary
-							default-template="analytics"
-							@generated="handleReportGenerated"
-						/>
-					</div>
-				</n-popover>
+					</n-popover>
+				</div>
 
-				<n-button
-					class="hidden @5xl:inline-flex!"
-					size="small"
-					secondary
-					type="error"
-					@click="showDeleteByTitleModal = true"
-				>
-					<template #icon>
-						<Icon :name="TrashIcon" />
-					</template>
-					Bulk Delete
-				</n-button>
-				<GenerateIncidentReportButton
-					class="hidden @5xl:inline-flex!"
-					size="small"
-					secondary
-					default-template="analytics"
-					@generated="handleReportGenerated"
-				/>
+				<div class="hidden items-center gap-2 @5xl:flex!">
+					<n-button size="small" secondary type="error" @click="showDeleteByTitleModal = true">
+						<template #icon>
+							<Icon :name="TrashIcon" />
+						</template>
+						Bulk Delete
+					</n-button>
+					<GenerateIncidentReportButton
+						size="small"
+						secondary
+						default-template="analytics"
+						@generated="handleReportGenerated"
+					/>
+				</div>
 			</div>
 
 			<div class="flex items-center justify-end gap-2 whitespace-nowrap">

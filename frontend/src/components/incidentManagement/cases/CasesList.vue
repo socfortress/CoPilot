@@ -487,7 +487,7 @@ useResizeObserver(header, entries => {
 	simpleMode.value = width < 550
 	caseCreationButtonShowIcon.value = width >= 580
 	caseExportButtonShowIcon.value = width >= 580
-	showMobileMenu.value = width <= 420
+	showMobileMenu.value = width <= 900
 })
 
 onBeforeMount(() => {
