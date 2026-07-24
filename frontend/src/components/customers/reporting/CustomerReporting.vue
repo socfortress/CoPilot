@@ -7,12 +7,7 @@
 					Generate and download aggregated PDF reports of alerts and cases for this customer
 				</p>
 			</div>
-			<n-button type="primary" @click="showGenerateModal = true">
-				<template #icon>
-					<Icon :name="AddIcon" />
-				</template>
-				Generate Report
-			</n-button>
+			<GenerateIncidentReportButton :customer-code @generated="handleReportGenerated" />
 		</div>
 
 		<n-spin :show="loading">
@@ -45,21 +40,6 @@
 		</n-spin>
 
 		<n-modal
-			v-model:show="showGenerateModal"
-			preset="card"
-			title="Generate Incident Management Report"
-			class="max-w-160!"
-			display-directive="if"
-			closable
-		>
-			<GenerateIncidentReportForm
-				:customer-code
-				@generated="handleReportGenerated"
-				@cancel="showGenerateModal = false"
-			/>
-		</n-modal>
-
-		<n-modal
 			v-model:show="showDeleteModal"
 			preset="dialog"
 			title="Delete Report"
@@ -79,25 +59,21 @@ import type { ApiError } from "@/types/common"
 import type { IncidentCustomerReport } from "@/types/incidentReports"
 import axios from "axios"
 import { saveAs } from "file-saver"
-import { NButton, NEmpty, NModal, NPagination, NSpin, useMessage } from "naive-ui"
+import { NEmpty, NModal, NPagination, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
-import GenerateIncidentReportForm from "./GenerateIncidentReportForm.vue"
+import GenerateIncidentReportButton from "./GenerateIncidentReportButton.vue"
 import IncidentReportCard from "./IncidentReportCard.vue"
 
 const { customerCode } = defineProps<{
 	customerCode: string
 }>()
 
-const AddIcon = "carbon:document-add"
-
 const message = useMessage()
 
 const loading = ref(false)
 const reports = ref<IncidentCustomerReport[]>([])
-const showGenerateModal = ref(false)
 const showDeleteModal = ref(false)
 const reportToDelete = ref<IncidentCustomerReport | null>(null)
 const currentPage = ref(1)
@@ -137,7 +113,6 @@ async function loadReports() {
 }
 
 async function handleReportGenerated(reportId: number) {
-	showGenerateModal.value = false
 	await loadReports()
 	startStatusPolling(reportId)
 }

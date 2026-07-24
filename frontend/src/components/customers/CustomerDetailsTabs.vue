@@ -196,7 +196,8 @@ const CustomerAITriggers = defineAsyncComponent(() => import("./aiTriggers/Custo
 const CustomerAiNotifications = defineAsyncComponent(() => import("./aiNotifications/CustomerAiNotifications.vue"))
 const CustomerEventSources = defineAsyncComponent(() => import("./eventSources/CustomerEventSources.vue"))
 const CustomerReporting = defineAsyncComponent(() => import("./reporting/CustomerReporting.vue"))
-const CustomerPortalBranding = defineAsyncComponent(() => import("./portalBranding/CustomerPortalBranding.vue"))
+// Same component as the global Customer Portal settings page — scoped to one customer.
+const CustomerPortalBranding = defineAsyncComponent(() => import("@/components/customerPortal/Settings.vue"))
 const CustomerSecurity = defineAsyncComponent(() => import("./security/CustomerSecurity.vue"))
 const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWorker.vue"))
 
