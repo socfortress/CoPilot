@@ -1,5 +1,5 @@
 <template>
-	<n-button type="primary" :size @click="showModal = true">
+	<n-button type="primary" :secondary :size @click="showModal = true">
 		<template #icon>
 			<Icon :name="AddIcon" />
 		</template>
@@ -34,6 +34,7 @@ defineProps<{
 	customerCode?: string
 	defaultTemplate?: IncidentReportTemplate
 	size?: "tiny" | "small" | "medium" | "large"
+	secondary?: boolean
 }>()
 
 const emit = defineEmits<{
