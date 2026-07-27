@@ -150,6 +150,11 @@ class AgentModel(BaseModel):
     velociraptor_id: Optional[str] = None
     wazuh_agent_version: Optional[str] = None
     customer_code: Optional[str] = None
+    # Both fields mirror columns on `Agents` and drive UI badges (ONLINE/OFFLINE, Quarantined).
+    # Omitting them made every agent in the customer Agents tab render as OFFLINE because the
+    # frontend compares an undefined `wazuh_agent_status` against "active" (issue #956).
+    wazuh_agent_status: Optional[str] = None
+    quarantined: Optional[bool] = None
     model_config = ConfigDict(from_attributes=True)
 
 
