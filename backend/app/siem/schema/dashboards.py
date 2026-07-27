@@ -19,6 +19,9 @@ class DashboardPanel(BaseModel):
     h: int
     lucene: str
     field: Optional[str] = None
+    # `table` panels list documents instead of aggregating, so they carry a set of
+    # source fields to project rather than a single aggregation `field`.
+    fields: Optional[List[str]] = None
     size: Optional[int] = None
 
 
@@ -109,6 +112,8 @@ class PanelResult(BaseModel):
     value: Optional[int] = None  # stat panels
     labels: Optional[List[str]] = None  # chart panels
     data: Optional[List[Any]] = None  # chart panels
+    columns: Optional[List[str]] = None  # table panels
+    rows: Optional[List[Dict[str, Any]]] = None  # table panels
     error: Optional[str] = None
 
 

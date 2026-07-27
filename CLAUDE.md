@@ -141,7 +141,7 @@ MySQL is the primary store via async SQLAlchemy/SQLModel (`app/db/db_session.py`
 
 | Domain | Where | Headline tables | Tenant FK? |
 |---|---|---|---|
-| Customers / agents | `app/db/universal_models.py` | `customers`, `customers_meta`, `agents`, `agent_datastore`, `agent_vulnerabilities`, `event_sources`, `enabled_dashboards` | ✅ FK |
+| Customers / agents | `app/db/universal_models.py` | `customers`, `customers_meta`, `agents`, `agent_datastore`, `agent_vulnerabilities`, `event_sources`, `enabled_dashboards`, `custom_dashboard_templates` | ✅ FK (nullable on `custom_dashboard_templates` — NULL means "shared with all customers") |
 | Auth / RBAC / 2FA / SSO | `app/auth/models/` | `user`, `role`, `user_customer_access`, `user_tag_access`, `role_tag_access`, `user_totp`, `sso_config`, `sso_allowed_email` | n/a |
 | Connector credentials | `app/connectors/models.py` | `connectors`, `connectorhistory` | n/a (deployment-wide) |
 | Incident management (~28 tables) | `app/incidents/models.py` | `incident_management_alert`, `_asset`, `_case`, `_ioc`, `_alerttag`, `_case_template`/`_case_task`/`_case_event`, `_threshold_alert_metadata`, `_velo_sigma_exclusion`, `_tag_access_settings`, plus `_*fieldname` ingest dictionaries | ⚠️ STRING |
@@ -165,6 +165,24 @@ MySQL is the primary store via async SQLAlchemy/SQLModel (`app/db/db_session.py`
 - **Source-mapped ingest dictionaries** — the `incident_management_*fieldname` family (`fieldname`, `assetfieldname`, `timestampfieldname`, `alerttitlefieldname`, `iocfieldname`, `customercodefieldname`) maps per-source (`wazuh`, `velociraptor`, `office365`, …) field names to canonical ingest fields. New SIEM source = new rows in *all six* tables.
 - **Connector credentials are global, integration auth keys are per-customer.** Connectors (`app/connectors/models.py:Connectors`) hold one row per first-party tool for the whole deployment. Integrations (`integration_auth_keys` via the subscription chain) hold one row per (customer, integration). The third axis — Shuffle — uses `customer_shuffle_integration.shuffle_org_id` as the per-customer differentiator while the deployment-wide `SHUFFLER_API_KEY` lives in the `connectors` table.
 - **Customer Portal branding is two-layered and merged per field.** `customer_portal_settings` (singleton) is the *global default*; `customer_portal_branding` (one row per customer, `enabled` toggles it without discarding the stored logo) is an optional override. Resolution is field-by-field — an override that only sets a title still inherits the global logo and color — and lives solely in `app/customer_portal/services/branding.py` (`build_effective_branding`). **Never read either table directly**: the portal (`GET /customer_portal/settings/effective`, authenticated) and the PDF report theming (`customer_report_branding.resolve_theme(..., customer_code=…)`) both go through that service. The *public* `GET /customer_portal/settings` stays global-only on purpose — the login page has no authenticated customer yet. A portal user scoped to more than one customer (or holding the `"*"` wildcard) resolves to the global defaults rather than picking a winner.
+
+### SIEM Dashboards: built-in templates vs. custom ones
+
+`SIEM → Dashboards` renders two kinds of template through **one** pipeline:
+
+- **Built-in** — JSON files under `app/siem/dashboard_templates/<category>/`, addressed by `(library_card=<category dir>, template_id=<file stem>)`.
+- **Custom** — rows in `custom_dashboard_templates` (UI-authored or imported), addressed by `(library_card="custom", template_id=<template_key>)`.
+
+`enabled_dashboards` is the single activation table for both, so the viewer, `POST /siem/dashboards/panel-data` and the Customer Portal need no per-kind branching. **`"custom"` is a reserved `library_card` value** — `list_categories()` skips a directory with that name so the two namespaces can never collide.
+
+Things to keep straight when touching this area:
+
+- **`template_key` is the stable identity.** Renaming a custom dashboard's title never changes it, which is what keeps already-enabled dashboards pointing at the right template. Creation slugifies the title and suffixes on collision (`acronis_overview_2`); *import* keeps the supplied key verbatim (409 on collision unless `overwrite`) so a definition moved between deployments stays the same dashboard.
+- **`custom_dashboard_templates.customer_code` is nullable and means scope**: NULL = shared with every customer, set = that tenant only. `enable_dashboard` rejects enabling a scoped template for a different customer. Narrowing a shared template back to one customer is blocked while other tenants have it enabled.
+- **`enabled_dashboards.template_id` is a plain string, not an FK**, so deleting a custom template cascades nothing — `delete_custom_dashboard` deletes the dependent `enabled_dashboards` rows itself and reports the count. Leave that out and customers keep seeing dashboards that 404 on open.
+- **Panel execution lives in one place**: `services/dashboards.py:execute_panels`. It is shared by panel-data (both kinds) and by the custom-dashboard *preview* endpoint, which runs an unsaved panel set so the builder shows real data — that's the reason preview and the saved dashboard can't drift.
+- **Panel types are `stat | histogram | pie | bar_h | table`.** `table` is the only one that returns rows rather than aggregations (`PanelResult.columns` / `.rows`) and the only one that reads `panel.fields` (plural) instead of `panel.field`. Both dashboard viewers (frontend *and* customer-portal) render it via their own `PanelTable.vue`; adding a sixth type means touching the executor plus both viewers.
+- **Custom dashboards carry a dashboard-wide `default_query`** that `execute_panels` ANDs into every panel. Built-in templates have no equivalent — don't add per-panel duplication of it.
 
 ### Detections Catalog (view layer over `rules_cache` + Wazuh)
 

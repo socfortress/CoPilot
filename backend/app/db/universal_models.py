@@ -669,6 +669,55 @@ class EnabledDashboards(SQLModel, table=True):
     event_source: Optional["EventSources"] = Relationship()
 
 
+class CustomDashboardTemplates(SQLModel, table=True):
+    """User-authored dashboard templates, the DB-backed twin of the JSON files
+    under ``app/siem/dashboard_templates/``.
+
+    Built-in templates ship on disk and are addressed by
+    ``(library_card=<category dir>, template_id=<file stem>)``. Custom ones live
+    here and are addressed by ``(library_card="custom", template_id=<template_key>)``
+    so ``enabled_dashboards`` — and therefore the dashboard viewer, the panel-data
+    endpoint and the Customer Portal — keep working unchanged for both kinds.
+
+    ``customer_code`` is nullable on purpose: NULL means "shared with every
+    customer" (the usual case for a reusable integration template), while a value
+    scopes the template to that tenant only.
+    """
+
+    __tablename__ = "custom_dashboard_templates"
+
+    id: Optional[int] = Field(primary_key=True)
+    # Stable slug used as `enabled_dashboards.template_id`. Renaming the title
+    # never changes it, so enabled dashboards survive edits.
+    template_key: str = Field(max_length=255, nullable=False, index=True, unique=True)
+    customer_code: Optional[str] = Field(
+        default=None,
+        foreign_key="customers.customer_code",
+        max_length=50,
+        index=True,
+        nullable=True,
+    )
+    title: str = Field(max_length=255, nullable=False)
+    description: str = Field(default="", max_length=2048)
+    # Card metadata — mirrors the on-disk `_card.json` so custom templates can be
+    # rendered by the same category/template cards as the built-ins.
+    vendor: str = Field(default="Custom", max_length=255)
+    product: str = Field(default="", max_length=255)
+    event_type: str = Field(default="Custom", max_length=50)
+    tags: Optional[List[str]] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    color: str = Field(default="#38bdf8", max_length=9)
+    icon: str = Field(default="dashboard", max_length=50)
+    # Lucene applied on top of every panel query (the dashboard-wide filter).
+    default_query: str = Field(default="*", max_length=4096)
+    # List of panel dicts, same shape as the on-disk template `panels` array.
+    panels: List[dict] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    created_by: Optional[str] = Field(default=None, max_length=255)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    customer: Optional["Customers"] = Relationship()
+
+
 class AiAnalystJob(SQLModel, table=True):
     __tablename__ = "ai_analyst_job"
 
