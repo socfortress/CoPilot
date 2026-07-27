@@ -2,7 +2,7 @@
 	<div class="alerts-list @container">
 		<div ref="header" class="flex items-center justify-between gap-2">
 			<div class="flex items-center gap-2">
-				<div class="flex grow gap-2 @6xl:hidden!">
+				<div class="flex grow gap-2 @7xl:hidden!">
 					<n-popover overlap placement="left">
 						<template #trigger>
 							<div class="bg-default rounded-lg">
@@ -40,7 +40,7 @@
 						</div>
 					</n-popover>
 				</div>
-				<div class="hidden grow items-center gap-1 text-sm @6xl:flex">
+				<div class="hidden grow items-center gap-1 text-sm @7xl:flex">
 					<n-button quaternary size="small" @click="filtersRef?.setFilter([{ type: 'status', value: null }])">
 						<div class="flex items-center gap-2">
 							<span>Total</span>
@@ -88,12 +88,48 @@
 						</div>
 					</n-button>
 				</div>
-				<n-button size="small" text type="error" @click="showDeleteByTitleModal = true">
-					<div class="flex items-center gap-2">
-						<Icon :name="TrashIcon" />
-						<span class="hidden @3xl:inline">Bulk Delete</span>
-					</div>
-				</n-button>
+				<div class="@5xl:hidden!">
+					<n-popover overlap placement="left" display-directive="show">
+						<template #trigger>
+							<div class="bg-default rounded-lg">
+								<n-button size="small">
+									<template #icon>
+										<Icon :name="MenuIcon" />
+									</template>
+								</n-button>
+							</div>
+						</template>
+						<div class="flex flex-col gap-2 py-1">
+							<n-button size="small" secondary type="error" @click="showDeleteByTitleModal = true">
+								<template #icon>
+									<Icon :name="TrashIcon" />
+								</template>
+								Bulk Delete
+							</n-button>
+							<GenerateIncidentReportButton
+								size="small"
+								secondary
+								default-template="analytics"
+								@generated="handleReportGenerated"
+							/>
+						</div>
+					</n-popover>
+				</div>
+
+				<div class="hidden items-center gap-2 @5xl:flex!">
+					<n-button size="small" secondary type="error" @click="showDeleteByTitleModal = true">
+						<template #icon>
+							<Icon :name="TrashIcon" />
+						</template>
+						Bulk Delete
+					</n-button>
+					<GenerateIncidentReportButton
+						size="small"
+						secondary
+						default-template="analytics"
+						@generated="handleReportGenerated"
+					/>
+				</div>
 			</div>
 
 			<div class="flex items-center justify-end gap-2 whitespace-nowrap">
@@ -234,6 +270,28 @@
 			</div>
 		</n-modal>
 
+		<n-modal
+			v-model:show="showReportGeneratedModal"
+			preset="card"
+			title="Report generated"
+			class="max-w-120!"
+			closable
+		>
+			<p class="text-secondary text-sm">
+				The incident report
+				<span v-if="generatedReport?.reportName" class="text-default font-medium">
+					"{{ generatedReport.reportName }}"
+				</span>
+				has been queued for generation. You can track progress in the customer reports list.
+			</p>
+			<template #footer>
+				<div class="flex flex-wrap justify-end gap-2">
+					<n-button @click="showReportGeneratedModal = false">Close</n-button>
+					<n-button type="primary" @click="goToReportsList">Go to reports list</n-button>
+				</div>
+			</template>
+		</n-modal>
+
 		<n-spin :show="loading">
 			<div class="my-3 flex min-h-52 flex-col gap-2">
 				<template v-if="alertsList.length">
@@ -275,6 +333,7 @@ import type { AlertsQuery } from "@/api/endpoints/incidentManagement/alerts"
 import type { ApiError } from "@/types/common"
 import type { Alert } from "@/types/incidentManagement/alerts"
 import type { Case } from "@/types/incidentManagement/cases"
+import type { IncidentReportGeneratedPayload } from "@/types/incidentReports"
 import { useResizeObserver, useStorage } from "@vueuse/core"
 import axios from "axios"
 import _orderBy from "lodash/orderBy"
@@ -299,6 +358,8 @@ import { computed, defineAsyncComponent, nextTick, onBeforeMount, provide, ref, 
 import Api from "@/api"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
+import GenerateIncidentReportButton from "@/components/customers/reporting/GenerateIncidentReportButton.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import AlertItem from "./AlertItem.vue"
 import AlertsFilters from "./AlertsFilters.vue"
@@ -317,7 +378,10 @@ const AlertMergeCaseButton = defineAsyncComponent(() => import("./AlertMergeCase
 
 const FilterIcon = "carbon:filter-edit"
 const TrashIcon = "carbon:trash-can"
+const MenuIcon = "carbon:overflow-menu-horizontal"
 const InfoIcon = "carbon:information"
+
+const { routeCustomer } = useNavigation()
 
 const checkedAlerts = ref<Alert[]>([])
 const checkedNoLinkedAlerts = computed(() => checkedAlerts.value.filter(alert => !alert.linked_cases.length))
@@ -327,6 +391,8 @@ const deleting = ref(false)
 const deletingByTitle = ref(false)
 const showDeleteByTitleModal = ref(false)
 const titleFilterInput = ref("")
+const showReportGeneratedModal = ref(false)
+const generatedReport = ref<IncidentReportGeneratedPayload | null>(null)
 const showFiltersView = useStorage<boolean>("incident-management-alerts-list-filters-view-state", false, localStorage)
 const alertsList = ref<Alert[]>([])
 const availableUsers = ref<string[]>([])
@@ -553,6 +619,17 @@ function deleteAlerts() {
 		.finally(() => {
 			deleting.value = false
 		})
+}
+
+function handleReportGenerated(payload: IncidentReportGeneratedPayload) {
+	generatedReport.value = payload
+	showReportGeneratedModal.value = true
+}
+
+function goToReportsList() {
+	if (!generatedReport.value) return
+	showReportGeneratedModal.value = false
+	routeCustomer({ code: generatedReport.value.customerCode, tab: "Reporting" }).navigate()
 }
 
 function deleteAlertsByTitle() {

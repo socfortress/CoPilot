@@ -208,7 +208,7 @@ async def build_report_context(
     open_cards = [_build_case_card(c) for c in open_cases_rows]
     closed_cards = [_build_case_card(c) for c in closed_cases_rows]
 
-    theme = await resolve_theme(session, request.brand_theme)
+    theme = await resolve_theme(session, request.brand_theme, customer_code=cc)
 
     months = [row["month"] for row in trend]
     show_evolution = len(trend) >= 2

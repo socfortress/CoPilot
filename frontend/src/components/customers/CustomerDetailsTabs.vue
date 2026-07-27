@@ -1,7 +1,8 @@
 <template>
-	<n-tabs type="line" animated :tabs-padding="24" class="h-full">
+	<n-tabs v-model:value="mainTab" type="line" animated :tabs-padding="24" class="h-full">
 		<n-tab-pane name="Customer" tab="Customer" display-directive="show" class="pt-0!">
 			<n-tabs
+				v-model:value="customerSubTab"
 				type="line"
 				animated
 				:tabs-padding="24"
@@ -73,6 +74,9 @@
 				</n-tab-pane>
 				<n-tab-pane name="Reporting" tab="Reporting" display-directive="show:lazy" class="p-4!">
 					<CustomerReporting :customer-code="customer.customer_code" />
+				</n-tab-pane>
+				<n-tab-pane name="Portal Branding" tab="Portal Branding" display-directive="show:lazy" class="p-4!">
+					<CustomerPortalBranding :customer-code="customer.customer_code" />
 				</n-tab-pane>
 				<n-tab-pane v-if="isAdmin" name="Security" tab="Security" display-directive="show:lazy" class="p-4!">
 					<CustomerSecurity :customer-code="customer.customer_code" />
@@ -152,8 +156,9 @@
 <script setup lang="ts">
 import type { Customer, CustomerMeta } from "@/types/customers"
 import { NScrollbar, NTabPane, NTabs } from "naive-ui"
-import { computed, defineAsyncComponent } from "vue"
+import { computed, defineAsyncComponent, ref, watch } from "vue"
 import { useCustomerHealthcheckFilters } from "@/composables/useCustomerHealthcheckFilters"
+import { useRouteQueryParam } from "@/composables/useNavigation"
 import { useAuthStore } from "@/stores/auth"
 
 const props = defineProps<{
@@ -188,6 +193,8 @@ const CustomerAITriggers = defineAsyncComponent(() => import("./aiTriggers/Custo
 const CustomerAiNotifications = defineAsyncComponent(() => import("./aiNotifications/CustomerAiNotifications.vue"))
 const CustomerEventSources = defineAsyncComponent(() => import("./eventSources/CustomerEventSources.vue"))
 const CustomerReporting = defineAsyncComponent(() => import("./reporting/CustomerReporting.vue"))
+// Same component as the global Customer Portal settings page — scoped to one customer.
+const CustomerPortalBranding = defineAsyncComponent(() => import("@/components/customerPortal/Settings.vue"))
 const CustomerSecurity = defineAsyncComponent(() => import("./security/CustomerSecurity.vue"))
 const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWorker.vue"))
 
@@ -201,4 +208,38 @@ const loadingDeleteModel = computed({
 })
 
 const scrollbarClass = computed(() => (props.useMaxHeight ? "max-h-117.5 pr-4" : undefined))
+
+const CUSTOMER_SUB_TABS = new Set([
+	"Info",
+	"Provision",
+	"3rd Party Integrations",
+	"Network Connectors",
+	"Notification Workflows",
+	"AI Triggers",
+	"AI Notifications",
+	"Event Sources",
+	"Reporting",
+	"Portal Branding",
+	"Security"
+])
+
+const MAIN_TABS = new Set(["Customer", "Agents", "Wazuh Worker"])
+
+const tabQuery = useRouteQueryParam("tab")
+const mainTab = ref("Customer")
+const customerSubTab = ref("Info")
+
+watch(
+	tabQuery,
+	tab => {
+		if (!tab) return
+		if (CUSTOMER_SUB_TABS.has(tab)) {
+			mainTab.value = "Customer"
+			customerSubTab.value = tab
+		} else if (MAIN_TABS.has(tab)) {
+			mainTab.value = tab
+		}
+	},
+	{ immediate: true }
+)
 </script>
