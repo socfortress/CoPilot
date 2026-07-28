@@ -57,7 +57,14 @@
 					Delete
 				</n-button>
 
-				<n-button v-if="isEnabled" size="small" type="error" quaternary :loading="toggling" @click="onDisable()">
+				<n-button
+					v-if="isEnabled"
+					size="small"
+					type="error"
+					quaternary
+					:loading="toggling"
+					@click="onDisable()"
+				>
 					<template #icon>
 						<Icon :name="DisableIcon" />
 					</template>
