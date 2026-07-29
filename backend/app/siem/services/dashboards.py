@@ -71,13 +71,19 @@ def get_category_detail(category_id: str) -> DashboardCategoryWithTemplates:
 # ── Enabled dashboards (database) ───────────────────────────────
 
 
+# Newest first, in both the CoPilot UI and the Customer Portal (neither table
+# re-sorts what the API returns). `created_at` only has second resolution, so the
+# id breaks ties between dashboards enabled within the same second.
+_NEWEST_FIRST = (EnabledDashboards.created_at.desc(), EnabledDashboards.id.desc())
+
+
 async def get_enabled_dashboards(
     customer_code: str,
     db: AsyncSession,
 ) -> List[EnabledDashboards]:
     logger.info(f"Fetching enabled dashboards for customer {customer_code}")
     result = await db.execute(
-        select(EnabledDashboards).where(EnabledDashboards.customer_code == customer_code),
+        select(EnabledDashboards).where(EnabledDashboards.customer_code == customer_code).order_by(*_NEWEST_FIRST),
     )
     return result.scalars().all()
 
@@ -95,7 +101,7 @@ async def get_enabled_dashboards_for_customers(
     query = select(EnabledDashboards)
     if "*" not in customer_codes:
         query = query.where(EnabledDashboards.customer_code.in_(customer_codes))
-    result = await db.execute(query)
+    result = await db.execute(query.order_by(*_NEWEST_FIRST))
     return result.scalars().all()
 
 
