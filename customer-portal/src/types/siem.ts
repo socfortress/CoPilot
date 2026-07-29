@@ -29,7 +29,7 @@ export interface FieldMapping {
 	type: string
 }
 
-export type DashboardPanelType = "stat" | "pie" | "bar_h" | "histogram"
+export type DashboardPanelType = "stat" | "pie" | "bar_h" | "histogram" | "table"
 
 export interface DashboardPanel {
 	id: string
@@ -38,7 +38,10 @@ export interface DashboardPanel {
 	w: number
 	h: number
 	lucene: string
+	/** Aggregation field, for `pie` / `bar_h` panels. */
 	field?: string
+	/** Source fields projected by `table` panels. */
+	fields?: string[]
 	size?: number
 }
 
@@ -48,6 +51,9 @@ export interface DashboardTemplate {
 	description: string
 	panels: DashboardPanel[]
 }
+
+/** Reserved `library_card` value used by every dashboard enabled from a custom template. */
+export const CUSTOM_LIBRARY_CARD = "custom"
 
 export interface EnabledDashboard {
 	id: number
@@ -64,6 +70,10 @@ export interface PanelResult {
 	value: number | null
 	labels: string[]
 	data: number[]
+	/** `table` panels only: column keys, in display order. */
+	columns?: string[] | null
+	/** `table` panels only: one object per document, keyed by column. */
+	rows?: Record<string, string | number | boolean | null>[] | null
 	error: string | null
 }
 

@@ -49,6 +49,7 @@
             "group": "SIEM",
             "pages": [
               "user/ui/siem-event-search",
+              "user/ui/siem-custom-dashboards",
               "user/ui/alerts-siem"
             ]
           },

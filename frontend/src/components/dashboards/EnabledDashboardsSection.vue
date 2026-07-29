@@ -34,6 +34,7 @@ import Api from "@/api"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
+import { CUSTOM_LIBRARY_CARD } from "@/types/dashboards"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
@@ -99,7 +100,14 @@ defineExpose({
 
 const enabledColumns = computed<DataTableColumns<EnabledDashboard>>(() => [
 	{ title: "Display Name", key: "display_name", minWidth: 240 },
-	{ title: "Category", key: "library_card", width: 150 },
+	{
+		title: "Category",
+		key: "library_card",
+		width: 150,
+		render(row) {
+			return row.library_card === CUSTOM_LIBRARY_CARD ? "Custom" : row.library_card
+		}
+	},
 	{ title: "Template", key: "template_id", width: 180 },
 	{
 		title: "Event Source",

@@ -63,6 +63,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/common/useNavigation"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
+import { CUSTOM_LIBRARY_CARD } from "@/types/siem"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
@@ -117,7 +118,7 @@ const columns = computed<DataTableColumns<EnabledDashboard>>(() => [
 		title: "Category",
 		key: "library_card",
 		width: 230,
-		render: row => <div>{row.library_card}</div>
+		render: row => <div>{row.library_card === CUSTOM_LIBRARY_CARD ? "Custom" : row.library_card}</div>
 	},
 	{
 		title: "Template",

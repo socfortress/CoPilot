@@ -1,4 +1,11 @@
 import type {
+	CustomDashboard,
+	CustomDashboardCreatePayload,
+	CustomDashboardDefinition,
+	CustomDashboardImportPayload,
+	CustomDashboardPreviewPayload,
+	CustomDashboardPreviewResponse,
+	CustomDashboardUpdatePayload,
 	DashboardCategory,
 	DashboardCategoryWithTemplates,
 	EnableDashboardPayload,
@@ -115,6 +122,53 @@ export default {
 				dashboard_id: dashboardId,
 				timerange
 			},
+			signal ? { signal } : {}
+		)
+	},
+
+	// ── Custom dashboards ───────────────────────────────────────
+	getCustomDashboards(customerCode?: string | null) {
+		return HttpClient.get<FlaskBaseResponse & { custom_dashboards: CustomDashboard[] }>(`/siem/dashboards/custom`, {
+			params: customerCode ? { customer_code: customerCode } : {}
+		})
+	},
+	getCustomDashboard(templateKey: string) {
+		return HttpClient.get<FlaskBaseResponse & { custom_dashboard: CustomDashboard }>(
+			`/siem/dashboards/custom/${templateKey}`
+		)
+	},
+	createCustomDashboard(payload: CustomDashboardCreatePayload) {
+		return HttpClient.post<FlaskBaseResponse & { custom_dashboard: CustomDashboard }>(
+			`/siem/dashboards/custom`,
+			payload
+		)
+	},
+	updateCustomDashboard(templateKey: string, payload: CustomDashboardUpdatePayload) {
+		return HttpClient.put<FlaskBaseResponse & { custom_dashboard: CustomDashboard }>(
+			`/siem/dashboards/custom/${templateKey}`,
+			payload
+		)
+	},
+	deleteCustomDashboard(templateKey: string) {
+		return HttpClient.delete<FlaskBaseResponse & { disabled_dashboards: number }>(
+			`/siem/dashboards/custom/${templateKey}`
+		)
+	},
+	importCustomDashboard(payload: CustomDashboardImportPayload) {
+		return HttpClient.post<FlaskBaseResponse & { custom_dashboard: CustomDashboard }>(
+			`/siem/dashboards/custom/import`,
+			payload
+		)
+	},
+	exportCustomDashboard(templateKey: string) {
+		return HttpClient.get<FlaskBaseResponse & { definition: CustomDashboardDefinition }>(
+			`/siem/dashboards/custom/${templateKey}/export`
+		)
+	},
+	previewCustomDashboard(payload: CustomDashboardPreviewPayload, signal?: AbortSignal) {
+		return HttpClient.post<FlaskBaseResponse & CustomDashboardPreviewResponse>(
+			`/siem/dashboards/custom/preview`,
+			payload,
 			signal ? { signal } : {}
 		)
 	}
