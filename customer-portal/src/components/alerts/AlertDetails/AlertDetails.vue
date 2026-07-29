@@ -29,6 +29,10 @@
 					<AlertIocs :alert />
 				</n-tab-pane>
 
+				<n-tab-pane name="ai-report" tab="AI Report" display-directive="show:lazy">
+					<AlertAiReport :alert-id="alert.id" />
+				</n-tab-pane>
+
 				<n-tab-pane name="comments" :tab="`Comments (${alert.comments?.length || 0})`">
 					<AlertComments
 						:alert
@@ -51,6 +55,7 @@ import { NAlert, NSpin, NTabPane, NTabs } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
+import AlertAiReport from "./AlertAiReport.vue"
 import AlertAssets from "./AlertAssets.vue"
 import AlertCases from "./AlertCases.vue"
 import AlertComments from "./AlertComments.vue"
