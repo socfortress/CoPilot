@@ -119,6 +119,8 @@ The "AI Analyst" feature is a *separate service*: [Talon](https://github.com/tay
 
 **Per-customer auto-trigger** is gated by `incident_management_ai_analyst_trigger_enabled` (one row per customer; default off). Don't fire investigations for a customer whose row is missing or `enabled=false`.
 
+**The Customer Portal reads AI reports through its own routes, never through `/ai_analyst`.** Every route in `app/ai_analyst/routes/` is admin/analyst-scoped *and* performs no per-request tenant check — it trusts the caller. Adding `customer_user` to those scopes would therefore hand every portal user every tenant's investigations. The portal instead uses the auth-scope sidestep pattern (see "Detections Catalog" for the general shape): `app/customer_portal/routes/ai_reports.py` → `services/ai_reports.py` calls the ai_analyst *service* layer directly and applies the portal's own customer + tag visibility on top (`ensure_alert_visible`, `_alert_visibility_filters`). Two consequences to preserve: the portal router is **GET-only** (review submission, palace lessons, replay and Talon chat stay analyst-only by construction), and `app/customer_portal/schema/ai_reports.py` is a deliberately narrower projection than `app/ai_analyst/schema/ai_analyst.py` — job ids, template names and agent error messages never reach an end customer. `tests/test_customer_portal_ai_reports_access.py` locks both in.
+
 ### Database structure
 
 MySQL is the primary store via async SQLAlchemy/SQLModel (`app/db/db_session.py`); SQLite fallback in `backend/settings.py`. MinIO handles object storage (`app/data_store/`). Roughly **80 SQLModel tables** spread across the codebase — the map below is the orientation aid.
