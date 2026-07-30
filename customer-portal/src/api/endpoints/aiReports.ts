@@ -20,7 +20,9 @@ export default {
 	 * The backend enforces the same customer/tag visibility as the alert itself.
 	 */
 	getAlertAnalysis(alertId: number, signal?: AbortSignal) {
-		return HttpClient.get<CommonResponse<AiAlertAnalysis>>(`/customer_portal/ai_reports/alert/${alertId}`, { signal })
+		return HttpClient.get<CommonResponse<AiAlertAnalysis>>(`/customer_portal/ai_reports/alert/${alertId}`, {
+			signal
+		})
 	},
 
 	/**

@@ -131,7 +131,9 @@ function save(value: boolean) {
 		.then(res => {
 			if (res.data.success) {
 				settings.value = res.data.settings
-				message.success(value ? "AI reports enabled for this customer" : "AI reports disabled for this customer")
+				message.success(
+					value ? "AI reports enabled for this customer" : "AI reports disabled for this customer"
+				)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

@@ -2,7 +2,11 @@
 	<n-spin :show="loading" class="min-h-50">
 		<n-alert v-if="error" title="Error" type="error" :description="error" />
 
-		<n-empty v-else-if="!loading && !analysis?.has_analysis" :description="emptyDescription" class="min-h-50 justify-center" />
+		<n-empty
+			v-else-if="!loading && !analysis?.has_analysis"
+			:description="emptyDescription"
+			class="min-h-50 justify-center"
+		/>
 
 		<div v-else-if="analysis?.has_analysis" class="flex flex-col gap-4">
 			<div class="flex flex-wrap items-center gap-2">
@@ -29,7 +33,9 @@
 					size="small"
 					round
 					label="Started"
-					:value="formatDate(investigation.started_at ?? investigation.created_at, dFormats.datetime) as string"
+					:value="
+						formatDate(investigation.started_at ?? investigation.created_at, dFormats.datetime) as string
+					"
 				/>
 				<Chip
 					v-if="investigation?.completed_at"
@@ -81,13 +87,7 @@
 									label="VT Verdict"
 									:value="ioc.vt_verdict"
 								/>
-								<Chip
-									v-if="ioc.vt_score"
-									size="tiny"
-									round
-									label="VT Score"
-									:value="ioc.vt_score"
-								/>
+								<Chip v-if="ioc.vt_score" size="tiny" round label="VT Score" :value="ioc.vt_score" />
 							</div>
 						</template>
 					</CardEntity>
