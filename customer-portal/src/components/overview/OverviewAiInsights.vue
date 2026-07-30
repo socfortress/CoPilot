@@ -5,19 +5,13 @@
 		off) see no empty placeholder on the overview.
 	-->
 	<n-spin v-if="hasInsights" :show="loading">
-		<n-card title="AI Analyst Insights" segmented content-class="flex flex-col gap-4">
+		<n-card title="AI Analyst Insights" segmented content-class="flex flex-col gap-4" size="small">
 			<template #header-extra>
 				<Icon name="carbon:ai-generate" :size="20" class="text-primary" />
 			</template>
 
 			<div class="flex flex-wrap items-center gap-2">
-				<Chip
-					size="small"
-					round
-					:bordered="false"
-					label="Alerts analyzed"
-					:value="insights.total_reports"
-				/>
+				<Chip size="small" round :bordered="false" label="Alerts analyzed" :value="insights.total_reports" />
 				<Chip
 					v-for="(count, severity) of severityBreakdown"
 					:key="severity"

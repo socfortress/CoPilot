@@ -78,6 +78,9 @@
 				<n-tab-pane name="Portal Branding" tab="Portal Branding" display-directive="show:lazy" class="p-4!">
 					<CustomerPortalBranding :customer-code="customer.customer_code" />
 				</n-tab-pane>
+				<n-tab-pane name="AI Report" tab="AI Report" display-directive="show:lazy" class="p-4!">
+					<CustomerPortalAiReport :customer-code="customer.customer_code" />
+				</n-tab-pane>
 				<n-tab-pane v-if="isAdmin" name="Security" tab="Security" display-directive="show:lazy" class="p-4!">
 					<CustomerSecurity :customer-code="customer.customer_code" />
 				</n-tab-pane>
@@ -195,6 +198,8 @@ const CustomerEventSources = defineAsyncComponent(() => import("./eventSources/C
 const CustomerReporting = defineAsyncComponent(() => import("./reporting/CustomerReporting.vue"))
 // Same component as the global Customer Portal settings page — scoped to one customer.
 const CustomerPortalBranding = defineAsyncComponent(() => import("@/components/customerPortal/Settings.vue"))
+// Per-customer switch for the portal's read-only AI Analyst surfaces.
+const CustomerPortalAiReport = defineAsyncComponent(() => import("@/components/customerPortal/AiReportSettings.vue"))
 const CustomerSecurity = defineAsyncComponent(() => import("./security/CustomerSecurity.vue"))
 const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWorker.vue"))
 
@@ -220,6 +225,7 @@ const CUSTOMER_SUB_TABS = new Set([
 	"Event Sources",
 	"Reporting",
 	"Portal Branding",
+	"AI Report",
 	"Security"
 ])
 

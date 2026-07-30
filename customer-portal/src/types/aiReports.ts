@@ -35,8 +35,15 @@ export interface AiInvestigation {
 	completed_at: string | null
 }
 
+export interface AiReportAvailability {
+	customer_code: string | null
+	enabled: boolean
+}
+
 export interface AiAlertAnalysis {
 	alert_id: number
+	/** False when the customer's AI report switch is off — no data is returned at all. */
+	enabled: boolean
 	has_analysis: boolean
 	investigation: AiInvestigation | null
 	report: AiReport | null

@@ -7,10 +7,14 @@ module follows the auth-scope sidestep pattern documented in CLAUDE.md: it calls
 the ai_analyst *service* layer directly and applies the portal's own customer +
 tag visibility rules on top.
 
-Everything here is read-only. Review submission, palace lessons, replay and the
-Talon chat stay analyst-only by construction — there is no write path.
+Everything the portal consumes here is read-only. Review submission, palace
+lessons, replay and the Talon chat stay analyst-only by construction. The one
+write path is the operator-facing per-customer switch
+(``upsert_ai_report_settings``), which admins call from the CoPilot frontend —
+not portal users.
 """
 
+from datetime import datetime
 from typing import Any
 from typing import Dict
 from typing import List
@@ -32,6 +36,7 @@ from app.customer_portal.schema.ai_reports import PortalAiInvestigation
 from app.customer_portal.schema.ai_reports import PortalAiIoc
 from app.customer_portal.schema.ai_reports import PortalAiReport
 from app.db.universal_models import AiAnalystReport
+from app.db.universal_models import CustomerPortalAiReportSettings
 from app.incidents.middleware.tag_access import tag_access_handler
 from app.incidents.models import Alert
 from app.incidents.models import AlertToTag
@@ -39,6 +44,50 @@ from app.middleware.customer_access import customer_access_handler
 
 # Severity bucket used when a report was persisted without an assessment.
 UNKNOWN_SEVERITY = "Unknown"
+
+
+# --- Per-customer AI report switch ---
+#
+# Opt-in: a customer with no row is disabled. Every portal-facing read below
+# goes through one of these, so flipping the switch off hides both surfaces
+# (overview insights card and alert-detail AI Report tab) at once.
+
+
+def _enabled_customer_codes_subquery():
+    """Customer codes whose portal users may read AI analyst findings."""
+    return select(CustomerPortalAiReportSettings.customer_code).where(CustomerPortalAiReportSettings.enabled.is_(True))
+
+
+async def get_ai_report_settings(customer_code: str, session: AsyncSession) -> Optional[CustomerPortalAiReportSettings]:
+    result = await session.execute(
+        select(CustomerPortalAiReportSettings).where(CustomerPortalAiReportSettings.customer_code == customer_code),
+    )
+    return result.scalars().first()
+
+
+async def is_ai_reports_enabled(customer_code: str, session: AsyncSession) -> bool:
+    settings = await get_ai_report_settings(customer_code, session)
+    return bool(settings and settings.enabled)
+
+
+async def upsert_ai_report_settings(
+    customer_code: str,
+    enabled: bool,
+    session: AsyncSession,
+    user_id: Optional[int] = None,
+) -> CustomerPortalAiReportSettings:
+    """Create or update a customer's switch. Caller commits."""
+    settings = await get_ai_report_settings(customer_code, session)
+
+    if settings is None:
+        settings = CustomerPortalAiReportSettings(customer_code=customer_code)
+        session.add(settings)
+
+    settings.enabled = enabled
+    settings.updated_at = datetime.utcnow()
+    settings.updated_by = user_id
+
+    return settings
 
 
 async def _alert_visibility_filters(
@@ -83,6 +132,10 @@ async def _alert_visibility_filters(
             return None
         filters.append(or_(*tag_conditions))
 
+    # Customers whose AI report surface is switched off contribute nothing, even
+    # when the user is otherwise entitled to their alerts.
+    filters.append(Alert.customer_code.in_(_enabled_customer_codes_subquery()))
+
     return filters
 
 
@@ -106,17 +159,51 @@ async def ensure_alert_visible(alert_id: int, user: User, session: AsyncSession)
     return alert
 
 
+async def is_ai_reports_enabled_for_user(
+    user: User,
+    session: AsyncSession,
+    customer_code: Optional[str] = None,
+) -> Tuple[Optional[str], bool]:
+    """Resolve the switch for the customer the portal is about to render.
+
+    With an explicit ``customer_code`` the caller must be entitled to it. Without
+    one, the answer is "enabled for any customer I can see" — which is what a
+    portal user scoped to a single customer actually asks.
+    """
+    if customer_code:
+        if not await customer_access_handler.check_customer_access(user, customer_code, session):
+            raise HTTPException(status_code=403, detail=f"Access denied to customer {customer_code}")
+        return customer_code, await is_ai_reports_enabled(customer_code, session)
+
+    accessible = await customer_access_handler.get_user_accessible_customers(user, session)
+    query = select(func.count()).select_from(CustomerPortalAiReportSettings).where(CustomerPortalAiReportSettings.enabled.is_(True))
+    if "*" not in accessible:
+        if not accessible:
+            return None, False
+        query = query.where(CustomerPortalAiReportSettings.customer_code.in_(accessible))
+
+    return None, bool((await session.execute(query)).scalar_one())
+
+
 async def get_portal_alert_analysis(
     alert_id: int,
     user: User,
     session: AsyncSession,
-) -> Tuple[Optional[PortalAiInvestigation], Optional[PortalAiReport], List[PortalAiIoc]]:
-    """Latest investigation + report + IOCs for an alert, projected for the portal."""
-    await ensure_alert_visible(alert_id, user, session)
+) -> Tuple[bool, Optional[PortalAiInvestigation], Optional[PortalAiReport], List[PortalAiIoc]]:
+    """Latest investigation + report + IOCs for an alert, projected for the portal.
+
+    The leading flag is the customer's AI report switch. When it is off nothing
+    else is read — an operator reading the response can tell "switched off" apart
+    from "no investigation ran", which returning a bare empty payload would hide.
+    """
+    alert = await ensure_alert_visible(alert_id, user, session)
+
+    if not await is_ai_reports_enabled(alert.customer_code, session):
+        return False, None, None, []
 
     job, report, iocs = await get_alert_analysis(alert_id, session)
     if not job:
-        return None, None, []
+        return True, None, None, []
 
     investigation = PortalAiInvestigation(
         status=job.status,
@@ -154,7 +241,7 @@ async def get_portal_alert_analysis(
         for ioc in iocs
     ]
 
-    return investigation, portal_report, portal_iocs
+    return True, investigation, portal_report, portal_iocs
 
 
 def _latest_report_ids_subquery():

@@ -29,7 +29,8 @@
 					<AlertIocs :alert />
 				</n-tab-pane>
 
-				<n-tab-pane name="ai-report" tab="AI Report" display-directive="show:lazy">
+				<!-- Gated by the customer's AI report switch, managed by the SOC in CoPilot. -->
+				<n-tab-pane v-if="aiReportEnabled" name="ai-report" tab="AI Report" display-directive="show:lazy">
 					<AlertAiReport :alert-id="alert.id" />
 				</n-tab-pane>
 
@@ -54,6 +55,7 @@ import type { ApiError } from "@/types/common"
 import { NAlert, NSpin, NTabPane, NTabs } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
+import { useAiReportsAvailability } from "@/composables/common/useAiReportsAvailability"
 import { getApiErrorMessage } from "@/utils"
 import AlertAiReport from "./AlertAiReport.vue"
 import AlertAssets from "./AlertAssets.vue"
@@ -73,6 +75,9 @@ const emit = defineEmits<{
 const alert = ref<Alert | null>(null)
 const detailsError = ref<string | null>(null)
 const loadingDetails = ref(false)
+const aiReportEnabled = ref(false)
+
+const { isEnabledFor } = useAiReportsAvailability()
 
 async function loadAlertDetails() {
 	if (props.alertId === null) return
@@ -91,6 +96,10 @@ async function loadAlertDetails() {
 	} finally {
 		loadingDetails.value = false
 	}
+
+	// Resolved after the alert so the switch is checked against its owning
+	// customer — a portal user may be scoped to more than one.
+	aiReportEnabled.value = alert.value ? await isEnabledFor(alert.value.customer_code) : false
 }
 
 function handleCommentAdded(comment: CommentItem) {
@@ -135,6 +144,7 @@ watch(
 	async newAlertId => {
 		alert.value = null
 		detailsError.value = null
+		aiReportEnabled.value = false
 
 		if (newAlertId !== null) {
 			await loadAlertDetails()

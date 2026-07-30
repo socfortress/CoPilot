@@ -2,11 +2,7 @@
 	<n-spin :show="loading" class="min-h-50">
 		<n-alert v-if="error" title="Error" type="error" :description="error" />
 
-		<n-empty
-			v-else-if="!loading && !analysis?.has_analysis"
-			description="No AI analysis has been performed for this alert"
-			class="min-h-50 justify-center"
-		/>
+		<n-empty v-else-if="!loading && !analysis?.has_analysis" :description="emptyDescription" class="min-h-50 justify-center" />
 
 		<div v-else-if="analysis?.has_analysis" class="flex flex-col gap-4">
 			<div class="flex flex-wrap items-center gap-2">
@@ -137,6 +133,13 @@ let abortController: AbortController | null = null
 
 const report = computed(() => analysis.value?.report ?? null)
 const investigation = computed(() => analysis.value?.investigation ?? null)
+// `enabled: false` only reaches here if the switch was flipped off while this
+// alert was open — the tab itself is already gated on availability.
+const emptyDescription = computed(() =>
+	analysis.value && !analysis.value.enabled
+		? "AI analyst findings are not enabled for this customer"
+		: "No AI analysis has been performed for this alert"
+)
 const investigationPending = computed(
 	() => !!investigation.value && ["pending", "running"].includes(investigation.value.status) && !report.value
 )

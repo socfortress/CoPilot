@@ -169,7 +169,7 @@ export function getAvatar(params: { seed: string; text?: string; size?: number }
 	const text =
 		`<text x="32" y="32" text-anchor="middle" dominant-baseline="central" fill="#ffffff" fill-opacity="0.92" ` +
 		`font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" ` +
-		`font-size="${initials.length === 1 ? 23 : 19}" font-weight="600" letter-spacing="-0.6">${escaped}</text>`
+		`font-size="${initials.length === 1 ? 28 : 23}" font-weight="600" letter-spacing="-0.6">${escaped}</text>`
 
 	return `data:image/svg+xml;utf8,${encodeURIComponent(avatar.svg.replace("</svg>", `${text}</svg>`))}`
 }

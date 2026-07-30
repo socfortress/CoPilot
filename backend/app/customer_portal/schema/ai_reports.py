@@ -47,6 +47,7 @@ class PortalAiInvestigation(BaseModel):
 
 class PortalAiAlertAnalysisResponse(BaseModel):
     alert_id: int
+    enabled: bool = Field(True, description="False when the customer's AI report switch is off — no data is read at all")
     has_analysis: bool = Field(..., description="False when no investigation has ever run for this alert")
     investigation: Optional[PortalAiInvestigation] = None
     report: Optional[PortalAiReport] = None
@@ -62,6 +63,38 @@ class PortalAiInsightAlert(BaseModel):
     severity_assessment: Optional[str] = None
     summary: Optional[str] = None
     report_created_at: datetime
+
+
+class PortalAiReportAvailabilityResponse(BaseModel):
+    """Answers "should the portal render its AI surfaces for this customer?"
+
+    Called by the portal *before* it decides whether to show the AI Report tab,
+    so it stays cheap: no report data, just the switch.
+    """
+
+    customer_code: Optional[str] = None
+    enabled: bool
+    success: bool
+    message: str
+
+
+class PortalAiReportSettings(BaseModel):
+    """Operator-facing view of one customer's AI report switch."""
+
+    customer_code: str
+    enabled: bool
+    updated_at: Optional[str] = None
+    updated_by: Optional[int] = None
+
+
+class PortalAiReportSettingsResponse(BaseModel):
+    settings: PortalAiReportSettings
+    success: bool
+    message: str
+
+
+class UpdatePortalAiReportSettingsRequest(BaseModel):
+    enabled: bool = Field(..., description="Whether the customer's portal users can see AI analyst findings")
 
 
 class PortalAiInsightsResponse(BaseModel):
