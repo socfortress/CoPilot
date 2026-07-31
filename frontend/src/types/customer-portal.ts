@@ -30,6 +30,18 @@ export interface CustomerPortalEffectiveBranding {
 	customer_code: string | null
 }
 
+/**
+ * Per-customer switch for the portal's AI Analyst surfaces (overview insights
+ * card + alert-detail AI Report tab). Opt-in: a customer with no stored row
+ * comes back as `enabled: false`.
+ */
+export interface CustomerPortalAiReportSettings {
+	customer_code: string
+	enabled: boolean
+	updated_at: string | null
+	updated_by: number | null
+}
+
 export interface CustomerPortalBrandingListItem {
 	customer_code: string
 	enabled: boolean

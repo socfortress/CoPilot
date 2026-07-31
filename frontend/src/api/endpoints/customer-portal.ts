@@ -1,4 +1,5 @@
 import type {
+	CustomerPortalAiReportSettings,
 	CustomerPortalBrandingListItem,
 	CustomerPortalBrandingOverride,
 	CustomerPortalEffectiveBranding,
@@ -19,9 +20,17 @@ export interface CustomerPortalBrandingPayload extends CustomerPortalSettingsPay
 	enabled: boolean
 }
 
+export interface CustomerPortalAiReportSettingsPayload {
+	enabled: boolean
+}
+
 type BrandingResponse = FlaskBaseResponse & {
 	override: CustomerPortalBrandingOverride | null
 	effective: CustomerPortalEffectiveBranding | null
+}
+
+type AiReportSettingsResponse = FlaskBaseResponse & {
+	settings: CustomerPortalAiReportSettings
 }
 
 export default {
@@ -47,5 +56,12 @@ export default {
 	},
 	deleteCustomerBranding(customerCode: string) {
 		return HttpClient.delete<BrandingResponse>(`/customer_portal/branding/${customerCode}`)
+	},
+	getCustomerAiReportSettings(customerCode: string) {
+		return HttpClient.get<AiReportSettingsResponse>(`/customer_portal/ai_reports/settings/${customerCode}`)
+	},
+	/** Admin-only: flips both portal AI surfaces for this customer at once. */
+	setCustomerAiReportSettings(customerCode: string, payload: CustomerPortalAiReportSettingsPayload) {
+		return HttpClient.put<AiReportSettingsResponse>(`/customer_portal/ai_reports/settings/${customerCode}`, payload)
 	}
 }

@@ -473,6 +473,33 @@ class CustomerPortalBranding(SQLModel, table=True):
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
 
+class CustomerPortalAiReportSettings(SQLModel, table=True):
+    """Per-customer switch for the Customer Portal's AI Analyst surfaces.
+
+    One flag gates both portal surfaces at once: the "AI Analyst Insights" card
+    on the overview and the "AI Report" tab on alert detail. It is **opt-in** —
+    a customer with no row here does not get either, so AI-written findings are
+    never exposed to an end customer until an operator turns them on.
+
+    Deliberately separate from ``incident_management_ai_analyst_trigger_enabled``:
+    that decides whether investigations *run* for a customer, this decides
+    whether the customer gets to *read* the result. Running investigations for
+    the SOC while keeping them internal is a valid configuration.
+
+    Resolution lives in ``app/customer_portal/services/ai_reports.py``; nothing
+    should read this table directly.
+    """
+
+    __tablename__ = "customer_portal_ai_report_settings"
+
+    id: Optional[int] = Field(primary_key=True)
+    # One row per customer. Hard FK: a setting for a deleted customer is meaningless.
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=50, index=True, unique=True, nullable=False)
+    enabled: bool = Field(default=False, nullable=False)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_by: Optional[int] = Field(default=None)  # User ID who last updated
+
+
 class VulnerabilityReport(SQLModel, table=True):
     __tablename__ = "vulnerability_reports"
 
