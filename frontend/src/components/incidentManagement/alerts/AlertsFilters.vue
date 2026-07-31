@@ -26,7 +26,7 @@
 					size="small"
 					filterable
 					class="w-40!"
-					:loading="loadingAvailableUsers || !usersOptions.length"
+					:loading="loadingAvailableUsers"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
@@ -47,7 +47,7 @@
 					clearable
 					:max-tag-count="2"
 					class="min-w-56!"
-					:loading="loadingCustomers || !customersOptions.length"
+					:loading="loadingCustomers"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
@@ -65,7 +65,7 @@
 					size="small"
 					filterable
 					class="w-44!"
-					:loading="loadingConfiguredSources || !sourcesOptions.length"
+					:loading="loadingConfiguredSources"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
@@ -251,6 +251,8 @@ function setFilter(newFilters: AlertsListFilter[]) {
 			filters.value.push(newFilter)
 		}
 	}
+
+	loadOptionsForFilters()
 	submit()
 }
 
@@ -364,6 +366,25 @@ function applyGlobalCustomerCodeFilter() {
 	return true
 }
 
+/**
+ * Filter chips can appear without the "Add filter" dropdown ever opening — restored from the
+ * query string, seeded from the global customer filter, or pushed by live sync. Fetch the option
+ * lists those chips need, otherwise they render as bare codes with no way to change them.
+ */
+function loadOptionsForFilters() {
+	const types = new Set(filters.value.map(f => f.type))
+
+	if (types.has("assignedTo") && !availableUsers.value.length) {
+		getAvailableUsers()
+	}
+	if (types.has("customerCode") && !customersList.value.length) {
+		getCustomers()
+	}
+	if (types.has("source") && !configuredSourcesList.value.length) {
+		getConfiguredSources()
+	}
+}
+
 function load() {
 	if (!availableUsers.value.length) {
 		getAvailableUsers()
@@ -385,6 +406,7 @@ onBeforeMount(() => {
 	}
 
 	if (filters.value.length) {
+		loadOptionsForFilters()
 		submit()
 	}
 })
