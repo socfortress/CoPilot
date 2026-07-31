@@ -392,7 +392,9 @@ onBeforeMount(() => {
 // A preset locks the list to a fixed scope (embedded usages) — never live-sync those.
 // setFilter() already upserts-or-deletes and submits, so a null value clears the filter.
 if (!preset?.length) {
-	onGlobalCustomerFilterChange(codes => setFilter([{ type: "customerCode", value: codes.length ? [...codes] : null }]))
+	onGlobalCustomerFilterChange(codes =>
+		setFilter([{ type: "customerCode", value: codes.length ? [...codes] : null }])
+	)
 }
 
 defineExpose({ setFilter })
