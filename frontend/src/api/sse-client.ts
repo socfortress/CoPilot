@@ -4,14 +4,23 @@ import { HttpClient } from "./http-client"
 
 const TRAILING_SLASH_REGEX = /\/$/
 
-/** Converte Record<string, string | number> in query string, escludendo undefined/null */
-function paramsToQueryString(params?: Record<string, string | number | undefined>): string {
+/** Converte Record<string, string | number | string[]> in query string, escludendo undefined/null */
+function paramsToQueryString(params?: Record<string, string | number | string[] | undefined>): string {
 	if (!params || Object.keys(params).length === 0) {
 		return ""
 	}
 	const search = new URLSearchParams()
 	for (const [key, value] of Object.entries(params)) {
-		if (value !== undefined && value !== null) {
+		if (value === undefined || value === null) {
+			continue
+		}
+		// Arrays become repeated params (?k=a&k=b) — the shape FastAPI expects for List[str],
+		// not the comma-joined string String(value) would produce.
+		if (Array.isArray(value)) {
+			for (const item of value) {
+				search.append(key, item)
+			}
+		} else {
 			search.append(key, String(value))
 		}
 	}
@@ -26,8 +35,8 @@ export interface SSEClientOptions {
 	method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
 	/** Base URL (default: HttpClient.baseURL ovvero "/api") */
 	baseURL?: string
-	/** Parametri convertiti automaticamente in query string */
-	params?: Record<string, string | number | undefined>
+	/** Parametri convertiti automaticamente in query string (gli array diventano param ripetuti) */
+	params?: Record<string, string | number | string[] | undefined>
 	/** Handler per tipo di evento. Chiave = nome evento SSE (es. "start", "agent_result") + onOpen, onMessage, onError */
 	handlers: Record<string, (data: unknown) => void> & {
 		onOpen?: (response: Response) => void | Promise<void>

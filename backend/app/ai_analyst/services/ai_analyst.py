@@ -364,7 +364,7 @@ async def list_iocs_by_customer(
 
 async def list_alerts_with_reports(
     session: AsyncSession,
-    customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
 ) -> List[AlertWithReportResponse]:
     """Return all alerts that have at least one AI analyst report."""
     query = (
@@ -372,8 +372,8 @@ async def list_alerts_with_reports(
         .join(AiAnalystReport, AiAnalystReport.alert_id == Alert.id)
         .order_by(AiAnalystReport.created_at.desc())
     )
-    if customer_code:
-        query = query.where(Alert.customer_code == customer_code)
+    if customer_codes:
+        query = query.where(Alert.customer_code.in_(customer_codes))
 
     result = await session.execute(query)
     rows = result.all()

@@ -4,7 +4,8 @@ export type VulnerabilitiesFilterTypes = keyof Omit<VulnerabilitySearchQuery, "p
 
 export interface VulnerabilitiesListFilter {
 	type: VulnerabilitiesFilterTypes
-	value: string | null
+	/** ``customer_codes`` holds a list; every other filter is scalar. */
+	value: string | string[] | null
 }
 
 export interface VulnerabilitySeverityCounts {

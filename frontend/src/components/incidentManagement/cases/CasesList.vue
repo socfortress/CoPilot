@@ -260,7 +260,7 @@ const props = defineProps<{ highlight?: string | null; preset?: CasesListFilter;
 const { highlight, preset, hideFilters } = toRefs(props)
 
 const message = useMessage()
-const { globalCustomerCode } = useGlobalCustomerFilter()
+const { globalCustomerCode, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 const { routeCustomer } = useNavigation()
 const loading = ref(false)
 const showFilters = ref(false)
@@ -380,6 +380,38 @@ function resetFilters() {
 	filters.value.type = undefined
 	showFilters.value = false
 	getData()
+}
+
+// Unlike the other lists this one holds a single {type, value} filter, so it can't reuse a
+// setFilter() upsert. Type is assigned first because the `filters.value.type` watcher wipes
+// the value.
+function syncGlobalCustomerCodeFilter(codes: string[]) {
+	const code = codes[0] || null
+
+	if (!code) {
+		if (filters.value.type === "customerCode") {
+			filters.value.type = undefined
+			filters.value.value = undefined
+			getData()
+		}
+		return
+	}
+
+	if (filters.value.type === "customerCode" && filters.value.value === code) {
+		return
+	}
+
+	filters.value.type = "customerCode"
+
+	nextTick(() => {
+		filters.value.value = code
+		getData()
+	})
+}
+
+// A preset locks the list to a fixed scope (embedded usages) — never live-sync those.
+if (!preset.value) {
+	onGlobalCustomerFilterChange(syncGlobalCustomerCodeFilter)
 }
 
 function handleReportGenerated(payload: IncidentReportGeneratedPayload) {

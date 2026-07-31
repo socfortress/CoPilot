@@ -28,7 +28,7 @@ async def list_audit_logs(
     action: Optional[str] = None,
     entity_type: Optional[str] = None,
     entity_id: Optional[str] = None,
-    customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
     result: Optional[str] = None,
     start_time: Optional[datetime] = None,
     end_time: Optional[datetime] = None,
@@ -51,8 +51,8 @@ async def list_audit_logs(
         filters.append(AuditLog.entity_type == entity_type)
     if entity_id:
         filters.append(AuditLog.entity_id == entity_id)
-    if customer_code:
-        filters.append(AuditLog.customer_code == customer_code)
+    if customer_codes:
+        filters.append(AuditLog.customer_code.in_(customer_codes))
     if result:
         filters.append(AuditLog.result == result)
     if start_time is not None:

@@ -81,7 +81,7 @@ import CaseTemplateEditor from "./CaseTemplateEditor.vue"
 
 const message = useMessage()
 const dialog = useDialog()
-const { globalCustomerCodes } = useGlobalCustomerFilter()
+const { globalCustomerCodes, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 const { routeIncidentManagementCaseTemplate } = useNavigation()
 
 const dFormats = useSettingsStore().dateFormat
@@ -344,28 +344,24 @@ function onTemplateSaved() {
 	fetchTemplates()
 }
 
-function applyGlobalCustomerCodeFilter() {
-	if (customerFilter.value) {
-		return false
-	}
-	const codes = globalCustomerCodes.value
-	if (!codes.length) {
-		return false
-	}
-	customerFilter.value = codes[0]
-}
-
 // Re-fetch when scope filters change so the result set follows the
 // backend's customer+source filtering semantics.
 watch([customerFilter, sourceFilter, includeGlobal], () => {
 	fetchTemplates()
 })
 
+// The watcher above turns the assignment into a re-fetch.
+onGlobalCustomerFilterChange(codes => {
+	customerFilter.value = codes[0] || null
+})
+
 onBeforeMount(() => {
-	fetchTemplates()
 	getCustomers()
 	getConfiguredSources()
-	applyGlobalCustomerCodeFilter()
+	// Seed the filter before the initial fetch. When it changes the watcher fires too, but
+	// fetchTemplates is debounced so both paths collapse into one already-filtered request.
+	customerFilter.value = globalCustomerCodes.value[0] || null
+	fetchTemplates()
 })
 
 defineExpose({

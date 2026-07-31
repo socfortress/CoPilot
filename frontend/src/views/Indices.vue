@@ -55,6 +55,7 @@ import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import type { IndexStats } from "@/types/indices"
 import axios from "axios"
+import _isEqual from "lodash/isEqual"
 import { NCard, NFormItem, NSelect, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, onBeforeUnmount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
@@ -72,7 +73,7 @@ const TopIndices = defineAsyncComponent(() => import("@/components/indices/TopIn
 
 const message = useMessage()
 const route = useRoute()
-const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
+const { applyGlobalCustomerPrefill, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 const indices = ref<IndexStats[] | null>(null)
 const loadingIndex = ref(false)
 const loadingCustomers = ref(false)
@@ -181,6 +182,13 @@ watch(
 	},
 	{ immediate: true }
 )
+
+// The only view with a multi-select, so the whole selection carries over rather than codes[0].
+onGlobalCustomerFilterChange(codes => {
+	if (!_isEqual(codes, customerCodesFilter.value)) {
+		customerCodesFilter.value = [...codes]
+	}
+})
 
 onBeforeUnmount(() => {
 	cancelGetIndices()

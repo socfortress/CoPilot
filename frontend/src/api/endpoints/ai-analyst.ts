@@ -104,9 +104,10 @@ export default {
 	},
 
 	// Alerts with reports
-	getAlertsWithReports(customerCode?: string) {
+	getAlertsWithReports(customerCodes?: string[]) {
 		return HttpClient.get<FlaskBaseResponse & { alerts: AlertWithReport[] }>(`/ai_analyst/alerts_with_reports`, {
-			params: customerCode ? { customer_code: customerCode } : {}
+			params: customerCodes?.length ? { customer_codes: customerCodes } : {},
+			paramsSerializer: { indexes: null }
 		})
 	},
 	getAlertWithReportByAlertId(alertId: number, signal?: AbortSignal) {
