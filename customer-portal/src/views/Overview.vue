@@ -6,6 +6,8 @@
 			<div class="@container flex grow flex-col gap-6 overflow-hidden">
 				<OverviewStatsCards />
 
+				<OverviewAiInsights class="shrink-0" />
+
 				<div class="flex max-h-full grow flex-col overflow-hidden">
 					<div class="flex grow flex-col gap-6 overflow-hidden @2xl:flex-row">
 						<div class="max-h-full basis-1/2 overflow-hidden">
@@ -41,6 +43,7 @@ import type { ApiError } from "@/types/common"
 import { NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import OverviewAiInsights from "@/components/overview/OverviewAiInsights.vue"
 import OverviewRecentAlerts from "@/components/overview/OverviewRecentAlerts.vue"
 import OverviewRecentCases from "@/components/overview/OverviewRecentCases.vue"
 import OverviewStatsCards from "@/components/overview/OverviewStatsCards.vue"
