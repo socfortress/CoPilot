@@ -2,6 +2,7 @@ import json
 from typing import Any
 from typing import AsyncGenerator
 from typing import Dict
+from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
@@ -40,6 +41,7 @@ from app.agents.sca.services.sca import stream_sca_for_all_agents
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
+from app.middleware.customer_query import customer_codes_query
 
 # Create router for SCA overview endpoints
 sca_router = APIRouter()
@@ -108,7 +110,7 @@ async def search_sca_results_overview(
     - **page_size**: Results per page (1-1000, default: 50)
 
     Args:
-        customer_code: Optional customer code filter
+        customer_codes: Optional filter by one or more customer codes
         agent_name: Optional agent hostname filter
         policy_id: Optional policy ID filter (exact match)
         policy_name: Optional policy name filter (partial matching)
@@ -388,7 +390,7 @@ async def generate_sca_report(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def list_reports(
-    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     db: AsyncSession = Depends(get_db),
     current_user: User = Security(AuthHandler().get_current_user),
 ) -> SCAReportListResponse:
@@ -434,13 +436,13 @@ async def list_reports(
     Returns:
         SCAReportListResponse: List of available reports
     """
-    logger.info(f"Listing SCA reports for customer: {customer_code or 'all accessible'}")
+    logger.info(f"Listing SCA reports for customers: {customer_codes or 'all accessible'}")
 
     try:
         result = await list_sca_reports(
             db_session=db,
             current_user=current_user,
-            customer_code=customer_code,
+            customer_codes=customer_codes,
         )
         return result
 

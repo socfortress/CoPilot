@@ -18,21 +18,18 @@
 				</div>
 
 				<div class="mt-5 mb-5 text-xl">Global customers filter</div>
-				<div class="flex flex-col md:flex-row md:gap-6">
-					<n-form-item label="Live sync" path="customerFilterLiveSync" class="basis-2/3">
-						<div class="flex flex-col gap-2">
-							<n-switch v-model:value="formValue.customerFilterLiveSync">
-								<template #checked>Enabled</template>
-								<template #unchecked>Disabled</template>
-							</n-switch>
-							<div class="text-secondary text-sm">
-								When enabled, every view that supports the global customers filter re-applies it — and
-								reloads its data — as soon as you change the selection in the sidebar. When disabled,
-								the global filter is only applied when you open the view.
-							</div>
-						</div>
-					</n-form-item>
-				</div>
+				<n-form-item label="Live sync" path="customerFilterLiveSync">
+					<div class="flex items-center gap-3">
+						<n-switch v-model:value="formValue.customerFilterLiveSync" />
+						<span class="text-secondary text-xs">
+							{{
+								formValue.customerFilterLiveSync
+									? "Views reload as soon as you change the sidebar selection"
+									: "The global filter is applied only when you open a view"
+							}}
+						</span>
+					</div>
+				</n-form-item>
 
 				<n-form-item>
 					<n-button type="primary" @click="save()">Save</n-button>

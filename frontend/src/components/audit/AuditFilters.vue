@@ -66,11 +66,22 @@
 				</n-button>
 			</n-input-group>
 
-			<n-input-group
-				v-if="filter.type === 'customer_code' && (typeof filter.value === 'string' || filter.value === null)"
-			>
+			<n-input-group v-if="filter.type === 'customer_code'">
 				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
-				<n-input v-model:value="filter.value" autosize placeholder="Input..." size="small" class="min-w-40!" />
+				<n-select
+					:value="customerFilterValue(filter)"
+					:options="customersOptions"
+					placeholder="Select..."
+					size="small"
+					multiple
+					filterable
+					clearable
+					class="min-w-56!"
+					:max-tag-count="2"
+					:consistent-menu-width="false"
+					:loading="loadingCustomers"
+					@update:value="filter.value = $event"
+				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
 						<Icon :name="DelIcon" />
@@ -140,6 +151,7 @@
 <script setup lang="ts">
 import type { AuditFilterTypes, AuditListFilter, AuditListFilterValue } from "./types"
 import type { ApiError } from "@/types/common"
+import type { Customer } from "@/types/customers"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
 import { NButton, NDatePicker, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
@@ -165,9 +177,14 @@ const message = useMessage()
 const { globalCustomerCodes, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 
 const loadingVocabularies = ref(false)
+const loadingCustomers = ref(false)
+const customersList = ref<Customer[]>([])
 const actionsList = ref<string[]>([])
 const resultsList = ref<string[]>([])
 
+const customersOptions = computed(() =>
+	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
+)
 const actionOptions = computed(() => actionsList.value.map(a => ({ label: a, value: a })))
 const resultOptions = computed(() => resultsList.value.map(r => ({ label: r, value: r })))
 
@@ -196,9 +213,20 @@ function getFilterLabel(type: AuditFilterTypes): string {
 	return typeOptions.find(o => o.value === type)?.label || type
 }
 
+/** The customer filter is multi-valued; anything else stored there is treated as empty. */
+function customerFilterValue(filter: AuditListFilter): string[] {
+	return Array.isArray(filter.value) && filter.value.every(v => typeof v === "string")
+		? (filter.value as string[])
+		: []
+}
+
 function dateRangeValue(filter: AuditListFilter): [number, number] | null {
+	// Array values are now either a date range or the customer_code list — check the shape,
+	// not just Array.isArray.
 	if (filter.type !== "dateRange" || !Array.isArray(filter.value)) return null
-	return filter.value
+
+	const [from, to] = filter.value
+	return typeof from === "number" && typeof to === "number" ? [from, to] : null
 }
 
 function setDateRangeValue(filter: AuditListFilter, value: [number, number] | null) {
@@ -219,6 +247,12 @@ function parseQueryValue(type: AuditFilterTypes, raw: string | string[]): AuditL
 			return parts as [number, number]
 		}
 		return null
+	}
+
+	if (type === "customer_code") {
+		// Repeated params arrive as an array, a lone one as a string — normalize to an array.
+		const codes = (Array.isArray(raw) ? raw : [raw]).filter(Boolean)
+		return codes.length ? codes : null
 	}
 
 	return (Array.isArray(raw) ? raw[0] : raw) || null
@@ -266,11 +300,12 @@ function setQueryString() {
 
 	const query = filters.value
 		.filter(filter => filter.value)
-		.reduce<Record<string, string>>((acc, filter) => {
+		.filter(filter => !Array.isArray(filter.value) || filter.value.length)
+		.reduce<Record<string, string | string[]>>((acc, filter) => {
 			if (filter.type === "dateRange" && Array.isArray(filter.value)) {
 				acc[filter.type] = filter.value.join(",")
 			} else {
-				acc[filter.type] = filter.value as string
+				acc[filter.type] = filter.value as string | string[]
 			}
 			return acc
 		}, {})
@@ -288,6 +323,26 @@ function getQueryString() {
 			value: parseQueryValue(type, value)
 		}))
 		.filter(filter => filter.value !== null)
+}
+
+function getCustomers() {
+	loadingCustomers.value = true
+
+	Api.customers
+		.getCustomers()
+		.then(res => {
+			if (res.data.success) {
+				customersList.value = res.data?.customers || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingCustomers.value = false
+		})
 }
 
 function getVocabularies() {
@@ -313,6 +368,9 @@ function load() {
 	if (!actionsList.value.length || !resultsList.value.length) {
 		getVocabularies()
 	}
+	if (!customersList.value.length) {
+		getCustomers()
+	}
 }
 
 function applyGlobalCustomerCodeFilter() {
@@ -323,7 +381,7 @@ function applyGlobalCustomerCodeFilter() {
 	if (!codes.length) {
 		return false
 	}
-	filters.value.push({ type: "customer_code", value: codes[0] })
+	filters.value.push({ type: "customer_code", value: [...codes] })
 	return true
 }
 
@@ -336,6 +394,7 @@ onBeforeMount(() => {
 	}
 
 	if (filters.value.length) {
+		load()
 		submit()
 	}
 })
@@ -343,7 +402,9 @@ onBeforeMount(() => {
 // A preset locks the list to a fixed scope (embedded usages) — never live-sync those.
 // setFilter() already upserts-or-deletes and submits, so a null value clears the filter.
 if (!preset?.length) {
-	onGlobalCustomerFilterChange(codes => setFilter([{ type: "customer_code", value: codes[0] ?? null }]))
+	onGlobalCustomerFilterChange(codes =>
+		setFilter([{ type: "customer_code", value: codes.length ? [...codes] : null }])
+	)
 }
 
 defineExpose({ setFilter })

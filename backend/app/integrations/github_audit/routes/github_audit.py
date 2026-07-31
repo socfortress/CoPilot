@@ -1,5 +1,6 @@
 from datetime import datetime
 from datetime import timezone
+from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
@@ -40,6 +41,7 @@ from app.integrations.github_audit.schema.github_audit import GitHubAuditRespons
 from app.integrations.github_audit.schema.github_audit import GitHubAuditSummaryResponse
 from app.integrations.github_audit.services.github_audit import run_github_audit
 from app.integrations.github_audit.services.github_audit import run_github_audit_summary
+from app.middleware.customer_query import customer_codes_query
 
 github_audit_router = APIRouter()
 
@@ -114,14 +116,14 @@ async def create_config(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_configs(
-    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     session: AsyncSession = Depends(get_db),
 ) -> GitHubAuditConfigResponse:
-    """Get all GitHub Audit configurations, optionally filtered by customer."""
+    """Get all GitHub Audit configurations, optionally filtered by one or more customers."""
     query = select(GitHubAuditConfig)
 
-    if customer_code:
-        query = query.where(GitHubAuditConfig.customer_code == customer_code)
+    if customer_codes:
+        query = query.where(GitHubAuditConfig.customer_code.in_(customer_codes))
 
     result = await session.execute(query)
     configs = result.scalars().all()

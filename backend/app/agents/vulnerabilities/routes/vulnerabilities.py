@@ -64,6 +64,7 @@ from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.db.db_session import get_db_session
 from app.db.universal_models import VulnerabilityReport
+from app.middleware.customer_query import customer_codes_query
 
 # Create router for vulnerability endpoints
 vulnerabilities_router = APIRouter()
@@ -657,7 +658,7 @@ async def generate_report_background(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def list_reports(
-    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> VulnerabilityReportListResponse:
@@ -673,14 +674,14 @@ async def list_reports(
     - Filters by customer if specified
 
     Args:
-        customer_code: Optional filter by customer code
+        customer_codes: Optional filter by one or more customer codes
         current_user: Current authenticated user
         db: Database session
 
     Returns:
         VulnerabilityReportListResponse with list of available reports
     """
-    return await list_vulnerability_reports(db, current_user, customer_code)
+    return await list_vulnerability_reports(db, current_user, customer_codes)
 
 
 @vulnerabilities_router.get(

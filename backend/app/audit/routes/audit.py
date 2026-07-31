@@ -5,6 +5,7 @@ Read-only: there is no create/update/delete here. Audit rows are written only by
 intent (no purge/edit endpoint — retention is a policy decision, not an API).
 """
 from datetime import datetime
+from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
@@ -22,6 +23,7 @@ from app.audit.services.query import get_audit_log_by_id
 from app.audit.services.query import list_audit_logs
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.middleware.customer_query import customer_codes_query
 
 audit_router = APIRouter()
 
@@ -58,7 +60,7 @@ async def get_audit_logs(
     action: Optional[str] = Query(None, description="Filter by action, e.g. 'agent.delete'"),
     entity_type: Optional[str] = Query(None, description="Filter by entity type, e.g. 'agent'"),
     entity_id: Optional[str] = Query(None, description="Filter by entity id (exact)"),
-    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     result: Optional[str] = Query(None, description="Filter by result: success | failure"),
     start_time: Optional[datetime] = Query(None, description="Only entries at/after this UTC time"),
     end_time: Optional[datetime] = Query(None, description="Only entries at/before this UTC time"),
@@ -74,7 +76,7 @@ async def get_audit_logs(
         action=action,
         entity_type=entity_type,
         entity_id=entity_id,
-        customer_code=customer_code,
+        customer_codes=customer_codes,
         result=result,
         start_time=start_time,
         end_time=end_time,

@@ -1793,7 +1793,7 @@ async def generate_vulnerability_csv_report(
 async def list_vulnerability_reports(
     db_session: AsyncSession,
     current_user: User,
-    customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
 ) -> VulnerabilityReportListResponse:
     """
     List available vulnerability reports
@@ -1801,7 +1801,7 @@ async def list_vulnerability_reports(
     Args:
         db_session: Database session
         current_user: Current authenticated user
-        customer_code: Optional filter by customer code
+        customer_codes: Optional filter by one or more customer codes
 
     Returns:
         VulnerabilityReportListResponse with list of reports
@@ -1817,15 +1817,19 @@ async def list_vulnerability_reports(
         if "*" not in accessible_customers:
             query = query.filter(VulnerabilityReport.customer_code.in_(accessible_customers))
 
-        if customer_code:
-            if "*" not in accessible_customers and customer_code not in accessible_customers:
-                return VulnerabilityReportListResponse(
-                    reports=[],
-                    total_count=0,
-                    success=True,
-                    message=f"Access denied to customer {customer_code}",
-                )
-            query = query.filter(VulnerabilityReport.customer_code == customer_code)
+        if customer_codes:
+            # Deny rather than silently narrowing — matches the single-customer behavior
+            # this replaced, so a caller asking for a customer it cannot see still knows.
+            if "*" not in accessible_customers:
+                denied = [code for code in customer_codes if code not in accessible_customers]
+                if denied:
+                    return VulnerabilityReportListResponse(
+                        reports=[],
+                        total_count=0,
+                        success=True,
+                        message=f"Access denied to customer {', '.join(denied)}",
+                    )
+            query = query.filter(VulnerabilityReport.customer_code.in_(customer_codes))
 
         result = await db_session.execute(query)
         reports = result.scalars().all()

@@ -7,6 +7,7 @@ export default {
 	getAuditLogs(filters?: AuditLogFilters, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & AuditLogsListResponse>("/audit", {
 			params: filters,
+			paramsSerializer: { indexes: null },
 			signal
 		})
 	},

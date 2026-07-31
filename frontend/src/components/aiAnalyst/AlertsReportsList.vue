@@ -12,9 +12,11 @@
 				<n-select
 					v-model:value="customerFilter"
 					size="small"
+					multiple
 					clearable
 					placeholder="All customers"
 					:options="customerOptions"
+					:max-tag-count="2"
 					:show-checkmark="false"
 					class="min-w-40"
 					:disabled="loading"
@@ -54,6 +56,7 @@
 
 <script setup lang="ts">
 import type { AlertWithReport } from "@/types/ai-analyst"
+import _isEqual from "lodash/isEqual"
 import { NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
@@ -65,7 +68,7 @@ const message = useMessage()
 const { getAvailableGlobalCustomerValue, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 const loading = ref(false)
 const alertsList = ref<AlertWithReport[]>([])
-const customerFilter = ref<string | null>(null)
+const customerFilter = ref<string[]>([])
 
 const sort = ref<"desc" | "asc">("desc")
 const sortOptions = [
@@ -93,7 +96,7 @@ function getData() {
 	loading.value = true
 
 	return Api.aiAnalyst
-		.getAlertsWithReports(customerFilter.value || undefined)
+		.getAlertsWithReports(customerFilter.value)
 		.then(res => {
 			if (res.data.success) {
 				alertsList.value = res.data?.alerts || []
@@ -115,19 +118,24 @@ function getData() {
 // options prop identity changes (our computed returns a new array each time
 // alertsList updates) — that created a feedback loop: fetch → options ref
 // changes → update:value fires → fetch again.
-watch(customerFilter, () => {
+watch(customerFilter, (current, previous) => {
+	if (_isEqual(current, previous)) return
 	getData()
 })
 
 onBeforeMount(() => {
 	getData().then(() => {
-		customerFilter.value =
-			getAvailableGlobalCustomerValue(Array.from(new Set(alertsList.value.map(a => a.customer_code)))) || null
+		// Intersect with the customers that actually have reports — the picker is built from
+		// the fetched list, so a code with no runs would render as a dangling tag.
+		customerFilter.value = getAvailableGlobalCustomerValue(
+			Array.from(new Set(alertsList.value.map(a => a.customer_code))),
+			true
+		)
 	})
 })
 
 // The customerFilter watcher above turns the assignment into a refetch.
 onGlobalCustomerFilterChange(codes => {
-	customerFilter.value = codes[0] || null
+	customerFilter.value = [...codes]
 })
 </script>
