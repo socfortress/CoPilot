@@ -162,7 +162,7 @@ const AddIcon = "carbon:add"
 const DelIcon = "carbon:delete"
 
 const message = useMessage()
-const { globalCustomerCodes } = useGlobalCustomerFilter()
+const { globalCustomerCodes, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 const loadingCustomers = ref(false)
 const customersList = ref<Customer[]>([])
 
@@ -274,24 +274,30 @@ function loadCustomers() {
 		})
 }
 
-function applyGlobalCustomerCodeFilter() {
-	if (filters.value.some(f => f.type === "customer_code" && f.value)) {
-		return false
-	}
-	const codes = globalCustomerCodes.value
-	if (!codes.length) {
-		return false
-	}
-	filters.value.push({ type: "customer_code", value: codes[0] })
-	return true
-}
-
 onBeforeMount(() => {
-	if (globalCustomerCodes.value.length) {
-		applyGlobalCustomerCodeFilter()
-		loadCustomers()
-		submit()
+	const code = globalCustomerCodes.value[0]
+	if (!code) return
+
+	filters.value.push({ type: "customer_code", value: code })
+	loadCustomers()
+	submit()
+})
+
+onGlobalCustomerFilterChange(codes => {
+	const code = codes[0] ?? null
+
+	if (!code) {
+		// delFilter() submits on its own, so routing the clear through setFilter() would submit
+		// twice and restart the SSE twice. Nothing to clear = nothing to restart.
+		if (filters.value.some(f => f.type === "customer_code")) {
+			delFilter("customer_code")
+		}
+		return
 	}
+
+	// Idempotent (no-ops once the list is in memory) and only needed to label the filter chip.
+	loadCustomers()
+	setFilter([{ type: "customer_code", value: code }])
 })
 
 defineExpose({ setFilter })

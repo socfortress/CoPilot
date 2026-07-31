@@ -1,3 +1,5 @@
+import type { WatchStopHandle } from "vue"
+import { watchDebounced } from "@vueuse/core"
 import { computed } from "vue"
 import { useCustomerFilterStore } from "@/stores/customer-filter"
 
@@ -36,11 +38,44 @@ export function useGlobalCustomerFilter() {
 		return multiple ? codes : codes[0]
 	}
 
+	/**
+	 * Live-sync hook for views that own a local customer filter.
+	 *
+	 * Fires `callback` with the new selection every time the global filter changes, but ONLY
+	 * while the user preference is enabled (Profile → Settings → "Live sync"). With the
+	 * preference off the callback never runs and the view keeps its mount-time-only behavior.
+	 *
+	 * The contract every call site implements: **the global filter wins over the local one**,
+	 * because changing the sidebar select is an explicit user action. Views whose local filter
+	 * is optional clear it when the global selection is emptied; views that cannot render
+	 * without a customer keep the current one and say so in a one-line comment.
+	 *
+	 * Debounced because the sidebar multi-select writes the store on every tag add/remove —
+	 * without it, scoping to three customers would fire three rounds of refetches. Kept short
+	 * (150ms) because some views debounce their own fetch on top of this one and the two delays
+	 * stack: `caseTemplates/CaseTemplatesTable.vue` adds another 400ms.
+	 *
+	 * Must be called during component setup so the watcher is disposed with the view.
+	 */
+	function onGlobalCustomerFilterChange(callback: (codes: string[]) => void): WatchStopHandle {
+		return watchDebounced(
+			// join() so the watcher compares content, not the array identity Pinia hands back
+			() => globalCustomerCodes.value.join(","),
+			() => {
+				if (store.liveSync) {
+					callback([...globalCustomerCodes.value])
+				}
+			},
+			{ debounce: 150 }
+		)
+	}
+
 	return {
 		globalCustomerCodes,
 		globalCustomerCode,
 		isFiltering,
 		applyGlobalCustomerPrefill,
-		getAvailableGlobalCustomerValue
+		getAvailableGlobalCustomerValue,
+		onGlobalCustomerFilterChange
 	}
 }

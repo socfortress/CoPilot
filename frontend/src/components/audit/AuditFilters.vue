@@ -162,7 +162,7 @@ const DelIcon = "carbon:delete"
 const router = useRouter()
 const route = useRoute()
 const message = useMessage()
-const { globalCustomerCodes } = useGlobalCustomerFilter()
+const { globalCustomerCodes, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 
 const loadingVocabularies = ref(false)
 const actionsList = ref<string[]>([])
@@ -339,6 +339,12 @@ onBeforeMount(() => {
 		submit()
 	}
 })
+
+// A preset locks the list to a fixed scope (embedded usages) — never live-sync those.
+// setFilter() already upserts-or-deletes and submits, so a null value clears the filter.
+if (!preset?.length) {
+	onGlobalCustomerFilterChange(codes => setFilter([{ type: "customer_code", value: codes[0] ?? null }]))
+}
 
 defineExpose({ setFilter })
 </script>

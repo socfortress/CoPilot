@@ -242,6 +242,23 @@ Consequence: refreshing CoPilot Searches refreshes the Stories surface; Wazuh ru
 
 The `customer-portal/` mirrors this structure but is a leaner standalone app, served separately (its own `nginx.conf`; port 3001 dev, 8443 in compose when uncommented).
 
+### Global customers filter (analyst frontend)
+
+The sidebar multi-select (`app-layouts/VerticalNav/GlobalCustomerFilter.vue`) writes `stores/customer-filter.ts`; **every consumer goes through `composables/useGlobalCustomerFilter.ts`, never the store directly.** Empty selection means "all accessible customers" — the backend intersects requested codes with `user_customer_access`, so a stale code can never widen access. Four entry points, and picking the wrong one is the usual mistake:
+
+- **`applyGlobalCustomerPrefill(field, formObject, opts)`** — *forms only* (case creation, report generation, config editors). Seeds an empty field once when the form opens and then leaves the user alone.
+- **`applyGlobalCustomerCodeFilter()`** — a per-view convention, not a shared helper: the mount-time apply for list views. Deliberately **does not overwrite** a filter the user already set or that arrived via query string.
+- **`onGlobalCustomerFilterChange(cb)`** — the live path for list views. Here the global filter **wins** over the local one, because changing the sidebar select is an explicit user action. Gated on the per-user `liveSync` preference (localStorage only, no API, toggled in Profile → Settings) — with it off the callback never fires and views keep mount-time-only behavior. Debounced 300ms inside the hook: the multi-select writes the store on every tag add/remove.
+- **`getAvailableGlobalCustomerValue(codes, multiple?)`** — when the view's picker is bootstrapped from data rather than `/customers` (AI Analyst surfaces list only customers that have runs), so the global code must be intersected with what's actually selectable.
+
+Three conventions the call sites rely on:
+
+- **Views with a `filters[]` array reuse their own `setFilter()`** rather than hand-rolling an upsert — `setFilter([{ type: "customer_code", value: codes[0] ?? null }])` upserts, deletes on null, and submits. Only `cases/CasesList.vue` can't (it holds a single `{type, value}` object).
+- **An emptied global selection clears the local filter** *except* where the view renders nothing without a customer (Events search, SIEM Dashboards browser, AI Analyst feedback) — those keep the current one and carry a one-line comment saying so.
+- **Components receiving a `preset` prop never live-sync.** A preset is an embedded list locked to a fixed scope; syncing it would break the embedding.
+
+Only `views/Overview.vue` sits outside this: it has its own opt-in switch that reads the global codes reactively through props and ignores `liveSync`. Deliberate — leave it alone unless unifying all four mechanisms.
+
 ### CI (`.github/workflows/`)
 
 - `docker.yml` — multi-arch builds → `ghcr.io/socfortress/copilot-{backend,frontend,customer-portal,mcp,nuclei-module,minio}`

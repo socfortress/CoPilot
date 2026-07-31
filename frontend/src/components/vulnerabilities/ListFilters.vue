@@ -151,7 +151,7 @@ const loadingAgents = ref(false)
 const loadingCustomers = ref(false)
 const agentsList = ref<Agent[]>([])
 const customersList = ref<Customer[]>([])
-const { globalCustomerCodes } = useGlobalCustomerFilter()
+const { globalCustomerCodes, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 const customersOptions = computed(() =>
 	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
 )
@@ -286,6 +286,14 @@ onBeforeMount(() => {
 	if (globalCustomerCodes.value.length) {
 		load()
 	}
+})
+
+// setFilter() already upserts-or-deletes and submits, so a null value clears the filter.
+onGlobalCustomerFilterChange(codes => {
+	if (!customersList.value.length) {
+		getCustomers()
+	}
+	setFilter([{ type: "customer_code", value: codes[0] ?? null }])
 })
 
 defineExpose({ setFilter })

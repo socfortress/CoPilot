@@ -107,7 +107,7 @@ const SearchIcon = "ion:search-outline"
 const InfoIcon = "ion:information-circle-outline"
 
 const message = useMessage()
-const { globalCustomerCode } = useGlobalCustomerFilter()
+const { globalCustomerCode, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 const loading = ref(false)
 const configs = ref<GitHubAuditConfig[]>([])
 const showForm = ref(false)
@@ -189,16 +189,20 @@ function onConfigSaved() {
 	loadConfigs()
 }
 
-function applyGlobalCustomerCodeFilter() {
-	if (globalCustomerCode.value && !filterCustomerCode.value) {
-		filterCustomerCode.value = globalCustomerCode.value
-		loadConfigs()
-	}
+function setCustomerFilter(code: string | null) {
+	if (filterCustomerCode.value === code) return
+
+	filterCustomerCode.value = code
+	loadConfigs()
 }
 
 onBeforeMount(() => {
-	loadConfigs()
 	loadCustomers()
-	applyGlobalCustomerCodeFilter()
+	// Seed the filter *before* the first fetch — assigning it afterwards fires an unfiltered
+	// request that the filtered one immediately aborts.
+	filterCustomerCode.value = globalCustomerCode.value
+	loadConfigs()
 })
+
+onGlobalCustomerFilterChange(codes => setCustomerFilter(codes[0] || null))
 </script>

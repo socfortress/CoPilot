@@ -180,7 +180,7 @@ const AddIcon = "carbon:add"
 const DelIcon = "carbon:delete"
 const router = useRouter()
 const route = useRoute()
-const { globalCustomerCodes } = useGlobalCustomerFilter()
+const { globalCustomerCodes, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 const message = useMessage()
 const loadingAvailableUsers = ref(false)
 const loadingConfiguredSources = ref(false)
@@ -382,6 +382,12 @@ onBeforeMount(() => {
 		submit()
 	}
 })
+
+// A preset locks the list to a fixed scope (embedded usages) — never live-sync those.
+// setFilter() already upserts-or-deletes and submits, so a null value clears the filter.
+if (!preset?.length) {
+	onGlobalCustomerFilterChange(codes => setFilter([{ type: "customerCode", value: codes[0] ?? null }]))
+}
 
 defineExpose({ setFilter })
 </script>

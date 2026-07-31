@@ -175,7 +175,7 @@ import WazuhRuleDetail from "./WazuhRuleDetail.vue"
 
 const message = useMessage()
 const { routeDetectionCatalogWazuhRule } = useNavigation()
-const { globalCustomerCode } = useGlobalCustomerFilter()
+const { globalCustomerCode, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 const rules = ref<CatalogWazuhRuleRow[]>([])
 const loading = ref(false)
 const filter = ref("")
@@ -460,5 +460,14 @@ onBeforeMount(() => {
 		}
 		load()
 	})
+})
+
+// An emptied global selection resets the scope to "all customers".
+onGlobalCustomerFilterChange(codes => {
+	const code = codes[0] || ""
+
+	if (code !== customerScope.value) {
+		onCustomerChange(code)
+	}
 })
 </script>

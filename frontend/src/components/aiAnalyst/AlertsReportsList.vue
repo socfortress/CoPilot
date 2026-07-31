@@ -62,7 +62,7 @@ import { getApiErrorMessage } from "@/utils"
 import AlertReportItem from "./AlertReportItem.vue"
 
 const message = useMessage()
-const { getAvailableGlobalCustomerValue } = useGlobalCustomerFilter()
+const { getAvailableGlobalCustomerValue, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 const loading = ref(false)
 const alertsList = ref<AlertWithReport[]>([])
 const customerFilter = ref<string | null>(null)
@@ -124,5 +124,10 @@ onBeforeMount(() => {
 		customerFilter.value =
 			getAvailableGlobalCustomerValue(Array.from(new Set(alertsList.value.map(a => a.customer_code)))) || null
 	})
+})
+
+// The customerFilter watcher above turns the assignment into a refetch.
+onGlobalCustomerFilterChange(codes => {
+	customerFilter.value = codes[0] || null
 })
 </script>

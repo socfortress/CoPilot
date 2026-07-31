@@ -15,7 +15,7 @@
 
 		<n-select
 			v-model:value="filterCustomerCode"
-			:options="customerOptions"
+			:options="customers"
 			placeholder="Filter by Customer"
 			clearable
 			filterable
@@ -97,7 +97,7 @@ import SCAReportCard from "./SCAReportCard.vue"
 const AddIcon = "carbon:document-add"
 
 const message = useMessage()
-const { globalCustomerCode } = useGlobalCustomerFilter()
+const { globalCustomerCode, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 
 const loading = ref(false)
 const generating = ref(false)
@@ -110,8 +110,6 @@ const customers = ref<Array<{ label: string; value: string }>>([])
 const currentPage = ref(1)
 const pageSize = ref(20)
 let abortController: AbortController | null = null
-
-const customerOptions = computed(() => [...customers.value])
 
 const paginatedReports = computed(() => {
 	const start = (currentPage.value - 1) * pageSize.value
@@ -219,17 +217,21 @@ async function confirmDelete() {
 	}
 }
 
-function applyGlobalCustomerCodeFilter() {
-	if (globalCustomerCode.value && !filterCustomerCode.value) {
-		filterCustomerCode.value = globalCustomerCode.value
-		onFilterChange()
-	}
+function setCustomerFilter(code: string | null) {
+	if (filterCustomerCode.value === code) return
+
+	filterCustomerCode.value = code
+	onFilterChange()
 }
 
 onBeforeMount(() => {
+	// Only populates the select labels — the reports fetch doesn't depend on it.
+	loadCustomers()
+	// Seed the filter *before* the first fetch — assigning it afterwards fires an unfiltered
+	// request that the filtered one immediately aborts.
+	filterCustomerCode.value = globalCustomerCode.value
 	loadReports()
-	loadCustomers().then(() => {
-		applyGlobalCustomerCodeFilter()
-	})
 })
+
+onGlobalCustomerFilterChange(codes => setCustomerFilter(codes[0] || null))
 </script>

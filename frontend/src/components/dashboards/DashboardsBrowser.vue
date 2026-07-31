@@ -106,7 +106,7 @@ import DashboardCategoriesSection from "./DashboardCategoriesSection.vue"
 import EnabledDashboardsSection from "./EnabledDashboardsSection.vue"
 
 const message = useMessage()
-const { globalCustomerCode } = useGlobalCustomerFilter()
+const { globalCustomerCode, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 
 // ── Customer selection ──────────────────────────────────────────
 const loadingCustomers = ref(false)
@@ -194,5 +194,12 @@ onBeforeMount(() => {
 			selectedCustomerCode.value = code
 		}
 	})
+})
+
+// An emptied global selection keeps the current customer — this view renders nothing without one.
+onGlobalCustomerFilterChange(codes => {
+	if (codes[0]) {
+		selectedCustomerCode.value = codes[0]
+	}
 })
 </script>
