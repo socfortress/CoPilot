@@ -42,8 +42,11 @@
 					:options="customersOptions"
 					placeholder="Select..."
 					size="small"
+					multiple
 					filterable
-					class="w-56!"
+					clearable
+					:max-tag-count="2"
+					class="min-w-56!"
 					:loading="loadingCustomers || !customersOptions.length"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
@@ -160,6 +163,7 @@ import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import type { AlertStatus } from "@/types/incidentManagement/alerts"
 import type { SourceName } from "@/types/incidentManagement/sources"
+import _castArray from "lodash/castArray"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
 import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
@@ -281,7 +285,9 @@ function getQueryString() {
 			.map(o => ({
 				type: o[0] as AlertsFilterTypes,
 				label: typeOptions.find(t => t.value === o[0])?.label || o[0],
-				value: o[1] as AlertsListFilterValue
+				// customerCode is multi-valued: a repeated param arrives as string[], a legacy
+				// single one as a plain string — normalize so the select always gets an array.
+				value: (o[0] === "customerCode" ? _castArray(o[1]) : o[1]) as AlertsListFilterValue
 			}))
 	}
 }
@@ -354,7 +360,7 @@ function applyGlobalCustomerCodeFilter() {
 	if (!codes.length) {
 		return false
 	}
-	filters.value.push({ type: "customerCode", value: codes[0] })
+	filters.value.push({ type: "customerCode", value: [...codes] })
 	return true
 }
 
@@ -386,7 +392,7 @@ onBeforeMount(() => {
 // A preset locks the list to a fixed scope (embedded usages) — never live-sync those.
 // setFilter() already upserts-or-deletes and submits, so a null value clears the filter.
 if (!preset?.length) {
-	onGlobalCustomerFilterChange(codes => setFilter([{ type: "customerCode", value: codes[0] ?? null }]))
+	onGlobalCustomerFilterChange(codes => setFilter([{ type: "customerCode", value: codes.length ? [...codes] : null }]))
 }
 
 defineExpose({ setFilter })

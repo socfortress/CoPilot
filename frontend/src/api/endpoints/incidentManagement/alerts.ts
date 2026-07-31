@@ -92,7 +92,9 @@ export default {
 							params.alert_title = filter.value
 							break
 						case "customerCode":
-							params.customer_code = filter.value
+							// /alerts/filter takes a repeated customer_codes param; the filter itself
+							// is multi-valued, but tolerate a lone string from older query strings.
+							params.customer_codes = _castArray(filter.value)
 							break
 						case "source":
 							params.source = filter.value
