@@ -376,7 +376,7 @@ async def delete_vulnerabilities_endpoint(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def search_vulnerabilities(
-    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     agent_name: Optional[str] = Query(None, description="Filter by agent hostname"),
     severity: Optional[str] = Query(None, description="Filter by severity (Critical, High, Medium, Low)"),
     cve_id: Optional[str] = Query(None, description="Filter by specific CVE ID"),
@@ -436,7 +436,7 @@ async def search_vulnerabilities(
     - When **include_epss=False**: Results sorted by detection date (newest first), then by severity
 
     Args:
-        customer_code: Optional customer code filter (filtered by user access)
+        customer_codes: Optional filter by one or more customer codes (narrowed by user access)
         agent_name: Optional agent hostname filter
         severity: Optional severity filter
         cve_id: Optional CVE ID filter
@@ -451,7 +451,7 @@ async def search_vulnerabilities(
     """
     logger.info(
         f"Searching vulnerabilities from indexer with filters: "
-        f"customer_code={customer_code}, agent_name={agent_name}, "
+        f"customer_codes={customer_codes}, agent_name={agent_name}, "
         f"severity={severity}, cve_id={cve_id}, package_name={package_name}, "
         f"page={page}, page_size={page_size}, include_epss={include_epss}",
     )
@@ -460,7 +460,7 @@ async def search_vulnerabilities(
         result = await search_vulnerabilities_from_indexer(
             db_session=db,
             current_user=current_user,
-            customer_code=customer_code,
+            customer_codes=customer_codes,
             agent_name=agent_name,
             severity=severity,
             cve_id=cve_id,

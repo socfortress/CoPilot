@@ -54,7 +54,7 @@ sca_router = APIRouter()
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def search_sca_results_overview(
-    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     agent_name: Optional[str] = Query(None, description="Filter by agent hostname"),
     policy_id: Optional[str] = Query(None, description="Filter by specific policy ID"),
     policy_name: Optional[str] = Query(None, description="Filter by policy name (partial matching)"),
@@ -92,7 +92,7 @@ async def search_sca_results_overview(
     - **Smart sorting: Agents with lowest compliance scores appear first for priority attention**
 
     **Filtering Options:**
-    - **customer_code**: Filter by specific customer/organization
+    - **customer_codes**: Filter by one or more customers/organizations
     - **agent_name**: Filter by specific agent hostname
     - **policy_id**: Search for specific policy ID (exact match)
     - **policy_name**: Filter by policy name (supports partial matching)
@@ -125,7 +125,7 @@ async def search_sca_results_overview(
     """
     logger.info(
         f"Searching SCA overview with filters: "
-        f"customer_code={customer_code}, agent_name={agent_name}, "
+        f"customer_codes={customer_codes}, agent_name={agent_name}, "
         f"policy_id={policy_id}, policy_name={policy_name}, "
         f"min_score={min_score}, max_score={max_score}, "
         f"page={page}, page_size={page_size}",
@@ -134,7 +134,7 @@ async def search_sca_results_overview(
     try:
         result = await search_sca_overview(
             db_session=db,
-            customer_code=customer_code,
+            customer_codes=customer_codes,
             agent_name=agent_name,
             policy_id=policy_id,
             policy_name=policy_name,
@@ -156,7 +156,7 @@ async def search_sca_results_overview(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def stream_sca_results_overview(
-    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     agent_name: Optional[str] = Query(None, description="Filter by agent hostname"),
     policy_id: Optional[str] = Query(None, description="Filter by specific policy ID"),
     policy_name: Optional[str] = Query(None, description="Filter by policy name (partial matching)"),
@@ -195,7 +195,7 @@ async def stream_sca_results_overview(
     """
     logger.info(
         f"Streaming SCA overview with filters: "
-        f"customer_code={customer_code}, agent_name={agent_name}, "
+        f"customer_codes={customer_codes}, agent_name={agent_name}, "
         f"policy_id={policy_id}, policy_name={policy_name}, "
         f"min_score={min_score}, max_score={max_score}",
     )
@@ -204,7 +204,7 @@ async def stream_sca_results_overview(
         try:
             async for event in stream_sca_for_all_agents(
                 db_session=db,
-                customer_code=customer_code,
+                customer_codes=customer_codes,
                 agent_name=agent_name,
                 policy_id=policy_id,
                 policy_name=policy_name,
@@ -238,7 +238,7 @@ async def stream_sca_results_overview(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_sca_stats(
-    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     db: AsyncSession = Depends(get_db),
 ) -> ScaStatsResponse:
     """
@@ -267,16 +267,16 @@ async def get_sca_stats(
     - Infrastructure security health checks
 
     Args:
-        customer_code: Optional customer code to filter statistics by
+        customer_codes: Optional customer codes to filter statistics by
         db: Database session
 
     Returns:
         ScaStatsResponse: Comprehensive SCA statistics
     """
-    logger.info(f"Getting SCA statistics for customer: {customer_code or 'all customers'}")
+    logger.info(f"Getting SCA statistics for customers: {customer_codes or 'all customers'}")
 
     try:
-        result = await get_sca_statistics(db_session=db, customer_code=customer_code)
+        result = await get_sca_statistics(db_session=db, customer_codes=customer_codes)
         return result
 
     except Exception as e:
@@ -429,7 +429,7 @@ async def list_reports(
     - Monitor report history
 
     Args:
-        customer_code: Optional customer code filter
+        customer_codes: Optional filter by one or more customer codes
         db: Database session
         current_user: Current authenticated user
 

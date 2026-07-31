@@ -52,27 +52,27 @@ COPILOT_SCA_INDEX_URL = f"{COPILOT_SCA_RAW_BASE}/index.json"
 
 async def get_all_agents_from_db(
     db_session: AsyncSession,
-    customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
 ) -> List[Agents]:
     """
-    Get all agents from database, optionally filtered by customer code
+    Get all agents from database, optionally filtered by one or more customer codes
 
     Args:
         db_session: Database session to use
-        customer_code: Optional customer code to filter agents by
+        customer_codes: Optional customer codes to filter agents by
 
     Returns:
         List of Agent objects
     """
     try:
         query = select(Agents)
-        if customer_code:
-            query = query.filter(Agents.customer_code == customer_code)
+        if customer_codes:
+            query = query.filter(Agents.customer_code.in_(customer_codes))
 
         result = await db_session.execute(query)
         agents = result.scalars().all()
 
-        logger.info(f"Found {len(agents)} agents" + (f" for customer {customer_code}" if customer_code else ""))
+        logger.info(f"Found {len(agents)} agents" + (f" for customers {customer_codes}" if customer_codes else ""))
         return agents
 
     except Exception as e:
@@ -158,7 +158,7 @@ async def collect_sca_for_single_agent(
 
 async def collect_sca_for_all_agents(
     db_session: AsyncSession,
-    customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
     agent_name: Optional[str] = None,
     policy_id: Optional[str] = None,
     policy_name: Optional[str] = None,
@@ -171,7 +171,7 @@ async def collect_sca_for_all_agents(
 
     Args:
         db_session: Database session to use
-        customer_code: Optional customer code filter
+        customer_codes: Optional customer code filters
         agent_name: Optional agent name filter
         policy_id: Optional policy ID filter
         policy_name: Optional policy name filter (partial matching)
@@ -184,10 +184,10 @@ async def collect_sca_for_all_agents(
     """
     try:
         # Get agents from database
-        agents = await get_all_agents_from_db(db_session, customer_code)
+        agents = await get_all_agents_from_db(db_session, customer_codes)
 
         if not agents:
-            logger.warning("No agents found" + (f" for customer {customer_code}" if customer_code else ""))
+            logger.warning("No agents found" + (f" for customers {customer_codes}" if customer_codes else ""))
             return []
 
         # Filter agents by name if specified (do this before parallel processing)
@@ -245,7 +245,7 @@ async def collect_sca_for_all_agents(
 
 async def search_sca_overview(
     db_session: AsyncSession,
-    customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
     agent_name: Optional[str] = None,
     policy_id: Optional[str] = None,
     policy_name: Optional[str] = None,
@@ -260,7 +260,7 @@ async def search_sca_overview(
 
     Args:
         db_session: Database session for agent lookup
-        customer_code: Optional customer code filter
+        customer_codes: Optional customer code filters
         agent_name: Optional agent hostname filter
         policy_id: Optional policy ID filter
         policy_name: Optional policy name filter (partial matching)
@@ -274,15 +274,15 @@ async def search_sca_overview(
         ScaOverviewResponse with paginated results and statistics
     """
     logger.info(
-        f"Searching SCA overview with filters: customer_code={customer_code}, "
+        f"Searching SCA overview with filters: customer_codes={customer_codes}, "
         f"agent_name={agent_name}, policy_id={policy_id}, policy_name={policy_name}, "
         f"min_score={min_score}, max_score={max_score}, page={page}, page_size={page_size}",
     )
 
     # Build filters applied dict for response
     filters_applied = {}
-    if customer_code:
-        filters_applied["customer_code"] = customer_code
+    if customer_codes:
+        filters_applied["customer_codes"] = customer_codes
     if agent_name:
         filters_applied["agent_name"] = agent_name
     if policy_id:
@@ -298,7 +298,7 @@ async def search_sca_overview(
         # Collect all SCA results with filtering (now uses parallel requests)
         all_sca_results = await collect_sca_for_all_agents(
             db_session=db_session,
-            customer_code=customer_code,
+            customer_codes=customer_codes,
             agent_name=agent_name,
             policy_id=policy_id,
             policy_name=policy_name,
@@ -383,25 +383,25 @@ async def search_sca_overview(
 
 async def get_sca_statistics(
     db_session: AsyncSession,
-    customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
 ) -> ScaStatsResponse:
     """
     Get SCA statistics across all agents or for a specific customer
 
     Args:
         db_session: Database session to use
-        customer_code: Optional customer code to filter by
+        customer_codes: Optional customer codes to filter by
 
     Returns:
         ScaStatsResponse with SCA statistics
     """
     try:
-        logger.info("Getting SCA statistics" + (f" for customer {customer_code}" if customer_code else " for all customers"))
+        logger.info("Getting SCA statistics" + (f" for customers {customer_codes}" if customer_codes else " for all customers"))
 
         # Collect all SCA results
         all_sca_results = await collect_sca_for_all_agents(
             db_session=db_session,
-            customer_code=customer_code,
+            customer_codes=customer_codes,
         )
 
         if not all_sca_results:
@@ -429,9 +429,10 @@ async def get_sca_statistics(
 
         average_score = sum(item.score for item in all_sca_results) / len(all_sca_results)
 
-        # Group by customer if no specific customer requested
+        # Break down per customer unless exactly one was requested — with a multi-customer
+        # filter the breakdown is the interesting part, not noise.
         by_customer = {}
-        if not customer_code:
+        if len(customer_codes or []) != 1:
             customer_groups = {}
             for item in all_sca_results:
                 cust_code = item.customer_code or "unknown"
@@ -516,7 +517,7 @@ async def collect_sca_for_report(
         # Use existing collect function to get all SCA results from Wazuh Manager
         all_sca_results = await collect_sca_for_all_agents(
             db_session=db_session,
-            customer_code=customer_code,
+            customer_codes=[customer_code],
             agent_name=agent_name,
             policy_id=policy_id,
             policy_name=None,  # Not used for reports
@@ -1014,7 +1015,7 @@ async def delete_sca_report(
 
 async def stream_sca_for_all_agents(
     db_session: AsyncSession,
-    customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
     agent_name: Optional[str] = None,
     policy_id: Optional[str] = None,
     policy_name: Optional[str] = None,
@@ -1029,7 +1030,7 @@ async def stream_sca_for_all_agents(
 
     Args:
         db_session: Database session to use
-        customer_code: Optional customer code filter
+        customer_codes: Optional customer code filters
         agent_name: Optional agent name filter
         policy_id: Optional policy ID filter
         policy_name: Optional policy name filter (partial matching)
@@ -1042,7 +1043,7 @@ async def stream_sca_for_all_agents(
     """
     try:
         # Get agents from database
-        agents = await get_all_agents_from_db(db_session, customer_code)
+        agents = await get_all_agents_from_db(db_session, customer_codes)
 
         if not agents:
             yield {

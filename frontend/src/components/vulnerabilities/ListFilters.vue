@@ -1,7 +1,7 @@
 <template>
 	<div class="flex flex-wrap gap-3">
 		<div v-for="filter of filters" :key="filter.type">
-			<n-input-group v-if="filter.type === 'customer_code'">
+			<n-input-group v-if="filter.type === 'customer_codes'">
 				<n-input-group-label size="small" class="flex! items-center gap-2">
 					<Icon :name="CustomersIcon" />
 					{{ getFilterLabel(filter.type) }}
@@ -12,8 +12,11 @@
 					:options="customersOptions"
 					placeholder="Select..."
 					:loading="loadingCustomers"
+					multiple
 					filterable
-					class="w-50!"
+					clearable
+					:max-tag-count="2"
+					class="min-w-56!"
 					:consistent-menu-width="false"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
@@ -164,7 +167,7 @@ const severityOptions = Object.values(VulnerabilitySeverity).map(severity => ({
 }))
 
 const typeOptions: { label: string; value: VulnerabilitiesFilterTypes }[] = [
-	{ label: "Customer", value: "customer_code" },
+	{ label: "Customer", value: "customer_codes" },
 	{ label: "Severity", value: "severity" },
 	{ label: "CVE", value: "cve_id" },
 	{ label: "Agent", value: "agent_name" },
@@ -263,14 +266,14 @@ function getCustomers() {
 }
 
 function applyGlobalCustomerCodeFilter() {
-	if (filters.value.some(f => f.type === "customer_code" && f.value)) {
+	if (filters.value.some(f => f.type === "customer_codes" && f.value)) {
 		return false
 	}
 	const codes = globalCustomerCodes.value
 	if (!codes.length) {
 		return false
 	}
-	filters.value.push({ type: "customer_code", value: codes[0] })
+	filters.value.push({ type: "customer_codes", value: [...codes] })
 	return true
 }
 
@@ -293,7 +296,7 @@ onGlobalCustomerFilterChange(codes => {
 	if (!customersList.value.length) {
 		getCustomers()
 	}
-	setFilter([{ type: "customer_code", value: codes[0] ?? null }])
+	setFilter([{ type: "customer_codes", value: codes.length ? [...codes] : null }])
 })
 
 defineExpose({ setFilter })
