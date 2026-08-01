@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-// Container for the per-customer "AI Notifications" tab. Three
+// Container for the per-customer "Notifications" tab. Three
 // sub-tabs:
 //   - Routes: CRUD list + form for notification rules
 //   - Shuffle integrations: CRUD for the customer's Shuffle Org-Id rows

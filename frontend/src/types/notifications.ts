@@ -6,7 +6,24 @@
 // a severity filter (severity gating lives in min_severity). Currently
 // just the one Talon-driven event; will grow when we add hooks for
 // analyst-review / IOC-enrichment / scheduled sweeps.
-export type NotificationTrigger = "investigation_complete"
+// What kind of event caused the dispatch — not a severity filter; severity
+// gating lives in min_severity.
+//
+// Triggers split by which routes they resolve against. The assignment triggers
+// are INTERNAL: they're about who is working on something, so they reach the
+// SOC's own routes and never a customer's channel.
+export type NotificationTrigger =
+	| "investigation_complete"
+	| "alert_created"
+	| "alert_assigned"
+	| "case_assigned"
+	| "case_task_assigned"
+
+export const INTERNAL_TRIGGERS: NotificationTrigger[] = ["alert_assigned", "case_assigned", "case_task_assigned"]
+
+export function isInternalTrigger(trigger: NotificationTrigger): boolean {
+	return INTERNAL_TRIGGERS.includes(trigger)
+}
 
 export type NotificationChannel = "shuffle" | "webhook" | "resend"
 

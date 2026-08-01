@@ -1,5 +1,23 @@
 <template>
 	<n-form ref="formRef" :model="form" :rules label-placement="top" class="flex flex-col gap-1">
+		<!--
+			The legacy per-customer Shuffle workflow also fires on alert creation.
+			Both are opt-in, so duplication only happens when an operator configures
+			both — which is exactly the moment to say so.
+		-->
+		<n-alert
+			v-if="showsLegacyWorkflowWarning"
+			type="warning"
+			:bordered="false"
+			title="This customer already notifies on alert creation"
+			class="mb-3"
+		>
+			A legacy Notification Workflow is enabled for this customer, under the
+			<strong>Notification Workflows</strong>
+			tab. Saving this route means new alerts will notify twice — once through each. Disable one if that
+			isn't what you want.
+		</n-alert>
+
 		<n-form-item label="Name" path="name">
 			<n-input v-model:value="form.name" placeholder="e.g. SOC team Slack #alerts" :maxlength="128" show-count />
 		</n-form-item>
@@ -260,6 +278,7 @@ import type {
 	NotificationChannel,
 	NotificationRoute,
 	NotificationRoutePayload,
+	NotificationScope,
 	NotificationSeverity,
 	NotificationTrigger,
 	ResendQuota,
@@ -272,8 +291,10 @@ import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
-	customerCode: string
+	// Empty for internal-scope routes, which belong to no tenant.
+	customerCode?: string
 	editingRoute: NotificationRoute | null
+	scope?: NotificationScope
 }>()
 
 const emit = defineEmits<{
@@ -317,8 +338,10 @@ const fieldErrors = reactive<Partial<Record<FeedbackField, string>>>({})
 
 const form = reactive<NotificationRoutePayload>({
 	name: props.editingRoute?.name ?? "",
-	trigger: props.editingRoute?.trigger ?? ("investigation_complete" as NotificationTrigger),
-	channel: props.editingRoute?.channel ?? "shuffle",
+	trigger:
+		props.editingRoute?.trigger ??
+		((props.scope === "internal" ? "alert_assigned" : "alert_created") as NotificationTrigger),
+	channel: props.editingRoute?.channel ?? (props.scope === "internal" ? "resend" : "shuffle"),
 	destination: props.editingRoute?.destination ?? "",
 	min_severity: props.editingRoute?.min_severity ?? ("Medium" as NotificationSeverity),
 	format_template: props.editingRoute?.format_template ?? "",
@@ -331,6 +354,32 @@ const form = reactive<NotificationRoutePayload>({
 })
 
 const isShuffle = computed(() => form.channel === "shuffle")
+// The same form serves both surfaces. They differ in exactly two ways — which
+// triggers apply and which channels are possible — so a prop is cheaper and
+// safer than extracting shared parts out of a 700-line component. If the
+// conditionals multiply beyond these, that's the signal to split it.
+const isInternalScope = computed(() => props.scope === "internal")
+
+// Non-null only when the customer has a legacy workflow enabled. Fetched once
+// per form open; a failure leaves it null so the warning simply doesn't show
+// rather than blocking the form.
+const legacyWorkflowEnabled = ref<boolean | null>(null)
+
+const showsLegacyWorkflowWarning = computed(
+	() => !isInternalScope.value && form.trigger === "alert_created" && legacyWorkflowEnabled.value === true
+)
+
+async function loadLegacyWorkflowState() {
+	if (isInternalScope.value || !props.customerCode) return
+	try {
+		const res = await Api.incidentManagement.notification.getNotifications(props.customerCode)
+		const rows = res.data?.notifications ?? []
+		legacyWorkflowEnabled.value = rows.some(n => n.enabled)
+	} catch {
+		legacyWorkflowEnabled.value = null
+	}
+}
+
 const isWebhook = computed(() => form.channel === "webhook")
 const isResend = computed(() => form.channel === "resend")
 const isAssigneeMode = computed(() => form.recipient_mode === "assignee")
@@ -397,19 +446,41 @@ const headerPairs = ref<{ key: string; value: string }[]>(
 		: []
 )
 
-// Trigger is a single fixed value today (`investigation_complete`).
-// Will become a richer select again when we add more dispatch event
-// types (analyst-review hooks, IOC-enrichment alerts, scheduled sweeps).
-const triggerOptions = [
-	{ label: "Every investigation completes", value: "investigation_complete" },
-	{ label: "Critical / High severity only", value: "severity_critical_or_high" }
+// Triggers are filtered by scope rather than shown as one list. A customer
+// route with an assignment trigger would be dead config: assignments resolve
+// against internal routes, so it could never fire. Offering it would be an
+// invitation to create something that silently does nothing.
+const CUSTOMER_TRIGGER_OPTIONS = [
+	{ label: "An alert is created", value: "alert_created" },
+	{ label: "An AI investigation completes", value: "investigation_complete" },
+	// Legacy value kept selectable so editing an old route doesn't blank the
+	// field; the backend coerces it to investigation_complete on read.
+	{ label: "Critical / High severity only (legacy)", value: "severity_critical_or_high" }
 ]
 
-const channelOptions = [
-	{ label: "Shuffle (Slack / Teams / Outlook / 3,000+ apps)", value: "shuffle" },
-	{ label: "Webhook (direct HTTP to any URL)", value: "webhook" },
-	{ label: "Email (Resend)", value: "resend" }
+const INTERNAL_TRIGGER_OPTIONS = [
+	{ label: "An alert is assigned", value: "alert_assigned" },
+	{ label: "A case is assigned", value: "case_assigned" },
+	{ label: "A case task is assigned", value: "case_task_assigned" }
 ]
+
+const triggerOptions = computed(() => (isInternalScope.value ? INTERNAL_TRIGGER_OPTIONS : CUSTOMER_TRIGGER_OPTIONS))
+
+// Shuffle is unavailable to internal routes: a Shuffle integration belongs to a
+// specific customer, and an internal route belongs to none. The backend rejects
+// it too — this just avoids offering something that would 400.
+const channelOptions = computed(() =>
+	isInternalScope.value
+		? [
+				{ label: "Email (Resend)", value: "resend" },
+				{ label: "Webhook (direct HTTP to any URL)", value: "webhook" }
+			]
+		: [
+				{ label: "Shuffle (Slack / Teams / Outlook / 3,000+ apps)", value: "shuffle" },
+				{ label: "Webhook (direct HTTP to any URL)", value: "webhook" },
+				{ label: "Email (Resend)", value: "resend" }
+			]
+)
 
 const methodOptions = [
 	{ label: "POST", value: "POST" },
@@ -499,9 +570,14 @@ function onChannelChange(channel: NotificationChannel) {
 }
 
 async function loadIntegrations() {
+	// Shuffle integrations are per-customer, so there is nothing to load for an
+	// internal route — and no customerCode to load it with.
+	const code = props.customerCode
+	if (!code) return
+
 	loadingIntegrations.value = true
 	try {
-		const res = await Api.notifications.listShuffleIntegrations(props.customerCode)
+		const res = await Api.notifications.listShuffleIntegrations(code)
 		if (res.data.success) {
 			integrations.value = res.data.integrations
 		}
@@ -513,10 +589,13 @@ async function loadIntegrations() {
 }
 
 async function loadApps(integrationId: number) {
+	const code = props.customerCode
+	if (!code) return
+
 	loadingApps.value = true
 	appsError.value = null
 	try {
-		const res = await Api.notifications.listShuffleApps(props.customerCode, integrationId)
+		const res = await Api.notifications.listShuffleApps(code, integrationId)
 		if (res.data.success) {
 			apps.value = res.data.apps
 		} else {
@@ -638,7 +717,7 @@ async function submit() {
 			min_severity: form.min_severity,
 			format_template: sendTemplate,
 			enabled: form.enabled,
-			scope: form.scope,
+			scope: props.scope ?? "customer",
 			recipient_mode: form.recipient_mode,
 			notify_on_self_assign: form.notify_on_self_assign
 		}
@@ -686,9 +765,24 @@ async function submit() {
 						}
 					}
 
-		const res = props.editingRoute
-			? await Api.notifications.updateRoute(props.customerCode, props.editingRoute.id, payload)
-			: await Api.notifications.createRoute(props.customerCode, payload)
+		let res
+		if (isInternalScope.value) {
+			res = props.editingRoute
+				? await Api.notifications.updateInternalRoute(props.editingRoute.id, payload)
+				: await Api.notifications.createInternalRoute(payload)
+		} else {
+			// customerCode is optional on the props because internal routes have
+			// none; on this branch it is always present, and a missing one is a
+			// wiring bug worth surfacing rather than sending "" to the API.
+			const code = props.customerCode
+			if (!code) {
+				message.error("No customer selected for this route.")
+				return
+			}
+			res = props.editingRoute
+				? await Api.notifications.updateRoute(code, props.editingRoute.id, payload)
+				: await Api.notifications.createRoute(code, payload)
+		}
 
 		if (res.data.success) {
 			message.success(editing.value ? "Route updated" : "Route created")
@@ -704,6 +798,7 @@ async function submit() {
 }
 
 onBeforeMount(async () => {
+	loadLegacyWorkflowState()
 	await loadIntegrations()
 	// If editing a Shuffle route, prefetch the apps for its integration
 	// so the picker is populated when the form first renders.

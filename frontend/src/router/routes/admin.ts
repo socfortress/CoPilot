@@ -1,5 +1,5 @@
 import type { RouteRecordRaw } from "vue-router"
-import { RouteRole } from "@/types/auth"
+import { AuthUserRole, RouteRole } from "@/types/auth"
 
 export const adminRoutes: RouteRecordRaw[] = [
 	{
@@ -13,6 +13,16 @@ export const adminRoutes: RouteRecordRaw[] = [
 		name: "AuditEntry",
 		component: () => import("@/views/AuditEntry.vue"),
 		meta: { title: "Audit Entry", auth: true, roles: RouteRole.All }
+	},
+	{
+		// Internal notification routes are deployment-wide configuration —
+		// where the SOC's own assignment notifications go — so they sit outside
+		// the per-customer tree and are admin-only, unlike a customer's routes
+		// which an analyst can manage.
+		path: "/internal-notifications",
+		name: "InternalNotifications",
+		component: () => import("@/views/InternalNotificationRoutes.vue"),
+		meta: { title: "Internal Notifications", auth: true, roles: AuthUserRole.Admin }
 	},
 	{
 		path: "/logs",

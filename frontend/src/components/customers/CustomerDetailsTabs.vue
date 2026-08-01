@@ -62,8 +62,8 @@
 					<CustomerAITriggers :customer-code="customer.customer_code" />
 				</n-tab-pane>
 				<n-tab-pane
-					name="AI Notifications"
-					tab="AI Notifications"
+					name="Notifications"
+					tab="Notifications"
 					display-directive="show:lazy"
 					class="overflow-hidden p-4!"
 				>
@@ -221,7 +221,7 @@ const CUSTOMER_SUB_TABS = new Set([
 	"Network Connectors",
 	"Notification Workflows",
 	"AI Triggers",
-	"AI Notifications",
+	"Notifications",
 	"Event Sources",
 	"Reporting",
 	"Portal Branding",
