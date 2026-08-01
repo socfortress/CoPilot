@@ -8,7 +8,7 @@
 // analyst-review / IOC-enrichment / scheduled sweeps.
 export type NotificationTrigger = "investigation_complete"
 
-export type NotificationChannel = "shuffle" | "webhook"
+export type NotificationChannel = "shuffle" | "webhook" | "resend"
 
 export type NotificationSeverity = "Critical" | "High" | "Medium" | "Low" | "Informational"
 
@@ -32,6 +32,24 @@ export type ChannelConfig = Record<string, unknown>
 export interface ShuffleChannelConfig extends ChannelConfig {
 	app_id?: string | null
 	app_name?: string | null
+}
+
+export interface ResendChannelConfig extends ChannelConfig {
+	to?: string[]
+	cc?: string[]
+	from_address?: string | null
+	reply_to?: string | null
+	subject_prefix?: string
+	// Per-route throttle. Resend's free tier is 1,000/month across the WHOLE
+	// deployment, so this guards a shared resource, not just this route.
+	max_per_hour?: number | null
+}
+
+export interface ResendQuota {
+	sent_this_month: number
+	limit: number
+	customer_sent: number | null
+	configured: boolean
 }
 
 export interface WebhookChannelConfig extends ChannelConfig {

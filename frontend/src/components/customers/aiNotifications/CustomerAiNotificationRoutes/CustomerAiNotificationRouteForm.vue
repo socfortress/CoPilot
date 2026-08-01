@@ -137,6 +137,64 @@
 			</div>
 		</template>
 
+		<!-- ===== Resend (email) channel fields ===== -->
+		<template v-else-if="isResend">
+			<n-form-item label="Deliver to" path="recipient_mode">
+				<n-select v-model:value="form.recipient_mode" :options="recipientModeOptions" />
+				<template #feedback>
+					<span v-if="isAssigneeMode">
+						Sent to whoever the alert or task is assigned to, resolved from their CoPilot account
+						at delivery time. Events with no assignee are skipped.
+					</span>
+					<span v-else>Sent to a fixed list of addresses.</span>
+				</template>
+			</n-form-item>
+
+			<n-form-item v-if="!isAssigneeMode" label="To" path="config.to">
+				<n-dynamic-input
+					v-model:value="toAddresses"
+					:on-create="() => ''"
+					placeholder="soc@example.com"
+					class="w-full"
+				/>
+			</n-form-item>
+
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<n-form-item label="From (optional)" path="config.from_address">
+					<n-input v-model:value="cfg.from_address" placeholder="alerts@yourdomain.com" />
+					<template #feedback>
+						Must be on a domain verified in Resend. Leave empty to use the deployment default.
+					</template>
+				</n-form-item>
+
+				<n-form-item label="Reply-to (optional)" path="config.reply_to">
+					<n-input v-model:value="cfg.reply_to" placeholder="soc@yourdomain.com" />
+				</n-form-item>
+			</div>
+
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<n-form-item label="Subject prefix" path="config.subject_prefix">
+					<n-input v-model:value="cfg.subject_prefix" placeholder="[CoPilot]" />
+				</n-form-item>
+
+				<n-form-item label="Max emails per hour" path="config.max_per_hour">
+					<n-input-number v-model:value="cfg.max_per_hour" :min="1" clearable class="w-full" />
+					<template #feedback>Clear to disable the throttle.</template>
+				</n-form-item>
+			</div>
+
+			<n-alert v-if="quota" :type="quotaTone" :bordered="false" class="mb-3">
+				<template v-if="!quota.configured">
+					The Resend connector has no API key set — routes on this channel will fail until it is
+					configured.
+				</template>
+				<template v-else>
+					{{ quota.sent_this_month }} of {{ quota.limit }} emails sent this month, across all
+					customers. Resend's allowance is deployment-wide, so every route draws from the same pool.
+				</template>
+			</n-alert>
+		</template>
+
 		<n-form-item label="Custom message template (optional)" path="format_template" :show-feedback="false">
 			<n-input
 				v-model:value="form.format_template"
@@ -204,10 +262,11 @@ import type {
 	NotificationRoutePayload,
 	NotificationSeverity,
 	NotificationTrigger,
+	ResendQuota,
 	ShuffleApp,
 	ShuffleIntegration
 } from "@/types/notifications"
-import { NButton, NCheckbox, NDynamicInput, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
+import { NAlert, NButton, NCheckbox, NDynamicInput, NForm, NFormItem, NInput, NInputNumber, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
@@ -244,6 +303,12 @@ interface EditableChannelConfig {
 	method?: string
 	headers?: Record<string, string> | null
 	include_full_report?: boolean
+	to?: string[]
+	cc?: string[]
+	from_address?: string | null
+	reply_to?: string | null
+	subject_prefix?: string
+	max_per_hour?: number | null
 }
 
 const cfg = reactive<EditableChannelConfig>({ ...(props.editingRoute?.config ?? {}) })
@@ -267,6 +332,48 @@ const form = reactive<NotificationRoutePayload>({
 
 const isShuffle = computed(() => form.channel === "shuffle")
 const isWebhook = computed(() => form.channel === "webhook")
+const isResend = computed(() => form.channel === "resend")
+const isAssigneeMode = computed(() => form.recipient_mode === "assignee")
+
+// n-dynamic-input binds an array of strings; cfg.to is the source of truth.
+const toAddresses = computed({
+	get: () => cfg.to ?? [],
+	set: (v: string[]) => {
+		cfg.to = v
+	}
+})
+
+const recipientModeOptions = [
+	{ label: "A fixed list of addresses", value: "static" },
+	{ label: "Whoever it's assigned to", value: "assignee" }
+]
+
+// Deployment-wide, not per-customer: one API key, one allowance. Fetched only
+// when the channel is actually Resend so other routes don't pay for it.
+const quota = ref<ResendQuota | null>(null)
+const quotaTone = computed(() => {
+	if (!quota.value?.configured) return "warning"
+	const used = quota.value.sent_this_month / Math.max(quota.value.limit, 1)
+	return used >= 0.9 ? "error" : used >= 0.7 ? "warning" : "info"
+})
+
+async function loadQuota() {
+	if (!isResend.value || quota.value) return
+	try {
+		const res = await Api.notifications.getResendQuota(props.customerCode)
+		if (res.data.success) {
+			quota.value = {
+				sent_this_month: res.data.sent_this_month,
+				limit: res.data.limit,
+				customer_sent: res.data.customer_sent,
+				configured: res.data.configured
+			}
+		}
+	} catch {
+		// Non-fatal: the indicator is informational, and a failure here must not
+		// block someone from saving a route.
+	}
+}
 
 // Mutual exclusivity (webhook only): "include full report" and a custom
 // template are two alternative body modes. Ticking the box disables the
@@ -300,7 +407,8 @@ const triggerOptions = [
 
 const channelOptions = [
 	{ label: "Shuffle (Slack / Teams / Outlook / 3,000+ apps)", value: "shuffle" },
-	{ label: "Webhook (direct HTTP to any URL)", value: "webhook" }
+	{ label: "Webhook (direct HTTP to any URL)", value: "webhook" },
+	{ label: "Email (Resend)", value: "resend" }
 ]
 
 const methodOptions = [
@@ -375,6 +483,16 @@ function onChannelChange(channel: NotificationChannel) {
 	clearFieldError("shuffle_app_id")
 	clearFieldError("destination")
 	clearFieldError("webhook_url")
+	if (channel !== "resend" && form.recipient_mode === "assignee") {
+		// Only email can resolve a person; leaving the mode set would fail the
+		// provider's supports_recipient_modes check on save.
+		form.recipient_mode = "static"
+	}
+	if (channel === "resend") {
+		if (!cfg.subject_prefix) cfg.subject_prefix = "[CoPilot]"
+		if (cfg.max_per_hour === undefined) cfg.max_per_hour = 20
+		loadQuota()
+	}
 	if (channel === "webhook" && !cfg.method) {
 		cfg.method = "POST"
 	}
@@ -541,15 +659,32 @@ async function submit() {
 						include_full_report: Boolean(cfg.include_full_report)
 					}
 				}
-			: {
-					...base,
-					destination: form.destination,
-					shuffle_integration_id: form.shuffle_integration_id,
-					config: {
-						app_id: cfg.app_id ?? null,
-						app_name: cfg.app_name ?? null
+			: isResend.value
+				? {
+						...base,
+						destination: null,
+						shuffle_integration_id: null,
+						config: {
+							// Assignee mode resolves the address from the event, so an
+							// unused `to` list is dropped rather than persisted as a
+							// fallback it would never act as.
+							to: isAssigneeMode.value ? [] : (cfg.to ?? []).filter(a => a.trim().length > 0),
+							cc: (cfg.cc ?? []).filter(a => a.trim().length > 0),
+							from_address: cfg.from_address?.trim() || null,
+							reply_to: cfg.reply_to?.trim() || null,
+							subject_prefix: cfg.subject_prefix ?? "[CoPilot]",
+							max_per_hour: cfg.max_per_hour ?? null
+						}
 					}
-				}
+				: {
+						...base,
+						destination: form.destination,
+						shuffle_integration_id: form.shuffle_integration_id,
+						config: {
+							app_id: cfg.app_id ?? null,
+							app_name: cfg.app_name ?? null
+						}
+					}
 
 		const res = props.editingRoute
 			? await Api.notifications.updateRoute(props.customerCode, props.editingRoute.id, payload)

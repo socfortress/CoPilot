@@ -97,10 +97,10 @@ def _shuffle_route(config=None, **over):
 
 
 def test_registry_contains_the_shipped_channels():
-    assert sorted(channel_keys()) == ["shuffle", "webhook"]
+    assert sorted(channel_keys()) == ["resend", "shuffle", "webhook"]
 
 
-@pytest.mark.parametrize("key", ["shuffle", "webhook"])
+@pytest.mark.parametrize("key", ["resend", "shuffle", "webhook"])
 def test_every_provider_declares_the_required_classvars(key):
     provider = CHANNEL_REGISTRY[key]
     assert isinstance(provider, ChannelProvider)

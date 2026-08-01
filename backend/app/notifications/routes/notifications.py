@@ -18,8 +18,11 @@ Two surfaces:
 
 from __future__ import annotations
 
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,6 +41,7 @@ from app.notifications.schema.notifications import NotificationRouteListResponse
 from app.notifications.schema.notifications import NotificationRouteRead
 from app.notifications.schema.notifications import NotificationRouteResponse
 from app.notifications.schema.notifications import NotificationRouteUpdate
+from app.notifications.schema.notifications import ResendQuotaResponse
 from app.notifications.schema.notifications import ShuffleAppListResponse
 from app.notifications.schema.notifications import ShuffleIntegrationCreate
 from app.notifications.schema.notifications import ShuffleIntegrationListResponse
@@ -161,6 +165,45 @@ async def list_channels_route() -> ChannelListResponse:
         for provider in CHANNEL_REGISTRY.values()
     ]
     return ChannelListResponse(success=True, message=f"{len(channels)} channel(s) retrieved", channels=channels)
+
+
+@notifications_router.get(
+    "/notification_channels/resend/quota",
+    response_model=ResendQuotaResponse,
+    description=(
+        "Resend emails sent this calendar month against the plan limit. Deployment-wide — "
+        "the API key is shared, so every customer's routes draw from one allowance. "
+        "Pass customer_code for a display-only breakdown."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def resend_quota_route(
+    customer_code: Optional[str] = None,
+    session: AsyncSession = Depends(get_db),
+) -> ResendQuotaResponse:
+    from app.notifications.channels.resend import FREE_TIER_MONTHLY_LIMIT
+    from app.notifications.channels.resend import get_resend_connector
+    from app.notifications.services.resend_quota import sends_this_month
+
+    total = await sends_this_month(session)
+    scoped = await sends_this_month(session, customer_code) if customer_code else None
+
+    # "Is Resend usable at all" drives whether the UI offers the channel; an
+    # unconfigured connector is a normal state, not an error.
+    try:
+        await get_resend_connector(session)
+        configured = True
+    except HTTPException:
+        configured = False
+
+    return ResendQuotaResponse(
+        success=True,
+        message=f"{total} email(s) sent this month",
+        sent_this_month=total,
+        limit=FREE_TIER_MONTHLY_LIMIT,
+        customer_sent=scoped,
+        configured=configured,
+    )
 
 
 # ---------------------------------------------------------------------------

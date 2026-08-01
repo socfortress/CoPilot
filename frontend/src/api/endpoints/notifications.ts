@@ -5,6 +5,7 @@ import type {
 	NotificationRoute,
 	NotificationRoutePayload,
 	NotificationRouteUpdatePayload,
+	ResendQuota,
 	ShuffleApp,
 	ShuffleIntegration,
 	ShuffleIntegrationPayload,
@@ -50,6 +51,14 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { channels: NotificationChannelDescriptor[] }>(
 			`/notification_channels`
 		)
+	},
+
+	// Resend's quota is deployment-wide — one API key, one allowance shared by
+	// every customer's routes. customerCode only narrows the display breakdown.
+	getResendQuota(customerCode?: string) {
+		return HttpClient.get<FlaskBaseResponse & ResendQuota>(`/notification_channels/resend/quota`, {
+			params: customerCode ? { customer_code: customerCode } : undefined
+		})
 	},
 
 	listDispatchLog(customerCode: string) {
