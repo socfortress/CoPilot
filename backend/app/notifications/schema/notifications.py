@@ -44,6 +44,12 @@ class NotificationTrigger(str, Enum):
 
     INVESTIGATION_COMPLETE = "investigation_complete"
 
+    # Fired by CoPilot itself rather than pushed in by Talon.
+    ALERT_CREATED = "alert_created"
+    ALERT_ASSIGNED = "alert_assigned"
+    CASE_ASSIGNED = "case_assigned"
+    CASE_TASK_ASSIGNED = "case_task_assigned"
+
 
 class NotificationChannel(str, Enum):
     """Delivery channel set.
@@ -135,6 +141,18 @@ class DispatchStatus(str, Enum):
 # The legacy `severity_critical_or_high` value is included because routes saved
 # against an older schema still dispatch through the same AI path; see
 # `_trigger_applies`.
+# Triggers about *who is working on something* rather than about a customer's
+# security posture. They resolve against scope='internal' routes, so assigning
+# an ACME alert to an analyst reaches the SOC, never ACME's channel.
+INTERNAL_TRIGGERS: frozenset = frozenset(
+    {
+        "alert_assigned",
+        "case_assigned",
+        "case_task_assigned",
+    },
+)
+
+
 AI_SOURCED_TRIGGERS: frozenset = frozenset(
     {
         "investigation_complete",

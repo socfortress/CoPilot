@@ -676,6 +676,24 @@ async def update_case_task(
         await session.commit()
         await session.refresh(task)
 
+        # Notification routes (#1006). `assignment_changed` is the same guard the
+        # audit event uses, so a no-op write neither logs nor notifies.
+        if assignment_changed:
+            from app.notifications.services.emit import emit
+            from app.notifications.services.event_builders import (
+                case_task_assigned_event,
+            )
+
+            emit(
+                case_task_assigned_event(
+                    task_id=task.id,
+                    case_id=task.case_id,
+                    title=task.title,
+                    assignee=task.assigned_to,
+                    actor=actor,
+                ),
+            )
+
         return CaseTaskOperationResponse(
             task=_case_task_to_response(task),
             success=True,
