@@ -2808,8 +2808,10 @@ async def add_case_task_endpoint(
 @incidents_db_operations_router.patch(
     "/case/tasks/{task_id}",
     description=(
-        "Update a CaseTask: change status (TODO/DONE/NOT_NECESSARY) and/or attach an evidence "
-        "comment. NOT_NECESSARY is rejected for mandatory tasks. Admin/analyst only."
+        "Update a CaseTask: change status (TODO/DONE/NOT_NECESSARY), attach an evidence "
+        "comment, and/or set the assignee. NOT_NECESSARY is rejected for mandatory tasks. "
+        "Pass assigned_to: null to unassign; omit the key to leave the assignee unchanged. "
+        "Admin/analyst only."
     ),
     dependencies=[_admin_analyst_dep],
 )

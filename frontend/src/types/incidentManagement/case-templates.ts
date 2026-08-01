@@ -19,6 +19,7 @@ export type CaseEventType =
 	| "task_added"
 	| "task_status_changed"
 	| "task_commented"
+	| "task_assigned"
 
 // ----- CaseTemplate (admin/analyst-managed) -----
 
@@ -101,6 +102,7 @@ export interface CaseTask {
 	order_index: number
 	status: CaseTaskStatus
 	evidence_comment?: string | null
+	assigned_to?: string | null
 	completed_by?: string | null
 	completed_at?: string | null
 	created_by: string
@@ -122,6 +124,10 @@ export interface CaseTaskCreatePayload {
 export interface CaseTaskUpdatePayload {
 	status?: CaseTaskStatus
 	evidence_comment?: string | null
+	// Omitting the key leaves the current assignee untouched; sending an
+	// explicit null unassigns. The backend distinguishes the two via Pydantic's
+	// __fields_set__, so never send `assigned_to: undefined` expecting a clear.
+	assigned_to?: string | null
 }
 
 // ----- Soft-warning close response -----
