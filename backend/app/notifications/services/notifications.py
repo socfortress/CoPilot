@@ -18,6 +18,7 @@ import json
 from datetime import datetime
 from typing import List
 from typing import Optional
+from uuid import uuid4
 
 from fastapi import HTTPException
 from loguru import logger
@@ -50,6 +51,7 @@ from app.notifications.schema.notifications import NotificationChannel
 from app.notifications.schema.notifications import NotificationRouteCreate
 from app.notifications.schema.notifications import NotificationRouteUpdate
 from app.notifications.schema.notifications import NotificationScope
+from app.notifications.schema.notifications import NotificationSeverity
 from app.notifications.schema.notifications import NotificationTrigger
 from app.notifications.schema.notifications import ShuffleApp
 from app.notifications.schema.notifications import ShuffleIntegrationCreate
@@ -867,6 +869,101 @@ async def _record_log(
         # into locals so this is safe.
         await session.rollback()
         return False
+
+
+def _sample_event_for(route: CustomerNotificationRoute) -> NotificationEvent:
+    """A realistic-looking event for a test send.
+
+    Deliberately built from the route's own trigger so the operator sees the
+    body they'll actually get, not a generic "hello". The dedupe key carries a
+    uuid so repeated tests always send — a test that silently no-ops the second
+    time would be worse than useless.
+    """
+    trigger = (
+        NotificationTrigger(route.trigger)
+        if route.trigger in {t.value for t in NotificationTrigger}
+        else NotificationTrigger.INVESTIGATION_COMPLETE
+    )
+
+    is_assignment = trigger.value in INTERNAL_TRIGGERS
+    entity_type = EntityType.ALERT
+    if trigger == NotificationTrigger.CASE_ASSIGNED:
+        entity_type = EntityType.CASE
+    elif trigger == NotificationTrigger.CASE_TASK_ASSIGNED:
+        entity_type = EntityType.CASE_TASK
+
+    return NotificationEvent(
+        customer_code=route.customer_code,
+        trigger=trigger,
+        severity=NotificationSeverity.HIGH,
+        subject="Test notification from CoPilot",
+        summary=(
+            "This is a test notification triggered from the CoPilot route form. "
+            "If you are reading it, this route is configured correctly."
+        ),
+        entity_type=entity_type,
+        entity_id=0,
+        dedupe_key=f"test:{route.id}:{uuid4()}",
+        link_url=None,
+        assignee_username=route.created_by if is_assignment else None,
+        actor_username=route.created_by,
+        context={"alert_name": "Test notification from CoPilot", "title": "Test notification from CoPilot"},
+    )
+
+
+async def send_test_notification(route: CustomerNotificationRoute, session: AsyncSession) -> DispatchOutcome:
+    """Deliver one test message through the route's real provider.
+
+    Uses the normal send path rather than a bespoke per-provider probe, because
+    a probe tests the wrong thing: the Resend key in use here is send-only
+    restricted, so an account-state check 401s while sending works fine. What an
+    operator wants to know is "will a real notification arrive", and only a real
+    send answers that.
+
+    The outcome IS logged. A test send consumes provider quota exactly like a
+    real one — leaving it out of the dispatch log would make the Resend monthly
+    counter under-report, and hide test traffic from the audit trail.
+    """
+    provider = get_channel(route.channel)
+    if provider is None:
+        return DispatchOutcome(
+            route_id=route.id,
+            route_name=route.name,
+            channel=route.channel,
+            status=DispatchStatus.FAILED,
+            error_message=f"Unsupported channel: {route.channel}",
+        )
+
+    event = _sample_event_for(route)
+    ctx = DispatchContext(session=session, event=event)
+    body = _render_body(route, event)
+
+    try:
+        result = await provider.send(route=route, event=event, rendered_body=body, ctx=ctx)
+    except Exception as e:  # noqa: BLE001 — a test must report, never 500
+        logger.exception(f"Test dispatch raised for route {route.id}: {e!r}")
+        result = SendResult.failed(f"Dispatcher exception: {type(e).__name__}: {e}")
+
+    await _record_log(
+        session,
+        event=event,
+        route_id=route.id,
+        status=result.status,
+        error_message=result.error_message,
+        latency_ms=result.latency_ms,
+        payload_preview=body[:500],
+        provider_reference=result.provider_reference,
+    )
+
+    return DispatchOutcome(
+        route_id=route.id,
+        route_name=route.name,
+        channel=route.channel,
+        status=DispatchStatus(result.status),
+        error_message=result.error_message,
+        latency_ms=result.latency_ms,
+        provider_reference=result.provider_reference,
+    )
 
 
 async def routes_for_event(event: NotificationEvent, session: AsyncSession) -> List[CustomerNotificationRoute]:

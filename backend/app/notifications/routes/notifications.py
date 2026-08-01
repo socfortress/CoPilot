@@ -34,6 +34,7 @@ from app.notifications.channels import CHANNEL_REGISTRY
 from app.notifications.schema.notifications import ChannelDescriptor
 from app.notifications.schema.notifications import ChannelListResponse
 from app.notifications.schema.notifications import DispatchLogListResponse
+from app.notifications.schema.notifications import DispatchOutcome
 from app.notifications.schema.notifications import DispatchRequest
 from app.notifications.schema.notifications import DispatchResponse
 from app.notifications.schema.notifications import NotificationRouteCreate
@@ -136,6 +137,35 @@ async def delete_route_route(
 ) -> dict:
     await svc.delete_route(route_id, customer_code, session)
     return {"success": True, "message": "Route deleted"}
+
+
+@notifications_router.post(
+    "/customers/{customer_code}/notification_routes/{route_id}/test",
+    response_model=DispatchOutcome,
+    description=(
+        "Send a real test notification through this route. Consumes provider quota and is "
+        "recorded in the dispatch log, exactly like a live notification."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def test_route(
+    customer_code: str,
+    route_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> DispatchOutcome:
+    route = await svc.get_route(route_id, customer_code, session)
+    return await svc.send_test_notification(route, session)
+
+
+@notifications_router.post(
+    "/internal_notification_routes/{route_id}/test",
+    response_model=DispatchOutcome,
+    description="Send a real test notification through this internal route.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def test_internal_route(route_id: int, session: AsyncSession = Depends(get_db)) -> DispatchOutcome:
+    route = await svc.get_internal_route(route_id, session)
+    return await svc.send_test_notification(route, session)
 
 
 # ---------------------------------------------------------------------------
