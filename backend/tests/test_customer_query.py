@@ -25,3 +25,20 @@ def test_customer_codes_query_empty():
     request.query_params.getlist.return_value = []
 
     assert customer_codes_query(request, None) is None
+
+
+def test_customer_codes_query_legacy_singular_param():
+    """Endpoints migrated from customer_code to customer_codes must keep old callers working."""
+    request = MagicMock()
+    request.query_params = MagicMock()
+    request.query_params.getlist.return_value = []
+
+    assert customer_codes_query(request, None, "test") == ["test"]
+
+
+def test_customer_codes_query_prefers_plural_over_legacy_singular():
+    request = MagicMock()
+    request.query_params = MagicMock()
+    request.query_params.getlist.return_value = []
+
+    assert customer_codes_query(request, ["demo"], "test") == ["demo"]

@@ -26,7 +26,7 @@
 					size="small"
 					filterable
 					class="w-40!"
-					:loading="loadingAvailableUsers || !usersOptions.length"
+					:loading="loadingAvailableUsers"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
@@ -42,9 +42,12 @@
 					:options="customersOptions"
 					placeholder="Select..."
 					size="small"
+					multiple
 					filterable
-					class="w-56!"
-					:loading="loadingCustomers || !customersOptions.length"
+					clearable
+					:max-tag-count="2"
+					class="min-w-56!"
+					:loading="loadingCustomers"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
@@ -62,7 +65,7 @@
 					size="small"
 					filterable
 					class="w-44!"
-					:loading="loadingConfiguredSources || !sourcesOptions.length"
+					:loading="loadingConfiguredSources"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
@@ -160,6 +163,7 @@ import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import type { AlertStatus } from "@/types/incidentManagement/alerts"
 import type { SourceName } from "@/types/incidentManagement/sources"
+import _castArray from "lodash/castArray"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
 import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
@@ -180,7 +184,7 @@ const AddIcon = "carbon:add"
 const DelIcon = "carbon:delete"
 const router = useRouter()
 const route = useRoute()
-const { globalCustomerCodes } = useGlobalCustomerFilter()
+const { globalCustomerCodes, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 const message = useMessage()
 const loadingAvailableUsers = ref(false)
 const loadingConfiguredSources = ref(false)
@@ -247,6 +251,8 @@ function setFilter(newFilters: AlertsListFilter[]) {
 			filters.value.push(newFilter)
 		}
 	}
+
+	loadOptionsForFilters()
 	submit()
 }
 
@@ -281,7 +287,9 @@ function getQueryString() {
 			.map(o => ({
 				type: o[0] as AlertsFilterTypes,
 				label: typeOptions.find(t => t.value === o[0])?.label || o[0],
-				value: o[1] as AlertsListFilterValue
+				// customerCode is multi-valued: a repeated param arrives as string[], a legacy
+				// single one as a plain string — normalize so the select always gets an array.
+				value: (o[0] === "customerCode" ? _castArray(o[1]) : o[1]) as AlertsListFilterValue
 			}))
 	}
 }
@@ -354,8 +362,27 @@ function applyGlobalCustomerCodeFilter() {
 	if (!codes.length) {
 		return false
 	}
-	filters.value.push({ type: "customerCode", value: codes[0] })
+	filters.value.push({ type: "customerCode", value: [...codes] })
 	return true
+}
+
+/**
+ * Filter chips can appear without the "Add filter" dropdown ever opening — restored from the
+ * query string, seeded from the global customer filter, or pushed by live sync. Fetch the option
+ * lists those chips need, otherwise they render as bare codes with no way to change them.
+ */
+function loadOptionsForFilters() {
+	const types = new Set(filters.value.map(f => f.type))
+
+	if (types.has("assignedTo") && !availableUsers.value.length) {
+		getAvailableUsers()
+	}
+	if (types.has("customerCode") && !customersList.value.length) {
+		getCustomers()
+	}
+	if (types.has("source") && !configuredSourcesList.value.length) {
+		getConfiguredSources()
+	}
 }
 
 function load() {
@@ -379,9 +406,18 @@ onBeforeMount(() => {
 	}
 
 	if (filters.value.length) {
+		loadOptionsForFilters()
 		submit()
 	}
 })
+
+// A preset locks the list to a fixed scope (embedded usages) — never live-sync those.
+// setFilter() already upserts-or-deletes and submits, so a null value clears the filter.
+if (!preset?.length) {
+	onGlobalCustomerFilterChange(codes =>
+		setFilter([{ type: "customerCode", value: codes.length ? [...codes] : null }])
+	)
+}
 
 defineExpose({ setFilter })
 </script>

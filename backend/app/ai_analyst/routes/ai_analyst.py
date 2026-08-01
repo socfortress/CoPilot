@@ -1,3 +1,4 @@
+from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
@@ -68,6 +69,7 @@ from app.connectors.talon.services.talon import (
 )
 from app.db.db_session import get_db
 from app.db.universal_models import AiAnalystReport
+from app.middleware.customer_query import customer_codes_query
 
 ai_analyst_router = APIRouter()
 
@@ -261,10 +263,10 @@ async def get_ioc_route(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def list_alerts_with_reports_route(
-    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     session: AsyncSession = Depends(get_db),
 ) -> AlertsWithReportsListResponse:
-    alerts = await list_alerts_with_reports(session, customer_code=customer_code)
+    alerts = await list_alerts_with_reports(session, customer_codes=customer_codes)
     return AlertsWithReportsListResponse(
         success=True,
         message=f"{len(alerts)} alerts with reports found",

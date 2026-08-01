@@ -30,7 +30,7 @@ export interface AuditLogFilters {
 	action?: string
 	entity_type?: string
 	entity_id?: string
-	customer_code?: string
+	customer_codes?: string[]
 	result?: string
 	/** ISO datetime; only entries at/after this UTC time */
 	start_time?: string

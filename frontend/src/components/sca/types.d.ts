@@ -4,5 +4,6 @@ export type ScaOverviewFilterTypes = keyof Omit<ScaOverviewQuery, "page" | "page
 
 export interface ScaOverviewFilter {
 	type: ScaOverviewFilterTypes
-	value: string | number | null
+	/** ``customer_codes`` holds a list; every other filter is scalar. */
+	value: string | string[] | number | null
 }

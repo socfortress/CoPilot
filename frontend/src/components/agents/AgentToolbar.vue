@@ -120,6 +120,7 @@ import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import { useWindowSize } from "@vueuse/core"
+import _isEqual from "lodash/isEqual"
 import { NButton, NCard, NDropdown, NFormItem, NInput, NScrollbar, NSelect, NSwitch, NTag, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
@@ -163,7 +164,7 @@ const {
 const SearchIcon = "carbon:search"
 const DeleteIcon = "carbon:trash-can"
 const message = useMessage()
-const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
+const { applyGlobalCustomerPrefill, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 
 const customerCodes = defineModel<string[]>("customerCodes", { default: () => [] })
 
@@ -257,5 +258,13 @@ onBeforeMount(() => {
 	const draft = { customerCodes: customerCodes.value }
 	applyGlobalCustomerPrefill("customerCodes", draft, { multiple: true })
 	customerCodes.value = (draft.customerCodes as string[]) || []
+})
+
+// This toolbar drives a multi-customer list, so the whole selection carries over rather than
+// codes[0]. The watcher on the parent's customerCodesFilter turns the assignment into a re-fetch.
+onGlobalCustomerFilterChange(codes => {
+	if (!_isEqual(codes, customerCodes.value)) {
+		customerCodes.value = [...codes]
+	}
 })
 </script>

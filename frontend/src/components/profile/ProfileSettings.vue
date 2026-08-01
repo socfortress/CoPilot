@@ -17,6 +17,20 @@
 					</n-form-item>
 				</div>
 
+				<div class="mt-5 mb-5 text-xl">Global customers filter</div>
+				<n-form-item label="Live sync" path="customerFilterLiveSync">
+					<div class="flex items-center gap-3">
+						<n-switch v-model:value="formValue.customerFilterLiveSync" />
+						<span class="text-secondary text-xs">
+							{{
+								formValue.customerFilterLiveSync
+									? "Views reload as soon as you change the sidebar selection"
+									: "The global filter is applied only when you open a view"
+							}}
+						</span>
+					</div>
+				</n-form-item>
+
 				<n-form-item>
 					<n-button type="primary" @click="save()">Save</n-button>
 				</n-form-item>
@@ -27,12 +41,14 @@
 
 <script setup lang="ts">
 import type { FormInst, FormValidationError } from "naive-ui"
-import { NButton, NCard, NForm, NFormItem, NRadio, NRadioGroup, NSelect, NSpin, useMessage } from "naive-ui"
+import { NButton, NCard, NForm, NFormItem, NRadio, NRadioGroup, NSelect, NSpin, NSwitch, useMessage } from "naive-ui"
 import { ref } from "vue"
+import { useCustomerFilterStore } from "@/stores/customer-filter"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 
 const settingsStore = useSettingsStore()
+const customerFilterStore = useCustomerFilterStore()
 
 const h24 = dayjs().format("HH:mm")
 const h12 = dayjs().format("h:mm a")
@@ -42,7 +58,8 @@ const hours24 = settingsStore.hours24
 
 const formValue = ref({
 	dateFormat: currentSateFormat,
-	hours24
+	hours24,
+	customerFilterLiveSync: customerFilterStore.liveSync
 })
 
 const loading = ref(false)
@@ -69,6 +86,7 @@ function save() {
 		if (!errors) {
 			settingsStore.setDateFormat(formValue.value.dateFormat)
 			settingsStore.setHours24(formValue.value.hours24)
+			customerFilterStore.setLiveSync(formValue.value.customerFilterLiveSync)
 
 			message.success("Settings saved")
 		} else {

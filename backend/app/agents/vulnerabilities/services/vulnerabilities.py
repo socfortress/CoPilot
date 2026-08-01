@@ -840,7 +840,7 @@ async def delete_vulnerabilities(db_session: AsyncSession, agent_name: Optional[
 async def search_vulnerabilities_from_indexer(
     db_session: AsyncSession,
     current_user: User,
-    customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
     agent_name: Optional[str] = None,
     severity: Optional[str] = None,
     cve_id: Optional[str] = None,
@@ -855,7 +855,7 @@ async def search_vulnerabilities_from_indexer(
     Args:
         db_session: Database session for agent lookup
         current_user: Current authenticated user for customer access filtering
-        customer_code: Optional customer code filter
+        customer_codes: Optional filter by one or more customer codes
         agent_name: Optional agent hostname filter
         severity: Optional severity filter
         cve_id: Optional CVE ID filter
@@ -868,7 +868,7 @@ async def search_vulnerabilities_from_indexer(
         VulnerabilitySearchResponse with paginated results filtered by user access
     """
     logger.info(
-        f"Searching vulnerabilities with filters: customer_code={customer_code}, "
+        f"Searching vulnerabilities with filters: customer_codes={customer_codes}, "
         f"agent_name={agent_name}, severity={severity}, cve_id={cve_id}, "
         f"package_name={package_name}, page={page}, page_size={page_size}, "
         f"include_epss={include_epss}",
@@ -878,9 +878,11 @@ async def search_vulnerabilities_from_indexer(
     accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db_session)
     logger.info(f"User {current_user.username} has access to customers: {accessible_customers}")
 
-    # Override customer_code based on user permissions
+    # Deny rather than silently narrowing — a caller asking for a customer it cannot see
+    # should be told, not handed a quietly reduced result set.
     if "*" not in accessible_customers:
-        if customer_code and customer_code not in accessible_customers:
+        denied = [code for code in (customer_codes or []) if code not in accessible_customers]
+        if denied:
             return VulnerabilitySearchResponse(
                 vulnerabilities=[],
                 total_count=0,
@@ -894,14 +896,14 @@ async def search_vulnerabilities_from_indexer(
                 has_next=False,
                 has_previous=False,
                 success=True,
-                message=f"Access denied to customer {customer_code}",
+                message=f"Access denied to customer {', '.join(denied)}",
                 filters_applied={},
             )
 
     # Build filters applied dict for response
     filters_applied = {}
-    if customer_code:
-        filters_applied["customer_code"] = customer_code
+    if customer_codes:
+        filters_applied["customer_codes"] = customer_codes
     if agent_name:
         filters_applied["agent_name"] = agent_name
     if severity:
@@ -938,15 +940,15 @@ async def search_vulnerabilities_from_indexer(
             query = query.filter(Agents.customer_code.in_(accessible_customers))
 
         # Apply additional filters if specified
-        if customer_code:
-            query = query.filter(Agents.customer_code == customer_code)
+        if customer_codes:
+            query = query.filter(Agents.customer_code.in_(customer_codes))
         if agent_name:
             query = query.filter(Agents.hostname == agent_name)
 
         result = await db_session.execute(query)
         agents = result.scalars().all()
 
-        if not agents and (customer_code or agent_name or "*" not in accessible_customers):
+        if not agents and (customer_codes or agent_name or "*" not in accessible_customers):
             return VulnerabilitySearchResponse(
                 vulnerabilities=[],
                 total_count=0,
@@ -965,7 +967,7 @@ async def search_vulnerabilities_from_indexer(
             )
 
         # Build list of agent hostnames for Elasticsearch filtering
-        if "*" not in accessible_customers or customer_code or agent_name:
+        if "*" not in accessible_customers or customer_codes or agent_name:
             for agent in agents:
                 if agent.hostname:
                     agent_hostnames.append(agent.hostname)
@@ -1793,7 +1795,7 @@ async def generate_vulnerability_csv_report(
 async def list_vulnerability_reports(
     db_session: AsyncSession,
     current_user: User,
-    customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
 ) -> VulnerabilityReportListResponse:
     """
     List available vulnerability reports
@@ -1801,7 +1803,7 @@ async def list_vulnerability_reports(
     Args:
         db_session: Database session
         current_user: Current authenticated user
-        customer_code: Optional filter by customer code
+        customer_codes: Optional filter by one or more customer codes
 
     Returns:
         VulnerabilityReportListResponse with list of reports
@@ -1817,15 +1819,19 @@ async def list_vulnerability_reports(
         if "*" not in accessible_customers:
             query = query.filter(VulnerabilityReport.customer_code.in_(accessible_customers))
 
-        if customer_code:
-            if "*" not in accessible_customers and customer_code not in accessible_customers:
-                return VulnerabilityReportListResponse(
-                    reports=[],
-                    total_count=0,
-                    success=True,
-                    message=f"Access denied to customer {customer_code}",
-                )
-            query = query.filter(VulnerabilityReport.customer_code == customer_code)
+        if customer_codes:
+            # Deny rather than silently narrowing — matches the single-customer behavior
+            # this replaced, so a caller asking for a customer it cannot see still knows.
+            if "*" not in accessible_customers:
+                denied = [code for code in customer_codes if code not in accessible_customers]
+                if denied:
+                    return VulnerabilityReportListResponse(
+                        reports=[],
+                        total_count=0,
+                        success=True,
+                        message=f"Access denied to customer {', '.join(denied)}",
+                    )
+            query = query.filter(VulnerabilityReport.customer_code.in_(customer_codes))
 
         result = await db_session.execute(query)
         reports = result.scalars().all()

@@ -151,7 +151,7 @@ function buildApiFilters(): AuditLogFilters {
 				api.entity_type = filter.value as string
 				break
 			case "customer_code":
-				api.customer_code = filter.value as string
+				api.customer_codes = filter.value as string[]
 				break
 			case "search":
 				api.search = filter.value as string

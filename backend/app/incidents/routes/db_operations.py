@@ -245,6 +245,7 @@ from app.incidents.services.incident_case import handle_customer_notifications_c
 from app.incidents.services.notification_enrichment import extract_rule_level
 from app.incidents.services.notification_enrichment import severity_from_rule_level
 from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_query import customer_codes_query
 
 incidents_db_operations_router = APIRouter()
 
@@ -1742,7 +1743,7 @@ async def list_alerts_by_source_endpoint(
 async def list_alerts_multiple_filters_endpoint(
     assigned_to: Optional[str] = Query(None),
     alert_title: Optional[str] = Query(None),
-    customer_code: Optional[str] = Query(None),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     source: Optional[str] = Query(None),
     asset_name: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
@@ -1759,24 +1760,31 @@ async def list_alerts_multiple_filters_endpoint(
     """
     logger.info(f"Listing alerts with filters for user: {current_user.username} with role_id: {current_user.role_id}")
 
-    # Get customer access filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    # Intersect the requested subset with what the user may see — never widens scope.
+    effective_customers = await customer_access_handler.resolve_effective_customers(current_user, customer_codes, db)
 
-    # Apply customer filtering if user is not admin/analyst
-    if "*" not in accessible_customers:
-        # If user provided customer_code, validate they have access to it
-        if customer_code and customer_code not in accessible_customers:
-            raise HTTPException(status_code=403, detail=f"Access denied to customer {customer_code}")
+    # An empty resolution means "the requested customers resolve to nothing you may see".
+    # It must short-circuit: the services skip the filter on a falsy list, so passing [] down
+    # would drop the tenant constraint entirely instead of matching no rows.
+    if not effective_customers:
+        return AlertOutResponse(
+            alerts=[],
+            total_filtered=0,
+            open=await alerts_open_for_user(current_user, db),
+            in_progress=await alerts_in_progress_for_user(current_user, db),
+            closed=await alerts_closed_for_user(current_user, db),
+            total=await alert_total_for_user(current_user, db),
+            success=True,
+            message="No alerts found for the requested customers",
+        )
 
-        # If no customer_code specified, use the first accessible customer for single customer users
-        if not customer_code and len(accessible_customers) == 1:
-            customer_code = accessible_customers[0]
+    # ["*"] = wildcard access with no requested subset -> no customer constraint at all.
+    scoped_customers = None if "*" in effective_customers else effective_customers
 
     # Pass user for tag filtering
     alerts = await list_alerts_multiple_filters(
         assigned_to=assigned_to,
         alert_title=alert_title,
-        customer_code=customer_code,
         source=source,
         asset_name=asset_name,
         status=status,
@@ -1786,9 +1794,7 @@ async def list_alerts_multiple_filters_endpoint(
         page=page,
         page_size=page_size,
         order=order,
-        # Constrain scoped users to their accessible customers (prevents cross-tenant
-        # disclosure when the user has >1 customer and no explicit customer_code).
-        customer_codes=None if "*" in accessible_customers else accessible_customers,
+        customer_codes=scoped_customers,
         user=current_user,  # Pass user for tag filtering
     )
 
@@ -1802,7 +1808,7 @@ async def list_alerts_multiple_filters_endpoint(
     total_filtered = await alerts_total_multiple_filters(
         assigned_to=assigned_to,
         alert_title=alert_title,
-        customer_code=customer_code,
+        customer_codes=scoped_customers,
         source=source,
         asset_name=asset_name,
         status=status,

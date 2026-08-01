@@ -191,7 +191,7 @@ const TRAILING_WHITESPACE_RE = /\s$/
 
 const route = useRoute()
 const message = useMessage()
-const { globalCustomerCode } = useGlobalCustomerFilter()
+const { globalCustomerCode, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 
 const filterTimeRange = ref<{ unit: "h" | "d" | "w"; time: number }>({
 	unit: "h",
@@ -422,5 +422,15 @@ onBeforeMount(() => {
 		}
 		applyRouteParams()
 	})
+})
+
+// An emptied global selection keeps the current customer — a search needs one to run at all.
+onGlobalCustomerFilterChange(codes => {
+	const code = codes[0] || null
+
+	if (code && code !== selectedCustomerCode.value) {
+		selectedCustomerCode.value = code
+		onCustomerChange(code)
+	}
 })
 </script>

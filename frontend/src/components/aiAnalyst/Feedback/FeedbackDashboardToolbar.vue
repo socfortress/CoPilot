@@ -63,7 +63,7 @@ const RefreshIcon = "carbon:renew"
 const ConsolidateIcon = "carbon:data-collection"
 
 const message = useMessage()
-const { getAvailableGlobalCustomerValue } = useGlobalCustomerFilter()
+const { getAvailableGlobalCustomerValue, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 
 const loading = defineModel<boolean>("loading")
 
@@ -108,5 +108,15 @@ function refresh() {
 
 onBeforeMount(() => {
 	bootstrapCustomers()
+})
+
+// The picker only lists customers that have AI runs, so an unmatched or emptied global
+// selection keeps the current one — the dashboard always needs a customer.
+onGlobalCustomerFilterChange(() => {
+	const globalCode = getAvailableGlobalCustomerValue(customerOptions.value.map(o => o.value))
+
+	if (globalCode && globalCode !== customer.value) {
+		customer.value = globalCode
+	}
 })
 </script>

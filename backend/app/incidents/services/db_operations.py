@@ -433,12 +433,18 @@ async def alerts_total_multiple_filters(
     assigned_to: Optional[str] = None,
     alert_title: Optional[str] = None,
     customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
     source: Optional[str] = None,
     asset_name: Optional[str] = None,
     status: Optional[str] = None,
     tags: Optional[List[str]] = None,
     ioc_value: Optional[str] = None,
 ) -> int:
+    """Count alerts matching the filter set.
+
+    ``customer_code`` filters to a single customer; ``customer_codes`` to a set — mirrors
+    ``list_alerts_multiple_filters`` so the count and the page it annotates stay in sync.
+    """
     # Build dynamic filters
     filters = []
     if assigned_to:
@@ -447,6 +453,8 @@ async def alerts_total_multiple_filters(
         filters.append(Alert.alert_name.like(f"%{alert_title}%"))
     if customer_code:
         filters.append(Alert.customer_code == customer_code)
+    if customer_codes:
+        filters.append(Alert.customer_code.in_(customer_codes))
     if source:
         filters.append(Alert.source == source)
     if asset_name:
