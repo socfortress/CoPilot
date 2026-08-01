@@ -27,6 +27,7 @@
 								v-for="route of list"
 								:key="route.id"
 								:route
+								:customer-code
 								class="item-appear item-appear-bottom item-appear-005 mb-2"
 								@edit="openEdit(route)"
 								@deleted="refreshList()"

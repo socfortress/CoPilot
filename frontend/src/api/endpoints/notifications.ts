@@ -1,5 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type {
+	NotificationChannelDescriptor,
 	NotificationDispatchLogEntry,
 	NotificationRoute,
 	NotificationRoutePayload,
@@ -40,6 +41,15 @@ export default {
 
 	deleteRoute(customerCode: string, routeId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`/customers/${customerCode}/notification_routes/${routeId}`)
+	},
+
+	// The channel catalog is deployment-wide, not per-customer: it advertises
+	// what this build supports plus each channel's config JSON Schema, which the
+	// route form renders generic inputs from for channels with no bespoke block.
+	getChannels() {
+		return HttpClient.get<FlaskBaseResponse & { channels: NotificationChannelDescriptor[] }>(
+			`/notification_channels`
+		)
 	},
 
 	listDispatchLog(customerCode: string) {

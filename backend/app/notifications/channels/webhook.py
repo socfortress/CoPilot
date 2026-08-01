@@ -16,7 +16,9 @@ from typing import Dict
 from typing import Optional
 
 from loguru import logger
+from pydantic import field_validator
 
+from app.notifications.channels.base import ChannelConfig
 from app.notifications.channels.base import ChannelProvider
 from app.notifications.channels.base import DispatchContext
 from app.notifications.channels.base import SendResult
@@ -81,9 +83,37 @@ async def build_full_report(alert_id: int, session) -> Optional[Dict[str, Any]]:
     }
 
 
+class WebhookConfig(ChannelConfig):
+    """`customer_notification_route.config` when channel='webhook'.
+
+    `headers` is a real dict here, unlike the legacy `webhook_headers` column,
+    which stored a JSON *string* inside a Text column and needed hand-decoding
+    on every read.
+    """
+
+    url: Optional[str] = None
+    method: str = "POST"
+    headers: Optional[Dict[str, str]] = None
+    include_full_report: bool = False
+
+    @field_validator("method")
+    @classmethod
+    def _method_supported(cls, v: str) -> str:
+        upper = (v or "POST").upper()
+        if upper not in {"POST", "PUT"}:
+            raise ValueError("method must be POST or PUT")
+        return upper
+
+
 class WebhookChannel(ChannelProvider):
     key = "webhook"
     display_name = "Webhook"
+    config_schema = WebhookConfig
+    # A webhook targets a fixed URL, so it cannot deliver to a resolved
+    # assignee — that needs an addressable channel like email.
+    supports_recipient_modes = {"static"}
+    # Authorization / X-API-Key and friends live here; encrypted in #1020.
+    secret_fields = {"headers"}
 
     async def send(
         self,
@@ -95,14 +125,21 @@ class WebhookChannel(ChannelProvider):
     ) -> SendResult:
         # Read every attribute before the first await — an expired ORM object
         # would otherwise trigger a synchronous refresh and MissingGreenlet.
-        url = route.webhook_url
-        method = route.webhook_method
-        raw_headers = route.webhook_headers
-        include_full_report = bool(route.include_full_report)
         has_template = bool(route.format_template)
+        try:
+            cfg = self.parse_config(route)
+        except ValueError as e:
+            # A malformed config is a data-integrity problem on one route; log
+            # it against that route rather than failing the whole batch.
+            return SendResult.failed(f"Invalid webhook config: {e}")
+
+        url = cfg.url
+        method = cfg.method
+        headers = cfg.headers
+        include_full_report = cfg.include_full_report
 
         if not url:
-            return SendResult.failed("Route has no webhook_url (data integrity issue)")
+            return SendResult.failed("Route config has no url (data integrity issue)")
 
         # Structured default payload — automation platforms consume these fields
         # directly, so the names and null-vs-empty semantics are load-bearing.
@@ -139,7 +176,7 @@ class WebhookChannel(ChannelProvider):
         status, error_message, latency_ms, _ = await dispatch_webhook(
             url=url,
             method=method or "POST",
-            headers=decode_webhook_headers(raw_headers),
+            headers=headers,
             structured_payload=structured_payload,
             rendered_template=rendered_template,
         )

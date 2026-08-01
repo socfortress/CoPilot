@@ -27,6 +27,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.notifications.channels import CHANNEL_REGISTRY
+from app.notifications.schema.notifications import ChannelDescriptor
+from app.notifications.schema.notifications import ChannelListResponse
 from app.notifications.schema.notifications import DispatchLogListResponse
 from app.notifications.schema.notifications import DispatchRequest
 from app.notifications.schema.notifications import DispatchResponse
@@ -129,6 +132,35 @@ async def delete_route_route(
 ) -> dict:
     await svc.delete_route(route_id, customer_code, session)
     return {"success": True, "message": "Route deleted"}
+
+
+# ---------------------------------------------------------------------------
+# Channel catalog
+# ---------------------------------------------------------------------------
+
+
+@notifications_router.get(
+    "/notification_channels",
+    response_model=ChannelListResponse,
+    description=(
+        "Delivery channels this deployment supports, with each one's config JSON Schema. "
+        "The route form renders generic inputs from the schema for channels without a "
+        "bespoke block, so adding a channel needs no frontend change."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def list_channels_route() -> ChannelListResponse:
+    channels = [
+        ChannelDescriptor(
+            key=provider.key,
+            display_name=provider.display_name,
+            config_schema=provider.config_schema.model_json_schema(),
+            supports_recipient_modes=sorted(provider.supports_recipient_modes),
+            secret_fields=sorted(provider.secret_fields),
+        )
+        for provider in CHANNEL_REGISTRY.values()
+    ]
+    return ChannelListResponse(success=True, message=f"{len(channels)} channel(s) retrieved", channels=channels)
 
 
 # ---------------------------------------------------------------------------

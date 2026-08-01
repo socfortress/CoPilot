@@ -17,6 +17,7 @@ before a migration commits data to it.
 
 from __future__ import annotations
 
+import json
 from abc import ABC
 from abc import abstractmethod
 from typing import Any
@@ -25,8 +26,11 @@ from typing import Callable
 from typing import ClassVar
 from typing import Dict
 from typing import Optional
+from typing import Set
+from typing import Type
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.notifications.schema.events import NotificationEvent
@@ -80,6 +84,17 @@ class DispatchContext:
         return self._memo[key]
 
 
+class ChannelConfig(BaseModel):
+    """Base for a provider's ``config`` shape.
+
+    ``extra="forbid"`` on purpose: a typo'd key should be a 400 at save time,
+    not a setting that silently does nothing until someone debugs why their
+    webhook has no auth header.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+
 class ChannelProvider(ABC):
     """One delivery channel.
 
@@ -92,6 +107,37 @@ class ChannelProvider(ABC):
 
     #: Human label for the route form's channel picker.
     display_name: ClassVar[str]
+
+    #: Validates ``customer_notification_route.config``. The API validates
+    #: against this at save time and the route form renders from its JSON
+    #: schema, so a new channel needs neither a migration nor bespoke form work.
+    config_schema: ClassVar[Type[ChannelConfig]]
+
+    #: Which ``recipient_mode`` values make sense here. A webhook targets a
+    #: fixed URL so it cannot resolve an assignee; email can.
+    supports_recipient_modes: ClassVar[Set[str]] = {"static"}
+
+    #: Config keys holding secrets. Encrypted at rest and redacted on read in
+    #: #1020; declared here so providers own the classification.
+    secret_fields: ClassVar[Set[str]] = set()
+
+    def parse_config(self, route: Any) -> ChannelConfig:
+        """Validate and return this route's config.
+
+        Raises ``ValueError`` on malformed JSON or a shape mismatch. Providers
+        call this at the top of ``send`` and convert failures into a logged
+        per-route failure rather than letting them abort the batch.
+        """
+        raw = getattr(route, "config", None)
+        if not raw:
+            return self.config_schema()
+        try:
+            data = json.loads(raw)
+        except ValueError as e:
+            raise ValueError(f"config is not valid JSON: {e}") from e
+        if not isinstance(data, dict):
+            raise ValueError("config must be a JSON object")
+        return self.config_schema.model_validate(data)
 
     @abstractmethod
     async def send(

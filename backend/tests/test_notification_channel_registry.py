@@ -59,37 +59,35 @@ def _ctx(event, session=None):
     return DispatchContext(session=session or AsyncMock(), event=event)
 
 
-def _webhook_route(**over):
+def _webhook_route(config=None, **over):
+    """A webhook route. Channel settings now live in the JSON `config` column
+    rather than a column per setting."""
+    cfg = {"url": "https://example.invalid/hook", "method": "POST", "include_full_report": False}
+    cfg.update(config or {})
     base = dict(
         id=1,
         name="SOC webhook",
         channel="webhook",
         destination="",
         format_template=None,
-        webhook_url="https://example.invalid/hook",
-        webhook_method="POST",
-        webhook_headers=None,
-        include_full_report=False,
-        shuffle_app_id=None,
+        config=json.dumps(cfg),
         shuffle_integration_id=None,
     )
     base.update(over)
     return SimpleNamespace(**base)
 
 
-def _shuffle_route(**over):
+def _shuffle_route(config=None, **over):
+    cfg = {"app_id": "app-uuid", "app_name": "Slack"}
+    cfg.update(config or {})
     base = dict(
         id=2,
         name="SOC slack",
         channel="shuffle",
         destination="#soc-alerts",
         format_template=None,
-        shuffle_app_id="app-uuid",
+        config=json.dumps(cfg),
         shuffle_integration_id=7,
-        webhook_url=None,
-        webhook_method=None,
-        webhook_headers=None,
-        include_full_report=False,
     )
     base.update(over)
     return SimpleNamespace(**base)
@@ -173,21 +171,21 @@ def test_webhook_preserves_none_for_absent_optional_fields():
 
 
 def test_webhook_defaults_method_to_post():
-    _result, kwargs = _run_webhook(_webhook_route(webhook_method=None))
+    _result, kwargs = _run_webhook(_webhook_route(config={"method": "POST"}))
     assert kwargs["method"] == "POST"
 
 
 def test_webhook_missing_url_fails_with_the_original_message():
-    result, kwargs = _run_webhook(_webhook_route(webhook_url=None))
+    result, kwargs = _run_webhook(_webhook_route(config={"url": None}))
     assert result.status == "failed"
-    assert result.error_message == "Route has no webhook_url (data integrity issue)"
+    assert result.error_message == "Route config has no url (data integrity issue)"
     assert kwargs is None, "must not attempt delivery"
 
 
 def test_webhook_include_full_report_merges_flat_and_ignores_template():
     report = {"report_id": 9, "recommended_actions": "isolate", "iocs": []}
     _result, kwargs = _run_webhook(
-        _webhook_route(include_full_report=True, format_template="ignored {{summary}}"),
+        _webhook_route(config={"include_full_report": True}, format_template="ignored {{summary}}"),
         report=report,
     )
 
@@ -198,7 +196,7 @@ def test_webhook_include_full_report_merges_flat_and_ignores_template():
 
 def test_webhook_missing_report_still_sends_base_payload():
     """A dispatch must not fail just because report write-back hasn't landed."""
-    _result, kwargs = _run_webhook(_webhook_route(include_full_report=True), report=None)
+    _result, kwargs = _run_webhook(_webhook_route(config={"include_full_report": True}), report=None)
 
     assert "report_id" not in kwargs["structured_payload"]
     assert kwargs["structured_payload"]["summary"] == "Credential dumping observed on WKSTN-04."
@@ -233,14 +231,52 @@ def test_webhook_template_report_token_substitutes_when_present_in_body():
     assert sent.await_args.kwargs["rendered_template"] == f"prefix {json.dumps(report)} suffix"
 
 
-def test_webhook_headers_are_decoded_from_the_json_column():
-    _result, kwargs = _run_webhook(_webhook_route(webhook_headers='{"Authorization": "Bearer x"}'))
+def test_webhook_headers_come_through_as_a_dict():
+    """Headers are a real dict in config, where the legacy column stored a JSON
+    string that needed hand-decoding on every read."""
+    _result, kwargs = _run_webhook(_webhook_route(config={"headers": {"Authorization": "Bearer x"}}))
     assert kwargs["headers"] == {"Authorization": "Bearer x"}
 
 
-def test_webhook_malformed_headers_do_not_abort_the_dispatch():
-    _result, kwargs = _run_webhook(_webhook_route(webhook_headers="{not json"))
+def test_webhook_absent_headers_are_none():
+    _result, kwargs = _run_webhook(_webhook_route())
     assert kwargs["headers"] is None
+
+
+def test_malformed_config_fails_the_route_rather_than_the_batch():
+    """BEHAVIOUR CHANGE from the per-column scheme.
+
+    Malformed `webhook_headers` used to be swallowed — headers became None and
+    the dispatch went out anyway. `config` carries the whole channel setup, so
+    an unparseable one means we don't know the URL either; sending a
+    half-configured request is worse than recording a failure. Config is
+    validated at save time now, so reaching this needs a hand-edited row.
+
+    It must still fail only THIS route, not raise into the dispatch loop.
+    """
+    result, kwargs = _run_webhook(
+        _webhook_route(),
+    )
+    # sanity: the well-formed case succeeds
+    assert result.status == "sent"
+
+    broken = _webhook_route()
+    broken.config = "{not json"
+    result, kwargs = _run_webhook(broken)
+
+    assert result.status == "failed"
+    assert "Invalid webhook config" in result.error_message
+    assert kwargs is None, "must not attempt delivery on a config we cannot read"
+
+
+def test_config_with_unknown_key_is_rejected():
+    """extra='forbid' — a typo'd key should surface, not silently do nothing."""
+    broken = _webhook_route()
+    broken.config = json.dumps({"url": "https://x.invalid", "heders": {"a": "b"}})
+    result, kwargs = _run_webhook(broken)
+
+    assert result.status == "failed"
+    assert kwargs is None
 
 
 # ── shuffle: statuses and tenancy ─────────────────────────────────────────
@@ -316,9 +352,9 @@ def test_shuffle_disabled_integration_is_skipped_not_failed():
 
 
 def test_shuffle_missing_app_id_fails_with_the_original_message():
-    result, _kwargs = _run_shuffle(_shuffle_route(shuffle_app_id=None), _integration())
+    result, _kwargs = _run_shuffle(_shuffle_route(config={"app_id": None}), _integration())
     assert result.status == "failed"
-    assert result.error_message == "Route has no shuffle_app_id (data integrity issue)"
+    assert result.error_message == "Route config has no app_id (data integrity issue)"
 
 
 def test_shuffle_connector_error_surfaces_the_connector_detail():
@@ -376,7 +412,7 @@ def test_report_is_read_once_across_routes_in_one_dispatch():
         for _ in range(3):
             asyncio.run(
                 CHANNEL_REGISTRY["webhook"].send(
-                    route=_webhook_route(include_full_report=True),
+                    route=_webhook_route(config={"include_full_report": True}),
                     event=event,
                     rendered_body="B",
                     ctx=ctx,

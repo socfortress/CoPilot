@@ -22,6 +22,7 @@ from sqlalchemy import update
 
 from app.connectors.utils import get_connector_info_from_db
 from app.db.universal_models import CustomerShuffleIntegration
+from app.notifications.channels.base import ChannelConfig
 from app.notifications.channels.base import ChannelProvider
 from app.notifications.channels.base import DispatchContext
 from app.notifications.channels.base import SendResult
@@ -62,9 +63,26 @@ async def get_shuffle_connector(session) -> Tuple[str, str]:
     return (base_url, api_key)
 
 
+class ShuffleConfig(ChannelConfig):
+    """`customer_notification_route.config` when channel='shuffle'.
+
+    `app_id` is the Shuffle app UUID we POST to /api/v1/apps/{id}/mcp;
+    `app_name` is the human label ("Slack") cached so the route list renders
+    without a round-trip to Shuffle.
+
+    The org lives on `shuffle_integration_id`, which stays a real FK column —
+    see the note on the model.
+    """
+
+    app_id: Optional[str] = None
+    app_name: Optional[str] = None
+
+
 class ShuffleChannel(ChannelProvider):
     key = "shuffle"
     display_name = "Shuffle"
+    config_schema = ShuffleConfig
+    supports_recipient_modes = {"static"}
 
     async def send(
         self,
@@ -76,9 +94,15 @@ class ShuffleChannel(ChannelProvider):
     ) -> SendResult:
         # Read every attribute before the first await — an expired ORM object
         # would otherwise trigger a synchronous refresh and MissingGreenlet.
-        app_id = route.shuffle_app_id
         integration_id = route.shuffle_integration_id
         destination = route.destination
+        try:
+            cfg = self.parse_config(route)
+        except ValueError as e:
+            # A malformed config is a data-integrity problem on one route; log
+            # it against that route rather than failing the whole batch.
+            return SendResult.failed(f"Invalid shuffle config: {e}")
+        app_id = cfg.app_id
 
         # Memoized per dispatch call: several Shuffle routes for one customer
         # share a single connector read, matching the pre-refactor behaviour.
@@ -95,7 +119,7 @@ class ShuffleChannel(ChannelProvider):
         if creds is None:
             return SendResult.failed("Shuffle connector unavailable")
         if not app_id:
-            return SendResult.failed("Route has no shuffle_app_id (data integrity issue)")
+            return SendResult.failed("Route config has no app_id (data integrity issue)")
 
         integration = await ctx.session.get(CustomerShuffleIntegration, integration_id)
         if not integration or integration.customer_code != event.customer_code:

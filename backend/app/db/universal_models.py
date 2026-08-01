@@ -893,12 +893,33 @@ class CustomerNotificationRoute(SQLModel, table=True):
     __tablename__ = "customer_notification_route"
 
     id: Optional[int] = Field(primary_key=True)
-    customer_code: str = Field(
+
+    # Nullable because an internal-scope route belongs to no tenant: assignment
+    # notifications go to the SOC, not to the customer whose alert was assigned.
+    # The CRUD layer enforces the invariant both ways —
+    # scope='customer' => customer_code IS NOT NULL; scope='internal' => NULL.
+    customer_code: Optional[str] = Field(
+        default=None,
         foreign_key="customers.customer_code",
         max_length=64,
         index=True,
-        nullable=False,
+        nullable=True,
     )
+
+    # 'customer' — delivers to the end customer's channel.
+    # 'internal'  — delivers to the SOC's own channel, tenant-agnostic. This is
+    #               where assignment notifications land, so analyst chatter
+    #               never reaches a customer's Slack.
+    scope: str = Field(default="customer", max_length=16, nullable=False, index=True)
+
+    # 'static'   — destination comes from `config`.
+    # 'assignee' — resolve the event's assignee to their email at dispatch time.
+    #              Only valid on channels whose supports_recipient_modes allows
+    #              it (a webhook targets a fixed URL, so it cannot).
+    recipient_mode: str = Field(default="static", max_length=16, nullable=False)
+
+    # An analyst picking up their own alert doesn't need an email about it.
+    notify_on_self_assign: bool = Field(default=False, nullable=False)
 
     # Human label shown in the UI list. Without this, users would have to
     # mentally parse channel+destination columns to identify a rule.
@@ -942,35 +963,39 @@ class CustomerNotificationRoute(SQLModel, table=True):
     # management. Populated from the auth context in the route handler.
     created_by: Optional[str] = Field(default=None, max_length=128)
 
-    # ----- Phase 2: Shuffle channel routing -----
-    # Populated when channel='shuffle'. NULL for legacy SMTP routes.
-    # The (integration_id, app_id, app_name) triple together describes
-    # "which Shuffle org" + "which app inside that org" + "label for the
-    # UI." `app_id` is the Shuffle app UUID we POST to
-    # /api/v1/apps/{app_id}/mcp; `app_name` is the human-readable label
-    # (e.g. "Slack") we cache so the UI doesn't have to roundtrip to
-    # Shuffle to render the route list.
+    # Per-channel settings, as a JSON string validated against the provider's
+    # declared `config_schema`. This replaced a column-per-channel-per-setting
+    # scheme that required a migration for every new channel; adding one is now
+    # a data-only change.
+    #
+    # Shapes (see each provider's ConfigSchema for the authority):
+    #   shuffle -> {"app_id": …, "app_name": …}
+    #   webhook -> {"url": …, "method": …, "headers": {…}, "include_full_report": bool}
+    #
+    # Stored as Text rather than a native JSON column for portability across
+    # the MySQL/SQLite backends, matching how webhook_headers was stored.
+    config: Optional[str] = Field(sa_column=Column(Text), default=None)
+
+    # `shuffle_integration_id` stays a real column while the rest of the Shuffle
+    # settings moved into `config`: it is a foreign key, and burying an FK
+    # inside JSON gives up referential integrity and the cross-tenant check the
+    # dispatcher relies on.
     shuffle_integration_id: Optional[int] = Field(
         default=None,
         foreign_key="customer_shuffle_integration.id",
         index=True,
     )
+
+    # ----- Legacy per-channel columns (dropped in #1018b) -----
+    # Superseded by `config`, retained for one release and dual-written on every
+    # create/update. That makes reverting this change lossless and lets the
+    # follow-up verify config against them on real data before dropping.
+    # Nothing reads these — the providers read `config`.
     shuffle_app_id: Optional[str] = Field(default=None, max_length=64)
     shuffle_app_name: Optional[str] = Field(default=None, max_length=128)
-
-    # ----- Direct webhook channel routing -----
-    # Populated when channel='webhook'. NULL for shuffle routes. The
-    # dispatch service POSTs/PUTs to `webhook_url` with either a
-    # structured JSON payload (default) or the rendered format_template
-    # (when set). `webhook_headers` is a JSON-encoded string of custom
-    # request headers (auth tokens etc.) — stored as text for portability
-    # across the MySQL/SQLite backends rather than a native JSON column.
     webhook_url: Optional[str] = Field(sa_column=Column(Text), default=None)
     webhook_method: Optional[str] = Field(default=None, max_length=8)
     webhook_headers: Optional[str] = Field(sa_column=Column(Text), default=None)
-    # Webhook-only: inline the full AI analyst report (markdown + recommended
-    # actions + IOCs) in the dispatched JSON payload. Default False; NULL on
-    # legacy/shuffle rows reads back as falsy.
     include_full_report: Optional[bool] = Field(default=False)
 
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)

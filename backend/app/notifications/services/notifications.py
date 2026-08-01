@@ -21,6 +21,7 @@ from typing import Optional
 
 from fastapi import HTTPException
 from loguru import logger
+from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import desc
 from sqlalchemy import select
 from sqlalchemy import update
@@ -47,6 +48,7 @@ from app.notifications.schema.notifications import DispatchStatus
 from app.notifications.schema.notifications import NotificationChannel
 from app.notifications.schema.notifications import NotificationRouteCreate
 from app.notifications.schema.notifications import NotificationRouteUpdate
+from app.notifications.schema.notifications import NotificationScope
 from app.notifications.schema.notifications import NotificationTrigger
 from app.notifications.schema.notifications import ShuffleApp
 from app.notifications.schema.notifications import ShuffleIntegrationCreate
@@ -92,6 +94,53 @@ async def get_route(route_id: int, customer_code: str, session: AsyncSession) ->
     return route
 
 
+def _legacy_columns_from_config(channel: str, config: dict) -> dict:
+    """Mirror `config` back onto the pre-#1018 per-channel columns.
+
+    Nothing reads these — the providers read `config`. They are dual-written for
+    one release so that reverting this change is lossless and #1018b can diff
+    the two representations against real rows before dropping the columns.
+
+    Deleted along with the columns in #1018b.
+    """
+    if channel == NotificationChannel.WEBHOOK.value:
+        headers = config.get("headers")
+        return {
+            "webhook_url": config.get("url"),
+            "webhook_method": config.get("method") or "POST",
+            "webhook_headers": json.dumps(headers) if headers else None,
+            "include_full_report": bool(config.get("include_full_report")),
+            "shuffle_app_id": None,
+            "shuffle_app_name": None,
+        }
+    if channel == NotificationChannel.SHUFFLE.value:
+        return {
+            "shuffle_app_id": config.get("app_id"),
+            "shuffle_app_name": config.get("app_name"),
+            "webhook_url": None,
+            "webhook_method": None,
+            "webhook_headers": None,
+            "include_full_report": False,
+        }
+    return {}
+
+
+def _enforce_scope_invariant(scope: str, customer_code: Optional[str]) -> Optional[str]:
+    """A customer route must name a tenant; an internal route must not.
+
+    Returning the coerced code keeps the two callers from drifting. Raising a
+    400 rather than silently fixing it: a client sending scope='internal' with a
+    customer_code has a bug worth surfacing.
+    """
+    if scope == NotificationScope.INTERNAL.value:
+        if customer_code:
+            raise HTTPException(status_code=400, detail="An internal-scope route must not name a customer.")
+        return None
+    if not customer_code:
+        raise HTTPException(status_code=400, detail="A customer-scope route requires a customer_code.")
+    return customer_code
+
+
 async def create_route(
     customer_code: str,
     payload: NotificationRouteCreate,
@@ -104,8 +153,13 @@ async def create_route(
     if payload.channel == NotificationChannel.SHUFFLE:
         await _ensure_integration_belongs_to_customer(payload.shuffle_integration_id, customer_code, session)
 
+    resolved_code = _enforce_scope_invariant(payload.scope.value, customer_code)
+
     route = CustomerNotificationRoute(
-        customer_code=customer_code,
+        customer_code=resolved_code,
+        scope=payload.scope.value,
+        recipient_mode=payload.recipient_mode.value,
+        notify_on_self_assign=payload.notify_on_self_assign,
         name=payload.name,
         trigger=payload.trigger.value,
         channel=payload.channel.value,
@@ -117,18 +171,9 @@ async def create_route(
         enabled=payload.enabled,
         created_by=created_by,
         shuffle_integration_id=payload.shuffle_integration_id,
-        shuffle_app_id=payload.shuffle_app_id,
-        shuffle_app_name=payload.shuffle_app_name,
-        # Only persist webhook columns for webhook routes — leave them
-        # NULL on shuffle routes so a read-back doesn't surface a
-        # spurious method/url on a route that doesn't use them.
-        webhook_url=payload.webhook_url if payload.channel == NotificationChannel.WEBHOOK else None,
-        webhook_method=(payload.webhook_method or "POST") if payload.channel == NotificationChannel.WEBHOOK else None,
-        # Headers are stored as a JSON string in a Text column.
-        webhook_headers=(
-            json.dumps(payload.webhook_headers) if payload.channel == NotificationChannel.WEBHOOK and payload.webhook_headers else None
-        ),
-        include_full_report=(payload.include_full_report if payload.channel == NotificationChannel.WEBHOOK else False),
+        config=json.dumps(payload.config or {}),
+        # Dual-written for one release; see _legacy_columns_from_config.
+        **_legacy_columns_from_config(payload.channel.value, payload.config or {}),
     )
     session.add(route)
     await session.commit()
@@ -161,19 +206,64 @@ async def update_route(
     if new_channel_value == NotificationChannel.SHUFFLE.value and new_integration_id:
         await _ensure_integration_belongs_to_customer(new_integration_id, customer_code, session)
 
+    # `config` is validated against the channel the route will HAVE after this
+    # PATCH — which may be the row's current channel when the PATCH doesn't
+    # change it. NotificationRouteUpdate can't do this itself: it has no view of
+    # the stored row.
+    if "config" in data or "channel" in data or "recipient_mode" in data:
+        provider = get_channel(new_channel_value)
+        if provider is None:
+            raise HTTPException(status_code=400, detail=f"Unsupported channel: {new_channel_value}")
+        raw_config = data.get("config")
+        if raw_config is None and "config" not in data:
+            # Channel changed but config didn't — re-validate what's stored, so
+            # switching to a channel the existing config can't satisfy is caught
+            # here rather than at dispatch time.
+            raw_config = json.loads(route.config) if route.config else {}
+        try:
+            data["config"] = provider.config_schema.model_validate(raw_config or {}).model_dump()
+        except PydanticValidationError as e:
+            raise HTTPException(status_code=400, detail=f"Invalid config for channel '{new_channel_value}': {e}") from e
+
+        mode = data.get("recipient_mode")
+        mode_value = mode.value if hasattr(mode, "value") else (mode or route.recipient_mode)
+        if mode_value not in provider.supports_recipient_modes:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Channel '{new_channel_value}' does not support recipient_mode '{mode_value}' "
+                    f"(supported: {sorted(provider.supports_recipient_modes)})"
+                ),
+            )
+
+    # Scope and customer_code have to move together.
+    new_scope = data.get("scope")
+    new_scope_value = new_scope.value if hasattr(new_scope, "value") else (new_scope or route.scope)
+    if "scope" in data:
+        data["customer_code"] = _enforce_scope_invariant(
+            new_scope_value,
+            None if new_scope_value == NotificationScope.INTERNAL.value else (route.customer_code or customer_code),
+        )
+
     for field, value in data.items():
         # Enums: write the underlying string into the DB column.
         if hasattr(value, "value"):
             value = value.value
-        # webhook_headers is a dict in the schema but a JSON-string
-        # column in the DB — encode on the way in.
-        if field == "webhook_headers":
-            value = json.dumps(value) if value else None
+        # config is a dict in the schema but a JSON-string column in the DB.
+        if field == "config":
+            value = json.dumps(value or {})
         # destination is NOT NULL in the DB; a webhook PATCH legitimately
         # sends it as null (webhooks don't use it) — coalesce to "".
         if field == "destination" and value is None:
             value = ""
         setattr(route, field, value)
+
+    # Keep the legacy columns in step with config; see the helper's note.
+    if "config" in data or "channel" in data:
+        final_config = json.loads(route.config) if route.config else {}
+        for column, mirrored in _legacy_columns_from_config(route.channel, final_config).items():
+            setattr(route, column, mirrored)
+
     route.updated_at = datetime.utcnow()
 
     await session.commit()
