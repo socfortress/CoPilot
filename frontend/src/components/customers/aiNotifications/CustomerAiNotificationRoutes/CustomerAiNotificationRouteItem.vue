@@ -110,7 +110,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { NotificationRoute, WebhookChannelConfig } from "@/types/notifications"
+import type { NotificationRoute, NotificationScope, WebhookChannelConfig } from "@/types/notifications"
 import _split from "lodash/split"
 import { NButton, NPopconfirm, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
@@ -125,10 +125,11 @@ import { formatDate } from "@/utils/format"
 const props = defineProps<{
 	route: NotificationRoute
 	// Passed down rather than read off the route: `customer_code` is nullable
-	// now (internal-scope routes belong to no tenant), while the API paths below
-	// always need a concrete code. This list only ever renders customer-scoped
-	// routes, so the parent's code is the right source.
-	customerCode: string
+	// (internal routes belong to no tenant) while the customer-scoped API paths
+	// need a concrete code. Absent for internal routes, which use their own
+	// endpoints below.
+	customerCode?: string
+	scope?: NotificationScope
 }>()
 
 const emit = defineEmits<{
@@ -146,6 +147,8 @@ const loadingToggle = ref(false)
 const loadingDelete = ref(false)
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
+
+const isInternalScope = computed(() => props.scope === "internal")
 
 const isWebhook = computed(() => props.route.channel === "webhook")
 
@@ -187,9 +190,12 @@ async function toggleEnabled() {
 	loadingToggle.value = true
 
 	try {
-		const res = await Api.notifications.updateRoute(props.customerCode, props.route.id, {
-			enabled: !props.route.enabled
-		})
+		const payload = { enabled: !props.route.enabled }
+		const code = props.customerCode
+		const res =
+			isInternalScope.value || !code
+				? await Api.notifications.updateInternalRoute(props.route.id, payload)
+				: await Api.notifications.updateRoute(code, props.route.id, payload)
 		if (res.data.success) {
 			message.success(`Route ${res.data.route.enabled ? "enabled" : "disabled"}`)
 			emit("toggled")
@@ -207,7 +213,11 @@ async function confirmDelete() {
 	loadingDelete.value = true
 
 	try {
-		const res = await Api.notifications.deleteRoute(props.customerCode, props.route.id)
+		const code = props.customerCode
+		const res =
+			isInternalScope.value || !code
+				? await Api.notifications.deleteInternalRoute(props.route.id)
+				: await Api.notifications.deleteRoute(code, props.route.id)
 		if (res.data.success) {
 			message.success("Route deleted")
 			emit("deleted")

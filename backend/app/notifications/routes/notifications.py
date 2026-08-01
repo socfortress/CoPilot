@@ -139,6 +139,74 @@ async def delete_route_route(
 
 
 # ---------------------------------------------------------------------------
+# Internal-scope routes (deployment-wide, no tenant)
+# ---------------------------------------------------------------------------
+#
+# Separate from the /customers/{code}/... CRUD because these routes belong to no
+# customer: there is no code to put in the path. They are where assignment
+# notifications land, so analyst chatter never reaches a customer's channel.
+#
+# Admin-only. A customer-scoped route configures what one tenant receives; an
+# internal route configures where the SOC's own traffic goes, which is
+# deployment-wide configuration.
+
+
+@notifications_router.get(
+    "/internal_notification_routes",
+    response_model=NotificationRouteListResponse,
+    description="Internal-scope notification routes. These belong to no customer and receive assignment events.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def list_internal_routes_route(session: AsyncSession = Depends(get_db)) -> NotificationRouteListResponse:
+    routes = await svc.list_internal_routes(session)
+    return NotificationRouteListResponse(
+        success=True,
+        message=f"{len(routes)} internal route(s) retrieved",
+        routes=routes,
+    )
+
+
+@notifications_router.post(
+    "/internal_notification_routes",
+    response_model=NotificationRouteResponse,
+    description="Create an internal-scope notification route. Shuffle is unavailable — its integrations are per-customer.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def create_internal_route_route(
+    payload: NotificationRouteCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> NotificationRouteResponse:
+    route = await svc.create_internal_route(payload, current_user.username, session)
+    return NotificationRouteResponse(success=True, message="Internal route created", route=route)
+
+
+@notifications_router.patch(
+    "/internal_notification_routes/{route_id}",
+    response_model=NotificationRouteResponse,
+    description="Update an internal-scope notification route.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def update_internal_route_route(
+    route_id: int,
+    payload: NotificationRouteUpdate,
+    session: AsyncSession = Depends(get_db),
+) -> NotificationRouteResponse:
+    route = await svc.update_internal_route(route_id, payload, session)
+    return NotificationRouteResponse(success=True, message="Internal route updated", route=route)
+
+
+@notifications_router.delete(
+    "/internal_notification_routes/{route_id}",
+    description="Delete an internal-scope notification route. Dispatch log entries are retained.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def delete_internal_route_route(route_id: int, session: AsyncSession = Depends(get_db)):
+    await svc.delete_internal_route(route_id, session)
+    return {"success": True, "message": "Internal route deleted"}
+
+
+# ---------------------------------------------------------------------------
 # Channel catalog
 # ---------------------------------------------------------------------------
 

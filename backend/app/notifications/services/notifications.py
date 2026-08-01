@@ -111,6 +111,150 @@ def _enforce_scope_invariant(scope: str, customer_code: Optional[str]) -> Option
     return customer_code
 
 
+async def list_internal_routes(session: AsyncSession) -> List[CustomerNotificationRoute]:
+    """Every internal-scope route. Deployment-wide — they belong to no tenant."""
+    result = await session.execute(
+        select(CustomerNotificationRoute)
+        .where(CustomerNotificationRoute.scope == NotificationScope.INTERNAL.value)
+        .order_by(desc(CustomerNotificationRoute.created_at)),
+    )
+    return result.scalars().all()
+
+
+async def get_internal_route(route_id: int, session: AsyncSession) -> CustomerNotificationRoute:
+    """Single internal route. Scoped in the query rather than trusting the id,
+    so a customer route's id can't be reached through the internal endpoints."""
+    result = await session.execute(
+        select(CustomerNotificationRoute).where(
+            CustomerNotificationRoute.id == route_id,
+            CustomerNotificationRoute.scope == NotificationScope.INTERNAL.value,
+        ),
+    )
+    route = result.scalars().first()
+    if not route:
+        raise HTTPException(status_code=404, detail="Internal route not found")
+    return route
+
+
+def _reject_shuffle_for_internal(payload_channel: Optional[str]) -> None:
+    """Shuffle is unavailable to internal routes.
+
+    `shuffle_integration_id` is an FK to `customer_shuffle_integration`, which is
+    per-customer — a route belonging to no tenant has no integration to point
+    at. Caught here rather than at dispatch, where it would surface as a
+    confusing "integration is missing" failure.
+    """
+    if payload_channel == NotificationChannel.SHUFFLE.value:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Shuffle is not available for internal routes: a Shuffle integration belongs to a "
+                "specific customer, and an internal route belongs to none. Use webhook or email."
+            ),
+        )
+
+
+async def create_internal_route(
+    payload: NotificationRouteCreate,
+    created_by: Optional[str],
+    session: AsyncSession,
+) -> CustomerNotificationRoute:
+    """Create a route that belongs to no tenant.
+
+    Forces scope='internal' rather than trusting the payload — these endpoints
+    are the internal surface by definition, and honouring a 'customer' scope
+    here would create a route with no customer_code that the customer-scoped
+    dispatch path could never find.
+    """
+    _reject_shuffle_for_internal(payload.channel.value)
+    if payload.scope != NotificationScope.INTERNAL:
+        raise HTTPException(status_code=400, detail="This endpoint creates internal-scope routes only.")
+
+    route = CustomerNotificationRoute(
+        customer_code=None,
+        scope=NotificationScope.INTERNAL.value,
+        recipient_mode=payload.recipient_mode.value,
+        notify_on_self_assign=payload.notify_on_self_assign,
+        name=payload.name,
+        trigger=payload.trigger.value,
+        channel=payload.channel.value,
+        destination=payload.destination or "",
+        min_severity=payload.min_severity.value,
+        format_template=payload.format_template,
+        enabled=payload.enabled,
+        created_by=created_by,
+        shuffle_integration_id=None,
+        config=json.dumps(payload.config or {}),
+    )
+    session.add(route)
+    await session.commit()
+    await session.refresh(route)
+    return route
+
+
+async def update_internal_route(
+    route_id: int,
+    payload: NotificationRouteUpdate,
+    session: AsyncSession,
+) -> CustomerNotificationRoute:
+    route = await get_internal_route(route_id, session)
+    data = payload.model_dump(exclude_unset=True)
+
+    new_channel = data.get("channel")
+    new_channel_value = new_channel.value if hasattr(new_channel, "value") else (new_channel or route.channel)
+    _reject_shuffle_for_internal(new_channel_value)
+
+    # Scope and customer_code are fixed for these routes; silently ignoring an
+    # attempt to change them would let a PATCH strand the route in a scope its
+    # dispatch path can't reach.
+    if "scope" in data and data["scope"] != NotificationScope.INTERNAL:
+        raise HTTPException(status_code=400, detail="An internal route's scope cannot be changed.")
+    data.pop("scope", None)
+
+    if "config" in data or "channel" in data or "recipient_mode" in data:
+        provider = get_channel(new_channel_value)
+        if provider is None:
+            raise HTTPException(status_code=400, detail=f"Unsupported channel: {new_channel_value}")
+        raw_config = data.get("config")
+        if raw_config is None and "config" not in data:
+            raw_config = json.loads(route.config) if route.config else {}
+        try:
+            data["config"] = provider.config_schema.model_validate(raw_config or {}).model_dump()
+        except PydanticValidationError as e:
+            raise HTTPException(status_code=400, detail=f"Invalid config for channel '{new_channel_value}': {e}") from e
+
+        mode = data.get("recipient_mode")
+        mode_value = mode.value if hasattr(mode, "value") else (mode or route.recipient_mode)
+        if mode_value not in provider.supports_recipient_modes:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Channel '{new_channel_value}' does not support recipient_mode '{mode_value}' "
+                    f"(supported: {sorted(provider.supports_recipient_modes)})"
+                ),
+            )
+
+    for field, value in data.items():
+        if hasattr(value, "value"):
+            value = value.value
+        if field == "config":
+            value = json.dumps(value or {})
+        if field == "destination" and value is None:
+            value = ""
+        setattr(route, field, value)
+    route.updated_at = datetime.utcnow()
+
+    await session.commit()
+    await session.refresh(route)
+    return route
+
+
+async def delete_internal_route(route_id: int, session: AsyncSession) -> None:
+    route = await get_internal_route(route_id, session)
+    await session.delete(route)
+    await session.commit()
+
+
 async def create_route(
     customer_code: str,
     payload: NotificationRouteCreate,

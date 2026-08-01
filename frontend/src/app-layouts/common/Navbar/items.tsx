@@ -15,6 +15,7 @@ const OverviewIcon = "carbon:dashboard"
 const CustomersIcon = "carbon:user-multiple"
 const AiAnalystIcon = "carbon:machine-learning-model"
 const DetectionCatalogIcon = "carbon:catalog"
+const InternalNotificationsIcon = "carbon:notification"
 
 export default function getItems(): MenuMixedOption[] {
 	return [
@@ -33,6 +34,12 @@ export default function getItems(): MenuMixedOption[] {
 		{
 			...routerLinkItem("Customers", "Customers"),
 			icon: renderIcon(CustomersIcon)
+		},
+		{
+			// Deployment-wide: where the SOC's own assignment notifications go.
+			// Distinct from a customer's routes, which live on the customer.
+			...routerLinkItem("Internal Notifications", "InternalNotifications"),
+			icon: renderIcon(InternalNotificationsIcon)
 		},
 		siemItem,
 		incidentManagementItem,

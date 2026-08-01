@@ -16,7 +16,7 @@ import type {
 import { HttpClient } from "../http-client"
 
 // Per-customer notification routing — wraps app/notifications/routes/notifications.py.
-// Used by the Customer detail page's "AI Notifications" tab to manage who
+// Used by the Customer detail page's "Notifications" tab to manage who
 // receives notifications about Talon's investigation results.
 
 export default {
@@ -42,6 +42,28 @@ export default {
 
 	deleteRoute(customerCode: string, routeId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`/customers/${customerCode}/notification_routes/${routeId}`)
+	},
+
+	// Internal-scope routes live outside the /customers/{code}/... tree because
+	// they belong to no tenant. Admin-only: they configure where the SOC's own
+	// traffic goes, which is deployment-wide rather than per-customer.
+	getInternalRoutes() {
+		return HttpClient.get<FlaskBaseResponse & { routes: NotificationRoute[] }>(`/internal_notification_routes`)
+	},
+	createInternalRoute(payload: NotificationRoutePayload) {
+		return HttpClient.post<FlaskBaseResponse & { route: NotificationRoute }>(
+			`/internal_notification_routes`,
+			payload
+		)
+	},
+	updateInternalRoute(routeId: number, payload: NotificationRouteUpdatePayload) {
+		return HttpClient.patch<FlaskBaseResponse & { route: NotificationRoute }>(
+			`/internal_notification_routes/${routeId}`,
+			payload
+		)
+	},
+	deleteInternalRoute(routeId: number) {
+		return HttpClient.delete<FlaskBaseResponse>(`/internal_notification_routes/${routeId}`)
 	},
 
 	// The channel catalog is deployment-wide, not per-customer: it advertises
