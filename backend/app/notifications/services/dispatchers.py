@@ -29,6 +29,7 @@ import json
 import time
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Tuple
 
@@ -56,6 +57,8 @@ _WEBHOOK_TIMEOUT_S = 15.0
 # uniform call site, but the 4th slot (a provider execution id) is always
 # None for webhooks — there's no async run to correlate to.
 WebhookDispatchResult = Tuple[str, Optional[str], int, Optional[str]]
+# (status, error_message, latency_ms, provider_reference)
+ResendDispatchResult = Tuple[str, Optional[str], int, Optional[str]]
 
 
 # ---------------------------------------------------------------------------
@@ -141,6 +144,77 @@ async def dispatch_webhook(
     except Exception as e:  # noqa: BLE001
         latency_ms = int((time.monotonic() - started) * 1000)
         logger.warning(f"Webhook dispatch failed: {e!r}")
+        return ("failed", f"{type(e).__name__}: {e}", latency_ms, None)
+
+
+# ---------------------------------------------------------------------------
+# Resend dispatcher
+# ---------------------------------------------------------------------------
+
+_RESEND_TIMEOUT_S = 15.0
+
+
+async def dispatch_resend(
+    *,
+    base_url: str,
+    api_key: str,
+    from_address: str,
+    to: List[str],
+    subject: str,
+    text_body: str,
+    cc: Optional[List[str]] = None,
+    reply_to: Optional[str] = None,
+) -> ResendDispatchResult:
+    """Send one email via Resend's REST API.
+
+    Returns (status, error_message, latency_ms, message_id). Never raises —
+    the provider turns the result into a dispatch-log row.
+
+    Body is plain text only for now. Resend accepts `html` too, but the message
+    body CoPilot renders today is markdown-ish plain text; sending it as HTML
+    would show the markup. Real HTML arrives with templates (#1009).
+    """
+    payload: Dict[str, Any] = {
+        "from": from_address,
+        "to": to,
+        "subject": subject,
+        "text": text_body,
+    }
+    if cc:
+        payload["cc"] = cc
+    if reply_to:
+        payload["reply_to"] = reply_to
+
+    started = time.monotonic()
+    try:
+        async with httpx.AsyncClient(timeout=_RESEND_TIMEOUT_S) as client:
+            response = await client.post(
+                f"{base_url.rstrip('/')}/emails",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json=payload,
+            )
+        latency_ms = int((time.monotonic() - started) * 1000)
+
+        if response.status_code >= 400:
+            # Resend returns a JSON body with `message` on errors; surface it so
+            # the operator sees "domain not verified" rather than a bare 403.
+            detail = response.text[:200]
+            try:
+                parsed = response.json()
+                detail = parsed.get("message") or parsed.get("error") or detail
+            except ValueError:
+                pass
+            return ("failed", f"Resend returned {response.status_code}: {detail}", latency_ms, None)
+
+        message_id = None
+        try:
+            message_id = response.json().get("id")
+        except ValueError:
+            pass
+        return ("sent", None, latency_ms, message_id)
+    except Exception as e:  # noqa: BLE001
+        latency_ms = int((time.monotonic() - started) * 1000)
+        logger.warning(f"Resend dispatch failed: {e!r}")
         return ("failed", f"{type(e).__name__}: {e}", latency_ms, None)
 
 

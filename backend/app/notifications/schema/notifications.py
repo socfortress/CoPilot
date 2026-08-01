@@ -69,6 +69,7 @@ class NotificationChannel(str, Enum):
 
     SHUFFLE = "shuffle"
     WEBHOOK = "webhook"
+    RESEND = "resend"
 
 
 class NotificationSeverity(str, Enum):
@@ -310,6 +311,12 @@ class NotificationRouteCreate(NotificationRouteBase):
                 raise ValueError("config.url is required when channel='webhook'")
             if not str(url).lower().startswith(("http://", "https://")):
                 raise ValueError("config.url must start with http:// or https://")
+        elif self.channel == NotificationChannel.RESEND:
+            # `to` is only meaningful for static delivery — in assignee mode the
+            # address comes from the event, and requiring both would imply the
+            # static list is a fallback, which it is not.
+            if self.recipient_mode == RecipientMode.STATIC and not self.config.get("to"):
+                raise ValueError("config.to is required when channel='resend' and recipient_mode='static'")
         return self
 
 
@@ -472,6 +479,22 @@ class ChannelDescriptor(BaseModel):
     config_schema: Dict[str, Any]
     supports_recipient_modes: List[str]
     secret_fields: List[str]
+
+
+class ResendQuotaResponse(BaseModel):
+    """Monthly email usage against Resend's plan limit.
+
+    Deployment-wide by construction: the API key is deployment-wide, so every
+    customer's routes draw from the same allowance. `customer_sent` is a
+    breakdown for display, never a separate budget.
+    """
+
+    success: bool = True
+    message: str = "Quota retrieved"
+    sent_this_month: int
+    limit: int
+    customer_sent: Optional[int] = None
+    configured: bool = Field(description="Whether the Resend connector has an API key set.")
 
 
 class ChannelListResponse(BaseModel):

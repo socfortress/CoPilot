@@ -19,12 +19,14 @@ from typing import Optional
 from app.notifications.channels.base import ChannelProvider
 from app.notifications.channels.base import DispatchContext
 from app.notifications.channels.base import SendResult
+from app.notifications.channels.resend import ResendChannel
 from app.notifications.channels.shuffle import ShuffleChannel
 from app.notifications.channels.webhook import WebhookChannel
 
 _PROVIDERS: List[ChannelProvider] = [
     ShuffleChannel(),
     WebhookChannel(),
+    ResendChannel(),
 ]
 
 CHANNEL_REGISTRY: Dict[str, ChannelProvider] = {p.key: p for p in _PROVIDERS}
