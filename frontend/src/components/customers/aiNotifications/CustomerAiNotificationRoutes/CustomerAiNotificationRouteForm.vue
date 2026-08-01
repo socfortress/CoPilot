@@ -213,6 +213,16 @@
 			</n-alert>
 		</template>
 
+		<!-- Any channel without a hand-written block above renders from the JSON
+		     Schema its provider advertises, so adding one needs no frontend work. -->
+		<template v-else-if="activeDescriptor">
+			<ChannelConfigFields
+				:descriptor="activeDescriptor"
+				:model="cfg"
+				@update="(key, value) => (cfg[key as keyof EditableChannelConfig] = value as never)"
+			/>
+		</template>
+
 		<n-form-item label="Custom message template (optional)" path="format_template" :show-feedback="false">
 			<n-input
 				v-model:value="form.format_template"
@@ -263,7 +273,18 @@
 			<n-checkbox v-model:checked="form.enabled">Enabled</n-checkbox>
 		</n-form-item>
 
-		<div class="flex justify-end gap-2">
+		<div class="flex flex-wrap items-center justify-end gap-2">
+			<!--
+				Only offered on a saved route: the test sends through the STORED
+				config, so offering it on unsaved edits would test something the
+				operator isn't looking at.
+			-->
+			<n-button v-if="editing" secondary :loading="testing" class="mr-auto" @click="sendTest">
+				<template #icon>
+					<Icon :name="TestIcon" :size="14" />
+				</template>
+				Send test
+			</n-button>
 			<n-button @click="$emit('close')">Cancel</n-button>
 			<n-button type="primary" :loading="submitting" @click="submit">
 				{{ editing ? "Save changes" : "Create route" }}
@@ -276,6 +297,7 @@
 import type { FormInst, FormRules } from "naive-ui"
 import type {
 	NotificationChannel,
+	NotificationChannelDescriptor,
 	NotificationRoute,
 	NotificationRoutePayload,
 	NotificationScope,
@@ -288,7 +310,9 @@ import type {
 import { NAlert, NButton, NCheckbox, NDynamicInput, NForm, NFormItem, NInput, NInputNumber, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
+import ChannelConfigFields from "./ChannelConfigFields.vue"
 
 const props = defineProps<{
 	// Empty for internal-scope routes, which belong to no tenant.
@@ -377,6 +401,49 @@ async function loadLegacyWorkflowState() {
 		legacyWorkflowEnabled.value = rows.some(n => n.enabled)
 	} catch {
 		legacyWorkflowEnabled.value = null
+	}
+}
+
+// The channel catalog drives the generic fallback renderer. Loaded once per
+// form open; a failure just means an unknown channel shows no config fields
+// rather than the form breaking.
+const channels = ref<NotificationChannelDescriptor[]>([])
+const activeDescriptor = computed(() => channels.value.find(c => c.key === form.channel) ?? null)
+
+async function loadChannels() {
+	try {
+		const res = await Api.notifications.getChannels()
+		if (res.data.success) channels.value = res.data.channels
+	} catch {
+		channels.value = []
+	}
+}
+
+const TestIcon = "carbon:send-alt"
+const testing = ref(false)
+
+async function sendTest() {
+	if (!props.editingRoute) return
+	testing.value = true
+	try {
+		const routeId = props.editingRoute.id
+		const code = props.customerCode
+		const res =
+			isInternalScope.value || !code
+				? await Api.notifications.testInternalRoute(routeId)
+				: await Api.notifications.testRoute(code, routeId)
+
+		// The endpoint reports the delivery outcome rather than throwing on a
+		// failed send: "domain not verified" is information, not an error state.
+		if (res.data.status === "sent") {
+			message.success(`Test sent via ${res.data.channel} in ${res.data.latency_ms ?? "?"}ms`)
+		} else {
+			message.warning(res.data.error_message || `Test ${res.data.status}`)
+		}
+	} catch (err) {
+		message.error(getApiErrorMessage(err as never) || "Failed to send test notification")
+	} finally {
+		testing.value = false
 	}
 }
 
@@ -798,6 +865,7 @@ async function submit() {
 }
 
 onBeforeMount(async () => {
+	loadChannels()
 	loadLegacyWorkflowState()
 	await loadIntegrations()
 	// If editing a Shuffle route, prefetch the apps for its integration

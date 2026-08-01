@@ -1,5 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type {
+	DispatchOutcome,
 	NotificationChannelDescriptor,
 	NotificationDispatchLogEntry,
 	NotificationRoute,
@@ -42,6 +43,19 @@ export default {
 
 	deleteRoute(customerCode: string, routeId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`/customers/${customerCode}/notification_routes/${routeId}`)
+	},
+
+	// Sends a REAL notification through the route — consumes provider quota and
+	// is recorded in the dispatch log, exactly like a live one.
+	testRoute(customerCode: string, routeId: number) {
+		return HttpClient.post<FlaskBaseResponse & DispatchOutcome>(
+			`/customers/${customerCode}/notification_routes/${routeId}/test`
+		)
+	},
+	testInternalRoute(routeId: number) {
+		return HttpClient.post<FlaskBaseResponse & DispatchOutcome>(
+			`/internal_notification_routes/${routeId}/test`
+		)
 	},
 
 	// Internal-scope routes live outside the /customers/{code}/... tree because

@@ -62,6 +62,16 @@ export interface ResendChannelConfig extends ChannelConfig {
 	max_per_hour?: number | null
 }
 
+export interface DispatchOutcome {
+	route_id: number
+	route_name: string
+	channel: string
+	status: DispatchStatus
+	error_message: string | null
+	latency_ms: number | null
+	provider_reference: string | null
+}
+
 export interface ResendQuota {
 	sent_this_month: number
 	limit: number
