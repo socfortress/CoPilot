@@ -26,6 +26,8 @@ import pytest
 os.environ.setdefault("JWT_SECRET", "test-only-secret-not-the-compromised-default")
 
 import app.notifications.services.notifications as svc  # noqa: E402
+from app.notifications.channels import CHANNEL_REGISTRY  # noqa: E402
+from app.notifications.channels.base import SendResult  # noqa: E402
 from app.notifications.schema.notifications import AI_SOURCED_TRIGGERS  # noqa: E402
 from app.notifications.schema.notifications import DispatchRequest  # noqa: E402
 from app.notifications.schema.notifications import DispatchStatus  # noqa: E402
@@ -71,15 +73,27 @@ def _request(trigger=NotificationTrigger.INVESTIGATION_COMPLETE, severity=Notifi
 def _dispatch(routes, *, ai_enabled):
     """Run dispatch() with the route list and gate state stubbed out.
 
-    Patches the provider call and the log writer so nothing touches a DB or a
-    network, letting the assertions speak only to the gate's decision.
+    Patches at the channel-provider seam rather than at the underlying HTTP
+    dispatchers: `provider.send` is what the loop actually calls, so asserting
+    on it answers "did anything reach a channel" directly and survives changes
+    to how a given provider talks to its vendor.
     """
     with (
         patch.object(svc, "list_routes", AsyncMock(return_value=routes)),
         patch.object(svc, "is_ai_reports_enabled", AsyncMock(return_value=ai_enabled)) as gate,
         patch.object(svc, "_record_log", AsyncMock(return_value=True)) as record,
-        patch.object(svc, "dispatch_webhook", AsyncMock(return_value=("sent", None, 12, None))) as webhook,
-        patch.object(svc, "dispatch_shuffle", AsyncMock(return_value=("sent", None, 12, "exec-1"))) as shuffle,
+        patch.object(
+            type(CHANNEL_REGISTRY["webhook"]),
+            "send",
+            AsyncMock(return_value=SendResult(status="sent", latency_ms=12)),
+        ) as webhook,
+        patch.object(
+            type(CHANNEL_REGISTRY["shuffle"]),
+            "send",
+            AsyncMock(return_value=SendResult(status="sent", latency_ms=12, provider_reference="exec-1")),
+        ) as shuffle,
+        patch.object(type(CHANNEL_REGISTRY["webhook"]), "after_send", AsyncMock()),
+        patch.object(type(CHANNEL_REGISTRY["shuffle"]), "after_send", AsyncMock()),
     ):
         response = asyncio.run(svc.dispatch(_request(), AsyncMock()))
     return response, gate, record, webhook, shuffle
