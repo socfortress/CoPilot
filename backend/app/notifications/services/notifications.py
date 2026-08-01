@@ -94,37 +94,6 @@ async def get_route(route_id: int, customer_code: str, session: AsyncSession) ->
     return route
 
 
-def _legacy_columns_from_config(channel: str, config: dict) -> dict:
-    """Mirror `config` back onto the pre-#1018 per-channel columns.
-
-    Nothing reads these — the providers read `config`. They are dual-written for
-    one release so that reverting this change is lossless and #1018b can diff
-    the two representations against real rows before dropping the columns.
-
-    Deleted along with the columns in #1018b.
-    """
-    if channel == NotificationChannel.WEBHOOK.value:
-        headers = config.get("headers")
-        return {
-            "webhook_url": config.get("url"),
-            "webhook_method": config.get("method") or "POST",
-            "webhook_headers": json.dumps(headers) if headers else None,
-            "include_full_report": bool(config.get("include_full_report")),
-            "shuffle_app_id": None,
-            "shuffle_app_name": None,
-        }
-    if channel == NotificationChannel.SHUFFLE.value:
-        return {
-            "shuffle_app_id": config.get("app_id"),
-            "shuffle_app_name": config.get("app_name"),
-            "webhook_url": None,
-            "webhook_method": None,
-            "webhook_headers": None,
-            "include_full_report": False,
-        }
-    return {}
-
-
 def _enforce_scope_invariant(scope: str, customer_code: Optional[str]) -> Optional[str]:
     """A customer route must name a tenant; an internal route must not.
 
@@ -172,8 +141,6 @@ async def create_route(
         created_by=created_by,
         shuffle_integration_id=payload.shuffle_integration_id,
         config=json.dumps(payload.config or {}),
-        # Dual-written for one release; see _legacy_columns_from_config.
-        **_legacy_columns_from_config(payload.channel.value, payload.config or {}),
     )
     session.add(route)
     await session.commit()
@@ -257,12 +224,6 @@ async def update_route(
         if field == "destination" and value is None:
             value = ""
         setattr(route, field, value)
-
-    # Keep the legacy columns in step with config; see the helper's note.
-    if "config" in data or "channel" in data:
-        final_config = json.loads(route.config) if route.config else {}
-        for column, mirrored in _legacy_columns_from_config(route.channel, final_config).items():
-            setattr(route, column, mirrored)
 
     route.updated_at = datetime.utcnow()
 

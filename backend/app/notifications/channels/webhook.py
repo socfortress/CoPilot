@@ -15,7 +15,6 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 
-from loguru import logger
 from pydantic import field_validator
 
 from app.notifications.channels.base import ChannelConfig
@@ -24,25 +23,6 @@ from app.notifications.channels.base import DispatchContext
 from app.notifications.channels.base import SendResult
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.services.dispatchers import dispatch_webhook
-
-
-def decode_webhook_headers(raw: Optional[str]) -> Optional[Dict[str, str]]:
-    """Deserialize the route's JSON-string ``webhook_headers`` column.
-
-    Returns a flat str→str dict, or None when unset/blank/malformed. Failing
-    closed (None) rather than raising keeps a bad row from aborting the whole
-    dispatch — the request just goes out with the dispatcher's default headers.
-    """
-    if not raw:
-        return None
-    try:
-        parsed = json.loads(raw)
-    except ValueError:
-        logger.warning(f"Malformed webhook_headers JSON, ignoring: {raw[:120]!r}")
-        return None
-    if not isinstance(parsed, dict):
-        return None
-    return {str(k): str(v) for k, v in parsed.items()}
 
 
 async def build_full_report(alert_id: int, session) -> Optional[Dict[str, Any]]:
