@@ -533,21 +533,22 @@ const INTERNAL_TRIGGER_OPTIONS = [
 
 const triggerOptions = computed(() => (isInternalScope.value ? INTERNAL_TRIGGER_OPTIONS : CUSTOMER_TRIGGER_OPTIONS))
 
-// Shuffle is unavailable to internal routes: a Shuffle integration belongs to a
-// specific customer, and an internal route belongs to none. The backend rejects
-// it too — this just avoids offering something that would 400.
-const channelOptions = computed(() =>
-	isInternalScope.value
-		? [
-				{ label: "Email (Resend)", value: "resend" },
-				{ label: "Webhook (direct HTTP to any URL)", value: "webhook" }
-			]
-		: [
-				{ label: "Shuffle (Slack / Teams / Outlook / 3,000+ apps)", value: "shuffle" },
-				{ label: "Webhook (direct HTTP to any URL)", value: "webhook" },
-				{ label: "Email (Resend)", value: "resend" }
-			]
-)
+// Derived from the channel catalog rather than a hardcoded list, so adding a
+// channel needs no change here. Providers declare whether they can serve an
+// internal route: Shuffle can't, because its org is an FK to a per-customer
+// table and an internal route has no tenant.
+const channelOptions = computed(() => {
+	const available = isInternalScope.value
+		? channels.value.filter(c => c.supports_internal_scope)
+		: channels.value
+
+	// Before the catalog loads, fall back to whatever the route already uses so
+	// the select isn't briefly empty when editing.
+	if (!available.length) {
+		return [{ label: form.channel, value: form.channel }]
+	}
+	return available.map(c => ({ label: c.display_name, value: c.key }))
+})
 
 const methodOptions = [
 	{ label: "POST", value: "POST" },

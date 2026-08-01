@@ -25,7 +25,7 @@ export function isInternalTrigger(trigger: NotificationTrigger): boolean {
 	return INTERNAL_TRIGGERS.includes(trigger)
 }
 
-export type NotificationChannel = "shuffle" | "webhook" | "resend"
+export type NotificationChannel = "shuffle" | "webhook" | "resend" | "teams"
 
 export type NotificationSeverity = "Critical" | "High" | "Medium" | "Low" | "Informational"
 
@@ -79,6 +79,10 @@ export interface ResendQuota {
 	configured: boolean
 }
 
+export interface TeamsChannelConfig extends ChannelConfig {
+	webhook_url?: string | null
+}
+
 export interface WebhookChannelConfig extends ChannelConfig {
 	url?: string | null
 	method?: string
@@ -98,6 +102,9 @@ export interface NotificationChannelDescriptor {
 		[key: string]: unknown
 	}
 	supports_recipient_modes: RecipientMode[]
+	// False only where something ties the channel to a specific customer —
+	// Shuffle's org is per-customer, so it can't serve an internal route.
+	supports_internal_scope: boolean
 	secret_fields: string[]
 }
 

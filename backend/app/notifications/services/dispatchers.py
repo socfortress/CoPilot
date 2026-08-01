@@ -59,6 +59,7 @@ _WEBHOOK_TIMEOUT_S = 15.0
 WebhookDispatchResult = Tuple[str, Optional[str], int, Optional[str]]
 # (status, error_message, latency_ms, provider_reference)
 ResendDispatchResult = Tuple[str, Optional[str], int, Optional[str]]
+TeamsDispatchResult = Tuple[str, Optional[str], int, Optional[str]]
 
 
 # ---------------------------------------------------------------------------
@@ -144,6 +145,59 @@ async def dispatch_webhook(
     except Exception as e:  # noqa: BLE001
         latency_ms = int((time.monotonic() - started) * 1000)
         logger.warning(f"Webhook dispatch failed: {e!r}")
+        return ("failed", f"{type(e).__name__}: {e}", latency_ms, None)
+
+
+# ---------------------------------------------------------------------------
+# Microsoft Teams dispatcher
+# ---------------------------------------------------------------------------
+
+_TEAMS_TIMEOUT_S = 15.0
+
+#: Teams rejects messages over 28 KB outright. AI report bodies can exceed that,
+#: so the provider truncates rather than letting the send fail.
+TEAMS_MAX_PAYLOAD_BYTES = 28 * 1024
+
+
+async def dispatch_teams(*, webhook_url: str, card: Dict[str, Any]) -> TeamsDispatchResult:
+    """POST an Adaptive Card envelope to a Teams webhook.
+
+    Returns (status, error_message, latency_ms, provider_reference). Teams
+    returns no message id, so the reference is always None — the field exists
+    for channels that do.
+
+    Teams throttles above 4 requests/second and answers 429. That is surfaced
+    distinctly from other 4xx: it means "retry later", not "your config is
+    wrong", and an operator seeing a bare 429 would reasonably check the URL.
+    """
+    started = time.monotonic()
+    try:
+        async with httpx.AsyncClient(timeout=_TEAMS_TIMEOUT_S) as client:
+            response = await client.post(
+                webhook_url,
+                headers={"Content-Type": "application/json"},
+                json=card,
+            )
+        latency_ms = int((time.monotonic() - started) * 1000)
+
+        if response.status_code == 429:
+            return (
+                "failed",
+                "Teams rate-limited this request (429). Teams throttles above ~4 requests/second.",
+                latency_ms,
+                None,
+            )
+        if response.status_code >= 400:
+            return (
+                "failed",
+                f"Teams returned {response.status_code}: {response.text[:200]}",
+                latency_ms,
+                None,
+            )
+        return ("sent", None, latency_ms, None)
+    except Exception as e:  # noqa: BLE001
+        latency_ms = int((time.monotonic() - started) * 1000)
+        logger.warning(f"Teams dispatch failed: {e!r}")
         return ("failed", f"{type(e).__name__}: {e}", latency_ms, None)
 
 

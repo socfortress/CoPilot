@@ -76,6 +76,7 @@ class NotificationChannel(str, Enum):
     SHUFFLE = "shuffle"
     WEBHOOK = "webhook"
     RESEND = "resend"
+    TEAMS = "teams"
 
 
 class NotificationSeverity(str, Enum):
@@ -329,6 +330,10 @@ class NotificationRouteCreate(NotificationRouteBase):
                 raise ValueError("config.url is required when channel='webhook'")
             if not str(url).lower().startswith(("http://", "https://")):
                 raise ValueError("config.url must start with http:// or https://")
+        elif self.channel == NotificationChannel.TEAMS:
+            url = self.config.get("webhook_url")
+            if not url:
+                raise ValueError("config.webhook_url is required when channel='teams'")
         elif self.channel == NotificationChannel.RESEND:
             # `to` is only meaningful for static delivery — in assignee mode the
             # address comes from the event, and requiring both would imply the
@@ -496,6 +501,7 @@ class ChannelDescriptor(BaseModel):
     display_name: str
     config_schema: Dict[str, Any]
     supports_recipient_modes: List[str]
+    supports_internal_scope: bool
     secret_fields: List[str]
 
 

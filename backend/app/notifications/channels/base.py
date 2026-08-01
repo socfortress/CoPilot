@@ -117,6 +117,13 @@ class ChannelProvider(ABC):
     #: fixed URL so it cannot resolve an assignee; email can.
     supports_recipient_modes: ClassVar[Set[str]] = {"static"}
 
+    #: Whether this channel can serve an internal-scope route. False only where
+    #: something ties the channel to a specific customer — Shuffle's org is an
+    #: FK to a per-customer table, so a tenant-less route has nothing to point
+    #: at. Declared here so the route form can filter generically instead of
+    #: hardcoding channel names.
+    supports_internal_scope: ClassVar[bool] = True
+
     #: Config keys holding secrets. Encrypted at rest and redacted on read in
     #: #1020; declared here so providers own the classification.
     secret_fields: ClassVar[Set[str]] = set()
