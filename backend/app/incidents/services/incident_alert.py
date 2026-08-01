@@ -54,6 +54,8 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
 )
 from app.integrations.alert_escalation.schema.escalate_alert import CustomerCodeKeys
 from app.integrations.routes import get_customer_by_auth_key
+from app.notifications.services.emit import emit
+from app.notifications.services.event_builders import alert_created_event
 
 
 async def fetch_settings(field: str, value: str, session: AsyncSession, case_insensitive: bool = False):
@@ -987,6 +989,27 @@ async def create_alert_full(
 
     # Trigger Talon investigation if enabled for this customer
     await handle_talon_investigation(alert_id, customer_code, session)
+
+    # Notification routes on the new engine (#1006). Deliberately placed after
+    # the recurrence early-return above, so a repeated alert does not re-notify.
+    #
+    # NOTE: handle_customer_notifications() above fires the LEGACY per-customer
+    # Shuffle workflow on the same event. Both are opt-in, so a customer only
+    # sees two notifications if an operator configures both — the route form
+    # warns when that is the case.
+    #
+    # Fire-and-forget: this is the ingest hot path and must not wait on an
+    # outbound HTTP call.
+    emit(
+        alert_created_event(
+            alert_id=alert_id,
+            customer_code=customer_code,
+            alert_title=alert_payload.alert_title_payload,
+            severity=alert_payload.severity,
+            rule_level=alert_payload.rule_level,
+            asset_name=asset.asset_name if asset is not None else None,
+        ),
+    )
 
     if threshold_alert is True or velo_sigma_alert is True:
         logger.info(

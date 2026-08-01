@@ -38,12 +38,18 @@ from app.notifications.schema.notifications import NotificationTrigger  # noqa: 
 CUSTOMER = "TENANT_A"
 
 
-def _route(route_id=1, name="SOC webhook", channel=NotificationChannel.WEBHOOK.value):
-    """A route that matches any Informational-or-above investigation dispatch."""
+def _route(route_id=1, name="SOC webhook", channel=NotificationChannel.WEBHOOK.value, scope="customer"):
+    """A customer-scoped route matching any Informational-or-above investigation.
+
+    Scope matters here: the gate governs what reaches the CUSTOMER, so internal
+    routes are deliberately exempt (see test_internal_routes_are_not_gated).
+    """
     return SimpleNamespace(
         id=route_id,
         name=name,
         channel=channel,
+        scope=scope,
+        notify_on_self_assign=False,
         enabled=True,
         trigger=NotificationTrigger.INVESTIGATION_COMPLETE.value,
         min_severity=NotificationSeverity.INFORMATIONAL.value,
@@ -79,7 +85,7 @@ def _dispatch(routes, *, ai_enabled):
     to how a given provider talks to its vendor.
     """
     with (
-        patch.object(svc, "list_routes", AsyncMock(return_value=routes)),
+        patch.object(svc, "routes_for_event", AsyncMock(return_value=routes)),
         patch.object(svc, "is_ai_reports_enabled", AsyncMock(return_value=ai_enabled)) as gate,
         patch.object(svc, "_record_log", AsyncMock(return_value=True)) as record,
         patch.object(
@@ -206,3 +212,15 @@ def test_every_ai_sourced_trigger_is_gated(trigger):
     with patch.object(svc, "is_ai_reports_enabled", AsyncMock(return_value=False)):
         permitted = asyncio.run(svc._ai_reports_permitted(trigger, CUSTOMER, session))
     assert permitted is False
+
+
+def test_internal_routes_are_not_gated():
+    """Running investigations while keeping results internal is supported.
+
+    The switch governs what reaches the customer, so an internal route must
+    still fire even when the customer's AI reports are disabled.
+    """
+    response, _gate, _record, webhook, _shuffle = _dispatch([_route(scope="internal")], ai_enabled=False)
+
+    assert webhook.await_count == 1
+    assert response.dispatched == 1

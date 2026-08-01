@@ -40,6 +40,7 @@ from app.notifications.schema.events import EntityType
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.schema.events import event_from_dispatch_request
 from app.notifications.schema.notifications import AI_SOURCED_TRIGGERS
+from app.notifications.schema.notifications import INTERNAL_TRIGGERS
 from app.notifications.schema.notifications import SEVERITY_ORDER
 from app.notifications.schema.notifications import DispatchOutcome
 from app.notifications.schema.notifications import DispatchRequest
@@ -536,44 +537,97 @@ async def _ai_reports_permitted(trigger: str, customer_code: str, session: Async
     return await is_ai_reports_enabled(customer_code, session)
 
 
-def _format_default_body(req: DispatchRequest) -> str:
-    """Plain default formatter when a route has no `format_template`.
+def _format_default_body(event: NotificationEvent) -> str:
+    """Default message body when a route sets no `format_template`.
 
-    Markdown-ish but readable in both Slack and email — both channels
-    render this acceptably without extra structure. Phase 4 swaps for
-    per-channel templates.
+    Markdown-ish: readable as-is in Slack, Teams and a plaintext email. Per-
+    trigger wording, because "AI investigation complete" is wrong for an
+    assignment and "assigned to" is wrong for an alert landing.
+
+    The investigation_complete branch reproduces the pre-#1006 text exactly —
+    it is what existing customers already receive.
     """
+    trig = event.trigger.value
+    ctx = event.context or {}
+
+    if trig in INTERNAL_TRIGGERS:
+        what = {
+            "alert_assigned": "Alert",
+            "case_assigned": "Case",
+            "case_task_assigned": "Task",
+        }.get(trig, "Item")
+        label = ctx.get("title") or event.subject
+        parts = [
+            f"*{what} assigned* — {event.assignee_username or 'unassigned'}",
+            "",
+            f"{what}: #{event.entity_id}" + (f" — {label}" if label else ""),
+        ]
+        if event.customer_code:
+            parts.append(f"Customer: `{event.customer_code}`")
+        if event.actor_username:
+            parts.append(f"Assigned by: {event.actor_username}")
+        if event.summary:
+            parts.extend(["", event.summary.strip()])
+        if event.link_url:
+            parts.extend(["", f"Open in CoPilot: {event.link_url}"])
+        return "\n".join(parts)
+
+    if trig == NotificationTrigger.ALERT_CREATED.value:
+        parts = [
+            f"*New alert* — severity: *{event.severity.value}*",
+            "",
+            f"Customer: `{event.customer_code}`",
+            f"Alert: #{event.entity_id}" + (f" — {event.subject}" if event.subject else ""),
+        ]
+        if ctx.get("asset_name"):
+            parts.append(f"Asset: {ctx['asset_name']}")
+        if ctx.get("rule_level") is not None:
+            parts.append(f"Rule level: {ctx['rule_level']}")
+        if event.summary:
+            parts.extend(["", event.summary.strip()])
+        if event.link_url:
+            parts.extend(["", f"Open in CoPilot: {event.link_url}"])
+        return "\n".join(parts)
+
+    # investigation_complete — unchanged wording, existing customers see this.
+    alert_name = ctx.get("alert_name")
     parts = [
-        f"*AI investigation complete* — severity: *{req.severity_assessment.value}*",
+        f"*AI investigation complete* — severity: *{event.severity.value}*",
         "",
-        f"Customer: `{req.customer_code}`",
-        f"Alert: #{req.alert_id}" + (f" — {req.alert_name}" if req.alert_name else ""),
+        f"Customer: `{event.customer_code}`",
+        f"Alert: #{event.entity_id}" + (f" — {alert_name}" if alert_name else ""),
         "",
-        req.summary.strip(),
+        event.summary.strip(),
     ]
-    if req.report_url:
-        parts.extend(["", f"Full report: {req.report_url}"])
+    if event.link_url:
+        parts.extend(["", f"Full report: {event.link_url}"])
     return "\n".join(parts)
 
 
-def _render_body(route: CustomerNotificationRoute, req: DispatchRequest) -> str:
-    """Apply the route's `format_template` if set, else fall back.
+def _render_body(route: CustomerNotificationRoute, event: NotificationEvent) -> str:
+    """Apply the route's `format_template` if set, else the default.
 
-    Phase 1's templating is intentionally minimal — `{{ variable }}`
-    substitution only, no Jinja control flow. Real Jinja can come in
-    Phase 4 when the per-channel templates land.
+    Substitution is `{{token}}` replacement only — no control flow. Real Jinja
+    arrives with #1009. Token names are unchanged from before the envelope so
+    existing stored templates keep rendering identically.
     """
     if not route.format_template:
-        return _format_default_body(req)
+        return _format_default_body(event)
 
+    ctx = event.context or {}
     body = route.format_template
     substitutions = {
-        "{{customer_code}}": req.customer_code,
-        "{{alert_id}}": str(req.alert_id),
-        "{{alert_name}}": req.alert_name or "",
-        "{{severity}}": req.severity_assessment.value,
-        "{{summary}}": req.summary,
-        "{{report_url}}": req.report_url or "",
+        "{{customer_code}}": event.customer_code or "",
+        "{{alert_id}}": str(event.entity_id),
+        "{{alert_name}}": ctx.get("alert_name") or event.subject or "",
+        "{{severity}}": event.severity.value,
+        "{{summary}}": event.summary,
+        "{{report_url}}": event.link_url or "",
+        # New with #1006; empty on triggers that don't carry them.
+        "{{assignee}}": event.assignee_username or "",
+        "{{actor}}": event.actor_username or "",
+        "{{entity_type}}": event.entity_type,
+        "{{entity_id}}": str(event.entity_id),
     }
     for token, value in substitutions.items():
         body = body.replace(token, value)
@@ -671,26 +725,68 @@ async def _record_log(
         return False
 
 
-async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchResponse:
-    """Walk the customer's routes, fire each match, log each outcome.
+async def routes_for_event(event: NotificationEvent, session: AsyncSession) -> List[CustomerNotificationRoute]:
+    """Candidate routes for an event, before trigger/severity filtering.
 
-    Idempotency is enforced at the log table — we attempt the insert
-    *before* calling the provider, so a re-dispatch sees the existing
-    row and short-circuits without sending. (The cost is one wasted
-    INSERT in the race case, which is fine.)
-
-    ``req`` is Talon's wire format and stays untouched (it is an external
-    contract); it is adapted into a ``NotificationEvent`` here, and everything
-    downstream — providers included — sees only the envelope. New triggers
-    (#1006) construct the envelope directly and never build a DispatchRequest.
+    Scope decides the pool, and the split is the point of the whole dimension:
+    an assignment is about *who is working on something*, so it resolves against
+    internal routes and never reaches the customer whose alert it was. Anything
+    else is about the customer's security posture and resolves against theirs.
     """
-    event = event_from_dispatch_request(req)
-    routes = await list_routes(req.customer_code, session)
+    if event.trigger.value in INTERNAL_TRIGGERS:
+        stmt = select(CustomerNotificationRoute).where(
+            CustomerNotificationRoute.scope == NotificationScope.INTERNAL.value,
+        )
+    else:
+        stmt = select(CustomerNotificationRoute).where(
+            CustomerNotificationRoute.scope == NotificationScope.CUSTOMER.value,
+            CustomerNotificationRoute.customer_code == event.customer_code,
+        )
+    result = await session.execute(stmt.order_by(desc(CustomerNotificationRoute.created_at)))
+    return result.scalars().all()
+
+
+def _self_assignment_suppressed(route: CustomerNotificationRoute, event: NotificationEvent) -> bool:
+    """Whether to drop a self-assignment for this route.
+
+    An analyst picking up their own alert doesn't need a notification about it.
+    Opt-in per route because some teams do want the audit trail.
+    """
+    if event.trigger.value not in INTERNAL_TRIGGERS:
+        return False
+    if not event.actor_username or not event.assignee_username:
+        return False
+    if event.actor_username != event.assignee_username:
+        return False
+    return not bool(getattr(route, "notify_on_self_assign", False))
+
+
+async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchResponse:
+    """Talon's entry point. Adapts the wire format and delegates.
+
+    Kept as a thin shim because `DispatchRequest` is an external contract; every
+    CoPilot-originated trigger builds a `NotificationEvent` directly and calls
+    `dispatch_event`.
+    """
+    return await dispatch_event(event_from_dispatch_request(req), session)
+
+
+async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> DispatchResponse:
+    """Walk the matching routes, fire each, log every outcome.
+
+    Idempotency is enforced at the log table — the insert is attempted *before*
+    the provider call, so a re-dispatch sees the existing row and short-circuits
+    without sending.
+    """
+    routes = await routes_for_event(event, session)
 
     matched_routes = [
         r
         for r in routes
-        if r.enabled and _trigger_applies(req.trigger.value, r.trigger) and _severity_meets(req.severity_assessment.value, r.min_severity)
+        if r.enabled
+        and _trigger_applies(event.trigger.value, r.trigger)
+        and _severity_meets(event.severity.value, r.min_severity)
+        and not _self_assignment_suppressed(r, event)
     ]
 
     outcomes: List[DispatchOutcome] = []
@@ -701,19 +797,21 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
     # is far easier to debug than silence — but BEFORE the connector fetch and
     # any provider call, so nothing leaves the process.
     #
-    # Every route today is customer-facing (`customer_code` is NOT NULL). Once
-    # the scope dimension lands (#1003) this must additionally check
-    # `route.scope == 'customer'` per route, because internal/analyst-facing
-    # routes are deliberately exempt: running investigations while keeping the
-    # results internal is a supported configuration.
-    if matched_routes and not await _ai_reports_permitted(req.trigger.value, req.customer_code, session):
+    # Only customer-facing routes are gated. Internal routes are deliberately
+    # exempt: running investigations while keeping the results internal is a
+    # supported configuration, and the switch governs what reaches the CUSTOMER.
+    # (routes_for_event already returns one scope or the other, so in practice
+    # this filter is all-or-nothing — it is written per-route so it stays
+    # correct if a future trigger mixes scopes.)
+    gated_routes = [r for r in matched_routes if r.scope == NotificationScope.CUSTOMER.value]
+    if gated_routes and not await _ai_reports_permitted(event.trigger.value, event.customer_code, session):
         logger.info(
-            f"AI reports are not enabled for customer {req.customer_code}; "
-            f"suppressing {len(matched_routes)} matched notification route(s) "
-            f"for alert {req.alert_id}.",
+            f"AI reports are not enabled for customer {event.customer_code}; "
+            f"suppressing {len(gated_routes)} matched notification route(s) "
+            f"for alert {event.entity_id}.",
         )
         reason = "AI reports are not enabled for this customer; notification suppressed."
-        for route in matched_routes:
+        for route in gated_routes:
             # Cache before the await — see the attribute-caching note in the
             # main loop below.
             route_id = route.id
@@ -741,7 +839,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
         return DispatchResponse(
             success=True,
             message="Dispatch suppressed — AI reports are not enabled for this customer",
-            routes_matched=len(matched_routes),
+            routes_matched=len(gated_routes),
             dispatched=0,
             skipped=skipped,
             failed=0,
@@ -765,7 +863,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
         route_name = route.name
         route_channel = route.channel
 
-        body = _render_body(route, req)
+        body = _render_body(route, event)
         body_preview = body[:500]
 
         latency_ms: Optional[int] = None
@@ -871,7 +969,9 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
 
     return DispatchResponse(
         success=True,
-        message=(f"Dispatched {sent} of {len(matched_routes)} matching route(s) " f"for customer {req.customer_code} alert {req.alert_id}"),
+        message=(
+            f"Dispatched {sent} of {len(matched_routes)} matching route(s) " f"for customer {event.customer_code} alert {event.entity_id}"
+        ),
         routes_matched=len(matched_routes),
         dispatched=sent,
         skipped=skipped,

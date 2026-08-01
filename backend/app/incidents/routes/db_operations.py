@@ -246,6 +246,9 @@ from app.incidents.services.notification_enrichment import extract_rule_level
 from app.incidents.services.notification_enrichment import severity_from_rule_level
 from app.middleware.customer_access import customer_access_handler
 from app.middleware.customer_query import customer_codes_query
+from app.notifications.services.emit import emit
+from app.notifications.services.event_builders import alert_assigned_event
+from app.notifications.services.event_builders import case_assigned_event
 
 incidents_db_operations_router = APIRouter()
 
@@ -762,13 +765,39 @@ async def get_available_users(db: AsyncSession = Depends(get_db)):
     response_model=AlertResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def update_assigned_to_endpoint(assigned_to: AssignedToAlert, db: AsyncSession = Depends(get_db)):
+async def update_assigned_to_endpoint(
+    assigned_to: AssignedToAlert,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     all_users = await select_all_users()
     user_names = [user.username for user in all_users]
     if assigned_to.assigned_to not in user_names:
         raise HTTPException(status_code=400, detail="User does not exist")
+
+    # Read the current assignee BEFORE the mutation: the notification below only
+    # fires on an actual change, so rewriting the same value stays silent.
+    existing = await db.execute(select(Alert).where(Alert.id == assigned_to.alert_id))
+    existing_alert = existing.scalars().first()
+    previous_assignee = existing_alert.assigned_to if existing_alert else None
+    alert_title = existing_alert.alert_name if existing_alert else None
+    alert_customer = existing_alert.customer_code if existing_alert else None
+
+    updated = await update_alert_assigned_to(assigned_to.alert_id, assigned_to.assigned_to, db)
+
+    if previous_assignee != assigned_to.assigned_to:
+        emit(
+            alert_assigned_event(
+                alert_id=assigned_to.alert_id,
+                title=alert_title,
+                assignee=assigned_to.assigned_to,
+                actor=current_user.username,
+                customer_code=alert_customer,
+            ),
+        )
+
     return AlertResponse(
-        alert=await update_alert_assigned_to(assigned_to.alert_id, assigned_to.assigned_to, db),
+        alert=updated,
         success=True,
         message="Alert assigned to user successfully",
     )
@@ -2109,6 +2138,20 @@ async def update_case_assigned_to_endpoint(
         payload=payload_assignment(from_assignee=previous_assignee, to_assignee=assigned_to.assigned_to),
         commit=True,
     )
+
+    # Notification routes (#1006). Only when the assignee actually changed — a
+    # PATCH rewriting the same value must not re-notify. Resolves against
+    # internal-scope routes, so this never reaches the customer's channel.
+    if previous_assignee != assigned_to.assigned_to:
+        emit(
+            case_assigned_event(
+                case_id=assigned_to.case_id,
+                title=getattr(case, "case_name", None),
+                assignee=assigned_to.assigned_to,
+                actor=current_user.username,
+                customer_code=case.customer_code,
+            ),
+        )
 
     # Re-fetch the case with full data structure
     updated_case = await get_case_by_id(assigned_to.case_id, db)
