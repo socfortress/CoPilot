@@ -14,9 +14,52 @@ export type NotificationSeverity = "Critical" | "High" | "Medium" | "Low" | "Inf
 
 export type DispatchStatus = "sent" | "failed" | "skipped"
 
+// Who a route serves. "internal" routes belong to no tenant and carry a null
+// customer_code — that's where assignment notifications land, so analyst
+// chatter never reaches a customer's channel.
+export type NotificationScope = "customer" | "internal"
+
+// Where the destination comes from. "assignee" resolves the event's assignee to
+// their email at dispatch time, and is only offered on channels that declare
+// support for it.
+export type RecipientMode = "static" | "assignee"
+
+// Per-channel settings. The shape is owned by the backend provider's config
+// schema (see NotificationChannelDescriptor), so this stays deliberately loose
+// — adding a channel must not require a type change here.
+export type ChannelConfig = Record<string, unknown>
+
+export interface ShuffleChannelConfig extends ChannelConfig {
+	app_id?: string | null
+	app_name?: string | null
+}
+
+export interface WebhookChannelConfig extends ChannelConfig {
+	url?: string | null
+	method?: string
+	headers?: Record<string, string> | null
+	include_full_report?: boolean
+}
+
+// A channel as advertised by GET /notification_channels. `config_schema` is the
+// provider's JSON Schema; the form renders generic inputs from it for channels
+// that have no bespoke block.
+export interface NotificationChannelDescriptor {
+	key: string
+	display_name: string
+	config_schema: {
+		properties?: Record<string, { type?: string; title?: string; description?: string; default?: unknown }>
+		required?: string[]
+		[key: string]: unknown
+	}
+	supports_recipient_modes: RecipientMode[]
+	secret_fields: string[]
+}
+
 export interface NotificationRoute {
 	id: number
-	customer_code: string
+	// Null on internal-scope routes.
+	customer_code: string | null
 	name: string
 	trigger: NotificationTrigger
 	channel: NotificationChannel
@@ -24,39 +67,35 @@ export interface NotificationRoute {
 	min_severity: NotificationSeverity
 	format_template: string | null
 	enabled: boolean
+	scope: NotificationScope
+	recipient_mode: RecipientMode
+	notify_on_self_assign: boolean
 	last_dispatched_at: string | null
 	dispatch_count: number
 	created_by: string | null
 	created_at: string
 	updated_at: string | null
-	// Phase 2 — populated only when channel === "shuffle"
+	// Shuffle's org stays a real FK column rather than moving into config,
+	// because burying an FK in JSON gives up referential integrity.
 	shuffle_integration_id: number | null
-	shuffle_app_id: string | null
-	shuffle_app_name: string | null
-	// Populated only when channel === "webhook"
-	webhook_url: string | null
-	webhook_method: string | null
-	webhook_headers: Record<string, string> | null
-	// Webhook only — inline the full AI report (markdown + recommended actions + IOCs) in the payload.
-	include_full_report: boolean
+	// Everything else channel-specific lives here.
+	config: ChannelConfig
 }
 
 export interface NotificationRoutePayload {
 	name: string
 	trigger: NotificationTrigger
 	channel: NotificationChannel
-	// Optional for webhook routes (the URL is the real target); required for shuffle.
+	// Required for shuffle (it's the delivery hint); ignored by other channels.
 	destination?: string | null
 	min_severity: NotificationSeverity
 	format_template?: string | null
 	enabled: boolean
+	scope?: NotificationScope
+	recipient_mode?: RecipientMode
+	notify_on_self_assign?: boolean
 	shuffle_integration_id?: number | null
-	shuffle_app_id?: string | null
-	shuffle_app_name?: string | null
-	webhook_url?: string | null
-	webhook_method?: string | null
-	webhook_headers?: Record<string, string> | null
-	include_full_report?: boolean
+	config: ChannelConfig
 }
 
 export type NotificationRouteUpdatePayload = Partial<NotificationRoutePayload>

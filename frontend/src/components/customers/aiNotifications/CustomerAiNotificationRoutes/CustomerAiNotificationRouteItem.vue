@@ -26,8 +26,8 @@
 			<div class="flex flex-col gap-3 text-sm">
 				<div class="flex flex-col gap-0.5 text-sm">
 					<div v-if="isWebhook" class="flex flex-wrap gap-1">
-						<span class="font-medium">{{ route.webhook_method || "POST" }} to:</span>
-						<code class="break-all">{{ route.webhook_url }}</code>
+						<span class="font-medium">{{ webhookConfig.method || "POST" }} to:</span>
+						<code class="break-all">{{ webhookConfig.url }}</code>
 					</div>
 					<div v-else class="flex flex-wrap gap-1">
 						<span class="font-medium">Destination:</span>
@@ -39,7 +39,7 @@
 						<span class="font-medium">Custom headers:</span>
 						<span class="italic">configured</span>
 					</div>
-					<div v-if="isWebhook && route.include_full_report" class="flex flex-wrap gap-1">
+					<div v-if="isWebhook && webhookConfig.include_full_report" class="flex flex-wrap gap-1">
 						<span class="font-medium">Full AI report:</span>
 						<span class="italic">included</span>
 					</div>
@@ -110,7 +110,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { NotificationRoute } from "@/types/notifications"
+import type { NotificationRoute, WebhookChannelConfig } from "@/types/notifications"
 import _split from "lodash/split"
 import { NButton, NPopconfirm, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
@@ -124,6 +124,11 @@ import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
 	route: NotificationRoute
+	// Passed down rather than read off the route: `customer_code` is nullable
+	// now (internal-scope routes belong to no tenant), while the API paths below
+	// always need a concrete code. This list only ever renders customer-scoped
+	// routes, so the parent's code is the right source.
+	customerCode: string
 }>()
 
 const emit = defineEmits<{
@@ -143,9 +148,13 @@ const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
 
 const isWebhook = computed(() => props.route.channel === "webhook")
-const hasCustomHeaders = computed(
-	() => props.route.webhook_headers !== null && Object.keys(props.route.webhook_headers ?? {}).length > 0
-)
+
+// Channel settings now live in the route's JSON `config`. Read through a typed
+// view rather than casting at each use site — and tolerate a missing config,
+// since the read schema deliberately returns {} for an unparseable row so a bad
+// route stays visible in the list instead of 500-ing the page.
+const webhookConfig = computed<WebhookChannelConfig>(() => (props.route.config ?? {}) as WebhookChannelConfig)
+const hasCustomHeaders = computed(() => Object.keys(webhookConfig.value.headers ?? {}).length > 0)
 
 // Shuffle routes cache the app name on the row at form-submit time so we
 // can render "Shuffle · Slack" without a roundtrip; webhook routes show
@@ -154,12 +163,13 @@ const channelIcon = computed(() => (isWebhook.value ? "carbon:webhook" : "carbon
 const channelLabel = computed(() => {
 	if (isWebhook.value) {
 		try {
-			return `Webhook · ${new URL(props.route.webhook_url ?? "").host}`
+			return `Webhook · ${new URL((props.route.config?.url as string) ?? "").host}`
 		} catch {
 			return "Webhook"
 		}
 	}
-	return props.route.shuffle_app_name ? `Shuffle · ${props.route.shuffle_app_name}` : "Shuffle"
+	const appName = props.route.config?.app_name as string | undefined
+	return appName ? `Shuffle · ${appName}` : "Shuffle"
 })
 
 const severityColor = computed<"danger" | "warning" | "success">(() => {
@@ -177,7 +187,7 @@ async function toggleEnabled() {
 	loadingToggle.value = true
 
 	try {
-		const res = await Api.notifications.updateRoute(props.route.customer_code, props.route.id, {
+		const res = await Api.notifications.updateRoute(props.customerCode, props.route.id, {
 			enabled: !props.route.enabled
 		})
 		if (res.data.success) {
@@ -197,7 +207,7 @@ async function confirmDelete() {
 	loadingDelete.value = true
 
 	try {
-		const res = await Api.notifications.deleteRoute(props.route.customer_code, props.route.id)
+		const res = await Api.notifications.deleteRoute(props.customerCode, props.route.id)
 		if (res.data.success) {
 			message.success("Route deleted")
 			emit("deleted")

@@ -53,9 +53,9 @@
 				</template>
 			</n-form-item>
 
-			<n-form-item label="Shuffle app" path="shuffle_app_id">
+			<n-form-item label="Shuffle app" path="config.app_id">
 				<n-select
-					v-model:value="form.shuffle_app_id"
+					v-model:value="cfg.app_id"
 					:options="appOptions"
 					placeholder="Pick an authenticated app"
 					:loading="loadingApps"
@@ -86,16 +86,16 @@
 		<!-- ===== Webhook channel fields ===== -->
 		<template v-else-if="isWebhook">
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-[1fr_140px]">
-				<n-form-item label="Webhook URL" path="webhook_url">
+				<n-form-item label="Webhook URL" path="config.url">
 					<n-input
-						v-model:value="form.webhook_url"
+						v-model:value="cfg.url"
 						placeholder="https://example.com/webhook/abc-123"
 						type="text"
 					/>
 				</n-form-item>
 
-				<n-form-item label="Method" path="webhook_method">
-					<n-select v-model:value="form.webhook_method" :options="methodOptions" />
+				<n-form-item label="Method" path="config.method">
+					<n-select v-model:value="cfg.method" :options="methodOptions" />
 				</n-form-item>
 			</div>
 
@@ -118,7 +118,7 @@
 			</div>
 
 			<n-form-item :show-feedback="false">
-				<n-checkbox v-model:checked="form.include_full_report" :disabled="fullReportDisabled">
+				<n-checkbox v-model:checked="cfg.include_full_report" :disabled="fullReportDisabled">
 					Include full AI report
 				</n-checkbox>
 			</n-form-item>
@@ -230,6 +230,24 @@ const editing = computed(() => props.editingRoute !== null)
 type FeedbackField =
 	"channel" | "destination" | "min_severity" | "shuffle_app_id" | "shuffle_integration_id" | "webhook_url"
 
+// Channel settings live in a JSON `config` blob on the route, whose shape each
+// backend provider owns. The form keeps them in a flat reactive object and
+// serialises on submit, so adding a field to a provider's schema doesn't
+// require a matching field here.
+// Union of the keys the hand-written channel blocks below bind to. Channels
+// without a bespoke block are rendered generically from their advertised JSON
+// Schema instead, so this deliberately does NOT try to cover every channel.
+interface EditableChannelConfig {
+	app_id?: string | null
+	app_name?: string | null
+	url?: string | null
+	method?: string
+	headers?: Record<string, string> | null
+	include_full_report?: boolean
+}
+
+const cfg = reactive<EditableChannelConfig>({ ...(props.editingRoute?.config ?? {}) })
+
 const fieldErrors = reactive<Partial<Record<FeedbackField, string>>>({})
 
 const form = reactive<NotificationRoutePayload>({
@@ -240,12 +258,11 @@ const form = reactive<NotificationRoutePayload>({
 	min_severity: props.editingRoute?.min_severity ?? ("Medium" as NotificationSeverity),
 	format_template: props.editingRoute?.format_template ?? "",
 	enabled: props.editingRoute?.enabled ?? true,
+	scope: props.editingRoute?.scope ?? "customer",
+	recipient_mode: props.editingRoute?.recipient_mode ?? "static",
+	notify_on_self_assign: props.editingRoute?.notify_on_self_assign ?? false,
 	shuffle_integration_id: props.editingRoute?.shuffle_integration_id ?? null,
-	shuffle_app_id: props.editingRoute?.shuffle_app_id ?? null,
-	shuffle_app_name: props.editingRoute?.shuffle_app_name ?? null,
-	webhook_url: props.editingRoute?.webhook_url ?? null,
-	webhook_method: props.editingRoute?.webhook_method ?? "POST",
-	include_full_report: props.editingRoute?.include_full_report ?? false
+	config: {}
 })
 
 const isShuffle = computed(() => form.channel === "shuffle")
@@ -256,7 +273,7 @@ const isWebhook = computed(() => form.channel === "webhook")
 // template; writing a template disables the box. Each lane can still get
 // the report — the box for the structured payload, the {{report}} token
 // for the template.
-const templateDisabled = computed(() => isWebhook.value && form.include_full_report)
+const templateDisabled = computed(() => isWebhook.value && Boolean(cfg.include_full_report))
 const fullReportDisabled = computed(() => isWebhook.value && Boolean(form.format_template?.trim()))
 // Shown literally in the help text. Kept as a constant so the template
 // doesn't nest {{ }} inside an interpolation (Vue can't parse that).
@@ -265,8 +282,11 @@ const reportToken = "{{report}}"
 // Custom headers are edited as an ordered key/value list and converted to
 // a Record on submit. Seed from the editing route's stored headers.
 const headerPairs = ref<{ key: string; value: string }[]>(
-	props.editingRoute?.webhook_headers
-		? Object.entries(props.editingRoute.webhook_headers).map(([key, value]) => ({ key, value }))
+	props.editingRoute?.config?.headers
+		? Object.entries(props.editingRoute.config.headers as Record<string, string>).map(([key, value]) => ({
+				key,
+				value
+			}))
 		: []
 )
 
@@ -355,8 +375,8 @@ function onChannelChange(channel: NotificationChannel) {
 	clearFieldError("shuffle_app_id")
 	clearFieldError("destination")
 	clearFieldError("webhook_url")
-	if (channel === "webhook" && !form.webhook_method) {
-		form.webhook_method = "POST"
+	if (channel === "webhook" && !cfg.method) {
+		cfg.method = "POST"
 	}
 }
 
@@ -395,8 +415,8 @@ async function loadApps(integrationId: number) {
 
 async function onIntegrationChange(integrationId: number | null) {
 	apps.value = []
-	form.shuffle_app_id = null
-	form.shuffle_app_name = null
+	cfg.app_id = null
+	cfg.app_name = null
 	if (integrationId) {
 		await loadApps(integrationId)
 	}
@@ -406,7 +426,7 @@ function onAppChange(appId: string | null) {
 	// Cache the app's display name alongside the UUID so the UI list can
 	// render "Slack" instead of a UUID without re-fetching the catalog.
 	const app = apps.value.find(a => a.id === appId)
-	form.shuffle_app_name = app?.name ?? null
+	cfg.app_name = app?.name ?? null
 }
 
 const rules: FormRules = {
@@ -491,7 +511,7 @@ async function submit() {
 		// Full report and a custom template are mutually exclusive — if the
 		// box is ticked, never persist a template (the structured payload is
 		// sent). Keeps stored data consistent with the UI's grey-out.
-		const sendTemplate = isWebhook.value && form.include_full_report ? null : form.format_template?.trim() || null
+		const sendTemplate = isWebhook.value && Boolean(cfg.include_full_report) ? null : form.format_template?.trim() || null
 
 		const base = {
 			name: form.name,
@@ -499,31 +519,36 @@ async function submit() {
 			channel: form.channel,
 			min_severity: form.min_severity,
 			format_template: sendTemplate,
-			enabled: form.enabled
+			enabled: form.enabled,
+			scope: form.scope,
+			recipient_mode: form.recipient_mode,
+			notify_on_self_assign: form.notify_on_self_assign
 		}
 
+		// Build config from scratch per channel rather than sending the whole
+		// `cfg` object: switching channels leaves the other branch's keys in
+		// there, and the backend's config schemas use extra="forbid", so a
+		// leftover `url` on a shuffle route is a 400 rather than a no-op.
 		const payload: NotificationRoutePayload = isWebhook.value
 			? {
 					...base,
 					destination: null,
-					webhook_url: form.webhook_url?.trim() || null,
-					webhook_method: form.webhook_method || "POST",
-					webhook_headers: buildHeaders(),
-					include_full_report: form.include_full_report,
 					shuffle_integration_id: null,
-					shuffle_app_id: null,
-					shuffle_app_name: null
+					config: {
+						url: cfg.url?.trim() || null,
+						method: cfg.method || "POST",
+						headers: buildHeaders(),
+						include_full_report: Boolean(cfg.include_full_report)
+					}
 				}
 			: {
 					...base,
 					destination: form.destination,
 					shuffle_integration_id: form.shuffle_integration_id,
-					shuffle_app_id: form.shuffle_app_id,
-					shuffle_app_name: form.shuffle_app_name,
-					webhook_url: null,
-					webhook_method: null,
-					webhook_headers: null,
-					include_full_report: false
+					config: {
+						app_id: cfg.app_id ?? null,
+						app_name: cfg.app_name ?? null
+					}
 				}
 
 		const res = props.editingRoute
