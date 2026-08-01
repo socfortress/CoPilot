@@ -991,22 +991,41 @@ class CustomerNotificationRoute(SQLModel, table=True):
 class NotificationDispatchLog(SQLModel, table=True):
     __tablename__ = "notification_dispatch_log"
     __table_args__ = (
-        # Idempotency key: re-running the same investigation must not
-        # re-fire the same notification. The dispatch service does
-        # "INSERT ... ON CONFLICT DO NOTHING" against this constraint and
-        # short-circuits if a row already exists.
+        # Idempotency key: re-dispatching the same event must not re-fire the
+        # same notification. The dispatch service checks this before calling a
+        # provider and short-circuits if a `sent` row already exists.
+        #
+        # Was (customer_code, alert_id, route_id, trigger). `route_id` already
+        # determines the customer, and each trigger now owns its own dedupe
+        # semantics via `dedupe_key` — notably manual sends (#1010) need a
+        # per-invocation unique key so repeat sends stay repeatable, which a
+        # fixed tuple cannot express.
         UniqueConstraint(
-            "customer_code",
-            "alert_id",
             "route_id",
-            "trigger",
+            "dedupe_key",
             name="uq_notif_dispatch_idem",
         ),
     )
 
     id: Optional[int] = Field(primary_key=True)
     customer_code: str = Field(max_length=64, index=True, nullable=False)
-    alert_id: int = Field(nullable=False, index=True)
+
+    # Nullable since the log stopped being alert-only: a case-task assignment
+    # has no alert. Retained alongside entity_id (rather than replaced by it)
+    # because existing queries and the UI filter on it, and because "which
+    # alert" stays the common question even for non-alert entities later.
+    alert_id: Optional[int] = Field(default=None, nullable=True, index=True)
+
+    # What this dispatch was about. 'alert' | 'case' | 'case_task' — plain
+    # strings so a new entity type is a data-only change.
+    entity_type: str = Field(default="alert", max_length=32, nullable=False, index=True)
+    entity_id: int = Field(nullable=False, index=True)
+
+    # Per-trigger idempotency token, carried on NotificationEvent so each
+    # trigger owns its own semantics. Backfilled as 'alert:{alert_id}:{trigger}'
+    # for pre-existing rows, which reproduces the old tuple's meaning exactly.
+    dedupe_key: str = Field(max_length=255, nullable=False, index=True)
+
     route_id: int = Field(
         foreign_key="customer_notification_route.id",
         nullable=False,
@@ -1028,12 +1047,14 @@ class NotificationDispatchLog(SQLModel, table=True):
     # a customer says "the message looked wrong" we want to see what we
     # actually sent without storing the entire body history.
     payload_preview: Optional[str] = Field(sa_column=Column(Text), default=None)
-    # Phase 2: Shuffle's POST /apps/{id}/mcp returns a fire-and-record
-    # execution_id. Stored here so an admin can pivot from "this
-    # notification didn't arrive at Slack" → look up the run in
-    # shuffler.io's UI to see whether Shuffle accepted the dispatch but
-    # the downstream app rejected it. Null for non-Shuffle channels.
-    shuffle_execution_id: Optional[str] = Field(default=None, max_length=128)
+    # Vendor-side identifier for this delivery, whatever the channel calls it —
+    # Shuffle's execution id, and later Resend's message id. Lets an admin pivot
+    # from "the notification didn't arrive" to the run in the provider's own UI
+    # and see whether the provider accepted it but the downstream app rejected
+    # it. Null for channels that return no reference.
+    #
+    # Was `shuffle_execution_id`; renamed once a second channel needed the slot.
+    provider_reference: Optional[str] = Field(default=None, max_length=128)
 
     # See note on CustomerNotificationRoute.dispatches — back_populates
     # removed deliberately to keep AsyncSession flush() synchronous-IO-free.

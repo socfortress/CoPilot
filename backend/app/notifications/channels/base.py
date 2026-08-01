@@ -38,8 +38,7 @@ class SendResult(BaseModel):
     Generalizes the ``(status, error, latency_ms, shuffle_execution_id)`` tuple
     the dispatchers returned. ``provider_reference`` is the vendor-agnostic name
     for that last slot — Shuffle's execution id, and later Resend's message id.
-    The dispatch-log *column* is still ``shuffle_execution_id`` until #1019
-    renames it; the mapping happens in the dispatch loop.
+    It maps straight onto the dispatch log's column of the same name.
     """
 
     status: str  # 'sent' | 'failed' | 'skipped'

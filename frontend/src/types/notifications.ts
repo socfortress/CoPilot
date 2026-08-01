@@ -61,10 +61,17 @@ export interface NotificationRoutePayload {
 
 export type NotificationRouteUpdatePayload = Partial<NotificationRoutePayload>
 
+export type NotificationEntityType = "alert" | "case" | "case_task"
+
 export interface NotificationDispatchLogEntry {
 	id: number
 	customer_code: string
-	alert_id: number
+	// Null for events that aren't about an alert (e.g. a case-task assignment).
+	// Prefer entity_type/entity_id, which are always populated.
+	alert_id: number | null
+	entity_type: NotificationEntityType
+	entity_id: number
+	dedupe_key: string
 	route_id: number
 	trigger: string
 	dispatched_at: string
@@ -72,7 +79,8 @@ export interface NotificationDispatchLogEntry {
 	error_message: string | null
 	latency_ms: number | null
 	payload_preview: string | null
-	shuffle_execution_id: string | null
+	// Vendor-side delivery id — Shuffle execution id, Resend message id, etc.
+	provider_reference: string | null
 }
 
 // ----- Shuffle integrations (Phase 2) -----
