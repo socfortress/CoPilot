@@ -8,7 +8,8 @@ walks every enabled route for the customer, filters by trigger and
 severity, formats the message body per channel, calls the appropriate
 dispatcher, and records the outcome in `notification_dispatch_log`. The
 log row is what gives us idempotency — re-dispatching the same
-(customer, alert, route, trigger) is a no-op.
+(route, dedupe_key) pair is a no-op. The key travels on the event, so
+each trigger decides its own dedupe semantics.
 """
 
 from __future__ import annotations
@@ -34,6 +35,8 @@ from app.notifications.channels import DispatchContext
 from app.notifications.channels import SendResult
 from app.notifications.channels import get_channel
 from app.notifications.channels.shuffle import get_shuffle_connector
+from app.notifications.schema.events import EntityType
+from app.notifications.schema.events import NotificationEvent
 from app.notifications.schema.events import event_from_dispatch_request
 from app.notifications.schema.notifications import AI_SOURCED_TRIGGERS
 from app.notifications.schema.notifications import SEVERITY_ORDER
@@ -529,15 +532,13 @@ def _render_body(route: CustomerNotificationRoute, req: DispatchRequest) -> str:
 async def _record_log(
     session: AsyncSession,
     *,
-    customer_code: str,
-    alert_id: int,
+    event: NotificationEvent,
     route_id: int,
-    trigger: str,
     status: str,
     error_message: Optional[str],
     latency_ms: Optional[int],
     payload_preview: Optional[str],
-    shuffle_execution_id: Optional[str] = None,
+    provider_reference: Optional[str] = None,
 ) -> bool:
     """Record a dispatch outcome. Returns False ONLY when the dispatch
     has already been recorded as `sent` — i.e. a true idempotency hit
@@ -546,8 +547,11 @@ async def _record_log(
     with the new result so retries land cleanly.
 
     Idempotency model:
-      - One row per (customer_code, alert_id, route_id, trigger) tuple
-        (enforced by a unique index)
+      - One row per (route_id, dedupe_key) pair (enforced by a unique
+        index). The key comes off the event, so each trigger owns its
+        own semantics — reassigning A → B → A re-notifies A, while a
+        no-op write does not, and manual sends (#1010) stay repeatable
+        by generating a per-invocation key.
       - If the existing row's status is `sent`, refuse the new write
         (caller treats as "already done, skip")
       - If the existing row's status is `failed`/`skipped`, overwrite
@@ -556,17 +560,15 @@ async def _record_log(
       - If no row exists yet, insert a fresh one
     """
     # Pre-flight: check whether a row already exists for this
-    # (customer, alert, route, trigger) tuple. Doing the check up front
-    # lets us update-in-place when needed — avoids the rollback path
-    # whose `session.rollback()` expires every loaded object in the
-    # session (route, integrations, etc.) and breaks subsequent
-    # attribute access in async context.
+    # (route, dedupe_key) pair. Doing the check up front lets us
+    # update-in-place when needed — avoids the rollback path whose
+    # `session.rollback()` expires every loaded object in the session
+    # (route, integrations, etc.) and breaks subsequent attribute
+    # access in async context.
     result = await session.execute(
         select(NotificationDispatchLog).where(
-            NotificationDispatchLog.customer_code == customer_code,
-            NotificationDispatchLog.alert_id == alert_id,
             NotificationDispatchLog.route_id == route_id,
-            NotificationDispatchLog.trigger == trigger,
+            NotificationDispatchLog.dedupe_key == event.dedupe_key,
         ),
     )
     existing = result.scalars().first()
@@ -582,22 +584,27 @@ async def _record_log(
         existing.error_message = error_message
         existing.latency_ms = latency_ms
         existing.payload_preview = payload_preview[:500] if payload_preview else None
-        existing.shuffle_execution_id = shuffle_execution_id
+        existing.provider_reference = provider_reference
         existing.dispatched_at = datetime.utcnow()
         await session.commit()
         return True
 
     # No prior record — insert fresh.
     log = NotificationDispatchLog(
-        customer_code=customer_code,
-        alert_id=alert_id,
+        customer_code=event.customer_code,
+        # Populated only for alert-shaped events; a case-task assignment
+        # leaves it NULL and carries its identity in entity_type/entity_id.
+        alert_id=event.entity_id if event.entity_type == EntityType.ALERT else None,
+        entity_type=event.entity_type,
+        entity_id=event.entity_id,
+        dedupe_key=event.dedupe_key,
         route_id=route_id,
-        trigger=trigger,
+        trigger=event.trigger.value,
         status=status,
         error_message=error_message,
         latency_ms=latency_ms,
         payload_preview=payload_preview[:500] if payload_preview else None,
-        shuffle_execution_id=shuffle_execution_id,
+        provider_reference=provider_reference,
     )
     session.add(log)
     try:
@@ -663,10 +670,8 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
             route_channel = route.channel
             await _record_log(
                 session,
-                customer_code=req.customer_code,
-                alert_id=req.alert_id,
+                event=event,
                 route_id=route_id,
-                trigger=req.trigger.value,
                 status=DispatchStatus.SKIPPED.value,
                 error_message=reason,
                 latency_ms=None,
@@ -715,7 +720,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
         latency_ms: Optional[int] = None
         result_status = "sent"
         error_message: Optional[str] = None
-        shuffle_execution_id: Optional[str] = None
+        provider_reference: Optional[str] = None
         # Stays None when the channel is unknown or send() raised. after_send
         # guards on it rather than inferring from result_status — the two can
         # only diverge via a future edit, and this way that edit is safe.
@@ -740,9 +745,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
                 result_status = result.status
                 error_message = result.error_message
                 latency_ms = result.latency_ms
-                # The log column is still named shuffle_execution_id; #1019
-                # renames it to provider_reference.
-                shuffle_execution_id = result.provider_reference
+                provider_reference = result.provider_reference
         except Exception as e:  # noqa: BLE001 — best-effort, never raise
             logger.exception(f"Dispatcher raised for route {route_id}: {e!r}")
             result_status = "failed"
@@ -755,15 +758,13 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
         # dispatch.
         recorded = await _record_log(
             session,
-            customer_code=req.customer_code,
-            alert_id=req.alert_id,
+            event=event,
             route_id=route_id,
-            trigger=req.trigger.value,
             status=result_status,
             error_message=error_message,
             latency_ms=latency_ms,
             payload_preview=body_preview,
-            shuffle_execution_id=shuffle_execution_id,
+            provider_reference=provider_reference,
         )
 
         if not recorded:
@@ -813,7 +814,7 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
                 status=DispatchStatus(result_status),
                 error_message=error_message,
                 latency_ms=latency_ms,
-                shuffle_execution_id=shuffle_execution_id,
+                provider_reference=provider_reference,
             ),
         )
 

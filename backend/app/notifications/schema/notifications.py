@@ -447,7 +447,12 @@ class NotificationRouteResponse(BaseModel):
 class DispatchLogRead(BaseModel):
     id: int
     customer_code: str
-    alert_id: int
+    # Nullable since the log stopped being alert-only — a case-task assignment
+    # has no alert. Use entity_type/entity_id for the general case.
+    alert_id: Optional[int] = None
+    entity_type: str = "alert"
+    entity_id: int
+    dedupe_key: str
     route_id: int
     trigger: str
     dispatched_at: datetime
@@ -455,7 +460,7 @@ class DispatchLogRead(BaseModel):
     error_message: Optional[str] = None
     latency_ms: Optional[int] = None
     payload_preview: Optional[str] = None
-    shuffle_execution_id: Optional[str] = None
+    provider_reference: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -498,10 +503,13 @@ class DispatchOutcome(BaseModel):
     status: DispatchStatus
     error_message: Optional[str] = None
     latency_ms: Optional[int] = None
-    # Shuffle's POST /apps/{id}/mcp returns this on a successful kickoff.
-    # Surfaced in the response so the calling agent (Talon) can include
-    # it in its analyst summary if the dispatch went through Shuffle.
-    shuffle_execution_id: Optional[str] = None
+    # Vendor-side identifier for the delivery, whatever the channel calls it —
+    # Shuffle's execution id today, Resend's message id next. Surfaced in the
+    # response so the calling agent (Talon) can cite it in its analyst summary.
+    #
+    # NOTE: renamed from `shuffle_execution_id`. This is Talon-facing, so if a
+    # Talon build still reads the old name it needs updating alongside this.
+    provider_reference: Optional[str] = None
 
 
 class DispatchResponse(BaseModel):

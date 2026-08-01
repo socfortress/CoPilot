@@ -57,6 +57,12 @@ const entries = ref<DispatchLogEntry[]>([])
 
 const dFormats = useSettingsStore().dateFormat
 
+function entityLabel(entityType: string): string {
+	if (entityType === "case") return "Case"
+	if (entityType === "case_task") return "Task"
+	return "Alert"
+}
+
 function statusColor(status: string): "success" | "warning" | "danger" | undefined {
 	if (status === "sent") return "success"
 	if (status === "skipped") return "warning"
@@ -72,10 +78,12 @@ const columns = computed<DataTableColumns<DispatchLogEntry>>(() => [
 		render: row => String(formatDate(row.dispatched_at, dFormats.datetime))
 	},
 	{
-		title: "Alert",
-		key: "alert_id",
-		width: 80,
-		render: row => `#${row.alert_id}`
+		// Entity rather than Alert: the log now records case and case-task
+		// events too, which carry no alert_id.
+		title: "Entity",
+		key: "entity_id",
+		width: 130,
+		render: row => (row.entity_type === "alert" ? `#${row.entity_id}` : `${entityLabel(row.entity_type)} #${row.entity_id}`)
 	},
 	{
 		title: "Trigger",
