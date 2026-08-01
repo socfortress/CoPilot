@@ -421,6 +421,17 @@ class CaseTask(SQLModel, table=True):
     completed_by: Optional[str] = Field(max_length=100, nullable=True)
     completed_at: Optional[datetime] = Field(default=None, nullable=True)
 
+    # Username of the analyst responsible for this task. Plain string, not an
+    # FK — same convention as Alert.assigned_to / Case.assigned_to, so renaming
+    # or deleting a user does not cascade. Validated against the user table at
+    # assignment time; NULL means unassigned.
+    #
+    # Width matches completed_by / created_by on this table (100) rather than
+    # the 50 used by Alert.assigned_to. User.username is varchar(256), so both
+    # are nominally short, but 100 is the local precedent and the safer of the
+    # two existing choices.
+    assigned_to: Optional[str] = Field(default=None, max_length=100, nullable=True, index=True)
+
     created_by: str = Field(max_length=100, nullable=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -446,7 +457,7 @@ class CaseEvent(SQLModel, table=True):
         description=(
             "One of: case_created, case_status_changed, case_assigned, case_escalated, "
             "alert_linked, alert_unlinked, comment_added, template_applied, "
-            "task_added, task_status_changed, task_commented"
+            "task_added, task_status_changed, task_commented, task_assigned"
         ),
     )
     actor: str = Field(max_length=100, nullable=False, description="user_name that performed the action")

@@ -48,6 +48,7 @@ class CaseEventType(str, Enum):
     TASK_ADDED = "task_added"
     TASK_STATUS_CHANGED = "task_status_changed"
     TASK_COMMENTED = "task_commented"
+    TASK_ASSIGNED = "task_assigned"
 
 
 # ---------------------------------------------------------------------------
@@ -207,10 +208,22 @@ class CaseTaskUpdate(BaseModel):
     Status transitions to NOT_NECESSARY are rejected at the service layer
     when the task is mandatory. ``evidence_comment`` is intended for free-form
     notes / log snippets / command output captured alongside the status change.
+
+    ``assigned_to`` piggybacks on this PATCH rather than getting its own
+    endpoint (as Alert/Case assignment has), because this route already does
+    partial updates and already resolves task -> case -> customer access. The
+    service distinguishes "field omitted" from "explicitly null" via
+    ``__fields_set__``, so passing ``{"assigned_to": null}`` unassigns while
+    omitting the key leaves the current assignee alone.
     """
 
     status: Optional[CaseTaskStatus] = None
     evidence_comment: Optional[str] = None
+    assigned_to: Optional[str] = Field(
+        default=None,
+        max_length=100,
+        description="Username to assign this task to. Pass null to unassign. Validated against existing users.",
+    )
 
     @field_validator("status")
     @classmethod
@@ -234,6 +247,7 @@ class CaseTaskResponse(BaseModel):
     order_index: int
     status: CaseTaskStatus
     evidence_comment: Optional[str] = None
+    assigned_to: Optional[str] = None
     completed_by: Optional[str] = None
     completed_at: Optional[datetime] = None
     created_by: str
