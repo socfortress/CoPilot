@@ -83,6 +83,9 @@ class ShuffleChannel(ChannelProvider):
     display_name = "Shuffle"
     config_schema = ShuffleConfig
     supports_recipient_modes = {"static"}
+    # A Shuffle integration belongs to a specific customer, so a route with no
+    # tenant has no org to dispatch through.
+    supports_internal_scope = False
 
     async def send(
         self,

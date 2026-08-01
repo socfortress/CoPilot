@@ -258,6 +258,7 @@ async def list_channels_route() -> ChannelListResponse:
             display_name=provider.display_name,
             config_schema=provider.config_schema.model_json_schema(),
             supports_recipient_modes=sorted(provider.supports_recipient_modes),
+            supports_internal_scope=provider.supports_internal_scope,
             secret_fields=sorted(provider.secret_fields),
         )
         for provider in CHANNEL_REGISTRY.values()

@@ -21,12 +21,14 @@ from app.notifications.channels.base import DispatchContext
 from app.notifications.channels.base import SendResult
 from app.notifications.channels.resend import ResendChannel
 from app.notifications.channels.shuffle import ShuffleChannel
+from app.notifications.channels.teams import TeamsChannel
 from app.notifications.channels.webhook import WebhookChannel
 
 _PROVIDERS: List[ChannelProvider] = [
     ShuffleChannel(),
     WebhookChannel(),
     ResendChannel(),
+    TeamsChannel(),
 ]
 
 CHANNEL_REGISTRY: Dict[str, ChannelProvider] = {p.key: p for p in _PROVIDERS}
