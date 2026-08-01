@@ -15,8 +15,6 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from typing import Any
-from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -28,13 +26,15 @@ from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.ai_analyst.services.ai_analyst import list_iocs_by_alert
-from app.ai_analyst.services.ai_analyst import list_reports_by_alert
-from app.connectors.utils import get_connector_info_from_db
 from app.customer_portal.services.ai_reports import is_ai_reports_enabled
 from app.db.universal_models import CustomerNotificationRoute
 from app.db.universal_models import CustomerShuffleIntegration
 from app.db.universal_models import NotificationDispatchLog
+from app.notifications.channels import DispatchContext
+from app.notifications.channels import SendResult
+from app.notifications.channels import get_channel
+from app.notifications.channels.shuffle import get_shuffle_connector
+from app.notifications.schema.events import event_from_dispatch_request
 from app.notifications.schema.notifications import AI_SOURCED_TRIGGERS
 from app.notifications.schema.notifications import SEVERITY_ORDER
 from app.notifications.schema.notifications import DispatchOutcome
@@ -49,8 +49,6 @@ from app.notifications.schema.notifications import ShuffleApp
 from app.notifications.schema.notifications import ShuffleIntegrationCreate
 from app.notifications.schema.notifications import ShuffleIntegrationUpdate
 from app.notifications.schema.notifications import ShuffleOrg
-from app.notifications.services.dispatchers import dispatch_shuffle
-from app.notifications.services.dispatchers import dispatch_webhook
 from app.notifications.services.dispatchers import (
     list_shuffle_apps as shuffle_apps_client,
 )
@@ -60,38 +58,6 @@ from app.notifications.services.dispatchers import (
 from app.notifications.services.dispatchers import (
     verify_shuffle_org as verify_shuffle_org_client,
 )
-
-# Name of the Shuffle row in CoPilot's connectors table. The
-# `connector_url` (Shuffle base URL) and `connector_api_key` (admin
-# Bearer token) are read fresh on every dispatch so a key rotation
-# takes effect without restarting the backend.
-_SHUFFLE_CONNECTOR_NAME = "Shuffle"
-
-
-async def _get_shuffle_connector(session: AsyncSession) -> tuple[str, str]:
-    """Fetch (base_url, api_key) for the Shuffle connector. Raises
-    HTTPException if the connector row is missing or unconfigured —
-    surfaces a clear 4xx in the dispatch endpoint instead of a generic
-    500 when an admin forgets to configure Shuffle."""
-    info = await get_connector_info_from_db(_SHUFFLE_CONNECTOR_NAME, session)
-    if not info:
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "Shuffle connector is not configured in CoPilot. "
-                "Add the Shuffle connector with a valid API key before "
-                "creating Shuffle-channel notification routes."
-            ),
-        )
-    api_key = info.get("connector_api_key") or ""
-    base_url = info.get("connector_url") or "https://shuffler.io"
-    if not api_key:
-        raise HTTPException(
-            status_code=503,
-            detail="Shuffle connector is configured but has no API key set.",
-        )
-    return (base_url, api_key)
-
 
 # ---------------------------------------------------------------------------
 # CRUD
@@ -337,7 +303,7 @@ async def list_apps_for_integration(
     cache — fresh data on every form open is fine for v1.
     """
     integration = await _ensure_integration_belongs_to_customer(integration_id, customer_code, session)
-    base_url, api_key = await _get_shuffle_connector(session)
+    base_url, api_key = await get_shuffle_connector(session)
     ok, apps_raw, error = await shuffle_apps_client(
         base_url=base_url,
         api_key=api_key,
@@ -369,7 +335,7 @@ async def list_apps_for_integration(
 
 async def verify_integration(integration_id: int, customer_code: str, session: AsyncSession) -> dict:
     integration = await _ensure_integration_belongs_to_customer(integration_id, customer_code, session)
-    base_url, api_key = await _get_shuffle_connector(session)
+    base_url, api_key = await get_shuffle_connector(session)
     ok, app_count, error = await verify_shuffle_org_client(
         base_url=base_url,
         api_key=api_key,
@@ -393,7 +359,7 @@ async def list_orgs(session: AsyncSession) -> List[ShuffleOrg]:
     each org is then attached to a specific customer via the
     integration row at create time.
     """
-    base_url, api_key = await _get_shuffle_connector(session)
+    base_url, api_key = await get_shuffle_connector(session)
     ok, orgs_raw, error = await shuffle_orgs_client(base_url=base_url, api_key=api_key)
     if not ok:
         raise HTTPException(
@@ -536,66 +502,6 @@ def _format_default_body(req: DispatchRequest) -> str:
     return "\n".join(parts)
 
 
-def _decode_webhook_headers(raw: Optional[str]) -> Optional[Dict[str, str]]:
-    """Deserialize the route's JSON-string `webhook_headers` column.
-
-    Returns a flat str→str dict, or None when unset/blank/malformed.
-    Failing closed (None) rather than raising keeps a bad row from
-    aborting the whole dispatch — the request just goes out with the
-    dispatcher's default headers.
-    """
-    if not raw:
-        return None
-    try:
-        parsed = json.loads(raw)
-    except ValueError:
-        logger.warning(f"Malformed webhook_headers JSON, ignoring: {raw[:120]!r}")
-        return None
-    if not isinstance(parsed, dict):
-        return None
-    return {str(k): str(v) for k, v in parsed.items()}
-
-
-async def _build_full_report(alert_id: int, session: AsyncSession) -> Optional[Dict[str, Any]]:
-    """Fetch the alert's latest AI report's *extra* fields as a flat dict.
-
-    Returns only the fields NOT already present at the top level of the
-    webhook payload — i.e. it deliberately omits `summary` and the
-    severity (those are already sent as `summary`/`severity`) to avoid
-    duplicating them. The dispatcher merges this flat into the payload.
-
-    Reuses the ai_analyst service layer (the canonical read path) so the
-    shape stays in sync with the AI Analyst API. Returns None when no
-    report exists yet — the dispatcher then sends the base payload
-    unchanged, so a webhook never fails just because the report
-    write-back hasn't landed.
-
-    `list_reports_by_alert` returns newest-first, so element 0 is the
-    report this dispatch is about. IOCs are scoped to the same alert.
-    """
-    reports = await list_reports_by_alert(alert_id, session)
-    if not reports:
-        return None
-    report = reports[0]
-    iocs = await list_iocs_by_alert(alert_id, session)
-    return {
-        "report_id": report.id,
-        "recommended_actions": report.recommended_actions,
-        "report_markdown": report.report_markdown,
-        "report_created_at": report.created_at.isoformat() if report.created_at else None,
-        "iocs": [
-            {
-                "ioc_value": i.ioc_value,
-                "ioc_type": i.ioc_type,
-                "vt_verdict": i.vt_verdict,
-                "vt_score": i.vt_score,
-                "details": i.details,
-            }
-            for i in iocs
-        ],
-    }
-
-
 def _render_body(route: CustomerNotificationRoute, req: DispatchRequest) -> str:
     """Apply the route's `format_template` if set, else fall back.
 
@@ -714,7 +620,13 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
     *before* calling the provider, so a re-dispatch sees the existing
     row and short-circuits without sending. (The cost is one wasted
     INSERT in the race case, which is fine.)
+
+    ``req`` is Talon's wire format and stays untouched (it is an external
+    contract); it is adapted into a ``NotificationEvent`` here, and everything
+    downstream — providers included — sees only the envelope. New triggers
+    (#1006) construct the envelope directly and never build a DispatchRequest.
     """
+    event = event_from_dispatch_request(req)
     routes = await list_routes(req.customer_code, session)
 
     matched_routes = [
@@ -780,42 +692,22 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
             outcomes=outcomes,
         )
 
-    # Shuffle dispatch needs the deployment's connector creds. We fetch
-    # them once per dispatch call (before the per-route loop) so a
-    # whole batch shares one DB read. Only fetch if at least one
-    # matched route uses Shuffle — early-out keeps zero-route customers
-    # from touching the connectors table.
-    shuffle_creds: Optional[tuple[str, str]] = None
-    shuffle_creds_error: Optional[str] = None
-    if any(r.channel == NotificationChannel.SHUFFLE.value for r in matched_routes):
-        try:
-            shuffle_creds = await _get_shuffle_connector(session)
-        except HTTPException as e:
-            # Connector misconfigured — the dispatch endpoint surfaces
-            # the helper's 503 to ad-hoc callers, but for a batch we'd
-            # rather mark each route as failed in the log than abort
-            # the whole loop.
-            logger.warning(f"Shuffle connector unavailable: {e.detail}")
-            shuffle_creds_error = str(e.detail)
+    # Per-call context. Expensive lookups a provider needs (the Shuffle
+    # connector row, an alert's AI report) are memoized on it, so a batch of
+    # routes shares one read — the property the pre-refactor prefetch gave us,
+    # now lazy: nothing is read unless a route actually reaches that provider.
+    ctx = DispatchContext(session=session, event=event)
 
     for route in matched_routes:
-        # Cache every route attribute we'll need into locals UP FRONT.
+        # Cache every route attribute the LOOP needs into locals UP FRONT.
         # Once we cross any `await` (let alone any rollback) the route
         # SQLAlchemy state can be expired and a synchronous attribute
         # access then triggers an implicit refresh query — which in
-        # AsyncSession throws MissingGreenlet. Caching here means the
-        # rest of the loop is plain-Python access on locals.
+        # AsyncSession throws MissingGreenlet. Providers do the same for
+        # the attributes they read; see ChannelProvider.send's docstring.
         route_id = route.id
         route_name = route.name
         route_channel = route.channel
-        route_destination = route.destination
-        route_shuffle_app_id = route.shuffle_app_id
-        route_shuffle_integration_id = route.shuffle_integration_id
-        route_has_template = bool(route.format_template)
-        route_webhook_url = route.webhook_url
-        route_webhook_method = route.webhook_method
-        route_webhook_headers = route.webhook_headers
-        route_include_full_report = bool(route.include_full_report)
 
         body = _render_body(route, req)
         body_preview = body[:500]
@@ -824,126 +716,33 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
         result_status = "sent"
         error_message: Optional[str] = None
         shuffle_execution_id: Optional[str] = None
+        # Stays None when the channel is unknown or send() raised. after_send
+        # guards on it rather than inferring from result_status — the two can
+        # only diverge via a future edit, and this way that edit is safe.
+        result: Optional[SendResult] = None
+
+        provider = get_channel(route_channel)
 
         try:
-            if route_channel == NotificationChannel.SHUFFLE.value:
-                # Shuffle hosted MCP. Fire-and-record — we POST to
-                # /api/v1/apps/{app_id}/mcp with the deployment's admin
-                # Bearer + the customer's Org-Id, capture the
-                # execution_id, and consider the dispatch "sent" on
-                # HTTP 200. We do NOT poll for the downstream app's
-                # terminal state.
-                if shuffle_creds is None:
-                    result_status = "failed"
-                    error_message = shuffle_creds_error or "Shuffle connector unavailable"
-                    latency_ms = 0
-                elif not route_shuffle_app_id:
-                    result_status = "failed"
-                    error_message = "Route has no shuffle_app_id (data integrity issue)"
-                    latency_ms = 0
-                else:
-                    integration = await session.get(CustomerShuffleIntegration, route_shuffle_integration_id)
-                    if not integration or integration.customer_code != req.customer_code:
-                        # Defense-in-depth: we already enforce tenant
-                        # isolation at create/update time, but a hand-
-                        # edited row could still slip through. Refusing
-                        # at dispatch time prevents cross-tenant leaks.
-                        result_status = "failed"
-                        error_message = (
-                            "Route's shuffle_integration is missing or belongs to a " "different customer; refusing to dispatch."
-                        )
-                        latency_ms = 0
-                    elif not integration.enabled:
-                        result_status = "skipped"
-                        error_message = "Shuffle integration is disabled"
-                        latency_ms = 0
-                    else:
-                        base_url, api_key = shuffle_creds
-                        # Cache integration attrs too — same reason as
-                        # the route caching above.
-                        integration_org_id = integration.shuffle_org_id
-                        # Shuffle's input_text is natural language. We
-                        # prepend a "send to {destination}" hint so the
-                        # Shuffle app agent knows where to deliver, and
-                        # follow with the formatted body.
-                        if route_destination:
-                            input_text = f"Send to {route_destination}: {body}"
-                        else:
-                            input_text = body
-                        (
-                            result_status,
-                            error_message,
-                            latency_ms,
-                            shuffle_execution_id,
-                        ) = await dispatch_shuffle(
-                            base_url=base_url,
-                            api_key=api_key,
-                            org_id=integration_org_id,
-                            app_id=route_shuffle_app_id,
-                            input_text=input_text,
-                        )
-            elif route_channel == NotificationChannel.WEBHOOK.value:
-                # Direct HTTP webhook. Fire-and-record — POST/PUT to the
-                # route's URL with either a structured JSON payload
-                # (default) or the rendered template (when the route sets
-                # one), and treat any 2xx/3xx as `sent`.
-                if not route_webhook_url:
-                    result_status = "failed"
-                    error_message = "Route has no webhook_url (data integrity issue)"
-                    latency_ms = 0
-                else:
-                    # Structured default payload — automation platforms
-                    # consume these fields directly.
-                    structured_payload: Dict[str, Any] = {
-                        "customer_code": req.customer_code,
-                        "alert_id": req.alert_id,
-                        "alert_name": req.alert_name,
-                        "severity": req.severity_assessment.value,
-                        "summary": req.summary,
-                        "report_url": req.report_url,
-                        "text": body,
-                    }
-                    # Two mutually-exclusive body modes (enforced in the UI,
-                    # guarded here):
-                    #   1. include_full_report → merge the report's extra
-                    #      fields (recommended actions, full markdown, IOCs)
-                    #      flat into the structured payload. Template ignored.
-                    #   2. custom template → that rendered string is the body.
-                    #      If it contains the `{{report}}` token, inject the
-                    #      same report fields as a JSON object at that spot.
-                    rendered_template: Optional[str] = None
-                    if route_include_full_report:
-                        report_fields = await _build_full_report(req.alert_id, session)
-                        if report_fields is not None:
-                            structured_payload.update(report_fields)
-                    elif route_has_template:
-                        rendered_template = body
-                        if "{{report}}" in rendered_template:
-                            report_fields = await _build_full_report(req.alert_id, session)
-                            rendered_template = rendered_template.replace(
-                                "{{report}}",
-                                json.dumps(report_fields) if report_fields is not None else "null",
-                            )
-                    headers = _decode_webhook_headers(route_webhook_headers)
-                    (
-                        result_status,
-                        error_message,
-                        latency_ms,
-                        _,
-                    ) = await dispatch_webhook(
-                        url=route_webhook_url,
-                        method=route_webhook_method or "POST",
-                        headers=headers,
-                        structured_payload=structured_payload,
-                        rendered_template=rendered_template,
-                    )
-            else:
-                # Unknown channel — preserved as a failure rather than
-                # silently dropped so a misconfigured row surfaces in
-                # the dispatch log.
+            if provider is None:
+                # Unknown channel — recorded as a failure rather than silently
+                # dropped, so a misconfigured row surfaces in the dispatch log.
                 result_status = "failed"
                 error_message = f"Unsupported channel: {route_channel}"
                 latency_ms = None
+            else:
+                result = await provider.send(
+                    route=route,
+                    event=event,
+                    rendered_body=body,
+                    ctx=ctx,
+                )
+                result_status = result.status
+                error_message = result.error_message
+                latency_ms = result.latency_ms
+                # The log column is still named shuffle_execution_id; #1019
+                # renames it to provider_reference.
+                shuffle_execution_id = result.provider_reference
         except Exception as e:  # noqa: BLE001 — best-effort, never raise
             logger.exception(f"Dispatcher raised for route {route_id}: {e!r}")
             result_status = "failed"
@@ -995,15 +794,11 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
                     last_dispatched_at=datetime.utcnow(),
                 ),
             )
-            # Bump the integration's last_used_at on a successful
-            # Shuffle dispatch — gives the integration list a "fired
-            # 2h ago" signal without a join against the log.
-            if route_channel == NotificationChannel.SHUFFLE.value and route_shuffle_integration_id:
-                await session.execute(
-                    update(CustomerShuffleIntegration)
-                    .where(CustomerShuffleIntegration.id == route_shuffle_integration_id)
-                    .values(last_used_at=datetime.utcnow()),
-                )
+            # Channel-specific post-send side effects, inside the same commit.
+            # Shuffle stamps last_used_at on the integration row so its list can
+            # show "fired 2h ago" without joining the dispatch log.
+            if provider is not None and result is not None:
+                await provider.after_send(route=route, result=result, ctx=ctx)
             await session.commit()
         elif result_status == "skipped":
             skipped += 1
