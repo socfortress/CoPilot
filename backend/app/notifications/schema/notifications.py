@@ -48,24 +48,23 @@ class NotificationTrigger(str, Enum):
 class NotificationChannel(str, Enum):
     """Delivery channel set.
 
-    `shuffle` proxies to Shuffle's hosted MCP — each customer points at
-    their own Shuffle Org via `customer_shuffle_integration`, and Shuffle
-    handles the OAuth-authenticated downstream app (Slack workspace,
-    Outlook tenant, Teams, Gmail, SendGrid, etc.). Routes referencing
-    `shuffle` MUST populate the `shuffle_integration_id` + `shuffle_app_id`
-    columns. Email, chat, ticketing, and the rest of the catalog all
-    flow through this single channel — there's no separate direct SMTP
-    path because Shuffle's email apps cover that surface.
+    Each value maps to a provider in ``app.notifications.channels``. The
+    provider owns its own settings shape, validated from the route's ``config``
+    column against its declared ``config_schema`` — so adding a channel needs
+    neither a migration nor an edit here beyond the enum member.
 
-    `webhook` is a direct HTTP POST to any URL the customer chooses
-    (automation platforms, chat incoming webhooks, a custom automation
-    endpoint, …) — no Shuffle org in the path. Routes referencing
-    `webhook` MUST populate `webhook_url`. By default the dispatcher
-    sends a structured JSON object; if the route sets a `format_template`
-    that template's rendered output is sent as the raw body instead, so
-    provider-specific shapes (Discord's `{"content": …}`, Slack's
-    `{"text": …}`) work without a code change. Optional `webhook_headers`
-    carry auth (Authorization / X-API-Key / …).
+    ``shuffle`` proxies to Shuffle's hosted MCP: each customer points at their
+    own Shuffle org via ``customer_shuffle_integration``, and Shuffle handles the
+    OAuth-authenticated downstream app (Slack, Outlook, Teams, Gmail, …). Its
+    org stays a real FK column (``shuffle_integration_id``) rather than moving
+    into config, so referential integrity and the dispatcher's cross-tenant
+    check survive.
+
+    ``webhook`` is a direct HTTP request to any URL the customer chooses, with
+    no Shuffle org in the path. By default the dispatcher sends a structured
+    JSON object; if the route sets a ``format_template`` its rendered output is
+    sent as the raw body instead, so provider-specific shapes (Discord's
+    ``{"content": …}``, Slack's ``{"text": …}``) work without a code change.
     """
 
     SHUFFLE = "shuffle"

@@ -986,18 +986,6 @@ class CustomerNotificationRoute(SQLModel, table=True):
         index=True,
     )
 
-    # ----- Legacy per-channel columns (dropped in #1018b) -----
-    # Superseded by `config`, retained for one release and dual-written on every
-    # create/update. That makes reverting this change lossless and lets the
-    # follow-up verify config against them on real data before dropping.
-    # Nothing reads these — the providers read `config`.
-    shuffle_app_id: Optional[str] = Field(default=None, max_length=64)
-    shuffle_app_name: Optional[str] = Field(default=None, max_length=128)
-    webhook_url: Optional[str] = Field(sa_column=Column(Text), default=None)
-    webhook_method: Optional[str] = Field(default=None, max_length=8)
-    webhook_headers: Optional[str] = Field(sa_column=Column(Text), default=None)
-    include_full_report: Optional[bool] = Field(default=False)
-
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
     updated_at: Optional[datetime] = Field(default=None)
 
