@@ -31,9 +31,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.ai_analyst.services.ai_analyst import list_iocs_by_alert
 from app.ai_analyst.services.ai_analyst import list_reports_by_alert
 from app.connectors.utils import get_connector_info_from_db
+from app.customer_portal.services.ai_reports import is_ai_reports_enabled
 from app.db.universal_models import CustomerNotificationRoute
 from app.db.universal_models import CustomerShuffleIntegration
 from app.db.universal_models import NotificationDispatchLog
+from app.notifications.schema.notifications import AI_SOURCED_TRIGGERS
 from app.notifications.schema.notifications import SEVERITY_ORDER
 from app.notifications.schema.notifications import DispatchOutcome
 from app.notifications.schema.notifications import DispatchRequest
@@ -490,6 +492,30 @@ def _trigger_applies(report_trigger: str, route_trigger: str) -> bool:
     return route_trigger == report_trigger
 
 
+async def _ai_reports_permitted(trigger: str, customer_code: str, session: AsyncSession) -> bool:
+    """Whether AI-written findings may be delivered to this customer.
+
+    `customer_portal_ai_report_settings` is the operator's opt-in switch for
+    publishing AI analyst output to an end customer. It is enforced on the
+    portal's read paths (`app/customer_portal/services/ai_reports.py`), but a
+    notification route is a *second* way the same content reaches the same
+    customer — so the same switch has to gate it, or the notification channel
+    becomes a way around the opt-out. See issue #1001.
+
+    We call the portal service's own predicate rather than re-querying the
+    table, so the two enforcement points cannot drift apart. (This is the
+    auth-scope sidestep pattern from CLAUDE.md: scope checks live on the route
+    handler, so calling the service function directly is both safe and the
+    documented approach.)
+
+    Returns True for non-AI triggers — the switch governs AI-written content,
+    not alert-creation or assignment notifications.
+    """
+    if trigger not in AI_SOURCED_TRIGGERS:
+        return True
+    return await is_ai_reports_enabled(customer_code, session)
+
+
 def _format_default_body(req: DispatchRequest) -> str:
     """Plain default formatter when a route has no `format_template`.
 
@@ -699,6 +725,60 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
 
     outcomes: List[DispatchOutcome] = []
     sent = failed = skipped = 0
+
+    # AI-report opt-out gate. Checked AFTER matching so the dispatch log still
+    # records which routes *would* have fired — "suppressed by the AI switch"
+    # is far easier to debug than silence — but BEFORE the connector fetch and
+    # any provider call, so nothing leaves the process.
+    #
+    # Every route today is customer-facing (`customer_code` is NOT NULL). Once
+    # the scope dimension lands (#1003) this must additionally check
+    # `route.scope == 'customer'` per route, because internal/analyst-facing
+    # routes are deliberately exempt: running investigations while keeping the
+    # results internal is a supported configuration.
+    if matched_routes and not await _ai_reports_permitted(req.trigger.value, req.customer_code, session):
+        logger.info(
+            f"AI reports are not enabled for customer {req.customer_code}; "
+            f"suppressing {len(matched_routes)} matched notification route(s) "
+            f"for alert {req.alert_id}.",
+        )
+        reason = "AI reports are not enabled for this customer; notification suppressed."
+        for route in matched_routes:
+            # Cache before the await — see the attribute-caching note in the
+            # main loop below.
+            route_id = route.id
+            route_name = route.name
+            route_channel = route.channel
+            await _record_log(
+                session,
+                customer_code=req.customer_code,
+                alert_id=req.alert_id,
+                route_id=route_id,
+                trigger=req.trigger.value,
+                status=DispatchStatus.SKIPPED.value,
+                error_message=reason,
+                latency_ms=None,
+                payload_preview=None,
+            )
+            skipped += 1
+            outcomes.append(
+                DispatchOutcome(
+                    route_id=route_id,
+                    route_name=route_name,
+                    channel=route_channel,
+                    status=DispatchStatus.SKIPPED,
+                    error_message=reason,
+                ),
+            )
+        return DispatchResponse(
+            success=True,
+            message="Dispatch suppressed — AI reports are not enabled for this customer",
+            routes_matched=len(matched_routes),
+            dispatched=0,
+            skipped=skipped,
+            failed=0,
+            outcomes=outcomes,
+        )
 
     # Shuffle dispatch needs the deployment's connector creds. We fetch
     # them once per dispatch call (before the per-route loop) so a

@@ -91,6 +91,30 @@ class DispatchStatus(str, Enum):
     SKIPPED = "skipped"
 
 
+# Triggers whose payload carries AI-written findings.
+#
+# Dispatches for these are gated on the customer's
+# `customer_portal_ai_report_settings` row before anything is delivered to a
+# customer-facing route — see `_ai_reports_permitted` in the dispatch service.
+# That switch is opt-in (a missing row reads as disabled), so an operator who
+# has not explicitly published AI findings to a customer must not have them
+# emailed/webhooked out either.
+#
+# Keep this in sync when adding AI-sourced triggers (`ai_report_reviewed` is
+# next, see issue #1007). Non-AI triggers — alert creation, assignment — are
+# deliberately NOT listed: the switch governs AI-written content only.
+#
+# The legacy `severity_critical_or_high` value is included because routes saved
+# against an older schema still dispatch through the same AI path; see
+# `_trigger_applies`.
+AI_SOURCED_TRIGGERS: frozenset = frozenset(
+    {
+        "investigation_complete",
+        "severity_critical_or_high",
+    },
+)
+
+
 # Severity ordering for `min_severity` filtering. Index = priority,
 # higher = more severe. Used by the dispatch service to gate routes.
 SEVERITY_ORDER: List[str] = [
