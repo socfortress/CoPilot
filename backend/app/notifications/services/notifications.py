@@ -18,6 +18,7 @@ import json
 from datetime import datetime
 from typing import List
 from typing import Optional
+from typing import Tuple
 from uuid import uuid4
 
 from fastapi import HTTPException
@@ -66,6 +67,7 @@ from app.notifications.services.dispatchers import (
 from app.notifications.services.dispatchers import (
     verify_shuffle_org as verify_shuffle_org_client,
 )
+from app.notifications.services.rendering import render_body
 
 # ---------------------------------------------------------------------------
 # CRUD
@@ -750,34 +752,26 @@ def _format_default_body(event: NotificationEvent) -> str:
     return "\n".join(parts)
 
 
-def _render_body(route: CustomerNotificationRoute, event: NotificationEvent) -> str:
-    """Apply the route's `format_template` if set, else the default.
+def _render_body(route: CustomerNotificationRoute, event: NotificationEvent) -> Tuple[str, Optional[str]]:
+    """Render this route's message body.
 
-    Substitution is `{{token}}` replacement only — no control flow. Real Jinja
-    arrives with #1009. Token names are unchanged from before the envelope so
-    existing stored templates keep rendering identically.
+    Returns `(body, template_error)`. The error is non-None only when a custom
+    template failed and the channel default was sent instead — it is appended to
+    the dispatch-log row so a broken template is visible without reproducing it.
+
+    Templates are real Jinja since #1037: conditionals, loops over an alert's
+    IOCs, filters. The original token names remain top-level context with
+    unchanged meaning, so templates written against the old string-substitution
+    renderer keep working.
+
+    One behaviour change worth knowing: an *unknown* token used to survive as a
+    literal `{{foo}}` in the output. Under `StrictUndefined` it now raises, and
+    the route falls back to the channel default with the reason logged. That is
+    louder, and deliberately so — a message with a stray `{{foo}}` in it was
+    already broken, just silently.
     """
-    if not route.format_template:
-        return _format_default_body(event)
-
-    ctx = event.context or {}
-    body = route.format_template
-    substitutions = {
-        "{{customer_code}}": event.customer_code or "",
-        "{{alert_id}}": str(event.entity_id),
-        "{{alert_name}}": ctx.get("alert_name") or event.subject or "",
-        "{{severity}}": event.severity.value,
-        "{{summary}}": event.summary,
-        "{{report_url}}": event.link_url or "",
-        # New with #1006; empty on triggers that don't carry them.
-        "{{assignee}}": event.assignee_username or "",
-        "{{actor}}": event.actor_username or "",
-        "{{entity_type}}": event.entity_type,
-        "{{entity_id}}": str(event.entity_id),
-    }
-    for token, value in substitutions.items():
-        body = body.replace(token, value)
-    return body
+    fallback = _format_default_body(event)
+    return render_body(route.format_template, event, fallback)
 
 
 async def _record_log(
@@ -936,7 +930,7 @@ async def send_test_notification(route: CustomerNotificationRoute, session: Asyn
 
     event = _sample_event_for(route)
     ctx = DispatchContext(session=session, event=event)
-    body = _render_body(route, event)
+    body, template_error = _render_body(route, event)
 
     try:
         result = await provider.send(route=route, event=event, rendered_body=body, ctx=ctx)
@@ -949,7 +943,11 @@ async def send_test_notification(route: CustomerNotificationRoute, session: Asyn
         event=event,
         route_id=route.id,
         status=result.status,
-        error_message=result.error_message,
+        error_message=(
+            f"{result.error_message}; {template_error}"
+            if result.error_message and template_error
+            else (result.error_message or template_error)
+        ),
         latency_ms=result.latency_ms,
         payload_preview=body[:500],
         provider_reference=result.provider_reference,
@@ -1104,7 +1102,7 @@ async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> Dis
         route_name = route.name
         route_channel = route.channel
 
-        body = _render_body(route, event)
+        body, template_error = _render_body(route, event)
         body_preview = body[:500]
 
         latency_ms: Optional[int] = None
@@ -1140,6 +1138,12 @@ async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> Dis
             logger.exception(f"Dispatcher raised for route {route_id}: {e!r}")
             result_status = "failed"
             error_message = f"Dispatcher exception: {type(e).__name__}: {e}"
+
+        # A template failure is worth recording even when delivery succeeded:
+        # the operator got the channel default, not what they wrote, and would
+        # otherwise have no signal that their template is broken.
+        if template_error:
+            error_message = f"{error_message}; {template_error}" if error_message else template_error
 
         # Record (or update) the dispatch outcome. _record_log handles
         # the retry-after-failure case in-place so a previous failed

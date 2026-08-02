@@ -288,6 +288,31 @@ class NotificationRouteCreate(NotificationRouteBase):
     500-ing the whole list.
     """
 
+    @field_validator("format_template")
+    @classmethod
+    def _template_must_compile(cls, v: Optional[str]) -> Optional[str]:
+        """Reject a malformed template when it is saved, not when it fires.
+
+        Without this a typo produces a route that silently sends the channel
+        default forever, and the operator finds out from the dispatch log days
+        later — if they look.
+
+        Only syntax is checked. Undefined variables depend on the event, and a
+        template valid for one trigger may reference fields another doesn't
+        carry; those degrade to the default at send time with the reason logged.
+        """
+        if not v or not v.strip():
+            return v
+        from jinja2 import TemplateError
+
+        from app.notifications.services.rendering import compile_template
+
+        try:
+            compile_template(v)
+        except TemplateError as e:
+            raise ValueError(f"format_template is not valid Jinja: {e}") from e
+        return v
+
     @model_validator(mode="after")
     def _validate_against_provider(self):
         """Validate `config` against the channel's declared schema.
