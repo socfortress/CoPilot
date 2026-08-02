@@ -15,6 +15,7 @@ governed by the route's trigger filter rather than accidentally suppressed.
 
 from __future__ import annotations
 
+import os
 from typing import Any
 from typing import Optional
 
@@ -45,6 +46,85 @@ def _coerce_severity(value: Optional[str]) -> NotificationSeverity:
         return NotificationSeverity.MEDIUM
 
 
+def _copilot_link(path: str) -> Optional[str]:
+    """Build a deep link back into CoPilot, when the base URL is configured.
+
+    CoPilot has never known its own public URL — Talon supplied `report_url` on
+    the dispatches it pushed. Now that CoPilot emits `investigation_complete`
+    itself (and wins the dedupe, since write-back happens first), the link has to
+    come from somewhere.
+
+    `COPILOT_URL` is optional: unset means no link, which is the same state as a
+    Talon push that omitted one. Set it and every notification gains a working
+    link, including triggers Talon never knew about.
+    """
+    base = (os.getenv("COPILOT_URL") or "").strip().rstrip("/")
+    return f"{base}/{path.lstrip('/')}" if base else None
+
+
+def investigation_complete_event(
+    *,
+    alert_id: int,
+    customer_code: Optional[str],
+    severity: Optional[str],
+    summary: str,
+    alert_name: Optional[str] = None,
+) -> NotificationEvent:
+    """An AI investigation finished and its report was written back.
+
+    The dedupe key is identical to the one `event_from_dispatch_request` builds,
+    which is what makes CoPilot's own emit and Talon's push converge on a single
+    notification rather than two.
+    """
+    return NotificationEvent(
+        customer_code=customer_code,
+        trigger=NotificationTrigger.INVESTIGATION_COMPLETE,
+        severity=_coerce_severity(severity),
+        subject=alert_name or f"Alert #{alert_id}",
+        summary=summary,
+        entity_type=EntityType.ALERT,
+        entity_id=alert_id,
+        dedupe_key=f"{EntityType.ALERT}:{alert_id}:{NotificationTrigger.INVESTIGATION_COMPLETE.value}",
+        link_url=_copilot_link(f"/alerts/{alert_id}"),
+        context={"alert_name": alert_name},
+    )
+
+
+def ai_report_reviewed_event(
+    *,
+    alert_id: int,
+    report_id: int,
+    customer_code: Optional[str],
+    severity: Optional[str],
+    summary: str,
+    reviewer: Optional[str] = None,
+    verdict: Optional[str] = None,
+) -> NotificationEvent:
+    """An analyst signed off on an AI report.
+
+    Exists as a separate trigger rather than a flag on the route so an operator
+    can run an internal route on submission AND a customer-facing route only
+    after review — two different audiences at two different moments, which a
+    boolean could not express.
+
+    Keyed on the alert, not the report: "this alert's findings have been
+    reviewed" happens once. A second reviewer, or a revision, does not re-notify.
+    """
+    return NotificationEvent(
+        customer_code=customer_code,
+        trigger=NotificationTrigger.AI_REPORT_REVIEWED,
+        severity=_coerce_severity(severity),
+        subject=f"Reviewed: alert #{alert_id}",
+        summary=summary,
+        entity_type=EntityType.ALERT,
+        entity_id=alert_id,
+        dedupe_key=f"{EntityType.ALERT}:{alert_id}:{NotificationTrigger.AI_REPORT_REVIEWED.value}",
+        link_url=_copilot_link(f"/alerts/{alert_id}"),
+        actor_username=reviewer,
+        context={"report_id": report_id, "reviewer": reviewer, "verdict": verdict},
+    )
+
+
 def alert_created_event(
     *,
     alert_id: int,
@@ -71,7 +151,7 @@ def alert_created_event(
         entity_type=EntityType.ALERT,
         entity_id=alert_id,
         dedupe_key=f"{EntityType.ALERT}:{alert_id}:{NotificationTrigger.ALERT_CREATED.value}",
-        link_url=link_url,
+        link_url=link_url or _copilot_link(f"/alerts/{alert_id}"),
         context={"alert_name": title, "rule_level": rule_level, "asset_name": asset_name},
     )
 
