@@ -62,6 +62,17 @@ export interface ResendChannelConfig extends ChannelConfig {
 	max_per_hour?: number | null
 }
 
+export type NotificationTriggerSource = "automatic" | "manual" | "test"
+
+export interface ManualSendPayload {
+	entity_type: "alert" | "case"
+	entity_id: number
+	// Always a configured route. There is deliberately no free-text destination:
+	// routes are admin-managed and carry validated config.
+	route_id: number
+	include_ai_report?: boolean
+}
+
 export interface DispatchOutcome {
 	route_id: number
 	route_name: string
@@ -172,6 +183,9 @@ export interface NotificationDispatchLogEntry {
 	payload_preview: string | null
 	// Vendor-side delivery id — Shuffle execution id, Resend message id, etc.
 	provider_reference: string | null
+	// Who caused this, when a person did. Null for automatic dispatches.
+	triggered_by: string | null
+	trigger_source: NotificationTriggerSource
 }
 
 // ----- Shuffle integrations (Phase 2) -----

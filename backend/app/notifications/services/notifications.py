@@ -784,6 +784,8 @@ async def _record_log(
     latency_ms: Optional[int],
     payload_preview: Optional[str],
     provider_reference: Optional[str] = None,
+    triggered_by: Optional[str] = None,
+    trigger_source: str = "automatic",
 ) -> bool:
     """Record a dispatch outcome. Returns False ONLY when the dispatch
     has already been recorded as `sent` — i.e. a true idempotency hit
@@ -850,6 +852,8 @@ async def _record_log(
         latency_ms=latency_ms,
         payload_preview=payload_preview[:500] if payload_preview else None,
         provider_reference=provider_reference,
+        triggered_by=triggered_by or event.actor_username,
+        trigger_source=trigger_source,
     )
     session.add(log)
     try:
@@ -905,37 +909,39 @@ def _sample_event_for(route: CustomerNotificationRoute) -> NotificationEvent:
     )
 
 
-async def send_test_notification(route: CustomerNotificationRoute, session: AsyncSession) -> DispatchOutcome:
-    """Deliver one test message through the route's real provider.
+async def deliver_one(
+    route: CustomerNotificationRoute,
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    trigger_source: str = "manual",
+) -> SendResult:
+    """Send one event through one route's provider, and log the outcome.
 
-    Uses the normal send path rather than a bespoke per-provider probe, because
-    a probe tests the wrong thing: the Resend key in use here is send-only
-    restricted, so an account-state check 401s while sending works fine. What an
-    operator wants to know is "will a real notification arrive", and only a real
-    send answers that.
+    The shared core of every "deliver this specific thing now" path — the test
+    button and manual send (#1010) — as distinct from `dispatch_event`, which
+    matches an event against many routes. Both need identical behaviour on
+    rendering, failure containment and logging, so they share it rather than
+    drifting.
 
-    The outcome IS logged. A test send consumes provider quota exactly like a
-    real one — leaving it out of the dispatch log would make the Resend monthly
-    counter under-report, and hide test traffic from the audit trail.
+    Never raises: a provider that blows up becomes a `failed` result, because
+    both callers report an outcome rather than an exception.
+
+    The outcome IS logged. These sends consume provider quota exactly like an
+    automatic one — omitting them would make the Resend monthly counter
+    under-report and hide hand-sent traffic from the audit trail.
     """
     provider = get_channel(route.channel)
     if provider is None:
-        return DispatchOutcome(
-            route_id=route.id,
-            route_name=route.name,
-            channel=route.channel,
-            status=DispatchStatus.FAILED,
-            error_message=f"Unsupported channel: {route.channel}",
-        )
+        return SendResult.failed(f"Unsupported channel: {route.channel}")
 
-    event = _sample_event_for(route)
     ctx = DispatchContext(session=session, event=event)
     body, template_error = _render_body(route, event)
 
     try:
         result = await provider.send(route=route, event=event, rendered_body=body, ctx=ctx)
-    except Exception as e:  # noqa: BLE001 — a test must report, never 500
-        logger.exception(f"Test dispatch raised for route {route.id}: {e!r}")
+    except Exception as e:  # noqa: BLE001 — report, never 500 the caller
+        logger.exception(f"Dispatch raised for route {route.id}: {e!r}")
         result = SendResult.failed(f"Dispatcher exception: {type(e).__name__}: {e}")
 
     await _record_log(
@@ -951,8 +957,21 @@ async def send_test_notification(route: CustomerNotificationRoute, session: Asyn
         latency_ms=result.latency_ms,
         payload_preview=body[:500],
         provider_reference=result.provider_reference,
+        trigger_source=trigger_source,
     )
+    return result
 
+
+async def send_test_notification(route: CustomerNotificationRoute, session: AsyncSession) -> DispatchOutcome:
+    """Deliver one test message through the route's real provider.
+
+    Uses the normal send path rather than a bespoke per-provider probe, because
+    a probe tests the wrong thing: the Resend key in use here is send-only
+    restricted, so an account-state check 401s while sending works fine. What an
+    operator wants to know is "will a real notification arrive", and only a real
+    send answers that.
+    """
+    result = await deliver_one(route, _sample_event_for(route), session, trigger_source="test")
     return DispatchOutcome(
         route_id=route.id,
         route_name=route.name,

@@ -1,6 +1,7 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	DispatchOutcome,
+	ManualSendPayload,
 	NotificationChannelDescriptor,
 	NotificationDispatchLogEntry,
 	NotificationRoute,
@@ -43,6 +44,19 @@ export default {
 
 	deleteRoute(customerCode: string, routeId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`/customers/${customerCode}/notification_routes/${routeId}`)
+	},
+
+	// Pushes a specific alert or case to a route on demand. Sends a REAL
+	// notification: consumes quota, lands in the dispatch log, and is refused
+	// server-side if the caller lacks permission — the UI's greying-out is a
+	// courtesy, not the control.
+	manualSend(payload: ManualSendPayload) {
+		return HttpClient.post<FlaskBaseResponse & DispatchOutcome>(`/notifications/send`, payload)
+	},
+	// Renders what manualSend would deliver, without sending. Runs the same
+	// authorization, so it can't reveal an item the caller may not see.
+	manualSendPreview(payload: ManualSendPayload) {
+		return HttpClient.post<FlaskBaseResponse & { body: string }>(`/notifications/send/preview`, payload)
 	},
 
 	// Sends a REAL notification through the route — consumes provider quota and
