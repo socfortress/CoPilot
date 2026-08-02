@@ -180,6 +180,24 @@
 										size="tiny"
 										@invoked="getCase(caseEntity.id)"
 									/>
+									<!--
+										Distinct from the button above, which fires the LEGACY
+										per-customer Shuffle workflow with no channel choice.
+										That one is deliberately untouched; this one targets the
+										notification routes.
+									-->
+									<n-button quaternary size="tiny" @click="showManualSend = true">
+										<template #icon>
+											<Icon :name="SendIcon" :size="13" />
+										</template>
+										Send to channel…
+									</n-button>
+									<ManualSendDialog
+										v-model:show="showManualSend"
+										entity-type="case"
+										:entity-id="caseEntity.id"
+										:customer-code="caseEntity.customer_code"
+									/>
 								</div>
 							</template>
 							<div class="flex flex-col gap-2">
@@ -243,6 +261,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ManualSendDialog from "@/components/notifications/ManualSendDialog.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
@@ -274,7 +293,10 @@ const emit = defineEmits<{
 const { caseData, caseId, compact, embedded, detailsOnMounted, highlight } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
+const SendIcon = "carbon:send-alt"
 const EditIcon = "uil:edit-alt"
+
+const showManualSend = ref(false)
 
 const { routeCustomer, routeIncidentManagementCases } = useNavigation()
 const dialog = useDialog()

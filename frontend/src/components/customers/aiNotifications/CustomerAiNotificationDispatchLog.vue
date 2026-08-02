@@ -78,6 +78,18 @@ const columns = computed<DataTableColumns<DispatchLogEntry>>(() => [
 		render: row => String(formatDate(row.dispatched_at, dFormats.datetime))
 	},
 	{
+		// Manual and test sends consume the same quota and reach the same
+		// customers as automatic ones, so "who hand-sent data where" has to be
+		// answerable from this table rather than inferred from the trigger.
+		title: "Source",
+		key: "trigger_source",
+		width: 130,
+		render: row =>
+			row.trigger_source === "automatic"
+				? "automatic"
+				: `${row.trigger_source}${row.triggered_by ? ` · ${row.triggered_by}` : ""}`
+	},
+	{
 		// Entity rather than Alert: the log now records case and case-task
 		// events too, which carry no alert_id.
 		title: "Entity",
