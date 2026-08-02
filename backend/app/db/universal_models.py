@@ -1060,6 +1060,16 @@ class NotificationDispatchLog(SQLModel, table=True):
     # a customer says "the message looked wrong" we want to see what we
     # actually sent without storing the entire body history.
     payload_preview: Optional[str] = Field(sa_column=Column(Text), default=None)
+    # Who caused this dispatch, when a person did. NULL for automatic ones —
+    # nobody triggered them. "Who sent which customer's data where" is a
+    # compliance question, and manual send (#1010) made it answerable.
+    triggered_by: Optional[str] = Field(default=None, max_length=128)
+
+    # 'automatic' | 'manual' | 'test'. Lets the dispatch-log viewer answer
+    # "show me every time someone hand-sent data to a customer" without
+    # inferring it from the trigger.
+    trigger_source: str = Field(default="automatic", max_length=16, nullable=False, index=True)
+
     # Vendor-side identifier for this delivery, whatever the channel calls it —
     # Shuffle's execution id, and later Resend's message id. Lets an admin pivot
     # from "the notification didn't arrive" to the run in the provider's own UI

@@ -515,6 +515,23 @@ class ShuffleOrgListResponse(BaseModel):
     orgs: List[ShuffleOrg]
 
 
+class ManualSendRequest(BaseModel):
+    """Body for POST /notifications/send.
+
+    Deliberately has NO destination field. The target is always a configured
+    route: routes are admin-managed and carry validated config, whereas a
+    free-text address would turn this into an arbitrary exfiltration tool.
+    """
+
+    entity_type: str = Field(description="'alert' or 'case'.")
+    entity_id: int
+    route_id: int = Field(description="An existing route. Re-validated server-side against the item's customer.")
+    include_ai_report: bool = Field(
+        default=False,
+        description="Attach the AI investigation report. Refused when the customer has opted out of AI reports.",
+    )
+
+
 class ChannelDescriptor(BaseModel):
     """One delivery channel, as the route form needs to see it.
 
@@ -588,6 +605,10 @@ class DispatchLogRead(BaseModel):
     latency_ms: Optional[int] = None
     payload_preview: Optional[str] = None
     provider_reference: Optional[str] = None
+    # Who caused this, when a person did, and how it was triggered. Lets the log
+    # answer "show me every hand-sent notification" without inference.
+    triggered_by: Optional[str] = None
+    trigger_source: str = "automatic"
     model_config = ConfigDict(from_attributes=True)
 
 

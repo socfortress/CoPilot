@@ -37,6 +37,7 @@ from app.notifications.schema.notifications import DispatchLogListResponse
 from app.notifications.schema.notifications import DispatchOutcome
 from app.notifications.schema.notifications import DispatchRequest
 from app.notifications.schema.notifications import DispatchResponse
+from app.notifications.schema.notifications import ManualSendRequest
 from app.notifications.schema.notifications import NotificationRouteCreate
 from app.notifications.schema.notifications import NotificationRouteListResponse
 from app.notifications.schema.notifications import NotificationRouteRead
@@ -166,6 +167,76 @@ async def test_route(
 async def test_internal_route(route_id: int, session: AsyncSession = Depends(get_db)) -> DispatchOutcome:
     route = await svc.get_internal_route(route_id, session)
     return await svc.send_test_notification(route, session)
+
+
+# ---------------------------------------------------------------------------
+# Manual send
+# ---------------------------------------------------------------------------
+#
+# A data egress control point rather than a convenience endpoint: it pushes a
+# specific customer's data outward on demand, bypassing the trigger and severity
+# filters that govern automatic notifications.
+#
+# The scope dependency below is intentionally the permissive one. Real
+# enforcement lives in the service — customer-facing targets need admin,
+# portal users are refused outright, the route is re-validated against the
+# item's tenant, and the caller must be able to see the item at all. Putting it
+# there rather than in a route dependency keeps every check in one auditable
+# place and applies to any future caller.
+
+
+@notifications_router.post(
+    "/notifications/send",
+    response_model=DispatchOutcome,
+    description=(
+        "Send a specific alert or case to a configured notification route. Sends a real "
+        "notification: it consumes provider quota and is recorded in the dispatch log. "
+        "Customer-facing routes require admin."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def manual_send_route(
+    payload: ManualSendRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> DispatchOutcome:
+    from app.notifications.services.manual_send import send_manual
+
+    return await send_manual(
+        entity_type=payload.entity_type,
+        entity_id=payload.entity_id,
+        route_id=payload.route_id,
+        user=current_user,
+        session=session,
+        include_ai_report=payload.include_ai_report,
+    )
+
+
+@notifications_router.post(
+    "/notifications/send/preview",
+    description=(
+        "Render what a manual send would deliver, without sending it. Runs the same "
+        "authorization as the send itself, so a preview cannot reveal an item the caller "
+        "may not see."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def manual_send_preview_route(
+    payload: ManualSendRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+):
+    from app.notifications.services.manual_send import preview_manual
+
+    body = await preview_manual(
+        entity_type=payload.entity_type,
+        entity_id=payload.entity_id,
+        route_id=payload.route_id,
+        user=current_user,
+        session=session,
+        include_ai_report=payload.include_ai_report,
+    )
+    return {"success": True, "message": "Preview rendered", "body": body}
 
 
 # ---------------------------------------------------------------------------
