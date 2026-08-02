@@ -106,6 +106,7 @@ from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
+from app.incidents.services.alert_severity import severity_of
 
 # from app.incidents.services.db_operations import list_alerts
 # from app.incidents.services.db_operations import alerts_open_multiple_filters
@@ -782,6 +783,11 @@ async def update_assigned_to_endpoint(
     previous_assignee = existing_alert.assigned_to if existing_alert else None
     alert_title = existing_alert.alert_name if existing_alert else None
     alert_customer = existing_alert.customer_code if existing_alert else None
+    # Being handed a Critical alert is a different event from being handed an
+    # Informational one; a route gating at High should see the first. Resolved
+    # rather than read raw, so an alert whose source gave no severity uses the
+    # deployment default instead of ranking below everything.
+    alert_severity = severity_of(existing_alert) if existing_alert else None
 
     updated = await update_alert_assigned_to(assigned_to.alert_id, assigned_to.assigned_to, db)
 
@@ -793,6 +799,7 @@ async def update_assigned_to_endpoint(
                 assignee=assigned_to.assigned_to,
                 actor=current_user.username,
                 customer_code=alert_customer,
+                severity=alert_severity,
             ),
         )
 

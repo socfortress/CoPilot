@@ -39,6 +39,7 @@ from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import FieldNames
 from app.incidents.schema.incident_alert import GenericAlertModel
 from app.incidents.schema.incident_alert import GenericSourceModel
+from app.incidents.services.alert_severity import normalize_severity
 from app.incidents.services.db_operations import get_alert_title_names
 from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_customer_ai_trigger
@@ -1196,6 +1197,11 @@ async def create_alert_in_copilot(alert_payload: CreatedAlertPayload, customer_c
         alert_creation_time=datetime.utcnow(),
         customer_code=customer_code,
         source=alert_payload.source,
+        # Persisted so everything after ingest can read it. NULL when the source
+        # supplied nothing — Wazuh carries a rule level, Office 365 / CrowdStrike
+        # / Carbon Black and the rest do not. NULL is resolved to the deployment
+        # default at read time by `severity_of`, deliberately not stamped here.
+        severity=normalize_severity(alert_payload.severity),
         assigned_to=None,
     )
     # Commit it to the database
