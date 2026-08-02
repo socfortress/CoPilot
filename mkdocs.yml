@@ -80,6 +80,7 @@ nav:
       - Quickstart (Admins/Engineers): user/admins-quickstart.md
       - Customer Provisioning (Tenancy): user/customer-provisioning.md
       - Features by Area: user/features.md
+      - Notifications (Admin/Operator): user/notifications.md
       - CoPilot ↔ Shuffle Integration (Admin/Operator): user/shuffle-integration.md
       - Navigation Guide (UI): user/navigation.md
       - UI Guide (mirrors menu):
@@ -92,6 +93,7 @@ nav:
               - Cases: user/ui/incident-cases.md
               - Case Templates: user/ui/incident-case-templates.md
               - Alerting → Shuffle (notifications): user/ui/alerting-shuffle.md
+              - Notifications (routes & channels): user/ui/notifications.md
           - Alerts:
               - Alerts: user/ui/alerts.md
               - SIEM: user/ui/alerts-siem.md
