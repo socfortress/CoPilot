@@ -132,10 +132,11 @@ async def send_get_request(
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to send GET request to {endpoint} with error: {e}",
-        )
+        logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
+        return {
+            "success": False,
+            "message": f"Failed to send GET request to {endpoint} with error: {e}",
+        }
 
 
 async def send_post_request(

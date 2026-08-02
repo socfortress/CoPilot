@@ -403,7 +403,12 @@ async def send_get_request(
                 params=params,
                 verify=False,
             )
-            response.raise_for_status()
+            if not response.ok:
+                logger.error(f"Raw GET request to {endpoint} failed with status {response.status_code}: {response.text}")
+                return {
+                    "success": False,
+                    "message": f"Failed to send GET request to {endpoint} with error: {response.status_code} Client Error: {response.text}",
+                }
             return {
                 "data": response.text,
                 "success": True,
