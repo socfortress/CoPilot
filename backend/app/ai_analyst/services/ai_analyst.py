@@ -46,6 +46,9 @@ from app.db.universal_models import AiAnalystPalaceLesson
 from app.db.universal_models import AiAnalystReport
 from app.db.universal_models import AiAnalystReview
 from app.incidents.models import Alert
+from app.notifications.services.emit import emit
+from app.notifications.services.event_builders import ai_report_reviewed_event
+from app.notifications.services.event_builders import investigation_complete_event
 
 
 def _job_to_response(job: AiAnalystJob) -> JobResponse:
@@ -261,6 +264,21 @@ async def submit_report(request: SubmitReportRequest, session: AsyncSession) -> 
     await session.refresh(report)
 
     logger.info(f"AI analyst report {report.id} created for job {request.job_id}")
+
+    # Notification routes (#1007). Emitted here rather than relying solely on
+    # Talon's POST /notifications/dispatch, which is single-attempt: a network
+    # blip or a CoPilot restart loses the notification even though the report is
+    # already durably stored. Both paths build the same dedupe key, so whichever
+    # arrives first wins and the other is a no-op.
+    emit(
+        investigation_complete_event(
+            alert_id=report.alert_id,
+            customer_code=report.customer_code,
+            severity=report.severity_assessment,
+            summary=report.summary or "An AI investigation completed for this alert.",
+        ),
+    )
+
     return SubmitReportResponse(success=True, message="Report submitted", report=_report_to_response(report))
 
 
@@ -603,6 +621,22 @@ async def submit_review(
 
     action = "updated" if is_edit else "created"
     logger.info(f"Review {review.id} {action} for report {report_id}")
+
+    # Notification routes (#1007). Creation only — an analyst revising their own
+    # review is not a new sign-off. Lets an operator run an internal route on
+    # report submission and a customer-facing route only after review.
+    if not is_edit:
+        emit(
+            ai_report_reviewed_event(
+                alert_id=report.alert_id,
+                report_id=report_id,
+                customer_code=report.customer_code,
+                severity=report.severity_assessment,
+                summary=report.summary or "An analyst reviewed the AI investigation for this alert.",
+                reviewer=str(reviewer_user_id),
+                verdict=request.overall_verdict.value if request.overall_verdict else None,
+            ),
+        )
     return SubmitReviewResponse(
         success=True,
         message=f"Review {action}",

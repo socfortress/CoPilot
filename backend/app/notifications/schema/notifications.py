@@ -43,6 +43,7 @@ class NotificationTrigger(str, Enum):
     """
 
     INVESTIGATION_COMPLETE = "investigation_complete"
+    AI_REPORT_REVIEWED = "ai_report_reviewed"
 
     # Fired by CoPilot itself rather than pushed in by Talon.
     ALERT_CREATED = "alert_created"
@@ -157,6 +158,7 @@ INTERNAL_TRIGGERS: frozenset = frozenset(
 AI_SOURCED_TRIGGERS: frozenset = frozenset(
     {
         "investigation_complete",
+        "ai_report_reviewed",
         "severity_critical_or_high",
     },
 )
