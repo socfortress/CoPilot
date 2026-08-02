@@ -197,16 +197,22 @@ def test_alert_created_uses_the_payloads_derived_severity():
     assert event.context["rule_level"] == 14
 
 
-def test_alert_without_a_severity_defaults_to_medium_not_informational():
-    """Sources with no rule level would otherwise be filtered out of every route
-    gating above Informational."""
+def test_alert_without_a_severity_uses_the_deployment_default():
+    """Sources with no rule level — Office 365, CrowdStrike, Carbon Black — used
+    to land on a hardcoded Medium and were invisible to any route gating above
+    it. The fallback is now deployment-configurable and defaults to High (#1040).
+    """
+    from app.incidents.services.alert_severity import default_severity
+
     event = alert_created_event(alert_id=1, customer_code=CUSTOMER, alert_title="t", severity=None)
-    assert event.severity.value == "Medium"
+    assert event.severity.value == default_severity()
 
 
 def test_unknown_severity_string_falls_back_rather_than_raising():
+    from app.incidents.services.alert_severity import default_severity
+
     event = alert_created_event(alert_id=1, customer_code=CUSTOMER, alert_title="t", severity="Catastrophic")
-    assert event.severity.value == "Medium"
+    assert event.severity.value == default_severity()
 
 
 def test_min_severity_still_gates_alert_created():

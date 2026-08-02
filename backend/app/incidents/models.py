@@ -41,6 +41,20 @@ class Alert(SQLModel, table=True):
     customer_code: str = Field(max_length=50, nullable=False)
     time_closed: Optional[datetime] = Field(default=None)
     source: str = Field(max_length=50, nullable=False)
+
+    # How serious this alert is: Critical | High | Medium | Low | Informational.
+    #
+    # NULL means "the source did not tell us" — not "unimportant". Wazuh alerts
+    # carry a rule level we map from; Office 365, CrowdStrike, Carbon Black,
+    # Huntress and the rest carry no equivalent, so their alerts land here NULL.
+    #
+    # Deliberately resolved at READ time rather than stamped at ingest: see
+    # `severity_of()`. Storing the fallback would freeze it, so changing
+    # DEFAULT_ALERT_SEVERITY would only affect alerts created afterwards.
+    #
+    # Indexed because filtering and sorting by it is the point of storing it.
+    severity: Optional[str] = Field(default=None, max_length=20, nullable=True, index=True)
+
     assigned_to: Optional[str] = Field(max_length=50, nullable=True)
     escalated: bool = Field(default=False, nullable=False)
 

@@ -192,14 +192,21 @@ def test_review_is_customer_facing_not_internal():
     assert NotificationTrigger.AI_REPORT_REVIEWED.value not in INTERNAL_TRIGGERS
 
 
-@pytest.mark.parametrize("severity,expected", [("Critical", "Critical"), (None, "Medium"), ("Nonsense", "Medium")])
-def test_severity_falls_back_rather_than_raising(severity, expected):
+@pytest.mark.parametrize("severity", [None, "Nonsense"])
+def test_unknown_severity_falls_back_to_the_deployment_default(severity):
     """A report with no assessed severity must not be filtered out of every
-    route gating above Informational."""
-    event = investigation_complete_event(
-        alert_id=1,
-        customer_code=CUSTOMER,
-        severity=severity,
-        summary="s",
-    )
-    assert event.severity.value == expected
+    route gating above Informational.
+
+    Asserted against `default_severity()` rather than a literal: the fallback is
+    deployment-configurable (#1040), and hardcoding it here would fail for
+    anyone who changed the setting rather than catching a real bug.
+    """
+    from app.incidents.services.alert_severity import default_severity
+
+    event = investigation_complete_event(alert_id=1, customer_code=CUSTOMER, severity=severity, summary="s")
+    assert event.severity.value == default_severity()
+
+
+def test_a_supplied_severity_is_used_verbatim():
+    event = investigation_complete_event(alert_id=1, customer_code=CUSTOMER, severity="Critical", summary="s")
+    assert event.severity.value == "Critical"

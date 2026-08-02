@@ -19,31 +19,39 @@ import os
 from typing import Any
 from typing import Optional
 
+from app.incidents.services.alert_severity import default_severity
 from app.notifications.schema.events import EntityType
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.schema.notifications import NotificationSeverity
 from app.notifications.schema.notifications import NotificationTrigger
 
-#: Assignments carry no security severity of their own. INFORMATIONAL means a
-#: route filters them by trigger, not by an invented severity — anything higher
-#: would silently drop them on routes tuned for real alerts.
+#: Used when an assignment concerns something with no severity of its own — a
+#: case or a task. Alerts now carry a stored severity (#1040), so an alert
+#: assignment reports the alert's real seriousness instead.
+#:
+#: INFORMATIONAL rather than something higher: a case assignment is a workflow
+#: event, and inventing a severity would let it trip routes tuned for real
+#: alerts.
 _ASSIGNMENT_SEVERITY = NotificationSeverity.INFORMATIONAL
 
 
 def _coerce_severity(value: Optional[str]) -> NotificationSeverity:
-    """Map a payload severity string onto the enum, defaulting to Medium.
+    """Map a severity string onto the enum, falling back to the deployment default.
 
-    `alert_payload.severity` is derived from the Wazuh rule level (issue #980)
-    and is None for sources that carry no level. Medium rather than
-    Informational so a severity-less alert isn't quietly filtered out of every
-    route that gates above Informational.
+    Previously hardcoded Medium here, which is what made non-Wazuh alerts —
+    Office 365, CrowdStrike, Carbon Black and the rest, none of which carry a
+    rule level — silently invisible to any route gating at High and above.
+
+    The fallback now comes from `DEFAULT_ALERT_SEVERITY` (High unless
+    configured otherwise), so an unmapped source is loud by default and the
+    behaviour is one setting away from whatever a given SOC wants. See #1040.
     """
-    if not value:
-        return NotificationSeverity.MEDIUM
-    try:
-        return NotificationSeverity(value)
-    except ValueError:
-        return NotificationSeverity.MEDIUM
+    if value:
+        try:
+            return NotificationSeverity(value)
+        except ValueError:
+            pass
+    return NotificationSeverity(default_severity())
 
 
 def _copilot_link(path: str) -> Optional[str]:
@@ -160,6 +168,7 @@ def _assignment_event(
     *,
     trigger: NotificationTrigger,
     entity_type: str,
+    severity: NotificationSeverity = _ASSIGNMENT_SEVERITY,
     entity_id: int,
     title: Optional[str],
     assignee: Optional[str],
@@ -182,7 +191,7 @@ def _assignment_event(
     return NotificationEvent(
         customer_code=customer_code,
         trigger=trigger,
-        severity=_ASSIGNMENT_SEVERITY,
+        severity=severity,
         subject=title or f"{entity_type} #{entity_id}",
         summary=summary,
         entity_type=entity_type,
@@ -202,9 +211,18 @@ def alert_assigned_event(
     assignee: Optional[str],
     actor: Optional[str],
     customer_code: Optional[str] = None,
+    severity: Optional[str] = None,
 ) -> NotificationEvent:
+    """An alert changed hands.
+
+    Carries the alert's own severity when the caller supplies it — being handed
+    a Critical alert is not the same event as being handed an Informational one,
+    and a route gating at High should see the first. Falls back to the
+    assignment default when unknown.
+    """
     return _assignment_event(
         trigger=NotificationTrigger.ALERT_ASSIGNED,
+        severity=_coerce_severity(severity) if severity else _ASSIGNMENT_SEVERITY,
         entity_type=EntityType.ALERT,
         entity_id=alert_id,
         title=title,
