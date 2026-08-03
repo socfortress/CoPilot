@@ -59,6 +59,39 @@ class SendResult(BaseModel):
         return cls(status="skipped", error_message=message, latency_ms=latency_ms)
 
 
+class RenderedMessage(BaseModel):
+    """What the dispatch loop hands a provider to deliver.
+
+    Was a bare ``rendered_body`` string until named templates (#1038) gave a
+    message two more properties a channel has to know about: its ``format``
+    (only email can render HTML; a chat card would show the markup) and an
+    optional ``subject`` from the template's own subject line, which overrides
+    whatever the channel would have composed.
+
+    One object rather than three keyword arguments, so a channel that later
+    needs a fourth property doesn't change every provider signature again.
+    """
+
+    body: str
+
+    #: 'text' | 'markdown' | 'html' | 'json'. Providers declare what they accept
+    #: via ``ChannelProvider.template_formats``; this is what was actually
+    #: rendered, which for the channel default is always plain text.
+    format: str = "text"
+
+    #: From the named template's ``subject_template``. None means the provider
+    #: composes its own — the pre-#1038 behaviour, which every route without a
+    #: named template still gets.
+    subject: Optional[str] = None
+
+    #: Whether ``body`` is operator-authored rather than the channel default.
+    #: Teams and webhook branch on this — a hand-written body is sent verbatim
+    #: instead of being restructured into a card or a JSON envelope. Providers
+    #: used to derive it from ``route.format_template``, which named templates
+    #: made wrong: a route can now have a custom body with that column empty.
+    is_custom: bool = False
+
+
 class DispatchContext:
     """Per-dispatch-call shared state.
 
@@ -128,6 +161,12 @@ class ChannelProvider(ABC):
     #: #1020; declared here so providers own the classification.
     secret_fields: ClassVar[Set[str]] = set()
 
+    #: Named-template formats (#1038) this channel can actually render. Chat
+    #: channels take text or markdown; only email renders HTML. Declared so
+    #: attaching an unrenderable template is a 400 at save time rather than a
+    #: route that silently falls back to the default forever.
+    template_formats: ClassVar[Set[str]] = {"text", "markdown"}
+
     def parse_config(self, route: Any) -> ChannelConfig:
         """Validate and return this route's config.
 
@@ -152,7 +191,7 @@ class ChannelProvider(ABC):
         *,
         route: Any,
         event: NotificationEvent,
-        rendered_body: str,
+        message: RenderedMessage,
         ctx: DispatchContext,
     ) -> SendResult:
         """Deliver one notification.

@@ -20,6 +20,7 @@ from pydantic import field_validator
 from app.notifications.channels.base import ChannelConfig
 from app.notifications.channels.base import ChannelProvider
 from app.notifications.channels.base import DispatchContext
+from app.notifications.channels.base import RenderedMessage
 from app.notifications.channels.base import SendResult
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.services.dispatchers import dispatch_webhook
@@ -100,12 +101,12 @@ class WebhookChannel(ChannelProvider):
         *,
         route: Any,
         event: NotificationEvent,
-        rendered_body: str,
+        message: RenderedMessage,
         ctx: DispatchContext,
     ) -> SendResult:
         # Read every attribute before the first await — an expired ORM object
         # would otherwise trigger a synchronous refresh and MissingGreenlet.
-        has_template = bool(route.format_template)
+        has_template = message.is_custom
         try:
             cfg = self.parse_config(route)
         except ValueError as e:
@@ -130,7 +131,7 @@ class WebhookChannel(ChannelProvider):
             "severity": event.severity.value,
             "summary": event.summary,
             "report_url": event.link_url,
-            "text": rendered_body,
+            "text": message.body,
         }
 
         # Two mutually-exclusive body modes (enforced in the UI, guarded here):
@@ -145,7 +146,7 @@ class WebhookChannel(ChannelProvider):
             if report_fields is not None:
                 structured_payload.update(report_fields)
         elif has_template:
-            rendered_template = rendered_body
+            rendered_template = message.body
             if "{{report}}" in rendered_template:
                 report_fields = await self._report(event, ctx)
                 rendered_template = rendered_template.replace(

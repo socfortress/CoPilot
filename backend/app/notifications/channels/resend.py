@@ -31,6 +31,7 @@ from app.connectors.utils import get_connector_info_from_db
 from app.notifications.channels.base import ChannelConfig
 from app.notifications.channels.base import ChannelProvider
 from app.notifications.channels.base import DispatchContext
+from app.notifications.channels.base import RenderedMessage
 from app.notifications.channels.base import SendResult
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.services.dispatchers import dispatch_resend
@@ -121,13 +122,17 @@ class ResendChannel(ChannelProvider):
     supports_recipient_modes = {"static", "assignee"}
     # Empty: the API key is on the connector row, not in route config.
     secret_fields = set()
+    # The only channel that renders HTML: an `html` template is posted as both
+    # the `html` and `text` parts, so it arrives formatted and still degrades to
+    # readable text. A chat card would show the markup instead.
+    template_formats = {"text", "markdown", "html"}
 
     async def send(
         self,
         *,
         route: Any,
         event: NotificationEvent,
-        rendered_body: str,
+        message: RenderedMessage,
         ctx: DispatchContext,
     ) -> SendResult:
         # Read every attribute before the first await — an expired ORM object
@@ -170,7 +175,15 @@ class ResendChannel(ChannelProvider):
                     f"Rate limit reached for this route ({recent}/{cfg.max_per_hour} in the last hour).",
                 )
 
-        subject = self._subject(cfg, event)
+        # A named template's subject line wins over the composed one — an
+        # operator who wrote a subject meant it. `subject_prefix` still applies,
+        # so deployment-wide inbox filtering on "[CoPilot]" keeps working.
+        subject = self._subject(cfg, event, override=message.subject)
+
+        # Email is the only channel that can render HTML, so an `html` template
+        # is sent as the HTML part with the same source as the text fallback.
+        # Clients that refuse HTML still get something readable.
+        is_html = message.format == "html"
 
         status, error_message, latency_ms, message_id = await dispatch_resend(
             base_url=base_url,
@@ -180,7 +193,8 @@ class ResendChannel(ChannelProvider):
             cc=cfg.cc or None,
             reply_to=cfg.reply_to,
             subject=subject,
-            text_body=rendered_body,
+            text_body=message.body,
+            html_body=message.body if is_html else None,
         )
         return SendResult(
             status=status,
@@ -221,12 +235,17 @@ class ResendChannel(ChannelProvider):
             return ([], SendResult.failed(f"Assignee '{username}' has no email address on their account."))
         return ([str(email)], None)
 
-    def _subject(self, cfg: ResendConfig, event: NotificationEvent) -> str:
+    def _subject(self, cfg: ResendConfig, event: NotificationEvent, *, override: Optional[str] = None) -> str:
         """Prefix + the event's one-line subject, with severity for scanability.
 
         Kept here rather than in the body renderer because a subject line is an
         email-specific concern — no other channel has one.
+
+        `override` is a named template's rendered `subject_template`. It replaces
+        the composed core but keeps the prefix: the prefix is a deployment-wide
+        inbox-filtering convention, and letting a per-customer template drop it
+        would silently break those filters.
         """
         prefix = (cfg.subject_prefix or "").strip()
-        core = f"{event.severity.value}: {event.subject}".strip()
+        core = (override or f"{event.severity.value}: {event.subject}").strip()
         return f"{prefix} {core}".strip() if prefix else core

@@ -25,6 +25,7 @@ from app.db.universal_models import CustomerShuffleIntegration
 from app.notifications.channels.base import ChannelConfig
 from app.notifications.channels.base import ChannelProvider
 from app.notifications.channels.base import DispatchContext
+from app.notifications.channels.base import RenderedMessage
 from app.notifications.channels.base import SendResult
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.services.dispatchers import dispatch_shuffle
@@ -92,7 +93,7 @@ class ShuffleChannel(ChannelProvider):
         *,
         route: Any,
         event: NotificationEvent,
-        rendered_body: str,
+        message: RenderedMessage,
         ctx: DispatchContext,
     ) -> SendResult:
         # Read every attribute before the first await — an expired ORM object
@@ -140,7 +141,7 @@ class ShuffleChannel(ChannelProvider):
 
         # Shuffle's input_text is natural language. We prepend a
         # "send to {destination}" hint so the app agent knows where to deliver.
-        input_text = f"Send to {destination}: {rendered_body}" if destination else rendered_body
+        input_text = f"Send to {destination}: {message.body}" if destination else message.body
 
         status, error_message, latency_ms, execution_id = await dispatch_shuffle(
             base_url=base_url,

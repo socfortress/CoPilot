@@ -117,6 +117,10 @@ export interface NotificationChannelDescriptor {
 	// Shuffle's org is per-customer, so it can't serve an internal route.
 	supports_internal_scope: boolean
 	secret_fields: string[]
+	// Named-template formats this channel can render. Only email does HTML — a
+	// chat card would show the markup — so the route form filters its template
+	// picker on this rather than offering one the server would refuse.
+	template_formats: NotificationTemplateFormat[]
 }
 
 export interface NotificationRoute {
@@ -129,6 +133,10 @@ export interface NotificationRoute {
 	destination: string
 	min_severity: NotificationSeverity
 	format_template: string | null
+	// A shared template this route renders with. Precedence at send time is
+	// format_template -> template_id -> the channel default, so the inline field
+	// stays a per-route override of the shared one.
+	template_id: number | null
 	enabled: boolean
 	scope: NotificationScope
 	recipient_mode: RecipientMode
@@ -153,6 +161,8 @@ export interface NotificationRoutePayload {
 	destination?: string | null
 	min_severity: NotificationSeverity
 	format_template?: string | null
+	// Null detaches the route from its named template; omit to leave it alone.
+	template_id?: number | null
 	enabled: boolean
 	scope?: NotificationScope
 	recipient_mode?: RecipientMode
@@ -229,5 +239,68 @@ export interface ShuffleOrg {
 export interface ShuffleVerifyResult {
 	org_id: string
 	app_count: number | null
+	error: string | null
+}
+
+// ----- Named message templates (#1038) -----
+
+// Only email renders HTML — a chat card would show the markup — so the format a
+// template declares is checked against the channel's `template_formats` when it
+// is attached to a route.
+export type NotificationTemplateFormat = "text" | "markdown" | "html" | "json"
+
+export interface NotificationTemplate {
+	id: number
+	name: string
+	description: string | null
+	// Null means usable with any trigger. Set restricts it to one, so a template
+	// written around {{assignee}} can't be attached where that's always empty.
+	trigger: NotificationTrigger | null
+	format: NotificationTemplateFormat
+	// Email needs a subject and a Teams card needs a title; neither is derivable
+	// from body text, which is why it's a separate field.
+	subject_template: string | null
+	body_template: string
+	// Null means shared with every customer — same convention as custom
+	// dashboard templates.
+	customer_code: string | null
+	// Seeded built-ins. Read-only: the next startup would recreate them anyway,
+	// so the UI offers Duplicate instead of Edit.
+	is_default: boolean
+	created_by: string | null
+	created_at: string
+	updated_at: string | null
+}
+
+export interface NotificationTemplatePayload {
+	name: string
+	description?: string | null
+	trigger?: NotificationTrigger | null
+	format: NotificationTemplateFormat
+	subject_template?: string | null
+	body_template: string
+	customer_code?: string | null
+}
+
+export type NotificationTemplateUpdatePayload = Partial<NotificationTemplatePayload>
+
+// Takes the source inline rather than an id so the editor previews UNSAVED
+// edits — the same reason the custom-dashboard builder previews an unsaved
+// panel set, and what keeps preview and the real send from drifting.
+export interface TemplatePreviewPayload {
+	body_template: string
+	subject_template?: string | null
+	format: NotificationTemplateFormat
+	trigger?: NotificationTrigger
+	// Drives the sample event's branding, so a template using {{ branding.* }}
+	// previews with the colours that customer would really receive.
+	customer_code?: string | null
+}
+
+export interface TemplatePreviewResult {
+	body: string
+	subject: string | null
+	// Non-null when rendering failed. Returned rather than thrown so the editor
+	// can show it beside the template being written.
 	error: string | null
 }

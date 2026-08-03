@@ -218,15 +218,17 @@ async def dispatch_resend(
     text_body: str,
     cc: Optional[List[str]] = None,
     reply_to: Optional[str] = None,
+    html_body: Optional[str] = None,
 ) -> ResendDispatchResult:
     """Send one email via Resend's REST API.
 
     Returns (status, error_message, latency_ms, message_id). Never raises —
     the provider turns the result into a dispatch-log row.
 
-    Body is plain text only for now. Resend accepts `html` too, but the message
-    body CoPilot renders today is markdown-ish plain text; sending it as HTML
-    would show the markup. Real HTML arrives with templates (#1009).
+    `text_body` is always sent. `html_body` is set only for a named template
+    declaring `format="html"` (#1038); the default body is markdown-ish plain
+    text, and sending that as HTML would show the markup. When both are present
+    Resend delivers a multipart message and the client picks.
     """
     payload: Dict[str, Any] = {
         "from": from_address,
@@ -234,6 +236,8 @@ async def dispatch_resend(
         "subject": subject,
         "text": text_body,
     }
+    if html_body:
+        payload["html"] = html_body
     if cc:
         payload["cc"] = cc
     if reply_to:

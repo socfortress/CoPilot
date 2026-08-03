@@ -43,6 +43,11 @@ from app.notifications.schema.notifications import NotificationRouteListResponse
 from app.notifications.schema.notifications import NotificationRouteRead
 from app.notifications.schema.notifications import NotificationRouteResponse
 from app.notifications.schema.notifications import NotificationRouteUpdate
+from app.notifications.schema.notifications import NotificationTemplateCreate
+from app.notifications.schema.notifications import NotificationTemplateListResponse
+from app.notifications.schema.notifications import NotificationTemplateRead
+from app.notifications.schema.notifications import NotificationTemplateResponse
+from app.notifications.schema.notifications import NotificationTemplateUpdate
 from app.notifications.schema.notifications import ResendQuotaResponse
 from app.notifications.schema.notifications import ShuffleAppListResponse
 from app.notifications.schema.notifications import ShuffleIntegrationCreate
@@ -52,7 +57,10 @@ from app.notifications.schema.notifications import ShuffleIntegrationResponse
 from app.notifications.schema.notifications import ShuffleIntegrationUpdate
 from app.notifications.schema.notifications import ShuffleOrgListResponse
 from app.notifications.schema.notifications import ShuffleVerifyResponse
+from app.notifications.schema.notifications import TemplatePreviewRequest
+from app.notifications.schema.notifications import TemplatePreviewResponse
 from app.notifications.services import notifications as svc
+from app.notifications.services import templates as templates_svc
 
 notifications_router = APIRouter()
 
@@ -228,7 +236,7 @@ async def manual_send_preview_route(
 ):
     from app.notifications.services.manual_send import preview_manual
 
-    body = await preview_manual(
+    rendered = await preview_manual(
         entity_type=payload.entity_type,
         entity_id=payload.entity_id,
         route_id=payload.route_id,
@@ -236,7 +244,14 @@ async def manual_send_preview_route(
         session=session,
         include_ai_report=payload.include_ai_report,
     )
-    return {"success": True, "message": "Preview rendered", "body": body}
+    return {
+        "success": True,
+        "message": "Preview rendered",
+        "body": rendered.body,
+        # Null unless a named template set one; the provider composes its own
+        # in that case, which this preview deliberately does not guess at.
+        "subject": rendered.subject,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -331,6 +346,7 @@ async def list_channels_route() -> ChannelListResponse:
             supports_recipient_modes=sorted(provider.supports_recipient_modes),
             supports_internal_scope=provider.supports_internal_scope,
             secret_fields=sorted(provider.secret_fields),
+            template_formats=sorted(provider.template_formats),
         )
         for provider in CHANNEL_REGISTRY.values()
     ]
@@ -574,3 +590,146 @@ async def dispatch_route(
         f"severity {payload.severity_assessment.value}",
     )
     return await svc.dispatch(payload, session)
+
+
+# ---------------------------------------------------------------------------
+# Named message templates (#1038)
+# ---------------------------------------------------------------------------
+#
+# Deployment-level rather than nested under /customers/{code}: a template with a
+# null customer_code is shared with every tenant, so there is no one customer it
+# belongs under. The optional `customer_code` query param filters the list to
+# one customer's own templates plus the shared ones.
+
+
+@notifications_router.get(
+    "/notifications/templates",
+    response_model=NotificationTemplateListResponse,
+    description=(
+        "List reusable message templates. Filter to a customer (returns their own plus the shared ones) "
+        "and/or to a trigger (returns templates scoped to it plus the trigger-agnostic ones)."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def list_templates_route(
+    customer_code: Optional[str] = None,
+    trigger: Optional[str] = None,
+    session: AsyncSession = Depends(get_db),
+) -> NotificationTemplateListResponse:
+    templates = await templates_svc.list_templates(session, customer_code=customer_code, trigger=trigger)
+    return NotificationTemplateListResponse(
+        success=True,
+        message=f"{len(templates)} template(s) retrieved",
+        templates=[NotificationTemplateRead.model_validate(t) for t in templates],
+    )
+
+
+@notifications_router.post(
+    "/notifications/templates/preview",
+    response_model=TemplatePreviewResponse,
+    description=(
+        "Render template source against a sample event without saving it. Takes the source inline so the "
+        "editor can preview unsaved edits. A render failure is returned in `error`, not raised."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def preview_template_route(
+    payload: TemplatePreviewRequest,
+    session: AsyncSession = Depends(get_db),
+) -> TemplatePreviewResponse:
+    result = await templates_svc.preview(payload, session)
+    return TemplatePreviewResponse(
+        success=result["error"] is None,
+        message="Rendered" if result["error"] is None else "Template failed to render",
+        **result,
+    )
+
+
+# Static paths above, wildcards below — a `/{template_id}` declared first would
+# swallow `/preview` and 422 on parsing it as an int. See CLAUDE.md.
+
+
+@notifications_router.get(
+    "/notifications/templates/{template_id}",
+    response_model=NotificationTemplateResponse,
+    description="Fetch one template.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_template_route(
+    template_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> NotificationTemplateResponse:
+    template = await templates_svc.get_template(template_id, session)
+    return NotificationTemplateResponse(
+        success=True,
+        message="Template retrieved",
+        template=NotificationTemplateRead.model_validate(template),
+    )
+
+
+@notifications_router.post(
+    "/notifications/templates",
+    response_model=NotificationTemplateResponse,
+    description="Create a reusable message template. Leave customer_code empty to share it with every customer.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def create_template_route(
+    payload: NotificationTemplateCreate,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
+) -> NotificationTemplateResponse:
+    created_by = getattr(current_user, "username", None) or str(current_user.id)
+    logger.info(f"User {created_by} creating notification template {payload.name!r}")
+    template = await templates_svc.create_template(payload, created_by, session)
+    return NotificationTemplateResponse(
+        success=True,
+        message="Template created",
+        template=NotificationTemplateRead.model_validate(template),
+    )
+
+
+@notifications_router.patch(
+    "/notifications/templates/{template_id}",
+    response_model=NotificationTemplateResponse,
+    description=(
+        "Update a template. Rejected if the change would break a route already using it, and built-in "
+        "templates cannot be edited — duplicate one instead."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def update_template_route(
+    template_id: int,
+    payload: NotificationTemplateUpdate,
+    session: AsyncSession = Depends(get_db),
+) -> NotificationTemplateResponse:
+    template = await templates_svc.update_template(template_id, payload, session)
+    return NotificationTemplateResponse(
+        success=True,
+        message="Template updated",
+        template=NotificationTemplateRead.model_validate(template),
+    )
+
+
+@notifications_router.delete(
+    "/notifications/templates/{template_id}",
+    response_model=NotificationTemplateResponse,
+    description=(
+        "Delete a template. Routes using it are detached rather than deleted — they fall back to their "
+        "inline template or the channel default, so notifications keep flowing."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def delete_template_route(
+    template_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> NotificationTemplateResponse:
+    template = await templates_svc.get_template(template_id, session)
+    # Snapshot before deletion: the ORM row is unusable for a response once the
+    # session has expunged it.
+    read = NotificationTemplateRead.model_validate(template)
+    detached = await templates_svc.delete_template(template_id, session)
+    return NotificationTemplateResponse(
+        success=True,
+        message=("Template deleted" + (f"; {detached} route(s) fell back to their channel default" if detached else "")),
+        template=read,
+    )

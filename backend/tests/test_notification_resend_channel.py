@@ -36,6 +36,7 @@ from fastapi import HTTPException  # noqa: E402
 import app.notifications.channels.resend as resend_mod  # noqa: E402
 from app.notifications.channels import CHANNEL_REGISTRY  # noqa: E402
 from app.notifications.channels.base import DispatchContext  # noqa: E402
+from app.notifications.channels.base import RenderedMessage  # noqa: E402
 from app.notifications.channels.resend import ResendConfig  # noqa: E402
 from app.notifications.schema.events import NotificationEvent  # noqa: E402
 from app.notifications.schema.notifications import NotificationSeverity  # noqa: E402
@@ -91,7 +92,7 @@ def _send(route, event=None, creds=CREDS, recent_sends=0, user=...):
             CHANNEL_REGISTRY["resend"].send(
                 route=route,
                 event=ev,
-                rendered_body="RENDERED BODY",
+                message=RenderedMessage(body="RENDERED BODY"),
                 ctx=DispatchContext(session=AsyncMock(), event=ev),
             ),
         )

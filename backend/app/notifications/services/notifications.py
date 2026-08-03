@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -34,9 +36,11 @@ from app.customer_portal.services.ai_reports import is_ai_reports_enabled
 from app.db.universal_models import CustomerNotificationRoute
 from app.db.universal_models import CustomerShuffleIntegration
 from app.db.universal_models import NotificationDispatchLog
+from app.db.universal_models import NotificationTemplate
 from app.notifications.channels import DispatchContext
 from app.notifications.channels import SendResult
 from app.notifications.channels import get_channel
+from app.notifications.channels.base import RenderedMessage
 from app.notifications.channels.shuffle import get_shuffle_connector
 from app.notifications.schema.events import EntityType
 from app.notifications.schema.events import NotificationEvent
@@ -68,6 +72,9 @@ from app.notifications.services.dispatchers import (
     verify_shuffle_org as verify_shuffle_org_client,
 )
 from app.notifications.services.rendering import render_body
+from app.notifications.services.templates import assert_template_usable
+from app.notifications.services.templates import build_branding_context
+from app.notifications.services.templates import resolve_template_for_route
 
 # ---------------------------------------------------------------------------
 # CRUD
@@ -174,6 +181,15 @@ async def create_internal_route(
     if payload.scope != NotificationScope.INTERNAL:
         raise HTTPException(status_code=400, detail="This endpoint creates internal-scope routes only.")
 
+    if payload.template_id:
+        await assert_template_usable(
+            payload.template_id,
+            channel=payload.channel.value,
+            trigger=payload.trigger.value,
+            customer_code=None,
+            session=session,
+        )
+
     route = CustomerNotificationRoute(
         customer_code=None,
         scope=NotificationScope.INTERNAL.value,
@@ -185,6 +201,7 @@ async def create_internal_route(
         destination=payload.destination or "",
         min_severity=payload.min_severity.value,
         format_template=payload.format_template,
+        template_id=payload.template_id,
         enabled=payload.enabled,
         created_by=created_by,
         shuffle_integration_id=None,
@@ -238,6 +255,20 @@ async def update_internal_route(
                 ),
             )
 
+    # An explicit null detaches the template; only a real id needs checking.
+    # Re-checked when the channel or trigger changes too, because either can
+    # invalidate an attachment that was valid when it was made.
+    effective_template_id = data.get("template_id", route.template_id)
+    if effective_template_id and {"template_id", "channel", "trigger"} & data.keys():
+        new_trigger = data.get("trigger")
+        await assert_template_usable(
+            effective_template_id,
+            channel=new_channel_value,
+            trigger=new_trigger.value if hasattr(new_trigger, "value") else (new_trigger or route.trigger),
+            customer_code=None,
+            session=session,
+        )
+
     for field, value in data.items():
         if hasattr(value, "value"):
             value = value.value
@@ -273,6 +304,15 @@ async def create_route(
 
     resolved_code = _enforce_scope_invariant(payload.scope.value, customer_code)
 
+    if payload.template_id:
+        await assert_template_usable(
+            payload.template_id,
+            channel=payload.channel.value,
+            trigger=payload.trigger.value,
+            customer_code=resolved_code,
+            session=session,
+        )
+
     route = CustomerNotificationRoute(
         customer_code=resolved_code,
         scope=payload.scope.value,
@@ -286,6 +326,7 @@ async def create_route(
         destination=payload.destination or "",
         min_severity=payload.min_severity.value,
         format_template=payload.format_template,
+        template_id=payload.template_id,
         enabled=payload.enabled,
         created_by=created_by,
         shuffle_integration_id=payload.shuffle_integration_id,
@@ -359,6 +400,19 @@ async def update_route(
         data["customer_code"] = _enforce_scope_invariant(
             new_scope_value,
             None if new_scope_value == NotificationScope.INTERNAL.value else (route.customer_code or customer_code),
+        )
+
+    # Same rule as the internal path: an explicit null detaches, a real id is
+    # re-checked whenever the channel or trigger moves under it.
+    effective_template_id = data.get("template_id", route.template_id)
+    if effective_template_id and {"template_id", "channel", "trigger"} & data.keys():
+        new_trigger = data.get("trigger")
+        await assert_template_usable(
+            effective_template_id,
+            channel=new_channel_value,
+            trigger=new_trigger.value if hasattr(new_trigger, "value") else (new_trigger or route.trigger),
+            customer_code=data.get("customer_code", route.customer_code),
+            session=session,
         )
 
     for field, value in data.items():
@@ -752,12 +806,23 @@ def _format_default_body(event: NotificationEvent) -> str:
     return "\n".join(parts)
 
 
-def _render_body(route: CustomerNotificationRoute, event: NotificationEvent) -> Tuple[str, Optional[str]]:
-    """Render this route's message body.
+async def _render_body(
+    route: CustomerNotificationRoute,
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> Tuple[RenderedMessage, Optional[str]]:
+    """Render this route's message.
 
-    Returns `(body, template_error)`. The error is non-None only when a custom
+    Returns `(message, template_error)`. The error is non-None only when a custom
     template failed and the channel default was sent instead — it is appended to
     the dispatch-log row so a broken template is visible without reproducing it.
+
+    **Precedence is inline → named → channel default.** The inline
+    `format_template` still wins so a single route can deviate without forking
+    the shared template, and so every route that worked before #1038 renders
+    byte-for-byte the same message.
 
     Templates are real Jinja since #1037: conditionals, loops over an alert's
     IOCs, filters. The original token names remain top-level context with
@@ -771,7 +836,77 @@ def _render_body(route: CustomerNotificationRoute, event: NotificationEvent) -> 
     already broken, just silently.
     """
     fallback = _format_default_body(event)
-    return render_body(route.format_template, event, fallback)
+
+    inline = route.format_template
+    if inline:
+        body, error = render_body(inline, event, fallback)
+        return (RenderedMessage(body=body, is_custom=error is None), error)
+
+    template = await resolve_template_for_route(route, session)
+    if template is None:
+        return (RenderedMessage(body=fallback), None)
+
+    autoescape = template.format == "html"
+    extra = await _branding_context(template, event, session, ctx=ctx)
+
+    body, error = render_body(template.body_template, event, fallback, autoescape=autoescape, extra_context=extra)
+    if error:
+        # The named template failed, so the channel default went out instead —
+        # which is plain text with no subject, whatever the template declared.
+        return (RenderedMessage(body=body), error)
+
+    subject, subject_error = render_body(
+        template.subject_template,
+        event,
+        # A failed subject falls back to the provider composing its own, which
+        # is what a route with no named template already does.
+        "",
+        autoescape=autoescape,
+        extra_context=extra,
+    )
+    return (
+        RenderedMessage(
+            body=body,
+            format=template.format,
+            # Subjects are single-line by definition; collapsing whitespace stops
+            # a template with a newline in it producing a header-shaped string.
+            subject=" ".join(subject.split()) or None,
+            is_custom=True,
+        ),
+        subject_error,
+    )
+
+
+async def _branding_context(
+    template: NotificationTemplate,
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> Dict[str, Any]:
+    """Resolve `branding` for a template that asks for it, and only then.
+
+    The substring check is sound rather than a heuristic: Jinja resolves a name
+    from the context by its literal spelling, so a template cannot reach
+    `branding` without the word appearing in its source. Skipping the lookup
+    otherwise keeps the common case — a plain-text chat template — at zero extra
+    queries on the ingest hot path.
+
+    Memoized on the dispatch context when there is one, so a batch of routes
+    sharing a customer resolves branding once.
+    """
+    source = f"{template.body_template}{template.subject_template or ''}"
+    if "branding" not in source:
+        return {}
+
+    customer_code = event.customer_code
+    if ctx is None:
+        return {"branding": await build_branding_context(customer_code, session)}
+    branding = await ctx.memoize(
+        f"branding:{customer_code}",
+        lambda: build_branding_context(customer_code, session),
+    )
+    return {"branding": branding}
 
 
 async def _record_log(
@@ -936,10 +1071,10 @@ async def deliver_one(
         return SendResult.failed(f"Unsupported channel: {route.channel}")
 
     ctx = DispatchContext(session=session, event=event)
-    body, template_error = _render_body(route, event)
+    message, template_error = await _render_body(route, event, session, ctx=ctx)
 
     try:
-        result = await provider.send(route=route, event=event, rendered_body=body, ctx=ctx)
+        result = await provider.send(route=route, event=event, message=message, ctx=ctx)
     except Exception as e:  # noqa: BLE001 — report, never 500 the caller
         logger.exception(f"Dispatch raised for route {route.id}: {e!r}")
         result = SendResult.failed(f"Dispatcher exception: {type(e).__name__}: {e}")
@@ -955,7 +1090,7 @@ async def deliver_one(
             else (result.error_message or template_error)
         ),
         latency_ms=result.latency_ms,
-        payload_preview=body[:500],
+        payload_preview=message.body[:500],
         provider_reference=result.provider_reference,
         trigger_source=trigger_source,
     )
@@ -1121,8 +1256,8 @@ async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> Dis
         route_name = route.name
         route_channel = route.channel
 
-        body, template_error = _render_body(route, event)
-        body_preview = body[:500]
+        message, template_error = await _render_body(route, event, session, ctx=ctx)
+        body_preview = message.body[:500]
 
         latency_ms: Optional[int] = None
         result_status = "sent"
@@ -1146,7 +1281,7 @@ async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> Dis
                 result = await provider.send(
                     route=route,
                     event=event,
-                    rendered_body=body,
+                    message=message,
                     ctx=ctx,
                 )
                 result_status = result.status

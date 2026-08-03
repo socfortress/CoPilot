@@ -54,6 +54,7 @@ def _route(trigger, scope, route_id=1, notify_on_self_assign=False, min_severity
         min_severity=min_severity,
         destination="",
         format_template=None,
+        template_id=None,
         config='{"url": "https://example.invalid/hook"}',
         shuffle_integration_id=None,
         notify_on_self_assign=notify_on_self_assign,
@@ -260,14 +261,26 @@ def test_existing_template_tokens_still_render():
     """Stored format_templates predate the envelope and must keep working."""
     route = _route("alert_created", "customer")
     route.format_template = "{{severity}} on {{customer_code}} alert {{alert_id}}: {{alert_name}}"
-    body, err = svc._render_body(route, alert_created_event(alert_id=9, customer_code=CUSTOMER, alert_title="X", severity="High"))
-    assert body == f"High on {CUSTOMER} alert 9: X"
+    message, err = asyncio.run(
+        svc._render_body(
+            route,
+            alert_created_event(alert_id=9, customer_code=CUSTOMER, alert_title="X", severity="High"),
+            session=None,
+        ),
+    )
+    assert message.body == f"High on {CUSTOMER} alert 9: X"
     assert err is None, "an existing template must render cleanly under Jinja"
 
 
 def test_new_assignment_tokens_are_available():
     route = _route("alert_assigned", "internal")
     route.format_template = "{{assignee}} <- {{actor}} ({{entity_type}}#{{entity_id}})"
-    body, err = svc._render_body(route, alert_assigned_event(alert_id=3, title="t", assignee="bob", actor="alice"))
-    assert body == "bob <- alice (alert#3)"
+    message, err = asyncio.run(
+        svc._render_body(
+            route,
+            alert_assigned_event(alert_id=3, title="t", assignee="bob", actor="alice"),
+            session=None,
+        ),
+    )
+    assert message.body == "bob <- alice (alert#3)"
     assert err is None

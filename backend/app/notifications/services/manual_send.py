@@ -46,6 +46,7 @@ from app.db.universal_models import CustomerNotificationRoute
 from app.incidents.models import Alert
 from app.incidents.models import Case
 from app.incidents.services.alert_severity import severity_of
+from app.notifications.channels.base import RenderedMessage
 from app.notifications.schema.events import EntityType
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.schema.notifications import DispatchOutcome
@@ -214,7 +215,7 @@ async def preview_manual(
     user: Any,
     session: AsyncSession,
     include_ai_report: bool = False,
-) -> str:
+) -> RenderedMessage:
     """Render what a send would deliver, without delivering it.
 
     Runs the **same authorization** as `send_manual`. A preview that skipped the
@@ -241,8 +242,11 @@ async def preview_manual(
     await _require_ai_report_permitted(route, entity, include_ai_report, session)
 
     event = build_manual_event(entity_type=entity_type, entity_id=entity_id, entity=entity, user=user)
-    body, _template_error = _render_body(route, event)
-    return body
+    message, _template_error = await _render_body(route, event, session)
+    # The whole message, not just the body: a named template can carry a
+    # subject, and a preview that hid it would misrepresent what an email
+    # recipient actually sees.
+    return message
 
 
 async def send_manual(
