@@ -2,10 +2,10 @@
 	<div class="page">
 		<div class="mb-4 flex flex-col gap-2">
 			<h1>Internal notifications</h1>
-			<p class="text-secondary max-w-3xl text-sm">
+			<p class="text-secondary text-sm">
 				Where the SOC's own notifications go. These routes belong to no customer — they receive assignment
-				events, so telling an analyst that an alert landed on their plate never reaches the customer whose
-				alert it was.
+				events, so telling an analyst that an alert landed on their plate never reaches the customer whose alert
+				it was.
 				<br />
 				For notifications a customer should receive, use
 				<strong>Customers → (customer) → Notifications</strong>
@@ -13,7 +13,7 @@
 			</p>
 		</div>
 
-		<n-card>
+		<n-card size="small">
 			<transition name="transition-fade" mode="out-in">
 				<div v-if="showForm" class="flex flex-col gap-4">
 					<h4>{{ editingRoute ? `Edit ${editingRoute.name}` : "Create an internal route" }}</h4>
@@ -35,7 +35,7 @@
 					</div>
 
 					<n-spin :show="loading">
-						<div class="min-h-52">
+						<div class="min-h-48">
 							<template v-if="list.length">
 								<CustomerAiNotificationRouteItem
 									v-for="route of list"

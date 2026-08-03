@@ -1,5 +1,5 @@
 <template>
-	<CardEntity hoverable embedded>
+	<CardEntity hoverable embedded footer-box-class="items-center!">
 		<template #headerMain>
 			<div class="flex items-center gap-2">
 				<Icon :name="channelIcon" :size="16" />

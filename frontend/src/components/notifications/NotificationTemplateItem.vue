@@ -1,5 +1,5 @@
 <template>
-	<CardEntity hoverable embedded>
+	<CardEntity hoverable embedded footer-box-class="items-center!">
 		<template #headerMain>
 			<div class="flex items-center gap-2">
 				<Icon :name="FormatIcon" :size="16" />
@@ -16,10 +16,12 @@
 
 		<template #default>
 			<div class="flex flex-col gap-3 text-sm">
-				<div v-if="template.description" class="text-secondary">{{ template.description }}</div>
+				<div v-if="template.description">{{ template.description }}</div>
 
 				<!-- The first few lines, so the list is scannable without opening each one. -->
-				<code class="text-secondary block overflow-hidden text-xs leading-relaxed whitespace-pre-wrap">{{ excerpt }}</code>
+				<code class="text-secondary block overflow-hidden text-xs leading-relaxed whitespace-pre-wrap">
+					{{ excerpt }}
+				</code>
 
 				<div class="flex flex-wrap items-center gap-2">
 					<Badge type="splitted" size="small">

@@ -2,7 +2,7 @@
 	<div class="page">
 		<div class="mb-4 flex flex-col gap-2">
 			<h1>Message templates</h1>
-			<p class="text-secondary max-w-3xl text-sm">
+			<p class="text-secondary text-sm">
 				Reusable message bodies that notification routes render with. Write one, attach it to as many routes as
 				you like, and edit it in one place.
 				<br />
@@ -11,7 +11,7 @@
 			</p>
 		</div>
 
-		<n-card>
+		<n-card size="small">
 			<transition name="transition-fade" mode="out-in">
 				<div v-if="showForm" class="flex flex-col gap-4">
 					<h4>{{ formTitle }}</h4>
@@ -38,7 +38,8 @@
 								size="small"
 								clearable
 								placeholder="Any trigger"
-								class="w-56"
+								class="w-40!"
+								:consistent-menu-width="false"
 								@update:value="refreshList()"
 							/>
 							<n-button size="small" :disabled="loading" @click="refreshList()">
@@ -117,7 +118,9 @@ const triggerOptions = [
 const formTitle = computed(() => {
 	if (!editingTemplate.value) return "Create a template"
 	// A duplicate arrives as an unsaved template with no id.
-	return editingTemplate.value.id ? `Edit ${editingTemplate.value.name}` : `Duplicate of ${editingTemplate.value.name}`
+	return editingTemplate.value.id
+		? `Edit ${editingTemplate.value.name}`
+		: `Duplicate of ${editingTemplate.value.name}`
 })
 
 function openForm() {
