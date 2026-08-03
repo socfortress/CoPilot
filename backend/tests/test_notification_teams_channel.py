@@ -29,6 +29,7 @@ os.environ.setdefault("JWT_SECRET", "test-only-secret-not-the-compromised-defaul
 import app.notifications.channels.teams as teams_mod  # noqa: E402
 from app.notifications.channels import CHANNEL_REGISTRY  # noqa: E402
 from app.notifications.channels.base import DispatchContext  # noqa: E402
+from app.notifications.channels.base import RenderedMessage  # noqa: E402
 from app.notifications.channels.teams import TeamsConfig  # noqa: E402
 from app.notifications.schema.events import NotificationEvent  # noqa: E402
 from app.notifications.schema.notifications import NotificationSeverity  # noqa: E402
@@ -67,7 +68,7 @@ def _send(route, event=None, body="RENDERED BODY", result=("sent", None, 12, Non
             CHANNEL_REGISTRY["teams"].send(
                 route=route,
                 event=ev,
-                rendered_body=body,
+                message=RenderedMessage(body=body),
                 ctx=DispatchContext(session=AsyncMock(), event=ev),
             ),
         )

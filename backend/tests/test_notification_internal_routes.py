@@ -70,6 +70,8 @@ def _existing(route_id=1, channel="resend", scope="internal"):
         customer_code=None,
         recipient_mode="assignee",
         config=json.dumps({"to": []}),
+        template_id=None,
+        trigger="alert_assigned",
         updated_at=None,
     )
 

@@ -27,6 +27,7 @@ alert.
 from __future__ import annotations
 
 import json
+from collections import defaultdict
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -91,7 +92,19 @@ def build_context(event: NotificationEvent) -> Dict[str, Any]:
     `event` is also exposed whole, so a template can reach parts of the envelope
     that have no flat alias — `{{ event.context.iocs }}`, for instance.
     """
-    ctx = event.context or {}
+    # `context` is the one place StrictUndefined is wrong, so missing keys read
+    # as "" instead of raising. The top-level names above are a fixed contract
+    # and a typo in one is a bug worth failing on; `context` is a free-form
+    # per-event bag where the SAME trigger legitimately carries different keys —
+    # `asset_name` is present on one alert and absent on the next. Under strict
+    # lookup, `{% if context.asset_name %}` renders fine in preview (the sample
+    # event is fully populated) and then falls back to the channel default on a
+    # sparse real event. Preview passing while production silently degrades is
+    # the worst failure mode available here.
+    #
+    # A copy, because defaultdict inserts on read and the event's own dict must
+    # not accumulate keys as a side effect of rendering.
+    ctx = defaultdict(str, event.context or {})
     return {
         # Original tokens — unchanged semantics.
         "customer_code": event.customer_code or "",
@@ -125,14 +138,26 @@ def compile_template(source: str, *, autoescape: bool = False) -> None:
     env.from_string(source)
 
 
-def render(source: str, event: NotificationEvent, *, autoescape: bool = False) -> str:
+def render(
+    source: str,
+    event: NotificationEvent,
+    *,
+    autoescape: bool = False,
+    extra_context: Optional[Dict[str, Any]] = None,
+) -> str:
     """Render `source` against `event`. Raises on any failure.
 
     Callers that must not fail should use `render_body`, which falls back.
+
+    `extra_context` adds variables beyond the event — named templates (#1038)
+    use it for `branding`. It is merged *under* nothing: the event context wins
+    on a key collision, so an extra can never shadow `severity` or `summary` and
+    change what an existing template means.
     """
     env = _ENV_AUTOESCAPE if autoescape else _ENV
     template = env.from_string(source)
-    output = template.render(**build_context(event))
+    context = {**(extra_context or {}), **build_context(event)}
+    output = template.render(**context)
 
     if len(output.encode("utf-8")) > MAX_RENDERED_BYTES:
         raise TemplateTooLargeError(
@@ -148,6 +173,7 @@ def render_body(
     fallback: str,
     *,
     autoescape: bool = False,
+    extra_context: Optional[Dict[str, Any]] = None,
 ) -> Tuple[str, Optional[str]]:
     """Render a template, falling back to `fallback` on any error.
 
@@ -162,7 +188,7 @@ def render_body(
         return (fallback, None)
 
     try:
-        return (render(source, event, autoescape=autoescape), None)
+        return (render(source, event, autoescape=autoescape, extra_context=extra_context), None)
     except TemplateError as e:
         message = f"Template render failed ({type(e).__name__}: {e}); sent the channel default instead."
         logger.warning(f"{message} trigger={event.trigger.value} entity={event.entity_type}#{event.entity_id}")

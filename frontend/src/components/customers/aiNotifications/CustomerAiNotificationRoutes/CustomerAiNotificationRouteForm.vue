@@ -223,6 +223,22 @@
 			/>
 		</template>
 
+		<n-form-item label="Shared template (optional)" :show-feedback="false">
+			<n-select
+				v-model:value="form.template_id"
+				:options="templateOptions"
+				:loading="loadingTemplates"
+				:disabled="templateDisabled"
+				clearable
+				placeholder="Use the channel default"
+			/>
+		</n-form-item>
+		<div class="text-secondary mb-2 text-xs">
+			Only templates this route can actually render are listed — a template scoped to another trigger or
+			customer, or in a format this channel can't render, is left out.
+			<router-link :to="{ name: 'NotificationTemplates' }" class="underline">Manage templates</router-link>
+		</div>
+
 		<n-form-item label="Custom message template (optional)" path="format_template" :show-feedback="false">
 			<n-input
 				v-model:value="form.format_template"
@@ -264,9 +280,13 @@
 				).
 			</template>
 			<template v-else>
-				Leave empty to use the default. Substitutions:
+				Leave empty to use the shared template above, or the channel default when there is none.
+				Substitutions:
 				<code>{{ substitutionTokens }}</code>
 			</template>
+		</div>
+		<div v-if="overridesSharedTemplate" class="text-secondary mb-2 text-xs italic">
+			This one-off template overrides the shared one for this route only.
 		</div>
 
 		<n-form-item>
@@ -302,6 +322,7 @@ import type {
 	NotificationRoutePayload,
 	NotificationScope,
 	NotificationSeverity,
+	NotificationTemplate,
 	NotificationTrigger,
 	ResendQuota,
 	ShuffleApp,
@@ -369,6 +390,7 @@ const form = reactive<NotificationRoutePayload>({
 	destination: props.editingRoute?.destination ?? "",
 	min_severity: props.editingRoute?.min_severity ?? ("Medium" as NotificationSeverity),
 	format_template: props.editingRoute?.format_template ?? "",
+	template_id: props.editingRoute?.template_id ?? null,
 	enabled: props.editingRoute?.enabled ?? true,
 	scope: props.editingRoute?.scope ?? "customer",
 	recipient_mode: props.editingRoute?.recipient_mode ?? "static",
@@ -497,6 +519,59 @@ async function loadQuota() {
 // the report — the box for the structured payload, the {{report}} token
 // for the template.
 const templateDisabled = computed(() => isWebhook.value && Boolean(cfg.include_full_report))
+
+// ----- Shared templates (#1038) -----
+//
+// Precedence at send time is: this route's inline `format_template`, then the
+// shared template picked here, then the channel default. The picker filters
+// client-side using the same rules the server enforces on save, so an operator
+// never picks something that's then refused.
+const templates = ref<NotificationTemplate[]>([])
+const loadingTemplates = ref(false)
+
+async function loadTemplates() {
+	loadingTemplates.value = true
+	try {
+		// Not filtered by trigger server-side: the trigger can change while the
+		// form is open, and re-fetching on every change would be a round trip
+		// per keystroke-equivalent. Filtering happens in `templateOptions`.
+		const res = await Api.notifications.listTemplates({ customerCode: props.customerCode })
+		templates.value = res.data.success ? res.data.templates : []
+	} catch {
+		// A failed list only costs the picker — the route is still saveable
+		// with an inline template or the channel default.
+		templates.value = []
+	} finally {
+		loadingTemplates.value = false
+	}
+}
+
+const templateOptions = computed(() =>
+	templates.value
+		.filter(t => {
+			// Trigger-agnostic templates work anywhere; a scoped one only on its
+			// own trigger, since it's written around that event's variables.
+			if (t.trigger && t.trigger !== form.trigger) return false
+			// An internal route belongs to no tenant, so a customer-scoped
+			// template would leak that customer's branding to the SOC.
+			if (t.customer_code && isInternalScope.value) return false
+			if (t.customer_code && props.customerCode && t.customer_code !== props.customerCode) return false
+			// Only email renders HTML; a chat card would show the markup.
+			const formats = activeDescriptor.value?.template_formats
+			if (formats?.length && !formats.includes(t.format)) return false
+			return true
+		})
+		.map(t => ({
+			label: t.customer_code ? `${t.name} (${t.customer_code})` : t.name,
+			value: t.id
+		}))
+)
+
+// The inline box wins over the picker, so say so rather than letting the
+// operator wonder which one is in effect.
+const overridesSharedTemplate = computed(
+	() => Boolean(form.template_id) && Boolean(form.format_template?.trim())
+)
 const fullReportDisabled = computed(() => isWebhook.value && Boolean(form.format_template?.trim()))
 // Shown literally in the help text. Kept as a constant so the template
 // doesn't nest {{ }} inside an interpolation (Vue can't parse that).
@@ -784,6 +859,9 @@ async function submit() {
 			channel: form.channel,
 			min_severity: form.min_severity,
 			format_template: sendTemplate,
+			// Explicit null rather than omitted, so clearing the picker detaches
+			// the template instead of silently leaving the old one attached.
+			template_id: form.template_id ?? null,
 			enabled: form.enabled,
 			scope: props.scope ?? "customer",
 			recipient_mode: form.recipient_mode,
@@ -867,6 +945,7 @@ async function submit() {
 
 onBeforeMount(async () => {
 	loadChannels()
+	loadTemplates()
 	loadLegacyWorkflowState()
 	await loadIntegrations()
 	// If editing a Shuffle route, prefetch the apps for its integration

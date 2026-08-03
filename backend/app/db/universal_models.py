@@ -963,6 +963,12 @@ class CustomerNotificationRoute(SQLModel, table=True):
     # management. Populated from the auth context in the route handler.
     created_by: Optional[str] = Field(default=None, max_length=128)
 
+    # A named template from `notification_template`, or NULL to use the inline
+    # `format_template` / channel default. Plain nullable FK: deleting a template
+    # must not cascade away the routes using it, so the CRUD layer clears this
+    # instead — see `delete_template`.
+    template_id: Optional[int] = Field(default=None, foreign_key="notification_template.id", index=True)
+
     # Per-channel settings, as a JSON string validated against the provider's
     # declared `config_schema`. This replaced a column-per-channel-per-setting
     # scheme that required a migration for every new channel; adding one is now
@@ -999,6 +1005,59 @@ class CustomerNotificationRoute(SQLModel, table=True):
     # (`session.get(...)`) when we need them.
     dispatches: list["NotificationDispatchLog"] = Relationship(sa_relationship_kwargs={"overlaps": "route"})
     shuffle_integration: Optional["CustomerShuffleIntegration"] = Relationship(sa_relationship_kwargs={"overlaps": "routes"})
+
+
+class NotificationTemplate(SQLModel, table=True):
+    """A named, reusable message template.
+
+    #1037 made `customer_notification_route.format_template` real Jinja, but it
+    stays per-route: every route re-pastes its own copy, with no reuse and no way
+    to offer per-language variants. This is the shared version.
+
+    Precedence at render time is inline -> named -> channel default. The inline
+    field survives as a per-route one-off override, so a template attached here
+    can still be overridden for a single route without editing the shared copy.
+    """
+
+    __tablename__ = "notification_template"
+
+    id: Optional[int] = Field(primary_key=True)
+    name: str = Field(max_length=128, nullable=False)
+    description: Optional[str] = Field(default=None, max_length=512)
+
+    # NULL = usable with any trigger. Set = only offered for that one, so a
+    # template written around {{assignee}} isn't attachable to alert_created
+    # where that variable is empty.
+    #
+    # Also what lets #999 (temporary-password emails) reuse this table later as
+    # a second event source rather than building a parallel one.
+    trigger: Optional[str] = Field(default=None, max_length=64, index=True)
+
+    # html | text | markdown | json. Drives autoescaping and which channels can
+    # accept the template — a Teams card can't render an HTML body.
+    format: str = Field(default="text", max_length=16, nullable=False)
+
+    # First-class rather than smuggled into the body: email needs a subject and
+    # Teams needs a card title, and neither is derivable from message text.
+    subject_template: Optional[str] = Field(sa_column=Column(Text), default=None)
+    body_template: str = Field(sa_column=Column(Text, nullable=False))
+
+    # NULL = shared with every customer, set = that tenant only. Same convention
+    # as custom_dashboard_templates.
+    customer_code: Optional[str] = Field(
+        default=None,
+        foreign_key="customers.customer_code",
+        max_length=64,
+        index=True,
+    )
+
+    # Seeded built-ins. Kept as data rather than code so an operator can copy one
+    # as a starting point instead of writing a template from a blank box.
+    is_default: bool = Field(default=False, nullable=False)
+
+    created_by: Optional[str] = Field(default=None, max_length=128)
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    updated_at: Optional[datetime] = Field(default=None)
 
 
 class NotificationDispatchLog(SQLModel, table=True):

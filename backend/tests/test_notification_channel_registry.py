@@ -35,6 +35,7 @@ from app.notifications.channels import channel_keys  # noqa: E402
 from app.notifications.channels import get_channel  # noqa: E402
 from app.notifications.channels.base import ChannelProvider  # noqa: E402
 from app.notifications.channels.base import DispatchContext  # noqa: E402
+from app.notifications.channels.base import RenderedMessage  # noqa: E402
 from app.notifications.schema.events import event_from_dispatch_request  # noqa: E402
 from app.notifications.schema.notifications import DispatchRequest  # noqa: E402
 from app.notifications.schema.notifications import NotificationSeverity  # noqa: E402
@@ -123,9 +124,15 @@ def test_unknown_channel_returns_none_rather_than_raising():
 # ── webhook: the payload is an external contract ──────────────────────────
 
 
-def _run_webhook(route, req=None, report=None):
+def _run_webhook(route, req=None, report=None, is_custom=False):
     """Invoke the webhook provider with the HTTP dispatcher stubbed, returning
-    the kwargs it was called with."""
+    the kwargs it was called with.
+
+    `is_custom` is what tells the provider the body was operator-authored rather
+    than the channel default. It rides on the message rather than being derived
+    from `route.format_template`, because a route can now get a custom body from
+    a named template with that column empty (#1038).
+    """
     event = event_from_dispatch_request(req or _request())
     sent = AsyncMock(return_value=("sent", None, 12, None))
     with (
@@ -136,7 +143,7 @@ def _run_webhook(route, req=None, report=None):
             CHANNEL_REGISTRY["webhook"].send(
                 route=route,
                 event=event,
-                rendered_body="RENDERED BODY",
+                message=RenderedMessage(body="RENDERED BODY", is_custom=is_custom),
                 ctx=_ctx(event),
             ),
         )
@@ -208,6 +215,7 @@ def test_webhook_template_body_passes_through_untouched_without_the_token():
     _result, kwargs = _run_webhook(
         _webhook_route(format_template="see something"),
         report={"report_id": 9, "iocs": []},
+        is_custom=True,
     )
     assert kwargs["rendered_template"] == "RENDERED BODY"
 
@@ -224,7 +232,7 @@ def test_webhook_template_report_token_substitutes_when_present_in_body():
             CHANNEL_REGISTRY["webhook"].send(
                 route=_webhook_route(format_template="x"),
                 event=event,
-                rendered_body="prefix {{report}} suffix",
+                message=RenderedMessage(body="prefix {{report}} suffix", is_custom=True),
                 ctx=_ctx(event),
             ),
         )
@@ -297,7 +305,7 @@ def _run_shuffle(route, integration, creds=("https://shuffler.io", "key")):
             CHANNEL_REGISTRY["shuffle"].send(
                 route=route,
                 event=event,
-                rendered_body="RENDERED BODY",
+                message=RenderedMessage(body="RENDERED BODY"),
                 ctx=_ctx(event, session),
             ),
         )
@@ -391,7 +399,7 @@ def test_connector_is_read_once_across_routes_in_one_dispatch():
                 CHANNEL_REGISTRY["shuffle"].send(
                     route=_shuffle_route(),
                     event=event,
-                    rendered_body="B",
+                    message=RenderedMessage(body="B"),
                     ctx=ctx,
                 ),
             )
@@ -414,7 +422,7 @@ def test_report_is_read_once_across_routes_in_one_dispatch():
                 CHANNEL_REGISTRY["webhook"].send(
                     route=_webhook_route(config={"include_full_report": True}),
                     event=event,
-                    rendered_body="B",
+                    message=RenderedMessage(body="B"),
                     ctx=ctx,
                 ),
             )

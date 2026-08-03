@@ -216,6 +216,13 @@ class NotificationRouteBase(BaseModel):
         default=None,
         description="Optional Jinja override for the message body. Leave empty to use the channel default.",
     )
+    # Precedence at render time is inline `format_template` -> this -> the
+    # channel default. The inline field stays as a per-route override so one
+    # route can deviate without forking the shared template.
+    template_id: Optional[int] = Field(
+        default=None,
+        description="ID of a named notification_template to render with. Ignored when format_template is set.",
+    )
     enabled: bool = True
 
     # Which audience this route serves. 'customer' delivers to the end
@@ -387,6 +394,10 @@ class NotificationRouteUpdate(BaseModel):
     destination: Optional[str] = None
     min_severity: Optional[NotificationSeverity] = None
     format_template: Optional[str] = None
+    # Nullable is meaningful: an explicit null detaches the named template and
+    # the route falls back to the channel default. `__fields_set__` is what
+    # distinguishes that from the field being omitted.
+    template_id: Optional[int] = None
     enabled: Optional[bool] = None
     scope: Optional[NotificationScope] = None
     recipient_mode: Optional[RecipientMode] = None
@@ -547,6 +558,10 @@ class ChannelDescriptor(BaseModel):
     supports_recipient_modes: List[str]
     supports_internal_scope: bool
     secret_fields: List[str]
+    # Named-template formats this channel can render. Advertised so the route
+    # form filters the template picker itself, rather than offering a template
+    # the server would then refuse.
+    template_formats: List[str] = []
 
 
 class ResendQuotaResponse(BaseModel):
@@ -668,3 +683,122 @@ class DispatchResponse(BaseModel):
     skipped: int
     failed: int
     outcomes: List[DispatchOutcome]
+
+
+# ---------------------------------------------------------------------------
+# Named message templates (#1038)
+# ---------------------------------------------------------------------------
+
+
+class TemplateFormat(str, Enum):
+    """How a template's output should be treated.
+
+    Only `resend` renders HTML — a chat card would show the markup — so a
+    provider declares what it accepts via `ChannelProvider.template_formats`
+    and attaching a mismatch is rejected at save time.
+    """
+
+    TEXT = "text"
+    MARKDOWN = "markdown"
+    HTML = "html"
+    JSON = "json"
+
+
+class NotificationTemplateBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=128, description="Human label shown in the route form's picker.")
+    description: Optional[str] = Field(default=None, max_length=512)
+
+    # Null means usable with any trigger. Setting it stops a template written
+    # around `{{assignee}}` from being attached where that variable is always
+    # empty — checked when it is attached, not when it fires.
+    trigger: Optional[NotificationTrigger] = Field(
+        default=None,
+        description="Restrict this template to one trigger. Leave empty to allow any.",
+    )
+    format: TemplateFormat = TemplateFormat.TEXT
+
+    # Separate from the body because it is not derivable from it: email needs a
+    # subject and a Teams card needs a title.
+    subject_template: Optional[str] = Field(
+        default=None,
+        description="Optional Jinja subject line. Channels that have no subject ignore it.",
+    )
+    body_template: str = Field(..., min_length=1, description="Jinja source for the message body.")
+
+    # Null means shared with every customer, matching custom_dashboard_templates.
+    customer_code: Optional[str] = Field(
+        default=None,
+        max_length=64,
+        description="Scope this template to one customer. Leave empty to share it with all of them.",
+    )
+
+
+class NotificationTemplateCreate(NotificationTemplateBase):
+    """Body for POST /notifications/templates."""
+
+
+class NotificationTemplateUpdate(BaseModel):
+    """Body for PATCH — every field optional.
+
+    `exclude_unset` in the service is what makes an omitted field mean "leave
+    it alone" rather than "set it to null", so clearing `trigger` back to
+    any-trigger requires sending an explicit null.
+    """
+
+    name: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    description: Optional[str] = None
+    trigger: Optional[NotificationTrigger] = None
+    format: Optional[TemplateFormat] = None
+    subject_template: Optional[str] = None
+    body_template: Optional[str] = Field(default=None, min_length=1)
+    customer_code: Optional[str] = Field(default=None, max_length=64)
+
+
+class NotificationTemplateRead(NotificationTemplateBase):
+    id: int
+    # Built-ins are seeded at startup and are read-only: editing or deleting one
+    # is a 400, because the next startup would recreate it anyway.
+    is_default: bool = False
+    created_by: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class NotificationTemplateListResponse(BaseModel):
+    templates: List[NotificationTemplateRead] = []
+    success: bool
+    message: str
+
+
+class NotificationTemplateResponse(BaseModel):
+    template: NotificationTemplateRead
+    success: bool
+    message: str
+
+
+class TemplatePreviewRequest(BaseModel):
+    """Render a template against a sample event, without saving it.
+
+    Takes the source inline rather than a template id so the editor can preview
+    unsaved edits — the same reason the custom-dashboard builder previews an
+    unsaved panel set.
+    """
+
+    body_template: str = Field(..., min_length=1)
+    subject_template: Optional[str] = None
+    format: TemplateFormat = TemplateFormat.TEXT
+    trigger: NotificationTrigger = NotificationTrigger.ALERT_CREATED
+    # Drives the sample event's branding, so a template using `{{ branding.* }}`
+    # previews with the colours that customer would really receive.
+    customer_code: Optional[str] = None
+
+
+class TemplatePreviewResponse(BaseModel):
+    body: str
+    subject: Optional[str] = None
+    # Non-null when rendering failed. The preview reports it rather than 400-ing
+    # so the editor can show the error beside the template being written.
+    error: Optional[str] = None
+    success: bool
+    message: str

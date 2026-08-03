@@ -46,6 +46,11 @@
 
 				<div v-if="preview !== null" class="flex flex-col gap-1">
 					<div class="text-secondary text-xs uppercase">Preview — exactly what will be sent</div>
+					<!-- Only present when the route's template sets one. -->
+					<div v-if="previewSubject" class="mb-1 text-xs">
+						<span class="text-secondary">Subject:</span>
+						<span class="font-mono">{{ previewSubject }}</span>
+					</div>
 					<n-input
 						:value="preview"
 						type="textarea"
@@ -112,6 +117,7 @@ const routes = ref<NotificationRoute[]>([])
 const routeId = ref<number | null>(null)
 const includeAiReport = ref(false)
 const preview = ref<string | null>(null)
+const previewSubject = ref<string | null>(null)
 const previewError = ref<string | null>(null)
 const loadingRoutes = ref(false)
 const previewing = ref(false)
@@ -171,6 +177,7 @@ function onRouteChange() {
 	// A preview belongs to one route; keeping a stale one would show the operator
 	// something other than what they're about to send.
 	preview.value = null
+	previewSubject.value = null
 	previewError.value = null
 }
 
@@ -189,8 +196,10 @@ async function loadPreview() {
 	try {
 		const res = await Api.notifications.manualSendPreview(payload())
 		preview.value = res.data.body
+		previewSubject.value = res.data.subject
 	} catch (err) {
 		preview.value = null
+		previewSubject.value = null
 		previewError.value = getApiErrorMessage(err as ApiError) || "Could not render a preview."
 	} finally {
 		previewing.value = false
@@ -221,6 +230,7 @@ watch(visible, isOpen => {
 		routeId.value = null
 		includeAiReport.value = false
 		preview.value = null
+		previewSubject.value = null
 		previewError.value = null
 		loadRoutes()
 	}

@@ -34,6 +34,7 @@ from pydantic import field_validator
 from app.notifications.channels.base import ChannelConfig
 from app.notifications.channels.base import ChannelProvider
 from app.notifications.channels.base import DispatchContext
+from app.notifications.channels.base import RenderedMessage
 from app.notifications.channels.base import SendResult
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.services.dispatchers import TEAMS_MAX_PAYLOAD_BYTES
@@ -89,7 +90,7 @@ class TeamsChannel(ChannelProvider):
         *,
         route: Any,
         event: NotificationEvent,
-        rendered_body: str,
+        message: RenderedMessage,
         ctx: DispatchContext,
     ) -> SendResult:
         # Read attributes before the first await — an expired ORM object would
@@ -103,8 +104,8 @@ class TeamsChannel(ChannelProvider):
         if not cfg.webhook_url:
             return SendResult.failed("Route config has no webhook_url (data integrity issue)")
 
-        card = self._build_card(event, rendered_body, raw_body=has_template)
-        card = self._fit_within_size_limit(card, event, rendered_body)
+        card = self._build_card(event, message.body, raw_body=has_template)
+        card = self._fit_within_size_limit(card, event, message.body)
 
         status, error_message, latency_ms, _ = await dispatch_teams(webhook_url=cfg.webhook_url, card=card)
         return SendResult(status=status, error_message=error_message, latency_ms=latency_ms)
