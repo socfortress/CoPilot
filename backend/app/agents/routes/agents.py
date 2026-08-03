@@ -671,7 +671,18 @@ async def sync_all_agents() -> SyncedAgentsResponse:
     logger.info("Syncing agents as part of scheduled job")
     loop = asyncio.get_event_loop()
     await loop.create_task(sync_agents_wazuh())
-    await loop.create_task(sync_agents_velociraptor())
+
+    # Velociraptor is optional — a deployment with only the Wazuh Manager verified must still
+    # complete the Wazuh side of the sync rather than failing the whole request.
+    try:
+        await loop.create_task(sync_agents_velociraptor())
+    except Exception as e:
+        logger.error(f"Failed to sync agents with Velociraptor, continuing without it: {e}")
+        return SyncedAgentsResponse(
+            success=True,
+            message=f"Agents synced from Wazuh Manager. Velociraptor sync skipped: {e}",
+        )
+
     return SyncedAgentsResponse(
         success=True,
         message="Agents synced started successfully",

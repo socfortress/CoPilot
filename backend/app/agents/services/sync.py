@@ -17,6 +17,7 @@ from app.agents.velociraptor.schema.agents import VelociraptorOrganizations
 from app.agents.wazuh.schema.agents import WazuhAgent
 from app.agents.wazuh.schema.agents import WazuhAgentsList
 from app.connectors.models import Connectors
+from app.connectors.utils import is_connector_verified
 from app.db.db_session import get_db_session
 from app.db.universal_models import Agents
 
@@ -302,6 +303,17 @@ async def update_agent_with_velociraptor_in_db(
     logger.info("Agent updated with Velociraptor details in the database")
 
 
+async def is_velociraptor_verified() -> bool:
+    """
+    Checks whether the Velociraptor connector exists and is verified.
+
+    Returns:
+        bool: True when the connector is present and verified, False otherwise.
+    """
+    async with get_db_session() as session:
+        return await is_connector_verified("Velociraptor", session)
+
+
 async def sync_agents_velociraptor() -> SyncedAgentsResponse:
     """
     Syncronizes the agents with Velociraptor. This function retrieves all the
@@ -310,16 +322,43 @@ async def sync_agents_velociraptor() -> SyncedAgentsResponse:
     `velociraptor_id` is not None, invoke the Velociraptor API and pass it the
     `velociraptor_id`.
 
+    Deployments that only run the Wazuh Manager have no Velociraptor connector to talk
+    to — that is a supported configuration, so this returns a successful no-op response
+    instead of raising when the connector is missing, unverified, or unreachable.
+
     :param session: The database session to use for querying and updating agents.
     :type session: AsyncSession
     :return: The response indicating the success of the synchronization operation and the list of agents added.
     :rtype: SyncedAgentsResponse
     """
     agents_added_list: List[VelociraptorAgent] = []
-    velo_orgs = await fetch_velociraptor_organizations()
+
+    if not await is_velociraptor_verified():
+        logger.info(
+            "Velociraptor connector is not verified. Skipping Velociraptor agent sync.",
+        )
+        return SyncedAgentsResponse(
+            success=True,
+            message="Velociraptor connector is not verified. Skipped Velociraptor agent sync.",
+            agents_added=agents_added_list,
+        )
+
+    try:
+        velo_orgs = await fetch_velociraptor_organizations()
+    except Exception as e:
+        logger.error(f"Failed to collect Velociraptor organizations: {e}")
+        return SyncedAgentsResponse(
+            success=True,
+            message=f"Skipped Velociraptor agent sync: failed to collect Velociraptor organizations: {e}",
+            agents_added=agents_added_list,
+        )
     logger.info(f"Collected Velociraptor Orgs: {velo_orgs}")
     for org in velo_orgs.organizations:
-        velociraptor_clients = await fetch_velociraptor_clients(org_id=org.OrgId)
+        try:
+            velociraptor_clients = await fetch_velociraptor_clients(org_id=org.OrgId)
+        except Exception as e:
+            logger.error(f"Failed to collect Velociraptor clients for org {org.OrgId}: {e}")
+            continue
         logger.info(f"Collected Velociraptor Clients: {velociraptor_clients}")
         velociraptor_clients = velociraptor_clients.clients if hasattr(velociraptor_clients, "clients") else []
 
