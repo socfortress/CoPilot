@@ -28,9 +28,9 @@ export const adminRoutes: RouteRecordRaw[] = [
 		// Templates are shared across tenants — one edit changes what every
 		// route using it sends — so they live outside the per-customer tree and
 		// are admin-only, same reasoning as internal routes above.
-		path: "/notification-templates",
-		name: "NotificationTemplates",
-		component: () => import("@/views/NotificationTemplates.vue"),
+		path: "/message-templates",
+		name: "MessageTemplates",
+		component: () => import("@/views/MessageTemplates.vue"),
 		meta: { title: "Message Templates", auth: true, roles: AuthUserRole.Admin }
 	},
 	{

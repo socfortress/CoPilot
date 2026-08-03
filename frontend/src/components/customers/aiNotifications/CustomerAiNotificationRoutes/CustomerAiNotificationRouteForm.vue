@@ -231,7 +231,7 @@
 		<div class="text-secondary mb-2 text-xs">
 			Only templates this route can actually render are listed — a template scoped to another trigger or customer,
 			or in a format this channel can't render, is left out.
-			<router-link :to="{ name: 'NotificationTemplates' }" class="underline">Manage templates</router-link>
+			<router-link :to="{ name: 'MessageTemplates' }" class="underline">Manage templates</router-link>
 		</div>
 
 		<n-form-item label="Custom message template (optional)" path="format_template" :show-feedback="false">
