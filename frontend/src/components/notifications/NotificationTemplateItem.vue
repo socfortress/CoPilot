@@ -90,8 +90,8 @@
 								Delete
 							</n-button>
 						</template>
-						Delete this template? Any route using it keeps working — it falls back to its own template or the
-						channel default.
+						Delete this template? Any route using it keeps working — it falls back to its own template or
+						the channel default.
 					</n-popconfirm>
 
 					<EntityDetailsButton
