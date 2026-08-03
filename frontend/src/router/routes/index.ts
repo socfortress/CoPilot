@@ -1,9 +1,9 @@
 import type { RouteRecordRaw } from "vue-router"
-import { adminRoutes } from "./admin"
 import { agentsRoutes } from "./agents"
 import { alertsRoutes } from "./alerts"
 import { analystRoutes } from "./analyst"
 import { assessmentsRoutes } from "./assessments"
+import { auditRoutes } from "./audit"
 import { authRoutes } from "./auth"
 import { connectorsRoutes } from "./connectors"
 import { coreRoutes } from "./core"
@@ -18,6 +18,8 @@ import { healthcheckRoutes } from "./healthcheck"
 import { incidentManagementRoutes } from "./incident-management"
 import { indicesRoutes } from "./indices"
 import { licenseRoutes } from "./license"
+import { logsRoutes } from "./logs"
+import { notificationsRoutes } from "./notifications"
 import { reportCreationRoutes } from "./report-creation"
 import { schedulerRoutes } from "./scheduler"
 import { settingsRoutes } from "./settings"
@@ -37,7 +39,9 @@ export const routes: RouteRecordRaw[] = [
 	...detectionCatalogRoutes,
 	...healthcheckRoutes,
 	...customersRoutes,
-	...adminRoutes,
+	...auditRoutes,
+	...logsRoutes,
+	...notificationsRoutes,
 	...usersRoutes,
 	...schedulerRoutes,
 	...externalServicesRoutes,

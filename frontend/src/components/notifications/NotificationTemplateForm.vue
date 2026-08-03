@@ -12,17 +12,17 @@
 
 		<div class="text-secondary mb-3 text-xs">
 			<template v-if="form.format === 'html'">
-				Only <strong>email</strong> renders HTML — a chat card would show the markup — so this template can
-				only be attached to email routes. Values are escaped automatically.
+				Only
+				<strong>email</strong>
+				renders HTML — a chat card would show the markup — so this template can only be attached to email
+				routes. Values are escaped automatically.
 			</template>
 			<template v-else-if="form.format === 'json'">
 				Sent as a raw JSON body. Use the
 				<code>| tojson</code>
 				filter on any value you interpolate, or the result won't parse.
 			</template>
-			<template v-else>
-				Plain text with light markdown. Renders as-is in chat, email and a Teams card.
-			</template>
+			<template v-else>Plain text with light markdown. Renders as-is in chat, email and a Teams card.</template>
 		</div>
 
 		<n-form-item label="Description (optional)" :show-feedback="false">
@@ -47,9 +47,12 @@
 		</div>
 
 		<div class="text-secondary mb-4 text-xs">
-			Leaving <strong>Trigger</strong> empty makes this usable anywhere. Setting it stops the template being
-			attached to a route whose event never carries the variables it references. Leaving
-			<strong>Customer</strong> empty shares it with every customer.
+			Leaving
+			<strong>Trigger</strong>
+			empty makes this usable anywhere. Setting it stops the template being attached to a route whose event never
+			carries the variables it references. Leaving
+			<strong>Customer</strong>
+			empty shares it with every customer.
 		</div>
 
 		<n-form-item label="Subject (optional)" :show-feedback="false">
@@ -76,7 +79,13 @@
 		-->
 		<div class="mb-4 flex flex-wrap items-center gap-2">
 			<span class="text-secondary text-xs">Insert:</span>
-			<n-button v-for="snippet of SNIPPETS" :key="snippet.label" size="tiny" secondary @click="append(snippet.source)">
+			<n-button
+				v-for="snippet of SNIPPETS"
+				:key="snippet.label"
+				size="tiny"
+				secondary
+				@click="append(snippet.source)"
+			>
 				{{ snippet.label }}
 			</n-button>
 		</div>

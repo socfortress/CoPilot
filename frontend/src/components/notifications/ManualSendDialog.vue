@@ -10,8 +10,9 @@
 		<n-spin :show="loadingRoutes">
 			<div class="flex flex-col gap-4">
 				<n-alert type="info" :bordered="false">
-					This sends a <strong>real notification</strong> now — it consumes provider quota and is recorded
-					in the dispatch log, exactly like an automatic one.
+					This sends a
+					<strong>real notification</strong>
+					now — it consumes provider quota and is recorded in the dispatch log, exactly like an automatic one.
 				</n-alert>
 
 				<n-form-item label="Send to" :show-feedback="false">
@@ -37,7 +38,8 @@
 					No routes are configured yet. Add one under
 					<strong>Customers → Notifications</strong>
 					or
-					<strong>Internal Notifications</strong>.
+					<strong>Internal Notifications</strong>
+					.
 				</div>
 
 				<n-form-item v-if="selectedRoute" :show-feedback="false">
@@ -67,9 +69,7 @@
 		<template #footer>
 			<div class="flex items-center justify-end gap-2">
 				<n-button @click="visible = false">Cancel</n-button>
-				<n-button secondary :disabled="!routeId" :loading="previewing" @click="loadPreview">
-					Preview
-				</n-button>
+				<n-button secondary :disabled="!routeId" :loading="previewing" @click="loadPreview">Preview</n-button>
 				<n-button type="primary" :disabled="!routeId" :loading="sending" @click="send">
 					<template #icon>
 						<Icon :name="SendIcon" :size="14" />

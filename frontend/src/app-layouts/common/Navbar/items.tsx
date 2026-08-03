@@ -41,7 +41,7 @@ export default function getItems(): MenuMixedOption[] {
 		// live on the customer.
 		parentMenuItem("Notifications", "Notifications", InternalNotificationsIcon, [
 			routerLinkItem("Internal Routes", "InternalNotifications"),
-			routerLinkItem("Message Templates", "NotificationTemplates")
+			routerLinkItem("Message Templates", "MessageTemplates")
 		]),
 		siemItem,
 		incidentManagementItem,

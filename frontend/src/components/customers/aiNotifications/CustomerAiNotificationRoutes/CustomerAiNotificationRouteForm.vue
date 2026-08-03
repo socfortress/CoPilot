@@ -1,5 +1,5 @@
 <template>
-	<n-form ref="formRef" :model="form" :rules label-placement="top" class="flex flex-col gap-1">
+	<n-form ref="formRef" :model="form" :rules label-placement="top" class="flex flex-col gap-1.5">
 		<!--
 			The legacy per-customer Shuffle workflow also fires on alert creation.
 			Both are opt-in, so duplication only happens when an operator configures
@@ -14,8 +14,8 @@
 		>
 			A legacy Notification Workflow is enabled for this customer, under the
 			<strong>Notification Workflows</strong>
-			tab. Saving this route means new alerts will notify twice — once through each. Disable one if that
-			isn't what you want.
+			tab. Saving this route means new alerts will notify twice — once through each. Disable one if that isn't
+			what you want.
 		</n-alert>
 
 		<n-form-item label="Name" path="name">
@@ -105,11 +105,7 @@
 		<template v-else-if="isWebhook">
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-[1fr_140px]">
 				<n-form-item label="Webhook URL" path="config.url">
-					<n-input
-						v-model:value="cfg.url"
-						placeholder="https://example.com/webhook/abc-123"
-						type="text"
-					/>
+					<n-input v-model:value="cfg.url" placeholder="https://example.com/webhook/abc-123" type="text" />
 				</n-form-item>
 
 				<n-form-item label="Method" path="config.method">
@@ -161,8 +157,8 @@
 				<n-select v-model:value="form.recipient_mode" :options="recipientModeOptions" />
 				<template #feedback>
 					<span v-if="isAssigneeMode">
-						Sent to whoever the alert or task is assigned to, resolved from their CoPilot account
-						at delivery time. Events with no assignee are skipped.
+						Sent to whoever the alert or task is assigned to, resolved from their CoPilot account at
+						delivery time. Events with no assignee are skipped.
 					</span>
 					<span v-else>Sent to a fixed list of addresses.</span>
 				</template>
@@ -203,12 +199,11 @@
 
 			<n-alert v-if="quota" :type="quotaTone" :bordered="false" class="mb-3">
 				<template v-if="!quota.configured">
-					The Resend connector has no API key set — routes on this channel will fail until it is
-					configured.
+					The Resend connector has no API key set — routes on this channel will fail until it is configured.
 				</template>
 				<template v-else>
-					{{ quota.sent_this_month }} of {{ quota.limit }} emails sent this month, across all
-					customers. Resend's allowance is deployment-wide, so every route draws from the same pool.
+					{{ quota.sent_this_month }} of {{ quota.limit }} emails sent this month, across all customers.
+					Resend's allowance is deployment-wide, so every route draws from the same pool.
 				</template>
 			</n-alert>
 		</template>
@@ -234,9 +229,9 @@
 			/>
 		</n-form-item>
 		<div class="text-secondary mb-2 text-xs">
-			Only templates this route can actually render are listed — a template scoped to another trigger or
-			customer, or in a format this channel can't render, is left out.
-			<router-link :to="{ name: 'NotificationTemplates' }" class="underline">Manage templates</router-link>
+			Only templates this route can actually render are listed — a template scoped to another trigger or customer,
+			or in a format this channel can't render, is left out.
+			<router-link :to="{ name: 'MessageTemplates' }" class="underline">Manage templates</router-link>
 		</div>
 
 		<n-form-item label="Custom message template (optional)" path="format_template" :show-feedback="false">
@@ -280,8 +275,7 @@
 				).
 			</template>
 			<template v-else>
-				Leave empty to use the shared template above, or the channel default when there is none.
-				Substitutions:
+				Leave empty to use the shared template above, or the channel default when there is none. Substitutions:
 				<code>{{ substitutionTokens }}</code>
 			</template>
 		</div>
@@ -328,7 +322,18 @@ import type {
 	ShuffleApp,
 	ShuffleIntegration
 } from "@/types/notifications"
-import { NAlert, NButton, NCheckbox, NDynamicInput, NForm, NFormItem, NInput, NInputNumber, NSelect, useMessage } from "naive-ui"
+import {
+	NAlert,
+	NButton,
+	NCheckbox,
+	NDynamicInput,
+	NForm,
+	NFormItem,
+	NInput,
+	NInputNumber,
+	NSelect,
+	useMessage
+} from "naive-ui"
 import { computed, onBeforeMount, reactive, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -569,9 +574,7 @@ const templateOptions = computed(() =>
 
 // The inline box wins over the picker, so say so rather than letting the
 // operator wonder which one is in effect.
-const overridesSharedTemplate = computed(
-	() => Boolean(form.template_id) && Boolean(form.format_template?.trim())
-)
+const overridesSharedTemplate = computed(() => Boolean(form.template_id) && Boolean(form.format_template?.trim()))
 const fullReportDisabled = computed(() => isWebhook.value && Boolean(form.format_template?.trim()))
 // Shown literally in the help text. Kept as a constant so the template
 // doesn't nest {{ }} inside an interpolation (Vue can't parse that).
@@ -613,9 +616,7 @@ const triggerOptions = computed(() => (isInternalScope.value ? INTERNAL_TRIGGER_
 // internal route: Shuffle can't, because its org is an FK to a per-customer
 // table and an internal route has no tenant.
 const channelOptions = computed(() => {
-	const available = isInternalScope.value
-		? channels.value.filter(c => c.supports_internal_scope)
-		: channels.value
+	const available = isInternalScope.value ? channels.value.filter(c => c.supports_internal_scope) : channels.value
 
 	// Before the catalog loads, fall back to whatever the route already uses so
 	// the select isn't briefly empty when editing.
@@ -851,7 +852,8 @@ async function submit() {
 		// Full report and a custom template are mutually exclusive — if the
 		// box is ticked, never persist a template (the structured payload is
 		// sent). Keeps stored data consistent with the UI's grey-out.
-		const sendTemplate = isWebhook.value && Boolean(cfg.include_full_report) ? null : form.format_template?.trim() || null
+		const sendTemplate =
+			isWebhook.value && Boolean(cfg.include_full_report) ? null : form.format_template?.trim() || null
 
 		const base = {
 			name: form.name,

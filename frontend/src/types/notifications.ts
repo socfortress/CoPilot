@@ -13,11 +13,7 @@
 // are INTERNAL: they're about who is working on something, so they reach the
 // SOC's own routes and never a customer's channel.
 export type NotificationTrigger =
-	| "investigation_complete"
-	| "alert_created"
-	| "alert_assigned"
-	| "case_assigned"
-	| "case_task_assigned"
+	"investigation_complete" | "alert_created" | "alert_assigned" | "case_assigned" | "case_task_assigned"
 
 export const INTERNAL_TRIGGERS: NotificationTrigger[] = ["alert_assigned", "case_assigned", "case_task_assigned"]
 

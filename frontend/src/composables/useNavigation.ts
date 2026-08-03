@@ -708,6 +708,44 @@ export function useNavigation() {
 		return routerConstructor({ name: "DetectionCatalog" })
 	}
 
+	/** `duplicate` opens the list with a copy of that template loaded in the form. */
+	function routeMessageTemplates(params?: { duplicate?: number }) {
+		return routerConstructor({
+			name: "MessageTemplates",
+			query: params?.duplicate != null ? { duplicate: params.duplicate.toString() } : {}
+		})
+	}
+
+	function routeMessageTemplateNew() {
+		return routerConstructor({ name: "MessageTemplateNew" })
+	}
+
+	function routeMessageTemplate(templateId?: number) {
+		if (templateId != null) {
+			return routerConstructor({
+				name: "MessageTemplate",
+				params: { id: templateId.toString() }
+			})
+		}
+
+		return routeMessageTemplates()
+	}
+
+	function routeInternalNotificationRouteNew() {
+		return routerConstructor({ name: "InternalNotificationNew" })
+	}
+
+	function routeInternalNotificationRoute(routeId?: number) {
+		if (routeId != null) {
+			return routerConstructor({
+				name: "InternalNotification",
+				params: { id: routeId.toString() }
+			})
+		}
+
+		return routerConstructor({ name: "InternalNotifications" })
+	}
+
 	function routeAiAnalystJob(jobId?: string) {
 		if (jobId) {
 			return routerConstructor({
@@ -821,6 +859,11 @@ export function useNavigation() {
 		routeDetectionCatalogWazuhRule,
 		routeDetectionCatalogCoverageGap,
 		routeDetectionCatalogComplianceGroup,
+		routeMessageTemplates,
+		routeMessageTemplateNew,
+		routeMessageTemplate,
+		routeInternalNotificationRouteNew,
+		routeInternalNotificationRoute,
 		routeAiAnalystJob,
 		routeAiAnalystIoc,
 		routeAiAnalystFeedbackReview,

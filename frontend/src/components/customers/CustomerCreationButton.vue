@@ -47,7 +47,7 @@
 			display-directive="show"
 		>
 			<n-drawer-content title="Add Customer" closable :native-scrollbar="false">
-				<CustomerForm ref="customerFormRef" reset-on-submit @submitted="emit('submitted')" />
+				<CustomerForm ref="customerFormRef" reset-on-submit hide-title @submitted="emit('submitted')" />
 			</n-drawer-content>
 		</n-drawer>
 	</div>

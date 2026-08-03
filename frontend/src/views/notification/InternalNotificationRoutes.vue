@@ -1,21 +1,30 @@
 <template>
 	<div class="page">
-		<div class="mb-4 flex flex-col gap-2">
-			<h1>Internal notifications</h1>
-			<p class="text-secondary max-w-3xl text-sm">
-				Where the SOC's own notifications go. These routes belong to no customer — they receive assignment
-				events, so telling an analyst that an alert landed on their plate never reaches the customer whose
-				alert it was.
-				<br />
-				For notifications a customer should receive, use
-				<strong>Customers → (customer) → Notifications</strong>
-				instead.
-			</p>
+		<div class="mb-10 flex flex-wrap items-start justify-between gap-10">
+			<div class="flex flex-col gap-2 sm:flex-1">
+				<h1>Internal notifications</h1>
+				<p class="text-secondary text-sm">
+					Where the SOC's own notifications go. These routes belong to no customer — they receive assignment
+					events, so telling an analyst that an alert landed on their plate never reaches the customer whose
+					alert it was.
+					<br />
+					For notifications a customer should receive, use
+					<strong>Customers → (customer) → Notifications</strong>
+					instead.
+				</p>
+			</div>
+
+			<n-button v-if="!showForm" size="small" type="primary" class="shrink-0" @click="openForm()">
+				<template #icon>
+					<Icon :name="AddIcon" :size="14" />
+				</template>
+				Add internal route
+			</n-button>
 		</div>
 
-		<n-card>
-			<transition name="transition-fade" mode="out-in">
-				<div v-if="showForm" class="flex flex-col gap-4">
+		<transition name="transition-fade" mode="out-in">
+			<n-card v-if="showForm" size="small">
+				<div class="flex flex-col gap-4">
 					<h4>{{ editingRoute ? `Edit ${editingRoute.name}` : "Create an internal route" }}</h4>
 					<CustomerAiNotificationRouteForm
 						:editing-route
@@ -24,42 +33,33 @@
 						@close="closeForm()"
 					/>
 				</div>
-				<div v-else class="flex flex-col gap-4">
-					<div class="flex items-center justify-between gap-4">
-						<n-button size="small" type="primary" @click="openForm()">
-							<template #icon>
-								<Icon :name="AddIcon" :size="14" />
-							</template>
-							Add internal route
-						</n-button>
+			</n-card>
+			<div v-else>
+				<n-spin :show="loading">
+					<div class="min-h-48">
+						<template v-if="list.length">
+							<CustomerAiNotificationRouteItem
+								v-for="route of list"
+								:key="route.id"
+								:route
+								scope="internal"
+								class="item-appear item-appear-bottom item-appear-005 mb-2"
+								@edit="openEdit(route)"
+								@deleted="refreshList()"
+								@toggled="refreshList()"
+							/>
+						</template>
+						<template v-else>
+							<n-empty
+								v-if="!loading"
+								description="No internal routes yet. Add one to be notified when an alert, case or task is assigned — email can deliver to whoever it was assigned to."
+								class="h-48 justify-center"
+							/>
+						</template>
 					</div>
-
-					<n-spin :show="loading">
-						<div class="min-h-52">
-							<template v-if="list.length">
-								<CustomerAiNotificationRouteItem
-									v-for="route of list"
-									:key="route.id"
-									:route
-									scope="internal"
-									class="item-appear item-appear-bottom item-appear-005 mb-2"
-									@edit="openEdit(route)"
-									@deleted="refreshList()"
-									@toggled="refreshList()"
-								/>
-							</template>
-							<template v-else>
-								<n-empty
-									v-if="!loading"
-									description="No internal routes yet. Add one to be notified when an alert, case or task is assigned — email can deliver to whoever it was assigned to."
-									class="h-48 justify-center"
-								/>
-							</template>
-						</div>
-					</n-spin>
-				</div>
-			</transition>
-		</n-card>
+				</n-spin>
+			</div>
+		</transition>
 	</div>
 </template>
 
