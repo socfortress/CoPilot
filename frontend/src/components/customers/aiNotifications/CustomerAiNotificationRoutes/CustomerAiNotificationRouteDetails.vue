@@ -118,7 +118,7 @@
 						<CardKV class="col-span-6 md:col-span-3">
 							<template #key>{{ destination.label }}</template>
 							<template #value>
-								<div v-if="destination.values.length" class="flex flex-col gap-1 py-1">
+								<div v-if="destination.values.length" class="flex flex-wrap gap-1 py-1">
 									<code v-for="value in destination.values" :key="value" class="break-all">
 										{{ value }}
 									</code>

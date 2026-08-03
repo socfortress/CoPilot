@@ -1,7 +1,7 @@
 <template>
 	<div class="page">
-		<div class="mb-4 flex flex-wrap items-start justify-between gap-4">
-			<div class="flex max-w-3xl flex-col gap-2">
+		<div class="mb-10 flex flex-wrap items-start justify-between gap-10">
+			<div class="flex flex-col gap-2 sm:flex-1">
 				<h1>Internal notifications</h1>
 				<p class="text-secondary text-sm">
 					Where the SOC's own notifications go. These routes belong to no customer — they receive assignment

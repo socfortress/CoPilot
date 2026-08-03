@@ -1,7 +1,7 @@
 <template>
 	<div class="page">
-		<div class="mb-4 flex flex-wrap items-start justify-between gap-4">
-			<div class="flex max-w-3xl flex-col gap-2">
+		<div class="mb-10 flex flex-wrap items-start justify-between gap-4">
+			<div class="flex flex-col gap-2 sm:flex-1">
 				<h1>Message templates</h1>
 				<p class="text-secondary text-sm">
 					Reusable message bodies that notification routes render with. Write one, attach it to as many routes

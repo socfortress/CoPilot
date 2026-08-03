@@ -96,12 +96,12 @@
 		<n-tab-pane name="Source" tab="Source" display-directive="show:lazy">
 			<div class="flex flex-col gap-4" :class="fullWidth ? 'p-0' : 'p-5 pt-3'">
 				<div v-if="entity.subject_template" class="flex flex-col gap-1">
-					<div class="text-secondary text-xs uppercase">Subject template</div>
+					<div class="text-secondary px-1 text-xs uppercase">Subject template</div>
 					<CodeSource :code="entity.subject_template" lang="text" />
 				</div>
 
 				<div class="flex flex-col gap-1">
-					<div class="text-secondary text-xs uppercase">Body template</div>
+					<div class="text-secondary px-1 text-xs uppercase">Body template</div>
 					<CodeSource :code="entity.body_template" :lang="sourceLang" />
 				</div>
 			</div>
@@ -113,11 +113,14 @@
 		-->
 		<n-tab-pane name="Preview" tab="Preview" display-directive="show:lazy">
 			<n-spin :show="previewing">
-				<div class="flex min-h-40 flex-col gap-3" :class="fullWidth ? 'p-0' : 'p-5 pt-3'">
-					<div class="flex items-center justify-between gap-3">
-						<span class="text-secondary text-xs">
-							Rendered against a sample event, not this customer's real data.
-						</span>
+				<div class="flex min-h-40 flex-col gap-4" :class="fullWidth ? 'p-0' : 'p-5 pt-3'">
+					<div
+						class="border-default bg-secondary flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
+					>
+						<div class="text-secondary flex items-center gap-2 text-xs">
+							<Icon :name="InfoIcon" :size="14" class="shrink-0" />
+							<span>Rendered against a sample event, not this customer's real data.</span>
+						</div>
 						<n-button size="tiny" secondary :loading="previewing" @click="loadPreview()">
 							<template #icon>
 								<Icon :name="RefreshIcon" :size="14" />
@@ -126,35 +129,44 @@
 						</n-button>
 					</div>
 
-					<n-alert v-if="preview?.error" type="warning" :bordered="false">{{ preview.error }}</n-alert>
+					<n-alert v-if="preview?.error" type="warning" :bordered="false" title="Render failed">
+						{{ preview.error }}
+					</n-alert>
 
 					<template v-else-if="preview">
-						<div v-if="preview.subject" class="text-xs">
-							<span class="text-secondary uppercase">Subject</span>
-							<div class="font-mono">{{ preview.subject }}</div>
-						</div>
+						<CardKV v-if="preview.subject">
+							<template #key>subject</template>
+							<template #value>{{ preview.subject }}</template>
+						</CardKV>
 
-						<!--
-							A sandboxed iframe, not v-html: the body is operator-authored
-							and renders in an admin's browser, so v-html would let a
-							template author run script in the viewer's session.
-						-->
-						<iframe
-							v-if="entity.format === 'html'"
-							:srcdoc="preview.body"
-							sandbox=""
-							title="HTML preview"
-							class="h-80 w-full rounded border bg-white"
-						/>
-						<n-input
-							v-else
-							:value="preview.body"
-							type="textarea"
-							readonly
-							:autosize="{ minRows: 4, maxRows: 20 }"
-							class="font-mono text-xs!"
-						/>
+						<div class="flex flex-col gap-1">
+							<div class="text-secondary px-1 text-xs uppercase">Body</div>
+
+							<!--
+								A sandboxed iframe, not v-html: the body is operator-authored
+								and renders in an admin's browser, so v-html would let a
+								template author run script in the viewer's session.
+							-->
+							<div
+								v-if="entity.format === 'html'"
+								class="border-default overflow-hidden rounded-lg border bg-white"
+							>
+								<iframe :srcdoc="preview.body" sandbox="" title="HTML preview" class="h-96 w-full" />
+							</div>
+
+							<!--
+								Keyed on the body: the highlighter runs once per element, so
+								a re-render after Refresh would otherwise keep the old output.
+							-->
+							<CodeSource v-else :key="preview.body" :code="preview.body" :lang="sourceLang" />
+						</div>
 					</template>
+
+					<n-empty
+						v-else-if="!previewing"
+						description="No preview yet — render one to see what this template sends."
+						class="h-32 justify-center"
+					/>
 				</div>
 			</n-spin>
 		</n-tab-pane>
@@ -164,7 +176,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { NotificationTemplate, NotificationTrigger, TemplatePreviewResult } from "@/types/notifications"
-import { NAlert, NButton, NInput, NSpin, NTabPane, NTabs } from "naive-ui"
+import { NAlert, NButton, NEmpty, NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
@@ -186,6 +198,7 @@ const { entity, fullWidth } = toRefs(props)
 const LinkIcon = "carbon:launch"
 const TimeIcon = "carbon:time"
 const RefreshIcon = "carbon:renew"
+const InfoIcon = "carbon:information"
 
 const TRIGGER_LABELS: Record<NotificationTrigger, string> = {
 	alert_created: "Alert created",
