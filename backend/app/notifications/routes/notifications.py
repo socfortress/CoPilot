@@ -282,6 +282,23 @@ async def list_internal_routes_route(session: AsyncSession = Depends(get_db)) ->
     )
 
 
+@notifications_router.get(
+    "/internal_notification_routes/{route_id}",
+    response_model=NotificationRouteResponse,
+    description="A single internal-scope notification route. Backs the route's own detail page, which is reachable by deep link.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def get_internal_route_route(route_id: int, session: AsyncSession = Depends(get_db)) -> NotificationRouteResponse:
+    # The service scopes the lookup to scope='internal', so a customer route's
+    # id cannot be read through this endpoint.
+    route = await svc.get_internal_route(route_id, session)
+    return NotificationRouteResponse(
+        success=True,
+        message="Internal route retrieved",
+        route=NotificationRouteRead.from_orm(route),
+    )
+
+
 @notifications_router.post(
     "/internal_notification_routes",
     response_model=NotificationRouteResponse,

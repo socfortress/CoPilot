@@ -86,6 +86,13 @@ export default {
 	getInternalRoutes() {
 		return HttpClient.get<FlaskBaseResponse & { routes: NotificationRoute[] }>(`/internal_notification_routes`)
 	},
+	// Single internal route — used by its detail page, which is deep-linkable
+	// and so can load without the list having been fetched first.
+	getInternalRoute(routeId: number) {
+		return HttpClient.get<FlaskBaseResponse & { route: NotificationRoute }>(
+			`/internal_notification_routes/${routeId}`
+		)
+	},
 	createInternalRoute(payload: NotificationRoutePayload) {
 		return HttpClient.post<FlaskBaseResponse & { route: NotificationRoute }>(
 			`/internal_notification_routes`,

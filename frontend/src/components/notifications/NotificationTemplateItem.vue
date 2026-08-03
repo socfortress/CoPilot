@@ -1,114 +1,148 @@
 <template>
-	<CardEntity hoverable embedded footer-box-class="items-center!">
-		<template #headerMain>
-			<div class="flex items-center gap-2">
-				<Icon :name="FormatIcon" :size="16" />
-				<span class="font-medium">{{ template.name }}</span>
-			</div>
-		</template>
+	<div>
+		<CardEntity hoverable embedded footer-box-class="items-center!">
+			<template #headerMain>
+				<div class="flex items-center gap-2">
+					<Icon :name="FormatIcon" :size="16" />
+					<span class="font-medium">{{ template.name }}</span>
+				</div>
+			</template>
 
-		<template #headerExtra>
-			<Badge v-if="template.is_default" type="splitted" size="small">
-				<template #label>built-in</template>
-				<template #value>read-only</template>
-			</Badge>
-		</template>
+			<template #headerExtra>
+				<Badge v-if="template.is_default" type="splitted" size="small">
+					<template #label>built-in</template>
+					<template #value>read-only</template>
+				</Badge>
+			</template>
 
-		<template #default>
-			<div class="flex flex-col gap-3 text-sm">
-				<div v-if="template.description">{{ template.description }}</div>
+			<template #default>
+				<div class="flex flex-col gap-3 text-sm">
+					<div v-if="template.description">{{ template.description }}</div>
 
-				<!-- The first few lines, so the list is scannable without opening each one. -->
-				<code class="text-secondary block overflow-hidden text-xs leading-relaxed whitespace-pre-wrap">
-					{{ excerpt }}
-				</code>
+					<!-- The first few lines, so the list is scannable without opening each one. -->
+					<code class="text-secondary block overflow-hidden text-xs leading-relaxed whitespace-pre-wrap">
+						{{ excerpt }}
+					</code>
 
+					<div class="flex flex-wrap items-center gap-2">
+						<Badge type="splitted" size="small">
+							<template #label>format</template>
+							<template #value>{{ template.format }}</template>
+						</Badge>
+						<Badge type="splitted" size="small">
+							<template #label>trigger</template>
+							<template #value>{{ template.trigger ? triggerLabel : "any" }}</template>
+						</Badge>
+						<Badge type="splitted" size="small">
+							<template #label>scope</template>
+							<template #value>{{ template.customer_code ?? "all customers" }}</template>
+						</Badge>
+						<Badge v-if="template.subject_template" type="splitted" size="small">
+							<template #label>subject</template>
+							<template #value>set</template>
+						</Badge>
+					</div>
+				</div>
+			</template>
+
+			<template #footerMain>
 				<div class="flex flex-wrap items-center gap-2">
-					<Badge type="splitted" size="small">
-						<template #label>format</template>
-						<template #value>{{ template.format }}</template>
+					<Badge v-if="template.created_by" type="splitted">
+						<template #label>owner</template>
+						<template #value>{{ template.created_by }}</template>
 					</Badge>
-					<Badge type="splitted" size="small">
-						<template #label>trigger</template>
-						<template #value>{{ template.trigger ? triggerLabel : "any" }}</template>
-					</Badge>
-					<Badge type="splitted" size="small">
-						<template #label>scope</template>
-						<template #value>{{ template.customer_code ?? "all customers" }}</template>
-					</Badge>
-					<Badge v-if="template.subject_template" type="splitted" size="small">
-						<template #label>subject</template>
-						<template #value>set</template>
+					<Badge type="splitted">
+						<template #label>updated</template>
+						<template #value>
+							{{ formatDate(template.updated_at ?? template.created_at, dFormats.datetime) }}
+						</template>
 					</Badge>
 				</div>
-			</div>
-		</template>
+			</template>
 
-		<template #footerMain>
-			<div class="flex flex-wrap items-center gap-2">
-				<Badge v-if="template.created_by" type="splitted">
-					<template #label>owner</template>
-					<template #value>{{ template.created_by }}</template>
-				</Badge>
-				<Badge type="splitted">
-					<template #label>updated</template>
-					<template #value>
-						{{ formatDate(template.updated_at ?? template.created_at, dFormats.datetime) }}
-					</template>
-				</Badge>
-			</div>
-		</template>
+			<template #footerExtra>
+				<div class="flex items-center justify-end gap-2">
+					<!--
+						Built-ins are read-only because the next startup would recreate
+						them anyway. Duplicate is offered in their place: the copy is a
+						normal row the operator owns.
+					-->
+					<n-button size="tiny" quaternary @click="$emit('duplicate')">
+						<template #icon>
+							<Icon :name="CopyIcon" :size="14" />
+						</template>
+						Duplicate
+					</n-button>
 
-		<template #footerExtra>
-			<div class="flex items-center justify-end gap-2">
-				<!--
-					Built-ins are read-only because the next startup would recreate
-					them anyway. Duplicate is offered in their place: the copy is a
-					normal row the operator owns.
-				-->
-				<n-button size="tiny" quaternary @click="$emit('duplicate')">
-					<template #icon>
-						<Icon :name="CopyIcon" :size="14" />
-					</template>
-					Duplicate
-				</n-button>
+					<n-button v-if="!template.is_default" size="tiny" quaternary @click="$emit('edit')">
+						<template #icon>
+							<Icon :name="EditIcon" :size="14" />
+						</template>
+						Edit
+					</n-button>
 
-				<n-button v-if="!template.is_default" size="tiny" quaternary @click="$emit('edit')">
-					<template #icon>
-						<Icon :name="EditIcon" :size="14" />
-					</template>
-					Edit
-				</n-button>
+					<n-popconfirm v-if="!template.is_default" to="body" @positive-click="confirmDelete">
+						<template #trigger>
+							<n-button size="tiny" quaternary :loading="loadingDelete">
+								<template #icon>
+									<Icon :name="DeleteIcon" :size="14" />
+								</template>
+								Delete
+							</n-button>
+						</template>
+						Delete this template? Any route using it keeps working — it falls back to its own template or the
+						channel default.
+					</n-popconfirm>
 
-				<n-popconfirm v-if="!template.is_default" to="body" @positive-click="confirmDelete">
-					<template #trigger>
-						<n-button size="tiny" quaternary :loading="loadingDelete">
-							<template #icon>
-								<Icon :name="DeleteIcon" :size="14" />
-							</template>
-							Delete
-						</n-button>
-					</template>
-					Delete this template? Any route using it keeps working — it falls back to its own template or the
-					channel default.
-				</n-popconfirm>
-			</div>
-		</template>
-	</CardEntity>
+					<EntityDetailsButton
+						size="tiny"
+						:route="routeMessageTemplate(template.id)"
+						@view="showDetails = true"
+					/>
+				</div>
+			</template>
+		</CardEntity>
+
+		<n-modal
+			v-model:show="showDetails"
+			:style="{ maxWidth: 'min(850px, 90vw)', minHeight: 'min(480px, 90vh)', overflow: 'hidden' }"
+			display-directive="show"
+		>
+			<n-card
+				content-class="flex flex-col p-0!"
+				:title="`#${template.id} • ${template.name}`"
+				closable
+				:bordered="false"
+				segmented
+				role="modal"
+				@close="showDetails = false"
+			>
+				<NotificationTemplateOverview
+					:entity="template"
+					@updated="$emit('updated')"
+					@deleted="handleDeleted()"
+					@duplicate="handleDuplicate()"
+				/>
+			</n-card>
+		</n-modal>
+	</div>
 </template>
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { NotificationTemplate, NotificationTrigger } from "@/types/notifications"
-import { NButton, NPopconfirm, useMessage } from "naive-ui"
+import { NButton, NCard, NModal, NPopconfirm, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
+import NotificationTemplateOverview from "./NotificationTemplateOverview.vue"
 
 const props = defineProps<{
 	template: NotificationTemplate
@@ -118,6 +152,7 @@ const emit = defineEmits<{
 	(e: "edit"): void
 	(e: "duplicate"): void
 	(e: "deleted"): void
+	(e: "updated"): void
 }>()
 
 const FormatIcon = "carbon:document-blank"
@@ -135,7 +170,9 @@ const TRIGGER_LABELS: Record<NotificationTrigger, string> = {
 
 const message = useMessage()
 const loadingDelete = ref(false)
+const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
+const { routeMessageTemplate } = useNavigation()
 
 const triggerLabel = computed(() =>
 	props.template.trigger ? (TRIGGER_LABELS[props.template.trigger] ?? props.template.trigger) : "any"
@@ -146,6 +183,18 @@ const excerpt = computed(() => {
 	const truncated = props.template.body_template.split("\n").length > 3
 	return lines.join("\n") + (truncated ? "\n…" : "")
 })
+
+function handleDeleted() {
+	showDetails.value = false
+	emit("deleted")
+}
+
+// The duplicate form lives on the page, not in the modal — close it so the
+// operator isn't editing a copy behind an overlay of the original.
+function handleDuplicate() {
+	showDetails.value = false
+	emit("duplicate")
+}
 
 function confirmDelete() {
 	loadingDelete.value = true

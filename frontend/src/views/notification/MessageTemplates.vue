@@ -63,6 +63,7 @@
 								@edit="openEdit(template)"
 								@duplicate="openDuplicate(template)"
 								@deleted="refreshList()"
+								@updated="refreshList()"
 							/>
 						</template>
 						<n-empty
@@ -82,6 +83,7 @@ import type { ApiError } from "@/types/common"
 import type { NotificationTemplate, NotificationTrigger } from "@/types/notifications"
 import { NButton, NCard, NEmpty, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
+import { useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import NotificationTemplateForm from "@/components/notifications/NotificationTemplateForm.vue"
@@ -97,6 +99,7 @@ const AddIcon = "carbon:add"
 const RefreshIcon = "carbon:renew"
 
 const message = useMessage()
+const router = useRouter()
 
 const list = ref<NotificationTemplate[]>([])
 const loading = ref(false)
@@ -166,6 +169,7 @@ function refreshList() {
 		.then(res => {
 			if (res.data.success) {
 				list.value = res.data.templates
+				applyDuplicateQuery()
 			} else {
 				message.warning(res.data.message || "Failed to load templates")
 			}
@@ -176,6 +180,23 @@ function refreshList() {
 		.finally(() => {
 			loading.value = false
 		})
+}
+
+// A template's detail page hands duplication back here, since the copy is
+// unsaved and the creation form lives on this page. Consumed once and dropped
+// from the URL, so a refresh doesn't reopen a form the operator closed.
+function applyDuplicateQuery() {
+	const requested = router.currentRoute.value.query.duplicate
+	if (!requested) return
+
+	const id = Number.parseInt(Array.isArray(requested) ? (requested[0] ?? "") : requested, 10)
+	const template = Number.isSafeInteger(id) ? list.value.find(item => item.id === id) : undefined
+
+	router.replace({ query: {} })
+
+	if (template) {
+		openDuplicate(template)
+	}
 }
 
 onBeforeMount(refreshList)
