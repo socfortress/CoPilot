@@ -5,7 +5,7 @@ description: Send alerts, AI investigation results and assignment events to emai
 
 # Notifications (routes & channels)
 
-CoPilot sends a message when something happens — a new alert lands, an AI investigation finishes, an analyst is assigned a case. You choose the **trigger**, the **severity floor**, and the **channel**.
+CoPilot sends a message when something happens — a new alert lands, an AI investigation finishes, an analyst is assigned a case. You choose the **trigger**, the **severity floor**, the **channel**, and optionally the **message template**.
 
 Four channels ship today:
 
@@ -22,15 +22,25 @@ Four channels ship today:
 
 Things the customer should know about: an alert was raised, an investigation concluded.
 
-**Internal routes** — *Internal Notifications* in the main navigation (admin only)
+**Internal routes** — *Notifications → Internal Routes* (admin only)
 
 Things your SOC should know about: who picked up which alert. These belong to no customer, which is the point — assigning an ACME alert to an analyst notifies your team, never ACME.
 
-## The one thing to know
+**Message templates** — *Notifications → Message Templates* (admin only)
+
+Reusable message bodies shared across routes. Six built-ins ship as working starting points; duplicate one to get an editable copy.
+
+## The two things that catch people
+
+**An alert being created and its AI investigation finishing are different triggers**, minutes apart. A route set to *An alert is created* will never fire when the investigation completes — and AI content only rides the second event. If you want the report, you need a route with the *An AI investigation completes* trigger. Nothing reports an error when no route matches; it just stays quiet.
 
 **Assignment notifications are internal by design.** They only reach internal routes. A customer route with an assignment trigger could never fire, so the interface doesn't offer that combination.
 
 If you want the assignee emailed directly, use the **Email (Resend)** channel with *Deliver to → Whoever it's assigned to*. It's the only channel that can address a person; a webhook targets a URL and Teams targets a channel.
+
+## Sending one item on demand
+
+Open any alert or case and choose **Send to channel…** to push it to a configured route immediately, bypassing the trigger and severity filters. Alerts can carry their AI investigation report. Customer-facing targets are admin-only.
 
 ## Testing
 
@@ -40,7 +50,7 @@ For Teams, look at the channel afterwards rather than trusting the result. A mal
 
 ## Read the full guide
 
-- **Notifications (Admin/Operator)**: ../notifications.md — setup for each channel, quota management, message templates, and troubleshooting
+- **Notifications (Admin/Operator)**: ../notifications.md — worked route examples, setup for each channel, quota management, message templates, and troubleshooting
 
 ## Related pages
 
