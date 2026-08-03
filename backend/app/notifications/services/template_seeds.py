@@ -103,6 +103,51 @@ BUILTIN_TEMPLATES: List[Dict[str, Any]] = [
         ),
     },
     {
+        "name": "AI investigation — full report (HTML email)",
+        "description": (
+            "The complete AI investigation write-up with its tables rendered, in the customer's brand colours. "
+            "Email channels only. Falls back to the summary when an alert has no report."
+        ),
+        "trigger": "investigation_complete",
+        "format": "html",
+        # `context.ai_report` is resolved lazily — mentioning it here is what
+        # causes the report to be loaded at all (`_ensure_ai_report_context`).
+        # Every access stays guarded: an alert with no investigation renders the
+        # summary instead of failing to the channel default, which on a
+        # customer-facing route would be the worse outcome.
+        #
+        # `.html` is already `Markup`, so autoescape leaves it alone; everything
+        # else in this template is escaped normally.
+        "body_template": (
+            '<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;'
+            'max-width:760px;margin:0 auto;padding:24px">'
+            "{% if branding.logo %}"
+            '<img src="{{ branding.logo }}" alt="{{ branding.title | default("") }}" '
+            'style="max-height:48px;margin-bottom:24px">'
+            "{% endif %}"
+            '<h2 style="color:{{ branding.accent | default("#1f2937") }};margin:0 0 8px">{{ alert_name }}</h2>'
+            '<p style="color:#6b7280;margin:0 0 24px">'
+            "Alert severity: <strong>{{ severity }}</strong>"
+            "{% if context.ai_report and context.ai_report.severity %}"
+            " · Assessed: <strong>{{ context.ai_report.severity }}</strong>"
+            "{% endif %}"
+            "{% if customer_code %} · {{ customer_code }}{% endif %}</p>"
+            "{% if context.ai_report and context.ai_report.html %}"
+            "{{ context.ai_report.html }}"
+            "{% else %}"
+            '<div style="line-height:1.6;color:#374151">{{ summary }}</div>'
+            "{% endif %}"
+            "{% if link_url %}"
+            '<p style="margin-top:32px">'
+            '<a href="{{ link_url }}" style="background:{{ branding.accent_strong | default("#2563eb") }};'
+            'color:{{ branding.accent_text | default("#ffffff") }};padding:10px 20px;border-radius:6px;'
+            'text-decoration:none;display:inline-block">View in CoPilot</a></p>'
+            "{% endif %}"
+            "</div>"
+        ),
+        "subject_template": "Investigation complete — {{ alert_name }}",
+    },
+    {
         "name": "Branded email — HTML",
         "description": (
             "HTML email in the customer's brand colours. Email channels only. "

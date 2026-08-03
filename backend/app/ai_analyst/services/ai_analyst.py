@@ -46,6 +46,7 @@ from app.db.universal_models import AiAnalystPalaceLesson
 from app.db.universal_models import AiAnalystReport
 from app.db.universal_models import AiAnalystReview
 from app.incidents.models import Alert
+from app.incidents.models import Asset
 from app.notifications.services.emit import emit
 from app.notifications.services.event_builders import ai_report_reviewed_event
 from app.notifications.services.event_builders import investigation_complete_event
@@ -241,6 +242,29 @@ async def list_jobs_by_customer(customer_code: str, session: AsyncSession) -> Li
 # --- Report operations ---
 
 
+async def _alert_display_fields(alert_id: int, session: AsyncSession) -> tuple[Optional[str], Optional[str]]:
+    """(alert_name, asset_name) for a notification about `alert_id`.
+
+    The investigation emit used to send neither, so every delivered notification
+    read `Alert #14` instead of the alert's name, and the built-in template's
+    asset line could never render (#1048).
+
+    Never raises. This runs on the write-back path, where the report is already
+    durably stored — failing to decorate a notification must not turn a
+    successful submission into a 500. A missing name degrades to the old
+    behaviour rather than losing the notification.
+    """
+    try:
+        alert = await session.get(Alert, alert_id)
+        if alert is None:
+            return (None, None)
+        result = await session.execute(select(Asset.asset_name).where(Asset.alert_linked == alert_id).limit(1))
+        return (alert.alert_name, result.scalars().first())
+    except Exception as e:  # noqa: BLE001 — decoration must never fail the write-back
+        logger.warning(f"Could not resolve display fields for alert {alert_id}: {type(e).__name__}: {e}")
+        return (None, None)
+
+
 async def submit_report(request: SubmitReportRequest, session: AsyncSession) -> SubmitReportResponse:
     logger.info(f"Submitting AI analyst report for job {request.job_id}, alert {request.alert_id}")
 
@@ -270,12 +294,15 @@ async def submit_report(request: SubmitReportRequest, session: AsyncSession) -> 
     # blip or a CoPilot restart loses the notification even though the report is
     # already durably stored. Both paths build the same dedupe key, so whichever
     # arrives first wins and the other is a no-op.
+    alert_name, asset_name = await _alert_display_fields(report.alert_id, session)
     emit(
         investigation_complete_event(
             alert_id=report.alert_id,
             customer_code=report.customer_code,
             severity=report.severity_assessment,
             summary=report.summary or "An AI investigation completed for this alert.",
+            alert_name=alert_name,
+            asset_name=asset_name,
         ),
     )
 

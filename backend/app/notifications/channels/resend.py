@@ -35,6 +35,7 @@ from app.notifications.channels.base import RenderedMessage
 from app.notifications.channels.base import SendResult
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.services.dispatchers import dispatch_resend
+from app.notifications.utils.markdown_html import markdown_to_html
 
 _CREDS_MEMO_KEY = "resend_creds"
 
@@ -122,9 +123,9 @@ class ResendChannel(ChannelProvider):
     supports_recipient_modes = {"static", "assignee"}
     # Empty: the API key is on the connector row, not in route config.
     secret_fields = set()
-    # The only channel that renders HTML: an `html` template is posted as both
-    # the `html` and `text` parts, so it arrives formatted and still degrades to
-    # readable text. A chat card would show the markup instead.
+    # The only channel that renders HTML. Both `html` and `markdown` templates
+    # get an HTML part alongside a text one, so they arrive formatted and still
+    # degrade to something readable. A chat card would show the markup instead.
     template_formats = {"text", "markdown", "html"}
 
     async def send(
@@ -180,10 +181,22 @@ class ResendChannel(ChannelProvider):
         # so deployment-wide inbox filtering on "[CoPilot]" keeps working.
         subject = self._subject(cfg, event, override=message.subject)
 
-        # Email is the only channel that can render HTML, so an `html` template
-        # is sent as the HTML part with the same source as the text fallback.
-        # Clients that refuse HTML still get something readable.
-        is_html = message.format == "html"
+        # Email is the only channel that can render HTML, so both HTML-capable
+        # formats get an HTML part with the rendered source as the text
+        # fallback. Clients that refuse HTML still get something readable.
+        #
+        # `markdown` is converted rather than passed through. A markdown body
+        # reaching an inbox as-is shows literal `*Severity:*` — correct in Slack
+        # and Teams where those asterisks are bold, wrong in a mail client, and
+        # unreadable once an AI report's tables are involved (#1048). `text` is
+        # deliberately left alone: the channel default body is markdown-ish but
+        # typed `text`, and converting it would change what every existing route
+        # already delivers.
+        html_body = None
+        if message.format == "html":
+            html_body = message.body
+        elif message.format == "markdown":
+            html_body = str(markdown_to_html(message.body)) or None
 
         status, error_message, latency_ms, message_id = await dispatch_resend(
             base_url=base_url,
@@ -194,7 +207,7 @@ class ResendChannel(ChannelProvider):
             reply_to=cfg.reply_to,
             subject=subject,
             text_body=message.body,
-            html_body=message.body if is_html else None,
+            html_body=html_body,
         )
         return SendResult(
             status=status,

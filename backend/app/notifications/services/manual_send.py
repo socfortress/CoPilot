@@ -54,6 +54,7 @@ from app.notifications.schema.notifications import DispatchStatus
 from app.notifications.schema.notifications import NotificationScope
 from app.notifications.schema.notifications import NotificationSeverity
 from app.notifications.schema.notifications import NotificationTrigger
+from app.notifications.services.ai_report_context import safe_load_ai_report_context
 
 SUPPORTED_ENTITY_TYPES = (EntityType.ALERT, EntityType.CASE)
 
@@ -196,6 +197,50 @@ async def _require_ai_report_permitted(
         )
 
 
+async def _attach_ai_report(
+    event: NotificationEvent,
+    entity_type: str,
+    include_ai_report: bool,
+    session: AsyncSession,
+) -> None:
+    """Load the AI report onto the event when the operator asked for it.
+
+    **Runs last, after every authorization check.** The loader reads without
+    asking who is calling, so pulling a report before `_require_object_access`
+    and `_require_ai_report_permitted` have passed would make this function the
+    read primitive those checks exist to prevent.
+
+    Refuses when there is nothing to include rather than sending silently
+    without it. The operator ticked a box that says the report will be attached;
+    delivering a notification that quietly lacks one is the wrong answer, and on
+    a customer-facing send they would have no way to tell.
+
+    Pre-populating `context["ai_report"]` also bypasses the template-source
+    guard in `_ensure_ai_report_context`, which is deliberate: a manual send
+    routinely targets a route with no template at all, where there is no source
+    to inspect and the channel default renders the report instead.
+    """
+    if not include_ai_report:
+        return
+
+    if entity_type != EntityType.ALERT:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Only an alert can carry an AI investigation report; this is a {entity_type}.",
+        )
+
+    report = await safe_load_ai_report_context(event.entity_id, session)
+    if report is None:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Alert {event.entity_id} has no AI investigation report to include. "
+                "Send without it, or run an investigation for this alert first."
+            ),
+        )
+    event.context["ai_report"] = report
+
+
 async def _deliver(route: CustomerNotificationRoute, event: NotificationEvent, session: AsyncSession):
     """Hand off to the channel provider and record the outcome.
 
@@ -242,6 +287,7 @@ async def preview_manual(
     await _require_ai_report_permitted(route, entity, include_ai_report, session)
 
     event = build_manual_event(entity_type=entity_type, entity_id=entity_id, entity=entity, user=user)
+    await _attach_ai_report(event, entity_type, include_ai_report, session)
     message, _template_error = await _render_body(route, event, session)
     # The whole message, not just the body: a named template can carry a
     # subject, and a preview that hid it would misrepresent what an email
@@ -278,6 +324,7 @@ async def send_manual(
     await _require_ai_report_permitted(route, entity, include_ai_report, session)
 
     event = build_manual_event(entity_type=entity_type, entity_id=entity_id, entity=entity, user=user)
+    await _attach_ai_report(event, entity_type, include_ai_report, session)
     logger.info(
         f"Manual send: {entity_type}#{entity_id} -> route {route.id} ({route.channel}, {route.scope}) "
         f"by {getattr(user, 'username', 'unknown')}",

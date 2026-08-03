@@ -79,7 +79,24 @@ def _session(alert=None, route=None):
     return session
 
 
-def _send(user, alert, route, *, tag_ok=True, customer_ok=True, ai_enabled=True, include_ai_report=False):
+#: Stands in for a loaded AI report. These tests are about authorization, not
+#: content, so the shape only has to be truthy — but it must be *present*, or a
+#: send asking for the report is refused for having nothing to attach, which
+#: would fail these tests for a reason none of them are testing.
+_A_REPORT = {"markdown": "# Report", "html": "<h1>Report</h1>", "summary": "s", "severity": "Medium", "iocs": []}
+
+
+def _send(
+    user,
+    alert,
+    route,
+    *,
+    tag_ok=True,
+    customer_ok=True,
+    ai_enabled=True,
+    include_ai_report=False,
+    report=_A_REPORT,
+):
     sent = AsyncMock(return_value=SimpleNamespace(status="sent", error_message=None, latency_ms=5, provider_reference="r"))
     with (
         patch.object(ms, "_load_entity", AsyncMock(return_value=alert)),
@@ -87,6 +104,7 @@ def _send(user, alert, route, *, tag_ok=True, customer_ok=True, ai_enabled=True,
         patch("app.incidents.middleware.tag_access.tag_access_handler.can_user_access_alert", AsyncMock(return_value=tag_ok)),
         patch("app.middleware.customer_access.customer_access_handler.check_customer_access", AsyncMock(return_value=customer_ok)),
         patch.object(ms, "is_ai_reports_enabled", AsyncMock(return_value=ai_enabled)),
+        patch.object(ms, "safe_load_ai_report_context", AsyncMock(return_value=report)),
         patch.object(ms, "_deliver", sent),
     ):
         outcome = asyncio.run(
