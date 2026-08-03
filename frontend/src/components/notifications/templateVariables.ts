@@ -70,15 +70,42 @@ const ALERT_VARIABLES: TemplateVariable[] = [
 	{ name: "context.iocs", description: "Indicators extracted by the investigation. Loop over it — often absent." }
 ]
 
+// The AI investigation report. Resolved only when a template mentions
+// `ai_report`, so listing it here is also what tells an operator the cost is
+// opt-in. Absent on most alerts — every example guards accordingly.
+const AI_REPORT_VARIABLES: TemplateVariable[] = [
+	{
+		name: "context.ai_report.html",
+		description: "The full report rendered as HTML, tables included. Use in an html-format template; email only.",
+		example: "{% if context.ai_report %}{{ context.ai_report.html }}{% endif %}"
+	},
+	{ name: "context.ai_report.markdown", description: "The raw markdown source of the report." },
+	{ name: "context.ai_report.summary", description: "The report's short summary." },
+	{ name: "context.ai_report.recommended_actions", description: "The AI's suggested next steps." },
+	{
+		name: "context.ai_report.severity",
+		description: "The AI's assessment of the finding — often lower than the alert's own severity.",
+		example: "Medium"
+	},
+	{
+		name: "context.ai_report.iocs",
+		description: "Indicators with verdicts. Each has .value, .type, .vt_verdict and .vt_score.",
+		example: "{% for i in context.ai_report.iocs %}{{ i.value }} ({{ i.vt_verdict }}){% endfor %}"
+	}
+]
+
 const ASSIGNMENT_TRIGGERS: NotificationTrigger[] = ["alert_assigned", "case_assigned", "case_task_assigned"]
 
 /** Variables worth showing for a given trigger, most relevant first. */
 export function variablesForTrigger(trigger: NotificationTrigger | null): TemplateVariable[] {
+	// The report rides alert-shaped events: investigation_complete carries one,
+	// and a manual send can attach one to any alert. Assignment triggers never
+	// do, so listing it there would invite a template with a permanent hole.
 	const specific = !trigger
-		? [...ASSIGNMENT_VARIABLES, ...ALERT_VARIABLES]
+		? [...ASSIGNMENT_VARIABLES, ...ALERT_VARIABLES, ...AI_REPORT_VARIABLES]
 		: ASSIGNMENT_TRIGGERS.includes(trigger)
 			? ASSIGNMENT_VARIABLES
-			: ALERT_VARIABLES
+			: [...ALERT_VARIABLES, ...AI_REPORT_VARIABLES]
 
 	return [...specific, ...COMMON_VARIABLES, ...LEGACY_ALIASES]
 }
@@ -105,5 +132,9 @@ export const SNIPPETS: { label: string; source: string }[] = [
 	{
 		label: "Link, when there is one",
 		source: "{% if link_url %}Open in CoPilot: {{ link_url }}{% endif %}"
+	},
+	{
+		label: "AI report, or the summary",
+		source: "{% if context.ai_report %}{{ context.ai_report.html }}{% else %}{{ summary }}{% endif %}"
 	}
 ]
