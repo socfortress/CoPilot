@@ -95,7 +95,8 @@ const columns = computed<DataTableColumns<DispatchLogEntry>>(() => [
 		title: "Entity",
 		key: "entity_id",
 		width: 130,
-		render: row => (row.entity_type === "alert" ? `#${row.entity_id}` : `${entityLabel(row.entity_type)} #${row.entity_id}`)
+		render: row =>
+			row.entity_type === "alert" ? `#${row.entity_id}` : `${entityLabel(row.entity_type)} #${row.entity_id}`
 	},
 	{
 		title: "Trigger",

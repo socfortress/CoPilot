@@ -77,9 +77,7 @@ export default {
 		)
 	},
 	testInternalRoute(routeId: number) {
-		return HttpClient.post<FlaskBaseResponse & DispatchOutcome>(
-			`/internal_notification_routes/${routeId}/test`
-		)
+		return HttpClient.post<FlaskBaseResponse & DispatchOutcome>(`/internal_notification_routes/${routeId}/test`)
 	},
 
 	// Internal-scope routes live outside the /customers/{code}/... tree because
@@ -220,9 +218,6 @@ export default {
 	// Renders unsaved source against a sample event. A render failure comes back
 	// in `error` rather than as a non-2xx, so the editor shows it inline.
 	previewTemplate(payload: TemplatePreviewPayload) {
-		return HttpClient.post<FlaskBaseResponse & TemplatePreviewResult>(
-			`/notifications/templates/preview`,
-			payload
-		)
+		return HttpClient.post<FlaskBaseResponse & TemplatePreviewResult>(`/notifications/templates/preview`, payload)
 	}
 }

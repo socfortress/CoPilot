@@ -20,7 +20,11 @@ export interface TemplateVariable {
 // a typo in one is an error at render time, not an empty string.
 export const COMMON_VARIABLES: TemplateVariable[] = [
 	{ name: "severity", description: "Critical / High / Medium / Low / Informational", example: "High" },
-	{ name: "customer_code", description: "The customer this event belongs to. Empty on internal routes.", example: "ACME" },
+	{
+		name: "customer_code",
+		description: "The customer this event belongs to. Empty on internal routes.",
+		example: "ACME"
+	},
 	{ name: "summary", description: "The event's body text — the AI summary, or the alert's description." },
 	{ name: "subject", description: "One-line title for the event." },
 	{ name: "link_url", description: "Deep link into CoPilot. May be empty.", example: "https://…/alerts/4821" },
