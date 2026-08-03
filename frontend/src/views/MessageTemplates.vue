@@ -1,19 +1,28 @@
 <template>
 	<div class="page">
-		<div class="mb-4 flex flex-col gap-2">
-			<h1>Message templates</h1>
-			<p class="text-secondary text-sm">
-				Reusable message bodies that notification routes render with. Write one, attach it to as many routes as
-				you like, and edit it in one place.
-				<br />
-				A route can still carry its own one-off template — that always wins over the shared one, so a single
-				route can deviate without forking it.
-			</p>
+		<div class="mb-4 flex flex-wrap items-start justify-between gap-4">
+			<div class="flex max-w-3xl flex-col gap-2">
+				<h1>Message templates</h1>
+				<p class="text-secondary text-sm">
+					Reusable message bodies that notification routes render with. Write one, attach it to as many routes
+					as you like, and edit it in one place.
+					<br />
+					A route can still carry its own one-off template — that always wins over the shared one, so a single
+					route can deviate without forking it.
+				</p>
+			</div>
+
+			<n-button v-if="!showForm" size="small" type="primary" class="shrink-0" @click="openForm()">
+				<template #icon>
+					<Icon :name="AddIcon" :size="14" />
+				</template>
+				Add template
+			</n-button>
 		</div>
 
-		<n-card size="small">
-			<transition name="transition-fade" mode="out-in">
-				<div v-if="showForm" class="flex flex-col gap-4">
+		<transition name="transition-fade" mode="out-in">
+			<n-card v-if="showForm" size="small">
+				<div class="flex flex-col gap-4">
 					<h4>{{ formTitle }}</h4>
 					<NotificationTemplateForm
 						:key="formKey"
@@ -22,58 +31,49 @@
 						@close="closeForm()"
 					/>
 				</div>
-				<div v-else class="flex flex-col gap-4">
-					<div class="flex flex-wrap items-center justify-between gap-4">
-						<n-button size="small" type="primary" @click="openForm()">
-							<template #icon>
-								<Icon :name="AddIcon" :size="14" />
-							</template>
-							Add template
-						</n-button>
-
-						<div class="flex flex-wrap items-center gap-2">
-							<n-select
-								v-model:value="triggerFilter"
-								:options="triggerOptions"
-								size="small"
-								clearable
-								placeholder="Any trigger"
-								class="w-40!"
-								:consistent-menu-width="false"
-								@update:value="refreshList()"
-							/>
-							<n-button size="small" :disabled="loading" @click="refreshList()">
-								<template #icon>
-									<Icon :name="RefreshIcon" :size="14" />
-								</template>
-								Refresh
-							</n-button>
-						</div>
-					</div>
-
-					<n-spin :show="loading">
-						<div class="min-h-52">
-							<template v-if="list.length">
-								<NotificationTemplateItem
-									v-for="template of list"
-									:key="template.id"
-									:template
-									class="item-appear item-appear-bottom item-appear-005 mb-2"
-									@edit="openEdit(template)"
-									@duplicate="openDuplicate(template)"
-									@deleted="refreshList()"
-								/>
-							</template>
-							<n-empty
-								v-else-if="!loading"
-								description="No templates match. Built-in templates ship with the deployment — clear the filter to see them."
-								class="h-48 justify-center"
-							/>
-						</div>
-					</n-spin>
+			</n-card>
+			<div v-else class="flex flex-col gap-4">
+				<div class="flex flex-wrap items-center justify-end gap-2">
+					<n-select
+						v-model:value="triggerFilter"
+						:options="triggerOptions"
+						size="small"
+						clearable
+						placeholder="Any trigger"
+						class="w-40!"
+						:consistent-menu-width="false"
+						@update:value="refreshList()"
+					/>
+					<n-button size="small" :disabled="loading" @click="refreshList()">
+						<template #icon>
+							<Icon :name="RefreshIcon" :size="14" />
+						</template>
+						Refresh
+					</n-button>
 				</div>
-			</transition>
-		</n-card>
+
+				<n-spin :show="loading">
+					<div class="min-h-52">
+						<template v-if="list.length">
+							<NotificationTemplateItem
+								v-for="template of list"
+								:key="template.id"
+								:template
+								class="item-appear item-appear-bottom item-appear-005 mb-2"
+								@edit="openEdit(template)"
+								@duplicate="openDuplicate(template)"
+								@deleted="refreshList()"
+							/>
+						</template>
+						<n-empty
+							v-else-if="!loading"
+							description="No templates match. Built-in templates ship with the deployment — clear the filter to see them."
+							class="h-48 justify-center"
+						/>
+					</div>
+				</n-spin>
+			</div>
+		</transition>
 	</div>
 </template>
 
