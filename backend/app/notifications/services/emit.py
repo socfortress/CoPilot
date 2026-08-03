@@ -60,6 +60,17 @@ async def _run(event: NotificationEvent) -> None:
                 f"{response.dispatched} sent, {response.skipped} skipped, {response.failed} failed "
                 f"across {response.routes_matched} route(s).",
             )
+        else:
+            # Logged rather than passed over in silence. A trigger nobody has
+            # subscribed to used to be indistinguishable from one that never
+            # fired: an operator whose routes were all `alert_created` saw
+            # nothing at all when an investigation completed, with no way to
+            # tell a missing route from a broken engine. Naming the trigger
+            # makes the fix obvious.
+            logger.info(
+                f"Notification emit [{event.trigger.value}] {event.entity_type}#{event.entity_id}: "
+                f"no route is configured for this trigger; nothing sent.",
+            )
     except asyncio.TimeoutError:
         logger.error(
             f"Notification emit [{event.trigger.value}] {event.entity_type}#{event.entity_id} "

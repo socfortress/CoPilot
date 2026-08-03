@@ -34,6 +34,7 @@ httpx[http2]<0.29
 influxdb-client[async]
 Jinja2
 loguru
+markdown-it-py  # direct dep since #1048 — notification bodies and AI reports render markdown to HTML for email
 miniopy-async
 packaging
 pdfkit

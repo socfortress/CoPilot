@@ -42,8 +42,21 @@
 					.
 				</div>
 
-				<n-form-item v-if="selectedRoute" :show-feedback="false">
-					<n-checkbox v-model:checked="includeAiReport">Include the AI investigation report</n-checkbox>
+				<!--
+					Alerts only: an investigation belongs to an alert, and the server
+					refuses the combination for anything else. Offering it on a case
+					would be an option that can only produce an error.
+				-->
+				<n-form-item v-if="selectedRoute && entityType === 'alert'" :show-feedback="false">
+					<div class="flex flex-col gap-1">
+						<n-checkbox v-model:checked="includeAiReport" @update:checked="onOptionChange">
+							Include the AI investigation report
+						</n-checkbox>
+						<div class="text-secondary text-xs">
+							Attaches the full write-up. Email renders it formatted; chat channels receive markdown.
+							Refused if this alert has no investigation.
+						</div>
+					</div>
 				</n-form-item>
 
 				<div v-if="preview !== null" class="flex flex-col gap-1">
@@ -180,6 +193,10 @@ function onRouteChange() {
 	previewSubject.value = null
 	previewError.value = null
 }
+
+// Same reasoning as onRouteChange: including the AI report changes the rendered
+// body, so a preview taken before the toggle no longer describes the send.
+const onOptionChange = onRouteChange
 
 function payload() {
 	return {

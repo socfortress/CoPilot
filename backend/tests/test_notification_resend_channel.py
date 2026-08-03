@@ -68,12 +68,13 @@ def _route(config=None, recipient_mode="static", **over):
     return SimpleNamespace(**base)
 
 
-def _send(route, event=None, creds=CREDS, recent_sends=0, user=...):
+def _send(route, event=None, creds=CREDS, recent_sends=0, user=..., message=None):
     """Invoke the provider with HTTP, connector and DB lookups stubbed.
 
     Returns (result, kwargs-the-dispatcher-was-called-with-or-None).
     """
     ev = event or _event()
+    message = message if message is not None else RenderedMessage(body="RENDERED BODY")
     sent = AsyncMock(return_value=("sent", None, 12, "msg-1"))
     creds_mock = AsyncMock(side_effect=creds) if isinstance(creds, Exception) else AsyncMock(return_value=creds)
 
@@ -92,7 +93,7 @@ def _send(route, event=None, creds=CREDS, recent_sends=0, user=...):
             CHANNEL_REGISTRY["resend"].send(
                 route=route,
                 event=ev,
-                message=RenderedMessage(body="RENDERED BODY"),
+                message=message,
                 ctx=DispatchContext(session=AsyncMock(), event=ev),
             ),
         )
@@ -290,3 +291,58 @@ def test_malformed_config_fails_only_this_route():
     assert result.status == "failed"
     assert "Invalid resend config" in result.error_message
     assert kwargs is None
+
+
+# ── body formats and the HTML part (#1048) ────────────────────────────────
+#
+# Email is the only channel that can render HTML, so the mapping from a
+# template's declared `format` onto Resend's `html`/`text` parts is where a
+# customer-visible regression is cheapest to introduce and hardest to notice —
+# nobody reads their own notification emails until one looks wrong.
+
+
+def test_a_text_body_gets_no_html_part():
+    """The channel default is markdown-ish but typed `text`. Converting it would
+    change what every pre-existing route already delivers."""
+    _result, kwargs = _send(_route(), message=RenderedMessage(body="*New alert* — severity: *Critical*", format="text"))
+
+    assert kwargs["text_body"] == "*New alert* — severity: *Critical*"
+    assert kwargs["html_body"] is None
+
+
+def test_an_html_body_is_passed_through_verbatim():
+    """An operator who wrote HTML meant that HTML — it is not re-processed."""
+    html = '<div style="color:red">Hand written</div>'
+    _result, kwargs = _send(_route(), message=RenderedMessage(body=html, format="html"))
+
+    assert kwargs["html_body"] == html
+    assert kwargs["text_body"] == html
+
+
+def test_a_markdown_body_is_converted_to_an_html_part():
+    """Previously delivered as literal `*Severity:*` — correct in Slack, wrong
+    in an inbox. The markdown source stays as the text part so a client that
+    refuses HTML still gets something readable."""
+    _result, kwargs = _send(_route(), message=RenderedMessage(body="**Severity:** Low", format="markdown"))
+
+    assert kwargs["text_body"] == "**Severity:** Low", "the plain-text part keeps the markdown source"
+    assert "<strong>Severity:</strong>" in kwargs["html_body"]
+    assert "**" not in kwargs["html_body"]
+
+
+def test_a_markdown_table_survives_into_the_html_part():
+    """The reason this conversion exists at all: an AI report's substance is in
+    its tables, and a pipe-delimited table is unreadable in a mail client."""
+    body = "| Field | Value |\n|---|---|\n| Event ID | 4732 |"
+    _result, kwargs = _send(_route(), message=RenderedMessage(body=body, format="markdown"))
+
+    assert "<table" in kwargs["html_body"]
+    assert "<td" in kwargs["html_body"]
+    assert "4732" in kwargs["html_body"]
+
+
+def test_an_empty_markdown_body_produces_no_html_part():
+    """`html: ""` would be a malformed multipart; None omits the part entirely."""
+    _result, kwargs = _send(_route(), message=RenderedMessage(body="   ", format="markdown"))
+
+    assert kwargs["html_body"] is None

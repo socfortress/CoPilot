@@ -77,12 +77,19 @@ def investigation_complete_event(
     severity: Optional[str],
     summary: str,
     alert_name: Optional[str] = None,
+    asset_name: Optional[str] = None,
 ) -> NotificationEvent:
     """An AI investigation finished and its report was written back.
 
     The dedupe key is identical to the one `event_from_dispatch_request` builds,
     which is what makes CoPilot's own emit and Talon's push converge on a single
     notification rather than two.
+
+    `alert_name` and `asset_name` are optional because Talon's push has never
+    carried an asset and may omit the name — but the CoPilot-side emit passes
+    both (#1048). Without them the subject degrades to `Alert #14` and the
+    seeded template's `{% if context.asset_name %}` can never fire, which is
+    what customers were actually receiving.
     """
     return NotificationEvent(
         customer_code=customer_code,
@@ -94,7 +101,7 @@ def investigation_complete_event(
         entity_id=alert_id,
         dedupe_key=f"{EntityType.ALERT}:{alert_id}:{NotificationTrigger.INVESTIGATION_COMPLETE.value}",
         link_url=_copilot_link(f"/alerts/{alert_id}"),
-        context={"alert_name": alert_name},
+        context={"alert_name": alert_name, "asset_name": asset_name},
     )
 
 

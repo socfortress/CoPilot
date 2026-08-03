@@ -62,6 +62,7 @@ from app.notifications.schema.notifications import ShuffleApp
 from app.notifications.schema.notifications import ShuffleIntegrationCreate
 from app.notifications.schema.notifications import ShuffleIntegrationUpdate
 from app.notifications.schema.notifications import ShuffleOrg
+from app.notifications.services.ai_report_context import safe_load_ai_report_context
 from app.notifications.services.dispatchers import (
     list_shuffle_apps as shuffle_apps_client,
 )
@@ -739,7 +740,43 @@ async def _ai_reports_permitted(trigger: str, customer_code: str, session: Async
     return await is_ai_reports_enabled(customer_code, session)
 
 
+def _ai_report_section(event: NotificationEvent) -> str:
+    """The AI report appended to a default body, or "" when there is none.
+
+    Exists so that ticking "Include the AI investigation report" on a route with
+    **no template at all** still delivers the report. Without this, the checkbox
+    would only work for routes an operator had already customised — which is
+    exactly the case where they least need help.
+
+    Emits the report markdown verbatim. On email that is turned into real HTML
+    downstream (the message is flagged `markdown` when this section is present);
+    on chat channels markdown is already the native format.
+    """
+    report = (event.context or {}).get("ai_report")
+    if not report:
+        return ""
+
+    body = report.get("markdown") or report.get("summary") or ""
+    if not body.strip():
+        return ""
+
+    heading = "*AI investigation*"
+    severity = report.get("severity")
+    if severity:
+        heading = f"*AI investigation* — assessed severity: *{severity}*"
+    return "\n".join(["", "---", "", heading, "", body.strip()])
+
+
 def _format_default_body(event: NotificationEvent) -> str:
+    """The channel default body, plus the AI report when one was requested.
+
+    Split from `_format_default_body_core` so every per-trigger branch gains the
+    report section without repeating the append at three return sites.
+    """
+    return _format_default_body_core(event) + _ai_report_section(event)
+
+
+def _format_default_body_core(event: NotificationEvent) -> str:
     """Default message body when a route sets no `format_template`.
 
     Markdown-ish: readable as-is in Slack, Teams and a plaintext email. Per-
@@ -835,16 +872,27 @@ async def _render_body(
     louder, and deliberately so — a message with a stray `{{foo}}` in it was
     already broken, just silently.
     """
-    fallback = _format_default_body(event)
-
     inline = route.format_template
     if inline:
+        await _ensure_ai_report_context(inline, event, session, ctx=ctx)
+        fallback = _format_default_body(event)
         body, error = render_body(inline, event, fallback)
         return (RenderedMessage(body=body, is_custom=error is None), error)
 
     template = await resolve_template_for_route(route, session)
     if template is None:
-        return (RenderedMessage(body=fallback), None)
+        fallback = _format_default_body(event)
+        # A default body that carries a report is markdown, not plain text: the
+        # report is markdown by nature, and flagging it lets the email channel
+        # render its tables instead of shipping pipes. Without a report the
+        # format stays `text`, so ordinary notifications are byte-for-byte
+        # unchanged.
+        fmt = "markdown" if (event.context or {}).get("ai_report") else "text"
+        return (RenderedMessage(body=fallback, format=fmt), None)
+
+    source = f"{template.body_template}{template.subject_template or ''}"
+    await _ensure_ai_report_context(source, event, session, ctx=ctx)
+    fallback = _format_default_body(event)
 
     autoescape = template.format == "html"
     extra = await _branding_context(template, event, session, ctx=ctx)
@@ -907,6 +955,46 @@ async def _branding_context(
         lambda: build_branding_context(customer_code, session),
     )
     return {"branding": branding}
+
+
+async def _ensure_ai_report_context(
+    source: str,
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> None:
+    """Put the alert's AI report on the event when a template asks for it.
+
+    Follows `_branding_context`'s guard exactly, for the same reason: Jinja
+    resolves names by their literal spelling, so a template that never writes
+    `ai_report` cannot reach one, and skipping the lookup keeps a plain chat
+    template at zero extra queries on the ingest hot path. Investigations are the
+    minority of alerts and the report is the largest thing the engine can load —
+    fetching it speculatively would be the wrong default.
+
+    Injects onto `event.context` rather than passing `extra_context`, so the
+    report is reachable identically from an inline template, a named template
+    and `_format_default_body`. Manual send pre-populates the same key, which is
+    why the presence check comes before the load.
+
+    `None` is stored on a miss rather than left absent, so a second route in the
+    same batch does not re-query. Templates guard with `{% if context.ai_report %}`
+    and both a `None` and an absent key read as falsy.
+    """
+    if "ai_report" not in source:
+        return
+    if "ai_report" in (event.context or {}):
+        return
+    # Cases and tasks have no investigation; only alerts do.
+    if event.entity_type != EntityType.ALERT:
+        return
+
+    async def _load():
+        return await safe_load_ai_report_context(event.entity_id, session)
+
+    report = await ctx.memoize(f"ai_report:{event.entity_id}", _load) if ctx is not None else await _load()
+    event.context["ai_report"] = report
 
 
 async def _record_log(
