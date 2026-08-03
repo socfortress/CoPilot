@@ -13,6 +13,15 @@ export const notificationsRoutes: RouteRecordRaw[] = [
 		meta: { title: "Internal Notifications", auth: true, roles: AuthUserRole.Admin }
 	},
 	{
+		// Declared above the `:id` route: vue-router ranks a static segment over a
+		// param anyway, but keeping the order explicit means the next path added
+		// here doesn't have to rely on that.
+		path: "/internal-notifications/new",
+		name: "InternalNotificationNew",
+		component: () => import("@/views/notification/InternalNotificationRouteNew.vue"),
+		meta: { title: "Create Internal Notification Route", auth: true, roles: AuthUserRole.Admin }
+	},
+	{
 		path: "/internal-notifications/:id",
 		name: "InternalNotification",
 		component: () => import("@/views/notification/InternalNotificationRoute.vue"),
@@ -26,6 +35,12 @@ export const notificationsRoutes: RouteRecordRaw[] = [
 		name: "MessageTemplates",
 		component: () => import("@/views/notification/MessageTemplates.vue"),
 		meta: { title: "Message Templates", auth: true, roles: AuthUserRole.Admin }
+	},
+	{
+		path: "/message-templates/new",
+		name: "MessageTemplateNew",
+		component: () => import("@/views/notification/MessageTemplateNew.vue"),
+		meta: { title: "Create Message Template", auth: true, roles: AuthUserRole.Admin }
 	},
 	{
 		path: "/message-templates/:id",

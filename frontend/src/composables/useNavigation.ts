@@ -716,6 +716,10 @@ export function useNavigation() {
 		})
 	}
 
+	function routeMessageTemplateNew() {
+		return routerConstructor({ name: "MessageTemplateNew" })
+	}
+
 	function routeMessageTemplate(templateId?: number) {
 		if (templateId != null) {
 			return routerConstructor({
@@ -725,6 +729,10 @@ export function useNavigation() {
 		}
 
 		return routeMessageTemplates()
+	}
+
+	function routeInternalNotificationRouteNew() {
+		return routerConstructor({ name: "InternalNotificationNew" })
 	}
 
 	function routeInternalNotificationRoute(routeId?: number) {
@@ -852,7 +860,9 @@ export function useNavigation() {
 		routeDetectionCatalogCoverageGap,
 		routeDetectionCatalogComplianceGroup,
 		routeMessageTemplates,
+		routeMessageTemplateNew,
 		routeMessageTemplate,
+		routeInternalNotificationRouteNew,
 		routeInternalNotificationRoute,
 		routeAiAnalystJob,
 		routeAiAnalystIoc,
