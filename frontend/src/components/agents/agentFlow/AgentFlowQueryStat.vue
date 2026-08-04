@@ -85,7 +85,6 @@
 </template>
 
 <script setup lang="ts">
-import { formatNanosecondsDuration } from "@/utils/formatNanosecondsDuration"
 import type { FlowQueryStat } from "@/types/flow"
 import _pick from "lodash/pick"
 import { NInput, NModal, NTabPane, NTabs } from "naive-ui"
@@ -94,8 +93,8 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
+import { formatNanosecondsDuration } from "@/utils/formatNanosecondsDuration"
 
 const { stat, embedded } = defineProps<{ stat: FlowQueryStat; embedded?: boolean }>()
 

@@ -163,7 +163,7 @@ import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import CustomerAiNotificationRouteOverview from "./CustomerAiNotificationRouteOverview.vue"
-import { describeRouteDestination } from "./destination"
+import { describeRouteChannel, describeRouteDestination } from "./destination"
 
 const props = defineProps<{
 	route: NotificationRoute
@@ -206,21 +206,9 @@ const hasCustomHeaders = computed(() => Object.keys(webhookConfig.value.headers 
 
 const destination = computed(() => describeRouteDestination(props.route))
 
-// Shuffle routes cache the app name on the row at form-submit time so we
-// can render "Shuffle · Slack" without a roundtrip; webhook routes show
-// the URL host so the list is scannable at a glance.
-const channelIcon = computed(() => (isWebhook.value ? "carbon:webhook" : "carbon:integration"))
-const channelLabel = computed(() => {
-	if (isWebhook.value) {
-		try {
-			return `Webhook · ${new URL((props.route.config?.url as string) ?? "").host}`
-		} catch {
-			return "Webhook"
-		}
-	}
-	const appName = props.route.config?.app_name as string | undefined
-	return appName ? `Shuffle · ${appName}` : "Shuffle"
-})
+// Shared with the detail panel so the two can't disagree about what a route is.
+const channelIcon = computed(() => describeRouteChannel(props.route).icon)
+const channelLabel = computed(() => describeRouteChannel(props.route).label)
 
 const severityColor = computed<"danger" | "warning" | "success">(() => {
 	if (props.route.min_severity === "Critical" || props.route.min_severity === "High") return "danger"
