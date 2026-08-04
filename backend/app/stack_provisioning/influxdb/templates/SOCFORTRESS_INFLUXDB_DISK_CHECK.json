@@ -1,0 +1,36 @@
+{
+    "name": "DISK USAGE CHECK",
+    "orgID": "REPLACE_ORG_ID",
+    "type": "threshold",
+    "status": "active",
+    "every": "5m",
+    "offset": "0s",
+    "statusMessageTemplate": "${ r._level }: ${ r._check_name }\nHost: ${r.host}\nPath: ${ r.path }\nDisk Used(%): ${ r.used_percent }",
+    "query": {
+        "text": "from(bucket: \"REPLACE_BUCKET\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"disk\")\n  |> filter(fn: (r) => r[\"_field\"] == \"used_percent\")\n  |> filter(fn: (r) => r[\"fstype\"] != \"tmpfs\" and r[\"fstype\"] != \"devtmpfs\" and r[\"fstype\"] != \"overlay\" and r[\"fstype\"] != \"squashfs\" and r[\"fstype\"] != \"iso9660\")\n  |> aggregateWindow(every: 5m, fn: max, createEmpty: false)\n  |> yield(name: \"max\")",
+        "editMode": "advanced",
+        "name": ""
+    },
+    "thresholds": [
+        {
+            "allValues": false,
+            "level": "INFO",
+            "value": 75,
+            "type": "greater"
+        },
+        {
+            "allValues": false,
+            "level": "WARN",
+            "value": 85,
+            "type": "greater"
+        },
+        {
+            "allValues": false,
+            "level": "CRIT",
+            "value": 90,
+            "type": "greater"
+        }
+    ],
+    "tags": [],
+    "labels": []
+}

@@ -1,7 +1,10 @@
+import os
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
 
+import httpx
 from fastapi import HTTPException
 from influxdb_client.client.influxdb_client_async import InfluxDBClientAsync
 from loguru import logger
@@ -102,10 +105,15 @@ async def create_influxdb_client(connector_name: str) -> InfluxDBClientAsync:
         )
 
 
-async def get_influxdb_organization() -> str:
+async def get_influxdb_attributes() -> Dict[str, Any]:
     """
-    Read the `connector_extra_data` from the database and return the organization name.
-    which is the first item. For example: `SOCFORTRESS,telegraf`.
+    Read the InfluxDB connector row from the database.
+
+    Returns:
+        Dict[str, Any]: The connector attributes (url, api key, extra data, ...).
+
+    Raises:
+        HTTPException: If the InfluxDB connector is not configured.
     """
     async with get_db_session() as session:  # This will correctly enter the context manager
         attributes = await get_connector_info_from_db("InfluxDB", session)
@@ -114,7 +122,156 @@ async def get_influxdb_organization() -> str:
             status_code=500,
             detail="No InfluxDB connector found in the database",
         )
+    return attributes
+
+
+async def get_influxdb_organization() -> str:
+    """
+    Read the `connector_extra_data` from the database and return the organization name.
+    which is the first item. For example: `SOCFORTRESS,telegraf`.
+    """
+    attributes = await get_influxdb_attributes()
     return attributes["connector_extra_data"].split(",")[0]
+
+
+async def get_influxdb_bucket() -> str:
+    """
+    Read the `connector_extra_data` from the database and return the bucket name,
+    which is the second item. For example: `SOCFORTRESS,telegraf`.
+
+    Returns:
+        str: The bucket holding the Telegraf metrics.
+
+    Raises:
+        HTTPException: If `connector_extra_data` is not in the expected `ORG,BUCKET` format.
+    """
+    attributes = await get_influxdb_attributes()
+    parts = attributes["connector_extra_data"].split(",")
+    if len(parts) < 2:
+        raise HTTPException(
+            status_code=500,
+            detail="Invalid connector_extra_data format for InfluxDB. Expected 'ORG,BUCKET'.",
+        )
+    return parts[1].strip()
+
+
+async def get_influxdb_org_id() -> str:
+    """
+    Resolve the InfluxDB organization *ID* from the organization *name* stored on the connector.
+
+    The connector only persists the org name (`connector_extra_data`), but the InfluxDB
+    `/api/v2/checks` API keys everything off the org ID, so it has to be looked up.
+
+    Returns:
+        str: The InfluxDB organization ID.
+
+    Raises:
+        HTTPException: If the organization cannot be found.
+    """
+    org_name = await get_influxdb_organization()
+    response = await send_get_request("/api/v2/orgs", params={"org": org_name})
+    orgs = response.get("orgs", [])
+    for org in orgs:
+        if org.get("name") == org_name:
+            logger.info(f"Resolved InfluxDB organization {org_name} to ID {org['id']}")
+            return org["id"]
+    raise HTTPException(
+        status_code=404,
+        detail=f"InfluxDB organization {org_name} not found",
+    )
+
+
+# ! HTTP HELPERS FOR THE INFLUXDB v2 REST API
+# The `influxdb_client` async client only wraps the query/write APIs — the checks,
+# notification endpoint and notification rule APIs are not exposed on it, so anything
+# touching those has to go over plain HTTP.
+#
+# TLS verification is OFF by default, matching `create_influxdb_client()` above: InfluxDB
+# in a SOCFortress stack is a co-located appliance that effectively always serves a
+# self-signed certificate, so verifying would fail every provisioning call out of the box.
+# Deployments that front InfluxDB with a certificate from a trusted CA should set
+# INFLUXDB_VERIFY_SSL=True.
+
+
+def _influxdb_verify_ssl() -> bool:
+    """Whether to verify TLS certificates when calling the InfluxDB REST API."""
+    return os.getenv("INFLUXDB_VERIFY_SSL", "False").lower() in ("true", "1", "yes")
+
+
+async def _influxdb_request(
+    method: str,
+    endpoint: str,
+    params: Optional[Dict[str, Any]] = None,
+    data: Optional[Dict[str, Any]] = None,
+) -> Any:
+    """
+    Send a request to the InfluxDB v2 REST API using the stored connector credentials.
+
+    Args:
+        method (str): The HTTP method to use.
+        endpoint (str): The API endpoint, e.g. `/api/v2/checks`.
+        params (Optional[Dict[str, Any]]): Optional query string parameters.
+        data (Optional[Dict[str, Any]]): Optional JSON body.
+
+    Returns:
+        Any: The decoded JSON response, or None for empty (204) responses.
+
+    Raises:
+        HTTPException: If InfluxDB is unreachable or returns a non-2xx response.
+    """
+    attributes = await get_influxdb_attributes()
+    url = f"{attributes['connector_url'].rstrip('/')}{endpoint}"
+    headers = {
+        "Authorization": f"Token {attributes['connector_api_key']}",
+        "Content-Type": "application/json",
+    }
+    logger.info(f"Sending {method} request to InfluxDB: {url}")
+    try:
+        async with httpx.AsyncClient(verify=_influxdb_verify_ssl(), timeout=60.0) as client:
+            response = await client.request(
+                method,
+                url,
+                headers=headers,
+                params=params,
+                json=data,
+            )
+    except Exception as e:
+        logger.error(f"Failed to reach InfluxDB at {url}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to reach InfluxDB: {e}",
+        )
+
+    if response.status_code >= 300:
+        logger.error(f"InfluxDB {method} {endpoint} failed ({response.status_code}): {response.text}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"InfluxDB request failed ({response.status_code}): {response.text}",
+        )
+
+    if not response.content:
+        return None
+    return response.json()
+
+
+async def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    """Send a GET request to the InfluxDB v2 REST API."""
+    return await _influxdb_request("GET", endpoint, params=params)
+
+
+async def send_post_request(endpoint: str, data: Dict[str, Any]) -> Any:
+    """Send a POST request to the InfluxDB v2 REST API."""
+    return await _influxdb_request("POST", endpoint, data=data)
+
+
+async def send_put_request(endpoint: str, data: Dict[str, Any]) -> Any:
+    """Send a PUT request to the InfluxDB v2 REST API."""
+    return await _influxdb_request("PUT", endpoint, data=data)
+
+
+async def send_delete_request(endpoint: str) -> Any:
+    """Send a DELETE request to the InfluxDB v2 REST API."""
+    return await _influxdb_request("DELETE", endpoint)
 
 
 # ! RUN A TEST QUERY TO FETCH ALERTS AND VERIFY THE CONNECTION
