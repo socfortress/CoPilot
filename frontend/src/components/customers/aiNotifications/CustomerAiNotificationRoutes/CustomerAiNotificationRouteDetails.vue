@@ -221,7 +221,7 @@ import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
-import { describeRouteDestination } from "./destination"
+import { describeRouteChannel, describeRouteDestination } from "./destination"
 
 const props = defineProps<{
 	entity: NotificationRoute
@@ -262,27 +262,14 @@ const loadingTemplate = ref(false)
 const namedTemplate = ref<NotificationTemplate | null>(null)
 
 const isInternalScope = computed(() => props.scope === "internal" || entity.value.customer_code === null)
-const isWebhook = computed(() => entity.value.channel === "webhook")
 const destination = computed(() => describeRouteDestination(entity.value))
 const hasConfig = computed(() => Object.keys(entity.value.config ?? {}).length > 0)
 
 const triggerLabel = computed(() => TRIGGER_LABELS[entity.value.trigger] ?? entity.value.trigger)
 
-const channelIcon = computed(() => (isWebhook.value ? "carbon:webhook" : "carbon:integration"))
-const channelLabel = computed(() => {
-	if (isWebhook.value) {
-		try {
-			return `Webhook · ${new URL((entity.value.config?.url as string) ?? "").host}`
-		} catch {
-			return "Webhook"
-		}
-	}
-	if (entity.value.channel === "shuffle") {
-		const appName = entity.value.config?.app_name as string | undefined
-		return appName ? `Shuffle · ${appName}` : "Shuffle"
-	}
-	return entity.value.channel
-})
+// Shared with the list row so the two can't disagree about what a route is.
+const channelIcon = computed(() => describeRouteChannel(entity.value).icon)
+const channelLabel = computed(() => describeRouteChannel(entity.value).label)
 
 const severityColor = computed<"danger" | "warning" | "success">(() => {
 	if (entity.value.min_severity === "Critical" || entity.value.min_severity === "High") return "danger"

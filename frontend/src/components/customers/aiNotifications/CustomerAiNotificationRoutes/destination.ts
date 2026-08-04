@@ -17,6 +17,51 @@ export interface RouteDestination {
 	note?: string
 }
 
+export interface RouteChannel {
+	/** Human label, e.g. "Email (Resend)". */
+	label: string
+	/** Iconify name. Only `carbon:`, `mdi:` and `logos:` are bundled. */
+	icon: string
+}
+
+// How a route's channel is named in the UI.
+//
+// This used to be `isWebhook ? "Webhook" : "Shuffle"` — written when those were
+// the only two channels, and duplicated in both the list row and the detail
+// panel. Every channel added since (resend, teams) fell into the else branch and
+// rendered as "Shuffle", so an email route claimed to be a Shuffle one while
+// correctly sending email.
+//
+// The labels mirror each provider's `display_name` in the backend channel
+// catalog. The default branch deliberately names no channel: guessing is what
+// caused the original bug, so an unrecognised key shows itself instead.
+export function describeRouteChannel(route: NotificationRoute): RouteChannel {
+	const config = route.config ?? {}
+
+	switch (route.channel) {
+		case "webhook": {
+			// The host makes a list of webhook routes scannable at a glance.
+			try {
+				return { label: `Webhook · ${new URL((config.url as string) ?? "").host}`, icon: "carbon:webhook" }
+			} catch {
+				return { label: "Webhook", icon: "carbon:webhook" }
+			}
+		}
+		case "resend":
+			return { label: "Email (Resend)", icon: "carbon:email" }
+		case "teams":
+			return { label: "Microsoft Teams", icon: "mdi:microsoft-teams" }
+		case "shuffle": {
+			// Shuffle routes cache the app name on the row at submit time, so
+			// "Shuffle · Slack" needs no extra round-trip.
+			const appName = config.app_name as string | undefined
+			return { label: appName ? `Shuffle · ${appName}` : "Shuffle", icon: "carbon:integration" }
+		}
+		default:
+			return { label: route.channel || "Unknown channel", icon: "carbon:send" }
+	}
+}
+
 export function describeRouteDestination(route: NotificationRoute): RouteDestination {
 	const config = route.config ?? {}
 
