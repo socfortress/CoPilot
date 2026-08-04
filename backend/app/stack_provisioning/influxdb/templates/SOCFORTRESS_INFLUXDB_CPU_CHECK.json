@@ -1,0 +1,78 @@
+{
+    "name": "CPU CHECK",
+    "orgID": "REPLACE_ORG_ID",
+    "type": "threshold",
+    "status": "active",
+    "every": "1m",
+    "offset": "0s",
+    "statusMessageTemplate": "${ r._level }: ${ r._check_name }\nHost: ${r.host}\nCPU Usage(%): ${100.0 - r.usage_idle}",
+    "query": {
+        "text": "from(bucket: \"REPLACE_BUCKET\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"cpu\")\n  |> filter(fn: (r) => r[\"_field\"] == \"usage_idle\")\n  |> filter(fn: (r) => r[\"cpu\"] == \"cpu-total\")\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+        "editMode": "builder",
+        "name": "",
+        "builderConfig": {
+            "buckets": [
+                "REPLACE_BUCKET"
+            ],
+            "tags": [
+                {
+                    "key": "_measurement",
+                    "values": [
+                        "cpu"
+                    ],
+                    "aggregateFunctionType": "filter"
+                },
+                {
+                    "key": "_field",
+                    "values": [
+                        "usage_idle"
+                    ],
+                    "aggregateFunctionType": "filter"
+                },
+                {
+                    "key": "cpu",
+                    "values": [
+                        "cpu-total"
+                    ],
+                    "aggregateFunctionType": "filter"
+                },
+                {
+                    "key": "host",
+                    "values": [],
+                    "aggregateFunctionType": "filter"
+                }
+            ],
+            "functions": [
+                {
+                    "name": "mean"
+                }
+            ],
+            "aggregateWindow": {
+                "period": "1m",
+                "fillValues": false
+            }
+        }
+    },
+    "thresholds": [
+        {
+            "allValues": false,
+            "level": "INFO",
+            "value": 25,
+            "type": "lesser"
+        },
+        {
+            "allValues": false,
+            "level": "WARN",
+            "value": 15,
+            "type": "lesser"
+        },
+        {
+            "allValues": false,
+            "level": "CRIT",
+            "value": 5,
+            "type": "lesser"
+        }
+    ],
+    "tags": [],
+    "labels": []
+}

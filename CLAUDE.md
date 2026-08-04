@@ -237,6 +237,22 @@ Consequence: refreshing CoPilot Searches refreshes the Stories surface; Wazuh ru
 - Frontend supporting files: `src/types/detectionCatalog.d.ts`, `src/api/endpoints/detectionCatalog.ts`
 - Three authorized cross-cutting edits and only these three: nav entry in `app-layouts/common/Navbar/items.tsx`, route in `router/index.ts`, barrel registration in `api/index.ts`. Nothing else outside the catalog namespace should change for this feature.
 
+### Stack provisioning: Graylog content packs and InfluxDB checks
+
+`app/stack_provisioning/` holds two independent provisioners that share a shape (JSON templates on disk + `routes / services / schema`) but nothing else:
+
+- **`graylog/`** — content packs, streams, inputs, pipelines. Templates are Graylog content-pack exports.
+- **`influxdb/`** — the four SOCFortress monitoring checks (CPU, memory, disk, critical systemd services). Templates under `influxdb/templates/` are **literal `POST /api/v2/checks` bodies** with two placeholders, `REPLACE_ORG_ID` and `REPLACE_BUCKET`, substituted at provision time.
+
+Things to keep straight in the InfluxDB half:
+
+- **The connector stores the org *name*, the checks API wants the org *ID*.** `connector_extra_data` is `"ORG,BUCKET"` (e.g. `SOCFORTRESS,telegraf`); `get_influxdb_org_id()` resolves name → ID via `GET /api/v2/orgs` on every provision run. Don't pass the name into a check payload — InfluxDB accepts it and then the check belongs to no org.
+- **`influxdb_client`'s async client exposes only the query and write APIs.** Checks, notification endpoints and notification rules are not on it, so `app/connectors/influxdb/utils/universal.py` carries plain `httpx` helpers (`send_get_request` / `send_post_request` / `send_put_request` / `send_delete_request`) that authenticate with `Authorization: Token <key>`. Anything touching those three APIs goes through them, not the SDK.
+- **Provisioning skips an existing check unless `overwrite=true`.** Stacks are routinely built by hand before CoPilot is pointed at them — `CPU CHECK` in particular usually already exists — and a blind PUT would discard an engineer's tuning. The CPU template is therefore a byte-for-byte copy of the hand-built check so that overwriting it is genuinely a no-op.
+- **No new read path is needed and none should be added.** Checks write their results into InfluxDB's `_monitoring` bucket as the `statuses` measurement, which the pre-existing `GET /influxdb/alerts` already queries — so a provisioned check surfaces in the Healthcheck UI automatically.
+- **A unit that doesn't exist on a host produces no rows, not a false alert**, which is why the critical-services template carries a superset of SOCFortress stack units rather than being tailored per deployment. Don't "fix" it by trimming the list.
+- **Checks alone notify nobody.** InfluxDB only sends anywhere once notification endpoints + rules exist, and CoPilot provisions neither. Creating checks is safe on a live stack.
+
 ### Frontend essentials
 
 - `src/api/httpClient.ts` (axios) and `src/api/sseClient.ts` (`@microsoft/fetch-event-source`) — backend traffic. Wrappers in `src/api/endpoints/`.
