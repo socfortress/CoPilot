@@ -169,6 +169,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatNanosecondsDuration } from "@/utils/formatNanosecondsDuration"
 import type { FlowResult } from "@/types/flow"
 import _pick from "lodash/pick"
 import { NEmpty, NInput, NModal, NPopover, NScrollbar, NTabPane, NTabs } from "naive-ui"
@@ -195,7 +196,7 @@ const EnabledIcon = "ri:check-line"
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
 
-const executionDuration = computed(() => dayjs.duration(flow.execution_duration).humanize())
+const executionDuration = computed(() => formatNanosecondsDuration(flow.execution_duration))
 
 const properties = computed(() => {
 	return _pick(flow, [
