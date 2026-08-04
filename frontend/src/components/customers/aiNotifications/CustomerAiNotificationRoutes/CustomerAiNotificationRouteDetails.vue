@@ -247,6 +247,7 @@ const PlayIcon = "carbon:play"
 const TRIGGER_LABELS: Record<NotificationTrigger, string> = {
 	alert_created: "Alert created",
 	investigation_complete: "AI investigation complete",
+	ai_report_reviewed: "AI report reviewed",
 	alert_assigned: "Alert assigned",
 	case_assigned: "Case assigned",
 	case_task_assigned: "Case task assigned"

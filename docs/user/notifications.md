@@ -61,6 +61,7 @@ If you expected an AI notification and didn't get one, that line is the first th
 |---|---|
 | To know an alert happened, immediately | An alert is created |
 | The AI's conclusions about an alert | An AI investigation completes |
+| The AI's conclusions, but only once an analyst has checked them | An AI report is reviewed |
 | Both (two messages) | Two routes, one of each |
 
 ---
@@ -81,6 +82,16 @@ If you expected an AI notification and didn't get one, that line is the first th
 | **An alert is assigned** | An alert's assignee changes |
 | **A case is assigned** | A case's assignee changes |
 | **A case task is assigned** | A task within a case is assigned |
+
+### Both
+
+| Trigger | Fires when |
+|---|---|
+| **An AI report is reviewed** | An analyst submits a review of an AI investigation. Once per alert — a second reviewer or a revision does not re-notify. |
+
+This is the only trigger offered on **both** customer and internal routes, because analyst sign-off is legitimately both audiences' business. It's what lets you hold customer delivery until a human has checked the AI's work — see [Two audiences, two moments](#two-audiences-two-moments).
+
+It counts as AI-written content, so a customer-facing review route is governed by the same *Customers → (customer) → AI Report* opt-in as the rest. An internal route is not: if the switch is off, the customer's route is suppressed and **your internal one still fires**.
 
 Assignment triggers only fire on an **actual change**. Re-saving the same assignee sends nothing. By default, assigning something to *yourself* also sends nothing — there's a per-route **Notify on self-assign** option if your team wants the audit trail anyway.
 
@@ -195,12 +206,16 @@ Leave the template empty so CoPilot sends its structured JSON object. A template
 
 ### Two audiences, two moments
 
-Internal first, customer only after a human has checked it:
+Internal first, customer only after a human has checked it. This is the configuration the *An AI report is reviewed* trigger exists for:
 
-- **Route A** — internal, *An AI investigation completes*, Teams. Your team sees every investigation the moment it lands.
-- **Route B** — customer, *An AI investigation completes*, email, full-report template. The customer gets the same finding.
+- **Route A** — **internal**, *An AI investigation completes*, Teams. Your team sees every investigation the moment it lands, unreviewed.
+- **Route B** — **customer**, *An AI report is reviewed*, email, full-report template. The customer hears nothing until an analyst has signed off in *AI Analyst → (report) → Review*.
 
-If you want Route B to wait for analyst sign-off, that's the `ai_report_reviewed` trigger — **currently not selectable in the interface**, tracked in [#1053](https://github.com/socfortress/CoPilot/issues/1053).
+Nothing reaches the customer automatically; the analyst's review is the release gate.
+
+*An AI report is reviewed* is the **only trigger available on both scopes**, so you can also run a third route — internal, same trigger — if your team wants a record of who signed off on what.
+
+A review fires the notification **once per alert**. A second reviewer, or someone revising their own review, does not re-notify.
 
 ---
 
@@ -390,6 +405,7 @@ Available variables:
 | `{{ trigger }}` | Which trigger fired this |
 | `{{ assignee }}` / `{{ actor }}` | Assignment triggers only |
 | `{{ context.… }}` | Per-event extras — `context.asset_name`, `context.rule_level`, `context.iocs` |
+| `{{ context.reviewer }}` / `{{ context.verdict }}` | Review trigger only — who signed off, and their verdict |
 | `{{ branding.… }}` | Customer logo and brand colours — `logo`, `title`, `accent`, `accent_strong`, `accent_text` |
 | `{{ context.ai_report.… }}` | The AI investigation report — see below |
 
@@ -427,7 +443,7 @@ The report is only fetched when a template mentions `ai_report`, so templates th
 
 ### Built-in templates
 
-Six ship with every deployment, as working starting points and as worked examples of the syntax:
+Seven ship with every deployment, as working starting points and as worked examples of the syntax:
 
 | Template | For |
 |---|---|
@@ -435,6 +451,7 @@ Six ship with every deployment, as working starting points and as worked example
 | **Alert — detailed with IOCs** | Full context including indicators |
 | **Assignment — who and what** | Internal routes |
 | **AI investigation — customer summary** | Plain-language wrap-up for the end customer |
+| **AI report reviewed — sign-off** | Who reviewed an investigation and what they concluded |
 | **AI investigation — full report (HTML email)** | The complete write-up with rendered tables, in the customer's brand colours |
 | **Branded email — HTML** | A branded shell for any trigger |
 
@@ -528,6 +545,7 @@ Both are opt-in, so this only happens if you set up both. The route form warns y
 |---|---|
 | An alert is created | Customer |
 | An AI investigation completes | Customer |
+| An AI report is reviewed | **Customer and internal** |
 | An alert / case / case task is assigned | Internal |
 
 ### Channel capabilities

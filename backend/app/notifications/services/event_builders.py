@@ -114,6 +114,8 @@ def ai_report_reviewed_event(
     summary: str,
     reviewer: Optional[str] = None,
     verdict: Optional[str] = None,
+    alert_name: Optional[str] = None,
+    asset_name: Optional[str] = None,
 ) -> NotificationEvent:
     """An analyst signed off on an AI report.
 
@@ -124,19 +126,32 @@ def ai_report_reviewed_event(
 
     Keyed on the alert, not the report: "this alert's findings have been
     reviewed" happens once. A second reviewer, or a revision, does not re-notify.
+
+    This trigger resolves against **both** scopes (`DUAL_SCOPE_TRIGGERS`), so one
+    sign-off can reach an internal route and a customer-facing one through
+    separate routes. The customer half is still governed by the #1014 opt-out.
     """
     return NotificationEvent(
         customer_code=customer_code,
         trigger=NotificationTrigger.AI_REPORT_REVIEWED,
+        # The alert's own name when we have it. `Reviewed: alert #14` was the
+        # only thing a recipient saw before, which is unreadable in a channel
+        # that carries several customers.
+        subject=f"Reviewed: {alert_name}" if alert_name else f"Reviewed: alert #{alert_id}",
         severity=_coerce_severity(severity),
-        subject=f"Reviewed: alert #{alert_id}",
         summary=summary,
         entity_type=EntityType.ALERT,
         entity_id=alert_id,
         dedupe_key=f"{EntityType.ALERT}:{alert_id}:{NotificationTrigger.AI_REPORT_REVIEWED.value}",
         link_url=_copilot_link(f"/alerts/{alert_id}"),
         actor_username=reviewer,
-        context={"report_id": report_id, "reviewer": reviewer, "verdict": verdict},
+        context={
+            "report_id": report_id,
+            "reviewer": reviewer,
+            "verdict": verdict,
+            "alert_name": alert_name,
+            "asset_name": asset_name,
+        },
     )
 
 

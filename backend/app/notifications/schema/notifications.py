@@ -155,6 +155,27 @@ INTERNAL_TRIGGERS: frozenset = frozenset(
 )
 
 
+# Triggers that resolve against BOTH scopes, so one event can reach the SOC and
+# the customer through separate routes.
+#
+# Every other trigger is one or the other: an assignment is about who is working
+# on something and never leaves the SOC; an alert or an investigation is about
+# the customer's posture and goes to them. Analyst sign-off is the first event
+# that is legitimately both — the SOC wants to know a report was reviewed, and
+# the customer's route is precisely the one an operator wants to hold back until
+# a human has checked it (#1053).
+#
+# Membership here is a scope *widening*: a dual-scope trigger still obeys every
+# other filter, and the #1014 AI opt-out still applies to its customer-scope
+# half. `dispatch_event` gates per route rather than per batch, which is what
+# makes that work without further change.
+DUAL_SCOPE_TRIGGERS: frozenset = frozenset(
+    {
+        "ai_report_reviewed",
+    },
+)
+
+
 AI_SOURCED_TRIGGERS: frozenset = frozenset(
     {
         "investigation_complete",
