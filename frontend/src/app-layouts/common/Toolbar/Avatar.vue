@@ -9,7 +9,7 @@ import { NAvatar, NDropdown } from "naive-ui"
 import { h, ref } from "vue"
 import { useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
-import { renderIcon } from "@/utils"
+import { getContactLink, getDocumentationLink, renderIcon } from "@/utils"
 
 const UserIcon = "ion:person-outline"
 const LicenseIcon = "carbon:license"
@@ -28,6 +28,8 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const userPic = authStore.userPic
+const documentationLink = getDocumentationLink()
+const contactLink = getContactLink()
 
 const options = ref([
 	{
@@ -110,11 +112,11 @@ const options = ref([
 			h(
 				"a",
 				{
-					href: "https://docs.socfortress.co/",
+					href: documentationLink.url,
 					target: "_blank",
 					rel: "noopener noreferrer"
 				},
-				"Documentation"
+				documentationLink.label
 			),
 		key: "documentation",
 		icon: renderIcon(DocsIcon)
@@ -124,11 +126,11 @@ const options = ref([
 			h(
 				"a",
 				{
-					href: "https://www.socfortress.co/contact-us",
+					href: contactLink.url,
 					target: "_blank",
 					rel: "noopener noreferrer"
 				},
-				"Contact SOCFortress"
+				contactLink.label
 			),
 		key: "contact-socfortress",
 		icon: renderIcon(ContactIcon)

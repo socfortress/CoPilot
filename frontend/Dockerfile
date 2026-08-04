@@ -55,6 +55,11 @@ ENV TLS_KEY_PATH=/etc/nginx/certs.d/server.key
 COPY build/docker-entrypoint.d/90-copilot-ssl.sh /docker-entrypoint.d/90-copilot-ssl.sh
 RUN chmod +x /docker-entrypoint.d/90-copilot-ssl.sh
 
+# Runtime configuration: rewrites /config.js from env on every start, so the user-menu links
+# stay configurable on a prebuilt image. Must run after the static files are in place.
+COPY build/docker-entrypoint.d/91-copilot-runtime-config.sh /docker-entrypoint.d/91-copilot-runtime-config.sh
+RUN chmod +x /docker-entrypoint.d/91-copilot-runtime-config.sh
+
 # Setup template
 RUN mkdir /etc/nginx/templates
 COPY build/etc/nginx/sites-enabled/default.conf /etc/nginx/templates/default.conf.template

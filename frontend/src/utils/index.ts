@@ -126,6 +126,71 @@ export function getBaseUrl() {
 	return _trim(import.meta.env.VITE_API_URL, "/")
 }
 
+export interface ExternalLink {
+	label: string
+	url: string
+}
+
+/**
+ * Where the external entries in the user menu point. The contact default is the SOCFortress
+ * pre-sale form, which suits a demo but not a production deployment whose operators want bug
+ * reports to land somewhere they control — see #1051.
+ */
+export const EXTERNAL_LINK_DEFAULTS = {
+	documentation: { label: "Documentation", url: "https://docs.socfortress.co/" },
+	contact: { label: "Contact SOCFortress", url: "https://www.socfortress.co/contact-us" }
+} as const
+
+/** Only http(s) is accepted, so a malformed or hostile override cannot become a `javascript:` URL. */
+function isSafeHttpUrl(value: string): boolean {
+	try {
+		const { protocol } = new URL(value)
+		return protocol === "http:" || protocol === "https:"
+	} catch {
+		return false
+	}
+}
+
+function resolveExternalLink(fallback: ExternalLink, label?: string, url?: string): ExternalLink {
+	const candidateUrl = _trim(url)
+
+	return {
+		label: _trim(label) || fallback.label,
+		url: isSafeHttpUrl(candidateUrl) ? candidateUrl : fallback.url
+	}
+}
+
+/**
+ * Resolution order is runtime config → build-time env → compiled-in default.
+ *
+ * The runtime layer is what makes these configurable on the published image: `/config.js` is
+ * regenerated from container environment variables on every start, whereas `VITE_*` values are
+ * substituted at build time and therefore frozen for anyone who pulls rather than builds.
+ */
+function getRuntimeConfig(): CopilotRuntimeConfig | undefined {
+	return typeof window === "undefined" ? undefined : window.__COPILOT_CONFIG__
+}
+
+export function getDocumentationLink(): ExternalLink {
+	const runtime = getRuntimeConfig()
+
+	return resolveExternalLink(
+		EXTERNAL_LINK_DEFAULTS.documentation,
+		runtime?.documentationLabel ?? import.meta.env.VITE_DOCUMENTATION_LABEL,
+		runtime?.documentationUrl ?? import.meta.env.VITE_DOCUMENTATION_URL
+	)
+}
+
+export function getContactLink(): ExternalLink {
+	const runtime = getRuntimeConfig()
+
+	return resolveExternalLink(
+		EXTERNAL_LINK_DEFAULTS.contact,
+		runtime?.contactLabel ?? import.meta.env.VITE_CONTACT_LABEL,
+		runtime?.contactUrl ?? import.meta.env.VITE_CONTACT_URL
+	)
+}
+
 export function getNameInitials(name: string, cap?: number) {
 	let initials = name.slice(0, 2)
 
