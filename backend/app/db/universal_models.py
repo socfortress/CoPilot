@@ -996,14 +996,19 @@ class CustomerNotificationRoute(SQLModel, table=True):
     updated_at: Optional[datetime] = Field(default=None)
 
     customer: Optional["Customers"] = Relationship()
-    # NB: no `back_populates` on the reverse relationships below. The
-    # dispatch service never traverses these — but with back_populates
-    # configured, SQLAlchemy fires implicit synchronous loads on the
-    # parent collections during flush() to keep the in-session graph in
-    # sync, which throws MissingGreenlet under AsyncSession. One-way
-    # foreign keys are fine here; we walk them via explicit queries
-    # (`session.get(...)`) when we need them.
-    dispatches: list["NotificationDispatchLog"] = Relationship(sa_relationship_kwargs={"overlaps": "route"})
+    # NB: no `back_populates` on the reverse relationship below. The dispatch
+    # service never traverses it — but with back_populates configured,
+    # SQLAlchemy fires implicit synchronous loads on the parent collections
+    # during flush() to keep the in-session graph in sync, which throws
+    # MissingGreenlet under AsyncSession. One-way foreign keys are fine here; we
+    # walk them via explicit queries (`session.get(...)`) when we need them.
+    #
+    # There is deliberately no `dispatches` collection. It was never traversed,
+    # and its mere existence broke route deletion: on `session.delete(route)`
+    # SQLAlchemy loaded the collection and tried to de-associate each row by
+    # setting `notification_dispatch_log.route_id = NULL`, which that column
+    # forbids. The log intentionally outlives the route that wrote it (#1057),
+    # so there is no parent/child lifecycle to model.
     shuffle_integration: Optional["CustomerShuffleIntegration"] = Relationship(sa_relationship_kwargs={"overlaps": "routes"})
 
 
@@ -1098,11 +1103,22 @@ class NotificationDispatchLog(SQLModel, table=True):
     # for pre-existing rows, which reproduces the old tuple's meaning exactly.
     dedupe_key: str = Field(max_length=255, nullable=False, index=True)
 
-    route_id: int = Field(
-        foreign_key="customer_notification_route.id",
-        nullable=False,
-        index=True,
-    )
+    # Deliberately NOT a foreign key, following the same convention as
+    # `incident_management_*.customer_code`, `monitoring_alerts` and
+    # `customer_integrations`: a plain indexed column whose orphans are
+    # tolerated by design.
+    #
+    # The log is an append-only record of what was sent to whom, not a live
+    # relational entity — deleting a route must not erase the history of what
+    # that route already delivered, and "Dispatch log entries will be retained"
+    # is what the delete dialog promises. With a real FK that promise was
+    # impossible: the constraint was ON DELETE NO ACTION, so MySQL refused the
+    # delete outright, and the ORM's default nullify-on-delete hit this column's
+    # NOT NULL first. See #1057.
+    #
+    # NOT NULL is kept so attribution survives: an orphaned row still records
+    # which route sent it, which is exactly what an egress audit trail needs.
+    route_id: int = Field(nullable=False, index=True)
     trigger: str = Field(max_length=64, nullable=False)
 
     dispatched_at: datetime = Field(default_factory=datetime.utcnow, index=True)
@@ -1138,10 +1154,10 @@ class NotificationDispatchLog(SQLModel, table=True):
     # Was `shuffle_execution_id`; renamed once a second channel needed the slot.
     provider_reference: Optional[str] = Field(default=None, max_length=128)
 
-    # See note on CustomerNotificationRoute.dispatches — back_populates
-    # removed deliberately to keep AsyncSession flush() synchronous-IO-free.
-    # `overlaps` makes the deliberate one-way nature explicit to SQLAlchemy 2.
-    route: Optional["CustomerNotificationRoute"] = Relationship(sa_relationship_kwargs={"overlaps": "dispatches"})
+    # No `route` relationship either. `route_id` is no longer a foreign key, so
+    # SQLAlchemy has no join condition to infer — and a log row deliberately
+    # survives its route, which makes "the route this belongs to" a question
+    # that can have no answer. Callers that need the route look it up by id.
 
 
 class CustomerShuffleIntegration(SQLModel, table=True):
