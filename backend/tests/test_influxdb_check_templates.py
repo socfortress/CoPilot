@@ -16,6 +16,7 @@ Run with: cd backend && python -m pytest tests/test_influxdb_check_templates.py
 
 import json
 import os
+import re
 from pathlib import Path
 
 import pytest
@@ -103,6 +104,63 @@ def test_cpu_template_matches_the_hand_built_check():
         ("WARN", 15, "lesser"),
         ("CRIT", 5, "lesser"),
     ]
+
+
+"""The units the critical-services check watches.
+
+Adding a unit here is NOT free. Telegraf reports inactive units too, so a unit that is
+installed-but-stopped — or that systemd carries as a `not-found` stub because something
+else references it — reports active_code=2 and trips the `> 0` CRIT threshold. On a
+role-split deployment (soc-grfna01 runs Grafana, not InfluxDB) that is a false critical
+alert; influxdb.service was removed from this list for exactly that reason. Only add a
+unit that genuinely runs on every host reporting to this InfluxDB.
+"""
+WATCHED_UNITS = {
+    "graylog-server.service",
+    "grafana-server.service",
+    "mongod.service",
+    "nginx.service",
+    "socfortress-wazuh-utils.service",
+    "socfortress-workerprovisioning.service",
+    "telegraf.service",
+    "velociraptor_server.service",
+    "wazuh-dashboard.service",
+    "wazuh-indexer.service",
+    "wazuh-manager.service",
+    "haproxy.service",
+    "fluent-bit.service",
+    "docker.service",
+}
+
+
+def test_critical_services_watch_list_is_exactly_the_agreed_set():
+    query = _load(AvailableInfluxDBChecks.SOCFORTRESS_INFLUXDB_CRITICAL_SERVICES_CHECK.name)["query"]["text"]
+    watched = set(re.findall(r'"name"\]\s*==\s*"([^"]+)"', query))
+    assert watched == WATCHED_UNITS
+
+
+def test_influxdb_service_is_not_watched():
+    """Regression for the false CRIT on soc-grfna01: InfluxDB is a single-host role, so
+    every other host in the stack reports the unit as inactive or not-found."""
+    query = _load(AvailableInfluxDBChecks.SOCFORTRESS_INFLUXDB_CRITICAL_SERVICES_CHECK.name)["query"]["text"]
+    assert "influxdb.service" not in query
+
+
+def test_critical_services_alerts_on_failed_not_on_stopped():
+    """The load-bearing assertion for role-split stacks.
+
+    Telegraf's active_code is active=0, reloading=1, inactive=2, failed=3, activating=4,
+    deactivating=5. Most watched units are legitimately stopped (2) on any given host
+    because no host runs every service, and systemd `not-found` stubs also report 2. A
+    `> 0` threshold therefore CRITs on every service a host does not own — which is the
+    bug this pins. Only a failed unit (3) may alert.
+    """
+    thresholds = _load(AvailableInfluxDBChecks.SOCFORTRESS_INFLUXDB_CRITICAL_SERVICES_CHECK.name)["thresholds"]
+    assert len(thresholds) == 1
+    threshold = thresholds[0]
+    assert threshold["level"] == "CRIT"
+    assert threshold["type"] == "greater"
+    assert threshold["value"] == 2, "an inactive unit (active_code=2) must not raise a critical alert"
 
 
 @pytest.mark.parametrize(

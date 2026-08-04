@@ -30,8 +30,9 @@ class AvailableInfluxDBChecks(str, Enum):
     )
     SOCFORTRESS_INFLUXDB_CRITICAL_SERVICES_CHECK = (
         "Threshold check on the critical SIEM stack systemd units (`systemd_units`/`active_code`)."
-        " Raises CRIT the moment a watched unit reports any state other than active, evaluated"
-        " every minute per host and unit."
+        " Raises CRIT when a watched unit reports failed, evaluated every minute per host and unit."
+        " A unit that is stopped by design is deliberately ignored, so the check is safe on a"
+        " role-split stack where not every host runs every service."
     )
 
 
