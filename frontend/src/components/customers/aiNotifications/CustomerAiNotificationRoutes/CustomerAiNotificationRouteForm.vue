@@ -595,9 +595,16 @@ const headerPairs = ref<{ key: string; value: string }[]>(
 // route with an assignment trigger would be dead config: assignments resolve
 // against internal routes, so it could never fire. Offering it would be an
 // invitation to create something that silently does nothing.
+// `ai_report_reviewed` appears in BOTH lists on purpose — it is the one trigger
+// that resolves against both scopes. Running an internal route on submission and
+// a customer-facing route only after a human has signed off is the configuration
+// it exists for, and expressing that needs the option on both sides.
+const REVIEW_TRIGGER_OPTION = { label: "An AI report is reviewed", value: "ai_report_reviewed" }
+
 const CUSTOMER_TRIGGER_OPTIONS = [
 	{ label: "An alert is created", value: "alert_created" },
 	{ label: "An AI investigation completes", value: "investigation_complete" },
+	REVIEW_TRIGGER_OPTION,
 	// Legacy value kept selectable so editing an old route doesn't blank the
 	// field; the backend coerces it to investigation_complete on read.
 	{ label: "Critical / High severity only (legacy)", value: "severity_critical_or_high" }
@@ -606,7 +613,8 @@ const CUSTOMER_TRIGGER_OPTIONS = [
 const INTERNAL_TRIGGER_OPTIONS = [
 	{ label: "An alert is assigned", value: "alert_assigned" },
 	{ label: "A case is assigned", value: "case_assigned" },
-	{ label: "A case task is assigned", value: "case_task_assigned" }
+	{ label: "A case task is assigned", value: "case_task_assigned" },
+	REVIEW_TRIGGER_OPTION
 ]
 
 const triggerOptions = computed(() => (isInternalScope.value ? INTERNAL_TRIGGER_OPTIONS : CUSTOMER_TRIGGER_OPTIONS))

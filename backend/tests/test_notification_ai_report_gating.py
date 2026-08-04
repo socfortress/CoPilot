@@ -224,3 +224,89 @@ def test_internal_routes_are_not_gated():
 
     assert webhook.await_count == 1
     assert response.dispatched == 1
+
+
+# ── mixed-scope batches (#1053) ───────────────────────────────────────────
+#
+# `ai_report_reviewed` resolves against BOTH scopes, so one event can match an
+# internal route and a customer route at once. That makes the per-route shape of
+# the gate load-bearing rather than theoretical: suppressing the customer half
+# must not touch the SOC's own notification.
+
+
+def _review_event():
+    from app.notifications.services.event_builders import ai_report_reviewed_event
+
+    return ai_report_reviewed_event(
+        alert_id=42,
+        report_id=3,
+        customer_code=CUSTOMER,
+        severity="Medium",
+        summary="An analyst reviewed the AI investigation for this alert.",
+        reviewer="asmith",
+        verdict="up",
+        alert_name="Mimikatz signature",
+    )
+
+
+def _dispatch_review(routes, *, ai_enabled):
+    """Same seams as `_dispatch`, but for a dual-scope review event."""
+    for route in routes:
+        route.trigger = NotificationTrigger.AI_REPORT_REVIEWED.value
+
+    with (
+        patch.object(svc, "routes_for_event", AsyncMock(return_value=routes)),
+        patch.object(svc, "is_ai_reports_enabled", AsyncMock(return_value=ai_enabled)),
+        patch.object(svc, "_record_log", AsyncMock(return_value=True)) as record,
+        patch.object(
+            type(CHANNEL_REGISTRY["webhook"]),
+            "send",
+            AsyncMock(return_value=SendResult(status="sent", latency_ms=12)),
+        ) as webhook,
+        patch.object(type(CHANNEL_REGISTRY["webhook"]), "after_send", AsyncMock()),
+    ):
+        response = asyncio.run(svc.dispatch_event(_review_event(), AsyncMock()))
+    return response, record, webhook
+
+
+def test_suppressing_the_customer_half_still_delivers_the_internal_half():
+    """The bug this guards against: the gate used to `return` outright, which
+    aborted the whole dispatch. On a mixed batch that silently took the SOC's
+    own notification down alongside the customer's — the exact opposite of what
+    the opt-out is for, since keeping findings internal is the configuration an
+    operator chose when they left the switch off."""
+    internal = _route(route_id=1, name="SOC review", scope="internal")
+    customer = _route(route_id=2, name="Customer review", scope="customer")
+
+    response, _record, webhook = _dispatch_review([internal, customer], ai_enabled=False)
+
+    assert webhook.await_count == 1, "the internal route should still have been delivered"
+    assert response.dispatched == 1
+    assert response.skipped == 1
+
+    statuses = {o.route_id: o.status for o in response.outcomes}
+    assert statuses[1] == DispatchStatus.SENT
+    assert statuses[2] == DispatchStatus.SKIPPED
+
+
+def test_both_halves_deliver_when_the_customer_is_opted_in():
+    internal = _route(route_id=1, name="SOC review", scope="internal")
+    customer = _route(route_id=2, name="Customer review", scope="customer")
+
+    response, _record, webhook = _dispatch_review([internal, customer], ai_enabled=True)
+
+    assert webhook.await_count == 2
+    assert response.dispatched == 2
+    assert response.skipped == 0
+
+
+def test_a_suppressed_customer_only_batch_still_reports_what_matched():
+    """`routes_matched` counts everything that matched, including suppressed
+    routes. `emit` logs "no route is configured for this trigger" when it is
+    zero, so under-reporting here would blame a missing route for what is
+    actually a deliberate opt-out."""
+    response, _record, webhook = _dispatch_review([_route(scope="customer")], ai_enabled=False)
+
+    assert webhook.await_count == 0
+    assert response.routes_matched == 1
+    assert response.skipped == 1

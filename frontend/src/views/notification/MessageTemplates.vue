@@ -113,6 +113,7 @@ const formKey = ref(0)
 const triggerOptions = [
 	{ label: "Alert created", value: "alert_created" },
 	{ label: "AI investigation complete", value: "investigation_complete" },
+	{ label: "AI report reviewed", value: "ai_report_reviewed" },
 	{ label: "Alert assigned", value: "alert_assigned" },
 	{ label: "Case assigned", value: "case_assigned" },
 	{ label: "Case task assigned", value: "case_task_assigned" }

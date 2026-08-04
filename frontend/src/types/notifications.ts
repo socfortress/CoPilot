@@ -12,8 +12,18 @@
 // Triggers split by which routes they resolve against. The assignment triggers
 // are INTERNAL: they're about who is working on something, so they reach the
 // SOC's own routes and never a customer's channel.
+//
+// `ai_report_reviewed` is the exception to that split — it resolves against
+// BOTH scopes, so one sign-off can reach the SOC and the customer through
+// separate routes. It is therefore in neither list below: it is not internal-
+// only, and `isInternalTrigger` must keep returning false for it.
 export type NotificationTrigger =
-	"investigation_complete" | "alert_created" | "alert_assigned" | "case_assigned" | "case_task_assigned"
+	| "investigation_complete"
+	| "ai_report_reviewed"
+	| "alert_created"
+	| "alert_assigned"
+	| "case_assigned"
+	| "case_task_assigned"
 
 export const INTERNAL_TRIGGERS: NotificationTrigger[] = ["alert_assigned", "case_assigned", "case_task_assigned"]
 

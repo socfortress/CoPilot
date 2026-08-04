@@ -39,6 +39,7 @@ from app.ai_analyst.schema.ai_analyst import SubmitReviewRequest
 from app.ai_analyst.schema.ai_analyst import SubmitReviewResponse
 from app.ai_analyst.schema.ai_analyst import UpdateJobRequest
 from app.ai_analyst.schema.ai_analyst import UpdateJobResponse
+from app.auth.models.users import User
 from app.db.universal_models import AiAnalystIoc
 from app.db.universal_models import AiAnalystIocReview
 from app.db.universal_models import AiAnalystJob
@@ -263,6 +264,22 @@ async def _alert_display_fields(alert_id: int, session: AsyncSession) -> tuple[O
     except Exception as e:  # noqa: BLE001 — decoration must never fail the write-back
         logger.warning(f"Could not resolve display fields for alert {alert_id}: {type(e).__name__}: {e}")
         return (None, None)
+
+
+async def _username_for(user_id: int, session: AsyncSession) -> Optional[str]:
+    """A reviewer's username, falling back to their id as a string.
+
+    Never raises, for the same reason as `_alert_display_fields`: the review is
+    already committed by the time this runs, and failing to label a notification
+    must not turn a successful submission into a 500. The fallback reproduces
+    the old behaviour rather than dropping the field entirely.
+    """
+    try:
+        user = await session.get(User, user_id)
+        return getattr(user, "username", None) or str(user_id)
+    except Exception as e:  # noqa: BLE001 — decoration must never fail the review
+        logger.warning(f"Could not resolve username for user {user_id}: {type(e).__name__}: {e}")
+        return str(user_id)
 
 
 async def submit_report(request: SubmitReportRequest, session: AsyncSession) -> SubmitReportResponse:
@@ -653,6 +670,7 @@ async def submit_review(
     # review is not a new sign-off. Lets an operator run an internal route on
     # report submission and a customer-facing route only after review.
     if not is_edit:
+        alert_name, asset_name = await _alert_display_fields(report.alert_id, session)
         emit(
             ai_report_reviewed_event(
                 alert_id=report.alert_id,
@@ -660,8 +678,12 @@ async def submit_review(
                 customer_code=report.customer_code,
                 severity=report.severity_assessment,
                 summary=report.summary or "An analyst reviewed the AI investigation for this alert.",
-                reviewer=str(reviewer_user_id),
+                # The reviewer's name, not their row id. This used to send
+                # `str(reviewer_user_id)`, so a notification read "Reviewed by: 3".
+                reviewer=await _username_for(reviewer_user_id, session),
                 verdict=request.overall_verdict.value if request.overall_verdict else None,
+                alert_name=alert_name,
+                asset_name=asset_name,
             ),
         )
     return SubmitReviewResponse(

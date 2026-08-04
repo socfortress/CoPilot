@@ -94,6 +94,13 @@ const AI_REPORT_VARIABLES: TemplateVariable[] = [
 	}
 ]
 
+// Set only by the analyst sign-off trigger.
+const REVIEW_VARIABLES: TemplateVariable[] = [
+	{ name: "context.reviewer", description: "Username of the analyst who signed off.", example: "asmith" },
+	{ name: "context.verdict", description: "Their overall verdict, when they gave one.", example: "up" },
+	{ name: "context.report_id", description: "Id of the report that was reviewed." }
+]
+
 const ASSIGNMENT_TRIGGERS: NotificationTrigger[] = ["alert_assigned", "case_assigned", "case_task_assigned"]
 
 /** Variables worth showing for a given trigger, most relevant first. */
@@ -102,10 +109,12 @@ export function variablesForTrigger(trigger: NotificationTrigger | null): Templa
 	// and a manual send can attach one to any alert. Assignment triggers never
 	// do, so listing it there would invite a template with a permanent hole.
 	const specific = !trigger
-		? [...ASSIGNMENT_VARIABLES, ...ALERT_VARIABLES, ...AI_REPORT_VARIABLES]
+		? [...ASSIGNMENT_VARIABLES, ...ALERT_VARIABLES, ...AI_REPORT_VARIABLES, ...REVIEW_VARIABLES]
 		: ASSIGNMENT_TRIGGERS.includes(trigger)
 			? ASSIGNMENT_VARIABLES
-			: [...ALERT_VARIABLES, ...AI_REPORT_VARIABLES]
+			: trigger === "ai_report_reviewed"
+				? [...REVIEW_VARIABLES, ...ALERT_VARIABLES, ...AI_REPORT_VARIABLES]
+				: [...ALERT_VARIABLES, ...AI_REPORT_VARIABLES]
 
 	return [...specific, ...COMMON_VARIABLES, ...LEGACY_ALIASES]
 }

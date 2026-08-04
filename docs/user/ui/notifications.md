@@ -28,7 +28,7 @@ Things your SOC should know about: who picked up which alert. These belong to no
 
 **Message templates** — *Notifications → Message Templates* (admin only)
 
-Reusable message bodies shared across routes. Six built-ins ship as working starting points; duplicate one to get an editable copy.
+Reusable message bodies shared across routes. Seven built-ins ship as working starting points; duplicate one to get an editable copy.
 
 ## The two things that catch people
 

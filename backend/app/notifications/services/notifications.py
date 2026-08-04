@@ -26,7 +26,9 @@ from uuid import uuid4
 from fastapi import HTTPException
 from loguru import logger
 from pydantic import ValidationError as PydanticValidationError
+from sqlalchemy import and_
 from sqlalchemy import desc
+from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
@@ -46,6 +48,7 @@ from app.notifications.schema.events import EntityType
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.schema.events import event_from_dispatch_request
 from app.notifications.schema.notifications import AI_SOURCED_TRIGGERS
+from app.notifications.schema.notifications import DUAL_SCOPE_TRIGGERS
 from app.notifications.schema.notifications import INTERNAL_TRIGGERS
 from app.notifications.schema.notifications import SEVERITY_ORDER
 from app.notifications.schema.notifications import DispatchOutcome
@@ -828,6 +831,27 @@ def _format_default_body_core(event: NotificationEvent) -> str:
             parts.extend(["", f"Open in CoPilot: {event.link_url}"])
         return "\n".join(parts)
 
+    if trig == NotificationTrigger.AI_REPORT_REVIEWED.value:
+        # Its own wording rather than falling through to the investigation
+        # branch, which would announce "AI investigation complete" for the
+        # second time about the same alert and bury what actually changed —
+        # that a human has now checked it.
+        parts = [
+            f"*AI report reviewed* — severity: *{event.severity.value}*",
+            "",
+            f"Customer: `{event.customer_code}`",
+            f"Alert: #{event.entity_id}" + (f" — {ctx.get('alert_name')}" if ctx.get("alert_name") else ""),
+        ]
+        if ctx.get("reviewer"):
+            parts.append(f"Reviewed by: {ctx['reviewer']}")
+        if ctx.get("verdict"):
+            parts.append(f"Verdict: {ctx['verdict']}")
+        if event.summary:
+            parts.extend(["", event.summary.strip()])
+        if event.link_url:
+            parts.extend(["", f"Open in CoPilot: {event.link_url}"])
+        return "\n".join(parts)
+
     # investigation_complete — unchanged wording, existing customers see this.
     alert_name = ctx.get("alert_name")
     parts = [
@@ -1213,17 +1237,33 @@ async def routes_for_event(event: NotificationEvent, session: AsyncSession) -> L
     an assignment is about *who is working on something*, so it resolves against
     internal routes and never reaches the customer whose alert it was. Anything
     else is about the customer's security posture and resolves against theirs.
+
+    **Dual-scope triggers resolve against both pools** (#1053). Analyst sign-off
+    is the first event that is legitimately internal *and* customer-facing: the
+    SOC wants to know a report was reviewed, and the customer's route is exactly
+    the one an operator wants held back until a human has checked it.
+
+    The tenant filter applies only to the customer half. Internal routes belong
+    to no tenant, so filtering them by `customer_code` would return nothing —
+    which is the bug this shape exists to avoid.
     """
-    if event.trigger.value in INTERNAL_TRIGGERS:
-        stmt = select(CustomerNotificationRoute).where(
-            CustomerNotificationRoute.scope == NotificationScope.INTERNAL.value,
-        )
+    trigger = event.trigger.value
+    internal_clause = CustomerNotificationRoute.scope == NotificationScope.INTERNAL.value
+    customer_clause = and_(
+        CustomerNotificationRoute.scope == NotificationScope.CUSTOMER.value,
+        CustomerNotificationRoute.customer_code == event.customer_code,
+    )
+
+    if trigger in INTERNAL_TRIGGERS:
+        where = internal_clause
+    elif trigger in DUAL_SCOPE_TRIGGERS:
+        where = or_(internal_clause, customer_clause)
     else:
-        stmt = select(CustomerNotificationRoute).where(
-            CustomerNotificationRoute.scope == NotificationScope.CUSTOMER.value,
-            CustomerNotificationRoute.customer_code == event.customer_code,
-        )
-    result = await session.execute(stmt.order_by(desc(CustomerNotificationRoute.created_at)))
+        where = customer_clause
+
+    result = await session.execute(
+        select(CustomerNotificationRoute).where(where).order_by(desc(CustomerNotificationRoute.created_at)),
+    )
     return result.scalars().all()
 
 
@@ -1281,9 +1321,13 @@ async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> Dis
     # Only customer-facing routes are gated. Internal routes are deliberately
     # exempt: running investigations while keeping the results internal is a
     # supported configuration, and the switch governs what reaches the CUSTOMER.
-    # (routes_for_event already returns one scope or the other, so in practice
-    # this filter is all-or-nothing — it is written per-route so it stays
-    # correct if a future trigger mixes scopes.)
+    #
+    # Suppression removes the gated routes and lets the rest proceed, rather
+    # than returning. `ai_report_reviewed` resolves against BOTH scopes (#1053),
+    # so a batch can hold internal and customer routes at once — and aborting
+    # the dispatch would silently take the SOC's own notification down with the
+    # customer's, which is the exact opposite of what the opt-out is for.
+    deliverable_routes = matched_routes
     gated_routes = [r for r in matched_routes if r.scope == NotificationScope.CUSTOMER.value]
     if gated_routes and not await _ai_reports_permitted(event.trigger.value, event.customer_code, session):
         logger.info(
@@ -1317,15 +1361,8 @@ async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> Dis
                     error_message=reason,
                 ),
             )
-        return DispatchResponse(
-            success=True,
-            message="Dispatch suppressed — AI reports are not enabled for this customer",
-            routes_matched=len(gated_routes),
-            dispatched=0,
-            skipped=skipped,
-            failed=0,
-            outcomes=outcomes,
-        )
+        gated_ids = {r.id for r in gated_routes}
+        deliverable_routes = [r for r in matched_routes if r.id not in gated_ids]
 
     # Per-call context. Expensive lookups a provider needs (the Shuffle
     # connector row, an alert's AI report) are memoized on it, so a batch of
@@ -1333,7 +1370,7 @@ async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> Dis
     # now lazy: nothing is read unless a route actually reaches that provider.
     ctx = DispatchContext(session=session, event=event)
 
-    for route in matched_routes:
+    for route in deliverable_routes:
         # Cache every route attribute the LOOP needs into locals UP FRONT.
         # Once we cross any `await` (let alone any rollback) the route
         # SQLAlchemy state can be expired and a synchronous attribute

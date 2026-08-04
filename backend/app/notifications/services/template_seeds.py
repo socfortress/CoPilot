@@ -103,6 +103,29 @@ BUILTIN_TEMPLATES: List[Dict[str, Any]] = [
         ),
     },
     {
+        "name": "AI report reviewed — sign-off",
+        "description": (
+            "An analyst checked an AI investigation. Works on both internal and customer-facing routes — "
+            "the same event can tell your SOC and the customer."
+        ),
+        "trigger": "ai_report_reviewed",
+        "format": "markdown",
+        "subject_template": "Reviewed: {{ alert_name }}",
+        # `reviewer` and `verdict` are guarded because a review can be submitted
+        # without an overall verdict, and because the same template is offered
+        # on both scopes — an operator may well want the customer-facing copy to
+        # omit who internally signed it off.
+        "body_template": (
+            "*Analyst review complete* — {{ alert_name }}\n\n"
+            "Customer: `{{ customer_code }}`\n"
+            "Alert: #{{ alert_id }}\n"
+            "{% if context.reviewer %}Reviewed by: {{ context.reviewer }}\n{% endif %}"
+            "{% if context.verdict %}Verdict: {{ context.verdict }}\n{% endif %}"
+            "\n{{ summary }}\n"
+            "{% if link_url %}\nOpen in CoPilot: {{ link_url }}{% endif %}"
+        ),
+    },
+    {
         "name": "AI investigation — full report (HTML email)",
         "description": (
             "The complete AI investigation write-up with its tables rendered, in the customer's brand colours. "
