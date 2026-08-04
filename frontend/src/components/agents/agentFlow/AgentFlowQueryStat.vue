@@ -85,6 +85,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatNanosecondsDuration } from "@/utils/formatNanosecondsDuration"
 import type { FlowQueryStat } from "@/types/flow"
 import _pick from "lodash/pick"
 import { NInput, NModal, NTabPane, NTabs } from "naive-ui"
@@ -101,7 +102,7 @@ const { stat, embedded } = defineProps<{ stat: FlowQueryStat; embedded?: boolean
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
 
-const duration = computed(() => dayjs.duration(stat.duration).humanize())
+const duration = computed(() => formatNanosecondsDuration(stat.duration))
 
 const properties = computed(() => {
 	return _pick(stat, [
