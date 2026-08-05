@@ -30,6 +30,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import verify_customer_code_access
+from app.middleware.customer_access import verify_optional_customer_code_access
 from app.notifications.channels import CHANNEL_REGISTRY
 from app.notifications.schema.notifications import ChannelDescriptor
 from app.notifications.schema.notifications import ChannelListResponse
@@ -74,7 +77,10 @@ notifications_router = APIRouter()
     "/customers/{customer_code}/notification_routes",
     response_model=NotificationRouteListResponse,
     description="List notification routes for a customer.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def list_routes_route(
     customer_code: str,
@@ -92,7 +98,10 @@ async def list_routes_route(
     "/customers/{customer_code}/notification_routes",
     response_model=NotificationRouteResponse,
     description="Create a new notification route for a customer.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def create_route_route(
     customer_code: str,
@@ -118,7 +127,10 @@ async def create_route_route(
     "/customers/{customer_code}/notification_routes/{route_id}",
     response_model=NotificationRouteResponse,
     description="Update an existing notification route. Only fields included in the body are modified.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def update_route_route(
     customer_code: str,
@@ -137,7 +149,10 @@ async def update_route_route(
 @notifications_router.delete(
     "/customers/{customer_code}/notification_routes/{route_id}",
     description="Delete a notification route. Dispatch log entries for the route are retained.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def delete_route_route(
     customer_code: str,
@@ -155,7 +170,10 @@ async def delete_route_route(
         "Send a real test notification through this route. Consumes provider quota and is "
         "recorded in the dispatch log, exactly like a live notification."
     ),
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def test_route(
     customer_code: str,
@@ -378,7 +396,10 @@ async def list_channels_route() -> ChannelListResponse:
         "the API key is shared, so every customer's routes draw from one allowance. "
         "Pass customer_code for a display-only breakdown."
     ),
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_optional_customer_code_access),
+    ],
 )
 async def resend_quota_route(
     customer_code: Optional[str] = None,
@@ -418,7 +439,10 @@ async def resend_quota_route(
     "/customers/{customer_code}/notification_dispatch_log",
     response_model=DispatchLogListResponse,
     description="Recent notification dispatch attempts for a customer (newest first, capped at 100).",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def list_dispatch_log_route(
     customer_code: str,
@@ -469,7 +493,10 @@ async def list_shuffle_orgs_route(
     "/customers/{customer_code}/shuffle_integrations",
     response_model=ShuffleIntegrationListResponse,
     description="List Shuffle integrations (per-customer Org-Id rows) for a customer.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def list_shuffle_integrations_route(
     customer_code: str,
@@ -487,7 +514,10 @@ async def list_shuffle_integrations_route(
     "/customers/{customer_code}/shuffle_integrations",
     response_model=ShuffleIntegrationResponse,
     description="Create a new Shuffle integration for a customer (records the customer's Shuffle Org-Id).",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def create_shuffle_integration_route(
     customer_code: str,
@@ -513,7 +543,10 @@ async def create_shuffle_integration_route(
     "/customers/{customer_code}/shuffle_integrations/{integration_id}",
     response_model=ShuffleIntegrationResponse,
     description="Update an existing Shuffle integration. Only fields included in the body are modified.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def update_shuffle_integration_route(
     customer_code: str,
@@ -532,7 +565,10 @@ async def update_shuffle_integration_route(
 @notifications_router.delete(
     "/customers/{customer_code}/shuffle_integrations/{integration_id}",
     description="Delete a Shuffle integration. Refused if any notification routes reference it.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def delete_shuffle_integration_route(
     customer_code: str,
@@ -551,7 +587,10 @@ async def delete_shuffle_integration_route(
         "by the route form's app picker so admins can pick from a list "
         "instead of hand-typing UUIDs."
     ),
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def list_shuffle_apps_route(
     customer_code: str,
@@ -570,7 +609,10 @@ async def list_shuffle_apps_route(
     "/customers/{customer_code}/shuffle_integrations/{integration_id}/verify",
     response_model=ShuffleVerifyResponse,
     description="Probe Shuffle with the integration's Org-Id to confirm the connector is reachable and the org is valid.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def verify_shuffle_integration_route(
     customer_code: str,
@@ -626,14 +668,24 @@ async def dispatch_route(
         "List reusable message templates. Filter to a customer (returns their own plus the shared ones) "
         "and/or to a trigger (returns templates scoped to it plus the trigger-agnostic ones)."
     ),
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_optional_customer_code_access),
+    ],
 )
 async def list_templates_route(
     customer_code: Optional[str] = None,
     trigger: Optional[str] = None,
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> NotificationTemplateListResponse:
-    templates = await templates_svc.list_templates(session, customer_code=customer_code, trigger=trigger)
+    accessible = await customer_access_handler.get_user_accessible_customers(current_user, session)
+    templates = await templates_svc.list_templates(
+        session,
+        customer_code=customer_code,
+        trigger=trigger,
+        accessible_customers=accessible,
+    )
     return NotificationTemplateListResponse(
         success=True,
         message=f"{len(templates)} template(s) retrieved",

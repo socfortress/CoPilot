@@ -56,18 +56,31 @@ async def list_templates(
     *,
     customer_code: Optional[str] = None,
     trigger: Optional[str] = None,
+    accessible_customers: Optional[List[str]] = None,
 ) -> List[NotificationTemplate]:
     """Templates available to a customer: their own plus the shared ones.
 
     A NULL `customer_code` means shared, so the filter is deliberately an OR
     rather than an equality — omitting the shared ones would hide every built-in
     default from every customer.
+
+    ``accessible_customers`` is the caller's tenant scope (``["*"]`` for
+    deployment-wide). It bounds the listing when no single ``customer_code`` was
+    asked for, so a scoped analyst browsing "all templates" sees only their own
+    tenants' — plus the shared ones, which are shared with them too.
     """
     stmt = select(NotificationTemplate)
     if customer_code:
         stmt = stmt.where(
             or_(
                 NotificationTemplate.customer_code == customer_code,
+                NotificationTemplate.customer_code.is_(None),
+            ),
+        )
+    elif accessible_customers is not None and "*" not in accessible_customers:
+        stmt = stmt.where(
+            or_(
+                NotificationTemplate.customer_code.in_(accessible_customers),
                 NotificationTemplate.customer_code.is_(None),
             ),
         )

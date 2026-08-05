@@ -67,18 +67,29 @@ def _panels_as_dicts(panels: List[Any]) -> List[Dict[str, Any]]:
 async def list_custom_dashboards(
     customer_code: Optional[str],
     db: AsyncSession,
+    accessible_customers: Optional[List[str]] = None,
 ) -> List[CustomDashboardTemplates]:
     """List custom templates.
 
     With ``customer_code`` set, returns the templates usable by that customer —
-    its own plus every globally-shared one. Without it, returns all of them
-    (the admin-wide view).
+    its own plus every globally-shared one. Without it, returns everything the
+    caller is entitled to: all templates for a deployment-wide caller, and only
+    the assigned tenants' (plus the shared ones) for a scoped one.
+
+    ``accessible_customers`` carries that scope — ``["*"]`` means deployment-wide.
     """
     query = select(CustomDashboardTemplates)
     if customer_code:
         query = query.where(
             or_(
                 CustomDashboardTemplates.customer_code == customer_code,
+                CustomDashboardTemplates.customer_code.is_(None),
+            ),
+        )
+    elif accessible_customers is not None and "*" not in accessible_customers:
+        query = query.where(
+            or_(
+                CustomDashboardTemplates.customer_code.in_(accessible_customers),
                 CustomDashboardTemplates.customer_code.is_(None),
             ),
         )

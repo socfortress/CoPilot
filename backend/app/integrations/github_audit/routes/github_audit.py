@@ -13,6 +13,7 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.github_audit.model import GitHubAuditBaseline
@@ -41,6 +42,8 @@ from app.integrations.github_audit.schema.github_audit import GitHubAuditRespons
 from app.integrations.github_audit.schema.github_audit import GitHubAuditSummaryResponse
 from app.integrations.github_audit.services.github_audit import run_github_audit
 from app.integrations.github_audit.services.github_audit import run_github_audit_summary
+from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import verify_optional_customer_code_access
 from app.middleware.customer_query import customer_codes_query
 
 github_audit_router = APIRouter()
@@ -431,7 +434,10 @@ async def run_audit_summary_from_config(
     "/reports",
     response_model=GitHubAuditReportListResponse,
     description="Get list of GitHub audit reports",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_optional_customer_code_access),
+    ],
 )
 async def get_reports(
     customer_code: Optional[str] = Query(None, description="Filter by customer code"),
@@ -440,6 +446,7 @@ async def get_reports(
     status: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(50, ge=1, le=200, description="Maximum number of reports"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> GitHubAuditReportListResponse:
     """Get list of GitHub audit reports with optional filters."""
@@ -470,6 +477,15 @@ async def get_reports(
         GitHubAuditReport.triggered_by,
         GitHubAuditReport.triggered_by_user,
     ).order_by(GitHubAuditReport.audit_started_at.desc())
+
+    # Bound the listing to the caller's tenants, so an unfiltered browse does not
+    # surface another customer's audit history.
+    query = await customer_access_handler.filter_query_by_customer_access(
+        current_user,
+        session,
+        query,
+        GitHubAuditReport.customer_code,
+    )
 
     if customer_code:
         query = query.where(GitHubAuditReport.customer_code == customer_code)

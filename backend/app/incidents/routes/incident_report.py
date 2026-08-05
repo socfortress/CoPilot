@@ -39,6 +39,7 @@ from app.incidents.services.reports_pdf import create_case_context_pdf
 from app.incidents.services.reports_pdf import create_file_response_pdf
 from app.incidents.services.reports_pdf import download_template_pdf
 from app.incidents.services.reports_pdf import render_html_template
+from app.middleware.customer_access import verify_customer_code_access
 
 incidents_report_router = APIRouter()
 
@@ -202,7 +203,10 @@ async def get_cases_export_all_route(
 @incidents_report_router.post(
     "/generate-report-csv/{customer_code}",
     description="Generate a report for a customer. Optionally filter by year and month.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_cases_export_customer_route(
     customer_code: str,

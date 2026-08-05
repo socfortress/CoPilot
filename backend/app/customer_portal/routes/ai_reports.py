@@ -26,6 +26,7 @@ from app.customer_portal.services.ai_reports import is_ai_reports_enabled_for_us
 from app.customer_portal.services.ai_reports import upsert_ai_report_settings
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
+from app.middleware.customer_access import verify_customer_code_access
 
 customer_portal_ai_reports_router = APIRouter()
 
@@ -69,7 +70,10 @@ def _settings_schema(customer_code: str, settings) -> PortalAiReportSettings:
     "/ai_reports/settings/{customer_code}",
     response_model=PortalAiReportSettingsResponse,
     description="Get whether a customer's portal users can see AI analyst findings",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_ai_report_settings(
     customer_code: str,

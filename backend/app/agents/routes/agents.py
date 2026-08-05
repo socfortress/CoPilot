@@ -69,6 +69,7 @@ from app.db.universal_models import Agents
 from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.services.db_operations import list_cases_by_asset_name
 from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import verify_customer_code_access
 from app.middleware.customer_query import customer_codes_query
 from app.middleware.search_query import SearchParams
 from app.middleware.search_query import apply_search_limit
@@ -1468,7 +1469,10 @@ async def sync_vulnerabilities_route(
 @agents_router.post(
     "/sync/vulnerabilities/{customer_code}",
     description="Sync agent vulnerabilities",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def sync_vulnerabilities_customer_code_route(
     customer_code: str,

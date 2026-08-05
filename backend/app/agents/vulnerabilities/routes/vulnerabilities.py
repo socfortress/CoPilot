@@ -64,6 +64,9 @@ from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.db.db_session import get_db_session
 from app.db.universal_models import VulnerabilityReport
+from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import verify_customer_code_access
+from app.middleware.customer_access import verify_optional_customer_code_access
 from app.middleware.customer_query import customer_codes_query
 
 # Create router for vulnerability endpoints
@@ -196,11 +199,15 @@ async def get_agent_vulnerabilities(
     "/stats",
     response_model=VulnerabilityStatsResponse,
     description="Get vulnerability statistics",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_optional_customer_code_access),
+    ],
     deprecated=True,  # Marking this endpoint as deprecated in favor of more specific ones
 )
 async def get_vulnerability_stats(
     customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> VulnerabilityStatsResponse:
     """
@@ -217,7 +224,8 @@ async def get_vulnerability_stats(
 
     try:
         # Use the standalone function directly
-        return await get_vulnerability_statistics(db_session=db, customer_code=customer_code)
+        accessible = await customer_access_handler.get_user_accessible_customers(current_user, db)
+        return await get_vulnerability_statistics(db_session=db, customer_code=customer_code, accessible_customers=accessible)
 
     except Exception as e:
         logger.error(f"Error getting vulnerability statistics: {e}")
@@ -228,7 +236,10 @@ async def get_vulnerability_stats(
     "/sync/customer/{customer_code}",
     response_model=VulnerabilitySyncResponse,
     description="Sync vulnerabilities for all agents of a specific customer",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
     deprecated=True,  # Marking this endpoint as deprecated in favor of more specific ones
 )
 async def sync_customer_vulnerabilities(
@@ -274,7 +285,10 @@ async def sync_customer_vulnerabilities(
     "/sync/agent/{agent_name}",
     response_model=VulnerabilitySyncResponse,
     description="Sync vulnerabilities for a specific agent with performance options",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_optional_customer_code_access),
+    ],
     deprecated=True,  # Marking this endpoint as deprecated in favor of more specific ones
 )
 async def sync_agent_vulnerabilities(

@@ -52,6 +52,7 @@ from app.integrations.schema import IntegrationWithAuthKeys
 from app.integrations.schema import UpdateCustomerIntegration
 from app.integrations.schema import UpdateMetaAutoRequest
 from app.integrations.schema import UpdateMetaResponse
+from app.middleware.customer_access import verify_customer_code_access
 from app.network_connectors.models.network_connectors import (
     CustomerNetworkConnectorsMeta,
 )
@@ -704,7 +705,10 @@ async def get_customer_integrations_meta(session: AsyncSession = Depends(get_db)
     "/customer_integrations/{customer_code}",
     response_model=CustomerIntegrationsResponse,
     description="Get a list of customer integrations for a specific customer.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_integrations_by_customer_code(
     customer_code: str,
@@ -738,7 +742,10 @@ async def get_customer_integrations_by_customer_code(
     "/customer_integrations_meta/{customer_code}",
     response_model=CustomerIntegrationsMetaResponse,
     description="Get a list of customer integrations metadata for a specific customer.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_integrations_meta_by_customer_code(
     customer_code: str,
@@ -875,7 +882,10 @@ async def create_integration_meta(
     "/update_integration/{customer_code}",
     response_model=CustomerIntegrationCreateResponse,
     description="Update a customer integration.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def update_integration(
     customer_code: str,
@@ -1257,7 +1267,10 @@ async def get_customer_by_auth_key(
 @integration_settings_router.get(
     "/meta_auto/{customer_code}/{integration_name}",
     description="Get integration or network connector metadata automatically based on integration name",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_meta_auto(
     customer_code: str,
