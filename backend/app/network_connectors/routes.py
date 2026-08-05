@@ -20,6 +20,7 @@ from app.db.universal_models import CustomersMeta
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
+from app.middleware.customer_access import verify_customer_code_access
 from app.network_connectors.models.network_connectors import AvailableNetworkConnectors
 from app.network_connectors.models.network_connectors import CustomerNetworkConnectors
 from app.network_connectors.models.network_connectors import (
@@ -626,7 +627,10 @@ async def get_customer_network_connectors_meta(session: AsyncSession = Depends(g
     "/customer_network_connectors/{customer_code}",
     response_model=CustomerNetworkConnectorsResponse,
     description="Get a list of customer network_connectors for a specific customer.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_network_connectors_by_customer_code(
     customer_code: str,
@@ -660,7 +664,10 @@ async def get_customer_network_connectors_by_customer_code(
     "/customer_network_connectors_meta/{customer_code}",
     response_model=CustomerNetworkConnectorsMetaResponse,
     description="Get a list of customer network_connectors metadata for a specific customer.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_network_connectors_meta_by_customer_code(
     customer_code: str,
@@ -790,7 +797,10 @@ async def create_network_connector_meta(
     "/update_network_connector/{customer_code}",
     response_model=CustomerNetworkConnectorsCreateResponse,
     description="Update a customer network_connector.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def update_network_connector(
     customer_code: str,

@@ -246,6 +246,7 @@ from app.incidents.services.incident_case import handle_customer_notifications_c
 from app.incidents.services.notification_enrichment import extract_rule_level
 from app.incidents.services.notification_enrichment import severity_from_rule_level
 from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import verify_customer_code_access
 from app.middleware.customer_query import customer_codes_query
 from app.notifications.services.emit import emit
 from app.notifications.services.event_builders import alert_assigned_event
@@ -257,7 +258,10 @@ incidents_db_operations_router = APIRouter()
 @incidents_db_operations_router.get(
     "/ai_trigger/{customer_code}",
     response_model=AITriggerResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_ai_trigger_endpoint(
     customer_code: str,
@@ -292,7 +296,10 @@ async def put_customer_ai_trigger_endpoint(
 @incidents_db_operations_router.get(
     "/notification/{customer_code}",
     response_model=NotificationResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_notification_endpoint(
     customer_code: str,
@@ -2813,7 +2820,9 @@ async def _ensure_customer_access(customer_code: str, current_user: User, db: As
 
     ``customer_code`` is taken from request input; this asserts the caller is
     actually entitled to that tenant. A None/blank code resolves to "no access"
-    for scoped (customer_user) callers while admin/analyst keep wildcard access.
+    for any scoped caller — a customer_user, or an analyst who has been assigned
+    specific customers. Admins, and analysts with no assignments, keep wildcard
+    access; see ``CustomerAccessHandler.get_user_accessible_customers``.
     """
     if not await customer_access_handler.check_customer_access(current_user, customer_code, db):
         raise HTTPException(

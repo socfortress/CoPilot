@@ -140,6 +140,7 @@ from app.integrations.copilot_searches.services.detection_catalog import (
 from app.integrations.copilot_searches.services.detection_catalog import run_log_test
 from app.integrations.copilot_searches.services.mitre_coverage import get_coverage
 from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
+from app.middleware.customer_access import verify_optional_customer_code_access
 from app.middleware.search_query import SearchParams
 from app.middleware.search_query import filter_and_limit
 from app.middleware.search_query import search_query
@@ -1017,7 +1018,10 @@ async def get_catalog_story_detail_endpoint(story_name: str) -> CatalogStoryDeta
         "response carries ``available=false`` + ``unavailable_reason`` so "
         "the UI can render an inline empty state instead of erroring."
     ),
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user")),
+        Depends(verify_optional_customer_code_access),
+    ],
 )
 async def list_catalog_wazuh_rules_endpoint(
     customer_code: Optional[str] = Query(

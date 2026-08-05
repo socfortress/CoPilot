@@ -688,7 +688,11 @@ async def get_vulnerabilities_by_agent(
         raise HTTPException(status_code=500, detail=f"Failed to get vulnerabilities for agent {agent_id}: {e}")
 
 
-async def get_vulnerability_statistics(db_session: AsyncSession, customer_code: Optional[str] = None) -> VulnerabilityStatsResponse:
+async def get_vulnerability_statistics(
+    db_session: AsyncSession,
+    customer_code: Optional[str] = None,
+    accessible_customers: Optional[List[str]] = None,
+) -> VulnerabilityStatsResponse:
     """
     Get vulnerability statistics
 
@@ -703,6 +707,9 @@ async def get_vulnerability_statistics(db_session: AsyncSession, customer_code: 
         query = select(AgentVulnerabilities)
         if customer_code:
             query = query.filter(AgentVulnerabilities.customer_code == customer_code)
+        elif accessible_customers is not None and "*" not in accessible_customers:
+            # Unfiltered stats must still be bounded by the caller's tenants.
+            query = query.filter(AgentVulnerabilities.customer_code.in_(accessible_customers))
 
         result = await db_session.execute(query)
         vulnerabilities = result.scalars().all()

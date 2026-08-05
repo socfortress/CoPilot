@@ -15,6 +15,7 @@ from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import verify_optional_customer_code_access
 from app.siem.schema.custom_dashboards import CustomDashboardCreateRequest
 from app.siem.schema.custom_dashboards import CustomDashboardDeleteResponse
 from app.siem.schema.custom_dashboards import CustomDashboardExportResponse
@@ -196,14 +197,19 @@ async def disable_dashboard_endpoint(
     "/custom",
     response_model=CustomDashboardsListResponse,
     description="List custom dashboard templates. With customer_code, returns that customer's templates plus the globally shared ones.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_optional_customer_code_access),
+    ],
 )
 async def list_custom_dashboards_endpoint(
     customer_code: Optional[str] = Query(None, description="Scope the listing to one customer (plus global templates)"),
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> CustomDashboardsListResponse:
     logger.info(f"Listing custom dashboards (customer_code={customer_code})")
-    rows = await list_custom_dashboards(customer_code, db)
+    accessible = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    rows = await list_custom_dashboards(customer_code, db, accessible_customers=accessible)
     return CustomDashboardsListResponse(
         custom_dashboards=[CustomDashboardResponse.model_validate(row) for row in rows],
         success=True,

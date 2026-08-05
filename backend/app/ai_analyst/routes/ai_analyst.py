@@ -69,6 +69,7 @@ from app.connectors.talon.services.talon import (
 )
 from app.db.db_session import get_db
 from app.db.universal_models import AiAnalystReport
+from app.middleware.customer_access import verify_customer_code_access
 from app.middleware.customer_query import customer_codes_query
 
 ai_analyst_router = APIRouter()
@@ -138,7 +139,10 @@ async def list_jobs_by_alert_route(
     "/jobs/customer/{customer_code}",
     response_model=JobListResponse,
     description="List all AI analyst jobs for a customer",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def list_jobs_by_customer_route(
     customer_code: str,
@@ -228,7 +232,10 @@ async def list_iocs_by_alert_route(
     "/iocs/customer/{customer_code}",
     response_model=IocListResponse,
     description="List IOCs for a customer, optionally filtered by VT verdict",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def list_iocs_by_customer_route(
     customer_code: str,
@@ -464,7 +471,10 @@ async def get_review_by_id_route(
     "/reviews/customer/{customer_code}",
     response_model=ReviewListResponse,
     description="Review dashboard feed for a customer (newest first, with per-IOC reviews)",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def list_reviews_by_customer_route(
     customer_code: str,
@@ -482,7 +492,10 @@ async def list_reviews_by_customer_route(
     "/reviews/customer/{customer_code}/stats",
     response_model=ReviewStatsResponse,
     description="Aggregate review metrics (feedback dashboard) for a customer — SQL-side rollup",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_review_stats_route(
     customer_code: str,
@@ -501,7 +514,10 @@ async def get_review_stats_route(
     "/palace_lessons/customer/{customer_code}",
     response_model=PalaceSearchResponse,
     description="Preview similar MemPalace lessons for a customer (proxies to Talon /palace/search)",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def search_palace_lessons_route(
     customer_code: str,
@@ -540,7 +556,10 @@ async def search_palace_lessons_route(
         "groups by room, flags near-duplicate pairs, and surfaces one-offs about "
         "to be swept. Pure read-only; no Talon round-trip."
     ),
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_palace_consolidation_route(
     customer_code: str,

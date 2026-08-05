@@ -34,6 +34,7 @@ from app.customer_portal.services.branding import resolve_effective_branding
 from app.customer_portal.services.branding import upsert_branding_override
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
+from app.middleware.customer_access import verify_customer_code_access
 
 customer_portal_branding_router = APIRouter()
 
@@ -127,7 +128,10 @@ async def list_customer_branding(
     "/branding/{customer_code}",
     response_model=CustomerBrandingResponse,
     description="Get a customer's branding override (if any) plus the branding that currently resolves for it.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_branding(
     customer_code: str,
