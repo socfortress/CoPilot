@@ -250,7 +250,10 @@ const TRIGGER_LABELS: Record<NotificationTrigger, string> = {
 	ai_report_reviewed: "AI report reviewed",
 	alert_assigned: "Alert assigned",
 	case_assigned: "Case assigned",
-	case_task_assigned: "Case task assigned"
+	case_task_assigned: "Case task assigned",
+	// Never reachable on a route — the backend rejects it as a route trigger —
+	// but the map is exhaustive over NotificationTrigger, so it needs a label.
+	temp_password_issued: "Temporary password email"
 }
 
 const message = useMessage()

@@ -94,16 +94,32 @@ async def force_reset_totp(session: AsyncSession, user_id: int) -> bool:
     return True
 
 
+def generate_temporary_password() -> Password:
+    """A strong temporary password, generated but NOT yet stored.
+
+    Split from `apply_temporary_password` so the caller can render the delivery
+    email first and abort on a template error without having rotated anyone's
+    credentials — a user locked out by a typo in a Jinja template would be a
+    poor trade for a customisable email (#999).
+    """
+    return Password.generate(TEMP_PASSWORD_LENGTH)
+
+
+async def apply_temporary_password(session: AsyncSession, user: User, password: Password) -> None:
+    """Store the hash of an already-generated temporary password."""
+    user.password = password.hashed
+    session.add(user)
+    await session.commit()
+
+
 async def set_temporary_password(session: AsyncSession, user: User) -> str:
     """Generate a strong temporary password, store its hash, return the plaintext.
 
     The caller is responsible for delivering the plaintext (e.g. by email) and
     should advise the user to change it on next login.
     """
-    password = Password.generate(TEMP_PASSWORD_LENGTH)
-    user.password = password.hashed
-    session.add(user)
-    await session.commit()
+    password = generate_temporary_password()
+    await apply_temporary_password(session, user, password)
     return password.plain
 
 
@@ -130,12 +146,19 @@ def smtp_configured() -> bool:
     return _smtp_config() is not None
 
 
-def _send_email_blocking(cfg: Dict[str, Any], to_addr: str, subject: str, body: str) -> None:
+def _send_email_blocking(cfg: Dict[str, Any], to_addr: str, subject: str, body: str, html_body: Optional[str]) -> None:
     message = EmailMessage()
     message["Subject"] = subject
     message["From"] = cfg["from_addr"]
     message["To"] = to_addr
+    # Always set the plaintext part first, then attach HTML as an alternative:
+    # that order is what makes the message `multipart/alternative` with the text
+    # part as the fallback. A recipient on a text-only client — or behind a
+    # gateway that strips HTML, which some corporate filters do to mail carrying
+    # credentials — must still be able to read their password.
     message.set_content(body)
+    if html_body:
+        message.add_alternative(html_body, subtype="html")
 
     with smtplib.SMTP(cfg["host"], cfg["port"], timeout=30) as server:
         if cfg["use_tls"]:
@@ -145,8 +168,12 @@ def _send_email_blocking(cfg: Dict[str, Any], to_addr: str, subject: str, body: 
         server.send_message(message)
 
 
-async def send_email(to_addr: str, subject: str, body: str) -> None:
-    """Send a plaintext email via SMTP. Raises RuntimeError if SMTP is unset.
+async def send_email(to_addr: str, subject: str, body: str, html_body: Optional[str] = None) -> None:
+    """Send an email via SMTP. Raises RuntimeError if SMTP is unset.
+
+    ``body`` is the plaintext part and is always required. ``html_body`` is
+    optional; when given the message goes out as multipart/alternative with
+    ``body`` as the fallback part.
 
     ``smtplib`` is blocking, so it runs in a worker thread to avoid stalling the
     event loop.
@@ -154,7 +181,7 @@ async def send_email(to_addr: str, subject: str, body: str) -> None:
     cfg = _smtp_config()
     if cfg is None:
         raise RuntimeError("SMTP is not configured (set SMTP_HOST and related SMTP_* env vars)")
-    await asyncio.to_thread(_send_email_blocking, cfg, to_addr, subject, body)
+    await asyncio.to_thread(_send_email_blocking, cfg, to_addr, subject, body, html_body)
     logger.info(f"Sent security email to {to_addr}: {subject}")
 
 

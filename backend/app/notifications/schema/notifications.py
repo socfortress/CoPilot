@@ -51,6 +51,36 @@ class NotificationTrigger(str, Enum):
     CASE_ASSIGNED = "case_assigned"
     CASE_TASK_ASSIGNED = "case_task_assigned"
 
+    # Not a dispatch trigger. #999 reuses `notification_template` as a second
+    # event source: the admin-issued temporary-password email is authored in the
+    # same editor and rendered by the same sandboxed Jinja, but it is delivered
+    # by `app/auth/services/temp_password_email.py` over SMTP rather than by the
+    # dispatch loop over a channel provider. It lives in this enum because the
+    # template table's `trigger` column is what scopes a template to it — see
+    # DISPATCH_TRIGGERS below for why routes must not accept it.
+    TEMP_PASSWORD_ISSUED = "temp_password_issued"
+
+
+#: The triggers a notification *route* may fire on.
+#:
+#: Every member of `NotificationTrigger` is a legal template scope, but not
+#: every one is a legal route scope: nothing emits `temp_password_issued` into
+#: `dispatch()`, so a route bound to it would be config that silently never
+#: fires. Rejecting it at save time is the same reasoning as
+#: `assert_template_usable` — a mismatch caught here is a 400 the operator can
+#: act on, caught at send time it is an outage nobody sees.
+DISPATCH_TRIGGERS = frozenset(t for t in NotificationTrigger if t is not NotificationTrigger.TEMP_PASSWORD_ISSUED)
+
+
+def _assert_route_trigger(v: Optional[NotificationTrigger]) -> Optional[NotificationTrigger]:
+    """Reject a trigger no route can ever fire on. Shared by create and PATCH."""
+    if v is not None and v not in DISPATCH_TRIGGERS:
+        raise ValueError(
+            f"{v.value!r} is not a route trigger — nothing dispatches it. It exists so a message template "
+            f"can be scoped to it; that delivery path has its own sender.",
+        )
+    return v
+
 
 class NotificationChannel(str, Enum):
     """Delivery channel set.
@@ -316,6 +346,11 @@ class NotificationRouteCreate(NotificationRouteBase):
     500-ing the whole list.
     """
 
+    @field_validator("trigger")
+    @classmethod
+    def _trigger_must_be_dispatchable(cls, v: NotificationTrigger) -> NotificationTrigger:
+        return _assert_route_trigger(v)
+
     @field_validator("format_template")
     @classmethod
     def _template_must_compile(cls, v: Optional[str]) -> Optional[str]:
@@ -425,6 +460,11 @@ class NotificationRouteUpdate(BaseModel):
     notify_on_self_assign: Optional[bool] = None
     shuffle_integration_id: Optional[int] = None
     config: Optional[Dict[str, Any]] = None
+
+    @field_validator("trigger")
+    @classmethod
+    def _trigger_must_be_dispatchable(cls, v: Optional[NotificationTrigger]) -> Optional[NotificationTrigger]:
+        return _assert_route_trigger(v)
 
 
 class NotificationRouteRead(NotificationRouteBase):

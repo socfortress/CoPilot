@@ -39,6 +39,11 @@ class EntityType:
     ALERT = "alert"
     CASE = "case"
     CASE_TASK = "case_task"
+    # #999: the temporary-password email is about a user account, not an alert.
+    # It never reaches the dispatch log — its sender is SMTP, not a channel
+    # provider — but it flows through the same `NotificationEvent` so it can be
+    # rendered by the same sandboxed Jinja and authored in the same editor.
+    USER = "user"
 
 
 class NotificationEvent(BaseModel):

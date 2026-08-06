@@ -206,6 +206,57 @@ BUILTIN_TEMPLATES: List[Dict[str, Any]] = [
             "</div>"
         ),
     },
+    {
+        "name": "Temporary password — branded email",
+        "description": (
+            "The email an admin sends when issuing a temporary password, in the customer's brand colours. "
+            "Duplicate it to translate it or add your support contact."
+        ),
+        # Scoped to the trigger, not left agnostic: this template is the only
+        # thing standing between an operator and a password email that renders
+        # `{{ alert_name }}` at someone. Resolution for #999 requires an exact
+        # trigger match for the same reason.
+        "trigger": "temp_password_issued",
+        "format": "html",
+        # `or` rather than the `default` filter: `customer_name` is always
+        # *defined* (it is "" for a user scoped to no single customer), and
+        # `default` only substitutes for undefined.
+        "subject_template": "Your temporary {{ customer_name or 'CoPilot' }} password",
+        # Deliberately the ONLY seeded template for this trigger. Resolution
+        # falls back to "the built-in" as a single step; two built-ins would
+        # make which one wins a matter of insertion order.
+        #
+        # `login_url` is guarded because COPILOT_URL is optional, and every
+        # `branding.*` access carries a default because the resolver's fallback
+        # shape is a promise this template should not depend on.
+        "body_template": (
+            '<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;'
+            'max-width:560px;margin:0 auto;padding:24px;color:#374151">'
+            "{% if branding.logo %}"
+            '<img src="{{ branding.logo }}" alt="{{ branding.title | default("") }}" '
+            'style="max-height:48px;margin-bottom:24px">'
+            "{% endif %}"
+            '<h2 style="color:{{ branding.accent | default("#1f2937") }};margin:0 0 16px">'
+            "Your temporary password</h2>"
+            "<p>Hello {{ user_name }},</p>"
+            "<p>An administrator has issued a temporary password for your "
+            "{% if customer_name %}{{ customer_name }} {% endif %}CoPilot account.</p>"
+            '<p style="background:{{ branding.accent_soft | default("#e5e7eb") }};padding:16px;'
+            "border-radius:6px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:18px;"
+            'letter-spacing:0.5px;word-break:break-all">{{ temp_password }}</p>'
+            "{% if login_url %}"
+            '<p style="margin:24px 0">'
+            '<a href="{{ login_url }}" style="background:{{ branding.accent_strong | default("#2563eb") }};'
+            'color:{{ branding.accent_text | default("#ffffff") }};padding:10px 20px;border-radius:6px;'
+            'text-decoration:none;display:inline-block">Sign in</a></p>'
+            "{% endif %}"
+            "<p><strong>Please change it immediately after signing in.</strong> "
+            "If you did not expect this, contact your security team.</p>"
+            '<p style="color:#6b7280;font-size:12px;margin-top:32px">'
+            "{{ branding.footer_brand or 'CoPilot' }}</p>"
+            "</div>"
+        ),
+    },
 ]
 
 

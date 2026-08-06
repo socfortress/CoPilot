@@ -166,7 +166,8 @@ const TRIGGER_LABELS: Record<NotificationTrigger, string> = {
 	ai_report_reviewed: "AI report reviewed",
 	alert_assigned: "Alert assigned",
 	case_assigned: "Case assigned",
-	case_task_assigned: "Case task assigned"
+	case_task_assigned: "Case task assigned",
+	temp_password_issued: "Temporary password email"
 }
 
 const message = useMessage()

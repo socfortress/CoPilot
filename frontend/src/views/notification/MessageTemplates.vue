@@ -116,7 +116,8 @@ const triggerOptions = [
 	{ label: "AI report reviewed", value: "ai_report_reviewed" },
 	{ label: "Alert assigned", value: "alert_assigned" },
 	{ label: "Case assigned", value: "case_assigned" },
-	{ label: "Case task assigned", value: "case_task_assigned" }
+	{ label: "Case task assigned", value: "case_task_assigned" },
+	{ label: "Temporary password email", value: "temp_password_issued" }
 ]
 
 const formTitle = computed(() => {
