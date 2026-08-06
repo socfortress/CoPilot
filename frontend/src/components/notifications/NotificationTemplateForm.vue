@@ -12,8 +12,8 @@
 
 		<div class="text-secondary mb-3 text-xs">
 			<template v-if="isTempPassword && form.format === 'json'">
-				A JSON template cannot be sent as an email — pick HTML or plain text, or this template won't be
-				offered when sending.
+				A JSON template cannot be sent as an email — pick HTML or plain text, or this template won't be offered
+				when sending.
 			</template>
 			<template v-else-if="isTempPassword && form.format === 'html'">
 				Sent as HTML with a plain-text part generated from it automatically, so a text-only client still shows
@@ -65,8 +65,8 @@
 			<strong>Customers → Security → Email temp password</strong>
 			. It is not a notification route and fires only on that action. Set
 			<strong>Customer</strong>
-			to give one customer their own wording or language; leave it empty for the shared default. The most
-			specific one wins, and the admin can still override it for a single send.
+			to give one customer their own wording or language; leave it empty for the shared default. The most specific
+			one wins, and the admin can still override it for a single send.
 		</div>
 		<div v-else class="text-secondary mb-4 text-xs">
 			Leaving
