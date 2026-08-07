@@ -2,23 +2,30 @@
 	<div :id="`customer-${customer.customer_code}`">
 		<CardEntity :loading :highlighted="!!highlight" :hide-footer-extra="!!hideCardActions">
 			<template #default>
-				<div class="flex items-start gap-4">
-					<n-avatar
-						:src="customerInfo?.logo_file || fallbackAvatar"
-						:fallback-src="fallbackAvatar"
-						round
-						:size="40"
-					/>
+				<div class="flex flex-wrap items-start justify-between gap-4">
+					<div class="flex items-start gap-4">
+						<n-avatar
+							:src="customerInfo?.logo_file || fallbackAvatar"
+							:fallback-src="fallbackAvatar"
+							round
+							:size="40"
+						/>
 
-					<div class="flex flex-col gap-1">
-						<div class="flex flex-wrap gap-2">
-							{{ customerInfo?.customer_name }}
-							<span class="text-secondary">#{{ customer.customer_code }}</span>
+						<div class="flex flex-col gap-1">
+							<div class="flex flex-wrap gap-2">
+								{{ customerInfo?.customer_name }}
+								<span class="text-secondary">#{{ customer.customer_code }}</span>
+							</div>
+							<p class="text-sm">
+								{{ customerInfo?.contact_first_name }} {{ customerInfo?.contact_last_name }}
+							</p>
 						</div>
-						<p class="text-sm">
-							{{ customerInfo?.contact_first_name }} {{ customerInfo?.contact_last_name }}
-						</p>
 					</div>
+					<EntityDetailsButton
+						size="small"
+						:route="routeCustomer({ code: customer.customer_code })"
+						@view="showDetails = true"
+					/>
 				</div>
 			</template>
 
@@ -121,14 +128,6 @@
 						</template>
 					</Badge>
 				</div>
-			</template>
-
-			<template #footerExtra>
-				<EntityDetailsButton
-					size="small"
-					:route="routeCustomer({ code: customer.customer_code })"
-					@view="showDetails = true"
-				/>
 			</template>
 		</CardEntity>
 
