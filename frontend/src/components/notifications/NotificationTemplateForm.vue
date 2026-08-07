@@ -11,7 +11,15 @@
 		</div>
 
 		<div class="text-secondary mb-3 text-xs">
-			<template v-if="form.format === 'html'">
+			<template v-if="isTempPassword && form.format === 'json'">
+				A JSON template cannot be sent as an email — pick HTML or plain text, or this template won't be offered
+				when sending.
+			</template>
+			<template v-else-if="isTempPassword && form.format === 'html'">
+				Sent as HTML with a plain-text part generated from it automatically, so a text-only client still shows
+				the password. Values are escaped automatically.
+			</template>
+			<template v-else-if="form.format === 'html'">
 				Only
 				<strong>email</strong>
 				renders HTML — a chat card would show the markup — so this template can only be attached to email
@@ -46,7 +54,21 @@
 			</n-form-item>
 		</div>
 
-		<div class="text-secondary mb-4 text-xs">
+		<!--
+			The temp-password trigger is not a route trigger — nothing dispatches
+			it — so the generic "attached to a route" explanation is wrong for it
+			and would leave an operator waiting for an email that only ever goes
+			out when an admin presses Send.
+		-->
+		<div v-if="isTempPassword" class="text-secondary mb-4 text-xs">
+			This is the email an admin sends from
+			<strong>Customers → Security → Email temp password</strong>
+			. It is not a notification route and fires only on that action. Set
+			<strong>Customer</strong>
+			to give one customer their own wording or language; leave it empty for the shared default. The most specific
+			one wins, and the admin can still override it for a single send.
+		</div>
+		<div v-else class="text-secondary mb-4 text-xs">
 			Leaving
 			<strong>Trigger</strong>
 			empty makes this usable anywhere. Setting it stops the template being attached to a route whose event never
@@ -56,7 +78,7 @@
 		</div>
 
 		<n-form-item label="Subject (optional)" :show-feedback="false">
-			<n-input v-model:value="form.subject_template" placeholder="{{ severity }} alert on {{ customer_code }}" />
+			<n-input v-model:value="form.subject_template" :placeholder="subjectPlaceholder" />
 		</n-form-item>
 		<div class="text-secondary mb-4 text-xs">
 			Used as the email subject and the Teams card title. Channels without a subject ignore it.
@@ -80,7 +102,7 @@
 		<div class="mb-4 flex flex-wrap items-center gap-2">
 			<span class="text-secondary text-xs">Insert:</span>
 			<n-button
-				v-for="snippet of SNIPPETS"
+				v-for="snippet of snippets"
 				:key="snippet.label"
 				size="tiny"
 				secondary
@@ -205,7 +227,7 @@ import { computed, onBeforeMount, reactive, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
-import { SNIPPETS, variablesForTrigger } from "./templateVariables"
+import { snippetsForTrigger, variablesForTrigger } from "./templateVariables"
 
 // The editor for a named, reusable template.
 //
@@ -269,7 +291,8 @@ const TRIGGER_LABELS: Record<NotificationTrigger, string> = {
 	ai_report_reviewed: "AI report reviewed",
 	alert_assigned: "Alert assigned",
 	case_assigned: "Case assigned",
-	case_task_assigned: "Case task assigned"
+	case_task_assigned: "Case task assigned",
+	temp_password_issued: "Temporary password email"
 }
 
 function triggerLabel(trigger: NotificationTrigger): string {
@@ -283,6 +306,17 @@ const customerOptions = computed(() =>
 )
 
 const variables = computed(() => variablesForTrigger(form.trigger ?? null))
+const snippets = computed(() => snippetsForTrigger(form.trigger ?? null))
+const isTempPassword = computed(() => form.trigger === "temp_password_issued")
+
+// A placeholder showing alert variables is worse than none on a password email
+// — it reads as the suggested shape. Bound rather than inlined in the template
+// because the mustaches would otherwise be parsed as interpolations there.
+const subjectPlaceholder = computed(() =>
+	isTempPassword.value
+		? "Your temporary {{ customer_name or 'CoPilot' }} password"
+		: "{{ severity }} alert on {{ customer_code }}"
+)
 
 const rules: FormRules = {
 	name: { required: true, message: "A template needs a name", trigger: ["blur", "input"] },

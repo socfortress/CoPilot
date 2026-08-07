@@ -17,6 +17,11 @@
 // BOTH scopes, so one sign-off can reach the SOC and the customer through
 // separate routes. It is therefore in neither list below: it is not internal-
 // only, and `isInternalTrigger` must keep returning false for it.
+// `temp_password_issued` is a template scope, NOT a route trigger: nothing
+// dispatches it. It exists so the admin-issued temporary-password email (#999)
+// can be authored in this same editor while being delivered over SMTP by the
+// Security tab. The backend rejects it on a route, so it is deliberately absent
+// from both trigger-option lists in the route form.
 export type NotificationTrigger =
 	| "investigation_complete"
 	| "ai_report_reviewed"
@@ -24,6 +29,7 @@ export type NotificationTrigger =
 	| "alert_assigned"
 	| "case_assigned"
 	| "case_task_assigned"
+	| "temp_password_issued"
 
 export const INTERNAL_TRIGGERS: NotificationTrigger[] = ["alert_assigned", "case_assigned", "case_task_assigned"]
 

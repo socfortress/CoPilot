@@ -388,6 +388,15 @@ def sample_event(trigger: str, customer_code: Optional[str]) -> NotificationEven
 
     parsed = NotificationTrigger(trigger) if trigger in {t.value for t in NotificationTrigger} else NotificationTrigger.ALERT_CREATED
 
+    # The temporary-password email (#999) is not an alert at all, so it gets its
+    # own envelope rather than a rewritten alert one — previewing it against
+    # "Suspicious PowerShell execution" would be actively misleading. The
+    # variables that make it renderable are extras, added in `preview` below.
+    if parsed == NotificationTrigger.TEMP_PASSWORD_ISSUED:
+        from app.auth.services.temp_password_email import build_event
+
+        return build_event(username="jdoe", customer_code=customer_code or "ACME")
+
     entity_type = EntityType.ALERT
     if parsed == NotificationTrigger.CASE_ASSIGNED:
         entity_type = EntityType.CASE
@@ -444,6 +453,26 @@ async def preview(payload: Any, session: AsyncSession) -> Dict[str, Any]:
     source = f"{payload.body_template}{payload.subject_template or ''}"
     if "branding" in source:
         extra["branding"] = await build_branding_context(payload.customer_code, session)
+
+    # The temporary-password email's variables are top-level extras, not event
+    # fields, so the editor has to supply sample ones or every `{{ user_name }}`
+    # raises under StrictUndefined and the preview reads as a broken template.
+    # The password is the same obvious placeholder the send dialog previews
+    # with — a preview must never mint a real credential.
+    if trigger == "temp_password_issued":
+        from app.auth.services.temp_password_email import PREVIEW_PASSWORD
+        from app.auth.services.temp_password_email import build_extra_context
+        from app.auth.services.temp_password_email import customer_name_for
+
+        extra.update(
+            build_extra_context(
+                username="jdoe",
+                email="jdoe@example.com",
+                temp_password=PREVIEW_PASSWORD,
+                customer_code=payload.customer_code or "ACME",
+                customer_name=await customer_name_for(session, payload.customer_code),
+            ),
+        )
 
     try:
         body = render(payload.body_template, event, autoescape=autoescape, extra_context=extra)

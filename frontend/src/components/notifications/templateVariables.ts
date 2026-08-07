@@ -101,10 +101,51 @@ const REVIEW_VARIABLES: TemplateVariable[] = [
 	{ name: "context.report_id", description: "Id of the report that was reviewed." }
 ]
 
+// The temporary-password email (#999). These are top-level extras supplied by
+// `build_extra_context` in app/auth/services/temp_password_email.py, not event
+// fields — which is why none of them lives under `context.`.
+//
+// This trigger's list is EXCLUSIVE rather than additive: an alert variable has
+// no meaning in a password email, and `severity` would render "Informational"
+// at a recipient who is not being told about a finding at all.
+const TEMP_PASSWORD_VARIABLES: TemplateVariable[] = [
+	{ name: "user_name", description: "Username of the account the password was issued for.", example: "jdoe" },
+	{ name: "user_email", description: "Address the email is being sent to.", example: "jdoe@example.com" },
+	{
+		name: "temp_password",
+		description: "The temporary password itself. A template that omits it sends the user nothing usable.",
+		example: "Xk4mR-9pLzAq2Vth"
+	},
+	{
+		name: "login_url",
+		description: "Sign-in URL, built from COPILOT_URL. Empty when that is unset — guard it with {% if %}.",
+		example: "https://copilot.example.com/login"
+	},
+	{
+		name: "customer_name",
+		description: "The customer's display name, falling back to their code. Empty for a user scoped to several.",
+		example: "Acme Corp"
+	},
+	{ name: "organization_name", description: "Alias for customer_name." },
+	{
+		name: "branding.…",
+		description:
+			"The customer's logo and brand colours, resolved the same way a PDF report's are. Keys: logo, title, " +
+			"accent, accent_strong, accent_soft, accent_text.",
+		example: "branding.accent_strong"
+	}
+]
+
 const ASSIGNMENT_TRIGGERS: NotificationTrigger[] = ["alert_assigned", "case_assigned", "case_task_assigned"]
 
 /** Variables worth showing for a given trigger, most relevant first. */
 export function variablesForTrigger(trigger: NotificationTrigger | null): TemplateVariable[] {
+	// Returned early and alone: this trigger shares the table and the renderer
+	// with notifications but none of their variables, so appending the common
+	// set would advertise `summary` and `link_url` as usable when they carry
+	// alert-shaped placeholder text nobody wants in a credentials email.
+	if (trigger === "temp_password_issued") return TEMP_PASSWORD_VARIABLES
+
 	// The report rides alert-shaped events: investigation_complete carries one,
 	// and a manual send can attach one to any alert. Assignment triggers never
 	// do, so listing it there would invite a template with a permanent hole.
@@ -147,3 +188,34 @@ export const SNIPPETS: { label: string; source: string }[] = [
 		source: "{% if context.ai_report %}{{ context.ai_report.html }}{% else %}{{ summary }}{% endif %}"
 	}
 ]
+
+// The password email's own snippets. Offering the alert ones here would put
+// `context.iocs` in front of someone writing a credentials email — every one of
+// them renders empty, and finding that out costs a real send.
+export const TEMP_PASSWORD_SNIPPETS: { label: string; source: string }[] = [
+	{
+		label: "Greeting",
+		source: "Hello {{ user_name }},"
+	},
+	{
+		label: "The password",
+		source: "Temporary password: {{ temp_password }}"
+	},
+	{
+		label: "Sign-in link, when configured",
+		source: "{% if login_url %}Sign in: {{ login_url }}{% endif %}"
+	},
+	{
+		label: "Organization name, with fallback",
+		source: "{{ customer_name or 'CoPilot' }}"
+	},
+	{
+		label: "Brand colour",
+		source: '<span style="color:{{ branding.accent_strong }}">…</span>'
+	}
+]
+
+/** Snippets worth offering for a given trigger. */
+export function snippetsForTrigger(trigger: NotificationTrigger | null): { label: string; source: string }[] {
+	return trigger === "temp_password_issued" ? TEMP_PASSWORD_SNIPPETS : SNIPPETS
+}

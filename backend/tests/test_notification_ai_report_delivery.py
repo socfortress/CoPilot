@@ -57,6 +57,7 @@ import app.notifications.services.notifications as svc  # noqa: E402
 from app.notifications.channels.base import DispatchContext  # noqa: E402
 from app.notifications.schema.events import EntityType  # noqa: E402
 from app.notifications.schema.events import NotificationEvent  # noqa: E402
+from app.notifications.schema.notifications import DISPATCH_TRIGGERS  # noqa: E402
 from app.notifications.schema.notifications import NotificationSeverity  # noqa: E402
 from app.notifications.schema.notifications import NotificationTrigger  # noqa: E402
 from app.notifications.services.rendering import MAX_RENDERED_BYTES  # noqa: E402
@@ -415,9 +416,17 @@ def test_the_full_report_builtin_falls_back_to_the_summary():
 
 def test_every_builtin_still_renders_against_an_event_with_a_report():
     """Attaching a report adds a key to `context`; no existing built-in may
-    change behaviour or start failing because of it."""
+    change behaviour or start failing because of it.
+
+    Restricted to built-ins the dispatch loop actually renders. #999 reuses this
+    table as a second event source — the temporary-password built-in is scoped
+    to a trigger nothing dispatches and reads variables its own sender supplies,
+    so rendering it against an alert event proves nothing about report
+    attachment. Its coverage is tests/test_temp_password_email.py.
+    """
     branding = {"logo": None, "accent": "#111", "accent_strong": "#222", "accent_text": "#fff", "title": "T"}
-    for seed in BUILTIN_TEMPLATES:
+    dispatchable = [s for s in BUILTIN_TEMPLATES if s["trigger"] is None or s["trigger"] in {t.value for t in DISPATCH_TRIGGERS}]
+    for seed in dispatchable:
         body, err = render_body(
             seed["body_template"],
             _event(with_report=True, trigger=NotificationTrigger.ALERT_CREATED),

@@ -40,6 +40,7 @@ import app.notifications.services.notifications as svc  # noqa: E402
 import app.notifications.services.templates as templates_svc  # noqa: E402
 from app.notifications.schema.events import EntityType  # noqa: E402
 from app.notifications.schema.events import NotificationEvent  # noqa: E402
+from app.notifications.schema.notifications import DISPATCH_TRIGGERS  # noqa: E402
 from app.notifications.schema.notifications import NotificationSeverity  # noqa: E402
 from app.notifications.schema.notifications import (  # noqa: E402
     NotificationTemplateUpdate,
@@ -333,8 +334,19 @@ def test_rendering_does_not_mutate_the_event_context():
 
 # ── built-in seeds ────────────────────────────────────────────────────────
 
+#: Built-ins that the dispatch loop can actually render.
+#:
+#: #999 reuses this table as a second event source: the temporary-password
+#: built-in is scoped to a trigger nothing dispatches, and its variables
+#: (`user_name`, `temp_password`) are extras its own sender supplies, not fields
+#: on a `NotificationEvent`. Rendering it against an alert event would fail
+#: under StrictUndefined and prove nothing — it has its own coverage in
+#: tests/test_temp_password_email.py. Filtering by DISPATCH_TRIGGERS rather than
+#: by name means a future non-dispatch built-in is excluded automatically.
+DISPATCHABLE_BUILTINS = [s for s in BUILTIN_TEMPLATES if s["trigger"] is None or s["trigger"] in {t.value for t in DISPATCH_TRIGGERS}]
 
-@pytest.mark.parametrize("spec", BUILTIN_TEMPLATES, ids=lambda s: s["name"])
+
+@pytest.mark.parametrize("spec", DISPATCHABLE_BUILTINS, ids=lambda s: s["name"])
 def test_every_builtin_renders_against_a_populated_event(spec):
     event = sample_event(spec["trigger"] or "alert_created", CUSTOMER)
     extra = {"branding": dict(_FALLBACK_BRANDING)}
@@ -343,7 +355,7 @@ def test_every_builtin_renders_against_a_populated_event(spec):
             render(spec[field], event, autoescape=spec["format"] == "html", extra_context=extra)
 
 
-@pytest.mark.parametrize("spec", BUILTIN_TEMPLATES, ids=lambda s: s["name"])
+@pytest.mark.parametrize("spec", DISPATCHABLE_BUILTINS, ids=lambda s: s["name"])
 def test_every_builtin_renders_against_a_bare_event(spec):
     """The case the sample event hides: empty context, no link, no assignee."""
     bare = _event(
