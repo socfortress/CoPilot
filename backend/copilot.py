@@ -64,6 +64,7 @@ from app.routers import darktrace
 from app.routers import data_store
 from app.routers import defenderforendpoint
 from app.routers import duo
+from app.routers import file_analysis
 from app.routers import github_audit
 from app.routers import grafana
 from app.routers import graylog
@@ -233,6 +234,7 @@ api_router.include_router(portainer.router)
 api_router.include_router(incidents.router)
 api_router.include_router(ai_analyst.router)
 api_router.include_router(notifications.router)
+api_router.include_router(file_analysis.router)
 api_router.include_router(darktrace.router)
 api_router.include_router(defenderforendpoint.router)
 api_router.include_router(siem.router)

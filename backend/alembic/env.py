@@ -26,6 +26,12 @@ from app.db.universal_models import Agents
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
 from app.db.universal_models import LogEntry
+
+# Models in a brand-new file are invisible to autogenerate unless imported here
+# -- app/db/all_models.py is NOT what env.py loads.
+from app.file_analysis.models.file_analysis import FileAnalysisFinding
+from app.file_analysis.models.file_analysis import FileAnalysisIoC
+from app.file_analysis.models.file_analysis import FileAnalysisJob
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag

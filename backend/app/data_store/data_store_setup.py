@@ -18,3 +18,4 @@ async def create_buckets() -> None:
     await create_bucket_if_not_exists("sysmon-configs")
     await create_bucket_if_not_exists("velociraptor-artifacts")
     await create_bucket_if_not_exists("incident-management-reports")
+    await create_bucket_if_not_exists("copilot-file-analysis")
