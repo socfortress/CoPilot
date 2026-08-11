@@ -55,7 +55,12 @@
 			title="Apply template"
 			:style="{ maxWidth: 'min(600px, 90vw)', overflow: 'hidden' }"
 		>
-			<CaseTasksToolbarApplyTemplateForm :case-id :customer-code @success="handleApplyTemplateSuccess" />
+			<CaseTasksToolbarApplyTemplateForm
+				:case-id
+				:customer-code
+				:linked-alerts="linkedAlerts || []"
+				@success="handleApplyTemplateSuccess"
+			/>
 		</n-modal>
 	</div>
 </template>

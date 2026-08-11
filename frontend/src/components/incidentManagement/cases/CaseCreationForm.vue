@@ -52,6 +52,24 @@
 						/>
 					</n-form-item>
 				</div>
+				<!--
+					Suggestions sit above the picker, not inside it: the ranked
+					cards are the fast path, and the full dropdown below stays
+					the unchanged "browse all templates" fallback. Both write the
+					same selectedTemplateId, so choosing in one updates the other.
+
+					Only rendered once a customer is chosen — with no customer
+					there is nothing to rank against and an empty panel above an
+					empty form is just noise.
+				-->
+				<div v-if="form.customer_code">
+					<CaseTemplateSuggestions
+						:customer-code="form.customer_code"
+						:selected-template-id
+						@select="onSuggestionSelected"
+					/>
+				</div>
+
 				<div>
 					<n-form-item label="Template (optional)" path="template_id">
 						<n-select
@@ -100,6 +118,7 @@ import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, inject, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import CaseTemplateSuggestions from "@/components/incidentManagement/caseTemplates/CaseTemplateSuggestions.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 
@@ -224,6 +243,16 @@ function reset(force?: boolean) {
 
 function resetForm() {
 	form.value = getForm()
+}
+
+/**
+ * Picking a suggested card and picking from the dropdown are the same action —
+ * both just set the template applied on creation. Clearing the card selection
+ * clears the dropdown too, so the two controls can never disagree about what
+ * will be applied.
+ */
+function onSuggestionSelected(template: CaseTemplate | null) {
+	selectedTemplateId.value = template?.id ?? null
 }
 
 function renderOption(option: {

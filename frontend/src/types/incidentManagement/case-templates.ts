@@ -191,3 +191,58 @@ export interface CaseTemplateLibraryRefreshResponse {
 	invalid_paths: string[]
 	last_refresh: string | null
 }
+
+// ---------------------------------------------------------------------------
+// Smart template suggestions (issue #935)
+//
+// Mirrors SuggestionReason / CaseTemplateSuggestion /
+// CaseTemplateSuggestionListResponse in
+// backend/app/incidents/schema/case_templates.py.
+//
+// Suggestions are a ranking *over* the templates that already exist — nothing
+// is persisted, so there is no "suggestion" entity to create, update or delete.
+// ---------------------------------------------------------------------------
+
+/**
+ * Machine-readable signal keys. Kept as a union rather than `string` so the
+ * icon/colour lookup in CaseTemplateSuggestionCard.vue fails at compile time
+ * when the backend grows a new signal, instead of silently rendering unstyled.
+ */
+export type SuggestionSignal =
+	| "condition"
+	| "condition_unverified"
+	| "customer"
+	| "source"
+	| "tag"
+	| "mitre"
+	| "mitre_parent"
+	| "mitre_name"
+	| "rule_group"
+	| "keyword"
+	| "usage"
+	| "default"
+
+export type SuggestionConfidence = "high" | "medium" | "low"
+
+/** One explainable contribution to a template's score. Rendered as a chip. */
+export interface SuggestionReason {
+	signal: SuggestionSignal
+	detail: string
+	/** Points contributed after capping. Reasons always sum to the score. */
+	points: number
+}
+
+export interface CaseTemplateSuggestion {
+	/** Full template, tasks included — the preview needs no extra request. */
+	template: CaseTemplate
+	score: number
+	confidence: SuggestionConfidence
+	/** Highest-scoring signal first. */
+	reasons: SuggestionReason[]
+}
+
+export interface CaseTemplateSuggestionListResponse {
+	suggestions: CaseTemplateSuggestion[]
+	/** Applicable templates before `limit` was applied. */
+	total_candidates: number
+}
