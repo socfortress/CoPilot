@@ -237,6 +237,13 @@ export interface CaseTemplateSuggestion {
 	template: CaseTemplate
 	score: number
 	confidence: SuggestionConfidence
+	/**
+	 * This template's auto-apply condition fired for this alert. Such templates
+	 * are returned ahead of every other suggestion regardless of score — the
+	 * same partition the backend's auto-apply uses. Do not re-sort the list by
+	 * score alone, or the panel will disagree with what applying would do.
+	 */
+	condition_matched: boolean
 	/** Highest-scoring signal first. */
 	reasons: SuggestionReason[]
 }

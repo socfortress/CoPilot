@@ -10,10 +10,25 @@
 		</template>
 
 		<template #headerExtra>
-			<Badge type="splitted" size="small" :color="confidenceColor" bright>
-				<template #label>Match</template>
-				<template #value>{{ confidenceLabel }}</template>
-			</Badge>
+			<div class="flex items-center gap-2">
+				<!--
+					Why this card is at the top. A fired auto-apply condition
+					sorts ahead of everything regardless of score, so the reason
+					for the ordering has to be visible at a glance — otherwise a
+					lower-scoring card sitting first looks like a bug.
+				-->
+				<Badge v-if="suggestion.condition_matched" color="success" type="splitted" bright size="small">
+					<template #iconLeft>
+						<Icon :name="SIGNAL_ICONS.condition" :size="13" />
+					</template>
+					<template #label>Auto-apply</template>
+					<template #value>fires</template>
+				</Badge>
+				<Badge type="splitted" size="small" :color="confidenceColor" bright>
+					<template #label>Match</template>
+					<template #value>{{ confidenceLabel }}</template>
+				</Badge>
+			</div>
 		</template>
 
 		<template #default>

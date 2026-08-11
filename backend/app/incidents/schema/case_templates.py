@@ -219,6 +219,15 @@ class CaseTemplateSuggestion(BaseModel):
     template: CaseTemplateResponse
     score: int = Field(..., description="Additive score. Unbounded in principle; ~110 is a realistic ceiling.")
     confidence: str = Field(..., description="Bucketed score: high | medium | low.")
+    condition_matched: bool = Field(
+        False,
+        description=(
+            "This template's auto-apply condition fired for this alert. Such templates are sorted "
+            "ahead of every other suggestion regardless of score — the same partition "
+            "pick_templates_for_alert applies — so a client that re-sorts purely by score will "
+            "disagree with what auto-apply would actually do."
+        ),
+    )
     reasons: List[SuggestionReason] = Field(
         default_factory=list,
         description="Why this template ranked where it did, highest-scoring signal first.",

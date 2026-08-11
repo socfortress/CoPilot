@@ -38,6 +38,14 @@ strictly better signal; it is not a precondition for the feature.
 Scoring is intentionally additive and explainable. Every point a template earns
 comes with a ``SuggestionReason`` naming the signal and the evidence, because a
 ranked list an analyst cannot audit is a ranked list an analyst will not trust.
+
+**Known limit, accepted deliberately.** Multi-word tags and compound Wazuh rule
+groups are matched as whole phrases, so the group ``ransomware_behaviour`` does
+*not* match a template whose text only says "ransomware". The looser rule —
+credit for any single shared token — would make groups like ``windows`` or
+``web`` match most of the library. Precision is worth more than recall here:
+one bad suggestion at the top of the list costs more trust than a missing
+signal on a template that still ranks on customer, source and MITRE.
 """
 
 from __future__ import annotations
@@ -80,13 +88,22 @@ from app.incidents.services.case_templates import _template_to_response
 # Tunable in one place on purpose. The absolute numbers matter less than their
 # ratios; what they encode is:
 #
-#   - A satisfied auto-apply condition outranks everything, because it is not a
-#     heuristic — it is the operator's own explicit rule firing.
 #   - Explicit scope (this customer / this source) outranks inferred topical
 #     overlap, because scope was configured deliberately and text overlap was
 #     not.
 #   - Topical signals are capped so a template that happens to name six MITRE
 #     techniques cannot bulldoze a correctly-scoped one.
+#
+# A satisfied auto-apply condition is deliberately NOT expressed as "a weight
+# big enough to win". It is a *partition* — see ``suggest_templates``, which
+# sorts condition-matched templates ahead of the rest regardless of score. That
+# mirrors ``pick_templates_for_alert``, where field-match templates win outright
+# and the scope-tier picker only runs when none of them fire. Encoding it as a
+# weight instead was an early bug: at 40 points a firing condition lost to a
+# template scoring customer (25) + source (20), so the panel could recommend
+# something different from what auto-apply would actually have applied. The
+# weight below still exists so the condition shows up in the score and reasons;
+# it just isn't what guarantees the ordering.
 # ---------------------------------------------------------------------------
 
 WEIGHT_CONDITION_MATCH = 40
@@ -910,13 +927,26 @@ async def suggest_templates(
                     template=_template_to_response(template),
                     score=score,
                     confidence=_confidence_for(score),
+                    condition_matched=condition_result is True,
                     reasons=sorted(reasons, key=lambda r: r.points, reverse=True),
                 ),
             )
 
-        # Ties broken by is_default then name, so repeated calls return a stable
-        # order — a list that reshuffles between renders reads as broken.
-        suggestions.sort(key=lambda s: (-s.score, not s.template.is_default, s.template.name.lower()))
+        # Condition-matched templates first, as a partition rather than a score
+        # comparison — the operator's explicit "when eventID == 11, use this"
+        # beats any amount of inferred overlap, and this is what keeps the panel
+        # agreeing with what auto-apply would have done. Then score, then
+        # is_default, then name: the last two make repeated calls return a
+        # stable order, since a list that reshuffles between renders reads as
+        # broken even when every score is right.
+        suggestions.sort(
+            key=lambda s: (
+                not s.condition_matched,
+                -s.score,
+                not s.template.is_default,
+                s.template.name.lower(),
+            ),
+        )
         top = suggestions[: max(0, limit)] if limit else suggestions
 
         return CaseTemplateSuggestionListResponse(

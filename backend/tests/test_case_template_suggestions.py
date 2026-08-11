@@ -476,6 +476,41 @@ def test_default_wins_a_tie_against_a_non_default():
     assert response.suggestions[0].template.id == 2
 
 
+def test_a_firing_condition_outranks_a_higher_scoring_template():
+    """The partition, not a weight — this is what keeps the panel agreeing with
+    ``pick_templates_for_alert``, where field-match templates win outright and
+    the scope-tier picker only runs when none of them fire.
+
+    Regression: expressing this as a 40-point weight let a template scoring
+    customer (25) + source (20) beat a firing condition, so the panel
+    recommended something different from what auto-apply would have applied.
+    Caught by the e2e, not by the mocked tests.
+    """
+    templates = [
+        _template(template_id=1, name="Well scoped", customer_code="ACME", source="wazuh"),
+        _template(template_id=2, name="Conditional", match_field="event_id", match_value="1"),
+    ]
+    signals = _signals(document={"event_id": "1"}, document_available=True, tags=["ransomware"])
+    response = _run_suggest(templates=templates, signals=signals)
+
+    top, second = response.suggestions[0], response.suggestions[1]
+    assert top.template.id == 2
+    assert top.condition_matched is True
+    # The point of the partition: it wins despite scoring less.
+    assert top.score < second.score
+    assert second.condition_matched is False
+
+
+def test_condition_matched_is_false_when_the_document_is_unreadable():
+    """Unverified is not matched — it must not jump the queue."""
+    templates = [_template(template_id=1, match_field="event_id", match_value="1")]
+    response = _run_suggest(
+        templates=templates,
+        signals=_signals(document={}, document_available=False),
+    )
+    assert response.suggestions[0].condition_matched is False
+
+
 def test_suggestion_carries_the_full_task_list_for_the_preview():
     """One round-trip: the preview must not need a second call per suggestion."""
     templates = [
