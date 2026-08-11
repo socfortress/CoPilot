@@ -148,39 +148,43 @@
 							<AlertTags :alert @updated="updateAlert" />
 						</template>
 					</CardKV>
+
+					<CardKV v-if="linkedCases.length">
+						<template #key>Linked Cases</template>
+						<template #value>
+							<AlertLinkedCases :alert @updated="updateAlert($event)" />
+						</template>
+					</CardKV>
 				</div>
 			</div>
 
 			<div
-				class="border-default flex items-center gap-2 border-t py-4"
+				class="border-default flex flex-wrap items-center justify-between gap-2 border-t py-4"
 				:class="[useFooterBackground && 'bg-secondary']"
 			>
-				<AlertCreateCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
+				<div class="flex flex-wrap items-center gap-2">
+					<AlertCreateCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
 
-				<AlertSendToChannelButton :alert />
+					<AlertSendToChannelButton :alert />
 
-				<AlertMergeCaseButton v-if="!linkedCases.length" :alerts="[alert]" @updated="updateAlert" />
-
-				<div v-if="linkedCases.length" class="flex flex-wrap items-center gap-3">
-					<span>Linked Cases:</span>
-					<AlertLinkedCases :alert @updated="updateAlert($event)" />
+					<AlertMergeCaseButton v-if="!linkedCases.length" :alerts="[alert]" @updated="updateAlert" />
 				</div>
 
-				<div class="grow"></div>
+				<div class="flex flex-wrap items-center gap-2">
+					<n-button type="primary" secondary :loading="investigating" @click="handleInvestigate()">
+						<template #icon>
+							<Icon name="carbon:machine-learning-model" />
+						</template>
+						Investigate with AI Analyst
+					</n-button>
 
-				<n-button type="primary" secondary :loading="investigating" @click="handleInvestigate()">
-					<template #icon>
-						<Icon name="carbon:machine-learning-model" />
-					</template>
-					Investigate with AI Analyst
-				</n-button>
-
-				<n-button type="error" secondary @click="handleDelete()">
-					<template #icon>
-						<Icon :name="TrashIcon" />
-					</template>
-					Delete
-				</n-button>
+					<n-button type="error" secondary @click="handleDelete()">
+						<template #icon>
+							<Icon :name="TrashIcon" />
+						</template>
+						Delete
+					</n-button>
+				</div>
 			</div>
 		</div>
 	</n-spin>
