@@ -28,22 +28,29 @@ import argparse
 import asyncio
 import datetime
 import sys
+from pathlib import Path
 
-from sqlalchemy import delete
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+# Lanciando ``python tests/e2e/seed_suggestion_demo.py``, Python mette sul path
+# la cartella dello script — non la cwd — quindi ``app`` non sarebbe
+# importabile e servirebbe ricordarsi PYTHONPATH=$PWD. Mettiamo qui la radice
+# di backend/ così il comando documentato funziona da solo.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from app.db.db_session import async_engine
-from app.db.universal_models import Customers
-from app.incidents.models import Alert
-from app.incidents.models import AlertContext
-from app.incidents.models import AlertTag
-from app.incidents.models import AlertToTag
-from app.incidents.models import Asset
-from app.incidents.models import Case
-from app.incidents.models import CaseTask
-from app.incidents.models import CaseTemplate
-from app.incidents.models import CaseTemplateTask
+from sqlalchemy import delete  # noqa: E402
+from sqlalchemy import select  # noqa: E402
+from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
+
+from app.db.db_session import async_engine  # noqa: E402
+from app.db.universal_models import Customers  # noqa: E402
+from app.incidents.models import Alert  # noqa: E402
+from app.incidents.models import AlertContext  # noqa: E402
+from app.incidents.models import AlertTag  # noqa: E402
+from app.incidents.models import AlertToTag  # noqa: E402
+from app.incidents.models import Asset  # noqa: E402
+from app.incidents.models import Case  # noqa: E402
+from app.incidents.models import CaseTask  # noqa: E402
+from app.incidents.models import CaseTemplate  # noqa: E402
+from app.incidents.models import CaseTemplateTask  # noqa: E402
 
 CUSTOMER = "DEMO935"
 PREFIX = "demo935_"
