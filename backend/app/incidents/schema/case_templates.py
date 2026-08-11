@@ -180,6 +180,72 @@ class CaseTemplateTaskOperationResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Smart template suggestions (issue #935)
+#
+# Ranked-template shapes for the "Suggested templates" panel shown when a case
+# is created from an alert. Purely derived — see
+# ``app.incidents.services.template_suggestions`` for why no schema backs this.
+# ---------------------------------------------------------------------------
+
+
+class SuggestionReason(BaseModel):
+    """One explainable contribution to a template's score.
+
+    Shipped to the UI verbatim so the ranking can be audited by the analyst
+    reading it, rather than being an opaque number. ``points`` is the amount
+    this signal actually contributed *after* its cap was applied, so the
+    reasons always sum to ``CaseTemplateSuggestion.score``.
+    """
+
+    signal: str = Field(
+        ...,
+        description=(
+            "Machine-readable signal key: condition, condition_unverified, customer, source, "
+            "tag, mitre, mitre_parent, mitre_name, rule_group, keyword, usage, default."
+        ),
+    )
+    detail: str = Field(..., description="Human-readable explanation shown as a chip in the UI.")
+    points: int = Field(..., description="Points this signal contributed to the score (0 for informational reasons).")
+
+
+class CaseTemplateSuggestion(BaseModel):
+    """A ranked template, carrying its full definition.
+
+    The nested ``template`` is the complete ``CaseTemplateResponse``, tasks
+    included, specifically so the UI can render the "tasks that will be added"
+    preview without a second round-trip per suggestion.
+    """
+
+    template: CaseTemplateResponse
+    score: int = Field(..., description="Additive score. Unbounded in principle; ~110 is a realistic ceiling.")
+    confidence: str = Field(..., description="Bucketed score: high | medium | low.")
+    condition_matched: bool = Field(
+        False,
+        description=(
+            "This template's auto-apply condition fired for this alert. Such templates are sorted "
+            "ahead of every other suggestion regardless of score — the same partition "
+            "pick_templates_for_alert applies — so a client that re-sorts purely by score will "
+            "disagree with what auto-apply would actually do."
+        ),
+    )
+    reasons: List[SuggestionReason] = Field(
+        default_factory=list,
+        description="Why this template ranked where it did, highest-scoring signal first.",
+    )
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CaseTemplateSuggestionListResponse(BaseModel):
+    suggestions: List[CaseTemplateSuggestion] = Field(default_factory=list)
+    total_candidates: int = Field(
+        0,
+        description="Applicable templates before the limit was applied. Lets the UI say 'showing 5 of 23'.",
+    )
+    success: bool
+    message: str
+
+
+# ---------------------------------------------------------------------------
 # CaseTask (case-side instance rows)
 # ---------------------------------------------------------------------------
 
