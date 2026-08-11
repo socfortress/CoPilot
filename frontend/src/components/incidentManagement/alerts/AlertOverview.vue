@@ -157,19 +157,7 @@
 			>
 				<AlertCreateCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
 
-				<n-button size="small" secondary @click="showManualSend = true">
-					<template #icon>
-						<Icon :name="SendIcon" :size="14" />
-					</template>
-					Send to channel…
-				</n-button>
-
-				<ManualSendDialog
-					v-model:show="showManualSend"
-					entity-type="alert"
-					:entity-id="alert.id"
-					:customer-code="alert.customer_code"
-				/>
+				<AlertSendToChannelButton :alert />
 
 				<AlertMergeCaseButton v-if="!linkedCases.length" :alerts="[alert]" @updated="updateAlert" />
 
@@ -207,7 +195,6 @@ import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
-import ManualSendDialog from "@/components/notifications/ManualSendDialog.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
@@ -223,13 +210,11 @@ const emit = defineEmits<{
 	(e: "updated", value: Alert): void
 }>()
 const AlertCreateCaseButton = defineAsyncComponent(() => import("./AlertCreateCaseButton.vue"))
+const AlertSendToChannelButton = defineAsyncComponent(() => import("./AlertSendToChannelButton.vue"))
 const AlertMergeCaseButton = defineAsyncComponent(() => import("./AlertMergeCaseButton.vue"))
 const AlertLinkedCases = defineAsyncComponent(() => import("./AlertLinkedCases.vue"))
 
 const { alert } = toRefs(props)
-
-const SendIcon = "carbon:send-alt"
-const showManualSend = ref(false)
 
 const TrashIcon = "carbon:trash-can"
 const LinkIcon = "carbon:launch"

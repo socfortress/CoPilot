@@ -3,7 +3,7 @@
 		v-model:show="visible"
 		preset="card"
 		:title="`Send ${entityLabel} to a channel`"
-		class="max-w-2xl"
+		:style="{ maxWidth: 'min(760px, 90vw)', minHeight: 'min(420px, 90vh)', maxHeight: '85vh' }"
 		:bordered="false"
 		segmented
 	>
@@ -80,15 +80,19 @@
 		</n-spin>
 
 		<template #footer>
-			<div class="flex items-center justify-end gap-2">
+			<div class="flex items-center justify-between gap-2">
 				<n-button @click="visible = false">Cancel</n-button>
-				<n-button secondary :disabled="!routeId" :loading="previewing" @click="loadPreview">Preview</n-button>
-				<n-button type="primary" :disabled="!routeId" :loading="sending" @click="send">
-					<template #icon>
-						<Icon :name="SendIcon" :size="14" />
-					</template>
-					Send now
-				</n-button>
+				<div class="flex items-center gap-2">
+					<n-button secondary :disabled="!routeId" :loading="previewing" @click="loadPreview">
+						Preview
+					</n-button>
+					<n-button type="primary" :disabled="!routeId" :loading="sending" @click="send">
+						<template #icon>
+							<Icon :name="SendIcon" :size="14" />
+						</template>
+						Send now
+					</n-button>
+				</div>
 			</div>
 		</template>
 	</n-modal>

@@ -28,9 +28,9 @@
 					@select="selectedTemplate = $event"
 				>
 					<template #browseAll>
-						<n-button text size="tiny" @click="browseAllTemplates()">
+						<n-button text size="tiny" :focusable="false" @click="browseAllTemplates()">
 							<template #icon>
-								<Icon :name="BrowseIcon" :size="14" />
+								<Icon name="carbon:launch" />
 							</template>
 							Browse all templates
 						</n-button>
@@ -47,7 +47,7 @@
 					the analyst isn't surprised by tasks appearing on a case they
 					thought they'd created bare.
 				-->
-				<n-button quaternary :disabled="creating" @click="createCase(null)">Skip — auto-select</n-button>
+				<n-button secondary :disabled="creating" @click="createCase(null)">Skip — auto-select</n-button>
 
 				<n-button type="primary" :loading="creating" :disabled="!selectedTemplate" @click="createCase()">
 					<template #icon>
@@ -80,7 +80,6 @@ const emit = defineEmits<{
 const { alert } = toRefs(props)
 
 const DangerIcon = "majesticons:exclamation-line"
-const BrowseIcon = "carbon:list"
 
 const message = useMessage()
 const { routeIncidentManagementCaseTemplates } = useNavigation()

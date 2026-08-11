@@ -10,12 +10,6 @@
 			</div>
 
 			<div class="flex items-center gap-2">
-				<n-button v-if="selectedId !== null" text size="tiny" @click="clearSelection()">
-					<template #icon>
-						<Icon :name="ClearIcon" :size="14" />
-					</template>
-					Clear selection
-				</n-button>
 				<slot name="browseAll" />
 			</div>
 		</div>
@@ -61,7 +55,7 @@
 import type { CaseTemplateSuggestQuery } from "@/api/endpoints/incidentManagement/case-templates"
 import type { ApiError } from "@/types/common"
 import type { CaseTemplate, CaseTemplateSuggestion } from "@/types/incidentManagement/case-templates"
-import { NAlert, NButton, NEmpty, NSpin, NTag } from "naive-ui"
+import { NAlert, NEmpty, NSpin, NTag } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -87,7 +81,6 @@ const emit = defineEmits<{
 }>()
 
 const SuggestIcon = "carbon:idea"
-const ClearIcon = "carbon:close"
 
 const suggestions = ref<CaseTemplateSuggestion[]>([])
 const totalCandidates = ref(0)

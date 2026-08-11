@@ -2,15 +2,13 @@
 	<CardEntity size="small" hoverable :highlighted="selected" card-entity-class="h-full" main-box-class="grow">
 		<template #headerMain>
 			<div class="flex items-center gap-2">
-				<div class="text-default text-base leading-snug font-semibold text-balance">
-					{{ suggestion.template.name }}
-				</div>
+				<span class="text-default">{{ suggestion.template.name }}</span>
 				<n-tag v-if="suggestion.template.is_default" size="tiny" :bordered="false">default</n-tag>
 			</div>
 		</template>
 
 		<template #headerExtra>
-			<div class="flex items-center gap-2">
+			<div class="text-default flex items-center gap-2">
 				<!--
 					Why this card is at the top. A fired auto-apply condition
 					sorts ahead of everything regardless of score, so the reason
@@ -32,7 +30,7 @@
 		</template>
 
 		<template #default>
-			<div class="flex flex-col gap-3">
+			<div class="mt-3 flex flex-col gap-3">
 				<p v-if="suggestion.template.description" class="text-secondary line-clamp-2 text-sm">
 					{{ suggestion.template.description }}
 				</p>
@@ -152,7 +150,7 @@ const emit = defineEmits<{
 }>()
 
 const TasksIcon = "carbon:task"
-const ApplyIcon = "carbon:play-filled-alt"
+const ApplyIcon = "carbon:circle-outline"
 const SelectedIcon = "carbon:checkmark-filled"
 const ExpandIcon = "carbon:chevron-down"
 const CollapseIcon = "carbon:chevron-up"
