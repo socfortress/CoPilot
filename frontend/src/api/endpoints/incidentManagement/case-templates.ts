@@ -9,6 +9,7 @@ import type {
 	CaseTemplateLibraryEntry,
 	CaseTemplateLibraryListResponse,
 	CaseTemplateLibraryRefreshResponse,
+	CaseTemplateSuggestionListResponse,
 	CaseTemplateTask,
 	CaseTemplateTaskCreatePayload,
 	CaseTemplateTaskUpdatePayload,
@@ -31,6 +32,22 @@ export interface CaseTimelineQuery {
 	offset?: number
 }
 
+/**
+ * Context for ranking templates (issue #935).
+ *
+ * `alertId` and the `customerCode`/`source` pair are alternatives, not
+ * companions: when an alert id is supplied the backend reads scope from the
+ * alert itself and ignores anything passed alongside it.
+ */
+export interface CaseTemplateSuggestQuery {
+	/** Creating a case from an alert — enables full contextual scoring. */
+	alertId?: number
+	/** Manual creation — scores on scope, usage history and default status. */
+	customerCode?: string | null
+	source?: string | null
+	limit?: number
+}
+
 export default {
 	listTemplates(filters: CaseTemplateListFilters = {}) {
 		const params: Record<string, string | boolean> = {}
@@ -41,6 +58,25 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { templates: CaseTemplate[] }>(`/incidents/case_templates`, {
 			params
 		})
+	},
+	/**
+	 * Rank templates against the context of the case about to be created.
+	 *
+	 * Returns each suggestion with its full template (tasks included) so the
+	 * "tasks that will be added" preview costs no extra round-trip, plus the
+	 * reasons behind its rank so the ordering is auditable rather than opaque.
+	 */
+	suggestTemplates(query: CaseTemplateSuggestQuery = {}) {
+		const params: Record<string, string | number> = {}
+		if (query.alertId !== undefined) params.alert_id = query.alertId
+		if (query.customerCode) params.customer_code = query.customerCode
+		if (query.source) params.source = query.source
+		if (query.limit !== undefined) params.limit = query.limit
+
+		return HttpClient.get<FlaskBaseResponse & CaseTemplateSuggestionListResponse>(
+			`/incidents/case_templates/suggest`,
+			{ params }
+		)
 	},
 	getTemplate(templateId: number) {
 		return HttpClient.get<FlaskBaseResponse & { template: CaseTemplate | null }>(

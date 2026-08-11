@@ -148,51 +148,43 @@
 							<AlertTags :alert @updated="updateAlert" />
 						</template>
 					</CardKV>
+
+					<CardKV v-if="linkedCases.length">
+						<template #key>Linked Cases</template>
+						<template #value>
+							<AlertLinkedCases :alert @updated="updateAlert($event)" />
+						</template>
+					</CardKV>
 				</div>
 			</div>
 
 			<div
-				class="border-default flex items-center gap-2 border-t py-4"
+				class="border-default flex flex-wrap items-center justify-between gap-2 border-t py-4"
 				:class="[useFooterBackground && 'bg-secondary']"
 			>
-				<AlertCreateCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
+				<div class="flex flex-wrap items-center gap-2">
+					<AlertCreateCaseButton v-if="!linkedCases.length" :alert @updated="updateAlert" />
 
-				<n-button size="small" secondary @click="showManualSend = true">
-					<template #icon>
-						<Icon :name="SendIcon" :size="14" />
-					</template>
-					Send to channel…
-				</n-button>
+					<AlertSendToChannelButton :alert />
 
-				<ManualSendDialog
-					v-model:show="showManualSend"
-					entity-type="alert"
-					:entity-id="alert.id"
-					:customer-code="alert.customer_code"
-				/>
-
-				<AlertMergeCaseButton v-if="!linkedCases.length" :alerts="[alert]" @updated="updateAlert" />
-
-				<div v-if="linkedCases.length" class="flex flex-wrap items-center gap-3">
-					<span>Linked Cases:</span>
-					<AlertLinkedCases :alert @updated="updateAlert($event)" />
+					<AlertMergeCaseButton v-if="!linkedCases.length" :alerts="[alert]" @updated="updateAlert" />
 				</div>
 
-				<div class="grow"></div>
+				<div class="flex flex-wrap items-center gap-2">
+					<n-button type="primary" secondary :loading="investigating" @click="handleInvestigate()">
+						<template #icon>
+							<Icon name="carbon:machine-learning-model" />
+						</template>
+						Investigate with AI Analyst
+					</n-button>
 
-				<n-button type="primary" secondary :loading="investigating" @click="handleInvestigate()">
-					<template #icon>
-						<Icon name="carbon:machine-learning-model" />
-					</template>
-					Investigate with AI Analyst
-				</n-button>
-
-				<n-button type="error" secondary @click="handleDelete()">
-					<template #icon>
-						<Icon :name="TrashIcon" />
-					</template>
-					Delete
-				</n-button>
+					<n-button type="error" secondary @click="handleDelete()">
+						<template #icon>
+							<Icon :name="TrashIcon" />
+						</template>
+						Delete
+					</n-button>
+				</div>
 			</div>
 		</div>
 	</n-spin>
@@ -207,7 +199,6 @@ import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
-import ManualSendDialog from "@/components/notifications/ManualSendDialog.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
@@ -223,13 +214,11 @@ const emit = defineEmits<{
 	(e: "updated", value: Alert): void
 }>()
 const AlertCreateCaseButton = defineAsyncComponent(() => import("./AlertCreateCaseButton.vue"))
+const AlertSendToChannelButton = defineAsyncComponent(() => import("./AlertSendToChannelButton.vue"))
 const AlertMergeCaseButton = defineAsyncComponent(() => import("./AlertMergeCaseButton.vue"))
 const AlertLinkedCases = defineAsyncComponent(() => import("./AlertLinkedCases.vue"))
 
 const { alert } = toRefs(props)
-
-const SendIcon = "carbon:send-alt"
-const showManualSend = ref(false)
 
 const TrashIcon = "carbon:trash-can"
 const LinkIcon = "carbon:launch"
