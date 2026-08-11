@@ -72,7 +72,6 @@ from app.incidents.models import CaseTemplateTask
 from app.incidents.schema.case_templates import CaseTemplateSuggestion
 from app.incidents.schema.case_templates import CaseTemplateSuggestionListResponse
 from app.incidents.schema.case_templates import SuggestionReason
-from app.incidents.services.alert_severity import severity_of
 from app.incidents.services.case_templates import _template_to_response
 
 # ---------------------------------------------------------------------------
@@ -286,11 +285,16 @@ class AlertSignals:
     and there is no alert to read. Both paths score through the same function;
     the manual one simply has empty topical signals and therefore leans on
     scope, usage history and ``is_default``.
+
+    Severity is deliberately absent. Templates carry no severity dimension, so
+    the only way to score on it would be text-matching "critical" / "high"
+    against the template's prose — which fires on any playbook that happens to
+    use the word, and says nothing about whether it fits. Giving severity real
+    weight needs a real column on the template first.
     """
 
     customer_code: Optional[str] = None
     source: Optional[str] = None
-    severity: Optional[str] = None
     alert_id: Optional[int] = None
     alert_name: Optional[str] = None
     tags: List[str] = dataclass_field(default_factory=list)
@@ -376,7 +380,6 @@ async def build_alert_signals(
     signals.alert_name = alert.alert_name
     signals.customer_code = alert.customer_code
     signals.source = alert.source
-    signals.severity = severity_of(alert)
 
     signals.tags = await _load_alert_tags(alert.id, session)
 
