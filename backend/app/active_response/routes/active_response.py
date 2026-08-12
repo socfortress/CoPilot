@@ -159,20 +159,37 @@ async def invoke_active_response_route(
     """
     logger.info("Invoking Wazuh Active Response...")
     # Append '0' to the command - This is required for Wazuh Active Response
-    request.command = f"{request.command.value}0"
+    command = f"{request.command.value}0"
     # Create a dictionary with the request data
-    data_dict = {"command": request.command, "arguments": request.arguments, "alert": request.alert}
+    data_dict = {"command": command, "arguments": request.arguments, "alert": request.alert}
+
+    # `requests` URL-encodes a Python bool as "True"; Wazuh's OpenAPI layer wants
+    # a JSON-style lowercase boolean. An empty agents_list means "every agent",
+    # which is what Wazuh assumes when the parameter is absent.
+    params = request.params.model_dump(exclude_none=True)
+    params["wait_for_complete"] = "true" if params.get("wait_for_complete") else "false"
+
     response = await send_put_request(
         endpoint=request.endpoint,
         data=json.dumps(data_dict),
-        params=request.params,
+        params=params,
         debug=True,
     )
-    if not response["success"]:
+
+    # send_put_request returns None when the Wazuh-Manager connector is missing.
+    if not response:
+        raise HTTPException(status_code=503, detail="Wazuh Manager connector is not configured")
+
+    if not response.get("success"):
+        # Reporting success here regardless of the outcome is how an unreachable
+        # or rejecting Wazuh looks identical to a completed block in the UI. The
+        # analyst has to be able to tell the difference — issue #960.
         logger.error(f"Request failed: {response.get('message')}")
-    if "raw_response" in response:
-        logger.error(f"Raw response: {response['raw_response']}")
-    if "error_detail" in response:
-        logger.error(f"Error details: {response['error_detail']}")
+        if "raw_response" in response:
+            logger.error(f"Raw response: {response['raw_response']}")
+        if "error_detail" in response:
+            logger.error(f"Error details: {response['error_detail']}")
+        detail = response.get("error_detail") or response.get("message") or "Wazuh rejected the Active Response request"
+        raise HTTPException(status_code=502, detail=f"Wazuh Active Response failed: {detail}")
 
     return InvokeActiveResponseResponse(success=True, message="Wazuh Active Response invoked successfully")
