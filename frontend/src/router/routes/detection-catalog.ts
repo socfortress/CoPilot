@@ -16,7 +16,7 @@ export const detectionCatalogRoutes: RouteRecordRaw[] = [
 		path: "/detection-catalog/stories/:name",
 		name: "DetectionCatalogStory",
 		component: () => import("@/views/detectionCatalog/DetectionCatalogStory.vue"),
-		meta: { title: "Analytic Story", auth: true, roles: RouteRole.All }
+		meta: { title: "Analytic Story", auth: true, roles: RouteRole.All, skipPin: true }
 	},
 	{
 		path: "/detection-catalog/detections",
@@ -26,7 +26,7 @@ export const detectionCatalogRoutes: RouteRecordRaw[] = [
 		path: "/detection-catalog/detections/:id",
 		name: "DetectionCatalogDetection",
 		component: () => import("@/views/detectionCatalog/DetectionCatalogDetection.vue"),
-		meta: { title: "Detection Rule", auth: true, roles: RouteRole.All }
+		meta: { title: "Detection Rule", auth: true, roles: RouteRole.All, skipPin: true }
 	},
 	{
 		path: "/detection-catalog/wazuh-rules",
@@ -36,7 +36,7 @@ export const detectionCatalogRoutes: RouteRecordRaw[] = [
 		path: "/detection-catalog/wazuh-rules/:id",
 		name: "DetectionCatalogWazuhRule",
 		component: () => import("@/views/detectionCatalog/DetectionCatalogWazuhRule.vue"),
-		meta: { title: "Wazuh Rule", auth: true, roles: RouteRole.All }
+		meta: { title: "Wazuh Rule", auth: true, roles: RouteRole.All, skipPin: true }
 	},
 	{
 		path: "/detection-catalog/coverage-gaps",
@@ -46,7 +46,7 @@ export const detectionCatalogRoutes: RouteRecordRaw[] = [
 		path: "/detection-catalog/coverage-gaps/:techniqueId",
 		name: "DetectionCatalogCoverageGap",
 		component: () => import("@/views/detectionCatalog/DetectionCatalogCoverageGap.vue"),
-		meta: { title: "Coverage Gap", auth: true, roles: RouteRole.All }
+		meta: { title: "Coverage Gap", auth: true, roles: RouteRole.All, skipPin: true }
 	},
 	{
 		path: "/detection-catalog/compliance",
@@ -60,6 +60,6 @@ export const detectionCatalogRoutes: RouteRecordRaw[] = [
 		path: "/detection-catalog/compliance/:framework/:control",
 		name: "DetectionCatalogComplianceGroup",
 		component: () => import("@/views/detectionCatalog/DetectionCatalogComplianceGroup.vue"),
-		meta: { title: "Compliance Control", auth: true, roles: RouteRole.All }
+		meta: { title: "Compliance Control", auth: true, roles: RouteRole.All, skipPin: true }
 	}
 ]

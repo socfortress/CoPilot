@@ -12,6 +12,6 @@ export const auditRoutes: RouteRecordRaw[] = [
 		path: "/audit/:id",
 		name: "AuditEntry",
 		component: () => import("@/views/AuditEntry.vue"),
-		meta: { title: "Audit Entry", auth: true, roles: RouteRole.All }
+		meta: { title: "Audit Entry", auth: true, roles: RouteRole.All, skipPin: true }
 	}
 ]

@@ -14,7 +14,7 @@ export const alertsRoutes: RouteRecordRaw[] = [
 				path: "siem/alert/:indexName/:alertId",
 				name: "Alerts-SIEM-Alert",
 				component: () => import("@/views/alerts/AlertsSiemAlert.vue"),
-				meta: { title: "SIEM Alert" }
+				meta: { title: "SIEM Alert", skipPin: true }
 			},
 			{
 				path: "siem/alert/:indexName",
@@ -37,13 +37,13 @@ export const alertsRoutes: RouteRecordRaw[] = [
 				path: "siem/:indexName",
 				name: "Alerts-SIEM-Summary",
 				component: () => import("@/views/alerts/AlertsSiemSummary.vue"),
-				meta: { title: "SIEM Alert Summary" }
+				meta: { title: "SIEM Alert Summary", skipPin: true }
 			},
 			{
 				path: "mitre/techniques/:techniqueId",
 				name: "Alerts-Mitre-Techniques",
 				component: () => import("@/views/alerts/MitreTechniques.vue"),
-				meta: { title: "MITRE Technique" }
+				meta: { title: "MITRE Technique", skipPin: true }
 			},
 			{
 				path: "mitre/techniques",
@@ -53,7 +53,7 @@ export const alertsRoutes: RouteRecordRaw[] = [
 				path: "mitre/tactics/:tacticId",
 				name: "Alerts-Mitre-Tactic",
 				component: () => import("@/views/alerts/MitreTactic.vue"),
-				meta: { title: "MITRE Tactic" }
+				meta: { title: "MITRE Tactic", skipPin: true }
 			},
 			{
 				path: "mitre/tactics",
@@ -63,7 +63,7 @@ export const alertsRoutes: RouteRecordRaw[] = [
 				path: "mitre/software/:softwareId",
 				name: "Alerts-Mitre-Software",
 				component: () => import("@/views/alerts/MitreSoftware.vue"),
-				meta: { title: "MITRE Software" }
+				meta: { title: "MITRE Software", skipPin: true }
 			},
 			{
 				path: "mitre/software",
@@ -73,7 +73,7 @@ export const alertsRoutes: RouteRecordRaw[] = [
 				path: "mitre/mitigations/:mitigationId",
 				name: "Alerts-Mitre-Mitigation",
 				component: () => import("@/views/alerts/MitreMitigation.vue"),
-				meta: { title: "MITRE Mitigation" }
+				meta: { title: "MITRE Mitigation", skipPin: true }
 			},
 			{
 				path: "mitre/mitigations",
@@ -83,7 +83,7 @@ export const alertsRoutes: RouteRecordRaw[] = [
 				path: "mitre/groups/:groupId",
 				name: "Alerts-Mitre-Group",
 				component: () => import("@/views/alerts/MitreGroup.vue"),
-				meta: { title: "MITRE Group" }
+				meta: { title: "MITRE Group", skipPin: true }
 			},
 			{
 				path: "mitre/groups",
@@ -93,7 +93,7 @@ export const alertsRoutes: RouteRecordRaw[] = [
 				path: "mitre/:techniqueId/events/:eventId",
 				name: "Alerts-Mitre-Technique-Event",
 				component: () => import("@/views/alerts/MitreTechniqueEvent.vue"),
-				meta: { title: "MITRE Technique Alert" }
+				meta: { title: "MITRE Technique Alert", skipPin: true }
 			},
 			{
 				path: "mitre/:techniqueId/events",
@@ -106,7 +106,7 @@ export const alertsRoutes: RouteRecordRaw[] = [
 				path: "mitre/:techniqueId",
 				name: "Alerts-Mitre-Technique",
 				component: () => import("@/views/alerts/MitreTechniqueAlert.vue"),
-				meta: { title: "MITRE Technique" }
+				meta: { title: "MITRE Technique", skipPin: true }
 			},
 			{
 				path: "mitre",
@@ -118,7 +118,7 @@ export const alertsRoutes: RouteRecordRaw[] = [
 				path: "atomic-red-team/:techniqueId",
 				name: "Alerts-AtomicRedTeam-Technique",
 				component: () => import("@/views/alerts/AtomicRedTeamTechnique.vue"),
-				meta: { title: "Atomic Red Team Technique" }
+				meta: { title: "Atomic Red Team Technique", skipPin: true }
 			},
 			{
 				path: "atomic-red-team",

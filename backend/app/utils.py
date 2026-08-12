@@ -86,7 +86,12 @@ class ErrorType(str, Enum):
 class ValidationErrorItem(BaseModel):
     field: str
     error_type: ErrorType
-    message: str = None  # Initialize as None
+    # Left as None to be filled in from `error_type` below. Callers that already
+    # hold a better description than the generic per-type text — the validation
+    # handler, for codes that land on GENERAL — may pass one and it is kept.
+    # Must be Optional, not a bare `str = None`: Pydantic 2 applies the default
+    # only when the key is absent and rejects an explicitly-passed None.
+    message: Optional[str] = None
 
     @model_validator(mode="after")
     def set_message(self):
@@ -123,7 +128,7 @@ class ValidationErrorItem(BaseModel):
             ErrorType.ENUM: "Value is not a valid enumeration member.",
             ErrorType.MISSING_V2: "Missing data for required field.",
         }
-        if self.error_type in error_messages:
+        if not self.message and self.error_type in error_messages:
             self.message = error_messages[self.error_type]
         return self
 

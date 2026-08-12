@@ -18,7 +18,7 @@ export const customersRoutes: RouteRecordRaw[] = [
 		path: "/customers/:code/healthcheck/:source/:agentId",
 		name: "CustomerHealthcheckAgent",
 		component: () => import("@/views/customers/CustomerHealthcheckAgent.vue"),
-		meta: { title: "Agent Healthcheck", auth: true, roles: RouteRole.All }
+		meta: { title: "Agent Healthcheck", auth: true, roles: RouteRole.All, skipPin: true }
 	},
 	{
 		path: "/customers/:code/healthcheck/:source",
@@ -32,7 +32,7 @@ export const customersRoutes: RouteRecordRaw[] = [
 		path: "/customers/:code",
 		name: "Customer",
 		component: () => import("@/views/customers/Customer.vue"),
-		meta: { title: "Customer", auth: true, roles: RouteRole.All }
+		meta: { title: "Customer", auth: true, roles: RouteRole.All, skipPin: true }
 	},
 	{
 		path: "/customer-portal",

@@ -56,7 +56,7 @@ export const incidentManagementRoutes: RouteRecordRaw[] = [
 				path: "exclusion-rules/:id",
 				name: "IncidentManagement-ExclusionRule",
 				component: () => import("@/views/incidentManagement/ExclusionRule.vue"),
-				meta: { title: "Exclusion Rule" }
+				meta: { title: "Exclusion Rule", skipPin: true }
 			},
 			{
 				path: "sources/new",
@@ -74,7 +74,7 @@ export const incidentManagementRoutes: RouteRecordRaw[] = [
 				path: "sources/:source",
 				name: "IncidentManagement-Source",
 				component: () => import("@/views/incidentManagement/ConfiguredSource.vue"),
-				meta: { title: "Incident Source" }
+				meta: { title: "Incident Source", skipPin: true }
 			},
 			{
 				path: "alerts",
@@ -93,7 +93,7 @@ export const incidentManagementRoutes: RouteRecordRaw[] = [
 				path: "alerts/:alertId/assets/:assetId",
 				name: "IncidentManagement-AlertAsset",
 				component: () => import("@/views/incidentManagement/AlertLinkedAsset.vue"),
-				meta: { title: "Alert Asset" }
+				meta: { title: "Alert Asset", skipPin: true }
 			},
 			{
 				path: "alerts/:alertId/iocs",
@@ -112,13 +112,13 @@ export const incidentManagementRoutes: RouteRecordRaw[] = [
 				path: "alerts/:alertId/iocs/:iocId",
 				name: "IncidentManagement-AlertIoc",
 				component: () => import("@/views/incidentManagement/AlertLinkedIoc.vue"),
-				meta: { title: "Alert IoC" }
+				meta: { title: "Alert IoC", skipPin: true }
 			},
 			{
 				path: "alerts/:id",
 				name: "IncidentManagement-Alert",
 				component: () => import("@/views/incidentManagement/Alert.vue"),
-				meta: { title: "Incident Alert" }
+				meta: { title: "Incident Alert", skipPin: true }
 			},
 			{
 				path: "cases/new",
@@ -130,7 +130,7 @@ export const incidentManagementRoutes: RouteRecordRaw[] = [
 				path: "cases/:id",
 				name: "IncidentManagement-Case",
 				component: () => import("@/views/incidentManagement/Case.vue"),
-				meta: { title: "Incident Case" }
+				meta: { title: "Incident Case", skipPin: true }
 			},
 			{
 				path: "cases",
@@ -165,7 +165,8 @@ export const incidentManagementRoutes: RouteRecordRaw[] = [
 				meta: {
 					title: "Case Template Library Entry",
 					// same gate as the templates list — SOC-team-managed playbooks
-					roles: [AuthUserRole.Admin, AuthUserRole.Analyst]
+					roles: [AuthUserRole.Admin, AuthUserRole.Analyst],
+					skipPin: true
 				}
 			},
 			{
@@ -175,7 +176,8 @@ export const incidentManagementRoutes: RouteRecordRaw[] = [
 				meta: {
 					title: "Case Template",
 					// same gate as the templates list — SOC-team-managed playbooks
-					roles: [AuthUserRole.Admin, AuthUserRole.Analyst]
+					roles: [AuthUserRole.Admin, AuthUserRole.Analyst],
+					skipPin: true
 				}
 			},
 			{

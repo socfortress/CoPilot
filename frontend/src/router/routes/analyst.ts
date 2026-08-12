@@ -16,7 +16,7 @@ export const analystRoutes: RouteRecordRaw[] = [
 		path: "/ai-analyst/reports/:id",
 		name: "AiAnalystReport",
 		component: () => import("@/views/aiAnalyst/AiAnalystReport.vue"),
-		meta: { title: "AI Analyst Report", auth: true, roles: RouteRole.All }
+		meta: { title: "AI Analyst Report", auth: true, roles: RouteRole.All, skipPin: true }
 	},
 	{
 		path: "/ai-analyst/feedback",
@@ -26,7 +26,7 @@ export const analystRoutes: RouteRecordRaw[] = [
 		path: "/ai-analyst/feedback/:id",
 		name: "AiAnalystFeedbackReview",
 		component: () => import("@/views/aiAnalyst/AiAnalystFeedbackReview.vue"),
-		meta: { title: "AI Analyst Feedback Review", auth: true, roles: RouteRole.All }
+		meta: { title: "AI Analyst Feedback Review", auth: true, roles: RouteRole.All, skipPin: true }
 	},
 	{
 		path: "/ai-analyst/iocs",
@@ -36,7 +36,7 @@ export const analystRoutes: RouteRecordRaw[] = [
 		path: "/ai-analyst/iocs/:id",
 		name: "AiAnalystIoc",
 		component: () => import("@/views/aiAnalyst/AiAnalystIoc.vue"),
-		meta: { title: "AI Analyst IOC", auth: true, roles: RouteRole.All }
+		meta: { title: "AI Analyst IOC", auth: true, roles: RouteRole.All, skipPin: true }
 	},
 	{
 		path: "/ai-analyst/jobs",
@@ -46,6 +46,6 @@ export const analystRoutes: RouteRecordRaw[] = [
 		path: "/ai-analyst/jobs/:id",
 		name: "AiAnalystJob",
 		component: () => import("@/views/aiAnalyst/AiAnalystJob.vue"),
-		meta: { title: "AI Analyst Job", auth: true, roles: RouteRole.All }
+		meta: { title: "AI Analyst Job", auth: true, roles: RouteRole.All, skipPin: true }
 	}
 ]

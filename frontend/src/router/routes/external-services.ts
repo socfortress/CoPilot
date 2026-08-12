@@ -20,7 +20,7 @@ export const externalServicesRoutes: RouteRecordRaw[] = [
 				path: "third-party-integrations/:id",
 				name: "ExternalServices-ThirdPartyIntegration",
 				component: () => import("@/views/externalServices/ThirdPartyIntegration.vue"),
-				meta: { title: "Third Party Integration" }
+				meta: { title: "Third Party Integration", skipPin: true }
 			},
 			{
 				path: "network-connectors",
@@ -32,7 +32,7 @@ export const externalServicesRoutes: RouteRecordRaw[] = [
 				path: "network-connectors/:id",
 				name: "ExternalServices-NetworkConnector",
 				component: () => import("@/views/externalServices/NetworkConnector.vue"),
-				meta: { title: "Network Connector" }
+				meta: { title: "Network Connector", skipPin: true }
 			},
 			{
 				path: "shuffle-app-auth",
