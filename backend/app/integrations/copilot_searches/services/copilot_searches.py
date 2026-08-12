@@ -191,8 +191,17 @@ class RulesCache:
 
             logger.info(f"Found {len(yaml_files)} YAML files in repository")
 
-            # Fetch each YAML file
-            tasks = [self._fetch_yaml_file(client, file_info["path"]) for file_info in yaml_files]
+            # Fetch each YAML file with bounded concurrency. Firing every
+            # request at once (thousands, once the repo grows) exhausts the
+            # httpx pool and trips GitHub throttling, surfacing as
+            # empty-message transport errors and a >60s refresh.
+            semaphore = asyncio.Semaphore(12)
+
+            async def _fetch_bounded(path: str):
+                async with semaphore:
+                    return await self._fetch_yaml_file(client, path)
+
+            tasks = [_fetch_bounded(file_info["path"]) for file_info in yaml_files]
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
