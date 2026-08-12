@@ -12,6 +12,6 @@ export const schedulerRoutes: RouteRecordRaw[] = [
 		path: "/scheduler/:id",
 		name: "SchedulerJob",
 		component: () => import("@/views/scheduler/SchedulerJob.vue"),
-		meta: { title: "Scheduler Job", auth: true, roles: RouteRole.All }
+		meta: { title: "Scheduler Job", auth: true, roles: RouteRole.All, skipPin: true }
 	}
 ]

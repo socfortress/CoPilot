@@ -12,7 +12,7 @@ export const dashboardsRoutes: RouteRecordRaw[] = [
 		path: "/dashboards/:id",
 		name: "DashboardView",
 		component: () => import("@/views/dashboards/DashboardView.vue"),
-		meta: { title: "Dashboard Viewer", auth: true, roles: RouteRole.All }
+		meta: { title: "Dashboard Viewer", auth: true, roles: RouteRole.All, skipPin: true }
 	},
 	{
 		path: "/artifacts",

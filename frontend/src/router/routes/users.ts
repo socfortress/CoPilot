@@ -18,6 +18,6 @@ export const usersRoutes: RouteRecordRaw[] = [
 		path: "/users/:id",
 		name: "UserView",
 		component: () => import("@/views/users/UserView.vue"),
-		meta: { title: "User", auth: true, roles: RouteRole.All }
+		meta: { title: "User", auth: true, roles: RouteRole.All, skipPin: true }
 	}
 ]

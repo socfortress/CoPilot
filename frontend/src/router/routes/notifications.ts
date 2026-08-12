@@ -25,7 +25,7 @@ export const notificationsRoutes: RouteRecordRaw[] = [
 		path: "/internal-notifications/:id",
 		name: "InternalNotification",
 		component: () => import("@/views/notification/InternalNotificationRoute.vue"),
-		meta: { title: "Internal Notification Route", auth: true, roles: AuthUserRole.Admin }
+		meta: { title: "Internal Notification Route", auth: true, roles: AuthUserRole.Admin, skipPin: true }
 	},
 	{
 		// Templates are shared across tenants — one edit changes what every
@@ -46,6 +46,6 @@ export const notificationsRoutes: RouteRecordRaw[] = [
 		path: "/message-templates/:id",
 		name: "MessageTemplate",
 		component: () => import("@/views/notification/MessageTemplate.vue"),
-		meta: { title: "Message Template", auth: true, roles: AuthUserRole.Admin }
+		meta: { title: "Message Template", auth: true, roles: AuthUserRole.Admin, skipPin: true }
 	}
 ]

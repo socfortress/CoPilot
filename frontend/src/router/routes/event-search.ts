@@ -12,7 +12,7 @@ export const eventSearchRoutes: RouteRecordRaw[] = [
 		path: "/event-search/:customerCode/:sourceName/:indexName/:eventId",
 		name: "EventSearch-Event",
 		component: () => import("@/views/events/Event.vue"),
-		meta: { title: "Event", auth: true, roles: RouteRole.All }
+		meta: { title: "Event", auth: true, roles: RouteRole.All, skipPin: true }
 	},
 	{
 		path: "/event-search/:customerCode/:sourceName/:indexName",
