@@ -1,3 +1,4 @@
+import ipaddress
 from enum import Enum
 from typing import Any
 from typing import Dict
@@ -55,14 +56,32 @@ class BaseModelWithEnum(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
 
-class WindowsFirewallAlert(BaseModelWithEnum):
+class FirewallAlert(BaseModelWithEnum):
+    """Shared shape for the firewall active responses — an action plus the IP it targets."""
+
     action: AlertAction
     ip: str
 
+    @field_validator("ip")
+    @classmethod
+    def check_ip(cls, v: str) -> str:
+        # The value is forwarded verbatim to the agent-side script, which builds
+        # a firewall rule out of it. Reject anything that isn't an address here
+        # so the analyst gets a message naming the field instead of a silent
+        # no-op logged on the endpoint hours later.
+        try:
+            ipaddress.ip_address(v.strip())
+        except ValueError:
+            raise ValueError(f"'{v}' is not a valid IP address")
+        return v.strip()
 
-class LinuxFirewallAlert(BaseModelWithEnum):
-    action: AlertAction
-    ip: str
+
+class WindowsFirewallAlert(FirewallAlert):
+    pass
+
+
+class LinuxFirewallAlert(FirewallAlert):
+    pass
 
 
 class SysmonConfigReloadAlert(BaseModelWithEnum):
@@ -76,18 +95,27 @@ class ActiveResponseCommand(str, Enum):
 
     @classmethod
     def _missing_(cls, value):
-        for member in cls:
-            if member.name == value:
-                return member
-
-        for active_response in ActiveResponsesSupported:
-            if active_response.name.lower() == value.lower():
-                return cls[f"{value}0"]
+        # Accept the name as the UI displays it ("WINDOWS_FIREWALL", "Windows_Firewall")
+        # as well as the canonical lowercase value. The trailing "0" Wazuh expects is
+        # appended at invoke time by the route, never here.
+        if isinstance(value, str):
+            for member in cls:
+                if member.name.lower() == value.lower():
+                    return member
 
         raise HTTPException(
             status_code=400,
             detail=f"Invalid command: {value}, must be one of {', '.join([member.name for member in cls])}",
         )
+
+
+# Which alert shape each command expects. A command missing from this map has no
+# validated payload and is rejected rather than forwarded to Wazuh unchecked.
+ALERT_MODEL_BY_COMMAND = {
+    ActiveResponseCommand.windows_firewall: WindowsFirewallAlert,
+    ActiveResponseCommand.linux_firewall: LinuxFirewallAlert,
+    ActiveResponseCommand.sysmon_config_reload: SysmonConfigReloadAlert,
+}
 
 
 class ParamsModel(BaseModel):
@@ -113,16 +141,31 @@ class InvokeActiveResponseRequest(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def create_alert(cls, values):
+        if not isinstance(values, dict):
+            return values
+
         command = values.get("command")
-        alert = values.get("alert")
-        if command == ActiveResponseCommand.windows_firewall:
-            values["alert"] = WindowsFirewallAlert(**alert)
-        elif command == ActiveResponseCommand.linux_firewall:
-            values["alert"] = LinuxFirewallAlert(**alert)
-        elif command == ActiveResponseCommand.sysmon_config_reload:
-            values["alert"] = SysmonConfigReloadAlert(**alert)
-        else:
+        if command is None:
+            # Nothing to pick an alert shape with. Fall through so the `command`
+            # field reports itself as missing, which names the field; a 400 from
+            # here would not.
+            return values
+
+        alert = values.get("alert") or {}
+        if not isinstance(alert, dict):
+            raise ValueError("'alert' must be an object")
+
+        alert_model = ALERT_MODEL_BY_COMMAND.get(ActiveResponseCommand(command))
+        if alert_model is None:
             raise HTTPException(status_code=400, detail="Invalid command for alert")
+
+        # `alert` is typed `Dict[str, Any]` and the route json.dumps() it straight
+        # onto the wire, so the per-command model is used to *validate* the payload
+        # and then dumped back to a plain dict. Leaving the model instance in place
+        # made Pydantic 2 reject the field outright ("Input should be a valid
+        # dictionary"), which surfaced in the UI as a bare "Invalid value." on
+        # perfectly good input — issue #960.
+        values["alert"] = alert_model(**alert).model_dump(mode="json")
 
         return values
 
