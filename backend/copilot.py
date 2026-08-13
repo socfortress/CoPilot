@@ -1,3 +1,4 @@
+import asyncio
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -21,6 +22,7 @@ from fastapi.staticfiles import StaticFiles  # noqa: E402
 from loguru import logger  # noqa: E402
 
 from app.auth.utils import AuthHandler  # noqa: E402
+from app.blocking import configure_thread_limit
 from app.data_store.data_store_setup import create_buckets
 from app.db.db_session import SQLALCHEMY_DATABASE_URI_NO_DB
 from app.db.db_session import async_engine
@@ -106,6 +108,7 @@ from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
 from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler
+from app.schedulers.services.refresh_catalog_caches import warm_catalog_caches
 
 # from app.middleware.logger import log_requests
 
@@ -145,6 +148,16 @@ async def lifespan(_app: FastAPI):
     if not scheduler.running:
         logger.info("Scheduler is not running, starting now...")
         scheduler.start()
+
+    # Blocking connector calls now run in anyio's worker pool (#1072); the default
+    # of 40 threads is raised here, inside the loop, where the limiter exists.
+    configure_thread_limit()
+
+    # Warm the Detections Catalog caches in the background (#1072). Cold loads
+    # measured 130s for the MITRE STIX bundle and 80-110s for the Wazuh ruleset;
+    # whoever triggers one pays for it inside their request, so it must never be a
+    # user. Detached on purpose: startup does not wait, and failures are logged.
+    asyncio.create_task(warm_catalog_caches())
 
     # Event loop lag watchdog (#1072). Started last so the startup work above —
     # migrations, MinIO, seeding — is not reported as a stall.

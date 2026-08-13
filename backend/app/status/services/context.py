@@ -1,3 +1,5 @@
+import asyncio
+import time
 from datetime import datetime
 from datetime import timedelta
 from typing import List
@@ -9,9 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.connectors.services import ConnectorServices
+from app.db.db_session import get_db_session
 from app.integrations.copilot_searches.services.wazuh_rules_cache import (
     wazuh_rules_cache,
 )
+from app.middleware.performance import performance_registry
 from app.status.schema.context import SidebarContextResponse
 from app.status.schema.context import SidebarHealthIndicator
 from app.status.services.context_indicators import build_agent_sync_indicator
@@ -38,6 +42,15 @@ from app.version.services.version import check_version_outdated
 _VERSION_CACHE: Optional[dict] = None
 _VERSION_CACHE_AT: Optional[datetime] = None
 _VERSION_CACHE_MINUTES = 30
+
+# Only attribute per-indicator time when the sidebar was actually slow, so a
+# healthy request adds nothing to the session log.
+INDICATOR_TIMING_LOG_MS = 1000.0
+
+# How many indicators may hold a database connection at once. One sidebar
+# request must not be able to drain the pool (DB_POOL_SIZE + DB_MAX_OVERFLOW)
+# while other requests are in flight.
+INDICATOR_CONCURRENCY = 6
 
 
 async def _get_version_fields() -> dict:
@@ -111,7 +124,20 @@ async def _build_connector_indicator(session: AsyncSession) -> SidebarHealthIndi
 
 
 async def _build_wazuh_catalog_indicator() -> SidebarHealthIndicator:
-    await wazuh_rules_cache.ensure_loaded()
+    # Never block the sidebar on a ruleset download: a cold refresh measured
+    # 80-110s against a real Wazuh Manager, and this indicator only reports the
+    # cache's state. Show what we have; the refresh lands for the next caller.
+    await wazuh_rules_cache.ensure_fresh_nonblocking()
+
+    if wazuh_rules_cache.rules_count == 0 and wazuh_rules_cache.unavailable_reason is None:
+        return SidebarHealthIndicator(
+            id="wazuh_catalog",
+            status="ok",
+            label="Wazuh catalog",
+            detail="Loading the Wazuh ruleset…",
+            count=0,
+            category="infrastructure",
+        )
 
     if wazuh_rules_cache.is_available:
         return SidebarHealthIndicator(
@@ -134,13 +160,100 @@ async def _build_wazuh_catalog_indicator() -> SidebarHealthIndicator:
     )
 
 
+async def _run_with_own_session(builder, args, kwargs):
+    """Run a builder on a session of its own.
+
+    A single AsyncSession cannot serve two operations at once — concurrent use
+    raises, or worse, interleaves results silently. Since every builder now runs
+    concurrently, none of them may use the caller's session: each takes a private
+    one for its lifetime and returns it immediately.
+    """
+    if args and isinstance(args[0], AsyncSession):
+        async with get_db_session() as own_session:
+            return await safe_build(builder, own_session, *args[1:], **kwargs)
+    return await safe_build(builder, *args, **kwargs)
+
+
+async def _gather_indicators(builders) -> List[SidebarHealthIndicator]:
+    """Run every indicator concurrently, each on its own database session.
+
+    History, because the shape here is not arbitrary (#1072):
+
+    1. Originally all ~14 builders were awaited in a `for` loop, so the request
+       cost the *sum* of them — measured at 15s.
+    2. Then the external ones fanned out while the DB-bound ones stayed
+       sequential, because they shared the caller's AsyncSession (one session
+       cannot serve concurrent operations) and the pool was SQLAlchemy's default
+       5+10. That took the sidebar to ~6s, and the per-builder timings then
+       showed the sequential DB group *was* the remaining 4.9s.
+    3. With the pool raised (20+20), every builder now gets its own session and
+       runs concurrently — bounded by a semaphore so one sidebar request cannot
+       take the whole pool while other requests are being served.
+
+    The bound is what keeps this safe: without it, a handful of simultaneous
+    sidebar loads would each ask for a dozen connections and starve everything
+    else, which looks like a slow database rather than a self-inflicted queue.
+
+    Results are reassembled in declaration order, because the sidebar renders
+    them in the order they are listed.
+    """
+    results: dict = {}
+    timings: List[tuple] = []
+    limiter = asyncio.Semaphore(INDICATOR_CONCURRENCY)
+
+    async def run_one(index, builder, args, kwargs):
+        started = time.perf_counter()
+        try:
+            async with limiter:
+                results[index] = await _run_with_own_session(builder, args, kwargs)
+        finally:
+            timings.append((builder.__name__, (time.perf_counter() - started) * 1000.0))
+
+    started = time.perf_counter()
+    await asyncio.gather(
+        *[run_one(index, builder, args, kwargs) for index, (builder, args, kwargs) in enumerate(builders)],
+    )
+    total_ms = (time.perf_counter() - started) * 1000.0
+    # Kept in the record for continuity with earlier sessions, where it measured
+    # the sequential DB group. Nothing is sequential now, so it is always 0.
+    sequential_ms = 0.0
+
+    _record_indicator_timings(total_ms, sequential_ms, timings)
+
+    return [results[index] for index in sorted(results) if results[index] is not None]
+
+
+def _record_indicator_timings(total_ms: float, sequential_ms: float, timings: List[tuple]) -> None:
+    """Log which indicators actually cost the time, when the request was slow.
+
+    Gated on a threshold so a healthy sidebar adds nothing to the session file.
+    Without this the only way to attribute the remaining seconds is guesswork —
+    and the whole point of #1072's instrumentation is not guessing.
+    """
+    if total_ms < INDICATOR_TIMING_LOG_MS:
+        return
+
+    slowest = sorted(timings, key=lambda item: item[1], reverse=True)
+    performance_registry.record_event(
+        "sidebar_indicators",
+        {
+            "total_ms": round(total_ms, 1),
+            # How much of the total is the DB group, which is deliberately
+            # sequential (one shared AsyncSession). If this dominates, the next
+            # lever is the connection pool, not more concurrency.
+            "sequential_group_ms": round(sequential_ms, 1),
+            "builders": [{"name": name, "ms": round(ms, 1)} for name, ms in slowest],
+        },
+    )
+    top = ", ".join(f"{name}={ms:.0f}ms" for name, ms in slowest[:4])
+    logger.info(f"Sidebar context took {total_ms:.0f}ms (DB group {sequential_ms:.0f}ms). Slowest: {top}")
+
+
 async def build_sidebar_context(
     *,
     session: AsyncSession,
     user: User,
 ) -> SidebarContextResponse:
-    version_fields = await _get_version_fields()
-
     is_admin = user.role_id == RoleEnum.admin.value
     is_analyst_or_admin = user.role_id in (RoleEnum.admin.value, RoleEnum.analyst.value)
     is_customer_user = user.role_id == RoleEnum.customer_user.value
@@ -183,11 +296,13 @@ async def build_sidebar_context(
             ],
         )
 
-    indicators: List[SidebarHealthIndicator] = []
-    for builder, args, kwargs in builders:
-        indicator = await safe_build(builder, *args, **kwargs)
-        if indicator is not None:
-            indicators.append(indicator)
+    # The version check is an outbound GitHub call (cached 30 min, 5s timeout). It
+    # used to be awaited before the builders even started, so on a cache miss the
+    # whole sidebar waited for it before doing anything else.
+    version_fields, indicators = await asyncio.gather(
+        _get_version_fields(),
+        _gather_indicators(builders),
+    )
 
     return SidebarContextResponse(
         success=True,

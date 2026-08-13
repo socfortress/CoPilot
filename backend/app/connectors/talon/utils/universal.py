@@ -6,6 +6,7 @@ import httpx
 import requests
 from loguru import logger
 
+from app.blocking import run_blocking
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 
@@ -19,11 +20,7 @@ async def verify_talon_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]
     """
     logger.info(f"Verifying the Talon connection to {attributes['connector_url']}")
     try:
-        response = requests.get(
-            f"{attributes['connector_url']}/health",
-            verify=False,
-            timeout=10,
-        )
+        response = await run_blocking(requests.get, f"{attributes['connector_url']}/health", verify=False, timeout=10)
         if response.status_code == 200:
             logger.info(f"Connection to {attributes['connector_url']} successful")
             return {
@@ -102,7 +99,8 @@ async def send_get_request(
         }
     try:
         headers = _build_headers(attributes["connector_api_key"])
-        response = requests.get(
+        response = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}{endpoint}",
             headers=headers,
             params=params,
@@ -152,7 +150,8 @@ async def send_post_request(
         }
     try:
         headers = _build_headers(attributes["connector_api_key"])
-        response = requests.post(
+        response = await run_blocking(
+            requests.post,
             f"{attributes['connector_url']}{endpoint}",
             headers=headers,
             json=data,

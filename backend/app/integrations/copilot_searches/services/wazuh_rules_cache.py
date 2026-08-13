@@ -33,13 +33,17 @@ from typing import Optional
 
 from loguru import logger
 
+from app.integrations.copilot_searches.services.cache_support import (
+    BackgroundRefreshMixin,
+)
+
 # Long TTL by design — Wazuh rules don't change without operator action. A
 # manual ``refresh()`` is exposed for the rare "I just uploaded a rule file"
 # case; we don't poll aggressively.
 CACHE_TTL_MINUTES = 60
 
 
-class WazuhRulesCache:
+class WazuhRulesCache(BackgroundRefreshMixin):
     """
     Single-source-of-truth in-memory copy of the Wazuh Manager ruleset, keyed
     by integer rule ID, with the same ``ensure_loaded`` / ``refresh`` /
@@ -85,7 +89,12 @@ class WazuhRulesCache:
     # ---- loading ----------------------------------------------------------
 
     async def ensure_loaded(self) -> None:
-        """Lazy-load on first access; refresh on TTL expiry. Never raises."""
+        """Lazy-load on first access; refresh on TTL expiry. Never raises.
+
+        Blocks the caller for the length of the load. Only appropriate where the
+        user explicitly asked for this data (the catalog itself) — see
+        `ensure_fresh_nonblocking` for everything else.
+        """
         if self.is_stale:
             await self.refresh()
 

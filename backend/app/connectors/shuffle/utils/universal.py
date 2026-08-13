@@ -6,6 +6,8 @@ import requests
 from fastapi import HTTPException
 from loguru import logger
 
+from app.blocking import DEFAULT_HTTP_TIMEOUT
+from app.blocking import run_blocking
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 
@@ -26,10 +28,12 @@ async def verify_shuffle_credentials(attributes: Dict[str, Any]) -> Dict[str, An
         headers = {
             "Authorization": f"Bearer {attributes['connector_api_key']}",
         }
-        shuffle_apps = requests.get(
+        shuffle_apps = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}/api/v1/apps/authentication",
             headers=headers,
             verify=False,
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
         if shuffle_apps.status_code == 200:
             logger.info(
@@ -114,11 +118,13 @@ async def send_get_request(
         HEADERS = {
             "Authorization": f"Bearer {attributes['connector_api_key']}",
         }
-        response = requests.get(
+        response = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,
             params=params,
             verify=False,
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
         logger.info(f"Response from Shuffle API: {response.json()}")
         return {
@@ -166,11 +172,13 @@ async def send_post_request(
             "Authorization": f"Bearer {attributes['connector_api_key']}",
         }
         logger.info(f"Sending POST request to {attributes['connector_url']}{endpoint}")
-        response = requests.post(
+        response = await run_blocking(
+            requests.post,
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,
             json=data,
             verify=False,
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
 
         if response.status_code == 204:
@@ -214,7 +222,7 @@ async def send_post_request(
         }
 
 
-def send_delete_request(
+async def send_delete_request(
     endpoint: str,
     params: Optional[Dict[str, Any]] = None,
     connector_name: str = "Shuffle",
@@ -239,7 +247,8 @@ def send_delete_request(
         HEADERS = {
             "Authorization": f"Bearer {attributes['connector_api_key']}",
         }
-        response = requests.delete(
+        response = await run_blocking(
+            requests.delete,
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,
             auth=(
@@ -248,6 +257,7 @@ def send_delete_request(
             ),
             params=params,
             verify=False,
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
         return {
             "data": response.json(),
@@ -266,7 +276,7 @@ def send_delete_request(
         }
 
 
-def send_put_request(
+async def send_put_request(
     endpoint: str,
     data: Optional[Dict[str, Any]] = None,
     connector_name: str = "Shuffle",
@@ -291,7 +301,8 @@ def send_put_request(
         HEADERS = {
             "Authorization": f"Bearer {attributes['connector_api_key']}",
         }
-        response = requests.put(
+        response = await run_blocking(
+            requests.put,
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,
             auth=(
@@ -300,6 +311,7 @@ def send_put_request(
             ),
             json=data,
             verify=False,
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
         return {
             "data": response.json(),

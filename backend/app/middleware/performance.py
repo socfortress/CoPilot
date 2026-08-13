@@ -459,6 +459,16 @@ class PerformanceRegistry:
 
         return suspects
 
+    def record_event(self, event_type: str, payload: dict) -> None:
+        """Append an arbitrary diagnostic record to the session log.
+
+        For findings a request timer cannot express — "which of these 14
+        indicators cost the 6 seconds?". Cheap and safe to call from a request
+        path: it degrades to a no-op when session logging is off, and a failing
+        sink is swallowed (see `_emit`).
+        """
+        self._emit(event_type, payload)
+
     # ── read-side snapshots ──────────────────────────────────────────────
 
     @property
@@ -554,12 +564,16 @@ class EventLoopLagMonitor:
     to run anything - i.e. time it was blocked inside synchronous code.
     """
 
-    def __init__(self, registry: "PerformanceRegistry") -> None:
+    def __init__(self, registry: "PerformanceRegistry", interval: Optional[float] = None) -> None:
         self.registry = registry
+        # Explicit interval beats reading the module constant at call time: tests
+        # need a short one, and depending on an env var read at import time makes
+        # the result depend on which test module imported this one first.
+        self.interval = LAG_SAMPLE_INTERVAL if interval is None else interval
         self._task: Optional[asyncio.Task] = None
 
     async def _run(self) -> None:
-        interval = LAG_SAMPLE_INTERVAL
+        interval = self.interval
         while True:
             start = time.perf_counter()
             await asyncio.sleep(interval)

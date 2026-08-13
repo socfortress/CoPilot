@@ -8,9 +8,14 @@ import requests
 from fastapi import HTTPException
 from loguru import logger
 
+from app.blocking import run_blocking
 from app.connectors.graylog.utils.routing import get_current_graylog_connector
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
+
+# Every call here was timeout-less: on the loop that could hang the process,
+# in a worker thread it pins one of a finite number of workers forever.
+GRAYLOG_REQUEST_TIMEOUT = 60
 
 HEADERS = {"X-Requested-By": "CoPilot"}
 
@@ -34,13 +39,15 @@ async def verify_graylog_credentials(attributes: Dict[str, Any]) -> Dict[str, An
         f"Verifying the graylog connection to {attributes['connector_url']}",
     )
     try:
-        graylog_roles = requests.get(
+        graylog_roles = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}/api/authz/roles/user/{attributes['connector_username']}",
             auth=(
                 attributes["connector_username"],
                 attributes["connector_password"],
             ),
             verify=False,
+            timeout=GRAYLOG_REQUEST_TIMEOUT,
         )
         if graylog_roles.status_code == 200:
             logger.info(
@@ -109,7 +116,8 @@ async def send_get_request(
     if attributes is None:
         raise HTTPException(status_code=500, detail=f"Connector {connector_name} not found")
     try:
-        response = requests.get(
+        response = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,
             auth=(
@@ -118,6 +126,7 @@ async def send_get_request(
             ),
             params=params,
             verify=False,
+            timeout=GRAYLOG_REQUEST_TIMEOUT,
         )
         if response.status_code == 404:
             raise HTTPException(
@@ -167,7 +176,8 @@ async def send_post_request(
         raise HTTPException(status_code=500, detail=f"Connector {connector_name} not found")
 
     try:
-        response = requests.post(
+        response = await run_blocking(
+            requests.post,
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,
             auth=(
@@ -176,6 +186,7 @@ async def send_post_request(
             ),
             json=data,
             verify=False,
+            timeout=GRAYLOG_REQUEST_TIMEOUT,
         )
         logger.info(
             f"Response from POST request: {response.status_code} {response.text}",
@@ -248,7 +259,8 @@ async def send_delete_request(
     if attributes is None:
         raise HTTPException(status_code=500, detail=f"Connector {connector_name} not found")
     try:
-        response = requests.delete(
+        response = await run_blocking(
+            requests.delete,
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,
             auth=(
@@ -257,6 +269,7 @@ async def send_delete_request(
             ),
             params=params,
             verify=False,
+            timeout=GRAYLOG_REQUEST_TIMEOUT,
         )
         if response.status_code != 200 and response.status_code != 204:
             raise HTTPException(
@@ -307,7 +320,8 @@ async def send_put_request(
         logger.error("No Graylog connector found in the database")
         return None
     try:
-        response = requests.put(
+        response = await run_blocking(
+            requests.put,
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,
             auth=(
@@ -316,6 +330,7 @@ async def send_put_request(
             ),
             json=data,
             verify=False,
+            timeout=GRAYLOG_REQUEST_TIMEOUT,
         )
         logger.info(
             f"Response from PUT request: {response.status_code} {response.text}",

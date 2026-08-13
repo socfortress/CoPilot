@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.sql import func
 
+from app.blocking import run_blocking
 from app.connectors.shuffle.schema.integrations import ExecuteWorkflowRequest
 from app.connectors.shuffle.services.integrations import execute_workflow
 from app.connectors.talon.schema.talon import TalonInvestigateRequest
@@ -1463,7 +1464,8 @@ async def fetch_alert_timeline(
         List[Dict[str, Any]]: The alert timeline.
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
-    alert_timeline = es_client.search(
+    alert_timeline = await run_blocking(
+        es_client.search,
         index=index_name,
         body={
             "query": {

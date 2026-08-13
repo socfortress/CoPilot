@@ -66,6 +66,9 @@ from app.schedulers.services.invoke_sap_siem import (
 from app.schedulers.services.invoke_snapshot_and_restore import (
     invoke_snapshot_schedules,
 )
+from app.schedulers.services.refresh_catalog_caches import refresh_catalog_caches
+from app.schedulers.services.refresh_sidebar_health import refresh_sidebar_health
+from app.schedulers.services.refresh_wazuh_rules_cache import refresh_wazuh_rules_cache
 from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 
 
@@ -175,6 +178,32 @@ async def initialize_job_metadata():
                 "time_interval": 60,
                 "function": invoke_palace_lesson_sweeper,
                 "description": "Forgets expired one-off AI analyst palace lessons via NanoClaw /palace/forget.",
+            },
+            {
+                "job_id": "refresh_wazuh_rules_cache",
+                # Shorter than CACHE_TTL_MINUTES (60) so the cache is renewed
+                # before it can expire under a request. A cold load measured
+                # 80-110s against a real Wazuh Manager (#1072); this job is the
+                # only thing that should ever pay it.
+                "time_interval": 30,
+                "function": refresh_wazuh_rules_cache,
+                "description": "Refreshes the in-memory Wazuh ruleset cache so catalog and sidebar requests never load it.",
+            },
+            {
+                "job_id": "refresh_catalog_caches",
+                # Below rules_cache's 30 min TTL so it is renewed before expiry.
+                # TTL-aware, so the 24h MITRE bundle is not re-downloaded each run.
+                "time_interval": 15,
+                "function": refresh_catalog_caches,
+                "description": "Refreshes the Detections Catalog GitHub-backed caches (CoPilot Searches rules, MITRE matrix) off the request path.",
+            },
+            {
+                "job_id": "refresh_sidebar_health",
+                # Below the indicator's 300s TTL so the sidebar never finds the
+                # value expired and has to render "checking".
+                "time_interval": 3,
+                "function": refresh_sidebar_health,
+                "description": "Refreshes the sidebar InfluxDB health indicator so the sidebar never runs the Flux query itself.",
             },
             {
                 "job_id": "prune_audit_log",
@@ -315,12 +344,23 @@ def get_function_by_name(function_name: str):
         "invoke_carbonblack_integration_collection": invoke_carbonblack_integration_collect,
         "invoke_palace_lesson_drainer": invoke_palace_lesson_drainer,
         "invoke_palace_lesson_sweeper": invoke_palace_lesson_sweeper,
+        "refresh_wazuh_rules_cache": refresh_wazuh_rules_cache,
+        "refresh_catalog_caches": refresh_catalog_caches,
+        "refresh_sidebar_health": refresh_sidebar_health,
         # Add other function mappings here
     }
-    return function_map.get(
-        function_name,
-        lambda: ValueError(f"Function {function_name} not found"),
-    )
+    # A job needs registering in TWO places: `known_jobs` in initialize_job_metadata
+    # (which seeds the DB row) and this map. Miss this one and the job is handed the
+    # fallback below, which APScheduler cannot pickle into its SQLAlchemy jobstore —
+    # the whole application then fails to start with an opaque serialisation error
+    # naming a lambda. Fail loudly and specifically instead.
+    function = function_map.get(function_name)
+    if function is None:
+        raise ValueError(
+            f"Scheduled job '{function_name}' has no entry in get_function_by_name's function_map. "
+            "Add it there as well as in initialize_job_metadata's known_jobs.",
+        )
+    return function
 
 
 async def add_scheduler_jobs(create_scheduler_request: CreateSchedulerRequest):

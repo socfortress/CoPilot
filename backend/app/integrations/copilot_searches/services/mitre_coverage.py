@@ -10,13 +10,16 @@ from loguru import logger
 from app.integrations.copilot_searches.schema.copilot_searches import PlatformFilter
 from app.integrations.copilot_searches.schema.copilot_searches import RuleSeverity
 from app.integrations.copilot_searches.schema.copilot_searches import RuleStatus
+from app.integrations.copilot_searches.services.cache_support import (
+    BackgroundRefreshMixin,
+)
 from app.integrations.copilot_searches.services.copilot_searches import rules_cache
 
 MITRE_STIX_URL = "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
 MITRE_CACHE_TTL_HOURS = 24
 
 
-class MitreMatrix:
+class MitreMatrix(BackgroundRefreshMixin):
     """In-memory cache of the MITRE ATT&CK Enterprise matrix structure.
 
     Pulls the official STIX bundle from mitre/cti and indexes tactics + techniques

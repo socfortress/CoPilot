@@ -11,7 +11,9 @@ Architecture notes:
 - MITRE tactic names are resolved via the in-memory ``mitre_matrix`` populated
   by ``app.integrations.copilot_searches.services.mitre_coverage``. Same
   reasoning: no second fetch, single source of truth.
-- Both backing caches load lazily on first access (``ensure_loaded``), and
+- Both backing caches are refreshed in the background (``ensure_fresh_nonblocking``
+  plus a scheduled job); a request never waits for a cold load — it serves the
+  current snapshot and reports ``loading`` so the UI can say so (#1072). And
   refresh of the CoPilot Searches cache is the single user-facing refresh
   path — there is no separate "refresh the catalog" action.
 - All aggregation happens fresh on each request. The corpus is small enough
@@ -135,8 +137,8 @@ async def list_stories() -> List[Dict[str, Any]]:
     Stories surface. (They still appear in the Rules grid; the catalog is
     just a story-centric view.)
     """
-    await rules_cache.ensure_loaded()
-    await mitre_matrix.ensure_loaded()
+    await rules_cache.ensure_fresh_nonblocking()
+    await mitre_matrix.ensure_fresh_nonblocking()
 
     agg: Dict[str, Dict[str, Any]] = defaultdict(
         lambda: {
@@ -196,8 +198,8 @@ async def get_story_detail(story_name: str) -> Optional[Dict[str, Any]]:
 
     Returns ``None`` if no rule in the cache carries this story tag.
     """
-    await rules_cache.ensure_loaded()
-    await mitre_matrix.ensure_loaded()
+    await rules_cache.ensure_fresh_nonblocking()
+    await mitre_matrix.ensure_fresh_nonblocking()
 
     target = story_name.strip()
     members: List[Dict[str, Any]] = [rule for rule in rules_cache.get_all_rules() if target in _rule_stories(rule)]
@@ -306,6 +308,15 @@ def _story_slug(name: str) -> str:
 # ---------------------------------------------------------------------------
 
 
+def catalog_is_loading() -> bool:
+    """True while any catalog cache is still being populated in the background.
+
+    Lets a response say "not loaded yet" instead of letting an empty snapshot be
+    read as "this deployment has no detections" (#1072).
+    """
+    return any(cache.is_loading for cache in (rules_cache, mitre_matrix, wazuh_rules_cache, wazuh_firing_stats_cache))
+
+
 async def get_catalog_stats() -> Dict[str, Any]:
     """
     Lightweight aggregation for the Catalog overview header — how many
@@ -317,9 +328,9 @@ async def get_catalog_stats() -> Dict[str, Any]:
     the Wazuh Manager is unreachable rather than failing the whole call —
     the Stories tab must keep working even on Wazuh outages.
     """
-    await rules_cache.ensure_loaded()
-    await mitre_matrix.ensure_loaded()
-    await wazuh_rules_cache.ensure_loaded()
+    await rules_cache.ensure_fresh_nonblocking()
+    await mitre_matrix.ensure_fresh_nonblocking()
+    await wazuh_rules_cache.ensure_fresh_nonblocking()
 
     stories: set[str] = set()
     products: set[str] = set()
@@ -413,8 +424,8 @@ async def list_compliance_pivot(framework: str) -> Dict[str, Any]:
             f"Unknown compliance framework {framework!r}. Valid: {list(COMPLIANCE_FRAMEWORKS)}",
         )
 
-    await wazuh_rules_cache.ensure_loaded()
-    await wazuh_firing_stats_cache.ensure_loaded()
+    await wazuh_rules_cache.ensure_fresh_nonblocking()
+    await wazuh_firing_stats_cache.ensure_fresh_nonblocking()
 
     field = framework_meta["field"]
 
@@ -479,8 +490,8 @@ async def get_compliance_group(framework: str, control: str) -> Dict[str, Any] |
             f"Unknown compliance framework {framework!r}. Valid: {list(COMPLIANCE_FRAMEWORKS)}",
         )
 
-    await wazuh_rules_cache.ensure_loaded()
-    await wazuh_firing_stats_cache.ensure_loaded()
+    await wazuh_rules_cache.ensure_fresh_nonblocking()
+    await wazuh_firing_stats_cache.ensure_fresh_nonblocking()
 
     field = framework_meta["field"]
     control_key = control.strip()
@@ -550,7 +561,7 @@ async def run_log_test(
     """
     from app.connectors.wazuh_manager.services.logtest import run_logtest
 
-    await mitre_matrix.ensure_loaded()
+    await mitre_matrix.ensure_fresh_nonblocking()
 
     try:
         result = await run_logtest(event=event, log_format=log_format, location=location)
@@ -644,9 +655,9 @@ async def list_coverage_gaps() -> Dict[str, Any]:
     have anything for T1059.001 specifically?". Listing every sub-technique
     individually would flood the gap report with thousands of rows.
     """
-    await rules_cache.ensure_loaded()
-    await mitre_matrix.ensure_loaded()
-    await wazuh_rules_cache.ensure_loaded()
+    await rules_cache.ensure_fresh_nonblocking()
+    await mitre_matrix.ensure_fresh_nonblocking()
+    await wazuh_rules_cache.ensure_fresh_nonblocking()
 
     # Collect the set of covered base-technique IDs across both corpora.
     covered_ids: set[str] = set()
@@ -697,9 +708,9 @@ async def get_coverage_gap(technique_id: str) -> Dict[str, Any] | None:
     sub-technique, or already covered) — same semantics as scanning the full
     gap list, without materializing it.
     """
-    await rules_cache.ensure_loaded()
-    await mitre_matrix.ensure_loaded()
-    await wazuh_rules_cache.ensure_loaded()
+    await rules_cache.ensure_fresh_nonblocking()
+    await mitre_matrix.ensure_fresh_nonblocking()
+    await wazuh_rules_cache.ensure_fresh_nonblocking()
 
     tid = technique_id.strip().upper()
     meta = mitre_matrix.techniques.get(tid)
@@ -808,10 +819,10 @@ async def list_wazuh_rules(customer_code: Optional[str] = None) -> Dict[str, Any
     is empty and ``available=False`` + ``unavailable_reason`` carries the
     explanation so the frontend can render an inline empty state.
     """
-    await wazuh_rules_cache.ensure_loaded()
+    await wazuh_rules_cache.ensure_fresh_nonblocking()
     # Load firing stats too — they're cached separately with their own TTL,
     # so this is cheap. _wazuh_row reads from the firing-stats cache below.
-    await wazuh_firing_stats_cache.ensure_loaded()
+    await wazuh_firing_stats_cache.ensure_fresh_nonblocking()
 
     # Per-customer override: fetch a fresh per-customer aggregation and
     # splice it into each row in place of the global stats. We don't mutate
@@ -876,9 +887,9 @@ async def get_wazuh_rule_detail(rule_id: int) -> Optional[Dict[str, Any]]:
     code snippet — analysts asked to "see how the rule is written" without
     the auth and parsing overhead of fetching the original ``.xml`` file.
     """
-    await wazuh_rules_cache.ensure_loaded()
-    await mitre_matrix.ensure_loaded()
-    await wazuh_firing_stats_cache.ensure_loaded()
+    await wazuh_rules_cache.ensure_fresh_nonblocking()
+    await mitre_matrix.ensure_fresh_nonblocking()
+    await wazuh_firing_stats_cache.ensure_fresh_nonblocking()
 
     rule = wazuh_rules_cache.get_rule(rule_id)
     if rule is None:

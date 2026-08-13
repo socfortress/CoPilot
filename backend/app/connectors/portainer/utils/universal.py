@@ -9,6 +9,8 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.blocking import DEFAULT_HTTP_TIMEOUT
+from app.blocking import run_blocking
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 from app.db.universal_models import CustomersMeta
@@ -51,7 +53,13 @@ async def get_portainer_jwt() -> str:
 
         auth_payload = {"username": attributes["connector_username"], "password": attributes["connector_password"]}
 
-        response = requests.post(auth_endpoint, json=auth_payload, verify=False)  # If using self-signed cert
+        response = await run_blocking(
+            requests.post,
+            auth_endpoint,
+            json=auth_payload,
+            verify=False,
+            timeout=DEFAULT_HTTP_TIMEOUT,
+        )  # If using self-signed cert
 
         response.raise_for_status()
         # The JWT token is in response.json()["jwt"]
@@ -80,7 +88,8 @@ async def verify_portainer_credentials(attributes: Dict[str, Any]) -> Dict[str, 
         headers = {
             "Authorization": f"Bearer {attributes['connector_api_key']}",
         }
-        portainer_apps = requests.get(
+        portainer_apps = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}/api/v1/apps/authentication",
             headers=headers,
             verify=False,
@@ -92,7 +101,7 @@ async def verify_portainer_credentials(attributes: Dict[str, Any]) -> Dict[str, 
             auth_endpoint = urljoin(attributes["connector_url"], "/api/auth")
             auth_payload = {"username": attributes["connector_username"], "password": attributes["connector_password"]}
 
-            jwt_response = requests.post(auth_endpoint, json=auth_payload, verify=False, timeout=2)
+            jwt_response = await run_blocking(requests.post, auth_endpoint, json=auth_payload, verify=False, timeout=2)
 
             if jwt_response.status_code == 200:
                 jwt_token = jwt_response.json()["jwt"]
@@ -165,11 +174,13 @@ async def send_get_request(
             "Content-Type": "application/json",
         }
         logger.info(f"Sending GET request to {attributes['connector_url']}{endpoint}")
-        response = requests.get(
+        response = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,
             params=params,
             verify=False,
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
         return {
             "data": response.json(),
@@ -218,11 +229,13 @@ async def send_post_request(
             "Content-Type": "application/json",
         }
         logger.info(f"Sending POST request to {attributes['connector_url']}{endpoint}")
-        response = requests.post(
+        response = await run_blocking(
+            requests.post,
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,
             json=data,
             verify=False,
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
 
         if response.status_code == 204:
@@ -279,11 +292,13 @@ async def send_delete_request(
             "Authorization": f"Bearer {jwt_token}",
             "Content-Type": "application/json",
         }
-        response = requests.delete(
+        response = await run_blocking(
+            requests.delete,
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,
             params=params,
             verify=False,
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
 
         # Check if response is empty or not JSON
@@ -316,7 +331,7 @@ async def send_delete_request(
         )
 
 
-def send_put_request(
+async def send_put_request(
     endpoint: str,
     data: Optional[Dict[str, Any]] = None,
     connector_name: str = "portainer",
@@ -341,7 +356,8 @@ def send_put_request(
         HEADERS = {
             "Authorization": f"Bearer {attributes['connector_api_key']}",
         }
-        response = requests.put(
+        response = await run_blocking(
+            requests.put,
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,
             auth=(
@@ -350,6 +366,7 @@ def send_put_request(
             ),
             json=data,
             verify=False,
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
         return {
             "data": response.json(),

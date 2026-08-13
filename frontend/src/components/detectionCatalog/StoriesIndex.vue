@@ -46,8 +46,9 @@
 import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { CatalogStoryRow } from "@/types/detection-catalog"
+import axios from "axios"
 import { NDataTable, NInput, NModal, NTag, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
@@ -204,22 +205,65 @@ const columns: DataTableColumns<CatalogStoryRow> = [
 	}
 ]
 
+// The catalog caches are refreshed in the background, so a request made while
+// one is still cold returns an empty list plus `loading: true` (#1072). Showing
+// that as the answer would read as "this deployment has no detections", so the
+// view stays in its loading state and re-asks until the data lands. A cold load
+// of the MITRE bundle was measured at up to ~2 minutes, hence the ceiling.
+const BACKEND_LOADING_POLL_MS = 4000
+const BACKEND_LOADING_MAX_POLLS = 30
+
+let abortController: AbortController | null = null
+let pollTimer: ReturnType<typeof setTimeout> | null = null
+let pollsLeft = BACKEND_LOADING_MAX_POLLS
+
+function stopPolling() {
+	if (pollTimer !== null) {
+		clearTimeout(pollTimer)
+		pollTimer = null
+	}
+}
+
 function load() {
+	abortController?.abort()
+	abortController = new AbortController()
+	stopPolling()
 	loading.value = true
 
 	Api.detectionCatalog
-		.listStories({})
+		.listStories({}, abortController.signal)
 		.then(res => {
-			if (res.data?.success) stories.value = res.data.stories || []
-			else message.warning(res.data?.message || "Failed to load analytic stories")
+			if (!res.data?.success) {
+				message.warning(res.data?.message || "Failed to load analytic stories")
+				loading.value = false
+				return
+			}
+
+			stories.value = res.data.stories || []
+
+			// Still warming up: keep the spinner and try again shortly.
+			if (res.data.loading && pollsLeft > 0) {
+				pollsLeft -= 1
+				pollTimer = setTimeout(load, BACKEND_LOADING_POLL_MS)
+				return
+			}
+
+			loading.value = false
 		})
 		.catch(err => {
+			if (axios.isCancel(err)) return
 			message.error(getApiErrorMessage(err as ApiError) || "Failed to load analytic stories")
-		})
-		.finally(() => {
 			loading.value = false
 		})
 }
 
-onBeforeMount(load)
+onBeforeMount(() => {
+	pollsLeft = BACKEND_LOADING_MAX_POLLS
+	load()
+})
+
+onBeforeUnmount(() => {
+	stopPolling()
+	abortController?.abort()
+})
 </script>

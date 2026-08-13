@@ -26,6 +26,8 @@ from sqlalchemy.orm import joinedload
 
 from app.auth.services.universal import find_user
 from app.auth.utils import AuthHandler
+from app.blocking import DEFAULT_HTTP_TIMEOUT
+from app.blocking import run_blocking
 from app.connectors.utils import get_connector_info_from_db
 from app.customer_provisioning.models.default_settings import (
     CustomerProvisioningDefaultSettings,
@@ -915,10 +917,11 @@ async def verify_wazuh_worker_provisioning_healtcheck(
         try:
             logger.info(f"Testing connection to host: {host}")
 
-            wazuh_worker_provisioning_healthcheck = requests.get(
+            wazuh_worker_provisioning_healthcheck = await run_blocking(
+                requests.get,
                 f"{host}/provision_worker/healthcheck",
                 verify=False,
-                timeout=10,  # Add timeout to prevent hanging
+                timeout=10,  # prevent hanging
             )
 
             if wazuh_worker_provisioning_healthcheck.status_code == 200:
@@ -993,9 +996,11 @@ async def verify_haproxy_provisioning_healtcheck(
     )
 
     try:
-        wazuh_worker_provisioning_healthcheck = requests.get(
+        wazuh_worker_provisioning_healthcheck = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}/provision_worker/healthcheck",
             verify=False,
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
 
         if wazuh_worker_provisioning_healthcheck.status_code == 200:
@@ -1051,9 +1056,11 @@ async def verify_alert_creation_provisioning_healtcheck(
     )
 
     try:
-        wazuh_worker_provisioning_healthcheck = requests.get(
+        wazuh_worker_provisioning_healthcheck = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}/provision_alert/healthcheck",
             verify=False,
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
 
         if wazuh_worker_provisioning_healthcheck.status_code == 200:
@@ -1110,10 +1117,12 @@ async def verify_virustotal_healtcheck(
     )
 
     try:
-        virustotal_healthcheck = requests.get(
+        virustotal_healthcheck = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}/files/99017f6eebbac24f351415dd410d522d",
             verify=False,
             headers={"x-apikey": attributes["connector_api_key"]},
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
 
         if virustotal_healthcheck.status_code == 200:

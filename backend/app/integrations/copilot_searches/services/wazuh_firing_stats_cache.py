@@ -56,6 +56,10 @@ from typing import Optional
 from elasticsearch7.exceptions import RequestError
 from loguru import logger
 
+from app.integrations.copilot_searches.services.cache_support import (
+    BackgroundRefreshMixin,
+)
+
 # 15-min TTL strikes a balance: fresh enough that the dashboard reflects
 # real-time tuning, cheap enough that the indexer barely notices.
 CACHE_TTL_MINUTES = 15
@@ -104,7 +108,7 @@ EXCLUDE_PATTERNS = [
 RULE_ID_FIELD_OPTIONS = ["rule.id", "rule_id", "id"]
 
 
-class WazuhFiringStatsCache:
+class WazuhFiringStatsCache(BackgroundRefreshMixin):
     """
     Per-rule firing-count cache, keyed by integer rule ID.
 

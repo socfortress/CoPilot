@@ -9,6 +9,8 @@ from sqlalchemy.future import select
 
 # from app.agents.routes.agents import check_wazuh_manager_version
 from app.agents.routes.agents import get_wazuh_manager_version
+from app.blocking import DEFAULT_HTTP_TIMEOUT
+from app.blocking import run_blocking
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import verify_grafana_connection
@@ -328,9 +330,11 @@ async def provision_wazuh_worker(
         # Send the POST request to the Wazuh worker
         request.portainer_deployment = False
         request.wazuh_manager_version = await get_wazuh_manager_version()
-        response = requests.post(
+        response = await run_blocking(
+            requests.post,
             url=f"{api_endpoint}/provision_worker",
             json=request.model_dump(),
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
         logger.info(f"Status code from Wazuh Worker: {response.status_code}")
         # Check the response status code
@@ -354,9 +358,11 @@ async def provision_wazuh_worker(
             request.node_id = str(index)
             logger.info(f"Provisioning Wazuh worker on IP: {ip} with node_id: {request.node_id}")
 
-            response = requests.post(
+            response = await run_blocking(
+                requests.post,
                 url=f"http://{ip}:5003/provision_worker",
                 json=request.model_dump(),
+                timeout=DEFAULT_HTTP_TIMEOUT,
             )
             logger.info(f"Status code from Wazuh Worker: {response.status_code}")
             if response.status_code != 200:
@@ -402,9 +408,11 @@ async def provision_haproxy(
         logger.info(f"HAProxy API endpoint: {api_endpoint}")
         request.portainer_deployment = False
         # Send the POST request to the Wazuh worker
-        response = requests.post(
+        response = await run_blocking(
+            requests.post,
             url=f"{api_endpoint}/provision_worker/haproxy",
             json=request.model_dump(),
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
         # Check the response status code
         if response.status_code != 200:
@@ -427,9 +435,11 @@ async def provision_haproxy(
         )
         logger.info(f"HAProxy API endpoint: {api_endpoint}")
         logger.info(f"Invoking the customer provisioning application on the swarm node IPs: {request.swarm_nodes}")
-        response = requests.post(
+        response = await run_blocking(
+            requests.post,
             url=f"{api_endpoint}/provision_worker/haproxy",
             json=request.model_dump(),
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
         # Check the response status code
         if response.status_code != 200:

@@ -20,6 +20,7 @@ from app.connectors.influxdb.services.alerts import get_influxdb_alerts
 from app.connectors.services import ConnectorServices
 from app.connectors.wazuh_indexer.services.monitoring import cluster_healthcheck
 from app.data_store.data_store_session import create_session as create_minio_session
+from app.db.db_session import get_db_session
 from app.db.universal_models import AiAnalystJob
 from app.db.universal_models import AiAnalystPalaceLesson
 from app.db.universal_models import LicenseCache
@@ -445,7 +446,97 @@ async def build_wazuh_indexer_indicator() -> SidebarHealthIndicator:
         )
 
 
+# The sidebar only needs a count of active critical alerts, but getting it costs a
+# Flux query over a day of the _monitoring bucket. Measured at 4.1-5.3s, it was
+# *the entire* sidebar once everything else had been parallelised (#1072).
+#
+# A TTL cache alone did not help: `/status/sidebar` is fetched roughly once per
+# app load, so a second caller who could hit the cache never arrives. The value is
+# therefore refreshed by a scheduled job and the indicator only ever reads the
+# last known result — zero queries on the request path.
+#
+# Nothing here blocks: a cold value renders as "checking", which is honest, and
+# the job fills it in seconds later.
+_INFLUX_INDICATOR_TTL_SECONDS = 300
+_influx_indicator_cache: Optional[SidebarHealthIndicator] = None
+_influx_indicator_cached_at: Optional[datetime] = None
+_influx_indicator_lock = asyncio.Lock()
+
+
+def _cached_influx_indicator() -> Optional[SidebarHealthIndicator]:
+    if _influx_indicator_cache is None or _influx_indicator_cached_at is None:
+        return None
+    if datetime.utcnow() - _influx_indicator_cached_at > timedelta(seconds=_INFLUX_INDICATOR_TTL_SECONDS):
+        return None
+    return _influx_indicator_cache
+
+
+async def refresh_influx_health_indicator() -> None:
+    """Recompute the cached InfluxDB health indicator. Called by the scheduler.
+
+    The lock keeps a scheduled run and a startup warm-up from both paying for the
+    query; whichever gets there first wins and the other returns immediately.
+    """
+    global _influx_indicator_cache
+    global _influx_indicator_cached_at
+
+    if _influx_indicator_lock.locked():
+        return
+
+    async with _influx_indicator_lock:
+        async with get_db_session() as session:
+            indicator = await _build_influx_health_indicator(session)
+        _influx_indicator_cache = indicator
+        _influx_indicator_cached_at = datetime.utcnow()
+
+
 async def build_influx_health_indicator(session: AsyncSession) -> SidebarHealthIndicator:
+    """Read the last refreshed value. Never queries InfluxDB itself."""
+    cached = _cached_influx_indicator()
+    if cached is not None:
+        return cached
+
+    # No value yet (fresh boot, or the refresher has not caught up). Kick one off
+    # for the next caller and report honestly rather than making this request wait
+    # 5 seconds for a status dot.
+    _schedule_influx_refresh()
+    return SidebarHealthIndicator(
+        id="influx_health",
+        status="ok",
+        label="Healthchecks",
+        detail="Checking InfluxDB healthchecks…",
+        count=0,
+        category="infrastructure",
+    )
+
+
+_influx_refresh_task: Optional[asyncio.Task] = None
+
+
+def _schedule_influx_refresh() -> None:
+    """Start a refresh in the background, at most one at a time."""
+    global _influx_refresh_task
+
+    if _influx_refresh_task is not None and not _influx_refresh_task.done():
+        return
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return
+
+    async def run():
+        global _influx_refresh_task
+        try:
+            await refresh_influx_health_indicator()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"Background InfluxDB health refresh failed: {exc}")
+        finally:
+            _influx_refresh_task = None
+
+    _influx_refresh_task = loop.create_task(run())
+
+
+async def _build_influx_health_indicator(session: AsyncSession) -> SidebarHealthIndicator:
     try:
         response = await get_influxdb_alerts(
             GetInfluxDBAlertQueryParams(
@@ -714,11 +805,19 @@ async def build_scheduler_indicator_excluding_agent_sync(session: AsyncSession) 
     now = datetime.utcnow()
     stale_jobs: List[str] = []
 
-    for job in scheduler.get_jobs():
-        if job.id == _AGENT_SYNC_JOB_ID:
-            continue
-        result = await session.execute(select(JobMetadata).filter_by(job_id=job.id))
-        metadata = result.scalars().first()
+    job_ids = [job.id for job in scheduler.get_jobs() if job.id != _AGENT_SYNC_JOB_ID]
+    if not job_ids:
+        job_metadata = {}
+    else:
+        # One query for every job, not one query per job. This loop used to issue
+        # a SELECT per scheduled job — ~15 sequential round-trips, which at the
+        # measured DB latency made this the most expensive indicator in the
+        # sidebar at 1.7s (#1072).
+        result = await session.execute(select(JobMetadata).where(JobMetadata.job_id.in_(job_ids)))
+        job_metadata = {metadata.job_id: metadata for metadata in result.scalars().all()}
+
+    for job_id in job_ids:
+        metadata = job_metadata.get(job_id)
         if metadata is None or not metadata.enabled:
             continue
         if _is_scheduler_job_stale(
@@ -726,7 +825,7 @@ async def build_scheduler_indicator_excluding_agent_sync(session: AsyncSession) 
             time_interval_minutes=metadata.time_interval,
             now=now,
         ):
-            stale_jobs.append(job.id)
+            stale_jobs.append(job_id)
 
     count = len(stale_jobs)
     if count == 0:
