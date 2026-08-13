@@ -254,31 +254,28 @@ class RulesCache:
         """
         p = f"/{file_path.lower().strip('/')}/"
 
-
         if "eid_4103" in p or "eid_4104" in p or "/powershell/" in p:
             return "powershell"
 
-
         m365 = ("entra_id", "exchange", "sharepoint_onedrive", "threat_intelligence")
-        if ("/microsoft_365/" in p or "/office365/" in p or "/office 365/" in p
-                or any(f"/{f}/" in p for f in m365)):
+        if "/microsoft_365/" in p or "/office365/" in p or "/office 365/" in p or any(f"/{f}/" in p for f in m365):
             return "office365"
-
 
         if "/linux/" in p or any(f"/{f}/" in p for f in ("auditd", "syslog", "tetragon")):
             return "linux"
 
-
         if "/web/" in p:
             return "web"
 
-
         win_folders = (
-            "application_eventlog", "defender_operational", "security_eventlog",
-            "system_eventlog", "task_scheduler_operational", "multi_event",
+            "application_eventlog",
+            "defender_operational",
+            "security_eventlog",
+            "system_eventlog",
+            "task_scheduler_operational",
+            "multi_event",
         )
-        if ("/windows/" in p or "/sysmon/" in p or "/eid_" in p
-                or any(f"/{f}/" in p for f in win_folders)):
+        if "/windows/" in p or "/sysmon/" in p or "/eid_" in p or any(f"/{f}/" in p for f in win_folders):
             return "windows"
 
         tags = rule_data.get("tags", {})
