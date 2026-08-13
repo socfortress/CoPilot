@@ -4,7 +4,7 @@
 			<GridViewToolbar
 				v-model:search-query="searchQuery"
 				v-model:show-filters="showFilters"
-				v-model:selected-platform="selectedPlatform"
+				v-model:selected-category="selectedCategory"
 				v-model:selected-severity="selectedSeverity"
 				v-model:selected-status="selectedStatus"
 				v-model:has-graylog-filter="hasGraylogFilter"
@@ -68,7 +68,6 @@
 import type { ApiError } from "@/types/common"
 import type {
 	BulkProvisionGraylogAlertResponse,
-	PlatformFilter,
 	RuleListQuery,
 	RuleSeverity,
 	RuleStatus,
@@ -96,7 +95,7 @@ const pagination = ref({
 	filtered: 0
 })
 
-const selectedPlatform = ref<PlatformFilter | null>(null)
+const selectedCategory = ref<string | null>(null)
 const selectedSeverity = ref<RuleSeverity | null>(null)
 const selectedStatus = ref<RuleStatus | null>(null)
 const searchQuery = ref<string | null>(null)
@@ -106,7 +105,7 @@ const showFilters = ref(false)
 let abortController: AbortController | null = null
 
 function resetFilters() {
-	selectedPlatform.value = null
+	selectedCategory.value = null
 	selectedSeverity.value = null
 	selectedStatus.value = null
 	hasGraylogFilter.value = false
@@ -136,7 +135,7 @@ function getList() {
 	const query: RuleListQuery = {
 		skip: (pagination.value.current - 1) * pagination.value.size,
 		limit: pagination.value.size,
-		platform: selectedPlatform.value || undefined,
+		category: selectedCategory.value || undefined,
 		severity: selectedSeverity.value || undefined,
 		status: selectedStatus.value || undefined,
 		search: searchQuery.value || undefined,
@@ -184,7 +183,7 @@ async function handleRefresh() {
 }
 
 watchDebounced(
-	[selectedPlatform, selectedSeverity, selectedStatus, searchQuery, hasGraylogFilter, () => pagination.value.current],
+	[selectedCategory, selectedSeverity, selectedStatus, searchQuery, hasGraylogFilter, () => pagination.value.current],
 	getList,
 	{
 		deep: true,

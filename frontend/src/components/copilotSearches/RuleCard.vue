@@ -60,6 +60,14 @@
 							<template #value>{{ platformInfo.label }}</template>
 						</Badge>
 
+						<Badge v-if="rule.category_label" type="splitted" size="small">
+							<template #iconLeft>
+								<Icon :name="SourceIcon" :size="11" />
+							</template>
+							<template #label>source</template>
+							<template #value>{{ rule.category_label }}</template>
+						</Badge>
+
 						<Badge v-for="mitre of visibleMitreIds" :key="mitre" size="small" color="primary">
 							<template #value>{{ mitre }}</template>
 						</Badge>
@@ -184,6 +192,7 @@ const message = useMessage()
 
 const PlayIcon = "carbon:play"
 const ProvisionIcon = "carbon:add-alt"
+const SourceIcon = "carbon:document"
 
 const visibleMitreIds = computed(() => rule.mitre_attack_id?.slice(0, 2) ?? [])
 const hiddenMitreCount = computed(() => Math.max((rule.mitre_attack_id?.length ?? 0) - 2, 0))

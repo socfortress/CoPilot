@@ -91,6 +91,104 @@ CACHE_TTL_MINUTES = 30
 
 
 # =============================================================================
+# Detection categories
+# =============================================================================
+#
+# The CoPilot-Search-Queries repo is laid out as detections/<source_folder>/<rule>.yaml
+# — the folder IS the log source a detection reads (see
+# https://github.com/socfortress/CoPilot-Search-Queries/tree/main/detections).
+# `_category` is that folder verbatim, which makes it the one filter dimension
+# that can never drift from the repo: new folder upstream = new filter option on
+# the next cache refresh, no code change. Contrast `_platform` below, which is a
+# best-effort OS guess kept only for the rule badge and the /linux, /windows,
+# /powershell convenience routes.
+
+DETECTIONS_ROOT = "detections"
+UNCATEGORIZED = "uncategorized"
+
+# Folders whose auto-humanized label would read badly. Everything else goes
+# through _humanize_category (underscores -> spaces, title case, EID uppercase).
+CATEGORY_LABEL_OVERRIDES = {
+    "entra_id": "Entra ID",
+    "sharepoint_onedrive": "SharePoint / OneDrive",
+    "eid_12_13_14_registry_events": "EID 12/13/14 Registry Events",
+    "eid_17_18_pipe_events": "EID 17/18 Pipe Events",
+    "eid_19_20_21_wmi_events": "EID 19/20/21 WMI Events",
+    "eid_23_26_file_delete": "EID 23/26 File Delete",
+    "eid_27_28_29_file_block": "EID 27/28/29 File Block",
+    "eid_22_dns_query": "EID 22 DNS Query",
+    "eid_15_file_create_stream_hash": "EID 15 File Create Stream Hash",
+    "eid_16_sysmon_config_changed": "EID 16 Sysmon Config Changed",
+    "web": "Web",
+}
+
+# Grouping is presentation only — it buckets the ~33 folders so the dropdown
+# stays scannable. Membership is by folder name; anything unrecognised (a folder
+# added upstream after this list was written) lands in "Other" and still works.
+GROUP_SYSMON = "Sysmon"
+GROUP_WINDOWS_LOGS = "Windows Event Logs"
+GROUP_POWERSHELL = "PowerShell"
+GROUP_LINUX = "Linux"
+GROUP_M365 = "Microsoft 365"
+GROUP_OTHER = "Other"
+
+CATEGORY_GROUP_ORDER = [
+    GROUP_SYSMON,
+    GROUP_WINDOWS_LOGS,
+    GROUP_POWERSHELL,
+    GROUP_LINUX,
+    GROUP_M365,
+    GROUP_OTHER,
+]
+
+POWERSHELL_CATEGORIES = {"eid_4103_module_logging", "eid_4104_script_block_logging"}
+WINDOWS_LOG_CATEGORIES = {
+    "application_eventlog",
+    "security_eventlog",
+    "system_eventlog",
+    "defender_operational",
+    "task_scheduler_operational",
+}
+LINUX_CATEGORIES = {"auditd", "syslog", "tetragon"}
+M365_CATEGORIES = {"entra_id", "exchange", "sharepoint_onedrive"}
+
+
+def _humanize_category(folder: str) -> str:
+    """Turn a folder name into a display label ('eid_01_process_creation' -> 'EID 01 Process Creation')."""
+    words = folder.replace("-", "_").split("_")
+    return " ".join("EID" if w.lower() == "eid" else w.capitalize() if w.islower() or w.isupper() else w for w in words if w)
+
+
+def category_label(folder: str) -> str:
+    """Display label for a detections/ folder."""
+    return CATEGORY_LABEL_OVERRIDES.get(folder.lower(), _humanize_category(folder))
+
+
+def category_group(folder: str) -> str:
+    """Presentation bucket for a detections/ folder."""
+    key = folder.lower()
+    if key in POWERSHELL_CATEGORIES:
+        return GROUP_POWERSHELL
+    if key.startswith("eid_"):
+        return GROUP_SYSMON
+    if key in WINDOWS_LOG_CATEGORIES:
+        return GROUP_WINDOWS_LOGS
+    if key in LINUX_CATEGORIES:
+        return GROUP_LINUX
+    if key in M365_CATEGORIES:
+        return GROUP_M365
+    return GROUP_OTHER
+
+
+def category_from_path(file_path: str) -> str:
+    """Extract the detections/<folder>/ segment from a rule's repo path."""
+    parts = file_path.strip("/").split("/")
+    if len(parts) >= 3 and parts[0] == DETECTIONS_ROOT:
+        return parts[1]
+    return UNCATEGORIZED
+
+
+# =============================================================================
 # Rules Cache
 # =============================================================================
 
@@ -235,6 +333,7 @@ class RulesCache:
             # Add metadata
             rule_data["_file_path"] = file_path
             rule_data["_raw_yaml"] = raw_yaml
+            rule_data["_category"] = category_from_path(file_path)
             rule_data["_platform"] = self._detect_platform(file_path, rule_data)
             rule_data["_has_graylog"] = "graylog" in rule_data and bool(rule_data.get("graylog", {}).get("query"))
 
@@ -333,9 +432,40 @@ class RulesCache:
 
         return None
 
+    def get_categories(self) -> list[dict]:
+        """
+        List the detections/ folders present in the cache, with counts.
+
+        Drives the Data Source filter — derived from the loaded rules rather than
+        a hardcoded enum, so a folder added upstream shows up after a refresh.
+        """
+        counts: dict[str, int] = {}
+        for rule in self._rules.values():
+            folder = rule.get("_category") or UNCATEGORIZED
+            counts[folder] = counts.get(folder, 0) + 1
+
+        categories = [
+            {
+                "value": folder,
+                "label": category_label(folder),
+                "group": category_group(folder),
+                "count": count,
+            }
+            for folder, count in counts.items()
+        ]
+        categories.sort(
+            key=lambda c: (
+                CATEGORY_GROUP_ORDER.index(c["group"]),
+                -c["count"],
+                c["label"].lower(),
+            ),
+        )
+        return categories
+
     def filter_rules(
         self,
         platform: PlatformFilter = PlatformFilter.ALL,
+        category: Optional[str] = None,
         status: Optional[RuleStatus] = None,
         severity: Optional[RuleSeverity] = None,
         mitre_id: Optional[str] = None,
@@ -344,12 +474,20 @@ class RulesCache:
     ) -> list[dict]:
         """Filter rules based on criteria."""
         results = []
+        category_key = category.lower() if category else None
 
         for rule in self._rules.values():
             # Platform filter
             if platform != PlatformFilter.ALL:
                 rule_platform = rule.get("_platform", "unknown")
                 if rule_platform != platform.value:
+                    continue
+
+            # Category (detections/ folder) filter — matched case-insensitively
+            # because the repo mixes cases (Entra_id, Exchange vs auditd).
+            if category_key is not None:
+                rule_category = (rule.get("_category") or UNCATEGORIZED).lower()
+                if rule_category != category_key:
                     continue
 
             # Status filter
@@ -393,6 +531,7 @@ class RulesCache:
         stats = {
             "total_rules": len(self._rules),
             "by_platform": {},
+            "by_category": {},
             "by_status": {},
             "by_severity": {},
             "by_mitre_tactic": {},
@@ -403,6 +542,10 @@ class RulesCache:
             # By platform
             platform = rule.get("_platform", "unknown")
             stats["by_platform"][platform] = stats["by_platform"].get(platform, 0) + 1
+
+            # By category (detections/ folder)
+            category = rule.get("_category") or UNCATEGORIZED
+            stats["by_category"][category] = stats["by_category"].get(category, 0) + 1
 
             # By status
             status = rule.get("status", "unknown")
@@ -451,6 +594,8 @@ def rule_to_summary(rule: dict) -> RuleSummary:
         severity=response.get("severity", "medium"),
         risk_score=response.get("risk_score", 0),
         platform=rule.get("_platform", "unknown"),
+        category=rule.get("_category") or UNCATEGORIZED,
+        category_label=category_label(rule.get("_category") or UNCATEGORIZED),
         mitre_attack_id=tags.get("mitre_attack_id", []),
         analytic_story=tags.get("analytic_story", []),
         cve=tags.get("cve", []),
@@ -671,8 +816,20 @@ rules_cache = RulesCache()
 # =============================================================================
 
 
+async def get_categories_list() -> list[dict]:
+    """
+    List the available detection categories (detections/ folders) with counts.
+
+    Returns:
+        List of {value, label, group, count} dicts, group-ordered.
+    """
+    await rules_cache.ensure_loaded()
+    return rules_cache.get_categories()
+
+
 async def get_rules_list(
     platform: PlatformFilter = PlatformFilter.ALL,
+    category: Optional[str] = None,
     status: Optional[RuleStatus] = None,
     severity: Optional[RuleSeverity] = None,
     mitre_id: Optional[str] = None,
@@ -686,6 +843,7 @@ async def get_rules_list(
 
     Args:
         platform: Filter by platform (linux, windows, powershell, all)
+        category: Filter by detections/ folder (e.g. eid_01_process_creation)
         status: Filter by rule status
         severity: Filter by severity level
         mitre_id: Filter by MITRE ATT&CK technique ID
@@ -695,13 +853,26 @@ async def get_rules_list(
         limit: Maximum rules to return
 
     Returns:
-        Dictionary with total, filtered count, platform, and rules list
+        Dictionary with total, filtered count, platform, category, and rules list
+
+    Raises:
+        ValueError: If category is not a folder present in the cache (surfaced as
+            HTTP 400) — a typo returning an empty list looks identical to a folder
+            with no rules, which is a miserable thing to debug from the UI.
     """
     await rules_cache.ensure_loaded()
+
+    if category is not None:
+        known = {c["value"].lower() for c in rules_cache.get_categories()}
+        if category.lower() not in known:
+            raise ValueError(
+                f"Unknown category '{category}'. See GET /copilot_searches/categories for the available folders.",
+            )
 
     # Filter rules
     filtered_rules = rules_cache.filter_rules(
         platform=platform,
+        category=category,
         status=status,
         severity=severity,
         mitre_id=mitre_id,
@@ -723,6 +894,7 @@ async def get_rules_list(
         "total": rules_cache.rules_count,
         "filtered": total_filtered,
         "platform": platform.value,
+        "category": category,
         "rules": summaries,
     }
 
@@ -800,6 +972,7 @@ async def get_rules_stats() -> dict:
     return {
         "total_rules": stats["total_rules"],
         "by_platform": stats["by_platform"],
+        "by_category": stats["by_category"],
         "by_status": stats["by_status"],
         "by_severity": stats["by_severity"],
         "by_mitre_tactic": stats["by_mitre_tactic"],
