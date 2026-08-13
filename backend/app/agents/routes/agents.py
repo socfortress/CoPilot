@@ -50,6 +50,7 @@ from app.agents.wazuh.services.sca import collect_agent_sca
 from app.agents.wazuh.services.sca import collect_agent_sca_policy_results
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities_new
+from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerability_by_cve
 from app.agents.wazuh.services.vulnerabilities import sync_agent_vulnerabilities
 from app.audit.models.audit import AuditAction
 from app.audit.services.audit import record_audit_event
@@ -68,6 +69,11 @@ from app.db.universal_models import Agents
 from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.services.db_operations import list_cases_by_asset_name
 from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import verify_customer_code_access
+from app.middleware.customer_query import customer_codes_query
+from app.middleware.search_query import SearchParams
+from app.middleware.search_query import apply_search_limit
+from app.middleware.search_query import search_query
 from app.threat_intel.schema.epss import EpssThreatIntelRequest
 from app.threat_intel.services.epss import collect_epss_score
 
@@ -239,7 +245,8 @@ async def delete_agent_from_database(db: AsyncSession, agent_id: str):
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_agents(
-    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the results to"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
+    search_params: SearchParams = Depends(search_query),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AgentsResponse:
@@ -247,13 +254,17 @@ async def get_agents(
     Retrieve all agents currently synced to the database.
     Results are filtered based on user's customer access permissions.
 
+    ``search``/``limit`` (see ``search_query``) narrow the result to agents whose
+    hostname, label, IP, or agent id contains the string and cap the count, so the
+    global search palette never has to pull the whole agent fleet.
+
     Returns:
         AgentsResponse: The response containing the list of agents, success status, and message.
 
     Raises:
         HTTPException: If there is an error while fetching the agents.
     """
-    logger.info("Fetching all agents")
+    logger.info(f"Fetching agents (customer_codes={customer_codes or 'all'}, search={search_params.search or 'none'})")
     try:
         # Apply customer access filtering (optionally narrowed to a requested subset)
         base_query = select(Agents)
@@ -263,6 +274,15 @@ async def get_agents(
             base_query,
             Agents.customer_code,
             requested_customers=customer_codes,
+        )
+
+        filtered_query = apply_search_limit(
+            filtered_query,
+            search_params,
+            Agents.hostname,
+            Agents.label,
+            Agents.ip_address,
+            Agents.agent_id,
         )
 
         result = await db.execute(filtered_query)
@@ -652,7 +672,18 @@ async def sync_all_agents() -> SyncedAgentsResponse:
     logger.info("Syncing agents as part of scheduled job")
     loop = asyncio.get_event_loop()
     await loop.create_task(sync_agents_wazuh())
-    await loop.create_task(sync_agents_velociraptor())
+
+    # Velociraptor is optional — a deployment with only the Wazuh Manager verified must still
+    # complete the Wazuh side of the sync rather than failing the whole request.
+    try:
+        await loop.create_task(sync_agents_velociraptor())
+    except Exception as e:
+        logger.error(f"Failed to sync agents with Velociraptor, continuing without it: {e}")
+        return SyncedAgentsResponse(
+            success=True,
+            message=f"Agents synced from Wazuh Manager. Velociraptor sync skipped: {e}",
+        )
+
     return SyncedAgentsResponse(
         success=True,
         message="Agents synced started successfully",
@@ -831,6 +862,47 @@ async def upgrade_wazuh_agent_route(
 
 
 @agents_router.get(
+    "/{agent_id}/vulnerabilities/cve/{cve}",
+    response_model=WazuhAgentVulnerabilitiesResponse,
+    description="Get a single agent vulnerability by CVE (optionally narrowed to one package).",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_agent_vulnerability_by_cve(
+    agent_id: str,
+    cve: str = Path(..., description="The CVE identifier of the vulnerability to fetch."),
+    package: Optional[str] = Query(None, description="Package name — disambiguates a CVE affecting several packages."),
+    package_version: Optional[str] = Query(None, alias="version", description="Package version."),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> WazuhAgentVulnerabilitiesResponse:
+    """
+    Fetches one vulnerability of an agent. Backs the vulnerability detail page,
+    which would otherwise have to pull the agent's whole "All" severity list.
+    User must have access to the agent's customer.
+    """
+    logger.info(f"Fetching agent {agent_id} vulnerability {cve}")
+
+    base_query = select(Agents).filter(Agents.agent_id == agent_id)
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(current_user, session, base_query, Agents.customer_code)
+
+    result = await session.execute(filtered_query)
+    agent = result.scalars().first()
+
+    if not agent:
+        raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found or access denied")
+
+    wazuh_new = await check_wazuh_manager_version()
+
+    return await collect_agent_vulnerability_by_cve(
+        agent_id=agent_id,
+        cve=cve,
+        package_name=package,
+        package_version=package_version,
+        wazuh_new=wazuh_new,
+    )
+
+
+@agents_router.get(
     "/{agent_id}/vulnerabilities/{vulnerability_severity}",
     response_model=WazuhAgentVulnerabilitiesResponse,
     description="Get agent vulnerabilities",
@@ -980,6 +1052,7 @@ async def get_agent_vulnerabilities_csv(
 )
 async def get_agent_sca(
     agent_id: str,
+    policy_id: Optional[str] = Query(None, description="Return only this SCA policy instead of the agent's whole list."),
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> WazuhAgentScaResponse:
@@ -989,6 +1062,7 @@ async def get_agent_sca(
 
     Args:
         agent_id (str): The ID of the agent.
+        policy_id (str): Optional single-policy filter, used by the SCA detail view.
         current_user (User): The authenticated user.
         session (AsyncSession): The database session.
 
@@ -1007,7 +1081,7 @@ async def get_agent_sca(
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found or access denied")
 
-    return await collect_agent_sca(agent_id)
+    return await collect_agent_sca(agent_id, policy_id=policy_id)
 
 
 @agents_router.get(
@@ -1019,6 +1093,7 @@ async def get_agent_sca(
 async def get_agent_sca_policy_results(
     agent_id: str,
     policy_id: str,
+    check_id: Optional[int] = Query(None, description="Return only this SCA check instead of the whole policy's checks."),
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> WazuhAgentScaPolicyResultsResponse:
@@ -1029,6 +1104,7 @@ async def get_agent_sca_policy_results(
     Args:
         agent_id (str): The ID of the agent.
         policy_id (str): The ID of the policy.
+        check_id (int): Optional single-check filter, used by the SCA check detail view.
         current_user (User): The authenticated user.
         session (AsyncSession): The database session.
 
@@ -1047,7 +1123,7 @@ async def get_agent_sca_policy_results(
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found or access denied")
 
-    return await collect_agent_sca_policy_results(agent_id, policy_id)
+    return await collect_agent_sca_policy_results(agent_id, policy_id, check_id=check_id)
 
 
 @agents_router.get(
@@ -1393,7 +1469,10 @@ async def sync_vulnerabilities_route(
 @agents_router.post(
     "/sync/vulnerabilities/{customer_code}",
     description="Sync agent vulnerabilities",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def sync_vulnerabilities_customer_code_route(
     customer_code: str,

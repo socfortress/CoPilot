@@ -1,4 +1,10 @@
-import type { CustomerPortalSettings } from "@/types/customer-portal"
+import type {
+	CustomerPortalAiReportSettings,
+	CustomerPortalBrandingListItem,
+	CustomerPortalBrandingOverride,
+	CustomerPortalEffectiveBranding,
+	CustomerPortalSettings
+} from "@/types/customer-portal"
 import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
 
@@ -6,6 +12,25 @@ export interface CustomerPortalSettingsPayload {
 	title: string | null
 	logo_base64: string | null
 	logo_mime_type: string | null
+	brand_color: string | null
+}
+
+/** Per-customer override payload. Null fields inherit the corresponding global setting. */
+export interface CustomerPortalBrandingPayload extends CustomerPortalSettingsPayload {
+	enabled: boolean
+}
+
+export interface CustomerPortalAiReportSettingsPayload {
+	enabled: boolean
+}
+
+type BrandingResponse = FlaskBaseResponse & {
+	override: CustomerPortalBrandingOverride | null
+	effective: CustomerPortalEffectiveBranding | null
+}
+
+type AiReportSettingsResponse = FlaskBaseResponse & {
+	settings: CustomerPortalAiReportSettings
 }
 
 export default {
@@ -17,5 +42,26 @@ export default {
 			`/customer_portal/settings`,
 			payload
 		)
+	},
+	getBrandingOverrides() {
+		return HttpClient.get<FlaskBaseResponse & { overrides: CustomerPortalBrandingListItem[] }>(
+			`/customer_portal/branding`
+		)
+	},
+	getCustomerBranding(customerCode: string) {
+		return HttpClient.get<BrandingResponse>(`/customer_portal/branding/${customerCode}`)
+	},
+	setCustomerBranding(customerCode: string, payload: CustomerPortalBrandingPayload) {
+		return HttpClient.put<BrandingResponse>(`/customer_portal/branding/${customerCode}`, payload)
+	},
+	deleteCustomerBranding(customerCode: string) {
+		return HttpClient.delete<BrandingResponse>(`/customer_portal/branding/${customerCode}`)
+	},
+	getCustomerAiReportSettings(customerCode: string) {
+		return HttpClient.get<AiReportSettingsResponse>(`/customer_portal/ai_reports/settings/${customerCode}`)
+	},
+	/** Admin-only: flips both portal AI surfaces for this customer at once. */
+	setCustomerAiReportSettings(customerCode: string, payload: CustomerPortalAiReportSettingsPayload) {
+		return HttpClient.put<AiReportSettingsResponse>(`/customer_portal/ai_reports/settings/${customerCode}`, payload)
 	}
 }

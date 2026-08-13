@@ -39,6 +39,7 @@ from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import FieldNames
 from app.incidents.schema.incident_alert import GenericAlertModel
 from app.incidents.schema.incident_alert import GenericSourceModel
+from app.incidents.services.alert_severity import normalize_severity
 from app.incidents.services.db_operations import get_alert_title_names
 from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_customer_ai_trigger
@@ -46,12 +47,16 @@ from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_ioc_names
 from app.incidents.services.db_operations import get_timefield_names
+from app.incidents.services.notification_enrichment import extract_rule_level
+from app.incidents.services.notification_enrichment import severity_from_rule_level
 from app.incidents.services.threshold_alert import retrieve_threshold_alert_timeline
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
 from app.integrations.alert_escalation.schema.escalate_alert import CustomerCodeKeys
 from app.integrations.routes import get_customer_by_auth_key
+from app.notifications.services.emit import emit
+from app.notifications.services.event_builders import alert_created_event
 
 
 async def fetch_settings(field: str, value: str, session: AsyncSession, case_insensitive: bool = False):
@@ -626,6 +631,11 @@ async def build_alert_payload(
     raw_alert_title = alert_payload.get(field_names.alert_title_name)
     cleaned_alert_title = clean_alert_title(raw_alert_title) if raw_alert_title else None
 
+    # Surface the Wazuh rule level + normalized severity by default (issue #980).
+    # Non-Wazuh sources (e.g. firewall events) have no rule level, so this stays
+    # None and callers simply omit/null the field rather than failing.
+    rule_level = extract_rule_level(alert_payload)
+
     return CreatedAlertPayload(
         alert_context_payload=await build_alert_context_payload(alert_payload, field_names),
         asset_payload=asset_name_value,
@@ -635,6 +645,8 @@ async def build_alert_payload(
         source=syslog_type,
         index_name=index_name,
         index_id=index_id,
+        rule_level=rule_level,
+        severity=severity_from_rule_level(rule_level),
     )
 
 
@@ -664,6 +676,10 @@ async def handle_customer_notifications(
                         "alert_context_payload": alert_payload.alert_context_payload,
                         "alert_title": alert_payload.alert_title_payload,
                         "alert_id": alert_payload.alert_id,
+                        # Default rule level + normalized severity (issue #980).
+                        # Null for non-Wazuh sources that carry no rule level.
+                        "rule_level": alert_payload.rule_level,
+                        "severity": alert_payload.severity,
                     },
                     start="",
                 ),
@@ -975,6 +991,27 @@ async def create_alert_full(
     # Trigger Talon investigation if enabled for this customer
     await handle_talon_investigation(alert_id, customer_code, session)
 
+    # Notification routes on the new engine (#1006). Deliberately placed after
+    # the recurrence early-return above, so a repeated alert does not re-notify.
+    #
+    # NOTE: handle_customer_notifications() above fires the LEGACY per-customer
+    # Shuffle workflow on the same event. Both are opt-in, so a customer only
+    # sees two notifications if an operator configures both — the route form
+    # warns when that is the case.
+    #
+    # Fire-and-forget: this is the ingest hot path and must not wait on an
+    # outbound HTTP call.
+    emit(
+        alert_created_event(
+            alert_id=alert_id,
+            customer_code=customer_code,
+            alert_title=alert_payload.alert_title_payload,
+            severity=alert_payload.severity,
+            rule_level=alert_payload.rule_level,
+            asset_name=asset.asset_name if asset is not None else None,
+        ),
+    )
+
     if threshold_alert is True or velo_sigma_alert is True:
         logger.info(
             f"{'Threshold' if threshold_alert else 'Velociraptor Sigma'} alert created for customer code {customer_code} with alert ID {alert_id}",
@@ -1160,6 +1197,11 @@ async def create_alert_in_copilot(alert_payload: CreatedAlertPayload, customer_c
         alert_creation_time=datetime.utcnow(),
         customer_code=customer_code,
         source=alert_payload.source,
+        # Persisted so everything after ingest can read it. NULL when the source
+        # supplied nothing — Wazuh carries a rule level, Office 365 / CrowdStrike
+        # / Carbon Black and the rest do not. NULL is resolved to the deployment
+        # default at read time by `severity_of`, deliberately not stamped here.
+        severity=normalize_severity(alert_payload.severity),
         assigned_to=None,
     )
     # Commit it to the database

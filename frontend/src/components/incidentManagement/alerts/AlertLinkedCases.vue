@@ -6,14 +6,12 @@
 				<Icon :name="MenuIcon" :size="14" class="relative top-0.5" />
 			</code>
 		</template>
-		<div class="flex flex-col gap-3 px-1 py-2">
-			<CaseItem
-				:case-data="{ ...linkedCase, alerts: alert ? [alert] : [] }"
-				compact
-				embedded
-				@click="routeIncidentManagementCases(linkedCase.id).navigate()"
-			/>
+		<div class="flex max-w-96 flex-col gap-3 px-1 py-2">
+			<CaseItem :case-data="{ ...linkedCase, alerts: alert ? [alert] : [] }" compact embedded />
 			<div class="flex items-center justify-end gap-3">
+				<n-button size="small" @click="routeIncidentManagementCases(linkedCase.id).navigate()">
+					Open Case
+				</n-button>
 				<n-button
 					size="small"
 					secondary

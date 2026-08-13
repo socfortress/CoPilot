@@ -35,7 +35,7 @@ export interface ScaOverviewResponse {
 }
 
 export interface ScaOverviewQuery {
-	customer_code?: string
+	customer_codes?: string[]
 	agent_name?: string
 	policy_id?: string
 	policy_name?: string

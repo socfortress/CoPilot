@@ -140,6 +140,10 @@ async def search_cves(
         description="Cycle in YYYY-Mmm format to limit search to. Defaults to current month.",
         pattern=r"^\d{4}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$",
     ),
+    product: Optional[str] = Query(
+        None,
+        description="Filter to a single affected product — a CVE spans multiple product rows.",
+    ),
 ) -> PatchTuesdayResponse:
     """
     Search for specific CVEs in Patch Tuesday data.
@@ -147,8 +151,8 @@ async def search_cves(
     Returns detailed information about the specified CVEs including
     EPSS scores, CISA KEV status, and prioritization recommendations.
     """
-    logger.info(f"Searching for CVEs: {cve_ids} in cycle: {cycle or 'current'}")
-    return await search_cves_in_patch_tuesday(cve_ids, cycle)
+    logger.info(f"Searching for CVEs: {cve_ids} in cycle: {cycle or 'current'} product: {product or 'any'}")
+    return await search_cves_in_patch_tuesday(cve_ids, cycle, product)
 
 
 @microsoft_patch_tuesday_router.get(

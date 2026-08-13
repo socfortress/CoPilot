@@ -1,4 +1,11 @@
 import type {
+	CustomDashboard,
+	CustomDashboardCreatePayload,
+	CustomDashboardDefinition,
+	CustomDashboardImportPayload,
+	CustomDashboardPreviewPayload,
+	CustomDashboardPreviewResponse,
+	CustomDashboardUpdatePayload,
 	DashboardCategory,
 	DashboardCategoryWithTemplates,
 	EnableDashboardPayload,
@@ -27,6 +34,11 @@ export interface EventSourceUpdatePayload {
 	time_field?: string
 	enabled?: boolean
 	displayed_columns?: DisplayColumn[] | null
+}
+
+export interface SiemEventDocumentQuery {
+	index_name: string
+	event_id: string
 }
 
 export default {
@@ -68,6 +80,12 @@ export default {
 			}
 		>(`/siem/events/${customerCode}/${sourceName}`, { params })
 	},
+	getEvent(customerCode: string, sourceName: string, query: SiemEventDocumentQuery, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { event: EventSearchResult }>(
+			`/siem/events/${customerCode}/${sourceName}/document`,
+			signal ? { params: query, signal } : { params: query }
+		)
+	},
 	getFieldMappings(customerCode: string, sourceName: string) {
 		return HttpClient.get<FlaskBaseResponse & { fields: FieldMapping[]; total: number; index_pattern: string }>(
 			`/siem/events/${customerCode}/${sourceName}/fields`
@@ -104,6 +122,53 @@ export default {
 				dashboard_id: dashboardId,
 				timerange
 			},
+			signal ? { signal } : {}
+		)
+	},
+
+	// ── Custom dashboards ───────────────────────────────────────
+	getCustomDashboards(customerCode?: string | null) {
+		return HttpClient.get<FlaskBaseResponse & { custom_dashboards: CustomDashboard[] }>(`/siem/dashboards/custom`, {
+			params: customerCode ? { customer_code: customerCode } : {}
+		})
+	},
+	getCustomDashboard(templateKey: string) {
+		return HttpClient.get<FlaskBaseResponse & { custom_dashboard: CustomDashboard }>(
+			`/siem/dashboards/custom/${templateKey}`
+		)
+	},
+	createCustomDashboard(payload: CustomDashboardCreatePayload) {
+		return HttpClient.post<FlaskBaseResponse & { custom_dashboard: CustomDashboard }>(
+			`/siem/dashboards/custom`,
+			payload
+		)
+	},
+	updateCustomDashboard(templateKey: string, payload: CustomDashboardUpdatePayload) {
+		return HttpClient.put<FlaskBaseResponse & { custom_dashboard: CustomDashboard }>(
+			`/siem/dashboards/custom/${templateKey}`,
+			payload
+		)
+	},
+	deleteCustomDashboard(templateKey: string) {
+		return HttpClient.delete<FlaskBaseResponse & { disabled_dashboards: number }>(
+			`/siem/dashboards/custom/${templateKey}`
+		)
+	},
+	importCustomDashboard(payload: CustomDashboardImportPayload) {
+		return HttpClient.post<FlaskBaseResponse & { custom_dashboard: CustomDashboard }>(
+			`/siem/dashboards/custom/import`,
+			payload
+		)
+	},
+	exportCustomDashboard(templateKey: string) {
+		return HttpClient.get<FlaskBaseResponse & { definition: CustomDashboardDefinition }>(
+			`/siem/dashboards/custom/${templateKey}/export`
+		)
+	},
+	previewCustomDashboard(payload: CustomDashboardPreviewPayload, signal?: AbortSignal) {
+		return HttpClient.post<FlaskBaseResponse & CustomDashboardPreviewResponse>(
+			`/siem/dashboards/custom/preview`,
+			payload,
 			signal ? { signal } : {}
 		)
 	}

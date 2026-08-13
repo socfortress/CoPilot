@@ -56,62 +56,16 @@
 			</n-input>
 		</div>
 
-		<n-spin :show="loading">
+		<n-spin :show="loading" class="min-h-48">
 			<div v-if="filteredEntries.length" class="grid grid-cols-1 gap-3 @3xl:grid-cols-2 @6xl:grid-cols-3">
-				<CardEntity v-for="entry of filteredEntries" :key="entry.key" size="small">
-					<template #headerMain>
-						<div class="text-default text-base font-semibold">
-							{{ entry.name }}
-						</div>
-					</template>
-					<template #headerExtra>
-						<n-button
-							size="small"
-							type="primary"
-							secondary
-							:disabled="importingKey !== null"
-							:loading="importingKey === entry.key"
-							@click="openImport(entry)"
-						>
-							<template #icon><Icon name="carbon:download" /></template>
-							Import
-						</n-button>
-					</template>
-					<template #default>
-						<p v-if="entry.description" class="text-secondary line-clamp-3 text-sm">
-							{{ entry.description }}
-						</p>
-					</template>
-
-					<template #footer>
-						<div class="flex flex-wrap items-center gap-2 text-xs">
-							<Badge type="splitted" size="small">
-								<template #label>Source</template>
-								<template #value>{{ entry.source || "—" }}</template>
-							</Badge>
-							<Badge type="splitted" size="small">
-								<template #label>Tasks</template>
-								<template #value>{{ entry.tasks.length }}</template>
-							</Badge>
-							<Badge v-if="mandatoryCount(entry) > 0" color="warning" type="splitted" bright size="small">
-								<template #label>Mandatory</template>
-								<template #value>{{ mandatoryCount(entry) }}</template>
-							</Badge>
-							<n-tag
-								v-if="entry.match_field && entry.match_value"
-								:bordered="false"
-								size="small"
-								type="success"
-								:title="`Conditional: applies when ${entry.match_field} == ${entry.match_value}`"
-							>
-								{{ entry.match_field }} == {{ entry.match_value }}
-							</n-tag>
-							<n-tag v-for="tactic of mitreTactics(entry)" :key="tactic" size="small" :bordered="false">
-								{{ tactic }}
-							</n-tag>
-						</div>
-					</template>
-				</CardEntity>
+				<CaseTemplateLibraryItem
+					v-for="entry of filteredEntries"
+					:key="entry.key"
+					:entry
+					:importing="importingKey === entry.key"
+					:import-disabled="importingKey !== null"
+					@import="openImport($event)"
+				/>
 			</div>
 
 			<n-empty
@@ -134,16 +88,15 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { CaseTemplateLibraryEntry } from "@/types/incidentManagement/case-templates"
-import { NAlert, NButton, NEmpty, NInput, NSpin, NTag, useMessage } from "naive-ui"
+import { NAlert, NButton, NEmpty, NInput, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
-import Badge from "@/components/common/Badge.vue"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import CaseTemplateLibraryImportModal from "./CaseTemplateLibraryImportModal.vue"
+import CaseTemplateLibraryItem from "./CaseTemplateLibraryItem.vue"
 
 const emit = defineEmits<{
 	(e: "imported"): void
@@ -176,16 +129,6 @@ const filteredEntries = computed(() => {
 		return haystack.includes(q)
 	})
 })
-
-function mandatoryCount(entry: CaseTemplateLibraryEntry): number {
-	return entry.tasks.filter(t => t.mandatory).length
-}
-
-function mitreTactics(entry: CaseTemplateLibraryEntry): string[] {
-	const raw = entry.tags?.mitre_tactics
-	if (!Array.isArray(raw)) return []
-	return raw.filter((t): t is string => typeof t === "string")
-}
 
 function load() {
 	loading.value = true

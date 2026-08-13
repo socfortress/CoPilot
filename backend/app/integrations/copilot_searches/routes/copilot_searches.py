@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
@@ -22,7 +23,13 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
     CatalogComplianceFrameworksResponse,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogComplianceGroupDetailResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
     CatalogComplianceResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CatalogCoverageGapDetailResponse,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import (
     CatalogCoverageGapsResponse,
@@ -106,6 +113,12 @@ from app.integrations.copilot_searches.services.detection_catalog import (
     get_catalog_stats,
 )
 from app.integrations.copilot_searches.services.detection_catalog import (
+    get_compliance_group,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
+    get_coverage_gap,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
     get_story_detail,
 )
 from app.integrations.copilot_searches.services.detection_catalog import (
@@ -127,6 +140,10 @@ from app.integrations.copilot_searches.services.detection_catalog import (
 from app.integrations.copilot_searches.services.detection_catalog import run_log_test
 from app.integrations.copilot_searches.services.mitre_coverage import get_coverage
 from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
+from app.middleware.customer_access import verify_optional_customer_code_access
+from app.middleware.search_query import SearchParams
+from app.middleware.search_query import filter_and_limit
+from app.middleware.search_query import search_query
 
 copilot_searches_router = APIRouter()
 
@@ -934,9 +951,11 @@ async def get_catalog_stats_endpoint() -> CatalogStatsResponse:
     ),
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def list_catalog_stories_endpoint() -> CatalogStoryListResponse:
+async def list_catalog_stories_endpoint(
+    search_params: SearchParams = Depends(search_query),
+) -> CatalogStoryListResponse:
     try:
-        stories = await list_stories()
+        stories = filter_and_limit(await list_stories(), search_params, key=lambda story: story.get("name", ""))
         return CatalogStoryListResponse(
             success=True,
             message=f"Found {len(stories)} story(ies)",
@@ -999,7 +1018,10 @@ async def get_catalog_story_detail_endpoint(story_name: str) -> CatalogStoryDeta
         "response carries ``available=false`` + ``unavailable_reason`` so "
         "the UI can render an inline empty state instead of erroring."
     ),
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user")),
+        Depends(verify_optional_customer_code_access),
+    ],
 )
 async def list_catalog_wazuh_rules_endpoint(
     customer_code: Optional[str] = Query(
@@ -1011,9 +1033,20 @@ async def list_catalog_wazuh_rules_endpoint(
             "cache is used."
         ),
     ),
+    search_params: SearchParams = Depends(search_query),
 ) -> CatalogWazuhRulesResponse:
     try:
         payload = await list_wazuh_rules(customer_code=customer_code)
+
+        # Server-side filter so the palette never pulls the whole ruleset to search it client-side.
+        if search_params.search or search_params.limit is not None:
+            payload["rules"] = filter_and_limit(
+                payload["rules"],
+                search_params,
+                key=lambda rule: f"{rule.get('description', '')} {rule.get('id', '')}",
+            )
+            payload["total"] = len(payload["rules"])
+
         return CatalogWazuhRulesResponse(
             success=True,
             message=(f"Listed {payload['total']} Wazuh rule(s)" if payload["available"] else "Wazuh Manager not available"),
@@ -1079,6 +1112,23 @@ async def list_catalog_coverage_gaps_endpoint() -> CatalogCoverageGapsResponse:
         raise HTTPException(status_code=503, detail=f"Failed to compute coverage gaps: {str(e)}")
 
 
+@copilot_searches_router.get(
+    "/catalog/coverage-gaps/{technique_id}",
+    response_model=CatalogCoverageGapDetailResponse,
+    description="Get a single MITRE coverage gap by technique ID.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_catalog_coverage_gap_endpoint(technique_id: str) -> CatalogCoverageGapDetailResponse:
+    gap = await get_coverage_gap(technique_id)
+    if gap is None:
+        raise HTTPException(status_code=404, detail=f"Coverage gap {technique_id} not found")
+    return CatalogCoverageGapDetailResponse(
+        success=True,
+        message="Coverage gap retrieved successfully",
+        gap=gap,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Compliance pivot — Wazuh rules grouped by framework control ID
 #
@@ -1135,6 +1185,37 @@ async def get_catalog_compliance_endpoint(framework: str) -> CatalogComplianceRe
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Failed to compute compliance pivot: {str(e)}")
+
+
+@copilot_searches_router.get(
+    "/catalog/compliance/{framework}/{control:path}",
+    response_model=CatalogComplianceGroupDetailResponse,
+    description=(
+        "Detail payload for one compliance control bucket within a framework "
+        "(e.g. PCI DSS 10.2.4 → rule IDs + firing hits). Uses ``{control:path}`` "
+        "so dotted control IDs are tolerated."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_catalog_compliance_group_endpoint(
+    framework: str,
+    control: str,
+) -> CatalogComplianceGroupDetailResponse:
+    try:
+        payload = await get_compliance_group(framework, control)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Failed to load compliance group: {str(e)}")
+
+    if payload is None:
+        raise HTTPException(status_code=404, detail=f"Compliance control {control!r} not found for {framework!r}")
+
+    return CatalogComplianceGroupDetailResponse(
+        success=True,
+        message="Compliance group retrieved successfully",
+        **payload,
+    )
 
 
 # ---------------------------------------------------------------------------

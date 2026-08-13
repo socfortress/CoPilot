@@ -5,6 +5,7 @@ Read-only: there is no create/update/delete here. Audit rows are written only by
 intent (no purge/edit endpoint — retention is a policy decision, not an API).
 """
 from datetime import datetime
+from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
@@ -15,11 +16,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.models.audit import AuditAction
 from app.audit.models.audit import AuditResult
+from app.audit.schema.audit import AuditLogDetailResponse
 from app.audit.schema.audit import AuditLogEntry
 from app.audit.schema.audit import AuditLogResponse
+from app.audit.services.query import get_audit_log_by_id
 from app.audit.services.query import list_audit_logs
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.middleware.customer_query import customer_codes_query
 
 audit_router = APIRouter()
 
@@ -56,7 +60,7 @@ async def get_audit_logs(
     action: Optional[str] = Query(None, description="Filter by action, e.g. 'agent.delete'"),
     entity_type: Optional[str] = Query(None, description="Filter by entity type, e.g. 'agent'"),
     entity_id: Optional[str] = Query(None, description="Filter by entity id (exact)"),
-    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     result: Optional[str] = Query(None, description="Filter by result: success | failure"),
     start_time: Optional[datetime] = Query(None, description="Only entries at/after this UTC time"),
     end_time: Optional[datetime] = Query(None, description="Only entries at/before this UTC time"),
@@ -72,7 +76,7 @@ async def get_audit_logs(
         action=action,
         entity_type=entity_type,
         entity_id=entity_id,
-        customer_code=customer_code,
+        customer_codes=customer_codes,
         result=result,
         start_time=start_time,
         end_time=end_time,
@@ -83,4 +87,22 @@ async def get_audit_logs(
         pagination={"total": total, "skip": skip, "limit": limit},
         success=True,
         message=f"Retrieved {len(rows)} of {total} audit log entries",
+    )
+
+
+@audit_router.get(
+    "/{audit_id}",
+    response_model=AuditLogDetailResponse,
+    description="Get a single audit log entry by id",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
+async def get_audit_log(
+    audit_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> AuditLogDetailResponse:
+    row = await get_audit_log_by_id(session, audit_id)
+    return AuditLogDetailResponse(
+        audit_log=AuditLogEntry.model_validate(row),
+        success=True,
+        message="Audit log entry retrieved successfully",
     )

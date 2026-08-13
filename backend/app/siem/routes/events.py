@@ -12,9 +12,11 @@ from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.middleware.customer_access import customer_access_handler
+from app.siem.schema.events import EventDocumentResponse
 from app.siem.schema.events import EventsQueryParams
 from app.siem.schema.events import EventsQueryResponse
 from app.siem.schema.events import FieldMappingsResponse
+from app.siem.services.events import get_event_document
 from app.siem.services.events import get_field_mappings
 from app.siem.services.events import query_events
 
@@ -53,6 +55,28 @@ async def query_events_endpoint(
         time_to=time_to,
     )
     return await query_events(customer_code, source_name, params, db)
+
+
+@siem_events_router.get(
+    "/{customer_code}/{source_name}/document",
+    response_model=EventDocumentResponse,
+    description="Get a single event document by OpenSearch index name and document id",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def get_event_document_endpoint(
+    customer_code: str,
+    source_name: str,
+    index_name: str = Query(..., description="Concrete OpenSearch index name containing the event"),
+    event_id: str = Query(..., description="OpenSearch document _id"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> EventDocumentResponse:
+    logger.info(f"Fetching event {event_id} from index {index_name} for customer {customer_code}, source {source_name}")
+
+    if not await customer_access_handler.check_customer_access(current_user, customer_code, db):
+        raise HTTPException(status_code=403, detail=f"Access denied to customer {customer_code}")
+
+    return await get_event_document(customer_code, source_name, index_name, event_id, db)
 
 
 @siem_events_router.get(

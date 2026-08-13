@@ -8,6 +8,7 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
+from fastapi import HTTPException
 from sqlalchemy import desc
 from sqlalchemy import func
 from sqlalchemy import or_
@@ -27,7 +28,7 @@ async def list_audit_logs(
     action: Optional[str] = None,
     entity_type: Optional[str] = None,
     entity_id: Optional[str] = None,
-    customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
     result: Optional[str] = None,
     start_time: Optional[datetime] = None,
     end_time: Optional[datetime] = None,
@@ -50,8 +51,8 @@ async def list_audit_logs(
         filters.append(AuditLog.entity_type == entity_type)
     if entity_id:
         filters.append(AuditLog.entity_id == entity_id)
-    if customer_code:
-        filters.append(AuditLog.customer_code == customer_code)
+    if customer_codes:
+        filters.append(AuditLog.customer_code.in_(customer_codes))
     if result:
         filters.append(AuditLog.result == result)
     if start_time is not None:
@@ -80,3 +81,10 @@ async def list_audit_logs(
     rows = (await session.execute(stmt)).scalars().all()
 
     return list(rows), total
+
+
+async def get_audit_log_by_id(session: AsyncSession, audit_id: int) -> AuditLog:
+    row = await session.get(AuditLog, audit_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"Audit log {audit_id} not found")
+    return row

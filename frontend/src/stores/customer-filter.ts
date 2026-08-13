@@ -5,10 +5,16 @@ import { acceptHMRUpdate, defineStore } from "pinia"
  *
  * Empty `selectedCustomerCodes` means "all accessible customers". The backend
  * intersects requested codes with user_customer_access — stale codes never widen access.
+ *
+ * `liveSync` is a per-user preference (localStorage only, no API): when ON, every view
+ * that consumes the global filter re-applies it to its own local filter as soon as the
+ * global selection changes. When OFF, the global filter is only read once, when the view
+ * mounts — the pre-existing behavior. Toggled from Profile → Settings.
  */
 export const useCustomerFilterStore = defineStore("customer-filter", {
 	state: () => ({
-		selectedCustomerCodes: [] as string[]
+		selectedCustomerCodes: [] as string[],
+		liveSync: true
 	}),
 	actions: {
 		setSelected(codes: string[]) {
@@ -16,6 +22,9 @@ export const useCustomerFilterStore = defineStore("customer-filter", {
 		},
 		clear() {
 			this.selectedCustomerCodes = []
+		},
+		setLiveSync(enabled: boolean) {
+			this.liveSync = enabled
 		},
 		/** Drop any persisted selection the current user can no longer access. */
 		pruneToAccessible(accessibleCodes: string[]) {
@@ -31,7 +40,7 @@ export const useCustomerFilterStore = defineStore("customer-filter", {
 		}
 	},
 	persist: {
-		pick: ["selectedCustomerCodes"]
+		pick: ["selectedCustomerCodes", "liveSync"]
 	}
 })
 

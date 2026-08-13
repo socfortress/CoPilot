@@ -35,6 +35,8 @@ export async function getHighlighter() {
 			import("shiki/langs/lua.mjs"),
 			import("shiki/langs/vb.mjs"),
 			import("shiki/langs/php.mjs"),
+			import("shiki/langs/python.mjs"),
+			import("shiki/langs/rust.mjs"),
 			import("shiki/langs/markdown.mjs")
 		],
 		engine: createOnigurumaEngine(() => import("shiki/wasm"))

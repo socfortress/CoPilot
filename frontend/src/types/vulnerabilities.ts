@@ -38,7 +38,7 @@ export enum VulnerabilitySeverity {
 }
 
 export interface VulnerabilitySearchQuery {
-	customer_code?: string
+	customer_codes?: string[]
 	agent_name?: string
 	severity?: VulnerabilitySeverity
 	cve_id?: string

@@ -5,4 +5,5 @@ export interface User {
 	role_id?: number
 	role_name?: string
 	assigned_tags?: number[]
+	last_login_at?: string | null
 }

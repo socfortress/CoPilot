@@ -9,6 +9,7 @@
 		card-entity-wrapper-class="h-full"
 		header-box-class="flex-nowrap! items-start"
 		:card-entity-class="priorityBorderClass"
+		@click.stop="showDetail = true"
 	>
 		<template #headerMain>
 			<span class="text-default font-mono font-semibold">{{ item.cve }}</span>
@@ -52,57 +53,79 @@
 			</div>
 		</template>
 
-		<template #footerMain>
-			<div class="flex flex-wrap items-center gap-2">
-				<Badge v-if="item.cvss.base !== null" type="splitted" size="small" :color="cvssBadgeColor">
-					<template #label>CVSS</template>
-					<template #value>{{ item.cvss.base.toFixed(1) }}</template>
-				</Badge>
+		<template #footer>
+			<div class="flex flex-col gap-2">
+				<div class="flex flex-wrap items-center gap-2">
+					<Badge v-if="item.cvss.base !== null" type="splitted" size="small" :color="cvssBadgeColor">
+						<template #label>CVSS</template>
+						<template #value>{{ item.cvss.base.toFixed(1) }}</template>
+					</Badge>
 
-				<Badge v-if="item.epss.score !== null" type="splitted" size="small" color="warning">
-					<template #label>EPSS</template>
-					<template #value>{{ (item.epss.score * 100).toFixed(1) }}%</template>
-				</Badge>
+					<Badge v-if="item.epss.score !== null" type="splitted" size="small" color="warning">
+						<template #label>EPSS</template>
+						<template #value>{{ (item.epss.score * 100).toFixed(1) }}%</template>
+					</Badge>
 
-				<Badge v-if="item.epss.percentile !== null" type="splitted" size="small" color="warning">
-					<template #label>Percentile</template>
-					<template #value>{{ (item.epss.percentile * 100).toFixed(0) }}%</template>
-				</Badge>
+					<Badge v-if="item.epss.percentile !== null" type="splitted" size="small" color="warning">
+						<template #label>Percentile</template>
+						<template #value>{{ (item.epss.percentile * 100).toFixed(0) }}%</template>
+					</Badge>
 
-				<Badge v-if="item.remediation.kbs.length > 0" type="splitted" size="small">
-					<template #label>
-						<Icon :name="LinkIcon" :size="12" />
-						KB
-					</template>
-					<template #value>{{ kbSummary }}</template>
-				</Badge>
-			</div>
-		</template>
+					<Badge v-if="item.remediation.kbs.length > 0" type="splitted" size="small">
+						<template #label>
+							<Icon :name="LinkIcon" :size="12" />
+							KB
+						</template>
+						<template #value>{{ kbSummary }}</template>
+					</Badge>
+				</div>
+				<div class="flex items-center justify-between gap-2">
+					<div class="text-tertiary flex min-w-0 items-center gap-1.5 text-xs">
+						<Icon :name="ClockIcon" :size="14" class="shrink-0" />
+						<span class="truncate" :title="item.prioritization.suggested_sla">
+							{{ item.prioritization.suggested_sla }}
+						</span>
+					</div>
 
-		<template #footerExtra>
-			<div class="text-tertiary flex min-w-0 items-center gap-1.5 text-xs">
-				<Icon :name="ClockIcon" :size="14" class="shrink-0" />
-				<span class="truncate" :title="item.prioritization.suggested_sla">
-					{{ item.prioritization.suggested_sla }}
-				</span>
+					<EntityDetailsButton
+						size="tiny"
+						view-label="Details"
+						:route="routePatchTuesdayItem(item.cycle, item.cve, item.affected.product)"
+						@view="showDetail = true"
+					/>
+				</div>
 			</div>
 		</template>
 	</CardEntity>
+
+	<n-drawer v-model:show="showDetail" :width="600" placement="right" class="max-w-[98vw]">
+		<n-drawer-content :title="item.cve" closable :native-scrollbar="false">
+			<PatchTuesdayDetail :item />
+		</n-drawer-content>
+	</n-drawer>
 </template>
 
 <script setup lang="ts">
 import type { BadgeColor } from "@/components/common/Badge.vue"
 import type { PatchTuesdayItem } from "@/types/patch-tuesday"
-import { computed } from "vue"
+import { NDrawer, NDrawerContent } from "naive-ui"
+import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { PriorityLevel } from "@/types/patch-tuesday"
+import PatchTuesdayDetail from "./PatchTuesdayDetail.vue"
 import PatchTuesdayPriorityBadge from "./PatchTuesdayPriorityBadge.vue"
 
 const { item } = defineProps<{
 	item: PatchTuesdayItem
 }>()
+
+const { routePatchTuesdayItem } = useNavigation()
+
+const showDetail = ref(false)
 
 const AlertIcon = "carbon:warning"
 const ClockIcon = "carbon:time"

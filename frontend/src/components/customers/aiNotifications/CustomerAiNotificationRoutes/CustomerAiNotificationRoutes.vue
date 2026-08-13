@@ -27,6 +27,7 @@
 								v-for="route of list"
 								:key="route.id"
 								:route
+								:customer-code
 								class="item-appear item-appear-bottom item-appear-005 mb-2"
 								@edit="openEdit(route)"
 								@deleted="refreshList()"
@@ -36,7 +37,7 @@
 						<template v-else>
 							<n-empty
 								v-if="!loading"
-								description="No routes configured. Add one to send Talon's investigation summaries to Slack or email."
+								description="No routes configured. Add one to send Talon's investigation summaries to Shuffle apps or a direct webhook (automation platforms, chat, custom endpoints)."
 								class="h-48 justify-center"
 							/>
 						</template>

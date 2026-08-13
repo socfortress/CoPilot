@@ -173,30 +173,42 @@
 
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
+import type { ApiError } from "@/types/common"
 import type { CatalogStoryDetailResponse, CatalogStoryDetection } from "@/types/detection-catalog"
+import axios from "axios"
 import { NButton, NDataTable, NModal, NSpin, NTag, useMessage } from "naive-ui"
-import { onBeforeMount, ref, watch } from "vue"
+import { ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import RuleCardContent from "@/components/copilotSearches/RuleCardContent.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
-const props = defineProps<{ storyName: string }>()
+const props = defineProps<{
+	storyName?: string | null
+	story?: CatalogStoryDetailResponse | null
+}>()
 
 const emits = defineEmits<{
 	(e: "error", message: string): void
+	(e: "loaded", value: CatalogStoryDetailResponse): void
 }>()
 
 const message = useMessage()
 const story = ref<CatalogStoryDetailResponse | null>(null)
 const loading = ref(false)
 const dFormats = useSettingsStore().dateFormat
+const { routeDetectionCatalogDetection } = useNavigation()
+
 const showRuleModal = ref(false)
 const modalRuleId = ref<string | null>(null)
+
+let abortController: AbortController | null = null
 
 function openRuleDetail(ruleId: string) {
 	modalRuleId.value = ruleId
@@ -219,11 +231,7 @@ const detectionColumns: DataTableColumns<CatalogStoryDetection> = [
 	{
 		title: "Name",
 		key: "name",
-		render: row => (
-			<span class="text-primary cursor-pointer underline" onClick={() => openRuleDetail(row.id)}>
-				{row.name}
-			</span>
-		)
+		render: row => row.name
 	},
 	{
 		title: "Technique",
@@ -262,24 +270,51 @@ const detectionColumns: DataTableColumns<CatalogStoryDetection> = [
 				</NTag>
 			)
 		}
+	},
+	{
+		title: "",
+		key: "actions",
+		width: 110,
+		render: row => (
+			<div onClick={e => e.stopPropagation()}>
+				<EntityDetailsButton
+					size="tiny"
+					route={routeDetectionCatalogDetection(row.id)}
+					onView={() => openRuleDetail(row.id)}
+				/>
+			</div>
+		)
 	}
 ]
 
+function applyStory(data: CatalogStoryDetailResponse) {
+	story.value = data
+	emits("loaded", data)
+}
+
 function load(name: string) {
+	abortController?.abort()
+	abortController = new AbortController()
 	loading.value = true
 	story.value = null
+
 	Api.detectionCatalog
-		.getStory(name)
+		.getStory(name, abortController.signal)
 		.then(res => {
+			loading.value = false
+
 			if (res.data?.success) {
-				story.value = res.data
+				applyStory(res.data)
 			} else {
 				message.warning(res.data?.message || "Failed to load story detail")
 			}
 		})
 		.catch(err => {
-			const status = err.response?.status
-			let errorMessage = getApiErrorMessage(err) || "Failed to load story detail"
+			if (axios.isCancel(err)) return
+
+			loading.value = false
+			const status = (err as ApiError).response?.status
+			let errorMessage = getApiErrorMessage(err as ApiError) || "Failed to load story detail"
 			if (status === 404) {
 				errorMessage = `No detections found for story '${name}'`
 				message.warning(errorMessage)
@@ -289,14 +324,29 @@ function load(name: string) {
 
 			emits("error", errorMessage)
 		})
-		.finally(() => {
-			loading.value = false
-		})
 }
 
 watch(
-	() => props.storyName,
-	name => load(name)
+	() => [props.story, props.storyName] as const,
+	([providedStory, name]) => {
+		if (providedStory) {
+			abortController?.abort()
+			loading.value = false
+			applyStory(providedStory)
+			return
+		}
+
+		if (name) {
+			load(name)
+			return
+		}
+
+		abortController?.abort()
+		story.value = null
+		loading.value = false
+	},
+	{ immediate: true }
 )
-onBeforeMount(() => load(props.storyName))
+
+defineExpose({ loading, story })
 </script>

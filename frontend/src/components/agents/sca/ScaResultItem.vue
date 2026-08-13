@@ -3,12 +3,12 @@
 		<CardEntity :embedded hoverable>
 			<template #headerMain>#{{ data.id }}</template>
 			<template #headerExtra>
-				<n-button size="small" @click.stop="showDetails = true">
-					<template #icon>
-						<Icon :name="DetailsIcon" />
-					</template>
-					Details
-				</n-button>
+				<EntityDetailsButton
+					size="small"
+					view-label="Details"
+					:route="routeAgentScaCheck(agentId, data.policy_id, data.id)"
+					@view="showDetails = true"
+				/>
 			</template>
 			<template #default>
 				<div class="flex flex-col gap-1">
@@ -73,18 +73,21 @@
 
 <script setup lang="ts">
 import type { ScaPolicyResult } from "@/types/agents"
-import { NButton, NModal } from "naive-ui"
+import { NModal } from "naive-ui"
 import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import Icon from "@/components/common/Icon.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import ScaResultItemDetails from "./ScaResultItemDetails.vue"
 
-const { data, embedded } = defineProps<{
+const { data, agentId, embedded } = defineProps<{
 	data: ScaPolicyResult
+	/** Owner agent — required to build the check's detail route. */
+	agentId?: string
 	embedded?: boolean
 }>()
 
-const DetailsIcon = "carbon:settings-adjust"
+const { routeAgentScaCheck } = useNavigation()
 const showDetails = ref(false)
 </script>

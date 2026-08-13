@@ -51,6 +51,13 @@
 					{{ formatCompactNumber(item.data?.value) }}
 				</div>
 
+				<PanelTable
+					v-else-if="item.panel.type === 'table'"
+					:columns="item.data?.columns"
+					:rows="item.data?.rows"
+					:height="item.panel.h"
+				/>
+
 				<component
 					:is="chartByType[item.panel.type]"
 					v-if="item.data && chartByType[item.panel.type]"
@@ -87,6 +94,7 @@ import ChartColumn from "@/components/common/charts/ChartColumn.vue"
 import ChartPie from "@/components/common/charts/ChartPie.vue"
 import Icon from "@/components/common/Icon.vue"
 import { formatCompactNumber, getApiErrorMessage } from "@/utils"
+import PanelTable from "./PanelTable.vue"
 import { panelColSpanClass } from "./utils"
 
 const { dashboardId } = defineProps<{
@@ -103,6 +111,8 @@ interface DashboardPanelEntry {
 
 const chartByType: Record<DashboardPanelType, Component | undefined> = {
 	stat: undefined,
+	// Rendered by PanelTable, not by an ECharts component.
+	table: undefined,
 	pie: ChartPie,
 	bar_h: ChartBar,
 	histogram: ChartColumn

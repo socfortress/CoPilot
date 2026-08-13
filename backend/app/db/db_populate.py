@@ -158,6 +158,17 @@ def get_connectors_list():
             "Connection to Graylog. If you only have one Graylog instance, set this to the same as Graylog.",
         ),
         (
+            "Resend",
+            "1",
+            "api_key",
+            (
+                "Connection to Resend for transactional email notifications. Requires an API key and a verified "
+                "sending domain. The default From address is read from RESEND_FROM_ADDRESS and can be overridden "
+                "per notification route."
+            ),
+            "RESEND_FROM_ADDRESS",
+        ),
+        (
             "Talon",
             "3",
             "api_key",

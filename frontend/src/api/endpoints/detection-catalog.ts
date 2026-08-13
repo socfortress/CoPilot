@@ -5,7 +5,9 @@
 
 import type {
 	CatalogComplianceFrameworksResponse,
+	CatalogComplianceGroupDetailResponse,
 	CatalogComplianceResponse,
+	CatalogCoverageGapRow,
 	CatalogCoverageGapsResponse,
 	CatalogLogTestRequest,
 	CatalogLogTestResponse,
@@ -17,6 +19,7 @@ import type {
 } from "@/types/detection-catalog"
 import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
+import { searchLimitParams } from "../params"
 
 export default {
 	/** Top-level metrics for the catalog overview pane. */
@@ -24,9 +27,15 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & CatalogStatsResponse>(`/copilot_searches/catalog/stats`)
 	},
 
-	/** List every analytic story with per-story aggregated summary fields. */
-	listStories() {
-		return HttpClient.get<FlaskBaseResponse & CatalogStoryListResponse>(`/copilot_searches/catalog/stories`)
+	/**
+	 * List analytic stories with per-story aggregated summary fields. Pass
+	 * ``search``/``limit`` to filter server-side (used by the global search palette).
+	 */
+	listStories(query: { search?: string; limit?: number } = {}, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & CatalogStoryListResponse>(`/copilot_searches/catalog/stories`, {
+			params: searchLimitParams(query),
+			signal
+		})
 	},
 
 	/**
@@ -34,9 +43,10 @@ export default {
 	 * detections table, data sources, references). The backend uses ``{story_name:path}``
 	 * so spaces and other characters are tolerated — we encodeURIComponent here too.
 	 */
-	getStory(storyName: string) {
+	getStory(storyName: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & CatalogStoryDetailResponse>(
-			`/copilot_searches/catalog/stories/${encodeURIComponent(storyName)}`
+			`/copilot_searches/catalog/stories/${encodeURIComponent(storyName)}`,
+			{ signal }
 		)
 	},
 
@@ -51,9 +61,10 @@ export default {
 	 * itself is unchanged — every rule is still returned — but rules without
 	 * any hits for that customer get zeros.
 	 */
-	listWazuhRules(customerCode?: string) {
+	listWazuhRules(customerCode?: string, query: { search?: string; limit?: number } = {}, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & CatalogWazuhRulesResponse>(`/copilot_searches/catalog/wazuh-rules`, {
-			params: customerCode ? { customer_code: customerCode } : {}
+			params: { ...(customerCode ? { customer_code: customerCode } : {}), ...searchLimitParams(query) },
+			signal
 		})
 	},
 
@@ -72,6 +83,12 @@ export default {
 	listCoverageGaps() {
 		return HttpClient.get<FlaskBaseResponse & CatalogCoverageGapsResponse>(
 			`/copilot_searches/catalog/coverage-gaps`
+		)
+	},
+	getCoverageGap(techniqueId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { gap: CatalogCoverageGapRow }>(
+			`/copilot_searches/catalog/coverage-gaps/${encodeURIComponent(techniqueId)}`,
+			{ signal }
 		)
 	},
 
@@ -103,6 +120,13 @@ export default {
 	getCompliancePivot(framework: string) {
 		return HttpClient.get<FlaskBaseResponse & CatalogComplianceResponse>(
 			`/copilot_searches/catalog/compliance/${encodeURIComponent(framework)}`
+		)
+	},
+
+	getComplianceGroup(framework: string, control: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & CatalogComplianceGroupDetailResponse>(
+			`/copilot_searches/catalog/compliance/${encodeURIComponent(framework)}/${encodeURIComponent(control)}`,
+			{ signal }
 		)
 	}
 }

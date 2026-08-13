@@ -11,6 +11,13 @@
 			<div class="flex items-center justify-end gap-3">
 				<VirusTotalEnrichmentButton :ioc-value="ioc.value" />
 
+				<EntityDetailsButton
+					size="small"
+					:order="['open']"
+					open-show-label
+					:route="routeIncidentManagementAlertIoc(alertId, ioc.id)"
+				/>
+
 				<n-popconfirm
 					v-model:show="showDeleteConfirm"
 					trigger="manual"
@@ -19,7 +26,13 @@
 					@clickoutside="showDeleteConfirm = false"
 				>
 					<template #trigger>
-						<n-button quaternary size="tiny" :loading="canceling" @click.stop="showDeleteConfirm = true">
+						<n-button
+							size="small"
+							type="error"
+							ghost
+							:loading="canceling"
+							@click.stop="showDeleteConfirm = true"
+						>
 							Delete
 						</n-button>
 					</template>
@@ -37,7 +50,9 @@ import { NButton, NPopconfirm, useMessage } from "naive-ui"
 import { ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import VirusTotalEnrichmentButton from "@/components/threatIntel/VirusTotalEnrichmentButton.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 
 const { ioc, embedded, alertId } = defineProps<{
@@ -50,6 +65,7 @@ const emit = defineEmits<{
 	(e: "deleted"): void
 }>()
 
+const { routeIncidentManagementAlertIoc } = useNavigation()
 const message = useMessage()
 const canceling = ref(false)
 const showDeleteConfirm = ref(false)

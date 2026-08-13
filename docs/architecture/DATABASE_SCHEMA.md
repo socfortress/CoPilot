@@ -155,7 +155,8 @@ When tag access control is enabled, alert visibility is constrained by the tag I
 | `license` | `id` | `license_key`, customer/company identity fields | None | `backend/app/db/universal_models.py` (`License`) |
 | `license_cache` | `id` | `license_key`, `feature_name`, `is_enabled`, `cached_at`, `expires_at`, `license_data` | None | `backend/app/db/universal_models.py` (`LicenseCache`) |
 | `log_entries` | `id` | `timestamp`, `event_type`, `user_id`, `route`, `status_code`, `message` | None | `backend/app/db/universal_models.py` (`LogEntry`) |
-| `customer_portal_settings` | `id` | `title`, `logo_base64`, `logo_mime_type`, `updated_at`, `updated_by` | None | `backend/app/db/universal_models.py` (`CustomerPortalSettings`) |
+| `customer_portal_settings` | `id` | `title`, `logo_base64`, `logo_mime_type`, `brand_color`, `updated_at`, `updated_by` | None | `backend/app/db/universal_models.py` (`CustomerPortalSettings`) — global **defaults** |
+| `customer_portal_branding` | `id` | `customer_code` (unique), `enabled`, `title`, `logo_base64`, `logo_mime_type`, `brand_color`, `updated_at`, `updated_by` | `customer_code -> customers.customer_code` | `backend/app/db/universal_models.py` (`CustomerPortalBranding`) — optional per-customer override of the above; merged field-by-field in `backend/app/customer_portal/services/branding.py` |
 
 ### Agents, Vulnerability, and Artifact/Data Store
 

@@ -71,7 +71,7 @@ const progress = reactive<ScaStreamProgress>({
 })
 
 const filters = reactive<ScaStreamingFilters>({
-	customer_code: undefined,
+	customer_codes: undefined,
 	agent_name: undefined,
 	policy_name: undefined,
 	min_score: undefined,
@@ -138,7 +138,7 @@ async function startStream() {
 	abortController.value = new AbortController()
 
 	const query: ScaStreamingFilters = {}
-	if (filters.customer_code) query.customer_code = filters.customer_code
+	if (filters.customer_codes?.length) query.customer_codes = filters.customer_codes
 	if (filters.agent_name) query.agent_name = filters.agent_name
 	if (filters.policy_name) query.policy_name = filters.policy_name
 	if (filters.min_score !== undefined) query.min_score = filters.min_score
@@ -222,7 +222,7 @@ function stopStream() {
 
 function applyFilters(newFilters: ScaStreamingListFilter[]) {
 	const nextFilters = scaStreamingListToFilters(newFilters)
-	filters.customer_code = nextFilters.customer_code
+	filters.customer_codes = nextFilters.customer_codes
 	filters.agent_name = nextFilters.agent_name
 	filters.policy_name = nextFilters.policy_name
 	filters.min_score = nextFilters.min_score

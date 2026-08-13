@@ -15,10 +15,12 @@
 
 		<n-select
 			v-model:value="filterCustomerCode"
-			:options="customerOptions"
+			:options="customers"
 			placeholder="Filter by Customer"
+			multiple
 			clearable
 			filterable
+			:max-tag-count="3"
 			@update:value="onFilterChange"
 		/>
 
@@ -85,6 +87,7 @@ import type { Customer } from "@/types/customers"
 import type { SCAReport, SCAReportGenerateRequest } from "@/types/sca"
 import axios from "axios"
 import { saveAs } from "file-saver"
+import _isEqual from "lodash/isEqual"
 import { NButton, NEmpty, NModal, NPagination, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
@@ -97,7 +100,7 @@ import SCAReportCard from "./SCAReportCard.vue"
 const AddIcon = "carbon:document-add"
 
 const message = useMessage()
-const { globalCustomerCode } = useGlobalCustomerFilter()
+const { globalCustomerCodes, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 
 const loading = ref(false)
 const generating = ref(false)
@@ -105,13 +108,11 @@ const reports = ref<SCAReport[]>([])
 const showGenerateModal = ref(false)
 const showDeleteModal = ref(false)
 const reportToDelete = ref<SCAReport | null>(null)
-const filterCustomerCode = ref<string | null>(null)
+const filterCustomerCode = ref<string[]>([])
 const customers = ref<Array<{ label: string; value: string }>>([])
 const currentPage = ref(1)
 const pageSize = ref(20)
 let abortController: AbortController | null = null
-
-const customerOptions = computed(() => [...customers.value])
 
 const paginatedReports = computed(() => {
 	const start = (currentPage.value - 1) * pageSize.value
@@ -133,7 +134,7 @@ async function loadReports() {
 
 	loading.value = true
 	try {
-		const response = await Api.sca.listReports(filterCustomerCode.value || null, abortController.signal)
+		const response = await Api.sca.listReports(filterCustomerCode.value, abortController.signal)
 		if (response.data.success) {
 			reports.value = response.data.reports
 		} else {
@@ -219,17 +220,20 @@ async function confirmDelete() {
 	}
 }
 
-function applyGlobalCustomerCodeFilter() {
-	if (globalCustomerCode.value && !filterCustomerCode.value) {
-		filterCustomerCode.value = globalCustomerCode.value
-		onFilterChange()
-	}
-}
-
 onBeforeMount(() => {
+	// Only populates the select labels — the reports fetch doesn't depend on it.
+	loadCustomers()
+	// Seed the filter *before* the first fetch — assigning it afterwards fires an unfiltered
+	// request that the filtered one immediately aborts.
+	filterCustomerCode.value = [...globalCustomerCodes.value]
 	loadReports()
-	loadCustomers().then(() => {
-		applyGlobalCustomerCodeFilter()
-	})
+})
+
+// The endpoint filters on a customer_codes list, so the whole selection carries over.
+onGlobalCustomerFilterChange(codes => {
+	if (_isEqual(codes, filterCustomerCode.value)) return
+
+	filterCustomerCode.value = [...codes]
+	onFilterChange()
 })
 </script>

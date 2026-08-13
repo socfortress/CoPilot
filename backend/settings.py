@@ -47,3 +47,16 @@ SQLALCHEMY_TRACK_MODIFICATIONS = env.bool(
 MDR_ENABLED = env.bool("MDR_ENABLED", default=False)
 MDR_SERVER_URL = env.str("MDR_SERVER_URL", default="https://mdr-server.socfortress.co")
 MDR_COLLECTOR_UUID = env.str("MDR_COLLECTOR_UUID", default="")
+
+# ---------------------------------------------------------------------------
+# InfluxDB REST API TLS
+# ---------------------------------------------------------------------------
+# Certificate verification for the direct HTTP calls to InfluxDB's v2 REST API
+# (checks / notification endpoints / notification rules — the APIs the influxdb_client
+# async SDK does not expose).
+#
+# Defaults to False: InfluxDB in a SOCFortress stack is a co-located appliance that
+# effectively always serves a self-signed certificate, so verifying would fail every
+# provisioning call out of the box. This matches the SDK client, which hardcodes
+# verify_ssl=False. Set to True where InfluxDB is fronted by a trusted CA.
+INFLUXDB_VERIFY_SSL = env.bool("INFLUXDB_VERIFY_SSL", default=False)

@@ -70,8 +70,10 @@ import { useDebounceFn } from "@vueuse/core"
 import { NButton, NCheckbox, NDataTable, NInput, NModal, NSelect, NTag, useDialog, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -79,7 +81,8 @@ import CaseTemplateEditor from "./CaseTemplateEditor.vue"
 
 const message = useMessage()
 const dialog = useDialog()
-const { globalCustomerCodes } = useGlobalCustomerFilter()
+const { globalCustomerCodes, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
+const { routeIncidentManagementCaseTemplate } = useNavigation()
 
 const dFormats = useSettingsStore().dateFormat
 const templates = ref<CaseTemplate[]>([])
@@ -216,14 +219,12 @@ const columns: DataTableColumns<CaseTemplate> = [
 		className: "whitespace-nowrap",
 		render: row => (
 			<div class="flex gap-2">
-				<NButton
+				<EntityDetailsButton
 					size="small"
-					secondary
-					onClick={() => openEdit(row)}
-					v-slots={{ icon: () => <Icon name="carbon:edit" size={14} /> }}
-				>
-					Edit
-				</NButton>
+					viewLabel="Edit"
+					route={routeIncidentManagementCaseTemplate(row.id)}
+					onView={() => openEdit(row)}
+				/>
 				<NButton
 					size="small"
 					secondary
@@ -343,28 +344,24 @@ function onTemplateSaved() {
 	fetchTemplates()
 }
 
-function applyGlobalCustomerCodeFilter() {
-	if (customerFilter.value) {
-		return false
-	}
-	const codes = globalCustomerCodes.value
-	if (!codes.length) {
-		return false
-	}
-	customerFilter.value = codes[0]
-}
-
 // Re-fetch when scope filters change so the result set follows the
 // backend's customer+source filtering semantics.
 watch([customerFilter, sourceFilter, includeGlobal], () => {
 	fetchTemplates()
 })
 
+// The watcher above turns the assignment into a re-fetch.
+onGlobalCustomerFilterChange(codes => {
+	customerFilter.value = codes[0] || null
+})
+
 onBeforeMount(() => {
-	fetchTemplates()
 	getCustomers()
 	getConfiguredSources()
-	applyGlobalCustomerCodeFilter()
+	// Seed the filter before the initial fetch. When it changes the watcher fires too, but
+	// fetchTemplates is debounced so both paths collapse into one already-filtered request.
+	customerFilter.value = globalCustomerCodes.value[0] || null
+	fetchTemplates()
 })
 
 defineExpose({

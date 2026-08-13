@@ -6,6 +6,7 @@ import type {
 	ScaPackageRegistryResponse,
 	ScaPoliciesIndexResponse,
 	ScaPolicyContentResponse,
+	ScaPolicyItem,
 	SCAReportGenerateRequest,
 	SCAReportGenerateResponse,
 	SCAReportListResponse,
@@ -28,7 +29,7 @@ export default {
 	searchScaOverview(query: ScaOverviewQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & ScaOverviewResponse>(`/sca/overview`, {
 			params: {
-				customer_code: query.customer_code,
+				customer_codes: query.customer_codes,
 				agent_name: query.agent_name,
 				policy_id: query.policy_id,
 				policy_name: query.policy_name,
@@ -37,6 +38,7 @@ export default {
 				page: query.page || 1,
 				page_size: query.page_size || 50
 			},
+			paramsSerializer: { indexes: null },
 			signal
 		})
 	},
@@ -53,7 +55,7 @@ export default {
 			path: "/sca/overview/stream",
 			params: query
 				? {
-						customer_code: query.customer_code,
+						customer_codes: query.customer_codes,
 						agent_name: query.agent_name,
 						policy_id: query.policy_id,
 						policy_name: query.policy_name,
@@ -94,9 +96,10 @@ export default {
 	/**
 	 * List all SCA reports
 	 */
-	listReports(customer_code: string | null, signal?: AbortSignal) {
+	listReports(customerCodes: string[] | null, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & SCAReportListResponse>(`/sca/reports`, {
-			params: customer_code ? { customer_code } : undefined,
+			params: customerCodes?.length ? { customer_codes: customerCodes } : undefined,
+			paramsSerializer: { indexes: null },
 			signal
 		})
 	},
@@ -122,6 +125,17 @@ export default {
 	 */
 	getPolicies() {
 		return HttpClient.get<FlaskBaseResponse & ScaPoliciesIndexResponse>(`/sca/policies`)
+	},
+
+	/**
+	 * Fetch a single SCA policy's index metadata by id (detail view — avoids
+	 * downloading the whole policy catalog)
+	 */
+	getPolicyMetadata(policyId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { policy: ScaPolicyItem | null }>(
+			`/sca/policies/${policyId}/metadata`,
+			signal ? { signal } : {}
+		)
 	},
 
 	/**

@@ -83,6 +83,21 @@ const router = createRouter({
 			]
 		},
 		{
+			path: "/reports",
+			meta: {
+				auth: true,
+				roles: RouteRole.All
+			},
+			children: [
+				{
+					path: "",
+					name: "ReportsList",
+					component: () => import("@/views/Reports/List.vue"),
+					meta: { title: "Reports" }
+				}
+			]
+		},
+		{
 			path: "/event-search",
 			name: "EventSearch",
 			component: () => import("@/views/EventSearch.vue"),

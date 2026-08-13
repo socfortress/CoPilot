@@ -130,6 +130,10 @@ class GraylogAlertsSearchBody(BaseModel):
         "gl-events*",
         description="The index prefix to search alerts in.",
     )
+    customer_codes: Optional[List[str]] = Field(
+        None,
+        description="Optional subset of customer codes to scope alert indices to.",
+    )
 
     @field_validator("timerange")
     @classmethod
@@ -146,6 +150,24 @@ class GraylogAlertsSearchBody(BaseModel):
             )
 
         return value
+
+
+class GraylogIndexAlertsSearchBody(GraylogAlertsSearchBody):
+    index_name: str = Field(
+        ...,
+        description="The Wazuh indexer index that groups the Graylog SIEM alert summary.",
+    )
+
+
+class AlertByIdSearchBody(BaseModel):
+    index_name: str = Field(..., description="The Wazuh indexer index that stores the alert document.")
+    alert_id: str = Field(..., description="The Elasticsearch document id of the alert.")
+
+
+class AlertByIdResponse(BaseModel):
+    alert: Dict[str, Any]
+    success: bool
+    message: str
 
 
 ############# ! PASSABLE MESSAGES FROM ES CLIENT ! #############

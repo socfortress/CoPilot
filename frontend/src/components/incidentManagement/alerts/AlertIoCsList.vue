@@ -1,12 +1,14 @@
 <template>
 	<div>
 		<n-collapse-transition :show="!showForm">
-			<n-button v-if="iocs.length" :loading="submitting" type="primary" @click="openForm()">
-				<template #icon>
-					<Icon :name="AddIcon" />
-				</template>
-				Create IoC
-			</n-button>
+			<div v-if="iocs.length" class="flex items-center gap-2">
+				<n-button :loading="submitting" type="primary" @click="openForm()">
+					<template #icon>
+						<Icon :name="AddIcon" />
+					</template>
+					Create IoC
+				</n-button>
+			</div>
 		</n-collapse-transition>
 
 		<CollapseKeepAlive :show="showForm">
@@ -29,12 +31,21 @@
 						<n-empty v-if="!loading" class="min-h-48">
 							<div class="flex flex-col items-center gap-4">
 								<p>No IoCs found</p>
-								<n-button type="primary" :loading="submitting" @click="openForm()">
-									<template #icon>
-										<Icon :name="AddIcon" />
-									</template>
-									Create an IoCs
-								</n-button>
+								<div class="flex items-center gap-2">
+									<n-button type="primary" :loading="submitting" @click="openForm()">
+										<template #icon>
+											<Icon :name="AddIcon" />
+										</template>
+										Create an IoCs
+									</n-button>
+
+									<EntityDetailsButton
+										:order="['open']"
+										open-label="Open form page"
+										open-show-label
+										:route="routeIncidentManagementAlertIocNew(alertId)"
+									/>
+								</div>
 							</div>
 						</n-empty>
 					</n-collapse-transition>
@@ -49,7 +60,9 @@ import type { AlertIOC } from "@/types/incidentManagement/alerts"
 import { NButton, NCollapseTransition, NEmpty } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import AlertIoCItem from "./AlertIoCItem.vue"
 import AlertIoCsForm from "./AlertIoCsForm.vue"
 
@@ -59,6 +72,8 @@ const emit = defineEmits<{
 }>()
 
 const { iocs, alertId } = toRefs(props)
+
+const { routeIncidentManagementAlertIocNew } = useNavigation()
 
 const AddIcon = "carbon:add-alt"
 const iocsList = ref<AlertIOC[]>(iocs.value)

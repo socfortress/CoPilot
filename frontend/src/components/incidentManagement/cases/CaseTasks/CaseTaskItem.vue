@@ -74,7 +74,26 @@
 		</template>
 		<template #footer>
 			<div v-if="taskData" class="flex flex-wrap items-center justify-between gap-2">
-				<div class="text-secondary flex flex-wrap gap-x-4 gap-y-1 text-sm">
+				<div class="text-secondary flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+					<div class="flex items-center gap-2">
+						<span class="text-secondary text-xs uppercase">Assignee</span>
+						<n-select
+							v-if="canEdit"
+							v-model:value="assignee"
+							:options="assigneeOptions"
+							:loading="loadingUsers || savingAssignee"
+							size="tiny"
+							class="w-44!"
+							clearable
+							filterable
+							placeholder="Unassigned"
+							:consistent-menu-width="false"
+							@update:show="onAssigneeDropdown"
+						/>
+						<strong v-else-if="taskData.assigned_to">{{ taskData.assigned_to }}</strong>
+						<span v-else class="text-tertiary italic">Unassigned</span>
+					</div>
+
 					<span v-if="taskData.completed_by">
 						{{ task.status === "DONE" ? "Completed" : "Marked" }} by
 						<strong>{{ taskData.completed_by }}</strong>
@@ -111,12 +130,13 @@
 </template>
 
 <script setup lang="ts">
+import type { Ref } from "vue"
 import type { ApiError } from "@/types/common"
 import type { CaseTask, CaseTaskStatus } from "@/types/incidentManagement/case-templates"
 import { useDebounceFn } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NInput, NSelect, NTag, useDialog, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { computed, inject, ref, watch } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -145,7 +165,27 @@ const taskData = ref<CaseTask | null>(props.task)
 
 const savingStatus = ref(false)
 const savingEvidenceComment = ref(false)
+const savingAssignee = ref(false)
 const deleting = ref(false)
+
+// Provided by CasesList / AlertsList. Falls back to an empty ref when this card
+// is rendered outside those providers, in which case we lazily fetch on first
+// dropdown open — one request per card, but only for cards actually interacted
+// with, rather than N requests on mount.
+const injectedUsers = inject<Ref<string[]>>("assignable-users", ref([]))
+const loadingUsers = ref(false)
+const fetchedUsers = ref<string[]>([])
+const assignee = ref<string | null>(props.task.assigned_to ?? null)
+
+const assigneeOptions = computed(() => {
+	const names = injectedUsers.value.length ? injectedUsers.value : fetchedUsers.value
+	const merged = new Set(names)
+	// Keep the current assignee selectable even if they're no longer in the
+	// assignable list (deactivated user) — otherwise the select renders blank
+	// and the next save would silently unassign them.
+	if (assignee.value) merged.add(assignee.value)
+	return [...merged].map(name => ({ label: name, value: name }))
+})
 
 const statusOptions = computed(() => {
 	const opts: { label: string; value: CaseTaskStatus; disabled?: boolean }[] = [
@@ -158,6 +198,7 @@ const statusOptions = computed(() => {
 
 let statusAbortController = new AbortController()
 let evidenceCommentAbortController = new AbortController()
+let assigneeAbortController = new AbortController()
 
 function statusLabel(status: CaseTaskStatus): string {
 	return status === "TODO" ? "To do" : status === "DONE" ? "Done" : "Not necessary"
@@ -223,6 +264,63 @@ const onCommentChange = useDebounceFn((value: string | null) => {
 		})
 }, 500)
 
+function onAssigneeDropdown(show: boolean) {
+	if (!show || injectedUsers.value.length || fetchedUsers.value.length || loadingUsers.value) return
+
+	loadingUsers.value = true
+	Api.incidentManagement.alerts
+		.getAvailableUsers()
+		.then(res => {
+			if (res.data.success) {
+				fetchedUsers.value = res.data?.available_users || []
+			} else {
+				message.warning(res.data?.message || "Could not load users")
+			}
+		})
+		.catch(err => {
+			message.error(getApiErrorMessage(err as ApiError) || "Could not load users")
+		})
+		.finally(() => {
+			loadingUsers.value = false
+		})
+}
+
+// Assignment is sent as an explicit key on every change, including null — the
+// backend reads key *presence* to distinguish "unassign" from "leave alone", so
+// omitting it here would make clearing the select a silent no-op.
+const onAssigneeChange = useDebounceFn((value: string | null) => {
+	if (!taskData.value) return
+
+	assigneeAbortController.abort()
+	assigneeAbortController = new AbortController()
+	savingAssignee.value = true
+
+	Api.incidentManagement.caseTemplates
+		.updateCaseTask(taskData.value.id, { assigned_to: value }, assigneeAbortController.signal)
+		.then(res => {
+			if (res.data.success && res.data.task) {
+				// Track the accepted value locally: the watcher guard compares
+				// against it to decide whether a change still needs saving, so
+				// leaving it stale would block the next edit.
+				if (taskData.value) taskData.value.assigned_to = res.data.task.assigned_to ?? null
+				emit("updated", res.data.task)
+			} else {
+				// Rejected (e.g. unknown user) — roll the select back so it
+				// doesn't show an assignment the server never accepted.
+				assignee.value = taskData.value?.assigned_to ?? null
+				message.warning(res.data.message || "Assignment rejected")
+			}
+			savingAssignee.value = false
+		})
+		.catch(err => {
+			if (!axios.isCancel(err)) {
+				savingAssignee.value = false
+				assignee.value = taskData.value?.assigned_to ?? null
+				message.error(getApiErrorMessage(err as ApiError) || "Failed to update assignee")
+			}
+		})
+}, 250)
+
 // Custom-task delete (analysts can only delete custom tasks via the chip — keeps
 // template-derived audit trails intact unless an admin really wants to nuke it).
 function confirmDelete(task: CaseTask) {
@@ -268,6 +366,14 @@ watch(
 		onCommentChange(val || null)
 	}
 )
+
+watch(assignee, (val, prev) => {
+	// Guard on an actual change: the rollback paths above reassign this ref, and
+	// without the guard that would re-fire the request in a loop.
+	if (val === prev) return
+	if (val === (taskData.value?.assigned_to ?? null)) return
+	onAssigneeChange(val)
+})
 </script>
 
 <style scoped lang="scss">

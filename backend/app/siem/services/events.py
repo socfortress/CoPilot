@@ -1,3 +1,6 @@
+import fnmatch
+
+from elasticsearch7.exceptions import NotFoundError
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import select
@@ -8,10 +11,20 @@ from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
 )
 from app.db.universal_models import EventSources
+from app.siem.schema.events import EventDocumentResponse
 from app.siem.schema.events import EventsQueryParams
 from app.siem.schema.events import EventsQueryResponse
 from app.siem.schema.events import FieldMapping
 from app.siem.schema.events import FieldMappingsResponse
+
+
+def _event_from_hit(hit: dict) -> dict:
+    return {**hit["_source"], "_id": hit["_id"], "_index": hit["_index"]}
+
+
+def _index_matches_pattern(index_name: str, index_pattern: str) -> bool:
+    # fnmatch only — ES comma-separated / exclusion (`-foo-*`) patterns are not supported here.
+    return fnmatch.fnmatchcase(index_name, index_pattern)
 
 
 async def get_event_source_by_customer_and_name(
@@ -109,7 +122,7 @@ async def _initial_search(
                 scroll_id = None
 
         return EventsQueryResponse(
-            events=[hit["_source"] for hit in hits],
+            events=[_event_from_hit(hit) for hit in hits],
             total=total,
             scroll_id=scroll_id,
             page_size=page_size,
@@ -145,7 +158,7 @@ async def _scroll_next_page(scroll_id: str) -> EventsQueryResponse:
             )
 
         return EventsQueryResponse(
-            events=[hit["_source"] for hit in hits],
+            events=[_event_from_hit(hit) for hit in hits],
             total=total,
             scroll_id=new_scroll_id,
             page_size=len(hits),
@@ -164,6 +177,42 @@ async def _clear_scroll(es_client, scroll_id: str) -> None:
         await es_client.clear_scroll(scroll_id=scroll_id)
     except Exception as e:
         logger.warning(f"Failed to clear scroll context: {e}")
+
+
+async def get_event_document(
+    customer_code: str,
+    source_name: str,
+    index_name: str,
+    event_id: str,
+    db: AsyncSession,
+) -> EventDocumentResponse:
+    event_source = await get_event_source_by_customer_and_name(customer_code, source_name, db)
+    if not _index_matches_pattern(index_name, event_source.index_pattern):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Index '{index_name}' does not match event source pattern '{event_source.index_pattern}'",
+        )
+
+    es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+    try:
+        doc = await es_client.get(index=index_name, id=event_id)
+        return EventDocumentResponse(
+            event=_event_from_hit(doc),
+            success=True,
+            message="Event retrieved",
+        )
+    except NotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Event '{event_id}' not found in index '{index_name}'",
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching event document: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching event: {e}")
+    finally:
+        await es_client.close()
 
 
 async def get_field_mappings(

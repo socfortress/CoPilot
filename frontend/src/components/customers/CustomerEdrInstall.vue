@@ -5,7 +5,7 @@
 				<div class="flex flex-col gap-4">
 					<n-alert type="info" :bordered="false">
 						Run the matching command on the endpoint to install and enroll the EDR agent for
-						<Badge type="splitted" color="primary" size="small" class="mx-1 inline-flex align-middle">
+						<Badge type="splitted" color="primary" size="small" class="inline-flex!">
 							<template #label>Customer</template>
 							<template #value>{{ customerCode }}</template>
 						</Badge>

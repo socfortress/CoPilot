@@ -45,9 +45,17 @@
 			</template>
 
 			<template #footerExtra>
-				<div class="text-secondary flex min-w-0 items-center gap-1.5 text-xs">
-					<Icon :name="FileIcon" :size="14" class="shrink-0" />
-					<span class="truncate font-mono" :title="fileName">{{ fileName }}</span>
+				<div class="flex min-w-0 items-center gap-3">
+					<div class="text-secondary flex min-w-0 items-center gap-1.5 text-xs">
+						<Icon :name="FileIcon" :size="14" class="shrink-0" />
+						<span class="truncate font-mono" :title="fileName">{{ fileName }}</span>
+					</div>
+					<EntityDetailsButton
+						size="tiny"
+						view-label="Details"
+						:route="routeScaPolicy(policy.id)"
+						@view="showDetails = true"
+					/>
 				</div>
 			</template>
 		</CardEntity>
@@ -71,11 +79,15 @@ import { NModal } from "naive-ui"
 import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import PlatformBadge from "@/components/common/PlatformBadge.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import PolicyCardContent from "./PolicyCardContent.vue"
 
 const { policy } = defineProps<{ policy: ScaPolicyItem; embedded?: boolean }>()
+
+const { routeScaPolicy } = useNavigation()
 
 const showDetails = ref(false)
 const FileIcon = "carbon:document"

@@ -1,26 +1,13 @@
 <template>
 	<div>
-		<CardEntity
-			:loading
-			:embedded
-			hoverable
-			:size="compact ? 'small' : 'medium'"
-			:clickable="compact"
-			:highlighted="highlight"
-			@click="compact ? openDetails() : undefined"
-		>
+		<CardEntity :loading :embedded hoverable :size="compact ? 'small' : 'medium'" :highlighted="highlight">
 			<template v-if="alert" #headerMain>
 				<div class="flex items-center gap-4">
 					<div v-if="selectable">
 						<n-checkbox :checked @click.stop="emit('check', !checked)" />
 					</div>
-					<div
-						class="flex cursor-pointer items-center gap-2"
-						:class="{ 'hover:text-primary cursor-pointer': !compact }"
-						@click="compact ? undefined : openDetails()"
-					>
+					<div class="flex items-center gap-2">
 						<span>#{{ alert.id }} - {{ alert.source }}</span>
-						<Icon v-if="!compact" :name="InfoIcon" :size="16" />
 					</div>
 				</div>
 			</template>
@@ -51,42 +38,49 @@
 			</template>
 
 			<template v-if="alert" #mainExtra>
-				<div v-if="compact" class="flex flex-wrap items-center gap-3">
-					<Badge
-						type="splitted"
-						class="cursor-pointer"
-						bright
-						:color="
-							alert.status === 'OPEN' ? 'danger' : alert.status === 'IN_PROGRESS' ? 'warning' : 'success'
-						"
-					>
-						<template #iconLeft>
-							<StatusIcon :status="alert.status" />
-						</template>
-						<template #label>Status</template>
-						<template #value>
-							<div class="flex items-center gap-2">
-								{{ alert.status || "n/d" }}
-							</div>
-						</template>
-					</Badge>
+				<div v-if="compact" class="flex flex-wrap items-center justify-between gap-3">
+					<div class="flex flex-wrap items-center gap-3">
+						<Badge
+							type="splitted"
+							size="small"
+							bright
+							:color="
+								alert.status === 'OPEN'
+									? 'danger'
+									: alert.status === 'IN_PROGRESS'
+										? 'warning'
+										: 'success'
+							"
+						>
+							<template #iconLeft>
+								<StatusIcon :status="alert.status" />
+							</template>
+							<template #label>Status</template>
+							<template #value>
+								<div class="flex items-center gap-2">
+									{{ alert.status || "n/d" }}
+								</div>
+							</template>
+						</Badge>
 
-					<Badge
-						type="splitted"
-						class="cursor-pointer"
-						bright
-						:color="alert.assigned_to ? 'success' : undefined"
-					>
-						<template #iconLeft>
-							<AssigneeIcon :assignee="alert.assigned_to" />
-						</template>
-						<template #label>Assignee</template>
-						<template #value>
-							<div class="flex items-center gap-2">
-								{{ alert.assigned_to || "n/d" }}
-							</div>
-						</template>
-					</Badge>
+						<Badge type="splitted" size="small" bright :color="alert.assigned_to ? 'success' : undefined">
+							<template #iconLeft>
+								<AssigneeIcon :assignee="alert.assigned_to" />
+							</template>
+							<template #label>Assignee</template>
+							<template #value>
+								<div class="flex items-center gap-2">
+									{{ alert.assigned_to || "n/d" }}
+								</div>
+							</template>
+						</Badge>
+					</div>
+
+					<EntityDetailsButton
+						size="tiny"
+						:route="routeIncidentManagementAlerts(alert.id)"
+						@view="openDetails()"
+					/>
 				</div>
 				<div v-else class="flex flex-wrap items-center gap-3">
 					<AlertStatusSwitch v-slot="{ loading: loadingStatus }" :alert @updated="updateAlert($event)">
@@ -175,9 +169,14 @@
 
 			<template v-if="alert && !compact" #footerMain>
 				<div class="flex flex-wrap items-center gap-3">
-					<Badge v-if="alert.alert_creation_time" type="splitted" :class="{ 'flex sm:hidden!': !compact }">
+					<Badge
+						v-if="alert.alert_creation_time"
+						type="splitted"
+						:class="{ 'flex sm:hidden!': !compact }"
+						size="small"
+					>
 						<template #iconLeft>
-							<Icon :name="TimeIcon" :size="16" />
+							<Icon :name="TimeIcon" :size="14" />
 						</template>
 						<template #value>
 							{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
@@ -186,9 +185,9 @@
 
 					<n-tooltip trigger="hover">
 						<template #trigger>
-							<Badge type="splitted" class="xs:flex! hidden!">
+							<Badge type="splitted" class="xs:flex! hidden!" size="small">
 								<template #iconLeft>
-									<Icon :name="AssetsIcon" :size="16" />
+									<Icon :name="AssetsIcon" :size="14" />
 								</template>
 								<template #value>
 									{{ alert.assets?.length || 0 }}
@@ -200,9 +199,9 @@
 
 					<n-tooltip trigger="hover">
 						<template #trigger>
-							<Badge type="splitted" class="xs:flex! hidden!">
+							<Badge type="splitted" class="xs:flex! hidden!" size="small">
 								<template #iconLeft>
-									<Icon :name="CommentsIcon" :size="16" />
+									<Icon :name="CommentsIcon" :size="14" />
 								</template>
 								<template #value>
 									{{ alert.comments?.length || 0 }}
@@ -214,9 +213,9 @@
 
 					<n-tooltip trigger="hover">
 						<template #trigger>
-							<Badge type="splitted" class="xs:flex! hidden!">
+							<Badge type="splitted" class="xs:flex! hidden!" size="small">
 								<template #iconLeft>
-									<Icon :name="IoCsIcon" :size="16" />
+									<Icon :name="IoCsIcon" :size="14" />
 								</template>
 								<template #value>
 									{{ alert.iocs?.length || 0 }}
@@ -238,7 +237,14 @@
 			</template>
 
 			<template v-if="alert && !compact" #footerExtra>
-				<n-button quaternary size="tiny" @click.stop="handleDelete()">Delete</n-button>
+				<div class="flex flex-wrap items-center justify-end gap-2">
+					<EntityDetailsButton
+						size="tiny"
+						:route="routeIncidentManagementAlerts(alert.id)"
+						@view="openDetails()"
+					/>
+					<n-button quaternary size="tiny" @click.stop="handleDelete()">Delete</n-button>
+				</div>
 			</template>
 		</CardEntity>
 
@@ -272,6 +278,7 @@ import { computed, defineAsyncComponent, onMounted, ref, toRefs, watch } from "v
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
@@ -308,7 +315,6 @@ const AlertLinkedCases = defineAsyncComponent(() => import("./AlertLinkedCases.v
 
 const { alertData, alertId, compact, embedded, detailsOnMounted, highlight, selectable, checked } = toRefs(props)
 
-const InfoIcon = "carbon:information"
 const LinkIcon = "carbon:launch"
 const TimeIcon = "carbon:time"
 const EditIcon = "uil:edit-alt"
@@ -316,7 +322,7 @@ const CommentsIcon = "carbon:chat"
 const AssetsIcon = "carbon:document-security"
 const IoCsIcon = "carbon:ibm-watson-discovery"
 
-const { routeCustomer } = useNavigation()
+const { routeCustomer, routeIncidentManagementAlerts } = useNavigation()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)

@@ -44,11 +44,9 @@
 						v-for="artifact in itemsPaginated"
 						:key="artifact.id"
 						:artifact
+						:agent-id
 						show-actions
-						@click="showArtifactDetails(artifact)"
-						@download="downloadArtifact(artifact)"
-						@delete="deleteArtifact(artifact)"
-						@details="showArtifactDetails(artifact)"
+						@deleted="getArtifacts()"
 					/>
 				</template>
 				<n-empty v-else-if="!loading" description="No artifacts found" class="h-40 justify-center" />
@@ -64,16 +62,6 @@
 				/>
 			</div>
 		</n-spin>
-
-		<n-modal
-			v-model:show="showDetailsModal"
-			preset="card"
-			title="Artifact Details"
-			:style="{ maxWidth: 'min(860px, 92vw)' }"
-			:segmented="{ content: true }"
-		>
-			<ArtifactDetails v-if="selectedArtifact" :artifact="selectedArtifact" />
-		</n-modal>
 	</div>
 </template>
 
@@ -82,21 +70,18 @@ import type { SelectOption } from "naive-ui"
 import type { AgentArtifactData } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import { refDebounced } from "@vueuse/core"
-import { saveAs } from "file-saver"
-import { NEmpty, NInput, NModal, NPagination, NSelect, NSpin, useDialog, useMessage } from "naive-ui"
+import { NEmpty, NInput, NPagination, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import AgentArtifactCard from "./AgentArtifactCard.vue"
-import ArtifactDetails from "./ArtifactDetails.vue"
 
 const { agentId } = defineProps<{
 	agentId: string
 }>()
 
 const message = useMessage()
-const dialog = useDialog()
 
 const SearchIcon = "carbon:search"
 
@@ -107,8 +92,6 @@ const textFilterDebounced = refDebounced<string | null>(textFilter, 250)
 const statusFilter = ref<string | null>(null)
 const page = ref(1)
 const pageSize = ref(12)
-const showDetailsModal = ref(false)
-const selectedArtifact = ref<AgentArtifactData | null>(null)
 
 const statusOptions: SelectOption[] = [
 	{ label: "Completed", value: "completed" },
@@ -154,48 +137,6 @@ function getArtifacts() {
 		.finally(() => {
 			loading.value = false
 		})
-}
-
-function downloadArtifact(artifact: AgentArtifactData) {
-	message.loading(`Downloading ${artifact.file_name}...`)
-	Api.agents
-		.downloadAgentArtifact(agentId, artifact.id)
-		.then(res => {
-			saveAs(res.data, artifact.file_name)
-			message.success(`Downloaded ${artifact.file_name}`)
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "Failed to download artifact")
-		})
-}
-
-function deleteArtifact(artifact: AgentArtifactData) {
-	dialog.warning({
-		title: "Delete Artifact",
-		content: `Delete "${artifact.file_name}" permanently?`,
-		positiveText: "Delete",
-		negativeText: "Cancel",
-		onPositiveClick: () => {
-			Api.agents
-				.deleteAgentArtifact(agentId, artifact.id)
-				.then(res => {
-					if (res.data.success) {
-						message.success("Artifact deleted successfully")
-						getArtifacts()
-						return
-					}
-					message.error(res.data?.message || "Failed to delete artifact")
-				})
-				.catch(err => {
-					message.error(getApiErrorMessage(err as ApiError) || "Failed to delete artifact")
-				})
-		}
-	})
-}
-
-function showArtifactDetails(artifact: AgentArtifactData) {
-	selectedArtifact.value = artifact
-	showDetailsModal.value = true
 }
 
 watch(

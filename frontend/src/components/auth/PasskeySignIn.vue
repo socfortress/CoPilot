@@ -5,7 +5,8 @@
 				<n-button
 					v-if="visible && !!username"
 					size="large"
-					:class="`${iconOnly ? 'w-10!' : 'w-full!'} animate-fade`"
+					class="animate-fade"
+					:class="`${iconOnly ? 'w-10!' : 'w-full!'}`"
 					:loading
 					@click="signInWithPasskey"
 				>

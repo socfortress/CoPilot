@@ -39,6 +39,7 @@ from app.ai_analyst.schema.ai_analyst import SubmitReviewRequest
 from app.ai_analyst.schema.ai_analyst import SubmitReviewResponse
 from app.ai_analyst.schema.ai_analyst import UpdateJobRequest
 from app.ai_analyst.schema.ai_analyst import UpdateJobResponse
+from app.auth.models.users import User
 from app.db.universal_models import AiAnalystIoc
 from app.db.universal_models import AiAnalystIocReview
 from app.db.universal_models import AiAnalystJob
@@ -46,6 +47,10 @@ from app.db.universal_models import AiAnalystPalaceLesson
 from app.db.universal_models import AiAnalystReport
 from app.db.universal_models import AiAnalystReview
 from app.incidents.models import Alert
+from app.incidents.models import Asset
+from app.notifications.services.emit import emit
+from app.notifications.services.event_builders import ai_report_reviewed_event
+from app.notifications.services.event_builders import investigation_complete_event
 
 
 def _job_to_response(job: AiAnalystJob) -> JobResponse:
@@ -75,6 +80,19 @@ def _report_to_response(report: AiAnalystReport) -> ReportResponse:
         report_markdown=report.report_markdown,
         recommended_actions=report.recommended_actions,
         created_at=report.created_at,
+    )
+
+
+def _alert_with_report_to_response(alert: Alert, report: AiAnalystReport) -> AlertWithReportResponse:
+    return AlertWithReportResponse(
+        alert_id=alert.id,
+        alert_name=alert.alert_name,
+        customer_code=alert.customer_code,
+        status=alert.status,
+        source=alert.source,
+        assigned_to=alert.assigned_to,
+        alert_creation_time=alert.alert_creation_time,
+        report=_report_to_response(report),
     )
 
 
@@ -225,6 +243,45 @@ async def list_jobs_by_customer(customer_code: str, session: AsyncSession) -> Li
 # --- Report operations ---
 
 
+async def _alert_display_fields(alert_id: int, session: AsyncSession) -> tuple[Optional[str], Optional[str]]:
+    """(alert_name, asset_name) for a notification about `alert_id`.
+
+    The investigation emit used to send neither, so every delivered notification
+    read `Alert #14` instead of the alert's name, and the built-in template's
+    asset line could never render (#1048).
+
+    Never raises. This runs on the write-back path, where the report is already
+    durably stored — failing to decorate a notification must not turn a
+    successful submission into a 500. A missing name degrades to the old
+    behaviour rather than losing the notification.
+    """
+    try:
+        alert = await session.get(Alert, alert_id)
+        if alert is None:
+            return (None, None)
+        result = await session.execute(select(Asset.asset_name).where(Asset.alert_linked == alert_id).limit(1))
+        return (alert.alert_name, result.scalars().first())
+    except Exception as e:  # noqa: BLE001 — decoration must never fail the write-back
+        logger.warning(f"Could not resolve display fields for alert {alert_id}: {type(e).__name__}: {e}")
+        return (None, None)
+
+
+async def _username_for(user_id: int, session: AsyncSession) -> Optional[str]:
+    """A reviewer's username, falling back to their id as a string.
+
+    Never raises, for the same reason as `_alert_display_fields`: the review is
+    already committed by the time this runs, and failing to label a notification
+    must not turn a successful submission into a 500. The fallback reproduces
+    the old behaviour rather than dropping the field entirely.
+    """
+    try:
+        user = await session.get(User, user_id)
+        return getattr(user, "username", None) or str(user_id)
+    except Exception as e:  # noqa: BLE001 — decoration must never fail the review
+        logger.warning(f"Could not resolve username for user {user_id}: {type(e).__name__}: {e}")
+        return str(user_id)
+
+
 async def submit_report(request: SubmitReportRequest, session: AsyncSession) -> SubmitReportResponse:
     logger.info(f"Submitting AI analyst report for job {request.job_id}, alert {request.alert_id}")
 
@@ -248,6 +305,24 @@ async def submit_report(request: SubmitReportRequest, session: AsyncSession) -> 
     await session.refresh(report)
 
     logger.info(f"AI analyst report {report.id} created for job {request.job_id}")
+
+    # Notification routes (#1007). Emitted here rather than relying solely on
+    # Talon's POST /notifications/dispatch, which is single-attempt: a network
+    # blip or a CoPilot restart loses the notification even though the report is
+    # already durably stored. Both paths build the same dedupe key, so whichever
+    # arrives first wins and the other is a no-op.
+    alert_name, asset_name = await _alert_display_fields(report.alert_id, session)
+    emit(
+        investigation_complete_event(
+            alert_id=report.alert_id,
+            customer_code=report.customer_code,
+            severity=report.severity_assessment,
+            summary=report.summary or "An AI investigation completed for this alert.",
+            alert_name=alert_name,
+            asset_name=asset_name,
+        ),
+    )
+
     return SubmitReportResponse(success=True, message="Report submitted", report=_report_to_response(report))
 
 
@@ -325,6 +400,13 @@ async def list_iocs_by_alert(alert_id: int, session: AsyncSession) -> List[IocRe
     return [_ioc_to_response(i) for i in iocs]
 
 
+async def get_ioc_by_id(ioc_id: int, session: AsyncSession) -> IocResponse:
+    ioc = await session.get(AiAnalystIoc, ioc_id)
+    if ioc is None:
+        raise HTTPException(status_code=404, detail=f"IOC {ioc_id} not found")
+    return _ioc_to_response(ioc)
+
+
 async def list_iocs_by_customer(
     customer_code: str,
     session: AsyncSession,
@@ -344,7 +426,7 @@ async def list_iocs_by_customer(
 
 async def list_alerts_with_reports(
     session: AsyncSession,
-    customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
 ) -> List[AlertWithReportResponse]:
     """Return all alerts that have at least one AI analyst report."""
     query = (
@@ -352,25 +434,45 @@ async def list_alerts_with_reports(
         .join(AiAnalystReport, AiAnalystReport.alert_id == Alert.id)
         .order_by(AiAnalystReport.created_at.desc())
     )
-    if customer_code:
-        query = query.where(Alert.customer_code == customer_code)
+    if customer_codes:
+        query = query.where(Alert.customer_code.in_(customer_codes))
 
     result = await session.execute(query)
     rows = result.all()
 
-    return [
-        AlertWithReportResponse(
-            alert_id=alert.id,
-            alert_name=alert.alert_name,
-            customer_code=alert.customer_code,
-            status=alert.status,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            alert_creation_time=alert.alert_creation_time,
-            report=_report_to_response(report),
-        )
-        for alert, report in rows
-    ]
+    return [_alert_with_report_to_response(alert, report) for alert, report in rows]
+
+
+async def get_alert_with_report_by_report_id(
+    report_id: int,
+    session: AsyncSession,
+) -> AlertWithReportResponse:
+    result = await session.execute(
+        select(Alert, AiAnalystReport).join(AiAnalystReport, AiAnalystReport.alert_id == Alert.id).where(AiAnalystReport.id == report_id),
+    )
+    row = result.first()
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
+    alert, report = row
+    return _alert_with_report_to_response(alert, report)
+
+
+async def get_alert_with_report_by_alert_id(
+    alert_id: int,
+    session: AsyncSession,
+) -> AlertWithReportResponse:
+    result = await session.execute(
+        select(Alert, AiAnalystReport)
+        .join(AiAnalystReport, AiAnalystReport.alert_id == Alert.id)
+        .where(Alert.id == alert_id)
+        .order_by(AiAnalystReport.created_at.desc())
+        .limit(1),
+    )
+    row = result.first()
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
+    alert, report = row
+    return _alert_with_report_to_response(alert, report)
 
 
 # --- Combined alert analysis lookup ---
@@ -563,6 +665,27 @@ async def submit_review(
 
     action = "updated" if is_edit else "created"
     logger.info(f"Review {review.id} {action} for report {report_id}")
+
+    # Notification routes (#1007). Creation only — an analyst revising their own
+    # review is not a new sign-off. Lets an operator run an internal route on
+    # report submission and a customer-facing route only after review.
+    if not is_edit:
+        alert_name, asset_name = await _alert_display_fields(report.alert_id, session)
+        emit(
+            ai_report_reviewed_event(
+                alert_id=report.alert_id,
+                report_id=report_id,
+                customer_code=report.customer_code,
+                severity=report.severity_assessment,
+                summary=report.summary or "An analyst reviewed the AI investigation for this alert.",
+                # The reviewer's name, not their row id. This used to send
+                # `str(reviewer_user_id)`, so a notification read "Reviewed by: 3".
+                reviewer=await _username_for(reviewer_user_id, session),
+                verdict=request.overall_verdict.value if request.overall_verdict else None,
+                alert_name=alert_name,
+                asset_name=asset_name,
+            ),
+        )
     return SubmitReviewResponse(
         success=True,
         message=f"Review {action}",
@@ -663,6 +786,19 @@ async def list_reviews_by_customer(
     )
     reviews = result.scalars().all()
     return [_review_to_response(r) for r in reviews]
+
+
+async def get_review_by_id(
+    review_id: int,
+    session: AsyncSession,
+) -> ReviewResponse:
+    result = await session.execute(
+        select(AiAnalystReview).where(AiAnalystReview.id == review_id).options(selectinload(AiAnalystReview.ioc_reviews)),
+    )
+    review = result.scalars().first()
+    if review is None:
+        raise HTTPException(status_code=404, detail=f"Review {review_id} not found")
+    return _review_to_response(review)
 
 
 def _pct(numerator: int, denominator: int) -> Optional[float]:

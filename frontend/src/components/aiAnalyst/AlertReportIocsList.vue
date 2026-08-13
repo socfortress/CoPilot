@@ -2,30 +2,7 @@
 	<n-spin :show="loading" class="min-h-40">
 		<div class="flex flex-col gap-2">
 			<template v-if="iocs.length">
-				<CardEntity v-for="ioc of iocs" :key="ioc.id" size="small" embedded>
-					<template #default>
-						<CodeSource :code="ioc.ioc_value" />
-					</template>
-					<template v-if="ioc.details" #mainExtra>
-						{{ ioc.details }}
-					</template>
-					<template #footer>
-						<div class="flex flex-wrap items-center gap-3">
-							<Badge type="splitted" bright>
-								<template #label>Type</template>
-								<template #value>{{ ioc.ioc_type }}</template>
-							</Badge>
-							<Badge type="splitted" bright :color="verdictColor(ioc.vt_verdict)">
-								<template #label>VT Verdict</template>
-								<template #value>{{ ioc.vt_verdict }}</template>
-							</Badge>
-							<Badge v-if="ioc.vt_score" type="splitted">
-								<template #label>VT Score</template>
-								<template #value>{{ ioc.vt_score }}</template>
-							</Badge>
-						</div>
-					</template>
-				</CardEntity>
+				<IocItem v-for="ioc of iocs" :key="ioc.id" :ioc />
 			</template>
 			<n-empty v-else-if="!loading" description="No IOCs found for this alert" class="min-h-40 justify-center" />
 		</div>
@@ -38,10 +15,8 @@ import type { ApiError } from "@/types/common"
 import { NEmpty, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
-import Badge from "@/components/common/Badge.vue"
-import CardEntity from "@/components/common/cards/CardEntity.vue"
-import CodeSource from "@/components/common/CodeSource.vue"
 import { getApiErrorMessage } from "@/utils"
+import IocItem from "./IocItem.vue"
 
 const props = defineProps<{
 	alertId: number
@@ -52,13 +27,6 @@ const { alertId } = toRefs(props)
 const message = useMessage()
 const loading = ref(false)
 const iocs = ref<AiAnalystIoc[]>([])
-
-function verdictColor(verdict: string) {
-	if (verdict === "malicious") return "danger"
-	if (verdict === "suspicious") return "warning"
-	if (verdict === "clean") return "success"
-	return undefined
-}
 
 function getData() {
 	loading.value = true

@@ -113,7 +113,14 @@ function getList() {
 		page_size: pageSize.value
 	}
 
-	for (const key of ["customer_code", "policy_id", "policy_name", "agent_name"] as ScaOverviewFilterTypes[]) {
+	// customer_codes is a list — kept out of the string-coercing loop below, which would
+	// flatten it to "a,b" and lose the repeated-param shape the API expects.
+	const customerCodes = filters.value.find(o => o.type === "customer_codes")?.value
+	if (Array.isArray(customerCodes) && customerCodes.length) {
+		query.customer_codes = customerCodes as string[]
+	}
+
+	for (const key of ["policy_id", "policy_name", "agent_name"] as ScaOverviewFilterTypes[]) {
 		if (filters.value.find(o => o.type === key)?.value) {
 			_set(query, key, `${filters.value.find(o => o.type === key)?.value}`)
 		}

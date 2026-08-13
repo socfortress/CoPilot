@@ -111,7 +111,8 @@
 									<span class="n-form-item-label__asterisk">*</span>
 								</span>
 								<small class="text-secondary">
-									Add multiple fields. First field has priority (checked first).
+									Add multiple fields. First field has priority (checked first). Type to filter, press
+									Enter to add the typed value.
 								</small>
 							</div>
 						</template>
@@ -123,13 +124,19 @@
 						>
 							<template #input="{ submit, deactivate }">
 								<n-auto-complete
+									ref="assetNameInputRef"
 									v-model:value="assetNameInput"
+									class="asset-name-input"
 									:options="filteredAssetNameOptions"
 									:disabled="!isFieldEnabled"
-									placeholder="Type or select field name"
+									:loading="loadingAvailableMappings"
+									:get-show="showAssetNameOptions"
+									:render-label="renderAssetOptionLabel"
+									placeholder="Type to search, or type a custom field and press Enter"
+									to="body"
 									@select="handleAssetSelect($event, submit)"
 									@blur="deactivate"
-									@keyup.enter="handleAssetEnter(submit)"
+									@keydown.capture="handleAssetKeydown($event, submit)"
 								/>
 							</template>
 							<template #trigger="{ activate, disabled }">
@@ -138,7 +145,7 @@
 									type="primary"
 									dashed
 									:disabled="disabled || !isFieldEnabled"
-									@click="activate()"
+									@click="activateAssetNameInput(activate)"
 								>
 									<template #icon>
 										<Icon :name="AddIcon" />
@@ -218,7 +225,7 @@ import {
 	NTag,
 	useMessage
 } from "naive-ui"
-import { computed, h, onBeforeMount, ref, toRefs, watch } from "vue"
+import { computed, h, nextTick, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
@@ -264,6 +271,10 @@ const formRef = ref<FormInst | null>(null)
 const availableMappingsOptions = ref<{ label: string; value: string }[]>([])
 const indexNamesOptions = ref<{ label: string; value: string }[]>([])
 const assetNameInput = ref("")
+const assetNameInputRef = ref<{ focus: () => void } | null>(null)
+// the auto-complete menu always auto-highlights its first option: while the user is browsing it
+// with the arrows, Enter must confirm that highlighted option instead of the raw typed text
+const assetMenuNavigated = ref(false)
 
 const rules: FormRules = {
 	source: {
@@ -320,12 +331,23 @@ const isValid = computed(() => {
 const isSocfortressRecommendsAvailable = computed(() => form.value.source?.toLowerCase() === "wazuh")
 
 const filteredAssetNameOptions = computed(() => {
-	return availableMappingsOptions.value.filter(option => !form.value.asset_name_array?.includes(option.value))
+	const query = assetNameInput.value.trim().toLowerCase()
+
+	return availableMappingsOptions.value.filter(
+		option =>
+			!form.value.asset_name_array?.includes(option.value) &&
+			(!query || option.value.toLowerCase().includes(query))
+	)
 })
 
 watch(sourceConfigurationModel, () => {
 	reset()
 	init()
+})
+
+// typing rebuilds the filtered list, so any previous arrow-key highlight is stale
+watch(assetNameInput, () => {
+	assetMenuNavigated.value = false
 })
 
 watch(
@@ -369,19 +391,56 @@ function renderAssetTag(tag: string, index: number) {
 	)
 }
 
-function handleAssetSelect(value: string, submit: (value: string) => void) {
-	if (value && !form.value.asset_name_array?.includes(value)) {
-		submit(value)
-		assetNameInput.value = ""
-	}
+function renderAssetOptionLabel(option: { label?: string | number }) {
+	const label = String(option.label ?? "")
+	// the menu is only as wide as the input, so long field names need the full value on hover
+	return h("span", { title: label }, label)
 }
 
-function handleAssetEnter(submit: (value: string) => void) {
-	const value = assetNameInput.value.trim()
-	if (value && !form.value.asset_name_array?.includes(value)) {
-		submit(value)
-		assetNameInput.value = ""
+// keep the whole list reachable on focus, the typed text filters it down
+function showAssetNameOptions() {
+	return true
+}
+
+function addAssetName(value: string, submit: (value: string) => void) {
+	const name = value.trim()
+
+	if (name && !form.value.asset_name_array?.includes(name)) {
+		submit(name)
 	}
+
+	assetNameInput.value = ""
+	assetMenuNavigated.value = false
+}
+
+function activateAssetNameInput(activate: () => void) {
+	assetNameInput.value = ""
+	assetMenuNavigated.value = false
+	activate()
+	// n-dynamic-tags only auto-focuses its own default input, not the one from the slot
+	nextTick(() => assetNameInputRef.value?.focus())
+}
+
+function handleAssetSelect(value: string, submit: (value: string) => void) {
+	addAssetName(value, submit)
+}
+
+function handleAssetKeydown(event: KeyboardEvent, submit: (value: string) => void) {
+	if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+		assetMenuNavigated.value = true
+		return
+	}
+
+	if (event.key !== "Enter" || event.isComposing || assetMenuNavigated.value) {
+		return
+	}
+
+	// stop the auto-complete from confirming its auto-highlighted option: Enter must add exactly
+	// what was typed, so custom field names can be entered even when the index doesn't expose them
+	event.preventDefault()
+	event.stopPropagation()
+
+	addAssetName(assetNameInput.value, submit)
 }
 
 function resetIndexAvailable() {
@@ -659,5 +718,12 @@ defineExpose({
 
 :deep(.n-dynamic-tags) {
 	width: 100%;
+
+	// the auto-complete menu is sized on its trigger, so a full-width input means
+	// long field names are readable in the dropdown
+	.asset-name-input {
+		width: 100%;
+		min-width: 240px;
+	}
 }
 </style>

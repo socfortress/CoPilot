@@ -61,6 +61,12 @@ export default {
 			`/network_connectors/available_network_connectors`
 		)
 	},
+	getAvailableNetworkConnector(networkConnectorId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { network_connector: NetworkConnector }>(
+			`/network_connectors/available_network_connectors/${networkConnectorId}`,
+			{ signal }
+		)
+	},
 	getCustomerNetworkConnectors(customerCode: string) {
 		return HttpClient.get<FlaskBaseResponse & { available_network_connectors: CustomerNetworkConnector[] }>(
 			`/network_connectors/customer_network_connectors/${customerCode}`

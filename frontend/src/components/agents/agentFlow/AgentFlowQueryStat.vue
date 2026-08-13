@@ -93,15 +93,15 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
+import { formatNanosecondsDuration } from "@/utils/formatNanosecondsDuration"
 
 const { stat, embedded } = defineProps<{ stat: FlowQueryStat; embedded?: boolean }>()
 
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
 
-const duration = computed(() => dayjs.duration(stat.duration).humanize())
+const duration = computed(() => formatNanosecondsDuration(stat.duration))
 
 const properties = computed(() => {
 	return _pick(stat, [

@@ -17,5 +17,6 @@ export const ICONS = {
 	celery: "carbon:bee",
 	websocket: "carbon:ibm-watson-discovery",
 	worker: "carbon:ibm-openshift-container-platform-on-vpc-for-regulated-industries",
-	eventSearch: "carbon:search-locate"
+	eventSearch: "carbon:search-locate",
+	reports: "carbon:document-pdf"
 }

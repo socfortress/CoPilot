@@ -16,7 +16,13 @@
 		</div>
 		<n-spin content-class="min-h-48" :show="loading">
 			<div class="grid-auto-fill-200 group grid gap-4">
-				<VulnerabilityCard v-for="item of vulnerabilities" :key="item.id" :vulnerability="item" hide-tooltip />
+				<VulnerabilityCard
+					v-for="item of vulnerabilities"
+					:key="item.id"
+					:vulnerability="item"
+					:agent-id="agent.agent_id"
+					hide-tooltip
+				/>
 			</div>
 			<n-empty
 				v-if="!loading && !vulnerabilities.length"

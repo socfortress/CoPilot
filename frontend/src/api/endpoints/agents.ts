@@ -12,9 +12,19 @@ import type {
 } from "@/types/agents"
 import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
+import { searchLimitParams } from "../params"
 
 export interface AgentPayload {
 	velociraptor_id: string
+}
+
+export interface GetAgentsQuery {
+	agentId?: string
+	customerCodes?: string[]
+	/** Server-side substring match on hostname, label, IP, or agent id. */
+	search?: string
+	/** Cap the number of returned agents (used by the search palette). */
+	limit?: number
 }
 
 export interface AgentArtifactsQuery {
@@ -25,8 +35,29 @@ export interface AgentArtifactsQuery {
 export type VulnerabilitySeverityType = "Low" | "Medium" | "High" | "Critical" | "All"
 
 export default {
-	getAgents(agentId?: string) {
-		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(`/agents${agentId ? `/${agentId}` : ""}`)
+	getAgents(arg?: string | GetAgentsQuery, signal?: AbortSignal) {
+		// Support legacy signature getAgents(agentId?: string)
+		if (typeof arg === "string") {
+			return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(
+				`/agents/${arg}`,
+				signal ? { signal } : undefined
+			)
+		}
+
+		const agentId = arg?.agentId
+		const url = `/agents${agentId ? `/${agentId}` : ""}`
+
+		const params: Record<string, number | string | string[]> = {
+			...(arg?.customerCodes?.length ? { customer_codes: arg.customerCodes } : {}),
+			...searchLimitParams(arg ?? {})
+		}
+
+		const requestConfig = {
+			...(Object.keys(params).length ? { params, paramsSerializer: { indexes: null } } : {}),
+			...(signal ? { signal } : {})
+		}
+
+		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(url, requestConfig)
 	},
 	markCritical(agentId: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/agents/${agentId}/critical`)
@@ -65,6 +96,19 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
+	agentVulnerabilityByCve(
+		agentId: string,
+		cve: string,
+		params?: { package?: string; version?: string },
+		signal?: AbortSignal
+	) {
+		// dedicated single-CVE lookup — the severity list endpoint scrolls every
+		// vulnerability document of the agent and takes minutes on real data
+		return HttpClient.get<FlaskBaseResponse & { vulnerabilities: AgentVulnerabilities[] }>(
+			`/agents/${agentId}/vulnerabilities/cve/${encodeURIComponent(cve)}`,
+			{ params: params ?? {}, ...(signal ? { signal } : {}) }
+		)
+	},
 	agentVulnerabilitiesDownload(agentId: string, severity: VulnerabilitySeverityType) {
 		return HttpClient.get<string>(`/agents/${agentId}/csv/vulnerabilities/${severity}`)
 	},
@@ -74,16 +118,23 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
-	getSCA(agentId: string | number, signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { sca: AgentSca[] }>(
-			`/agents/${agentId}/sca`,
-			signal ? { signal } : {}
-		)
+	getSCA(agentId: string | number, policyId?: string, signal?: AbortSignal) {
+		// policyId narrows the Wazuh query to one policy — the detail view must not
+		// pull the agent's whole SCA list just to render a single one
+		return HttpClient.get<FlaskBaseResponse & { sca: AgentSca[] }>(`/agents/${agentId}/sca`, {
+			params: policyId ? { policy_id: policyId } : {},
+			...(signal ? { signal } : {})
+		})
 	},
-	getSCAResults(agentId: string | number, policyId: string, signal?: AbortSignal) {
+	getSCAResults(agentId: string | number, policyId: string, checkId?: number, signal?: AbortSignal) {
+		// checkId narrows the Wazuh query to one check — the check detail view must
+		// not pull the policy's whole check list just to render a single one
 		return HttpClient.get<FlaskBaseResponse & { sca_policy_results: ScaPolicyResult[] }>(
 			`/agents/${agentId}/sca/${policyId}`,
-			signal ? { signal } : {}
+			{
+				params: checkId != null ? { check_id: checkId } : {},
+				...(signal ? { signal } : {})
+			}
 		)
 	},
 	scaResultsDownload(agentId: string | number, policyId: string) {

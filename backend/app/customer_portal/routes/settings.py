@@ -66,6 +66,12 @@ async def update_portal_settings(
         else:
             settings.logo_mime_type = request.logo_mime_type
 
+        # Handle brand_color: if explicitly set to null, restore default
+        if request.brand_color is None:
+            settings.brand_color = defaults["brand_color"]
+        else:
+            settings.brand_color = request.brand_color
+
         # Update metadata
         settings.updated_by = auth_handler.user_id if hasattr(auth_handler, "user_id") else None
         settings.updated_at = datetime.now()
@@ -120,6 +126,7 @@ async def get_portal_settings(
             title=settings.title,
             logo_base64=settings.logo_base64,
             logo_mime_type=settings.logo_mime_type,
+            brand_color=settings.brand_color,
             updated_at=settings.updated_at.isoformat(),
         )
 

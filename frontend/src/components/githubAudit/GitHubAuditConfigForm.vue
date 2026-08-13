@@ -221,7 +221,7 @@ watch(
 	() => props.config,
 	config => {
 		if (config) {
-			Object.assign(formData, {
+			Object.assign(formData.value, {
 				customer_code: config.customer_code,
 				github_token: "",
 				organization: config.organization,
@@ -242,7 +242,7 @@ watch(
 				minimum_passing_score: config.minimum_passing_score
 			})
 		} else {
-			Object.assign(formData, defaultFormData())
+			Object.assign(formData.value, defaultFormData())
 		}
 	},
 	{ immediate: true }
@@ -267,7 +267,7 @@ async function handleSubmit() {
 			message.success("Configuration updated successfully")
 		} else {
 			const createData: GitHubAuditConfigCreate = {
-				...formData,
+				...formData.value,
 				customer_code: formData.value.customer_code ?? "",
 				github_token: formData.value.github_token ?? "",
 				organization: formData.value.organization ?? ""

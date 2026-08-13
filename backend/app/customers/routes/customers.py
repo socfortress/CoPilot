@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from starlette.status import HTTP_401_UNAUTHORIZED
 
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 
 # App specific imports
@@ -29,8 +30,13 @@ from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
 from app.healthchecks.agents.schema.agents import TimeCriteriaModel
 from app.healthchecks.agents.services.agents import velociraptor_agents_healthcheck
 from app.healthchecks.agents.services.agents import wazuh_agents_healthcheck
+from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import verify_customer_code_access
 from app.middleware.license import get_license_seat_allowance
 from app.middleware.license import is_feature_enabled
+from app.middleware.search_query import SearchParams
+from app.middleware.search_query import apply_search_limit
+from app.middleware.search_query import search_query
 
 customers_router = APIRouter()
 
@@ -244,9 +250,21 @@ async def create_customer(
     description="Get all customers",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_customers(session: AsyncSession = Depends(get_db)) -> CustomersResponse:
+async def get_customers(
+    search_params: SearchParams = Depends(search_query),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> CustomersResponse:
     """
-    Fetches all customers from the database.
+    Fetches customers from the database.
+
+    ``search``/``limit`` (see ``search_query``) narrow the result to customers whose
+    code or name contains the string and cap the count — so the global search palette
+    never pulls the whole customer list to filter client-side.
+
+    The result is scoped to the caller's customer access, which makes this the source
+    of truth for every customer picker in the UI: an analyst assigned to one customer
+    cannot pick, or even see, another one.
 
     Args:
         session (AsyncSession): The async session object used to interact with the database.
@@ -254,10 +272,16 @@ async def get_customers(session: AsyncSession = Depends(get_db)) -> CustomersRes
     Returns:
         CustomersResponse: The response containing the list of customers fetched successfully.
     """
-    logger.info("Fetching all customers")
+    logger.info(f"Fetching customers (search={search_params.search or 'none'})")
 
-    # Asynchronous query to fetch all customers
-    result = await session.execute(select(Customers))
+    query = apply_search_limit(select(Customers), search_params, Customers.customer_code, Customers.customer_name)
+    query = await customer_access_handler.filter_query_by_customer_access(
+        current_user,
+        session,
+        query,
+        Customers.customer_code,
+    )
+    result = await session.execute(query)
     customers = result.scalars().all()
 
     # Fetch all customer meta records to check provisioning status
@@ -283,7 +307,10 @@ async def get_customers(session: AsyncSession = Depends(get_db)) -> CustomersRes
     "/{customer_code}",
     response_model=CustomerResponse,
     description="Get customer by customer_code",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer(
     customer_code: str,
@@ -513,7 +540,10 @@ async def add_customer_meta(
     "/{customer_code}/meta",
     response_model=CustomerMetaResponse,
     description="Get customer meta by customer_code",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
     deprecated=True,
 )
 async def get_customer_meta(
@@ -665,7 +695,10 @@ async def delete_customer_meta(
     "/{customer_code}/full",
     response_model=CustomerFullResponse,
     description="Get customer and customer meta by customer_code",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_full(
     customer_code: str,
@@ -722,7 +755,10 @@ async def get_customer_full(
     "/{customer_code}/agents",
     response_model=AgentsResponse,
     description="Get agents for the given customer_code",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_agents(
     customer_code: str,
@@ -770,7 +806,10 @@ async def get_agents(
     "/{customer_code}/agents/healthcheck/wazuh",
     response_model=AgentHealthCheckResponse,
     description="Get agents healthcheck for the given customer_code",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_wazuh_agents_healthcheck(
     customer_code: str,
@@ -827,7 +866,10 @@ async def get_wazuh_agents_healthcheck(
     "/{customer_code}/agents/healthcheck/velociraptor",
     response_model=AgentHealthCheckResponse,
     description="Get agents healthcheck for the given customer_code",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_velociraptor_agents_healthcheck(
     customer_code: str,

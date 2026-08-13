@@ -55,6 +55,8 @@ export interface MitreTechniquesQuery {
 export interface MitreEventsQuery {
 	/** MITRE ATT&CK technique ID (e.g., T1047, 1047) */
 	technique_id: string
+	/** Filter by alert document id */
+	alert_id?: string
 	/** Time range for the search (e.g., now-24h, now-7d) */
 	time_range?: string
 	/** Maximum number of techniques to return per page */
@@ -206,6 +208,7 @@ export default {
 				time_range: query?.time_range || "now-24h",
 				size: query?.size || 25,
 				page: query?.page || 1,
+				alert_id: query?.alert_id,
 				rule_level: query?.rule_level,
 				rule_group: query?.rule_group,
 				mitre_field: query?.mitre_field,

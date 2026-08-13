@@ -10,14 +10,18 @@ purely for input validation at the API boundary.
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from enum import Enum
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import ValidationError as PydanticValidationError
 from pydantic import field_validator
 from pydantic import model_validator
 
@@ -39,22 +43,71 @@ class NotificationTrigger(str, Enum):
     """
 
     INVESTIGATION_COMPLETE = "investigation_complete"
+    AI_REPORT_REVIEWED = "ai_report_reviewed"
+
+    # Fired by CoPilot itself rather than pushed in by Talon.
+    ALERT_CREATED = "alert_created"
+    ALERT_ASSIGNED = "alert_assigned"
+    CASE_ASSIGNED = "case_assigned"
+    CASE_TASK_ASSIGNED = "case_task_assigned"
+
+    # Not a dispatch trigger. #999 reuses `notification_template` as a second
+    # event source: the admin-issued temporary-password email is authored in the
+    # same editor and rendered by the same sandboxed Jinja, but it is delivered
+    # by `app/auth/services/temp_password_email.py` over SMTP rather than by the
+    # dispatch loop over a channel provider. It lives in this enum because the
+    # template table's `trigger` column is what scopes a template to it — see
+    # DISPATCH_TRIGGERS below for why routes must not accept it.
+    TEMP_PASSWORD_ISSUED = "temp_password_issued"
+
+
+#: The triggers a notification *route* may fire on.
+#:
+#: Every member of `NotificationTrigger` is a legal template scope, but not
+#: every one is a legal route scope: nothing emits `temp_password_issued` into
+#: `dispatch()`, so a route bound to it would be config that silently never
+#: fires. Rejecting it at save time is the same reasoning as
+#: `assert_template_usable` — a mismatch caught here is a 400 the operator can
+#: act on, caught at send time it is an outage nobody sees.
+DISPATCH_TRIGGERS = frozenset(t for t in NotificationTrigger if t is not NotificationTrigger.TEMP_PASSWORD_ISSUED)
+
+
+def _assert_route_trigger(v: Optional[NotificationTrigger]) -> Optional[NotificationTrigger]:
+    """Reject a trigger no route can ever fire on. Shared by create and PATCH."""
+    if v is not None and v not in DISPATCH_TRIGGERS:
+        raise ValueError(
+            f"{v.value!r} is not a route trigger — nothing dispatches it. It exists so a message template "
+            f"can be scoped to it; that delivery path has its own sender.",
+        )
+    return v
 
 
 class NotificationChannel(str, Enum):
     """Delivery channel set.
 
-    `shuffle` proxies to Shuffle's hosted MCP — each customer points at
-    their own Shuffle Org via `customer_shuffle_integration`, and Shuffle
-    handles the OAuth-authenticated downstream app (Slack workspace,
-    Outlook tenant, Teams, Gmail, SendGrid, etc.). Routes referencing
-    `shuffle` MUST populate the `shuffle_integration_id` + `shuffle_app_id`
-    columns. Email, chat, ticketing, and the rest of the catalog all
-    flow through this single channel — there's no separate direct SMTP
-    path because Shuffle's email apps cover that surface.
+    Each value maps to a provider in ``app.notifications.channels``. The
+    provider owns its own settings shape, validated from the route's ``config``
+    column against its declared ``config_schema`` — so adding a channel needs
+    neither a migration nor an edit here beyond the enum member.
+
+    ``shuffle`` proxies to Shuffle's hosted MCP: each customer points at their
+    own Shuffle org via ``customer_shuffle_integration``, and Shuffle handles the
+    OAuth-authenticated downstream app (Slack, Outlook, Teams, Gmail, …). Its
+    org stays a real FK column (``shuffle_integration_id``) rather than moving
+    into config, so referential integrity and the dispatcher's cross-tenant
+    check survive.
+
+    ``webhook`` is a direct HTTP request to any URL the customer chooses, with
+    no Shuffle org in the path. By default the dispatcher sends a structured
+    JSON object; if the route sets a ``format_template`` its rendered output is
+    sent as the raw body instead, so provider-specific shapes (Discord's
+    ``{"content": …}``, Slack's ``{"text": …}``) work without a code change.
     """
 
     SHUFFLE = "shuffle"
+    WEBHOOK = "webhook"
+    RESEND = "resend"
+    TEAMS = "teams"
 
 
 class NotificationSeverity(str, Enum):
@@ -71,12 +124,95 @@ class NotificationSeverity(str, Enum):
     INFORMATIONAL = "Informational"
 
 
+class NotificationScope(str, Enum):
+    """Who a route serves.
+
+    CUSTOMER routes deliver to the end customer and carry a customer_code.
+    INTERNAL routes deliver to the SOC, belong to no tenant, and are where
+    assignment notifications land — an ACME alert assigned to an analyst should
+    reach the analyst, not ACME's Slack.
+    """
+
+    CUSTOMER = "customer"
+    INTERNAL = "internal"
+
+
+class RecipientMode(str, Enum):
+    """Where the destination comes from.
+
+    STATIC reads it from the route's `config`. ASSIGNEE resolves the event's
+    assignee to their email at dispatch time, and is only valid on channels
+    that declare support for it.
+    """
+
+    STATIC = "static"
+    ASSIGNEE = "assignee"
+
+
 class DispatchStatus(str, Enum):
     """Result classes for notification_dispatch_log.status."""
 
     SENT = "sent"
     FAILED = "failed"
     SKIPPED = "skipped"
+
+
+# Triggers whose payload carries AI-written findings.
+#
+# Dispatches for these are gated on the customer's
+# `customer_portal_ai_report_settings` row before anything is delivered to a
+# customer-facing route — see `_ai_reports_permitted` in the dispatch service.
+# That switch is opt-in (a missing row reads as disabled), so an operator who
+# has not explicitly published AI findings to a customer must not have them
+# emailed/webhooked out either.
+#
+# Keep this in sync when adding AI-sourced triggers (`ai_report_reviewed` is
+# next, see issue #1007). Non-AI triggers — alert creation, assignment — are
+# deliberately NOT listed: the switch governs AI-written content only.
+#
+# The legacy `severity_critical_or_high` value is included because routes saved
+# against an older schema still dispatch through the same AI path; see
+# `_trigger_applies`.
+# Triggers about *who is working on something* rather than about a customer's
+# security posture. They resolve against scope='internal' routes, so assigning
+# an ACME alert to an analyst reaches the SOC, never ACME's channel.
+INTERNAL_TRIGGERS: frozenset = frozenset(
+    {
+        "alert_assigned",
+        "case_assigned",
+        "case_task_assigned",
+    },
+)
+
+
+# Triggers that resolve against BOTH scopes, so one event can reach the SOC and
+# the customer through separate routes.
+#
+# Every other trigger is one or the other: an assignment is about who is working
+# on something and never leaves the SOC; an alert or an investigation is about
+# the customer's posture and goes to them. Analyst sign-off is the first event
+# that is legitimately both — the SOC wants to know a report was reviewed, and
+# the customer's route is precisely the one an operator wants to hold back until
+# a human has checked it (#1053).
+#
+# Membership here is a scope *widening*: a dual-scope trigger still obeys every
+# other filter, and the #1014 AI opt-out still applies to its customer-scope
+# half. `dispatch_event` gates per route rather than per batch, which is what
+# makes that work without further change.
+DUAL_SCOPE_TRIGGERS: frozenset = frozenset(
+    {
+        "ai_report_reviewed",
+    },
+)
+
+
+AI_SOURCED_TRIGGERS: frozenset = frozenset(
+    {
+        "investigation_complete",
+        "ai_report_reviewed",
+        "severity_critical_or_high",
+    },
+)
 
 
 # Severity ordering for `min_severity` filtering. Index = priority,
@@ -117,76 +253,224 @@ class NotificationRouteBase(BaseModel):
             return NotificationTrigger.INVESTIGATION_COMPLETE.value
         return v
 
-    # For SMTP: comma-separated recipient emails. For Shuffle: free-form
-    # destination hint (e.g. '#soc-alerts', 'ir@corp.com') that gets
-    # injected into Shuffle's natural-language input — Shuffle's app
-    # agent figures out how to route it within the authenticated app.
-    destination: str = Field(
-        ...,
-        min_length=1,
-        description="Destination hint for the Shuffle app (channel name, email address, handle).",
+    # Free-form destination hint. Shuffle injects it into the app agent's
+    # natural-language input ("send to #soc-alerts"); other channels ignore it
+    # and keep it as a human label. Deliberately NOT moved into `config` — it is
+    # NOT NULL in the DB and shared across channels, and dropping a seventh
+    # column would add migration risk for marginal tidiness.
+    destination: Optional[str] = Field(
+        default=None,
+        description="Destination hint for the Shuffle app (channel name, email address, handle). Unused by other channels.",
     )
     min_severity: NotificationSeverity = NotificationSeverity.MEDIUM
     format_template: Optional[str] = Field(
         default=None,
         description="Optional Jinja override for the message body. Leave empty to use the channel default.",
     )
+    # Precedence at render time is inline `format_template` -> this -> the
+    # channel default. The inline field stays as a per-route override so one
+    # route can deviate without forking the shared template.
+    template_id: Optional[int] = Field(
+        default=None,
+        description="ID of a named notification_template to render with. Ignored when format_template is set.",
+    )
     enabled: bool = True
 
-    # Phase 2: Shuffle routing target. Required when channel='shuffle'.
-    # The integration row scopes the dispatch to a specific customer
-    # Shuffle org; the app id + name describe which app within that
-    # org receives the natural-language input.
+    # Which audience this route serves. 'customer' delivers to the end
+    # customer; 'internal' delivers to the SOC and belongs to no tenant, which
+    # is where assignment notifications go so analyst chatter never reaches a
+    # customer's channel.
+    scope: NotificationScope = NotificationScope.CUSTOMER
+
+    # 'static' takes the destination from `config`; 'assignee' resolves the
+    # event's assignee to their email at dispatch time. Validated against the
+    # provider's supports_recipient_modes.
+    recipient_mode: RecipientMode = RecipientMode.STATIC
+
+    notify_on_self_assign: bool = Field(
+        default=False,
+        description="Notify the assignee even when they assigned it to themselves.",
+    )
+
+    # Shuffle's org lives on a real FK column rather than inside `config`,
+    # because burying an FK in JSON gives up referential integrity and the
+    # cross-tenant check the dispatcher performs at send time.
     shuffle_integration_id: Optional[int] = Field(
         default=None,
         description="ID of the customer_shuffle_integration row (required when channel='shuffle').",
     )
-    shuffle_app_id: Optional[str] = Field(default=None, description="Shuffle app UUID (required when channel='shuffle').")
-    shuffle_app_name: Optional[str] = Field(
-        default=None,
-        description="Human-readable Shuffle app name cached for the UI list (e.g. 'Slack').",
+
+    # Per-channel settings, validated against the selected provider's
+    # config_schema. Replaces the old column-per-setting scheme, so a new
+    # channel needs no migration and no schema edit here.
+    config: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Channel-specific settings. Shape is defined by the selected channel's config schema.",
     )
 
     @field_validator("destination")
     @classmethod
-    def _strip_destination(cls, v: str) -> str:
-        return v.strip()
+    def _strip_destination(cls, v: Optional[str]) -> Optional[str]:
+        return v.strip() if v is not None else v
 
-    @model_validator(mode="after")
-    def _shuffle_fields_required(self):
-        if self.channel == NotificationChannel.SHUFFLE:
-            if not self.shuffle_integration_id:
-                raise ValueError("shuffle_integration_id is required when channel='shuffle'")
-            if not self.shuffle_app_id:
-                raise ValueError("shuffle_app_id is required when channel='shuffle'")
-        return self
+    @field_validator("config", mode="before")
+    @classmethod
+    def _parse_config(cls, v):
+        """Deserialize the DB's JSON-string column into a dict.
+
+        `config` is a Text column for MySQL/SQLite portability, so an ORM row
+        yields a string. Pydantic 2 won't coerce it, and an unparsable value
+        must not 500 the list endpoint — fall back to an empty dict so a bad
+        row is visible in the UI rather than taking the whole page down.
+        """
+        if v is None:
+            return {}
+        if isinstance(v, dict):
+            return v
+        if isinstance(v, str):
+            if not v.strip():
+                return {}
+            try:
+                parsed = json.loads(v)
+            except ValueError:
+                return {}
+            return parsed if isinstance(parsed, dict) else {}
+        return {}
 
 
 class NotificationRouteCreate(NotificationRouteBase):
-    """Body for POST /customers/{code}/notification_routes."""
+    """Body for POST /customers/{code}/notification_routes.
+
+    Write-time validation lives here rather than on the shared base: reads must
+    stay lenient so a legacy or hand-edited row surfaces in the UI instead of
+    500-ing the whole list.
+    """
+
+    @field_validator("trigger")
+    @classmethod
+    def _trigger_must_be_dispatchable(cls, v: NotificationTrigger) -> NotificationTrigger:
+        return _assert_route_trigger(v)
+
+    @field_validator("format_template")
+    @classmethod
+    def _template_must_compile(cls, v: Optional[str]) -> Optional[str]:
+        """Reject a malformed template when it is saved, not when it fires.
+
+        Without this a typo produces a route that silently sends the channel
+        default forever, and the operator finds out from the dispatch log days
+        later — if they look.
+
+        Only syntax is checked. Undefined variables depend on the event, and a
+        template valid for one trigger may reference fields another doesn't
+        carry; those degrade to the default at send time with the reason logged.
+        """
+        if not v or not v.strip():
+            return v
+        from jinja2 import TemplateError
+
+        from app.notifications.services.rendering import compile_template
+
+        try:
+            compile_template(v)
+        except TemplateError as e:
+            raise ValueError(f"format_template is not valid Jinja: {e}") from e
+        return v
+
+    @model_validator(mode="after")
+    def _validate_against_provider(self):
+        """Validate `config` against the channel's declared schema.
+
+        Replaces the hand-written per-channel field checks. Import is local to
+        avoid a cycle: the channels package imports this module for the event
+        envelope's enums.
+        """
+        from app.notifications.channels import get_channel
+
+        provider = get_channel(self.channel.value)
+        if provider is None:
+            raise ValueError(f"Unsupported channel: {self.channel.value}")
+
+        try:
+            parsed = provider.config_schema.model_validate(self.config or {})
+        except PydanticValidationError as e:
+            raise ValueError(f"Invalid config for channel '{self.channel.value}': {e}") from e
+
+        # Normalize back so defaults (e.g. webhook method 'POST') are persisted
+        # rather than left implicit.
+        self.config = parsed.model_dump()
+
+        if self.recipient_mode.value not in provider.supports_recipient_modes:
+            raise ValueError(
+                f"Channel '{self.channel.value}' does not support recipient_mode "
+                f"'{self.recipient_mode.value}' (supported: {sorted(provider.supports_recipient_modes)})",
+            )
+
+        # Channel-specific requirements the generic schema can't express,
+        # because they involve columns outside `config`.
+        if self.channel == NotificationChannel.SHUFFLE:
+            if not self.shuffle_integration_id:
+                raise ValueError("shuffle_integration_id is required when channel='shuffle'")
+            if not self.config.get("app_id"):
+                raise ValueError("config.app_id is required when channel='shuffle'")
+            if not self.destination:
+                raise ValueError("destination is required when channel='shuffle'")
+        elif self.channel == NotificationChannel.WEBHOOK:
+            url = self.config.get("url")
+            if not url:
+                raise ValueError("config.url is required when channel='webhook'")
+            if not str(url).lower().startswith(("http://", "https://")):
+                raise ValueError("config.url must start with http:// or https://")
+        elif self.channel == NotificationChannel.TEAMS:
+            url = self.config.get("webhook_url")
+            if not url:
+                raise ValueError("config.webhook_url is required when channel='teams'")
+        elif self.channel == NotificationChannel.RESEND:
+            # `to` is only meaningful for static delivery — in assignee mode the
+            # address comes from the event, and requiring both would imply the
+            # static list is a fallback, which it is not.
+            if self.recipient_mode == RecipientMode.STATIC and not self.config.get("to"):
+                raise ValueError("config.to is required when channel='resend' and recipient_mode='static'")
+        return self
 
 
 class NotificationRouteUpdate(BaseModel):
     """Body for PATCH — every field optional. Mirrors the editable subset
-    of NotificationRouteBase."""
+    of NotificationRouteBase.
+
+    `config` is replaced wholesale rather than merged: a partial merge makes
+    "remove this header" impossible to express, and the form always holds the
+    complete channel config anyway. It is validated against the *resulting*
+    channel in the service layer, which knows the row's current channel when
+    the PATCH doesn't change it.
+    """
 
     name: Optional[str] = Field(default=None, min_length=1, max_length=128)
     trigger: Optional[NotificationTrigger] = None
     channel: Optional[NotificationChannel] = None
-    destination: Optional[str] = Field(default=None, min_length=1)
+    destination: Optional[str] = None
     min_severity: Optional[NotificationSeverity] = None
     format_template: Optional[str] = None
+    # Nullable is meaningful: an explicit null detaches the named template and
+    # the route falls back to the channel default. `__fields_set__` is what
+    # distinguishes that from the field being omitted.
+    template_id: Optional[int] = None
     enabled: Optional[bool] = None
-    # Shuffle target — included on PATCH so admins can re-point a route
-    # at a different integration / app without recreating it.
+    scope: Optional[NotificationScope] = None
+    recipient_mode: Optional[RecipientMode] = None
+    notify_on_self_assign: Optional[bool] = None
     shuffle_integration_id: Optional[int] = None
-    shuffle_app_id: Optional[str] = None
-    shuffle_app_name: Optional[str] = None
+    config: Optional[Dict[str, Any]] = None
+
+    @field_validator("trigger")
+    @classmethod
+    def _trigger_must_be_dispatchable(cls, v: Optional[NotificationTrigger]) -> Optional[NotificationTrigger]:
+        return _assert_route_trigger(v)
 
 
 class NotificationRouteRead(NotificationRouteBase):
     id: int
-    customer_code: str
+    # None on internal-scope routes, which belong to no tenant.
+    customer_code: Optional[str] = None
     last_dispatched_at: Optional[datetime] = None
     dispatch_count: int = 0
     created_by: Optional[str] = None
@@ -303,6 +587,66 @@ class ShuffleOrgListResponse(BaseModel):
     orgs: List[ShuffleOrg]
 
 
+class ManualSendRequest(BaseModel):
+    """Body for POST /notifications/send.
+
+    Deliberately has NO destination field. The target is always a configured
+    route: routes are admin-managed and carry validated config, whereas a
+    free-text address would turn this into an arbitrary exfiltration tool.
+    """
+
+    entity_type: str = Field(description="'alert' or 'case'.")
+    entity_id: int
+    route_id: int = Field(description="An existing route. Re-validated server-side against the item's customer.")
+    include_ai_report: bool = Field(
+        default=False,
+        description="Attach the AI investigation report. Refused when the customer has opted out of AI reports.",
+    )
+
+
+class ChannelDescriptor(BaseModel):
+    """One delivery channel, as the route form needs to see it.
+
+    `config_schema` is the provider's Pydantic model rendered as JSON Schema.
+    The form uses it two ways: to render generic inputs for channels that have
+    no hand-written block (so a new channel needs no frontend work), and to
+    label/validate the ones that do.
+    """
+
+    key: str
+    display_name: str
+    config_schema: Dict[str, Any]
+    supports_recipient_modes: List[str]
+    supports_internal_scope: bool
+    secret_fields: List[str]
+    # Named-template formats this channel can render. Advertised so the route
+    # form filters the template picker itself, rather than offering a template
+    # the server would then refuse.
+    template_formats: List[str] = []
+
+
+class ResendQuotaResponse(BaseModel):
+    """Monthly email usage against Resend's plan limit.
+
+    Deployment-wide by construction: the API key is deployment-wide, so every
+    customer's routes draw from the same allowance. `customer_sent` is a
+    breakdown for display, never a separate budget.
+    """
+
+    success: bool = True
+    message: str = "Quota retrieved"
+    sent_this_month: int
+    limit: int
+    customer_sent: Optional[int] = None
+    configured: bool = Field(description="Whether the Resend connector has an API key set.")
+
+
+class ChannelListResponse(BaseModel):
+    success: bool = True
+    message: str = "Channels retrieved"
+    channels: List[ChannelDescriptor]
+
+
 class NotificationRouteListResponse(BaseModel):
     success: bool = True
     message: str = "Routes retrieved"
@@ -323,7 +667,12 @@ class NotificationRouteResponse(BaseModel):
 class DispatchLogRead(BaseModel):
     id: int
     customer_code: str
-    alert_id: int
+    # Nullable since the log stopped being alert-only — a case-task assignment
+    # has no alert. Use entity_type/entity_id for the general case.
+    alert_id: Optional[int] = None
+    entity_type: str = "alert"
+    entity_id: int
+    dedupe_key: str
     route_id: int
     trigger: str
     dispatched_at: datetime
@@ -331,7 +680,11 @@ class DispatchLogRead(BaseModel):
     error_message: Optional[str] = None
     latency_ms: Optional[int] = None
     payload_preview: Optional[str] = None
-    shuffle_execution_id: Optional[str] = None
+    provider_reference: Optional[str] = None
+    # Who caused this, when a person did, and how it was triggered. Lets the log
+    # answer "show me every hand-sent notification" without inference.
+    triggered_by: Optional[str] = None
+    trigger_source: str = "automatic"
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -374,10 +727,13 @@ class DispatchOutcome(BaseModel):
     status: DispatchStatus
     error_message: Optional[str] = None
     latency_ms: Optional[int] = None
-    # Shuffle's POST /apps/{id}/mcp returns this on a successful kickoff.
-    # Surfaced in the response so the calling agent (Talon) can include
-    # it in its analyst summary if the dispatch went through Shuffle.
-    shuffle_execution_id: Optional[str] = None
+    # Vendor-side identifier for the delivery, whatever the channel calls it —
+    # Shuffle's execution id today, Resend's message id next. Surfaced in the
+    # response so the calling agent (Talon) can cite it in its analyst summary.
+    #
+    # NOTE: renamed from `shuffle_execution_id`. This is Talon-facing, so if a
+    # Talon build still reads the old name it needs updating alongside this.
+    provider_reference: Optional[str] = None
 
 
 class DispatchResponse(BaseModel):
@@ -388,3 +744,122 @@ class DispatchResponse(BaseModel):
     skipped: int
     failed: int
     outcomes: List[DispatchOutcome]
+
+
+# ---------------------------------------------------------------------------
+# Named message templates (#1038)
+# ---------------------------------------------------------------------------
+
+
+class TemplateFormat(str, Enum):
+    """How a template's output should be treated.
+
+    Only `resend` renders HTML — a chat card would show the markup — so a
+    provider declares what it accepts via `ChannelProvider.template_formats`
+    and attaching a mismatch is rejected at save time.
+    """
+
+    TEXT = "text"
+    MARKDOWN = "markdown"
+    HTML = "html"
+    JSON = "json"
+
+
+class NotificationTemplateBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=128, description="Human label shown in the route form's picker.")
+    description: Optional[str] = Field(default=None, max_length=512)
+
+    # Null means usable with any trigger. Setting it stops a template written
+    # around `{{assignee}}` from being attached where that variable is always
+    # empty — checked when it is attached, not when it fires.
+    trigger: Optional[NotificationTrigger] = Field(
+        default=None,
+        description="Restrict this template to one trigger. Leave empty to allow any.",
+    )
+    format: TemplateFormat = TemplateFormat.TEXT
+
+    # Separate from the body because it is not derivable from it: email needs a
+    # subject and a Teams card needs a title.
+    subject_template: Optional[str] = Field(
+        default=None,
+        description="Optional Jinja subject line. Channels that have no subject ignore it.",
+    )
+    body_template: str = Field(..., min_length=1, description="Jinja source for the message body.")
+
+    # Null means shared with every customer, matching custom_dashboard_templates.
+    customer_code: Optional[str] = Field(
+        default=None,
+        max_length=64,
+        description="Scope this template to one customer. Leave empty to share it with all of them.",
+    )
+
+
+class NotificationTemplateCreate(NotificationTemplateBase):
+    """Body for POST /notifications/templates."""
+
+
+class NotificationTemplateUpdate(BaseModel):
+    """Body for PATCH — every field optional.
+
+    `exclude_unset` in the service is what makes an omitted field mean "leave
+    it alone" rather than "set it to null", so clearing `trigger` back to
+    any-trigger requires sending an explicit null.
+    """
+
+    name: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    description: Optional[str] = None
+    trigger: Optional[NotificationTrigger] = None
+    format: Optional[TemplateFormat] = None
+    subject_template: Optional[str] = None
+    body_template: Optional[str] = Field(default=None, min_length=1)
+    customer_code: Optional[str] = Field(default=None, max_length=64)
+
+
+class NotificationTemplateRead(NotificationTemplateBase):
+    id: int
+    # Built-ins are seeded at startup and are read-only: editing or deleting one
+    # is a 400, because the next startup would recreate it anyway.
+    is_default: bool = False
+    created_by: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class NotificationTemplateListResponse(BaseModel):
+    templates: List[NotificationTemplateRead] = []
+    success: bool
+    message: str
+
+
+class NotificationTemplateResponse(BaseModel):
+    template: NotificationTemplateRead
+    success: bool
+    message: str
+
+
+class TemplatePreviewRequest(BaseModel):
+    """Render a template against a sample event, without saving it.
+
+    Takes the source inline rather than a template id so the editor can preview
+    unsaved edits — the same reason the custom-dashboard builder previews an
+    unsaved panel set.
+    """
+
+    body_template: str = Field(..., min_length=1)
+    subject_template: Optional[str] = None
+    format: TemplateFormat = TemplateFormat.TEXT
+    trigger: NotificationTrigger = NotificationTrigger.ALERT_CREATED
+    # Drives the sample event's branding, so a template using `{{ branding.* }}`
+    # previews with the colours that customer would really receive.
+    customer_code: Optional[str] = None
+
+
+class TemplatePreviewResponse(BaseModel):
+    body: str
+    subject: Optional[str] = None
+    # Non-null when rendering failed. The preview reports it rather than 400-ing
+    # so the editor can show the error beside the template being written.
+    error: Optional[str] = None
+    success: bool
+    message: str

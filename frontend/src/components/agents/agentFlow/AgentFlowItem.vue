@@ -179,8 +179,8 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
+import { formatNanosecondsDuration } from "@/utils/formatNanosecondsDuration"
 import "@/assets/scss/overrides/vuesjv-override.scss"
 
 const { flow, embedded } = defineProps<{ flow: FlowResult; embedded?: boolean }>()
@@ -195,7 +195,7 @@ const EnabledIcon = "ri:check-line"
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
 
-const executionDuration = computed(() => dayjs.duration(flow.execution_duration).humanize())
+const executionDuration = computed(() => formatNanosecondsDuration(flow.execution_duration))
 
 const properties = computed(() => {
 	return _pick(flow, [

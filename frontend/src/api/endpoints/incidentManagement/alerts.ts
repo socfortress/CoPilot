@@ -20,6 +20,7 @@ export interface AlertsQuery {
 	page: number
 	pageSize: number
 	sort: "asc" | "desc"
+	customerCodes?: string[]
 	filter: Partial<UnionToIntersection<AlertsFilter>>
 	filters: {
 		type: AlertsFilterTypes
@@ -68,11 +69,16 @@ export default {
 			page: number
 			page_size: number
 			order: "asc" | "desc"
+			customer_codes?: string[]
 			[key: string]: unknown
 		} = {
 			page: args.page || 1,
 			page_size: args.pageSize || 25,
 			order: args.sort || "desc"
+		}
+
+		if (args.customerCodes?.length && url === `/incidents/db_operations/alerts`) {
+			params.customer_codes = args.customerCodes
 		}
 
 		if (args.filters?.length) {
@@ -86,7 +92,9 @@ export default {
 							params.alert_title = filter.value
 							break
 						case "customerCode":
-							params.customer_code = filter.value
+							// /alerts/filter takes a repeated customer_codes param; the filter itself
+							// is multi-valued, but tolerate a lone string from older query strings.
+							params.customer_codes = _castArray(filter.value)
 							break
 						case "source":
 							params.source = filter.value

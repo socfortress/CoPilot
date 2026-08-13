@@ -36,6 +36,7 @@ from app.integrations.models.customer_integration_settings import (
     IntegrationSubscription,
 )
 from app.integrations.schema import AuthKey
+from app.integrations.schema import AvailableIntegrationDetailResponse
 from app.integrations.schema import AvailableIntegrationsResponse
 from app.integrations.schema import CreateIntegrationAuthKeys
 from app.integrations.schema import CreateIntegrationService
@@ -51,11 +52,19 @@ from app.integrations.schema import IntegrationWithAuthKeys
 from app.integrations.schema import UpdateCustomerIntegration
 from app.integrations.schema import UpdateMetaAutoRequest
 from app.integrations.schema import UpdateMetaResponse
+from app.middleware.customer_access import verify_customer_code_access
 from app.network_connectors.models.network_connectors import (
     CustomerNetworkConnectorsMeta,
 )
 
 integration_settings_router = APIRouter()
+
+# Shown whenever a deployed integration has no metadata row — usually the result of a
+# deployment that failed after the infrastructure was provisioned.
+MISSING_META_RECOVERY_HINT = (
+    "This usually means the deployment did not finish. You can record the metadata manually from the "
+    "Meta Details panel, or delete the integration and deploy it again."
+)
 
 NETWORK_INTEGRATIONS = [
     "DefenderForEndpoint",
@@ -66,6 +75,17 @@ NETWORK_INTEGRATIONS = [
     "Sonicwall",
     # Add other network integrations as needed
 ]
+
+
+def _to_integration_with_auth_keys(integration: AvailableIntegrations) -> IntegrationWithAuthKeys:
+    """Map an AvailableIntegrations ORM row (with auth_keys loaded) to its response schema."""
+    return IntegrationWithAuthKeys(
+        id=integration.id,
+        integration_name=integration.integration_name,
+        description=integration.description,
+        integration_details=integration.integration_details,
+        auth_keys=[AuthKey(auth_key_name=key.auth_key_name) for key in integration.auth_keys],
+    )
 
 
 async def fetch_available_integrations(session: AsyncSession):
@@ -86,19 +106,19 @@ async def fetch_available_integrations(session: AsyncSession):
     # Use unique() to avoid duplicates caused by joined eager loading
     unique_integrations = result.unique().scalars().all()
 
-    integrations_with_auth_keys = []
-    for integration in unique_integrations:
-        auth_keys = [AuthKey(auth_key_name=key.auth_key_name) for key in integration.auth_keys]
-        integration_data = IntegrationWithAuthKeys(
-            id=integration.id,
-            integration_name=integration.integration_name,
-            description=integration.description,
-            integration_details=integration.integration_details,
-            auth_keys=auth_keys,
-        )
-        integrations_with_auth_keys.append(integration_data)
+    return [_to_integration_with_auth_keys(integration) for integration in unique_integrations]
 
-    return integrations_with_auth_keys
+
+async def fetch_available_integration_by_id(session: AsyncSession, integration_id: int) -> IntegrationWithAuthKeys:
+    stmt = (
+        select(AvailableIntegrations).options(joinedload(AvailableIntegrations.auth_keys)).where(AvailableIntegrations.id == integration_id)
+    )
+    result = await session.execute(stmt)
+    integration = result.unique().scalar_one_or_none()
+    if integration is None:
+        raise HTTPException(status_code=404, detail=f"Integration {integration_id} not found")
+
+    return _to_integration_with_auth_keys(integration)
 
 
 async def validate_integration_name(integration_name: str, session: AsyncSession):
@@ -564,7 +584,11 @@ def generate_integration_response(customer_code: str, integration_name: str) -> 
     )
 
 
-def generate_decommission_response(customer_code: str, integration_name: str) -> CustomerIntegrationDeleteResponse:
+def generate_decommission_response(
+    customer_code: str,
+    integration_name: str,
+    cleanup_warnings: Optional[List[str]] = None,
+) -> CustomerIntegrationDeleteResponse:
     additional_info_map = {
         "Office365": (
             "Make sure to remove the Office365 integration block from the Wazuh Manager ossec.conf file and restart the Wazuh Manager service. "
@@ -574,6 +598,12 @@ def generate_decommission_response(customer_code: str, integration_name: str) ->
     }
 
     additional_info = additional_info_map.get(integration_name, "")
+
+    # Anything the infrastructure cleanup could not remove is reported alongside the manual
+    # steps so the operator knows exactly what is left over.
+    if cleanup_warnings:
+        additional_info = " ".join([additional_info, *cleanup_warnings]).strip()
+
     if additional_info == "":
         additional_info = None
 
@@ -600,6 +630,24 @@ async def get_available_integrations(
     return AvailableIntegrationsResponse(
         available_integrations=available_integrations,
         message="Available integrations successfully retrieved.",
+        success=True,
+    )
+
+
+@integration_settings_router.get(
+    "/available_integrations/{integration_id}",
+    response_model=AvailableIntegrationDetailResponse,
+    description="Get a single available integration by id.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_available_integration(
+    integration_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> AvailableIntegrationDetailResponse:
+    integration = await fetch_available_integration_by_id(session, integration_id)
+    return AvailableIntegrationDetailResponse(
+        available_integration=integration,
+        message="Available integration successfully retrieved.",
         success=True,
     )
 
@@ -657,7 +705,10 @@ async def get_customer_integrations_meta(session: AsyncSession = Depends(get_db)
     "/customer_integrations/{customer_code}",
     response_model=CustomerIntegrationsResponse,
     description="Get a list of customer integrations for a specific customer.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_integrations_by_customer_code(
     customer_code: str,
@@ -691,7 +742,10 @@ async def get_customer_integrations_by_customer_code(
     "/customer_integrations_meta/{customer_code}",
     response_model=CustomerIntegrationsMetaResponse,
     description="Get a list of customer integrations metadata for a specific customer.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_integrations_meta_by_customer_code(
     customer_code: str,
@@ -828,7 +882,10 @@ async def create_integration_meta(
     "/update_integration/{customer_code}",
     response_model=CustomerIntegrationCreateResponse,
     description="Update a customer integration.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def update_integration(
     customer_code: str,
@@ -977,6 +1034,66 @@ async def delete_customer_network_connectors_meta(session: AsyncSession, custome
     )
 
 
+async def _cleanup_integration_infrastructure(
+    meta_data,
+    customer_code: str,
+    integration_name: str,
+    cleanup_warnings: List[str],
+) -> None:
+    """
+    Remove the Graylog and Grafana resources recorded in an integration's metadata.
+
+    Each resource is removed independently: a resource that is already gone (or a metadata
+    field that was never populated because provisioning failed partway) must not block the
+    removal of the others, otherwise the integration becomes undeletable from the UI. Every
+    failure is logged and appended to `cleanup_warnings` for the caller to surface.
+    """
+
+    async def _attempt(description: str, coroutine_factory):
+        try:
+            await coroutine_factory()
+        except Exception as e:
+            logger.warning(f"Failed to delete {description} for {integration_name} / {customer_code}: {e}")
+            cleanup_warnings.append(f"Could not delete {description}: {e}. Remove it manually if it still exists.")
+
+    # Delete stream and index using metadata
+    stream_id = meta_data.graylog_stream_id
+    logger.info(f"stream_id: {stream_id}")
+    if stream_id:
+        await _attempt(f"Graylog stream {stream_id}", lambda: delete_stream(stream_id=stream_id))
+
+    index_id = meta_data.graylog_index_id
+    logger.info(f"index_id: {index_id}")
+    if index_id:
+        await _attempt(f"Graylog index {index_id}", lambda: delete_index_by_id(index_id=index_id))
+
+    # Delete the folder in Grafana
+    grafana_org_id = meta_data.grafana_org_id
+    grafana_dashboard_folder_id = meta_data.grafana_dashboard_folder_id
+
+    if grafana_org_id and grafana_dashboard_folder_id:
+        await _attempt(
+            f"Grafana dashboard folder {grafana_dashboard_folder_id}",
+            lambda: delete_folder(grafana_org_id, grafana_dashboard_folder_id),
+        )
+    else:
+        logger.info("No Grafana org ID or dashboard folder ID found, skipping folder deletion.")
+
+    # Delete the grafana datasource
+    grafana_datasource_uid = getattr(meta_data, "grafana_datasource_uid", None)
+    if grafana_org_id and grafana_datasource_uid:
+        logger.info(f"Deleting Grafana datasource with UID: {grafana_datasource_uid}")
+        await _attempt(
+            f"Grafana datasource {grafana_datasource_uid}",
+            lambda: delete_grafana_datasource(
+                organization_id=grafana_org_id,
+                datasource_uid=grafana_datasource_uid,
+            ),
+        )
+    else:
+        logger.info("No Grafana datasource UID found, skipping deletion.")
+
+
 @integration_settings_router.delete(
     "/delete_integration",
     response_model=CustomerIntegrationDeleteResponse,
@@ -1024,6 +1141,9 @@ async def delete_integration(
             detail="No subscriptions found for customer integration",
         )
 
+    # Collected non-fatal problems, surfaced to the caller so they know what was left behind
+    cleanup_warnings: List[str] = []
+
     # Only proceed with infrastructure cleanup if the integration is deployed
     if is_deployed:
         logger.info("Integration is deployed, proceeding with full cleanup including infrastructure components")
@@ -1035,38 +1155,31 @@ async def delete_integration(
             meta_data = await fetch_customer_integration_meta(session, customer_code, integration_name)
 
         if not meta_data:
-            raise HTTPException(status_code=404, detail=f"Metadata not found for {integration_name} integration")
-
-        # Delete stream and index using metadata
-        stream_id = meta_data.graylog_stream_id
-        logger.info(f"stream_id: {stream_id}")
-        await delete_stream(stream_id=stream_id)
-
-        index_id = meta_data.graylog_index_id
-        logger.info(f"index_id: {index_id}")
-        await delete_index_by_id(index_id=index_id)
-
-        # Delete the folder in Grafana
-        grafana_org_id = meta_data.grafana_org_id
-        grafana_dashboard_folder_id = meta_data.grafana_dashboard_folder_id
-
-        await delete_folder(grafana_org_id, int(grafana_dashboard_folder_id))
-
-        # Delete the grafana datasource
-        if meta_data.grafana_datasource_uid is not None:
-            logger.info(f"Deleting Grafana datasource with UID: {meta_data.grafana_datasource_uid}")
-            await delete_grafana_datasource(
-                organization_id=grafana_org_id,
-                datasource_uid=meta_data.grafana_datasource_uid,
+            # A deployment that failed partway (or predates metadata tracking) leaves the
+            # integration flagged as deployed with no metadata row. Refusing to delete here
+            # used to make the integration permanently undeletable from the UI, so continue
+            # with the settings cleanup and tell the caller what could not be reached.
+            logger.warning(
+                f"No metadata found for {integration_name} / {customer_code}; "
+                "skipping infrastructure cleanup and removing the integration settings only",
+            )
+            cleanup_warnings.append(
+                f"No metadata record was found for {integration_name}, so the Graylog stream/index and Grafana folder/datasource "
+                "could not be removed automatically. Delete any leftover Graylog and Grafana resources for this customer manually.",
             )
         else:
-            logger.info("No Grafana datasource UID found, skipping deletion.")
+            await _cleanup_integration_infrastructure(
+                meta_data=meta_data,
+                customer_code=customer_code,
+                integration_name=integration_name,
+                cleanup_warnings=cleanup_warnings,
+            )
 
-        # Delete metadata from appropriate table
-        if is_network_integration:
-            await delete_customer_network_connectors_meta(session, customer_code, integration_name)
-        else:
-            await delete_customer_integration_meta(session, customer_code, integration_name)
+            # Delete metadata from appropriate table
+            if is_network_integration:
+                await delete_customer_network_connectors_meta(session, customer_code, integration_name)
+            else:
+                await delete_customer_integration_meta(session, customer_code, integration_name)
 
     else:
         logger.info(
@@ -1083,7 +1196,7 @@ async def delete_integration(
 
     await session.commit()
 
-    return generate_decommission_response(customer_code, integration_name)
+    return generate_decommission_response(customer_code, integration_name, cleanup_warnings)
 
 
 @integration_settings_router.get(
@@ -1154,7 +1267,10 @@ async def get_customer_by_auth_key(
 @integration_settings_router.get(
     "/meta_auto/{customer_code}/{integration_name}",
     description="Get integration or network connector metadata automatically based on integration name",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_meta_auto(
     customer_code: str,
@@ -1192,7 +1308,10 @@ async def get_meta_auto(
             if not meta_record:
                 raise HTTPException(
                     status_code=404,
-                    detail=f"Network connector metadata not found for customer {customer_code} and connector {integration_name}",
+                    detail=(
+                        f"Network connector metadata not found for customer {customer_code} and connector {integration_name}. "
+                        f"{MISSING_META_RECOVERY_HINT}"
+                    ),
                 )
 
             logger.info(f"Successfully retrieved network connector metadata for {customer_code}/{integration_name}")
@@ -1209,7 +1328,10 @@ async def get_meta_auto(
             if not meta_record:
                 raise HTTPException(
                     status_code=404,
-                    detail=f"Integration metadata not found for customer {customer_code} and integration {integration_name}",
+                    detail=(
+                        f"Integration metadata not found for customer {customer_code} and integration {integration_name}. "
+                        f"{MISSING_META_RECOVERY_HINT}"
+                    ),
                 )
 
             logger.info(f"Successfully retrieved integration metadata for {customer_code}/{integration_name}")
@@ -1243,112 +1365,87 @@ async def update_meta_auto(
     Automatically determine which table to update based on integration name.
 
     This route checks if the integration is in the NETWORK_INTEGRATIONS list and
-    updates the appropriate table accordingly.
+    updates the appropriate table accordingly. When no metadata row exists yet — the state a
+    deployment that failed partway leaves behind — the row is created instead of returning a
+    404, so a broken integration can be repaired from the UI.
     """
     is_network_integration = update_request.integration_name in NETWORK_INTEGRATIONS
 
+    if is_network_integration:
+        meta_model = CustomerNetworkConnectorsMeta
+        name_field = "network_connector_name"
+        editable_fields = [
+            "graylog_input_id",
+            "graylog_index_id",
+            "graylog_stream_id",
+            "graylog_pipeline_id",
+            "graylog_content_pack_input_id",
+            "graylog_content_pack_stream_id",
+            "grafana_org_id",
+            "grafana_dashboard_folder_id",
+            "grafana_datasource_uid",
+        ]
+    else:
+        meta_model = CustomerIntegrationsMeta
+        name_field = "integration_name"
+        editable_fields = [
+            "graylog_input_id",
+            "graylog_index_id",
+            "graylog_stream_id",
+            "grafana_org_id",
+            "grafana_dashboard_folder_id",
+            "grafana_datasource_uid",
+        ]
+
+    table_type = "network connector" if is_network_integration else "integration"
+    name_column = getattr(meta_model, name_field)
+
     try:
-        if is_network_integration:
-            # Check if record exists in network connectors table
-            stmt = select(CustomerNetworkConnectorsMeta).where(
-                CustomerNetworkConnectorsMeta.customer_code == update_request.customer_code,
-                CustomerNetworkConnectorsMeta.network_connector_name == update_request.integration_name,
-            )
-            result = await session.execute(stmt)
-            existing_record = result.scalars().first()
+        stmt = select(meta_model).where(
+            meta_model.customer_code == update_request.customer_code,
+            name_column == update_request.integration_name,
+        )
+        result = await session.execute(stmt)
+        existing_record = result.scalars().first()
 
-            if not existing_record:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Network connector metadata not found for customer {update_request.customer_code} and connector {update_request.integration_name}",
-                )
-
-            # Update network connector metadata
-            update_data = {}
-            if update_request.graylog_input_id is not None:
-                update_data["graylog_input_id"] = update_request.graylog_input_id
-            if update_request.graylog_index_id is not None:
-                update_data["graylog_index_id"] = update_request.graylog_index_id
-            if update_request.graylog_stream_id is not None:
-                update_data["graylog_stream_id"] = update_request.graylog_stream_id
-            if update_request.graylog_pipeline_id is not None:
-                update_data["graylog_pipeline_id"] = update_request.graylog_pipeline_id
-            if update_request.graylog_content_pack_input_id is not None:
-                update_data["graylog_content_pack_input_id"] = update_request.graylog_content_pack_input_id
-            if update_request.graylog_content_pack_stream_id is not None:
-                update_data["graylog_content_pack_stream_id"] = update_request.graylog_content_pack_stream_id
-            if update_request.grafana_org_id is not None:
-                update_data["grafana_org_id"] = update_request.grafana_org_id
-            if update_request.grafana_dashboard_folder_id is not None:
-                update_data["grafana_dashboard_folder_id"] = update_request.grafana_dashboard_folder_id
-            if update_request.grafana_datasource_uid is not None:
-                update_data["grafana_datasource_uid"] = update_request.grafana_datasource_uid
-
-            if update_data:
-                update_stmt = (
-                    update(CustomerNetworkConnectorsMeta)
-                    .where(
-                        CustomerNetworkConnectorsMeta.customer_code == update_request.customer_code,
-                        CustomerNetworkConnectorsMeta.network_connector_name == update_request.integration_name,
-                    )
-                    .values(**update_data)
-                )
-                await session.execute(update_stmt)
-
-        else:
-            # Check if record exists in integrations table
-            stmt = select(CustomerIntegrationsMeta).where(
-                CustomerIntegrationsMeta.customer_code == update_request.customer_code,
-                CustomerIntegrationsMeta.integration_name == update_request.integration_name,
-            )
-            result = await session.execute(stmt)
-            existing_record = result.scalars().first()
-
-            if not existing_record:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Integration metadata not found for customer {update_request.customer_code} and integration {update_request.integration_name}",
-                )
-
-            # Update regular integration metadata
-            update_data = {}
-            if update_request.graylog_input_id is not None:
-                update_data["graylog_input_id"] = update_request.graylog_input_id
-            if update_request.graylog_index_id is not None:
-                update_data["graylog_index_id"] = update_request.graylog_index_id
-            if update_request.graylog_stream_id is not None:
-                update_data["graylog_stream_id"] = update_request.graylog_stream_id
-            if update_request.grafana_org_id is not None:
-                update_data["grafana_org_id"] = update_request.grafana_org_id
-            if update_request.grafana_dashboard_folder_id is not None:
-                update_data["grafana_dashboard_folder_id"] = update_request.grafana_dashboard_folder_id
-            if update_request.grafana_datasource_uid is not None:
-                update_data["grafana_datasource_uid"] = update_request.grafana_datasource_uid
-
-            if update_data:
-                update_stmt = (
-                    update(CustomerIntegrationsMeta)
-                    .where(
-                        CustomerIntegrationsMeta.customer_code == update_request.customer_code,
-                        CustomerIntegrationsMeta.integration_name == update_request.integration_name,
-                    )
-                    .values(**update_data)
-                )
-                await session.execute(update_stmt)
+        update_data = {field: getattr(update_request, field) for field in editable_fields if getattr(update_request, field) is not None}
 
         if not update_data:
             return UpdateMetaResponse(success=False, message="No fields provided for update")
 
+        if existing_record:
+            update_stmt = (
+                update(meta_model)
+                .where(
+                    meta_model.customer_code == update_request.customer_code,
+                    name_column == update_request.integration_name,
+                )
+                .values(**update_data)
+            )
+            await session.execute(update_stmt)
+            action = "Updated"
+        else:
+            # Every ID column is NOT NULL, so anything the caller left out is stored as an
+            # empty string rather than blocking the repair of a partially deployed integration.
+            record_values = {field: "" for field in editable_fields}
+            record_values.update(update_data)
+            record_values["customer_code"] = update_request.customer_code
+            record_values[name_field] = update_request.integration_name
+            session.add(meta_model(**record_values))
+            action = "Created"
+
         await session.commit()
 
-        table_type = "network connector" if is_network_integration else "integration"
         logger.info(
-            f"Updated {table_type} metadata for customer {update_request.customer_code}, {table_type} {update_request.integration_name}",
+            f"{action} {table_type} metadata for customer {update_request.customer_code}, {table_type} {update_request.integration_name}",
         )
 
         return UpdateMetaResponse(
             success=True,
-            message=f"Successfully updated {table_type} metadata for {update_request.customer_code}/{update_request.integration_name}",
+            message=(
+                f"Successfully {action.lower()} {table_type} metadata for "
+                f"{update_request.customer_code}/{update_request.integration_name}"
+            ),
         )
 
     except HTTPException:

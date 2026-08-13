@@ -35,6 +35,7 @@ from app.integrations.alert_creation_settings.schema.alert_creation_settings imp
 from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
     EventOrderResponse,
 )
+from app.middleware.customer_access import verify_customer_code_access
 from app.utils import get_customer_alert_event_configs
 
 alert_creation_settings_router = APIRouter()
@@ -44,7 +45,10 @@ alert_creation_settings_router = APIRouter()
     "/{customer_code}/event_configs",
     response_model=List[List[AlertCreationEventConfigResponse]],
     description="Get all alert event configs for a customer.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_event_configs(
     customer_code: str,

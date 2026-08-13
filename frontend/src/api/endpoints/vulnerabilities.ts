@@ -17,7 +17,7 @@ export default {
 	searchVulnerabilities(query: VulnerabilitySearchQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & VulnerabilitySearchResponse>(`/vulnerabilities/search`, {
 			params: {
-				customer_code: query.customer_code,
+				customer_codes: query.customer_codes,
 				agent_name: query.agent_name,
 				severity: query.severity,
 				cve_id: query.cve_id,
@@ -26,6 +26,7 @@ export default {
 				page_size: query.page_size || 50,
 				include_epss: query.include_epss !== false
 			},
+			paramsSerializer: { indexes: null },
 			signal
 		})
 	},
@@ -53,9 +54,10 @@ export default {
 	/**
 	 * List all vulnerability reports
 	 */
-	listReports(customer_code: string | null, signal?: AbortSignal) {
+	listReports(customerCodes: string[] | null, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & VulnerabilityReportListResponse>(`/vulnerabilities/reports`, {
-			params: customer_code ? { customer_code } : undefined,
+			params: customerCodes?.length ? { customer_codes: customerCodes } : undefined,
+			paramsSerializer: { indexes: null },
 			signal
 		})
 	},

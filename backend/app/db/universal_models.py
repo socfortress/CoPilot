@@ -377,6 +377,7 @@ class CustomerPortalSettings(SQLModel, table=True):
     title: str = Field(max_length=255, default="CoPilot")
     logo_base64: Optional[str] = Field(default=None, sa_column=Column(LONGTEXT))  # Use TEXT column for large base64 data
     logo_mime_type: Optional[str] = Field(default=None, max_length=50)  # e.g., "image/png", "image/jpeg"
+    brand_color: Optional[str] = Field(default=None, max_length=9)  # e.g., "#RRGGBB" - used to theme customer-branded reports
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
@@ -385,6 +386,7 @@ class CustomerPortalSettings(SQLModel, table=True):
         title: Optional[str] = None,
         logo_base64: Optional[str] = None,
         logo_mime_type: Optional[str] = None,
+        brand_color: Optional[str] = None,
         user_id: Optional[int] = None,
     ) -> None:
         """
@@ -412,6 +414,12 @@ class CustomerPortalSettings(SQLModel, table=True):
         elif logo_mime_type is None and hasattr(self, "_explicit_none_mime"):
             self.logo_mime_type = defaults["logo_mime_type"]
 
+        # Update brand_color - if None is passed, restore to default
+        if brand_color is not None:
+            self.brand_color = brand_color
+        elif brand_color is None and hasattr(self, "_explicit_none_brand_color"):
+            self.brand_color = defaults["brand_color"]
+
         self.updated_by = user_id
         self.updated_at = datetime.now()
 
@@ -422,6 +430,7 @@ class CustomerPortalSettings(SQLModel, table=True):
             "title": "CoPilot",
             "logo_base64": None,
             "logo_mime_type": None,
+            "brand_color": None,
         }
 
     @classmethod
@@ -432,7 +441,63 @@ class CustomerPortalSettings(SQLModel, table=True):
             title=defaults["title"],
             logo_base64=defaults["logo_base64"],
             logo_mime_type=defaults["logo_mime_type"],
+            brand_color=defaults["brand_color"],
         )
+
+
+class CustomerPortalBranding(SQLModel, table=True):
+    """Per-customer branding override for the Customer Portal.
+
+    ``customer_portal_settings`` (above) stays the *global default* for every
+    customer. A row here is an optional override for one customer: when
+    ``enabled`` is true the populated fields win, and any field left empty still
+    falls back to the global default (so an override can customise only the
+    title, only the logo, …). Flipping ``enabled`` to false — or deleting the row
+    entirely — reverts the customer to the global defaults.
+
+    Resolution lives in ``app/customer_portal/services/branding.py``; nothing
+    should read this table directly.
+    """
+
+    __tablename__ = "customer_portal_branding"
+
+    id: Optional[int] = Field(primary_key=True)
+    # One override per customer. Hard FK: an override for a deleted customer is meaningless.
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=50, index=True, unique=True, nullable=False)
+    enabled: bool = Field(default=True, nullable=False)
+    title: Optional[str] = Field(default=None, max_length=255)
+    logo_base64: Optional[str] = Field(default=None, sa_column=Column(LONGTEXT))  # LONGTEXT: base64 payloads are large
+    logo_mime_type: Optional[str] = Field(default=None, max_length=50)  # e.g. "image/png", "image/jpeg"
+    brand_color: Optional[str] = Field(default=None, max_length=9)  # e.g. "#RRGGBB"
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_by: Optional[int] = Field(default=None)  # User ID who last updated
+
+
+class CustomerPortalAiReportSettings(SQLModel, table=True):
+    """Per-customer switch for the Customer Portal's AI Analyst surfaces.
+
+    One flag gates both portal surfaces at once: the "AI Analyst Insights" card
+    on the overview and the "AI Report" tab on alert detail. It is **opt-in** —
+    a customer with no row here does not get either, so AI-written findings are
+    never exposed to an end customer until an operator turns them on.
+
+    Deliberately separate from ``incident_management_ai_analyst_trigger_enabled``:
+    that decides whether investigations *run* for a customer, this decides
+    whether the customer gets to *read* the result. Running investigations for
+    the SOC while keeping them internal is a valid configuration.
+
+    Resolution lives in ``app/customer_portal/services/ai_reports.py``; nothing
+    should read this table directly.
+    """
+
+    __tablename__ = "customer_portal_ai_report_settings"
+
+    id: Optional[int] = Field(primary_key=True)
+    # One row per customer. Hard FK: a setting for a deleted customer is meaningless.
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=50, index=True, unique=True, nullable=False)
+    enabled: bool = Field(default=False, nullable=False)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
 
 class VulnerabilityReport(SQLModel, table=True):
@@ -502,6 +567,52 @@ class SCAReport(SQLModel, table=True):
     passed_count: int = Field(default=0)  # Sum of passed checks
     failed_count: int = Field(default=0)  # Sum of failed checks
     invalid_count: int = Field(default=0)  # Sum of invalid/not applicable checks
+
+    # Status tracking (for background generation)
+    status: str = Field(max_length=50, default="processing", index=True)  # processing, completed, failed
+    error_message: Optional[str] = Field(sa_column=Column(Text, nullable=True))
+
+    # Relationship to Customers table
+    customer: Optional["Customers"] = Relationship()
+
+
+class IncidentManagementCustomerReport(SQLModel, table=True):
+    __tablename__ = "incident_management_customer_reports"
+
+    id: Optional[int] = Field(primary_key=True)
+
+    # Report metadata
+    report_name: str = Field(max_length=255, nullable=False)
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=50, index=True, nullable=False)
+
+    # MinIO storage details (standard blob-pointer set)
+    bucket_name: str = Field(max_length=255, nullable=False, default="incident-management-reports")
+    object_key: str = Field(max_length=1024, nullable=False)  # Path: customer_code/report_name_timestamp.pdf
+    file_name: str = Field(max_length=255, nullable=False)  # PDF filename
+    file_size: int = Field(nullable=False, default=0)  # File size in bytes
+    file_hash: str = Field(max_length=128, nullable=False, default="pending")  # SHA-256 hash
+
+    # Report generation details
+    generated_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    generated_by: int = Field(nullable=False)  # User ID who generated the report
+    generated_by_role: Optional[str] = Field(max_length=50, default=None)  # admin | analyst | customer_user
+
+    # Reporting period (naive UTC, matches incident_management_* timestamps)
+    date_from: datetime = Field(nullable=False)
+    date_to: datetime = Field(nullable=False)
+
+    # Report filters applied
+    filters_json: Optional[str] = Field(sa_column=Column(Text, nullable=True))  # JSON string of filters used
+
+    # Snapshot statistics (so the UI can preview without opening the PDF)
+    total_alerts: int = Field(default=0)
+    total_cases: int = Field(default=0)
+    open_cases: int = Field(default=0)
+    closed_cases: int = Field(default=0)
+
+    # Whether an analyst/admin-generated report is shared with the customer portal.
+    # Customer-generated reports are always visible to the customer regardless of this flag.
+    visible_to_customer: bool = Field(default=False)
 
     # Status tracking (for background generation)
     status: str = Field(max_length=50, default="processing", index=True)  # processing, completed, failed
@@ -583,6 +694,55 @@ class EnabledDashboards(SQLModel, table=True):
     # Relationships
     customer: Optional["Customers"] = Relationship()
     event_source: Optional["EventSources"] = Relationship()
+
+
+class CustomDashboardTemplates(SQLModel, table=True):
+    """User-authored dashboard templates, the DB-backed twin of the JSON files
+    under ``app/siem/dashboard_templates/``.
+
+    Built-in templates ship on disk and are addressed by
+    ``(library_card=<category dir>, template_id=<file stem>)``. Custom ones live
+    here and are addressed by ``(library_card="custom", template_id=<template_key>)``
+    so ``enabled_dashboards`` — and therefore the dashboard viewer, the panel-data
+    endpoint and the Customer Portal — keep working unchanged for both kinds.
+
+    ``customer_code`` is nullable on purpose: NULL means "shared with every
+    customer" (the usual case for a reusable integration template), while a value
+    scopes the template to that tenant only.
+    """
+
+    __tablename__ = "custom_dashboard_templates"
+
+    id: Optional[int] = Field(primary_key=True)
+    # Stable slug used as `enabled_dashboards.template_id`. Renaming the title
+    # never changes it, so enabled dashboards survive edits.
+    template_key: str = Field(max_length=255, nullable=False, index=True, unique=True)
+    customer_code: Optional[str] = Field(
+        default=None,
+        foreign_key="customers.customer_code",
+        max_length=50,
+        index=True,
+        nullable=True,
+    )
+    title: str = Field(max_length=255, nullable=False)
+    description: str = Field(default="", max_length=2048)
+    # Card metadata — mirrors the on-disk `_card.json` so custom templates can be
+    # rendered by the same category/template cards as the built-ins.
+    vendor: str = Field(default="Custom", max_length=255)
+    product: str = Field(default="", max_length=255)
+    event_type: str = Field(default="Custom", max_length=50)
+    tags: Optional[List[str]] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    color: str = Field(default="#38bdf8", max_length=9)
+    icon: str = Field(default="dashboard", max_length=50)
+    # Lucene applied on top of every panel query (the dashboard-wide filter).
+    default_query: str = Field(default="*", max_length=4096)
+    # List of panel dicts, same shape as the on-disk template `panels` array.
+    panels: List[dict] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    created_by: Optional[str] = Field(default=None, max_length=255)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    customer: Optional["Customers"] = Relationship()
 
 
 class AiAnalystJob(SQLModel, table=True):
@@ -733,12 +893,33 @@ class CustomerNotificationRoute(SQLModel, table=True):
     __tablename__ = "customer_notification_route"
 
     id: Optional[int] = Field(primary_key=True)
-    customer_code: str = Field(
+
+    # Nullable because an internal-scope route belongs to no tenant: assignment
+    # notifications go to the SOC, not to the customer whose alert was assigned.
+    # The CRUD layer enforces the invariant both ways —
+    # scope='customer' => customer_code IS NOT NULL; scope='internal' => NULL.
+    customer_code: Optional[str] = Field(
+        default=None,
         foreign_key="customers.customer_code",
         max_length=64,
         index=True,
-        nullable=False,
+        nullable=True,
     )
+
+    # 'customer' — delivers to the end customer's channel.
+    # 'internal'  — delivers to the SOC's own channel, tenant-agnostic. This is
+    #               where assignment notifications land, so analyst chatter
+    #               never reaches a customer's Slack.
+    scope: str = Field(default="customer", max_length=16, nullable=False, index=True)
+
+    # 'static'   — destination comes from `config`.
+    # 'assignee' — resolve the event's assignee to their email at dispatch time.
+    #              Only valid on channels whose supports_recipient_modes allows
+    #              it (a webhook targets a fixed URL, so it cannot).
+    recipient_mode: str = Field(default="static", max_length=16, nullable=False)
+
+    # An analyst picking up their own alert doesn't need an email about it.
+    notify_on_self_assign: bool = Field(default=False, nullable=False)
 
     # Human label shown in the UI list. Without this, users would have to
     # mentally parse channel+destination columns to identify a rule.
@@ -782,61 +963,162 @@ class CustomerNotificationRoute(SQLModel, table=True):
     # management. Populated from the auth context in the route handler.
     created_by: Optional[str] = Field(default=None, max_length=128)
 
-    # ----- Phase 2: Shuffle channel routing -----
-    # Populated when channel='shuffle'. NULL for legacy SMTP routes.
-    # The (integration_id, app_id, app_name) triple together describes
-    # "which Shuffle org" + "which app inside that org" + "label for the
-    # UI." `app_id` is the Shuffle app UUID we POST to
-    # /api/v1/apps/{app_id}/mcp; `app_name` is the human-readable label
-    # (e.g. "Slack") we cache so the UI doesn't have to roundtrip to
-    # Shuffle to render the route list.
+    # A named template from `notification_template`, or NULL to use the inline
+    # `format_template` / channel default. Plain nullable FK: deleting a template
+    # must not cascade away the routes using it, so the CRUD layer clears this
+    # instead — see `delete_template`.
+    template_id: Optional[int] = Field(default=None, foreign_key="notification_template.id", index=True)
+
+    # Per-channel settings, as a JSON string validated against the provider's
+    # declared `config_schema`. This replaced a column-per-channel-per-setting
+    # scheme that required a migration for every new channel; adding one is now
+    # a data-only change.
+    #
+    # Shapes (see each provider's ConfigSchema for the authority):
+    #   shuffle -> {"app_id": …, "app_name": …}
+    #   webhook -> {"url": …, "method": …, "headers": {…}, "include_full_report": bool}
+    #
+    # Stored as Text rather than a native JSON column for portability across
+    # the MySQL/SQLite backends, matching how webhook_headers was stored.
+    config: Optional[str] = Field(sa_column=Column(Text), default=None)
+
+    # `shuffle_integration_id` stays a real column while the rest of the Shuffle
+    # settings moved into `config`: it is a foreign key, and burying an FK
+    # inside JSON gives up referential integrity and the cross-tenant check the
+    # dispatcher relies on.
     shuffle_integration_id: Optional[int] = Field(
         default=None,
         foreign_key="customer_shuffle_integration.id",
         index=True,
     )
-    shuffle_app_id: Optional[str] = Field(default=None, max_length=64)
-    shuffle_app_name: Optional[str] = Field(default=None, max_length=128)
 
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
     updated_at: Optional[datetime] = Field(default=None)
 
     customer: Optional["Customers"] = Relationship()
-    # NB: no `back_populates` on the reverse relationships below. The
-    # dispatch service never traverses these — but with back_populates
-    # configured, SQLAlchemy fires implicit synchronous loads on the
-    # parent collections during flush() to keep the in-session graph in
-    # sync, which throws MissingGreenlet under AsyncSession. One-way
-    # foreign keys are fine here; we walk them via explicit queries
-    # (`session.get(...)`) when we need them.
-    dispatches: list["NotificationDispatchLog"] = Relationship(sa_relationship_kwargs={"overlaps": "route"})
+    # NB: no `back_populates` on the reverse relationship below. The dispatch
+    # service never traverses it — but with back_populates configured,
+    # SQLAlchemy fires implicit synchronous loads on the parent collections
+    # during flush() to keep the in-session graph in sync, which throws
+    # MissingGreenlet under AsyncSession. One-way foreign keys are fine here; we
+    # walk them via explicit queries (`session.get(...)`) when we need them.
+    #
+    # There is deliberately no `dispatches` collection. It was never traversed,
+    # and its mere existence broke route deletion: on `session.delete(route)`
+    # SQLAlchemy loaded the collection and tried to de-associate each row by
+    # setting `notification_dispatch_log.route_id = NULL`, which that column
+    # forbids. The log intentionally outlives the route that wrote it (#1057),
+    # so there is no parent/child lifecycle to model.
     shuffle_integration: Optional["CustomerShuffleIntegration"] = Relationship(sa_relationship_kwargs={"overlaps": "routes"})
+
+
+class NotificationTemplate(SQLModel, table=True):
+    """A named, reusable message template.
+
+    #1037 made `customer_notification_route.format_template` real Jinja, but it
+    stays per-route: every route re-pastes its own copy, with no reuse and no way
+    to offer per-language variants. This is the shared version.
+
+    Precedence at render time is inline -> named -> channel default. The inline
+    field survives as a per-route one-off override, so a template attached here
+    can still be overridden for a single route without editing the shared copy.
+    """
+
+    __tablename__ = "notification_template"
+
+    id: Optional[int] = Field(primary_key=True)
+    name: str = Field(max_length=128, nullable=False)
+    description: Optional[str] = Field(default=None, max_length=512)
+
+    # NULL = usable with any trigger. Set = only offered for that one, so a
+    # template written around {{assignee}} isn't attachable to alert_created
+    # where that variable is empty.
+    #
+    # Also what lets #999 (temporary-password emails) reuse this table later as
+    # a second event source rather than building a parallel one.
+    trigger: Optional[str] = Field(default=None, max_length=64, index=True)
+
+    # html | text | markdown | json. Drives autoescaping and which channels can
+    # accept the template — a Teams card can't render an HTML body.
+    format: str = Field(default="text", max_length=16, nullable=False)
+
+    # First-class rather than smuggled into the body: email needs a subject and
+    # Teams needs a card title, and neither is derivable from message text.
+    subject_template: Optional[str] = Field(sa_column=Column(Text), default=None)
+    body_template: str = Field(sa_column=Column(Text, nullable=False))
+
+    # NULL = shared with every customer, set = that tenant only. Same convention
+    # as custom_dashboard_templates.
+    customer_code: Optional[str] = Field(
+        default=None,
+        foreign_key="customers.customer_code",
+        max_length=64,
+        index=True,
+    )
+
+    # Seeded built-ins. Kept as data rather than code so an operator can copy one
+    # as a starting point instead of writing a template from a blank box.
+    is_default: bool = Field(default=False, nullable=False)
+
+    created_by: Optional[str] = Field(default=None, max_length=128)
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    updated_at: Optional[datetime] = Field(default=None)
 
 
 class NotificationDispatchLog(SQLModel, table=True):
     __tablename__ = "notification_dispatch_log"
     __table_args__ = (
-        # Idempotency key: re-running the same investigation must not
-        # re-fire the same notification. The dispatch service does
-        # "INSERT ... ON CONFLICT DO NOTHING" against this constraint and
-        # short-circuits if a row already exists.
+        # Idempotency key: re-dispatching the same event must not re-fire the
+        # same notification. The dispatch service checks this before calling a
+        # provider and short-circuits if a `sent` row already exists.
+        #
+        # Was (customer_code, alert_id, route_id, trigger). `route_id` already
+        # determines the customer, and each trigger now owns its own dedupe
+        # semantics via `dedupe_key` — notably manual sends (#1010) need a
+        # per-invocation unique key so repeat sends stay repeatable, which a
+        # fixed tuple cannot express.
         UniqueConstraint(
-            "customer_code",
-            "alert_id",
             "route_id",
-            "trigger",
+            "dedupe_key",
             name="uq_notif_dispatch_idem",
         ),
     )
 
     id: Optional[int] = Field(primary_key=True)
     customer_code: str = Field(max_length=64, index=True, nullable=False)
-    alert_id: int = Field(nullable=False, index=True)
-    route_id: int = Field(
-        foreign_key="customer_notification_route.id",
-        nullable=False,
-        index=True,
-    )
+
+    # Nullable since the log stopped being alert-only: a case-task assignment
+    # has no alert. Retained alongside entity_id (rather than replaced by it)
+    # because existing queries and the UI filter on it, and because "which
+    # alert" stays the common question even for non-alert entities later.
+    alert_id: Optional[int] = Field(default=None, nullable=True, index=True)
+
+    # What this dispatch was about. 'alert' | 'case' | 'case_task' — plain
+    # strings so a new entity type is a data-only change.
+    entity_type: str = Field(default="alert", max_length=32, nullable=False, index=True)
+    entity_id: int = Field(nullable=False, index=True)
+
+    # Per-trigger idempotency token, carried on NotificationEvent so each
+    # trigger owns its own semantics. Backfilled as 'alert:{alert_id}:{trigger}'
+    # for pre-existing rows, which reproduces the old tuple's meaning exactly.
+    dedupe_key: str = Field(max_length=255, nullable=False, index=True)
+
+    # Deliberately NOT a foreign key, following the same convention as
+    # `incident_management_*.customer_code`, `monitoring_alerts` and
+    # `customer_integrations`: a plain indexed column whose orphans are
+    # tolerated by design.
+    #
+    # The log is an append-only record of what was sent to whom, not a live
+    # relational entity — deleting a route must not erase the history of what
+    # that route already delivered, and "Dispatch log entries will be retained"
+    # is what the delete dialog promises. With a real FK that promise was
+    # impossible: the constraint was ON DELETE NO ACTION, so MySQL refused the
+    # delete outright, and the ORM's default nullify-on-delete hit this column's
+    # NOT NULL first. See #1057.
+    #
+    # NOT NULL is kept so attribution survives: an orphaned row still records
+    # which route sent it, which is exactly what an egress audit trail needs.
+    route_id: int = Field(nullable=False, index=True)
     trigger: str = Field(max_length=64, nullable=False)
 
     dispatched_at: datetime = Field(default_factory=datetime.utcnow, index=True)
@@ -853,17 +1135,29 @@ class NotificationDispatchLog(SQLModel, table=True):
     # a customer says "the message looked wrong" we want to see what we
     # actually sent without storing the entire body history.
     payload_preview: Optional[str] = Field(sa_column=Column(Text), default=None)
-    # Phase 2: Shuffle's POST /apps/{id}/mcp returns a fire-and-record
-    # execution_id. Stored here so an admin can pivot from "this
-    # notification didn't arrive at Slack" → look up the run in
-    # shuffler.io's UI to see whether Shuffle accepted the dispatch but
-    # the downstream app rejected it. Null for non-Shuffle channels.
-    shuffle_execution_id: Optional[str] = Field(default=None, max_length=128)
+    # Who caused this dispatch, when a person did. NULL for automatic ones —
+    # nobody triggered them. "Who sent which customer's data where" is a
+    # compliance question, and manual send (#1010) made it answerable.
+    triggered_by: Optional[str] = Field(default=None, max_length=128)
 
-    # See note on CustomerNotificationRoute.dispatches — back_populates
-    # removed deliberately to keep AsyncSession flush() synchronous-IO-free.
-    # `overlaps` makes the deliberate one-way nature explicit to SQLAlchemy 2.
-    route: Optional["CustomerNotificationRoute"] = Relationship(sa_relationship_kwargs={"overlaps": "dispatches"})
+    # 'automatic' | 'manual' | 'test'. Lets the dispatch-log viewer answer
+    # "show me every time someone hand-sent data to a customer" without
+    # inferring it from the trigger.
+    trigger_source: str = Field(default="automatic", max_length=16, nullable=False, index=True)
+
+    # Vendor-side identifier for this delivery, whatever the channel calls it —
+    # Shuffle's execution id, and later Resend's message id. Lets an admin pivot
+    # from "the notification didn't arrive" to the run in the provider's own UI
+    # and see whether the provider accepted it but the downstream app rejected
+    # it. Null for channels that return no reference.
+    #
+    # Was `shuffle_execution_id`; renamed once a second channel needed the slot.
+    provider_reference: Optional[str] = Field(default=None, max_length=128)
+
+    # No `route` relationship either. `route_id` is no longer a foreign key, so
+    # SQLAlchemy has no join condition to infer — and a log row deliberately
+    # survives its route, which makes "the route this belongs to" a question
+    # that can have no answer. Callers that need the route look it up by id.
 
 
 class CustomerShuffleIntegration(SQLModel, table=True):

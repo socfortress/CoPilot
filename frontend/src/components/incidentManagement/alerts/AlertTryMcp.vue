@@ -13,7 +13,7 @@
 		<!-- No integration configured -->
 		<n-alert v-else-if="!activeIntegration" type="info" title="No Shuffle integration configured">
 			This customer has no enabled Shuffle integration. Configure one in
-			<strong>Customer → AI Notifications → Shuffle integrations</strong>
+			<strong>Customer → Notifications → Shuffle integrations</strong>
 			before using Try MCP.
 		</n-alert>
 

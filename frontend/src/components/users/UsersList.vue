@@ -57,8 +57,20 @@
 								</n-tag>
 							</td>
 							<td class="max-w-75">
-								<div v-if="isAdmin" class="flex justify-end">
-									<UserDropdown :user @success="getUsers" @loading="updateLoadingDelete" />
+								<div class="flex items-center justify-end gap-2">
+									<EntityDetailsButton
+										size="tiny"
+										:order="['open']"
+										open-show-label
+										:route="routeUser(user.id)"
+										@view="routeUser(user.id).navigate()"
+									/>
+									<UserDropdown
+										v-if="isAdmin"
+										:user
+										@success="getUsers"
+										@loading="updateLoadingDelete"
+									/>
 								</div>
 							</td>
 						</tr>
@@ -104,12 +116,15 @@ import type { User } from "@/types/user"
 import { NButton, NModal, NScrollbar, NSpin, NTable, NTag, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import UserDropdown from "@/components/users/UserDropdown.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
 
 const { highlight } = defineProps<{ highlight: string | null | undefined }>()
+const { routeUser } = useNavigation()
 const TagRbacSettings = defineAsyncComponent(() => import("./TagRbacSettings.vue"))
 const SignUp = defineAsyncComponent(() => import("@/components/auth/SignUp.vue"))
 

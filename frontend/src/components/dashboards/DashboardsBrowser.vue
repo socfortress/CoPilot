@@ -14,6 +14,13 @@
 				/>
 			</n-form-item>
 
+			<n-button :disabled="!selectedCustomerCode" @click="showCustomDashboardsDrawer = true">
+				<template #icon>
+					<Icon name="carbon:dashboard" />
+				</template>
+				Custom dashboards
+			</n-button>
+
 			<n-button type="primary" :disabled="!selectedCustomerCode" @click="showAddTemplateDrawer = true">
 				<template #icon>
 					<Icon name="carbon:add" />
@@ -63,6 +70,23 @@
 				/>
 			</n-drawer-content>
 		</n-drawer>
+
+		<n-drawer
+			v-model:show="showCustomDashboardsDrawer"
+			display-directive="if"
+			:width="1080"
+			class="max-w-[92vw]"
+			:trap-focus="false"
+		>
+			<n-drawer-content title="Custom dashboards" closable :native-scrollbar="false">
+				<CustomDashboardsSection
+					:customer-code="selectedCustomerCode"
+					:event-sources-list
+					:enabled-dashboards
+					@refresh-enabled-dashboards="refreshEnabledDashboards"
+				/>
+			</n-drawer-content>
+		</n-drawer>
 	</div>
 </template>
 
@@ -77,17 +101,19 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
 import { getApiErrorMessage } from "@/utils"
+import CustomDashboardsSection from "./custom/CustomDashboardsSection.vue"
 import DashboardCategoriesSection from "./DashboardCategoriesSection.vue"
 import EnabledDashboardsSection from "./EnabledDashboardsSection.vue"
 
 const message = useMessage()
-const { globalCustomerCode } = useGlobalCustomerFilter()
+const { globalCustomerCode, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 
 // ── Customer selection ──────────────────────────────────────────
 const loadingCustomers = ref(false)
 const customersList = ref<Customer[]>([])
 const selectedCustomerCode = ref<string | null>(null)
 const showAddTemplateDrawer = ref(false)
+const showCustomDashboardsDrawer = ref(false)
 
 // ── Enabled dashboards (lista aggiornata da EnabledDashboardsSection via v-model) ──
 const enabledDashboards = ref<EnabledDashboard[]>([])
@@ -154,6 +180,7 @@ function refreshEnabledDashboards() {
 watch(selectedCustomerCode, code => {
 	eventSourcesList.value = []
 	showAddTemplateDrawer.value = false
+	showCustomDashboardsDrawer.value = false
 
 	if (code) {
 		getEventSources(code)
@@ -167,5 +194,12 @@ onBeforeMount(() => {
 			selectedCustomerCode.value = code
 		}
 	})
+})
+
+// An emptied global selection keeps the current customer — this view renders nothing without one.
+onGlobalCustomerFilterChange(codes => {
+	if (codes[0]) {
+		selectedCustomerCode.value = codes[0]
+	}
 })
 </script>

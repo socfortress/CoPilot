@@ -18,12 +18,16 @@
 import type { ItemProps } from "@/components/common/cards/CardStatsBars.vue"
 import type { ApiError } from "@/types/common"
 import { NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import CardStatsBars from "@/components/common/cards/CardStatsBars.vue"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
+
+const props = defineProps<{
+	customerCodes?: string[]
+}>()
 
 const CasesIcon = "carbon:ibm-secure-infrastructure-on-vpc-for-regulated-industries"
 const { routeIncidentManagementCases } = useNavigation()
@@ -46,7 +50,11 @@ function getData() {
 	loading.value = true
 
 	Api.incidentManagement.cases
-		.getCasesList({ page: 1, pageSize: 1 })
+		.getCasesList({
+			page: 1,
+			pageSize: 1,
+			customerCodes: props.customerCodes?.length ? props.customerCodes : undefined
+		})
 		.then(res => {
 			if (res.data.success) {
 				total.value = res.data.total || 0
@@ -68,4 +76,11 @@ function getData() {
 onBeforeMount(() => {
 	getData()
 })
+
+watch(
+	() => (props.customerCodes || []).slice(),
+	() => {
+		getData()
+	}
+)
 </script>

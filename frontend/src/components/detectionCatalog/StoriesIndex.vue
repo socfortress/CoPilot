@@ -26,7 +26,7 @@
 			</Badge>
 		</div>
 
-		<n-data-table :columns :data="filteredStories" :loading size="small" :row-props :pagination :scroll-x="1200" />
+		<n-data-table :columns :data="filteredStories" :loading size="small" :pagination :scroll-x="1200" />
 
 		<n-modal
 			v-model:show="showStoryModal"
@@ -50,7 +50,9 @@ import { NDataTable, NInput, NModal, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -61,12 +63,13 @@ const MAX_TACTICS_TAG = 3
 const MAX_PRODUCTS_TAG = 3
 
 const message = useMessage()
+const { routeDetectionCatalogStory } = useNavigation()
 const stories = ref<CatalogStoryRow[]>([])
 const loading = ref(false)
 const filter = ref("")
+const dFormats = useSettingsStore().dateFormat
 const showStoryModal = ref(false)
 const selectedStoryName = ref<string | null>(null)
-const dFormats = useSettingsStore().dateFormat
 
 const pagination = {
 	pageSize: 25,
@@ -86,13 +89,6 @@ const filteredStories = computed<CatalogStoryRow[]>(() => {
 			.includes(q)
 	)
 })
-
-function rowProps(row: CatalogStoryRow) {
-	return {
-		class: "cursor-pointer",
-		onClick: () => openStoryDetail(row.name)
-	}
-}
 
 function openStoryDetail(storyName: string) {
 	selectedStoryName.value = storyName
@@ -190,6 +186,21 @@ const columns: DataTableColumns<CatalogStoryRow> = [
 			) : (
 				<span class="text-tertiary text-xs">—</span>
 			)
+	},
+	{
+		title: "",
+		key: "actions",
+		width: 110,
+		fixed: "right",
+		render: row => (
+			<div onClick={e => e.stopPropagation()}>
+				<EntityDetailsButton
+					size="tiny"
+					route={routeDetectionCatalogStory(row.name)}
+					onView={() => openStoryDetail(row.name)}
+				/>
+			</div>
+		)
 	}
 ]
 

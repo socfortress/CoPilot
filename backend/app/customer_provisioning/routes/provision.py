@@ -30,6 +30,7 @@ from app.customer_provisioning.services.provision import provision_wazuh_worker
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
+from app.middleware.customer_access import verify_customer_code_access
 
 customer_provisioning_router = APIRouter()
 
@@ -299,7 +300,10 @@ async def get_subscriptions_route():
     "/provision/{customer_code}",
     response_model=CustomersMetaResponse,
     description="Get Customer Meta",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_meta(
     customer_code: str,
@@ -373,7 +377,10 @@ async def provision_dashboards_route(
     "/update/office365_org_id/{customer_code}",
     response_model=UpdateOffice365OrgIdResponse,
     description="Update Office 365 organization ID",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def update_office_365_org_id(
     customer_code: str,
@@ -413,7 +420,10 @@ async def update_office_365_org_id(
     "/edr_install_commands/{customer_code}",
     response_model=EDRInstallCommandsResponse,
     description="Generate the Windows and Linux EDR agent install commands for a customer",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_edr_install_commands(
     customer_code: str,

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import HTTPException
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
@@ -53,6 +55,25 @@ async def custom_http_exception_handler(request: Request, exc: HTTPException):
     )
 
 
+# FastAPI prefixes every `loc` with where the value came from; that is plumbing
+# detail, not something to show an analyst.
+_REQUEST_LOCATIONS = ("body", "query", "path", "header", "cookie")
+# Pydantic 2 prefixes messages raised by custom validators with this.
+_PYDANTIC_VALUE_ERROR_PREFIX = "Value error, "
+
+
+def _describe(error: dict, loc: tuple) -> Optional[str]:
+    """Render one Pydantic error as `field.path: reason`, or None if it says nothing."""
+    raw_message = str(error.get("msg") or "").strip()
+    if not raw_message:
+        return None
+    raw_message = raw_message.removeprefix(_PYDANTIC_VALUE_ERROR_PREFIX)
+
+    parts = loc[1:] if loc and loc[0] in _REQUEST_LOCATIONS else loc
+    path = ".".join(str(part) for part in parts)
+    return f"{path}: {raw_message}" if path else raw_message
+
+
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """
     Handles validation exceptions and logs the error.
@@ -68,7 +89,10 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     details = []
 
     for error in errors:
-        field = error["loc"][-1]
+        loc = error.get("loc") or ()
+        # `loc` entries are ints for list indices; ValidationErrorItem.field is a
+        # str and Pydantic 2 will not coerce, so stringify before handing it over.
+        field = str(loc[-1]) if loc else "body"
         try:
             error_type = ErrorType(error["type"])
         except ValueError:
@@ -77,7 +101,15 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             # GENERAL so unknown codes still produce a 422 with a sensible
             # message instead of crashing the handler.
             error_type = ErrorType.GENERAL
-        details.append(ValidationErrorItem(field=field, error_type=error_type))
+
+        # GENERAL is the "we have no specific wording" bucket, and its canned text
+        # is "Invalid value." — naming neither the field nor the reason. That
+        # opacity is what made #960 unreadable from the UI, so whenever we land on
+        # GENERAL (unmapped code, or a custom validator's `value_error`) carry
+        # Pydantic's own message through instead. Every other code keeps its
+        # friendlier hand-written wording.
+        message = _describe(error, loc) if error_type is ErrorType.GENERAL else None
+        details.append(ValidationErrorItem(field=field, error_type=error_type, message=message))
 
     main_message = details[0].message if details else "Validation Error"
 

@@ -19,11 +19,13 @@
 				</div>
 			</div>
 
-			<div class="flex flex-wrap items-center gap-2">
+			<div class="flex flex-wrap items-start gap-2">
 				<n-select
 					v-model:value="filterCustomerCode"
 					placeholder="Filter by Customer"
+					multiple
 					clearable
+					:max-tag-count="2"
 					:options="customerOptions"
 					:loading="loadingCustomers"
 					class="min-w-50 flex-1"
@@ -62,54 +64,13 @@
 			</div>
 
 			<div v-else class="grid grid-cols-1 gap-4 @4xl:grid-cols-2">
-				<GitHubAuditCard
-					v-for="config in configs"
-					:key="config.id"
-					:config
-					@click="openDetail(config)"
-					@edit="openEditForm"
-					@audit-complete="loadConfigs"
-				/>
+				<GitHubAuditCard v-for="config in configs" :key="config.id" :config @updated="loadConfigs" />
 			</div>
 		</n-spin>
 
 		<n-drawer v-model:show="showForm" :width="600" placement="right" class="max-w-[98vw]" display-directive="show">
-			<n-drawer-content
-				:title="selectedConfig ? 'Edit Configuration' : 'New GitHub Audit Configuration'"
-				closable
-				:native-scrollbar="false"
-			>
-				<GitHubAuditConfigForm
-					v-if="showForm"
-					:config="selectedConfig"
-					@saved="onConfigSaved"
-					@cancel="showForm = false"
-				/>
-			</n-drawer-content>
-		</n-drawer>
-
-		<n-drawer
-			v-model:show="showDetail"
-			:width="800"
-			placement="right"
-			class="max-w-[98vw]"
-			display-directive="show"
-		>
-			<n-drawer-content v-if="selectedConfig" closable :native-scrollbar="false">
-				<template #header>
-					<div class="flex items-center gap-3">
-						<Icon name="codicon:organization" :size="24" />
-						<span>{{ selectedConfig.organization }}</span>
-						<n-tag v-if="!selectedConfig.enabled" type="warning" size="small">Disabled</n-tag>
-					</div>
-				</template>
-
-				<GitHubAuditDetail
-					:config="selectedConfig"
-					@updated="loadConfigs"
-					@edit="openEditForm"
-					@close="showDetail = false"
-				/>
+			<n-drawer-content title="New GitHub Audit Configuration" closable :native-scrollbar="false">
+				<GitHubAuditConfigForm v-if="showForm" @saved="onConfigSaved" @cancel="showForm = false" />
 			</n-drawer-content>
 		</n-drawer>
 
@@ -133,7 +94,8 @@ import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers.ts"
 import type { GitHubAuditConfig } from "@/types/github-audit"
 import axios from "axios"
-import { NButton, NDrawer, NDrawerContent, NEmpty, NInput, NSelect, NSpin, NTag, useMessage } from "naive-ui"
+import _isEqual from "lodash/isEqual"
+import { NButton, NDrawer, NDrawerContent, NEmpty, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -141,7 +103,6 @@ import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.t
 import { getApiErrorMessage } from "@/utils"
 import GitHubAuditCard from "./GitHubAuditCard.vue"
 import GitHubAuditConfigForm from "./GitHubAuditConfigForm.vue"
-import GitHubAuditDetail from "./GitHubAuditDetail.vue"
 import GitHubAuditInfo from "./GitHubAuditInfo.vue"
 
 const AddIcon = "ion:add"
@@ -149,16 +110,14 @@ const SearchIcon = "ion:search-outline"
 const InfoIcon = "ion:information-circle-outline"
 
 const message = useMessage()
-const { globalCustomerCode } = useGlobalCustomerFilter()
+const { globalCustomerCodes, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 const loading = ref(false)
 const configs = ref<GitHubAuditConfig[]>([])
 const showForm = ref(false)
-const showDetail = ref(false)
 const showInfo = ref(false)
-const selectedConfig = ref<GitHubAuditConfig | null>(null)
 
 // Filters
-const filterCustomerCode = ref<string | null>(null)
+const filterCustomerCode = ref<string[]>([])
 const filterStatus = ref<string | null>(null)
 const filterOrganization = ref<string | null>(null)
 const customerOptions = ref<{ label: string; value: string }[]>([])
@@ -196,7 +155,7 @@ async function loadConfigs() {
 
 	loading.value = true
 	try {
-		const response = await Api.githubAudit.getConfigs(filterCustomerCode.value || null, abortController.signal)
+		const response = await Api.githubAudit.getConfigs(filterCustomerCode.value, abortController.signal)
 		if (response.data.configs) {
 			let filteredConfigs = response.data.configs
 
@@ -225,19 +184,7 @@ async function loadConfigs() {
 }
 
 function openCreateForm() {
-	selectedConfig.value = null
 	showForm.value = true
-}
-
-function openEditForm(config: GitHubAuditConfig) {
-	selectedConfig.value = config
-	showDetail.value = false
-	showForm.value = true
-}
-
-function openDetail(config: GitHubAuditConfig) {
-	selectedConfig.value = config
-	showDetail.value = true
 }
 
 function onConfigSaved() {
@@ -245,16 +192,19 @@ function onConfigSaved() {
 	loadConfigs()
 }
 
-function applyGlobalCustomerCodeFilter() {
-	if (globalCustomerCode.value && !filterCustomerCode.value) {
-		filterCustomerCode.value = globalCustomerCode.value
-		loadConfigs()
-	}
-}
-
 onBeforeMount(() => {
-	loadConfigs()
 	loadCustomers()
-	applyGlobalCustomerCodeFilter()
+	// Seed the filter *before* the first fetch — assigning it afterwards fires an unfiltered
+	// request that the filtered one immediately aborts.
+	filterCustomerCode.value = [...globalCustomerCodes.value]
+	loadConfigs()
+})
+
+// The endpoint filters on a customer_codes list, so the whole selection carries over.
+onGlobalCustomerFilterChange(codes => {
+	if (_isEqual(codes, filterCustomerCode.value)) return
+
+	filterCustomerCode.value = [...codes]
+	loadConfigs()
 })
 </script>

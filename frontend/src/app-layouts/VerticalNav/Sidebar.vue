@@ -73,7 +73,7 @@ onMounted(() => {
 
 .sidebar {
 	position: fixed;
-	z-index: 5;
+	z-index: 100;
 	top: 0;
 	left: 0;
 	width: var(--sidebar-open-width);

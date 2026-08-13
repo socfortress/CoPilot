@@ -23,17 +23,21 @@ from app.db.db_session import get_db
 from app.incidents.models import CaseTemplate
 from app.incidents.schema.case_templates import CaseTemplateCreate
 from app.incidents.schema.case_templates import CaseTemplateLibraryEntry
+from app.incidents.schema.case_templates import CaseTemplateLibraryEntryResponse
 from app.incidents.schema.case_templates import CaseTemplateLibraryListResponse
 from app.incidents.schema.case_templates import CaseTemplateLibraryRefreshResponse
 from app.incidents.schema.case_templates import CaseTemplateLibraryTask
 from app.incidents.schema.case_templates import CaseTemplateListResponse
 from app.incidents.schema.case_templates import CaseTemplateOperationResponse
+from app.incidents.schema.case_templates import CaseTemplateSuggestionListResponse
 from app.incidents.schema.case_templates import CaseTemplateTaskCreate
 from app.incidents.schema.case_templates import CaseTemplateTaskOperationResponse
 from app.incidents.schema.case_templates import CaseTemplateTaskUpdate
 from app.incidents.schema.case_templates import CaseTemplateUpdate
 from app.incidents.services import case_templates as service
 from app.incidents.services import template_library
+from app.incidents.services import template_suggestions as suggestion_service
+from app.incidents.services.template_suggestions import DEFAULT_SUGGESTION_LIMIT
 
 # Scope guard applied to every route on this router. Returns the username,
 # which we use as the audit actor for create operations.
@@ -147,6 +151,26 @@ async def list_library_entries_endpoint() -> CaseTemplateLibraryListResponse:
         )
 
 
+@case_templates_router.get(
+    "/library/{key}",
+    response_model=CaseTemplateLibraryEntryResponse,
+    description="Fetch a single library entry by its key. Read-only; serves the library entry detail page. 404 when the key isn't cached.",
+)
+async def get_library_entry_endpoint(key: str) -> CaseTemplateLibraryEntryResponse:
+    entry = await template_library.get_library_entry(key)
+    if entry is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Library entry '{key}' not found. Try POST /library/refresh if you just pushed it.",
+        )
+
+    return CaseTemplateLibraryEntryResponse(
+        entry=_library_entry_to_response(entry),
+        success=True,
+        message=f"Retrieved library entry '{key}'",
+    )
+
+
 @case_templates_router.post(
     "/library/refresh",
     response_model=CaseTemplateLibraryRefreshResponse,
@@ -227,8 +251,62 @@ async def import_library_entry_endpoint(
 
 
 # ---------------------------------------------------------------------------
+# Smart suggestions (issue #935)
+#
+# Also a static path, so it belongs above /{template_id} for the same reason
+# /library does.
+# ---------------------------------------------------------------------------
+
+
+@case_templates_router.get(
+    "/suggest",
+    response_model=CaseTemplateSuggestionListResponse,
+    description=(
+        "Rank case templates against the context of the case about to be created. "
+        "Pass alert_id when creating a case from an alert for full contextual scoring "
+        "(tags, MITRE techniques, rule groups, auto-apply conditions, title keywords); "
+        "pass customer_code and/or source for the manual-creation path, which scores on "
+        "scope, usage history and default status only. Never fails the caller: a lookup "
+        "error returns success=false with an empty list so the create-case form still works."
+    ),
+)
+async def suggest_case_templates(
+    alert_id: Optional[int] = Query(
+        None,
+        description=(
+            "Originating alert. When set, customer_code and source are read from the alert "
+            "itself and any values passed alongside are ignored."
+        ),
+    ),
+    customer_code: Optional[str] = Query(
+        None,
+        description="Customer context for the manual-creation path. Ignored when alert_id is set.",
+    ),
+    source: Optional[str] = Query(
+        None,
+        description="Alert-source context for the manual-creation path. Ignored when alert_id is set.",
+    ),
+    limit: int = Query(
+        DEFAULT_SUGGESTION_LIMIT,
+        ge=1,
+        le=50,
+        description="Maximum suggestions returned. total_candidates reports how many applied before the cut.",
+    ),
+    db: AsyncSession = Depends(get_db),
+) -> CaseTemplateSuggestionListResponse:
+    return await suggestion_service.suggest_templates(
+        session=db,
+        alert_id=alert_id,
+        customer_code=customer_code,
+        source=source,
+        limit=limit,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Wildcard /{template_id} routes — must be declared AFTER the static
-# /library routes above for the same reason FastAPI route ordering matters.
+# /library and /suggest routes above for the same reason FastAPI route
+# ordering matters.
 # ---------------------------------------------------------------------------
 
 

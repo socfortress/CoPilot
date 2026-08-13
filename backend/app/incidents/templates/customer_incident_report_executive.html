@@ -1,0 +1,52 @@
+{# EXECUTIVE report — a one-look synthesis of the whole period for management:
+   headline KPIs + service-metrics table + a single status donut. No per-case
+   detail, no trend deep-dive. #}
+{% extends "_report_base.html" %}
+
+{% block cover_eyebrow %}Executive Brief{% endblock %}
+{% block cover_title %}SOC Activity — Executive Summary{% endblock %}
+{% block cover_kind %}<div class="kind">Executive Summary</div>{% endblock %}
+
+{% block content %}
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">›</span><span class="t">Executive Summary</span></div>
+  <div class="section-sub">{{ period.from }} — {{ period.to }}</div>
+  <p class="lead">
+    At-a-glance summary of the SOC monitoring service activity for {{ customer.name }} during the
+    reporting period. Figures below aggregate every alert and case handled in the window.
+  </p>
+
+  <!-- Headline KPIs -->
+  <div class="kpi-row">
+    <div class="kpi"><div class="num">{{ metrics.total_alerts }}</div><div class="lbl">Alerts received</div></div>
+    <div class="kpi"><div class="num">{{ metrics.reported_cases }}</div><div class="lbl">Cases reported</div></div>
+    <div class="kpi"><div class="num">{{ metrics.closed_cases }}</div><div class="lbl">Cases closed</div></div>
+    <div class="kpi"><div class="num">{{ metrics.open_cases }}</div><div class="lbl">Cases pending</div></div>
+  </div>
+
+  <!-- Service metrics breakdown -->
+  <div class="bar">Service Metrics</div>
+  <table class="metrics">
+    <tr class="grp"><td>Total alerts received</td><td class="v">{{ metrics.total_alerts }}</td></tr>
+    {% for source, count in alerts_by_source %}
+    <tr class="sub"><td class="k">• {{ source }}</td><td class="v">{{ count }}</td></tr>
+    {% endfor %}
+
+    <tr class="grp"><td>Cases reported</td><td class="v">{{ metrics.reported_cases }}</td></tr>
+    <tr class="sub"><td class="k">• Incidents [INC]</td><td class="v">{{ cases_by_type.INC }}</td></tr>
+    <tr class="sub"><td class="k">• Investigations [RFI]</td><td class="v">{{ cases_by_type.RFI }}</td></tr>
+    <tr class="sub"><td class="k">• Configurations [CONF]</td><td class="v">{{ cases_by_type.CONF }}</td></tr>
+    <tr class="sub"><td class="k">• Cyber Intelligence [CTI]</td><td class="v">{{ cases_by_type.CTI }}</td></tr>
+    {% if cases_by_type.OTROS %}<tr class="sub"><td class="k">• Other</td><td class="v">{{ cases_by_type.OTROS }}</td></tr>{% endif %}
+
+    <tr class="grp"><td>Cases closed in period</td><td class="v">{{ metrics.closed_cases }}</td></tr>
+    <tr class="grp"><td>Cases pending resolution</td><td class="v">{{ metrics.open_cases }}</td></tr>
+  </table>
+
+  {% if has_alerts and charts.alerts_by_status %}
+  <div class="chart-block" style="margin-top:22px;"><img src="{{ charts.alerts_by_status }}" alt="alerts by status" />
+    <div class="chart-cap">Alert distribution by status</div></div>
+  {% elif not has_alerts %}
+  <div class="empty">No alerts were recorded for this customer in the selected period.</div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,24 @@
+{
+    "name": "CRITICAL SERVICES CHECK",
+    "orgID": "REPLACE_ORG_ID",
+    "type": "threshold",
+    "status": "active",
+    "every": "1m",
+    "offset": "0s",
+    "statusMessageTemplate": "${ r._level }: ${ r._check_name }\nHost: ${r.host}\nService: ${ r.name } has failed\nActive Code: ${ r.active_code }",
+    "query": {
+        "text": "from(bucket: \"REPLACE_BUCKET\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"systemd_units\")\n  |> filter(fn: (r) => r[\"_field\"] == \"active_code\")\n  |> filter(fn: (r) => r[\"name\"] == \"graylog-server.service\" or r[\"name\"] == \"grafana-server.service\" or r[\"name\"] == \"mongod.service\" or r[\"name\"] == \"nginx.service\" or r[\"name\"] == \"socfortress-wazuh-utils.service\" or r[\"name\"] == \"socfortress-workerprovisioning.service\" or r[\"name\"] == \"telegraf.service\" or r[\"name\"] == \"velociraptor_server.service\" or r[\"name\"] == \"wazuh-dashboard.service\" or r[\"name\"] == \"wazuh-indexer.service\" or r[\"name\"] == \"wazuh-manager.service\" or r[\"name\"] == \"haproxy.service\" or r[\"name\"] == \"fluent-bit.service\" or r[\"name\"] == \"docker.service\")\n  |> aggregateWindow(every: 1m, fn: last, createEmpty: false)\n  |> yield(name: \"last\")",
+        "editMode": "advanced",
+        "name": ""
+    },
+    "thresholds": [
+        {
+            "allValues": false,
+            "level": "CRIT",
+            "value": 2,
+            "type": "greater"
+        }
+    ],
+    "tags": [],
+    "labels": []
+}

@@ -1,0 +1,71 @@
+{
+    "name": "MEMORY CHECK",
+    "orgID": "REPLACE_ORG_ID",
+    "type": "threshold",
+    "status": "active",
+    "every": "1m",
+    "offset": "0s",
+    "statusMessageTemplate": "${ r._level }: ${ r._check_name }\nHost: ${r.host}\nMemory Available(%): ${ r.available_percent }",
+    "query": {
+        "text": "from(bucket: \"REPLACE_BUCKET\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"mem\")\n  |> filter(fn: (r) => r[\"_field\"] == \"available_percent\")\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+        "editMode": "builder",
+        "name": "",
+        "builderConfig": {
+            "buckets": [
+                "REPLACE_BUCKET"
+            ],
+            "tags": [
+                {
+                    "key": "_measurement",
+                    "values": [
+                        "mem"
+                    ],
+                    "aggregateFunctionType": "filter"
+                },
+                {
+                    "key": "_field",
+                    "values": [
+                        "available_percent"
+                    ],
+                    "aggregateFunctionType": "filter"
+                },
+                {
+                    "key": "host",
+                    "values": [],
+                    "aggregateFunctionType": "filter"
+                }
+            ],
+            "functions": [
+                {
+                    "name": "mean"
+                }
+            ],
+            "aggregateWindow": {
+                "period": "1m",
+                "fillValues": false
+            }
+        }
+    },
+    "thresholds": [
+        {
+            "allValues": false,
+            "level": "INFO",
+            "value": 25,
+            "type": "lesser"
+        },
+        {
+            "allValues": false,
+            "level": "WARN",
+            "value": 15,
+            "type": "lesser"
+        },
+        {
+            "allValues": false,
+            "level": "CRIT",
+            "value": 10,
+            "type": "lesser"
+        }
+    ],
+    "tags": [],
+    "labels": []
+}

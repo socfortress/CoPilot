@@ -111,6 +111,15 @@ function summary(event: CaseEvent): string {
 			return `Task ${p.title ?? `#${p.task_id}`}: ${p.from_status ?? "—"} → ${p.to_status ?? "—"}`
 		case "task_commented":
 			return `Evidence added on task: ${p.title ?? `#${p.task_id}`}`
+		case "task_assigned": {
+			// Mirrors from_status/to_status on sibling task events rather than
+			// case_assigned's bare from/to, so task payloads stay self-consistent.
+			const task = p.title ?? `#${p.task_id}`
+			if (!p.to_assignee) return `Task unassigned: ${task}`
+			return p.from_assignee
+				? `Task ${task} reassigned from ${p.from_assignee} to ${p.to_assignee}`
+				: `Task ${task} assigned to ${p.to_assignee}`
+		}
 		default:
 			return String(event.event_type).replace(/_/g, " ")
 	}
@@ -135,6 +144,7 @@ function timelineType(event: CaseEvent): "default" | "success" | "info" | "warni
 		case "task_added":
 		case "task_commented":
 		case "case_assigned":
+		case "task_assigned":
 		default:
 			return "default"
 	}
@@ -164,6 +174,8 @@ function iconFor(event: CaseEvent): string {
 			return "carbon:checkmark"
 		case "task_commented":
 			return "carbon:notebook"
+		case "task_assigned":
+			return "carbon:user-avatar"
 		default:
 			return "carbon:circle-dash"
 	}

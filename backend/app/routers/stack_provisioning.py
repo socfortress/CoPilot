@@ -15,6 +15,12 @@ from app.stack_provisioning.graylog.routes.sentinelone import (
 from app.stack_provisioning.graylog.routes.sonicwall import (
     stack_provisioning_graylog_sonicwall_router,
 )
+from app.stack_provisioning.influxdb.routes.decommission import (
+    stack_decommissioning_influxdb_router,
+)
+from app.stack_provisioning.influxdb.routes.provision import (
+    stack_provisioning_influxdb_router,
+)
 
 # Instantiate the APIRouter
 router = APIRouter()
@@ -52,4 +58,18 @@ router.include_router(
     stack_provisioning_graylog_sentinelone_router,
     prefix="/stack_provisioning",
     tags=["Stack Provisioning"],
+)
+
+# Include the InfluxDB Stack Provisioning related routes
+router.include_router(
+    stack_provisioning_influxdb_router,
+    prefix="/stack_provisioning",
+    tags=["Stack Provisioning"],
+)
+
+# Include the InfluxDB Stack Decommissioning related routes
+router.include_router(
+    stack_decommissioning_influxdb_router,
+    prefix="/stack_decommissioning",
+    tags=["Stack Decommissioning"],
 )

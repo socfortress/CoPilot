@@ -24,13 +24,18 @@ from app.auth.schema.auth import UpdateUserRoleRequest
 from app.auth.schema.auth import UserLoginResponse
 from app.auth.schema.auth import UserResponse
 from app.auth.schema.user import UserBaseResponse
+from app.auth.schema.user import UserDetailResponse
 from app.auth.services.totp import is_2fa_enabled
 from app.auth.services.universal import delete_user
 from app.auth.services.universal import find_user
+from app.auth.services.universal import get_user_by_id
 from app.auth.services.universal import select_all_users
 from app.auth.services.universal import update_last_login
+from app.auth.services.universal import user_to_base_dict
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.middleware.search_query import SearchParams
+from app.middleware.search_query import search_query
 
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
@@ -323,9 +328,15 @@ async def login(user: UserLogin, session: AsyncSession = Depends(get_db)):
     description="Get all users",
     dependencies=[Security(AuthHandler().require_any_scope("analyst", "admin"))],
 )
-async def get_users(session: AsyncSession = Depends(get_db)):
+async def get_users(
+    search_params: SearchParams = Depends(search_query),
+    session: AsyncSession = Depends(get_db),
+):
     """
-    Retrieve all users from the database.
+    Retrieve users from the database.
+
+    ``search``/``limit`` (see ``search_query``) narrow the result to users whose
+    username or email contains the string and cap the count — used by the search palette.
 
     Parameters:
     - session: AsyncSession - The database session.
@@ -337,25 +348,30 @@ async def get_users(session: AsyncSession = Depends(get_db)):
     - None
 
     """
-    users = await select_all_users()
+    users = await select_all_users(search=search_params.search, limit=search_params.limit)
 
-    # Transform users to include role_name
-    user_list = []
-    for user in users:
-        user_dict = {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "role_id": user.role_id,
-            "role_name": user.role.name if user.role else None,
-            "last_login_at": user.last_login_at,
-        }
-        user_list.append(user_dict)
+    # Transform users to include role_name — single source of truth for the mapping
+    user_list = [user_to_base_dict(user) for user in users]
 
     return UserBaseResponse(
         users=user_list,
         message="Users retrieved successfully",
         success=True,
+    )
+
+
+@auth_router.get(
+    "/users/{user_id}",
+    response_model=UserDetailResponse,
+    description="Get a single user by id",
+    dependencies=[Security(AuthHandler().require_any_scope("analyst", "admin"))],
+)
+async def get_user_route(user_id: int) -> UserDetailResponse:
+    user = await get_user_by_id(user_id)
+    return UserDetailResponse(
+        success=True,
+        message="User retrieved successfully",
+        user=user,
     )
 
 

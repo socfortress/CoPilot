@@ -1,19 +1,15 @@
 <template>
 	<div class="page">
-		<div class="flex items-center justify-between">
-			<n-button text size="small" :focusable="false" @click="routeAgent().navigate()">
-				<template #icon>
-					<Icon :name="ArrowIcon" :size="16" />
-				</template>
-				Back to agents list
-			</n-button>
-			<n-button v-if="agent" text size="small" :focusable="false" @click.stop="handleDelete">
-				<template #icon>
-					<Icon :name="DeleteIcon" :size="16" />
-				</template>
-				Delete Agent
-			</n-button>
-		</div>
+		<DetailPageHeader :back-route="routeAgent()">
+			<template #actions>
+				<n-button v-if="agent" text size="small" :focusable="false" @click.stop="handleDelete">
+					<template #icon>
+						<Icon :name="DeleteIcon" :size="16" />
+					</template>
+					Delete Agent
+				</n-button>
+			</template>
+		</DetailPageHeader>
 
 		<CardEntity class="my-4" :highlighted="agent?.critical_asset" :loading="loadingAgent">
 			<template #headerMain>
@@ -143,6 +139,7 @@ import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import { handleDeleteAgent, toggleAgentCritical } from "@/components/agents/utils"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { AgentStatus } from "@/types/agents"
@@ -167,7 +164,6 @@ const FileCollectionForm = defineAsyncComponent(
 	() => import("@/components/agents/fileCollection/FileCollectionForm.vue")
 )
 
-const ArrowIcon = "carbon:arrow-left"
 const DeleteIcon = "ph:trash"
 
 const { routeAgent } = useNavigation()

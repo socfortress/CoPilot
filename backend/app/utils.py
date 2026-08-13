@@ -16,6 +16,7 @@ from fastapi import Security
 from fastapi.exceptions import RequestValidationError
 from loguru import logger
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
@@ -85,7 +86,12 @@ class ErrorType(str, Enum):
 class ValidationErrorItem(BaseModel):
     field: str
     error_type: ErrorType
-    message: str = None  # Initialize as None
+    # Left as None to be filled in from `error_type` below. Callers that already
+    # hold a better description than the generic per-type text — the validation
+    # handler, for codes that land on GENERAL — may pass one and it is kept.
+    # Must be Optional, not a bare `str = None`: Pydantic 2 applies the default
+    # only when the key is absent and rejects an explicitly-passed None.
+    message: Optional[str] = None
 
     @model_validator(mode="after")
     def set_message(self):
@@ -122,7 +128,7 @@ class ValidationErrorItem(BaseModel):
             ErrorType.ENUM: "Value is not a valid enumeration member.",
             ErrorType.MISSING_V2: "Missing data for required field.",
         }
-        if self.error_type in error_messages:
+        if not self.message and self.error_type in error_messages:
             self.message = error_messages[self.error_type]
         return self
 
@@ -133,14 +139,20 @@ class ValidationErrorResponse(BaseModel):
 
 
 ################## ! LOGGING TO `log_entry` table ! ##################
+# Matches the varchar(5024) width of log_entries.message / .additional_info.
+_LOG_TEXT_MAX_LENGTH = 5024
+
+
 # #######! MODELS !########
 class LogEntryModel(BaseModel):
-    event_type: str = Field(..., examples=["Info"], description="Event type")
+    event_type: str = Field("Info", examples=["Info"], description="Event type")
     user_id: Optional[int] = Field(None, examples=[1], description="User ID")
-    route: str = Field(..., examples=["/wazuh_indexer/health"], description="Route")
-    method: str = Field(..., examples=["GET"], description="Method")
+    # route/method/message are nullable in the log_entries table, so keep them optional
+    # here — a legacy row with a NULL column must not fail validation for the whole page.
+    route: Optional[str] = Field(None, examples=["/wazuh_indexer/health"], description="Route")
+    method: Optional[str] = Field(None, examples=["GET"], description="Method")
     status_code: int = Field(..., examples=[200], description="Status code")
-    message: str = Field(..., examples=["Route accessed"], description="Message")
+    message: Optional[str] = Field(None, examples=["Route accessed"], description="Message")
     additional_info: Optional[str] = Field(
         None,
         examples=["Additional details here"],
@@ -149,6 +161,12 @@ class LogEntryModel(BaseModel):
 
 
 class LogRetrieveModel(LogEntryModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    # DB allows NULL on these columns; keep LogEntryModel strict for inserts
+    route: Optional[str] = None
+    method: Optional[str] = None
+    message: Optional[str] = None
     timestamp: datetime = Field(..., examples=[datetime.now()], description="Timestamp")
 
 
@@ -299,7 +317,12 @@ class Logger:
         Returns:
             None
         """
-        log_entry = LogEntry(**log_entry_model.model_dump())
+        data = log_entry_model.model_dump()
+        # log_entries.message/additional_info are varchar(5024) — truncate here once for all callers
+        for field in ("message", "additional_info"):
+            if data.get(field):
+                data[field] = data[field][:5024]
+        log_entry = LogEntry(**data)
         self.session.add(log_entry)
         await self.session.commit()
 

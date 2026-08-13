@@ -19,6 +19,7 @@ export type CaseEventType =
 	| "task_added"
 	| "task_status_changed"
 	| "task_commented"
+	| "task_assigned"
 
 // ----- CaseTemplate (admin/analyst-managed) -----
 
@@ -101,6 +102,7 @@ export interface CaseTask {
 	order_index: number
 	status: CaseTaskStatus
 	evidence_comment?: string | null
+	assigned_to?: string | null
 	completed_by?: string | null
 	completed_at?: string | null
 	created_by: string
@@ -122,6 +124,10 @@ export interface CaseTaskCreatePayload {
 export interface CaseTaskUpdatePayload {
 	status?: CaseTaskStatus
 	evidence_comment?: string | null
+	// Omitting the key leaves the current assignee untouched; sending an
+	// explicit null unassigns. The backend distinguishes the two via Pydantic's
+	// __fields_set__, so never send `assigned_to: undefined` expecting a clear.
+	assigned_to?: string | null
 }
 
 // ----- Soft-warning close response -----
@@ -184,4 +190,66 @@ export interface CaseTemplateLibraryRefreshResponse {
 	loaded: number
 	invalid_paths: string[]
 	last_refresh: string | null
+}
+
+// ---------------------------------------------------------------------------
+// Smart template suggestions (issue #935)
+//
+// Mirrors SuggestionReason / CaseTemplateSuggestion /
+// CaseTemplateSuggestionListResponse in
+// backend/app/incidents/schema/case_templates.py.
+//
+// Suggestions are a ranking *over* the templates that already exist — nothing
+// is persisted, so there is no "suggestion" entity to create, update or delete.
+// ---------------------------------------------------------------------------
+
+/**
+ * Machine-readable signal keys. Kept as a union rather than `string` so the
+ * icon/colour lookup in CaseTemplateSuggestionCard.vue fails at compile time
+ * when the backend grows a new signal, instead of silently rendering unstyled.
+ */
+export type SuggestionSignal =
+	| "condition"
+	| "condition_unverified"
+	| "customer"
+	| "source"
+	| "tag"
+	| "mitre"
+	| "mitre_parent"
+	| "mitre_name"
+	| "rule_group"
+	| "keyword"
+	| "usage"
+	| "default"
+
+export type SuggestionConfidence = "high" | "medium" | "low"
+
+/** One explainable contribution to a template's score. Rendered as a chip. */
+export interface SuggestionReason {
+	signal: SuggestionSignal
+	detail: string
+	/** Points contributed after capping. Reasons always sum to the score. */
+	points: number
+}
+
+export interface CaseTemplateSuggestion {
+	/** Full template, tasks included — the preview needs no extra request. */
+	template: CaseTemplate
+	score: number
+	confidence: SuggestionConfidence
+	/**
+	 * This template's auto-apply condition fired for this alert. Such templates
+	 * are returned ahead of every other suggestion regardless of score — the
+	 * same partition the backend's auto-apply uses. Do not re-sort the list by
+	 * score alone, or the panel will disagree with what applying would do.
+	 */
+	condition_matched: boolean
+	/** Highest-scoring signal first. */
+	reasons: SuggestionReason[]
+}
+
+export interface CaseTemplateSuggestionListResponse {
+	suggestions: CaseTemplateSuggestion[]
+	/** Applicable templates before `limit` was applied. */
+	total_candidates: number
 }

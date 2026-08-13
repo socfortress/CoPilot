@@ -36,7 +36,14 @@
 			</div>
 		</template>
 		<template #footerExtra>
-			<div class="flex flex-row flex-wrap gap-3">
+			<div class="flex flex-wrap items-center gap-2">
+				<EntityDetailsButton
+					size="small"
+					:order="['open']"
+					open-show-label
+					:route="routeSchedulerJob(job.id)"
+					@view="routeSchedulerJob(job.id).navigate()"
+				/>
 				<JobActions :job size="small" />
 			</div>
 		</template>
@@ -48,13 +55,17 @@ import type { Job } from "@/types/scheduler"
 import { NTooltip } from "naive-ui"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import JobActions from "./JobActions.vue"
 import NextJobTimeTooltip from "./NextJobTimeTooltip.vue"
 
 const { job } = defineProps<{ job: Job }>()
+
+const { routeSchedulerJob } = useNavigation()
 
 const TimeIcon = "carbon:time"
 

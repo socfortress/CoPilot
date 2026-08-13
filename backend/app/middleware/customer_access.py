@@ -4,6 +4,7 @@ from typing import Optional
 
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,15 +17,36 @@ from app.db.db_session import get_db
 
 class CustomerAccessHandler:
     async def get_user_accessible_customers(self, user: User, session: AsyncSession) -> List[str]:
-        """Get all customer codes accessible to a user"""
-        # Admin and analyst users have access to all customers
-        if user.role_id in [RoleEnum.admin, RoleEnum.analyst]:
+        """Get all customer codes accessible to a user.
+
+        Returns ``["*"]`` for deployment-wide access, or a concrete list of codes.
+
+        Roles differ in how an *empty* ``user_customer_access`` set is read, and the
+        difference is deliberate:
+
+        - **admin** — always deployment-wide. Assignments are never consulted, so an
+          admin cannot lock themselves out of the tenant they administer.
+        - **analyst** — scoped to their assignments *when they have any*, otherwise
+          deployment-wide. Assigning customers to an analyst is what opts that analyst
+          into scoping (#1050); without this, an upgrade would silently strip every
+          existing analyst of all access, since no deployment has assigned them rows.
+        - **customer_user** — always scoped to their assignments, and no assignments
+          means no access. A portal user must never fall back to seeing everything.
+        """
+        # Admins are unconditionally deployment-wide.
+        if user.role_id == RoleEnum.admin:
             return ["*"]  # Wildcard for all customers
 
-        # Customer users only see their assigned customers
-        if user.role_id == RoleEnum.customer_user:
+        if user.role_id in [RoleEnum.analyst, RoleEnum.customer_user]:
             result = await session.execute(select(UserCustomerAccess.customer_code).where(UserCustomerAccess.user_id == user.id))
-            return result.scalars().all()
+            assigned_customers = list(result.scalars().all())
+
+            # An unassigned analyst keeps the deployment-wide access they had before
+            # scoping existed; an unassigned portal user gets nothing.
+            if not assigned_customers and user.role_id == RoleEnum.analyst:
+                return ["*"]
+
+            return assigned_customers
 
         return []  # No access by default
 
@@ -97,6 +119,15 @@ class CustomerAccessHandler:
         # No access / requested subset resolved to nothing - return empty result
         return base_query.where(False)
 
+    async def enforce_customer_access(self, user: User, customer_code: str, session: AsyncSession) -> None:
+        """Raise 403 unless ``user`` may see ``customer_code``.
+
+        The counterpart to ``filter_query_by_customer_access`` for single-tenant
+        routes, where there is no query to narrow — the tenant is named in the path.
+        """
+        if not await self.check_customer_access(user, customer_code, session):
+            raise HTTPException(status_code=403, detail=f"Access denied to customer {customer_code}")
+
     def require_customer_access(self, customer_code: Optional[str] = None):
         """FastAPI dependency to enforce customer access"""
 
@@ -111,3 +142,35 @@ class CustomerAccessHandler:
 
 # Create a singleton instance
 customer_access_handler = CustomerAccessHandler()
+
+
+async def verify_customer_code_access(
+    customer_code: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> str:
+    """Route dependency enforcing access to the ``{customer_code}`` path parameter.
+
+    Add to ``dependencies=[...]`` alongside the scope check on any route keyed by a
+    customer code: the scope check answers "may this role reach the route at all",
+    this answers "is this caller entitled to *this* tenant".
+    """
+    await customer_access_handler.enforce_customer_access(current_user, customer_code, session)
+    return customer_code
+
+
+async def verify_optional_customer_code_access(
+    customer_code: Optional[str] = Query(None),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> Optional[str]:
+    """Route dependency for a ``?customer_code=`` filter that is optional.
+
+    Enforces access to the code when one is supplied, so a scoped caller cannot
+    read another tenant by naming it. It deliberately does **not** constrain the
+    no-code case: that means "everything the caller may see", and narrowing an
+    aggregate is the calling service's job, not a dependency's.
+    """
+    if customer_code:
+        await customer_access_handler.enforce_customer_access(current_user, customer_code, session)
+    return customer_code

@@ -1,5 +1,7 @@
 from fastapi import APIRouter
 
+from app.customer_portal.routes.ai_reports import customer_portal_ai_reports_router
+from app.customer_portal.routes.branding import customer_portal_branding_router
 from app.customer_portal.routes.dashboard import customer_portal_dashboard_router
 from app.customer_portal.routes.settings import customer_portal_settings_router
 
@@ -12,8 +14,20 @@ router.include_router(
     prefix="/customer_portal",
     tags=["Customer Portal Settings"],
 )
+# Per-customer branding overrides + the authenticated "which branding do I render?" lookup
+router.include_router(
+    customer_portal_branding_router,
+    prefix="/customer_portal",
+    tags=["Customer Portal Branding"],
+)
 router.include_router(
     customer_portal_dashboard_router,
     prefix="/customer_portal",
     tags=["Customer Portal Dashboard"],
+)
+# Read-only AI Analyst findings surfaced to end customers
+router.include_router(
+    customer_portal_ai_reports_router,
+    prefix="/customer_portal",
+    tags=["Customer Portal AI Reports"],
 )

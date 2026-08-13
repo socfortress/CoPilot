@@ -15,13 +15,21 @@ Channels:
               downstream provider's terminal state. Email, Slack,
               Teams, etc. all flow through this single channel via
               Shuffle's catalog of authenticated apps.
+  - webhook : Direct HTTP POST/PUT to any URL the customer configures
+              on the route (automation platforms, chat incoming
+              webhooks, a custom endpoint, …). No Shuffle in the path.
+              By default sends a structured JSON object; if the route
+              supplies a rendered template, that string is sent as the
+              raw body instead so provider-specific shapes work.
 """
 
 from __future__ import annotations
 
+import json
 import time
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Tuple
 
@@ -39,6 +47,233 @@ ShuffleDispatchResult = Tuple[str, Optional[str], int, Optional[str]]
 # 30s leaves enough headroom for those without letting a stuck request
 # stall the dispatch loop indefinitely.
 _SHUFFLE_TIMEOUT_S = 30.0
+
+# Webhook delivery is fire-and-record like Shuffle. 15s is plenty for a
+# healthy automation endpoint (most respond in well under a
+# second); a slow target shouldn't stall the whole dispatch loop.
+_WEBHOOK_TIMEOUT_S = 15.0
+
+# The webhook dispatcher returns the same 4-tuple shape as Shuffle for a
+# uniform call site, but the 4th slot (a provider execution id) is always
+# None for webhooks — there's no async run to correlate to.
+WebhookDispatchResult = Tuple[str, Optional[str], int, Optional[str]]
+# (status, error_message, latency_ms, provider_reference)
+ResendDispatchResult = Tuple[str, Optional[str], int, Optional[str]]
+TeamsDispatchResult = Tuple[str, Optional[str], int, Optional[str]]
+
+
+# ---------------------------------------------------------------------------
+# Webhook dispatcher (direct HTTP)
+# ---------------------------------------------------------------------------
+
+
+async def dispatch_webhook(
+    *,
+    url: str,
+    method: str = "POST",
+    headers: Optional[Dict[str, str]] = None,
+    structured_payload: Dict[str, Any],
+    rendered_template: Optional[str] = None,
+) -> WebhookDispatchResult:
+    """Deliver a notification by direct HTTP request to `url`.
+
+    Body selection:
+      - When `rendered_template` is set, that string is the body. If it
+        parses as JSON we send it with `Content-Type: application/json`
+        (so Discord's `{"content": …}` / Slack's `{"text": …}` work);
+        otherwise it goes out as `text/plain`. This lets a route target
+        a provider with a strict body shape without a code change.
+      - Otherwise we POST `structured_payload` as JSON — the default
+        shape for automation platforms that consume discrete fields.
+
+    User-supplied `headers` are merged last so they can override the
+    default Content-Type when a target needs something specific.
+
+    Returns (status, error_message, latency_ms, None) — the 4th slot is
+    always None (no provider execution id for a direct webhook); it
+    exists only to match the Shuffle dispatcher's tuple shape so the
+    dispatch loop has one call-site contract.
+    """
+    method = (method or "POST").upper()
+    if method not in ("POST", "PUT"):
+        return ("failed", f"Unsupported webhook method: {method}", 0, None)
+
+    # Build the body + default content-type.
+    request_headers: Dict[str, str] = {"Accept": "application/json"}
+    content: Optional[str] = None
+    json_body: Optional[Dict[str, Any]] = None
+
+    if rendered_template is not None:
+        # Custom template path — send verbatim, JSON if it parses.
+        try:
+            parsed = json.loads(rendered_template)
+            json_body = parsed if isinstance(parsed, (dict, list)) else None
+        except ValueError:
+            json_body = None
+        if json_body is None:
+            content = rendered_template
+            request_headers["Content-Type"] = "text/plain; charset=utf-8"
+        else:
+            request_headers["Content-Type"] = "application/json"
+    else:
+        json_body = structured_payload
+        request_headers["Content-Type"] = "application/json"
+
+    # Caller headers win (auth tokens, content-type overrides, …).
+    if headers:
+        request_headers.update({str(k): str(v) for k, v in headers.items()})
+
+    started = time.monotonic()
+    try:
+        async with httpx.AsyncClient(timeout=_WEBHOOK_TIMEOUT_S) as client:
+            if json_body is not None:
+                response = await client.request(method, url, headers=request_headers, json=json_body)
+            else:
+                response = await client.request(method, url, headers=request_headers, content=content)
+        latency_ms = int((time.monotonic() - started) * 1000)
+
+        if response.status_code >= 400:
+            return (
+                "failed",
+                f"Webhook returned {response.status_code}: {response.text[:200]}",
+                latency_ms,
+                None,
+            )
+        # Any 2xx/3xx is treated as accepted — fire-and-record, we don't
+        # interpret the target's response body.
+        return ("sent", None, latency_ms, None)
+    except Exception as e:  # noqa: BLE001
+        latency_ms = int((time.monotonic() - started) * 1000)
+        logger.warning(f"Webhook dispatch failed: {e!r}")
+        return ("failed", f"{type(e).__name__}: {e}", latency_ms, None)
+
+
+# ---------------------------------------------------------------------------
+# Microsoft Teams dispatcher
+# ---------------------------------------------------------------------------
+
+_TEAMS_TIMEOUT_S = 15.0
+
+#: Teams rejects messages over 28 KB outright. AI report bodies can exceed that,
+#: so the provider truncates rather than letting the send fail.
+TEAMS_MAX_PAYLOAD_BYTES = 28 * 1024
+
+
+async def dispatch_teams(*, webhook_url: str, card: Dict[str, Any]) -> TeamsDispatchResult:
+    """POST an Adaptive Card envelope to a Teams webhook.
+
+    Returns (status, error_message, latency_ms, provider_reference). Teams
+    returns no message id, so the reference is always None — the field exists
+    for channels that do.
+
+    Teams throttles above 4 requests/second and answers 429. That is surfaced
+    distinctly from other 4xx: it means "retry later", not "your config is
+    wrong", and an operator seeing a bare 429 would reasonably check the URL.
+    """
+    started = time.monotonic()
+    try:
+        async with httpx.AsyncClient(timeout=_TEAMS_TIMEOUT_S) as client:
+            response = await client.post(
+                webhook_url,
+                headers={"Content-Type": "application/json"},
+                json=card,
+            )
+        latency_ms = int((time.monotonic() - started) * 1000)
+
+        if response.status_code == 429:
+            return (
+                "failed",
+                "Teams rate-limited this request (429). Teams throttles above ~4 requests/second.",
+                latency_ms,
+                None,
+            )
+        if response.status_code >= 400:
+            return (
+                "failed",
+                f"Teams returned {response.status_code}: {response.text[:200]}",
+                latency_ms,
+                None,
+            )
+        return ("sent", None, latency_ms, None)
+    except Exception as e:  # noqa: BLE001
+        latency_ms = int((time.monotonic() - started) * 1000)
+        logger.warning(f"Teams dispatch failed: {e!r}")
+        return ("failed", f"{type(e).__name__}: {e}", latency_ms, None)
+
+
+# ---------------------------------------------------------------------------
+# Resend dispatcher
+# ---------------------------------------------------------------------------
+
+_RESEND_TIMEOUT_S = 15.0
+
+
+async def dispatch_resend(
+    *,
+    base_url: str,
+    api_key: str,
+    from_address: str,
+    to: List[str],
+    subject: str,
+    text_body: str,
+    cc: Optional[List[str]] = None,
+    reply_to: Optional[str] = None,
+    html_body: Optional[str] = None,
+) -> ResendDispatchResult:
+    """Send one email via Resend's REST API.
+
+    Returns (status, error_message, latency_ms, message_id). Never raises —
+    the provider turns the result into a dispatch-log row.
+
+    `text_body` is always sent. `html_body` is set only for a named template
+    declaring `format="html"` (#1038); the default body is markdown-ish plain
+    text, and sending that as HTML would show the markup. When both are present
+    Resend delivers a multipart message and the client picks.
+    """
+    payload: Dict[str, Any] = {
+        "from": from_address,
+        "to": to,
+        "subject": subject,
+        "text": text_body,
+    }
+    if html_body:
+        payload["html"] = html_body
+    if cc:
+        payload["cc"] = cc
+    if reply_to:
+        payload["reply_to"] = reply_to
+
+    started = time.monotonic()
+    try:
+        async with httpx.AsyncClient(timeout=_RESEND_TIMEOUT_S) as client:
+            response = await client.post(
+                f"{base_url.rstrip('/')}/emails",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json=payload,
+            )
+        latency_ms = int((time.monotonic() - started) * 1000)
+
+        if response.status_code >= 400:
+            # Resend returns a JSON body with `message` on errors; surface it so
+            # the operator sees "domain not verified" rather than a bare 403.
+            detail = response.text[:200]
+            try:
+                parsed = response.json()
+                detail = parsed.get("message") or parsed.get("error") or detail
+            except ValueError:
+                pass
+            return ("failed", f"Resend returned {response.status_code}: {detail}", latency_ms, None)
+
+        message_id = None
+        try:
+            message_id = response.json().get("id")
+        except ValueError:
+            pass
+        return ("sent", None, latency_ms, message_id)
+    except Exception as e:  # noqa: BLE001
+        latency_ms = int((time.monotonic() - started) * 1000)
+        logger.warning(f"Resend dispatch failed: {e!r}")
+        return ("failed", f"{type(e).__name__}: {e}", latency_ms, None)
 
 
 # ---------------------------------------------------------------------------

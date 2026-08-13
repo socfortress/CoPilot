@@ -1,44 +1,54 @@
 <template>
 	<div>
-		<div v-if="badge" class="text-primary cursor-pointer leading-none" @click="showDetails = true">
-			<code class="flex items-center gap-1.75 px-1.25 py-0.5">
-				<span>{{ asset.asset_name }}</span>
-				<Icon :name="ViewIcon" :size="14" />
-			</code>
+		<div v-if="badge" class="flex items-center gap-1">
+			<code class="text-primary leading-none">{{ asset.asset_name }}</code>
+			<EntityDetailsButton
+				size="tiny"
+				:route="routeIncidentManagementAlertAsset(asset.alert_linked, asset.id)"
+				@view="openDetails()"
+			/>
 		</div>
-		<CardEntity v-else :embedded hoverable clickable @click="showDetails = true">
+		<CardEntity v-else :embedded hoverable>
 			<template #default>{{ asset.asset_name }}</template>
 			<template #mainExtra>
-				<div class="flex flex-wrap items-center gap-3">
-					<Badge type="splitted">
-						<template #label>Index</template>
-						<template #value>
-							<div class="flex h-full items-center">
-								<code
-									class="text-primary cursor-pointer leading-none"
-									@click.stop="routeIndex(asset.index_name).navigate()"
-								>
-									{{ asset.index_name }}
-									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
-								</code>
-							</div>
-						</template>
-					</Badge>
+				<div class="flex justify-between gap-2">
+					<div class="flex flex-wrap items-center gap-3">
+						<Badge type="splitted">
+							<template #label>Index</template>
+							<template #value>
+								<div class="flex h-full items-center">
+									<code
+										class="text-primary cursor-pointer leading-none"
+										@click.stop="routeIndex(asset.index_name).navigate()"
+									>
+										{{ asset.index_name }}
+										<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
+									</code>
+								</div>
+							</template>
+						</Badge>
 
-					<Badge type="splitted">
-						<template #label>Agent</template>
-						<template #value>
-							<div class="flex h-full items-center">
-								<code
-									class="text-primary cursor-pointer leading-none"
-									@click.stop="routeAgent(asset.agent_id).navigate()"
-								>
-									{{ asset.agent_id }}
-									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
-								</code>
-							</div>
-						</template>
-					</Badge>
+						<Badge type="splitted">
+							<template #label>Agent</template>
+							<template #value>
+								<div class="flex h-full items-center">
+									<code
+										class="text-primary cursor-pointer leading-none"
+										@click.stop="routeAgent(asset.agent_id).navigate()"
+									>
+										{{ asset.agent_id }}
+										<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
+									</code>
+								</div>
+							</template>
+						</Badge>
+					</div>
+
+					<EntityDetailsButton
+						size="small"
+						:route="routeIncidentManagementAlertAsset(asset.alert_linked, asset.id)"
+						@view="openDetails()"
+					/>
 				</div>
 			</template>
 		</CardEntity>
@@ -52,225 +62,31 @@
 			:title="assetNameTruncated"
 			segmented
 		>
-			<LicenseFeatureCheck
-				feature="SOCFORTRESS AI"
-				@response="
-					(() => {
-						licenseChecked = true
-						licenseResponse = $event
-					})()
-				"
-			/>
-			<n-spin :show="!licenseChecked" content-class="flex flex-wrap gap-3 px-6 py-4" :size="18">
-				<AIVelociraptorArtifactRecommendationButton
-					:index-id="asset.index_id"
-					:index-name="asset.index_name"
-					:agent-id="asset.agent_id"
-					:alert-id="asset.alert_linked"
-					:force-license-response="licenseResponse"
-				/>
-				<AIWazuhExclusionRuleButton
-					:index-id="asset.index_id"
-					:index-name="asset.index_name"
-					:alert-id="asset.alert_linked"
-					:force-license-response="licenseResponse"
-				/>
-				<AIAnalystButton
-					:index-id="asset.index_id"
-					:index-name="asset.index_name"
-					:alert-id="asset.alert_linked"
-					:force-license-response="licenseResponse"
-				/>
-			</n-spin>
-
-			<n-divider class="my-0!" />
-
-			<n-tabs type="line" animated :tabs-padding="24">
-				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<AlertAssetInfo :asset />
-				</n-tab-pane>
-				<n-tab-pane name="Context" tab="Context" display-directive="show">
-					<n-spin :show="loading" class="min-h-40">
-						<div v-if="alertContext" class="p-6 pt-3">
-							<div class="mb-4 flex flex-wrap gap-3">
-								<Badge type="splitted">
-									<template #label>id</template>
-									<template #value>#{{ alertContext.id }}</template>
-								</Badge>
-								<Badge type="splitted">
-									<template #label>source</template>
-									<template #value>
-										{{ alertContext.source }}
-									</template>
-								</Badge>
-							</div>
-
-							<CodeSource :code="alertContext.context" lang="json" />
-						</div>
-					</n-spin>
-				</n-tab-pane>
-				<n-tab-pane
-					v-if="isInvestigationAvailable"
-					name="Investigate"
-					tab="Investigate"
-					display-directive="show:lazy"
-				>
-					<div class="p-6 pt-3">
-						<div class="flex flex-wrap gap-2">
-							<ThreatIntelProcessEvaluationProvider
-								v-for="pn of processNameList"
-								:key="pn"
-								v-slot="{ openEvaluation }"
-								:process-name="pn"
-							>
-								<n-card
-									size="small"
-									embedded
-									class="hover:border-primary cursor-pointer overflow-hidden"
-									@click="openEvaluation()"
-								>
-									{{ pn }}
-								</n-card>
-							</ThreatIntelProcessEvaluationProvider>
-						</div>
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					v-if="isWazuhSource"
-					name="CoPilot Searches"
-					tab="CoPilot Searches"
-					display-directive="show:lazy"
-				>
-					<div class="p-6 pt-3">
-						<AlertAssetSearches :asset />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					v-if="isWazuhSource"
-					name="Artifact Collection"
-					tab="Artifact Collection"
-					display-directive="show:lazy"
-				>
-					<div class="p-7 pt-2">
-						<ArtifactsCollect
-							:hostname="asset.asset_name"
-							:artifacts-filter="{ hostname: asset.asset_name }"
-							hide-hostname-field
-							velociraptor-id="string"
-							hide-velociraptor-id-field
-						/>
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					v-if="isWazuhSource"
-					name="Alert Timeline"
-					tab="Alert Timeline"
-					display-directive="show:lazy"
-				>
-					<div class="p-7 pt-2">
-						<AlertDetailTimeline :asset />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane
-					v-if="isWazuhSource"
-					name="File Collection"
-					tab="File Collection"
-					display-directive="show:lazy"
-				>
-					<div class="p-7 pt-2">
-						<FileCollectionForm v-if="asset.agent_id" :agent-id="asset.agent_id" />
-
-						<n-empty v-else description="No agent associated with this asset" class="h-40" />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane v-if="isWazuhSource" name="Data Store" tab="Data Store" display-directive="show:lazy">
-					<div class="p-7 pt-2">
-						<AgentDataStore v-if="asset.agent_id" :agent-id="asset.agent_id" />
-						<n-empty v-else description="No agent associated with this asset" class="h-40" />
-					</div>
-				</n-tab-pane>
-			</n-tabs>
+			<AlertAssetOverview :asset />
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { ApiError } from "@/types/common"
-import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts"
+import type { AlertAsset } from "@/types/incidentManagement/alerts"
 import _truncate from "lodash/truncate"
-import { NCard, NDivider, NEmpty, NModal, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
-import { computed, defineAsyncComponent, ref, watch } from "vue"
-import Api from "@/api"
+import { NModal } from "naive-ui"
+import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
-import { getApiErrorMessage } from "@/utils"
+import AlertAssetOverview from "./AlertAssetOverview.vue"
 
 const { asset, embedded, badge } = defineProps<{ asset: AlertAsset; embedded?: boolean; badge?: boolean }>()
 
-const AlertAssetInfo = defineAsyncComponent(() => import("./AlertAssetInfo.vue"))
-const AlertDetailTimeline = defineAsyncComponent(() => import("./AlertDetailTimeline.vue"))
-const AlertAssetSearches = defineAsyncComponent(() => import("@/components/copilotSearches/AlertAssetSearches.vue"))
-const AIAnalystButton = defineAsyncComponent(() => import("@/components/threatIntel/AIAnalystButton.vue"))
-const AIWazuhExclusionRuleButton = defineAsyncComponent(
-	() => import("@/components/threatIntel/AIWazuhExclusionRuleButton.vue")
-)
-const AIVelociraptorArtifactRecommendationButton = defineAsyncComponent(
-	() => import("@/components/threatIntel/AIVelociraptorArtifactRecommendationButton.vue")
-)
-const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
-	() => import("@/components/threatIntel/ThreatIntelProcessEvaluationProvider.vue")
-)
-const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
-const CodeSource = defineAsyncComponent(() => import("@/components/common/CodeSource.vue"))
-const LicenseFeatureCheck = defineAsyncComponent(() => import("@/components/license/LicenseFeatureCheck.vue"))
-const AgentDataStore = defineAsyncComponent(() => import("@/components/agents/dataStore/AgentDataStore.vue"))
-const FileCollectionForm = defineAsyncComponent(
-	() => import("@/components/agents/fileCollection/FileCollectionForm.vue")
-)
-
-const ViewIcon = "iconoir:eye-solid"
 const LinkIcon = "carbon:launch"
-const { routeAgent, routeIndex } = useNavigation()
-const message = useMessage()
-const loading = ref(false)
+const { routeAgent, routeIndex, routeIncidentManagementAlertAsset } = useNavigation()
 const showDetails = ref(false)
 const assetNameTruncated = computed(() => _truncate(asset.asset_name, { length: 50 }))
-const alertContext = ref<AlertContext | null>(null)
-const processNameList = computed<string[]>(() => alertContext.value?.context?.process_name || [])
-const isInvestigationAvailable = computed(() => processNameList.value.length)
 
-const licenseChecked = ref(false)
-const licenseResponse = ref(false)
-
-const isWazuhSource = computed(() => {
-	return alertContext.value?.source?.toLowerCase() === "wazuh"
-})
-
-watch(showDetails, val => {
-	if (val && !alertContext.value) {
-		getAlertContext(asset.alert_context_id)
-	}
-})
-
-function getAlertContext(alertContextId: number) {
-	loading.value = true
-
-	Api.incidentManagement.alerts
-		.getAlertContext(alertContextId)
-		.then(res => {
-			if (res.data.success) {
-				alertContext.value = res.data?.alert_context || null
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loading.value = false
-		})
+function openDetails() {
+	showDetails.value = true
 }
 </script>

@@ -15,6 +15,17 @@ from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import verify_optional_customer_code_access
+from app.siem.schema.custom_dashboards import CustomDashboardCreateRequest
+from app.siem.schema.custom_dashboards import CustomDashboardDeleteResponse
+from app.siem.schema.custom_dashboards import CustomDashboardExportResponse
+from app.siem.schema.custom_dashboards import CustomDashboardImportRequest
+from app.siem.schema.custom_dashboards import CustomDashboardOperationResponse
+from app.siem.schema.custom_dashboards import CustomDashboardPreviewRequest
+from app.siem.schema.custom_dashboards import CustomDashboardPreviewResponse
+from app.siem.schema.custom_dashboards import CustomDashboardResponse
+from app.siem.schema.custom_dashboards import CustomDashboardsListResponse
+from app.siem.schema.custom_dashboards import CustomDashboardUpdateRequest
 from app.siem.schema.dashboards import DashboardCategoriesListResponse
 from app.siem.schema.dashboards import DashboardCategoryDetailResponse
 from app.siem.schema.dashboards import DisableDashboardResponse
@@ -24,6 +35,14 @@ from app.siem.schema.dashboards import EnabledDashboardResponse
 from app.siem.schema.dashboards import EnabledDashboardsListResponse
 from app.siem.schema.dashboards import PanelDataRequest
 from app.siem.schema.dashboards import PanelDataResponse
+from app.siem.services.custom_dashboards import create_custom_dashboard
+from app.siem.services.custom_dashboards import delete_custom_dashboard
+from app.siem.services.custom_dashboards import export_custom_dashboard
+from app.siem.services.custom_dashboards import get_custom_dashboard
+from app.siem.services.custom_dashboards import import_custom_dashboard
+from app.siem.services.custom_dashboards import list_custom_dashboards
+from app.siem.services.custom_dashboards import preview_custom_dashboard
+from app.siem.services.custom_dashboards import update_custom_dashboard
 from app.siem.services.dashboards import disable_dashboard
 from app.siem.services.dashboards import enable_dashboard
 from app.siem.services.dashboards import get_category_detail
@@ -164,6 +183,181 @@ async def disable_dashboard_endpoint(
     return DisableDashboardResponse(
         success=True,
         message="Dashboard disabled successfully",
+    )
+
+
+# ── Custom dashboards (UI-authored templates, DB-backed) ─────────
+#
+# Route order matters: the static `/custom/import` and `/custom/preview` paths
+# must be declared before `/custom/{template_key}`, otherwise the wildcard
+# swallows them and treats "import" as a template key.
+
+
+@dashboards_router.get(
+    "/custom",
+    response_model=CustomDashboardsListResponse,
+    description="List custom dashboard templates. With customer_code, returns that customer's templates plus the globally shared ones.",
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_optional_customer_code_access),
+    ],
+)
+async def list_custom_dashboards_endpoint(
+    customer_code: Optional[str] = Query(None, description="Scope the listing to one customer (plus global templates)"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> CustomDashboardsListResponse:
+    logger.info(f"Listing custom dashboards (customer_code={customer_code})")
+    accessible = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    rows = await list_custom_dashboards(customer_code, db, accessible_customers=accessible)
+    return CustomDashboardsListResponse(
+        custom_dashboards=[CustomDashboardResponse.model_validate(row) for row in rows],
+        success=True,
+        message="Custom dashboards retrieved successfully",
+    )
+
+
+@dashboards_router.post(
+    "/custom",
+    response_model=CustomDashboardOperationResponse,
+    description="Create a custom dashboard template",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def create_custom_dashboard_endpoint(
+    request: CustomDashboardCreateRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> CustomDashboardOperationResponse:
+    logger.info(f"Creating custom dashboard '{request.title}' for customer {request.customer_code or 'ALL'}")
+    row = await create_custom_dashboard(request, db, current_user=current_user)
+    return CustomDashboardOperationResponse(
+        custom_dashboard=CustomDashboardResponse.model_validate(row),
+        success=True,
+        message="Custom dashboard created successfully",
+    )
+
+
+@dashboards_router.post(
+    "/custom/import",
+    response_model=CustomDashboardOperationResponse,
+    description="Import a custom dashboard template from an exported definition",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def import_custom_dashboard_endpoint(
+    request: CustomDashboardImportRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> CustomDashboardOperationResponse:
+    logger.info(f"Importing custom dashboard '{request.definition.title}' (overwrite={request.overwrite})")
+    row = await import_custom_dashboard(request, db, current_user=current_user)
+    return CustomDashboardOperationResponse(
+        custom_dashboard=CustomDashboardResponse.model_validate(row),
+        success=True,
+        message="Custom dashboard imported successfully",
+    )
+
+
+@dashboards_router.post(
+    "/custom/preview",
+    response_model=CustomDashboardPreviewResponse,
+    description="Run an unsaved panel set against an event source so the builder can show live data",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def preview_custom_dashboard_endpoint(
+    request: CustomDashboardPreviewRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> CustomDashboardPreviewResponse:
+    logger.info(f"Previewing {len(request.panels)} panel(s) against event source {request.event_source_id}")
+    data = await preview_custom_dashboard(request, db, current_user)
+    return CustomDashboardPreviewResponse(
+        panels=data["results"],
+        template=data["template"],
+        customer_code=data["customer_code"],
+        source_name=data["source_name"],
+        success=True,
+        message="Preview generated successfully",
+    )
+
+
+@dashboards_router.get(
+    "/custom/{template_key}",
+    response_model=CustomDashboardOperationResponse,
+    description="Get a single custom dashboard template",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_custom_dashboard_endpoint(
+    template_key: str,
+    db: AsyncSession = Depends(get_db),
+) -> CustomDashboardOperationResponse:
+    logger.info(f"Getting custom dashboard {template_key}")
+    row = await get_custom_dashboard(template_key, db)
+    return CustomDashboardOperationResponse(
+        custom_dashboard=CustomDashboardResponse.model_validate(row),
+        success=True,
+        message="Custom dashboard retrieved successfully",
+    )
+
+
+@dashboards_router.put(
+    "/custom/{template_key}",
+    response_model=CustomDashboardOperationResponse,
+    description="Update a custom dashboard template",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def update_custom_dashboard_endpoint(
+    template_key: str,
+    request: CustomDashboardUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+) -> CustomDashboardOperationResponse:
+    logger.info(f"Updating custom dashboard {template_key}")
+    row = await update_custom_dashboard(template_key, request, db)
+    return CustomDashboardOperationResponse(
+        custom_dashboard=CustomDashboardResponse.model_validate(row),
+        success=True,
+        message="Custom dashboard updated successfully",
+    )
+
+
+@dashboards_router.delete(
+    "/custom/{template_key}",
+    response_model=CustomDashboardDeleteResponse,
+    description="Delete a custom dashboard template and every dashboard enabled from it",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def delete_custom_dashboard_endpoint(
+    template_key: str,
+    db: AsyncSession = Depends(get_db),
+) -> CustomDashboardDeleteResponse:
+    logger.info(f"Deleting custom dashboard {template_key}")
+    disabled = await delete_custom_dashboard(template_key, db)
+    return CustomDashboardDeleteResponse(
+        disabled_dashboards=disabled,
+        success=True,
+        message=(
+            f"Custom dashboard deleted successfully along with {disabled} enabled dashboard(s)"
+            if disabled
+            else "Custom dashboard deleted successfully"
+        ),
+    )
+
+
+@dashboards_router.get(
+    "/custom/{template_key}/export",
+    response_model=CustomDashboardExportResponse,
+    description="Export a custom dashboard template as a portable definition",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def export_custom_dashboard_endpoint(
+    template_key: str,
+    db: AsyncSession = Depends(get_db),
+) -> CustomDashboardExportResponse:
+    logger.info(f"Exporting custom dashboard {template_key}")
+    row = await get_custom_dashboard(template_key, db)
+    return CustomDashboardExportResponse(
+        definition=export_custom_dashboard(row),
+        success=True,
+        message="Custom dashboard exported successfully",
     )
 
 

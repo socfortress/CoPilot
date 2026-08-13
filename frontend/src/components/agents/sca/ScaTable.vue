@@ -17,16 +17,12 @@
 					<tr v-for="item of scaList" :key="item.policy_id">
 						<td class="w-6">
 							<div class="flex items-center gap-2">
-								<n-tooltip trigger="hover">
-									<template #trigger>
-										<n-button size="small" @click="showScaDetails(item)">
-											<template #icon>
-												<Icon :name="InfoIcon" />
-											</template>
-										</n-button>
-									</template>
-									Details
-								</n-tooltip>
+								<EntityDetailsButton
+									size="small"
+									:view-show-label="false"
+									:route="routeAgentSca(agent.agent_id, item.policy_id)"
+									@view="showScaDetails(item)"
+								/>
 
 								<n-tooltip trigger="hover">
 									<template #trigger>
@@ -105,7 +101,9 @@ import _truncate from "lodash/truncate"
 import { NButton, NEmpty, NModal, NPopover, NScrollbar, NSpin, NTable, NTooltip, useMessage } from "naive-ui"
 import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -123,7 +121,7 @@ const props = defineProps<{
 const { agent } = toRefs(props)
 
 const DownloadIcon = "carbon:document-download"
-const InfoIcon = "carbon:information"
+const { routeAgentSca } = useNavigation()
 const message = useMessage()
 const loading = ref(false)
 const showDetails = ref(false)
@@ -142,8 +140,8 @@ function getSCA(agentId: string) {
 					return {
 						...o,
 						downloading: false,
-						end_scan_text: formatDate(o.end_scan, dFormats.datetime).toString(),
-						extract: _truncate(o.description, {
+						end_scan_text: o.end_scan ? formatDate(o.end_scan, dFormats.datetime).toString() : "-",
+						extract: _truncate(o.description ?? "", {
 							length: 50,
 							omission: ""
 						})

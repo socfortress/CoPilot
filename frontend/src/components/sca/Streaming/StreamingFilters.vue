@@ -1,22 +1,24 @@
 <template>
 	<div class="flex flex-wrap gap-3">
 		<div v-for="filter of filters" :key="filter.type">
-			<n-input-group v-if="filter.type === 'customer_code'">
+			<n-input-group v-if="filter.type === 'customer_codes'">
 				<n-input-group-label size="small" class="flex! items-center gap-2">
 					<Icon :name="CustomersIcon" />
 					{{ getFilterLabel(filter.type) }}
 				</n-input-group-label>
 				<n-select
-					:value="stringFilterValue(filter)"
+					:value="customerFilterValue(filter)"
 					size="small"
 					:options="customerOptions"
 					placeholder="Select..."
+					multiple
 					clearable
 					filterable
+					:max-tag-count="2"
 					:loading="loadingCustomers"
-					class="w-50!"
+					class="min-w-56!"
 					:consistent-menu-width="false"
-					@update:value="updateStringFilterValue(filter, $event)"
+					@update:value="filter.value = $event"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
@@ -162,12 +164,12 @@ const AddIcon = "carbon:add"
 const DelIcon = "carbon:delete"
 
 const message = useMessage()
-const { globalCustomerCodes } = useGlobalCustomerFilter()
+const { globalCustomerCodes, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 const loadingCustomers = ref(false)
 const customersList = ref<Customer[]>([])
 
 const typeOptions: { label: string; value: ScaStreamingFilterType }[] = [
-	{ label: "Customer", value: "customer_code" },
+	{ label: "Customer", value: "customer_codes" },
 	{ label: "Agent", value: "agent_name" },
 	{ label: "Policy", value: "policy_name" },
 	{ label: "Min Score", value: "min_score" },
@@ -196,6 +198,11 @@ function getFilterLabel(type: ScaStreamingFilterType): string {
 	return typeOptions.find(option => option.value === type)?.label || type
 }
 
+/** The customer filter is multi-valued; anything else stored there is treated as empty. */
+function customerFilterValue(filter: ScaStreamingListFilter): string[] {
+	return Array.isArray(filter.value) ? (filter.value as string[]) : []
+}
+
 function stringFilterValue(filter: ScaStreamingListFilter): string | null {
 	return typeof filter.value === "string" ? filter.value : null
 }
@@ -213,7 +220,7 @@ function updateNumberFilterValue(filter: ScaStreamingListFilter, value: number |
 }
 
 function addFilter(key: ScaStreamingFilterType) {
-	if (key === "customer_code" && !customersList.value.length) {
+	if (key === "customer_codes" && !customersList.value.length) {
 		loadCustomers()
 	}
 
@@ -274,24 +281,28 @@ function loadCustomers() {
 		})
 }
 
-function applyGlobalCustomerCodeFilter() {
-	if (filters.value.some(f => f.type === "customer_code" && f.value)) {
-		return false
-	}
-	const codes = globalCustomerCodes.value
-	if (!codes.length) {
-		return false
-	}
-	filters.value.push({ type: "customer_code", value: codes[0] })
-	return true
-}
-
 onBeforeMount(() => {
-	if (globalCustomerCodes.value.length) {
-		applyGlobalCustomerCodeFilter()
-		loadCustomers()
-		submit()
+	const codes = globalCustomerCodes.value
+	if (!codes.length) return
+
+	filters.value.push({ type: "customer_codes", value: [...codes] })
+	loadCustomers()
+	submit()
+})
+
+onGlobalCustomerFilterChange(codes => {
+	if (!codes.length) {
+		// delFilter() submits on its own, so routing the clear through setFilter() would submit
+		// twice and restart the SSE twice. Nothing to clear = nothing to restart.
+		if (filters.value.some(f => f.type === "customer_codes")) {
+			delFilter("customer_codes")
+		}
+		return
 	}
+
+	// Idempotent (no-ops once the list is in memory) and only needed to label the filter chip.
+	loadCustomers()
+	setFilter([{ type: "customer_codes", value: [...codes] }])
 })
 
 defineExpose({ setFilter })

@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "SOCFortress CoPilot",
-  "description": "SOCFortress CoPilot documentation \u2014 operator workflows, admin/engineer configuration, and developer/AI-agent guides.",
+  "description": "SOCFortress CoPilot documentation — operator workflows, admin/engineer configuration, and developer/AI-agent guides.",
   "logo": {
     "light": "/assets/brand/logo-text.png",
     "dark": "/assets/brand/logo-text.png",
@@ -49,6 +49,7 @@
             "group": "SIEM",
             "pages": [
               "user/ui/siem-event-search",
+              "user/ui/siem-custom-dashboards",
               "user/ui/alerts-siem"
             ]
           },
@@ -102,7 +103,7 @@
             ]
           },
           {
-            "group": "Alerting (Graylog \u2192 CoPilot)",
+            "group": "Alerting (Graylog → CoPilot)",
             "pages": [
               "user/ui/incident-sources",
               "user/ui/graylog-management",
@@ -110,9 +111,11 @@
             ]
           },
           {
-            "group": "Alerting (CoPilot \u2192 Shuffle)",
+            "group": "Notifications & Alerting (outbound)",
             "pages": [
-              "user/ui/alerting-shuffle"
+              "user/ui/notifications",
+              "user/ui/alerting-shuffle",
+              "user/notifications"
             ]
           },
           {

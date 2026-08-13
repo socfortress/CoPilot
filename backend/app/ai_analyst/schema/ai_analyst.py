@@ -241,6 +241,12 @@ class IocListResponse(BaseModel):
     iocs: List[IocResponse]
 
 
+class IocDetailResponse(BaseModel):
+    success: bool
+    message: str
+    ioc: IocResponse
+
+
 class AlertWithReportResponse(BaseModel):
     alert_id: int
     alert_name: str
@@ -256,6 +262,12 @@ class AlertsWithReportsListResponse(BaseModel):
     success: bool
     message: str
     alerts: List[AlertWithReportResponse]
+
+
+class AlertWithReportDetailResponse(BaseModel):
+    success: bool
+    message: str
+    alert: AlertWithReportResponse
 
 
 class AlertAnalysisResponse(BaseModel):
@@ -348,6 +360,12 @@ class ReviewListResponse(BaseModel):
     success: bool
     message: str
     reviews: List[ReviewResponse]
+
+
+class ReviewDetailResponse(BaseModel):
+    success: bool
+    message: str
+    review: ReviewResponse
 
 
 class QueuePalaceLessonRequest(BaseModel):

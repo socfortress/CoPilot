@@ -1,4 +1,4 @@
-import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost, AlertsSummary } from "@/types/alerts"
+import type { Alert, AlertsByHost, AlertsByRule, AlertsByRulePerHost, AlertsSummary } from "@/types/alerts"
 import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
 
@@ -7,7 +7,17 @@ export type AlertsQueryTimeRange = `${number}${"h" | "d" | "w"}`
 export interface GraylogAlertsQuery {
 	size: number
 	timerange: AlertsQueryTimeRange
-	index_prefix: string
+	index_prefix?: string
+	customer_codes?: string[]
+}
+
+export interface GraylogIndexAlertsQuery extends GraylogAlertsQuery {
+	index_name: string
+}
+
+export interface AlertByIdQuery {
+	index_name: string
+	alert_id: string
 }
 
 interface AlertsQuery {
@@ -51,7 +61,11 @@ function getGraylogQueryByFilter(filter?: Partial<GraylogAlertsQuery>): GraylogA
 	const query: GraylogAlertsQuery = {
 		size: filter?.size || 10,
 		timerange: filter?.timerange || "24h",
-		index_prefix: "gl-events*"
+		index_prefix: filter?.index_prefix || "gl-events*"
+	}
+
+	if (filter?.customer_codes?.length) {
+		query.customer_codes = filter.customer_codes
 	}
 
 	return query
@@ -66,6 +80,16 @@ export default {
 			query,
 			signal ? { signal } : {}
 		)
+	},
+	getGraylogAlertsSummary(query: GraylogIndexAlertsQuery, signal?: AbortSignal) {
+		return HttpClient.post<FlaskBaseResponse & { alerts_summary: AlertsSummary[] }>(
+			`/alerts/alerts/graylog/index`,
+			query,
+			signal ? { signal } : {}
+		)
+	},
+	getById(query: AlertByIdQuery, signal?: AbortSignal) {
+		return HttpClient.post<FlaskBaseResponse & { alert: Alert }>(`/alerts/by-id`, query, signal ? { signal } : {})
 	},
 	getAll(filter: AlertsSummaryQuery, signal?: AbortSignal) {
 		const query = getQueryByFilter(filter)

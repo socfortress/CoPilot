@@ -1,0 +1,134 @@
+{# FULL report — the complete picture: executive summary + charts/trends +
+   open & closed cases with per-case technical detail (assets + IOCs). #}
+{% extends "_report_base.html" %}
+{% from "_report_macros.html" import priority_chip, case_summary_row, case_card with context %}
+
+{% block cover_kind %}<div class="kind">Complete Report</div>{% endblock %}
+
+{% block content %}
+  <!-- ================= TABLE OF CONTENTS ================= -->
+  <div class="page-break"></div>
+  <div class="toc-title">Table of Contents</div>
+  <table class="toc">
+    <tr><td class="num">1.</td><td>Executive Summary</td></tr>
+    <tr><td class="num">2.</td><td>Distribution &amp; Trends (charts)</td></tr>
+    <tr><td class="num">3.</td><td>Open Cases</td></tr>
+    <tr><td class="num">4.</td><td>Closed Cases</td></tr>
+  </table>
+
+  <!-- ================= 1. EXECUTIVE SUMMARY ================= -->
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">1.</span><span class="t">Executive Summary</span></div>
+  <p class="lead">
+    The purpose of this document is to report on the activity of the SOC monitoring service for
+    {{ customer.name }} during the reporting period.
+  </p>
+
+  <div class="bar">Service Metrics</div>
+  <table class="metrics">
+    <tr class="grp"><td>Total alerts received</td><td class="v">{{ metrics.total_alerts }}</td></tr>
+    {% for source, count in alerts_by_source %}
+    <tr class="sub"><td class="k">• {{ source }}</td><td class="v">{{ count }}</td></tr>
+    {% endfor %}
+
+    <tr class="grp"><td>Cases reported</td><td class="v">{{ metrics.reported_cases }}</td></tr>
+    <tr class="sub"><td class="k">• Incidents [INC]</td><td class="v">{{ cases_by_type.INC }}</td></tr>
+    <tr class="sub"><td class="k">• Investigations [RFI]</td><td class="v">{{ cases_by_type.RFI }}</td></tr>
+    <tr class="sub"><td class="k">• Configurations [CONF]</td><td class="v">{{ cases_by_type.CONF }}</td></tr>
+    <tr class="sub"><td class="k">• Cyber Intelligence [CTI]</td><td class="v">{{ cases_by_type.CTI }}</td></tr>
+    {% if cases_by_type.OTROS %}<tr class="sub"><td class="k">• Other</td><td class="v">{{ cases_by_type.OTROS }}</td></tr>{% endif %}
+
+    <tr class="grp"><td>Cases closed in period</td><td class="v">{{ metrics.closed_cases }}</td></tr>
+    <tr class="grp"><td>Cases pending resolution</td><td class="v">{{ metrics.open_cases }}</td></tr>
+  </table>
+
+  <!-- ================= 2. CHARTS ================= -->
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">2.</span><span class="t">Distribution &amp; Trends</span></div>
+  <div class="section-sub">{{ period.from }} — {{ period.to }}</div>
+
+  {% if has_alerts %}
+    {% set illus = namespace(n=0) %}
+    {% if charts.alerts_by_status %}{% set illus.n = illus.n + 1 %}
+    <div class="chart-block"><img src="{{ charts.alerts_by_status }}" alt="alerts by status" />
+      <div class="chart-cap">Figure {{ illus.n }}: Alert distribution by status</div></div>{% endif %}
+    {% if charts.alerts_by_source %}{% set illus.n = illus.n + 1 %}
+    <div class="chart-block"><img src="{{ charts.alerts_by_source }}" alt="alerts by source" />
+      <div class="chart-cap">Figure {{ illus.n }}: Alert distribution by source</div></div>{% endif %}
+    {% if charts.top_alert_names %}{% set illus.n = illus.n + 1 %}
+    <div class="chart-block"><img src="{{ charts.top_alert_names }}" alt="top alert titles" />
+      <div class="chart-cap">Figure {{ illus.n }}: Top alert titles</div></div>{% endif %}
+    {% if charts.top_tags %}{% set illus.n = illus.n + 1 %}
+    <div class="chart-block"><img src="{{ charts.top_tags }}" alt="top tags" />
+      <div class="chart-cap">Figure {{ illus.n }}: Top alert tags / classifications</div></div>{% endif %}
+    {% if charts.evolution_alerts %}{% set illus.n = illus.n + 1 %}
+    <div class="chart-block"><img src="{{ charts.evolution_alerts }}" alt="alert trend" />
+      <div class="chart-cap">Figure {{ illus.n }}: Monthly alert trend</div></div>{% endif %}
+    {% if charts.evolution_cases %}{% set illus.n = illus.n + 1 %}
+    <div class="chart-block"><img src="{{ charts.evolution_cases }}" alt="case trend" />
+      <div class="chart-cap">Figure {{ illus.n }}: Monthly case trend</div></div>{% endif %}
+
+    {% if monthly_trend|length >= 2 %}
+    <table class="data avoid-break" style="margin-top:14px;">
+      <thead><tr><th>Month</th><th>Alerts</th><th>Cases</th><th>Case/alert ratio</th></tr></thead>
+      <tbody>
+        {% for row in monthly_trend %}
+        <tr><td>{{ row.month }}</td><td>{{ row.alerts }}</td><td>{{ row.cases }}</td><td>{{ row.ratio }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  {% else %}
+    <div class="empty">No alerts were recorded for this customer in the selected period.</div>
+  {% endif %}
+
+  <!-- ================= 3. OPEN CASES ================= -->
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">3.</span><span class="t">Open Cases</span></div>
+  <p class="lead">
+    The following table lists the cases that were open at the end of the period ({{ period.to }}),
+    whether newly created or carried over from previous periods.
+  </p>
+
+  {% if open_cases %}
+    <div class="bar">Open Cases Summary</div>
+    <table class="cases">
+      <thead><tr><th>Case</th><th>Type</th><th>Title</th><th>Priority</th><th>Reported</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for case in open_cases %}{{ case_summary_row(case, customer.code, false) }}{% endfor %}
+      </tbody>
+    </table>
+    {% if open_overflow %}<div class="muted" style="margin-top:6px;">…and {{ open_overflow }} more open cases (not listed; narrow the date range).</div>{% endif %}
+
+    {% for case in open_cases %}
+      {{ case_card(case, customer.code, false) }}
+    {% endfor %}
+  {% else %}
+    <div class="empty">There were no open cases for this customer at the end of the period.</div>
+  {% endif %}
+
+  <!-- ================= 4. CLOSED CASES ================= -->
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">4.</span><span class="t">Closed Cases</span></div>
+  <p class="lead">
+    The following table lists the cases that were closed during the reporting period,
+    regardless of their creation date.
+  </p>
+
+  {% if closed_cases %}
+    <div class="bar">Closed Cases Summary</div>
+    <table class="cases">
+      <thead><tr><th>Case</th><th>Type</th><th>Title</th><th>Priority</th><th>Reported / Closed</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for case in closed_cases %}{{ case_summary_row(case, customer.code, true) }}{% endfor %}
+      </tbody>
+    </table>
+    {% if closed_overflow %}<div class="muted" style="margin-top:6px;">…and {{ closed_overflow }} more closed cases (not listed; narrow the date range).</div>{% endif %}
+
+    {% for case in closed_cases %}
+      {{ case_card(case, customer.code, true) }}
+    {% endfor %}
+  {% else %}
+    <div class="empty">No cases were closed for this customer in the selected period.</div>
+  {% endif %}
+{% endblock %}

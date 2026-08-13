@@ -19,6 +19,7 @@ from app.connectors.graylog.utils.universal import verify_graylog_connection
 from app.connectors.influxdb.utils.universal import verify_influxdb_connection
 from app.connectors.models import Connectors
 from app.connectors.portainer.utils.universal import verify_portainer_connection
+from app.connectors.resend.utils.universal import verify_resend_connection
 from app.connectors.schema import ConnectorResponse
 from app.connectors.shuffle.utils.universal import verify_shuffle_connection
 from app.connectors.sublime.utils.universal import verify_sublime_connection
@@ -200,6 +201,14 @@ class PortainerService(ConnectorServiceInterface):
 
 
 # Talon Service
+class ResendService(ConnectorServiceInterface):
+    async def verify_authentication(
+        self,
+        connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
+        return await verify_resend_connection(connector.connector_name)
+
+
 class TalonService(ConnectorServiceInterface):
     async def verify_authentication(
         self,
@@ -236,6 +245,7 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "Alert Creation Provisioning": AlertCreationService,
         "VirusTotal": VirustotalService,
         "Portainer": PortainerService,
+        "Resend": ResendService,
         "Talon": TalonService,
     }
     return service_map.get(connector_name, None)

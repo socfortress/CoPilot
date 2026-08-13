@@ -13,6 +13,25 @@ class UpdatePortalSettingsRequest(BaseModel):
     title: Optional[str] = Field(None, max_length=255, description="Portal title. Set to null to restore default.")
     logo_base64: Optional[str] = Field(None, description="Base64 encoded logo image. Set to null to restore default.")
     logo_mime_type: Optional[str] = Field(None, max_length=50, description="MIME type of the logo. Set to null to restore default.")
+    brand_color: Optional[str] = Field(
+        None,
+        max_length=9,
+        description="Brand color as a hex string (e.g. #RRGGBB), used to theme customer-branded reports. Set to null to restore default.",
+    )
+
+    @field_validator("brand_color")
+    @classmethod
+    def validate_brand_color(cls, v):
+        if v is None:
+            return v
+
+        v = v.strip()
+        if not re.match(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$", v):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid brand_color. Expected a hex color like #RGB or #RRGGBB",
+            )
+        return v.lower()
 
     @field_validator("logo_base64")
     @classmethod
@@ -65,6 +84,7 @@ class PortalSettingsData(BaseModel):
     title: str
     logo_base64: Optional[str] = None
     logo_mime_type: Optional[str] = None
+    brand_color: Optional[str] = None
     updated_at: str
     model_config = ConfigDict(from_attributes=True)
 

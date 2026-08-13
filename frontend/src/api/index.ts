@@ -20,6 +20,7 @@ import githubAudit from "./endpoints/github-audit"
 import graylog from "./endpoints/graylog"
 import healthchecks from "./endpoints/healthchecks"
 import incidentManagement from "./endpoints/incidentManagement"
+import incidentReports from "./endpoints/incidentReports"
 import integrations from "./endpoints/integrations"
 import license from "./endpoints/license"
 import logs from "./endpoints/logs"
@@ -33,6 +34,7 @@ import portainer from "./endpoints/portainer"
 import reporting from "./endpoints/reporting"
 import sca from "./endpoints/sca"
 import scheduler from "./endpoints/scheduler"
+import security from "./endpoints/security"
 import shuffle from "./endpoints/shuffle"
 import sidebarContext from "./endpoints/sidebar-context"
 import siem from "./endpoints/siem"
@@ -88,11 +90,13 @@ export default {
 	cloudSecurityAssessment,
 	webVulnerabilityAssessment,
 	incidentManagement,
+	incidentReports,
 	sigma,
 	users,
 	sysmonConfig,
 	vulnerabilities,
 	sca,
+	security,
 	siem,
 	wazuh,
 	patchTuesday,

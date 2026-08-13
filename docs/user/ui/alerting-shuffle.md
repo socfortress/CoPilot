@@ -12,6 +12,10 @@ CoPilot integrates with **Shuffle** to run automation/playbooks and send notific
 
 This is the recommended way to extend CoPilot alerting into external systems without needing a custom integration inside CoPilot for every downstream tool.
 
+> **There is now a second, newer notification system.** [Notification routes](./notifications.md) let you send to **email, Microsoft Teams, Shuffle or any webhook**, with per-route triggers and severity filtering — including notifying an analyst when work is assigned to them.
+>
+> The workflow described on this page still works and is unchanged. But it fires on the **same event** as an *alert is created* route, so a customer configured with both receives **two notifications per alert**. The route form warns you when that applies.
+
 ## Video walkthrough
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/Ko5jLfkSCrk?si=YHEv-wHYhY3FuRUe" title="Revolutionize Your SIEM Alerts: Integrate CoPilot &amp; Shuffle" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
@@ -25,6 +29,8 @@ This is the recommended way to extend CoPilot alerting into external systems wit
 - **CoPilot ↔ Shuffle Integration (Admin/Operator)**: ../shuffle-integration.md
 
 ## Related alerting pages
+
+- Notification routes (email / Teams / Shuffle / webhook): ./notifications.md
 
 - Graylog management (detections): ./graylog-management.md
 - Incident sources (mapping context): ./incident-sources.md

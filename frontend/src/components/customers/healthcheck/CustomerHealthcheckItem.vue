@@ -3,9 +3,7 @@
 		<CardEntity
 			:embedded
 			hoverable
-			clickable
 			:status="type === 'healthy' ? 'success' : type === 'unhealthy' ? 'warning' : undefined"
-			@click="showDetails = true"
 		>
 			<template #headerMain>#{{ healthData.id }} - {{ healthData.label }}</template>
 			<template v-if="cardDate" #headerExtra>{{ cardDate }}</template>
@@ -20,7 +18,8 @@
 					</p>
 				</div>
 			</template>
-			<template #mainExtra>
+
+			<template #footerMain>
 				<div class="flex flex-wrap items-center gap-3">
 					<Badge v-if="agentVersion" type="splitted">
 						<template #label>Agent version</template>
@@ -70,6 +69,9 @@
 					</n-popover>
 				</div>
 			</template>
+			<template #footerExtra>
+				<EntityDetailsButton size="tiny" :route="detailRoute" @view="showDetails = true" />
+			</template>
 		</CardEntity>
 
 		<n-modal
@@ -81,16 +83,7 @@
 			:bordered="false"
 			segmented
 		>
-			<div class="grid-auto-fit-200 grid gap-2 px-7 py-6">
-				<CardKV v-for="(value, key) of healthData" :key>
-					<template #key>
-						{{ key }}
-					</template>
-					<template #value>
-						{{ value || "-" }}
-					</template>
-				</CardKV>
-			</div>
+			<CustomerHealthcheckDetails v-if="showDetails" :health-data :source />
 		</n-modal>
 	</div>
 </template>
@@ -101,16 +94,18 @@ import { NModal, NPopover } from "naive-ui"
 import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import CardKV from "@/components/common/cards/CardKV.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { iconFromOs } from "@/utils"
 import dayjs from "@/utils/dayjs"
+import CustomerHealthcheckDetails from "./CustomerHealthcheckDetails.vue"
 
-const { healthData, source, embedded, type } = defineProps<{
+const { healthData, source, embedded, type, customerCode } = defineProps<{
 	healthData: CustomerAgentHealth
 	source: CustomerHealthcheckSource
+	customerCode: string
 	type?: "healthy" | "unhealthy"
 	embedded?: boolean
 }>()
@@ -120,7 +115,9 @@ const AgentIcon = "carbon:police"
 const LinkIcon = "carbon:launch"
 
 const showDetails = ref(false)
-const { routeAgent } = useNavigation()
+const { routeAgent, routeCustomerHealthcheckAgent } = useNavigation()
+
+const detailRoute = computed(() => routeCustomerHealthcheckAgent(customerCode, source, healthData.agent_id))
 
 const agentVersion = computed(() => {
 	let agent = ""

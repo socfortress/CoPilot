@@ -106,6 +106,7 @@ from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
+from app.incidents.services.alert_severity import severity_of
 
 # from app.incidents.services.db_operations import list_alerts
 # from app.incidents.services.db_operations import alerts_open_multiple_filters
@@ -218,6 +219,7 @@ from app.incidents.services.db_operations import list_all_files
 from app.incidents.services.db_operations import list_cases_by_asset_name
 from app.incidents.services.db_operations import list_cases_by_assigned_to
 from app.incidents.services.db_operations import list_cases_by_customer_code
+from app.incidents.services.db_operations import list_cases_by_name
 from app.incidents.services.db_operations import list_cases_by_status
 from app.incidents.services.db_operations import list_cases_for_user
 from app.incidents.services.db_operations import list_files_by_case_id
@@ -241,7 +243,14 @@ from app.incidents.services.db_operations import upload_report_template
 from app.incidents.services.db_operations import upload_report_template_to_data_store
 from app.incidents.services.db_operations import validate_source_exists
 from app.incidents.services.incident_case import handle_customer_notifications_case
+from app.incidents.services.notification_enrichment import extract_rule_level
+from app.incidents.services.notification_enrichment import severity_from_rule_level
 from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import verify_customer_code_access
+from app.middleware.customer_query import customer_codes_query
+from app.notifications.services.emit import emit
+from app.notifications.services.event_builders import alert_assigned_event
+from app.notifications.services.event_builders import case_assigned_event
 
 incidents_db_operations_router = APIRouter()
 
@@ -249,7 +258,10 @@ incidents_db_operations_router = APIRouter()
 @incidents_db_operations_router.get(
     "/ai_trigger/{customer_code}",
     response_model=AITriggerResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_ai_trigger_endpoint(
     customer_code: str,
@@ -284,7 +296,10 @@ async def put_customer_ai_trigger_endpoint(
 @incidents_db_operations_router.get(
     "/notification/{customer_code}",
     response_model=NotificationResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_customer_notification_endpoint(
     customer_code: str,
@@ -758,13 +773,45 @@ async def get_available_users(db: AsyncSession = Depends(get_db)):
     response_model=AlertResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def update_assigned_to_endpoint(assigned_to: AssignedToAlert, db: AsyncSession = Depends(get_db)):
+async def update_assigned_to_endpoint(
+    assigned_to: AssignedToAlert,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     all_users = await select_all_users()
     user_names = [user.username for user in all_users]
     if assigned_to.assigned_to not in user_names:
         raise HTTPException(status_code=400, detail="User does not exist")
+
+    # Read the current assignee BEFORE the mutation: the notification below only
+    # fires on an actual change, so rewriting the same value stays silent.
+    existing = await db.execute(select(Alert).where(Alert.id == assigned_to.alert_id))
+    existing_alert = existing.scalars().first()
+    previous_assignee = existing_alert.assigned_to if existing_alert else None
+    alert_title = existing_alert.alert_name if existing_alert else None
+    alert_customer = existing_alert.customer_code if existing_alert else None
+    # Being handed a Critical alert is a different event from being handed an
+    # Informational one; a route gating at High should see the first. Resolved
+    # rather than read raw, so an alert whose source gave no severity uses the
+    # deployment default instead of ranking below everything.
+    alert_severity = severity_of(existing_alert) if existing_alert else None
+
+    updated = await update_alert_assigned_to(assigned_to.alert_id, assigned_to.assigned_to, db)
+
+    if previous_assignee != assigned_to.assigned_to:
+        emit(
+            alert_assigned_event(
+                alert_id=assigned_to.alert_id,
+                title=alert_title,
+                assignee=assigned_to.assigned_to,
+                actor=current_user.username,
+                customer_code=alert_customer,
+                severity=alert_severity,
+            ),
+        )
+
     return AlertResponse(
-        alert=await update_alert_assigned_to(assigned_to.alert_id, assigned_to.assigned_to, db),
+        alert=updated,
         success=True,
         message="Alert assigned to user successfully",
     )
@@ -1739,7 +1786,7 @@ async def list_alerts_by_source_endpoint(
 async def list_alerts_multiple_filters_endpoint(
     assigned_to: Optional[str] = Query(None),
     alert_title: Optional[str] = Query(None),
-    customer_code: Optional[str] = Query(None),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     source: Optional[str] = Query(None),
     asset_name: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
@@ -1756,24 +1803,31 @@ async def list_alerts_multiple_filters_endpoint(
     """
     logger.info(f"Listing alerts with filters for user: {current_user.username} with role_id: {current_user.role_id}")
 
-    # Get customer access filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    # Intersect the requested subset with what the user may see — never widens scope.
+    effective_customers = await customer_access_handler.resolve_effective_customers(current_user, customer_codes, db)
 
-    # Apply customer filtering if user is not admin/analyst
-    if "*" not in accessible_customers:
-        # If user provided customer_code, validate they have access to it
-        if customer_code and customer_code not in accessible_customers:
-            raise HTTPException(status_code=403, detail=f"Access denied to customer {customer_code}")
+    # An empty resolution means "the requested customers resolve to nothing you may see".
+    # It must short-circuit: the services skip the filter on a falsy list, so passing [] down
+    # would drop the tenant constraint entirely instead of matching no rows.
+    if not effective_customers:
+        return AlertOutResponse(
+            alerts=[],
+            total_filtered=0,
+            open=await alerts_open_for_user(current_user, db),
+            in_progress=await alerts_in_progress_for_user(current_user, db),
+            closed=await alerts_closed_for_user(current_user, db),
+            total=await alert_total_for_user(current_user, db),
+            success=True,
+            message="No alerts found for the requested customers",
+        )
 
-        # If no customer_code specified, use the first accessible customer for single customer users
-        if not customer_code and len(accessible_customers) == 1:
-            customer_code = accessible_customers[0]
+    # ["*"] = wildcard access with no requested subset -> no customer constraint at all.
+    scoped_customers = None if "*" in effective_customers else effective_customers
 
     # Pass user for tag filtering
     alerts = await list_alerts_multiple_filters(
         assigned_to=assigned_to,
         alert_title=alert_title,
-        customer_code=customer_code,
         source=source,
         asset_name=asset_name,
         status=status,
@@ -1783,9 +1837,7 @@ async def list_alerts_multiple_filters_endpoint(
         page=page,
         page_size=page_size,
         order=order,
-        # Constrain scoped users to their accessible customers (prevents cross-tenant
-        # disclosure when the user has >1 customer and no explicit customer_code).
-        customer_codes=None if "*" in accessible_customers else accessible_customers,
+        customer_codes=scoped_customers,
         user=current_user,  # Pass user for tag filtering
     )
 
@@ -1799,7 +1851,7 @@ async def list_alerts_multiple_filters_endpoint(
     total_filtered = await alerts_total_multiple_filters(
         assigned_to=assigned_to,
         alert_title=alert_title,
-        customer_code=customer_code,
+        customer_codes=scoped_customers,
         source=source,
         asset_name=asset_name,
         status=status,
@@ -2101,6 +2153,20 @@ async def update_case_assigned_to_endpoint(
         commit=True,
     )
 
+    # Notification routes (#1006). Only when the assignee actually changed — a
+    # PATCH rewriting the same value must not re-notify. Resolves against
+    # internal-scope routes, so this never reaches the customer's channel.
+    if previous_assignee != assigned_to.assigned_to:
+        emit(
+            case_assigned_event(
+                case_id=assigned_to.case_id,
+                title=getattr(case, "case_name", None),
+                assignee=assigned_to.assigned_to,
+                actor=current_user.username,
+                customer_code=case.customer_code,
+            ),
+        )
+
     # Re-fetch the case with full data structure
     updated_case = await get_case_by_id(assigned_to.case_id, db)
     return CaseOutResponse(
@@ -2210,6 +2276,47 @@ async def list_cases_by_status_endpoint(
     return CaseOutResponse(
         cases=cases,
         total=total,
+        open=open_cases,
+        in_progress=in_progress,
+        closed=closed,
+        success=True,
+        message="Cases retrieved successfully",
+    )
+
+
+@incidents_db_operations_router.get(
+    "/case/name/{name}",
+    response_model=CaseOutResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def list_cases_by_name_endpoint(
+    name: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List cases whose name matches ``name`` (substring), with customer access filtering.
+
+    Backs the global search palette's case lookup; cases have no other text-search route.
+    """
+    logger.info(f"Listing cases by name '{name}' for user: {current_user.username} with role_id: {current_user.role_id}")
+
+    cases = await list_cases_by_name(name, db, page=page, page_size=page_size, order=order)
+
+    # Cases carry a string customer_code with no FK — scope customer users in Python.
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    if "*" not in accessible_customers:
+        cases = [case for case in cases if case.customer_code in accessible_customers]
+
+    open_cases = sum(1 for case in cases if case.case_status == "OPEN")
+    in_progress = sum(1 for case in cases if case.case_status == "IN_PROGRESS")
+    closed = sum(1 for case in cases if case.case_status == "CLOSED")
+
+    return CaseOutResponse(
+        cases=cases,
+        total=len(cases),
         open=open_cases,
         in_progress=in_progress,
         closed=closed,
@@ -2501,23 +2608,42 @@ async def create_case_notification_endpoint(
     if not await customer_access_handler.check_customer_access(current_user, case_details.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to case {request.case_id} - insufficient customer permissions")
 
+    case_alert_payloads = []
+    for alert in case_details.alerts:
+        # Fetch the stored alert context once and reuse it for both the payload
+        # body and the derived rule_level/severity (issue #980).
+        alert_context = (await get_alert_context_by_id(alert.assets[0].alert_context_id, db)).context if alert.assets else None
+        # Non-Wazuh sources (e.g. firewall events) carry no rule level, so this
+        # stays None rather than failing.
+        rule_level = extract_rule_level(alert_context)
+        case_alert_payloads.append(
+            CreatedAlertPayload(
+                alert_context_payload=alert_context,  # Populate with actual alert context data
+                asset_payload=alert.assets[0].asset_name if alert.assets else "",  # Populate with actual asset data
+                # The CoPilot alert-creation time is set from the configured Timefield during
+                # ingest (see update_alert_creation_time), so it's the case-side equivalent of
+                # the automatic alert payload's timefield_payload. Issue #979 Bug 1.
+                timefield_payload=alert.alert_creation_time or "",
+                alert_title_payload=alert.alert_name,  # Populate with actual alert title data
+                ioc_payload={ioc.value: ioc.type for ioc in alert.iocs} if alert.iocs else {},  # Populate with actual IoC data if available
+                source=alert.source,
+                # Carry the CoPilot alert ID and the raw-event index pointer so downstream
+                # notifications can deeplink back to the alert and pivot to the source event
+                # in Graylog/OpenSearch. Issue #979 Bugs 2 & 3.
+                alert_id=alert.id,
+                index_name=alert.assets[0].index_name if alert.assets else None,
+                index_id=alert.assets[0].index_id if alert.assets else None,
+                # Default rule level + normalized severity (issue #980).
+                rule_level=rule_level,
+                severity=severity_from_rule_level(rule_level),
+            ),
+        )
+
     case_notification_payload = CreatedCaseNotificationPayload(
         case_name=case_details.case_name,
         case_description=case_details.case_description,
         case_creation_time=case_details.case_creation_time,
-        alerts=[
-            CreatedAlertPayload(
-                alert_context_payload=(await get_alert_context_by_id(alert.assets[0].alert_context_id, db)).context
-                if alert.assets
-                else None,  # Populate with actual alert context data
-                asset_payload=alert.assets[0].asset_name if alert.assets else "",  # Populate with actual asset data
-                timefield_payload="",  # Populate with actual timefield data
-                alert_title_payload=alert.alert_name,  # Populate with actual alert title data
-                ioc_payload={ioc.value: ioc.type for ioc in alert.iocs} if alert.iocs else {},  # Populate with actual IoC data if available
-                source=alert.source,
-            )
-            for alert in case_details.alerts
-        ],
+        alerts=case_alert_payloads,
     )
 
     logger.info(f"Creating case notification for case {case_notification_payload}")
@@ -2694,7 +2820,9 @@ async def _ensure_customer_access(customer_code: str, current_user: User, db: As
 
     ``customer_code`` is taken from request input; this asserts the caller is
     actually entitled to that tenant. A None/blank code resolves to "no access"
-    for scoped (customer_user) callers while admin/analyst keep wildcard access.
+    for any scoped caller — a customer_user, or an analyst who has been assigned
+    specific customers. Admins, and analysts with no assignments, keep wildcard
+    access; see ``CustomerAccessHandler.get_user_accessible_customers``.
     """
     if not await customer_access_handler.check_customer_access(current_user, customer_code, db):
         raise HTTPException(
@@ -2739,8 +2867,10 @@ async def add_case_task_endpoint(
 @incidents_db_operations_router.patch(
     "/case/tasks/{task_id}",
     description=(
-        "Update a CaseTask: change status (TODO/DONE/NOT_NECESSARY) and/or attach an evidence "
-        "comment. NOT_NECESSARY is rejected for mandatory tasks. Admin/analyst only."
+        "Update a CaseTask: change status (TODO/DONE/NOT_NECESSARY), attach an evidence "
+        "comment, and/or set the assignee. NOT_NECESSARY is rejected for mandatory tasks. "
+        "Pass assigned_to: null to unassign; omit the key to leave the assignee unchanged. "
+        "Admin/analyst only."
     ),
     dependencies=[_admin_analyst_dep],
 )

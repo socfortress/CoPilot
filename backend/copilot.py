@@ -39,6 +39,7 @@ from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.exception_handlers import value_error_handler
 from app.middleware.integrity import run_integrity_check
+from app.notifications.services.template_seeds import seed_builtin_templates
 
 # from app.routers import ask_socfortress
 from app.routers import active_response
@@ -130,6 +131,9 @@ async def lifespan(_app: FastAPI):
     await create_available_network_connectors(async_engine)
     await ensure_admin_user(async_engine)
     await ensure_scheduler_user(async_engine)
+    # Built-in message templates (#1038). Idempotent by name, and never fatal —
+    # notifications work without them, they just start from a blank editor.
+    await seed_builtin_templates(async_engine)
 
     # Initialize the scheduler
     scheduler = await init_scheduler()

@@ -68,7 +68,13 @@
 		</div>
 		<div class="my-3 flex min-h-52 flex-col gap-2">
 			<template v-if="itemsPaginated.length">
-				<ScaResultItem v-for="item of itemsPaginated" :key="item.id" :data="item" embedded />
+				<ScaResultItem
+					v-for="item of itemsPaginated"
+					:key="item.id"
+					:data="item"
+					:agent-id="agent.agent_id"
+					embedded
+				/>
 			</template>
 			<template v-else>
 				<n-empty v-if="!loading" description="No items found" class="h-48 justify-center" />

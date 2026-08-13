@@ -63,18 +63,23 @@ class WazuhAgentVulnerabilitiesResponse(BaseModel):
 
 
 class WazuhAgentScaResults(BaseModel):
-    description: str
-    fail: int
-    start_scan: str
-    references: str
-    name: str
-    pass_count: int = Field(..., alias="pass")
-    score: int
-    end_scan: str
+    # Wazuh omits fields on some policies (a policy with no `references`, a scan
+    # that never ran, …). Everything but `policy_id` is therefore optional —
+    # a single missing key used to fail validation and surface as a 500.
     policy_id: str
-    total_checks: int
-    hash_file: str
-    invalid: int
+    description: Optional[str] = None
+    fail: int = 0
+    start_scan: Optional[str] = None
+    references: Optional[str] = None
+    name: Optional[str] = None
+    pass_count: int = Field(0, alias="pass")
+    score: int = 0
+    end_scan: Optional[str] = None
+    total_checks: int = 0
+    hash_file: Optional[str] = None
+    invalid: int = 0
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class WazuhAgentScaResponse(BaseModel):

@@ -1,9 +1,14 @@
+from typing import List
+from typing import Optional
 from typing import Union
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse
 from app.connectors.wazuh_indexer.schema.monitoring import CustomerIndicesSizeResponse
@@ -21,6 +26,12 @@ from app.connectors.wazuh_indexer.services.monitoring import (
 )
 from app.connectors.wazuh_indexer.services.monitoring import shards
 from app.connectors.wazuh_indexer.utils.universal import resize_wazuh_index_fields
+from app.db.db_session import get_db
+from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_query import customer_codes_query
+from app.middleware.search_query import SearchParams
+from app.middleware.search_query import filter_and_limit
+from app.middleware.search_query import search_query
 
 wazuh_indexer_router = APIRouter()
 
@@ -84,11 +95,19 @@ async def get_node_allocation() -> Union[NodeAllocationResponse, HTTPException]:
     description="Fetch Wazuh Indexer indices stats",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_indices_stats() -> Union[IndicesStatsResponse, HTTPException]:
+async def get_indices_stats(
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
+    search_params: SearchParams = Depends(search_query),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Union[IndicesStatsResponse, HTTPException]:
     """
     Fetch Wazuh Indexer indices stats.
 
     This endpoint retrieves the indices stats of the Wazuh Indexer service.
+    ``search``/``limit`` (see ``search_query``) narrow the result to indices whose
+    name contains the string and cap the count — so the global search palette can
+    query by name instead of pulling the whole (often 1500+) index list.
 
     Returns:
         ElasticsearchResponse: A Pydantic model representing the indices stats of the Wazuh Indexer service.
@@ -96,11 +115,25 @@ async def get_indices_stats() -> Union[IndicesStatsResponse, HTTPException]:
     Raises:
         HTTPException: An exception with a 500 status code is raised if the indices stats cannot be retrieved.
     """
-    indices_stats_response = await indices_stats()
-    if indices_stats_response is not None:
-        return indices_stats_response
-    else:
+    effective_customers = await customer_access_handler.resolve_effective_customers(
+        current_user,
+        customer_codes,
+        db,
+    )
+    scoped_customers = None if "*" in effective_customers else effective_customers
+
+    indices_stats_response = await indices_stats(customer_codes=scoped_customers, session=db)
+    if indices_stats_response is None:
         raise HTTPException(status_code=500, detail="Failed to retrieve indices stats.")
+
+    if indices_stats_response.indices_stats:
+        indices_stats_response.indices_stats = filter_and_limit(
+            indices_stats_response.indices_stats,
+            search_params,
+            key=lambda row: row.index,
+        )
+
+    return indices_stats_response
 
 
 @wazuh_indexer_router.get(
@@ -109,7 +142,11 @@ async def get_indices_stats() -> Union[IndicesStatsResponse, HTTPException]:
     description="Fetch Wazuh Indexer indices size aggregated per customer",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_indices_size_per_customer() -> Union[CustomerIndicesSizeResponse, HTTPException]:
+async def get_indices_size_per_customer(
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Union[CustomerIndicesSizeResponse, HTTPException]:
     """
     Fetch Wazuh Indexer indices size per customer.
 
@@ -123,7 +160,14 @@ async def get_indices_size_per_customer() -> Union[CustomerIndicesSizeResponse, 
         HTTPException: An exception with a 500 status code is raised if the data cannot be retrieved.
     """
     try:
-        response = await indices_size_per_customer()
+        effective_customers = await customer_access_handler.resolve_effective_customers(
+            current_user,
+            customer_codes,
+            db,
+        )
+        scoped_customers = None if "*" in effective_customers else effective_customers
+
+        response = await indices_size_per_customer(customer_codes=scoped_customers, session=db)
         return response
     except Exception as e:
         raise HTTPException(

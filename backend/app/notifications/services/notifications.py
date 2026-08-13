@@ -8,27 +8,48 @@ walks every enabled route for the customer, filters by trigger and
 severity, formats the message body per channel, calls the appropriate
 dispatcher, and records the outcome in `notification_dispatch_log`. The
 log row is what gives us idempotency — re-dispatching the same
-(customer, alert, route, trigger) is a no-op.
+(route, dedupe_key) pair is a no-op. The key travels on the event, so
+each trigger decides its own dedupe semantics.
 """
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Tuple
+from uuid import uuid4
 
 from fastapi import HTTPException
 from loguru import logger
+from pydantic import ValidationError as PydanticValidationError
+from sqlalchemy import and_
 from sqlalchemy import desc
+from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.connectors.utils import get_connector_info_from_db
+from app.customer_portal.services.ai_reports import is_ai_reports_enabled
 from app.db.universal_models import CustomerNotificationRoute
 from app.db.universal_models import CustomerShuffleIntegration
 from app.db.universal_models import NotificationDispatchLog
+from app.db.universal_models import NotificationTemplate
+from app.notifications.channels import DispatchContext
+from app.notifications.channels import SendResult
+from app.notifications.channels import get_channel
+from app.notifications.channels.base import RenderedMessage
+from app.notifications.channels.shuffle import get_shuffle_connector
+from app.notifications.schema.events import EntityType
+from app.notifications.schema.events import NotificationEvent
+from app.notifications.schema.events import event_from_dispatch_request
+from app.notifications.schema.notifications import AI_SOURCED_TRIGGERS
+from app.notifications.schema.notifications import DUAL_SCOPE_TRIGGERS
+from app.notifications.schema.notifications import INTERNAL_TRIGGERS
 from app.notifications.schema.notifications import SEVERITY_ORDER
 from app.notifications.schema.notifications import DispatchOutcome
 from app.notifications.schema.notifications import DispatchRequest
@@ -37,12 +58,14 @@ from app.notifications.schema.notifications import DispatchStatus
 from app.notifications.schema.notifications import NotificationChannel
 from app.notifications.schema.notifications import NotificationRouteCreate
 from app.notifications.schema.notifications import NotificationRouteUpdate
+from app.notifications.schema.notifications import NotificationScope
+from app.notifications.schema.notifications import NotificationSeverity
 from app.notifications.schema.notifications import NotificationTrigger
 from app.notifications.schema.notifications import ShuffleApp
 from app.notifications.schema.notifications import ShuffleIntegrationCreate
 from app.notifications.schema.notifications import ShuffleIntegrationUpdate
 from app.notifications.schema.notifications import ShuffleOrg
-from app.notifications.services.dispatchers import dispatch_shuffle
+from app.notifications.services.ai_report_context import safe_load_ai_report_context
 from app.notifications.services.dispatchers import (
     list_shuffle_apps as shuffle_apps_client,
 )
@@ -52,38 +75,10 @@ from app.notifications.services.dispatchers import (
 from app.notifications.services.dispatchers import (
     verify_shuffle_org as verify_shuffle_org_client,
 )
-
-# Name of the Shuffle row in CoPilot's connectors table. The
-# `connector_url` (Shuffle base URL) and `connector_api_key` (admin
-# Bearer token) are read fresh on every dispatch so a key rotation
-# takes effect without restarting the backend.
-_SHUFFLE_CONNECTOR_NAME = "Shuffle"
-
-
-async def _get_shuffle_connector(session: AsyncSession) -> tuple[str, str]:
-    """Fetch (base_url, api_key) for the Shuffle connector. Raises
-    HTTPException if the connector row is missing or unconfigured —
-    surfaces a clear 4xx in the dispatch endpoint instead of a generic
-    500 when an admin forgets to configure Shuffle."""
-    info = await get_connector_info_from_db(_SHUFFLE_CONNECTOR_NAME, session)
-    if not info:
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "Shuffle connector is not configured in CoPilot. "
-                "Add the Shuffle connector with a valid API key before "
-                "creating Shuffle-channel notification routes."
-            ),
-        )
-    api_key = info.get("connector_api_key") or ""
-    base_url = info.get("connector_url") or "https://shuffler.io"
-    if not api_key:
-        raise HTTPException(
-            status_code=503,
-            detail="Shuffle connector is configured but has no API key set.",
-        )
-    return (base_url, api_key)
-
+from app.notifications.services.rendering import render_body
+from app.notifications.services.templates import assert_template_usable
+from app.notifications.services.templates import build_branding_context
+from app.notifications.services.templates import resolve_template_for_route
 
 # ---------------------------------------------------------------------------
 # CRUD
@@ -115,6 +110,190 @@ async def get_route(route_id: int, customer_code: str, session: AsyncSession) ->
     return route
 
 
+def _enforce_scope_invariant(scope: str, customer_code: Optional[str]) -> Optional[str]:
+    """A customer route must name a tenant; an internal route must not.
+
+    Returning the coerced code keeps the two callers from drifting. Raising a
+    400 rather than silently fixing it: a client sending scope='internal' with a
+    customer_code has a bug worth surfacing.
+    """
+    if scope == NotificationScope.INTERNAL.value:
+        if customer_code:
+            raise HTTPException(status_code=400, detail="An internal-scope route must not name a customer.")
+        return None
+    if not customer_code:
+        raise HTTPException(status_code=400, detail="A customer-scope route requires a customer_code.")
+    return customer_code
+
+
+async def list_internal_routes(session: AsyncSession) -> List[CustomerNotificationRoute]:
+    """Every internal-scope route. Deployment-wide — they belong to no tenant."""
+    result = await session.execute(
+        select(CustomerNotificationRoute)
+        .where(CustomerNotificationRoute.scope == NotificationScope.INTERNAL.value)
+        .order_by(desc(CustomerNotificationRoute.created_at)),
+    )
+    return result.scalars().all()
+
+
+async def get_internal_route(route_id: int, session: AsyncSession) -> CustomerNotificationRoute:
+    """Single internal route. Scoped in the query rather than trusting the id,
+    so a customer route's id can't be reached through the internal endpoints."""
+    result = await session.execute(
+        select(CustomerNotificationRoute).where(
+            CustomerNotificationRoute.id == route_id,
+            CustomerNotificationRoute.scope == NotificationScope.INTERNAL.value,
+        ),
+    )
+    route = result.scalars().first()
+    if not route:
+        raise HTTPException(status_code=404, detail="Internal route not found")
+    return route
+
+
+def _reject_shuffle_for_internal(payload_channel: Optional[str]) -> None:
+    """Shuffle is unavailable to internal routes.
+
+    `shuffle_integration_id` is an FK to `customer_shuffle_integration`, which is
+    per-customer — a route belonging to no tenant has no integration to point
+    at. Caught here rather than at dispatch, where it would surface as a
+    confusing "integration is missing" failure.
+    """
+    if payload_channel == NotificationChannel.SHUFFLE.value:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Shuffle is not available for internal routes: a Shuffle integration belongs to a "
+                "specific customer, and an internal route belongs to none. Use webhook or email."
+            ),
+        )
+
+
+async def create_internal_route(
+    payload: NotificationRouteCreate,
+    created_by: Optional[str],
+    session: AsyncSession,
+) -> CustomerNotificationRoute:
+    """Create a route that belongs to no tenant.
+
+    Forces scope='internal' rather than trusting the payload — these endpoints
+    are the internal surface by definition, and honouring a 'customer' scope
+    here would create a route with no customer_code that the customer-scoped
+    dispatch path could never find.
+    """
+    _reject_shuffle_for_internal(payload.channel.value)
+    if payload.scope != NotificationScope.INTERNAL:
+        raise HTTPException(status_code=400, detail="This endpoint creates internal-scope routes only.")
+
+    if payload.template_id:
+        await assert_template_usable(
+            payload.template_id,
+            channel=payload.channel.value,
+            trigger=payload.trigger.value,
+            customer_code=None,
+            session=session,
+        )
+
+    route = CustomerNotificationRoute(
+        customer_code=None,
+        scope=NotificationScope.INTERNAL.value,
+        recipient_mode=payload.recipient_mode.value,
+        notify_on_self_assign=payload.notify_on_self_assign,
+        name=payload.name,
+        trigger=payload.trigger.value,
+        channel=payload.channel.value,
+        destination=payload.destination or "",
+        min_severity=payload.min_severity.value,
+        format_template=payload.format_template,
+        template_id=payload.template_id,
+        enabled=payload.enabled,
+        created_by=created_by,
+        shuffle_integration_id=None,
+        config=json.dumps(payload.config or {}),
+    )
+    session.add(route)
+    await session.commit()
+    await session.refresh(route)
+    return route
+
+
+async def update_internal_route(
+    route_id: int,
+    payload: NotificationRouteUpdate,
+    session: AsyncSession,
+) -> CustomerNotificationRoute:
+    route = await get_internal_route(route_id, session)
+    data = payload.model_dump(exclude_unset=True)
+
+    new_channel = data.get("channel")
+    new_channel_value = new_channel.value if hasattr(new_channel, "value") else (new_channel or route.channel)
+    _reject_shuffle_for_internal(new_channel_value)
+
+    # Scope and customer_code are fixed for these routes; silently ignoring an
+    # attempt to change them would let a PATCH strand the route in a scope its
+    # dispatch path can't reach.
+    if "scope" in data and data["scope"] != NotificationScope.INTERNAL:
+        raise HTTPException(status_code=400, detail="An internal route's scope cannot be changed.")
+    data.pop("scope", None)
+
+    if "config" in data or "channel" in data or "recipient_mode" in data:
+        provider = get_channel(new_channel_value)
+        if provider is None:
+            raise HTTPException(status_code=400, detail=f"Unsupported channel: {new_channel_value}")
+        raw_config = data.get("config")
+        if raw_config is None and "config" not in data:
+            raw_config = json.loads(route.config) if route.config else {}
+        try:
+            data["config"] = provider.config_schema.model_validate(raw_config or {}).model_dump()
+        except PydanticValidationError as e:
+            raise HTTPException(status_code=400, detail=f"Invalid config for channel '{new_channel_value}': {e}") from e
+
+        mode = data.get("recipient_mode")
+        mode_value = mode.value if hasattr(mode, "value") else (mode or route.recipient_mode)
+        if mode_value not in provider.supports_recipient_modes:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Channel '{new_channel_value}' does not support recipient_mode '{mode_value}' "
+                    f"(supported: {sorted(provider.supports_recipient_modes)})"
+                ),
+            )
+
+    # An explicit null detaches the template; only a real id needs checking.
+    # Re-checked when the channel or trigger changes too, because either can
+    # invalidate an attachment that was valid when it was made.
+    effective_template_id = data.get("template_id", route.template_id)
+    if effective_template_id and {"template_id", "channel", "trigger"} & data.keys():
+        new_trigger = data.get("trigger")
+        await assert_template_usable(
+            effective_template_id,
+            channel=new_channel_value,
+            trigger=new_trigger.value if hasattr(new_trigger, "value") else (new_trigger or route.trigger),
+            customer_code=None,
+            session=session,
+        )
+
+    for field, value in data.items():
+        if hasattr(value, "value"):
+            value = value.value
+        if field == "config":
+            value = json.dumps(value or {})
+        if field == "destination" and value is None:
+            value = ""
+        setattr(route, field, value)
+    route.updated_at = datetime.utcnow()
+
+    await session.commit()
+    await session.refresh(route)
+    return route
+
+
+async def delete_internal_route(route_id: int, session: AsyncSession) -> None:
+    route = await get_internal_route(route_id, session)
+    await session.delete(route)
+    await session.commit()
+
+
 async def create_route(
     customer_code: str,
     payload: NotificationRouteCreate,
@@ -127,19 +306,35 @@ async def create_route(
     if payload.channel == NotificationChannel.SHUFFLE:
         await _ensure_integration_belongs_to_customer(payload.shuffle_integration_id, customer_code, session)
 
+    resolved_code = _enforce_scope_invariant(payload.scope.value, customer_code)
+
+    if payload.template_id:
+        await assert_template_usable(
+            payload.template_id,
+            channel=payload.channel.value,
+            trigger=payload.trigger.value,
+            customer_code=resolved_code,
+            session=session,
+        )
+
     route = CustomerNotificationRoute(
-        customer_code=customer_code,
+        customer_code=resolved_code,
+        scope=payload.scope.value,
+        recipient_mode=payload.recipient_mode.value,
+        notify_on_self_assign=payload.notify_on_self_assign,
         name=payload.name,
         trigger=payload.trigger.value,
         channel=payload.channel.value,
-        destination=payload.destination,
+        # `destination` is non-null in the DB; webhook routes may omit it,
+        # so coalesce to empty string rather than NULL.
+        destination=payload.destination or "",
         min_severity=payload.min_severity.value,
         format_template=payload.format_template,
+        template_id=payload.template_id,
         enabled=payload.enabled,
         created_by=created_by,
         shuffle_integration_id=payload.shuffle_integration_id,
-        shuffle_app_id=payload.shuffle_app_id,
-        shuffle_app_name=payload.shuffle_app_name,
+        config=json.dumps(payload.config or {}),
     )
     session.add(route)
     await session.commit()
@@ -172,11 +367,71 @@ async def update_route(
     if new_channel_value == NotificationChannel.SHUFFLE.value and new_integration_id:
         await _ensure_integration_belongs_to_customer(new_integration_id, customer_code, session)
 
+    # `config` is validated against the channel the route will HAVE after this
+    # PATCH — which may be the row's current channel when the PATCH doesn't
+    # change it. NotificationRouteUpdate can't do this itself: it has no view of
+    # the stored row.
+    if "config" in data or "channel" in data or "recipient_mode" in data:
+        provider = get_channel(new_channel_value)
+        if provider is None:
+            raise HTTPException(status_code=400, detail=f"Unsupported channel: {new_channel_value}")
+        raw_config = data.get("config")
+        if raw_config is None and "config" not in data:
+            # Channel changed but config didn't — re-validate what's stored, so
+            # switching to a channel the existing config can't satisfy is caught
+            # here rather than at dispatch time.
+            raw_config = json.loads(route.config) if route.config else {}
+        try:
+            data["config"] = provider.config_schema.model_validate(raw_config or {}).model_dump()
+        except PydanticValidationError as e:
+            raise HTTPException(status_code=400, detail=f"Invalid config for channel '{new_channel_value}': {e}") from e
+
+        mode = data.get("recipient_mode")
+        mode_value = mode.value if hasattr(mode, "value") else (mode or route.recipient_mode)
+        if mode_value not in provider.supports_recipient_modes:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Channel '{new_channel_value}' does not support recipient_mode '{mode_value}' "
+                    f"(supported: {sorted(provider.supports_recipient_modes)})"
+                ),
+            )
+
+    # Scope and customer_code have to move together.
+    new_scope = data.get("scope")
+    new_scope_value = new_scope.value if hasattr(new_scope, "value") else (new_scope or route.scope)
+    if "scope" in data:
+        data["customer_code"] = _enforce_scope_invariant(
+            new_scope_value,
+            None if new_scope_value == NotificationScope.INTERNAL.value else (route.customer_code or customer_code),
+        )
+
+    # Same rule as the internal path: an explicit null detaches, a real id is
+    # re-checked whenever the channel or trigger moves under it.
+    effective_template_id = data.get("template_id", route.template_id)
+    if effective_template_id and {"template_id", "channel", "trigger"} & data.keys():
+        new_trigger = data.get("trigger")
+        await assert_template_usable(
+            effective_template_id,
+            channel=new_channel_value,
+            trigger=new_trigger.value if hasattr(new_trigger, "value") else (new_trigger or route.trigger),
+            customer_code=data.get("customer_code", route.customer_code),
+            session=session,
+        )
+
     for field, value in data.items():
         # Enums: write the underlying string into the DB column.
         if hasattr(value, "value"):
             value = value.value
+        # config is a dict in the schema but a JSON-string column in the DB.
+        if field == "config":
+            value = json.dumps(value or {})
+        # destination is NOT NULL in the DB; a webhook PATCH legitimately
+        # sends it as null (webhooks don't use it) — coalesce to "".
+        if field == "destination" and value is None:
+            value = ""
         setattr(route, field, value)
+
     route.updated_at = datetime.utcnow()
 
     await session.commit()
@@ -309,7 +564,7 @@ async def list_apps_for_integration(
     cache — fresh data on every form open is fine for v1.
     """
     integration = await _ensure_integration_belongs_to_customer(integration_id, customer_code, session)
-    base_url, api_key = await _get_shuffle_connector(session)
+    base_url, api_key = await get_shuffle_connector(session)
     ok, apps_raw, error = await shuffle_apps_client(
         base_url=base_url,
         api_key=api_key,
@@ -341,7 +596,7 @@ async def list_apps_for_integration(
 
 async def verify_integration(integration_id: int, customer_code: str, session: AsyncSession) -> dict:
     integration = await _ensure_integration_belongs_to_customer(integration_id, customer_code, session)
-    base_url, api_key = await _get_shuffle_connector(session)
+    base_url, api_key = await get_shuffle_connector(session)
     ok, app_count, error = await verify_shuffle_org_client(
         base_url=base_url,
         api_key=api_key,
@@ -365,7 +620,7 @@ async def list_orgs(session: AsyncSession) -> List[ShuffleOrg]:
     each org is then attached to a specific customer via the
     integration row at create time.
     """
-    base_url, api_key = await _get_shuffle_connector(session)
+    base_url, api_key = await get_shuffle_connector(session)
     ok, orgs_raw, error = await shuffle_orgs_client(base_url=base_url, api_key=api_key)
     if not ok:
         raise HTTPException(
@@ -464,62 +719,320 @@ def _trigger_applies(report_trigger: str, route_trigger: str) -> bool:
     return route_trigger == report_trigger
 
 
-def _format_default_body(req: DispatchRequest) -> str:
-    """Plain default formatter when a route has no `format_template`.
+async def _ai_reports_permitted(trigger: str, customer_code: str, session: AsyncSession) -> bool:
+    """Whether AI-written findings may be delivered to this customer.
 
-    Markdown-ish but readable in both Slack and email — both channels
-    render this acceptably without extra structure. Phase 4 swaps for
-    per-channel templates.
+    `customer_portal_ai_report_settings` is the operator's opt-in switch for
+    publishing AI analyst output to an end customer. It is enforced on the
+    portal's read paths (`app/customer_portal/services/ai_reports.py`), but a
+    notification route is a *second* way the same content reaches the same
+    customer — so the same switch has to gate it, or the notification channel
+    becomes a way around the opt-out. See issue #1001.
+
+    We call the portal service's own predicate rather than re-querying the
+    table, so the two enforcement points cannot drift apart. (This is the
+    auth-scope sidestep pattern from CLAUDE.md: scope checks live on the route
+    handler, so calling the service function directly is both safe and the
+    documented approach.)
+
+    Returns True for non-AI triggers — the switch governs AI-written content,
+    not alert-creation or assignment notifications.
     """
+    if trigger not in AI_SOURCED_TRIGGERS:
+        return True
+    return await is_ai_reports_enabled(customer_code, session)
+
+
+def _ai_report_section(event: NotificationEvent) -> str:
+    """The AI report appended to a default body, or "" when there is none.
+
+    Exists so that ticking "Include the AI investigation report" on a route with
+    **no template at all** still delivers the report. Without this, the checkbox
+    would only work for routes an operator had already customised — which is
+    exactly the case where they least need help.
+
+    Emits the report markdown verbatim. On email that is turned into real HTML
+    downstream (the message is flagged `markdown` when this section is present);
+    on chat channels markdown is already the native format.
+    """
+    report = (event.context or {}).get("ai_report")
+    if not report:
+        return ""
+
+    body = report.get("markdown") or report.get("summary") or ""
+    if not body.strip():
+        return ""
+
+    heading = "*AI investigation*"
+    severity = report.get("severity")
+    if severity:
+        heading = f"*AI investigation* — assessed severity: *{severity}*"
+    return "\n".join(["", "---", "", heading, "", body.strip()])
+
+
+def _format_default_body(event: NotificationEvent) -> str:
+    """The channel default body, plus the AI report when one was requested.
+
+    Split from `_format_default_body_core` so every per-trigger branch gains the
+    report section without repeating the append at three return sites.
+    """
+    return _format_default_body_core(event) + _ai_report_section(event)
+
+
+def _format_default_body_core(event: NotificationEvent) -> str:
+    """Default message body when a route sets no `format_template`.
+
+    Markdown-ish: readable as-is in Slack, Teams and a plaintext email. Per-
+    trigger wording, because "AI investigation complete" is wrong for an
+    assignment and "assigned to" is wrong for an alert landing.
+
+    The investigation_complete branch reproduces the pre-#1006 text exactly —
+    it is what existing customers already receive.
+    """
+    trig = event.trigger.value
+    ctx = event.context or {}
+
+    if trig in INTERNAL_TRIGGERS:
+        what = {
+            "alert_assigned": "Alert",
+            "case_assigned": "Case",
+            "case_task_assigned": "Task",
+        }.get(trig, "Item")
+        label = ctx.get("title") or event.subject
+        parts = [
+            f"*{what} assigned* — {event.assignee_username or 'unassigned'}",
+            "",
+            f"{what}: #{event.entity_id}" + (f" — {label}" if label else ""),
+        ]
+        if event.customer_code:
+            parts.append(f"Customer: `{event.customer_code}`")
+        if event.actor_username:
+            parts.append(f"Assigned by: {event.actor_username}")
+        if event.summary:
+            parts.extend(["", event.summary.strip()])
+        if event.link_url:
+            parts.extend(["", f"Open in CoPilot: {event.link_url}"])
+        return "\n".join(parts)
+
+    if trig == NotificationTrigger.ALERT_CREATED.value:
+        parts = [
+            f"*New alert* — severity: *{event.severity.value}*",
+            "",
+            f"Customer: `{event.customer_code}`",
+            f"Alert: #{event.entity_id}" + (f" — {event.subject}" if event.subject else ""),
+        ]
+        if ctx.get("asset_name"):
+            parts.append(f"Asset: {ctx['asset_name']}")
+        if ctx.get("rule_level") is not None:
+            parts.append(f"Rule level: {ctx['rule_level']}")
+        if event.summary:
+            parts.extend(["", event.summary.strip()])
+        if event.link_url:
+            parts.extend(["", f"Open in CoPilot: {event.link_url}"])
+        return "\n".join(parts)
+
+    if trig == NotificationTrigger.AI_REPORT_REVIEWED.value:
+        # Its own wording rather than falling through to the investigation
+        # branch, which would announce "AI investigation complete" for the
+        # second time about the same alert and bury what actually changed —
+        # that a human has now checked it.
+        parts = [
+            f"*AI report reviewed* — severity: *{event.severity.value}*",
+            "",
+            f"Customer: `{event.customer_code}`",
+            f"Alert: #{event.entity_id}" + (f" — {ctx.get('alert_name')}" if ctx.get("alert_name") else ""),
+        ]
+        if ctx.get("reviewer"):
+            parts.append(f"Reviewed by: {ctx['reviewer']}")
+        if ctx.get("verdict"):
+            parts.append(f"Verdict: {ctx['verdict']}")
+        if event.summary:
+            parts.extend(["", event.summary.strip()])
+        if event.link_url:
+            parts.extend(["", f"Open in CoPilot: {event.link_url}"])
+        return "\n".join(parts)
+
+    # investigation_complete — unchanged wording, existing customers see this.
+    alert_name = ctx.get("alert_name")
     parts = [
-        f"*AI investigation complete* — severity: *{req.severity_assessment.value}*",
+        f"*AI investigation complete* — severity: *{event.severity.value}*",
         "",
-        f"Customer: `{req.customer_code}`",
-        f"Alert: #{req.alert_id}" + (f" — {req.alert_name}" if req.alert_name else ""),
+        f"Customer: `{event.customer_code}`",
+        f"Alert: #{event.entity_id}" + (f" — {alert_name}" if alert_name else ""),
         "",
-        req.summary.strip(),
+        event.summary.strip(),
     ]
-    if req.report_url:
-        parts.extend(["", f"Full report: {req.report_url}"])
+    if event.link_url:
+        parts.extend(["", f"Full report: {event.link_url}"])
     return "\n".join(parts)
 
 
-def _render_body(route: CustomerNotificationRoute, req: DispatchRequest) -> str:
-    """Apply the route's `format_template` if set, else fall back.
+async def _render_body(
+    route: CustomerNotificationRoute,
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> Tuple[RenderedMessage, Optional[str]]:
+    """Render this route's message.
 
-    Phase 1's templating is intentionally minimal — `{{ variable }}`
-    substitution only, no Jinja control flow. Real Jinja can come in
-    Phase 4 when the per-channel templates land.
+    Returns `(message, template_error)`. The error is non-None only when a custom
+    template failed and the channel default was sent instead — it is appended to
+    the dispatch-log row so a broken template is visible without reproducing it.
+
+    **Precedence is inline → named → channel default.** The inline
+    `format_template` still wins so a single route can deviate without forking
+    the shared template, and so every route that worked before #1038 renders
+    byte-for-byte the same message.
+
+    Templates are real Jinja since #1037: conditionals, loops over an alert's
+    IOCs, filters. The original token names remain top-level context with
+    unchanged meaning, so templates written against the old string-substitution
+    renderer keep working.
+
+    One behaviour change worth knowing: an *unknown* token used to survive as a
+    literal `{{foo}}` in the output. Under `StrictUndefined` it now raises, and
+    the route falls back to the channel default with the reason logged. That is
+    louder, and deliberately so — a message with a stray `{{foo}}` in it was
+    already broken, just silently.
     """
-    if not route.format_template:
-        return _format_default_body(req)
+    inline = route.format_template
+    if inline:
+        await _ensure_ai_report_context(inline, event, session, ctx=ctx)
+        fallback = _format_default_body(event)
+        body, error = render_body(inline, event, fallback)
+        return (RenderedMessage(body=body, is_custom=error is None), error)
 
-    body = route.format_template
-    substitutions = {
-        "{{customer_code}}": req.customer_code,
-        "{{alert_id}}": str(req.alert_id),
-        "{{alert_name}}": req.alert_name or "",
-        "{{severity}}": req.severity_assessment.value,
-        "{{summary}}": req.summary,
-        "{{report_url}}": req.report_url or "",
-    }
-    for token, value in substitutions.items():
-        body = body.replace(token, value)
-    return body
+    template = await resolve_template_for_route(route, session)
+    if template is None:
+        fallback = _format_default_body(event)
+        # A default body that carries a report is markdown, not plain text: the
+        # report is markdown by nature, and flagging it lets the email channel
+        # render its tables instead of shipping pipes. Without a report the
+        # format stays `text`, so ordinary notifications are byte-for-byte
+        # unchanged.
+        fmt = "markdown" if (event.context or {}).get("ai_report") else "text"
+        return (RenderedMessage(body=fallback, format=fmt), None)
+
+    source = f"{template.body_template}{template.subject_template or ''}"
+    await _ensure_ai_report_context(source, event, session, ctx=ctx)
+    fallback = _format_default_body(event)
+
+    autoescape = template.format == "html"
+    extra = await _branding_context(template, event, session, ctx=ctx)
+
+    body, error = render_body(template.body_template, event, fallback, autoescape=autoescape, extra_context=extra)
+    if error:
+        # The named template failed, so the channel default went out instead —
+        # which is plain text with no subject, whatever the template declared.
+        return (RenderedMessage(body=body), error)
+
+    subject, subject_error = render_body(
+        template.subject_template,
+        event,
+        # A failed subject falls back to the provider composing its own, which
+        # is what a route with no named template already does.
+        "",
+        autoescape=autoescape,
+        extra_context=extra,
+    )
+    return (
+        RenderedMessage(
+            body=body,
+            format=template.format,
+            # Subjects are single-line by definition; collapsing whitespace stops
+            # a template with a newline in it producing a header-shaped string.
+            subject=" ".join(subject.split()) or None,
+            is_custom=True,
+        ),
+        subject_error,
+    )
+
+
+async def _branding_context(
+    template: NotificationTemplate,
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> Dict[str, Any]:
+    """Resolve `branding` for a template that asks for it, and only then.
+
+    The substring check is sound rather than a heuristic: Jinja resolves a name
+    from the context by its literal spelling, so a template cannot reach
+    `branding` without the word appearing in its source. Skipping the lookup
+    otherwise keeps the common case — a plain-text chat template — at zero extra
+    queries on the ingest hot path.
+
+    Memoized on the dispatch context when there is one, so a batch of routes
+    sharing a customer resolves branding once.
+    """
+    source = f"{template.body_template}{template.subject_template or ''}"
+    if "branding" not in source:
+        return {}
+
+    customer_code = event.customer_code
+    if ctx is None:
+        return {"branding": await build_branding_context(customer_code, session)}
+    branding = await ctx.memoize(
+        f"branding:{customer_code}",
+        lambda: build_branding_context(customer_code, session),
+    )
+    return {"branding": branding}
+
+
+async def _ensure_ai_report_context(
+    source: str,
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> None:
+    """Put the alert's AI report on the event when a template asks for it.
+
+    Follows `_branding_context`'s guard exactly, for the same reason: Jinja
+    resolves names by their literal spelling, so a template that never writes
+    `ai_report` cannot reach one, and skipping the lookup keeps a plain chat
+    template at zero extra queries on the ingest hot path. Investigations are the
+    minority of alerts and the report is the largest thing the engine can load —
+    fetching it speculatively would be the wrong default.
+
+    Injects onto `event.context` rather than passing `extra_context`, so the
+    report is reachable identically from an inline template, a named template
+    and `_format_default_body`. Manual send pre-populates the same key, which is
+    why the presence check comes before the load.
+
+    `None` is stored on a miss rather than left absent, so a second route in the
+    same batch does not re-query. Templates guard with `{% if context.ai_report %}`
+    and both a `None` and an absent key read as falsy.
+    """
+    if "ai_report" not in source:
+        return
+    if "ai_report" in (event.context or {}):
+        return
+    # Cases and tasks have no investigation; only alerts do.
+    if event.entity_type != EntityType.ALERT:
+        return
+
+    async def _load():
+        return await safe_load_ai_report_context(event.entity_id, session)
+
+    report = await ctx.memoize(f"ai_report:{event.entity_id}", _load) if ctx is not None else await _load()
+    event.context["ai_report"] = report
 
 
 async def _record_log(
     session: AsyncSession,
     *,
-    customer_code: str,
-    alert_id: int,
+    event: NotificationEvent,
     route_id: int,
-    trigger: str,
     status: str,
     error_message: Optional[str],
     latency_ms: Optional[int],
     payload_preview: Optional[str],
-    shuffle_execution_id: Optional[str] = None,
+    provider_reference: Optional[str] = None,
+    triggered_by: Optional[str] = None,
+    trigger_source: str = "automatic",
 ) -> bool:
     """Record a dispatch outcome. Returns False ONLY when the dispatch
     has already been recorded as `sent` — i.e. a true idempotency hit
@@ -528,8 +1041,11 @@ async def _record_log(
     with the new result so retries land cleanly.
 
     Idempotency model:
-      - One row per (customer_code, alert_id, route_id, trigger) tuple
-        (enforced by a unique index)
+      - One row per (route_id, dedupe_key) pair (enforced by a unique
+        index). The key comes off the event, so each trigger owns its
+        own semantics — reassigning A → B → A re-notifies A, while a
+        no-op write does not, and manual sends (#1010) stay repeatable
+        by generating a per-invocation key.
       - If the existing row's status is `sent`, refuse the new write
         (caller treats as "already done, skip")
       - If the existing row's status is `failed`/`skipped`, overwrite
@@ -538,17 +1054,15 @@ async def _record_log(
       - If no row exists yet, insert a fresh one
     """
     # Pre-flight: check whether a row already exists for this
-    # (customer, alert, route, trigger) tuple. Doing the check up front
-    # lets us update-in-place when needed — avoids the rollback path
-    # whose `session.rollback()` expires every loaded object in the
-    # session (route, integrations, etc.) and breaks subsequent
-    # attribute access in async context.
+    # (route, dedupe_key) pair. Doing the check up front lets us
+    # update-in-place when needed — avoids the rollback path whose
+    # `session.rollback()` expires every loaded object in the session
+    # (route, integrations, etc.) and breaks subsequent attribute
+    # access in async context.
     result = await session.execute(
         select(NotificationDispatchLog).where(
-            NotificationDispatchLog.customer_code == customer_code,
-            NotificationDispatchLog.alert_id == alert_id,
             NotificationDispatchLog.route_id == route_id,
-            NotificationDispatchLog.trigger == trigger,
+            NotificationDispatchLog.dedupe_key == event.dedupe_key,
         ),
     )
     existing = result.scalars().first()
@@ -564,22 +1078,29 @@ async def _record_log(
         existing.error_message = error_message
         existing.latency_ms = latency_ms
         existing.payload_preview = payload_preview[:500] if payload_preview else None
-        existing.shuffle_execution_id = shuffle_execution_id
+        existing.provider_reference = provider_reference
         existing.dispatched_at = datetime.utcnow()
         await session.commit()
         return True
 
     # No prior record — insert fresh.
     log = NotificationDispatchLog(
-        customer_code=customer_code,
-        alert_id=alert_id,
+        customer_code=event.customer_code,
+        # Populated only for alert-shaped events; a case-task assignment
+        # leaves it NULL and carries its identity in entity_type/entity_id.
+        alert_id=event.entity_id if event.entity_type == EntityType.ALERT else None,
+        entity_type=event.entity_type,
+        entity_id=event.entity_id,
+        dedupe_key=event.dedupe_key,
         route_id=route_id,
-        trigger=trigger,
+        trigger=event.trigger.value,
         status=status,
         error_message=error_message,
         latency_ms=latency_ms,
         payload_preview=payload_preview[:500] if payload_preview else None,
-        shuffle_execution_id=shuffle_execution_id,
+        provider_reference=provider_reference,
+        triggered_by=triggered_by or event.actor_username,
+        trigger_source=trigger_source,
     )
     session.add(log)
     try:
@@ -595,133 +1116,313 @@ async def _record_log(
         return False
 
 
-async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchResponse:
-    """Walk the customer's routes, fire each match, log each outcome.
+def _sample_event_for(route: CustomerNotificationRoute) -> NotificationEvent:
+    """A realistic-looking event for a test send.
 
-    Idempotency is enforced at the log table — we attempt the insert
-    *before* calling the provider, so a re-dispatch sees the existing
-    row and short-circuits without sending. (The cost is one wasted
-    INSERT in the race case, which is fine.)
+    Deliberately built from the route's own trigger so the operator sees the
+    body they'll actually get, not a generic "hello". The dedupe key carries a
+    uuid so repeated tests always send — a test that silently no-ops the second
+    time would be worse than useless.
     """
-    routes = await list_routes(req.customer_code, session)
+    trigger = (
+        NotificationTrigger(route.trigger)
+        if route.trigger in {t.value for t in NotificationTrigger}
+        else NotificationTrigger.INVESTIGATION_COMPLETE
+    )
+
+    is_assignment = trigger.value in INTERNAL_TRIGGERS
+    entity_type = EntityType.ALERT
+    if trigger == NotificationTrigger.CASE_ASSIGNED:
+        entity_type = EntityType.CASE
+    elif trigger == NotificationTrigger.CASE_TASK_ASSIGNED:
+        entity_type = EntityType.CASE_TASK
+
+    return NotificationEvent(
+        customer_code=route.customer_code,
+        trigger=trigger,
+        severity=NotificationSeverity.HIGH,
+        subject="Test notification from CoPilot",
+        summary=(
+            "This is a test notification triggered from the CoPilot route form. "
+            "If you are reading it, this route is configured correctly."
+        ),
+        entity_type=entity_type,
+        entity_id=0,
+        dedupe_key=f"test:{route.id}:{uuid4()}",
+        link_url=None,
+        assignee_username=route.created_by if is_assignment else None,
+        actor_username=route.created_by,
+        context={"alert_name": "Test notification from CoPilot", "title": "Test notification from CoPilot"},
+    )
+
+
+async def deliver_one(
+    route: CustomerNotificationRoute,
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    trigger_source: str = "manual",
+) -> SendResult:
+    """Send one event through one route's provider, and log the outcome.
+
+    The shared core of every "deliver this specific thing now" path — the test
+    button and manual send (#1010) — as distinct from `dispatch_event`, which
+    matches an event against many routes. Both need identical behaviour on
+    rendering, failure containment and logging, so they share it rather than
+    drifting.
+
+    Never raises: a provider that blows up becomes a `failed` result, because
+    both callers report an outcome rather than an exception.
+
+    The outcome IS logged. These sends consume provider quota exactly like an
+    automatic one — omitting them would make the Resend monthly counter
+    under-report and hide hand-sent traffic from the audit trail.
+    """
+    provider = get_channel(route.channel)
+    if provider is None:
+        return SendResult.failed(f"Unsupported channel: {route.channel}")
+
+    ctx = DispatchContext(session=session, event=event)
+    message, template_error = await _render_body(route, event, session, ctx=ctx)
+
+    try:
+        result = await provider.send(route=route, event=event, message=message, ctx=ctx)
+    except Exception as e:  # noqa: BLE001 — report, never 500 the caller
+        logger.exception(f"Dispatch raised for route {route.id}: {e!r}")
+        result = SendResult.failed(f"Dispatcher exception: {type(e).__name__}: {e}")
+
+    await _record_log(
+        session,
+        event=event,
+        route_id=route.id,
+        status=result.status,
+        error_message=(
+            f"{result.error_message}; {template_error}"
+            if result.error_message and template_error
+            else (result.error_message or template_error)
+        ),
+        latency_ms=result.latency_ms,
+        payload_preview=message.body[:500],
+        provider_reference=result.provider_reference,
+        trigger_source=trigger_source,
+    )
+    return result
+
+
+async def send_test_notification(route: CustomerNotificationRoute, session: AsyncSession) -> DispatchOutcome:
+    """Deliver one test message through the route's real provider.
+
+    Uses the normal send path rather than a bespoke per-provider probe, because
+    a probe tests the wrong thing: the Resend key in use here is send-only
+    restricted, so an account-state check 401s while sending works fine. What an
+    operator wants to know is "will a real notification arrive", and only a real
+    send answers that.
+    """
+    result = await deliver_one(route, _sample_event_for(route), session, trigger_source="test")
+    return DispatchOutcome(
+        route_id=route.id,
+        route_name=route.name,
+        channel=route.channel,
+        status=DispatchStatus(result.status),
+        error_message=result.error_message,
+        latency_ms=result.latency_ms,
+        provider_reference=result.provider_reference,
+    )
+
+
+async def routes_for_event(event: NotificationEvent, session: AsyncSession) -> List[CustomerNotificationRoute]:
+    """Candidate routes for an event, before trigger/severity filtering.
+
+    Scope decides the pool, and the split is the point of the whole dimension:
+    an assignment is about *who is working on something*, so it resolves against
+    internal routes and never reaches the customer whose alert it was. Anything
+    else is about the customer's security posture and resolves against theirs.
+
+    **Dual-scope triggers resolve against both pools** (#1053). Analyst sign-off
+    is the first event that is legitimately internal *and* customer-facing: the
+    SOC wants to know a report was reviewed, and the customer's route is exactly
+    the one an operator wants held back until a human has checked it.
+
+    The tenant filter applies only to the customer half. Internal routes belong
+    to no tenant, so filtering them by `customer_code` would return nothing —
+    which is the bug this shape exists to avoid.
+    """
+    trigger = event.trigger.value
+    internal_clause = CustomerNotificationRoute.scope == NotificationScope.INTERNAL.value
+    customer_clause = and_(
+        CustomerNotificationRoute.scope == NotificationScope.CUSTOMER.value,
+        CustomerNotificationRoute.customer_code == event.customer_code,
+    )
+
+    if trigger in INTERNAL_TRIGGERS:
+        where = internal_clause
+    elif trigger in DUAL_SCOPE_TRIGGERS:
+        where = or_(internal_clause, customer_clause)
+    else:
+        where = customer_clause
+
+    result = await session.execute(
+        select(CustomerNotificationRoute).where(where).order_by(desc(CustomerNotificationRoute.created_at)),
+    )
+    return result.scalars().all()
+
+
+def _self_assignment_suppressed(route: CustomerNotificationRoute, event: NotificationEvent) -> bool:
+    """Whether to drop a self-assignment for this route.
+
+    An analyst picking up their own alert doesn't need a notification about it.
+    Opt-in per route because some teams do want the audit trail.
+    """
+    if event.trigger.value not in INTERNAL_TRIGGERS:
+        return False
+    if not event.actor_username or not event.assignee_username:
+        return False
+    if event.actor_username != event.assignee_username:
+        return False
+    return not bool(getattr(route, "notify_on_self_assign", False))
+
+
+async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchResponse:
+    """Talon's entry point. Adapts the wire format and delegates.
+
+    Kept as a thin shim because `DispatchRequest` is an external contract; every
+    CoPilot-originated trigger builds a `NotificationEvent` directly and calls
+    `dispatch_event`.
+    """
+    return await dispatch_event(event_from_dispatch_request(req), session)
+
+
+async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> DispatchResponse:
+    """Walk the matching routes, fire each, log every outcome.
+
+    Idempotency is enforced at the log table — the insert is attempted *before*
+    the provider call, so a re-dispatch sees the existing row and short-circuits
+    without sending.
+    """
+    routes = await routes_for_event(event, session)
 
     matched_routes = [
         r
         for r in routes
-        if r.enabled and _trigger_applies(req.trigger.value, r.trigger) and _severity_meets(req.severity_assessment.value, r.min_severity)
+        if r.enabled
+        and _trigger_applies(event.trigger.value, r.trigger)
+        and _severity_meets(event.severity.value, r.min_severity)
+        and not _self_assignment_suppressed(r, event)
     ]
 
     outcomes: List[DispatchOutcome] = []
     sent = failed = skipped = 0
 
-    # Shuffle dispatch needs the deployment's connector creds. We fetch
-    # them once per dispatch call (before the per-route loop) so a
-    # whole batch shares one DB read. Only fetch if at least one
-    # matched route uses Shuffle — early-out keeps zero-route customers
-    # from touching the connectors table.
-    shuffle_creds: Optional[tuple[str, str]] = None
-    shuffle_creds_error: Optional[str] = None
-    if any(r.channel == NotificationChannel.SHUFFLE.value for r in matched_routes):
-        try:
-            shuffle_creds = await _get_shuffle_connector(session)
-        except HTTPException as e:
-            # Connector misconfigured — the dispatch endpoint surfaces
-            # the helper's 503 to ad-hoc callers, but for a batch we'd
-            # rather mark each route as failed in the log than abort
-            # the whole loop.
-            logger.warning(f"Shuffle connector unavailable: {e.detail}")
-            shuffle_creds_error = str(e.detail)
+    # AI-report opt-out gate. Checked AFTER matching so the dispatch log still
+    # records which routes *would* have fired — "suppressed by the AI switch"
+    # is far easier to debug than silence — but BEFORE the connector fetch and
+    # any provider call, so nothing leaves the process.
+    #
+    # Only customer-facing routes are gated. Internal routes are deliberately
+    # exempt: running investigations while keeping the results internal is a
+    # supported configuration, and the switch governs what reaches the CUSTOMER.
+    #
+    # Suppression removes the gated routes and lets the rest proceed, rather
+    # than returning. `ai_report_reviewed` resolves against BOTH scopes (#1053),
+    # so a batch can hold internal and customer routes at once — and aborting
+    # the dispatch would silently take the SOC's own notification down with the
+    # customer's, which is the exact opposite of what the opt-out is for.
+    deliverable_routes = matched_routes
+    gated_routes = [r for r in matched_routes if r.scope == NotificationScope.CUSTOMER.value]
+    if gated_routes and not await _ai_reports_permitted(event.trigger.value, event.customer_code, session):
+        logger.info(
+            f"AI reports are not enabled for customer {event.customer_code}; "
+            f"suppressing {len(gated_routes)} matched notification route(s) "
+            f"for alert {event.entity_id}.",
+        )
+        reason = "AI reports are not enabled for this customer; notification suppressed."
+        for route in gated_routes:
+            # Cache before the await — see the attribute-caching note in the
+            # main loop below.
+            route_id = route.id
+            route_name = route.name
+            route_channel = route.channel
+            await _record_log(
+                session,
+                event=event,
+                route_id=route_id,
+                status=DispatchStatus.SKIPPED.value,
+                error_message=reason,
+                latency_ms=None,
+                payload_preview=None,
+            )
+            skipped += 1
+            outcomes.append(
+                DispatchOutcome(
+                    route_id=route_id,
+                    route_name=route_name,
+                    channel=route_channel,
+                    status=DispatchStatus.SKIPPED,
+                    error_message=reason,
+                ),
+            )
+        gated_ids = {r.id for r in gated_routes}
+        deliverable_routes = [r for r in matched_routes if r.id not in gated_ids]
 
-    for route in matched_routes:
-        # Cache every route attribute we'll need into locals UP FRONT.
+    # Per-call context. Expensive lookups a provider needs (the Shuffle
+    # connector row, an alert's AI report) are memoized on it, so a batch of
+    # routes shares one read — the property the pre-refactor prefetch gave us,
+    # now lazy: nothing is read unless a route actually reaches that provider.
+    ctx = DispatchContext(session=session, event=event)
+
+    for route in deliverable_routes:
+        # Cache every route attribute the LOOP needs into locals UP FRONT.
         # Once we cross any `await` (let alone any rollback) the route
         # SQLAlchemy state can be expired and a synchronous attribute
         # access then triggers an implicit refresh query — which in
-        # AsyncSession throws MissingGreenlet. Caching here means the
-        # rest of the loop is plain-Python access on locals.
+        # AsyncSession throws MissingGreenlet. Providers do the same for
+        # the attributes they read; see ChannelProvider.send's docstring.
         route_id = route.id
         route_name = route.name
         route_channel = route.channel
-        route_destination = route.destination
-        route_shuffle_app_id = route.shuffle_app_id
-        route_shuffle_integration_id = route.shuffle_integration_id
 
-        body = _render_body(route, req)
-        body_preview = body[:500]
+        message, template_error = await _render_body(route, event, session, ctx=ctx)
+        body_preview = message.body[:500]
 
         latency_ms: Optional[int] = None
         result_status = "sent"
         error_message: Optional[str] = None
-        shuffle_execution_id: Optional[str] = None
+        provider_reference: Optional[str] = None
+        # Stays None when the channel is unknown or send() raised. after_send
+        # guards on it rather than inferring from result_status — the two can
+        # only diverge via a future edit, and this way that edit is safe.
+        result: Optional[SendResult] = None
+
+        provider = get_channel(route_channel)
 
         try:
-            if route_channel == NotificationChannel.SHUFFLE.value:
-                # Shuffle hosted MCP. Fire-and-record — we POST to
-                # /api/v1/apps/{app_id}/mcp with the deployment's admin
-                # Bearer + the customer's Org-Id, capture the
-                # execution_id, and consider the dispatch "sent" on
-                # HTTP 200. We do NOT poll for the downstream app's
-                # terminal state.
-                if shuffle_creds is None:
-                    result_status = "failed"
-                    error_message = shuffle_creds_error or "Shuffle connector unavailable"
-                    latency_ms = 0
-                elif not route_shuffle_app_id:
-                    result_status = "failed"
-                    error_message = "Route has no shuffle_app_id (data integrity issue)"
-                    latency_ms = 0
-                else:
-                    integration = await session.get(CustomerShuffleIntegration, route_shuffle_integration_id)
-                    if not integration or integration.customer_code != req.customer_code:
-                        # Defense-in-depth: we already enforce tenant
-                        # isolation at create/update time, but a hand-
-                        # edited row could still slip through. Refusing
-                        # at dispatch time prevents cross-tenant leaks.
-                        result_status = "failed"
-                        error_message = (
-                            "Route's shuffle_integration is missing or belongs to a " "different customer; refusing to dispatch."
-                        )
-                        latency_ms = 0
-                    elif not integration.enabled:
-                        result_status = "skipped"
-                        error_message = "Shuffle integration is disabled"
-                        latency_ms = 0
-                    else:
-                        base_url, api_key = shuffle_creds
-                        # Cache integration attrs too — same reason as
-                        # the route caching above.
-                        integration_org_id = integration.shuffle_org_id
-                        # Shuffle's input_text is natural language. We
-                        # prepend a "send to {destination}" hint so the
-                        # Shuffle app agent knows where to deliver, and
-                        # follow with the formatted body.
-                        if route_destination:
-                            input_text = f"Send to {route_destination}: {body}"
-                        else:
-                            input_text = body
-                        (
-                            result_status,
-                            error_message,
-                            latency_ms,
-                            shuffle_execution_id,
-                        ) = await dispatch_shuffle(
-                            base_url=base_url,
-                            api_key=api_key,
-                            org_id=integration_org_id,
-                            app_id=route_shuffle_app_id,
-                            input_text=input_text,
-                        )
-            else:
-                # Unknown channel — preserved as a failure rather than
-                # silently dropped so a misconfigured row surfaces in
-                # the dispatch log.
+            if provider is None:
+                # Unknown channel — recorded as a failure rather than silently
+                # dropped, so a misconfigured row surfaces in the dispatch log.
                 result_status = "failed"
                 error_message = f"Unsupported channel: {route_channel}"
                 latency_ms = None
+            else:
+                result = await provider.send(
+                    route=route,
+                    event=event,
+                    message=message,
+                    ctx=ctx,
+                )
+                result_status = result.status
+                error_message = result.error_message
+                latency_ms = result.latency_ms
+                provider_reference = result.provider_reference
         except Exception as e:  # noqa: BLE001 — best-effort, never raise
             logger.exception(f"Dispatcher raised for route {route_id}: {e!r}")
             result_status = "failed"
             error_message = f"Dispatcher exception: {type(e).__name__}: {e}"
+
+        # A template failure is worth recording even when delivery succeeded:
+        # the operator got the channel default, not what they wrote, and would
+        # otherwise have no signal that their template is broken.
+        if template_error:
+            error_message = f"{error_message}; {template_error}" if error_message else template_error
 
         # Record (or update) the dispatch outcome. _record_log handles
         # the retry-after-failure case in-place so a previous failed
@@ -730,15 +1431,13 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
         # dispatch.
         recorded = await _record_log(
             session,
-            customer_code=req.customer_code,
-            alert_id=req.alert_id,
+            event=event,
             route_id=route_id,
-            trigger=req.trigger.value,
             status=result_status,
             error_message=error_message,
             latency_ms=latency_ms,
             payload_preview=body_preview,
-            shuffle_execution_id=shuffle_execution_id,
+            provider_reference=provider_reference,
         )
 
         if not recorded:
@@ -769,15 +1468,11 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
                     last_dispatched_at=datetime.utcnow(),
                 ),
             )
-            # Bump the integration's last_used_at on a successful
-            # Shuffle dispatch — gives the integration list a "fired
-            # 2h ago" signal without a join against the log.
-            if route_channel == NotificationChannel.SHUFFLE.value and route_shuffle_integration_id:
-                await session.execute(
-                    update(CustomerShuffleIntegration)
-                    .where(CustomerShuffleIntegration.id == route_shuffle_integration_id)
-                    .values(last_used_at=datetime.utcnow()),
-                )
+            # Channel-specific post-send side effects, inside the same commit.
+            # Shuffle stamps last_used_at on the integration row so its list can
+            # show "fired 2h ago" without joining the dispatch log.
+            if provider is not None and result is not None:
+                await provider.after_send(route=route, result=result, ctx=ctx)
             await session.commit()
         elif result_status == "skipped":
             skipped += 1
@@ -792,13 +1487,15 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
                 status=DispatchStatus(result_status),
                 error_message=error_message,
                 latency_ms=latency_ms,
-                shuffle_execution_id=shuffle_execution_id,
+                provider_reference=provider_reference,
             ),
         )
 
     return DispatchResponse(
         success=True,
-        message=(f"Dispatched {sent} of {len(matched_routes)} matching route(s) " f"for customer {req.customer_code} alert {req.alert_id}"),
+        message=(
+            f"Dispatched {sent} of {len(matched_routes)} matching route(s) " f"for customer {event.customer_code} alert {event.entity_id}"
+        ),
         routes_matched=len(matched_routes),
         dispatched=sent,
         skipped=skipped,

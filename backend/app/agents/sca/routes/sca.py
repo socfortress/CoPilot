@@ -2,6 +2,7 @@ import json
 from typing import Any
 from typing import AsyncGenerator
 from typing import Dict
+from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
@@ -20,6 +21,7 @@ from app.agents.sca.schema.sca import ScaPackageAgentsResponse
 from app.agents.sca.schema.sca import ScaPackageRegistryResponse
 from app.agents.sca.schema.sca import ScaPoliciesIndexResponse
 from app.agents.sca.schema.sca import ScaPolicyContentResponse
+from app.agents.sca.schema.sca import ScaPolicyMetadataResponse
 from app.agents.sca.schema.sca import SCAReportGenerateRequest
 from app.agents.sca.schema.sca import SCAReportGenerateResponse
 from app.agents.sca.schema.sca import SCAReportListResponse
@@ -28,6 +30,7 @@ from app.agents.sca.services.sca import delete_sca_report
 from app.agents.sca.services.sca import detect_agents_for_sca_package
 from app.agents.sca.services.sca import fetch_sca_policies_index
 from app.agents.sca.services.sca import fetch_sca_policy_content
+from app.agents.sca.services.sca import fetch_sca_policy_metadata
 from app.agents.sca.services.sca import generate_sca_csv_report
 from app.agents.sca.services.sca import get_sca_report_download
 from app.agents.sca.services.sca import get_sca_statistics
@@ -38,6 +41,7 @@ from app.agents.sca.services.sca import stream_sca_for_all_agents
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
+from app.middleware.customer_query import customer_codes_query
 
 # Create router for SCA overview endpoints
 sca_router = APIRouter()
@@ -50,7 +54,7 @@ sca_router = APIRouter()
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def search_sca_results_overview(
-    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     agent_name: Optional[str] = Query(None, description="Filter by agent hostname"),
     policy_id: Optional[str] = Query(None, description="Filter by specific policy ID"),
     policy_name: Optional[str] = Query(None, description="Filter by policy name (partial matching)"),
@@ -88,7 +92,7 @@ async def search_sca_results_overview(
     - **Smart sorting: Agents with lowest compliance scores appear first for priority attention**
 
     **Filtering Options:**
-    - **customer_code**: Filter by specific customer/organization
+    - **customer_codes**: Filter by one or more customers/organizations
     - **agent_name**: Filter by specific agent hostname
     - **policy_id**: Search for specific policy ID (exact match)
     - **policy_name**: Filter by policy name (supports partial matching)
@@ -106,7 +110,7 @@ async def search_sca_results_overview(
     - **page_size**: Results per page (1-1000, default: 50)
 
     Args:
-        customer_code: Optional customer code filter
+        customer_codes: Optional filter by one or more customer codes
         agent_name: Optional agent hostname filter
         policy_id: Optional policy ID filter (exact match)
         policy_name: Optional policy name filter (partial matching)
@@ -121,7 +125,7 @@ async def search_sca_results_overview(
     """
     logger.info(
         f"Searching SCA overview with filters: "
-        f"customer_code={customer_code}, agent_name={agent_name}, "
+        f"customer_codes={customer_codes}, agent_name={agent_name}, "
         f"policy_id={policy_id}, policy_name={policy_name}, "
         f"min_score={min_score}, max_score={max_score}, "
         f"page={page}, page_size={page_size}",
@@ -130,7 +134,7 @@ async def search_sca_results_overview(
     try:
         result = await search_sca_overview(
             db_session=db,
-            customer_code=customer_code,
+            customer_codes=customer_codes,
             agent_name=agent_name,
             policy_id=policy_id,
             policy_name=policy_name,
@@ -152,7 +156,7 @@ async def search_sca_results_overview(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def stream_sca_results_overview(
-    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     agent_name: Optional[str] = Query(None, description="Filter by agent hostname"),
     policy_id: Optional[str] = Query(None, description="Filter by specific policy ID"),
     policy_name: Optional[str] = Query(None, description="Filter by policy name (partial matching)"),
@@ -191,7 +195,7 @@ async def stream_sca_results_overview(
     """
     logger.info(
         f"Streaming SCA overview with filters: "
-        f"customer_code={customer_code}, agent_name={agent_name}, "
+        f"customer_codes={customer_codes}, agent_name={agent_name}, "
         f"policy_id={policy_id}, policy_name={policy_name}, "
         f"min_score={min_score}, max_score={max_score}",
     )
@@ -200,7 +204,7 @@ async def stream_sca_results_overview(
         try:
             async for event in stream_sca_for_all_agents(
                 db_session=db,
-                customer_code=customer_code,
+                customer_codes=customer_codes,
                 agent_name=agent_name,
                 policy_id=policy_id,
                 policy_name=policy_name,
@@ -234,7 +238,7 @@ async def stream_sca_results_overview(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_sca_stats(
-    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     db: AsyncSession = Depends(get_db),
 ) -> ScaStatsResponse:
     """
@@ -263,16 +267,16 @@ async def get_sca_stats(
     - Infrastructure security health checks
 
     Args:
-        customer_code: Optional customer code to filter statistics by
+        customer_codes: Optional customer codes to filter statistics by
         db: Database session
 
     Returns:
         ScaStatsResponse: Comprehensive SCA statistics
     """
-    logger.info(f"Getting SCA statistics for customer: {customer_code or 'all customers'}")
+    logger.info(f"Getting SCA statistics for customers: {customer_codes or 'all customers'}")
 
     try:
-        result = await get_sca_statistics(db_session=db, customer_code=customer_code)
+        result = await get_sca_statistics(db_session=db, customer_codes=customer_codes)
         return result
 
     except Exception as e:
@@ -386,7 +390,7 @@ async def generate_sca_report(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def list_reports(
-    customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     db: AsyncSession = Depends(get_db),
     current_user: User = Security(AuthHandler().get_current_user),
 ) -> SCAReportListResponse:
@@ -425,20 +429,20 @@ async def list_reports(
     - Monitor report history
 
     Args:
-        customer_code: Optional customer code filter
+        customer_codes: Optional filter by one or more customer codes
         db: Database session
         current_user: Current authenticated user
 
     Returns:
         SCAReportListResponse: List of available reports
     """
-    logger.info(f"Listing SCA reports for customer: {customer_code or 'all accessible'}")
+    logger.info(f"Listing SCA reports for customers: {customer_codes or 'all accessible'}")
 
     try:
         result = await list_sca_reports(
             db_session=db,
             current_user=current_user,
-            customer_code=customer_code,
+            customer_codes=customer_codes,
         )
         return result
 
@@ -597,6 +601,23 @@ async def list_available_sca_policies() -> ScaPoliciesIndexResponse:
     - Review available policy versions before deployment
     """
     return await fetch_sca_policies_index()
+
+
+@sca_router.get(
+    "/policies/{policy_id}/metadata",
+    response_model=ScaPolicyMetadataResponse,
+    description="Fetch a single SCA policy's index metadata by id",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_sca_policy_metadata(policy_id: str) -> ScaPolicyMetadataResponse:
+    """
+    Fetch a single SCA policy's metadata (name, application, platform, CIS
+    version, …) by id, without returning the whole policy catalog.
+
+    Backs the SCA policy detail page — the ``policy_id`` must match an id from
+    the ``/policies`` listing (e.g. ``cis_iis_10_win``).
+    """
+    return await fetch_sca_policy_metadata(policy_id)
 
 
 @sca_router.get(

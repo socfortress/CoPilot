@@ -54,8 +54,7 @@
 			:loading
 			size="small"
 			:pagination
-			:row-props
-			:scroll-x="1000"
+			:scroll-x="1110"
 			class="catalog-table"
 		/>
 
@@ -87,7 +86,9 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import Dot, { hitsToDotVariant } from "@/components/common/Dot.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import ComplianceDetail from "./ComplianceDetail.vue"
 
@@ -101,6 +102,7 @@ interface ComplianceStatTile {
 }
 
 const message = useMessage()
+const { routeDetectionCatalogComplianceGroup } = useNavigation()
 
 const frameworks = ref<CatalogComplianceFramework[]>([])
 const selectedFramework = ref<string>("pci_dss")
@@ -109,9 +111,17 @@ const loadingFrameworks = ref(false)
 const loading = ref(false)
 const filter = ref("")
 
-const showGroupModal = ref(false)
 const modalGroup = ref<CatalogComplianceGroupRow | null>(null)
-const modalTitle = ref("Compliance Control")
+// The modal is open exactly when a control group is selected — closing it clears the selection.
+const showGroupModal = computed({
+	get: () => modalGroup.value !== null,
+	set: (open: boolean) => {
+		if (!open) modalGroup.value = null
+	}
+})
+const modalTitle = computed(() =>
+	modalGroup.value ? `${pivot.value?.framework_label ?? ""} ${modalGroup.value.control}` : "Compliance Control"
+)
 
 const ControlIcon = "carbon:certificate-check"
 const RulesIcon = "carbon:document-security"
@@ -164,15 +174,6 @@ const complianceStatTiles = computed<ComplianceStatTile[]>(() => {
 
 function openGroup(group: CatalogComplianceGroupRow) {
 	modalGroup.value = group
-	modalTitle.value = `${pivot.value?.framework_label ?? ""} ${group.control}`
-	showGroupModal.value = true
-}
-
-function rowProps(row: CatalogComplianceGroupRow) {
-	return {
-		style: "cursor: pointer;",
-		onClick: () => openGroup(row)
-	}
 }
 
 const columns: DataTableColumns<CatalogComplianceGroupRow> = [
@@ -234,6 +235,21 @@ const columns: DataTableColumns<CatalogComplianceGroupRow> = [
 				{row.rule_ids.length > 10 && (
 					<NTag size="small" type="default" bordered={false}>{`+${row.rule_ids.length - 10}`}</NTag>
 				)}
+			</div>
+		)
+	},
+	{
+		title: "",
+		key: "actions",
+		width: 110,
+		fixed: "right",
+		render: row => (
+			<div onClick={e => e.stopPropagation()}>
+				<EntityDetailsButton
+					size="tiny"
+					route={routeDetectionCatalogComplianceGroup(selectedFramework.value, row.control)}
+					onView={() => openGroup(row)}
+				/>
 			</div>
 		)
 	}

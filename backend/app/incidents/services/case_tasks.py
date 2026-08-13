@@ -27,6 +27,7 @@ from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.auth.services.universal import select_all_users
 from app.incidents.models import Alert
 from app.incidents.models import Asset
 from app.incidents.models import Case
@@ -60,6 +61,7 @@ def _case_task_to_response(task: CaseTask) -> CaseTaskResponse:
         order_index=task.order_index,
         status=CaseTaskStatus(task.status),
         evidence_comment=task.evidence_comment,
+        assigned_to=task.assigned_to,
         completed_by=task.completed_by,
         completed_at=task.completed_at,
         created_by=task.created_by,
@@ -542,9 +544,14 @@ async def update_case_task(
     session: AsyncSession,
 ) -> CaseTaskOperationResponse:
     """
-    Update task status and/or evidence comment. Validates that
+    Update task status, evidence comment and/or assignee. Validates that
     NOT_NECESSARY isn't applied to a mandatory task. Sets/unsets
     ``completed_by`` and ``completed_at`` based on the resulting status.
+
+    Assignment uses ``__fields_set__`` presence rather than truthiness, so an
+    explicit ``assigned_to: null`` unassigns while omitting the key preserves
+    the existing assignee. The username is validated against the user table —
+    the column is a plain string with no FK, mirroring Alert/Case assignment.
     """
     try:
         result = await session.execute(select(CaseTask).where(CaseTask.id == task_id))
@@ -585,6 +592,28 @@ async def update_case_task(
         if comment_set_this_call:
             task.evidence_comment = request.evidence_comment
 
+        # Assignment. Presence in `fields_set` (not truthiness) is what marks
+        # intent, so an explicit null unassigns while omitting the key leaves
+        # the current assignee untouched.
+        previous_assignee = task.assigned_to
+        assignment_changed = False
+        if "assigned_to" in fields_set:
+            new_assignee = request.assigned_to.strip() if request.assigned_to else None
+            if new_assignee:
+                # Same validation the alert-assignment endpoint performs: the
+                # column is a plain string with no FK, so an unchecked value
+                # would silently create an assignment to a non-existent user.
+                known_usernames = {u.username for u in await select_all_users()}
+                if new_assignee not in known_usernames:
+                    return CaseTaskOperationResponse(
+                        task=_case_task_to_response(task),
+                        success=False,
+                        message=f"User '{new_assignee}' does not exist.",
+                    )
+            if new_assignee != previous_assignee:
+                task.assigned_to = new_assignee
+                assignment_changed = True
+
         task.updated_at = datetime.utcnow()
         session.add(task)
 
@@ -610,6 +639,25 @@ async def update_case_task(
                 commit=False,
             )
 
+        if assignment_changed:
+            # Carries both sides so the timeline can render "reassigned from X
+            # to Y" and an unassign (to_assignee=None) reads distinctly from a
+            # fresh assignment.
+            await emit_case_event(
+                session=session,
+                case_id=task.case_id,
+                event_type=CaseEventType.TASK_ASSIGNED,
+                actor=actor,
+                payload=payload_task(
+                    task_id=task.id,
+                    title=task.title,
+                    mandatory=task.mandatory,
+                    from_assignee=previous_assignee,
+                    to_assignee=task.assigned_to,
+                ),
+                commit=False,
+            )
+
         if comment_set_this_call and request.evidence_comment:
             await emit_case_event(
                 session=session,
@@ -627,6 +675,24 @@ async def update_case_task(
 
         await session.commit()
         await session.refresh(task)
+
+        # Notification routes (#1006). `assignment_changed` is the same guard the
+        # audit event uses, so a no-op write neither logs nor notifies.
+        if assignment_changed:
+            from app.notifications.services.emit import emit
+            from app.notifications.services.event_builders import (
+                case_task_assigned_event,
+            )
+
+            emit(
+                case_task_assigned_event(
+                    task_id=task.id,
+                    case_id=task.case_id,
+                    title=task.title,
+                    assignee=task.assigned_to,
+                    actor=actor,
+                ),
+            )
 
         return CaseTaskOperationResponse(
             task=_case_task_to_response(task),

@@ -58,15 +58,20 @@
 import type { ApiError } from "@/types/common"
 import type { CustomerIndicesSize } from "@/types/indices"
 import { NCard, NEmpty, NPopover, NProgress, NScrollbar, NSpin, NTag, useMessage, useThemeVars } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
+
+const props = defineProps<{
+	customerCodes?: string[]
+}>()
 
 const emit = defineEmits<{
 	(e: "click", value: string): void
 }>()
 
+const { customerCodes } = toRefs(props)
 const message = useMessage()
 const themeVars = useThemeVars()
 
@@ -97,8 +102,10 @@ function selectIndex(indexName: string) {
 function getCustomerIndicesSize() {
 	loading.value = true
 
+	const query = customerCodes.value?.length ? { customerCodes: customerCodes.value } : undefined
+
 	Api.wazuh.indices
-		.getIndicesSizePerCustomer()
+		.getIndicesSizePerCustomer(query)
 		.then(res => {
 			if (res.data.success) {
 				customerSizes.value = res.data.customer_sizes || []
@@ -114,7 +121,11 @@ function getCustomerIndicesSize() {
 		})
 }
 
-onBeforeMount(() => {
-	getCustomerIndicesSize()
-})
+watch(
+	() => customerCodes.value,
+	() => {
+		getCustomerIndicesSize()
+	},
+	{ deep: true, immediate: true }
+)
 </script>

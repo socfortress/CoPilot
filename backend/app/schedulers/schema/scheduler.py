@@ -20,6 +20,12 @@ class JobsResponse(BaseModel):
     message: str
 
 
+class JobDetailResponse(BaseModel):
+    job: Job
+    success: bool
+    message: str
+
+
 class JobsNextRunResponse(BaseModel):
     next_run_time: datetime
     success: bool

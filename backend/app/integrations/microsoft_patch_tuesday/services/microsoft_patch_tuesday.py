@@ -755,13 +755,19 @@ async def get_available_cycles() -> AvailableCyclesResponse:
         )
 
 
-async def search_cves_in_patch_tuesday(cve_ids: List[str], cycle: Optional[str] = None) -> PatchTuesdayResponse:
+async def search_cves_in_patch_tuesday(
+    cve_ids: List[str],
+    cycle: Optional[str] = None,
+    product: Optional[str] = None,
+) -> PatchTuesdayResponse:
     """
     Search for specific CVEs in Patch Tuesday data.
 
     Args:
         cve_ids: List of CVE IDs to search for.
         cycle: Optional cycle to limit search to.
+        product: Optional affected-product filter. A CVE spans multiple product
+            rows, so the single-CVE detail view passes this to get exactly one item.
 
     Returns:
         PatchTuesdayResponse with matching items.
@@ -776,6 +782,10 @@ async def search_cves_in_patch_tuesday(cve_ids: List[str], cycle: Optional[str] 
         # Filter items to only matching CVEs
         cve_set = set([c.upper() for c in cve_ids])
         matching_items = [item for item in response.items if item.cve.upper() in cve_set]
+
+        # Narrow to a single affected product when requested (detail view)
+        if product is not None:
+            matching_items = [item for item in matching_items if item.affected.product == product]
 
         # Recalculate summary for matched items
         if matching_items and response.summary:

@@ -164,6 +164,10 @@ class CreatedAlertPayload(BaseModel):
     index_name: Optional[str] = None
     index_id: Optional[str] = None
     alert_id: Optional[int] = None
+    # Wazuh rule level (1-15) surfaced by default plus a normalized severity label
+    # so downstream Shuffle consumers don't need custom mapping logic. Issue #980.
+    rule_level: Optional[int] = None
+    severity: Optional[str] = None
 
 
 class CreatedCaseNotificationPayload(BaseModel):
