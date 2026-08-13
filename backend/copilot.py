@@ -39,7 +39,12 @@ from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.exception_handlers import value_error_handler
 from app.middleware.integrity import run_integrity_check
+from app.middleware.performance import PERF_MONITOR_ENABLED
+from app.middleware.performance import RequestTimingMiddleware
+from app.middleware.performance import lag_monitor
+from app.middleware.performance import performance_registry
 from app.notifications.services.template_seeds import seed_builtin_templates
+from app.performance.services.session_log import session_log
 
 # from app.routers import ask_socfortress
 from app.routers import active_response
@@ -82,6 +87,7 @@ from app.routers import network_connectors
 from app.routers import notifications
 from app.routers import nuclei
 from app.routers import office365
+from app.routers import performance
 from app.routers import portainer
 from app.routers import sap_siem
 from app.routers import scheduler
@@ -140,9 +146,19 @@ async def lifespan(_app: FastAPI):
         logger.info("Scheduler is not running, starting now...")
         scheduler.start()
 
+    # Event loop lag watchdog (#1072). Started last so the startup work above —
+    # migrations, MinIO, seeding — is not reported as a stall.
+    session_log.start()
+    session_log.start_snapshots()
+    lag_monitor.start()
+
     yield
 
     # ── shutdown ──
+    # Watchdog first, so no stall can be recorded after the session file is closed.
+    await lag_monitor.stop()
+    await session_log.stop()
+
     logger.info("Shutting down scheduler")
     scheduler = await get_scheduler_instance()
     if scheduler.running:
@@ -165,6 +181,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+################## ! PERFORMANCE INSTRUMENTATION (#1072) ! ##################
+# Added after CORS so it ends up OUTERMOST (Starlette prepends each new
+# middleware), which means the measured duration is the full time the client
+# waited — CORS handling included. Read the numbers at /api/performance/summary.
+if PERF_MONITOR_ENABLED:
+    app.add_middleware(RequestTimingMiddleware, registry=performance_registry)
 
 
 ################## ! Middleware LOGGING TO `log_entry` table ! ##################
@@ -230,6 +253,7 @@ api_router.include_router(scoutsuite.router)
 api_router.include_router(nuclei.router)
 api_router.include_router(duo.router)
 api_router.include_router(portainer.router)
+api_router.include_router(performance.router)
 api_router.include_router(incidents.router)
 api_router.include_router(ai_analyst.router)
 api_router.include_router(notifications.router)
