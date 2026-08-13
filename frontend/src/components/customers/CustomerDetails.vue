@@ -20,7 +20,7 @@ import type { ApiError } from "@/types/common"
 import type { Customer, CustomerMeta } from "@/types/customers"
 import axios from "axios"
 import { NSpin, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { computed, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 import CustomerDetailsTabs from "./CustomerDetailsTabs.vue"
@@ -162,4 +162,11 @@ watch(
 )
 
 defineExpose({ loading, customerInfo, customerMeta })
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	fullAbortController?.abort()
+})
 </script>

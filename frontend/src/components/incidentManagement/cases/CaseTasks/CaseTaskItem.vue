@@ -136,7 +136,7 @@ import type { CaseTask, CaseTaskStatus } from "@/types/incidentManagement/case-t
 import { useDebounceFn } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NInput, NSelect, NTag, useDialog, useMessage } from "naive-ui"
-import { computed, inject, ref, watch } from "vue"
+import { computed, inject, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -373,6 +373,15 @@ watch(assignee, (val, prev) => {
 	if (val === prev) return
 	if (val === (taskData.value?.assigned_to ?? null)) return
 	onAssigneeChange(val)
+})
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	statusAbortController?.abort()
+	evidenceCommentAbortController?.abort()
+	assigneeAbortController?.abort()
 })
 </script>
 

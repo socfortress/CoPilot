@@ -208,7 +208,7 @@ function load() {
 	loading.value = true
 
 	Api.detectionCatalog
-		.listStories()
+		.listStories({})
 		.then(res => {
 			if (res.data?.success) stories.value = res.data.stories || []
 			else message.warning(res.data?.message || "Failed to load analytic stories")

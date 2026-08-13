@@ -56,9 +56,10 @@ export interface SentinelOneProvisionPayload extends SentinelOneProvision {
 
 export default {
 	// #region Network Connector
-	getAvailableNetworkConnectors() {
+	getAvailableNetworkConnectors(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { network_connector_keys: NetworkConnector[] }>(
-			`/network_connectors/available_network_connectors`
+			`/network_connectors/available_network_connectors`,
+			{ signal }
 		)
 	},
 	getAvailableNetworkConnector(networkConnectorId: number, signal?: AbortSignal) {
@@ -67,9 +68,10 @@ export default {
 			{ signal }
 		)
 	},
-	getCustomerNetworkConnectors(customerCode: string) {
+	getCustomerNetworkConnectors(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { available_network_connectors: CustomerNetworkConnector[] }>(
-			`/network_connectors/customer_network_connectors/${customerCode}`
+			`/network_connectors/customer_network_connectors/${customerCode}`,
+			{ signal }
 		)
 	},
 	createNetworkConnector(props: NewNetworkConnector) {

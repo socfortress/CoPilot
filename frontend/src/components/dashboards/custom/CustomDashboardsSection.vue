@@ -119,7 +119,7 @@ function fetchCustomDashboards() {
 	// The listing is scoped server-side: this customer's templates plus every
 	// globally shared one.
 	Api.siem
-		.getCustomDashboards(customerCode)
+		.getCustomDashboards({ customerCode })
 		.then(res => {
 			if (res.data.success) {
 				customDashboards.value = res.data?.custom_dashboards || []

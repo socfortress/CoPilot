@@ -105,7 +105,7 @@ function getCustomerIndicesSize() {
 	const query = customerCodes.value?.length ? { customerCodes: customerCodes.value } : undefined
 
 	Api.wazuh.indices
-		.getIndicesSizePerCustomer(query)
+		.getIndicesSizePerCustomer(query ?? {})
 		.then(res => {
 			if (res.data.success) {
 				customerSizes.value = res.data.customer_sizes || []

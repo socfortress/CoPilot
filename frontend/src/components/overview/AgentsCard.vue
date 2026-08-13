@@ -45,9 +45,7 @@ function getData() {
 	loading.value = true
 
 	Api.agents
-		.getAgents(
-			props.customerCodes && props.customerCodes.length ? { customerCodes: props.customerCodes } : undefined
-		)
+		.getAgents(props.customerCodes?.length ? { customerCodes: props.customerCodes } : {})
 		.then(res => {
 			if (res.data.success) {
 				agents.value = res.data.agents || []

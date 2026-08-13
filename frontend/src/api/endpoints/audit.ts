@@ -4,7 +4,7 @@ import { HttpClient } from "../http-client"
 
 export default {
 	/** List audit log entries (admin only) with filtering + pagination. */
-	getAuditLogs(filters?: AuditLogFilters, signal?: AbortSignal) {
+	getAuditLogs(filters: AuditLogFilters, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & AuditLogsListResponse>("/audit", {
 			params: filters,
 			paramsSerializer: { indexes: null },
@@ -15,7 +15,7 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { audit_log: AuditLogEntry }>(`/audit/${auditId}`, { signal })
 	},
 	/** Action + result vocabularies, for populating filter dropdowns. */
-	getAuditVocabularies() {
-		return HttpClient.get<FlaskBaseResponse & AuditVocabularies>("/audit/actions")
+	getAuditVocabularies(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & AuditVocabularies>("/audit/actions", { signal })
 	}
 }

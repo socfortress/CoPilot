@@ -30,9 +30,10 @@ export default {
 	/**
 	 * Download a customer Incident-Management report PDF
 	 */
-	downloadReport(reportId: number) {
+	downloadReport(reportId: number, signal?: AbortSignal) {
 		return HttpClient.get<Blob>(`/incidents/customer_reports/${reportId}/download`, {
-			responseType: "blob"
+			responseType: "blob",
+			signal
 		})
 	},
 

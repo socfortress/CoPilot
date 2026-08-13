@@ -3,14 +3,16 @@ import type { PortainerStack } from "@/types/portainer"
 import { HttpClient } from "../http-client"
 
 export default {
-	getCustomerStackId(customerName: string) {
+	getCustomerStackId(customerName: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { stack_id: number }>(`/portainer/get-customer-stack-id`, {
-			params: { customer_name: customerName }
+			params: { customer_name: customerName },
+			signal
 		})
 	},
-	getStackDetails(stackId: number) {
+	getStackDetails(stackId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { data: PortainerStack }>(`/portainer/stack-details`, {
-			params: { stack_id: stackId }
+			params: { stack_id: stackId },
+			signal
 		})
 	},
 	startWazuhCustomerStack(stackId: number) {

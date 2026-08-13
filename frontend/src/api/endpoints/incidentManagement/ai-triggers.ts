@@ -8,9 +8,10 @@ export interface AITriggerPayload {
 }
 
 export default {
-	getAITriggers(customerCode: string) {
+	getAITriggers(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { ai_triggers: AITrigger[] }>(
-			`/incidents/db_operations/ai_trigger/${customerCode}`
+			`/incidents/db_operations/ai_trigger/${customerCode}`,
+			{ signal }
 		)
 	},
 	setAITrigger(notification: AITriggerPayload) {

@@ -54,20 +54,22 @@ export interface FileCollectionByAgentRequest {
 }
 
 export default {
-	getAll(filters?: ArtifactsQuery) {
+	getAll(filters: ArtifactsQuery, signal?: AbortSignal) {
 		let url = "/artifacts"
 
-		if (filters?.os) {
+		if (filters.os) {
 			url = `/artifacts/${filters.os}`
 		}
-		if (filters?.hostname) {
+		if (filters.hostname) {
 			url = `/artifacts/hostname/${filters.hostname}`
 		}
 
-		return HttpClient.get<FlaskBaseResponse & { artifacts: Artifact[] }>(url)
+		return HttpClient.get<FlaskBaseResponse & { artifacts: Artifact[] }>(url, { signal })
 	},
-	getByName(artifactName: string) {
-		return HttpClient.get<FlaskBaseResponse & { artifacts: Artifact[] }>(`/artifacts/artifact/${artifactName}`)
+	getByName(artifactName: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { artifacts: Artifact[] }>(`/artifacts/artifact/${artifactName}`, {
+			signal
+		})
 	},
 	collect(payload: CollectRequest) {
 		return HttpClient.post<FlaskBaseResponse & { results: CollectResult[] }>(`/artifacts/collect`, payload)
@@ -84,7 +86,7 @@ export default {
 			payload
 		)
 	},
-	getParameters(artifactName: string, parameterPrefix: string) {
+	getParameters(artifactName: string, parameterPrefix: string, signal?: AbortSignal) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
 				artifact_name: string
@@ -92,7 +94,7 @@ export default {
 				matching_parameters: MatchingParameter[]
 				total_matches: number
 			}
-		>(`/artifacts/artifact/${artifactName}/parameters/${parameterPrefix}`)
+		>(`/artifacts/artifact/${artifactName}/parameters/${parameterPrefix}`, { signal })
 	},
 	collectFileByAgentId(agentId: string, payload: FileCollectionByAgentRequest) {
 		return HttpClient.post<FlaskBaseResponse & FileCollection>(`/artifacts/collect/file/agent/${agentId}`, payload)

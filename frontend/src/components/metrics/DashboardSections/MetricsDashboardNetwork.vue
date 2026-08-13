@@ -70,7 +70,7 @@ const network = ref<MetricsNetworkData>({})
 async function reload() {
 	loading.value = true
 	try {
-		const res = await Api.metrics.getNetwork(props.host, props.range)
+		const res = await Api.metrics.getNetwork({ host: props.host, rangeH: props.range })
 		if (!res.data.success) {
 			message.warning(res.data.message || "Error fetching network metrics")
 			network.value = {}

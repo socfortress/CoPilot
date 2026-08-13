@@ -169,7 +169,7 @@ import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import _clone from "lodash/cloneDeep"
 import { NButton, NEmpty, NInput, NPagination, NPopover, NScrollbar, NSpin, NTooltip, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { computed, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
@@ -263,7 +263,7 @@ function loadGroupFile(groupId: string, filename: string) {
 	loadingFile.value = true
 
 	Api.wazuh.groups
-		.getGroupFile(groupId, filename)
+		.getGroupFile({ groupId, filename })
 		.then(res => {
 			if (res.data.success) {
 				currentFile.value = _clone(res.data)
@@ -319,4 +319,11 @@ watchDebounced(
 	},
 	{ debounce: 250, immediate: true, deep: true }
 )
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
+})
 </script>

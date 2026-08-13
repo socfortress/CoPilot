@@ -135,12 +135,18 @@ function getList() {
 
 	switch (source) {
 		case "wazuh":
-			apiCall = Api.customers.getCustomerAgentsHealthcheckWazuh(customerCode, buildHealthcheckQuery())
+			apiCall = Api.customers.getCustomerAgentsHealthcheckWazuh({
+				code: customerCode,
+				...buildHealthcheckQuery()
+			})
 			healthyKey = "healthy_wazuh_agents"
 			unhealthyKey = "unhealthy_wazuh_agents"
 			break
 		case "velociraptor":
-			apiCall = Api.customers.getCustomerAgentsHealthcheckVelociraptor(customerCode, buildHealthcheckQuery())
+			apiCall = Api.customers.getCustomerAgentsHealthcheckVelociraptor({
+				code: customerCode,
+				...buildHealthcheckQuery()
+			})
 			healthyKey = "healthy_velociraptor_agents"
 			unhealthyKey = "unhealthy_velociraptor_agents"
 			break

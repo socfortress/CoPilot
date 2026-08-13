@@ -65,10 +65,8 @@ export default {
 	/**
 	 * Download a vulnerability report
 	 */
-	downloadReport(reportId: number) {
-		return HttpClient.get<Blob>(`/vulnerabilities/reports/${reportId}/download`, {
-			responseType: "blob"
-		})
+	downloadReport(reportId: number, signal?: AbortSignal) {
+		return HttpClient.get<Blob>(`/vulnerabilities/reports/${reportId}/download`, { responseType: "blob", signal })
 	},
 
 	/**

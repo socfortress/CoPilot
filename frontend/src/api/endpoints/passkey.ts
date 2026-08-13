@@ -55,15 +55,19 @@ export interface PasskeyLoginOptionsQuery {
 
 export default {
 	getPublicStatus() {
-		return HttpClient.get<FlaskBaseResponse & PasskeyStatusResponse>("/auth/passkey/status")
+		return HttpClient.get<FlaskBaseResponse & PasskeyStatusResponse>("/auth/passkey/status", {
+			keepOnNavigation: true
+		})
 	},
 
 	getMyStatus() {
-		return HttpClient.get<FlaskBaseResponse & PasskeyStatusResponse>("/auth/passkey/me/status")
+		return HttpClient.get<FlaskBaseResponse & PasskeyStatusResponse>("/auth/passkey/me/status", {
+			keepOnNavigation: true
+		})
 	},
 
 	listMine() {
-		return HttpClient.get<FlaskBaseResponse & PasskeyListResponse>("/auth/passkey/me")
+		return HttpClient.get<FlaskBaseResponse & PasskeyListResponse>("/auth/passkey/me", { keepOnNavigation: true })
 	},
 
 	registerOptions(query: PasskeyRegisterOptionsQuery = {}) {

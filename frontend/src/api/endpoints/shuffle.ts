@@ -8,19 +8,23 @@ export interface ShuffleConnectorCredentials {
 }
 
 export default {
-	getOrganizations() {
+	getOrganizations(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { data: Organization[]; total_count: number }>(
-			`/shuffle/organizations/organizations?connector_name=Shuffle`
+			`/shuffle/organizations/organizations?connector_name=Shuffle`,
+			{ signal }
 		)
 	},
-	getOrganization(organizationId: string) {
+	getOrganization(organizationId: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { data: Organization }>(
-			`/shuffle/organizations/organizations/${organizationId}?connector_name=Shuffle`
+			`/shuffle/organizations/organizations/${organizationId}?connector_name=Shuffle`,
+			{ signal }
 		)
 	},
 	// Returns the deployment-wide Shuffle connector base URL + API key for
 	// the React MCP embeds. Backed by the connectors table.
-	getConnectorCredentials() {
-		return HttpClient.get<FlaskBaseResponse & ShuffleConnectorCredentials>(`/shuffle/integrations/credentials`)
+	getConnectorCredentials(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & ShuffleConnectorCredentials>(`/shuffle/integrations/credentials`, {
+			signal
+		})
 	}
 }

@@ -27,9 +27,10 @@ export interface CustomProvisionPayload {
 }
 
 export default {
-	getAvailableMonitoringAlerts() {
+	getAvailableMonitoringAlerts(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { available_monitoring_alerts: AvailableMonitoringAlert[] }>(
-			`/monitoring_alert/available`
+			`/monitoring_alert/available`,
+			{ signal }
 		)
 	},
 	provisionsMonitoringAlert(alertName: string, params: ProvisionsMonitoringAlertParams) {

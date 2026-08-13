@@ -63,12 +63,12 @@ export interface SSOCloudflareVerifyResponse {
 export default {
 	/** Public — which SSO providers are active */
 	getStatus() {
-		return HttpClient.get<FlaskBaseResponse & SSOPublicStatus>("/auth/sso/status")
+		return HttpClient.get<FlaskBaseResponse & SSOPublicStatus>("/auth/sso/status", { keepOnNavigation: true })
 	},
 
 	/** Admin — get SSO settings */
 	getSettings() {
-		return HttpClient.get<FlaskBaseResponse & SSOConfigResponse>("/auth/sso/settings")
+		return HttpClient.get<FlaskBaseResponse & SSOConfigResponse>("/auth/sso/settings", { keepOnNavigation: true })
 	},
 
 	/** Admin — update SSO settings */
@@ -78,7 +78,9 @@ export default {
 
 	/** Admin — list allowed emails */
 	getAllowedEmails() {
-		return HttpClient.get<FlaskBaseResponse & { emails: SSOAllowedEmail[] }>("/auth/sso/allowed-emails")
+		return HttpClient.get<FlaskBaseResponse & { emails: SSOAllowedEmail[] }>("/auth/sso/allowed-emails", {
+			keepOnNavigation: true
+		})
 	},
 
 	/** Admin — add allowed email */

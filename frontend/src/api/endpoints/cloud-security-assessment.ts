@@ -9,13 +9,16 @@ import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
 
 export default {
-	getAvailableScoutSuiteReports() {
+	getAvailableScoutSuiteReports(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { available_reports: ScoutSuiteReport[] }>(
-			`/scoutsuite/available-reports`
+			`/scoutsuite/available-reports`,
+			{ signal }
 		)
 	},
-	getScoutSuiteReportGenerationOptions() {
-		return HttpClient.get<FlaskBaseResponse & { options: string[] }>(`/scoutsuite/report-generation-options`)
+	getScoutSuiteReportGenerationOptions(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { options: string[] }>(`/scoutsuite/report-generation-options`, {
+			signal
+		})
 	},
 	generateAwsScoutSuiteReport(payload: ScoutSuiteReportPayload & ScoutSuiteAwsReportPayload) {
 		return HttpClient.post<FlaskBaseResponse>(`/scoutsuite/generate-aws-report`, { ...payload, report_type: "aws" })

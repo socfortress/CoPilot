@@ -10,7 +10,7 @@ export interface UpdateJobPayload {
 }
 
 export default {
-	getAllJobs(query: { search?: string; limit?: number } = {}, signal?: AbortSignal) {
+	getAllJobs(query: { search?: string; limit?: number }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { jobs: Job[] }>(`/scheduler`, {
 			params: searchLimitParams(query),
 			signal
@@ -19,8 +19,8 @@ export default {
 	getJob(jobId: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { job: Job }>(`/scheduler/${encodeURIComponent(jobId)}`, { signal })
 	},
-	getNextRun(job_id: string) {
-		return HttpClient.get<FlaskBaseResponse & { next_run_time: Date }>(`/scheduler/next_run/${job_id}`)
+	getNextRun(job_id: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { next_run_time: Date }>(`/scheduler/next_run/${job_id}`, { signal })
 	},
 	jobAction(job_id: string, action: "run" | "start" | "pause") {
 		const endpoint = action === "run" ? "jobs/run" : action

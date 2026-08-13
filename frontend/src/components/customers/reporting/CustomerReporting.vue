@@ -60,7 +60,7 @@ import type { IncidentCustomerReport } from "@/types/incidentReports"
 import axios from "axios"
 import { saveAs } from "file-saver"
 import { NEmpty, NModal, NPagination, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref, watch } from "vue"
+import { computed, onBeforeMount, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 import GenerateIncidentReportButton from "./GenerateIncidentReportButton.vue"
@@ -200,5 +200,12 @@ async function deleteReport(report: IncidentCustomerReport) {
 
 onBeforeMount(() => {
 	loadReports()
+})
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
 })
 </script>

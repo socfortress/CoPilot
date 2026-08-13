@@ -138,8 +138,10 @@ export default {
 			signal
 		})
 	},
-	getAlert(alertId: number) {
-		return HttpClient.get<FlaskBaseResponse & { alerts: Alert[] }>(`/incidents/db_operations/alert/${alertId}`)
+	getAlert(alertId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { alerts: Alert[] }>(`/incidents/db_operations/alert/${alertId}`, {
+			signal
+		})
 	},
 	getAlertDetails(indexId: string, indexName: string) {
 		return HttpClient.post<FlaskBaseResponse & { alert_details: AlertDetails }>(`/incidents/alerts/alert/details`, {
@@ -156,9 +158,10 @@ export default {
 			}
 		)
 	},
-	getAvailableUsers() {
+	getAvailableUsers(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { available_users: string[] }>(
-			`/incidents/db_operations/alert/available-users`
+			`/incidents/db_operations/alert/available-users`,
+			{ signal }
 		)
 	},
 	updateAlertStatus(alertId: number, status: AlertStatus) {
@@ -198,9 +201,10 @@ export default {
 			}
 		>(`/incidents/db_operations/alerts/by-title/${encodeURIComponent(titleFilter)}`)
 	},
-	getAlertContext(alertContextId: number) {
+	getAlertContext(alertContextId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { alert_context: AlertContext }>(
-			`/incidents/db_operations/alert/context/${alertContextId}`
+			`/incidents/db_operations/alert/context/${alertContextId}`,
+			{ signal }
 		)
 	},
 	newAlertComment(payload: AlertCommentPayload) {

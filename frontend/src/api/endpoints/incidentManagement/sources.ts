@@ -3,27 +3,28 @@ import type { SourceConfiguration, SourceName } from "@/types/incidentManagement
 import { HttpClient } from "../../http-client"
 
 export default {
-	getConfiguredSources() {
+	getConfiguredSources(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { sources: SourceName[] }>(
-			`/incidents/db_operations/configured/sources`
+			`/incidents/db_operations/configured/sources`,
+			{ signal }
 		)
 	},
-	getAvailableMappings(indexName: string) {
+	getAvailableMappings(indexName: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { available_mappings: string[] }>(
 			`/incidents/db_operations/mappings/fields-assets-title-and-timefield`,
-			{
-				params: { index_name: indexName }
-			}
+			{ params: { index_name: indexName }, signal }
 		)
 	},
-	getSourceByIndex(indexName: string) {
+	getSourceByIndex(indexName: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { source: SourceName }>(
-			`/incidents/db_operations/available-source/${indexName}`
+			`/incidents/db_operations/available-source/${indexName}`,
+			{ signal }
 		)
 	},
-	getAvailableIndices(source: SourceName) {
+	getAvailableIndices(source: SourceName, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { indices: string[] }>(
-			`/incidents/db_operations/available-indices/${source}`
+			`/incidents/db_operations/available-indices/${source}`,
+			{ signal }
 		)
 	},
 	createSourceConfiguration(payload: SourceConfiguration) {
@@ -32,17 +33,16 @@ export default {
 	updateSourceConfiguration(payload: SourceConfiguration) {
 		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/fields-assets-title-and-timefield`, payload)
 	},
-	getSourceConfiguration(source: SourceName) {
+	getSourceConfiguration(source: SourceName, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & SourceConfiguration>(
 			`/incidents/db_operations/fields-assets-title-and-timefield`,
-			{
-				params: { source }
-			}
+			{ params: { source }, signal }
 		)
 	},
-	getSocfortressRecommendsWazuh() {
+	getSocfortressRecommendsWazuh(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & SourceConfiguration>(
-			`/incidents/db_operations/socfortress/recommends/wazuh`
+			`/incidents/db_operations/socfortress/recommends/wazuh`,
+			{ signal }
 		)
 	},
 	deleteSourceConfiguration(source: SourceName) {

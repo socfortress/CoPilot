@@ -505,7 +505,7 @@ function getCustomers() {
 	loadingCustomers.value = true
 
 	return Api.customers
-		.getCustomers()
+		.getCustomers({})
 		.then(res => {
 			if (res.data.success) {
 				customersList.value = res.data?.customers || []

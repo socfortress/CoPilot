@@ -42,9 +42,10 @@ export interface SiemEventDocumentQuery {
 }
 
 export default {
-	getEventSources(customerCode: string) {
+	getEventSources(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { event_sources: EventSource[] }>(
-			`/siem/event_sources/${customerCode}`
+			`/siem/event_sources/${customerCode}`,
+			{ signal }
 		)
 	},
 	createEventSource(payload: EventSourceCreatePayload) {
@@ -60,16 +61,19 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse>(`/siem/event_sources/${eventSourceId}`)
 	},
 	queryEvents(
-		customerCode: string,
-		sourceName: string,
-		params: {
-			timerange?: string
-			page_size?: number
-			scroll_id?: string
-			query?: string
-			time_from?: string
-			time_to?: string
-		}
+		query: {
+			customerCode: string
+			sourceName: string
+			params: {
+				timerange?: string
+				page_size?: number
+				scroll_id?: string
+				query?: string
+				time_from?: string
+				time_to?: string
+			}
+		},
+		signal?: AbortSignal
 	) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
@@ -78,7 +82,7 @@ export default {
 				scroll_id: string | null
 				page_size: number
 			}
-		>(`/siem/events/${customerCode}/${sourceName}`, { params })
+		>(`/siem/events/${query.customerCode}/${query.sourceName}`, { params: query.params, signal })
 	},
 	getEvent(customerCode: string, sourceName: string, query: SiemEventDocumentQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { event: EventSearchResult }>(
@@ -86,24 +90,29 @@ export default {
 			signal ? { params: query, signal } : { params: query }
 		)
 	},
-	getFieldMappings(customerCode: string, sourceName: string) {
+	getFieldMappings(customerCode: string, sourceName: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { fields: FieldMapping[]; total: number; index_pattern: string }>(
-			`/siem/events/${customerCode}/${sourceName}/fields`
+			`/siem/events/${customerCode}/${sourceName}/fields`,
+			{ signal }
 		)
 	},
 
 	// ── Dashboards ──────────────────────────────────────────────
-	getDashboardCategories() {
-		return HttpClient.get<FlaskBaseResponse & { categories: DashboardCategory[] }>(`/siem/dashboards/templates`)
+	getDashboardCategories(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { categories: DashboardCategory[] }>(`/siem/dashboards/templates`, {
+			signal
+		})
 	},
-	getDashboardCategory(categoryId: string) {
+	getDashboardCategory(categoryId: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { category: DashboardCategoryWithTemplates }>(
-			`/siem/dashboards/templates/${categoryId}`
+			`/siem/dashboards/templates/${categoryId}`,
+			{ signal }
 		)
 	},
-	getEnabledDashboards(customerCode: string) {
+	getEnabledDashboards(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { enabled_dashboards: EnabledDashboard[] }>(
-			`/siem/dashboards/enabled/${customerCode}`
+			`/siem/dashboards/enabled/${customerCode}`,
+			{ signal }
 		)
 	},
 	enableDashboard(payload: EnableDashboardPayload) {
@@ -127,14 +136,16 @@ export default {
 	},
 
 	// ── Custom dashboards ───────────────────────────────────────
-	getCustomDashboards(customerCode?: string | null) {
+	getCustomDashboards(query: { customerCode?: string | null }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { custom_dashboards: CustomDashboard[] }>(`/siem/dashboards/custom`, {
-			params: customerCode ? { customer_code: customerCode } : {}
+			params: query.customerCode ? { customer_code: query.customerCode } : {},
+			signal
 		})
 	},
-	getCustomDashboard(templateKey: string) {
+	getCustomDashboard(templateKey: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { custom_dashboard: CustomDashboard }>(
-			`/siem/dashboards/custom/${templateKey}`
+			`/siem/dashboards/custom/${templateKey}`,
+			{ signal }
 		)
 	},
 	createCustomDashboard(payload: CustomDashboardCreatePayload) {
@@ -160,9 +171,10 @@ export default {
 			payload
 		)
 	},
-	exportCustomDashboard(templateKey: string) {
+	exportCustomDashboard(templateKey: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { definition: CustomDashboardDefinition }>(
-			`/siem/dashboards/custom/${templateKey}/export`
+			`/siem/dashboards/custom/${templateKey}/export`,
+			{ signal }
 		)
 	},
 	previewCustomDashboard(payload: CustomDashboardPreviewPayload, signal?: AbortSignal) {

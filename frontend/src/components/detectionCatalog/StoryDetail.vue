@@ -177,7 +177,7 @@ import type { ApiError } from "@/types/common"
 import type { CatalogStoryDetailResponse, CatalogStoryDetection } from "@/types/detection-catalog"
 import axios from "axios"
 import { NButton, NDataTable, NModal, NSpin, NTag, useMessage } from "naive-ui"
-import { ref, watch } from "vue"
+import { onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -349,4 +349,11 @@ watch(
 )
 
 defineExpose({ loading, story })
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
+})
 </script>

@@ -4,6 +4,6 @@ import { HttpClient } from "../http-client"
 
 export default {
 	getSidebarContext() {
-		return HttpClient.get<FlaskBaseResponse & SidebarContextResponse>("/status/sidebar")
+		return HttpClient.get<FlaskBaseResponse & SidebarContextResponse>("/status/sidebar", { keepOnNavigation: true })
 	}
 }

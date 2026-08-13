@@ -284,7 +284,7 @@ const isFormValid = computed(() => {
 async function getAgents() {
 	loadingAgents.value = true
 	try {
-		const res = await Api.agents.getAgents()
+		const res = await Api.agents.getAgents({})
 		if (res.data.success) {
 			agents.value = res.data.agents || []
 		} else {

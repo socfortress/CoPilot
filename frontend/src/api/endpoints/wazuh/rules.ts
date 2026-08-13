@@ -47,9 +47,10 @@ export default {
 			}
 		)
 	},
-	getRulesFile(filename: string) {
+	getRulesFile(filename: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & WazuhFileDetails>(`/wazuh_manager/rules/files/${filename}`, {
-			params: { raw: true, pretty: false, wait_for_complete: false }
+			params: { raw: true, pretty: false, wait_for_complete: false },
+			signal
 		})
 	},
 	updateRulesFile(filename: string, rules: File) {

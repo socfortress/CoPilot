@@ -77,7 +77,7 @@ import type {
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
-import { computed, ref } from "vue"
+import { computed, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 import RuleCard from "../RuleCard.vue"
@@ -231,4 +231,11 @@ function onBulkProvisionSuccess(res: BulkProvisionGraylogAlertResponse) {
 	}
 	provisionedMap.value = next
 }
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
+})
 </script>

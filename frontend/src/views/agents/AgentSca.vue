@@ -40,7 +40,7 @@ const policyId = useRouteParam("policyId")
 function load(id: string, policy: string) {
 	loading.value = true
 
-	Promise.all([Api.agents.getAgents(id), Api.agents.getSCA(id, policy)])
+	Promise.all([Api.agents.getAgents({ agentId: id }), Api.agents.getSCA({ agentId: id, policyId: policy })])
 		.then(([agentRes, scaRes]) => {
 			if (agentRes.data.success) {
 				agent.value = agentRes.data.agents?.[0] || null

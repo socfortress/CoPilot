@@ -153,7 +153,7 @@ function getUsers() {
 	loadingUsers.value = true
 
 	Api.users
-		.getUsers()
+		.getUsers({})
 		.then(res => {
 			if (res.data.success) {
 				setUsers(res.data?.users)

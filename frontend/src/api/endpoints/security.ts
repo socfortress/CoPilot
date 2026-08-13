@@ -17,8 +17,8 @@ export default {
 	},
 
 	/** Whether SMTP is configured (enables the temporary-password email action) */
-	getSmtpStatus() {
-		return HttpClient.get<FlaskBaseResponse & { configured: boolean }>(`/auth/security/smtp-status`)
+	getSmtpStatus(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { configured: boolean }>(`/auth/security/smtp-status`, { signal })
 	},
 
 	/** Force-reset a user's TOTP (2FA) without requiring their code (admin) */

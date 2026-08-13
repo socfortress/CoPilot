@@ -33,14 +33,15 @@ export interface ProvisioningDefaultSettingsPayload {
 
 export default {
 	// #region Customer
-	getCustomers(code?: string) {
+	getCustomers(query: { code?: string }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { customers?: Customer[]; customer?: Customer }>(
-			`/customers${code ? `/${code}` : ""}`
+			`/customers${query.code ? `/${query.code}` : ""}`,
+			{ signal }
 		)
 	},
-	searchCustomers(search: string, limit?: number, signal?: AbortSignal) {
+	searchCustomers(query: { search: string; limit?: number }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { customers?: Customer[] }>(`/customers`, {
-			params: { search, ...(limit !== undefined ? { limit } : {}) },
+			params: { search: query.search, ...(query.limit !== undefined ? { limit: query.limit } : {}) },
 			signal
 		})
 	},
@@ -57,8 +58,10 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse & { customer: Customer }>(`/customers/${code}`)
 	},
 	/** @deprecated */
-	getCustomerMeta(code: string) {
-		return HttpClient.get<FlaskBaseResponse & { customer_meta: CustomerMeta }>(`/customers/${code}/meta`)
+	getCustomerMeta(code: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { customer_meta: CustomerMeta }>(`/customers/${code}/meta`, {
+			signal
+		})
 	},
 	/** @deprecated */
 	updateCustomerMeta(meta: CustomerMeta, code: string) {
@@ -78,27 +81,26 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
-	getCustomerAgents(code: string) {
-		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(`/customers/${code}/agents`)
+	getCustomerAgents(code: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(`/customers/${code}/agents`, { signal })
 	},
-	getCustomerAgentsHealthcheckWazuh(code: string, query?: CustomerAgentsHealthcheckQuery, signal?: AbortSignal) {
+	getCustomerAgentsHealthcheckWazuh(query: { code: string } & CustomerAgentsHealthcheckQuery, signal?: AbortSignal) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
 				healthy_wazuh_agents: CustomerAgentHealth[]
 				unhealthy_wazuh_agents: CustomerAgentHealth[]
 			}
-		>(`/customers/${code}/agents/healthcheck/wazuh`, {
+		>(`/customers/${query.code}/agents/healthcheck/wazuh`, {
 			params: {
-				minutes: query?.minutes || 0,
-				hours: query?.hours || 0,
-				days: query?.days || 0
+				minutes: query.minutes || 0,
+				hours: query.hours || 0,
+				days: query.days || 0
 			},
 			signal
 		})
 	},
 	getCustomerAgentsHealthcheckVelociraptor(
-		code: string,
-		query?: CustomerAgentsHealthcheckQuery,
+		query: { code: string } & CustomerAgentsHealthcheckQuery,
 		signal?: AbortSignal
 	) {
 		return HttpClient.get<
@@ -106,11 +108,11 @@ export default {
 				healthy_velociraptor_agents: CustomerAgentHealth[]
 				unhealthy_velociraptor_agents: CustomerAgentHealth[]
 			}
-		>(`/customers/${code}/agents/healthcheck/velociraptor`, {
+		>(`/customers/${query.code}/agents/healthcheck/velociraptor`, {
 			params: {
-				minutes: query?.minutes || 0,
-				hours: query?.hours || 0,
-				days: query?.days || 0
+				minutes: query.minutes || 0,
+				hours: query.hours || 0,
+				days: query.days || 0
 			},
 			signal
 		})
@@ -129,9 +131,10 @@ export default {
 			}
 		)
 	},
-	getCustomerProvision(code: string) {
+	getCustomerProvision(code: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { customer_meta: CustomerMeta }>(
-			`/customer_provisioning/provision/${code}`
+			`/customer_provisioning/provision/${code}`,
+			{ signal }
 		)
 	},
 	decommissionCustomer(code: string) {
@@ -145,20 +148,22 @@ export default {
 			}
 		)
 	},
-	getProvisioningDashboards() {
+	getProvisioningDashboards(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { available_dashboards: string[] }>(
-			`/customer_provisioning/provision/dashboards`
+			`/customer_provisioning/provision/dashboards`,
+			{ signal }
 		)
 	},
-	getProvisioningSubscriptions() {
+	getProvisioningSubscriptions(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { available_subscriptions: string[] }>(
-			`/customer_provisioning/provision/subscriptions`
+			`/customer_provisioning/provision/subscriptions`,
+			{ signal }
 		)
 	},
-	getProvisioningDefaultSettings() {
+	getProvisioningDefaultSettings(signal?: AbortSignal) {
 		return HttpClient.get<
 			FlaskBaseResponse & { customer_provisioning_default_settings: CustomerProvisioningDefaultSettings }
-		>(`/customer_provisioning/default_settings`)
+		>(`/customer_provisioning/default_settings`, { signal })
 	},
 	setProvisioningDefaultSettings(payload: ProvisioningDefaultSettingsPayload) {
 		return HttpClient.post<
@@ -194,9 +199,10 @@ export default {
 			wazuh_domain: payload.wazuhDomain
 		})
 	},
-	getEdrInstallCommands(customerCode: string) {
+	getEdrInstallCommands(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { customer_code: string; commands: EDRInstallCommands }>(
-			`/customer_provisioning/edr_install_commands/${customerCode}`
+			`/customer_provisioning/edr_install_commands/${customerCode}`,
+			{ signal }
 		)
 	}
 	// #endregion

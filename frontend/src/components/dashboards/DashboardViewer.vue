@@ -85,7 +85,7 @@ import type { ApiError } from "@/types/common"
 import type { DashboardPanel, DashboardPanelType, PanelResult } from "@/types/dashboards"
 import axios from "axios"
 import { NButton, NEmpty, NRadioButton, NRadioGroup, NSpin, NTooltip, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { computed, onBeforeUnmount, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
 import CardLink from "@/components/common/cards/CardLink.vue"
@@ -209,4 +209,11 @@ watch(
 	},
 	{ immediate: true }
 )
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
+})
 </script>

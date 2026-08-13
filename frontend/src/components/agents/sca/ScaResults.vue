@@ -154,7 +154,7 @@ function getSCAResults(agentId: string, policyId: string) {
 	loading.value = true
 
 	Api.agents
-		.getSCAResults(agentId, policyId)
+		.getSCAResults({ agentId, policyId })
 		.then(res => {
 			if (res.data.success) {
 				resultsList.value = res.data.sca_policy_results || []

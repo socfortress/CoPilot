@@ -110,7 +110,7 @@ export const useAuthStore = defineStore("auth", {
 			}
 		},
 		getEmail() {
-			Api.users.getUsers().then(res => {
+			Api.users.getUsers({}).then(res => {
 				if (res.data.users) {
 					const user = res.data.users.find(o => o.username === this.userName)
 					this.user.email = user?.email || ""
