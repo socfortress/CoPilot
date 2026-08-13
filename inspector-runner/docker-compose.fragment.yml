@@ -1,0 +1,71 @@
+# Compose fragment for the Tier 1 inspection plane. Merge into CoPilot's
+# docker-compose.yml. The CoPilot backend talks HTTP to inspector-runner and
+# NEVER mounts the Docker socket itself (see CLAUDE.md -> File Analysis).
+#
+# Trust boundary:
+#   copilot-backend --HTTP--> inspector-runner --tcp(allowlisted)--> docker-socket-proxy --> dockerd
+#   inspector-runner --spawns--> copilot-inspector (per job, --network none, destroyed after)
+# The sample travels on stdin/stdout (base64) — NO shared volume between the
+# runner and per-job containers, so no sibling-mount problem and no cross-job
+# filesystem exposure.
+services:
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:0.2.0
+    restart: unless-stopped
+    environment:
+      # Allow ONLY what the runner needs to spawn/attach/kill per-job containers.
+      CONTAINERS: 1        # create/inspect/start/attach/wait/logs/remove containers
+      IMAGES: 1            # inspect image presence
+      POST: 1              # allow POST (create/start/attach/wait/kill/remove)
+      # Everything else denied by default:
+      BUILD: 0
+      EXEC: 0
+      VOLUMES: 0
+      NETWORKS: 0
+      SWARM: 0
+      SERVICES: 0
+      SECRETS: 0
+      INFO: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - inspector-internal
+
+  inspector-runner:
+    build:
+      context: .
+      dockerfile: inspector-runner/Dockerfile
+    image: ghcr.io/socfortress/copilot-inspector-runner:latest
+    restart: unless-stopped
+    ports:
+      - "9100:9000"                        # host 9100 -> container 9000 (host 9000 is taken by MinIO)
+    environment:
+      INSPECTOR_MODE: container            # container (prod) | service (dev only)
+      FILE_ANALYSIS_DEV_MODE: "false"
+      INSPECTOR_IMAGE: ghcr.io/socfortress/copilot-inspector:latest
+      DOCKER_HOST: tcp://docker-socket-proxy:2375
+      INSPECTOR_MAX_CONCURRENT: "2"
+      INSPECTOR_JOB_TIMEOUT: "180"
+      INSPECTOR_MEM_LIMIT: "1g"
+      INSPECTOR_PIDS_LIMIT: "256"
+      INSPECTOR_CPUS: "1.0"
+      # Optional ClamAV signature engine (see CLAUDE.md -> File Analysis):
+      CLAMAV_ENABLED: "false"
+      CLAMD_HOST: clamav
+      CLAMD_PORT: "3310"
+    depends_on:
+      - docker-socket-proxy
+    networks:
+      - inspector-internal
+      - default
+
+  # Optional — enable with CLAMAV_ENABLED=true. Internal network, no published ports.
+  # clamav:
+  #   image: clamav/clamav:1.3
+  #   restart: unless-stopped
+  #   networks:
+  #     - inspector-internal
+
+networks:
+  inspector-internal:
+    internal: true

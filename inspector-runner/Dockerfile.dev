@@ -1,0 +1,40 @@
+# DEV-ONLY single-container inspector.
+#
+# Runs the analyzers IN-PROCESS (INSPECTOR_MODE=service) with the real parser
+# tools installed, so you can see Tier 1 work locally WITHOUT the Docker socket
+# proxy or Docker-in-Docker. Results are flagged {"hardened": false} and the UI
+# shows an "unhardened dev analysis" banner. NOT for production — production uses
+# the hardened per-job container (inspector-runner/Dockerfile + docker-compose.fragment.yml).
+#
+# Build from the REPO ROOT so it can see both inspector/ and inspector-runner/:
+#   docker build -f inspector-runner/Dockerfile.dev -t copilot-inspector-dev .
+FROM python:3.11-slim-bookworm
+
+# Parser tooling: poppler (pdftoppm → PDF page previews), libmagic (type detect),
+# p7zip (archives). LibreOffice (Office → PNG previews) is omitted here for a fast
+# build — uncomment the libreoffice-* lines below if you want Office page previews.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libmagic1 \
+        poppler-utils \
+        p7zip-full \
+        ca-certificates \
+        # libreoffice-core libreoffice-writer libreoffice-calc \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir \
+        fastapi==0.116.1 "uvicorn[standard]==0.30.6" python-multipart==0.0.9 loguru==0.7.2 \
+        python-magic==0.4.27 pymupdf==1.24.10 oletools==0.60.2 pefile==2024.8.26 LnkParse3==1.5.1 \
+        extract-msg==0.54.1 py7zr==0.22.0
+
+# Inspector source (analyzers) + the runner service.
+COPY inspector /opt/inspector
+COPY inspector-runner/main.py /app/main.py
+
+ENV INSPECTOR_SRC=/opt/inspector \
+    INSPECTOR_MODE=service \
+    FILE_ANALYSIS_DEV_MODE=true \
+    INSPECTOR_MAX_CONCURRENT=2
+
+WORKDIR /app
+EXPOSE 9000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9000"]

@@ -1,0 +1,228 @@
+// Types for the File Analysis module (issue #974). Mirrors the backend inspector
+// JSON contract (design/file-analysis/docs/01 section 2) and the router response
+// shapes (docs/03 section 3).
+
+export type FileAnalysisVerdict = "clean" | "suspicious" | "malicious"
+export type FileAnalysisTier = "static" | "dynamic"
+export type FileAnalysisStatus = "pending" | "queued" | "running" | "done" | "failed"
+
+export interface FileAnalysisJob {
+	job_id: string
+	sha256: string
+	filename: string
+	customer_code: string
+	status: FileAnalysisStatus
+	static_status: FileAnalysisStatus
+	dynamic_status?: FileAnalysisStatus
+	/** True only when SANDBOX_BACKEND != none AND the backend is available. Drives detonation-tab visibility. */
+	sandbox_enabled: boolean
+	/** False when the result came from the dev-only in-process inspector (no container isolation). */
+	hardened: boolean
+	verdict?: FileAnalysisVerdict
+	created_at?: string
+}
+
+export interface InspectorHashes {
+	md5?: string
+	sha1?: string
+	sha256?: string
+	imphash?: string | null
+}
+
+export interface InspectorIocs {
+	urls: string[]
+	ips: string[]
+	domains: string[]
+}
+
+export interface InspectorSection {
+	name: string
+	vsize: number
+	rawsize: number
+	entropy: number
+}
+
+export interface InspectorContent {
+	raw?: string
+	deobfuscated?: string
+	deobfuscated_layers?: string[]
+	macros?: string
+	autoexec_keywords?: string[]
+	suspicious_keywords?: string[]
+	dde?: string
+	javascript?: string
+	text?: string
+	structure?: Record<string, number>
+	pdf_metadata?: Record<string, string>
+	target?: string
+	arguments?: string
+	icon_location?: string
+	working_dir?: string
+	imports?: string[]
+	import_count?: number
+	sections?: InspectorSection[]
+	capabilities?: string[]
+	strings?: string[]
+	signature_present?: boolean
+	timestamp?: number
+	members?: Record<string, unknown>[]
+	headers?: Record<string, string>
+	body?: string
+	attachments?: Record<string, unknown>[]
+	note?: string
+	[key: string]: unknown
+}
+
+export interface InspectorResult {
+	sha256: string
+	filename: string
+	customer_code: string
+	filetype: string
+	magic: string
+	extension_mismatch: boolean
+	entropy: number
+	hashes: InspectorHashes
+	iocs: InspectorIocs
+	av?: { engine?: string; signature?: string } | null
+	previews: string[]
+	content: InspectorContent
+	flags: string[]
+	analysis_incomplete: boolean
+	verdict_hint: FileAnalysisVerdict
+}
+
+export interface SandboxSignature {
+	name: string
+	description?: string
+	severity?: number
+	mitre?: string[]
+}
+
+export interface SandboxProcess {
+	name: string
+	pid?: number
+	ppid?: number
+	command_line?: string
+}
+
+export interface SandboxDns {
+	request: string
+	type?: string
+	answers: string[]
+}
+
+export interface SandboxHttp {
+	method: string
+	host: string
+	uri: string
+}
+
+export interface SandboxConnection {
+	proto: string
+	dst: string
+	dport?: number
+}
+
+export interface SandboxTtp {
+	id: string
+	signature?: string
+}
+
+export interface SandboxPayload {
+	name: string
+	sha256: string
+	type?: string
+}
+
+export interface SandboxSummary {
+	task_id?: number
+	malscore: number
+	family: string
+	verdict?: string
+	machine?: string
+	duration?: number
+	package?: string
+	signatures: SandboxSignature[]
+	/** C2 recovered from an extracted malware config — NOT merely-observed traffic. */
+	c2_ips: string[]
+	c2_domains: string[]
+	/** Everything the guest actually contacted (mostly OS telemetry). */
+	hosts?: string[]
+	domains?: string[]
+	dns?: SandboxDns[]
+	http?: SandboxHttp[]
+	connections?: SandboxConnection[]
+	ttps?: SandboxTtp[]
+	processes?: SandboxProcess[]
+	payloads?: SandboxPayload[]
+	dropped: { sha256: string; name?: string; type?: string }[]
+	screenshots: string[]
+	errors?: string[]
+}
+
+export interface FileAnalysisReputation {
+	source: string
+	found: boolean
+	sha256?: string
+	malicious?: number
+	suspicious?: number
+	total?: number
+	family?: string
+	meaningful_name?: string
+	permalink?: string
+	submitted?: boolean
+	note?: string
+}
+
+export interface FileAnalysisResult {
+	job: FileAnalysisJob
+	inspector: InspectorResult
+	sandbox?: SandboxSummary | null
+	reputation?: FileAnalysisReputation | null
+	/** Preview object names, resolvable via Api.fileAnalysis.previewUrl(jobId, name). */
+	preview_urls: string[]
+	/** One line explaining what drove the verdict (surfaces tier disagreement). */
+	verdict_reason?: string | null
+}
+
+export interface SubmitFileAnalysisPayload {
+	source: "host_path" | "upload"
+	customer_code: string
+	tiers?: FileAnalysisTier[]
+	client_id?: string
+	target_path?: string
+	hostname?: string
+}
+
+/** A Velociraptor endpoint shown in the submit dropdown (not the raw client_id). */
+export interface FileAnalysisAgent {
+	client_id: string
+	hostname: string
+	os: string
+	online: boolean
+	last_seen: number | null
+	unassigned: boolean
+}
+
+/** A file matched by an endpoint glob (metadata only — bytes not yet pulled). */
+export interface FileAnalysisMatch {
+	path: string
+	name: string
+	size: number
+	sha256: string
+}
+
+/** One row in a customer's analysis history. */
+export interface FileAnalysisHistoryItem {
+	job_id: string
+	filename: string
+	sha256: string
+	verdict: FileAnalysisVerdict | null
+	source: string
+	status: string
+	hardened: boolean
+	created_at: string
+	updated_at: string
+	vt_malicious: number | null
+	vt_total: number | null
+}
