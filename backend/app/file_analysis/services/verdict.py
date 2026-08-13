@@ -33,8 +33,6 @@ VERDICT_SUSPICIOUS = "suspicious"
 VERDICT_MALICIOUS = "malicious"
 _SEVERITY = {VERDICT_CLEAN: 0, VERDICT_SUSPICIOUS: 1, VERDICT_MALICIOUS: 2}
 
-# Score at/above which the run is at least suspicious (CAPE's own "bad" threshold).
-MALSCORE_SUSPICIOUS = 7.0
 # A single signature at/above this severity is treated as corroborating evidence.
 # CAPE's environmental noise tops out at 3, so this is the line between
 # "the guest did normal Windows things" and "something notable happened".

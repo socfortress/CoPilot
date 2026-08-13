@@ -409,8 +409,6 @@ Removed as out-of-scope for this PR — the module is now **collect-or-upload �
 - **"Advanced: pull uploads from an existing flow"** — the raw Client ID + Flow ID form, the `source="flow"` branch in `routes.submit` / `orchestrator._resolve_sample`, and `flow_id` from `SubmitRequest` + the frontend payload type. `velociraptor_fetch.fetch_from_flow` **stays** — it is internal plumbing for `collect_and_fetch`, not the removed UI feature.
 - **`design/file-analysis/`** — the whole build package (docs + prompts + PATHS.md + TESTING.md). Its still-relevant content lives in this section.
 
-Kept deliberately: **`artifacts/Custom.Sandbox.CollectFile.yaml`** (unused by the live code path, which uses the built-in FileFinder artifacts, but retained for operators who want a custom collector).
-
 ### Verdict policy — why a high malscore alone is NOT malicious
 
 Found during testing: a **benign** `whoami; hostname; Get-Process` script came back **malscore 10.0 / "Malicious"** while VirusTotal said **0/74**. The stored evidence was `family: ''`, no config-extracted C2, and 17 signatures whose max severity was **3** (`mountpoint_manager_access`, `enumerates_physical_drives`, `queries_keyboard_layout`…). CAPE derives malscore by **summing signature hits**, and a freshly-booted Windows guest fires a dozen environmental signatures — plus CAPE's own instrumentation — before the sample does anything. Score-only logic therefore calls clean files malicious, which is not shippable in a SOC tool.

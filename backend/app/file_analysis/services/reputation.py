@@ -282,14 +282,6 @@ async def _wait_for_analysis(api_key: str, analysis_id: str) -> bool:
     return False
 
 
-async def virustotal_lookup(sha256: str) -> Optional[Dict[str, Any]]:
-    """Hash-only lookup (no upload)."""
-    api_key = await _vt_api_key()
-    if not api_key:
-        return None
-    return await _lookup(api_key, sha256)
-
-
 async def virustotal_lookup_only(sha256: str) -> Optional[Dict[str, Any]]:
     """Fast, non-blocking hash lookup (no upload). Used inline by the orchestrator."""
     logger.info(f"[reputation] VirusTotal hash lookup for {sha256[:16]} (submit_enabled={SUBMIT_FILES})")

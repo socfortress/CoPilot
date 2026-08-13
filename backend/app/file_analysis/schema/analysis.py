@@ -70,8 +70,6 @@ class SubmitRequest(BaseModel):
     client_id: Optional[str] = None
     target_path: Optional[str] = None
     hostname: Optional[str] = None
-    # for source="upload": a sha256 of previously-uploaded bytes (see /upload)
-    sha256: Optional[str] = None
 
 
 class JobResponse(BaseModel):

@@ -130,20 +130,6 @@ async def get_json(key: str) -> Optional[Dict[str, Any]]:
     return json.loads(data.decode("utf-8"))
 
 
-async def exists(key: str) -> bool:
-    await ensure_bucket()
-
-    async def _op():
-        client = await _client()
-        await client.stat_object(BUCKET, key)
-        return True
-
-    try:
-        return bool(await _retry(f"stat {key}", _op))
-    except Exception:
-        return False
-
-
 async def put_bytes(key: str, data: bytes, content_type: str = "application/octet-stream") -> None:
     await ensure_bucket()
 

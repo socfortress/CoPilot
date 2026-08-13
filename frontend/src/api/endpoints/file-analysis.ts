@@ -70,11 +70,6 @@ export default {
 		return HttpClient.post<FlaskBaseResponse & { guac_url: string }>(`/file-analysis/job/${jobId}/interactive`)
 	},
 
-	/** Cache lookup by SHA256 — returns an existing job id if this hash was analyzed before. */
-	searchHash(sha256: string) {
-		return HttpClient.get<FlaskBaseResponse & { job_id?: string }>(`/file-analysis/search/${sha256}`)
-	},
-
 	/** Recent analyses for a customer (newest first) — powers the history table. */
 	getHistory(customerCode: string, limit = 50) {
 		return HttpClient.get<FlaskBaseResponse & { items: FileAnalysisHistoryItem[] }>(`/file-analysis/history`, {
