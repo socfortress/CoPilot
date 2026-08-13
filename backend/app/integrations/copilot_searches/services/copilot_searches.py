@@ -245,29 +245,42 @@ class RulesCache:
             return None
 
     def _detect_platform(self, file_path: str, rule_data: dict) -> str:
-        """Detect the platform / source category for a rule."""
-        path_lower = file_path.lower()
+        """Detect the platform / source category for a rule from its folder.
 
-        # Check path first (folder-based classification). The endpoint/* subfolders
-        # map to the OS platforms; the top-level Cloud / Office 365 / Web folders
-        # map to their own categories. "office 365" is matched with and without the
-        # space so a folder rename doesn't silently break classification.
-        if "/linux/" in path_lower:
-            return "linux"
-        if "/windows/" in path_lower:
-            return "windows"
-        if "/powershell/" in path_lower:
+        Works with the flat detections/<source_folder>/ layout AND the nested
+        windows|linux|cloud/... layout. Most specific wins: PowerShell EID
+        folders and Microsoft 365 source folders are checked before the
+        generic Windows/Cloud buckets so they aren't swallowed.
+        """
+        p = f"/{file_path.lower().strip('/')}/"
+
+
+        if "eid_4103" in p or "eid_4104" in p or "/powershell/" in p:
             return "powershell"
-        if "/cve/" in path_lower:
-            return "cve"
-        if "/office 365/" in path_lower or "/office365/" in path_lower:
+
+
+        m365 = ("entra_id", "exchange", "sharepoint_onedrive", "threat_intelligence")
+        if ("/microsoft_365/" in p or "/office365/" in p or "/office 365/" in p
+                or any(f"/{f}/" in p for f in m365)):
             return "office365"
-        if "/cloud/" in path_lower:
-            return "cloud"
-        if "/web/" in path_lower:
+
+
+        if "/linux/" in p or any(f"/{f}/" in p for f in ("auditd", "syslog", "tetragon")):
+            return "linux"
+
+
+        if "/web/" in p:
             return "web"
 
-        # Check tags
+
+        win_folders = (
+            "application_eventlog", "defender_operational", "security_eventlog",
+            "system_eventlog", "task_scheduler_operational", "multi_event",
+        )
+        if ("/windows/" in p or "/sysmon/" in p or "/eid_" in p
+                or any(f"/{f}/" in p for f in win_folders)):
+            return "windows"
+
         tags = rule_data.get("tags", {})
         asset_type = tags.get("asset_type", "").lower()
         if "linux" in asset_type:
@@ -275,7 +288,6 @@ class RulesCache:
         if "windows" in asset_type:
             return "windows"
 
-        # Check rule name
         name_lower = rule_data.get("name", "").lower()
         if "powershell" in name_lower:
             return "powershell"
@@ -286,8 +298,6 @@ class RulesCache:
         if "windows" in name_lower:
             return "windows"
 
-        # SaaS / cloud metadata fallback for rules not filed under the
-        # Cloud / Office 365 folders (the folder-path checks above win).
         products = tags.get("product", [])
         product_text = " ".join(products).lower() if isinstance(products, list) else str(products).lower()
         security_domain = str(tags.get("security_domain", "")).lower()
