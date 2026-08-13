@@ -84,6 +84,10 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
     ProvisionGraylogAlertResponse,
 )
 from app.integrations.copilot_searches.schema.copilot_searches import RefreshResponse
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    RuleCategoriesResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import RuleCategory
 from app.integrations.copilot_searches.schema.copilot_searches import RuleDetailResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RuleListResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RulesByIdsRequest
@@ -96,6 +100,9 @@ from app.integrations.copilot_searches.services.copilot_searches import (
 )
 from app.integrations.copilot_searches.services.copilot_searches import (
     generate_graylog_query,
+)
+from app.integrations.copilot_searches.services.copilot_searches import (
+    get_categories_list,
 )
 from app.integrations.copilot_searches.services.copilot_searches import get_rule_by_id
 from app.integrations.copilot_searches.services.copilot_searches import get_rule_by_name
@@ -194,6 +201,10 @@ async def list_rules(
         PlatformFilter.ALL,
         description="Filter by platform (linux, windows, powershell, all)",
     ),
+    category: Optional[str] = Query(
+        None,
+        description="Filter by detections/ folder, e.g. eid_01_process_creation. See GET /categories.",
+    ),
     status: Optional[RuleStatus] = Query(
         None,
         description="Filter by rule status",
@@ -222,6 +233,7 @@ async def list_rules(
 
     Supports filtering by:
     - **platform**: linux, windows, powershell, cve or all
+    - **category**: detections/ folder from the CoPilot-Search-Queries repo
     - **status**: production, experimental, deprecated
     - **severity**: low, medium, high, critical
     - **mitre_id**: MITRE ATT&CK technique ID
@@ -230,6 +242,7 @@ async def list_rules(
     """
     result = await get_rules_list(
         platform=platform,
+        category=category,
         status=status,
         severity=severity,
         mitre_id=mitre_id,
@@ -387,6 +400,27 @@ async def get_rule_stats():
 
 
 @copilot_searches_router.get(
+    "/categories",
+    response_model=RuleCategoriesResponse,
+    description="List the detection categories (detections/ folders) available in the rules repo",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def list_rule_categories():
+    """
+    List the detection categories that back the Data Source filter.
+
+    These mirror the folders under `detections/` in CoPilot-Search-Queries
+    verbatim — the list is derived from the loaded rules, so a folder added
+    upstream appears here after the next cache refresh with no code change.
+    Each entry carries a display `label`, a presentation `group` and the `count`
+    of cached rules in that folder.
+    """
+    categories = await get_categories_list()
+
+    return RuleCategoriesResponse(categories=[RuleCategory(**c) for c in categories])
+
+
+@copilot_searches_router.get(
     "/id/{rule_id}",
     response_model=RuleDetailResponse,
     description="Get full details of a specific rule by its ID",
@@ -467,6 +501,10 @@ async def get_mitre_coverage(
         PlatformFilter.ALL,
         description="Restrict coverage to rules matching this platform",
     ),
+    category: Optional[str] = Query(
+        None,
+        description="Restrict coverage to rules in this detections/ folder. See GET /categories.",
+    ),
     severity: Optional[RuleSeverity] = Query(None, description="Restrict coverage to rules of this severity"),
     status: Optional[RuleStatus] = Query(None, description="Restrict coverage to rules of this status"),
     has_graylog: Optional[bool] = Query(
@@ -489,6 +527,7 @@ async def get_mitre_coverage(
     try:
         result = await get_coverage(
             platform=platform,
+            category=category,
             severity=severity,
             status=status,
             has_graylog=has_graylog,
@@ -530,6 +569,7 @@ async def refresh_mitre_matrix():
 async def get_rules_by_mitre(
     technique_id: str,
     platform: PlatformFilter = Query(PlatformFilter.ALL),
+    category: Optional[str] = Query(None),
 ):
     """
     Get all rules that detect a specific MITRE ATT&CK technique.
@@ -541,6 +581,7 @@ async def get_rules_by_mitre(
     """
     result = await get_rules_list(
         platform=platform,
+        category=category,
         mitre_id=technique_id,
     )
 

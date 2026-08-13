@@ -3,7 +3,7 @@
 		<MatrixViewToolbar
 			v-model:search-query="searchQuery"
 			v-model:show-filters="showFilters"
-			v-model:selected-platform="selectedPlatform"
+			v-model:selected-category="selectedCategory"
 			v-model:selected-severity="selectedSeverity"
 			v-model:selected-status="selectedStatus"
 			v-model:has-graylog-filter="hasGraylogFilter"
@@ -70,7 +70,6 @@ import type {
 	MitreSubTechnique,
 	MitreTactic,
 	MitreTechnique,
-	PlatformFilter,
 	RuleSeverity,
 	RuleStatus
 } from "@/types/copilot-searches"
@@ -101,7 +100,7 @@ const onlyCovered = useLocalStorage("copilot-searches/matrix/only-covered", fals
 const searchQuery = ref("")
 const expanded = useLocalStorage<Record<string, boolean>>("copilot-searches/matrix/expanded", {})
 
-const selectedPlatform = ref<PlatformFilter | null>(null)
+const selectedCategory = ref<string | null>(null)
 const selectedSeverity = ref<RuleSeverity | null>(null)
 const selectedStatus = ref<RuleStatus | null>(null)
 const hasGraylogFilter = ref(false)
@@ -172,7 +171,7 @@ const filteredTactics = computed<MitreTactic[]>(() => {
 })
 
 function clearAllFilters() {
-	selectedPlatform.value = null
+	selectedCategory.value = null
 	selectedSeverity.value = null
 	selectedStatus.value = null
 	hasGraylogFilter.value = false
@@ -223,7 +222,7 @@ function exportCoverageCsv() {
 }
 
 function resetFilters() {
-	selectedPlatform.value = null
+	selectedCategory.value = null
 	selectedSeverity.value = null
 	selectedStatus.value = null
 	hasGraylogFilter.value = false
@@ -267,8 +266,8 @@ function syncRouteFromSelection() {
 
 function syncFiltersToUrl() {
 	const next: Record<string, string> = { ...(route.query as Record<string, string>) }
-	if (selectedPlatform.value) next.platform = selectedPlatform.value
-	else delete next.platform
+	if (selectedCategory.value) next.category = selectedCategory.value
+	else delete next.category
 	if (selectedSeverity.value) next.severity = selectedSeverity.value
 	else delete next.severity
 	if (selectedStatus.value) next.status = selectedStatus.value
@@ -280,16 +279,16 @@ function syncFiltersToUrl() {
 
 function applyFiltersFromUrl() {
 	const q = route.query
-	const platform = q.platform as string | undefined
+	const category = q.category as string | undefined
 	const severity = q.severity as string | undefined
 	const status = q.status as string | undefined
 
-	const validPlatforms: PlatformFilter[] = ["all", "linux", "windows", "powershell", "cve"]
 	const validSeverities: RuleSeverity[] = ["low", "medium", "high", "critical"]
 	const validStatuses: RuleStatus[] = ["production", "experimental", "deprecated"]
 
-	selectedPlatform.value =
-		platform && (validPlatforms as string[]).includes(platform) ? (platform as PlatformFilter) : null
+	// Categories come from the rules repo, so there is no static list to validate
+	// against here — an unknown folder simply yields empty coverage.
+	selectedCategory.value = category || null
 	selectedSeverity.value =
 		severity && (validSeverities as string[]).includes(severity) ? (severity as RuleSeverity) : null
 	selectedStatus.value = status && (validStatuses as string[]).includes(status) ? (status as RuleStatus) : null
@@ -321,7 +320,7 @@ function applyDeepLinkFromRoute() {
 async function load(opts: { preserveDeepLink?: boolean } = {}) {
 	loading.value = true
 	const query: MitreCoverageQuery = {
-		platform: selectedPlatform.value || undefined,
+		category: selectedCategory.value || undefined,
 		severity: selectedSeverity.value || undefined,
 		status: selectedStatus.value || undefined,
 		has_graylog: hasGraylogFilter.value || undefined
@@ -355,7 +354,7 @@ async function handleRefresh() {
 }
 
 watchDebounced(
-	[selectedPlatform, selectedSeverity, selectedStatus, hasGraylogFilter],
+	[selectedCategory, selectedSeverity, selectedStatus, hasGraylogFilter],
 	() => {
 		if (!ready.value) return
 		syncFiltersToUrl()

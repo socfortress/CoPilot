@@ -10,7 +10,13 @@ from pydantic import model_validator
 
 
 class PlatformFilter(str, Enum):
-    """Supported platform filters."""
+    """Supported platform filters.
+
+    Kept for the OS badge on a rule and the /linux, /windows, /powershell
+    convenience routes. The user-facing rule filter is `category` — the
+    detections/<folder> the rule lives in — which is not an enum on purpose:
+    folders are added to CoPilot-Search-Queries without a CoPilot release.
+    """
 
     ALL = "all"
     LINUX = "linux"
@@ -132,6 +138,8 @@ class RuleSummary(BaseModel):
     severity: str
     risk_score: int
     platform: str
+    category: str = ""
+    category_label: str = ""
     mitre_attack_id: list[str] = []
     analytic_story: list[str] = []
     cve: list[str] = []
@@ -172,9 +180,27 @@ class RuleListResponse(BaseModel):
     total: int
     filtered: int
     platform: str
+    category: Optional[str] = None
     rules: list[RuleSummary]
     success: bool = True
     message: str = "Rules fetched successfully"
+
+
+class RuleCategory(BaseModel):
+    """One detections/ folder from the CoPilot-Search-Queries repo."""
+
+    value: str = Field(..., description="Folder name as it appears under detections/ (e.g. eid_01_process_creation)")
+    label: str = Field(..., description="Display label (e.g. 'EID 01 Process Creation')")
+    group: str = Field(..., description="Presentation bucket: Sysmon, Windows Event Logs, PowerShell, Linux, …")
+    count: int = Field(..., description="Number of cached rules in this folder")
+
+
+class RuleCategoriesResponse(BaseModel):
+    """Response model for the detection category listing."""
+
+    categories: list[RuleCategory]
+    success: bool = True
+    message: str = "Categories fetched successfully"
 
 
 class RuleStatsResponse(BaseModel):
@@ -182,6 +208,7 @@ class RuleStatsResponse(BaseModel):
 
     total_rules: int
     by_platform: dict[str, int]
+    by_category: dict[str, int] = {}
     by_status: dict[str, int]
     by_severity: dict[str, int]
     by_mitre_tactic: dict[str, int]

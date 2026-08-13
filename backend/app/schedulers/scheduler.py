@@ -317,10 +317,14 @@ def get_function_by_name(function_name: str):
         "invoke_palace_lesson_sweeper": invoke_palace_lesson_sweeper,
         # Add other function mappings here
     }
-    return function_map.get(
-        function_name,
-        lambda: ValueError(f"Function {function_name} not found"),
-    )
+    # Raise rather than returning a placeholder lambda: APScheduler's SQLAlchemy jobstore
+    # pickles every job's callable at `start()`, and a lambda has no importable reference,
+    # so a stale/unknown job_id in scheduled_job_metadata would kill app startup with
+    # "This Job cannot be serialized...". Raising lets schedule_enabled_jobs skip the job.
+    try:
+        return function_map[function_name]
+    except KeyError:
+        raise ValueError(f"Function {function_name} not found")
 
 
 async def add_scheduler_jobs(create_scheduler_request: CreateSchedulerRequest):

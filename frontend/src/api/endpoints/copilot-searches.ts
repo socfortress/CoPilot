@@ -11,6 +11,7 @@ import type {
 	ProvisionGraylogAlertRequest,
 	ProvisionGraylogAlertResponse,
 	RefreshResponse,
+	RuleCategoriesResponse,
 	RuleDetailResponse,
 	RuleListQuery,
 	RuleListResponse,
@@ -30,6 +31,7 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & RuleListResponse>(`/copilot_searches`, {
 			params: {
 				platform: query.platform,
+				category: query.category,
 				status: query.status,
 				severity: query.severity,
 				mitre_id: query.mitre_id,
@@ -115,6 +117,16 @@ export default {
 	},
 
 	/**
+	 * List the detection categories (detections/ folders in the rules repo) that
+	 * back the Data Source filter, with per-folder rule counts.
+	 */
+	getCategories(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & RuleCategoriesResponse>(`/copilot_searches/categories`, {
+			signal
+		})
+	},
+
+	/**
 	 * Get statistics about loaded detection rules
 	 */
 	getStats(signal?: AbortSignal) {
@@ -150,7 +162,8 @@ export default {
 	getRulesByMitre(query: RulesByMitreQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & RuleListResponse>(`/copilot_searches/mitre/${query.techniqueId}`, {
 			params: {
-				platform: query.platform
+				platform: query.platform,
+				category: query.category
 			},
 			signal
 		})
@@ -227,6 +240,7 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & MitreCoverageResponse>(`/copilot_searches/mitre/coverage`, {
 			params: {
 				platform: query.platform,
+				category: query.category,
 				severity: query.severity,
 				status: query.status,
 				has_graylog: query.has_graylog,
