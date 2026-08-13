@@ -16,6 +16,7 @@ and a bounded per-tenant listing, nothing that needs scanning at scale.
 """
 from __future__ import annotations
 
+import asyncio
 import io
 import json
 import os
@@ -40,13 +41,44 @@ BUCKET = os.getenv("FILE_ANALYSIS_MINIO_BUCKET", "file-analysis")
 #   5: plain-text analyzer — text/config/log files now show their contents + IOCs
 #   6: enriched CAPE detonation summary (processes, dns/http/connections, MITRE, payloads)
 #   7: process pid read from CAPE's process_id (was always null -> broken process tree)
-ENGINE_VERSION = 7
+#   8: VirusTotal deep intel (per-engine detections, crowdsourced YARA/Sigma/IDS, VT sandbox behaviour)
+ENGINE_VERSION = 8
 
 _bucket_ready = False
+
+# MinIO I/O crosses the network (a VPN in this dev setup), so a single connection
+# timeout — Windows surfaces it as "The semaphore timeout period has expired" — used
+# to abort the whole analysis mid-write (orchestrator crashed in save_result). Retry
+# transient connection/timeout errors with exponential backoff so a blip is ridden out.
+# Logical S3 errors (NoSuchKey/NoSuchBucket) are NOT transient: _retry re-raises them
+# immediately (no wasted retries) and the read helpers treat them as "not found".
+_MINIO_RETRIES = int(os.getenv("FILE_ANALYSIS_MINIO_RETRIES", "4"))
+_MINIO_BACKOFF = float(os.getenv("FILE_ANALYSIS_MINIO_BACKOFF", "0.5"))
+_TRANSIENT_ERRORS = (aiohttp.ClientError, asyncio.TimeoutError, ConnectionError, OSError)
 
 
 async def _client():
     return await create_session()
+
+
+async def _retry(what: str, op):
+    """Run an async MinIO op, retrying only transient connection/timeout errors.
+
+    Re-raises the last transient error once retries are exhausted, and re-raises
+    non-transient errors (e.g. S3 ``NoSuchKey``) immediately so callers can act on them.
+    """
+    for attempt in range(_MINIO_RETRIES):
+        try:
+            return await op()
+        except _TRANSIENT_ERRORS as exc:
+            if attempt + 1 >= _MINIO_RETRIES:
+                logger.error(f"MinIO {what} failed after {_MINIO_RETRIES} attempts: {exc}")
+                raise
+            delay = _MINIO_BACKOFF * (2 ** attempt)
+            logger.warning(
+                f"MinIO {what} transient error (attempt {attempt + 1}/{_MINIO_RETRIES}): {exc}; retrying in {delay:.1f}s"
+            )
+            await asyncio.sleep(delay)
 
 
 async def ensure_bucket() -> None:
@@ -54,10 +86,14 @@ async def ensure_bucket() -> None:
     global _bucket_ready
     if _bucket_ready:
         return
-    client = await _client()
-    if not await client.bucket_exists(BUCKET):
-        await client.make_bucket(BUCKET)
-        logger.info(f"Created MinIO bucket {BUCKET}")
+
+    async def _op():
+        client = await _client()
+        if not await client.bucket_exists(BUCKET):
+            await client.make_bucket(BUCKET)
+            logger.info(f"Created MinIO bucket {BUCKET}")
+
+    await _retry("ensure_bucket", _op)
     _bucket_ready = True
 
 
@@ -65,69 +101,97 @@ async def ensure_bucket() -> None:
 async def put_json(key: str, obj: Dict[str, Any]) -> None:
     await ensure_bucket()
     body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
-    client = await _client()
-    await client.put_object(BUCKET, key, io.BytesIO(body), length=len(body), content_type="application/json")
+
+    async def _op():
+        client = await _client()
+        await client.put_object(BUCKET, key, io.BytesIO(body), length=len(body), content_type="application/json")
+
+    await _retry(f"put_json {key}", _op)
 
 
 async def get_json(key: str) -> Optional[Dict[str, Any]]:
     await ensure_bucket()
-    client = await _client()
+
+    async def _op():
+        client = await _client()
+        await client.stat_object(BUCKET, key)  # NoSuchKey (non-transient) -> re-raised -> None below
+        async with aiohttp.ClientSession() as session:
+            response = await client.get_object(BUCKET, key, session)
+            try:
+                return await response.read()
+            finally:
+                response.close()
+
     try:
-        await client.stat_object(BUCKET, key)
+        data = await _retry(f"get_json {key}", _op)
     except Exception:
+        # Missing object, or a sustained outage after all retries -> treat as a miss.
         return None
-    async with aiohttp.ClientSession() as session:
-        response = await client.get_object(BUCKET, key, session)
-        try:
-            data = await response.read()
-        finally:
-            response.close()
     return json.loads(data.decode("utf-8"))
 
 
 async def exists(key: str) -> bool:
     await ensure_bucket()
-    client = await _client()
-    try:
+
+    async def _op():
+        client = await _client()
         await client.stat_object(BUCKET, key)
         return True
+
+    try:
+        return bool(await _retry(f"stat {key}", _op))
     except Exception:
         return False
 
 
 async def put_bytes(key: str, data: bytes, content_type: str = "application/octet-stream") -> None:
     await ensure_bucket()
-    client = await _client()
-    await client.put_object(BUCKET, key, io.BytesIO(data), length=len(data), content_type=content_type)
+
+    async def _op():
+        client = await _client()
+        await client.put_object(BUCKET, key, io.BytesIO(data), length=len(data), content_type=content_type)
+
+    await _retry(f"put_bytes {key}", _op)
 
 
 async def get_bytes(key: str) -> Optional[bytes]:
     await ensure_bucket()
-    client = await _client()
-    try:
+
+    async def _op():
+        client = await _client()
         await client.stat_object(BUCKET, key)
+        async with aiohttp.ClientSession() as session:
+            response = await client.get_object(BUCKET, key, session)
+            try:
+                return await response.read()
+            finally:
+                response.close()
+
+    try:
+        return await _retry(f"get_bytes {key}", _op)
     except Exception:
         return None
-    async with aiohttp.ClientSession() as session:
-        response = await client.get_object(BUCKET, key, session)
-        try:
-            return await response.read()
-        finally:
-            response.close()
 
 
 async def list_prefix(prefix: str) -> List[str]:
     await ensure_bucket()
-    client = await _client()
-    names: List[str] = []
-    objects = client.list_objects(BUCKET, prefix=prefix, recursive=True)
-    # miniopy_async yields a lone ``None`` for an empty listing (prefix with no
-    # objects, e.g. a customer that has never been analyzed) — guard against it.
-    async for obj in objects:
-        name = getattr(obj, "object_name", None) if obj is not None else None
-        if name:
-            names.append(name)
-    return names
+
+    async def _op():
+        client = await _client()
+        names: List[str] = []
+        objects = client.list_objects(BUCKET, prefix=prefix, recursive=True)
+        # miniopy_async yields a lone ``None`` for an empty listing (prefix with no
+        # objects, e.g. a customer that has never been analyzed) — guard against it.
+        async for obj in objects:
+            name = getattr(obj, "object_name", None) if obj is not None else None
+            if name:
+                names.append(name)
+        return names
+
+    try:
+        return await _retry(f"list_prefix {prefix}", _op)
+    except Exception:
+        return []
 
 
 # --- domain helpers --------------------------------------------------------

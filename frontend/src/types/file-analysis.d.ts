@@ -160,6 +160,46 @@ export interface SandboxSummary {
 	errors?: string[]
 }
 
+export interface VtDetection {
+	engine: string
+	result: string
+	category: string
+}
+export interface VtBehaviour {
+	mitre: { id: string; description?: string; severity?: string }[]
+	contacted_ips: string[]
+	contacted_domains: string[]
+	contacted_urls: string[]
+	dropped_files: { name: string; sha256?: string; type?: string }[]
+	processes: string[]
+	registry_keys: string[]
+	mutexes: string[]
+	tags: string[]
+}
+export interface VirusTotalIntel {
+	threat_label?: string
+	threat_categories?: string[]
+	threat_names?: string[]
+	type_description?: string
+	size?: number | null
+	reputation?: number | null
+	harmless_votes?: number
+	malicious_votes?: number
+	times_submitted?: number | null
+	first_seen?: string
+	last_analysis?: string
+	signed?: boolean
+	signer?: string
+	names?: string[]
+	detections?: VtDetection[]
+	detection_count?: number
+	yara?: { rule: string; author?: string; description?: string; ruleset?: string }[]
+	sigma?: { title: string; level?: string; source?: string }[]
+	ids?: { msg: string; severity?: string; category?: string; source?: string }[]
+	/** VT's OWN sandbox observations — populated even when our detonation is offline. */
+	behaviour?: VtBehaviour | null
+}
+
 export interface FileAnalysisReputation {
 	source: string
 	found: boolean
@@ -172,6 +212,8 @@ export interface FileAnalysisReputation {
 	permalink?: string
 	submitted?: boolean
 	note?: string
+	/** Deep VT intel (per-engine detections, crowdsourced rules, VT sandbox behaviour). */
+	intel?: VirusTotalIntel | null
 }
 
 export interface FileAnalysisResult {

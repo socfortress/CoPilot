@@ -24,6 +24,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+import pyvelociraptor
 from loguru import logger
 
 from app.connectors.velociraptor.utils.universal import UniversalService
@@ -47,10 +48,46 @@ class VelociraptorFetchError(Exception):
     """Raised on unrecoverable fetch failures (config, gRPC, missing file)."""
 
 
+def _local_api_config() -> Optional[str]:
+    """A Velociraptor ``api.config.yaml`` on THIS host, used as a fallback when the
+    connector's stored path is stale.
+
+    The connector's ``connector_api_key`` is an absolute PATH to the api config; on a
+    shared dev DB it frequently reverts to another machine's path (e.g. a previous
+    developer's ``/Users/<x>/.../api.config.yaml``) that doesn't exist here, which
+    silently breaks live agent status + collection. Prefer ``VELOCIRAPTOR_API_CONFIG``,
+    else the conventional ``backend/data/api.config.yaml``.
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.getenv("VELOCIRAPTOR_API_CONFIG", ""),
+        os.path.abspath(os.path.join(here, "..", "..", "..", "data", "api.config.yaml")),  # backend/data/
+        os.path.join(os.getcwd(), "data", "api.config.yaml"),
+    ]
+    for c in candidates:
+        if c and os.path.isfile(c):
+            return os.path.abspath(c)
+    return None
+
+
 async def _service() -> UniversalService:
     try:
         return await UniversalService.create(CONNECTOR_NAME)
     except Exception as exc:
+        # The connector's stored api-config PATH may not exist on this host (a stale
+        # absolute path from another machine). Fall back to a local config so agent
+        # status + collection keep working WITHOUT a DB edit (which would just revert).
+        local = _local_api_config()
+        if local:
+            try:
+                svc = UniversalService()
+                svc.connector_api_key = local
+                svc.config = pyvelociraptor.LoadConfigFile(local)
+                await svc.setup_grpc_channel_and_stub()
+                logger.warning(f"Velociraptor connector config unusable ({exc}); using local config {local}")
+                return svc
+            except Exception as exc2:
+                raise VelociraptorFetchError(f"Velociraptor connect failed (connector + local fallback {local}): {exc2}")
         raise VelociraptorFetchError(f"could not connect to Velociraptor connector: {exc}")
 
 

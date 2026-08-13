@@ -69,6 +69,9 @@
 				<n-tab-pane v-if="hasIocs" name="iocs" tab="IOCs" display-directive="show:lazy">
 					<IocsTab :iocs="result?.inspector?.iocs" />
 				</n-tab-pane>
+				<n-tab-pane v-if="hasVtIntel" name="virustotal" tab="VirusTotal" display-directive="show:lazy">
+					<VirusTotalTab :reputation="result?.reputation" :loading="stillRunning" />
+				</n-tab-pane>
 				<n-tab-pane name="metadata" tab="Metadata" display-directive="show:lazy">
 					<MetadataTab :result="result?.inspector" />
 				</n-tab-pane>
@@ -119,6 +122,7 @@ const ContentTab = defineAsyncComponent(() => import("@/components/fileAnalysis/
 const IocsTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/IocsTab.vue"))
 const MetadataTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/MetadataTab.vue"))
 const DetonationTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/DetonationTab.vue"))
+const VirusTotalTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/VirusTotalTab.vue"))
 const NetworkTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/NetworkTab.vue"))
 const LiveSessionTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/LiveSessionTab.vue"))
 
@@ -193,6 +197,9 @@ const hasIocs = computed(() => {
 	const i = result.value?.inspector?.iocs
 	return Boolean(i && ((i.urls?.length ?? 0) + (i.ips?.length ?? 0) + (i.domains?.length ?? 0) > 0))
 })
+
+// The VirusTotal tab appears only when VT knows the file AND deep intel came back.
+const hasVtIntel = computed(() => Boolean(result.value?.reputation?.found && result.value?.reputation?.intel))
 
 // Land on the first tab that has something; Metadata is the always-present fallback.
 watch([hasPreviews, hasContent, hasIocs], () => {
