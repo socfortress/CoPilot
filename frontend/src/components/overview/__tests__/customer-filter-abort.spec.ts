@@ -44,23 +44,37 @@ const stubs = new Proxy(
 	{},
 	{
 		get: (_target, name: string) =>
-			name === "default" ? undefined : defineComponent({ name, setup: (_p, { slots }) => () => h("div", slots.default?.()) })
+			name === "default"
+				? undefined
+				: defineComponent({
+						name,
+						setup:
+							(_p, { slots }) =>
+							() =>
+								h("div", slots.default?.())
+					})
 	}
 )
 
+// Resolved at module scope, not inside the tests. Awaiting the import in a test
+// body puts Vite's first single-file-component transform on the test's clock —
+// measured at ~1.5s for the first card — which intermittently blew the default
+// 5s timeout on a loaded machine. Worse, a card whose test times out is never
+// unmounted, so it keeps writing into `issued` and the *next* describe block
+// fails with a count it never produced. One slow import looked like three
+// unrelated failures.
 const CARDS = [
-	["AgentsCard", () => import("../AgentsCard.vue")],
-	["IncidentAlerts", () => import("../IncidentAlerts.vue")],
-	["IncidentCases", () => import("../IncidentCases.vue")]
+	["AgentsCard", (await import("../AgentsCard.vue")).default],
+	["IncidentAlerts", (await import("../IncidentAlerts.vue")).default],
+	["IncidentCases", (await import("../IncidentCases.vue")).default]
 ] as const
 
-describe.each(CARDS)("%s — aborting on filter change", (_name, load) => {
+describe.each(CARDS)("%s — aborting on filter change", (_name, Card) => {
 	beforeEach(() => {
 		issued.length = 0
 	})
 
 	it("aborts the in-flight request before issuing the new one", async () => {
-		const { default: Card } = await load()
 		const wrapper = mount(Card, { props: { customerCodes: [] }, global: { stubs } })
 		await flushPromises()
 
@@ -70,7 +84,7 @@ describe.each(CARDS)("%s — aborting on filter change", (_name, load) => {
 		expect(first?.aborted).toBe(false)
 
 		// What the switch does: the prop changes, the watcher refetches.
-        await wrapper.setProps({ customerCodes: ["SOC01"] })
+		await wrapper.setProps({ customerCodes: ["SOC01"] })
 		await flushPromises()
 
 		expect(issued).toHaveLength(2)
@@ -81,7 +95,6 @@ describe.each(CARDS)("%s — aborting on filter change", (_name, load) => {
 	})
 
 	it("aborts on unmount, so leaving the page does not leave work running", async () => {
-		const { default: Card } = await load()
 		const wrapper = mount(Card, { props: { customerCodes: [] }, global: { stubs } })
 		await flushPromises()
 
