@@ -132,6 +132,46 @@ def test_a_missing_user_is_not_cached(monkeypatch):
     assert len(calls) == 2, "a failed lookup must be retried, not remembered"
 
 
+def test_the_scope_guard_shares_the_same_cached_lookup(monkeypatch):
+    """The path that actually dominates, and that the first fix missed.
+
+    `require_any_scope` verifies the user still exists ("prevents ghost-user token
+    abuse") with its own `find_user`. Almost every route is scope-guarded, so
+    caching only `get_current_user` left the measured ratio unchanged at ~1.35
+    lookups per request across three sessions — the fix looked applied and was not.
+    """
+    calls = []
+
+    async def fake_find_user(name):
+        calls.append(name)
+        return _user(name)
+
+    monkeypatch.setattr("app.auth.utils.find_user", fake_find_user)
+
+    handler = AuthHandler()
+    request = _request()
+
+    async def scenario():
+        # The guard first, as a request would: it resolves the user…
+        await handler._resolve_user(request, "admin")
+        # …and an injected `current_user` on the same route must not re-query.
+        await handler._resolve_user(request, "admin")
+
+    asyncio.run(scenario())
+
+    assert calls == ["admin"]
+
+
+def test_the_scope_guard_takes_a_request_so_it_can_share_the_cache():
+    """Without the parameter there is nowhere to put or find the cached user."""
+    import inspect
+
+    source = inspect.getsource(AuthHandler.require_any_scope)
+
+    assert "_require_any_scope(request: Request" in source, "the guard cannot reach request.state"
+    assert "await find_user(" not in source, "the guard is querying on its own again"
+
+
 # ── the customers list: one statement, not two ─────────────────────────────
 
 

@@ -321,7 +321,7 @@ class AuthHandler:
             Callable: The decorated function that checks if the token has any of the required scopes.
         """
 
-        async def _require_any_scope(token: str = Depends(self.security)):
+        async def _require_any_scope(request: Request, token: str = Depends(self.security)):
             if not token:
                 raise HTTPException(
                     status_code=401,
@@ -350,8 +350,12 @@ class AuthHandler:
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
-            # Verify user still exists in DB — prevents ghost-user token abuse
-            user = await find_user(username)
+            # Verify user still exists in DB — prevents ghost-user token abuse.
+            # Shared with get_current_user for the duration of the request: this is
+            # the dominant path (almost every route is scope-guarded), and it was
+            # doing its own lookup, which is why caching only get_current_user left
+            # the measured ratio at ~1.35 lookups per request (#1072 level 3).
+            user = await self._resolve_user(request, username)
             if user is None:
                 raise HTTPException(
                     status_code=401,
