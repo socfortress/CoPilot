@@ -68,6 +68,9 @@ from app.schedulers.services.invoke_snapshot_and_restore import (
 )
 from app.schedulers.services.refresh_catalog_caches import refresh_catalog_caches
 from app.schedulers.services.refresh_sidebar_health import refresh_sidebar_health
+from app.schedulers.services.refresh_sidebar_indicators import (
+    refresh_sidebar_indicators,
+)
 from app.schedulers.services.refresh_wazuh_rules_cache import refresh_wazuh_rules_cache
 from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 
@@ -204,6 +207,14 @@ async def initialize_job_metadata():
                 "time_interval": 3,
                 "function": refresh_sidebar_health,
                 "description": "Refreshes the sidebar InfluxDB health indicator so the sidebar never runs the Flux query itself.",
+            },
+            {
+                "job_id": "refresh_sidebar_indicators",
+                # Below SHARED_INDICATORS_TTL_SECONDS (300) so a single missed run
+                # cannot leave the sidebar serving an expired set.
+                "time_interval": 2,
+                "function": refresh_sidebar_indicators,
+                "description": "Assembles the deployment-wide sidebar indicators so /status/sidebar reads them from memory.",
             },
             {
                 "job_id": "prune_audit_log",
@@ -347,6 +358,7 @@ def get_function_by_name(function_name: str):
         "refresh_wazuh_rules_cache": refresh_wazuh_rules_cache,
         "refresh_catalog_caches": refresh_catalog_caches,
         "refresh_sidebar_health": refresh_sidebar_health,
+        "refresh_sidebar_indicators": refresh_sidebar_indicators,
         # Add other function mappings here
     }
     # A job needs registering in TWO places: `known_jobs` in initialize_job_metadata

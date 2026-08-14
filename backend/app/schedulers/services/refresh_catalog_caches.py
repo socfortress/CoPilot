@@ -64,5 +64,11 @@ async def warm_catalog_caches() -> None:
     # The sidebar's InfluxDB indicator is refreshed on the same principle: filled
     # in here so the first sidebar load after a restart already has a value.
     from app.schedulers.services.refresh_sidebar_health import refresh_sidebar_health
+    from app.schedulers.services.refresh_sidebar_indicators import (
+        refresh_sidebar_indicators,
+    )
 
     await refresh_sidebar_health()
+    # Assembled last: it reads the caches warmed above, so the first sidebar load
+    # after a restart already has everything.
+    await refresh_sidebar_indicators()

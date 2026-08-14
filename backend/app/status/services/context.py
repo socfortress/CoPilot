@@ -249,6 +249,137 @@ def _record_indicator_timings(total_ms: float, sequential_ms: float, timings: Li
     logger.info(f"Sidebar context took {total_ms:.0f}ms (DB group {sequential_ms:.0f}ms). Slowest: {top}")
 
 
+# Sidebar indicators split in two by what they depend on (#1072).
+#
+# Twelve of them are deployment-wide: the same answer for every user, every time.
+# Recomputing them inside each request is what kept the sidebar at ~3s even after
+# the fan-out — not one slow builder, but a dozen database round-trips contending
+# for connections. They are now assembled by a scheduled job and served from
+# memory.
+#
+# Two are genuinely per-user (whose alerts, whose cases) and are still computed
+# live. Two queries per request instead of fourteen.
+#
+# `audiences` mirrors the role gating that used to live in build_sidebar_context;
+# order in this list is the order the sidebar renders.
+_SHARED_BUILDERS = [
+    (build_tag_rbac_indicator, True, {"analyst"}),
+    (build_ai_analyst_jobs_indicator, True, {"analyst"}),
+    (build_mem_palace_indicator, True, {"analyst"}),
+    (build_notification_dispatch_indicator, True, {"analyst"}),
+    (build_scheduler_indicator_excluding_agent_sync, True, {"analyst"}),
+    (build_agent_sync_indicator, True, {"analyst"}),
+    (build_talon_indicator, True, {"analyst"}),
+    (build_core_soc_tools_indicator, True, {"analyst"}),
+    (build_wazuh_indexer_indicator, False, {"analyst"}),
+    (_build_wazuh_catalog_indicator, False, {"analyst", "customer"}),
+    (build_influx_health_indicator, True, {"analyst"}),
+    (_build_connector_indicator, True, {"admin"}),
+    (build_license_indicator, True, {"admin"}),
+    (build_platform_storage_indicator, True, {"admin"}),
+]
+
+# Kept longer than the refresh interval so a single missed job run does not blank
+# the sidebar; a stale read also triggers a background refresh.
+SHARED_INDICATORS_TTL_SECONDS = 300
+
+_shared_indicators: Optional[List[SidebarHealthIndicator]] = None
+_shared_indicators_at: Optional[datetime] = None
+_shared_audiences: List[set] = []
+_shared_refresh_lock = asyncio.Lock()
+_shared_refresh_task: Optional[asyncio.Task] = None
+
+
+def _shared_indicators_are_fresh() -> bool:
+    if _shared_indicators is None or _shared_indicators_at is None:
+        return False
+    return datetime.utcnow() - _shared_indicators_at < timedelta(seconds=SHARED_INDICATORS_TTL_SECONDS)
+
+
+async def refresh_shared_indicators() -> None:
+    """Recompute every deployment-wide indicator. Called by the scheduler.
+
+    This is the only place that pays for them. It runs them concurrently on
+    private sessions, exactly as the request path used to.
+    """
+    global _shared_indicators
+    global _shared_indicators_at
+    global _shared_audiences
+
+    if _shared_refresh_lock.locked():
+        return
+
+    async with _shared_refresh_lock:
+        builders = [(builder, ((None,) if needs_session else ()), {}) for builder, needs_session, _ in _SHARED_BUILDERS]
+        indicators, audiences = await _gather_shared(builders)
+        _shared_indicators = indicators
+        _shared_audiences = audiences
+        _shared_indicators_at = datetime.utcnow()
+
+
+async def _gather_shared(builders):
+    """Run the shared builders and keep each one's audience alongside its result."""
+    results: dict = {}
+    timings: List[tuple] = []
+    limiter = asyncio.Semaphore(INDICATOR_CONCURRENCY)
+
+    async def run_one(index, builder, args, kwargs):
+        started = time.perf_counter()
+        try:
+            async with limiter:
+                # A `None` placeholder means "this builder wants a session"; it is
+                # replaced by a private one inside _run_with_own_session.
+                if args and args[0] is None:
+                    async with get_db_session() as own_session:
+                        results[index] = await safe_build(builder, own_session, *args[1:], **kwargs)
+                else:
+                    results[index] = await safe_build(builder, *args, **kwargs)
+        finally:
+            timings.append((builder.__name__, (time.perf_counter() - started) * 1000.0))
+
+    started = time.perf_counter()
+    await asyncio.gather(*[run_one(i, b, a, k) for i, (b, a, k) in enumerate(builders)])
+    _record_indicator_timings((time.perf_counter() - started) * 1000.0, 0.0, timings)
+
+    indicators, audiences = [], []
+    for index, (_, _, audience) in enumerate(_SHARED_BUILDERS):
+        indicator = results.get(index)
+        if indicator is not None:
+            indicators.append(indicator)
+            audiences.append(audience)
+    return indicators, audiences
+
+
+def _schedule_shared_refresh() -> None:
+    """Start a refresh in the background, at most one at a time."""
+    global _shared_refresh_task
+
+    if _shared_refresh_task is not None and not _shared_refresh_task.done():
+        return
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return
+
+    async def run():
+        global _shared_refresh_task
+        try:
+            await refresh_shared_indicators()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"Background sidebar indicator refresh failed: {exc}")
+        finally:
+            _shared_refresh_task = None
+
+    _shared_refresh_task = loop.create_task(run())
+
+
+def _visible_shared_indicators(audience_tags: set) -> List[SidebarHealthIndicator]:
+    """The cached indicators this role may see, in declaration order."""
+    if _shared_indicators is None:
+        return []
+    return [indicator for indicator, audience in zip(_shared_indicators, _shared_audiences) if audience & audience_tags]
+
+
 async def build_sidebar_context(
     *,
     session: AsyncSession,
@@ -258,51 +389,33 @@ async def build_sidebar_context(
     is_analyst_or_admin = user.role_id in (RoleEnum.admin.value, RoleEnum.analyst.value)
     is_customer_user = user.role_id == RoleEnum.customer_user.value
 
-    builders = []
-
-    if is_analyst_or_admin or is_customer_user:
-        builders.extend(
-            [
-                (build_open_alerts_indicator, (session, user), {}),
-                (build_my_open_cases_indicator, (session, user), {}),
-            ],
-        )
-
+    audience_tags = set()
     if is_analyst_or_admin:
-        builders.extend(
-            [
-                (build_tag_rbac_indicator, (session,), {}),
-                (build_ai_analyst_jobs_indicator, (session,), {}),
-                (build_mem_palace_indicator, (session,), {}),
-                (build_notification_dispatch_indicator, (session,), {}),
-                (build_scheduler_indicator_excluding_agent_sync, (session,), {}),
-                (build_agent_sync_indicator, (session,), {}),
-                (build_talon_indicator, (session,), {}),
-                (build_core_soc_tools_indicator, (session,), {}),
-                (build_wazuh_indexer_indicator, (), {}),
-                (_build_wazuh_catalog_indicator, (), {}),
-                (build_influx_health_indicator, (session,), {}),
-            ],
-        )
-    elif is_customer_user:
-        builders.append((_build_wazuh_catalog_indicator, (), {}))
-
+        audience_tags.add("analyst")
+    if is_customer_user:
+        audience_tags.add("customer")
     if is_admin:
-        builders.extend(
-            [
-                (_build_connector_indicator, (session,), {}),
-                (build_license_indicator, (session,), {}),
-                (build_platform_storage_indicator, (session,), {}),
-            ],
-        )
+        audience_tags.add("admin")
 
-    # The version check is an outbound GitHub call (cached 30 min, 5s timeout). It
-    # used to be awaited before the builders even started, so on a cache miss the
-    # whole sidebar waited for it before doing anything else.
-    version_fields, indicators = await asyncio.gather(
+    # Only the per-user indicators are computed live.
+    personal_builders = []
+    if is_analyst_or_admin or is_customer_user:
+        personal_builders = [
+            (build_open_alerts_indicator, (session, user), {}),
+            (build_my_open_cases_indicator, (session, user), {}),
+        ]
+
+    if not _shared_indicators_are_fresh():
+        # Never wait for it: a cold or stale set is filled in for the next caller
+        # while this request serves what is already known.
+        _schedule_shared_refresh()
+
+    version_fields, personal = await asyncio.gather(
         _get_version_fields(),
-        _gather_indicators(builders),
+        _gather_indicators(personal_builders),
     )
+
+    indicators = personal + _visible_shared_indicators(audience_tags)
 
     return SidebarContextResponse(
         success=True,
