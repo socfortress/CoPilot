@@ -10,11 +10,13 @@ from fastapi import Query
 from fastapi import Security
 
 from app.auth.utils import AuthHandler
+from app.performance.schema.performance import DatabaseSummaryResponse
 from app.performance.schema.performance import PerformanceEndpointsResponse
 from app.performance.schema.performance import PerformanceRequestsResponse
 from app.performance.schema.performance import PerformanceResetResponse
 from app.performance.schema.performance import PerformanceStallsResponse
 from app.performance.schema.performance import PerformanceSummaryResponse
+from app.performance.services.performance import get_database_summary
 from app.performance.services.performance import get_endpoint_timings
 from app.performance.services.performance import get_loop_stalls
 from app.performance.services.performance import get_performance_summary
@@ -80,3 +82,13 @@ async def performance_requests_endpoint(
 )
 async def performance_reset_endpoint() -> PerformanceResetResponse:
     return await reset_performance_counters()
+
+
+@performance_router.get(
+    "/database",
+    response_model=DatabaseSummaryResponse,
+    description="Query timings and connection-pool occupancy, with a reading of which cause they point at",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def performance_database_endpoint() -> DatabaseSummaryResponse:
+    return await get_database_summary()

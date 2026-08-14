@@ -18,11 +18,14 @@ from datetime import timezone
 from typing import List
 from typing import Sequence
 
+from app.db.query_metrics import query_registry
+from app.db.query_metrics import summary as query_summary
 from app.middleware.performance import LAG_SAMPLE_INTERVAL
 from app.middleware.performance import LAG_STALL_THRESHOLD_MS
 from app.middleware.performance import PERF_MONITOR_ENABLED
 from app.middleware.performance import SLOW_REQUEST_MS
 from app.middleware.performance import performance_registry
+from app.performance.schema.performance import DatabaseSummaryResponse
 from app.performance.schema.performance import EndpointTiming
 from app.performance.schema.performance import InFlightRequest
 from app.performance.schema.performance import LoopLagStats
@@ -222,6 +225,7 @@ async def reset_performance_counters() -> PerformanceResetResponse:
     previous_max_lag = round(performance_registry.max_lag_ms, 2)
 
     performance_registry.reset()
+    query_registry.reset()
 
     return PerformanceResetResponse(
         success=True,
@@ -230,4 +234,18 @@ async def reset_performance_counters() -> PerformanceResetResponse:
         previous_uptime_seconds=previous_uptime,
         previous_total_requests=previous_requests,
         previous_max_lag_ms=previous_max_lag,
+    )
+
+
+async def get_database_summary() -> DatabaseSummaryResponse:
+    """Per-query timings and pool occupancy (#1072 level 2).
+
+    Sampling the pool on read as well as on the snapshot timer means a manual
+    check reflects the moment it was asked, not the last periodic sample.
+    """
+    query_registry.sample_pool()
+    return DatabaseSummaryResponse(
+        success=True,
+        message="Database metrics retrieved successfully",
+        **query_summary(),
     )

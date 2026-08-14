@@ -46,6 +46,8 @@ from typing import Optional
 
 from loguru import logger
 
+from app.db.query_metrics import query_registry
+from app.db.query_metrics import summary as query_summary
 from app.middleware.performance import LAG_SAMPLE_INTERVAL
 from app.middleware.performance import LAG_STALL_THRESHOLD_MS
 from app.middleware.performance import MAX_ENDPOINTS
@@ -219,6 +221,9 @@ class PerformanceSessionLog:
     async def _snapshot_loop(self) -> None:
         while True:
             await asyncio.sleep(PERF_LOG_SNAPSHOT_INTERVAL)
+            # Sampled here rather than on a timer of its own: pool pressure is
+            # only interpretable next to the latencies it would explain.
+            query_registry.sample_pool()
             self._write("snapshot", self._summary())
 
     def _write(self, event_type: str, payload: Dict[str, Any]) -> None:
@@ -272,6 +277,8 @@ class PerformanceSessionLog:
                 "total_stalled_ms": round(registry.total_stalled_ms, 2),
                 "stalled_ratio": round(registry.total_stalled_ms / 1000.0 / uptime, 4),
             },
+            # What the database cost over the same window (#1072 level 2).
+            "database": query_summary(),
             "top_endpoints": [
                 {
                     "method": stats.method,

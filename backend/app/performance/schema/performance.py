@@ -112,3 +112,38 @@ class PerformanceResetResponse(BaseModel):
     previous_uptime_seconds: float
     previous_total_requests: int
     previous_max_lag_ms: Optional[float] = None
+
+
+class QueryStatement(BaseModel):
+    statement: str = Field(..., description="Parameterised SQL — no literal values are ever recorded")
+    count: int
+    total_ms: float
+    avg_ms: float
+    p95_ms: float
+    max_ms: float
+
+
+class PoolState(BaseModel):
+    size: Optional[int] = None
+    checked_out: Optional[int] = None
+    overflow: Optional[int] = None
+    peak_checked_out: Optional[int] = None
+    exhausted_samples: Optional[int] = Field(None, description="Snapshots where every connection was in use")
+    samples: Optional[int] = None
+
+
+class DatabaseSummaryResponse(BaseModel):
+    success: bool
+    message: str
+    queries: int
+    total_ms: float
+    slow_queries: int
+    slow_query_threshold_ms: float
+    p50_ms: float
+    p95_ms: float
+    p99_ms: float
+    max_ms: float
+    pool: PoolState
+    dropped_statements: int
+    verdict: str = Field(..., description="Which of the three causes the numbers point at")
+    top_statements: List[QueryStatement]

@@ -37,6 +37,7 @@ from app.db.db_setup import delete_connectors
 from app.db.db_setup import ensure_admin_user
 from app.db.db_setup import ensure_scheduler_user
 from app.db.db_setup import ensure_scheduler_user_removed
+from app.db.query_metrics import install as install_query_metrics
 from app.middleware.client_disconnect import CANCEL_ON_DISCONNECT_ENABLED
 from app.middleware.client_disconnect import ClientDisconnectMiddleware
 from app.middleware.exception_handlers import custom_http_exception_handler
@@ -127,6 +128,11 @@ environment = os.getenv("ENVIRONMENT", "PRODUCTION")
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     # ── startup ──
+    # Installed first so migrations and seeding are measured too (#1072 level 2):
+    # every earlier conclusion about the database was inferred from endpoint
+    # durations rather than measured.
+    install_query_metrics(async_engine)
+
     run_integrity_check()
     logger.info("Initializing database")
     if environment == "PRODUCTION":
