@@ -202,17 +202,19 @@ async def initialize_job_metadata():
             },
             {
                 "job_id": "refresh_sidebar_health",
-                # Below the indicator's 300s TTL so the sidebar never finds the
+                # Below the indicator's TTL (600s) so the sidebar never finds the
                 # value expired and has to render "checking".
-                "time_interval": 3,
+                "time_interval": 6,
                 "function": refresh_sidebar_health,
                 "description": "Refreshes the sidebar InfluxDB health indicator so the sidebar never runs the Flux query itself.",
             },
             {
                 "job_id": "refresh_sidebar_indicators",
-                # Below SHARED_INDICATORS_TTL_SECONDS (300) so a single missed run
-                # cannot leave the sidebar serving an expired set.
-                "time_interval": 2,
+                # Below SHARED_INDICATORS_TTL_SECONDS (600) so a missed run cannot
+                # leave the sidebar serving an expired set. Halved in frequency
+                # after measuring this job colliding with a sidebar request and
+                # tripling its latency.
+                "time_interval": 4,
                 "function": refresh_sidebar_indicators,
                 "description": "Assembles the deployment-wide sidebar indicators so /status/sidebar reads them from memory.",
             },

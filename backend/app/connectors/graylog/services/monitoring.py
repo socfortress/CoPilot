@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import HTTPException
 from loguru import logger
 
@@ -125,8 +127,15 @@ async def get_metrics() -> GraylogMetricsResponse:
         GraylogMetricsResponse: The response object containing the collected metrics.
     """
     logger.info("Getting metrics from Graylog")
-    throughput_metrics_collected = await fetch_metrics_from_graylog()
-    uncommitted_journal_entries_collected = await fetch_uncommitted_journal_entries()
+    # Two independent Graylog endpoints — neither uses the other's result — so the
+    # request cost the sum of both round-trips instead of the slower one. Measured
+    # at a steady ~3.1s across every session (#1072). Worth gathering only now
+    # that these calls no longer block the event loop: before level 0 the second
+    # one could not have started while the first was in flight anyway.
+    throughput_metrics_collected, uncommitted_journal_entries_collected = await asyncio.gather(
+        fetch_metrics_from_graylog(),
+        fetch_uncommitted_journal_entries(),
+    )
     try:
         if throughput_metrics_collected["success"] and uncommitted_journal_entries_collected["success"]:
             merged_metrics = merge_metrics_data(throughput_metrics_collected)

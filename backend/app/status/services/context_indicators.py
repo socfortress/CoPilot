@@ -457,7 +457,7 @@ async def build_wazuh_indexer_indicator() -> SidebarHealthIndicator:
 #
 # Nothing here blocks: a cold value renders as "checking", which is honest, and
 # the job fills it in seconds later.
-_INFLUX_INDICATOR_TTL_SECONDS = 300
+_INFLUX_INDICATOR_TTL_SECONDS = 600
 _influx_indicator_cache: Optional[SidebarHealthIndicator] = None
 _influx_indicator_cached_at: Optional[datetime] = None
 _influx_indicator_lock = asyncio.Lock()

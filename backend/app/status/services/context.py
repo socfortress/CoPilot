@@ -52,6 +52,12 @@ INDICATOR_TIMING_LOG_MS = 1000.0
 # while other requests are in flight.
 INDICATOR_CONCURRENCY = 6
 
+# The background refresh is deliberately gentler than the request path. It runs
+# fourteen builders while real requests are being served, and a measured
+# collision tripled a sidebar request's latency: nobody is waiting for this job,
+# so it takes fewer connections and finishes a little later.
+SHARED_REFRESH_CONCURRENCY = 3
+
 
 async def _get_version_fields() -> dict:
     global _VERSION_CACHE
@@ -279,9 +285,16 @@ _SHARED_BUILDERS = [
     (build_platform_storage_indicator, True, {"admin"}),
 ]
 
-# Kept longer than the refresh interval so a single missed job run does not blank
-# the sidebar; a stale read also triggers a background refresh.
-SHARED_INDICATORS_TTL_SECONDS = 300
+# Kept comfortably longer than the refresh interval so a missed job run cannot
+# blank the sidebar; a stale read also triggers a background refresh.
+#
+# Both this and the job interval were doubled after measuring the refresh
+# colliding with a request: the job holds up to SHARED_REFRESH_CONCURRENCY connections
+# for ~3s, and when that landed on top of a sidebar request the request's own two
+# queries went from ~0.5s to ~1.6s each. Health indicators do not move on a
+# minute scale, so refreshing half as often costs nothing and halves the chance
+# of that collision.
+SHARED_INDICATORS_TTL_SECONDS = 600
 
 _shared_indicators: Optional[List[SidebarHealthIndicator]] = None
 _shared_indicators_at: Optional[datetime] = None
@@ -321,7 +334,7 @@ async def _gather_shared(builders):
     """Run the shared builders and keep each one's audience alongside its result."""
     results: dict = {}
     timings: List[tuple] = []
-    limiter = asyncio.Semaphore(INDICATOR_CONCURRENCY)
+    limiter = asyncio.Semaphore(SHARED_REFRESH_CONCURRENCY)
 
     async def run_one(index, builder, args, kwargs):
         started = time.perf_counter()

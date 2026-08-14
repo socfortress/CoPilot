@@ -124,6 +124,49 @@ def test_wazuh_rules_cache_refresh_is_scheduled_below_the_cache_ttl():
     )
 
 
+def _job_interval(job_id):
+    tree = ast.parse(SCHEDULER_SOURCE.read_text())
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Dict):
+            continue
+        entries = {k.value: v for k, v in zip(node.keys, node.values) if isinstance(k, ast.Constant)}
+        found = entries.get("job_id")
+        if isinstance(found, ast.Constant) and found.value == job_id:
+            return entries["time_interval"].value
+    return None
+
+
+def test_every_warming_job_runs_more_often_than_the_ttl_it_feeds():
+    """A job slower than its TTL lets the value expire under a request.
+
+    That is the whole point of these jobs (#1072): the request path reads a value
+    somebody else paid for. If the interval ever creeps past the TTL, requests
+    silently start paying again — a regression with no error and no crash, only a
+    return of the latency we spent this work removing.
+    """
+    from app.status.services.context import SHARED_INDICATORS_TTL_SECONDS
+    from app.status.services.context_indicators import _INFLUX_INDICATOR_TTL_SECONDS
+
+    for job_id, ttl_seconds in (
+        ("refresh_sidebar_indicators", SHARED_INDICATORS_TTL_SECONDS),
+        ("refresh_sidebar_health", _INFLUX_INDICATOR_TTL_SECONDS),
+    ):
+        interval_minutes = _job_interval(job_id)
+        assert interval_minutes is not None, f"{job_id} is no longer seeded"
+        assert interval_minutes * 60 < ttl_seconds, (
+            f"{job_id} runs every {interval_minutes} min but the value it feeds " f"expires after {ttl_seconds}s"
+        )
+
+
+def test_the_background_refresh_is_gentler_than_the_request_path():
+    """Nobody waits for the job, so it must not compete as hard as a request."""
+    from app.status.services.context import INDICATOR_CONCURRENCY
+    from app.status.services.context import SHARED_REFRESH_CONCURRENCY
+
+    assert SHARED_REFRESH_CONCURRENCY < INDICATOR_CONCURRENCY
+    assert SHARED_REFRESH_CONCURRENCY >= 1
+
+
 def test_refresh_job_is_a_coroutine_function():
     """`schedule_enabled_jobs` branches on this to add the job correctly."""
     function = scheduler_module.get_function_by_name("refresh_wazuh_rules_cache")

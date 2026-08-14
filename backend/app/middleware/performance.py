@@ -521,7 +521,16 @@ class RequestTimingMiddleware:
 
         async def wrapped_receive() -> Message:
             message = await receive()
-            if message["type"] == "http.disconnect":
+            # Only an *abandoned* request counts: a client that hangs up after the
+            # response was already sent has not cost us anything.
+            #
+            # This guard matters since level 1 landed. ClientDisconnectMiddleware
+            # now pumps the receive channel continuously, so every connection
+            # close reaches this wrapper — including the perfectly ordinary one at
+            # the end of a served request. Without the check, 27 of 36 "client
+            # disconnects" in a real session were requests that had already
+            # answered with a 200.
+            if message["type"] == "http.disconnect" and state["status"] == 0:
                 state["disconnected"] = True
             return message
 
@@ -548,11 +557,15 @@ class RequestTimingMiddleware:
                 state["status"] = 500
             raise
         finally:
+            # ClientDisconnectMiddleware sets this when it cancelled the handler.
+            # Without it an abandoned request looks like a mystery with no status
+            # code rather than a request the user walked away from.
+            cancelled = bool(scope.get("copilot_client_disconnected"))
             self.registry.finish_request(
                 entry,
                 state["status"],
                 _route_template(scope, raw_path),
-                bool(state["disconnected"]),
+                bool(state["disconnected"]) or cancelled,
             )
 
 

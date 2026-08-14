@@ -207,6 +207,82 @@ def test_timing_header_is_emitted():
     assert "x-request-id" in header_names
 
 
+def test_a_disconnect_after_the_response_is_not_counted_as_abandoned():
+    """Only requests the client walked away from count (#1072).
+
+    Since level 1, ClientDisconnectMiddleware pumps the receive channel, so the
+    ordinary connection close at the end of every served request now reaches the
+    timing wrapper too. Counting those made `client_disconnects` read 36 in a
+    session where only 9 requests were actually abandoned — the metric said users
+    were leaving constantly while they were being served fine.
+    """
+
+    async def scenario():
+        registry = PerformanceRegistry()
+
+        async def answers_then_sees_the_hangup(scope, receive, send):
+            # Exactly the shape level 1 produces: the response goes out, and the
+            # disconnect arrives afterwards while something is still reading the
+            # channel.
+            scope.update({"endpoint": None, "path_params": {}})
+            await send({"type": "http.response.start", "status": 200, "headers": []})
+            await send({"type": "http.response.body", "body": b"ok"})
+            await receive()
+
+        middleware = RequestTimingMiddleware(answers_then_sees_the_hangup, registry)
+
+        async def receive():
+            return {"type": "http.disconnect"}
+
+        async def send(message):
+            pass
+
+        await middleware({"type": "http", "method": "GET", "path": "/api/x"}, receive, send)
+        return registry
+
+    registry = asyncio.run(scenario())
+
+    record = registry.recent_requests[-1]
+    assert record.status_code == 200
+    assert not record.client_disconnected, "a disconnect after a 200 is not an abandoned request"
+    assert registry.total_disconnects == 0
+
+
+def test_a_disconnect_before_the_response_is_counted():
+    """The real case: the client left while we were still working."""
+
+    async def scenario():
+        registry = PerformanceRegistry()
+
+        async def never_answers(scope, receive, send):
+            # Reads the body, then the client hangs up before anything is sent.
+            await receive()
+            await receive()
+
+        middleware = RequestTimingMiddleware(never_answers, registry)
+
+        messages = [
+            {"type": "http.request", "body": b"", "more_body": False},
+            {"type": "http.disconnect"},
+        ]
+
+        async def receive():
+            return messages.pop(0)
+
+        async def send(message):
+            pass
+
+        await middleware({"type": "http", "method": "GET", "path": "/api/x"}, receive, send)
+        return registry
+
+    registry = asyncio.run(scenario())
+
+    record = registry.recent_requests[-1]
+    assert record.status_code == 0, "no response was ever started"
+    assert record.client_disconnected
+    assert registry.total_disconnects == 1
+
+
 def test_route_template_is_rebuilt_from_path_params():
     """Concrete paths must collapse to their route template.
 

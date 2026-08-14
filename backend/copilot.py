@@ -37,6 +37,8 @@ from app.db.db_setup import delete_connectors
 from app.db.db_setup import ensure_admin_user
 from app.db.db_setup import ensure_scheduler_user
 from app.db.db_setup import ensure_scheduler_user_removed
+from app.middleware.client_disconnect import CANCEL_ON_DISCONNECT_ENABLED
+from app.middleware.client_disconnect import ClientDisconnectMiddleware
 from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.exception_handlers import value_error_handler
@@ -194,6 +196,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+################## ! CANCEL ABANDONED REQUESTS (#1072) ! ##################
+# Added before the timing middleware so it ends up INSIDE it: a cancelled request
+# must still be measured. Starlette does not cancel a handler when the client goes
+# away, so without this an abandoned 30s query keeps running for nobody.
+if CANCEL_ON_DISCONNECT_ENABLED:
+    app.add_middleware(ClientDisconnectMiddleware)
+
 
 ################## ! PERFORMANCE INSTRUMENTATION (#1072) ! ##################
 # Added after CORS so it ends up OUTERMOST (Starlette prepends each new
