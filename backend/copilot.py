@@ -18,6 +18,7 @@ from fastapi import FastAPI  # noqa: E402
 from fastapi import HTTPException  # noqa: E402
 from fastapi.exceptions import RequestValidationError  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.middleware.gzip import GZipMiddleware  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 from loguru import logger  # noqa: E402
 
@@ -202,6 +203,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+################## ! RESPONSE COMPRESSION (#1072, level 3) ! ##################
+# There was none. The catalog ships 3-5k Wazuh rules per request and the incident
+# lists ship full alert rows; on a remote deployment that is the transfer cost of
+# every page load. Added between the timer and the cancel middleware so the
+# recorded duration includes compressing — otherwise the measurement would hide
+# the cost of the thing being added.
+#
+# `minimum_size` keeps small JSON uncompressed, where the CPU and the extra header
+# outweigh a few saved bytes.
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 
 ################## ! CANCEL ABANDONED REQUESTS (#1072) ! ##################
 # Added before the timing middleware so it ends up INSIDE it: a cancelled request
