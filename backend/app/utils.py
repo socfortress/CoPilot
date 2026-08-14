@@ -28,6 +28,8 @@ from app.auth.services.universal import find_user
 from app.auth.utils import AuthHandler
 from app.blocking import DEFAULT_HTTP_TIMEOUT
 from app.blocking import run_blocking
+from app.connectors import cache as connector_cache
+from app.connectors.schema import ConnectorResponse
 from app.connectors.utils import get_connector_info_from_db
 from app.customer_provisioning.models.default_settings import (
     CustomerProvisioningDefaultSettings,
@@ -689,18 +691,33 @@ async def get_connector_attribute(
     if not connector_id and not connector_name:
         raise ValueError("Either connector_id or connector_name must be provided.")
 
-    query = select(Connectors)
-    if connector_id:
-        query = query.filter(Connectors.id == connector_id)
-    if connector_name:
-        query = query.filter(Connectors.connector_name == connector_name)
+    # Second funnel into the same table (#1072, level 4). This one has 88 call
+    # sites to `get_connector_info_from_db`'s 89 — caching only the other left
+    # roughly a quarter of the connector reads still going to the database.
+    if connector_name is None:
+        connector_name = connector_cache.name_for_id(connector_id)
 
+    if connector_name is not None:
+        connector = await get_connector_info_from_db(connector_name, session)
+        return connector.get(column_name) if connector else None
+
+    # An id this process has not seen before: resolve it once, then hand the row
+    # we already have to the cache under its name, so every later read — by id or
+    # by name — is a hit. Loading it rather than re-querying keeps this at one
+    # statement, the same as before.
+    query = select(Connectors).filter(Connectors.id == connector_id)
     result = await session.execute(query)
     connector = result.scalars().first()
+    if not connector:
+        return None
 
-    if connector:
-        return getattr(connector, column_name, None)
-    return None
+    connector_cache.remember_id(connector.id, connector.connector_name)
+
+    async def already_loaded():
+        return ConnectorResponse.from_orm(connector).model_dump()
+
+    payload = await connector_cache.get_or_load(connector.connector_name, already_loaded)
+    return payload.get(column_name) if payload else None
 
 
 async def get_customer_meta_attribute(

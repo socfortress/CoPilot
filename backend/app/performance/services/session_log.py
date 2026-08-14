@@ -46,6 +46,7 @@ from typing import Optional
 
 from loguru import logger
 
+from app.connectors.cache import stats as connector_cache_stats
 from app.db.query_metrics import query_registry
 from app.db.query_metrics import summary as query_summary
 from app.middleware.performance import LAG_SAMPLE_INTERVAL
@@ -279,6 +280,8 @@ class PerformanceSessionLog:
             },
             # What the database cost over the same window (#1072 level 2).
             "database": query_summary(),
+            # …and how much of it the connector cache is now removing (level 4).
+            "connector_cache": connector_cache_stats(),
             "top_endpoints": [
                 {
                     "method": stats.method,
