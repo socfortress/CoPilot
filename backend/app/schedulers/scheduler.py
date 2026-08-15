@@ -363,11 +363,16 @@ def get_function_by_name(function_name: str):
         "refresh_sidebar_indicators": refresh_sidebar_indicators,
         # Add other function mappings here
     }
-    # A job needs registering in TWO places: `known_jobs` in initialize_job_metadata
-    # (which seeds the DB row) and this map. Miss this one and the job is handed the
-    # fallback below, which APScheduler cannot pickle into its SQLAlchemy jobstore —
-    # the whole application then fails to start with an opaque serialisation error
-    # naming a lambda. Fail loudly and specifically instead.
+    # Raise rather than returning a placeholder lambda: APScheduler's SQLAlchemy jobstore
+    # pickles every job's callable at `start()`, and a lambda has no importable reference,
+    # so a stale/unknown job_id in scheduled_job_metadata would kill app startup with
+    # "This Job cannot be serialized...". Raising lets schedule_enabled_jobs skip the job.
+    #
+    # The other way to land here is a *new* job registered in only one of the two places
+    # it needs to be: `known_jobs` in initialize_job_metadata seeds the DB row, this map
+    # resolves the id to a callable. Miss this one and the job seeds fine, then fails to
+    # schedule — so the message names both places, because it is what the operator sees
+    # in the log.
     function = function_map.get(function_name)
     if function is None:
         raise ValueError(

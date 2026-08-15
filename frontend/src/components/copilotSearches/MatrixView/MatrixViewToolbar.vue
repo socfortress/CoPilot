@@ -58,12 +58,15 @@
 				<div class="divide-border flex w-50 flex-col gap-0 divide-y">
 					<div class="flex flex-col gap-2.5 px-3 pt-1 pb-3">
 						<n-select
-							v-model:value="selectedPlatform"
-							:options="platformOptions"
+							v-model:value="selectedCategory"
+							:options="categoryOptions"
+							:render-label="renderCategoryLabel"
+							:loading="categoriesLoading"
 							size="small"
-							placeholder="Platform"
+							placeholder="Data Source"
 							class="w-full"
 							clearable
+							filterable
 							:consistent-menu-width="false"
 						/>
 						<n-select
@@ -129,10 +132,11 @@
 </template>
 
 <script setup lang="ts">
-import type { MitreCoverageResponse, PlatformFilter, RuleSeverity, RuleStatus } from "@/types/copilot-searches"
+import type { MitreCoverageResponse, RuleSeverity, RuleStatus } from "@/types/copilot-searches"
 import { NBadge, NButton, NCheckbox, NInput, NPopover, NSelect, NTooltip } from "naive-ui"
-import { computed } from "vue"
+import { computed, onBeforeMount } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import { useDetectionCategories } from "@/composables/useDetectionCategories"
 
 defineProps<{
 	coverage: MitreCoverageResponse | null
@@ -147,14 +151,21 @@ const emit = defineEmits<{
 
 const searchQuery = defineModel<string>("searchQuery", { default: "" })
 const showFilters = defineModel<boolean>("showFilters", { default: false })
-const selectedPlatform = defineModel<PlatformFilter | null>("selectedPlatform", { default: null })
+const selectedCategory = defineModel<string | null>("selectedCategory", { default: null })
 const selectedSeverity = defineModel<RuleSeverity | null>("selectedSeverity", { default: null })
 const selectedStatus = defineModel<RuleStatus | null>("selectedStatus", { default: null })
 const hasGraylogFilter = defineModel<boolean>("hasGraylogFilter", { default: false })
 const onlyCovered = defineModel<boolean>("onlyCovered", { default: false })
 
+const {
+	options: categoryOptions,
+	loading: categoriesLoading,
+	renderLabel: renderCategoryLabel,
+	load: loadCategories
+} = useDetectionCategories()
+
 const anyFiltersActive = computed(
-	() => !!selectedPlatform.value || !!selectedSeverity.value || !!selectedStatus.value || hasGraylogFilter.value
+	() => !!selectedCategory.value || !!selectedSeverity.value || !!selectedStatus.value || hasGraylogFilter.value
 )
 
 const InfoIcon = "carbon:information"
@@ -162,16 +173,6 @@ const SearchIcon = "carbon:search"
 const FilterIcon = "carbon:filter-edit"
 const ExportIcon = "carbon:download"
 const RefreshIcon = "carbon:renew"
-
-const platformOptions = [
-	{ label: "Linux", value: "linux" },
-	{ label: "Windows", value: "windows" },
-	{ label: "PowerShell", value: "powershell" },
-	{ label: "CVE", value: "cve" },
-	{ label: "Cloud", value: "cloud" },
-	{ label: "Office 365", value: "office365" },
-	{ label: "Web", value: "web" }
-]
 
 const severityOptions = [
 	{ label: "Low", value: "low" },
@@ -185,4 +186,8 @@ const statusOptions = [
 	{ label: "Experimental", value: "experimental" },
 	{ label: "Deprecated", value: "deprecated" }
 ]
+
+onBeforeMount(() => {
+	loadCategories()
+})
 </script>
