@@ -23,6 +23,7 @@ import zlib
 from typing import List
 from typing import Tuple
 
+from analyzers import behaviors as behavior_rules
 from common import extract_iocs
 from contract import FLAG_DEOBFUSCATION_INCOMPLETE
 from contract import FLAG_ENCODED_POWERSHELL
@@ -201,3 +202,7 @@ def analyze(sample_path: str, result: InspectorResult) -> None:
     for kind, values in found.items():
         for value in values:
             result.add_ioc(kind, value)
+
+    # ATT&CK-mapped malicious-behaviour patterns over raw + every decoded layer,
+    # so an -enc payload that unwinds to `vssadmin delete shadows` is still caught.
+    behavior_rules.apply(result, *blobs)

@@ -35,11 +35,15 @@ _EXT_TO_FAMILY = {
     ".xls": "office", ".xlsx": "office", ".xlsm": "office",
     ".ppt": "office", ".pptx": "office", ".pptm": "office",
     ".rtf": "office",
-    ".ps1": "script", ".vbs": "script", ".js": "script", ".jse": "script",
-    ".bat": "script", ".cmd": "script", ".hta": "script", ".wsf": "script", ".sh": "script",
+    ".ps1": "script", ".psm1": "script", ".psd1": "script",
+    ".vbs": "script", ".vbe": "script", ".js": "script", ".jse": "script",
+    ".bat": "script", ".cmd": "script", ".hta": "script", ".wsf": "script", ".wsh": "script", ".sh": "script",
+    ".py": "script", ".pyw": "script", ".pl": "script", ".rb": "script", ".php": "script",
     ".lnk": "lnk",
-    ".exe": "pe", ".dll": "pe", ".sys": "pe", ".scr": "pe",
+    ".exe": "pe", ".dll": "pe", ".sys": "pe", ".scr": "pe", ".com": "pe", ".cpl": "pe",
+    ".msi": "office", ".msp": "office",  # Windows Installer = OLE compound; detonatable via msiexec
     ".zip": "archive", ".rar": "archive", ".7z": "archive", ".iso": "archive", ".img": "archive",
+    ".jar": "archive", ".cab": "archive", ".gz": "archive", ".tar": "archive",
     ".eml": "email", ".msg": "email",
     ".html": "html", ".htm": "html", ".svg": "html",
 }

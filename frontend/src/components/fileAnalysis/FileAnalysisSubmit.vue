@@ -19,6 +19,41 @@
 			:render-label="renderCustomerLabel"
 		/>
 
+		<!-- Phase selection — chosen BEFORE analysis. Tier-1 static always runs. -->
+		<div class="border-default flex flex-col gap-3 rounded-lg border p-3">
+			<span class="text-secondary text-xs font-medium">Analysis phases</span>
+
+			<div class="flex items-center justify-between gap-4">
+				<div class="flex flex-col">
+					<span class="text-sm">Sandbox detonation (Tier 2)</span>
+					<span class="text-secondary text-xs">
+						Run the file in the CAPE VM to observe its behaviour. Off = static inspection only.
+					</span>
+				</div>
+				<n-switch v-model:value="sandbox" />
+			</div>
+
+			<div class="flex flex-col gap-1">
+				<div class="flex flex-wrap items-center justify-between gap-2">
+					<span class="text-sm">VirusTotal</span>
+					<n-radio-group v-model:value="vtMode" size="small">
+						<n-radio-button value="off">Off</n-radio-button>
+						<n-radio-button value="lookup">Hash lookup</n-radio-button>
+						<n-radio-button value="upload">Lookup + upload</n-radio-button>
+					</n-radio-group>
+				</div>
+				<span class="text-secondary text-xs">
+					<template v-if="vtMode === 'off'">VirusTotal is skipped entirely — nothing about this file is sent.</template>
+					<template v-else-if="vtMode === 'lookup'">
+						Checks the file's hash only — the file itself is <b>never uploaded</b>.
+					</template>
+					<template v-else>
+						⚠ Uploads the file if VirusTotal hasn't seen it — this <b>publishes it</b> and can't be undone.
+					</template>
+				</span>
+			</div>
+		</div>
+
 		<n-upload
 			:show-file-list="false"
 			:disabled="!customerCode || uploading"
@@ -146,8 +181,11 @@ import {
 	NDivider,
 	NEmpty,
 	NInput,
+	NRadioButton,
+	NRadioGroup,
 	NSelect,
 	NSpin,
+	NSwitch,
 	NUpload,
 	NUploadDragger,
 	useMessage
@@ -174,6 +212,10 @@ const customersLoading = ref(false)
 const uploading = ref(false)
 const submitting = ref(false)
 const refreshKey = ref(0)
+
+// Pre-analysis phase selection (Tier-1 static always runs).
+const sandbox = ref(true)
+const vtMode = ref<"off" | "lookup" | "upload">("lookup")
 
 // Endpoint (host_path) collection
 const agents = ref<FileAnalysisAgent[]>([])
@@ -344,7 +386,8 @@ async function analyzeSelected() {
 						customer_code: customerCode.value as string,
 						client_id: selectedClientId.value as string,
 						target_path: path,
-						tiers: ["static"]
+						tiers: sandbox.value ? ["static", "dynamic"] : ["static"],
+						reputation_mode: vtMode.value
 					})
 					.then(r => (r.data?.success ? r.data.job_id : null))
 					.catch(() => null)
@@ -377,7 +420,7 @@ function handleUpload({ file, onFinish, onError }: import("naive-ui").UploadCust
 	}
 	uploading.value = true
 	Api.fileAnalysis
-		.upload(file.file, customerCode.value)
+		.upload(file.file, customerCode.value, { sandbox: sandbox.value, reputationMode: vtMode.value })
 		.then(res => {
 			if (res.data.success && res.data.job_id) {
 				onFinish()

@@ -21,6 +21,8 @@ from contract import FLAG_ENCODED_POWERSHELL
 from contract import FLAG_HTML_SMUGGLING
 from contract import FLAG_LAUNCH_ACTION
 from contract import FLAG_LNK_SUSPICIOUS_ARGS
+from contract import FLAG_MALICIOUS_BEHAVIOR
+from contract import FLAG_SUSPICIOUS_BEHAVIOR
 from contract import FLAG_SUSPICIOUS_ATTACHMENT
 from contract import VERDICT_CLEAN
 from contract import VERDICT_MALICIOUS
@@ -41,6 +43,7 @@ _SUSPICIOUS_FLAGS = {
     FLAG_HTML_SMUGGLING,
     FLAG_SUSPICIOUS_ATTACHMENT,
     FLAG_DEOBFUSCATION_INCOMPLETE,
+    FLAG_SUSPICIOUS_BEHAVIOR,
 }
 
 
@@ -84,7 +87,13 @@ def compute_verdict(result: Dict) -> str:
     flags = set(result.get("flags", []))
 
     # Row 1 — malicious.
-    if _has_av_hit(result) or _macro_is_malicious(result) or _pdf_is_malicious(result) or _lnk_is_malicious(result):
+    if (
+        _has_av_hit(result)
+        or FLAG_MALICIOUS_BEHAVIOR in flags
+        or _macro_is_malicious(result)
+        or _pdf_is_malicious(result)
+        or _lnk_is_malicious(result)
+    ):
         return VERDICT_MALICIOUS
 
     # Row 2 — suspicious on a single strong flag or masquerading executable.

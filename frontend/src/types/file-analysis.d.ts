@@ -96,6 +96,10 @@ export interface SandboxSignature {
 	description?: string
 	severity?: number
 	mitre?: string[]
+	/** True = CAPE-monitor/Windows-guest baseline that doesn't drive the verdict. */
+	noise?: boolean
+	/** True = static-PE/packer/.NET-JIT heuristic that fires on benign software. */
+	low_confidence?: boolean
 }
 
 export interface SandboxProcess {
@@ -158,6 +162,15 @@ export interface SandboxSummary {
 	dropped: { sha256: string; name?: string; type?: string }[]
 	screenshots: string[]
 	errors?: string[]
+	/** Full behavioural record — what the sample touched on the host. Keys:
+	 *  files, read_files, write_files, delete_files, registry_keys, read_keys,
+	 *  write_keys, delete_keys, mutexes, executed_commands, created_services,
+	 *  started_services, resolved_apis. */
+	behavior?: Record<string, string[]>
+	/** CAPE's human-readable event stream (a plain-English action timeline). */
+	enhanced?: { event: string; object: string; data?: Record<string, unknown> }[]
+	/** Endpoints the sample tried to reach but were unreachable. */
+	dead_hosts?: string[]
 }
 
 export interface VtDetection {
@@ -211,6 +224,8 @@ export interface FileAnalysisReputation {
 	meaningful_name?: string
 	permalink?: string
 	submitted?: boolean
+	/** VirusTotal was turned off for this analysis (phase selection). */
+	skipped?: boolean
 	note?: string
 	/** Deep VT intel (per-engine detections, crowdsourced rules, VT sandbox behaviour). */
 	intel?: VirusTotalIntel | null
@@ -231,6 +246,8 @@ export interface SubmitFileAnalysisPayload {
 	source: "host_path" | "upload"
 	customer_code: string
 	tiers?: FileAnalysisTier[]
+	/** VirusTotal phase: "off" | "lookup" (hash only) | "upload" (publishes if new). */
+	reputation_mode?: "off" | "lookup" | "upload"
 	client_id?: string
 	target_path?: string
 	hostname?: string

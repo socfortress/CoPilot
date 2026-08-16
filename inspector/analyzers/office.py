@@ -11,6 +11,8 @@ import os
 import subprocess
 from typing import List
 
+from analyzers import behaviors as behavior_rules
+from analyzers.script import deobfuscate
 from common import extract_iocs
 from contract import FLAG_AUTOOPEN_MACRO
 from contract import FLAG_DDE_PRESENT
@@ -60,6 +62,10 @@ def _olevba(sample_path: str, result: InspectorResult) -> bool:
         for kind, values in extract_iocs(joined).items():
             for value in values:
                 result.add_ioc(kind, value)
+        # ATT&CK behaviour rules over the macro source AND anything it decodes to
+        # (VBA frequently stages an -enc PowerShell or a URLDownloadToFile+Shell).
+        macro_layers, _, _ = deobfuscate(joined)
+        behavior_rules.apply(result, joined, *macro_layers)
     return True
 
 

@@ -38,11 +38,15 @@ export default {
 		)
 	},
 
-	/** Analyst-only direct file upload (multipart). Returns a job id. */
-	upload(file: File, customerCode: string) {
+	/** Analyst-only direct file upload (multipart). Returns a job id.
+	 *  opts.sandbox → run Tier-2 detonation; opts.reputationMode → VirusTotal phase
+	 *  ("off" | "lookup" = hash only, never uploads | "upload" = publishes if new). */
+	upload(file: File, customerCode: string, opts?: { sandbox?: boolean; reputationMode?: "off" | "lookup" | "upload" }) {
 		const form = new FormData()
 		form.append("file", file)
 		form.append("customer_code", customerCode)
+		form.append("sandbox", String(opts?.sandbox ?? true))
+		form.append("reputation_mode", opts?.reputationMode ?? "lookup")
 		return HttpClient.post<FlaskBaseResponse & { job_id: string }>(`/file-analysis/upload`, form, {
 			headers: { "Content-Type": "multipart/form-data" }
 		})
@@ -75,5 +79,15 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { items: FileAnalysisHistoryItem[] }>(`/file-analysis/history`, {
 			params: { customer_code: customerCode, limit }
 		})
+	},
+
+	/** Delete a stored analysis (result + previews + job). The CAPE detonation is kept. */
+	deleteAnalysis(jobId: string) {
+		return HttpClient.delete<FlaskBaseResponse & { removed: number }>(`/file-analysis/analysis/${jobId}`)
+	},
+
+	/** The COMPLETE raw CAPE report (every API call + all behaviour), fetched on demand. */
+	getCapeReport(jobId: string) {
+		return HttpClient.get<Record<string, unknown>>(`/file-analysis/result/${jobId}/cape-report`)
 	}
 }

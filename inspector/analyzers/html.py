@@ -22,6 +22,7 @@ from common import extract_iocs
 from contract import FLAG_HTML_SMUGGLING
 from contract import FLAG_SUSPICIOUS_ATTACHMENT
 from contract import InspectorResult
+from analyzers import behaviors as behavior_rules
 from analyzers.script import deobfuscate
 
 _SCRIPT_RE = re.compile(r"<script\b[^>]*>(.*?)</script>", re.IGNORECASE | re.DOTALL)
@@ -60,6 +61,10 @@ def analyze(sample_path: str, result: InspectorResult, results_dir: str = "", de
     for kind, values in extract_iocs(raw, *deob_layers).items():
         for value in values:
             result.add_ioc(kind, value)
+
+    # ATT&CK behaviour rules over the script bodies + decoded layers (HTA/HTML
+    # droppers embed WScript.Shell.Run / powershell download-and-exec inline).
+    behavior_rules.apply(result, joined, *deob_layers)
 
 
 def _try_reassemble(script_text: str, result: InspectorResult, depth: int) -> None:

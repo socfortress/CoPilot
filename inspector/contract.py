@@ -48,6 +48,9 @@ FLAG_ANALYSIS_INCOMPLETE = "analysis_incomplete"
 FLAG_EMBEDDED_FILE = "embedded_file"
 FLAG_ELF_STATIC_STRIPPED = "elf_static_stripped"
 FLAG_ELF_SUSPICIOUS_INTERP = "elf_suspicious_interp"
+# Static malicious-behaviour matches (ATT&CK-mapped) found in script content.
+FLAG_MALICIOUS_BEHAVIOR = "malicious_behavior"
+FLAG_SUSPICIOUS_BEHAVIOR = "suspicious_behavior"
 
 
 @dataclasses.dataclass
@@ -97,4 +100,4 @@ class InspectorResult:
 # The single integer bumped whenever analyzers change meaningfully; the CoPilot
 # cache is keyed by (sha256, engine_version) so improvements re-apply to files
 # already seen (see CLAUDE.md -> File Analysis).
-ENGINE_VERSION = 1
+ENGINE_VERSION = 5

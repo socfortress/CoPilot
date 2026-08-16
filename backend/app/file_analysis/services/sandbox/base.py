@@ -46,6 +46,12 @@ class CapeSummary:
     ttps: List[Dict[str, Any]] = dataclasses.field(default_factory=list)     # {id, signature}
     payloads: List[Dict[str, Any]] = dataclasses.field(default_factory=list)  # {name, sha256, type}
     errors: List[str] = dataclasses.field(default_factory=list)             # CAPE debug errors
+    # --- full behavioural record: literally what the sample DID on the host, so an
+    #     analyst can judge for themselves rather than trust a score. Each list is a
+    #     category from CAPE's behaviour.summary (files/registry/mutexes/services/…).
+    behavior: Dict[str, List[str]] = dataclasses.field(default_factory=dict)
+    enhanced: List[Dict[str, Any]] = dataclasses.field(default_factory=list)  # human-readable event stream
+    dead_hosts: List[str] = dataclasses.field(default_factory=list)          # attempted-but-unreachable endpoints
 
     def to_dict(self) -> Dict[str, Any]:
         return dataclasses.asdict(self)

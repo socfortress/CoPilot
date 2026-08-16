@@ -39,7 +39,12 @@ _ESCALATION_FLAGS = {
     "deobfuscation_incomplete",
     "analysis_incomplete",
 }
-_ESCALATION_TYPES = {"pe", "elf", "script"}
+# File families a sandbox can meaningfully DETONATE (CAPE auto-detects the package):
+# native executables, scripts, Office/MSI (OLE), PDFs, shortcuts, archives, HTA/HTML.
+_ESCALATION_TYPES = {"pe", "elf", "script", "office", "pdf", "lnk", "archive", "html"}
+# Plain text / config / logs — there is nothing for a sandbox to execute, so never
+# waste a VM run on them even when Tier-2 was requested.
+_INERT_FILETYPES = {"text"}
 
 
 def _now() -> str:
@@ -98,8 +103,17 @@ async def run(
     tiers: List[Tier],
     refs: Optional[Dict[str, Any]] = None,
     context: Optional[Dict[str, Any]] = None,
+    reputation_mode: str = "lookup",
 ) -> None:
-    """Execute the full pipeline for a job. Runs in the background."""
+    """Execute the full pipeline for a job. Runs in the background.
+
+    ``reputation_mode`` controls the VirusTotal phase, chosen per-submission:
+      * ``"off"``    — skip VirusTotal entirely (nothing leaves the host).
+      * ``"lookup"`` — hash lookup only; the file is NEVER uploaded (default).
+      * ``"upload"`` — hash lookup, and upload the file if VT has not seen it
+                        (this PUBLISHES the file on VirusTotal).
+    Tier-2 detonation is gated by ``Tier.DYNAMIC in tiers``.
+    """
     job_dict = await state_store.load_job(job_id)
     if not job_dict:
         logger.error(f"run: job {job_id} not found")
@@ -140,44 +154,32 @@ async def run(
             await state_store.save_preview(job.customer_code, job.sha256, name, data)
             preview_names.append(name)
 
-        # 3. Save an INTERIM Tier 1 result immediately so Preview/Content/Metadata
-        #    show in seconds — reputation (which may upload to VT and wait minutes)
-        #    fills in after. Job stays RUNNING so the UI keeps polling.
-        job.sandbox_enabled = await _sandbox_available()
-        job.static_status = Status.DONE
-        job.verdict = Verdict(static_verdict)
-        interim = {
-            "job": job.model_dump(mode="json"),
-            "inspector": inspector,
-            "sandbox": None,
-            "reputation": None,
-            "preview_urls": preview_names,
-            "engine_version": state_store.ENGINE_VERSION,
-        }
-        await state_store.save_result(job.customer_code, job.sha256, interim)
-        await _save(job)
-
-        # 4. Tier 2 — only if a backend is available AND escalation is warranted.
-        sandbox_summary: Optional[Dict[str, Any]] = None
-        if job.sandbox_enabled and Tier.DYNAMIC in tiers and _should_escalate(inspector, job.source):
-            job.dynamic_status = Status.RUNNING
-            await _save(job)
-            sandbox_summary = await _detonate(sample_bytes, inspector, job)
-            job.dynamic_status = Status.DONE if sandbox_summary is not None else Status.FAILED
-
-        # 5. Reputation — FAST VirusTotal hash lookup (non-blocking). If VT has
-        #    never seen the file and submission is enabled, the upload+scan runs
-        #    DETACHED (step 7) and patches the result later — the job completes now.
-        from app.file_analysis.services.reputation import SUBMIT_FILES
+        # 3. FAST VirusTotal hash lookup — done BEFORE detonation, not after, so a
+        #    file VT already knows (e.g. any signed system binary) resolves in ~1s
+        #    instead of making the analyst wait minutes behind the sandbox VM. If VT
+        #    has never seen the file and submission is enabled, the upload+scan runs
+        #    DETACHED (step 7) and patches the result later.
         from app.file_analysis.services.reputation import virustotal_lookup_only
 
         reputation = None
-        try:
-            reputation = await virustotal_lookup_only(job.sha256)
-        except Exception as exc:
-            logger.warning(f"reputation lookup failed for {job.sha256[:12]}: {exc}")
+        if reputation_mode == "off":
+            # Explicit sentinel so the UI shows "not run" instead of a perpetual
+            # "checking reputation…" (it otherwise can't tell "off" from "pending").
+            reputation = {"source": "virustotal", "skipped": True, "note": "VirusTotal was turned off for this analysis."}
+        else:
+            try:
+                reputation = await virustotal_lookup_only(job.sha256)
+            except Exception as exc:
+                logger.warning(f"reputation lookup failed for {job.sha256[:12]}: {exc}")
 
-        submit_pending = bool(reputation is not None and not reputation.get("found") and SUBMIT_FILES and sample_bytes)
+        # Upload ONLY when the analyst explicitly chose it — uploading publishes the
+        # file on VirusTotal, so it is never the default (see CLAUDE.md golden rule 7).
+        submit_pending = bool(
+            reputation_mode == "upload"
+            and reputation is not None
+            and not reputation.get("found")
+            and sample_bytes
+        )
         if submit_pending:
             reputation = {
                 "source": "virustotal",
@@ -187,6 +189,30 @@ async def run(
                 "note": "uploading to VirusTotal — scan in progress…",
                 "permalink": f"https://www.virustotal.com/gui/file/{job.sha256}",
             }
+
+        # 4. Save an INTERIM result immediately (Tier-1 + reputation) so Preview/
+        #    Content/Metadata AND VirusTotal show in seconds while the sandbox runs.
+        job.sandbox_enabled = await _sandbox_available()
+        job.static_status = Status.DONE
+        job.verdict = Verdict(static_verdict)
+        interim = {
+            "job": job.model_dump(mode="json"),
+            "inspector": inspector,
+            "sandbox": None,
+            "reputation": reputation,
+            "preview_urls": preview_names,
+            "engine_version": state_store.ENGINE_VERSION,
+        }
+        await state_store.save_result(job.customer_code, job.sha256, interim)
+        await _save(job)
+
+        # 5. Tier 2 — only if a backend is available AND escalation is warranted.
+        sandbox_summary: Optional[Dict[str, Any]] = None
+        if job.sandbox_enabled and Tier.DYNAMIC in tiers and _should_escalate(inspector, job.source):
+            job.dynamic_status = Status.RUNNING
+            await _save(job)
+            sandbox_summary = await _detonate(sample_bytes, inspector, job)
+            job.dynamic_status = Status.DONE if sandbox_summary is not None else Status.FAILED
 
         # 6. Final verdict + persist. Job is DONE now (previews/content stable).
         from app.file_analysis.services.verdict import explain_verdict
@@ -198,7 +224,7 @@ async def run(
             "reputation": reputation,
             "preview_urls": preview_names,
             "engine_version": state_store.ENGINE_VERSION,
-            "verdict_reason": explain_verdict(static_verdict, sandbox_summary, reputation),
+            "verdict_reason": explain_verdict(static_verdict, sandbox_summary, reputation, inspector),
         }
         job.verdict = Verdict(_merge_verdict(static_verdict, sandbox_summary, reputation))
         job.status = Status.DONE
@@ -273,9 +299,20 @@ async def _sandbox_available() -> bool:
 
 
 def _should_escalate(inspector: Dict[str, Any], source: str) -> bool:
-    if inspector.get("filetype") in _ESCALATION_TYPES:
+    """Whether to send this file to the sandbox.
+
+    We only get here once Tier-2 has ALREADY been requested for the job (the analyst
+    turned the sandbox on, or the source auto-selected it), so honour that intent:
+    detonate any recognised runnable family, anything that raised a suspicious flag,
+    OR any file we simply couldn't classify (an unrecognised binary is exactly what
+    you want to detonate). The only thing skipped is plain inert text/config/logs.
+    """
+    filetype = inspector.get("filetype", "")
+    if filetype in _ESCALATION_TYPES:
         return True
-    return bool(set(inspector.get("flags", [])) & _ESCALATION_FLAGS)
+    if set(inspector.get("flags", [])) & _ESCALATION_FLAGS:
+        return True
+    return filetype not in _INERT_FILETYPES
 
 
 async def _detonate(sample_bytes: bytes, inspector: Dict[str, Any], job: AnalysisJob) -> Optional[Dict[str, Any]]:
@@ -337,7 +374,7 @@ async def _submit_and_patch(
 
         result["reputation"] = rep
         # Reputation just landed — the explanation must reflect it too.
-        result["verdict_reason"] = explain_verdict(static_verdict, result.get("sandbox"), rep)
+        result["verdict_reason"] = explain_verdict(static_verdict, result.get("sandbox"), rep, result.get("inspector"))
         job_dict = result.get("job", {}) or {}
         job_dict["verdict"] = _merge_verdict(static_verdict, result.get("sandbox"), rep)
         job_dict["updated_at"] = _now()

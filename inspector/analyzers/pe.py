@@ -73,10 +73,14 @@ def _has_signature(pe) -> bool:
 
 
 def _capa(sample_path: str, result: InspectorResult) -> None:
+    # capa is OPTIONAL capability enrichment. Its absence/timeout must degrade
+    # gracefully — the core PE parse already succeeded, so a missing FLARE tool
+    # must NOT mark the whole analysis incomplete (that would fail-close EVERY
+    # .exe to "suspicious" on any inspector without capa installed).
     try:
         proc = subprocess.run(["capa", "-j", sample_path], capture_output=True, timeout=_CAPA_TIMEOUT, check=False)
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        result.mark_incomplete()
+        result.content.setdefault("enrichment_skipped", []).append("capa")
         return
     if proc.returncode != 0 or not proc.stdout:
         return
@@ -90,10 +94,12 @@ def _capa(sample_path: str, result: InspectorResult) -> None:
 
 
 def _floss(sample_path: str, result: InspectorResult) -> None:
+    # FLOSS is OPTIONAL deobfuscated-string enrichment — same rule as capa: a
+    # missing/slow tool degrades gracefully and never marks the analysis incomplete.
     try:
         proc = subprocess.run(["floss", "-j", "-q", sample_path], capture_output=True, timeout=_FLOSS_TIMEOUT, check=False)
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        result.mark_incomplete()
+        result.content.setdefault("enrichment_skipped", []).append("floss")
         return
     if not proc.stdout:
         return

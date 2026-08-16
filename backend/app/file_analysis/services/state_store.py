@@ -42,7 +42,16 @@ BUCKET = os.getenv("FILE_ANALYSIS_MINIO_BUCKET", "file-analysis")
 #   6: enriched CAPE detonation summary (processes, dns/http/connections, MITRE, payloads)
 #   7: process pid read from CAPE's process_id (was always null -> broken process tree)
 #   8: VirusTotal deep intel (per-engine detections, crowdsourced YARA/Sigma/IDS, VT sandbox behaviour)
-ENGINE_VERSION = 8
+#   9: noise-aware sandbox verdict — environmental/monitor signatures no longer drive the verdict
+#  10: Tier-1 ATT&CK static behaviour rules (T1490/T1562/T1059/T1003/… script detection) +
+#      honest "inspection incomplete" reason (infra failure no longer reads as a content finding)
+#  11: behaviour rules expanded to 31 techniques + applied across office-macro/LNK/HTML analyzers
+#  12: PE optional-enrichment (capa/FLOSS) degrades gracefully — a MISSING tool no longer
+#      marks the analysis incomplete, so .exe files stop falsely reading "suspicious"
+#  13: full detonation behaviour surfaced (files/registry/mutexes/services/commands/APIs/timeline)
+#  14: broadened detonation coverage — .py/scripts, MSI, Office, PDF, archives, HTA now escalate
+#  15: low-confidence static-PE/.NET-JIT signatures no longer drive the verdict (benign packed = clean)
+ENGINE_VERSION = 15
 
 _bucket_ready = False
 
@@ -193,6 +202,33 @@ def _preview_key(customer_code: str, sha256: str, name: str) -> str:
     return f"{customer_code}/{sha256}/previews/{name}"
 
 
+def _summary_key(customer_code: str, sha256: str) -> str:
+    # A tiny per-analysis index row so the history list never has to fetch (and
+    # deserialize) the full result.json — detonation results are large.
+    return f"{customer_code}/{sha256}/summary.json"
+
+
+def _history_item(result: Dict[str, Any]) -> Dict[str, Any]:
+    """Project a full result down to the lightweight fields the history table shows."""
+    job = result.get("job") or {}
+    insp = result.get("inspector") or {}
+    rep = result.get("reputation") or {}
+    found = bool(rep.get("found"))
+    return {
+        "job_id": job.get("job_id", ""),
+        "filename": job.get("filename") or insp.get("filename") or "",
+        "sha256": job.get("sha256") or insp.get("sha256") or "",
+        "verdict": job.get("verdict"),
+        "source": job.get("source", ""),
+        "status": job.get("status", ""),
+        "hardened": bool(job.get("hardened", True)),
+        "created_at": job.get("created_at", ""),
+        "updated_at": job.get("updated_at", ""),
+        "vt_malicious": rep.get("malicious") if found else None,
+        "vt_total": rep.get("total") if found else None,
+    }
+
+
 async def save_job(job: Dict[str, Any]) -> None:
     await put_json(_job_key(job["job_id"]), job)
 
@@ -203,6 +239,37 @@ async def load_job(job_id: str) -> Optional[Dict[str, Any]]:
 
 async def save_result(customer_code: str, sha256: str, result: Dict[str, Any]) -> None:
     await put_json(_result_key(customer_code, sha256), result)
+    # Also write the lightweight index row so list_history reads small objects, not
+    # the full result. Best-effort: a summary write failure must not fail the save.
+    try:
+        await put_json(_summary_key(customer_code, sha256), _history_item(result))
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.warning(f"summary write failed for {sha256[:12]}: {exc}")
+
+
+async def delete_analysis(customer_code: str, sha256: str, job_id: Optional[str] = None) -> int:
+    """Remove one analysis: its result, summary, previews, and (optional) job object.
+
+    Scoped strictly to ``{customer_code}/{sha256}/`` plus the given job — nothing
+    else is touched. Returns the number of objects removed.
+    """
+    keys = [_result_key(customer_code, sha256), _summary_key(customer_code, sha256)]
+    keys.extend(await list_prefix(f"{customer_code}/{sha256}/previews/"))
+    if job_id:
+        keys.append(_job_key(job_id))
+
+    async def _op():
+        client = await _client()
+        removed = 0
+        for key in keys:
+            try:
+                await client.remove_object(BUCKET, key)
+                removed += 1
+            except Exception:  # object may not exist (e.g. no previews) — ignore
+                pass
+        return removed
+
+    return await _retry(f"delete_analysis {sha256[:12]}", _op)
 
 
 async def load_result(customer_code: str, sha256: str) -> Optional[Dict[str, Any]]:
@@ -227,39 +294,88 @@ async def find_cached_job_id(customer_code: str, sha256: str) -> Optional[str]:
     return None
 
 
-async def list_history(customer_code: str, limit: int = 50) -> List[Dict[str, Any]]:
-    """Recent analyses for a customer, newest first (built from stored results).
+_HISTORY_SCAN_CAP = 250      # most analyses considered before sort+limit
+_HISTORY_CONCURRENCY = 24    # parallel reads (MinIO is over a VPN here)
 
-    Tenant-isolated by the ``{customer_code}/`` key prefix. Reads each result's
-    embedded job summary — bounded by a soft cap so a customer with a very large
-    history doesn't fan out unboundedly.
+
+async def _read_json_batch(keys: List[str]) -> List[Optional[Dict[str, Any]]]:
+    """Read many JSON objects KNOWN to exist (from a listing) as fast as possible.
+
+    One shared client + one pooled aiohttp session (connection reuse across the
+    batch), and NO per-key ``stat_object`` round-trip — halving the trips that made
+    the history list crawl over the VPN. Missing/garbled objects come back as None.
+    Order matches ``keys``.
+    """
+    if not keys:
+        return []
+    await ensure_bucket()
+    client = await _client()
+    sem = asyncio.Semaphore(_HISTORY_CONCURRENCY)
+
+    async def _one(session, key):
+        async with sem:
+            try:
+                resp = await client.get_object(BUCKET, key, session)
+                try:
+                    data = await resp.read()
+                finally:
+                    resp.close()
+                return json.loads(data.decode("utf-8"))
+            except Exception:
+                return None
+
+    async with aiohttp.ClientSession() as session:
+        return await asyncio.gather(*[_one(session, k) for k in keys])
+
+
+async def list_history(customer_code: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """Recent analyses for a customer, newest first.
+
+    Fast path: batch-read the tiny per-analysis ``summary.json`` rows (pooled, no
+    stat, parallel) instead of fetching every large ``result.json`` one at a time —
+    that sequential full-result fetch was what made the list crawl. Analyses saved
+    before summaries existed fall back to the full result and are backfilled so the
+    next listing is fast. Tenant-isolated by the ``{cc}/`` prefix.
     """
     names = await list_prefix(f"{customer_code}/")
-    result_keys = [n for n in names if n.endswith("/result.json")]
-    items: List[Dict[str, Any]] = []
-    for key in result_keys[:250]:
-        res = await get_json(key)
-        if not res:
+    have_summary: set = set()
+    result_shas: Dict[str, str] = {}
+    for name in names:
+        parts = name.split("/")
+        if len(parts) < 3:
             continue
-        job = res.get("job") or {}
-        insp = res.get("inspector") or {}
-        rep = res.get("reputation") or {}
-        found = bool(rep.get("found"))
-        items.append(
-            {
-                "job_id": job.get("job_id", ""),
-                "filename": job.get("filename") or insp.get("filename") or "",
-                "sha256": job.get("sha256") or insp.get("sha256") or "",
-                "verdict": job.get("verdict"),
-                "source": job.get("source", ""),
-                "status": job.get("status", ""),
-                "hardened": bool(job.get("hardened", True)),
-                "created_at": job.get("created_at", ""),
-                "updated_at": job.get("updated_at", ""),
-                "vt_malicious": rep.get("malicious") if found else None,
-                "vt_total": rep.get("total") if found else None,
-            }
-        )
+        sha = parts[1]
+        if name.endswith("/summary.json"):
+            have_summary.add(sha)
+        elif name.endswith("/result.json"):
+            result_shas[sha] = name
+
+    # One key per sha: prefer the small summary, else the full result (legacy).
+    fast = [(sha, _summary_key(customer_code, sha), True) for sha in have_summary]
+    fast.extend((sha, key, False) for sha, key in result_shas.items() if sha not in have_summary)
+    fast = fast[:_HISTORY_SCAN_CAP]
+
+    blobs = await _read_json_batch([key for _, key, _ in fast])
+
+    items: List[Dict[str, Any]] = []
+    backfill: List[tuple] = []
+    for (sha, _key, is_summary), blob in zip(fast, blobs):
+        if not blob:
+            continue
+        if is_summary:
+            items.append(blob)
+        else:
+            item = _history_item(blob)
+            items.append(item)
+            backfill.append((sha, item))
+
+    # Backfill legacy rows so they're on the fast path next time (best-effort, async).
+    for sha, item in backfill:
+        try:
+            await put_json(_summary_key(customer_code, sha), item)
+        except Exception:  # pragma: no cover
+            pass
+
     items.sort(key=lambda x: x.get("created_at") or "", reverse=True)
     return items[:limit]
 

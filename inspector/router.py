@@ -69,6 +69,14 @@ def _family_from_magic(magic_str: str) -> str:
         return "pe"
     if "elf " in m:
         return "elf"
+    # Interpreted scripts by content (shebang/type) — catches e.g. a Python or shell
+    # script with no extension or a misleading one.
+    if (
+        "python script" in m or "python source" in m
+        or "shell script" in m or "perl script" in m or "ruby script" in m
+        or "php script" in m or "batch file" in m or "powershell" in m
+    ):
+        return "script"
     if "rfc 822" in m or "smtp mail" in m or "news or mail" in m or "microsoft outlook" in m:
         return "email"
     if "html" in m or "svg" in m or "xml" in m and "svg" in m:

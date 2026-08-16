@@ -6,6 +6,8 @@ when the arguments invoke an interpreter with encoded or remote content.
 """
 from __future__ import annotations
 
+from analyzers import behaviors as behavior_rules
+from analyzers.script import deobfuscate
 from common import extract_iocs
 from contract import FLAG_LNK_SUSPICIOUS_ARGS
 from contract import InspectorResult
@@ -47,6 +49,12 @@ def analyze(sample_path: str, result: InspectorResult) -> None:
     for kind, values in extract_iocs(str(arguments or "")).items():
         for value in values:
             result.add_ioc(kind, value)
+
+    # ATT&CK behaviour rules over target+args and anything the args decode to
+    # (LNK droppers stage an -enc PowerShell or a certutil download in the args).
+    arg_str = str(target or "") + " " + str(arguments or "")
+    arg_layers, _, _ = deobfuscate(arg_str)
+    behavior_rules.apply(result, arg_str, *arg_layers)
 
 
 def _dig(data: dict, key: str):

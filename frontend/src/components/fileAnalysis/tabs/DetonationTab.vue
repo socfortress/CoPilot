@@ -54,11 +54,11 @@
 				</div>
 			</div>
 
-			<!-- Signatures (ordered by severity, most severe first) -->
-			<div v-if="sortedSignatures.length" class="flex flex-col gap-2">
-				<span class="text-secondary text-xs font-medium">Signatures ({{ sortedSignatures.length }})</span>
+			<!-- Meaningful (sample-driven) signatures — the real signal, ranked by severity -->
+			<div v-if="meaningfulSignatures.length" class="flex flex-col gap-2">
+				<span class="text-secondary text-xs font-medium">Signatures ({{ meaningfulSignatures.length }})</span>
 				<div class="flex flex-col gap-2">
-					<div v-for="(sig, i) of sortedSignatures" :key="i" class="bg-secondary flex items-start gap-3 rounded-lg p-3">
+					<div v-for="(sig, i) of meaningfulSignatures" :key="i" class="bg-secondary flex items-start gap-3 rounded-lg p-3">
 						<Icon :name="SigIcon" :size="16" :class="sevColor(sig.severity)" class="mt-0.5 shrink-0" />
 						<div class="flex grow flex-col">
 							<span class="text-sm font-medium">{{ sig.name }}</span>
@@ -73,6 +73,46 @@
 					</div>
 				</div>
 			</div>
+
+			<!-- Low-confidence static-PE / .NET-JIT heuristics — fire on legit packed/
+			     signed/.NET binaries, so excluded from the verdict but shown for context. -->
+			<n-collapse v-if="lowConfidenceSignatures.length">
+				<n-collapse-item name="lowconf">
+					<template #header>
+						<span class="text-secondary text-xs">
+							Static packer / .NET-JIT heuristics ({{ lowConfidenceSignatures.length }}) — fire on benign
+							software, not counted toward the verdict
+						</span>
+					</template>
+					<div class="flex flex-col gap-1 opacity-70">
+						<div v-for="(sig, i) of lowConfidenceSignatures" :key="i" class="flex items-start gap-2 py-0.5 text-xs">
+							<n-tag size="tiny" round :bordered="false">sev {{ sig.severity }}</n-tag>
+							<div class="flex flex-col">
+								<span class="break-all font-medium">{{ sig.name }}</span>
+								<span v-if="sig.description" class="text-secondary">{{ sig.description }}</span>
+							</div>
+						</div>
+					</div>
+				</n-collapse-item>
+			</n-collapse>
+
+			<!-- Environmental noise — CAPE monitor + Windows-guest baseline. Collapsed &
+			     dimmed, and excluded from the verdict, so it doesn't masquerade as signal. -->
+			<n-collapse v-if="noiseSignatures.length">
+				<n-collapse-item name="noise">
+					<template #header>
+						<span class="text-secondary text-xs">
+							Environmental / monitor baseline ({{ noiseSignatures.length }}) — not counted toward the verdict
+						</span>
+					</template>
+					<div class="flex flex-col gap-1 opacity-60">
+						<div v-for="(sig, i) of noiseSignatures" :key="i" class="flex items-center gap-2 py-0.5 text-xs">
+							<n-tag size="tiny" round :bordered="false">sev {{ sig.severity }}</n-tag>
+							<span class="break-all">{{ sig.name }}</span>
+						</div>
+					</div>
+				</n-collapse-item>
+			</n-collapse>
 
 			<!-- Process tree — children nested under parents (by ppid); the detonated
 			     sample's own process is highlighted so it stands out from OS noise. -->
@@ -141,6 +181,53 @@
 				</div>
 			</div>
 
+			<!-- Host activity — the FULL behavioural record (judge from evidence, not the score) -->
+			<div v-if="behaviorGroups.length || sandbox.enhanced?.length || sandbox.dead_hosts?.length" class="flex flex-col gap-2">
+				<div class="flex items-center justify-between">
+					<span class="text-secondary text-xs font-medium">Host activity — everything the sample did</span>
+					<n-button v-if="jobId" text size="tiny" :loading="downloadingReport" @click="downloadReport">
+						<template #icon><Icon :name="DownloadIcon" :size="14" /></template>
+						Full CAPE report (JSON)
+					</n-button>
+				</div>
+
+				<n-alert v-if="sandbox.dead_hosts?.length" type="warning" size="small" :bordered="false" class="text-xs">
+					Tried to reach (unreachable):
+					<code v-for="(h, i) of sandbox.dead_hosts" :key="i" class="mr-2 break-all">{{ h }}</code>
+				</n-alert>
+
+				<n-collapse>
+					<n-collapse-item v-for="g of behaviorGroups" :key="g.key" :name="g.key" :title="`${g.label} (${g.items.length})`">
+						<n-input
+							v-if="g.items.length > 20"
+							v-model:value="filters[g.key]"
+							size="tiny"
+							clearable
+							placeholder="Filter…"
+							class="mb-2"
+						/>
+						<n-scrollbar class="bg-secondary max-h-72 rounded-lg p-3">
+							<code v-for="(it, i) of filtered(g)" :key="i" class="block py-0.5 text-xs break-all">{{ it }}</code>
+							<div v-if="!filtered(g).length" class="text-secondary text-xs">No matches.</div>
+						</n-scrollbar>
+					</n-collapse-item>
+
+					<n-collapse-item
+						v-if="sandbox.enhanced?.length"
+						name="_timeline"
+						:title="`Behaviour timeline (${sandbox.enhanced.length} events)`"
+					>
+						<n-scrollbar class="bg-secondary max-h-96 rounded-lg p-3">
+							<div v-for="(ev, i) of sandbox.enhanced" :key="i" class="flex gap-2 py-0.5 text-xs">
+								<n-tag size="tiny" round :bordered="false" type="info" class="shrink-0">{{ ev.event }}</n-tag>
+								<span class="text-secondary shrink-0">{{ ev.object }}</span>
+								<code class="break-all">{{ eventDetail(ev) }}</code>
+							</div>
+						</n-scrollbar>
+					</n-collapse-item>
+				</n-collapse>
+			</div>
+
 			<!-- Screenshots -->
 			<div v-if="sandbox.screenshots?.length" class="flex flex-col gap-2">
 				<span class="text-secondary text-xs font-medium">Screenshots</span>
@@ -172,29 +259,107 @@
 import type { SandboxSummary } from "@/types/file-analysis"
 import {
 	NAlert,
+	NButton,
 	NCollapse,
 	NCollapseItem,
 	NEmpty,
 	NImage,
 	NImageGroup,
+	NInput,
 	NProgress,
 	NScrollbar,
 	NSpin,
-	NTag
+	NTag,
+	useMessage
 } from "naive-ui"
-import { computed } from "vue"
+import { computed, reactive, ref } from "vue"
+import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 
-const props = defineProps<{ sandbox?: SandboxSummary | null; loading?: boolean; dynamicStatus?: string | null }>()
+const props = defineProps<{
+	sandbox?: SandboxSummary | null
+	loading?: boolean
+	dynamicStatus?: string | null
+	jobId?: string
+}>()
+
+const message = useMessage()
 
 const SigIcon = "carbon:rule"
 const ProcIcon = "carbon:process"
+const DownloadIcon = "carbon:download"
 
-// Signatures ranked most-severe first — an analyst reads top-down, so the sev-3
-// hits shouldn't be buried under a dozen sev-1 environmental checks.
-const sortedSignatures = computed(() =>
-	[...(props.sandbox?.signatures ?? [])].sort((a, b) => (b.severity ?? 0) - (a.severity ?? 0))
+// The full host-activity record, grouped for display. Labels are analyst-facing;
+// order puts the highest-signal categories (writes/deletes/commands) first.
+const _BEHAVIOR_LABELS: { key: string; label: string }[] = [
+	{ key: "executed_commands", label: "Executed commands" },
+	{ key: "created_services", label: "Services created" },
+	{ key: "started_services", label: "Services started" },
+	{ key: "write_files", label: "Files written" },
+	{ key: "delete_files", label: "Files deleted" },
+	{ key: "write_keys", label: "Registry written" },
+	{ key: "delete_keys", label: "Registry deleted" },
+	{ key: "files", label: "Files touched" },
+	{ key: "read_files", label: "Files read" },
+	{ key: "registry_keys", label: "Registry keys touched" },
+	{ key: "read_keys", label: "Registry keys read" },
+	{ key: "mutexes", label: "Mutexes" },
+	{ key: "resolved_apis", label: "Resolved APIs" }
+]
+
+const behaviorGroups = computed(() => {
+	const b = props.sandbox?.behavior ?? {}
+	return _BEHAVIOR_LABELS.map(({ key, label }) => ({ key, label, items: b[key] ?? [] })).filter(g => g.items.length)
+})
+
+const filters = reactive<Record<string, string>>({})
+
+function filtered(g: { key: string; items: string[] }): string[] {
+	const q = (filters[g.key] || "").toLowerCase().trim()
+	return q ? g.items.filter(it => it.toLowerCase().includes(q)) : g.items
+}
+
+function eventDetail(ev: { data?: Record<string, unknown> }): string {
+	const d = ev.data
+	if (!d || typeof d !== "object") return ""
+	const parts = Object.entries(d)
+		.filter(([, v]) => v != null && v !== "")
+		.map(([k, v]) => `${k}=${typeof v === "object" ? JSON.stringify(v) : v}`)
+	return parts.join("  ")
+}
+
+const downloadingReport = ref(false)
+function downloadReport() {
+	if (!props.jobId || downloadingReport.value) return
+	downloadingReport.value = true
+	Api.fileAnalysis
+		.getCapeReport(props.jobId)
+		.then(res => {
+			const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: "application/json" })
+			const url = URL.createObjectURL(blob)
+			const a = document.createElement("a")
+			a.href = url
+			a.download = `cape-report-${props.jobId}.json`
+			a.click()
+			URL.revokeObjectURL(url)
+		})
+		.catch(() => message.error("Could not fetch the full CAPE report."))
+		.finally(() => {
+			downloadingReport.value = false
+		})
+}
+
+// Split real signal from environmental noise (CAPE-monitor/Windows baseline). The
+// backend tags each signature; noise is shown separately so a malscore-10 benign
+// run reads clearly instead of a wall of scary-looking sev-2/3 hits.
+const _bySeverity = (a: { severity?: number }, b: { severity?: number }) => (b.severity ?? 0) - (a.severity ?? 0)
+const meaningfulSignatures = computed(() =>
+	(props.sandbox?.signatures ?? []).filter(s => !s.noise && !s.low_confidence).sort(_bySeverity)
 )
+const lowConfidenceSignatures = computed(() =>
+	(props.sandbox?.signatures ?? []).filter(s => s.low_confidence && !s.noise).sort(_bySeverity)
+)
+const noiseSignatures = computed(() => (props.sandbox?.signatures ?? []).filter(s => s.noise).sort(_bySeverity))
 
 interface TreeProc {
 	name: string
@@ -269,10 +434,12 @@ const processTree = computed<TreeProc[]>(() => {
 })
 
 const malscorePct = computed(() => Math.min(100, Math.max(0, (props.sandbox?.malscore ?? 0) * 10)))
+// Colour the ring by the VERDICT, not the raw malscore — a benign run can hit
+// malscore 10 on environmental noise, and a red ring next to a "clean" tag misleads.
 const malscoreColor = computed(() => {
-	const s = props.sandbox?.malscore ?? 0
-	if (s >= 7) return "#e88080"
-	if (s >= 3) return "#e8c07d"
+	const v = props.sandbox?.verdict
+	if (v === "malicious") return "#e88080"
+	if (v === "suspicious") return "#e8c07d"
 	return "#63e2b7"
 })
 const verdictType = computed<"error" | "warning" | "success">(() => {

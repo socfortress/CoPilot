@@ -83,6 +83,7 @@
 							:sandbox="result?.sandbox"
 							:loading="loadingResult"
 							:dynamic-status="job?.dynamic_status"
+							:job-id="jobId"
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="network" tab="Network" display-directive="show:lazy">
@@ -161,7 +162,7 @@ const vtPending = computed(() => {
 })
 const vtLabel = computed<string | null>(() => {
 	const r = reputation.value
-	if (!r) return null
+	if (!r || r.skipped) return null
 	if (r.found) return `VirusTotal ${r.malicious ?? 0}/${r.total ?? "?"}`
 	if (r.submitted) return "VirusTotal scanning…"
 	return "VirusTotal: not seen"

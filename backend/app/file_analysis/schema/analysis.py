@@ -67,6 +67,8 @@ class SubmitRequest(BaseModel):
     source: str  # "host_path" | "upload"
     customer_code: str
     tiers: List[Tier] = Field(default_factory=lambda: [Tier.STATIC])
+    # VirusTotal phase: "off" | "lookup" (hash only, never uploads) | "upload".
+    reputation_mode: str = "lookup"
     client_id: Optional[str] = None
     target_path: Optional[str] = None
     hostname: Optional[str] = None
@@ -156,3 +158,9 @@ class HistoryResponse(BaseModel):
     success: bool = True
     message: str = ""
     items: List[HistoryItem] = Field(default_factory=list)
+
+
+class DeleteResponse(BaseModel):
+    success: bool = True
+    message: str = ""
+    removed: int = 0

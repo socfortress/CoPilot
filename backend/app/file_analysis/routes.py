@@ -18,6 +18,7 @@ from fastapi import Form
 from fastapi import HTTPException
 from fastapi import Security
 from fastapi import UploadFile
+from fastapi.responses import JSONResponse
 from fastapi.responses import StreamingResponse
 from loguru import logger
 from sqlalchemy import or_
@@ -31,6 +32,7 @@ from app.file_analysis.schema.analysis import AgentInfo
 from app.file_analysis.schema.analysis import AgentsResponse
 from app.file_analysis.schema.analysis import EnumerateRequest
 from app.file_analysis.schema.analysis import EnumerateResponse
+from app.file_analysis.schema.analysis import DeleteResponse
 from app.file_analysis.schema.analysis import HistoryItem
 from app.file_analysis.schema.analysis import HistoryResponse
 from app.file_analysis.schema.analysis import MatchInfo
@@ -145,7 +147,14 @@ async def submit(body: SubmitRequest, background: BackgroundTasks) -> SubmitResp
             "target_path": body.target_path,
             "hostname": body.hostname,
         }
-        background.add_task(orchestrator.run, job_id, sample_bytes=None, tiers=body.tiers, refs=refs)
+        background.add_task(
+            orchestrator.run,
+            job_id,
+            sample_bytes=None,
+            tiers=body.tiers,
+            refs=refs,
+            reputation_mode=body.reputation_mode,
+        )
     return SubmitResponse(job_id=job_id, message="analysis queued")
 
 
@@ -154,17 +163,26 @@ async def upload(
     background: BackgroundTasks,
     file: UploadFile = File(...),
     customer_code: str = Form(...),
+    sandbox: bool = Form(True),
+    reputation_mode: str = Form("lookup"),
 ) -> SubmitResponse:
-    """Direct analyst upload (multipart). Bytes stay in memory for the job."""
+    """Direct analyst upload (multipart). Bytes stay in memory for the job.
+
+    ``sandbox`` toggles Tier-2 detonation; ``reputation_mode`` picks the VirusTotal
+    phase (``off`` | ``lookup`` | ``upload``) — chosen by the analyst before submit.
+    """
     data = await file.read()
     if len(data) > _MAX_UPLOAD_MB * 1024 * 1024:
         raise HTTPException(status_code=413, detail=f"file exceeds {_MAX_UPLOAD_MB} MB")
+    if reputation_mode not in ("off", "lookup", "upload"):
+        raise HTTPException(status_code=400, detail="reputation_mode must be off|lookup|upload")
     sha256 = hashlib.sha256(data).hexdigest()
+    tiers = [Tier.STATIC, Tier.DYNAMIC] if sandbox else [Tier.STATIC]
 
     job_id, needs_run = await orchestrator.create_and_dispatch(
         source="upload",
         customer_code=customer_code,
-        tiers=[Tier.STATIC, Tier.DYNAMIC],
+        tiers=tiers,
         sample_bytes=data,
         filename=file.filename or "sample",
         sha256=sha256,
@@ -175,7 +193,8 @@ async def upload(
             orchestrator.run,
             job_id,
             sample_bytes=data,
-            tiers=[Tier.STATIC, Tier.DYNAMIC],
+            tiers=tiers,
+            reputation_mode=reputation_mode,
         )
     return SubmitResponse(job_id=job_id, message="analysis queued")
 
@@ -197,6 +216,41 @@ async def get_result(job_id: str) -> ResultResponse:
     if not result:
         raise HTTPException(status_code=404, detail="result not ready")
     return ResultResponse(result=AnalysisResult(**result))
+
+
+@file_analysis_router.get("/result/{job_id}/cape-report", dependencies=[_ANALYST])
+async def cape_report(job_id: str) -> JSONResponse:
+    """The COMPLETE raw CAPE report for this analysis (every API call, all behaviour)
+    — fetched on demand so analysts can inspect literally everything without bloating
+    the stored result. Served straight from CAPE by the detonation task id.
+    """
+    job = await state_store.load_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="job not found")
+    result = await state_store.load_result(job["customer_code"], job.get("sha256", ""))
+    task_id = ((result or {}).get("sandbox") or {}).get("task_id")
+    if not task_id:
+        raise HTTPException(status_code=404, detail="this analysis has no detonation report")
+    from app.file_analysis.services.sandbox import get_backend
+
+    try:
+        report = await get_backend().get_report(str(task_id))
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"could not fetch the CAPE report: {exc}")
+    return JSONResponse(content=report)
+
+
+@file_analysis_router.delete("/analysis/{job_id}", response_model=DeleteResponse, dependencies=[_ANALYST])
+async def delete_analysis(job_id: str) -> DeleteResponse:
+    """Delete a stored analysis (result, summary, previews, job) so the history
+    table can drop old files. Scoped to this job's own (customer, sha) — the CAPE
+    detonation task is intentionally left, so re-analysing the same file reuses it.
+    """
+    job = await state_store.load_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="analysis not found")
+    removed = await state_store.delete_analysis(job["customer_code"], job.get("sha256", ""), job_id)
+    return DeleteResponse(removed=removed, message="analysis deleted")
 
 
 @file_analysis_router.get("/result/{job_id}/preview/{name}", dependencies=[_ANALYST])

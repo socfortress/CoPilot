@@ -22,6 +22,8 @@ from loguru import logger
 
 from app.file_analysis.services.sandbox.base import CapeSummary
 from app.file_analysis.services.sandbox.base import NotEnabled
+from app.file_analysis.services.verdict import is_low_confidence_signature
+from app.file_analysis.services.verdict import is_noise_signature
 
 _POLL_INTERVAL = int(os.getenv("CAPE_POLL_INTERVAL", "15"))
 _POLL_TIMEOUT = int(os.getenv("CAPE_POLL_TIMEOUT", "1800"))
@@ -160,11 +162,17 @@ def summarize(report: dict) -> CapeSummary:
 
     # Signatures + ATT&CK ids.
     for sig in report.get("signatures", []) or []:
+        name = sig.get("name", "")
         summary.signatures.append(
             {
-                "name": sig.get("name", ""),
+                "name": name,
                 "description": sig.get("description", ""),
                 "severity": sig.get("severity", 0),
+                # Environmental noise = CAPE-monitor/Windows-guest baseline (see verdict.py).
+                # low_confidence = static-PE/packer/.NET-JIT heuristics that fire on benign
+                # software. Both are tagged so the UI can separate them from real signal.
+                "noise": is_noise_signature(name),
+                "low_confidence": not is_noise_signature(name) and is_low_confidence_signature(name),
                 "mitre": [t.get("attack_id", t) if isinstance(t, dict) else t for t in sig.get("ttp", []) or sig.get("mitre", []) or []],
             }
         )
@@ -221,6 +229,52 @@ def summarize(report: dict) -> CapeSummary:
                 "command_line": proc.get("command_line") or environ.get("CommandLine", ""),
             }
         )
+
+    # Full behavioural record — literally what the sample touched on the host, so an
+    # analyst can judge from evidence, not a score. Straight from CAPE's
+    # behaviour.summary categories; capped per category so a pathological run can't
+    # bloat the stored result (the raw report stays available for download).
+    _BEHAV_CAP = 2000
+    behav_summary = behavior.get("summary", {}) or {}
+    _behav_map = {
+        "files": "files",
+        "read_files": "read_files",
+        "write_files": "write_files",
+        "delete_files": "delete_files",
+        "registry_keys": "keys",
+        "read_keys": "read_keys",
+        "write_keys": "write_keys",
+        "delete_keys": "delete_keys",
+        "mutexes": "mutexes",
+        "executed_commands": "executed_commands",
+        "created_services": "created_services",
+        "started_services": "started_services",
+        "resolved_apis": "resolved_apis",
+    }
+    for out_key, src_key in _behav_map.items():
+        vals = behav_summary.get(src_key) or []
+        if vals:
+            summary.behavior[out_key] = [str(v) for v in vals][:_BEHAV_CAP]
+
+    # Human-readable event stream (CAPE's "enhanced" behaviour) — a plain-English
+    # timeline of the notable actions (create file/key, load lib, connect, …).
+    for ev in (behavior.get("enhanced", []) or [])[:_BEHAV_CAP]:
+        if isinstance(ev, dict):
+            summary.enhanced.append(
+                {
+                    "event": ev.get("event", ""),
+                    "object": ev.get("object", ""),
+                    "data": ev.get("data", {}),
+                }
+            )
+
+    # Endpoints the sample TRIED to reach but that were unreachable (dead) — a strong
+    # "attempted C2 / offline infra" tell even when nothing was contacted.
+    for dh in network.get("dead_hosts", []) or []:
+        if isinstance(dh, (list, tuple)) and dh:
+            summary.dead_hosts.append(f"{dh[0]}:{dh[1]}" if len(dh) > 1 else str(dh[0]))
+        elif dh:
+            summary.dead_hosts.append(str(dh))
 
     # MITRE ATT&CK (ttps).
     for t in report.get("ttps", []) or []:

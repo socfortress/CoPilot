@@ -47,6 +47,21 @@
 				<n-tag :type="verdictType(it.verdict)" size="small" round :bordered="false">
 					{{ it.verdict || it.status || "—" }}
 				</n-tag>
+				<n-popconfirm @positive-click="remove(it)">
+					<template #trigger>
+						<n-button
+							text
+							size="tiny"
+							class="text-secondary hover:text-error-color shrink-0"
+							:loading="deletingId === it.job_id"
+							title="Delete this analysis"
+							@click.stop
+						>
+							<template #icon><Icon :name="TrashIcon" :size="16" /></template>
+						</n-button>
+					</template>
+					Delete this analysis? The stored result and previews are removed (the file can be re-analysed later).
+				</n-popconfirm>
 				<Icon :name="ChevronIcon" :size="16" class="text-secondary shrink-0" />
 			</div>
 		</div>
@@ -56,7 +71,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { FileAnalysisHistoryItem, FileAnalysisVerdict } from "@/types/file-analysis"
-import { NButton, NEmpty, NSpin, NTag, useMessage } from "naive-ui"
+import { NButton, NEmpty, NPopconfirm, NSpin, NTag, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
@@ -70,9 +85,11 @@ const message = useMessage()
 
 const RefreshIcon = "carbon:renew"
 const ChevronIcon = "carbon:chevron-right"
+const TrashIcon = "carbon:trash-can"
 
 const items = ref<FileAnalysisHistoryItem[]>([])
 const loading = ref(false)
+const deletingId = ref<string | null>(null)
 
 function verdictType(v: FileAnalysisVerdict | null): "success" | "warning" | "error" | "default" {
 	if (v === "malicious") return "error"
@@ -104,6 +121,25 @@ function when(iso: string): string {
 function open(it: FileAnalysisHistoryItem) {
 	if (!it.job_id) return
 	router.push({ name: "FileAnalysis", params: { jobId: it.job_id } })
+}
+
+function remove(it: FileAnalysisHistoryItem) {
+	if (!it.job_id || deletingId.value) return
+	deletingId.value = it.job_id
+	Api.fileAnalysis
+		.deleteAnalysis(it.job_id)
+		.then(res => {
+			if (res.data.success) {
+				items.value = items.value.filter(x => x.job_id !== it.job_id)
+				message.success("Analysis deleted.")
+			}
+		})
+		.catch(err => {
+			message.error(getApiErrorMessage(err as ApiError) || "Could not delete the analysis.")
+		})
+		.finally(() => {
+			deletingId.value = null
+		})
 }
 
 function load() {

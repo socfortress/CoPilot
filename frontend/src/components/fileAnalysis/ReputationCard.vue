@@ -1,9 +1,14 @@
 <template>
-	<!-- Scanning in progress -->
-	<n-alert v-if="!reputation && loading" type="default" :bordered="false" class="text-sm">
+	<!-- VirusTotal was turned off for this analysis -->
+	<n-alert v-if="reputation?.skipped" type="default" :bordered="false" class="text-sm">
+		<span class="text-secondary">VirusTotal — not run for this analysis.</span>
+	</n-alert>
+
+	<!-- Reputation lookup in flight (hash lookup — NOT necessarily an upload) -->
+	<n-alert v-else-if="!reputation && loading" type="default" :bordered="false" class="text-sm">
 		<div class="flex items-center gap-2">
 			<n-spin :size="14" />
-			<span>VirusTotal — scanning… (a first-seen file is uploaded and scanned by 70+ engines; this can take a minute)</span>
+			<span>VirusTotal — checking reputation…</span>
 		</div>
 	</n-alert>
 
