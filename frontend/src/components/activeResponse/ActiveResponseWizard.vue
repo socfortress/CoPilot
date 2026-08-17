@@ -170,7 +170,7 @@ function getActiveResponseList() {
 	loadingActiveResponse.value = true
 
 	Api.activeResponse
-		.getSupported()
+		.getSupported({})
 		.then(res => {
 			if (res.data.success) {
 				activeResponseList.value = res.data?.supported_active_responses || []

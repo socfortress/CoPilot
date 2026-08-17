@@ -100,7 +100,7 @@ function getCustomers() {
 	loadingCustomers.value = true
 
 	Api.customers
-		.getCustomers()
+		.getCustomers({})
 		.then(res => {
 			if (res.data.success) {
 				customersList.value = res.data?.customers || []
@@ -129,7 +129,7 @@ function getIndices(cb?: () => void) {
 	const query = customerCodesFilter.value.length ? { customerCodes: customerCodesFilter.value } : undefined
 
 	Api.wazuh.indices
-		.getIndices(query, abortController.signal)
+		.getIndices(query ?? {}, abortController.signal)
 		.then(res => {
 			if (res.data.success) {
 				indices.value = res.data.indices_stats

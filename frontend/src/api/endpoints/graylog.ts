@@ -11,13 +11,14 @@ import { HttpClient } from "../http-client"
 
 export default {
 	// #region Messages
-	getMessages(page?: number) {
+	getMessages(query: { page?: number }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { graylog_messages: Message[]; total_messages: number }>(
 			`/graylog/messages`,
 			{
 				params: {
-					page_number: page || 1
-				}
+					page_number: query.page || 1
+				},
+				signal
 			}
 		)
 	},
@@ -27,16 +28,17 @@ export default {
 	getAlerts(query: AlertsQuery) {
 		return HttpClient.post<FlaskBaseResponse & { alerts: Alerts }>(`/graylog/event/alerts`, query)
 	},
-	getEventDefinitions() {
+	getEventDefinitions(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { event_definitions: EventDefinition[] }>(
-			`/graylog/event/definitions`
+			`/graylog/event/definitions`,
+			{ signal }
 		)
 	},
 	// #endregion
 
 	// #region Stream
-	getStreams() {
-		return HttpClient.get<FlaskBaseResponse & { streams: Stream[]; total: number }>(`/graylog/streams`)
+	getStreams(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { streams: Stream[]; total: number }>(`/graylog/streams`, { signal })
 	},
 	startStream(streamId: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/graylog/stream/start`, {
@@ -51,16 +53,20 @@ export default {
 	// #endregion
 
 	// #region Inputs
-	getInputs() {
+	getInputs(signal?: AbortSignal) {
 		return HttpClient.get<
 			FlaskBaseResponse & { configured_inputs: ConfiguredInput[]; running_inputs: RunningInput[] }
-		>(`/graylog/inputs`)
+		>(`/graylog/inputs`, { signal })
 	},
-	getInputsRunning() {
-		return HttpClient.get<FlaskBaseResponse & { configured_inputs: ConfiguredInput[] }>(`/graylog/inputs/running`)
+	getInputsRunning(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { configured_inputs: ConfiguredInput[] }>(`/graylog/inputs/running`, {
+			signal
+		})
 	},
-	getInputsConfigured() {
-		return HttpClient.get<FlaskBaseResponse & { running_inputs: RunningInput[] }>(`/graylog/inputs/configured`)
+	getInputsConfigured(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { running_inputs: RunningInput[] }>(`/graylog/inputs/configured`, {
+			signal
+		})
 	},
 	startInput(inputId: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/graylog/input/start`, {
@@ -75,28 +81,30 @@ export default {
 	// #endregion
 
 	// #region Metrics
-	getMetrics() {
+	getMetrics(signal?: AbortSignal) {
 		return HttpClient.get<
 			FlaskBaseResponse & { throughput_metrics: ThroughputMetric[]; uncommitted_journal_entries: number }
-		>(`/graylog/metrics`)
+		>(`/graylog/metrics`, { signal })
 	},
 	// #endregion
 
 	// #region Pipelines
-	getPipelines() {
-		return HttpClient.get<FlaskBaseResponse & { pipelines: Pipeline[] }>(`/graylog/pipelines`)
+	getPipelines(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { pipelines: Pipeline[] }>(`/graylog/pipelines`, { signal })
 	},
-	getPipelinesFull() {
-		return HttpClient.get<FlaskBaseResponse & { pipelines: PipelineFull[] }>(`/graylog/pipeline/full`)
+	getPipelinesFull(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { pipelines: PipelineFull[] }>(`/graylog/pipeline/full`, { signal })
 	},
-	getPipelinesRules() {
-		return HttpClient.get<FlaskBaseResponse & { pipeline_rules: PipelineRule[] }>(`/graylog/pipeline/rules`)
+	getPipelinesRules(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { pipeline_rules: PipelineRule[] }>(`/graylog/pipeline/rules`, {
+			signal
+		})
 	},
 	// #endregion
 
 	// #region Indices
-	getIndices() {
-		return HttpClient.get<FlaskBaseResponse & { indices: GraylogIndex[] }>(`/graylog/indices`)
+	getIndices(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { indices: GraylogIndex[] }>(`/graylog/indices`, { signal })
 	},
 	deleteIndex(indexName: string) {
 		return HttpClient.delete<FlaskBaseResponse>(`/graylog/index`, {

@@ -10,6 +10,7 @@ from typing import Optional
 import requests
 from loguru import logger
 
+from app.blocking import run_blocking
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import AsyncSessionLocal
 from app.db.db_session import get_db_session
@@ -99,6 +100,12 @@ _token_cache = WazuhTokenCache(default_ttl_minutes=10)
 # =============================================================================
 
 
+# No call here had a timeout. On the event loop that risked hanging the whole
+# process; in a worker thread it would pin one of a finite number of workers
+# forever. Generous enough for Wazuh under load, finite either way.
+WAZUH_REQUEST_TIMEOUT = 60
+
+
 async def invalidate_wazuh_token_cache(connector_name: str = "Wazuh-Manager"):
     """
     Invalidate cached token for a connector.
@@ -132,13 +139,15 @@ async def verify_wazuh_manager_credentials(
     )
 
     try:
-        wazuh_auth_token = requests.get(
+        wazuh_auth_token = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}/security/user/authenticate",
             auth=(
                 attributes["connector_username"],
                 attributes["connector_password"],
             ),
             verify=False,
+            timeout=WAZUH_REQUEST_TIMEOUT,
         )
 
         if wazuh_auth_token.status_code == 200:
@@ -258,13 +267,15 @@ async def create_wazuh_manager_client(connector_name: str) -> Optional[Dict[str,
     )
 
     try:
-        response = requests.get(
+        response = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}/security/user/authenticate",
             auth=(
                 attributes["connector_username"],
                 attributes["connector_password"],
             ),
             verify=False,
+            timeout=WAZUH_REQUEST_TIMEOUT,
         )
 
         if response.status_code == 200:
@@ -397,11 +408,13 @@ async def send_get_request(
         is_raw_request = (params == {"raw": True}) or (params and params.get("raw", False))
 
         if is_raw_request:
-            response = requests.get(
+            response = await run_blocking(
+                requests.get,
                 f"{attributes['connector_url']}{endpoint}",
                 headers=wazuh_manager_client,
                 params=params,
                 verify=False,
+                timeout=WAZUH_REQUEST_TIMEOUT,
             )
             response.raise_for_status()
             return {
@@ -410,11 +423,13 @@ async def send_get_request(
                 "message": "Successfully retrieved data",
             }
 
-        response = requests.get(
+        response = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}{endpoint}",
             headers=wazuh_manager_client,
             params=params,
             verify=False,
+            timeout=WAZUH_REQUEST_TIMEOUT,
         )
 
         # Handle 401 Unauthorized - token may have expired on server side
@@ -430,11 +445,13 @@ async def send_get_request(
                     "message": "Failed to re-authenticate with Wazuh Manager",
                 }
 
-            response = requests.get(
+            response = await run_blocking(
+                requests.get,
                 f"{attributes['connector_url']}{endpoint}",
                 headers=wazuh_manager_client,
                 params=params,
                 verify=False,
+                timeout=WAZUH_REQUEST_TIMEOUT,
             )
 
         response.raise_for_status()
@@ -475,11 +492,13 @@ async def send_post_request(
         logger.error("No Wazuh Manager connector found in the database")
         return None
     try:
-        response = requests.post(
+        response = await run_blocking(
+            requests.post,
             f"{attributes['connector_url']}{endpoint}",
             headers=wazuh_manager_client,
             json=data,
             verify=False,
+            timeout=WAZUH_REQUEST_TIMEOUT,
         )
         response.raise_for_status()
         return {
@@ -605,12 +624,14 @@ async def send_put_request(
     try:
         logger.debug(f"Sending PUT request to {endpoint} with data: {data}")
 
-        response = requests.put(
+        response = await run_blocking(
+            requests.put,
             f"{attributes['connector_url']}{endpoint}",
             headers=wazuh_manager_client,
             params=params,
             data=data,
             verify=False,
+            timeout=WAZUH_REQUEST_TIMEOUT,
         )
 
         # Log response details before checking status
@@ -685,11 +706,13 @@ async def send_delete_request(
         logger.error("No Wazuh Manager connector found in the database")
         return None
     try:
-        response = requests.delete(
+        response = await run_blocking(
+            requests.delete,
             f"{attributes['connector_url']}{endpoint}",
             headers=wazuh_manager_client,
             params=params,
             verify=False,
+            timeout=WAZUH_REQUEST_TIMEOUT,
         )
         response.raise_for_status()
         return {
@@ -720,10 +743,12 @@ async def restart_service(connector_name: str = "Wazuh-Manager") -> Dict[str, An
         logger.error("No Wazuh Manager connector found in the database")
         return None
     try:
-        response = requests.put(
+        response = await run_blocking(
+            requests.put,
             f"{attributes['connector_url']}/manager/restart",
             headers=wazuh_manager_client,
             verify=False,
+            timeout=WAZUH_REQUEST_TIMEOUT,
         )
         response.raise_for_status()
         return {

@@ -9,9 +9,10 @@ export interface IncidentNotificationPayload {
 }
 
 export default {
-	getNotifications(customerCode: string) {
+	getNotifications(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { notifications: IncidentNotification[] }>(
-			`/incidents/db_operations/notification/${customerCode}`
+			`/incidents/db_operations/notification/${customerCode}`,
+			{ signal }
 		)
 	},
 	setNotification(notification: IncidentNotificationPayload) {

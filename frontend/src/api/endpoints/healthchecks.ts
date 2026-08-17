@@ -3,12 +3,12 @@ import type { InfluxDBAlertQueryParams, InfluxDBAlertResponse, InfluxDBCheckName
 import { HttpClient } from "../http-client"
 
 export default {
-	getHealthchecks(params?: InfluxDBAlertQueryParams) {
-		return HttpClient.get<FlaskBaseResponse & InfluxDBAlertResponse>(`/influxdb/alerts`, { params })
+	getHealthchecks(params: InfluxDBAlertQueryParams, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & InfluxDBAlertResponse>(`/influxdb/alerts`, { params, signal })
 	},
 
-	getCheckNames() {
-		return HttpClient.get<FlaskBaseResponse & InfluxDBCheckNamesResponse>(`/influxdb/check-names`)
+	getCheckNames(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & InfluxDBCheckNamesResponse>(`/influxdb/check-names`, { signal })
 	}
 
 	//   index health : Api.wazuh.indices.getClusterHealth()

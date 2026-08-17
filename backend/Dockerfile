@@ -78,7 +78,12 @@ EXPOSE 5000
 # ───────────────
 # Runtime Environment
 # ───────────────
-ENV SERVER_IP=0.0.0.0 \
+# Performance session logs (#1072) land in /opt/logs, which docker-compose already
+# bind-mounts to ./data/copilot-backend-data/logs on the host — without this they
+# would be written inside the container and lost on every recreate. Outside Docker
+# the default is backend/logs/performance instead.
+ENV PERF_LOG_DIR=/opt/logs/performance \
+    SERVER_IP=0.0.0.0 \
     WAZUH_INDEXER_URL=https://1.1.1.1:9200 \
     WAZUH_INDEXER_USERNAME=admin \
     WAZUH_INDEXER_PASSWORD=admin \

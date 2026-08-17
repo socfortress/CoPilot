@@ -284,7 +284,7 @@ onBeforeMount(() => {
 
 	loadingCustomers.value = true
 	Api.customers
-		.getCustomers()
+		.getCustomers({})
 		.then(res => {
 			if (res.data.success) {
 				customersOptions.value = (res.data.customers || []).map(c => ({

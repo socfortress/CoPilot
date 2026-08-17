@@ -330,7 +330,7 @@ function append(source: string) {
 async function loadCustomers() {
 	loadingCustomers.value = true
 	try {
-		const res = await Api.customers.getCustomers()
+		const res = await Api.customers.getCustomers({})
 		customers.value = res.data.customers ?? []
 	} catch {
 		// A failed customer list only costs the scoping dropdown; the template

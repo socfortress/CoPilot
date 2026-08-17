@@ -35,7 +35,7 @@ export interface TOTPDeleteRequest {
 export default {
 	/** Get 2FA status for current user */
 	getStatus() {
-		return HttpClient.get<FlaskBaseResponse & TOTPStatusResponse>("/auth/2fa/status")
+		return HttpClient.get<FlaskBaseResponse & TOTPStatusResponse>("/auth/2fa/status", { keepOnNavigation: true })
 	},
 
 	/** Start 2FA setup — get QR code and backup codes */

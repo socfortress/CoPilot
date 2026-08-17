@@ -71,7 +71,7 @@ const disks = ref<MetricsDisksData>({})
 async function reload() {
 	loading.value = true
 	try {
-		const res = await Api.metrics.getDisks(props.host, props.range)
+		const res = await Api.metrics.getDisks({ host: props.host, rangeH: props.range })
 		if (!res.data.success) {
 			message.warning(res.data.message || "Error fetching disk metrics")
 			disks.value = {}

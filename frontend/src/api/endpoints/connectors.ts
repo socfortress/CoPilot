@@ -3,8 +3,8 @@ import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
 
 export default {
-	getAll() {
-		return HttpClient.get<FlaskBaseResponse & { connectors: Connector[] }>("/connectors")
+	getAll(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { connectors: Connector[] }>("/connectors", { signal })
 	},
 	configure(connectorId: string | number, payload: ConnectorRequestPayload) {
 		return HttpClient.post<FlaskBaseResponse & { connectors: Connector[] }>(`/connectors/${connectorId}`, payload)

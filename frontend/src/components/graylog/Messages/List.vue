@@ -66,7 +66,7 @@ function getData(page: number) {
 	loading.value = true
 
 	Api.graylog
-		.getMessages(page)
+		.getMessages({ page })
 		.then(res => {
 			if (res.data.success) {
 				const data = (res.data.graylog_messages || []) as MessageExtended[]

@@ -303,7 +303,7 @@ function renderRuleMitre(row: CatalogWazuhRuleRow) {
 function loadCustomers() {
 	loadingCustomers.value = true
 	return Api.customers
-		.getCustomers()
+		.getCustomers({})
 		.then(res => {
 			const list = res.data?.customers || []
 			customerOptions.value = [
@@ -432,7 +432,7 @@ const columns = computed<DataTableColumns<CatalogWazuhRuleRow>>(() => {
 function load(isCustomerChange = false) {
 	if (!isCustomerChange) loading.value = true
 	Api.detectionCatalog
-		.listWazuhRules(customerScope.value || undefined)
+		.listWazuhRules({ customerCode: customerScope.value || undefined })
 		.then(res => {
 			if (res.data?.success) {
 				rules.value = res.data.rules || []

@@ -41,7 +41,7 @@ import axios from "axios"
 import { saveAs } from "file-saver"
 import { NButton, NEmpty, NFormItem, NSelect, NSpin, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import { computed, onBeforeMount, onBeforeUnmount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
@@ -134,5 +134,12 @@ function vulnerabilitiesDownload(id: string) {
 
 onBeforeMount(() => {
 	if (agent?.value?.agent_id) getVulnerabilities(agent.value.agent_id)
+})
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
 })
 </script>

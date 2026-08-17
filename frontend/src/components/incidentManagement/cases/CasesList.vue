@@ -240,7 +240,7 @@ import {
 	NSpin,
 	useMessage
 } from "naive-ui"
-import { computed, nextTick, onBeforeMount, provide, ref, toRefs, watch } from "vue"
+import { computed, nextTick, onBeforeMount, onBeforeUnmount, provide, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import GenerateIncidentReportButton from "@/components/customers/reporting/GenerateIncidentReportButton.vue"
@@ -496,7 +496,7 @@ function getAvailableUsers() {
 
 function getCustomers() {
 	return Api.customers
-		.getCustomers()
+		.getCustomers({})
 		.then(res => {
 			if (res.data.success) {
 				customersList.value = res.data?.customers || []
@@ -549,5 +549,12 @@ onBeforeMount(() => {
 			})
 		}
 	})
+})
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
 })
 </script>

@@ -168,7 +168,7 @@ import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import _clone from "lodash/cloneDeep"
 import { NButton, NEmpty, NInput, NPagination, NPopover, NScrollbar, NSpin, NTooltip, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { computed, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
@@ -337,4 +337,11 @@ watchDebounced(
 	},
 	{ debounce: 250, immediate: true, deep: true }
 )
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
+})
 </script>

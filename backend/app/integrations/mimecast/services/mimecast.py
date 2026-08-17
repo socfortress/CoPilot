@@ -15,6 +15,8 @@ import requests
 from fastapi import HTTPException
 from loguru import logger
 
+from app.blocking import DEFAULT_HTTP_TIMEOUT
+from app.blocking import run_blocking
 from app.integrations.mimecast.schema.mimecast import DataItem
 from app.integrations.mimecast.schema.mimecast import MimecastAPIEndpointResponse
 from app.integrations.mimecast.schema.mimecast import MimecastAuthKeys
@@ -177,10 +179,12 @@ async def get_mta_siem_logs(
         "Content-Type": "application/json",
     }
     try:
-        response = requests.post(
+        response = await run_blocking(
+            requests.post,
             url=base_url + auth_keys.URI,
             headers=headers,
             data=json.dumps(post_body),
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
         return response.content, response.headers
     except Exception as e:
@@ -416,10 +420,12 @@ async def invoke_mimecast_api_ttp_urls(
     for item in request_dict["data"]:
         item["from"] = await custom_datetime_format(item["from"])
         item["to"] = await custom_datetime_format(item["to"])
-    response = requests.post(
+    response = await run_blocking(
+        requests.post,
         url=mimecast_request.BaseURL + "/api/ttp/url/get-logs",
         headers=mimecast_request.headers.model_dump(by_alias=True),
         data=str(request_dict),
+        timeout=DEFAULT_HTTP_TIMEOUT,
     )
     return TtpURLResponseBody(**response.json())
 

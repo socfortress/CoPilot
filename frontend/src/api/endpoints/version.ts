@@ -4,6 +4,6 @@ import { HttpClient } from "../http-client"
 
 export default {
 	checkVersion() {
-		return HttpClient.get<FlaskBaseResponse & VersionCheckResponse>(`/version/check`)
+		return HttpClient.get<FlaskBaseResponse & VersionCheckResponse>(`/version/check`, { keepOnNavigation: true })
 	}
 }

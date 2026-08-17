@@ -11,6 +11,7 @@ from elasticsearch7 import Elasticsearch
 from fastapi import HTTPException
 from loguru import logger
 
+from app.blocking import run_blocking
 from app.connectors.utils import get_connector_info_from_db
 from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel
 from app.connectors.wazuh_indexer.schema.indices import Indices
@@ -41,7 +42,7 @@ async def verify_wazuh_indexer_credentials(
             max_retries=10,
             retry_on_timeout=False,
         )
-        es.cluster.health()
+        await run_blocking(es.cluster.health)
         logger.debug("Wazuh Indexer connection successful")
         return {
             "connectionSuccessful": True,
@@ -260,7 +261,7 @@ async def collect_indices(all_indices: bool = False) -> Indices:
     logger.info("Collecting indices from Elasticsearch")
     es = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
-        indices_dict = es.indices.get_alias("*", expand_wildcards="open")
+        indices_dict = await run_blocking(es.indices.get_alias, "*", expand_wildcards="open")
         indices_list = list(indices_dict.keys())
         # Check if the index is valid
         if not all_indices:
@@ -555,7 +556,7 @@ async def get_index_mappings_key_names(index_name: str):
         list: The field names of the index.
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
-    mappings = es_client.indices.get_mapping(index=index_name)
+    mappings = await run_blocking(es_client.indices.get_mapping, index=index_name)
     # return only the field names
     return list(mappings[index_name]["mappings"]["properties"].keys())
 
@@ -568,7 +569,7 @@ async def return_graylog_events_index_names():
         list: The index names of the Graylog events.
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
-    indices = es_client.indices.get_alias("gl-events*")
+    indices = await run_blocking(es_client.indices.get_alias, "gl-events*")
     return list(indices.keys())
 
 
@@ -595,7 +596,7 @@ async def get_index_source(index_name: str):
 
     # First search for 'syslog_type'
     query_syslog_type = {"size": 10, "query": {"bool": {"must": [{"exists": {"field": "syslog_type"}}]}}}
-    response = es_client.search(index=index_name, body=query_syslog_type)
+    response = await run_blocking(es_client.search, index=index_name, body=query_syslog_type)
     for hit in response["hits"]["hits"]:  # Loop through each hit in the response
         if "syslog_type" in hit["_source"]:  # Check if 'syslog_type' exists in the source of the hit
             if hit["_source"]["syslog_type"] == "integration" and "integration" in hit["_source"]:
@@ -604,7 +605,7 @@ async def get_index_source(index_name: str):
 
     # If no 'syslog_type' found, search for 'integration'
     query_integration = {"size": 10, "query": {"bool": {"must": [{"exists": {"field": "integration"}}]}}}
-    response = es_client.search(index=index_name, body=query_integration)
+    response = await run_blocking(es_client.search, index=index_name, body=query_integration)
     for hit in response["hits"]["hits"]:  # Loop through each hit in the response
         if "integration" in hit["_source"]:  # Check if 'integration' exists in the source of the hit
             return hit["_source"]["integration"]  # Return the value of 'integration'
@@ -624,7 +625,7 @@ async def get_available_indices_via_source(source: str):
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
-        indices = es_client.indices.get_alias("*")
+        indices = await run_blocking(es_client.indices.get_alias, "*")
         logger.info(f"Indices: {indices.keys()}")
         available_indices = []
         source_pattern = re.compile(source)  # Compile the regex pattern for the source
@@ -649,7 +650,7 @@ async def resize_wazuh_index_fields():
     settings = {"index.mapping.total_fields.limit": 2000}
 
     try:
-        es_client.indices.put_settings(index="wazuh*", body=settings)
+        await run_blocking(es_client.indices.put_settings, index="wazuh*", body=settings)
         logger.info("Successfully resized the Wazuh index fields")
     except Exception as e:
         logger.error(f"An error occurred: {e}")

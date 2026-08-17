@@ -38,7 +38,7 @@ import type { Message } from "./TalonChatQuery.vue"
 import { useStorage } from "@vueuse/core"
 import { NScrollbar, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
-import { nextTick, ref } from "vue"
+import { nextTick, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import Markdown from "@/components/common/Markdown.vue"
@@ -154,5 +154,12 @@ defineExpose({
 	clearHistory() {
 		messages.value = []
 	}
+})
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
 })
 </script>

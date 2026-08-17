@@ -48,9 +48,10 @@ export default {
 			}
 		>(`/incidents/alerts/create/velo-sigma/exclusion`, { params, signal })
 	},
-	getExclusionRule(exclusionId: number) {
+	getExclusionRule(exclusionId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { exclusion_response: ExclusionRule }>(
-			`/incidents/alerts/create/velo-sigma/exclusion/${exclusionId}`
+			`/incidents/alerts/create/velo-sigma/exclusion/${exclusionId}`,
+			{ signal }
 		)
 	},
 	createExclusionRule(payload: ExclusionRulePayload) {

@@ -41,7 +41,7 @@ async function loadStats() {
 	}
 	loading.value = true
 	try {
-		const res = await Api.aiAnalyst.getReviewStats(customer.value, 10)
+		const res = await Api.aiAnalyst.getReviewStats({ customerCode: customer.value, recentLimit: 10 })
 		if (res.data.success) {
 			stats.value = res.data
 		} else {

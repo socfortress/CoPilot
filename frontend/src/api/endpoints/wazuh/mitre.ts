@@ -109,7 +109,7 @@ export default {
 			signal
 		})
 	},
-	getMitreTechniques(query?: MitreTechniquesQuery) {
+	getMitreTechniques(query: MitreTechniquesQuery, signal?: AbortSignal) {
 		let q: string | undefined
 
 		if (query?.external_id) {
@@ -125,11 +125,12 @@ export default {
 			{
 				params: {
 					q
-				}
+				},
+				signal
 			}
 		)
 	},
-	getMitreGroups(query?: MitreGroupsQuery) {
+	getMitreGroups(query: MitreGroupsQuery, signal?: AbortSignal) {
 		let q: string | undefined
 
 		if (query?.id) {
@@ -141,11 +142,12 @@ export default {
 			{
 				params: {
 					q
-				}
+				},
+				signal
 			}
 		)
 	},
-	getMitreMitigations(query?: MitreMitigationsQuery) {
+	getMitreMitigations(query: MitreMitigationsQuery, signal?: AbortSignal) {
 		let q: string | undefined
 
 		if (query?.id) {
@@ -157,11 +159,12 @@ export default {
 			{
 				params: {
 					q
-				}
+				},
+				signal
 			}
 		)
 	},
-	getMitreSoftware(query?: MitreSoftwareQuery) {
+	getMitreSoftware(query: MitreSoftwareQuery, signal?: AbortSignal) {
 		let q: string | undefined
 
 		if (query?.id) {
@@ -173,11 +176,12 @@ export default {
 			{
 				params: {
 					q
-				}
+				},
+				signal
 			}
 		)
 	},
-	getMitreTactics(query?: MitreTacticsQuery) {
+	getMitreTactics(query: MitreTacticsQuery, signal?: AbortSignal) {
 		let q: string | undefined
 
 		if (query?.id) {
@@ -187,7 +191,8 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { results: MitreTacticDetails[] }>(`/wazuh_manager/mitre/tactics`, {
 			params: {
 				q
-			}
+			},
+			signal
 		})
 	},
 	getMitreEvents(query: MitreEventsQuery, signal?: AbortSignal) {
@@ -237,12 +242,12 @@ export default {
 			signal
 		})
 	},
-	getMitreAtomicTestContent(technique_id: string) {
+	getMitreAtomicTestContent(technique_id: string, signal?: AbortSignal) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
 				technique_id: string
 				markdown_content: string
 			}
-		>(`/wazuh_manager/mitre/techniques/${technique_id}/atomic-tests`)
+		>(`/wazuh_manager/mitre/techniques/${technique_id}/atomic-tests`, { signal })
 	}
 }

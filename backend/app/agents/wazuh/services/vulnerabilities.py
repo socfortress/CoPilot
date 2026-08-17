@@ -6,6 +6,7 @@ from loguru import logger
 
 from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilities
 from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
+from app.blocking import run_blocking
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.connectors.wazuh_indexer.utils.universal import (
@@ -157,7 +158,8 @@ async def collect_agent_vulnerability_by_cve(
     query = {"query": {"bool": {"must": must}}}
 
     # let the indexer resolve the pattern server-side rather than enumerating indices
-    response = es.search(
+    response = await run_blocking(
+        es.search,
         index=VULNERABILITY_STATES_INDEX_PATTERN,
         body=query,
         size=10,
@@ -231,7 +233,7 @@ async def collect_vulnerabilities(es, vulnerabilities_indices, agent_id, vulnera
                 },
             }
 
-        page = es.search(index=index, body=query, scroll="2m")
+        page = await run_blocking(es.search, index=index, body=query, scroll="2m")
         sid = page["_scroll_id"]
         scroll_size = len(page["hits"]["hits"])
 
@@ -240,7 +242,7 @@ async def collect_vulnerabilities(es, vulnerabilities_indices, agent_id, vulnera
                 vulnerability = hit["_source"]
                 agent_vulnerabilities.append(vulnerability)
 
-            page = es.scroll(scroll_id=sid, scroll="2m")
+            page = await run_blocking(es.scroll, scroll_id=sid, scroll="2m")
             sid = page["_scroll_id"]
             scroll_size = len(page["hits"]["hits"])
 
@@ -270,7 +272,7 @@ async def collect_vulnerabilities_sync(es, vulnerabilities_indices, agent_name, 
                 },
             }
 
-        page = es.search(index=index, body=query, scroll="2m")
+        page = await run_blocking(es.search, index=index, body=query, scroll="2m")
         sid = page["_scroll_id"]
         scroll_size = len(page["hits"]["hits"])
 
@@ -279,7 +281,7 @@ async def collect_vulnerabilities_sync(es, vulnerabilities_indices, agent_name, 
                 vulnerability = hit["_source"]
                 agent_vulnerabilities.append(vulnerability)
 
-            page = es.scroll(scroll_id=sid, scroll="2m")
+            page = await run_blocking(es.scroll, scroll_id=sid, scroll="2m")
             sid = page["_scroll_id"]
             scroll_size = len(page["hits"]["hits"])
 

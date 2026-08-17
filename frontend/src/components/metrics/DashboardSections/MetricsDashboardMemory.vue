@@ -68,7 +68,7 @@ const memory = ref<MetricsMemoryData>({})
 async function reload() {
 	loading.value = true
 	try {
-		const res = await Api.metrics.getMemory(props.host, props.range)
+		const res = await Api.metrics.getMemory({ host: props.host, rangeH: props.range })
 		if (!res.data.success) {
 			message.warning(res.data.message || "Error fetching memory metrics")
 			memory.value = {}

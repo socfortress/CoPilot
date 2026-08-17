@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.models.users import Role
+from app.connectors import cache as connector_cache
 from app.connectors.models import Connectors
 from app.integrations.models.customer_integration_settings import AvailableIntegrations
 from app.integrations.models.customer_integration_settings import (
@@ -224,6 +225,10 @@ async def add_connectors_if_not_exist(session: AsyncSession):
             logger.info(f"Added new connector: {connector_data['connector_name']}")
 
     await session.commit()
+    # Startup runs before the first request, so nothing can be cached yet. Kept
+    # anyway so this stays correct if it is ever called from anywhere else
+    # (#1072, level 4).
+    connector_cache.invalidate_all()
 
 
 async def delete_connectors_if_exist(session: AsyncSession):
@@ -252,6 +257,7 @@ async def delete_connectors_if_exist(session: AsyncSession):
             logger.info(f"Deleted connector: {connector_data}")
 
     await session.commit()
+    connector_cache.invalidate_all()
 
 
 async def add_roles_if_not_exist(session: AsyncSession) -> None:

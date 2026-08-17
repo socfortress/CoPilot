@@ -20,6 +20,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.routes.auth import AuthHandler
+from app.blocking import run_blocking
 from app.connectors.schema import UpdateConnector
 from app.connectors.services import ConnectorServices
 from app.db.db_session import get_db
@@ -707,12 +708,7 @@ async def send_get_request(endpoint: str) -> Dict[str, Any]:
             "Content-Type": "application/json",
             "module-version": "1.0",
         }
-        response = requests.get(
-            f"https://license.socfortress.co/{endpoint}",
-            headers=HEADERS,
-            verify=False,
-            timeout=10,
-        )
+        response = await run_blocking(requests.get, f"https://license.socfortress.co/{endpoint}", headers=HEADERS, verify=False, timeout=10)
 
         if response.status_code == 204:
             return {"success": True, "message": "No content"}
@@ -1035,7 +1031,8 @@ async def send_post_request(endpoint: str, data: Dict[str, Any] = None) -> Dict[
             "Content-Type": "application/json",
             "module-version": "1.0",
         }
-        response = requests.post(
+        response = await run_blocking(
+            requests.post,
             f"https://license.socfortress.co/{endpoint}",
             headers=HEADERS,
             json=data,

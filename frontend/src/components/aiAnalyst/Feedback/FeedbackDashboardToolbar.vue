@@ -79,7 +79,7 @@ async function bootstrapCustomers() {
 	customerBootstrapLoading.value = true
 
 	try {
-		const res = await Api.aiAnalyst.getAlertsWithReports()
+		const res = await Api.aiAnalyst.getAlertsWithReports({})
 		if (res.data.success) {
 			const codes = new Set((res.data.alerts || []).map(a => a.customer_code))
 			customerOptions.value = Array.from(codes)

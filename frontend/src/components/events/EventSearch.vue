@@ -150,7 +150,7 @@ function searchEvents() {
 	}
 
 	Api.siem
-		.queryEvents(params.customerCode, params.sourceName, apiParams)
+		.queryEvents({ customerCode: params.customerCode, sourceName: params.sourceName, params: apiParams })
 		.then(res => {
 			if (res.data.success) {
 				events.value = res.data.events || []
@@ -175,8 +175,10 @@ function loadMoreEvents() {
 	loadingMore.value = true
 
 	Api.siem
-		.queryEvents(params.customerCode, params.sourceName, {
-			scroll_id: scrollId.value
+		.queryEvents({
+			customerCode: params.customerCode,
+			sourceName: params.sourceName,
+			params: { scroll_id: scrollId.value }
 		})
 		.then(res => {
 			if (res.data.success) {

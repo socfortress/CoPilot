@@ -43,14 +43,18 @@ export interface GenerateReportPayload {
 export type ReportTimeRange = `${number}${RowPanelTimeUnit}`
 
 export default {
-	getOrgs() {
-		return HttpClient.get<FlaskBaseResponse & { orgs: Org[] }>(`/reporting/orgs`)
+	getOrgs(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { orgs: Org[] }>(`/reporting/orgs`, { signal })
 	},
-	getDashboards(orgId: string) {
-		return HttpClient.get<FlaskBaseResponse & { dashboards: Dashboard[] }>(`/reporting/dashboards/${orgId}`)
+	getDashboards(orgId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { dashboards: Dashboard[] }>(`/reporting/dashboards/${orgId}`, {
+			signal
+		})
 	},
-	getPanels(dashboardUID: string) {
-		return HttpClient.get<FlaskBaseResponse & { panels: Panel[] }>(`/reporting/dashboard_panels/${dashboardUID}`)
+	getPanels(dashboardUID: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { panels: Panel[] }>(`/reporting/dashboard_panels/${dashboardUID}`, {
+			signal
+		})
 	},
 	generatePanelsLinks(payload: PanelsLinksPayload) {
 		return HttpClient.post<FlaskBaseResponse & { links: PanelLink[] }>(`/reporting/generate_iframe_links`, payload)

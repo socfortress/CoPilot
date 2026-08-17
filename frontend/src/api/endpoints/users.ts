@@ -4,7 +4,7 @@ import { HttpClient } from "../http-client"
 import { searchLimitParams } from "../params"
 
 export default {
-	getUsers(query: { search?: string; limit?: number } = {}, signal?: AbortSignal) {
+	getUsers(query: { search?: string; limit?: number }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { users: User[] }>("/auth/users", {
 			params: searchLimitParams(query),
 			signal

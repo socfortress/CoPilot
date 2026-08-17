@@ -545,6 +545,11 @@ class CatalogStoryListResponse(BaseModel):
     success: bool = True
     message: str = "Stories listed successfully"
     stories: list[CatalogStoryRow] = Field(default_factory=list)
+    # True while a catalog cache is still being populated in the background. The
+    # UI must distinguish "nothing matched" from "not loaded yet": a cold cache
+    # returns an empty list, and presenting that as the answer would read as
+    # "this deployment has no detections" (#1072).
+    loading: bool = False
 
 
 class CatalogStoryDetection(BaseModel):
@@ -586,6 +591,11 @@ class CatalogStatsResponse(BaseModel):
     data_source_count: int = 0
     tactic_count: int = 0
     last_refresh: Optional[datetime] = None
+    # True while a catalog cache is still being populated in the background. The
+    # UI must distinguish "nothing matched" from "not loaded yet": a cold cache
+    # returns an empty list, and presenting that as the answer would read as
+    # "this deployment has no detections" (#1072).
+    loading: bool = False
     # Wazuh-side counts — mirror of the wazuh_rules_cache state. Optional /
     # defaulted so deployments that have never loaded the cache (or hit an
     # outage on first load) still get a valid response shape.

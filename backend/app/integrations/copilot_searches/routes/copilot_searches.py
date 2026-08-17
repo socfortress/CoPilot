@@ -117,6 +117,9 @@ from app.integrations.copilot_searches.services.copilot_searches import (
 )
 from app.integrations.copilot_searches.services.copilot_searches import rules_cache
 from app.integrations.copilot_searches.services.detection_catalog import (
+    catalog_is_loading,
+)
+from app.integrations.copilot_searches.services.detection_catalog import (
     get_catalog_stats,
 )
 from app.integrations.copilot_searches.services.detection_catalog import (
@@ -977,7 +980,7 @@ async def provision_graylog_alert(request: ProvisionGraylogAlertRequest):
 async def get_catalog_stats_endpoint() -> CatalogStatsResponse:
     try:
         stats = await get_catalog_stats()
-        return CatalogStatsResponse(**stats)
+        return CatalogStatsResponse(**stats, loading=catalog_is_loading())
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Failed to build catalog stats: {str(e)}")
 
@@ -998,6 +1001,7 @@ async def list_catalog_stories_endpoint(
     try:
         stories = filter_and_limit(await list_stories(), search_params, key=lambda story: story.get("name", ""))
         return CatalogStoryListResponse(
+            loading=catalog_is_loading(),
             success=True,
             message=f"Found {len(stories)} story(ies)",
             stories=stories,

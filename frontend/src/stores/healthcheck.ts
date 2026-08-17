@@ -6,6 +6,27 @@ import { InfluxDBAlertSeverity } from "@/types/healthchecks"
 import { IndexHealth } from "@/types/indices"
 import { useAuthStore } from "./auth"
 
+/**
+ * Owns the cancellation of this store's polling (#1072).
+ *
+ * These three checks feed the sidebar healthcheck indicator and the toolbar
+ * notification bell, which live *across* navigation — they are not page-scoped.
+ * Passing an explicit signal keeps them out of the router's navigation scope
+ * (a caller-supplied signal always wins), so changing page no longer kills the
+ * poll and blanks the indicator until the next interval tick.
+ *
+ * Kept outside `state` deliberately: an AbortController is not serialisable and
+ * has no business being reactive or persisted.
+ */
+let pollAbortController: AbortController | null = null
+
+function pollSignal(): AbortSignal {
+	if (!pollAbortController) {
+		pollAbortController = new AbortController()
+	}
+	return pollAbortController.signal
+}
+
 export const useHealthcheckStore = defineStore("healthcheck", {
 	state: () => ({
 		uncommittedJournalEntriesThreshold: _toNumber(import.meta.env.VITE_UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD),
@@ -19,7 +40,7 @@ export const useHealthcheckStore = defineStore("healthcheck", {
 	actions: {
 		getGraylogCheck() {
 			Api.graylog
-				.getMetrics()
+				.getMetrics(pollSignal())
 				.then(res => {
 					if (res.data.success) {
 						this.uncommittedJournalEntries = res.data.uncommitted_journal_entries || 0
@@ -33,7 +54,7 @@ export const useHealthcheckStore = defineStore("healthcheck", {
 		},
 		getClusterHealth() {
 			Api.wazuh.indices
-				.getClusterHealth()
+				.getClusterHealth(pollSignal())
 				.then(res => {
 					if (res.data.success) {
 						this.clusterName = res.data.cluster_health.cluster_name
@@ -50,11 +71,14 @@ export const useHealthcheckStore = defineStore("healthcheck", {
 		},
 		getHealthchecks() {
 			Api.healthchecks
-				.getHealthchecks({
-					days: 1,
-					status: "active",
-					exclude_ok: true
-				})
+				.getHealthchecks(
+					{
+						days: 1,
+						status: "active",
+						exclude_ok: true
+					},
+					pollSignal()
+				)
 				.then(res => {
 					if (res.data.success) {
 						// Filter to only show critical alerts
@@ -85,6 +109,10 @@ export const useHealthcheckStore = defineStore("healthcheck", {
 				clearInterval(this.getDataTimer)
 				this.getDataTimer = null
 			}
+			// Drop any poll still in flight, and arm a fresh controller for the next
+			// start() — an aborted signal stays aborted and would kill every retry.
+			pollAbortController?.abort()
+			pollAbortController = null
 		},
 
 		start() {

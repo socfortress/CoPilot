@@ -3,9 +3,10 @@ import type { AvailableContentPack, AvailableInfluxDbCheck, ProvisionedInfluxDbC
 import { HttpClient } from "../http-client"
 
 export default {
-	getAvailableContentPacks() {
+	getAvailableContentPacks(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { available_content_packs: AvailableContentPack[] }>(
-			`/stack_provisioning/graylog/available/content_packs`
+			`/stack_provisioning/graylog/available/content_packs`,
+			{ signal }
 		)
 	},
 	provisionContentPack(contentPackName: string) {
@@ -13,9 +14,10 @@ export default {
 			content_pack_name: contentPackName
 		})
 	},
-	getAvailableInfluxDbChecks() {
+	getAvailableInfluxDbChecks(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { available_checks: AvailableInfluxDbCheck[] }>(
-			`/stack_provisioning/influxdb/available/checks`
+			`/stack_provisioning/influxdb/available/checks`,
+			{ signal }
 		)
 	},
 	provisionInfluxDbCheck(checkName: string, overwrite: boolean = false) {

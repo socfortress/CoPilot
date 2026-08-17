@@ -285,7 +285,7 @@ async function handleSubmit() {
 
 onBeforeMount(async () => {
 	try {
-		const response = await Api.customers.getCustomers()
+		const response = await Api.customers.getCustomers({})
 		if (response.data.customers) {
 			customerOptions.value = response.data.customers.map((c: Customer) => ({
 				label: `${c.customer_name} (${c.customer_code})`,

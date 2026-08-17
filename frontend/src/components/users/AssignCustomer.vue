@@ -91,7 +91,7 @@ const customerOptions = computed(() =>
 async function loadCustomers() {
 	loadingCustomers.value = true
 	try {
-		const res = await Api.customers.getCustomers()
+		const res = await Api.customers.getCustomers({})
 		if (res.data.success && res.data.customers) {
 			customers.value = res.data.customers
 		}

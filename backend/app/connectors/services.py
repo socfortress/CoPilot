@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from werkzeug.utils import secure_filename
 
+from app.connectors import cache as connector_cache
 from app.connectors.cortex.utils.universal import verify_cortex_connection
 from app.connectors.grafana.utils.universal import verify_grafana_connection
 from app.connectors.graylog.utils.universal import verify_graylog_connection
@@ -383,6 +384,11 @@ class ConnectorServices:
                     session.add(connector)
                     await session.commit()
 
+                # After the commit, never before: a read racing an uncommitted
+                # write would otherwise repopulate the cache with the old row
+                # (#1072, level 4).
+                connector_cache.invalidate(connector.connector_name)
+
             else:
                 logger.error(
                     f"Connector type {connector_response.connector_name} is not supported",
@@ -434,6 +440,11 @@ class ConnectorServices:
             # Commit the changes to the database
             session.add(connector_record)
             await session.commit()
+
+            # This is the path that rotates a credential. A stale entry here
+            # means outbound calls keep using the old key for the whole TTL, so
+            # the invalidation is what makes the cache safe (#1072, level 4).
+            connector_cache.invalidate(connector_record.connector_name)
 
             # Convert the SQLModel object to a Pydantic model
             connector_response = ConnectorResponse.from_orm(connector_record)
@@ -493,6 +504,10 @@ class ConnectorServices:
                 connector_record.connector_api_key = file_path
                 session.add(connector_record)
                 await session.commit()
+
+                # `connector_api_key` holds the uploaded file's path here, and
+                # it is what callers read to find the credential (#1072).
+                connector_cache.invalidate(connector_record.connector_name)
 
                 connector_response = ConnectorResponse.from_orm(connector_record)
                 return connector_response

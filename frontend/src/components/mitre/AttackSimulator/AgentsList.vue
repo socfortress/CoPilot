@@ -75,7 +75,7 @@ function getList() {
 	loading.value = true
 
 	Api.agents
-		.getAgents()
+		.getAgents({})
 		.then(res => {
 			if (res.data.success) {
 				const tmpList = res.data?.agents || []

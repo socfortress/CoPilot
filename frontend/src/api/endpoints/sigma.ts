@@ -4,16 +4,20 @@ import { HttpClient } from "../http-client"
 
 export default {
 	/** client-side pagination (1k+ items) */
-	getAvailable() {
-		return HttpClient.get<FlaskBaseResponse & { sigma_queries: SigmaQuery[] }>(`/sigma/queries/available`)
+	getAvailable(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { sigma_queries: SigmaQuery[] }>(`/sigma/queries/available`, {
+			signal
+		})
 	},
 	/** client-side pagination (1k+ items) */
-	getActive() {
-		return HttpClient.get<FlaskBaseResponse & { sigma_queries: SigmaQuery[] }>(`/sigma/queries/active`)
+	getActive(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { sigma_queries: SigmaQuery[] }>(`/sigma/queries/active`, { signal })
 	},
 	/** client-side pagination (1k+ items) */
-	getInactive() {
-		return HttpClient.get<FlaskBaseResponse & { sigma_queries: SigmaQuery[] }>(`/sigma/queries/inactive`)
+	getInactive(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { sigma_queries: SigmaQuery[] }>(`/sigma/queries/inactive`, {
+			signal
+		})
 	},
 	downloadRules() {
 		return HttpClient.post<FlaskBaseResponse>(`/sigma/download`, {

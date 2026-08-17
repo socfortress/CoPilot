@@ -354,7 +354,7 @@ import {
 	NSpin,
 	useMessage
 } from "naive-ui"
-import { computed, defineAsyncComponent, nextTick, onBeforeMount, provide, ref, watch } from "vue"
+import { computed, defineAsyncComponent, nextTick, onBeforeMount, onBeforeUnmount, provide, ref, watch } from "vue"
 import Api from "@/api"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -697,5 +697,12 @@ onBeforeMount(() => {
 	getData()
 	getAvailableUsers()
 	getCases()
+})
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
 })
 </script>

@@ -7,18 +7,18 @@ export default {
 	investigate(payload: TalonInvestigateRequest) {
 		return HttpClient.post<FlaskBaseResponse & { data?: Record<string, unknown> }>(`/talon/investigate`, payload)
 	},
-	getStatus() {
-		return HttpClient.get<FlaskBaseResponse & { data?: Record<string, unknown> }>(`/talon/status`)
+	getStatus(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { data?: Record<string, unknown> }>(`/talon/status`, { signal })
 	},
-	getJob(alertId: number) {
-		return HttpClient.get<FlaskBaseResponse & { data?: TalonJobData }>(`/talon/jobs/${alertId}`)
+	getJob(alertId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { data?: TalonJobData }>(`/talon/jobs/${alertId}`, { signal })
 	},
 	/**
 	 * List the prompt templates available in NanoClaw's CoPilot group.
 	 * Used by the replay picker in the review UI — metadata only, no bodies.
 	 */
-	getTemplates() {
-		return HttpClient.get<FlaskBaseResponse & { templates: TalonTemplate[] }>(`/talon/templates`)
+	getTemplates(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { templates: TalonTemplate[] }>(`/talon/templates`, { signal })
 	},
 	/**
 	 * Stream a message to Talon via SSE.

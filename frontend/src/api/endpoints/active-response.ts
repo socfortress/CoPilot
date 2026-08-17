@@ -12,14 +12,16 @@ export interface InvokeRequest {
 }
 
 export default {
-	getSupported(agentId?: string) {
+	getSupported(query: { agentId?: string }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { supported_active_responses: SupportedActiveResponse[] }>(
-			`/active_response/supported${agentId ? `/${agentId}` : ""}`
+			`/active_response/supported${query.agentId ? `/${query.agentId}` : ""}`,
+			{ signal }
 		)
 	},
-	getDetails(activeResponseName: string) {
+	getDetails(activeResponseName: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { active_response: ActiveResponseDetails }>(
-			`/active_response/describe/${activeResponseName.toLowerCase()}`
+			`/active_response/describe/${activeResponseName.toLowerCase()}`,
+			{ signal }
 		)
 	},
 	invoke(params: InvokeRequest) {

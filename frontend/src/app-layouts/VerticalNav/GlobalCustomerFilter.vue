@@ -29,7 +29,7 @@
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import { NBadge, NSelect } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { computed, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
@@ -58,10 +58,19 @@ const selected = computed<string[]>({
 	set: (codes: string[]) => customerFilterStore.setSelected(codes)
 })
 
+// This filter lives in the layout, not in a page: it is mounted once and stays
+// for the whole session. Owning a controller keeps it out of the router's
+// navigation scope (#1072) — otherwise navigating while it loads would abort it
+// and leave the sidebar filter permanently empty, since nothing retries it.
+let abortController: AbortController | null = null
+
 function loadCustomers() {
+	abortController?.abort()
+	abortController = new AbortController()
+
 	loading.value = true
 	Api.customers
-		.getCustomers()
+		.getCustomers({}, abortController.signal)
 		.then(res => {
 			if (res.data.success) {
 				customersList.value = res.data.customers || []
@@ -85,4 +94,8 @@ watch(
 	},
 	{ immediate: true }
 )
+
+onBeforeUnmount(() => {
+	abortController?.abort()
+})
 </script>

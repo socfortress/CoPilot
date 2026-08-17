@@ -196,7 +196,7 @@ function getAgents() {
 
 	Api.agents
 		.getAgents(
-			customerCodesFilter.value.length ? { customerCodes: customerCodesFilter.value } : undefined,
+			customerCodesFilter.value.length ? { customerCodes: customerCodesFilter.value } : {},
 			abortController.signal
 		)
 		.then(res => {

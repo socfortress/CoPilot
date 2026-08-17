@@ -69,7 +69,7 @@ const cpu = ref<MetricsCpuData>({})
 async function reload() {
 	loading.value = true
 	try {
-		const res = await Api.metrics.getCpu(props.host, props.range)
+		const res = await Api.metrics.getCpu({ host: props.host, rangeH: props.range })
 		if (!res.data.success) {
 			message.warning(res.data.message || "Error fetching CPU metrics")
 			cpu.value = {}

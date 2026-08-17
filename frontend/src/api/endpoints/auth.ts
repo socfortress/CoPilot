@@ -17,7 +17,9 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse>(`/auth/delete/${userId}`)
 	},
 	refresh() {
-		return HttpClient.get<FlaskBaseResponse & { access_token: string; token_type: string }>("/auth/refresh")
+		return HttpClient.get<FlaskBaseResponse & { access_token: string; token_type: string }>("/auth/refresh", {
+			keepOnNavigation: true
+		})
 	},
 	/** need admin role */
 	resetPassword(username: string, password: string) {
@@ -43,11 +45,13 @@ export default {
 		return HttpClient.post<FlaskBaseResponse>(`/auth/users/${userId}/customers`, customerCodes)
 	},
 	/** need admin role */
-	getUserCustomerAccess(userId: number) {
-		return HttpClient.get<FlaskBaseResponse & { customer_codes: string[] }>(`/auth/users/${userId}/customers`)
+	getUserCustomerAccess(userId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { customer_codes: string[] }>(`/auth/users/${userId}/customers`, {
+			signal
+		})
 	},
 	/** get current user's accessible customers */
-	getMyCustomerAccess() {
-		return HttpClient.get<FlaskBaseResponse & { customer_codes: string[] }>("/auth/me/customers")
+	getMyCustomerAccess(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { customer_codes: string[] }>("/auth/me/customers", { signal })
 	}
 }

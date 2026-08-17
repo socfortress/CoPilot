@@ -58,6 +58,9 @@ from app.integrations.copilot_searches.schema.copilot_searches import SearchHit
 from app.integrations.copilot_searches.schema.copilot_searches import (
     SearchValidationError,
 )
+from app.integrations.copilot_searches.services.cache_support import (
+    BackgroundRefreshMixin,
+)
 from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionConfig,
 )
@@ -193,7 +196,7 @@ def category_from_path(file_path: str) -> str:
 # =============================================================================
 
 
-class RulesCache:
+class RulesCache(BackgroundRefreshMixin):
     """
     In-memory cache for detection rules fetched from GitHub.
 

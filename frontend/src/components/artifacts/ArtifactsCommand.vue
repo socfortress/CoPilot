@@ -212,7 +212,7 @@ function getAgents(cb?: (agents: Agent[]) => void) {
 	loadingAgents.value = true
 
 	Api.agents
-		.getAgents()
+		.getAgents({})
 		.then(res => {
 			if (res.data.success) {
 				agentsList.value = res.data.agents || []
@@ -236,7 +236,7 @@ function getArtifacts(cb?: (artifacts: Artifact[]) => void) {
 	loadingArtifacts.value = true
 
 	Api.artifacts
-		.getAll()
+		.getAll({})
 		.then(res => {
 			if (res.data.success) {
 				artifactsList.value = res.data.artifacts || []

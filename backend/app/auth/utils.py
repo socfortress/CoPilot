@@ -6,6 +6,7 @@ import bcrypt
 import jwt
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.security import SecurityScopes
 from loguru import logger
@@ -194,8 +195,31 @@ class AuthHandler:
         except jwt.InvalidTokenError:
             return "Invalid token", []
 
+    async def _resolve_user(self, request: Request, username: str):
+        """Look the user up once per request, however many dependencies ask.
+
+        FastAPI caches a dependency's result per request by *callable identity*,
+        and every `Security(AuthHandler().…)` builds a fresh instance — so a route
+        that both guards a scope and injects `current_user` resolved the same user
+        twice. Measured over one session (#1072 level 2): 214 identical
+        `SELECT … FROM user WHERE username = %s`, 29.1s, a fifth of all the time
+        the process spent talking to the database.
+
+        Scope checks deliberately stay outside this: only the *lookup* is shared,
+        never the authorisation decision.
+        """
+        cached = getattr(request.state, "copilot_current_user", None)
+        if cached is not None and cached.username == username:
+            return cached
+
+        user = await find_user(username)
+        if user is not None:
+            request.state.copilot_current_user = user
+        return user
+
     async def get_current_user(
         self,
+        request: Request,
         security_scopes: SecurityScopes,
         token: str = Depends(security),
     ):
@@ -254,7 +278,7 @@ class AuthHandler:
                 detail="Username not found in token",
                 headers={"WWW-Authenticate": authenticate_value},
             )
-        user = await find_user(username)
+        user = await self._resolve_user(request, username)
 
         if user is None:
             raise HTTPException(
@@ -297,7 +321,7 @@ class AuthHandler:
             Callable: The decorated function that checks if the token has any of the required scopes.
         """
 
-        async def _require_any_scope(token: str = Depends(self.security)):
+        async def _require_any_scope(request: Request, token: str = Depends(self.security)):
             if not token:
                 raise HTTPException(
                     status_code=401,
@@ -326,8 +350,12 @@ class AuthHandler:
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
-            # Verify user still exists in DB — prevents ghost-user token abuse
-            user = await find_user(username)
+            # Verify user still exists in DB — prevents ghost-user token abuse.
+            # Shared with get_current_user for the duration of the request: this is
+            # the dominant path (almost every route is scope-guarded), and it was
+            # doing its own lookup, which is why caching only get_current_user left
+            # the measured ratio at ~1.35 lookups per request (#1072 level 3).
+            user = await self._resolve_user(request, username)
             if user is None:
                 raise HTTPException(
                     status_code=401,

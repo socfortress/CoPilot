@@ -66,7 +66,7 @@ const processes = ref<MetricsProcessesData>({})
 async function reload() {
 	loading.value = true
 	try {
-		const res = await Api.metrics.getProcesses(props.host, props.range)
+		const res = await Api.metrics.getProcesses({ host: props.host, rangeH: props.range })
 		if (!res.data.success) {
 			message.warning(res.data.message || "Error fetching process metrics")
 			processes.value = {}

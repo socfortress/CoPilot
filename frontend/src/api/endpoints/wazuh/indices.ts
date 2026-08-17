@@ -28,10 +28,12 @@ function indicesParams(query?: IndicesQuery) {
 }
 
 export default {
-	getAllocation() {
-		return HttpClient.get<FlaskBaseResponse & { node_allocation: IndexAllocation[] }>("/wazuh_indexer/allocation")
+	getAllocation(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { node_allocation: IndexAllocation[] }>("/wazuh_indexer/allocation", {
+			signal
+		})
 	},
-	getIndices(query?: IndicesQuery, signal?: AbortSignal) {
+	getIndices(query: IndicesQuery, signal?: AbortSignal) {
 		const config = indicesParams(query)
 		const requestConfig = signal && config ? { ...config, signal } : signal ? { signal } : config
 
@@ -40,13 +42,15 @@ export default {
 			requestConfig
 		)
 	},
-	getShards() {
-		return HttpClient.get<FlaskBaseResponse & { shards: IndexShard[] }>("/wazuh_indexer/shards")
+	getShards(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { shards: IndexShard[] }>("/wazuh_indexer/shards", { signal })
 	},
-	getClusterHealth() {
-		return HttpClient.get<FlaskBaseResponse & { cluster_health: ClusterHealth }>("/wazuh_indexer/health")
+	getClusterHealth(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { cluster_health: ClusterHealth }>("/wazuh_indexer/health", {
+			signal
+		})
 	},
-	getIndicesSizePerCustomer(query?: IndicesQuery, signal?: AbortSignal) {
+	getIndicesSizePerCustomer(query: IndicesQuery, signal?: AbortSignal) {
 		const config = indicesParams(query)
 		const requestConfig = signal && config ? { ...config, signal } : signal ? { signal } : config
 

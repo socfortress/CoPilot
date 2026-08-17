@@ -23,19 +23,30 @@ export interface CancelSubscriptionPayload {
 
 export default {
 	getLicense() {
-		return HttpClient.get<FlaskBaseResponse & { license_key: LicenseKey }>(`/license/get_license`)
+		return HttpClient.get<FlaskBaseResponse & { license_key: LicenseKey }>(`/license/get_license`, {
+			keepOnNavigation: true
+		})
 	},
 	getSubscriptionFeatures() {
-		return HttpClient.get<FlaskBaseResponse & { features: SubscriptionFeature[] }>(`/license/subscription_features`)
+		return HttpClient.get<FlaskBaseResponse & { features: SubscriptionFeature[] }>(
+			`/license/subscription_features`,
+			{ keepOnNavigation: true }
+		)
 	},
 	verifyLicense() {
-		return HttpClient.get<FlaskBaseResponse & { license: License }>(`/license/verify_license`)
+		return HttpClient.get<FlaskBaseResponse & { license: License }>(`/license/verify_license`, {
+			keepOnNavigation: true
+		})
 	},
 	getLicenseFeatures() {
-		return HttpClient.get<FlaskBaseResponse & { features: LicenseFeatures[] }>(`/license/get_license_features`)
+		return HttpClient.get<FlaskBaseResponse & { features: LicenseFeatures[] }>(`/license/get_license_features`, {
+			keepOnNavigation: true
+		})
 	},
 	isFeatureEnabled(feature_name: LicenseFeatures) {
-		return HttpClient.get<FlaskBaseResponse & { enabled: boolean }>(`/license/is_feature_enabled/${feature_name}`)
+		return HttpClient.get<FlaskBaseResponse & { enabled: boolean }>(`/license/is_feature_enabled/${feature_name}`, {
+			keepOnNavigation: true
+		})
 	},
 	replaceLicense(license_key: LicenseKey) {
 		return HttpClient.post<FlaskBaseResponse>(`/license/replace_license_in_db`, {
