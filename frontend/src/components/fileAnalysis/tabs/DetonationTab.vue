@@ -187,7 +187,7 @@
 					<span class="text-secondary text-xs font-medium">Host activity — everything the sample did</span>
 					<n-button v-if="jobId" text size="tiny" :loading="downloadingReport" @click="downloadReport">
 						<template #icon><Icon :name="DownloadIcon" :size="14" /></template>
-						Full CAPE report (JSON)
+						Raw CAPE JSON (advanced)
 					</n-button>
 				</div>
 

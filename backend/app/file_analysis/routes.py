@@ -240,6 +240,43 @@ async def cape_report(job_id: str) -> JSONResponse:
     return JSONResponse(content=report)
 
 
+@file_analysis_router.get("/result/{job_id}/report.pdf", dependencies=[_ANALYST])
+async def report_pdf(job_id: str):
+    """A shareable PDF analyst report — file identity, verdict, static findings,
+    reputation, and detonation behaviour (with sandbox screenshots embedded).
+    Rendered on demand via the shared Jinja2 -> wkhtmltopdf pipeline.
+    """
+    job = await state_store.load_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="job not found")
+    result = await state_store.load_result(job["customer_code"], job.get("sha256", ""))
+    if not result:
+        raise HTTPException(status_code=404, detail="result not ready")
+
+    # Screenshots live on the sandbox, not in our stored result — fetch them on
+    # demand (best-effort; the report renders fine without them).
+    screenshots: list = []
+    task_id = ((result.get("sandbox") or {}).get("task_id"))
+    if task_id:
+        from app.file_analysis.services.sandbox import get_backend
+
+        try:
+            screenshots = await get_backend().get_screenshots(str(task_id))
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"screenshot fetch failed for job {job_id}: {exc}")
+
+    from app.file_analysis.services import report_pdf as report_pdf_service
+
+    try:
+        return report_pdf_service.generate_report_pdf(result, screenshots=screenshots)
+    except FileNotFoundError as exc:
+        # wkhtmltopdf missing on this host — actionable message, not a 500.
+        raise HTTPException(status_code=503, detail=f"PDF renderer unavailable: {exc}")
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"PDF report generation failed for job {job_id}: {exc}")
+        raise HTTPException(status_code=500, detail=f"could not generate the PDF report: {exc}")
+
+
 @file_analysis_router.delete("/analysis/{job_id}", response_model=DeleteResponse, dependencies=[_ANALYST])
 async def delete_analysis(job_id: str) -> DeleteResponse:
     """Delete a stored analysis (result, summary, previews, job) so the history
@@ -285,31 +322,3 @@ async def search(sha256: str, customer_code: str | None = None) -> SearchRespons
         return SearchResponse(job_id=None, message="customer_code required for cache lookup")
     job_id = await state_store.find_cached_job_id(customer_code, sha256)
     return SearchResponse(job_id=job_id, message="cache hit" if job_id else "not analyzed")
-
-
-@file_analysis_router.post("/job/{job_id}/interactive", dependencies=[_ANALYST])
-async def interactive(job_id: str) -> dict:
-    """Open CAPE's interactive VNC console for the analysis guest.
-
-    Uses the per-VM console (``/guac/direct/vnc/<vm>/``), which boots the guest
-    on demand and streams its desktop — so it doesn't require this job to have
-    detonated first. The guest defaults to route ``none`` (no internet).
-    """
-    job = await state_store.load_job(job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="job not found")
-    try:
-        from app.file_analysis.services.sandbox import get_backend
-
-        backend = get_backend()
-        if not await backend.available():
-            raise HTTPException(status_code=409, detail="sandbox not enabled")
-        url = await backend.interactive_url(job.get("sha256", job_id))
-    except HTTPException:
-        raise
-    except Exception as exc:
-        logger.error(f"interactive session failed: {exc}")
-        raise HTTPException(status_code=502, detail="could not start interactive session")
-    if not url:
-        raise HTTPException(status_code=409, detail="interactive sessions not supported by this backend")
-    return {"success": True, "message": "session ready", "guac_url": url}

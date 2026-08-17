@@ -76,5 +76,5 @@ class SandboxBackend(Protocol):
     async def get_report(self, job_ref: str) -> dict:
         ...
 
-    async def interactive_url(self, job_ref: str) -> Optional[str]:
+    async def get_screenshots(self, job_ref: str, limit: int = 24) -> list[bytes]:
         ...

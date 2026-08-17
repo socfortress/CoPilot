@@ -89,9 +89,6 @@
 					<n-tab-pane name="network" tab="Network" display-directive="show:lazy">
 						<NetworkTab :sandbox="result?.sandbox" :loading="loadingResult" />
 					</n-tab-pane>
-					<n-tab-pane name="live" tab="Live Session" display-directive="show:lazy">
-						<LiveSessionTab :job-id />
-					</n-tab-pane>
 				</template>
 				<!-- No sandbox → explain why the detonation tabs are absent -->
 				<n-tab-pane v-else-if="job" name="sandbox-setup" tab="Sandbox Setup" display-directive="show:lazy">
@@ -125,7 +122,6 @@ const MetadataTab = defineAsyncComponent(() => import("@/components/fileAnalysis
 const DetonationTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/DetonationTab.vue"))
 const VirusTotalTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/VirusTotalTab.vue"))
 const NetworkTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/NetworkTab.vue"))
-const LiveSessionTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/LiveSessionTab.vue"))
 
 const route = useRoute()
 const message = useMessage()

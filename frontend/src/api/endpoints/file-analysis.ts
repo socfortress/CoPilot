@@ -69,11 +69,6 @@ export default {
 		})
 	},
 
-	/** Start (or reuse) an interactive detonation session; returns a Guacamole iframe URL. */
-	startInteractive(jobId: string) {
-		return HttpClient.post<FlaskBaseResponse & { guac_url: string }>(`/file-analysis/job/${jobId}/interactive`)
-	},
-
 	/** Recent analyses for a customer (newest first) — powers the history table. */
 	getHistory(customerCode: string, limit = 50) {
 		return HttpClient.get<FlaskBaseResponse & { items: FileAnalysisHistoryItem[] }>(`/file-analysis/history`, {
@@ -89,5 +84,10 @@ export default {
 	/** The COMPLETE raw CAPE report (every API call + all behaviour), fetched on demand. */
 	getCapeReport(jobId: string) {
 		return HttpClient.get<Record<string, unknown>>(`/file-analysis/result/${jobId}/cape-report`)
+	},
+
+	/** A shareable PDF analyst report (verdict + static + reputation + detonation, screenshots embedded). */
+	getReportPdf(jobId: string) {
+		return HttpClient.get<Blob>(`/file-analysis/result/${jobId}/report.pdf`, { responseType: "blob" })
 	}
 }

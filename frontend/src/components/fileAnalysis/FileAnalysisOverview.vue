@@ -18,6 +18,16 @@
 				<template #icon><Icon :name="ShieldIcon" :size="12" /></template>
 				isolated
 			</n-tag>
+			<n-button
+				v-if="job?.job_id"
+				size="small"
+				secondary
+				:loading="downloadingPdf"
+				@click="downloadPdf"
+			>
+				<template #icon><Icon :name="DownloadIcon" :size="14" /></template>
+				PDF report
+			</n-button>
 		</div>
 
 		<!-- Why this verdict — makes tier disagreement visible instead of a bare label -->
@@ -65,7 +75,8 @@
 <script setup lang="ts">
 import type { FileAnalysisJob, FileAnalysisVerdict, InspectorResult } from "@/types/file-analysis"
 import { NButton, NDivider, NTag, useMessage } from "naive-ui"
-import { computed } from "vue"
+import { computed, ref } from "vue"
+import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
@@ -81,6 +92,28 @@ const ShieldIcon = "carbon:security"
 const CopyIcon = "carbon:copy"
 const ClockIcon = "carbon:time"
 const ReasonIcon = "carbon:information"
+const DownloadIcon = "carbon:document-pdf"
+
+const downloadingPdf = ref(false)
+function downloadPdf() {
+	const id = props.job?.job_id
+	if (!id || downloadingPdf.value) return
+	downloadingPdf.value = true
+	Api.fileAnalysis
+		.getReportPdf(id)
+		.then(res => {
+			const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }))
+			const a = document.createElement("a")
+			a.href = url
+			a.download = `file-analysis-${id}.pdf`
+			a.click()
+			URL.revokeObjectURL(url)
+		})
+		.catch(() => message.error("Could not generate the PDF report. Is the PDF renderer installed on the host?"))
+		.finally(() => {
+			downloadingPdf.value = false
+		})
+}
 
 const verdict = computed<FileAnalysisVerdict>(() => props.job?.verdict || (props.result?.verdict_hint as FileAnalysisVerdict) || "clean")
 const hardened = computed(() => props.job?.hardened ?? props.result?.hardened)

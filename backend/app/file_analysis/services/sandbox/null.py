@@ -27,5 +27,5 @@ class NullBackend:
     async def get_report(self, job_ref: str) -> dict:
         raise NotEnabled("SANDBOX_BACKEND=none: detonation is disabled")
 
-    async def interactive_url(self, job_ref: str) -> Optional[str]:
-        return None
+    async def get_screenshots(self, job_ref: str, limit: int = 24) -> list[bytes]:
+        return []

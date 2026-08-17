@@ -11,7 +11,7 @@
 		     on the landing page the state is unknown, so we claim nothing. -->
 		<n-alert v-if="sandboxEnabled === false" type="warning" :bordered="false" class="text-sm">
 			<template #header>Sandbox not reachable for this analysis</template>
-			CoPilot couldn't reach a CAPE backend, so the Detonation / Network / Live Session tabs stay empty. That's
+			CoPilot couldn't reach a CAPE backend, so the Detonation / Network tabs stay empty. That's
 			expected until you finish the steps below.
 		</n-alert>
 		<n-alert v-else-if="sandboxEnabled === true" type="success" :bordered="false" class="text-sm">
@@ -114,7 +114,7 @@
 				<div class="flex flex-col gap-2 text-sm">
 					<CodeBlock title="Add to CoPilot's .env, then restart the backend" :code="envWiring" />
 					<p class="text-secondary text-xs">
-						On restart the Detonation / Network / Live Session tabs activate and this page flips to
+						On restart the Detonation / Network tabs activate and this page flips to
 						"Sandbox connected". Verify with
 						<code>GET {{ '{CAPE_API_URL}' }}/cuckoo/status/</code>.
 					</p>
@@ -122,28 +122,7 @@
 			</n-collapse-item>
 
 			<!-- 6 -->
-			<n-collapse-item name="guac" title="6. Optional — live interactive VNC session">
-				<div class="flex flex-col gap-3 text-sm">
-					<p>
-						The <b>Live Session</b> tab streams the guest's desktop through CAPE's Guacamole console, booting
-						it on demand and defaulting its route to <b>none (no internet)</b>.
-					</p>
-					<CodeBlock title="Install the Guacamole daemon" :code="guacInstall" />
-					<CodeBlock title="conf/web.conf → [guacamole]" :code="guacConf" />
-					<n-alert type="warning" :bordered="false" class="text-xs">
-						<template #header>cape-web must run under ASGI, or the screen never draws</template>
-						The pixel stream is a Django Channels websocket at
-						<code>/guac/websocket-tunnel/</code>. The stock unit runs <code>runserver_plus</code> (WSGI),
-						which 404s that route — the console then shows
-						<code>guac error 519</code>. Override the unit to use the ASGI runserver.
-					</n-alert>
-					<CodeBlock title="systemd drop-in: serve ASGI (daphne)" :code="daphneOverride" />
-					<CodeBlock title="Then add to CoPilot's .env" :code="guacEnv" />
-				</div>
-			</n-collapse-item>
-
-			<!-- 7 -->
-			<n-collapse-item name="safety" title="7. Network isolation — required before real malware">
+			<n-collapse-item name="safety" title="6. Network isolation — required before real malware">
 				<div class="flex flex-col gap-2 text-sm">
 					<n-alert type="error" :bordered="false" class="text-sm">
 						<template #header>Do not detonate real malware until this is done</template>
@@ -231,33 +210,4 @@ CAPE_TASK_TIMEOUT=120
 CAPE_POLL_INTERVAL=15
 CAPE_POLL_TIMEOUT=1800`
 
-const guacInstall = `apt install -y guacd
-systemctl enable --now guacd
-ss -ltnp | grep 4822        # guacd listening on 127.0.0.1:4822
-mkdir -p /opt/CAPEv2/storage/guacrecordings && chown cape:cape /opt/CAPEv2/storage/guacrecordings`
-
-const guacConf = `# /opt/CAPEv2/conf/web.conf → [guacamole]
-enabled = yes
-vnc_console_enabled = yes    # NOTE: this key appears further down the section —
-                             # make sure there is exactly ONE of it, or Python's
-                             # ConfigParser raises DuplicateOptionError and cape-web
-                             # refuses to start.
-mode = vnc
-guacd_host = localhost
-guacd_port = 4822
-vnc_host = localhost`
-
-const daphneOverride = `mkdir -p /etc/systemd/system/cape-web.service.d
-cat > /etc/systemd/system/cape-web.service.d/override.conf <<'EOF'
-[Service]
-ExecStart=
-ExecStart=/etc/poetry/bin/poetry run python manage.py runserver 0.0.0.0:8000 --noreload
-EOF
-systemctl daemon-reload && systemctl restart cape-web
-
-# confirm: the log should say  daphne.server: Listening on TCP address 0.0.0.0:8000
-journalctl -u cape-web -n 15 --no-pager`
-
-const guacEnv = `CAPE_GUAC_BASE=http://<cape-host>:8000
-CAPE_GUAC_VM_LABEL=guest_windows`
 </script>

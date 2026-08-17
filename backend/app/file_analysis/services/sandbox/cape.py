@@ -13,8 +13,10 @@ retries on transient errors; a 401 is surfaced clearly (bad/expired token).
 from __future__ import annotations
 
 import asyncio
-import base64
+import io
 import os
+import zipfile
+from typing import List
 from typing import Optional
 
 import httpx
@@ -35,7 +37,6 @@ class CapeBackend:
     def __init__(self) -> None:
         self.base_url = os.getenv("CAPE_API_URL", "http://cape-host:8000/apiv2").rstrip("/")
         self.token = os.getenv("CAPE_API_TOKEN", "")
-        self.guac_base = os.getenv("CAPE_GUAC_BASE", "").rstrip("/")
 
     def _headers(self) -> dict:
         headers = {}
@@ -115,25 +116,28 @@ class CapeBackend:
         resp = await self._request("GET", f"/tasks/get/report/{job_ref}/json/")
         return resp.json()
 
-    async def interactive_url(self, job_ref: str) -> Optional[str]:
-        """Return CAPE's interactive VNC-console URL for the analysis guest.
+    async def get_screenshots(self, job_ref: str, limit: int = 24) -> List[bytes]:
+        """Return up to ``limit`` detonation screenshots as raw JPEG bytes.
 
-        Uses CAPE's ``guac`` app "VNC Console" endpoint (``/guac/direct/vnc/<vm>/``)
-        rather than the per-task ``/guac/<task_id>/<session_data>/`` watch mode.
-        The console boots the guest on demand, streams its desktop over guacd, and
-        **defaults the guest route to ``none`` (no internet)** — the safest option
-        while network isolation is still pending. ``job_ref`` is unused here (the
-        console is per-VM, not per-task) but kept for the interface + a future
-        live-watch mode. Requires ``vnc_console_enabled = yes`` in web.conf.
+        CAPE serves all shots for a task as one zip (`/tasks/get/screenshot/<id>/`);
+        we fetch it once and unzip in memory. Best-effort — any failure (no shots,
+        backend hiccup) returns an empty list so the report still renders.
         """
-        if not self.guac_base:
-            return None
-        vm_label = os.getenv("CAPE_GUAC_VM_LABEL", "capewin")
-        return f"{self.guac_base}/guac/direct/vnc/{vm_label}/"
-
-    def guac_url(self, task_id: str, session_id: str, vm_label: str, guest_ip: str) -> str:
-        session_data = base64.urlsafe_b64encode(f"{session_id}|{vm_label}|{guest_ip}".encode()).decode()
-        return f"{self.guac_base}/guac/{task_id}/{session_data}"
+        try:
+            resp = await self._request("GET", f"/tasks/get/screenshot/{job_ref}/")
+            if resp.status_code != 200 or "zip" not in resp.headers.get("content-type", ""):
+                return []
+            shots: List[bytes] = []
+            with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
+                for name in sorted(zf.namelist()):
+                    if name.lower().endswith((".jpg", ".jpeg", ".png")):
+                        shots.append(zf.read(name))
+                        if len(shots) >= limit:
+                            break
+            return shots
+        except Exception as exc:  # noqa: BLE001 — screenshots are non-essential
+            logger.warning(f"CAPE screenshot fetch failed for task {job_ref}: {exc}")
+            return []
 
 
 def summarize(report: dict) -> CapeSummary:

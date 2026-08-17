@@ -1,11 +1,9 @@
-"""Sandbox backend tests — factory selection, summarize(), guac URL.
+"""Sandbox backend tests — factory selection, summarize().
 
 Pure: no CAPE server contacted. The report fixture is a trimmed recorded CAPE
 JSON shape (see CLAUDE.md -> File Analysis).
 """
 from __future__ import annotations
-
-import base64
 
 import pytest
 
@@ -41,7 +39,6 @@ def test_remote_selects_cape(monkeypatch):
 async def test_null_backend_unavailable():
     backend = NullBackend()
     assert await backend.available() is False
-    assert await backend.interactive_url("x") is None
 
 
 def test_package_mapping():
@@ -71,13 +68,3 @@ def test_summarize_extracts_family_c2_mitre():
     assert "evil.example.com" in summary.c2_domains
     assert any("T1055" in s["mitre"] for s in summary.signatures)
     assert summary.dropped[0]["sha256"] == "a" * 64
-
-
-def test_guac_url_format():
-    backend = CapeBackend()
-    backend.guac_base = "https://cape.example"
-    url = backend.guac_url("100", "sess", "win10", "10.0.0.5")
-    assert url.startswith("https://cape.example/guac/100/")
-    encoded = url.rsplit("/", 1)[-1]
-    decoded = base64.urlsafe_b64decode(encoded).decode()
-    assert decoded == "sess|win10|10.0.0.5"
