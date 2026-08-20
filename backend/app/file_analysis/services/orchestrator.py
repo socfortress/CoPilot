@@ -267,8 +267,16 @@ async def _resolve_sample(job: AnalysisJob, refs: Optional[Dict[str, Any]]) -> O
             return None
         job.sha256 = local.sha256
         job.filename = local.original_filename
-        with open(local.path, "rb") as fh:
-            return fh.read()
+        # Read the collected bytes into memory, then delete the scratch file so the
+        # customer's file never lingers on the CoPilot host's disk.
+        try:
+            with open(local.path, "rb") as fh:
+                return fh.read()
+        finally:
+            try:
+                os.remove(local.path)
+            except OSError:
+                pass
     except Exception as exc:
         logger.error(f"sample resolve failed: {exc}")
         return None
@@ -316,40 +324,26 @@ def _should_escalate(inspector: Dict[str, Any], source: str) -> bool:
 
 
 async def _detonate(sample_bytes: bytes, inspector: Dict[str, Any], job: AnalysisJob) -> Optional[Dict[str, Any]]:
-    import tempfile
-
     from app.file_analysis.services.sandbox import get_backend
     from app.file_analysis.services.sandbox import package_for  # noqa: F401 (kept for explicit-package override)
     from app.file_analysis.services.sandbox.cape import summarize
 
     backend = get_backend()
-    tmp = None
     try:
-        import os as _os
-
-        fd, tmp = tempfile.mkstemp(prefix="deto_")
-        with _os.fdopen(fd, "wb") as fh:
-            fh.write(sample_bytes)
         existing = await backend.find_by_sha256(job.sha256)
         # Empty package => CAPE auto-detects the sample and routes it to a matching
-        # guest (robust across Linux + Windows guests). Set CAPE_PACKAGE to force one
-        # (e.g. package_for(filetype) once a Windows guest is added).
+        # guest (robust across Linux + Windows guests). Set CAPE_PACKAGE to force one.
         package = os.getenv("CAPE_PACKAGE", "").strip()
-        ref = existing or await backend.submit(tmp, package, job.customer_code, job.source)
+        filename = job.filename or inspector.get("filename") or job.sha256
+        # Bytes stream straight from memory into the CAPE POST — the sample never
+        # lands on the CoPilot host's disk.
+        ref = existing or await backend.submit(sample_bytes, filename, package, job.customer_code, job.source)
         await backend.wait_for_report(ref)
         report = await backend.get_report(ref)
         return summarize(report).to_dict()
     except Exception as exc:
         logger.error(f"detonation failed for {job.sha256[:12]}: {exc}")
         return None
-    finally:
-        if tmp:
-            try:
-                import os as _os
-
-                _os.remove(tmp)
-            except OSError:
-                pass
 
 
 async def _submit_and_patch(

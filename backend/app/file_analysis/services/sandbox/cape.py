@@ -87,10 +87,11 @@ class CapeBackend:
                     return str(task.get("id") or task.get("task_id") or "")
         return None
 
-    async def submit(self, local_file: str, package: str, customer_code: str, source_flow: str) -> str:
+    async def submit(self, sample: bytes, filename: str, package: str, customer_code: str, source_flow: str) -> str:
+        """Submit the sample bytes straight to CAPE — the file never touches the
+        CoPilot host's disk (streamed from memory into the multipart POST)."""
         custom = f"{customer_code}|{source_flow}"
-        with open(local_file, "rb") as fh:
-            files = {"file": (os.path.basename(local_file), fh.read())}
+        files = {"file": (filename or "sample", sample)}
         data = {"package": package, "custom": custom, "timeout": os.getenv("CAPE_TASK_TIMEOUT", "120")}
         resp = await self._request("POST", "/tasks/create/file/", files=files, data=data)
         payload = resp.json()

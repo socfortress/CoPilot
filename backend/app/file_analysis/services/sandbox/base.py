@@ -67,7 +67,7 @@ class SandboxBackend(Protocol):
     async def find_by_sha256(self, sha256: str) -> Optional[str]:
         ...
 
-    async def submit(self, local_file: str, package: str, customer_code: str, source_flow: str) -> str:
+    async def submit(self, sample: bytes, filename: str, package: str, customer_code: str, source_flow: str) -> str:
         ...
 
     async def wait_for_report(self, job_ref: str) -> None:

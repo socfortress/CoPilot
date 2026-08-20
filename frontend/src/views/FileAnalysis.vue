@@ -1,14 +1,7 @@
 <template>
 	<div class="page">
-		<!-- No job selected → submit / upload panel + the sandbox setup guide -->
-		<n-tabs v-if="!jobId" type="line" animated>
-			<n-tab-pane name="analyze" tab="Analyze" display-directive="show:lazy">
-				<FileAnalysisSubmit />
-			</n-tab-pane>
-			<n-tab-pane name="sandbox-setup" tab="Sandbox Setup" display-directive="show:lazy">
-				<SandboxSetupGuide />
-			</n-tab-pane>
-		</n-tabs>
+		<!-- No job selected → submit / upload panel -->
+		<FileAnalysisSubmit v-if="!jobId" />
 
 		<div v-else class="flex flex-col gap-4 md:flex-row md:items-start">
 			<!-- Batch sidebar — when several files were analyzed together -->
@@ -90,10 +83,6 @@
 						<NetworkTab :sandbox="result?.sandbox" :loading="loadingResult" />
 					</n-tab-pane>
 				</template>
-				<!-- No sandbox → explain why the detonation tabs are absent -->
-				<n-tab-pane v-else-if="job" name="sandbox-setup" tab="Sandbox Setup" display-directive="show:lazy">
-					<SandboxSetupGuide :sandbox-enabled="false" />
-				</n-tab-pane>
 			</n-tabs>
 			</div>
 		</div>
@@ -112,7 +101,6 @@ import FileAnalysisBatchList from "@/components/fileAnalysis/FileAnalysisBatchLi
 import FileAnalysisOverview from "@/components/fileAnalysis/FileAnalysisOverview.vue"
 import FileAnalysisSubmit from "@/components/fileAnalysis/FileAnalysisSubmit.vue"
 import ReputationCard from "@/components/fileAnalysis/ReputationCard.vue"
-import SandboxSetupGuide from "@/components/fileAnalysis/SandboxSetupGuide.vue"
 import { getApiErrorMessage } from "@/utils"
 
 const PreviewTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/PreviewTab.vue"))
