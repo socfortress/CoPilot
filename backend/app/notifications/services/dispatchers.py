@@ -48,6 +48,17 @@ ShuffleDispatchResult = Tuple[str, Optional[str], int, Optional[str]]
 # stall the dispatch loop indefinitely.
 _SHUFFLE_TIMEOUT_S = 30.0
 
+# Shuffle is very often self-hosted behind a self-signed certificate or an
+# internal CA the backend container has no trust store for (GitHub issue
+# #1087). The legacy Shuffle connector
+# (`app/connectors/shuffle/utils/universal.py`) has always called with
+# `verify=False`; the Notification Routes dispatchers must match it, or the
+# same deployment that verifies fine on the connector page dies with
+# `CERTIFICATE_VERIFY_FAILED` on org/app lookup and dispatch. Shuffle carries
+# an API key on every call, so the TLS layer is transport privacy here, not
+# the authentication boundary.
+_SHUFFLE_VERIFY_SSL = False
+
 # Webhook delivery is fire-and-record like Shuffle. 15s is plenty for a
 # healthy automation endpoint (most respond in well under a
 # second); a slow target shouldn't stall the whole dispatch loop.
@@ -333,7 +344,7 @@ async def dispatch_shuffle(
     logger.info(f"Dispatching payload to Shuffle body: {body}")
     started = time.monotonic()
     try:
-        async with httpx.AsyncClient(timeout=_SHUFFLE_TIMEOUT_S, http2=True) as client:
+        async with httpx.AsyncClient(timeout=_SHUFFLE_TIMEOUT_S, http2=True, verify=_SHUFFLE_VERIFY_SSL) as client:
             response = await client.post(url, headers=_shuffle_headers(api_key, org_id), json=body)
         latency_ms = int((time.monotonic() - started) * 1000)
 
@@ -388,7 +399,7 @@ async def list_shuffle_apps(
     """
     url = f"{base_url.rstrip('/')}/api/v1/apps"
     try:
-        async with httpx.AsyncClient(timeout=_SHUFFLE_TIMEOUT_S, http2=True) as client:
+        async with httpx.AsyncClient(timeout=_SHUFFLE_TIMEOUT_S, http2=True, verify=_SHUFFLE_VERIFY_SSL) as client:
             response = await client.get(url, headers=_shuffle_headers(api_key, org_id))
         if response.status_code in (401, 403):
             return (False, [], f"Shuffle authentication failed ({response.status_code})")
@@ -448,7 +459,7 @@ async def list_shuffle_orgs(
         "Accept": "application/json",
     }
     try:
-        async with httpx.AsyncClient(timeout=_SHUFFLE_TIMEOUT_S, http2=True) as client:
+        async with httpx.AsyncClient(timeout=_SHUFFLE_TIMEOUT_S, http2=True, verify=_SHUFFLE_VERIFY_SSL) as client:
             response = await client.get(url, headers=headers)
         if response.status_code in (401, 403):
             return (False, [], f"Shuffle authentication failed ({response.status_code})")
