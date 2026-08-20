@@ -113,3 +113,23 @@ What to check:
 - CoPilot: Velociraptor connector status
 - Velociraptor: client visibility
 - CoPilot: agent metadata has velociraptor identifiers
+
+### Velociraptor multi-org: agents healthy but flows/artifacts fail
+
+Symptom: agents in a non-`root` Velociraptor org show as healthy and the connector is
+verified, but flows and artifact collection fail for them. Root-org agents work normally.
+
+Likely cause: the Velociraptor API user CoPilot authenticates as has no role in the child
+org. A `root` administrator is **not** implicitly an administrator in child orgs. Org
+enumeration runs at root and succeeds, so the gap only shows on org-scoped queries.
+
+What to check:
+- CoPilot returns `403` with `Velociraptor denied the query for org '<ORGID>'` — that is
+  Velociraptor refusing, not CoPilot failing
+- On the Velociraptor server, grant the API user a role **per org**:
+
+```
+SELECT user_grant(user='<copilot api user>', roles='administrator', orgs=['<ORGID>']) FROM scope()
+```
+
+Repeat for every tenant org. Then re-run the agent sync.

@@ -21,7 +21,17 @@ from fastapi import HTTPException
 # Velociraptor client IDs are "C." followed by hex (e.g. C.475df76785008b04). The literal
 # "server" addresses the Velociraptor server itself and is used by built-in server
 # artifacts (e.g. Server.Utils.DeleteClient).
-_CLIENT_ID_PATTERN = re.compile(r"^(server|C\.[0-9A-Fa-f]+)$")
+#
+# In a multi-org deployment Velociraptor reports a client's id *within an org* with the org
+# appended -- "C.<hex>-<ORGID>" -- and that suffixed form is the one the server matches on:
+# flows(client_id='C.aaaaaaaaaaaaaaaa') returns nothing where
+# flows(client_id='C.aaaaaaaaaaaaaaaa-OXXXXXXX') returns the flow. `sync_agents_velociraptor`
+# stores exactly what clients() reports, so agents outside the root org carry the suffixed id
+# and the un-suffixed pattern rejected CoPilot's own stored value (GitHub issue #1015).
+# The optional suffix uses the same character class as _ORG_ID_PATTERN below, so this widens
+# an accepted *format* without admitting any of the quote/backtick/brace/backslash/whitespace
+# characters the validator exists to reject (GHSA-5542-j2fc-gqjm).
+_CLIENT_ID_PATTERN = re.compile(r"^(server|C\.[0-9A-Fa-f]+(-[A-Za-z0-9._-]+)?)$")
 
 # Org IDs are "root" (the default org) or generated ids like "O1234ABCD".
 _ORG_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -42,7 +52,7 @@ _VQL_BREAKOUT_CHARS = ("'", '"', "`", "\\", "\n", "\r")
 
 
 def validate_client_id(value: str) -> str:
-    """Validate a Velociraptor client/agent id ("C.<hex>" or "server")."""
+    """Validate a Velociraptor client/agent id ("C.<hex>", "C.<hex>-<ORGID>", or "server")."""
     if not isinstance(value, str) or not _CLIENT_ID_PATTERN.fullmatch(value):
         raise HTTPException(status_code=400, detail="Invalid Velociraptor client id")
     return value
