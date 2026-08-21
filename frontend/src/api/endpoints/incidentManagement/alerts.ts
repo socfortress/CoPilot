@@ -8,7 +8,9 @@ import type {
 	AlertsFilter,
 	AlertStatus,
 	AlertTag,
-	AlertTimeline
+	AlertTimeline,
+	AlertVerdict,
+	FalsePositiveReason
 } from "@/types/incidentManagement/alerts"
 import _castArray from "lodash/castArray"
 import { HttpClient } from "../../http-client"
@@ -111,6 +113,12 @@ export default {
 						case "tag":
 							params.tags = _castArray(filter.value)
 							break
+						case "verdict":
+							params.verdict = filter.value
+							break
+						case "verdictReason":
+							params.verdict_reason = filter.value
+							break
 						default:
 							params[filter.type] = filter.value
 							break
@@ -168,6 +176,21 @@ export default {
 		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/alert/status`, {
 			alert_id: alertId,
 			status
+		})
+	},
+	updateAlertVerdict(
+		alertId: number,
+		verdict: AlertVerdict | null,
+		verdictReason?: FalsePositiveReason | null,
+		verdictNote?: string | null
+	) {
+		// A null verdict clears the classification back to untriaged; the backend wipes the
+		// reason, note and attribution alongside it.
+		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/alert/verdict`, {
+			alert_id: alertId,
+			verdict,
+			verdict_reason: verdict === "FALSE_POSITIVE" ? verdictReason : null,
+			verdict_note: verdict ? (verdictNote ?? null) : null
 		})
 	},
 	updateAlertAssignedUser(alertId: number, user: string) {

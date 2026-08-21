@@ -103,6 +103,7 @@ from app.incidents.schema.db_operations import SocfortressRecommendsWazuhIoCFiel
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhResponse
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhTimeFieldName
 from app.incidents.schema.db_operations import UpdateAlertStatus
+from app.incidents.schema.db_operations import UpdateAlertVerdict
 from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
@@ -234,6 +235,7 @@ from app.incidents.services.db_operations import report_template_exists
 from app.incidents.services.db_operations import update_alert_assigned_to
 from app.incidents.services.db_operations import update_alert_escalated
 from app.incidents.services.db_operations import update_alert_status
+from app.incidents.services.db_operations import update_alert_verdict
 from app.incidents.services.db_operations import update_case_assigned_to
 from app.incidents.services.db_operations import update_case_customer_code
 from app.incidents.services.db_operations import update_case_escalated
@@ -573,6 +575,62 @@ async def update_alert_status_endpoint(
     # caller who is not entitled to it (GHSA-wjpw-xrg8-vmf9).
     await _ensure_alert_access(alert_status.alert_id, current_user, db)
     return AlertResponse(alert=await update_alert_status(alert_status, db), success=True, message="Alert status updated successfully")
+
+
+@incidents_db_operations_router.put(
+    "/alert/verdict",
+    response_model=AlertResponse,
+    description="Set, change or clear an alert's triage verdict (true positive / false positive)",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def update_alert_verdict_endpoint(
+    alert_verdict: UpdateAlertVerdict,
+    request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Record an analyst's triage verdict on an alert (GitHub issue #1085).
+
+    Scoped to admin/analyst, deliberately narrower than the sibling `/alert/status` route
+    which also admits `customer_user`. The verdict feeds SOC quality metrics and detection
+    tuning, so the set of people who can move those numbers is kept to the SOC. Widening
+    it later is a one-word change; narrowing it after release would break callers.
+    """
+    # Enforce per-object ownership: resolve the alert's customer and reject a
+    # caller who is not entitled to it (GHSA-wjpw-xrg8-vmf9).
+    await _ensure_alert_access(alert_verdict.alert_id, current_user, db)
+
+    verdict_value = alert_verdict.verdict.value if alert_verdict.verdict else None
+    reason_value = alert_verdict.verdict_reason.value if alert_verdict.verdict_reason else None
+
+    updated_alert, previous = await update_alert_verdict(
+        alert_id=alert_verdict.alert_id,
+        verdict=verdict_value,
+        verdict_reason=reason_value,
+        verdict_note=alert_verdict.verdict_note,
+        actor=current_user.username,
+        db=db,
+    )
+
+    # The columns carry the current verdict only; the audit log carries the history, so a
+    # verdict that was set and later reversed stays answerable after the fact.
+    await record_audit_event(
+        action=AuditAction.ALERT_VERDICT_CLEAR if verdict_value is None else AuditAction.ALERT_VERDICT_SET,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        customer_code=updated_alert.customer_code,
+        entity_type="alert",
+        entity_id=updated_alert.id,
+        old_value=previous,
+        new_value={
+            "verdict": verdict_value,
+            "verdict_reason": reason_value,
+            "verdict_note": alert_verdict.verdict_note,
+        },
+        request=request,
+    )
+
+    return AlertResponse(alert=updated_alert, success=True, message="Alert verdict updated successfully")
 
 
 @incidents_db_operations_router.put(
@@ -1792,6 +1850,11 @@ async def list_alerts_multiple_filters_endpoint(
     status: Optional[str] = Query(None),
     tags: Optional[List[str]] = Query(None),
     ioc_value: Optional[str] = Query(None),
+    verdict: Optional[str] = Query(
+        None,
+        description="TRUE_POSITIVE, FALSE_POSITIVE, or UNTRIAGED for alerts with no verdict recorded yet",
+    ),
+    verdict_reason: Optional[str] = Query(None, description="False-positive reason; only meaningful alongside verdict=FALSE_POSITIVE"),
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", pattern="^(asc|desc)$"),
@@ -1833,6 +1896,8 @@ async def list_alerts_multiple_filters_endpoint(
         status=status,
         tags=tags,
         ioc_value=ioc_value,
+        verdict=verdict,
+        verdict_reason=verdict_reason,
         db=db,
         page=page,
         page_size=page_size,
@@ -1857,6 +1922,8 @@ async def list_alerts_multiple_filters_endpoint(
         status=status,
         tags=tags,
         ioc_value=ioc_value,
+        verdict=verdict,
+        verdict_reason=verdict_reason,
         db=db,
     )
 

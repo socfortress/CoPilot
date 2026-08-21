@@ -61,6 +61,10 @@ class AuditAction(str, Enum):
     # Cases
     CASE_CREATE = "case.create"
 
+    # Alert triage
+    ALERT_VERDICT_SET = "alert.verdict_set"
+    ALERT_VERDICT_CLEAR = "alert.verdict_clear"
+
     # File data store
     DATASTORE_FILE_CREATE = "datastore.file_create"
     DATASTORE_FILE_DELETE = "datastore.file_delete"

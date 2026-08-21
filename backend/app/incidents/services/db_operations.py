@@ -54,6 +54,7 @@ from app.incidents.models import IoCFieldName
 from app.incidents.models import Notification
 from app.incidents.models import ThresholdAlertMetadata
 from app.incidents.models import TimestampFieldName
+from app.incidents.schema.db_operations import VERDICT_FILTER_UNTRIAGED
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertIoCCreate
@@ -85,6 +86,48 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
     AlertCreationSettings,
 )
 from app.middleware.customer_access import customer_access_handler
+
+
+def build_alert_out(
+    alert: Alert,
+    *,
+    comments: Optional[List[CommentBase]] = None,
+    assets: Optional[List[AssetBase]] = None,
+    tags: Optional[List[AlertTagBase]] = None,
+    iocs: Optional[List[IoCBase]] = None,
+    linked_cases: Optional[List[LinkedCaseCreate]] = None,
+) -> AlertOut:
+    """Single construction point for an ``AlertOut`` from an ``Alert`` row.
+
+    Twenty call sites in this module used to spell out the same ten scalar fields by hand
+    and differ only in which relationship lists they had loaded. That made adding a field
+    to the alert response a twenty-site edit, and the fastest way to ship a field that is
+    silently missing from four of the listing endpoints. Every caller now goes through
+    here; the relationship lists stay per-caller because not all of them eager-load all
+    five, and omitting one must keep meaning "empty" exactly as it did before.
+    """
+    return AlertOut(
+        id=alert.id,
+        alert_creation_time=alert.alert_creation_time,
+        time_closed=alert.time_closed,
+        alert_name=alert.alert_name,
+        alert_description=alert.alert_description,
+        status=alert.status,
+        customer_code=alert.customer_code,
+        source=alert.source,
+        assigned_to=alert.assigned_to,
+        escalated=alert.escalated,
+        verdict=alert.verdict,
+        verdict_reason=alert.verdict_reason,
+        verdict_note=alert.verdict_note,
+        verdict_by=alert.verdict_by,
+        verdict_at=alert.verdict_at,
+        comments=comments or [],
+        assets=assets or [],
+        tags=tags or [],
+        iocs=iocs or [],
+        linked_cases=linked_cases or [],
+    )
 
 
 async def customer_code_valid(customer_code: str, db: AsyncSession) -> bool:
@@ -439,6 +482,8 @@ async def alerts_total_multiple_filters(
     status: Optional[str] = None,
     tags: Optional[List[str]] = None,
     ioc_value: Optional[str] = None,
+    verdict: Optional[str] = None,
+    verdict_reason: Optional[str] = None,
 ) -> int:
     """Count alerts matching the filter set.
 
@@ -465,6 +510,13 @@ async def alerts_total_multiple_filters(
         filters.append(AlertTag.tag.in_(tags))
     if ioc_value:
         filters.append(IoC.value == ioc_value)
+    if verdict:
+        # UNTRIAGED is a filter-only sentinel, not a stored value: the untriaged state is
+        # NULL on the column, and "no verdict yet" is exactly the slice an analyst working
+        # a review queue wants (GitHub issue #1085).
+        filters.append(Alert.verdict.is_(None) if verdict == VERDICT_FILTER_UNTRIAGED else Alert.verdict == verdict)
+    if verdict_reason:
+        filters.append(Alert.verdict_reason == verdict_reason)
 
     # Build the query with dynamic filters
     query = (
@@ -1072,6 +1124,49 @@ async def update_alert_assigned_to(alert_id: int, assigned_to: str, db: AsyncSes
     return alert
 
 
+async def update_alert_verdict(
+    alert_id: int,
+    verdict: Optional[str],
+    verdict_reason: Optional[str],
+    verdict_note: Optional[str],
+    actor: Optional[str],
+    db: AsyncSession,
+) -> Tuple[Alert, dict]:
+    """Set, change or clear an alert's triage verdict (GitHub issue #1085).
+
+    Returns the alert plus the previous verdict snapshot, so the caller can write the
+    audit record without re-reading the row. Clearing (``verdict=None``) wipes the reason,
+    note and attribution together -- leaving a stale "marked false positive by X" behind
+    an absent verdict is worse than no attribution at all.
+    """
+    result = await db.execute(select(Alert).where(Alert.id == alert_id))
+    alert = result.scalars().first()
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+
+    previous = {
+        "verdict": alert.verdict,
+        "verdict_reason": alert.verdict_reason,
+        "verdict_note": alert.verdict_note,
+        "verdict_by": alert.verdict_by,
+    }
+
+    alert.verdict = verdict
+    if verdict is None:
+        alert.verdict_reason = None
+        alert.verdict_note = None
+        alert.verdict_by = None
+        alert.verdict_at = None
+    else:
+        alert.verdict_reason = verdict_reason
+        alert.verdict_note = verdict_note
+        alert.verdict_by = actor
+        alert.verdict_at = datetime.utcnow()
+
+    await db.commit()
+    return alert, previous
+
+
 async def update_alert_escalated(alert_id: int, escalated: bool, db: AsyncSession) -> Alert:
     result = await db.execute(select(Alert).where(Alert.id == alert_id))
     alert = result.scalars().first()
@@ -1360,23 +1455,7 @@ async def get_alert_by_id(alert_id: int, db: AsyncSession, user: Optional[User] 
     iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
     linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
 
-    alert_out = AlertOut(
-        id=alert.id,
-        alert_creation_time=alert.alert_creation_time,
-        time_closed=alert.time_closed,
-        alert_name=alert.alert_name,
-        alert_description=alert.alert_description,
-        status=alert.status,
-        customer_code=alert.customer_code,
-        source=alert.source,
-        assigned_to=alert.assigned_to,
-        escalated=alert.escalated,
-        comments=comments,
-        assets=assets,
-        tags=tags,
-        iocs=iocs,
-        linked_cases=linked_cases,
-    )
+    alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags, iocs=iocs, linked_cases=linked_cases)
 
     return alert_out
 
@@ -1407,23 +1486,7 @@ async def list_alerts(db: AsyncSession, page: int = 1, page_size: int = 25, orde
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
         iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
         linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
-        alert_out = AlertOut(
-            id=alert.id,
-            alert_creation_time=alert.alert_creation_time,
-            time_closed=alert.time_closed,
-            alert_name=alert.alert_name,
-            alert_description=alert.alert_description,
-            status=alert.status,
-            customer_code=alert.customer_code,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            escalated=alert.escalated,
-            comments=comments,
-            assets=assets,
-            tags=tags,
-            iocs=iocs,
-            linked_cases=linked_cases,
-        )
+        alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags, iocs=iocs, linked_cases=linked_cases)
         alerts_out.append(alert_out)
     return alerts_out
 
@@ -1709,23 +1772,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
         linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
         iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
-        alert_out = AlertOut(
-            id=alert.id,
-            alert_creation_time=alert.alert_creation_time,
-            time_closed=alert.time_closed,
-            alert_name=alert.alert_name,
-            alert_description=alert.alert_description,
-            status=alert.status,
-            customer_code=alert.customer_code,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            escalated=alert.escalated,
-            comments=comments,
-            assets=assets,
-            tags=tags,
-            linked_cases=linked_cases,
-            iocs=iocs,
-        )
+        alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags, iocs=iocs, linked_cases=linked_cases)
         alerts_out.append(alert_out)
 
     # Extract case comments
@@ -1769,23 +1816,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
             linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
             iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
-            alert_out = AlertOut(
-                id=alert.id,
-                alert_creation_time=alert.alert_creation_time,
-                time_closed=alert.time_closed,
-                alert_name=alert.alert_name,
-                alert_description=alert.alert_description,
-                status=alert.status,
-                customer_code=alert.customer_code,
-                source=alert.source,
-                assigned_to=alert.assigned_to,
-                escalated=alert.escalated,
-                comments=comments,
-                assets=assets,
-                tags=tags,
-                linked_cases=linked_cases,
-                iocs=iocs,
-            )
+            alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags, iocs=iocs, linked_cases=linked_cases)
             alerts_out.append(alert_out)
 
         # Extract case comments
@@ -1838,23 +1869,7 @@ async def list_cases_by_status(status: str, db: AsyncSession, page: int = 1, pag
             tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
             linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
             iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
-            alert_out = AlertOut(
-                id=alert.id,
-                alert_creation_time=alert.alert_creation_time,
-                time_closed=alert.time_closed,
-                alert_name=alert.alert_name,
-                alert_description=alert.alert_description,
-                status=alert.status,
-                customer_code=alert.customer_code,
-                source=alert.source,
-                assigned_to=alert.assigned_to,
-                escalated=alert.escalated,
-                comments=comments,
-                assets=assets,
-                tags=tags,
-                linked_cases=linked_cases,
-                iocs=iocs,
-            )
+            alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags, iocs=iocs, linked_cases=linked_cases)
             alerts_out.append(alert_out)
 
         # Extract case comments
@@ -1888,23 +1903,7 @@ def _case_to_out(case: Case) -> CaseOut:
         linked_cases = [LinkedCaseCreate(**link.case.__dict__) for link in alert.cases]
         iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
         alerts_out.append(
-            AlertOut(
-                id=alert.id,
-                alert_creation_time=alert.alert_creation_time,
-                time_closed=alert.time_closed,
-                alert_name=alert.alert_name,
-                alert_description=alert.alert_description,
-                status=alert.status,
-                customer_code=alert.customer_code,
-                source=alert.source,
-                assigned_to=alert.assigned_to,
-                escalated=alert.escalated,
-                comments=comments,
-                assets=assets,
-                tags=tags,
-                linked_cases=linked_cases,
-                iocs=iocs,
-            ),
+            build_alert_out(alert, comments=comments, assets=assets, tags=tags, iocs=iocs, linked_cases=linked_cases),
         )
 
     case_comments = [CaseCommentBase(**comment.__dict__) for comment in case.comments]
@@ -1973,21 +1972,7 @@ async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
             comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
             assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
             tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
-            alert_out = AlertOut(
-                id=alert.id,
-                alert_creation_time=alert.alert_creation_time,
-                time_closed=alert.time_closed,
-                alert_name=alert.alert_name,
-                alert_description=alert.alert_description,
-                status=alert.status,
-                customer_code=alert.customer_code,
-                source=alert.source,
-                assigned_to=alert.assigned_to,
-                escalated=alert.escalated,
-                comments=comments,
-                assets=assets,
-                tags=tags,
-            )
+            alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags)
             alerts_out.append(alert_out)
 
         # Handle case comments
@@ -2042,21 +2027,7 @@ async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[Ca
             comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
             assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
             tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
-            alert_out = AlertOut(
-                id=alert.id,
-                alert_creation_time=alert.alert_creation_time,
-                time_closed=alert.time_closed,
-                alert_name=alert.alert_name,
-                alert_description=alert.alert_description,
-                status=alert.status,
-                customer_code=alert.customer_code,
-                source=alert.source,
-                assigned_to=alert.assigned_to,
-                escalated=alert.escalated,
-                comments=comments,
-                assets=assets,
-                tags=tags,
-            )
+            alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags)
             alerts_out.append(alert_out)
 
         # Handle case comments
@@ -2108,21 +2079,7 @@ async def list_cases_by_customer_code(customer_code: str, db: AsyncSession) -> L
             comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
             assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
             tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
-            alert_out = AlertOut(
-                id=alert.id,
-                alert_creation_time=alert.alert_creation_time,
-                time_closed=alert.time_closed,
-                alert_name=alert.alert_name,
-                alert_description=alert.alert_description,
-                status=alert.status,
-                customer_code=alert.customer_code,
-                source=alert.source,
-                assigned_to=alert.assigned_to,
-                escalated=alert.escalated,
-                comments=comments,
-                assets=assets,
-                tags=tags,
-            )
+            alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags)
             alerts_out.append(alert_out)
 
         # Handle case comments
@@ -2191,22 +2148,7 @@ async def list_alerts_by_ioc(ioc_value: str, db: AsyncSession, page: int = 1, pa
         assets: List[AssetBase] = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags: List[AlertTagBase] = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
         iocs: List[IoCBase] = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
-        alert_out = AlertOut(
-            id=alert.id,
-            alert_creation_time=alert.alert_creation_time,
-            time_closed=alert.time_closed,
-            alert_name=alert.alert_name,
-            alert_description=alert.alert_description,
-            status=alert.status,
-            customer_code=alert.customer_code,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            escalated=alert.escalated,
-            comments=comments,
-            assets=assets,
-            tags=tags,
-            iocs=iocs,
-        )
+        alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags, iocs=iocs)
         alerts_out.append(alert_out)
     return alerts_out
 
@@ -2238,22 +2180,7 @@ async def list_alerts_by_tag(tag: str, db: AsyncSession, page: int = 1, page_siz
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
         iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
-        alert_out = AlertOut(
-            id=alert.id,
-            alert_creation_time=alert.alert_creation_time,
-            time_closed=alert.time_closed,
-            alert_name=alert.alert_name,
-            alert_description=alert.alert_description,
-            status=alert.status,
-            customer_code=alert.customer_code,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            escalated=alert.escalated,
-            comments=comments,
-            assets=assets,
-            tags=tags,
-            iocs=iocs,
-        )
+        alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags, iocs=iocs)
         alerts_out.append(alert_out)
     return alerts_out
 
@@ -2284,22 +2211,7 @@ async def list_alert_by_status(status: str, db: AsyncSession, page: int = 1, pag
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
         iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
-        alert_out = AlertOut(
-            id=alert.id,
-            alert_creation_time=alert.alert_creation_time,
-            time_closed=alert.time_closed,
-            alert_name=alert.alert_name,
-            alert_description=alert.alert_description,
-            status=alert.status,
-            customer_code=alert.customer_code,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            escalated=alert.escalated,
-            comments=comments,
-            assets=assets,
-            tags=tags,
-            iocs=iocs,
-        )
+        alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags, iocs=iocs)
         alerts_out.append(alert_out)
     return alerts_out
 
@@ -2334,21 +2246,7 @@ async def list_alerts_by_asset_name(
         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
-        alert_out = AlertOut(
-            id=alert.id,
-            alert_creation_time=alert.alert_creation_time,
-            time_closed=alert.time_closed,
-            alert_name=alert.alert_name,
-            alert_description=alert.alert_description,
-            status=alert.status,
-            customer_code=alert.customer_code,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            escalated=alert.escalated,
-            comments=comments,
-            assets=assets,
-            tags=tags,
-        )
+        alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags)
         alerts_out.append(alert_out)
     return alerts_out
 
@@ -2382,21 +2280,7 @@ async def list_alert_by_assigned_to(
         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
-        alert_out = AlertOut(
-            id=alert.id,
-            alert_creation_time=alert.alert_creation_time,
-            time_closed=alert.time_closed,
-            alert_name=alert.alert_name,
-            alert_description=alert.alert_description,
-            status=alert.status,
-            customer_code=alert.customer_code,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            escalated=alert.escalated,
-            comments=comments,
-            assets=assets,
-            tags=tags,
-        )
+        alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags)
         alerts_out.append(alert_out)
     return alerts_out
 
@@ -2430,21 +2314,7 @@ async def list_alerts_by_title(
         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
-        alert_out = AlertOut(
-            id=alert.id,
-            alert_creation_time=alert.alert_creation_time,
-            time_closed=alert.time_closed,
-            alert_name=alert.alert_name,
-            alert_description=alert.alert_description,
-            status=alert.status,
-            customer_code=alert.customer_code,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            escalated=alert.escalated,
-            comments=comments,
-            assets=assets,
-            tags=tags,
-        )
+        alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags)
         alerts_out.append(alert_out)
     return alerts_out
 
@@ -2478,21 +2348,7 @@ async def list_alerts_by_customer_code(
         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
-        alert_out = AlertOut(
-            id=alert.id,
-            alert_creation_time=alert.alert_creation_time,
-            time_closed=alert.time_closed,
-            alert_name=alert.alert_name,
-            alert_description=alert.alert_description,
-            status=alert.status,
-            customer_code=alert.customer_code,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            escalated=alert.escalated,
-            comments=comments,
-            assets=assets,
-            tags=tags,
-        )
+        alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags)
         alerts_out.append(alert_out)
     return alerts_out
 
@@ -2526,21 +2382,7 @@ async def list_alerts_by_source(
         comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
         assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
         tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
-        alert_out = AlertOut(
-            id=alert.id,
-            alert_creation_time=alert.alert_creation_time,
-            time_closed=alert.time_closed,
-            alert_name=alert.alert_name,
-            alert_description=alert.alert_description,
-            status=alert.status,
-            customer_code=alert.customer_code,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            escalated=alert.escalated,
-            comments=comments,
-            assets=assets,
-            tags=tags,
-        )
+        alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags)
         alerts_out.append(alert_out)
     return alerts_out
 
@@ -2556,6 +2398,8 @@ async def list_alerts_multiple_filters(
     status: Optional[str] = None,
     tags: Optional[List[str]] = None,
     ioc_value: Optional[str] = None,
+    verdict: Optional[str] = None,
+    verdict_reason: Optional[str] = None,
     page: int = 1,
     page_size: int = 25,
     order: str = "desc",
@@ -2594,6 +2438,13 @@ async def list_alerts_multiple_filters(
         filters.append(AlertTag.tag.in_(tags))
     if ioc_value:
         filters.append(IoC.value == ioc_value)
+    if verdict:
+        # UNTRIAGED is a filter-only sentinel, not a stored value: the untriaged state is
+        # NULL on the column, and "no verdict yet" is exactly the slice an analyst working
+        # a review queue wants (GitHub issue #1085).
+        filters.append(Alert.verdict.is_(None) if verdict == VERDICT_FILTER_UNTRIAGED else Alert.verdict == verdict)
+    if verdict_reason:
+        filters.append(Alert.verdict_reason == verdict_reason)
 
     # Apply tag-based RBAC filtering if user is provided
     if user:
@@ -2660,23 +2511,7 @@ async def list_alerts_multiple_filters(
         tags_out = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
         iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
         linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
-        alert_out = AlertOut(
-            id=alert.id,
-            alert_creation_time=alert.alert_creation_time,
-            time_closed=alert.time_closed,
-            alert_name=alert.alert_name,
-            alert_description=alert.alert_description,
-            status=alert.status,
-            customer_code=alert.customer_code,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            escalated=alert.escalated,
-            comments=comments,
-            assets=assets,
-            tags=tags_out,
-            iocs=iocs,
-            linked_cases=linked_cases,
-        )
+        alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags_out, iocs=iocs, linked_cases=linked_cases)
         alerts_out.append(alert_out)
 
     return alerts_out
@@ -2765,23 +2600,7 @@ async def list_alerts_for_user(
         iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
         linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
 
-        alert_out = AlertOut(
-            id=alert.id,
-            alert_creation_time=alert.alert_creation_time,
-            time_closed=alert.time_closed,
-            alert_name=alert.alert_name,
-            alert_description=alert.alert_description,
-            status=alert.status,
-            customer_code=alert.customer_code,
-            source=alert.source,
-            assigned_to=alert.assigned_to,
-            escalated=alert.escalated,
-            comments=comments,
-            assets=assets,
-            tags=tags,
-            iocs=iocs,
-            linked_cases=linked_cases,
-        )
+        alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags, iocs=iocs, linked_cases=linked_cases)
         alerts_out.append(alert_out)
 
     return alerts_out
@@ -2883,23 +2702,7 @@ async def list_cases_for_user(
             tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
             linked_cases = [LinkedCaseCreate(**case_alert_link.case.__dict__) for case_alert_link in alert.cases]
             iocs = [IoCBase(**alert_to_ioc.ioc.__dict__) for alert_to_ioc in alert.iocs]
-            alert_out = AlertOut(
-                id=alert.id,
-                alert_creation_time=alert.alert_creation_time,
-                time_closed=alert.time_closed,
-                alert_name=alert.alert_name,
-                alert_description=alert.alert_description,
-                status=alert.status,
-                customer_code=alert.customer_code,
-                source=alert.source,
-                assigned_to=alert.assigned_to,
-                escalated=alert.escalated,
-                comments=comments,
-                assets=assets,
-                tags=tags,
-                linked_cases=linked_cases,
-                iocs=iocs,
-            )
+            alert_out = build_alert_out(alert, comments=comments, assets=assets, tags=tags, iocs=iocs, linked_cases=linked_cases)
             alerts_out.append(alert_out)
 
         # Handle case comments
