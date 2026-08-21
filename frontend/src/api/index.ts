@@ -14,6 +14,7 @@ import copilotSearches from "./endpoints/copilot-searches"
 import customerPortal from "./endpoints/customer-portal"
 import customers from "./endpoints/customers"
 import detectionCatalog from "./endpoints/detection-catalog"
+import fileAnalysis from "./endpoints/file-analysis"
 import flow from "./endpoints/flow"
 import githubAudit from "./endpoints/github-audit"
 import graylog from "./endpoints/graylog"
@@ -85,6 +86,7 @@ export default {
 	notifications,
 	copilotSearches,
 	detectionCatalog,
+	fileAnalysis,
 	cloudSecurityAssessment,
 	webVulnerabilityAssessment,
 	incidentManagement,

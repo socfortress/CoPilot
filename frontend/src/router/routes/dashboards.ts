@@ -19,5 +19,11 @@ export const dashboardsRoutes: RouteRecordRaw[] = [
 		name: "Artifacts",
 		component: () => import("@/views/Artifacts.vue"),
 		meta: { title: "Artifacts", auth: true, roles: RouteRole.All }
+	},
+	{
+		path: "/file-analysis/:jobId?",
+		name: "FileAnalysis",
+		component: () => import("@/views/FileAnalysis.vue"),
+		meta: { title: "File Analysis", auth: true, roles: RouteRole.All }
 	}
 ]
