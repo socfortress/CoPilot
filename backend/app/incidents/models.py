@@ -58,6 +58,38 @@ class Alert(SQLModel, table=True):
     assigned_to: Optional[str] = Field(max_length=50, nullable=True)
     escalated: bool = Field(default=False, nullable=False)
 
+    # Analyst triage verdict: TRUE_POSITIVE | FALSE_POSITIVE (see AlertVerdict).
+    #
+    # Deliberately TRI-STATE, not a `false_positive` boolean. NULL means "nobody has
+    # judged this yet" -- which is a different fact from "judged, and not a false
+    # positive". A NOT NULL boolean defaulting to False would fold every never-triaged
+    # alert into the true-positive side and make the headline KPI a lie: the number a
+    # monthly service review needs is "of the alerts we actually reviewed, X% were false
+    # positives", and that ratio is only computable if unreviewed alerts are excludable.
+    #
+    # Orthogonal to `status` on purpose. A CLOSED alert can be either verdict, and status
+    # already drives the OPEN/IN_PROGRESS/CLOSED counters -- folding a verdict into it
+    # would break those and throw the true/false axis away (GitHub issue #1085).
+    #
+    # Indexed because filtering and aggregating on it is the point of storing it.
+    verdict: Optional[str] = Field(default=None, max_length=20, nullable=True, index=True)
+
+    # Why it was judged a false positive (see FalsePositiveReason). Only meaningful when
+    # verdict is FALSE_POSITIVE. A closed vocabulary rather than free text is the whole
+    # reason this feature exists instead of a tag -- consistent values are what make
+    # "most common false positive categories" answerable.
+    verdict_reason: Optional[str] = Field(default=None, max_length=50, nullable=True)
+
+    # Free-text detail, for the OTHER reason or any judgement worth a sentence.
+    verdict_note: Optional[str] = Field(default=None, max_length=1024, nullable=True)
+
+    # Who judged it and when. Username is a denormalized snapshot with no FK, matching
+    # `assigned_to` above: the record of who called it must survive that user's deletion.
+    # These carry the *current* verdict only -- the full change history (including a
+    # verdict being reversed) goes to the audit log as ALERT_VERDICT_SET/CLEAR.
+    verdict_by: Optional[str] = Field(default=None, max_length=50, nullable=True)
+    verdict_at: Optional[datetime] = Field(default=None, nullable=True)
+
     comments: List["Comment"] = Relationship(back_populates="alert")
     assets: List["Asset"] = Relationship(back_populates="alert")
     cases: List["CaseAlertLink"] = Relationship(back_populates="alert")

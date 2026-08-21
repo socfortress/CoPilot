@@ -44,6 +44,51 @@
 						</template>
 					</CardKV>
 
+					<CardKV :color="verdictCardColor" size="lg" class="w-full grow">
+						<template #key>
+							<div class="flex items-center gap-2">
+								<Icon :name="VerdictIcon" />
+								<span>Verdict</span>
+							</div>
+						</template>
+						<template #value>
+							<div class="flex flex-col gap-1">
+								<div class="flex">
+									<AlertVerdictSwitch
+										v-slot="{ loading: loadingVerdict }"
+										:alert
+										@updated="updateAlert($event)"
+									>
+										<div
+											class="flex items-center gap-3"
+											:class="{
+												'cursor-not-allowed': loadingVerdict,
+												'cursor-pointer': !loadingVerdict
+											}"
+										>
+											<span>{{ verdictLabel(alert.verdict) }}</span>
+											<n-spin
+												:size="14"
+												:show="loadingVerdict"
+												content-class="flex flex-col justify-center"
+											>
+												<Icon :name="EditIcon" />
+											</n-spin>
+										</div>
+									</AlertVerdictSwitch>
+								</div>
+								<div
+									v-if="alert.verdict === 'FALSE_POSITIVE'"
+									class="text-secondary flex flex-col gap-0.5 text-xs"
+								>
+									<span>{{ falsePositiveReasonLabel(alert.verdict_reason) }}</span>
+									<span v-if="alert.verdict_note" class="italic">{{ alert.verdict_note }}</span>
+									<span v-if="alert.verdict_by">Marked by {{ alert.verdict_by }}</span>
+								</div>
+							</div>
+						</template>
+					</CardKV>
+
 					<CardKV :color="alert.assigned_to ? 'success' : undefined" size="lg" class="w-full grow">
 						<template #key>
 							<div class="flex items-center gap-2">
@@ -206,7 +251,8 @@ import StatusIcon from "../common/StatusIcon.vue"
 import AlertAssignUser from "./AlertAssignUser.vue"
 import AlertStatusSwitch from "./AlertStatusSwitch.vue"
 import AlertTags from "./AlertTags.vue"
-import { handleDeleteAlert } from "./utils"
+import AlertVerdictSwitch from "./AlertVerdictSwitch.vue"
+import { falsePositiveReasonLabel, handleDeleteAlert, verdictLabel } from "./utils"
 
 const props = defineProps<{ alert: Alert; useFooterBackground?: boolean }>()
 const emit = defineEmits<{
@@ -220,7 +266,16 @@ const AlertLinkedCases = defineAsyncComponent(() => import("./AlertLinkedCases.v
 
 const { alert } = toRefs(props)
 
+// Untriaged stays uncoloured: it is the default state of every alert, so tinting it would
+// make the whole list look flagged.
+const verdictCardColor = computed(() => {
+	if (alert.value.verdict === "FALSE_POSITIVE") return "warning"
+	if (alert.value.verdict === "TRUE_POSITIVE") return "danger"
+	return undefined
+})
+
 const TrashIcon = "carbon:trash-can"
+const VerdictIcon = "carbon:task-view"
 const LinkIcon = "carbon:launch"
 const EditIcon = "uil:edit-alt"
 
