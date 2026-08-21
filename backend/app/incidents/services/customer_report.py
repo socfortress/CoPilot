@@ -45,6 +45,10 @@ from app.incidents.services.customer_report_charts import donut_png
 from app.incidents.services.customer_report_charts import evolution_png
 from app.incidents.services.customer_report_charts import hbar_png
 from app.incidents.services.reports_pdf import convert_html_to_pdf
+from app.incidents.services.verdict_stats import false_positive_reason_label
+from app.incidents.services.verdict_stats import false_positives_by_reason
+from app.incidents.services.verdict_stats import top_false_positives_by_alert_name
+from app.incidents.services.verdict_stats import verdict_counts
 
 BUCKET_NAME = "incident-management-reports"
 TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
@@ -203,6 +207,13 @@ async def build_report_context(
     cases_by_type = await agg.cases_reported_by_type(session, cc, date_from, date_to)
     trend = await agg.monthly_trend(session, cc, date_from, date_to)
 
+    # Triage-verdict figures (issue #1085). Scoped to this one customer by passing a
+    # single-element list -- the same helpers back the cross-tenant SOC view, so the
+    # number in the customer's PDF and the number on the SOC dashboard cannot disagree.
+    verdicts = await verdict_counts(session, [cc], date_from, date_to)
+    fp_by_reason = await false_positives_by_reason(session, [cc], date_from, date_to)
+    fp_by_alert_name = await top_false_positives_by_alert_name(session, [cc], date_from, date_to)
+
     open_cases_rows, open_total = await agg.fetch_open_cases(session, cc, date_from, date_to, limit=MAX_CASE_SHEETS)
     closed_cases_rows, closed_total = await agg.fetch_closed_cases(session, cc, date_from, date_to, limit=MAX_CASE_SHEETS)
     open_cards = [_build_case_card(c) for c in open_cases_rows]
@@ -227,6 +238,13 @@ async def build_report_context(
             "open_cases": open_count,
             "closed_cases": closed_count,
             "reported_cases": cases_by_type.get("total", 0),
+            "reviewed_alerts": verdicts["reviewed"],
+            "false_positives": verdicts["false_positive"],
+            "true_positives": verdicts["true_positive"],
+            # None where nothing was triaged: the template renders "n/a" rather than a
+            # 0% that would read as "no false positives" instead of "no data".
+            "false_positive_rate": verdicts["false_positive_rate"],
+            "triage_coverage_rate": verdicts["coverage_rate"],
         },
         "alerts_by_source": by_source,
         "cases_by_type": cases_by_type,
@@ -235,6 +253,12 @@ async def build_report_context(
             "alerts_by_source": donut_png(by_source) if total_alerts else None,
             "top_alert_names": hbar_png(top_alert_names, color=theme["chart_bar"]) if top_alert_names else None,
             "top_tags": hbar_png(top_alert_tags, color=theme["chart_bar"]) if top_alert_tags else None,
+            "false_positive_reasons": hbar_png(
+                [(false_positive_reason_label(reason), count) for reason, count in fp_by_reason],
+                color=theme["chart_bar"],
+            )
+            if fp_by_reason
+            else None,
             "evolution_alerts": evolution_png(months, [row["alerts"] for row in trend], color=theme["chart_evo_alerts"])
             if show_evolution
             else None,
@@ -243,6 +267,10 @@ async def build_report_context(
             else None,
         },
         "monthly_trend": trend,
+        "false_positive_rules": [
+            {"alert_name": name, "false_positive": fp, "reviewed": reviewed, "rate": rate} for name, fp, reviewed, rate in fp_by_alert_name
+        ],
+        "has_verdicts": verdicts["reviewed"] > 0,
         "open_cases": open_cards,
         "open_overflow": max(0, open_total - len(open_cards)),
         "closed_cases": closed_cards,
