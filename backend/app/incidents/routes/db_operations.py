@@ -1,5 +1,7 @@
 import io
 import os
+from datetime import datetime
+from datetime import timedelta
 from typing import List
 from typing import Optional
 
@@ -89,6 +91,8 @@ from app.incidents.schema.db_operations import DeleteAlertsRequest
 from app.incidents.schema.db_operations import DeleteAlertsResponse
 from app.incidents.schema.db_operations import EscalateAlert
 from app.incidents.schema.db_operations import EscalateCase
+from app.incidents.schema.db_operations import FalsePositiveCustomerStat
+from app.incidents.schema.db_operations import FalsePositiveRuleStat
 from app.incidents.schema.db_operations import FieldAndAssetNames
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
 from app.incidents.schema.db_operations import ListCaseDataStoreResponse
@@ -105,6 +109,8 @@ from app.incidents.schema.db_operations import SocfortressRecommendsWazuhTimeFie
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateAlertVerdict
 from app.incidents.schema.db_operations import UpdateCaseStatus
+from app.incidents.schema.db_operations import VerdictStatsResponse
+from app.incidents.schema.db_operations import VerdictTrendPoint
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
 from app.incidents.services.alert_severity import severity_of
@@ -247,6 +253,11 @@ from app.incidents.services.db_operations import validate_source_exists
 from app.incidents.services.incident_case import handle_customer_notifications_case
 from app.incidents.services.notification_enrichment import extract_rule_level
 from app.incidents.services.notification_enrichment import severity_from_rule_level
+from app.incidents.services.verdict_stats import false_positive_trend
+from app.incidents.services.verdict_stats import false_positives_by_customer
+from app.incidents.services.verdict_stats import false_positives_by_reason
+from app.incidents.services.verdict_stats import top_false_positives_by_alert_name
+from app.incidents.services.verdict_stats import verdict_counts
 from app.middleware.customer_access import customer_access_handler
 from app.middleware.customer_access import verify_customer_code_access
 from app.middleware.customer_query import customer_codes_query
@@ -1284,6 +1295,75 @@ async def create_case_from_alert_endpoint(
         case_alert_link=link,
         success=True,
         message="Case created from alert successfully",
+    )
+
+
+@incidents_db_operations_router.get(
+    "/alerts/verdict-stats",
+    response_model=VerdictStatsResponse,
+    description="Aggregate false-positive / true-positive statistics for a period",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_verdict_stats_endpoint(
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
+    date_from: Optional[datetime] = Query(None, description="Window start (naive UTC). Defaults to 30 days before date_to."),
+    date_to: Optional[datetime] = Query(None, description="Window end (naive UTC). Defaults to now."),
+    alert_name_limit: int = Query(15, ge=1, le=100),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """False-positive statistics for detection tuning and the monthly SOC review (#1085).
+
+    Scoped admin/analyst to match the write path: these are SOC quality metrics, and a
+    tenant reading its own false-positive rate is a customer-portal decision rather than
+    something to fall out of this router by default.
+    """
+    # Naive UTC to match the incident_management_* columns, which default to datetime.utcnow.
+    date_to = date_to or datetime.utcnow()
+    date_from = date_from or (date_to - timedelta(days=30))
+    if date_from > date_to:
+        raise HTTPException(status_code=400, detail="date_from must not be after date_to")
+
+    # Intersect the requested subset with what the user may see -- never widens scope.
+    effective_customers = await customer_access_handler.resolve_effective_customers(current_user, customer_codes, db)
+
+    # An empty resolution means "the requested customers resolve to nothing you may see".
+    # It must short-circuit: the aggregations skip the tenant filter on a falsy list, so
+    # passing [] down would drop the constraint entirely instead of matching no rows.
+    if not effective_customers:
+        return VerdictStatsResponse(
+            total=0,
+            reviewed=0,
+            untriaged=0,
+            true_positive=0,
+            false_positive=0,
+            success=True,
+            message="No alerts found for the requested customers",
+        )
+
+    # ["*"] = wildcard access with no requested subset -> no tenant constraint at all.
+    scoped_customers = None if "*" in effective_customers else effective_customers
+
+    counts = await verdict_counts(db, scoped_customers, date_from, date_to)
+    by_reason = await false_positives_by_reason(db, scoped_customers, date_from, date_to)
+    by_alert_name = await top_false_positives_by_alert_name(db, scoped_customers, date_from, date_to, limit=alert_name_limit)
+    by_customer = await false_positives_by_customer(db, scoped_customers, date_from, date_to)
+    trend = await false_positive_trend(db, scoped_customers, date_from, date_to)
+
+    return VerdictStatsResponse(
+        **counts,
+        by_reason=by_reason,
+        by_alert_name=[
+            FalsePositiveRuleStat(alert_name=name, false_positive=fp, reviewed=reviewed, false_positive_rate=rate)
+            for name, fp, reviewed, rate in by_alert_name
+        ],
+        by_customer=[
+            FalsePositiveCustomerStat(customer_code=code, false_positive=fp, reviewed=reviewed, false_positive_rate=rate)
+            for code, fp, reviewed, rate in by_customer
+        ],
+        trend=[VerdictTrendPoint(**point) for point in trend],
+        success=True,
+        message="Verdict statistics retrieved successfully",
     )
 
 

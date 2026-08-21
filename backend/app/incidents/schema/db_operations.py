@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 from fastapi import HTTPException
 from pydantic import BaseModel
@@ -661,6 +662,54 @@ class AlertFilterOptionsResponse(BaseModel):
     # though it is never a stored value.
     verdicts: List[str] = [v.value for v in AlertVerdict] + [VERDICT_FILTER_UNTRIAGED]
     false_positive_reasons: List[str] = [r.value for r in FalsePositiveReason]
+    success: bool
+    message: str
+
+
+class FalsePositiveRuleStat(BaseModel):
+    """One detection's false-positive record over the window."""
+
+    alert_name: str
+    false_positive: int
+    reviewed: int
+    # None when nothing was reviewed: no rate exists, and 0.0 would read as "clean".
+    false_positive_rate: Optional[float] = None
+
+
+class FalsePositiveCustomerStat(BaseModel):
+    customer_code: str
+    false_positive: int
+    reviewed: int
+    false_positive_rate: Optional[float] = None
+
+
+class VerdictTrendPoint(BaseModel):
+    month: str
+    false_positive: int
+    true_positive: int
+    untriaged: int
+    false_positive_rate: Optional[float] = None
+
+
+class VerdictStatsResponse(BaseModel):
+    """Aggregate triage-verdict statistics for a window.
+
+    `false_positive_rate` throughout is a percentage of *reviewed* alerts, never of all
+    alerts ingested -- otherwise the rate would improve every time triage fell behind.
+    `coverage_rate` is what keeps that number in proportion.
+    """
+
+    total: int
+    reviewed: int
+    untriaged: int
+    true_positive: int
+    false_positive: int
+    false_positive_rate: Optional[float] = None
+    coverage_rate: Optional[float] = None
+    by_reason: List[Tuple[str, int]] = []
+    by_alert_name: List[FalsePositiveRuleStat] = []
+    by_customer: List[FalsePositiveCustomerStat] = []
+    trend: List[VerdictTrendPoint] = []
     success: bool
     message: str
 

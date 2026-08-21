@@ -40,6 +40,17 @@
 
     <tr class="grp"><td>Cases closed in period</td><td class="v">{{ metrics.closed_cases }}</td></tr>
     <tr class="grp"><td>Cases pending resolution</td><td class="v">{{ metrics.open_cases }}</td></tr>
+
+    {# Triage quality (issue #1085). The rate is a share of REVIEWED alerts, never of all
+       alerts received — otherwise it would improve whenever triage fell behind. The
+       coverage line is printed alongside so the rate is read in proportion. #}
+    <tr class="grp"><td>Alerts triaged</td><td class="v">{{ metrics.reviewed_alerts }}</td></tr>
+    <tr class="sub"><td class="k">• Confirmed true positives</td><td class="v">{{ metrics.true_positives }}</td></tr>
+    <tr class="sub"><td class="k">• Confirmed false positives</td><td class="v">{{ metrics.false_positives }}</td></tr>
+    <tr class="sub"><td class="k">• False positive rate (of triaged)</td>
+      <td class="v">{% if metrics.false_positive_rate is not none %}{{ metrics.false_positive_rate }}%{% else %}n/a{% endif %}</td></tr>
+    <tr class="sub"><td class="k">• Triage coverage</td>
+      <td class="v">{% if metrics.triage_coverage_rate is not none %}{{ metrics.triage_coverage_rate }}%{% else %}n/a{% endif %}</td></tr>
   </table>
 
   <!-- ================= 2. CHARTS ================= -->
@@ -61,6 +72,9 @@
     {% if charts.top_tags %}{% set illus.n = illus.n + 1 %}
     <div class="chart-block"><img src="{{ charts.top_tags }}" alt="top tags" />
       <div class="chart-cap">Figure {{ illus.n }}: Top alert tags / classifications</div></div>{% endif %}
+    {% if charts.false_positive_reasons %}{% set illus.n = illus.n + 1 %}
+    <div class="chart-block"><img src="{{ charts.false_positive_reasons }}" alt="false positive reasons" />
+      <div class="chart-cap">Figure {{ illus.n }}: False positives by category</div></div>{% endif %}
     {% if charts.evolution_alerts %}{% set illus.n = illus.n + 1 %}
     <div class="chart-block"><img src="{{ charts.evolution_alerts }}" alt="alert trend" />
       <div class="chart-cap">Figure {{ illus.n }}: Monthly alert trend</div></div>{% endif %}
@@ -77,6 +91,29 @@
         {% endfor %}
       </tbody>
     </table>
+    {% endif %}
+
+    {# Detection-tuning list. Grouped by alert title, which is the closest thing to a rule
+       identity stored on an alert. Rate is shown next to count on purpose: 40 false
+       positives out of 400 triaged is a noisy rule, 12 out of 12 is a broken one, and
+       ordering by count alone buries the second behind the first. #}
+    {% if false_positive_rules %}
+    <div class="bar" style="margin-top:18px;">Detections generating false positives</div>
+    <table class="data avoid-break">
+      <thead><tr><th>Alert title</th><th>False positives</th><th>Triaged</th><th>FP rate</th></tr></thead>
+      <tbody>
+        {% for row in false_positive_rules %}
+        <tr>
+          <td>{{ row.alert_name }}</td>
+          <td>{{ row.false_positive }}</td>
+          <td>{{ row.reviewed }}</td>
+          <td>{% if row.rate is not none %}{{ row.rate }}%{% else %}n/a{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% elif has_verdicts %}
+    <div class="empty" style="margin-top:18px;">No alerts were classified as false positives in this period.</div>
     {% endif %}
   {% else %}
     <div class="empty">No alerts were recorded for this customer in the selected period.</div>
