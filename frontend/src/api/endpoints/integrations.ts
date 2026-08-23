@@ -35,9 +35,10 @@ export type UpdateIntegrationPayload = Omit<NewIntegration, "customer_name">
 
 export default {
 	// #region Integrations
-	getAvailableIntegrations() {
+	getAvailableIntegrations(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { available_integrations: AvailableIntegration[] }>(
-			`/integrations/available_integrations`
+			`/integrations/available_integrations`,
+			{ signal }
 		)
 	},
 	getAvailableIntegration(integrationId: number, signal?: AbortSignal) {
@@ -46,14 +47,16 @@ export default {
 			{ signal }
 		)
 	},
-	getMetaAuto(customerCode: string, integrationName: string) {
+	getMetaAuto(customerCode: string, integrationName: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & CustomerIntegrationMetaResponse>(
-			`/integrations/meta_auto/${customerCode}/${integrationName}`
+			`/integrations/meta_auto/${customerCode}/${integrationName}`,
+			{ signal }
 		)
 	},
-	getCustomerIntegrations(customerCode: string) {
+	getCustomerIntegrations(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { available_integrations: CustomerIntegration[] }>(
-			`/integrations/customer_integrations/${customerCode}`
+			`/integrations/customer_integrations/${customerCode}`,
+			{ signal }
 		)
 	},
 	createIntegration(props: NewIntegration) {

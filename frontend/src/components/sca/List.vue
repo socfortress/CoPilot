@@ -69,7 +69,7 @@ import axios from "axios"
 import _set from "lodash/set"
 import _toNumber from "lodash/toSafeInteger"
 import { NAlert, NBadge, NButton, NEmpty, NPagination, NSpin, useMessage } from "naive-ui"
-import { computed, ref } from "vue"
+import { computed, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -205,5 +205,12 @@ useResizeObserver(header, entries => {
 
 	pageSlot.value = width < 700 ? 5 : 8
 	showSizePicker.value = width > 550
+})
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
 })
 </script>

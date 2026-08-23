@@ -79,7 +79,7 @@ const summary = ref<MetricsSummaryData>({})
 async function reload() {
 	loading.value = true
 	try {
-		const res = await Api.metrics.getSummary(props.host, props.range)
+		const res = await Api.metrics.getSummary({ host: props.host, rangeH: props.range })
 		if (!res.data.success) {
 			message.warning(res.data.message || "Error fetching summary metrics")
 			summary.value = {}

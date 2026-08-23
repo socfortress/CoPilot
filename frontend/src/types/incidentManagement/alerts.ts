@@ -10,6 +10,8 @@ export type AlertsFilter =
 	| { source: string }
 	| { source: string }
 	| { iocValue: string }
+	| { verdict: AlertVerdictFilter }
+	| { verdictReason: FalsePositiveReason }
 
 export interface Alert {
 	id: number
@@ -26,6 +28,11 @@ export interface Alert {
 	tags: AlertTag[]
 	linked_cases: Omit<Case, "alerts">[]
 	iocs: AlertIOC[]
+	verdict: AlertVerdict | null
+	verdict_reason: FalsePositiveReason | null
+	verdict_note: string | null
+	verdict_by: string | null
+	verdict_at: Date | null
 }
 
 export interface AlertIOC {
@@ -36,6 +43,19 @@ export interface AlertIOC {
 }
 
 export type AlertStatus = "OPEN" | "CLOSED" | "IN_PROGRESS"
+
+/** An analyst's triage verdict. `null` on an alert means untriaged — a distinct, meaningful state. */
+export type AlertVerdict = "TRUE_POSITIVE" | "FALSE_POSITIVE"
+
+/** `UNTRIAGED` is selectable as a filter but is never a stored verdict. */
+export type AlertVerdictFilter = AlertVerdict | "UNTRIAGED"
+
+export type FalsePositiveReason =
+	| "EXPECTED_ACTIVITY"
+	| "KNOWN_APPLICATION"
+	| "AUTHORIZED_USER"
+	| "RULE_TOO_SENSITIVE"
+	| "OTHER"
 
 export interface AlertAsset {
 	id: number

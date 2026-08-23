@@ -66,8 +66,8 @@ function loadHealthData(customerCode: string, source: CustomerHealthcheckSource,
 	const query: CustomerAgentsHealthcheckQuery | undefined = undefined
 	const apiCall =
 		source === "wazuh"
-			? Api.customers.getCustomerAgentsHealthcheckWazuh(customerCode, query, signal)
-			: Api.customers.getCustomerAgentsHealthcheckVelociraptor(customerCode, query, signal)
+			? Api.customers.getCustomerAgentsHealthcheckWazuh({ code: customerCode, ...(query ?? {}) }, signal)
+			: Api.customers.getCustomerAgentsHealthcheckVelociraptor({ code: customerCode, ...(query ?? {}) }, signal)
 
 	return apiCall.then(res => {
 		if (!res.data.success) {

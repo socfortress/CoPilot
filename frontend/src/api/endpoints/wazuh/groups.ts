@@ -88,16 +88,17 @@ export default {
 			}
 		)
 	},
-	getGroupFile(groupId: string, filename: string, query?: GroupFileQueryParams) {
+	getGroupFile(query: { groupId: string; filename: string; params?: GroupFileQueryParams }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & WazuhGroupFileDetails>(
-			`/wazuh_manager/groups/${groupId}/files/${filename}`,
+			`/wazuh_manager/groups/${query.groupId}/files/${query.filename}`,
 			{
 				params: {
 					raw: true,
 					pretty: false,
 					wait_for_complete: false,
-					...query
-				}
+					...query.params
+				},
+				signal
 			}
 		)
 	},

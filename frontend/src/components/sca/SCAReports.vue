@@ -89,7 +89,7 @@ import axios from "axios"
 import { saveAs } from "file-saver"
 import _isEqual from "lodash/isEqual"
 import { NButton, NEmpty, NModal, NPagination, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref, watch } from "vue"
+import { computed, onBeforeMount, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
@@ -151,7 +151,7 @@ async function loadReports() {
 
 async function loadCustomers() {
 	try {
-		const response = await Api.customers.getCustomers()
+		const response = await Api.customers.getCustomers({})
 		const customerData = response.data.customers || []
 
 		customers.value = customerData.map((c: Customer) => ({
@@ -235,5 +235,12 @@ onGlobalCustomerFilterChange(codes => {
 
 	filterCustomerCode.value = [...codes]
 	onFilterChange()
+})
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
 })
 </script>

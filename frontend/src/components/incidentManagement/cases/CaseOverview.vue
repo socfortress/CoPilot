@@ -195,7 +195,7 @@ function resolveAssignedUserId(username: string | null) {
 		return
 	}
 
-	Api.users.getUsers().then(res => {
+	Api.users.getUsers({}).then(res => {
 		const user = res.data.users?.find(u => u.username === username)
 		assignedUserId.value = user?.id ?? null
 	})

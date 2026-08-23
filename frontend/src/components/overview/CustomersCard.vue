@@ -39,7 +39,7 @@ function getData() {
 	loading.value = true
 
 	Api.customers
-		.getCustomers()
+		.getCustomers({})
 		.then(res => {
 			if (res.data.success) {
 				customers.value = res.data?.customers || []

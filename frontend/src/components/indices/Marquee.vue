@@ -83,7 +83,7 @@ function getIndices() {
 	const query = customerCodes.value?.length ? { customerCodes: customerCodes.value } : undefined
 
 	Api.wazuh.indices
-		.getIndices(query)
+		.getIndices(query ?? {})
 		.then(res => {
 			if (res.data.success) {
 				list.value = res.data.indices_stats

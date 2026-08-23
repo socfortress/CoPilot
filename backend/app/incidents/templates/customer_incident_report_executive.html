@@ -41,6 +41,17 @@
 
     <tr class="grp"><td>Cases closed in period</td><td class="v">{{ metrics.closed_cases }}</td></tr>
     <tr class="grp"><td>Cases pending resolution</td><td class="v">{{ metrics.open_cases }}</td></tr>
+
+    {# Triage quality (issue #1085). The rate is a share of REVIEWED alerts, never of all
+       alerts received — otherwise it would improve whenever triage fell behind. The
+       coverage line is printed alongside so the rate is read in proportion. #}
+    <tr class="grp"><td>Alerts triaged</td><td class="v">{{ metrics.reviewed_alerts }}</td></tr>
+    <tr class="sub"><td class="k">• Confirmed true positives</td><td class="v">{{ metrics.true_positives }}</td></tr>
+    <tr class="sub"><td class="k">• Confirmed false positives</td><td class="v">{{ metrics.false_positives }}</td></tr>
+    <tr class="sub"><td class="k">• False positive rate (of triaged)</td>
+      <td class="v">{% if metrics.false_positive_rate is not none %}{{ metrics.false_positive_rate }}%{% else %}n/a{% endif %}</td></tr>
+    <tr class="sub"><td class="k">• Triage coverage</td>
+      <td class="v">{% if metrics.triage_coverage_rate is not none %}{{ metrics.triage_coverage_rate }}%{% else %}n/a{% endif %}</td></tr>
   </table>
 
   {% if has_alerts and charts.alerts_by_status %}

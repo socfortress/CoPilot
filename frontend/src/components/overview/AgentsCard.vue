@@ -12,8 +12,9 @@
 import type { ItemProps } from "@/components/common/cards/CardStatsMulti.vue"
 import type { Agent } from "@/types/agents"
 import type { ApiError } from "@/types/common"
+import axios from "axios"
 import { NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref, watch } from "vue"
+import { computed, onBeforeMount, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import CardStatsMulti from "@/components/common/cards/CardStatsMulti.vue"
@@ -41,13 +42,19 @@ const values = computed<ItemProps[]>(() => [
 	{ value: onlineTotal.value, label: "Online", status: onlineTotal.value ? "success" : undefined }
 ])
 
+// Toggling "Use Global Customer Filter" changes the prop, which re-runs the watch
+// below while the previous request is still in flight (#1072). Without aborting,
+// two answers race and the slower one wins — the card can end up showing the
+// filter state the user just left.
+let abortController: AbortController | null = null
+
 function getData() {
+	abortController?.abort()
+	abortController = new AbortController()
 	loading.value = true
 
 	Api.agents
-		.getAgents(
-			props.customerCodes && props.customerCodes.length ? { customerCodes: props.customerCodes } : undefined
-		)
+		.getAgents(props.customerCodes?.length ? { customerCodes: props.customerCodes } : {}, abortController.signal)
 		.then(res => {
 			if (res.data.success) {
 				agents.value = res.data.agents || []
@@ -56,6 +63,7 @@ function getData() {
 			}
 		})
 		.catch(err => {
+			if (axios.isCancel(err)) return
 			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
@@ -73,4 +81,8 @@ watch(
 		getData()
 	}
 )
+
+onBeforeUnmount(() => {
+	abortController?.abort()
+})
 </script>

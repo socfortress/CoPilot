@@ -4,8 +4,11 @@ import { HttpClient } from "../http-client"
 
 export default {
 	// Get tag RBAC settings
-	getSettings() {
-		return HttpClient.get<FlaskBaseResponse & { settings: TagAccessSettingsItem }>("/incidents/tag_access/settings")
+	getSettings(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { settings: TagAccessSettingsItem }>(
+			"/incidents/tag_access/settings",
+			{ signal }
+		)
 	},
 
 	// Update tag RBAC settings
@@ -17,14 +20,15 @@ export default {
 	},
 
 	// Get all available alert tags
-	getAvailableTags() {
-		return HttpClient.get<FlaskBaseResponse & { tags: AlertTag[] }>("/incidents/tag_access/tags")
+	getAvailableTags(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { tags: AlertTag[] }>("/incidents/tag_access/tags", { signal })
 	},
 
 	// Get tags assigned to a user (matches: GET /user/{user_id})
-	getUserTags(userId: number) {
+	getUserTags(userId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { user_id: number; username: string; accessible_tags: AlertTag[] }>(
-			`/incidents/tag_access/user/${userId}`
+			`/incidents/tag_access/user/${userId}`,
+			{ signal }
 		)
 	},
 
@@ -59,7 +63,7 @@ export default {
 	},
 
 	// Get current user's effective access
-	getMyEffectiveAccess() {
-		return HttpClient.get<FlaskBaseResponse & EffectiveAccessResponse>("/incidents/tag_access/me")
+	getMyEffectiveAccess(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & EffectiveAccessResponse>("/incidents/tag_access/me", { signal })
 	}
 }

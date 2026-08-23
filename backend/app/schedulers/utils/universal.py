@@ -6,13 +6,15 @@ from loguru import logger
 from sqlalchemy import select
 
 from app.auth.services.universal import get_scheduler_password
+from app.blocking import DEFAULT_HTTP_TIMEOUT
+from app.blocking import run_blocking
 from app.db.db_session import get_db_session
 from app.schedulers.models.scheduler import JobMetadata
 
 load_dotenv()
 
 
-def scheduler_login():
+async def scheduler_login():
     """
     Retrieves an authentication token for the scheduler user.
 
@@ -24,7 +26,8 @@ def scheduler_login():
     password = get_scheduler_password()
 
     # Get an auth token
-    token_response = requests.post(
+    token_response = await run_blocking(
+        requests.post,
         f"http://{os.getenv('SERVER_IP')}:5000/auth/token",
         headers={
             "accept": "application/json",
@@ -36,6 +39,7 @@ def scheduler_login():
             "password": password,
             "scope": "",
         },
+        timeout=DEFAULT_HTTP_TIMEOUT,
     )
 
     # Check if the token was successfully retrieved

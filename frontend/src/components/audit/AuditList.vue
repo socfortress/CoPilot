@@ -91,7 +91,7 @@ import type { ApiError } from "@/types/common"
 import { useResizeObserver, useStorage } from "@vueuse/core"
 import axios from "axios"
 import { NBadge, NButton, NEmpty, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref, watch } from "vue"
+import { computed, onBeforeMount, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -228,5 +228,12 @@ onBeforeMount(() => {
 	}
 
 	getData()
+})
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
 })
 </script>

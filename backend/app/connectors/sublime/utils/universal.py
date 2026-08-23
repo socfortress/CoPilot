@@ -5,6 +5,8 @@ from typing import Optional
 import requests
 from loguru import logger
 
+from app.blocking import DEFAULT_HTTP_TIMEOUT
+from app.blocking import run_blocking
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 
@@ -27,11 +29,13 @@ async def verify_sublime_credentials(attributes: Dict[str, Any]) -> Dict[str, An
         params = {
             "limit": 1,
         }
-        sublime = requests.get(
+        sublime = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}/v0/rules",
             headers=headers,
             params=params,
             verify=False,
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
         if sublime.status_code == 200:
             logger.info(
@@ -99,11 +103,13 @@ async def send_get_request(
             "Authorization": f"Bearer {attributes['connector_api_key']}",
             "Content-Type": "application/json",
         }
-        response = requests.get(
+        response = await run_blocking(
+            requests.get,
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,
             params=params,
             verify=False,
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
         return {
             "data": response.json(),

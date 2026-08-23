@@ -17,6 +17,38 @@
 				</n-button>
 			</n-input-group>
 
+			<n-input-group v-if="filter.type === 'verdict'">
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
+				<n-select
+					v-model:value="filter.value"
+					size="small"
+					:options="verdictOptions"
+					placeholder="Select..."
+					class="w-40!"
+				/>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
+			<n-input-group v-if="filter.type === 'verdictReason'">
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
+				<n-select
+					v-model:value="filter.value"
+					size="small"
+					:options="falsePositiveReasonOptions"
+					placeholder="Select..."
+					class="w-56!"
+				/>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
 			<n-input-group v-if="filter.type === 'assignedTo'">
 				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
 				<n-select
@@ -161,7 +193,7 @@ import type { AlertsListFilter } from "./types.d"
 import type { AlertsFilterTypes, AlertsListFilterValue } from "@/api/endpoints/incidentManagement/alerts"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import type { AlertStatus } from "@/types/incidentManagement/alerts"
+import type { AlertStatus, AlertVerdictFilter, FalsePositiveReason } from "@/types/incidentManagement/alerts"
 import type { SourceName } from "@/types/incidentManagement/sources"
 import _castArray from "lodash/castArray"
 import _cloneDeep from "lodash/cloneDeep"
@@ -173,6 +205,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
+import { falsePositiveReasonLabel } from "./utils"
 
 const { useQueryString, preset } = defineProps<{ useQueryString?: boolean; preset?: AlertsListFilter[] }>()
 
@@ -202,6 +235,22 @@ const statusOptions: { label: string; value: AlertStatus }[] = [
 	{ label: "Closed", value: "CLOSED" },
 	{ label: "In progress", value: "IN_PROGRESS" }
 ]
+// UNTRIAGED is offered alongside the two stored verdicts because "not yet judged" is the
+// slice an analyst working a review backlog actually wants.
+const verdictOptions: { label: string; value: AlertVerdictFilter }[] = [
+	{ label: "True positive", value: "TRUE_POSITIVE" },
+	{ label: "False positive", value: "FALSE_POSITIVE" },
+	{ label: "Not triaged", value: "UNTRIAGED" }
+]
+const falsePositiveReasonOptions: { label: string; value: FalsePositiveReason }[] = (
+	[
+		"EXPECTED_ACTIVITY",
+		"KNOWN_APPLICATION",
+		"AUTHORIZED_USER",
+		"RULE_TOO_SENSITIVE",
+		"OTHER"
+	] as FalsePositiveReason[]
+).map(value => ({ label: falsePositiveReasonLabel(value), value }))
 const typeOptions: { label: string; value: AlertsFilterTypes }[] = [
 	{ label: "Status", value: "status" },
 	{ label: "Asset Name", value: "assetName" },
@@ -210,7 +259,9 @@ const typeOptions: { label: string; value: AlertsFilterTypes }[] = [
 	{ label: "Title", value: "title" },
 	{ label: "Customer Code", value: "customerCode" },
 	{ label: "Source", value: "source" },
-	{ label: "IoC", value: "iocValue" }
+	{ label: "IoC", value: "iocValue" },
+	{ label: "Verdict", value: "verdict" },
+	{ label: "FP Reason", value: "verdictReason" }
 ]
 
 const filters = ref<AlertsListFilter[]>([])
@@ -318,7 +369,7 @@ function getCustomers() {
 	loadingCustomers.value = true
 
 	Api.customers
-		.getCustomers()
+		.getCustomers({})
 		.then(res => {
 			if (res.data.success) {
 				customersList.value = res.data?.customers || []

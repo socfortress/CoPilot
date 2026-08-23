@@ -5,6 +5,8 @@ from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.blocking import DEFAULT_HTTP_TIMEOUT
+from app.blocking import run_blocking
 from app.connectors.portainer.services.stack import delete_wazuh_customer_stack
 from app.connectors.utils import is_connector_verified
 from app.customer_provisioning.schema.decommission import DecommissionCustomerResponse
@@ -207,9 +209,11 @@ async def decommission_wazuh_worker(
         )
         # Send the POST request to the Wazuh worker
         request.portainer_deployment = False
-        response = requests.post(
+        response = await run_blocking(
+            requests.post,
             url=f"{api_endpoint}/provision_worker/decommission",
             json=request.model_dump(),
+            timeout=DEFAULT_HTTP_TIMEOUT,
         )
         # Check the response status code
         if response.status_code != 200:
@@ -235,9 +239,11 @@ async def decommission_wazuh_worker(
         logger.info(f"Invoking the customer provisioning application on the swarm node IPs: {swarm_node_ips}")
         for ip in swarm_node_ips:
             logger.info(f"Provisioning Wazuh worker on IP: {ip}")
-            response = requests.post(
+            response = await run_blocking(
+                requests.post,
                 url=f"http://{ip}:5003/provision_worker/decommission",
                 json=request.model_dump(),
+                timeout=DEFAULT_HTTP_TIMEOUT,
             )
             logger.info(f"Status code from Wazuh Worker: {response.status_code}")
             if response.status_code != 200:
@@ -288,9 +294,11 @@ async def decommission_haproxy(
         session=session,
     )
     # Send the POST request to the HAProxy worker
-    response = requests.post(
+    response = await run_blocking(
+        requests.post,
         url=f"{api_endpoint}/provision_worker/haproxy/decommission",
         json=request.model_dump(),
+        timeout=DEFAULT_HTTP_TIMEOUT,
     )
     # Check the response status code
     if response.status_code != 200:

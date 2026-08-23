@@ -66,6 +66,12 @@ from app.schedulers.services.invoke_sap_siem import (
 from app.schedulers.services.invoke_snapshot_and_restore import (
     invoke_snapshot_schedules,
 )
+from app.schedulers.services.refresh_catalog_caches import refresh_catalog_caches
+from app.schedulers.services.refresh_sidebar_health import refresh_sidebar_health
+from app.schedulers.services.refresh_sidebar_indicators import (
+    refresh_sidebar_indicators,
+)
+from app.schedulers.services.refresh_wazuh_rules_cache import refresh_wazuh_rules_cache
 from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 
 
@@ -175,6 +181,42 @@ async def initialize_job_metadata():
                 "time_interval": 60,
                 "function": invoke_palace_lesson_sweeper,
                 "description": "Forgets expired one-off AI analyst palace lessons via NanoClaw /palace/forget.",
+            },
+            {
+                "job_id": "refresh_wazuh_rules_cache",
+                # Shorter than CACHE_TTL_MINUTES (60) so the cache is renewed
+                # before it can expire under a request. A cold load measured
+                # 80-110s against a real Wazuh Manager (#1072); this job is the
+                # only thing that should ever pay it.
+                "time_interval": 30,
+                "function": refresh_wazuh_rules_cache,
+                "description": "Refreshes the in-memory Wazuh ruleset cache so catalog and sidebar requests never load it.",
+            },
+            {
+                "job_id": "refresh_catalog_caches",
+                # Below rules_cache's 30 min TTL so it is renewed before expiry.
+                # TTL-aware, so the 24h MITRE bundle is not re-downloaded each run.
+                "time_interval": 15,
+                "function": refresh_catalog_caches,
+                "description": "Refreshes the Detections Catalog GitHub-backed caches (CoPilot Searches rules, MITRE matrix) off the request path.",
+            },
+            {
+                "job_id": "refresh_sidebar_health",
+                # Below the indicator's TTL (600s) so the sidebar never finds the
+                # value expired and has to render "checking".
+                "time_interval": 6,
+                "function": refresh_sidebar_health,
+                "description": "Refreshes the sidebar InfluxDB health indicator so the sidebar never runs the Flux query itself.",
+            },
+            {
+                "job_id": "refresh_sidebar_indicators",
+                # Below SHARED_INDICATORS_TTL_SECONDS (600) so a missed run cannot
+                # leave the sidebar serving an expired set. Halved in frequency
+                # after measuring this job colliding with a sidebar request and
+                # tripling its latency.
+                "time_interval": 4,
+                "function": refresh_sidebar_indicators,
+                "description": "Assembles the deployment-wide sidebar indicators so /status/sidebar reads them from memory.",
             },
             {
                 "job_id": "prune_audit_log",
@@ -315,12 +357,29 @@ def get_function_by_name(function_name: str):
         "invoke_carbonblack_integration_collection": invoke_carbonblack_integration_collect,
         "invoke_palace_lesson_drainer": invoke_palace_lesson_drainer,
         "invoke_palace_lesson_sweeper": invoke_palace_lesson_sweeper,
+        "refresh_wazuh_rules_cache": refresh_wazuh_rules_cache,
+        "refresh_catalog_caches": refresh_catalog_caches,
+        "refresh_sidebar_health": refresh_sidebar_health,
+        "refresh_sidebar_indicators": refresh_sidebar_indicators,
         # Add other function mappings here
     }
-    return function_map.get(
-        function_name,
-        lambda: ValueError(f"Function {function_name} not found"),
-    )
+    # Raise rather than returning a placeholder lambda: APScheduler's SQLAlchemy jobstore
+    # pickles every job's callable at `start()`, and a lambda has no importable reference,
+    # so a stale/unknown job_id in scheduled_job_metadata would kill app startup with
+    # "This Job cannot be serialized...". Raising lets schedule_enabled_jobs skip the job.
+    #
+    # The other way to land here is a *new* job registered in only one of the two places
+    # it needs to be: `known_jobs` in initialize_job_metadata seeds the DB row, this map
+    # resolves the id to a callable. Miss this one and the job seeds fine, then fails to
+    # schedule — so the message names both places, because it is what the operator sees
+    # in the log.
+    function = function_map.get(function_name)
+    if function is None:
+        raise ValueError(
+            f"Scheduled job '{function_name}' has no entry in get_function_by_name's function_map. "
+            "Add it there as well as in initialize_job_metadata's known_jobs.",
+        )
+    return function
 
 
 async def add_scheduler_jobs(create_scheduler_request: CreateSchedulerRequest):

@@ -98,7 +98,7 @@ async function deleteSchedule(schedule: SnapshotScheduleResponse) {
 async function fetchSchedules() {
 	loading.value = true
 	try {
-		const response = await Api.snapshots.getSchedules()
+		const response = await Api.snapshots.getSchedules({})
 		if (response.data.success) {
 			schedules.value = response.data.schedules
 		} else {

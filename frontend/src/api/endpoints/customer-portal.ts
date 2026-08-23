@@ -34,8 +34,10 @@ type AiReportSettingsResponse = FlaskBaseResponse & {
 }
 
 export default {
-	getSettings() {
-		return HttpClient.get<FlaskBaseResponse & { settings: CustomerPortalSettings }>(`/customer_portal/settings`)
+	getSettings(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { settings: CustomerPortalSettings }>(`/customer_portal/settings`, {
+			signal
+		})
 	},
 	setSettings(payload: CustomerPortalSettingsPayload) {
 		return HttpClient.post<FlaskBaseResponse & { settings: CustomerPortalSettings }>(
@@ -43,13 +45,14 @@ export default {
 			payload
 		)
 	},
-	getBrandingOverrides() {
+	getBrandingOverrides(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { overrides: CustomerPortalBrandingListItem[] }>(
-			`/customer_portal/branding`
+			`/customer_portal/branding`,
+			{ signal }
 		)
 	},
-	getCustomerBranding(customerCode: string) {
-		return HttpClient.get<BrandingResponse>(`/customer_portal/branding/${customerCode}`)
+	getCustomerBranding(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<BrandingResponse>(`/customer_portal/branding/${customerCode}`, { signal })
 	},
 	setCustomerBranding(customerCode: string, payload: CustomerPortalBrandingPayload) {
 		return HttpClient.put<BrandingResponse>(`/customer_portal/branding/${customerCode}`, payload)
@@ -57,8 +60,10 @@ export default {
 	deleteCustomerBranding(customerCode: string) {
 		return HttpClient.delete<BrandingResponse>(`/customer_portal/branding/${customerCode}`)
 	},
-	getCustomerAiReportSettings(customerCode: string) {
-		return HttpClient.get<AiReportSettingsResponse>(`/customer_portal/ai_reports/settings/${customerCode}`)
+	getCustomerAiReportSettings(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<AiReportSettingsResponse>(`/customer_portal/ai_reports/settings/${customerCode}`, {
+			signal
+		})
 	},
 	/** Admin-only: flips both portal AI surfaces for this customer at once. */
 	setCustomerAiReportSettings(customerCode: string, payload: CustomerPortalAiReportSettingsPayload) {

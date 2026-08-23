@@ -229,7 +229,7 @@ function getAgents() {
 	loadingAgents.value = true
 
 	Api.agents
-		.getAgents()
+		.getAgents({})
 		.then(res => {
 			if (res.data.success) {
 				agentsList.value = res.data.agents || []
@@ -249,7 +249,7 @@ function getCustomers() {
 	loadingCustomers.value = true
 
 	return Api.customers
-		.getCustomers()
+		.getCustomers({})
 		.then(res => {
 			if (res.data.success) {
 				customersList.value = res.data?.customers || []

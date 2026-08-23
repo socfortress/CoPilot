@@ -31,7 +31,7 @@ function getData() {
 	loadingJobs.value = true
 
 	Api.scheduler
-		.getAllJobs()
+		.getAllJobs({})
 		.then(res => {
 			if (res.data.success) {
 				jobs.value = res.data.jobs || []

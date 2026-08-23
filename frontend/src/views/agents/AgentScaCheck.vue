@@ -40,7 +40,14 @@ const { loading, entity: check } = useEntityDetails<ScaPolicyResult, string>({
 			: null,
 	fetch: (_id, signal) =>
 		Api.agents
-			.getSCAResults(agentId.value as string, policyId.value as string, checkId.value as number, signal)
+			.getSCAResults(
+				{
+					agentId: agentId.value as string,
+					policyId: policyId.value as string,
+					checkId: checkId.value as number
+				},
+				signal
+			)
 			.then(res => ({
 				entity: res.data.success ? (res.data.sca_policy_results?.[0] ?? null) : null,
 				message: res.data.message

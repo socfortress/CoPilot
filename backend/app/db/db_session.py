@@ -1,5 +1,6 @@
 # ! NEW WITH MYSQL ! #
 
+import os
 from contextlib import asynccontextmanager
 from contextlib import contextmanager
 
@@ -39,10 +40,38 @@ SQLALCHEMY_DATABASE_URI = f"mysql+aiomysql://{db_user}:{db_password}@{db_url}/co
 session = "placeholder"
 
 # Create async engine for MySQL using aiomysql
+# Connection pool sizing (#1072).
+#
+# The engine used to run on SQLAlchemy's defaults — pool_size=5, max_overflow=10,
+# so 15 connections for the whole process. That was already tight: the sidebar
+# alone fans out several indicators, and a page load fires a dozen endpoints at
+# once, each taking a session for its whole request. Once a connection is not
+# available a request simply waits, which looks exactly like a slow query and is
+# invisible without measuring — `GET /api/customers`, a trivial read, was
+# recorded at 1.3s with 0% event-loop stall.
+#
+# Overridable per deployment: a small MySQL still needs `max_connections` to
+# comfortably exceed DB_POOL_SIZE + DB_MAX_OVERFLOW across every process that
+# talks to it (backend, scheduler jobs in-process, MCP).
+DB_POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "20"))
+DB_MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", "20"))
+# Seconds a request waits for a free connection before erroring rather than
+# hanging indefinitely.
+DB_POOL_TIMEOUT = int(os.getenv("DB_POOL_TIMEOUT", "30"))
+# MySQL closes idle connections after `wait_timeout` (8h by default, often much
+# lower behind a proxy). Recycling below that avoids handing out dead sockets.
+DB_POOL_RECYCLE = int(os.getenv("DB_POOL_RECYCLE", "1800"))
+
 async_engine = create_async_engine(
     SQLALCHEMY_DATABASE_URI,
     echo=False,
-    # Additional MySQL-specific options can be set here if needed
+    pool_size=DB_POOL_SIZE,
+    max_overflow=DB_MAX_OVERFLOW,
+    pool_timeout=DB_POOL_TIMEOUT,
+    pool_recycle=DB_POOL_RECYCLE,
+    # Cheap liveness check on checkout: without it a recycled-by-the-server
+    # connection surfaces as a random "server has gone away" mid-request.
+    pool_pre_ping=True,
 )
 # If you still need sync sessions for some operations, set it appropriately
 # This would typically require a different sync driver since SQLAlchemy doesn't use aiomysql for sync operations

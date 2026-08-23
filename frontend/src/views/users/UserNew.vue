@@ -38,7 +38,7 @@ function onSuccess() {
 
 function getUsers() {
 	Api.users
-		.getUsers()
+		.getUsers({})
 		.then(res => {
 			if (res.data.success) {
 				usersList.value = res.data?.users || []

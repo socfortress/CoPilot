@@ -6,6 +6,7 @@ from typing import Type
 from fastapi import HTTPException
 from loguru import logger
 
+from app.blocking import run_blocking
 from app.connectors.wazuh_indexer.utils.universal import LogsQueryBuilder
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
@@ -348,7 +349,7 @@ async def collect_logs_generic(
     query = query_builder.build()
 
     try:
-        logs = es_client.search(index=index_name, body=query, size=body.size)
+        logs = await run_blocking(es_client.search, index=index_name, body=query, size=body.size)
         logger.info(f"logs collected: {logs}")
         logs_list = [log for log in logs["hits"]["hits"]]
         logger.info(f"logs collected: {logs_list}")

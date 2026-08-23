@@ -15,6 +15,7 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.blocking import run_blocking
 from app.connectors.wazuh_indexer.schema.alerts import AlertNotFound
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHost
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
@@ -127,7 +128,7 @@ async def collect_alerts_generic(
 
         query = query_builder.build()
 
-        alerts = es_client.search(index=index_name, body=query, size=body.size)
+        alerts = await run_blocking(es_client.search, index=index_name, body=query, size=body.size)
     except RequestError as e:
         logger.warning(f"An error occurred while collecting alerts: {e}")
         if "No mapping found for [timestamp_utc] in order to sort on" in str(e):

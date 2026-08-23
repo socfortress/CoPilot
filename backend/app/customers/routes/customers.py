@@ -281,19 +281,21 @@ async def get_customers(
         query,
         Customers.customer_code,
     )
-    result = await session.execute(query)
-    customers = result.scalars().all()
+    # `is_provisioned` used to cost a second statement that read the whole
+    # customers_meta table just to build a set of codes. Measured (#1072 level 2),
+    # every statement on this deployment costs ~135ms regardless of what it does,
+    # so the saving is a round-trip, not a table scan — folded into the same query
+    # as a correlated EXISTS.
+    provisioned = (
+        select(CustomersMeta.customer_code).where(CustomersMeta.customer_code == Customers.customer_code).exists().label("is_provisioned")
+    )
 
-    # Fetch all customer meta records to check provisioning status
-    meta_result = await session.execute(select(CustomersMeta))
-    customer_metas = meta_result.scalars().all()
-    provisioned_codes = {meta.customer_code for meta in customer_metas}
+    result = await session.execute(query.add_columns(provisioned))
 
-    # Parse the customer ORM objects into schema objects and add is_provisioned field
     customers_list = []
-    for customer in customers:
+    for customer, is_provisioned in result.all():
         customer_data = CustomerRequestBody.from_orm(customer)
-        customer_data.is_provisioned = customer.customer_code in provisioned_codes
+        customer_data.is_provisioned = bool(is_provisioned)
         customers_list.append(customer_data)
 
     return CustomersResponse(

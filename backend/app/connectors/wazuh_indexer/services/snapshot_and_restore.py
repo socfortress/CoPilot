@@ -14,6 +14,7 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.blocking import run_blocking
 from app.connectors.wazuh_indexer.models.snapshot_and_restore import SnapshotSchedule
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
     CreateSnapshotRequest,
@@ -151,7 +152,7 @@ async def get_all_indices() -> List[str]:
     """
     try:
         es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
-        indices = es_client.indices.get_alias(index="*")
+        indices = await run_blocking(es_client.indices.get_alias, index="*")
         return list(indices.keys())
     except Exception as e:
         logger.error(f"Failed to get indices: {e}")
@@ -315,7 +316,7 @@ async def list_snapshot_repositories() -> SnapshotRepositoryListResponse:
         es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
 
         # Get all snapshot repositories using the _snapshot API
-        response = es_client.snapshot.get_repository()
+        response = await run_blocking(es_client.snapshot.get_repository)
 
         repositories: List[SnapshotRepository] = []
 
@@ -368,11 +369,7 @@ async def get_snapshot_status(
         snapshot_param = snapshot if snapshot else "_all"
 
         # Get snapshot status using the _snapshot/_status API
-        response = es_client.snapshot.status(
-            repository=repo_param,
-            snapshot=snapshot_param,
-            ignore_unavailable=True,
-        )
+        response = await run_blocking(es_client.snapshot.status, repository=repo_param, snapshot=snapshot_param, ignore_unavailable=True)
 
         snapshots: List[SnapshotStatus] = []
 
@@ -422,11 +419,7 @@ async def list_snapshots(repository: str) -> SnapshotListResponse:
         es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
 
         # Get all snapshots in the repository
-        response = es_client.snapshot.get(
-            repository=repository,
-            snapshot="_all",
-            ignore_unavailable=True,
-        )
+        response = await run_blocking(es_client.snapshot.get, repository=repository, snapshot="_all", ignore_unavailable=True)
 
         snapshots: List[SnapshotInfo] = []
 
@@ -510,7 +503,8 @@ async def restore_snapshot(request: RestoreSnapshotRequest) -> RestoreSnapshotRe
             body["partial"] = request.partial
 
         # Restore the snapshot
-        response = es_client.snapshot.restore(
+        response = await run_blocking(
+            es_client.snapshot.restore,
             repository=request.repository,
             snapshot=request.snapshot,
             body=body if body else None,
@@ -623,7 +617,8 @@ async def create_snapshot(request: CreateSnapshotRequest) -> CreateSnapshotRespo
             body["metadata"] = {"skipped_write_indices": skipped_write_indices}
 
         # Create the snapshot
-        response = es_client.snapshot.create(
+        response = await run_blocking(
+            es_client.snapshot.create,
             repository=request.repository,
             snapshot=request.snapshot,
             body=body if body else None,
@@ -990,11 +985,7 @@ async def get_snapshotted_indices_for_schedule(
         es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
 
         # List all snapshots in the repository
-        response = es_client.snapshot.get(
-            repository=schedule.repository,
-            snapshot="_all",
-            ignore_unavailable=True,
-        )
+        response = await run_blocking(es_client.snapshot.get, repository=schedule.repository, snapshot="_all", ignore_unavailable=True)
 
         # Build the prefix pattern for this schedule's snapshots
         prefix = f"{schedule.snapshot_prefix}_{schedule.name}_".lower().replace(" ", "_")
@@ -1291,11 +1282,7 @@ async def cleanup_old_snapshots(
         es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
 
         # List snapshots in the repository
-        response = es_client.snapshot.get(
-            repository=schedule.repository,
-            snapshot="_all",
-            ignore_unavailable=True,
-        )
+        response = await run_blocking(es_client.snapshot.get, repository=schedule.repository, snapshot="_all", ignore_unavailable=True)
 
         snapshots_to_delete = []
         cutoff_time = datetime.utcnow() - timedelta(days=schedule.retention_days)
@@ -1315,10 +1302,7 @@ async def cleanup_old_snapshots(
         deleted_count = 0
         for snapshot_name in snapshots_to_delete:
             try:
-                es_client.snapshot.delete(
-                    repository=schedule.repository,
-                    snapshot=snapshot_name,
-                )
+                await run_blocking(es_client.snapshot.delete, repository=schedule.repository, snapshot=snapshot_name)
                 deleted_count += 1
                 logger.info(f"Deleted old snapshot: {snapshot_name}")
             except Exception as e:

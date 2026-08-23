@@ -71,7 +71,7 @@ import type { MitreAtomicTest } from "@/types/mitre"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NEmpty, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, ref } from "vue"
+import { computed, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
@@ -158,4 +158,11 @@ watchDebounced([currentPage, pageSize, osCategory], getList, {
 list.value = techniqueAlertsResponse.alerts
 total.value = techniqueAlertsResponse.total_alerts
 */
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
+})
 </script>

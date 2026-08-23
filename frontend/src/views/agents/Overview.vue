@@ -187,7 +187,7 @@ function getAgent() {
 		loadingAgent.value = true
 
 		Api.agents
-			.getAgents(agentId.value)
+			.getAgents({ agentId: agentId.value })
 			.then(res => {
 				if (res.data.success) {
 					agent.value = res.data.agents[0] || null

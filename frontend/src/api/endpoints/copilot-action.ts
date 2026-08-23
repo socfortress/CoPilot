@@ -49,9 +49,10 @@ export default {
 	/**
 	 * Get details for a specific active response script
 	 */
-	getActionByName(copilotActionName: string) {
+	getActionByName(copilotActionName: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { copilot_action: CopilotAction }>(
-			`/copilot_action/inventory/${copilotActionName}`
+			`/copilot_action/inventory/${copilotActionName}`,
+			{ signal }
 		)
 	},
 

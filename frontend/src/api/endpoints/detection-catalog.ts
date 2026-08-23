@@ -23,15 +23,15 @@ import { searchLimitParams } from "../params"
 
 export default {
 	/** Top-level metrics for the catalog overview pane. */
-	getStats() {
-		return HttpClient.get<FlaskBaseResponse & CatalogStatsResponse>(`/copilot_searches/catalog/stats`)
+	getStats(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & CatalogStatsResponse>(`/copilot_searches/catalog/stats`, { signal })
 	},
 
 	/**
 	 * List analytic stories with per-story aggregated summary fields. Pass
 	 * ``search``/``limit`` to filter server-side (used by the global search palette).
 	 */
-	listStories(query: { search?: string; limit?: number } = {}, signal?: AbortSignal) {
+	listStories(query: { search?: string; limit?: number }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & CatalogStoryListResponse>(`/copilot_searches/catalog/stories`, {
 			params: searchLimitParams(query),
 			signal
@@ -61,17 +61,21 @@ export default {
 	 * itself is unchanged — every rule is still returned — but rules without
 	 * any hits for that customer get zeros.
 	 */
-	listWazuhRules(customerCode?: string, query: { search?: string; limit?: number } = {}, signal?: AbortSignal) {
+	listWazuhRules(query: { customerCode?: string; search?: string; limit?: number }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & CatalogWazuhRulesResponse>(`/copilot_searches/catalog/wazuh-rules`, {
-			params: { ...(customerCode ? { customer_code: customerCode } : {}), ...searchLimitParams(query) },
+			params: {
+				...(query.customerCode ? { customer_code: query.customerCode } : {}),
+				...searchLimitParams(query)
+			},
 			signal
 		})
 	},
 
 	/** Full meta payload for one Wazuh rule (header, compliance, if-then details, …). */
-	getWazuhRule(ruleId: number) {
+	getWazuhRule(ruleId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & CatalogWazuhRuleDetailResponse>(
-			`/copilot_searches/catalog/wazuh-rules/${ruleId}`
+			`/copilot_searches/catalog/wazuh-rules/${ruleId}`,
+			{ signal }
 		)
 	},
 
@@ -80,9 +84,10 @@ export default {
 	 * the "where are our blind spots?" view. Sub-techniques are collapsed
 	 * into their parents server-side (a hit on T1059.001 covers T1059).
 	 */
-	listCoverageGaps() {
+	listCoverageGaps(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & CatalogCoverageGapsResponse>(
-			`/copilot_searches/catalog/coverage-gaps`
+			`/copilot_searches/catalog/coverage-gaps`,
+			{ signal }
 		)
 	},
 	getCoverageGap(techniqueId: string, signal?: AbortSignal) {
@@ -106,9 +111,10 @@ export default {
 	},
 
 	/** List the compliance frameworks the Compliance tab can pivot by. */
-	listComplianceFrameworks() {
+	listComplianceFrameworks(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & CatalogComplianceFrameworksResponse>(
-			`/copilot_searches/catalog/compliance/frameworks`
+			`/copilot_searches/catalog/compliance/frameworks`,
+			{ signal }
 		)
 	},
 
@@ -117,9 +123,10 @@ export default {
 	 * carries rule count + total firing hits — the "what coverage do we have
 	 * for PCI 10.2.4?" answer in one round-trip.
 	 */
-	getCompliancePivot(framework: string) {
+	getCompliancePivot(framework: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & CatalogComplianceResponse>(
-			`/copilot_searches/catalog/compliance/${encodeURIComponent(framework)}`
+			`/copilot_searches/catalog/compliance/${encodeURIComponent(framework)}`,
+			{ signal }
 		)
 	},
 

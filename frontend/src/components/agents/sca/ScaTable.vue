@@ -133,7 +133,7 @@ function getSCA(agentId: string) {
 	loading.value = true
 
 	Api.agents
-		.getSCA(agentId)
+		.getSCA({ agentId })
 		.then(res => {
 			if (res.data.success) {
 				scaList.value = (res.data.sca || []).map(o => {

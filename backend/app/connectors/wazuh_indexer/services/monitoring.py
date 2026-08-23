@@ -7,6 +7,7 @@ from typing import Union
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.blocking import run_blocking
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealth
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse
 from app.connectors.wazuh_indexer.schema.monitoring import CustomerIndicesSize
@@ -39,7 +40,7 @@ async def cluster_healthcheck() -> Union[ClusterHealthResponse, Dict[str, str]]:
     logger.info("Collecting Wazuh Indexer healthcheck")
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
-        cluster_health_data = es_client.cluster.health()
+        cluster_health_data = await run_blocking(es_client.cluster.health)
         cluster_health_model = ClusterHealth(**cluster_health_data)
         return ClusterHealthResponse(
             cluster_health=cluster_health_model,
@@ -64,7 +65,7 @@ async def node_allocation() -> Union[NodeAllocationResponse, Dict[str, bool]]:
     logger.info("Collecting Wazuh Indexer node allocation")
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
-        raw_node_allocation_data = es_client.cat.allocation(format="json")
+        raw_node_allocation_data = await run_blocking(es_client.cat.allocation, format="json")
         logger.info(raw_node_allocation_data)
 
         formatted_node_allocation_data = await format_node_allocation(
@@ -99,7 +100,7 @@ async def indices_stats(
     logger.info(f"Collecting Wazuh Indexer indices stats (customer_codes={customer_codes or 'all'})")
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
-        raw_indices_stats_data = es_client.cat.indices(format="json")
+        raw_indices_stats_data = await run_blocking(es_client.cat.indices, format="json")
 
         formatted_indices_stats_data = await format_indices_stats(
             raw_indices_stats_data,
@@ -140,7 +141,7 @@ async def shards() -> Union[ShardsResponse, Dict[str, str]]:
     logger.info("Collecting Wazuh Indexer shards")
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
-        raw_shards_data = es_client.cat.shards(format="json")
+        raw_shards_data = await run_blocking(es_client.cat.shards, format="json")
 
         formatted_shards_data = await format_shards(raw_shards_data)
 
@@ -168,7 +169,7 @@ async def output_shard_number_to_be_set_based_on_nodes() -> int:
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
-        cluster_health_data = es_client.cluster.health()
+        cluster_health_data = await run_blocking(es_client.cluster.health)
         cluster_health_model = ClusterHealth(**cluster_health_data)
         return cluster_health_model.number_of_nodes
     except Exception as e:
@@ -257,7 +258,7 @@ async def indices_size_per_customer(
     logger.info(f"Collecting Wazuh Indexer indices size per customer (customer_codes={customer_codes or 'all'})")
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
-        raw_indices_stats_data = es_client.cat.indices(format="json")
+        raw_indices_stats_data = await run_blocking(es_client.cat.indices, format="json")
 
         formatted_indices_stats_data = await format_indices_stats(raw_indices_stats_data)
 

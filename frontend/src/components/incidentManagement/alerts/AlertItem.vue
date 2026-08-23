@@ -111,6 +111,34 @@
 						</Badge>
 					</AlertStatusSwitch>
 
+					<AlertVerdictSwitch v-slot="{ loading: loadingVerdict }" :alert @updated="updateAlert($event)">
+						<Badge
+							type="splitted"
+							class="cursor-pointer"
+							bright
+							:color="
+								alert.verdict === 'FALSE_POSITIVE'
+									? 'warning'
+									: alert.verdict === 'TRUE_POSITIVE'
+										? 'danger'
+										: undefined
+							"
+						>
+							<template #iconLeft>
+								<n-spin :size="12" :show="loadingVerdict" content-class="flex flex-col justify-center">
+									<Icon :name="VerdictIcon" :size="13" />
+								</n-spin>
+							</template>
+							<template #label>Verdict</template>
+							<template #value>
+								<div class="flex items-center gap-2">
+									{{ verdictLabel(alert.verdict) }}
+									<Icon :name="EditIcon" :size="13" />
+								</div>
+							</template>
+						</Badge>
+					</AlertVerdictSwitch>
+
 					<AlertAssignUser v-slot="{ loading: loadingAssignee }" :alert @updated="updateAlert($event)">
 						<Badge
 							type="splitted"
@@ -290,7 +318,8 @@ import AlertAssignUser from "./AlertAssignUser.vue"
 import AlertDetails from "./AlertDetails.vue"
 import AlertStatusSwitch from "./AlertStatusSwitch.vue"
 import AlertTimeline from "./AlertTimeline.vue"
-import { handleDeleteAlert } from "./utils"
+import AlertVerdictSwitch from "./AlertVerdictSwitch.vue"
+import { handleDeleteAlert, verdictLabel } from "./utils"
 
 const props = defineProps<{
 	alertData?: Alert
@@ -318,6 +347,7 @@ const { alertData, alertId, compact, embedded, detailsOnMounted, highlight, sele
 const LinkIcon = "carbon:launch"
 const TimeIcon = "carbon:time"
 const EditIcon = "uil:edit-alt"
+const VerdictIcon = "carbon:task-view"
 const CommentsIcon = "carbon:chat"
 const AssetsIcon = "carbon:document-security"
 const IoCsIcon = "carbon:ibm-watson-discovery"

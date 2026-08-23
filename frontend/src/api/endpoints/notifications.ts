@@ -27,9 +27,10 @@ import { HttpClient } from "../http-client"
 // receives notifications about Talon's investigation results.
 
 export default {
-	listRoutes(customerCode: string) {
+	listRoutes(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { routes: NotificationRoute[] }>(
-			`/customers/${customerCode}/notification_routes`
+			`/customers/${customerCode}/notification_routes`,
+			{ signal }
 		)
 	},
 
@@ -83,14 +84,17 @@ export default {
 	// Internal-scope routes live outside the /customers/{code}/... tree because
 	// they belong to no tenant. Admin-only: they configure where the SOC's own
 	// traffic goes, which is deployment-wide rather than per-customer.
-	getInternalRoutes() {
-		return HttpClient.get<FlaskBaseResponse & { routes: NotificationRoute[] }>(`/internal_notification_routes`)
+	getInternalRoutes(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { routes: NotificationRoute[] }>(`/internal_notification_routes`, {
+			signal
+		})
 	},
 	// Single internal route — used by its detail page, which is deep-linkable
 	// and so can load without the list having been fetched first.
-	getInternalRoute(routeId: number) {
+	getInternalRoute(routeId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { route: NotificationRoute }>(
-			`/internal_notification_routes/${routeId}`
+			`/internal_notification_routes/${routeId}`,
+			{ signal }
 		)
 	},
 	createInternalRoute(payload: NotificationRoutePayload) {
@@ -112,31 +116,35 @@ export default {
 	// The channel catalog is deployment-wide, not per-customer: it advertises
 	// what this build supports plus each channel's config JSON Schema, which the
 	// route form renders generic inputs from for channels with no bespoke block.
-	getChannels() {
+	getChannels(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { channels: NotificationChannelDescriptor[] }>(
-			`/notification_channels`
+			`/notification_channels`,
+			{ signal }
 		)
 	},
 
 	// Resend's quota is deployment-wide — one API key, one allowance shared by
 	// every customer's routes. customerCode only narrows the display breakdown.
-	getResendQuota(customerCode?: string) {
+	getResendQuota(query: { customerCode?: string }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & ResendQuota>(`/notification_channels/resend/quota`, {
-			params: customerCode ? { customer_code: customerCode } : undefined
+			params: query.customerCode ? { customer_code: query.customerCode } : undefined,
+			signal
 		})
 	},
 
-	listDispatchLog(customerCode: string) {
+	listDispatchLog(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { entries: NotificationDispatchLogEntry[] }>(
-			`/customers/${customerCode}/notification_dispatch_log`
+			`/customers/${customerCode}/notification_dispatch_log`,
+			{ signal }
 		)
 	},
 
 	// ----- Shuffle integrations (Phase 2) -----
 
-	listShuffleIntegrations(customerCode: string) {
+	listShuffleIntegrations(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { integrations: ShuffleIntegration[] }>(
-			`/customers/${customerCode}/shuffle_integrations`
+			`/customers/${customerCode}/shuffle_integrations`,
+			{ signal }
 		)
 	},
 
@@ -158,23 +166,25 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse>(`/customers/${customerCode}/shuffle_integrations/${integrationId}`)
 	},
 
-	listShuffleApps(customerCode: string, integrationId: number) {
+	listShuffleApps(customerCode: string, integrationId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { apps: ShuffleApp[] }>(
-			`/customers/${customerCode}/shuffle_integrations/${integrationId}/apps`
+			`/customers/${customerCode}/shuffle_integrations/${integrationId}/apps`,
+			{ signal }
 		)
 	},
 
-	verifyShuffleIntegration(customerCode: string, integrationId: number) {
+	verifyShuffleIntegration(customerCode: string, integrationId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & ShuffleVerifyResult>(
-			`/customers/${customerCode}/shuffle_integrations/${integrationId}/verify`
+			`/customers/${customerCode}/shuffle_integrations/${integrationId}/verify`,
+			{ signal }
 		)
 	},
 
 	// Phase 3a — deployment-scoped org listing for the integration form's
 	// dropdown picker. Not customer-scoped; the admin Bearer (Shuffle
 	// connector) has access to every org we can attach.
-	listShuffleOrgs() {
-		return HttpClient.get<FlaskBaseResponse & { orgs: ShuffleOrg[] }>(`/notifications/shuffle/orgs`)
+	listShuffleOrgs(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { orgs: ShuffleOrg[] }>(`/notifications/shuffle/orgs`, { signal })
 	},
 
 	// ----- Named message templates (#1038) -----
@@ -184,18 +194,20 @@ export default {
 	// it belongs under. `customerCode` filters the list to that customer's own
 	// templates PLUS the shared ones.
 
-	listTemplates(params?: { customerCode?: string | null; trigger?: string | null }) {
+	listTemplates(params: { customerCode?: string | null; trigger?: string | null }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { templates: NotificationTemplate[] }>(`/notifications/templates`, {
 			params: {
-				customer_code: params?.customerCode || undefined,
-				trigger: params?.trigger || undefined
-			}
+				customer_code: params.customerCode || undefined,
+				trigger: params.trigger || undefined
+			},
+			signal
 		})
 	},
 
-	getTemplate(templateId: number) {
+	getTemplate(templateId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { template: NotificationTemplate }>(
-			`/notifications/templates/${templateId}`
+			`/notifications/templates/${templateId}`,
+			{ signal }
 		)
 	},
 

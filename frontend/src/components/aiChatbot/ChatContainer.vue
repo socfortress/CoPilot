@@ -52,7 +52,7 @@ import { useStorage } from "@vueuse/core"
 import axios from "axios"
 import { NScrollbar, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
-import { nextTick, onBeforeMount, onMounted, ref } from "vue"
+import { nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref } from "vue"
 import Api from "@/api"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -194,4 +194,11 @@ onMounted(() => {
 })
 
 defineExpose({ clearHistory })
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
+})
 </script>

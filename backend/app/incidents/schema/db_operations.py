@@ -3,10 +3,12 @@ from enum import Enum
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
 
@@ -120,6 +122,61 @@ class AlertStatus(str, Enum):
 class UpdateAlertStatus(BaseModel):
     alert_id: int
     status: AlertStatus
+
+
+class AlertVerdict(str, Enum):
+    """Analyst triage verdict. The absence of a verdict (NULL on the alert) is a third,
+    meaningful state -- "not yet triaged" -- and is represented by omitting the value
+    rather than by a member here."""
+
+    TRUE_POSITIVE = "TRUE_POSITIVE"
+    FALSE_POSITIVE = "FALSE_POSITIVE"
+
+
+class FalsePositiveReason(str, Enum):
+    """Why an alert was judged a false positive.
+
+    A closed vocabulary on purpose: free-form tags were the pre-existing workaround and
+    the reason reporting on false positives was unreliable (GitHub issue #1085). Adding a
+    member is a code change, which is what keeps the aggregate counts comparable across
+    analysts and across months.
+    """
+
+    EXPECTED_ACTIVITY = "EXPECTED_ACTIVITY"
+    KNOWN_APPLICATION = "KNOWN_APPLICATION"
+    AUTHORIZED_USER = "AUTHORIZED_USER"
+    RULE_TOO_SENSITIVE = "RULE_TOO_SENSITIVE"
+    OTHER = "OTHER"
+
+
+# Filter-only sentinel for "no verdict recorded yet". Not an AlertVerdict member and never
+# stored -- untriaged is NULL on the column. It exists so a single `verdict` query param can
+# express all three states an analyst wants to slice by.
+VERDICT_FILTER_UNTRIAGED = "UNTRIAGED"
+
+
+class UpdateAlertVerdict(BaseModel):
+    """Set, change or clear an alert's triage verdict.
+
+    `verdict=None` clears it back to untriaged, which is why the field is Optional rather
+    than defaulted -- an analyst who mis-clicked needs a way back to "nobody has judged
+    this", and that is not the same as marking it a true positive.
+    """
+
+    alert_id: int
+    verdict: Optional[AlertVerdict] = None
+    verdict_reason: Optional[FalsePositiveReason] = None
+    verdict_note: Optional[str] = Field(default=None, max_length=1024)
+
+    @model_validator(mode="after")
+    def check_reason_matches_verdict(self):
+        # A reason only means anything alongside FALSE_POSITIVE. Silently dropping a
+        # mismatched one would leave the caller believing it was recorded.
+        if self.verdict_reason is not None and self.verdict != AlertVerdict.FALSE_POSITIVE:
+            raise ValueError("verdict_reason is only valid when verdict is FALSE_POSITIVE")
+        if self.verdict == AlertVerdict.FALSE_POSITIVE and self.verdict_reason is None:
+            raise ValueError("verdict_reason is required when verdict is FALSE_POSITIVE")
+        return self
 
 
 class UpdateCaseStatus(BaseModel):
@@ -444,13 +501,18 @@ class AlertOut(BaseModel):
     source: str
     assigned_to: Optional[str] = None
     escalated: bool = False
+    verdict: Optional[str] = None
+    verdict_reason: Optional[str] = None
+    verdict_note: Optional[str] = None
+    verdict_by: Optional[str] = None
+    verdict_at: Optional[str] = None
     comments: List[CommentBase] = []
     assets: List[AssetBase] = []
     tags: List[AlertTagBase] = []
     linked_cases: List[LinkedCaseCreate] = []
     iocs: List[IoCBase] = []
 
-    @field_validator("alert_creation_time", "time_closed", mode="before")
+    @field_validator("alert_creation_time", "time_closed", "verdict_at", mode="before")
     @classmethod
     def format_datetime(cls, v):
         if isinstance(v, datetime):
@@ -595,6 +657,59 @@ class AlertFilterOptionsResponse(BaseModel):
     assets: List[str]
     tags: List[str]
     statuses: List[str] = [s.value for s in AlertStatus]
+    # Verdict vocabulary is served alongside the data-derived options so the UI never
+    # hard-codes it. UNTRIAGED is included because it is a selectable filter state even
+    # though it is never a stored value.
+    verdicts: List[str] = [v.value for v in AlertVerdict] + [VERDICT_FILTER_UNTRIAGED]
+    false_positive_reasons: List[str] = [r.value for r in FalsePositiveReason]
+    success: bool
+    message: str
+
+
+class FalsePositiveRuleStat(BaseModel):
+    """One detection's false-positive record over the window."""
+
+    alert_name: str
+    false_positive: int
+    reviewed: int
+    # None when nothing was reviewed: no rate exists, and 0.0 would read as "clean".
+    false_positive_rate: Optional[float] = None
+
+
+class FalsePositiveCustomerStat(BaseModel):
+    customer_code: str
+    false_positive: int
+    reviewed: int
+    false_positive_rate: Optional[float] = None
+
+
+class VerdictTrendPoint(BaseModel):
+    month: str
+    false_positive: int
+    true_positive: int
+    untriaged: int
+    false_positive_rate: Optional[float] = None
+
+
+class VerdictStatsResponse(BaseModel):
+    """Aggregate triage-verdict statistics for a window.
+
+    `false_positive_rate` throughout is a percentage of *reviewed* alerts, never of all
+    alerts ingested -- otherwise the rate would improve every time triage fell behind.
+    `coverage_rate` is what keeps that number in proportion.
+    """
+
+    total: int
+    reviewed: int
+    untriaged: int
+    true_positive: int
+    false_positive: int
+    false_positive_rate: Optional[float] = None
+    coverage_rate: Optional[float] = None
+    by_reason: List[Tuple[str, int]] = []
+    by_alert_name: List[FalsePositiveRuleStat] = []
+    by_customer: List[FalsePositiveCustomerStat] = []
+    trend: List[VerdictTrendPoint] = []
     success: bool
     message: str
 

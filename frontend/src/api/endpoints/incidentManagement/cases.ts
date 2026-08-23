@@ -45,7 +45,7 @@ export interface ExportCasesQuery {
 }
 
 export default {
-	getCasesList(query: CasesListQuery = {}, signal?: AbortSignal) {
+	getCasesList(query: CasesListQuery, signal?: AbortSignal) {
 		let url = `/incidents/db_operations/cases`
 
 		if (query.status) {
@@ -83,19 +83,21 @@ export default {
 			signal
 		})
 	},
-	searchCasesByName(name: string, query: CasesPaginationParams = {}, signal?: AbortSignal) {
+	searchCasesByName(query: { name: string } & CasesPaginationParams, signal?: AbortSignal) {
 		const params: Record<string, number | string> = {}
 		if (query.page !== undefined) params.page = query.page
 		if (query.pageSize !== undefined) params.page_size = query.pageSize
 		if (query.order !== undefined) params.order = query.order
 
 		return HttpClient.get<FlaskBaseResponse & CasesListResponse>(
-			`/incidents/db_operations/case/name/${encodeURIComponent(name)}`,
+			`/incidents/db_operations/case/name/${encodeURIComponent(query.name)}`,
 			{ params, signal }
 		)
 	},
-	getCase(caseId: number) {
-		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(`/incidents/db_operations/case/${caseId}`)
+	getCase(caseId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { cases: Case[] }>(`/incidents/db_operations/case/${caseId}`, {
+			signal
+		})
 	},
 	createCase(payload: CasePayload, params: Record<string, number | string | boolean> = {}) {
 		return HttpClient.post<FlaskBaseResponse & { case: Case }>(`/incidents/db_operations/case/create`, payload, {
@@ -169,14 +171,16 @@ export default {
 			}
 		})
 	},
-	getCaseDataStoreFiles(caseId: number) {
+	getCaseDataStoreFiles(caseId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { case_data_store: CaseDataStore[] }>(
-			`/incidents/db_operations/case/data-store/${caseId}`
+			`/incidents/db_operations/case/data-store/${caseId}`,
+			{ signal }
 		)
 	},
-	downloadCaseDataStoreFile(caseId: number, fileName: string) {
+	downloadCaseDataStoreFile(caseId: number, fileName: string, signal?: AbortSignal) {
 		return HttpClient.get<Blob>(`/incidents/db_operations/case/data-store/download/${caseId}/${fileName}`, {
-			responseType: "blob"
+			responseType: "blob",
+			signal
 		})
 	},
 	uploadCaseDataStoreFile(caseId: number, file: File) {
@@ -196,9 +200,10 @@ export default {
 	deleteCaseDataStoreFile(caseId: number, fileName: string) {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case/data-store/${caseId}/${fileName}`)
 	},
-	getCaseReportTemplate() {
+	getCaseReportTemplate(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { case_report_template_data_store: string[] }>(
-			`/incidents/db_operations/case-report-template`
+			`/incidents/db_operations/case-report-template`,
+			{ signal }
 		)
 	},
 	uploadDefaultCaseReportTemplate() {
@@ -215,17 +220,19 @@ export default {
 			form
 		)
 	},
-	downloadCaseReportTemplate(fileName: string) {
+	downloadCaseReportTemplate(fileName: string, signal?: AbortSignal) {
 		return HttpClient.get<Blob>(`/incidents/db_operations/case-report-template/download/${fileName}`, {
-			responseType: "blob"
+			responseType: "blob",
+			signal
 		})
 	},
 	deleteCaseReportTemplate(fileName: string) {
 		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case-report-template/${fileName}`)
 	},
-	checkDefaultCaseReportTemplateExists() {
+	checkDefaultCaseReportTemplateExists(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { default_template_exists: boolean }>(
-			`/incidents/db_operations/case-report-template/do-default-template-exists`
+			`/incidents/db_operations/case-report-template/do-default-template-exists`,
+			{ signal }
 		)
 	},
 	generateCaseReport(payload: CaseReportPayload, type: "docx" | "pdf") {

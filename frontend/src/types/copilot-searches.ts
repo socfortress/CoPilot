@@ -27,6 +27,10 @@ export interface RuleSummary {
 	severity: string
 	risk_score: number
 	platform: string
+	/** detections/<folder> the rule lives in, verbatim from the rules repo */
+	category: string
+	/** Display label for `category`, e.g. "EID 01 Process Creation" */
+	category_label: string
 	mitre_attack_id: string[]
 	analytic_story: string[]
 	cve: string[]
@@ -89,7 +93,20 @@ export interface RuleListResponse {
 	total: number
 	filtered: number
 	platform: string
+	category: string | null
 	rules: RuleSummary[]
+}
+
+/** One detections/ folder from the CoPilot-Search-Queries repo */
+export interface RuleCategory {
+	value: string
+	label: string
+	group: string
+	count: number
+}
+
+export interface RuleCategoriesResponse {
+	categories: RuleCategory[]
 }
 
 export interface RuleDetailResponse {
@@ -99,6 +116,7 @@ export interface RuleDetailResponse {
 export interface RuleStatsResponse {
 	total_rules: number
 	by_platform: Record<string, number>
+	by_category: Record<string, number>
 	by_status: Record<string, number>
 	by_severity: Record<string, number>
 	by_mitre_tactic: Record<string, number>
@@ -206,6 +224,7 @@ export interface GraylogProvisioningStatusResponse {
 
 export interface RuleListQuery {
 	platform?: PlatformFilter
+	category?: string
 	status?: RuleStatus
 	severity?: RuleSeverity
 	mitre_id?: string
@@ -264,10 +283,12 @@ export interface MitreRuleIndexEntry {
 export interface RulesByMitreQuery {
 	techniqueId: string
 	platform?: PlatformFilter
+	category?: string
 }
 
 export interface MitreCoverageQuery {
 	platform?: PlatformFilter
+	category?: string
 	severity?: RuleSeverity
 	status?: RuleStatus
 	has_graylog?: boolean

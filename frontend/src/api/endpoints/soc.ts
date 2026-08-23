@@ -34,8 +34,8 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
-	getAlert(alertId: string) {
-		return HttpClient.get<FlaskBaseResponse & { alert: SocAlert }>(`/soc/alerts/${alertId}`)
+	getAlert(alertId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { alert: SocAlert }>(`/soc/alerts/${alertId}`, { signal })
 	},
 	getAlertsBookmark(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { bookmarked_alerts: SocAlert[] }>(
@@ -49,8 +49,10 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
-	getAssetsByAlert(alertId: string) {
-		return HttpClient.get<FlaskBaseResponse & { assets: SocAlertAsset[] }>(`/soc/alerts/assets/${alertId}`)
+	getAssetsByAlert(alertId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { assets: SocAlertAsset[] }>(`/soc/alerts/assets/${alertId}`, {
+			signal
+		})
 	},
 	addAlertBookmark(alertId: string) {
 		return HttpClient.post<FlaskBaseResponse & { alert: SocAlert }>(`/soc/alerts/bookmark/${alertId}`)
@@ -76,9 +78,10 @@ export default {
 	// #endregion
 
 	// #region Assets
-	getAssetsByCase(caseId: string) {
+	getAssetsByCase(caseId: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { assets: SocCaseAsset[]; state: SocCaseAssetsState }>(
-			`/soc/assets/${caseId}`
+			`/soc/assets/${caseId}`,
+			{ signal }
 		)
 	},
 	// #endregion
@@ -101,8 +104,8 @@ export default {
 	// #endregion
 
 	// #region Users
-	getUsers() {
-		return HttpClient.get<FlaskBaseResponse & { users: SocUser[] }>(`/soc/users`)
+	getUsers(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { users: SocUser[] }>(`/soc/users`, { signal })
 	},
 	assignUserToAlert(alertId: string, userId: string) {
 		return HttpClient.post<FlaskBaseResponse & { alert: SocAlert }>(`/soc/users/assign/${alertId}/${userId}`)

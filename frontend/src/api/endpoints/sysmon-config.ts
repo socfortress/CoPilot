@@ -3,16 +3,14 @@ import type { ConfigContent, DeployConfigResponse, UploadConfigFileResponse } fr
 import { HttpClient } from "../http-client"
 
 export default {
-	getAll() {
-		return HttpClient.get<FlaskBaseResponse & { customer_codes: string[] }>(`/sysmon_config`)
+	getAll(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { customer_codes: string[] }>(`/sysmon_config`, { signal })
 	},
-	getConfigContent(customerCode: string) {
-		return HttpClient.get<FlaskBaseResponse & ConfigContent>(`/sysmon_config/content/${customerCode}`)
+	getConfigContent(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & ConfigContent>(`/sysmon_config/content/${customerCode}`, { signal })
 	},
-	getConfigFile(customerCode: string) {
-		return HttpClient.get<Blob>(`/sysmon_config/${customerCode}`, {
-			responseType: "blob"
-		})
+	getConfigFile(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<Blob>(`/sysmon_config/${customerCode}`, { responseType: "blob", signal })
 	},
 	uploadConfigFile(customerCode: string, config: File) {
 		const form = new FormData()

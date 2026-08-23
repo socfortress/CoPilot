@@ -76,7 +76,7 @@
 import type { ScrollbarInst } from "naive-ui"
 import { useMagicKeys, useStorage, watchDebounced, whenever } from "@vueuse/core"
 import { NAvatar, NCard, NDivider, NHighlight, NModal, NScrollbar, NSpin, NText } from "naive-ui"
-import { computed, onMounted, reactive, ref, watch } from "vue"
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -450,7 +450,7 @@ const REMOTE_PROVIDERS: RemoteProvider[] = [
 	{
 		name: "Customers",
 		async search(query, signal) {
-			const res = await Api.customers.searchCustomers(query, REMOTE_MAX_ITEMS, signal)
+			const res = await Api.customers.searchCustomers({ search: query, limit: REMOTE_MAX_ITEMS }, signal)
 			return toEntityItems("customer", res.data.customers ?? [], c => [
 				c.customer_code,
 				c.customer_name,
@@ -472,8 +472,7 @@ const REMOTE_PROVIDERS: RemoteProvider[] = [
 		name: "Cases",
 		async search(query, signal) {
 			const res = await Api.incidentManagement.cases.searchCasesByName(
-				query,
-				{ page: 1, pageSize: REMOTE_MAX_ITEMS },
+				{ name: query, page: 1, pageSize: REMOTE_MAX_ITEMS },
 				signal
 			)
 			return toEntityItems("case", res.data.cases, c => [String(c.id), c.case_name, `#${c.id}`])
@@ -507,7 +506,7 @@ const REMOTE_PROVIDERS: RemoteProvider[] = [
 	{
 		name: "Wazuh Rules",
 		async search(query, signal) {
-			const res = await Api.detectionCatalog.listWazuhRules(undefined, { search: query, ...SEARCH_LIMIT }, signal)
+			const res = await Api.detectionCatalog.listWazuhRules({ search: query, ...SEARCH_LIMIT }, signal)
 			return toEntityItems(
 				"wazuhRule",
 				res.data.rules.filter(r => r.id != null),
@@ -737,6 +736,13 @@ onMounted(() => {
 			}
 		})
 	}
+})
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	remoteAbort?.abort()
 })
 </script>
 

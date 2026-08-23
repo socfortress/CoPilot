@@ -69,7 +69,7 @@ const kernel = ref<MetricsKernelData>({})
 async function reload() {
 	loading.value = true
 	try {
-		const res = await Api.metrics.getKernel(props.host, props.range)
+		const res = await Api.metrics.getKernel({ host: props.host, rangeH: props.range })
 		if (!res.data.success) {
 			message.warning(res.data.message || "Error fetching kernel metrics")
 			kernel.value = {}

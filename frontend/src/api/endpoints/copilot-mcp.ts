@@ -9,30 +9,32 @@ export interface QueryPayload {
 }
 
 export default {
-	getAvailableServers() {
+	getAvailableServers(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { servers: MCPServer[]; total_servers: number }>(
-			`/copilot_mcp/servers`
+			`/copilot_mcp/servers`,
+			{ signal }
 		)
 	},
-	getServerDetails(server: string) {
+	getServerDetails(server: string, signal?: AbortSignal) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
 				servers: MCPServer[]
 				available_categories: string[]
 				total_example_questions: number
 			}
-		>(`/copilot_mcp/servers/${server}`)
+		>(`/copilot_mcp/servers/${server}`, { signal })
 	},
 	query(payload: QueryPayload, signal?: AbortSignal) {
 		return HttpClient.post<FlaskBaseResponse & QueryResult>(`/copilot_mcp/query`, payload, signal ? { signal } : {})
 	},
-	getExampleQuestions(server: string) {
+	getExampleQuestions(server: string, signal?: AbortSignal) {
 		return HttpClient.get<
 			FlaskBaseResponse & { mcp_server: string; questions: ExampleQuestion[]; total_questions: number }
 		>(`/copilot_mcp/example-questions`, {
 			params: {
 				mcp_server: server
-			}
+			},
+			signal
 		})
 	}
 }

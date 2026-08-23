@@ -10,13 +10,16 @@ from loguru import logger
 from app.integrations.copilot_searches.schema.copilot_searches import PlatformFilter
 from app.integrations.copilot_searches.schema.copilot_searches import RuleSeverity
 from app.integrations.copilot_searches.schema.copilot_searches import RuleStatus
+from app.integrations.copilot_searches.services.cache_support import (
+    BackgroundRefreshMixin,
+)
 from app.integrations.copilot_searches.services.copilot_searches import rules_cache
 
 MITRE_STIX_URL = "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
 MITRE_CACHE_TTL_HOURS = 24
 
 
-class MitreMatrix:
+class MitreMatrix(BackgroundRefreshMixin):
     """In-memory cache of the MITRE ATT&CK Enterprise matrix structure.
 
     Pulls the official STIX bundle from mitre/cti and indexes tactics + techniques
@@ -158,6 +161,7 @@ mitre_matrix = MitreMatrix()
 def _rule_matches_filters(
     rule: dict,
     platform: Optional[PlatformFilter],
+    category: Optional[str],
     severity: Optional[RuleSeverity],
     status: Optional[RuleStatus],
     has_graylog: Optional[bool],
@@ -165,6 +169,10 @@ def _rule_matches_filters(
 ) -> bool:
     if platform is not None and platform != PlatformFilter.ALL:
         if rule.get("_platform", "unknown") != platform.value:
+            return False
+    if category:
+        # Case-insensitive: the repo mixes folder casing (Entra_id vs auditd).
+        if (rule.get("_category") or "").lower() != category.lower():
             return False
     if severity is not None:
         if rule.get("response", {}).get("severity", "").lower() != severity.value:
@@ -186,6 +194,7 @@ def _rule_matches_filters(
 
 async def get_coverage(
     platform: Optional[PlatformFilter] = None,
+    category: Optional[str] = None,
     severity: Optional[RuleSeverity] = None,
     status: Optional[RuleStatus] = None,
     has_graylog: Optional[bool] = None,
@@ -193,8 +202,9 @@ async def get_coverage(
 ) -> dict:
     """Build the MITRE coverage map by cross-referencing rules against the matrix.
 
-    Optional filters narrow the rules considered (platform/severity/status/has_graylog/search)
-    so the matrix can show "Windows-only coverage", etc.
+    Optional filters narrow the rules considered
+    (platform/category/severity/status/has_graylog/search) so the matrix can show
+    "Sysmon process-creation coverage only", etc.
 
     Returns a payload shaped for the frontend matrix view: ordered tactic columns,
     techniques grouped under each tactic, per-technique rule counts + IDs with
@@ -212,7 +222,7 @@ async def get_coverage(
         rule_id = rule.get("id", "")
         if not rule_id:
             continue
-        if not _rule_matches_filters(rule, platform, severity, status, has_graylog, search):
+        if not _rule_matches_filters(rule, platform, category, severity, status, has_graylog, search):
             continue
 
         # Cap data_sources at 3 to keep payload small; full list is in /id/{rule_id}.

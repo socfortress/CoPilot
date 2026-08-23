@@ -96,7 +96,7 @@ function getData() {
 	loading.value = true
 
 	return Api.aiAnalyst
-		.getAlertsWithReports(customerFilter.value)
+		.getAlertsWithReports({ customerCodes: customerFilter.value })
 		.then(res => {
 			if (res.data.success) {
 				alertsList.value = res.data?.alerts || []

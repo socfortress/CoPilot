@@ -93,7 +93,7 @@ import type { CopilotAction } from "@/types/copilot-action"
 import { watchDebounced } from "@vueuse/core"
 import axios from "axios"
 import { NAlert, NButton, NEmpty, NInput, NPagination, NPopover, NSelect, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { onBeforeMount, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
@@ -177,5 +177,12 @@ watchDebounced([selectedTechnology, searchQuery, () => pagination.value.current]
 
 onBeforeMount(() => {
 	getTechnologies()
+})
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
 })
 </script>

@@ -240,7 +240,7 @@ function getAgents(cb?: (agents: Agent[]) => void) {
 	loadingAgents.value = true
 
 	Api.agents
-		.getAgents()
+		.getAgents({})
 		.then(res => {
 			if (res.data.success) {
 				agentsList.value = res.data.agents || []

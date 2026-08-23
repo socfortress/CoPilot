@@ -13,6 +13,13 @@ export interface CatalogStoryRow {
 
 export interface CatalogStoryListResponse {
 	stories: CatalogStoryRow[]
+	/**
+	 * True while a catalog cache is still being populated in the background.
+	 * Distinguishes "not loaded yet" from "nothing found" — a cold cache returns
+	 * an empty list, and showing that as the answer reads as "this deployment has
+	 * no detections" (#1072).
+	 */
+	loading?: boolean
 }
 
 export interface CatalogStoryDetection {
@@ -53,6 +60,13 @@ export interface CatalogStatsResponse {
 	wazuh_rule_count: number
 	wazuh_last_refresh: string | null
 	wazuh_available: boolean
+	/**
+	 * True while a catalog cache is still being populated in the background.
+	 * Distinguishes "not loaded yet" from "nothing found" — a cold cache returns
+	 * an empty list, and showing that as the answer reads as "this deployment has
+	 * no detections" (#1072).
+	 */
+	loading?: boolean
 	wazuh_unavailable_reason: string | null
 }
 

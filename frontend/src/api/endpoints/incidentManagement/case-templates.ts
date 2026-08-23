@@ -49,14 +49,15 @@ export interface CaseTemplateSuggestQuery {
 }
 
 export default {
-	listTemplates(filters: CaseTemplateListFilters = {}) {
+	listTemplates(filters: CaseTemplateListFilters, signal?: AbortSignal) {
 		const params: Record<string, string | boolean> = {}
 		if (filters.customerCode !== undefined) params.customer_code = filters.customerCode
 		if (filters.source !== undefined) params.source = filters.source
 		if (filters.includeGlobal !== undefined) params.include_global = filters.includeGlobal
 
 		return HttpClient.get<FlaskBaseResponse & { templates: CaseTemplate[] }>(`/incidents/case_templates`, {
-			params
+			params,
+			signal
 		})
 	},
 	/**
@@ -66,7 +67,7 @@ export default {
 	 * "tasks that will be added" preview costs no extra round-trip, plus the
 	 * reasons behind its rank so the ordering is auditable rather than opaque.
 	 */
-	suggestTemplates(query: CaseTemplateSuggestQuery = {}) {
+	suggestTemplates(query: CaseTemplateSuggestQuery, signal?: AbortSignal) {
 		const params: Record<string, string | number> = {}
 		if (query.alertId !== undefined) params.alert_id = query.alertId
 		if (query.customerCode) params.customer_code = query.customerCode
@@ -75,12 +76,13 @@ export default {
 
 		return HttpClient.get<FlaskBaseResponse & CaseTemplateSuggestionListResponse>(
 			`/incidents/case_templates/suggest`,
-			{ params }
+			{ params, signal }
 		)
 	},
-	getTemplate(templateId: number) {
+	getTemplate(templateId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { template: CaseTemplate | null }>(
-			`/incidents/case_templates/${templateId}`
+			`/incidents/case_templates/${templateId}`,
+			{ signal }
 		)
 	},
 	createTemplate(payload: CaseTemplateCreatePayload) {
@@ -129,9 +131,10 @@ export default {
 	// ---------------------------------------------------------------------------
 	// Per-case tasks (visible to admin/analyst/customer_user; writes admin/analyst only)
 	// ---------------------------------------------------------------------------
-	listCaseTasks(caseId: number) {
+	listCaseTasks(caseId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { tasks: CaseTask[] }>(
-			`/incidents/db_operations/case/${caseId}/tasks`
+			`/incidents/db_operations/case/${caseId}/tasks`,
+			{ signal }
 		)
 	},
 	addCaseTask(caseId: number, payload: CaseTaskCreatePayload) {
@@ -165,10 +168,11 @@ export default {
 	// ---------------------------------------------------------------------------
 	// Timeline (read-only for everyone with case access)
 	// ---------------------------------------------------------------------------
-	getCaseTimeline(caseId: number, { limit = 500, offset = 0 }: CaseTimelineQuery = {}) {
+	getCaseTimeline(query: { caseId: number } & CaseTimelineQuery, signal?: AbortSignal) {
+		const { caseId, limit = 500, offset = 0 } = query
 		return HttpClient.get<FlaskBaseResponse & { case_id: number; events: CaseEvent[] }>(
 			`/incidents/db_operations/case/${caseId}/timeline`,
-			{ params: { limit, offset } }
+			{ params: { limit, offset }, signal }
 		)
 	},
 
@@ -177,12 +181,16 @@ export default {
 	// Read-only catalog of YAML playbooks from
 	// https://github.com/socfortress/CoPilot-Case-Templates.
 	// ---------------------------------------------------------------------------
-	getLibrary() {
-		return HttpClient.get<FlaskBaseResponse & CaseTemplateLibraryListResponse>(`/incidents/case_templates/library`)
+	getLibrary(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & CaseTemplateLibraryListResponse>(
+			`/incidents/case_templates/library`,
+			{ signal }
+		)
 	},
-	getLibraryEntry(key: string) {
+	getLibraryEntry(key: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { entry: CaseTemplateLibraryEntry | null }>(
-			`/incidents/case_templates/library/${encodeURIComponent(key)}`
+			`/incidents/case_templates/library/${encodeURIComponent(key)}`,
+			{ signal }
 		)
 	},
 	refreshLibrary() {

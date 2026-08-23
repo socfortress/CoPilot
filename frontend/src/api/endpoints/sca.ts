@@ -80,9 +80,10 @@ export default {
 	/**
 	 * Get SCA statistics
 	 */
-	getScaStats(customer_code?: string) {
+	getScaStats(query: { customerCode?: string }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & ScaStatsResponse>(`/sca/stats`, {
-			params: customer_code ? { customer_code } : undefined
+			params: query.customerCode ? { customer_code: query.customerCode } : undefined,
+			signal
 		})
 	},
 
@@ -107,10 +108,8 @@ export default {
 	/**
 	 * Download an SCA report
 	 */
-	downloadReport(reportId: number) {
-		return HttpClient.get<Blob>(`/sca/reports/${reportId}/download`, {
-			responseType: "blob"
-		})
+	downloadReport(reportId: number, signal?: AbortSignal) {
+		return HttpClient.get<Blob>(`/sca/reports/${reportId}/download`, { responseType: "blob", signal })
 	},
 
 	/**
@@ -123,8 +122,8 @@ export default {
 	/**
 	 * List all available SCA policies from the CoPilot-SCA repository
 	 */
-	getPolicies() {
-		return HttpClient.get<FlaskBaseResponse & ScaPoliciesIndexResponse>(`/sca/policies`)
+	getPolicies(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & ScaPoliciesIndexResponse>(`/sca/policies`, { signal })
 	},
 
 	/**
@@ -141,23 +140,24 @@ export default {
 	/**
 	 * Fetch the YAML content of a specific SCA policy
 	 */
-	getPolicyContent(policyId: string) {
-		return HttpClient.get<FlaskBaseResponse & ScaPolicyContentResponse>(`/sca/policies/${policyId}`)
+	getPolicyContent(policyId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & ScaPolicyContentResponse>(`/sca/policies/${policyId}`, { signal })
 	},
 
 	/**
 	 * List all tracked SCA-relevant package categories
 	 */
-	getPackageRegistry() {
-		return HttpClient.get<FlaskBaseResponse & ScaPackageRegistryResponse>(`/sca/packages/registry`)
+	getPackageRegistry(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & ScaPackageRegistryResponse>(`/sca/packages/registry`, { signal })
 	},
 
 	/**
 	 * Detect agents running a tracked SCA-relevant package
 	 */
-	getAgentsForPackage(registryKey: string) {
+	getAgentsForPackage(registryKey: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & ScaPackageAgentsResponse>(
-			`/sca/packages/registry/${registryKey}/agents`
+			`/sca/packages/registry/${registryKey}/agents`,
+			{ signal }
 		)
 	}
 }

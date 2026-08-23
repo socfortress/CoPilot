@@ -42,11 +42,16 @@ export default {
 	getJob(jobId: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { job: AiAnalystJob }>(`/ai_analyst/jobs/${jobId}`, { signal })
 	},
-	getJobsByAlert(alertId: number) {
-		return HttpClient.get<FlaskBaseResponse & { jobs: AiAnalystJob[] }>(`/ai_analyst/jobs/alert/${alertId}`)
+	getJobsByAlert(alertId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { jobs: AiAnalystJob[] }>(`/ai_analyst/jobs/alert/${alertId}`, {
+			signal
+		})
 	},
-	getJobsByCustomer(customerCode: string) {
-		return HttpClient.get<FlaskBaseResponse & { jobs: AiAnalystJob[] }>(`/ai_analyst/jobs/customer/${customerCode}`)
+	getJobsByCustomer(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { jobs: AiAnalystJob[] }>(
+			`/ai_analyst/jobs/customer/${customerCode}`,
+			{ signal }
+		)
 	},
 
 	// Reports
@@ -61,9 +66,10 @@ export default {
 	}) {
 		return HttpClient.post<FlaskBaseResponse & { report: AiAnalystReport }>(`/ai_analyst/reports`, payload)
 	},
-	getReportsByAlert(alertId: number) {
+	getReportsByAlert(alertId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { reports: AiAnalystReport[] }>(
-			`/ai_analyst/reports/alert/${alertId}`
+			`/ai_analyst/reports/alert/${alertId}`,
+			{ signal }
 		)
 	},
 
@@ -85,29 +91,35 @@ export default {
 			payload
 		)
 	},
-	getIocsByReport(reportId: number) {
-		return HttpClient.get<FlaskBaseResponse & { iocs: AiAnalystIoc[] }>(`/ai_analyst/iocs/report/${reportId}`)
+	getIocsByReport(reportId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { iocs: AiAnalystIoc[] }>(`/ai_analyst/iocs/report/${reportId}`, {
+			signal
+		})
 	},
-	getIocsByAlert(alertId: number) {
-		return HttpClient.get<FlaskBaseResponse & { iocs: AiAnalystIoc[] }>(`/ai_analyst/iocs/alert/${alertId}`)
+	getIocsByAlert(alertId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { iocs: AiAnalystIoc[] }>(`/ai_analyst/iocs/alert/${alertId}`, {
+			signal
+		})
 	},
 	getIoc(iocId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { ioc: AiAnalystIoc }>(`/ai_analyst/iocs/${iocId}`, { signal })
 	},
-	getIocsByCustomer(customerCode: string, vtVerdict?: string) {
+	getIocsByCustomer(query: { customerCode: string; vtVerdict?: string }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { iocs: AiAnalystIoc[] }>(
-			`/ai_analyst/iocs/customer/${customerCode}`,
+			`/ai_analyst/iocs/customer/${query.customerCode}`,
 			{
-				params: vtVerdict ? { vt_verdict: vtVerdict } : {}
+				params: query.vtVerdict ? { vt_verdict: query.vtVerdict } : {},
+				signal
 			}
 		)
 	},
 
 	// Alerts with reports
-	getAlertsWithReports(customerCodes?: string[]) {
+	getAlertsWithReports(query: { customerCodes?: string[] }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { alerts: AlertWithReport[] }>(`/ai_analyst/alerts_with_reports`, {
-			params: customerCodes?.length ? { customer_codes: customerCodes } : {},
-			paramsSerializer: { indexes: null }
+			params: query.customerCodes?.length ? { customer_codes: query.customerCodes } : {},
+			paramsSerializer: { indexes: null },
+			signal
 		})
 	},
 	getAlertWithReportByAlertId(alertId: number, signal?: AbortSignal) {
@@ -123,14 +135,14 @@ export default {
 	},
 
 	// Combined alert analysis
-	getAlertAnalysis(alertId: number) {
+	getAlertAnalysis(alertId: number, signal?: AbortSignal) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
 				job: AiAnalystJob | null
 				report: AiAnalystReport | null
 				iocs: AiAnalystIoc[] | null
 			}
-		>(`/ai_analyst/alert/${alertId}`)
+		>(`/ai_analyst/alert/${alertId}`, { signal })
 	},
 
 	// --- Reviews ---
@@ -138,9 +150,10 @@ export default {
 	 * Fetch the current user's existing review for a report (if any).
 	 * Returns review=null in create-mode so the UI shows a fresh rubric.
 	 */
-	getMyReview(reportId: number) {
+	getMyReview(reportId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { review: AiAnalystReview | null }>(
-			`/ai_analyst/reports/${reportId}/review/mine`
+			`/ai_analyst/reports/${reportId}/review/mine`,
+			{ signal }
 		)
 	},
 	/**
@@ -154,9 +167,10 @@ export default {
 			payload
 		)
 	},
-	getReviewsByCustomer(customerCode: string) {
+	getReviewsByCustomer(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { reviews: AiAnalystReview[] }>(
-			`/ai_analyst/reviews/customer/${customerCode}`
+			`/ai_analyst/reviews/customer/${customerCode}`,
+			{ signal }
 		)
 	},
 	getReview(reviewId: number, signal?: AbortSignal) {
@@ -168,11 +182,12 @@ export default {
 	 * SQL-side feedback dashboard rollup — counts, averages, template
 	 * breakdown, IOC accuracy, and embedded recent reviews for drill-in.
 	 */
-	getReviewStats(customerCode: string, recentLimit = 10) {
+	getReviewStats(query: { customerCode: string; recentLimit?: number }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & AiAnalystReviewStats>(
-			`/ai_analyst/reviews/customer/${customerCode}/stats`,
+			`/ai_analyst/reviews/customer/${query.customerCode}/stats`,
 			{
-				params: { recent_limit: recentLimit }
+				params: { recent_limit: query.recentLimit ?? 10 },
+				signal
 			}
 		)
 	},
@@ -201,7 +216,7 @@ export default {
 	 * Preview similar lessons already stored in MemPalace — debounced against
 	 * the lesson-text textarea so the reviewer can see overlap before queueing.
 	 */
-	searchPalaceLessons({ customerCode, query, room, limit = 5 }: SearchPalaceLessonsQuery) {
+	searchPalaceLessons({ customerCode, query, room, limit = 5 }: SearchPalaceLessonsQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { lessons: PalaceSearchHit[] }>(
 			`/ai_analyst/palace_lessons/customer/${customerCode}`,
 			{
@@ -209,7 +224,8 @@ export default {
 					query,
 					limit,
 					...(room ? { room } : {})
-				}
+				},
+				signal
 			}
 		)
 	},
@@ -219,9 +235,10 @@ export default {
 	 * by room, with near-duplicate pairs and upcoming expirations
 	 * surfaced for reviewer action. Pure read-only, no Talon round-trip.
 	 */
-	getPalaceConsolidation(customerCode: string) {
+	getPalaceConsolidation(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & PalaceConsolidation>(
-			`/ai_analyst/palace_lessons/customer/${customerCode}/consolidation`
+			`/ai_analyst/palace_lessons/customer/${customerCode}/consolidation`,
+			{ signal }
 		)
 	}
 }

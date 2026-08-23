@@ -35,26 +35,17 @@ export interface AgentArtifactsQuery {
 export type VulnerabilitySeverityType = "Low" | "Medium" | "High" | "Critical" | "All"
 
 export default {
-	getAgents(arg?: string | GetAgentsQuery, signal?: AbortSignal) {
-		// Support legacy signature getAgents(agentId?: string)
-		if (typeof arg === "string") {
-			return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(
-				`/agents/${arg}`,
-				signal ? { signal } : undefined
-			)
-		}
-
-		const agentId = arg?.agentId
-		const url = `/agents${agentId ? `/${agentId}` : ""}`
+	getAgents(query: GetAgentsQuery, signal?: AbortSignal) {
+		const url = `/agents${query.agentId ? `/${query.agentId}` : ""}`
 
 		const params: Record<string, number | string | string[]> = {
-			...(arg?.customerCodes?.length ? { customer_codes: arg.customerCodes } : {}),
-			...searchLimitParams(arg ?? {})
+			...(query.customerCodes?.length ? { customer_codes: query.customerCodes } : {}),
+			...searchLimitParams(query)
 		}
 
 		const requestConfig = {
 			...(Object.keys(params).length ? { params, paramsSerializer: { indexes: null } } : {}),
-			...(signal ? { signal } : {})
+			signal
 		}
 
 		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(url, requestConfig)
@@ -97,20 +88,18 @@ export default {
 		)
 	},
 	agentVulnerabilityByCve(
-		agentId: string,
-		cve: string,
-		params?: { package?: string; version?: string },
+		query: { agentId: string; cve: string; params?: { package?: string; version?: string } },
 		signal?: AbortSignal
 	) {
 		// dedicated single-CVE lookup — the severity list endpoint scrolls every
 		// vulnerability document of the agent and takes minutes on real data
 		return HttpClient.get<FlaskBaseResponse & { vulnerabilities: AgentVulnerabilities[] }>(
-			`/agents/${agentId}/vulnerabilities/cve/${encodeURIComponent(cve)}`,
-			{ params: params ?? {}, ...(signal ? { signal } : {}) }
+			`/agents/${query.agentId}/vulnerabilities/cve/${encodeURIComponent(query.cve)}`,
+			{ params: query.params ?? {}, signal }
 		)
 	},
-	agentVulnerabilitiesDownload(agentId: string, severity: VulnerabilitySeverityType) {
-		return HttpClient.get<string>(`/agents/${agentId}/csv/vulnerabilities/${severity}`)
+	agentVulnerabilitiesDownload(agentId: string, severity: VulnerabilitySeverityType, signal?: AbortSignal) {
+		return HttpClient.get<string>(`/agents/${agentId}/csv/vulnerabilities/${severity}`, { signal })
 	},
 	getSocCases(agentId: string | number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { case_ids: number[] }>(
@@ -118,29 +107,27 @@ export default {
 			signal ? { signal } : {}
 		)
 	},
-	getSCA(agentId: string | number, policyId?: string, signal?: AbortSignal) {
+	getSCA(query: { agentId: string | number; policyId?: string }, signal?: AbortSignal) {
 		// policyId narrows the Wazuh query to one policy — the detail view must not
 		// pull the agent's whole SCA list just to render a single one
-		return HttpClient.get<FlaskBaseResponse & { sca: AgentSca[] }>(`/agents/${agentId}/sca`, {
-			params: policyId ? { policy_id: policyId } : {},
-			...(signal ? { signal } : {})
+		return HttpClient.get<FlaskBaseResponse & { sca: AgentSca[] }>(`/agents/${query.agentId}/sca`, {
+			params: query.policyId ? { policy_id: query.policyId } : {},
+			signal
 		})
 	},
-	getSCAResults(agentId: string | number, policyId: string, checkId?: number, signal?: AbortSignal) {
+	getSCAResults(query: { agentId: string | number; policyId: string; checkId?: number }, signal?: AbortSignal) {
 		// checkId narrows the Wazuh query to one check — the check detail view must
 		// not pull the policy's whole check list just to render a single one
 		return HttpClient.get<FlaskBaseResponse & { sca_policy_results: ScaPolicyResult[] }>(
-			`/agents/${agentId}/sca/${policyId}`,
+			`/agents/${query.agentId}/sca/${query.policyId}`,
 			{
-				params: checkId != null ? { check_id: checkId } : {},
-				...(signal ? { signal } : {})
+				params: query.checkId != null ? { check_id: query.checkId } : {},
+				signal
 			}
 		)
 	},
-	scaResultsDownload(agentId: string | number, policyId: string) {
-		return HttpClient.get<Blob>(`/agents/${agentId}/csv/sca/${policyId}`, {
-			responseType: "blob"
-		})
+	scaResultsDownload(agentId: string | number, policyId: string, signal?: AbortSignal) {
+		return HttpClient.get<Blob>(`/agents/${agentId}/csv/sca/${policyId}`, { responseType: "blob", signal })
 	},
 	updateAgent(agentId: string, payload: AgentPayload) {
 		return HttpClient.put<FlaskBaseResponse>(
@@ -187,9 +174,10 @@ export default {
 	 * @param artifactId - The artifact ID
 	 * @returns Promise with Blob response
 	 */
-	downloadAgentArtifact(agentId: string, artifactId: number) {
+	downloadAgentArtifact(agentId: string, artifactId: number, signal?: AbortSignal) {
 		return HttpClient.get<Blob>(`/agent_data_store/agent/${agentId}/artifacts/${artifactId}/download`, {
-			responseType: "blob"
+			responseType: "blob",
+			signal
 		})
 	},
 
@@ -204,16 +192,18 @@ export default {
 
 	// IGNORE AT THE MOMENT !
 	/** @deprecated */
-	agentsWazuhOutdated() {
+	agentsWazuhOutdated(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { outdated_wazuh_agents: OutdatedWazuhAgents }>(
-			`/agents/wazuh/outdated`
+			`/agents/wazuh/outdated`,
+			{ signal }
 		) // Include the outdated Wazuh agents
 	},
 	// IGNORE AT THE MOMENT !
 	/** @deprecated */
-	agentsVelociraptorOutdated() {
+	agentsVelociraptorOutdated(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { outdated_velociraptor_agents: OutdatedVelociraptorAgents }>(
-			`/agents/velociraptor/outdated`
+			`/agents/velociraptor/outdated`,
+			{ signal }
 		) // Include the outdated Velociraptor agents
 	}
 }

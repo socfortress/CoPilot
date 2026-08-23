@@ -63,7 +63,7 @@ import type { ApiError } from "@/types/common"
 import type { CustomDashboardPanel, DashboardPanelType, PanelResult } from "@/types/dashboards"
 import axios from "axios"
 import { NButton, NEmpty, NRadioButton, NRadioGroup, NSpin, useMessage } from "naive-ui"
-import { ref, watch } from "vue"
+import { onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import ChartBar from "@/components/common/charts/ChartBar.vue"
@@ -147,4 +147,11 @@ async function fetchPreview() {
 }
 
 watch(selectedTimerange, () => fetchPreview(), { immediate: true })
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
+})
 </script>

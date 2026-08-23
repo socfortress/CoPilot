@@ -12,53 +12,78 @@ import type {
 } from "@/types/metrics"
 import { HttpClient } from "../http-client"
 
+/**
+ * Query shared by every per-host metrics endpoint.
+ *
+ * `host` and `rangeH` used to be positional with a default on `rangeH`. They are
+ * grouped here so `signal` can be the single optional argument, in last position.
+ */
+export interface MetricsQuery {
+	host: string
+	/** Look-back window in hours. Defaults to "1". */
+	rangeH?: string
+}
+
+const DEFAULT_RANGE_H = "1"
+
+function metricsParams({ host, rangeH }: MetricsQuery) {
+	return { host, range_h: rangeH ?? DEFAULT_RANGE_H }
+}
+
 export default {
-	getHosts() {
-		return HttpClient.get<FlaskBaseResponse & HostsResponse>(`/influxdb/metrics/hosts`)
+	getHosts(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & HostsResponse>(`/influxdb/metrics/hosts`, { signal })
 	},
 
-	getSummary(host: string, rangeH: string = "1") {
+	getSummary(query: MetricsQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & MetricsResponse<MetricsSummaryData>>(`/influxdb/metrics/summary`, {
-			params: { host, range_h: rangeH }
+			params: metricsParams(query),
+			signal
 		})
 	},
 
-	getCpu(host: string, rangeH: string = "1") {
+	getCpu(query: MetricsQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & MetricsResponse<MetricsCpuData>>(`/influxdb/metrics/cpu`, {
-			params: { host, range_h: rangeH }
+			params: metricsParams(query),
+			signal
 		})
 	},
 
-	getMemory(host: string, rangeH: string = "1") {
+	getMemory(query: MetricsQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & MetricsResponse<MetricsMemoryData>>(`/influxdb/metrics/memory`, {
-			params: { host, range_h: rangeH }
+			params: metricsParams(query),
+			signal
 		})
 	},
 
-	getKernel(host: string, rangeH: string = "1") {
+	getKernel(query: MetricsQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & MetricsResponse<MetricsKernelData>>(`/influxdb/metrics/kernel`, {
-			params: { host, range_h: rangeH }
+			params: metricsParams(query),
+			signal
 		})
 	},
 
-	getDisks(host: string, rangeH: string = "1") {
+	getDisks(query: MetricsQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & MetricsResponse<MetricsDisksData>>(`/influxdb/metrics/disks`, {
-			params: { host, range_h: rangeH }
+			params: metricsParams(query),
+			signal
 		})
 	},
 
-	getProcesses(host: string, rangeH: string = "1") {
+	getProcesses(query: MetricsQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & MetricsResponse<MetricsProcessesData>>(
 			`/influxdb/metrics/processes`,
 			{
-				params: { host, range_h: rangeH }
+				params: metricsParams(query),
+				signal
 			}
 		)
 	},
 
-	getNetwork(host: string, rangeH: string = "1") {
+	getNetwork(query: MetricsQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & MetricsResponse<MetricsNetworkData>>(`/influxdb/metrics/network`, {
-			params: { host, range_h: rangeH }
+			params: metricsParams(query),
+			signal
 		})
 	}
 }

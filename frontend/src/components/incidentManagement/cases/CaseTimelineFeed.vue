@@ -64,7 +64,7 @@ const loading = ref(false)
 function fetchTimeline() {
 	loading.value = true
 	Api.incidentManagement.caseTemplates
-		.getCaseTimeline(props.caseId)
+		.getCaseTimeline({ caseId: props.caseId })
 		.then(res => {
 			if (res.data.success) {
 				events.value = res.data.events

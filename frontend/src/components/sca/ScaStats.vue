@@ -170,7 +170,7 @@ import axios from "axios"
 import _set from "lodash/set"
 import _toNumber from "lodash/toNumber"
 import { NCard, NProgress, NSpin, NStatistic, useMessage } from "naive-ui"
-import { computed, ref, toRefs } from "vue"
+import { computed, onBeforeUnmount, ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { ScaComplianceLevel } from "@/types/sca"
@@ -402,6 +402,13 @@ watchDebounced(
 	},
 	{ deep: true, debounce: 300, immediate: true }
 )
+
+// Cancel anything still in flight when this component goes away: without it the
+// request outlives the view — the backend keeps working for a page nobody is
+// looking at, and the response resolves into a destroyed scope (#1072).
+onBeforeUnmount(() => {
+	abortController?.abort()
+})
 </script>
 
 <style lang="scss" scoped>

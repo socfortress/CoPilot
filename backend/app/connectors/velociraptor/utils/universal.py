@@ -209,9 +209,24 @@ class UniversalService:
                 )
             else:
                 logger.error(f"Failed to execute query: {e}")
+                details = e.details() or ""
+                # A root administrator is NOT implicitly an administrator in child orgs, so an
+                # org-scoped query fails with "Permission denied: ... requires permission
+                # ANY_QUERY" while org enumeration (which runs at root) succeeds. That reads as a
+                # CoPilot fault unless we say what the operator has to grant (GitHub issue #1015).
+                if "permission denied" in details.lower():
+                    raise HTTPException(
+                        status_code=403,
+                        detail=(
+                            f"Velociraptor denied the query for org '{org_id}': {details}. "
+                            "The Velociraptor API user CoPilot authenticates as needs a role in "
+                            "each org, not just root. Grant it on the Velociraptor server with: "
+                            f"SELECT user_grant(user='<copilot api user>', roles='administrator', orgs=['{org_id}']) FROM scope()"
+                        ),
+                    )
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Failed to execute query: {e.details()}",
+                    detail=f"Failed to execute query: {details}",
                 )
         except Exception as e:
             logger.error(f"Failed to execute query: {e}")

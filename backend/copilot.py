@@ -1,3 +1,4 @@
+import asyncio
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -17,10 +18,12 @@ from fastapi import FastAPI  # noqa: E402
 from fastapi import HTTPException  # noqa: E402
 from fastapi.exceptions import RequestValidationError  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.middleware.gzip import GZipMiddleware  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 from loguru import logger  # noqa: E402
 
 from app.auth.utils import AuthHandler  # noqa: E402
+from app.blocking import configure_thread_limit
 from app.data_store.data_store_setup import create_buckets
 from app.db.db_session import SQLALCHEMY_DATABASE_URI_NO_DB
 from app.db.db_session import async_engine
@@ -35,11 +38,19 @@ from app.db.db_setup import delete_connectors
 from app.db.db_setup import ensure_admin_user
 from app.db.db_setup import ensure_scheduler_user
 from app.db.db_setup import ensure_scheduler_user_removed
+from app.db.query_metrics import install as install_query_metrics
+from app.middleware.client_disconnect import CANCEL_ON_DISCONNECT_ENABLED
+from app.middleware.client_disconnect import ClientDisconnectMiddleware
 from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.exception_handlers import value_error_handler
 from app.middleware.integrity import run_integrity_check
+from app.middleware.performance import PERF_MONITOR_ENABLED
+from app.middleware.performance import RequestTimingMiddleware
+from app.middleware.performance import lag_monitor
+from app.middleware.performance import performance_registry
 from app.notifications.services.template_seeds import seed_builtin_templates
+from app.performance.services.session_log import session_log
 
 # from app.routers import ask_socfortress
 from app.routers import active_response
@@ -83,6 +94,7 @@ from app.routers import network_connectors
 from app.routers import notifications
 from app.routers import nuclei
 from app.routers import office365
+from app.routers import performance
 from app.routers import portainer
 from app.routers import sap_siem
 from app.routers import scheduler
@@ -101,6 +113,7 @@ from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
 from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler
+from app.schedulers.services.refresh_catalog_caches import warm_catalog_caches
 
 # from app.middleware.logger import log_requests
 
@@ -117,6 +130,11 @@ environment = os.getenv("ENVIRONMENT", "PRODUCTION")
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     # ── startup ──
+    # Installed first so migrations and seeding are measured too (#1072 level 2):
+    # every earlier conclusion about the database was inferred from endpoint
+    # durations rather than measured.
+    install_query_metrics(async_engine)
+
     run_integrity_check()
     logger.info("Initializing database")
     if environment == "PRODUCTION":
@@ -141,9 +159,29 @@ async def lifespan(_app: FastAPI):
         logger.info("Scheduler is not running, starting now...")
         scheduler.start()
 
+    # Blocking connector calls now run in anyio's worker pool (#1072); the default
+    # of 40 threads is raised here, inside the loop, where the limiter exists.
+    configure_thread_limit()
+
+    # Warm the Detections Catalog caches in the background (#1072). Cold loads
+    # measured 130s for the MITRE STIX bundle and 80-110s for the Wazuh ruleset;
+    # whoever triggers one pays for it inside their request, so it must never be a
+    # user. Detached on purpose: startup does not wait, and failures are logged.
+    asyncio.create_task(warm_catalog_caches())
+
+    # Event loop lag watchdog (#1072). Started last so the startup work above —
+    # migrations, MinIO, seeding — is not reported as a stall.
+    session_log.start()
+    session_log.start_snapshots()
+    lag_monitor.start()
+
     yield
 
     # ── shutdown ──
+    # Watchdog first, so no stall can be recorded after the session file is closed.
+    await lag_monitor.stop()
+    await session_log.stop()
+
     logger.info("Shutting down scheduler")
     scheduler = await get_scheduler_instance()
     if scheduler.running:
@@ -166,6 +204,33 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+################## ! RESPONSE COMPRESSION (#1072, level 3) ! ##################
+# There was none. The catalog ships 3-5k Wazuh rules per request and the incident
+# lists ship full alert rows; on a remote deployment that is the transfer cost of
+# every page load. Added between the timer and the cancel middleware so the
+# recorded duration includes compressing — otherwise the measurement would hide
+# the cost of the thing being added.
+#
+# `minimum_size` keeps small JSON uncompressed, where the CPU and the extra header
+# outweigh a few saved bytes.
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+
+################## ! CANCEL ABANDONED REQUESTS (#1072) ! ##################
+# Added before the timing middleware so it ends up INSIDE it: a cancelled request
+# must still be measured. Starlette does not cancel a handler when the client goes
+# away, so without this an abandoned 30s query keeps running for nobody.
+if CANCEL_ON_DISCONNECT_ENABLED:
+    app.add_middleware(ClientDisconnectMiddleware)
+
+
+################## ! PERFORMANCE INSTRUMENTATION (#1072) ! ##################
+# Added after CORS so it ends up OUTERMOST (Starlette prepends each new
+# middleware), which means the measured duration is the full time the client
+# waited — CORS handling included. Read the numbers at /api/performance/summary.
+if PERF_MONITOR_ENABLED:
+    app.add_middleware(RequestTimingMiddleware, registry=performance_registry)
 
 
 ################## ! Middleware LOGGING TO `log_entry` table ! ##################
@@ -231,6 +296,7 @@ api_router.include_router(scoutsuite.router)
 api_router.include_router(nuclei.router)
 api_router.include_router(duo.router)
 api_router.include_router(portainer.router)
+api_router.include_router(performance.router)
 api_router.include_router(incidents.router)
 api_router.include_router(ai_analyst.router)
 api_router.include_router(notifications.router)

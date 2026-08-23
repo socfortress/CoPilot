@@ -248,7 +248,7 @@ function getIndices() {
 	loadingIndex.value = true
 
 	Api.wazuh.indices
-		.getIndices()
+		.getIndices({})
 		.then(res => {
 			if (res.data.success) {
 				indices.value = res.data.indices_stats || []
@@ -281,7 +281,7 @@ function getAgents() {
 	loadingAgents.value = true
 
 	Api.agents
-		.getAgents()
+		.getAgents({})
 		.then(res => {
 			if (res.data.success) {
 				agents.value = res.data.agents || []

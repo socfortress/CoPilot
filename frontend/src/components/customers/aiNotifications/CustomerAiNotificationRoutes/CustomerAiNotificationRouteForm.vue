@@ -503,7 +503,7 @@ const quotaTone = computed(() => {
 async function loadQuota() {
 	if (!isResend.value || quota.value) return
 	try {
-		const res = await Api.notifications.getResendQuota(props.customerCode)
+		const res = await Api.notifications.getResendQuota({ customerCode: props.customerCode })
 		if (res.data.success) {
 			quota.value = {
 				sent_this_month: res.data.sent_this_month,
