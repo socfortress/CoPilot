@@ -16,74 +16,74 @@
 				<!-- Header -->
 				<div class="flex flex-wrap items-center gap-3">
 					<Icon :name="FileIcon" :size="20" />
-				<span class="text-lg font-semibold">{{ job?.filename || "File analysis" }}</span>
-				<n-tag v-if="vtLabel" :type="vtType" size="small" round :bordered="false">
-					<template #icon><Icon :name="VtIcon" :size="14" /></template>
-					{{ vtLabel }}
-				</n-tag>
-				<n-spin v-if="stillRunning || vtPending" :size="16" />
-				<div class="grow" />
-				<n-tag v-if="job?.customer_code" size="small" round :bordered="false">
-					<template #icon><Icon :name="CustomerIcon" :size="14" /></template>
-					{{ job.customer_code }}
-				</n-tag>
-				<code v-if="shaShort" class="text-secondary text-xs">{{ shaShort }}</code>
-			</div>
+					<span class="text-lg font-semibold">{{ job?.filename || "File analysis" }}</span>
+					<n-tag v-if="vtLabel" :type="vtType" size="small" round :bordered="false">
+						<template #icon><Icon :name="VtIcon" :size="14" /></template>
+						{{ vtLabel }}
+					</n-tag>
+					<n-spin v-if="stillRunning || vtPending" :size="16" />
+					<div class="grow" />
+					<n-tag v-if="job?.customer_code" size="small" round :bordered="false">
+						<template #icon><Icon :name="CustomerIcon" :size="14" /></template>
+						{{ job.customer_code }}
+					</n-tag>
+					<code v-if="shaShort" class="text-secondary text-xs">{{ shaShort }}</code>
+				</div>
 
-			<!-- Dev-mode (unhardened) banner -->
-			<n-alert v-if="job && job.hardened === false" type="warning" :bordered="false" class="text-sm">
-				This result came from the dev-only in-process inspector — <b>no container isolation</b>. Not for production
-				triage.
-			</n-alert>
+				<!-- Dev-mode (unhardened) banner -->
+				<n-alert v-if="job && job.hardened === false" type="warning" :bordered="false" class="text-sm">
+					This result came from the dev-only in-process inspector — <b>no container isolation</b>. Not for production
+					triage.
+				</n-alert>
 
-			<n-alert v-if="job?.status === 'failed'" type="error" :bordered="false" class="text-sm">
-				Analysis failed. A file that crashes the inspector is itself worth a look.
-			</n-alert>
+				<n-alert v-if="job?.status === 'failed'" type="error" :bordered="false" class="text-sm">
+					Analysis failed. A file that crashes the inspector is itself worth a look.
+				</n-alert>
 
-			<!-- VirusTotal reputation -->
-			<ReputationCard :reputation="result?.reputation" :loading="stillRunning" />
+				<!-- VirusTotal reputation -->
+				<ReputationCard :reputation="result?.reputation" :loading="stillRunning" />
 
-			<!-- Always-populated summary -->
-			<FileAnalysisOverview
+				<!-- Always-populated summary -->
+				<FileAnalysisOverview
 					:result="result?.inspector"
-					:job="job"
+					:job
 					:reputation-pending="vtPending"
 					:verdict-reason="result?.verdict_reason"
 				/>
 
-			<!-- Tabs (empty ones are hidden; we land on the first with content) -->
-			<n-tabs v-model:value="activeTab" type="line" animated>
-				<n-tab-pane v-if="hasPreviews" name="preview" tab="Preview" display-directive="show:lazy">
-					<PreviewTab :job-id :preview-names="result?.preview_urls || []" :loading="loadingResult" />
-				</n-tab-pane>
-				<n-tab-pane v-if="hasContent" name="content" tab="Content" display-directive="show:lazy">
-					<ContentTab :result="result?.inspector" :loading="loadingResult" />
-				</n-tab-pane>
-				<n-tab-pane v-if="hasIocs" name="iocs" tab="IOCs" display-directive="show:lazy">
-					<IocsTab :iocs="result?.inspector?.iocs" />
-				</n-tab-pane>
-				<n-tab-pane v-if="hasVtIntel" name="virustotal" tab="VirusTotal" display-directive="show:lazy">
-					<VirusTotalTab :reputation="result?.reputation" :loading="stillRunning" />
-				</n-tab-pane>
-				<n-tab-pane name="metadata" tab="Metadata" display-directive="show:lazy">
-					<MetadataTab :result="result?.inspector" />
-				</n-tab-pane>
+				<!-- Tabs (empty ones are hidden; we land on the first with content) -->
+				<n-tabs v-model:value="activeTab" type="line" animated @update:value="tabPinnedByUser = true">
+					<n-tab-pane v-if="hasPreviews" name="preview" tab="Preview" display-directive="show:lazy">
+						<PreviewTab :job-id :preview-names="result?.preview_urls || []" :loading="loadingResult" />
+					</n-tab-pane>
+					<n-tab-pane v-if="hasContent" name="content" tab="Content" display-directive="show:lazy">
+						<ContentTab :result="result?.inspector" :loading="loadingResult" />
+					</n-tab-pane>
+					<n-tab-pane v-if="hasIocs" name="iocs" tab="IOCs" display-directive="show:lazy">
+						<IocsTab :iocs="result?.inspector?.iocs" />
+					</n-tab-pane>
+					<n-tab-pane v-if="hasVtIntel" name="virustotal" tab="VirusTotal" display-directive="show:lazy">
+						<VirusTotalTab :reputation="result?.reputation" :loading="stillRunning" />
+					</n-tab-pane>
+					<n-tab-pane name="metadata" tab="Metadata" display-directive="show:lazy">
+						<MetadataTab :result="result?.inspector" />
+					</n-tab-pane>
 
-				<!-- Detonation tabs only when the backend reports sandbox enabled -->
-				<template v-if="job?.sandbox_enabled">
-					<n-tab-pane name="detonation" tab="Detonation" display-directive="show:lazy">
-						<DetonationTab
-							:sandbox="result?.sandbox"
-							:loading="loadingResult"
-							:dynamic-status="job?.dynamic_status"
-							:job-id="jobId"
-						/>
-					</n-tab-pane>
-					<n-tab-pane name="network" tab="Network" display-directive="show:lazy">
-						<NetworkTab :sandbox="result?.sandbox" :loading="loadingResult" />
-					</n-tab-pane>
-				</template>
-			</n-tabs>
+					<!-- Detonation tabs only when the backend reports sandbox enabled -->
+					<template v-if="hasSandbox">
+						<n-tab-pane name="detonation" tab="Detonation" display-directive="show:lazy">
+							<DetonationTab
+								:sandbox="result?.sandbox"
+								:loading="loadingResult"
+								:dynamic-status="job?.dynamic_status"
+								:job-id
+							/>
+						</n-tab-pane>
+						<n-tab-pane name="network" tab="Network" display-directive="show:lazy">
+							<NetworkTab :sandbox="result?.sandbox" :loading="loadingResult" />
+						</n-tab-pane>
+					</template>
+				</n-tabs>
 			</div>
 		</div>
 	</div>
@@ -97,6 +97,7 @@ import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from "vue
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { resolveActiveTab } from "@/components/fileAnalysis/fileAnalysis.helpers"
 import FileAnalysisBatchList from "@/components/fileAnalysis/FileAnalysisBatchList.vue"
 import FileAnalysisOverview from "@/components/fileAnalysis/FileAnalysisOverview.vue"
 import FileAnalysisSubmit from "@/components/fileAnalysis/FileAnalysisSubmit.vue"
@@ -130,6 +131,9 @@ const batchIds = computed(() =>
 		.filter(Boolean)
 )
 const activeTab = ref<string>("metadata")
+// Set the moment the analyst clicks a tab: from then on the view stops following
+// the content and stays where they put it.
+const tabPinnedByUser = ref(false)
 const job = ref<FileAnalysisJob | null>(null)
 const result = ref<FileAnalysisResult | null>(null)
 const loadingResult = ref(false)
@@ -186,16 +190,30 @@ const hasIocs = computed(() => {
 // The VirusTotal tab appears only when VT knows the file AND deep intel came back.
 const hasVtIntel = computed(() => Boolean(result.value?.reputation?.found && result.value?.reputation?.intel))
 
+// Detonation/Network are gated on the backend reporting a sandbox, not on a report
+// existing — an in-flight detonation must still be reachable.
+const hasSandbox = computed(() => job.value?.sandbox_enabled === true)
+
 // Land on the first tab that has something; Metadata is the always-present fallback.
-watch([hasPreviews, hasContent, hasIocs], () => {
-	const available = [
-		hasPreviews.value && "preview",
-		hasContent.value && "content",
-		hasIocs.value && "iocs",
-		"metadata"
-	].filter(Boolean) as string[]
-	if (!available.includes(activeTab.value)) activeTab.value = available[0]
-})
+// Availability changes mid-view as polling fills the result in, so resolveActiveTab
+// keeps the analyst on their current tab whenever it still exists.
+watch(
+	[hasPreviews, hasContent, hasIocs, hasVtIntel, hasSandbox],
+	() => {
+		activeTab.value = resolveActiveTab(
+			activeTab.value,
+			{
+				previews: hasPreviews.value,
+				content: hasContent.value,
+				iocs: hasIocs.value,
+				vtIntel: hasVtIntel.value,
+				sandbox: hasSandbox.value
+			},
+			tabPinnedByUser.value
+		)
+	},
+	{ immediate: true }
+)
 
 const stillRunning = computed(() => {
 	const s = job.value?.status
@@ -258,6 +276,7 @@ function start() {
 	job.value = null
 	result.value = null
 	pollCount = 0
+	tabPinnedByUser.value = false
 	if (!jobId.value) return
 	fetchJob()
 	pollTimer = setInterval(fetchJob, POLL_MS)

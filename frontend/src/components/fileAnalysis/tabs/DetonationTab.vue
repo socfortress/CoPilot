@@ -384,7 +384,9 @@ function looksLikeSample(cmd?: string): boolean {
 const processTree = computed<TreeProc[]>(() => {
 	const procs = props.sandbox?.processes ?? []
 	const byPid = new Map<string, (typeof procs)[number]>()
-	for (const p of procs) if (p.pid != null) byPid.set(String(p.pid), p)
+	for (const p of procs) {
+		if (p.pid != null) byPid.set(String(p.pid), p)
+	}
 
 	const childrenOf = new Map<string, typeof procs>()
 	const roots: typeof procs = []

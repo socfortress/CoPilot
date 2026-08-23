@@ -162,10 +162,12 @@ export interface SandboxSummary {
 	dropped: { sha256: string; name?: string; type?: string }[]
 	screenshots: string[]
 	errors?: string[]
-	/** Full behavioural record — what the sample touched on the host. Keys:
+	/**
+	 * Full behavioural record — what the sample touched on the host. Keys:
 	 *  files, read_files, write_files, delete_files, registry_keys, read_keys,
 	 *  write_keys, delete_keys, mutexes, executed_commands, created_services,
-	 *  started_services, resolved_apis. */
+	 *  started_services, resolved_apis.
+	 */
 	behavior?: Record<string, string[]>
 	/** CAPE's human-readable event stream (a plain-English action timeline). */
 	enhanced?: { event: string; object: string; data?: Record<string, unknown> }[]

@@ -228,7 +228,7 @@ function domainUrl(v: string): string {
 }
 
 // Small inline list renderer (keeps the template flat for the three-up IOC grids).
-const IocList = (p: { label: string; items?: string[]; link?: (v: string) => string; mono?: boolean }) => {
+function IocList(p: { label: string; items?: string[]; link?: (v: string) => string; mono?: boolean }) {
 	const items = p.items || []
 	if (!items.length) return null
 	return h("div", { class: "flex flex-col gap-1" }, [

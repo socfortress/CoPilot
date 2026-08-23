@@ -1,5 +1,5 @@
 import type { RouteRecordRaw } from "vue-router"
-import { RouteRole } from "@/types/auth"
+import { AuthUserRole, RouteRole } from "@/types/auth"
 
 export const dashboardsRoutes: RouteRecordRaw[] = [
 	{
@@ -24,6 +24,6 @@ export const dashboardsRoutes: RouteRecordRaw[] = [
 		path: "/file-analysis/:jobId?",
 		name: "FileAnalysis",
 		component: () => import("@/views/FileAnalysis.vue"),
-		meta: { title: "File Analysis", auth: true, roles: RouteRole.All }
+		meta: { title: "File Analysis", auth: true, roles: [AuthUserRole.Admin, AuthUserRole.Analyst] }
 	}
 ]

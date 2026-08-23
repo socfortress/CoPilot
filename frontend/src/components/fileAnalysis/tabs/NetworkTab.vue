@@ -23,7 +23,7 @@
 					<div class="flex items-center gap-2">
 						<Icon :name="IpIcon" :size="16" />
 						<span class="text-sm font-medium">Hosts contacted</span>
-					<span class="text-secondary text-xs">(observed)</span>
+						<span class="text-secondary text-xs">(observed)</span>
 						<n-tag size="tiny" round :bordered="false">{{ hosts.length }}</n-tag>
 					</div>
 					<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
@@ -129,6 +129,7 @@ import type { SandboxSummary } from "@/types/file-analysis"
 import { NAlert, NEmpty, NScrollbar, NTag } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import { groupConnections } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{ sandbox?: SandboxSummary | null; loading?: boolean }>()
 
@@ -146,27 +147,7 @@ const dns = computed(() => props.sandbox?.dns ?? [])
 const http = computed(() => props.sandbox?.http ?? [])
 const connections = computed(() => props.sandbox?.connections ?? [])
 
-interface GroupedConn {
-	proto: string
-	dst: string
-	dport?: number
-	count: number
-}
-
-// A detonation typically logs the same endpoint (DNS resolver, multicast, gateway)
-// hundreds of times. Collapse identical proto+dst+dport tuples into one counted row
-// so the analyst sees the handful of *distinct* endpoints, ranked by chattiness.
-const groupedConnections = computed<GroupedConn[]>(() => {
-	const map = new Map<string, GroupedConn>()
-	for (const c of connections.value) {
-		const proto = (c.proto || "").toLowerCase()
-		const key = `${proto}|${c.dst}|${c.dport ?? ""}`
-		const existing = map.get(key)
-		if (existing) existing.count += 1
-		else map.set(key, { proto, dst: c.dst, dport: c.dport, count: 1 })
-	}
-	return Array.from(map.values()).sort((a, b) => b.count - a.count)
-})
+const groupedConnections = computed(() => groupConnections(connections.value))
 const noisyCollapsed = computed(() => connections.value.length > groupedConnections.value.length)
 
 const hasNetwork = computed(
@@ -174,7 +155,7 @@ const hasNetwork = computed(
 )
 
 function looksLikeIp(v: string): boolean {
-	return /^\d{1,3}(\.\d{1,3}){3}$/.test(v || "")
+	return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(v || "")
 }
 function tiUrl(indicator: string, kind: "ip" | "domain" = "ip"): string {
 	const enc = encodeURIComponent(indicator)

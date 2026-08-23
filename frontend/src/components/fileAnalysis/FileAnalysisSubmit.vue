@@ -164,7 +164,7 @@
 
 		<n-divider />
 
-		<FileAnalysisHistory :customer-code="customerCode || ''" :refresh-key="refreshKey" />
+		<FileAnalysisHistory :customer-code="customerCode || ''" :refresh-key />
 	</div>
 </template>
 
@@ -411,7 +411,6 @@ async function analyzeSelected() {
 		submitting.value = false
 	}
 }
-
 
 function handleUpload({ file, onFinish, onError }: import("naive-ui").UploadCustomRequestOptions) {
 	if (!file.file || !customerCode.value) {

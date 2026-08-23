@@ -38,9 +38,11 @@ export default {
 		)
 	},
 
-	/** Analyst-only direct file upload (multipart). Returns a job id.
+	/**
+	 * Analyst-only direct file upload (multipart). Returns a job id.
 	 *  opts.sandbox → run Tier-2 detonation; opts.reputationMode → VirusTotal phase
-	 *  ("off" | "lookup" = hash only, never uploads | "upload" = publishes if new). */
+	 *  ("off" | "lookup" = hash only, never uploads | "upload" = publishes if new).
+	 */
 	upload(file: File, customerCode: string, opts?: { sandbox?: boolean; reputationMode?: "off" | "lookup" | "upload" }) {
 		const form = new FormData()
 		form.append("file", file)
@@ -67,6 +69,18 @@ export default {
 		return HttpClient.get<Blob>(`/file-analysis/result/${jobId}/preview/${encodeURIComponent(name)}`, {
 			responseType: "blob"
 		})
+	},
+
+	/**
+	 * "Have we already analyzed this hash?" — the cache is tenant-scoped, so the
+	 * customer_code is required; without it the backend answers "not analyzed"
+	 * rather than leaking a hit across tenants. Returns the job id on a cache hit.
+	 */
+	search(sha256: string, customerCode: string) {
+		return HttpClient.get<FlaskBaseResponse & { job_id: string | null }>(
+			`/file-analysis/search/${encodeURIComponent(sha256)}`,
+			{ params: { customer_code: customerCode } }
+		)
 	},
 
 	/** Recent analyses for a customer (newest first) — powers the history table. */
