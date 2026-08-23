@@ -310,7 +310,7 @@ function toggleAll() {
 function loadCustomers() {
 	customersLoading.value = true
 	Api.customers
-		.getCustomers()
+		.getCustomers({})
 		.then(res => {
 			if (res.data.success && res.data.customers) {
 				customers.value = res.data.customers

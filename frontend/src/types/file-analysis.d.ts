@@ -89,6 +89,12 @@ export interface InspectorResult {
 	flags: string[]
 	analysis_incomplete: boolean
 	verdict_hint: FileAnalysisVerdict
+	/**
+	 * Stamped by inspector-runner, not by the analyzers: false means the result came
+	 * from the dev in-process mode with no container isolation. The orchestrator
+	 * copies it onto the job, so the job value is the one to prefer.
+	 */
+	hardened?: boolean
 }
 
 export interface SandboxSignature {

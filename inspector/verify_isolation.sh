@@ -24,9 +24,28 @@ check() { # name  expected  actual
 echo "Verifying isolation for image: $IMAGE"
 echo
 
-# 1. No network — with --network none only loopback exists in the net namespace.
-NET=$(docker run --rm "${FLAGS[@]}" --entrypoint sh "$IMAGE" -c 'ls /sys/class/net 2>/dev/null | tr "\n" " " | tr -s " "' 2>/dev/null | tr -d ' ')
-check "no network (only loopback)" "lo" "$NET"
+# 1. No network — assert on what actually decides reachability: an empty routing
+# table and no non-loopback address. Listing /sys/class/net is NOT a valid test:
+# the kernel materialises stub tunnel devices (tunl0, gre0, sit0, ip6tnl0, …) in
+# every new net namespace when those modules are loaded on the host, so a genuinely
+# isolated container shows them on Docker Desktop / any host with the modules in.
+# They carry no address and no route, so nothing can leave through them.
+NET=$(docker run --rm "${FLAGS[@]}" --entrypoint sh "$IMAGE" -c '
+  routes=$(tail -n +2 /proc/net/route | wc -l)
+  if [ "$routes" -eq 0 ]; then echo ISOLATED; else echo "ROUTES=$routes"; fi
+' 2>/dev/null | tr -d ' \n')
+check "no network (no routes, no egress)" "ISOLATED" "$NET"
+
+# 1b. Prove it rather than infer it: an outbound connect must fail at the socket.
+EGRESS=$(docker run --rm "${FLAGS[@]}" --entrypoint python "$IMAGE" -c '
+import socket
+try:
+    socket.create_connection(("1.1.1.1", 53), timeout=3)
+    print("REACHABLE")
+except OSError:
+    print("BLOCKED")
+' 2>/dev/null | tr -d ' \n')
+check "outbound connect blocked" "BLOCKED" "$EGRESS"
 
 # 2. Read-only root filesystem.
 RO=$(docker run --rm "${FLAGS[@]}" --entrypoint sh "$IMAGE" -c 'touch /probe 2>/dev/null && echo WRITABLE || echo READONLY')
