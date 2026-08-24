@@ -4,19 +4,28 @@
 			Static inspection runs on the CoPilot host in a locked-down container — the file is parsed, never executed.
 		</p>
 
-		<n-upload :show-file-list="false" :disabled="!customerCode || uploading" :custom-request="handleUpload" directory-dnd>
-			<n-upload-dragger>
-				<div class="flex flex-col items-center gap-2 py-6">
-					<Icon :name="UploadIcon" :size="34" class="text-secondary" />
-					<span class="text-sm font-medium">Click or drag a file here to analyze</span>
-					<span class="text-secondary text-xs">
-						{{ customerCode ? "Uploaded bytes never leave the host by default." : "Select a customer first." }}
-					</span>
-				</div>
-			</n-upload-dragger>
-		</n-upload>
-
-		<n-spin v-if="uploading" show class="self-center" />
+		<n-spin :show="uploading">
+			<n-upload
+				:show-file-list="false"
+				:disabled="!customerCode || uploading"
+				:custom-request="handleUpload"
+				directory-dnd
+			>
+				<n-upload-dragger>
+					<div class="flex flex-col items-center gap-2 py-6">
+						<Icon :name="UploadIcon" :size="34" class="text-secondary" />
+						<span class="text-sm font-medium">Click or drag a file here to analyze</span>
+						<span class="text-secondary text-xs">
+							{{
+								customerCode
+									? "Uploaded bytes never leave the host by default."
+									: "Select a customer first."
+							}}
+						</span>
+					</div>
+				</n-upload-dragger>
+			</n-upload>
+		</n-spin>
 	</div>
 </template>
 

@@ -1,15 +1,15 @@
 <template>
 	<div class="flex flex-col gap-3">
 		<p class="text-secondary text-sm">
-			CoPilot lists matching files over Velociraptor (auto-detecting the endpoint OS) without pulling any bytes; you
-			pick which to collect and analyze.
+			CoPilot lists matching files over Velociraptor (auto-detecting the endpoint OS) without pulling any bytes;
+			you pick which to collect and analyze.
 		</p>
 
 		<n-select
 			v-model:value="selectedClientId"
 			:options="agentOptions"
 			:loading="agentsLoading"
-			:disabled="!customerCode"
+			:disabled="!customerCode || finding"
 			filterable
 			clearable
 			:placeholder="customerCode ? 'Select an endpoint' : 'Select a customer first'"
@@ -33,6 +33,7 @@
 				v-model:value="targetPath"
 				placeholder="File path or glob (e.g. /tmp/sample, C:\Users\x\*.exe)"
 				clearable
+				:disabled="!customerCode || !selectedClientId || finding"
 				class="grow"
 				@keyup.enter="findFiles()"
 			>
@@ -41,7 +42,7 @@
 			<n-button
 				type="primary"
 				ghost
-				:disabled="!customerCode || !selectedClientId || !targetPath || finding"
+				:disabled="!customerCode || !selectedClientId || !targetPath || finding || agentsLoading"
 				:loading="finding"
 				@click="findFiles()"
 			>
@@ -49,6 +50,14 @@
 				Find files
 			</n-button>
 		</div>
+
+		<!-- Enumeration failure stays on screen next to the input that caused it: a
+		     toast disappears before the analyst has finished re-reading their path,
+		     and a wrong glob or an offline endpoint is corrected right here. -->
+		<n-alert v-if="findError" type="error" :bordered="false" closable @close="findError = null">
+			<template #header>Could not list files on that endpoint</template>
+			<span class="text-sm">{{ findError }}</span>
+		</n-alert>
 
 		<!-- Match picker -->
 		<div v-if="searched" class="border-default flex flex-col gap-2 rounded-lg border p-3">
@@ -92,7 +101,7 @@ import type { SelectOption } from "naive-ui"
 import type { VNodeChild } from "vue"
 import type { ApiError } from "@/types/common"
 import type { FileAnalysisAgent, FileAnalysisMatch, ReputationMode } from "@/types/file-analysis"
-import { NButton, NCheckbox, NCheckboxGroup, NEmpty, NInput, NSelect, useMessage } from "naive-ui"
+import { NAlert, NButton, NCheckbox, NCheckboxGroup, NEmpty, NInput, NSelect, useMessage } from "naive-ui"
 import { computed, h, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -117,6 +126,7 @@ const targetPath = ref("")
 
 const finding = ref(false)
 const searched = ref(false)
+const findError = ref<string | null>(null)
 const submitting = ref(false)
 const matches = ref<FileAnalysisMatch[]>([])
 const selectedPaths = ref<string[]>([])
@@ -151,6 +161,7 @@ function clearMatches() {
 	searched.value = false
 	matches.value = []
 	selectedPaths.value = []
+	findError.value = null
 }
 
 function fmtBytes(n: number): string {
@@ -214,6 +225,7 @@ function loadAgents() {
 function findFiles() {
 	if (!props.customerCode || !selectedClientId.value || !targetPath.value) return
 	finding.value = true
+	findError.value = null
 	Api.fileAnalysis
 		.enumerateFiles({
 			customer_code: props.customerCode,
@@ -226,7 +238,8 @@ function findFiles() {
 			selectedPaths.value = matches.value.length === 1 ? [matches.value[0].path] : []
 		})
 		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "Could not enumerate files.")
+			searched.value = false
+			findError.value = getApiErrorMessage(err as ApiError) || "Could not enumerate files."
 		})
 		.finally(() => {
 			finding.value = false

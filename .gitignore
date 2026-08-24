@@ -46,6 +46,9 @@ wheels/
 *.db
 *.db-journal
 .env
+.env.*
+!.env.example
+
 *.sqbpro
 site/
 *.checkpoint
