@@ -37,53 +37,89 @@
 			class="py-4"
 		/>
 
-		<div v-else class="border-default divide-border flex flex-col divide-y overflow-hidden rounded-lg border">
-			<div
+		<!-- Responsive by intrinsic sizing rather than viewport breakpoints: this list
+		     lives in a drawer whose width is independent of the screen, so media
+		     queries would fire on the wrong measurement. The title claims a basis of
+		     12.5rem and the rest flex-wraps, so each row reflows against the box it is
+		     actually in — verified down to a 340px drawer with no overflow. -->
+		<div v-else class="flex flex-col gap-2">
+			<CardEntity
 				v-for="it in visibleItems"
 				:key="it.job_id"
-				class="hover:bg-secondary flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors"
+				clickable
+				hoverable
+				embedded
+				size="small"
+				:status="statusFor(it.verdict)"
 				@click="open(it)"
 			>
-				<Icon :name="iconFor(it)" :size="18" class="text-secondary shrink-0" />
-				<div class="flex min-w-0 grow flex-col">
-					<span class="truncate text-sm font-medium">{{ it.filename || "(unnamed)" }}</span>
-					<span class="text-secondary flex items-center gap-2 text-xs">
-						<span>{{ sourceLabel(it.source) }}</span>
-						<span>·</span>
-						<span>{{ when(it.created_at) }}</span>
-						<code class="opacity-70">{{ it.sha256.slice(0, 12) }}</code>
-					</span>
-				</div>
-				<n-tag
-					v-if="it.vt_total != null"
-					size="small"
-					round
-					:bordered="false"
-					:type="it.vt_malicious ? 'error' : 'default'"
-				>
-					VT {{ it.vt_malicious ?? 0 }}/{{ it.vt_total }}
-				</n-tag>
-				<n-tag :type="verdictType(it.verdict)" size="small" round :bordered="false">
-					{{ it.verdict || it.status || "—" }}
-				</n-tag>
-				<n-popconfirm @positive-click="remove(it)">
-					<template #trigger>
-						<n-button
-							text
-							size="tiny"
-							class="text-secondary hover:text-error-color shrink-0"
-							:loading="deletingId === it.job_id"
-							title="Delete this analysis"
-							@click.stop
-						>
-							<template #icon><Icon :name="TrashIcon" :size="16" /></template>
-						</n-button>
-					</template>
-					Delete this analysis? The stored result and previews are removed (the file can be re-analysed
-					later).
-				</n-popconfirm>
-				<Icon :name="ChevronIcon" :size="16" class="text-secondary shrink-0" />
-			</div>
+				<!-- One header slot rather than headerMain/headerExtra: the split wraps its
+				     two halves in divs with no min-w-0, so a 64-char hash filename cannot
+				     shrink and overflows the drawer instead of truncating. -->
+				<template #header>
+					<div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+						<div class="flex min-w-0 grow basis-50 items-center gap-2">
+							<Icon :name="iconFor(it)" :size="16" class="text-secondary shrink-0" />
+							<span class="text-default truncate text-sm font-medium" :title="it.filename">
+								{{ it.filename || "(unnamed)" }}
+							</span>
+						</div>
+
+						<div class="flex shrink-0 items-center gap-2">
+							<n-tag
+								v-if="it.vt_total != null"
+								size="small"
+								round
+								:bordered="false"
+								:type="it.vt_malicious ? 'error' : 'default'"
+							>
+								VT {{ it.vt_malicious ?? 0 }}/{{ it.vt_total }}
+							</n-tag>
+							<n-tag :type="verdictType(it.verdict)" size="small" round :bordered="false">
+								{{ it.verdict || it.status || "—" }}
+							</n-tag>
+							<n-popconfirm @positive-click="remove(it)">
+								<template #trigger>
+									<n-button
+										text
+										size="tiny"
+										class="text-secondary hover:text-error-color"
+										:loading="deletingId === it.job_id"
+										title="Delete this analysis"
+										@click.stop
+									>
+										<template #icon><Icon :name="TrashIcon" :size="15" /></template>
+									</n-button>
+								</template>
+								Delete this analysis? The stored result and previews are removed (the file can be
+								re-analysed later).
+							</n-popconfirm>
+						</div>
+					</div>
+				</template>
+
+				<!-- Wrapping badges rather than fixed columns: "collected from endpoint" is
+				     three times the width of "uploaded", so any grid sized for one of them
+				     cramps the other. -->
+				<template #default>
+					<div class="flex flex-wrap items-center gap-2">
+						<Badge type="splitted" :color="sourceColor(it.source)" size="small">
+							<template #iconLeft><Icon :name="sourceIcon(it.source)" :size="12" /></template>
+							<template #value>{{ sourceLabel(it.source) }}</template>
+						</Badge>
+						<Badge type="splitted" size="small">
+							<template #iconLeft><Icon :name="TimeIcon" :size="12" /></template>
+							<template #value>{{ when(it.created_at) }}</template>
+						</Badge>
+						<Badge type="splitted" size="small">
+							<template #label>sha256</template>
+							<template #value>
+								<span class="font-mono">{{ it.sha256.slice(0, 12) }}</span>
+							</template>
+						</Badge>
+					</div>
+				</template>
+			</CardEntity>
 		</div>
 	</div>
 </template>
@@ -95,6 +131,8 @@ import { NButton, NEmpty, NInput, NPopconfirm, NSpin, NTag, useMessage } from "n
 import { computed, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 
@@ -103,8 +141,10 @@ const props = defineProps<{ customerCode: string; refreshKey?: number }>()
 const router = useRouter()
 const message = useMessage()
 
-const ChevronIcon = "carbon:chevron-right"
 const TrashIcon = "carbon:trash-can"
+const TimeIcon = "carbon:time"
+const UploadIcon = "carbon:cloud-upload"
+const EndpointIcon = "carbon:bare-metal-server"
 const SearchIcon = "carbon:search"
 const SHA256_RE = /^[a-f0-9]{64}$/i
 
@@ -159,6 +199,22 @@ function verdictType(v: FileAnalysisVerdict | null): "success" | "warning" | "er
 	if (v === "suspicious") return "warning"
 	if (v === "clean") return "success"
 	return "default"
+}
+
+// CardEntity paints its own status accent; only a judged-bad row should carry one,
+// so an unjudged/clean row stays neutral instead of shouting "success".
+function statusFor(v: FileAnalysisVerdict | null): "success" | "warning" | "error" | undefined {
+	if (v === "malicious") return "error"
+	if (v === "suspicious") return "warning"
+	return undefined
+}
+
+function sourceIcon(source: string): string {
+	return source === "upload" ? UploadIcon : EndpointIcon
+}
+
+function sourceColor(source: string): "primary" | undefined {
+	return source === "upload" ? undefined : "primary"
 }
 
 function iconFor(it: FileAnalysisHistoryItem): string {
