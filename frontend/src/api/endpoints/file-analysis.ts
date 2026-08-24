@@ -11,6 +11,7 @@ import type {
 	FileAnalysisJob,
 	FileAnalysisMatch,
 	FileAnalysisResult,
+	ReputationMode,
 	SubmitFileAnalysisPayload
 } from "@/types/file-analysis"
 import type { FlaskBaseResponse } from "@/types/flask"
@@ -43,7 +44,7 @@ export default {
 	 *  opts.sandbox → run Tier-2 detonation; opts.reputationMode → VirusTotal phase
 	 *  ("off" | "lookup" = hash only, never uploads | "upload" = publishes if new).
 	 */
-	upload(file: File, customerCode: string, opts?: { sandbox?: boolean; reputationMode?: "off" | "lookup" | "upload" }) {
+	upload(file: File, customerCode: string, opts?: { sandbox?: boolean; reputationMode?: ReputationMode }) {
 		const form = new FormData()
 		form.append("file", file)
 		form.append("customer_code", customerCode)

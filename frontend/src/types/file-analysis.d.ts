@@ -250,12 +250,14 @@ export interface FileAnalysisResult {
 	verdict_reason?: string | null
 }
 
+/** VirusTotal phase: "off" | "lookup" (hash only) | "upload" (publishes if new). */
+export type ReputationMode = "off" | "lookup" | "upload"
+
 export interface SubmitFileAnalysisPayload {
 	source: "host_path" | "upload"
 	customer_code: string
 	tiers?: FileAnalysisTier[]
-	/** VirusTotal phase: "off" | "lookup" (hash only) | "upload" (publishes if new). */
-	reputation_mode?: "off" | "lookup" | "upload"
+	reputation_mode?: ReputationMode
 	client_id?: string
 	target_path?: string
 	hostname?: string
