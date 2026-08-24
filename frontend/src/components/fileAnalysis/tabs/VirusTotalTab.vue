@@ -167,7 +167,7 @@ import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{ reputation?: FileAnalysisReputation | null; loading?: boolean }>()
 
-const BugIcon = "carbon:bug"
+const BugIcon = "carbon:debug"
 const SandboxIcon = "carbon:play-filled-alt"
 const RuleIcon = "carbon:rule"
 const DotIcon = "carbon:circle-solid"

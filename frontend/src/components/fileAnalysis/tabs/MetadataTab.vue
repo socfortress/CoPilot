@@ -39,7 +39,7 @@ import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{ result?: InspectorResult | null }>()
 
-const AvIcon = "carbon:virus-outbreak"
+const AvIcon = "carbon:radar"
 
 const rows = computed(() => {
 	const r = props.result

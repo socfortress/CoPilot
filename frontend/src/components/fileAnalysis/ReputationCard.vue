@@ -49,7 +49,7 @@ import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{ reputation?: FileAnalysisReputation | null; loading?: boolean }>()
 
-const VtIcon = "carbon:virus-outbreak"
+const VtIcon = "carbon:radar"
 
 const alertType = computed<"error" | "warning" | "success" | "default">(() => {
 	const r = props.reputation

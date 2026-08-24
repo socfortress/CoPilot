@@ -117,7 +117,7 @@ const message = useMessage()
 
 const FileIcon = "carbon:document-security"
 const CustomerIcon = "carbon:user"
-const VtIcon = "carbon:virus-outbreak"
+const VtIcon = "carbon:radar"
 const POLL_MS = 3000
 const MAX_POLLS = 120 // ~6 min ceiling so a slow VT scan doesn't poll forever
 
