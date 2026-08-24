@@ -148,7 +148,13 @@ async def update_wazuh_agent_in_db(
 
     """
     existing_agent.update_wazuh_agent_from_model(agent, customer_code)
-    await session.commit()  # Use the await keyword to commit asynchronously
+    try:
+        await session.commit()  # Use the await keyword to commit asynchronously
+    except Exception:
+        # Roll back so the session stays usable for the remaining agents — without this
+        # the failed transaction poisons every subsequent iteration of the sync loop.
+        await session.rollback()
+        raise
     logger.info(f"Agent {agent.agent_name} updated in the database")
 
 
@@ -250,33 +256,48 @@ async def sync_agents_wazuh() -> SyncedAgentsResponse:
     logger.info(f"Collected Wazuh Agents: {wazuh_agents_list}")
 
     agents_added_list: List[WazuhAgent] = []
+    failed_agents: List[str] = []
 
     async with get_db_session() as session:  # Create a new session here
         for wazuh_agent in wazuh_agents_list.agents:
-            customer_code = extract_customer_code(wazuh_agent.agent_label)
+            # One bad agent must not abort the run. A single failure used to propagate out of
+            # this loop and 500 the whole sync, leaving every agent after it unprocessed.
+            try:
+                customer_code = extract_customer_code(wazuh_agent.agent_label)
 
-            existing_agent_query = select(Agents).filter(
-                Agents.hostname == wazuh_agent.agent_name,
-            )
-            result = await session.execute(existing_agent_query)
-            existing_agent = result.scalars().first()
+                existing_agent_query = select(Agents).filter(
+                    Agents.hostname == wazuh_agent.agent_name,
+                )
+                result = await session.execute(existing_agent_query)
+                existing_agent = result.scalars().first()
 
-            if existing_agent:
-                await update_wazuh_agent_in_db(session, existing_agent, wazuh_agent, customer_code)
-            else:
-                await add_wazuh_agent_in_db(session, wazuh_agent, customer_code)
+                if existing_agent:
+                    await update_wazuh_agent_in_db(session, existing_agent, wazuh_agent, customer_code)
+                else:
+                    await add_wazuh_agent_in_db(session, wazuh_agent, customer_code)
 
-            synced_wazuh_agent = SyncedWazuhAgent(**wazuh_agent.model_dump())
-            agents_added_list.append(synced_wazuh_agent)
+                synced_wazuh_agent = SyncedWazuhAgent(**wazuh_agent.model_dump())
+                agents_added_list.append(synced_wazuh_agent)
+            except Exception as e:
+                await session.rollback()
+                failed_agents.append(wazuh_agent.agent_name)
+                logger.opt(exception=True).error(
+                    f"Failed to sync Wazuh agent {wazuh_agent.agent_name} " f"(agent_id {wazuh_agent.agent_id}): {type(e).__name__}: {e}",
+                )
 
     logger.info(f"Agents Added List: {agents_added_list}")
 
     # Close the session
     await session.close()
 
+    message = f"Agents synced successfully ({len(agents_added_list)} of {len(wazuh_agents_list.agents)})"
+    if failed_agents:
+        message += f". Failed to sync {len(failed_agents)}: {', '.join(failed_agents)}"
+        logger.warning(f"Wazuh agent sync completed with {len(failed_agents)} failure(s): {failed_agents}")
+
     return SyncedAgentsResponse(
         success=True,
-        message="Agents synced successfully",
+        message=message,
     )
 
 
