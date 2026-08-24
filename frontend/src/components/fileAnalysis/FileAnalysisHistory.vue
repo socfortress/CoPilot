@@ -1,13 +1,5 @@
 <template>
 	<div class="flex flex-col gap-2">
-		<div class="flex items-center justify-between">
-			<span class="text-sm font-semibold">Recent analyses</span>
-			<n-button text size="tiny" :loading :disabled="!customerCode" @click="load()">
-				<template #icon><Icon :name="RefreshIcon" :size="14" /></template>
-				Refresh
-			</n-button>
-		</div>
-
 		<!-- Filters the loaded rows as you type; a full SHA256 additionally asks the
 		     backend whether this customer has a cached analysis older than the page. -->
 		<n-input
@@ -45,7 +37,7 @@
 			class="py-4"
 		/>
 
-		<div v-else class="border-default flex flex-col divide-y divide-[var(--n-border-color)] rounded-lg border">
+		<div v-else class="border-default divide-border flex flex-col divide-y overflow-hidden rounded-lg border">
 			<div
 				v-for="it in visibleItems"
 				:key="it.job_id"
@@ -87,7 +79,8 @@
 							<template #icon><Icon :name="TrashIcon" :size="16" /></template>
 						</n-button>
 					</template>
-					Delete this analysis? The stored result and previews are removed (the file can be re-analysed later).
+					Delete this analysis? The stored result and previews are removed (the file can be re-analysed
+					later).
 				</n-popconfirm>
 				<Icon :name="ChevronIcon" :size="16" class="text-secondary shrink-0" />
 			</div>
@@ -110,7 +103,6 @@ const props = defineProps<{ customerCode: string; refreshKey?: number }>()
 const router = useRouter()
 const message = useMessage()
 
-const RefreshIcon = "carbon:renew"
 const ChevronIcon = "carbon:chevron-right"
 const TrashIcon = "carbon:trash-can"
 const SearchIcon = "carbon:search"

@@ -8,20 +8,29 @@
 			</p>
 		</div>
 
-		<!-- Scopes all three tabs: submissions are stamped with it, and both the
-		     endpoint list and the history are read per-customer. -->
-		<n-select
-			v-model:value="customerCode"
-			:options="customerOptions"
-			:loading="customersLoading"
-			filterable
-			clearable
-			placeholder="Select a customer (required)"
-			:render-label="renderCustomerLabel"
-		/>
+		<!-- Scopes everything on this page: submissions are stamped with it, and both
+		     the endpoint list and the history are read per-customer. -->
+		<div class="flex items-center gap-2">
+			<n-select
+				v-model:value="customerCode"
+				:options="customerOptions"
+				:loading="customersLoading"
+				filterable
+				clearable
+				class="grow"
+				placeholder="Select a customer (required)"
+				:render-label="renderCustomerLabel"
+			/>
+			<!-- History is per-customer, so the button has nothing to open until one is
+			     picked — it appears with the scope it belongs to rather than sitting
+			     there disabled. -->
+			<n-button v-if="customerCode" secondary class="shrink-0" @click="openHistory()">
+				<template #icon><Icon :name="HistoryIcon" :size="16" /></template>
+				Recent analyses
+			</n-button>
+		</div>
 
-		<!-- Applies to both submission tabs, and to neither of them on History. -->
-		<AnalysisPhaseOptions v-if="activeTab !== 'history'" v-model:sandbox="sandbox" v-model:vt-mode="vtMode" />
+		<AnalysisPhaseOptions v-model:sandbox="sandbox" v-model:vt-mode="vtMode" />
 
 		<n-tabs v-model:value="activeTab" type="line" animated>
 			<n-tab-pane name="upload" tab="Analyze a file" display-directive="show:lazy">
@@ -30,10 +39,13 @@
 			<n-tab-pane name="collect" tab="Collect from an endpoint" display-directive="show:lazy">
 				<CollectPanel :customer-code :sandbox :vt-mode @started="onStarted" />
 			</n-tab-pane>
-			<n-tab-pane name="history" tab="Recent analyses" display-directive="show:lazy">
-				<FileAnalysisHistory :customer-code="customerCode || ''" :refresh-key />
-			</n-tab-pane>
 		</n-tabs>
+
+		<n-drawer v-model:show="showHistory" :width="640" class="max-w-[90vw]!" placement="right">
+			<n-drawer-content title="Recent analyses" closable :native-scrollbar="false">
+				<FileAnalysisHistory :customer-code="customerCode || ''" :refresh-key />
+			</n-drawer-content>
+		</n-drawer>
 	</div>
 </template>
 
@@ -43,20 +55,22 @@ import type { VNodeChild } from "vue"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import type { ReputationMode } from "@/types/file-analysis"
-import { NSelect, NTabPane, NTabs, useMessage } from "naive-ui"
+import { NButton, NDrawer, NDrawerContent, NSelect, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, h, onMounted, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import FileAnalysisHistory from "@/components/fileAnalysis/FileAnalysisHistory.vue"
 import AnalysisPhaseOptions from "@/components/fileAnalysis/submit/AnalysisPhaseOptions.vue"
 import CollectPanel from "@/components/fileAnalysis/submit/CollectPanel.vue"
 import UploadPanel from "@/components/fileAnalysis/submit/UploadPanel.vue"
 import { getApiErrorMessage } from "@/utils"
 
-type SubmitTab = "upload" | "collect" | "history"
+type SubmitTab = "upload" | "collect"
 
-const TABS: SubmitTab[] = ["upload", "collect", "history"]
+const TABS: SubmitTab[] = ["upload", "collect"]
 const LS_CUSTOMER = "fileAnalysis.customerCode"
+const HistoryIcon = "carbon:time"
 
 const route = useRoute()
 const router = useRouter()
@@ -66,6 +80,7 @@ const customerCode = ref<string | null>(null)
 const customers = ref<Customer[]>([])
 const customersLoading = ref(false)
 const refreshKey = ref(0)
+const showHistory = ref(false)
 
 // Pre-analysis phase selection, shared by both submission tabs.
 const sandbox = ref(true)
@@ -102,10 +117,19 @@ watch(
 	}
 )
 
-// Remember the last-used customer across visits.
+// Remember the last-used customer across visits. Clearing it closes the drawer:
+// the history it is showing belongs to a customer that is no longer selected.
 watch(customerCode, val => {
 	if (val) localStorage.setItem(LS_CUSTOMER, val)
+	else showHistory.value = false
 })
+
+// Bump the key on every open so a drawer reopened after a submission shows the
+// new analysis instead of the list it was mounted with.
+function openHistory() {
+	refreshKey.value++
+	showHistory.value = true
+}
 
 function renderCustomerLabel(option: SelectOption): VNodeChild {
 	const c = option.customer as Customer | undefined
