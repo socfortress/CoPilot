@@ -167,10 +167,10 @@
 						:style="
 							p.isSample
 								? {
-									borderLeft: '2px solid var(--primary-color)',
-									background: 'color-mix(in srgb, var(--primary-color) 7%, transparent)',
-									borderRadius: '4px'
-								}
+										borderLeft: '2px solid var(--primary-color)',
+										background: 'color-mix(in srgb, var(--primary-color) 7%, transparent)',
+										borderRadius: '4px'
+									}
 								: {}
 						"
 					>
