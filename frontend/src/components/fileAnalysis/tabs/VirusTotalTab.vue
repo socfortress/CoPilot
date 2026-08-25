@@ -7,24 +7,31 @@
 		/>
 
 		<template v-else-if="intel">
-			<!-- Headline: detection ratio + threat classification + community -->
-			<div class="border-default flex flex-wrap items-center gap-6 rounded-lg border p-4">
-				<div class="flex flex-col items-center gap-1">
-					<n-progress type="circle" :percentage="detPct" :color="ratioColor" :style="{ width: '92px' }">
+			<!-- Headline as three hairline-separated cells rather than a free-flowing
+			     row: same grid language as the summary card, so detection, classification
+			     and community read as three answers instead of one paragraph. -->
+			<div class="border-default grid gap-px overflow-hidden rounded-lg border bg-[var(--border-color)] lg:grid-cols-[auto_1fr_auto]">
+				<div class="bg-secondary flex items-center gap-4 p-4">
+					<n-progress type="circle" :percentage="detPct" :color="ratioColor" :style="{ width: '76px' }">
 						<div class="flex flex-col items-center">
-							<span class="text-lg font-semibold">{{ reputation?.malicious ?? 0 }}</span>
-							<span class="text-secondary text-xs">/ {{ reputation?.total ?? "?" }}</span>
+							<span class="text-lg leading-none font-semibold">{{ reputation?.malicious ?? 0 }}</span>
+							<span class="text-tertiary font-mono text-xs">/{{ reputation?.total ?? "?" }}</span>
 						</div>
 					</n-progress>
-					<span class="text-secondary text-xs">engines flagged</span>
+					<div class="flex flex-col gap-1">
+						<span :class="LABEL">Detection</span>
+						<span class="text-secondary text-xs">engines flagging it</span>
+					</div>
 				</div>
 
-				<div class="flex min-w-0 flex-col gap-2">
-					<div v-if="intel.threat_label" class="flex flex-wrap items-center gap-2">
-						<Icon :name="BugIcon" :size="16" class="text-red-500" />
-						<code class="text-base font-semibold break-all">{{ intel.threat_label }}</code>
+				<div class="bg-secondary flex min-w-0 flex-col gap-2 p-4">
+					<span :class="LABEL">Threat label</span>
+					<div v-if="intel.threat_label" class="flex min-w-0 items-center gap-2">
+						<Icon :name="BugIcon" :size="15" class="text-error shrink-0" />
+						<span class="text-default min-w-0 font-mono text-sm break-all">{{ intel.threat_label }}</span>
 					</div>
-					<div v-else class="text-secondary text-sm">No consensus threat label.</div>
+					<span v-else class="text-tertiary text-sm">No consensus threat label.</span>
+
 					<div v-if="intel.threat_categories?.length" class="flex flex-wrap gap-1">
 						<n-tag
 							v-for="c of intel.threat_categories"
@@ -42,30 +49,43 @@
 					</div>
 				</div>
 
-				<div class="grow" />
-
-				<div class="text-secondary flex flex-col gap-1 text-xs">
-					<div v-if="intel.reputation != null">
-						Community:
-						<span :class="intel.reputation < 0 ? 'text-red-500' : 'text-default'">
-							{{ intel.reputation }}
-						</span>
+				<!-- Community as aligned label/value rows: it used to run on as prose
+				     ("Votes: 0 harmless · 0 malicious"), which hid the numbers. -->
+				<div class="bg-secondary flex flex-col gap-2 p-4 lg:w-56">
+					<span :class="LABEL">Community</span>
+					<div class="flex flex-col gap-1 text-xs">
+						<div v-if="intel.reputation != null" class="flex items-baseline justify-between gap-3">
+							<span class="text-tertiary">reputation</span>
+							<span
+								class="font-mono tabular-nums"
+								:class="intel.reputation < 0 ? 'text-error' : 'text-secondary'"
+							>
+								{{ intel.reputation }}
+							</span>
+						</div>
+						<div class="flex items-baseline justify-between gap-3">
+							<span class="text-tertiary">harmless votes</span>
+							<span class="text-success font-mono tabular-nums">{{ intel.harmless_votes ?? 0 }}</span>
+						</div>
+						<div class="flex items-baseline justify-between gap-3">
+							<span class="text-tertiary">malicious votes</span>
+							<span class="text-error font-mono tabular-nums">{{ intel.malicious_votes ?? 0 }}</span>
+						</div>
+						<div v-if="intel.times_submitted != null" class="flex items-baseline justify-between gap-3">
+							<span class="text-tertiary">submitted</span>
+							<span class="text-secondary font-mono tabular-nums">{{ intel.times_submitted }}×</span>
+						</div>
 					</div>
-					<div>
-						Votes:
-						<span class="text-green-500">{{ intel.harmless_votes ?? 0 }} harmless</span>
-						·
-						<span class="text-red-500">{{ intel.malicious_votes ?? 0 }} malicious</span>
-					</div>
-					<div v-if="intel.times_submitted != null">Submitted {{ intel.times_submitted }}×</div>
 				</div>
 			</div>
 
 			<!-- File facts -->
-			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-				<div v-for="f in facts" :key="f.label" class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
-					<span class="text-secondary text-xs">{{ f.label }}</span>
-					<span class="text-sm font-medium break-all">{{ f.value }}</span>
+			<div
+				class="border-default grid gap-px overflow-hidden rounded-lg border bg-[var(--border-color)] sm:grid-cols-2 lg:grid-cols-4"
+			>
+				<div v-for="f in facts" :key="f.label" class="bg-secondary flex min-h-20 flex-col gap-1 p-4">
+					<span :class="LABEL">{{ f.label }}</span>
+					<span class="text-default text-sm break-words">{{ f.value }}</span>
 				</div>
 			</div>
 
@@ -134,7 +154,7 @@
 						class="bg-secondary flex flex-col gap-0.5 rounded-lg p-3"
 					>
 						<div class="flex flex-wrap items-center gap-2 text-sm">
-							<Icon :name="RuleIcon" :size="14" class="text-amber-500" />
+							<Icon :name="RuleIcon" :size="14" class="text-warning" />
 							<span class="font-medium">{{ y.rule }}</span>
 							<span v-if="y.author" class="text-secondary text-xs">by {{ y.author }}</span>
 							<n-tag v-if="y.ruleset" size="tiny" round :bordered="false">{{ y.ruleset }}</n-tag>
@@ -179,7 +199,7 @@
 							<Icon
 								:name="DotIcon"
 								:size="10"
-								:class="d.category === 'malicious' ? 'text-red-500' : 'text-amber-500'"
+								:class="d.category === 'malicious' ? 'text-error' : 'text-warning'"
 							/>
 							<span class="w-40 shrink-0 font-medium">{{ d.engine }}</span>
 							<code class="break-all">{{ d.result }}</code>
@@ -214,6 +234,10 @@ import { computed, h } from "vue"
 import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{ reputation?: FileAnalysisReputation | null; loading?: boolean }>()
+
+// Same label treatment as the summary card, so the two surfaces read as one
+// design rather than two.
+const LABEL = "text-secondary text-xs font-medium tracking-wider uppercase"
 
 const BugIcon = "carbon:debug"
 const SandboxIcon = "carbon:play-filled-alt"

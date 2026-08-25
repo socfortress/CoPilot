@@ -2,7 +2,8 @@
 	<div class="flex flex-col gap-2">
 		<div class="text-secondary flex items-center justify-between font-mono text-xs">
 			<span>{{ jobIds.length }} files analysed together</span>
-			<span v-if="runningCount">{{ runningCount }} still running</span>
+			<span v-if="!allLoaded">loading…</span>
+			<span v-else-if="runningCount">{{ runningCount }} still running</span>
 		</div>
 
 		<CardEntity
@@ -21,15 +22,18 @@
 					<div class="flex min-w-0 grow basis-50 items-center gap-2">
 						<Icon :name="iconFor(b)" :size="16" :class="colorFor(b)" class="shrink-0" />
 						<span
+							v-if="b.loaded"
 							class="text-default truncate text-sm"
 							:class="b.jobId === activeJobId ? 'font-semibold' : 'font-medium'"
 							:title="b.filename"
 						>
-							{{ b.filename || "…" }}
+							{{ b.filename || "(unnamed)" }}
 						</span>
+						<n-skeleton v-else text :height="16" class="w-2/3" />
 					</div>
 					<div class="flex shrink-0 items-center gap-2">
-						<n-spin v-if="isRunning(b)" :size="13" />
+						<n-skeleton v-if="!b.loaded" text :height="20" class="w-16" />
+						<n-spin v-else-if="isRunning(b)" :size="13" />
 						<n-tag v-else :type="verdictType(b.verdict)" size="small" round :bordered="false">
 							{{ b.verdict || b.status || "—" }}
 						</n-tag>
@@ -39,7 +43,8 @@
 
 			<template #default>
 				<div class="flex flex-wrap items-center gap-2">
-					<Badge type="splitted" size="small">
+					<n-skeleton v-if="!b.loaded" text :height="22" class="w-40" />
+					<Badge v-else type="splitted" size="small">
 						<template #label>sha256</template>
 						<template #value>
 							<span class="font-mono">{{ b.sha256 ? b.sha256.slice(0, 12) : "—" }}</span>
@@ -56,7 +61,7 @@
 
 <script setup lang="ts">
 import type { FileAnalysisJob, FileAnalysisVerdict } from "@/types/file-analysis"
-import { NSpin, NTag } from "naive-ui"
+import { NSkeleton, NSpin, NTag } from "naive-ui"
 import { computed, onBeforeUnmount, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
@@ -66,6 +71,8 @@ import Icon from "@/components/common/Icon.vue"
 
 interface BatchEntry {
 	jobId: string
+	/** False until this job's first fetch lands, so the row can show a placeholder. */
+	loaded: boolean
 	filename: string
 	sha256: string
 	verdict: FileAnalysisVerdict | null
@@ -84,9 +91,10 @@ const items = ref<BatchEntry[]>([])
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 const runningCount = computed(() => items.value.filter(isRunning).length)
+const allLoaded = computed(() => items.value.length > 0 && items.value.every(b => b.loaded))
 
 function isRunning(b: BatchEntry): boolean {
-	return ["pending", "queued", "running"].includes(b.status)
+	return b.loaded && ["pending", "queued", "running"].includes(b.status)
 }
 
 function verdictType(v: FileAnalysisVerdict | null): "success" | "warning" | "error" | "default" {
@@ -99,6 +107,7 @@ function verdictType(v: FileAnalysisVerdict | null): "success" | "warning" | "er
 // Only a judged-bad row carries a status accent; a clean one stays neutral rather
 // than painting the drawer green.
 function statusFor(b: BatchEntry): "success" | "warning" | "error" | undefined {
+	if (!b.loaded) return undefined
 	if (b.status === "failed") return "error"
 	if (b.verdict === "malicious") return "error"
 	if (b.verdict === "suspicious") return "warning"
@@ -134,13 +143,19 @@ function fetchAll() {
 					const j = res.data?.job as FileAnalysisJob | undefined
 					return {
 						jobId,
+						loaded: true,
 						filename: j?.filename || "",
 						sha256: j?.sha256 || "",
 						verdict: j?.verdict ?? null,
 						status: j?.status || "pending"
 					} as BatchEntry
 				})
-				.catch(() => ({ jobId, filename: "", sha256: "", verdict: null, status: "pending" }) as BatchEntry)
+				// A job that cannot be read is still shown, as loaded-but-unknown: an
+				// empty gap would be indistinguishable from a bug.
+				.catch(
+					() =>
+						({ jobId, loaded: true, filename: "", sha256: "", verdict: null, status: "unknown" }) as BatchEntry
+				)
 		)
 	).then(entries => {
 		items.value = entries
@@ -159,6 +174,16 @@ watch(
 	() => props.jobIds.join(","),
 	() => {
 		stopPoll()
+		// Placeholders first: the drawer opens with one row per job right away.
+		// Waiting for Promise.all left it blank for a beat, which reads as broken.
+		items.value = props.jobIds.map(jobId => ({
+			jobId,
+			loaded: false,
+			filename: "",
+			sha256: "",
+			verdict: null,
+			status: "pending"
+		}))
 		fetchAll()
 		pollTimer = setInterval(fetchAll, 3000)
 	},
