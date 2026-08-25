@@ -6,7 +6,9 @@ from loguru import logger
 from sqlalchemy import JSON
 from sqlalchemy import Column
 from sqlalchemy import Float
+from sqlalchemy import ForeignKey
 from sqlalchemy import LargeBinary
+from sqlalchemy import String
 from sqlalchemy import Text
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.dialects.mysql import LONGTEXT
@@ -236,7 +238,19 @@ class AgentDataStore(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
 
     # Agent information
-    agent_id: str = Field(foreign_key="agents.agent_id", max_length=256, index=True, nullable=False)
+    # ON UPDATE CASCADE: Wazuh reassigns agent_id when an agent re-registers, and the sync
+    # updates it in place on the matching hostname. Without the cascade MySQL rejects that
+    # UPDATE (errno 1451) and the whole agent sync aborts. ON DELETE stays RESTRICT: each row
+    # points at a MinIO object that has to be removed explicitly, so a silent cascade would
+    # orphan the blobs.
+    agent_id: str = Field(
+        sa_column=Column(
+            String(256),
+            ForeignKey("agents.agent_id", onupdate="CASCADE"),
+            index=True,
+            nullable=False,
+        ),
+    )
     velociraptor_id: str = Field(max_length=256, nullable=False)
     # Removed customer_code - access via agent.customer_code relationship
 
@@ -323,7 +337,17 @@ class AgentVulnerabilities(SQLModel, table=True):
     package_name: Optional[str] = Field(default=None, max_length=255)
 
     # Foreign keys
-    agent_id: str = Field(foreign_key="agents.agent_id", max_length=256, index=True)
+    # ON UPDATE CASCADE for the same re-registration reason as agent_datastore above.
+    # ON DELETE CASCADE is safe here where it is not there: vulnerabilities are derived data,
+    # regenerated from the Wazuh Indexer on the next scan, and hold no external blob.
+    agent_id: str = Field(
+        sa_column=Column(
+            String(256),
+            ForeignKey("agents.agent_id", onupdate="CASCADE", ondelete="CASCADE"),
+            index=True,
+            nullable=False,
+        ),
+    )
     customer_code: Optional[str] = Field(foreign_key="customers.customer_code", max_length=50, index=True)
 
     # Relationship back to the Agents model
