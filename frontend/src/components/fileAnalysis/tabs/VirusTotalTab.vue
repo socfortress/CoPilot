@@ -10,7 +10,9 @@
 			<!-- Headline as three hairline-separated cells rather than a free-flowing
 			     row: same grid language as the summary card, so detection, classification
 			     and community read as three answers instead of one paragraph. -->
-			<div class="border-default grid gap-px overflow-hidden rounded-lg border bg-[var(--border-color)] lg:grid-cols-[auto_1fr_auto]">
+			<div
+				class="border-default bg-border grid gap-px overflow-hidden rounded-lg border lg:grid-cols-[auto_1fr_auto]"
+			>
 				<div class="bg-secondary flex items-center gap-4 p-4">
 					<n-progress type="circle" :percentage="detPct" :color="ratioColor" :style="{ width: '76px' }">
 						<div class="flex flex-col items-center">
@@ -81,72 +83,107 @@
 
 			<!-- File facts -->
 			<div
-				class="border-default grid gap-px overflow-hidden rounded-lg border bg-[var(--border-color)] sm:grid-cols-2 lg:grid-cols-4"
+				class="border-default bg-border grid gap-px overflow-hidden rounded-lg border sm:grid-cols-2 lg:grid-cols-4"
 			>
 				<div v-for="f in facts" :key="f.label" class="bg-secondary flex min-h-20 flex-col gap-1 p-4">
 					<span :class="LABEL">{{ f.label }}</span>
-					<span class="text-default text-sm break-words">{{ f.value }}</span>
+					<span class="text-default text-sm wrap-break-word">{{ f.value }}</span>
 				</div>
 			</div>
 
 			<!-- VT sandbox behaviour — the detonation stand-in when our own sandbox is offline -->
-			<div v-if="intel.behaviour" class="border-default flex flex-col gap-3 rounded-lg border p-4">
-				<div class="flex flex-wrap items-center gap-2">
-					<Icon :name="SandboxIcon" :size="16" class="text-primary" />
-					<span class="text-sm font-semibold">Behaviour observed by VirusTotal's sandboxes</span>
+			<div v-if="intel.behaviour" class="border-default flex flex-col overflow-hidden rounded-lg border">
+				<div class="border-default bg-secondary flex flex-wrap items-center gap-2 border-b px-4 py-2">
+					<span :class="LABEL">Behaviour observed by VirusTotal's sandboxes</span>
 					<n-tag size="tiny" round :bordered="false" type="info">no local detonation needed</n-tag>
 				</div>
 
-				<div v-if="intel.behaviour.mitre?.length" class="flex flex-col gap-1">
-					<span class="text-secondary text-xs font-medium">MITRE ATT&CK</span>
-					<div class="flex flex-wrap gap-2">
-						<n-tag
-							v-for="t of intel.behaviour.mitre"
-							:key="t.id"
-							type="warning"
-							size="small"
-							round
-							:bordered="false"
-						>
-							{{ t.id }}
-							<span v-if="t.description" class="opacity-70">· {{ t.description }}</span>
-						</n-tag>
-					</div>
-				</div>
+				<div class="flex flex-col gap-4 p-4">
+					<!-- Rows, not pills: a technique id is an identifier and its description
+					     is prose, and packing both into a round tag produced ragged blobs
+					     that could not be scanned down the ids. -->
+					<div v-if="intel.behaviour.mitre?.length" class="flex flex-col gap-2">
+						<div class="flex flex-wrap items-center justify-between gap-2">
+							<span :class="LABEL">
+								MITRE ATT&CK
+								<span class="text-tertiary normal-case">
+									({{ filteredMitre.length }}/{{ intel.behaviour.mitre.length }})
+								</span>
+							</span>
+							<!-- Filtering happens in memory over the techniques already loaded
+							     with the report: no request is made as you type. -->
+							<n-input
+								v-model:value="mitreQuery"
+								size="tiny"
+								clearable
+								placeholder="Filter by technique or text"
+								class="w-full sm:w-64"
+							>
+								<template #prefix><Icon :name="SearchIcon" :size="13" /></template>
+							</n-input>
+						</div>
 
-				<div class="grid gap-3 md:grid-cols-3">
-					<IocList label="Contacted IPs" :items="intel.behaviour.contacted_ips" :link="ipUrl" />
-					<IocList label="Contacted domains" :items="intel.behaviour.contacted_domains" :link="domainUrl" />
-					<IocList label="Contacted URLs" :items="intel.behaviour.contacted_urls" />
-				</div>
-
-				<div v-if="intel.behaviour.dropped_files?.length" class="flex flex-col gap-1">
-					<span class="text-secondary text-xs font-medium">
-						Dropped files ({{ intel.behaviour.dropped_files.length }})
-					</span>
-					<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
-						<div
-							v-for="(d, i) of intel.behaviour.dropped_files"
-							:key="i"
-							class="flex items-center gap-2 text-xs"
-						>
-							<span class="font-medium break-all">{{ d.name || "(unnamed)" }}</span>
-							<n-tag v-if="d.type" size="tiny" round :bordered="false">{{ d.type }}</n-tag>
-							<code v-if="d.sha256" class="text-secondary break-all">{{ d.sha256.slice(0, 20) }}</code>
+						<div class="border-default rounded-lg border">
+							<n-scrollbar style="max-height: 16rem">
+								<div class="divide-border flex flex-col divide-y">
+									<div
+										v-for="t of filteredMitre"
+										:key="t.id"
+										class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-3 py-2"
+									>
+										<span class="text-warning w-24 shrink-0 font-mono text-xs">{{ t.id }}</span>
+										<span v-if="t.description" class="text-secondary min-w-0 text-xs">
+											{{ t.description }}
+										</span>
+									</div>
+									<div v-if="!filteredMitre.length" class="text-tertiary px-3 py-4 text-xs">
+										No technique matches that filter.
+									</div>
+								</div>
+							</n-scrollbar>
 						</div>
 					</div>
-				</div>
 
-				<div class="grid gap-3 md:grid-cols-3">
-					<IocList label="Processes" :items="intel.behaviour.processes" mono />
-					<IocList label="Registry keys" :items="intel.behaviour.registry_keys" mono />
-					<IocList label="Mutexes" :items="intel.behaviour.mutexes" mono />
+					<div class="grid gap-3 md:grid-cols-3">
+						<IocList label="Contacted IPs" :items="intel.behaviour.contacted_ips" :link="ipUrl" />
+						<IocList
+							label="Contacted domains"
+							:items="intel.behaviour.contacted_domains"
+							:link="domainUrl"
+						/>
+						<IocList label="Contacted URLs" :items="intel.behaviour.contacted_urls" />
+					</div>
+
+					<div v-if="intel.behaviour.dropped_files?.length" class="flex flex-col gap-1">
+						<span :class="LABEL">Dropped files ({{ intel.behaviour.dropped_files.length }})</span>
+						<div class="border-default rounded-lg border">
+							<n-scrollbar style="max-height: 13rem" class="p-3">
+								<div
+									v-for="(d, i) of intel.behaviour.dropped_files"
+									:key="i"
+									class="flex items-center gap-2 py-0.5 text-xs"
+								>
+									<span class="font-medium break-all">{{ d.name || "(unnamed)" }}</span>
+									<n-tag v-if="d.type" size="tiny" round :bordered="false">{{ d.type }}</n-tag>
+									<code v-if="d.sha256" class="text-secondary break-all">
+										{{ d.sha256.slice(0, 20) }}
+									</code>
+								</div>
+							</n-scrollbar>
+						</div>
+					</div>
+
+					<div class="grid gap-3 md:grid-cols-3">
+						<IocList label="Processes" :items="intel.behaviour.processes" mono />
+						<IocList label="Registry keys" :items="intel.behaviour.registry_keys" mono />
+						<IocList label="Mutexes" :items="intel.behaviour.mutexes" mono />
+					</div>
 				</div>
 			</div>
 
 			<!-- Crowdsourced detection rules -->
 			<div v-if="intel.yara?.length" class="flex flex-col gap-2">
-				<span class="text-secondary text-xs font-medium">Crowdsourced YARA ({{ intel.yara.length }})</span>
+				<span :class="LABEL">Crowdsourced YARA ({{ intel.yara.length }})</span>
 				<div class="flex flex-col gap-2">
 					<div
 						v-for="(y, i) of intel.yara"
@@ -165,7 +202,7 @@
 			</div>
 
 			<div v-if="intel.sigma?.length" class="flex flex-col gap-2">
-				<span class="text-secondary text-xs font-medium">Sigma matches ({{ intel.sigma.length }})</span>
+				<span :class="LABEL">Sigma matches ({{ intel.sigma.length }})</span>
 				<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
 					<div v-for="(s, i) of intel.sigma" :key="i" class="flex flex-wrap items-center gap-2 text-xs">
 						<n-tag size="tiny" round :bordered="false" :type="sevTag(s.level)">{{ s.level || "—" }}</n-tag>
@@ -176,7 +213,7 @@
 			</div>
 
 			<div v-if="intel.ids?.length" class="flex flex-col gap-2">
-				<span class="text-secondary text-xs font-medium">IDS/IPS alerts ({{ intel.ids.length }})</span>
+				<span :class="LABEL">IDS/IPS alerts ({{ intel.ids.length }})</span>
 				<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
 					<div v-for="(x, i) of intel.ids" :key="i" class="flex flex-wrap items-center gap-2 text-xs">
 						<n-tag size="tiny" round :bordered="false" :type="sevTag(x.severity)">
@@ -229,9 +266,10 @@
 
 <script setup lang="ts">
 import type { FileAnalysisReputation } from "@/types/file-analysis"
-import { NCollapse, NCollapseItem, NEmpty, NProgress, NScrollbar, NTag } from "naive-ui"
-import { computed, h } from "vue"
+import { NCollapse, NCollapseItem, NEmpty, NInput, NProgress, NScrollbar, NTag } from "naive-ui"
+import { computed, h, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import { createFuse, searchFuse } from "@/components/common/searchDialog.helpers"
 
 const props = defineProps<{ reputation?: FileAnalysisReputation | null; loading?: boolean }>()
 
@@ -240,12 +278,21 @@ const props = defineProps<{ reputation?: FileAnalysisReputation | null; loading?
 const LABEL = "text-secondary text-xs font-medium tracking-wider uppercase"
 
 const BugIcon = "carbon:debug"
-const SandboxIcon = "carbon:play-filled-alt"
 const RuleIcon = "carbon:rule"
 const DotIcon = "carbon:circle-solid"
+const SearchIcon = "carbon:search"
 
 const intel = computed(() => props.reputation?.intel ?? null)
 const permalink = computed(() => props.reputation?.permalink)
+
+// 24+ techniques is normal for a real sample, so the list needs a way in beyond
+// scrolling. Purely client-side: Fuse searches the techniques already delivered
+// with the report, so nothing is requested as you type. Fuzzy rather than a plain
+// substring match, because "base64" should still find "encode data using Base64"
+// and a typo in a technique id should not blank the list.
+const mitreQuery = ref("")
+const mitreFuse = computed(() => createFuse(intel.value?.behaviour?.mitre ?? [], ["id", "description"]))
+const filteredMitre = computed(() => searchFuse(mitreFuse.value, mitreQuery.value, intel.value?.behaviour?.mitre ?? []))
 
 const detPct = computed(() => {
 	const m = props.reputation?.malicious ?? 0
@@ -303,26 +350,38 @@ function domainUrl(v: string): string {
 function IocList(p: { label: string; items?: string[]; link?: (v: string) => string; mono?: boolean }) {
 	const items = p.items || []
 	if (!items.length) return null
-	return h("div", { class: "flex flex-col gap-1" }, [
-		h("span", { class: "text-secondary text-xs font-medium" }, `${p.label} (${items.length})`),
-		h(
-			"div",
-			{ class: "bg-secondary flex max-h-52 flex-col gap-1 overflow-y-auto rounded-lg p-3" },
-			items.map(it =>
-				p.link
-					? h(
-							"a",
-							{
-								href: p.link(it),
-								target: "_blank",
-								rel: "noopener noreferrer",
-								class: "hover:text-primary text-xs break-all underline decoration-dotted"
-							},
-							it
+	// NScrollbar rather than overflow-y-auto: the native bar is a different widget
+	// from the ones used everywhere else in the app, and on some platforms it only
+	// appears while scrolling, so a clipped list read as truncated content.
+	return h("div", { class: "flex flex-col gap-2" }, [
+		h("span", { class: LABEL }, `${p.label} (${items.length})`),
+		h("div", { class: "border-default rounded-lg border" }, [
+			h(
+				NScrollbar,
+				{ style: "max-height: 13rem", class: "p-3" },
+				{
+					default: () =>
+						h(
+							"div",
+							{ class: "flex flex-col gap-2" },
+							items.map(it =>
+								p.link
+									? h(
+											"a",
+											{
+												href: p.link(it),
+												target: "_blank",
+												rel: "noopener noreferrer",
+												class: "hover:text-primary block py-0.5 text-xs break-all underline decoration-dotted"
+											},
+											it
+										)
+									: h("code", { class: "block py-0.5 text-xs break-all" }, it)
+							)
 						)
-					: h("code", { class: `text-xs break-all${p.mono ? "" : ""}` }, it)
+				}
 			)
-		)
+		])
 	])
 }
 </script>
