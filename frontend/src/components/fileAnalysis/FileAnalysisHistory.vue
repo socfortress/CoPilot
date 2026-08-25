@@ -184,7 +184,7 @@ function lookup() {
 		.then(res => {
 			const jobId = res.data.job_id
 			if (jobId) {
-				router.push({ name: "FileAnalysis", params: { jobId } })
+				router.push({ name: "FileAnalysisDetails", params: { jobId } })
 			} else {
 				message.info("This customer has no analysis for that hash yet.")
 			}
@@ -235,7 +235,7 @@ function sourceLabel(source: string): string {
 
 function open(it: FileAnalysisHistoryItem) {
 	if (!it.job_id) return
-	router.push({ name: "FileAnalysis", params: { jobId: it.job_id } })
+	router.push({ name: "FileAnalysisDetails", params: { jobId: it.job_id } })
 }
 
 function remove(it: FileAnalysisHistoryItem) {

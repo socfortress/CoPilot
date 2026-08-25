@@ -74,7 +74,7 @@ function colorFor(b: BatchEntry): string {
 
 function select(jobId: string) {
 	if (jobId === props.activeJobId) return
-	router.push({ name: "FileAnalysis", params: { jobId }, query: { batch: props.jobIds.join(",") } })
+	router.push({ name: "FileAnalysisDetails", params: { jobId }, query: { batch: props.jobIds.join(",") } })
 }
 
 function fetchAll() {

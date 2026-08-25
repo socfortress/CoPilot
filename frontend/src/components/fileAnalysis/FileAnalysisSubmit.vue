@@ -147,7 +147,7 @@ function onStarted(jobIds: string[]) {
 	refreshKey.value++
 	// Carry the whole batch so the result view can show all of them in a sidebar.
 	const query = jobIds.length > 1 ? { batch: jobIds.join(",") } : undefined
-	router.push({ name: "FileAnalysis", params: { jobId: jobIds[0] }, query })
+	router.push({ name: "FileAnalysisDetails", params: { jobId: jobIds[0] }, query })
 }
 
 function loadCustomers() {

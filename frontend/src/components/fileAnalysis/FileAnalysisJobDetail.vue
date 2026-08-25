@@ -1,91 +1,86 @@
 <template>
-	<div class="page">
-		<!-- No job selected → submit / upload panel -->
-		<FileAnalysisSubmit v-if="!jobId" />
+	<div class="flex flex-col gap-4 md:flex-row md:items-start">
+		<!-- Batch sidebar — when several files were analyzed together -->
+		<FileAnalysisBatchList
+			v-if="batchIds.length > 1"
+			:job-ids="batchIds"
+			:active-job-id="jobId"
+			class="w-full md:w-64 md:shrink-0"
+		/>
 
-		<div v-else class="flex flex-col gap-4 md:flex-row md:items-start">
-			<!-- Batch sidebar — when several files were analyzed together -->
-			<FileAnalysisBatchList
-				v-if="batchIds.length > 1"
-				:job-ids="batchIds"
-				:active-job-id="jobId"
-				class="w-full md:w-64 md:shrink-0"
+		<div class="flex min-w-0 grow flex-col gap-4">
+			<!-- Header -->
+			<div class="flex flex-wrap items-center gap-3">
+				<Icon :name="FileIcon" :size="20" />
+				<span class="text-lg font-semibold">{{ job?.filename || "File analysis" }}</span>
+				<n-tag v-if="vtLabel" :type="vtType" size="small" round :bordered="false">
+					<template #icon><Icon :name="VtIcon" :size="14" /></template>
+					{{ vtLabel }}
+				</n-tag>
+				<n-spin v-if="stillRunning || vtPending" :size="16" />
+				<div class="grow" />
+				<n-tag v-if="job?.customer_code" size="small" round :bordered="false">
+					<template #icon><Icon :name="CustomerIcon" :size="14" /></template>
+					{{ job.customer_code }}
+				</n-tag>
+				<code v-if="shaShort" class="text-secondary text-xs">{{ shaShort }}</code>
+			</div>
+
+			<!-- Dev-mode (unhardened) banner -->
+			<n-alert v-if="job && job.hardened === false" type="warning" :bordered="false" class="text-sm">
+				This result came from the dev-only in-process inspector —
+				<b>no container isolation</b>
+				. Not for production triage.
+			</n-alert>
+
+			<n-alert v-if="job?.status === 'failed'" type="error" :bordered="false" class="text-sm">
+				Analysis failed. A file that crashes the inspector is itself worth a look.
+			</n-alert>
+
+			<!-- VirusTotal reputation -->
+			<ReputationCard :reputation="result?.reputation" :loading="stillRunning" />
+
+			<!-- Always-populated summary -->
+			<FileAnalysisOverview
+				:result="result?.inspector"
+				:job
+				:reputation-pending="vtPending"
+				:verdict-reason="result?.verdict_reason"
 			/>
 
-			<div class="flex min-w-0 grow flex-col gap-4">
-				<!-- Header -->
-				<div class="flex flex-wrap items-center gap-3">
-					<Icon :name="FileIcon" :size="20" />
-					<span class="text-lg font-semibold">{{ job?.filename || "File analysis" }}</span>
-					<n-tag v-if="vtLabel" :type="vtType" size="small" round :bordered="false">
-						<template #icon><Icon :name="VtIcon" :size="14" /></template>
-						{{ vtLabel }}
-					</n-tag>
-					<n-spin v-if="stillRunning || vtPending" :size="16" />
-					<div class="grow" />
-					<n-tag v-if="job?.customer_code" size="small" round :bordered="false">
-						<template #icon><Icon :name="CustomerIcon" :size="14" /></template>
-						{{ job.customer_code }}
-					</n-tag>
-					<code v-if="shaShort" class="text-secondary text-xs">{{ shaShort }}</code>
-				</div>
+			<!-- Tabs (empty ones are hidden; we land on the first with content) -->
+			<n-tabs v-model:value="activeTab" type="line" animated @update:value="tabPinnedByUser = true">
+				<n-tab-pane v-if="hasPreviews" name="preview" tab="Preview" display-directive="show:lazy">
+					<PreviewTab :job-id :preview-names="result?.preview_urls || []" :loading="loadingResult" />
+				</n-tab-pane>
+				<n-tab-pane v-if="hasContent" name="content" tab="Content" display-directive="show:lazy">
+					<ContentTab :result="result?.inspector" :loading="loadingResult" />
+				</n-tab-pane>
+				<n-tab-pane v-if="hasIocs" name="iocs" tab="IOCs" display-directive="show:lazy">
+					<IocsTab :iocs="result?.inspector?.iocs" />
+				</n-tab-pane>
+				<n-tab-pane v-if="hasVtIntel" name="virustotal" tab="VirusTotal" display-directive="show:lazy">
+					<VirusTotalTab :reputation="result?.reputation" :loading="stillRunning" />
+				</n-tab-pane>
+				<n-tab-pane name="metadata" tab="Metadata" display-directive="show:lazy">
+					<MetadataTab :result="result?.inspector" />
+				</n-tab-pane>
 
-				<!-- Dev-mode (unhardened) banner -->
-				<n-alert v-if="job && job.hardened === false" type="warning" :bordered="false" class="text-sm">
-					This result came from the dev-only in-process inspector —
-					<b>no container isolation</b>
-					. Not for production triage.
-				</n-alert>
-
-				<n-alert v-if="job?.status === 'failed'" type="error" :bordered="false" class="text-sm">
-					Analysis failed. A file that crashes the inspector is itself worth a look.
-				</n-alert>
-
-				<!-- VirusTotal reputation -->
-				<ReputationCard :reputation="result?.reputation" :loading="stillRunning" />
-
-				<!-- Always-populated summary -->
-				<FileAnalysisOverview
-					:result="result?.inspector"
-					:job
-					:reputation-pending="vtPending"
-					:verdict-reason="result?.verdict_reason"
-				/>
-
-				<!-- Tabs (empty ones are hidden; we land on the first with content) -->
-				<n-tabs v-model:value="activeTab" type="line" animated @update:value="tabPinnedByUser = true">
-					<n-tab-pane v-if="hasPreviews" name="preview" tab="Preview" display-directive="show:lazy">
-						<PreviewTab :job-id :preview-names="result?.preview_urls || []" :loading="loadingResult" />
+				<!-- Detonation tabs only when the backend reports sandbox enabled -->
+				<template v-if="hasSandbox">
+					<n-tab-pane name="detonation" tab="Detonation" display-directive="show:lazy">
+						<DetonationTab
+							:sandbox="result?.sandbox"
+							:loading="loadingResult"
+							:dynamic-status="job?.dynamic_status"
+							:job-id
+						/>
 					</n-tab-pane>
-					<n-tab-pane v-if="hasContent" name="content" tab="Content" display-directive="show:lazy">
-						<ContentTab :result="result?.inspector" :loading="loadingResult" />
+					<n-tab-pane name="network" tab="Network" display-directive="show:lazy">
+						<NetworkTab :sandbox="result?.sandbox" :loading="loadingResult" />
 					</n-tab-pane>
-					<n-tab-pane v-if="hasIocs" name="iocs" tab="IOCs" display-directive="show:lazy">
-						<IocsTab :iocs="result?.inspector?.iocs" />
-					</n-tab-pane>
-					<n-tab-pane v-if="hasVtIntel" name="virustotal" tab="VirusTotal" display-directive="show:lazy">
-						<VirusTotalTab :reputation="result?.reputation" :loading="stillRunning" />
-					</n-tab-pane>
-					<n-tab-pane name="metadata" tab="Metadata" display-directive="show:lazy">
-						<MetadataTab :result="result?.inspector" />
-					</n-tab-pane>
-
-					<!-- Detonation tabs only when the backend reports sandbox enabled -->
-					<template v-if="hasSandbox">
-						<n-tab-pane name="detonation" tab="Detonation" display-directive="show:lazy">
-							<DetonationTab
-								:sandbox="result?.sandbox"
-								:loading="loadingResult"
-								:dynamic-status="job?.dynamic_status"
-								:job-id
-							/>
-						</n-tab-pane>
-						<n-tab-pane name="network" tab="Network" display-directive="show:lazy">
-							<NetworkTab :sandbox="result?.sandbox" :loading="loadingResult" />
-						</n-tab-pane>
-					</template>
-				</n-tabs>
-			</div>
+				</template>
+			</n-tabs>
 		</div>
 	</div>
 </template>
@@ -95,15 +90,18 @@ import type { ApiError } from "@/types/common"
 import type { FileAnalysisJob, FileAnalysisResult } from "@/types/file-analysis"
 import { NAlert, NSpin, NTabPane, NTabs, NTag, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from "vue"
-import { useRoute } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { resolveActiveTab } from "@/components/fileAnalysis/fileAnalysis.helpers"
 import FileAnalysisBatchList from "@/components/fileAnalysis/FileAnalysisBatchList.vue"
 import FileAnalysisOverview from "@/components/fileAnalysis/FileAnalysisOverview.vue"
-import FileAnalysisSubmit from "@/components/fileAnalysis/FileAnalysisSubmit.vue"
 import ReputationCard from "@/components/fileAnalysis/ReputationCard.vue"
 import { getApiErrorMessage } from "@/utils"
+
+// Route state arrives as props: the view owns the URL, this component owns one
+// job's polling and rendering. That keeps it mountable anywhere a job id is known
+// (a drawer, a case page) without inventing a route to get there.
+const props = withDefaults(defineProps<{ jobId: string; batchIds?: string[] }>(), { batchIds: () => [] })
 
 const PreviewTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/PreviewTab.vue"))
 const ContentTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/ContentTab.vue"))
@@ -113,7 +111,6 @@ const DetonationTab = defineAsyncComponent(() => import("@/components/fileAnalys
 const VirusTotalTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/VirusTotalTab.vue"))
 const NetworkTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/NetworkTab.vue"))
 
-const route = useRoute()
 const message = useMessage()
 
 const FileIcon = "carbon:document-security"
@@ -122,15 +119,6 @@ const VtIcon = "carbon:radar"
 const POLL_MS = 3000
 const MAX_POLLS = 120 // ~6 min ceiling so a slow VT scan doesn't poll forever
 
-const jobId = computed(() => (route.params.jobId as string) || "")
-// A batch of files analyzed together (via ?batch=id1,id2,…) shows a sidebar to flip
-// between them, so analyzing N files doesn't hide N-1 of the results.
-const batchIds = computed(() =>
-	((route.query.batch as string) || "")
-		.split(",")
-		.map(s => s.trim())
-		.filter(Boolean)
-)
 const activeTab = ref<string>("metadata")
 // Set the moment the analyst clicks a tab: from then on the view stops following
 // the content and stays where they put it.
@@ -236,9 +224,9 @@ function stopPolling() {
 }
 
 function fetchJob() {
-	if (!jobId.value) return
+	if (!props.jobId) return
 	Api.fileAnalysis
-		.getJob(jobId.value)
+		.getJob(props.jobId)
 		.then(res => {
 			if (res.data.success) {
 				job.value = res.data.job
@@ -261,10 +249,10 @@ function fetchJob() {
 }
 
 function fetchResult() {
-	if (!jobId.value || loadingResult.value) return
+	if (!props.jobId || loadingResult.value) return
 	loadingResult.value = true
 	Api.fileAnalysis
-		.getResult(jobId.value)
+		.getResult(props.jobId)
 		.then(res => {
 			if (res.data.success) result.value = res.data.result
 		})
@@ -282,11 +270,13 @@ function start() {
 	result.value = null
 	pollCount = 0
 	tabPinnedByUser.value = false
-	if (!jobId.value) return
+	if (!props.jobId) return
 	fetchJob()
 	pollTimer = setInterval(fetchJob, POLL_MS)
 }
 
-watch(jobId, start, { immediate: true })
+// Switching between jobs in a batch reuses this component instance, so the restart
+// hangs off the prop rather than off mount.
+watch(() => props.jobId, start, { immediate: true })
 onBeforeUnmount(stopPolling)
 </script>
