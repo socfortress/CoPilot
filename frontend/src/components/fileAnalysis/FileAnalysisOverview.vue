@@ -42,7 +42,7 @@
 		     band reads as a rendering fault. -->
 		<div v-if="hashes.length" class="border-default flex flex-col gap-2 border-t p-4">
 			<span :class="LABEL">Hashes</span>
-			<div class="flex flex-col gap-1.5">
+			<div class="flex flex-col gap-0">
 				<!-- The value IS the button, and the copy icon sits inside it. The icon
 				     used to be pushed to the far edge of a full-width row, leaving ~900px
 				     of empty space between a hash and the control that copies it, so the
