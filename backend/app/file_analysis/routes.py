@@ -30,15 +30,15 @@ from app.db.db_session import get_db
 from app.db.universal_models import Agents
 from app.file_analysis.schema.analysis import AgentInfo
 from app.file_analysis.schema.analysis import AgentsResponse
-from app.file_analysis.schema.analysis import EnumerateRequest
-from app.file_analysis.schema.analysis import EnumerateResponse
-from app.file_analysis.schema.analysis import DeleteResponse
-from app.file_analysis.schema.analysis import HistoryItem
-from app.file_analysis.schema.analysis import HistoryResponse
-from app.file_analysis.schema.analysis import MatchInfo
 from app.file_analysis.schema.analysis import AnalysisJob
 from app.file_analysis.schema.analysis import AnalysisResult
+from app.file_analysis.schema.analysis import DeleteResponse
+from app.file_analysis.schema.analysis import EnumerateRequest
+from app.file_analysis.schema.analysis import EnumerateResponse
+from app.file_analysis.schema.analysis import HistoryItem
+from app.file_analysis.schema.analysis import HistoryResponse
 from app.file_analysis.schema.analysis import JobResponse
+from app.file_analysis.schema.analysis import MatchInfo
 from app.file_analysis.schema.analysis import ResultResponse
 from app.file_analysis.schema.analysis import SearchResponse
 from app.file_analysis.schema.analysis import SubmitRequest
@@ -93,7 +93,7 @@ async def velociraptor_agents(customer_code: str, session: AsyncSession = Depend
                 online=vf.is_online(last),
                 last_seen=last or None,
                 unassigned=a.customer_code is None,
-            )
+            ),
         )
     # Online first, then this customer's own agents before unassigned, then by name.
     agents.sort(key=lambda x: (not x.online, x.unassigned, (x.hostname or "").lower()))
@@ -256,7 +256,7 @@ async def report_pdf(job_id: str):
     # Screenshots live on the sandbox, not in our stored result — fetch them on
     # demand (best-effort; the report renders fine without them).
     screenshots: list = []
-    task_id = ((result.get("sandbox") or {}).get("task_id"))
+    task_id = (result.get("sandbox") or {}).get("task_id")
     if task_id:
         from app.file_analysis.services.sandbox import get_backend
 

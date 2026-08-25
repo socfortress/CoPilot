@@ -22,8 +22,13 @@ _LIBREOFFICE_TIMEOUT = 120
 _RENDER_TIMEOUT = 60
 
 _AUTOEXEC_KEYWORDS = (
-    "AutoOpen", "AutoClose", "AutoExec", "Document_Open", "Workbook_Open",
-    "Auto_Open", "DocumentOpen",
+    "AutoOpen",
+    "AutoClose",
+    "AutoExec",
+    "Document_Open",
+    "Workbook_Open",
+    "Auto_Open",
+    "DocumentOpen",
 )
 _SUSPICIOUS_KEYWORDS = ("Shell", "WScript", "URLDownloadToFile", "powershell", "CreateObject", "Run")
 
@@ -94,11 +99,20 @@ def _preview(sample_path: str, result: InspectorResult, results_dir: str) -> Non
     try:
         subprocess.run(
             [
-                binary, "--headless", "--nologo", "--nofirststartwizard",
+                binary,
+                "--headless",
+                "--nologo",
+                "--nofirststartwizard",
                 "-env:UserInstallation=file://" + profile,
-                "--convert-to", "pdf", "--outdir", results_dir, sample_path,
+                "--convert-to",
+                "pdf",
+                "--outdir",
+                results_dir,
+                sample_path,
             ],
-            capture_output=True, timeout=_LIBREOFFICE_TIMEOUT, check=False,
+            capture_output=True,
+            timeout=_LIBREOFFICE_TIMEOUT,
+            check=False,
         )
     except (subprocess.TimeoutExpired, OSError):
         result.mark_incomplete()
@@ -109,8 +123,12 @@ def _preview(sample_path: str, result: InspectorResult, results_dir: str) -> Non
     pdf_path = os.path.join(results_dir, pdfs[0])
     prefix = os.path.join(results_dir, "page")
     try:
-        subprocess.run(["pdftoppm", "-png", "-r", "100", "-l", "25", pdf_path, prefix],
-                       capture_output=True, timeout=_RENDER_TIMEOUT, check=False)
+        subprocess.run(
+            ["pdftoppm", "-png", "-r", "100", "-l", "25", pdf_path, prefix],
+            capture_output=True,
+            timeout=_RENDER_TIMEOUT,
+            check=False,
+        )
     except (subprocess.TimeoutExpired, OSError):
         return
     result.previews.extend(sorted(f for f in os.listdir(results_dir) if f.startswith("page") and f.endswith(".png")))

@@ -25,7 +25,7 @@ def test_av_hit_is_malicious():
 
 
 def test_autoopen_macro_with_shell_is_malicious():
-    d = _result(filetype="office", flags=[FLAG_AUTOOPEN_MACRO], content={"macros": "Sub AutoOpen()\n Shell \"x\"\nEnd Sub"})
+    d = _result(filetype="office", flags=[FLAG_AUTOOPEN_MACRO], content={"macros": 'Sub AutoOpen()\n Shell "x"\nEnd Sub'})
     assert compute_verdict(d) == "malicious"
 
 

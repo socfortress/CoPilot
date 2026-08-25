@@ -83,10 +83,8 @@ async def _retry(what: str, op):
             if attempt + 1 >= _MINIO_RETRIES:
                 logger.error(f"MinIO {what} failed after {_MINIO_RETRIES} attempts: {exc}")
                 raise
-            delay = _MINIO_BACKOFF * (2 ** attempt)
-            logger.warning(
-                f"MinIO {what} transient error (attempt {attempt + 1}/{_MINIO_RETRIES}): {exc}; retrying in {delay:.1f}s"
-            )
+            delay = _MINIO_BACKOFF * (2**attempt)
+            logger.warning(f"MinIO {what} transient error (attempt {attempt + 1}/{_MINIO_RETRIES}): {exc}; retrying in {delay:.1f}s")
             await asyncio.sleep(delay)
 
 
@@ -294,8 +292,8 @@ async def find_cached_job_id(customer_code: str, sha256: str) -> Optional[str]:
     return None
 
 
-_HISTORY_SCAN_CAP = 250      # most analyses considered before sort+limit
-_HISTORY_CONCURRENCY = 24    # parallel reads (MinIO is over a VPN here)
+_HISTORY_SCAN_CAP = 250  # most analyses considered before sort+limit
+_HISTORY_CONCURRENCY = 24  # parallel reads (MinIO is over a VPN here)
 
 
 async def _read_json_batch(keys: List[str]) -> List[Optional[Dict[str, Any]]]:

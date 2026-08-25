@@ -124,7 +124,9 @@ def _render_pdftoppm(sample_path: str, result: InspectorResult, results_dir: str
     try:
         subprocess.run(
             ["pdftoppm", "-png", "-r", "100", "-l", str(_MAX_PAGES), sample_path, prefix],
-            capture_output=True, timeout=_RENDER_TIMEOUT, check=False,
+            capture_output=True,
+            timeout=_RENDER_TIMEOUT,
+            check=False,
         )
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         return False

@@ -1,14 +1,14 @@
+extract-msg==0.54.1
+LnkParse3==1.5.1
+oletools==0.60.2
+pefile==2024.8.26
+py7zr==0.22.0
+pymupdf==1.24.10
 # Tier 1 inspector — pure-parser dependencies only.
 # NO PSDecode / box-ps: they execute scripts in an instrumented interpreter, which
 # breaks the "nothing executes" guarantee (see CLAUDE.md -> File Analysis).
 # NO yara-python: known-malware naming comes from the optional ClamAV sidecar +
 # hash reputation, not a bundled rule set we would have to curate.
 python-magic==0.4.27
-pymupdf==1.24.10
-oletools==0.60.2
-pefile==2024.8.26
-LnkParse3==1.5.1
-extract-msg==0.54.1
-py7zr==0.22.0
 # capa and FLOSS are installed as standalone binaries in the Dockerfile (heavy,
 # and invoked as subprocesses with their own sub-timeouts), not pip deps here.

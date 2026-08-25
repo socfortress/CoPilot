@@ -22,12 +22,11 @@ from contract import FLAG_HTML_SMUGGLING
 from contract import FLAG_LAUNCH_ACTION
 from contract import FLAG_LNK_SUSPICIOUS_ARGS
 from contract import FLAG_MALICIOUS_BEHAVIOR
-from contract import FLAG_SUSPICIOUS_BEHAVIOR
 from contract import FLAG_SUSPICIOUS_ATTACHMENT
+from contract import FLAG_SUSPICIOUS_BEHAVIOR
 from contract import VERDICT_CLEAN
 from contract import VERDICT_MALICIOUS
 from contract import VERDICT_SUSPICIOUS
-
 
 # Executable-ish true types where an extension mismatch is itself alarming.
 _EXECUTABLE_TYPES = {"pe", "elf", "script", "lnk", "hta"}
@@ -66,9 +65,7 @@ def _pdf_is_malicious(result: Dict) -> bool:
     if not (FLAG_AUTO_EXECUTE_JAVASCRIPT in flags or FLAG_LAUNCH_ACTION in flags):
         return False
     content = result.get("content") or {}
-    payload = " ".join(
-        str(content.get(key, "")) for key in ("javascript", "deobfuscated", "launch")
-    ).lower()
+    payload = " ".join(str(content.get(key, "")) for key in ("javascript", "deobfuscated", "launch")).lower()
     return any(token in payload for token in ("powershell", "cmd.exe", "http://", "https://", "downloadstring", "iex"))
 
 

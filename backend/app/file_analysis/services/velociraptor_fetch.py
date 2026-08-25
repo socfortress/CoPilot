@@ -149,9 +149,7 @@ def _client_os(svc: UniversalService, client_id: str) -> str:
     """Best-effort OS family ('windows' | 'linux' | 'darwin') for a client_id."""
     safe = client_id.replace("'", "''")
     try:
-        res = svc.execute_query(
-            "SELECT os_info.system AS os FROM clients() WHERE client_id='%s'" % safe
-        )
+        res = svc.execute_query("SELECT os_info.system AS os FROM clients() WHERE client_id='%s'" % safe)
     except Exception as exc:
         logger.warning(f"_client_os failed for {client_id}: {exc}")
         return ""
@@ -209,10 +207,7 @@ def _finder_vql(client_id: str, os_name: str, target_path: str, upload: bool) ->
     else:
         safe = target_path.replace("'", "''")
         env = "dict(SearchFilesGlob='%s', Upload_File='%s', Calculate_Hash='Y')" % (safe, up)
-    return (
-        "SELECT collect_client(client_id='%s', artifacts=['%s'], env=%s) AS Flow FROM scope()"
-        % (client_id, artifact, env)
-    )
+    return "SELECT collect_client(client_id='%s', artifacts=['%s'], env=%s) AS Flow FROM scope()" % (client_id, artifact, env)
 
 
 def _wait_for_flow(svc: UniversalService, client_id: str, flow_id: str, timeout: int) -> None:
@@ -229,9 +224,7 @@ def _wait_for_flow(svc: UniversalService, client_id: str, flow_id: str, timeout:
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            res = svc.execute_query(
-                "SELECT * FROM uploads(client_id='%s', flow_id='%s')" % (safe, flow_id)
-            )
+            res = svc.execute_query("SELECT * FROM uploads(client_id='%s', flow_id='%s')" % (safe, flow_id))
             rows = res.get("results", []) if isinstance(res, dict) else []
             if rows:
                 logger.info(f"[velo] flow {flow_id} has {len(rows)} upload(s); ready")
@@ -297,9 +290,7 @@ def _wait_and_read_source(svc: UniversalService, client_id: str, flow_id: str, a
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            res = svc.execute_query(
-                "SELECT * FROM source(client_id='%s', flow_id='%s', artifact='%s')" % (safe, flow_id, artifact)
-            )
+            res = svc.execute_query("SELECT * FROM source(client_id='%s', flow_id='%s', artifact='%s')" % (safe, flow_id, artifact))
             rows = res.get("results", []) if isinstance(res, dict) else []
             if rows:
                 return rows
@@ -330,9 +321,7 @@ async def enumerate_matches(client_id: str, target_path: str) -> List[Dict[str, 
 
     cap = int(os.getenv("FILE_ANALYSIS_MAX_FLOW_FILES", "25"))
     timeout = int(os.getenv("FILE_ANALYSIS_ENUM_TIMEOUT", "90"))
-    rows = await asyncio.to_thread(
-        _wait_and_read_source, svc, client_id, flow_id, _finder_artifact(os_name), timeout
-    )
+    rows = await asyncio.to_thread(_wait_and_read_source, svc, client_id, flow_id, _finder_artifact(os_name), timeout)
     matches = [m for m in (_match_from_source_row(r) for r in rows) if m]
     logger.info(f"[velo] enumerate matched {len(matches)} file(s) for {target_path!r}")
     return matches[:cap]

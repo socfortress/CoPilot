@@ -115,7 +115,8 @@ def _iso(ts) -> str:
     if not ts:
         return ""
     try:
-        from datetime import datetime, timezone
+        from datetime import datetime
+        from datetime import timezone
 
         return datetime.fromtimestamp(int(ts), tz=timezone.utc).isoformat()
     except Exception:
@@ -142,12 +143,31 @@ def _extract_intel(attrs: Dict[str, Any], behaviour: Dict[str, Any]) -> Dict[str
             detections.append({"engine": r.get("engine_name") or engine, "result": r.get("result"), "category": r.get("category")})
     detections.sort(key=lambda d: (d["category"] != "malicious", d["engine"].lower()))
 
-    yara = [{"rule": y.get("rule_name", ""), "author": y.get("author", ""), "description": y.get("description", ""), "ruleset": y.get("ruleset_name", "")}
-            for y in (attrs.get("crowdsourced_yara_results") or []) if isinstance(y, dict)]
-    sigma = [{"title": s.get("rule_title", ""), "level": s.get("rule_level", ""), "source": s.get("rule_source", "")}
-             for s in (attrs.get("sigma_analysis_results") or []) if isinstance(s, dict)]
-    ids = [{"msg": i.get("rule_msg", ""), "severity": i.get("alert_severity", ""), "category": i.get("rule_category", ""), "source": i.get("rule_source", "")}
-           for i in (attrs.get("crowdsourced_ids_results") or []) if isinstance(i, dict)]
+    yara = [
+        {
+            "rule": y.get("rule_name", ""),
+            "author": y.get("author", ""),
+            "description": y.get("description", ""),
+            "ruleset": y.get("ruleset_name", ""),
+        }
+        for y in (attrs.get("crowdsourced_yara_results") or [])
+        if isinstance(y, dict)
+    ]
+    sigma = [
+        {"title": s.get("rule_title", ""), "level": s.get("rule_level", ""), "source": s.get("rule_source", "")}
+        for s in (attrs.get("sigma_analysis_results") or [])
+        if isinstance(s, dict)
+    ]
+    ids = [
+        {
+            "msg": i.get("rule_msg", ""),
+            "severity": i.get("alert_severity", ""),
+            "category": i.get("rule_category", ""),
+            "source": i.get("rule_source", ""),
+        }
+        for i in (attrs.get("crowdsourced_ids_results") or [])
+        if isinstance(i, dict)
+    ]
 
     votes = attrs.get("total_votes") or {}
     sig_info = attrs.get("signature_info") or {}
@@ -155,15 +175,24 @@ def _extract_intel(attrs: Dict[str, Any], behaviour: Dict[str, Any]) -> Dict[str
     mitre = []
     for t in behaviour.get("mitre_attack_techniques") or []:
         if isinstance(t, dict) and t.get("id"):
-            mitre.append({"id": t.get("id"), "description": t.get("signature_description") or t.get("description") or "", "severity": t.get("severity", "")})
+            mitre.append(
+                {
+                    "id": t.get("id"),
+                    "description": t.get("signature_description") or t.get("description") or "",
+                    "severity": t.get("severity", ""),
+                },
+            )
 
     behaviour_out = {
         "mitre": mitre,
         "contacted_ips": _str_list(behaviour.get("ip_traffic"), "destination_ip", "ip")[:60],
         "contacted_domains": _str_list(behaviour.get("dns_lookups"), "hostname")[:60],
         "contacted_urls": _str_list(behaviour.get("http_conversations"), "url")[:60],
-        "dropped_files": [{"name": f.get("path") or f.get("name") or "", "sha256": f.get("sha256", ""), "type": f.get("type", "")}
-                          for f in (behaviour.get("files_dropped") or []) if isinstance(f, dict)][:40],
+        "dropped_files": [
+            {"name": f.get("path") or f.get("name") or "", "sha256": f.get("sha256", ""), "type": f.get("type", "")}
+            for f in (behaviour.get("files_dropped") or [])
+            if isinstance(f, dict)
+        ][:40],
         "processes": _str_list(behaviour.get("processes_created"), "process")[:40],
         "registry_keys": _str_list(behaviour.get("registry_keys_set"), "key")[:40],
         "mutexes": _str_list(behaviour.get("mutexes_created"))[:20],
@@ -301,15 +330,26 @@ async def virustotal_submit_and_wait(sha256: str, sample_bytes: Optional[bytes],
     if not api_key or not sample_bytes:
         return None
     if len(sample_bytes) > VT_MAX_UPLOAD_MB * 1024 * 1024:
-        return {"source": "virustotal", "found": False, "sha256": sha256, "submitted": False,
-                "note": f"exceeds {VT_MAX_UPLOAD_MB}MB VT upload cap; not submitted",
-                "permalink": f"https://www.virustotal.com/gui/file/{sha256}"}
+        return {
+            "source": "virustotal",
+            "found": False,
+            "sha256": sha256,
+            "submitted": False,
+            "note": f"exceeds {VT_MAX_UPLOAD_MB}MB VT upload cap; not submitted",
+            "permalink": f"https://www.virustotal.com/gui/file/{sha256}",
+        }
 
     logger.info(f"[reputation] VirusTotal submitting {filename} ({len(sample_bytes)} bytes)")
     analysis_id = await _submit(api_key, sample_bytes, filename)
     if not analysis_id:
-        return {"source": "virustotal", "found": False, "sha256": sha256, "submitted": False,
-                "note": "VirusTotal submission failed", "permalink": f"https://www.virustotal.com/gui/file/{sha256}"}
+        return {
+            "source": "virustotal",
+            "found": False,
+            "sha256": sha256,
+            "submitted": False,
+            "note": "VirusTotal submission failed",
+            "permalink": f"https://www.virustotal.com/gui/file/{sha256}",
+        }
     await _wait_for_analysis(api_key, analysis_id)
 
     final = await _lookup(api_key, sha256)
@@ -317,9 +357,14 @@ async def virustotal_submit_and_wait(sha256: str, sample_bytes: Optional[bytes],
         final["submitted"] = True
         logger.info(f"[reputation] VirusTotal scan complete: {final.get('malicious')}/{final.get('total')} malicious")
         return await _attach_intel(api_key, final)
-    return {"source": "virustotal", "found": False, "sha256": sha256, "submitted": True,
-            "note": "uploaded to VirusTotal — still processing; open the permalink for live results",
-            "permalink": f"https://www.virustotal.com/gui/file/{sha256}"}
+    return {
+        "source": "virustotal",
+        "found": False,
+        "sha256": sha256,
+        "submitted": True,
+        "note": "uploaded to VirusTotal — still processing; open the permalink for live results",
+        "permalink": f"https://www.virustotal.com/gui/file/{sha256}",
+    }
 
 
 def verdict_from_reputation(rep: Optional[Dict[str, Any]]) -> str:

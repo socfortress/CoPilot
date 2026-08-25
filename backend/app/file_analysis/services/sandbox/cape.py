@@ -58,7 +58,7 @@ class CapeBackend:
                 return resp
             except (httpx.TransportError, httpx.HTTPStatusError) as exc:
                 last_exc = exc
-                await asyncio.sleep(2 ** attempt)
+                await asyncio.sleep(2**attempt)
         raise httpx.TransportError(f"CAPE request failed after {_RETRIES} retries: {last_exc}")
 
     # --- interface ---------------------------------------------------------
@@ -155,7 +155,7 @@ def summarize(report: dict) -> CapeSummary:
     cape = report.get("CAPE", {}) or {}
     configs = cape.get("configs", []) if isinstance(cape, dict) else []
     for cfg in configs or []:
-        for family, details in (cfg.items() if isinstance(cfg, dict) else []):
+        for family, details in cfg.items() if isinstance(cfg, dict) else []:
             if not summary.family:
                 summary.family = family
             if isinstance(details, dict):
@@ -179,7 +179,7 @@ def summarize(report: dict) -> CapeSummary:
                 "noise": is_noise_signature(name),
                 "low_confidence": not is_noise_signature(name) and is_low_confidence_signature(name),
                 "mitre": [t.get("attack_id", t) if isinstance(t, dict) else t for t in sig.get("ttp", []) or sig.get("mitre", []) or []],
-            }
+            },
         )
 
     # Run metadata (machine, duration, package).
@@ -232,7 +232,7 @@ def summarize(report: dict) -> CapeSummary:
                 "pid": proc.get("process_id") if proc.get("process_id") is not None else proc.get("pid"),
                 "ppid": proc.get("parent_id") if proc.get("parent_id") is not None else proc.get("ppid"),
                 "command_line": proc.get("command_line") or environ.get("CommandLine", ""),
-            }
+            },
         )
 
     # Full behavioural record — literally what the sample touched on the host, so an
@@ -270,7 +270,7 @@ def summarize(report: dict) -> CapeSummary:
                     "event": ev.get("event", ""),
                     "object": ev.get("object", ""),
                     "data": ev.get("data", {}),
-                }
+                },
             )
 
     # Endpoints the sample TRIED to reach but that were unreachable (dead) — a strong
@@ -291,7 +291,9 @@ def summarize(report: dict) -> CapeSummary:
     # Extracted payloads (CAPE config/payload dumps).
     for p in cape.get("payloads", []) or []:
         if isinstance(p, dict):
-            summary.payloads.append({"name": p.get("name", ""), "sha256": p.get("sha256", ""), "type": p.get("cape_type") or p.get("type", "")})
+            summary.payloads.append(
+                {"name": p.get("name", ""), "sha256": p.get("sha256", ""), "type": p.get("cape_type") or p.get("type", "")},
+            )
 
     # Dropped files + screenshots.
     for dropped in report.get("dropped", []) or []:

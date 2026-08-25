@@ -32,9 +32,7 @@ def _result(verdict: str = "malicious") -> dict:
             "verdict_hint": "clean",
             "content": {
                 "deobfuscated": "X" * 10000,
-                "behaviors": [
-                    {"attack_id": "T1055", "technique": "Injection", "severity": "malicious", "evidence": "VirtualAlloc"}
-                ],
+                "behaviors": [{"attack_id": "T1055", "technique": "Injection", "severity": "malicious", "evidence": "VirtualAlloc"}],
             },
         },
         "sandbox": {
@@ -78,7 +76,10 @@ def test_fmt_verdict_all_states():
 def test_signatures_split_into_meaningful_low_and_noise():
     ctx = build_context(_result())
     sigs = ctx["sandbox"]["signatures"]
-    names = lambda group: {s["name"] for s in sigs[group]}
+
+    def names(group):
+        return {s["name"] for s in sigs[group]}
+
     assert "ransomware_file_modifications" in names("meaningful")
     assert "pe_tls_callbacks" in names("low_confidence")
     assert "queries_user_name" in names("noise")

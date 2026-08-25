@@ -7,18 +7,19 @@ noise must be CLEAN, while genuine evidence (config/C2/high-sev) stays MALICIOUS
 """
 from __future__ import annotations
 
-from app.file_analysis.services.verdict import (
-    dynamic_evidence,
-    dynamic_verdict_from_report,
-    explain_verdict,
-    meaningful_signatures,
-    noise_stats,
-)
+from app.file_analysis.services.verdict import dynamic_evidence
+from app.file_analysis.services.verdict import dynamic_verdict_from_report
+from app.file_analysis.services.verdict import explain_verdict
+from app.file_analysis.services.verdict import meaningful_signatures
+from app.file_analysis.services.verdict import noise_stats
 
 # Real task 6 (wintest.ps1 — a benign `whoami; hostname; Get-Process` script): malscore 10,
 # 17 signatures, ALL environmental noise.
 BENIGN_ALL_NOISE = {
-    "malscore": 10.0, "family": "", "c2_ips": [], "c2_domains": [],
+    "malscore": 10.0,
+    "family": "",
+    "c2_ips": [],
+    "c2_domains": [],
     "signatures": [
         {"name": "mountpoint_manager_access", "severity": 3},
         {"name": "enumerates_physical_drives", "severity": 3},
@@ -34,7 +35,10 @@ BENIGN_ALL_NOISE = {
 
 # A run with some non-noise (sample-driven) signatures but nothing conclusive.
 SUSPICIOUS_MEANINGFUL = {
-    "malscore": 10.0, "family": "", "c2_ips": [], "c2_domains": [],
+    "malscore": 10.0,
+    "family": "",
+    "c2_ips": [],
+    "c2_domains": [],
     "signatures": [
         {"name": "creates_suspended_process", "severity": 2},  # noise
         {"name": "antivm_checks_available_memory", "severity": 1},  # noise
@@ -47,7 +51,10 @@ MALWARE_CONFIG = {"malscore": 8.0, "family": "AgentTesla", "c2_ips": ["1.2.3.4"]
 
 # Malware: a genuinely high-severity, non-noise behavioural signature.
 MALWARE_HIGHSEV = {
-    "malscore": 9.0, "family": "", "c2_ips": [], "c2_domains": [],
+    "malscore": 9.0,
+    "family": "",
+    "c2_ips": [],
+    "c2_domains": [],
     "signatures": [{"name": "ransomware_mass_file_encrypt", "severity": 5}],
 }
 
@@ -79,7 +86,10 @@ def test_high_severity_but_NOISE_signature_does_not_convict():
     # A noise signature at high severity must NOT be treated as evidence — only
     # meaningful signatures count toward the severity check.
     noisy_highsev = {
-        "malscore": 10.0, "family": "", "c2_ips": [], "c2_domains": [],
+        "malscore": 10.0,
+        "family": "",
+        "c2_ips": [],
+        "c2_domains": [],
         "signatures": [{"name": "creates_suspended_process", "severity": 5}],  # noise, even at sev5
     }
     assert dynamic_evidence(noisy_highsev) == []
@@ -97,8 +107,7 @@ def test_incomplete_inspection_reads_as_infra_not_content():
     # closed to a cautious verdict — but the REASON must say the inspection did
     # not complete, NOT "static inspection: suspicious" (which reads as a content
     # finding). This is the WhatsApp-photo false-positive class.
-    incomplete = {"analysis_incomplete": True, "verdict_hint": "suspicious",
-                  "error": "All connection attempts failed"}
+    incomplete = {"analysis_incomplete": True, "verdict_hint": "suspicious", "error": "All connection attempts failed"}
     reason = explain_verdict("suspicious", None, None, incomplete)
     assert "incomplete" in reason.lower()
     assert "All connection attempts failed" in reason
@@ -111,7 +120,10 @@ def test_incomplete_inspection_reads_as_infra_not_content():
 # Recorded from benign detonations on the live box: a RealVNC viewer (packed, signed)
 # and a .NET app (Deceive) both used to read suspicious/malicious purely from these.
 BENIGN_PACKED_PE = {
-    "malscore": 1.5, "family": "", "c2_ips": [], "c2_domains": [],
+    "malscore": 1.5,
+    "family": "",
+    "c2_ips": [],
+    "c2_domains": [],
     "signatures": [
         {"name": "pe_cert_self_signed", "severity": 3},
         {"name": "pe_tls_callbacks", "severity": 2},
@@ -121,7 +133,10 @@ BENIGN_PACKED_PE = {
     ],
 }
 BENIGN_DOTNET = {
-    "malscore": 8.0, "family": "", "c2_ips": [], "c2_domains": [],
+    "malscore": 8.0,
+    "family": "",
+    "c2_ips": [],
+    "c2_domains": [],
     "signatures": [
         {"name": "unbacked_privilege_escalation", "severity": 3},
         {"name": "unbacked_token_manipulation", "severity": 3},
@@ -151,11 +166,14 @@ def test_dotnet_jit_unbacked_is_clean_even_at_malscore_8():
 def test_low_confidence_does_not_hide_a_real_behavioural_signal():
     # Static-PE noise PLUS one genuine behavioural signature -> still suspicious.
     mixed = {
-        "malscore": 5.0, "family": "", "c2_ips": [], "c2_domains": [],
+        "malscore": 5.0,
+        "family": "",
+        "c2_ips": [],
+        "c2_domains": [],
         "signatures": [
-            {"name": "pe_tls_callbacks", "severity": 2},          # low-confidence
+            {"name": "pe_tls_callbacks", "severity": 2},  # low-confidence
             {"name": "packer_unknown_pe_section_name", "severity": 2},  # low-confidence
-            {"name": "modifies_boot_config", "severity": 3},      # meaningful
+            {"name": "modifies_boot_config", "severity": 3},  # meaningful
         ],
     }
     assert dynamic_verdict_from_report(mixed) == "suspicious"
@@ -164,7 +182,6 @@ def test_low_confidence_does_not_hide_a_real_behavioural_signal():
 
 def test_low_confidence_at_high_severity_still_does_not_convict():
     # A low-confidence signature marked sev>=4 must NOT reach the malicious threshold.
-    hs = {"malscore": 9.0, "family": "", "c2_ips": [], "c2_domains": [],
-          "signatures": [{"name": "injection_rwx", "severity": 5}]}
+    hs = {"malscore": 9.0, "family": "", "c2_ips": [], "c2_domains": [], "signatures": [{"name": "injection_rwx", "severity": 5}]}
     assert dynamic_evidence(hs) == []
     assert dynamic_verdict_from_report(hs) == "clean"

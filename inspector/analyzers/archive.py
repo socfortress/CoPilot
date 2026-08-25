@@ -23,10 +23,6 @@ _COMMON_PASSWORDS = ("infected", "malware", "password", "123456")
 
 def analyze(sample_path: str, result: InspectorResult, results_dir: str = "", depth: int = 0) -> None:
     result.filetype = "archive"
-    try:
-        import py7zr  # noqa: F401  (probe only)
-    except ImportError:
-        py7zr = None  # type: ignore
     members = _list_and_extract(sample_path, result, depth)
     result.content["members"] = members
 

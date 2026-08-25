@@ -14,7 +14,6 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-
 # --- Verdicts (see CLAUDE.md -> File Analysis) ---------------------
 VERDICT_CLEAN = "clean"
 VERDICT_SUSPICIOUS = "suspicious"

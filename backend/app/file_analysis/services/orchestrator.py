@@ -174,12 +174,7 @@ async def run(
 
         # Upload ONLY when the analyst explicitly chose it — uploading publishes the
         # file on VirusTotal, so it is never the default (see CLAUDE.md golden rule 7).
-        submit_pending = bool(
-            reputation_mode == "upload"
-            and reputation is not None
-            and not reputation.get("found")
-            and sample_bytes
-        )
+        submit_pending = bool(reputation_mode == "upload" and reputation is not None and not reputation.get("found") and sample_bytes)
         if submit_pending:
             reputation = {
                 "source": "virustotal",
@@ -289,10 +284,16 @@ async def _inspect_with_retry(sample_bytes: bytes, inspector_job: Dict[str, Any]
         try:
             return await inspect(sample_bytes, inspector_job)
         except InspectorBusy:
-            await asyncio.sleep(2 ** attempt)
+            await asyncio.sleep(2**attempt)
     # Give up gracefully: incomplete result rather than a lost job.
     return (
-        {**inspector_job, "filetype": "unknown", "analysis_incomplete": True, "flags": ["analysis_incomplete"], "verdict_hint": "suspicious"},
+        {
+            **inspector_job,
+            "filetype": "unknown",
+            "analysis_incomplete": True,
+            "flags": ["analysis_incomplete"],
+            "verdict_hint": "suspicious",
+        },
         {},
     )
 
@@ -325,7 +326,9 @@ def _should_escalate(inspector: Dict[str, Any], source: str) -> bool:
 
 async def _detonate(sample_bytes: bytes, inspector: Dict[str, Any], job: AnalysisJob) -> Optional[Dict[str, Any]]:
     from app.file_analysis.services.sandbox import get_backend
-    from app.file_analysis.services.sandbox import package_for  # noqa: F401 (kept for explicit-package override)
+    from app.file_analysis.services.sandbox import (  # noqa: F401 (kept for explicit-package override)
+        package_for,
+    )
     from app.file_analysis.services.sandbox.cape import summarize
 
     backend = get_backend()
@@ -389,5 +392,3 @@ def _merge_verdict(static_verdict: str, sandbox: Optional[Dict[str, Any]], reput
     merged = merge_verdict(static_verdict, dyn)
     # Reputation raises only — fold it in as another tier.
     return merge_verdict(merged, verdict_from_reputation(reputation))
-
-

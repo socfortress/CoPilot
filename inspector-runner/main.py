@@ -19,15 +19,14 @@ import base64
 import json
 import os
 import tempfile
-import uuid
 from typing import Any
 from typing import Dict
 
 from fastapi import FastAPI
-from fastapi import HTTPException
-from fastapi import UploadFile
 from fastapi import File
 from fastapi import Form
+from fastapi import HTTPException
+from fastapi import UploadFile
 from loguru import logger
 
 # --- Config (env only; no secrets) -----------------------------------------

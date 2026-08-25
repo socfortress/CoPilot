@@ -95,7 +95,10 @@ def _split_signatures(sigs: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, An
             low.append(row)
         else:
             meaningful.append(row)
-    keyf = lambda r: -(r.get("severity") or 0)
+
+    def keyf(r):
+        return -(r.get("severity") or 0)
+
     return {
         "meaningful": sorted(meaningful, key=keyf),
         "low_confidence": sorted(low, key=keyf),

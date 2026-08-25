@@ -120,7 +120,7 @@ def test_new_techniques_detected():
     assert "T1098" in _ids("net localgroup administrators hacker /add")
     assert "T1021.002" in _ids("psexec.exe \\\\victim -u admin -p pass cmd")
     assert "T1047" in _ids("wmic /node:victim process call create calc.exe")
-    assert "T1548.002" in _ids('reg add HKLM\\...\\System /v EnableLUA /t REG_DWORD /d 0 /f')
+    assert "T1548.002" in _ids("reg add HKLM\\...\\System /v EnableLUA /t REG_DWORD /d 0 /f")
     assert "T1562.001" in _ids('reg add "...\\Explorer" /v SmartScreenEnabled /t REG_SZ /d Off /f')
 
 
@@ -149,8 +149,8 @@ def test_apply_sets_content_and_flag_and_is_idempotent():
 def test_new_rules_do_not_fire_on_benign():
     benign = [
         "Invoke-WebRequest https://api.example.com/status -UseBasicParsing",
-        "Get-LocalUser | Select-Object Name",              # read, not create
-        "wmic cpu get name",                                # query, not process-create
+        "Get-LocalUser | Select-Object Name",  # read, not create
+        "wmic cpu get name",  # query, not process-create
         'Set-ItemProperty HKCU:\\Software\\App -Name Theme -Value "dark"',
         "Restart-Service -Name Spooler",
     ]

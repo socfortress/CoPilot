@@ -61,7 +61,15 @@ def _family_from_magic(magic_str: str) -> str:
         return "unknown"
     if "pdf" in m:
         return "pdf"
-    if "composite document" in m or "opendocument" in m or "microsoft word" in m or "microsoft excel" in m or "microsoft office" in m or "zip archive" in m and "opendocument" in m:
+    if (
+        "composite document" in m
+        or "opendocument" in m
+        or "microsoft word" in m
+        or "microsoft excel" in m
+        or "microsoft office" in m
+        or "zip archive" in m
+        and "opendocument" in m
+    ):
         return "office"
     if "ms windows shortcut" in m or "shortcut" in m:
         return "lnk"
@@ -72,9 +80,14 @@ def _family_from_magic(magic_str: str) -> str:
     # Interpreted scripts by content (shebang/type) — catches e.g. a Python or shell
     # script with no extension or a misleading one.
     if (
-        "python script" in m or "python source" in m
-        or "shell script" in m or "perl script" in m or "ruby script" in m
-        or "php script" in m or "batch file" in m or "powershell" in m
+        "python script" in m
+        or "python source" in m
+        or "shell script" in m
+        or "perl script" in m
+        or "ruby script" in m
+        or "php script" in m
+        or "batch file" in m
+        or "powershell" in m
     ):
         return "script"
     if "rfc 822" in m or "smtp mail" in m or "news or mail" in m or "microsoft outlook" in m:
@@ -138,7 +151,14 @@ def _unknown(path, result, results_dir, depth):
         text_analyzer.analyze(path, result)
 
 
-def inspect_path(path: str, filename: str, customer_code: str, results_dir: str = "", depth: int = 0, context: dict = None) -> InspectorResult:
+def inspect_path(
+    path: str,
+    filename: str,
+    customer_code: str,
+    results_dir: str = "",
+    depth: int = 0,
+    context: dict = None,
+) -> InspectorResult:
     """Analyze a single file and return an assembled :class:`InspectorResult`."""
     hashes = compute_hashes(path)
     result = InspectorResult(

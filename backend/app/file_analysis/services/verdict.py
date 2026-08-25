@@ -92,7 +92,7 @@ ENVIRONMENTAL_NOISE_SIGNATURES = frozenset(
         # PowerShell one-liner trips both — the interpreter itself is flagged).
         "uses_windows_utilities",
         "driver_filtermanager",
-    }
+    },
 )
 
 
@@ -142,12 +142,12 @@ LOW_CONFIDENCE_SIGNATURES = frozenset(
         "unbacked_service_manipulation",
         "unbacked_token_manipulation",
         "unbacked_bind_shell",
-        "injection_rwx",       # RWX memory — .NET JIT, browsers, many runtimes
-        "network_bind",        # loopback 127.0.0.1:0 listener — benign IPC
+        "injection_rwx",  # RWX memory — .NET JIT, browsers, many runtimes
+        "network_bind",  # loopback 127.0.0.1:0 listener — benign IPC
         # --- weak anti-analysis / recon heuristics that trip on benign software ---
-        "antidebug_guardpages",       # guard pages are normal .NET/CRT stack protection
+        "antidebug_guardpages",  # guard pages are normal .NET/CRT stack protection
         "query_fips_reconnaissance",  # sig text itself: "or by legitimate encryption software"
-    }
+    },
 )
 
 
@@ -163,9 +163,7 @@ def meaningful_signatures(sandbox: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Signatures that drive the verdict — i.e. neither environmental noise NOR a
     low-confidence static-PE/.NET-JIT heuristic (both fire on benign software)."""
     return [
-        s
-        for s in _signatures(sandbox)
-        if not is_noise_signature(s.get("name", "")) and not is_low_confidence_signature(s.get("name", ""))
+        s for s in _signatures(sandbox) if not is_noise_signature(s.get("name", "")) and not is_low_confidence_signature(s.get("name", ""))
     ]
 
 
@@ -173,11 +171,7 @@ def noise_stats(sandbox: Dict[str, Any]) -> Dict[str, int]:
     """{total, noise, low_confidence, meaningful} signature counts — UI + explanation."""
     sigs = _signatures(sandbox)
     noise = sum(1 for s in sigs if is_noise_signature(s.get("name", "")))
-    low = sum(
-        1
-        for s in sigs
-        if not is_noise_signature(s.get("name", "")) and is_low_confidence_signature(s.get("name", ""))
-    )
+    low = sum(1 for s in sigs if not is_noise_signature(s.get("name", "")) and is_low_confidence_signature(s.get("name", "")))
     return {"total": len(sigs), "noise": noise, "low_confidence": low, "meaningful": len(sigs) - noise - low}
 
 
@@ -258,10 +252,7 @@ def explain_verdict(
     # inspector was merely unreachable or timed out (e.g. the Tier-1 service down).
     if inspector and inspector.get("analysis_incomplete"):
         why = (inspector.get("error") or "inspection did not complete").strip().rstrip(".")
-        parts.append(
-            f"Tier-1 static inspection incomplete ({why}) — provisional fail-closed verdict, "
-            f"not a content-based finding"
-        )
+        parts.append(f"Tier-1 static inspection incomplete ({why}) — provisional fail-closed verdict, " f"not a content-based finding")
     elif static_verdict and static_verdict != VERDICT_CLEAN:
         parts.append(f"static inspection: {static_verdict}")
 
@@ -274,19 +265,19 @@ def explain_verdict(
         elif stats["meaningful"] > 0:
             parts.append(
                 f"sandbox: malscore {score:g} with {stats['meaningful']} sample-driven "
-                f"signature(s) (no malware config, no C2, nothing above severity {HIGH_SEVERITY_SIGNATURE - 1})"
+                f"signature(s) (no malware config, no C2, nothing above severity {HIGH_SEVERITY_SIGNATURE - 1})",
             )
         elif stats.get("low_confidence", 0) > 0:
             parts.append(
                 f"sandbox: malscore {score:g} is static packer / .NET-JIT heuristics only "
                 f"({stats['low_confidence']}/{stats['total']} signatures fire on benign software) — "
-                f"no sample-specific malicious behaviour"
+                f"no sample-specific malicious behaviour",
             )
         elif score > 0 and stats["total"] > 0:
             parts.append(
                 f"sandbox: malscore {score:g} is entirely environmental noise "
                 f"({stats['noise']}/{stats['total']} signatures are guest/monitor baseline) — "
-                f"no sample-specific behaviour"
+                f"no sample-specific behaviour",
             )
 
     if reputation and reputation.get("found"):

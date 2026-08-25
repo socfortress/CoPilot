@@ -20,9 +20,13 @@ _ATTRS = {
         "CleanAV": {"category": "undetected", "result": None, "engine_name": "CleanAV"},
         "Unsupported": {"category": "type-unsupported", "result": None, "engine_name": "X"},
     },
-    "crowdsourced_yara_results": [{"rule_name": "Emotet_Loader", "author": "researcher", "description": "Detects Emotet", "ruleset_name": "malware_rules"}],
+    "crowdsourced_yara_results": [
+        {"rule_name": "Emotet_Loader", "author": "researcher", "description": "Detects Emotet", "ruleset_name": "malware_rules"},
+    ],
     "sigma_analysis_results": [{"rule_title": "Suspicious PowerShell", "rule_level": "high", "rule_source": "Sigma Community"}],
-    "crowdsourced_ids_results": [{"rule_msg": "ET MALWARE Emotet CnC", "alert_severity": "high", "rule_category": "malware", "rule_source": "Proofpoint ET"}],
+    "crowdsourced_ids_results": [
+        {"rule_msg": "ET MALWARE Emotet CnC", "alert_severity": "high", "rule_category": "malware", "rule_source": "Proofpoint ET"},
+    ],
     "total_votes": {"harmless": 2, "malicious": 40},
     "signature_info": {"verified": "Signed", "product": "FakeSigner", "signers": "Evil Corp"},
     "reputation": -55,

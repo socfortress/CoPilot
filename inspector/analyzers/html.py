@@ -18,12 +18,12 @@ import re
 import tempfile
 from typing import List
 
+from analyzers import behaviors as behavior_rules
+from analyzers.script import deobfuscate
 from common import extract_iocs
 from contract import FLAG_HTML_SMUGGLING
 from contract import FLAG_SUSPICIOUS_ATTACHMENT
 from contract import InspectorResult
-from analyzers import behaviors as behavior_rules
-from analyzers.script import deobfuscate
 
 _SCRIPT_RE = re.compile(r"<script\b[^>]*>(.*?)</script>", re.IGNORECASE | re.DOTALL)
 _SMUGGLING_MARKERS = ("atob", "blob", "mssaveoropenblob", "createobjecturl", "msSaveBlob".lower(), "data:application/octet-stream")
