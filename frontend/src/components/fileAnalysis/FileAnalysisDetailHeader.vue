@@ -1,32 +1,44 @@
 <template>
 	<header class="flex flex-col gap-3">
-		<!-- Identity + verdict + actions. The verdict lives HERE and nowhere else:
-		     it used to be repeated as a headline inside the summary card, which made
-		     the page open with the same word twice at two different sizes. -->
-		<div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-			<Icon :name="iconForFile(job?.filename)" :size="20" class="text-secondary shrink-0" />
+		<div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+			<!-- Identity. The verdict lives here and nowhere else — it used to be
+			     repeated as a headline inside the summary card, opening the page with
+			     the same word twice at two different sizes. -->
+			<div class="flex min-w-0 grow basis-72 items-center gap-3">
+				<!-- Verdict leads the row. Trailing the filename put it hard against the
+				     action buttons, because the name grows to fill the row — and in this
+				     feature names are often 64-char hashes, so that was the normal case,
+				     not the edge one. Leading also matches how the page is read: what
+				     the file turned out to be, then which file it was. -->
+				<n-tag :type="verdictTagType" size="medium" round :bordered="false" class="shrink-0">
+					<template #icon><Icon :name="verdictIcon" :size="14" /></template>
+					<span class="capitalize">{{ verdict }}</span>
+				</n-tag>
 
-			<h1 class="text-default min-w-0 grow basis-60 truncate text-lg font-semibold" :title="job?.filename">
-				{{ job?.filename || "File analysis" }}
-			</h1>
+				<Icon :name="iconForFile(job?.filename)" :size="20" class="text-secondary shrink-0" />
 
-			<n-tag :type="verdictTagType" size="small" round :bordered="false" class="shrink-0">
-				<template #icon><Icon :name="verdictIcon" :size="13" /></template>
-				<span class="capitalize">{{ verdict }}</span>
-			</n-tag>
+				<h1 class="text-default min-w-0 grow truncate text-lg font-semibold" :title="job?.filename">
+					{{ job?.filename || "File analysis" }}
+				</h1>
 
-			<n-spin v-if="running" :size="14" class="shrink-0" />
-
-			<div class="flex shrink-0 items-center gap-2">
-				<n-button v-if="batchCount > 1" size="small" secondary @click="emit('openBatch')">
-					<template #icon><Icon :name="BatchIcon" :size="15" /></template>
-					Batch · {{ batchCount }}
-				</n-button>
-				<n-button v-if="job?.job_id" size="small" secondary :loading="downloadingPdf" @click="downloadPdf()">
-					<template #icon><Icon :name="PdfIcon" :size="15" /></template>
-					PDF report
-				</n-button>
+				<n-spin v-if="running" :size="14" class="shrink-0" />
 			</div>
+
+			<!-- Actions as one segmented object rather than a bordered column: a column
+			     claimed a whole empty row whenever only one action existed, and the
+			     group separates by SHAPE (joined rectangles vs round tag and flat
+			     chips) so it holds up with one, two or three buttons. -->
+			<n-button-group size="small" class="ml-auto shrink-0">
+				<n-button v-if="batchCount > 1" secondary @click="emit('openBatch')">
+					<template #icon><Icon :name="BatchIcon" :size="15" /></template>
+					<!-- Labels drop below sm so three buttons still fit a phone. -->
+					<span class="hidden sm:inline">Batch · {{ batchCount }}</span>
+				</n-button>
+				<n-button v-if="job?.job_id" secondary :loading="downloadingPdf" @click="downloadPdf()">
+					<template #icon><Icon :name="PdfIcon" :size="15" /></template>
+					<span class="hidden sm:inline">PDF report</span>
+				</n-button>
+			</n-button-group>
 		</div>
 
 		<!-- One uniform strip of facts. Every chip is the same component at the same
@@ -68,7 +80,7 @@
 
 <script setup lang="ts">
 import type { FileAnalysisJob, FileAnalysisResult, FileAnalysisVerdict } from "@/types/file-analysis"
-import { NButton, NSpin, NTag, useMessage } from "naive-ui"
+import { NButton, NButtonGroup, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
