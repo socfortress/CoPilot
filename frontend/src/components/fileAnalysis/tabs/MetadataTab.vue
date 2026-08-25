@@ -20,12 +20,19 @@
 			<div v-if="result.content?.strings?.length" class="flex flex-col gap-2">
 				<span class="text-secondary text-xs font-medium">Strings ({{ result.content.strings.length }})</span>
 				<n-scrollbar class="bg-secondary max-h-80 rounded-lg p-3">
-					<code v-for="(s, i) of result.content.strings" :key="i" class="block text-xs break-all">{{ s }}</code>
+					<code v-for="(s, i) of result.content.strings" :key="i" class="block text-xs break-all">
+						{{ s }}
+					</code>
 				</n-scrollbar>
 			</div>
 
 			<!-- PE sections -->
-			<n-data-table v-if="result.content?.sections?.length" :columns="sectionColumns" :data="result.content.sections" size="small" />
+			<n-data-table
+				v-if="result.content?.sections?.length"
+				:columns="sectionColumns"
+				:data="result.content.sections"
+				size="small"
+			/>
 		</template>
 	</div>
 </template>

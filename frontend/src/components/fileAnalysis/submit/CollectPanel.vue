@@ -76,7 +76,9 @@
 		<!-- Match picker -->
 		<div v-if="searched" class="border-default flex flex-col overflow-hidden rounded-lg border">
 			<template v-if="matches.length">
-				<div class="border-default bg-secondary flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2">
+				<div
+					class="border-default bg-secondary flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2"
+				>
 					<span class="text-secondary font-mono text-xs">
 						{{ matches.length }} match{{ matches.length > 1 ? "es" : "" }}
 						<template v-if="selectedPaths.length">
@@ -107,11 +109,13 @@
 								<span class="text-tertiary shrink-0 font-mono text-xs tabular-nums">
 									{{ fmtBytes(m.size) }}
 								</span>
-								<span class="text-tertiary shrink-0 font-mono text-xs">{{ m.sha256.slice(0, 12) }}</span>
+								<span class="text-tertiary shrink-0 font-mono text-xs">
+									{{ m.sha256.slice(0, 12) }}
+								</span>
 							</div>
 							<!-- Full path on its own line: it is the longest field and the one that
 							     disambiguates two files sharing a name. -->
-							<span class="text-tertiary truncate font-mono text-2xs" :title="m.path">{{ m.path }}</span>
+							<span class="text-tertiary text-2xs truncate font-mono" :title="m.path">{{ m.path }}</span>
 						</div>
 					</n-checkbox>
 				</n-checkbox-group>

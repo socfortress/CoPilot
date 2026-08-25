@@ -20,20 +20,30 @@
 
 			<template v-if="reputation.found">
 				<span>
-					<b>{{ reputation.malicious ?? 0 }}</b> / {{ reputation.total ?? "?" }} engines flagged this as malicious<span
-						v-if="(reputation.suspicious ?? 0) > 0"
-					>
-						({{ reputation.suspicious }} suspicious)</span>.
+					<b>{{ reputation.malicious ?? 0 }}</b>
+					/ {{ reputation.total ?? "?" }} engines flagged this as malicious
+					<span v-if="(reputation.suspicious ?? 0) > 0">({{ reputation.suspicious }} suspicious)</span>
+					.
 				</span>
-				<n-tag v-if="reputation.family" type="error" size="small" round :bordered="false">{{ reputation.family }}</n-tag>
+				<n-tag v-if="reputation.family" type="error" size="small" round :bordered="false">
+					{{ reputation.family }}
+				</n-tag>
 			</template>
 			<template v-else>
 				<span>Not previously seen by VirusTotal.</span>
 			</template>
 
-			<n-tag v-if="reputation.submitted" size="small" round :bordered="false" type="warning">uploaded to VT</n-tag>
+			<n-tag v-if="reputation.submitted" size="small" round :bordered="false" type="warning">
+				uploaded to VT
+			</n-tag>
 
-			<a v-if="reputation.permalink" :href="reputation.permalink" target="_blank" rel="noopener" class="underline">
+			<a
+				v-if="reputation.permalink"
+				:href="reputation.permalink"
+				target="_blank"
+				rel="noopener"
+				class="underline"
+			>
 				View on VirusTotal ↗
 			</a>
 		</div>

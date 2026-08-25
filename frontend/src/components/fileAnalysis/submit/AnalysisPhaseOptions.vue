@@ -18,7 +18,8 @@
 					<n-tag size="tiny" round :bordered="false" type="primary">Tier 1</n-tag>
 				</div>
 				<span class="text-secondary text-xs">
-					Parsed in a locked-down container — structure, IOCs and ATT&CK behaviours. The file is never executed.
+					Parsed in a locked-down container — structure, IOCs and ATT&CK behaviours. The file is never
+					executed.
 				</span>
 			</div>
 			<n-tag size="small" round :bordered="false" class="shrink-0">
@@ -73,12 +74,7 @@
 					</template>
 				</span>
 			</div>
-			<n-radio-group
-				:value="vtMode"
-				size="small"
-				class="shrink-0"
-				@update:value="emit('update:vtMode', $event)"
-			>
+			<n-radio-group :value="vtMode" size="small" class="shrink-0" @update:value="emit('update:vtMode', $event)">
 				<n-radio-button value="off">Off</n-radio-button>
 				<n-radio-button value="lookup">Hash lookup</n-radio-button>
 				<n-radio-button value="upload">Lookup + upload</n-radio-button>

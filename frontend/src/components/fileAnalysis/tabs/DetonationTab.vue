@@ -4,15 +4,18 @@
 		<n-spin v-if="!sandbox && dynamicStatus === 'running'" show class="min-h-52">
 			<div class="flex min-h-52 flex-col items-center justify-center gap-2">
 				<span class="text-sm font-medium">Detonating in the sandbox…</span>
-				<span class="text-secondary text-xs">Dynamic analysis runs over minutes — this fills in when the report lands.</span>
+				<span class="text-secondary text-xs">
+					Dynamic analysis runs over minutes — this fills in when the report lands.
+				</span>
 			</div>
 		</n-spin>
 
 		<n-alert v-else-if="!sandbox && dynamicStatus === 'failed'" type="warning" :bordered="false">
 			<template #header>Detonation didn't complete</template>
 			The sandbox couldn't produce a report for this sample. The most common cause is a
-			<b>platform mismatch</b> — e.g. a Windows PE/PowerShell/Office file with only a Linux guest available (or vice-versa).
-			The static analysis above is still valid.
+			<b>platform mismatch</b>
+			— e.g. a Windows PE/PowerShell/Office file with only a Linux guest available (or vice-versa). The static
+			analysis above is still valid.
 		</n-alert>
 
 		<n-empty
@@ -25,7 +28,12 @@
 			<!-- Headline: score + verdict + run facts -->
 			<div class="border-default flex flex-wrap items-center gap-6 rounded-lg border p-4">
 				<div class="flex flex-col items-center gap-1">
-					<n-progress type="circle" :percentage="malscorePct" :color="malscoreColor" :style="{ width: '92px' }">
+					<n-progress
+						type="circle"
+						:percentage="malscorePct"
+						:color="malscoreColor"
+						:style="{ width: '92px' }"
+					>
 						<span class="text-lg font-semibold">{{ sandbox.malscore.toFixed(1) }}</span>
 					</n-progress>
 					<span class="text-secondary text-xs">malscore / 10</span>
@@ -34,13 +42,24 @@
 					<n-tag :type="verdictType" size="large" round :bordered="false" class="capitalize">
 						{{ sandbox.verdict || "clean" }}
 					</n-tag>
-					<n-tag v-if="sandbox.family" type="error" size="small" round :bordered="false">{{ sandbox.family }}</n-tag>
+					<n-tag v-if="sandbox.family" type="error" size="small" round :bordered="false">
+						{{ sandbox.family }}
+					</n-tag>
 				</div>
 				<div class="grow" />
 				<div class="text-secondary flex flex-col gap-1 text-xs">
-					<div v-if="sandbox.machine">Guest: <span class="text-default">{{ sandbox.machine }}</span></div>
-					<div v-if="sandbox.duration">Duration: <span class="text-default">{{ sandbox.duration }}s</span></div>
-					<div v-if="sandbox.task_id != null">CAPE task: <span class="text-default">#{{ sandbox.task_id }}</span></div>
+					<div v-if="sandbox.machine">
+						Guest:
+						<span class="text-default">{{ sandbox.machine }}</span>
+					</div>
+					<div v-if="sandbox.duration">
+						Duration:
+						<span class="text-default">{{ sandbox.duration }}s</span>
+					</div>
+					<div v-if="sandbox.task_id != null">
+						CAPE task:
+						<span class="text-default">#{{ sandbox.task_id }}</span>
+					</div>
 				</div>
 			</div>
 
@@ -49,7 +68,8 @@
 				<span class="text-secondary text-xs font-medium">MITRE ATT&CK</span>
 				<div class="flex flex-wrap gap-2">
 					<n-tag v-for="t of sandbox.ttps" :key="t.id" type="warning" size="small" round :bordered="false">
-						{{ t.id }}<span v-if="t.signature" class="opacity-70"> · {{ t.signature }}</span>
+						{{ t.id }}
+						<span v-if="t.signature" class="opacity-70">· {{ t.signature }}</span>
 					</n-tag>
 				</div>
 			</div>
@@ -58,7 +78,11 @@
 			<div v-if="meaningfulSignatures.length" class="flex flex-col gap-2">
 				<span class="text-secondary text-xs font-medium">Signatures ({{ meaningfulSignatures.length }})</span>
 				<div class="flex flex-col gap-2">
-					<div v-for="(sig, i) of meaningfulSignatures" :key="i" class="bg-secondary flex items-start gap-3 rounded-lg p-3">
+					<div
+						v-for="(sig, i) of meaningfulSignatures"
+						:key="i"
+						class="bg-secondary flex items-start gap-3 rounded-lg p-3"
+					>
 						<Icon :name="SigIcon" :size="16" :class="sevColor(sig.severity)" class="mt-0.5 shrink-0" />
 						<div class="flex grow flex-col">
 							<span class="text-sm font-medium">{{ sig.name }}</span>
@@ -68,7 +92,9 @@
 							sev {{ sig.severity }}
 						</n-tag>
 						<div class="flex flex-wrap gap-1">
-							<n-tag v-for="m of sig.mitre || []" :key="m" size="tiny" round :bordered="false">{{ m }}</n-tag>
+							<n-tag v-for="m of sig.mitre || []" :key="m" size="tiny" round :bordered="false">
+								{{ m }}
+							</n-tag>
 						</div>
 					</div>
 				</div>
@@ -85,10 +111,14 @@
 						</span>
 					</template>
 					<div class="flex flex-col gap-1 opacity-70">
-						<div v-for="(sig, i) of lowConfidenceSignatures" :key="i" class="flex items-start gap-2 py-0.5 text-xs">
+						<div
+							v-for="(sig, i) of lowConfidenceSignatures"
+							:key="i"
+							class="flex items-start gap-2 py-0.5 text-xs"
+						>
 							<n-tag size="tiny" round :bordered="false">sev {{ sig.severity }}</n-tag>
 							<div class="flex flex-col">
-								<span class="break-all font-medium">{{ sig.name }}</span>
+								<span class="font-medium break-all">{{ sig.name }}</span>
 								<span v-if="sig.description" class="text-secondary">{{ sig.description }}</span>
 							</div>
 						</div>
@@ -102,11 +132,16 @@
 				<n-collapse-item name="noise">
 					<template #header>
 						<span class="text-secondary text-xs">
-							Environmental / monitor baseline ({{ noiseSignatures.length }}) — not counted toward the verdict
+							Environmental / monitor baseline ({{ noiseSignatures.length }}) — not counted toward the
+							verdict
 						</span>
 					</template>
 					<div class="flex flex-col gap-1 opacity-60">
-						<div v-for="(sig, i) of noiseSignatures" :key="i" class="flex items-center gap-2 py-0.5 text-xs">
+						<div
+							v-for="(sig, i) of noiseSignatures"
+							:key="i"
+							class="flex items-center gap-2 py-0.5 text-xs"
+						>
 							<n-tag size="tiny" round :bordered="false">sev {{ sig.severity }}</n-tag>
 							<span class="break-all">{{ sig.name }}</span>
 						</div>
@@ -129,21 +164,25 @@
 						v-for="(p, i) of processTree"
 						:key="i"
 						class="flex flex-col border-b border-[var(--n-border-color)] py-1 last:border-0"
-						:style="p.isSample
-							? {
-								borderLeft: '2px solid var(--primary-color)',
-								background: 'color-mix(in srgb, var(--primary-color) 7%, transparent)',
-								borderRadius: '4px'
-							}
-							: {}"
+						:style="
+							p.isSample
+								? {
+										borderLeft: '2px solid var(--primary-color)',
+										background: 'color-mix(in srgb, var(--primary-color) 7%, transparent)',
+										borderRadius: '4px'
+									}
+								: {}
+						"
 					>
 						<div class="flex items-center gap-2 text-sm" :style="{ paddingLeft: `${p.depth * 18}px` }">
 							<span v-if="p.depth" class="text-secondary select-none">└</span>
 							<Icon :name="ProcIcon" :size="14" :class="p.isSample ? 'text-primary' : 'text-secondary'" />
-							<span class="font-medium" :class="p.isSample ? 'text-primary' : ''">{{ p.name || "(unknown)" }}</span>
+							<span class="font-medium" :class="p.isSample ? 'text-primary' : ''">
+								{{ p.name || "(unknown)" }}
+							</span>
 							<span v-if="p.pid != null || p.ppid != null" class="text-secondary text-xs">
 								<span v-if="p.pid != null">pid {{ p.pid }}</span>
-								<span v-if="p.pid != null && p.ppid != null"> · </span>
+								<span v-if="p.pid != null && p.ppid != null">·</span>
 								<span v-if="p.ppid != null">ppid {{ p.ppid }}</span>
 							</span>
 							<n-tag v-if="p.isSample" size="tiny" round :bordered="false" type="success">sample</n-tag>
@@ -152,14 +191,18 @@
 							v-if="p.command_line"
 							class="text-secondary text-xs break-all"
 							:style="{ paddingLeft: `${p.depth * 18 + 22}px` }"
-						>{{ p.command_line }}</code>
+						>
+							{{ p.command_line }}
+						</code>
 					</div>
 				</n-scrollbar>
 			</div>
 
 			<!-- Extracted payloads -->
 			<div v-if="sandbox.payloads?.length" class="flex flex-col gap-2">
-				<span class="text-secondary text-xs font-medium">Extracted payloads ({{ sandbox.payloads.length }})</span>
+				<span class="text-secondary text-xs font-medium">
+					Extracted payloads ({{ sandbox.payloads.length }})
+				</span>
 				<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
 					<div v-for="(p, i) of sandbox.payloads" :key="i" class="flex items-center gap-2 text-xs">
 						<n-tag v-if="p.type" size="tiny" round :bordered="false" type="info">{{ p.type }}</n-tag>
@@ -182,7 +225,10 @@
 			</div>
 
 			<!-- Host activity — the FULL behavioural record (judge from evidence, not the score) -->
-			<div v-if="behaviorGroups.length || sandbox.enhanced?.length || sandbox.dead_hosts?.length" class="flex flex-col gap-2">
+			<div
+				v-if="behaviorGroups.length || sandbox.enhanced?.length || sandbox.dead_hosts?.length"
+				class="flex flex-col gap-2"
+			>
 				<div class="flex items-center justify-between">
 					<span class="text-secondary text-xs font-medium">Host activity — everything the sample did</span>
 					<n-button v-if="jobId" text size="tiny" :loading="downloadingReport" @click="downloadReport">
@@ -191,13 +237,24 @@
 					</n-button>
 				</div>
 
-				<n-alert v-if="sandbox.dead_hosts?.length" type="warning" size="small" :bordered="false" class="text-xs">
+				<n-alert
+					v-if="sandbox.dead_hosts?.length"
+					type="warning"
+					size="small"
+					:bordered="false"
+					class="text-xs"
+				>
 					Tried to reach (unreachable):
 					<code v-for="(h, i) of sandbox.dead_hosts" :key="i" class="mr-2 break-all">{{ h }}</code>
 				</n-alert>
 
 				<n-collapse>
-					<n-collapse-item v-for="g of behaviorGroups" :key="g.key" :name="g.key" :title="`${g.label} (${g.items.length})`">
+					<n-collapse-item
+						v-for="g of behaviorGroups"
+						:key="g.key"
+						:name="g.key"
+						:title="`${g.label} (${g.items.length})`"
+					>
 						<n-input
 							v-if="g.items.length > 20"
 							v-model:value="filters[g.key]"
@@ -207,7 +264,9 @@
 							class="mb-2"
 						/>
 						<n-scrollbar class="bg-secondary max-h-72 rounded-lg p-3">
-							<code v-for="(it, i) of filtered(g)" :key="i" class="block py-0.5 text-xs break-all">{{ it }}</code>
+							<code v-for="(it, i) of filtered(g)" :key="i" class="block py-0.5 text-xs break-all">
+								{{ it }}
+							</code>
 							<div v-if="!filtered(g).length" class="text-secondary text-xs">No matches.</div>
 						</n-scrollbar>
 					</n-collapse-item>
@@ -219,7 +278,9 @@
 					>
 						<n-scrollbar class="bg-secondary max-h-96 rounded-lg p-3">
 							<div v-for="(ev, i) of sandbox.enhanced" :key="i" class="flex gap-2 py-0.5 text-xs">
-								<n-tag size="tiny" round :bordered="false" type="info" class="shrink-0">{{ ev.event }}</n-tag>
+								<n-tag size="tiny" round :bordered="false" type="info" class="shrink-0">
+									{{ ev.event }}
+								</n-tag>
 								<span class="text-secondary shrink-0">{{ ev.object }}</span>
 								<code class="break-all">{{ eventDetail(ev) }}</code>
 							</div>
@@ -233,7 +294,13 @@
 				<span class="text-secondary text-xs font-medium">Screenshots</span>
 				<n-image-group>
 					<div class="flex flex-wrap gap-2">
-						<n-image v-for="(s, i) of sandbox.screenshots" :key="i" :src="s" width="160" class="rounded-lg" />
+						<n-image
+							v-for="(s, i) of sandbox.screenshots"
+							:key="i"
+							:src="s"
+							width="160"
+							class="rounded-lg"
+						/>
 					</div>
 				</n-image-group>
 			</div>
@@ -248,8 +315,8 @@
 			</n-collapse>
 
 			<div class="text-secondary text-xs">
-				"Nothing malicious observed" isn't a guarantee — a sample may detect the sandbox or wait. Weigh it with the static +
-				reputation signals.
+				"Nothing malicious observed" isn't a guarantee — a sample may detect the sandbox or wait. Weigh it with
+				the static + reputation signals.
 			</div>
 		</template>
 	</div>

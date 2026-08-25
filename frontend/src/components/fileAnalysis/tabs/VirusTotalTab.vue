@@ -26,8 +26,19 @@
 					</div>
 					<div v-else class="text-secondary text-sm">No consensus threat label.</div>
 					<div v-if="intel.threat_categories?.length" class="flex flex-wrap gap-1">
-						<n-tag v-for="c of intel.threat_categories" :key="c" type="error" size="small" round :bordered="false">{{ c }}</n-tag>
-						<n-tag v-for="n of intel.threat_names || []" :key="n" size="small" round :bordered="false">{{ n }}</n-tag>
+						<n-tag
+							v-for="c of intel.threat_categories"
+							:key="c"
+							type="error"
+							size="small"
+							round
+							:bordered="false"
+						>
+							{{ c }}
+						</n-tag>
+						<n-tag v-for="n of intel.threat_names || []" :key="n" size="small" round :bordered="false">
+							{{ n }}
+						</n-tag>
 					</div>
 				</div>
 
@@ -35,10 +46,15 @@
 
 				<div class="text-secondary flex flex-col gap-1 text-xs">
 					<div v-if="intel.reputation != null">
-						Community: <span :class="intel.reputation < 0 ? 'text-red-500' : 'text-default'">{{ intel.reputation }}</span>
+						Community:
+						<span :class="intel.reputation < 0 ? 'text-red-500' : 'text-default'">
+							{{ intel.reputation }}
+						</span>
 					</div>
 					<div>
-						Votes: <span class="text-green-500">{{ intel.harmless_votes ?? 0 }} harmless</span> ·
+						Votes:
+						<span class="text-green-500">{{ intel.harmless_votes ?? 0 }} harmless</span>
+						·
 						<span class="text-red-500">{{ intel.malicious_votes ?? 0 }} malicious</span>
 					</div>
 					<div v-if="intel.times_submitted != null">Submitted {{ intel.times_submitted }}×</div>
@@ -64,8 +80,16 @@
 				<div v-if="intel.behaviour.mitre?.length" class="flex flex-col gap-1">
 					<span class="text-secondary text-xs font-medium">MITRE ATT&CK</span>
 					<div class="flex flex-wrap gap-2">
-						<n-tag v-for="t of intel.behaviour.mitre" :key="t.id" type="warning" size="small" round :bordered="false">
-							{{ t.id }}<span v-if="t.description" class="opacity-70"> · {{ t.description }}</span>
+						<n-tag
+							v-for="t of intel.behaviour.mitre"
+							:key="t.id"
+							type="warning"
+							size="small"
+							round
+							:bordered="false"
+						>
+							{{ t.id }}
+							<span v-if="t.description" class="opacity-70">· {{ t.description }}</span>
 						</n-tag>
 					</div>
 				</div>
@@ -77,9 +101,15 @@
 				</div>
 
 				<div v-if="intel.behaviour.dropped_files?.length" class="flex flex-col gap-1">
-					<span class="text-secondary text-xs font-medium">Dropped files ({{ intel.behaviour.dropped_files.length }})</span>
+					<span class="text-secondary text-xs font-medium">
+						Dropped files ({{ intel.behaviour.dropped_files.length }})
+					</span>
 					<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
-						<div v-for="(d, i) of intel.behaviour.dropped_files" :key="i" class="flex items-center gap-2 text-xs">
+						<div
+							v-for="(d, i) of intel.behaviour.dropped_files"
+							:key="i"
+							class="flex items-center gap-2 text-xs"
+						>
 							<span class="font-medium break-all">{{ d.name || "(unnamed)" }}</span>
 							<n-tag v-if="d.type" size="tiny" round :bordered="false">{{ d.type }}</n-tag>
 							<code v-if="d.sha256" class="text-secondary break-all">{{ d.sha256.slice(0, 20) }}</code>
@@ -98,7 +128,11 @@
 			<div v-if="intel.yara?.length" class="flex flex-col gap-2">
 				<span class="text-secondary text-xs font-medium">Crowdsourced YARA ({{ intel.yara.length }})</span>
 				<div class="flex flex-col gap-2">
-					<div v-for="(y, i) of intel.yara" :key="i" class="bg-secondary flex flex-col gap-0.5 rounded-lg p-3">
+					<div
+						v-for="(y, i) of intel.yara"
+						:key="i"
+						class="bg-secondary flex flex-col gap-0.5 rounded-lg p-3"
+					>
 						<div class="flex flex-wrap items-center gap-2 text-sm">
 							<Icon :name="RuleIcon" :size="14" class="text-amber-500" />
 							<span class="font-medium">{{ y.rule }}</span>
@@ -125,7 +159,9 @@
 				<span class="text-secondary text-xs font-medium">IDS/IPS alerts ({{ intel.ids.length }})</span>
 				<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
 					<div v-for="(x, i) of intel.ids" :key="i" class="flex flex-wrap items-center gap-2 text-xs">
-						<n-tag size="tiny" round :bordered="false" :type="sevTag(x.severity)">{{ x.severity || "—" }}</n-tag>
+						<n-tag size="tiny" round :bordered="false" :type="sevTag(x.severity)">
+							{{ x.severity || "—" }}
+						</n-tag>
 						<span class="font-medium break-all">{{ x.msg }}</span>
 						<span v-if="x.source" class="text-secondary">· {{ x.source }}</span>
 					</div>
@@ -134,7 +170,10 @@
 
 			<!-- Per-engine detections (collapsed by default; can be long) -->
 			<n-collapse v-if="intel.detections?.length">
-				<n-collapse-item :title="`Engine detections (${intel.detection_count ?? intel.detections.length})`" name="det">
+				<n-collapse-item
+					:title="`Engine detections (${intel.detection_count ?? intel.detections.length})`"
+					name="det"
+				>
 					<n-scrollbar class="bg-secondary max-h-80 rounded-lg p-3">
 						<div v-for="(d, i) of intel.detections" :key="i" class="flex items-center gap-2 py-0.5 text-xs">
 							<Icon
@@ -150,10 +189,19 @@
 			</n-collapse>
 
 			<div class="flex items-center gap-3 text-xs">
-				<a v-if="permalink" :href="permalink" target="_blank" rel="noopener noreferrer" class="hover:text-primary underline">
+				<a
+					v-if="permalink"
+					:href="permalink"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="hover:text-primary underline"
+				>
 					Full report on VirusTotal ↗
 				</a>
-				<span class="text-secondary">VirusTotal aggregates 70+ engines and multiple community sandboxes — treat it as corroboration, not ground truth.</span>
+				<span class="text-secondary">
+					VirusTotal aggregates 70+ engines and multiple community sandboxes — treat it as corroboration, not
+					ground truth.
+				</span>
 			</div>
 		</template>
 	</div>

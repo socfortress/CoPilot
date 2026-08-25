@@ -32,8 +32,9 @@
 
 				<!-- Dev-mode (unhardened) banner -->
 				<n-alert v-if="job && job.hardened === false" type="warning" :bordered="false" class="text-sm">
-					This result came from the dev-only in-process inspector — <b>no container isolation</b>. Not for production
-					triage.
+					This result came from the dev-only in-process inspector —
+					<b>no container isolation</b>
+					. Not for production triage.
 				</n-alert>
 
 				<n-alert v-if="job?.status === 'failed'" type="error" :bordered="false" class="text-sm">
@@ -172,19 +173,19 @@ const hasContent = computed(() => {
 	if (!c) return false
 	return Boolean(
 		c.raw ||
-			c.macros ||
-			c.javascript ||
-			c.text ||
-			c.arguments ||
-			c.target ||
-			c.capabilities?.length ||
-			c.strings?.length ||
-			c.sections?.length
+		c.macros ||
+		c.javascript ||
+		c.text ||
+		c.arguments ||
+		c.target ||
+		c.capabilities?.length ||
+		c.strings?.length ||
+		c.sections?.length
 	)
 })
 const hasIocs = computed(() => {
 	const i = result.value?.inspector?.iocs
-	return Boolean(i && ((i.urls?.length ?? 0) + (i.ips?.length ?? 0) + (i.domains?.length ?? 0) > 0))
+	return Boolean(i && (i.urls?.length ?? 0) + (i.ips?.length ?? 0) + (i.domains?.length ?? 0) > 0)
 })
 
 // The VirusTotal tab appears only when VT knows the file AND deep intel came back.
@@ -220,7 +221,11 @@ const stillRunning = computed(() => {
 	if (!s) return true
 	if (["pending", "queued", "running"].includes(s)) return true
 	// Sandbox may still be detonating after the static tier is done.
-	return job.value?.sandbox_enabled === true && job.value?.dynamic_status !== undefined && !["done", "failed"].includes(job.value.dynamic_status)
+	return (
+		job.value?.sandbox_enabled === true &&
+		job.value?.dynamic_status !== undefined &&
+		!["done", "failed"].includes(job.value.dynamic_status)
+	)
 })
 
 function stopPolling() {

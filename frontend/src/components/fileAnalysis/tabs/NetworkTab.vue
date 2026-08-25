@@ -94,9 +94,7 @@
 					<span class="text-secondary text-xs font-medium">
 						Connections — {{ groupedConnections.length }} unique of {{ connections.length }}
 					</span>
-					<n-tag v-if="noisyCollapsed" size="tiny" round :bordered="false" type="info">
-						deduplicated
-					</n-tag>
+					<n-tag v-if="noisyCollapsed" size="tiny" round :bordered="false" type="info">deduplicated</n-tag>
 				</div>
 				<n-scrollbar class="bg-secondary max-h-72 rounded-lg p-3">
 					<div v-for="(c, i) of groupedConnections" :key="i" class="flex items-center gap-2 py-0.5 text-xs">
@@ -111,9 +109,15 @@
 							class="hover:text-primary break-all underline decoration-dotted"
 							:title="`Look up ${c.dst} on VirusTotal`"
 						>
-							<code>{{ c.dst }}<span v-if="c.dport">:{{ c.dport }}</span></code>
+							<code>
+								{{ c.dst }}
+								<span v-if="c.dport">:{{ c.dport }}</span>
+							</code>
 						</a>
-						<code v-else class="break-all">{{ c.dst }}<span v-if="c.dport">:{{ c.dport }}</span></code>
+						<code v-else class="break-all">
+							{{ c.dst }}
+							<span v-if="c.dport">:{{ c.dport }}</span>
+						</code>
 						<n-tag v-if="c.count > 1" size="tiny" round :bordered="false" class="opacity-80">
 							×{{ c.count }}
 						</n-tag>
@@ -151,7 +155,8 @@ const groupedConnections = computed(() => groupConnections(connections.value))
 const noisyCollapsed = computed(() => connections.value.length > groupedConnections.value.length)
 
 const hasNetwork = computed(
-	() => hosts.value.length || domains.value.length || dns.value.length || http.value.length || connections.value.length
+	() =>
+		hosts.value.length || domains.value.length || dns.value.length || http.value.length || connections.value.length
 )
 
 function looksLikeIp(v: string): boolean {

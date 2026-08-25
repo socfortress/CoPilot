@@ -110,11 +110,7 @@ const reasonOptions: { label: string; value: FalsePositiveReason }[] = (
 
 const noteLabel = computed(() => (reasonSelected.value === "OTHER" ? "Note (recommended for Other)" : "Note"))
 
-function applyVerdict(
-	nextVerdict: AlertVerdict | null,
-	reason: FalsePositiveReason | null,
-	note: string | null
-) {
+function applyVerdict(nextVerdict: AlertVerdict | null, reason: FalsePositiveReason | null, note: string | null) {
 	loading.value = true
 
 	Api.incidentManagement.alerts

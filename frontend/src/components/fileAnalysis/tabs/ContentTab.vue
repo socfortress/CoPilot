@@ -1,6 +1,10 @@
 <template>
 	<div class="flex flex-col gap-4">
-		<n-empty v-if="!hasAnyContent && !loading" description="No extracted content yet." class="min-h-52 justify-center" />
+		<n-empty
+			v-if="!hasAnyContent && !loading"
+			description="No extracted content yet."
+			class="min-h-52 justify-center"
+		/>
 
 		<!-- Flags row -->
 		<div v-if="result?.flags?.length" class="flex flex-wrap items-center gap-2">
@@ -38,16 +42,29 @@
 		</div>
 
 		<!-- Embedded PDF JavaScript -->
-		<CodeBlock v-if="content.javascript" title="Embedded PDF JavaScript (extracted, not executed)" :code="content.javascript" />
+		<CodeBlock
+			v-if="content.javascript"
+			title="Embedded PDF JavaScript (extracted, not executed)"
+			:code="content.javascript"
+		/>
 
 		<!-- Extracted document text (PDF visible text) -->
 		<CodeBlock v-if="content.text" title="Extracted text" :code="content.text" />
 
 		<!-- LNK -->
 		<div v-if="content.arguments || content.target" class="bg-secondary flex flex-col gap-1 rounded-lg p-3 text-sm">
-			<div v-if="content.target"><span class="text-secondary">Target:</span> <code>{{ content.target }}</code></div>
-			<div v-if="content.arguments"><span class="text-secondary">Arguments:</span> <code>{{ content.arguments }}</code></div>
-			<div v-if="content.working_dir"><span class="text-secondary">Working dir:</span> <code>{{ content.working_dir }}</code></div>
+			<div v-if="content.target">
+				<span class="text-secondary">Target:</span>
+				<code>{{ content.target }}</code>
+			</div>
+			<div v-if="content.arguments">
+				<span class="text-secondary">Arguments:</span>
+				<code>{{ content.arguments }}</code>
+			</div>
+			<div v-if="content.working_dir">
+				<span class="text-secondary">Working dir:</span>
+				<code>{{ content.working_dir }}</code>
+			</div>
 		</div>
 
 		<!-- PE capabilities -->
@@ -73,12 +90,12 @@ const content = computed<InspectorContent>(() => props.result?.content ?? {})
 const hasAnyContent = computed(() =>
 	Boolean(
 		content.value.raw ||
-			content.value.macros ||
-			content.value.javascript ||
-			content.value.text ||
-			content.value.arguments ||
-			content.value.target ||
-			content.value.capabilities?.length
+		content.value.macros ||
+		content.value.javascript ||
+		content.value.text ||
+		content.value.arguments ||
+		content.value.target ||
+		content.value.capabilities?.length
 	)
 )
 </script>

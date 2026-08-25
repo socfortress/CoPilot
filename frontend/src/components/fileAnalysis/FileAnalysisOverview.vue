@@ -3,7 +3,11 @@
 		<!-- Verdict + type headline -->
 		<div class="flex flex-wrap items-center gap-3">
 			<div class="flex items-center gap-2">
-				<Icon :name="verdictIcon" :size="22" :class="reputationPending ? 'text-secondary' : verdictColorClass" />
+				<Icon
+					:name="verdictIcon"
+					:size="22"
+					:class="reputationPending ? 'text-secondary' : verdictColorClass"
+				/>
 				<span class="text-lg font-semibold capitalize">{{ verdict }}</span>
 				<n-tag v-if="reputationPending" size="small" round :bordered="false" type="warning">
 					<template #icon><Icon :name="ClockIcon" :size="12" /></template>
@@ -13,18 +17,14 @@
 			<n-divider vertical />
 			<span class="text-secondary text-sm">{{ prettyType }}</span>
 			<div class="grow" />
-			<n-tag v-if="hardened === false" type="warning" size="small" round :bordered="false">dev / unhardened</n-tag>
+			<n-tag v-if="hardened === false" type="warning" size="small" round :bordered="false">
+				dev / unhardened
+			</n-tag>
 			<n-tag v-else type="success" size="small" round :bordered="false">
 				<template #icon><Icon :name="ShieldIcon" :size="12" /></template>
 				isolated
 			</n-tag>
-			<n-button
-				v-if="job?.job_id"
-				size="small"
-				secondary
-				:loading="downloadingPdf"
-				@click="downloadPdf"
-			>
+			<n-button v-if="job?.job_id" size="small" secondary :loading="downloadingPdf" @click="downloadPdf">
 				<template #icon><Icon :name="DownloadIcon" :size="14" /></template>
 				PDF report
 			</n-button>
@@ -115,7 +115,9 @@ function downloadPdf() {
 		})
 }
 
-const verdict = computed<FileAnalysisVerdict>(() => props.job?.verdict || (props.result?.verdict_hint as FileAnalysisVerdict) || "clean")
+const verdict = computed<FileAnalysisVerdict>(
+	() => props.job?.verdict || (props.result?.verdict_hint as FileAnalysisVerdict) || "clean"
+)
 const hardened = computed(() => props.job?.hardened ?? props.result?.hardened)
 
 const verdictIcon = computed(() => {
