@@ -1,25 +1,56 @@
 <template>
-	<div class="border-default flex flex-col gap-1 rounded-lg border p-2">
-		<div class="text-secondary flex items-center justify-between px-1 py-1 text-xs font-semibold">
-			<span>Batch · {{ jobIds.length }} files</span>
-			<span v-if="runningCount">{{ runningCount }} running</span>
+	<div class="flex flex-col gap-2">
+		<div class="text-secondary flex items-center justify-between font-mono text-xs">
+			<span>{{ jobIds.length }} files analysed together</span>
+			<span v-if="runningCount">{{ runningCount }} still running</span>
 		</div>
-		<button
+
+		<CardEntity
 			v-for="b in items"
 			:key="b.jobId"
-			class="flex items-center gap-2 rounded-md px-2 py-2 text-left transition-colors"
-			:class="b.jobId === activeJobId ? 'bg-secondary' : 'hover:bg-secondary'"
+			clickable
+			hoverable
+			embedded
+			size="small"
+			:status="statusFor(b)"
+			:highlighted="b.jobId === activeJobId"
 			@click="select(b.jobId)"
 		>
-			<Icon :name="iconFor(b)" :size="16" :class="colorFor(b)" class="shrink-0" />
-			<span class="grow truncate text-sm" :class="{ 'font-medium': b.jobId === activeJobId }">
-				{{ b.filename || "…" }}
-			</span>
-			<n-spin v-if="isRunning(b)" :size="12" />
-			<n-tag v-else :type="verdictType(b.verdict)" size="small" round :bordered="false">
-				{{ b.verdict || b.status || "—" }}
-			</n-tag>
-		</button>
+			<template #header>
+				<div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+					<div class="flex min-w-0 grow basis-50 items-center gap-2">
+						<Icon :name="iconFor(b)" :size="16" :class="colorFor(b)" class="shrink-0" />
+						<span
+							class="text-default truncate text-sm"
+							:class="b.jobId === activeJobId ? 'font-semibold' : 'font-medium'"
+							:title="b.filename"
+						>
+							{{ b.filename || "…" }}
+						</span>
+					</div>
+					<div class="flex shrink-0 items-center gap-2">
+						<n-spin v-if="isRunning(b)" :size="13" />
+						<n-tag v-else :type="verdictType(b.verdict)" size="small" round :bordered="false">
+							{{ b.verdict || b.status || "—" }}
+						</n-tag>
+					</div>
+				</div>
+			</template>
+
+			<template #default>
+				<div class="flex flex-wrap items-center gap-2">
+					<Badge type="splitted" size="small">
+						<template #label>sha256</template>
+						<template #value>
+							<span class="font-mono">{{ b.sha256 ? b.sha256.slice(0, 12) : "—" }}</span>
+						</template>
+					</Badge>
+					<Badge v-if="b.jobId === activeJobId" type="splitted" size="small" color="primary">
+						<template #value>viewing</template>
+					</Badge>
+				</div>
+			</template>
+		</CardEntity>
 	</div>
 </template>
 
@@ -29,16 +60,24 @@ import { NSpin, NTag } from "naive-ui"
 import { computed, onBeforeUnmount, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
+import Badge from "@/components/common/Badge.vue"
+import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 
 interface BatchEntry {
 	jobId: string
 	filename: string
+	sha256: string
 	verdict: FileAnalysisVerdict | null
 	status: string
 }
 
 const props = defineProps<{ jobIds: string[]; activeJobId: string }>()
+
+// The drawer that hosts this list closes on navigation, so the parent decides
+// what "picking a job" means beyond the route change.
+const emit = defineEmits<{ (e: "select", jobId: string): void }>()
+
 const router = useRouter()
 
 const items = ref<BatchEntry[]>([])
@@ -57,6 +96,15 @@ function verdictType(v: FileAnalysisVerdict | null): "success" | "warning" | "er
 	return "default"
 }
 
+// Only a judged-bad row carries a status accent; a clean one stays neutral rather
+// than painting the drawer green.
+function statusFor(b: BatchEntry): "success" | "warning" | "error" | undefined {
+	if (b.status === "failed") return "error"
+	if (b.verdict === "malicious") return "error"
+	if (b.verdict === "suspicious") return "warning"
+	return undefined
+}
+
 function iconFor(b: BatchEntry): string {
 	if (isRunning(b)) return "carbon:document"
 	if (b.status === "failed") return "carbon:warning"
@@ -66,13 +114,13 @@ function iconFor(b: BatchEntry): string {
 }
 
 function colorFor(b: BatchEntry): string {
-	if (b.verdict === "malicious") return "text-red-500"
-	if (b.verdict === "suspicious") return "text-amber-500"
-	if (b.status === "failed") return "text-red-500"
+	if (b.verdict === "malicious" || b.status === "failed") return "text-error"
+	if (b.verdict === "suspicious") return "text-warning"
 	return "text-secondary"
 }
 
 function select(jobId: string) {
+	emit("select", jobId)
 	if (jobId === props.activeJobId) return
 	router.push({ name: "FileAnalysisDetails", params: { jobId }, query: { batch: props.jobIds.join(",") } })
 }
@@ -87,11 +135,12 @@ function fetchAll() {
 					return {
 						jobId,
 						filename: j?.filename || "",
+						sha256: j?.sha256 || "",
 						verdict: j?.verdict ?? null,
 						status: j?.status || "pending"
 					} as BatchEntry
 				})
-				.catch(() => ({ jobId, filename: "", verdict: null, status: "pending" }) as BatchEntry)
+				.catch(() => ({ jobId, filename: "", sha256: "", verdict: null, status: "pending" }) as BatchEntry)
 		)
 	).then(entries => {
 		items.value = entries

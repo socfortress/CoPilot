@@ -82,3 +82,46 @@ export function groupConnections(connections: SandboxConnection[] | undefined | 
 	}
 	return Array.from(map.values()).sort((a, b) => b.count - a.count)
 }
+
+// Extension → icon. Scanning collected files is mostly asking "which of these is
+// executable content", so the families that answer that get their own glyph and
+// everything else falls back to a plain document.
+const FILE_ICONS: Record<string, string> = {
+	exe: "carbon:executable-program",
+	dll: "carbon:executable-program",
+	sys: "carbon:executable-program",
+	elf: "carbon:executable-program",
+	so: "carbon:executable-program",
+	bin: "carbon:executable-program",
+	ps1: "carbon:script",
+	sh: "carbon:script",
+	bat: "carbon:script",
+	cmd: "carbon:script",
+	py: "carbon:script",
+	js: "carbon:script",
+	vbs: "carbon:script",
+	hta: "carbon:script",
+	zip: "carbon:archive",
+	"7z": "carbon:archive",
+	rar: "carbon:archive",
+	gz: "carbon:archive",
+	tar: "carbon:archive",
+	cab: "carbon:archive",
+	pdf: "carbon:document-pdf",
+	png: "carbon:image",
+	jpg: "carbon:image",
+	jpeg: "carbon:image",
+	gif: "carbon:image",
+	svg: "carbon:image",
+	bmp: "carbon:image",
+	txt: "carbon:document-blank",
+	log: "carbon:document-blank",
+	csv: "carbon:document-blank",
+	json: "carbon:code",
+	xml: "carbon:code"
+}
+
+export function iconForFile(name: string | null | undefined): string {
+	const ext = (name || "").split(".").pop()?.toLowerCase() || ""
+	return FILE_ICONS[ext] || "carbon:document"
+}

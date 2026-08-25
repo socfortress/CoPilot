@@ -11,6 +11,8 @@ export interface FileAnalysisJob {
 	sha256: string
 	filename: string
 	customer_code: string
+	/** "upload" | "host_path" — how the sample reached CoPilot. */
+	source: string
 	status: FileAnalysisStatus
 	static_status: FileAnalysisStatus
 	dynamic_status?: FileAnalysisStatus
@@ -20,6 +22,8 @@ export interface FileAnalysisJob {
 	hardened: boolean
 	verdict?: FileAnalysisVerdict
 	created_at?: string
+	updated_at?: string
+	error?: string | null
 }
 
 export interface InspectorHashes {

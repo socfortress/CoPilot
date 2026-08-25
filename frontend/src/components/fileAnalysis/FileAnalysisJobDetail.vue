@@ -1,101 +1,91 @@
 <template>
-	<div class="flex flex-col gap-4 md:flex-row md:items-start">
-		<!-- Batch sidebar — when several files were analyzed together -->
-		<FileAnalysisBatchList
-			v-if="batchIds.length > 1"
-			:job-ids="batchIds"
-			:active-job-id="jobId"
-			class="w-full md:w-64 md:shrink-0"
+	<div class="flex flex-col gap-4">
+		<FileAnalysisDetailHeader
+			:job
+			:result
+			:batch-count="batchIds.length"
+			:running="stillRunning || vtPending"
+			@open-batch="showBatch = true"
 		/>
 
-		<div class="flex min-w-0 grow flex-col gap-4">
-			<!-- Header -->
-			<div class="flex flex-wrap items-center gap-3">
-				<Icon :name="FileIcon" :size="20" />
-				<span class="text-lg font-semibold">{{ job?.filename || "File analysis" }}</span>
-				<n-tag v-if="vtLabel" :type="vtType" size="small" round :bordered="false">
-					<template #icon><Icon :name="VtIcon" :size="14" /></template>
-					{{ vtLabel }}
-				</n-tag>
-				<n-spin v-if="stillRunning || vtPending" :size="16" />
-				<div class="grow" />
-				<n-tag v-if="job?.customer_code" size="small" round :bordered="false">
-					<template #icon><Icon :name="CustomerIcon" :size="14" /></template>
-					{{ job.customer_code }}
-				</n-tag>
-				<code v-if="shaShort" class="text-secondary text-xs">{{ shaShort }}</code>
-			</div>
+		<!-- The one place the unhardened state is stated, and it carries the
+		     consequence rather than just the label. -->
+		<n-alert v-if="job && job.hardened === false" type="warning" :bordered="false" class="text-sm">
+			This result came from the dev-only in-process inspector —
+			<b>no container isolation</b>
+			. Not for production triage.
+		</n-alert>
 
-			<!-- Dev-mode (unhardened) banner -->
-			<n-alert v-if="job && job.hardened === false" type="warning" :bordered="false" class="text-sm">
-				This result came from the dev-only in-process inspector —
-				<b>no container isolation</b>
-				. Not for production triage.
-			</n-alert>
+		<n-alert v-if="job?.status === 'failed'" type="error" :bordered="false" class="text-sm">
+			Analysis failed. A file that crashes the inspector is itself worth a look.
+		</n-alert>
 
-			<n-alert v-if="job?.status === 'failed'" type="error" :bordered="false" class="text-sm">
-				Analysis failed. A file that crashes the inspector is itself worth a look.
-			</n-alert>
+		<FileAnalysisOverview
+			:result="result?.inspector"
+			:reputation="result?.reputation"
+			:reputation-pending="vtPending"
+			:verdict-reason="result?.verdict_reason"
+		/>
 
-			<!-- VirusTotal reputation -->
-			<ReputationCard :reputation="result?.reputation" :loading="stillRunning" />
+		<!-- Tabs (empty ones are hidden; we land on the first with content) -->
+		<n-tabs v-model:value="activeTab" type="line" animated @update:value="tabPinnedByUser = true">
+			<n-tab-pane v-if="hasPreviews" name="preview" tab="Preview" display-directive="show:lazy">
+				<PreviewTab :job-id :preview-names="result?.preview_urls || []" :loading="loadingResult" />
+			</n-tab-pane>
+			<n-tab-pane v-if="hasContent" name="content" tab="Content" display-directive="show:lazy">
+				<ContentTab :result="result?.inspector" :loading="loadingResult" />
+			</n-tab-pane>
+			<n-tab-pane v-if="hasIocs" name="iocs" tab="IOCs" display-directive="show:lazy">
+				<IocsTab :iocs="result?.inspector?.iocs" />
+			</n-tab-pane>
+			<n-tab-pane v-if="hasVtIntel" name="virustotal" tab="VirusTotal" display-directive="show:lazy">
+				<VirusTotalTab :reputation="result?.reputation" :loading="stillRunning" />
+			</n-tab-pane>
+			<n-tab-pane name="metadata" tab="Metadata" display-directive="show:lazy">
+				<MetadataTab :result="result?.inspector" />
+			</n-tab-pane>
 
-			<!-- Always-populated summary -->
-			<FileAnalysisOverview
-				:result="result?.inspector"
-				:job
-				:reputation-pending="vtPending"
-				:verdict-reason="result?.verdict_reason"
-			/>
-
-			<!-- Tabs (empty ones are hidden; we land on the first with content) -->
-			<n-tabs v-model:value="activeTab" type="line" animated @update:value="tabPinnedByUser = true">
-				<n-tab-pane v-if="hasPreviews" name="preview" tab="Preview" display-directive="show:lazy">
-					<PreviewTab :job-id :preview-names="result?.preview_urls || []" :loading="loadingResult" />
+			<!-- Detonation tabs only when the backend reports sandbox enabled -->
+			<template v-if="hasSandbox">
+				<n-tab-pane name="detonation" tab="Detonation" display-directive="show:lazy">
+					<DetonationTab
+						:sandbox="result?.sandbox"
+						:loading="loadingResult"
+						:dynamic-status="job?.dynamic_status"
+						:job-id
+					/>
 				</n-tab-pane>
-				<n-tab-pane v-if="hasContent" name="content" tab="Content" display-directive="show:lazy">
-					<ContentTab :result="result?.inspector" :loading="loadingResult" />
+				<n-tab-pane name="network" tab="Network" display-directive="show:lazy">
+					<NetworkTab :sandbox="result?.sandbox" :loading="loadingResult" />
 				</n-tab-pane>
-				<n-tab-pane v-if="hasIocs" name="iocs" tab="IOCs" display-directive="show:lazy">
-					<IocsTab :iocs="result?.inspector?.iocs" />
-				</n-tab-pane>
-				<n-tab-pane v-if="hasVtIntel" name="virustotal" tab="VirusTotal" display-directive="show:lazy">
-					<VirusTotalTab :reputation="result?.reputation" :loading="stillRunning" />
-				</n-tab-pane>
-				<n-tab-pane name="metadata" tab="Metadata" display-directive="show:lazy">
-					<MetadataTab :result="result?.inspector" />
-				</n-tab-pane>
+			</template>
+		</n-tabs>
 
-				<!-- Detonation tabs only when the backend reports sandbox enabled -->
-				<template v-if="hasSandbox">
-					<n-tab-pane name="detonation" tab="Detonation" display-directive="show:lazy">
-						<DetonationTab
-							:sandbox="result?.sandbox"
-							:loading="loadingResult"
-							:dynamic-status="job?.dynamic_status"
-							:job-id
-						/>
-					</n-tab-pane>
-					<n-tab-pane name="network" tab="Network" display-directive="show:lazy">
-						<NetworkTab :sandbox="result?.sandbox" :loading="loadingResult" />
-					</n-tab-pane>
-				</template>
-			</n-tabs>
-		</div>
+		<!-- Batch moved out of the layout: as a sidebar it squeezed the content column
+		     on every screen, including the common case of a single-file analysis. -->
+		<n-drawer v-model:show="showBatch" :width="640" class="max-w-[90vw]!" placement="right">
+			<n-drawer-content title="Batch" closable :native-scrollbar="false">
+				<FileAnalysisBatchList
+					v-if="batchIds.length > 1"
+					:job-ids="batchIds"
+					:active-job-id="jobId"
+					@select="showBatch = false"
+				/>
+			</n-drawer-content>
+		</n-drawer>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { FileAnalysisJob, FileAnalysisResult } from "@/types/file-analysis"
-import { NAlert, NSpin, NTabPane, NTabs, NTag, useMessage } from "naive-ui"
+import { NAlert, NDrawer, NDrawerContent, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { resolveActiveTab } from "@/components/fileAnalysis/fileAnalysis.helpers"
 import FileAnalysisBatchList from "@/components/fileAnalysis/FileAnalysisBatchList.vue"
+import FileAnalysisDetailHeader from "@/components/fileAnalysis/FileAnalysisDetailHeader.vue"
 import FileAnalysisOverview from "@/components/fileAnalysis/FileAnalysisOverview.vue"
-import ReputationCard from "@/components/fileAnalysis/ReputationCard.vue"
 import { getApiErrorMessage } from "@/utils"
 
 // Route state arrives as props: the view owns the URL, this component owns one
@@ -113,12 +103,10 @@ const NetworkTab = defineAsyncComponent(() => import("@/components/fileAnalysis/
 
 const message = useMessage()
 
-const FileIcon = "carbon:document-security"
-const CustomerIcon = "carbon:user"
-const VtIcon = "carbon:radar"
 const POLL_MS = 3000
 const MAX_POLLS = 120 // ~6 min ceiling so a slow VT scan doesn't poll forever
 
+const showBatch = ref(false)
 const activeTab = ref<string>("metadata")
 // Set the moment the analyst clicks a tab: from then on the view stops following
 // the content and stays where they put it.
@@ -129,30 +117,12 @@ const loadingResult = ref(false)
 let pollTimer: ReturnType<typeof setInterval> | null = null
 let pollCount = 0
 
-const shaShort = computed(() => (job.value?.sha256 || result.value?.inspector?.sha256 || "").slice(0, 16))
-
 // Header indicator is SOLELY the VirusTotal result — the multi-engine hit ratio.
 const reputation = computed(() => result.value?.reputation || null)
 const vtPending = computed(() => {
 	const r = reputation.value
 	return !!(r && r.submitted && !r.found)
 })
-const vtLabel = computed<string | null>(() => {
-	const r = reputation.value
-	if (!r || r.skipped) return null
-	if (r.found) return `VirusTotal ${r.malicious ?? 0}/${r.total ?? "?"}`
-	if (r.submitted) return "VirusTotal scanning…"
-	return "VirusTotal: not seen"
-})
-const vtType = computed<"error" | "warning" | "success" | "default">(() => {
-	const r = reputation.value
-	if (!r || !r.found) return "default"
-	const m = r.malicious ?? 0
-	if (m >= 5) return "error"
-	if (m >= 1 || (r.suspicious ?? 0) >= 1) return "warning"
-	return "success"
-})
-
 // Which detail tabs actually have content — empty ones are hidden and we never
 // land on them (the old default was always "Preview", blank for non-document files).
 const hasPreviews = computed(() => (result.value?.preview_urls?.length ?? 0) > 0)
