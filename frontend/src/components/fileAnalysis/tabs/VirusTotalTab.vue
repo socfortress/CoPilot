@@ -126,9 +126,12 @@
 						<div class="border-default rounded-lg border">
 							<n-scrollbar style="max-height: 16rem">
 								<div class="divide-border flex flex-col divide-y">
+									<!-- Composite key: VirusTotal reports the same technique more than
+									     once (different tactic or description), so the id alone is not
+									     unique and Vue warns about duplicate keys. -->
 									<div
-										v-for="t of filteredMitre"
-										:key="t.id"
+										v-for="(t, ti) of filteredMitre"
+										:key="`${t.id}-${ti}`"
 										class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-3 py-2"
 									>
 										<span class="text-warning w-24 shrink-0 font-mono text-xs">{{ t.id }}</span>
@@ -154,20 +157,56 @@
 						<IocList label="Contacted URLs" :items="intel.behaviour.contacted_urls" />
 					</div>
 
-					<div v-if="intel.behaviour.dropped_files?.length" class="flex flex-col gap-1">
-						<span :class="LABEL">Dropped files ({{ intel.behaviour.dropped_files.length }})</span>
+					<div v-if="intel.behaviour.dropped_files?.length" class="flex flex-col gap-2">
+						<div class="flex flex-wrap items-center justify-between gap-2">
+							<span :class="LABEL">
+								Dropped files
+								<span class="text-tertiary normal-case">
+									({{ filteredDropped.length }}/{{ intel.behaviour.dropped_files.length }})
+								</span>
+							</span>
+							<n-input
+								v-model:value="droppedQuery"
+								size="tiny"
+								clearable
+								placeholder="Filter by name, type or hash"
+								class="w-full sm:w-64"
+							>
+								<template #prefix><Icon :name="SearchIcon" :size="13" /></template>
+							</n-input>
+						</div>
 						<div class="border-default rounded-lg border">
-							<n-scrollbar style="max-height: 13rem" class="p-3">
-								<div
-									v-for="(d, i) of intel.behaviour.dropped_files"
-									:key="i"
-									class="flex items-center gap-2 py-0.5 text-xs"
-								>
-									<span class="font-medium break-all">{{ d.name || "(unnamed)" }}</span>
-									<n-tag v-if="d.type" size="tiny" round :bordered="false">{{ d.type }}</n-tag>
-									<code v-if="d.sha256" class="text-secondary break-all">
-										{{ d.sha256.slice(0, 20) }}
-									</code>
+							<n-scrollbar style="max-height: 13rem">
+								<div class="divide-border flex flex-col divide-y">
+									<!-- Same two-zone row as the YARA list: what the file IS on the
+									     left, what identifies it right-aligned. The old row mixed a
+									     bold name, a round tag and a break-all hash in one flow, so
+									     long names shoved the hash onto a second ragged line. -->
+									<div
+										v-for="(d, i) of filteredDropped"
+										:key="i"
+										class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-3 py-2"
+									>
+										<div class="flex min-w-0 grow items-baseline gap-2">
+											<Icon
+												:name="iconForFile(d.name)"
+												:size="13"
+												class="text-secondary shrink-0 translate-y-0.5"
+											/>
+											<span
+												class="text-default min-w-0 truncate font-mono text-xs"
+												:title="d.name"
+											>
+												{{ d.name || "(unnamed)" }}
+											</span>
+										</div>
+										<span v-if="droppedMeta(d)" class="text-tertiary shrink-0 font-mono text-2xs">
+											{{ droppedMeta(d) }}
+										</span>
+									</div>
+									<div v-if="!filteredDropped.length" class="text-tertiary px-3 py-4 text-xs">
+										No dropped file matches that filter.
+									</div>
 								</div>
 							</n-scrollbar>
 						</div>
@@ -182,47 +221,113 @@
 			</div>
 
 			<!-- Crowdsourced detection rules -->
-			<div v-if="intel.yara?.length" class="flex flex-col gap-2">
-				<span :class="LABEL">Crowdsourced YARA ({{ intel.yara.length }})</span>
-				<div class="flex flex-col gap-2">
-					<div
-						v-for="(y, i) of intel.yara"
-						:key="i"
-						class="bg-secondary flex flex-col gap-0.5 rounded-lg p-3"
+			<!-- Same card shape as the Behaviour block: a header band carrying the label,
+			     the count and the filter, then the rows. Loose labels floating above bare
+			     boxes were what made this tab read as a pile of fragments. -->
+			<div v-if="intel.yara?.length" class="border-default flex flex-col overflow-hidden rounded-lg border">
+				<div
+					class="border-default bg-secondary flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2"
+				>
+					<span :class="LABEL">
+						Crowdsourced YARA
+						<span class="text-tertiary normal-case">
+							({{ filteredYara.length }}/{{ intel.yara.length }})
+						</span>
+					</span>
+					<n-input
+						v-model:value="yaraQuery"
+						size="tiny"
+						clearable
+						placeholder="Filter by rule, author or ruleset"
+						class="w-full sm:w-64"
 					>
-						<div class="flex flex-wrap items-center gap-2 text-sm">
-							<Icon :name="RuleIcon" :size="14" class="text-warning" />
-							<span class="font-medium">{{ y.rule }}</span>
-							<span v-if="y.author" class="text-secondary text-xs">by {{ y.author }}</span>
-							<n-tag v-if="y.ruleset" size="tiny" round :bordered="false">{{ y.ruleset }}</n-tag>
+						<template #prefix><Icon :name="SearchIcon" :size="13" /></template>
+					</n-input>
+				</div>
+				<div>
+					<n-scrollbar style="max-height: 18rem">
+						<div class="divide-border flex flex-col divide-y">
+							<!-- Two zones on one baseline: the rule identity on the left, its
+							     provenance right-aligned. Previously the row mixed an icon, a mono
+							     name, prose ("by X") and a round tag in one wrapping flow at two
+							     text sizes, so nothing lined up between rows. -->
+							<div v-for="(y, i) of filteredYara" :key="i" class="flex flex-col gap-1 px-3 py-2">
+								<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+									<div class="flex min-w-0 grow items-baseline gap-2">
+										<Icon :name="RuleIcon" :size="13" class="text-warning shrink-0 translate-y-0.5" />
+										<!-- mono: a YARA rule name is an identifier, not prose -->
+										<span
+											class="text-default min-w-0 truncate font-mono text-xs font-medium"
+											:title="y.rule"
+										>
+											{{ y.rule }}
+										</span>
+									</div>
+									<!-- Provenance as one muted run instead of a tag plus a sentence:
+									     same treatment for both fields, so the right edge is uniform. -->
+									<span v-if="yaraMeta(y)" class="text-tertiary shrink-0 font-mono text-2xs">
+										{{ yaraMeta(y) }}
+									</span>
+								</div>
+								<!-- Indented past the icon so it reads as belonging to the rule above. -->
+								<span v-if="y.description" class="text-secondary pl-5 text-xs">
+									{{ y.description }}
+								</span>
+							</div>
+							<div v-if="!filteredYara.length" class="text-tertiary px-3 py-4 text-xs">
+								No rule matches that filter.
+							</div>
 						</div>
-						<span v-if="y.description" class="text-secondary text-xs">{{ y.description }}</span>
-					</div>
+					</n-scrollbar>
 				</div>
 			</div>
 
-			<div v-if="intel.sigma?.length" class="flex flex-col gap-2">
-				<span :class="LABEL">Sigma matches ({{ intel.sigma.length }})</span>
-				<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
-					<div v-for="(s, i) of intel.sigma" :key="i" class="flex flex-wrap items-center gap-2 text-xs">
-						<n-tag size="tiny" round :bordered="false" :type="sevTag(s.level)">{{ s.level || "—" }}</n-tag>
-						<span class="font-medium">{{ s.title }}</span>
-						<span v-if="s.source" class="text-secondary">· {{ s.source }}</span>
-					</div>
+			<div v-if="intel.sigma?.length" class="border-default flex flex-col overflow-hidden rounded-lg border">
+				<div class="border-default bg-secondary border-b px-4 py-2">
+					<span :class="LABEL">
+						Sigma matches
+						<span class="text-tertiary normal-case">({{ intel.sigma.length }})</span>
+					</span>
 				</div>
+				<n-scrollbar style="max-height: 18rem">
+					<div class="divide-border flex flex-col divide-y">
+						<div
+							v-for="(s, i) of intel.sigma"
+							:key="i"
+							class="flex flex-wrap items-center gap-2 px-3 py-2 text-xs"
+						>
+							<n-tag size="tiny" round :bordered="false" :type="sevTag(s.level)">
+								{{ s.level || "—" }}
+							</n-tag>
+							<span class="text-default min-w-0">{{ s.title }}</span>
+							<span v-if="s.source" class="text-tertiary">· {{ s.source }}</span>
+						</div>
+					</div>
+				</n-scrollbar>
 			</div>
 
-			<div v-if="intel.ids?.length" class="flex flex-col gap-2">
-				<span :class="LABEL">IDS/IPS alerts ({{ intel.ids.length }})</span>
-				<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
-					<div v-for="(x, i) of intel.ids" :key="i" class="flex flex-wrap items-center gap-2 text-xs">
-						<n-tag size="tiny" round :bordered="false" :type="sevTag(x.severity)">
-							{{ x.severity || "—" }}
-						</n-tag>
-						<span class="font-medium break-all">{{ x.msg }}</span>
-						<span v-if="x.source" class="text-secondary">· {{ x.source }}</span>
-					</div>
+			<div v-if="intel.ids?.length" class="border-default flex flex-col overflow-hidden rounded-lg border">
+				<div class="border-default bg-secondary border-b px-4 py-2">
+					<span :class="LABEL">
+						IDS/IPS alerts
+						<span class="text-tertiary normal-case">({{ intel.ids.length }})</span>
+					</span>
 				</div>
+				<n-scrollbar style="max-height: 18rem">
+					<div class="divide-border flex flex-col divide-y">
+						<div
+							v-for="(x, i) of intel.ids"
+							:key="i"
+							class="flex flex-wrap items-center gap-2 px-3 py-2 text-xs"
+						>
+							<n-tag size="tiny" round :bordered="false" :type="sevTag(x.severity)">
+								{{ x.severity || "—" }}
+							</n-tag>
+							<span class="text-default min-w-0 break-all">{{ x.msg }}</span>
+							<span v-if="x.source" class="text-tertiary">· {{ x.source }}</span>
+						</div>
+					</div>
+				</n-scrollbar>
 			</div>
 
 			<!-- Per-engine detections (collapsed by default; can be long) -->
@@ -231,17 +336,28 @@
 					:title="`Engine detections (${intel.detection_count ?? intel.detections.length})`"
 					name="det"
 				>
-					<n-scrollbar class="bg-secondary max-h-80 rounded-lg p-3">
-						<div v-for="(d, i) of intel.detections" :key="i" class="flex items-center gap-2 py-0.5 text-xs">
-							<Icon
-								:name="DotIcon"
-								:size="10"
-								:class="d.category === 'malicious' ? 'text-error' : 'text-warning'"
-							/>
-							<span class="w-40 shrink-0 font-medium">{{ d.engine }}</span>
-							<code class="break-all">{{ d.result }}</code>
-						</div>
-					</n-scrollbar>
+					<div class="border-default rounded-lg border">
+						<n-scrollbar style="max-height: 20rem">
+							<div class="divide-border flex flex-col divide-y">
+								<div
+									v-for="(d, i) of intel.detections"
+									:key="i"
+									class="flex items-center gap-2 px-3 py-1.5 text-xs"
+								>
+									<Icon
+										:name="DotIcon"
+										:size="10"
+										class="shrink-0"
+										:class="d.category === 'malicious' ? 'text-error' : 'text-warning'"
+									/>
+									<!-- Engine name in a fixed mono column so the verdicts line up
+									     and the list can be scanned down one edge. -->
+									<span class="text-secondary w-44 shrink-0 font-mono">{{ d.engine }}</span>
+									<span class="text-default min-w-0 font-mono break-all">{{ d.result }}</span>
+								</div>
+							</div>
+						</n-scrollbar>
+					</div>
 				</n-collapse-item>
 			</n-collapse>
 
@@ -270,6 +386,7 @@ import { NCollapse, NCollapseItem, NEmpty, NInput, NProgress, NScrollbar, NTag }
 import { computed, h, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { createFuse, searchFuse } from "@/components/common/searchDialog.helpers"
+import { iconForFile } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{ reputation?: FileAnalysisReputation | null; loading?: boolean }>()
 
@@ -285,14 +402,36 @@ const SearchIcon = "carbon:search"
 const intel = computed(() => props.reputation?.intel ?? null)
 const permalink = computed(() => props.reputation?.permalink)
 
-// 24+ techniques is normal for a real sample, so the list needs a way in beyond
-// scrolling. Purely client-side: Fuse searches the techniques already delivered
-// with the report, so nothing is requested as you type. Fuzzy rather than a plain
-// substring match, because "base64" should still find "encode data using Base64"
-// and a typo in a technique id should not blank the list.
-const mitreQuery = ref("")
-const mitreFuse = computed(() => createFuse(intel.value?.behaviour?.mitre ?? [], ["id", "description"]))
-const filteredMitre = computed(() => searchFuse(mitreFuse.value, mitreQuery.value, intel.value?.behaviour?.mitre ?? []))
+/**
+ * A client-side filter over one of the report's lists. Nothing is requested as you
+ * type — Fuse searches the array already delivered with the report. Fuzzy rather
+ * than a substring match, so "base64" still finds "encode data using Base64" and a
+ * typo in a rule name does not blank the list.
+ *
+ * Three lists here are long enough to need this (techniques, dropped files, YARA),
+ * which is why it is a helper rather than three copies of the same two refs.
+ */
+function useFuseFilter<T>(source: () => T[], keys: string[]) {
+	const query = ref("")
+	const fuse = computed(() => createFuse(source(), keys))
+	const results = computed(() => searchFuse(fuse.value, query.value, source()))
+	return { query, results }
+}
+
+const { query: mitreQuery, results: filteredMitre } = useFuseFilter(
+	() => intel.value?.behaviour?.mitre ?? [],
+	["id", "description"]
+)
+const { query: droppedQuery, results: filteredDropped } = useFuseFilter(
+	() => intel.value?.behaviour?.dropped_files ?? [],
+	["name", "type", "sha256"]
+)
+const { query: yaraQuery, results: filteredYara } = useFuseFilter(() => intel.value?.yara ?? [], [
+	"rule",
+	"author",
+	"ruleset",
+	"description"
+])
 
 const detPct = computed(() => {
 	const m = props.reputation?.malicious ?? 0
@@ -318,6 +457,16 @@ const facts = computed(() => {
 	if (i.names?.length) rows.push({ label: "Also seen as", value: i.names.slice(0, 3).join(", ") })
 	return rows
 })
+
+/** Type and hash as one muted run — both identify the file, so both read alike. */
+function droppedMeta(d: { type?: string; sha256?: string }): string {
+	return [d.type, d.sha256 ? d.sha256.slice(0, 12) : ""].filter(Boolean).join(" · ")
+}
+
+/** Ruleset and author as one muted run — both are provenance, so both read alike. */
+function yaraMeta(y: { ruleset?: string; author?: string }): string {
+	return [y.ruleset, y.author].filter(Boolean).join(" · ")
+}
 
 function sevTag(level?: string): "error" | "warning" | "default" {
 	const l = (level || "").toLowerCase()

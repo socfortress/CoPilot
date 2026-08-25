@@ -67,7 +67,15 @@
 			<div v-if="sandbox.ttps?.length" class="flex flex-col gap-2">
 				<span class="text-secondary text-xs font-medium">MITRE ATT&CK</span>
 				<div class="flex flex-wrap gap-2">
-					<n-tag v-for="t of sandbox.ttps" :key="t.id" type="warning" size="small" round :bordered="false">
+					<!-- Composite key: a technique id repeats across tactics, so it is not unique. -->
+					<n-tag
+						v-for="(t, ti) of sandbox.ttps"
+						:key="`${t.id}-${ti}`"
+						type="warning"
+						size="small"
+						round
+						:bordered="false"
+					>
 						{{ t.id }}
 						<span v-if="t.signature" class="opacity-70">· {{ t.signature }}</span>
 					</n-tag>

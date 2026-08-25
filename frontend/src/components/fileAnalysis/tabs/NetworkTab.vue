@@ -143,8 +143,12 @@ const IpIcon = "carbon:ibm-cloud-internet-services"
 // Observed traffic. Older cached results (engine < 7) stored observed endpoints in
 // the c2_* fields, so fall back to them for those — but a fresh result keeps the two
 // strictly separate: c2_* means "recovered from an extracted malware config".
-const hosts = computed(() => props.sandbox?.hosts ?? props.sandbox?.c2_ips ?? [])
-const domains = computed(() => props.sandbox?.domains ?? props.sandbox?.c2_domains ?? [])
+// Deduplicated: these arrive raw from the sandbox report and repeat freely (the
+// same resolver or CDN host is contacted many times). Duplicates rendered the same
+// row twice AND made the v-for key non-unique, which is a Vue warning waiting to
+// happen — the MITRE lists hit exactly that.
+const hosts = computed(() => [...new Set(props.sandbox?.hosts ?? props.sandbox?.c2_ips ?? [])])
+const domains = computed(() => [...new Set(props.sandbox?.domains ?? props.sandbox?.c2_domains ?? [])])
 const c2 = computed(() => [...(props.sandbox?.c2_ips ?? []), ...(props.sandbox?.c2_domains ?? [])])
 const hasExtractedC2 = computed(() => !!props.sandbox?.domains && c2.value.length > 0)
 const dns = computed(() => props.sandbox?.dns ?? [])
