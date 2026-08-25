@@ -383,10 +383,9 @@
 <script setup lang="ts">
 import type { FileAnalysisReputation } from "@/types/file-analysis"
 import { NCollapse, NCollapseItem, NEmpty, NInput, NProgress, NScrollbar, NTag } from "naive-ui"
-import { computed, h, ref } from "vue"
+import { computed, h } from "vue"
 import Icon from "@/components/common/Icon.vue"
-import { createFuse, searchFuse } from "@/components/common/searchDialog.helpers"
-import { iconForFile } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import { iconForFile, useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{ reputation?: FileAnalysisReputation | null; loading?: boolean }>()
 
@@ -401,22 +400,6 @@ const SearchIcon = "carbon:search"
 
 const intel = computed(() => props.reputation?.intel ?? null)
 const permalink = computed(() => props.reputation?.permalink)
-
-/**
- * A client-side filter over one of the report's lists. Nothing is requested as you
- * type — Fuse searches the array already delivered with the report. Fuzzy rather
- * than a substring match, so "base64" still finds "encode data using Base64" and a
- * typo in a rule name does not blank the list.
- *
- * Three lists here are long enough to need this (techniques, dropped files, YARA),
- * which is why it is a helper rather than three copies of the same two refs.
- */
-function useFuseFilter<T>(source: () => T[], keys: string[]) {
-	const query = ref("")
-	const fuse = computed(() => createFuse(source(), keys))
-	const results = computed(() => searchFuse(fuse.value, query.value, source()))
-	return { query, results }
-}
 
 const { query: mitreQuery, results: filteredMitre } = useFuseFilter(
 	() => intel.value?.behaviour?.mitre ?? [],

@@ -26,46 +26,63 @@
 
 		<template v-else-if="sandbox">
 			<!-- Headline: score + verdict + run facts -->
-			<div class="border-default flex flex-wrap items-center gap-6 rounded-lg border p-4">
-				<div class="flex flex-col items-center gap-1">
+			<!-- Headline as three hairline-separated cells, matching the VirusTotal tab:
+			     score, verdict and run facts read as three answers instead of a row of
+			     controls pushed apart by a grow spacer. -->
+			<div
+				class="border-default bg-border grid gap-px overflow-hidden rounded-lg border lg:grid-cols-[auto_1fr_auto]"
+			>
+				<div class="bg-secondary flex items-center gap-4 p-4">
 					<n-progress
 						type="circle"
 						:percentage="malscorePct"
 						:color="malscoreColor"
-						:style="{ width: '92px' }"
+						:style="{ width: '76px' }"
 					>
-						<span class="text-lg font-semibold">{{ sandbox.malscore.toFixed(1) }}</span>
+						<span class="text-lg leading-none font-semibold">{{ sandbox.malscore.toFixed(1) }}</span>
 					</n-progress>
-					<span class="text-secondary text-xs">malscore / 10</span>
-				</div>
-				<div class="flex flex-col gap-2">
-					<n-tag :type="verdictType" size="large" round :bordered="false" class="capitalize">
-						{{ sandbox.verdict || "clean" }}
-					</n-tag>
-					<n-tag v-if="sandbox.family" type="error" size="small" round :bordered="false">
-						{{ sandbox.family }}
-					</n-tag>
-				</div>
-				<div class="grow" />
-				<div class="text-secondary flex flex-col gap-1 text-xs">
-					<div v-if="sandbox.machine">
-						Guest:
-						<span class="text-default">{{ sandbox.machine }}</span>
+					<div class="flex flex-col gap-1">
+						<span :class="LABEL">Malscore</span>
+						<span class="text-secondary text-xs">out of 10</span>
 					</div>
-					<div v-if="sandbox.duration">
-						Duration:
-						<span class="text-default">{{ sandbox.duration }}s</span>
+				</div>
+
+				<div class="bg-secondary flex min-w-0 flex-col gap-2 p-4">
+					<span :class="LABEL">Verdict</span>
+					<div class="flex flex-wrap items-center gap-2">
+						<n-tag :type="verdictType" size="medium" round :bordered="false" class="capitalize">
+							{{ sandbox.verdict || "clean" }}
+						</n-tag>
+						<n-tag v-if="sandbox.family" type="error" size="small" round :bordered="false">
+							{{ sandbox.family }}
+						</n-tag>
 					</div>
-					<div v-if="sandbox.task_id != null">
-						CAPE task:
-						<span class="text-default">#{{ sandbox.task_id }}</span>
+				</div>
+
+				<!-- Run facts as aligned label/value rows: they used to run on as prose
+				     ("Guest: capewin"), which buried the values. -->
+				<div class="bg-secondary flex flex-col gap-2 p-4 lg:w-60">
+					<span :class="LABEL">Run</span>
+					<div class="flex flex-col gap-1 text-xs">
+						<div v-if="sandbox.machine" class="flex items-baseline justify-between gap-3">
+							<span class="text-tertiary">guest</span>
+							<span class="text-secondary min-w-0 truncate font-mono">{{ sandbox.machine }}</span>
+						</div>
+						<div v-if="sandbox.duration" class="flex items-baseline justify-between gap-3">
+							<span class="text-tertiary">duration</span>
+							<span class="text-secondary font-mono tabular-nums">{{ sandbox.duration }}s</span>
+						</div>
+						<div v-if="sandbox.task_id != null" class="flex items-baseline justify-between gap-3">
+							<span class="text-tertiary">CAPE task</span>
+							<span class="text-secondary font-mono tabular-nums">#{{ sandbox.task_id }}</span>
+						</div>
 					</div>
 				</div>
 			</div>
 
 			<!-- MITRE ATT&CK -->
 			<div v-if="sandbox.ttps?.length" class="flex flex-col gap-2">
-				<span class="text-secondary text-xs font-medium">MITRE ATT&CK</span>
+				<span :class="LABEL">MITRE ATT&CK</span>
 				<div class="flex flex-wrap gap-2">
 					<!-- Composite key: a technique id repeats across tactics, so it is not unique. -->
 					<n-tag
@@ -84,7 +101,7 @@
 
 			<!-- Meaningful (sample-driven) signatures — the real signal, ranked by severity -->
 			<div v-if="meaningfulSignatures.length" class="flex flex-col gap-2">
-				<span class="text-secondary text-xs font-medium">Signatures ({{ meaningfulSignatures.length }})</span>
+				<span :class="LABEL">Signatures ({{ meaningfulSignatures.length }})</span>
 				<div class="flex flex-col gap-2">
 					<div
 						v-for="(sig, i) of meaningfulSignatures"
@@ -159,58 +176,84 @@
 
 			<!-- Process tree — children nested under parents (by ppid); the detonated
 			     sample's own process is highlighted so it stands out from OS noise. -->
-			<div v-if="processTree.length" class="flex flex-col gap-2">
-				<div class="flex items-center gap-2">
-					<span class="text-secondary text-xs font-medium">Process tree ({{ processTree.length }})</span>
-					<n-tag size="tiny" round :bordered="false" type="success">
-						<template #icon><Icon :name="ProcIcon" :size="11" /></template>
-						sample highlighted
-					</n-tag>
-				</div>
-				<n-scrollbar class="bg-secondary max-h-80 rounded-lg p-3">
-					<div
-						v-for="(p, i) of processTree"
-						:key="i"
-						class="flex flex-col border-b border-[var(--n-border-color)] py-1 last:border-0"
-						:style="
-							p.isSample
-								? {
-									borderLeft: '2px solid var(--primary-color)',
-									background: 'color-mix(in srgb, var(--primary-color) 7%, transparent)',
-									borderRadius: '4px'
-								}
-								: {}
-						"
+			<div v-if="processTree.length" class="border-default flex flex-col overflow-hidden rounded-lg border">
+				<div
+					class="border-default bg-secondary flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2"
+				>
+					<div class="flex flex-wrap items-center gap-2">
+						<span :class="LABEL">
+							Process tree
+							<span class="text-tertiary normal-case">
+								({{ procRows.length }}/{{ processTree.length }})
+							</span>
+						</span>
+						<n-tag size="tiny" round :bordered="false" type="success">
+							<template #icon><Icon :name="ProcIcon" :size="11" /></template>
+							sample highlighted
+						</n-tag>
+					</div>
+					<n-input
+						v-model:value="procQuery"
+						size="tiny"
+						clearable
+						placeholder="Filter by process or command line"
+						class="w-full sm:w-72"
 					>
-						<div class="flex items-center gap-2 text-sm" :style="{ paddingLeft: `${p.depth * 18}px` }">
-							<span v-if="p.depth" class="text-secondary select-none">└</span>
-							<Icon :name="ProcIcon" :size="14" :class="p.isSample ? 'text-primary' : 'text-secondary'" />
-							<span class="font-medium" :class="p.isSample ? 'text-primary' : ''">
-								{{ p.name || "(unknown)" }}
-							</span>
-							<span v-if="p.pid != null || p.ppid != null" class="text-secondary text-xs">
-								<span v-if="p.pid != null">pid {{ p.pid }}</span>
-								<span v-if="p.pid != null && p.ppid != null">·</span>
-								<span v-if="p.ppid != null">ppid {{ p.ppid }}</span>
-							</span>
-							<n-tag v-if="p.isSample" size="tiny" round :bordered="false" type="success">sample</n-tag>
-						</div>
-						<code
-							v-if="p.command_line"
-							class="text-secondary text-xs break-all"
-							:style="{ paddingLeft: `${p.depth * 18 + 22}px` }"
+						<template #prefix><Icon :name="SearchIcon" :size="13" /></template>
+					</n-input>
+				</div>
+
+				<n-scrollbar style="max-height: 22rem">
+					<div class="divide-border flex flex-col divide-y">
+						<div
+							v-for="(p, i) of procRows"
+							:key="i"
+							class="flex flex-col gap-1 px-3 py-2"
+							:class="p.isSample ? 'bg-primary/6' : ''"
+							:style="p.isSample ? { boxShadow: 'inset 2px 0 0 0 var(--primary-color)' } : {}"
 						>
-							{{ p.command_line }}
-						</code>
+							<div
+								class="flex flex-wrap items-baseline gap-x-3 gap-y-1"
+								:style="{ paddingLeft: `${p.depth * 18}px` }"
+							>
+								<div class="flex min-w-0 grow items-baseline gap-2">
+									<span v-if="p.depth" class="text-tertiary shrink-0 select-none">└</span>
+									<Icon
+										:name="ProcIcon"
+										:size="13"
+										class="shrink-0 translate-y-0.5"
+										:class="p.isSample ? 'text-primary' : 'text-secondary'"
+									/>
+									<span
+										class="min-w-0 truncate font-mono text-xs font-medium"
+										:class="p.isSample ? 'text-primary' : 'text-default'"
+										:title="p.name"
+									>
+										{{ p.name || "(unknown)" }}
+									</span>
+								</div>
+								<span v-if="procMeta(p)" class="text-tertiary text-2xs shrink-0 font-mono">
+									{{ procMeta(p) }}
+								</span>
+							</div>
+							<code
+								v-if="p.command_line"
+								class="text-secondary text-2xs break-all"
+								:style="{ paddingLeft: `${p.depth * 18 + 20}px` }"
+							>
+								{{ p.command_line }}
+							</code>
+						</div>
+						<div v-if="!procRows.length" class="text-tertiary px-3 py-4 text-xs">
+							No process matches that filter.
+						</div>
 					</div>
 				</n-scrollbar>
 			</div>
 
 			<!-- Extracted payloads -->
 			<div v-if="sandbox.payloads?.length" class="flex flex-col gap-2">
-				<span class="text-secondary text-xs font-medium">
-					Extracted payloads ({{ sandbox.payloads.length }})
-				</span>
+				<span :class="LABEL">Extracted payloads ({{ sandbox.payloads.length }})</span>
 				<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
 					<div v-for="(p, i) of sandbox.payloads" :key="i" class="flex items-center gap-2 text-xs">
 						<n-tag v-if="p.type" size="tiny" round :bordered="false" type="info">{{ p.type }}</n-tag>
@@ -222,7 +265,7 @@
 
 			<!-- Dropped files -->
 			<div v-if="sandbox.dropped?.length" class="flex flex-col gap-2">
-				<span class="text-secondary text-xs font-medium">Dropped files ({{ sandbox.dropped.length }})</span>
+				<span :class="LABEL">Dropped files ({{ sandbox.dropped.length }})</span>
 				<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
 					<div v-for="(d, i) of sandbox.dropped" :key="i" class="flex items-center gap-2 text-xs">
 						<span v-if="d.name" class="font-medium">{{ d.name }}</span>
@@ -238,7 +281,7 @@
 				class="flex flex-col gap-2"
 			>
 				<div class="flex items-center justify-between">
-					<span class="text-secondary text-xs font-medium">Host activity — everything the sample did</span>
+					<span :class="LABEL">Host activity — everything the sample did</span>
 					<n-button v-if="jobId" text size="tiny" :loading="downloadingReport" @click="downloadReport">
 						<template #icon><Icon :name="DownloadIcon" :size="14" /></template>
 						Raw CAPE JSON (advanced)
@@ -299,7 +342,7 @@
 
 			<!-- Screenshots -->
 			<div v-if="sandbox.screenshots?.length" class="flex flex-col gap-2">
-				<span class="text-secondary text-xs font-medium">Screenshots</span>
+				<span :class="LABEL">Screenshots</span>
 				<n-image-group>
 					<div class="flex flex-wrap gap-2">
 						<n-image
@@ -350,6 +393,7 @@ import {
 import { computed, reactive, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{
 	sandbox?: SandboxSummary | null
@@ -360,6 +404,11 @@ const props = defineProps<{
 
 const message = useMessage()
 
+// Same label treatment as the summary card and the VirusTotal tab, so the three
+// surfaces read as one design.
+const LABEL = "text-secondary text-xs font-medium tracking-wider uppercase"
+
+const SearchIcon = "carbon:search"
 const SigIcon = "carbon:rule"
 const ProcIcon = "carbon:process"
 const DownloadIcon = "carbon:download"
@@ -400,6 +449,8 @@ function eventDetail(ev: { data?: Record<string, unknown> }): string {
 	const parts = Object.entries(d)
 		.filter(([, v]) => v != null && v !== "")
 		.map(([k, v]) => `${k}=${typeof v === "object" ? JSON.stringify(v) : v}`)
+
+	if (parts.length === 0) return "—"
 	return parts.join("  ")
 }
 
@@ -456,6 +507,11 @@ function looksLikeSample(cmd?: string): boolean {
 // Build a parent→child ordering from ppid. Processes whose parent isn't in the
 // captured set (very common — the parent is an OS service) render as roots, so
 // nothing is dropped; genuine parent/child pairs get indented under their parent.
+/** pid and ppid as one muted run — both locate the process, so both read alike. */
+function procMeta(p: TreeProc): string {
+	return [p.pid != null ? `pid ${p.pid}` : "", p.ppid != null ? `ppid ${p.ppid}` : ""].filter(Boolean).join(" · ")
+}
+
 const processTree = computed<TreeProc[]>(() => {
 	const procs = props.sandbox?.processes ?? []
 	const byPid = new Map<string, (typeof procs)[number]>()
@@ -509,6 +565,17 @@ const processTree = computed<TreeProc[]>(() => {
 	}
 	return out
 })
+
+const { query: procQuery, results: filteredProcesses } = useFuseFilter(
+	() => processTree.value,
+	["name", "command_line"]
+)
+
+// While filtering, rows are flattened: indentation that points at a parent the
+// filter removed describes a tree that is not on screen.
+const procRows = computed(() =>
+	procQuery.value.trim() ? filteredProcesses.value.map(p => ({ ...p, depth: 0 })) : filteredProcesses.value
+)
 
 const malscorePct = computed(() => Math.min(100, Math.max(0, (props.sandbox?.malscore ?? 0) * 10)))
 // Colour the ring by the VERDICT, not the raw malscore — a benign run can hit
