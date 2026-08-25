@@ -1,4 +1,6 @@
 import type {
+	BacktestRequest,
+	BacktestResponse,
 	BulkProvisionGraylogAlertRequest,
 	BulkProvisionGraylogAlertResponse,
 	ExecuteGraylogQueryRequest,
@@ -18,7 +20,9 @@ import type {
 	RulesByIdsRequest,
 	RulesByIdsResponse,
 	RulesByMitreQuery,
-	RuleStatsResponse
+	RuleStatsResponse,
+	ValidateRuleRequest,
+	ValidateRuleResponse
 } from "@/types/copilot-searches"
 import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
@@ -181,6 +185,22 @@ export default {
 	 */
 	executeSearch(request: ExecuteSearchRequest) {
 		return HttpClient.post<FlaskBaseResponse & ExecuteSearchResponse>(`/copilot_searches/execute`, request)
+	},
+
+	/**
+	 * L1 validation (schema + lint) of a Graylog-only detection-rule YAML.
+	 * Fast + offline — never touches Graylog/OpenSearch.
+	 */
+	validateRule(request: ValidateRuleRequest) {
+		return HttpClient.post<FlaskBaseResponse & ValidateRuleResponse>(`/copilot_searches/validate`, request)
+	},
+
+	/**
+	 * Backtest a Graylog-only rule against a customer's real Graylog data.
+	 * Graylog-only path — never touches OpenSearch. May take a few seconds.
+	 */
+	backtestRule(request: BacktestRequest) {
+		return HttpClient.post<FlaskBaseResponse & BacktestResponse>(`/copilot_searches/backtest`, request)
 	},
 
 	/**

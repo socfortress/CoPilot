@@ -15,6 +15,12 @@
 			tab-class="px-5!"
 			class="[&_.n-tabs-nav]:mx-auto [&_.n-tabs-nav]:min-w-70"
 		>
+			<template #suffix>
+				<n-button type="primary" size="small" @click="createRule">
+					<template #icon><Icon :name="AddIcon" :size="16" /></template>
+					Create rule
+				</n-button>
+			</template>
 			<n-tab-pane name="grid" tab="Rules" display-directive="show:lazy">
 				<GridView />
 			</n-tab-pane>
@@ -26,16 +32,22 @@
 </template>
 
 <script setup lang="ts">
-import { NAlert, NTabPane, NTabs } from "naive-ui"
+import { NAlert, NButton, NTabPane, NTabs } from "naive-ui"
 import { onMounted, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
+import Icon from "@/components/common/Icon.vue"
 import GridView from "./GridView/GridView.vue"
 import MatrixView from "./MatrixView/MatrixView.vue"
 
+const AddIcon = "carbon:add"
 const viewMode = ref<"grid" | "matrix">("grid")
 
 const route = useRoute()
 const router = useRouter()
+
+function createRule() {
+	router.push({ name: "CopilotSearchEditor" })
+}
 
 onMounted(() => {
 	const v = route.query.view

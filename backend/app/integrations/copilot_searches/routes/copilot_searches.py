@@ -8,6 +8,12 @@ from fastapi import Security
 from loguru import logger
 
 from app.auth.routes.auth import AuthHandler
+from app.integrations.copilot_searches.schema.copilot_searches import BacktestRequest
+from app.integrations.copilot_searches.schema.copilot_searches import BacktestResponse
+from app.integrations.copilot_searches.schema.copilot_searches import ValidateRuleRequest
+from app.integrations.copilot_searches.schema.copilot_searches import ValidateRuleResponse
+from app.integrations.copilot_searches.services.backtest import run_backtest
+from app.integrations.copilot_searches.services.rule_linter import lint_result
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from app.integrations.copilot_searches.schema.copilot_searches import (
@@ -1309,3 +1315,42 @@ async def run_catalog_logtest_endpoint(request: CatalogLogTestRequest) -> Catalo
         raise
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Failed to run logtest: {str(e)}")
+
+
+@copilot_searches_router.post(
+    "/validate",
+    response_model=ValidateRuleResponse,
+    description="L1 validation (schema + lint) of a Graylog-only detection rule YAML",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def validate_rule(request: ValidateRuleRequest) -> ValidateRuleResponse:
+    """Structure + lint a raw rule YAML (Graylog-only editor, layer 1).
+
+    Fast and fully offline — never touches Graylog or OpenSearch. Reference
+    integrity (L2), Graylog query parse (L3) and per-tenant field existence (L4)
+    are separate endpoints (see DETECTION_RULE_EDITOR.md).
+    """
+    return ValidateRuleResponse(**lint_result(request.yaml or ""))
+
+
+@copilot_searches_router.post(
+    "/backtest",
+    response_model=BacktestResponse,
+    description="Backtest a Graylog-only rule against a customer's real Graylog data",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def backtest_rule(request: BacktestRequest) -> BacktestResponse:
+    """Replay a rule's Graylog query over a tenant's stream and report what it would do.
+
+    Graylog-only path — never touches OpenSearch and never reuses /execute (wrong
+    engine + cross-tenant risk). Scopes strictly to the selected customer's Graylog
+    stream. Returns total hits, a per-bucket sparkline, sample events, a top-value
+    breakdown, and — for aggregation rules — a local sliding-window threshold
+    simulation (estimated alerts, top offenders, threshold sensitivity).
+    """
+    result = await run_backtest(
+        rule_yaml=request.yaml or "",
+        customer_code=request.customer_code,
+        range_seconds=request.range_seconds,
+    )
+    return BacktestResponse(**result)

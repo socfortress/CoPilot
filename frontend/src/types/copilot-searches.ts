@@ -311,3 +311,88 @@ export interface RulesByIdsResponse {
 	rules: RuleSummary[]
 	missing: string[]
 }
+
+// --- Detection rule editor: L1 validation (see DETECTION_RULE_EDITOR.md) ---
+export interface LintFinding {
+	level: "error" | "warning"
+	code: string
+	message: string
+	path?: string
+	line?: number | null
+}
+
+export interface ValidateRuleRequest {
+	yaml: string
+}
+
+export interface ValidateRuleResponse {
+	valid: boolean
+	error_count: number
+	warning_count: number
+	findings: LintFinding[]
+}
+
+// --- Detection rule editor: backtest (see DETECTION_RULE_EDITOR.md) ---
+export interface BacktestRequest {
+	yaml: string
+	customer_code: string
+	range_seconds?: number
+}
+
+export interface BacktestBucket {
+	bucket: string
+	count: number
+}
+
+export interface BacktestTopValue {
+	value: string
+	count: number
+}
+
+export interface BacktestOffender {
+	group: string
+	windows_alerting: number
+	peak: number
+}
+
+export interface BacktestSensitivity {
+	threshold: number
+	alerts: number
+}
+
+export interface BacktestAggregation {
+	window: string
+	window_seconds: number
+	function: string
+	field?: string | null
+	group_by: string[]
+	threshold: number
+	condition: string
+	estimated_alerts: number
+	per_day_alerts: number
+	top_offenders: BacktestOffender[]
+	sensitivity: BacktestSensitivity[]
+	truncated: boolean
+}
+
+export interface BacktestResponse {
+	success: boolean
+	message?: string
+	error?: string | null
+	mode?: "messages" | "aggregation" | null
+	customer_code?: string | null
+	stream_id?: string | null
+	range_seconds?: number | null
+	query?: string | null
+	total_hits: number
+	per_day_avg: number
+	fetched: number
+	truncated: boolean
+	per_bucket: BacktestBucket[]
+	bucket_unit?: string | null
+	samples: Record<string, unknown>[]
+	sample_fields: string[]
+	top_fields: Record<string, BacktestTopValue[]>
+	aggregation?: BacktestAggregation | null
+	note?: string | null
+}

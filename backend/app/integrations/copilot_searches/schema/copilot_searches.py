@@ -847,3 +847,103 @@ class CatalogLogTestResponse(BaseModel):
     # Free-form dict because Wazuh's shape varies per decoder type.
     alert: Optional[dict] = None
     unavailable_reason: Optional[str] = None
+
+
+# --- Detection rule editor: L1 validation (see DETECTION_RULE_EDITOR.md) -------
+class LintFinding(BaseModel):
+    """One L1 validation finding for a detection rule."""
+
+    level: str = Field(..., description="error | warning")
+    code: str
+    message: str
+    path: str = ""
+    line: Optional[int] = None
+
+
+class ValidateRuleRequest(BaseModel):
+    """Validate a raw Graylog-only rule YAML (editor + CI, layer 1)."""
+
+    yaml: str = Field(..., description="Full rule YAML to validate (Graylog-only format)")
+
+
+class ValidateRuleResponse(BaseModel):
+    success: bool = True
+    message: str = "Validation complete"
+    valid: bool
+    error_count: int
+    warning_count: int
+    findings: list[LintFinding] = Field(default_factory=list)
+
+
+# =============================================================================
+# Backtest (Graylog-only) — replay a rule against a tenant's real data
+# =============================================================================
+class BacktestRequest(BaseModel):
+    """Backtest a raw Graylog-only rule YAML against one customer's Graylog stream."""
+
+    yaml: str = Field(..., description="Full rule YAML to backtest (Graylog-only format)")
+    customer_code: str = Field(..., description="Customer to backtest against (scopes to their Graylog stream)")
+    range_seconds: int = Field(
+        default=604800,
+        ge=300,
+        le=2592000,
+        description="Relative look-back window in seconds (default 7d, max 30d).",
+    )
+
+
+class BacktestBucket(BaseModel):
+    bucket: str
+    count: int
+
+
+class BacktestTopValue(BaseModel):
+    value: str
+    count: int
+
+
+class BacktestOffender(BaseModel):
+    group: str
+    windows_alerting: int
+    peak: int
+
+
+class BacktestSensitivity(BaseModel):
+    threshold: int
+    alerts: int
+
+
+class BacktestAggregation(BaseModel):
+    window: str
+    window_seconds: int
+    function: str
+    field: Optional[str] = None
+    group_by: list[str] = Field(default_factory=list)
+    threshold: int
+    condition: str
+    estimated_alerts: int
+    per_day_alerts: float = 0.0
+    top_offenders: list[BacktestOffender] = Field(default_factory=list)
+    sensitivity: list[BacktestSensitivity] = Field(default_factory=list)
+    truncated: bool = False
+
+
+class BacktestResponse(BaseModel):
+    success: bool
+    message: str = ""
+    error: Optional[str] = None
+    mode: Optional[str] = None  # "messages" | "aggregation"
+    customer_code: Optional[str] = None
+    stream_id: Optional[str] = None
+    range_seconds: Optional[int] = None
+    query: Optional[str] = None
+    total_hits: int = 0
+    per_day_avg: float = 0.0
+    fetched: int = 0
+    truncated: bool = False
+    per_bucket: list[BacktestBucket] = Field(default_factory=list)
+    bucket_unit: Optional[str] = None
+    samples: list[dict] = Field(default_factory=list)
+    sample_fields: list[str] = Field(default_factory=list)
+    top_fields: dict[str, list[BacktestTopValue]] = Field(default_factory=dict)
+    aggregation: Optional[BacktestAggregation] = None
+    note: Optional[str] = None
