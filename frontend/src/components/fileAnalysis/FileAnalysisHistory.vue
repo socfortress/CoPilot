@@ -109,7 +109,7 @@
 						</Badge>
 						<Badge type="splitted" size="small">
 							<template #iconLeft><Icon :name="TimeIcon" :size="12" /></template>
-							<template #value>{{ when(it.created_at) }}</template>
+							<template #value>{{ formatDate(it.created_at, dFormats.datetimesec) }}</template>
 						</Badge>
 						<Badge type="splitted" size="small">
 							<template #label>sha256</template>
@@ -134,12 +134,15 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const props = defineProps<{ customerCode: string; refreshKey?: number }>()
 
 const router = useRouter()
 const message = useMessage()
+const dFormats = useSettingsStore().dateFormat
 
 const TrashIcon = "carbon:trash-can"
 const TimeIcon = "carbon:time"
@@ -228,13 +231,6 @@ function sourceLabel(source: string): string {
 	if (source === "flow") return "from flow"
 	if (source === "upload") return "uploaded"
 	return source || "—"
-}
-
-function when(iso: string): string {
-	if (!iso) return ""
-	const d = new Date(iso)
-	if (Number.isNaN(d.getTime())) return iso
-	return d.toLocaleString()
 }
 
 function open(it: FileAnalysisHistoryItem) {

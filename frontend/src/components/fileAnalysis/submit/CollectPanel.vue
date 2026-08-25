@@ -5,6 +5,20 @@
 			you pick which to collect and analyze.
 		</p>
 
+		<!-- Loud on purpose: a mocked endpoint list looks exactly like a real one, and
+		     mistaking one for the other during review is the whole risk here. -->
+		<n-alert v-if="USE_MOCK_COLLECT" type="warning" :bordered="false" class="text-sm">
+			<template #header>Mock data — no endpoint is being contacted</template>
+			Endpoints and file matches are fabricated locally so the selection flow can be exercised without a live
+			Velociraptor. Path keywords drive the outcome:
+			<b>one</b>
+			= single match,
+			<b>empty</b>
+			= no matches,
+			<b>fail</b>
+			= error. A backslash or drive letter yields Windows-style files.
+		</n-alert>
+
 		<n-select
 			v-model:value="selectedClientId"
 			:options="agentOptions"
@@ -60,38 +74,62 @@
 		</n-alert>
 
 		<!-- Match picker -->
-		<div v-if="searched" class="border-default flex flex-col gap-2 rounded-lg border p-3">
+		<div v-if="searched" class="border-default flex flex-col overflow-hidden rounded-lg border">
 			<template v-if="matches.length">
-				<div class="flex items-center justify-between">
-					<span class="text-sm font-medium">
-						{{ matches.length }} file{{ matches.length > 1 ? "s" : "" }} matched — pick what to analyze
+				<div class="border-default bg-secondary flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2">
+					<span class="text-secondary font-mono text-xs">
+						{{ matches.length }} match{{ matches.length > 1 ? "es" : "" }}
+						<template v-if="selectedPaths.length">
+							· {{ selectedPaths.length }} selected · {{ fmtBytes(selectedSize) }}
+						</template>
 					</span>
 					<n-button text size="tiny" @click="toggleAll()">
 						{{ allSelected ? "Clear" : "Select all" }}
 					</n-button>
 				</div>
-				<n-checkbox-group v-model:value="selectedPaths">
-					<div class="flex flex-col gap-1">
-						<n-checkbox v-for="m in matches" :key="m.path" :value="m.path">
-							<div class="flex items-baseline gap-2">
-								<span class="font-medium">{{ m.name }}</span>
-								<span class="text-secondary text-xs">{{ fmtBytes(m.size) }}</span>
-								<span class="text-secondary font-mono text-xs">{{ m.sha256.slice(0, 12) }}</span>
-								<span class="text-secondary truncate text-xs opacity-70">{{ m.path }}</span>
+
+				<n-checkbox-group v-model:value="selectedPaths" class="flex flex-col">
+					<n-checkbox
+						v-for="m in matches"
+						:key="m.path"
+						:value="m.path"
+						class="match-row"
+						:class="{ 'is-selected': selectedPaths.includes(m.path) }"
+					>
+						<div class="flex min-w-0 flex-col gap-0.5">
+							<!-- Name and the technical columns share a wrapping row, so the size
+							     and hash drop under the name instead of squeezing it. -->
+							<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+								<Icon :name="iconForFile(m.name)" :size="15" class="text-secondary shrink-0" />
+								<span class="text-default min-w-0 grow basis-40 truncate text-sm font-medium">
+									{{ m.name }}
+								</span>
+								<span class="text-tertiary shrink-0 font-mono text-xs tabular-nums">
+									{{ fmtBytes(m.size) }}
+								</span>
+								<span class="text-tertiary shrink-0 font-mono text-xs">{{ m.sha256.slice(0, 12) }}</span>
 							</div>
-						</n-checkbox>
-					</div>
+							<!-- Full path on its own line: it is the longest field and the one that
+							     disambiguates two files sharing a name. -->
+							<span class="text-tertiary truncate font-mono text-2xs" :title="m.path">{{ m.path }}</span>
+						</div>
+					</n-checkbox>
 				</n-checkbox-group>
-				<n-button
-					type="primary"
-					:disabled="!selectedPaths.length || submitting"
-					:loading="submitting"
-					@click="analyzeSelected()"
-				>
-					Analyze selected ({{ selectedPaths.length }})
-				</n-button>
+
+				<div class="border-default border-t p-3">
+					<n-button
+						type="primary"
+						block
+						:disabled="!selectedPaths.length || submitting"
+						:loading="submitting"
+						@click="analyzeSelected()"
+					>
+						Analyze selected ({{ selectedPaths.length }})
+					</n-button>
+				</div>
 			</template>
-			<n-empty v-else size="small" description="No files matched that path on this endpoint." />
+
+			<n-empty v-else size="small" description="No files matched that path on this endpoint." class="py-6" />
 		</div>
 	</div>
 </template>
@@ -105,6 +143,7 @@ import { NAlert, NButton, NCheckbox, NCheckboxGroup, NEmpty, NInput, NSelect, us
 import { computed, h, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { mockEnumerate, mockListAgents, mockSubmit, USE_MOCK_COLLECT } from "@/components/fileAnalysis/submit/mock"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{ customerCode: string | null; sandbox: boolean; vtMode: ReputationMode }>()
@@ -140,6 +179,10 @@ const agentOptions = computed<SelectOption[]>(() =>
 )
 
 const allSelected = computed(() => matches.value.length > 0 && selectedPaths.value.length === matches.value.length)
+
+const selectedSize = computed(() =>
+	matches.value.filter(m => selectedPaths.value.includes(m.path)).reduce((sum, m) => sum + m.size, 0)
+)
 
 // Agents are listed per-customer, so a customer change invalidates the endpoint,
 // the match list and the selection alike.
@@ -195,6 +238,49 @@ function renderAgentLabel(option: SelectOption): VNodeChild {
 	])
 }
 
+// Extension → icon. Scanning collected files is mostly asking "which of these is
+// executable content", so the families that answer that get their own glyph and
+// everything else falls back to a plain document.
+const FILE_ICONS: Record<string, string> = {
+	exe: "carbon:executable-program",
+	dll: "carbon:executable-program",
+	sys: "carbon:executable-program",
+	elf: "carbon:executable-program",
+	so: "carbon:executable-program",
+	bin: "carbon:executable-program",
+	ps1: "carbon:script",
+	sh: "carbon:script",
+	bat: "carbon:script",
+	cmd: "carbon:script",
+	py: "carbon:script",
+	js: "carbon:script",
+	vbs: "carbon:script",
+	hta: "carbon:script",
+	zip: "carbon:archive",
+	"7z": "carbon:archive",
+	rar: "carbon:archive",
+	gz: "carbon:archive",
+	tar: "carbon:archive",
+	cab: "carbon:archive",
+	pdf: "carbon:document-pdf",
+	png: "carbon:image",
+	jpg: "carbon:image",
+	jpeg: "carbon:image",
+	gif: "carbon:image",
+	svg: "carbon:image",
+	bmp: "carbon:image",
+	txt: "carbon:document-blank",
+	log: "carbon:document-blank",
+	csv: "carbon:document-blank",
+	json: "carbon:code",
+	xml: "carbon:code"
+}
+
+function iconForFile(name: string): string {
+	const ext = name.split(".").pop()?.toLowerCase() || ""
+	return FILE_ICONS[ext] || "carbon:document"
+}
+
 function toggleAll() {
 	selectedPaths.value = allSelected.value ? [] : matches.value.map(m => m.path)
 }
@@ -205,6 +291,14 @@ function loadAgents() {
 		return
 	}
 	agentsLoading.value = true
+
+	if (USE_MOCK_COLLECT) {
+		mockListAgents()
+			.then(list => (agents.value = list))
+			.finally(() => (agentsLoading.value = false))
+		return
+	}
+
 	Api.fileAnalysis
 		.listAgents(props.customerCode)
 		.then(res => {
@@ -226,6 +320,22 @@ function findFiles() {
 	if (!props.customerCode || !selectedClientId.value || !targetPath.value) return
 	finding.value = true
 	findError.value = null
+
+	if (USE_MOCK_COLLECT) {
+		mockEnumerate(targetPath.value)
+			.then(list => {
+				matches.value = list
+				searched.value = true
+				selectedPaths.value = list.length === 1 ? [list[0].path] : []
+			})
+			.catch(err => {
+				searched.value = false
+				findError.value = (err as Error).message
+			})
+			.finally(() => (finding.value = false))
+		return
+	}
+
 	Api.fileAnalysis
 		.enumerateFiles({
 			customer_code: props.customerCode,
@@ -250,6 +360,19 @@ async function analyzeSelected() {
 	if (!props.customerCode || !selectedClientId.value || !selectedPaths.value.length) return
 	submitting.value = true
 	try {
+		// Mocked submission stops here on purpose: emitting would navigate to a job
+		// id the backend has never heard of, and the result view would poll a 404.
+		// What is worth checking at this point is the payload, so it is reported
+		// instead. Swap the message for `emit("started", ids)` to exercise routing.
+		if (USE_MOCK_COLLECT) {
+			const ids = await mockSubmit(selectedPaths.value)
+			const tiers = props.sandbox ? "static + dynamic" : "static only"
+			message.info(
+				`Mock: would start ${ids.length} analysis/analyses — tiers: ${tiers}, VirusTotal: ${props.vtMode}.`
+			)
+			return
+		}
+
 		// One submit per file: a single unreadable path must not sink the batch.
 		const results = await Promise.all(
 			selectedPaths.value.map(path =>
@@ -282,3 +405,40 @@ async function analyzeSelected() {
 	}
 }
 </script>
+
+<style scoped lang="scss">
+.match-row {
+	display: flex;
+	align-items: flex-start;
+	width: 100%;
+	padding: 0.5rem 0.75rem;
+	// Transparent rather than absent, so selecting a row does not shift its text.
+	box-shadow: inset 3px 0 0 0 transparent;
+	transition:
+		box-shadow 0.15s ease,
+		background-color 0.15s ease;
+
+	// Naive lays a checkbox out inline; the label has to become a full-width block
+	// for the name to truncate instead of pushing the technical columns off-row.
+	:deep(.n-checkbox__label) {
+		width: 100%;
+		min-width: 0;
+		padding-left: 0.5rem;
+	}
+
+	& + .match-row {
+		border-top: 1px solid var(--border-color);
+	}
+
+	&:hover {
+		background-color: var(--hover-005-color);
+	}
+
+	// Same accent language as the analysis-phase rows: a left rule means
+	// "this is in the plan".
+	&.is-selected {
+		box-shadow: inset 3px 0 0 0 var(--primary-color);
+		background-color: color-mix(in srgb, var(--primary-color) 4%, transparent);
+	}
+}
+</style>
