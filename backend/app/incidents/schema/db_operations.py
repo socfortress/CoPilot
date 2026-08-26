@@ -124,6 +124,28 @@ class UpdateAlertStatus(BaseModel):
     status: AlertStatus
 
 
+class BulkUpdateAlertStatus(BaseModel):
+    """Apply one status to many alerts (GitHub issue #1098)."""
+
+    alert_ids: List[int]
+    status: AlertStatus
+
+
+class BulkAlertUpdateResponse(BaseModel):
+    """Outcome of a bulk alert mutation.
+
+    Mirrors ``DeleteAlertsResponse``: a per-alert failure (missing alert, or a
+    customer the caller is not entitled to) is reported as a skipped id rather
+    than failing the whole request, so one inaccessible alert in a selection of
+    fifty does not discard the other forty-nine.
+    """
+
+    message: str
+    updated_alert_ids: List[int]
+    not_updated_alert_ids: List[int]
+    success: bool
+
+
 class AlertVerdict(str, Enum):
     """Analyst triage verdict. The absence of a verdict (NULL on the alert) is a third,
     meaningful state -- "not yet triaged" -- and is represented by omitting the value
@@ -302,6 +324,13 @@ class FieldAndAssetNamesResponse(BaseModel):
 
 class AssignedToAlert(BaseModel):
     alert_id: int
+    assigned_to: str
+
+
+class BulkAssignedToAlert(BaseModel):
+    """Assign many alerts to one user (GitHub issue #1098)."""
+
+    alert_ids: List[int]
     assigned_to: str
 
 
