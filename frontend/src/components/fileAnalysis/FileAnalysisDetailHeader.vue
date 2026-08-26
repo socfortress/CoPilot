@@ -11,7 +11,7 @@
 				     not the edge one. Leading also matches how the page is read: what
 				     the file turned out to be, then which file it was. -->
 				<n-tag :type="verdictTagType" size="medium" round :bordered="false" class="shrink-0">
-					<template #icon><Icon :name="verdictIcon" :size="14" /></template>
+					<template #icon><Icon :name="verdictIcon" :size="14" class="ml-1" /></template>
 					<span class="capitalize">{{ verdict }}</span>
 				</n-tag>
 

@@ -86,6 +86,7 @@ import { resolveActiveTab } from "@/components/fileAnalysis/fileAnalysis.helpers
 import FileAnalysisBatchList from "@/components/fileAnalysis/FileAnalysisBatchList.vue"
 import FileAnalysisDetailHeader from "@/components/fileAnalysis/FileAnalysisDetailHeader.vue"
 import FileAnalysisOverview from "@/components/fileAnalysis/FileAnalysisOverview.vue"
+import { MOCK_JOB_ID, mockJob, mockResult, USE_MOCK_ANALYSIS } from "@/components/fileAnalysis/mock-analysis"
 import { getApiErrorMessage } from "@/utils"
 
 // Route state arrives as props: the view owns the URL, this component owns one
@@ -241,6 +242,15 @@ function start() {
 	pollCount = 0
 	tabPinnedByUser.value = false
 	if (!props.jobId) return
+
+	// Dev fixture: one job id renders a fully-populated analysis so every panel on
+	// this page can be reviewed at once. No real sample fills them all.
+	if (USE_MOCK_ANALYSIS && props.jobId === MOCK_JOB_ID) {
+		job.value = mockJob()
+		result.value = mockResult()
+		return
+	}
+
 	fetchJob()
 	pollTimer = setInterval(fetchJob, POLL_MS)
 }

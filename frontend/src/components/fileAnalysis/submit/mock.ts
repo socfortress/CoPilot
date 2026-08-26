@@ -15,7 +15,11 @@
 
 import type { FileAnalysisAgent, FileAnalysisMatch } from "@/types/file-analysis"
 
-export const USE_MOCK_COLLECT = false // import.meta.env.DEV
+/** The switch. Currently off: the panel talks to the real backend. */
+const MOCK_COLLECT_ENABLED = false
+
+/** DEV-guarded as well, so it can never serve data from a production build. */
+export const USE_MOCK_COLLECT = import.meta.env.DEV && MOCK_COLLECT_ENABLED
 
 /** Stand-in latency, so loading states and disabled-while-busy actually show. */
 const LATENCY_MS = 600

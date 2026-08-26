@@ -1,15 +1,21 @@
 <template>
 	<div class="flex flex-col gap-3">
 		<n-spin :show="loading || loadingPreviews">
-			<div v-if="images.length" class="preview-grid grid gap-3">
-				<n-image
-					v-for="(src, i) of images"
-					:key="i"
-					:src
-					class="border-default overflow-hidden rounded-lg border"
-					object-fit="contain"
-				/>
-			</div>
+			<!-- n-image-group, not bare n-image: the lightbox then knows about the whole
+			     page set, so a multi-page document is paged through with the arrows
+			     instead of closing and reopening one page at a time. -->
+			<n-image-group v-if="images.length">
+				<div class="preview-grid grid gap-3">
+					<n-image
+						v-for="(src, i) of images"
+						:key="i"
+						:src
+						:alt="previewNames[i] || `page ${i + 1}`"
+						class="border-default overflow-hidden rounded-lg border"
+						object-fit="contain"
+					/>
+				</div>
+			</n-image-group>
 			<n-empty
 				v-else-if="!loading"
 				description="No page previews — this file type has no rendered pages (e.g. an executable), or Tier 1 is still running."
@@ -21,9 +27,10 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import { NEmpty, NImage, NSpin, useMessage } from "naive-ui"
+import { NEmpty, NImage, NImageGroup, NSpin, useMessage } from "naive-ui"
 import { onBeforeUnmount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
+import { MOCK_JOB_ID, mockPreview, USE_MOCK_ANALYSIS } from "@/components/fileAnalysis/mock-analysis"
 import { getApiErrorMessage } from "@/utils"
 
 // Renders authenticated PNG previews as object URLs — the browser never receives
@@ -79,6 +86,13 @@ async function loadPreviews() {
 				const ck = `${jid}::${name}`
 				const hit = BLOB_CACHE.get(ck)
 				if (hit) return hit
+				// The dev fixture has no server side; it draws its own pages so this tab
+				// still exercises the real fetch → object-URL → revoke path.
+				if (USE_MOCK_ANALYSIS && jid === MOCK_JOB_ID) {
+					const blob = await mockPreview(name)
+					cachePut(ck, blob)
+					return blob
+				}
 				try {
 					const res = await Api.fileAnalysis.getPreview(jid, name)
 					cachePut(ck, res.data)

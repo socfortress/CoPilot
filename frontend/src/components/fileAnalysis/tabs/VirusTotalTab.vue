@@ -92,11 +92,11 @@
 			</div>
 
 			<!-- VT sandbox behaviour — the detonation stand-in when our own sandbox is offline -->
-			<div v-if="intel.behaviour" class="border-default flex flex-col overflow-hidden rounded-lg border">
-				<div class="border-default bg-secondary flex flex-wrap items-center gap-2 border-b px-4 py-2">
+			<CollapsibleCard v-if="intel.behaviour">
+				<template #header>
 					<span :class="LABEL">Behaviour observed by VirusTotal's sandboxes</span>
 					<n-tag size="tiny" round :bordered="false" type="info">no local detonation needed</n-tag>
-				</div>
+				</template>
 
 				<div class="flex flex-col gap-4 p-4">
 					<!-- Rows, not pills: a technique id is an identifier and its description
@@ -218,16 +218,14 @@
 						<IocList label="Mutexes" :items="intel.behaviour.mutexes" mono />
 					</div>
 				</div>
-			</div>
+			</CollapsibleCard>
 
 			<!-- Crowdsourced detection rules -->
 			<!-- Same card shape as the Behaviour block: a header band carrying the label,
 			     the count and the filter, then the rows. Loose labels floating above bare
 			     boxes were what made this tab read as a pile of fragments. -->
-			<div v-if="intel.yara?.length" class="border-default flex flex-col overflow-hidden rounded-lg border">
-				<div
-					class="border-default bg-secondary flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2"
-				>
+			<CollapsibleCard v-if="intel.yara?.length">
+				<template #header>
 					<span :class="LABEL">
 						Crowdsourced YARA
 						<span class="text-tertiary normal-case">
@@ -243,7 +241,7 @@
 					>
 						<template #prefix><Icon :name="SearchIcon" :size="13" /></template>
 					</n-input>
-				</div>
+				</template>
 				<div>
 					<n-scrollbar style="max-height: 18rem">
 						<div class="divide-border flex flex-col divide-y">
@@ -280,15 +278,15 @@
 						</div>
 					</n-scrollbar>
 				</div>
-			</div>
+			</CollapsibleCard>
 
-			<div v-if="intel.sigma?.length" class="border-default flex flex-col overflow-hidden rounded-lg border">
-				<div class="border-default bg-secondary border-b px-4 py-2">
+			<CollapsibleCard v-if="intel.sigma?.length">
+				<template #header>
 					<span :class="LABEL">
 						Sigma matches
 						<span class="text-tertiary normal-case">({{ intel.sigma.length }})</span>
 					</span>
-				</div>
+				</template>
 				<n-scrollbar style="max-height: 18rem">
 					<div class="divide-border flex flex-col divide-y">
 						<div
@@ -304,15 +302,15 @@
 						</div>
 					</div>
 				</n-scrollbar>
-			</div>
+			</CollapsibleCard>
 
-			<div v-if="intel.ids?.length" class="border-default flex flex-col overflow-hidden rounded-lg border">
-				<div class="border-default bg-secondary border-b px-4 py-2">
+			<CollapsibleCard v-if="intel.ids?.length">
+				<template #header>
 					<span :class="LABEL">
 						IDS/IPS alerts
 						<span class="text-tertiary normal-case">({{ intel.ids.length }})</span>
 					</span>
-				</div>
+				</template>
 				<n-scrollbar style="max-height: 18rem">
 					<div class="divide-border flex flex-col divide-y">
 						<div
@@ -328,7 +326,7 @@
 						</div>
 					</div>
 				</n-scrollbar>
-			</div>
+			</CollapsibleCard>
 
 			<!-- Per-engine detections (collapsed by default; can be long) -->
 			<n-collapse v-if="intel.detections?.length">
@@ -385,6 +383,7 @@ import type { FileAnalysisReputation } from "@/types/file-analysis"
 import { NCollapse, NCollapseItem, NEmpty, NInput, NProgress, NScrollbar, NTag } from "naive-ui"
 import { computed, h } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import CollapsibleCard from "@/components/fileAnalysis/CollapsibleCard.vue"
 import { iconForFile, useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{ reputation?: FileAnalysisReputation | null; loading?: boolean }>()

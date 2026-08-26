@@ -6,18 +6,23 @@
 			class="min-h-52 justify-center"
 		/>
 
-		<!-- Flags row -->
-		<div v-if="result?.flags?.length" class="flex flex-wrap items-center gap-2">
-			<n-tag
-				v-for="flag of result.flags"
-				:key="flag"
-				:type="flag === 'analysis_incomplete' ? 'default' : 'warning'"
-				size="small"
-				round
-				:bordered="false"
-			>
-				{{ flag.replaceAll("_", " ") }}
-			</n-tag>
+		<!-- Signals: same name the summary card gives these flags, and the same
+		     label-above-tags shape as the other tag groups on this tab. A bare row of
+		     tags did not say what they were. -->
+		<div v-if="result?.flags?.length" class="flex flex-col gap-2">
+			<span :class="LABEL">Signals</span>
+			<div class="flex flex-wrap items-center gap-2">
+				<n-tag
+					v-for="flag of result.flags"
+					:key="flag"
+					:type="flag === 'analysis_incomplete' ? 'default' : 'warning'"
+					size="small"
+					round
+					:bordered="false"
+				>
+					{{ flag.replaceAll("_", " ") }}
+				</n-tag>
+			</div>
 		</div>
 
 		<!-- Scripts: raw + deobfuscated side by side -->
@@ -32,11 +37,20 @@
 
 		<!-- Macro source -->
 		<div v-if="content.macros" class="flex flex-col gap-2">
-			<div v-if="content.autoexec_keywords?.length" class="flex flex-wrap gap-2">
-				<span class="text-secondary text-xs">Auto-exec:</span>
-				<n-tag v-for="k of content.autoexec_keywords" :key="k" type="error" size="tiny" round :bordered="false">
-					{{ k }}
-				</n-tag>
+			<div v-if="content.autoexec_keywords?.length" class="flex flex-col gap-2">
+				<span :class="LABEL">Auto-exec triggers</span>
+				<div class="flex flex-wrap gap-2">
+					<n-tag
+						v-for="k of content.autoexec_keywords"
+						:key="k"
+						type="error"
+						size="small"
+						round
+						:bordered="false"
+					>
+						{{ k }}
+					</n-tag>
+				</div>
 			</div>
 			<CodeBlock title="Macro source (VBA)" :code="content.macros" />
 		</div>
@@ -51,25 +65,27 @@
 		<!-- Extracted document text (PDF visible text) -->
 		<CodeBlock v-if="content.text" title="Extracted text" :code="content.text" />
 
-		<!-- LNK -->
-		<div v-if="content.arguments || content.target" class="bg-secondary flex flex-col gap-1 rounded-lg p-3 text-sm">
-			<div v-if="content.target">
-				<span class="text-secondary">Target:</span>
-				<code>{{ content.target }}</code>
+		<!-- Shortcut target: label/value rows in a card, matching the other detail
+		     surfaces. Inline "Target:" + <code> put the label and the path on one
+		     baseline at two different treatments, so nothing lined up between rows. -->
+		<div
+			v-if="content.arguments || content.target"
+			class="border-default flex flex-col overflow-hidden rounded-lg border"
+		>
+			<div class="border-default bg-secondary border-b px-4 py-2">
+				<span :class="LABEL">Shortcut target</span>
 			</div>
-			<div v-if="content.arguments">
-				<span class="text-secondary">Arguments:</span>
-				<code>{{ content.arguments }}</code>
-			</div>
-			<div v-if="content.working_dir">
-				<span class="text-secondary">Working dir:</span>
-				<code>{{ content.working_dir }}</code>
+			<div class="divide-border flex flex-col divide-y">
+				<div v-for="row of lnkRows" :key="row.label" class="flex flex-wrap items-baseline gap-x-3 px-4 py-2">
+					<span class="text-tertiary w-28 shrink-0 font-mono text-xs">{{ row.label }}</span>
+					<span class="text-default min-w-0 font-mono text-xs break-all">{{ row.value }}</span>
+				</div>
 			</div>
 		</div>
 
 		<!-- PE capabilities -->
 		<div v-if="content.capabilities?.length" class="flex flex-col gap-2">
-			<span class="text-secondary text-xs font-medium">Capabilities (capa)</span>
+			<span :class="LABEL">Capabilities (capa)</span>
 			<div class="flex flex-wrap gap-2">
 				<n-tag v-for="c of content.capabilities" :key="c" size="small" round :bordered="false">{{ c }}</n-tag>
 			</div>
@@ -85,7 +101,20 @@ import CodeBlock from "../CodeBlock.vue"
 
 const props = defineProps<{ result?: InspectorResult | null; loading?: boolean }>()
 
+// Same label treatment as the summary card and the other tabs, so the module
+// reads as one design rather than a per-tab decision.
+const LABEL = "text-secondary text-xs font-medium tracking-wider uppercase"
+
 const content = computed<InspectorContent>(() => props.result?.content ?? {})
+
+const lnkRows = computed(() =>
+	[
+		{ label: "target", value: content.value.target },
+		{ label: "arguments", value: content.value.arguments },
+		{ label: "working dir", value: content.value.working_dir },
+		{ label: "icon", value: content.value.icon_location }
+	].filter((r): r is { label: string; value: string } => Boolean(r.value))
+)
 
 const hasAnyContent = computed(() =>
 	Boolean(

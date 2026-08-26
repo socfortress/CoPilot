@@ -20,9 +20,15 @@
 			<div v-if="result.content?.strings?.length" class="flex flex-col gap-2">
 				<span class="text-secondary text-xs font-medium">Strings ({{ result.content.strings.length }})</span>
 				<n-scrollbar class="bg-secondary max-h-80 rounded-lg p-3">
-					<code v-for="(s, i) of result.content.strings" :key="i" class="block text-xs break-all">
-						{{ s }}
-					</code>
+					<div class="flex flex-col gap-2">
+						<code
+							v-for="(s, i) of result.content.strings"
+							:key="i"
+							class="block px-2 py-1 text-xs break-all"
+						>
+							{{ s }}
+						</code>
+					</div>
 				</n-scrollbar>
 			</div>
 
