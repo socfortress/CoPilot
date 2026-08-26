@@ -898,6 +898,12 @@ async def update_assigned_to_endpoint(
     if assigned_to.assigned_to not in user_names:
         raise HTTPException(status_code=400, detail="User does not exist")
 
+    # Enforce per-object ownership, as the sibling `/alert/status` and `/alert/verdict`
+    # routes do. Without it an analyst scoped to one customer could reassign another
+    # customer's alerts, and the notification emitted below would carry that alert's
+    # title, customer code and severity to whichever route is listening (#1099).
+    await _ensure_alert_access(assigned_to.alert_id, current_user, db)
+
     # Read the current assignee BEFORE the mutation: the notification below only
     # fires on an actual change, so rewriting the same value stays silent.
     existing = await db.execute(select(Alert).where(Alert.id == assigned_to.alert_id))
@@ -1637,32 +1643,52 @@ async def delete_alert_endpoint(
     response_model=DeleteAlertsResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def delete_alerts_endpoint(request: DeleteAlertsRequest, db: AsyncSession = Depends(get_db)):
+async def delete_alerts_endpoint(
+    request: DeleteAlertsRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     """
     Endpoint to delete alerts.
 
     This endpoint deletes alerts based on the provided list of alert IDs. If an alert is linked to a case, it will not be deleted and will be skipped.
 
+    Access is checked per alert (#1099). The route is scoped `admin|analyst`, but an
+    analyst is not necessarily deployment-wide -- `user_customer_access` narrows one to
+    specific customers -- and this route previously took no `current_user` at all, so
+    anyone holding the scope could delete any tenant's alerts by passing their ids.
+    Deletion is unrecoverable and alert ids are sequential, which made that worth
+    closing even without a report.
+
+    A denied alert is skipped rather than 403ing the request, keeping the partial-success
+    contract the UI already renders and matching how case-linked alerts are handled. It
+    also avoids confirming which ids exist inside a tenant the caller cannot see.
+
     Args:
         request (DeleteAlertsRequest): Request object containing the list of alert IDs to be deleted.
+        current_user (User): The authenticated caller, used for the per-alert access check.
         db (AsyncSession, optional): Database session dependency.
 
     Returns:
         DeleteAlertsResponse: Response object containing the status of the deletion process, including lists of successfully deleted alert IDs and those that were not deleted.
 
     Raises:
-        HTTPException: If an error occurs during the deletion process that is not related to an alert being linked to a case.
+        HTTPException: If an error occurs during the deletion process that is not related to an alert being linked to a case, missing, or inaccessible.
     """
     deleted_alert_ids = []
     not_deleted_alert_ids = []
     for alert_id in request.alert_ids:
         try:
+            await _ensure_alert_access(alert_id, current_user, db)
             await is_alert_linked_to_case(alert_id, db)
             await delete_alert(alert_id, db)
             deleted_alert_ids.append(alert_id)
         except HTTPException as e:
-            if e.status_code == 400:
-                logger.info(f"Alert {alert_id} is linked to a case and cannot be deleted. Skipping.")
+            # 400 linked to a case, 403 not the caller's customer, 404 already gone --
+            # all three are "skip this one and carry on". Anything else is unexpected
+            # and still fails the request loudly.
+            if e.status_code in (400, 403, 404):
+                logger.info(f"Alert {alert_id} skipped in bulk delete: {e.detail}")
                 not_deleted_alert_ids.append(alert_id)
             else:
                 raise e
