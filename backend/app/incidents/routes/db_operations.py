@@ -571,7 +571,15 @@ async def delete_alert_title_name_endpoint(alert_title_name: str, source: str, d
     response_model=Alert,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def create_alert_endpoint(alert: AlertCreate, db: AsyncSession = Depends(get_db)):
+async def create_alert_endpoint(
+    alert: AlertCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    # `customer_code` is taken from the request body, so it has to be asserted
+    # against the caller's entitlements the way `/case/create` does -- otherwise a
+    # scoped analyst can file an alert against any tenant (#1102).
+    await _ensure_customer_access(alert.customer_code, current_user, db)
     return await create_alert(alert, db)
 
 
@@ -1050,7 +1058,13 @@ async def get_alert_context_by_id_endpoint(alert_context_id: int, db: AsyncSessi
     response_model=AssetResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def create_asset_endpoint(asset: AssetCreate, db: AsyncSession = Depends(get_db)):
+async def create_asset_endpoint(
+    asset: AssetCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    # `alert_linked` is this schema's name for the alert id (#1102).
+    await _ensure_alert_access(asset.alert_linked, current_user, db)
     return AssetResponse(asset=await create_asset(asset, db), success=True, message="Asset created successfully")
 
 
@@ -1059,7 +1073,12 @@ async def create_asset_endpoint(asset: AssetCreate, db: AsyncSession = Depends(g
     response_model=AlertIoCResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def create_alert_ioc_endpoint(ioc: AlertIoCCreate, db: AsyncSession = Depends(get_db)):
+async def create_alert_ioc_endpoint(
+    ioc: AlertIoCCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await _ensure_alert_access(ioc.alert_id, current_user, db)
     return AlertIoCResponse(alert_ioc=await create_alert_ioc(ioc, db), success=True, message="Alert IoC created successfully")
 
 
@@ -1119,7 +1138,12 @@ async def list_alerts_by_ioc_value_endpoint(
     response_model=AlertIoCResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def delete_alert_ioc_endpoint(ioc: AlertIoCDelete, db: AsyncSession = Depends(get_db)):
+async def delete_alert_ioc_endpoint(
+    ioc: AlertIoCDelete,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await _ensure_alert_access(ioc.alert_id, current_user, db)
     return AlertIoCResponse(
         alert_ioc=await delete_alert_ioc(ioc=ioc, db=db),
         success=True,
@@ -1132,7 +1156,12 @@ async def delete_alert_ioc_endpoint(ioc: AlertIoCDelete, db: AsyncSession = Depe
     response_model=AlertTagResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def create_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession = Depends(get_db)):
+async def create_alert_tag_endpoint(
+    alert_tag: AlertTagCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await _ensure_alert_access(alert_tag.alert_id, current_user, db)
     return AlertTagResponse(alert_tag=await create_alert_tag(alert_tag, db), success=True, message="Alert tag created successfully")
 
 
@@ -1193,7 +1222,16 @@ async def list_alerts_by_tag_endpoint(
     response_model=AlertTagResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def delete_alert_tag_endpoint(alert_tag: AlertTagDelete, db: AsyncSession = Depends(get_db)):
+async def delete_alert_tag_endpoint(
+    alert_tag: AlertTagDelete,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    # Tags are not just labels: `user_tag_access` / `role_tag_access` gate which
+    # alerts a user can see when tag ACLs are enabled, so removing the tag that
+    # scopes an alert changes who can see it. That makes an unscoped tag delete an
+    # access-control mutation rather than a cosmetic one (#1102).
+    await _ensure_alert_access(alert_tag.alert_id, current_user, db)
     return AlertTagResponse(
         alert_tag=await delete_alert_tag(alert_tag.alert_id, alert_tag.tag_id, db),
         success=True,
@@ -1297,6 +1335,17 @@ async def create_case_alert_links_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # Both ends, as the single-alert `/case/alert-link` route does (#1102): the case
+    # once for the request, then every alert being attached.
+    #
+    # Unlike bulk delete, a denied alert fails the request rather than being skipped.
+    # There is no partial-success shape in this response to report a skip through, and
+    # the caller builds the list from alerts it can already see -- so a denial here means
+    # a bug or a probe, not an ordinary mixed selection.
+    await _ensure_case_access(case_alert_links.case_id, current_user, db)
+    for alert_id in case_alert_links.alert_ids:
+        await _ensure_alert_access(alert_id, current_user, db)
+
     links = await create_case_alert_links_bulk(case_alert_links, db, actor=current_user.username)
 
     from app.incidents.schema.case_templates import CaseEventType
