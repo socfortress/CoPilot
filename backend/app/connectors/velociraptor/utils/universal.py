@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 from typing import Any
 from typing import Dict
@@ -18,6 +19,33 @@ from app.connectors.velociraptor.utils.validation import validate_hostname
 from app.connectors.velociraptor.utils.validation import validate_org_id
 from app.db.db_session import AsyncSessionLocal
 from app.db.db_session import get_db_session
+
+
+def _timeout_seconds(name: str, default: int) -> int:
+    """Read a gRPC deadline from the environment, falling back to `default`."""
+    raw = os.getenv(name, str(default))
+    try:
+        parsed = int(raw)
+    except ValueError:
+        logger.warning(f"{name}={raw!r} is not an integer; falling back to {default}s")
+        return default
+    if parsed <= 0:
+        logger.warning(f"{name}={parsed} is not a positive number of seconds; falling back to {default}s")
+        return default
+    return parsed
+
+
+# Ordinary VQL — listing clients, resolving a client_id, reading collection results.
+# These talk to the Velociraptor server's own datastore and should answer quickly; a
+# slow one means the server is unwell, and waiting minutes on it just moves the failure.
+QUERY_TIMEOUT_SECONDS = _timeout_seconds("VELOCIRAPTOR_QUERY_TIMEOUT", 30)
+
+# Waiting for a *flow* to finish is a different kind of wait: the deadline has to cover
+# however long the endpoint takes to run the artifact, which for anything touching disk
+# is routinely minutes rather than seconds. Sharing the 30s query deadline meant a
+# perfectly healthy collection failed with DEADLINE_EXCEEDED while it was still running
+# (the flow completed server-side; only CoPilot gave up), which is what this splits.
+FLOW_TIMEOUT_SECONDS = _timeout_seconds("VELOCIRAPTOR_FLOW_TIMEOUT", 300)
 
 
 async def verify_velociraptor_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -173,23 +201,28 @@ class UniversalService:
             ],
         )
 
-    def execute_query(self, vql: str, org_id: str = "root"):
+    def execute_query(self, vql: str, org_id: str = "root", timeout: int = None):
         """
         Executes a VQL query and returns the results.
 
         Args:
             vql (str): The VQL query to be executed.
+            org_id (str): The Velociraptor org to run against.
+            timeout (int, optional): gRPC deadline in seconds. Defaults to
+                `QUERY_TIMEOUT_SECONDS`; callers that wait on a flow pass
+                `FLOW_TIMEOUT_SECONDS` instead.
 
         Returns:
             dict: A dictionary with the success status, a message, and potentially the results.
         """
-        logger.info(f"Executing query: {vql}")
+        timeout = timeout or QUERY_TIMEOUT_SECONDS
+        logger.info(f"Executing query: {vql} (timeout {timeout}s)")
 
         client_request = self.create_vql_request(vql, org_id)
 
         try:
             results = []
-            for response in self.stub.Query(client_request, timeout=30):
+            for response in self.stub.Query(client_request, timeout=timeout):
                 if response.Response:
                     results += json.loads(response.Response)
                 elif response.log:
@@ -202,10 +235,18 @@ class UniversalService:
             }
         except grpc.RpcError as e:  # Catch gRPC-specific errors
             if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
-                logger.error("Failed to execute query due to timeout.")
+                # Name the deadline that was hit and the knob that raises it: the flow
+                # itself usually finished on the server, and the operator's next question
+                # is always "how do I give it longer?".
+                env_var = "VELOCIRAPTOR_FLOW_TIMEOUT" if timeout == FLOW_TIMEOUT_SECONDS else "VELOCIRAPTOR_QUERY_TIMEOUT"
+                logger.error(f"Failed to execute query: deadline of {timeout}s exceeded.")
                 raise HTTPException(
-                    status_code=500,
-                    detail="Failed to execute query due to timeout. Make sure the Velocraptor server has stopped this artifact collection.",
+                    status_code=504,
+                    detail=(
+                        f"Velociraptor did not respond within {timeout}s. The collection may still be "
+                        f"running on the server -- check the flow there before re-running it. "
+                        f"Raise {env_var} (seconds) if collections on this deployment legitimately take longer."
+                    ),
                 )
             else:
                 logger.error(f"Failed to execute query: {e}")
@@ -232,20 +273,24 @@ class UniversalService:
             logger.error(f"Failed to execute query: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to execute query: {e}")
 
-    def watch_flow_completion(self, flow_id: str, org_id: str = "root"):
+    def watch_flow_completion(self, flow_id: str, org_id: str = "root", timeout: int = None):
         """
         Watch for the completion of a flow.
 
         Args:
             flow_id (str): The ID of the flow.
+            org_id (str): The Velociraptor org the flow belongs to.
+            timeout (int, optional): gRPC deadline in seconds. Defaults to
+                `FLOW_TIMEOUT_SECONDS` -- this call blocks for as long as the endpoint
+                takes to run the artifact, not for as long as the server takes to answer.
 
         Returns:
             dict: A dictionary with the success status and a message.
         """
         validate_flow_id(flow_id)
         vql = f"SELECT * FROM watch_monitoring(artifact='System.Flow.Completion') WHERE FlowId='{flow_id}' LIMIT 1"
-        logger.info(f"Watching flow {flow_id} for completion")
-        return self.execute_query(vql, org_id)
+        logger.info(f"Watching flow {flow_id} for completion (timeout {timeout or FLOW_TIMEOUT_SECONDS}s)")
+        return self.execute_query(vql, org_id, timeout=timeout or FLOW_TIMEOUT_SECONDS)
 
     def read_collection_results(
         self,
