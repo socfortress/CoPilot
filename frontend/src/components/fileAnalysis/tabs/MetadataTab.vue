@@ -32,25 +32,20 @@
 			/>
 
 			<!-- PE sections -->
-			<n-data-table
-				v-if="result.content?.sections?.length"
-				:columns="sectionColumns"
-				:data="result.content.sections"
-				size="small"
-			/>
+			<PeSectionsCard v-if="result.content?.sections?.length" :sections="result.content.sections" />
 		</template>
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { DataTableColumns } from "naive-ui"
-import type { InspectorResult, InspectorSection } from "@/types/file-analysis"
-import { NDataTable, NEmpty, NTag } from "naive-ui"
+import type { InspectorResult } from "@/types/file-analysis"
+import { NEmpty, NTag } from "naive-ui"
 import { computed } from "vue"
 import CollapsibleCard from "@/components/common/CollapsibleCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
 import ValueList from "@/components/common/ValueList.vue"
+import PeSectionsCard from "@/components/fileAnalysis/PeSectionsCard.vue"
 
 const props = defineProps<{ result?: InspectorResult | null }>()
 
@@ -70,11 +65,4 @@ const rows = computed(() => {
 		{ label: "Imphash", value: r.hashes?.imphash ?? "—" }
 	]
 })
-
-const sectionColumns: DataTableColumns<InspectorSection> = [
-	{ title: "Section", key: "name" },
-	{ title: "Virtual size", key: "vsize" },
-	{ title: "Raw size", key: "rawsize" },
-	{ title: "Entropy", key: "entropy" }
-]
 </script>

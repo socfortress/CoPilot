@@ -22,7 +22,7 @@
 		<div class="border-default rounded-lg border">
 			<n-scrollbar :style="{ maxHeight }">
 				<div class="divide-border flex flex-col divide-y">
-					<template v-for="value of items" :key="value">
+					<template v-for="(value, index) of items" :key="`${index}-${value}`">
 						<a
 							v-if="link"
 							:href="link(value)"
