@@ -63,6 +63,9 @@ from app.incidents.schema.db_operations import AssignedToCase
 from app.incidents.schema.db_operations import AvailableIndicesResponse
 from app.incidents.schema.db_operations import AvailableSourcesResponse
 from app.incidents.schema.db_operations import AvailableUsersResponse
+from app.incidents.schema.db_operations import BulkAlertUpdateResponse
+from app.incidents.schema.db_operations import BulkAssignedToAlert
+from app.incidents.schema.db_operations import BulkUpdateAlertStatus
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseAlertLinkResponse
 from app.incidents.schema.db_operations import CaseAlertLinksCreate
@@ -589,6 +592,49 @@ async def update_alert_status_endpoint(
 
 
 @incidents_db_operations_router.put(
+    "/alerts/status",
+    response_model=BulkAlertUpdateResponse,
+    description="Apply one status to every alert in a selection",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def bulk_update_alert_status_endpoint(
+    bulk_status: BulkUpdateAlertStatus,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Set the same status on many alerts at once (GitHub issue #1098).
+
+    Scoped to match the single-alert `/alert/status` route, `customer_user`
+    included -- bulk is a convenience over the same operation, not a wider
+    permission.
+
+    Access is checked per alert, not once for the request: a selection can span
+    customers, and the caller may be entitled to only some of them. An alert the
+    caller cannot reach is skipped and reported, which is also why this does not
+    distinguish 403 from 404 in the response -- doing so would confirm that an id
+    exists in a tenant the caller cannot see.
+    """
+    updated_alert_ids = []
+    not_updated_alert_ids = []
+
+    for alert_id in bulk_status.alert_ids:
+        try:
+            await _ensure_alert_access(alert_id, current_user, db)
+            await update_alert_status(UpdateAlertStatus(alert_id=alert_id, status=bulk_status.status), db)
+            updated_alert_ids.append(alert_id)
+        except HTTPException as e:
+            logger.info(f"Skipping alert {alert_id} in bulk status update: {e.detail}")
+            not_updated_alert_ids.append(alert_id)
+
+    return BulkAlertUpdateResponse(
+        message=f"Updated {len(updated_alert_ids)} alert(s) to {bulk_status.status.value}",
+        updated_alert_ids=updated_alert_ids,
+        not_updated_alert_ids=not_updated_alert_ids,
+        success=True,
+    )
+
+
+@incidents_db_operations_router.put(
     "/alert/verdict",
     response_model=AlertResponse,
     description="Set, change or clear an alert's triage verdict (true positive / false positive)",
@@ -883,6 +929,87 @@ async def update_assigned_to_endpoint(
         alert=updated,
         success=True,
         message="Alert assigned to user successfully",
+    )
+
+
+@incidents_db_operations_router.put(
+    "/alerts/assigned-to",
+    response_model=BulkAlertUpdateResponse,
+    description="Assign every alert in a selection to the same user",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def bulk_update_assigned_to_endpoint(
+    bulk_assigned_to: BulkAssignedToAlert,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Assign many alerts to one user at once (GitHub issue #1098).
+
+    Scoped `admin|analyst`, matching the single-alert route and deliberately
+    narrower than bulk status, which also admits `customer_user`.
+
+    The assignee is validated once for the request rather than per alert -- an
+    unknown username is a bad request, not a per-alert skip, and failing fast
+    avoids assigning half a selection before noticing. Alert-level failures
+    (missing, or a customer the caller is not entitled to) are still skipped and
+    reported, so a selection spanning customers does the work it is allowed to do.
+
+    One `ALERT_ASSIGNED` notification is emitted per alert that actually changed
+    hands, exactly as the single-alert route does: each alert genuinely changed,
+    and a route gating on severity should see each one. Alerts already assigned
+    to that user stay silent. If the volume proves noisy in practice, an
+    aggregated trigger is the follow-up -- that needs its own trigger, template
+    variables and route config, so it is not smuggled in here.
+    """
+    all_users = await select_all_users()
+    user_names = [user.username for user in all_users]
+    if bulk_assigned_to.assigned_to not in user_names:
+        raise HTTPException(status_code=400, detail="User does not exist")
+
+    updated_alert_ids = []
+    not_updated_alert_ids = []
+
+    for alert_id in bulk_assigned_to.alert_ids:
+        try:
+            await _ensure_alert_access(alert_id, current_user, db)
+
+            # Re-read as the ORM row rather than reusing what the access check
+            # returned: that is an `AlertOut`, which carries no `severity`, so
+            # `severity_of` would silently fall back to the deployment default
+            # and every bulk assignment would notify at the wrong severity.
+            #
+            # Read BEFORE the mutation, as the single-alert route does: rewriting
+            # the same assignee must stay silent.
+            existing = await db.execute(select(Alert).where(Alert.id == alert_id))
+            existing_alert = existing.scalars().first()
+            previous_assignee = existing_alert.assigned_to
+            alert_title = existing_alert.alert_name
+            alert_customer = existing_alert.customer_code
+            alert_severity = severity_of(existing_alert)
+
+            await update_alert_assigned_to(alert_id, bulk_assigned_to.assigned_to, db)
+            updated_alert_ids.append(alert_id)
+
+            if previous_assignee != bulk_assigned_to.assigned_to:
+                emit(
+                    alert_assigned_event(
+                        alert_id=alert_id,
+                        title=alert_title,
+                        assignee=bulk_assigned_to.assigned_to,
+                        actor=current_user.username,
+                        customer_code=alert_customer,
+                        severity=alert_severity,
+                    ),
+                )
+        except HTTPException as e:
+            logger.info(f"Skipping alert {alert_id} in bulk assignment: {e.detail}")
+            not_updated_alert_ids.append(alert_id)
+
+    return BulkAlertUpdateResponse(
+        message=f"Assigned {len(updated_alert_ids)} alert(s) to {bulk_assigned_to.assigned_to}",
+        updated_alert_ids=updated_alert_ids,
+        not_updated_alert_ids=not_updated_alert_ids,
+        success=True,
     )
 
 
