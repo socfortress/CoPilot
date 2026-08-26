@@ -154,7 +154,14 @@ function fetchAll() {
 				// empty gap would be indistinguishable from a bug.
 				.catch(
 					() =>
-						({ jobId, loaded: true, filename: "", sha256: "", verdict: null, status: "unknown" }) as BatchEntry
+						({
+							jobId,
+							loaded: true,
+							filename: "",
+							sha256: "",
+							verdict: null,
+							status: "unknown"
+						}) as BatchEntry
 				)
 		)
 	).then(entries => {

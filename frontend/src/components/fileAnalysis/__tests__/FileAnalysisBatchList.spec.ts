@@ -15,7 +15,10 @@ vi.mock("vue-router", () => ({ useRouter: () => ({ push: vi.fn() }) }))
 vi.mock("@/components/common/cards/CardEntity.vue", () => ({
 	default: defineComponent({
 		name: "CardEntity",
-		setup: (_p, { slots }) => () => h("div", { class: "card-entity" }, [slots.header?.(), slots.default?.()])
+		setup:
+			(_p, { slots }) =>
+			() =>
+				h("div", { class: "card-entity" }, [slots.header?.(), slots.default?.()])
 	})
 }))
 

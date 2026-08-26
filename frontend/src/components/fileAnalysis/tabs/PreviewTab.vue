@@ -5,12 +5,7 @@
 		     the images arrived; worse, "No page previews" rendered underneath it for as
 		     long as the fetch took, which states the opposite of what is happening. -->
 		<div v-if="showPlaceholders" class="grid-auto-fill-250 grid gap-3" aria-busy="true">
-			<n-skeleton
-				v-for="n of placeholderCount"
-				:key="n"
-				:sharp="false"
-				class="aspect-[3/4] w-full rounded-lg"
-			/>
+			<n-skeleton v-for="n of placeholderCount" :key="n" :sharp="false" class="aspect-[3/4] w-full rounded-lg" />
 		</div>
 
 		<!-- n-image-group, not bare n-image: the lightbox then knows about the whole

