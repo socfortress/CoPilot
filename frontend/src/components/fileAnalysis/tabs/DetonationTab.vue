@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-col gap-4">
+	<div class="@container flex flex-col gap-4">
 		<!-- States when there's no report yet -->
 		<n-spin v-if="!sandbox && dynamicStatus === 'running'" show class="min-h-52">
 			<div class="flex min-h-52 flex-col items-center justify-center gap-2">
@@ -30,7 +30,7 @@
 			     score, verdict and run facts read as three answers instead of a row of
 			     controls pushed apart by a grow spacer. -->
 			<div
-				class="border-default bg-border grid gap-px overflow-hidden rounded-lg border lg:grid-cols-[auto_1fr_auto]"
+				class="border-default bg-border grid gap-px overflow-hidden rounded-lg border @4xl:grid-cols-[auto_1fr_auto]"
 			>
 				<div class="bg-secondary flex items-center gap-4 p-4">
 					<n-progress
@@ -49,11 +49,14 @@
 
 				<div class="bg-secondary flex min-w-0 flex-col gap-2 p-4">
 					<span :class="SECTION_LABEL">Verdict</span>
+					<!-- Both tags at one size: verdict and family are two facts about the
+					     same run, and a taller verdict next to a shorter family read as a
+					     control beside a label rather than as a pair. -->
 					<div class="flex flex-wrap items-center gap-2">
 						<n-tag :type="verdictType" size="medium" round :bordered="false" class="capitalize">
 							{{ sandbox.verdict || "clean" }}
 						</n-tag>
-						<n-tag v-if="sandbox.family" type="error" size="small" round :bordered="false">
+						<n-tag v-if="sandbox.family" type="error" size="medium" round :bordered="false">
 							{{ sandbox.family }}
 						</n-tag>
 					</div>
@@ -61,7 +64,7 @@
 
 				<!-- Run facts as aligned label/value rows: they used to run on as prose
 				     ("Guest: capewin"), which buried the values. -->
-				<div class="bg-secondary flex flex-col gap-2 p-4 lg:w-60">
+				<div class="bg-secondary flex flex-col gap-2 p-4 @4xl:w-60">
 					<span :class="SECTION_LABEL">Run</span>
 					<div class="flex flex-col gap-1 text-xs">
 						<div v-if="sandbox.machine" class="flex items-baseline justify-between gap-3">
@@ -176,30 +179,30 @@
 
 			<!-- Process tree — children nested under parents (by ppid); the detonated
 			     sample's own process is highlighted so it stands out from OS noise. -->
-			<div v-if="processTree.length" class="border-default flex flex-col overflow-hidden rounded-lg border">
-				<div
-					class="border-default bg-secondary flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2"
-				>
-					<div class="flex flex-wrap items-center gap-2">
-						<span :class="SECTION_LABEL">
-							Process tree
-							<span class="text-tertiary normal-case">
-								({{ procRows.length }}/{{ processTree.length }})
-							</span>
-						</span>
-						<n-tag size="tiny" round :bordered="false" type="success">
-							<template #icon><Icon :name="ProcIcon" :size="11" /></template>
-							sample highlighted
-						</n-tag>
-					</div>
+			<CollapsibleCard v-if="processTree.length">
+				<template #header>
+					<span :class="SECTION_LABEL">
+						Process tree
+						<span class="text-tertiary normal-case">({{ procRows.length }}/{{ processTree.length }})</span>
+					</span>
+					<n-tag size="tiny" round :bordered="false" type="success">
+						<template #icon><Icon :name="ProcIcon" :size="11" /></template>
+						sample highlighted
+					</n-tag>
+				</template>
+
+				<!-- The filter lives in the body, not the header band: collapsing the card
+				     should take the whole control away, and a search box above a folded list
+				     is a control with nothing to act on. -->
+				<div class="border-default flex flex-col border-b p-3">
 					<n-input
 						v-model:value="procQuery"
-						size="tiny"
+						size="small"
 						clearable
 						placeholder="Filter by process or command line"
-						class="w-full sm:w-72"
+						class="w-full sm:w-80"
 					>
-						<template #prefix><Icon :name="SearchIcon" :size="13" /></template>
+						<template #prefix><Icon :name="SearchIcon" :size="14" /></template>
 					</n-input>
 				</div>
 
@@ -208,72 +211,74 @@
 						<div
 							v-for="(p, i) of procRows"
 							:key="i"
-							class="flex flex-col gap-1 px-3 py-2"
+							class="flex items-stretch px-3 py-2"
 							:class="p.isSample ? 'bg-primary/6' : ''"
 							:style="p.isSample ? { boxShadow: 'inset 2px 0 0 0 var(--primary-color)' } : {}"
 						>
-							<div
-								class="flex flex-wrap items-baseline gap-x-3 gap-y-1"
-								:style="{ paddingLeft: `${p.depth * 18}px` }"
-							>
-								<div class="flex min-w-0 grow items-baseline gap-2">
-									<span v-if="p.depth" class="text-tertiary shrink-0 select-none">└</span>
-									<Icon
-										:name="ProcIcon"
-										:size="13"
-										class="shrink-0 translate-y-0.5"
-										:class="p.isSample ? 'text-primary' : 'text-secondary'"
-									/>
-									<span
-										class="min-w-0 truncate font-mono text-xs font-medium"
-										:class="p.isSample ? 'text-primary' : 'text-default'"
-										:title="p.name"
-									>
-										{{ p.name || "(unknown)" }}
+							<!-- Indentation is drawn as guide rails rather than left padding: at
+							     depth 2+ padding alone leaves you counting pixels to work out which
+							     parent a process hangs from, and the elbow says where it attaches. -->
+							<!-- -my-2 bleeds the rails over the row's vertical padding, so a line runs
+							     unbroken from one row into the next instead of restarting below each
+							     divider and leaving every elbow detached from its parent. -->
+							<span v-for="(line, d) of p.rails" :key="d" class="relative -my-2 w-4 shrink-0">
+								<span v-if="line" class="bg-border absolute inset-y-0 left-2 w-px" />
+							</span>
+							<span v-if="p.depth" class="relative -my-2 w-4 shrink-0">
+								<span
+									class="bg-border absolute left-2 w-px"
+									:class="p.isLast ? 'top-0 h-4' : 'inset-y-0'"
+								/>
+								<span class="bg-border absolute top-4 left-2 h-px w-2" />
+							</span>
+
+							<div class="flex min-w-0 grow flex-col gap-1">
+								<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+									<div class="flex min-w-0 grow items-baseline gap-2">
+										<Icon
+											:name="ProcIcon"
+											:size="13"
+											class="shrink-0 translate-y-0.5"
+											:class="p.isSample ? 'text-primary' : 'text-secondary'"
+										/>
+										<span
+											class="min-w-0 truncate font-mono text-xs font-medium"
+											:class="p.isSample ? 'text-primary' : 'text-default'"
+											:title="p.name"
+										>
+											{{ p.name || "(unknown)" }}
+										</span>
+									</div>
+									<span v-if="procMeta(p)" class="text-tertiary text-2xs shrink-0 font-mono">
+										{{ procMeta(p) }}
 									</span>
 								</div>
-								<span v-if="procMeta(p)" class="text-tertiary text-2xs shrink-0 font-mono">
-									{{ procMeta(p) }}
-								</span>
+								<!-- The command line sits inside the same indented column as the name,
+								     so it no longer needs its own depth arithmetic to line up. -->
+								<code v-if="p.command_line" class="text-secondary text-2xs break-all">
+									{{ p.command_line }}
+								</code>
 							</div>
-							<code
-								v-if="p.command_line"
-								class="text-secondary text-2xs break-all"
-								:style="{ paddingLeft: `${p.depth * 18 + 20}px` }"
-							>
-								{{ p.command_line }}
-							</code>
 						</div>
 						<div v-if="!procRows.length" class="text-tertiary px-3 py-4 text-xs">
 							No process matches that filter.
 						</div>
 					</div>
 				</n-scrollbar>
-			</div>
+			</CollapsibleCard>
 
-			<!-- Extracted payloads -->
-			<div v-if="sandbox.payloads?.length" class="flex flex-col gap-2">
-				<span :class="SECTION_LABEL">Extracted payloads ({{ sandbox.payloads.length }})</span>
-				<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
-					<div v-for="(p, i) of sandbox.payloads" :key="i" class="flex items-center gap-2 text-xs">
-						<n-tag v-if="p.type" size="tiny" round :bordered="false" type="info">{{ p.type }}</n-tag>
-						<span class="font-medium">{{ p.name }}</span>
-						<code class="text-secondary break-all">{{ p.sha256.slice(0, 24) }}</code>
-					</div>
-				</div>
-			</div>
+			<!-- Extracted payloads and dropped files are one-line facts about a file —
+			     name, type, hash — so they use the module's shared list rather than each
+			     inventing its own row. The full sha256 is kept: a truncated hash cannot be
+			     looked up anywhere. -->
+			<ValueList
+				v-if="sandbox.payloads?.length"
+				label="Extracted payloads"
+				:items="payloadItems"
+				max-height="18rem"
+			/>
 
-			<!-- Dropped files -->
-			<div v-if="sandbox.dropped?.length" class="flex flex-col gap-2">
-				<span :class="SECTION_LABEL">Dropped files ({{ sandbox.dropped.length }})</span>
-				<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
-					<div v-for="(d, i) of sandbox.dropped" :key="i" class="flex items-center gap-2 text-xs">
-						<span v-if="d.name" class="font-medium">{{ d.name }}</span>
-						<n-tag v-if="d.type" size="tiny" round :bordered="false">{{ d.type }}</n-tag>
-						<code class="text-secondary break-all">{{ d.sha256.slice(0, 24) }}</code>
-					</div>
-				</div>
-			</div>
+			<ValueList v-if="sandbox.dropped?.length" label="Dropped files" :items="droppedItems" max-height="18rem" />
 
 			<!-- Host activity — the FULL behavioural record (judge from evidence, not the score) -->
 			<div
@@ -293,7 +298,7 @@
 					type="warning"
 					size="small"
 					:bordered="false"
-					class="text-xs"
+					class="mb-2 text-xs"
 				>
 					Tried to reach (unreachable):
 					<code v-for="(h, i) of sandbox.dead_hosts" :key="i" class="mr-2 break-all">{{ h }}</code>
@@ -314,12 +319,7 @@
 							placeholder="Filter…"
 							class="mb-2"
 						/>
-						<n-scrollbar class="bg-secondary max-h-72 rounded-lg p-3">
-							<code v-for="(it, i) of filtered(g)" :key="i" class="block py-0.5 text-xs break-all">
-								{{ it }}
-							</code>
-							<div v-if="!filtered(g).length" class="text-secondary text-xs">No matches.</div>
-						</n-scrollbar>
+						<ValueList :items="filtered(g)" max-height="18rem" empty-text="No matches." />
 					</n-collapse-item>
 
 					<n-collapse-item
@@ -327,15 +327,16 @@
 						name="_timeline"
 						:title="`Behaviour timeline (${sandbox.enhanced.length} events)`"
 					>
-						<n-scrollbar class="bg-secondary max-h-96 rounded-lg p-3">
-							<div v-for="(ev, i) of sandbox.enhanced" :key="i" class="flex gap-2 py-0.5 text-xs">
-								<n-tag size="tiny" round :bordered="false" type="info" class="shrink-0">
-									{{ ev.event }}
-								</n-tag>
-								<span class="text-secondary shrink-0">{{ ev.object }}</span>
-								<code class="break-all">{{ eventDetail(ev) }}</code>
-							</div>
-						</n-scrollbar>
+						<ValueList :items="timelineItems" max-height="24rem" />
+					</n-collapse-item>
+
+					<!-- CAPE errors (diagnostics) -->
+					<n-collapse-item
+						v-if="sandbox.errors?.length"
+						:title="`Sandbox diagnostics (${sandbox.errors.length})`"
+						name="err"
+					>
+						<ValueList :items="sandbox.errors" max-height="13rem" />
 					</n-collapse-item>
 				</n-collapse>
 			</div>
@@ -355,15 +356,6 @@
 					</div>
 				</n-image-group>
 			</div>
-
-			<!-- CAPE errors (diagnostics) -->
-			<n-collapse v-if="sandbox.errors?.length">
-				<n-collapse-item :title="`Sandbox diagnostics (${sandbox.errors.length})`" name="err">
-					<n-scrollbar class="bg-secondary max-h-52 rounded-lg p-3">
-						<code v-for="(e, i) of sandbox.errors" :key="i" class="block text-xs break-all">{{ e }}</code>
-					</n-scrollbar>
-				</n-collapse-item>
-			</n-collapse>
 
 			<div class="text-secondary text-xs">
 				"Nothing malicious observed" isn't a guarantee — a sample may detect the sandbox or wait. Weigh it with
@@ -392,8 +384,11 @@ import {
 } from "naive-ui"
 import { computed, reactive, ref } from "vue"
 import Api from "@/api"
+import CollapsibleCard from "@/components/common/CollapsibleCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
+import { valueListParts } from "@/components/common/value-list"
+import ValueList from "@/components/common/ValueList.vue"
 import { useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{
@@ -439,6 +434,17 @@ function filtered(g: { key: string; items: string[] }): string[] {
 	const q = (filters[g.key] || "").toLowerCase().trim()
 	return q ? g.items.filter(it => it.toLowerCase().includes(q)) : g.items
 }
+
+/** One timeline row: what happened, what it happened to, and the call detail. */
+const timelineItems = computed(() =>
+	(props.sandbox?.enhanced ?? []).map(ev =>
+		valueListParts([
+			{ text: ev.event, tone: "accent" },
+			{ text: ev.object, tone: "strong" },
+			{ text: eventDetail(ev), tone: "muted" }
+		])
+	)
+)
 
 function eventDetail(ev: { data?: Record<string, unknown> }): string {
 	const d = ev.data
@@ -491,6 +497,11 @@ interface TreeProc {
 	command_line?: string
 	depth: number
 	isSample: boolean
+	/** One entry per ancestor level: true where that ancestor still has siblings
+	 *  below, so the guide rail must continue down through this row. */
+	rails: boolean[]
+	/** Last child of its parent — its elbow stops instead of running on. */
+	isLast: boolean
 }
 
 // CAPE writes the submitted sample into the guest as a temp file and launches it;
@@ -531,7 +542,7 @@ const processTree = computed<TreeProc[]>(() => {
 
 	const out: TreeProc[] = []
 	const seen = new Set<string>()
-	const walk = (p: (typeof procs)[number], depth: number) => {
+	const walk = (p: (typeof procs)[number], depth: number, rails: boolean[], isLast: boolean) => {
 		const pid = String(p.pid ?? `_${out.length}`)
 		if (seen.has(pid)) return // guard against pathological ppid cycles
 		seen.add(pid)
@@ -541,11 +552,16 @@ const processTree = computed<TreeProc[]>(() => {
 			ppid: p.ppid,
 			command_line: p.command_line,
 			depth,
-			isSample: looksLikeSample(p.command_line)
+			isSample: looksLikeSample(p.command_line),
+			rails,
+			isLast
 		})
-		for (const c of childrenOf.get(pid) ?? []) walk(c, depth + 1)
+		// This node becomes an ancestor for its children: its rail continues past
+		// them only while it still has siblings of its own left to draw.
+		const kids = childrenOf.get(pid) ?? []
+		kids.forEach((c, i) => walk(c, depth + 1, [...rails, !isLast], i === kids.length - 1))
 	}
-	for (const r of roots) walk(r, 0)
+	roots.forEach((r, i) => walk(r, 0, [], i === roots.length - 1))
 	// Any process not reached (cycle/orphan) appended flat so the count stays honest.
 	for (const p of procs) {
 		if (!seen.has(String(p.pid))) {
@@ -555,7 +571,9 @@ const processTree = computed<TreeProc[]>(() => {
 				ppid: p.ppid,
 				command_line: p.command_line,
 				depth: 0,
-				isSample: looksLikeSample(p.command_line)
+				isSample: looksLikeSample(p.command_line),
+				rails: [],
+				isLast: true
 			})
 			seen.add(String(p.pid))
 		}
@@ -571,8 +589,24 @@ const { query: procQuery, results: filteredProcesses } = useFuseFilter(
 // While filtering, rows are flattened: indentation that points at a parent the
 // filter removed describes a tree that is not on screen.
 const procRows = computed(() =>
-	procQuery.value.trim() ? filteredProcesses.value.map(p => ({ ...p, depth: 0 })) : filteredProcesses.value
+	procQuery.value.trim()
+		? filteredProcesses.value.map(p => ({ ...p, depth: 0, rails: [], isLast: true }))
+		: filteredProcesses.value
 )
+
+/** name · type · full hash, in that order: the name is what you recognise, the
+ *  type is what it is, the hash is what you look up — so each is toned apart
+ *  rather than reading as one long grey run. */
+function fileLine(f: { name?: string; type?: string; sha256?: string }) {
+	return valueListParts([
+		{ text: f.name, tone: "strong" },
+		{ text: f.type, tone: "accent" },
+		{ text: f.sha256, tone: "muted" }
+	])
+}
+
+const payloadItems = computed(() => (props.sandbox?.payloads ?? []).map(fileLine))
+const droppedItems = computed(() => (props.sandbox?.dropped ?? []).map(fileLine))
 
 const malscorePct = computed(() => Math.min(100, Math.max(0, (props.sandbox?.malscore ?? 0) * 10)))
 // Colour the ring by the VERDICT, not the raw malscore — a benign run can hit
