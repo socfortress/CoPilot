@@ -143,3 +143,72 @@ def test_query_empty():
 def test_query_lint_runs_via_full_rule():
     raw = VALID.replace('query: data_win_system_eventID:"4706"', 'query: foo:"bar')
     assert "GRAYLOG_QUERY_QUOTES" in _codes(raw)
+
+
+# --- L2: reference integrity (warnings only) --------------------------------
+L2_BASE = '''name: L2 Test
+id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+version: 1
+schema_version: "1.0"
+description: >
+  test
+response:
+  message: >
+    User $data_win_user$ did something from $missing_field$.
+  risk_score: {score}
+  severity: {severity}
+  risk_objects:
+    - field: data_win_user
+      type: user
+      score: 50
+    - field: not_in_query
+      type: host
+tags:
+  mitre_attack_id:
+    - T1059.001
+    - BOGUS123
+graylog:
+  query: data_win_system_eventID:"1" AND data_win_user:"x"
+'''
+
+
+def _codes(raw):
+    return {f["code"] for f in lint_result(raw)["findings"]}
+
+
+def test_l2_message_placeholder_flags_only_unused_fields():
+    r = lint_result(L2_BASE.format(score=50, severity="medium"))
+    msgs = [f for f in r["findings"] if f["code"] == "REF_MESSAGE_FIELD"]
+    assert len(msgs) == 1 and "$missing_field$" in msgs[0]["message"]
+    assert r["valid"]  # L2 findings are warnings, never errors
+
+
+def test_l2_risk_object_flags_only_unused_fields():
+    r = lint_result(L2_BASE.format(score=50, severity="medium"))
+    objs = [f for f in r["findings"] if f["code"] == "REF_RISK_OBJECT"]
+    assert len(objs) == 1 and "not_in_query" in objs[0]["message"]
+
+
+def test_l2_mitre_format_flags_bogus_only():
+    r = lint_result(L2_BASE.format(score=50, severity="medium"))
+    mitre = [f for f in r["findings"] if f["code"] == "MITRE_ID_FORMAT"]
+    assert len(mitre) == 1 and "BOGUS123" in mitre[0]["message"]
+
+
+def test_l2_severity_score_mismatch():
+    assert "SEVERITY_SCORE_MISMATCH" in _codes(L2_BASE.format(score=10, severity="critical"))
+    assert "SEVERITY_SCORE_MISMATCH" not in _codes(L2_BASE.format(score=90, severity="critical"))
+
+
+def test_l2_placeholder_satisfied_by_group_by():
+    raw = L2_BASE.format(score=50, severity="medium") + '''aggregation:
+  enabled: true
+  function: count
+  field: null
+  group_by:
+    - missing_field
+  window: 10m
+  threshold: 5
+  condition: ">"
+'''
+    assert "REF_MESSAGE_FIELD" not in _codes(raw)

@@ -68,6 +68,19 @@
 							{{ result.note }}
 						</n-alert>
 
+						<n-alert
+							v-if="result.missing_fields?.length"
+							type="warning"
+							:bordered="false"
+							size="small"
+							title="Fields not found in this customer's data"
+						>
+							<span class="text-sm">
+								<code v-for="(f, i) of result.missing_fields" :key="f">{{ f }}{{ i < result.missing_fields.length - 1 ? ", " : "" }}</code>
+								— the rule may never match for this customer. Check for typos or a different field naming.
+							</span>
+						</n-alert>
+
 						<!-- headline stats -->
 						<div class="grid grid-cols-2 gap-3 md:grid-cols-4">
 							<CardStats v-for="(s, i) of statTiles" :key="i" :title="s.title" :value="s.value">

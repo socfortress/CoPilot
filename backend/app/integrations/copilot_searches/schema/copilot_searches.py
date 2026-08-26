@@ -146,6 +146,8 @@ class RuleSummary(BaseModel):
     file_path: str
     has_graylog_query: bool = False
     has_aggregation: bool = False
+    provenance: str = "catalog"  # "catalog" (shared repo) | "custom" (a client's own repo)
+    owner_customer_code: Optional[str] = None  # set for custom rules
 
 
 class RuleDetail(BaseModel):
@@ -172,6 +174,8 @@ class RuleDetail(BaseModel):
     raw_yaml: str
     graylog: Optional[GraylogQuery] = None
     aggregation: Optional[AggregationConfig] = None
+    provenance: str = "catalog"
+    owner_customer_code: Optional[str] = None
 
 
 class RuleListResponse(BaseModel):
@@ -946,4 +950,87 @@ class BacktestResponse(BaseModel):
     sample_fields: list[str] = Field(default_factory=list)
     top_fields: dict[str, list[BacktestTopValue]] = Field(default_factory=dict)
     aggregation: Optional[BacktestAggregation] = None
+    # Query/aggregation fields that don't exist in this customer's stream data
+    # (L4-lite; empty when the stream's field population is too small to judge).
+    missing_fields: list[str] = Field(default_factory=list)
     note: Optional[str] = None
+
+
+# =============================================================================
+# Per-tenant custom rule repositories (pointers stored in MinIO)
+# =============================================================================
+class CustomRepoConfig(BaseModel):
+    """A client's custom-rule repo pointer (token never returned — only its presence)."""
+
+    customer_code: str
+    repo: str  # "owner/name"
+    branch: str = "main"
+    enabled: bool = True
+    has_token: bool = False
+    # Fetch outcome from the last cache refresh (None = not refreshed yet this run).
+    last_refresh_ok: Optional[bool] = None
+    rules_loaded: Optional[int] = None
+    last_refresh_error: Optional[str] = None
+    last_refresh_at: Optional[str] = None
+
+
+class TestCustomRepoRequest(BaseModel):
+    """Dry-run a repo pull before saving it."""
+
+    repo: str = Field(..., description="GitHub repo as 'owner/name'")
+    branch: str = Field(default="main")
+    token: Optional[str] = Field(default=None, description="Token to test with (optional)")
+    customer_code: Optional[str] = Field(
+        default=None,
+        description="When set and no token is given, test with this customer's stored token",
+    )
+
+
+class TestCustomRepoResponse(BaseModel):
+    success: bool = True
+    message: str = ""
+    ok: bool = False
+    rules_found: int = 0
+    error: Optional[str] = None
+
+
+class SetCustomRepoRequest(BaseModel):
+    repo: str = Field(..., description="GitHub repo as 'owner/name'")
+    branch: str = Field(default="main")
+    token: Optional[str] = Field(default=None, description="Optional read PAT for a private repo")
+    enabled: bool = True
+
+
+class CustomRepoResponse(BaseModel):
+    success: bool = True
+    message: str = ""
+    repo: Optional[CustomRepoConfig] = None
+
+
+class CustomRepoListResponse(BaseModel):
+    success: bool = True
+    message: str = "Custom repositories fetched"
+    repos: list[CustomRepoConfig] = Field(default_factory=list)
+
+
+# =============================================================================
+# Publish a rule to a client's own GitHub repo
+# =============================================================================
+class PublishRuleRequest(BaseModel):
+    yaml: str = Field(..., description="Full rule YAML to publish (Graylog-only format)")
+    customer_code: str = Field(..., description="Customer whose custom repo to publish to")
+    message: Optional[str] = Field(default=None, description="Commit message (optional)")
+    path: Optional[str] = Field(default=None, description="Target path in the repo (defaults to detections/custom/<slug>.yaml)")
+
+
+class PublishRuleResponse(BaseModel):
+    success: bool
+    message: str = ""
+    error: Optional[str] = None
+    action: Optional[str] = None  # "created" | "updated"
+    repo: Optional[str] = None
+    branch: Optional[str] = None
+    path: Optional[str] = None
+    commit_url: Optional[str] = None
+    html_url: Optional[str] = None
+    findings: list[LintFinding] = Field(default_factory=list)

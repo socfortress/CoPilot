@@ -22,6 +22,16 @@ def _github_headers() -> dict[str, str]:
     return headers
 
 
+def _custom_repo_headers(token: Optional[str]) -> dict[str, str]:
+    """Headers for a per-tenant custom repo — its own read token when provided,
+    otherwise fall back to the shared GITHUB_TOKEN (rate-limit / public access)."""
+    headers = {"Accept": "application/vnd.github+json"}
+    tok = token or os.getenv("GITHUB_TOKEN")
+    if tok:
+        headers["Authorization"] = f"Bearer {tok}"
+    return headers
+
+
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
 )
@@ -208,6 +218,15 @@ class RulesCache(BackgroundRefreshMixin):
         self._rules_by_name: dict[str, str] = {}  # normalized name -> id
         self._last_refresh: Optional[datetime] = None
         self._lock = asyncio.Lock()
+        # Per-source fetch outcome from the last refresh, so a broken custom repo
+        # (revoked token, renamed repo) is visible in the UI instead of its rules
+        # just silently vanishing. [{repo, provenance, owner, ok, rules_loaded, error, fetched_at}]
+        self._source_status: list[dict] = []
+
+    @property
+    def source_status(self) -> list[dict]:
+        """Fetch outcome per repo source from the last refresh."""
+        return list(self._source_status)
 
     @property
     def is_stale(self) -> bool:
@@ -259,6 +278,15 @@ class RulesCache(BackgroundRefreshMixin):
                 rule_id = rule.get("id", "")
                 rule_name = rule.get("name", "")
 
+                # Catalog is loaded first; a custom repo re-using an id must not
+                # silently clobber the canonical rule. Keep the first, warn on dupes.
+                if rule_id and rule_id in self._rules:
+                    logger.warning(
+                        f"Duplicate rule id {rule_id} from {rule.get('_provenance')} repo "
+                        f"(owner={rule.get('_owner_customer_code')}) — keeping the first, skipping this one.",
+                    )
+                    continue
+
                 self._rules[rule_id] = rule
 
                 # Index by normalized name for lookup
@@ -270,40 +298,86 @@ class RulesCache(BackgroundRefreshMixin):
 
             return len(self._rules)
 
+    async def _build_sources(self) -> list[dict]:
+        """The repos to pull: the canonical catalog first, then each configured
+        per-tenant custom repo (from MinIO). Catalog first so it wins id collisions."""
+        sources: list[dict] = [
+            {
+                "repo": GITHUB_REPO,
+                "branch": GITHUB_BRANCH,
+                "headers": _github_headers(),
+                "provenance": "catalog",
+                "owner": None,
+            },
+        ]
+        try:
+            from app.integrations.copilot_searches.services.custom_repos import list_custom_repos
+
+            for cfg in await list_custom_repos():
+                if cfg.get("enabled") and cfg.get("repo"):
+                    sources.append(
+                        {
+                            "repo": cfg["repo"],
+                            "branch": cfg.get("branch") or "main",
+                            "headers": _custom_repo_headers(cfg.get("token")),
+                            "provenance": "custom",
+                            "owner": cfg.get("customer_code"),
+                        },
+                    )
+        except Exception as e:  # noqa: BLE001 — a bad custom config must not break the catalog
+            logger.warning(f"Could not load custom repo configs: {e}")
+        return sources
+
     async def _fetch_all_rules(self) -> list[dict]:
-        """Fetch all YAML rules from GitHub repository."""
-        rules = []
+        """Fetch YAML rules from the canonical catalog + every configured custom repo."""
+        rules: list[dict] = []
+        statuses: list[dict] = []
+        for src in await self._build_sources():
+            entry = {
+                "repo": src["repo"],
+                "provenance": src["provenance"],
+                "owner": src.get("owner"),
+                "fetched_at": datetime.utcnow().isoformat() + "Z",
+            }
+            try:
+                repo_rules = await self._fetch_repo_rules(src)
+                rules.extend(repo_rules)
+                entry.update(ok=True, rules_loaded=len(repo_rules), error=None)
+                logger.info(f"Loaded {len(repo_rules)} {src['provenance']} rules from {src['repo']}")
+            except Exception as e:  # noqa: BLE001 — one repo failing must not sink the rest
+                entry.update(ok=False, rules_loaded=0, error=str(e))
+                logger.warning(f"Failed to fetch rules from {src['repo']}: {e}")
+            statuses.append(entry)
+        self._source_status = statuses
+        return rules
 
-        async with httpx.AsyncClient(timeout=30.0, headers=_github_headers()) as client:
-            # Get the directory tree for detections
-            tree_url = f"{GITHUB_API_BASE}/repos/{GITHUB_REPO}/git/trees/{GITHUB_BRANCH}" f"?recursive=1"
-
+    async def _fetch_repo_rules(self, src: dict) -> list[dict]:
+        """Fetch all detection YAMLs from a single repo source (catalog or custom)."""
+        rules: list[dict] = []
+        async with httpx.AsyncClient(timeout=30.0, headers=src["headers"]) as client:
+            tree_url = f"{GITHUB_API_BASE}/repos/{src['repo']}/git/trees/{src['branch']}?recursive=1"
             response = await client.get(tree_url)
             response.raise_for_status()
-
             tree_data = response.json()
 
-            # Filter for YAML files in detections directory
             yaml_files = [
                 item
                 for item in tree_data.get("tree", [])
-                if item["path"].startswith("detections/") and item["path"].endswith(".yaml") and item["type"] == "blob"
+                if item["path"].startswith("detections/")
+                and item["path"].endswith((".yaml", ".yml"))
+                and item["type"] == "blob"
             ]
+            logger.info(f"Found {len(yaml_files)} YAML files in {src['repo']}")
 
-            logger.info(f"Found {len(yaml_files)} YAML files in repository")
-
-            # Fetch each YAML file with bounded concurrency. Firing every
-            # request at once (thousands, once the repo grows) exhausts the
-            # httpx pool and trips GitHub throttling, surfacing as
-            # empty-message transport errors and a >60s refresh.
+            # Bounded concurrency — firing thousands at once exhausts the pool and
+            # trips GitHub throttling.
             semaphore = asyncio.Semaphore(12)
 
             async def _fetch_bounded(path: str):
                 async with semaphore:
-                    return await self._fetch_yaml_file(client, path)
+                    return await self._fetch_yaml_file(client, src, path)
 
             tasks = [_fetch_bounded(file_info["path"]) for file_info in yaml_files]
-
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             for result in results:
@@ -317,11 +391,12 @@ class RulesCache(BackgroundRefreshMixin):
     async def _fetch_yaml_file(
         self,
         client: httpx.AsyncClient,
+        src: dict,
         file_path: str,
     ) -> Optional[dict]:
-        """Fetch and parse a single YAML file from GitHub."""
+        """Fetch and parse a single YAML file from a repo source."""
         try:
-            raw_url = f"{GITHUB_RAW_BASE}/{GITHUB_REPO}/{GITHUB_BRANCH}/{file_path}"
+            raw_url = f"{GITHUB_RAW_BASE}/{src['repo']}/{src['branch']}/{file_path}"
 
             response = await client.get(raw_url)
             response.raise_for_status()
@@ -339,6 +414,8 @@ class RulesCache(BackgroundRefreshMixin):
             rule_data["_category"] = category_from_path(file_path)
             rule_data["_platform"] = self._detect_platform(file_path, rule_data)
             rule_data["_has_graylog"] = "graylog" in rule_data and bool(rule_data.get("graylog", {}).get("query"))
+            rule_data["_provenance"] = src.get("provenance", "catalog")
+            rule_data["_owner_customer_code"] = src.get("owner")
 
             return rule_data
 
@@ -474,6 +551,7 @@ class RulesCache(BackgroundRefreshMixin):
         mitre_id: Optional[str] = None,
         search: Optional[str] = None,
         has_graylog: Optional[bool] = None,
+        provenance: Optional[str] = None,
     ) -> list[dict]:
         """Filter rules based on criteria."""
         results = []
@@ -523,6 +601,11 @@ class RulesCache(BackgroundRefreshMixin):
             if has_graylog is not None:
                 rule_has_graylog = rule.get("_has_graylog", False)
                 if rule_has_graylog != has_graylog:
+                    continue
+
+            # Provenance filter (catalog = shared repo, custom = a client's repo)
+            if provenance is not None:
+                if (rule.get("_provenance") or "catalog") != provenance:
                     continue
 
             results.append(rule)
@@ -605,6 +688,8 @@ def rule_to_summary(rule: dict) -> RuleSummary:
         file_path=rule.get("_file_path", ""),
         has_graylog_query=rule.get("_has_graylog", False),
         has_aggregation=has_aggregation,
+        provenance=rule.get("_provenance", "catalog"),
+        owner_customer_code=rule.get("_owner_customer_code"),
     )
 
 
@@ -662,6 +747,8 @@ def rule_to_detail(rule: dict) -> RuleDetail:
         raw_yaml=rule.get("_raw_yaml", ""),
         graylog=graylog,
         aggregation=aggregation,
+        provenance=rule.get("_provenance", "catalog"),
+        owner_customer_code=rule.get("_owner_customer_code"),
     )
 
 
@@ -838,6 +925,7 @@ async def get_rules_list(
     mitre_id: Optional[str] = None,
     search: Optional[str] = None,
     has_graylog: Optional[bool] = None,
+    provenance: Optional[str] = None,
     skip: int = 0,
     limit: int = 100,
 ) -> dict:
@@ -881,6 +969,7 @@ async def get_rules_list(
         mitre_id=mitre_id,
         search=search,
         has_graylog=has_graylog,
+        provenance=provenance,
     )
 
     # Sort by name

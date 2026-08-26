@@ -6,8 +6,9 @@ the repo gate can never disagree (see DETECTION_RULE_EDITOR.md §5, Milestone 1)
 
 Scope is **Graylog-only** rules: a top-level ``graylog.query`` string, an optional
 top-level ``aggregation`` block placed AFTER ``graylog``, and no ``search`` (OpenSearch
-DSL) or ``parameters`` block. Layer 1 is structure + lint only — reference integrity
-(L2), Graylog query parse (L3) and per-tenant field existence (L4) are separate.
+DSL) or ``parameters`` block. Covers structure + lint (L1), reference integrity as
+warnings (L2), and Graylog query parse (L3); per-tenant field existence (L4) runs
+inside the backtest, where a customer/stream is in scope.
 """
 from __future__ import annotations
 
@@ -42,6 +43,31 @@ AGG_CONDITIONS = {">", ">=", "<", "<=", "=="}
 FOLDED_SCALAR_KEYS = ("description", "how_to_implement", "known_false_positives")
 FORBIDDEN_BLOCKS = ("search", "parameters")
 _WINDOW_RE = re.compile(r"^\d+[smhd]$")
+
+# --- L2 reference-integrity helpers (all L2 findings are WARNINGS: they flag
+# --- likely mistakes, but enrichment pipelines can add fields we can't see) ---
+_PLACEHOLDER_RE = re.compile(r"\$([A-Za-z_][\w.]*)\$")
+_QUERY_FIELD_RE = re.compile(r"(?<![\w.])([A-Za-z_][\w.]*)\s*:")
+_EXISTS_RE = re.compile(r"_exists_\s*:\s*([A-Za-z_][\w.]*)")
+_RESERVED_QUERY_TOKENS = {"AND", "OR", "NOT", "TO", "_exists_"}
+_MITRE_RE = re.compile(r"^T\d{4}(\.\d{3})?$")
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+# Rough risk_score bands per severity — deliberately wide; only flags clear mismatches.
+_SEVERITY_SCORE_BANDS = {"low": (1, 40), "medium": (25, 75), "high": (55, 95), "critical": (75, 100)}
+
+
+def _rule_used_fields(data: Dict[str, Any]) -> set:
+    """Fields the rule actually uses: query fields + aggregation group_by/field."""
+    graylog = data.get("graylog") if isinstance(data.get("graylog"), dict) else {}
+    query = str(graylog.get("query") or "")
+    fields = {m for m in _QUERY_FIELD_RE.findall(query) if m not in _RESERVED_QUERY_TOKENS}
+    fields |= set(_EXISTS_RE.findall(query))
+    agg = data.get("aggregation")
+    if isinstance(agg, dict):
+        fields |= {g for g in (agg.get("group_by") or []) if isinstance(g, str)}
+        if agg.get("field"):
+            fields.add(str(agg["field"]))
+    return fields
 
 
 @dataclasses.dataclass
@@ -285,6 +311,46 @@ def lint_rule_yaml(raw: str) -> List[Finding]:
     for key in ("author", "date", "data_source", "response", "tags"):
         if key not in data:
             findings.append(Finding("warning", "MISSING_RECOMMENDED", f"'{key}' is recommended for a complete rule.", path=key))
+
+    # --- L2: reference integrity (warnings only) ---------------------------
+    used_fields = _rule_used_fields(data)
+    response = data.get("response") if isinstance(data.get("response"), dict) else {}
+
+    # $field$ placeholders in the alert message should be fields the rule uses.
+    msg = response.get("message")
+    if isinstance(msg, str):
+        for ph in sorted(set(_PLACEHOLDER_RE.findall(msg))):
+            if ph not in used_fields:
+                findings.append(Finding("warning", "REF_MESSAGE_FIELD", f"response.message references ${ph}$ but the query/aggregation never uses that field — it may render blank in alerts.", path="response.message", line=_line_of_key(raw, "response")))
+
+    # risk_objects / threat_objects should point at fields the rule uses.
+    for kind, code in (("risk_objects", "REF_RISK_OBJECT"), ("threat_objects", "REF_THREAT_OBJECT")):
+        items = response.get(kind)
+        if isinstance(items, list):
+            for obj in items:
+                if isinstance(obj, dict) and isinstance(obj.get("field"), str) and obj["field"] not in used_fields:
+                    findings.append(Finding("warning", code, f"response.{kind} field '{obj['field']}' is not used by the query/aggregation — the object may be empty on alerts.", path=f"response.{kind}", line=_line_of_key(raw, "response")))
+
+    # MITRE technique id format.
+    tags = data.get("tags") if isinstance(data.get("tags"), dict) else {}
+    mitre = tags.get("mitre_attack_id")
+    if isinstance(mitre, list):
+        for mid in mitre:
+            if isinstance(mid, str) and not _MITRE_RE.match(mid):
+                findings.append(Finding("warning", "MITRE_ID_FORMAT", f"'{mid}' does not look like a MITRE ATT&CK technique id (e.g. T1059 or T1059.001).", path="tags.mitre_attack_id", line=_line_of_key(raw, "tags")))
+
+    # severity vs risk_score sanity (wide bands — only clear mismatches).
+    sev = str(response.get("severity") or "").lower()
+    score = response.get("risk_score")
+    if sev in _SEVERITY_SCORE_BANDS and isinstance(score, int) and not isinstance(score, bool):
+        lo, hi = _SEVERITY_SCORE_BANDS[sev]
+        if not (lo <= score <= hi):
+            findings.append(Finding("warning", "SEVERITY_SCORE_MISMATCH", f"risk_score {score} is unusual for severity '{sev}' (expected roughly {lo}–{hi}).", path="response.risk_score", line=_line_of_key(raw, "response")))
+
+    # date should be a quoted ISO date string.
+    date_v = data.get("date")
+    if isinstance(date_v, str) and not _DATE_RE.match(date_v):
+        findings.append(Finding("warning", "DATE_FORMAT", 'date should be a quoted ISO date, e.g. "2026-08-26".', path="date", line=_line_of_key(raw, "date")))
 
     return findings
 

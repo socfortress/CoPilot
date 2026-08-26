@@ -40,9 +40,9 @@
 				<template #icon><Icon :name="BacktestIcon" :size="16" /></template>
 				Backtest
 			</n-button>
-			<n-button size="small" type="primary" :disabled="!result?.valid">
+			<n-button size="small" type="primary" :disabled="!result?.valid" @click="showPublish = true">
 				<template #icon><Icon :name="PublishIcon" :size="16" /></template>
-				Publish (soon)
+				Publish
 			</n-button>
 		</div>
 
@@ -140,6 +140,7 @@
 		</div>
 
 		<BacktestModal v-model:show="showBacktest" :yaml="yamlText" />
+		<PublishModal v-model:show="showPublish" :yaml="yamlText" :valid="!!result?.valid" />
 	</div>
 </template>
 
@@ -153,6 +154,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import BacktestModal from "@/components/copilotSearches/BacktestModal.vue"
 import GraylogSyntaxReference from "@/components/copilotSearches/GraylogSyntaxReference.vue"
+import PublishModal from "@/components/copilotSearches/PublishModal.vue"
 import RuleYamlEditor from "@/components/copilotSearches/RuleYamlEditor.vue"
 import { getApiErrorMessage } from "@/utils"
 
@@ -184,6 +186,7 @@ const result = ref<ValidateRuleResponse | null>(null)
 const validating = ref(false)
 const rightTab = ref<"validation" | "syntax">("validation")
 const showBacktest = ref(false)
+const showPublish = ref(false)
 const editorRef = ref<InstanceType<typeof RuleYamlEditor> | null>(null)
 
 // Findings grouped by level, each sorted by line.
@@ -286,8 +289,34 @@ async function validate() {
 
 watchDebounced(yamlText, validate, { debounce: 400 })
 
+// --- draft auto-save: never lose an in-progress rule to a refresh/navigation ---
+const DRAFT_KEY = "copilot-searches:editor-draft"
+
+watchDebounced(
+	yamlText,
+	v => {
+		try {
+			localStorage.setItem(DRAFT_KEY, v || "")
+		} catch {
+			// storage full/blocked — drafts are best-effort
+		}
+	},
+	{ debounce: 600 }
+)
+
 onMounted(() => {
-	yamlText.value = makeTemplate("disabled")
+	let draft: string | null = null
+	try {
+		draft = localStorage.getItem(DRAFT_KEY)
+	} catch {
+		draft = null
+	}
+	if (draft?.trim()) {
+		yamlText.value = draft
+		message.info("Restored your draft — use the template buttons to start fresh.")
+	} else {
+		yamlText.value = makeTemplate("disabled")
+	}
 })
 </script>
 

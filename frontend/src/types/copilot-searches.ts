@@ -36,6 +36,9 @@ export interface RuleSummary {
 	cve: string[]
 	file_path: string
 	has_graylog_query: boolean
+	/** "catalog" = shared SOCFortress repo, "custom" = a client's own repo */
+	provenance?: "catalog" | "custom"
+	owner_customer_code?: string | null
 }
 
 export interface RuleDetail {
@@ -59,6 +62,8 @@ export interface RuleDetail {
 	file_path: string
 	raw_yaml: string
 	graylog: GraylogQuery | null
+	provenance?: "catalog" | "custom"
+	owner_customer_code?: string | null
 }
 
 export interface RuleResponse {
@@ -230,6 +235,7 @@ export interface RuleListQuery {
 	mitre_id?: string
 	search?: string
 	has_graylog?: boolean
+	provenance?: "catalog" | "custom"
 	skip?: number
 	limit?: number
 }
@@ -394,5 +400,70 @@ export interface BacktestResponse {
 	sample_fields: string[]
 	top_fields: Record<string, BacktestTopValue[]>
 	aggregation?: BacktestAggregation | null
+	/** Query fields that don't exist in this customer's stream data (L4-lite) */
+	missing_fields?: string[]
 	note?: string | null
+}
+
+// --- Per-tenant custom rule repositories (see DETECTION_RULE_EDITOR.md) ---
+export interface CustomRepoConfig {
+	customer_code: string
+	repo: string
+	branch: string
+	enabled: boolean
+	has_token: boolean
+	/** Fetch outcome from the last cache refresh (null = not refreshed yet this run) */
+	last_refresh_ok?: boolean | null
+	rules_loaded?: number | null
+	last_refresh_error?: string | null
+	last_refresh_at?: string | null
+}
+
+export interface TestCustomRepoRequest {
+	repo: string
+	branch?: string
+	token?: string | null
+	customer_code?: string | null
+}
+
+export interface TestCustomRepoResponse {
+	ok: boolean
+	rules_found: number
+	error?: string | null
+}
+
+export interface SetCustomRepoRequest {
+	repo: string
+	branch?: string
+	token?: string | null
+	enabled?: boolean
+}
+
+export interface CustomRepoResponse {
+	repo: CustomRepoConfig | null
+}
+
+export interface CustomRepoListResponse {
+	repos: CustomRepoConfig[]
+}
+
+// --- Publish a rule to a client's own GitHub repo ---
+export interface PublishRuleRequest {
+	yaml: string
+	customer_code: string
+	message?: string
+	path?: string
+}
+
+export interface PublishRuleResponse {
+	success: boolean
+	message?: string
+	error?: string | null
+	action?: "created" | "updated" | null
+	repo?: string | null
+	branch?: string | null
+	path?: string | null
+	commit_url?: string | null
+	html_url?: string | null
+	findings?: LintFinding[]
 }

@@ -16,18 +16,26 @@
 			class="[&_.n-tabs-nav]:mx-auto [&_.n-tabs-nav]:min-w-70"
 		>
 			<template #suffix>
-				<n-button type="primary" size="small" @click="createRule">
-					<template #icon><Icon :name="AddIcon" :size="16" /></template>
-					Create rule
-				</n-button>
+				<div class="flex items-center gap-2">
+					<n-button size="small" secondary @click="showCustomRepos = true">
+						<template #icon><Icon :name="RepoIcon" :size="16" /></template>
+						Custom repos
+					</n-button>
+					<n-button type="primary" size="small" @click="createRule">
+						<template #icon><Icon :name="AddIcon" :size="16" /></template>
+						Create rule
+					</n-button>
+				</div>
 			</template>
 			<n-tab-pane name="grid" tab="Rules" display-directive="show:lazy">
-				<GridView />
+				<GridView :key="gridKey" />
 			</n-tab-pane>
 			<n-tab-pane name="matrix" tab="Matrix" display-directive="show:lazy">
 				<MatrixView />
 			</n-tab-pane>
 		</n-tabs>
+
+		<CustomReposModal v-model:show="showCustomRepos" @changed="gridKey++" />
 	</div>
 </template>
 
@@ -36,11 +44,15 @@ import { NAlert, NButton, NTabPane, NTabs } from "naive-ui"
 import { onMounted, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
+import CustomReposModal from "./CustomReposModal.vue"
 import GridView from "./GridView/GridView.vue"
 import MatrixView from "./MatrixView/MatrixView.vue"
 
 const AddIcon = "carbon:add"
+const RepoIcon = "carbon:logo-github"
 const viewMode = ref<"grid" | "matrix">("grid")
+const showCustomRepos = ref(false)
+const gridKey = ref(0)
 
 const route = useRoute()
 const router = useRouter()

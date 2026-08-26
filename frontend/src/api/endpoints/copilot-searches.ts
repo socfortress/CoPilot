@@ -3,6 +3,8 @@ import type {
 	BacktestResponse,
 	BulkProvisionGraylogAlertRequest,
 	BulkProvisionGraylogAlertResponse,
+	CustomRepoListResponse,
+	CustomRepoResponse,
 	ExecuteGraylogQueryRequest,
 	ExecuteSearchRequest,
 	ExecuteSearchResponse,
@@ -12,6 +14,8 @@ import type {
 	MitreCoverageResponse,
 	ProvisionGraylogAlertRequest,
 	ProvisionGraylogAlertResponse,
+	PublishRuleRequest,
+	PublishRuleResponse,
 	RefreshResponse,
 	RuleCategoriesResponse,
 	RuleDetailResponse,
@@ -21,6 +25,9 @@ import type {
 	RulesByIdsResponse,
 	RulesByMitreQuery,
 	RuleStatsResponse,
+	SetCustomRepoRequest,
+	TestCustomRepoRequest,
+	TestCustomRepoResponse,
 	ValidateRuleRequest,
 	ValidateRuleResponse
 } from "@/types/copilot-searches"
@@ -41,6 +48,7 @@ export default {
 				mitre_id: query.mitre_id,
 				search: query.search,
 				has_graylog: query.has_graylog,
+				provenance: query.provenance,
 				skip: query.skip || 0,
 				limit: query.limit || 100
 			},
@@ -201,6 +209,43 @@ export default {
 	 */
 	backtestRule(request: BacktestRequest) {
 		return HttpClient.post<FlaskBaseResponse & BacktestResponse>(`/copilot_searches/backtest`, request)
+	},
+
+	/** List configured per-tenant custom rule repositories. */
+	listCustomRepos() {
+		return HttpClient.get<FlaskBaseResponse & CustomRepoListResponse>(`/copilot_searches/custom-repos`)
+	},
+
+	/** Get one customer's custom-repo pointer. */
+	getCustomRepo(customerCode: string) {
+		return HttpClient.get<FlaskBaseResponse & CustomRepoResponse>(
+			`/copilot_searches/custom-repos/${encodeURIComponent(customerCode)}`
+		)
+	},
+
+	/** Set/replace a customer's custom-repo pointer. */
+	setCustomRepo(customerCode: string, request: SetCustomRepoRequest) {
+		return HttpClient.put<FlaskBaseResponse & CustomRepoResponse>(
+			`/copilot_searches/custom-repos/${encodeURIComponent(customerCode)}`,
+			request
+		)
+	},
+
+	/** Remove a customer's custom-repo pointer. */
+	deleteCustomRepo(customerCode: string) {
+		return HttpClient.delete<FlaskBaseResponse & CustomRepoResponse>(
+			`/copilot_searches/custom-repos/${encodeURIComponent(customerCode)}`
+		)
+	},
+
+	/** Publish a rule to a customer's own GitHub repo (direct commit). */
+	publishRule(request: PublishRuleRequest) {
+		return HttpClient.post<FlaskBaseResponse & PublishRuleResponse>(`/copilot_searches/publish`, request)
+	},
+
+	/** Dry-run a custom repo pull (reachability + detection YAML count). */
+	testCustomRepo(request: TestCustomRepoRequest) {
+		return HttpClient.post<FlaskBaseResponse & TestCustomRepoResponse>(`/copilot_searches/custom-repos/test`, request)
 	},
 
 	/**

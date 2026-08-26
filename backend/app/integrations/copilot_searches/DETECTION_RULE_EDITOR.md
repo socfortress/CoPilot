@@ -46,8 +46,17 @@ Key order:
 4. ⬜ **L4 field-existence** (per tenant, 3-outcome via Graylog message-search schema).
 5. ✅ **Backtest — non-aggregation** (total via count aggregate, per-bucket sparkline, samples, top fields). Live end-to-end.
 6. ✅ **Backtest — aggregation + threshold sensitivity** (local sliding-window simulation using the same `count`/`distinct_count` semantics the provisioner uses; estimated alerts, top offenders, threshold sensitivity). 8 unit tests pass.
-7. ⬜ **Publish → GitHub PR/commit** (client repo + canonical contribution path).
-8. ⬜ **Multi-repo RulesCache merge** (canonical + per-tenant custom repo).
+7. ✅ **Publish → client GitHub (direct commit)** — `services/publish.py` + `POST /copilot_searches/publish` + editor `PublishModal`. Uses the per-tenant write token (MinIO); gated on lint-valid; create-or-update via Contents API. 5 unit tests. *(PR flow + upstream-contribution path still optional/later.)*
+8. ✅ **Multi-repo RulesCache merge** — backend + frontend done; custom badge on cards + per-tenant config UI (Custom repos) + live-verified with `aminemoussaa/copilot-custom-rules-demo` → `local` (3 custom rules load, tagged). **Live publish verified by the user** (fine-grained PAT w/ Contents RW; rule "event id 1 + 11" round-tripped repo→card).
+9. ✅ **Source filter** — `provenance` param on GET /copilot_searches (`catalog`|`custom`) + "Source" select in the grid filter popover (counts verified: 3050/4).
+10. ❌ **Edit existing custom rule — built then REMOVED at the user's request** ("i don't like this feature"). All pieces reverted (card Edit button, editor `?rule=` loading + chip, PublishModal defaults). Updating a rule still works by publishing to the same path manually. Do not re-add without asking.
+11. ✅ **Publish hardening** — `path` constrained to `detections/**.ya?ml` (no `..`/backslashes/other locations); **id-collision check** vs the cache (catalog or another custom file → clear error; re-publishing the same file → allowed as update). Verified live; 4 new tests (39 total).
+12. ✅ **Custom-repo failure visibility** — `RulesCache.source_status` records per-repo fetch outcome each refresh; surfaced in `GET /custom-repos` (`last_refresh_ok/rules_loaded/last_refresh_error/last_refresh_at`) and as status chips in the Custom repos UI; plus `POST /custom-repos/test` dry-run + "Test" button (uses stored token when editing with blank field). Verified live (good repo → 4 rules; bad branch → clear error).
+13. ⚠️ **Multi-tenant visibility scoping: deliberately SKIPPED per the user** ("keep it accessible to all") — every tenant's custom rules are visible to all authenticated users, including customer_user. Documented decision; revisit only if the user asks.
+14. ✅ **L2 reference integrity** — folded into the linter as WARNINGS only (nothing valid becomes invalid): `$field$` message placeholders vs used fields, risk/threat_object fields vs used fields, MITRE id format, severity↔risk_score bands, quoted ISO date. 5 new tests (23 linter total).
+15. ✅ **L4-lite field existence** — inside the backtest (customer already in scope): query/aggregation fields compared against the stream's real field population (`/api/views/fields`), returned as `missing_fields` + warning alert in the modal. Guarded (skipped when the stream has <5 fields, e.g. empty streams). Verified live: typo'd `eventlD` flagged for `local`.
+16. ✅ **Draft auto-save** — editor YAML persisted to localStorage (600ms debounce), restored on mount with a toast; template buttons start fresh.
+17. **Backend suite: 44 tests green** (9 publish + 3 custom-repo + 9 backtest + 23 linter).
 
 ## 6. Progress log
 - _(init)_ Created working doc. Verified deps + wiring.
@@ -70,6 +79,13 @@ Key order:
   - **Editor polish**: template menu (Simple vs Rule-with-aggregation), Copy YAML, validation panel grouped into Errors/Warnings with a valid hero; findings are **clickable → jump to the offending line** (RuleYamlEditor exposes `goToLine()` with a transient flash).
   - **Graylog syntax reference**: filter box + click-to-copy examples.
   - `vue-tsc` clean; all HMR'd clean. No shared-app files touched.
+- **M8 (backend) — Multi-repo custom rules read/merge (decision: MinIO, per-tenant):**
+  - `services/custom_repos.py` — per-tenant pointer `{repo, branch, token?, enabled}` in MinIO bucket `copilot-searches`, key `custom-repos/<customer_code>.json` (reuses infra; no DB change). CRUD + `redact()` (token never returned, only `has_token`). Round-trip verified vs live MinIO (`10.255.255.5`).
+  - `RulesCache` refactored to pull the **canonical catalog + every enabled custom repo** the same way (tree+raw). Rules tagged `_provenance` (catalog|custom) + `_owner_customer_code`; catalog fetched first and **wins id collisions** (dupes skipped + logged). No regression: canonical still loads 3050 rules. `_custom_repo_headers()` uses the client's read token or falls back to `GITHUB_TOKEN`.
+  - `provenance` + `owner_customer_code` added to `RuleSummary`/`RuleDetail` (so cards can badge).
+  - Endpoints `GET/PUT/DELETE /copilot_searches/custom-repos[/{customer_code}]` (admin/analyst). Refresh endpoint re-pulls everything.
+  - Tests `tests/test_custom_repos.py` (3): merge+tag+collision, per-file tagging (custom + catalog). All green.
+  - **TODO (frontend):** "Custom" badge on rule cards (read `provenance`), per-tenant config UI (customer picker + repo/branch/token, save/delete, then Refresh). **Multi-tenant scoping** of which custom rules a `customer_user` sees is still open (today all provenance shown to admin/analyst) — tighten before prod.
 
 ## 7. Endpoints
 - ✅ `POST /copilot_searches/validate` — L1+L3 lint of a YAML string → findings.

@@ -367,9 +367,17 @@ async def run_backtest(rule_yaml: str, customer_code: str, range_seconds: int = 
     top_fields = _top_fields([d for _, d in rows], ["source", *qfields[:3]])
 
     # --- rich samples: pull the FULL field set for the sample events so the UI
-    #     can show a full-log inspector (bounded second fetch; best-effort). -----
+    #     can show a full-log inspector (bounded second fetch; best-effort). Also
+    #     L4-lite: warn about query fields that don't exist in this stream's data. -
+    missing_fields: List[str] = []
     try:
         stream_fields = await list_stream_fields(stream)
+        # Only meaningful when the stream actually has a real field population —
+        # an empty/new stream would flag everything as missing.
+        if len(stream_fields) >= 5:
+            known = set(stream_fields)
+            candidates = {f for f in [*qfields, *agg_fields] if f and f not in ("timestamp", "source", "message")}
+            missing_fields = sorted(f for f in candidates if f not in known)
         if stream_fields:
             detail_fields: List[str] = []
             for f in ["timestamp", "source", "message", "full_message", *stream_fields]:
@@ -420,6 +428,7 @@ async def run_backtest(rule_yaml: str, customer_code: str, range_seconds: int = 
         "sample_fields": sample_fields,
         "top_fields": top_fields,
         "aggregation": aggregation,
+        "missing_fields": missing_fields,
         "note": note,
         "error": None,
     }
