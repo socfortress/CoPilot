@@ -98,7 +98,8 @@ import type { InspectorContent, InspectorResult } from "@/types/file-analysis"
 import { NEmpty, NTag } from "naive-ui"
 import { computed } from "vue"
 import CollapsibleCard from "@/components/common/CollapsibleCard.vue"
-import { SECTION_LABEL } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import { SECTION_LABEL } from "@/components/common/section-label"
+
 import CodeBlock from "../CodeBlock.vue"
 
 const props = defineProps<{ result?: InspectorResult | null; loading?: boolean }>()

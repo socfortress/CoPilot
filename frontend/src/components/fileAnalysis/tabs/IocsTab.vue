@@ -12,37 +12,58 @@
 		<n-empty v-if="!hasIocs" description="No IOCs extracted." class="min-h-52 justify-center" />
 
 		<div v-else class="grid gap-4 md:grid-cols-3">
-			<div v-for="group of groups" :key="group.key" class="flex flex-col gap-2">
-				<div class="flex items-center gap-2">
-					<Icon :name="group.icon" :size="16" />
-					<span class="text-sm font-medium">{{ group.label }}</span>
-					<n-tag size="tiny" round :bordered="false">{{ group.values.length }}</n-tag>
-				</div>
-				<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
-					<code v-for="v of group.values" :key="v" class="text-xs break-all">{{ v }}</code>
-					<span v-if="!group.values.length" class="text-secondary text-xs">—</span>
-				</div>
-			</div>
+			<ValueList
+				v-for="group of groups"
+				:key="group.key"
+				:label="group.label"
+				:items="group.values"
+				:link="group.link"
+				max-height="18rem"
+				empty-text="— none extracted —"
+			/>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { InspectorIocs } from "@/types/file-analysis"
-import { NButton, NEmpty, NTag, useMessage } from "naive-ui"
+import { NButton, NEmpty, useMessage } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import ValueList from "@/components/common/ValueList.vue"
 
 const props = defineProps<{ iocs?: InspectorIocs | null }>()
 const message = useMessage()
 
 const CopyIcon = "carbon:copy"
 
+// Indicators link out to VirusTotal, the same affordance the detonation and
+// VirusTotal tabs already give: an extracted indicator is something you look up.
 const groups = computed(() => [
-	{ key: "urls", label: "URLs", icon: "carbon:link", values: props.iocs?.urls ?? [] },
-	{ key: "domains", label: "Domains", icon: "carbon:web-services-container", values: props.iocs?.domains ?? [] },
-	{ key: "ips", label: "IPs", icon: "carbon:ibm-cloud-internet-services", values: props.iocs?.ips ?? [] }
+	{
+		key: "urls",
+		label: "URLs",
+		values: props.iocs?.urls ?? [],
+		link: undefined as ((v: string) => string) | undefined
+	},
+	{
+		key: "domains",
+		label: "Domains",
+		values: props.iocs?.domains ?? [],
+		link: (v: string) => `https://www.virustotal.com/gui/domain/${encodeURIComponent(defang(v))}`
+	},
+	{
+		key: "ips",
+		label: "IPs",
+		values: props.iocs?.ips ?? [],
+		link: (v: string) => `https://www.virustotal.com/gui/ip-address/${encodeURIComponent(defang(v))}`
+	}
 ])
+
+/** Indicators are stored defanged (example[.]com); a lookup URL needs them intact. */
+function defang(value: string): string {
+	return value.replaceAll("[.]", ".").replaceAll("[:]", ":")
+}
 
 const hasIocs = computed(() => groups.value.some(g => g.values.length))
 

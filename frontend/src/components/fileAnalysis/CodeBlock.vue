@@ -15,7 +15,7 @@
 <script setup lang="ts">
 import CodeSource from "@/components/common/CodeSource.vue"
 import CollapsibleCard from "@/components/common/CollapsibleCard.vue"
-import { SECTION_LABEL } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import { SECTION_LABEL } from "@/components/common/section-label"
 
 withDefaults(
 	defineProps<{

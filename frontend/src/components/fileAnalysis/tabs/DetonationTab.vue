@@ -393,7 +393,8 @@ import {
 import { computed, reactive, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { SECTION_LABEL, useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import { SECTION_LABEL } from "@/components/common/section-label"
+import { useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{
 	sandbox?: SandboxSummary | null

@@ -88,7 +88,8 @@ import type { FileAnalysisReputation, InspectorResult } from "@/types/file-analy
 import { NTag, useMessage } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
-import { SECTION_LABEL } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import { SECTION_LABEL } from "@/components/common/section-label"
+
 import ReputationSummary from "@/components/fileAnalysis/ReputationSummary.vue"
 
 const props = defineProps<{

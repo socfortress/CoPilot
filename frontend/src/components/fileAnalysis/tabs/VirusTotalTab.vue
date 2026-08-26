@@ -98,7 +98,7 @@
 					<n-tag size="tiny" round :bordered="false" type="info">no local detonation needed</n-tag>
 				</template>
 
-				<div class="flex flex-col gap-4 p-4">
+				<div class="flex flex-col gap-4 p-4 pb-0">
 					<!-- Rows, not pills: a technique id is an identifier and its description
 					     is prose, and packing both into a round tag produced ragged blobs
 					     that could not be scanned down the ids. -->
@@ -147,14 +147,23 @@
 						</div>
 					</div>
 
-					<div class="grid gap-3 md:grid-cols-3">
-						<IocList label="Contacted IPs" :items="intel.behaviour.contacted_ips" :link="ipUrl" />
-						<IocList
-							label="Contacted domains"
-							:items="intel.behaviour.contacted_domains"
-							:link="domainUrl"
-						/>
-						<IocList label="Contacted URLs" :items="intel.behaviour.contacted_urls" />
+					<div
+						class="bg-secondary divide-border border-border -mx-4 grid gap-3 divide-y border-y md:grid-cols-3 md:divide-x md:divide-y-0"
+					>
+						<div class="p-4">
+							<ValueList label="Contacted IPs" :items="intel.behaviour.contacted_ips" :link="ipUrl" />
+						</div>
+						<div class="p-4">
+							<ValueList
+								label="Contacted domains"
+								:items="intel.behaviour.contacted_domains"
+								:link="domainUrl"
+							/>
+						</div>
+
+						<div class="p-4">
+							<ValueList label="Contacted URLs" :items="intel.behaviour.contacted_urls" />
+						</div>
 					</div>
 
 					<div v-if="intel.behaviour.dropped_files?.length" class="flex flex-col gap-2">
@@ -200,7 +209,7 @@
 												{{ d.name || "(unnamed)" }}
 											</span>
 										</div>
-										<span v-if="droppedMeta(d)" class="text-tertiary shrink-0 font-mono text-2xs">
+										<span v-if="droppedMeta(d)" class="text-tertiary text-2xs shrink-0 font-mono">
 											{{ droppedMeta(d) }}
 										</span>
 									</div>
@@ -212,10 +221,18 @@
 						</div>
 					</div>
 
-					<div class="grid gap-3 md:grid-cols-3">
-						<IocList label="Processes" :items="intel.behaviour.processes" mono />
-						<IocList label="Registry keys" :items="intel.behaviour.registry_keys" mono />
-						<IocList label="Mutexes" :items="intel.behaviour.mutexes" mono />
+					<div
+						class="bg-secondary divide-border border-border -mx-4 grid gap-3 divide-y border-t md:grid-cols-3 md:divide-x md:divide-y-0"
+					>
+						<div class="p-4">
+							<ValueList label="Processes" :items="intel.behaviour.processes" />
+						</div>
+						<div class="p-4">
+							<ValueList label="Registry keys" :items="intel.behaviour.registry_keys" />
+						</div>
+						<div class="p-4">
+							<ValueList label="Mutexes" :items="intel.behaviour.mutexes" />
+						</div>
 					</div>
 				</div>
 			</CollapsibleCard>
@@ -252,7 +269,11 @@
 							<div v-for="(y, i) of filteredYara" :key="i" class="flex flex-col gap-1 px-3 py-2">
 								<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
 									<div class="flex min-w-0 grow items-baseline gap-2">
-										<Icon :name="RuleIcon" :size="13" class="text-warning shrink-0 translate-y-0.5" />
+										<Icon
+											:name="RuleIcon"
+											:size="13"
+											class="text-warning shrink-0 translate-y-0.5"
+										/>
 										<!-- mono: a YARA rule name is an identifier, not prose -->
 										<span
 											class="text-default min-w-0 truncate font-mono text-xs font-medium"
@@ -263,7 +284,7 @@
 									</div>
 									<!-- Provenance as one muted run instead of a tag plus a sentence:
 									     same treatment for both fields, so the right edge is uniform. -->
-									<span v-if="yaraMeta(y)" class="text-tertiary shrink-0 font-mono text-2xs">
+									<span v-if="yaraMeta(y)" class="text-tertiary text-2xs shrink-0 font-mono">
 										{{ yaraMeta(y) }}
 									</span>
 								</div>
@@ -381,10 +402,12 @@
 <script setup lang="ts">
 import type { FileAnalysisReputation } from "@/types/file-analysis"
 import { NCollapse, NCollapseItem, NEmpty, NInput, NProgress, NScrollbar, NTag } from "naive-ui"
-import { computed, h } from "vue"
+import { computed } from "vue"
 import CollapsibleCard from "@/components/common/CollapsibleCard.vue"
 import Icon from "@/components/common/Icon.vue"
-import { iconForFile, SECTION_LABEL, useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import { SECTION_LABEL } from "@/components/common/section-label"
+import ValueList from "@/components/common/ValueList.vue"
+import { iconForFile, useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{ reputation?: FileAnalysisReputation | null; loading?: boolean }>()
 
@@ -404,12 +427,10 @@ const { query: droppedQuery, results: filteredDropped } = useFuseFilter(
 	() => intel.value?.behaviour?.dropped_files ?? [],
 	["name", "type", "sha256"]
 )
-const { query: yaraQuery, results: filteredYara } = useFuseFilter(() => intel.value?.yara ?? [], [
-	"rule",
-	"author",
-	"ruleset",
-	"description"
-])
+const { query: yaraQuery, results: filteredYara } = useFuseFilter(
+	() => intel.value?.yara ?? [],
+	["rule", "author", "ruleset", "description"]
+)
 
 const detPct = computed(() => {
 	const m = props.reputation?.malicious ?? 0
@@ -471,44 +492,5 @@ function ipUrl(v: string): string {
 }
 function domainUrl(v: string): string {
 	return `https://www.virustotal.com/gui/domain/${encodeURIComponent(v)}`
-}
-
-// Small inline list renderer (keeps the template flat for the three-up IOC grids).
-function IocList(p: { label: string; items?: string[]; link?: (v: string) => string; mono?: boolean }) {
-	const items = p.items || []
-	if (!items.length) return null
-	// NScrollbar rather than overflow-y-auto: the native bar is a different widget
-	// from the ones used everywhere else in the app, and on some platforms it only
-	// appears while scrolling, so a clipped list read as truncated content.
-	return h("div", { class: "flex flex-col gap-2" }, [
-		h("span", { class: SECTION_LABEL }, `${p.label} (${items.length})`),
-		h("div", { class: "border-default rounded-lg border" }, [
-			h(
-				NScrollbar,
-				{ style: "max-height: 13rem", class: "p-3" },
-				{
-					default: () =>
-						h(
-							"div",
-							{ class: "flex flex-col gap-2" },
-							items.map(it =>
-								p.link
-									? h(
-											"a",
-											{
-												href: p.link(it),
-												target: "_blank",
-												rel: "noopener noreferrer",
-												class: "hover:text-primary block py-0.5 text-xs break-all underline decoration-dotted"
-											},
-											it
-										)
-									: h("code", { class: "block py-0.5 text-xs break-all" }, it)
-							)
-						)
-				}
-			)
-		])
-	])
 }
 </script>
