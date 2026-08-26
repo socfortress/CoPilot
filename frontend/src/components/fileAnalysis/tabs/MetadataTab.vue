@@ -1,13 +1,20 @@
 <template>
-	<div class="flex flex-col gap-4">
+	<div class="@container flex flex-col gap-4">
 		<n-empty v-if="!result" description="No metadata yet." class="min-h-52 justify-center" />
 
 		<template v-else>
-			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-				<div v-for="row of rows" :key="row.label" class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
-					<span class="text-secondary text-xs">{{ row.label }}</span>
-					<code class="text-sm break-all">{{ row.value }}</code>
-				</div>
+			<!-- Each fact is a card in the module's shared chrome, but not collapsible:
+			     a single value has nothing worth folding away, and a chevron on eight
+			     one-line cards would be eight controls that do nothing useful. -->
+			<div class="grid gap-3 @2xl:grid-cols-2 @4xl:grid-cols-3">
+				<CollapsibleCard v-for="row of rows" :key="row.label" :collapsible="false">
+					<template #header>
+						<span :class="SECTION_LABEL">{{ row.label }}</span>
+					</template>
+					<div class="p-3">
+						<span class="text-default font-mono text-sm break-all">{{ row.value }}</span>
+					</div>
+				</CollapsibleCard>
 			</div>
 
 			<div v-if="result.av?.signature" class="flex items-center gap-2">
@@ -17,20 +24,12 @@
 			</div>
 
 			<!-- FLOSS / extracted strings -->
-			<div v-if="result.content?.strings?.length" class="flex flex-col gap-2">
-				<span class="text-secondary text-xs font-medium">Strings ({{ result.content.strings.length }})</span>
-				<n-scrollbar class="bg-secondary max-h-80 rounded-lg p-3">
-					<div class="flex flex-col gap-2">
-						<code
-							v-for="(s, i) of result.content.strings"
-							:key="i"
-							class="block px-2 py-1 text-xs break-all"
-						>
-							{{ s }}
-						</code>
-					</div>
-				</n-scrollbar>
-			</div>
+			<ValueList
+				v-if="result.content?.strings?.length"
+				label="Strings"
+				:items="result.content.strings"
+				max-height="20rem"
+			/>
 
 			<!-- PE sections -->
 			<n-data-table
@@ -46,9 +45,12 @@
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
 import type { InspectorResult, InspectorSection } from "@/types/file-analysis"
-import { NDataTable, NEmpty, NScrollbar, NTag } from "naive-ui"
+import { NDataTable, NEmpty, NTag } from "naive-ui"
 import { computed } from "vue"
+import CollapsibleCard from "@/components/common/CollapsibleCard.vue"
 import Icon from "@/components/common/Icon.vue"
+import { SECTION_LABEL } from "@/components/common/section-label"
+import ValueList from "@/components/common/ValueList.vue"
 
 const props = defineProps<{ result?: InspectorResult | null }>()
 

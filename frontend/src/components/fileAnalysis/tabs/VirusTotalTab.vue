@@ -249,17 +249,23 @@
 							({{ filteredYara.length }}/{{ intel.yara.length }})
 						</span>
 					</span>
-					<n-input
-						v-model:value="yaraQuery"
-						size="tiny"
-						clearable
-						placeholder="Filter by rule, author or ruleset"
-						class="w-full sm:w-64"
-					>
-						<template #prefix><Icon :name="SearchIcon" :size="13" /></template>
-					</n-input>
 				</template>
+
 				<div>
+					<!-- The filter belongs to the content, not to the header: collapsing the
+					     card should take it away too, and a control that stays behind on a
+					     folded card has nothing left to act on. -->
+					<div class="border-default border-b p-3">
+						<n-input
+							v-model:value="yaraQuery"
+							size="tiny"
+							clearable
+							placeholder="Filter by rule, author or ruleset"
+							class="w-full sm:w-72"
+						>
+							<template #prefix><Icon :name="SearchIcon" :size="13" /></template>
+						</n-input>
+					</div>
 					<n-scrollbar style="max-height: 18rem">
 						<div class="divide-border flex flex-col divide-y">
 							<!-- Two zones on one baseline: the rule identity on the left, its
