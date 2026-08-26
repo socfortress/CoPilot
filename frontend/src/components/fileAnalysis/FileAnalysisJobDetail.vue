@@ -1,5 +1,16 @@
 <template>
-	<div class="flex flex-col gap-4">
+	<!-- Nothing at all is known yet: show the page's shape rather than an empty one.
+	     The whole view then appears in a single step instead of assembling itself
+	     block by block in front of the analyst. -->
+	<FileAnalysisDetailSkeleton v-if="initialLoading" />
+
+	<!-- The first fetch failed: say so here. Left to the toast alone, the page would
+	     sit on its skeleton for good, which is the very stall this state prevents. -->
+	<n-alert v-else-if="loadError" type="error" :bordered="false" class="text-sm">
+		{{ loadError }}
+	</n-alert>
+
+	<div v-else class="flex flex-col gap-4">
 		<FileAnalysisDetailHeader
 			:job
 			:result
@@ -20,46 +31,57 @@
 			Analysis failed. A file that crashes the inspector is itself worth a look.
 		</n-alert>
 
-		<FileAnalysisOverview
-			:result="result?.inspector"
-			:reputation="result?.reputation"
-			:reputation-pending="vtPending"
-			:verdict-reason="result?.verdict_reason"
-		/>
+		<!-- The job is known but its result is not readable yet. Naming the stage is
+		     what makes the wait read as expected rather than as a stall — the tab
+		     strip stays out until it can be drawn complete. -->
+		<FileAnalysisProgress v-if="awaitingResult" :job :reputation-pending="vtPending" />
 
-		<!-- Tabs (empty ones are hidden; we land on the first with content) -->
-		<n-tabs v-model:value="activeTab" type="line" animated @update:value="tabPinnedByUser = true">
-			<n-tab-pane v-if="hasPreviews" name="preview" tab="Preview" display-directive="show:lazy">
-				<PreviewTab :job-id :preview-names="result?.preview_urls || []" :loading="loadingResult" />
-			</n-tab-pane>
-			<n-tab-pane v-if="hasContent" name="content" tab="Content" display-directive="show:lazy">
-				<ContentTab :result="result?.inspector" :loading="loadingResult" />
-			</n-tab-pane>
-			<n-tab-pane v-if="hasIocs" name="iocs" tab="IOCs" display-directive="show:lazy">
-				<IocsTab :iocs="result?.inspector?.iocs" />
-			</n-tab-pane>
-			<n-tab-pane v-if="hasVtIntel" name="virustotal" tab="VirusTotal" display-directive="show:lazy">
-				<VirusTotalTab :reputation="result?.reputation" :loading="stillRunning" />
-			</n-tab-pane>
-			<n-tab-pane name="metadata" tab="Metadata" display-directive="show:lazy">
-				<MetadataTab :result="result?.inspector" />
-			</n-tab-pane>
+		<template v-else>
+			<FileAnalysisOverview
+				:result="result?.inspector"
+				:reputation="result?.reputation"
+				:reputation-pending="vtPending"
+				:verdict-reason="result?.verdict_reason"
+			/>
 
-			<!-- Detonation tabs only when the backend reports sandbox enabled -->
-			<template v-if="hasSandbox">
-				<n-tab-pane name="detonation" tab="Detonation" display-directive="show:lazy">
-					<DetonationTab
-						:sandbox="result?.sandbox"
-						:loading="loadingResult"
-						:dynamic-status="job?.dynamic_status"
-						:job-id
-					/>
+			<!-- A later tier can still be running once the static result is readable;
+			     say so under the content instead of leaving a half-filled page. -->
+			<FileAnalysisProgress v-if="stillRunning" :job :reputation-pending="vtPending" />
+
+			<!-- Tabs (empty ones are hidden; we land on the first with content) -->
+			<n-tabs v-model:value="activeTab" type="line" animated @update:value="tabPinnedByUser = true">
+				<n-tab-pane v-if="hasPreviews" name="preview" tab="Preview" display-directive="show:lazy">
+					<PreviewTab :job-id :preview-names="result?.preview_urls || []" :loading="loadingResult" />
 				</n-tab-pane>
-				<n-tab-pane name="network" tab="Network" display-directive="show:lazy">
-					<NetworkTab :sandbox="result?.sandbox" :loading="loadingResult" />
+				<n-tab-pane v-if="hasContent" name="content" tab="Content" display-directive="show:lazy">
+					<ContentTab :result="result?.inspector" :loading="loadingResult" />
 				</n-tab-pane>
-			</template>
-		</n-tabs>
+				<n-tab-pane v-if="hasIocs" name="iocs" tab="IOCs" display-directive="show:lazy">
+					<IocsTab :iocs="result?.inspector?.iocs" />
+				</n-tab-pane>
+				<n-tab-pane v-if="hasVtIntel" name="virustotal" tab="VirusTotal" display-directive="show:lazy">
+					<VirusTotalTab :reputation="result?.reputation" :loading="stillRunning" />
+				</n-tab-pane>
+				<n-tab-pane name="metadata" tab="Metadata" display-directive="show:lazy">
+					<MetadataTab :result="result?.inspector" />
+				</n-tab-pane>
+
+				<!-- Detonation tabs only when the backend reports sandbox enabled -->
+				<template v-if="hasSandbox">
+					<n-tab-pane name="detonation" tab="Detonation" display-directive="show:lazy">
+						<DetonationTab
+							:sandbox="result?.sandbox"
+							:loading="loadingResult"
+							:dynamic-status="job?.dynamic_status"
+							:job-id
+						/>
+					</n-tab-pane>
+					<n-tab-pane name="network" tab="Network" display-directive="show:lazy">
+						<NetworkTab :sandbox="result?.sandbox" :loading="loadingResult" />
+					</n-tab-pane>
+				</template>
+			</n-tabs>
+		</template>
 
 		<!-- Batch moved out of the layout: as a sidebar it squeezed the content column
 		     on every screen, including the common case of a single-file analysis. -->
@@ -85,8 +107,17 @@ import Api from "@/api"
 import { resolveActiveTab } from "@/components/fileAnalysis/fileAnalysis.helpers"
 import FileAnalysisBatchList from "@/components/fileAnalysis/FileAnalysisBatchList.vue"
 import FileAnalysisDetailHeader from "@/components/fileAnalysis/FileAnalysisDetailHeader.vue"
+import FileAnalysisDetailSkeleton from "@/components/fileAnalysis/FileAnalysisDetailSkeleton.vue"
 import FileAnalysisOverview from "@/components/fileAnalysis/FileAnalysisOverview.vue"
-import { MOCK_JOB_ID, mockJob, mockResult, USE_MOCK_ANALYSIS } from "@/components/fileAnalysis/mock-analysis"
+import FileAnalysisProgress from "@/components/fileAnalysis/FileAnalysisProgress.vue"
+import {
+	MOCK_JOB_ID,
+	MOCK_LATENCY_MS,
+	mockJob,
+	mockResult,
+	USE_MOCK_ANALYSIS
+} from "@/components/fileAnalysis/mock-analysis"
+import TabLoading from "@/components/fileAnalysis/tabs/TabLoading.vue"
 import { getApiErrorMessage } from "@/utils"
 
 // Route state arrives as props: the view owns the URL, this component owns one
@@ -94,13 +125,24 @@ import { getApiErrorMessage } from "@/utils"
 // (a drawer, a case page) without inventing a route to get there.
 const props = withDefaults(defineProps<{ jobId: string; batchIds?: string[] }>(), { batchIds: () => [] })
 
-const PreviewTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/PreviewTab.vue"))
-const ContentTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/ContentTab.vue"))
-const IocsTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/IocsTab.vue"))
-const MetadataTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/MetadataTab.vue"))
-const DetonationTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/DetonationTab.vue"))
-const VirusTotalTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/VirusTotalTab.vue"))
-const NetworkTab = defineAsyncComponent(() => import("@/components/fileAnalysis/tabs/NetworkTab.vue"))
+// Each panel is its own chunk. The fallback keeps a switch to a not-yet-downloaded
+// tab from showing an empty pane; the delay keeps it from flashing when the chunk
+// is already cached, which is the common case after the first visit.
+function tabChunk(loader: () => Promise<unknown>) {
+	return defineAsyncComponent({
+		loader: loader as never,
+		loadingComponent: TabLoading,
+		delay: 120
+	})
+}
+
+const PreviewTab = tabChunk(() => import("@/components/fileAnalysis/tabs/PreviewTab.vue"))
+const ContentTab = tabChunk(() => import("@/components/fileAnalysis/tabs/ContentTab.vue"))
+const IocsTab = tabChunk(() => import("@/components/fileAnalysis/tabs/IocsTab.vue"))
+const MetadataTab = tabChunk(() => import("@/components/fileAnalysis/tabs/MetadataTab.vue"))
+const DetonationTab = tabChunk(() => import("@/components/fileAnalysis/tabs/DetonationTab.vue"))
+const VirusTotalTab = tabChunk(() => import("@/components/fileAnalysis/tabs/VirusTotalTab.vue"))
+const NetworkTab = tabChunk(() => import("@/components/fileAnalysis/tabs/NetworkTab.vue"))
 
 const message = useMessage()
 
@@ -115,8 +157,15 @@ const tabPinnedByUser = ref(false)
 const job = ref<FileAnalysisJob | null>(null)
 const result = ref<FileAnalysisResult | null>(null)
 const loadingResult = ref(false)
+const loadError = ref("")
 let pollTimer: ReturnType<typeof setInterval> | null = null
 let pollCount = 0
+
+// Three phases, so the page never renders half-built: nothing known yet (shape
+// only), the job known but its result not readable (named stages), everything
+// readable (the real view, drawn once and complete).
+const initialLoading = computed(() => !job.value && !loadError.value)
+const awaitingResult = computed(() => !result.value && job.value?.status !== "failed")
 
 // Header indicator is SOLELY the VirusTotal result — the multi-engine hit ratio.
 const reputation = computed(() => result.value?.reputation || null)
@@ -239,6 +288,7 @@ function start() {
 	stopPolling()
 	job.value = null
 	result.value = null
+	loadError.value = ""
 	pollCount = 0
 	tabPinnedByUser.value = false
 	if (!props.jobId) return
@@ -246,8 +296,15 @@ function start() {
 	// Dev fixture: one job id renders a fully-populated analysis so every panel on
 	// this page can be reviewed at once. No real sample fills them all.
 	if (USE_MOCK_ANALYSIS && props.jobId === MOCK_JOB_ID) {
-		job.value = mockJob()
-		result.value = mockResult()
+		// Resolved after a beat rather than synchronously: the fixture exists to review
+		// this page, and a mock that lands instantly is the one state the real page
+		// never has — the loading path would go unreviewed.
+		const id = props.jobId
+		setTimeout(() => {
+			if (props.jobId !== id) return
+			job.value = mockJob()
+			result.value = mockResult()
+		}, MOCK_LATENCY_MS)
 		return
 	}
 

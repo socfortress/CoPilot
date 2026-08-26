@@ -30,6 +30,12 @@ const MOCK_ANALYSIS_ENABLED = true
 export const USE_MOCK_ANALYSIS = import.meta.env.DEV && MOCK_ANALYSIS_ENABLED
 
 /** Job id that switches the detail view onto this fixture instead of the API. */
+/**
+ * How long the fixture pretends to load, so the skeleton and the progress panel
+ *  are actually on screen while reviewing this page.
+ */
+export const MOCK_LATENCY_MS = 900
+
 export const MOCK_JOB_ID = "mock-full"
 
 const SHA = "9f2b8c1d4e6a7b3c5d8e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c"

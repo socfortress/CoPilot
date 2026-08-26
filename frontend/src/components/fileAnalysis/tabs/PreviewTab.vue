@@ -1,34 +1,46 @@
 <template>
 	<div class="flex flex-col gap-3">
-		<n-spin :show="loading || loadingPreviews">
-			<!-- n-image-group, not bare n-image: the lightbox then knows about the whole
-			     page set, so a multi-page document is paged through with the arrows
-			     instead of closing and reopening one page at a time. -->
-			<n-image-group v-if="images.length">
-				<div class="grid-auto-fill-250 grid gap-3">
-					<n-image
-						v-for="(src, i) of images"
-						:key="i"
-						:src
-						:alt="previewNames[i] || `page ${i + 1}`"
-						class="border-default overflow-hidden rounded-lg border"
-						object-fit="contain"
-					/>
-				</div>
-			</n-image-group>
-			<n-empty
-				v-else-if="!loading"
-				description="No page previews — this file type has no rendered pages (e.g. an executable), or Tier 1 is still running."
-				class="min-h-52 justify-center"
+		<!-- One placeholder tile per page, in the grid the pages will occupy. A spinner
+		     over an empty grid left the tab collapsed and then shoved the page down when
+		     the images arrived; worse, "No page previews" rendered underneath it for as
+		     long as the fetch took, which states the opposite of what is happening. -->
+		<div v-if="showPlaceholders" class="grid-auto-fill-250 grid gap-3" aria-busy="true">
+			<n-skeleton
+				v-for="n of placeholderCount"
+				:key="n"
+				:sharp="false"
+				class="aspect-[3/4] w-full rounded-lg"
 			/>
-		</n-spin>
+		</div>
+
+		<!-- n-image-group, not bare n-image: the lightbox then knows about the whole
+		     page set, so a multi-page document is paged through with the arrows
+		     instead of closing and reopening one page at a time. -->
+		<n-image-group v-else-if="images.length">
+			<div class="grid-auto-fill-250 grid gap-3">
+				<n-image
+					v-for="(src, i) of images"
+					:key="i"
+					:src
+					:alt="previewNames[i] || `page ${i + 1}`"
+					class="border-default overflow-hidden rounded-lg border"
+					object-fit="contain"
+				/>
+			</div>
+		</n-image-group>
+
+		<n-empty
+			v-else
+			description="No page previews — this file type has no rendered pages (e.g. an executable), or Tier 1 is still running."
+			class="min-h-52 justify-center"
+		/>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import { NEmpty, NImage, NImageGroup, NSpin, useMessage } from "naive-ui"
-import { onBeforeUnmount, ref, toRefs, watch } from "vue"
+import { NEmpty, NImage, NImageGroup, NSkeleton, useMessage } from "naive-ui"
+import { computed, onBeforeUnmount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import { MOCK_JOB_ID, mockPreview, USE_MOCK_ANALYSIS } from "@/components/fileAnalysis/mock-analysis"
 import { getApiErrorMessage } from "@/utils"
@@ -46,6 +58,11 @@ let objectUrls: string[] = []
 // every status poll, handing us a NEW array each time — without this guard we'd
 // revoke + re-download every page on each poll (the flicker). Load once per set.
 let loadedKey = ""
+
+const showPlaceholders = computed(() => props.loading || loadingPreviews.value)
+// Match the number of pages we are about to show, so the grid does not resize as
+// they land. Three is only the fallback for a set whose size is not known yet.
+const placeholderCount = computed(() => props.previewNames?.length || 3)
 
 // Session-lived blob cache (module scope, survives component unmount) so reopening
 // a previously-viewed file is instant instead of re-downloading every page. The
