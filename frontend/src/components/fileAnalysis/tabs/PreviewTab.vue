@@ -5,7 +5,7 @@
 			     page set, so a multi-page document is paged through with the arrows
 			     instead of closing and reopening one page at a time. -->
 			<n-image-group v-if="images.length">
-				<div class="preview-grid grid gap-3">
+				<div class="grid-auto-fill-250 grid gap-3">
 					<n-image
 						v-for="(src, i) of images"
 						:key="i"
@@ -117,9 +117,3 @@ async function loadPreviews() {
 watch(() => `${jobId.value}::${(previewNames.value || []).join("|")}`, loadPreviews, { immediate: true })
 onBeforeUnmount(revoke)
 </script>
-
-<style scoped>
-.preview-grid {
-	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-}
-</style>

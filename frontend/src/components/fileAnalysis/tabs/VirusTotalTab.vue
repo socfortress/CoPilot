@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-col gap-4">
+	<div class="@container flex flex-col gap-4">
 		<n-empty
 			v-if="!intel && !loading"
 			description="No VirusTotal intelligence. The file is unknown to VirusTotal, or reputation is disabled."
@@ -11,7 +11,7 @@
 			     row: same grid language as the summary card, so detection, classification
 			     and community read as three answers instead of one paragraph. -->
 			<div
-				class="border-default bg-border grid gap-px overflow-hidden rounded-lg border lg:grid-cols-[auto_1fr_auto]"
+				class="border-default bg-border grid gap-px overflow-hidden rounded-lg border @4xl:grid-cols-[auto_1fr_auto]"
 			>
 				<div class="bg-secondary flex items-center gap-4 p-4">
 					<n-progress type="circle" :percentage="detPct" :color="ratioColor" :style="{ width: '76px' }">
@@ -53,7 +53,7 @@
 
 				<!-- Community as aligned label/value rows: it used to run on as prose
 				     ("Votes: 0 harmless · 0 malicious"), which hid the numbers. -->
-				<div class="bg-secondary flex flex-col gap-2 p-4 lg:w-56">
+				<div class="bg-secondary flex flex-col gap-2 p-4 @4xl:w-56">
 					<span :class="SECTION_LABEL">Community</span>
 					<div class="flex flex-col gap-1 text-xs">
 						<div v-if="intel.reputation != null" class="flex items-baseline justify-between gap-3">
@@ -83,7 +83,7 @@
 
 			<!-- File facts -->
 			<div
-				class="border-default bg-border grid gap-px overflow-hidden rounded-lg border sm:grid-cols-2 lg:grid-cols-4"
+				class="border-default bg-border grid gap-px overflow-hidden rounded-lg border @2xl:grid-cols-2 @4xl:grid-cols-4"
 			>
 				<div v-for="f in facts" :key="f.label" class="bg-secondary flex min-h-20 flex-col gap-1 p-4">
 					<span :class="SECTION_LABEL">{{ f.label }}</span>
@@ -98,7 +98,7 @@
 					<n-tag size="tiny" round :bordered="false" type="info">no local detonation needed</n-tag>
 				</template>
 
-				<div class="flex flex-col gap-4 p-4 pb-0">
+				<div class="@container flex flex-col gap-4 p-4 pb-0">
 					<!-- Rows, not pills: a technique id is an identifier and its description
 					     is prose, and packing both into a round tag produced ragged blobs
 					     that could not be scanned down the ids. -->
@@ -148,7 +148,7 @@
 					</div>
 
 					<div
-						class="bg-secondary divide-border border-border -mx-4 grid gap-3 divide-y border-y md:grid-cols-3 md:divide-x md:divide-y-0"
+						class="bg-secondary divide-border border-border -mx-4 grid gap-3 divide-y border-y @4xl:grid-cols-3 @4xl:divide-x @4xl:divide-y-0"
 					>
 						<div class="p-4">
 							<ValueList label="Contacted IPs" :items="intel.behaviour.contacted_ips" :link="ipUrl" />
@@ -222,7 +222,7 @@
 					</div>
 
 					<div
-						class="bg-secondary divide-border border-border -mx-4 grid gap-3 divide-y border-t md:grid-cols-3 md:divide-x md:divide-y-0"
+						class="bg-secondary divide-border border-border -mx-4 grid gap-3 divide-y border-t @4xl:grid-cols-3 @4xl:divide-x @4xl:divide-y-0"
 					>
 						<div class="p-4">
 							<ValueList label="Processes" :items="intel.behaviour.processes" />

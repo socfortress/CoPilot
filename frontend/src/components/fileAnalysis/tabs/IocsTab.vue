@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-col gap-4">
+	<div class="@container flex flex-col gap-4">
 		<div class="flex items-center justify-end">
 			<n-button size="small" secondary :disabled="!hasIocs" @click="copyIocs()">
 				<template #icon>
@@ -11,7 +11,7 @@
 
 		<n-empty v-if="!hasIocs" description="No IOCs extracted." class="min-h-52 justify-center" />
 
-		<div v-else class="grid gap-4 md:grid-cols-3">
+		<div v-else class="grid gap-4 @4xl:grid-cols-3">
 			<ValueList
 				v-for="group of groups"
 				:key="group.key"

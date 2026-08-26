@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-col gap-4">
+	<div class="@container flex flex-col gap-4">
 		<n-empty
 			v-if="!hasAnyContent && !loading"
 			description="No extracted content yet."
@@ -28,7 +28,7 @@
 		<!-- Scripts: raw + deobfuscated side by side -->
 		<!-- These two are not collapsible: they sit side by side to be READ AGAINST
 		     each other, and folding one would leave a comparison with one half. -->
-		<div v-if="content.raw" class="grid gap-3 lg:grid-cols-2">
+		<div v-if="content.raw" class="grid gap-3 @4xl:grid-cols-2">
 			<CodeBlock title="Raw source" :code="content.raw" :collapsible="false" />
 			<CodeBlock
 				title="Deobfuscated (static — not executed)"
