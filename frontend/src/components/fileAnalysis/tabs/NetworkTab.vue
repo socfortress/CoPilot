@@ -10,135 +10,59 @@
 			<!-- C2 recovered from an extracted config — the one high-confidence network signal -->
 			<n-alert v-if="hasExtractedC2" type="error" :bordered="false">
 				<template #header>Command-and-control extracted from malware config</template>
+				<!-- Data chips, not status pills: the alert around them already carries the
+				     severity, so a second red pill per endpoint adds colour without adding
+				     meaning. Bordered and square-cornered, they read as addresses. -->
 				<div class="flex flex-wrap gap-2">
-					<n-tag v-for="e of c2" :key="e" type="error" size="small" round :bordered="false">
-						<code>{{ e }}</code>
+					<n-tag v-for="e of c2" :key="e" size="medium" bordered :round="false" class="font-mono">
+						{{ e }}
 					</n-tag>
 				</div>
 			</n-alert>
 
-			<!-- Hosts + domains summary -->
+			<!-- "Observed" is load-bearing: it separates these from the config-extracted
+			     C2 above, which is the one high-confidence signal on this tab. -->
 			<div class="grid gap-4 md:grid-cols-2">
-				<div class="flex flex-col gap-2">
-					<div class="flex items-center gap-2">
-						<Icon :name="IpIcon" :size="16" />
-						<span class="text-sm font-medium">Hosts contacted</span>
-						<span class="text-secondary text-xs">(observed)</span>
-						<n-tag size="tiny" round :bordered="false">{{ hosts.length }}</n-tag>
-					</div>
-					<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
-						<a
-							v-for="ip of hosts"
-							:key="ip"
-							:href="tiUrl(ip)"
-							target="_blank"
-							rel="noopener noreferrer"
-							class="hover:text-primary text-xs break-all underline decoration-dotted"
-							:title="`Look up ${ip} on VirusTotal`"
-						>
-							<code>{{ ip }}</code>
-						</a>
-						<span v-if="!hosts.length" class="text-secondary text-xs">—</span>
-					</div>
-				</div>
-				<div class="flex flex-col gap-2">
-					<div class="flex items-center gap-2">
-						<Icon :name="DomainIcon" :size="16" />
-						<span class="text-sm font-medium">Domains</span>
-						<n-tag size="tiny" round :bordered="false">{{ domains.length }}</n-tag>
-					</div>
-					<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
-						<a
-							v-for="d of domains"
-							:key="d"
-							:href="tiUrl(d, 'domain')"
-							target="_blank"
-							rel="noopener noreferrer"
-							class="hover:text-primary text-xs break-all underline decoration-dotted"
-							:title="`Look up ${d} on VirusTotal`"
-						>
-							<code>{{ d }}</code>
-						</a>
-						<span v-if="!domains.length" class="text-secondary text-xs">—</span>
-					</div>
-				</div>
+				<ValueList label="Observed hosts" :items="hosts" :link="ip => tiUrl(ip)" />
+				<ValueList label="Observed domains" :items="domains" :link="d => tiUrl(d, 'domain')" />
 			</div>
 
-			<!-- DNS queries -->
-			<div v-if="dns.length" class="flex flex-col gap-2">
-				<span class="text-secondary text-xs font-medium">DNS queries ({{ dns.length }})</span>
-				<n-scrollbar class="bg-secondary max-h-60 rounded-lg p-3">
-					<div v-for="(q, i) of dns" :key="i" class="flex flex-wrap items-center gap-2 py-0.5 text-xs">
-						<n-tag v-if="q.type" size="tiny" round :bordered="false">{{ q.type }}</n-tag>
-						<code class="font-medium break-all">{{ q.request }}</code>
-						<span v-if="q.answers?.length" class="text-secondary">→ {{ q.answers.join(", ") }}</span>
-					</div>
-				</n-scrollbar>
-			</div>
+			<!-- Each row keeps the same hierarchy as elsewhere in the module: what kind
+			     of thing it is, then the identity, then the supporting detail. -->
+			<ValueList v-if="dns.length" label="DNS queries" :items="dnsItems" max-height="15rem" />
 
-			<!-- HTTP requests -->
-			<div v-if="http.length" class="flex flex-col gap-2">
-				<span class="text-secondary text-xs font-medium">HTTP requests ({{ http.length }})</span>
-				<n-scrollbar class="bg-secondary max-h-72 rounded-lg p-3">
-					<div v-for="(h, i) of http" :key="i" class="flex items-center gap-2 py-0.5 text-xs">
-						<n-tag size="tiny" round :bordered="false" type="info">{{ h.method || "GET" }}</n-tag>
-						<code class="break-all">{{ h.host }}{{ h.uri }}</code>
-					</div>
-				</n-scrollbar>
-			</div>
+			<ValueList v-if="http.length" label="HTTP requests" :items="httpItems" max-height="18rem" />
 
 			<!-- TCP/UDP connections — grouped by endpoint so repeated chatter (e.g. DNS to
 			     the gateway) collapses into one counted row instead of hundreds of lines. -->
 			<div v-if="groupedConnections.length" class="flex flex-col gap-2">
+				<!-- Kept as its own header: the label states a ratio the list's own count
+				     can't ("4 unique of 7"), and carries the dedup badge that explains it. -->
 				<div class="flex items-center gap-2">
-					<span class="text-secondary text-xs font-medium">
-						Connections — {{ groupedConnections.length }} unique of {{ connections.length }}
+					<span :class="SECTION_LABEL">
+						Connections
+						<span class="text-tertiary normal-case">
+							({{ groupedConnections.length }} unique of {{ connections.length }})
+						</span>
 					</span>
 					<n-tag v-if="noisyCollapsed" size="tiny" round :bordered="false" type="info">deduplicated</n-tag>
 				</div>
-				<n-scrollbar class="bg-secondary max-h-72 rounded-lg p-3">
-					<div v-for="(c, i) of groupedConnections" :key="i" class="flex items-center gap-2 py-0.5 text-xs">
-						<n-tag size="tiny" round :bordered="false" :type="c.proto === 'tcp' ? 'warning' : 'default'">
-							{{ c.proto.toUpperCase() }}
-						</n-tag>
-						<a
-							v-if="looksLikeIp(c.dst)"
-							:href="tiUrl(c.dst)"
-							target="_blank"
-							rel="noopener noreferrer"
-							class="hover:text-primary break-all underline decoration-dotted"
-							:title="`Look up ${c.dst} on VirusTotal`"
-						>
-							<code>
-								{{ c.dst }}
-								<span v-if="c.dport">:{{ c.dport }}</span>
-							</code>
-						</a>
-						<code v-else class="break-all">
-							{{ c.dst }}
-							<span v-if="c.dport">:{{ c.dport }}</span>
-						</code>
-						<n-tag v-if="c.count > 1" size="tiny" round :bordered="false" class="opacity-80">
-							×{{ c.count }}
-						</n-tag>
-					</div>
-				</n-scrollbar>
+				<ValueList :items="connectionItems" max-height="18rem" />
 			</div>
 		</template>
 	</div>
 </template>
 
 <script setup lang="ts">
+import type { ValueListPart } from "@/components/common/value-list"
 import type { SandboxSummary } from "@/types/file-analysis"
-import { NAlert, NEmpty, NScrollbar, NTag } from "naive-ui"
+import { NAlert, NEmpty, NTag } from "naive-ui"
 import { computed } from "vue"
-import Icon from "@/components/common/Icon.vue"
+import { SECTION_LABEL } from "@/components/common/section-label"
+import ValueList from "@/components/common/ValueList.vue"
 import { groupConnections } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{ sandbox?: SandboxSummary | null; loading?: boolean }>()
-
-const DomainIcon = "carbon:web-services-container"
-const IpIcon = "carbon:ibm-cloud-internet-services"
 
 // Observed traffic. Older cached results (engine < 7) stored observed endpoints in
 // the c2_* fields, so fall back to them for those — but a fresh result keeps the two
@@ -157,6 +81,39 @@ const connections = computed(() => props.sandbox?.connections ?? [])
 
 const groupedConnections = computed(() => groupConnections(connections.value))
 const noisyCollapsed = computed(() => connections.value.length > groupedConnections.value.length)
+
+const dnsItems = computed<ValueListPart[][]>(() =>
+	dns.value.map(q =>
+		[
+			{ text: q.type, tone: "accent" as const },
+			{ text: q.request, tone: "strong" as const },
+			{ text: q.answers?.join(", "), tone: "muted" as const }
+		].filter((part): part is ValueListPart => Boolean(part.text))
+	)
+)
+
+const httpItems = computed<ValueListPart[][]>(() =>
+	http.value.map(h => [
+		{ text: h.method || "GET", tone: "accent" as const },
+		{ text: `${h.host}${h.uri}`, tone: "strong" as const }
+	])
+)
+
+const connectionItems = computed<ValueListPart[][]>(() =>
+	groupedConnections.value.map(c =>
+		[
+			{ text: c.proto.toUpperCase(), tone: "accent" as const },
+			{
+				text: c.dport ? `${c.dst}:${c.dport}` : c.dst,
+				tone: "strong" as const,
+				// Only an IP is worth a reputation lookup; a bare port or hostname
+				// fragment would send the analyst to a page about nothing.
+				href: looksLikeIp(c.dst) ? tiUrl(c.dst) : undefined
+			},
+			{ text: c.count > 1 ? `×${c.count}` : "", tone: "muted" as const }
+		].filter((part): part is ValueListPart => Boolean(part.text))
+	)
+)
 
 const hasNetwork = computed(
 	() =>

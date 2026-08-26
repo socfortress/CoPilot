@@ -46,7 +46,17 @@
 						<span v-else class="flex flex-wrap items-baseline px-3 py-2 font-mono text-xs">
 							<template v-for="(part, pi) of value" :key="pi">
 								<span v-if="pi" class="text-tertiary/50 px-1.5 select-none">·</span>
-								<span class="min-w-0 break-all" :class="PART_TONE[part.tone ?? 'muted']">
+								<a
+									v-if="part.href"
+									:href="part.href"
+									target="_blank"
+									rel="noopener noreferrer"
+									class="hover:text-primary min-w-0 break-all underline decoration-dotted transition-colors"
+									:class="PART_TONE[part.tone ?? 'muted']"
+								>
+									{{ part.text }}
+								</a>
+								<span v-else class="min-w-0 break-all" :class="PART_TONE[part.tone ?? 'muted']">
 									{{ part.text }}
 								</span>
 							</template>

@@ -7,6 +7,8 @@ export interface ValueListPart {
 	 * muted  — the identifier you copy out (hash, id), long and quiet.
 	 */
 	tone?: ValueListTone
+	/** Makes this part alone a link — the rest of the row stays plain text. */
+	href?: string
 }
 
 export type ValueListTone = "strong" | "accent" | "muted"
