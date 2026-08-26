@@ -144,3 +144,10 @@ export function useFuseFilter<T>(source: () => T[], keys: string[]): { query: Re
 	const results = computed(() => searchFuse(fuse.value, query.value, source()))
 	return { query, results }
 }
+
+/**
+ * The one definition of a section label in this module. It was written inline in
+ * four components, which is how a scale drifts: change it here and every surface
+ * follows.
+ */
+export const SECTION_LABEL = "text-secondary text-xs font-medium tracking-wider uppercase"

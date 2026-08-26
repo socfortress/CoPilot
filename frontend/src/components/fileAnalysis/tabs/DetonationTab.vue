@@ -42,13 +42,13 @@
 						<span class="text-lg leading-none font-semibold">{{ sandbox.malscore.toFixed(1) }}</span>
 					</n-progress>
 					<div class="flex flex-col gap-1">
-						<span :class="LABEL">Malscore</span>
+						<span :class="SECTION_LABEL">Malscore</span>
 						<span class="text-secondary text-xs">out of 10</span>
 					</div>
 				</div>
 
 				<div class="bg-secondary flex min-w-0 flex-col gap-2 p-4">
-					<span :class="LABEL">Verdict</span>
+					<span :class="SECTION_LABEL">Verdict</span>
 					<div class="flex flex-wrap items-center gap-2">
 						<n-tag :type="verdictType" size="medium" round :bordered="false" class="capitalize">
 							{{ sandbox.verdict || "clean" }}
@@ -62,7 +62,7 @@
 				<!-- Run facts as aligned label/value rows: they used to run on as prose
 				     ("Guest: capewin"), which buried the values. -->
 				<div class="bg-secondary flex flex-col gap-2 p-4 lg:w-60">
-					<span :class="LABEL">Run</span>
+					<span :class="SECTION_LABEL">Run</span>
 					<div class="flex flex-col gap-1 text-xs">
 						<div v-if="sandbox.machine" class="flex items-baseline justify-between gap-3">
 							<span class="text-tertiary">guest</span>
@@ -82,7 +82,7 @@
 
 			<!-- MITRE ATT&CK -->
 			<div v-if="sandbox.ttps?.length" class="flex flex-col gap-2">
-				<span :class="LABEL">MITRE ATT&CK</span>
+				<span :class="SECTION_LABEL">MITRE ATT&CK</span>
 				<div class="flex flex-wrap gap-2">
 					<!-- Composite key: a technique id repeats across tactics, so it is not unique. -->
 					<n-tag
@@ -101,7 +101,7 @@
 
 			<!-- Meaningful (sample-driven) signatures — the real signal, ranked by severity -->
 			<div v-if="meaningfulSignatures.length" class="flex flex-col gap-2">
-				<span :class="LABEL">Signatures ({{ meaningfulSignatures.length }})</span>
+				<span :class="SECTION_LABEL">Signatures ({{ meaningfulSignatures.length }})</span>
 				<div class="flex flex-col gap-2">
 					<div
 						v-for="(sig, i) of meaningfulSignatures"
@@ -181,7 +181,7 @@
 					class="border-default bg-secondary flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2"
 				>
 					<div class="flex flex-wrap items-center gap-2">
-						<span :class="LABEL">
+						<span :class="SECTION_LABEL">
 							Process tree
 							<span class="text-tertiary normal-case">
 								({{ procRows.length }}/{{ processTree.length }})
@@ -253,7 +253,7 @@
 
 			<!-- Extracted payloads -->
 			<div v-if="sandbox.payloads?.length" class="flex flex-col gap-2">
-				<span :class="LABEL">Extracted payloads ({{ sandbox.payloads.length }})</span>
+				<span :class="SECTION_LABEL">Extracted payloads ({{ sandbox.payloads.length }})</span>
 				<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
 					<div v-for="(p, i) of sandbox.payloads" :key="i" class="flex items-center gap-2 text-xs">
 						<n-tag v-if="p.type" size="tiny" round :bordered="false" type="info">{{ p.type }}</n-tag>
@@ -265,7 +265,7 @@
 
 			<!-- Dropped files -->
 			<div v-if="sandbox.dropped?.length" class="flex flex-col gap-2">
-				<span :class="LABEL">Dropped files ({{ sandbox.dropped.length }})</span>
+				<span :class="SECTION_LABEL">Dropped files ({{ sandbox.dropped.length }})</span>
 				<div class="bg-secondary flex flex-col gap-1 rounded-lg p-3">
 					<div v-for="(d, i) of sandbox.dropped" :key="i" class="flex items-center gap-2 text-xs">
 						<span v-if="d.name" class="font-medium">{{ d.name }}</span>
@@ -281,7 +281,7 @@
 				class="flex flex-col gap-2"
 			>
 				<div class="flex items-center justify-between">
-					<span :class="LABEL">Host activity — everything the sample did</span>
+					<span :class="SECTION_LABEL">Host activity — everything the sample did</span>
 					<n-button v-if="jobId" text size="tiny" :loading="downloadingReport" @click="downloadReport">
 						<template #icon><Icon :name="DownloadIcon" :size="14" /></template>
 						Raw CAPE JSON (advanced)
@@ -342,7 +342,7 @@
 
 			<!-- Screenshots -->
 			<div v-if="sandbox.screenshots?.length" class="flex flex-col gap-2">
-				<span :class="LABEL">Screenshots</span>
+				<span :class="SECTION_LABEL">Screenshots</span>
 				<n-image-group>
 					<div class="flex flex-wrap gap-2">
 						<n-image
@@ -393,7 +393,7 @@ import {
 import { computed, reactive, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import { SECTION_LABEL, useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{
 	sandbox?: SandboxSummary | null
@@ -403,10 +403,6 @@ const props = defineProps<{
 }>()
 
 const message = useMessage()
-
-// Same label treatment as the summary card and the VirusTotal tab, so the three
-// surfaces read as one design.
-const LABEL = "text-secondary text-xs font-medium tracking-wider uppercase"
 
 const SearchIcon = "carbon:search"
 const SigIcon = "carbon:rule"

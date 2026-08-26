@@ -20,21 +20,21 @@
 				<span class="text-2xl leading-none font-semibold" :class="ratioClass">
 					{{ reputation.malicious ?? 0 }}
 				</span>
-				<span class="text-tertiary text-sm">/ {{ reputation.total ?? "?" }} engines flagged it</span>
+				<span class="text-secondary text-sm">/ {{ reputation.total ?? "?" }} engines flagged it</span>
 			</div>
 
 			<!-- Extra facts as label/value rows: they line up instead of running on. -->
 			<div class="flex flex-col gap-1 text-xs">
 				<div v-if="(reputation.suspicious ?? 0) > 0" class="flex items-baseline gap-2">
-					<span class="text-tertiary w-20 shrink-0">suspicious</span>
+					<span class="text-secondary w-20 shrink-0">suspicious</span>
 					<span class="text-secondary">{{ reputation.suspicious }}</span>
 				</div>
 				<div v-if="reputation.family" class="flex items-baseline gap-2">
-					<span class="text-tertiary w-20 shrink-0">family</span>
+					<span class="text-secondary w-20 shrink-0">family</span>
 					<span class="text-error min-w-0 font-mono break-all">{{ reputation.family }}</span>
 				</div>
 				<div v-if="reputation.submitted" class="flex items-baseline gap-2">
-					<span class="text-tertiary w-20 shrink-0">submitted</span>
+					<span class="text-secondary w-20 shrink-0">submitted</span>
 					<span class="text-warning">uploaded to VT by this analysis</span>
 				</div>
 			</div>

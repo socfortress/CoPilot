@@ -21,13 +21,13 @@
 						</div>
 					</n-progress>
 					<div class="flex flex-col gap-1">
-						<span :class="LABEL">Detection</span>
+						<span :class="SECTION_LABEL">Detection</span>
 						<span class="text-secondary text-xs">engines flagging it</span>
 					</div>
 				</div>
 
 				<div class="bg-secondary flex min-w-0 flex-col gap-2 p-4">
-					<span :class="LABEL">Threat label</span>
+					<span :class="SECTION_LABEL">Threat label</span>
 					<div v-if="intel.threat_label" class="flex min-w-0 items-center gap-2">
 						<Icon :name="BugIcon" :size="15" class="text-error shrink-0" />
 						<span class="text-default min-w-0 font-mono text-sm break-all">{{ intel.threat_label }}</span>
@@ -54,7 +54,7 @@
 				<!-- Community as aligned label/value rows: it used to run on as prose
 				     ("Votes: 0 harmless · 0 malicious"), which hid the numbers. -->
 				<div class="bg-secondary flex flex-col gap-2 p-4 lg:w-56">
-					<span :class="LABEL">Community</span>
+					<span :class="SECTION_LABEL">Community</span>
 					<div class="flex flex-col gap-1 text-xs">
 						<div v-if="intel.reputation != null" class="flex items-baseline justify-between gap-3">
 							<span class="text-tertiary">reputation</span>
@@ -86,7 +86,7 @@
 				class="border-default bg-border grid gap-px overflow-hidden rounded-lg border sm:grid-cols-2 lg:grid-cols-4"
 			>
 				<div v-for="f in facts" :key="f.label" class="bg-secondary flex min-h-20 flex-col gap-1 p-4">
-					<span :class="LABEL">{{ f.label }}</span>
+					<span :class="SECTION_LABEL">{{ f.label }}</span>
 					<span class="text-default text-sm wrap-break-word">{{ f.value }}</span>
 				</div>
 			</div>
@@ -94,7 +94,7 @@
 			<!-- VT sandbox behaviour — the detonation stand-in when our own sandbox is offline -->
 			<CollapsibleCard v-if="intel.behaviour">
 				<template #header>
-					<span :class="LABEL">Behaviour observed by VirusTotal's sandboxes</span>
+					<span :class="SECTION_LABEL">Behaviour observed by VirusTotal's sandboxes</span>
 					<n-tag size="tiny" round :bordered="false" type="info">no local detonation needed</n-tag>
 				</template>
 
@@ -104,7 +104,7 @@
 					     that could not be scanned down the ids. -->
 					<div v-if="intel.behaviour.mitre?.length" class="flex flex-col gap-2">
 						<div class="flex flex-wrap items-center justify-between gap-2">
-							<span :class="LABEL">
+							<span :class="SECTION_LABEL">
 								MITRE ATT&CK
 								<span class="text-tertiary normal-case">
 									({{ filteredMitre.length }}/{{ intel.behaviour.mitre.length }})
@@ -159,7 +159,7 @@
 
 					<div v-if="intel.behaviour.dropped_files?.length" class="flex flex-col gap-2">
 						<div class="flex flex-wrap items-center justify-between gap-2">
-							<span :class="LABEL">
+							<span :class="SECTION_LABEL">
 								Dropped files
 								<span class="text-tertiary normal-case">
 									({{ filteredDropped.length }}/{{ intel.behaviour.dropped_files.length }})
@@ -226,7 +226,7 @@
 			     boxes were what made this tab read as a pile of fragments. -->
 			<CollapsibleCard v-if="intel.yara?.length">
 				<template #header>
-					<span :class="LABEL">
+					<span :class="SECTION_LABEL">
 						Crowdsourced YARA
 						<span class="text-tertiary normal-case">
 							({{ filteredYara.length }}/{{ intel.yara.length }})
@@ -282,7 +282,7 @@
 
 			<CollapsibleCard v-if="intel.sigma?.length">
 				<template #header>
-					<span :class="LABEL">
+					<span :class="SECTION_LABEL">
 						Sigma matches
 						<span class="text-tertiary normal-case">({{ intel.sigma.length }})</span>
 					</span>
@@ -306,7 +306,7 @@
 
 			<CollapsibleCard v-if="intel.ids?.length">
 				<template #header>
-					<span :class="LABEL">
+					<span :class="SECTION_LABEL">
 						IDS/IPS alerts
 						<span class="text-tertiary normal-case">({{ intel.ids.length }})</span>
 					</span>
@@ -382,15 +382,11 @@
 import type { FileAnalysisReputation } from "@/types/file-analysis"
 import { NCollapse, NCollapseItem, NEmpty, NInput, NProgress, NScrollbar, NTag } from "naive-ui"
 import { computed, h } from "vue"
+import CollapsibleCard from "@/components/common/CollapsibleCard.vue"
 import Icon from "@/components/common/Icon.vue"
-import CollapsibleCard from "@/components/fileAnalysis/CollapsibleCard.vue"
-import { iconForFile, useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import { iconForFile, SECTION_LABEL, useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{ reputation?: FileAnalysisReputation | null; loading?: boolean }>()
-
-// Same label treatment as the summary card, so the two surfaces read as one
-// design rather than two.
-const LABEL = "text-secondary text-xs font-medium tracking-wider uppercase"
 
 const BugIcon = "carbon:debug"
 const RuleIcon = "carbon:rule"
@@ -485,7 +481,7 @@ function IocList(p: { label: string; items?: string[]; link?: (v: string) => str
 	// from the ones used everywhere else in the app, and on some platforms it only
 	// appears while scrolling, so a clipped list read as truncated content.
 	return h("div", { class: "flex flex-col gap-2" }, [
-		h("span", { class: LABEL }, `${p.label} (${items.length})`),
+		h("span", { class: SECTION_LABEL }, `${p.label} (${items.length})`),
 		h("div", { class: "border-default rounded-lg border" }, [
 			h(
 				NScrollbar,

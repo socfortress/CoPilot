@@ -5,7 +5,7 @@
 		<div v-if="verdictReason || reputation || reputationPending" class="border-default border-b p-4">
 			<div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
 				<div class="flex min-w-0 grow flex-col gap-1">
-					<span :class="LABEL">Why this verdict</span>
+					<span :class="SECTION_LABEL">Why this verdict</span>
 					<p v-if="verdictReason" class="text-default m-0 text-sm">{{ verdictReason }}</p>
 					<p v-else class="m-0 text-sm">
 						Nothing stood out — no obfuscation, no flagged behaviour, no reputation hit.
@@ -14,9 +14,9 @@
 
 				<!-- Second opinion sits beside the reason on wide screens and under it on
 				     narrow ones, so agreement or disagreement is read in one glance. -->
-				<div class="border-default flex shrink-0 flex-col rounded-lg border lg:w-96">
+				<div class="border-default bg-secondary flex shrink-0 flex-col rounded-lg border lg:w-96">
 					<div class="border-default border-b px-4 py-2">
-						<span :class="LABEL">VirusTotal</span>
+						<span :class="SECTION_LABEL">VirusTotal</span>
 					</div>
 					<div class="p-4">
 						<ReputationSummary :reputation :pending="reputationPending" />
@@ -30,7 +30,7 @@
 		     each cell repaints itself — cheaper than per-cell responsive borders. -->
 		<div class="bg-border grid gap-px" :class="gridClass">
 			<div v-for="f in facts" :key="f.label" class="bg-secondary flex min-h-20 flex-col gap-1 p-4">
-				<span :class="LABEL">{{ f.label }}</span>
+				<span :class="SECTION_LABEL">{{ f.label }}</span>
 				<span class="text-default text-sm wrap-break-word" :class="f.mono ? 'font-mono' : ''">
 					{{ f.value }}
 				</span>
@@ -41,7 +41,7 @@
 		     Hidden when empty: an incomplete analysis has none, and an empty labelled
 		     band reads as a rendering fault. -->
 		<div v-if="hashes.length" class="border-default flex flex-col gap-2 border-t p-4">
-			<span :class="LABEL">Hashes</span>
+			<span :class="SECTION_LABEL">Hashes</span>
 			<div class="flex flex-col gap-0">
 				<!-- The value IS the button, and the copy icon sits inside it. The icon
 				     used to be pushed to the far edge of a full-width row, leaving ~900px
@@ -68,7 +68,7 @@
 
 		<!-- Signals last: they qualify the verdict, they are not the headline. -->
 		<div v-if="result.flags?.length" class="border-default flex flex-wrap items-center gap-2 border-t p-4">
-			<span :class="LABEL">Signals</span>
+			<span :class="SECTION_LABEL">Signals</span>
 			<n-tag
 				v-for="flag of result.flags"
 				:key="flag"
@@ -88,6 +88,7 @@ import type { FileAnalysisReputation, InspectorResult } from "@/types/file-analy
 import { NTag, useMessage } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import { SECTION_LABEL } from "@/components/fileAnalysis/fileAnalysis.helpers"
 import ReputationSummary from "@/components/fileAnalysis/ReputationSummary.vue"
 
 const props = defineProps<{
@@ -100,12 +101,6 @@ const props = defineProps<{
 const message = useMessage()
 
 const CopyIcon = "carbon:copy"
-
-// One definition for every section label in the card. It was repeated inline five
-// times, which is how the scale drifts: bump it here and the whole card follows.
-// 12px/secondary rather than 10.8px/tertiary — at the smaller size the uppercase
-// tracking made these labels hard to read rather than merely quiet.
-const LABEL = "text-secondary text-xs font-medium tracking-wider uppercase"
 
 const facts = computed(() => {
 	const r = props.result

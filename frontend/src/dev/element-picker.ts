@@ -11,9 +11,11 @@
  * would report an unknown file. That is why this module is imported behind
  * `import.meta.env.DEV` and never reaches the shipped bundle.
  *
- * Everything (picks, highlights, toolbar position, whether the mode was on)
- * survives a reload through sessionStorage, so a picking session is not lost the
- * moment a file is saved and Vite reloads the page.
+ * Picks, highlights and toolbar position survive a reload through sessionStorage,
+ * so a picking session is not lost the moment a file is saved and Vite reloads.
+ * The "mode was on" flag additionally EXPIRES after a minute: resuming is meant to
+ * cover an HMR reload, not to bring a browser back up in pick mode hours later
+ * because Chrome restored the session.
  */
 
 interface Pick {
@@ -32,6 +34,9 @@ const PICKS_KEY = "dev.picker.picks"
 const ACTIVE_KEY = "dev.picker.active"
 const HUD_KEY = "dev.picker.hud"
 const HOTKEY = "KeyP" // with ctrl+alt — rarely bound by the browser or the OS
+
+/** How long an open pick session stays resumable: long enough for an HMR reload. */
+const RESUME_WINDOW_MS = 60_000
 
 /** Marks the picker's own chrome so it never picks itself. */
 const UI_ATTR = "data-picker-ui"
@@ -295,7 +300,7 @@ function refreshHud() {
 
 function start() {
 	if (teardown) return
-	writeSession(ACTIVE_KEY, true)
+	writeSession(ACTIVE_KEY, { at: Date.now() })
 
 	const box = document.createElement("div")
 	box.setAttribute(UI_ATTR, "")
@@ -448,7 +453,19 @@ function list() {
 }
 
 export function installElementPicker() {
+	try {
+		install()
+	} catch (err) {
+		// Dev tooling must never take the app down with it: a malformed stored
+		// payload (or a storage that throws) drops the picker, not the page.
+
+		console.warn("[PICK] disabled — could not initialise:", err)
+	}
+}
+
+function install() {
 	picks = readSession<Pick[]>(PICKS_KEY, [])
+	if (!Array.isArray(picks)) picks = []
 
 	Object.defineProperty(window, "__picker", {
 		value: {
@@ -477,8 +494,13 @@ export function installElementPicker() {
 	if (picks.length) renderMarkers()
 
 	// A picking session that was open when the page reloaded resumes itself —
-	// saving a file must not silently drop the mode you were working in.
-	if (readSession(ACTIVE_KEY, false)) start()
+	// saving a file must not silently drop the mode you were working in. But that
+	// is only meant to survive an HMR reload, so the flag EXPIRES: a browser
+	// restarted hours later must not silently come back up in pick mode, with
+	// document-wide capture listeners, because of a session Chrome restored.
+	const active = readSession<{ at?: number } | boolean>(ACTIVE_KEY, false)
+	const activeAt = typeof active === "object" && active ? (active.at ?? 0) : 0
+	if (activeAt && Date.now() - activeAt < RESUME_WINDOW_MS) start()
 
 	// eslint-disable-next-line no-console
 	console.info(
