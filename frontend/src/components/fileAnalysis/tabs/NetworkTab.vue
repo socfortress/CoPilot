@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-col gap-4">
+	<div class="@container flex flex-col gap-4">
 		<n-empty
 			v-if="!hasNetwork && !loading"
 			description="No network activity captured (or detonation not yet reported)."
@@ -22,9 +22,9 @@
 
 			<!-- "Observed" is load-bearing: it separates these from the config-extracted
 			     C2 above, which is the one high-confidence signal on this tab. -->
-			<div class="grid gap-4 md:grid-cols-2">
-				<ValueList label="Observed hosts" :items="hosts" :link="ip => tiUrl(ip)" />
-				<ValueList label="Observed domains" :items="domains" :link="d => tiUrl(d, 'domain')" />
+			<div v-if="hosts.length || domains.length" class="grid gap-4 @2xl:grid-cols-2">
+				<ValueList v-if="hosts.length" label="Observed hosts" :items="hosts" :link="tiUrl" />
+				<ValueList v-if="domains.length" label="Observed domains" :items="domains" :link="domainUrl" />
 			</div>
 
 			<!-- Each row keeps the same hierarchy as elsewhere in the module: what kind
@@ -54,15 +54,17 @@
 </template>
 
 <script setup lang="ts">
-import type { ValueListPart } from "@/components/common/value-list"
 import type { SandboxSummary } from "@/types/file-analysis"
 import { NAlert, NEmpty, NTag } from "naive-ui"
 import { computed } from "vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
+import { valueListParts } from "@/components/common/value-list"
 import ValueList from "@/components/common/ValueList.vue"
 import { groupConnections } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{ sandbox?: SandboxSummary | null; loading?: boolean }>()
+
+const IPV4 = /^\d{1,3}(?:\.\d{1,3}){3}$/
 
 // Observed traffic. Older cached results (engine < 7) stored observed endpoints in
 // the c2_* fields, so fall back to them for those — but a fresh result keeps the two
@@ -73,8 +75,10 @@ const props = defineProps<{ sandbox?: SandboxSummary | null; loading?: boolean }
 // happen — the MITRE lists hit exactly that.
 const hosts = computed(() => [...new Set(props.sandbox?.hosts ?? props.sandbox?.c2_ips ?? [])])
 const domains = computed(() => [...new Set(props.sandbox?.domains ?? props.sandbox?.c2_domains ?? [])])
-const c2 = computed(() => [...(props.sandbox?.c2_ips ?? []), ...(props.sandbox?.c2_domains ?? [])])
-const hasExtractedC2 = computed(() => !!props.sandbox?.domains && c2.value.length > 0)
+const c2 = computed(() => [...new Set([...(props.sandbox?.c2_ips ?? []), ...(props.sandbox?.c2_domains ?? [])])])
+// `domains` (even `[]`) is the engine≥7 discriminator: old cache lacked the field,
+// so its c2_* values are observed traffic and must not raise this alert.
+const hasExtractedC2 = computed(() => props.sandbox?.domains != null && c2.value.length > 0)
 const dns = computed(() => props.sandbox?.dns ?? [])
 const http = computed(() => props.sandbox?.http ?? [])
 const connections = computed(() => props.sandbox?.connections ?? [])
@@ -82,51 +86,58 @@ const connections = computed(() => props.sandbox?.connections ?? [])
 const groupedConnections = computed(() => groupConnections(connections.value))
 const noisyCollapsed = computed(() => connections.value.length > groupedConnections.value.length)
 
-const dnsItems = computed<ValueListPart[][]>(() =>
+const dnsItems = computed(() =>
 	dns.value.map(q =>
-		[
-			{ text: q.type, tone: "accent" as const },
-			{ text: q.request, tone: "strong" as const },
-			{ text: q.answers?.join(", "), tone: "muted" as const }
-		].filter((part): part is ValueListPart => Boolean(part.text))
+		valueListParts([
+			{ text: q.type, tone: "accent" },
+			{ text: q.request, tone: "strong" },
+			{ text: q.answers?.join(", "), tone: "muted" }
+		])
 	)
 )
 
-const httpItems = computed<ValueListPart[][]>(() =>
-	http.value.map(h => [
-		{ text: h.method || "GET", tone: "accent" as const },
-		{ text: `${h.host}${h.uri}`, tone: "strong" as const }
-	])
+const httpItems = computed(() =>
+	http.value.map(h =>
+		valueListParts([
+			{ text: h.method || "GET", tone: "accent" },
+			{ text: `${h.host}${h.uri}`, tone: "strong" }
+		])
+	)
 )
 
-const connectionItems = computed<ValueListPart[][]>(() =>
+const connectionItems = computed(() =>
 	groupedConnections.value.map(c =>
-		[
-			{ text: c.proto.toUpperCase(), tone: "accent" as const },
+		valueListParts([
+			{ text: c.proto.toUpperCase(), tone: "accent" },
 			{
 				text: c.dport ? `${c.dst}:${c.dport}` : c.dst,
-				tone: "strong" as const,
+				tone: "strong",
 				// Only an IP is worth a reputation lookup; a bare port or hostname
 				// fragment would send the analyst to a page about nothing.
 				href: looksLikeIp(c.dst) ? tiUrl(c.dst) : undefined
 			},
-			{ text: c.count > 1 ? `×${c.count}` : "", tone: "muted" as const }
-		].filter((part): part is ValueListPart => Boolean(part.text))
+			{ text: c.count > 1 ? `×${c.count}` : undefined, tone: "muted" }
+		])
 	)
 )
 
 const hasNetwork = computed(
 	() =>
-		hosts.value.length || domains.value.length || dns.value.length || http.value.length || connections.value.length
+		hasExtractedC2.value ||
+		hosts.value.length > 0 ||
+		domains.value.length > 0 ||
+		dns.value.length > 0 ||
+		http.value.length > 0 ||
+		connections.value.length > 0
 )
 
 function looksLikeIp(v: string): boolean {
-	return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(v || "")
+	return IPV4.test(v || "")
 }
-function tiUrl(indicator: string, kind: "ip" | "domain" = "ip"): string {
-	const enc = encodeURIComponent(indicator)
-	return kind === "domain"
-		? `https://www.virustotal.com/gui/domain/${enc}`
-		: `https://www.virustotal.com/gui/ip-address/${enc}`
+function tiUrl(indicator: string): string {
+	return `https://www.virustotal.com/gui/ip-address/${encodeURIComponent(indicator)}`
+}
+function domainUrl(indicator: string): string {
+	return `https://www.virustotal.com/gui/domain/${encodeURIComponent(indicator)}`
 }
 </script>

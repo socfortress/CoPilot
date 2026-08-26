@@ -60,7 +60,7 @@
 				<template #value>{{ formatDate(job.created_at, dFormats.datetimesec) }}</template>
 			</Badge>
 
-			<Badge v-if="sha256" type="splitted" size="small" hint-cursor @click="copySha()">
+			<Badge v-if="sha256" type="splitted" size="small" class="cursor-pointer" @click="copySha()">
 				<template #label>sha256</template>
 				<template #value>
 					<span class="font-mono">{{ sha256.slice(0, 16) }}</span>

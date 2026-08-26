@@ -16,8 +16,8 @@ export type ValueListTone = "strong" | "accent" | "muted"
 export type ValueListItem = string | ValueListPart[]
 
 /** Drop empty parts so optional fields don't fight `ValueListPart.text: string`. */
-export function valueListParts(chunks: { text?: string; tone?: ValueListTone }[]): ValueListPart[] {
-	return chunks.flatMap(({ text, tone }) => (text ? [{ text, tone }] : []))
+export function valueListParts(chunks: { text?: string; tone?: ValueListTone; href?: string }[]): ValueListPart[] {
+	return chunks.flatMap(({ text, tone, href }) => (text ? [{ text, tone, href }] : []))
 }
 
 export const PART_TONE: Record<ValueListTone, string> = {
