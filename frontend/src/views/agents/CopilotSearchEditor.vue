@@ -1,42 +1,35 @@
 <template>
-	<div class="page flex flex-col gap-4">
-		<!-- Header -->
-		<div class="flex flex-wrap items-center gap-3">
+	<div class="page page-wrapped page-without-footer editor-page flex flex-col">
+		<!-- Page header — identity, live validation status, rule-level actions -->
+		<header class="editor-head">
 			<n-button quaternary circle size="small" title="Back to searches" @click="goBack">
 				<template #icon><Icon :name="BackIcon" :size="18" /></template>
 			</n-button>
-			<Icon :name="EditorIcon" :size="22" />
-			<span class="text-lg font-semibold">Detection Rule Editor</span>
-			<n-tag size="small" round :bordered="false" type="info">Graylog-only</n-tag>
 
-			<!-- live status -->
-			<n-tag v-if="result" size="small" round :bordered="false" :type="result.valid ? 'success' : 'error'">
-				<template #icon><Icon :name="result.valid ? OkIcon : ErrIcon" :size="14" /></template>
-				{{ result.valid ? "Valid" : `${result.error_count} error${result.error_count === 1 ? "" : "s"}` }}
-			</n-tag>
-			<n-tag v-if="result && result.warning_count" size="small" round :bordered="false" type="warning">
-				{{ result.warning_count }} warning{{ result.warning_count === 1 ? "" : "s" }}
-			</n-tag>
-			<n-spin v-if="validating" :size="14" />
+			<div class="editor-head__title">
+				<Icon :name="EditorIcon" :size="20" />
+				<h1>Detection Rule Editor</h1>
+				<n-tag size="small" round :bordered="false" type="info">Graylog-only</n-tag>
+			</div>
+
+			<div class="editor-head__status">
+				<n-spin v-if="validating" :size="14" />
+				<template v-else-if="result">
+					<n-tag size="small" round :bordered="false" :type="result.valid ? 'success' : 'error'">
+						<template #icon><Icon :name="result.valid ? OkIcon : ErrIcon" :size="14" /></template>
+						{{
+							result.valid ? "Valid" : `${result.error_count} error${result.error_count === 1 ? "" : "s"}`
+						}}
+					</n-tag>
+					<n-tag v-if="result.warning_count" size="small" round :bordered="false" type="warning">
+						{{ result.warning_count }} warning{{ result.warning_count === 1 ? "" : "s" }}
+					</n-tag>
+				</template>
+			</div>
 
 			<div class="grow" />
-			<n-button size="small" secondary @click="loadSimple">
-				<template #icon><Icon :name="TemplateIcon" :size="16" /></template>
-				New simple rule
-			</n-button>
-			<n-button size="small" secondary @click="loadAggregation">
-				<template #icon><Icon :name="AggIcon" :size="16" /></template>
-				New aggregation rule
-			</n-button>
-			<n-tooltip>
-				<template #trigger>
-					<n-button size="small" secondary :disabled="!yamlText.trim()" @click="copyYaml">
-						<template #icon><Icon :name="CopyIcon" :size="16" /></template>
-					</n-button>
-				</template>
-				Copy YAML
-			</n-tooltip>
-			<n-button size="small" type="primary" :disabled="!yamlText.trim()" @click="showBacktest = true">
+
+			<n-button size="small" secondary :disabled="!yamlText.trim()" @click="showBacktest = true">
 				<template #icon><Icon :name="BacktestIcon" :size="16" /></template>
 				Backtest
 			</n-button>
@@ -44,99 +37,125 @@
 				<template #icon><Icon :name="PublishIcon" :size="16" /></template>
 				Publish
 			</n-button>
-		</div>
+		</header>
 
-		<div class="flex min-h-0 grow flex-col gap-4 lg:flex-row">
-			<!-- Left: YAML source -->
-			<div class="flex min-w-0 grow flex-col gap-2 lg:w-1/2">
-				<div class="flex items-center gap-2">
-					<span class="text-secondary text-xs font-medium">Rule YAML</span>
-					<n-tag size="tiny" round :bordered="false">
-						<template #icon><Icon :name="LockIcon" :size="11" /></template>
-						required fields are locked
-					</n-tag>
+		<!-- Workspace — a single box split into the editor and the reference side -->
+		<div class="workspace">
+			<!-- Authoring side -->
+			<section class="workspace__pane workspace__pane--main">
+				<div class="workspace__toolbar">
+					<div class="toolbar__group">
+						<Icon :name="YamlIcon" :size="15" class="toolbar__icon" />
+						<span class="toolbar__title">Rule YAML</span>
+						<n-tooltip>
+							<template #trigger>
+								<span class="toolbar__hint">
+									<Icon :name="LockIcon" :size="13" />
+								</span>
+							</template>
+							Required schema fields are locked — edit their values, not the keys
+						</n-tooltip>
+					</div>
+
+					<div class="grow" />
+
+					<div class="toolbar__group">
+						<span class="toolbar__label">Template</span>
+						<n-button-group size="tiny">
+							<n-tooltip>
+								<template #trigger>
+									<n-button secondary @click="loadSimple">
+										<template #icon><Icon :name="TemplateIcon" :size="14" /></template>
+										Simple
+									</n-button>
+								</template>
+								Start a new simple match rule — replaces the editor content
+							</n-tooltip>
+							<n-tooltip>
+								<template #trigger>
+									<n-button secondary @click="loadAggregation">
+										<template #icon><Icon :name="AggIcon" :size="14" /></template>
+										Aggregation
+									</n-button>
+								</template>
+								Start a new threshold / aggregation rule — replaces the editor content
+							</n-tooltip>
+						</n-button-group>
+
+						<span class="toolbar__divider" />
+
+						<n-tooltip>
+							<template #trigger>
+								<n-button size="tiny" secondary :disabled="!yamlText.trim()" @click="copyYaml">
+									<template #icon><Icon :name="CopyIcon" :size="14" /></template>
+								</n-button>
+							</template>
+							Copy YAML
+						</n-tooltip>
+					</div>
 				</div>
-				<div class="border-default overflow-hidden rounded-lg border" :style="{ height: '62vh' }">
+
+				<div class="workspace__content">
 					<RuleYamlEditor ref="editorRef" v-model:code="yamlText" @blocked="onBlocked" />
 				</div>
-			</div>
+			</section>
 
-			<!-- Right: validation + Graylog syntax reference -->
-			<div class="flex min-w-0 grow flex-col gap-2 lg:w-1/2">
-				<n-tabs v-model:value="rightTab" type="segment" size="small">
+			<!-- Reference side — validation findings and Graylog syntax -->
+			<aside class="workspace__pane workspace__pane--aside">
+				<n-tabs v-model:value="rightTab" type="segment" size="small" class="aside-tabs">
 					<n-tab-pane name="validation" tab="Validation">
-						<div class="border-default overflow-auto rounded-lg border p-3" :style="{ height: '58vh' }">
-							<!-- valid hero -->
-							<div
-								v-if="result?.valid && !result.warning_count"
-								class="flex flex-col items-center justify-center gap-2 py-16 text-center"
-							>
-								<Icon :name="OkIcon" :size="40" class="text-green-500" />
-								<span class="text-base font-semibold">Looks good</span>
-								<span class="text-secondary max-w-xs text-sm">
-									No structural, lint, or Graylog-query issues. Reference integrity and per-tenant field
-									checks come next.
-								</span>
-							</div>
-
-							<n-empty v-else-if="!result && !validating" description="Start typing to validate." class="mt-10" />
-
-							<div v-else class="flex flex-col gap-4">
-								<!-- errors -->
-								<div v-if="errorFindings.length" class="flex flex-col gap-2">
-									<h4 class="section-title">Errors ({{ errorFindings.length }})</h4>
-									<div
-										v-for="(f, i) of errorFindings"
-										:key="`e${i}`"
-										class="finding-row"
-										:class="{ clickable: !!f.line }"
-										@click="jumpTo(f)"
-									>
-										<n-tag size="tiny" round :bordered="false" type="error">error</n-tag>
-										<div class="flex min-w-0 grow flex-col gap-0.5">
-											<div class="flex items-center gap-2">
-												<code class="text-xs">{{ f.code }}</code>
-												<span v-if="f.line" class="text-secondary text-xs">line {{ f.line }}</span>
-												<span v-else-if="f.path" class="text-secondary text-xs">{{ f.path }}</span>
-											</div>
-											<span class="text-sm break-words">{{ f.message }}</span>
-										</div>
-										<Icon v-if="f.line" :name="JumpIcon" :size="14" class="text-secondary mt-1 shrink-0" />
-									</div>
+						<n-scrollbar trigger="none" class="h-full">
+							<div class="findings">
+								<div v-if="result?.valid && !result.warning_count" class="findings__hero">
+									<Icon :name="OkIcon" :size="38" class="text-green-500" />
+									<span class="findings__hero-title">Looks good</span>
+									<span class="findings__hero-text">
+										No structural, lint, or Graylog-query issues. Reference integrity and per-tenant
+										field checks come next.
+									</span>
 								</div>
 
-								<!-- warnings -->
-								<div v-if="warningFindings.length" class="flex flex-col gap-2">
-									<h4 class="section-title">Warnings ({{ warningFindings.length }})</h4>
-									<div
-										v-for="(f, i) of warningFindings"
-										:key="`w${i}`"
-										class="finding-row"
-										:class="{ clickable: !!f.line }"
-										@click="jumpTo(f)"
-									>
-										<n-tag size="tiny" round :bordered="false" type="warning">warning</n-tag>
-										<div class="flex min-w-0 grow flex-col gap-0.5">
-											<div class="flex items-center gap-2">
-												<code class="text-xs">{{ f.code }}</code>
-												<span v-if="f.line" class="text-secondary text-xs">line {{ f.line }}</span>
-												<span v-else-if="f.path" class="text-secondary text-xs">{{ f.path }}</span>
+								<n-empty
+									v-else-if="!result && !validating"
+									description="Start typing to validate."
+									class="findings__hero"
+								/>
+
+								<section v-for="g of findingGroups" v-else :key="g.level" class="finding-group">
+									<h4 class="section-title">{{ g.label }} ({{ g.items.length }})</h4>
+									<div class="finding-group__rows">
+										<div
+											v-for="(f, i) of g.items"
+											:key="`${g.level}-${i}`"
+											class="finding-row"
+											:class="[`is-${g.level}`, { clickable: !!f.line }]"
+											@click="jumpTo(f)"
+										>
+											<span class="finding-row__level">{{ g.level }}</span>
+											<div class="finding-row__body">
+												<div class="finding-row__meta">
+													<code class="finding-row__code">{{ f.code }}</code>
+													<span v-if="f.line">line {{ f.line }}</span>
+													<span v-else-if="f.path">{{ f.path }}</span>
+												</div>
+												<span class="finding-row__msg">{{ f.message }}</span>
 											</div>
-											<span class="text-sm break-words">{{ f.message }}</span>
+											<Icon v-if="f.line" :name="JumpIcon" :size="14" class="finding-row__jump" />
 										</div>
-										<Icon v-if="f.line" :name="JumpIcon" :size="14" class="text-secondary mt-1 shrink-0" />
 									</div>
-								</div>
+								</section>
 							</div>
-						</div>
+						</n-scrollbar>
 					</n-tab-pane>
 					<n-tab-pane name="syntax" tab="Graylog syntax">
-						<div class="border-default overflow-auto rounded-lg border p-3" :style="{ height: '58vh' }">
-							<GraylogSyntaxReference />
-						</div>
+						<n-scrollbar trigger="none" class="h-full">
+							<div class="syntax-pane">
+								<GraylogSyntaxReference />
+							</div>
+						</n-scrollbar>
 					</n-tab-pane>
 				</n-tabs>
-			</div>
+			</aside>
 		</div>
 
 		<BacktestModal v-model:show="showBacktest" :yaml="yamlText" />
@@ -147,7 +166,7 @@
 <script setup lang="ts">
 import type { LintFinding, ValidateRuleResponse } from "@/types/copilot-searches"
 import { watchDebounced } from "@vueuse/core"
-import { NButton, NEmpty, NSpin, NTabPane, NTabs, NTag, NTooltip, useMessage } from "naive-ui"
+import { NButton, NButtonGroup, NEmpty, NScrollbar, NSpin, NTabPane, NTabs, NTag, NTooltip, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
@@ -159,6 +178,7 @@ import RuleYamlEditor from "@/components/copilotSearches/RuleYamlEditor.vue"
 import { getApiErrorMessage } from "@/utils"
 
 const EditorIcon = "carbon:code"
+const YamlIcon = "carbon:document"
 const BackIcon = "carbon:arrow-left"
 const OkIcon = "carbon:checkmark-filled"
 const ErrIcon = "carbon:warning-alt-filled"
@@ -196,6 +216,14 @@ const errorFindings = computed<LintFinding[]>(() =>
 )
 const warningFindings = computed<LintFinding[]>(() =>
 	(result.value?.findings || []).filter(f => f.level === "warning").sort(byLine)
+)
+
+/** Both severity blocks in one list so the panel renders them from a single loop. */
+const findingGroups = computed(() =>
+	[
+		{ level: "error" as const, label: "Errors", items: errorFindings.value },
+		{ level: "warning" as const, label: "Warnings", items: warningFindings.value }
+	].filter(g => g.items.length)
 )
 
 function jumpTo(f: LintFinding) {
@@ -249,7 +277,7 @@ graylog:
 `
 	if (agg === "none") return base
 	const enabled = agg === "enabled"
-	return `${base}${enabled ? "" : "# Optional — only for threshold / aggregation rules (e.g. \"N events per user in 10m\").\n# Leave enabled: false (or delete this whole block) for a simple match rule.\n"}aggregation:
+	return `${base}${enabled ? "" : '# Optional — only for threshold / aggregation rules (e.g. "N events per user in 10m").\n# Leave enabled: false (or delete this whole block) for a simple match rule.\n'}aggregation:
   enabled: ${enabled}
   function: count            # count | distinct_count
   field: null                # required only when function is distinct_count
@@ -320,30 +348,322 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+.editor-page {
+	gap: 14px;
+}
+
+.editor-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+
+	h1 {
+		font-size: 17px;
+		font-weight: 600;
+		line-height: 1.2;
+		white-space: nowrap;
+	}
+}
+
+.editor-head__title,
+.editor-head__status {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/*
+ * One box for the whole workspace, split like SegmentedPage: an authoring half and a
+ * reference half, each with its own toolbar strip and a full-height content area.
+ */
+.workspace {
+	--workspace-toolbar-height: 48px;
+
+	display: flex;
+	min-height: 0;
+	flex-grow: 1;
+	flex-direction: column;
+	overflow: hidden;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	background-color: var(--bg-default-color);
+
+	@media (min-width: 1024px) {
+		flex-direction: row;
+	}
+}
+
+.workspace__pane {
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	flex: 1 1 0;
+	flex-direction: column;
+}
+
+.workspace__pane--main {
+	border-block-end: 1px solid var(--border-color);
+
+	@media (min-width: 1024px) {
+		border-block-end: none;
+		border-inline-end: 1px solid var(--border-color);
+	}
+}
+
+/* The reference side reads as a panel, not as more canvas — hence the recessed ground. */
+.workspace__pane--aside {
+	background-color: var(--bg-secondary-color);
+}
+
+.workspace__toolbar {
+	display: flex;
+	height: var(--workspace-toolbar-height);
+	min-height: var(--workspace-toolbar-height);
+	align-items: center;
+	gap: 10px;
+	padding: 0 14px;
+	border-block-end: 1px solid var(--border-color);
+}
+
+.toolbar__group {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	gap: 10px;
+}
+
+.toolbar__icon {
+	flex-shrink: 0;
+	color: var(--fg-secondary-color);
+}
+
+.toolbar__title {
+	font-size: 13px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.toolbar__label {
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	color: var(--fg-secondary-color);
+}
+
+.toolbar__hint {
+	display: flex;
+	align-items: center;
+	cursor: help;
+	color: var(--fg-secondary-color);
+	opacity: 0.7;
+	transition: opacity 0.15s var(--bezier-ease);
+
+	&:hover {
+		opacity: 1;
+	}
+}
+
+.toolbar__divider {
+	width: 1px;
+	height: 16px;
+	flex-shrink: 0;
+	background-color: var(--border-color);
+}
+
+.workspace__content {
+	display: flex;
+	min-height: 0;
+	flex-grow: 1;
+	flex-direction: column;
+	overflow: hidden;
+
+	> * {
+		min-height: 0;
+		flex-grow: 1;
+	}
+}
+
+/* The tab nav doubles as this pane's toolbar strip, so both halves line up. */
+.aside-tabs {
+	display: flex;
+	min-height: 0;
+	flex-grow: 1;
+	flex-direction: column;
+
+	:deep(.n-tabs-nav) {
+		display: flex;
+		height: var(--workspace-toolbar-height);
+		min-height: var(--workspace-toolbar-height);
+		align-items: center;
+		padding: 0 14px;
+		border-block-end: 1px solid var(--border-color);
+	}
+
+	:deep(.n-tabs-pane-wrapper) {
+		display: flex;
+		min-height: 0;
+		flex-grow: 1;
+		overflow: hidden;
+	}
+
+	:deep(.n-tab-pane) {
+		display: flex;
+		width: 100%;
+		height: 100%;
+		min-height: 0;
+		flex-direction: column;
+		padding: 0;
+	}
+}
+
+.findings {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	padding: 14px;
+}
+
+.syntax-pane {
+	padding: 14px;
+}
+
+.findings__hero {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 52px 16px;
+	text-align: center;
+}
+
+.findings__hero-title {
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.findings__hero-text {
+	max-width: 22rem;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--fg-secondary-color);
+}
+
+.finding-group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.finding-group__rows {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.finding-row {
+	--accent: var(--border-color);
+
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	overflow: hidden;
+	padding: 10px 12px 10px 14px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-small);
+	/* lifted off the recessed panel ground */
+	background-color: var(--bg-default-color);
+	transition:
+		background-color 0.15s var(--bezier-ease),
+		border-color 0.15s var(--bezier-ease);
+
+	&::before {
+		content: "";
+		position: absolute;
+		inset: 0 auto 0 0;
+		width: 3px;
+		background-color: var(--accent);
+	}
+
+	&.is-error {
+		--accent: var(--error-color);
+	}
+
+	&.is-warning {
+		--accent: var(--warning-color);
+	}
+
+	&.clickable {
+		cursor: pointer;
+
+		&:hover {
+			border-color: var(--accent);
+			background-color: var(--hover-005-color);
+		}
+	}
+}
+
+.finding-row__level {
+	min-width: 52px;
+	flex-shrink: 0;
+	padding-top: 2px;
+	font-family: var(--font-family-mono);
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--accent);
+}
+
+.finding-row__body {
+	display: flex;
+	min-width: 0;
+	flex-grow: 1;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.finding-row__meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	font-family: var(--font-family-mono);
+	font-size: 11px;
+	color: var(--fg-secondary-color);
+}
+
+/* Neutralise the global `code` pill — inside a row the code reads as plain mono text. */
+.finding-row__code {
+	padding: 0;
+	background: none;
+	font-size: 11px;
+	color: var(--fg-default-color);
+}
+
+.finding-row__msg {
+	font-size: 13px;
+	line-height: 1.45;
+	overflow-wrap: anywhere;
+}
+
+.finding-row__jump {
+	margin-top: 2px;
+	flex-shrink: 0;
+	color: var(--fg-secondary-color);
+	opacity: 0.6;
+}
+
 .section-title {
 	font-size: 11px;
 	font-weight: 600;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
-	color: var(--n-text-color-3, #888);
-}
-.finding-row {
-	display: flex;
-	align-items: flex-start;
-	gap: 12px;
-	border-radius: 8px;
-	padding: 12px;
-	background: var(--bg-secondary-color, rgba(128, 128, 128, 0.08));
-	transition:
-		background 0.15s ease,
-		transform 0.05s ease;
-}
-.finding-row.clickable {
-	cursor: pointer;
-}
-.finding-row.clickable:hover {
-	background: var(--bg-body-color, rgba(128, 128, 128, 0.16));
-	filter: brightness(1.05);
+	color: var(--fg-secondary-color);
 }
 </style>
