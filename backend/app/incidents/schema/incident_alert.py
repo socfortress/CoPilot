@@ -1,13 +1,18 @@
 from datetime import datetime
 from enum import Enum
+from types import UnionType
 from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Union
+from typing import get_args
+from typing import get_origin
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import model_validator
 
 
 class ValidSyslogType(str, Enum):
@@ -84,6 +89,15 @@ class FieldNames(BaseModel):
     ioc_field_names: Optional[List[str]] = None
 
 
+def _is_string_field(annotation: Any) -> bool:
+    """True for a field declared `str` or `Optional[str]`."""
+    if annotation is str:
+        return True
+    if get_origin(annotation) in (Union, UnionType):
+        return str in get_args(annotation)
+    return False
+
+
 class GenericSourceModel(BaseModel):
     timestamp: str = Field(..., description="The timestamp of the alert.")
     timestamp_utc: Optional[str] = Field(
@@ -111,6 +125,46 @@ class GenericSourceModel(BaseModel):
         description="The agent name of the alert.",
     )
     model_config = ConfigDict(extra="allow")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _stringify_numeric_values(cls, data: Any) -> Any:
+        """Accept a number where a string field is declared.
+
+        These models are built straight from raw indexer documents, and what a
+        source puts in a given field is not ours to control: `timestamp_utc`
+        arrives as epoch milliseconds from some pipelines, `syslog_level` as a
+        numeric severity, `process_id` as an int. Pydantic 1 coerced all of that
+        to `str` silently; Pydantic 2 rejects it with `string_type`, and because
+        `get_single_alert_details` turns any exception into a 400, a single
+        numeric field stopped the alert being created at all — permanently, since
+        the Graylog event is only stamped after a successful create, so the same
+        document was retried and re-failed on every scheduler run (#1096).
+
+        Coercing here rather than widening the annotations keeps the rest of the
+        ingest path working with plain strings. Driven off the declared fields so
+        a string field added later is covered without a second look.
+
+        `bool` is excluded deliberately: it is an `int` subclass in Python, and
+        turning `True` into `"True"` would be a silent data change rather than a
+        format fix.
+        """
+        if not isinstance(data, dict):
+            return data
+
+        coerced = None
+        for name, field in cls.model_fields.items():
+            if name not in data or not _is_string_field(field.annotation):
+                continue
+            value = data[name]
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                continue
+            if coerced is None:
+                # Copy on first hit — the caller's document is not ours to mutate.
+                coerced = dict(data)
+            coerced[name] = str(value)
+
+        return coerced if coerced is not None else data
 
     def to_dict(self):
         return self.model_dump(exclude_none=True)

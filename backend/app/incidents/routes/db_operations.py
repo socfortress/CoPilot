@@ -63,6 +63,9 @@ from app.incidents.schema.db_operations import AssignedToCase
 from app.incidents.schema.db_operations import AvailableIndicesResponse
 from app.incidents.schema.db_operations import AvailableSourcesResponse
 from app.incidents.schema.db_operations import AvailableUsersResponse
+from app.incidents.schema.db_operations import BulkAlertUpdateResponse
+from app.incidents.schema.db_operations import BulkAssignedToAlert
+from app.incidents.schema.db_operations import BulkUpdateAlertStatus
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseAlertLinkResponse
 from app.incidents.schema.db_operations import CaseAlertLinksCreate
@@ -568,7 +571,15 @@ async def delete_alert_title_name_endpoint(alert_title_name: str, source: str, d
     response_model=Alert,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def create_alert_endpoint(alert: AlertCreate, db: AsyncSession = Depends(get_db)):
+async def create_alert_endpoint(
+    alert: AlertCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    # `customer_code` is taken from the request body, so it has to be asserted
+    # against the caller's entitlements the way `/case/create` does -- otherwise a
+    # scoped analyst can file an alert against any tenant (#1102).
+    await _ensure_customer_access(alert.customer_code, current_user, db)
     return await create_alert(alert, db)
 
 
@@ -586,6 +597,49 @@ async def update_alert_status_endpoint(
     # caller who is not entitled to it (GHSA-wjpw-xrg8-vmf9).
     await _ensure_alert_access(alert_status.alert_id, current_user, db)
     return AlertResponse(alert=await update_alert_status(alert_status, db), success=True, message="Alert status updated successfully")
+
+
+@incidents_db_operations_router.put(
+    "/alerts/status",
+    response_model=BulkAlertUpdateResponse,
+    description="Apply one status to every alert in a selection",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def bulk_update_alert_status_endpoint(
+    bulk_status: BulkUpdateAlertStatus,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Set the same status on many alerts at once (GitHub issue #1098).
+
+    Scoped to match the single-alert `/alert/status` route, `customer_user`
+    included -- bulk is a convenience over the same operation, not a wider
+    permission.
+
+    Access is checked per alert, not once for the request: a selection can span
+    customers, and the caller may be entitled to only some of them. An alert the
+    caller cannot reach is skipped and reported, which is also why this does not
+    distinguish 403 from 404 in the response -- doing so would confirm that an id
+    exists in a tenant the caller cannot see.
+    """
+    updated_alert_ids = []
+    not_updated_alert_ids = []
+
+    for alert_id in bulk_status.alert_ids:
+        try:
+            await _ensure_alert_access(alert_id, current_user, db)
+            await update_alert_status(UpdateAlertStatus(alert_id=alert_id, status=bulk_status.status), db)
+            updated_alert_ids.append(alert_id)
+        except HTTPException as e:
+            logger.info(f"Skipping alert {alert_id} in bulk status update: {e.detail}")
+            not_updated_alert_ids.append(alert_id)
+
+    return BulkAlertUpdateResponse(
+        message=f"Updated {len(updated_alert_ids)} alert(s) to {bulk_status.status.value}",
+        updated_alert_ids=updated_alert_ids,
+        not_updated_alert_ids=not_updated_alert_ids,
+        success=True,
+    )
 
 
 @incidents_db_operations_router.put(
@@ -852,6 +906,12 @@ async def update_assigned_to_endpoint(
     if assigned_to.assigned_to not in user_names:
         raise HTTPException(status_code=400, detail="User does not exist")
 
+    # Enforce per-object ownership, as the sibling `/alert/status` and `/alert/verdict`
+    # routes do. Without it an analyst scoped to one customer could reassign another
+    # customer's alerts, and the notification emitted below would carry that alert's
+    # title, customer code and severity to whichever route is listening (#1099).
+    await _ensure_alert_access(assigned_to.alert_id, current_user, db)
+
     # Read the current assignee BEFORE the mutation: the notification below only
     # fires on an actual change, so rewriting the same value stays silent.
     existing = await db.execute(select(Alert).where(Alert.id == assigned_to.alert_id))
@@ -886,6 +946,87 @@ async def update_assigned_to_endpoint(
     )
 
 
+@incidents_db_operations_router.put(
+    "/alerts/assigned-to",
+    response_model=BulkAlertUpdateResponse,
+    description="Assign every alert in a selection to the same user",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def bulk_update_assigned_to_endpoint(
+    bulk_assigned_to: BulkAssignedToAlert,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Assign many alerts to one user at once (GitHub issue #1098).
+
+    Scoped `admin|analyst`, matching the single-alert route and deliberately
+    narrower than bulk status, which also admits `customer_user`.
+
+    The assignee is validated once for the request rather than per alert -- an
+    unknown username is a bad request, not a per-alert skip, and failing fast
+    avoids assigning half a selection before noticing. Alert-level failures
+    (missing, or a customer the caller is not entitled to) are still skipped and
+    reported, so a selection spanning customers does the work it is allowed to do.
+
+    One `ALERT_ASSIGNED` notification is emitted per alert that actually changed
+    hands, exactly as the single-alert route does: each alert genuinely changed,
+    and a route gating on severity should see each one. Alerts already assigned
+    to that user stay silent. If the volume proves noisy in practice, an
+    aggregated trigger is the follow-up -- that needs its own trigger, template
+    variables and route config, so it is not smuggled in here.
+    """
+    all_users = await select_all_users()
+    user_names = [user.username for user in all_users]
+    if bulk_assigned_to.assigned_to not in user_names:
+        raise HTTPException(status_code=400, detail="User does not exist")
+
+    updated_alert_ids = []
+    not_updated_alert_ids = []
+
+    for alert_id in bulk_assigned_to.alert_ids:
+        try:
+            await _ensure_alert_access(alert_id, current_user, db)
+
+            # Re-read as the ORM row rather than reusing what the access check
+            # returned: that is an `AlertOut`, which carries no `severity`, so
+            # `severity_of` would silently fall back to the deployment default
+            # and every bulk assignment would notify at the wrong severity.
+            #
+            # Read BEFORE the mutation, as the single-alert route does: rewriting
+            # the same assignee must stay silent.
+            existing = await db.execute(select(Alert).where(Alert.id == alert_id))
+            existing_alert = existing.scalars().first()
+            previous_assignee = existing_alert.assigned_to
+            alert_title = existing_alert.alert_name
+            alert_customer = existing_alert.customer_code
+            alert_severity = severity_of(existing_alert)
+
+            await update_alert_assigned_to(alert_id, bulk_assigned_to.assigned_to, db)
+            updated_alert_ids.append(alert_id)
+
+            if previous_assignee != bulk_assigned_to.assigned_to:
+                emit(
+                    alert_assigned_event(
+                        alert_id=alert_id,
+                        title=alert_title,
+                        assignee=bulk_assigned_to.assigned_to,
+                        actor=current_user.username,
+                        customer_code=alert_customer,
+                        severity=alert_severity,
+                    ),
+                )
+        except HTTPException as e:
+            logger.info(f"Skipping alert {alert_id} in bulk assignment: {e.detail}")
+            not_updated_alert_ids.append(alert_id)
+
+    return BulkAlertUpdateResponse(
+        message=f"Assigned {len(updated_alert_ids)} alert(s) to {bulk_assigned_to.assigned_to}",
+        updated_alert_ids=updated_alert_ids,
+        not_updated_alert_ids=not_updated_alert_ids,
+        success=True,
+    )
+
+
 @incidents_db_operations_router.post(
     "/alert/context",
     response_model=AlertContextResponse,
@@ -917,7 +1058,13 @@ async def get_alert_context_by_id_endpoint(alert_context_id: int, db: AsyncSessi
     response_model=AssetResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def create_asset_endpoint(asset: AssetCreate, db: AsyncSession = Depends(get_db)):
+async def create_asset_endpoint(
+    asset: AssetCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    # `alert_linked` is this schema's name for the alert id (#1102).
+    await _ensure_alert_access(asset.alert_linked, current_user, db)
     return AssetResponse(asset=await create_asset(asset, db), success=True, message="Asset created successfully")
 
 
@@ -926,7 +1073,12 @@ async def create_asset_endpoint(asset: AssetCreate, db: AsyncSession = Depends(g
     response_model=AlertIoCResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def create_alert_ioc_endpoint(ioc: AlertIoCCreate, db: AsyncSession = Depends(get_db)):
+async def create_alert_ioc_endpoint(
+    ioc: AlertIoCCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await _ensure_alert_access(ioc.alert_id, current_user, db)
     return AlertIoCResponse(alert_ioc=await create_alert_ioc(ioc, db), success=True, message="Alert IoC created successfully")
 
 
@@ -986,7 +1138,12 @@ async def list_alerts_by_ioc_value_endpoint(
     response_model=AlertIoCResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def delete_alert_ioc_endpoint(ioc: AlertIoCDelete, db: AsyncSession = Depends(get_db)):
+async def delete_alert_ioc_endpoint(
+    ioc: AlertIoCDelete,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await _ensure_alert_access(ioc.alert_id, current_user, db)
     return AlertIoCResponse(
         alert_ioc=await delete_alert_ioc(ioc=ioc, db=db),
         success=True,
@@ -999,7 +1156,12 @@ async def delete_alert_ioc_endpoint(ioc: AlertIoCDelete, db: AsyncSession = Depe
     response_model=AlertTagResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def create_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession = Depends(get_db)):
+async def create_alert_tag_endpoint(
+    alert_tag: AlertTagCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await _ensure_alert_access(alert_tag.alert_id, current_user, db)
     return AlertTagResponse(alert_tag=await create_alert_tag(alert_tag, db), success=True, message="Alert tag created successfully")
 
 
@@ -1060,7 +1222,16 @@ async def list_alerts_by_tag_endpoint(
     response_model=AlertTagResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def delete_alert_tag_endpoint(alert_tag: AlertTagDelete, db: AsyncSession = Depends(get_db)):
+async def delete_alert_tag_endpoint(
+    alert_tag: AlertTagDelete,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    # Tags are not just labels: `user_tag_access` / `role_tag_access` gate which
+    # alerts a user can see when tag ACLs are enabled, so removing the tag that
+    # scopes an alert changes who can see it. That makes an unscoped tag delete an
+    # access-control mutation rather than a cosmetic one (#1102).
+    await _ensure_alert_access(alert_tag.alert_id, current_user, db)
     return AlertTagResponse(
         alert_tag=await delete_alert_tag(alert_tag.alert_id, alert_tag.tag_id, db),
         success=True,
@@ -1164,6 +1335,17 @@ async def create_case_alert_links_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # Both ends, as the single-alert `/case/alert-link` route does (#1102): the case
+    # once for the request, then every alert being attached.
+    #
+    # Unlike bulk delete, a denied alert fails the request rather than being skipped.
+    # There is no partial-success shape in this response to report a skip through, and
+    # the caller builds the list from alerts it can already see -- so a denial here means
+    # a bug or a probe, not an ordinary mixed selection.
+    await _ensure_case_access(case_alert_links.case_id, current_user, db)
+    for alert_id in case_alert_links.alert_ids:
+        await _ensure_alert_access(alert_id, current_user, db)
+
     links = await create_case_alert_links_bulk(case_alert_links, db, actor=current_user.username)
 
     from app.incidents.schema.case_templates import CaseEventType
@@ -1510,32 +1692,52 @@ async def delete_alert_endpoint(
     response_model=DeleteAlertsResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def delete_alerts_endpoint(request: DeleteAlertsRequest, db: AsyncSession = Depends(get_db)):
+async def delete_alerts_endpoint(
+    request: DeleteAlertsRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     """
     Endpoint to delete alerts.
 
     This endpoint deletes alerts based on the provided list of alert IDs. If an alert is linked to a case, it will not be deleted and will be skipped.
 
+    Access is checked per alert (#1099). The route is scoped `admin|analyst`, but an
+    analyst is not necessarily deployment-wide -- `user_customer_access` narrows one to
+    specific customers -- and this route previously took no `current_user` at all, so
+    anyone holding the scope could delete any tenant's alerts by passing their ids.
+    Deletion is unrecoverable and alert ids are sequential, which made that worth
+    closing even without a report.
+
+    A denied alert is skipped rather than 403ing the request, keeping the partial-success
+    contract the UI already renders and matching how case-linked alerts are handled. It
+    also avoids confirming which ids exist inside a tenant the caller cannot see.
+
     Args:
         request (DeleteAlertsRequest): Request object containing the list of alert IDs to be deleted.
+        current_user (User): The authenticated caller, used for the per-alert access check.
         db (AsyncSession, optional): Database session dependency.
 
     Returns:
         DeleteAlertsResponse: Response object containing the status of the deletion process, including lists of successfully deleted alert IDs and those that were not deleted.
 
     Raises:
-        HTTPException: If an error occurs during the deletion process that is not related to an alert being linked to a case.
+        HTTPException: If an error occurs during the deletion process that is not related to an alert being linked to a case, missing, or inaccessible.
     """
     deleted_alert_ids = []
     not_deleted_alert_ids = []
     for alert_id in request.alert_ids:
         try:
+            await _ensure_alert_access(alert_id, current_user, db)
             await is_alert_linked_to_case(alert_id, db)
             await delete_alert(alert_id, db)
             deleted_alert_ids.append(alert_id)
         except HTTPException as e:
-            if e.status_code == 400:
-                logger.info(f"Alert {alert_id} is linked to a case and cannot be deleted. Skipping.")
+            # 400 linked to a case, 403 not the caller's customer, 404 already gone --
+            # all three are "skip this one and carry on". Anything else is unexpected
+            # and still fails the request loudly.
+            if e.status_code in (400, 403, 404):
+                logger.info(f"Alert {alert_id} skipped in bulk delete: {e.detail}")
                 not_deleted_alert_ids.append(alert_id)
             else:
                 raise e

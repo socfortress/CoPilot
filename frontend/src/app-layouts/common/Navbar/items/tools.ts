@@ -6,6 +6,7 @@ const ToolsIcon = "carbon:tool-box"
 
 export const toolsItem: MenuMixedOption = parentMenuItem("Tools", "Tools", ToolsIcon, [
 	routerLinkItem("Connectors", "Connectors"),
+	routerLinkItem("File Analysis", "FileAnalysis"),
 	{ label: "Stack Provisioning", key: "Tools-StackProvisioning" },
 	routerLinkItem("Cloud Security Assessment", "CloudSecurityAssessment"),
 	routerLinkItem("Web Vulnerability Assessment", "WebVulnerabilityAssessment"),

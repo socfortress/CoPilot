@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #0f172a; font-size: 10.5px; line-height: 1.5; background: #ffffff;
+  }
+  .muted { color: #64748b; }
+  .small { font-size: 8.5px; }
+  .mono { font-family: "Consolas", "Courier New", monospace; }
+  .up { text-transform: uppercase; letter-spacing: .06em; }
+
+  /* ---------- header band ---------- */
+  .header {
+    width: 100%; border-collapse: collapse; color: #e2e8f0;
+    background: #0f172a;
+    background: linear-gradient(120deg, #0b1220 0%, #14243d 55%, #1e3a5f 100%);
+    border-radius: 8px; margin-bottom: 14px;
+  }
+  .header td { padding: 16px 18px; vertical-align: middle; border: none; }
+  .brand { font-size: 9px; letter-spacing: .14em; color: #7dd3fc; text-transform: uppercase; font-weight: 700; }
+  .brand .dot { display:inline-block; width:8px; height:8px; background:#0ea5e9; border-radius:2px; margin-right:6px; }
+  .title { font-size: 22px; font-weight: 700; color: #ffffff; margin-top: 2px; letter-spacing: -.01em; }
+  .header .meta { text-align: right; font-size: 8.5px; color: #94a3b8; line-height: 1.7; }
+  .header .meta b { color: #e2e8f0; font-weight: 600; }
+
+  /* ---------- verdict hero ---------- */
+  .hero { border-radius: 8px; padding: 14px 16px 14px 18px; margin-bottom: 12px; border: 1px solid; }
+  .hero .vlabel { font-size: 26px; font-weight: 800; letter-spacing: .02em; line-height: 1; }
+  .hero .vreason { font-size: 10px; margin-top: 6px; }
+
+  /* ---------- KPI tiles ---------- */
+  .tiles { width: 100%; border-collapse: separate; border-spacing: 8px 0; margin: 0 -8px 16px -8px; }
+  .tiles td { width: 25%; vertical-align: top; }
+  .tile { border: 1px solid #e2e8f0; border-top: 3px solid #94a3b8; border-radius: 7px; padding: 9px 11px; background: #f8fafc; }
+  .tile .k { font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; }
+  .tile .v { font-size: 17px; font-weight: 700; color: #0f172a; margin-top: 3px; }
+  .tile .sub { font-size: 8px; color: #94a3b8; margin-top: 1px; }
+
+  /* ---------- sections ---------- */
+  .section { margin-bottom: 6px; page-break-inside: avoid; }
+  h2 {
+    font-size: 12px; font-weight: 700; color: #0f172a; margin: 18px 0 8px 0;
+    padding: 0 0 5px 10px; border-left: 4px solid #0ea5e9; border-bottom: 1px solid #e2e8f0;
+    text-transform: uppercase; letter-spacing: .05em; page-break-after: avoid;
+  }
+  h2 .count { float: right; font-size: 9px; color: #64748b; font-weight: 600; letter-spacing: 0; text-transform: none; }
+  h3 { font-size: 9.5px; font-weight: 700; color: #475569; margin: 12px 0 4px 0; text-transform: uppercase; letter-spacing: .04em; }
+
+  /* ---------- tables ---------- */
+  table.data { width: 100%; border-collapse: collapse; margin: 4px 0 10px 0; border: 1px solid #e2e8f0; border-radius: 6px; }
+  table.data th {
+    text-align: left; background: #f1f5f9; color: #475569; font-size: 8px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .05em; padding: 6px 9px; border-bottom: 1px solid #e2e8f0; white-space: nowrap;
+  }
+  table.data td { padding: 6px 9px; border-bottom: 1px solid #eef2f6; vertical-align: top; }
+  table.data tr:nth-child(even) td { background: #fafbfc; }
+  table.data tr:last-child td { border-bottom: none; }
+  td.key { color: #64748b; font-weight: 600; width: 130px; white-space: nowrap; }
+
+  /* ---------- chips / pills ---------- */
+  .chips span {
+    display: inline-block; background: #eef2f7; color: #334155; border: 1px solid #e2e8f0;
+    border-radius: 10px; padding: 1px 8px; margin: 2px 3px 2px 0; font-size: 8.5px;
+  }
+  .chips.mono span { font-family: "Consolas","Courier New",monospace; }
+  .sev { display:inline-block; border-radius: 4px; padding: 1px 7px; font-size: 8px; font-weight: 700; color: #fff; }
+  .sev3 { background:#dc2626; } .sev2 { background:#ea580c; } .sev1 { background:#64748b; } .sev0 { background:#94a3b8; }
+  .badge { display:inline-block; padding:1px 8px; border-radius:10px; font-size:8px; font-weight:700; letter-spacing:.03em; }
+  .badge-bad { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
+  .badge-warn { background:#fffbeb; color:#d97706; border:1px solid #fde68a; }
+  .badge-ok { background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; }
+
+  pre {
+    background: #0f172a; color: #e2e8f0; border-radius: 6px; padding: 9px 11px;
+    white-space: pre-wrap; word-wrap: break-word; font-family: "Consolas","Courier New",monospace;
+    font-size: 8px; line-height: 1.5; margin: 4px 0; overflow: hidden;
+  }
+  img.shot { width: 48%; border: 1px solid #cbd5e1; border-radius: 5px; margin: 2px 1%; vertical-align: top; }
+  .foot { margin-top: 20px; border-top: 2px solid #e2e8f0; padding-top: 8px; color:#94a3b8; }
+  .foot .bar { display:inline-block; width:26px; height:3px; background:#0ea5e9; border-radius:2px; margin-right:6px; vertical-align:middle; }
+</style>
+</head>
+<body>
+
+  <!-- ===== header band ===== -->
+  <table class="header"><tr>
+    <td>
+      <div class="brand"><span class="dot"></span>SOCFortress CoPilot &nbsp;·&nbsp; File Analysis</div>
+      <div class="title">Malware Analysis Report</div>
+    </td>
+    <td class="meta">
+      <div>Generated&nbsp; <b>{{ generated_at }}</b></div>
+      <div>Customer&nbsp; <b>{{ job.customer_code }}</b></div>
+      {% if job.job_id %}<div class="mono">Job {{ job.job_id }}</div>{% endif %}
+    </td>
+  </tr></table>
+
+  <!-- ===== verdict hero ===== -->
+  <div class="hero" style="background:{{ verdict.bg }};border-color:{{ verdict.soft }}">
+    <div class="vlabel" style="color:{{ verdict.color }}">{{ verdict.label }}</div>
+    {% if verdict_reason %}<div class="vreason" style="color:{{ verdict.dark }}">{{ verdict_reason }}</div>{% endif %}
+  </div>
+
+  <!-- ===== KPI tiles ===== -->
+  <table class="tiles"><tr>
+    <td><div class="tile" style="border-top-color:{{ verdict.color }}">
+      <div class="k">Verdict</div><div class="v" style="color:{{ verdict.color }}">{{ verdict.label|capitalize }}</div>
+      <div class="sub">two-tier consensus</div></div></td>
+    <td><div class="tile" style="border-top-color:{% if sandbox and sandbox.malscore and sandbox.malscore>=7 %}#dc2626{% elif sandbox and sandbox.malscore and sandbox.malscore>=4 %}#ea580c{% else %}#94a3b8{% endif %}">
+      <div class="k">Sandbox malscore</div>
+      <div class="v">{% if sandbox %}{{ sandbox.malscore }}<span class="sub" style="font-size:10px"> / 10</span>{% else %}<span class="muted" style="font-size:12px">not detonated</span>{% endif %}</div>
+      <div class="sub">{% if sandbox and sandbox.family %}family: {{ sandbox.family }}{% else %}CAPE dynamic{% endif %}</div></div></td>
+    <td><div class="tile" style="border-top-color:{% if reputation and reputation.malicious %}#dc2626{% else %}#94a3b8{% endif %}">
+      <div class="k">VirusTotal</div>
+      <div class="v">{% if reputation and reputation.skipped %}<span class="muted" style="font-size:12px">off</span>{% elif reputation and reputation.found %}{{ reputation.malicious or 0 }}<span class="sub" style="font-size:10px"> / {{ reputation.total or 0 }}</span>{% else %}<span class="muted" style="font-size:12px">unknown</span>{% endif %}</div>
+      <div class="sub">engines flagged</div></div></td>
+    <td><div class="tile">
+      <div class="k">File type</div><div class="v" style="font-size:14px">{{ static.filetype or "unknown" }}</div>
+      <div class="sub">entropy {{ static.entropy }}</div></div></td>
+  </tr></table>
+
+  <!-- ===== File identity ===== -->
+  <div class="section">
+  <h2>File</h2>
+  <table class="data">
+    <tr><td class="key">Name</td><td class="mono">{{ file.name }}
+        {% if static.extension_mismatch %}<span class="badge badge-warn">extension mismatch</span>{% endif %}</td></tr>
+    <tr><td class="key">Magic</td><td class="small">{{ static.magic }}</td></tr>
+    <tr><td class="key">SHA256</td><td class="mono small">{{ file.hashes.sha256 }}</td></tr>
+    <tr><td class="key">MD5 / SHA1</td><td class="mono small">{{ file.hashes.md5 }} &nbsp;·&nbsp; {{ file.hashes.sha1 }}</td></tr>
+    {% if file.hashes.imphash %}<tr><td class="key">Imphash</td><td class="mono small">{{ file.hashes.imphash }}</td></tr>{% endif %}
+    <tr><td class="key">Analyzed</td><td class="small">{{ job.created_at }}
+        {% if job.hardened %}<span class="badge badge-ok">hardened container</span>
+        {% else %}<span class="badge badge-warn">dev inspector — not isolated</span>{% endif %}</td></tr>
+  </table>
+  </div>
+
+  <!-- ===== Static (Tier 1) ===== -->
+  <div class="section">
+  <h2>Static inspection <span class="count">Tier 1 · non-executing</span></h2>
+  <table class="data">
+    <tr><td class="key">Static verdict</td><td>{{ static.verdict_hint or "—" }}
+        {% if static.analysis_incomplete %}<span class="badge badge-warn">analysis incomplete</span>{% endif %}</td></tr>
+    {% if static.av and static.av.signature %}<tr><td class="key">AV detection</td><td><span class="badge badge-bad">{{ static.av.engine }}: {{ static.av.signature }}</span></td></tr>{% endif %}
+    {% if static.flags %}<tr><td class="key">Signals</td><td class="chips">{% for f in static.flags %}<span>{{ f }}</span>{% endfor %}</td></tr>{% endif %}
+  </table>
+
+  {% if static.behaviors %}
+  <h3>ATT&amp;CK behaviours</h3>
+  <table class="data">
+    <tr><th>Technique</th><th>ID</th><th>Severity</th><th>Evidence</th></tr>
+    {% for b in static.behaviors %}
+    <tr><td>{{ b.technique }}</td><td class="mono small">{{ b.attack_id }}</td>
+        <td><span class="sev sev{{ 3 if b.severity=='malicious' else 2 }}">{{ b.severity }}</span></td>
+        <td class="mono small">{{ b.evidence }}</td></tr>
+    {% endfor %}
+  </table>{% endif %}
+
+  {% if static.iocs.urls or static.iocs.ips or static.iocs.domains %}
+  <h3>Indicators of compromise</h3>
+  {% if static.iocs.urls %}<div class="small muted">URLs</div><div class="chips mono">{% for u in static.iocs.urls %}<span>{{ u }}</span>{% endfor %}</div>{% endif %}
+  {% if static.iocs.ips %}<div class="small muted">IPs</div><div class="chips mono">{% for i in static.iocs.ips %}<span>{{ i }}</span>{% endfor %}</div>{% endif %}
+  {% if static.iocs.domains %}<div class="small muted">Domains</div><div class="chips mono">{% for d in static.iocs.domains %}<span>{{ d }}</span>{% endfor %}</div>{% endif %}
+  {% endif %}
+
+  {% if static.capabilities %}<h3>Capabilities (capa)</h3><div class="chips">{% for c in static.capabilities %}<span>{{ c }}</span>{% endfor %}</div>{% endif %}
+
+  {% if static.sections %}
+  <h3>PE sections</h3>
+  <table class="data"><tr><th>Name</th><th>Virtual size</th><th>Raw size</th><th>Entropy</th></tr>
+    {% for s in static.sections %}<tr><td class="mono">{{ s.name }}</td><td>{{ s.vsize }}</td><td>{{ s.rawsize }}</td><td>{{ s.entropy }}</td></tr>{% endfor %}
+  </table>{% endif %}
+
+  {% for h in static.highlights %}<h3>{{ h.label }}</h3><pre>{{ h.text }}</pre>{% endfor %}
+  </div>
+
+  <!-- ===== Reputation ===== -->
+  {% if reputation %}
+  <div class="section">
+  <h2>Reputation <span class="count">VirusTotal</span></h2>
+  {% if reputation.skipped %}<p class="muted">VirusTotal lookup was disabled for this analysis.</p>
+  {% elif not reputation.found %}<p class="muted">Not seen on VirusTotal{% if reputation.note %} — {{ reputation.note }}{% endif %}.</p>
+  {% else %}
+  <table class="data">
+    <tr><td class="key">Detections</td><td><b style="font-size:12px;color:{% if reputation.malicious %}#dc2626{% else %}#16a34a{% endif %}">{{ reputation.malicious or 0 }} / {{ reputation.total or 0 }}</b> engines flagged this file</td></tr>
+    {% if reputation.threat_label %}<tr><td class="key">Threat label</td><td>{{ reputation.threat_label }}</td></tr>{% endif %}
+    {% if reputation.threat_names %}<tr><td class="key">Threat names</td><td class="chips">{% for n in reputation.threat_names %}<span>{{ n }}</span>{% endfor %}</td></tr>{% endif %}
+    {% if reputation.type_description %}<tr><td class="key">File type</td><td>{{ reputation.type_description }}</td></tr>{% endif %}
+    {% if reputation.first_seen %}<tr><td class="key">First seen</td><td>{{ reputation.first_seen }}</td></tr>{% endif %}
+    {% if reputation.last_analysis %}<tr><td class="key">Last analysis</td><td>{{ reputation.last_analysis }}</td></tr>{% endif %}
+    {% if reputation.signed is not none %}<tr><td class="key">Signed</td><td>{{ "yes" if reputation.signed else "no" }}{% if reputation.signer %} — {{ reputation.signer }}{% endif %}</td></tr>{% endif %}
+    {% if reputation.submitted %}<tr><td class="key">Submission</td><td><span class="badge badge-warn">this sample was uploaded to VirusTotal</span></td></tr>{% endif %}
+  </table>
+  {% if reputation.detections %}
+  <h3>Per-engine detections <span class="muted">({{ reputation.detections|length }})</span></h3>
+  <table class="data"><tr><th>Engine</th><th>Result</th><th>Category</th></tr>
+    {% for d in reputation.detections %}<tr><td>{{ d.engine }}</td><td class="mono small">{{ d.result }}</td><td class="small muted">{{ d.category }}</td></tr>{% endfor %}
+  </table>{% endif %}
+  {% if reputation.yara %}<h3>Crowdsourced YARA</h3><div class="chips">{% for y in reputation.yara %}<span>{{ y.rule }}</span>{% endfor %}</div>{% endif %}
+  {% if reputation.sigma %}<h3>Crowdsourced Sigma</h3><table class="data"><tr><th>Title</th><th>Level</th></tr>{% for s in reputation.sigma %}<tr><td>{{ s.title }}</td><td>{{ s.level }}</td></tr>{% endfor %}</table>{% endif %}
+  {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- ===== Detonation (Tier 2) ===== -->
+  {% if sandbox %}
+  <div class="section">
+  <h2>Detonation <span class="count">Tier 2 · CAPE sandbox</span></h2>
+  <table class="data">
+    <tr><td class="key">Malscore</td><td><b>{{ sandbox.malscore }}</b> / 10 &nbsp;·&nbsp; sandbox verdict: {{ sandbox.verdict or "—" }}</td></tr>
+    {% if sandbox.family %}<tr><td class="key">Malware family</td><td><span class="badge badge-bad">{{ sandbox.family }}</span> &nbsp;<span class="small muted">config extracted</span></td></tr>{% endif %}
+    <tr><td class="key">Guest / package</td><td class="small">{{ sandbox.machine or "—" }} · {{ sandbox.package or "—" }} · {{ sandbox.duration or "?" }}s{% if sandbox.task_id %} · task {{ sandbox.task_id }}{% endif %}</td></tr>
+    {% if sandbox.c2_ips or sandbox.c2_domains %}<tr><td class="key">C2 (extracted)</td><td class="chips mono">{% for c in sandbox.c2_ips %}<span>{{ c }}</span>{% endfor %}{% for c in sandbox.c2_domains %}<span>{{ c }}</span>{% endfor %}</td></tr>{% endif %}
+  </table>
+
+  {% if sandbox.signatures.meaningful %}
+  <h3>Signatures — meaningful <span class="muted">({{ sandbox.signatures.meaningful|length }})</span></h3>
+  <table class="data"><tr><th>Sev</th><th>Signature</th><th>Description</th><th>ATT&amp;CK</th></tr>
+    {% for s in sandbox.signatures.meaningful %}<tr><td><span class="sev sev{{ s.severity if s.severity in [0,1,2,3] else 2 }}">{{ s.severity }}</span></td><td class="mono small">{{ s.name }}</td><td class="small">{{ s.description }}</td><td class="mono small">{{ s.mitre }}</td></tr>{% endfor %}
+  </table>{% endif %}
+
+  {% if sandbox.signatures.low_confidence %}
+  <h3 class="muted">Low-confidence heuristics <span>({{ sandbox.signatures.low_confidence|length }}, not verdict-driving)</span></h3>
+  <table class="data"><tr><th>Sev</th><th>Signature</th><th>Description</th></tr>
+    {% for s in sandbox.signatures.low_confidence %}<tr><td><span class="sev sev{{ s.severity if s.severity in [0,1,2,3] else 1 }}">{{ s.severity }}</span></td><td class="mono small">{{ s.name }}</td><td class="small muted">{{ s.description }}</td></tr>{% endfor %}
+  </table>{% endif %}
+
+  {% if sandbox.processes %}
+  <h3>Processes</h3>
+  <table class="data"><tr><th>PID</th><th>PPID</th><th>Name</th><th>Command line</th></tr>
+    {% for p in sandbox.processes %}<tr><td>{{ p.pid }}</td><td>{{ p.ppid }}</td><td class="mono small">{{ p.name }}</td><td class="mono small">{{ p.command_line }}</td></tr>{% endfor %}
+  </table>{% endif %}
+
+  {% if sandbox.http or sandbox.dns or sandbox.connections or sandbox.dead_hosts %}
+  <h3>Network</h3>
+  {% if sandbox.http %}<div class="small muted">HTTP</div><table class="data"><tr><th>Method</th><th>Host</th><th>URI</th></tr>{% for h in sandbox.http %}<tr><td>{{ h.method }}</td><td class="mono small">{{ h.host }}</td><td class="mono small">{{ h.uri }}</td></tr>{% endfor %}</table>{% endif %}
+  {% if sandbox.dns %}<div class="small muted">DNS</div><table class="data"><tr><th>Request</th><th>Type</th><th>Answers</th></tr>{% for d in sandbox.dns %}<tr><td class="mono small">{{ d.request }}</td><td>{{ d.type }}</td><td class="mono small">{{ d.answers|join(", ") }}</td></tr>{% endfor %}</table>{% endif %}
+  {% if sandbox.connections %}<div class="small muted">Connections (grouped)</div><table class="data"><tr><th>Proto</th><th>Destination</th><th>Port</th><th>Count</th></tr>{% for c in sandbox.connections %}<tr><td>{{ c.proto }}</td><td class="mono small">{{ c.dst }}</td><td>{{ c.dport }}</td><td>&times;{{ c.count }}</td></tr>{% endfor %}</table>{% endif %}
+  {% if sandbox.dead_hosts %}<div class="small muted">Unreachable endpoints</div><div class="chips mono">{% for d in sandbox.dead_hosts %}<span>{{ d }}</span>{% endfor %}</div>{% endif %}
+  {% endif %}
+
+  {% if sandbox.dropped %}
+  <h3>Dropped files</h3>
+  <table class="data"><tr><th>Name</th><th>Type</th><th>SHA256</th></tr>
+    {% for d in sandbox.dropped %}<tr><td class="mono small">{{ d.name }}</td><td class="small">{{ d.type }}</td><td class="mono small">{{ d.sha256 }}</td></tr>{% endfor %}
+  </table>{% endif %}
+
+  {% if sandbox.behavior %}
+  <h3>Host activity</h3>
+  {% for cat, items in sandbox.behavior.items() %}
+    <div class="small muted" style="margin-top:5px">{{ cat|replace("_"," ")|title }} <span class="muted">({{ items|length }})</span></div>
+    <div class="chips mono">{% for it in items %}<span>{{ it }}</span>{% endfor %}</div>
+  {% endfor %}{% endif %}
+
+  {% if sandbox.errors %}<h3 class="muted">Sandbox diagnostics</h3><div class="chips">{% for e in sandbox.errors %}<span>{{ e }}</span>{% endfor %}</div>{% endif %}
+  </div>
+
+  {% if screenshots %}
+  <div class="section">
+  <h2>Screenshots <span class="count">{{ screenshots|length }} captured</span></h2>
+  {% for s in screenshots %}<img class="shot" src="{{ s }}" />{% endfor %}
+  </div>
+  {% endif %}
+  {% endif %}
+
+  <div class="foot small">
+    <div><span class="bar"></span><b style="color:#475569">SOCFortress CoPilot</b> · File Analysis{% if engine_version %} · engine v{{ engine_version }}{% endif %}</div>
+    <div style="margin-top:3px">Static findings never execute the sample. Detonation runs in an isolated CAPE guest with no egress. Extracted content shown verbatim may itself be adversarial.</div>
+  </div>
+
+</body>
+</html>

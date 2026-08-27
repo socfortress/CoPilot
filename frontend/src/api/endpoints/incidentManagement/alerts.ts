@@ -16,6 +16,16 @@ import _castArray from "lodash/castArray"
 import { HttpClient } from "../../http-client"
 
 export type AlertsListFilterValue = string | string[] | AlertStatus | null
+
+/**
+ * Outcome of a bulk alert mutation. A per-alert failure — the alert is gone, or belongs to a
+ * customer the caller is not entitled to — is reported as a skipped id rather than failing the
+ * request, so one inaccessible alert in a selection of fifty does not discard the other 49.
+ */
+export interface BulkAlertUpdateResult {
+	updated_alert_ids: number[]
+	not_updated_alert_ids: number[]
+}
 export type AlertsFilterTypes = KeysOfUnion<AlertsFilter>
 
 export interface AlertsQuery {
@@ -198,6 +208,29 @@ export default {
 			alert_id: alertId,
 			assigned_to: user
 		})
+	},
+	/**
+	 * Apply one status to a whole selection. Alerts the caller cannot reach come back in
+	 * `not_updated_alert_ids` rather than failing the request — a selection may span customers.
+	 */
+	bulkUpdateAlertStatus(alertIds: number[], status: AlertStatus) {
+		return HttpClient.put<FlaskBaseResponse & BulkAlertUpdateResult>(
+			`/incidents/db_operations/alerts/status`,
+			{
+				alert_ids: alertIds,
+				status
+			}
+		)
+	},
+	/** Assign a whole selection to one user. Same partial-success contract as the status call. */
+	bulkUpdateAlertAssignedUser(alertIds: number[], user: string) {
+		return HttpClient.put<FlaskBaseResponse & BulkAlertUpdateResult>(
+			`/incidents/db_operations/alerts/assigned-to`,
+			{
+				alert_ids: alertIds,
+				assigned_to: user
+			}
+		)
 	},
 	deleteAlertTag(alertId: number, tagId: number) {
 		return HttpClient.delete<FlaskBaseResponse & { alert_tag: AlertTag }>(`/incidents/db_operations/alert/tag`, {

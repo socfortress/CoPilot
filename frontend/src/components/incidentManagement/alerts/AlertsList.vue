@@ -217,6 +217,21 @@
 					</template>
 				</n-popover>
 
+				<AlertBulkStatusButton
+					:alerts="checkedAlerts"
+					size="small"
+					@updated="updateAlert"
+					@done="resetChecked()"
+				/>
+
+				<AlertBulkAssignButton
+					v-if="canAssign"
+					:alerts="checkedAlerts"
+					size="small"
+					@updated="updateAlert"
+					@done="resetChecked()"
+				/>
+
 				<AlertMergeCaseButton
 					v-if="checkedNoLinkedAlerts.length"
 					:alerts="checkedNoLinkedAlerts"
@@ -360,6 +375,8 @@ import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
 import GenerateIncidentReportButton from "@/components/customers/reporting/GenerateIncidentReportButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
+import { useAuthStore } from "@/stores/auth"
+import { AuthUserRole } from "@/types/auth"
 import { getApiErrorMessage } from "@/utils"
 import AlertItem from "./AlertItem.vue"
 import AlertsFilters from "./AlertsFilters.vue"
@@ -375,6 +392,8 @@ const {
 }>()
 
 const AlertMergeCaseButton = defineAsyncComponent(() => import("./AlertMergeCaseButton.vue"))
+const AlertBulkStatusButton = defineAsyncComponent(() => import("./AlertBulkStatusButton.vue"))
+const AlertBulkAssignButton = defineAsyncComponent(() => import("./AlertBulkAssignButton.vue"))
 
 const FilterIcon = "carbon:filter-edit"
 const TrashIcon = "carbon:trash-can"
@@ -460,6 +479,13 @@ watch(
 	},
 	{ immediate: true }
 )
+
+const authStore = useAuthStore()
+
+// Bulk assign is admin|analyst server-side, matching the single-alert route, so a
+// customer_user gets no control rather than a 403 on press. Bulk status is not gated:
+// that route admits customer_user, as its single-alert counterpart does.
+const canAssign = computed(() => authStore.userRole !== AuthUserRole.CustomerUser)
 
 provide("assignable-users", availableUsers)
 
