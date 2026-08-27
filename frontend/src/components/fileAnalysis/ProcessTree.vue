@@ -1,93 +1,65 @@
 <template>
 	<!-- Process tree — children nested under parents (by ppid); the detonated
 	     sample's own process is highlighted so it stands out from OS noise. -->
-	<CollapsibleCard v-if="processTree.length">
-		<template #header>
-			<span :class="SECTION_LABEL">
-				Process tree
-				<span class="text-tertiary normal-case">({{ procRows.length }}/{{ processTree.length }})</span>
-			</span>
+	<FilterableList
+		v-if="processTree.length"
+		:items="processTree"
+		label="Process tree"
+		:filter-keys="['name', 'command_line']"
+		filter-placeholder="Filter by process or command line"
+		max-height="22rem"
+		empty-text="No process matches that filter."
+		row-class="flex items-stretch"
+		@update:query="onQuery"
+	>
+		<template #header-extra>
 			<n-tag size="tiny" round :bordered="false" type="success">
 				<template #icon><Icon :name="ProcIcon" :size="11" /></template>
 				sample highlighted
 			</n-tag>
 		</template>
 
-		<!-- The filter lives in the body, not the header band: collapsing the card
-		     should take the whole control away, and a search box above a folded list
-		     is a control with nothing to act on. -->
-		<div class="border-default flex flex-col border-b p-3">
-			<n-input
-				v-model:value="procQuery"
-				size="small"
-				clearable
-				placeholder="Filter by process or command line"
-				class="w-full sm:w-80"
+		<template #item="{ item: p }">
+			<!-- Indentation is drawn as guide rails rather than left padding: at depth 2+
+			     padding alone leaves you counting pixels to work out which parent a
+			     process hangs from, and the elbow says where it attaches. -->
+			<span v-for="(line, d) of railsOf(p)" :key="d" class="relative -my-2 w-4 shrink-0">
+				<span v-if="line" class="bg-border absolute inset-y-0 left-2 w-px" />
+			</span>
+			<span v-if="depthOf(p)" class="relative -my-2 w-4 shrink-0">
+				<span class="bg-border absolute left-2 w-px" :class="p.isLast ? 'top-0 h-4' : 'inset-y-0'" />
+				<span class="bg-border absolute top-4 left-2 h-px w-2" />
+			</span>
+
+			<div
+				class="-mx-3 -my-2 flex min-w-0 grow flex-col gap-1 px-3 py-2"
+				:class="p.isSample ? 'bg-primary/6' : ''"
+				:style="p.isSample ? { boxShadow: 'inset 2px 0 0 0 var(--primary-color)' } : {}"
 			>
-				<template #prefix><Icon :name="SearchIcon" :size="14" /></template>
-			</n-input>
-		</div>
-
-		<n-scrollbar style="max-height: 22rem">
-			<div class="divide-border flex flex-col divide-y">
-				<div
-					v-for="(p, i) of procRows"
-					:key="i"
-					class="flex items-stretch px-3 py-2"
-					:class="p.isSample ? 'bg-primary/6' : ''"
-					:style="p.isSample ? { boxShadow: 'inset 2px 0 0 0 var(--primary-color)' } : {}"
-				>
-					<!-- Indentation is drawn as guide rails rather than left padding: at
-					     depth 2+ padding alone leaves you counting pixels to work out which
-					     parent a process hangs from, and the elbow says where it attaches. -->
-					<!-- -my-2 bleeds the rails over the row's vertical padding, so a line runs
-					     unbroken from one row into the next instead of restarting below each
-					     divider and leaving every elbow detached from its parent. -->
-					<span v-for="(line, d) of p.rails" :key="d" class="relative -my-2 w-4 shrink-0">
-						<span v-if="line" class="bg-border absolute inset-y-0 left-2 w-px" />
-					</span>
-					<span v-if="p.depth" class="relative -my-2 w-4 shrink-0">
-						<span
-							class="bg-border absolute left-2 w-px"
-							:class="p.isLast ? 'top-0 h-4' : 'inset-y-0'"
+				<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+					<div class="flex min-w-0 grow items-baseline gap-2">
+						<Icon
+							:name="ProcIcon"
+							:size="13"
+							class="shrink-0 translate-y-0.5"
+							:class="p.isSample ? 'text-primary' : 'text-secondary'"
 						/>
-						<span class="bg-border absolute top-4 left-2 h-px w-2" />
-					</span>
-
-					<div class="flex min-w-0 grow flex-col gap-1">
-						<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-							<div class="flex min-w-0 grow items-baseline gap-2">
-								<Icon
-									:name="ProcIcon"
-									:size="13"
-									class="shrink-0 translate-y-0.5"
-									:class="p.isSample ? 'text-primary' : 'text-secondary'"
-								/>
-								<span
-									class="min-w-0 truncate font-mono text-xs font-medium"
-									:class="p.isSample ? 'text-primary' : 'text-default'"
-									:title="p.name"
-								>
-									{{ p.name || "(unknown)" }}
-								</span>
-							</div>
-							<span v-if="procMeta(p)" class="text-tertiary text-2xs shrink-0 font-mono">
-								{{ procMeta(p) }}
-							</span>
-						</div>
-						<!-- The command line sits inside the same indented column as the name,
-						     so it no longer needs its own depth arithmetic to line up. -->
-						<code v-if="p.command_line" class="text-secondary text-2xs break-all">
-							{{ p.command_line }}
-						</code>
+						<span
+							class="min-w-0 truncate font-mono text-xs font-medium"
+							:class="p.isSample ? 'text-primary' : 'text-default'"
+							:title="p.name"
+						>
+							{{ p.name || "(unknown)" }}
+						</span>
 					</div>
+					<span v-if="procMeta(p)" class="text-tertiary text-2xs shrink-0 font-mono">{{ procMeta(p) }}</span>
 				</div>
-				<div v-if="!procRows.length" class="text-tertiary px-3 py-4 text-xs">
-					No process matches that filter.
-				</div>
+				<!-- The command line sits inside the same indented column as the name, so
+				     it no longer needs its own depth arithmetic to line up. -->
+				<code v-if="p.command_line" class="text-secondary text-2xs break-all">{{ p.command_line }}</code>
 			</div>
-		</n-scrollbar>
-	</CollapsibleCard>
+		</template>
+	</FilterableList>
 </template>
 
 <script setup lang="ts">
@@ -100,16 +72,13 @@
  * already carried seven other sections.
  */
 import type { SandboxProcess } from "@/types/file-analysis"
-import { NInput, NScrollbar, NTag } from "naive-ui"
-import { computed } from "vue"
-import CollapsibleCard from "@/components/common/CollapsibleCard.vue"
+import { NTag } from "naive-ui"
+import { computed, ref } from "vue"
+import FilterableList from "@/components/common/FilterableList.vue"
 import Icon from "@/components/common/Icon.vue"
-import { SECTION_LABEL } from "@/components/common/section-label"
-import { useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{ processes?: SandboxProcess[] | null }>()
 
-const SearchIcon = "carbon:search"
 const ProcIcon = "carbon:process"
 
 interface TreeProc {
@@ -203,18 +172,20 @@ const processTree = computed<TreeProc[]>(() => {
 	return out
 })
 
-const { query: procQuery, results: filteredProcesses } = useFuseFilter(
-	() => processTree.value,
-	["name", "command_line"]
-)
+// While a filter is active the rows are flattened: the rails and elbows describe
+// parent/child links, and a parent removed by the filter is not there to point at.
+const filtering = ref(false)
+function onQuery(value: string) {
+	filtering.value = !!value.trim()
+}
 
-// While filtering, rows are flattened: indentation that points at a parent the
-// filter removed describes a tree that is not on screen.
-const procRows = computed(() =>
-	procQuery.value.trim()
-		? filteredProcesses.value.map(p => ({ ...p, depth: 0, rails: [], isLast: true }))
-		: filteredProcesses.value
-)
+function railsOf(p: TreeProc): boolean[] {
+	return filtering.value ? [] : p.rails
+}
+
+function depthOf(p: TreeProc): number {
+	return filtering.value ? 0 : p.depth
+}
 
 /** name · type · full hash, in that order: the name is what you recognise, the
  *  type is what it is, the hash is what you look up — so each is toned apart

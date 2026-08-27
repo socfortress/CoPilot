@@ -3,10 +3,7 @@
 // given result, and collapsing a detonation's connection flood — is unit-testable
 // without mounting a component or mocking the API.
 
-import type { Ref } from "vue"
 import type { FileAnalysisVerdict, SandboxConnection } from "@/types/file-analysis"
-import { computed, ref } from "vue"
-import { createFuse, searchFuse } from "@/components/common/searchDialog.helpers"
 
 /** The tab keys rendered by views/FileAnalysis.vue, in display order. */
 export type FileAnalysisTab = "preview" | "content" | "iocs" | "virustotal" | "metadata" | "detonation" | "network"
@@ -127,22 +124,6 @@ const FILE_ICONS: Record<string, string> = {
 export function iconForFile(name: string | null | undefined): string {
 	const ext = (name || "").split(".").pop()?.toLowerCase() || ""
 	return FILE_ICONS[ext] || "carbon:document"
-}
-
-/**
- * A client-side filter over one of a report's lists. Nothing is requested as the
- * analyst types — Fuse searches the array already delivered with the report.
- * Fuzzy rather than a substring match, so "base64" still finds "encode data using
- * Base64" and a typo in a rule or process name does not blank the list.
- *
- * `source` is a getter rather than a value so the index follows a computed list
- * that arrives later, which is always the case while a job is still polling.
- */
-export function useFuseFilter<T>(source: () => T[], keys: string[]): { query: Ref<string>; results: Ref<T[]> } {
-	const query = ref("")
-	const fuse = computed(() => createFuse(source(), keys))
-	const results = computed(() => searchFuse(fuse.value, query.value, source()))
-	return { query, results }
 }
 
 /* -------------------------------------------------------------------------- */

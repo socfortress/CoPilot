@@ -255,7 +255,8 @@ export function mockResult(): FileAnalysisResult {
 					name: "WINWORD.EXE",
 					pid: 3120,
 					ppid: 812,
-					command_line: '"C:\\Program Files\\Office\\WINWORD.EXE" /n invoice_statement_2026.docm'
+					command_line:
+						'"C:\\Program Files\\Office\\WINWORD.EXE" /n C:\\Users\\jdoe\\AppData\\Local\\Temp\\deto_invoice_statement_2026.docm'
 				},
 				{
 					name: "cmd.exe",

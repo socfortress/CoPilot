@@ -1,6 +1,8 @@
 /** Pure matching/parsing logic for SearchDialog, split out so it can be unit-tested. */
 import type { IFuseOptions } from "fuse.js"
+import type { Ref } from "vue"
 import Fuse from "fuse.js"
+import { computed, ref } from "vue"
 
 /** The two entity kinds `entityCandidates` can emit; a subset of SearchDialog's `ItemKind`. */
 export type EntityCandidateKind = "alert" | "case"
@@ -53,4 +55,20 @@ export function entityCandidates(search: string): EntityCandidate[] {
 		{ kind: "alert" as const, target: numeric, title: `Go to Alert #${numeric}` },
 		{ kind: "case" as const, target: numeric, title: `Go to Case #${numeric}` }
 	]
+}
+
+/**
+ * A client-side filter over a list that is already in memory. Nothing is requested
+ * as the user types. Fuzzy rather than a substring match, so "base64" still finds
+ * "encode data using Base64" and a typo in a rule or process name does not blank
+ * the list.
+ *
+ * `source` is a getter rather than a value so the index follows a computed list
+ * that arrives later — which is the normal case for anything still loading.
+ */
+export function useFuseFilter<T>(source: () => T[], keys: string[]): { query: Ref<string>; results: Ref<T[]> } {
+	const query = ref("")
+	const fuse = computed(() => createFuse(source(), keys))
+	const results = computed(() => searchFuse(fuse.value, query.value, source()))
+	return { query, results }
 }

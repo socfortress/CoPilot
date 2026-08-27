@@ -102,50 +102,25 @@
 					<!-- Rows, not pills: a technique id is an identifier and its description
 					     is prose, and packing both into a round tag produced ragged blobs
 					     that could not be scanned down the ids. -->
-					<div v-if="intel.behaviour.mitre?.length" class="flex flex-col gap-2">
-						<div class="flex flex-wrap items-center justify-between gap-2">
-							<span :class="SECTION_LABEL">
-								MITRE ATT&CK
-								<span class="text-tertiary normal-case">
-									({{ filteredMitre.length }}/{{ intel.behaviour.mitre.length }})
-								</span>
-							</span>
-							<!-- Filtering happens in memory over the techniques already loaded
-							     with the report: no request is made as you type. -->
-							<n-input
-								v-model:value="mitreQuery"
-								size="tiny"
-								clearable
-								placeholder="Filter by technique or text"
-								class="w-full sm:w-64"
-							>
-								<template #prefix><Icon :name="SearchIcon" :size="13" /></template>
-							</n-input>
-						</div>
-
-						<div class="border-default rounded-lg border">
-							<n-scrollbar style="max-height: 16rem">
-								<div class="divide-border flex flex-col divide-y">
-									<!-- Composite key: VirusTotal reports the same technique more than
-									     once (different tactic or description), so the id alone is not
-									     unique and Vue warns about duplicate keys. -->
-									<div
-										v-for="(t, ti) of filteredMitre"
-										:key="`${t.id}-${ti}`"
-										class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-3 py-2"
-									>
-										<span class="text-warning w-24 shrink-0 font-mono text-xs">{{ t.id }}</span>
-										<span v-if="t.description" class="text-secondary min-w-0 text-xs">
-											{{ t.description }}
-										</span>
-									</div>
-									<div v-if="!filteredMitre.length" class="text-tertiary px-3 py-4 text-xs">
-										No technique matches that filter.
-									</div>
-								</div>
-							</n-scrollbar>
-						</div>
-					</div>
+					<!-- Rows, not pills: a technique id is an identifier and its description
+					     is prose, and packing both into a round tag produced ragged blobs
+					     that could not be scanned down the ids. -->
+					<FilterableList
+						v-if="intel.behaviour.mitre?.length"
+						:items="intel.behaviour.mitre"
+						label="MITRE ATT&CK"
+						:filter-keys="['id', 'description']"
+						filter-placeholder="Filter by technique or text"
+						max-height="16rem"
+						empty-text="No technique matches that filter."
+						:card="false"
+						row-class="flex flex-wrap items-baseline gap-x-3 gap-y-1"
+					>
+						<template #item="{ item: t }">
+							<span class="text-warning w-24 shrink-0 font-mono text-xs">{{ t.id }}</span>
+							<span v-if="t.description" class="text-secondary min-w-0 text-xs">{{ t.description }}</span>
+						</template>
+					</FilterableList>
 
 					<div
 						class="bg-secondary divide-border border-border -mx-4 grid gap-3 divide-y border-y @4xl:grid-cols-3 @4xl:divide-x @4xl:divide-y-0"
@@ -166,60 +141,37 @@
 						</div>
 					</div>
 
-					<div v-if="intel.behaviour.dropped_files?.length" class="flex flex-col gap-2">
-						<div class="flex flex-wrap items-center justify-between gap-2">
-							<span :class="SECTION_LABEL">
-								Dropped files
-								<span class="text-tertiary normal-case">
-									({{ filteredDropped.length }}/{{ intel.behaviour.dropped_files.length }})
+					<!-- Two zones on one baseline: what the file IS on the left, what
+					     identifies it right-aligned. The old row mixed a bold name, a round
+					     tag and a break-all hash in one flow, so long names shoved the hash
+					     onto a second ragged line. -->
+					<FilterableList
+						v-if="intel.behaviour.dropped_files?.length"
+						:items="intel.behaviour.dropped_files"
+						label="Dropped files"
+						:filter-keys="['name', 'type', 'sha256']"
+						filter-placeholder="Filter by name, type or hash"
+						max-height="13rem"
+						empty-text="No dropped file matches that filter."
+						:card="false"
+						row-class="flex flex-wrap items-baseline gap-x-3 gap-y-1"
+					>
+						<template #item="{ item: d }">
+							<div class="flex min-w-0 grow items-baseline gap-2">
+								<Icon
+									:name="iconForFile(d.name)"
+									:size="13"
+									class="text-secondary shrink-0 translate-y-0.5"
+								/>
+								<span class="text-default min-w-0 truncate font-mono text-xs" :title="d.name">
+									{{ d.name || "(unnamed)" }}
 								</span>
+							</div>
+							<span v-if="droppedMeta(d)" class="text-tertiary text-2xs shrink-0 font-mono">
+								{{ droppedMeta(d) }}
 							</span>
-							<n-input
-								v-model:value="droppedQuery"
-								size="tiny"
-								clearable
-								placeholder="Filter by name, type or hash"
-								class="w-full sm:w-64"
-							>
-								<template #prefix><Icon :name="SearchIcon" :size="13" /></template>
-							</n-input>
-						</div>
-						<div class="border-default rounded-lg border">
-							<n-scrollbar style="max-height: 13rem">
-								<div class="divide-border flex flex-col divide-y">
-									<!-- Same two-zone row as the YARA list: what the file IS on the
-									     left, what identifies it right-aligned. The old row mixed a
-									     bold name, a round tag and a break-all hash in one flow, so
-									     long names shoved the hash onto a second ragged line. -->
-									<div
-										v-for="(d, i) of filteredDropped"
-										:key="i"
-										class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-3 py-2"
-									>
-										<div class="flex min-w-0 grow items-baseline gap-2">
-											<Icon
-												:name="iconForFile(d.name)"
-												:size="13"
-												class="text-secondary shrink-0 translate-y-0.5"
-											/>
-											<span
-												class="text-default min-w-0 truncate font-mono text-xs"
-												:title="d.name"
-											>
-												{{ d.name || "(unnamed)" }}
-											</span>
-										</div>
-										<span v-if="droppedMeta(d)" class="text-tertiary text-2xs shrink-0 font-mono">
-											{{ droppedMeta(d) }}
-										</span>
-									</div>
-									<div v-if="!filteredDropped.length" class="text-tertiary px-3 py-4 text-xs">
-										No dropped file matches that filter.
-									</div>
-								</div>
-							</n-scrollbar>
-						</div>
-					</div>
+						</template>
+					</FilterableList>
 
 					<div
 						class="bg-secondary divide-border border-border -mx-4 grid gap-3 divide-y border-t @4xl:grid-cols-3 @4xl:divide-x @4xl:divide-y-0"
@@ -241,119 +193,68 @@
 			<!-- Same card shape as the Behaviour block: a header band carrying the label,
 			     the count and the filter, then the rows. Loose labels floating above bare
 			     boxes were what made this tab read as a pile of fragments. -->
-			<CollapsibleCard v-if="intel.yara?.length">
-				<template #header>
-					<span :class="SECTION_LABEL">
-						Crowdsourced YARA
-						<span class="text-tertiary normal-case">
-							({{ filteredYara.length }}/{{ intel.yara.length }})
+			<!-- Crowdsourced detection rules -->
+			<FilterableList
+				v-if="intel.yara?.length"
+				:items="intel.yara"
+				label="Crowdsourced YARA"
+				:filter-keys="['rule', 'author', 'ruleset', 'description']"
+				filter-placeholder="Filter by rule, author or ruleset"
+				empty-text="No rule matches that filter."
+				row-class="flex flex-col gap-1"
+			>
+				<template #item="{ item: y }">
+					<!-- Two zones on one baseline: the rule identity on the left, its
+					     provenance right-aligned. -->
+					<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+						<div class="flex min-w-0 grow items-baseline gap-2">
+							<Icon :name="RuleIcon" :size="13" class="text-warning shrink-0 translate-y-0.5" />
+							<!-- mono: a YARA rule name is an identifier, not prose -->
+							<span
+								class="text-default min-w-0 truncate font-mono text-xs font-medium"
+								:title="y.rule"
+							>
+								{{ y.rule }}
+							</span>
+						</div>
+						<span v-if="yaraMeta(y)" class="text-tertiary text-2xs shrink-0 font-mono">
+							{{ yaraMeta(y) }}
 						</span>
-					</span>
-				</template>
-
-				<div>
-					<!-- The filter belongs to the content, not to the header: collapsing the
-					     card should take it away too, and a control that stays behind on a
-					     folded card has nothing left to act on. -->
-					<div class="border-default border-b p-3">
-						<n-input
-							v-model:value="yaraQuery"
-							size="tiny"
-							clearable
-							placeholder="Filter by rule, author or ruleset"
-							class="w-full sm:w-72"
-						>
-							<template #prefix><Icon :name="SearchIcon" :size="13" /></template>
-						</n-input>
 					</div>
-					<n-scrollbar style="max-height: 18rem">
-						<div class="divide-border flex flex-col divide-y">
-							<!-- Two zones on one baseline: the rule identity on the left, its
-							     provenance right-aligned. Previously the row mixed an icon, a mono
-							     name, prose ("by X") and a round tag in one wrapping flow at two
-							     text sizes, so nothing lined up between rows. -->
-							<div v-for="(y, i) of filteredYara" :key="i" class="flex flex-col gap-1 px-3 py-2">
-								<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-									<div class="flex min-w-0 grow items-baseline gap-2">
-										<Icon
-											:name="RuleIcon"
-											:size="13"
-											class="text-warning shrink-0 translate-y-0.5"
-										/>
-										<!-- mono: a YARA rule name is an identifier, not prose -->
-										<span
-											class="text-default min-w-0 truncate font-mono text-xs font-medium"
-											:title="y.rule"
-										>
-											{{ y.rule }}
-										</span>
-									</div>
-									<!-- Provenance as one muted run instead of a tag plus a sentence:
-									     same treatment for both fields, so the right edge is uniform. -->
-									<span v-if="yaraMeta(y)" class="text-tertiary text-2xs shrink-0 font-mono">
-										{{ yaraMeta(y) }}
-									</span>
-								</div>
-								<!-- Indented past the icon so it reads as belonging to the rule above. -->
-								<span v-if="y.description" class="text-secondary pl-5 text-xs">
-									{{ y.description }}
-								</span>
-							</div>
-							<div v-if="!filteredYara.length" class="text-tertiary px-3 py-4 text-xs">
-								No rule matches that filter.
-							</div>
-						</div>
-					</n-scrollbar>
-				</div>
-			</CollapsibleCard>
-
-			<CollapsibleCard v-if="intel.sigma?.length">
-				<template #header>
-					<span :class="SECTION_LABEL">
-						Sigma matches
-						<span class="text-tertiary normal-case">({{ intel.sigma.length }})</span>
-					</span>
+					<!-- Indented past the icon so it reads as belonging to the rule above. -->
+					<span v-if="y.description" class="text-secondary pl-5 text-xs">{{ y.description }}</span>
 				</template>
-				<n-scrollbar style="max-height: 18rem">
-					<div class="divide-border flex flex-col divide-y">
-						<div
-							v-for="(s, i) of intel.sigma"
-							:key="i"
-							class="flex flex-wrap items-center gap-2 px-3 py-2 text-xs"
-						>
-							<n-tag size="tiny" round :bordered="false" :type="sevTag(s.level)">
-								{{ s.level || "—" }}
-							</n-tag>
-							<span class="text-default min-w-0">{{ s.title }}</span>
-							<span v-if="s.source" class="text-tertiary">· {{ s.source }}</span>
-						</div>
-					</div>
-				</n-scrollbar>
-			</CollapsibleCard>
+			</FilterableList>
 
-			<CollapsibleCard v-if="intel.ids?.length">
-				<template #header>
-					<span :class="SECTION_LABEL">
-						IDS/IPS alerts
-						<span class="text-tertiary normal-case">({{ intel.ids.length }})</span>
-					</span>
+			<FilterableList
+				v-if="intel.sigma?.length"
+				:items="intel.sigma"
+				label="Sigma matches"
+				row-class="flex flex-wrap items-center gap-2 text-xs"
+			>
+				<template #item="{ item: sig }">
+					<n-tag size="tiny" round :bordered="false" :type="sevTag(sig.level)">
+						{{ sig.level || "—" }}
+					</n-tag>
+					<span class="text-default min-w-0">{{ sig.title }}</span>
+					<span v-if="sig.source" class="text-tertiary">· {{ sig.source }}</span>
 				</template>
-				<n-scrollbar style="max-height: 18rem">
-					<div class="divide-border flex flex-col divide-y">
-						<div
-							v-for="(x, i) of intel.ids"
-							:key="i"
-							class="flex flex-wrap items-center gap-2 px-3 py-2 text-xs"
-						>
-							<n-tag size="tiny" round :bordered="false" :type="sevTag(x.severity)">
-								{{ x.severity || "—" }}
-							</n-tag>
-							<span class="text-default min-w-0 break-all">{{ x.msg }}</span>
-							<span v-if="x.source" class="text-tertiary">· {{ x.source }}</span>
-						</div>
-					</div>
-				</n-scrollbar>
-			</CollapsibleCard>
+			</FilterableList>
+
+			<FilterableList
+				v-if="intel.ids?.length"
+				:items="intel.ids"
+				label="IDS/IPS alerts"
+				row-class="flex flex-wrap items-center gap-2 text-xs"
+			>
+				<template #item="{ item: x }">
+					<n-tag size="tiny" round :bordered="false" :type="sevTag(x.severity)">
+						{{ x.severity || "—" }}
+					</n-tag>
+					<span class="text-default min-w-0 break-all">{{ x.msg }}</span>
+					<span v-if="x.source" class="text-tertiary">· {{ x.source }}</span>
+				</template>
+			</FilterableList>
 
 			<!-- Per-engine detections (collapsed by default; can be long) -->
 			<n-collapse v-if="intel.detections?.length">
@@ -407,13 +308,14 @@
 
 <script setup lang="ts">
 import type { FileAnalysisReputation } from "@/types/file-analysis"
-import { NCollapse, NCollapseItem, NEmpty, NInput, NProgress, NScrollbar, NTag } from "naive-ui"
+import { NCollapse, NCollapseItem, NEmpty, NProgress, NScrollbar, NTag } from "naive-ui"
 import { computed } from "vue"
 import CollapsibleCard from "@/components/common/CollapsibleCard.vue"
+import FilterableList from "@/components/common/FilterableList.vue"
 import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
 import ValueList from "@/components/common/ValueList.vue"
-import { iconForFile, useFuseFilter, virusTotalUrl } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import { iconForFile, virusTotalUrl } from "@/components/fileAnalysis/fileAnalysis.helpers"
 import { useSettingsStore } from "@/stores/settings"
 import { formatBytes, formatDate } from "@/utils/format"
 
@@ -422,25 +324,11 @@ const props = defineProps<{ reputation?: FileAnalysisReputation | null; loading?
 const BugIcon = "carbon:debug"
 const RuleIcon = "carbon:rule"
 const DotIcon = "carbon:circle-solid"
-const SearchIcon = "carbon:search"
 
 const dFormats = useSettingsStore().dateFormat
 
 const intel = computed(() => props.reputation?.intel ?? null)
 const permalink = computed(() => props.reputation?.permalink)
-
-const { query: mitreQuery, results: filteredMitre } = useFuseFilter(
-	() => intel.value?.behaviour?.mitre ?? [],
-	["id", "description"]
-)
-const { query: droppedQuery, results: filteredDropped } = useFuseFilter(
-	() => intel.value?.behaviour?.dropped_files ?? [],
-	["name", "type", "sha256"]
-)
-const { query: yaraQuery, results: filteredYara } = useFuseFilter(
-	() => intel.value?.yara ?? [],
-	["rule", "author", "ruleset", "description"]
-)
 
 const detPct = computed(() => {
 	const m = props.reputation?.malicious ?? 0
