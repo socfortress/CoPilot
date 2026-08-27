@@ -50,7 +50,7 @@
 				hoverable
 				embedded
 				size="small"
-				:status="statusFor(it.verdict)"
+				:status="verdictAccent(it.verdict)"
 				@click="open(it)"
 			>
 				<!-- One header slot rather than headerMain/headerExtra: the split wraps its
@@ -75,7 +75,7 @@
 							>
 								VT {{ it.vt_malicious ?? 0 }}/{{ it.vt_total }}
 							</n-tag>
-							<n-tag :type="verdictType(it.verdict)" size="small" round :bordered="false">
+							<n-tag :type="verdictTagType(it.verdict)" size="small" round :bordered="false">
 								{{ it.verdict || it.status || "—" }}
 							</n-tag>
 							<n-popconfirm @positive-click="remove(it)">
@@ -126,7 +126,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { FileAnalysisHistoryItem, FileAnalysisVerdict } from "@/types/file-analysis"
+import type { FileAnalysisHistoryItem } from "@/types/file-analysis"
 import { NButton, NEmpty, NInput, NPopconfirm, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import { useRouter } from "vue-router"
@@ -134,6 +134,13 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import {
+	sourceIcon,
+	sourceLabel,
+	verdictAccent,
+	verdictIcon,
+	verdictTagType
+} from "@/components/fileAnalysis/fileAnalysis.helpers"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -146,8 +153,6 @@ const dFormats = useSettingsStore().dateFormat
 
 const TrashIcon = "carbon:trash-can"
 const TimeIcon = "carbon:time"
-const UploadIcon = "carbon:cloud-upload"
-const EndpointIcon = "carbon:bare-metal-server"
 const SearchIcon = "carbon:search"
 const SHA256_RE = /^[a-f0-9]{64}$/i
 
@@ -197,40 +202,14 @@ function lookup() {
 		})
 }
 
-function verdictType(v: FileAnalysisVerdict | null): "success" | "warning" | "error" | "default" {
-	if (v === "malicious") return "error"
-	if (v === "suspicious") return "warning"
-	if (v === "clean") return "success"
-	return "default"
-}
-
-// CardEntity paints its own status accent; only a judged-bad row should carry one,
-// so an unjudged/clean row stays neutral instead of shouting "success".
-function statusFor(v: FileAnalysisVerdict | null): "success" | "warning" | "error" | undefined {
-	if (v === "malicious") return "error"
-	if (v === "suspicious") return "warning"
-	return undefined
-}
-
-function sourceIcon(source: string): string {
-	return source === "upload" ? UploadIcon : EndpointIcon
-}
-
 function sourceColor(source: string): "primary" | undefined {
 	return source === "upload" ? undefined : "primary"
 }
 
+// A row with no verdict yet keeps the neutral document icon rather than the
+// shared "checkmark" — in a history list that would read as "analysed, clean".
 function iconFor(it: FileAnalysisHistoryItem): string {
-	if (it.verdict === "malicious") return "carbon:warning-alt-filled"
-	if (it.verdict === "suspicious") return "carbon:warning-alt"
-	return "carbon:document"
-}
-
-function sourceLabel(source: string): string {
-	if (source === "host_path") return "collected from endpoint"
-	if (source === "flow") return "from flow"
-	if (source === "upload") return "uploaded"
-	return source || "—"
+	return it.verdict ? verdictIcon(it.verdict) : "carbon:document"
 }
 
 function open(it: FileAnalysisHistoryItem) {

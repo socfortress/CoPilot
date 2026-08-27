@@ -10,8 +10,8 @@
 				     feature names are often 64-char hashes, so that was the normal case,
 				     not the edge one. Leading also matches how the page is read: what
 				     the file turned out to be, then which file it was. -->
-				<n-tag :type="verdictTagType" size="medium" round :bordered="false" class="shrink-0">
-					<template #icon><Icon :name="verdictIcon" :size="14" class="ml-1" /></template>
+				<n-tag :type="tagType" size="medium" round :bordered="false" class="shrink-0">
+					<template #icon><Icon :name="icon" :size="14" class="ml-1" /></template>
 					<span class="capitalize">{{ verdict }}</span>
 				</n-tag>
 
@@ -51,8 +51,8 @@
 			</Badge>
 
 			<Badge v-if="job?.source" type="splitted" size="small">
-				<template #iconLeft><Icon :name="sourceIcon" :size="12" /></template>
-				<template #value>{{ sourceLabel }}</template>
+				<template #iconLeft><Icon :name="srcIcon" :size="12" /></template>
+				<template #value>{{ srcLabel }}</template>
 			</Badge>
 
 			<Badge v-if="job?.created_at" type="splitted" size="small">
@@ -80,12 +80,20 @@
 
 <script setup lang="ts">
 import type { FileAnalysisJob, FileAnalysisResult, FileAnalysisVerdict } from "@/types/file-analysis"
+import { useClipboard } from "@vueuse/core"
+import { saveAs } from "file-saver"
 import { NButton, NButtonGroup, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
-import { iconForFile } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import {
+	iconForFile,
+	sourceIcon,
+	sourceLabel,
+	verdictIcon,
+	verdictTagType
+} from "@/components/fileAnalysis/fileAnalysis.helpers"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 
@@ -100,6 +108,7 @@ const emit = defineEmits<{ (e: "openBatch"): void }>()
 
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
+const { copy } = useClipboard()
 
 const CustomerIcon = "carbon:user"
 const TimeIcon = "carbon:time"
@@ -107,8 +116,6 @@ const CopyIcon = "carbon:copy"
 const ShieldIcon = "carbon:security"
 const PdfIcon = "carbon:document-pdf"
 const BatchIcon = "carbon:list"
-const UploadIcon = "carbon:cloud-upload"
-const EndpointIcon = "carbon:bare-metal-server"
 
 const batchCount = computed(() => props.batchCount ?? 0)
 const sha256 = computed(() => props.job?.sha256 || props.result?.inspector?.sha256 || "")
@@ -118,29 +125,14 @@ const verdict = computed<FileAnalysisVerdict>(
 	() => props.job?.verdict || (props.result?.inspector?.verdict_hint as FileAnalysisVerdict) || "clean"
 )
 
-const verdictTagType = computed<"error" | "warning" | "success">(() => {
-	if (verdict.value === "malicious") return "error"
-	if (verdict.value === "suspicious") return "warning"
-	return "success"
-})
-
-const verdictIcon = computed(() => {
-	if (verdict.value === "malicious") return "carbon:warning-alt-filled"
-	if (verdict.value === "suspicious") return "carbon:warning-alt"
-	return "carbon:checkmark-filled"
-})
-
-const sourceIcon = computed(() => (props.job?.source === "upload" ? UploadIcon : EndpointIcon))
-const sourceLabel = computed(() => {
-	if (props.job?.source === "upload") return "uploaded"
-	if (props.job?.source === "host_path") return "collected from endpoint"
-	return props.job?.source || ""
-})
+const tagType = computed(() => verdictTagType(verdict.value))
+const icon = computed(() => verdictIcon(verdict.value))
+const srcIcon = computed(() => sourceIcon(props.job?.source))
+const srcLabel = computed(() => sourceLabel(props.job?.source))
 
 function copySha() {
 	if (!sha256.value) return
-	navigator.clipboard.writeText(sha256.value)
-	message.success("SHA256 copied.")
+	copy(sha256.value).then(() => message.success("SHA256 copied."))
 }
 
 const downloadingPdf = ref(false)
@@ -151,12 +143,7 @@ function downloadPdf() {
 	Api.fileAnalysis
 		.getReportPdf(id)
 		.then(res => {
-			const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }))
-			const a = document.createElement("a")
-			a.href = url
-			a.download = `file-analysis-${id}.pdf`
-			a.click()
-			URL.revokeObjectURL(url)
+			saveAs(new Blob([res.data], { type: "application/pdf" }), `file-analysis-${id}.pdf`)
 		})
 		.catch(() => message.error("Could not generate the PDF report. Is the PDF renderer installed on the host?"))
 		.finally(() => {

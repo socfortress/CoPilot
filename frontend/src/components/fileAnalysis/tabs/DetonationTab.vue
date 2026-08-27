@@ -102,170 +102,28 @@
 				</div>
 			</div>
 
-			<!-- Meaningful (sample-driven) signatures — the real signal, ranked by severity -->
-			<div v-if="meaningfulSignatures.length" class="flex flex-col gap-2">
-				<span :class="SECTION_LABEL">Signatures ({{ meaningfulSignatures.length }})</span>
-				<div class="flex flex-col gap-2">
-					<div
-						v-for="(sig, i) of meaningfulSignatures"
-						:key="i"
-						class="bg-secondary flex items-start gap-3 rounded-lg p-3"
-					>
-						<Icon :name="SigIcon" :size="16" :class="sevColor(sig.severity)" class="mt-0.5 shrink-0" />
-						<div class="flex grow flex-col">
-							<span class="text-sm font-medium">{{ sig.name }}</span>
-							<span v-if="sig.description" class="text-secondary text-xs">{{ sig.description }}</span>
-						</div>
-						<n-tag v-if="sig.severity" size="tiny" round :bordered="false" :type="sevTag(sig.severity)">
-							sev {{ sig.severity }}
-						</n-tag>
-						<div class="flex flex-wrap gap-1">
-							<n-tag v-for="m of sig.mitre || []" :key="m" size="tiny" round :bordered="false">
-								{{ m }}
-							</n-tag>
-						</div>
-					</div>
-				</div>
-			</div>
+			<!-- The real signal, ranked by severity -->
+			<SignatureList v-if="meaningfulSignatures.length" :signatures="meaningfulSignatures" label="Signatures" />
 
-			<!-- Low-confidence static-PE / .NET-JIT heuristics — fire on legit packed/
-			     signed/.NET binaries, so excluded from the verdict but shown for context. -->
-			<n-collapse v-if="lowConfidenceSignatures.length">
-				<n-collapse-item name="lowconf">
-					<template #header>
-						<span class="text-secondary text-xs">
-							Static packer / .NET-JIT heuristics ({{ lowConfidenceSignatures.length }}) — fire on benign
-							software, not counted toward the verdict
-						</span>
-					</template>
-					<div class="flex flex-col gap-1 opacity-70">
-						<div
-							v-for="(sig, i) of lowConfidenceSignatures"
-							:key="i"
-							class="flex items-start gap-2 py-0.5 text-xs"
-						>
-							<n-tag size="tiny" round :bordered="false">sev {{ sig.severity }}</n-tag>
-							<div class="flex flex-col">
-								<span class="font-medium break-all">{{ sig.name }}</span>
-								<span v-if="sig.description" class="text-secondary">{{ sig.description }}</span>
-							</div>
-						</div>
-					</div>
-				</n-collapse-item>
-			</n-collapse>
+			<!-- Fire on legitimately packed / signed / .NET binaries, so they are shown for
+			     context but kept out of the verdict. -->
+			<SignatureList
+				v-if="lowConfidenceSignatures.length"
+				:signatures="lowConfidenceSignatures"
+				label="Static packer / .NET-JIT heuristics"
+				variant="secondary"
+				note="fire on benign software, not counted toward the verdict"
+			/>
 
-			<!-- Environmental noise — CAPE monitor + Windows-guest baseline. Collapsed &
-			     dimmed, and excluded from the verdict, so it doesn't masquerade as signal. -->
-			<n-collapse v-if="noiseSignatures.length">
-				<n-collapse-item name="noise">
-					<template #header>
-						<span class="text-secondary text-xs">
-							Environmental / monitor baseline ({{ noiseSignatures.length }}) — not counted toward the
-							verdict
-						</span>
-					</template>
-					<div class="flex flex-col gap-1 opacity-60">
-						<div
-							v-for="(sig, i) of noiseSignatures"
-							:key="i"
-							class="flex items-center gap-2 py-0.5 text-xs"
-						>
-							<n-tag size="tiny" round :bordered="false">sev {{ sig.severity }}</n-tag>
-							<span class="break-all">{{ sig.name }}</span>
-						</div>
-					</div>
-				</n-collapse-item>
-			</n-collapse>
+			<!-- CAPE monitor + Windows-guest baseline: fires on every run, sample or not. -->
+			<SignatureList
+				v-if="noiseSignatures.length"
+				:signatures="noiseSignatures"
+				label="Environmental / monitor baseline"
+				variant="secondary"
+			/>
 
-			<!-- Process tree — children nested under parents (by ppid); the detonated
-			     sample's own process is highlighted so it stands out from OS noise. -->
-			<CollapsibleCard v-if="processTree.length">
-				<template #header>
-					<span :class="SECTION_LABEL">
-						Process tree
-						<span class="text-tertiary normal-case">({{ procRows.length }}/{{ processTree.length }})</span>
-					</span>
-					<n-tag size="tiny" round :bordered="false" type="success">
-						<template #icon><Icon :name="ProcIcon" :size="11" /></template>
-						sample highlighted
-					</n-tag>
-				</template>
-
-				<!-- The filter lives in the body, not the header band: collapsing the card
-				     should take the whole control away, and a search box above a folded list
-				     is a control with nothing to act on. -->
-				<div class="border-default flex flex-col border-b p-3">
-					<n-input
-						v-model:value="procQuery"
-						size="small"
-						clearable
-						placeholder="Filter by process or command line"
-						class="w-full sm:w-80"
-					>
-						<template #prefix><Icon :name="SearchIcon" :size="14" /></template>
-					</n-input>
-				</div>
-
-				<n-scrollbar style="max-height: 22rem">
-					<div class="divide-border flex flex-col divide-y">
-						<div
-							v-for="(p, i) of procRows"
-							:key="i"
-							class="flex items-stretch px-3 py-2"
-							:class="p.isSample ? 'bg-primary/6' : ''"
-							:style="p.isSample ? { boxShadow: 'inset 2px 0 0 0 var(--primary-color)' } : {}"
-						>
-							<!-- Indentation is drawn as guide rails rather than left padding: at
-							     depth 2+ padding alone leaves you counting pixels to work out which
-							     parent a process hangs from, and the elbow says where it attaches. -->
-							<!-- -my-2 bleeds the rails over the row's vertical padding, so a line runs
-							     unbroken from one row into the next instead of restarting below each
-							     divider and leaving every elbow detached from its parent. -->
-							<span v-for="(line, d) of p.rails" :key="d" class="relative -my-2 w-4 shrink-0">
-								<span v-if="line" class="bg-border absolute inset-y-0 left-2 w-px" />
-							</span>
-							<span v-if="p.depth" class="relative -my-2 w-4 shrink-0">
-								<span
-									class="bg-border absolute left-2 w-px"
-									:class="p.isLast ? 'top-0 h-4' : 'inset-y-0'"
-								/>
-								<span class="bg-border absolute top-4 left-2 h-px w-2" />
-							</span>
-
-							<div class="flex min-w-0 grow flex-col gap-1">
-								<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-									<div class="flex min-w-0 grow items-baseline gap-2">
-										<Icon
-											:name="ProcIcon"
-											:size="13"
-											class="shrink-0 translate-y-0.5"
-											:class="p.isSample ? 'text-primary' : 'text-secondary'"
-										/>
-										<span
-											class="min-w-0 truncate font-mono text-xs font-medium"
-											:class="p.isSample ? 'text-primary' : 'text-default'"
-											:title="p.name"
-										>
-											{{ p.name || "(unknown)" }}
-										</span>
-									</div>
-									<span v-if="procMeta(p)" class="text-tertiary text-2xs shrink-0 font-mono">
-										{{ procMeta(p) }}
-									</span>
-								</div>
-								<!-- The command line sits inside the same indented column as the name,
-								     so it no longer needs its own depth arithmetic to line up. -->
-								<code v-if="p.command_line" class="text-secondary text-2xs break-all">
-									{{ p.command_line }}
-								</code>
-							</div>
-						</div>
-						<div v-if="!procRows.length" class="text-tertiary px-3 py-4 text-xs">
-							No process matches that filter.
-						</div>
-					</div>
-				</n-scrollbar>
-			</CollapsibleCard>
+			<ProcessTree :processes="sandbox.processes" />
 
 			<!-- Extracted payloads and dropped files are one-line facts about a file —
 			     name, type, hash — so they use the module's shared list rather than each
@@ -366,7 +224,8 @@
 </template>
 
 <script setup lang="ts">
-import type { SandboxSummary } from "@/types/file-analysis"
+import type { FileAnalysisVerdict, SandboxSummary } from "@/types/file-analysis"
+import { saveAs } from "file-saver"
 import {
 	NAlert,
 	NButton,
@@ -377,19 +236,19 @@ import {
 	NImageGroup,
 	NInput,
 	NProgress,
-	NScrollbar,
 	NSpin,
 	NTag,
 	useMessage
 } from "naive-ui"
 import { computed, reactive, ref } from "vue"
 import Api from "@/api"
-import CollapsibleCard from "@/components/common/CollapsibleCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
 import { valueListParts } from "@/components/common/value-list"
 import ValueList from "@/components/common/ValueList.vue"
-import { useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import { verdictColorVar, verdictTagType } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import ProcessTree from "@/components/fileAnalysis/ProcessTree.vue"
+import SignatureList from "@/components/fileAnalysis/SignatureList.vue"
 
 const props = defineProps<{
 	sandbox?: SandboxSummary | null
@@ -400,9 +259,6 @@ const props = defineProps<{
 
 const message = useMessage()
 
-const SearchIcon = "carbon:search"
-const SigIcon = "carbon:rule"
-const ProcIcon = "carbon:process"
 const DownloadIcon = "carbon:download"
 
 // The full host-activity record, grouped for display. Labels are analyst-facing;
@@ -464,13 +320,10 @@ function downloadReport() {
 	Api.fileAnalysis
 		.getCapeReport(props.jobId)
 		.then(res => {
-			const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: "application/json" })
-			const url = URL.createObjectURL(blob)
-			const a = document.createElement("a")
-			a.href = url
-			a.download = `cape-report-${props.jobId}.json`
-			a.click()
-			URL.revokeObjectURL(url)
+			saveAs(
+				new Blob([JSON.stringify(res.data, null, 2)], { type: "application/json" }),
+				`cape-report-${props.jobId}.json`
+			)
 		})
 		.catch(() => message.error("Could not fetch the full CAPE report."))
 		.finally(() => {
@@ -490,113 +343,6 @@ const lowConfidenceSignatures = computed(() =>
 )
 const noiseSignatures = computed(() => (props.sandbox?.signatures ?? []).filter(s => s.noise).sort(_bySeverity))
 
-interface TreeProc {
-	name: string
-	pid?: number | string
-	ppid?: number | string
-	command_line?: string
-	depth: number
-	isSample: boolean
-	/** One entry per ancestor level: true where that ancestor still has siblings
-	 *  below, so the guide rail must continue down through this row. */
-	rails: boolean[]
-	/** Last child of its parent — its elbow stops instead of running on. */
-	isLast: boolean
-}
-
-// CAPE writes the submitted sample into the guest as a temp file and launches it;
-// flag the process whose command line references that drop path so the real sample
-// pops out from Windows' own background processes (svchost, WmiPrvSE, …).
-function looksLikeSample(cmd?: string): boolean {
-	if (!cmd) return false
-	return /deto_|\\Temp\\|\/tmp\/|AppData\\Local\\Temp/i.test(cmd)
-}
-
-// Build a parent→child ordering from ppid. Processes whose parent isn't in the
-// captured set (very common — the parent is an OS service) render as roots, so
-// nothing is dropped; genuine parent/child pairs get indented under their parent.
-/** pid and ppid as one muted run — both locate the process, so both read alike. */
-function procMeta(p: TreeProc): string {
-	return [p.pid != null ? `pid ${p.pid}` : "", p.ppid != null ? `ppid ${p.ppid}` : ""].filter(Boolean).join(" · ")
-}
-
-const processTree = computed<TreeProc[]>(() => {
-	const procs = props.sandbox?.processes ?? []
-	const byPid = new Map<string, (typeof procs)[number]>()
-	for (const p of procs) {
-		if (p.pid != null) byPid.set(String(p.pid), p)
-	}
-
-	const childrenOf = new Map<string, typeof procs>()
-	const roots: typeof procs = []
-	for (const p of procs) {
-		const ppid = p.ppid != null ? String(p.ppid) : ""
-		if (ppid && ppid !== String(p.pid) && byPid.has(ppid)) {
-			const arr = childrenOf.get(ppid) ?? []
-			arr.push(p)
-			childrenOf.set(ppid, arr)
-		} else {
-			roots.push(p)
-		}
-	}
-
-	const out: TreeProc[] = []
-	const seen = new Set<string>()
-	const walk = (p: (typeof procs)[number], depth: number, rails: boolean[], isLast: boolean) => {
-		const pid = String(p.pid ?? `_${out.length}`)
-		if (seen.has(pid)) return // guard against pathological ppid cycles
-		seen.add(pid)
-		out.push({
-			name: p.name,
-			pid: p.pid,
-			ppid: p.ppid,
-			command_line: p.command_line,
-			depth,
-			isSample: looksLikeSample(p.command_line),
-			rails,
-			isLast
-		})
-		// This node becomes an ancestor for its children: its rail continues past
-		// them only while it still has siblings of its own left to draw.
-		const kids = childrenOf.get(pid) ?? []
-		kids.forEach((c, i) => walk(c, depth + 1, [...rails, !isLast], i === kids.length - 1))
-	}
-	roots.forEach((r, i) => walk(r, 0, [], i === roots.length - 1))
-	// Any process not reached (cycle/orphan) appended flat so the count stays honest.
-	for (const p of procs) {
-		if (!seen.has(String(p.pid))) {
-			out.push({
-				name: p.name,
-				pid: p.pid,
-				ppid: p.ppid,
-				command_line: p.command_line,
-				depth: 0,
-				isSample: looksLikeSample(p.command_line),
-				rails: [],
-				isLast: true
-			})
-			seen.add(String(p.pid))
-		}
-	}
-	return out
-})
-
-const { query: procQuery, results: filteredProcesses } = useFuseFilter(
-	() => processTree.value,
-	["name", "command_line"]
-)
-
-// While filtering, rows are flattened: indentation that points at a parent the
-// filter removed describes a tree that is not on screen.
-const procRows = computed(() =>
-	procQuery.value.trim()
-		? filteredProcesses.value.map(p => ({ ...p, depth: 0, rails: [], isLast: true }))
-		: filteredProcesses.value
-)
-
-/** name · type · full hash, in that order: the name is what you recognise, the
- *  type is what it is, the hash is what you look up — so each is toned apart
- *  rather than reading as one long grey run. */
 function fileLine(f: { name?: string; type?: string; sha256?: string }) {
 	return valueListParts([
 		{ text: f.name, tone: "strong" },
@@ -611,29 +357,15 @@ const droppedItems = computed(() => (props.sandbox?.dropped ?? []).map(fileLine)
 const malscorePct = computed(() => Math.min(100, Math.max(0, (props.sandbox?.malscore ?? 0) * 10)))
 // Colour the ring by the VERDICT, not the raw malscore — a benign run can hit
 // malscore 10 on environmental noise, and a red ring next to a "clean" tag misleads.
-const malscoreColor = computed(() => {
+// The sandbox summary types its verdict as a free string (it mirrors CAPE's own
+// wording), so it is narrowed here instead of loosening the shared helpers.
+const sandboxVerdict = computed<FileAnalysisVerdict>(() => {
 	const v = props.sandbox?.verdict
-	if (v === "malicious") return "#e88080"
-	if (v === "suspicious") return "#e8c07d"
-	return "#63e2b7"
-})
-const verdictType = computed<"error" | "warning" | "success">(() => {
-	const v = props.sandbox?.verdict
-	if (v === "malicious") return "error"
-	if (v === "suspicious") return "warning"
-	return "success"
+	return v === "malicious" || v === "suspicious" ? v : "clean"
 })
 
-function sevColor(sev?: number): string {
-	if (!sev) return "text-secondary"
-	if (sev >= 3) return "text-red-500"
-	if (sev >= 2) return "text-amber-500"
-	return "text-secondary"
-}
-function sevTag(sev?: number): "error" | "warning" | "default" {
-	if (!sev) return "default"
-	if (sev >= 3) return "error"
-	if (sev >= 2) return "warning"
-	return "default"
-}
+// Colour the ring by the VERDICT, not the raw malscore — a benign run can hit
+// malscore 10 on environmental noise, and a red ring next to a "clean" tag misleads.
+const malscoreColor = computed(() => verdictColorVar(sandboxVerdict.value))
+const verdictType = computed(() => verdictTagType(sandboxVerdict.value))
 </script>

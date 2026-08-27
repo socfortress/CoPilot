@@ -33,7 +33,7 @@ function delay<T>(value: T, ms = LATENCY_MS): Promise<T> {
 // render would look like a different file on every search.
 function fakeSha256(seed: string): string {
 	let h1 = 0x12345678
-	let h2 = 0x9abcdef0
+	let h2 = 0x9ABCDEF0
 	for (let i = 0; i < seed.length; i++) {
 		h1 = Math.imul(h1 ^ seed.charCodeAt(i), 2654435761) >>> 0 || 1
 		h2 = Math.imul(h2 + seed.charCodeAt(i), 1597334677) >>> 0 || 1

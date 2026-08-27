@@ -23,7 +23,7 @@
 			<!-- "Observed" is load-bearing: it separates these from the config-extracted
 			     C2 above, which is the one high-confidence signal on this tab. -->
 			<div v-if="hosts.length || domains.length" class="grid gap-4 @2xl:grid-cols-2">
-				<ValueList v-if="hosts.length" label="Observed hosts" :items="hosts" :link="tiUrl" />
+				<ValueList v-if="hosts.length" label="Observed hosts" :items="hosts" :link="ipUrl" />
 				<ValueList v-if="domains.length" label="Observed domains" :items="domains" :link="domainUrl" />
 			</div>
 
@@ -60,11 +60,9 @@ import { computed } from "vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
 import { valueListParts } from "@/components/common/value-list"
 import ValueList from "@/components/common/ValueList.vue"
-import { groupConnections } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import { groupConnections, looksLikeIp, virusTotalUrl } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{ sandbox?: SandboxSummary | null; loading?: boolean }>()
-
-const IPV4 = /^\d{1,3}(?:\.\d{1,3}){3}$/
 
 // Observed traffic. Older cached results (engine < 7) stored observed endpoints in
 // the c2_* fields, so fall back to them for those — but a fresh result keeps the two
@@ -114,7 +112,7 @@ const connectionItems = computed(() =>
 				tone: "strong",
 				// Only an IP is worth a reputation lookup; a bare port or hostname
 				// fragment would send the analyst to a page about nothing.
-				href: looksLikeIp(c.dst) ? tiUrl(c.dst) : undefined
+				href: looksLikeIp(c.dst) ? virusTotalUrl(c.dst) : undefined
 			},
 			{ text: c.count > 1 ? `×${c.count}` : undefined, tone: "muted" }
 		])
@@ -131,13 +129,11 @@ const hasNetwork = computed(
 		connections.value.length > 0
 )
 
-function looksLikeIp(v: string): boolean {
-	return IPV4.test(v || "")
-}
-function tiUrl(indicator: string): string {
-	return `https://www.virustotal.com/gui/ip-address/${encodeURIComponent(indicator)}`
+// Thin named wrappers so the templates read as what they link to.
+function ipUrl(indicator: string): string {
+	return virusTotalUrl(indicator, "ip")
 }
 function domainUrl(indicator: string): string {
-	return `https://www.virustotal.com/gui/domain/${encodeURIComponent(indicator)}`
+	return virusTotalUrl(indicator, "domain")
 }
 </script>

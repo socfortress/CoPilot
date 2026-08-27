@@ -34,7 +34,7 @@
 					<div class="flex shrink-0 items-center gap-2">
 						<n-skeleton v-if="!b.loaded" text :height="20" class="w-16" />
 						<n-spin v-else-if="isRunning(b)" :size="13" />
-						<n-tag v-else :type="verdictType(b.verdict)" size="small" round :bordered="false">
+						<n-tag v-else :type="verdictTagType(b.verdict)" size="small" round :bordered="false">
 							{{ b.verdict || b.status || "—" }}
 						</n-tag>
 					</div>
@@ -68,6 +68,12 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import {
+	verdictAccent,
+	verdictIcon,
+	verdictTagType,
+	verdictTextClass
+} from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 interface BatchEntry {
 	jobId: string
@@ -97,35 +103,23 @@ function isRunning(b: BatchEntry): boolean {
 	return b.loaded && ["pending", "queued", "running"].includes(b.status)
 }
 
-function verdictType(v: FileAnalysisVerdict | null): "success" | "warning" | "error" | "default" {
-	if (v === "malicious") return "error"
-	if (v === "suspicious") return "warning"
-	if (v === "clean") return "success"
-	return "default"
-}
-
-// Only a judged-bad row carries a status accent; a clean one stays neutral rather
-// than painting the drawer green.
+// A failed job is a state of its own, not a verdict — so it is decided here and
+// everything else defers to the shared verdict mapping.
 function statusFor(b: BatchEntry): "success" | "warning" | "error" | undefined {
 	if (!b.loaded) return undefined
 	if (b.status === "failed") return "error"
-	if (b.verdict === "malicious") return "error"
-	if (b.verdict === "suspicious") return "warning"
-	return undefined
+	return verdictAccent(b.verdict)
 }
 
 function iconFor(b: BatchEntry): string {
 	if (isRunning(b)) return "carbon:document"
 	if (b.status === "failed") return "carbon:warning"
-	if (b.verdict === "malicious") return "carbon:warning-alt-filled"
-	if (b.verdict === "suspicious") return "carbon:warning-alt"
-	return "carbon:checkmark-filled"
+	return verdictIcon(b.verdict)
 }
 
 function colorFor(b: BatchEntry): string {
-	if (b.verdict === "malicious" || b.status === "failed") return "text-error"
-	if (b.verdict === "suspicious") return "text-warning"
-	return "text-secondary"
+	if (b.status === "failed") return "text-error"
+	return verdictTextClass(b.verdict)
 }
 
 function select(jobId: string) {

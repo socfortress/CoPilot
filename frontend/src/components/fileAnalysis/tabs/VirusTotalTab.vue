@@ -413,7 +413,9 @@ import CollapsibleCard from "@/components/common/CollapsibleCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
 import ValueList from "@/components/common/ValueList.vue"
-import { iconForFile, useFuseFilter } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import { iconForFile, useFuseFilter, virusTotalUrl } from "@/components/fileAnalysis/fileAnalysis.helpers"
+import { useSettingsStore } from "@/stores/settings"
+import { formatBytes, formatDate } from "@/utils/format"
 
 const props = defineProps<{ reputation?: FileAnalysisReputation | null; loading?: boolean }>()
 
@@ -421,6 +423,8 @@ const BugIcon = "carbon:debug"
 const RuleIcon = "carbon:rule"
 const DotIcon = "carbon:circle-solid"
 const SearchIcon = "carbon:search"
+
+const dFormats = useSettingsStore().dateFormat
 
 const intel = computed(() => props.reputation?.intel ?? null)
 const permalink = computed(() => props.reputation?.permalink)
@@ -443,11 +447,14 @@ const detPct = computed(() => {
 	const t = props.reputation?.total ?? 0
 	return t > 0 ? Math.min(100, Math.round((m / t) * 100)) : 0
 })
+// The ratio is graded by hit count, not by our own verdict — five engines calling
+// a file bad is a different statement from one. Theme variables, so the ring
+// follows the light/dark switch instead of staying at a fixed hex.
 const ratioColor = computed(() => {
 	const m = props.reputation?.malicious ?? 0
-	if (m >= 5) return "#e88080"
-	if (m >= 1) return "#e8c07d"
-	return "#63e2b7"
+	if (m >= 5) return "var(--error-color)"
+	if (m >= 1) return "var(--warning-color)"
+	return "var(--success-color)"
 })
 
 const facts = computed(() => {
@@ -455,9 +462,9 @@ const facts = computed(() => {
 	if (!i) return []
 	const rows: { label: string; value: string }[] = []
 	if (i.type_description) rows.push({ label: "Type", value: i.type_description })
-	if (i.size != null) rows.push({ label: "Size", value: humanSize(i.size) })
-	if (i.first_seen) rows.push({ label: "First seen", value: shortDate(i.first_seen) })
-	if (i.last_analysis) rows.push({ label: "Last analysis", value: shortDate(i.last_analysis) })
+	if (i.size != null) rows.push({ label: "Size", value: formatBytes(i.size) ?? "—" })
+	if (i.first_seen) rows.push({ label: "First seen", value: String(formatDate(i.first_seen, dFormats.date)) })
+	if (i.last_analysis) rows.push({ label: "Last analysis", value: String(formatDate(i.last_analysis, dFormats.date)) })
 	rows.push({ label: "Signed", value: i.signed ? i.signer || "yes" : "no" })
 	if (i.names?.length) rows.push({ label: "Also seen as", value: i.names.slice(0, 3).join(", ") })
 	return rows
@@ -479,24 +486,10 @@ function sevTag(level?: string): "error" | "warning" | "default" {
 	if (l.includes("medium")) return "warning"
 	return "default"
 }
-function humanSize(n: number): string {
-	if (!n) return "0 B"
-	const u = ["B", "KB", "MB", "GB"]
-	let i = 0
-	let v = n
-	while (v >= 1024 && i < u.length - 1) {
-		v /= 1024
-		i++
-	}
-	return `${v.toFixed(v < 10 && i > 0 ? 1 : 0)} ${u[i]}`
-}
-function shortDate(iso: string): string {
-	return (iso || "").slice(0, 10)
-}
 function ipUrl(v: string): string {
-	return `https://www.virustotal.com/gui/ip-address/${encodeURIComponent(v)}`
+	return virusTotalUrl(v, "ip")
 }
 function domainUrl(v: string): string {
-	return `https://www.virustotal.com/gui/domain/${encodeURIComponent(v)}`
+	return virusTotalUrl(v, "domain")
 }
 </script>

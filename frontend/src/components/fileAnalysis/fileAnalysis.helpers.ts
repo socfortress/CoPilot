@@ -4,7 +4,7 @@
 // without mounting a component or mocking the API.
 
 import type { Ref } from "vue"
-import type { SandboxConnection } from "@/types/file-analysis"
+import type { FileAnalysisVerdict, SandboxConnection } from "@/types/file-analysis"
 import { computed, ref } from "vue"
 import { createFuse, searchFuse } from "@/components/common/searchDialog.helpers"
 
@@ -143,4 +143,96 @@ export function useFuseFilter<T>(source: () => T[], keys: string[]): { query: Re
 	const fuse = computed(() => createFuse(source(), keys))
 	const results = computed(() => searchFuse(fuse.value, query.value, source()))
 	return { query, results }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Verdict and source presentation                                           */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * One verdict, one appearance. These mappings used to be re-typed in every view
+ * that showed a verdict — the header, the batch drawer, the history list and the
+ * detonation tab — and the copies had already drifted apart: two of them knew
+ * about the "flow" source and two did not.
+ */
+
+export type VerdictTagType = "success" | "warning" | "error" | "default"
+
+/** Naive tag/alert type for a verdict. */
+export function verdictTagType(verdict: FileAnalysisVerdict | null | undefined): VerdictTagType {
+	if (verdict === "malicious") return "error"
+	if (verdict === "suspicious") return "warning"
+	if (verdict === "clean") return "success"
+	return "default"
+}
+
+/** Icon for a verdict; callers with their own states (running, failed) handle those first. */
+export function verdictIcon(verdict: FileAnalysisVerdict | null | undefined): string {
+	if (verdict === "malicious") return "carbon:warning-alt-filled"
+	if (verdict === "suspicious") return "carbon:warning-alt"
+	return "carbon:checkmark-filled"
+}
+
+/**
+ * Accent for a row or card. Only a judged-bad verdict carries one: painting a
+ * clean row green makes a list of ordinary files look like a wall of alarms.
+ */
+export function verdictAccent(verdict: FileAnalysisVerdict | null | undefined): "warning" | "error" | undefined {
+	if (verdict === "malicious") return "error"
+	if (verdict === "suspicious") return "warning"
+	return undefined
+}
+
+/** Text colour class for a verdict. */
+export function verdictTextClass(verdict: FileAnalysisVerdict | null | undefined): string {
+	if (verdict === "malicious") return "text-error"
+	if (verdict === "suspicious") return "text-warning"
+	return "text-secondary"
+}
+
+/**
+ * A resolved colour for canvases and Naive props that take a colour rather than a
+ * class (progress rings, charts). Theme variables, not hex literals — hardcoded
+ * ones ignored the light/dark switch and any brand override.
+ */
+export function verdictColorVar(verdict: FileAnalysisVerdict | null | undefined): string {
+	if (verdict === "malicious") return "var(--error-color)"
+	if (verdict === "suspicious") return "var(--warning-color)"
+	return "var(--success-color)"
+}
+
+const SOURCE_LABELS: Record<string, string> = {
+	upload: "uploaded",
+	host_path: "collected from endpoint",
+	flow: "from flow"
+}
+
+/** How the sample reached CoPilot, in words. */
+export function sourceLabel(source: string | null | undefined): string {
+	return SOURCE_LABELS[source || ""] || source || "—"
+}
+
+/** How the sample reached CoPilot, as an icon. */
+export function sourceIcon(source: string | null | undefined): string {
+	return source === "upload" ? "carbon:cloud-upload" : "carbon:bare-metal-server"
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Indicator lookups                                                          */
+/* -------------------------------------------------------------------------- */
+
+/** Indicators are stored defanged (example[.]com); a lookup URL needs them intact. */
+export function refang(value: string): string {
+	return value.replaceAll("[.]", ".").replaceAll("[:]", ":")
+}
+
+/** VirusTotal page for an indicator — the one place the GUI URL shape is written. */
+export function virusTotalUrl(indicator: string, kind: "ip" | "domain" | "file" = "ip"): string {
+	const path = kind === "domain" ? "domain" : kind === "file" ? "file" : "ip-address"
+	return `https://www.virustotal.com/gui/${path}/${encodeURIComponent(refang(indicator))}`
+}
+
+/** True for a bare IPv4 literal — the only shape worth a reputation lookup. */
+export function looksLikeIp(value: string): boolean {
+	return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(value || "")
 }

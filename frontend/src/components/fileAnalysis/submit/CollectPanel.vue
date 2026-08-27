@@ -82,7 +82,7 @@
 					<span class="text-secondary font-mono text-xs">
 						{{ matches.length }} match{{ matches.length > 1 ? "es" : "" }}
 						<template v-if="selectedPaths.length">
-							· {{ selectedPaths.length }} selected · {{ fmtBytes(selectedSize) }}
+							· {{ selectedPaths.length }} selected · {{ formatBytes(selectedSize) }}
 						</template>
 					</span>
 					<n-button text size="tiny" @click="toggleAll()">
@@ -107,7 +107,7 @@
 									{{ m.name }}
 								</span>
 								<span class="text-tertiary shrink-0 font-mono text-xs tabular-nums">
-									{{ fmtBytes(m.size) }}
+									{{ formatBytes(m.size) }}
 								</span>
 								<span class="text-tertiary shrink-0 font-mono text-xs">
 									{{ m.sha256.slice(0, 12) }}
@@ -146,10 +146,12 @@ import type { FileAnalysisAgent, FileAnalysisMatch, ReputationMode } from "@/typ
 import { NAlert, NButton, NCheckbox, NCheckboxGroup, NEmpty, NInput, NSelect, useMessage } from "naive-ui"
 import { computed, h, ref, watch } from "vue"
 import Api from "@/api"
+import Dot from "@/components/common/Dot.vue"
 import Icon from "@/components/common/Icon.vue"
 import { iconForFile } from "@/components/fileAnalysis/fileAnalysis.helpers"
 import { mockEnumerate, mockListAgents, mockSubmit, USE_MOCK_COLLECT } from "@/components/fileAnalysis/submit/mock"
 import { getApiErrorMessage } from "@/utils"
+import { formatBytes } from "@/utils/format"
 
 const props = defineProps<{ customerCode: string | null; sandbox: boolean; vtMode: ReputationMode }>()
 
@@ -212,21 +214,14 @@ function clearMatches() {
 	findError.value = null
 }
 
-function fmtBytes(n: number): string {
-	if (n < 1024) return `${n} B`
-	if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
-	return `${(n / 1024 / 1024).toFixed(1)} MB`
-}
-
 function renderAgentLabel(option: SelectOption): VNodeChild {
 	const agent = option.agent as FileAnalysisAgent | undefined
 	if (!agent) return option.label as string
 	return h("div", { class: "flex items-center justify-between gap-3 w-full" }, [
 		h("span", { class: "flex items-center gap-2" }, [
-			h("span", {
-				class: "inline-block w-2 h-2 rounded-full",
-				style: { background: agent.online ? "#18a058" : "#909399" }
-			}),
+			// The shared Dot, not a hand-rolled span with two hex literals: those
+			// ignored the theme and were the only hardcoded colours left in the module.
+			h(Dot, { variant: agent.online ? "success" : "muted" }),
 			h("span", agent.hostname || agent.client_id),
 			agent.unassigned
 				? h(

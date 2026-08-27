@@ -27,13 +27,16 @@
 
 <script setup lang="ts">
 import type { InspectorIocs } from "@/types/file-analysis"
+import { useClipboard } from "@vueuse/core"
 import { NButton, NEmpty, useMessage } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import ValueList from "@/components/common/ValueList.vue"
+import { virusTotalUrl } from "@/components/fileAnalysis/fileAnalysis.helpers"
 
 const props = defineProps<{ iocs?: InspectorIocs | null }>()
 const message = useMessage()
+const { copy } = useClipboard()
 
 const CopyIcon = "carbon:copy"
 
@@ -50,20 +53,15 @@ const groups = computed(() => [
 		key: "domains",
 		label: "Domains",
 		values: props.iocs?.domains ?? [],
-		link: (v: string) => `https://www.virustotal.com/gui/domain/${encodeURIComponent(defang(v))}`
+		link: (v: string) => virusTotalUrl(v, "domain")
 	},
 	{
 		key: "ips",
 		label: "IPs",
 		values: props.iocs?.ips ?? [],
-		link: (v: string) => `https://www.virustotal.com/gui/ip-address/${encodeURIComponent(defang(v))}`
+		link: (v: string) => virusTotalUrl(v, "ip")
 	}
 ])
-
-/** Indicators are stored defanged (example[.]com); a lookup URL needs them intact. */
-function defang(value: string): string {
-	return value.replaceAll("[.]", ".").replaceAll("[:]", ":")
-}
 
 const hasIocs = computed(() => groups.value.some(g => g.values.length))
 
@@ -73,8 +71,7 @@ function copyIocs() {
 		.filter(g => g.values.length)
 		.map(g => `# ${g.label}\n${g.values.join("\n")}`)
 		.join("\n\n")
-	navigator.clipboard
-		.writeText(text)
+	copy(text)
 		.then(() => message.success("IOCs copied to clipboard."))
 		.catch(() => message.error("Could not copy to the clipboard."))
 }

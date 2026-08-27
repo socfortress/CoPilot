@@ -53,7 +53,7 @@
 						type="button"
 						class="hover:border-primary/60 hover:bg-primary/5 group flex min-w-0 cursor-pointer items-center gap-2 rounded-md border border-transparent px-2 py-1 transition-colors"
 						:title="`Copy ${h.label}`"
-						@click="copy(h.value)"
+						@click="copyValue(h.value)"
 					>
 						<span class="text-secondary min-w-0 truncate font-mono">{{ h.value }}</span>
 						<Icon
@@ -85,6 +85,7 @@
 
 <script setup lang="ts">
 import type { FileAnalysisReputation, InspectorResult } from "@/types/file-analysis"
+import { useClipboard } from "@vueuse/core"
 import { NTag, useMessage } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
@@ -100,6 +101,7 @@ const props = defineProps<{
 }>()
 
 const message = useMessage()
+const { copy } = useClipboard()
 
 const CopyIcon = "carbon:copy"
 
@@ -128,8 +130,7 @@ const hashes = computed(() => {
 	].filter(x => !!x.value) as { label: string; value: string }[]
 })
 
-function copy(value: string) {
-	navigator.clipboard.writeText(value)
-	message.success("Copied.")
+function copyValue(value: string) {
+	copy(value).then(() => message.success("Copied."))
 }
 </script>
