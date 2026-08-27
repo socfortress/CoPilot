@@ -3,6 +3,7 @@
 		ref="yamlEditorRef"
 		v-model:code="code"
 		placeholder="Write a Graylog-only detection rule…"
+		class="scrollbar-styled"
 		:locked-keys="PROTECTED_KEYS"
 		@blocked="emit('blocked', $event)"
 	/>

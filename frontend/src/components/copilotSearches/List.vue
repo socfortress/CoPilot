@@ -12,8 +12,9 @@
 			v-model:value="viewMode"
 			type="segment"
 			animated
+			size="small"
 			tab-class="px-5!"
-			class="[&_.n-tabs-nav]:mx-auto [&_.n-tabs-nav]:min-w-70"
+			class="[&_.n-tabs-nav]:min-w-70 [&_.n-tabs-rail]:mr-auto [&_.n-tabs-rail]:w-auto!"
 		>
 			<template #suffix>
 				<div class="flex items-center gap-2">

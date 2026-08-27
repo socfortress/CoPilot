@@ -1,6 +1,6 @@
 <template>
 	<n-modal
-		:show="show"
+		:show
 		preset="card"
 		segmented
 		:style="{ width: 'min(640px, 94vw)', maxHeight: '90vh' }"
@@ -18,7 +18,11 @@
 		<div v-if="result?.success" class="flex flex-col gap-4">
 			<n-alert type="success" :bordered="false" :title="`Rule ${result.action} in ${result.repo}`">
 				<div class="flex flex-col gap-1 text-sm">
-					<span><code>{{ result.path }}</code> on <code>{{ result.branch }}</code></span>
+					<span>
+						<code>{{ result.path }}</code>
+						on
+						<code>{{ result.branch }}</code>
+					</span>
 					<a v-if="result.commit_url" :href="result.commit_url" target="_blank" rel="noopener noreferrer">
 						View commit ↗
 					</a>
@@ -28,7 +32,9 @@
 				</div>
 			</n-alert>
 			<span class="text-secondary text-sm">
-				It becomes a <b>Custom</b> card once the rules cache is refreshed.
+				It becomes a
+				<b>Custom</b>
+				card once the rules cache is refreshed.
 			</span>
 			<div class="flex justify-end gap-2">
 				<n-button secondary :loading="refreshing" @click="refreshCache">
@@ -46,8 +52,11 @@
 			</n-alert>
 
 			<n-alert v-if="!loadingRepos && !repoOptions.length" type="info" :bordered="false" size="small">
-				No customer has a custom repository configured yet. Set one up under <b>Custom repos</b> first (and add a
-				GitHub token with <code>contents:write</code> to publish).
+				No customer has a custom repository configured yet. Set one up under
+				<b>Custom repos</b>
+				first (and add a GitHub token with
+				<code>contents:write</code>
+				to publish).
 			</n-alert>
 
 			<div class="flex flex-col gap-1">
@@ -60,7 +69,9 @@
 					placeholder="Select a configured repository"
 				/>
 				<span v-if="selectedRepo && !selectedRepo.has_token" class="text-xs text-amber-500">
-					This repo has no write token — add a PAT with <code>contents:write</code> under Custom repos to publish.
+					This repo has no write token — add a PAT with
+					<code>contents:write</code>
+					under Custom repos to publish.
 				</span>
 			</div>
 
@@ -70,7 +81,10 @@
 			</div>
 
 			<div class="flex flex-col gap-1">
-				<span class="text-secondary text-xs font-medium">Commit message <span class="opacity-60">(optional)</span></span>
+				<span class="text-secondary text-xs font-medium">
+					Commit message
+					<span class="opacity-60">(optional)</span>
+				</span>
 				<n-input v-model:value="commitMessage" :placeholder="defaultMessage" />
 			</div>
 
@@ -118,10 +132,9 @@ const refreshing = ref(false)
 const errorMsg = ref<string | null>(null)
 const result = ref<PublishRuleResponse | null>(null)
 
-const ruleName = computed(() => {
-	const m = props.yaml.match(/^name:\s*(.+?)\s*$/m)
-	return (m?.[1] || "rule").replace(/^["']|["']$/g, "")
-})
+const RULE_NAME_RE = /^name:\s*(\S.*)$/m
+const WRAP_QUOTES_RE = /^["']|["']$/g
+const ruleName = computed(() => (props.yaml.match(RULE_NAME_RE)?.[1]?.trim() || "rule").replace(WRAP_QUOTES_RE, ""))
 function slug(s: string): string {
 	return (
 		s
