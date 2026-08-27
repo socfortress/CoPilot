@@ -51,11 +51,7 @@ export type AlertVerdict = "TRUE_POSITIVE" | "FALSE_POSITIVE"
 export type AlertVerdictFilter = AlertVerdict | "UNTRIAGED"
 
 export type FalsePositiveReason =
-	| "EXPECTED_ACTIVITY"
-	| "KNOWN_APPLICATION"
-	| "AUTHORIZED_USER"
-	| "RULE_TOO_SENSITIVE"
-	| "OTHER"
+	"EXPECTED_ACTIVITY" | "KNOWN_APPLICATION" | "AUTHORIZED_USER" | "RULE_TOO_SENSITIVE" | "OTHER"
 
 export interface AlertAsset {
 	id: number

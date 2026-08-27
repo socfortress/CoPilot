@@ -21,4 +21,10 @@ app.use(router)
 
 app.mount("#app")
 
+// Dev-only tooling. The dynamic import keeps it out of the production bundle
+// entirely, and the picker relies on Vue's dev-build component metadata anyway.
+if (import.meta.env.DEV) {
+	import("@/dev/element-picker").then(m => m.installElementPicker())
+}
+
 // TODO-FE: search for all <style/> tags and replace them with tailwind classes
