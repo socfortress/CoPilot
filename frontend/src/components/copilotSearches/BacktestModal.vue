@@ -68,46 +68,69 @@
 					</n-alert>
 
 					<!-- results -->
-					<div v-else-if="result" class="flex flex-col gap-6">
-						<n-alert v-if="result.note" type="warning" :bordered="false" size="small">
-							{{ result.note }}
-						</n-alert>
+					<div v-else-if="result" class="flex flex-col gap-8">
+						<div class="flex flex-col gap-4">
+							<n-alert v-if="result.note" type="warning" :bordered="false" size="small">
+								{{ result.note }}
+							</n-alert>
 
-						<n-alert
-							v-if="result.missing_fields?.length"
-							type="warning"
-							:bordered="false"
-							size="small"
-							title="Fields not found in this customer's data"
-						>
-							<span class="text-sm">
-								<code v-for="(f, i) of result.missing_fields" :key="f">
-									{{ f }}{{ i < result.missing_fields.length - 1 ? ", " : "" }}
-								</code>
-								— the rule may never match for this customer. Check for typos or a different field
-								naming.
-							</span>
-						</n-alert>
-
-						<!-- headline stats -->
-						<div class="grid grid-cols-2 gap-3 md:grid-cols-4">
-							<CardStats v-for="(s, i) of statTiles" :key="i" :title="s.title" :value="s.value">
-								<template #icon>
-									<CardStatsIcon :icon-name="s.icon" boxed :color="s.color" :box-size="42" />
-								</template>
-							</CardStats>
+							<n-alert
+								v-if="result.missing_fields?.length"
+								type="warning"
+								:bordered="false"
+								size="small"
+								title="Fields not found in this customer's data"
+							>
+								<span class="text-sm">
+									<code v-for="(f, i) of result.missing_fields" :key="f">
+										{{ f }}{{ i < result.missing_fields.length - 1 ? ", " : "" }}
+									</code>
+									— the rule may never match for this customer. Check for typos or a different field
+									naming.
+								</span>
+							</n-alert>
 						</div>
 
-						<!-- sparkline -->
-						<section v-if="result.per_bucket.length" class="flex flex-col gap-2">
-							<h4 class="section-title">
-								Matches per {{ result.bucket_unit === "1h" ? "hour" : "day" }}
-							</h4>
-							<div class="border-default bg-secondary/40 rounded-lg border p-2">
+						<!-- headline stats -->
+						<div class="stat-strip">
+							<div v-for="(s, i) of statTiles" :key="i" class="stat">
+								<span class="stat__label">
+									<Icon :name="s.icon" :size="13" :style="{ color: s.color }" />
+									{{ s.title }}
+								</span>
+								<span class="stat__value">{{ s.value }}</span>
+							</div>
+						</div>
+
+						<!-- volume over time -->
+						<section v-if="result.per_bucket.length" class="panel">
+							<header class="panel__head">
+								<Icon :name="ChartIcon" :size="15" class="panel__icon" />
+								<h4 class="panel__title">
+									Matches per {{ result.bucket_unit === "1h" ? "hour" : "day" }}
+								</h4>
+								<div class="panel__meta">
+									<span>
+										peak
+										<b>{{ fmt(bucketPeak) }}</b>
+									</span>
+									<span class="panel__sep">·</span>
+									<span>
+										avg
+										<b>{{ fmt(bucketAvg) }}</b>
+									</span>
+									<span class="panel__sep">·</span>
+									<span>
+										buckets
+										<b>{{ result.per_bucket.length }}</b>
+									</span>
+								</div>
+							</header>
+							<div class="panel__body">
 								<ChartColumn
 									:labels="bucketLabels"
 									:data="bucketData"
-									height="180px"
+									height="260px"
 									labels-datetime
 									monochrome
 								/>
@@ -117,124 +140,105 @@
 						<!-- aggregation simulation -->
 						<section
 							v-if="result.mode === 'aggregation' && result.aggregation"
-							class="rounded-xl border p-4"
-							:style="{ borderColor: `${warningColor}55`, background: `${warningColor}0d` }"
+							class="panel panel--warning"
 						>
-							<div class="mb-3 flex flex-wrap items-center gap-2">
-								<Icon :name="AlertIcon" :size="18" :style="{ color: warningColor }" />
-								<span class="font-semibold">Threshold simulation</span>
-								<n-tag size="small" round :bordered="false">
+							<header class="panel__head">
+								<Icon :name="AlertIcon" :size="15" class="panel__icon panel__icon--warning" />
+								<h4 class="panel__title">Threshold simulation</h4>
+								<code class="panel__expr">
 									{{ result.aggregation.function
 									}}{{ result.aggregation.field ? `(${result.aggregation.field})` : "()" }}
-									{{ result.aggregation.condition }} {{ result.aggregation.threshold }} per
+									{{ result.aggregation.condition }} {{ result.aggregation.threshold }} /
 									{{ result.aggregation.window }}
 									<template v-if="result.aggregation.group_by.length">
 										by {{ result.aggregation.group_by.join(", ") }}
 									</template>
-								</n-tag>
-							</div>
+								</code>
+							</header>
 
-							<div class="mb-4 flex flex-wrap items-end gap-8">
-								<div class="flex flex-col">
-									<span class="text-secondary text-xs">Would have fired</span>
-									<span class="font-display text-3xl font-bold" :style="{ color: warningColor }">
-										≈ {{ fmt(result.aggregation.estimated_alerts) }}
-									</span>
-									<span class="text-secondary text-xs">
-										alert{{ result.aggregation.estimated_alerts === 1 ? "" : "s" }} in
-										{{ rangeLabel }}
-									</span>
+							<div class="panel__body flex flex-col gap-5">
+								<!-- verdict figures -->
+								<div class="figures">
+									<div class="figure">
+										<span class="figure__label">Would have fired</span>
+										<span class="figure__value figure__value--warning">
+											≈ {{ fmt(result.aggregation.estimated_alerts) }}
+										</span>
+										<span class="figure__hint">
+											alert{{ result.aggregation.estimated_alerts === 1 ? "" : "s" }} in
+											{{ rangeLabel }}
+										</span>
+									</div>
+									<div class="figure">
+										<span class="figure__label">Per day</span>
+										<span class="figure__value">{{ result.aggregation.per_day_alerts }}</span>
+										<span class="figure__hint">on average</span>
+									</div>
 								</div>
-								<div class="flex flex-col">
-									<span class="text-secondary text-xs">Per day</span>
-									<span class="font-display text-3xl font-bold">
-										{{ result.aggregation.per_day_alerts }}
-									</span>
-								</div>
-							</div>
 
-							<!-- top offenders -->
-							<div v-if="result.aggregation.top_offenders.length" class="mb-4 flex flex-col gap-2">
-								<h4 class="section-title">Top offenders</h4>
-								<div
-									v-for="(o, i) of result.aggregation.top_offenders"
-									:key="i"
-									class="flex items-center gap-3"
-								>
-									<code class="w-56 shrink-0 truncate text-xs">{{ o.group }}</code>
-									<div class="bg-secondary h-2.5 grow overflow-hidden rounded-full">
+								<!-- top offenders -->
+								<div v-if="result.aggregation.top_offenders.length" class="subsection">
+									<h5 class="subsection__title">Top offenders</h5>
+									<div class="flex flex-col gap-1.5">
+										<div v-for="(o, i) of result.aggregation.top_offenders" :key="i" class="meter">
+											<span class="meter__label" :title="o.group">{{ o.group }}</span>
+											<div class="meter__track">
+												<div
+													class="meter__fill meter__fill--warning"
+													:style="{ width: pct(o.windows_alerting, maxOffenderWindows) }"
+												/>
+											</div>
+											<span class="meter__value">
+												peak
+												<b>{{ o.peak }}</b>
+												<span class="panel__sep">·</span>
+												{{ o.windows_alerting }}×
+											</span>
+										</div>
+									</div>
+								</div>
+
+								<!-- threshold sensitivity -->
+								<div v-if="result.aggregation.sensitivity.length" class="subsection">
+									<h5 class="subsection__title">Threshold sensitivity</h5>
+									<div class="flex flex-wrap gap-2">
 										<div
-											class="h-full rounded-full"
-											:style="{
-												width: pct(o.windows_alerting, maxOffenderWindows),
-												background: warningColor
-											}"
-										/>
+											v-for="(s, i) of result.aggregation.sensitivity"
+											:key="i"
+											class="chip"
+											:class="{ 'is-current': s.threshold === result.aggregation.threshold }"
+										>
+											<span class="chip__key">≥ {{ s.threshold }}</span>
+											<span class="chip__value">{{ fmt(s.alerts) }}</span>
+										</div>
 									</div>
-									<span class="text-secondary w-24 shrink-0 text-right text-xs">
-										peak
-										<b class="text-default">{{ o.peak }}</b>
-										· {{ o.windows_alerting }}×
+									<span class="subsection__hint">
+										Alerts at each threshold — the highlighted one is the rule's current setting.
 									</span>
 								</div>
-							</div>
-
-							<!-- threshold sensitivity -->
-							<div v-if="result.aggregation.sensitivity.length" class="flex flex-col gap-2">
-								<h4 class="section-title">Threshold sensitivity</h4>
-								<div class="flex flex-wrap gap-2">
-									<div
-										v-for="(s, i) of result.aggregation.sensitivity"
-										:key="i"
-										class="flex min-w-16 flex-col items-center rounded-lg border px-3 py-2"
-										:class="
-											s.threshold === result.aggregation.threshold
-												? 'border-primary'
-												: 'border-default'
-										"
-										:style="
-											s.threshold === result.aggregation.threshold
-												? { background: `${primaryColor}14` }
-												: {}
-										"
-									>
-										<span class="text-secondary text-xs">≥ {{ s.threshold }}</span>
-										<span class="font-display text-lg font-bold">{{ fmt(s.alerts) }}</span>
-									</div>
-								</div>
-								<span class="text-secondary text-xs">
-									Alerts at each threshold — the outlined one is the rule's current setting.
-								</span>
 							</div>
 						</section>
 
-						<!-- top fields -->
+						<!-- top values -->
 						<section v-if="topFieldEntries.length" class="flex flex-col gap-2">
 							<h4 class="section-title">Top values (from sampled events)</h4>
 							<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-								<div
-									v-for="[field, values] of topFieldEntries"
-									:key="field"
-									class="border-default rounded-lg border p-3"
-								>
-									<code class="mb-2 block text-xs font-semibold">{{ field }}</code>
-									<div class="flex flex-col gap-2">
-										<div v-for="(v, i) of values" :key="i" class="flex items-center gap-2">
-											<span class="w-40 shrink-0 truncate text-sm" :title="v.value">
-												{{ v.value }}
-											</span>
-											<div class="bg-secondary h-2 grow overflow-hidden rounded-full">
+								<div v-for="[field, values] of topFieldEntries" :key="field" class="panel">
+									<header class="panel__head panel__head--compact">
+										<Icon :name="FieldIcon" :size="13" class="panel__icon" />
+										<code class="panel__field" :title="field">{{ field }}</code>
+										<span class="panel__count">{{ values.length }}</span>
+									</header>
+									<div class="panel__body panel__body--compact">
+										<div v-for="(v, i) of values" :key="i" class="meter">
+											<span class="meter__label" :title="v.value">{{ v.value }}</span>
+											<div class="meter__track">
 												<div
-													class="h-full rounded-full"
-													:style="{
-														width: pct(v.count, maxTopCount(values)),
-														background: primaryColor
-													}"
+													class="meter__fill"
+													:style="{ width: pct(v.count, maxTopCount(values)) }"
 												/>
 											</div>
-											<span class="text-secondary w-8 shrink-0 text-right text-xs">
-												{{ v.count }}
-											</span>
+											<span class="meter__value meter__value--narrow">{{ fmt(v.count) }}</span>
 										</div>
 									</div>
 								</div>
@@ -243,9 +247,9 @@
 
 						<!-- samples -->
 						<section v-if="result.samples.length" class="flex flex-col gap-2">
-							<div class="flex items-center gap-2">
+							<div class="flex flex-wrap items-center gap-2">
 								<h4 class="section-title">Sample events ({{ result.samples.length }})</h4>
-								<span class="text-secondary text-xs">— click a row to inspect the full log</span>
+								<span class="text-secondary text-xs">click a row to inspect the full log</span>
 							</div>
 							<n-data-table
 								:columns="sampleColumns"
@@ -286,7 +290,7 @@
 	>
 		<template #header>
 			<div class="flex items-center gap-2">
-				<Icon :name="LogIcon" :size="18" />
+				<Icon :name="LogIcon" :size="20" />
 				<span class="font-semibold">Event details</span>
 				<n-tag v-if="detailEvent?.source" size="tiny" round :bordered="false">{{ detailEvent?.source }}</n-tag>
 			</div>
@@ -365,10 +369,9 @@ import {
 } from "naive-ui"
 import { computed, h, ref, watch } from "vue"
 import Api from "@/api"
-import CardStats from "@/components/common/cards/CardStats.vue"
-import CardStatsIcon from "@/components/common/cards/CardStatsIcon.vue"
 import ChartColumn from "@/components/common/charts/ChartColumn.vue"
 import Icon from "@/components/common/Icon.vue"
+import { MOCK_LATENCY_MS, mockBacktest, USE_MOCK_BACKTEST } from "@/components/copilotSearches/mock-backtest"
 import { useThemeStore } from "@/stores/theme"
 import { getApiErrorMessage } from "@/utils"
 
@@ -387,6 +390,8 @@ const LogIcon = "carbon:document"
 const CopyIcon = "carbon:copy"
 const EmptyIcon = "carbon:search"
 const SearchIcon = "carbon:search"
+const ChartIcon = "carbon:chart-column"
+const FieldIcon = "carbon:data-vis-1"
 
 const message = useMessage()
 const themeStore = useThemeStore()
@@ -450,9 +455,14 @@ const statTiles = computed(() => {
 	return tiles
 })
 
-// --- sparkline ---
+// --- volume over time ---
 const bucketLabels = computed(() => (result.value?.per_bucket || []).map(b => b.bucket))
 const bucketData = computed(() => (result.value?.per_bucket || []).map(b => b.count))
+const bucketPeak = computed(() => Math.max(0, ...bucketData.value))
+const bucketAvg = computed(() => {
+	const d = bucketData.value
+	return d.length ? Math.round(d.reduce((acc, n) => acc + n, 0) / d.length) : 0
+})
 
 // --- top values / offenders ---
 const topFieldEntries = computed<[string, BacktestTopValue[]][]>(() =>
@@ -578,6 +588,18 @@ async function runBacktest() {
 	errorMsg.value = null
 	result.value = null
 	detailEvent.value = null
+	// Dev fixture: a fully-populated result so every panel in this modal can be
+	// reviewed at once. No real rule + tenant pair fills them all.
+	if (USE_MOCK_BACKTEST) {
+		// Resolved after a beat rather than synchronously: the fixture exists to review
+		// this modal, and a mock that lands instantly is the one state the real run
+		// never has — the running spinner would go unreviewed.
+		await new Promise(resolve => setTimeout(resolve, MOCK_LATENCY_MS))
+		result.value = mockBacktest(customerCode.value, rangeSeconds.value)
+		running.value = false
+		return
+	}
+
 	try {
 		const res = await Api.copilotSearches.backtestRule({
 			yaml: props.yaml,
@@ -608,14 +630,351 @@ watch(
 )
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+/*
+ * Headline figures as one segmented strip rather than four floating cards: the 1px grid
+ * gaps let the container background show through as dividers, so the segments stay flush
+ * and perfectly separated however the grid wraps.
+ */
+.stat-strip {
+	display: grid;
+	overflow: hidden;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 1px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	background-color: var(--border-color);
+
+	@media (min-width: 768px) {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+}
+
+.stat {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	padding: 11px 14px;
+	background-color: var(--bg-default-color);
+}
+
+.stat__label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	color: var(--fg-secondary-color);
+}
+
+.stat__value {
+	font-family: var(--font-family-display);
+	font-size: 22px;
+	font-weight: 700;
+	line-height: 1.15;
+}
+
+/*
+ * Headings carry an accent tick and a fading rule. Plain muted uppercase read as just
+ * another row of small text next to the mono labels underneath it.
+ */
+@mixin heading {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--fg-default-color);
+
+	&::before {
+		content: "";
+		width: 2px;
+		height: 11px;
+		flex-shrink: 0;
+		border-radius: 1px;
+		background-color: var(--heading-accent, var(--primary-color));
+	}
+
+	&::after {
+		content: "";
+		height: 1px;
+		flex-grow: 1;
+		background: linear-gradient(to right, var(--border-color), transparent);
+	}
+}
+
 .section-title {
+	@include heading;
+}
+
+/*
+ * Every result block is a panel: a titled strip over a bordered body. The stack used to be
+ * flat sections separated only by whitespace, which read as one long undifferentiated column.
+ */
+.panel {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	background-color: var(--bg-default-color);
+}
+
+.panel__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	padding: 9px 12px;
+	border-block-end: 1px solid var(--border-color);
+	background-color: var(--bg-secondary-color);
+
+	&--compact {
+		padding: 7px 10px;
+	}
+}
+
+.panel__icon {
+	flex-shrink: 0;
+	color: var(--fg-secondary-color);
+
+	&--warning {
+		color: var(--warning-color);
+	}
+}
+
+.panel__title {
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+}
+
+.panel__meta {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-inline-start: auto;
+	font-family: var(--font-family-mono);
 	font-size: 11px;
+	color: var(--fg-secondary-color);
+
+	b {
+		font-weight: 600;
+		color: var(--fg-default-color);
+	}
+}
+
+.panel__sep {
+	opacity: 0.4;
+}
+
+/* The rule expression the simulation is based on — reads as code, because it is. */
+.panel__expr {
+	margin-inline-start: auto;
+	padding: 2px 8px;
+	border-radius: var(--border-radius-small);
+	background-color: rgba(var(--warning-color-rgb) / 0.12);
+	font-family: var(--font-family-mono);
+	font-size: 11px;
+	color: var(--warning-color);
+}
+
+/* Card title for a top-values panel: the field name, in mono, with its value count. */
+.panel__field {
+	overflow: hidden;
+	padding: 0;
+	background: none;
+	font-family: var(--font-family-mono);
+	font-size: 11.5px;
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--fg-default-color);
+}
+
+.panel__count {
+	margin-inline-start: auto;
+	padding: 1px 7px;
+	padding-top: 3px;
+	border-radius: 999px;
+	background-color: rgba(var(--primary-color-rgb) / 0.14);
+	font-family: var(--font-family-mono);
+	font-size: 10px;
+	font-weight: 600;
+	color: var(--primary-color);
+}
+
+.panel__body {
+	padding: 12px;
+
+	&--compact {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		padding: 10px;
+	}
+}
+
+.panel--warning {
+	--heading-accent: var(--warning-color);
+
+	border-color: rgba(var(--warning-color-rgb) / 0.35);
+
+	.panel__head {
+		background-color: rgba(var(--warning-color-rgb) / 0.08);
+	}
+}
+
+/* --- threshold simulation --- */
+.figures {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.figure {
+	display: flex;
+	min-width: 150px;
+	flex: 1 1 0;
+	flex-direction: column;
+	gap: 1px;
+	padding: 10px 12px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-small);
+	background-color: var(--bg-secondary-color);
+}
+
+.figure__label {
+	font-size: 10px;
 	font-weight: 600;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
-	color: var(--n-text-color-3, #888);
+	color: var(--fg-secondary-color);
 }
+
+.figure__value {
+	font-family: var(--font-family-display);
+	font-size: 26px;
+	font-weight: 700;
+	line-height: 1.15;
+
+	&--warning {
+		color: var(--warning-color);
+	}
+}
+
+.figure__hint {
+	font-size: 11px;
+	color: var(--fg-secondary-color);
+}
+
+.subsection {
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+}
+
+.subsection__title {
+	@include heading;
+}
+
+.subsection__hint {
+	font-size: 11px;
+	color: var(--fg-secondary-color);
+}
+
+/* --- shared label + bar + value row, used by offenders and top values --- */
+.meter {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.meter__label {
+	overflow: hidden;
+	width: 40%;
+	max-width: 260px;
+	flex-shrink: 0;
+	font-family: var(--font-family-mono);
+	font-size: 11.5px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.meter__track {
+	overflow: hidden;
+	height: 6px;
+	flex-grow: 1;
+	border-radius: 999px;
+	background-color: rgba(var(--fg-secondary-color-rgb) / 0.16);
+}
+
+.meter__fill {
+	height: 100%;
+	border-radius: 999px;
+	background-color: var(--primary-color);
+	transition: width 0.3s var(--bezier-ease);
+
+	&--warning {
+		background-color: var(--warning-color);
+	}
+}
+
+.meter__value {
+	width: 96px;
+	flex-shrink: 0;
+	text-align: end;
+	font-family: var(--font-family-mono);
+	font-size: 11px;
+	color: var(--fg-secondary-color);
+
+	b {
+		font-weight: 600;
+		color: var(--fg-default-color);
+	}
+
+	&--narrow {
+		width: 48px;
+	}
+}
+
+/* --- sensitivity chips --- */
+.chip {
+	display: flex;
+	min-width: 68px;
+	flex-direction: column;
+	align-items: center;
+	gap: 1px;
+	padding: 6px 10px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-small);
+	transition:
+		border-color 0.15s var(--bezier-ease),
+		background-color 0.15s var(--bezier-ease);
+
+	&.is-current {
+		border-color: var(--primary-color);
+		background-color: rgba(var(--primary-color-rgb) / 0.1);
+	}
+}
+
+.chip__key {
+	font-family: var(--font-family-mono);
+	font-size: 10px;
+	color: var(--fg-secondary-color);
+}
+
+.chip__value {
+	font-family: var(--font-family-display);
+	font-size: 16px;
+	font-weight: 700;
+}
+
 .kv-row {
 	display: grid;
 	grid-template-columns: minmax(140px, 240px) minmax(0, 1fr);
