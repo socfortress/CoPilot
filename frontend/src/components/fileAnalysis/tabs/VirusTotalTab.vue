@@ -210,10 +210,7 @@
 						<div class="flex min-w-0 grow items-baseline gap-2">
 							<Icon :name="RuleIcon" :size="13" class="text-warning shrink-0 translate-y-0.5" />
 							<!-- mono: a YARA rule name is an identifier, not prose -->
-							<span
-								class="text-default min-w-0 truncate font-mono text-xs font-medium"
-								:title="y.rule"
-							>
+							<span class="text-default min-w-0 truncate font-mono text-xs font-medium" :title="y.rule">
 								{{ y.rule }}
 							</span>
 						</div>
@@ -352,7 +349,8 @@ const facts = computed(() => {
 	if (i.type_description) rows.push({ label: "Type", value: i.type_description })
 	if (i.size != null) rows.push({ label: "Size", value: formatBytes(i.size) ?? "—" })
 	if (i.first_seen) rows.push({ label: "First seen", value: String(formatDate(i.first_seen, dFormats.date)) })
-	if (i.last_analysis) rows.push({ label: "Last analysis", value: String(formatDate(i.last_analysis, dFormats.date)) })
+	if (i.last_analysis)
+		rows.push({ label: "Last analysis", value: String(formatDate(i.last_analysis, dFormats.date)) })
 	rows.push({ label: "Signed", value: i.signed ? i.signer || "yes" : "no" })
 	if (i.names?.length) rows.push({ label: "Also seen as", value: i.names.slice(0, 3).join(", ") })
 	return rows

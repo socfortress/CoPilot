@@ -120,7 +120,7 @@ const props = withDefaults(
 const emit = defineEmits<{ (e: "update:query", value: string): void }>()
 
 defineSlots<{
-	"item": (props: { item: T; index: number }) => unknown
+	item: (props: { item: T; index: number }) => unknown
 	"header-extra": () => unknown
 }>()
 
