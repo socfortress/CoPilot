@@ -1,6 +1,6 @@
 <template>
 	<n-modal
-		:show="show"
+		:show
 		preset="card"
 		segmented
 		:mask-closable="!running"
@@ -31,7 +31,12 @@
 				</div>
 				<div class="flex flex-col gap-1">
 					<span class="text-secondary text-xs font-medium">Look-back</span>
-					<n-select v-model:value="rangeSeconds" :options="rangeOptions" class="w-40" />
+					<n-select
+						v-model:value="rangeSeconds"
+						:options="rangeOptions"
+						class="w-30!"
+						:consistent-menu-width="false"
+					/>
 				</div>
 				<n-button type="primary" :loading="running" :disabled="!customerCode || running" @click="runBacktest">
 					<template #icon><Icon :name="RunIcon" :size="16" /></template>
@@ -76,8 +81,11 @@
 							title="Fields not found in this customer's data"
 						>
 							<span class="text-sm">
-								<code v-for="(f, i) of result.missing_fields" :key="f">{{ f }}{{ i < result.missing_fields.length - 1 ? ", " : "" }}</code>
-								— the rule may never match for this customer. Check for typos or a different field naming.
+								<code v-for="(f, i) of result.missing_fields" :key="f">
+									{{ f }}{{ i < result.missing_fields.length - 1 ? ", " : "" }}
+								</code>
+								— the rule may never match for this customer. Check for typos or a different field
+								naming.
 							</span>
 						</n-alert>
 
@@ -92,9 +100,17 @@
 
 						<!-- sparkline -->
 						<section v-if="result.per_bucket.length" class="flex flex-col gap-2">
-							<h4 class="section-title">Matches per {{ result.bucket_unit === "1h" ? "hour" : "day" }}</h4>
+							<h4 class="section-title">
+								Matches per {{ result.bucket_unit === "1h" ? "hour" : "day" }}
+							</h4>
 							<div class="border-default bg-secondary/40 rounded-lg border p-2">
-								<ChartColumn :labels="bucketLabels" :data="bucketData" height="180px" labels-datetime monochrome />
+								<ChartColumn
+									:labels="bucketLabels"
+									:data="bucketData"
+									height="180px"
+									labels-datetime
+									monochrome
+								/>
 							</div>
 						</section>
 
@@ -102,16 +118,19 @@
 						<section
 							v-if="result.mode === 'aggregation' && result.aggregation"
 							class="rounded-xl border p-4"
-							:style="{ borderColor: warningColor + '55', background: warningColor + '0d' }"
+							:style="{ borderColor: `${warningColor}55`, background: `${warningColor}0d` }"
 						>
 							<div class="mb-3 flex flex-wrap items-center gap-2">
 								<Icon :name="AlertIcon" :size="18" :style="{ color: warningColor }" />
 								<span class="font-semibold">Threshold simulation</span>
 								<n-tag size="small" round :bordered="false">
-									{{ result.aggregation.function }}{{ result.aggregation.field ? `(${result.aggregation.field})` : "()" }}
-									{{ result.aggregation.condition }} {{ result.aggregation.threshold }}
-									per {{ result.aggregation.window }}
-									<template v-if="result.aggregation.group_by.length"> by {{ result.aggregation.group_by.join(", ") }}</template>
+									{{ result.aggregation.function
+									}}{{ result.aggregation.field ? `(${result.aggregation.field})` : "()" }}
+									{{ result.aggregation.condition }} {{ result.aggregation.threshold }} per
+									{{ result.aggregation.window }}
+									<template v-if="result.aggregation.group_by.length">
+										by {{ result.aggregation.group_by.join(", ") }}
+									</template>
 								</n-tag>
 							</div>
 
@@ -121,11 +140,16 @@
 									<span class="font-display text-3xl font-bold" :style="{ color: warningColor }">
 										≈ {{ fmt(result.aggregation.estimated_alerts) }}
 									</span>
-									<span class="text-secondary text-xs">alert{{ result.aggregation.estimated_alerts === 1 ? "" : "s" }} in {{ rangeLabel }}</span>
+									<span class="text-secondary text-xs">
+										alert{{ result.aggregation.estimated_alerts === 1 ? "" : "s" }} in
+										{{ rangeLabel }}
+									</span>
 								</div>
 								<div class="flex flex-col">
 									<span class="text-secondary text-xs">Per day</span>
-									<span class="font-display text-3xl font-bold">{{ result.aggregation.per_day_alerts }}</span>
+									<span class="font-display text-3xl font-bold">
+										{{ result.aggregation.per_day_alerts }}
+									</span>
 								</div>
 							</div>
 
@@ -141,11 +165,16 @@
 									<div class="bg-secondary h-2.5 grow overflow-hidden rounded-full">
 										<div
 											class="h-full rounded-full"
-											:style="{ width: pct(o.windows_alerting, maxOffenderWindows), background: warningColor }"
+											:style="{
+												width: pct(o.windows_alerting, maxOffenderWindows),
+												background: warningColor
+											}"
 										/>
 									</div>
 									<span class="text-secondary w-24 shrink-0 text-right text-xs">
-										peak <b class="text-default">{{ o.peak }}</b> · {{ o.windows_alerting }}×
+										peak
+										<b class="text-default">{{ o.peak }}</b>
+										· {{ o.windows_alerting }}×
 									</span>
 								</div>
 							</div>
@@ -158,8 +187,16 @@
 										v-for="(s, i) of result.aggregation.sensitivity"
 										:key="i"
 										class="flex min-w-16 flex-col items-center rounded-lg border px-3 py-2"
-										:class="s.threshold === result.aggregation.threshold ? 'border-primary' : 'border-default'"
-										:style="s.threshold === result.aggregation.threshold ? { background: primaryColor + '14' } : {}"
+										:class="
+											s.threshold === result.aggregation.threshold
+												? 'border-primary'
+												: 'border-default'
+										"
+										:style="
+											s.threshold === result.aggregation.threshold
+												? { background: `${primaryColor}14` }
+												: {}
+										"
 									>
 										<span class="text-secondary text-xs">≥ {{ s.threshold }}</span>
 										<span class="font-display text-lg font-bold">{{ fmt(s.alerts) }}</span>
@@ -175,18 +212,29 @@
 						<section v-if="topFieldEntries.length" class="flex flex-col gap-2">
 							<h4 class="section-title">Top values (from sampled events)</h4>
 							<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-								<div v-for="[field, values] of topFieldEntries" :key="field" class="border-default rounded-lg border p-3">
+								<div
+									v-for="[field, values] of topFieldEntries"
+									:key="field"
+									class="border-default rounded-lg border p-3"
+								>
 									<code class="mb-2 block text-xs font-semibold">{{ field }}</code>
 									<div class="flex flex-col gap-2">
 										<div v-for="(v, i) of values" :key="i" class="flex items-center gap-2">
-											<span class="w-40 shrink-0 truncate text-sm" :title="v.value">{{ v.value }}</span>
+											<span class="w-40 shrink-0 truncate text-sm" :title="v.value">
+												{{ v.value }}
+											</span>
 											<div class="bg-secondary h-2 grow overflow-hidden rounded-full">
 												<div
 													class="h-full rounded-full"
-													:style="{ width: pct(v.count, maxTopCount(values)), background: primaryColor }"
+													:style="{
+														width: pct(v.count, maxTopCount(values)),
+														background: primaryColor
+													}"
 												/>
 											</div>
-											<span class="text-secondary w-8 shrink-0 text-right text-xs">{{ v.count }}</span>
+											<span class="text-secondary w-8 shrink-0 text-right text-xs">
+												{{ v.count }}
+											</span>
 										</div>
 									</div>
 								</div>
@@ -202,10 +250,10 @@
 							<n-data-table
 								:columns="sampleColumns"
 								:data="result.samples"
-								:bordered="true"
+								bordered
 								size="small"
 								:max-height="280"
-								:row-props="rowProps"
+								:row-props
 								:scroll-x="Math.max(640, sampleColumns.length * 170)"
 							/>
 						</section>
@@ -230,7 +278,11 @@
 		segmented
 		:style="{ width: 'min(780px, 94vw)', maxHeight: '90vh' }"
 		content-class="p-0!"
-		@update:show="(v: boolean) => { if (!v) detailEvent = null }"
+		@update:show="
+			(v: boolean) => {
+				if (!v) detailEvent = null
+			}
+		"
 	>
 		<template #header>
 			<div class="flex items-center gap-2">
@@ -266,7 +318,11 @@
 					</div>
 				</div>
 
-				<n-empty v-if="!filteredPrimary.length && !filteredInternal.length" description="No fields match your filter." class="py-8" />
+				<n-empty
+					v-if="!filteredPrimary.length && !filteredInternal.length"
+					description="No fields match your filter."
+					class="py-8"
+				/>
 
 				<n-collapse v-if="filteredInternal.length" :default-expanded-names="detailFilter ? ['internal'] : []">
 					<n-collapse-item :title="`Graylog internal fields (${filteredInternal.length})`" name="internal">
@@ -458,7 +514,9 @@ const primaryEntries = computed<[string, string][]>(() => {
 	for (const k of PRIMARY_ORDER) {
 		if (k in ev && fmtVal(ev[k]) !== "") out.push([k, fmtVal(ev[k])])
 	}
-	for (const k of Object.keys(ev).filter(k => !PRIMARY_ORDER.includes(k) && !isInternal(k)).sort()) {
+	for (const k of Object.keys(ev)
+		.filter(k => !PRIMARY_ORDER.includes(k) && !isInternal(k))
+		.sort()) {
 		out.push([k, fmtVal(ev[k])])
 	}
 	return out
