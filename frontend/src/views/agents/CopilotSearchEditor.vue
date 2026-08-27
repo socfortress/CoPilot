@@ -16,7 +16,9 @@
 				<n-spin v-if="validating" :size="14" />
 				<template v-else-if="result">
 					<n-tag size="small" round :bordered="false" :type="result.valid ? 'success' : 'error'">
-						<template #icon><Icon :name="result.valid ? OkIcon : ErrIcon" :size="14" /></template>
+						<template #icon>
+							<Icon :name="result.valid ? OkIcon : ErrIcon" :size="12" class="ml-1" />
+						</template>
 						{{
 							result.valid ? "Valid" : `${result.error_count} error${result.error_count === 1 ? "" : "s"}`
 						}}
@@ -46,7 +48,7 @@
 				<div class="workspace__toolbar">
 					<div class="toolbar__group">
 						<Icon :name="YamlIcon" :size="15" class="toolbar__icon" />
-						<span class="toolbar__title">Rule YAML</span>
+						<span class="toolbar__title leading-none">Rule YAML</span>
 						<n-tooltip>
 							<template #trigger>
 								<span class="toolbar__hint">
@@ -60,7 +62,7 @@
 					<div class="grow" />
 
 					<div class="toolbar__group">
-						<span class="toolbar__label">Template</span>
+						<span class="toolbar__label leading-none">Template</span>
 						<n-button-group size="tiny">
 							<n-tooltip>
 								<template #trigger>
@@ -101,24 +103,26 @@
 			</section>
 
 			<!-- Reference side — validation findings and Graylog syntax -->
-			<aside class="workspace__pane workspace__pane--aside">
+			<aside class="workspace__pane workspace__pane--aside" :class="{ 'is-fit': rightTab === 'validation' }">
 				<n-tabs v-model:value="rightTab" type="segment" size="small" class="aside-tabs">
 					<n-tab-pane name="validation" tab="Validation">
 						<n-scrollbar trigger="none" class="h-full">
 							<div class="findings">
 								<div v-if="result?.valid && !result.warning_count" class="findings__hero">
-									<Icon :name="OkIcon" :size="38" class="text-green-500" />
-									<span class="findings__hero-title">Looks good</span>
-									<span class="findings__hero-text">
-										No structural, lint, or Graylog-query issues. Reference integrity and per-tenant
-										field checks come next.
-									</span>
+									<Icon :name="OkIcon" :size="34" class="findings__hero-icon text-green-500" />
+									<div class="findings__hero-body">
+										<span class="findings__hero-title">Looks good</span>
+										<span class="findings__hero-text">
+											No structural, lint, or Graylog-query issues. Reference integrity and
+											per-tenant field checks come next.
+										</span>
+									</div>
 								</div>
 
 								<n-empty
 									v-else-if="!result && !validating"
 									description="Start typing to validate."
-									class="findings__hero"
+									class="findings__empty"
 								/>
 
 								<section v-for="g of findingGroups" v-else :key="g.level" class="finding-group">
@@ -165,7 +169,7 @@
 
 <script setup lang="ts">
 import type { LintFinding, ValidateRuleResponse } from "@/types/copilot-searches"
-import { watchDebounced } from "@vueuse/core"
+import { useStorage, watchDebounced } from "@vueuse/core"
 import { NButton, NButtonGroup, NEmpty, NScrollbar, NSpin, NTabPane, NTabs, NTag, NTooltip, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import { useRouter } from "vue-router"
@@ -201,7 +205,7 @@ function onBlocked(key: string) {
 	message.warning(`"${key}" is a required field and can't be removed — edit its value instead.`)
 }
 
-const yamlText = ref<string>("")
+const yamlText = ref("")
 const result = ref<ValidateRuleResponse | null>(null)
 const validating = ref(false)
 const rightTab = ref<"validation" | "syntax">("validation")
@@ -317,30 +321,24 @@ async function validate() {
 
 watchDebounced(yamlText, validate, { debounce: 400 })
 
-// --- draft auto-save: never lose an in-progress rule to a refresh/navigation ---
-const DRAFT_KEY = "copilot-searches:editor-draft"
+// Draft auto-save: never lose an in-progress rule to a refresh/navigation.
+const draft = useStorage("copilot-searches:editor-draft", "", localStorage, {
+	onError: () => {
+		// storage full/blocked — drafts are best-effort
+	}
+})
 
 watchDebounced(
 	yamlText,
-	v => {
-		try {
-			localStorage.setItem(DRAFT_KEY, v || "")
-		} catch {
-			// storage full/blocked — drafts are best-effort
-		}
+	() => {
+		draft.value = yamlText.value || ""
 	},
 	{ debounce: 600 }
 )
 
 onMounted(() => {
-	let draft: string | null = null
-	try {
-		draft = localStorage.getItem(DRAFT_KEY)
-	} catch {
-		draft = null
-	}
-	if (draft?.trim()) {
-		yamlText.value = draft
+	if (draft.value.trim()) {
+		yamlText.value = draft.value
 		message.info("Restored your draft — use the template buttons to start fresh.")
 	} else {
 		yamlText.value = makeTemplate("disabled")
@@ -415,6 +413,23 @@ onMounted(() => {
 /* The reference side reads as a panel, not as more canvas — hence the recessed ground. */
 .workspace__pane--aside {
 	background-color: var(--bg-secondary-color);
+
+	/*
+	 * Stacked layout: the findings list claims only the height it needs — capped at 40% of the
+	 * workspace — so the editor keeps the rest. The syntax reference is long-form reading and
+	 * keeps its full half. Side by side, both halves are equal again.
+	 */
+	&.is-fit {
+		max-height: 40%;
+		flex: 0 1 auto;
+	}
+
+	@media (min-width: 1024px) {
+		&.is-fit {
+			max-height: none;
+			flex: 1 1 0;
+		}
+	}
 }
 
 .workspace__toolbar {
@@ -531,26 +546,82 @@ onMounted(() => {
 	padding: 14px;
 }
 
+/*
+ * Stacked, the reference panel is a wide, short strip — so the placeholders lie down and stay
+ * inside 100px instead of eating height the editor needs. Side by side they stand up again.
+ */
 .findings__hero {
 	display: flex;
-	flex-direction: column;
+	max-height: 100px;
 	align-items: center;
-	justify-content: center;
-	gap: 8px;
-	padding: 52px 16px;
-	text-align: center;
+	justify-content: flex-start;
+	gap: 12px;
+	overflow: hidden;
+	padding: 12px 14px;
+	text-align: start;
+
+	@media (min-width: 1024px) {
+		max-height: none;
+		flex-direction: column;
+		justify-content: center;
+		gap: 8px;
+		padding: 52px 16px;
+		text-align: center;
+	}
+}
+
+.findings__hero-icon {
+	flex-shrink: 0;
+}
+
+.findings__hero-body {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 2px;
+
+	@media (min-width: 1024px) {
+		align-items: center;
+		gap: 8px;
+	}
+}
+
+.findings__empty {
+	max-height: 100px;
+	overflow: hidden;
+	padding: 12px 14px;
+
+	@media (min-width: 1024px) {
+		max-height: none;
+		padding: 52px 16px;
+	}
 }
 
 .findings__hero-title {
-	font-size: 15px;
+	font-size: 14px;
 	font-weight: 600;
+
+	@media (min-width: 1024px) {
+		font-size: 15px;
+	}
 }
 
 .findings__hero-text {
-	max-width: 22rem;
-	font-size: 13px;
-	line-height: 1.5;
+	display: -webkit-box;
+	overflow: hidden;
+	font-size: 12px;
+	line-height: 1.45;
 	color: var(--fg-secondary-color);
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+
+	@media (min-width: 1024px) {
+		display: block;
+		max-width: 22rem;
+		font-size: 13px;
+		line-height: 1.5;
+		-webkit-line-clamp: none;
+	}
 }
 
 .finding-group {
