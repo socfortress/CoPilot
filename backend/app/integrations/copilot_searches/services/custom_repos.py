@@ -95,7 +95,7 @@ async def list_custom_repos() -> List[Dict[str, Any]]:
             name = obj.object_name
             if not name.endswith(".json"):
                 continue
-            code = name[len(PREFIX):-len(".json")]
+            code = name[len(PREFIX) : -len(".json")]
             try:
                 resp = await client.get_object(BUCKET, name, session)
                 data = await resp.read()

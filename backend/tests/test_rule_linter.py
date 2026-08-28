@@ -5,7 +5,7 @@ from app.integrations.copilot_searches.services.rule_linter import lint_graylog_
 from app.integrations.copilot_searches.services.rule_linter import lint_result
 from app.integrations.copilot_searches.services.rule_linter import lint_rule_yaml
 
-VALID = '''name: A New Trust Was Created To A Domain
+VALID = """name: A New Trust Was Created To A Domain
 id: 0255a820-e564-4e40-af2b-6ac61160335c
 version: 1
 schema_version: "1.0"
@@ -33,7 +33,7 @@ tags:
   security_domain: endpoint
 graylog:
   query: data_win_system_eventID:"4706"
-'''
+"""
 
 
 def _codes(raw):
@@ -72,7 +72,7 @@ def test_schema_version_must_be_quoted():
 
 def test_graylog_only_query():
     raw = VALID.replace(
-        "graylog:\n  query: data_win_system_eventID:\"4706\"\n",
+        'graylog:\n  query: data_win_system_eventID:"4706"\n',
         'graylog:\n  query: data_win_system_eventID:"4706"\n  streams:\n    - abc\n',
     )
     assert "GRAYLOG_EXTRA_KEYS" in _codes(raw)
@@ -91,7 +91,7 @@ def test_aggregation_count_forbids_field():
 def test_aggregation_must_follow_graylog():
     # aggregation placed BEFORE graylog
     raw = VALID.replace(
-        "graylog:\n  query: data_win_system_eventID:\"4706\"\n",
+        'graylog:\n  query: data_win_system_eventID:"4706"\n',
         "aggregation:\n  enabled: true\n  function: count\n  threshold: 5\n  condition: '>'\n"
         'graylog:\n  query: data_win_system_eventID:"4706"\n',
     )
@@ -99,7 +99,7 @@ def test_aggregation_must_follow_graylog():
 
 
 def test_bad_id_and_key_order_are_warnings():
-    raw = "id: not-a-uuid\nname: X\nversion: 1\nschema_version: \"1.0\"\ndescription: y\ngraylog:\n  query: a:b\n"
+    raw = 'id: not-a-uuid\nname: X\nversion: 1\nschema_version: "1.0"\ndescription: y\ngraylog:\n  query: a:b\n'
     codes = _codes(raw)
     assert "ID_NOT_UUID" in codes
     assert "KEY_ORDER" in codes  # name after id, etc.
@@ -146,7 +146,7 @@ def test_query_lint_runs_via_full_rule():
 
 
 # --- L2: reference integrity (warnings only) --------------------------------
-L2_BASE = '''name: L2 Test
+L2_BASE = """name: L2 Test
 id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
 version: 1
 schema_version: "1.0"
@@ -169,10 +169,10 @@ tags:
     - BOGUS123
 graylog:
   query: data_win_system_eventID:"1" AND data_win_user:"x"
-'''
+"""
 
 
-def _codes(raw):
+def _result_codes(raw):
     return {f["code"] for f in lint_result(raw)["findings"]}
 
 
@@ -196,12 +196,14 @@ def test_l2_mitre_format_flags_bogus_only():
 
 
 def test_l2_severity_score_mismatch():
-    assert "SEVERITY_SCORE_MISMATCH" in _codes(L2_BASE.format(score=10, severity="critical"))
-    assert "SEVERITY_SCORE_MISMATCH" not in _codes(L2_BASE.format(score=90, severity="critical"))
+    assert "SEVERITY_SCORE_MISMATCH" in _result_codes(L2_BASE.format(score=10, severity="critical"))
+    assert "SEVERITY_SCORE_MISMATCH" not in _result_codes(L2_BASE.format(score=90, severity="critical"))
 
 
 def test_l2_placeholder_satisfied_by_group_by():
-    raw = L2_BASE.format(score=50, severity="medium") + '''aggregation:
+    raw = (
+        L2_BASE.format(score=50, severity="medium")
+        + """aggregation:
   enabled: true
   function: count
   field: null
@@ -210,5 +212,6 @@ def test_l2_placeholder_satisfied_by_group_by():
   window: 10m
   threshold: 5
   condition: ">"
-'''
-    assert "REF_MESSAGE_FIELD" not in _codes(raw)
+"""
+    )
+    assert "REF_MESSAGE_FIELD" not in _result_codes(raw)

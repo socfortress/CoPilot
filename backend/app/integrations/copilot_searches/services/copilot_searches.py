@@ -311,7 +311,9 @@ class RulesCache(BackgroundRefreshMixin):
             },
         ]
         try:
-            from app.integrations.copilot_searches.services.custom_repos import list_custom_repos
+            from app.integrations.copilot_searches.services.custom_repos import (
+                list_custom_repos,
+            )
 
             for cfg in await list_custom_repos():
                 if cfg.get("enabled") and cfg.get("repo"):
@@ -363,9 +365,7 @@ class RulesCache(BackgroundRefreshMixin):
             yaml_files = [
                 item
                 for item in tree_data.get("tree", [])
-                if item["path"].startswith("detections/")
-                and item["path"].endswith((".yaml", ".yml"))
-                and item["type"] == "blob"
+                if item["path"].startswith("detections/") and item["path"].endswith((".yaml", ".yml")) and item["type"] == "blob"
             ]
             logger.info(f"Found {len(yaml_files)} YAML files in {src['repo']}")
 

@@ -31,9 +31,20 @@ except Exception:  # noqa: BLE001
 
 # Canonical top-level key order (DETECTION_RULE_EDITOR.md §4).
 CANONICAL_ORDER = [
-    "name", "id", "version", "schema_version", "date", "author",
-    "description", "data_source", "how_to_implement", "known_false_positives",
-    "response", "tags", "graylog", "aggregation",
+    "name",
+    "id",
+    "version",
+    "schema_version",
+    "date",
+    "author",
+    "description",
+    "data_source",
+    "how_to_implement",
+    "known_false_positives",
+    "response",
+    "tags",
+    "graylog",
+    "aggregation",
 ]
 _ORDER_INDEX = {k: i for i, k in enumerate(CANONICAL_ORDER)}
 
@@ -184,7 +195,15 @@ def lint_graylog_query(query: str, line: Optional[int] = None) -> List[Finding]:
     if parens != 0 or went_negative:
         out.append(Finding("error", "GRAYLOG_QUERY_PARENS", "Unbalanced parentheses in graylog.query.", path="graylog.query", line=line))
     if slashes % 2 != 0:
-        out.append(Finding("error", "GRAYLOG_QUERY_REGEX", "Unbalanced '/' — a regex literal (/.../) is not closed.", path="graylog.query", line=line))
+        out.append(
+            Finding(
+                "error",
+                "GRAYLOG_QUERY_REGEX",
+                "Unbalanced '/' — a regex literal (/.../) is not closed.",
+                path="graylog.query",
+                line=line,
+            ),
+        )
 
     tokens = q.split()
     if tokens and tokens[0] in ("AND", "OR"):
@@ -193,7 +212,15 @@ def lint_graylog_query(query: str, line: Optional[int] = None) -> List[Finding]:
         out.append(Finding("error", "GRAYLOG_QUERY_DANGLING_OP", f"Query ends with '{tokens[-1]}'.", path="graylog.query", line=line))
 
     if re.search(r"/\.\*", q):
-        out.append(Finding("warning", "GRAYLOG_QUERY_LEADING_WILDCARD", "Leading '.*' in a regex scans everything — anchor it or use a literal where possible.", path="graylog.query", line=line))
+        out.append(
+            Finding(
+                "warning",
+                "GRAYLOG_QUERY_LEADING_WILDCARD",
+                "Leading '.*' in a regex scans everything — anchor it or use a literal where possible.",
+                path="graylog.query",
+                line=line,
+            ),
+        )
 
     return out
 
@@ -220,11 +247,15 @@ def lint_rule_yaml(raw: str) -> List[Finding]:
     # --- forbidden (out-of-scope) blocks ----------------------------------
     for block in FORBIDDEN_BLOCKS:
         if block in data:
-            findings.append(Finding(
-                "error", "FORBIDDEN_BLOCK",
-                f"'{block}' is out of scope for Graylog-only rules — remove it (this editor targets graylog.query only).",
-                path=block, line=_line_of_key(raw, block),
-            ))
+            findings.append(
+                Finding(
+                    "error",
+                    "FORBIDDEN_BLOCK",
+                    f"'{block}' is out of scope for Graylog-only rules — remove it (this editor targets graylog.query only).",
+                    path=block,
+                    line=_line_of_key(raw, block),
+                ),
+            )
 
     # --- structural JSON Schema -------------------------------------------
     if _HAVE_JSONSCHEMA:
@@ -242,22 +273,30 @@ def lint_rule_yaml(raw: str) -> List[Finding]:
     if isinstance(gl, dict):
         extra = sorted(set(gl.keys()) - {"query"})
         if extra:
-            findings.append(Finding(
-                "error", "GRAYLOG_EXTRA_KEYS",
-                f"graylog must contain only 'query'; found extra key(s): {', '.join(extra)}.",
-                path="graylog", line=_line_of_key(raw, "graylog"),
-            ))
+            findings.append(
+                Finding(
+                    "error",
+                    "GRAYLOG_EXTRA_KEYS",
+                    f"graylog must contain only 'query'; found extra key(s): {', '.join(extra)}.",
+                    path="graylog",
+                    line=_line_of_key(raw, "graylog"),
+                ),
+            )
         # L3 — parse the Graylog query string itself.
         if isinstance(gl.get("query"), str):
             findings.extend(lint_graylog_query(gl["query"], _line_of_key(raw, "graylog")))
 
     # --- schema_version must be a quoted string ---------------------------
     if "schema_version" in data and not isinstance(data["schema_version"], str):
-        findings.append(Finding(
-            "error", "SCHEMA_VERSION_UNQUOTED",
-            'schema_version must be a quoted string, e.g. "1.0" (unquoted 1.0 parses as a number).',
-            path="schema_version", line=_line_of_key(raw, "schema_version"),
-        ))
+        findings.append(
+            Finding(
+                "error",
+                "SCHEMA_VERSION_UNQUOTED",
+                'schema_version must be a quoted string, e.g. "1.0" (unquoted 1.0 parses as a number).',
+                path="schema_version",
+                line=_line_of_key(raw, "schema_version"),
+            ),
+        )
 
     # --- id should be a UUID ----------------------------------------------
     rid = data.get("id")
@@ -265,21 +304,40 @@ def lint_rule_yaml(raw: str) -> List[Finding]:
         try:
             uuid.UUID(rid)
         except ValueError:
-            findings.append(Finding("warning", "ID_NOT_UUID", "id should be a UUID (generate a fresh one per rule).", path="id", line=_line_of_key(raw, "id")))
+            findings.append(
+                Finding(
+                    "warning",
+                    "ID_NOT_UUID",
+                    "id should be a UUID (generate a fresh one per rule).",
+                    path="id",
+                    line=_line_of_key(raw, "id"),
+                ),
+            )
 
     # --- canonical key order ----------------------------------------------
     present = [k for k in data.keys() if k in _ORDER_INDEX]
     expected = sorted(present, key=lambda k: _ORDER_INDEX[k])
     if present != expected:
-        findings.append(Finding(
-            "warning", "KEY_ORDER",
-            f"Top-level keys are out of canonical order. Expected: {', '.join(expected)}.",
-        ))
+        findings.append(
+            Finding(
+                "warning",
+                "KEY_ORDER",
+                f"Top-level keys are out of canonical order. Expected: {', '.join(expected)}.",
+            ),
+        )
     # aggregation must come after graylog specifically
     if "aggregation" in data and "graylog" in data:
         keys = list(data.keys())
         if keys.index("aggregation") < keys.index("graylog"):
-            findings.append(Finding("error", "AGG_POSITION", "aggregation must appear AFTER the graylog block.", path="aggregation", line=_line_of_key(raw, "aggregation")))
+            findings.append(
+                Finding(
+                    "error",
+                    "AGG_POSITION",
+                    "aggregation must appear AFTER the graylog block.",
+                    path="aggregation",
+                    line=_line_of_key(raw, "aggregation"),
+                ),
+            )
 
     # --- aggregation semantics --------------------------------------------
     agg = data.get("aggregation")
@@ -287,25 +345,64 @@ def lint_rule_yaml(raw: str) -> List[Finding]:
         fn = agg.get("function")
         field = agg.get("field")
         if fn == "count" and field:
-            findings.append(Finding("error", "AGG_FIELD_FORBIDDEN", "field must be null (or omitted) when function is 'count'.", path="aggregation.field", line=_line_of_key(raw, "aggregation")))
+            findings.append(
+                Finding(
+                    "error",
+                    "AGG_FIELD_FORBIDDEN",
+                    "field must be null (or omitted) when function is 'count'.",
+                    path="aggregation.field",
+                    line=_line_of_key(raw, "aggregation"),
+                ),
+            )
         if fn == "distinct_count" and not field:
-            findings.append(Finding("error", "AGG_FIELD_REQUIRED", "field is required when function is 'distinct_count'.", path="aggregation.field", line=_line_of_key(raw, "aggregation")))
+            findings.append(
+                Finding(
+                    "error",
+                    "AGG_FIELD_REQUIRED",
+                    "field is required when function is 'distinct_count'.",
+                    path="aggregation.field",
+                    line=_line_of_key(raw, "aggregation"),
+                ),
+            )
         win = agg.get("window")
         if isinstance(win, str) and not _WINDOW_RE.match(win):
-            findings.append(Finding("warning", "AGG_WINDOW_FORMAT", "window should look like '10m' / '1h' / '30s' / '1d'.", path="aggregation.window", line=_line_of_key(raw, "aggregation")))
+            findings.append(
+                Finding(
+                    "warning",
+                    "AGG_WINDOW_FORMAT",
+                    "window should look like '10m' / '1h' / '30s' / '1d'.",
+                    path="aggregation.window",
+                    line=_line_of_key(raw, "aggregation"),
+                ),
+            )
 
     # --- folded scalars for long text fields ------------------------------
     for key in FOLDED_SCALAR_KEYS:
         if key in data and isinstance(data.get(key), str):
             if not re.search(rf"^{re.escape(key)}\s*:\s*>", raw, re.MULTILINE):
-                findings.append(Finding("warning", "FOLDED_SCALAR", f"{key} should use a folded scalar (>) for readable multi-line text.", path=key, line=_line_of_key(raw, key)))
+                findings.append(
+                    Finding(
+                        "warning",
+                        "FOLDED_SCALAR",
+                        f"{key} should use a folded scalar (>) for readable multi-line text.",
+                        path=key,
+                        line=_line_of_key(raw, key),
+                    ),
+                )
 
     # --- data_source entries with a colon must be quoted ------------------
     ds = data.get("data_source")
     if isinstance(ds, list):
         for v in ds:
             if isinstance(v, str) and ":" in v and f'"{v}"' not in raw and f"'{v}'" not in raw:
-                findings.append(Finding("warning", "DATA_SOURCE_QUOTE", f"data_source entry '{v}' contains ':' — quote it so YAML doesn't misparse it.", path="data_source"))
+                findings.append(
+                    Finding(
+                        "warning",
+                        "DATA_SOURCE_QUOTE",
+                        f"data_source entry '{v}' contains ':' — quote it so YAML doesn't misparse it.",
+                        path="data_source",
+                    ),
+                )
 
     # --- recommended metadata (soft) --------------------------------------
     for key in ("author", "date", "data_source", "response", "tags"):
@@ -321,7 +418,15 @@ def lint_rule_yaml(raw: str) -> List[Finding]:
     if isinstance(msg, str):
         for ph in sorted(set(_PLACEHOLDER_RE.findall(msg))):
             if ph not in used_fields:
-                findings.append(Finding("warning", "REF_MESSAGE_FIELD", f"response.message references ${ph}$ but the query/aggregation never uses that field — it may render blank in alerts.", path="response.message", line=_line_of_key(raw, "response")))
+                findings.append(
+                    Finding(
+                        "warning",
+                        "REF_MESSAGE_FIELD",
+                        f"response.message references ${ph}$ but the query/aggregation never uses that field — it may render blank in alerts.",
+                        path="response.message",
+                        line=_line_of_key(raw, "response"),
+                    ),
+                )
 
     # risk_objects / threat_objects should point at fields the rule uses.
     for kind, code in (("risk_objects", "REF_RISK_OBJECT"), ("threat_objects", "REF_THREAT_OBJECT")):
@@ -329,7 +434,15 @@ def lint_rule_yaml(raw: str) -> List[Finding]:
         if isinstance(items, list):
             for obj in items:
                 if isinstance(obj, dict) and isinstance(obj.get("field"), str) and obj["field"] not in used_fields:
-                    findings.append(Finding("warning", code, f"response.{kind} field '{obj['field']}' is not used by the query/aggregation — the object may be empty on alerts.", path=f"response.{kind}", line=_line_of_key(raw, "response")))
+                    findings.append(
+                        Finding(
+                            "warning",
+                            code,
+                            f"response.{kind} field '{obj['field']}' is not used by the query/aggregation — the object may be empty on alerts.",
+                            path=f"response.{kind}",
+                            line=_line_of_key(raw, "response"),
+                        ),
+                    )
 
     # MITRE technique id format.
     tags = data.get("tags") if isinstance(data.get("tags"), dict) else {}
@@ -337,7 +450,15 @@ def lint_rule_yaml(raw: str) -> List[Finding]:
     if isinstance(mitre, list):
         for mid in mitre:
             if isinstance(mid, str) and not _MITRE_RE.match(mid):
-                findings.append(Finding("warning", "MITRE_ID_FORMAT", f"'{mid}' does not look like a MITRE ATT&CK technique id (e.g. T1059 or T1059.001).", path="tags.mitre_attack_id", line=_line_of_key(raw, "tags")))
+                findings.append(
+                    Finding(
+                        "warning",
+                        "MITRE_ID_FORMAT",
+                        f"'{mid}' does not look like a MITRE ATT&CK technique id (e.g. T1059 or T1059.001).",
+                        path="tags.mitre_attack_id",
+                        line=_line_of_key(raw, "tags"),
+                    ),
+                )
 
     # severity vs risk_score sanity (wide bands — only clear mismatches).
     sev = str(response.get("severity") or "").lower()
@@ -345,12 +466,28 @@ def lint_rule_yaml(raw: str) -> List[Finding]:
     if sev in _SEVERITY_SCORE_BANDS and isinstance(score, int) and not isinstance(score, bool):
         lo, hi = _SEVERITY_SCORE_BANDS[sev]
         if not (lo <= score <= hi):
-            findings.append(Finding("warning", "SEVERITY_SCORE_MISMATCH", f"risk_score {score} is unusual for severity '{sev}' (expected roughly {lo}–{hi}).", path="response.risk_score", line=_line_of_key(raw, "response")))
+            findings.append(
+                Finding(
+                    "warning",
+                    "SEVERITY_SCORE_MISMATCH",
+                    f"risk_score {score} is unusual for severity '{sev}' (expected roughly {lo}–{hi}).",
+                    path="response.risk_score",
+                    line=_line_of_key(raw, "response"),
+                ),
+            )
 
     # date should be a quoted ISO date string.
     date_v = data.get("date")
     if isinstance(date_v, str) and not _DATE_RE.match(date_v):
-        findings.append(Finding("warning", "DATE_FORMAT", 'date should be a quoted ISO date, e.g. "2026-08-26".', path="date", line=_line_of_key(raw, "date")))
+        findings.append(
+            Finding(
+                "warning",
+                "DATE_FORMAT",
+                'date should be a quoted ISO date, e.g. "2026-08-26".',
+                path="date",
+                line=_line_of_key(raw, "date"),
+            ),
+        )
 
     return findings
 

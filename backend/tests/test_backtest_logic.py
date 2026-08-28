@@ -107,8 +107,12 @@ def test_simulate_burst_straddling_boundary_still_fires():
     start = boundary - 240  # start 4 min before the boundary → burst spans it
     rows = [(start + i * 15, {"u": "alice"}) for i in range(35)]  # 35 events over ~8.5 min
     agg = {
-        "enabled": True, "function": "count", "group_by": ["u"],
-        "window": "10m", "threshold": 30, "condition": ">",
+        "enabled": True,
+        "function": "count",
+        "group_by": ["u"],
+        "window": "10m",
+        "threshold": 30,
+        "condition": ">",
     }
     sim = bt._simulate_aggregation(rows, agg, truncated=False)
     assert sim["estimated_alerts"] == 1

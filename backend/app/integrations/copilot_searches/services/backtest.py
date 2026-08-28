@@ -332,7 +332,11 @@ async def run_backtest(rule_yaml: str, customer_code: str, range_seconds: int = 
     # fetched events. The messages endpoint is index-independent; the aggregate
     # endpoint is not (needs keyword fields, rejects empty group_by).
     qfields = _query_fields(query)
-    agg_fields = ([f for f in (agg_raw.get("group_by") or []) if f] + ([agg_raw.get("field")] if agg_raw and agg_raw.get("field") else [])) if isinstance(agg_raw, dict) else []
+    agg_fields = (
+        ([f for f in (agg_raw.get("group_by") or []) if f] + ([agg_raw.get("field")] if agg_raw and agg_raw.get("field") else []))
+        if isinstance(agg_raw, dict)
+        else []
+    )
     fetch_fields: List[str] = []
     for f in ["timestamp", "source", "message", *qfields, *agg_fields]:
         if f and f not in fetch_fields:
@@ -384,7 +388,13 @@ async def run_backtest(rule_yaml: str, customer_code: str, range_seconds: int = 
                 if f and f not in detail_fields:
                     detail_fields.append(f)
             detail_fields = detail_fields[:MAX_DETAIL_FIELDS]
-            rich_resp = await search_messages(query=query, streams=[stream], fields=detail_fields, size=SAMPLE_SIZE, range_seconds=range_seconds)
+            rich_resp = await search_messages(
+                query=query,
+                streams=[stream],
+                fields=detail_fields,
+                size=SAMPLE_SIZE,
+                range_seconds=range_seconds,
+            )
             rnames = _schema_names(rich_resp) or detail_fields
             rich: List[Dict[str, Any]] = []
             for r in (rich_resp.get("datarows") or [])[:SAMPLE_SIZE]:
@@ -405,8 +415,10 @@ async def run_backtest(rule_yaml: str, customer_code: str, range_seconds: int = 
     days = max(1.0, range_seconds / 86400)
     note = None
     if truncated:
-        note = (f"Hit the {FETCH_CAP:,}-event analysis cap — this rule matches at least this many events in the window. "
-                "Figures are a lower bound over the most recent events; tighten the query or shorten the window for exact numbers.")
+        note = (
+            f"Hit the {FETCH_CAP:,}-event analysis cap — this rule matches at least this many events in the window. "
+            "Figures are a lower bound over the most recent events; tighten the query or shorten the window for exact numbers."
+        )
     elif agg_enabled and aggregation is None:
         note = "Aggregation block present but its window is unparseable — showing raw event volume only."
 

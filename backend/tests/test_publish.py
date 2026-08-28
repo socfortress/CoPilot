@@ -109,28 +109,53 @@ def test_publish_rejects_invalid_rule(monkeypatch):
 
 def test_publish_rejects_paths_outside_detections(monkeypatch):
     _patch(monkeypatch, CFG, _Resp(404), _Resp(201))
-    for bad in ["README.md", ".github/workflows/x.yml", "detections/../README.md", "detections\\x.yaml", "/detections/x.yaml", "detections/x.txt"]:
+    for bad in [
+        "README.md",
+        ".github/workflows/x.yml",
+        "detections/../README.md",
+        "detections\\x.yaml",
+        "/detections/x.yaml",
+        "detections/x.txt",
+    ]:
         r = asyncio.run(pub.publish_rule(VALID_YAML, "acme", path=bad))
         assert not r["success"], f"path {bad!r} should be rejected"
         assert "detections/" in r["error"]
 
 
 def test_publish_rejects_id_collision_with_catalog(monkeypatch):
-    existing = {"id": "11111111-1111-1111-1111-111111111111", "name": "Catalog Rule", "_provenance": "catalog", "_file_path": "detections/windows/x.yaml", "_owner_customer_code": None}
+    existing = {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "Catalog Rule",
+        "_provenance": "catalog",
+        "_file_path": "detections/windows/x.yaml",
+        "_owner_customer_code": None,
+    }
     _patch(monkeypatch, CFG, _Resp(404), _Resp(201), existing=existing)
     r = asyncio.run(pub.publish_rule(VALID_YAML, "acme"))
     assert not r["success"] and "already used" in r["error"] and "catalog" in r["error"]
 
 
 def test_publish_rejects_id_collision_with_other_custom_file(monkeypatch):
-    existing = {"id": "11111111-1111-1111-1111-111111111111", "name": "Other Rule", "_provenance": "custom", "_file_path": "detections/custom/other.yaml", "_owner_customer_code": "acme"}
+    existing = {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "Other Rule",
+        "_provenance": "custom",
+        "_file_path": "detections/custom/other.yaml",
+        "_owner_customer_code": "acme",
+    }
     _patch(monkeypatch, CFG, _Resp(404), _Resp(201), existing=existing)
     r = asyncio.run(pub.publish_rule(VALID_YAML, "acme", path="detections/custom/my-rule.yaml"))
     assert not r["success"] and "already used" in r["error"]
 
 
 def test_publish_allows_republish_of_same_file(monkeypatch):
-    existing = {"id": "11111111-1111-1111-1111-111111111111", "name": "My Rule", "_provenance": "custom", "_file_path": "detections/custom/my-rule.yaml", "_owner_customer_code": "acme"}
+    existing = {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "name": "My Rule",
+        "_provenance": "custom",
+        "_file_path": "detections/custom/my-rule.yaml",
+        "_owner_customer_code": "acme",
+    }
     _patch(
         monkeypatch,
         CFG,

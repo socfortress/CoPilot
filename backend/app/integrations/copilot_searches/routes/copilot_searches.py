@@ -8,24 +8,10 @@ from fastapi import Security
 from loguru import logger
 
 from app.auth.routes.auth import AuthHandler
-from app.integrations.copilot_searches.schema.copilot_searches import BacktestRequest
-from app.integrations.copilot_searches.schema.copilot_searches import BacktestResponse
-from app.integrations.copilot_searches.schema.copilot_searches import CustomRepoConfig
-from app.integrations.copilot_searches.schema.copilot_searches import CustomRepoListResponse
-from app.integrations.copilot_searches.schema.copilot_searches import CustomRepoResponse
-from app.integrations.copilot_searches.schema.copilot_searches import PublishRuleRequest
-from app.integrations.copilot_searches.schema.copilot_searches import PublishRuleResponse
-from app.integrations.copilot_searches.schema.copilot_searches import SetCustomRepoRequest
-from app.integrations.copilot_searches.schema.copilot_searches import TestCustomRepoRequest
-from app.integrations.copilot_searches.schema.copilot_searches import TestCustomRepoResponse
-from app.integrations.copilot_searches.schema.copilot_searches import ValidateRuleRequest
-from app.integrations.copilot_searches.schema.copilot_searches import ValidateRuleResponse
-from app.integrations.copilot_searches.services import custom_repos as custom_repos_svc
-from app.integrations.copilot_searches.services.backtest import run_backtest
-from app.integrations.copilot_searches.services.publish import publish_rule
-from app.integrations.copilot_searches.services.rule_linter import lint_result
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
+from app.integrations.copilot_searches.schema.copilot_searches import BacktestRequest
+from app.integrations.copilot_searches.schema.copilot_searches import BacktestResponse
 from app.integrations.copilot_searches.schema.copilot_searches import (
     BulkProvisionGraylogAlertRequest,
 )
@@ -71,6 +57,11 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
 from app.integrations.copilot_searches.schema.copilot_searches import (
     CatalogWazuhRulesResponse,
 )
+from app.integrations.copilot_searches.schema.copilot_searches import CustomRepoConfig
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CustomRepoListResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import CustomRepoResponse
 from app.integrations.copilot_searches.schema.copilot_searches import (
     ExecuteGraylogQueryRequest,
 )
@@ -99,6 +90,10 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
 from app.integrations.copilot_searches.schema.copilot_searches import (
     ProvisionGraylogAlertResponse,
 )
+from app.integrations.copilot_searches.schema.copilot_searches import PublishRuleRequest
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    PublishRuleResponse,
+)
 from app.integrations.copilot_searches.schema.copilot_searches import RefreshResponse
 from app.integrations.copilot_searches.schema.copilot_searches import (
     RuleCategoriesResponse,
@@ -111,6 +106,23 @@ from app.integrations.copilot_searches.schema.copilot_searches import RulesByIds
 from app.integrations.copilot_searches.schema.copilot_searches import RuleSeverity
 from app.integrations.copilot_searches.schema.copilot_searches import RuleStatsResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RuleStatus
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    SetCustomRepoRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    TestCustomRepoRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    TestCustomRepoResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    ValidateRuleRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    ValidateRuleResponse,
+)
+from app.integrations.copilot_searches.services import custom_repos as custom_repos_svc
+from app.integrations.copilot_searches.services.backtest import run_backtest
 from app.integrations.copilot_searches.services.copilot_searches import (
     execute_rule_search,
 )
@@ -166,6 +178,8 @@ from app.integrations.copilot_searches.services.detection_catalog import (
 from app.integrations.copilot_searches.services.detection_catalog import run_log_test
 from app.integrations.copilot_searches.services.mitre_coverage import get_coverage
 from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
+from app.integrations.copilot_searches.services.publish import publish_rule
+from app.integrations.copilot_searches.services.rule_linter import lint_result
 from app.middleware.customer_access import verify_optional_customer_code_access
 from app.middleware.search_query import SearchParams
 from app.middleware.search_query import filter_and_limit
