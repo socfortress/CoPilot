@@ -1,8 +1,8 @@
 <template>
-	<component :is="tag" class="text-default text-3xs flex items-center gap-2 font-bold tracking-[0.1em] uppercase">
-		<span class="h-2.75 w-0.5 shrink-0 rounded-xs" :class="accent === 'warning' ? 'bg-warning' : 'bg-primary'" />
+	<component :is="tag" class="text-default text-3xs flex items-center gap-2 font-bold tracking-widest uppercase">
+		<span class="h-2.75 w-0.5 shrink-0 rounded-xs" :class="accent === 'warning' ? 'bg-warning' : 'bg-border'" />
 		<slot />
-		<span class="h-px grow bg-linear-to-r from-[var(--border-color)] to-transparent" />
+		<span class="bg-border h-px grow" />
 	</component>
 </template>
 

@@ -35,16 +35,27 @@
 		</div>
 
 		<!-- volume over time -->
-		<section v-if="result.per_bucket.length" class="border-default bg-default flex flex-col overflow-hidden rounded-lg border">
+		<section
+			v-if="result.per_bucket.length"
+			class="border-default bg-default flex flex-col overflow-hidden rounded-lg border"
+		>
 			<header class="border-default bg-secondary flex flex-wrap items-center gap-2 border-b px-3 py-2.25">
 				<Icon :name="ChartIcon" :size="15" class="text-secondary shrink-0" />
 				<h4 class="text-xs font-semibold tracking-[0.02em]">
 					Matches per {{ result.bucket_unit === "1h" ? "hour" : "day" }}
 				</h4>
-				<div class="text-secondary text-2xs ms-auto flex items-center gap-1.5 font-mono [&_b]:text-default [&_b]:font-semibold">
-					<span>peak <b>{{ fmt(bucketPeak) }}</b></span>
+				<div
+					class="text-secondary text-2xs [&_b]:text-default ms-auto flex items-center gap-1.5 font-mono [&_b]:font-semibold"
+				>
+					<span>
+						peak
+						<b>{{ fmt(bucketPeak) }}</b>
+					</span>
 					<span class="opacity-40">·</span>
-					<span>avg <b>{{ fmt(bucketAvg) }}</b></span>
+					<span>
+						avg
+						<b>{{ fmt(bucketAvg) }}</b>
+					</span>
 					<span class="opacity-40">·</span>
 					<span>{{ result.per_bucket.length }} buckets</span>
 				</div>
@@ -71,10 +82,15 @@
 				>
 					<header class="border-default bg-secondary flex items-center gap-2 border-b px-2.5 py-1.75">
 						<Icon :name="FieldIcon" :size="13" class="text-secondary shrink-0" />
-						<code class="text-default overflow-hidden bg-transparent p-0 font-mono text-[11.5px] font-semibold text-ellipsis whitespace-nowrap" :title="field">
+						<code
+							class="text-default overflow-hidden bg-transparent p-0 font-mono text-[11.5px] font-semibold text-ellipsis whitespace-nowrap"
+							:title="field"
+						>
 							{{ field }}
 						</code>
-						<span class="text-primary text-3xs ms-auto rounded-full bg-[rgba(var(--primary-color-rgb)/0.14)] px-1.75 py-0.25 font-mono font-semibold">
+						<span
+							class="text-primary text-3xs ms-auto rounded-full bg-[rgba(var(--primary-color-rgb)/0.14)] px-1.75 py-0.25 font-mono font-semibold"
+						>
 							{{ values.length }}
 						</span>
 					</header>
@@ -92,10 +108,10 @@
 		</section>
 
 		<!-- samples -->
-		<section v-if="result.samples.length" class="mb-4 flex flex-col gap-2">
-			<div class="flex flex-wrap items-baseline gap-2">
+		<section v-if="result.samples.length" class="mb-6 flex flex-col gap-2">
+			<div class="flex flex-wrap items-center gap-2">
 				<SectionHeading>Sample events ({{ result.samples.length }})</SectionHeading>
-				<span class="text-secondary text-xs">— click a row to inspect the full log</span>
+				<span class="text-secondary text-xs">click a row to inspect the full log</span>
 			</div>
 			<n-data-table
 				:columns="sampleColumns"
@@ -151,7 +167,12 @@ const statTiles = computed(() => {
 	const style = themeStore.style
 	const tiles = [
 		{ title: "Total matches", value: fmt(result.total_hits), icon: "carbon:search", color: style["primary-color"] },
-		{ title: "Avg / day", value: String(result.per_day_avg), icon: "carbon:calendar", color: style["success-color"] },
+		{
+			title: "Avg / day",
+			value: String(result.per_day_avg),
+			icon: "carbon:calendar",
+			color: style["success-color"]
+		},
 		{ title: "Window", value: rangeLabel, icon: "carbon:time", color: style["fg-secondary-color"] }
 	]
 
