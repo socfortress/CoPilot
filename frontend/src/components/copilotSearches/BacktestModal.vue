@@ -18,9 +18,8 @@
 
 		<div class="flex max-h-[78vh] flex-col">
 			<!-- Config bar -->
-			<div class="border-default flex flex-wrap items-end gap-3 border-b px-5 py-4">
-				<div class="flex min-w-55 grow flex-col gap-1">
-					<span class="text-secondary text-xs font-medium">Customer</span>
+			<n-form class="border-default flex flex-wrap items-end gap-3 border-b px-5 py-4">
+				<n-form-item label="Customer" :show-feedback="false" class="min-w-55 grow">
 					<n-select
 						v-model:value="customerCode"
 						:options="customerOptions"
@@ -28,21 +27,20 @@
 						filterable
 						placeholder="Select a customer"
 					/>
-				</div>
-				<div class="flex flex-col gap-1">
-					<span class="text-secondary text-xs font-medium">Look-back</span>
+				</n-form-item>
+				<n-form-item label="Look-back" :show-feedback="false">
 					<n-select
 						v-model:value="rangeSeconds"
 						:options="rangeOptions"
 						class="w-30!"
 						:consistent-menu-width="false"
 					/>
-				</div>
+				</n-form-item>
 				<n-button type="primary" :loading="running" :disabled="!customerCode || running" @click="runBacktest">
 					<template #icon><Icon :name="RunIcon" :size="16" /></template>
 					Run backtest
 				</n-button>
-			</div>
+			</n-form>
 
 			<!-- Body -->
 			<n-scrollbar class="grow" style="max-height: calc(78vh - 74px)">
@@ -246,7 +244,7 @@
 						</section>
 
 						<!-- samples -->
-						<section v-if="result.samples.length" class="flex flex-col gap-2">
+						<section v-if="result.samples.length" class="mb-4 flex flex-col gap-2">
 							<div class="flex flex-wrap items-center gap-2">
 								<h4 class="section-title">Sample events ({{ result.samples.length }})</h4>
 								<span class="text-secondary text-xs">click a row to inspect the full log</span>
@@ -359,6 +357,8 @@ import {
 	NCollapseItem,
 	NDataTable,
 	NEmpty,
+	NForm,
+	NFormItem,
 	NInput,
 	NModal,
 	NScrollbar,
@@ -697,14 +697,14 @@ watch(
 		height: 11px;
 		flex-shrink: 0;
 		border-radius: 1px;
-		background-color: var(--heading-accent, var(--primary-color));
+		background-color: var(--border-color);
 	}
 
 	&::after {
 		content: "";
 		height: 1px;
 		flex-grow: 1;
-		background: linear-gradient(to right, var(--border-color), transparent);
+		background: var(--border-color);
 	}
 }
 

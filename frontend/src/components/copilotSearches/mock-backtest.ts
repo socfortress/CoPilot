@@ -24,7 +24,7 @@ import type { BacktestResponse, BacktestTopValue } from "@/types/copilot-searche
  * The switch. Set to false to turn the fixture off without removing any code —
  * "Run backtest" then goes back to the real API like any other run.
  */
-const MOCK_BACKTEST_ENABLED = true
+const MOCK_BACKTEST_ENABLED = false
 
 /**
  * Guarded by DEV as well, so the fixture cannot serve data from a production

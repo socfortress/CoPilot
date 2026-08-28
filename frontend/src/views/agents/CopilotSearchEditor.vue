@@ -31,21 +31,23 @@
 
 			<div class="grow" />
 
-			<n-button size="small" secondary :disabled="!yamlText.trim()" @click="showBacktest = true">
-				<template #icon><Icon :name="BacktestIcon" :size="16" /></template>
-				Backtest
-			</n-button>
-			<n-button size="small" type="primary" :disabled="!result?.valid" @click="showPublish = true">
-				<template #icon><Icon :name="PublishIcon" :size="16" /></template>
-				Publish
-			</n-button>
+			<div class="flex items-center gap-2">
+				<n-button size="small" secondary :disabled="!yamlText.trim()" @click="showBacktest = true">
+					<template #icon><Icon :name="BacktestIcon" :size="16" /></template>
+					Backtest
+				</n-button>
+				<n-button size="small" type="primary" :disabled="!result?.valid" @click="showPublish = true">
+					<template #icon><Icon :name="PublishIcon" :size="16" /></template>
+					Publish
+				</n-button>
+			</div>
 		</header>
 
 		<!-- Workspace — a single box split into the editor and the reference side -->
 		<div class="workspace">
 			<!-- Authoring side -->
 			<section class="workspace__pane workspace__pane--main">
-				<div class="workspace__toolbar">
+				<div class="workspace__toolbar @container">
 					<div class="toolbar__group">
 						<Icon :name="YamlIcon" :size="15" class="toolbar__icon" />
 						<span class="toolbar__title leading-none">Rule YAML</span>
@@ -64,20 +66,24 @@
 					<div class="toolbar__group">
 						<span class="toolbar__label leading-none">Template</span>
 						<n-button-group size="tiny">
-							<n-tooltip>
+							<n-tooltip class="px-2! py-1! text-sm!">
 								<template #trigger>
 									<n-button secondary @click="loadSimple">
-										<template #icon><Icon :name="TemplateIcon" :size="14" /></template>
-										Simple
+										<div class="flex items-center gap-1.5">
+											<Icon :name="TemplateIcon" :size="14" />
+											<span class="hidden @lg:block">Sample rule</span>
+										</div>
 									</n-button>
 								</template>
 								Start a new simple match rule — replaces the editor content
 							</n-tooltip>
-							<n-tooltip>
+							<n-tooltip class="px-2! py-1! text-sm!">
 								<template #trigger>
 									<n-button secondary @click="loadAggregation">
-										<template #icon><Icon :name="AggIcon" :size="14" /></template>
-										Aggregation
+										<div class="flex items-center gap-1.5">
+											<Icon :name="AggIcon" :size="14" />
+											<span class="hidden @lg:block">New threshold rule</span>
+										</div>
 									</n-button>
 								</template>
 								Start a new threshold / aggregation rule — replaces the editor content
@@ -86,7 +92,7 @@
 
 						<span class="toolbar__divider" />
 
-						<n-tooltip>
+						<n-tooltip class="px-2! py-1! text-sm!">
 							<template #trigger>
 								<n-button size="tiny" secondary :disabled="!yamlText.trim()" @click="copyYaml">
 									<template #icon><Icon :name="CopyIcon" :size="14" /></template>
