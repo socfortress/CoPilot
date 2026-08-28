@@ -59,34 +59,34 @@
 				to publish).
 			</n-alert>
 
-			<div class="flex flex-col gap-1">
-				<span class="text-secondary text-xs font-medium">Target — customer's repository</span>
-				<n-select
-					v-model:value="customerCode"
-					:options="repoOptions"
-					:loading="loadingRepos"
-					filterable
-					placeholder="Select a configured repository"
-				/>
-				<span v-if="selectedRepo && !selectedRepo.has_token" class="text-xs text-amber-500">
-					This repo has no write token — add a PAT with
-					<code>contents:write</code>
-					under Custom repos to publish.
-				</span>
-			</div>
-
-			<div class="flex flex-col gap-1">
-				<span class="text-secondary text-xs font-medium">Path in repo</span>
-				<n-input v-model:value="path" placeholder="detections/custom/rule.yaml" />
-			</div>
-
-			<div class="flex flex-col gap-1">
-				<span class="text-secondary text-xs font-medium">
-					Commit message
-					<span class="opacity-60">(optional)</span>
-				</span>
-				<n-input v-model:value="commitMessage" :placeholder="defaultMessage" />
-			</div>
+			<n-form :model="form" class="flex flex-col gap-3">
+				<n-form-item label="Target — customer's repository" path="customerCode" :show-feedback="false">
+					<div class="flex w-full flex-col gap-1">
+						<n-select
+							v-model:value="customerCode"
+							:options="repoOptions"
+							:loading="loadingRepos"
+							filterable
+							placeholder="Select a configured repository"
+						/>
+						<span v-if="selectedRepo && !selectedRepo.has_token" class="text-xs text-amber-500">
+							This repo has no write token — add a PAT with
+							<code>contents:write</code>
+							under Custom repos to publish.
+						</span>
+					</div>
+				</n-form-item>
+				<n-form-item label="Path in repo" path="path" :show-feedback="false">
+					<n-input v-model:value="path" placeholder="detections/custom/rule.yaml" />
+				</n-form-item>
+				<n-form-item path="commitMessage" :show-feedback="false">
+					<template #label>
+						Commit message
+						<span class="opacity-60">(optional)</span>
+					</template>
+					<n-input v-model:value="commitMessage" :placeholder="defaultMessage" />
+				</n-form-item>
+			</n-form>
 
 			<n-alert v-if="errorMsg" type="error" :bordered="false" size="small">{{ errorMsg }}</n-alert>
 
@@ -104,7 +104,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { CustomRepoConfig, PublishRuleResponse } from "@/types/copilot-searches"
-import { NAlert, NButton, NInput, NModal, NSelect, NTag, useMessage } from "naive-ui"
+import { NAlert, NButton, NForm, NFormItem, NInput, NModal, NSelect, NTag, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -131,6 +131,13 @@ const publishing = ref(false)
 const refreshing = ref(false)
 const errorMsg = ref<string | null>(null)
 const result = ref<PublishRuleResponse | null>(null)
+
+/** n-form needs a model object; the fields stay individual refs. */
+const form = computed(() => ({
+	customerCode: customerCode.value,
+	path: path.value,
+	commitMessage: commitMessage.value
+}))
 
 const RULE_NAME_RE = /^name:\s*(\S.*)$/m
 const WRAP_QUOTES_RE = /^["']|["']$/g
