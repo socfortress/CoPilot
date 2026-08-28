@@ -85,6 +85,7 @@ import BacktestResults from "@/components/copilotSearches/backtest/BacktestResul
 import EventInspectorModal from "@/components/copilotSearches/backtest/EventInspectorModal.vue"
 import { MOCK_LATENCY_MS, mockBacktest, USE_MOCK_BACKTEST } from "@/components/copilotSearches/mock-backtest"
 import { useCustomerOptions } from "@/composables/useCustomerOptions"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 
 const { show, yaml } = defineProps<{
@@ -100,6 +101,7 @@ const BacktestIcon = "carbon:chart-line"
 const RunIcon = "carbon:play-filled-alt"
 
 const { options: customerOptions, loading: loadingCustomers, load: loadCustomers } = useCustomerOptions()
+const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
 
 const customerCode = ref<string | null>(null)
 const rangeSeconds = ref(604800)
@@ -163,7 +165,16 @@ async function runBacktest() {
 watch(
 	() => show,
 	shown => {
-		if (shown) loadCustomers()
+		if (!shown) return
+
+		// Seed the picker from the sidebar scope, after the options exist so the select has
+		// something to resolve the code against. `applyGlobalCustomerPrefill` only writes an
+		// empty field, so a customer picked here survives closing and reopening the modal.
+		loadCustomers().then(() => {
+			const draft: Record<string, unknown> = { customer_code: customerCode.value }
+			applyGlobalCustomerPrefill("customer_code", draft)
+			customerCode.value = (draft.customer_code as string) ?? null
+		})
 	}
 )
 </script>

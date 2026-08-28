@@ -183,6 +183,8 @@ import { computed, reactive, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SectionHeading from "@/components/copilotSearches/SectionHeading.vue"
+import { useCustomerOptions } from "@/composables/useCustomerOptions"
+import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{ show: boolean }>()
@@ -207,6 +209,8 @@ const SaveIcon = "carbon:save"
 const TestIcon = "carbon:plug"
 
 const message = useMessage()
+const { options: customerOptions, loading: loadingCustomers, load: loadCustomers } = useCustomerOptions()
+const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
 
 const repos = ref<CustomRepoConfig[]>([])
 const loading = ref(false)
@@ -214,8 +218,6 @@ const saving = ref(false)
 const testing = ref(false)
 const refreshing = ref(false)
 const editing = ref(false)
-const loadingCustomers = ref(false)
-const customerOptions = ref<{ label: string; value: string }[]>([])
 
 const form = reactive<{ customer_code: string | null; repo: string; branch: string; token: string; enabled: boolean }>({
 	customer_code: null,
@@ -280,21 +282,6 @@ async function loadRepos() {
 		message.error(getApiErrorMessage(err as ApiError) || "Failed to load custom repositories")
 	} finally {
 		loading.value = false
-	}
-}
-
-async function loadCustomers() {
-	loadingCustomers.value = true
-	try {
-		const res = await Api.customers.getCustomers({})
-		customerOptions.value = (res.data.customers || []).map(c => ({
-			label: `${c.customer_name} (${c.customer_code})`,
-			value: c.customer_code
-		}))
-	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to load customers")
-	} finally {
-		loadingCustomers.value = false
 	}
 }
 
@@ -374,12 +361,16 @@ function onShow(value: boolean) {
 watch(
 	() => props.show,
 	shown => {
-		if (shown) {
-			loadRepos()
-			if (!customerOptions.value.length) loadCustomers()
-		} else {
+		if (!shown) {
 			resetForm()
+			return
 		}
+
+		loadRepos()
+		// Seed the picker from the sidebar scope, after the options exist so the select can
+		// resolve the code to a name. Only writes an empty field, so it never fights the
+		// customer carried in by "Edit".
+		loadCustomers().then(() => applyGlobalCustomerPrefill("customer_code", form))
 	}
 )
 </script>
