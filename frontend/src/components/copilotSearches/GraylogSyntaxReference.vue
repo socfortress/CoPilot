@@ -52,6 +52,7 @@
 </template>
 
 <script setup lang="ts">
+import { useClipboard } from "@vueuse/core"
 import { NEmpty, NInput, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
@@ -60,15 +61,16 @@ const WarnIcon = "carbon:warning-alt"
 const SearchIcon = "carbon:search"
 
 const message = useMessage()
+const { copy: copyToClipboard, isSupported: isClipboardSupported } = useClipboard()
 const filter = ref("")
 
 async function copy(text: string) {
-	try {
-		await navigator.clipboard.writeText(text)
-		message.success("Copied to clipboard")
-	} catch {
+	if (!isClipboardSupported.value) {
 		message.error("Couldn't copy to clipboard")
+		return
 	}
+	await copyToClipboard(text)
+	message.success("Copied to clipboard")
 }
 
 const notes = [

@@ -28,7 +28,7 @@
 				<!-- Configured repos -->
 				<section class="flex flex-col gap-2">
 					<div class="flex items-center gap-2">
-						<h4 class="section-title">Configured ({{ repos.length }})</h4>
+						<SectionHeading class="whitespace-nowrap">Configured ({{ repos.length }})</SectionHeading>
 						<n-spin v-if="loading" :size="12" />
 						<div class="grow" />
 						<n-button size="tiny" secondary :loading="refreshing" @click="refreshCache">
@@ -43,31 +43,55 @@
 						class="py-6"
 					/>
 
-					<div v-for="r of repoRows" :key="r.customer_code" class="repo-row" :class="`is-${r.status}`">
-						<Icon :name="RepoIcon" :size="16" class="repo-row__glyph" />
+					<!--
+						The 3px rail is the only carrier of status: transparent when healthy, painted
+						when the repo needs attention. `--status-color` keeps the meter label in step.
+					-->
+					<div
+						v-for="r of repoRows"
+						:key="r.customer_code"
+						class="border-default hover:bg-hover-005 relative flex items-center gap-3 overflow-hidden rounded-lg border py-2.5 pr-2.5 pl-4 transition-colors hover:border-[rgba(var(--primary-color-rgb)/0.35)] before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-(--rail-color) before:transition-colors"
+						:class="RAIL_CLASSES[r.status]"
+					>
+						<Icon
+							:name="RepoIcon"
+							:size="16"
+							class="text-secondary shrink-0"
+							:class="{ 'opacity-55': r.status === 'disabled' }"
+						/>
 
-						<div class="repo-row__body">
-							<span class="repo-row__name" :title="r.repo">{{ r.repo }}</span>
-							<div class="repo-row__meta">
-								<span class="repo-row__customer">{{ r.customer_code }}</span>
-								<span class="repo-row__sep">·</span>
+						<div class="flex min-w-0 grow flex-col gap-0.5">
+							<span
+								class="truncate font-mono text-[13px] font-medium"
+								:class="{ 'opacity-55': r.status === 'disabled' }"
+								:title="r.repo"
+							>
+								{{ r.repo }}
+							</span>
+							<div class="text-secondary text-2xs flex flex-wrap items-center gap-1.5 font-mono">
+								<span class="text-default font-medium">{{ r.customer_code }}</span>
+								<span class="opacity-40">·</span>
 								<span>{{ r.branch || "main" }}</span>
 								<template v-if="r.has_token">
-									<span class="repo-row__sep">·</span>
+									<span class="opacity-40">·</span>
 									<span>token</span>
 								</template>
-								<span class="repo-row__sep">·</span>
+								<span class="opacity-40">·</span>
 								<n-tooltip v-if="r.status === 'error'">
 									<template #trigger>
-										<span class="repo-row__status">{{ r.statusLabel }}</span>
+										<span
+											class="cursor-help font-medium text-(--status-color) underline decoration-dotted underline-offset-2"
+										>
+											{{ r.statusLabel }}
+										</span>
 									</template>
 									{{ r.last_refresh_error || "The last cache refresh could not pull this repo." }}
 								</n-tooltip>
-								<span v-else class="repo-row__status">{{ r.statusLabel }}</span>
+								<span v-else class="font-medium text-(--status-color)">{{ r.statusLabel }}</span>
 							</div>
 						</div>
 
-						<div class="repo-row__actions">
+						<div class="flex shrink-0 items-center gap-0.5">
 							<n-button size="tiny" quaternary @click="editRepo(r)">
 								<template #icon><Icon :name="EditIcon" :size="14" /></template>
 								Edit
@@ -86,7 +110,7 @@
 
 				<!-- Add / update -->
 				<section class="border-default flex flex-col gap-3 rounded-lg border p-4">
-					<h4 class="section-title">{{ editing ? "Update repository" : "Add repository" }}</h4>
+					<SectionHeading>{{ editing ? "Update repository" : "Add repository" }}</SectionHeading>
 					<n-form :model="form" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 						<n-form-item label="Customer" path="customer_code" :show-feedback="false">
 							<n-select
@@ -158,6 +182,7 @@ import {
 import { computed, reactive, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import SectionHeading from "@/components/copilotSearches/SectionHeading.vue"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{ show: boolean }>()
@@ -165,6 +190,14 @@ const emit = defineEmits<{
 	(e: "update:show", value: boolean): void
 	(e: "changed"): void
 }>()
+
+/** Rail + status colour per state; healthy repos deliberately paint no rail. */
+const RAIL_CLASSES: Record<RepoStatus, string> = {
+	ok: "[--rail-color:transparent] [--status-color:var(--success-color)]",
+	error: "[--rail-color:var(--error-color)] [--status-color:var(--error-color)]",
+	disabled: "[--rail-color:var(--warning-color)] [--status-color:var(--warning-color)]",
+	idle: "[--rail-color:transparent] [--status-color:var(--fg-secondary-color)]"
+}
 
 const RepoIcon = "carbon:logo-github"
 const RefreshIcon = "carbon:renew"
@@ -350,122 +383,3 @@ watch(
 	}
 )
 </script>
-
-<style scoped lang="scss">
-.repo-row {
-	--rail-color: transparent;
-	--status-color: var(--fg-secondary-color);
-
-	position: relative;
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	overflow: hidden;
-	padding: 10px 10px 10px 16px;
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius);
-	transition:
-		background-color 0.2s var(--bezier-ease),
-		border-color 0.2s var(--bezier-ease);
-
-	&::before {
-		content: "";
-		position: absolute;
-		inset: 0 auto 0 0;
-		width: 3px;
-		background-color: var(--rail-color);
-		transition: background-color 0.2s var(--bezier-ease);
-	}
-
-	&.is-ok {
-		--status-color: var(--success-color);
-	}
-
-	&.is-error {
-		--rail-color: var(--error-color);
-		--status-color: var(--error-color);
-	}
-
-	&.is-disabled {
-		--rail-color: var(--warning-color);
-		--status-color: var(--warning-color);
-
-		.repo-row__glyph,
-		.repo-row__name {
-			opacity: 0.55;
-		}
-	}
-
-	&:hover {
-		background-color: var(--hover-005-color);
-		border-color: rgba(var(--primary-color-rgb) / 0.35);
-	}
-
-	.repo-row__glyph {
-		flex-shrink: 0;
-		color: var(--fg-secondary-color);
-	}
-
-	.repo-row__body {
-		display: flex;
-		min-width: 0;
-		flex-grow: 1;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	.repo-row__name {
-		overflow: hidden;
-		font-family: var(--font-family-mono);
-		font-size: 13px;
-		font-weight: 500;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.repo-row__meta {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 6px;
-		font-family: var(--font-family-mono);
-		font-size: 11px;
-		color: var(--fg-secondary-color);
-	}
-
-	.repo-row__customer {
-		color: var(--fg-default-color);
-		font-weight: 500;
-	}
-
-	.repo-row__sep {
-		opacity: 0.4;
-	}
-
-	.repo-row__status {
-		color: var(--status-color);
-		font-weight: 500;
-	}
-
-	&.is-error .repo-row__status {
-		cursor: help;
-		text-decoration: underline dotted;
-		text-underline-offset: 2px;
-	}
-
-	.repo-row__actions {
-		display: flex;
-		flex-shrink: 0;
-		align-items: center;
-		gap: 2px;
-	}
-}
-
-.section-title {
-	font-size: 11px;
-	font-weight: 600;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--n-text-color-3, #888);
-}
-</style>

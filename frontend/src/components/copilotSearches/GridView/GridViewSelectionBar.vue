@@ -1,5 +1,12 @@
 <template>
-	<Transition name="selection-bar">
+	<!-- Explicit classes rather than a `name`: Vue's generated transition classes are the
+	     one thing a utility-class element cannot carry, and these props take utilities. -->
+	<Transition
+		enter-active-class="transition-[opacity,transform] duration-220 ease-in-out"
+		leave-active-class="transition-[opacity,transform] duration-220 ease-in-out"
+		enter-from-class="translate-y-4 opacity-0"
+		leave-to-class="translate-y-4 opacity-0"
+	>
 		<div
 			v-if="selectMode && selectedRules.length > 0"
 			class="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-5"
@@ -150,17 +157,3 @@ function exportSelectedJson() {
 	saveAs(new Blob([json], { type: "application/json;charset=utf-8;" }), `copilot-searches-selected-${stamp}.json`)
 }
 </script>
-
-<style scoped lang="scss">
-.selection-bar-enter-active,
-.selection-bar-leave-active {
-	transition:
-		opacity 0.22s ease,
-		transform 0.22s ease;
-}
-.selection-bar-enter-from,
-.selection-bar-leave-to {
-	opacity: 0;
-	transform: translateY(16px);
-}
-</style>
