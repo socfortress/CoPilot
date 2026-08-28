@@ -36,7 +36,9 @@
 					]"
 					@click="emit('jump', finding)"
 				>
-					<span class="text-3xs w-13 shrink-0 pt-0.5 font-mono font-semibold tracking-widest text-(--accent) uppercase">
+					<span
+						class="text-3xs w-13 shrink-0 pt-0.5 font-mono font-semibold tracking-widest text-(--accent) uppercase"
+					>
 						{{ group.level }}
 					</span>
 					<div class="flex min-w-0 grow flex-col gap-0.75">
@@ -80,12 +82,17 @@ const JumpIcon = "carbon:arrow-right"
 
 /** Findings by severity, each sorted by line, empty levels dropped. */
 const findingGroups = computed(() => {
-	const byLine = (a: LintFinding, b: LintFinding) => (a.line ?? Number.MAX_SAFE_INTEGER) - (b.line ?? Number.MAX_SAFE_INTEGER)
+	const byLine = (a: LintFinding, b: LintFinding) =>
+		(a.line ?? Number.MAX_SAFE_INTEGER) - (b.line ?? Number.MAX_SAFE_INTEGER)
 	const findings = result?.findings || []
 
 	return [
 		{ level: "error" as const, label: "Errors", items: findings.filter(f => f.level === "error").sort(byLine) },
-		{ level: "warning" as const, label: "Warnings", items: findings.filter(f => f.level === "warning").sort(byLine) }
+		{
+			level: "warning" as const,
+			label: "Warnings",
+			items: findings.filter(f => f.level === "warning").sort(byLine)
+		}
 	].filter(group => group.items.length)
 })
 </script>

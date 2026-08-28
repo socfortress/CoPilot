@@ -47,9 +47,7 @@
 			Workspace — one box split like SegmentedPage: an authoring half and a reference
 			half, each with its own toolbar strip over a full-height content area.
 		-->
-		<div
-			class="border-default bg-default flex min-h-0 grow flex-col overflow-hidden rounded-lg border lg:flex-row"
-		>
+		<div class="border-default bg-default flex min-h-0 grow flex-col overflow-hidden rounded-lg border lg:flex-row">
 			<!-- Authoring side -->
 			<section class="border-default flex min-h-0 min-w-0 flex-1 flex-col border-b lg:border-e lg:border-b-0">
 				<div class="border-default @container flex h-12 min-h-12 items-center gap-2.5 border-b px-3.5">
@@ -122,14 +120,14 @@
 				reading and keeps its full half. Side by side, both halves are equal again.
 			-->
 			<aside
-				class="bg-secondary flex min-h-0 min-w-0 flex-col lg:flex-1 lg:max-h-none"
+				class="bg-secondary flex min-h-0 min-w-0 flex-col lg:max-h-none lg:flex-1"
 				:class="rightTab === 'validation' ? 'max-h-[40%] flex-none lg:flex-1' : 'flex-1'"
 			>
 				<n-tabs
 					v-model:value="rightTab"
 					type="segment"
 					size="small"
-					class="flex min-h-0 grow flex-col [&_.n-tab-pane]:flex [&_.n-tab-pane]:h-full [&_.n-tab-pane]:min-h-0 [&_.n-tab-pane]:w-full [&_.n-tab-pane]:flex-col [&_.n-tab-pane]:p-0 [&_.n-tabs-nav]:border-default [&_.n-tabs-nav]:flex [&_.n-tabs-nav]:h-12 [&_.n-tabs-nav]:min-h-12 [&_.n-tabs-nav]:items-center [&_.n-tabs-nav]:border-b [&_.n-tabs-nav]:px-3.5 [&_.n-tabs-pane-wrapper]:flex [&_.n-tabs-pane-wrapper]:min-h-0 [&_.n-tabs-pane-wrapper]:grow [&_.n-tabs-pane-wrapper]:overflow-hidden"
+					class="[&_.n-tabs-nav]:border-default flex min-h-0 grow flex-col [&_.n-tab-pane]:flex [&_.n-tab-pane]:h-full [&_.n-tab-pane]:min-h-0 [&_.n-tab-pane]:w-full [&_.n-tab-pane]:flex-col [&_.n-tab-pane]:p-0 [&_.n-tabs-nav]:flex [&_.n-tabs-nav]:h-12 [&_.n-tabs-nav]:min-h-12 [&_.n-tabs-nav]:items-center [&_.n-tabs-nav]:border-b [&_.n-tabs-nav]:px-3.5 [&_.n-tabs-pane-wrapper]:flex [&_.n-tabs-pane-wrapper]:min-h-0 [&_.n-tabs-pane-wrapper]:grow [&_.n-tabs-pane-wrapper]:overflow-hidden"
 				>
 					<n-tab-pane name="validation" tab="Validation">
 						<n-scrollbar trigger="none" class="h-full">

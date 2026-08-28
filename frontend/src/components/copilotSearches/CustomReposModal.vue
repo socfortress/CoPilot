@@ -50,7 +50,7 @@
 					<div
 						v-for="r of repoRows"
 						:key="r.customer_code"
-						class="border-default hover:bg-hover-005 relative flex items-center gap-3 overflow-hidden rounded-lg border py-2.5 pr-2.5 pl-4 transition-colors hover:border-[rgba(var(--primary-color-rgb)/0.35)] before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-(--rail-color) before:transition-colors"
+						class="border-default hover:bg-hover-005 relative flex items-center gap-3 overflow-hidden rounded-lg border py-2.5 pr-2.5 pl-4 transition-colors before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-(--rail-color) before:transition-colors hover:border-[rgba(var(--primary-color-rgb)/0.35)]"
 						:class="RAIL_CLASSES[r.status]"
 					>
 						<Icon

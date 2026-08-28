@@ -5,7 +5,7 @@
 		@click="emit('copy', value)"
 	>
 		<code class="text-tertiary text-xs break-all">{{ field }}</code>
-		<span class="text-[13px] font-mono break-words whitespace-pre-wrap select-text">{{ value }}</span>
+		<span class="font-mono text-[13px] break-words whitespace-pre-wrap select-text">{{ value }}</span>
 	</div>
 </template>
 

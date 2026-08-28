@@ -36,7 +36,11 @@
 							type="warning"
 							round
 							:bordered="false"
-							:title="rule.owner_customer_code ? `Custom rule (customer ${rule.owner_customer_code})` : 'Custom rule'"
+							:title="
+								rule.owner_customer_code
+									? `Custom rule (customer ${rule.owner_customer_code})`
+									: 'Custom rule'
+							"
 						>
 							<template #icon><Icon :name="CustomIcon" :size="12" /></template>
 							Custom{{ rule.owner_customer_code ? ` · ${rule.owner_customer_code}` : "" }}

@@ -45,8 +45,10 @@
 		<n-empty v-if="filter && !filteredSections.length" description="No syntax matches your filter." class="py-6" />
 
 		<div class="text-secondary text-xs">
-			Escape any of these to search them literally (with <code>\</code>):
-			<code class="break-all">&amp; | : \ / + - ! ( ) {{ "{ } [ ] ^ \" ~ * ?" }}</code>
+			Escape any of these to search them literally (with
+			<code>\</code>
+			):
+			<code class="break-all">&amp; | : \ / + - ! ( ) {{ '{ } [ ] ^ " ~ * ?' }}</code>
 		</div>
 	</div>
 </template>

@@ -84,7 +84,10 @@ const filter = ref("")
 
 // A fresh event deserves a fresh filter, otherwise the previous query silently
 // hides most of the new one's fields.
-watch(() => event, () => (filter.value = ""))
+watch(
+	() => event,
+	() => (filter.value = "")
+)
 
 const source = computed(() => (event?.source ? String(event.source) : ""))
 

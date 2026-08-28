@@ -245,7 +245,10 @@ export default {
 
 	/** Dry-run a custom repo pull (reachability + detection YAML count). */
 	testCustomRepo(request: TestCustomRepoRequest) {
-		return HttpClient.post<FlaskBaseResponse & TestCustomRepoResponse>(`/copilot_searches/custom-repos/test`, request)
+		return HttpClient.post<FlaskBaseResponse & TestCustomRepoResponse>(
+			`/copilot_searches/custom-repos/test`,
+			request
+		)
 	},
 
 	/**

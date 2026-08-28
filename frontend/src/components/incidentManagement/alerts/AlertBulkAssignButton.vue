@@ -80,9 +80,7 @@ function updateAssignee() {
 				}
 
 				if (updatedIds.size && skippedCount) {
-					message.warning(
-						`Assigned ${updatedIds.size} alert(s). ${skippedCount} could not be assigned.`
-					)
+					message.warning(`Assigned ${updatedIds.size} alert(s). ${skippedCount} could not be assigned.`)
 				} else if (updatedIds.size) {
 					message.success(res.data?.message || `Assigned ${updatedIds.size} alert(s).`)
 				} else {

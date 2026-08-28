@@ -9,7 +9,7 @@
 			/>
 		</div>
 		<span
-			class="text-secondary text-2xs shrink-0 text-end font-mono [&_b]:text-default [&_b]:font-semibold"
+			class="text-secondary text-2xs [&_b]:text-default shrink-0 text-end font-mono [&_b]:font-semibold"
 			:class="wide ? 'w-24' : 'w-12'"
 		>
 			<slot>{{ fmt(value) }}</slot>

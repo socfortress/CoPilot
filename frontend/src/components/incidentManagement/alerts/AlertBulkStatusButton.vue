@@ -84,9 +84,7 @@ function updateStatus() {
 				}
 
 				if (updatedIds.size && skippedCount) {
-					message.warning(
-						`Updated ${updatedIds.size} alert(s). ${skippedCount} could not be updated.`
-					)
+					message.warning(`Updated ${updatedIds.size} alert(s). ${skippedCount} could not be updated.`)
 				} else if (updatedIds.size) {
 					message.success(res.data?.message || `Updated ${updatedIds.size} alert(s).`)
 				} else {
