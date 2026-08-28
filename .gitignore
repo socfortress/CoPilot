@@ -48,7 +48,6 @@ wheels/
 .env
 .env.*
 !.env.example
-
 *.sqbpro
 site/
 *.checkpoint

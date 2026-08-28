@@ -8,6 +8,7 @@
 				v-model:selected-severity="selectedSeverity"
 				v-model:selected-status="selectedStatus"
 				v-model:has-graylog-filter="hasGraylogFilter"
+				v-model:provenance-filter="provenanceFilter"
 				hide-selection-switch
 				:pagination
 				:select-mode
@@ -100,6 +101,7 @@ const selectedSeverity = ref<RuleSeverity | null>(null)
 const selectedStatus = ref<RuleStatus | null>(null)
 const searchQuery = ref<string | null>(null)
 const hasGraylogFilter = ref(false)
+const provenanceFilter = ref<"catalog" | "custom" | null>(null)
 const showFilters = ref(false)
 
 let abortController: AbortController | null = null
@@ -109,6 +111,7 @@ function resetFilters() {
 	selectedSeverity.value = null
 	selectedStatus.value = null
 	hasGraylogFilter.value = false
+	provenanceFilter.value = null
 	showFilters.value = false
 }
 
@@ -139,7 +142,8 @@ function getList() {
 		severity: selectedSeverity.value || undefined,
 		status: selectedStatus.value || undefined,
 		search: searchQuery.value || undefined,
-		has_graylog: hasGraylogFilter.value ? true : undefined
+		has_graylog: hasGraylogFilter.value ? true : undefined,
+		provenance: provenanceFilter.value || undefined
 	}
 
 	Api.copilotSearches
@@ -183,7 +187,15 @@ async function handleRefresh() {
 }
 
 watchDebounced(
-	[selectedCategory, selectedSeverity, selectedStatus, searchQuery, hasGraylogFilter, () => pagination.value.current],
+	[
+		selectedCategory,
+		selectedSeverity,
+		selectedStatus,
+		searchQuery,
+		hasGraylogFilter,
+		provenanceFilter,
+		() => pagination.value.current
+	],
 	getList,
 	{
 		deep: true,

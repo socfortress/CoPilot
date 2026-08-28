@@ -76,6 +76,16 @@
 							:consistent-menu-width="false"
 						/>
 
+						<n-select
+							v-model:value="provenanceFilter"
+							:options="provenanceOptions"
+							clearable
+							size="small"
+							placeholder="Source"
+							class="w-full"
+							:consistent-menu-width="false"
+						/>
+
 						<n-checkbox v-model:checked="hasGraylogFilter" size="small">
 							<span class="text-xs">Graylog Only</span>
 						</n-checkbox>
@@ -143,6 +153,7 @@ const selectedCategory = defineModel<string | null>("selectedCategory", { defaul
 const selectedSeverity = defineModel<RuleSeverity | null>("selectedSeverity", { default: null })
 const selectedStatus = defineModel<RuleStatus | null>("selectedStatus", { default: null })
 const hasGraylogFilter = defineModel<boolean>("hasGraylogFilter", { default: false })
+const provenanceFilter = defineModel<"catalog" | "custom" | null>("provenanceFilter", { default: null })
 
 const {
 	options: categoryOptions,
@@ -153,8 +164,18 @@ const {
 } = useDetectionCategories()
 
 const hasActiveFilters = computed(
-	() => !!selectedCategory.value || !!selectedSeverity.value || !!selectedStatus.value || hasGraylogFilter.value
+	() =>
+		!!selectedCategory.value ||
+		!!selectedSeverity.value ||
+		!!selectedStatus.value ||
+		hasGraylogFilter.value ||
+		!!provenanceFilter.value
 )
+
+const provenanceOptions = [
+	{ label: "Catalog (shared)", value: "catalog" },
+	{ label: "Custom (client)", value: "custom" }
+]
 
 const InfoIcon = "carbon:information"
 const FilterIcon = "carbon:filter-edit"

@@ -146,6 +146,8 @@ class RuleSummary(BaseModel):
     file_path: str
     has_graylog_query: bool = False
     has_aggregation: bool = False
+    provenance: str = "catalog"  # "catalog" (shared repo) | "custom" (a client's own repo)
+    owner_customer_code: Optional[str] = None  # set for custom rules
 
 
 class RuleDetail(BaseModel):
@@ -172,6 +174,8 @@ class RuleDetail(BaseModel):
     raw_yaml: str
     graylog: Optional[GraylogQuery] = None
     aggregation: Optional[AggregationConfig] = None
+    provenance: str = "catalog"
+    owner_customer_code: Optional[str] = None
 
 
 class RuleListResponse(BaseModel):
@@ -847,3 +851,186 @@ class CatalogLogTestResponse(BaseModel):
     # Free-form dict because Wazuh's shape varies per decoder type.
     alert: Optional[dict] = None
     unavailable_reason: Optional[str] = None
+
+
+# --- Detection rule editor: L1 validation (see DETECTION_RULE_EDITOR.md) -------
+class LintFinding(BaseModel):
+    """One L1 validation finding for a detection rule."""
+
+    level: str = Field(..., description="error | warning")
+    code: str
+    message: str
+    path: str = ""
+    line: Optional[int] = None
+
+
+class ValidateRuleRequest(BaseModel):
+    """Validate a raw Graylog-only rule YAML (editor + CI, layer 1)."""
+
+    yaml: str = Field(..., description="Full rule YAML to validate (Graylog-only format)")
+
+
+class ValidateRuleResponse(BaseModel):
+    success: bool = True
+    message: str = "Validation complete"
+    valid: bool
+    error_count: int
+    warning_count: int
+    findings: list[LintFinding] = Field(default_factory=list)
+
+
+# =============================================================================
+# Backtest (Graylog-only) — replay a rule against a tenant's real data
+# =============================================================================
+class BacktestRequest(BaseModel):
+    """Backtest a raw Graylog-only rule YAML against one customer's Graylog stream."""
+
+    yaml: str = Field(..., description="Full rule YAML to backtest (Graylog-only format)")
+    customer_code: str = Field(..., description="Customer to backtest against (scopes to their Graylog stream)")
+    range_seconds: int = Field(
+        default=604800,
+        ge=300,
+        le=2592000,
+        description="Relative look-back window in seconds (default 7d, max 30d).",
+    )
+
+
+class BacktestBucket(BaseModel):
+    bucket: str
+    count: int
+
+
+class BacktestTopValue(BaseModel):
+    value: str
+    count: int
+
+
+class BacktestOffender(BaseModel):
+    group: str
+    windows_alerting: int
+    peak: int
+
+
+class BacktestSensitivity(BaseModel):
+    threshold: int
+    alerts: int
+
+
+class BacktestAggregation(BaseModel):
+    window: str
+    window_seconds: int
+    function: str
+    field: Optional[str] = None
+    group_by: list[str] = Field(default_factory=list)
+    threshold: int
+    condition: str
+    estimated_alerts: int
+    per_day_alerts: float = 0.0
+    top_offenders: list[BacktestOffender] = Field(default_factory=list)
+    sensitivity: list[BacktestSensitivity] = Field(default_factory=list)
+    truncated: bool = False
+
+
+class BacktestResponse(BaseModel):
+    success: bool
+    message: str = ""
+    error: Optional[str] = None
+    mode: Optional[str] = None  # "messages" | "aggregation"
+    customer_code: Optional[str] = None
+    stream_id: Optional[str] = None
+    range_seconds: Optional[int] = None
+    query: Optional[str] = None
+    total_hits: int = 0
+    per_day_avg: float = 0.0
+    fetched: int = 0
+    truncated: bool = False
+    per_bucket: list[BacktestBucket] = Field(default_factory=list)
+    bucket_unit: Optional[str] = None
+    samples: list[dict] = Field(default_factory=list)
+    sample_fields: list[str] = Field(default_factory=list)
+    top_fields: dict[str, list[BacktestTopValue]] = Field(default_factory=dict)
+    aggregation: Optional[BacktestAggregation] = None
+    # Query/aggregation fields that don't exist in this customer's stream data
+    # (L4-lite; empty when the stream's field population is too small to judge).
+    missing_fields: list[str] = Field(default_factory=list)
+    note: Optional[str] = None
+
+
+# =============================================================================
+# Per-tenant custom rule repositories (pointers stored in MinIO)
+# =============================================================================
+class CustomRepoConfig(BaseModel):
+    """A client's custom-rule repo pointer (token never returned — only its presence)."""
+
+    customer_code: str
+    repo: str  # "owner/name"
+    branch: str = "main"
+    enabled: bool = True
+    has_token: bool = False
+    # Fetch outcome from the last cache refresh (None = not refreshed yet this run).
+    last_refresh_ok: Optional[bool] = None
+    rules_loaded: Optional[int] = None
+    last_refresh_error: Optional[str] = None
+    last_refresh_at: Optional[str] = None
+
+
+class TestCustomRepoRequest(BaseModel):
+    """Dry-run a repo pull before saving it."""
+
+    repo: str = Field(..., description="GitHub repo as 'owner/name'")
+    branch: str = Field(default="main")
+    token: Optional[str] = Field(default=None, description="Token to test with (optional)")
+    customer_code: Optional[str] = Field(
+        default=None,
+        description="When set and no token is given, test with this customer's stored token",
+    )
+
+
+class TestCustomRepoResponse(BaseModel):
+    success: bool = True
+    message: str = ""
+    ok: bool = False
+    rules_found: int = 0
+    error: Optional[str] = None
+
+
+class SetCustomRepoRequest(BaseModel):
+    repo: str = Field(..., description="GitHub repo as 'owner/name'")
+    branch: str = Field(default="main")
+    token: Optional[str] = Field(default=None, description="Optional read PAT for a private repo")
+    enabled: bool = True
+
+
+class CustomRepoResponse(BaseModel):
+    success: bool = True
+    message: str = ""
+    repo: Optional[CustomRepoConfig] = None
+
+
+class CustomRepoListResponse(BaseModel):
+    success: bool = True
+    message: str = "Custom repositories fetched"
+    repos: list[CustomRepoConfig] = Field(default_factory=list)
+
+
+# =============================================================================
+# Publish a rule to a client's own GitHub repo
+# =============================================================================
+class PublishRuleRequest(BaseModel):
+    yaml: str = Field(..., description="Full rule YAML to publish (Graylog-only format)")
+    customer_code: str = Field(..., description="Customer whose custom repo to publish to")
+    message: Optional[str] = Field(default=None, description="Commit message (optional)")
+    path: Optional[str] = Field(default=None, description="Target path in the repo (defaults to detections/custom/<slug>.yaml)")
+
+
+class PublishRuleResponse(BaseModel):
+    success: bool
+    message: str = ""
+    error: Optional[str] = None
+    action: Optional[str] = None  # "created" | "updated"
+    repo: Optional[str] = None
+    branch: Optional[str] = None
+    path: Optional[str] = None
+    commit_url: Optional[str] = None
+    html_url: Optional[str] = None
+    findings: list[LintFinding] = Field(default_factory=list)

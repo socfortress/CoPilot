@@ -214,13 +214,10 @@ export default {
 	 * `not_updated_alert_ids` rather than failing the request — a selection may span customers.
 	 */
 	bulkUpdateAlertStatus(alertIds: number[], status: AlertStatus) {
-		return HttpClient.put<FlaskBaseResponse & BulkAlertUpdateResult>(
-			`/incidents/db_operations/alerts/status`,
-			{
-				alert_ids: alertIds,
-				status
-			}
-		)
+		return HttpClient.put<FlaskBaseResponse & BulkAlertUpdateResult>(`/incidents/db_operations/alerts/status`, {
+			alert_ids: alertIds,
+			status
+		})
 	},
 	/** Assign a whole selection to one user. Same partial-success contract as the status call. */
 	bulkUpdateAlertAssignedUser(alertIds: number[], user: string) {

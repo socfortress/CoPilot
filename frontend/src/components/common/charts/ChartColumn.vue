@@ -108,7 +108,8 @@ const chartOption = computed((): ChartOption => {
 			left: 8,
 			right: 8,
 			top: 8,
-			bottom: showXAxisLabels.value ? 56 : 16,
+			// bottom: showXAxisLabels.value ? 56 : 16,
+			bottom: showXAxisLabels.value ? 0 : 0,
 			...CHART_GRID_CONTAIN_AXIS_LABELS
 		},
 		tooltip: {

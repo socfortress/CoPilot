@@ -10,6 +10,8 @@ from loguru import logger
 from app.auth.routes.auth import AuthHandler
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
+from app.integrations.copilot_searches.schema.copilot_searches import BacktestRequest
+from app.integrations.copilot_searches.schema.copilot_searches import BacktestResponse
 from app.integrations.copilot_searches.schema.copilot_searches import (
     BulkProvisionGraylogAlertRequest,
 )
@@ -55,6 +57,11 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
 from app.integrations.copilot_searches.schema.copilot_searches import (
     CatalogWazuhRulesResponse,
 )
+from app.integrations.copilot_searches.schema.copilot_searches import CustomRepoConfig
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    CustomRepoListResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import CustomRepoResponse
 from app.integrations.copilot_searches.schema.copilot_searches import (
     ExecuteGraylogQueryRequest,
 )
@@ -83,6 +90,10 @@ from app.integrations.copilot_searches.schema.copilot_searches import (
 from app.integrations.copilot_searches.schema.copilot_searches import (
     ProvisionGraylogAlertResponse,
 )
+from app.integrations.copilot_searches.schema.copilot_searches import PublishRuleRequest
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    PublishRuleResponse,
+)
 from app.integrations.copilot_searches.schema.copilot_searches import RefreshResponse
 from app.integrations.copilot_searches.schema.copilot_searches import (
     RuleCategoriesResponse,
@@ -95,6 +106,23 @@ from app.integrations.copilot_searches.schema.copilot_searches import RulesByIds
 from app.integrations.copilot_searches.schema.copilot_searches import RuleSeverity
 from app.integrations.copilot_searches.schema.copilot_searches import RuleStatsResponse
 from app.integrations.copilot_searches.schema.copilot_searches import RuleStatus
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    SetCustomRepoRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    TestCustomRepoRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    TestCustomRepoResponse,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    ValidateRuleRequest,
+)
+from app.integrations.copilot_searches.schema.copilot_searches import (
+    ValidateRuleResponse,
+)
+from app.integrations.copilot_searches.services import custom_repos as custom_repos_svc
+from app.integrations.copilot_searches.services.backtest import run_backtest
 from app.integrations.copilot_searches.services.copilot_searches import (
     execute_rule_search,
 )
@@ -150,6 +178,8 @@ from app.integrations.copilot_searches.services.detection_catalog import (
 from app.integrations.copilot_searches.services.detection_catalog import run_log_test
 from app.integrations.copilot_searches.services.mitre_coverage import get_coverage
 from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
+from app.integrations.copilot_searches.services.publish import publish_rule
+from app.integrations.copilot_searches.services.rule_linter import lint_result
 from app.middleware.customer_access import verify_optional_customer_code_access
 from app.middleware.search_query import SearchParams
 from app.middleware.search_query import filter_and_limit
@@ -228,6 +258,10 @@ async def list_rules(
         None,
         description="Filter for rules with Graylog queries",
     ),
+    provenance: Optional[str] = Query(
+        None,
+        description="Filter by source: 'catalog' (shared repo) or 'custom' (a client's own repo)",
+    ),
     skip: int = Query(0, ge=0, description="Number of rules to skip"),
     limit: int = Query(100, ge=1, le=500, description="Maximum rules to return"),
 ):
@@ -242,6 +276,7 @@ async def list_rules(
     - **mitre_id**: MITRE ATT&CK technique ID
     - **search**: Text search in name/description
     - **has_graylog**: Filter for rules with Graylog queries
+    - **provenance**: catalog or custom
     """
     result = await get_rules_list(
         platform=platform,
@@ -251,6 +286,7 @@ async def list_rules(
         mitre_id=mitre_id,
         search=search,
         has_graylog=has_graylog,
+        provenance=provenance,
         skip=skip,
         limit=limit,
     )
@@ -1309,3 +1345,151 @@ async def run_catalog_logtest_endpoint(request: CatalogLogTestRequest) -> Catalo
         raise
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Failed to run logtest: {str(e)}")
+
+
+@copilot_searches_router.post(
+    "/validate",
+    response_model=ValidateRuleResponse,
+    description="L1 validation (schema + lint) of a Graylog-only detection rule YAML",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def validate_rule(request: ValidateRuleRequest) -> ValidateRuleResponse:
+    """Structure + lint a raw rule YAML (Graylog-only editor, layer 1).
+
+    Fast and fully offline — never touches Graylog or OpenSearch. Reference
+    integrity (L2), Graylog query parse (L3) and per-tenant field existence (L4)
+    are separate endpoints (see DETECTION_RULE_EDITOR.md).
+    """
+    return ValidateRuleResponse(**lint_result(request.yaml or ""))
+
+
+@copilot_searches_router.post(
+    "/backtest",
+    response_model=BacktestResponse,
+    description="Backtest a Graylog-only rule against a customer's real Graylog data",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def backtest_rule(request: BacktestRequest) -> BacktestResponse:
+    """Replay a rule's Graylog query over a tenant's stream and report what it would do.
+
+    Graylog-only path — never touches OpenSearch and never reuses /execute (wrong
+    engine + cross-tenant risk). Scopes strictly to the selected customer's Graylog
+    stream. Returns total hits, a per-bucket sparkline, sample events, a top-value
+    breakdown, and — for aggregation rules — a local sliding-window threshold
+    simulation (estimated alerts, top offenders, threshold sensitivity).
+    """
+    result = await run_backtest(
+        rule_yaml=request.yaml or "",
+        customer_code=request.customer_code,
+        range_seconds=request.range_seconds,
+    )
+    return BacktestResponse(**result)
+
+
+# =============================================================================
+# Custom rule repositories (per-tenant pointers → client's own GitHub)
+# =============================================================================
+@copilot_searches_router.get(
+    "/custom-repos",
+    response_model=CustomRepoListResponse,
+    description="List configured per-tenant custom rule repositories",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def list_custom_repos() -> CustomRepoListResponse:
+    # Merge last-refresh fetch status so a broken repo/token is visible in the UI
+    # instead of its rules just silently vanishing from the grid.
+    status_by_owner = {s.get("owner"): s for s in rules_cache.source_status if s.get("provenance") == "custom"}
+    repos = []
+    for r in await custom_repos_svc.list_custom_repos():
+        record = custom_repos_svc.redact(r)
+        s = status_by_owner.get(r.get("customer_code"))
+        if s:
+            record.update(
+                last_refresh_ok=s.get("ok"),
+                rules_loaded=s.get("rules_loaded"),
+                last_refresh_error=s.get("error"),
+                last_refresh_at=s.get("fetched_at"),
+            )
+        repos.append(CustomRepoConfig(**record))
+    return CustomRepoListResponse(repos=repos, message=f"{len(repos)} custom repositories configured")
+
+
+@copilot_searches_router.get(
+    "/custom-repos/{customer_code}",
+    response_model=CustomRepoResponse,
+    description="Get a customer's custom rule repository pointer",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_custom_repo(customer_code: str) -> CustomRepoResponse:
+    record = await custom_repos_svc.get_custom_repo(customer_code)
+    if not record:
+        return CustomRepoResponse(success=True, message="No custom repository configured", repo=None)
+    return CustomRepoResponse(repo=CustomRepoConfig(**custom_repos_svc.redact(record)))
+
+
+@copilot_searches_router.put(
+    "/custom-repos/{customer_code}",
+    response_model=CustomRepoResponse,
+    description="Set/replace a customer's custom rule repository pointer",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def set_custom_repo(customer_code: str, request: SetCustomRepoRequest) -> CustomRepoResponse:
+    if "/" not in (request.repo or ""):
+        raise HTTPException(status_code=400, detail="repo must be in 'owner/name' form")
+    record = await custom_repos_svc.set_custom_repo(customer_code, request.model_dump())
+    # New rules become visible on the next cache refresh.
+    return CustomRepoResponse(
+        message="Saved. Refresh the rules cache to pull this repo's rules.",
+        repo=CustomRepoConfig(**custom_repos_svc.redact(record)),
+    )
+
+
+@copilot_searches_router.delete(
+    "/custom-repos/{customer_code}",
+    response_model=CustomRepoResponse,
+    description="Remove a customer's custom rule repository pointer",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def delete_custom_repo(customer_code: str) -> CustomRepoResponse:
+    await custom_repos_svc.delete_custom_repo(customer_code)
+    return CustomRepoResponse(message="Custom repository pointer removed. Refresh the cache to drop its rules.")
+
+
+@copilot_searches_router.post(
+    "/custom-repos/test",
+    response_model=TestCustomRepoResponse,
+    description="Dry-run a custom repo pull (reachability + detection YAML count)",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def test_custom_repo(request: TestCustomRepoRequest) -> TestCustomRepoResponse:
+    if "/" not in (request.repo or ""):
+        raise HTTPException(status_code=400, detail="repo must be in 'owner/name' form")
+    token = request.token
+    if not token and request.customer_code:
+        stored = await custom_repos_svc.get_custom_repo(request.customer_code)
+        token = (stored or {}).get("token")
+    result = await custom_repos_svc.test_repo_fetch(request.repo, request.branch or "main", token)
+    msg = f"Found {result['rules_found']} detection YAML(s)." if result["ok"] else (result["error"] or "Test failed")
+    return TestCustomRepoResponse(message=msg, **result)
+
+
+@copilot_searches_router.post(
+    "/publish",
+    response_model=PublishRuleResponse,
+    description="Publish a detection rule to a customer's own GitHub repo (direct commit)",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def publish_rule_endpoint(request: PublishRuleRequest) -> PublishRuleResponse:
+    """Commit a validated rule to the customer's configured custom repo.
+
+    Graylog-only, feature-local. Uses the per-tenant write token stored in MinIO
+    (never exposed). Rejects invalid rules. New rules appear as Custom cards after
+    the next cache refresh.
+    """
+    result = await publish_rule(
+        rule_yaml=request.yaml or "",
+        customer_code=request.customer_code,
+        message=request.message,
+        path=request.path,
+    )
+    return PublishRuleResponse(**result)

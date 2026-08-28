@@ -30,6 +30,21 @@
 					</p>
 					<p v-else class="text-secondary text-xs italic">No description available</p>
 					<div class="flex flex-wrap items-center gap-1.5">
+						<n-tag
+							v-if="rule.provenance === 'custom'"
+							size="small"
+							type="warning"
+							round
+							:bordered="false"
+							:title="
+								rule.owner_customer_code
+									? `Custom rule (customer ${rule.owner_customer_code})`
+									: 'Custom rule'
+							"
+						>
+							<template #icon><Icon :name="CustomIcon" :size="12" /></template>
+							Custom{{ rule.owner_customer_code ? ` · ${rule.owner_customer_code}` : "" }}
+						</n-tag>
 						<n-tag v-if="provisioned" size="small" type="success" round :bordered="false">In Graylog</n-tag>
 						<n-tag v-if="rule.has_graylog_query" size="small" round :bordered="false">Query ready</n-tag>
 					</div>
@@ -193,6 +208,7 @@ const message = useMessage()
 const PlayIcon = "carbon:play"
 const ProvisionIcon = "carbon:add-alt"
 const SourceIcon = "carbon:document"
+const CustomIcon = "carbon:logo-github"
 
 const visibleMitreIds = computed(() => rule.mitre_attack_id?.slice(0, 2) ?? [])
 const hiddenMitreCount = computed(() => Math.max((rule.mitre_attack_id?.length ?? 0) - 2, 0))

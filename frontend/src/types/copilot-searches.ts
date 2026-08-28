@@ -36,6 +36,9 @@ export interface RuleSummary {
 	cve: string[]
 	file_path: string
 	has_graylog_query: boolean
+	/** "catalog" = shared SOCFortress repo, "custom" = a client's own repo */
+	provenance?: "catalog" | "custom"
+	owner_customer_code?: string | null
 }
 
 export interface RuleDetail {
@@ -59,6 +62,8 @@ export interface RuleDetail {
 	file_path: string
 	raw_yaml: string
 	graylog: GraylogQuery | null
+	provenance?: "catalog" | "custom"
+	owner_customer_code?: string | null
 }
 
 export interface RuleResponse {
@@ -230,6 +235,7 @@ export interface RuleListQuery {
 	mitre_id?: string
 	search?: string
 	has_graylog?: boolean
+	provenance?: "catalog" | "custom"
 	skip?: number
 	limit?: number
 }
@@ -310,4 +316,154 @@ export interface RulesByIdsRequest {
 export interface RulesByIdsResponse {
 	rules: RuleSummary[]
 	missing: string[]
+}
+
+// --- Detection rule editor: L1 validation (see DETECTION_RULE_EDITOR.md) ---
+export interface LintFinding {
+	level: "error" | "warning"
+	code: string
+	message: string
+	path?: string
+	line?: number | null
+}
+
+export interface ValidateRuleRequest {
+	yaml: string
+}
+
+export interface ValidateRuleResponse {
+	valid: boolean
+	error_count: number
+	warning_count: number
+	findings: LintFinding[]
+}
+
+// --- Detection rule editor: backtest (see DETECTION_RULE_EDITOR.md) ---
+export interface BacktestRequest {
+	yaml: string
+	customer_code: string
+	range_seconds?: number
+}
+
+export interface BacktestBucket {
+	bucket: string
+	count: number
+}
+
+export interface BacktestTopValue {
+	value: string
+	count: number
+}
+
+export interface BacktestOffender {
+	group: string
+	windows_alerting: number
+	peak: number
+}
+
+export interface BacktestSensitivity {
+	threshold: number
+	alerts: number
+}
+
+export interface BacktestAggregation {
+	window: string
+	window_seconds: number
+	function: string
+	field?: string | null
+	group_by: string[]
+	threshold: number
+	condition: string
+	estimated_alerts: number
+	per_day_alerts: number
+	top_offenders: BacktestOffender[]
+	sensitivity: BacktestSensitivity[]
+	truncated: boolean
+}
+
+export interface BacktestResponse {
+	success: boolean
+	message?: string
+	error?: string | null
+	mode?: "messages" | "aggregation" | null
+	customer_code?: string | null
+	stream_id?: string | null
+	range_seconds?: number | null
+	query?: string | null
+	total_hits: number
+	per_day_avg: number
+	fetched: number
+	truncated: boolean
+	per_bucket: BacktestBucket[]
+	bucket_unit?: string | null
+	samples: Record<string, unknown>[]
+	sample_fields: string[]
+	top_fields: Record<string, BacktestTopValue[]>
+	aggregation?: BacktestAggregation | null
+	/** Query fields that don't exist in this customer's stream data (L4-lite) */
+	missing_fields?: string[]
+	note?: string | null
+}
+
+// --- Per-tenant custom rule repositories (see DETECTION_RULE_EDITOR.md) ---
+export interface CustomRepoConfig {
+	customer_code: string
+	repo: string
+	branch: string
+	enabled: boolean
+	has_token: boolean
+	/** Fetch outcome from the last cache refresh (null = not refreshed yet this run) */
+	last_refresh_ok?: boolean | null
+	rules_loaded?: number | null
+	last_refresh_error?: string | null
+	last_refresh_at?: string | null
+}
+
+export interface TestCustomRepoRequest {
+	repo: string
+	branch?: string
+	token?: string | null
+	customer_code?: string | null
+}
+
+export interface TestCustomRepoResponse {
+	ok: boolean
+	rules_found: number
+	error?: string | null
+}
+
+export interface SetCustomRepoRequest {
+	repo: string
+	branch?: string
+	token?: string | null
+	enabled?: boolean
+}
+
+export interface CustomRepoResponse {
+	repo: CustomRepoConfig | null
+}
+
+export interface CustomRepoListResponse {
+	repos: CustomRepoConfig[]
+}
+
+// --- Publish a rule to a client's own GitHub repo ---
+export interface PublishRuleRequest {
+	yaml: string
+	customer_code: string
+	message?: string
+	path?: string
+}
+
+export interface PublishRuleResponse {
+	success: boolean
+	message?: string
+	error?: string | null
+	action?: "created" | "updated" | null
+	repo?: string | null
+	branch?: string | null
+	path?: string | null
+	commit_url?: string | null
+	html_url?: string | null
+	findings?: LintFinding[]
 }
