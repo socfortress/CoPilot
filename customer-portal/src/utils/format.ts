@@ -24,12 +24,24 @@ export function hashMD5(text: number | string) {
 	return md5(text.toString())
 }
 
-export function formatDate(date: Date | string | number, format: string) {
+/**
+ * `tz: true` parses the value as UTC before converting it to the viewer's timezone. That is what
+ * makes offset-less timestamps — which several event sources emit — read as UTC instead of as local
+ * time; without it they render as the raw UTC clock and appear shifted by the viewer's offset.
+ * `utc: true` renders in UTC instead. Mirrors `formatDate` in the analyst frontend.
+ */
+export function formatDate(date: Date | string | number, format: string, opts?: { utc?: boolean; tz?: boolean }) {
 	const parsedDate = isTimestamp(date, true) ?? date
 
-	const dateJs = dayjs(parsedDate)
+	let dateJs = opts?.tz ? dayjs.utc(parsedDate) : dayjs(parsedDate)
 
 	if (!dateJs.isValid()) return date
+
+	if (opts?.tz) {
+		dateJs = dateJs.tz(dayjs.tz.guess())
+	} else if (opts?.utc) {
+		dateJs = dateJs.utc()
+	}
 
 	if (format === "x") {
 		return dateJs.valueOf()

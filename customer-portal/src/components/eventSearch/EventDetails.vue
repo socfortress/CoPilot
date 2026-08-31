@@ -12,7 +12,7 @@
 					</div>
 					<div class="flex items-start justify-end gap-2">
 						<div class="flex-1 text-right text-sm break-all">
-							{{ formatValue(value) }}
+							{{ formatValue(key, value) }}
 						</div>
 						<div
 							class="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
@@ -40,9 +40,14 @@ import type { EventSearchResult } from "@/types/siem"
 import { NButton, NDrawer, NDrawerContent } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
+import { isTimestamp } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const props = defineProps<{
 	event: EventSearchResult | null
+	/** Time field of the selected event source, used to render event times in local time. */
+	timeField?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -51,7 +56,11 @@ const emit = defineEmits<{
 	(e: "close"): void
 }>()
 
-const { event: selectedEvent } = toRefs(props)
+const DATE_LIKE_REGEX = /\d{4}-\d{2}-\d{2}/
+
+const { event: selectedEvent, timeField } = toRefs(props)
+
+const dFormats = useSettingsStore().dateFormat
 
 const showDrawer = ref<boolean>(false)
 
@@ -70,9 +79,29 @@ function excludeFilter(field: string, value: string) {
 	emit("filter-exclude", field, value)
 }
 
-function formatValue(value: unknown): string {
-	if (value === null || value === undefined) return "-"
+/** Source `time_field`, or any key whose name contains `timestamp` (case-insensitive). */
+function isTimeField(key: string): boolean {
+	return key === timeField.value || key.toLowerCase().includes("timestamp")
+}
+
+/**
+ * The drawer renders every raw field, so a time-looking key is only reformatted when its value
+ * really is a date — an epoch number, or a string carrying a `YYYY-MM-DD` part. Without this a
+ * field such as `timestamp_offset: 5` would be rendered as an epoch and shown as 1970.
+ */
+function isEventTimeValue(value: unknown): value is string | number {
+	if (typeof value === "number") return isTimestamp(value)
+	return typeof value === "string" && DATE_LIKE_REGEX.test(value)
+}
+
+function formatValue(key: string, value: unknown): string {
+	if (value === null || value === undefined || value === "") return "-"
 	if (typeof value === "object") return JSON.stringify(value)
+	// Event times are stored in UTC; `tz: true` reads them as such and renders them in the
+	// viewer's timezone, matching the results table instead of showing a raw UTC clock.
+	if (isTimeField(key) && isEventTimeValue(value)) {
+		return String(formatDate(value, dFormats.datetime, { tz: true }))
+	}
 	return String(value)
 }
 
