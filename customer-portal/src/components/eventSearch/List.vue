@@ -45,6 +45,7 @@
 
 		<EventDetails
 			:event="selectedEvent"
+			:time-field="selectedEventSource?.time_field"
 			@filter-add="addFilter"
 			@filter-exclude="excludeFilter"
 			@close="selectedEvent = null"
@@ -67,6 +68,7 @@ import EventDetails from "@/components/eventSearch/EventDetails.vue"
 import SearchForm from "@/components/eventSearch/SearchForm.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
+import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
 
 const message = useMessage()
@@ -115,13 +117,57 @@ function formatCellValue(val: unknown): string {
 	return String(val)
 }
 
+/** Source `time_field`, or any key whose name contains `timestamp` (case-insensitive). */
+function isTimeField(key: string): boolean {
+	return key === selectedEventSource.value?.time_field || key.toLowerCase().includes("timestamp")
+}
+
+function getEventTime(row: EventSearchResult): unknown {
+	const preferred = selectedEventSource.value?.time_field
+	const keys = [
+		...(preferred ? [preferred] : []),
+		...Object.keys(row).filter(k => k !== preferred && k.toLowerCase().includes("timestamp"))
+	]
+	for (const key of keys) {
+		const value = getNestedValue(row, key)
+		if (value !== undefined && value !== null && value !== "") return value
+	}
+	return undefined
+}
+
+/**
+ * Renders an event time in the viewer's local timezone. `tz: true` is what makes offset-less
+ * timestamps — which several sources emit — be read as UTC instead of as local time; without it
+ * they render as the raw UTC clock and appear shifted by the viewer's offset.
+ */
+function formatEventTime(value: unknown): string {
+	return String(formatDate(typeof value === "number" ? value : `${value}`, dFormats.datetime, { tz: true }))
+}
+
+/** Parses on the same UTC assumption as `formatEventTime`, so sorting matches what is displayed. */
+function parseEventTime(value: unknown): number {
+	if (value === undefined || value === null || value === "") return Number.NaN
+	const parsed = typeof value === "number" ? dayjs(value) : dayjs.utc(`${value}`)
+	return parsed.isValid() ? parsed.valueOf() : Number.NaN
+}
+
 function buildColumnFromConfig(col: DisplayColumn): DataTableColumn<EventSearchResult> {
+	// A configured column pointing at the source's time field gets the same local-timezone
+	// treatment as the default Timestamp column, instead of being dumped as a raw UTC string.
+	const timeColumn = isTimeField(col.key)
+
 	return {
 		title: col.label || col.key,
 		key: col.key,
 		width: col.width || undefined,
 		ellipsis: { tooltip: true },
-		render: row => <div>{formatCellValue(getNestedValue(row, col.key))}</div>
+		render: row => {
+			const value = getNestedValue(row, col.key)
+			if (timeColumn && value !== undefined && value !== null && value !== "") {
+				return <div>{formatEventTime(value)}</div>
+			}
+			return <div>{formatCellValue(value)}</div>
+		}
 	}
 }
 
@@ -133,7 +179,18 @@ const defaultColumns = computed<DataTableColumn<EventSearchResult>[]>(() => [
 		key: "Timestamp",
 		fixed: simpleMode.value ? undefined : "left",
 		width: 160,
-		render: row => <div class="font-mono">{formatDate(row.timestamp || row["@timestamp"], dFormats.datetime)}</div>
+		sorter: (a, b) => {
+			const timeA = parseEventTime(getEventTime(a))
+			const timeB = parseEventTime(getEventTime(b))
+			if (Number.isNaN(timeA) && Number.isNaN(timeB)) return 0
+			if (Number.isNaN(timeA)) return -1
+			if (Number.isNaN(timeB)) return 1
+			return timeA - timeB
+		},
+		render: row => {
+			const ts = getEventTime(row)
+			return <div class="font-mono">{ts === undefined ? "-" : formatEventTime(ts)}</div>
+		}
 	},
 	{
 		title: "Level",
