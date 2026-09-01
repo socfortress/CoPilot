@@ -27,6 +27,38 @@ Huntress provides managed detection/response-style telemetry that can complement
 - Configure Huntress under **External Services / 3rd Party Integrations**.
 - Ensure events are tenant-aware.
 
+## Deploy (provisioning)
+
+Adding the integration only stores the customer's API keys. Nothing is
+collected until the integration is **deployed**, which is a second, separate
+call:
+
+```
+POST /api/huntress/provision
+{ "customer_code": "00002", "time_interval": 5 }
+```
+
+Note the prefix: provisioning lives under `/api/huntress`, **not** under
+`/api/integrations` — the `/api/integrations/*` routes only manage the
+integration record and its metadata.
+
+That one call does all of the following:
+
+1. Creates the Graylog index set (`huntress_<customer_code>`) and event stream,
+   and starts the stream.
+2. Creates the Grafana datasource, `HUNTRESS` folder, and dashboards.
+3. Writes the `customer_integrations_meta` row (Graylog index/stream IDs,
+   Grafana org/folder/datasource).
+4. Sets `customer_integrations.deployed = 1`.
+5. Registers the `invoke_huntress_integration_collect` scheduler job at
+   `time_interval` minutes.
+
+Step 5 is why an integration that was never deployed collects nothing: the
+scheduler job simply does not exist. The collection job itself does **not**
+read the `deployed` flag — it runs against every customer with a Huntress
+integration row — so `deployed` is a record of provisioning having completed,
+not a gate on collection.
+
 ## Success criteria
 
 - [ ] You can find at least one recent Huntress event/detection
