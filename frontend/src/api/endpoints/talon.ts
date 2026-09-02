@@ -10,6 +10,28 @@ export default {
 	getStatus(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { data?: Record<string, unknown> }>(`/talon/status`, { signal })
 	},
+	/**
+	 * Start a fresh Talon conversation for the signed-in user.
+	 *
+	 * Talon holds the conversation, not CoPilot — the chat sends only the current
+	 * message and the agent resumes its own stored session. Emptying the local
+	 * message list alone leaves the agent remembering every prior turn.
+	 *
+	 * Scoped server-side to the caller's own lane; the user is read from the JWT.
+	 */
+	resetSession() {
+		return HttpClient.post<FlaskBaseResponse & { lanes_cleared?: number }>(`/talon/session/reset`)
+	},
+	/**
+	 * Size of the signed-in user's Talon conversation. Resolved server-side, so
+	 * this never reports another analyst's activity.
+	 */
+	getSessionContext(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { input_tokens?: number | null, updated_at?: string | null }>(
+			`/talon/session/context`,
+			{ signal }
+		)
+	},
 	getJob(alertId: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { data?: TalonJobData }>(`/talon/jobs/${alertId}`, { signal })
 	},

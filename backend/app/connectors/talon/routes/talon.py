@@ -5,17 +5,22 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import StreamingResponse
 
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.talon.schema.talon import TalonInvestigateRequest
 from app.connectors.talon.schema.talon import TalonInvestigateResponse
 from app.connectors.talon.schema.talon import TalonJobResponse
 from app.connectors.talon.schema.talon import TalonMessageRequest
+from app.connectors.talon.schema.talon import TalonSessionContextResponse
+from app.connectors.talon.schema.talon import TalonSessionResetResponse
 from app.connectors.talon.schema.talon import TalonStatusResponse
 from app.connectors.talon.schema.talon import TalonTemplatesResponse
 from app.connectors.talon.services.talon import get_talon_job
+from app.connectors.talon.services.talon import get_talon_session_context
 from app.connectors.talon.services.talon import get_talon_status
 from app.connectors.talon.services.talon import investigate_alert
 from app.connectors.talon.services.talon import list_talon_templates
+from app.connectors.talon.services.talon import reset_talon_session
 from app.connectors.talon.services.talon import stream_talon_message
 from app.db.db_session import get_db
 
@@ -28,11 +33,20 @@ talon_router = APIRouter()
     description="Send a message to Talon and stream the SSE response",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def send_message(request: TalonMessageRequest) -> StreamingResponse:
-    """Send a message to Talon and stream the response as SSE."""
-    logger.info(f"Sending message to Talon: {request.message}")
+async def send_message(
+    request: TalonMessageRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+) -> StreamingResponse:
+    """
+    Send a message to Talon and stream the response as SSE.
+
+    The authenticated user selects the Talon conversation lane, so concurrent
+    analysts get separate conversations rather than being batched into one
+    prompt. It is read from the JWT, never from the request body.
+    """
+    logger.info(f"User {current_user.id} sending message to Talon")
     return StreamingResponse(
-        stream_talon_message(request),
+        stream_talon_message(request, user_id=current_user.id, user_name=current_user.username),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -52,6 +66,38 @@ async def trigger_investigation(request: TalonInvestigateRequest) -> TalonInvest
     """Trigger an investigation for a specific alert."""
     logger.info(f"Triggering investigation for alert ID: {request.alert_id}")
     return await investigate_alert(request)
+
+
+@talon_router.post(
+    "/session/reset",
+    response_model=TalonSessionResetResponse,
+    description="Clear the calling user's Talon conversation session",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def reset_session(
+    current_user: User = Depends(AuthHandler().get_current_user),
+) -> TalonSessionResetResponse:
+    """
+    Start a fresh Talon conversation for the calling analyst.
+
+    Scoped to this user's lane — clearing your own chat must not discard a
+    colleague's conversation.
+    """
+    logger.info(f"User {current_user.id} resetting their Talon session")
+    return await reset_talon_session(user_id=current_user.id)
+
+
+@talon_router.get(
+    "/session/context",
+    response_model=TalonSessionContextResponse,
+    description="Size of the calling user's Talon conversation, for the chat header readout",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_session_context(
+    current_user: User = Depends(AuthHandler().get_current_user),
+) -> TalonSessionContextResponse:
+    """Report only the caller's own lane — never another analyst's."""
+    return await get_talon_session_context(user_id=current_user.id)
 
 
 @talon_router.get(
