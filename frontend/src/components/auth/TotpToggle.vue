@@ -65,11 +65,25 @@
 							v-model:value="verifyCode"
 							block
 							size="large"
-							:input-props="{ autocomplete: 'one-time-code', inputmode: 'numeric' }"
+							:allow-input="allowDigitsOnly"
 							class="max-w-100"
 							@finish="confirmSetup()"
 							@keydown.enter="confirmSetup()"
-						/>
+						>
+							<template #default="{ index, ref: otpRef, ...inputProps }">
+								<n-input
+									:key="index"
+									:ref="asOtpInputRef(otpRef)"
+									v-bind="inputProps"
+									:input-props="{
+										type: 'text',
+										inputmode: 'numeric',
+										pattern: '[0-9]*',
+										autocomplete: 'one-time-code'
+									}"
+								/>
+							</template>
+						</n-input-otp>
 
 						<div class="flex justify-between gap-2">
 							<n-button @click="setupStep = 1">Back</n-button>
@@ -154,10 +168,24 @@
 					v-model:value="regenCode"
 					block
 					size="large"
-					:input-props="{ autocomplete: 'one-time-code', inputmode: 'numeric' }"
+					:allow-input="allowDigitsOnly"
 					@finish="regenBackupCodes()"
 					@keydown.enter="regenBackupCodes()"
-				/>
+				>
+					<template #default="{ index, ref: otpRef, ...inputProps }">
+						<n-input
+							:key="index"
+							:ref="asOtpInputRef(otpRef)"
+							v-bind="inputProps"
+							:input-props="{
+								type: 'text',
+								inputmode: 'numeric',
+								pattern: '[0-9]*',
+								autocomplete: 'one-time-code'
+							}"
+						/>
+					</template>
+				</n-input-otp>
 				<div class="flex justify-end gap-2">
 					<n-button @click="showRegenModal = false">Cancel</n-button>
 					<n-button
@@ -179,6 +207,7 @@
 </template>
 
 <script lang="ts" setup>
+import type { VNodeRef } from "vue"
 import type { TOTPSetupResponse } from "@/api/endpoints/totp"
 import type { ApiError } from "@/types/common"
 import {
@@ -201,6 +230,17 @@ import Api from "@/api"
 import BackupCodesPanel from "@/components/auth/BackupCodesPanel.vue"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
+
+// Naive UI types the OTP slot `ref` as `(InputInst) => void`; Vue's VNodeRef also gets `null` on unmount.
+function asOtpInputRef(slotRef: unknown) {
+	return slotRef as VNodeRef
+}
+
+// Restrict the OTP boxes to digits: naive-ui applies `allowInput` to both
+// typing and pasting. An empty char must pass through so deletions still work.
+function allowDigitsOnly(char: string) {
+	return char === "" || /^\d$/.test(char)
+}
 
 const message = useMessage()
 
