@@ -9,10 +9,24 @@
 					v-model:value="twoFaCode"
 					block
 					size="large"
-					:input-props="{ autocomplete: 'one-time-code', inputmode: 'numeric' }"
+					:allow-input="allowDigitsOnly"
 					@finish="verify2fa()"
 					@keydown.enter="verify2fa()"
-				/>
+				>
+					<template #default="{ index, ref: otpRef, ...inputProps }">
+						<n-input
+							:key="index"
+							:ref="asOtpInputRef(otpRef)"
+							v-bind="inputProps"
+							:input-props="{
+								type: 'text',
+								inputmode: 'numeric',
+								pattern: '[0-9]*',
+								autocomplete: 'one-time-code'
+							}"
+						/>
+					</template>
+				</n-input-otp>
 			</n-collapse-transition>
 			<n-collapse-transition :show="showBackupInput">
 				<n-input
@@ -48,6 +62,7 @@
 
 <script lang="ts" setup>
 import type { InputOtpInst } from "naive-ui"
+import type { VNodeRef } from "vue"
 import type { TOTPValidateRequest } from "@/api/endpoints/totp"
 import { NButton, NCollapseTransition, NInput, NInputOtp, useMessage } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
@@ -59,6 +74,17 @@ const emit = defineEmits<{
 }>()
 
 const twoFaTempToken = defineModel<string>("twoFaTempToken", { default: "" })
+
+// Naive UI types the OTP slot `ref` as `(InputInst) => void`; Vue's VNodeRef also gets `null` on unmount.
+function asOtpInputRef(slotRef: unknown) {
+	return slotRef as VNodeRef
+}
+
+// Restrict the OTP boxes to digits: naive-ui applies `allowInput` to both
+// typing and pasting. An empty char must pass through so deletions still work.
+function allowDigitsOnly(char: string) {
+	return char === "" || /^\d$/.test(char)
+}
 
 const router = useRouter()
 const message = useMessage()
