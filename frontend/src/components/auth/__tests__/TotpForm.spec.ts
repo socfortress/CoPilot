@@ -4,7 +4,7 @@ import { defineComponent, h, nextTick, ref } from "vue"
 
 import TotpForm from "../TotpForm.vue"
 
-const verify2fa = vi.fn(() => Promise.resolve())
+const verify2fa = vi.fn((_payload?: unknown) => Promise.resolve())
 const push = vi.fn()
 
 vi.mock("naive-ui", async importOriginal => {
@@ -118,9 +118,9 @@ describe("totpForm OTP field (issue #1095)", () => {
 				const value = ref<string[]>([])
 				return () =>
 					h(NInputOtp, {
-						"value": value.value,
+						value: value.value,
 						"onUpdate:value": (v: string[]) => (value.value = v),
-						"inputProps": { autocomplete: "one-time-code", inputmode: "numeric" }
+						inputProps: { autocomplete: "one-time-code", inputmode: "numeric" }
 					} as never)
 			}
 		})
