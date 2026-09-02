@@ -13,6 +13,8 @@ from app.connectors.talon.schema.talon import TalonInvestigateResponse
 from app.connectors.talon.schema.talon import TalonJobResponse
 from app.connectors.talon.schema.talon import TalonMessageRequest
 from app.connectors.talon.schema.talon import TalonMessageResponse
+from app.connectors.talon.schema.talon import TalonSessionContextResponse
+from app.connectors.talon.schema.talon import TalonSessionResetResponse
 from app.connectors.talon.schema.talon import TalonStatusResponse
 from app.connectors.talon.schema.talon import TalonTemplatesResponse
 from app.connectors.talon.utils.universal import send_get_request
@@ -21,7 +23,33 @@ from app.connectors.talon.utils.universal import send_post_request_sse
 from app.db.universal_models import AiAnalystJob
 
 
-async def send_talon_message(request: TalonMessageRequest) -> TalonMessageResponse:
+def _message_payload(
+    request: TalonMessageRequest,
+    user_id: Optional[int] = None,
+    user_name: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Build the Talon /message body.
+
+    user_id selects the caller's conversation lane in Talon: their own session,
+    queue slot and response stream. Omitting it drops the caller into the
+    shared anonymous lane, where concurrent analysts are batched into one
+    prompt and can receive each other's replies — so it is always stamped from
+    the authenticated user rather than taken from the request body.
+    """
+    payload: Dict[str, Any] = {"message": request.message, "sender": request.sender}
+    if user_id is not None:
+        payload["user_id"] = str(user_id)
+    if user_name:
+        payload["user_name"] = user_name
+    return payload
+
+
+async def send_talon_message(
+    request: TalonMessageRequest,
+    user_id: Optional[int] = None,
+    user_name: Optional[str] = None,
+) -> TalonMessageResponse:
     """
     Send a message to Talon for ad-hoc analyst prompts.
 
@@ -34,7 +62,7 @@ async def send_talon_message(request: TalonMessageRequest) -> TalonMessageRespon
     logger.info(f"Sending message to Talon: {request.message}")
     response = await send_post_request(
         endpoint="/message",
-        data=request.model_dump(),
+        data=_message_payload(request, user_id, user_name),
         timeout=600,
     )
     if not response.get("success"):
@@ -49,7 +77,11 @@ async def send_talon_message(request: TalonMessageRequest) -> TalonMessageRespon
     )
 
 
-async def stream_talon_message(request: TalonMessageRequest):
+async def stream_talon_message(
+    request: TalonMessageRequest,
+    user_id: Optional[int] = None,
+    user_name: Optional[str] = None,
+):
     """
     Stream a message response from Talon via SSE.
 
@@ -62,9 +94,69 @@ async def stream_talon_message(request: TalonMessageRequest):
     logger.info(f"Streaming message to Talon: {request.message}")
     async for chunk in send_post_request_sse(
         endpoint="/message",
-        data=request.model_dump(),
+        data=_message_payload(request, user_id, user_name),
     ):
         yield chunk
+
+
+async def reset_talon_session(user_id: int) -> TalonSessionResetResponse:
+    """
+    Clear the calling analyst's Talon conversation.
+
+    Talon holds the conversation, not CoPilot: the chat UI sends only the
+    current message and the agent resumes its own stored session. Clearing the
+    browser therefore leaves the agent remembering every prior turn, which is
+    both the surprise ("I cleared the chat and it still knows") and the cost —
+    a resumed session grows without bound and eventually takes minutes to
+    answer.
+
+    Scoped to this user's lane. An analyst starting a fresh conversation must
+    not discard a colleague's.
+    """
+    logger.info(f"Resetting Talon session for user {user_id}")
+    response = await send_post_request(
+        endpoint="/session/reset",
+        data={"scope": "chat", "user_id": str(user_id)},
+    )
+    if not response.get("success"):
+        raise HTTPException(
+            status_code=500,
+            detail=response.get("message", "Failed to reset Talon session"),
+        )
+    data = response.get("data") or {}
+    return TalonSessionResetResponse(
+        success=True,
+        message="Talon session cleared",
+        lanes_cleared=data.get("cleared", 0),
+    )
+
+
+async def get_talon_session_context(user_id: int) -> TalonSessionContextResponse:
+    """
+    Size of the calling analyst's Talon conversation.
+
+    Resolved server-side so the caller only ever learns about its own lane —
+    Talon's /status lists every lane, and with per-user conversations those
+    figures are another analyst's activity, not this one's.
+
+    Advisory: a Talon that is down or has no record of the lane yields a null
+    rather than an error, because this only decorates the chat header.
+    """
+    response = await send_get_request(endpoint="/status")
+    if not response.get("success"):
+        return TalonSessionContextResponse(success=True, message="Talon session context unavailable")
+
+    sessions = (response.get("data") or {}).get("sessions") or []
+    lane = next((s for s in sessions if str(s.get("user_id") or "") == str(user_id)), None)
+    if lane is None:
+        return TalonSessionContextResponse(success=True, message="No active Talon conversation")
+
+    return TalonSessionContextResponse(
+        success=True,
+        message="Talon session context retrieved",
+        input_tokens=lane.get("input_tokens"),
+        updated_at=lane.get("updated_at"),
+    )
 
 
 async def investigate_alert(request: TalonInvestigateRequest) -> TalonInvestigateResponse:

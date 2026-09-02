@@ -25,6 +25,8 @@
 		<TalonChatQuery
 			v-model:input="input"
 			:loading="streaming"
+			:resetting
+			:context-tokens
 			@message="sendMessage"
 			@stop="stopStream()"
 			@clear-chat="clearChat()"
@@ -38,7 +40,7 @@ import type { Message } from "./TalonChatQuery.vue"
 import { useStorage } from "@vueuse/core"
 import { NScrollbar, useMessage } from "naive-ui"
 import { nanoid } from "nanoid"
-import { nextTick, onBeforeUnmount, ref } from "vue"
+import { nextTick, onBeforeUnmount, onMounted, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import Markdown from "@/components/common/Markdown.vue"
@@ -61,6 +63,11 @@ const input = ref("")
 const streaming = ref(false)
 const streamBuffer = ref("")
 const scrollbar = ref<ScrollbarInst | null>(null)
+const resetting = ref(false)
+// Size of the conversation Talon is carrying. Surfaced because a resumed
+// session grows without bound: past a few hundred thousand tokens replies
+// slow to minutes, and there is otherwise nothing to tell the analyst why.
+const contextTokens = ref<number | null>(null)
 
 let abortController: AbortController | null = null
 
@@ -69,9 +76,34 @@ function useExample(example: string) {
 	sendMessage({ input: example })
 }
 
-function clearChat() {
-	messages.value = []
+async function clearChat() {
+	if (resetting.value) return
+
+	resetting.value = true
+	try {
+		// Reset Talon first. Emptying the local list on a failed reset would
+		// report success while the agent still holds every prior turn.
+		await Api.talon.resetSession()
+		messages.value = []
+		contextTokens.value = null
+	} catch {
+		message.error("Couldn't start a new session. Talon still has the previous conversation.")
+	} finally {
+		resetting.value = false
+	}
 }
+
+async function loadContextSize() {
+	try {
+		const res = await Api.talon.getSessionContext()
+		contextTokens.value = res.data?.input_tokens ?? null
+	} catch {
+		// Advisory only — a status hiccup must not disturb the chat.
+		contextTokens.value = null
+	}
+}
+
+onMounted(loadContextSize)
 
 function scrollChat() {
 	nextTick(() => {
@@ -116,6 +148,7 @@ async function sendMessage(payload: Message) {
 				streaming.value = false
 				streamBuffer.value = ""
 				scrollChat()
+				loadContextSize()
 			},
 			(err: string) => {
 				if (err !== "AbortError") {
@@ -151,9 +184,9 @@ function stopStream() {
 }
 
 defineExpose({
-	clearHistory() {
-		messages.value = []
-	}
+	// Same contract as the in-chat control: a caller asking to clear the history
+	// means "start a new conversation", not "hide the transcript".
+	clearHistory: clearChat
 })
 
 // Cancel anything still in flight when this component goes away: without it the
