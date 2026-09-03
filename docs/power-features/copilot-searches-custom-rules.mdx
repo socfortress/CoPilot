@@ -1,0 +1,295 @@
+---
+title: Custom detection rules (authoring, validation, backtesting)
+description: Write your own Graylog detection rules inside CoPilot — validate them against a schema and linter, backtest them on your real data, then publish them to your own GitHub repository.
+---
+
+CoPilot Searches ships a large shared catalog of detection rules, but every environment has detections that only make sense locally: a naming convention, an internal application, a tuning exception. The **Detection Rule Editor** lets you author those rules in CoPilot, check them, prove them against your own data, and publish them to a repository you control — where they merge back into the same catalog you already browse.
+
+This page covers the custom-rule half of CoPilot Searches. For browsing, executing and provisioning the shared catalog, see [CoPilot Searches](/power-features/copilot-searches).
+
+---
+
+## The mental model
+
+Three ideas explain almost every behaviour in this feature.
+
+**1. Rules live in git, not in a CoPilot database.** There is no rules table. A rule is a YAML file in a GitHub repository, and CoPilot reads those files into an in-memory cache. Two sources feed that cache:
+
+| Source | Repository | Access | Who sees it |
+|---|---|---|---|
+| **Catalog** | `socfortress/CoPilot-Search-Queries` | Read-only | Everyone |
+| **Custom** | Your own repo, one per customer | Read **and** write | Everyone (see [Guardrails](#guardrails-and-things-to-know)) |
+
+Both are pulled the same way and merged into one catalog, each rule tagged with its provenance. That is why a published rule shows up beside catalog rules with a **Custom** badge rather than in a separate list, and why the grid's **Source** filter (`catalog` / `custom`) exists.
+
+The consequence worth internalising: **git is the source of truth.** Your rules are versioned, reviewable, diffable, and portable to another CoPilot deployment by pointing it at the same repository. Equally, deleting a rule means deleting the file — there is nothing to delete in CoPilot.
+
+**2. The only CoPilot-side state is a pointer, not rule content.** Per customer, CoPilot stores `{repo, branch, token, enabled}` — nothing else. It lives in MinIO (bucket `copilot-searches`, key `custom-repos/<customer_code>.json`), so enabling this feature required no database schema change.
+
+**3. Custom rules are Graylog-only.** The editor targets rules with a top-level `graylog.query` string and an optional `aggregation` block. An OpenSearch DSL `search:` block or a `parameters:` block is rejected outright. This is not an arbitrary restriction: validation and backtesting run entirely through Graylog's Search API, so a rule the editor cannot execute against Graylog is a rule it cannot verify for you.
+
+> Catalog rules that carry a `search:` block still work as they always have — they are simply not editable in this editor.
+
+---
+
+## Anatomy of a rule
+
+Keys have a **canonical order**. It is enforced as a warning (except `aggregation`, which must come after `graylog` — that one is an error), and it exists so that every rule in the catalog reads the same way.
+
+| Key | Required | Type | Notes |
+|---|---|---|---|
+| `name` | **Yes** | string | Human-readable rule name |
+| `id` | **Yes** | string | A UUID — generate a fresh one per rule |
+| `version` | **Yes** | integer ≥ 1 | Bump when you change a published rule |
+| `schema_version` | **Yes** | **quoted** string | `"1.0"` — unquoted `1.0` parses as a number and is rejected |
+| `date` | Recommended | quoted ISO date | `"2026-08-26"` |
+| `author` | Recommended | string | |
+| `description` | **Yes** | folded string | What it detects and why it matters |
+| `data_source` | Recommended | list of strings | Quote any entry containing `:` |
+| `how_to_implement` | Optional | folded string | What must be collected or enabled |
+| `known_false_positives` | Optional | folded string | Benign triggers and how to tune them |
+| `response` | Recommended | object | `risk_score` (0–100), `severity` (`low`/`medium`/`high`/`critical`) |
+| `tags` | Recommended | object | `asset_type`, `mitre_attack_id[]`, `custom_tags[]`, `product[]`, `security_domain` |
+| `graylog` | **Yes** | object | **Only** `query` — any other key is an error |
+| `aggregation` | Optional | object | Threshold rules; must come **after** `graylog` |
+
+"Required" means publishing fails without it. "Recommended" means you get a warning but can still publish.
+
+### A simple match rule
+
+```yaml
+name: Audit Policy Changed
+id: 7b1f0a3e-2c44-4a1f-9f3b-6c1d2e8a5b90
+version: 1
+schema_version: "1.0"
+date: "2026-08-26"
+author: SOCFortress LLC
+description: >
+  Detects modification of the Windows audit policy, a common precursor to
+  anti-forensic activity.
+data_source:
+  - Windows Security Event Log
+how_to_implement: >
+  Requires the Security channel to be collected and audit policy change
+  auditing to be enabled.
+known_false_positives: >
+  Legitimate GPO rollouts will trigger this. Tune by excluding your
+  configuration management service accounts.
+response:
+  risk_score: 50
+  severity: medium
+tags:
+  asset_type: Endpoint
+  mitre_attack_id:
+    - T1562.002
+  custom_tags:
+    - audit
+  product:
+    - Wazuh
+  security_domain: endpoint
+graylog:
+  query: data_win_system_eventID:"4719"
+```
+
+### A threshold rule
+
+Add the `aggregation` block when the signal is a *rate*, not a single event — "30 failed logons for one user in 10 minutes" rather than "a failed logon".
+
+```yaml
+graylog:
+  query: data_win_system_eventID:"4625"
+aggregation:
+  enabled: true
+  function: count            # count | distinct_count
+  field: null                # required only when function is distinct_count
+  group_by:
+    - data_win_eventdata_targetUserName
+  window: 10m
+  threshold: 30
+  condition: ">"             # one of  >  >=  <  <=  ==
+```
+
+| Field | Meaning |
+|---|---|
+| `enabled` | `false` keeps the block as documentation without activating it |
+| `function` | `count` (how many events) or `distinct_count` (how many unique values of `field`) |
+| `field` | Must be `null`/omitted for `count`; **required** for `distinct_count` |
+| `group_by` | Evaluate the threshold per value of these fields — usually a user, host, or source IP |
+| `window` | Sliding window: `30s`, `10m`, `1h`, `1d` |
+| `execute_every` | Optional — how often the check runs once provisioned |
+| `threshold` / `condition` | Integer ≥ 1, compared with `>`, `>=`, `<`, `<=`, `==` |
+
+---
+
+## Before you start
+
+1. **Create the repository.** A GitHub repository you control. Rules must live under **`detections/`** and end in `.yaml` or `.yml` — CoPilot scans the repo tree and ignores everything else. Nested folders are fine (`detections/custom/windows/my-rule.yaml`).
+
+2. **Create a GitHub token.** A PAT with **Contents: read and write** on that repository. A fine-grained token scoped to the single repo is the right choice — the token is used only to read rules and commit rule files.
+
+3. **Register the repo in CoPilot.** Go to **Agents → CoPilot Searches → Custom repos** and add: **Customer**, **Repository** (`owner/name`), **Branch**, and the **token**. Press **Test** first — it dry-runs the pull and reports how many detection YAMLs it found, so a wrong branch or a bad token surfaces immediately instead of as an empty catalog later.
+
+4. **Confirm the customer's Graylog stream.** Backtesting resolves the customer's Graylog stream from their customer metadata. It must be a real Graylog stream id (a 24-character hex ObjectId); a placeholder value is rejected with a clear message. Everything else works without this — only backtesting needs it.
+
+---
+
+## Creating a rule
+
+**Agents → CoPilot Searches → Create rule** opens the editor at `/copilot-searches/editor`.
+
+1. **Start from a template.** The template menu offers a **simple match rule** and a **rule with aggregation**. A fresh editor loads the simple rule with the aggregation block present but `enabled: false`, so the shape is discoverable without being active. Each template generates a fresh UUID and today's date for you.
+
+2. **Write the rule.** Required keys are highlighted and **cannot be deleted** — `name`, `id`, `version`, `schema_version`, `description`, `graylog`, `query`. Their values stay freely editable; attempting to remove the key itself is rejected with a toast. Everything else, including the whole `aggregation` block, is yours to change or delete.
+
+   The right-hand panel has a **Graylog syntax** tab: a searchable cheat-sheet of Graylog/Lucene query syntax (fields, `_exists_`, boolean operators, wildcards, ranges, regex, escaping) with click-to-copy examples.
+
+3. **Read the validation panel.** Validation runs automatically as you type (debounced), splitting findings into **Errors** and **Warnings**. Click any finding to jump to the offending line, which flashes briefly.
+
+4. **Backtest against real data.** Press **Backtest**, pick a customer and a look-back window. See [Backtesting](#backtesting-what-it-actually-does) below.
+
+5. **Publish.** **Publish** is enabled only once validation is error-free. See [Publishing](#publishing).
+
+> Your work is auto-saved to the browser's local storage as you type and restored when you come back. Loading a template deliberately starts fresh.
+
+---
+
+## Validation logic
+
+Validation runs in four layers. The first three are pure text analysis and run live in the editor; the fourth needs a customer's real data and therefore runs inside the backtest.
+
+| Layer | What it checks | Where it runs |
+|---|---|---|
+| **L1 — Structure** | Required keys, types, value ranges, enums | Editor, live |
+| **L2 — Reference integrity** | Whether the rule's parts agree with each other | Editor, live |
+| **L3 — Query parse** | Whether the Graylog query is well-formed | Editor, live |
+| **L4 — Field existence** | Whether the fields exist in this tenant's data | Backtest |
+
+**Errors block publishing. Warnings never do** — L2 in particular is deliberately advisory, because an enrichment pipeline can create fields the linter cannot see.
+
+### L1 — Structure
+
+Errors: a missing required key; a wrong type; `schema_version` that is not a quoted string; a `graylog` block containing anything other than `query`; a forbidden `search:` or `parameters:` block; `aggregation` placed before `graylog`; `field` set when `function: count`; `field` missing when `function: distinct_count`.
+
+Warnings: an `id` that is not a UUID; top-level keys out of canonical order; a `window` that doesn't look like `10m`; long text fields not using a folded scalar (`>`); a `data_source` entry containing `:` that isn't quoted; a missing recommended key (`author`, `date`, `data_source`, `response`, `tags`).
+
+### L2 — Reference integrity
+
+All warnings. These catch rules that are structurally perfect but internally inconsistent:
+
+- `response.message` interpolates `$some_field$`, but the query and aggregation never use that field — it would render blank in the alert.
+- A `risk_objects` or `threat_objects` entry points at a field the rule never touches, so the object arrives empty.
+- A `mitre_attack_id` that isn't shaped like `T1059` or `T1059.001`.
+- A `risk_score` far outside the usual band for its `severity` (roughly: low 1–40, medium 25–75, high 55–95, critical 75–100). The bands are wide on purpose — only clear mismatches are flagged.
+- A `date` that isn't a quoted ISO date.
+
+### L3 — Query parse
+
+A lightweight parse of `graylog.query` that catches what Graylog would reject at runtime: an unbalanced double-quote, unbalanced parentheses, an unclosed `/regex/`, or a query starting or ending on a dangling `AND` / `OR` / `NOT`. Quote-aware, so parentheses inside a quoted phrase don't produce false alarms.
+
+One performance advisory (warning only): a leading `.*` in a regex scans everything — anchor it or use a literal where you can.
+
+### L4 — Field existence
+
+Runs during the backtest, where a customer and stream are in scope. Every field used in the query, `group_by`, or aggregation `field` is compared against the fields that actually appear in that tenant's stream, and anything missing is reported as a warning on the results.
+
+This is the check that catches the typo you cannot see — `eventlD` with a lowercase L instead of `eventID` is a perfectly valid query that will simply never match. It is skipped when the stream has fewer than five known fields, since an empty or brand-new stream would flag everything.
+
+---
+
+## Backtesting: what it actually does
+
+A backtest answers "what would this rule have done?" against one customer's real Graylog data, before the rule goes anywhere near production.
+
+**The flow:** resolve the customer's Graylog stream → run `graylog.query` over the chosen window through Graylog's Search API → pull the matching events once → compute everything locally.
+
+**What you get back:**
+
+- **Total hits** over the window.
+- **A sparkline** of matches per time bucket, so a steady trickle is visually distinguishable from one spike.
+- **Sample events** — click any row to open a full-event inspector with a field filter, click-to-copy values, collapsible internal `gl2_*` fields, and Copy JSON.
+- **Top values** per field, which is how you tell "one noisy host" from "genuine spread across the fleet".
+- **Missing fields**, the L4 check above.
+- **For threshold rules:** how many alerts the rule *would have raised*, the top offenders, and a **threshold sensitivity** row showing how that alert count changes at neighbouring thresholds. This is the fastest way to pick a threshold that isn't a guess.
+
+**Bounds and honesty about them:**
+
+| Bound | Value |
+|---|---|
+| Look-back window | 5 minutes to 30 days (default 7 days) |
+| Events fetched for analysis | 10,000 |
+| Sample events shown | 20 |
+
+When a rule matches more than the fetch cap, the result says so explicitly and the total is labelled as a lower bound — a truncated result is never presented as a complete one.
+
+**The threshold simulation uses the same `count` / `distinct_count` semantics that CoPilot uses when it provisions the rule to Graylog**, so the simulated alert count reflects what the deployed rule will actually do rather than an approximation.
+
+> Backtesting is entirely read-only: it queries Graylog and writes nothing. Run it as often as you like.
+
+---
+
+## Publishing
+
+**Publish** commits the rule to the customer's own repository via the GitHub Contents API — a direct commit to the configured branch, using the write token from that customer's repo pointer.
+
+Four things happen before a commit is made:
+
+1. **The rule must be lint-valid.** Any error blocks the publish, with the findings returned so you can fix them.
+2. **The path is constrained** to `detections/**.yaml` (or `.yml`) — no `..`, no backslashes, no other locations in the repo. A write token handed to CoPilot must not become a way to overwrite a workflow file or a README. The default path is `detections/custom/<slugified-name>.yaml`.
+3. **The rule id must be unique** across the shared catalog *and* every custom repo. If the id is already taken, you are told exactly where — the catalog, or another customer's file — and asked to generate a new UUID. This matters because the cache resolves collisions by keeping the first rule it loaded (the catalog always wins), so a duplicate id would mean your rule silently never appears.
+4. **Same file, same rule = update.** Re-publishing to the path a rule already occupies is an update, not a collision. That is how you edit a published rule.
+
+Afterwards, the rule appears in the catalog alongside everything else with a **Custom** badge, filterable via **Source → custom**.
+
+**Note:** the catalog cache refreshes on a 30-minute cycle, so a freshly published rule is not visible instantly. Use **Refresh** on the CoPilot Searches page to pull it immediately.
+
+### Updating and deleting
+
+There is **no in-app editor for an already-published rule** — this was a deliberate product decision, not an oversight.
+
+- **To update:** publish to the same path, and bump `version`.
+- **To delete:** remove the file from your repository and refresh the catalog. CoPilot holds no copy to delete.
+
+---
+
+## Guardrails and things to know
+
+- **Custom rules are visible to every authenticated user**, not just the customer they belong to. Rule *content* is shared across tenants even though the repo pointer is per-customer. Treat rule text as non-sensitive: put tuning logic in it, not customer secrets or internal hostnames you would not want another tenant to read.
+- **Write tokens are never returned by the API.** Reads report only whether a token is set. When editing a repo pointer, leaving the token field blank keeps the stored token.
+- **The shared catalog wins id collisions.** If a custom rule and a catalog rule share an id, the catalog rule loads and yours is skipped — which is exactly what the publish-time collision check prevents.
+- **Rule authoring, validation, backtesting and publishing are admin/analyst actions.** Browsing the catalog is open to customer users.
+- **A repo that fails to pull is visible, not silent.** The Custom repos panel shows a per-repo status chip with the last refresh outcome, the rule count, and the error if there was one.
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| *"Customer has no Graylog stream configured"* on backtest | No stream in the customer's metadata | Set the customer's Graylog stream |
+| *"placeholder/invalid Graylog stream"* | The stored value isn't a 24-hex Graylog stream id | Replace it with the real stream id |
+| *"has no write token"* on publish | The repo pointer was saved without a PAT | Add a token with Contents: read and write |
+| *"Rule id … is already used"* | Duplicate UUID | Generate a new UUID, or publish to that rule's existing path to update it |
+| *"path must be a YAML file under detections/"* | Path outside the allowed area | Use `detections/…/name.yaml` |
+| Published rule doesn't appear | 30-minute cache TTL | Press **Refresh** on CoPilot Searches |
+| Custom repo loads 0 rules | Wrong branch, rules outside `detections/`, or a token without read access | Use **Test** in Custom repos — it reports the count and the error |
+| Backtest returns 0 hits but the query looks right | A field name that doesn't exist in that stream | Check the **missing fields** warning on the backtest result |
+| Rule fires far more than expected in the backtest | Threshold too low, or `group_by` too broad | Use the threshold sensitivity row to choose a better value |
+
+---
+
+## Setup checklist
+
+- [ ] A GitHub repository with a `detections/` folder
+- [ ] A PAT with Contents: read and write on that repository
+- [ ] The repo registered under **Custom repos** for the customer, with **Test** passing
+- [ ] The customer's Graylog stream set (required for backtesting)
+- [ ] One rule authored, validated clean, backtested, and published
+- [ ] The published rule visible in the catalog with a **Custom** badge after a refresh
+
+---
+
+## Related resources
+
+- [CoPilot Searches](/power-features/copilot-searches) — browsing, executing and provisioning the shared catalog
+- Shared rule catalog: https://github.com/socfortress/CoPilot-Search-Queries
+- [Graylog search query language](https://go2docs.graylog.org/current/making_sense_of_your_log_data/writing_search_queries.html)

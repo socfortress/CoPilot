@@ -207,6 +207,7 @@
               "power-features/atomic-red-team",
               "power-features/report-creation",
               "power-features/copilot-searches",
+              "power-features/copilot-searches-custom-rules",
               "power-features/sca-policies"
             ]
           }
