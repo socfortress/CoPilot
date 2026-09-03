@@ -110,6 +110,38 @@
 				</div>
 			</n-card>
 		</section>
+
+		<!-- Add a column by field path -->
+		<section class="flex min-w-0 flex-col gap-3">
+			<div>
+				<p class="text-secondary text-3xs font-medium tracking-widest uppercase">Add field manually</p>
+				<p class="text-secondary mt-1 text-xs">
+					For fields not returned by discovery, such as a dynamically mapped field
+				</p>
+			</div>
+
+			<div class="flex flex-col gap-2 sm:flex-row">
+				<n-input
+					v-model:value="manualField"
+					class="font-mono"
+					size="small"
+					placeholder="Field path, e.g. syslog_level"
+					@keydown.enter="addManualColumn()"
+				/>
+				<n-input
+					v-model:value="manualLabel"
+					size="small"
+					placeholder="Column title (optional)"
+					@keydown.enter="addManualColumn()"
+				/>
+				<n-button size="small" secondary :disabled="!manualField.trim()" @click="addManualColumn()">
+					<template #icon>
+						<Icon :name="AddIcon" :size="14" />
+					</template>
+					Add
+				</n-button>
+			</div>
+		</section>
 	</div>
 </template>
 
@@ -139,11 +171,14 @@ const SearchIcon = "carbon:search"
 const CloseIcon = "carbon:close"
 const ArrowUpIcon = "carbon:arrow-up"
 const ArrowDownIcon = "carbon:arrow-down"
+const AddIcon = "carbon:add"
 
 const message = useMessage()
 
 const localColumns = ref<DisplayColumn[]>([])
 const fieldFilter = ref("")
+const manualField = ref("")
+const manualLabel = ref("")
 const saving = ref(false)
 
 watch(
@@ -156,6 +191,8 @@ watch(
 				width: c.width ?? null
 			}))
 			fieldFilter.value = ""
+			manualField.value = ""
+			manualLabel.value = ""
 		}
 	},
 	{ immediate: true }
@@ -189,6 +226,28 @@ function addColumn(fieldPath: string) {
 		label: defaultLabelFor(fieldPath),
 		width: null
 	})
+}
+
+/**
+ * Add a column for a field path typed by hand. Field discovery reports what the index
+ * mappings declare; a field can still be absent from that list (a dynamic mapping that
+ * has not been written yet, an alias), and the column renders fine regardless because
+ * values are read from the event `_source`.
+ */
+function addManualColumn() {
+	const key = manualField.value.trim()
+	if (!key) return
+	if (usedKeys.value.has(key)) {
+		message.warning(`Column "${key}" is already in the table`)
+		return
+	}
+	localColumns.value.push({
+		key,
+		label: manualLabel.value.trim() || defaultLabelFor(key),
+		width: null
+	})
+	manualField.value = ""
+	manualLabel.value = ""
 }
 
 function removeColumn(idx: number) {

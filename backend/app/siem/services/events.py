@@ -220,34 +220,33 @@ async def get_field_mappings(
     source_name: str,
     db: AsyncSession,
 ) -> FieldMappingsResponse:
-    """Retrieve index field name mappings for a customer's event source."""
+    """Retrieve the field names available across a customer's event source.
+
+    Uses `_field_caps` rather than `_mapping` because an event source pattern routinely
+    spans many indices whose mappings diverge: a quiet period or a dynamically-mapped
+    field means one index can be missing fields another has, so reading a single index's
+    mapping under-reports the source (#1114). `_field_caps` answers exactly this question
+    -- the union of fields over every matching index -- in one response instead of a full
+    mapping per index, and it echoes each field path as the mapping declares it, so no
+    path is re-derived here and already-configured columns keep resolving.
+    """
     event_source = await get_event_source_by_customer_and_name(customer_code, source_name, db)
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
     try:
-        mapping_response = await es_client.indices.get_mapping(index=event_source.index_pattern)
-
-        # Flatten nested mappings into dot-notation field list
-        fields = []
-        for index_name in mapping_response:
-            properties = mapping_response[index_name].get("mappings", {}).get("properties", {})
-            _flatten_properties(properties, "", fields)
-            break  # All indices matching pattern share the same mapping
-
-        # Deduplicate and sort
-        seen = set()
-        unique_fields = []
-        for f in fields:
-            if f.field not in seen:
-                seen.add(f.field)
-                unique_fields.append(f)
-        unique_fields.sort(key=lambda x: x.field)
+        response = await es_client.field_caps(
+            index=event_source.index_pattern,
+            fields="*",
+            ignore_unavailable=True,
+            allow_no_indices=True,
+        )
+        fields = _fields_from_field_caps(response.get("fields", {}))
 
         return FieldMappingsResponse(
-            fields=unique_fields,
-            total=len(unique_fields),
+            fields=fields,
+            total=len(fields),
             index_pattern=event_source.index_pattern,
             success=True,
-            message=f"Retrieved {len(unique_fields)} field mappings",
+            message=f"Retrieved {len(fields)} field mappings",
         )
     except Exception as e:
         logger.error(f"Error retrieving field mappings: {e}")
@@ -256,13 +255,38 @@ async def get_field_mappings(
         await es_client.close()
 
 
-def _flatten_properties(properties: dict, prefix: str, fields: list) -> None:
-    """Recursively flatten OpenSearch mapping properties into FieldMapping objects."""
-    for field_name, field_info in properties.items():
-        full_name = f"{prefix}{field_name}" if not prefix else f"{prefix}_{field_name}"
-        field_type = field_info.get("type")
-        if field_type:
-            fields.append(FieldMapping(field=full_name, type=field_type))
-        # Recurse into nested properties
-        if "properties" in field_info:
-            _flatten_properties(field_info["properties"], full_name, fields)
+def _fields_from_field_caps(field_caps: dict) -> list:
+    """Project a `_field_caps` `fields` object into a sorted FieldMapping list.
+
+    Three kinds of entry are dropped as noise in a column picker: metadata fields
+    (`_id`, `_index`, ...), container fields (`object`/`nested`, which hold no value of
+    their own -- the previous `_mapping` walk skipped them for the same reason), and
+    multi-field subfields whose parent leaf is also present (`full_log.keyword` when
+    `full_log` exists). A field mapped with conflicting types across indices reports
+    every type rather than silently picking a winner.
+    """
+    leaf_names = {name for name, caps in field_caps.items() if _leaf_types(caps)}
+
+    fields = []
+    for field_name, caps_by_type in field_caps.items():
+        types = _leaf_types(caps_by_type)
+        if not types:
+            continue
+        if any(caps.get("metadata_field") for caps in caps_by_type.values() if isinstance(caps, dict)):
+            continue
+        # A dotted name whose parent is itself a leaf field can only be a multi-field
+        # (an object's children have an object-typed parent, so they survive this test).
+        parent, _, _ = field_name.rpartition(".")
+        if parent and parent in leaf_names:
+            continue
+        fields.append(FieldMapping(field=field_name, type=", ".join(sorted(types))))
+
+    fields.sort(key=lambda f: f.field)
+    return fields
+
+
+def _leaf_types(caps_by_type) -> set:
+    """Type names under one `_field_caps` entry, excluding the container types."""
+    if not isinstance(caps_by_type, dict):
+        return set()
+    return {field_type for field_type in caps_by_type if field_type not in ("object", "nested")}
