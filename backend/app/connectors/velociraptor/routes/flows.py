@@ -6,6 +6,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
 from app.connectors.velociraptor.schema.flows import FlowResponse
@@ -14,6 +15,8 @@ from app.connectors.velociraptor.services.flows import get_flow
 from app.connectors.velociraptor.services.flows import get_flows
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
+from app.middleware.customer_access import enforce_owned_object_access
+from app.middleware.customer_access import verify_hostname_access
 
 velociraptor_flows_router = APIRouter()
 
@@ -128,7 +131,10 @@ async def get_velociraptor_org_via_client_id(session: AsyncSession, client_id: s
     "/{hostname}",
     response_model=FlowResponse,
     description="Get all artifacts for a specific host's OS prefix",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_hostname_access),
+    ],
 )
 async def get_all_flows_for_hostname(
     hostname: str,
@@ -164,6 +170,7 @@ async def get_all_flows_for_hostname(
 async def retrieve_flow(
     retrieve_flow_request: RetrieveFlowRequest,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ) -> CollectArtifactResponse:
     """
     Retrieve ran flows for a specific host.
@@ -176,4 +183,8 @@ async def retrieve_flow(
         CollectArtifactResponse: The response containing the retrieved flows.
     """
     logger.info(f"Fetching flow for flow_id {retrieve_flow_request.session_id}")
+    # A flow's results belong to whoever owns the endpoint it ran on; the caller names
+    # that endpoint by its Velociraptor client id, so resolve it back to a tenant.
+    owner = await session.execute(select(Agents.customer_code).where(Agents.velociraptor_id == retrieve_flow_request.client_id))
+    await enforce_owned_object_access(current_user, owner.scalars().first(), session, subject=f"client {retrieve_flow_request.client_id}")
     return await get_flow(retrieve_flow_request, await get_velociraptor_org_via_client_id(session, retrieve_flow_request.client_id))

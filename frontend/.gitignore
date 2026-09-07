@@ -21,3 +21,19 @@ cypress/downloads/
 tsconfig.app.tsbuildinfo
 tsconfig.node.tsbuildinfo
 tsconfig.vitest.tsbuildinfo
+
+# Playwright (e2e/)
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+tsconfig.e2e.tsbuildinfo
+# resolved by e2e/global-setup.ts at run time, differs per deployment
+e2e/.tenants.json
+# holds the admin credential the suite seeds with
+.env.e2e
+# ...but the template must ship: the repo root ignores `.env.*`, which would swallow it
+!.env.e2e.example
+
+# quello — visual element picks (generated, safe to delete)
+.quello/

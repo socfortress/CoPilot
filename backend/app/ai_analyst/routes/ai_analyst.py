@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
 from loguru import logger
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai_analyst.schema.ai_analyst import AlertAnalysisResponse
@@ -68,11 +69,88 @@ from app.connectors.talon.services.talon import (
     search_palace_lessons as talon_search_palace_lessons,
 )
 from app.db.db_session import get_db
+from app.db.universal_models import AiAnalystIoc
+from app.db.universal_models import AiAnalystJob
 from app.db.universal_models import AiAnalystReport
+from app.db.universal_models import AiAnalystReview
+from app.incidents.models import Alert
+from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import enforce_owned_object_access
 from app.middleware.customer_access import verify_customer_code_access
 from app.middleware.customer_query import customer_codes_query
 
 ai_analyst_router = APIRouter()
+
+
+# ── per-object tenancy ────────────────────────────────────────────────────────
+#
+# Every route below is keyed by an *object* id — a job, a report, an IOC, an alert —
+# rather than by a customer code, so the `{customer_code}` guards added in #1050 do
+# not reach them. Each AiAnalyst* table carries `customer_code` directly, so one
+# lookup answers "whose investigation is this".
+
+
+async def _enforce_owner(current_user: User, session: AsyncSession, column, condition, subject: str) -> None:
+    owner = await session.execute(select(column).where(condition))
+    await enforce_owned_object_access(current_user, owner.scalars().first(), session, subject=subject)
+
+
+async def verify_job_access(
+    job_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> str:
+    await _enforce_owner(current_user, session, AiAnalystJob.customer_code, AiAnalystJob.id == job_id, f"job {job_id}")
+    return job_id
+
+
+async def verify_report_access(
+    report_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> int:
+    await _enforce_owner(
+        current_user,
+        session,
+        AiAnalystReport.customer_code,
+        AiAnalystReport.id == report_id,
+        f"report {report_id}",
+    )
+    return report_id
+
+
+async def verify_ioc_access(
+    ioc_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> int:
+    await _enforce_owner(current_user, session, AiAnalystIoc.customer_code, AiAnalystIoc.id == ioc_id, f"IOC {ioc_id}")
+    return ioc_id
+
+
+async def verify_review_access(
+    review_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> int:
+    await _enforce_owner(
+        current_user,
+        session,
+        AiAnalystReview.customer_code,
+        AiAnalystReview.id == review_id,
+        f"review {review_id}",
+    )
+    return review_id
+
+
+async def verify_alert_access(
+    alert_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> int:
+    """The alert row is the authority on the tenant, not the investigation of it."""
+    await _enforce_owner(current_user, session, Alert.customer_code, Alert.id == alert_id, f"alert {alert_id}")
+    return alert_id
 
 
 # --- Job endpoints ---
@@ -87,8 +165,11 @@ ai_analyst_router = APIRouter()
 async def create_job_route(
     request: CreateJobRequest,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ) -> CreateJobResponse:
     logger.info(f"Creating AI analyst job for alert {request.alert_id}")
+    # The tenant is in the body here, so no path dependency sees it.
+    await customer_access_handler.enforce_customer_access(current_user, request.customer_code, session)
     return await create_job(request, session)
 
 
@@ -96,7 +177,10 @@ async def create_job_route(
     "/jobs/{job_id}",
     response_model=UpdateJobResponse,
     description="Update an AI analyst job status",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_job_access),
+    ],
 )
 async def update_job_route(
     job_id: str,
@@ -111,7 +195,10 @@ async def update_job_route(
     "/jobs/{job_id}",
     response_model=CreateJobResponse,
     description="Get a specific AI analyst job",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_job_access),
+    ],
 )
 async def get_job_route(
     job_id: str,
@@ -125,7 +212,10 @@ async def get_job_route(
     "/jobs/alert/{alert_id}",
     response_model=JobListResponse,
     description="List all AI analyst jobs for an alert",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_alert_access),
+    ],
 )
 async def list_jobs_by_alert_route(
     alert_id: int,
@@ -164,8 +254,10 @@ async def list_jobs_by_customer_route(
 async def submit_report_route(
     request: SubmitReportRequest,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ) -> SubmitReportResponse:
     logger.info(f"Submitting AI analyst report for job {request.job_id}")
+    await customer_access_handler.enforce_customer_access(current_user, request.customer_code, session)
     return await submit_report(request, session)
 
 
@@ -173,7 +265,10 @@ async def submit_report_route(
     "/reports/alert/{alert_id}",
     response_model=ReportListResponse,
     description="List all AI analyst reports for an alert",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_alert_access),
+    ],
 )
 async def list_reports_by_alert_route(
     alert_id: int,
@@ -195,8 +290,10 @@ async def list_reports_by_alert_route(
 async def submit_iocs_route(
     request: SubmitIocsRequest,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ) -> SubmitIocsResponse:
     logger.info(f"Submitting IOCs for report {request.report_id}")
+    await customer_access_handler.enforce_customer_access(current_user, request.customer_code, session)
     return await submit_iocs(request, session)
 
 
@@ -204,7 +301,10 @@ async def submit_iocs_route(
     "/iocs/report/{report_id}",
     response_model=IocListResponse,
     description="List IOCs for a specific report",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_report_access),
+    ],
 )
 async def list_iocs_by_report_route(
     report_id: int,
@@ -218,7 +318,10 @@ async def list_iocs_by_report_route(
     "/iocs/alert/{alert_id}",
     response_model=IocListResponse,
     description="List all IOCs for an alert",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_alert_access),
+    ],
 )
 async def list_iocs_by_alert_route(
     alert_id: int,
@@ -250,7 +353,10 @@ async def list_iocs_by_customer_route(
     "/iocs/{ioc_id}",
     response_model=IocDetailResponse,
     description="Get a single IOC by id",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_ioc_access),
+    ],
 )
 async def get_ioc_route(
     ioc_id: int,
@@ -285,7 +391,10 @@ async def list_alerts_with_reports_route(
     "/alerts_with_reports/{alert_id}",
     response_model=AlertWithReportDetailResponse,
     description="Fetch a single alert with its latest AI analyst report",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_alert_access),
+    ],
 )
 async def get_alert_with_report_by_alert_id_route(
     alert_id: int,
@@ -303,7 +412,10 @@ async def get_alert_with_report_by_alert_id_route(
     "/reports/{report_id}",
     response_model=AlertWithReportDetailResponse,
     description="Fetch alert metadata for a single AI analyst report",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_report_access),
+    ],
 )
 async def get_alert_with_report_by_report_id_route(
     report_id: int,
@@ -324,7 +436,10 @@ async def get_alert_with_report_by_report_id_route(
     "/alert/{alert_id}",
     response_model=AlertAnalysisResponse,
     description="Get the full AI analysis for an alert (job, report, IOCs)",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_alert_access),
+    ],
 )
 async def get_alert_analysis_route(
     alert_id: int,
@@ -349,7 +464,10 @@ async def get_alert_analysis_route(
     "/reports/{report_id}/review",
     response_model=SubmitReviewResponse,
     description="Submit an analyst review (rubric + IOC corrections) for a report",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_report_access),
+    ],
 )
 async def submit_review_route(
     report_id: int,
@@ -375,7 +493,10 @@ async def submit_review_route(
     "/reports/{report_id}/review/mine",
     response_model=MyReviewResponse,
     description="Fetch the current user's existing review for a report (returns review=null if none yet)",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_report_access),
+    ],
 )
 async def get_my_review_route(
     report_id: int,
@@ -394,7 +515,10 @@ async def get_my_review_route(
     "/reports/{report_id}/replay",
     response_model=ReplayResponse,
     description="Replay an investigation for the given report's alert with a forced template override",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_report_access),
+    ],
 )
 async def replay_report_route(
     report_id: int,
@@ -443,8 +567,10 @@ async def replay_report_route(
 async def queue_palace_lesson_route(
     request: QueuePalaceLessonRequest,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ) -> QueuePalaceLessonResponse:
     logger.info(f"Queuing palace lesson for customer {request.customer_code}")
+    await customer_access_handler.enforce_customer_access(current_user, request.customer_code, session)
     return await queue_palace_lesson(request, session)
 
 
@@ -452,7 +578,10 @@ async def queue_palace_lesson_route(
     "/reviews/{review_id}",
     response_model=ReviewDetailResponse,
     description="Fetch a single review by id (with nested IOC reviews)",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_review_access),
+    ],
 )
 async def get_review_by_id_route(
     review_id: int,

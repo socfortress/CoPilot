@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite"
 import vue from "@vitejs/plugin-vue"
 import vueJsx from "@vitejs/plugin-vue-jsx"
 import { defineConfig, loadEnv } from "vite"
+import quello from "vite-plugin-quello"
 import VueDevTools from "vite-plugin-vue-devtools"
 import svgLoader from "vite-svg-loader"
 // import { analyzer } from "vite-bundle-analyzer"
@@ -24,6 +25,10 @@ export default defineConfig(({ mode }) => {
 				}
 			}),
 			vueJsx(),
+			// See frontend/vite.config.ts. Dev-only by construction (`apply: "serve"`).
+			// The agent instructions live once in the repo-root AGENTS.md, written by the
+			// analyst frontend, so this app must not append a second copy of them.
+			quello({ writeAgentFile: false }),
 			VueDevTools({
 				launchEditor: "cursor"
 			}),

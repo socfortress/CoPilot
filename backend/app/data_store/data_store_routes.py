@@ -25,6 +25,7 @@ from app.data_store.data_store_schema import AgentDataStoreResponse
 from app.data_store.data_store_schema import FileUploadResponse
 from app.db.db_session import get_db
 from app.db.universal_models import AgentDataStore
+from app.middleware.customer_access import verify_agent_id_access
 
 agent_data_store_router = APIRouter()
 
@@ -96,7 +97,10 @@ async def upload_file(
     "/agent/{agent_id}/artifacts",
     response_model=AgentDataStoreListResponse,
     description="List all artifact files for an agent",
-    dependencies=[Depends(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Depends(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_agent_id_access),
+    ],
 )
 async def list_agent_artifacts(
     agent_id: str,
@@ -162,7 +166,10 @@ async def list_agent_artifacts(
     "/agent/{agent_id}/artifacts/{artifact_id}",
     response_model=AgentDataStoreResponse,
     description="Get details of a specific artifact file",
-    dependencies=[Depends(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Depends(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_agent_id_access),
+    ],
 )
 async def get_agent_artifact_details(
     agent_id: str,
@@ -222,7 +229,10 @@ async def get_agent_artifact_details(
 @agent_data_store_router.get(
     "/agent/{agent_id}/artifacts/{artifact_id}/download",
     description="Download an artifact file",
-    dependencies=[Depends(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Depends(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_agent_id_access),
+    ],
 )
 async def download_agent_artifact(
     agent_id: str,
@@ -269,7 +279,10 @@ async def download_agent_artifact(
 @agent_data_store_router.delete(
     "/agent/{agent_id}/artifacts/{artifact_id}",
     description="Delete an artifact file",
-    dependencies=[Depends(AuthHandler().require_any_scope("admin"))],
+    dependencies=[
+        Depends(AuthHandler().require_any_scope("admin")),
+        Depends(verify_agent_id_access),
+    ],
 )
 async def delete_agent_artifact(
     agent_id: str,

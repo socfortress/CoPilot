@@ -174,3 +174,140 @@ async def verify_optional_customer_code_access(
     if customer_code:
         await customer_access_handler.enforce_customer_access(current_user, customer_code, session)
     return customer_code
+
+
+# ── object-keyed enforcement ──────────────────────────────────────────────────
+#
+# #1050 closed every route keyed by a literal ``{customer_code}``. That left the
+# larger family of routes keyed by something a tenant *owns* — an agent id, a
+# hostname, a report id — reachable by any analyst who can guess the key. The
+# helpers below resolve such a key back to its owning tenant so the same
+# ``enforce_customer_access`` decision applies there too.
+#
+# They are **fail-closed**: a key that resolves to no tenant is denied for a scoped
+# caller. Being unable to prove ownership is not permission to read.
+
+
+async def customer_code_for_agent(session: AsyncSession, agent_id: str) -> Optional[str]:
+    """Resolve an ``agents.agent_id`` to the customer code that owns it."""
+    from app.db.universal_models import Agents
+
+    result = await session.execute(select(Agents.customer_code).where(Agents.agent_id == agent_id))
+    return result.scalars().first()
+
+
+async def customer_code_for_hostname(session: AsyncSession, hostname: str) -> Optional[str]:
+    """Resolve an ``agents.hostname`` to the customer code that owns it."""
+    from app.db.universal_models import Agents
+
+    result = await session.execute(select(Agents.customer_code).where(Agents.hostname == hostname))
+    return result.scalars().first()
+
+
+async def enforce_owned_object_access(
+    user: User,
+    owner_customer_code: Optional[str],
+    session: AsyncSession,
+    *,
+    subject: str,
+) -> None:
+    """Enforce access to an object whose owning tenant has already been resolved.
+
+    ``owner_customer_code`` of ``None`` means the object could not be tied to a
+    tenant (unknown agent, orphaned row). A wildcard caller is let through — the
+    object is deployment-wide as far as they are concerned — while a scoped caller
+    is denied, because an unattributable object may belong to anyone.
+    """
+    accessible = await customer_access_handler.get_user_accessible_customers(user, session)
+    if "*" in accessible:
+        return
+    if owner_customer_code and owner_customer_code in accessible:
+        return
+    raise HTTPException(status_code=403, detail=f"Access denied to {subject}")
+
+
+async def enforce_agent_access(user: User, agent_id: str, session: AsyncSession) -> None:
+    """Enforce access to the tenant that owns ``agent_id``."""
+    await enforce_owned_object_access(
+        user,
+        await customer_code_for_agent(session, agent_id),
+        session,
+        subject=f"agent {agent_id}",
+    )
+
+
+async def enforce_hostname_access(user: User, hostname: str, session: AsyncSession) -> None:
+    """Enforce access to the tenant that owns ``hostname``."""
+    await enforce_owned_object_access(
+        user,
+        await customer_code_for_hostname(session, hostname),
+        session,
+        subject=f"host {hostname}",
+    )
+
+
+async def verify_agent_id_access(
+    agent_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> str:
+    """Route dependency enforcing access to the tenant owning the ``{agent_id}`` path param."""
+    await enforce_agent_access(current_user, agent_id, session)
+    return agent_id
+
+
+async def verify_hostname_access(
+    hostname: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> str:
+    """Route dependency enforcing access to the tenant owning the ``{hostname}`` path param."""
+    await enforce_hostname_access(current_user, hostname, session)
+    return hostname
+
+
+async def verify_customer_name_access(
+    customer_name: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> str:
+    """Route dependency for a ``{customer_name}`` path param.
+
+    ``custom_alert_creation_settings`` is keyed by the customer *name*, not the code,
+    so the name is resolved to its code before the normal decision is applied. A name
+    that matches no settings row is denied for a scoped caller.
+    """
+    from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+        AlertCreationSettings,
+    )
+
+    result = await session.execute(select(AlertCreationSettings.customer_code).where(AlertCreationSettings.customer_name == customer_name))
+    await enforce_owned_object_access(
+        current_user,
+        result.scalars().first(),
+        session,
+        subject=f"customer {customer_name}",
+    )
+    return customer_name
+
+
+async def scoped_customer_codes(
+    user: User,
+    requested_customers: Optional[List[str]],
+    session: AsyncSession,
+) -> Optional[List[str]]:
+    """The customer codes an aggregate listing must be narrowed to.
+
+    A thin, honest wrapper over ``resolve_effective_customers`` for services whose
+    ``customer_codes`` parameter already means "filter to these":
+
+      - ``None``  — caller is deployment-wide and asked for no subset: no filtering.
+      - ``[]``    — the caller may see nothing here; the route must return an empty
+                    result rather than calling the service, since most services read
+                    an empty list as "no filter" and would leak everything.
+      - a list    — filter to exactly these.
+    """
+    resolved = await customer_access_handler.resolve_effective_customers(user, requested_customers, session)
+    if "*" in resolved:
+        return None
+    return resolved

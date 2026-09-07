@@ -22,3 +22,6 @@ cypress/downloads/
 tsconfig.app.tsbuildinfo
 tsconfig.node.tsbuildinfo
 tsconfig.vitest.tsbuildinfo
+
+# quello — visual element picks (generated, safe to delete)
+.quello/

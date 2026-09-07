@@ -6,6 +6,7 @@ from sqlalchemy import delete
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.auth.models.users import UserCustomerAccess
 from app.auth.utils import AuthHandler
@@ -53,7 +54,26 @@ async def get_user_customer_access(
 
 @customer_users_router.get("/me/customers")
 async def get_my_customer_access(current_user: User = Depends(AuthHandler().get_current_user), session: AsyncSession = Depends(get_db)):
-    """Get current user's accessible customers"""
+    """Get current user's accessible customers, and *why* they are what they are.
+
+    ``customer_codes == ["*"]`` means deployment-wide, and it has two very different
+    causes that used to be indistinguishable from the outside:
+
+    - the caller is an admin (``scope="deployment"``), or
+    - the caller is an analyst nobody has assigned any customer to
+      (``scope="unassigned"``), which keeps pre-#1050 behaviour on upgrade.
+
+    That second case is what makes an operator report "I assigned a customer and the
+    analyst still sees everything": the assignment went to a different user, or never
+    landed. Naming it here lets the UI say so instead of leaving it to be guessed.
+    """
     customer_codes = await customer_access_handler.get_user_accessible_customers(current_user, session)
 
-    return {"success": True, "customer_codes": customer_codes}
+    if "*" not in customer_codes:
+        scope = "assigned"
+    elif current_user.role_id == RoleEnum.admin:
+        scope = "deployment"
+    else:
+        scope = "unassigned"
+
+    return {"success": True, "customer_codes": customer_codes, "scope": scope}

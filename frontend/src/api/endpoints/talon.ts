@@ -27,7 +27,7 @@ export default {
 	 * this never reports another analyst's activity.
 	 */
 	getSessionContext(signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { input_tokens?: number | null, updated_at?: string | null }>(
+		return HttpClient.get<FlaskBaseResponse & { input_tokens?: number | null; updated_at?: string | null }>(
 			`/talon/session/context`,
 			{ signal }
 		)

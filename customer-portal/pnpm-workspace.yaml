@@ -1,11 +1,18 @@
 minimumReleaseAge: 0
-shellEmulator: true
 
 trustPolicy: off
-
 trustPolicyExclude:
   - chokidar
   - semver
+
+peerDependencyRules:
+  allowedVersions:
+    eslint: "10"
+
+shellEmulator: true
+
+overrides:
+  rolldown: 1.0.1
 
 allowBuilds:
   "@parcel/watcher": true
@@ -13,14 +20,8 @@ allowBuilds:
   esbuild: true
   unrs-resolver: true
 
-overrides:
-  rolldown: 1.0.1
-
 onlyBuiltDependencies:
   - "@parcel/watcher"
   - "@tailwindcss/oxide"
   - esbuild
   - unrs-resolver
-peerDependencyRules:
-  allowedVersions:
-    eslint: "10"

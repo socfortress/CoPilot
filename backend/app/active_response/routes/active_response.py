@@ -21,6 +21,8 @@ from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 from app.db.db_session import get_db
+from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import enforce_agent_access
 
 active_response_router = APIRouter()
 
@@ -147,6 +149,8 @@ async def get_supported_active_responses_agent_route(
 )
 async def invoke_active_response_route(
     request: InvokeActiveResponseRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
 ) -> InvokeActiveResponseResponse:
     """
     Invoke an active response.
@@ -158,6 +162,22 @@ async def invoke_active_response_route(
         InvokeActiveResponseResponse: The response object indicating the success or failure of the active response invocation.
     """
     logger.info("Invoking Wazuh Active Response...")
+
+    # An active response executes on the endpoint — the most consequential thing an
+    # analyst can do here — and the targets arrive in the body. Wazuh reads an absent
+    # or empty `agents_list` as "every agent in the deployment", so a scoped caller
+    # must name their targets explicitly and own every one of them.
+    accessible = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    if "*" not in accessible:
+        targets = request.params.agents_list or []
+        if not targets:
+            raise HTTPException(
+                status_code=403,
+                detail="agents_list is required: a deployment-wide active response is limited to unscoped users",
+            )
+        for agent_id in targets:
+            await enforce_agent_access(current_user, agent_id, db)
+
     # Append '0' to the command - This is required for Wazuh Active Response
     command = f"{request.command.value}0"
     # Create a dictionary with the request data

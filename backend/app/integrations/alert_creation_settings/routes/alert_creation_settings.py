@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
+from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
@@ -35,7 +36,9 @@ from app.integrations.alert_creation_settings.schema.alert_creation_settings imp
 from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
     EventOrderResponse,
 )
+from app.middleware.customer_access import customer_access_handler
 from app.middleware.customer_access import verify_customer_code_access
+from app.middleware.customer_access import verify_customer_name_access
 from app.utils import get_customer_alert_event_configs
 
 alert_creation_settings_router = APIRouter()
@@ -87,6 +90,7 @@ async def get_customer_event_configs(
 async def create_alert_creation_settings(
     alert_creation_settings: AlertCreationSettingsCreate,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ):
     """
     Create a new alert creation setting.
@@ -99,6 +103,10 @@ async def create_alert_creation_settings(
         AlertCreationSettings: The created alert creation setting.
     """
     logger.info(f"alert_creation_settings: {alert_creation_settings.model_dump()}")
+
+    # The tenant lives in the body here, not the path, so the route dependency cannot
+    # see it — a scoped analyst must not be able to create settings for someone else.
+    await customer_access_handler.enforce_customer_access(current_user, alert_creation_settings.customer_code, session)
 
     result = await session.execute(
         select(AlertCreationSettings).where(
@@ -145,7 +153,10 @@ async def create_alert_creation_settings(
     "/{customer_name}",
     response_model=AlertCreationSettingsResponse,
     description="Retrieve alert creation settings by customer name.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_name_access),
+    ],
 )
 async def get_alert_creation_settings(
     customer_name: str,
@@ -187,7 +198,10 @@ async def get_alert_creation_settings(
     "/{customer_name}/event",
     response_model=EventOrderResponse,
     description="Add a new event to a customer's alert creation settings.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_name_access),
+    ],
 )
 async def add_event_order(
     customer_name: str,
@@ -250,7 +264,10 @@ async def add_event_order(
     "/{customer_name}",
     response_model=AlertCreationSettingsResponse,
     description="Update a customer's event orders.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_name_access),
+    ],
 )
 async def update_event_orders(
     customer_name: str,
@@ -317,7 +334,10 @@ async def update_event_orders(
 @alert_creation_settings_router.delete(
     "/{customer_name}/event/{order_label}",
     description="Delete an event order by order_label.",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_name_access),
+    ],
 )
 async def delete_event_order(
     customer_name: str,

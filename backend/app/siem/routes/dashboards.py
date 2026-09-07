@@ -13,6 +13,7 @@ from sqlalchemy.future import select
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.db.universal_models import CustomDashboardTemplates
 from app.db.universal_models import Customers
 from app.middleware.customer_access import customer_access_handler
 from app.middleware.customer_access import verify_optional_customer_code_access
@@ -280,11 +281,32 @@ async def preview_custom_dashboard_endpoint(
     )
 
 
+async def verify_custom_dashboard_access(
+    template_key: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> str:
+    """Enforce access to the tenant a custom dashboard belongs to.
+
+    ``custom_dashboard_templates.customer_code`` is nullable and NULL means "shared
+    with every customer", so only a scoped template is guarded — matching how
+    ``list_custom_dashboards`` already treats the two cases.
+    """
+    row = await db.execute(select(CustomDashboardTemplates.customer_code).where(CustomDashboardTemplates.template_key == template_key))
+    owner = row.scalars().first()
+    if owner:
+        await customer_access_handler.enforce_customer_access(current_user, owner, db)
+    return template_key
+
+
 @dashboards_router.get(
     "/custom/{template_key}",
     response_model=CustomDashboardOperationResponse,
     description="Get a single custom dashboard template",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_custom_dashboard_access),
+    ],
 )
 async def get_custom_dashboard_endpoint(
     template_key: str,
@@ -303,7 +325,10 @@ async def get_custom_dashboard_endpoint(
     "/custom/{template_key}",
     response_model=CustomDashboardOperationResponse,
     description="Update a custom dashboard template",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_custom_dashboard_access),
+    ],
 )
 async def update_custom_dashboard_endpoint(
     template_key: str,
@@ -323,7 +348,10 @@ async def update_custom_dashboard_endpoint(
     "/custom/{template_key}",
     response_model=CustomDashboardDeleteResponse,
     description="Delete a custom dashboard template and every dashboard enabled from it",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_custom_dashboard_access),
+    ],
 )
 async def delete_custom_dashboard_endpoint(
     template_key: str,
@@ -346,7 +374,10 @@ async def delete_custom_dashboard_endpoint(
     "/custom/{template_key}/export",
     response_model=CustomDashboardExportResponse,
     description="Export a custom dashboard template as a portable definition",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_custom_dashboard_access),
+    ],
 )
 async def export_custom_dashboard_endpoint(
     template_key: str,

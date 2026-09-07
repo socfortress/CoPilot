@@ -262,6 +262,74 @@ Things to keep straight in the InfluxDB half:
 
 The `customer-portal/` mirrors this structure but is a leaner standalone app, served separately (its own `nginx.conf`; port 3001 dev, 8443 in compose when uncommented).
 
+### Tenant scoping: customer codes are not the only tenant key
+
+#1050 made `user_customer_access` authoritative for analysts and guarded every route
+whose path carried a literal `{customer_code}`. The reporter came straight back with
+"analyst with one customer assigned, still able to see other customer information", and
+the reason is structural: **most of a tenant's data is not addressed by its customer
+code.** It is addressed by an agent id, a hostname, a Velociraptor client id, a report
+id, a job id, a dashboard `template_key`, or a customer *name* — none of which the
+`{customer_code}` scan could see. Closing the list view while leaving those open is
+security theatre.
+
+The primitives live in `app/middleware/customer_access.py` alongside the #1050 ones:
+
+- **`enforce_owned_object_access(user, owner_code, session, subject=…)`** — the base
+  decision, taking an owner already resolved from whatever key the route uses. It is
+  **fail-closed**: `owner_code=None` (unknown agent, orphaned row, typo'd hostname) is
+  denied for a scoped caller. Not being able to prove ownership is not permission.
+- **`verify_agent_id_access` / `verify_hostname_access`** — route dependencies for
+  `{agent_id}` / `{hostname}` path params, resolving through `agents.customer_code`.
+- **`verify_customer_name_access`** — for `{customer_name}`, which
+  `custom_alert_creation_settings` is keyed by (the *name* column, not the code).
+- **`scoped_customer_codes(user, requested, session)`** — for aggregates whose service
+  takes a `customer_codes` filter. Returns `None` (no filtering), `[]` (**caller sees
+  nothing — the route must return an empty result itself**) or a concrete list. The `[]`
+  case matters: nearly every service reads an empty list as "all customers", so passing
+  it straight through leaks the deployment.
+
+Rules when adding a route:
+
+- **The tenant is wherever the caller names it.** A path param gets a dependency; a
+  *body* field (`request.customer_code`, `agents_list`, an upload's `Form(...)`) cannot
+  be reached by a dependency and must be enforced in the handler — see
+  `active_response.invoke_active_response_route`, `file_analysis.submit`/`upload`,
+  `ai_analyst.create_job_route`.
+- **Objects addressed by their own id still belong to someone.** Every `AiAnalyst*`
+  table carries `customer_code` directly; `custom_dashboard_templates.customer_code` is
+  nullable and NULL means shared, so only a scoped template is guarded; a file-analysis
+  job carries its customer in the MinIO job blob.
+- **Wazuh's active response reads an absent/empty `agents_list` as *every agent in the
+  deployment*.** `["*"]` from the UI normalises to `[]` before the handler sees it, so a
+  scoped caller must name their targets and own each one; the empty case is a 403 rather
+  than a silent fan-out across tenants.
+- **Admins stay deployment-wide everywhere**, and an analyst with *no* assignments keeps
+  the pre-#1050 wildcard — that upgrade compromise is preserved by every helper here.
+
+**The wildcard-for-unassigned-analysts fallback is the one remaining way an assigned-
+looking analyst sees everything**, and it is invisible from the outside: `["*"]` looks
+the same whether the caller is an admin or an unassigned analyst. `GET /auth/me/customers`
+now returns a `scope` of `assigned` | `deployment` | `unassigned` to tell them apart, and
+the sidebar filter shows a warning on `unassigned` — because picking a customer *there*
+is only a view filter, and mistaking it for an assignment is exactly what produces
+"I assigned a customer and they still see the others".
+
+**Browser e2e** for this area lives in `frontend/e2e/` (Playwright, `pnpm test:e2e`,
+`pnpm test:e2e:headed` to watch it). It drives the real app against a real backend on
+purpose — an API mock would happily "prove" a tenancy fix that does not exist, since the
+whole point is what the server refuses to send. Two traps it detects and explains rather
+than failing cryptically: a `pnpm dev` already running proxies `/api` to whatever
+`VITE_API_URL` said when *it* started (use `E2E_PORT=5199`), and on macOS AirPlay
+Receiver owns port 5000. Its seed borrows two existing customers when the deployment's
+licence caps customer creation at one, and writes the pair it settled on to
+`e2e/.tenants.json`. See `frontend/e2e/README.md`.
+
+Tests: `tests/test_object_level_customer_scoping.py` (middleware primitives) and
+`tests/e2e/analyst_object_scoping_e2e.py` (real routers, real MySQL, real JWT — the
+same disposable-13306 setup as `analyst_scoping_e2e.py`). Run the e2e against the
+pre-fix tree and 13 of its checks come back 200: that is the bug, reproduced.
+
 ### Global customers filter (analyst frontend)
 
 The sidebar multi-select (`app-layouts/VerticalNav/GlobalCustomerFilter.vue`) writes `stores/customer-filter.ts`; **every consumer goes through `composables/useGlobalCustomerFilter.ts`, never the store directly.** Empty selection means "all accessible customers" — the backend intersects requested codes with `user_customer_access`, so a stale code can never widen access. Four entry points, and picking the wrong one is the usual mistake:
