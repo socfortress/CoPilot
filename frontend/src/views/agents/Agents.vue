@@ -110,6 +110,12 @@ watch(textFilter, val => {
 	update(val)
 })
 
+// Every filter change (text search and Customer select) restarts the list from the first page,
+// otherwise a narrower result set leaves the user on a page that no longer exists.
+watch([textFilterDebounced, customerCodesFilter], () => {
+	page.value = 1
+})
+
 const agentsFiltered = computed(() => {
 	return agents.value
 		.filter(({ hostname, ip_address, agent_id, label }) =>
