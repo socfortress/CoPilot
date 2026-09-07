@@ -25,6 +25,7 @@ from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
@@ -46,6 +47,10 @@ from app.file_analysis.schema.analysis import SubmitResponse
 from app.file_analysis.schema.analysis import Tier
 from app.file_analysis.services import orchestrator
 from app.file_analysis.services import state_store
+from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import enforce_owned_object_access
+from app.middleware.customer_access import verify_customer_code_access
+from app.middleware.customer_access import verify_optional_customer_code_access
 
 file_analysis_router = APIRouter()
 
@@ -53,7 +58,26 @@ _ANALYST = Security(AuthHandler().require_any_scope("admin", "analyst"))
 _MAX_UPLOAD_MB = 100
 
 
-@file_analysis_router.get("/velociraptor/agents", response_model=AgentsResponse, dependencies=[_ANALYST])
+# Every job carries the customer it was submitted for, so a job id resolves to a
+# tenant the same way a customer code does. Job ids are opaque but guessable enough
+# that "you have the id" is not an authorisation story.
+async def verify_job_customer_access(
+    job_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> str:
+    job = await state_store.load_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="job not found")
+    await enforce_owned_object_access(current_user, job.get("customer_code"), session, subject=f"analysis {job_id}")
+    return job_id
+
+
+_JOB_ACCESS = Depends(verify_job_customer_access)
+_CUSTOMER_QUERY_ACCESS = Depends(verify_customer_code_access)
+
+
+@file_analysis_router.get("/velociraptor/agents", response_model=AgentsResponse, dependencies=[_ANALYST, _CUSTOMER_QUERY_ACCESS])
 async def velociraptor_agents(customer_code: str, session: AsyncSession = Depends(get_db)) -> AgentsResponse:
     """List a customer's Velociraptor-enrolled endpoints for the submit dropdown.
 
@@ -123,12 +147,18 @@ async def velociraptor_enumerate(body: EnumerateRequest) -> EnumerateResponse:
 
 
 @file_analysis_router.post("/submit", response_model=SubmitResponse, dependencies=[_ANALYST])
-async def submit(body: SubmitRequest, background: BackgroundTasks) -> SubmitResponse:
+async def submit(
+    body: SubmitRequest,
+    background: BackgroundTasks,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> SubmitResponse:
     """Collect a file from an endpoint via Velociraptor and analyze it (async).
 
     The operator picks an endpoint by hostname (or client_id) and a file path;
     resolution, OS-aware collection, fetch and analysis all run in the background.
     """
+    await customer_access_handler.enforce_customer_access(current_user, body.customer_code, session)
     if body.source != "host_path":
         raise HTTPException(status_code=400, detail="use /upload for source=upload")
     if not (body.hostname or body.client_id):
@@ -165,12 +195,15 @@ async def upload(
     customer_code: str = Form(...),
     sandbox: bool = Form(True),
     reputation_mode: str = Form("lookup"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> SubmitResponse:
     """Direct analyst upload (multipart). Bytes stay in memory for the job.
 
     ``sandbox`` toggles Tier-2 detonation; ``reputation_mode`` picks the VirusTotal
     phase (``off`` | ``lookup`` | ``upload``) — chosen by the analyst before submit.
     """
+    await customer_access_handler.enforce_customer_access(current_user, customer_code, session)
     data = await file.read()
     if len(data) > _MAX_UPLOAD_MB * 1024 * 1024:
         raise HTTPException(status_code=413, detail=f"file exceeds {_MAX_UPLOAD_MB} MB")
@@ -199,7 +232,7 @@ async def upload(
     return SubmitResponse(job_id=job_id, message="analysis queued")
 
 
-@file_analysis_router.get("/job/{job_id}", response_model=JobResponse, dependencies=[_ANALYST])
+@file_analysis_router.get("/job/{job_id}", response_model=JobResponse, dependencies=[_ANALYST, _JOB_ACCESS])
 async def get_job(job_id: str) -> JobResponse:
     job = await state_store.load_job(job_id)
     if not job:
@@ -207,7 +240,7 @@ async def get_job(job_id: str) -> JobResponse:
     return JobResponse(job=AnalysisJob(**job))
 
 
-@file_analysis_router.get("/result/{job_id}", response_model=ResultResponse, dependencies=[_ANALYST])
+@file_analysis_router.get("/result/{job_id}", response_model=ResultResponse, dependencies=[_ANALYST, _JOB_ACCESS])
 async def get_result(job_id: str) -> ResultResponse:
     job = await state_store.load_job(job_id)
     if not job:
@@ -218,7 +251,7 @@ async def get_result(job_id: str) -> ResultResponse:
     return ResultResponse(result=AnalysisResult(**result))
 
 
-@file_analysis_router.get("/result/{job_id}/cape-report", dependencies=[_ANALYST])
+@file_analysis_router.get("/result/{job_id}/cape-report", dependencies=[_ANALYST, _JOB_ACCESS])
 async def cape_report(job_id: str) -> JSONResponse:
     """The COMPLETE raw CAPE report for this analysis (every API call, all behaviour)
     — fetched on demand so analysts can inspect literally everything without bloating
@@ -240,7 +273,7 @@ async def cape_report(job_id: str) -> JSONResponse:
     return JSONResponse(content=report)
 
 
-@file_analysis_router.get("/result/{job_id}/report.pdf", dependencies=[_ANALYST])
+@file_analysis_router.get("/result/{job_id}/report.pdf", dependencies=[_ANALYST, _JOB_ACCESS])
 async def report_pdf(job_id: str):
     """A shareable PDF analyst report — file identity, verdict, static findings,
     reputation, and detonation behaviour (with sandbox screenshots embedded).
@@ -277,7 +310,7 @@ async def report_pdf(job_id: str):
         raise HTTPException(status_code=500, detail=f"could not generate the PDF report: {exc}")
 
 
-@file_analysis_router.delete("/analysis/{job_id}", response_model=DeleteResponse, dependencies=[_ANALYST])
+@file_analysis_router.delete("/analysis/{job_id}", response_model=DeleteResponse, dependencies=[_ANALYST, _JOB_ACCESS])
 async def delete_analysis(job_id: str) -> DeleteResponse:
     """Delete a stored analysis (result, summary, previews, job) so the history
     table can drop old files. Scoped to this job's own (customer, sha) — the CAPE
@@ -290,7 +323,7 @@ async def delete_analysis(job_id: str) -> DeleteResponse:
     return DeleteResponse(removed=removed, message="analysis deleted")
 
 
-@file_analysis_router.get("/result/{job_id}/preview/{name}", dependencies=[_ANALYST])
+@file_analysis_router.get("/result/{job_id}/preview/{name}", dependencies=[_ANALYST, _JOB_ACCESS])
 async def get_preview(job_id: str, name: str) -> StreamingResponse:
     job = await state_store.load_job(job_id)
     if not job:
@@ -305,7 +338,7 @@ async def get_preview(job_id: str, name: str) -> StreamingResponse:
     return StreamingResponse(io.BytesIO(data), media_type="image/png")
 
 
-@file_analysis_router.get("/history", response_model=HistoryResponse, dependencies=[_ANALYST])
+@file_analysis_router.get("/history", response_model=HistoryResponse, dependencies=[_ANALYST, _CUSTOMER_QUERY_ACCESS])
 async def history(customer_code: str, limit: int = 50) -> HistoryResponse:
     """Recent analyses for a customer (newest first) — powers the history table."""
     if not customer_code:
@@ -314,7 +347,11 @@ async def history(customer_code: str, limit: int = 50) -> HistoryResponse:
     return HistoryResponse(items=[HistoryItem(**i) for i in items], message=f"{len(items)} analyses")
 
 
-@file_analysis_router.get("/search/{sha256}", response_model=SearchResponse, dependencies=[_ANALYST])
+@file_analysis_router.get(
+    "/search/{sha256}",
+    response_model=SearchResponse,
+    dependencies=[_ANALYST, Depends(verify_optional_customer_code_access)],
+)
 async def search(sha256: str, customer_code: str | None = None) -> SearchResponse:
     # Cache is tenant-scoped, so a lookup needs the customer_code; without it we
     # can't answer and report "not analyzed" rather than leak across tenants.

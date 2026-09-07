@@ -8,9 +8,25 @@
 		</n-badge>
 	</div>
 	<div v-else class="flex flex-col gap-1">
-		<div class="text-secondary text-2xs truncate px-px uppercase">Global customers filter</div>
+		<div class="flex items-center gap-1 px-px">
+			<span class="text-secondary text-2xs truncate uppercase">Global customers filter</span>
+			<n-tooltip v-if="showUnassignedHint" trigger="hover" :style="{ maxWidth: '260px' }">
+				<template #trigger>
+					<Icon
+						name="carbon:warning-alt"
+						:size="12"
+						class="text-warning shrink-0"
+						data-testid="global-filter-unassigned-warning"
+					/>
+				</template>
+				This filter narrows the view only. No customer is assigned to your account, so you can still
+				reach every customer in the deployment — ask an admin to assign yours under Users → Assign
+				Customer.
+			</n-tooltip>
+		</div>
 		<n-select
 			v-model:value="selected"
+			data-testid="global-customer-filter"
 			multiple
 			to=".sidebar-footer"
 			clearable
@@ -28,7 +44,7 @@
 <script lang="ts" setup>
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import { NBadge, NSelect } from "naive-ui"
+import { NBadge, NSelect, NTooltip } from "naive-ui"
 import { computed, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -44,6 +60,12 @@ const authStore = useAuthStore()
 const customerFilterStore = useCustomerFilterStore()
 const customersList = ref<Customer[]>([])
 const loading = ref(false)
+// An analyst with no `user_customer_access` rows keeps deployment-wide access (#1050
+// kept that so upgrading does not strip every existing analyst). Picking a customer
+// here then looks like an assignment while it is only a view filter — which is exactly
+// how "I assigned a customer and the analyst still sees the others" gets reported.
+const accessScope = ref<"assigned" | "deployment" | "unassigned" | null>(null)
+const showUnassignedHint = computed(() => accessScope.value === "unassigned")
 const isLogged = computed(() => authStore.isLogged)
 
 const options = computed(() =>
@@ -69,6 +91,17 @@ function loadCustomers() {
 	abortController = new AbortController()
 
 	loading.value = true
+
+	Api.auth
+		.getMyCustomerAccess(abortController.signal)
+		.then(res => {
+			accessScope.value = res.data.scope ?? null
+		})
+		.catch(() => {
+			// purely informational — never block the filter on it
+			accessScope.value = null
+		})
+
 	Api.customers
 		.getCustomers({}, abortController.signal)
 		.then(res => {

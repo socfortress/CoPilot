@@ -180,6 +180,7 @@ from app.integrations.copilot_searches.services.mitre_coverage import get_covera
 from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
 from app.integrations.copilot_searches.services.publish import publish_rule
 from app.integrations.copilot_searches.services.rule_linter import lint_result
+from app.middleware.customer_access import verify_customer_code_access
 from app.middleware.customer_access import verify_optional_customer_code_access
 from app.middleware.search_query import SearchParams
 from app.middleware.search_query import filter_and_limit
@@ -1418,7 +1419,10 @@ async def list_custom_repos() -> CustomRepoListResponse:
     "/custom-repos/{customer_code}",
     response_model=CustomRepoResponse,
     description="Get a customer's custom rule repository pointer",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def get_custom_repo(customer_code: str) -> CustomRepoResponse:
     record = await custom_repos_svc.get_custom_repo(customer_code)
@@ -1431,7 +1435,10 @@ async def get_custom_repo(customer_code: str) -> CustomRepoResponse:
     "/custom-repos/{customer_code}",
     response_model=CustomRepoResponse,
     description="Set/replace a customer's custom rule repository pointer",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def set_custom_repo(customer_code: str, request: SetCustomRepoRequest) -> CustomRepoResponse:
     if "/" not in (request.repo or ""):
@@ -1448,7 +1455,10 @@ async def set_custom_repo(customer_code: str, request: SetCustomRepoRequest) -> 
     "/custom-repos/{customer_code}",
     response_model=CustomRepoResponse,
     description="Remove a customer's custom rule repository pointer",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
 )
 async def delete_custom_repo(customer_code: str) -> CustomRepoResponse:
     await custom_repos_svc.delete_custom_repo(customer_code)

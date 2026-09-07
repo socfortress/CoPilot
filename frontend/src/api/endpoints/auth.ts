@@ -50,8 +50,18 @@ export default {
 			signal
 		})
 	},
-	/** get current user's accessible customers */
+	/**
+	 * Get the current user's accessible customers.
+	 *
+	 * `scope` says *why* the answer is what it is, which `customer_codes` alone cannot:
+	 * `assigned` (scoped to their own customers), `deployment` (admin, always
+	 * deployment-wide) or `unassigned` (an analyst nobody assigned a customer to, so
+	 * they still see everything). The last one is what makes "I assigned a customer and
+	 * the analyst still sees them all" look like a bug rather than a missing assignment.
+	 */
 	getMyCustomerAccess(signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { customer_codes: string[] }>("/auth/me/customers", { signal })
+		return HttpClient.get<
+			FlaskBaseResponse & { customer_codes: string[]; scope?: "assigned" | "deployment" | "unassigned" }
+		>("/auth/me/customers", { signal })
 	}
 }

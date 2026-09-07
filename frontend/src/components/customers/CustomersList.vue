@@ -1,10 +1,10 @@
 <template>
-	<div class="customers-list">
+	<div class="customers-list" data-testid="customers-list">
 		<div class="header mb-4 flex items-center justify-between gap-2">
 			<div class="flex items-center gap-4">
 				<div class="flex shrink-0 items-center gap-2">
 					Total:
-					<strong class="font-mono">{{ totalCustomers }}</strong>
+					<strong class="font-mono" data-testid="customers-total">{{ totalCustomers }}</strong>
 				</div>
 				<n-input-group>
 					<n-input-group-label size="small">Sort by</n-input-group-label>

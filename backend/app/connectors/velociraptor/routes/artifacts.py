@@ -38,6 +38,9 @@ from app.connectors.velociraptor.services.artifacts import run_remote_command
 from app.connectors.velociraptor.services.artifacts import validate_artifact_parameters
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
+from app.middleware.customer_access import enforce_hostname_access
+from app.middleware.customer_access import verify_agent_id_access
+from app.middleware.customer_access import verify_hostname_access
 
 # App specific imports
 
@@ -378,7 +381,10 @@ async def get_artifact_parameters_by_prefix(artifact_name: str, parameter_prefix
     "/hostname/{hostname}",
     response_model=ArtifactsResponse,
     description="Get all artifacts for a specific host's OS prefix",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_hostname_access),
+    ],
 )
 async def get_all_artifacts_for_hostname(
     hostname: str,
@@ -448,6 +454,9 @@ async def collect_artifact(
         CollectArtifactResponse: The response containing the collected artifact.
     """
     logger.info(f"Received request to collect artifact {collect_artifact_body}")
+    # The host is named in the body, so no path dependency can guard it: collecting an
+    # artifact runs code on someone's endpoint, which a scoped analyst must not reach.
+    await enforce_hostname_access(current_user, collect_artifact_body.hostname, session)
     result = await get_all_artifacts_for_hostname(
         collect_artifact_body.hostname,
         session,
@@ -624,7 +633,10 @@ async def quarantine(
     "/collect/file/agent/{agent_id}",
     response_model=CollectArtifactResponse,
     description="Collect a file from an agent using agent ID",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_agent_id_access),
+    ],
 )
 async def collect_file_by_agent_id(
     agent_id: str,

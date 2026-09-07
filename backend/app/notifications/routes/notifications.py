@@ -727,8 +727,13 @@ async def preview_template_route(
 async def get_template_route(
     template_id: int,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ) -> NotificationTemplateResponse:
     template = await templates_svc.get_template(template_id, session)
+    # `list_templates` is already scoped; fetching one by id must agree with it.
+    # A NULL customer_code is a template shared with everyone, so it stays readable.
+    if template.customer_code:
+        await customer_access_handler.enforce_customer_access(current_user, template.customer_code, session)
     return NotificationTemplateResponse(
         success=True,
         message="Template retrieved",

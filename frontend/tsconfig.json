@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "./tsconfig.vitest.json"
+		},
+		{
+			"path": "./tsconfig.e2e.json"
 		}
 	],
 	"files": []

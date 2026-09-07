@@ -11,6 +11,7 @@ from app.customer_provisioning.schema.decommission import DecommissionCustomerRe
 from app.customer_provisioning.services.decommission import decomission_wazuh_customer
 from app.db.db_session import get_db
 from app.db.universal_models import CustomersMeta
+from app.middleware.customer_access import verify_customer_code_access
 
 # App specific imports
 
@@ -54,7 +55,13 @@ async def check_customermeta_exists(
     "/decommission",
     response_model=DecommissionCustomerResponse,
     description="Decommission Customer",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        # `customer_code` arrives as a query param here (via check_customermeta_exists),
+        # which the dependency reads the same way it reads a path param. Tearing down a
+        # tenant's stack is the most destructive per-customer action in the product.
+        Depends(verify_customer_code_access),
+    ],
 )
 async def decommission_customer_route(
     _customer: CustomersMeta = Depends(check_customermeta_exists),

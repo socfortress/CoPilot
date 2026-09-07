@@ -14,6 +14,7 @@ from fastapi import Response
 from fastapi import Security
 from fastapi.responses import StreamingResponse
 from loguru import logger
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.sca.schema.sca import ScaOverviewResponse
@@ -41,6 +42,9 @@ from app.agents.sca.services.sca import stream_sca_for_all_agents
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
+from app.db.universal_models import Agents
+from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import scoped_customer_codes
 from app.middleware.customer_query import customer_codes_query
 
 # Create router for SCA overview endpoints
@@ -54,6 +58,7 @@ sca_router = APIRouter()
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def search_sca_results_overview(
+    current_user: User = Depends(AuthHandler().get_current_user),
     customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     agent_name: Optional[str] = Query(None, description="Filter by agent hostname"),
     policy_id: Optional[str] = Query(None, description="Filter by specific policy ID"),
@@ -131,10 +136,33 @@ async def search_sca_results_overview(
         f"page={page}, page_size={page_size}",
     )
 
+    # `customer_codes=None` means "every agent" to the service, so the caller's own
+    # scope has to be resolved into an explicit list before it gets there.
+    scoped_codes = await scoped_customer_codes(current_user, customer_codes, db)
+    if scoped_codes is not None and not scoped_codes:
+        return ScaOverviewResponse(
+            sca_results=[],
+            total_count=0,
+            total_agents=0,
+            total_policies=0,
+            average_score=0.0,
+            total_checks_all_agents=0,
+            total_passes_all_agents=0,
+            total_fails_all_agents=0,
+            total_invalid_all_agents=0,
+            page=page,
+            page_size=page_size,
+            total_pages=0,
+            has_next=False,
+            has_previous=False,
+            success=True,
+            message="No accessible customers",
+        )
+
     try:
         result = await search_sca_overview(
             db_session=db,
-            customer_codes=customer_codes,
+            customer_codes=scoped_codes,
             agent_name=agent_name,
             policy_id=policy_id,
             policy_name=policy_name,
@@ -156,6 +184,7 @@ async def search_sca_results_overview(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def stream_sca_results_overview(
+    current_user: User = Depends(AuthHandler().get_current_user),
     customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     agent_name: Optional[str] = Query(None, description="Filter by agent hostname"),
     policy_id: Optional[str] = Query(None, description="Filter by specific policy ID"),
@@ -200,11 +229,16 @@ async def stream_sca_results_overview(
         f"min_score={min_score}, max_score={max_score}",
     )
 
+    scoped_codes = await scoped_customer_codes(current_user, customer_codes, db)
+
     async def event_generator() -> AsyncGenerator[str, None]:
+        if scoped_codes is not None and not scoped_codes:
+            yield 'event: complete\ndata: {"results": [], "message": "No accessible customers"}\n\n'
+            return
         try:
             async for event in stream_sca_for_all_agents(
                 db_session=db,
-                customer_codes=customer_codes,
+                customer_codes=scoped_codes,
                 agent_name=agent_name,
                 policy_id=policy_id,
                 policy_name=policy_name,
@@ -238,6 +272,7 @@ async def stream_sca_results_overview(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_sca_stats(
+    current_user: User = Depends(AuthHandler().get_current_user),
     customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     db: AsyncSession = Depends(get_db),
 ) -> ScaStatsResponse:
@@ -275,8 +310,23 @@ async def get_sca_stats(
     """
     logger.info(f"Getting SCA statistics for customers: {customer_codes or 'all customers'}")
 
+    scoped_codes = await scoped_customer_codes(current_user, customer_codes, db)
+    if scoped_codes is not None and not scoped_codes:
+        return ScaStatsResponse(
+            total_agents_with_sca=0,
+            total_policies=0,
+            average_score_across_all=0.0,
+            total_checks_all_agents=0,
+            total_passes_all_agents=0,
+            total_fails_all_agents=0,
+            total_invalid_all_agents=0,
+            by_customer={},
+            success=True,
+            message="No accessible customers",
+        )
+
     try:
-        result = await get_sca_statistics(db_session=db, customer_codes=customer_codes)
+        result = await get_sca_statistics(db_session=db, customer_codes=scoped_codes)
         return result
 
     except Exception as e:
@@ -666,7 +716,11 @@ async def get_sca_package_registry() -> ScaPackageRegistryResponse:
     description="Detect agents running a tracked SCA-relevant package",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_agents_for_sca_package(registry_key: str) -> ScaPackageAgentsResponse:
+async def get_agents_for_sca_package(
+    registry_key: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ScaPackageAgentsResponse:
     """
     Given a registry key (e.g. ``apache``, ``nginx``, ``mysql``), search the
     Wazuh Indexer for agents that have any matching packages installed.
@@ -680,4 +734,15 @@ async def get_agents_for_sca_package(registry_key: str) -> ScaPackageAgentsRespo
     - Find agents with MySQL/MariaDB for targeted SCA policy deployment
     - Audit which agents would benefit from a specific SCA policy
     """
-    return await detect_agents_for_sca_package(registry_key)
+    response = await detect_agents_for_sca_package(registry_key)
+
+    # The lookup runs against the indexer, which knows nothing about CoPilot tenancy:
+    # drop matches on agents the caller may not see before the list leaves the route.
+    accessible = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    if "*" not in accessible:
+        owned = await db.execute(select(Agents.agent_id).where(Agents.customer_code.in_(accessible)))
+        owned_ids = {str(agent_id) for agent_id in owned.scalars().all()}
+        response.matched_agents = [a for a in response.matched_agents if a.agent_id and str(a.agent_id) in owned_ids]
+        response.total = len(response.matched_agents)
+
+    return response

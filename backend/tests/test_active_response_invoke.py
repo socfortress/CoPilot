@@ -35,7 +35,9 @@ Run with: cd backend && python -m pytest tests/test_active_response_invoke.py
 import asyncio
 import json
 import os
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
@@ -51,6 +53,7 @@ from app.active_response.schema.active_response import (  # noqa: E402
 from app.active_response.schema.active_response import (  # noqa: E402
     InvokeActiveResponseRequest,
 )
+from app.auth.models.users import RoleEnum  # noqa: E402
 
 
 def build_payload(**overrides):
@@ -170,13 +173,80 @@ def test_sysmon_config_reload_needs_no_ip():
 # ---------------------------------------------------------------------------
 
 
-def invoke(response, payload=None):
+def _admin():
+    """An admin caller: deployment-wide, so the tenancy guard is a no-op for them."""
+    return SimpleNamespace(id=1, username="admin", role_id=RoleEnum.admin)
+
+
+def _scoped_analyst():
+    """An analyst assigned to exactly one customer."""
+    return SimpleNamespace(id=2, username="analyst", role_id=RoleEnum.analyst)
+
+
+def _session(assigned_codes, agent_owner=None):
+    """AsyncSession answering, in order: the assignment lookup, then the agent-owner lookup.
+
+    The route asks twice per target — once for "what may this caller see", once for
+    "who owns this agent" — and the guard is only meaningful if the second answer is
+    the one that decides.
+    """
+
+    def _result(rows):
+        result = MagicMock()
+        result.scalars.return_value.all.return_value = rows
+        result.scalars.return_value.first.return_value = rows[0] if rows else None
+        return result
+
+    session = AsyncMock()
+    owner_rows = [agent_owner] if agent_owner else []
+    # the owner lookup repeats once per target agent; the assignment lookup is re-run
+    # alongside it, so alternate the two answers for as many rounds as any test needs
+    session.execute = AsyncMock(side_effect=[_result(assigned_codes), _result(owner_rows)] * 8)
+    return session
+
+
+def invoke(response, payload=None, user=None, session=None):
     """Run the route with the Wazuh PUT stubbed out; returns (result, call kwargs)."""
     request = InvokeActiveResponseRequest(**(payload or build_payload()))
     stub = AsyncMock(return_value=response)
     with patch.object(route_mod, "send_put_request", new=stub):
-        result = asyncio.run(route_mod.invoke_active_response_route(request))
+        result = asyncio.run(
+            route_mod.invoke_active_response_route(request, user or _admin(), session or AsyncMock()),
+        )
     return result, stub.call_args.kwargs
+
+
+# ---------------------------------------------------------------------------
+# Tenancy — an active response runs code on somebody's endpoint
+# ---------------------------------------------------------------------------
+
+
+def test_a_scoped_analyst_cannot_fire_at_another_tenants_agent():
+    session = _session(["TENANT_A"], agent_owner="TENANT_B")
+    with pytest.raises(HTTPException) as excinfo:
+        invoke({"success": True, "data": {}}, user=_scoped_analyst(), session=session)
+
+    assert excinfo.value.status_code == 403
+
+
+def test_a_scoped_analyst_may_fire_at_their_own_agent():
+    session = _session(["TENANT_A"], agent_owner="TENANT_A")
+    _, kwargs = invoke({"success": True, "data": {}}, user=_scoped_analyst(), session=session)
+
+    assert kwargs["params"]["agents_list"] == ["032"]
+
+
+def test_a_scoped_analyst_cannot_fire_at_every_agent_at_once():
+    """``["*"]`` normalises to ``[]``, which Wazuh reads as "every agent in the deployment".
+
+    That is the one shape a scoped caller must never reach: it would run the response on
+    every tenant's endpoints at once, and no per-agent check would ever see a target.
+    """
+    payload = build_payload(params={"wait_for_complete": True, "agents_list": ["*"]})
+    with pytest.raises(HTTPException) as excinfo:
+        invoke({"success": True, "data": {}}, payload, user=_scoped_analyst(), session=_session(["TENANT_A"]))
+
+    assert excinfo.value.status_code == 403
 
 
 def test_wire_format_matches_what_wazuh_expects():
