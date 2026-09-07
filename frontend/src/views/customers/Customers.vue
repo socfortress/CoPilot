@@ -1,9 +1,9 @@
 <template>
 	<div class="page">
 		<n-alert v-if="isFiltering" type="info" :bordered="false" class="mb-4 text-xs">
-			The global customers filter ({{ globalCustomerCodes.join(", ") }}) is not applied here. This
-			page always lists every customer your account has access to — what you can see is decided by
-			your customer assignments, not by this filter.
+			The global customers filter ({{ globalCustomerCodes.join(", ") }}) is not applied here. This page always
+			lists every customer your account has access to — what you can see is decided by your customer assignments,
+			not by this filter.
 		</n-alert>
 
 		<CustomersList

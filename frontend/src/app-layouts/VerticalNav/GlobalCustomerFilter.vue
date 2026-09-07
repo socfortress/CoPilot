@@ -19,9 +19,8 @@
 						data-testid="global-filter-unassigned-warning"
 					/>
 				</template>
-				This filter narrows the view only. No customer is assigned to your account, so you can still
-				reach every customer in the deployment — ask an admin to assign yours under Users → Assign
-				Customer.
+				This filter narrows the view only. No customer is assigned to your account, so you can still reach every
+				customer in the deployment — ask an admin to assign yours under Users → Assign Customer.
 			</n-tooltip>
 		</div>
 		<n-select

@@ -6,6 +6,7 @@ import tailwindcss from "@tailwindcss/vite"
 import vue from "@vitejs/plugin-vue"
 import vueJsx from "@vitejs/plugin-vue-jsx"
 import { defineConfig, loadEnv } from "vite"
+import quello from "vite-plugin-quello"
 import VueDevTools from "vite-plugin-vue-devtools"
 import svgLoader from "vite-svg-loader"
 // import { analyzer } from "vite-bundle-analyzer"
@@ -41,6 +42,12 @@ export default defineConfig(({ mode, command }) => {
 				}
 			}),
 			vueJsx(),
+			// Visual element picker for AI coding agents: Alt+Q, click a component, the pick
+			// resolves back to its source. `apply: "serve"` internally, so it is absent from a
+			// production build by construction rather than by remembering to strip it.
+			// One agent file for the whole repo — the root AGENTS.md the tooling already reads —
+			// instead of one per app; the customer portal therefore leaves writeAgentFile off.
+			quello({ agentFile: "../AGENTS.md" }),
 			...(command === "serve"
 				? [
 						VueDevTools({

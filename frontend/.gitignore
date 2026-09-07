@@ -34,3 +34,6 @@ e2e/.tenants.json
 .env.e2e
 # ...but the template must ship: the repo root ignores `.env.*`, which would swallow it
 !.env.e2e.example
+
+# quello — visual element picks (generated, safe to delete)
+.quello/

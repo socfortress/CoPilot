@@ -1,17 +1,15 @@
 minimumReleaseAge: 0
-shellEmulator: true
 
 trustPolicy: off
-
 trustPolicyExclude:
   - chokidar
   - semver
 
-allowBuilds:
-  "@parcel/watcher": true
-  "@tailwindcss/oxide": true
-  esbuild: true
-  unrs-resolver: true
+peerDependencyRules:
+  allowedVersions:
+    eslint: "10"
+
+shellEmulator: true
 
 overrides:
   "@codemirror/state": 6.7.0
@@ -19,6 +17,8 @@ overrides:
   "@mui/icons-material": ^7.3.9
   "@shuffleio/shuffle-mcps": 0.0.34
 
-peerDependencyRules:
-  allowedVersions:
-    eslint: "10"
+allowBuilds:
+  "@parcel/watcher": true
+  "@tailwindcss/oxide": true
+  esbuild: true
+  unrs-resolver: true
