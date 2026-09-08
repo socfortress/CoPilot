@@ -392,15 +392,21 @@ async def sync_agents_velociraptor() -> SyncedAgentsResponse:
                 logger.info(f"Collecting Velociraptor Agent for {agent.hostname}")
 
                 try:
-                    # Build the velociraptor_agent where the hostname or `client_id` is that equal to the `agents`
+                    # Hostname is resolved across the whole client list before the stored
+                    # `velociraptor_id` is considered. Testing both in a single pass let a stale id
+                    # win purely by appearing earlier in the list, which is what pinned another
+                    # tenant's client to an agent whose identity had been overwritten underneath it
+                    # (#1120) — and kept re-pinning it on every sync instead of self-correcting.
+                    # The id stays as the fallback so a renamed agent still resolves.
                     velociraptor_agent = next(
-                        (
-                            client
-                            for client in velociraptor_clients
-                            if client.os_info.hostname == agent.hostname or client.client_id == agent.velociraptor_id
-                        ),
+                        (client for client in velociraptor_clients if client.os_info.hostname == agent.hostname),
                         None,
                     )
+                    if velociraptor_agent is None:
+                        velociraptor_agent = next(
+                            (client for client in velociraptor_clients if client.client_id == agent.velociraptor_id),
+                            None,
+                        )
                     # Convert Unix epoch timestamp to datetime
                     last_seen_at = datetime.fromtimestamp(
                         int(velociraptor_agent.last_seen_at) / 1e6,
