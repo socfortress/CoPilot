@@ -186,6 +186,11 @@ function closeAlertDetails() {
 function openEventSearch() {
 	const url = routeEventSearch({
 		customer_code: asset.value.customer_code,
+		// The asset knows the index it was read from, not the event source's name — those
+		// are joined only by the source's index pattern, which Event Search resolves on
+		// arrival off the source list it loads anyway. Without this the filter bar falls
+		// back to the first enabled EDR source, which for a non-EDR alert is the wrong one.
+		index_name: asset.value.index_name,
 		query: `alert_id:"${asset.value.alert_linked}"`
 	}).fullUrl()
 	window.open(url, "_blank")

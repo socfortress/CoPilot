@@ -154,6 +154,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
+import { resolveSourceForIndex } from "./eventSearch.helpers"
 
 export type EventSearchQueryTimerange = `${number}${"h" | "d" | "w"}`
 
@@ -382,6 +383,10 @@ async function applyRouteParams() {
 
 	await getEventSources(code)
 
+	// An explicitly named source is taken at its word: if it is gone or disabled, nothing
+	// is selected, rather than quietly searching a different source under the name asked
+	// for. `index_name` is the softer form — a caller that holds an index but not a source
+	// name — so an index nothing claims falls through to the default below.
 	const targetSource = qp.source_name ? String(qp.source_name) : null
 	if (targetSource) {
 		const match = eventSources.value.find(s => s.name === targetSource && s.enabled)
@@ -389,9 +394,16 @@ async function applyRouteParams() {
 			selectedSourceName.value = match.name
 		}
 	} else {
-		const edr = eventSources.value.find(s => s.event_type === "EDR" && s.enabled)
-		if (edr) {
-			selectedSourceName.value = edr.name
+		const indexName = qp.index_name ? String(qp.index_name) : null
+		const resolved = indexName ? resolveSourceForIndex(indexName, eventSources.value) : null
+
+		if (resolved) {
+			selectedSourceName.value = resolved.name
+		} else {
+			const edr = eventSources.value.find(s => s.event_type === "EDR" && s.enabled)
+			if (edr) {
+				selectedSourceName.value = edr.name
+			}
 		}
 	}
 

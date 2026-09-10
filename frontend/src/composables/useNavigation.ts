@@ -570,10 +570,21 @@ export function useNavigation() {
 		return routerConstructor({ name: "IncidentManagement-Sources" })
 	}
 
-	function routeEventSearch(params?: { customer_code?: string; source_name?: string; query?: string }) {
+	/**
+	 * `source_name` names the event source outright; `index_name` names a concrete index
+	 * and lets Event Search resolve the source from it, for callers (an alert's asset)
+	 * that hold the index but not the source. `source_name` wins when both are given.
+	 */
+	function routeEventSearch(params?: {
+		customer_code?: string
+		source_name?: string
+		index_name?: string
+		query?: string
+	}) {
 		const routeQuery: Record<string, string> = {}
 		if (params?.customer_code) routeQuery.customer_code = params.customer_code
 		if (params?.source_name) routeQuery.source_name = params.source_name
+		if (params?.index_name) routeQuery.index_name = params.index_name
 		if (params?.query) routeQuery.query = params.query
 		return routerConstructor({ name: "EventSearch", query: routeQuery })
 	}

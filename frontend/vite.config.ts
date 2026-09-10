@@ -47,7 +47,7 @@ export default defineConfig(({ mode, command }) => {
 			// production build by construction rather than by remembering to strip it.
 			// One agent file for the whole repo — the root AGENTS.md the tooling already reads —
 			// instead of one per app; the customer portal therefore leaves writeAgentFile off.
-			quello({ agentFile: "../AGENTS.md" }),
+			quello({ agentFile: "../AGENTS.md", visible: false }),
 			...(command === "serve"
 				? [
 						VueDevTools({

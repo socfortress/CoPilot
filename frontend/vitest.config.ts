@@ -8,7 +8,8 @@ export default defineConfig(env =>
 		defineConfig({
 			test: {
 				environment: "jsdom",
-				exclude: [...configDefaults.exclude, "e2e/*"],
+				// Both Playwright suites: their specs import `@playwright/test`, which vitest cannot run.
+				exclude: [...configDefaults.exclude, "e2e/**", "e2e-mocked/**"],
 				root: fileURLToPath(new URL("./", import.meta.url))
 			}
 		})
