@@ -453,6 +453,36 @@ async def get_mitre_techniques(
         raise HTTPException(status_code=500, detail=f"Error processing MITRE data: {str(e)}")
 
 
+# mitre_field is user-controllable (a query parameter on both MITRE alert-search routes)
+# and is interpolated into a Painless script (_build_mitre_search_query) and into a Lucene
+# query_string (_build_mitre_alerts_query). Restrict it to plain field-name characters so
+# neither interpolation can be broken out of, regardless of which caller supplies the value.
+_MITRE_FIELD_PATTERN = re.compile(r"^[A-Za-z0-9_.]+$")
+
+
+def _validate_mitre_field(mitre_field: str) -> str:
+    """Validate a MITRE field name before it is interpolated into a script or query string."""
+    if not isinstance(mitre_field, str) or not _MITRE_FIELD_PATTERN.fullmatch(mitre_field):
+        raise HTTPException(status_code=400, detail="Invalid mitre_field")
+    return mitre_field
+
+
+# technique_id (the {technique_id} path parameter of GET .../techniques/{technique_id}/alerts)
+# is interpolated by the same f-string into the same Lucene query_string clause as mitre_field
+# (_build_mitre_alerts_query). A real MITRE ATT&CK technique id is "T" followed by 4 digits,
+# optionally with a ".NNN" sub-technique suffix (e.g. T1003.004); the route's own docstring
+# also accepts the bare-digit form without the "T" (e.g. "1047"). Restrict to that format so
+# the interpolation can never be broken out of, regardless of which caller supplies the value.
+_TECHNIQUE_ID_PATTERN = re.compile(r"^T?[0-9]{4}(\.[0-9]{3})?$")
+
+
+def _validate_technique_id(technique_id: str) -> str:
+    """Validate a MITRE technique id before it is interpolated into a query string."""
+    if not isinstance(technique_id, str) or not _TECHNIQUE_ID_PATTERN.fullmatch(technique_id):
+        raise HTTPException(status_code=400, detail="Invalid technique_id")
+    return technique_id
+
+
 async def search_mitre_techniques_in_alerts(
     time_range: str = "now-24h",
     size: int = 1000,
@@ -847,6 +877,8 @@ def _build_mitre_search_query(
     name_field: Optional[str] = None,
 ) -> Dict:
     """Build the Wazuh Indexer query for MITRE technique aggregation."""
+    mitre_field = _validate_mitre_field(mitre_field)
+
     # Build the base filters
     query_filters = [{"match_all": {}}, {"range": {"timestamp": {"from": time_range, "to": "now"}}}]
 
@@ -1031,6 +1063,9 @@ def _build_mitre_alerts_query(
     mitre_field: str,
 ) -> Dict:
     """Build the OpenSearch query to fetch alerts for a specific MITRE technique."""
+    mitre_field = _validate_mitre_field(mitre_field)
+    technique_id = _validate_technique_id(technique_id)
+
     # Build the base filters
     query_filters = [{"range": {"timestamp": {"from": time_range, "to": "now"}}}]
 

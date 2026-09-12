@@ -397,7 +397,11 @@ async def list_mitre_techniques_in_alerts(
     page: int = Query(1, description="Page number for pagination", gt=0),
     rule_level: Optional[int] = Query(None, description="Filter by rule level"),
     rule_group: Optional[str] = Query(None, description="Filter by rule group"),
-    mitre_field: Optional[str] = Query(None, description="Override the field containing MITRE IDs"),
+    mitre_field: Optional[str] = Query(
+        None,
+        description="Override the field containing MITRE IDs",
+        pattern="^[A-Za-z0-9_.]+$",
+    ),
     index_pattern: str = Query("wazuh-*", description="Index pattern to search"),
 ) -> MitreTechniquesInAlertsResponse:
     """Search for MITRE ATT&CK techniques in Wazuh alerts."""
@@ -452,13 +456,21 @@ async def list_mitre_techniques_in_alerts(
     dependencies=[Security(auth_handler.require_any_scope("admin", "analyst"))],
 )
 async def get_mitre_technique_alerts(
-    technique_id: str = Path(..., description="MITRE ATT&CK technique ID (e.g., T1047, 1047)"),
+    technique_id: str = Path(
+        ...,
+        description="MITRE ATT&CK technique ID (e.g., T1047, 1047)",
+        pattern=r"^T?[0-9]{4}(\.[0-9]{3})?$",
+    ),
     time_range: str = Query("now-24h", description="Time range for the search (e.g., now-24h, now-7d)"),
     size: int = Query(25, description="Maximum number of alerts to return per page"),
     page: int = Query(1, description="Page number for pagination", gt=0),
     rule_level: Optional[int] = Query(None, description="Filter by rule level"),
     rule_group: Optional[str] = Query(None, description="Filter by rule group"),
-    mitre_field: Optional[str] = Query(None, description="Override the field containing MITRE IDs"),
+    mitre_field: Optional[str] = Query(
+        None,
+        description="Override the field containing MITRE IDs",
+        pattern="^[A-Za-z0-9_.]+$",
+    ),
     index_pattern: str = Query("wazuh-*", description="Index pattern to search"),
     alert_id: Optional[str] = Query(None, description="Filter by alert document id"),
 ) -> MitreTechniqueAlertsResponse:
