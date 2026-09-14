@@ -26,19 +26,27 @@
 						}"
 					/>
 				</div>
-				<div class="tool-box flex justify-end gap-2">
-					<n-button secondary :disabled="submitting" @click="reset()">Reset</n-button>
-					<n-button
-						type="primary"
-						:disabled="!trimmedValue || submitting"
-						:loading="submitting"
-						@click="submit()"
-					>
+				<div class="tool-box flex flex-wrap items-center justify-between gap-2">
+					<n-button quaternary :disabled="submitting" :loading="reloading" @click="reload()">
 						<template #icon>
-							<Icon :name="CommentsIcon" />
+							<Icon :name="ReloadIcon" />
 						</template>
-						Send comment
+						Reload comments
 					</n-button>
+					<div class="flex gap-2">
+						<n-button secondary :disabled="submitting" @click="reset()">Reset</n-button>
+						<n-button
+							type="primary"
+							:disabled="!trimmedValue || submitting"
+							:loading="submitting"
+							@click="submit()"
+						>
+							<template #icon>
+								<Icon :name="CommentsIcon" />
+							</template>
+							Send comment
+						</n-button>
+					</div>
 				</div>
 			</div>
 		</n-spin>
@@ -50,7 +58,7 @@ import type { ApiError } from "@/types/common"
 import type { AlertComment } from "@/types/incidentManagement/alerts"
 import _trim from "lodash/trim"
 import { NButton, NEmpty, NInput, NSpin, useMessage } from "naive-ui"
-import { computed, ref, toRefs } from "vue"
+import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
@@ -65,12 +73,20 @@ const emit = defineEmits<{
 const { comments, alertId } = toRefs(props)
 
 const CommentsIcon = "carbon:chat"
+const ReloadIcon = "carbon:renew"
 const commentsList = ref<AlertComment[]>(comments.value)
 const commentMessage = ref<string | null>(null)
 const submitting = ref(false)
+const reloading = ref(false)
 const message = useMessage()
 const authStore = useAuthStore()
 const trimmedValue = computed(() => _trim(commentMessage.value || ""))
+
+// A comment can be added from outside this list (the verdict dialog posts one), which
+// replaces the alert's comments array — pick the new array up instead of the stale copy.
+watch(comments, value => {
+	commentsList.value = value
+})
 
 function reset() {
 	commentMessage.value = ""
@@ -89,6 +105,29 @@ function removeComment(comment: AlertComment) {
 		commentsList.value.findIndex(o => o.id === comment.id),
 		1
 	)
+}
+
+// There is no comments-only endpoint: the alert fetch is the source of truth, and its
+// comments array is what this list already renders, so re-reading it is the reload.
+function reload() {
+	reloading.value = true
+
+	Api.incidentManagement.alerts
+		.getAlert(alertId.value)
+		.then(res => {
+			if (res.data.success) {
+				commentsList.value = res.data.alerts?.[0]?.comments || []
+				emit("updated", commentsList.value)
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			reloading.value = false
+		})
 }
 
 function submit() {
