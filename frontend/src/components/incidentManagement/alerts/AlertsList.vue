@@ -210,18 +210,43 @@
 						</div>
 					</template>
 					<template #footer>
-						<div class="flex justify-between">
-							<n-button size="small" secondary @click="setALlChecked()">Select current page</n-button>
+						<div class="flex flex-wrap items-center justify-between gap-2">
+							<div class="flex gap-2">
+								<n-button size="small" secondary @click="setALlChecked()">Select current page</n-button>
+								<n-tooltip trigger="hover" to="body">
+									<template #trigger>
+										<n-button
+											size="small"
+											secondary
+											:loading="verifyingChecked"
+											@click="verifyChecked()"
+										>
+											<template #icon>
+												<Icon :name="RefreshIcon" />
+											</template>
+											Refresh
+										</n-button>
+									</template>
+									Reload the selected alerts and drop the ones that no longer exist
+								</n-tooltip>
+							</div>
 							<n-button size="small" secondary @click="resetChecked()">Uncheck all</n-button>
 						</div>
 					</template>
 				</n-popover>
 
+				<!--
+					The selection survives every bulk action (#1131): the usual flow is assign,
+					then merge, then close, on the same group of alerts. Only "Uncheck all" and
+					deletion clear it. The buttons patch the rows they changed through `updated`,
+					and report the ids they could not touch through `done`, so the selection is
+					kept current rather than merely kept.
+				-->
 				<AlertBulkStatusButton
 					:alerts="checkedAlerts"
 					size="small"
 					@updated="updateAlert"
-					@done="resetChecked()"
+					@done="verifyChecked($event)"
 				/>
 
 				<AlertBulkAssignButton
@@ -229,7 +254,7 @@
 					:alerts="checkedAlerts"
 					size="small"
 					@updated="updateAlert"
-					@done="resetChecked()"
+					@done="verifyChecked($event)"
 				/>
 
 				<AlertMergeCaseButton
@@ -237,7 +262,6 @@
 					:alerts="checkedNoLinkedAlerts"
 					size="small"
 					@updated="updateAlert"
-					@merged="resetChecked()"
 				/>
 
 				<n-popconfirm to="body" @positive-click="deleteAlerts()">
@@ -367,6 +391,7 @@ import {
 	NScrollbar,
 	NSelect,
 	NSpin,
+	NTooltip,
 	useMessage
 } from "naive-ui"
 import { computed, defineAsyncComponent, nextTick, onBeforeMount, onBeforeUnmount, provide, ref, watch } from "vue"
@@ -396,14 +421,24 @@ const AlertBulkStatusButton = defineAsyncComponent(() => import("./AlertBulkStat
 const AlertBulkAssignButton = defineAsyncComponent(() => import("./AlertBulkAssignButton.vue"))
 
 const FilterIcon = "carbon:filter-edit"
+const RefreshIcon = "carbon:renew"
 const TrashIcon = "carbon:trash-can"
 const MenuIcon = "carbon:overflow-menu-horizontal"
 const InfoIcon = "carbon:information"
 
 const { routeCustomer } = useNavigation()
 
+/**
+ * Pagination is remote, so a checked alert is not necessarily in `alertsList` — the
+ * selection therefore holds full snapshots (the popover renders them as items) rather
+ * than ids. Snapshots go stale in three ways, each handled explicitly: an edit
+ * (`updateAlert` patches both lists), a page fetch (`syncCheckedWith` refreshes the
+ * ones that came back), and a deletion (removed on delete here, or pruned by
+ * `verifyChecked` when it finds the row is gone).
+ */
 const checkedAlerts = ref<Alert[]>([])
 const checkedNoLinkedAlerts = computed(() => checkedAlerts.value.filter(alert => !alert.linked_cases.length))
+const verifyingChecked = ref(false)
 const message = useMessage()
 const loading = ref(false)
 const deleting = ref(false)
@@ -501,6 +536,66 @@ function updateAlert(updatedAlert: Alert) {
 	if (alertIndex !== -1) {
 		alertsList.value[alertIndex] = updatedAlert
 	}
+
+	const checkedIndex = checkedAlerts.value.findIndex(o => o.id === updatedAlert.id)
+	if (checkedIndex !== -1) {
+		checkedAlerts.value[checkedIndex] = updatedAlert
+	}
+}
+
+/** Refresh the snapshots of checked alerts that appear in a freshly fetched page. */
+function syncCheckedWith(alerts: Alert[]) {
+	if (!checkedAlerts.value.length) return
+
+	const fresh = new Map(alerts.map(alert => [alert.id, alert]))
+	checkedAlerts.value = checkedAlerts.value.map(alert => fresh.get(alert.id) ?? alert)
+}
+
+/**
+ * Re-read checked alerts from the server: refresh the snapshot of those that still
+ * exist and drop the ones that do not. With no `ids` the whole selection is verified
+ * (the popover's Refresh button); bulk actions pass only the ids they could not update,
+ * which is normally none — a deleted alert is the usual reason for a skip.
+ */
+async function verifyChecked(ids?: number[]) {
+	const targets = ids ? checkedAlerts.value.filter(alert => ids.includes(alert.id)) : [...checkedAlerts.value]
+	if (!targets.length) return
+
+	verifyingChecked.value = true
+	const goneIds: number[] = []
+
+	// Bounded fan-out: one request per alert, a handful at a time.
+	const CHUNK = 8
+	for (let i = 0; i < targets.length; i += CHUNK) {
+		await Promise.all(
+			targets.slice(i, i + CHUNK).map(alert =>
+				Api.incidentManagement.alerts
+					.getAlert(alert.id)
+					.then(res => {
+						const fresh = res.data.success ? res.data.alerts?.[0] : undefined
+						if (fresh) {
+							updateAlert(fresh)
+						} else {
+							goneIds.push(alert.id)
+						}
+					})
+					.catch((err: ApiError) => {
+						// Only a definite "not found" removes an alert from the selection: a
+						// transient failure must not silently shrink what the analyst picked.
+						if (err?.response?.status === 404) {
+							goneIds.push(alert.id)
+						}
+					})
+			)
+		)
+	}
+
+	if (goneIds.length) {
+		checkedAlerts.value = checkedAlerts.value.filter(alert => !goneIds.includes(alert.id))
+		message.info(`${goneIds.length} selected alert(s) no longer exist and were removed from the selection.`)
+	}
+
+	verifyingChecked.value = false
 }
 
 function isChecked(alert: Alert) {
@@ -563,6 +658,7 @@ function getData() {
 		.then(res => {
 			if (res.data.success) {
 				alertsList.value = res.data?.alerts || []
+				syncCheckedWith(alertsList.value)
 				total.value = res.data.total || 0
 				totalFiltered.value = res.data.total_filtered ?? total.value ?? 0
 				statusCloseTotal.value = res.data.closed || 0
@@ -621,9 +717,8 @@ function deleteAlerts() {
 		.then(res => {
 			if (res.data.success) {
 				if (res.data.deleted_alert_ids.length) {
-					for (const id of res.data.deleted_alert_ids) {
-						toggleCheck({ id } as Alert)
-					}
+					const deletedIds = new Set(res.data.deleted_alert_ids)
+					checkedAlerts.value = checkedAlerts.value.filter(alert => !deletedIds.has(alert.id))
 
 					if (res.data.not_deleted_alert_ids.length) {
 						message.warning("Some alerts could not be deleted.")

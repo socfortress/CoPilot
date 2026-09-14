@@ -77,11 +77,10 @@
 										</div>
 									</AlertVerdictSwitch>
 								</div>
-								<div
-									v-if="alert.verdict === 'FALSE_POSITIVE'"
-									class="text-secondary flex flex-col gap-0.5 text-xs"
-								>
-									<span>{{ falsePositiveReasonLabel(alert.verdict_reason) }}</span>
+								<div v-if="alert.verdict" class="text-secondary flex flex-col gap-0.5 text-xs">
+									<span v-if="alert.verdict === 'FALSE_POSITIVE'">
+										{{ falsePositiveReasonLabel(alert.verdict_reason) }}
+									</span>
 									<span v-if="alert.verdict_note" class="italic">{{ alert.verdict_note }}</span>
 									<span v-if="alert.verdict_by">Marked by {{ alert.verdict_by }}</span>
 								</div>
