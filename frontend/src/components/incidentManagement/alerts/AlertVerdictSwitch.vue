@@ -264,6 +264,9 @@ function openDialog(next: AlertVerdict) {
 	pendingVerdict.value = next
 	reasonSelected.value = null
 	noteValue.value = ""
+	// Re-read on every open: one switch is mounted per row, so a preference changed in
+	// another row's dialog would otherwise stay invisible here until a reload.
+	postAsComment.value = readPostAsCommentPreference()
 	showReasonDialog.value = true
 }
 
