@@ -35,7 +35,9 @@ const { alerts, size } = defineProps<{
 
 const emit = defineEmits<{
 	(e: "updated", value: Alert): void
-	(e: "done"): void
+	// Skipped ids are reported so the list can find out whether they still exist —
+	// the backend folds "gone" and "not entitled" into the same bucket.
+	(e: "done", skippedIds: number[]): void
 }>()
 
 const AssigneeIcon = "carbon:user-avatar"
@@ -87,7 +89,7 @@ function updateAssignee() {
 					message.warning("The selected alerts could not be assigned.")
 				}
 
-				emit("done")
+				emit("done", res.data.not_updated_alert_ids ?? [])
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
