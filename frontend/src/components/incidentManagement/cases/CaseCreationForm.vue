@@ -97,7 +97,7 @@
 					<div class="flex gap-4">
 						<n-button :disabled="loading" @click="reset()">Reset</n-button>
 						<n-button type="primary" :disabled="!isValid" :loading="submitting" @click="validate()">
-							Submit
+							{{ submitLabel || "Submit" }}
 						</n-button>
 					</div>
 				</div>
@@ -122,8 +122,23 @@ import CaseTemplateSuggestions from "@/components/incidentManagement/caseTemplat
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 
+/**
+ * `prefill` seeds the form when it opens (and on Reset) — used when the case is created
+ * in the context of something else, e.g. merging alerts (#1131), where the customer and
+ * a sensible name are already known. It takes precedence over the global customer
+ * filter, which only ever fills an empty field. `submitLabel` lets the embedding flow
+ * say what actually happens on submit ("Create case & merge") instead of a bare Submit.
+ */
+const { prefill, submitLabel } = defineProps<{
+	prefill?: Partial<CasePayload>
+	submitLabel?: string
+}>()
+
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
+	// `loading` also covers the users/customers/templates fetches; `submitting` is only
+	// the create request, for embedders that must not be dismissed mid-creation.
+	(e: "update:submitting", value: boolean): void
 	(e: "submitted", value: Case): void
 }>()
 
@@ -221,8 +236,8 @@ function validate() {
 	})
 }
 
-function getForm() {
-	const payload = {
+function getForm(): CasePayload {
+	const payload: CasePayload = {
 		case_name: "",
 		case_creation_time: new Date(),
 		case_description: "",
@@ -231,7 +246,7 @@ function getForm() {
 		customer_code: null,
 		comments: []
 	}
-	return payload
+	return { ...payload, ...(prefill || {}) }
 }
 
 function reset(force?: boolean) {
@@ -384,6 +399,10 @@ watch(
 
 watch(loading, val => {
 	emit("update:loading", val)
+})
+
+watch(submitting, val => {
+	emit("update:submitting", val)
 })
 
 onBeforeMount(() => {
