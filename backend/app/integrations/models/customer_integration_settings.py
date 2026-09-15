@@ -36,6 +36,12 @@ class CustomerIntegrations(SQLModel, table=True):
     customer_name: str = Field(max_length=255, nullable=False)
     integration_service_id: Optional[int] = Field(default=None, nullable=False)
     integration_service_name: str = Field(max_length=255, nullable=False)
+    # Distinguishes several configurations of the same integration for one customer (e.g. an MSSP
+    # customer with three Microsoft 365 tenants). NULL is the single, unnamed instance that every
+    # pre-existing row carries, so `(customer_code, integration_service_name, NULL)` keeps meaning
+    # exactly what it did before. Only integrations listed in `MULTI_INSTANCE_INTEGRATIONS`
+    # (app/integrations/routes.py) are allowed to have more than one row.
+    instance_name: Optional[str] = Field(default=None, max_length=255)
     deployed: bool = Field(default=False)
     # Relationships
     integration_subscriptions: List["IntegrationSubscription"] = Relationship(
@@ -110,6 +116,8 @@ class CustomerIntegrationsMeta(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     customer_code: str = Field(max_length=50, nullable=False)
     integration_name: str = Field(max_length=255, nullable=False)
+    # Matches `CustomerIntegrations.instance_name`; one metadata row per provisioned instance.
+    instance_name: Optional[str] = Field(default=None, max_length=255)
     graylog_input_id: Optional[str] = Field(max_length=1024)
     graylog_index_id: str = Field(max_length=1024, nullable=False)
     graylog_stream_id: str = Field(max_length=1024, nullable=False)

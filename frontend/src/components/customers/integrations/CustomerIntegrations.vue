@@ -6,6 +6,7 @@
 					:customer-code
 					:customer-name
 					:disabled-ids-list="disabledIds"
+					:existing-instance-names
 					@submitted="refreshList()"
 					@close="closeForm()"
 				/>
@@ -53,6 +54,7 @@ import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import CustomerIntegrationForm from "./CustomerIntegrationForm.vue"
 import CustomerIntegrationItem from "./CustomerIntegrationItem.vue"
+import { isMultiInstanceIntegration } from "./utils"
 
 const { customerCode, customerName } = defineProps<{
 	customerCode: string
@@ -65,7 +67,24 @@ const message = useMessage()
 const showForm = ref(false)
 const loading = ref(false)
 const list = ref<CustomerIntegration[]>([])
-const disabledIds = computed(() => list.value.map(o => o.integration_service_id))
+// A multi-instance integration stays selectable once the customer already has one, since that is
+// how a second Microsoft 365 tenant gets added; everything else remains one-per-customer.
+const disabledIds = computed(() =>
+	list.value.filter(o => !isMultiInstanceIntegration(o.integration_service_name)).map(o => o.integration_service_id)
+)
+
+// Instance names already taken for a given integration, so the form can reject a duplicate before
+// the request reaches the backend
+const existingInstanceNames = computed(() =>
+	list.value.reduce(
+		(acc, o) => {
+			const names = acc[o.integration_service_name] || []
+			acc[o.integration_service_name] = [...names, o.instance_name || null]
+			return acc
+		},
+		{} as Record<string, (string | null)[]>
+	)
+)
 
 function getCustomerIntegrations() {
 	loading.value = true

@@ -14,6 +14,8 @@ from app.integrations.office365.schema.provision import ProvisionOffice365Respon
 from app.integrations.office365.services.provision import provision_office365
 from app.integrations.routes import find_customer_integration
 from app.integrations.routes import get_customer_integrations_by_customer_code
+from app.integrations.routes import normalize_instance_name
+from app.integrations.routes import resolve_integration_instance
 from app.integrations.schema import CustomerIntegrations
 from app.integrations.schema import CustomerIntegrationsResponse
 
@@ -55,8 +57,12 @@ def extract_office365_auth_keys(
     """
     Extracts the authentication keys for Office365 integration from the given customer integration.
 
+    The keys of every Office365 subscription on this record are flattened into one dict, so the
+    record handed in must already be narrowed to a single instance — a customer with several
+    Microsoft 365 tenants would otherwise end up with one tenant's ID paired with another's secret.
+
     Args:
-        customer_integration (CustomerIntegrations): The customer integration object.
+        customer_integration (CustomerIntegrations): The customer integration object, for one instance.
 
     Returns:
         Dict[str, str]: A dictionary containing the authentication keys for Office365 integration.
@@ -102,11 +108,26 @@ async def provision_office365_route(
         session,
     )
 
+    instance_name = await resolve_integration_instance(
+        session,
+        provision_office365_request.customer_code,
+        provision_office365_request.integration_name,
+        normalize_instance_name(provision_office365_request.instance_name),
+    )
+
     customer_integration = await find_customer_integration(
         provision_office365_request.customer_code,
         provision_office365_request.integration_name,
         customer_integration_response,
+        instance_name=instance_name,
+        match_instance=True,
     )
+
+    if customer_integration is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(f"Office365 integration '{instance_name}' not found for customer " f"{provision_office365_request.customer_code}."),
+        )
 
     office365_auth_keys = extract_office365_auth_keys(customer_integration)
 
@@ -116,4 +137,5 @@ async def provision_office365_route(
         provision_office365_request.customer_code,
         auth_keys,
         session,
+        instance_name=instance_name,
     )

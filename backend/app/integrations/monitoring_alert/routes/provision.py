@@ -179,6 +179,9 @@ from app.integrations.monitoring_alert.services.provision import (
 from app.integrations.monitoring_alert.services.provision import (
     provision_wazuh_monitoring_alert,
 )
+from app.integrations.office365.services.tenant_lookup import (
+    resolve_customer_code_from_office365_tenant,
+)
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
 
@@ -209,6 +212,16 @@ async def get_customer_meta(customer_code: str, session: AsyncSession) -> Custom
             select(CustomersMeta).where(CustomersMeta.customer_meta_office365_organization_id == customer_code),
         )
         customer_meta = customer_meta.scalars().first()
+
+    if not customer_meta:
+        # The column above names only the customer's first Microsoft 365 tenant, so a later tenant's
+        # organization ID is resolved through the credentials stored per Office365 instance.
+        resolved_code = await resolve_customer_code_from_office365_tenant(customer_code, session)
+        if resolved_code:
+            customer_meta = await session.execute(
+                select(CustomersMeta).where(CustomersMeta.customer_code == resolved_code),
+            )
+            customer_meta = customer_meta.scalars().first()
 
     if not customer_meta:
         raise HTTPException(status_code=404, detail="Customer not found")

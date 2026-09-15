@@ -17,6 +17,12 @@ export interface CustomerIntegration {
 	customer_name: string
 	integration_service_id: number
 	integration_service_name: string
+	/**
+	 * Label distinguishing this configuration from the customer's other configurations of the same
+	 * integration (one per Microsoft 365 tenant, for example). Null/absent is the customer's single
+	 * unnamed instance, which is what every integration configured before multi-instance support has.
+	 */
+	instance_name?: string | null
 	integration_subscriptions: IntegrationSubscription[]
 }
 
@@ -57,6 +63,7 @@ export interface CustomerIntegrationMetaCommon {
 
 export interface CustomerIntegrationMetaThirdParty extends CustomerIntegrationMetaCommon {
 	integration_name: string
+	instance_name?: string | null
 }
 
 export interface CustomerIntegrationMetaNetwork extends CustomerIntegrationMetaCommon {

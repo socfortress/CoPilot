@@ -1,8 +1,11 @@
 import json
 import os
+import re
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from typing import List
+from typing import Optional
+from urllib.parse import quote
 from xml.dom import minidom
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import SubElement
@@ -330,24 +333,25 @@ async def check_if_office365_is_already_provisioned(
     return False
 
 
-async def check_if_office365_is_already_provisioned_for_customer(
+async def check_if_tenant_is_already_provisioned(
     tenant_id: str,
     wazuh_config: str,
-) -> bool:
+) -> None:
     """
-    If the string "Office365 Integration" is found in the Wazuh configuration, return True.
+    Refuse to provision a Microsoft 365 tenant the Wazuh manager is already polling.
+
+    Wazuh supports several `<api_auth>` blocks in one `<office365>` block, which is how a customer
+    with several tenants is configured — but the same tenant twice would have the manager collect
+    every event from it twice.
 
     Args:
-        customer_code (str): The customer code.
+        tenant_id (str): The Microsoft 365 tenant (organization) ID.
         wazuh_config (str): The Wazuh configuration in string format.
-
-    Returns:
-        bool: True if the Office365 integration is already provisioned, False otherwise.
     """
-    if f"{tenant_id}" in wazuh_config:
+    if tenant_id in wazuh_config:
         raise HTTPException(
             status_code=400,
-            detail=f"Office365 integration is already provisioned for customer {tenant_id}.",
+            detail=f"Microsoft 365 tenant {tenant_id} is already provisioned on the Wazuh manager.",
         )
 
 
@@ -362,25 +366,53 @@ async def restart_wazuh_manager() -> None:
 ################## ! GRAYLOG ! ##################
 
 
+def instance_slug(instance_name: Optional[str]) -> str:
+    """
+    Turn an instance label into something usable in a Graylog index prefix.
+
+    Index prefixes are lowercase and cannot carry the dots or spaces a tenant label like
+    `company.onmicrosoft.com` is full of, so everything outside `[a-z0-9]` collapses to a single
+    hyphen. Returns an empty string for the unnamed instance, which keeps a pre-existing
+    single-tenant customer on exactly the prefix it already has.
+    """
+    if not instance_name:
+        return ""
+    slug = re.sub(r"[^a-z0-9]+", "-", instance_name.lower()).strip("-")
+    return slug
+
+
+def instance_suffix(instance_name: Optional[str], separator: str = " - ") -> str:
+    """Human-readable suffix for titles, empty for the unnamed instance."""
+    return f"{separator}{instance_name}" if instance_name else ""
+
+
 async def build_index_set_config(
     customer_code: str,
     session: AsyncSession,
+    instance_name: Optional[str] = None,
 ) -> TimeBasedIndexSet:
     """
     Build the configuration for a time-based index set.
 
+    Each Microsoft 365 tenant of a customer gets its own index set, so retention and rotation can be
+    set per tenant and one tenant's events never mix with another's. The unnamed instance keeps the
+    original `office365-<customer_code>` prefix untouched.
+
     Args:
         request (ProvisionNewCustomer): The request object containing customer information.
+        instance_name (Optional[str]): The instance label of the tenant being provisioned.
 
     Returns:
         TimeBasedIndexSet: The configured time-based index set.
     """
     # Lowercase the customer code since Graylog index sets must be lowercase
     customer_code = customer_code.lower()
+    slug = instance_slug(instance_name)
+    index_prefix = f"office365-{customer_code}" + (f"-{slug}" if slug else "")
     return TimeBasedIndexSet(
-        title=f"{(await get_customer(customer_code, session)).customer.customer_name} - Office365",
-        description=f"{customer_code} - Office365",
-        index_prefix=f"office365-{customer_code}",
+        title=f"{(await get_customer(customer_code, session)).customer.customer_name} - Office365{instance_suffix(instance_name)}",
+        description=f"{customer_code} - Office365{instance_suffix(instance_name)}",
+        index_prefix=index_prefix,
         rotation_strategy_class="org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy",
         rotation_strategy={
             "type": "org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig",
@@ -430,18 +462,20 @@ async def send_index_set_creation_request(
 async def create_index_set(
     customer_code: str,
     session: AsyncSession,
+    instance_name: Optional[str] = None,
 ) -> GraylogIndexSetCreationResponse:
     """
     Creates an index set for a new customer.
 
     Args:
         request (ProvisionNewCustomer): The request object containing the customer information.
+        instance_name (Optional[str]): The instance label of the tenant being provisioned.
 
     Returns:
         GraylogIndexSetCreationResponse: The response object containing the result of the index set creation.
     """
-    logger.info(f"Creating index set for customer {customer_code}")
-    index_set_config = await build_index_set_config(customer_code, session)
+    logger.info(f"Creating index set for customer {customer_code} (instance: {instance_name or 'default'})")
+    index_set_config = await build_index_set_config(customer_code, session, instance_name=instance_name)
     return await send_index_set_creation_request(index_set_config)
 
 
@@ -466,20 +500,29 @@ async def build_event_stream_config(
     provision_office365_auth_keys: ProvisionOffice365AuthKeys,
     index_set_id: str,
     session: AsyncSession,
+    instance_name: Optional[str] = None,
 ) -> Office365EventStream:
     """
     Build the configuration for a Wazuh event stream.
 
+    A stream rule pins exactly one organization ID and Graylog cannot OR several values together in
+    an AND-matched stream, so a customer with several Microsoft 365 tenants gets one stream per
+    tenant, all writing into that customer's single Office365 index set. The instance label is put
+    in the title so the streams are tellable apart in Graylog.
+
     Args:
         request (ProvisionNewCustomer): The request object containing customer information.
         index_set_id (str): The ID of the index set.
+        instance_name (Optional[str]): The instance label of the tenant being provisioned.
 
     Returns:
         Office365EventStream: The configured Wazuh event stream.
     """
+    customer_name = (await get_customer(customer_code, session)).customer.customer_name
+    stream_title = f"{customer_name} - Office365" + (f" - {instance_name}" if instance_name else "")
     return Office365EventStream(
-        title=f"{(await get_customer(customer_code, session)).customer.customer_name} - Office365",
-        description=f"{(await get_customer(customer_code, session)).customer.customer_name} - Office365",
+        title=stream_title,
+        description=stream_title,
         index_set_id=index_set_id,
         rules=[
             {
@@ -527,6 +570,7 @@ async def create_event_stream(
     provision_office365_auth_keys: ProvisionOffice365AuthKeys,
     index_set_id: str,
     session: AsyncSession,
+    instance_name: Optional[str] = None,
 ) -> StreamCreationResponse:
     """
     Creates an event stream for a customer.
@@ -543,6 +587,7 @@ async def create_event_stream(
         provision_office365_auth_keys,
         index_set_id,
         session,
+        instance_name=instance_name,
     )
     return await send_event_stream_creation_request(event_stream_config)
 
@@ -778,21 +823,32 @@ async def create_office365_pipeline(pipeline_title: str) -> None:
 async def create_grafana_datasource(
     customer_code: str,
     session: AsyncSession,
+    instance_name: Optional[str] = None,
 ) -> GrafanaDataSourceCreationResponse:
     """
     Creates a Grafana Wazuh datasource for a new customer using the OpenSearch Data Source.
+
+    Each tenant gets its own datasource, pointed at that tenant's own index prefix, because two
+    datasources cannot share a name inside one Grafana organization and because a tenant's
+    dashboards should show that tenant's events. Note the unnamed instance keeps the original
+    `office365-<customer_code>*` pattern, which by construction also matches the later tenants'
+    `office365-<customer_code>-<slug>-*` indices — they all belong to the same customer.
 
     Args:
         request (ProvisionNewCustomer): The request object containing customer information.
         organization_id (int): The ID of the organization to create the datasource for.
         session (AsyncSession): The database session.
+        instance_name (Optional[str]): The instance label of the tenant being provisioned.
 
     Returns:
         GrafanaDataSourceCreationResponse: The response object containing the result of the datasource creation.
     """
-    logger.info("Creating Grafana datasource")
+    logger.info(f"Creating Grafana datasource (instance: {instance_name or 'default'})")
     # Lowercase the customer code since Graylog index sets must be lowercase
     customer_code = customer_code.lower()
+    slug = instance_slug(instance_name)
+    datasource_name = "O365" + (f" - {instance_name}" if instance_name else "")
+    index_pattern = f"office365-{customer_code}" + (f"-{slug}" if slug else "") + "*"
     grafana_client = await create_grafana_client("Grafana")
     grafana_url = await get_connector_attribute(
         connector_id=12,
@@ -804,7 +860,7 @@ async def create_grafana_datasource(
         (await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
     )
     datasource_payload = GrafanaDatasource(
-        name="O365",
+        name=datasource_name,
         type="grafana-opensearch-datasource",
         typeName="OpenSearch",
         access="proxy",
@@ -813,7 +869,7 @@ async def create_grafana_datasource(
             column_name="connector_url",
             session=session,
         ),
-        database=f"office365-{customer_code}*",
+        database=index_pattern,
         basicAuth=True,
         basicAuthUser=await get_connector_attribute(
             connector_id=1,
@@ -833,15 +889,15 @@ async def create_grafana_datasource(
                 {
                     "field": "^_id$",
                     "url": (
-                        "{}/explore?left=%7B%22datasource%22:%22O365%22,%22queries%22:%5B%7B"
+                        "{}/explore?left=%7B%22datasource%22:%22{}%22,%22queries%22:%5B%7B"
                         "%22refId%22:%22A%22,%22query%22:%22_id:${{__value.raw}}%22,%22alias%22:%22%22,"
                         "%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:"
                         "%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%7B%22type%22:%22date_histogram%22,%22id%22:%221%22,%22settings%22:%7B%22interval%22:%22auto%22%7D%7D%5D,%22timeField%22:"
                         "%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-6h%22,%22to%22:%22now%22%7D%7D"
-                    ).format(grafana_url),
+                    ).format(grafana_url, quote(datasource_name, safe="")),
                 },
             ],
-            "database": f"office365-{customer_code}*",
+            "database": index_pattern,
             "flavor": "opensearch",
             "includeFrozen": False,
             "logLevelField": "syslog_level",
@@ -867,8 +923,22 @@ async def provision_office365(
     customer_code: str,
     provision_office365_auth_keys: ProvisionOffice365AuthKeys,
     session: AsyncSession,
+    instance_name: Optional[str] = None,
 ) -> ProvisionOffice365Response:
-    logger.info(f"Provisioning Office365 integration for customer {customer_code}.")
+    """
+    Provision one Microsoft 365 tenant for a customer.
+
+    A customer may hold several tenants (an MSSP customer with subsidiaries or acquisitions), each
+    its own `customer_integrations` instance. Everything that identifies the *tenant* is created per
+    call — the Wazuh `<api_auth>` block and the Graylog stream that selects on the tenant's
+    organization ID. Everything that identifies the *customer* — the Graylog index set, the Grafana
+    datasource, folder and dashboards — is created once and reused by later tenants, so all of a
+    customer's Microsoft 365 events land in one index and one set of dashboards while each event
+    keeps its originating tenant in `data_office365_OrganizationId`.
+    """
+    logger.info(
+        f"Provisioning Office365 integration for customer {customer_code} (instance: {instance_name or 'default'}).",
+    )
 
     # Get Wazuh configuration
     wazuh_config = await get_wazuh_configuration(file_name="wazuh_config.xml")
@@ -876,9 +946,14 @@ async def provision_office365(
     # Check if Office365 is already provisioned
     office365_provisioned = await check_if_office365_is_already_provisioned(customer_code, wazuh_config)
 
-    # Create Office365 template
+    # Refuse a tenant the manager is already polling, whoever it belongs to
+    await check_if_tenant_is_already_provisioned(provision_office365_auth_keys.TENANT_ID, wazuh_config)
+
     if office365_provisioned:
-        logger.info("Office365 integration is already provisioned.")
+        # An <office365> block exists (this deployment already collects for some tenant), so this
+        # tenant is added as another <api_auth> inside it — Wazuh's own multi-tenant shape.
+        logger.info("Office365 block already exists on the manager; adding this tenant's api_auth block.")
+        wazuh_config = await add_api_auth_to_office365_block(customer_code, provision_office365_auth_keys)
     else:
         logger.info("Office365 integration is not yet provisioned.")
         logger.info("Creating new Office365 block.")
@@ -886,17 +961,6 @@ async def provision_office365(
             customer_code,
             provision_office365_auth_keys,
         )
-
-    # Check if Office365 is already provisioned for customer
-    await check_if_office365_is_already_provisioned_for_customer(provision_office365_auth_keys.TENANT_ID, wazuh_config)
-
-    # If Office365 is already provisioned but not for the customer, add the api_auth contents to the office365 block
-    if office365_provisioned and not await check_if_office365_is_already_provisioned_for_customer(
-        provision_office365_auth_keys.TENANT_ID,
-        wazuh_config,
-    ):
-        wazuh_config = await add_api_auth_to_office365_block(customer_code, provision_office365_auth_keys)
-    else:
         # Append Office365 template to Wazuh configuration
         wazuh_config = await append_office365_template(wazuh_config, office365_templated)
 
@@ -911,16 +975,27 @@ async def provision_office365(
     await check_pipeline_rules()
     await check_pipeline()
 
+    # Every Graylog and Grafana resource below is created per tenant, not shared between a
+    # customer's tenants: each tenant gets its own index set (so retention is set per tenant and
+    # events never mix), its own stream, and its own datasource, folder and dashboards.
     # Create Index Set
-    index_set_id = (await create_index_set(customer_code=customer_code, session=session)).data.id
+    index_set_id = (
+        await create_index_set(
+            customer_code=customer_code,
+            session=session,
+            instance_name=instance_name,
+        )
+    ).data.id
     logger.info(f"Index set: {index_set_id}")
-    # Create event stream
+
+    # Create event stream — its rule pins this tenant's organization ID
     stream_id = (
         await create_event_stream(
             customer_code,
             provision_office365_auth_keys,
             index_set_id,
             session,
+            instance_name=instance_name,
         )
     ).data.stream_id
     pipeline_id = await get_pipeline_id(subscription="OFFICE365")
@@ -936,17 +1011,25 @@ async def provision_office365(
     await start_stream(stream_id=stream_id)
 
     # Grafana Deployment
-    office365_datasource_uid = (await create_grafana_datasource(customer_code=customer_code, session=session)).datasource.uid
+    grafana_org_id = (await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id
+
+    office365_datasource_uid = (
+        await create_grafana_datasource(
+            customer_code=customer_code,
+            session=session,
+            instance_name=instance_name,
+        )
+    ).datasource.uid
     grafana_o365_folder_id = (
         await create_grafana_folder(
-            organization_id=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
-            folder_title="OFFICE 365",
+            organization_id=grafana_org_id,
+            folder_title=f"OFFICE 365{instance_suffix(instance_name)}",
         )
     ).id
     await provision_dashboards(
         DashboardProvisionRequest(
             dashboards=[dashboard.name for dashboard in Office365Dashboard],
-            organizationId=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
+            organizationId=grafana_org_id,
             folderId=grafana_o365_folder_id,
             datasourceUid=office365_datasource_uid,
             grafana_url=(await get_customer_default_settings_attribute(column_name="grafana_url", session=session))
@@ -961,27 +1044,26 @@ async def provision_office365(
         CustomerIntegrationsMetaSchema(
             customer_code=customer_code,
             integration_name="Office365",
+            instance_name=instance_name,
             graylog_input_id=None,
             graylog_index_id=index_set_id,
             graylog_stream_id=stream_id,
-            grafana_org_id=(
-                await get_customer_meta(
-                    customer_code,
-                    session,
-                )
-            ).customer_meta.customer_meta_grafana_org_id,
+            grafana_org_id=grafana_org_id,
             grafana_dashboard_folder_id=grafana_o365_folder_id,
             grafana_datasource_uid=office365_datasource_uid,
         ),
         session,
     )
 
-    await update_customer_integration_table(customer_code, session)
+    await update_customer_integration_table(customer_code, session, instance_name=instance_name)
     await update_customermeta_table(customer_code, session, provision_office365_auth_keys.TENANT_ID)
 
     return ProvisionOffice365Response(
         success=True,
-        message=f"Successfully provisioned Office365 integration for customer {customer_code}.",
+        message=(
+            f"Successfully provisioned Office365 integration for customer {customer_code}"
+            + (f" (tenant {instance_name})." if instance_name else ".")
+        ),
     )
 
 
@@ -989,21 +1071,30 @@ async def provision_office365(
 async def update_customer_integration_table(
     customer_code: str,
     session: AsyncSession,
+    instance_name: Optional[str] = None,
 ) -> None:
     """
     Updates the `customer_integrations` table to set the `deployed` column to True where the `customer_code`
     matches the given customer code and the `integration_service_name` is "Office365".
 
+    Scoped to one instance so deploying a customer's second Microsoft 365 tenant does not mark
+    their other, still-undeployed tenants as deployed — which would hide the Deploy button for them.
+
     Args:
         customer_code (str): The customer code.
         session (AsyncSession): The async session object for making HTTP requests.
+        instance_name (Optional[str]): The instance being deployed.
     """
+    instance_clause = (
+        CustomerIntegrations.instance_name.is_(None) if instance_name is None else CustomerIntegrations.instance_name == instance_name
+    )
     await session.execute(
         update(CustomerIntegrations)
         .where(
             and_(
                 CustomerIntegrations.customer_code == customer_code,
                 CustomerIntegrations.integration_service_name == "Office365",
+                instance_clause,
             ),
         )
         .values(deployed=True),
@@ -1017,12 +1108,24 @@ async def update_customermeta_table(customer_code: str, session: AsyncSession, t
     """
     Updates the `customer_meta` table to set the `office365_tenant_id` column to the given tenant_id.
 
+    The column holds a single tenant and predates multi-tenant support, so it is only written while
+    still empty — the customer's first tenant claims it and later ones leave it alone. Alert routing
+    for every tenant goes through the stored TENANT_ID auth keys instead
+    (`resolve_customer_code_from_office365_tenant`), so nothing depends on this column being the
+    "current" tenant.
+
     Args:
         customer_code (str): The customer code.
         session (AsyncSession): The async session object for making HTTP requests.
     """
     await session.execute(
-        update(CustomersMeta).where(CustomersMeta.customer_code == customer_code).values(customer_meta_office365_organization_id=tenant_id),
+        update(CustomersMeta)
+        .where(
+            CustomersMeta.customer_code == customer_code,
+            (CustomersMeta.customer_meta_office365_organization_id.is_(None))
+            | (CustomersMeta.customer_meta_office365_organization_id == ""),
+        )
+        .values(customer_meta_office365_organization_id=tenant_id),
     )
     await session.commit()
 

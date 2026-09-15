@@ -798,7 +798,34 @@ async def get_customer_alert_settings(
         )
         settings = result.scalars().first()
 
+    if not settings:
+        # `customer_code` may be a Microsoft 365 organization ID: Office365 alerts carry the tenant
+        # GUID in the customer-code field. The legacy column above names only one tenant per
+        # customer, so any further tenant is resolved through its stored integration credentials.
+        settings = await _settings_for_office365_tenant(customer_code, session)
+
     return settings
+
+
+async def _settings_for_office365_tenant(
+    tenant_id: str,
+    session: AsyncSession,
+) -> Optional[AlertCreationSettings]:
+    """Resolve alert creation settings via the customer that owns a Microsoft 365 tenant."""
+    from app.integrations.office365.services.tenant_lookup import (
+        resolve_customer_code_from_office365_tenant,
+    )
+
+    customer_code = await resolve_customer_code_from_office365_tenant(tenant_id, session)
+    if not customer_code:
+        return None
+
+    result = await session.execute(
+        select(AlertCreationSettings).filter(
+            AlertCreationSettings.customer_code == customer_code,
+        ),
+    )
+    return result.scalars().first()
 
 
 async def get_customer_alert_settings_office365(
@@ -824,7 +851,10 @@ async def get_customer_alert_settings_office365(
 
     if settings:
         return settings
-    return None
+
+    # The column above holds the customer's first tenant only; later ones are matched against the
+    # tenant IDs stored with each Office365 integration instance.
+    return await _settings_for_office365_tenant(office365_organization_id, session)
 
 
 async def get_customer_alert_event_configs(

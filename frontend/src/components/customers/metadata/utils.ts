@@ -6,6 +6,7 @@ export function getMetaFieldLabel(key: string): string {
 		customer_code: "Customer Code",
 		integration_name: "Integration Name",
 		network_connector_name: "Network Connector Name",
+		instance_name: "Instance Name",
 		graylog_input_id: "Graylog Input ID",
 		graylog_index_id: "Graylog Index ID",
 		graylog_stream_id: "Graylog Stream ID",

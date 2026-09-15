@@ -51,6 +51,7 @@ const loadingDelete = ref(false)
 const loading = computed(() => loadingProvision.value || loadingDelete.value)
 const serviceName = computed(() => integration.integration_service_name)
 const customerCode = computed(() => integration.customer_code)
+const instanceName = computed(() => integration.instance_name || null)
 const isOffice365 = computed(() => serviceName.value === "Office365")
 const isMimecast = computed(() => serviceName.value === "Mimecast")
 const isCrowdstrike = computed(() => serviceName.value === "Crowdstrike")
@@ -86,7 +87,7 @@ function provision() {
 	let apiCall: Promise<ApiCommonResponse> | null = null
 
 	if (isOffice365.value) {
-		apiCall = Api.integrations.office365Provision(customerCode.value, serviceName.value)
+		apiCall = Api.integrations.office365Provision(customerCode.value, serviceName.value, instanceName.value)
 	}
 	if (isMimecast.value) {
 		apiCall = Api.integrations.mimecastProvision(customerCode.value, serviceName.value)

@@ -6,6 +6,22 @@ import { h } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
+/**
+ * Integrations a customer may configure more than once, each configuration labelled by
+ * `instance_name`. Mirrors `MULTI_INSTANCE_INTEGRATIONS` in `app/integrations/routes.py` — the
+ * backend is what enforces it; this list only decides whether the UI offers to add another one.
+ */
+export const MULTI_INSTANCE_INTEGRATIONS = ["Office365"]
+
+export function isMultiInstanceIntegration(integrationName: string): boolean {
+	return MULTI_INSTANCE_INTEGRATIONS.includes(integrationName)
+}
+
+/** Label for an instance in lists and dialogs; the unnamed instance reads as "Default". */
+export function integrationInstanceLabel(integration: CustomerIntegration): string {
+	return integration.instance_name || "Default"
+}
+
 export interface DeleteIntegrationParams {
 	integration: CustomerIntegration
 	cbBefore?: () => void
@@ -27,10 +43,16 @@ export function handleDeleteIntegration({
 }: DeleteIntegrationParams) {
 	dialog.warning({
 		title: "Confirm",
+		// Built from render helpers rather than innerHTML: `instance_name` is free text somebody
+		// typed into the add-integration form, and interpolating it into markup would execute
+		// whatever they stored. Text children are escaped by Vue.
 		content: () =>
-			h("div", {
-				innerHTML: `Are you sure you want to delete the integration: <strong>${integration.integration_service_name}</strong> ?`
-			}),
+			h("div", [
+				"Are you sure you want to delete the integration: ",
+				h("strong", integration.integration_service_name),
+				...(integration.instance_name ? [" — ", h("strong", integration.instance_name)] : []),
+				" ?"
+			]),
 		positiveText: "Yes I'm sure",
 		negativeText: "Cancel",
 		onPositiveClick: () => {
@@ -55,7 +77,7 @@ export function deleteIntegration({
 	}
 
 	Api.integrations
-		.deleteIntegration(integration.customer_code, integration.integration_service_name)
+		.deleteIntegration(integration.customer_code, integration.integration_service_name, integration.instance_name)
 		.then(res => {
 			if (res.data.success) {
 				message.success(res.data?.message || "Customer integration successfully deleted.")
