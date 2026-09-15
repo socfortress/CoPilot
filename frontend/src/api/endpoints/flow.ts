@@ -4,7 +4,9 @@ import { HttpClient } from "../http-client"
 
 export default {
 	getAllByAgent(hostname: string, signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { results: FlowResult[] }>(`/flows/${hostname}`, { signal })
+		return HttpClient.get<FlaskBaseResponse & { results: FlowResult[] }>(`/flows/${encodeURIComponent(hostname)}`, {
+			signal
+		})
 	},
 	retrieve(clientId: string, sessionId: string) {
 		return HttpClient.post<FlaskBaseResponse & { results: CollectResult[] }>(`/flows/retrieve`, {

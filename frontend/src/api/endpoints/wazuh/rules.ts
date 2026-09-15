@@ -48,16 +48,22 @@ export default {
 		)
 	},
 	getRulesFile(filename: string, signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & WazuhFileDetails>(`/wazuh_manager/rules/files/${filename}`, {
-			params: { raw: true, pretty: false, wait_for_complete: false },
-			signal
-		})
+		return HttpClient.get<FlaskBaseResponse & WazuhFileDetails>(
+			`/wazuh_manager/rules/files/${encodeURIComponent(filename)}`,
+			{
+				params: { raw: true, pretty: false, wait_for_complete: false },
+				signal
+			}
+		)
 	},
 	updateRulesFile(filename: string, rules: File) {
 		const form = new FormData()
 		form.append("file", new Blob([rules], { type: rules.type }), rules.name)
 
-		return HttpClient.put<FlaskBaseResponse & WazuhFileDetails>(`/wazuh_manager/rules/files/${filename}`, form)
+		return HttpClient.put<FlaskBaseResponse & WazuhFileDetails>(
+			`/wazuh_manager/rules/files/${encodeURIComponent(filename)}`,
+			form
+		)
 	},
 	restartManager() {
 		return HttpClient.post<FlaskBaseResponse>(`/wazuh_manager/management/restart`)

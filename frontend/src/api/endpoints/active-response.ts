@@ -20,7 +20,7 @@ export default {
 	},
 	getDetails(activeResponseName: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { active_response: ActiveResponseDetails }>(
-			`/active_response/describe/${activeResponseName.toLowerCase()}`,
+			`/active_response/describe/${encodeURIComponent(activeResponseName.toLowerCase())}`,
 			{ signal }
 		)
 	},

@@ -59,22 +59,24 @@ export default {
 			url = `/incidents/db_operations/alerts/status/${args.filter.status}`
 		}
 		if (args?.filter?.assetName) {
-			url = `/incidents/db_operations/alerts/asset/${args.filter.assetName}`
+			url = `/incidents/db_operations/alerts/asset/${encodeURIComponent(args.filter.assetName)}`
 		}
 		if (args?.filter?.assignedTo) {
-			url = `/incidents/db_operations/alerts/assigned-to/${args.filter.assignedTo}`
+			url = `/incidents/db_operations/alerts/assigned-to/${encodeURIComponent(args.filter.assignedTo)}`
 		}
 		if (args?.filter?.tag) {
-			url = `/incidents/db_operations/alert/tag/${_castArray(args.filter.tag).join(",")}`
+			url = `/incidents/db_operations/alert/tag/${_castArray(args.filter.tag)
+				.map(tag => encodeURIComponent(tag))
+				.join(",")}`
 		}
 		if (args?.filter?.title) {
-			url = `/incidents/db_operations/alerts/title/${args.filter.title}`
+			url = `/incidents/db_operations/alerts/title/${encodeURIComponent(args.filter.title)}`
 		}
 		if (args?.filter?.customerCode) {
-			url = `/incidents/db_operations/alerts/customer/${args.filter.customerCode}`
+			url = `/incidents/db_operations/alerts/customer/${encodeURIComponent(args.filter.customerCode)}`
 		}
 		if (args?.filter?.source) {
-			url = `/incidents/db_operations/alerts/source/${args.filter.source}`
+			url = `/incidents/db_operations/alerts/source/${encodeURIComponent(args.filter.source)}`
 		}
 
 		const params: {

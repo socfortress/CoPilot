@@ -61,15 +61,18 @@ export default {
 			url = `/artifacts/${filters.os}`
 		}
 		if (filters.hostname) {
-			url = `/artifacts/hostname/${filters.hostname}`
+			url = `/artifacts/hostname/${encodeURIComponent(filters.hostname)}`
 		}
 
 		return HttpClient.get<FlaskBaseResponse & { artifacts: Artifact[] }>(url, { signal })
 	},
 	getByName(artifactName: string, signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { artifacts: Artifact[] }>(`/artifacts/artifact/${artifactName}`, {
-			signal
-		})
+		return HttpClient.get<FlaskBaseResponse & { artifacts: Artifact[] }>(
+			`/artifacts/artifact/${encodeURIComponent(artifactName)}`,
+			{
+				signal
+			}
+		)
 	},
 	collect(payload: CollectRequest) {
 		return HttpClient.post<FlaskBaseResponse & { results: CollectResult[] }>(`/artifacts/collect`, payload)

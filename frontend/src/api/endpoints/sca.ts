@@ -156,7 +156,7 @@ export default {
 	 */
 	getAgentsForPackage(registryKey: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & ScaPackageAgentsResponse>(
-			`/sca/packages/registry/${registryKey}/agents`,
+			`/sca/packages/registry/${encodeURIComponent(registryKey)}/agents`,
 			{ signal }
 		)
 	}

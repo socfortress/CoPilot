@@ -40,6 +40,6 @@ export default {
 		})
 	},
 	deleteScoutSuiteReport(reportName: string) {
-		return HttpClient.delete<FlaskBaseResponse>(`/scoutsuite/delete-report/${reportName}`)
+		return HttpClient.delete<FlaskBaseResponse>(`/scoutsuite/delete-report/${encodeURIComponent(reportName)}`)
 	}
 }
