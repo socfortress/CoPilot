@@ -216,6 +216,7 @@ function updateIntegration() {
 	const payload: UpdateIntegrationPayload = {
 		customer_code: integration.value.customer_code,
 		integration_name: integration.value.integration_service_name,
+		instance_name: integration.value.instance_name || null,
 		integration_auth_keys: Object.entries(model.value).map(([key, val]) => ({
 			auth_key_name: key,
 			auth_value: val || ""

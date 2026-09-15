@@ -13,9 +13,18 @@
 						<n-input :value="model.integration_name" disabled />
 					</n-form-item>
 
+					<!-- Instance Name (readonly) — only for an integration a customer holds more than one of -->
+					<n-form-item
+						v-if="model.instance_name"
+						:label="getMetaFieldLabel('instance_name')"
+						path="instance_name"
+					>
+						<n-input :value="model.instance_name" disabled />
+					</n-form-item>
+
 					<template v-for="(_, key) of model" :key>
 						<n-form-item
-							v-if="!['customer_code', 'integration_name'].includes(key)"
+							v-if="!['customer_code', 'integration_name', 'instance_name'].includes(key)"
 							:label="getMetaFieldLabel(key)"
 							:path="key"
 						>
@@ -94,6 +103,9 @@ function getDefaultModel(
 				: entity && "network_connector_name" in entity
 					? entity.network_connector_name
 					: "",
+		// Carried through untouched so a save targets the instance the metadata belongs to rather
+		// than the customer's first one
+		instance_name: entity && "instance_name" in entity ? (entity.instance_name ?? null) : null,
 		graylog_input_id: entity?.graylog_input_id || undefined,
 		graylog_index_id: entity?.graylog_index_id || undefined,
 		graylog_stream_id: entity?.graylog_stream_id || undefined,
@@ -125,6 +137,9 @@ function save() {
 
 		const payload: UpdateMetaAutoRequest = { ...model.value }
 		for (const key in payload) {
+			// `instance_name` has to keep its null: an empty string would be normalized to the
+			// customer's unnamed instance and write the metadata to the wrong row
+			if (key === "instance_name") continue
 			if (!payload[key as keyof UpdateMetaAutoRequest]) payload[key as keyof UpdateMetaAutoRequest] = ""
 		}
 

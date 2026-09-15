@@ -16,6 +16,11 @@ export interface NewIntegration {
 	customer_code: string
 	customer_name: string
 	integration_name: string
+	/**
+	 * Names one of several configurations of the same integration for a customer (one per Microsoft
+	 * 365 tenant, say). Omit for the customer's single, unnamed instance.
+	 */
+	instance_name?: string | null
 	integration_auth_keys: IntegrationAuthKeyPairs[]
 }
 
@@ -29,6 +34,7 @@ export interface NewIntegrationPayload extends NewIntegration {
 
 export interface UpdateMetaAutoRequest extends Omit<CustomerIntegrationMetaCommon, "id"> {
 	integration_name: string
+	instance_name?: string | null
 }
 
 export type UpdateIntegrationPayload = Omit<NewIntegration, "customer_name">
@@ -47,10 +53,10 @@ export default {
 			{ signal }
 		)
 	},
-	getMetaAuto(customerCode: string, integrationName: string, signal?: AbortSignal) {
+	getMetaAuto(customerCode: string, integrationName: string, instanceName?: string | null, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & CustomerIntegrationMetaResponse>(
 			`/integrations/meta_auto/${customerCode}/${integrationName}`,
-			{ signal }
+			{ params: instanceName ? { instance_name: instanceName } : undefined, signal }
 		)
 	},
 	getCustomerIntegrations(customerCode: string, signal?: AbortSignal) {
@@ -79,21 +85,26 @@ export default {
 	updateMetaAuto(payload: UpdateMetaAutoRequest) {
 		return HttpClient.put<FlaskBaseResponse>(`/integrations/update_meta_auto`, payload)
 	},
-	deleteIntegration(customerCode: string, integrationName: string) {
+	deleteIntegration(customerCode: string, integrationName: string, instanceName?: string | null) {
 		return HttpClient.delete<FlaskBaseResponse & { additional_info: string | null }>(
 			`/integrations/delete_integration`,
 			{
-				data: { customer_code: customerCode, integration_name: integrationName }
+				data: {
+					customer_code: customerCode,
+					integration_name: integrationName,
+					instance_name: instanceName ?? null
+				}
 			}
 		)
 	},
 	// #endregion
 
 	// #region Provision
-	office365Provision(customerCode: string, integrationName: string) {
+	office365Provision(customerCode: string, integrationName: string, instanceName?: string | null) {
 		return HttpClient.post<FlaskBaseResponse>(`/office365/provision`, {
 			customer_code: customerCode,
-			integration_name: integrationName || "Office365"
+			integration_name: integrationName || "Office365",
+			instance_name: instanceName ?? null
 		})
 	},
 	mimecastProvision(customerCode: string, integrationName: string) {

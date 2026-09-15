@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Any
 from typing import Dict
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -29,6 +30,14 @@ class ProvisionOffice365Request(BaseModel):
         "Office365",
         description="The integration name.",
         examples=["Office365"],
+    )
+    instance_name: Optional[str] = Field(
+        None,
+        description=(
+            "Which Microsoft 365 tenant of this customer to provision. Omit when the customer has "
+            "a single, unnamed Office365 integration."
+        ),
+        examples=["company.onmicrosoft.com"],
     )
 
     # ensure the `integration_name` is always set to "Office365"

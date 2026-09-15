@@ -35,6 +35,10 @@ from app.integrations.models.customer_integration_settings import IntegrationSer
 from app.integrations.models.customer_integration_settings import (
     IntegrationSubscription,
 )
+from app.integrations.office365.services.decommission import (
+    decommission_office365_tenant,
+)
+from app.integrations.office365.services.decommission import get_office365_tenant_id
 from app.integrations.schema import AuthKey
 from app.integrations.schema import AvailableIntegrationDetailResponse
 from app.integrations.schema import AvailableIntegrationsResponse
@@ -65,6 +69,15 @@ MISSING_META_RECOVERY_HINT = (
     "This usually means the deployment did not finish. You can record the metadata manually from the "
     "Meta Details panel, or delete the integration and deploy it again."
 )
+
+# Integrations a customer may configure more than once, each configuration distinguished by
+# `CustomerIntegrations.instance_name`. The column and every lookup below are generic, but an
+# integration only becomes multi-instance once its provisioning and decommission paths can cope
+# with sharing a customer's infrastructure between instances — so opting one in is a deliberate
+# act, not a default.
+MULTI_INSTANCE_INTEGRATIONS = {
+    "Office365",
+}
 
 NETWORK_INTEGRATIONS = [
     "DefenderForEndpoint",
@@ -199,13 +212,45 @@ async def validate_customer_meta(customer_code: str, session: AsyncSession):
         )
 
 
+def normalize_instance_name(instance_name: Optional[str]) -> Optional[str]:
+    """
+    Collapse an absent, empty or whitespace-only instance label to ``None``.
+
+    ``None`` is the single unnamed instance every pre-existing row carries, so a form that posts
+    an empty string must resolve to the same thing rather than creating a second, "" -named
+    instance that no lookup would ever find again.
+    """
+    if instance_name is None:
+        return None
+    stripped = instance_name.strip()
+    return stripped or None
+
+
+def instance_name_matches(column, instance_name: Optional[str]):
+    """
+    Build a WHERE clause for an instance label, using ``IS NULL`` for the unnamed instance.
+
+    ``column == None`` renders as ``= NULL`` under some drivers, which matches nothing. Route every
+    instance comparison through here so the default instance stays selectable.
+    """
+    return column.is_(None) if instance_name is None else column == instance_name
+
+
 async def check_existing_customer_integration(
     customer_code: str,
     integration_name: str,
     session: AsyncSession,
+    instance_name: Optional[str] = None,
 ):
     """
     Check if the customer integration already exists.
+
+    For a single-instance integration any existing row is a conflict, exactly as before. For a
+    multi-instance one (see ``MULTI_INSTANCE_INTEGRATIONS``) only a clash on the same instance label
+    is. An unlabelled *second* instance is still rejected: two NULL instances would be
+    indistinguishable to every lookup, provisioning and decommission path downstream. A customer
+    provisioned before this feature keeps its unnamed instance and can have named ones added
+    alongside it.
     """
     # Assuming IntegrationService has an 'integration_name' field or similar
     stmt = (
@@ -218,10 +263,29 @@ async def check_existing_customer_integration(
         )
     )
     result = await session.execute(stmt)
-    if result.scalars().first() is not None:
+    existing = result.scalars().unique().all()
+
+    if not existing:
+        return
+
+    if integration_name not in MULTI_INSTANCE_INTEGRATIONS:
         raise HTTPException(
             status_code=400,
             detail=f"Customer integration {customer_code} {integration_name} already exists.",
+        )
+
+    if instance_name is None:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Customer {customer_code} already has a {integration_name} integration. " f"Provide an instance name to add another one."
+            ),
+        )
+
+    if any(ci.instance_name == instance_name for ci in existing):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Customer integration {customer_code} {integration_name} '{instance_name}' already exists.",
         )
 
 
@@ -229,13 +293,17 @@ async def check_existing_customer_integration_meta(
     customer_code: str,
     integration_name: str,
     session: AsyncSession,
+    instance_name: Optional[str] = None,
 ):
     """
-    Check if the customer integration meta already exists for the customer code and integration name.
+    Check if the customer integration meta already exists for the customer code, integration name
+    and instance. Each provisioned instance has its own Graylog and Grafana resources, so each gets
+    its own metadata row.
     """
     stmt = select(CustomerIntegrationsMeta).where(
         CustomerIntegrationsMeta.customer_code == customer_code,
         CustomerIntegrationsMeta.integration_name == integration_name,
+        instance_name_matches(CustomerIntegrationsMeta.instance_name, instance_name),
     )
     result = await session.execute(stmt)
     if result.scalars().first() is not None:
@@ -274,6 +342,7 @@ async def create_customer_integrations(
     integration_service_id: int,
     integration_service_name: str,
     session: AsyncSession,
+    instance_name: Optional[str] = None,
 ) -> CustomerIntegrations:
     """
     Create CustomerIntegrations instance.
@@ -283,6 +352,7 @@ async def create_customer_integrations(
         customer_name=customer_name,
         integration_service_id=integration_service_id,
         integration_service_name=integration_service_name,
+        instance_name=instance_name,
         deployed=False,
     )
     session.add(customer_integrations)
@@ -315,9 +385,17 @@ async def create_integration_subscription(
         await session.commit()
 
 
-async def get_customer_and_service_ids(session, customer_code, integration_name):
+async def get_customer_and_service_ids(session, customer_code, integration_name, instance_name=None, match_instance=False):
+    """
+    Resolve the `(customer_integrations.id, integration_services.id)` pairs backing an integration.
+
+    ``create_integration_service`` mints a fresh ``integration_services`` row per instance, so each
+    instance owns its own service id and the two can be deleted together. Pass
+    ``match_instance=True`` to narrow to a single instance; without it the behaviour is unchanged
+    and every instance of the integration comes back.
+    """
     try:
-        result = await session.execute(
+        stmt = (
             select(CustomerIntegrations.id, IntegrationService.id)
             .join(
                 IntegrationSubscription,
@@ -330,11 +408,61 @@ async def get_customer_and_service_ids(session, customer_code, integration_name)
             .where(
                 CustomerIntegrations.customer_code == customer_code,
                 IntegrationService.service_name == integration_name,
-            ),
+            )
         )
+        if match_instance:
+            stmt = stmt.where(instance_name_matches(CustomerIntegrations.instance_name, instance_name))
+        result = await session.execute(stmt)
         return result.all()
     except NoResultFound:
         raise HTTPException(status_code=404, detail="Customer integration not found")
+
+
+async def resolve_integration_instance(
+    session,
+    customer_code: str,
+    integration_name: str,
+    instance_name: Optional[str],
+) -> Optional[str]:
+    """
+    Work out which instance a caller means when they did not name one.
+
+    Callers that predate multi-instance support (and every single-instance integration) send only a
+    customer code and an integration name. When the customer has exactly one instance that is
+    unambiguous, so return its label; when they have several, refuse rather than silently acting on
+    an arbitrary one.
+    """
+    if instance_name is not None:
+        return instance_name
+
+    result = await session.execute(
+        select(CustomerIntegrations.instance_name)
+        .join(
+            IntegrationSubscription,
+            CustomerIntegrations.id == IntegrationSubscription.customer_id,
+        )
+        .join(
+            IntegrationService,
+            IntegrationSubscription.integration_service_id == IntegrationService.id,
+        )
+        .where(
+            CustomerIntegrations.customer_code == customer_code,
+            IntegrationService.service_name == integration_name,
+        )
+        .distinct(),
+    )
+    instances = list(result.scalars().all())
+
+    if len(instances) > 1:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Customer {customer_code} has {len(instances)} {integration_name} instances "
+                f"({', '.join(sorted(i or 'unnamed' for i in instances))}). Specify which one."
+            ),
+        )
+
+    return instances[0] if instances else None
 
 
 async def get_subscription_ids(session, customer_id, integration_service_id):
@@ -401,8 +529,18 @@ async def find_customer_integration(
     customer_code: str,
     integration_name: str,
     customer_integration_response,
+    instance_name: Optional[str] = None,
+    match_instance: bool = False,
 ) -> Optional[CustomerIntegrations]:
+    """
+    Pick a customer's integration out of a ``CustomerIntegrationsResponse``.
+
+    With ``match_instance`` the search is narrowed to one instance label; without it the first
+    matching instance wins, which is what every single-instance caller has always got.
+    """
     for ci in customer_integration_response.available_integrations:
+        if match_instance and ci.instance_name != instance_name:
+            continue
         for subscription in ci.integration_subscriptions:
             if subscription.integration_service.service_name == integration_name:
                 return ci
@@ -425,10 +563,15 @@ def get_subscription_id(
 async def get_tenant_id(
     customer_integration: CustomerIntegrationCreate,
     session: AsyncSession,
+    instance_name: Optional[str] = None,
+    match_instance: bool = False,
 ) -> str:
     """
     Retrieves the Tenant ID for a given customer integration. This is the Office365 organization ID and
     is used to create alerts for the customer in DFIR-IRIS.
+
+    With ``match_instance`` the lookup is pinned to one instance, which is what a customer holding
+    several Microsoft 365 tenants needs; without it the customer's first tenant comes back, as before.
     """
     stmt = (
         select(IntegrationAuthKeys)
@@ -450,6 +593,8 @@ async def get_tenant_id(
             IntegrationAuthKeys.auth_key_name == "TENANT_ID",
         )
     )
+    if match_instance:
+        stmt = stmt.where(instance_name_matches(CustomerIntegrations.instance_name, instance_name))
 
     result = await session.execute(stmt)
     tenant_id = result.scalars().first()
@@ -462,17 +607,51 @@ async def get_tenant_id(
     return tenant_id.auth_value
 
 
+async def clear_office365_organization_id(
+    tenant_id: str,
+    session: AsyncSession,
+):
+    """
+    Forget a deleted tenant in the two legacy single-tenant columns.
+
+    Both are matched on the tenant ID rather than the customer, so only rows naming this exact
+    tenant are touched — a customer's remaining tenants are unaffected. Without this a deleted
+    tenant keeps pointing at its old customer, and re-registering it under a different customer
+    would route its alerts to the previous one, since the legacy columns are consulted first.
+    """
+    await session.execute(
+        update(AlertCreationSettings)
+        .where(AlertCreationSettings.office365_organization_id == tenant_id)
+        .values(office365_organization_id=None),
+    )
+    await session.execute(
+        update(CustomersMeta)
+        .where(CustomersMeta.customer_meta_office365_organization_id == tenant_id)
+        .values(customer_meta_office365_organization_id=None),
+    )
+    await session.commit()
+
+
 async def update_office365_organization_id(
     customer_code: str,
     tenant_id: str,
     session: AsyncSession,
 ):
     """
-    Updates the Office365 organization ID in the alert_creation_settings table.
+    Record the customer's Microsoft 365 tenant in `custom_alert_creation_settings`.
+
+    This column holds a single tenant and predates multi-tenant support, so it is only ever written
+    for the *first* tenant a customer gets; alerts from any later tenant are routed by
+    `resolve_customer_code_from_office365_tenant` instead, which reads the stored TENANT_ID auth
+    keys. Overwriting it here would silently repoint the legacy lookup at whichever tenant was added
+    last.
     """
     stmt = (
         update(AlertCreationSettings)
-        .where(AlertCreationSettings.customer_code == customer_code)
+        .where(
+            AlertCreationSettings.customer_code == customer_code,
+            (AlertCreationSettings.office365_organization_id.is_(None)) | (AlertCreationSettings.office365_organization_id == ""),
+        )
         .values(office365_organization_id=tenant_id)
     )
     await session.execute(stmt)
@@ -551,6 +730,7 @@ def process_customer_integrations(customer_integrations_data):
             integration_service_name=ci.integration_subscriptions[0].integration_service.service_name
             if ci.integration_subscriptions
             else None,
+            instance_name=ci.instance_name,
             deployed=ci.deployed,
         )
         processed_customer_integrations.append(customer_integration_obj)
@@ -590,9 +770,9 @@ def generate_decommission_response(
     cleanup_warnings: Optional[List[str]] = None,
 ) -> CustomerIntegrationDeleteResponse:
     additional_info_map = {
-        "Office365": (
-            "Make sure to remove the Office365 integration block from the Wazuh Manager ossec.conf file and restart the Wazuh Manager service. "
-        ),
+        # The tenant's <api_auth> block and the manager restart are handled automatically by
+        # `decommission_office365_tenant`; anything it could not do arrives as a cleanup warning.
+        "Office365": "",
         "Crowdstrike": ("Make sure to remove the Crowdstrike docker application."),
         "BitDefender": ("Make sure to remove the BitDefender docker application."),
     }
@@ -791,10 +971,19 @@ async def create_integration(
     )
     await validate_customer_code(customer_integration_create.customer_code, session)
     await validate_customer_meta(customer_integration_create.customer_code, session)
+
+    instance_name = normalize_instance_name(customer_integration_create.instance_name)
+    if instance_name and customer_integration_create.integration_name not in MULTI_INSTANCE_INTEGRATIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{customer_integration_create.integration_name} does not support multiple instances per customer.",
+        )
+
     await check_existing_customer_integration(
         customer_integration_create.customer_code,
         customer_integration_create.integration_name,
         session,
+        instance_name=instance_name,
     )
     integration_service_id = await get_integration_service_id(
         customer_integration_create.integration_name,
@@ -816,6 +1005,7 @@ async def create_integration(
         integration_service_id=integration_service_id,
         integration_service_name=integration_service_name,
         session=session,
+        instance_name=instance_name,
     )
     await create_integration_subscription(
         customer_integrations,
@@ -826,7 +1016,12 @@ async def create_integration(
 
     # Office365 specific integration handling
     if customer_integration_create.integration_name == "Office365":
-        tenant_id = await get_tenant_id(customer_integration_create, session)
+        tenant_id = await get_tenant_id(
+            customer_integration_create,
+            session,
+            instance_name=instance_name,
+            match_instance=True,
+        )
         await update_office365_organization_id(
             customer_integration_create.customer_code,
             tenant_id,
@@ -858,6 +1053,7 @@ async def create_integration_meta(
         customer_integration_meta.customer_code,
         customer_integration_meta.integration_name,
         session,
+        instance_name=normalize_instance_name(customer_integration_meta.instance_name),
     )
     try:
         new_customer_integration_meta = CustomerIntegrationsMeta(
@@ -904,10 +1100,19 @@ async def update_integration(
     if not customer_integration_response:
         raise HTTPException(status_code=404, detail="Customer integrations not found")
 
+    instance_name = await resolve_integration_instance(
+        session,
+        customer_code,
+        customer_integration_update.integration_name,
+        normalize_instance_name(customer_integration_update.instance_name),
+    )
+
     customer_integration = await find_customer_integration(
         customer_code,
         customer_integration_update.integration_name,
         customer_integration_response,
+        instance_name=instance_name,
+        match_instance=True,
     )
 
     if not customer_integration:
@@ -986,7 +1191,13 @@ async def update_available_integrations(
     )
 
 
-async def fetch_customer_integration_meta(session: AsyncSession, customer_code: str, integration_name: str):
+async def fetch_customer_integration_meta(
+    session: AsyncSession,
+    customer_code: str,
+    integration_name: str,
+    instance_name: Optional[str] = None,
+    match_instance: bool = False,
+):
     """
     Fetches customer integrations metadata from the database.
     """
@@ -994,20 +1205,29 @@ async def fetch_customer_integration_meta(session: AsyncSession, customer_code: 
         CustomerIntegrationsMeta.customer_code == customer_code,
         CustomerIntegrationsMeta.integration_name == integration_name,
     )
+    if match_instance:
+        stmt = stmt.where(instance_name_matches(CustomerIntegrationsMeta.instance_name, instance_name))
     result = await session.execute(stmt)
     return result.scalars().first()
 
 
-async def delete_customer_integration_meta(session: AsyncSession, customer_code: str, integration_name: str):
+async def delete_customer_integration_meta(
+    session: AsyncSession,
+    customer_code: str,
+    integration_name: str,
+    instance_name: Optional[str] = None,
+    match_instance: bool = False,
+):
     """
     Deletes customer integrations metadata from the database.
     """
-    await session.execute(
-        delete(CustomerIntegrationsMeta).where(
-            CustomerIntegrationsMeta.customer_code == customer_code,
-            CustomerIntegrationsMeta.integration_name == integration_name,
-        ),
+    stmt = delete(CustomerIntegrationsMeta).where(
+        CustomerIntegrationsMeta.customer_code == customer_code,
+        CustomerIntegrationsMeta.integration_name == integration_name,
     )
+    if match_instance:
+        stmt = stmt.where(instance_name_matches(CustomerIntegrationsMeta.instance_name, instance_name))
+    await session.execute(stmt)
 
 
 async def fetch_customer_network_connectors_meta(session: AsyncSession, customer_code: str, network_connector_name: str):
@@ -1047,6 +1267,10 @@ async def _cleanup_integration_infrastructure(
     field that was never populated because provisioning failed partway) must not block the
     removal of the others, otherwise the integration becomes undeletable from the UI. Every
     failure is logged and appended to `cleanup_warnings` for the caller to surface.
+
+    Every resource named here belongs to one instance — a multi-instance integration provisions its
+    own index set, stream, folder and datasource per instance — so there is nothing shared to
+    preserve for the customer's surviving instances.
     """
 
     async def _attempt(description: str, coroutine_factory):
@@ -1110,10 +1334,19 @@ async def delete_integration(
     # Check if this is a network integration
     is_network_integration = integration_name in NETWORK_INTEGRATIONS
 
+    instance_name = await resolve_integration_instance(
+        session,
+        customer_code,
+        integration_name,
+        normalize_instance_name(delete_customer_integration.instance_name),
+    )
+
     results = await get_customer_and_service_ids(
         session,
         customer_code,
         integration_name,
+        instance_name=instance_name,
+        match_instance=True,
     )
     # Check if results is not empty
     if results:
@@ -1144,6 +1377,12 @@ async def delete_integration(
     # Collected non-fatal problems, surfaced to the caller so they know what was left behind
     cleanup_warnings: List[str] = []
 
+    # Read before the auth keys are deleted, since it is the only record of which Microsoft 365
+    # tenant the Wazuh manager should stop polling for this instance.
+    office365_tenant_id = None
+    if integration_name == "Office365":
+        office365_tenant_id = await get_office365_tenant_id(customer_code, session, instance_name=instance_name)
+
     # Only proceed with infrastructure cleanup if the integration is deployed
     if is_deployed:
         logger.info("Integration is deployed, proceeding with full cleanup including infrastructure components")
@@ -1152,7 +1391,13 @@ async def delete_integration(
         if is_network_integration:
             meta_data = await fetch_customer_network_connectors_meta(session, customer_code, integration_name)
         else:
-            meta_data = await fetch_customer_integration_meta(session, customer_code, integration_name)
+            meta_data = await fetch_customer_integration_meta(
+                session,
+                customer_code,
+                integration_name,
+                instance_name=instance_name,
+                match_instance=True,
+            )
 
         if not meta_data:
             # A deployment that failed partway (or predates metadata tracking) leaves the
@@ -1179,7 +1424,13 @@ async def delete_integration(
             if is_network_integration:
                 await delete_customer_network_connectors_meta(session, customer_code, integration_name)
             else:
-                await delete_customer_integration_meta(session, customer_code, integration_name)
+                await delete_customer_integration_meta(
+                    session,
+                    customer_code,
+                    integration_name,
+                    instance_name=instance_name,
+                    match_instance=True,
+                )
 
     else:
         logger.info(
@@ -1195,6 +1446,21 @@ async def delete_integration(
     await delete_customer_integration_record(session, customer_id)
 
     await session.commit()
+
+    # The Wazuh manager keeps collecting from a tenant whose <api_auth> block is still in ossec.conf,
+    # so this runs even when the integration was never marked deployed. A failure here is reported
+    # rather than raised: the CoPilot-side records are already gone and re-running the delete would
+    # 404 before it ever reached this point.
+    if office365_tenant_id:
+        await clear_office365_organization_id(office365_tenant_id, session)
+        try:
+            await decommission_office365_tenant(customer_code, office365_tenant_id)
+        except Exception as e:
+            logger.warning(f"Failed to remove the Office365 api_auth block for tenant {office365_tenant_id}: {e}")
+            cleanup_warnings.append(
+                f"Could not remove the Office365 api_auth block for tenant {office365_tenant_id} from the Wazuh "
+                f"manager ({e}). Remove it from ossec.conf and restart the manager.",
+            )
 
     return generate_decommission_response(customer_code, integration_name, cleanup_warnings)
 
@@ -1275,6 +1541,7 @@ async def get_customer_by_auth_key(
 async def get_meta_auto(
     customer_code: str,
     integration_name: str,
+    instance_name: Optional[str] = None,
     session: AsyncSession = Depends(get_db),
 ):
     """
@@ -1322,6 +1589,11 @@ async def get_meta_auto(
                 CustomerIntegrationsMeta.customer_code == customer_code,
                 CustomerIntegrationsMeta.integration_name == integration_name,
             )
+            # Only narrow when the caller named an instance: an omitted instance keeps the
+            # pre-multi-instance behaviour of returning the customer's single metadata row.
+            normalized_instance = normalize_instance_name(instance_name)
+            if normalized_instance is not None:
+                stmt = stmt.where(instance_name_matches(CustomerIntegrationsMeta.instance_name, normalized_instance))
             result = await session.execute(stmt)
             meta_record = result.scalars().first()
 
@@ -1400,10 +1672,21 @@ async def update_meta_auto(
     table_type = "network connector" if is_network_integration else "integration"
     name_column = getattr(meta_model, name_field)
 
+    # Network connectors have no instance column; for integrations an omitted instance keeps the
+    # pre-multi-instance behaviour of addressing the customer's single metadata row.
+    normalized_instance = None if is_network_integration else normalize_instance_name(update_request.instance_name)
+
+    def _scope(statement):
+        if normalized_instance is not None:
+            return statement.where(instance_name_matches(meta_model.instance_name, normalized_instance))
+        return statement
+
     try:
-        stmt = select(meta_model).where(
-            meta_model.customer_code == update_request.customer_code,
-            name_column == update_request.integration_name,
+        stmt = _scope(
+            select(meta_model).where(
+                meta_model.customer_code == update_request.customer_code,
+                name_column == update_request.integration_name,
+            ),
         )
         result = await session.execute(stmt)
         existing_record = result.scalars().first()
@@ -1414,14 +1697,12 @@ async def update_meta_auto(
             return UpdateMetaResponse(success=False, message="No fields provided for update")
 
         if existing_record:
-            update_stmt = (
-                update(meta_model)
-                .where(
+            update_stmt = _scope(
+                update(meta_model).where(
                     meta_model.customer_code == update_request.customer_code,
                     name_column == update_request.integration_name,
-                )
-                .values(**update_data)
-            )
+                ),
+            ).values(**update_data)
             await session.execute(update_stmt)
             action = "Updated"
         else:
@@ -1431,6 +1712,8 @@ async def update_meta_auto(
             record_values.update(update_data)
             record_values["customer_code"] = update_request.customer_code
             record_values[name_field] = update_request.integration_name
+            if not is_network_integration:
+                record_values["instance_name"] = normalized_instance
             session.add(meta_model(**record_values))
             action = "Created"
 

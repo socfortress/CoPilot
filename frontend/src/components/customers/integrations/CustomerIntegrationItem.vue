@@ -2,7 +2,12 @@
 	<div>
 		<CardEntity hoverable :embedded>
 			<template #default>
-				{{ serviceName }}
+				<div class="flex items-center gap-2">
+					<span>{{ serviceName }}</span>
+					<Badge v-if="instanceName" type="muted" size="small" class="shrink-0">
+						<template #value>{{ instanceName }}</template>
+					</Badge>
+				</div>
 			</template>
 
 			<template v-if="integration.deployed" #footerMain>
@@ -26,6 +31,7 @@
 						size="small"
 						:customer-code="integration.customer_code"
 						:integration-name="serviceName"
+						:instance-name
 					/>
 
 					<CustomerIntegrationActions
@@ -44,7 +50,7 @@
 			v-model:show="showDetails"
 			preset="card"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(404px, 90vh)', overflow: 'hidden' }"
-			:title="serviceName"
+			:title="modalTitle"
 			:bordered="false"
 			segmented
 			display-directive="show"
@@ -81,4 +87,6 @@ const DetailsIcon = "carbon:settings-adjust"
 const integration = ref(customerIntegration)
 const showDetails = ref(false)
 const serviceName = computed(() => integration.value.integration_service_name)
+const instanceName = computed(() => integration.value.instance_name || null)
+const modalTitle = computed(() => (instanceName.value ? `${serviceName.value} — ${instanceName.value}` : serviceName.value))
 </script>

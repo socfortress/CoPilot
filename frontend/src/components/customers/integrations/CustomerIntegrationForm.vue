@@ -30,6 +30,20 @@
 					</n-scrollbar>
 				</div>
 				<div v-else class="auth-key-form flex flex-wrap gap-3">
+					<n-form-item
+						v-if="isMultiInstance"
+						label="Instance name"
+						:required="isInstanceNameRequired"
+						:validation-status="instanceNameError ? 'error' : undefined"
+						:feedback="instanceNameError"
+						class="w-full"
+					>
+						<n-input
+							v-model:value="instanceName"
+							placeholder="e.g. company.onmicrosoft.com"
+							clearable
+						/>
+					</n-form-item>
 					<template v-for="ak of authKeysForm" :key="ak.key">
 						<n-form-item v-if="ak.type === 'string'" :label="ak.key" required class="grow">
 							<n-input v-model:value="ak.value" :placeholder="`Input ${ak.key}...`" clearable />
@@ -84,6 +98,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import IntegrationsList from "@/components/integrations/IntegrationsList.vue"
 import { getApiErrorMessage } from "@/utils"
+import { isMultiInstanceIntegration } from "./utils"
 
 interface AuthKeysInput {
 	key: string
@@ -91,10 +106,12 @@ interface AuthKeysInput {
 	type: "selectType" | "string"
 }
 
-const { customerCode, customerName, disabledIdsList } = defineProps<{
+const { customerCode, customerName, disabledIdsList, existingInstanceNames } = defineProps<{
 	customerCode: string
 	customerName: string
 	disabledIdsList?: (string | number)[]
+	/** Instance names the customer already uses, keyed by integration name */
+	existingInstanceNames?: Record<string, (string | null)[]>
 }>()
 
 const emit = defineEmits<{
@@ -113,6 +130,7 @@ const currentStatus = ref<StepsProps["status"]>("process")
 const slideFormDirection = ref<"right" | "left">("right")
 
 const selectedIntegration = ref<ServiceItemData | null>(null)
+const instanceName = ref<string>("")
 const authKeysForm = ref<AuthKeysInput[]>([])
 const apiTypeOptions = [
 	{ label: "Commercial", value: "commercial" },
@@ -120,8 +138,33 @@ const apiTypeOptions = [
 	{ label: "GCC-High", value: "gcc-high" }
 ]
 
+const isMultiInstance = computed(() =>
+	selectedIntegration.value ? isMultiInstanceIntegration(selectedIntegration.value.name) : false
+)
+
+const takenInstanceNames = computed(() =>
+	selectedIntegration.value ? (existingInstanceNames?.[selectedIntegration.value.name] ?? []) : []
+)
+
+// The customer's first instance may stay unnamed, matching every integration configured before
+// multi-instance support; adding a further one has to name it so the two can be told apart.
+const isInstanceNameRequired = computed(() => isMultiInstance.value && takenInstanceNames.value.length > 0)
+
+const instanceNameError = computed(() => {
+	const value = instanceName.value.trim()
+
+	if (!value) {
+		return isInstanceNameRequired.value ? "An instance name is required to add another one" : null
+	}
+	if (takenInstanceNames.value.includes(value)) {
+		return "This customer already has an instance with that name"
+	}
+	return null
+})
+
 watch(selectedIntegration, val => {
 	authKeysForm.value = []
+	instanceName.value = ""
 
 	if (val !== null) {
 		for (const ak of val.keys) {
@@ -144,6 +187,10 @@ const isSubmitValid = computed(() => {
 		return false
 	}
 
+	if (instanceNameError.value) {
+		return false
+	}
+
 	const keys = authKeysForm.value.length
 	const valid = authKeysForm.value.filter(o => !!o.value).length
 
@@ -161,6 +208,7 @@ function submit() {
 			customer_code: customerCode,
 			customer_name: customerName,
 			integration_name: selectedIntegration.value.name,
+			instance_name: instanceName.value.trim() || null,
 			integration_auth_keys: authKeysForm.value.map(o => ({
 				auth_key_name: o.key,
 				auth_value: o.value
@@ -198,6 +246,7 @@ function reset() {
 	current.value = 1
 
 	selectedIntegration.value = null
+	instanceName.value = ""
 	authKeysForm.value = []
 }
 

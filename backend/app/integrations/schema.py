@@ -78,6 +78,15 @@ class CustomerIntegrationCreate(BaseModel):
         description="The integration name.",
         examples=["Mimecast"],
     )
+    instance_name: Optional[str] = Field(
+        None,
+        description=(
+            "Optional label distinguishing this configuration from other configurations of the same "
+            "integration for the same customer (e.g. one per Microsoft 365 tenant). Leave unset for "
+            "the customer's single/default instance."
+        ),
+        examples=["company.onmicrosoft.com"],
+    )
     integration_config: CreateIntegrationService = Field(
         ...,
         description="The integration service.",
@@ -193,6 +202,11 @@ class CustomerIntegrations(BaseModel):
         description="The integration service name.",
         examples=["Mimecast"],
     )
+    instance_name: Optional[str] = Field(
+        None,
+        description="The instance label, when the customer has more than one configuration of this integration.",
+        examples=["company.onmicrosoft.com"],
+    )
     deployed: Optional[bool] = Field(
         None,
         description="The deployment status.",
@@ -219,6 +233,14 @@ class DeleteCustomerIntegration(BaseModel):
         description="The integration name.",
         examples=["Mimecast"],
     )
+    instance_name: Optional[str] = Field(
+        None,
+        description=(
+            "Which instance to delete when the customer has several configurations of this integration. "
+            "May be omitted when there is exactly one."
+        ),
+        examples=["company.onmicrosoft.com"],
+    )
 
 
 class UpdateCustomerIntegration(BaseModel):
@@ -226,6 +248,14 @@ class UpdateCustomerIntegration(BaseModel):
         ...,
         description="The integration name.",
         examples=["Mimecast"],
+    )
+    instance_name: Optional[str] = Field(
+        None,
+        description=(
+            "Which instance to update when the customer has several configurations of this integration. "
+            "May be omitted when there is exactly one."
+        ),
+        examples=["company.onmicrosoft.com"],
     )
     integration_auth_keys: List[CreateIntegrationAuthKeys] = Field(
         ...,
@@ -237,6 +267,7 @@ class CustomerIntegrationsMetaSchema(BaseModel):
     id: Optional[int] = None
     customer_code: str
     integration_name: str
+    instance_name: Optional[str] = None
     graylog_input_id: Optional[str] = None
     graylog_index_id: str
     graylog_stream_id: str
@@ -294,6 +325,7 @@ class CustomerByAuthKeyResponse(BaseModel):
 class UpdateMetaAutoRequest(BaseModel):
     customer_code: str = Field(..., description="Customer code identifier")
     integration_name: str = Field(..., description="Integration or network connector name")
+    instance_name: Optional[str] = Field(None, description="Instance label, for multi-instance integrations")
     graylog_input_id: Optional[str] = Field(None, description="Graylog input ID")
     graylog_index_id: Optional[str] = Field(None, description="Graylog index ID")
     graylog_stream_id: Optional[str] = Field(None, description="Graylog stream ID")

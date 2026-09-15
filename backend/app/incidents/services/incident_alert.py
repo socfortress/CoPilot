@@ -55,6 +55,9 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
     AlertCreationSettings,
 )
 from app.integrations.alert_escalation.schema.escalate_alert import CustomerCodeKeys
+from app.integrations.office365.services.tenant_lookup import (
+    resolve_customer_code_from_office365_tenant,
+)
 from app.integrations.routes import get_customer_by_auth_key
 from app.notifications.services.emit import emit
 from app.notifications.services.event_builders import alert_created_event
@@ -121,6 +124,15 @@ async def is_customer_code_valid(customer_code: str, session: AsyncSession) -> A
 
     if settings:
         return settings
+
+    # Office365 alerts carry the Microsoft 365 organization ID in the customer-code field. The
+    # column above names a single tenant per customer, so a customer's second and later tenants are
+    # resolved through the tenant IDs stored with each Office365 integration instance.
+    office365_customer_code = await resolve_customer_code_from_office365_tenant(customer_code, session)
+    if office365_customer_code:
+        settings = await fetch_settings("customer_code", office365_customer_code, session)
+        if settings:
+            return settings
 
     raise HTTPException(
         status_code=400,

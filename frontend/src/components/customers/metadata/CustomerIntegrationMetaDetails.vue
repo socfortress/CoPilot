@@ -73,9 +73,11 @@ import { getApiErrorMessage } from "@/utils"
 import CustomerIntegrationMetaForm from "./CustomerIntegrationMetaForm.vue"
 import { getMetaFieldLabel } from "./utils"
 
-const { customerCode, integrationName } = defineProps<{
+const { customerCode, integrationName, instanceName } = defineProps<{
 	customerCode: string
 	integrationName: string
+	/** Which instance's metadata to load, for an integration a customer holds more than one of */
+	instanceName?: string | null
 }>()
 
 type Mode = "view" | "edit"
@@ -112,7 +114,8 @@ function startCreate() {
 	integrationData.value = {
 		id: 0,
 		customer_code: customerCode,
-		integration_name: integrationName
+		integration_name: integrationName,
+		instance_name: instanceName ?? null
 	}
 	creating.value = true
 	setEditMode()
@@ -137,7 +140,7 @@ function loadMetaData() {
 	creating.value = false
 
 	Api.integrations
-		.getMetaAuto(customerCode, integrationName)
+		.getMetaAuto(customerCode, integrationName, instanceName)
 		.then(res => {
 			if (res.data.success) {
 				integrationData.value = res.data.data
