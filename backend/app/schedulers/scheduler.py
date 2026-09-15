@@ -1,6 +1,7 @@
 import asyncio
 
 from apscheduler.events import EVENT_JOB_ERROR
+from apscheduler.events import EVENT_JOB_EXECUTED
 from apscheduler.events import EVENT_JOB_MISSED
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -73,14 +74,54 @@ from app.schedulers.services.refresh_sidebar_indicators import (
 )
 from app.schedulers.services.refresh_wazuh_rules_cache import refresh_wazuh_rules_cache
 from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
+from app.schedulers.utils.universal import record_job_success
+
+# Fire-and-forget `record_job_success` tasks are kept here for the lifetime of the write.
+# asyncio only holds a weak reference to a task, so a task nobody references may be garbage
+# collected mid-await and the update silently lost.
+_pending_metadata_writes = set()
+
+
+def _schedule_success_record(job_id: str) -> None:
+    """Persist a job's success without blocking APScheduler's event dispatch.
+
+    The listener is synchronous and runs inside the scheduler's event loop, so the database
+    write is handed to the loop as a task rather than awaited here.
+    """
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        # Dispatched from outside the event loop (no executor configured here does this today,
+        # but a listener must not raise whatever it is called from).
+        logger.warning(f"No running event loop; cannot record last_success for {job_id!r}.")
+        return
+
+    task = loop.create_task(record_job_success(job_id))
+    _pending_metadata_writes.add(task)
+    task.add_done_callback(_pending_metadata_writes.discard)
 
 
 def scheduler_listener(event):
-    if event.exception:
+    """React to job execution events.
+
+    `last_success` is stamped here, centrally, rather than inside each job. It used to be each
+    job's own responsibility, which meant it was copy-pasted — and five jobs shipped without it,
+    so healthy jobs reported `last_success: null` forever (#1135). APScheduler already knows
+    precisely which jobs finished and which raised, so this is the one place that cannot be
+    forgotten by the next job somebody adds.
+
+    The success/failure distinction is APScheduler's: EVENT_JOB_EXECUTED fires only when the
+    callable returned, EVENT_JOB_ERROR when it raised. A job that deliberately does nothing on a
+    given tick — "cache still fresh, skipping" — returns normally and therefore counts as a
+    success, which is what an operator means by "it is running fine".
+    """
+    if event.code == EVENT_JOB_EXECUTED:
+        _schedule_success_record(event.job_id)
+    elif event.code == EVENT_JOB_ERROR:
         logger.error(f"Job {event.job_id} crashed: {event.exception}")
-    else:
-        logger.info(
-            f"Job {event.job_id} that was scheduled to run at {event.scheduled_run_time}, missed its run time by {event.scheduled_run_time - event.scheduled_run_time}",
+    elif event.code == EVENT_JOB_MISSED:
+        logger.warning(
+            f"Job {event.job_id} missed its scheduled run time of {event.scheduled_run_time}.",
         )
 
 
@@ -100,7 +141,10 @@ async def init_scheduler():
         executors = {"default": AsyncIOExecutor()}  # This executor can run asyncio coroutines
         event_loop = asyncio.get_event_loop()
         scheduler_instance = AsyncIOScheduler(event_loop=event_loop)
-        scheduler_instance.add_listener(scheduler_listener, EVENT_JOB_MISSED | EVENT_JOB_ERROR)
+        scheduler_instance.add_listener(
+            scheduler_listener,
+            EVENT_JOB_EXECUTED | EVENT_JOB_MISSED | EVENT_JOB_ERROR,
+        )
         scheduler_instance.configure(jobstores=jobstores, executors=executors)
         await initialize_job_metadata()
         logger.info("Scheduling enabled jobs...")
