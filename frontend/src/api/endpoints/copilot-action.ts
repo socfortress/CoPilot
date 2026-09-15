@@ -51,7 +51,7 @@ export default {
 	 */
 	getActionByName(copilotActionName: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { copilot_action: CopilotAction }>(
-			`/copilot_action/inventory/${copilotActionName}`,
+			`/copilot_action/inventory/${encodeURIComponent(copilotActionName)}`,
 			{ signal }
 		)
 	},

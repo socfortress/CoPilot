@@ -144,7 +144,7 @@ export default {
 	},
 	getCustomDashboard(templateKey: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { custom_dashboard: CustomDashboard }>(
-			`/siem/dashboards/custom/${templateKey}`,
+			`/siem/dashboards/custom/${encodeURIComponent(templateKey)}`,
 			{ signal }
 		)
 	},
@@ -156,13 +156,13 @@ export default {
 	},
 	updateCustomDashboard(templateKey: string, payload: CustomDashboardUpdatePayload) {
 		return HttpClient.put<FlaskBaseResponse & { custom_dashboard: CustomDashboard }>(
-			`/siem/dashboards/custom/${templateKey}`,
+			`/siem/dashboards/custom/${encodeURIComponent(templateKey)}`,
 			payload
 		)
 	},
 	deleteCustomDashboard(templateKey: string) {
 		return HttpClient.delete<FlaskBaseResponse & { disabled_dashboards: number }>(
-			`/siem/dashboards/custom/${templateKey}`
+			`/siem/dashboards/custom/${encodeURIComponent(templateKey)}`
 		)
 	},
 	importCustomDashboard(payload: CustomDashboardImportPayload) {
@@ -173,7 +173,7 @@ export default {
 	},
 	exportCustomDashboard(templateKey: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { definition: CustomDashboardDefinition }>(
-			`/siem/dashboards/custom/${templateKey}/export`,
+			`/siem/dashboards/custom/${encodeURIComponent(templateKey)}/export`,
 			{ signal }
 		)
 	},

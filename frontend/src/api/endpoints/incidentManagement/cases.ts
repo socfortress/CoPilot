@@ -52,13 +52,13 @@ export default {
 			url = `/incidents/db_operations/case/status/${query.status}`
 		}
 		if (query.assignedTo) {
-			url = `/incidents/db_operations/case/assigned-to/${query.assignedTo}`
+			url = `/incidents/db_operations/case/assigned-to/${encodeURIComponent(query.assignedTo)}`
 		}
 		if (query.customerCode) {
-			url = `/incidents/db_operations/case/customer/${query.customerCode}`
+			url = `/incidents/db_operations/case/customer/${encodeURIComponent(query.customerCode)}`
 		}
 		if (query.hostname) {
-			url = `/agents/${query.hostname}/cases`
+			url = `/agents/${encodeURIComponent(query.hostname)}/cases`
 		}
 
 		const params: Record<string, number | string | string[]> = {}
@@ -161,7 +161,7 @@ export default {
 		let url = `/incidents/report/generate-report-csv`
 
 		if (customerCode) {
-			url = `/incidents/report/generate-report-csv/${customerCode}`
+			url = `/incidents/report/generate-report-csv/${encodeURIComponent(customerCode)}`
 		}
 
 		return HttpClient.post<Blob>(url, null, {
@@ -221,13 +221,18 @@ export default {
 		)
 	},
 	downloadCaseReportTemplate(fileName: string, signal?: AbortSignal) {
-		return HttpClient.get<Blob>(`/incidents/db_operations/case-report-template/download/${fileName}`, {
-			responseType: "blob",
-			signal
-		})
+		return HttpClient.get<Blob>(
+			`/incidents/db_operations/case-report-template/download/${encodeURIComponent(fileName)}`,
+			{
+				responseType: "blob",
+				signal
+			}
+		)
 	},
 	deleteCaseReportTemplate(fileName: string) {
-		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/case-report-template/${fileName}`)
+		return HttpClient.delete<FlaskBaseResponse>(
+			`/incidents/db_operations/case-report-template/${encodeURIComponent(fileName)}`
+		)
 	},
 	checkDefaultCaseReportTemplateExists(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { default_template_exists: boolean }>(

@@ -190,7 +190,13 @@ async def lifespan(_app: FastAPI):
     await ensure_scheduler_user_removed(async_engine)
 
 
-app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API", lifespan=lifespan)
+# `redirect_slashes=False`: Starlette's default answers an unmatched `/x/` with a 307 to
+# an *absolute* URL rebuilt from the ASGI scope — `http://<host>/api/x` behind nginx,
+# because uvicorn only trusts X-Forwarded-Proto from 127.0.0.1. The browser follows
+# that cross-origin hop without the Authorization header, the backend answers 401, and
+# the frontend reads that as an expired session (#1133). Every CoPilot client uses
+# exact paths, so an unmatched path is simply a 404.
+app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API", lifespan=lifespan, redirect_slashes=False)
 
 # Create an APIRouter with a prefix of `/api`
 api_router = APIRouter(prefix="/api")

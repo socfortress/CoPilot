@@ -17,7 +17,7 @@ export default {
 	},
 	getSourceByIndex(indexName: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { source: SourceName }>(
-			`/incidents/db_operations/available-source/${indexName}`,
+			`/incidents/db_operations/available-source/${encodeURIComponent(indexName)}`,
 			{ signal }
 		)
 	},

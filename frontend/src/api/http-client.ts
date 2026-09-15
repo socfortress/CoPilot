@@ -3,6 +3,7 @@ import axios from "axios"
 import { useAuthStore } from "@/stores/auth"
 import { isDebounceTimeOver, isJwtExpiring } from "@/utils/auth"
 import { getNavigationSignal } from "./navigation-abort"
+import { isSessionExpiry } from "./session-expiry"
 // import { useGlobalActions } from "@/composables/useGlobalActions"
 
 declare module "axios" {
@@ -75,7 +76,11 @@ HttpClient.interceptors.response.use(
 			return new Promise(() => {})
 		}
 
-		if (error.response && error.response.status === 401) {
+		// A 401 is only a lost session when the backend rejected *our* token. One the
+		// browser produced by following a cross-origin redirect (which strips the
+		// Authorization header) must surface to the caller as an ordinary failure —
+		// a search term containing a backslash used to log the whole session out (#1133).
+		if (isSessionExpiry(error)) {
 			if (!window.location.pathname.includes("login")) {
 				window.location.href = "/logout"
 			}

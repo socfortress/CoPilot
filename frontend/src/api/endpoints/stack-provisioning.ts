@@ -36,6 +36,8 @@ export default {
 		)
 	},
 	decommissionInfluxDbCheck(checkName: string) {
-		return HttpClient.delete<FlaskBaseResponse>(`/stack_decommissioning/influxdb/check/${checkName}`)
+		return HttpClient.delete<FlaskBaseResponse>(
+			`/stack_decommissioning/influxdb/check/${encodeURIComponent(checkName)}`
+		)
 	}
 }
