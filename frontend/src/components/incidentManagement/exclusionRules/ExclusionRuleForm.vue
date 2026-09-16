@@ -23,20 +23,59 @@
 				</n-form-item>
 
 				<div class="mb-6 flex flex-col gap-2">
-					<n-form-item path="field_matches" required label="Field matches" :show-feedback="false">
+					<!--
+						In-context creation (#934): the originating alert's EventData fields, named
+						exactly as the backend matcher looks them up. Ticking one adds a match row
+						pinned to the observed value; the analyst can still loosen it below
+						(e.g. a `regex:` prefix) before saving.
+					-->
+					<n-form-item v-if="candidateFields?.length" label="Fields from alert" :show-feedback="false">
+						<div class="border-default flex w-full flex-col gap-1 rounded-xl border p-2">
+							<div
+								v-for="field of candidateFields"
+								:key="field.name"
+								class="flex items-start gap-2 rounded-lg px-1 py-0.5"
+								:class="{ 'opacity-60': field.volatile }"
+							>
+								<n-checkbox
+									:checked="isCandidateSelected(field.name)"
+									@update:checked="toggleCandidate(field, $event)"
+								>
+									<span class="font-mono text-sm">{{ field.name }}</span>
+								</n-checkbox>
+								<n-tag v-if="field.volatile" size="tiny" :bordered="false" type="warning">
+									volatile
+								</n-tag>
+								<span
+									class="text-secondary min-w-0 grow truncate font-mono text-xs"
+									:title="field.value"
+								>
+									{{ field.value }}
+								</span>
+							</div>
+						</div>
+					</n-form-item>
+
+					<n-form-item required label="Field matches" :show-feedback="false">
 						<div class="flex w-full flex-col gap-4">
 							<div
 								v-for="(field, index) of model.field_matches"
 								:key="field.id"
 								class="border-default relative flex w-full flex-col gap-2 rounded-xl border p-2"
 							>
-								<n-input v-model:value.trim="field.key" placeholder="Field name" clearable />
+								<n-input
+									v-model:value.trim="field.key"
+									placeholder="Field name"
+									clearable
+									:status="fieldStatus(field, 'key')"
+								/>
 								<n-input
 									v-model:value.trim="field.value"
 									placeholder="Field match"
 									clearable
 									type="textarea"
 									:autosize="{ minRows: 3 }"
+									:status="fieldStatus(field, 'value')"
 								/>
 								<div class="absolute -top-2.5 -right-2.5">
 									<n-button
@@ -65,6 +104,9 @@
 						</n-button>
 					</div>
 
+					<n-alert v-if="!areFieldsPresent" type="warning">
+						<span class="text-sm">Add at least one field match</span>
+					</n-alert>
 					<n-alert v-if="!areFieldsFilled" type="warning">
 						<span class="text-sm">Please fill in all fields</span>
 					</n-alert>
@@ -72,6 +114,35 @@
 						<span class="text-sm">Attention, there are duplicate fields</span>
 					</n-alert>
 				</div>
+
+				<!--
+					Live check against the originating alert. While a request is in flight the previous
+					result is kept but dimmed and a spinner is shown, so the banner never claims a
+					verdict for a rule the backend has not seen yet.
+				-->
+				<n-alert
+					v-if="sourceAlertId && (dryRun || dryRunPending)"
+					:type="dryRunPending ? 'default' : dryRun?.matches ? 'success' : 'warning'"
+					class="mb-6"
+				>
+					<template v-if="dryRunPending">
+						<div class="flex items-center gap-3">
+							<n-spin :size="14" />
+							<span class="text-sm">Checking against alert #{{ sourceAlertId }}…</span>
+						</div>
+					</template>
+					<template v-else-if="dryRun?.matches">
+						<span class="text-sm">
+							This rule matches alert #{{ sourceAlertId }}: the next identical alert will be suppressed.
+						</span>
+					</template>
+					<template v-else-if="dryRun">
+						<span class="text-sm">This rule would NOT have suppressed alert #{{ sourceAlertId }}:</span>
+						<ul class="mt-1 list-disc pl-5 text-sm">
+							<li v-for="reason of dryRun.reasons" :key="reason">{{ reason }}</li>
+						</ul>
+					</template>
+				</n-alert>
 
 				<n-form-item label="Customer" path="customer_code">
 					<n-select
@@ -103,15 +174,21 @@
 </template>
 
 <script setup lang="ts">
-import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
+import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { ExclusionRulePayload } from "@/api/endpoints/incidentManagement/exclusion-rules"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import type { ExclusionRule } from "@/types/incidentManagement/exclusion-rules"
+import type {
+	ExclusionRule,
+	ExclusionRuleDraftField,
+	ExclusionRuleDryRunResult
+} from "@/types/incidentManagement/exclusion-rules"
+import axios from "axios"
+import _debounce from "lodash/debounce"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
-import { NAlert, NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import { NAlert, NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, NSpin, NTag, useMessage } from "naive-ui"
+import { computed, onBeforeMount, onBeforeUnmount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
@@ -130,6 +207,12 @@ interface Model extends Omit<ExclusionRulePayload, "field_matches"> {
 const props = defineProps<{
 	entity?: ExclusionRule
 	resetOnSubmit?: boolean
+	/** Initial values for a NEW rule (in-context creation from an alert). Ignored when `entity` is set. */
+	prefill?: Partial<ExclusionRulePayload>
+	/** The originating alert's EventData fields, offered as one-click `field_matches`. */
+	candidateFields?: ExclusionRuleDraftField[]
+	/** When set, every edit is dry-run against this alert so the analyst sees whether the rule catches it. */
+	sourceAlertId?: number
 }>()
 
 const emit = defineEmits<{
@@ -137,7 +220,7 @@ const emit = defineEmits<{
 	(e: "submitted", value: ExclusionRule): void
 }>()
 
-const { entity, resetOnSubmit } = toRefs(props)
+const { entity, resetOnSubmit, prefill, candidateFields, sourceAlertId } = toRefs(props)
 const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
 const DelIcon = "carbon:close-filled"
 const AddIcon = "carbon:add"
@@ -147,13 +230,20 @@ const message = useMessage()
 const model = ref<Model>(getDefaultModel())
 const formRef = ref<FormInst | null>(null)
 const customersList = ref<Customer[]>([])
+const dryRun = ref<ExclusionRuleDryRunResult | null>(null)
+/** True from the first edit until the backend answers — covers the debounce wait AND the request. */
+const dryRunPending = ref(false)
+let dryRunAbort: AbortController | null = null
 
 const customersOptions = computed(() =>
 	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
 )
 
+// The model always carries one empty placeholder row so the UI has something to type into,
+// so "present" must mean "at least one row with a name" — counting rows let a rule with no
+// field matches at all through a validator that says the opposite.
 const areFieldsPresent = computed(() => {
-	return !!model.value.field_matches.length
+	return model.value.field_matches.some(o => !!o.key)
 })
 
 const areFieldsFilled = computed(() => {
@@ -190,27 +280,21 @@ const rules: FormRules = {
 		required: true,
 		message: "Please input title",
 		trigger: ["input", "blur"]
-	},
-	field_matches: {
-		required: false,
-
-		validator(_rule: FormItemRule, _value: string) {
-			if (!areFieldsPresent.value) {
-				return new Error(`Please fill least one fields`)
-			}
-
-			if (!areFieldsFilled.value) {
-				return new Error(`Please fill all fields`)
-			}
-
-			if (!areFieldsUniques.value) {
-				return new Error(`There are duplicated fields`)
-			}
-
-			return true
-		},
-		trigger: ["input", "blur"]
 	}
+}
+
+/**
+ * Field-match rows are validated per input rather than through an n-form-item rule: an
+ * invalid form item paints every input inside it red, so one half-filled pair used to flag
+ * the complete pairs next to it. Only the empty half of an incomplete pair is marked, and
+ * only once the analyst has started typing in that row. `isValid` still gates Submit.
+ */
+function fieldStatus(field: FieldMatch, part: "key" | "value"): "error" | undefined {
+	const other = part === "key" ? field.value : field.key
+	const own = part === "key" ? field.key : field.value
+	if (!!other && !own) return "error"
+	if (part === "key" && !!own && model.value.field_matches.filter(o => o.key === own).length > 1) return "error"
+	return undefined
 }
 
 const isValid = computed(() => {
@@ -244,19 +328,90 @@ function validate() {
 	})
 }
 
-function getDefaultModel(entity?: Partial<ExclusionRule>): Model {
+function getDefaultModel(entity?: Partial<ExclusionRule> | Partial<ExclusionRulePayload>): Model {
+	const fieldMatches = entity?.field_matches ? Object.entries(entity.field_matches) : []
+
 	return {
 		name: entity?.name || "",
 		description: entity?.description || "",
 		channel: entity?.channel || "",
 		title: entity?.title || "",
-		field_matches: entity?.field_matches
-			? Object.entries(entity.field_matches).map(o => ({ key: o[0], value: o[1], id: o[0] }))
+		field_matches: fieldMatches.length
+			? fieldMatches.map(o => ({ key: o[0], value: o[1], id: o[0] }))
 			: [{ id: `${Date.now()}`, key: null, value: null }],
 		customer_code: entity?.customer_code || undefined,
 		enabled: entity?.enabled || false
 	}
 }
+
+function isCandidateSelected(name: string) {
+	return model.value.field_matches.some(o => o.key === name)
+}
+
+function toggleCandidate(field: ExclusionRuleDraftField, checked: boolean) {
+	if (checked) {
+		if (isCandidateSelected(field.name)) return
+		// Replace a lone empty placeholder row instead of leaving it dangling under the picked field.
+		const onlyEmptyRow = model.value.field_matches.length === 1 && !model.value.field_matches[0].key
+		if (onlyEmptyRow) model.value.field_matches.splice(0, 1)
+		model.value.field_matches.push({ id: field.name, key: field.name, value: field.value })
+	} else {
+		const index = model.value.field_matches.findIndex(o => o.key === field.name)
+		if (index !== -1) delField(index)
+	}
+}
+
+/**
+ * Dry-run against the originating alert. Runs the same matcher the ingest path runs, so
+ * a green result means "the next identical alert is suppressed" — not a client-side guess.
+ * Debounced because every keystroke in a field value would otherwise fire a request.
+ */
+const runDryRun = _debounce(() => {
+	if (!sourceAlertId.value) return
+
+	const fieldMatches = model.value.field_matches
+		.filter(o => !!o.key && !!o.value)
+		.reduce((acc: Record<string, string>, cur: FieldMatch) => {
+			acc[`${cur.key}`] = `${cur.value}`
+			return acc
+		}, {})
+
+	if (!model.value.channel && !model.value.title && !Object.keys(fieldMatches).length) {
+		dryRun.value = null
+		dryRunPending.value = false
+		return
+	}
+
+	dryRunAbort?.abort()
+	dryRunAbort = new AbortController()
+	const { signal } = dryRunAbort
+
+	Api.incidentManagement.exclusionRules
+		.dryRunExclusionRule(
+			sourceAlertId.value,
+			{
+				channel: model.value.channel || undefined,
+				title: model.value.title || undefined,
+				customer_code: model.value.customer_code || undefined,
+				field_matches: fieldMatches
+			},
+			signal
+		)
+		.then(res => {
+			if (res.data.success) {
+				dryRun.value = { matches: res.data.matches, reasons: res.data.reasons }
+			}
+		})
+		.catch(err => {
+			if (axios.isCancel(err)) return
+			dryRun.value = null
+			message.error(getApiErrorMessage(err as ApiError) || "Could not check the rule against the alert.")
+		})
+		.finally(() => {
+			// A superseded request must not clear the spinner the newer one is still showing.
+			if (!signal.aborted) dryRunPending.value = false
+		})
+}, 400)
 
 function reset(force?: boolean) {
 	if (!loading.value || force) {
@@ -338,7 +493,7 @@ function submit() {
 }
 
 function setModel() {
-	model.value = getDefaultModel(entity.value)
+	model.value = getDefaultModel(entity.value ?? prefill.value)
 }
 
 watch(loading, val => {
@@ -354,6 +509,32 @@ watch(
 	},
 	{ immediate: true }
 )
+
+watch(
+	prefill,
+	val => {
+		if (val && !entity.value) {
+			setModel()
+		}
+	},
+	{ immediate: true }
+)
+
+watch(
+	model,
+	() => {
+		if (!sourceAlertId.value) return
+		dryRunPending.value = true
+		runDryRun()
+	},
+	{ deep: true, immediate: true }
+)
+
+onBeforeUnmount(() => {
+	runDryRun.cancel()
+	dryRunAbort?.abort()
+	dryRunPending.value = false
+})
 
 onBeforeMount(() => {
 	getCustomers().then(() => {

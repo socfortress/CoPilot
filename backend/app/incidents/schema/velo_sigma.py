@@ -449,3 +449,56 @@ class VeloSigmaExclusionListResponse(BaseModel):
     message: str
     exclusions: List[VeloSigmaExclusionResponse]
     pagination: dict = {"total": 0, "skip": 0, "limit": 0}
+
+
+# ---------------------------------------------------------------------------
+# In-context exclusion creation from Incident Management (#934)
+# ---------------------------------------------------------------------------
+
+
+class VeloSigmaExclusionDraftField(BaseModel):
+    """One `EventData` field of the originating alert, offered as a `field_matches` candidate."""
+
+    name: str = Field(..., description="Field name exactly as the exclusion matcher will look it up")
+    value: str = Field(..., description="Value observed on the originating alert")
+    suggested: bool = Field(False, description="Pre-selected in the UI: a stable, discriminating field for this channel")
+    volatile: bool = Field(False, description="Changes on every event (ids, GUIDs, timestamps) - a poor exclusion key")
+
+
+class VeloSigmaExclusionDraft(BaseModel):
+    """A pre-filled exclusion rule reconstructed from a CoPilot alert that came from Velociraptor Sigma."""
+
+    alert_id: int
+    customer_code: Optional[str] = None
+    channel: Optional[str] = None
+    title: Optional[str] = None
+    computer: Optional[str] = None
+    name: str = Field(..., description="Suggested rule name")
+    description: str = Field(..., description="Suggested justification, to be completed by the analyst")
+    payload_available: bool = Field(
+        True,
+        description="False when the alert kept its Sigma title/channel but not the event payload, so no field candidates can be offered",
+    )
+    fields: List[VeloSigmaExclusionDraftField] = Field(default_factory=list)
+
+
+class VeloSigmaExclusionDraftResponse(BaseModel):
+    success: bool
+    message: str
+    draft: VeloSigmaExclusionDraft
+
+
+class VeloSigmaExclusionDryRunRequest(BaseModel):
+    """A rule as the analyst is typing it, checked against the alert it is being created from."""
+
+    channel: Optional[str] = None
+    title: Optional[str] = None
+    field_matches: Optional[Dict[str, Any]] = None
+    customer_code: Optional[str] = None
+
+
+class VeloSigmaExclusionDryRunResponse(BaseModel):
+    success: bool
+    message: str
+    matches: bool = Field(..., description="Whether the rule would have suppressed the originating alert")
+    reasons: List[str] = Field(default_factory=list, description="Why it would not match; empty when it matches")

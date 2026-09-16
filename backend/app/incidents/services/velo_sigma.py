@@ -4,8 +4,10 @@ from datetime import datetime
 from datetime import timedelta
 from typing import Any
 from typing import Dict
+from typing import Iterable
 from typing import List
 from typing import Optional
+from typing import Tuple
 from typing import Union
 
 from loguru import logger
@@ -19,6 +21,7 @@ from app.connectors.wazuh_indexer.utils.universal import (
 )
 from app.db.universal_models import Agents
 from app.incidents.models import VeloSigmaExclusion
+from app.incidents.schema.db_operations import AlertOut
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.incident_alert import CreateAlertRequest
@@ -30,10 +33,259 @@ from app.incidents.schema.velo_sigma import SysmonEvent
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlertResponse
 from app.incidents.schema.velo_sigma import VeloSigmaExclusionCreate
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionDraft
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionDraftField
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionDryRunRequest
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionDryRunResponse
 from app.incidents.services.db_operations import add_alert_tag_if_not_exists
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.incident_alert import create_alert
 from app.incidents.services.incident_alert import create_alert_full
+
+# ---------------------------------------------------------------------------
+# Event-field extraction (shared by ingest-time matching, the draft builder and the dry-run)
+# ---------------------------------------------------------------------------
+
+# The comments `_create_copilot_alert` / `_create_fallback_alert` leave on the CoPilot alert are
+# the only place the original Sigma payload survives, so in-context exclusion creation (#934)
+# reads them back. Keep these prefixes in sync with the writers below.
+SIGMA_META_COMMENT_PREFIX = "Velociraptor Sigma: "
+SIGMA_FALLBACK_COMMENT_PREFIX = "Velociraptor Sigma Alert (No Wazuh match found)"
+SIGMA_PAYLOAD_COMMENT_PREFIX = "Full Event Payload:"
+
+# Fields worth pre-selecting as an exclusion key, most discriminating first. They are stable
+# across repeated occurrences of the same benign activity, which is what an exclusion pins.
+SUGGESTED_FIELD_PRIORITY: Tuple[str, ...] = (
+    "Image",
+    "SourceImage",
+    "TargetImage",
+    "CommandLine",
+    "ParentImage",
+    "ParentCommandLine",
+    "TargetFilename",
+    "TargetObject",
+    "Path",
+    "Process Name",
+    "HostApplication",
+    "ScriptBlockText",
+    "DestinationHostname",
+    "DestinationIp",
+    "QueryName",
+    "User",
+    "SourceUser",
+    "TargetUser",
+    "Threat Name",
+    "OriginalFileName",
+    "Product",
+    "Company",
+)
+MAX_SUGGESTED_FIELDS = 3
+
+# Fields that differ on every event. Offered for completeness but never suggested, and flagged
+# so the UI can warn that pinning one produces a rule that matches exactly once.
+_VOLATILE_FIELD_PATTERN = re.compile(
+    r"(guid|time|record|sequence|^.*id$|^.*ids$|hash|logon|checksum)",
+    re.IGNORECASE,
+)
+
+
+def extract_event_fields(alert: VelociraptorSigmaAlert) -> Dict[str, str]:
+    """Flatten the alert's ``EventData`` into the ``{name: value}`` map the exclusion matcher looks fields up in.
+
+    This is the single definition of what an exclusion's ``field_matches`` key can refer to. The
+    draft builder offers exactly these names, and the dry-run evaluates against exactly this map,
+    so a rule created from an alert can only ever name fields the ingest-time check will find.
+    Raises on an unparseable event; callers decide whether that means "skip" or "400".
+    """
+    parsed_event = alert.get_parsed_event()
+    logger.debug(f"Extracting event fields | Channel: {alert.channel} | Type: {type(parsed_event).__name__}")
+    event_data: Dict[str, str] = {}
+
+    if hasattr(parsed_event, "EventData"):
+        # First add all top-level fields
+        for attr_name in dir(parsed_event.EventData):
+            if not attr_name.startswith("_") and not callable(getattr(parsed_event.EventData, attr_name)):
+                try:
+                    value = getattr(parsed_event.EventData, attr_name)
+                    if not callable(value):
+                        event_data[attr_name] = str(value)
+                except Exception:
+                    pass
+
+        # Special handling for PowerShell ContextInfo which contains Host Application
+        if hasattr(parsed_event.EventData, "ContextInfo") and parsed_event.EventData.ContextInfo:
+            # Parse the ContextInfo string which contains multiple lines of key-value pairs
+            context_info = parsed_event.EventData.ContextInfo
+            logger.debug(f"Found ContextInfo in PowerShell event: {context_info}")
+
+            for line in context_info.splitlines():
+                line = line.strip()
+                if line and " = " in line:
+                    key, value = line.split(" = ", 1)
+                    key = key.strip()
+                    # Add these fields with their original names for direct matching
+                    event_data[key] = value.strip()
+                    # Also add common CamelCase variations to make matching more flexible
+                    if " " in key:
+                        # Convert "Host Application" to "HostApplication"
+                        camel_key = "".join(word.capitalize() for word in key.split())
+                        camel_key = camel_key[0].lower() + camel_key[1:]  # lowerCamelCase
+                        event_data[camel_key] = value.strip()
+
+    # Pydantic models expose their config too - it is not an event field.
+    event_data.pop("model_config", None)
+    event_data.pop("model_fields", None)
+    event_data.pop("model_computed_fields", None)
+    event_data.pop("model_extra", None)
+    event_data.pop("model_fields_set", None)
+    return event_data
+
+
+def parse_sigma_comments(comments: Iterable[str]) -> Tuple[Optional[str], Optional[str], Optional[Dict[str, Any]]]:
+    """Recover ``(title, channel, event)`` from the comments the Sigma ingest wrote on a CoPilot alert.
+
+    Handles both writers: the Wazuh-matched path (``Velociraptor Sigma: <title> | <channel>``) and
+    the fallback path (a multi-line ``Title:`` / ``Channel:`` block). Any part that cannot be
+    recovered comes back as ``None`` rather than raising - a stored alert is never invalid, just
+    incomplete.
+    """
+    title: Optional[str] = None
+    channel: Optional[str] = None
+    event: Optional[Dict[str, Any]] = None
+
+    for raw in comments:
+        text = (raw or "").strip()
+        if not text:
+            continue
+
+        if text.startswith(SIGMA_META_COMMENT_PREFIX) and title is None:
+            meta = text[len(SIGMA_META_COMMENT_PREFIX) :].strip()
+            # The channel never contains " | " while a Sigma title might, so split from the right.
+            if " | " in meta:
+                title, channel = (part.strip() for part in meta.rsplit(" | ", 1))
+            else:
+                title = meta
+            continue
+
+        if text.startswith(SIGMA_FALLBACK_COMMENT_PREFIX) and title is None:
+            for line in text.splitlines():
+                key, sep, value = line.partition(":")
+                if not sep:
+                    continue
+                key = key.strip().lower()
+                if key == "title":
+                    title = value.strip() or None
+                elif key == "channel":
+                    channel = value.strip() or None
+            continue
+
+        if text.startswith(SIGMA_PAYLOAD_COMMENT_PREFIX) and event is None:
+            body = text[len(SIGMA_PAYLOAD_COMMENT_PREFIX) :].strip()
+            # The payload is fenced: ```\n{...}\n```
+            if body.startswith("```"):
+                body = body[3:]
+                if body.endswith("```"):
+                    body = body[:-3]
+            body = body.strip()
+            try:
+                parsed = json.loads(body)
+            except json.JSONDecodeError:
+                logger.warning("Sigma payload comment is not valid JSON; ignoring it")
+                continue
+            if isinstance(parsed, dict):
+                event = parsed
+
+    return title, channel, event
+
+
+def sigma_alert_from_copilot_alert(alert: AlertOut) -> Optional[VelociraptorSigmaAlert]:
+    """Rebuild the inbound ``VelociraptorSigmaAlert`` from a stored CoPilot alert, or ``None`` if it was not one.
+
+    Only the parts the exclusion matcher reads are faithful (``channel``, ``title``, ``event``,
+    ``computer``, ``clientID``); ``level`` / ``index_pattern`` / ``sourceRef`` are placeholders.
+
+    An alert that kept its meta comment but lost the payload one (seen in the wild: the payload
+    write is best-effort at ingest) still comes back, with an empty ``event`` - channel and title
+    are enough to draft a rule, just not to offer field candidates. ``has_event_payload`` tells
+    the two apart.
+    """
+    title, channel, event = parse_sigma_comments(c.comment for c in alert.comments)
+    if event is None and title is None and channel is None:
+        return None
+
+    event = event or {}
+    system = event.get("System") if isinstance(event.get("System"), dict) else {}
+    if channel is None and isinstance(system.get("Channel"), str):
+        channel = system["Channel"]
+
+    asset = alert.assets[0] if alert.assets else None
+    computer = (system.get("Computer") if isinstance(system.get("Computer"), str) else None) or (asset.asset_name if asset else None)
+
+    return VelociraptorSigmaAlert(
+        computer=computer or "unknown",
+        clientID=asset.velociraptor_id if asset else None,
+        channel=channel or "",
+        title=title or "",
+        level="unknown",
+        event=event,
+        index_pattern="n/a",
+        sourceRef=str(alert.id),
+    )
+
+
+def has_event_payload(alert: VelociraptorSigmaAlert) -> bool:
+    return bool(alert.event)
+
+
+def _is_volatile_field(name: str) -> bool:
+    return bool(_VOLATILE_FIELD_PATTERN.search(name))
+
+
+def build_exclusion_draft(alert: AlertOut) -> Optional[VeloSigmaExclusionDraft]:
+    """Turn a stored Sigma alert into a pre-filled exclusion rule, or ``None`` if the payload is gone."""
+    sigma_alert = sigma_alert_from_copilot_alert(alert)
+    if sigma_alert is None:
+        return None
+
+    event_fields: Dict[str, str] = {}
+    if has_event_payload(sigma_alert):
+        try:
+            event_fields = extract_event_fields(sigma_alert)
+        except Exception as e:  # the stored payload can predate a schema change
+            logger.warning(f"Could not extract event fields for alert {alert.id}: {e}")
+
+    priority = {name: rank for rank, name in enumerate(SUGGESTED_FIELD_PRIORITY)}
+    suggested_left = MAX_SUGGESTED_FIELDS
+    fields: List[VeloSigmaExclusionDraftField] = []
+    for name in sorted(event_fields, key=lambda n: (priority.get(n, len(priority)), n.lower())):
+        value = event_fields[name]
+        if value in ("", "None"):
+            continue
+        volatile = _is_volatile_field(name)
+        suggested = name in priority and not volatile and suggested_left > 0
+        if suggested:
+            suggested_left -= 1
+        fields.append(VeloSigmaExclusionDraftField(name=name, value=value, suggested=suggested, volatile=volatile))
+
+    title = sigma_alert.title or None
+    channel = sigma_alert.channel or None
+    computer = sigma_alert.computer if sigma_alert.computer != "unknown" else None
+
+    name = f"Exclude: {title}" if title else f"Exclusion from alert #{alert.id}"
+    where = f" on {computer}" if computer else ""
+    description = f"False positive observed on alert #{alert.id}{where}. Justification: "
+
+    return VeloSigmaExclusionDraft(
+        alert_id=alert.id,
+        customer_code=alert.customer_code or None,
+        channel=channel,
+        title=title,
+        computer=computer,
+        name=name[:255],
+        description=description,
+        payload_available=has_event_payload(sigma_alert),
+        fields=fields,
+    )
 
 
 class VeloSigmaExclusionService:
@@ -62,67 +314,42 @@ class VeloSigmaExclusionService:
 
         # Parse the event data
         try:
-            parsed_event = alert.get_parsed_event()
-            logger.debug(f"Checking exclusions for alert | Channel: {alert.channel} | Type: {type(parsed_event).__name__}")
-            logger.debug(f"Parsed event: {parsed_event}")
-            event_data = {}
-
-            # Extract event data fields from different event types
-            if hasattr(parsed_event, "EventData"):
-                # First add all top-level fields
-                for attr_name in dir(parsed_event.EventData):
-                    if not attr_name.startswith("_") and not callable(getattr(parsed_event.EventData, attr_name)):
-                        try:
-                            value = getattr(parsed_event.EventData, attr_name)
-                            if not callable(value):
-                                event_data[attr_name] = str(value)
-                        except Exception:
-                            pass
-
-                # Special handling for PowerShell ContextInfo which contains Host Application
-                if hasattr(parsed_event.EventData, "ContextInfo") and parsed_event.EventData.ContextInfo:
-                    # Parse the ContextInfo string which contains multiple lines of key-value pairs
-                    context_info = parsed_event.EventData.ContextInfo
-                    logger.debug(f"Found ContextInfo in PowerShell event: {context_info}")
-
-                    for line in context_info.splitlines():
-                        line = line.strip()
-                        if line and " = " in line:
-                            key, value = line.split(" = ", 1)
-                            key = key.strip()
-                            # Add these fields with their original names for direct matching
-                            event_data[key] = value.strip()
-                            # Also add common CamelCase variations to make matching more flexible
-                            if " " in key:
-                                # Convert "Host Application" to "HostApplication"
-                                camel_key = "".join(word.capitalize() for word in key.split())
-                                camel_key = camel_key[0].lower() + camel_key[1:]  # lowerCamelCase
-                                event_data[camel_key] = value.strip()
-
-                # Log the extracted field names and values for debugging
-                for key, value in event_data.items():
-                    logger.debug(f"Extracted field: {key} = {value}")
-
+            event_data = extract_event_fields(alert)
+            for key, value in event_data.items():
+                logger.debug(f"Extracted field: {key} = {value}")
         except Exception as e:
             logger.error(f"Error parsing event data: {str(e)}")
             # If we can't parse the event, we won't exclude it
             return None
 
+        # Resolve the tenant once; customer-scoped rules compare against it.
+        customer_code = await self.resolve_customer_code(alert)
+
         # Check each exclusion against this alert
         for exclusion in exclusions:
             logger.debug(f"Checking exclusion: {exclusion.name} (ID: {exclusion.id})")
-            if await self._matches_exclusion(alert, event_data, exclusion):
+            if await self._matches_exclusion(alert, event_data, exclusion, customer_code):
                 # Update match statistics
                 await self._update_exclusion_stats(exclusion.id)
                 return exclusion
 
         return None
 
-    async def _matches_exclusion(self, alert: VelociraptorSigmaAlert, event_data: Dict[str, str], exclusion: VeloSigmaExclusion) -> bool:
-        """Check if the alert matches the given exclusion rule."""
+    async def _matches_exclusion(
+        self,
+        alert: VelociraptorSigmaAlert,
+        event_data: Dict[str, str],
+        exclusion: VeloSigmaExclusion,
+        customer_code: Optional[str] = None,
+    ) -> bool:
+        """Check if the alert matches the given exclusion rule.
+
+        ``customer_code`` is the tenant the alert was resolved to (see ``resolve_customer_code``);
+        ``None`` means it could not be resolved, in which case a customer-scoped rule never matches.
+        """
         # Check customer code if specified
-        if exclusion.customer_code and exclusion.customer_code != self._get_customer_code(alert):
-            logger.debug(f"Customer code mismatch: rule={exclusion.customer_code}, alert={self._get_customer_code(alert)}")
+        if exclusion.customer_code and exclusion.customer_code != customer_code:
+            logger.debug(f"Customer code mismatch: rule={exclusion.customer_code}, alert={customer_code}")
             return False
 
         # Check channel if specified
@@ -333,12 +560,101 @@ class VeloSigmaExclusionService:
             logger.error(f"Error updating exclusion stats: {str(e)}")
             # Don't raise the error, just log it
 
-    def _get_customer_code(self, alert: VelociraptorSigmaAlert) -> str:
-        """Extract or determine customer code from the alert."""
-        # This will depend on where customer code is stored in your alerts
-        # You might need to use your agent lookup logic here
-        # For now, we'll return a placeholder
-        return "unknown"
+    async def resolve_customer_code(self, alert: VelociraptorSigmaAlert) -> Optional[str]:
+        """Resolve the tenant of an inbound Sigma alert through the ``agents`` table.
+
+        Tries the Velociraptor client id first, then the hostname - the same keys the alert
+        creation path uses. Returns ``None`` when neither is enrolled, which makes every
+        customer-scoped rule a non-match (fail closed) while deployment-wide rules still apply.
+
+        Before this existed the check compared against a hard-coded ``"unknown"``, so a rule with
+        a customer code could never match anything - exactly what the Sources form produced by
+        default, since it pre-fills the customer from the global filter.
+        """
+        try:
+            if alert.clientID:
+                result = await self.session.execute(select(Agents.customer_code).where(Agents.velociraptor_id == alert.clientID))
+                code = result.scalar_one_or_none()
+                if code:
+                    return code
+            if alert.computer:
+                result = await self.session.execute(select(Agents.customer_code).where(Agents.hostname == alert.computer))
+                code = result.scalars().first()
+                if code:
+                    return code
+        except Exception as e:
+            logger.error(f"Error resolving customer code for Sigma alert: {str(e)}")
+        logger.debug(f"Could not resolve a customer code for computer={alert.computer!r} clientID={alert.clientID!r}")
+        return None
+
+    async def dry_run(self, alert: AlertOut, rule: VeloSigmaExclusionDryRunRequest) -> VeloSigmaExclusionDryRunResponse:
+        """Evaluate an unsaved rule against the stored alert it is being created from - no DB, no side effects.
+
+        Uses the same ``_matches_exclusion`` the ingest path runs, so "matches" here means the
+        next identical alert would be suppressed. When it does not match, each failing criterion
+        is named so the analyst can see which exact-match field is off.
+        """
+        sigma_alert = sigma_alert_from_copilot_alert(alert)
+        if sigma_alert is None:
+            return VeloSigmaExclusionDryRunResponse(
+                success=True,
+                message="This alert carries no Velociraptor Sigma payload; nothing to test against",
+                matches=False,
+                reasons=["Alert has no Velociraptor Sigma event payload"],
+            )
+
+        event_data: Dict[str, str] = {}
+        if has_event_payload(sigma_alert):
+            try:
+                event_data = extract_event_fields(sigma_alert)
+            except Exception as e:
+                return VeloSigmaExclusionDryRunResponse(
+                    success=True,
+                    message="The stored event payload could not be parsed",
+                    matches=False,
+                    reasons=[f"Event payload could not be parsed: {e}"],
+                )
+
+        customer_code = alert.customer_code or None
+        candidate = VeloSigmaExclusion(
+            name="dry-run",
+            created_by="dry-run",
+            channel=rule.channel or None,
+            title=rule.title or None,
+            field_matches=rule.field_matches or None,
+            customer_code=rule.customer_code or None,
+        )
+        if await self._matches_exclusion(sigma_alert, event_data, candidate, customer_code):
+            return VeloSigmaExclusionDryRunResponse(success=True, message="The rule matches the originating alert", matches=True)
+
+        # Isolate which criteria fail so the UI can point at them.
+        reasons: List[str] = []
+        if candidate.customer_code and candidate.customer_code != customer_code:
+            reasons.append(f"Customer mismatch: rule={candidate.customer_code!r}, alert={customer_code!r}")
+        if candidate.channel and candidate.channel != sigma_alert.channel:
+            reasons.append(f"Channel mismatch: rule={candidate.channel!r}, alert={sigma_alert.channel!r}")
+        if candidate.title and candidate.title != sigma_alert.title:
+            reasons.append(f"Title mismatch: rule={candidate.title!r}, alert={sigma_alert.title!r}")
+        if candidate.field_matches and not has_event_payload(sigma_alert):
+            reasons.append("Alert stores no event payload, so field matches cannot be verified against it")
+        for field_name, field_value in (candidate.field_matches or {}).items():
+            if not has_event_payload(sigma_alert):
+                break
+            single = VeloSigmaExclusion(name="dry-run", created_by="dry-run", field_matches={field_name: field_value})
+            if not await self._matches_exclusion(sigma_alert, event_data, single, customer_code):
+                if field_name not in event_data and field_name.lower() != "hostapplication":
+                    reasons.append(f"Field {field_name!r} is not present on the alert event")
+                else:
+                    reasons.append(f"Field {field_name!r} does not match: rule={field_value!r}, alert={event_data.get(field_name)!r}")
+        if not reasons:
+            reasons.append("The rule does not match the originating alert")
+
+        return VeloSigmaExclusionDryRunResponse(
+            success=True,
+            message="The rule would NOT have suppressed the originating alert",
+            matches=False,
+            reasons=reasons,
+        )
 
     async def create_exclusion(self, exclusion: VeloSigmaExclusionCreate) -> VeloSigmaExclusion:
         """Create a new exclusion rule."""
