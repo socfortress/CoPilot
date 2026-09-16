@@ -11,6 +11,9 @@ export interface ExclusionRule {
 	created_at: Date
 	last_matched_at: Date | null
 	match_count: number
+	/** Alert / case this rule was created from in-context; null = created from Sources. */
+	source_alert_id: number | null
+	source_case_id: number | null
 }
 
 /** One `EventData` field of the originating alert, offered as a `field_matches` candidate (#934). */

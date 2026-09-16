@@ -89,6 +89,16 @@ _VOLATILE_FIELD_PATTERN = re.compile(
 )
 
 
+EXCLUSION_LINK_COMMENT_PREFIX = "Exclusion rule created from this alert: "
+
+
+def source_link_comment(exclusion: VeloSigmaExclusion) -> str:
+    """The comment left on an alert when an exclusion rule is created from it (#934)."""
+    scope = f"customer {exclusion.customer_code}" if exclusion.customer_code else "all customers"
+    state = "enabled" if exclusion.enabled else "disabled"
+    return f'{EXCLUSION_LINK_COMMENT_PREFIX}#{exclusion.id} "{exclusion.name}" ({scope}, {state}) by {exclusion.created_by}'
+
+
 def extract_event_fields(alert: VelociraptorSigmaAlert) -> Dict[str, str]:
     """Flatten the alert's ``EventData`` into the ``{name: value}`` map the exclusion matcher looks fields up in.
 
@@ -668,7 +678,31 @@ class VeloSigmaExclusionService:
         self.session.add(db_exclusion)
         await self.session.commit()
         await self.session.refresh(db_exclusion)
+
+        if db_exclusion.source_alert_id is not None:
+            await self._comment_on_source_alert(db_exclusion)
+
         return db_exclusion
+
+    async def _comment_on_source_alert(self, exclusion: VeloSigmaExclusion) -> None:
+        """Leave the reverse link on the originating alert as a comment.
+
+        The rule row already points at the alert; the comment is what an analyst reading the
+        alert's timeline sees, and it survives the rule being deleted. Best-effort: the rule is
+        committed by now, and a failed comment must not report the creation as failed.
+        """
+        try:
+            await create_comment(
+                comment=CommentCreate(
+                    alert_id=exclusion.source_alert_id,
+                    comment=source_link_comment(exclusion),
+                    user_name=exclusion.created_by,
+                    created_at=datetime.utcnow(),
+                ),
+                db=self.session,
+            )
+        except Exception as e:
+            logger.error(f"Exclusion {exclusion.id} created but the link comment on alert {exclusion.source_alert_id} failed: {e}")
 
     async def get_exclusion(self, exclusion_id: int) -> Optional[VeloSigmaExclusion]:
         """Retrieve an exclusion by ID."""
@@ -710,7 +744,14 @@ class VeloSigmaExclusionService:
         await self.session.commit()
         return True
 
-    async def list_exclusions_with_count(self, skip: int = 0, limit: int = 100, enabled_only: bool = False) -> tuple[list, int]:
+    async def list_exclusions_with_count(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        enabled_only: bool = False,
+        source_alert_id: Optional[int] = None,
+        source_case_id: Optional[int] = None,
+    ) -> tuple[list, int]:
         """
         List all exclusion rules with pagination and return total count.
 
@@ -718,6 +759,8 @@ class VeloSigmaExclusionService:
             skip: Number of items to skip
             limit: Maximum number of items to return
             enabled_only: If True, only return enabled exclusions
+            source_alert_id: Only rules created in-context from this alert
+            source_case_id: Only rules created in-context from this case
 
         Returns:
             Tuple of (list of exclusions, total count)
@@ -726,6 +769,10 @@ class VeloSigmaExclusionService:
 
         if enabled_only:
             query = query.where(VeloSigmaExclusion.enabled == True)
+        if source_alert_id is not None:
+            query = query.where(VeloSigmaExclusion.source_alert_id == source_alert_id)
+        if source_case_id is not None:
+            query = query.where(VeloSigmaExclusion.source_case_id == source_case_id)
 
         # Get total count first
         count_query = select(func.count()).select_from(query.subquery())

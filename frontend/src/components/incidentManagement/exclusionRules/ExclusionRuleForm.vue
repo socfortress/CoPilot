@@ -340,7 +340,9 @@ function getDefaultModel(entity?: Partial<ExclusionRule> | Partial<ExclusionRule
 			? fieldMatches.map(o => ({ key: o[0], value: o[1], id: o[0] }))
 			: [{ id: `${Date.now()}`, key: null, value: null }],
 		customer_code: entity?.customer_code || undefined,
-		enabled: entity?.enabled || false
+		enabled: entity?.enabled || false,
+		// Provenance rides along untouched; the backend only honours it on create.
+		source_alert_id: entity?.source_alert_id ?? undefined
 	}
 }
 

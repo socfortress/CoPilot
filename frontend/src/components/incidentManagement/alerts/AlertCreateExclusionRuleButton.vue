@@ -96,6 +96,7 @@ function openDialog() {
 					title: res.data.draft.title ?? "",
 					customer_code: res.data.draft.customer_code ?? undefined,
 					enabled: true,
+					source_alert_id: alert.value.id,
 					field_matches: Object.fromEntries(
 						res.data.draft.fields.filter(f => f.suggested).map(f => [f.name, f.value])
 					)

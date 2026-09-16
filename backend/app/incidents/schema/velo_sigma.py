@@ -391,6 +391,10 @@ class VeloSigmaExclusionBase(BaseModel):
     field_matches: Optional[Dict] = Field(None, description="Field names and values to match in the event data")
     customer_code: Optional[str] = Field(None, description="Customer code this exclusion applies to (null means all customers)")
     enabled: bool = Field(True, description="Whether this exclusion is active")
+    # Provenance. Settable on create only - VeloSigmaExclusionUpdate deliberately has no such
+    # fields, because "which alert was this written for" is a fact about creation, not a setting.
+    source_alert_id: Optional[int] = Field(None, description="Alert this exclusion was created from (in-context creation)")
+    source_case_id: Optional[int] = Field(None, description="Case this exclusion was created from (in-context creation)")
 
 
 class VeloSigmaExclusionCreate(VeloSigmaExclusionBase):

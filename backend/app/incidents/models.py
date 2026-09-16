@@ -3,6 +3,8 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
 from sqlalchemy import PrimaryKeyConstraint
 from sqlmodel import JSON
 from sqlmodel import Column
@@ -307,6 +309,20 @@ class VeloSigmaExclusion(SQLModel, table=True):
     last_matched_at: Optional[datetime] = Field(nullable=True, description="When this exclusion last matched an alert")
     match_count: int = Field(default=0, description="How many times this exclusion has matched")
     enabled: bool = Field(default=True, description="Whether this exclusion is active")
+
+    # Provenance (#934): the alert / case this rule was created from, when it was created
+    # in-context rather than from Sources. NULL = created from Sources (every pre-existing row).
+    # ON DELETE SET NULL: a rule is detection tuning and outlives the alert it was written for.
+    source_alert_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column(Integer, ForeignKey("incident_management_alert.id", ondelete="SET NULL"), nullable=True, index=True),
+        description="Alert this exclusion was created from, if any",
+    )
+    source_case_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column(Integer, ForeignKey("incident_management_case.id", ondelete="SET NULL"), nullable=True, index=True),
+        description="Case this exclusion was created from, if any",
+    )
 
 
 class ThresholdAlertMetadata(SQLModel, table=True):

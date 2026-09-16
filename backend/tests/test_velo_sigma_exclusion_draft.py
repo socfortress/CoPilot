@@ -33,9 +33,11 @@ from app.incidents.schema.db_operations import AlertOut  # noqa: E402
 from app.incidents.schema.db_operations import AssetBase  # noqa: E402
 from app.incidents.schema.db_operations import CommentBase  # noqa: E402
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert  # noqa: E402
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionCreate  # noqa: E402
 from app.incidents.schema.velo_sigma import (  # noqa: E402
     VeloSigmaExclusionDryRunRequest,
 )
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionUpdate  # noqa: E402
 from app.incidents.services import velo_sigma  # noqa: E402
 from app.incidents.services.velo_sigma import VeloSigmaExclusionService  # noqa: E402
 
@@ -334,6 +336,38 @@ def test_extract_event_fields_matches_ingest_shape_for_powershell_context_info()
     assert fields["Host Application"] == "C:\\Windows\\powershell.exe -File ok.ps1"
     assert fields["hostApplication"] == fields["Host Application"]
     assert fields["ScriptBlockText"] == "Get-Process"
+
+
+# ---------------------------------------------------------------------------
+# Provenance (phase 2): settable on create, immutable afterwards, mirrored as an alert comment
+# ---------------------------------------------------------------------------
+
+
+def test_provenance_is_accepted_on_create_and_ignored_on_update():
+    created = VeloSigmaExclusionCreate(name="r", source_alert_id=42, source_case_id=7)
+    assert (created.source_alert_id, created.source_case_id) == (42, 7)
+
+    # Update has no provenance fields: a PATCH carrying them must not re-point the rule.
+    updated = VeloSigmaExclusionUpdate(name="renamed", source_alert_id=99)
+    assert "source_alert_id" not in updated.model_dump(exclude_unset=True)
+    assert "source_alert_id" not in VeloSigmaExclusionUpdate.model_fields
+
+
+def test_source_link_comment_names_rule_scope_state_and_author():
+    rule = VeloSigmaExclusion(id=12, name="Exclude: Proc Access", created_by="jane", customer_code="acme", enabled=True, source_alert_id=42)
+    text = velo_sigma.source_link_comment(rule)
+    assert text.startswith(velo_sigma.EXCLUSION_LINK_COMMENT_PREFIX)
+    assert '#12 "Exclude: Proc Access" (customer acme, enabled) by jane' in text
+
+    shared = VeloSigmaExclusion(id=13, name="n", created_by="jane", enabled=False)
+    assert "(all customers, disabled)" in velo_sigma.source_link_comment(shared)
+
+
+def test_source_link_comment_is_not_mistaken_for_a_sigma_payload():
+    """The draft builder scans the same comment list; the link comment must be inert to it."""
+    rule = VeloSigmaExclusion(id=12, name="n", created_by="jane")
+    title, channel, event = velo_sigma.parse_sigma_comments([velo_sigma.source_link_comment(rule)])
+    assert (title, channel, event) == (None, None, None)
 
 
 if __name__ == "__main__":

@@ -215,7 +215,7 @@
 
 					<!-- Velociraptor Sigma exclusions only apply to Sigma alerts (tagged at ingest), so the
 					     button is hidden everywhere else rather than offered and then 404ing. -->
-					<AlertCreateExclusionRuleButton v-if="isSigmaAlert" :alert />
+					<AlertExclusionRules v-if="isSigmaAlert" :alert @updated="updateAlert" />
 				</div>
 
 				<div class="flex flex-wrap items-center gap-2">
@@ -265,7 +265,7 @@ const emit = defineEmits<{
 const AlertCreateCaseButton = defineAsyncComponent(() => import("./AlertCreateCaseButton.vue"))
 const AlertSendToChannelButton = defineAsyncComponent(() => import("./AlertSendToChannelButton.vue"))
 const AlertMergeCaseButton = defineAsyncComponent(() => import("./AlertMergeCaseButton.vue"))
-const AlertCreateExclusionRuleButton = defineAsyncComponent(() => import("./AlertCreateExclusionRuleButton.vue"))
+const AlertExclusionRules = defineAsyncComponent(() => import("./AlertExclusionRules.vue"))
 const AlertLinkedCases = defineAsyncComponent(() => import("./AlertLinkedCases.vue"))
 
 const { alert } = toRefs(props)

@@ -237,7 +237,7 @@ Consequence: refreshing CoPilot Searches refreshes the Stories surface; Wazuh ru
 - Frontend supporting files: `src/types/detectionCatalog.d.ts`, `src/api/endpoints/detectionCatalog.ts`
 - Three authorized cross-cutting edits and only these three: nav entry in `app-layouts/common/Navbar/items.tsx`, route in `router/index.ts`, barrel registration in `api/index.ts`. Nothing else outside the catalog namespace should change for this feature.
 
-### Exclusion rules created in-context from an alert (#934, phase 1)
+### Exclusion rules created in-context from an alert (#934, phases 1–2)
 
 Velociraptor Sigma exclusion rules (`incident_management_velo_sigma_exclusion`) can be drafted from the alert they should have suppressed instead of retyped under Sources. Two routes in `app/incidents/routes/incident_alert.py`, both keyed by the CoPilot alert id and tenancy-checked like `GET /incidents/alert/{id}`: `GET /incidents/alerts/alert/{alert_id}/velo-sigma/exclusion-draft` and `POST …/exclusion-dry-run`. The frontend button (`alerts/AlertCreateExclusionRuleButton.vue`, mounted in `AlertOverview.vue`) only renders on alerts tagged `sigma-alert` — the exclusion mechanism applies to nothing else, so offering it elsewhere would just 404. Things that are load-bearing:
 
@@ -246,7 +246,9 @@ Velociraptor Sigma exclusion rules (`incident_management_velo_sigma_exclusion`) 
 - **The dry-run is the real matcher, not a client-side guess.** `VeloSigmaExclusionService.dry_run` calls `_matches_exclusion` with a throwaway `VeloSigmaExclusion` and no DB writes; "matches" means the next identical alert is suppressed. Non-matches name each failing criterion because channel/title are exact-match and the whole point is catching the off-by-one-character rule before it is saved.
 - **`resolve_customer_code` replaced a hard-coded `"unknown"`.** Before, a customer-scoped rule could never match anything — and the Sources form pre-fills the customer from the global filter, so most rules were scoped. It now resolves through `agents` (Velociraptor client id, then hostname) and fails closed to `None`, which keeps customer-scoped rules non-matching for unenrolled hosts while deployment-wide rules still apply. Expect previously-dead scoped rules to start matching after this lands.
 
-Tests: `tests/test_velo_sigma_exclusion_draft.py` (no DB). Phases 2–4 of #934 (source-alert link-back columns, case-detail entry point, Detection Catalog pivot) are not built.
+- **Provenance is two nullable FK columns plus a comment, not a join table.** `source_alert_id` / `source_case_id` on the exclusion row (`b934a1c2d3e4`, ON DELETE SET NULL — tuning outlives the alert it was written for; NULL means "created from Sources") are settable on **create only**: `VeloSigmaExclusionUpdate` has no such fields, so a PATCH cannot re-point a rule. The create route verifies the caller can see the named alert/case before accepting it, otherwise a scoped analyst could pin a rule to another tenant's alert by guessing an id. On success the service leaves an `Exclusion rule created from this alert: …` comment on the alert (best-effort, after the commit) — that comment is the reverse link an analyst sees in the timeline, and `parse_sigma_comments` ignores it by construction. The alert page lists rules via `GET …/exclusion?source_alert_id=` (`AlertExclusionRules.vue`); the rule shows a "From alert" badge; `/incident-management/exclusion-rules/new?alert_id=N` is the deep-link form of the same flow.
+
+Tests: `tests/test_velo_sigma_exclusion_draft.py` (no DB). Phases 3–4 of #934 (case-detail entry point, Detection Catalog pivot) are not built; `source_case_id` exists so phase 3 needs no second migration.
 
 ### Multi-instance integrations (Microsoft 365 tenants per customer)
 

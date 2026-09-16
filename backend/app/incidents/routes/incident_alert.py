@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -39,6 +40,7 @@ from app.incidents.services.alert_collection import get_graylog_event_indices
 from app.incidents.services.alert_collection import get_original_alert_id
 from app.incidents.services.alert_collection import get_original_alert_index_name
 from app.incidents.services.db_operations import get_alert_by_id
+from app.incidents.services.db_operations import get_case_by_id
 from app.incidents.services.incident_alert import add_alert_to_document
 from app.incidents.services.incident_alert import create_alert
 from app.incidents.services.incident_alert import create_alert_full
@@ -51,6 +53,7 @@ from app.incidents.services.velo_sigma import VeloSigmaExclusionService
 from app.incidents.services.velo_sigma import build_exclusion_draft
 from app.incidents.services.velo_sigma import create_velo_sigma_alert
 from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import enforce_owned_object_access
 
 incidents_alerts_router = APIRouter()
 
@@ -541,11 +544,21 @@ async def create_exclusion(
     # unauthenticated (GHSA-c6jc-rh4j-wg88). require_any_scope validates the token and returns
     # the authenticated username, which we use for created_by.
     current_user: str = Security(AuthHandler().require_any_scope("admin", "analyst")),
+    user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new exclusion rule for Velociraptor Sigma alerts."""
     # Set the created_by field to the current user
     logger.info(f"Current user: {current_user}")
+
+    # Provenance (#934): a rule may name the alert / case it was created from. The caller must
+    # be able to see that object - otherwise a scoped analyst could pin a rule to, and comment
+    # on, another tenant's alert by guessing an id.
+    if exclusion.source_alert_id is not None:
+        await _load_alert_for_exclusion(exclusion.source_alert_id, user, db)
+    if exclusion.source_case_id is not None:
+        case = await get_case_by_id(exclusion.source_case_id, db)
+        await enforce_owned_object_access(user, case.customer_code, db, subject=f"case {exclusion.source_case_id}")
 
     # Take only needed fields from exclusion, excluding created_by
     exclusion_dict = exclusion.model_dump(exclude={"created_by"})
@@ -598,13 +611,21 @@ async def list_exclusions(
     skip: int = Query(0, description="Number of items to skip for pagination"),
     limit: int = Query(100, description="Maximum number of items to return"),
     enabled_only: bool = Query(False, description="Only return enabled exclusions"),
+    source_alert_id: Optional[int] = Query(None, description="Only rules created in-context from this alert"),
+    source_case_id: Optional[int] = Query(None, description="Only rules created in-context from this case"),
     db: AsyncSession = Depends(get_db),
 ):
     """List all exclusion rules with pagination."""
     service = VeloSigmaExclusionService(db)
 
     # Get exclusions and total count
-    exclusions, total_count = await service.list_exclusions_with_count(skip=skip, limit=limit, enabled_only=enabled_only)
+    exclusions, total_count = await service.list_exclusions_with_count(
+        skip=skip,
+        limit=limit,
+        enabled_only=enabled_only,
+        source_alert_id=source_alert_id,
+        source_case_id=source_case_id,
+    )
 
     return VeloSigmaExclusionListResponse(
         success=True,

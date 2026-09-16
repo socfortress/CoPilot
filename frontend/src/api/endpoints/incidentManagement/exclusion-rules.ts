@@ -13,6 +13,8 @@ export interface ExclusionRulesQuery {
 	}
 	filters: {
 		enabledOnly?: boolean
+		/** Only rules created in-context from this alert. */
+		sourceAlertId?: number
 	}
 }
 
@@ -24,6 +26,8 @@ export interface ExclusionRulePayload {
 	field_matches: { [key: string]: string }
 	enabled: boolean
 	customer_code?: string
+	/** Provenance, create only: the backend ignores it on update. */
+	source_alert_id?: number
 }
 
 /** The rule as the analyst is typing it — only the criteria the matcher evaluates. */
@@ -37,6 +41,7 @@ export default {
 			skip: number
 			limit: number
 			enabled_only?: boolean
+			source_alert_id?: number
 		} = {
 			skip: args.pagination?.skip || 0,
 			limit: args.pagination?.limit || 25
@@ -44,6 +49,9 @@ export default {
 
 		if (args.filters?.enabledOnly !== undefined) {
 			params.enabled_only = args.filters.enabledOnly
+		}
+		if (args.filters?.sourceAlertId !== undefined) {
+			params.source_alert_id = args.filters.sourceAlertId
 		}
 
 		return HttpClient.get<
