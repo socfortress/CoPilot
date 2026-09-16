@@ -1,6 +1,5 @@
 import json
 import os
-import re
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from typing import List
@@ -17,17 +16,20 @@ from dotenv import load_dotenv
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import and_
+from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.schema.dashboards import Office365Dashboard
 from app.connectors.grafana.services.dashboards import provision_dashboards
+from app.connectors.grafana.services.folders import delete_folder
 from app.connectors.grafana.utils.universal import create_grafana_client
 from app.connectors.graylog.schema.pipelines import CreatePipeline
 from app.connectors.graylog.schema.pipelines import CreatePipelineRule
 from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
 from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
+from app.connectors.graylog.services.management import delete_index_by_id
 from app.connectors.graylog.services.management import start_stream
 from app.connectors.graylog.services.pipelines import connect_stream_to_pipeline
 from app.connectors.graylog.services.pipelines import create_pipeline_graylog
@@ -35,6 +37,7 @@ from app.connectors.graylog.services.pipelines import create_pipeline_rule
 from app.connectors.graylog.services.pipelines import get_pipeline_id
 from app.connectors.graylog.services.pipelines import get_pipeline_rules
 from app.connectors.graylog.services.pipelines import get_pipelines
+from app.connectors.graylog.services.streams import delete_stream
 from app.connectors.graylog.utils.universal import send_post_request
 from app.connectors.graylog.utils.universal import send_post_request_create_entity
 from app.connectors.wazuh_indexer.services.monitoring import (
@@ -50,15 +53,22 @@ from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineR
 from app.customer_provisioning.schema.graylog import StreamCreationResponse
 from app.customer_provisioning.schema.graylog import TimeBasedIndexSet
 from app.customer_provisioning.services.grafana import create_grafana_folder
+from app.customer_provisioning.services.grafana import delete_grafana_datasource
 from app.customer_provisioning.services.grafana import get_opensearch_version
 from app.customers.routes.customers import get_customer
 from app.customers.routes.customers import get_customer_meta
 from app.db.universal_models import CustomersMeta
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
+from app.integrations.models.customer_integration_settings import (
+    CustomerIntegrationsMeta,
+)
 from app.integrations.office365.schema.provision import PipelineRuleTitles
 from app.integrations.office365.schema.provision import PipelineTitles
 from app.integrations.office365.schema.provision import ProvisionOffice365AuthKeys
 from app.integrations.office365.schema.provision import ProvisionOffice365Response
+from app.integrations.office365.services.decommission import (
+    decommission_office365_tenant,
+)
 from app.integrations.routes import create_integration_meta
 from app.integrations.schema import CustomerIntegrationsMetaSchema
 from app.utils import get_connector_attribute
@@ -366,21 +376,6 @@ async def restart_wazuh_manager() -> None:
 ################## ! GRAYLOG ! ##################
 
 
-def instance_slug(instance_name: Optional[str]) -> str:
-    """
-    Turn an instance label into something usable in a Graylog index prefix.
-
-    Index prefixes are lowercase and cannot carry the dots or spaces a tenant label like
-    `company.onmicrosoft.com` is full of, so everything outside `[a-z0-9]` collapses to a single
-    hyphen. Returns an empty string for the unnamed instance, which keeps a pre-existing
-    single-tenant customer on exactly the prefix it already has.
-    """
-    if not instance_name:
-        return ""
-    slug = re.sub(r"[^a-z0-9]+", "-", instance_name.lower()).strip("-")
-    return slug
-
-
 def instance_suffix(instance_name: Optional[str], separator: str = " - ") -> str:
     """Human-readable suffix for titles, empty for the unnamed instance."""
     return f"{separator}{instance_name}" if instance_name else ""
@@ -389,30 +384,29 @@ def instance_suffix(instance_name: Optional[str], separator: str = " - ") -> str
 async def build_index_set_config(
     customer_code: str,
     session: AsyncSession,
-    instance_name: Optional[str] = None,
 ) -> TimeBasedIndexSet:
     """
     Build the configuration for a time-based index set.
 
-    Each Microsoft 365 tenant of a customer gets its own index set, so retention and rotation can be
-    set per tenant and one tenant's events never mix with another's. The unnamed instance keeps the
-    original `office365-<customer_code>` prefix untouched.
+    One index set per customer, shared by every Microsoft 365 tenant they hold. Per-tenant index
+    sets are not possible: Graylog rejects any prefix that extends an existing one, so a second
+    tenant's `office365-<code>-<tenant>` collides with the first tenant's `office365-<code>` with
+    "would conflict with existing index set prefix" (#1117). Sharing is also the right answer on
+    its own terms — the tenants belong to one customer, each event still carries its originating
+    tenant in `data_office365_OrganizationId`, and the customer's Office365 data stays in one place.
 
     Args:
         request (ProvisionNewCustomer): The request object containing customer information.
-        instance_name (Optional[str]): The instance label of the tenant being provisioned.
 
     Returns:
         TimeBasedIndexSet: The configured time-based index set.
     """
     # Lowercase the customer code since Graylog index sets must be lowercase
     customer_code = customer_code.lower()
-    slug = instance_slug(instance_name)
-    index_prefix = f"office365-{customer_code}" + (f"-{slug}" if slug else "")
     return TimeBasedIndexSet(
-        title=f"{(await get_customer(customer_code, session)).customer.customer_name} - Office365{instance_suffix(instance_name)}",
-        description=f"{customer_code} - Office365{instance_suffix(instance_name)}",
-        index_prefix=index_prefix,
+        title=f"{(await get_customer(customer_code, session)).customer.customer_name} - Office365",
+        description=f"{customer_code} - Office365",
+        index_prefix=f"office365-{customer_code}",
         rotation_strategy_class="org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy",
         rotation_strategy={
             "type": "org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig",
@@ -462,20 +456,18 @@ async def send_index_set_creation_request(
 async def create_index_set(
     customer_code: str,
     session: AsyncSession,
-    instance_name: Optional[str] = None,
 ) -> GraylogIndexSetCreationResponse:
     """
     Creates an index set for a new customer.
 
     Args:
         request (ProvisionNewCustomer): The request object containing the customer information.
-        instance_name (Optional[str]): The instance label of the tenant being provisioned.
 
     Returns:
         GraylogIndexSetCreationResponse: The response object containing the result of the index set creation.
     """
-    logger.info(f"Creating index set for customer {customer_code} (instance: {instance_name or 'default'})")
-    index_set_config = await build_index_set_config(customer_code, session, instance_name=instance_name)
+    logger.info(f"Creating index set for customer {customer_code}")
+    index_set_config = await build_index_set_config(customer_code, session)
     return await send_index_set_creation_request(index_set_config)
 
 
@@ -823,32 +815,27 @@ async def create_office365_pipeline(pipeline_title: str) -> None:
 async def create_grafana_datasource(
     customer_code: str,
     session: AsyncSession,
-    instance_name: Optional[str] = None,
 ) -> GrafanaDataSourceCreationResponse:
     """
     Creates a Grafana Wazuh datasource for a new customer using the OpenSearch Data Source.
 
-    Each tenant gets its own datasource, pointed at that tenant's own index prefix, because two
-    datasources cannot share a name inside one Grafana organization and because a tenant's
-    dashboards should show that tenant's events. Note the unnamed instance keeps the original
-    `office365-<customer_code>*` pattern, which by construction also matches the later tenants'
-    `office365-<customer_code>-<slug>-*` indices — they all belong to the same customer.
+    One datasource per customer, like the index set it reads. Every Microsoft 365 tenant of a
+    customer writes into `office365-<customer_code>`, so a per-tenant datasource would have nothing
+    of its own to point at.
 
     Args:
         request (ProvisionNewCustomer): The request object containing customer information.
         organization_id (int): The ID of the organization to create the datasource for.
         session (AsyncSession): The database session.
-        instance_name (Optional[str]): The instance label of the tenant being provisioned.
 
     Returns:
         GrafanaDataSourceCreationResponse: The response object containing the result of the datasource creation.
     """
-    logger.info(f"Creating Grafana datasource (instance: {instance_name or 'default'})")
+    logger.info("Creating Grafana datasource")
     # Lowercase the customer code since Graylog index sets must be lowercase
     customer_code = customer_code.lower()
-    slug = instance_slug(instance_name)
-    datasource_name = "O365" + (f" - {instance_name}" if instance_name else "")
-    index_pattern = f"office365-{customer_code}" + (f"-{slug}" if slug else "") + "*"
+    datasource_name = "O365"
+    index_pattern = f"office365-{customer_code}*"
     grafana_client = await create_grafana_client("Grafana")
     grafana_url = await get_connector_attribute(
         connector_id=12,
@@ -919,6 +906,40 @@ async def create_grafana_datasource(
 ################## ! MAIN FUNCTION ! ##################
 
 
+class _ProvisioningRollback:
+    """Undo whatever a failed deployment already created.
+
+    Deployment touches the Wazuh manager, Graylog and Grafana before it records anything in the
+    database, so a failure partway used to leave all of it behind while the integration still
+    showed a Deploy button. Worse, the leftover `<api_auth>` block made the retry *impossible*:
+    `check_if_tenant_is_already_provisioned` saw the tenant in ossec.conf and refused with "already
+    provisioned on the Wazuh manager" (#1117).
+
+    Steps are undone newest-first, and one failing undo never stops the rest — a rollback that
+    gives up halfway is what created the mess it is trying to clean up.
+    """
+
+    def __init__(self, customer_code: str, instance_name: Optional[str]):
+        self._steps: List[tuple] = []
+        self._customer_code = customer_code
+        self._instance_name = instance_name
+
+    def add(self, description: str, undo) -> None:
+        self._steps.append((description, undo))
+
+    async def run(self) -> List[str]:
+        """Undo every recorded step; returns the descriptions that could not be undone."""
+        failures = []
+        for description, undo in reversed(self._steps):
+            try:
+                logger.info(f"Rolling back: {description}")
+                await undo()
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"Could not roll back {description}: {exc}")
+                failures.append(f"{description} ({exc})")
+        return failures
+
+
 async def provision_office365(
     customer_code: str,
     provision_office365_auth_keys: ProvisionOffice365AuthKeys,
@@ -929,134 +950,180 @@ async def provision_office365(
     Provision one Microsoft 365 tenant for a customer.
 
     A customer may hold several tenants (an MSSP customer with subsidiaries or acquisitions), each
-    its own `customer_integrations` instance. Everything that identifies the *tenant* is created per
-    call — the Wazuh `<api_auth>` block and the Graylog stream that selects on the tenant's
-    organization ID. Everything that identifies the *customer* — the Graylog index set, the Grafana
-    datasource, folder and dashboards — is created once and reused by later tenants, so all of a
-    customer's Microsoft 365 events land in one index and one set of dashboards while each event
-    keeps its originating tenant in `data_office365_OrganizationId`.
+    its own `customer_integrations` instance. What is created *per tenant* is the Wazuh
+    `<api_auth>` block and the Graylog stream, whose rule pins that tenant's organization ID. What
+    is created once and shared by every tenant of the customer is the Graylog index set and the
+    Grafana datasource, folder and dashboards.
+
+    Sharing the index set is not just a simplification: Graylog refuses an index prefix that
+    extends an existing one, so a per-tenant `office365-<code>-<tenant>` is rejected outright
+    against the first tenant's `office365-<code>`. It is also the behaviour that matches the
+    feature — the tenants belong to one customer, and each event keeps its originating tenant in
+    `data_office365_OrganizationId`.
+
+    Either the whole deployment succeeds or it leaves nothing behind: every externally-visible
+    step registers its undo, and any failure rolls them back before the error reaches the caller.
     """
     logger.info(
         f"Provisioning Office365 integration for customer {customer_code} (instance: {instance_name or 'default'}).",
     )
 
-    # Get Wazuh configuration
-    wazuh_config = await get_wazuh_configuration(file_name="wazuh_config.xml")
+    rollback = _ProvisioningRollback(customer_code, instance_name)
 
-    # Check if Office365 is already provisioned
-    office365_provisioned = await check_if_office365_is_already_provisioned(customer_code, wazuh_config)
+    try:
+        # Get Wazuh configuration
+        wazuh_config = await get_wazuh_configuration(file_name="wazuh_config.xml")
 
-    # Refuse a tenant the manager is already polling, whoever it belongs to
-    await check_if_tenant_is_already_provisioned(provision_office365_auth_keys.TENANT_ID, wazuh_config)
+        # Check if Office365 is already provisioned
+        office365_provisioned = await check_if_office365_is_already_provisioned(customer_code, wazuh_config)
 
-    if office365_provisioned:
-        # An <office365> block exists (this deployment already collects for some tenant), so this
-        # tenant is added as another <api_auth> inside it — Wazuh's own multi-tenant shape.
-        logger.info("Office365 block already exists on the manager; adding this tenant's api_auth block.")
-        wazuh_config = await add_api_auth_to_office365_block(customer_code, provision_office365_auth_keys)
-    else:
-        logger.info("Office365 integration is not yet provisioned.")
-        logger.info("Creating new Office365 block.")
-        office365_templated = await office365_template_with_api_type(
-            customer_code,
-            provision_office365_auth_keys,
+        # Refuse a tenant the manager is already polling, whoever it belongs to
+        await check_if_tenant_is_already_provisioned(provision_office365_auth_keys.TENANT_ID, wazuh_config)
+
+        if office365_provisioned:
+            # An <office365> block exists (this deployment already collects for some tenant), so this
+            # tenant is added as another <api_auth> inside it — Wazuh's own multi-tenant shape.
+            logger.info("Office365 block already exists on the manager; adding this tenant's api_auth block.")
+            wazuh_config = await add_api_auth_to_office365_block(customer_code, provision_office365_auth_keys)
+        else:
+            logger.info("Office365 integration is not yet provisioned.")
+            logger.info("Creating new Office365 block.")
+            office365_templated = await office365_template_with_api_type(
+                customer_code,
+                provision_office365_auth_keys,
+            )
+            # Append Office365 template to Wazuh configuration
+            wazuh_config = await append_office365_template(wazuh_config, office365_templated)
+
+        # Update Wazuh configuration
+        await update_wazuh_configuration(provision_office365_auth_keys)
+        rollback.add(
+            f"the Wazuh api_auth block for tenant {provision_office365_auth_keys.TENANT_ID}",
+            lambda: decommission_office365_tenant(customer_code, provision_office365_auth_keys.TENANT_ID),
         )
-        # Append Office365 template to Wazuh configuration
-        wazuh_config = await append_office365_template(wazuh_config, office365_templated)
 
-    # Update Wazuh configuration
-    # await update_wazuh_configuration(wazuh_config, provision_office365_auth_keys)
-    await update_wazuh_configuration(provision_office365_auth_keys)
+        # Restart Wazuh manager
+        await restart_wazuh_manager()
 
-    # Restart Wazuh manager
-    await restart_wazuh_manager()
+        # Graylog Deployment
+        await check_pipeline_rules()
+        await check_pipeline()
 
-    # Graylog Deployment
-    await check_pipeline_rules()
-    await check_pipeline()
+        # Anything this customer's earlier tenants already provisioned is reused rather than
+        # recreated: they all write into one index set and are read through one Grafana datasource.
+        existing_meta = await get_existing_office365_meta(customer_code, session)
 
-    # Every Graylog and Grafana resource below is created per tenant, not shared between a
-    # customer's tenants: each tenant gets its own index set (so retention is set per tenant and
-    # events never mix), its own stream, and its own datasource, folder and dashboards.
-    # Create Index Set
-    index_set_id = (
-        await create_index_set(
-            customer_code=customer_code,
-            session=session,
-            instance_name=instance_name,
+        if existing_meta and existing_meta.graylog_index_id:
+            index_set_id = existing_meta.graylog_index_id
+            logger.info(f"Reusing this customer's Office365 index set: {index_set_id}")
+        else:
+            index_set_id = (await create_index_set(customer_code=customer_code, session=session)).data.id
+            logger.info(f"Index set: {index_set_id}")
+            rollback.add(f"Graylog index set {index_set_id}", lambda: delete_index_by_id(index_id=index_set_id))
+
+        # Create event stream — always per tenant, because its rule pins one organization ID
+        stream_id = (
+            await create_event_stream(
+                customer_code,
+                provision_office365_auth_keys,
+                index_set_id,
+                session,
+                instance_name=instance_name,
+            )
+        ).data.stream_id
+        rollback.add(f"Graylog stream {stream_id}", lambda: delete_stream(stream_id=stream_id))
+
+        pipeline_id = await get_pipeline_id(subscription="OFFICE365")
+        # Combine stream and pipeline IDs
+        stream_and_pipeline = StreamConnectionToPipelineRequest(
+            stream_id=stream_id,
+            pipeline_ids=pipeline_id,
         )
-    ).data.id
-    logger.info(f"Index set: {index_set_id}")
+        # Connect stream to pipeline
+        logger.info(f"Stream and pipeline: {stream_and_pipeline}")
+        await connect_stream_to_pipeline(stream_and_pipeline)
+        # Start stream
+        await start_stream(stream_id=stream_id)
 
-    # Create event stream — its rule pins this tenant's organization ID
-    stream_id = (
-        await create_event_stream(
-            customer_code,
-            provision_office365_auth_keys,
-            index_set_id,
+        # Grafana Deployment
+        grafana_org_id = (await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id
+
+        if existing_meta and existing_meta.grafana_datasource_uid and existing_meta.grafana_dashboard_folder_id:
+            office365_datasource_uid = existing_meta.grafana_datasource_uid
+            grafana_o365_folder_id = existing_meta.grafana_dashboard_folder_id
+            logger.info(
+                f"Reusing this customer's Office365 Grafana folder {grafana_o365_folder_id} " f"and datasource {office365_datasource_uid}.",
+            )
+        else:
+            office365_datasource_uid = (
+                await create_grafana_datasource(
+                    customer_code=customer_code,
+                    session=session,
+                )
+            ).datasource.uid
+            rollback.add(
+                f"Grafana datasource {office365_datasource_uid}",
+                lambda: delete_grafana_datasource(
+                    organization_id=grafana_org_id,
+                    datasource_uid=office365_datasource_uid,
+                ),
+            )
+
+            grafana_o365_folder_id = (
+                await create_grafana_folder(
+                    organization_id=grafana_org_id,
+                    folder_title="OFFICE 365",
+                )
+            ).id
+            rollback.add(
+                f"Grafana folder {grafana_o365_folder_id}",
+                lambda: delete_folder(grafana_org_id, grafana_o365_folder_id),
+            )
+
+            await provision_dashboards(
+                DashboardProvisionRequest(
+                    dashboards=[dashboard.name for dashboard in Office365Dashboard],
+                    organizationId=grafana_org_id,
+                    folderId=grafana_o365_folder_id,
+                    datasourceUid=office365_datasource_uid,
+                    grafana_url=(await get_customer_default_settings_attribute(column_name="grafana_url", session=session))
+                    or "grafana.company.local",
+                ),
+            )
+
+        # The metadata entry is written *before* the integration is flagged as deployed: the UI
+        # hides the Deploy button once `deployed` is true, so a failure here would otherwise leave
+        # the integration undeployable and its infrastructure untracked.
+        await create_integration_meta_entry(
+            CustomerIntegrationsMetaSchema(
+                customer_code=customer_code,
+                integration_name="Office365",
+                instance_name=instance_name,
+                graylog_input_id=None,
+                graylog_index_id=index_set_id,
+                graylog_stream_id=stream_id,
+                grafana_org_id=grafana_org_id,
+                grafana_dashboard_folder_id=grafana_o365_folder_id,
+                grafana_datasource_uid=office365_datasource_uid,
+            ),
             session,
-            instance_name=instance_name,
         )
-    ).data.stream_id
-    pipeline_id = await get_pipeline_id(subscription="OFFICE365")
-    # Combine stream and pipeline IDs
-    stream_and_pipeline = StreamConnectionToPipelineRequest(
-        stream_id=stream_id,
-        pipeline_ids=pipeline_id,
-    )
-    # Connect stream to pipeline
-    logger.info(f"Stream and pipeline: {stream_and_pipeline}")
-    await connect_stream_to_pipeline(stream_and_pipeline)
-    # Start stream
-    await start_stream(stream_id=stream_id)
 
-    # Grafana Deployment
-    grafana_org_id = (await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id
+        await update_customer_integration_table(customer_code, session, instance_name=instance_name)
+        await update_customermeta_table(customer_code, session, provision_office365_auth_keys.TENANT_ID)
 
-    office365_datasource_uid = (
-        await create_grafana_datasource(
-            customer_code=customer_code,
-            session=session,
-            instance_name=instance_name,
-        )
-    ).datasource.uid
-    grafana_o365_folder_id = (
-        await create_grafana_folder(
-            organization_id=grafana_org_id,
-            folder_title=f"OFFICE 365{instance_suffix(instance_name)}",
-        )
-    ).id
-    await provision_dashboards(
-        DashboardProvisionRequest(
-            dashboards=[dashboard.name for dashboard in Office365Dashboard],
-            organizationId=grafana_org_id,
-            folderId=grafana_o365_folder_id,
-            datasourceUid=office365_datasource_uid,
-            grafana_url=(await get_customer_default_settings_attribute(column_name="grafana_url", session=session))
-            or "grafana.company.local",
-        ),
-    )
+    except Exception as exc:
+        logger.error(f"Office365 provisioning failed for customer {customer_code}: {exc}. Rolling back.")
+        failures = await rollback.run()
 
-    # The metadata entry is written *before* the integration is flagged as deployed: the UI
-    # hides the Deploy button once `deployed` is true, so a failure here would otherwise leave
-    # the integration undeployable and its infrastructure untracked.
-    await create_integration_meta_entry(
-        CustomerIntegrationsMetaSchema(
-            customer_code=customer_code,
-            integration_name="Office365",
-            instance_name=instance_name,
-            graylog_input_id=None,
-            graylog_index_id=index_set_id,
-            graylog_stream_id=stream_id,
-            grafana_org_id=grafana_org_id,
-            grafana_dashboard_folder_id=grafana_o365_folder_id,
-            grafana_datasource_uid=office365_datasource_uid,
-        ),
-        session,
-    )
+        detail = getattr(exc, "detail", None) or str(exc)
+        message = f"Office365 deployment failed and was rolled back: {detail}"
+        if failures:
+            message += " Some resources could not be removed automatically: " + "; ".join(failures) + "."
 
-    await update_customer_integration_table(customer_code, session, instance_name=instance_name)
-    await update_customermeta_table(customer_code, session, provision_office365_auth_keys.TENANT_ID)
+        # The original status is preserved where there is one, so a 400 from a validation-style
+        # failure does not become a 500 just because it was rolled back.
+        raise HTTPException(status_code=getattr(exc, "status_code", 500), detail=message)
 
     return ProvisionOffice365Response(
         success=True,
@@ -1068,6 +1135,26 @@ async def provision_office365(
 
 
 ######### ! Update Database ! ############
+async def get_existing_office365_meta(
+    customer_code: str,
+    session: AsyncSession,
+) -> Optional[CustomerIntegrationsMeta]:
+    """
+    Return the metadata of an Office365 instance this customer already has deployed, if any.
+
+    Its index set and Grafana resources are shared with every further tenant of the same customer,
+    so this is what tells provisioning to reuse rather than create — and, on the delete path, what
+    must survive while any sibling instance is still deployed.
+    """
+    result = await session.execute(
+        select(CustomerIntegrationsMeta).where(
+            CustomerIntegrationsMeta.customer_code == customer_code,
+            CustomerIntegrationsMeta.integration_name == "Office365",
+        ),
+    )
+    return result.scalars().first()
+
+
 async def update_customer_integration_table(
     customer_code: str,
     session: AsyncSession,

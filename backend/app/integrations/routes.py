@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
 from sqlalchemy import delete
+from sqlalchemy import or_
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -236,6 +237,19 @@ def instance_name_matches(column, instance_name: Optional[str]):
     return column.is_(None) if instance_name is None else column == instance_name
 
 
+def instance_name_differs(column, instance_name: Optional[str]):
+    """
+    The negation of :func:`instance_name_matches`, written so NULL rows are not swallowed.
+
+    SQL's ``column != 'x'`` evaluates to NULL — and therefore false — for a NULL column, so the
+    plain negation would hide a customer's unnamed instance from "are there any others?" questions
+    and let the delete path tear down infrastructure that instance is still using.
+    """
+    if instance_name is None:
+        return column.isnot(None)
+    return or_(column.is_(None), column != instance_name)
+
+
 async def check_existing_customer_integration(
     customer_code: str,
     integration_name: str,
@@ -416,6 +430,40 @@ async def get_customer_and_service_ids(session, customer_code, integration_name,
         return result.all()
     except NoResultFound:
         raise HTTPException(status_code=404, detail="Customer integration not found")
+
+
+async def count_other_integration_instances(
+    session,
+    customer_code: str,
+    integration_name: str,
+    instance_name: Optional[str],
+) -> int:
+    """
+    How many *other* instances of this integration the customer still has.
+
+    The delete path uses this to decide whether the customer's shared infrastructure may be torn
+    down. A multi-instance integration provisions some resources once per customer — for Office365
+    the Graylog index set every tenant writes into, and the Grafana datasource, folder and
+    dashboards that read it — so removing one tenant must not take them with it.
+    """
+    result = await session.execute(
+        select(CustomerIntegrations.id)
+        .join(
+            IntegrationSubscription,
+            CustomerIntegrations.id == IntegrationSubscription.customer_id,
+        )
+        .join(
+            IntegrationService,
+            IntegrationSubscription.integration_service_id == IntegrationService.id,
+        )
+        .where(
+            CustomerIntegrations.customer_code == customer_code,
+            IntegrationService.service_name == integration_name,
+            instance_name_differs(CustomerIntegrations.instance_name, instance_name),
+        )
+        .distinct(),
+    )
+    return len(result.scalars().all())
 
 
 async def resolve_integration_instance(
@@ -1259,6 +1307,7 @@ async def _cleanup_integration_infrastructure(
     customer_code: str,
     integration_name: str,
     cleanup_warnings: List[str],
+    stream_only: bool = False,
 ) -> None:
     """
     Remove the Graylog and Grafana resources recorded in an integration's metadata.
@@ -1268,9 +1317,11 @@ async def _cleanup_integration_infrastructure(
     removal of the others, otherwise the integration becomes undeletable from the UI. Every
     failure is logged and appended to `cleanup_warnings` for the caller to surface.
 
-    Every resource named here belongs to one instance — a multi-instance integration provisions its
-    own index set, stream, folder and datasource per instance — so there is nothing shared to
-    preserve for the customer's surviving instances.
+    `stream_only` is for a multi-instance integration whose other instances are still deployed.
+    Each instance owns its Graylog stream, but the index set and the Grafana folder, datasource and
+    dashboards are provisioned once per customer and shared — for Office365 every tenant writes
+    into the one `office365-<customer_code>` index set — so tearing those down here would blind the
+    tenants that remain.
     """
 
     async def _attempt(description: str, coroutine_factory):
@@ -1285,6 +1336,13 @@ async def _cleanup_integration_infrastructure(
     logger.info(f"stream_id: {stream_id}")
     if stream_id:
         await _attempt(f"Graylog stream {stream_id}", lambda: delete_stream(stream_id=stream_id))
+
+    if stream_only:
+        logger.info(
+            f"Other instances of {integration_name} are still deployed for {customer_code}; "
+            "keeping the shared index set, Grafana folder and datasource.",
+        )
+        return
 
     index_id = meta_data.graylog_index_id
     logger.info(f"index_id: {index_id}")
@@ -1339,6 +1397,15 @@ async def delete_integration(
         customer_code,
         integration_name,
         normalize_instance_name(delete_customer_integration.instance_name),
+    )
+
+    # Instances of the same integration share the customer's index set and Grafana resources, so
+    # only the last one out may take the infrastructure with it.
+    remaining_instances = await count_other_integration_instances(
+        session,
+        customer_code,
+        integration_name,
+        instance_name,
     )
 
     results = await get_customer_and_service_ids(
@@ -1418,6 +1485,7 @@ async def delete_integration(
                 customer_code=customer_code,
                 integration_name=integration_name,
                 cleanup_warnings=cleanup_warnings,
+                stream_only=remaining_instances > 0,
             )
 
             # Delete metadata from appropriate table

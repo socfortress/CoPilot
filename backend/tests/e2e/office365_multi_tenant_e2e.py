@@ -141,6 +141,16 @@ async def cleanup(customer_code):
         return len(ci_ids)
 
 
+async def build_index_set_for(customer_code):
+    """Build the index set config a deploy would send to Graylog, without sending it."""
+    from sqlalchemy.ext.asyncio import AsyncSession as _AsyncSession
+
+    from app.integrations.office365.services.provision import build_index_set_config
+
+    async with _AsyncSession(async_engine) as session:
+        return await build_index_set_config(customer_code, session)
+
+
 def office365_payload(customer_code, customer_name, instance_name):
     payload = {
         "customer_code": customer_code,
@@ -303,6 +313,16 @@ async def main():
             async with AsyncSession(async_engine) as session:
                 resolved = await resolve_customer_code_from_office365_tenant(TENANT_ID, session)
             check("second tenant GUID -> owning customer", resolved == customer_code, str(resolved))
+
+            print("\n=== 7b) deploying the second tenant reuses the customer's index set ===")
+            # The reported failure: a per-tenant index prefix `office365-<code>-<tenant>` is
+            # rejected by Graylog because it extends the first tenant's `office365-<code>`.
+            index_set = await build_index_set_for(customer_code)
+            check(
+                "index prefix depends on the customer only",
+                index_set.index_prefix == f"office365-{customer_code.lower()}",
+                index_set.index_prefix,
+            )
 
             print("\n=== 8) deleting the named instance leaves the unnamed one alone ===")
             r = await client.request(
