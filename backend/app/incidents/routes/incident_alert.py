@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -12,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.active_response.routes.graylog import verify_graylog_header
 from app.active_response.schema.graylog import GraylogThresholdEventNotification
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.incidents.schema.alert_collection import AlertsPayload
@@ -26,6 +28,9 @@ from app.incidents.schema.incident_alert import IndexNamesResponse
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlert
 from app.incidents.schema.velo_sigma import VelociraptorSigmaAlertResponse
 from app.incidents.schema.velo_sigma import VeloSigmaExclusionCreate
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionDraftResponse
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionDryRunRequest
+from app.incidents.schema.velo_sigma import VeloSigmaExclusionDryRunResponse
 from app.incidents.schema.velo_sigma import VeloSigmaExclusionListResponse
 from app.incidents.schema.velo_sigma import VeloSigmaExclusionUpdate
 from app.incidents.schema.velo_sigma import VeloSigmaExlcusionRouteResponse
@@ -34,6 +39,8 @@ from app.incidents.services.alert_collection import get_alerts_not_created_in_co
 from app.incidents.services.alert_collection import get_graylog_event_indices
 from app.incidents.services.alert_collection import get_original_alert_id
 from app.incidents.services.alert_collection import get_original_alert_index_name
+from app.incidents.services.db_operations import get_alert_by_id
+from app.incidents.services.db_operations import get_case_by_id
 from app.incidents.services.incident_alert import add_alert_to_document
 from app.incidents.services.incident_alert import create_alert
 from app.incidents.services.incident_alert import create_alert_full
@@ -43,7 +50,10 @@ from app.incidents.services.threshold_alert import resolve_threshold_asset
 from app.incidents.services.threshold_alert import resolve_threshold_event
 from app.incidents.services.threshold_alert import save_threshold_metadata
 from app.incidents.services.velo_sigma import VeloSigmaExclusionService
+from app.incidents.services.velo_sigma import build_exclusion_draft
 from app.incidents.services.velo_sigma import create_velo_sigma_alert
+from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import enforce_owned_object_access
 
 incidents_alerts_router = APIRouter()
 
@@ -463,6 +473,64 @@ async def process_sigma_alert(alert: VelociraptorSigmaAlert, session: AsyncSessi
     return await create_velo_sigma_alert(alert, session)
 
 
+# ---------------------------------------------------------------------------
+# In-context exclusion creation from an alert (#934)
+#
+# Both routes are keyed by the CoPilot alert id, so tenancy is enforced the way
+# GET /incidents/alert/{alert_id} does it: tag access inside get_alert_by_id, then
+# customer access on the alert's own customer_code. They are declared BEFORE the
+# `/create/velo-sigma/exclusion/{exclusion_id}` family for the usual static-before-
+# wildcard reason, even though their paths do not overlap today.
+# ---------------------------------------------------------------------------
+
+
+async def _load_alert_for_exclusion(alert_id: int, current_user: User, db: AsyncSession):
+    alert = await get_alert_by_id(alert_id, db, user=current_user)
+    if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
+        raise HTTPException(status_code=403, detail=f"Access denied to alert {alert_id} - insufficient customer permissions")
+    return alert
+
+
+@incidents_alerts_router.get(
+    "/alert/{alert_id}/velo-sigma/exclusion-draft",
+    response_model=VeloSigmaExclusionDraftResponse,
+    summary="Pre-fill an exclusion rule from a Velociraptor Sigma alert",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_exclusion_draft(
+    alert_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Rebuild channel, title, customer and the event's fields from the alert's stored Sigma payload.
+
+    404s when the alert did not come from Velociraptor Sigma (no payload comment to read),
+    since there is nothing a velo-sigma exclusion could be built from.
+    """
+    alert = await _load_alert_for_exclusion(alert_id, current_user, db)
+    draft = build_exclusion_draft(alert)
+    if draft is None:
+        raise HTTPException(status_code=404, detail="Alert carries no Velociraptor Sigma event payload; cannot draft an exclusion rule")
+    return VeloSigmaExclusionDraftResponse(success=True, message="Exclusion draft built from alert", draft=draft)
+
+
+@incidents_alerts_router.post(
+    "/alert/{alert_id}/velo-sigma/exclusion-dry-run",
+    response_model=VeloSigmaExclusionDryRunResponse,
+    summary="Check whether an unsaved exclusion rule would suppress the given alert",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def dry_run_exclusion(
+    alert_id: int,
+    rule: VeloSigmaExclusionDryRunRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Run the ingest-time matcher against the stored alert. Saves nothing, updates no statistics."""
+    alert = await _load_alert_for_exclusion(alert_id, current_user, db)
+    return await VeloSigmaExclusionService(db).dry_run(alert, rule)
+
+
 @incidents_alerts_router.post(
     "/create/velo-sigma/exclusion",
     response_model=VeloSigmaExlcusionRouteResponse,
@@ -476,11 +544,21 @@ async def create_exclusion(
     # unauthenticated (GHSA-c6jc-rh4j-wg88). require_any_scope validates the token and returns
     # the authenticated username, which we use for created_by.
     current_user: str = Security(AuthHandler().require_any_scope("admin", "analyst")),
+    user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new exclusion rule for Velociraptor Sigma alerts."""
     # Set the created_by field to the current user
     logger.info(f"Current user: {current_user}")
+
+    # Provenance (#934): a rule may name the alert / case it was created from. The caller must
+    # be able to see that object - otherwise a scoped analyst could pin a rule to, and comment
+    # on, another tenant's alert by guessing an id.
+    if exclusion.source_alert_id is not None:
+        await _load_alert_for_exclusion(exclusion.source_alert_id, user, db)
+    if exclusion.source_case_id is not None:
+        case = await get_case_by_id(exclusion.source_case_id, db)
+        await enforce_owned_object_access(user, case.customer_code, db, subject=f"case {exclusion.source_case_id}")
 
     # Take only needed fields from exclusion, excluding created_by
     exclusion_dict = exclusion.model_dump(exclude={"created_by"})
@@ -533,13 +611,21 @@ async def list_exclusions(
     skip: int = Query(0, description="Number of items to skip for pagination"),
     limit: int = Query(100, description="Maximum number of items to return"),
     enabled_only: bool = Query(False, description="Only return enabled exclusions"),
+    source_alert_id: Optional[int] = Query(None, description="Only rules created in-context from this alert"),
+    source_case_id: Optional[int] = Query(None, description="Only rules created in-context from this case"),
     db: AsyncSession = Depends(get_db),
 ):
     """List all exclusion rules with pagination."""
     service = VeloSigmaExclusionService(db)
 
     # Get exclusions and total count
-    exclusions, total_count = await service.list_exclusions_with_count(skip=skip, limit=limit, enabled_only=enabled_only)
+    exclusions, total_count = await service.list_exclusions_with_count(
+        skip=skip,
+        limit=limit,
+        enabled_only=enabled_only,
+        source_alert_id=source_alert_id,
+        source_case_id=source_case_id,
+    )
 
     return VeloSigmaExclusionListResponse(
         success=True,

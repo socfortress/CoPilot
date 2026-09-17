@@ -81,6 +81,22 @@
 								</code>
 							</template>
 						</Badge>
+
+						<Badge v-if="entity.source_alert_id" type="splitted" color="warning">
+							<template #iconLeft>
+								<Icon :name="AlertIcon" />
+							</template>
+							<template #label>From alert</template>
+							<template #value>
+								<code
+									class="text-primary cursor-pointer leading-none"
+									@click.stop="routeIncidentManagementAlerts(entity.source_alert_id).navigate()"
+								>
+									#{{ entity.source_alert_id }}
+									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
+								</code>
+							</template>
+						</Badge>
 					</div>
 
 					<CardKV v-for="(val, key) in properties" :key>
@@ -127,8 +143,9 @@ const { entity, fullWidth } = toRefs(props)
 const TimeIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
 const TargetIcon = "zondicons:target"
+const AlertIcon = "carbon:warning-alt"
 const dFormats = useSettingsStore().dateFormat
-const { routeCustomer } = useNavigation()
+const { routeCustomer, routeIncidentManagementAlerts } = useNavigation()
 const updatingStatus = ref(false)
 const loading = computed(() => updatingStatus.value)
 const properties = computed(() => _pick(entity.value, ["description", "channel", "title"]))

@@ -42,6 +42,22 @@
 							</code>
 						</template>
 					</Badge>
+
+					<Badge v-if="entity.source_alert_id" type="splitted" color="warning">
+						<template #iconLeft>
+							<Icon :name="AlertIcon" />
+						</template>
+						<template #label>From alert</template>
+						<template #value>
+							<code
+								class="text-primary cursor-pointer leading-none"
+								@click.stop="routeIncidentManagementAlerts(entity.source_alert_id).navigate()"
+							>
+								#{{ entity.source_alert_id }}
+								<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
+							</code>
+						</template>
+					</Badge>
 				</div>
 			</template>
 
@@ -109,10 +125,11 @@ const { entity } = toRefs(props)
 const TimeIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
 const TargetIcon = "zondicons:target"
+const AlertIcon = "carbon:warning-alt"
 
 const loading = ref(false)
 const showDetails = ref(false)
-const { routeCustomer, routeIncidentManagementExclusionRule } = useNavigation()
+const { routeCustomer, routeIncidentManagementAlerts, routeIncidentManagementExclusionRule } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
 
 function openDetails() {

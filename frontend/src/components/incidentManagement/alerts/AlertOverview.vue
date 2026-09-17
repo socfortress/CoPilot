@@ -212,6 +212,10 @@
 					<AlertSendToChannelButton :alert />
 
 					<AlertMergeCaseButton v-if="!linkedCases.length" :alerts="[alert]" @updated="updateAlert" />
+
+					<!-- Velociraptor Sigma exclusions only apply to Sigma alerts (tagged at ingest), so the
+					     button is hidden everywhere else rather than offered and then 404ing. -->
+					<AlertExclusionRules v-if="isSigmaAlert" :alert @updated="updateAlert" />
 				</div>
 
 				<div class="flex flex-wrap items-center gap-2">
@@ -261,6 +265,7 @@ const emit = defineEmits<{
 const AlertCreateCaseButton = defineAsyncComponent(() => import("./AlertCreateCaseButton.vue"))
 const AlertSendToChannelButton = defineAsyncComponent(() => import("./AlertSendToChannelButton.vue"))
 const AlertMergeCaseButton = defineAsyncComponent(() => import("./AlertMergeCaseButton.vue"))
+const AlertExclusionRules = defineAsyncComponent(() => import("./AlertExclusionRules.vue"))
 const AlertLinkedCases = defineAsyncComponent(() => import("./AlertLinkedCases.vue"))
 
 const { alert } = toRefs(props)
@@ -285,6 +290,7 @@ const loading = ref(false)
 const investigating = ref(false)
 const assignedUserId = ref<number | null>(null)
 const linkedCases = computed(() => alert.value.linked_cases)
+const isSigmaAlert = computed(() => alert.value.tags.some(o => o.tag === "sigma-alert"))
 
 function resolveAssignedUserId(username: string | null) {
 	if (!username) {
