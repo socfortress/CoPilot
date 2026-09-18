@@ -3,7 +3,7 @@ title: Single Sign-On (SSO)
 description: Configure SSO with Azure Entra ID, Google, or Cloudflare Access so users can log in via their identity provider.
 ---
 
-**Menu:** Users → Single Sign-On (SSO) Configuration
+**Menu:** Platform → Access → SSO
 
 **Best for:** Admin
 

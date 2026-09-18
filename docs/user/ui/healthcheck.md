@@ -5,7 +5,7 @@ description: Monitor endpoint and SIEM health signals via Telegraf metrics store
 
 # Healthcheck (InfluxDB + Telegraf)
 
-**Menu:** Healthcheck
+**Menu:** Platform → Health → Healthcheck Alerts
 
 **Best for:** Admin / Engineer (primary) + Operator (awareness)
 

@@ -5,7 +5,7 @@ description: Operator-facing views and controls for endpoints, groups, actions, 
 
 # Agents
 
-**Menu:** Agents
+**Menu:** Endpoints → Agents
 
 ![Agents](../../assets/ui/agents.png)
 

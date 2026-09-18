@@ -1,26 +1,35 @@
 # Navigation Guide (UI Map + Tips)
 
-This page explains what each left‑hand navigation item in CoPilot does and how to use the UI efficiently.
+This page explains what each left-hand navigation item in CoPilot does and how to use the UI efficiently.
 
-> Source of truth: `frontend/src/app-layouts/common/Navbar/items.tsx` (nav items) and `frontend/src/router/index.ts` (routes).
+> Source of truth: `frontend/src/app-layouts/common/Navbar/items.tsx` and the section files under `Navbar/items/` (menu), and `frontend/src/router/routes/` (routes).
 
 ---
 
-## Quick tips (applies to everyone)
+## How the menu is organised
 
-- **Use the left nav as your workflow map**:
-  - *AI Analyst* = AI-powered investigation and chat
-  - *Customers* = select your customer context first
-  - *SIEM + Incident Management* = where analysts detect and respond
-  - *Agents* = endpoint management and detection rules
-  - *Log Management* = indices, snapshots, and Graylog pipeline health
-  - *Tools* = connectors, assessments, and utilities
+The sidebar follows the order SOC work happens in:
 
-- **Deep links exist** (helpful for bookmarking / SOPs):
-  - Incident Alerts can be opened directly via `?alert_id=<id>`
-  - Incident Cases can be opened directly via `?case_id=<id>`
+| Section | What it's for |
+|---|---|
+| **Overview**, **AI Analyst** | Where you land, and AI-assisted investigation |
+| **Incidents** | The alert sources that feed the triage queue, then the queue itself: alerts, cases, case templates |
+| **Investigate** | Digging into an alert: events, raw SIEM alerts, dashboards, file analysis, threat intel |
+| **Respond** | Acting on an endpoint: active response, Velociraptor artifacts, CoPilot Actions |
+| **Detections** | What fires: the catalog, CoPilot Searches, Wazuh rules, MITRE, Atomic Red Team |
+| **Exposure** | Weaknesses to fix before they're exploited: vulnerabilities, Patch Tuesday, configuration assessment, cloud/web/GitHub assessments |
+| **Endpoints** | The fleet: agents, agent groups, Sysmon config |
+| **Customers** | Tenants and everything configured per customer |
+| **Reports** | General, vulnerability and SCA reports |
+| **Platform** | Deployment configuration: connectors and integrations, notifications, log management, health, access, system |
+
+The avatar menu (top right) holds only what's about you: **Profile**, **Documentation**, **Contact SOCFortress** and **Logout**.
+
+- **Deep links** (useful for bookmarks and SOPs):
+  - Incident alerts open directly via `?alert_id=<id>`
+  - Incident cases open directly via `?case_id=<id>`
   - Customers supports `?code=<customer_code>` and `?action=add-customer`
-  - Graylog Management supports tab anchors like `#streams`, `#inputs`, etc.
+  - Graylog Management supports tab anchors such as `#streams` and `#inputs`
 
 ---
 
@@ -28,365 +37,173 @@ This page explains what each left‑hand navigation item in CoPilot does and how
 
 ### SOC operator / analyst
 
-1. **AI Analyst** (`/ai-analyst`) – AI-powered investigation, reports, and Talon chat
-2. **Incident Management → Alerts** (`/incident-management/alerts`)
-3. **Incident Management → Cases** (`/incident-management/cases`)
+1. **Incidents → Alerts** (`/incident-management/alerts`): the triage queue
+2. **Incidents → Cases** (`/incident-management/cases`)
+3. **AI Analyst** (`/ai-analyst`): AI-powered investigation, reports and Talon chat
+4. **Investigate → Event Search** (`/event-search`) when an alert needs more context
 
 ### Admin / engineer
 
-1. **Tools → Connectors** (`/connectors`) – connect the underlying systems (Wazuh, Graylog, Grafana, Velociraptor, etc.)
-2. **Log Management → Index Management** (`/indices/management`) – index health/visibility and troubleshooting
-3. **Log Management → Graylog Management** (`/graylog/management`) – alert plumbing / streams / inputs / provisioning
+1. **Platform → Connectors & Integrations → Connectors** (`/connectors`): connect Wazuh, Graylog, Grafana, Velociraptor and the rest
+2. **Platform → Connectors & Integrations → Integrations** (`/external-services/third-party-integrations`): per-customer third-party sources
+3. **Platform → Log Management → Index Management** (`/indices/management`): index health and troubleshooting
+4. **Platform → Log Management → Graylog Management** (`/graylog/management`): streams, inputs, provisioning
 
 ---
 
-## Left navigation map (what each item does)
+## Screenshots
 
-Below are screenshots of the main areas (from a lab environment) to help you quickly recognize where you are in the UI.
+From a lab environment, to help you recognise where you are:
 
 - Overview:
 
   ![Overview](../assets/ui/overview.png)
 
-- Incident Management → Alerts:
+- Incidents → Alerts:
 
   ![Incident Alerts](../assets/ui/incident-alerts.png)
 
-- Connectors:
+- Platform → Connectors & Integrations → Connectors:
 
   ![Connectors](../assets/ui/connectors.png)
 
-- Log Management → Index Management:
+- Platform → Log Management → Index Management:
 
   ![Indices](../assets/ui/indices-management.png)
 
-- Log Management → Graylog Management:
+- Platform → Log Management → Graylog Management:
 
   ![Graylog Management](../assets/ui/graylog-management.png)
 
 ---
 
+## Left navigation map (what each item does)
+
 ### Overview
 
 - **Overview** → `/overview`
-  - High-level dashboard/landing page once logged in.
+  - The landing dashboard once logged in.
 
 ### AI Analyst
 
 - **AI Analyst** → `/ai-analyst`
-  - AI-powered investigation hub with Talon chat, alert reports, and architecture overview.
+  - AI-powered investigation hub: Talon chat, alert reports and architecture overview.
+
+### Incidents
+
+- **Incidents → Alert Sources & Exclusions** → `/incident-management/sources`
+  - Which SIEM alerts get ingested as incidents, and the exclusion rules that suppress them. Define a source first: until one exists, nothing reaches the triage queue.
+- **Incidents → Alerts** → `/incident-management/alerts`
+  - The primary triage queue.
+  - Deep link: `/incident-management/alerts?alert_id=<id>`
+- **Incidents → Cases** → `/incident-management/cases`
+  - Investigation lifecycle management.
+  - Deep link: `/incident-management/cases?case_id=<id>`
+- **Incidents → Case Templates** → `/incident-management/case-templates`
+
+### Investigate
+
+- **Investigate → Event Search** → `/event-search`
+  - Search and filter raw events.
+- **Investigate → SIEM Alerts** → `/alerts/siem`
+  - Raw alerts from the SIEM indices (Graylog-backed). Not the triage queue: that's **Incidents → Alerts**.
+- **Investigate → Dashboards** → `/dashboards`
+- **Investigate → File Analysis** → `/file-analysis`
+- **Investigate → Threat Intel**: opens the threat intel lookup panel (SOCFortress, VirusTotal, OpenCTI).
+- **Investigate → OpenCTI** → `/opencti`
+  - Only shown once the OpenCTI connector is verified.
+
+### Respond
+
+- **Respond → Active Response**: opens the active response wizard.
+- **Respond → Artifacts** → `/artifacts`
+  - Velociraptor collection, commands and quarantine.
+- **Respond → CoPilot Actions** → `/agents/copilot-actions`
+
+### Detections
+
+- **Detections → Catalog** → `/detection-catalog`
+  - Browse CoPilot Searches by story, the full Wazuh ruleset, coverage gaps and compliance mappings.
+- **Detections → CoPilot Searches** → `/copilot-searches`
+- **Detections → Wazuh Rules** → `/agents/detection-rules`
+  - The Wazuh rule-file editor (formerly *Agents → Detection Rules*).
+- **Detections → MITRE ATT&CK** → `/alerts/mitre`
+- **Detections → Atomic Red Team** → `/alerts/atomic-red-team`
+  - Adversary simulation / test harness.
+
+### Exposure
+
+- **Exposure → Vulnerabilities** → `/agents/vulnerability-overview`
+- **Exposure → Patch Tuesday** → `/patch-tuesday`
+- **Exposure → Configuration Assessment → SCA Overview** → `/agents/sca-overview`
+- **Exposure → Configuration Assessment → SCA Policies** → `/agents/sca-policies`
+- **Exposure → Cloud Security Assessment** → `/cloud-security-assessment`
+- **Exposure → Web Vulnerability Assessment** → `/web-vulnerability-assessment`
+- **Exposure → GitHub Audit** → `/github-audit`
+
+### Endpoints
+
+- **Endpoints → Agents** → `/agents`
+- **Endpoints → Agent Groups** → `/agents/groups`
+- **Endpoints → Sysmon Config** → `/agents/sysmon-config`
 
 ### Customers
 
 - **Customers** → `/customers`
-  - Multi-tenant/customer context management.
-  - Deep links:
-    - `/customers?code=<customer_code>`
-    - `/customers?action=add-customer`
+  - Multi-tenant / customer context management.
+  - Deep links: `/customers?code=<customer_code>`, `/customers?action=add-customer`
 
-### SIEM (detection/testing oriented)
+### Reports
 
-- **SIEM → Alerts** → `/alerts/siem`
-  - SIEM-centric alert view (Graylog-backed in current routing).
+- **Reports → General Reports** → `/report-creation/general`
+- **Reports → Vulnerability Reports** → `/report-creation/vulnerability-reports`
+- **Reports → SCA Reports** → `/report-creation/sca-reports`
 
-- **SIEM → Event Search** → `/alerts/event-search`
-  - Search and filter raw events.
+### Platform
 
-- **SIEM → Dashboards** → `/alerts/dashboards`
-  - SIEM dashboards.
+Visible to analysts as well as admins. The items marked *(admin only)* are hidden from analysts.
 
-- **SIEM → MITRE ATT&CK** → `/alerts/mitre`
-  - ATT&CK mapping view.
-
-- **SIEM → Atomic Red Team** → `/alerts/atomic-red-team`
-  - Adversary simulation / test harness view.
-
-### Incident Management (operator-first)
-
-- **Incident Management → Sources** → `/incident-management/sources`
-  - Defines/controls *where alerts come from* (your "alert sources" / categories).
-
-- **Incident Management → Alerts** → `/incident-management/alerts`
-  - Primary triage queue.
-  - Deep link: `/incident-management/alerts?alert_id=<id>`
-
-- **Incident Management → Cases** → `/incident-management/cases`
-  - Investigation lifecycle management.
-  - Deep link: `/incident-management/cases?case_id=<id>`
-
-### Agents (endpoint-facing capabilities)
-
-- **Agents → Agents list** → `/agents`
-- **Agents → Artifacts** → `/artifacts`
-  - Evidence, files, and investigation artifacts.
-- **Agents → Groups** → `/agents/groups`
-- **Agents → Sysmon Config** → `/agents/sysmon-config`
-- **Agents → Detection Rules** → `/agents/detection-rules`
-- **Agents → CoPilot Actions** → `/agents/copilot-actions`
-- **Agents → CoPilot Searches** → `/agents/copilot-searches`
-- **Agents → Vulnerability Overview** → `/agents/vulnerability-overview`
-- **Agents → Patch Tuesday** → `/patch-tuesday` *(note: defined under Agents menu, but route is top-level)*
-- **Agents → SCA Overview** → `/agents/sca-overview`
-- **Agents → SCA Policies** → `/agents/sca-policies`
-
-### Log Management (admin/ops)
-
-- **Log Management → Index Management** → `/indices/management`
-  - Deep link supports `?index_name=<name>`.
-
-- **Log Management → Snapshot & Restore** → `/indices/snapshots`
-
-- **Log Management → Graylog Management** → `/graylog/management`
-  - Supports hash navigation to tabs (example):
-    - `/graylog/management#streams`
-    - `/graylog/management#inputs`
-    - `/graylog/management#events`
-
-- **Log Management → Graylog Metrics** → `/graylog/metrics`
-
-- **Log Management → Graylog Pipelines** → `/graylog/pipelines`
-  - Supports `?rule=<something>` for jumping to a pipeline rule.
-
-### Report Creation
-
-- **Report Creation → General Reports** → `/report-creation/general`
-- **Report Creation → Vulnerability Reports** → `/report-creation/vulnerability-reports`
-- **Report Creation → SCA Reports** → `/report-creation/sca-reports`
-
-### Healthcheck
-
-- **Healthcheck → Healthcheck Alerts** → `/healthcheck`
-  - Health/status style overview (commonly used by admins/operators to confirm stack state).
-- **Healthcheck → Metrics Overview** → `/healthcheck/metrics`
-
-### Tools (admin/engineer)
-
-- **Tools → Connectors** → `/connectors`
-  - Configure and validate connections to underlying stack services.
-- **Tools → Stack Provisioning** – stack provisioning workflows
-- **Tools → Cloud Security Assessment** → `/tools/cloud-security-assessment`
-- **Tools → Web Vulnerability Assessment** → `/tools/web-vulnerability-assessment`
-- **Tools → GitHub Audit** → `/tools/github-audit`
-- **Tools → Active Response** – active response actions
-- **Tools → Threat Intel** – threat intelligence lookups
+- **Connectors & Integrations**
+  - **Connectors** → `/connectors`: configure and verify connections to the stack services
+  - **Integrations** → `/external-services/third-party-integrations`
+  - **Network Connectors** → `/external-services/network-connectors`
+  - **Shuffle App Auth** → `/external-services/shuffle-app-auth`
+- **Notifications** *(admin only)*
+  - **Internal Routes** → `/internal-notifications`
+  - **Message Templates** → `/message-templates`
+- **Log Management**
+  - **Index Management** → `/indices/management` (deep link: `?index_name=<name>`)
+  - **Snapshot & Restore** → `/indices/snapshots`
+  - **Graylog Management** → `/graylog/management` (tab anchors: `#streams`, `#inputs`, `#events`)
+  - **Graylog Metrics** → `/graylog/metrics`
+  - **Graylog Pipelines** → `/graylog/pipelines` (jump to a rule with `?rule=<name>`)
+- **Health**
+  - **Healthcheck Alerts** → `/healthcheck/alerts`
+  - **Metrics** → `/healthcheck/metrics`
+- **Access**
+  - **Users** → `/users`
+  - **SSO** → `/sso-config` *(admin only)*
+  - **Audit Log** → `/audit` *(admin only)*
+- **System**
+  - **Scheduler** → `/scheduler`
+  - **Logs** → `/logs`
+  - **License** → `/license`
+  - **Stack Provisioning**: opens the stack provisioning wizard
+  - **Customer Portal** → `/customer-portal`
 
 ---
 
-## User menu (avatar icon, top-right)
+## Avatar menu (top right)
 
-The user avatar dropdown contains account, administration, and resource links:
-
-### Account
 - **Profile** → `/profile`
-- **License** → `/license`
-- **Users** → `/users`
-- **SSO Config** → `/sso-config` *(admin only)*
-
-### Administration
-- **Scheduler** → `/scheduler` – job scheduling / automation
-- **Customer Portal** → `/customer-portal` – customer-facing portal view
-- **Logs** → `/logs`
-
-### External Services
-- **3rd Party Integrations** → `/external-services/third-party-integrations`
-- **Network Connectors** → `/external-services/network-connectors`
-- **Singul App Auth** → `/external-services/singul-app-auth`
-
-### Resources
 - **Documentation** → [docs.socfortress.co](https://docs.socfortress.co/) *(external)*
 - **Contact SOCFortress** → [socfortress.co/contact-us](https://www.socfortress.co/contact-us) *(external)*
+- **Logout**
 
 ---
 
 ## Suggested mental model (helps teams onboard)
 
-- **Operators**:
-  - live in *AI Analyst*, *SIEM*, and *Incident Management* — select a *Customer* first, then triage.
-
-- **Admins/Engineers**:
-  - spend time in *Tools → Connectors*, *Log Management*, and the *User menu → External Services* to ensure the pipeline is healthy.
-
-- **Detection engineering / testing**:
-  - *SIEM (MITRE/Atomic Red Team)* + *Agents (Rules/Sysmon)* + *User menu → Scheduler*.
-# Navigation Guide (UI Map + Tips)
-
-This page explains what each left‑hand navigation item in CoPilot does and how to use the UI efficiently.
-
-> Source of truth: `frontend/src/app-layouts/common/Navbar/items.tsx` (nav items) and `frontend/src/router/index.ts` (routes).
-
----
-
-## Quick tips (applies to everyone)
-
-- **Use the left nav as your workflow map**:
-  - *Incident Management* = where analysts live (alerts/cases)
-  - *Connectors / External Services / Indices* = where engineers wire up data and keep the stack healthy
-
-- **Deep links exist** (helpful for bookmarking / SOPs):
-  - Incident Alerts can be opened directly via `?alert_id=<id>`
-  - Incident Cases can be opened directly via `?case_id=<id>`
-  - Customers supports `?code=<customer_code>` and `?action=add-customer`
-  - Graylog Management supports tab anchors like `#streams`, `#inputs`, etc.
-
----
-
-## “Where do I start?” by role
-
-### SOC operator / analyst
-
-1. **Incident Management → Alerts** (`/incident-management/alerts`)
-2. **Incident Management → Cases** (`/incident-management/cases`)
-3. **Artifacts** (`/artifacts`) for evidence / files you need to attach or review
-
-### Admin / engineer
-
-1. **Connectors** (`/connectors`) – connect the underlying systems (Wazuh, Graylog, Grafana, Velociraptor, etc.)
-2. **External Services** (`/external-services/...`) – configure third‑party sources / network connectors
-3. **Indices → Index Management** (`/indices/management`) – index health/visibility and troubleshooting
-4. **Graylog → Management** (`/graylog/management`) – alert plumbing / streams / inputs / provisioning
-
----
-
-## Left navigation map (what each item does)
-
-Below are screenshots of the main areas (from a lab environment) to help you quickly recognize where you are in the UI.
-
-- Overview:
-
-  ![Overview](../assets/ui/overview.png)
-
-- Incident Management → Alerts:
-
-  ![Incident Alerts](../assets/ui/incident-alerts.png)
-
-- Connectors:
-
-  ![Connectors](../assets/ui/connectors.png)
-
-- Indices → Index Management:
-
-  ![Indices](../assets/ui/indices-management.png)
-
-- Graylog → Management:
-
-  ![Graylog Management](../assets/ui/graylog-management.png)
-
----
-
-### Overview
-
-- **Overview** → `/overview`
-  - High-level dashboard/landing page once logged in.
-
-### Incident Management (operator-first)
-
-- **Incident Management → Sources** → `/incident-management/sources`
-  - Defines/controls *where alerts come from* (your “alert sources” / categories).
-
-- **Incident Management → Alerts** → `/incident-management/alerts`
-  - Primary triage queue.
-  - Deep link: `/incident-management/alerts?alert_id=<id>`
-
-- **Incident Management → Cases** → `/incident-management/cases`
-  - Investigation lifecycle management.
-  - Deep link: `/incident-management/cases?case_id=<id>`
-
-### Alerts (engineering/testing oriented)
-
-- **Alerts → SIEM** → `/alerts/siem`
-  - SIEM-centric alert view (Graylog-backed in current routing).
-
-- **Alerts → MITRE ATT&CK** → `/alerts/mitre`
-  - ATT&CK mapping view.
-
-- **Alerts → Atomic Red Team** → `/alerts/atomic-red-team`
-  - Adversary simulation / test harness view.
-
-### Artifacts
-
-- **Artifacts** → `/artifacts`
-  - Evidence, files, and investigation artifacts.
-
-### Customers
-
-- **Customers** → `/customers`
-  - Multi-tenant/customer context management.
-  - Deep links:
-    - `/customers?code=<customer_code>`
-    - `/customers?action=add-customer`
-
-### Agents (endpoint-facing capabilities)
-
-- **Agents → Agents list** → `/agents`
-- **Agents → Groups** → `/agents/groups`
-- **Agents → Sysmon Config** → `/agents/sysmon-config`
-- **Agents → Detection Rules** → `/agents/detection-rules`
-- **Agents → CoPilot Actions** → `/agents/copilot-actions`
-- **Agents → Vulnerability Overview** → `/agents/vulnerability-overview`
-- **Agents → Patch Tuesday** → `/patch-tuesday` *(note: defined under Agents menu, but route is top-level)*
-- **Agents → SCA Overview** → `/agents/sca-overview`
-
-### Report Creation
-
-- **Report Creation → General Reports** → `/report-creation/general`
-- **Report Creation → Vulnerability Reports** → `/report-creation/vulnerability-reports`
-- **Report Creation → SCA Reports** → `/report-creation/sca-reports`
-
-### Healthcheck
-
-- **Healthcheck** → `/healthcheck`
-  - Health/status style overview (commonly used by admins/operators to confirm stack state).
-
-### Indices (admin/ops)
-
-- **Indices → Index Management** → `/indices/management`
-  - Deep link supports `?index_name=<name>`.
-
-- **Indices → Snapshot & Restore** → `/indices/snapshots`
-
-### Graylog (admin/ops)
-
-- **Graylog → Management** → `/graylog/management`
-  - Supports hash navigation to tabs (example):
-    - `/graylog/management#streams`
-    - `/graylog/management#inputs`
-    - `/graylog/management#events`
-
-- **Graylog → Metrics** → `/graylog/metrics`
-
-- **Graylog → Pipelines** → `/graylog/pipelines`
-  - Supports `?rule=<something>` for jumping to a pipeline rule.
-
-### Connectors (admin/engineer)
-
-- **Connectors** → `/connectors`
-  - Configure and validate connections to underlying stack services.
-
-### External Services (admin/engineer)
-
-- **External Services → 3rd Party Integrations** → `/external-services/third-party-integrations`
-- **External Services → Network Connectors** → `/external-services/network-connectors`
-- **External Services → Singul App Auth** → `/external-services/singul-app-auth`
-
-### Scheduler
-
-- **Scheduler** → `/scheduler`
-  - Job scheduling / automation.
-
-### Customer Portal
-
-- **Customer Portal** → `/customer-portal`
-  - Customer-facing portal view.
-
----
-
-## Suggested mental model (helps teams onboard)
-
-- **Operators**:
-  - live in *Incident Management* and only dip into *Artifacts* and *Customers* as needed.
-
-- **Admins/Engineers**:
-  - spend time in *Connectors*, *External Services*, *Graylog*, and *Indices* to ensure the pipeline is healthy.
-
-- **Detection engineering / testing**:
-  - *Alerts (MITRE/Atomic Red Team)* + *Agents (Rules/Sysmon)* + *Scheduler*.
+- **Operators** live in *Incidents*, *AI Analyst* and *Investigate*. Select a customer in the sidebar filter first, then triage.
+- **Detection engineers** work in *Detections* (and *Endpoints → Sysmon Config*), with *Platform → System → Scheduler* for scheduled jobs.
+- **Admins / engineers** spend their time in *Platform*: connectors and integrations, log management and health.

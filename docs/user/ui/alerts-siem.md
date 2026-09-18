@@ -1,6 +1,6 @@
 # SIEM
 
-**Menu:** SIEM → Alerts
+**Menu:** Investigate → SIEM Alerts
 
 **Best for:** Both
 

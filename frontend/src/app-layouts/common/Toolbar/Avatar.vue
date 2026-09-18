@@ -12,17 +12,9 @@ import { useAuthStore } from "@/stores/auth"
 import { renderIcon } from "@/utils"
 
 const UserIcon = "ion:person-outline"
-const LicenseIcon = "carbon:license"
 const LogoutIcon = "ion:log-out-outline"
-const LogsIcon = "carbon:cloud-logging"
-const AuditIcon = "carbon:document-security"
 const ContactIcon = "ic:outline-alternate-email"
 const DocsIcon = "carbon:document"
-const UsersIcon = "carbon:group-security"
-const SSOConfigIcon = "carbon:rule-locked"
-const SchedulerIcon = "material-symbols:autoplay"
-const CustomerPortalIcon = "streamline-ultimate:coding-apps-website-apps-browser"
-const ExternalServicesIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -35,75 +27,11 @@ const options = ref([
 		key: "route-Profile",
 		icon: renderIcon(UserIcon)
 	},
-	{
-		label: "License",
-		key: "route-License",
-		icon: renderIcon(LicenseIcon)
-	},
-	{
-		label: "Users",
-		key: "route-Users",
-		icon: renderIcon(UsersIcon)
-	},
-	...(authStore.isAdmin
-		? [
-				{
-					label: "SSO Config",
-					key: "route-SSOConfig",
-					icon: renderIcon(SSOConfigIcon)
-				}
-			]
-		: []),
+	// Settings pages (Users, SSO, Scheduler, Integrations, Audit, …) live in the
+	// sidebar's Platform section since #1152; this menu is about the signed-in user.
 	{
 		type: "divider",
 		key: "divider-1"
-	},
-	{
-		label: "Scheduler",
-		key: "route-Scheduler",
-		icon: renderIcon(SchedulerIcon)
-	},
-	{
-		label: "Customer Portal",
-		key: "route-CustomerPortal",
-		icon: renderIcon(CustomerPortalIcon)
-	},
-	{
-		label: "Logs",
-		key: "route-Logs",
-		icon: renderIcon(LogsIcon)
-	},
-	...(authStore.isAdmin
-		? [
-				{
-					label: "Audit Log",
-					key: "route-Audit",
-					icon: renderIcon(AuditIcon)
-				}
-			]
-		: []),
-	{
-		type: "divider",
-		key: "divider-2"
-	},
-	{
-		label: "3rd Party Integrations",
-		key: "route-ExternalServices-ThirdPartyIntegrations",
-		icon: renderIcon(ExternalServicesIcon)
-	},
-	{
-		label: "Network Connectors",
-		key: "route-ExternalServices-NetworkConnectors",
-		icon: renderIcon(ExternalServicesIcon)
-	},
-	{
-		label: "Shuffle App Auth",
-		key: "route-ExternalServices-ShuffleAppAuth",
-		icon: renderIcon(ExternalServicesIcon)
-	},
-	{
-		type: "divider",
-		key: "divider-3"
 	},
 	{
 		label: () =>
@@ -135,7 +63,7 @@ const options = ref([
 	},
 	{
 		type: "divider",
-		key: "divider-4"
+		key: "divider-2"
 	},
 	{
 		label: "Logout",

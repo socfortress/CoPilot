@@ -7,7 +7,7 @@
 import { mount } from "@vue/test-utils"
 import { describe, expect, it, vi } from "vitest"
 import { ref } from "vue"
-import { getToolsItem } from "@/app-layouts/common/Navbar/items/tools"
+import { getInvestigateItem } from "@/app-layouts/common/Navbar/items/investigate"
 import OpenCTIShell from "../OpenCTIShell.vue"
 import { markingType, scoreColor, scoreTagType } from "../utils"
 
@@ -30,11 +30,11 @@ vi.mock("vue-router", async importOriginal => ({
 }))
 
 function childKeys(showOpenCTI: boolean): unknown[] {
-	const item = getToolsItem(showOpenCTI) as { children?: { key?: unknown }[] }
+	const item = getInvestigateItem(showOpenCTI) as { children?: { key?: unknown }[] }
 	return (item.children || []).map(child => child.key)
 }
 
-describe("tools menu", () => {
+describe("investigate menu", () => {
 	it("lists OpenCTI only for a verified connector", () => {
 		expect(childKeys(true)).toContain("OpenCTI")
 		expect(childKeys(false)).not.toContain("OpenCTI")

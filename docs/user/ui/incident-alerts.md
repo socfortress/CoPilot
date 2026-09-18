@@ -5,7 +5,7 @@ description: How to triage, filter, tag, and collaborate on alerts in SOCFortres
 
 # Incident alerts
 
-**Menu:** Incident Management → Alerts
+**Menu:** Incidents → Alerts
 
 This is your primary triage queue.
 
@@ -28,7 +28,7 @@ Deep link tip: you can open/highlight an alert directly with:
 
 ## Step 1 — Triage an alert (quick workflow)
 
-1) Open **Incident Management → Alerts**
+1) Open **Incidents → Alerts**
 2) Click an alert in the list to open **details**
 3) In **Overview**, confirm:
    - **Customer** (tenant)

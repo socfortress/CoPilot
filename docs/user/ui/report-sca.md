@@ -5,7 +5,7 @@ description: Generate CSV reports for Security Configuration Assessment (SCA) re
 
 # SCA reports (Wazuh)
 
-**Menu:** Report Creation → SCA Reports
+**Menu:** Reports → SCA Reports
 
 SCA (Security Configuration Assessment) reports pull from the **Wazuh SCA module**, which evaluates endpoints against hardening/compliance policies.
 

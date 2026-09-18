@@ -5,7 +5,7 @@ description: Configure how CoPilot reads Graylog event alerts and turns them int
 
 # Incident sources (Graylog → Alerts)
 
-**Menu:** Incident Management → Sources
+**Menu:** Incidents → Alert Sources & Exclusions
 
 **Best for:** Admin / Engineer
 
@@ -28,7 +28,7 @@ High level:
 
 1) Graylog evaluates **Event Definitions** (your detection logic)
 2) When an event fires, Graylog writes an alert into an index (commonly `gl-events*`)
-3) CoPilot reads those event alerts and **creates/updates** alerts inside **Incident Management → Alerts**
+3) CoPilot reads those event alerts and **creates/updates** alerts inside **Incidents → Alerts**
 
 ![Graylog event definition → gl-events* (placeholder)](../../assets/ui/incident-sources-graylog-event-def.png)
 
@@ -53,7 +53,7 @@ This keeps your triage queue clean and helps you group alerts by where they came
 
 ![Sources list (placeholder)](../../assets/ui/incident-sources-list.png)
 
-1) Open **Incident Management → Sources**
+1) Open **Incidents → Alert Sources & Exclusions**
 2) Click to **add** a new source
 3) Give it a name you’ll use consistently (example: `wazuh`, `office365`, `mimecast`)
 
@@ -109,7 +109,7 @@ Important distinction:
 
 1) In Graylog, confirm your **Event Definition** is firing (test with a known event)
 2) Confirm Graylog writes events into `gl-events*`
-3) In CoPilot, confirm a new alert appears under **Incident Management → Alerts** with:
+3) In CoPilot, confirm a new alert appears under **Incidents → Alerts** with:
    - correct **Source**
    - correct **Title**
    - correct **Asset**

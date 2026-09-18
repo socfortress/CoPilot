@@ -1,11 +1,11 @@
 # Quickstart (SOC Operators)
 
-![Incident Management → Alerts](../assets/ui/incident-alerts.png)
+![Incidents → Alerts](../assets/ui/incident-alerts.png)
 
 ## Where you spend most of your time
 
-- **Incident Management → Alerts**: triage, investigate, and decide next actions.
-- **Incident Management → Cases**: manage the lifecycle of incidents.
+- **Incidents → Alerts**: triage, investigate, and decide next actions.
+- **Incidents → Cases**: manage the lifecycle of incidents.
 
 ## Core workflows
 
@@ -17,7 +17,7 @@
 
 ### 2) Create and link a case
 
-![Incident Management → Cases](../assets/ui/incident-cases.png)
+![Incidents → Cases](../assets/ui/incident-cases.png)
 
 - Create a case from the alert when it needs tracking
 - Link related alerts to the same case

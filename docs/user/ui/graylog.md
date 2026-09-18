@@ -1,6 +1,6 @@
 # Graylog
 
-**Menu:** Graylog
+**Menu:** Platform → Log Management → Graylog Management / Graylog Metrics / Graylog Pipelines
 
 **Best for:** Admin/Engineer
 

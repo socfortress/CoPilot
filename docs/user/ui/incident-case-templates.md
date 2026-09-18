@@ -5,7 +5,7 @@ description: Reusable investigation playbooks with predefined tasks and timeline
 
 # Case templates
 
-**Menu:** Incident Management → Case Templates
+**Menu:** Incidents → Case Templates
 
 **Best for:** Admin / Analyst (template ownership is restricted to these roles)
 
@@ -44,7 +44,7 @@ Each step short-circuits the next on first match. Within a step, ties are broken
 
 ## Authoring a template
 
-**Menu:** Incident Management → Case Templates → **New template**
+**Menu:** Incidents → Case Templates → **New template**
 
 | Field | Required | Notes |
 |---|---|---|

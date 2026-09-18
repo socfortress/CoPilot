@@ -5,7 +5,7 @@ description: Review Wazuh Security Configuration Assessment (SCA) posture across
 
 # SCA overview
 
-**Menu:** Agents → SCA Overview
+**Menu:** Exposure → Configuration Assessment → SCA Overview
 
 SCA (Security Configuration Assessment) is Wazuh’s secure configuration/hardening framework. It evaluates endpoints against policies (benchmarks) and reports pass/fail results so you can:
 - find configuration drift

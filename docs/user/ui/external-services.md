@@ -1,6 +1,6 @@
 # External Services
 
-**Menu:** External Services
+**Menu:** Platform → Connectors & Integrations
 
 **Best for:** Admin/Engineer
 

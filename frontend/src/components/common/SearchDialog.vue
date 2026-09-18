@@ -213,10 +213,11 @@ const NAV_LINKS: { title: string; routeName: string; icon: string; tags: string[
 		tags: ["case", "templates"]
 	},
 	{
-		title: "Incident Sources",
+		title: "Alert Sources & Exclusions",
 		routeName: "IncidentManagement-Sources",
 		icon: "carbon:data-share",
-		tags: ["sources", "ingest"]
+		// "incident sources" is the pre-#1152 name; kept so old habits still find it.
+		tags: ["sources", "ingest", "exclusions", "incident sources"]
 	},
 	{ title: "Agents", routeName: "Agents", icon: "carbon:network-3", tags: ["endpoints", "wazuh"] },
 	{
@@ -237,10 +238,10 @@ const NAV_LINKS: { title: string; routeName: string; icon: string; tags: string[
 		tags: ["copilot", "rules"]
 	},
 	{
-		title: "Vulnerability Overview",
+		title: "Vulnerabilities",
 		routeName: "VulnerabilityOverview",
 		icon: "carbon:debug",
-		tags: ["vulnerability", "cve", "vulnerabilities"]
+		tags: ["vulnerability", "cve", "vulnerabilities", "vulnerability overview"]
 	},
 	{ title: "SCA Overview", routeName: "ScaOverview", icon: "carbon:certificate-check", tags: ["sca", "benchmark"] },
 	{ title: "GitHub Audit", routeName: "GitHubAudit", icon: "carbon:logo-github", tags: ["github", "audit"] }

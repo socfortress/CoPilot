@@ -5,7 +5,7 @@ description: Generate General (Grafana-to-PDF), Vulnerability, and SCA reports i
 
 # Report creation
 
-**Menu:** Report Creation
+**Menu:** Reports
 
 **Best for:** SOC operators / analysts + SOC leadership
 

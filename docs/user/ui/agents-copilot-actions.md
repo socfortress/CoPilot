@@ -5,7 +5,7 @@ description: Run repeatable response actions across endpoints using CoPilot + Ve
 
 # CoPilot actions
 
-**Menu:** Agents → CoPilot Actions
+**Menu:** Respond → CoPilot Actions
 
 CoPilot Actions provides a more flexible way to launch endpoint actions (response + collection) across your infrastructure.
 
@@ -54,7 +54,7 @@ CoPilot’s own UI also shows:
 
 ## Prerequisites
 
-- CoPilot is deployed and you can access **Agents → CoPilot Actions**.
+- CoPilot is deployed and you can access **Respond → CoPilot Actions**.
 - Velociraptor server + clients are deployed (the CoPilot-Action repo recommends Velociraptor **0.74.1+**).
 - CoPilot can authenticate to Velociraptor (Connector configured).
 

@@ -40,6 +40,9 @@ import ThreatIntelButton from "@/components/threatIntel/ThreatIntelButton.vue"
 import { useThemeStore } from "@/stores/theme"
 
 import getItems from "./items"
+import { THREAT_INTEL_PANEL_KEY } from "./items/investigate"
+import { STACK_PROVISIONING_PANEL_KEY } from "./items/platform"
+import { ACTIVE_RESPONSE_PANEL_KEY } from "./items/respond"
 
 const { collapsed = false } = defineProps<{
 	collapsed?: boolean
@@ -66,13 +69,13 @@ watch(selectedKey, val => {
 
 function handleMenuSelect(key: string | null) {
 	switch (key) {
-		case "Tools-ThreatIntel":
+		case THREAT_INTEL_PANEL_KEY:
 			threatIntelButton.value?.openDrawer()
 			break
-		case "Tools-StackProvisioning":
+		case STACK_PROVISIONING_PANEL_KEY:
 			stackProvisioningButton.value?.openModal()
 			break
-		case "Tools-ActiveResponse":
+		case ACTIVE_RESPONSE_PANEL_KEY:
 			activeResponseWizardButton.value?.openModal()
 			break
 	}

@@ -1,6 +1,6 @@
 # Incident Management
 
-**Menu:** Incident Management
+**Menu:** Incidents (Alert Sources & Exclusions, Alerts, Cases, Case Templates)
 
 **Best for:** SOC operators / analysts
 

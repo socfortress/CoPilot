@@ -1,6 +1,6 @@
 # Atomic Red Team
 
-**Menu:** SIEM → Atomic Red Team
+**Menu:** Detections → Atomic Red Team
 
 **Best for:** Operators + detection engineering / validation
 

@@ -1,6 +1,6 @@
 # Scheduler
 
-**Menu:** Scheduler
+**Menu:** Platform → System → Scheduler
 
 **Best for:** Admin/Engineer
 

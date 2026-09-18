@@ -5,7 +5,7 @@ description: Create PDF reports by snapshotting Grafana panels and combining the
 
 # General reports (Grafana → PDF)
 
-**Menu:** Report Creation → General Reports
+**Menu:** Reports → General Reports
 
 General reports generate a PDF by taking snapshots of selected **Grafana dashboard panels**.
 
@@ -24,7 +24,7 @@ General reports generate a PDF by taking snapshots of selected **Grafana dashboa
 
 ![Report wizard (placeholder)](../../assets/ui/report-general-wizard.png)
 
-1) Open **Report Creation → General Reports**
+1) Open **Reports → General Reports**
 2) Select the **Organization**
 3) Select the **Dashboard**
 4) Choose a **time range** (ex: `24h`, `7d`, `30d`)

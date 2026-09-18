@@ -5,7 +5,7 @@ description: Run Velociraptor artifacts from CoPilot to collect DFIR evidence fr
 
 # Artifacts (Velociraptor)
 
-**Menu:** Artifacts
+**Menu:** Respond → Artifacts
 
 CoPilot’s Artifacts feature integrates with **Velociraptor** (DFIR / threat hunting) to run **Velociraptor Artifacts** via the Velociraptor API and pull results back into CoPilot.
 

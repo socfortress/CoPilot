@@ -5,11 +5,11 @@ description: Define Graylog event alerts (detections) so CoPilot can ingest them
 
 # Graylog management (alerting)
 
-**Menu:** Log Management → Graylog Management
+**Menu:** Platform → Log Management → Graylog Management
 
 This page is for **Admin / Engineer** workflows.
 
-CoPilot uses **Graylog** as the detection and alerting engine. If Graylog isn’t creating event alerts, CoPilot won’t have anything to ingest into **Incident Management → Alerts**.
+CoPilot uses **Graylog** as the detection and alerting engine. If Graylog isn’t creating event alerts, CoPilot won’t have anything to ingest into **Incidents → Alerts**.
 
 ![Graylog Management](../../assets/ui/graylog-management.png)
 

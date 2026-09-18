@@ -172,7 +172,7 @@ MySQL is the primary store via async SQLAlchemy/SQLModel (`app/db/db_session.py`
 
 ### SIEM Dashboards: built-in templates vs. custom ones
 
-`SIEM → Dashboards` renders two kinds of template through **one** pipeline:
+`Investigate → Dashboards` renders two kinds of template through **one** pipeline:
 
 - **Built-in** — JSON files under `app/siem/dashboard_templates/<category>/`, addressed by `(library_card=<category dir>, template_id=<file stem>)`.
 - **Custom** — rows in `custom_dashboard_templates` (UI-authored or imported), addressed by `(library_card="custom", template_id=<template_key>)`.
@@ -190,7 +190,7 @@ Things to keep straight when touching this area:
 
 ### Detections Catalog (view layer over `rules_cache` + Wazuh)
 
-The Detections Catalog (top-level nav, `/detection-catalog` — note URL path stays singular for backward-compat; user-facing label is plural since the Wazuh tab was added) is a discovery surface — *not* its own data store. It is **the single feature in CoPilot that deliberately introduces no new tables, no new columns, no Alembic migrations, no schema of any kind.** Everything is in-memory caches loading from sources that already exist.
+The Detections Catalog (*Detections → Catalog* in the sidebar, `/detection-catalog` — note URL path stays singular for backward-compat; the page title is plural since the Wazuh tab was added) is a discovery surface — *not* its own data store. It is **the single feature in CoPilot that deliberately introduces no new tables, no new columns, no Alembic migrations, no schema of any kind.** Everything is in-memory caches loading from sources that already exist.
 
 **Source caches (all in `app/integrations/copilot_searches/services/`):**
 
@@ -235,7 +235,7 @@ Consequence: refreshing CoPilot Searches refreshes the Stories surface; Wazuh ru
   - `CoverageGapsIndex.vue` — Coverage Gaps tab
   - `ComplianceIndex.vue` — Compliance tab (framework selector + grouped table + drill-down modal)
 - Frontend supporting files: `src/types/detectionCatalog.d.ts`, `src/api/endpoints/detectionCatalog.ts`
-- Three authorized cross-cutting edits and only these three: nav entry in `app-layouts/common/Navbar/items.tsx`, route in `router/index.ts`, barrel registration in `api/index.ts`. Nothing else outside the catalog namespace should change for this feature.
+- Three authorized cross-cutting edits and only these three: nav entry in `app-layouts/common/Navbar/items/detections.ts`, route in `router/index.ts`, barrel registration in `api/index.ts`. Nothing else outside the catalog namespace should change for this feature.
 
 ### Exclusion rules created in-context from an alert (#934, phases 1–2)
 
@@ -299,6 +299,7 @@ Things to keep straight in the InfluxDB half:
 - `src/stores/` — Pinia with `pinia-plugin-persistedstate`, encrypted via `secure-ls`.
 - Tailwind v4 + Naive UI; design tokens flow from `figma-tokens.json` via `pnpm design-tokens`.
 - `@shuffleio/shuffle-mcps` is embedded as a frontend dependency for per-org Shuffle app management.
+- **Sidebar menu (#1152)** — `app-layouts/common/Navbar/items.tsx` plus one file per section in `items/` (Incidents, Investigate, Respond, Detections, Exposure, Endpoints, Reports, Platform), ordered the way SOC work happens. Three rules, all pinned by `Navbar/__tests__/items.spec.ts`: **a leaf's key is its route name** (Navbar highlights the current page by route name; a section key must never equal a route name); the three entries that open a panel rather than a page (Threat Intel, Active Response, Stack Provisioning) use the exported `*_PANEL_KEY` constants handled in `Navbar.vue`; and **Platform mirrors route access**, so analysts see everything they could open except the admin-only Notifications pages and SSO / Audit Log. Don't make a section admin-only without checking its routes' `meta.roles`: most Platform pages allow analysts. The avatar menu holds only Profile, docs, contact and logout. Settings pages belong in Platform.
 
 The `customer-portal/` mirrors this structure but is a leaner standalone app, served separately (its own `nginx.conf`; port 3001 dev, 8443 in compose when uncommented).
 

@@ -5,7 +5,7 @@ description: Build native SIEM dashboards for any indexed source — including c
 
 # Custom Dashboards
 
-**Menu:** SIEM → Dashboards → **Custom dashboards**
+**Menu:** Investigate → Dashboards → **Custom dashboards**
 
 **Best for:** Admin / Engineer
 
@@ -26,7 +26,7 @@ Once enabled, a custom dashboard behaves exactly like a built-in one — it show
 
 ## Step 1 — Open the builder
 
-1. Go to **SIEM → Dashboards**
+1. Go to **Investigate → Dashboards**
 2. Select the customer
 3. Click **Custom dashboards**
 4. Pick the **Event source** the dashboards will be enabled against

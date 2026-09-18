@@ -5,7 +5,7 @@ description: Search and explore raw SIEM events across customers and event sourc
 
 # Event Search
 
-**Menu:** SIEM → Event Search
+**Menu:** Investigate → Event Search
 
 **Best for:** Operators + Analysts
 
@@ -93,7 +93,7 @@ This lets you quickly drill down or exclude noise without manually typing querie
 
 ## Deep-linking from Incident Management
 
-When viewing an alert asset in **Incident Management → Alerts**, the `alert_linked` field includes a **"View in Event Search"** link. Clicking it opens Event Search in a new tab with the customer, default EDR source, and Lucene query pre-populated to find the specific alert.
+When viewing an alert asset in **Incidents → Alerts**, the `alert_linked` field includes a **"View in Event Search"** link. Clicking it opens Event Search in a new tab with the customer, default EDR source, and Lucene query pre-populated to find the specific alert.
 
 ---
 
