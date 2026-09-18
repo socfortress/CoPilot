@@ -94,6 +94,7 @@ from app.routers import network_connectors
 from app.routers import notifications
 from app.routers import nuclei
 from app.routers import office365
+from app.routers import opencti
 from app.routers import performance
 from app.routers import portainer
 from app.routers import sap_siem
@@ -311,6 +312,7 @@ api_router.include_router(defenderforendpoint.router)
 api_router.include_router(file_analysis.router)
 api_router.include_router(siem.router)
 api_router.include_router(talon.router)
+api_router.include_router(opencti.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)

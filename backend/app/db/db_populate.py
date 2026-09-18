@@ -49,7 +49,12 @@ def load_connector_data(
     return {
         "connector_name": connector_name,
         "connector_type": connector_type,
-        "connector_url": os.getenv(f"{env_prefix}_URL"),
+        # `connectors.connector_url` is NOT NULL, and every missing connector is
+        # inserted in one commit at startup. A deployment that upgrades without
+        # adding a new connector's `<NAME>_URL` to `.env` would otherwise fail
+        # that insert and refuse to boot. An empty URL just leaves the connector
+        # to be filled in from the Connectors page.
+        "connector_url": url or "",
         "connector_username": os.getenv(f"{env_prefix}_USERNAME"),
         "connector_password": os.getenv(f"{env_prefix}_PASSWORD"),
         "connector_api_key": os.getenv(f"{env_prefix}_API_KEY"),
@@ -174,6 +179,16 @@ def get_connectors_list():
             "3",
             "api_key",
             "Talon is an automated AI SOC analyst built by SOCfortress for the CoPilot stack. It runs as a background service alongside CoPilot — pulling raw events from your Wazuh/OpenSearch SIEM, enriching them with threat intelligence, correlating across your environment, and writing structured investigation reports with severity assessments and recommended actions directly back into CoPilot.",
+        ),
+        (
+            "OpenCTI",
+            "7",
+            "api_key",
+            (
+                "Connection to OpenCTI's GraphQL API for threat intelligence lookups — IOC enrichment, indicators, "
+                "reports and threat entities. Set the URL to the platform address (e.g. http://opencti:8080) and the "
+                "API key to an OpenCTI user's API token."
+            ),
         ),
         # ... Add more connectors as needed ...
     ]

@@ -19,6 +19,7 @@ from app.connectors.grafana.utils.universal import verify_grafana_connection
 from app.connectors.graylog.utils.universal import verify_graylog_connection
 from app.connectors.influxdb.utils.universal import verify_influxdb_connection
 from app.connectors.models import Connectors
+from app.connectors.opencti.utils.universal import verify_opencti_connection
 from app.connectors.portainer.utils.universal import verify_portainer_connection
 from app.connectors.resend.utils.universal import verify_resend_connection
 from app.connectors.schema import ConnectorResponse
@@ -218,6 +219,14 @@ class TalonService(ConnectorServiceInterface):
         return await verify_talon_connection(connector.connector_name)
 
 
+class OpenCTIService(ConnectorServiceInterface):
+    async def verify_authentication(
+        self,
+        connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
+        return await verify_opencti_connection(connector.connector_name)
+
+
 # Factory function to create a service instance based on connector name
 def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface]:
     """
@@ -248,6 +257,7 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "Portainer": PortainerService,
         "Resend": ResendService,
         "Talon": TalonService,
+        "OpenCTI": OpenCTIService,
     }
     return service_map.get(connector_name, None)
 
