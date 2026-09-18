@@ -5,7 +5,7 @@ description: View and manage Wazuh detection rules in CoPilot to tune signal vs 
 
 # Detection rules (Wazuh)
 
-**Menu:** Agents → Detection Rules
+**Menu:** Detections → Wazuh Rules
 
 Detection rules in CoPilot map to **Wazuh detection rules**. These rules are what Wazuh uses to generate alerts from decoded telemetry.
 

@@ -176,7 +176,7 @@ Entries here **merge over and override** the built-in defaults (so you can, for 
 2. When the threshold condition is met, Graylog fires the Event Definition.
 3. The HTTP Notification sends a POST request to CoPilot's `/create/threshold` endpoint with the event payload (including your custom fields).
 4. CoPilot validates the Graylog header, extracts the required fields (`CUSTOMER_CODE`, `SOURCE`, `ALERT_DESCRIPTION`, `ASSET_NAME`), and creates a new alert in Incident Management.
-5. The alert appears in the CoPilot **Incident Management → Alerts** view and can be triaged, assigned to a case, or trigger downstream automation (e.g., via Shuffle).
+5. The alert appears in the CoPilot **Incidents → Alerts** view and can be triaged, assigned to a case, or trigger downstream automation (e.g., via Shuffle).
 
 ---
 

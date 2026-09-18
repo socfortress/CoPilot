@@ -4,9 +4,9 @@
 
 ## Where you spend most of your time
 
-- **Connectors**: configure connectivity to the toolchain (Wazuh, Graylog, Grafana, Velociraptor, etc.).
-- **External Services / Integrations**: configure per-customer integrations.
-- **Scheduler**: enable/disable and tune background jobs/collectors.
+- **Connectors** (*Platform → Connectors & Integrations*): configure connectivity to the toolchain (Wazuh, Graylog, Grafana, Velociraptor, etc.).
+- **Integrations** (*Platform → Connectors & Integrations*): configure per-customer integrations.
+- **Scheduler** (*Platform → System*): enable/disable and tune background jobs/collectors.
 
 ## Core workflows
 
@@ -19,7 +19,7 @@
 
 ### 2) Validate SIEM data availability
 
-![Indices → Index Management](../assets/ui/indices-management.png)
+![Platform → Log Management → Index Management](../assets/ui/indices-management.png)
 
 - Confirm Wazuh Indexer is reachable
 - Confirm Graylog alerts are being written (often `gl-events*`)

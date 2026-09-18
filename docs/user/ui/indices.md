@@ -1,6 +1,6 @@
 # Indices
 
-**Menu:** Indices
+**Menu:** Platform → Log Management → Index Management / Snapshot & Restore
 
 **Best for:** Admin/Engineer
 

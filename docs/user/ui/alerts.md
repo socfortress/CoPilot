@@ -1,6 +1,6 @@
 # Alerts
 
-**Menu:** SIEM
+**Menu:** Investigate → SIEM Alerts · Detections → MITRE ATT&CK · Detections → Atomic Red Team
 
 **Best for:** Admin/Engineer + Detection engineering + SOC leadership
 

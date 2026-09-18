@@ -1,27 +1,37 @@
 import type { MenuMixedOption } from "naive-ui/es/menu/src/interface"
 
 import { useOpenCTIAvailability } from "@/composables/useOpenCTIAvailability"
+import { useAuthStore } from "@/stores/auth"
 import { renderIcon } from "@/utils"
 
-import { agentsItem } from "./items/agents"
-import { healthcheckItem } from "./items/healthcheck"
-import { parentMenuItem, routerLinkItem } from "./items/helpers"
-import { incidentManagementItem } from "./items/incident-management"
-import { logManagementItem } from "./items/log-management"
-import { reportCreationItem } from "./items/report-creation"
-import { siemItem } from "./items/siem"
-import { getToolsItem } from "./items/tools"
+import { detectionsItem } from "./items/detections"
+import { endpointsItem } from "./items/endpoints"
+import { exposureItem } from "./items/exposure"
+import { routerLinkItem } from "./items/helpers"
+import { incidentsItem } from "./items/incidents"
+import { getInvestigateItem } from "./items/investigate"
+import { getPlatformItem } from "./items/platform"
+import { reportsItem } from "./items/reports"
+import { respondItem } from "./items/respond"
 
 const OverviewIcon = "carbon:dashboard"
 const CustomersIcon = "carbon:user-multiple"
 const AiAnalystIcon = "carbon:machine-learning-model"
-const DetectionCatalogIcon = "carbon:catalog"
-const InternalNotificationsIcon = "carbon:notification"
 
+/**
+ * The sidebar, ordered the way SOC work happens: triage, investigate, respond,
+ * tune detections, reduce exposure, then administer (#1152).
+ *
+ * Every leaf's key is its route name. Navbar.vue highlights the current page by
+ * route name, so renaming or moving an item never breaks that as long as the
+ * key stays the route name. The few keys that aren't route names open a panel
+ * instead of a page (see Navbar.vue's handleMenuSelect).
+ */
 export default function getItems(): MenuMixedOption[] {
-	// Read inside the Navbar's computed, so the Tools menu gains or loses OpenCTI
-	// as soon as the connector is verified or unverified.
+	// Both read inside the Navbar's computed, so the menu follows OpenCTI being
+	// verified and the signed-in user's role without a reload.
 	const { available: openCTIAvailable } = useOpenCTIAvailability()
+	const authStore = useAuthStore()
 
 	return [
 		{
@@ -32,28 +42,17 @@ export default function getItems(): MenuMixedOption[] {
 			...routerLinkItem("AI Analyst", "AiAnalyst"),
 			icon: renderIcon(AiAnalystIcon)
 		},
-		{
-			...routerLinkItem("Detections Catalog", "DetectionCatalog"),
-			icon: renderIcon(DetectionCatalogIcon)
-		},
+		incidentsItem,
+		getInvestigateItem(openCTIAvailable.value),
+		respondItem,
+		detectionsItem,
+		exposureItem,
+		endpointsItem,
 		{
 			...routerLinkItem("Customers", "Customers"),
 			icon: renderIcon(CustomersIcon)
 		},
-		// Deployment-wide notification config: where the SOC's own assignment
-		// notifications go, and the shared message templates every route can
-		// render with. Both are distinct from a customer's own routes, which
-		// live on the customer.
-		parentMenuItem("Notifications", "Notifications", InternalNotificationsIcon, [
-			routerLinkItem("Internal Routes", "InternalNotifications"),
-			routerLinkItem("Message Templates", "MessageTemplates")
-		]),
-		siemItem,
-		incidentManagementItem,
-		agentsItem,
-		logManagementItem,
-		reportCreationItem,
-		healthcheckItem,
-		getToolsItem(openCTIAvailable.value)
+		reportsItem,
+		getPlatformItem(authStore.isAdmin)
 	]
 }

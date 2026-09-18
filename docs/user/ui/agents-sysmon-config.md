@@ -5,7 +5,7 @@ description: Centralized Sysmon configuration management for Windows telemetry c
 
 # Sysmon config (Windows)
 
-**Menu:** Agents → Sysmon Config
+**Menu:** Endpoints → Sysmon Config
 
 Sysmon (System Monitor) is a Microsoft Sysinternals tool that logs high-value system activity to the **Windows Event Log**. We use it on Windows endpoints to collect richer telemetry (process, network, file, etc.) that improves detections and investigations.
 

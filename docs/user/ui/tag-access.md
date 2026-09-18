@@ -3,7 +3,7 @@ title: Tag-Based Access Control (Tag RBAC)
 description: Restrict which alerts users and roles can see based on assigned tags.
 ---
 
-**Menu:** Users → (select user) → Assign Tags | Settings → Tag RBAC Settings
+**Menu:** Platform → Access → Users → (select user) → Assign Tags | Settings → Tag RBAC Settings
 
 **Best for:** Admin
 

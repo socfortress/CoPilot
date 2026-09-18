@@ -5,7 +5,7 @@ description: Offload old indexes into snapshot repositories and restore them lat
 
 # Snapshot & restore (cold storage)
 
-**Menu:** Indices → Snapshot & Restore
+**Menu:** Platform → Log Management → Snapshot & Restore
 
 **Best for:** Admin / Engineer
 
@@ -38,7 +38,7 @@ In the UI you’ll see this warning if none exist:
 
 ## Step 1 — Verify repositories
 
-1) Open **Indices → Snapshot & Restore**
+1) Open **Platform → Log Management → Snapshot & Restore**
 2) Click **Repositories**
 3) Confirm at least one repository exists and is healthy
 

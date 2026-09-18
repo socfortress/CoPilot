@@ -5,7 +5,7 @@ description: How to build and run an investigation case by linking multiple aler
 
 # Incident cases
 
-**Menu:** Incident Management → Cases
+**Menu:** Incidents → Cases
 
 Cases are where you **bundle related alerts into one investigation** (example: Wazuh + firewall + third‑party integration alerts) and track the work from triage → resolution.
 
@@ -34,7 +34,7 @@ The Cases view is split into two parts:
 
 ![Case details (Overview)](../../assets/ui/incident-cases-details-overview.png)
 
-1) Open **Incident Management → Cases**
+1) Open **Incidents → Cases**
 2) Click a case in the list to open **details**
 3) Use **Overview** to confirm:
    - case name + description

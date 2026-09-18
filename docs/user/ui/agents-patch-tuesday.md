@@ -5,7 +5,7 @@ description: Patch-cycle view that prioritizes Microsoft CVEs by urgency (P0–P
 
 # Patch Tuesday (Microsoft)
 
-**Menu:** Agents → Patch Tuesday
+**Menu:** Exposure → Patch Tuesday
 
 Patch Tuesday is a patch-cycle view focused on **Microsoft Patch Tuesday** releases. It helps you triage CVEs for a given patch cycle and prioritize what to patch first using:
 - priority bands (**P0–P3**)

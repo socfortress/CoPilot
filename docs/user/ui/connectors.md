@@ -1,6 +1,6 @@
 # Connectors
 
-**Menu:** Tools → Connectors
+**Menu:** Platform → Connectors & Integrations → Connectors
 
 **Best for:** Admin/Engineer
 

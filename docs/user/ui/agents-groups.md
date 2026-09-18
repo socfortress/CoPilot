@@ -5,7 +5,7 @@ description: Multi-tenant Wazuh agent groups used to apply endpoint configuratio
 
 # Agent groups (Wazuh)
 
-**Menu:** Agents → Groups
+**Menu:** Endpoints → Agent Groups
 
 Agent groups in CoPilot map to **Wazuh agent groups**. Wazuh uses these groups to apply endpoint configuration such as:
 - log collection settings
