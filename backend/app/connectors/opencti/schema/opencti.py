@@ -3,6 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 
 # OpenCTI answers in nested Relay/GraphQL shapes (`edges { node }`,
 # `objectLabel`, `createdBy { name }`, …). The services flatten them into the
@@ -95,6 +96,33 @@ class OpenCTIAbout(BaseModel):
     user_email: Optional[str] = None
 
 
+# ── Requests ─────────────────────────────────────────────────────────────────
+
+MAX_BATCH_VALUES = 100
+MAX_VALUE_LENGTH = 2048
+
+
+class OpenCTIBatchLookupRequest(BaseModel):
+    values: List[str] = Field(..., min_length=1, max_length=MAX_BATCH_VALUES, description="IOC values to look up in one query")
+
+    @field_validator("values")
+    @classmethod
+    def _clean(cls, values: List[str]) -> List[str]:
+        """Strip, drop blanks and case-insensitive duplicates, keep the caller's order."""
+        seen = set()
+        cleaned = []
+        for value in values:
+            value = (value or "").strip()
+            if len(value) > MAX_VALUE_LENGTH:
+                raise ValueError(f"Each value must be at most {MAX_VALUE_LENGTH} characters")
+            if value and value.lower() not in seen:
+                seen.add(value.lower())
+                cleaned.append(value)
+        if not cleaned:
+            raise ValueError("At least one non-blank value is required")
+        return cleaned
+
+
 # ── Responses ────────────────────────────────────────────────────────────────
 
 
@@ -122,6 +150,22 @@ class OpenCTIObservableLookupResponse(BaseModel):
     found: bool = Field(..., description="True when OpenCTI knows at least one matching observable")
     total: int = 0
     observables: List[OpenCTIObservable] = Field(default_factory=list)
+
+
+class OpenCTIValueLookup(BaseModel):
+    value: str = Field(..., description="The value as the caller sent it (stripped)")
+    found: bool
+    observables: List[OpenCTIObservable] = Field(default_factory=list)
+
+
+class OpenCTIBatchLookupResponse(BaseModel):
+    success: bool
+    message: str
+    results: List[OpenCTIValueLookup] = Field(default_factory=list, description="One entry per requested value, in request order")
+    truncated: bool = Field(
+        default=False,
+        description="OpenCTI matched more observables than one query returns, so a value reported as not found may still exist",
+    )
 
 
 class OpenCTIIndicatorsResponse(BaseModel):

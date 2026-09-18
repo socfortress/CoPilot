@@ -6,11 +6,12 @@
 				<span>{{ ioc.value }}</span>
 			</div>
 			<p class="mt-2">{{ ioc.description }}</p>
+			<!-- Looks itself up on render (batched across the alert); renders nothing without a verified OpenCTI connector. -->
+			<OpenCTIIocBadge :value="ioc.value" class="mt-2" />
 		</template>
 		<template #footerExtra>
 			<div class="flex items-center justify-end gap-3">
 				<VirusTotalEnrichmentButton :ioc-value="ioc.value" />
-				<OpenCTIEnrichmentButton :ioc-value="ioc.value" />
 
 				<EntityDetailsButton
 					size="small"
@@ -52,7 +53,7 @@ import { ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
-import OpenCTIEnrichmentButton from "@/components/opencti/OpenCTIEnrichmentButton.vue"
+import OpenCTIIocBadge from "@/components/opencti/OpenCTIIocBadge.vue"
 import VirusTotalEnrichmentButton from "@/components/threatIntel/VirusTotalEnrichmentButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"

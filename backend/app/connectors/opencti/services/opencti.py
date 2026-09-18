@@ -9,6 +9,7 @@ from loguru import logger
 from app.connectors.opencti.schema.opencti import OpenCTIAbout
 from app.connectors.opencti.schema.opencti import OpenCTIAboutResponse
 from app.connectors.opencti.schema.opencti import OpenCTIAvailabilityResponse
+from app.connectors.opencti.schema.opencti import OpenCTIBatchLookupResponse
 from app.connectors.opencti.schema.opencti import OpenCTIEntity
 from app.connectors.opencti.schema.opencti import OpenCTIEntityResponse
 from app.connectors.opencti.schema.opencti import OpenCTIIndicator
@@ -16,6 +17,7 @@ from app.connectors.opencti.schema.opencti import OpenCTIIndicatorsResponse
 from app.connectors.opencti.schema.opencti import OpenCTIObservable
 from app.connectors.opencti.schema.opencti import OpenCTIObservableLookupResponse
 from app.connectors.opencti.schema.opencti import OpenCTIPageInfo
+from app.connectors.opencti.schema.opencti import OpenCTIValueLookup
 from app.connectors.opencti.services.queries import ABOUT_QUERY
 from app.connectors.opencti.services.queries import ENTITY_QUERY
 from app.connectors.opencti.services.queries import INDICATORS_QUERY
@@ -193,6 +195,63 @@ async def lookup_observable(
         found=bool(observables),
         total=_global_count(connection),
         observables=observables,
+    )
+
+
+# Observables fetched per requested value in a batch. One value normally matches
+# one observable (occasionally two: the same string as Domain-Name and
+# Hostname); the headroom keeps a noisy value from crowding the others out.
+BATCH_OBSERVABLES_PER_VALUE = 5
+BATCH_MAX_OBSERVABLES = 500
+
+
+def _match_keys(observable: OpenCTIObservable) -> set:
+    """Every string OpenCTI would match this observable on: its value and each hash, lower-cased."""
+    keys = {observable.value.lower()} if observable.value else set()
+    keys.update(h.hash.lower() for h in observable.hashes)
+    return keys
+
+
+async def lookup_observables(
+    values: List[str],
+    indicators_per_observable: int = 5,
+    reports_per_observable: int = 3,
+) -> OpenCTIBatchLookupResponse:
+    """
+    Look up many IOCs in one GraphQL query, e.g. every IoC on an alert.
+
+    A single filter item's `values` are ORed server-side, so N values cost one
+    round trip instead of N. The response doesn't say which requested value
+    each observable matched, so it's mapped back here on the same keys the
+    filter used (`value` and every hash), case-insensitively like OpenCTI.
+
+    Args:
+        values: Already stripped and de-duplicated by `OpenCTIBatchLookupRequest`.
+    """
+    logger.info(f"Batch lookup of {len(values)} observables in OpenCTI")
+    first = min(max(len(values) * BATCH_OBSERVABLES_PER_VALUE, 50), BATCH_MAX_OBSERVABLES)
+    variables = {
+        "filters": filter_group([filter_item(OBSERVABLE_LOOKUP_KEYS, values)]),
+        "first": first,
+        "indicators": indicators_per_observable,
+        "reports": reports_per_observable,
+    }
+    data = _raise_on_failure(await send_graphql_request(OBSERVABLE_LOOKUP_QUERY, variables), "look up observables in OpenCTI")
+    connection = data.get("stixCyberObservables")
+    observables = [parse_observable(node) for node in _edges(connection)]
+
+    matches: Dict[str, List[OpenCTIObservable]] = {value.lower(): [] for value in values}
+    for observable in observables:
+        for key in _match_keys(observable) & matches.keys():
+            matches[key].append(observable)
+
+    results = [OpenCTIValueLookup(value=value, found=bool(matches[value.lower()]), observables=matches[value.lower()]) for value in values]
+    found = sum(1 for result in results if result.found)
+    return OpenCTIBatchLookupResponse(
+        success=True,
+        message=f"{found} of {len(values)} values found in OpenCTI",
+        results=results,
+        truncated=_global_count(connection) > len(observables),
     )
 
 

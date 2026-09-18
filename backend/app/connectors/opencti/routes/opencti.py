@@ -9,6 +9,8 @@ from loguru import logger
 from app.auth.utils import AuthHandler
 from app.connectors.opencti.schema.opencti import OpenCTIAboutResponse
 from app.connectors.opencti.schema.opencti import OpenCTIAvailabilityResponse
+from app.connectors.opencti.schema.opencti import OpenCTIBatchLookupRequest
+from app.connectors.opencti.schema.opencti import OpenCTIBatchLookupResponse
 from app.connectors.opencti.schema.opencti import OpenCTIEntityResponse
 from app.connectors.opencti.schema.opencti import OpenCTIIndicatorsResponse
 from app.connectors.opencti.schema.opencti import OpenCTIObservableLookupResponse
@@ -16,6 +18,7 @@ from app.connectors.opencti.services.opencti import get_availability
 from app.connectors.opencti.services.opencti import get_entity
 from app.connectors.opencti.services.opencti import get_platform_info
 from app.connectors.opencti.services.opencti import lookup_observable
+from app.connectors.opencti.services.opencti import lookup_observables
 from app.connectors.opencti.services.opencti import search_indicators
 
 # OpenCTI holds deployment-wide threat intelligence, not tenant data, so these
@@ -56,6 +59,16 @@ async def search_observable(
 ) -> OpenCTIObservableLookupResponse:
     logger.info(f"Looking up OpenCTI observable: {value}")
     return await lookup_observable(value, first=first)
+
+
+@opencti_router.post(
+    "/observables/lookup",
+    response_model=OpenCTIBatchLookupResponse,
+    description="Look up many IOCs by exact value in one OpenCTI query (up to 100), e.g. every IoC on an alert",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def batch_lookup_observables(request: OpenCTIBatchLookupRequest) -> OpenCTIBatchLookupResponse:
+    return await lookup_observables(request.values)
 
 
 @opencti_router.get(
