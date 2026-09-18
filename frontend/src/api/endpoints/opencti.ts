@@ -2,6 +2,7 @@ import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	OpenCTIAbout,
 	OpenCTIAvailability,
+	OpenCTIBatchLookup,
 	OpenCTIEntity,
 	OpenCTIIndicator,
 	OpenCTIIndicatorsQuery,
@@ -31,6 +32,10 @@ export default {
 			params: { value },
 			signal
 		})
+	},
+	/** Many exact-value IOC lookups in one OpenCTI query (max 100 values). */
+	lookupObservables(values: string[]) {
+		return HttpClient.post<FlaskBaseResponse & OpenCTIBatchLookup>(`/opencti/observables/lookup`, { values })
 	},
 	getIndicators(query: OpenCTIIndicatorsQuery = {}, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { indicators: OpenCTIIndicator[]; page_info: OpenCTIPageInfo }>(

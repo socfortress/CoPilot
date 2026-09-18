@@ -98,6 +98,19 @@ export interface OpenCTIObservableLookup {
 	observables: OpenCTIObservable[]
 }
 
+export interface OpenCTIValueLookup {
+	value: string
+	found: boolean
+	observables: OpenCTIObservable[]
+}
+
+export interface OpenCTIBatchLookup {
+	/** One entry per requested value, in request order. */
+	results: OpenCTIValueLookup[]
+	/** OpenCTI matched more than one query returns; a "not found" may be a false negative. */
+	truncated: boolean
+}
+
 export interface OpenCTIIndicatorsQuery {
 	search?: string
 	first?: number

@@ -389,3 +389,85 @@ def test_availability_platform_url_is_the_web_address(stored):
 def test_availability_hides_platform_url_until_verified():
     row = {"connector_url": "http://opencti:8080", "connector_api_key": "k", "connector_verified": False}
     assert _availability(row).platform_url is None
+
+
+# ── batch lookup (inline alert IoC badges, #1146) ────────────────────────────
+
+
+def _observable_node(id_, value=None, hashes=None, entity_type="IPv4-Addr"):
+    return {
+        "id": id_,
+        "entity_type": entity_type,
+        "observable_value": value,
+        "hashes": [{"algorithm": "SHA-256", "hash": h} for h in hashes or []],
+        "objectLabel": [],
+        "objectMarking": [],
+    }
+
+
+def _connection(*nodes, total=None):
+    return {
+        "data": {
+            "stixCyberObservables": {
+                "pageInfo": {"globalCount": len(nodes) if total is None else total},
+                "edges": [{"node": n} for n in nodes],
+            },
+        },
+    }
+
+
+def test_batch_request_strips_dedupes_and_keeps_order():
+    from app.connectors.opencti.schema.opencti import OpenCTIBatchLookupRequest
+
+    request = OpenCTIBatchLookupRequest(values=[" b.com ", "A.com", "", "a.COM", "b.com", "c.com"])
+    assert request.values == ["b.com", "A.com", "c.com"]
+
+
+@pytest.mark.parametrize("values", [[], ["", "  "], ["x"] * 101, ["x" * 2049]])
+def test_batch_request_rejects_bad_input(values):
+    from pydantic import ValidationError
+
+    from app.connectors.opencti.schema.opencti import OpenCTIBatchLookupRequest
+
+    with pytest.raises(ValidationError):
+        OpenCTIBatchLookupRequest(values=values)
+
+
+def test_batch_lookup_is_one_query_with_every_value():
+    client = _client(_response(200, _connection()))
+    _run(services.lookup_observables(["1.2.3.4", "evil.com", "abc123"]), client)
+    assert client.post.call_count == 1
+    [item] = client.post.call_args.kwargs["json"]["variables"]["filters"]["filters"]
+    assert item["values"] == ["1.2.3.4", "evil.com", "abc123"] and item["key"] == OBSERVABLE_LOOKUP_KEYS
+
+
+def test_batch_lookup_maps_observables_back_to_values():
+    """OpenCTI doesn't say which value each observable matched; hashes and case must still map back."""
+    body = _connection(
+        _observable_node("ip", value="1.2.3.4"),
+        _observable_node("file", value="aaa", hashes=["aaa", "bbb"], entity_type="StixFile"),
+        _observable_node("dom", value="evil.com", entity_type="Domain-Name"),
+        _observable_node("host", value="evil.com", entity_type="Hostname"),
+    )
+    result = _run(services.lookup_observables(["1.2.3.4", "BBB", "Evil.com", "8.8.8.8"]), _client(_response(200, body)))
+    by_value = {r.value: [o.id for o in r.observables] for r in result.results}
+    assert [r.value for r in result.results] == ["1.2.3.4", "BBB", "Evil.com", "8.8.8.8"]
+    assert by_value == {"1.2.3.4": ["ip"], "BBB": ["file"], "Evil.com": ["dom", "host"], "8.8.8.8": []}
+    assert [r.found for r in result.results] == [True, True, True, False]
+    assert result.truncated is False
+    assert result.message == "3 of 4 values found in OpenCTI"
+
+
+def test_batch_lookup_flags_a_truncated_answer():
+    body = _connection(_observable_node("ip", value="1.2.3.4"), total=900)
+    assert _run(services.lookup_observables(["1.2.3.4"]), _client(_response(200, body))).truncated is True
+
+
+def test_batch_lookup_sizes_the_page_to_the_request():
+    client = _client(_response(200, _connection()))
+    _run(services.lookup_observables(["v"] * 1), client)
+    assert client.post.call_args.kwargs["json"]["variables"]["first"] == 50
+
+    client = _client(_response(200, _connection()))
+    _run(services.lookup_observables([f"v{i}" for i in range(100)]), client)
+    assert client.post.call_args.kwargs["json"]["variables"]["first"] == services.BATCH_MAX_OBSERVABLES
