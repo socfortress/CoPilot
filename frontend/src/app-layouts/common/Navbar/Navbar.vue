@@ -22,7 +22,6 @@
 	<div class="hidden">
 		<StackProvisioningButton ref="stackProvisioningButton" />
 		<ActiveResponseWizardButton ref="activeResponseWizardButton" />
-		<ThreatIntelButton ref="threatIntelButton" />
 	</div>
 </template>
 
@@ -36,11 +35,9 @@ import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import ActiveResponseWizardButton from "@/components/activeResponse/ActiveResponseWizardButton.vue"
 import StackProvisioningButton from "@/components/stackProvisioning/StackProvisioningButton.vue"
-import ThreatIntelButton from "@/components/threatIntel/ThreatIntelButton.vue"
 import { useThemeStore } from "@/stores/theme"
 
 import getItems from "./items"
-import { THREAT_INTEL_PANEL_KEY } from "./items/investigate"
 import { STACK_PROVISIONING_PANEL_KEY } from "./items/platform"
 import { ACTIVE_RESPONSE_PANEL_KEY } from "./items/respond"
 
@@ -60,7 +57,6 @@ const collapsedWidth = computed<number>(() => themeStore.sidebar.closeWidth)
 const sidebarCollapsed = computed<boolean>(() => themeStore.sidebar.collapsed)
 
 const stackProvisioningButton = ref<InstanceType<typeof StackProvisioningButton> | null>(null)
-const threatIntelButton = ref<InstanceType<typeof ThreatIntelButton> | null>(null)
 const activeResponseWizardButton = ref<InstanceType<typeof ActiveResponseWizardButton> | null>(null)
 
 watch(selectedKey, val => {
@@ -69,9 +65,6 @@ watch(selectedKey, val => {
 
 function handleMenuSelect(key: string | null) {
 	switch (key) {
-		case THREAT_INTEL_PANEL_KEY:
-			threatIntelButton.value?.openDrawer()
-			break
 		case STACK_PROVISIONING_PANEL_KEY:
 			stackProvisioningButton.value?.openModal()
 			break

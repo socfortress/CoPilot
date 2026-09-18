@@ -183,6 +183,12 @@ const NAV_LINKS: { title: string; routeName: string; icon: string; tags: string[
 	{ title: "Event Search", routeName: "EventSearch", icon: "carbon:search", tags: ["events", "logs"] },
 	{ title: "Dashboards", routeName: "Dashboards", icon: "carbon:dashboard-reference", tags: ["grafana"] },
 	{
+		title: "Threat Intel",
+		routeName: "ThreatIntel",
+		icon: "mynaui:info-waves",
+		tags: ["ioc", "reputation", "socfortress", "virustotal", "opencti"]
+	},
+	{
 		title: "MITRE ATT&CK",
 		routeName: "Alerts-Mitre",
 		icon: "carbon:security",

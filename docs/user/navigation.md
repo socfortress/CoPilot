@@ -109,9 +109,12 @@ From a lab environment, to help you recognise where you are:
   - Raw alerts from the SIEM indices (Graylog-backed). Not the triage queue: that's **Incidents → Alerts**.
 - **Investigate → Dashboards** → `/dashboards`
 - **Investigate → File Analysis** → `/file-analysis`
-- **Investigate → Threat Intel**: opens the threat intel lookup panel (SOCFortress, VirusTotal, OpenCTI).
-- **Investigate → OpenCTI** → `/opencti`
-  - Only shown once the OpenCTI connector is verified.
+- **Investigate → Threat Intel** → `/threat-intel`
+  - One tab per source, selected with `?tab=`:
+    - **SOCFortress** (`?tab=socfortress`): reputation lookup for an IP, domain or SHA256 hash.
+    - **VirusTotal** (`?tab=virustotal`): submit a file for analysis. The upload is shared with VirusTotal.
+    - **OpenCTI** (`?tab=opencti`): IOC lookup, and a filterable indicators table (`&view=indicators`). Only shown once the OpenCTI connector is verified. The old `/opencti` URL redirects here.
+  - The quick-access **Threat Intel** button on the Overview page and the SIEM alert lists still opens the same lookups in a side panel, so you don't have to leave the page.
 
 ### Respond
 
