@@ -9,6 +9,7 @@
 		<template v-if="resolvedIoc">
 			<div class="flex flex-wrap items-center gap-3">
 				<VirusTotalEnrichmentButton :ioc-value="resolvedIoc.value" />
+				<OpenCTIEnrichmentButton :ioc-value="resolvedIoc.value" />
 			</div>
 
 			<div class="grid-auto-fit-200 grid gap-2">
@@ -51,6 +52,7 @@ const emit = defineEmits<{
 	(e: "loaded", value: AlertIOC): void
 }>()
 
+const OpenCTIEnrichmentButton = defineAsyncComponent(() => import("@/components/opencti/OpenCTIEnrichmentButton.vue"))
 const VirusTotalEnrichmentButton = defineAsyncComponent(
 	() => import("@/components/threatIntel/VirusTotalEnrichmentButton.vue")
 )

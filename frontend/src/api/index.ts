@@ -28,6 +28,7 @@ import metrics from "./endpoints/metrics"
 import monitoringAlerts from "./endpoints/monitoring-alerts"
 import networkConnectors from "./endpoints/network-connectors"
 import notifications from "./endpoints/notifications"
+import opencti from "./endpoints/opencti"
 import passkey from "./endpoints/passkey"
 import patchTuesday from "./endpoints/patch-tuesday"
 import portainer from "./endpoints/portainer"
@@ -109,6 +110,7 @@ export default {
 	snapshots,
 	tagRbac,
 	talon,
+	opencti,
 	sso,
 	totp,
 	passkey

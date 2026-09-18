@@ -23,6 +23,9 @@
 				<n-collapse-item title="Virus Total" name="2" class="px-6">
 					<VirusTotalForm ref="virusTotalRef" />
 				</n-collapse-item>
+				<n-collapse-item v-if="openCTIAvailable" title="OpenCTI" name="3" class="px-6">
+					<OpenCTIForm ref="openCTIRef" />
+				</n-collapse-item>
 			</n-collapse>
 		</n-drawer-content>
 	</n-drawer>
@@ -33,6 +36,8 @@ import type { ButtonSize, ButtonType } from "naive-ui"
 import { NButton, NCollapse, NCollapseItem, NDrawer, NDrawerContent } from "naive-ui"
 import { ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import OpenCTIForm from "@/components/opencti/OpenCTIForm.vue"
+import { useOpenCTIAvailability } from "@/composables/useOpenCTIAvailability"
 import ThreatIntelForm from "./ThreatIntelForm.vue"
 import VirusTotalForm from "./VirusTotalForm.vue"
 
@@ -46,6 +51,8 @@ const ThreatIcon = "mynaui:info-waves"
 const showThreatIntelDrawer = ref(false)
 const threatIntelRef = ref<{ restore: () => void } | null>(null)
 const virusTotalRef = ref<{ restore: () => void } | null>(null)
+const openCTIRef = ref<{ restore: () => void } | null>(null)
+const { available: openCTIAvailable } = useOpenCTIAvailability()
 
 function openDrawer() {
 	showThreatIntelDrawer.value = true
@@ -57,6 +64,7 @@ function closeDrawer() {
 watch(showThreatIntelDrawer, () => {
 	threatIntelRef.value?.restore()
 	virusTotalRef.value?.restore()
+	openCTIRef.value?.restore()
 })
 
 defineExpose({

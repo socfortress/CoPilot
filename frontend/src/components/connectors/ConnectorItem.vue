@@ -105,6 +105,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useOpenCTIAvailability } from "@/composables/useOpenCTIAvailability"
 import { getApiErrorMessage } from "@/utils"
 import ConfigForm from "./ConfigForm"
 
@@ -128,6 +129,7 @@ const showConfigDialog = ref(false)
 const loadingConfiguration = ref(false)
 const loadingVerify = ref(false)
 const message = useMessage()
+const { refresh: refreshOpenCTIAvailability } = useOpenCTIAvailability()
 
 const loading = computed(() => loadingVerify.value || loadingConfiguration.value)
 
@@ -157,6 +159,9 @@ function verify(connector: Connector) {
 		})
 		.finally(() => {
 			loadingVerify.value = false
+			// OpenCTI surfaces elsewhere show only for a verified connector; let
+			// them appear (or disappear) without a reload.
+			if (connector.connector_name === "OpenCTI") refreshOpenCTIAvailability()
 		})
 }
 </script>
