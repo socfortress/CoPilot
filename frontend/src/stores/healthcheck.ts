@@ -75,7 +75,9 @@ export const useHealthcheckStore = defineStore("healthcheck", {
 					{
 						days: 1,
 						status: "active",
-						exclude_ok: true
+						exclude_ok: true,
+						// One entry per monitored thing that is failing *now*, not every CRIT row of the day (#1118)
+						latest_only: true
 					},
 					pollSignal()
 				)

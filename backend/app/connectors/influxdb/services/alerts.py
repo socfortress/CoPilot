@@ -1,3 +1,9 @@
+from typing import Any
+from typing import Dict
+from typing import Iterable
+from typing import Optional
+from typing import Tuple
+
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,6 +15,113 @@ from app.connectors.influxdb.schema.alerts import InfluxDBCheckNamesResponse
 from app.connectors.influxdb.utils.universal import create_influxdb_client
 from app.connectors.influxdb.utils.universal import get_influxdb_organization
 from app.connectors.utils import get_connector_info_from_db
+
+# InfluxDB level -> the severity vocabulary the API speaks.
+SEVERITY_BY_LEVEL = {"crit": "critical", "warn": "warning", "info": "info", "ok": "ok"}
+LEVELS_BY_SEVERITY = {"critical": "crit", "error": "crit", "warning": "warn", "ok": "ok"}
+
+# Tags whose value *is* the monitored state rather than naming the monitored thing. Telegraf's
+# systemd_units input tags every point with the unit's current load/active/sub state, so a unit
+# that fails and recovers writes its CRIT rows under `active=failed` and its OK rows under
+# `active=active` -- two different series (#1118). `mode` is the disk input's rw/ro, which a
+# remount flips. Leaving these out of the identity is what lets a recovery clear the failure.
+STATE_TAGS = frozenset({"active", "sub", "load", "mode"})
+
+SeriesIdentity = Tuple[str, Tuple[Tuple[str, str], ...]]
+
+
+def series_identity(values: Dict[str, Any]) -> SeriesIdentity:
+    """Name the monitored thing a status row is about: its check plus the tags that say which one.
+
+    One check evaluates many things at once -- CRITICAL SERVICES CHECK writes a status per host
+    *and* unit every minute -- so `_check_id` alone is not an identity. Neither is the Influx series
+    key: `_level` is a tag, so every level change starts a new series, and so do the STATE_TAGS.
+    Everything Influx adds itself is underscore-prefixed, which leaves exactly the tags the check's
+    query grouped by (host, name, path, cpu, ...), minus the ones that carry state.
+    """
+    tags = tuple(
+        sorted(
+            (key, str(value))
+            for key, value in values.items()
+            if value is not None and not key.startswith("_") and key not in STATE_TAGS and key not in ("result", "table")
+        ),
+    )
+    return str(values.get("_check_id", "unknown")), tags
+
+
+def latest_by_identity(records: Iterable[Any]) -> Dict[SeriesIdentity, Any]:
+    """Collapse status records to the most recent one per monitored thing."""
+    latest: Dict[SeriesIdentity, Any] = {}
+    for record in records:
+        identity = series_identity(record.values)
+        current = latest.get(identity)
+        if current is None or record.get_time() > current.get_time():
+            latest[identity] = record
+        elif record.get_time() == current.get_time() and current.values.get("_level") == "ok":
+            # Two series of one identity evaluated at the same instant: never let OK hide a problem.
+            latest[identity] = record
+    return latest
+
+
+def selected_levels(query_params: GetInfluxDBAlertQueryParams) -> Optional[frozenset]:
+    """The InfluxDB levels the caller wants rows for, or None for all of them."""
+    if query_params.severity:
+        return frozenset(LEVELS_BY_SEVERITY.get(sev.value, sev.value) for sev in query_params.severity)
+    return None
+
+
+def flux_string(value: str) -> str:
+    """Render `value` as a Flux string literal.
+
+    InfluxDB OSS does not support parameterised queries (they are Cloud-only), so anything the
+    caller supplies has to be escaped into the query text. `${` must be escaped as well as quotes
+    and backslashes: Flux interpolates it inside string literals.
+    """
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"').replace("${", "\\${") + '"'
+
+
+def build_status_query(bucket: str, query_params: GetInfluxDBAlertQueryParams) -> str:
+    """The statuses stream every alert query starts from: range + check filters, no level filter.
+
+    The level filter is deliberately absent. Current state has to be decided from *every* level --
+    an `exclude_ok` applied here would hide the OK that says a failure has recovered (#1118).
+    """
+    lines = ['import "regexp"']
+    filters = []
+    # Caller text is matched literally (quoteMeta), never spliced into a regex or the query.
+    if query_params.check_name:
+        lines.append(f"check_name_pattern = regexp.compile(v: regexp.quoteMeta(v: {flux_string(query_params.check_name)}))")
+        filters.append("|> filter(fn: (r) => r._check_name =~ check_name_pattern)")
+    if query_params.sensor_type:
+        lines.append(f"sensor_type_pattern = regexp.compile(v: regexp.quoteMeta(v: {flux_string(query_params.sensor_type)}))")
+        filters.append("|> filter(fn: (r) => r._check_name =~ sensor_type_pattern)")
+    lines += [
+        f"from(bucket: {flux_string(bucket)})",
+        f"    |> range(start: -{int(query_params.days)}d)",
+        '    |> filter(fn: (r) => r._measurement == "statuses" and r._field == "_message")',
+        "    |> filter(fn: (r) => exists r._check_id and exists r._check_name and exists r._level)",
+    ]
+    lines += [f"    {f}" for f in filters]
+    return "\n".join(lines)
+
+
+def build_alert(record: Any, current_level: str) -> InfluxDBAlert:
+    """One status row, with `status` taken from the monitored thing's *current* level.
+
+    A row is active only while its own level is a problem *and* the thing it describes has not
+    recovered since. A CRIT that has been followed by an OK is history: still listed, but cleared.
+    """
+    level = record.values.get("_level", "unknown")
+    check_name = record.values.get("_check_name", "unknown")
+    return InfluxDBAlert(
+        time=record.get_time(),
+        check_name=check_name,
+        sensor_type=check_name.split()[0] if " " in check_name else check_name,
+        severity=SEVERITY_BY_LEVEL.get(level, level),
+        message=record.values.get("_value", "No message"),
+        status="active" if level != "ok" and current_level != "ok" else "cleared",
+        check_id=str(record.values.get("_check_id", "unknown")),
+    )
 
 
 async def get_influxdb_alerts(
@@ -64,124 +177,56 @@ async def get_influxdb_alerts(
 
     query_api = influxdb_client.query_api()
 
-    # Build time range - use relative time for better performance
-    days_ago = f"-{query_params.days}d"
-
     try:
-        # Build Flux query - matching the actual InfluxDB structure
-        flux_query = f"""
-        from(bucket: "{influxdb_bucket}")
-            |> range(start: {days_ago})
-            |> filter(fn: (r) => r._measurement == "statuses" and r._field == "_message")
-            |> filter(fn: (r) => exists r._check_id and exists r._check_name and exists r._level)
-        """
+        status_query = build_status_query(influxdb_bucket, query_params)
 
-        # Add severity/level filter
-        if query_params.exclude_ok or query_params.severity:
-            severity_filters = []
+        # 1. Current state: the newest status of every series, with no level filter and no limit.
+        #    `last()` runs per series, which is small (things monitored x levels seen) and cheap.
+        state_query = status_query + "\n    |> last()"
+        logger.info(f"Executing Flux state query:\n{state_query}")
+        state_tables = await query_api.query(state_query, org=influxdb_org)
+        latest = latest_by_identity(record for table in state_tables for record in table.records)
+        current_level = {identity: record.values.get("_level") for identity, record in latest.items()}
 
-            if query_params.severity:
-                # Map severity to InfluxDB levels (crit, warn, info, ok)
-                level_mapping = {"critical": "crit", "error": "crit", "warning": "warn", "ok": "ok"}
-                for sev in query_params.severity:
-                    level = level_mapping.get(sev.value, sev.value)
-                    severity_filters.append(f'r._level == "{level}"')
-            elif query_params.exclude_ok:
-                # Exclude 'ok' level
-                severity_filters = ['r._level == "warn"', 'r._level == "crit"', 'r._level == "info"']
+        levels = selected_levels(query_params)
+        limit = query_params.limit or 500
 
-            if severity_filters:
-                severity_filter_str = " or ".join(severity_filters)
-                flux_query += f"\n    |> filter(fn: (r) => {severity_filter_str})"
+        def wanted(record) -> bool:
+            level = record.values.get("_level")
+            if levels is not None and level not in levels:
+                return False
+            return not (query_params.exclude_ok and level == "ok")
 
-        # Add check name filter
-        if query_params.check_name:
-            flux_query += f"""
-            |> filter(fn: (r) => r._check_name =~ /{query_params.check_name}/)
-            """
-
-        # Add sensor type filter (if applicable)
-        if query_params.sensor_type:
-            flux_query += f"""
-            |> filter(fn: (r) => r._check_name =~ /{query_params.sensor_type}/)
-            """
-
-        # Get only latest per check if requested
+        # 2. The rows to display. Level filters only choose rows here; they never feed state.
         if query_params.latest_only:
-            flux_query += """
-            |> group(columns: ["_check_name"])
-            |> sort(columns: ["_time"], desc: true)
-            |> limit(n: 1)
-            |> group()
-            """
+            records = [record for record in latest.values() if wanted(record)]
+            records.sort(key=lambda record: record.get_time(), reverse=True)
         else:
-            flux_query += """
-            |> sort(columns: ["_time"], desc: true)
-            """
-
-        # Add limit to prevent overwhelming results
-        flux_query += f"""
-            |> limit(n: {query_params.limit})
-        """
-
-        logger.info(f"Executing Flux query:\n{flux_query}")
-
-        # Execute query
-        result = await query_api.query(flux_query, org=influxdb_org)
-
-        # Process results
-        alerts = []
-        check_states = {}  # Track latest state per check for status calculation
-
-        for table in result:
-            for record in table.records:
-                alert_time = record.get_time()
-                check_name = record.values.get("_check_name", "unknown")
-                check_id = record.values.get("_check_id", "unknown")
-                level = record.values.get("_level", "unknown")
-                message = record.values.get("_value", "No message")
-
-                # Map InfluxDB levels to severity
-                severity_mapping = {"crit": "critical", "warn": "warning", "info": "info", "ok": "ok"}
-                severity = severity_mapping.get(level, level)
-
-                # Track the latest state for this check ID
-                if check_id not in check_states or alert_time > check_states[check_id]["time"]:
-                    check_states[check_id] = {
-                        "time": alert_time,
-                        "level": level,
-                        "check_name": check_name,
-                    }
-
-                # Status: if level is 'ok', it's cleared; otherwise active
-                status = "cleared" if level == "ok" else "active"
-
-                alerts.append(
-                    InfluxDBAlert(
-                        time=alert_time,
-                        check_name=check_name,
-                        sensor_type=check_name.split()[0] if " " in check_name else check_name,
-                        severity=severity,
-                        message=message,
-                        status=status,
-                        check_id=str(check_id),
-                    ),
+            rows_query = status_query
+            if levels is not None:
+                rows_query += (
+                    "\n    |> filter(fn: (r) => " + " or ".join(f"r._level == {flux_string(level)}" for level in sorted(levels)) + ")"
                 )
+            if query_params.exclude_ok:
+                rows_query += '\n    |> filter(fn: (r) => r._level != "ok")'
+            # group() first: sort and limit act per table, and every series is its own table.
+            rows_query += f'\n    |> group()\n    |> sort(columns: ["_time"], desc: true)\n    |> limit(n: {limit})'
+            logger.info(f"Executing Flux rows query:\n{rows_query}")
+            rows_tables = await query_api.query(rows_query, org=influxdb_org)
+            records = [record for table in rows_tables for record in table.records]
 
-        # Apply status filter if requested
-        if query_params.status != AlertStatus.ALL:
-            if query_params.status == AlertStatus.ACTIVE:
-                # Only keep alerts from checks that are currently NOT in 'ok' state
-                active_check_ids = {check_id for check_id, state in check_states.items() if state["level"] != "ok"}
+        # A row written after the state query ran falls back to its own level.
+        alerts = [
+            build_alert(record, current_level.get(series_identity(record.values), record.values.get("_level", "unknown")))
+            for record in records
+        ]
 
-                logger.info(f"Active check IDs: {active_check_ids}")
+        if query_params.status == AlertStatus.ACTIVE:
+            alerts = [alert for alert in alerts if alert.status == "active"]
+        elif query_params.status == AlertStatus.CLEARED:
+            alerts = [alert for alert in alerts if alert.status == "cleared"]
 
-                alerts = [alert for alert in alerts if alert.check_id in active_check_ids]
-            elif query_params.status == AlertStatus.CLEARED:
-                # Only keep alerts from checks that are currently in 'ok' state
-                cleared_check_ids = {check_id for check_id, state in check_states.items() if state["level"] == "ok"}
-
-                alerts = [alert for alert in alerts if alert.check_id in cleared_check_ids]
+        alerts = alerts[:limit]
 
         # Calculate counts
         total_count = len(alerts)
