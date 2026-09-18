@@ -559,7 +559,8 @@ async def _build_influx_health_indicator(session: AsyncSession) -> SidebarHealth
             )
 
         critical_count = sum(1 for alert in response.alerts if str(alert.severity).lower() in {"critical", "error"})
-        warn_count = sum(1 for alert in response.alerts if str(alert.severity).lower() == "warn")
+        # The service maps Influx's `warn` level to `warning`; matching only "warn" never counted any.
+        warn_count = sum(1 for alert in response.alerts if str(alert.severity).lower() in {"warn", "warning"})
 
         if critical_count == 0 and warn_count == 0:
             return SidebarHealthIndicator(

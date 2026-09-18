@@ -60,7 +60,9 @@ function getData() {
 		.getHealthchecks({
 			days: 1,
 			status: "active",
-			exclude_ok: true
+			exclude_ok: true,
+			// One entry per monitored thing that is failing *now*, not every CRIT row of the day (#1118)
+			latest_only: true
 		})
 		.then(res => {
 			if (res.data.success) {
