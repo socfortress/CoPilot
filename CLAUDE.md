@@ -265,6 +265,18 @@ A customer may hold several Microsoft 365 tenants — an MSSP customer with subs
 
 Tests: `tests/test_office365_multi_tenant.py` (no DB, no network).
 
+### OpenCTI connector (GraphQL foundation, #1143)
+
+`app/connectors/opencti/` is a normal first-party connector (`OPENCTI_URL` / `OPENCTI_API_KEY`, `api_key` auth, row name `OpenCTI`) built as the base for any feature that needs threat intel from OpenCTI. Routes live under `/api/opencti` (`/about`, `/observables/search`, `/indicators`, `/entities/{id}`, admin/analyst, no tenant scoping because OpenCTI data is deployment-wide). Adding a feature means writing a query in `services/queries.py` and a service function. Don't add a transport.
+
+- **OpenCTI reports failure as HTTP 200.** A bad token, a malformed query and a missing capability all return 200 with an `errors` array (`AUTH_REQUIRED`, `GRAPHQL_VALIDATION_FAILED`, …) and a `data` full of nulls. `send_graphql_request` treats any `errors` entry as `success=False`. A caller that checks the status code or reads `data` directly will show a revoked token as healthy.
+- **Plain GraphQL over `httpx`, not `pycti`.** The SDK is synchronous and has to track the server's exact version. A GraphQL document keeps working across releases as long as the fields it names exist.
+- **Lists are Relay connections.** Use `paginate_graphql(query, connection_path, …)` rather than hand-rolling a cursor loop. The query must declare `$first: Int, $after: ID` and select `pageInfo { hasNextPage endCursor }`.
+- **Shared fields are GraphQL fragments** (`CoreMeta`, `IndicatorFields`). A document must define exactly the fragments it spreads, because an unused one fails server-side validation. `test_every_query_defines_exactly_the_fragments_it_spreads` catches that offline.
+- **IOC lookup is one filter item ORing `value` with every `hashes.*` key**, because files have no `value`. OpenCTI matches these case-insensitively. Free-text `search` matches whole tokens only (`sdk.netnut.io` finds that indicator, `netnut` finds nothing), so exact lookups go through filters, not `search`.
+
+Tests: `tests/test_opencti_connector.py` (no DB, no network).
+
 ### Stack provisioning: Graylog content packs and InfluxDB checks
 
 `app/stack_provisioning/` holds two independent provisioners that share a shape (JSON templates on disk + `routes / services / schema`) but nothing else:
