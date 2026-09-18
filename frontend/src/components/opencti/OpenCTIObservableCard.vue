@@ -105,7 +105,6 @@
 </template>
 
 <script setup lang="ts">
-import type { BadgeColor } from "@/components/common/Badge.vue"
 import type { OpenCTIObservable } from "@/types/opencti"
 import { NTag } from "naive-ui"
 import Badge from "@/components/common/Badge.vue"
@@ -113,6 +112,7 @@ import { useOpenCTIAvailability } from "@/composables/useOpenCTIAvailability"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
+import { markingType, scoreColor } from "./utils"
 
 const { observable } = defineProps<{
 	observable: OpenCTIObservable
@@ -120,21 +120,6 @@ const { observable } = defineProps<{
 
 const dFormats = useSettingsStore().dateFormat
 const { objectUrl } = useOpenCTIAvailability()
-
-function scoreColor(score: number | null): BadgeColor | undefined {
-	if (score === null) return undefined
-	if (score >= 75) return "danger"
-	if (score >= 50) return "warning"
-	return undefined
-}
-
-function markingType(marking: string): "error" | "warning" | "success" | "default" {
-	const tlp = marking.toUpperCase()
-	if (tlp.startsWith("TLP:RED")) return "error"
-	if (tlp.startsWith("TLP:AMBER")) return "warning"
-	if (tlp.startsWith("TLP:GREEN")) return "success"
-	return "default"
-}
 
 function isExpired(date: string): boolean {
 	return dayjs(date).isBefore(dayjs())

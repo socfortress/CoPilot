@@ -1,5 +1,6 @@
 import type { MenuMixedOption } from "naive-ui/es/menu/src/interface"
 
+import { useOpenCTIAvailability } from "@/composables/useOpenCTIAvailability"
 import { renderIcon } from "@/utils"
 
 import { agentsItem } from "./items/agents"
@@ -9,7 +10,7 @@ import { incidentManagementItem } from "./items/incident-management"
 import { logManagementItem } from "./items/log-management"
 import { reportCreationItem } from "./items/report-creation"
 import { siemItem } from "./items/siem"
-import { toolsItem } from "./items/tools"
+import { getToolsItem } from "./items/tools"
 
 const OverviewIcon = "carbon:dashboard"
 const CustomersIcon = "carbon:user-multiple"
@@ -18,6 +19,10 @@ const DetectionCatalogIcon = "carbon:catalog"
 const InternalNotificationsIcon = "carbon:notification"
 
 export default function getItems(): MenuMixedOption[] {
+	// Read inside the Navbar's computed, so the Tools menu gains or loses OpenCTI
+	// as soon as the connector is verified or unverified.
+	const { available: openCTIAvailable } = useOpenCTIAvailability()
+
 	return [
 		{
 			...routerLinkItem("Overview", "Overview"),
@@ -49,6 +54,6 @@ export default function getItems(): MenuMixedOption[] {
 		logManagementItem,
 		reportCreationItem,
 		healthcheckItem,
-		toolsItem
+		getToolsItem(openCTIAvailable.value)
 	]
 }

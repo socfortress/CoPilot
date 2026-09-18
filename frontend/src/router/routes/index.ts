@@ -20,6 +20,7 @@ import { indicesRoutes } from "./indices"
 import { licenseRoutes } from "./license"
 import { logsRoutes } from "./logs"
 import { notificationsRoutes } from "./notifications"
+import { openCTIRoutes } from "./opencti"
 import { reportCreationRoutes } from "./report-creation"
 import { schedulerRoutes } from "./scheduler"
 import { settingsRoutes } from "./settings"
@@ -37,6 +38,7 @@ export const routes: RouteRecordRaw[] = [
 	...incidentManagementRoutes,
 	...analystRoutes,
 	...detectionCatalogRoutes,
+	...openCTIRoutes,
 	...healthcheckRoutes,
 	...customersRoutes,
 	...auditRoutes,
