@@ -38,11 +38,7 @@
 						:feedback="instanceNameError"
 						class="w-full"
 					>
-						<n-input
-							v-model:value="instanceName"
-							placeholder="e.g. company.onmicrosoft.com"
-							clearable
-						/>
+						<n-input v-model:value="instanceName" placeholder="e.g. company.onmicrosoft.com" clearable />
 					</n-form-item>
 					<template v-for="ak of authKeysForm" :key="ak.key">
 						<n-form-item v-if="ak.type === 'string'" :label="ak.key" required class="grow">
@@ -150,16 +146,18 @@ const takenInstanceNames = computed(() =>
 // multi-instance support; adding a further one has to name it so the two can be told apart.
 const isInstanceNameRequired = computed(() => isMultiInstance.value && takenInstanceNames.value.length > 0)
 
-const instanceNameError = computed(() => {
+// `undefined`, not `null`, for "no error": it feeds n-form-item's `feedback`,
+// which is typed `string | undefined`.
+const instanceNameError = computed<string | undefined>(() => {
 	const value = instanceName.value.trim()
 
 	if (!value) {
-		return isInstanceNameRequired.value ? "An instance name is required to add another one" : null
+		return isInstanceNameRequired.value ? "An instance name is required to add another one" : undefined
 	}
 	if (takenInstanceNames.value.includes(value)) {
 		return "This customer already has an instance with that name"
 	}
-	return null
+	return undefined
 })
 
 watch(selectedIntegration, val => {
