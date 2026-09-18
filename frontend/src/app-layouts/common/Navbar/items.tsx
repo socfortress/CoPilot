@@ -1,6 +1,5 @@
 import type { MenuMixedOption } from "naive-ui/es/menu/src/interface"
 
-import { useOpenCTIAvailability } from "@/composables/useOpenCTIAvailability"
 import { useAuthStore } from "@/stores/auth"
 import { renderIcon } from "@/utils"
 
@@ -9,7 +8,7 @@ import { endpointsItem } from "./items/endpoints"
 import { exposureItem } from "./items/exposure"
 import { routerLinkItem } from "./items/helpers"
 import { incidentsItem } from "./items/incidents"
-import { getInvestigateItem } from "./items/investigate"
+import { investigateItem } from "./items/investigate"
 import { getPlatformItem } from "./items/platform"
 import { reportsItem } from "./items/reports"
 import { respondItem } from "./items/respond"
@@ -24,13 +23,12 @@ const AiAnalystIcon = "carbon:machine-learning-model"
  *
  * Every leaf's key is its route name. Navbar.vue highlights the current page by
  * route name, so renaming or moving an item never breaks that as long as the
- * key stays the route name. The few keys that aren't route names open a panel
+ * key stays the route name. The two keys that aren't route names open a panel
  * instead of a page (see Navbar.vue's handleMenuSelect).
  */
 export default function getItems(): MenuMixedOption[] {
-	// Both read inside the Navbar's computed, so the menu follows OpenCTI being
-	// verified and the signed-in user's role without a reload.
-	const { available: openCTIAvailable } = useOpenCTIAvailability()
+	// Read inside the Navbar's computed, so the menu follows the signed-in
+	// user's role without a reload.
 	const authStore = useAuthStore()
 
 	return [
@@ -43,7 +41,7 @@ export default function getItems(): MenuMixedOption[] {
 			icon: renderIcon(AiAnalystIcon)
 		},
 		incidentsItem,
-		getInvestigateItem(openCTIAvailable.value),
+		investigateItem,
 		respondItem,
 		detectionsItem,
 		exposureItem,

@@ -12,22 +12,16 @@
 import type { MenuMixedOption } from "naive-ui/es/menu/src/interface"
 import type { RouteRecordRaw } from "vue-router"
 import { describe, expect, it, vi } from "vitest"
-import { ref } from "vue"
 import { routes } from "@/router/routes"
 import getItems from "../items"
-import { THREAT_INTEL_PANEL_KEY } from "../items/investigate"
 import { STACK_PROVISIONING_PANEL_KEY } from "../items/platform"
 import { ACTIVE_RESPONSE_PANEL_KEY } from "../items/respond"
 
 const auth = { isAdmin: true }
-const openCTI = ref(true)
 
 vi.mock("@/stores/auth", () => ({ useAuthStore: () => auth }))
-vi.mock("@/composables/useOpenCTIAvailability", () => ({
-	useOpenCTIAvailability: () => ({ available: openCTI })
-}))
 
-const PANEL_KEYS = [THREAT_INTEL_PANEL_KEY, ACTIVE_RESPONSE_PANEL_KEY, STACK_PROVISIONING_PANEL_KEY]
+const PANEL_KEYS = [ACTIVE_RESPONSE_PANEL_KEY, STACK_PROVISIONING_PANEL_KEY]
 
 /** Every destination the sidebar and the avatar menu reached before #1152. */
 const PREVIOUS_DESTINATIONS = [
@@ -72,7 +66,9 @@ const PREVIOUS_DESTINATIONS = [
 	"CloudSecurityAssessment",
 	"WebVulnerabilityAssessment",
 	"GitHubAudit",
-	"OpenCTI",
+	// The Threat Intel drawer and the OpenCTI page became one page with a tab per
+	// source (#1153); /opencti redirects to its OpenCTI tab.
+	"ThreatIntel",
 	// formerly in the avatar menu
 	"License",
 	"Users",
@@ -125,9 +121,8 @@ function routeNames(records: RouteRecordRaw[]): Set<string> {
 	return names
 }
 
-function menuFor(role: "admin" | "analyst", openCTIVerified = true) {
+function menuFor(role: "admin" | "analyst") {
 	auth.isAdmin = role === "admin"
-	openCTI.value = openCTIVerified
 	return getItems()
 }
 
@@ -190,10 +185,5 @@ describe("sidebar menu", () => {
 			"Reports",
 			"Platform"
 		])
-	})
-
-	it("shows OpenCTI only for a verified connector", () => {
-		expect(leaves(menuFor("admin", false)).map(leaf => leaf.key)).not.toContain("OpenCTI")
-		expect(leaves(menuFor("admin", true)).map(leaf => leaf.key)).toContain("OpenCTI")
 	})
 })

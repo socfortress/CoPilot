@@ -20,10 +20,10 @@ import { indicesRoutes } from "./indices"
 import { licenseRoutes } from "./license"
 import { logsRoutes } from "./logs"
 import { notificationsRoutes } from "./notifications"
-import { openCTIRoutes } from "./opencti"
 import { reportCreationRoutes } from "./report-creation"
 import { schedulerRoutes } from "./scheduler"
 import { settingsRoutes } from "./settings"
+import { threatIntelRoutes } from "./threat-intel"
 import { usersRoutes } from "./users"
 
 export const routes: RouteRecordRaw[] = [
@@ -38,7 +38,7 @@ export const routes: RouteRecordRaw[] = [
 	...incidentManagementRoutes,
 	...analystRoutes,
 	...detectionCatalogRoutes,
-	...openCTIRoutes,
+	...threatIntelRoutes,
 	...healthcheckRoutes,
 	...customersRoutes,
 	...auditRoutes,
