@@ -271,7 +271,11 @@ def test_sidebar_counts_warnings():
     from app.status.services import context_indicators as indicators
 
     warning = InfluxDBAlert(
-        time=datetime.now(timezone.utc), check_name="DISK USAGE CHECK", sensor_type="DISK", severity="warning", message="m",
+        time=datetime.now(timezone.utc),
+        check_name="DISK USAGE CHECK",
+        sensor_type="DISK",
+        severity="warning",
+        message="m",
     )
     response = InfluxDBAlertResponse(success=True, message="ok", alerts=[warning], total_count=1, filtered_count=1)
     with patch.object(indicators, "get_influxdb_alerts", AsyncMock(return_value=response)):
