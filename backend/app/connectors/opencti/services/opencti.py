@@ -8,6 +8,7 @@ from loguru import logger
 
 from app.connectors.opencti.schema.opencti import OpenCTIAbout
 from app.connectors.opencti.schema.opencti import OpenCTIAboutResponse
+from app.connectors.opencti.schema.opencti import OpenCTIAvailabilityResponse
 from app.connectors.opencti.schema.opencti import OpenCTIEntity
 from app.connectors.opencti.schema.opencti import OpenCTIEntityResponse
 from app.connectors.opencti.schema.opencti import OpenCTIIndicator
@@ -20,9 +21,14 @@ from app.connectors.opencti.services.queries import ENTITY_QUERY
 from app.connectors.opencti.services.queries import INDICATORS_QUERY
 from app.connectors.opencti.services.queries import OBSERVABLE_LOOKUP_KEYS
 from app.connectors.opencti.services.queries import OBSERVABLE_LOOKUP_QUERY
+from app.connectors.opencti.utils.universal import GRAPHQL_PATH
+from app.connectors.opencti.utils.universal import OPENCTI_CONNECTOR_NAME
+from app.connectors.opencti.utils.universal import build_graphql_url
 from app.connectors.opencti.utils.universal import filter_group
 from app.connectors.opencti.utils.universal import filter_item
 from app.connectors.opencti.utils.universal import send_graphql_request
+from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import get_db_session
 
 # ── GraphQL → CoPilot shape ──────────────────────────────────────────────────
 
@@ -100,6 +106,33 @@ def _raise_on_failure(response: Dict[str, Any], action: str) -> Dict[str, Any]:
 
 
 # ── Services ─────────────────────────────────────────────────────────────────
+
+
+async def get_availability() -> OpenCTIAvailabilityResponse:
+    """
+    Whether the UI should offer OpenCTI at all.
+
+    Reads only the connector row, through the same cache every credential read
+    uses, and never calls OpenCTI. The frontend asks this once per session to
+    decide whether to show its OpenCTI surfaces. The alternative, `GET
+    /connectors`, would hand the browser every connector's credentials to
+    answer a yes/no question.
+    """
+    async with get_db_session() as session:
+        attributes = await get_connector_info_from_db(OPENCTI_CONNECTOR_NAME, session)
+    if attributes is None:
+        return OpenCTIAvailabilityResponse(success=True, message="OpenCTI connector is not installed", configured=False, verified=False)
+
+    configured = bool((attributes.get("connector_url") or "").strip() and (attributes.get("connector_api_key") or "").strip())
+    verified = configured and bool(attributes.get("connector_verified"))
+    return OpenCTIAvailabilityResponse(
+        success=True,
+        message="OpenCTI connector is verified" if verified else "OpenCTI connector is not verified",
+        configured=configured,
+        verified=verified,
+        # The stored URL may be the GraphQL endpoint itself; links need the platform.
+        platform_url=build_graphql_url(attributes["connector_url"])[: -len(GRAPHQL_PATH)] if verified else None,
+    )
 
 
 async def get_platform_info() -> OpenCTIAboutResponse:

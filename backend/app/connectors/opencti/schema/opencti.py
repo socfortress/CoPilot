@@ -98,6 +98,17 @@ class OpenCTIAbout(BaseModel):
 # ── Responses ────────────────────────────────────────────────────────────────
 
 
+class OpenCTIAvailabilityResponse(BaseModel):
+    success: bool
+    message: str
+    configured: bool = Field(..., description="The connector row exists with a URL and an API key")
+    verified: bool = Field(..., description="The last Verify on the Connectors page succeeded")
+    platform_url: Optional[str] = Field(
+        default=None,
+        description="OpenCTI's web address, for 'open in OpenCTI' links (<platform_url>/dashboard/id/<id>). Only set once verified.",
+    )
+
+
 class OpenCTIAboutResponse(BaseModel):
     success: bool
     message: str

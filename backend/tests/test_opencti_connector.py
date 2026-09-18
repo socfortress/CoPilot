@@ -336,3 +336,56 @@ def test_seed_list_includes_opencti():
     from app.db.db_populate import get_connectors_list
 
     assert "OpenCTI" in {c["connector_name"] for c in get_connectors_list()}
+
+
+# ── availability (frontend gating, #1145) ────────────────────────────────────
+
+
+def _availability(row):
+    async def get_connector_info_from_db(_name, _session):
+        return row
+
+    class _Session:
+        async def __aenter__(self):
+            return None
+
+        async def __aexit__(self, *exc):
+            return False
+
+    with patch.object(services, "get_connector_info_from_db", get_connector_info_from_db), patch.object(
+        services,
+        "get_db_session",
+        lambda: _Session(),
+    ):
+        return asyncio.run(services.get_availability())
+
+
+@pytest.mark.parametrize(
+    ("row", "configured", "verified"),
+    [
+        (None, False, False),
+        ({"connector_url": "", "connector_api_key": "k", "connector_verified": True}, False, False),
+        ({"connector_url": "http://opencti:8080", "connector_api_key": None, "connector_verified": True}, False, False),
+        ({"connector_url": "http://opencti:8080", "connector_api_key": "k", "connector_verified": False}, True, False),
+        ({"connector_url": "http://opencti:8080", "connector_api_key": "k", "connector_verified": True}, True, True),
+    ],
+)
+def test_availability_reflects_the_connector_row(row, configured, verified):
+    result = _availability(row)
+    assert (result.configured, result.verified) == (configured, verified)
+
+
+def test_availability_never_returns_credentials():
+    row = {"connector_url": "http://opencti:8080", "connector_api_key": "secret-token", "connector_verified": True}
+    assert "secret-token" not in _availability(row).model_dump_json()
+
+
+@pytest.mark.parametrize("stored", ["http://opencti:8080", "http://opencti:8080/", "http://opencti:8080/graphql"])
+def test_availability_platform_url_is_the_web_address(stored):
+    row = {"connector_url": stored, "connector_api_key": "k", "connector_verified": True}
+    assert _availability(row).platform_url == "http://opencti:8080"
+
+
+def test_availability_hides_platform_url_until_verified():
+    row = {"connector_url": "http://opencti:8080", "connector_api_key": "k", "connector_verified": False}
+    assert _availability(row).platform_url is None

@@ -10,6 +10,7 @@
 		<template #footerExtra>
 			<div class="flex items-center justify-end gap-3">
 				<VirusTotalEnrichmentButton :ioc-value="ioc.value" />
+				<OpenCTIEnrichmentButton :ioc-value="ioc.value" />
 
 				<EntityDetailsButton
 					size="small"
@@ -51,6 +52,7 @@ import { ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
+import OpenCTIEnrichmentButton from "@/components/opencti/OpenCTIEnrichmentButton.vue"
 import VirusTotalEnrichmentButton from "@/components/threatIntel/VirusTotalEnrichmentButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"

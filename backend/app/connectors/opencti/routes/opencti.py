@@ -8,9 +8,11 @@ from loguru import logger
 
 from app.auth.utils import AuthHandler
 from app.connectors.opencti.schema.opencti import OpenCTIAboutResponse
+from app.connectors.opencti.schema.opencti import OpenCTIAvailabilityResponse
 from app.connectors.opencti.schema.opencti import OpenCTIEntityResponse
 from app.connectors.opencti.schema.opencti import OpenCTIIndicatorsResponse
 from app.connectors.opencti.schema.opencti import OpenCTIObservableLookupResponse
+from app.connectors.opencti.services.opencti import get_availability
 from app.connectors.opencti.services.opencti import get_entity
 from app.connectors.opencti.services.opencti import get_platform_info
 from app.connectors.opencti.services.opencti import lookup_observable
@@ -19,6 +21,16 @@ from app.connectors.opencti.services.opencti import search_indicators
 # OpenCTI holds deployment-wide threat intelligence, not tenant data, so these
 # routes carry no customer scoping.
 opencti_router = APIRouter()
+
+
+@opencti_router.get(
+    "/availability",
+    response_model=OpenCTIAvailabilityResponse,
+    description="Whether the OpenCTI connector is configured and verified. Reads the connector row only; never calls OpenCTI.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_opencti_availability() -> OpenCTIAvailabilityResponse:
+    return await get_availability()
 
 
 @opencti_router.get(
