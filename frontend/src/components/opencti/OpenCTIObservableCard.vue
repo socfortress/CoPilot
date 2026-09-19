@@ -37,6 +37,17 @@
 					>
 						<Icon :name="copiedText === displayValue ? 'carbon:checkmark' : 'carbon:copy'" :size="15" />
 					</button>
+					<a
+						v-if="objectUrl(observable.id)"
+						:href="objectUrl(observable.id) || undefined"
+						target="_blank"
+						rel="noopener noreferrer"
+						:class="OPEN_LINK"
+						class="mt-0.5"
+						title="Open in OpenCTI"
+					>
+						<Icon name="carbon:launch" :size="15" />
+					</a>
 				</div>
 
 				<div v-if="metaLine.length" class="text-tertiary flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
@@ -44,7 +55,7 @@
 				</div>
 			</div>
 
-			<div class="flex shrink-0 items-center justify-between gap-5 @2xl:flex-col @2xl:items-end @2xl:gap-3">
+			<div class="flex shrink-0 items-center gap-5">
 				<div class="flex flex-col gap-1.5 @2xl:items-end">
 					<span :class="SECTION_LABEL">Score</span>
 					<div class="flex items-center gap-3 @2xl:flex-row-reverse">
@@ -64,17 +75,6 @@
 						</div>
 					</div>
 				</div>
-
-				<a
-					v-if="objectUrl(observable.id)"
-					:href="objectUrl(observable.id) || undefined"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="text-secondary hover:text-primary flex items-center gap-1 text-xs whitespace-nowrap transition-colors"
-				>
-					Open in OpenCTI
-					<Icon name="carbon:launch" :size="12" />
-				</a>
 			</div>
 		</header>
 
