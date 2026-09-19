@@ -21,9 +21,10 @@ import type { ApiError } from "@/types/common"
 import type { OpenCTIAbout } from "@/types/opencti"
 import { NSpin } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
-import Api from "@/api"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import { getApiErrorMessage } from "@/utils"
+// TEMP(mock): UI/UX review — restore `import Api from "@/api"` and `Api.opencti` before merging.
+import mockOpenCTI from "./__mock__/opencti-mock"
 
 // Scores at or above this are what most feeds assign to confirmed-malicious IOCs.
 const HIGH_SCORE = 75
@@ -72,9 +73,9 @@ function load() {
 	// Counts come from `global_count` on a one-row page: OpenCTI totals the
 	// whole match set server-side, so this costs two tiny queries, not a scan.
 	Promise.all([
-		Api.opencti.getAbout(),
-		Api.opencti.getIndicators({ first: 1 }),
-		Api.opencti.getIndicators({ first: 1, min_score: HIGH_SCORE })
+		mockOpenCTI.getAbout(),
+		mockOpenCTI.getIndicators({ first: 1 }),
+		mockOpenCTI.getIndicators({ first: 1, min_score: HIGH_SCORE })
 	])
 		.then(([aboutRes, allRes, highRes]) => {
 			about.value = aboutRes.data.about

@@ -12,9 +12,7 @@
 			<n-tab name="indicators" tab="Indicators" />
 		</n-tabs>
 
-		<div v-if="activeView === 'lookup'" class="max-w-3xl">
-			<OpenCTIForm />
-		</div>
+		<OpenCTIForm v-if="activeView === 'lookup'" />
 		<OpenCTIIndicatorsIndex v-else />
 	</div>
 </template>

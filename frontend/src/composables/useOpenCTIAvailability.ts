@@ -1,5 +1,6 @@
 import { computed, ref } from "vue"
-import Api from "@/api"
+// TEMP(mock): UI/UX review — restore `import Api from "@/api"` and `Api.opencti` before merging.
+import mockOpenCTI from "@/components/opencti/__mock__/opencti-mock"
 
 /**
  * Whether this deployment has a verified OpenCTI connector.
@@ -22,7 +23,7 @@ let inflight: Promise<void> | null = null
 function fetchAvailability(): Promise<void> {
 	if (inflight) return inflight
 
-	inflight = Api.opencti
+	inflight = mockOpenCTI
 		.getAvailability()
 		.then(res => {
 			verified.value = !!res.data.verified

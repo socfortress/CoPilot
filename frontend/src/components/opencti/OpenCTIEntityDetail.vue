@@ -100,13 +100,14 @@ import type { OpenCTIEntity } from "@/types/opencti"
 import axios from "axios"
 import { NSpin, NTag } from "naive-ui"
 import { ref, watch } from "vue"
-import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import { useOpenCTIAvailability } from "@/composables/useOpenCTIAvailability"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
+// TEMP(mock): UI/UX review — restore `import Api from "@/api"` and `Api.opencti` before merging.
+import mockOpenCTI from "./__mock__/opencti-mock"
 import { markingType, scoreColor } from "./utils"
 
 const { entityId } = defineProps<{
@@ -130,7 +131,7 @@ function load(id: string) {
 	error.value = ""
 	entity.value = null
 
-	Api.opencti
+	mockOpenCTI
 		.getEntity(id, current.signal)
 		.then(res => {
 			entity.value = res.data.entity

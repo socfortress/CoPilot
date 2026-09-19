@@ -2,16 +2,16 @@
 	<n-spin :show="loading">
 		<div class="flex flex-col gap-3">
 			<n-form-item label="IOC Value" :show-feedback="false">
-				<n-input
-					v-model:value.trim="iocValue"
-					placeholder="IP, domain, URL, email or file hash"
-					clearable
-					@keydown.enter="isValid && lookup()"
-				/>
+				<n-input-group>
+					<n-input
+						v-model:value.trim="iocValue"
+						placeholder="IP, domain, URL, email or file hash"
+						clearable
+						@keydown.enter="isValid && lookup()"
+					/>
+					<n-button type="primary" :disabled="!isValid" @click="lookup()">Lookup</n-button>
+				</n-input-group>
 			</n-form-item>
-			<div class="flex justify-end">
-				<n-button type="primary" :disabled="!isValid" @click="lookup()">Lookup</n-button>
-			</div>
 			<div v-if="error" class="bg-secondary border-error rounded-lg border px-4 py-2.5">
 				{{ error }}
 			</div>
@@ -24,10 +24,11 @@
 import type { ApiError } from "@/types/common"
 import type { OpenCTIObservableLookup } from "@/types/opencti"
 import _trim from "lodash/trim"
-import { NButton, NFormItem, NInput, NSpin } from "naive-ui"
+import { NButton, NFormItem, NInput, NInputGroup, NSpin } from "naive-ui"
 import { computed, ref } from "vue"
-import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
+// TEMP(mock): UI/UX review — restore `import Api from "@/api"` and `Api.opencti` before merging.
+import mockOpenCTI from "./__mock__/opencti-mock"
 import OpenCTILookupResult from "./OpenCTILookupResult.vue"
 
 const loading = ref(false)
@@ -47,7 +48,7 @@ function lookup() {
 	loading.value = true
 	error.value = ""
 
-	Api.opencti
+	mockOpenCTI
 		.lookupObservable(_trim(iocValue.value))
 		.then(res => {
 			response.value = res.data
