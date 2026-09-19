@@ -5,12 +5,14 @@
 			indicators and open any of them for full context.
 		</p>
 
-		<OpenCTIPlatformStats />
-
-		<n-tabs v-model:value="activeView" type="segment" animated class="max-w-md">
-			<n-tab name="lookup" tab="IOC Lookup" />
-			<n-tab name="indicators" tab="Indicators" />
-		</n-tabs>
+		<!-- The view switch and the platform readout share one line: tabs lead, stats follow. -->
+		<div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+			<n-tabs v-model:value="activeView" type="segment" animated size="small" class="w-full max-w-xs">
+				<n-tab name="lookup" tab="IOC Lookup" />
+				<n-tab name="indicators" tab="Indicators" />
+			</n-tabs>
+			<OpenCTIPlatformStats />
+		</div>
 
 		<OpenCTIForm v-if="activeView === 'lookup'" />
 		<OpenCTIIndicatorsIndex v-else />

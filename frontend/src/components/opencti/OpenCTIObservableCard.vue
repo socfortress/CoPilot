@@ -155,21 +155,26 @@
 
 						<div class="flex shrink-0 items-center gap-3">
 							<div class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs">
-								<n-tag v-if="indicator.revoked" size="tiny" type="error" :bordered="false">
-									revoked
-								</n-tag>
 								<span v-if="indicator.score !== null" :class="scoreClass(indicator.score)">
 									score {{ indicator.score }}
 								</span>
 								<span v-if="indicator.confidence !== null" class="text-tertiary">
 									conf {{ indicator.confidence }}
 								</span>
-								<span
-									v-if="indicator.valid_until"
-									:class="isExpired(indicator.valid_until) ? 'text-error' : 'text-tertiary'"
-								>
-									{{ isExpired(indicator.valid_until) ? "expired" : "until" }}
-									{{ formatDate(indicator.valid_until, dFormats.date) }}
+								<span class="flex items-center gap-1.5">
+									<span
+										class="size-1.5 shrink-0 rounded-full"
+										:class="VALIDITY_DOT[indicatorValidity(indicator)]"
+									/>
+									<span class="text-tertiary">
+										{{ VALIDITY_LABEL[indicatorValidity(indicator)] }}
+									</span>
+									<span
+										v-if="indicator.valid_until && indicatorValidity(indicator) !== 'revoked'"
+										class="text-secondary"
+									>
+										{{ formatDate(indicator.valid_until, dFormats.date) }}
+									</span>
 								</span>
 							</div>
 							<a
@@ -249,9 +254,8 @@ import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
 import { useOpenCTIAvailability } from "@/composables/useOpenCTIAvailability"
 import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
-import { markingType, scoreColor } from "./utils"
+import { indicatorValidity, markingType, scoreColor, VALIDITY_DOT, VALIDITY_LABEL } from "./utils"
 
 const { observable } = defineProps<{
 	observable: OpenCTIObservable
@@ -313,10 +317,6 @@ const scoreBarClass = computed(() => {
 	const color = scoreColor(observable.score)
 	return color === "danger" ? "bg-error" : color === "warning" ? "bg-warning" : "bg-success"
 })
-
-function isExpired(date: string): boolean {
-	return dayjs(date).isBefore(dayjs())
-}
 
 let copiedTimer: ReturnType<typeof setTimeout> | null = null
 
