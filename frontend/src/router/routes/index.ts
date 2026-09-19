@@ -1,4 +1,5 @@
 import type { RouteRecordRaw } from "vue-router"
+import { activeResponseRoutes } from "./active-response"
 import { agentsRoutes } from "./agents"
 import { alertsRoutes } from "./alerts"
 import { analystRoutes } from "./analyst"
@@ -32,6 +33,7 @@ export const routes: RouteRecordRaw[] = [
 	...indicesRoutes,
 	...connectorsRoutes,
 	...agentsRoutes,
+	...activeResponseRoutes,
 	...graylogRoutes,
 	...alertsRoutes,
 	...eventSearchRoutes,

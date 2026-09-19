@@ -14,13 +14,10 @@ import type { RouteRecordRaw } from "vue-router"
 import { describe, expect, it, vi } from "vitest"
 import { routes } from "@/router/routes"
 import getItems from "../items"
-import { ACTIVE_RESPONSE_PANEL_KEY } from "../items/respond"
 
 const auth = { isAdmin: true }
 
 vi.mock("@/stores/auth", () => ({ useAuthStore: () => auth }))
-
-const PANEL_KEYS = [ACTIVE_RESPONSE_PANEL_KEY]
 
 /** Every destination the sidebar and the avatar menu reached before #1152. */
 const PREVIOUS_DESTINATIONS = [
@@ -79,9 +76,9 @@ const PREVIOUS_DESTINATIONS = [
 	"ExternalServices-ThirdPartyIntegrations",
 	"ExternalServices-NetworkConnectors",
 	"ExternalServices-ShuffleAppAuth",
-	// Stack Provisioning opened a modal from the sidebar; it is a page now.
-	"StackProvisioning",
-	...PANEL_KEYS
+	// Active Response and Stack Provisioning opened a modal from the sidebar; they are pages now.
+	"ActiveResponse",
+	"StackProvisioning"
 ]
 
 /** Entries analysts could not use or see before, and still don't get. */
@@ -97,7 +94,7 @@ function leaves(items: MenuMixedOption[]): Leaf[] {
 		const children = (item as { children?: MenuMixedOption[] }).children
 		if (children) return leaves(children)
 		const label = (item as { label?: unknown }).label
-		// routerLinkItem renders h(RouterLink, { to: { name } }); panel entries have a plain string label.
+		// routerLinkItem renders h(RouterLink, { to: { name } }); anything else has a plain string label.
 		const vnode = typeof label === "function" ? (label as () => { props?: { to?: { name?: string } } })() : null
 		return [{ key: String(item.key), linkedRoute: vnode?.props?.to?.name ?? null }]
 	})
@@ -137,10 +134,6 @@ describe("sidebar menu", () => {
 	it("links every entry to a real route, keyed by that route's name", () => {
 		const known = routeNames(routes)
 		for (const leaf of leaves(menuFor("admin"))) {
-			if (PANEL_KEYS.includes(leaf.key)) {
-				expect(leaf.linkedRoute, `${leaf.key} opens a panel, not a page`).toBeNull()
-				continue
-			}
 			expect(known.has(leaf.key), `${leaf.key} is not a route`).toBe(true)
 			expect(leaf.linkedRoute, `${leaf.key} links to ${leaf.linkedRoute}`).toBe(leaf.key)
 		}
