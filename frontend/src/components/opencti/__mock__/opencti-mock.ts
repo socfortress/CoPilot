@@ -22,7 +22,16 @@
 //   "invoice@dhl-express-delivery.com" → email
 //   "long"               → observable with a very long value / many labels
 //   anything else        → a generic Domain-Name observable
-// Search box (Indicators tab): "error" → error state, "empty" → 0 rows.
+// Search box (Indicators tab):
+//   "error"    → error state
+//   "empty"    → 0 rows (empty table)
+//   "slow"     → 4 s delay: with rows on screen the table spins, with none the
+//                Search button spins
+//   "nocount"  → page_info.global_count = null (footer count hidden)
+//   "deleted"  → the one row whose detail drawer fails (entity not found)
+// Row edge cases in the table: name→pattern→id fallbacks, type "—", score
+// null / 0 / 49 / 75 / 100, 0 and 7 labels (+4), author "—", created "—",
+// validity valid / expired / revoked / no expiry. Load more → 6 pages.
 // ============================================================================
 
 import type {
@@ -376,6 +385,18 @@ const HAND_AUTHORED: OpenCTIIndicator[] = [
 		labels: [LABELS[14]],
 		created_at: daysAgo(5),
 		updated_at: daysAgo(5)
+	}),
+	indicator({
+		id: "ind-c0ffee00-0000-4000-8000-000000000016",
+		// Entity lookup for this row fails: exercises the drawer's error state.
+		name: "deleted-entity.example",
+		pattern: "[domain-name:value = 'deleted-entity.example']",
+		main_observable_type: "Domain-Name",
+		score: 10,
+		confidence: 10,
+		labels: [LABELS[20]],
+		created_at: daysAgo(1),
+		updated_at: daysAgo(1)
 	}),
 	indicator({
 		id: "ind-c0ffee00-0000-4000-8000-000000000015",
@@ -743,7 +764,7 @@ function entityFromIndicator(ind: OpenCTIIndicator): OpenCTIEntity {
 }
 
 const ENTITIES: Record<string, OpenCTIEntity> = Object.fromEntries(
-	MOCK_INDICATORS.map(i => [i.id, entityFromIndicator(i)])
+	MOCK_INDICATORS.filter(i => i.name !== "deleted-entity.example").map(i => [i.id, entityFromIndicator(i)])
 )
 
 // Malware entity, reachable from the detail drawer by id (not from the table).
@@ -811,6 +832,8 @@ function applyQuery(query: OpenCTIIndicatorsQuery): { indicators: OpenCTIIndicat
 	let rows = MOCK_INDICATORS
 	if (search === "empty") {
 		rows = []
+	} else if (search === "slow" || search === "nocount") {
+		// keep the full set; the effect is applied in getIndicators()
 	} else if (search) {
 		// OpenCTI matches whole tokens; approximate that with token containment.
 		const tokens = search.split(/\s+/)
@@ -870,8 +893,11 @@ export const mockOpenCTI = {
 		})
 	},
 	getIndicators(query: OpenCTIIndicatorsQuery = {}, _signal?: AbortSignal) {
+		const search = (query.search ?? "").trim().toLowerCase()
 		try {
-			return wait(applyQuery(query), query.after ? 900 : DEFAULT_DELAY_MS)
+			const page = applyQuery(query)
+			if (search === "nocount") page.page_info.global_count = null
+			return wait(page, search === "slow" ? 4000 : query.after ? 900 : DEFAULT_DELAY_MS)
 		} catch {
 			return fail("OpenCTI GraphQL validation failed: Unknown argument 'search' on field 'indicators'.")
 		}
