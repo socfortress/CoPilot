@@ -400,7 +400,7 @@ const columns = computed<DataTableColumns<CatalogWazuhRuleRow>>(() => {
 			title: "File",
 			key: "filename",
 			width: 200,
-			ellipsis: { tooltip: true },
+			ellipsis: { tooltip: { to: "body", contentClass: "max-w-[70vw] text-sm!" } },
 			render: row => <span class="text-secondary font-mono text-xs">{row.filename || "—"}</span>
 		}
 	]

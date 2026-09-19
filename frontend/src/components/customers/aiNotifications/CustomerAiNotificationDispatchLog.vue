@@ -128,7 +128,7 @@ const columns = computed<DataTableColumns<DispatchLogEntry>>(() => [
 		title: "Error / Preview",
 		key: "detail",
 		maxWidth: 200,
-		ellipsis: { tooltip: { to: "body ", class: "max-w-[90vw] text-sm" } },
+		ellipsis: { tooltip: { to: "body", contentClass: "max-w-[70vw] text-sm!" } },
 		render: row => row.error_message || row.payload_preview || ""
 	}
 ])
