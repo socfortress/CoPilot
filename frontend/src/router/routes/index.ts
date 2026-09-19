@@ -23,6 +23,7 @@ import { notificationsRoutes } from "./notifications"
 import { reportCreationRoutes } from "./report-creation"
 import { schedulerRoutes } from "./scheduler"
 import { settingsRoutes } from "./settings"
+import { stackProvisioningRoutes } from "./stack-provisioning"
 import { threatIntelRoutes } from "./threat-intel"
 import { usersRoutes } from "./users"
 
@@ -46,6 +47,7 @@ export const routes: RouteRecordRaw[] = [
 	...notificationsRoutes,
 	...usersRoutes,
 	...schedulerRoutes,
+	...stackProvisioningRoutes,
 	...externalServicesRoutes,
 	...reportCreationRoutes,
 	...assessmentsRoutes,

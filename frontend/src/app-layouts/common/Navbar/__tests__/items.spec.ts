@@ -14,14 +14,13 @@ import type { RouteRecordRaw } from "vue-router"
 import { describe, expect, it, vi } from "vitest"
 import { routes } from "@/router/routes"
 import getItems from "../items"
-import { STACK_PROVISIONING_PANEL_KEY } from "../items/platform"
 import { ACTIVE_RESPONSE_PANEL_KEY } from "../items/respond"
 
 const auth = { isAdmin: true }
 
 vi.mock("@/stores/auth", () => ({ useAuthStore: () => auth }))
 
-const PANEL_KEYS = [ACTIVE_RESPONSE_PANEL_KEY, STACK_PROVISIONING_PANEL_KEY]
+const PANEL_KEYS = [ACTIVE_RESPONSE_PANEL_KEY]
 
 /** Every destination the sidebar and the avatar menu reached before #1152. */
 const PREVIOUS_DESTINATIONS = [
@@ -80,6 +79,8 @@ const PREVIOUS_DESTINATIONS = [
 	"ExternalServices-ThirdPartyIntegrations",
 	"ExternalServices-NetworkConnectors",
 	"ExternalServices-ShuffleAppAuth",
+	// Stack Provisioning opened a modal from the sidebar; it is a page now.
+	"StackProvisioning",
 	...PANEL_KEYS
 ]
 

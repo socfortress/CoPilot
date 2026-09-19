@@ -15,24 +15,16 @@
 		:bordered="false"
 		segmented
 	>
-		<n-tabs type="line" animated>
-			<n-tab-pane name="graylog" tab="Graylog Content Packs" display-directive="show">
-				<StackProvisioningList />
-			</n-tab-pane>
-			<n-tab-pane name="influxdb" tab="InfluxDB Checks" display-directive="show">
-				<InfluxDbChecksList />
-			</n-tab-pane>
-		</n-tabs>
+		<StackProvisioningTabs />
 	</n-modal>
 </template>
 
 <script setup lang="ts">
 import type { ButtonSize, ButtonType } from "naive-ui"
-import { NButton, NModal, NTabPane, NTabs } from "naive-ui"
+import { NButton, NModal } from "naive-ui"
 import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
-import InfluxDbChecksList from "./influxdb/InfluxDbChecksList.vue"
-import StackProvisioningList from "./StackProvisioningList.vue"
+import StackProvisioningTabs from "./StackProvisioningTabs.vue"
 
 defineProps<{
 	size?: ButtonSize

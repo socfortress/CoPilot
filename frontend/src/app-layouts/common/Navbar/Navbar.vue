@@ -20,7 +20,6 @@
 	</nav>
 
 	<div class="hidden">
-		<StackProvisioningButton ref="stackProvisioningButton" />
 		<ActiveResponseWizardButton ref="activeResponseWizardButton" />
 	</div>
 </template>
@@ -34,11 +33,9 @@ import { NMenu } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import ActiveResponseWizardButton from "@/components/activeResponse/ActiveResponseWizardButton.vue"
-import StackProvisioningButton from "@/components/stackProvisioning/StackProvisioningButton.vue"
 import { useThemeStore } from "@/stores/theme"
 
 import getItems from "./items"
-import { STACK_PROVISIONING_PANEL_KEY } from "./items/platform"
 import { ACTIVE_RESPONSE_PANEL_KEY } from "./items/respond"
 
 const { collapsed = false } = defineProps<{
@@ -56,7 +53,6 @@ const menuOptions = computed<MenuMixedOption[]>(() => getItems())
 const collapsedWidth = computed<number>(() => themeStore.sidebar.closeWidth)
 const sidebarCollapsed = computed<boolean>(() => themeStore.sidebar.collapsed)
 
-const stackProvisioningButton = ref<InstanceType<typeof StackProvisioningButton> | null>(null)
 const activeResponseWizardButton = ref<InstanceType<typeof ActiveResponseWizardButton> | null>(null)
 
 watch(selectedKey, val => {
@@ -65,9 +61,6 @@ watch(selectedKey, val => {
 
 function handleMenuSelect(key: string | null) {
 	switch (key) {
-		case STACK_PROVISIONING_PANEL_KEY:
-			stackProvisioningButton.value?.openModal()
-			break
 		case ACTIVE_RESPONSE_PANEL_KEY:
 			activeResponseWizardButton.value?.openModal()
 			break

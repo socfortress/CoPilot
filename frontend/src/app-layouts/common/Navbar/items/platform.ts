@@ -4,9 +4,6 @@ import { parentMenuItem, routerLinkItem } from "./helpers"
 
 const PlatformIcon = "carbon:settings"
 
-/** Opens the Stack Provisioning modal rather than a page; handled in Navbar.vue. */
-export const STACK_PROVISIONING_PANEL_KEY = "Platform-StackProvisioning"
-
 function group(label: string, key: string, children: MenuMixedOption[]): MenuMixedOption {
 	return { label, key, children }
 }
@@ -54,7 +51,7 @@ export function getPlatformItem(isAdmin: boolean): MenuMixedOption {
 			routerLinkItem("Scheduler", "Scheduler"),
 			routerLinkItem("Logs", "Logs"),
 			routerLinkItem("License", "License"),
-			{ label: "Stack Provisioning", key: STACK_PROVISIONING_PANEL_KEY },
+			routerLinkItem("Stack Provisioning", "StackProvisioning"),
 			routerLinkItem("Customer Portal", "CustomerPortal")
 		])
 	])
