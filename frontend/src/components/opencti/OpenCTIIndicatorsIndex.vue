@@ -59,11 +59,10 @@ import type { OpenCTIIndicator, OpenCTIPageInfo } from "@/types/opencti"
 import axios from "axios"
 import { NButton, NDataTable, NDrawer, NDrawerContent, NFormItem, NInput, NInputNumber, NSelect, NTag } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
+import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
-// TEMP(mock): UI/UX review — restore `import Api from "@/api"` and `Api.opencti` before merging.
-import mockOpenCTI from "./__mock__/opencti-mock"
 import OpenCTIEntityDetail from "./OpenCTIEntityDetail.vue"
 import { indicatorValidity, scoreTagType, VALIDITY_DOT, VALIDITY_LABEL } from "./utils"
 
@@ -100,7 +99,7 @@ function fetchPage(append: boolean) {
 	loading.value = true
 	error.value = ""
 
-	mockOpenCTI
+	Api.opencti
 		.getIndicators(
 			{
 				search: search.value.trim() || undefined,

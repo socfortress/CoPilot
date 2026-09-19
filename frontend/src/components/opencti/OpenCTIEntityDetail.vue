@@ -209,14 +209,13 @@ import { useClipboard } from "@vueuse/core"
 import axios from "axios"
 import { NSpin, NTag } from "naive-ui"
 import { computed, ref, watch } from "vue"
+import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
 import { useOpenCTIAvailability } from "@/composables/useOpenCTIAvailability"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
-// TEMP(mock): UI/UX review — restore `import Api from "@/api"` and `Api.opencti` before merging.
-import mockOpenCTI from "./__mock__/opencti-mock"
 import { markingType, scoreColor } from "./utils"
 
 const { entityId } = defineProps<{
@@ -286,7 +285,7 @@ function load(id: string) {
 	entity.value = null
 	descriptionExpanded.value = false
 
-	mockOpenCTI
+	Api.opencti
 		.getEntity(id, current.signal)
 		.then(res => {
 			entity.value = res.data.entity
