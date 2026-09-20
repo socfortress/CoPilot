@@ -1,28 +1,30 @@
 <template>
-	<div class="@container">
-		<div v-if="error" class="bg-secondary border-error rounded-lg border px-4 py-2.5">{{ error }}</div>
-		<n-spin v-else :show="loading">
-			<div class="grid grid-cols-1 gap-4 @md:grid-cols-2 @4xl:grid-cols-4">
-				<CardLink
-					v-for="tile of tiles"
-					:key="tile.label"
-					:title="tile.label"
-					:value="tile.value"
-					:icon="tile.icon"
-					:subtitle="tile.sub"
-				/>
-			</div>
-		</n-spin>
+	<!--
+		A one-line readout, not a dashboard: these numbers are orientation ("which
+		platform, how much is in it"), and the tabs beside them are the work.
+	-->
+	<div v-if="error" class="text-warning flex items-center gap-1.5 text-xs" :title="error">
+		<Icon name="carbon:warning-alt" :size="14" />
+		<span>OpenCTI unreachable</span>
 	</div>
+	<dl
+		v-else
+		class="divide-border/40 -mx-1 flex flex-wrap items-center divide-x text-xs"
+		:class="{ 'animate-pulse': loading }"
+	>
+		<div v-for="stat of stats" :key="stat.label" class="flex items-baseline gap-1.5 px-2" :title="stat.title">
+			<dt class="text-tertiary whitespace-nowrap">{{ stat.label }}</dt>
+			<dd class="text-default font-mono tabular-nums" :class="stat.valueClass">{{ stat.value }}</dd>
+		</div>
+	</dl>
 </template>
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { OpenCTIAbout } from "@/types/opencti"
-import { NSpin } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
-import CardLink from "@/components/common/cards/CardLink.vue"
+import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 
 // Scores at or above this are what most feeds assign to confirmed-malicious IOCs.
@@ -38,30 +40,32 @@ function formatCount(value: number | null): string {
 	return value === null ? "—" : value.toLocaleString()
 }
 
-const tiles = computed(() => [
+const stats = computed(() => [
 	{
-		label: "Platform",
-		value: about.value?.version || "—",
-		sub: "OpenCTI version",
-		icon: "carbon:cloud-service-management"
+		label: "OpenCTI",
+		value: about.value?.version ? `v${about.value.version}` : "—",
+		title: "Platform version",
+		valueClass: ""
 	},
 	{
 		label: "Account",
 		value: about.value?.user_name || "—",
-		sub: "Connector token's user",
-		icon: "carbon:user-certification"
+		title: about.value?.user_email
+			? `Connector token's user (${about.value.user_email})`
+			: "Connector token's user",
+		valueClass: ""
 	},
 	{
 		label: "Indicators",
 		value: formatCount(indicatorCount.value),
-		sub: "Visible to the connector",
-		icon: "carbon:radar"
+		title: "Indicators visible to the connector",
+		valueClass: ""
 	},
 	{
-		label: "High score",
+		label: `Score ≥${HIGH_SCORE}`,
 		value: formatCount(highScoreCount.value),
-		sub: `Indicators scored ${HIGH_SCORE}+`,
-		icon: "carbon:warning-alt"
+		title: `Indicators scored ${HIGH_SCORE} or higher`,
+		valueClass: highScoreCount.value ? "text-error" : ""
 	}
 ])
 

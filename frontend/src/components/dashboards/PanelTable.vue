@@ -36,7 +36,7 @@ const tableColumns = computed<DataTableColumns<PanelTableRow>>(() =>
 		title: key,
 		key,
 		minWidth: MIN_COLUMN_WIDTH,
-		ellipsis: { tooltip: true },
+		ellipsis: { tooltip: { to: "body", contentClass: "max-w-[70vw] text-sm!" } },
 		render: (row: PanelTableRow) => {
 			const value = row[key]
 			return value === null || value === undefined || value === "" ? "—" : String(value)

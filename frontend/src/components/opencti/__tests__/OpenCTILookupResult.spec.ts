@@ -116,15 +116,22 @@ describe("openCTILookupResult", () => {
 		expect(wrapper.text()).not.toContain("Open in OpenCTI")
 	})
 
-	it("flags expired and revoked indicators", () => {
+	it("flags expired indicators", () => {
+		const indicators = observable().indicators.map(i => ({ ...i, valid_until: "2001-01-01T00:00:00Z" }))
+		const text = render(lookup({ observables: [observable({ indicators })] })).text()
+		expect(text).toContain("expired")
+		expect(text).not.toContain("revoked")
+	})
+
+	it("flags revoked indicators, and revocation wins over expiry", () => {
 		const indicators = observable().indicators.map(i => ({
 			...i,
 			valid_until: "2001-01-01T00:00:00Z",
 			revoked: true
 		}))
 		const text = render(lookup({ observables: [observable({ indicators })] })).text()
-		expect(text).toContain("expired")
 		expect(text).toContain("revoked")
+		expect(text).not.toContain("expired")
 	})
 
 	it("notes when more observables match than were returned", () => {

@@ -156,7 +156,7 @@ function buildDefaultColumns(): DataTableColumns<EventSearchResult> {
 			title: "Source",
 			key: "agent_name",
 			width: 140,
-			ellipsis: { tooltip: true },
+			ellipsis: { tooltip: { to: "body", contentClass: "max-w-[70vw] text-sm!" } },
 			render(row) {
 				return formatCellValue(row.agent_name || row.source)
 			}
@@ -165,7 +165,7 @@ function buildDefaultColumns(): DataTableColumns<EventSearchResult> {
 			title: "Rule",
 			key: "rule_description",
 			width: 200,
-			ellipsis: { tooltip: true },
+			ellipsis: { tooltip: { to: "body", contentClass: "max-w-[70vw] text-sm!" } },
 			render(row) {
 				return formatCellValue(row.rule_description || row.rule_id)
 			}
@@ -224,7 +224,7 @@ function buildColumnFromConfig(col: DisplayColumn): DataTableColumns<EventSearch
 		title: col.label || col.key,
 		key: col.key,
 		width: resolveColumnWidth(col.width),
-		ellipsis: { tooltip: true },
+		ellipsis: { tooltip: { to: "body", contentClass: "max-w-[70vw] text-sm!" } },
 		render(row: EventSearchResult) {
 			const value = getNestedValue(row, col.key)
 			if (timeColumn && value !== undefined && value !== null && value !== "") {

@@ -62,10 +62,9 @@ import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
-import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
 import OpenCTIEntityDetail from "./OpenCTIEntityDetail.vue"
-import { scoreTagType } from "./utils"
+import { indicatorValidity, scoreTagType, VALIDITY_DOT, VALIDITY_LABEL } from "./utils"
 
 const PAGE_SIZE = 25
 
@@ -146,16 +145,12 @@ function rowProps(row: OpenCTIIndicator) {
 	return { class: "cursor-pointer", onClick: () => openDetail(row) }
 }
 
-function isExpired(date: string | null): boolean {
-	return !!date && dayjs(date).isBefore(dayjs())
-}
-
 const columns: DataTableColumns<OpenCTIIndicator> = [
 	{
 		title: "Indicator",
 		key: "name",
 		minWidth: 320,
-		ellipsis: { tooltip: true },
+		ellipsis: { tooltip: { to: "body", contentClass: "max-w-[70vw] text-sm!" } },
 		render: row => <span class="font-mono text-sm">{row.name || row.pattern || row.id}</span>
 	},
 	{
@@ -182,7 +177,7 @@ const columns: DataTableColumns<OpenCTIIndicator> = [
 		key: "labels",
 		width: 240,
 		render: row => (
-			<div class="flex flex-wrap gap-1">
+			<div class="flex flex-wrap items-center gap-1">
 				{row.labels.slice(0, 3).map(label => (
 					<NTag size="small" round key={label.value}>
 						{label.value}
@@ -198,7 +193,7 @@ const columns: DataTableColumns<OpenCTIIndicator> = [
 		title: "Author",
 		key: "created_by",
 		width: 140,
-		ellipsis: { tooltip: true },
+		ellipsis: { tooltip: { to: "body", contentClass: "max-w-[90vw] text-sm" } },
 		render: row => <span class="text-secondary text-sm">{row.created_by || "—"}</span>
 	},
 	{
@@ -214,20 +209,19 @@ const columns: DataTableColumns<OpenCTIIndicator> = [
 	{
 		title: "Valid until",
 		key: "valid_until",
-		width: 130,
-		render: row =>
-			row.revoked ? (
-				<NTag size="small" type="error" bordered={false}>
-					revoked
-				</NTag>
-			) : row.valid_until ? (
-				<span class={isExpired(row.valid_until) ? "text-error text-xs" : "text-secondary text-xs"}>
-					{isExpired(row.valid_until) ? "expired " : ""}
-					{formatDate(row.valid_until, dFormats.date)}
+		width: 170,
+		render: row => {
+			const state = indicatorValidity(row)
+			return (
+				<span class="flex items-center gap-1.5 text-xs">
+					<span class={`size-1.5 shrink-0 rounded-full ${VALIDITY_DOT[state]}`} />
+					<span class="text-tertiary">{VALIDITY_LABEL[state]}</span>
+					{row.valid_until && state !== "revoked" ? (
+						<span class="text-secondary font-mono">{formatDate(row.valid_until, dFormats.date)}</span>
+					) : null}
 				</span>
-			) : (
-				<span class="text-tertiary">—</span>
 			)
+		}
 	}
 ]
 

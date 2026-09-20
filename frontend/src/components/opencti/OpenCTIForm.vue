@@ -1,17 +1,24 @@
 <template>
-	<n-spin :show="loading">
+	<!--
+		With a result on screen the whole block dims so stale content isn't read as
+		fresh; with nothing to protect, only the button shows the wait.
+	-->
+	<n-spin :show="loading && hasResult">
 		<div class="flex flex-col gap-3">
 			<n-form-item label="IOC Value" :show-feedback="false">
-				<n-input
-					v-model:value.trim="iocValue"
-					placeholder="IP, domain, URL, email or file hash"
-					clearable
-					@keydown.enter="isValid && lookup()"
-				/>
+				<n-input-group>
+					<n-input
+						v-model:value.trim="iocValue"
+						placeholder="IP, domain, URL, email or file hash"
+						clearable
+						:disabled="loading"
+						@keydown.enter="isValid && lookup()"
+					/>
+					<n-button type="primary" :disabled="!isValid" :loading="loading && !hasResult" @click="lookup()">
+						Lookup
+					</n-button>
+				</n-input-group>
 			</n-form-item>
-			<div class="flex justify-end">
-				<n-button type="primary" :disabled="!isValid" @click="lookup()">Lookup</n-button>
-			</div>
 			<div v-if="error" class="bg-secondary border-error rounded-lg border px-4 py-2.5">
 				{{ error }}
 			</div>
@@ -24,7 +31,7 @@
 import type { ApiError } from "@/types/common"
 import type { OpenCTIObservableLookup } from "@/types/opencti"
 import _trim from "lodash/trim"
-import { NButton, NFormItem, NInput, NSpin } from "naive-ui"
+import { NButton, NFormItem, NInput, NInputGroup, NSpin } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
@@ -35,6 +42,7 @@ const iocValue = ref<string>("")
 const response = ref<OpenCTIObservableLookup | null>(null)
 const error = ref<string>("")
 const isValid = computed(() => !!_trim(iocValue.value))
+const hasResult = computed(() => !!response.value || !!error.value)
 
 function restore() {
 	iocValue.value = ""
@@ -45,11 +53,11 @@ function restore() {
 
 function lookup() {
 	loading.value = true
-	error.value = ""
 
 	Api.opencti
 		.lookupObservable(_trim(iocValue.value))
 		.then(res => {
+			error.value = ""
 			response.value = res.data
 		})
 		.catch(err => {

@@ -214,7 +214,7 @@ const sampleColumns = computed(() => {
 	const columns: any[] = (result.sample_fields || []).slice(0, 6).map(field => ({
 		title: field,
 		key: field,
-		ellipsis: { tooltip: true },
+		ellipsis: { tooltip: { to: "body", contentClass: "max-w-[70vw] text-sm!" } },
 		render: (row: Record<string, unknown>) => {
 			const value = row[field]
 			return h("span", { class: "text-xs" }, value === null || value === undefined ? "" : String(value))

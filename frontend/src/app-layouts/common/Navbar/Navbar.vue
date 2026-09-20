@@ -18,11 +18,6 @@
 			@update:expanded-keys="handleUpdateExpandedKeys"
 		/>
 	</nav>
-
-	<div class="hidden">
-		<StackProvisioningButton ref="stackProvisioningButton" />
-		<ActiveResponseWizardButton ref="activeResponseWizardButton" />
-	</div>
 </template>
 
 <script lang="ts" setup>
@@ -31,15 +26,11 @@ import type { MenuMixedOption } from "naive-ui/es/menu/src/interface"
 import type { RouteRecordNormalized } from "vue-router"
 import _uniq from "lodash/uniq"
 import { NMenu } from "naive-ui"
-import { computed, onBeforeMount, ref, watch } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import ActiveResponseWizardButton from "@/components/activeResponse/ActiveResponseWizardButton.vue"
-import StackProvisioningButton from "@/components/stackProvisioning/StackProvisioningButton.vue"
 import { useThemeStore } from "@/stores/theme"
 
 import getItems from "./items"
-import { STACK_PROVISIONING_PANEL_KEY } from "./items/platform"
-import { ACTIVE_RESPONSE_PANEL_KEY } from "./items/respond"
 
 const { collapsed = false } = defineProps<{
 	collapsed?: boolean
@@ -55,25 +46,6 @@ const themeStore = useThemeStore()
 const menuOptions = computed<MenuMixedOption[]>(() => getItems())
 const collapsedWidth = computed<number>(() => themeStore.sidebar.closeWidth)
 const sidebarCollapsed = computed<boolean>(() => themeStore.sidebar.collapsed)
-
-const stackProvisioningButton = ref<InstanceType<typeof StackProvisioningButton> | null>(null)
-const activeResponseWizardButton = ref<InstanceType<typeof ActiveResponseWizardButton> | null>(null)
-
-watch(selectedKey, val => {
-	handleMenuSelect(val)
-})
-
-function handleMenuSelect(key: string | null) {
-	switch (key) {
-		case STACK_PROVISIONING_PANEL_KEY:
-			stackProvisioningButton.value?.openModal()
-			break
-		case ACTIVE_RESPONSE_PANEL_KEY:
-			activeResponseWizardButton.value?.openModal()
-			break
-	}
-	selectedKey.value = key
-}
 
 function setMenuKey(matched: RouteRecordNormalized[]) {
 	for (const match of matched) {

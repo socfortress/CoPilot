@@ -88,5 +88,7 @@ const integration = ref(customerIntegration)
 const showDetails = ref(false)
 const serviceName = computed(() => integration.value.integration_service_name)
 const instanceName = computed(() => integration.value.instance_name || null)
-const modalTitle = computed(() => (instanceName.value ? `${serviceName.value} — ${instanceName.value}` : serviceName.value))
+const modalTitle = computed(() =>
+	instanceName.value ? `${serviceName.value} — ${instanceName.value}` : serviceName.value
+)
 </script>
