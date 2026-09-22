@@ -44,7 +44,7 @@
 					/>
 				</n-form-item>
 
-				<n-form-item v-if="customerOptions.length > 1" label="Customer" path="customer_code" required>
+				<n-form-item v-if="hasMultipleCustomers" label="Customer" path="customer_code" required>
 					<n-select v-model:value="formData.customer_code" :options="customerOptions" filterable />
 				</n-form-item>
 
@@ -100,13 +100,13 @@ import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import ReportCard from "@/components/reports/ReportCard.vue"
-import { useAuthStore } from "@/stores/auth"
+import { useCustomerPrefill } from "@/composables/common/useCustomerPrefill"
 import { getApiErrorMessage } from "@/utils"
 
 const AddIcon = "carbon:document-add"
 
 const message = useMessage()
-const authStore = useAuthStore()
+const { customerOptions, hasMultipleCustomers, initialCustomerCode } = useCustomerPrefill()
 
 const loading = ref(false)
 const generating = ref(false)
@@ -116,8 +116,6 @@ const showDeleteModal = ref(false)
 const reportToDelete = ref<IncidentCustomerReport | null>(null)
 const formRef = ref<FormInst | null>(null)
 let abortController: AbortController | null = null
-
-const customerOptions = computed(() => authStore.accessibleCustomerCodes.map(code => ({ label: code, value: code })))
 
 interface GenerateFormData {
 	report_name?: string
@@ -130,7 +128,7 @@ interface GenerateFormData {
 function getDefaultFormData(): GenerateFormData {
 	return {
 		report_name: undefined,
-		customer_code: authStore.userCustomerCode,
+		customer_code: initialCustomerCode(),
 		range: "30d",
 		customRange: null,
 		reportTemplate: "full"
@@ -257,7 +255,7 @@ async function handleGenerate() {
 		return
 	}
 
-	const customerCode = formData.value.customer_code || authStore.userCustomerCode
+	const customerCode = formData.value.customer_code
 	if (!customerCode) {
 		message.error("No customer available for report generation")
 		return

@@ -1,5 +1,13 @@
 <template>
 	<n-form :disabled="loading" label-placement="top">
+		<n-form-item v-if="hasMultipleCustomers" label="Customer" required>
+			<n-select
+				v-model:value="model.customer_code"
+				:options="customerOptions"
+				filterable
+				placeholder="Select the customer this case belongs to"
+			/>
+		</n-form-item>
 		<n-form-item label="Case name" required>
 			<n-input v-model:value="model.case_name" placeholder="Insert case name" />
 		</n-form-item>
@@ -37,7 +45,7 @@ import type { ApiError } from "@/types/common"
 import { NButton, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
-import { useAuthStore } from "@/stores/auth"
+import { useCustomerPrefill } from "@/composables/common/useCustomerPrefill"
 import { getApiErrorMessage } from "@/utils"
 
 const emit = defineEmits<{
@@ -46,8 +54,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
-const authStore = useAuthStore()
-const customerCode = computed(() => authStore.userCustomerCode)
+const { customerOptions, hasMultipleCustomers, initialCustomerCode } = useCustomerPrefill()
 const loading = ref(false)
 const optionsLoading = ref(false)
 const assignedToOptions = ref<{ label: string; value: string }[]>([])
@@ -56,18 +63,34 @@ const statusOptions = [
 	{ label: "In Progress", value: "IN_PROGRESS" },
 	{ label: "Closed", value: "CLOSED" }
 ]
-const model = ref<CasePayload>({
-	case_name: "",
-	case_description: "",
-	assigned_to: undefined,
-	case_status: "OPEN"
-})
+function emptyModel(): CasePayload {
+	return {
+		case_name: "",
+		case_description: "",
+		assigned_to: undefined,
+		case_status: "OPEN",
+		// Seeded from the global customer filter (or the only accessible customer); a
+		// multi-tenant user with no unambiguous default has to pick one explicitly.
+		customer_code: initialCustomerCode() ?? undefined
+	}
+}
+
+const model = ref<CasePayload>(emptyModel())
+
+/** Clear the fields and re-seed the customer. The parent calls this on every modal open. */
+function reset() {
+	if (loading.value) return
+	model.value = emptyModel()
+}
+
+defineExpose({ reset })
 
 const isValidForm = computed(
 	() =>
 		model.value.case_name.trim().length > 0 &&
 		model.value.case_description.trim().length > 0 &&
-		Boolean(model.value.case_status)
+		Boolean(model.value.case_status) &&
+		Boolean(model.value.customer_code)
 )
 
 async function loadAssignedToOptions() {
@@ -94,7 +117,7 @@ async function handleSubmit() {
 			case_description: model.value.case_description.trim(),
 			assigned_to: model.value.assigned_to || undefined,
 			case_status: model.value.case_status,
-			customer_code: customerCode.value || undefined
+			customer_code: model.value.customer_code
 		})
 		message.success(response.data.message || "Case created successfully")
 		emit("success")
