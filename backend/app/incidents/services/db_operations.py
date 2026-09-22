@@ -4,6 +4,7 @@ import mimetypes
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -287,188 +288,83 @@ async def alerts_open_by_customer_codes(db: AsyncSession, customer_codes: List[s
     return len(result.scalars().all())
 
 
-async def alert_total_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
-    """Get total alerts count with customer and tag filtering"""
+async def alert_visibility_filters_for_user(
+    user: User,
+    db: AsyncSession,
+    customer_codes: Optional[List[str]] = None,
+) -> Optional[List[Any]]:
+    """WHERE clauses restricting ``Alert`` rows to what ``user`` may see.
+
+    Combines customer scoping (``customer_access_handler``, intersected with an
+    optional requested subset) and tag RBAC (``tag_access_handler``). Returns
+    ``None`` when the user can see no alert at all — callers must short-circuit
+    to an empty result rather than run an unfiltered query. This is the single
+    definition every read *and* write path (counts, listings, bulk deletes) must
+    go through, so a tag-restricted analyst can never touch an alert the list
+    would not show them.
+    """
     from sqlalchemy import and_
     from sqlalchemy import exists
     from sqlalchemy import or_
 
-    filters = []
+    filters: List[Any] = []
 
-    # Customer filtering
     accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, db)
     if "*" not in accessible_customers:
         filters.append(Alert.customer_code.in_(accessible_customers))
 
-    # Tag filtering
     tag_filters = await tag_access_handler.build_alert_query_filters(user, db)
     accessible_tags = tag_filters["accessible_tags"]
 
     if "*" not in accessible_tags:
         tag_conditions = []
         if accessible_tags:
-            has_accessible_tag = exists(
-                select(AlertToTag.alert_id).where(
-                    and_(
-                        AlertToTag.alert_id == Alert.id,
-                        AlertToTag.tag_id.in_(accessible_tags),
+            tag_conditions.append(
+                exists(
+                    select(AlertToTag.alert_id).where(
+                        and_(
+                            AlertToTag.alert_id == Alert.id,
+                            AlertToTag.tag_id.in_(accessible_tags),
+                        ),
                     ),
                 ),
             )
-            tag_conditions.append(has_accessible_tag)
-
         if tag_filters["include_untagged"]:
-            is_untagged = ~exists(
-                select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id),
-            )
-            tag_conditions.append(is_untagged)
+            tag_conditions.append(~exists(select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id)))
 
-        if tag_conditions:
-            filters.append(or_(*tag_conditions))
-        else:
-            return 0
+        if not tag_conditions:
+            return None
+        filters.append(or_(*tag_conditions))
 
-    query = select(func.count(Alert.id)).where(*filters) if filters else select(func.count(Alert.id))
-    result = await db.execute(query)
+    return filters
+
+
+async def _count_alerts_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]], *extra) -> int:
+    filters = await alert_visibility_filters_for_user(user, db, customer_codes)
+    if filters is None:
+        return 0
+    result = await db.execute(select(func.count(Alert.id)).where(*extra, *filters))
     return result.scalar_one()
+
+
+async def alert_total_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
+    """Get total alerts count with customer and tag filtering"""
+    return await _count_alerts_for_user(user, db, customer_codes)
 
 
 async def alerts_open_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
     """Get open alerts count with customer and tag filtering"""
-    from sqlalchemy import and_
-    from sqlalchemy import exists
-    from sqlalchemy import or_
-
-    filters = [Alert.status == "OPEN"]
-
-    # Customer filtering
-    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, db)
-    if "*" not in accessible_customers:
-        filters.append(Alert.customer_code.in_(accessible_customers))
-
-    # Tag filtering
-    tag_filters = await tag_access_handler.build_alert_query_filters(user, db)
-    accessible_tags = tag_filters["accessible_tags"]
-
-    if "*" not in accessible_tags:
-        tag_conditions = []
-        if accessible_tags:
-            has_accessible_tag = exists(
-                select(AlertToTag.alert_id).where(
-                    and_(
-                        AlertToTag.alert_id == Alert.id,
-                        AlertToTag.tag_id.in_(accessible_tags),
-                    ),
-                ),
-            )
-            tag_conditions.append(has_accessible_tag)
-
-        if tag_filters["include_untagged"]:
-            is_untagged = ~exists(
-                select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id),
-            )
-            tag_conditions.append(is_untagged)
-
-        if tag_conditions:
-            filters.append(or_(*tag_conditions))
-        else:
-            return 0
-
-    query = select(func.count(Alert.id)).where(*filters)
-    result = await db.execute(query)
-    return result.scalar_one()
+    return await _count_alerts_for_user(user, db, customer_codes, Alert.status == "OPEN")
 
 
 async def alerts_in_progress_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
     """Get in-progress alerts count with customer and tag filtering"""
-    from sqlalchemy import and_
-    from sqlalchemy import exists
-    from sqlalchemy import or_
-
-    filters = [Alert.status == "IN_PROGRESS"]
-
-    # Customer filtering
-    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, db)
-    if "*" not in accessible_customers:
-        filters.append(Alert.customer_code.in_(accessible_customers))
-
-    # Tag filtering
-    tag_filters = await tag_access_handler.build_alert_query_filters(user, db)
-    accessible_tags = tag_filters["accessible_tags"]
-
-    if "*" not in accessible_tags:
-        tag_conditions = []
-        if accessible_tags:
-            has_accessible_tag = exists(
-                select(AlertToTag.alert_id).where(
-                    and_(
-                        AlertToTag.alert_id == Alert.id,
-                        AlertToTag.tag_id.in_(accessible_tags),
-                    ),
-                ),
-            )
-            tag_conditions.append(has_accessible_tag)
-
-        if tag_filters["include_untagged"]:
-            is_untagged = ~exists(
-                select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id),
-            )
-            tag_conditions.append(is_untagged)
-
-        if tag_conditions:
-            filters.append(or_(*tag_conditions))
-        else:
-            return 0
-
-    query = select(func.count(Alert.id)).where(*filters)
-    result = await db.execute(query)
-    return result.scalar_one()
+    return await _count_alerts_for_user(user, db, customer_codes, Alert.status == "IN_PROGRESS")
 
 
 async def alerts_closed_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
     """Get closed alerts count with customer and tag filtering"""
-    from sqlalchemy import and_
-    from sqlalchemy import exists
-    from sqlalchemy import or_
-
-    filters = [Alert.status == "CLOSED"]
-
-    # Customer filtering
-    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, db)
-    if "*" not in accessible_customers:
-        filters.append(Alert.customer_code.in_(accessible_customers))
-
-    # Tag filtering
-    tag_filters = await tag_access_handler.build_alert_query_filters(user, db)
-    accessible_tags = tag_filters["accessible_tags"]
-
-    if "*" not in accessible_tags:
-        tag_conditions = []
-        if accessible_tags:
-            has_accessible_tag = exists(
-                select(AlertToTag.alert_id).where(
-                    and_(
-                        AlertToTag.alert_id == Alert.id,
-                        AlertToTag.tag_id.in_(accessible_tags),
-                    ),
-                ),
-            )
-            tag_conditions.append(has_accessible_tag)
-
-        if tag_filters["include_untagged"]:
-            is_untagged = ~exists(
-                select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id),
-            )
-            tag_conditions.append(is_untagged)
-
-        if tag_conditions:
-            filters.append(or_(*tag_conditions))
-        else:
-            return 0
-
-    query = select(func.count(Alert.id)).where(*filters)
-    result = await db.execute(query)
-    return result.scalar_one()
+    return await _count_alerts_for_user(user, db, customer_codes, Alert.status == "CLOSED")
 
 
 async def alerts_total_multiple_filters(
@@ -2527,8 +2423,6 @@ async def list_alerts_for_user(
 ) -> List[AlertOut]:
     """List alerts filtered by user's customer access and tag access"""
     from sqlalchemy import and_
-    from sqlalchemy import exists
-    from sqlalchemy import or_
 
     offset = (page - 1) * page_size
     order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
@@ -2542,45 +2436,10 @@ async def list_alerts_for_user(
         selectinload(Alert.iocs).selectinload(AlertToIoC.ioc),
     )
 
-    filters = []
-
-    # 1. Apply customer filtering
-    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, session)
-    if "*" not in accessible_customers:
-        filters.append(Alert.customer_code.in_(accessible_customers))
-
-    # 2. Apply tag filtering (new)
-    tag_filters = await tag_access_handler.build_alert_query_filters(user, session)
-    accessible_tags = tag_filters["accessible_tags"]
-
-    if "*" not in accessible_tags:
-        # User has tag restrictions
-        tag_conditions = []
-
-        if accessible_tags:
-            # Alerts that have at least one accessible tag
-            has_accessible_tag = exists(
-                select(AlertToTag.alert_id).where(
-                    and_(
-                        AlertToTag.alert_id == Alert.id,
-                        AlertToTag.tag_id.in_(accessible_tags),
-                    ),
-                ),
-            )
-            tag_conditions.append(has_accessible_tag)
-
-        if tag_filters["include_untagged"]:
-            # Include untagged alerts
-            is_untagged = ~exists(
-                select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id),
-            )
-            tag_conditions.append(is_untagged)
-
-        if tag_conditions:
-            filters.append(or_(*tag_conditions))
-        else:
-            # No accessible tags and untagged not allowed - return empty
-            return []
+    filters = await alert_visibility_filters_for_user(user, session, customer_codes)
+    if filters is None:
+        # No accessible tags and untagged not allowed - return empty
+        return []
 
     # Apply all filters
     if filters:

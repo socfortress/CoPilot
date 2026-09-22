@@ -132,6 +132,7 @@ from app.incidents.services.db_operations import alert_total_by_alert_title
 from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alert_total_by_customer_codes
 from app.incidents.services.db_operations import alert_total_for_user
+from app.incidents.services.db_operations import alert_visibility_filters_for_user
 from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
 from app.incidents.services.db_operations import alerts_closed_by_asset_name
@@ -1775,18 +1776,14 @@ async def delete_alerts_by_title_endpoint(
     """
     logger.info(f"Deleting alerts with title filter '{title_filter}' for user: {current_user.username}")
 
-    # Get customer access filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
-
-    # Build query to find matching alerts
-    query = select(Alert).where(Alert.alert_name.ilike(f"%{title_filter}%"))
-
-    # Apply customer filtering if not admin/analyst
-    if "*" not in accessible_customers:
-        query = query.where(Alert.customer_code.in_(accessible_customers))
-
-    result = await db.execute(query)
-    matching_alerts = result.scalars().all()
+    # Same customer + tag visibility as the list and the single-alert delete: a
+    # tag-restricted analyst must not be able to bulk-delete alerts they cannot see.
+    visibility = await alert_visibility_filters_for_user(current_user, db)
+    matching_alerts = []
+    if visibility is not None:
+        query = select(Alert).where(Alert.alert_name.ilike(f"%{title_filter}%"), *visibility)
+        result = await db.execute(query)
+        matching_alerts = result.scalars().all()
 
     if not matching_alerts:
         return DeleteAlertsResponse(

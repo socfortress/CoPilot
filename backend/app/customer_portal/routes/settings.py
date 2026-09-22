@@ -8,6 +8,7 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.customer_portal.schema.settings import PortalSettingsData
 from app.customer_portal.schema.settings import PortalSettingsResponse
@@ -28,7 +29,7 @@ customer_portal_settings_router = APIRouter()
 async def update_portal_settings(
     request: UpdatePortalSettingsRequest,
     session: AsyncSession = Depends(get_db),
-    auth_handler: AuthHandler = Depends(AuthHandler().get_current_user),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ) -> UpdatePortalSettingsResponse:
     """
     Update customer portal settings including logo and title.
@@ -73,15 +74,13 @@ async def update_portal_settings(
             settings.brand_color = request.brand_color
 
         # Update metadata
-        settings.updated_by = auth_handler.user_id if hasattr(auth_handler, "user_id") else None
+        settings.updated_by = current_user.id
         settings.updated_at = datetime.now()
 
         await session.commit()
         await session.refresh(settings)
 
-        logger.info(
-            f"Portal settings updated successfully by user {auth_handler.user_id if hasattr(auth_handler, 'user_id') else 'unknown'}",
-        )
+        logger.info(f"Portal settings updated successfully by user {current_user.username} (id={current_user.id})")
 
         return UpdatePortalSettingsResponse(
             success=True,

@@ -28,6 +28,7 @@ from app.auth.schema.user import UserDetailResponse
 from app.auth.services.totp import is_2fa_enabled
 from app.auth.services.universal import delete_user
 from app.auth.services.universal import find_user
+from app.auth.services.universal import get_customer_codes_for_user
 from app.auth.services.universal import get_user_by_id
 from app.auth.services.universal import select_all_users
 from app.auth.services.universal import update_last_login
@@ -132,7 +133,6 @@ async def login_for_access_token(
 async def login_for_customer_portal(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    session: AsyncSession = Depends(get_db),
 ):
     user = await auth_handler.authenticate_user(form_data.username, form_data.password)
     if not user:
@@ -182,13 +182,7 @@ async def login_for_customer_portal(
             "requires_2fa": True,
         }
 
-    # Fetch assigned customer codes
-    from sqlalchemy import select
-
-    from app.auth.models.users import UserCustomerAccess
-
-    result = await session.execute(select(UserCustomerAccess.customer_code).where(UserCustomerAccess.user_id == user.id))
-    customer_codes = result.scalars().all()
+    customer_codes = await get_customer_codes_for_user(user.id)
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await auth_handler.encode_token(
@@ -215,16 +209,24 @@ async def refresh_token(current_user: User = Depends(auth_handler.get_current_us
     """
     Refreshes the access token for the current user.
 
+    A ``customer_user`` token is re-issued with the same ``customer_codes`` claim the
+    login attached, so a refreshed Customer Portal session keeps its customer list.
+
     Parameters:
     - current_user (User): The current authenticated user.
 
     Returns:
     - dict: A dictionary containing the refreshed access token and token type.
     """
+    extra_claims = None
+    if current_user.role_id == RoleEnum.customer_user.value:
+        extra_claims = {"customer_codes": await get_customer_codes_for_user(current_user.id)}
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await auth_handler.encode_token(
         current_user.username,
         access_token_expires,
+        extra_claims=extra_claims,
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
