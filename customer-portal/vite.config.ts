@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
 			// See frontend/vite.config.ts. Dev-only by construction (`apply: "serve"`).
 			// The agent instructions live once in the repo-root AGENTS.md, written by the
 			// analyst frontend, so this app must not append a second copy of them.
-			quello({ writeAgentFile: false }),
+			quello({ writeAgentFile: false, visible: false }),
 			VueDevTools({
 				launchEditor: "cursor"
 			}),
