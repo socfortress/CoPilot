@@ -7,8 +7,11 @@ export default {
 	/**
 	 * Get all agents for the authenticated customer
 	 */
-	getAgents(customerCodes?: string[]) {
-		return HttpClient.get<CommonResponse<{ agents: Agent[] }>>("/agents", withCustomerCodes(customerCodes))
+	getAgents(customerCodes?: string[], signal?: AbortSignal) {
+		return HttpClient.get<CommonResponse<{ agents: Agent[] }>>(
+			"/agents",
+			withCustomerCodes(customerCodes, { signal })
+		)
 	},
 
 	/**

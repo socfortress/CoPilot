@@ -45,10 +45,10 @@ export default {
 		)
 	},
 
-	getEnabledDashboardsForCustomers(customerCodes?: string[]) {
+	getEnabledDashboardsForCustomers(customerCodes?: string[], signal?: AbortSignal) {
 		return HttpClient.get<CommonResponse<{ enabled_dashboards: EnabledDashboard[] }>>(
 			"/siem/dashboards/enabled",
-			withCustomerCodes(customerCodes)
+			withCustomerCodes(customerCodes, { signal })
 		)
 	},
 
