@@ -25,7 +25,6 @@ export const useAuthStore = defineStore("auth", {
 
 			this.user = {
 				access_token: payload.access_token,
-				refresh_token: payload.refresh_token,
 				username: jwtPayload.sub || "",
 				customer_code: jwtPayload.customer_codes?.[0] || null,
 				customer_codes: jwtPayload.customer_codes ?? [],
@@ -35,7 +34,6 @@ export const useAuthStore = defineStore("auth", {
 		setTokens(payload: AuthResponse) {
 			if (this.user) {
 				this.user.access_token = payload.access_token
-				this.user.refresh_token = payload.refresh_token
 			}
 		},
 		setLogout() {
@@ -65,10 +63,8 @@ export const useAuthStore = defineStore("auth", {
 			try {
 				const response = await Api.totp.validate(payload)
 
-				// The validate endpoint returns the same {access_token, token_type} shape as the
-				// customer-portal login Token (no refresh_token), so cast through unknown.
 				if (response.data) {
-					this.setLogged(response.data as unknown as AuthResponse)
+					this.setLogged(response.data)
 				}
 
 				return response.data
@@ -77,24 +73,19 @@ export const useAuthStore = defineStore("auth", {
 				throw error.response?.data
 			}
 		},
-		refreshToken() {
-			return new Promise((resolve, reject) => {
-				const refreshToken = this.user?.refresh_token || ""
-
-				Api.auth
-					.refresh(refreshToken)
-					.then(res => {
-						if (res.data) {
-							this.setTokens(res.data)
-							resolve(res.data)
-						} else {
-							reject(res.data)
-						}
-					})
-					.catch(err => {
-						reject(err.response?.data || err)
-					})
-			})
+		/** Extend the session by re-issuing the access token. Rejects with the API error body. */
+		async refreshToken(): Promise<AuthResponse> {
+			try {
+				const response = await Api.auth.refresh()
+				if (!response.data?.access_token) {
+					throw new Error("Empty refresh response")
+				}
+				this.setTokens(response.data)
+				return response.data
+			} catch (err) {
+				const error = err as ApiError
+				throw error.response?.data || err
+			}
 		}
 	},
 	getters: {

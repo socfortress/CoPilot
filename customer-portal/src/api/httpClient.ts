@@ -32,9 +32,15 @@ function applyInterceptors(client: AxiosInstance) {
 				__TOKEN_REFRESHING = true
 				__TOKEN_LAST_CHECK = new Date()
 
-				store.refreshToken().then(() => {
-					__TOKEN_REFRESHING = false
-				})
+				// Fire-and-forget: this request still goes out with the old (valid) token.
+				// A failed refresh must release the flag or no further attempt is ever made;
+				// the debounce above keeps a persistently failing backend from being hammered.
+				store
+					.refreshToken()
+					.catch(() => {})
+					.finally(() => {
+						__TOKEN_REFRESHING = false
+					})
 			}
 
 			return config

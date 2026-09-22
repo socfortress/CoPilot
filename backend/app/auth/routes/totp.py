@@ -29,6 +29,7 @@ from app.auth.services.totp import setup_totp
 from app.auth.services.totp import validate_totp
 from app.auth.services.totp import verify_setup
 from app.auth.services.universal import find_user
+from app.auth.services.universal import get_customer_codes_for_user
 from app.auth.services.universal import update_last_login
 from app.auth.utils import AuthHandler
 
@@ -215,14 +216,7 @@ async def validate_2fa_login(body: TOTPValidateRequest, request: Request):
     customer_code = None
     login_detail = "Main portal login (2FA)"
     if user.role_id == RoleEnum.customer_user.value:
-        from sqlalchemy import select
-
-        from app.auth.models.users import UserCustomerAccess
-        from app.db.db_session import get_session
-
-        async with get_session() as session:
-            result = await session.execute(select(UserCustomerAccess.customer_code).where(UserCustomerAccess.user_id == user.id))
-            customer_codes = result.scalars().all()
+        customer_codes = await get_customer_codes_for_user(user.id)
         extra_claims = {"customer_codes": customer_codes}
         customer_code = customer_codes[0] if customer_codes else None
         login_detail = "Customer portal login (2FA)"

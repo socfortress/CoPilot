@@ -122,6 +122,18 @@ async def update_last_login(user_id: int) -> None:
         logger.error(f"Failed to update last_login_at for user {user_id}: {e}")
 
 
+async def get_customer_codes_for_user(user_id: int) -> List[str]:
+    """Customer codes assigned to a user via ``user_customer_access``.
+
+    Used to build the ``customer_codes`` JWT claim the Customer Portal reads to populate
+    its customer filter. Every token issued to a ``customer_user`` — login, 2FA
+    completion and refresh — must carry it, or the portal ends up with no customers.
+    """
+    async with AsyncSession(async_engine) as session:
+        result = await session.execute(select(UserCustomerAccess.customer_code).where(UserCustomerAccess.user_id == user_id))
+        return list(result.scalars().all())
+
+
 async def get_role(name: str):
     """
     Retrieve the role name for a given user name.

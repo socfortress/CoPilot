@@ -22,16 +22,19 @@ export type RouteMetaAuthRole = AuthUserRole | RouteRole | string
 
 export interface AuthUser {
 	access_token: string | null
-	refresh_token: string | null
 	role: AuthUserRole | string | null
 	username: string | null
 	customer_code: string | null
 	customer_codes: string[]
 }
 
+/**
+ * Shape of every token-issuing endpoint (`/auth/token/customer-portal`, `/auth/2fa/validate`,
+ * `/auth/refresh`). There is no refresh token: a session is extended by calling
+ * `GET /auth/refresh` with the still-valid access token (sliding expiry).
+ */
 export interface AuthResponse {
 	access_token: string
-	refresh_token: string
 	token_type: string
 	/**
 	 * Set by the login endpoint when the account has 2FA enabled. When true, `access_token`
