@@ -93,6 +93,7 @@ import type {
 	IncidentCustomerReportGenerateRequest,
 	IncidentReportTemplate
 } from "@/types/reports"
+import { useIntervalFn } from "@vueuse/core"
 import axios from "axios"
 import { saveAs } from "file-saver"
 import { NButton, NDatePicker, NEmpty, NForm, NFormItem, NInput, NModal, NSelect, NSpin, useMessage } from "naive-ui"
@@ -226,25 +227,48 @@ async function loadReports() {
 	}
 }
 
-function startStatusPolling(reportId: number) {
-	const pollInterval = setInterval(async () => {
-		try {
-			await loadReports()
-			const report = reports.value.find(r => r.id === reportId)
-			if (report && report.status !== "processing") {
-				clearInterval(pollInterval)
-				if (report.status === "completed") {
-					message.success(`Report "${report.report_name}" completed successfully`)
-				} else if (report.status === "failed") {
-					message.error(`Report "${report.report_name}" failed`)
-				}
-			}
-		} catch {
-			clearInterval(pollInterval)
-		}
-	}, 3000)
+// One shared poller for every report still generating, instead of an interval per
+// report. `useIntervalFn` is bound to the component scope, so leaving the page stops
+// the polling — a bare setInterval kept hitting the backend after unmount.
+const POLL_INTERVAL_MS = 3000
+const POLL_TIMEOUT_MS = 300000
 
-	setTimeout(clearInterval, 300000, pollInterval)
+/** Report id -> the moment we stop waiting for it. */
+const pendingReports = new Map<number, number>()
+
+const { pause: pausePolling, resume: resumePolling } = useIntervalFn(pollPendingReports, POLL_INTERVAL_MS, {
+	immediate: false
+})
+
+async function pollPendingReports() {
+	await loadReports()
+
+	const now = Date.now()
+	for (const [reportId, deadline] of pendingReports) {
+		const report = reports.value.find(r => r.id === reportId)
+
+		if (report && report.status !== "processing") {
+			pendingReports.delete(reportId)
+			if (report.status === "completed") {
+				message.success(`Report "${report.report_name}" completed successfully`)
+			} else if (report.status === "failed") {
+				message.error(`Report "${report.report_name}" failed`)
+			}
+		} else if (now > deadline) {
+			// Give up quietly: the row keeps showing "processing" and a manual reload
+			// will pick the result up.
+			pendingReports.delete(reportId)
+		}
+	}
+
+	if (!pendingReports.size) {
+		pausePolling()
+	}
+}
+
+function startStatusPolling(reportId: number) {
+	pendingReports.set(reportId, Date.now() + POLL_TIMEOUT_MS)
+	resumePolling()
 }
 
 async function handleGenerate() {
