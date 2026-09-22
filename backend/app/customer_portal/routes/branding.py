@@ -165,7 +165,7 @@ async def set_customer_branding(
     customer_code: str,
     request: UpdateCustomerBrandingRequest,
     session: AsyncSession = Depends(get_db),
-    auth_handler: AuthHandler = Depends(AuthHandler().get_current_user),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ) -> CustomerBrandingResponse:
     await _ensure_customer_exists(session, customer_code)
 
@@ -178,7 +178,7 @@ async def set_customer_branding(
             logo_base64=request.logo_base64,
             logo_mime_type=request.logo_mime_type,
             brand_color=request.brand_color,
-            user_id=getattr(auth_handler, "user_id", None),
+            user_id=current_user.id,
         )
         await session.commit()
         await session.refresh(override)
