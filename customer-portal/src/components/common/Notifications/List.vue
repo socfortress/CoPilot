@@ -4,8 +4,8 @@
 			v-for="item of listSanitized"
 			:key="item.id"
 			class="item flex"
-			:class="[{ pointer: !!item.action }, item.type]"
-			@click.stop="item.action ? preformAction(item.id, item.action) : () => {}"
+			:class="[{ pointer: !!item.actionRoute }, item.type]"
+			@click.stop="item.actionRoute ? preformAction(item) : undefined"
 		>
 			<div class="icon-box">
 				<Icon :name="ReportIcon" :size="21" />
@@ -23,7 +23,7 @@
 					<div class="date">
 						{{ formatDatetime(item.date) }}
 					</div>
-					<div v-if="!!item.action" class="action-text">
+					<div v-if="!!item.actionRoute" class="action-text">
 						{{ item.actionTitle || "Details" }}
 					</div>
 				</div>
@@ -43,11 +43,12 @@
 </template>
 
 <script lang="ts" setup>
+import type { Notification } from "@/composables/common/useNotifications"
 import _take from "lodash/take"
 import { NEmpty, NScrollbar, NTooltip } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
-import { useNotifications } from "@/composables/common/useNotifications"
+import { openRoute, useNotifications } from "@/composables/common/useNotifications"
 
 const props = defineProps<{
 	maxItems?: number
@@ -64,9 +65,9 @@ const listSanitized = computed(() => {
 	return list.value
 })
 
-function preformAction(id: string | number, action: () => void) {
-	action()
-	setRead(id)
+function preformAction(item: Notification) {
+	openRoute(item.actionRoute)
+	setRead(item.id)
 }
 
 function setRead(id: string | number) {

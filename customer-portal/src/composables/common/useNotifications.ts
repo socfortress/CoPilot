@@ -3,6 +3,7 @@ import { useStorage } from "@vueuse/core"
 import _uniqBy from "lodash/uniqBy"
 import { NButton } from "naive-ui"
 import { computed, h } from "vue"
+import router from "@/router"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { secureLocalStorage } from "@/utils/secure-storage"
@@ -19,7 +20,12 @@ export interface Notification {
 	description: string
 	read: boolean
 	date: string | Date
-	action?: () => void
+	/**
+	 * Where clicking the notification takes the reader. A route name, not a callback:
+	 * the list is persisted, and a function does not survive serialisation — that is
+	 * how a reloaded bell ends up with items that look clickable and do nothing.
+	 */
+	actionRoute?: { name: string }
 	actionTitle?: string
 }
 
@@ -33,6 +39,12 @@ export interface PrependOptions {
  * user was logged in, so they are dropped on logout together with the session keys.
  */
 const list = useStorage<Notification[]>("notifications-list", [], secureLocalStorage({ session: true }))
+
+/** Navigate to a notification's target. A push to the current page is a no-op. */
+export function openRoute(route: Notification["actionRoute"]) {
+	if (!route) return
+	router.push({ name: route.name }).catch(() => {})
+}
 
 export function useNotifications() {
 	const hasUnread = computed(() => list.value.some(o => !o.read))
@@ -83,11 +95,11 @@ export function useNotifications() {
 					keepAliveOnHover: true
 				}
 
-				if (newItem.action) {
+				if (newItem.actionRoute) {
 					notify.action = () =>
 						h(
 							NButton,
-							{ text: true, type: newItem.type, onClick: newItem.action },
+							{ text: true, type: newItem.type, onClick: () => openRoute(newItem.actionRoute) },
 							{ default: () => newItem.actionTitle || "Details" }
 						)
 				}

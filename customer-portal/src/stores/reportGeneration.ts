@@ -35,7 +35,10 @@ function notify(report: PendingReport, status: IncidentCustomerReport["status"] 
 		id: `report-${report.id}`,
 		category: "report" as const,
 		read: false,
-		date: new Date()
+		date: new Date(),
+		// Clicking the toast button — or the item in the bell — opens the Reports page.
+		actionRoute: { name: "ReportsList" },
+		actionTitle: "View reports"
 	}
 
 	const item: Notification =
