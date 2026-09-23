@@ -1,137 +1,79 @@
 <template>
-	<div class="page md:page-wrapped flex flex-col gap-6 md:overflow-hidden">
-		<p>Monitor your organization's security posture and recent activity</p>
+	<div class="page overview flex flex-col gap-6">
+		<OverviewHeader :last-updated :refreshing="isRefreshing" @refresh="refresh()" />
 
-		<div class="flex grow flex-col gap-6 overflow-hidden">
-			<div class="@container flex grow flex-col gap-6 overflow-hidden">
-				<OverviewStatsCards />
+		<OverviewPosture
+			:alert-counts
+			:case-counts
+			:agent-counts
+			:loading="{ alerts: loading.alerts, cases: loading.cases, agents: loading.agents }"
+			:errors="{ alerts: errors.alerts, cases: errors.cases, agents: errors.agents }"
+			:loaded
+		/>
 
-				<OverviewAiInsights class="shrink-0" />
+		<OverviewAiInsights v-if="!errors.ai" :insights :loading="!loaded && loading.ai" @updated="refresh()" />
 
-				<div class="flex max-h-full grow flex-col overflow-hidden">
-					<div class="flex grow flex-col gap-6 overflow-hidden @2xl:flex-row">
-						<div class="max-h-full basis-1/2 overflow-hidden">
-							<n-spin :show="loadingAlerts" class="h-full" content-class="h-full">
-								<OverviewRecentAlerts
-									:recent-alerts
-									class="h-full"
-									size="small"
-									@updated="fetchAlerts()"
-								/>
-							</n-spin>
-						</div>
-						<div class="max-h-full basis-1/2 overflow-hidden">
-							<n-spin :show="loadingCases" class="h-full" content-class="h-full">
-								<OverviewRecentCases
-									:recent-cases
-									class="h-full"
-									size="small"
-									@updated="fetchCases()"
-								/>
-							</n-spin>
-						</div>
-					</div>
-				</div>
-			</div>
+		<div class="activity-grid grid gap-6">
+			<OverviewRecentAlerts
+				:alerts
+				:loading="!loaded && loading.alerts"
+				:error="errors.alerts"
+				@retry="refresh()"
+				@updated="refresh()"
+			/>
+			<OverviewRecentCases
+				:cases
+				:loading="!loaded && loading.cases"
+				:error="errors.cases"
+				@retry="refresh()"
+				@updated="refresh()"
+			/>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { DashboardAlert, DashboardCase } from "@/components/overview/types"
-import type { ApiError } from "@/types/common"
-import { NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref, watch } from "vue"
-import Api from "@/api"
+import { onBeforeMount } from "vue"
 import OverviewAiInsights from "@/components/overview/OverviewAiInsights.vue"
+import OverviewHeader from "@/components/overview/OverviewHeader.vue"
+import OverviewPosture from "@/components/overview/OverviewPosture.vue"
 import OverviewRecentAlerts from "@/components/overview/OverviewRecentAlerts.vue"
 import OverviewRecentCases from "@/components/overview/OverviewRecentCases.vue"
-import OverviewStatsCards from "@/components/overview/OverviewStatsCards.vue"
-import { useCustomerFilterStore } from "@/stores/customerFilter"
-import { getApiErrorMessage } from "@/utils"
+import { useOverviewData } from "@/composables/overview/useOverviewData"
 
-const loadingAlerts = ref(false)
-const loadingCases = ref(false)
-const message = useMessage()
-const recentAlerts = ref<DashboardAlert[]>([])
-const recentCases = ref<DashboardCase[]>([])
-const customerFilterStore = useCustomerFilterStore()
-
-async function fetchAlerts() {
-	loadingAlerts.value = true
-
-	try {
-		// Fetch alerts, cases, and agents data using our API services
-		const alertsResponse = await Api.alerts.getAlerts(
-			{ page: 1, pageSize: 10, order: "desc" },
-			undefined,
-			customerFilterStore.queryCustomerCodes
-		)
-
-		const alerts = alertsResponse.data.alerts || []
-
-		// Get recent alerts (last 5, sorted by creation time)
-		recentAlerts.value = alerts
-			.map(alert => ({
-				id: alert.id,
-				name: alert.alert_name || "Unnamed Alert",
-				description: alert.alert_description || "No description available",
-				severity: alert.status === "OPEN" ? "high" : alert.status === "IN_PROGRESS" ? "medium" : "low",
-				created_at: alert.alert_creation_time || new Date()
-			}))
-			.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-			.slice(0, 10)
-	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError))
-	} finally {
-		loadingAlerts.value = false
-	}
-}
-
-async function fetchCases() {
-	loadingCases.value = true
-
-	try {
-		// Fetch alerts, cases, and agents data using our API services
-		const casesResponse = await Api.cases.getCases(
-			{ page: 1, pageSize: 10, order: "desc" },
-			undefined,
-			customerFilterStore.queryCustomerCodes
-		)
-
-		const cases = casesResponse.data.cases || []
-
-		// Get recent cases (last 5, sorted by creation time)
-		recentCases.value = cases
-			.map(o => ({
-				id: o.id,
-				name: o.case_name || "Unnamed Case",
-				description: o.case_description || "No description available",
-				status: o.case_status || "open",
-				created_at: o.case_creation_time || new Date(),
-				assigned_to: o.assigned_to || undefined
-			}))
-			.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-			.slice(0, 10)
-	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError))
-	} finally {
-		loadingCases.value = false
-	}
-}
+// Hierarchy, top to bottom: what needs attention now (posture), the AI analyst's
+// read of it (when the SOC publishes findings), then what just happened (recent
+// alerts and cases).
+const {
+	alerts,
+	cases,
+	alertCounts,
+	caseCounts,
+	agentCounts,
+	insights,
+	loading,
+	errors,
+	loaded,
+	lastUpdated,
+	isRefreshing,
+	refresh
+} = useOverviewData()
 
 onBeforeMount(() => {
-	fetchAlerts()
-	fetchCases()
+	refresh()
 })
-
-// Refetch whenever the global customer filter changes.
-watch(
-	() => customerFilterStore.selectedCustomerCodes,
-	() => {
-		fetchAlerts()
-		fetchCases()
-	},
-	{ deep: true }
-)
 </script>
+
+<style lang="scss" scoped>
+.overview {
+	.activity-grid {
+		grid-template-columns: minmax(0, 1fr);
+
+		@media (min-width: 1100px) {
+			// Equal columns: both feeds carry long titles, and same-height panels read as
+			// one block. Alerts sit first (left) because they are the primary feed.
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+}
+</style>

@@ -1,54 +1,76 @@
 <template>
-	<n-card
-		title="Recent Cases"
-		segmented
-		:content-class="`flex flex-col gap-4 overflow-hidden ${!recentCases.length ? 'items-center justify-center' : 'p-0!'}`"
+	<OverviewPanel
+		title="Recent cases"
+		:icon="ICONS.cases"
+		:meta="cases.length ? `latest ${cases.length}` : undefined"
+		:to="{ name: 'CasesList' }"
+		link-label="All cases"
+		:loading
+		:error
+		:empty="!cases.length"
+		empty-text="No cases in the selected scope"
+		:skeleton-rows="RECENT_LIMIT"
+		@retry="emit('retry')"
 	>
-		<n-empty v-if="!recentCases.length" description="No recent cases" />
-
-		<n-scrollbar v-else class="flex grow" trigger="none">
-			<div class="flex flex-col gap-4 p-4">
-				<RecentCaseCard
-					v-for="caseData in recentCases"
-					:key="caseData.id"
-					embedded
-					:case-data
-					@updated="handleCaseUpdated()"
+		<OverviewActivityList :items>
+			<template #action="{ item }">
+				<CaseDetailsButton
+					:case-id="item.id"
+					size="tiny"
+					@status-updated="emit('updated')"
+					@assigned-to-updated="emit('updated')"
+					@deleted="emit('updated')"
 				/>
-			</div>
-		</n-scrollbar>
-
-		<n-button :text="!!recentCases.length" class="mb-4!" @click="goToCases()">
-			<template #icon>
-				<Icon name="carbon:launch" />
 			</template>
-			View all cases
-		</n-button>
-	</n-card>
+		</OverviewActivityList>
+	</OverviewPanel>
 </template>
 
 <script setup lang="ts">
-import type { DashboardCase } from "./types"
-import { NButton, NCard, NEmpty, NScrollbar } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import { useNavigation } from "@/composables/common/useNavigation"
-import RecentCaseCard from "./RecentCaseCard.vue"
+import type { ActivityItem } from "./OverviewActivityList.vue"
+import type { Case } from "@/types/cases"
+import { computed } from "vue"
+import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
+import { RECENT_LIMIT } from "@/composables/overview/useOverviewData"
+import { ICONS } from "@/const"
+import { useAuthStore } from "@/stores/auth"
+import OverviewActivityList from "./OverviewActivityList.vue"
+import OverviewPanel from "./OverviewPanel.vue"
+import { workflowStatus } from "./status"
 
-defineProps<{
-	recentCases: DashboardCase[]
+const { cases } = defineProps<{
+	cases: Case[]
+	loading: boolean
+	error: string | null
 }>()
 
 const emit = defineEmits<{
+	(e: "retry"): void
+	/** Something changed from the details modal: the page reloads its numbers. */
 	(e: "updated"): void
 }>()
 
-const { routeCasesList } = useNavigation()
+const authStore = useAuthStore()
+const showCustomer = computed(() => authStore.accessibleCustomerCodes.length > 1)
 
-function goToCases() {
-	routeCasesList().navigate()
-}
+const items = computed<ActivityItem[]>(() =>
+	cases.map(caseItem => {
+		const name = caseItem.case_name || "Unnamed case"
+		const description = caseItem.case_description?.trim()
+		const alertCount = caseItem.alerts?.length ?? 0
 
-function handleCaseUpdated() {
-	emit("updated")
-}
+		return {
+			id: caseItem.id,
+			title: name,
+			detail: description && description !== name ? description : undefined,
+			status: workflowStatus(caseItem.case_status),
+			time: caseItem.case_creation_time,
+			meta: [
+				caseItem.assigned_to || "unassigned",
+				alertCount ? `${alertCount} ${alertCount === 1 ? "alert" : "alerts"}` : null,
+				showCustomer.value ? caseItem.customer_code : null
+			].filter((value): value is string => !!value)
+		}
+	})
+)
 </script>
