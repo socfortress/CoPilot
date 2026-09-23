@@ -19,15 +19,19 @@
 		</header>
 
 		<div class="flex grow flex-col">
-			<div v-if="loading" class="flex flex-col gap-4 p-5" aria-busy="true">
-				<div v-for="n of skeletonRows" :key="n" class="flex items-center gap-3">
-					<n-skeleton :width="8" :height="8" circle />
-					<div class="flex grow flex-col gap-2">
-						<n-skeleton :height="12" :width="`${60 + ((n * 17) % 30)}%`" :sharp="false" />
-						<n-skeleton :height="10" :width="`${30 + ((n * 11) % 20)}%`" :sharp="false" />
+			<template v-if="loading">
+				<slot name="skeleton">
+					<div class="flex flex-col gap-4 p-5" aria-busy="true">
+						<div v-for="n of skeletonRows" :key="n" class="flex items-center gap-3">
+							<n-skeleton :width="8" :height="8" circle />
+							<div class="flex grow flex-col gap-2">
+								<n-skeleton :height="12" :width="`${60 + ((n * 17) % 30)}%`" :sharp="false" />
+								<n-skeleton :height="10" :width="`${30 + ((n * 11) % 20)}%`" :sharp="false" />
+							</div>
+						</div>
 					</div>
-				</div>
-			</div>
+				</slot>
+			</template>
 
 			<div v-else-if="error" class="flex grow flex-col items-start gap-2 p-5">
 				<p class="text-error text-sm">{{ error }}</p>

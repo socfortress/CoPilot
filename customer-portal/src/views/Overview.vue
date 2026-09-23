@@ -11,7 +11,13 @@
 			:loaded
 		/>
 
-		<OverviewAiInsights v-if="!errors.ai" :insights :loading="!loaded && loading.ai" @updated="refresh()" />
+		<OverviewAiInsights
+			v-if="showAiInsights"
+			:insights
+			:loading="!loaded && loading.ai"
+			:skeleton-rows="aiRowsHint || undefined"
+			@updated="refresh()"
+		/>
 
 		<div class="activity-grid grid gap-6">
 			<OverviewRecentAlerts
@@ -33,7 +39,8 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount } from "vue"
+import { useSessionStorage } from "@vueuse/core"
+import { computed, onBeforeMount, watch } from "vue"
 import OverviewAiInsights from "@/components/overview/OverviewAiInsights.vue"
 import OverviewHeader from "@/components/overview/OverviewHeader.vue"
 import OverviewPosture from "@/components/overview/OverviewPosture.vue"
@@ -58,6 +65,26 @@ const {
 	isRefreshing,
 	refresh
 } = useOverviewData()
+
+/**
+ * The AI card only exists when the SOC has published findings, which is unknown
+ * until the first response. Showing it only then pushes the whole activity area
+ * down; always showing a placeholder makes it collapse for customers without AI.
+ * So the page remembers, per session, how many findings the card last showed and
+ * reserves exactly that space while loading.
+ */
+const aiRowsHint = useSessionStorage("overview.ai-findings-rows", 0)
+
+const showAiInsights = computed(() => {
+	if (errors.ai) return false
+	return loaded.value ? insights.value.total_reports > 0 : aiRowsHint.value > 0
+})
+
+// Refreshed on every completed load, including refreshes and filter changes.
+watch([loaded, insights], ([isLoaded, current]) => {
+	if (!isLoaded || errors.ai) return
+	aiRowsHint.value = current.total_reports > 0 ? current.recent.length : 0
+})
 
 onBeforeMount(() => {
 	refresh()

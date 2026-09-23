@@ -9,9 +9,12 @@
 		:error
 		:empty="!alerts.length"
 		empty-text="No alerts in the selected scope"
-		:skeleton-rows="RECENT_LIMIT"
 		@retry="emit('retry')"
 	>
+		<template #skeleton>
+			<OverviewActivityList :items="[]" skeleton :skeleton-rows="RECENT_LIMIT" :skeleton-detail-lines="[0]" />
+		</template>
+
 		<OverviewActivityList :items>
 			<template #action="{ item }">
 				<AlertDetailsButton :alert-id="item.id" size="tiny" @status-updated="emit('updated')" />

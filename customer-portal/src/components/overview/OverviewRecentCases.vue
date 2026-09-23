@@ -9,9 +9,17 @@
 		:error
 		:empty="!cases.length"
 		empty-text="No cases in the selected scope"
-		:skeleton-rows="RECENT_LIMIT"
 		@retry="emit('retry')"
 	>
+		<template #skeleton>
+			<OverviewActivityList
+				:items="[]"
+				skeleton
+				:skeleton-rows="RECENT_LIMIT"
+				:skeleton-detail-lines="[1, 0, 0]"
+			/>
+		</template>
+
 		<OverviewActivityList :items>
 			<template #action="{ item }">
 				<CaseDetailsButton

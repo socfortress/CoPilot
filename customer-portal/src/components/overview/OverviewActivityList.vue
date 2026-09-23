@@ -1,5 +1,36 @@
 <template>
-	<ul class="activity-list m-0 list-none p-0">
+	<!--
+		The skeleton renders the very same row grid, paddings and line boxes as a real
+		item, with placeholders in place of text: rows keep their height when data
+		arrives, whichever feed they belong to.
+	-->
+	<ul v-if="skeleton" class="activity-list m-0 list-none p-0" aria-busy="true">
+		<li v-for="(row, index) of skeletonItems" :key="index" class="row">
+			<span class="marker marker-skeleton" />
+
+			<div class="content flex min-w-0 flex-col gap-1">
+				<div class="line title-line"><n-skeleton :height="12" :width="row.title" :sharp="false" /></div>
+				<div v-if="row.detailLines" class="flex flex-col">
+					<div v-for="line of row.detailLines" :key="line" class="line detail-line">
+						<n-skeleton :height="9" :width="line === row.detailLines ? '64%' : '96%'" :sharp="false" />
+					</div>
+				</div>
+				<div class="line meta-line flex items-center gap-2">
+					<n-skeleton :height="9" :width="42" :sharp="false" />
+					<n-skeleton :height="9" :width="row.meta" :sharp="false" />
+				</div>
+			</div>
+
+			<div class="aside flex flex-col items-end justify-between gap-2">
+				<div class="line meta-line"><n-skeleton :height="9" :width="88" :sharp="false" /></div>
+				<div v-if="skeletonActions" class="actions">
+					<n-skeleton :height="22" :width="127" :sharp="false" />
+				</div>
+			</div>
+		</li>
+	</ul>
+
+	<ul v-else class="activity-list m-0 list-none p-0">
 		<li v-for="item of items" :key="item.id" class="row">
 			<span class="marker" :style="{ backgroundColor: colorVar(item.status.color) }" />
 
@@ -38,6 +69,8 @@
 
 <script setup lang="ts">
 import type { StatusColor } from "./status"
+import { NSkeleton } from "naive-ui"
+import { computed } from "vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate, formatTimeAgo } from "@/utils/format"
 import { colorVar } from "./status"
@@ -54,9 +87,31 @@ export interface ActivityItem {
 	meta: string[]
 }
 
-defineProps<{
+const {
+	skeletonRows = 4,
+	skeletonDetailLines = [0],
+	skeletonActions = true
+} = defineProps<{
 	items: ActivityItem[]
+	/** Render placeholder rows instead of `items`. */
+	skeleton?: boolean
+	skeletonRows?: number
+	/** Detail lines per placeholder row, cycled: mirror what the real feed usually shows. */
+	skeletonDetailLines?: number[]
+	skeletonActions?: boolean
 }>()
+
+// Fixed, slightly uneven widths: a column of identical bars reads as a table, not a feed.
+const TITLE_WIDTHS = ["72%", "58%", "66%", "49%", "61%", "54%"]
+const META_WIDTHS = ["38%", "30%", "44%", "26%", "34%", "40%"]
+
+const skeletonItems = computed(() =>
+	Array.from({ length: skeletonRows }, (_, index) => ({
+		title: TITLE_WIDTHS[index % TITLE_WIDTHS.length],
+		meta: META_WIDTHS[index % META_WIDTHS.length],
+		detailLines: skeletonDetailLines[index % skeletonDetailLines.length] ?? 0
+	}))
+)
 
 const dFormats = useSettingsStore().dateFormat
 
@@ -94,6 +149,29 @@ function toIso(time: string | Date) {
 			line-height: 1.35;
 		}
 
+		// Placeholder line boxes, sized like the text they stand in for
+		// (title 14px × 1.35, detail 12px × 1.5, meta and time 12px × 16px).
+		.line {
+			display: flex;
+			align-items: center;
+		}
+
+		.title-line {
+			height: 18.9px;
+		}
+
+		.detail-line {
+			height: 18px;
+		}
+
+		.meta-line {
+			height: 16px;
+		}
+
+		.marker-skeleton {
+			background-color: var(--border-color);
+		}
+
 		.detail {
 			line-height: 1.5;
 		}
@@ -106,6 +184,14 @@ function toIso(time: string | Date) {
 		// box; text keeps the default button colour.
 		.actions :deep(.n-button) {
 			--n-color: transparent !important;
+		}
+
+		// The details buttons wrap an inline-flex group in a plain div, which would sit
+		// in a 1.6 line box and add ~4px under the 22px button. As a flex container it
+		// is exactly button-high, so the button lines up with the meta line and the
+		// skeleton row matches the real one.
+		.actions > :deep(div) {
+			display: flex;
 		}
 
 		&:hover,

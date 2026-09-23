@@ -1,17 +1,40 @@
 <template>
-	<!--
-		Rendered only once at least one AI report exists for the visible customers,
-		so deployments without the AI analyst (or customers whose AI report switch is
-		off) see no empty placeholder on the overview.
-	-->
+	<!-- Whether to show this card at all is the page's call (see Overview.vue). -->
 	<OverviewPanel
-		v-if="insights.total_reports > 0"
 		title="AI analyst findings"
 		icon="carbon:ai-generate"
-		:meta="`${insights.total_reports} ${insights.total_reports === 1 ? 'alert' : 'alerts'} analyzed`"
+		:meta="
+			insights.total_reports
+				? `${insights.total_reports} ${insights.total_reports === 1 ? 'alert' : 'alerts'} analyzed`
+				: undefined
+		"
 		:loading
-		:skeleton-rows="3"
 	>
+		<template #skeleton>
+			<div class="ai-grid grid" aria-busy="true">
+				<div class="summary border-default flex flex-col gap-4 p-5">
+					<div class="flex h-[29px] items-center gap-2">
+						<n-skeleton :height="26" :width="28" :sharp="false" />
+						<n-skeleton :height="10" :width="96" :sharp="false" />
+					</div>
+					<n-skeleton :height="6" :sharp="false" />
+					<div class="flex flex-col gap-1.5">
+						<div v-for="n of 2" :key="n" class="flex h-4 items-center justify-between gap-3">
+							<n-skeleton :height="9" :width="n === 1 ? '38%' : '52%'" :sharp="false" />
+							<n-skeleton :height="9" :width="10" :sharp="false" />
+						</div>
+					</div>
+				</div>
+				<OverviewActivityList
+					:items="[]"
+					skeleton
+					:skeleton-rows
+					:skeleton-detail-lines="[2]"
+					class="min-w-0"
+				/>
+			</div>
+		</template>
+
 		<div class="ai-grid grid">
 			<div class="summary border-default flex flex-col gap-4 p-5">
 				<div class="flex items-baseline gap-2">
@@ -50,6 +73,7 @@
 import type { ActivityItem } from "./OverviewActivityList.vue"
 import type { StatusSegment } from "./status"
 import type { AiInsights } from "@/types/aiReports"
+import { NSkeleton } from "naive-ui"
 import { computed } from "vue"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
 import { useAuthStore } from "@/stores/auth"
@@ -58,9 +82,11 @@ import OverviewPanel from "./OverviewPanel.vue"
 import { colorVar, severityColor } from "./status"
 import StatusBar from "./StatusBar.vue"
 
-const { insights } = defineProps<{
+const { insights, skeletonRows = 3 } = defineProps<{
 	insights: AiInsights
 	loading: boolean
+	/** How many finding rows the placeholder shows: the page passes the last known count. */
+	skeletonRows?: number
 }>()
 
 const emit = defineEmits<{
