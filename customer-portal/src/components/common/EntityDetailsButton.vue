@@ -27,7 +27,16 @@
 		>
 			<!-- Next to the modal's close button: leave the modal for the entity's own page. -->
 			<template #header-extra>
-				<n-button quaternary circle size="small" :aria-label="pageLabel" :title="pageLabel" @click="goToPage()">
+				<n-button
+					quaternary
+					:focusable="false"
+					circle
+					size="small"
+					:aria-label="pageLabel"
+					:title="pageLabel"
+					class="opacity-60"
+					@click="goToPage()"
+				>
 					<template #icon>
 						<Icon :name="PAGE_ICON" />
 					</template>
