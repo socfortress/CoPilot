@@ -277,6 +277,21 @@ Tests: `tests/test_office365_multi_tenant.py` (no DB, no network).
 
 Tests: `tests/test_opencti_connector.py` (no DB, no network).
 
+### SOCFortress WAF per customer (#1165)
+
+A customer can have one or more SOCFortress WAFs (Caddy + Coraza, [waf-platform](https://github.com/socfortress/waf-platform)). CoPilot reads their events, stats and threat intel, and phase 2 will block IPs. `app/customer_waf/`, routes under `/api/customer_waf/{customer_code}[/{waf_id}/…]`, and a **WAF** tab on the customer (phase 3). Phases and design are tracked in #1165.
+
+- **Not an integration or a connector.** One row per WAF in `customer_waf_instances` (hard FK to `customers`, `ON DELETE CASCADE`, unique `(customer_code, name)`). The WAF has no tenant concept, so each row belongs to exactly one customer. Don't move it into `integration_auth_keys` or the `connectors` table.
+- **Auth is a WAF service token** (`wafst_…`, from waf-platform#4). The token authenticates *as* a WAF user and carries that user's WAF role: `viewer` means read-only, `admin` can block and manage forwarders, and `operator` can block but can't read sites. `capabilities_for_roles` mirrors the WAF's role table only to *describe* a token in the UI; the WAF enforces its own table. `normalize_token` rejects anything that isn't `wafst_`: a WAF login JWT expires within the hour, and a site API key (`waf_…`) never authenticates to the admin API.
+- **The token is write-only and encrypted with its own key.** It is Fernet-encrypted with `WAF_TOKEN_ENCRYPTION_KEY`, with **no fallback**: not the TOTP key, and not derived from `JWT_SECRET`, so rotating either of those can never strand stored WAF tokens. Without the key, saving a WAF is a 400. Nothing returns or logs the plaintext or the ciphertext; the API exposes `token_prefix` only, and a blank token on update keeps the stored one. A rotated key surfaces as `409` "re-enter the token", deliberately not as a WAF auth failure. `tests/test_customer_waf.py` pins that the token appears in no response model and no log line.
+- **A WAF id belongs to a tenant.** `services.get_instance_for_customer` is the only way a route turns `{waf_id}` into a row, and it 404s when the row's customer differs from the path's. The path's customer is what `verify_customer_code_access` authorised, so without this check a scoped analyst could reach another tenant's WAF by guessing an id. 404 rather than 403, so ids can't be enumerated.
+- **A WAF 401/403 must never become a CoPilot 401/403.** The frontend treats a 401 from our own API as the analyst's session ending and logs them out (`frontend/src/api/session-expiry.ts`). Upstream failures are **502** with a `reason` (`token_rejected`, `insufficient_role`, `unreachable`, `tls_error`, `not_a_waf`, …); a disabled WAF is 409.
+- **Always send the WAF timezone-aware timestamps.** The WAF reads a naive `start_time`/`end_time` in its own process's timezone, so the same query matches different windows on different hosts. Found live against a WAF running in MDT, where a naive "last hour" matched nothing. `build_event_params` sends UTC with an explicit offset.
+- **`/health` is outside `/api`.** Through the recommended `https://waf-host:8080` URL (the admin UI's nginx, which proxies only `/api/`) it serves the SPA. The connection check therefore relies on `GET /api/v1/users/me` and treats health as optional.
+- **Removing a WAF from CoPilot doesn't revoke its token.** A token can't manage tokens, so the delete response tells the operator to revoke it in the WAF UI.
+
+Tests: `tests/test_customer_waf.py` (no DB, no network). `tests/e2e/customer_waf_e2e.py` uses real routers, real MySQL on 13306 and real JWTs, optionally against a live WAF (`WAF_E2E_URL` / `WAF_E2E_VIEWER_TOKEN`).
+
 ### Stack provisioning: Graylog content packs and InfluxDB checks
 
 `app/stack_provisioning/` holds two independent provisioners that share a shape (JSON templates on disk + `routes / services / schema`) but nothing else:
