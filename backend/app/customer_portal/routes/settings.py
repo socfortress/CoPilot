@@ -73,9 +73,11 @@ async def update_portal_settings(
         else:
             settings.brand_color = request.brand_color
 
-        # Update metadata
+        # Update metadata. UTC, like the column default and every other portal
+        # timestamp — datetime.now() would stamp the server's local time and make
+        # this row inconsistent with the rest of the schema.
         settings.updated_by = current_user.id
-        settings.updated_at = datetime.now()
+        settings.updated_at = datetime.utcnow()
 
         await session.commit()
         await session.refresh(settings)

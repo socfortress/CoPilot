@@ -76,7 +76,8 @@ async function fetchAlerts() {
 				id: alert.id,
 				name: alert.alert_name || "Unnamed Alert",
 				description: alert.alert_description || "No description available",
-				severity: alert.status === "OPEN" ? "high" : alert.status === "IN_PROGRESS" ? "medium" : "low",
+				status: alert.status,
+				tags: (alert.tags ?? []).map(tag => tag.tag),
 				created_at: alert.alert_creation_time || new Date()
 			}))
 			.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())

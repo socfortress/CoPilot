@@ -9,6 +9,7 @@
 			<Breadcrumb class="grow" />
 
 			<PillWrapper class="pl-3!">
+				<Notifications />
 				<FullscreenSwitch />
 				<ThemeSwitch />
 				<Avatar />
@@ -28,6 +29,7 @@ import Logo from "../Logo.vue"
 import Avatar from "./Avatar.vue"
 import Breadcrumb from "./Breadcrumb.vue"
 import FullscreenSwitch from "./FullscreenSwitch.vue"
+import Notifications from "./Notifications.vue"
 import PillWrapper from "./PillWrapper.vue"
 import ThemeSwitch from "./ThemeSwitch.vue"
 

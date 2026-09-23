@@ -96,17 +96,19 @@ import type {
 import axios from "axios"
 import { saveAs } from "file-saver"
 import { NButton, NDatePicker, NEmpty, NForm, NFormItem, NInput, NModal, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import ReportCard from "@/components/reports/ReportCard.vue"
 import { useCustomerPrefill } from "@/composables/common/useCustomerPrefill"
+import { useReportGenerationStore } from "@/stores/reportGeneration"
 import { getApiErrorMessage } from "@/utils"
 
 const AddIcon = "carbon:document-add"
 
 const message = useMessage()
 const { customerOptions, hasMultipleCustomers, initialCustomerCode } = useCustomerPrefill()
+const reportGenerationStore = useReportGenerationStore()
 
 const loading = ref(false)
 const generating = ref(false)
@@ -226,27 +228,6 @@ async function loadReports() {
 	}
 }
 
-function startStatusPolling(reportId: number) {
-	const pollInterval = setInterval(async () => {
-		try {
-			await loadReports()
-			const report = reports.value.find(r => r.id === reportId)
-			if (report && report.status !== "processing") {
-				clearInterval(pollInterval)
-				if (report.status === "completed") {
-					message.success(`Report "${report.report_name}" completed successfully`)
-				} else if (report.status === "failed") {
-					message.error(`Report "${report.report_name}" failed`)
-				}
-			}
-		} catch {
-			clearInterval(pollInterval)
-		}
-	}, 3000)
-
-	setTimeout(clearInterval, 300000, pollInterval)
-}
-
 async function handleGenerate() {
 	if (!formRef.value) return
 	try {
@@ -278,12 +259,16 @@ async function handleGenerate() {
 	try {
 		const response = await Api.reports.generateReportBackground(request)
 		if (response.data.success) {
-			message.success(response.data.message)
 			showGenerateModal.value = false
 			formData.value = getDefaultFormData()
 			formRef.value?.restoreValidation()
+			message.info("Generating the report can take a while — you will be notified once it is ready.", {
+				duration: 6000
+			})
+			// The watch lives in the app-level store, so the notification arrives even if
+			// the user leaves this page (or reloads) while the report is still generating.
+			reportGenerationStore.track({ id: response.data.report_id, name: response.data.report_name })
 			await loadReports()
-			startStatusPolling(response.data.report_id)
 		} else {
 			message.error("Failed to queue report generation")
 		}
@@ -326,6 +311,14 @@ async function confirmDelete() {
 		reportToDelete.value = null
 	}
 }
+
+// The store notifies the user; this only keeps the open list in sync with it.
+watch(
+	() => reportGenerationStore.lastResolvedAt,
+	() => {
+		loadReports()
+	}
+)
 
 onBeforeMount(() => {
 	loadReports()

@@ -159,7 +159,10 @@ const loadDashboards = useDebounceFn(async () => {
 	abortController = new AbortController()
 
 	try {
-		const response = await Api.siem.getEnabledDashboardsForCustomers(customerFilterStore.queryCustomerCodes)
+		const response = await Api.siem.getEnabledDashboardsForCustomers(
+			customerFilterStore.queryCustomerCodes,
+			abortController.signal
+		)
 
 		data.value = response.data?.enabled_dashboards || []
 		emit("loaded", data.value)

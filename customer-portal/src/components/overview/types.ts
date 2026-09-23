@@ -1,8 +1,12 @@
+import type { AlertStatus } from "@/types/alerts"
+
 export interface DashboardAlert {
 	id: number
 	name: string
 	description: string
-	severity: string
+	/** The alert's real workflow status. There is no severity on a CoPilot alert. */
+	status: AlertStatus
+	tags: string[]
 	created_at: string | Date
 }
 

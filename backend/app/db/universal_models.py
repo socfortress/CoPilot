@@ -445,7 +445,8 @@ class CustomerPortalSettings(SQLModel, table=True):
             self.brand_color = defaults["brand_color"]
 
         self.updated_by = user_id
-        self.updated_at = datetime.now()
+        # UTC, matching the column default (datetime.utcnow).
+        self.updated_at = datetime.utcnow()
 
     @staticmethod
     def get_default_values() -> dict:
