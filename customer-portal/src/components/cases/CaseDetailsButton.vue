@@ -1,43 +1,26 @@
 <template>
-	<div>
-		<n-button-group :size>
-			<n-button :focusable="false" :ghost @click="showDetails = true">
-				<template #icon>
-					<Icon name="carbon:view" />
-				</template>
-				View Details
-			</n-button>
-			<n-button :focusable="false" :ghost @click="routeCaseDetails(caseId).navigate()">
-				<template #icon>
-					<Icon name="carbon:launch" />
-				</template>
-			</n-button>
-		</n-button-group>
-
-		<n-modal
-			v-model:show="showDetails"
-			title="Case Details"
-			preset="card"
-			display-directive="show"
-			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(540px, 90vh)', overflow: 'hidden' }"
-		>
-			<CaseDetails
-				:case-id
-				@assigned-to-updated="handleAssignedToUpdated"
-				@status-updated="handleStatusUpdated"
-				@deleted="handleDeleted"
-			/>
-		</n-modal>
-	</div>
+	<EntityDetailsButton
+		v-slot="{ close }"
+		title="Case Details"
+		entity="case"
+		:route="routeCaseDetails(caseId)"
+		:size
+		:ghost
+	>
+		<CaseDetails
+			:case-id
+			@status-updated="emit('statusUpdated', $event)"
+			@assigned-to-updated="emit('assignedToUpdated', $event)"
+			@deleted="handleDeleted(close)"
+		/>
+	</EntityDetailsButton>
 </template>
 
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
 import type { CaseAssignedUpdateSuccessPayload } from "./CaseAssignedSelect.vue"
 import type { CaseStatusUpdateSuccessPayload } from "./CaseStatusSelect.vue"
-import { NButton, NButtonGroup, NModal } from "naive-ui"
-import { ref } from "vue"
-import Icon from "@/components/common/Icon.vue"
+import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import { useNavigation } from "@/composables/common/useNavigation"
 import CaseDetails from "./CaseDetails"
 
@@ -55,18 +38,10 @@ const emit = defineEmits<{
 }>()
 
 const { routeCaseDetails } = useNavigation()
-const showDetails = ref(false)
 
-function handleStatusUpdated(payload: CaseStatusUpdateSuccessPayload) {
-	emit("statusUpdated", payload)
-}
-
-function handleAssignedToUpdated(payload: CaseAssignedUpdateSuccessPayload) {
-	emit("assignedToUpdated", payload)
-}
-
-function handleDeleted() {
-	showDetails.value = false
+/** A deleted case has nothing left to show: close the modal before telling the list. */
+function handleDeleted(close: () => void) {
+	close()
 	emit("deleted")
 }
 </script>
