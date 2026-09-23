@@ -525,6 +525,56 @@ class CustomerPortalAiReportSettings(SQLModel, table=True):
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
 
+class CustomerWafInstance(SQLModel, table=True):
+    """A SOCFortress WAF deployment that CoPilot talks to on a customer's behalf (#1165).
+
+    Deliberately not a 3rd-party integration: the WAF is SOCFortress's own product,
+    CoPilot manages it directly (reads events, blocks IPs), and a customer may run
+    several — one row per WAF, told apart by ``name``, instead of the
+    ``instance_name`` plumbing the integrations tables need.
+
+    ``service_token_encrypted`` holds a ``wafst_…`` service token Fernet-encrypted
+    with the dedicated ``WAF_TOKEN_ENCRYPTION_KEY`` (not the TOTP key, so rotating one
+    can never strand the other). The plaintext is write-only: it is never returned by
+    any route or written to a log; ``token_prefix`` is what the UI shows.
+
+    ``last_verified_role`` caches the WAF role the token's user held at the last
+    connection check, so the UI can show "read-only" vs "can block" without a round
+    trip to the WAF. It is a hint, not an authorisation — the WAF enforces the role.
+    """
+
+    __tablename__ = "customer_waf_instances"
+    __table_args__ = (UniqueConstraint("customer_code", "name", name="uq_customer_waf_instances_customer_name"),)
+
+    id: Optional[int] = Field(primary_key=True)
+    # CASCADE: customer deletion only deletes the customer row, and a WAF config for a
+    # deleted customer is meaningless — a plain FK would block the delete instead.
+    customer_code: str = Field(
+        sa_column=Column(
+            String(50),
+            ForeignKey("customers.customer_code", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
+    )
+    name: str = Field(max_length=100, nullable=False)  # e.g. "prod-eu"; unique per customer
+    api_url: str = Field(max_length=1024, nullable=False)
+    service_token_encrypted: str = Field(sa_column=Column(Text, nullable=False))
+    token_prefix: str = Field(max_length=20, nullable=False)
+    # Off unless the operator opts in (#1167): WAFs ship a self-signed admin certificate that doesn't
+    # cover their public address. The column's server_default (1) only affects raw SQL inserts —
+    # every row CoPilot writes sets this explicitly from the API schema.
+    verify_tls: bool = Field(default=False, nullable=False)
+    ca_cert_pem: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
+    enabled: bool = Field(default=True, nullable=False)
+    last_verified_at: Optional[datetime] = Field(default=None)
+    last_verified_role: Optional[str] = Field(default=None, max_length=50)
+    created_by: Optional[int] = Field(default=None)  # User ID
+    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    updated_by: Optional[int] = Field(default=None)  # User ID
+    updated_at: Optional[datetime] = Field(default=None)
+
+
 class VulnerabilityReport(SQLModel, table=True):
     __tablename__ = "vulnerability_reports"
 

@@ -12,6 +12,7 @@ import copilotAction from "./endpoints/copilot-action"
 import copilotMCP from "./endpoints/copilot-mcp"
 import copilotSearches from "./endpoints/copilot-searches"
 import customerPortal from "./endpoints/customer-portal"
+import customerWaf from "./endpoints/customer-waf"
 import customers from "./endpoints/customers"
 import detectionCatalog from "./endpoints/detection-catalog"
 import fileAnalysis from "./endpoints/file-analysis"
@@ -105,6 +106,7 @@ export default {
 	shuffle,
 	copilotMCP,
 	customerPortal,
+	customerWaf,
 	version,
 	sidebarContext,
 	snapshots,
