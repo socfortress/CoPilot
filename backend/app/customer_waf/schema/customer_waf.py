@@ -43,8 +43,16 @@ class WafInstanceCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="Unique per customer, e.g. 'prod-eu'")
     api_url: str = Field(..., max_length=1024, description="WAF admin UI / API base URL, e.g. https://waf.example.com:8080")
     service_token: str = Field(..., description="A wafst_… service token from the WAF (write-only)")
-    verify_tls: bool = True
-    ca_cert_pem: Optional[str] = Field(None, max_length=65536, description="CA certificate(s) to verify the WAF against")
+    verify_tls: bool = Field(
+        False,
+        description="Off by default: WAFs ship with a self-signed admin certificate that doesn't cover their public "
+        "address, so verification would fail out of the box. Turn on once the WAF has a trusted certificate.",
+    )
+    ca_cert_pem: Optional[str] = Field(
+        None,
+        max_length=65536,
+        description="CA certificate(s) to verify the WAF against (only used when verify_tls is on)",
+    )
     enabled: bool = True
 
 
@@ -230,5 +238,56 @@ class WafThreatIntelSummary(BaseModel):
 class WafThreatIntelResponse(BaseModel):
     summary: WafThreatIntelSummary
     entries: List[WafThreatIntelEntry]
+    success: bool
+    message: str
+
+
+# ── IP blocks (#1167) ──────────────────────────────────────────────────────
+
+
+class WafBlockRequest(BaseModel):
+    target: str = Field(..., max_length=64, description="IPv4/IPv6 address or CIDR, e.g. 203.0.113.7 or 203.0.113.0/24")
+    reason: str = Field(..., min_length=1, max_length=500, description="Why — stored on the WAF rule's description")
+    alert_id: Optional[int] = Field(None, description="Alert this block responds to; gets a reverse-link comment")
+    case_id: Optional[int] = Field(None, description="Case this block responds to; recorded on the rule")
+
+
+class WafBlock(BaseModel):
+    """One IP-blocking rule on the WAF, CoPilot-created or not."""
+
+    target: str
+    rule_uuid: str
+    rule_id: int
+    name: str
+    description: str = ""
+    enabled: bool
+    created_by_copilot: bool
+    created_at: Optional[datetime] = None
+
+
+WafBlockAction = Literal["created", "reenabled", "already_blocked", "blocked_by_waf_rule"]
+WafUnblockAction = Literal["unblocked", "already_unblocked"]
+
+
+class WafBlockResponse(BaseModel):
+    action: WafBlockAction
+    target: str
+    block: WafBlock = Field(..., description="The rule that now blocks the target (CoPilot's, or the WAF's own)")
+    warnings: List[str] = []
+    success: bool
+    message: str
+
+
+class WafUnblockResponse(BaseModel):
+    action: WafUnblockAction
+    target: str
+    blocks: List[WafBlock]
+    success: bool
+    message: str
+
+
+class WafBlocksResponse(BaseModel):
+    copilot_blocks: List[WafBlock] = Field(..., description="Blocks CoPilot created (enabled and disabled)")
+    other_ip_blocks: List[WafBlock] = Field(..., description="IP blocks created on the WAF itself — read-only from CoPilot")
     success: bool
     message: str

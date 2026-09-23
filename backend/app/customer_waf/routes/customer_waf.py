@@ -30,6 +30,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.customer_waf.schema.customer_waf import WafAction
+from app.customer_waf.schema.customer_waf import WafBlockRequest
+from app.customer_waf.schema.customer_waf import WafBlockResponse
+from app.customer_waf.schema.customer_waf import WafBlocksResponse
 from app.customer_waf.schema.customer_waf import WafDeleteResponse
 from app.customer_waf.schema.customer_waf import WafEventsResponse
 from app.customer_waf.schema.customer_waf import WafInstanceCreate
@@ -39,7 +42,9 @@ from app.customer_waf.schema.customer_waf import WafInstanceUpdate
 from app.customer_waf.schema.customer_waf import WafSitesResponse
 from app.customer_waf.schema.customer_waf import WafStatsResponse
 from app.customer_waf.schema.customer_waf import WafThreatIntelResponse
+from app.customer_waf.schema.customer_waf import WafUnblockResponse
 from app.customer_waf.schema.customer_waf import WafVerifyResponse
+from app.customer_waf.services import blocks as blocks_svc
 from app.customer_waf.services import customer_waf as svc
 from app.customer_waf.services.crypto import WafTokenCryptoError
 from app.customer_waf.services.crypto import key_configured
@@ -272,3 +277,145 @@ async def get_customer_waf_threat_intel(customer_code: str, waf_id: int, session
     except (WafRequestError, WafTokenCryptoError) as e:
         return _error(e)
     return WafThreatIntelResponse(summary=summary, entries=entries, success=True, message=f"{len(entries)} offender(s)")
+
+
+# ── IP blocks (#1167) ──────────────────────────────────────────────────────
+#
+# Admin and analyst: blocking an attacker is a response action, like Active Response.
+# The WAF still enforces the token's role — a viewer token gets a 502
+# ``insufficient_role`` naming the missing ``rules:write``.
+
+
+def _target_or_422(value: str):
+    try:
+        return blocks_svc.normalize_target(value)
+    except blocks_svc.BlockTargetError as e:
+        return JSONResponse(status_code=422, content={"detail": str(e), "reason": "invalid_target", "success": False})
+
+
+@customer_waf_router.get(
+    "/{customer_code}/{waf_id}/blocks",
+    response_model=WafBlocksResponse,
+    description="IP blocks on this WAF: CoPilot's own, plus the WAF's (read-only)",
+    dependencies=_READ,
+)
+async def list_customer_waf_blocks(customer_code: str, waf_id: int, session: AsyncSession = Depends(get_db)):
+    row = await svc.get_instance_for_customer(session, customer_code, waf_id)
+    try:
+        copilot, other = blocks_svc.ip_block_rules(await blocks_svc.fetch_rules(row))
+    except (WafRequestError, WafTokenCryptoError) as e:
+        return _error(e)
+    active = sum(1 for r in copilot if r.get("is_enabled"))
+    return WafBlocksResponse(
+        copilot_blocks=[blocks_svc.to_block(r) for r in copilot],
+        other_ip_blocks=[blocks_svc.to_block(r) for r in other],
+        success=True,
+        message=f"{active} active CoPilot block(s), {len(other)} WAF-managed IP block(s)",
+    )
+
+
+@customer_waf_router.post(
+    "/{customer_code}/{waf_id}/blocks",
+    response_model=WafBlockResponse,
+    description="Block an IP or range on this WAF. Idempotent: an IP already blocked is reported, not re-blocked.",
+    dependencies=_READ,
+)
+async def block_on_customer_waf(
+    customer_code: str,
+    waf_id: int,
+    request: WafBlockRequest,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    row = await svc.get_instance_for_customer(session, customer_code, waf_id)
+    network = _target_or_422(request.target)
+    if isinstance(network, JSONResponse):
+        return network
+    await svc.verify_block_provenance(session, current_user, customer_code, request.alert_id, request.case_id)
+
+    username = getattr(current_user, "username", None) or "unknown"
+    description = blocks_svc.build_description(request.reason, username, request.alert_id, request.case_id)
+    try:
+        action, rule = await blocks_svc.block(row, network, description)
+    except (WafRequestError, WafTokenCryptoError) as e:
+        return _error(e)
+
+    target = blocks_svc.display(network)
+    messages = {
+        "created": f"Blocked {target} on WAF '{row.name}' (rule {rule['rule_id']})",
+        "reenabled": f"Re-enabled CoPilot's block of {target} on WAF '{row.name}' (rule {rule['rule_id']})",
+        "already_blocked": f"{target} is already blocked on WAF '{row.name}' by CoPilot rule {rule['rule_id']}",
+        "blocked_by_waf_rule": (
+            f"{target} is already blocked on WAF '{row.name}' by its own rule {rule['rule_id']} "
+            f"('{rule.get('name')}'), which CoPilot doesn't manage — no CoPilot rule was added"
+        ),
+    }
+    if request.alert_id is not None and action in ("created", "reenabled"):
+        await svc.comment_block_on_alert(
+            session,
+            request.alert_id,
+            f"{target} blocked on WAF '{row.name}' (rule {rule['rule_id']}) by {username}: {' '.join(request.reason.split())}",
+            username,
+        )
+    return WafBlockResponse(
+        action=action,
+        target=target,
+        block=blocks_svc.to_block(rule, network if action != "blocked_by_waf_rule" else None),
+        warnings=blocks_svc.target_warnings(network),
+        success=True,
+        message=messages[action],
+    )
+
+
+@customer_waf_router.delete(
+    "/{customer_code}/{waf_id}/blocks",
+    response_model=WafUnblockResponse,
+    description="Lift CoPilot's block of an IP or range (the rule is disabled, not deleted). "
+    "The target is a query parameter because a CIDR contains '/'.",
+    dependencies=_READ,
+)
+async def unblock_on_customer_waf(
+    customer_code: str,
+    waf_id: int,
+    target: str = Query(..., max_length=64, description="IP or CIDR exactly as blocked"),
+    session: AsyncSession = Depends(get_db),
+):
+    row = await svc.get_instance_for_customer(session, customer_code, waf_id)
+    network = _target_or_422(target)
+    if isinstance(network, JSONResponse):
+        return network
+    try:
+        action, rules, waf_rule = await blocks_svc.unblock(row, network)
+    except (WafRequestError, WafTokenCryptoError) as e:
+        return _error(e)
+
+    shown = blocks_svc.display(network)
+    if not rules and waf_rule is not None:
+        # CoPilot never blocked it; the WAF's own rule does, and CoPilot doesn't manage that one.
+        return JSONResponse(
+            status_code=409,
+            content={
+                "detail": f"{shown} is blocked by WAF '{row.name}' rule {waf_rule['rule_id']} ('{waf_rule.get('name')}'), "
+                "which CoPilot didn't create — lift it in the WAF UI.",
+                "reason": "blocked_by_waf_rule",
+                "success": False,
+            },
+        )
+    if not rules:
+        return JSONResponse(
+            status_code=404,
+            content={"detail": f"No CoPilot block for {shown} on WAF '{row.name}'", "reason": "not_blocked", "success": False},
+        )
+    message = f"Unblocked {shown} on WAF '{row.name}'" if action == "unblocked" else f"CoPilot's block of {shown} was already lifted"
+    if waf_rule is not None:
+        message += (
+            f" — but the WAF's own rule {waf_rule['rule_id']} ('{waf_rule.get('name')}') still blocks it. "
+            "CoPilot doesn't manage that rule; lift it in the WAF UI."
+        )
+    return WafUnblockResponse(
+        action=action,
+        target=shown,
+        blocks=[blocks_svc.to_block(r, network) for r in rules],
+        success=True,
+        message=message,
+    )
