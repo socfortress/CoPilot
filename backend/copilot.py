@@ -70,6 +70,7 @@ from app.routers import cortex
 from app.routers import crowdstrike
 from app.routers import customer_portal
 from app.routers import customer_provisioning
+from app.routers import customer_waf
 from app.routers import customers
 from app.routers import darktrace
 from app.routers import data_store
@@ -313,6 +314,7 @@ api_router.include_router(file_analysis.router)
 api_router.include_router(siem.router)
 api_router.include_router(talon.router)
 api_router.include_router(opencti.router)
+api_router.include_router(customer_waf.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)
