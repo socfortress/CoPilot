@@ -116,6 +116,13 @@
 							</template>
 						</div>
 					</n-alert>
+					<CustomerWafForwarding
+						:customer-code
+						:instance="waf"
+						:default-host="forwardingDefaultHost"
+						:port-range="forwardingPortRange"
+						@updated="replace"
+					/>
 				</n-card>
 			</div>
 		</n-spin>
@@ -138,6 +145,7 @@ import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import CustomerWafError from "./CustomerWafError.vue"
 import CustomerWafForm from "./CustomerWafForm.vue"
+import CustomerWafForwarding from "./CustomerWafForwarding.vue"
 import { invalidateCustomerWafs, reasonHint, wafCapabilityLabel } from "./utils"
 
 const { customerCode } = defineProps<{ customerCode: string }>()
@@ -153,6 +161,8 @@ const loading = ref(false)
 const error = ref<ApiError | null>(null)
 const instances = ref<CustomerWafInstance[]>([])
 const keyConfigured = ref(true)
+const forwardingDefaultHost = ref<string | null>(null)
+const forwardingPortRange = ref<string | null>(null)
 const verifying = ref<number | null>(null)
 const deleting = ref<number | null>(null)
 const verifyResults = ref<Record<number, CustomerWafVerification>>({})
@@ -173,6 +183,8 @@ function load() {
 		.then(res => {
 			instances.value = res.data.instances
 			keyConfigured.value = res.data.encryption_key_configured
+			forwardingDefaultHost.value = res.data.forwarding_default_host
+			forwardingPortRange.value = res.data.forwarding_port_range
 		})
 		.catch((err: ApiError) => {
 			error.value = err

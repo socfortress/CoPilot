@@ -106,6 +106,12 @@ def to_schema(row: CustomerWafInstance) -> WafInstance:
         created_at=row.created_at,
         updated_by=row.updated_by,
         updated_at=row.updated_at,
+        syslog_host=row.syslog_host,
+        syslog_port=row.syslog_port,
+        graylog_input_id=row.graylog_input_id,
+        graylog_stream_id=row.graylog_stream_id,
+        graylog_index_set_id=row.graylog_index_set_id,
+        forwarding_provisioned_at=row.forwarding_provisioned_at,
     )
 
 

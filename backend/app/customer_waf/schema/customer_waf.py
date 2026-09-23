@@ -37,6 +37,13 @@ class WafInstance(BaseModel):
     created_at: Optional[datetime] = None
     updated_by: Optional[int] = None
     updated_at: Optional[datetime] = None
+    # Event forwarding into the SIEM (#1169); all null until set up.
+    syslog_host: Optional[str] = None
+    syslog_port: Optional[int] = None
+    graylog_input_id: Optional[str] = None
+    graylog_stream_id: Optional[str] = None
+    graylog_index_set_id: Optional[str] = None
+    forwarding_provisioned_at: Optional[datetime] = None
 
 
 class WafInstanceCreate(BaseModel):
@@ -87,6 +94,8 @@ class WafVerifyResult(BaseModel):
 class WafInstancesResponse(BaseModel):
     instances: List[WafInstance]
     encryption_key_configured: bool = Field(..., description="False → the UI explains why WAFs can't be saved")
+    forwarding_default_host: Optional[str] = Field(None, description="WAF_SYSLOG_DEFAULT_HOST, pre-filled when setting up forwarding")
+    forwarding_port_range: Optional[str] = None
     success: bool
     message: str
 
@@ -289,5 +298,26 @@ class WafUnblockResponse(BaseModel):
 class WafBlocksResponse(BaseModel):
     copilot_blocks: List[WafBlock] = Field(..., description="Blocks CoPilot created (enabled and disabled)")
     other_ip_blocks: List[WafBlock] = Field(..., description="IP blocks created on the WAF itself — read-only from CoPilot")
+    success: bool
+    message: str
+
+
+# ── event forwarding (#1169) ───────────────────────────────────────────────
+
+
+class WafForwardingRequest(BaseModel):
+    syslog_host: Optional[str] = Field(
+        None,
+        max_length=255,
+        description="Host or IP the WAF sends syslog to — the Graylog address the WAF can reach. " "Defaults to WAF_SYSLOG_DEFAULT_HOST.",
+    )
+
+
+class WafForwardingResponse(BaseModel):
+    instance: WafInstance
+    test_success: Optional[bool] = Field(None, description="The WAF's own forwarder test: did a synthetic event get out?")
+    test_message: Optional[str] = None
+    reused: List[str] = []
+    warnings: List[str] = []
     success: bool
     message: str

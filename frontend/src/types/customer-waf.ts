@@ -18,6 +18,13 @@ export interface CustomerWafInstance {
 	created_at: string | null
 	updated_by: number | null
 	updated_at: string | null
+	/** Event forwarding into the SIEM (#1169) — all null until set up. */
+	syslog_host: string | null
+	syslog_port: number | null
+	graylog_input_id: string | null
+	graylog_stream_id: string | null
+	graylog_index_set_id: string | null
+	forwarding_provisioned_at: string | null
 }
 
 export interface CustomerWafPayload {
@@ -160,4 +167,13 @@ export interface CustomerWafBlockPayload {
 	reason: string
 	alert_id?: number | null
 	case_id?: number | null
+}
+
+export interface CustomerWafForwardingResult {
+	instance: CustomerWafInstance
+	/** The WAF's own forwarder test: did a synthetic event get out? */
+	test_success: boolean | null
+	test_message: string | null
+	reused: string[]
+	warnings: string[]
 }
