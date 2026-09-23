@@ -326,7 +326,11 @@ def test_every_route_checks_the_tenant():
 def test_configuration_writes_are_admin_only():
     for route in customer_waf_router.routes:
         scopes, _ = _route_scopes(route)
-        writes_config = route.methods & {"PUT", "DELETE"} or (route.methods == {"POST"} and route.path == "/{customer_code}")
+        # Blocking is a response action (#1167) and open to analysts; only WAF *configuration* is admin-only.
+        is_block_route = route.path.endswith("/blocks")
+        writes_config = not is_block_route and (
+            route.methods & {"PUT", "DELETE"} or (route.methods == {"POST"} and route.path == "/{customer_code}")
+        )
         if writes_config:
             assert scopes == {"admin"}, f"{route.methods} {route.path} must be admin-only, got {scopes}"
         else:
@@ -388,10 +392,15 @@ def test_invalid_ca_cert_rejected():
     assert svc._clean_ca_cert("   ") is None
 
 
-def test_config_warnings_for_cleartext_and_no_verify():
-    warnings = svc.config_warnings(_row(api_url="http://waf:8000", verify_tls=False))
-    assert len(warnings) == 2
+def test_config_warnings_only_for_cleartext():
+    """Unverified TLS is the default for self-signed WAFs (#1167) and is not warned about; plain http is."""
+    assert len(svc.config_warnings(_row(api_url="http://waf:8000"))) == 1
+    assert svc.config_warnings(_row(verify_tls=False)) == []
     assert svc.config_warnings(_row()) == []
+
+
+def test_tls_verification_is_off_by_default():
+    assert WafInstanceCreate(name="p", api_url="https://waf:8443", service_token=TOKEN).verify_tls is False
 
 
 # ── capabilities / verify ──────────────────────────────────────────────────

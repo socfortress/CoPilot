@@ -57,7 +57,14 @@ def normalize_api_url(api_url: str) -> str:
 
 
 def build_ssl_verify(verify_tls: bool, ca_cert_pem: Optional[str]):
-    """httpx ``verify`` value: a context trusting the row's CA, the system bundle, or off."""
+    """httpx ``verify`` value: a context trusting the row's CA, the system bundle, or off.
+
+    Off is the default (see ``WafInstanceCreate.verify_tls``): a stock WAF's self-signed
+    certificate covers only 127.0.0.1 / localhost / admin-ui, so verification would fail
+    against every fresh install. The traffic is still encrypted; what is given up is
+    proof of the WAF's identity, which is acceptable on the private network or VPN the
+    WAF admin API should sit on anyway.
+    """
     if not verify_tls:
         return False
     if ca_cert_pem:

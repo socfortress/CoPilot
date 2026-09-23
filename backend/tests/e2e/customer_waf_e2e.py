@@ -13,7 +13,13 @@
 Optionally point it at a real SOCFortress WAF to exercise the WAF-facing routes too
 (without these, those checks are skipped and only config/tenancy/crypto run):
 
-    export WAF_E2E_URL=http://127.0.0.1:18777 WAF_E2E_VIEWER_TOKEN=wafst_...
+    export WAF_E2E_URL=https://waf-host:8443 WAF_E2E_TOKEN=wafst_...
+    export WAF_E2E_VERIFY_TLS=true    # opt in to TLS verification (CoPilot's default is off)
+
+With a block-capable token (WAF role admin/operator) the IP-blocking checks (#1167) run
+too. They only ever block TEST-NET addresses (RFC 5737 — never routed on the internet),
+and delete the rules they created afterwards; a viewer token instead checks that
+blocking is refused with a readable ``insufficient_role``.
 
 Targets a disposable instance on port 13306: never the MySQL from .env.
 
@@ -57,7 +63,9 @@ ADMIN = "e2e_waf_admin"
 PASSWORD = "E2ePassw0rd!x"
 
 WAF_URL = os.environ.get("WAF_E2E_URL")
-REAL_TOKEN = os.environ.get("WAF_E2E_VIEWER_TOKEN")
+REAL_TOKEN = os.environ.get("WAF_E2E_TOKEN") or os.environ.get("WAF_E2E_VIEWER_TOKEN")
+VERIFY_TLS = os.environ.get("WAF_E2E_VERIFY_TLS", "false").lower() == "true"
+TEST_NET = ("192.0.2.77", "198.51.100.0/24")  # RFC 5737 documentation ranges
 LIVE = bool(WAF_URL and REAL_TOKEN)
 TOKEN = REAL_TOKEN or "wafst_" + "E" * 43
 API_URL = WAF_URL or "http://127.0.0.1:1"  # unreachable when no live WAF
@@ -123,6 +131,87 @@ async def stored_row(waf_id):
         return await s.get(CustomerWafInstance, waf_id)
 
 
+async def blocking_checks(c, id_a, id_b, headers, can_block):
+    """#1167 against the live WAF. Only TEST-NET targets; created rules are deleted afterwards."""
+    print("\n=== 3b) IP blocking ===")
+    base = f"/customer_waf/{CUST_A}/{id_a}/blocks"
+    single, rng = TEST_NET
+    if not can_block:
+        r = await c.post(base, json={"target": single, "reason": "e2e"}, headers=headers)
+        check("viewer token: block -> 502 insufficient_role", r.status_code == 502 and r.json()["reason"] == "insufficient_role", r.text)
+        return
+
+    created = []
+    try:
+        r = await c.get(base, headers=headers)
+        before = r.json()
+        check("list blocks -> 200", r.status_code == 200, before.get("message"))
+        waf_owned = next((b for b in before["other_ip_blocks"] if b["enabled"] and "/" not in b["target"] and "," not in b["target"]), None)
+
+        r = await c.post(base, json={"target": single, "reason": "e2e test — TEST-NET"}, headers=headers)
+        check("block new IP -> created", r.status_code == 200 and r.json()["action"] == "created", r.text[:200])
+        rule = r.json()["block"]
+        created.append(rule["rule_uuid"])
+        check("  rule is CoPilot's and enabled", rule["created_by_copilot"] and rule["enabled"])
+        check("  description records user", f"by {SCOPED} via CoPilot" in rule["description"], rule["description"])
+
+        r = await c.post(base, json={"target": f"{single}/32", "reason": "again"}, headers=headers)
+        check(
+            "block same IP again -> already_blocked, same rule",
+            r.json()["action"] == "already_blocked" and r.json()["block"]["rule_uuid"] == rule["rule_uuid"],
+        )
+
+        if waf_owned:
+            r = await c.post(base, json={"target": waf_owned["target"], "reason": "e2e"}, headers=headers)
+            check(
+                "IP already blocked by the WAF's own rule -> blocked_by_waf_rule",
+                r.json()["action"] == "blocked_by_waf_rule",
+                waf_owned["name"],
+            )
+            r = await c.delete(base, params={"target": waf_owned["target"]}, headers=headers)
+            check(
+                "unblock a WAF-owned block -> 409, untouched",
+                r.status_code == 409 and r.json()["reason"] == "blocked_by_waf_rule",
+                str(r.status_code),
+            )
+
+        r = await c.post(base, json={"target": rng, "reason": "e2e range"}, headers=headers)
+        check("block a /24 -> created", r.json()["action"] == "created")
+        created.append(r.json()["block"]["rule_uuid"])
+        r = await c.post(base, json={"target": "198.51.100.9", "reason": "inside range"}, headers=headers)
+        check("IP inside a blocked range -> already_blocked", r.json()["action"] == "already_blocked")
+
+        for bad in ('192.0.2.1" "id:1,pass', "10.0.0.0/8", "not-an-ip"):
+            r = await c.post(base, json={"target": bad, "reason": "x"}, headers=headers)
+            check(f"reject target {bad!r} -> 422", r.status_code == 422, str(r.status_code))
+
+        r = await c.post(f"/customer_waf/{CUST_A}/{id_b}/blocks", json={"target": single, "reason": "x"}, headers=headers)
+        check("block via another tenant's WAF id -> 404", r.status_code == 404, str(r.status_code))
+
+        r = await c.delete(base, params={"target": single}, headers=headers)
+        check(
+            "unblock -> unblocked (rule disabled)",
+            r.status_code == 200 and r.json()["action"] == "unblocked" and not r.json()["blocks"][0]["enabled"],
+        )
+        r = await c.delete(base, params={"target": single}, headers=headers)
+        check("unblock again -> already_unblocked", r.json()["action"] == "already_unblocked")
+        r = await c.post(base, json={"target": single, "reason": "re-block"}, headers=headers)
+        check("re-block -> reenabled, same rule", r.json()["action"] == "reenabled" and r.json()["block"]["rule_uuid"] == rule["rule_uuid"])
+
+        after = (await c.get(base, headers=headers)).json()
+        check("WAF-owned blocks untouched", after["other_ip_blocks"] == before["other_ip_blocks"])
+    finally:
+        await _delete_waf_rules(created)
+
+
+async def _delete_waf_rules(rule_uuids):
+    """Test hygiene only: CoPilot itself never deletes WAF rules."""
+    async with httpx.AsyncClient(base_url=API_URL.rstrip("/"), verify=VERIFY_TLS, timeout=30) as waf:
+        for uid in rule_uuids:
+            r = await waf.delete(f"/api/v1/rules/custom/{uid}", headers={"Authorization": f"Bearer {TOKEN}"})
+            print(f"  cleanup: deleted e2e rule {uid[:8]} -> {r.status_code}")
+
+
 def build_app():
     from app.customer_waf.routes.customer_waf import customer_waf_router
 
@@ -140,7 +229,7 @@ async def main():
         auth = AuthHandler()
         H_ADMIN = {"Authorization": f"Bearer {await auth.encode_token(ADMIN)}"}
         H_SCOPED = {"Authorization": f"Bearer {await auth.encode_token(SCOPED)}"}
-        body = {"name": "prod", "api_url": API_URL, "service_token": TOKEN, "verify_tls": True}
+        body = {"name": "prod", "api_url": API_URL, "service_token": TOKEN, "verify_tls": VERIFY_TLS}
 
         print("\n=== 1) create: encrypted at rest, never returned ===")
         r = await c.post(f"/customer_waf/{CUST_A}", json=body, headers=H_ADMIN)
@@ -153,8 +242,9 @@ async def main():
         check("ciphertext decrypts to the token", crypto.decrypt_token(row.service_token_encrypted) == TOKEN)
         v = r.json()["verification"]
         if LIVE:
-            check("create ran verify", v and v["authenticated"] and "viewer" in v["waf_roles"], str(v and v.get("waf_roles")))
-            check("role cached on row", row.last_verified_role == "viewer", str(row.last_verified_role))
+            check("create ran verify", v and v["authenticated"] and v["waf_roles"], str(v and v.get("waf_roles")))
+            check("role cached on row", row.last_verified_role == ",".join(sorted(v["waf_roles"])), str(row.last_verified_role))
+            can_block = v["capabilities"]["can_block"]
         else:
             check("create saves even when WAF unreachable", r.json()["success"] and v and v["reason"] == "unreachable", str(v))
         check("http:// URL warned", any("clear text" in w for w in r.json()["warnings"]) == API_URL.startswith("http://"))
@@ -196,7 +286,8 @@ async def main():
                 check(f"analyst GET /{path} -> 200", r.status_code == 200, f"{r.status_code} {r.json().get('message')}")
             r = await c.post(f"/customer_waf/{CUST_A}/{id_a}/verify", headers=H_SCOPED)
             caps = r.json()["verification"]["capabilities"]
-            check("verify -> viewer is read-only", r.status_code == 200 and caps["can_read"] and not caps["can_block"], str(caps))
+            check("verify -> capabilities reported", r.status_code == 200 and caps["can_read"], str(caps))
+            await blocking_checks(c, id_a, id_b, H_SCOPED, can_block)
         else:
             r = await c.get(f"/customer_waf/{CUST_A}/{id_a}/events", headers=H_SCOPED)
             check("unreachable WAF -> 502 unreachable (not 401)", r.status_code == 502 and r.json()["reason"] == "unreachable", r.text)

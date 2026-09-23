@@ -288,9 +288,18 @@ A customer can have one or more SOCFortress WAFs (Caddy + Coraza, [waf-platform]
 - **A WAF 401/403 must never become a CoPilot 401/403.** The frontend treats a 401 from our own API as the analyst's session ending and logs them out (`frontend/src/api/session-expiry.ts`). Upstream failures are **502** with a `reason` (`token_rejected`, `insufficient_role`, `unreachable`, `tls_error`, `not_a_waf`, …); a disabled WAF is 409.
 - **Always send the WAF timezone-aware timestamps.** The WAF reads a naive `start_time`/`end_time` in its own process's timezone, so the same query matches different windows on different hosts. Found live against a WAF running in MDT, where a naive "last hour" matched nothing. `build_event_params` sends UTC with an explicit offset.
 - **`/health` is outside `/api`.** Through the recommended `https://waf-host:8080` URL (the admin UI's nginx, which proxies only `/api/`) it serves the SPA. The connection check therefore relies on `GET /api/v1/users/me` and treats health as optional.
+- **IP blocking (#1167) is a custom Coraza rule; the WAF has no blocklist API.** CoPilot creates exactly one shape (`REMOTE_ADDR @ipMatch <target>`, phase 1, deny, `tag:'copilot-block'`) in `services/blocks.py`.
+  - **Injection boundary:** the rule text comes only from a parsed `ip_network`. The analyst's reason goes into the WAF rule's *description*, never into the rule text.
+  - **Refused:** IPv4 ranges wider than /16 and IPv6 wider than /48.
+  - **Idempotent:** no duplicate rule is added for a target that's already blocked, including by the WAF's own Threat Intel rules, which CoPilot lists but **never modifies**.
+  - **Unblock disables the rule, never deletes it.** Re-blocking re-enables the same rule.
+  - **Judge rules by their text, not the stored `action` field.** Rules created before waf-platform `cbc7b9b` carry a stale `deny` action on what is really a bypass rule.
+  - **A block can cite an alert or case only from the WAF's own customer.** That alert gets a `WAF block:` comment.
+  - **The WAF sees the address traffic *arrives* from.** Behind a VPN, NAT or proxy that is the shared exit, not the user. Found live: a dev machine on a split tunnel reached the WAF as the VPN's exit address, so blocking its home IP did nothing. Blocking a shared exit blocks everyone behind it; `target_warnings` says so for non-public addresses.
+- **TLS to the WAF is not verified by default.** A stock WAF's self-signed admin certificate covers only `127.0.0.1` / `localhost` / `admin-ui`, never its real address, so verification fails against every fresh install. The traffic is still encrypted, but the WAF's identity isn't proven. `verify_tls` (+ optional `ca_cert_pem`) is an opt-in for WAFs with a trusted certificate. Don't flip the default back to on, and don't reintroduce a warning for it: that's the decision, not an oversight. The WAF admin API belongs on a private network or VPN.
 - **Removing a WAF from CoPilot doesn't revoke its token.** A token can't manage tokens, so the delete response tells the operator to revoke it in the WAF UI.
 
-Tests: `tests/test_customer_waf.py` (no DB, no network). `tests/e2e/customer_waf_e2e.py` uses real routers, real MySQL on 13306 and real JWTs, optionally against a live WAF (`WAF_E2E_URL` / `WAF_E2E_VIEWER_TOKEN`).
+Tests: `tests/test_customer_waf.py` + `tests/test_customer_waf_blocks.py` (no DB, no network). `tests/e2e/customer_waf_e2e.py` uses real routers, real MySQL on 13306 and real JWTs, optionally against a live WAF (`WAF_E2E_URL` / `WAF_E2E_TOKEN`; `WAF_E2E_VERIFY_TLS=true` to opt in to verification). With a block-capable token it also blocks and unblocks TEST-NET addresses only, and deletes the rules afterwards.
 
 ### Stack provisioning: Graylog content packs and InfluxDB checks
 

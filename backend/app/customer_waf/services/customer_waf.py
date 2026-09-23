@@ -141,10 +141,6 @@ def config_warnings(row: CustomerWafInstance) -> List[str]:
     warnings = []
     if row.api_url.startswith("http://"):
         warnings.append("The API URL uses http:// — the service token is sent in clear text. Prefer the WAF admin UI's https listener.")
-    if not row.verify_tls:
-        warnings.append(
-            "TLS verification is off — CoPilot can't tell this WAF from an impostor. Prefer a trusted certificate or a CA here.",
-        )
     return warnings
 
 
@@ -382,3 +378,43 @@ async def fetch_threat_intel(row: CustomerWafInstance) -> Tuple[WafThreatIntelSu
         data["top_rules"] = data.get("top_rules") or []
         parsed.append(WafThreatIntelEntry.model_validate(data))
     return summary, parsed
+
+
+# ── block provenance (#1167) ───────────────────────────────────────────────
+
+
+async def verify_block_provenance(session: AsyncSession, user, customer_code: str, alert_id: Optional[int], case_id: Optional[int]):
+    """Check the caller may cite this alert/case, and that it belongs to the WAF's customer.
+
+    Without the same-customer check an analyst who can see two tenants could block on
+    tenant A's WAF "because of" tenant B's alert — and leave a comment on B's alert
+    announcing an action taken on A's infrastructure.
+    """
+    from app.incidents.services.db_operations import get_alert_by_id
+    from app.incidents.services.db_operations import get_case_by_id
+    from app.middleware.customer_access import enforce_owned_object_access
+
+    if alert_id is not None:
+        alert = await get_alert_by_id(alert_id, session, user=user)
+        await enforce_owned_object_access(user, alert.customer_code, session, subject=f"alert {alert_id}")
+        if alert.customer_code != customer_code:
+            raise HTTPException(status_code=400, detail=f"Alert {alert_id} belongs to a different customer than this WAF")
+    if case_id is not None:
+        case = await get_case_by_id(case_id, session)
+        await enforce_owned_object_access(user, case.customer_code, session, subject=f"case {case_id}")
+        if case.customer_code != customer_code:
+            raise HTTPException(status_code=400, detail=f"Case {case_id} belongs to a different customer than this WAF")
+
+
+BLOCK_COMMENT_PREFIX = "WAF block: "
+
+
+async def comment_block_on_alert(session: AsyncSession, alert_id: int, text: str, username: str) -> None:
+    """Best-effort reverse link on the alert; the block itself already happened."""
+    from app.incidents.schema.db_operations import CommentCreate
+    from app.incidents.services.db_operations import create_comment
+
+    try:
+        await create_comment(CommentCreate(alert_id=alert_id, comment=f"{BLOCK_COMMENT_PREFIX}{text}", user_name=username), session)
+    except Exception as e:
+        logger.error(f"WAF block succeeded but the comment on alert {alert_id} failed: {e}")

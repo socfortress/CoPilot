@@ -561,7 +561,10 @@ class CustomerWafInstance(SQLModel, table=True):
     api_url: str = Field(max_length=1024, nullable=False)
     service_token_encrypted: str = Field(sa_column=Column(Text, nullable=False))
     token_prefix: str = Field(max_length=20, nullable=False)
-    verify_tls: bool = Field(default=True, nullable=False)
+    # Off unless the operator opts in (#1167): WAFs ship a self-signed admin certificate that doesn't
+    # cover their public address. The column's server_default (1) only affects raw SQL inserts —
+    # every row CoPilot writes sets this explicitly from the API schema.
+    verify_tls: bool = Field(default=False, nullable=False)
     ca_cert_pem: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
     enabled: bool = Field(default=True, nullable=False)
     last_verified_at: Optional[datetime] = Field(default=None)
