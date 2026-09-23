@@ -24,7 +24,15 @@
 		<CollapseKeepAlive :show="!showForm">
 			<div class="mt-3 flex flex-col gap-2">
 				<template v-if="iocs.length">
-					<AlertIoCItem v-for="ioc of iocs" :key="ioc.id" :ioc :alert-id embedded @deleted="delIoc(ioc)" />
+					<AlertIoCItem
+						v-for="ioc of iocs"
+						:key="ioc.id"
+						:ioc
+						:alert-id
+						:customer-code="props.customerCode"
+						embedded
+						@deleted="delIoc(ioc)"
+					/>
 				</template>
 				<template v-else>
 					<n-collapse-transition :show="!showForm">
@@ -66,7 +74,7 @@ import { useNavigation } from "@/composables/useNavigation"
 import AlertIoCItem from "./AlertIoCItem.vue"
 import AlertIoCsForm from "./AlertIoCsForm.vue"
 
-const props = defineProps<{ iocs: AlertIOC[]; alertId: number }>()
+const props = defineProps<{ iocs: AlertIOC[]; alertId: number; customerCode?: string }>()
 const emit = defineEmits<{
 	(e: "updated", value: AlertIOC[]): void
 }>()

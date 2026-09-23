@@ -319,8 +319,32 @@ def _route_scopes(route):
 
 def test_every_route_checks_the_tenant():
     for route in customer_waf_router.routes:
+        if route.path == "":
+            continue  # the cross-customer list; scoped in its handler, tested below
         _, has_tenant_check = _route_scopes(route)
         assert has_tenant_check, f"{route.methods} {route.path} lacks verify_customer_code_access"
+
+
+def test_only_the_cross_customer_list_lacks_a_path_customer():
+    assert [r.path for r in customer_waf_router.routes if "{customer_code}" not in r.path] == [""]
+
+
+@pytest.mark.parametrize(("scoped", "expect_service_call"), [(None, True), (["ACME"], True), ([], False)])
+def test_cross_customer_list_is_scoped(monkeypatch, scoped, expect_service_call):
+    """[] means the caller sees nothing: the service must not be called (it would read [] as 'all')."""
+    import app.customer_waf.routes.customer_waf as routes
+
+    monkeypatch.setattr(routes, "scoped_customer_codes", AsyncMock(return_value=scoped))
+    service = AsyncMock(return_value=[_row()])
+    monkeypatch.setattr(routes.svc, "list_all_instances", service)
+    result = asyncio.run(routes.list_all_customer_wafs(session=AsyncMock(), current_user=MagicMock()))
+    if expect_service_call:
+        service.assert_awaited_once()
+        assert service.await_args.args[1] == scoped
+        assert len(result.instances) == 1
+    else:
+        service.assert_not_awaited()
+        assert result.instances == []
 
 
 def test_configuration_writes_are_admin_only():

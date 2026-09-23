@@ -47,7 +47,12 @@
 			</n-tab-pane>
 			<n-tab-pane name="IoCs" tab="IoCs" display-directive="show:lazy">
 				<div :class="fullWidth ? 'p-0 pt-3' : 'p-6 pt-3'">
-					<AlertIoCsList :iocs="alert.iocs" :alert-id="alert.id" @updated="updateIos($event)" />
+					<AlertIoCsList
+						:iocs="alert.iocs"
+						:alert-id="alert.id"
+						:customer-code="alert.customer_code"
+						@updated="updateIos($event)"
+					/>
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="TryMcp" display-directive="show:lazy">

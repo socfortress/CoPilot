@@ -153,6 +153,19 @@ async def ensure_customer_exists(session: AsyncSession, customer_code: str) -> N
         raise HTTPException(status_code=404, detail=f"Customer {customer_code} not found")
 
 
+async def list_all_instances(session: AsyncSession, customer_codes: Optional[List[str]]) -> List[CustomerWafInstance]:
+    """WAFs across customers, for the WAF page's pickers. ``None`` = no filter (deployment-wide caller).
+
+    Callers must resolve ``customer_codes`` with ``scoped_customer_codes`` and short-circuit
+    on ``[]`` themselves — an empty list here would mean "everything".
+    """
+    query = select(CustomerWafInstance).order_by(CustomerWafInstance.customer_code, CustomerWafInstance.name)
+    if customer_codes is not None:
+        query = query.where(CustomerWafInstance.customer_code.in_(customer_codes))
+    result = await session.execute(query)
+    return list(result.scalars().all())
+
+
 async def list_instances(session: AsyncSession, customer_code: str) -> List[CustomerWafInstance]:
     result = await session.execute(
         select(CustomerWafInstance).where(CustomerWafInstance.customer_code == customer_code).order_by(CustomerWafInstance.name),
