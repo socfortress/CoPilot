@@ -526,9 +526,17 @@ provide("assignable-users", availableUsers)
 
 provide("linkable-cases", linkableCases)
 
+// Every filter change (status counters, filters panel, global customer filter) restarts the
+// list from the first page, otherwise a narrower result set leaves the user on a page that no
+// longer exists. Moving the page lets the `currentPage` watcher fetch, avoiding a double request.
 function applyFilters(newFilters: AlertsListFilter[]) {
 	filters.value = newFilters
-	getData()
+
+	if (currentPage.value === 1) {
+		getData()
+	} else {
+		currentPage.value = 1
+	}
 }
 
 function updateAlert(updatedAlert: Alert) {
