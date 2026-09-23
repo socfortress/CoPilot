@@ -179,6 +179,21 @@ def extractor_payloads() -> List[dict]:
             "converters": [],
             "order": 1,
         },
+        {
+            # The first matched rule's message, e.g. "SQL Injection Attack Detected via
+            # libinjection" — the CoPilot alert title (#1169 4b). The JSON extractor flattens
+            # the matched_rules list into one string, so it can't be used as a title.
+            "title": "WAF - first matched rule message",
+            "extractor_type": "regex",
+            "source_field": "waf_json",
+            "target_field": "waf_rule_msg",
+            "cursor_strategy": "copy",
+            "condition_type": "string",
+            "condition_value": '"matched_rules":[{',
+            "extractor_config": {"regex_value": r'"matched_rules":\[\{"id":"[^"]*","msg":"((?:[^"\\]|\\.)*)"'},
+            "converters": [],
+            "order": 2,
+        },
     ]
 
 
