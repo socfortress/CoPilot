@@ -1,23 +1,26 @@
 <template>
-	<ActivityRow rail-color="var(--border-color)" :interactive="false">
-		<!-- Each box has the height of the text line it stands in for (see ActivityListItem). -->
-		<div class="skeleton-line skeleton-line--title">
+	<ActivityRow rail-class="bg-border" :interactive="false">
+		<!--
+			Each box has the height of the text line it stands in for (see ActivityListItem):
+			title 20px (text-sm), detail 18px per line (text-xs, leading-normal), meta and time 16px.
+		-->
+		<div class="flex h-5 items-center">
 			<n-skeleton :height="12" :width="titleWidth" :sharp="false" />
 		</div>
 
 		<div v-if="detailLines" class="flex flex-col">
-			<div v-for="line of detailLines" :key="line" class="skeleton-line skeleton-line--detail">
+			<div v-for="line of detailLines" :key="line" class="flex h-4.5 items-center">
 				<n-skeleton :height="9" :width="line === detailLines ? '64%' : '96%'" :sharp="false" />
 			</div>
 		</div>
 
-		<div class="skeleton-line skeleton-line--meta gap-2">
+		<div class="flex h-4 items-center gap-2">
 			<n-skeleton :height="9" :width="42" :sharp="false" />
 			<n-skeleton :height="9" :width="metaWidth" :sharp="false" />
 		</div>
 
 		<template #aside>
-			<div class="skeleton-line skeleton-line--meta">
+			<div class="flex h-4 items-center">
 				<n-skeleton :height="9" :width="88" :sharp="false" />
 			</div>
 			<n-skeleton v-if="withAction" :height="ACTION_HEIGHT" :width="ACTION_WIDTH" :sharp="false" />
@@ -41,23 +44,3 @@ const { detailLines = 0 } = defineProps<{
 const ACTION_WIDTH = 127
 const ACTION_HEIGHT = 22
 </script>
-
-<style lang="scss" scoped>
-.skeleton-line {
-	display: flex;
-	align-items: center;
-
-	// title 14px × 1.35, detail 12px × 1.5, meta and time 16px
-	&--title {
-		height: 18.9px;
-	}
-
-	&--detail {
-		height: 18px;
-	}
-
-	&--meta {
-		height: 16px;
-	}
-}
-</style>

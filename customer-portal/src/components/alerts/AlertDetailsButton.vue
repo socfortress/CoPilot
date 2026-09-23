@@ -1,13 +1,13 @@
 <template>
 	<div>
 		<n-button-group :size>
-			<n-button :focusable="false" @click="showDetails = true">
+			<n-button :focusable="false" :ghost @click="showDetails = true">
 				<template #icon>
 					<Icon name="carbon:view" />
 				</template>
 				View Details
 			</n-button>
-			<n-button :focusable="false" @click="routeAlertDetails(alertId).navigate()">
+			<n-button :focusable="false" :ghost @click="routeAlertDetails(alertId).navigate()">
 				<template #icon>
 					<Icon name="carbon:launch" />
 				</template>
@@ -38,6 +38,8 @@ import AlertDetails from "./AlertDetails"
 defineProps<{
 	alertId: number
 	size?: ButtonSize
+	/** Transparent background, for buttons sitting on a surface that already has one. */
+	ghost?: boolean
 }>()
 
 const emit = defineEmits<{

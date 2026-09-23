@@ -23,6 +23,9 @@
 	--color-extra-3: var(--extra3-color);
 	--color-extra-4: var(--extra4-color);
 
+	/* Muted foreground as a colour, so it also exists as a background (e.g. `bg-muted`). */
+	--color-muted: var(--fg-tertiary-color);
+
 	--border-color-default: var(--border-color);
 
 	--background-color-default: var(--bg-default-color);
@@ -62,6 +65,16 @@
 			transform: translateY(0);
 		}
 	}
+}
+
+/* Overview activity rows: status rail · text · time and actions (see ActivityRow). */
+@utility grid-cols-activity-row {
+	grid-template-columns: 3px minmax(0, 1fr) auto;
+}
+
+/* Same row in a narrow list: time and actions move under the text. */
+@utility grid-cols-activity-row-stacked {
+	grid-template-columns: 3px minmax(0, 1fr);
 }
 
 @utility delay-* {

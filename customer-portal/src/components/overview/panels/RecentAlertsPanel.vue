@@ -17,7 +17,13 @@
 
 		<ActivityList :items>
 			<template #action="{ item }">
-				<AlertDetailsButton :alert-id="item.id" size="tiny" @status-updated="emit('updated')" />
+				<AlertDetailsButton
+					:alert-id="item.id"
+					size="tiny"
+					ghost
+					class="flex"
+					@status-updated="emit('updated')"
+				/>
 			</template>
 		</ActivityList>
 	</OverviewPanel>

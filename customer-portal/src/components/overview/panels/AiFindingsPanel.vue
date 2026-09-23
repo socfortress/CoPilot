@@ -2,17 +2,23 @@
 	<!-- Whether the card appears at all is decided by the page (useAiFindingsPlaceholder). -->
 	<OverviewPanel title="AI analyst findings" icon="carbon:ai-generate" :meta :loading>
 		<template #skeleton>
-			<div class="ai-findings">
-				<AiSeveritySummarySkeleton class="ai-findings__summary" />
-				<ActivityList loading :skeleton-rows :skeleton-detail-lines="[2]" />
+			<div :class="LAYOUT">
+				<AiSeveritySummarySkeleton :class="SUMMARY" />
+				<ActivityList loading :skeleton-rows :skeleton-detail-lines="[2]" class="grow" />
 			</div>
 		</template>
 
-		<div class="ai-findings">
-			<AiSeveritySummary :severity-counts="insights.severity_counts" class="ai-findings__summary" />
-			<ActivityList :items>
+		<div :class="LAYOUT">
+			<AiSeveritySummary :severity-counts="insights.severity_counts" :class="SUMMARY" />
+			<ActivityList :items class="grow">
 				<template #action="{ item }">
-					<AlertDetailsButton :alert-id="item.id" size="tiny" @status-updated="emit('updated')" />
+					<AlertDetailsButton
+						:alert-id="item.id"
+						size="tiny"
+						ghost
+						class="flex"
+						@status-updated="emit('updated')"
+					/>
 				</template>
 			</ActivityList>
 		</div>
@@ -42,6 +48,11 @@ const emit = defineEmits<{
 	(e: "updated"): void
 }>()
 
+// Shared by the loaded card and its skeleton: a fixed-width summary on the left from
+// lg up, stacked above the findings below that.
+const LAYOUT = "flex flex-col lg:flex-row"
+const SUMMARY = "border-border shrink-0 border-b lg:w-68 lg:border-r lg:border-b-0"
+
 const showCustomer = useIsMultiCustomer()
 
 const meta = computed(() => {
@@ -53,23 +64,3 @@ const items = computed(() =>
 	insights.recent.map(finding => findingToActivityItem(finding, { showCustomer: showCustomer.value }))
 )
 </script>
-
-<style lang="scss" scoped>
-.ai-findings {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr);
-
-	@media (min-width: 900px) {
-		grid-template-columns: 17rem minmax(0, 1fr);
-	}
-
-	&__summary {
-		border-bottom: 1px solid var(--border-color);
-
-		@media (min-width: 900px) {
-			border-bottom: none;
-			border-right: 1px solid var(--border-color);
-		}
-	}
-}
-</style>

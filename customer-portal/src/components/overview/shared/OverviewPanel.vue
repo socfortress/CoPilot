@@ -1,5 +1,5 @@
 <template>
-	<section class="overview-panel bg-default border-default flex min-w-0 flex-col rounded-lg border">
+	<section class="bg-default border-default flex min-w-0 flex-col rounded-lg border">
 		<header class="border-default flex items-center justify-between gap-3 border-b px-5 py-3.5">
 			<div class="flex min-w-0 items-center gap-2.5">
 				<Icon v-if="icon" :name="icon" :size="16" class="text-secondary shrink-0" />
@@ -7,7 +7,11 @@
 				<span v-if="meta" class="text-tertiary font-mono text-xs tabular-nums">{{ meta }}</span>
 			</div>
 
-			<RouterLink v-if="link" :to="link.to" class="overview-panel__link">
+			<RouterLink
+				v-if="link"
+				:to="link.to"
+				class="text-secondary hover:text-primary focus-visible:text-primary focus-visible:outline-primary flex shrink-0 items-center gap-1 rounded text-xs font-medium no-underline transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+			>
 				{{ link.label }}
 				<Icon name="carbon:arrow-right" :size="14" />
 			</RouterLink>
@@ -50,28 +54,3 @@ const emit = defineEmits<{
 	(e: "retry"): void
 }>()
 </script>
-
-<style lang="scss" scoped>
-.overview-panel__link {
-	display: flex;
-	flex-shrink: 0;
-	align-items: center;
-	gap: 4px;
-	font-size: 12px;
-	font-weight: 500;
-	color: var(--fg-secondary-color);
-	text-decoration: none;
-	transition: color 0.2s ease;
-
-	&:hover,
-	&:focus-visible {
-		color: var(--primary-color);
-	}
-
-	&:focus-visible {
-		outline: 2px solid var(--primary-color);
-		outline-offset: 2px;
-		border-radius: 4px;
-	}
-}
-</style>

@@ -1,7 +1,9 @@
 <template>
 	<header class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
 		<div class="flex min-w-0 flex-col gap-1.5">
-			<h1 class="title font-display">Security overview</h1>
+			<h1 class="font-display text-2xl leading-tight font-semibold tracking-tight text-balance">
+				Security overview
+			</h1>
 			<p class="text-secondary text-sm">
 				Your organization's security posture and the latest activity from the SOC.
 			</p>
@@ -67,13 +69,3 @@ const scopeLabel = computed(() => {
 
 const scopeTitle = computed(() => `Scope: ${scopeCodes.value.join(", ")}`)
 </script>
-
-<style lang="scss" scoped>
-.title {
-	font-size: 1.5rem;
-	font-weight: 600;
-	line-height: 1.15;
-	letter-spacing: -0.02em;
-	text-wrap: balance;
-}
-</style>

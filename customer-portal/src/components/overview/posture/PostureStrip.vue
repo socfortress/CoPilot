@@ -1,12 +1,15 @@
 <template>
-	<section class="posture-strip bg-default border-default rounded-lg border" aria-label="Security posture">
+	<!-- One column (cells divided horizontally) below lg, then three side by side. -->
+	<section
+		class="bg-default border-default divide-border grid grid-cols-1 divide-y overflow-hidden rounded-lg border lg:grid-cols-3 lg:divide-x lg:divide-y-0"
+		aria-label="Security posture"
+	>
 		<PostureCell
 			v-for="cell of cells"
 			:key="cell.key"
 			:cell
 			:loading="loading[cell.key]"
 			:error="errors[cell.key]"
-			class="posture-strip__cell"
 		/>
 	</section>
 </template>
@@ -29,24 +32,3 @@ const { alertCounts, caseCounts, agentCounts } = defineProps<{
 
 const cells = computed(() => buildPostureCells({ alerts: alertCounts, cases: caseCounts, agents: agentCounts }))
 </script>
-
-<style lang="scss" scoped>
-.posture-strip {
-	display: grid;
-	grid-template-columns: 1fr;
-	overflow: hidden;
-
-	@media (min-width: 900px) {
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-	}
-
-	&__cell + &__cell {
-		border-top: 1px solid var(--border-color);
-
-		@media (min-width: 900px) {
-			border-top: none;
-			border-left: 1px solid var(--border-color);
-		}
-	}
-}
-</style>

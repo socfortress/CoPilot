@@ -1,5 +1,6 @@
 <template>
-	<div class="activity-list" role="list">
+	<!-- Rows adapt to this list's width, not the viewport's (see ActivityRow). -->
+	<div class="divide-border @container/activity-list min-w-0 divide-y" role="list">
 		<template v-if="loading">
 			<ActivityListItemSkeleton
 				v-for="(shape, index) of skeletonShapes"
@@ -56,11 +57,3 @@ const skeletonShapes = computed<ActivitySkeletonShape[]>(() =>
 	}))
 )
 </script>
-
-<style lang="scss" scoped>
-.activity-list {
-	// Rows adapt to the list's width, not the viewport's (see ActivityRow).
-	container: activity-list / inline-size;
-	min-width: 0;
-}
-</style>

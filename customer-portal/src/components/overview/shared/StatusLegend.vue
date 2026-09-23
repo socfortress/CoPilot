@@ -1,9 +1,19 @@
 <template>
-	<div class="status-legend" :class="`status-legend--${variant}`" role="list">
-		<div v-for="segment of segments" :key="segment.key" class="status-legend__item" role="listitem">
+	<div
+		class="text-secondary flex text-xs leading-4"
+		:class="variant === 'inline' ? 'flex-wrap items-center gap-x-3 gap-y-1' : 'flex-col gap-1.5'"
+		role="list"
+	>
+		<div
+			v-for="segment of segments"
+			:key="segment.key"
+			class="flex items-center"
+			:class="variant === 'inline' ? 'gap-1.5' : 'gap-3'"
+			role="listitem"
+		>
 			<template v-if="variant === 'inline'">
 				<StatusDot :color="segment.color" />
-				<span class="status-legend__value">{{ segment.value }}</span>
+				<span class="text-default font-mono tabular-nums">{{ segment.value }}</span>
 				<span>{{ segment.label }}</span>
 			</template>
 
@@ -12,8 +22,8 @@
 					<StatusDot :color="segment.color" />
 					{{ segment.label }}
 				</span>
-				<span class="status-legend__leader" aria-hidden="true" />
-				<span class="status-legend__value">{{ segment.value }}</span>
+				<span class="bg-border h-px grow" aria-hidden="true" />
+				<span class="text-default font-mono tabular-nums">{{ segment.value }}</span>
 			</template>
 		</div>
 	</div>
@@ -32,45 +42,3 @@ const { variant = "inline" } = defineProps<{
 	variant?: "inline" | "stacked"
 }>()
 </script>
-
-<style lang="scss" scoped>
-.status-legend {
-	display: flex;
-	font-size: 12px;
-	line-height: 16px;
-	color: var(--fg-secondary-color);
-
-	&__item {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-	}
-
-	&__value {
-		font-family: var(--font-family-mono);
-		font-variant-numeric: tabular-nums;
-		color: var(--fg-default-color);
-	}
-
-	&--inline {
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 4px 12px;
-	}
-
-	&--stacked {
-		flex-direction: column;
-		gap: 6px;
-
-		.status-legend__item {
-			gap: 12px;
-		}
-	}
-
-	&__leader {
-		flex-grow: 1;
-		height: 1px;
-		background-color: var(--border-color);
-	}
-}
-</style>

@@ -1,12 +1,24 @@
 <template>
-	<div class="activity-row" :class="{ 'activity-row--interactive': interactive }" role="listitem">
-		<span class="activity-row__rail" :style="{ backgroundColor: railColor }" aria-hidden="true" />
+	<div
+		class="grid-cols-activity-row @max-md/activity-list:grid-cols-activity-row-stacked grid gap-x-3.5 py-3 pr-5 pl-4 @max-md/activity-list:gap-y-2.5"
+		:class="{ 'hover:bg-hover focus-within:bg-hover transition-colors motion-reduce:transition-none': interactive }"
+		role="listitem"
+	>
+		<!-- A thin status rail: the colour reads at a glance without a chip competing with the title. -->
+		<span
+			class="w-0.75 self-stretch rounded-full opacity-85 @max-md/activity-list:row-span-2"
+			:class="railClass"
+			aria-hidden="true"
+		/>
 
-		<div class="activity-row__content">
+		<div class="flex min-w-0 flex-col gap-1">
 			<slot />
 		</div>
 
-		<div class="activity-row__aside">
+		<!-- Narrow lists: time and actions drop under the text instead of squeezing it. -->
+		<div
+			class="flex flex-col items-end justify-between gap-2 @max-md/activity-list:col-start-2 @max-md/activity-list:flex-row @max-md/activity-list:items-center"
+		>
 			<slot name="aside" />
 		</div>
 	</div>
@@ -17,78 +29,12 @@
  * The row grid shared by real items and their skeletons: a status rail, the text
  * column and a right-hand column (time on top, actions at the bottom). Both render
  * through this component, so a placeholder cannot drift from the row it stands for.
+ * Responsive rules read the width of the enclosing ActivityList (`@container/activity-list`).
  */
 const { interactive = true } = defineProps<{
-	railColor: string
+	/** Background utility for the rail, e.g. `bg-info`. */
+	railClass: string
 	/** Hover and focus highlight; off for placeholders. */
 	interactive?: boolean
 }>()
 </script>
-
-<style lang="scss" scoped>
-.activity-row {
-	display: grid;
-	grid-template-columns: 3px minmax(0, 1fr) auto;
-	column-gap: 14px;
-	padding: 12px 20px 12px 17px;
-
-	& + & {
-		border-top: 1px solid var(--border-color);
-	}
-
-	&--interactive {
-		transition: background-color 0.2s ease;
-
-		&:hover,
-		&:focus-within {
-			background-color: var(--hover-color);
-		}
-	}
-
-	// A thin rail on the leading edge: the status colour reads at a glance without
-	// a chip competing with the title.
-	&__rail {
-		width: 3px;
-		border-radius: 3px;
-		align-self: stretch;
-		opacity: 0.85;
-	}
-
-	&__content {
-		display: flex;
-		min-width: 0;
-		flex-direction: column;
-		gap: 4px;
-	}
-
-	&__aside {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: 8px;
-	}
-
-	// Narrow panels: time and actions drop under the text instead of squeezing it.
-	@container activity-list (max-width: 440px) {
-		grid-template-columns: 3px minmax(0, 1fr);
-		row-gap: 10px;
-
-		&__rail {
-			grid-row: span 2;
-		}
-
-		&__aside {
-			grid-column: 2;
-			flex-direction: row;
-			align-items: center;
-		}
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.activity-row--interactive {
-		transition: none;
-	}
-}
-</style>

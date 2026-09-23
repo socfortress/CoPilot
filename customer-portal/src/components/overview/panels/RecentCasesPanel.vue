@@ -20,6 +20,8 @@
 				<CaseDetailsButton
 					:case-id="item.id"
 					size="tiny"
+					ghost
+					class="flex"
 					@status-updated="emit('updated')"
 					@assigned-to-updated="emit('updated')"
 					@deleted="emit('updated')"

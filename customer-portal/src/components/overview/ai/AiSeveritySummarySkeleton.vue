@@ -1,8 +1,8 @@
 <template>
-	<!-- Mirrors AiSeveritySummary: headline row 29px, bar 6px, legend lines 16px. -->
+	<!-- Mirrors AiSeveritySummary: headline row 31px (text-3xl), bar 6px, legend lines 16px. -->
 	<div class="flex flex-col gap-4 p-5">
-		<div class="flex h-[29px] items-center gap-2">
-			<n-skeleton :height="26" :width="28" :sharp="false" />
+		<div class="flex h-7.75 items-center gap-2">
+			<n-skeleton :height="28" :width="30" :sharp="false" />
 			<n-skeleton :height="10" :width="96" :sharp="false" />
 		</div>
 		<n-skeleton :height="6" :sharp="false" />

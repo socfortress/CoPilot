@@ -12,7 +12,11 @@
 			@updated="refresh()"
 		/>
 
-		<div class="overview__activity">
+		<!--
+			Equal columns from lg: both feeds carry long titles, and same-height panels
+			read as one block. Alerts come first because they are the primary feed.
+		-->
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 			<RecentAlertsPanel
 				:alerts
 				:loading="showSkeleton.alerts"
@@ -64,17 +68,3 @@ onBeforeMount(() => {
 	refresh()
 })
 </script>
-
-<style lang="scss" scoped>
-.overview__activity {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr);
-	gap: 24px;
-
-	@media (min-width: 1100px) {
-		// Equal columns: both feeds carry long titles, and same-height panels read as
-		// one block. Alerts come first because they are the primary feed.
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
-}
-</style>

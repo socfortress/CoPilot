@@ -1,7 +1,9 @@
 <template>
 	<div class="flex flex-col gap-4 p-5">
 		<div class="flex items-baseline gap-2">
-			<span class="ai-summary__headline">{{ attention }}</span>
+			<span class="font-mono text-3xl leading-none font-semibold tracking-tight tabular-nums">
+				{{ attention }}
+			</span>
 			<span class="text-secondary text-sm">high or critical</span>
 		</div>
 
@@ -24,14 +26,3 @@ const { severityCounts } = defineProps<{
 const segments = computed(() => severitySegments(severityCounts))
 const attention = computed(() => attentionCount(segments.value))
 </script>
-
-<style lang="scss" scoped>
-.ai-summary__headline {
-	font-family: var(--font-family-mono);
-	font-size: 1.75rem;
-	font-weight: 600;
-	line-height: 1;
-	letter-spacing: -0.03em;
-	font-variant-numeric: tabular-nums;
-}
-</style>

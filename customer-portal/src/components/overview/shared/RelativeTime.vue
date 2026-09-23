@@ -1,5 +1,11 @@
 <template>
-	<time class="relative-time" :datetime="isoDate" :title="absolute">{{ relative }}</time>
+	<time
+		class="text-secondary font-mono text-xs leading-4 whitespace-nowrap tabular-nums"
+		:datetime="isoDate"
+		:title="absolute"
+	>
+		{{ relative }}
+	</time>
 </template>
 
 <script setup lang="ts">
@@ -21,14 +27,3 @@ const isoDate = computed(() => {
 	return Number.isNaN(date.getTime()) ? undefined : date.toISOString()
 })
 </script>
-
-<style lang="scss" scoped>
-.relative-time {
-	font-family: var(--font-family-mono);
-	font-size: 12px;
-	line-height: 16px;
-	font-variant-numeric: tabular-nums;
-	white-space: nowrap;
-	color: var(--fg-tertiary-color);
-}
-</style>
