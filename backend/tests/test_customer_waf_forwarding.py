@@ -163,8 +163,10 @@ def test_provisions_everything_with_the_agreed_shapes(monkeypatch):
     fields = {c[2]["key"]: c[2]["value"] for c in gl.by("POST", "/staticfields")}
     assert fields == {"syslog_type": "waf", "syslog_customer": "ACME", "waf_name": "prod-eu"}
 
-    # Extractors: regex copy into waf_json, then JSON flattened with the waf_ prefix.
-    regex, js = (c[2] for c in gl.by("POST", "/extractors"))
+    # Extractors: regex copy into waf_json, JSON flattened with the waf_ prefix, then the
+    # first matched rule's message as waf_rule_msg (the alert title, #1169 4b).
+    regex, js, rule_msg = (c[2] for c in gl.by("POST", "/extractors"))
+    assert rule_msg["target_field"] == "waf_rule_msg" and rule_msg["source_field"] == "waf_json"
     assert regex["extractor_type"] == "regex" and regex["target_field"] == "waf_json"
     assert regex["extractor_config"]["regex_value"] == r"^\S+ - (\{.*\})$" and regex["cursor_strategy"] == "copy"
     assert js["extractor_type"] == "json" and js["source_field"] == "waf_json"

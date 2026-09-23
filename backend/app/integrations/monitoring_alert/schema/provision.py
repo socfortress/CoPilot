@@ -51,6 +51,17 @@ class AvailableMonitoringAlerts(str, Enum):
         "alert that is created within CoPilot. Ensure that you have a pipeline rule that sets the "
         "alert_severity field to 1 when the Office365 alert is detected."
     )
+    SOCFORTRESS_WAF_BLOCKED = (
+        "This alert monitors SOCFortress WAF events forwarded into the SIEM (Customers → WAF → Set up event "
+        "forwarding). Every request the WAF blocks creates a CoPilot alert titled by the matched rule; repeated "
+        "blocks for the same rule and customer are added to the open alert, with each attacking IP as an IoC. "
+        "Always provisioned on the default Graylog, where WAF events are ingested."
+    )
+    SOCFORTRESS_WAF_BRUTE_FORCE = (
+        "This alert fires when one IP has 30 or more requests blocked by a customer's SOCFortress WAF within 5 "
+        "minutes. Graylog delivers it to CoPilot's threshold route, so ALERT_FORWARDING_IP and "
+        "GRAYLOG_API_HEADER_VALUE must be set in CoPilot's environment. Always provisioned on the default Graylog."
+    )
     CROWDSTRIKE_ALERT = (
         "This alert monitors the CrowdStrike events. When an alert is detected, it triggers an "
         "alert that is created within CoPilot. Ensure that you have a pipeline rule that sets the "

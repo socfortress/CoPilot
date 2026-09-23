@@ -15,6 +15,7 @@ from app.connectors.graylog.services.streams import get_streams
 from app.connectors.graylog.utils.routing import GraylogContext
 from app.connectors.graylog.utils.routing import clear_graylog_context
 from app.connectors.graylog.utils.routing import set_graylog_context
+from app.customer_waf.services import alerts as waf_alerts
 from app.db.db_session import get_db
 from app.db.universal_models import CustomersMeta
 from app.integrations.monitoring_alert.schema.provision import AvailableMonitoringAlerts
@@ -273,6 +274,20 @@ async def invoke_provision_office365_threat_intel_alert(
 ):
     # Provision the Office365 Threat Intel monitoring alert
     await provision_office365_threat_intel_alert(request)
+
+
+async def invoke_provision_socfortress_waf_blocked_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    # Per-event alert on WAF-blocked requests; see app/customer_waf/services/alerts.py.
+    await waf_alerts.provision_blocked_alert(request.execute_every, request.search_within_last)
+
+
+async def invoke_provision_socfortress_waf_brute_force_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    # Threshold alert (30 blocks from one IP in 5 min); window and threshold are fixed.
+    await waf_alerts.provision_brute_force_alert()
 
 
 async def invoke_provision_crowdstrike_monitoring_alert(
@@ -607,6 +622,8 @@ PROVISION_FUNCTIONS = {
     "OFFICE365_EXCHANGE_ONLINE": invoke_provision_office365_exchange_online_alert,
     "OFFICE365_THREAT_INTEL": invoke_provision_office365_threat_intel_alert,
     "CROWDSTRIKE_ALERT": invoke_provision_crowdstrike_monitoring_alert,
+    "SOCFORTRESS_WAF_BLOCKED": invoke_provision_socfortress_waf_blocked_alert,
+    "SOCFORTRESS_WAF_BRUTE_FORCE": invoke_provision_socfortress_waf_brute_force_alert,
     "FORTINET_SYSTEM": invoke_provision_fortinet_system_monitoring_alert,
     "FORTINET_UTM": invoke_provision_fortinet_utm_monitoring_alert,
     "FORTINET_FORTIWEB_PATH_TRAVERSAL_VULNERABILITY_EXPLOITATION_ATTEMPT": invoke_provision_fortinet_fortiweb_path_traversal_vulnerability_exploitation_attempt_monitoring_alert,
@@ -654,6 +671,22 @@ PROVISION_FUNCTIONS = {
     "CUSTOM": invoke_provision_custom_monitoring_alert,
     # Add more alert names and functions as needed
 }
+
+
+# Alerts pinned to one Graylog regardless of the requested instance. The SOCFortress WAF
+# deployment always ingests on the default Graylog (forwarding creates its inputs through
+# the default connector), so its alerts must live there too — a definition on the
+# network Graylog would search indices that never receive WAF events and never fire.
+PINNED_TO_DEFAULT_GRAYLOG = frozenset({"SOCFORTRESS_WAF_BLOCKED", "SOCFORTRESS_WAF_BRUTE_FORCE"})
+
+
+def effective_graylog_instance(alert_name: str, requested: GraylogInstance) -> GraylogInstance:
+    """The instance an alert is actually provisioned on: pinned alerts ignore ``requested``."""
+    if alert_name in PINNED_TO_DEFAULT_GRAYLOG:
+        if requested != GraylogInstance.DEFAULT:
+            logger.info(f"{alert_name} is pinned to the default Graylog; ignoring requested instance '{requested.value}'")
+        return GraylogInstance.DEFAULT
+    return requested
 
 
 def graylog_context_for_instance(instance: GraylogInstance) -> GraylogContext:
@@ -733,8 +766,9 @@ async def provision_monitoring_alert_route(
     request: ProvisionMonitoringAlertRequest,
 ) -> ProvisionWazuhMonitoringAlertResponse:
     # Route every downstream Graylog call (existence check + event-definition
-    # creation) to the requested instance. Network sources land on Graylog02.
-    set_graylog_context(graylog_context_for_instance(request.graylog_instance))
+    # creation) to the requested instance. Network sources land on Graylog02; alerts
+    # in PINNED_TO_DEFAULT_GRAYLOG always go to the default Graylog.
+    set_graylog_context(graylog_context_for_instance(effective_graylog_instance(request.alert_name, request.graylog_instance)))
     try:
         await check_if_event_definition_exists(request.alert_name.replace("_", " "))
 
