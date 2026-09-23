@@ -8,6 +8,7 @@ import _castArray from "lodash/castArray"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
+import { useReportGenerationStore } from "@/stores/reportGeneration"
 import { RouteRole } from "@/types/auth"
 import { getAvatar } from "@/utils"
 import { jwtRoleToUserRole } from "@/utils/auth"
@@ -40,6 +41,7 @@ export const useAuthStore = defineStore("auth", {
 			this.user = null
 
 			useCustomerFilterStore().clear()
+			useReportGenerationStore().reset()
 			removePersistentSessionKey()
 		},
 		async login(payload: LoginPayload) {

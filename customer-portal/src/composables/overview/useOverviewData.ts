@@ -112,7 +112,7 @@ export function useOverviewData() {
 			),
 			run(
 				"agents",
-				() => Api.agents.getAgents(codes),
+				() => Api.agents.getAgents(codes, signal),
 				res => {
 					const list = res.data.agents ?? []
 					const online = list.filter(agent => agent.wazuh_agent_status === "active").length

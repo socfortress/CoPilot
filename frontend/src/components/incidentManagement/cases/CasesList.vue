@@ -156,7 +156,7 @@
 						</div>
 						<div class="flex justify-end gap-2">
 							<n-button size="small" secondary @click="resetFilters()">Reset</n-button>
-							<n-button size="small" type="primary" secondary :loading @click="getData()">
+							<n-button size="small" type="primary" secondary :loading @click="applyFilters()">
 								Submit
 							</n-button>
 						</div>
@@ -376,10 +376,21 @@ watch(
 provide("assignable-users", availableUsers)
 provide("customers-list", customersList)
 
+// Every filter change (filters panel, reset, global customer filter) restarts the list from
+// the first page, otherwise a narrower result set leaves the user on a page that no longer
+// exists. Moving the page lets the `currentPage` watcher fetch, avoiding a double request.
+function applyFilters() {
+	if (currentPage.value === 1) {
+		getData()
+	} else {
+		currentPage.value = 1
+	}
+}
+
 function resetFilters() {
 	filters.value.type = undefined
 	showFilters.value = false
-	getData()
+	applyFilters()
 }
 
 // Unlike the other lists this one holds a single {type, value} filter, so it can't reuse a
@@ -392,7 +403,7 @@ function syncGlobalCustomerCodeFilter(codes: string[]) {
 		if (filters.value.type === "customerCode") {
 			filters.value.type = undefined
 			filters.value.value = undefined
-			getData()
+			applyFilters()
 		}
 		return
 	}
@@ -405,7 +416,7 @@ function syncGlobalCustomerCodeFilter(codes: string[]) {
 
 	nextTick(() => {
 		filters.value.value = code
-		getData()
+		applyFilters()
 	})
 }
 

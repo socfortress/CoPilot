@@ -241,7 +241,7 @@ const loadAgents = useDebounceFn(async () => {
 	abortController = new AbortController()
 
 	try {
-		const response = await Api.agents.getAgents(customerFilterStore.queryCustomerCodes)
+		const response = await Api.agents.getAgents(customerFilterStore.queryCustomerCodes, abortController.signal)
 
 		data.value = response.data.agents || []
 		emit("loaded", data.value)
