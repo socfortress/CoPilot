@@ -27,6 +27,12 @@ function waf(over: Partial<CustomerWafInstance> = {}): CustomerWafInstance {
 		created_at: null,
 		updated_by: null,
 		updated_at: null,
+		syslog_host: null,
+		syslog_port: null,
+		graylog_input_id: null,
+		graylog_stream_id: null,
+		graylog_index_set_id: null,
+		forwarding_provisioned_at: null,
 		...over
 	}
 }

@@ -4,6 +4,7 @@ import type {
 	CustomerWafBlockPayload,
 	CustomerWafEvent,
 	CustomerWafEventsQuery,
+	CustomerWafForwardingResult,
 	CustomerWafInstance,
 	CustomerWafPayload,
 	CustomerWafSite,
@@ -28,8 +29,23 @@ export default {
 	},
 	getInstances(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<
-			FlaskBaseResponse & { instances: CustomerWafInstance[]; encryption_key_configured: boolean }
+			FlaskBaseResponse & {
+				instances: CustomerWafInstance[]
+				encryption_key_configured: boolean
+				forwarding_default_host: string | null
+				forwarding_port_range: string | null
+			}
 		>(base(customerCode), { signal })
+	},
+	/** Admin only. Creates the Graylog input, index set, stream and the WAF forwarder; rolls back on failure. */
+	setUpForwarding(customerCode: string, wafId: number, syslogHost: string | null) {
+		return HttpClient.post<FlaskBaseResponse & CustomerWafForwardingResult>(`${base(customerCode)}/${wafId}/forwarding`, {
+			syslog_host: syslogHost
+		})
+	},
+	/** Admin only. Removes the forwarder and this WAF's input; stored events are kept. */
+	removeForwarding(customerCode: string, wafId: number) {
+		return HttpClient.delete<FlaskBaseResponse & CustomerWafForwardingResult>(`${base(customerCode)}/${wafId}/forwarding`)
 	},
 	/** Admin only. Saves, then runs a connection test (the save stands even if it fails). */
 	createInstance(customerCode: string, payload: CustomerWafPayload) {

@@ -574,6 +574,18 @@ class CustomerWafInstance(SQLModel, table=True):
     updated_by: Optional[int] = Field(default=None)  # User ID
     updated_at: Optional[datetime] = Field(default=None)
 
+    # Event forwarding into the SIEM (#1169). All NULL until "Set up event forwarding"
+    # runs; every object provisioned is recorded here so it can be torn down again.
+    # Stream and index set are per *customer* (siblings carry the same ids); the input
+    # and the WAF-side forwarder are per WAF.
+    syslog_host: Optional[str] = Field(default=None, max_length=255)  # what the WAF can reach
+    syslog_port: Optional[int] = Field(default=None)
+    graylog_input_id: Optional[str] = Field(default=None, max_length=64)
+    graylog_stream_id: Optional[str] = Field(default=None, max_length=64)
+    graylog_index_set_id: Optional[str] = Field(default=None, max_length=64)
+    waf_forwarder_id: Optional[str] = Field(default=None, max_length=64)
+    forwarding_provisioned_at: Optional[datetime] = Field(default=None)
+
 
 class VulnerabilityReport(SQLModel, table=True):
     __tablename__ = "vulnerability_reports"

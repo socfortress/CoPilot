@@ -352,8 +352,10 @@ def test_configuration_writes_are_admin_only():
         scopes, _ = _route_scopes(route)
         # Blocking is a response action (#1167) and open to analysts; only WAF *configuration* is admin-only.
         is_block_route = route.path.endswith("/blocks")
-        writes_config = not is_block_route and (
-            route.methods & {"PUT", "DELETE"} or (route.methods == {"POST"} and route.path == "/{customer_code}")
+        # Setting up / removing SIEM forwarding (#1169) provisions infrastructure: configuration, admin-only.
+        is_forwarding_route = route.path.endswith("/forwarding")
+        writes_config = is_forwarding_route or (
+            not is_block_route and (route.methods & {"PUT", "DELETE"} or (route.methods == {"POST"} and route.path == "/{customer_code}"))
         )
         if writes_config:
             assert scopes == {"admin"}, f"{route.methods} {route.path} must be admin-only, got {scopes}"

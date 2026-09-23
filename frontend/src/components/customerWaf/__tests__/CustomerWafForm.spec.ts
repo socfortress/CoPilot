@@ -24,7 +24,13 @@ const existing: CustomerWafInstance = {
 	created_by: null,
 	created_at: null,
 	updated_by: null,
-	updated_at: null
+	updated_at: null,
+	syslog_host: null,
+	syslog_port: null,
+	graylog_input_id: null,
+	graylog_stream_id: null,
+	graylog_index_set_id: null,
+	forwarding_provisioned_at: null
 }
 
 const ModalStub = { template: "<div><slot /><slot name=\"footer\" /></div>" }

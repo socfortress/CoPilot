@@ -35,6 +35,8 @@ from app.customer_waf.schema.customer_waf import WafBlockResponse
 from app.customer_waf.schema.customer_waf import WafBlocksResponse
 from app.customer_waf.schema.customer_waf import WafDeleteResponse
 from app.customer_waf.schema.customer_waf import WafEventsResponse
+from app.customer_waf.schema.customer_waf import WafForwardingRequest
+from app.customer_waf.schema.customer_waf import WafForwardingResponse
 from app.customer_waf.schema.customer_waf import WafInstanceCreate
 from app.customer_waf.schema.customer_waf import WafInstanceResponse
 from app.customer_waf.schema.customer_waf import WafInstancesResponse
@@ -46,6 +48,7 @@ from app.customer_waf.schema.customer_waf import WafUnblockResponse
 from app.customer_waf.schema.customer_waf import WafVerifyResponse
 from app.customer_waf.services import blocks as blocks_svc
 from app.customer_waf.services import customer_waf as svc
+from app.customer_waf.services import forwarding as forwarding_svc
 from app.customer_waf.services.crypto import WafTokenCryptoError
 from app.customer_waf.services.crypto import key_configured
 from app.customer_waf.utils.universal import WafRequestError
@@ -108,9 +111,16 @@ async def list_all_customer_wafs(
 )
 async def list_customer_wafs(customer_code: str, session: AsyncSession = Depends(get_db)):
     rows = await svc.list_instances(session, customer_code)
+    try:
+        low, high = forwarding_svc.port_range()
+        port_range = f"{low}-{high}"
+    except forwarding_svc.ForwardingError:
+        port_range = None
     return WafInstancesResponse(
         instances=[svc.to_schema(r) for r in rows],
         encryption_key_configured=key_configured(),
+        forwarding_default_host=forwarding_svc.default_syslog_host(),
+        forwarding_port_range=port_range,
         success=True,
         message=f"{len(rows)} WAF(s) configured",
     )
@@ -185,13 +195,94 @@ async def delete_customer_waf(
 ):
     row = await svc.get_instance_for_customer(session, customer_code, waf_id)
     name, prefix = row.name, row.token_prefix
+    # Tear down event forwarding first, or its Graylog input and WAF forwarder would be orphaned.
+    warnings = await forwarding_svc.deprovision(session, row) if row.forwarding_provisioned_at else []
     await svc.delete_instance(session, row, getattr(current_user, "id", None))
     return WafDeleteResponse(
         success=True,
-        message=(
-            f"WAF '{name}' removed from CoPilot. Its token ({prefix}) is still valid on the WAF — "
-            "revoke it under Service Tokens in the WAF UI."
+        message=" ".join(
+            [
+                f"WAF '{name}' removed from CoPilot. Its token ({prefix}) is still valid on the WAF — "
+                "revoke it under Service Tokens in the WAF UI.",
+                *warnings,
+            ],
         ),
+    )
+
+
+# ── event forwarding (#1169) ───────────────────────────────────────────────
+
+
+@customer_waf_router.post(
+    "/{customer_code}/{waf_id}/forwarding",
+    response_model=WafForwardingResponse,
+    description="Send this WAF's events into the SIEM: a Graylog Syslog TCP input (+ static fields, "
+    "extractors), the customer's waf-<code> index set and stream, and a forwarder on the WAF",
+    dependencies=_WRITE,
+)
+async def set_up_customer_waf_forwarding(
+    customer_code: str,
+    waf_id: int,
+    request: WafForwardingRequest,
+    session: AsyncSession = Depends(get_db),
+):
+    row = await svc.get_instance_for_customer(session, customer_code, waf_id)
+    host = (request.syslog_host or "").strip() or forwarding_svc.default_syslog_host()
+    if not host:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "detail": "Give the syslog host the WAF should send to (the Graylog address the WAF can reach), "
+                "or set WAF_SYSLOG_DEFAULT_HOST.",
+                "reason": "no_syslog_host",
+                "success": False,
+            },
+        )
+    try:
+        result = await forwarding_svc.provision(session, row, host)
+    except forwarding_svc.ForwardingError as e:
+        detail = e.detail + (f" Rollback could not undo: {'; '.join(e.rollback_failures)}" if e.rollback_failures else "")
+        return JSONResponse(status_code=e.status_code, content={"detail": detail, "reason": "forwarding_failed", "success": False})
+    except (WafRequestError, WafTokenCryptoError) as e:
+        return _error(e)
+
+    warnings = []
+    if result.test_success is False:
+        warnings.append(
+            f"The WAF's test event did not reach {host}:{row.syslog_port} ({result.test_message}). "
+            "Forwarding is set up; check that the WAF can reach that address and port.",
+        )
+    return WafForwardingResponse(
+        instance=svc.to_schema(row),
+        test_success=result.test_success,
+        test_message=result.test_message,
+        reused=result.reused,
+        warnings=warnings,
+        success=True,
+        message=f"WAF '{row.name}' now forwards its events to {host}:{row.syslog_port}",
+    )
+
+
+@customer_waf_router.delete(
+    "/{customer_code}/{waf_id}/forwarding",
+    response_model=WafForwardingResponse,
+    description="Stop forwarding: removes the WAF forwarder and this WAF's input; the customer's stream only when "
+    "no other WAF of theirs still forwards. The index set and stored events are kept.",
+    dependencies=_WRITE,
+)
+async def remove_customer_waf_forwarding(customer_code: str, waf_id: int, session: AsyncSession = Depends(get_db)):
+    row = await svc.get_instance_for_customer(session, customer_code, waf_id)
+    if not row.forwarding_provisioned_at:
+        return JSONResponse(status_code=404, content={"detail": "Event forwarding is not set up for this WAF", "success": False})
+    try:
+        warnings = await forwarding_svc.deprovision(session, row)
+    except WafTokenCryptoError as e:
+        return _error(e)
+    return WafForwardingResponse(
+        instance=svc.to_schema(row),
+        warnings=warnings,
+        success=True,
+        message=f"Event forwarding removed for WAF '{row.name}'. Events already stored are kept.",
     )
 
 
