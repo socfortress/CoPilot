@@ -10,6 +10,9 @@ export const investigateItem: MenuMixedOption = parentMenuItem("Investigate", "I
 	// the triage queue, which shared the label "Alerts" before #1152.
 	routerLinkItem("SIEM Alerts", "Alerts-SIEM"),
 	routerLinkItem("Dashboards", "Dashboards"),
+	// Customers' SOCFortress WAFs: events, threat intel and IP blocks (#1168). Mostly
+	// reading what the WAF saw, hence Investigate; setup lives on the customer.
+	routerLinkItem("WAF", "Waf"),
 	routerLinkItem("File Analysis", "FileAnalysis"),
 	// One page with a tab per source; OpenCTI is a tab there, shown only for a
 	// verified connector, rather than its own entry (#1153).

@@ -12,6 +12,7 @@
 		<template #footerExtra>
 			<div class="flex items-center justify-end gap-3">
 				<VirusTotalEnrichmentButton :ioc-value="ioc.value" />
+				<AlertWafBlockButton v-if="customerCode" :customer-code :value="ioc.value" :alert-id />
 
 				<EntityDetailsButton
 					size="small"
@@ -53,14 +54,17 @@ import { ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
+import AlertWafBlockButton from "@/components/customerWaf/AlertWafBlockButton.vue"
 import OpenCTIIocBadge from "@/components/opencti/OpenCTIIocBadge.vue"
 import VirusTotalEnrichmentButton from "@/components/threatIntel/VirusTotalEnrichmentButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 
-const { ioc, embedded, alertId } = defineProps<{
+const { ioc, embedded, alertId, customerCode } = defineProps<{
 	ioc: AlertIOC
 	alertId: number
+	/** The alert's customer — enables "Block at WAF" when that customer has a block-capable WAF. */
+	customerCode?: string
 	embedded?: boolean
 }>()
 

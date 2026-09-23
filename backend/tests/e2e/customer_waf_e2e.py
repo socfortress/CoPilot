@@ -269,6 +269,12 @@ async def main():
         check("list carries no token", TOKEN not in r.text)
         r = await c.get(f"/customer_waf/{CUST_B}", headers=H_SCOPED)
         check("analyst GET other customer's list -> 403", r.status_code == 403, str(r.status_code))
+        r = await c.get("/customer_waf", headers=H_SCOPED)
+        seen = {i["customer_code"] for i in r.json()["instances"]} & {CUST_A, CUST_B}
+        check("cross-customer list: analyst sees only own customer's WAFs", r.status_code == 200 and seen == {CUST_A}, str(seen))
+        r = await c.get("/customer_waf", headers=H_ADMIN)
+        seen = {i["customer_code"] for i in r.json()["instances"]} & {CUST_A, CUST_B}
+        check("cross-customer list: admin sees both", seen == {CUST_A, CUST_B}, str(seen))
         for path in ("sites", "events", "stats", "threat-intel"):
             r = await c.get(f"/customer_waf/{CUST_A}/{id_b}/{path}", headers=H_SCOPED)
             check(f"other tenant's WAF id under own path /{path} -> 404", r.status_code == 404, str(r.status_code))

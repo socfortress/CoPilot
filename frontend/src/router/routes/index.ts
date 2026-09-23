@@ -27,6 +27,7 @@ import { settingsRoutes } from "./settings"
 import { stackProvisioningRoutes } from "./stack-provisioning"
 import { threatIntelRoutes } from "./threat-intel"
 import { usersRoutes } from "./users"
+import { wafRoutes } from "./waf"
 
 export const routes: RouteRecordRaw[] = [
 	...coreRoutes,
@@ -42,6 +43,7 @@ export const routes: RouteRecordRaw[] = [
 	...analystRoutes,
 	...detectionCatalogRoutes,
 	...threatIntelRoutes,
+	...wafRoutes,
 	...healthcheckRoutes,
 	...customersRoutes,
 	...auditRoutes,

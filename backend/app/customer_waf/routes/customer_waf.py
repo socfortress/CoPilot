@@ -50,6 +50,7 @@ from app.customer_waf.services.crypto import WafTokenCryptoError
 from app.customer_waf.services.crypto import key_configured
 from app.customer_waf.utils.universal import WafRequestError
 from app.db.db_session import get_db
+from app.middleware.customer_access import scoped_customer_codes
 from app.middleware.customer_access import verify_customer_code_access
 
 customer_waf_router = APIRouter()
@@ -75,6 +76,28 @@ async def _verify_quietly(session: AsyncSession, row):
 
 
 # ── configuration ──────────────────────────────────────────────────────────
+
+
+@customer_waf_router.get(
+    "",
+    response_model=WafInstancesResponse,
+    description="WAFs across every customer the caller can see (the WAF page's pickers)",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def list_all_customer_wafs(
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    # The one route without a {customer_code}: tenancy comes from scoped_customer_codes
+    # instead. [] means "sees nothing" and must not reach the service, which reads it as all.
+    codes = await scoped_customer_codes(current_user, None, session)
+    rows = [] if codes == [] else await svc.list_all_instances(session, codes)
+    return WafInstancesResponse(
+        instances=[svc.to_schema(r) for r in rows],
+        encryption_key_configured=key_configured(),
+        success=True,
+        message=f"{len(rows)} WAF(s) visible",
+    )
 
 
 @customer_waf_router.get(
