@@ -35,7 +35,7 @@
 			<span class="marker" :style="{ backgroundColor: colorVar(item.status.color) }" />
 
 			<div class="content flex min-w-0 flex-col gap-1">
-				<p class="title truncate text-sm font-medium">{{ item.title }}</p>
+				<p class="title text-default truncate text-sm font-medium">{{ item.title }}</p>
 				<p
 					v-if="item.detail"
 					class="detail text-secondary text-xs"
