@@ -26,7 +26,7 @@ export interface AgentCounts {
 	critical: number
 }
 
-type Section = "alerts" | "cases" | "agents" | "ai"
+export type OverviewSection = "alerts" | "cases" | "agents" | "ai"
 
 function emptyCounts(): StatusCounts {
 	return { total: 0, open: 0, in_progress: 0, closed: 0 }
@@ -51,17 +51,43 @@ export function useOverviewData() {
 	const agentCounts = ref<AgentCounts>({ total: 0, online: 0, offline: 0, critical: 0 })
 	const insights = ref<AiInsights>({ total_reports: 0, severity_counts: {}, recent: [] })
 
-	const loading = reactive<Record<Section, boolean>>({ alerts: false, cases: false, agents: false, ai: false })
-	const errors = reactive<Record<Section, string | null>>({ alerts: null, cases: null, agents: null, ai: null })
+	const loading = reactive<Record<OverviewSection, boolean>>({
+		alerts: false,
+		cases: false,
+		agents: false,
+		ai: false
+	})
+	const errors = reactive<Record<OverviewSection, string | null>>({
+		alerts: null,
+		cases: null,
+		agents: null,
+		ai: null
+	})
 	/** `false` until the first load settles, so the page can show skeletons instead of zeros. */
 	const loaded = ref(false)
 	const lastUpdated = ref<Date | null>(null)
 
 	const isRefreshing = computed(() => Object.values(loading).some(Boolean))
 
+	/**
+	 * Placeholders belong to the first load only: a refresh keeps the current numbers
+	 * on screen instead of flashing skeletons over them.
+	 */
+	const showSkeleton = computed(
+		() =>
+			Object.fromEntries(
+				(Object.keys(loading) as OverviewSection[]).map(section => [section, !loaded.value && loading[section]])
+			) as Record<OverviewSection, boolean>
+	)
+
 	let controller: AbortController | null = null
 
-	async function run<T>(section: Section, request: () => Promise<T>, apply: (value: T) => void, signal: AbortSignal) {
+	async function run<T>(
+		section: OverviewSection,
+		request: () => Promise<T>,
+		apply: (value: T) => void,
+		signal: AbortSignal
+	) {
 		loading[section] = true
 		errors[section] = null
 		try {
@@ -154,6 +180,7 @@ export function useOverviewData() {
 		loading,
 		errors,
 		loaded,
+		showSkeleton,
 		lastUpdated,
 		isRefreshing,
 		refresh

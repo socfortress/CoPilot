@@ -2,34 +2,27 @@
 	<div class="page overview flex flex-col gap-6">
 		<OverviewHeader :last-updated :refreshing="isRefreshing" @refresh="refresh()" />
 
-		<OverviewPosture
-			:alert-counts
-			:case-counts
-			:agent-counts
-			:loading="{ alerts: loading.alerts, cases: loading.cases, agents: loading.agents }"
-			:errors="{ alerts: errors.alerts, cases: errors.cases, agents: errors.agents }"
-			:loaded
-		/>
+		<PostureStrip :alert-counts :case-counts :agent-counts :loading="showSkeleton" :errors />
 
-		<OverviewAiInsights
-			v-if="showAiInsights"
+		<AiFindingsPanel
+			v-if="aiFindings.visible.value"
 			:insights
-			:loading="!loaded && loading.ai"
-			:skeleton-rows="aiRowsHint || undefined"
+			:loading="showSkeleton.ai"
+			:skeleton-rows="aiFindings.skeletonRows.value"
 			@updated="refresh()"
 		/>
 
-		<div class="activity-grid grid gap-6">
-			<OverviewRecentAlerts
+		<div class="overview__activity">
+			<RecentAlertsPanel
 				:alerts
-				:loading="!loaded && loading.alerts"
+				:loading="showSkeleton.alerts"
 				:error="errors.alerts"
 				@retry="refresh()"
 				@updated="refresh()"
 			/>
-			<OverviewRecentCases
+			<RecentCasesPanel
 				:cases
-				:loading="!loaded && loading.cases"
+				:loading="showSkeleton.cases"
 				:error="errors.cases"
 				@retry="refresh()"
 				@updated="refresh()"
@@ -39,18 +32,17 @@
 </template>
 
 <script setup lang="ts">
-import { useSessionStorage } from "@vueuse/core"
-import { computed, onBeforeMount, watch } from "vue"
-import OverviewAiInsights from "@/components/overview/OverviewAiInsights.vue"
+import { onBeforeMount } from "vue"
 import OverviewHeader from "@/components/overview/OverviewHeader.vue"
-import OverviewPosture from "@/components/overview/OverviewPosture.vue"
-import OverviewRecentAlerts from "@/components/overview/OverviewRecentAlerts.vue"
-import OverviewRecentCases from "@/components/overview/OverviewRecentCases.vue"
+import AiFindingsPanel from "@/components/overview/panels/AiFindingsPanel.vue"
+import RecentAlertsPanel from "@/components/overview/panels/RecentAlertsPanel.vue"
+import RecentCasesPanel from "@/components/overview/panels/RecentCasesPanel.vue"
+import PostureStrip from "@/components/overview/posture/PostureStrip.vue"
+import { useAiFindingsPlaceholder } from "@/composables/overview/useAiFindingsPlaceholder"
 import { useOverviewData } from "@/composables/overview/useOverviewData"
 
-// Hierarchy, top to bottom: what needs attention now (posture), the AI analyst's
-// read of it (when the SOC publishes findings), then what just happened (recent
-// alerts and cases).
+// Top to bottom: what needs attention now (posture), the AI analyst's read of it
+// (when the SOC publishes findings), then what just happened (alerts and cases).
 const {
 	alerts,
 	cases,
@@ -58,33 +50,15 @@ const {
 	caseCounts,
 	agentCounts,
 	insights,
-	loading,
 	errors,
 	loaded,
+	showSkeleton,
 	lastUpdated,
 	isRefreshing,
 	refresh
 } = useOverviewData()
 
-/**
- * The AI card only exists when the SOC has published findings, which is unknown
- * until the first response. Showing it only then pushes the whole activity area
- * down; always showing a placeholder makes it collapse for customers without AI.
- * So the page remembers, per session, how many findings the card last showed and
- * reserves exactly that space while loading.
- */
-const aiRowsHint = useSessionStorage("overview.ai-findings-rows", 0)
-
-const showAiInsights = computed(() => {
-	if (errors.ai) return false
-	return loaded.value ? insights.value.total_reports > 0 : aiRowsHint.value > 0
-})
-
-// Refreshed on every completed load, including refreshes and filter changes.
-watch([loaded, insights], ([isLoaded, current]) => {
-	if (!isLoaded || errors.ai) return
-	aiRowsHint.value = current.total_reports > 0 ? current.recent.length : 0
-})
+const aiFindings = useAiFindingsPlaceholder({ insights, loaded, failed: () => !!errors.ai })
 
 onBeforeMount(() => {
 	refresh()
@@ -92,15 +66,15 @@ onBeforeMount(() => {
 </script>
 
 <style lang="scss" scoped>
-.overview {
-	.activity-grid {
-		grid-template-columns: minmax(0, 1fr);
+.overview__activity {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 24px;
 
-		@media (min-width: 1100px) {
-			// Equal columns: both feeds carry long titles, and same-height panels read as
-			// one block. Alerts sit first (left) because they are the primary feed.
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
+	@media (min-width: 1100px) {
+		// Equal columns: both feeds carry long titles, and same-height panels read as
+		// one block. Alerts come first because they are the primary feed.
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 </style>
