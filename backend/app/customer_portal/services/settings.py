@@ -12,6 +12,7 @@ is authenticated. Two rules follow from that:
 """
 import base64
 import binascii
+import hashlib
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
@@ -26,6 +27,7 @@ from app.db.universal_models import CustomerPortalSettings
 
 # Relative to the API root, like every path the portal's HTTP client calls.
 LOGO_PATH = "/customer_portal/settings/logo"
+EFFECTIVE_LOGO_PATH = "/customer_portal/settings/effective/logo"
 
 
 @dataclass
@@ -38,6 +40,23 @@ class PortalLogo:
 def _logo_version(updated_at: Optional[datetime]) -> str:
     """Version token for the logo: any save moves ``updated_at``, which busts the cached URL."""
     return str(int(updated_at.timestamp() * 1000)) if updated_at else "0"
+
+
+def logo_content_version(logo_base64: str) -> str:
+    """Version token derived from the logo itself, for logos with no single ``updated_at`` (merged branding)."""
+    return hashlib.sha256(logo_base64.encode()).hexdigest()[:16]
+
+
+def decode_logo(logo_base64: Optional[str], mime_type: Optional[str], version: str) -> Optional[PortalLogo]:
+    """Decode a stored base64 logo; None when there is none or it cannot be decoded."""
+    if not logo_base64:
+        return None
+    try:
+        content = base64.b64decode(logo_base64, validate=True)
+    except (binascii.Error, ValueError):
+        logger.error("Stored customer portal logo is not valid base64")
+        return None
+    return PortalLogo(content=content, mime_type=mime_type or "image/png", etag=f'"{version}"')
 
 
 async def ensure_default_portal_settings(async_engine) -> None:
@@ -93,17 +112,6 @@ async def get_portal_logo(session: AsyncSession) -> Optional[PortalLogo]:
     """The decoded global logo, or None when none is configured (or it cannot be decoded)."""
     result = await session.execute(select(CustomerPortalSettings).limit(1))
     settings = result.scalars().first()
-    if settings is None or not settings.logo_base64:
+    if settings is None:
         return None
-
-    try:
-        content = base64.b64decode(settings.logo_base64, validate=True)
-    except (binascii.Error, ValueError):
-        logger.error("Stored customer portal logo is not valid base64")
-        return None
-
-    return PortalLogo(
-        content=content,
-        mime_type=settings.logo_mime_type or "image/png",
-        etag=f'"{_logo_version(settings.updated_at)}"',
-    )
+    return decode_logo(settings.logo_base64, settings.logo_mime_type, _logo_version(settings.updated_at))

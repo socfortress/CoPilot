@@ -20,6 +20,7 @@ from app.customer_portal.schema.settings import PublicPortalSettingsResponse
 from app.customer_portal.schema.settings import UpdatePortalSettingsRequest
 from app.customer_portal.schema.settings import UpdatePortalSettingsResponse
 from app.customer_portal.services.branding import get_global_settings
+from app.customer_portal.services.settings import PortalLogo
 from app.customer_portal.services.settings import get_portal_logo
 from app.customer_portal.services.settings import get_public_portal_settings
 from app.db.db_session import get_db
@@ -135,6 +136,31 @@ async def get_portal_settings(
         )
 
 
+def logo_response(logo: Optional[PortalLogo], if_none_match: Optional[str], *, cache_scope: str) -> Response:
+    """Serve a portal logo as bytes with ETag revalidation; 404 when there is none.
+
+    ``cache_scope`` is ``public`` for the anonymous global logo and ``private`` for a
+    logo resolved per user, which shared caches must not hand to anyone else.
+    """
+    if logo is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No portal logo configured")
+
+    headers = {
+        "ETag": logo.etag,
+        # The portal requests a versioned URL (?v=…), so a stale copy is only ever
+        # served for the unversioned path, and then for an hour at most.
+        "Cache-Control": f"{cache_scope}, max-age={LOGO_MAX_AGE_SECONDS}",
+        "X-Content-Type-Options": "nosniff",
+        # The logo may be an admin-uploaded SVG: opened directly, it must not run script.
+        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+    }
+
+    if if_none_match and logo.etag in [tag.strip() for tag in if_none_match.split(",")]:
+        return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers=headers)
+
+    return Response(content=logo.content, media_type=logo.mime_type, headers=headers)
+
+
 @customer_portal_settings_router.get(
     "/settings/logo",
     response_class=Response,
@@ -145,24 +171,7 @@ async def get_portal_logo_image(
     if_none_match: Optional[str] = Header(None),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
-    logo = await get_portal_logo(session)
-    if logo is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No portal logo configured")
-
-    headers = {
-        "ETag": logo.etag,
-        # The portal requests a versioned URL (?v=…), so a stale copy is only ever
-        # served for the unversioned path, and then for an hour at most.
-        "Cache-Control": f"public, max-age={LOGO_MAX_AGE_SECONDS}",
-        "X-Content-Type-Options": "nosniff",
-        # The logo may be an admin-uploaded SVG: opened directly, it must not run script.
-        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
-    }
-
-    if if_none_match and logo.etag in [tag.strip() for tag in if_none_match.split(",")]:
-        return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers=headers)
-
-    return Response(content=logo.content, media_type=logo.mime_type, headers=headers)
+    return logo_response(await get_portal_logo(session), if_none_match, cache_scope="public")
 
 
 @customer_portal_settings_router.get(

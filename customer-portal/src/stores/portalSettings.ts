@@ -1,7 +1,7 @@
 import type { EffectivePortalBranding, PortalSettings } from "@/types/portal"
 import { defineStore } from "pinia"
 import Api from "@/api"
-import { API_ROOT } from "@/api/httpClient"
+import { API_ROOT, HttpClient } from "@/api/httpClient"
 import { useAuthStore } from "@/stores/auth"
 import { getAvatar } from "@/utils"
 import { getNameInitials } from "@/utils/format"
@@ -21,6 +21,8 @@ export const usePortalSettingsStore = defineStore("portalSettings", {
 	state: () => ({
 		settings: null as PortalSettings | null,
 		branding: null as EffectivePortalBranding | null,
+		/** Object URL of the branding logo. Not persisted: it dies with the page. */
+		brandingLogo: null as string | null,
 		loading: false
 	}),
 
@@ -29,13 +31,14 @@ export const usePortalSettingsStore = defineStore("portalSettings", {
 			return state.branding?.title || state.settings?.title || ""
 		},
 		portalLogo(state) {
-			// The authenticated branding carries its logo inline; the public settings
-			// point at a cacheable URL instead.
+			const globalLogo = state.settings?.logo_url ? `${API_ROOT}${state.settings.logo_url}` : null
 			if (state.branding) {
-				const { logo_base64, logo_mime_type } = state.branding
-				return logo_base64 && logo_mime_type ? `data:${logo_mime_type};base64,${logo_base64}` : null
+				if (!state.branding.logo_url) return null
+				// Until the authenticated logo has been fetched, show the global one
+				// (usually the same image) rather than flashing the initials.
+				return state.brandingLogo ?? globalLogo
 			}
-			return state.settings?.logo_url ? `${API_ROOT}${state.settings.logo_url}` : null
+			return globalLogo
 		},
 		portalInitials(): string {
 			return getNameInitials(this.portalTitle || "")
@@ -69,6 +72,7 @@ export const usePortalSettingsStore = defineStore("portalSettings", {
 
 				if (response.data.success && response.data.settings) {
 					this.branding = response.data.settings
+					await this.loadBrandingLogo()
 				}
 			} catch (error) {
 				// Branding must never block the portal: keep whatever we already have
@@ -77,8 +81,35 @@ export const usePortalSettingsStore = defineStore("portalSettings", {
 			}
 		},
 
+		/**
+		 * The branding logo needs the Bearer token, which an `<img>` cannot send, so it is
+		 * fetched through the HTTP client (the browser's HTTP cache still applies) and
+		 * shown as an object URL.
+		 */
+		async loadBrandingLogo() {
+			const url = this.branding?.logo_url
+			if (!url) {
+				this.setBrandingLogo(null)
+				return
+			}
+
+			try {
+				const response = await HttpClient.get<Blob>(url, { responseType: "blob" })
+				this.setBrandingLogo(URL.createObjectURL(response.data))
+			} catch (error) {
+				console.error("Failed to load customer branding logo:", error)
+				this.setBrandingLogo(null)
+			}
+		},
+
+		setBrandingLogo(objectUrl: string | null) {
+			if (this.brandingLogo) URL.revokeObjectURL(this.brandingLogo)
+			this.brandingLogo = objectUrl
+		},
+
 		clearBranding() {
 			this.branding = null
+			this.setBrandingLogo(null)
 		},
 
 		/**

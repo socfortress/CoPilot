@@ -16,7 +16,8 @@ export interface PortalSettings {
  */
 export interface EffectivePortalBranding {
 	title: string
-	logo_base64: string | null
+	/** Versioned logo path relative to the API root; authenticated, so fetch it through the HTTP client. */
+	logo_url: string | null
 	logo_mime_type: string | null
 	brand_color: string | null
 	source: "custom" | "global"
