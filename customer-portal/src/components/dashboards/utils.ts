@@ -10,7 +10,7 @@ export function getDashboardIcon(icon: string) {
 		case "security":
 			return "carbon:security"
 		case "performance":
-			return "ph:gauge"
+			return "carbon:meter"
 		default:
 			return "carbon:dashboard"
 	}

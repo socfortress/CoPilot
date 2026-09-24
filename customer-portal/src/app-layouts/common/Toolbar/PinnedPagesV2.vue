@@ -76,7 +76,7 @@ interface Page {
 	title: string
 }
 
-const PinnedIcon = "tabler:pinned"
+const PinnedIcon = "carbon:pin"
 const CloseIcon = "carbon:close"
 const router = useRouter()
 const latest: RemovableRef<Page[]> = useStorage<Page[]>("latest-pages", [], sessionStorage)
