@@ -23,9 +23,12 @@ function applyInterceptors(client: AxiosInstance) {
 				config.headers.Authorization = `Bearer ${store.userToken}`
 			}
 
+			// An already-expired token cannot be refreshed (the backend rejects it); the
+			// router guard logs the user out instead, so don't fire a doomed 401.
 			if (
 				store.userToken &&
 				isJwtExpiring(store.userToken, 60 * 15 /** 15 minutes */) &&
+				!isJwtExpiring(store.userToken, 0) &&
 				!__TOKEN_REFRESHING &&
 				isDebounceTimeOver(__TOKEN_LAST_CHECK)
 			) {
