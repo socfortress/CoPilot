@@ -173,6 +173,17 @@ async def enable_dashboard(
     return row
 
 
+async def get_enabled_dashboard_customer_code(dashboard_id: int, db: AsyncSession) -> str:
+    """The customer an enabled dashboard belongs to, so the route can check the caller owns it. 404 if unknown."""
+    result = await db.execute(
+        select(EnabledDashboards.customer_code).where(EnabledDashboards.id == dashboard_id),
+    )
+    customer_code = result.scalars().first()
+    if customer_code is None:
+        raise HTTPException(status_code=404, detail="Enabled dashboard not found")
+    return customer_code
+
+
 async def disable_dashboard(
     dashboard_id: int,
     db: AsyncSession,
