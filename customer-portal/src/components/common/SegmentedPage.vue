@@ -123,7 +123,7 @@ const emit = defineEmits<{
 	(e: "sidebar", value: boolean): void
 }>()
 
-const MenuIcon = "ph:list-light"
+const MenuIcon = "carbon:list"
 const CloseIcon = "carbon:close"
 const SplitIcon = "carbon:draggable"
 

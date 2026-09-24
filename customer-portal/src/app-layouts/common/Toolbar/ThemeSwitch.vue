@@ -14,15 +14,15 @@
 </template>
 
 <script lang="ts" setup>
-import { Icon as Iconify } from "@iconify/vue"
+import { Icon as Iconify } from "@iconify/vue/offline"
 import { computed, nextTick } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { useThemeStore } from "@/stores/theme"
 
-const Sunny = "ion:sunny"
-const Moon = "ion:moon"
-const SunnyOutline = "ion:sunny-outline"
-const MoonOutline = "ion:moon-outline"
+const Sunny = "carbon:light-filled"
+const Moon = "carbon:asleep-filled"
+const SunnyOutline = "carbon:light"
+const MoonOutline = "carbon:asleep"
 const themeStore = useThemeStore()
 const isThemeDark = computed<boolean>(() => themeStore.isThemeDark)
 

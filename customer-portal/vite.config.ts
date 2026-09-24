@@ -1,6 +1,8 @@
 import fs from "node:fs"
 import process from "node:process"
 import { fileURLToPath, URL } from "node:url"
+import { icons as carbonIcons } from "@iconify-json/carbon"
+import { icons as mdiIcons } from "@iconify-json/mdi"
 import tailwindcss from "@tailwindcss/vite"
 import vue from "@vitejs/plugin-vue"
 import vueJsx from "@vitejs/plugin-vue-jsx"
@@ -8,6 +10,7 @@ import { defineConfig, loadEnv } from "vite"
 import quello from "vite-plugin-quello"
 import VueDevTools from "vite-plugin-vue-devtools"
 import svgLoader from "vite-svg-loader"
+import { iconifyCollections } from "./vite-plugins/iconify-collections"
 // import { analyzer } from "vite-bundle-analyzer"
 
 // https://vitejs.dev/config/
@@ -32,7 +35,13 @@ export default defineConfig(({ mode }) => {
 			VueDevTools({
 				launchEditor: "cursor"
 			}),
-			svgLoader()
+			svgLoader(),
+			// Icons are bundled, never fetched from api.iconify.design. Carbon is the
+			// icon set; mdi only supplies the OS brand logos carbon does not have.
+			iconifyCollections({
+				collections: [carbonIcons, mdiIcons],
+				srcDir: fileURLToPath(new URL("./src", import.meta.url))
+			})
 			// uncomment to enable analyzer after build
 			// analyzer()
 		],

@@ -119,3 +119,33 @@ def test_missing_global_settings_still_resolve():
     assert result.title == "Acme Security"
     assert result.logo_base64 is None
     assert result.brand_color is None
+
+
+# ── Portal projection: the logo travels as a URL, not inline ─────────────
+
+
+def test_portal_branding_carries_a_versioned_logo_url_instead_of_the_bytes():
+    from app.customer_portal.schema.branding import EffectiveBranding
+    from app.customer_portal.services.branding import to_portal_branding
+
+    effective = EffectiveBranding(
+        title="Acme",
+        logo_base64="iVBORw0KGgo=",
+        logo_mime_type="image/png",
+        source="custom",
+        customer_code="ACME",
+    )
+    portal = to_portal_branding(effective)
+
+    assert "logo_base64" not in portal.model_dump()
+    assert portal.logo_url.startswith("/customer_portal/settings/effective/logo?v=")
+    # A different logo must produce a different URL, or browsers keep the cached one.
+    other = to_portal_branding(effective.model_copy(update={"logo_base64": "R0lGODlh"}))
+    assert other.logo_url != portal.logo_url
+
+
+def test_portal_branding_without_a_logo_has_no_url():
+    from app.customer_portal.schema.branding import EffectiveBranding
+    from app.customer_portal.services.branding import to_portal_branding
+
+    assert to_portal_branding(EffectiveBranding(title="Acme")).logo_url is None

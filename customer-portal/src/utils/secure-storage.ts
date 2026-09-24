@@ -32,7 +32,9 @@ export function secureLocalStorage(options?: { session?: boolean }) {
 	return {
 		getItem(key: string) {
 			try {
-				return secureLS.get(persistentKey({ session: options?.session })(key))
+				// secure-ls answers "" for a missing key; the Storage contract (and VueUse's
+				// useStorage, which otherwise JSON.parse("")s it) expects null.
+				return secureLS.get(persistentKey({ session: options?.session })(key)) || null
 			} catch (err) {
 				console.warn(`[secureLocalStorage] Failed to get "${key}"`, err)
 				return null

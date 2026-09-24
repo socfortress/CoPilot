@@ -31,7 +31,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Icon as Iconify } from "@iconify/vue"
+import { Icon as Iconify } from "@iconify/vue/offline"
 import { computed } from "vue"
 import Logo from "@/app-layouts/common/Logo.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -41,8 +41,8 @@ const { logoSmall } = defineProps<{
 	logoSmall?: boolean
 }>()
 
-const CircleRegular = "fa6-regular:circle"
-const DotCircleRegular = "fa6-regular:circle-dot"
+const CircleRegular = "carbon:radio-button"
+const DotCircleRegular = "carbon:radio-button-checked"
 const CloseOutline = "carbon:chevron-left"
 const themeStore = useThemeStore()
 const showPin = computed<boolean>(() => !logoSmall)

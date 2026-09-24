@@ -11,7 +11,8 @@
 			/>
 			<div v-else class="whitespace-pre-wrap">{{ comment.comment }}</div>
 		</template>
-		<template #footer-extra>
+		<!-- The backend lets a portal user change only their own comments. -->
+		<template v-if="isOwn" #footer-extra>
 			<div v-if="editMode" class="flex items-center gap-2">
 				<n-button
 					size="tiny"
@@ -62,7 +63,7 @@
 import type { CommentItem } from "@/types/comments"
 import type { ApiError } from "@/types/common"
 import { NButton, NInput, NPopconfirm, useMessage } from "naive-ui"
-import { ref } from "vue"
+import { computed, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -88,6 +89,7 @@ const editMode = ref(false)
 const newComment = ref<string | null>(null)
 const updating = ref(false)
 const deleting = ref(false)
+const isOwn = computed(() => !!authStore.userName && comment.user_name === authStore.userName)
 
 function setEditMode(mode: boolean) {
 	editMode.value = mode

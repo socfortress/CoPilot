@@ -7,6 +7,11 @@ declare module "*.vue" {
 	export default component
 }
 
+declare module "virtual:iconify-collections" {
+	const collections: import("@iconify/types").IconifyJSON[]
+	export default collections
+}
+
 declare module "*.svg" {
 	import type { DefineComponent } from "vue"
 

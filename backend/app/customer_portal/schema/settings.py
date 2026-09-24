@@ -95,6 +95,26 @@ class PortalSettingsResponse(BaseModel):
     settings: Optional[PortalSettingsData] = None
 
 
+class PublicPortalSettingsData(BaseModel):
+    """The global settings as the anonymous login page sees them: no inline logo."""
+
+    id: int
+    title: str
+    logo_url: Optional[str] = Field(
+        None,
+        description="Versioned path of the logo, relative to the API root (e.g. /customer_portal/settings/logo?v=…). Null when no logo is set.",
+    )
+    logo_mime_type: Optional[str] = None
+    brand_color: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class PublicPortalSettingsResponse(BaseModel):
+    success: bool
+    message: str
+    settings: Optional[PublicPortalSettingsData] = None
+
+
 class UpdatePortalSettingsResponse(BaseModel):
     success: bool
     message: str
