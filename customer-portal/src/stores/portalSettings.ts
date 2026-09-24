@@ -1,6 +1,7 @@
 import type { EffectivePortalBranding, PortalSettings } from "@/types/portal"
 import { defineStore } from "pinia"
 import Api from "@/api"
+import { API_ROOT } from "@/api/httpClient"
 import { useAuthStore } from "@/stores/auth"
 import { getAvatar } from "@/utils"
 import { getNameInitials } from "@/utils/format"
@@ -28,11 +29,13 @@ export const usePortalSettingsStore = defineStore("portalSettings", {
 			return state.branding?.title || state.settings?.title || ""
 		},
 		portalLogo(state) {
-			const source = state.branding ?? state.settings
-			if (source?.logo_base64 && source?.logo_mime_type) {
-				return `data:${source.logo_mime_type};base64,${source.logo_base64}`
+			// The authenticated branding carries its logo inline; the public settings
+			// point at a cacheable URL instead.
+			if (state.branding) {
+				const { logo_base64, logo_mime_type } = state.branding
+				return logo_base64 && logo_mime_type ? `data:${logo_mime_type};base64,${logo_base64}` : null
 			}
-			return null
+			return state.settings?.logo_url ? `${API_ROOT}${state.settings.logo_url}` : null
 		},
 		portalInitials(): string {
 			return getNameInitials(this.portalTitle || "")

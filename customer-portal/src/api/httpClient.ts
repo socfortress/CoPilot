@@ -86,4 +86,4 @@ function getHttpClient(base: HttpClientBase = "api") {
 	return CLIENTS[base]
 }
 
-export { createHttpClient, getHttpClient, HttpClient, WsHttpClient }
+export { API_ROOT, createHttpClient, getHttpClient, HttpClient, WsHttpClient }

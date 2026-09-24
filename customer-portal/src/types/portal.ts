@@ -1,9 +1,12 @@
+/** The global settings as served publicly: the logo is fetched separately from `logo_url`. */
 export interface PortalSettings {
 	id: number
 	title: string
-	logo_base64: string
-	logo_mime_type: string
-	updated_at: string
+	/** Versioned logo path relative to the API root, or null when no logo is set. */
+	logo_url: string | null
+	logo_mime_type: string | null
+	brand_color: string | null
+	updated_at: string | null
 }
 
 /**

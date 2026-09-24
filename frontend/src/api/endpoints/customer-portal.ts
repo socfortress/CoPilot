@@ -34,10 +34,12 @@ type AiReportSettingsResponse = FlaskBaseResponse & {
 }
 
 export default {
+	/** Global settings with the inline logo, for the editor. The public `/settings` omits the logo bytes. */
 	getSettings(signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { settings: CustomerPortalSettings }>(`/customer_portal/settings`, {
-			signal
-		})
+		return HttpClient.get<FlaskBaseResponse & { settings: CustomerPortalSettings }>(
+			`/customer_portal/settings/global`,
+			{ signal }
+		)
 	},
 	setSettings(payload: CustomerPortalSettingsPayload) {
 		return HttpClient.post<FlaskBaseResponse & { settings: CustomerPortalSettings }>(
