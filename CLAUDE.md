@@ -348,6 +348,10 @@ Things to keep straight in the InfluxDB half:
 
 The `customer-portal/` mirrors this structure but is a leaner standalone app, served separately (its own `nginx.conf`; port 3001 dev, 8443 in compose when uncommented).
 
+### What a portal user may write: the `customer_user` allowlist
+
+Tenant checks stop a customer from touching *another* tenant's data; what they may do to their *own* SOC record is a separate product decision, pinned by `tests/test_customer_user_write_allowlist.py`. A customer can triage (alert/case status, comments, link/unlink alerts, assignee), open cases, upload case files, generate and delete their own reports, flag critical assets and manage their own password/2FA. **Deleting alerts, cases or case files, escalating, moving a case to another customer, firing the Shuffle case notification and refreshing the deployment-wide rules cache are analyst-only.** The test enumerates every non-GET route whose scope admits `customer_user` and fails on any drift in either direction, so adding `customer_user` to a write route means updating `ALLOWED_CUSTOMER_USER_WRITES` on purpose. Read-only POSTs (panel data, rule lookups, logtest) are listed there too.
+
 ### Tenant scoping: customer codes are not the only tenant key
 
 #1050 made `user_customer_access` authoritative for analysts and guarded every route

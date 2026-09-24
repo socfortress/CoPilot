@@ -632,7 +632,7 @@ async def get_rules_by_mitre(
     "/refresh",
     response_model=RefreshResponse,
     description="Manually refresh the rules cache from GitHub",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def refresh_rules():
     """

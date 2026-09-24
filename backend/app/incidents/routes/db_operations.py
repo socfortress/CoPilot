@@ -702,7 +702,7 @@ async def update_alert_verdict_endpoint(
 @incidents_db_operations_router.put(
     "/alert/escalated",
     response_model=AlertResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def update_alert_escalated_endpoint(
     escalate_alert: EscalateAlert,
@@ -1666,7 +1666,7 @@ async def get_alert_by_id_endpoint(
 
 @incidents_db_operations_router.delete(
     "/alert/{alert_id}",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_alert_endpoint(
     alert_id: int,
@@ -1753,7 +1753,7 @@ async def delete_alerts_endpoint(
 @incidents_db_operations_router.delete(
     "/alerts/by-title/{title_filter}",
     response_model=DeleteAlertsResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_alerts_by_title_endpoint(
     title_filter: str,
@@ -2413,7 +2413,7 @@ async def update_case_status_endpoint(
 @incidents_db_operations_router.put(
     "/case/escalated",
     response_model=CaseOutResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def update_case_escalated_endpoint(
     escalate_case: EscalateCase,
@@ -2525,7 +2525,7 @@ async def update_case_assigned_to_endpoint(
 @incidents_db_operations_router.put(
     "/case/customer-code",
     response_model=CaseOutResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def update_case_customer_code_endpoint(
     case_id: int,
@@ -2562,7 +2562,7 @@ async def update_case_customer_code_endpoint(
 
 @incidents_db_operations_router.delete(
     "/case/{case_id}",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_case_endpoint(
     case_id: int,
@@ -2864,7 +2864,7 @@ async def upload_case_data_store_endpoint(
 
 @incidents_db_operations_router.delete(
     "/case/data-store/{case_id}/{file_name}",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_case_data_store_file_endpoint(
     case_id: int,
@@ -2924,7 +2924,7 @@ async def get_case_by_id_endpoint(
 @incidents_db_operations_router.post(
     "/case/notification",
     response_model=CaseNotificationResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_case_notification_endpoint(
     request: CaseNotificationCreate,

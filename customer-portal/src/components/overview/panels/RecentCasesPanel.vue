@@ -24,7 +24,6 @@
 					class="flex"
 					@status-updated="emit('updated')"
 					@assigned-to-updated="emit('updated')"
-					@deleted="emit('updated')"
 				/>
 			</template>
 		</ActivityList>
@@ -50,7 +49,7 @@ const { cases } = defineProps<{
 
 const emit = defineEmits<{
 	(e: "retry"): void
-	/** A case changed (status, assignee, deleted) from its details modal. */
+	/** A case changed (status, assignee) from its details modal. */
 	(e: "updated"): void
 }>()
 
