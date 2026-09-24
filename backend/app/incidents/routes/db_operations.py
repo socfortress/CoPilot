@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.models.audit import AuditAction
 from app.audit.services.audit import record_audit_event
+from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
@@ -725,6 +726,16 @@ async def update_alert_escalated_endpoint(
     return AlertResponse(alert=updated_alert, success=True, message="Alert escalated status updated successfully")
 
 
+def _ensure_can_modify_comment(user: User, author: str) -> None:
+    """End customers may change only their own comments; admin/analyst moderate any.
+
+    ``user_name`` is the only authorship a comment carries, which is why the create/edit
+    routes stamp it from the caller rather than trusting the body.
+    """
+    if user.role_id == RoleEnum.customer_user.value and author != user.username:
+        raise HTTPException(status_code=403, detail="You can only modify your own comments")
+
+
 @incidents_db_operations_router.post(
     "/alert/comment",
     response_model=CommentResponse,
@@ -742,6 +753,7 @@ async def create_comment_endpoint(
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to alert {comment.alert_id} - insufficient customer permissions")
 
+    comment.user_name = current_user.username
     return CommentResponse(comment=await create_comment(comment, db), success=True, message="Comment created successfully")
 
 
@@ -755,13 +767,22 @@ async def edit_comment_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # The comment decides which alert is checked: trusting the body's alert_id would let a
+    # caller pass their own alert and edit a comment that lives on another tenant's.
+    result = await db.execute(select(Comment).where(Comment.id == comment.comment_id))
+    existing = result.scalars().first()
+    if not existing or existing.alert_id != comment.alert_id:
+        raise HTTPException(status_code=404, detail="Comment not found")
+
     # Get the alert to check customer and tag access
-    alert = await get_alert_by_id(comment.alert_id, db, user=current_user)
+    alert = await get_alert_by_id(existing.alert_id, db, user=current_user)
 
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to alert {comment.alert_id} - insufficient customer permissions")
 
+    _ensure_can_modify_comment(current_user, existing.user_name)
+    comment.user_name = current_user.username
     return CommentResponse(comment=await edit_comment(comment, db), success=True, message="Comment edited successfully")
 
 
@@ -790,6 +811,7 @@ async def delete_comment_endpoint(
             detail=f"Access denied to comment on alert {comment.alert_id} - insufficient customer permissions",
         )
 
+    _ensure_can_modify_comment(current_user, comment.user_name)
     await delete_comment(comment_id, db)
     return {"message": "Comment deleted successfully", "success": True}
 
@@ -811,6 +833,7 @@ async def create_case_comment_endpoint(
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to case {comment.case_id} - insufficient customer permissions")
 
+    comment.user_name = current_user.username
     created = await create_case_comment(comment, db)
 
     from app.incidents.schema.case_templates import CaseEventType
@@ -839,13 +862,21 @@ async def edit_case_comment_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # As for alert comments: the comment, not the body's case_id, decides what is checked.
+    result = await db.execute(select(CaseComment).where(CaseComment.id == comment.comment_id))
+    existing = result.scalars().first()
+    if not existing or existing.case_id != comment.case_id:
+        raise HTTPException(status_code=404, detail="Comment not found")
+
     # Get the case to check customer access
-    case = await get_case_by_id(comment.case_id, db)
+    case = await get_case_by_id(existing.case_id, db)
 
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to case {comment.case_id} - insufficient customer permissions")
 
+    _ensure_can_modify_comment(current_user, existing.user_name)
+    comment.user_name = current_user.username
     return CaseCommentResponse(comment=await edit_case_comment(comment, db), success=True, message="Case comment edited successfully")
 
 
@@ -874,6 +905,7 @@ async def delete_case_comment_endpoint(
             detail=f"Access denied to comment on case {comment.case_id} - insufficient customer permissions",
         )
 
+    _ensure_can_modify_comment(current_user, comment.user_name)
     await delete_case_comment(comment_id, db)
     return {"message": "Case comment deleted successfully", "success": True}
 

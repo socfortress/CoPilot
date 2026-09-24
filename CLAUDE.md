@@ -352,6 +352,8 @@ The `customer-portal/` mirrors this structure but is a leaner standalone app, se
 
 Tenant checks stop a customer from touching *another* tenant's data; what they may do to their *own* SOC record is a separate product decision, pinned by `tests/test_customer_user_write_allowlist.py`. A customer can triage (alert/case status, comments, link/unlink alerts, assignee), open cases, upload case files, generate and delete their own reports, flag critical assets and manage their own password/2FA. **Deleting alerts, cases or case files, escalating, moving a case to another customer, firing the Shuffle case notification and refreshing the deployment-wide rules cache are analyst-only.** The test enumerates every non-GET route whose scope admits `customer_user` and fails on any drift in either direction, so adding `customer_user` to a write route means updating `ALLOWED_CUSTOMER_USER_WRITES` on purpose. Read-only POSTs (panel data, rule lookups, logtest) are listed there too.
 
+**Comments carry authorship only in `user_name`, so the routes own it**: create and edit stamp it from the caller (the body's `user_name` is ignored), a `customer_user` may edit or delete only their own comments (admin/analyst still moderate any), and edit resolves the alert/case from the comment itself rather than the body — otherwise a caller could name their own alert and a comment id from another tenant. `tests/test_comment_authorship.py`.
+
 ### Tenant scoping: customer codes are not the only tenant key
 
 #1050 made `user_customer_access` authoritative for analysts and guarded every route
