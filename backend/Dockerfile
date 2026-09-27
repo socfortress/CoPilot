@@ -40,6 +40,15 @@ WORKDIR /opt/copilot/backend
 COPY requirements.txt ./
 RUN uv pip install -r requirements.txt --no-cache
 
+# urllib3-future (via grafana-client → niquests) ships its own `urllib3/`
+# package into the same directory as the pinned urllib3 1.26 (elasticsearch7
+# needs <2). uv unpacks wheels in parallel, so the two can interleave into a
+# broken hybrid (ImportError: create_proxy_ssl_context). Reinstall 1.26 so it
+# owns `urllib3/` outright — niquests then uses `urllib3_future` on its own —
+# and fail the build if the result is still mixed.
+RUN uv pip install --no-cache --reinstall-package urllib3 "urllib3==1.26.20" && \
+    python -c "import urllib3, requests, niquests; assert urllib3.__version__ == '1.26.20', urllib3.__version__"
+
 # ───────────────
 # Install Playwright Chromium
 # ───────────────
