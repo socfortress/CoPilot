@@ -91,8 +91,8 @@ import { useAuthStore } from "@/stores/auth"
 
 const propicEnabled = false
 
-const RoleIcon = "tabler:user"
-const EditIcon = "uil:image-edit"
+const RoleIcon = "carbon:user"
+const EditIcon = "carbon:edit"
 const CustomerCodeIcon = "carbon:hashtag"
 
 const tabActive = ref("settings")

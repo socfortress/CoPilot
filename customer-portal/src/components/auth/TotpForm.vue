@@ -66,8 +66,9 @@ import type { VNodeRef } from "vue"
 import type { TOTPValidateRequest } from "@/api/endpoints/totp"
 import { NButton, NCollapseTransition, NInput, NInputOtp, useMessage } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
-import { useRouter } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
+import { getSafeRedirect } from "@/utils/auth"
 
 const emit = defineEmits<{
 	(e: "cancel"): void
@@ -87,6 +88,7 @@ function allowDigitsOnly(char: string) {
 }
 
 const router = useRouter()
+const route = useRoute()
 const message = useMessage()
 const twoFaCodeRef = ref<InputOtpInst | null>(null)
 const authStore = useAuthStore()
@@ -128,7 +130,7 @@ async function verify2fa(params?: { useBackupCode?: boolean }) {
 	authStore
 		.verify2fa(payload)
 		.then(() => {
-			router.push({ path: "/", replace: true })
+			router.replace(getSafeRedirect(route.query.redirect))
 		})
 		.catch(err => {
 			message.error(err?.message || "An error occurred. Please try again later.")

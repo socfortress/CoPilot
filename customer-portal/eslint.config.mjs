@@ -17,6 +17,13 @@ export default antfu(
 		rules: {
 			"e18e/ban-dependencies": ["error", { allowed: ["axios", "lodash", "depcheck", "fs-extra"] }],
 			"antfu/if-newline": "off",
+			// The online build fetches icons from api.iconify.design; icons are bundled instead.
+			"no-restricted-imports": [
+				"error",
+				{
+					paths: [{ name: "@iconify/vue", message: "Import from \"@iconify/vue/offline\": icons are bundled, never fetched." }]
+				}
+			],
 			"pnpm/yaml-enforce-settings": isProduction ? "error" : "off",
 			"style/operator-linebreak": "off",
 			"style/arrow-parens": "off",

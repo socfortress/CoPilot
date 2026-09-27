@@ -4,16 +4,16 @@
 			<slot />
 		</template>
 		<template v-else>
-			<Icon v-if="icon" :icon :width="options.size || undefined" :height="options.size || undefined" />
+			<Icon v-if="name" :icon="name" :width="options.size || undefined" :height="options.size || undefined" />
 		</template>
 	</component>
 </template>
 
 <script setup lang="ts">
-import type { IconifyIcon } from "@iconify/vue"
-import { Icon, loadIcon } from "@iconify/vue"
+// The offline build renders only the collections bundled in main.ts and never calls the Iconify API.
+import { Icon } from "@iconify/vue/offline"
 import { NIcon, NIconWrapper } from "naive-ui"
-import { computed, ref, watchEffect } from "vue"
+import { computed } from "vue"
 
 const props = defineProps<{
 	name?: string
@@ -42,18 +42,4 @@ const options = computed(() => {
 	}
 	return opt
 })
-
-const load = (name: string) => loadIcon(name).catch(() => console.error(`Failed to load icon ${name}`))
-
-const icon = ref<void | Required<IconifyIcon>>()
-
-function setIcon(name: string | undefined) {
-	if (name) {
-		load(name).then(res => (icon.value = res))
-	}
-}
-
-setIcon(props.name)
-
-watchEffect(() => setIcon(props.name))
 </script>

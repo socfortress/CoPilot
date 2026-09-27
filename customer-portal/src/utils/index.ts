@@ -50,7 +50,7 @@ export function iconFromOs(os: string): string {
 		case "UNIX":
 			return "mdi:linux"
 		default:
-			return "mdi:help-box"
+			return "carbon:help"
 	}
 }
 

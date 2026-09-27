@@ -68,13 +68,6 @@ export default {
 	},
 
 	/**
-	 * Delete case (customer access controlled)
-	 */
-	deleteCase(caseId: number) {
-		return HttpClient.delete<CommonResponse>(`/incidents/db_operations/case/${caseId}`)
-	},
-
-	/**
 	 * Get cases by status with customer filtering
 	 */
 	getCasesByStatus(
@@ -202,13 +195,6 @@ export default {
 				}
 			}
 		)
-	},
-
-	/**
-	 * Delete a file from a case data store
-	 */
-	deleteCaseFile(caseId: number, fileName: string) {
-		return HttpClient.delete<CommonResponse>(`/incidents/db_operations/case/data-store/${caseId}/${fileName}`)
 	},
 
 	/**

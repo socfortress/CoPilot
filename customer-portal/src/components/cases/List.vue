@@ -165,7 +165,6 @@ const columns = computed<DataTableColumns<Case>>(() => [
 					caseId={row.id}
 					onStatusUpdated={handleStatusUpdateSuccess}
 					onAssignedToUpdated={handleAssignedToUpdateSuccess}
-					onDeleted={handleDeleted}
 				/>
 			)
 		}
@@ -241,10 +240,6 @@ function resetPage() {
 
 function handleFiltersLoaded(value: Record<string, string[]>) {
 	assignedAvailable.value = value.assigned_to || []
-}
-
-function handleDeleted() {
-	loadCases()
 }
 
 function resetFilters() {

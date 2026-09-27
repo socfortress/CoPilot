@@ -39,9 +39,10 @@ import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { LoginPayload } from "@/api/endpoints/auth"
 import { NButton, NForm, NFormItem, NInput, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
-import { useRouter } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 import TotpForm from "@/components/auth/TotpForm.vue"
 import { useAuthStore } from "@/stores/auth"
+import { getSafeRedirect } from "@/utils/auth"
 
 interface ModelType {
 	username: string | null
@@ -50,6 +51,7 @@ interface ModelType {
 
 const loading = ref(false)
 const router = useRouter()
+const route = useRoute()
 const formRef = ref<FormInst | null>(null)
 const message = useMessage()
 const model = ref<ModelType>({
@@ -105,7 +107,7 @@ function signIn(e: Event) {
 						show2faForm.value = true
 						return
 					}
-					router.push({ path: "/", replace: true })
+					router.replace(getSafeRedirect(route.query.redirect))
 				})
 				.catch(err => {
 					message.error(err?.message || "An error occurred. Please try again later.")

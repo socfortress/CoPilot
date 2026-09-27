@@ -29,7 +29,7 @@ import { useRoute, useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 import { useBreadcrumb } from "@/composables/common/useBreadcrumb"
 
-const HomeIcon = "fluent:home-24-regular"
+const HomeIcon = "carbon:home"
 const router = useRouter()
 const route = useRoute()
 const { items, setItems } = useBreadcrumb()

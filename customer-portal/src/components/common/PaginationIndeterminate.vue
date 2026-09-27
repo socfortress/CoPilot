@@ -50,8 +50,8 @@ const sortOptions = [
 	{ label: "Asc", value: "asc" }
 ]
 
-const ArrowForwardIcon = "ion:chevron-forward"
-const ArrowBackIcon = "ion:chevron-back"
+const ArrowForwardIcon = "carbon:chevron-right"
+const ArrowBackIcon = "carbon:chevron-left"
 
 watch(page, val => {
 	if (!val) {

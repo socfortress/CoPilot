@@ -5,32 +5,11 @@
 
 			<n-tabs v-else-if="caseData" type="line" animated>
 				<n-tab-pane name="overview" tab="Overview">
-					<div class="flex flex-col gap-4">
-						<CaseOverview
-							:case-data
-							@status-updated="handleStatusUpdated"
-							@assigned-to-updated="handleAssignedToUpdated"
-						/>
-						<div class="flex justify-end">
-							<n-popconfirm to="body" @positive-click="handleDeleteCase">
-								<template #trigger>
-									<n-button
-										size="small"
-										:focusable="false"
-										:loading="deleting"
-										type="error"
-										secondary
-									>
-										<template #icon>
-											<Icon name="carbon:trash-can" />
-										</template>
-										Delete Case
-									</n-button>
-								</template>
-								Are you sure you want to delete this case?
-							</n-popconfirm>
-						</div>
-					</div>
+					<CaseOverview
+						:case-data
+						@status-updated="handleStatusUpdated"
+						@assigned-to-updated="handleAssignedToUpdated"
+					/>
 				</n-tab-pane>
 				<n-tab-pane
 					name="alerts"
@@ -71,10 +50,9 @@ import type { CaseStatusUpdateSuccessPayload } from "../CaseStatusSelect.vue"
 import type { Case } from "@/types/cases"
 import type { CommentItem } from "@/types/comments"
 import type { ApiError } from "@/types/common"
-import { NAlert, NButton, NPopconfirm, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
+import { NAlert, NSpin, NTabPane, NTabs } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import CaseAlerts from "./CaseAlerts.vue"
 import CaseComments from "./CaseComments.vue"
@@ -90,14 +68,11 @@ const props = defineProps<{
 const emit = defineEmits<{
 	(e: "statusUpdated", value: CaseStatusUpdateSuccessPayload): void
 	(e: "assignedToUpdated", value: CaseAssignedUpdateSuccessPayload): void
-	(e: "deleted"): void
 }>()
 
-const message = useMessage()
 const caseData = ref<Case | null>(null)
 const detailsError = ref<string | null>(null)
 const loadingDetails = ref(false)
-const deleting = ref(false)
 
 async function loadCaseDetails() {
 	if (props.caseId === null) return
@@ -159,27 +134,6 @@ function handleAlertUnlinked() {
 
 function handleAlertLinked() {
 	loadCaseDetails()
-}
-
-function handleDeleteCase() {
-	if (!caseData.value) return
-
-	deleting.value = true
-
-	Api.cases
-		.deleteCase(caseData.value.id)
-		.then(res => {
-			if (res.data.success) {
-				message.success("Case deleted successfully")
-				emit("deleted")
-			}
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError))
-		})
-		.finally(() => {
-			deleting.value = false
-		})
 }
 
 watch(

@@ -16,6 +16,7 @@ from app.db.db_session import get_db
 from app.db.universal_models import CustomDashboardTemplates
 from app.db.universal_models import Customers
 from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import enforce_owned_object_access
 from app.middleware.customer_access import verify_optional_customer_code_access
 from app.siem.schema.custom_dashboards import CustomDashboardCreateRequest
 from app.siem.schema.custom_dashboards import CustomDashboardDeleteResponse
@@ -47,6 +48,7 @@ from app.siem.services.custom_dashboards import update_custom_dashboard
 from app.siem.services.dashboards import disable_dashboard
 from app.siem.services.dashboards import enable_dashboard
 from app.siem.services.dashboards import get_category_detail
+from app.siem.services.dashboards import get_enabled_dashboard_customer_code
 from app.siem.services.dashboards import get_enabled_dashboards
 from app.siem.services.dashboards import get_enabled_dashboards_for_customers
 from app.siem.services.dashboards import get_panel_data
@@ -177,8 +179,13 @@ async def enable_dashboard_endpoint(
 )
 async def disable_dashboard_endpoint(
     dashboard_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> DisableDashboardResponse:
+    # The id alone names another tenant's dashboard just as easily: a scoped analyst
+    # must own the customer it was enabled for.
+    owner = await get_enabled_dashboard_customer_code(dashboard_id, db)
+    await enforce_owned_object_access(current_user, owner, db, subject=f"dashboard {dashboard_id}")
     logger.info(f"Disabling dashboard {dashboard_id}")
     await disable_dashboard(dashboard_id, db)
     return DisableDashboardResponse(

@@ -30,22 +30,6 @@
 								</template>
 								Download
 							</n-button>
-
-							<n-popconfirm to="body" @positive-click="deleteFile(caseId, file.file_name)">
-								<template #trigger>
-									<n-button
-										size="small"
-										:focusable="false"
-										:loading="deletingFile === file.file_name"
-									>
-										<template #icon>
-											<Icon name="carbon:trash-can" />
-										</template>
-										Delete
-									</n-button>
-								</template>
-								Are you sure you want to delete this file?
-							</n-popconfirm>
 						</div>
 					</template>
 				</CardEntity>
@@ -86,7 +70,7 @@ import type { UploadFileInfo } from "naive-ui"
 import type { CaseDataStoreFile } from "@/types/cases"
 import type { ApiError } from "@/types/common"
 import { saveAs } from "file-saver"
-import { NButton, NEmpty, NPopconfirm, NSpin, NUpload, NUploadDragger, useMessage } from "naive-ui"
+import { NButton, NEmpty, NSpin, NUpload, NUploadDragger, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -106,7 +90,6 @@ const dFormats = useSettingsStore().dateFormat
 const caseFiles = ref<CaseDataStoreFile[]>([])
 const loadingFiles = ref(false)
 const downloadingFile = ref<string | null>(null)
-const deletingFile = ref<string | null>(null)
 const uploadingFile = ref(false)
 const fileList = ref<UploadFileInfo[]>([])
 const selectedFile = computed<File | null>(() => fileList.value?.[0]?.file || null)
@@ -135,19 +118,6 @@ async function downloadFile(caseId: number, fileName: string) {
 		message.error(getApiErrorMessage(err as ApiError))
 	} finally {
 		downloadingFile.value = null
-	}
-}
-
-async function deleteFile(caseId: number, fileName: string) {
-	deletingFile.value = fileName
-
-	try {
-		await Api.cases.deleteCaseFile(caseId, fileName)
-		loadCaseFiles(caseId)
-	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError))
-	} finally {
-		deletingFile.value = null
 	}
 }
 

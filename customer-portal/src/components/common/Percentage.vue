@@ -65,8 +65,8 @@ const {
 	progress = false
 } = defineProps<PercentageProps>()
 
-const ChevronUp = "tabler:chevron-up"
-const ChevronDown = "tabler:chevron-down"
+const ChevronUp = "carbon:chevron-up"
+const ChevronDown = "carbon:chevron-down"
 </script>
 
 <style scoped lang="scss">

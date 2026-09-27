@@ -32,10 +32,23 @@ export function isJwtExpiring(token: string, threshold: number): boolean {
 }
 
 /**
+ * Sanitizes the `redirect` query param carried to the login page, so a crafted link
+ * cannot send the user off-site (`//evil.example`) or back into the auth pages.
+ * @param value - Raw `route.query.redirect` value
+ * @returns A same-origin path, or "/" when the value is missing or unsafe
+ */
+export function getSafeRedirect(value: unknown): string {
+	if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) {
+		return "/"
+	}
+	return /^\/(?:login|logout)(?:[/?#]|$)/.test(value) ? "/" : value
+}
+
+/**
  * Verifies user authentication and permissions for a given route
  * Handles logout, checks if the user is authenticated and has the required roles
  * @param route - Vue Router route to verify
- * @returns The redirect path if necessary, otherwise undefined
+ * @returns The redirect location if necessary, otherwise undefined
  */
 export function authCheck(route: RouteLocationNormalized) {
 	const { checkAuth, authRedirect, auth, roles }: RouteMetaAuth = route.meta
@@ -46,11 +59,16 @@ export function authCheck(route: RouteLocationNormalized) {
 
 	if (authStore.isLogged && !authStore.userRole) authStore.setLogout()
 
+	// A persisted token past its expiry is not a session: drop it here rather than
+	// mounting the page and letting the first API call 401.
+	if (authStore.userToken && isJwtExpiring(authStore.userToken, 0)) authStore.setLogout()
+
 	// Auth check: if not logged or role not granted
 	const loginPath = `/login${window.location.search}`
 
 	if (auth && !authStore.isLogged) {
-		return loginPath
+		// Remember where the user was headed so login can bring them back there.
+		return { path: "/login", query: route.fullPath === "/" ? {} : { redirect: route.fullPath } }
 	}
 
 	if (auth && roles && !authStore.isRoleGranted(roles)) {
@@ -58,7 +76,8 @@ export function authCheck(route: RouteLocationNormalized) {
 	}
 
 	if (checkAuth && authStore.isLogged) {
-		return roles && !authStore.isRoleGranted(roles) ? route.path : authRedirect || "/"
+		if (roles && !authStore.isRoleGranted(roles)) return route.path
+		return route.query.redirect ? getSafeRedirect(route.query.redirect) : authRedirect || "/"
 	}
 }
 

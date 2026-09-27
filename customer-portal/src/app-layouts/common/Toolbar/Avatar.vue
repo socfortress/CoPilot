@@ -11,8 +11,8 @@ import { useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
 import { renderIcon } from "@/utils"
 
-const UserIcon = "ion:person-outline"
-const LogoutIcon = "ion:log-out-outline"
+const UserIcon = "carbon:user"
+const LogoutIcon = "carbon:logout"
 
 const router = useRouter()
 const authStore = useAuthStore()

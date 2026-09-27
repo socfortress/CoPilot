@@ -9,9 +9,13 @@ Split across two audiences:
   ``GET /customer_portal/settings`` (see ``routes/settings.py``) keeps serving the
   global defaults for the login page, where no customer is known yet.
 """
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Header
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi import Security
 from fastapi import status
 from loguru import logger
@@ -20,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.customer_portal.routes.settings import logo_response
 from app.customer_portal.schema.branding import CustomerBrandingListItem
 from app.customer_portal.schema.branding import CustomerBrandingListResponse
 from app.customer_portal.schema.branding import CustomerBrandingOverride
@@ -28,9 +33,11 @@ from app.customer_portal.schema.branding import EffectiveBrandingResponse
 from app.customer_portal.schema.branding import UpdateCustomerBrandingRequest
 from app.customer_portal.services.branding import delete_branding_override
 from app.customer_portal.services.branding import get_branding_override
+from app.customer_portal.services.branding import get_effective_logo_for_user
 from app.customer_portal.services.branding import list_branding_overrides
 from app.customer_portal.services.branding import resolve_branding_for_user
 from app.customer_portal.services.branding import resolve_effective_branding
+from app.customer_portal.services.branding import to_portal_branding
 from app.customer_portal.services.branding import upsert_branding_override
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
@@ -78,7 +85,7 @@ async def get_effective_portal_settings(
         return EffectiveBrandingResponse(
             success=True,
             message="Portal branding resolved successfully",
-            settings=effective,
+            settings=to_portal_branding(effective),
         )
     except Exception as e:
         logger.error(f"Failed to resolve effective portal branding for user {current_user.username}: {e}")
@@ -86,6 +93,20 @@ async def get_effective_portal_settings(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to resolve portal branding: {str(e)}",
         )
+
+
+@customer_portal_branding_router.get(
+    "/settings/effective/logo",
+    response_class=Response,
+    responses={200: {"content": {"image/*": {}}}, 304: {"description": "Not modified"}, 404: {"description": "No logo configured"}},
+    description="Get the logo of the authenticated user's portal branding as an image (cacheable per user).",
+)
+async def get_effective_portal_logo(
+    if_none_match: Optional[str] = Header(None),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    return logo_response(await get_effective_logo_for_user(session, current_user), if_none_match, cache_scope="private")
 
 
 # NOTE: the static ``/branding`` list route must stay above ``/branding/{customer_code}``

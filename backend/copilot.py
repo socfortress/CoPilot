@@ -24,6 +24,7 @@ from loguru import logger  # noqa: E402
 
 from app.auth.utils import AuthHandler  # noqa: E402
 from app.blocking import configure_thread_limit
+from app.customer_portal.services.settings import ensure_default_portal_settings
 from app.data_store.data_store_setup import create_buckets
 from app.db.db_session import SQLALCHEMY_DATABASE_URI_NO_DB
 from app.db.db_session import async_engine
@@ -154,6 +155,8 @@ async def lifespan(_app: FastAPI):
     # Built-in message templates (#1038). Idempotent by name, and never fatal —
     # notifications work without them, they just start from a blank editor.
     await seed_builtin_templates(async_engine)
+    # The public portal settings endpoint is read-only, so its default row is seeded here.
+    await ensure_default_portal_settings(async_engine)
 
     # Initialize the scheduler
     scheduler = await init_scheduler()

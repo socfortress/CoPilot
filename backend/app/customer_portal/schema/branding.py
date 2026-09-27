@@ -166,7 +166,22 @@ class CustomerBrandingListResponse(BaseModel):
     overrides: List[CustomerBrandingListItem] = []
 
 
+class PortalEffectiveBranding(BaseModel):
+    """``EffectiveBranding`` as the portal receives it: the logo is not inlined.
+
+    ``logo_url`` is a versioned path relative to the API root; the bytes come from the
+    authenticated ``GET /customer_portal/settings/effective/logo``.
+    """
+
+    title: str
+    logo_url: Optional[str] = None
+    logo_mime_type: Optional[str] = None
+    brand_color: Optional[str] = None
+    source: str = "global"
+    customer_code: Optional[str] = None
+
+
 class EffectiveBrandingResponse(BaseModel):
     success: bool
     message: str
-    settings: Optional[EffectiveBranding] = None
+    settings: Optional[PortalEffectiveBranding] = None

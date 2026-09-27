@@ -29,6 +29,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
 from app.customer_portal.schema.branding import EffectiveBranding
+from app.customer_portal.schema.branding import PortalEffectiveBranding
+from app.customer_portal.services.settings import EFFECTIVE_LOGO_PATH
+from app.customer_portal.services.settings import PortalLogo
+from app.customer_portal.services.settings import decode_logo
+from app.customer_portal.services.settings import logo_content_version
 from app.db.universal_models import CustomerPortalBranding
 from app.db.universal_models import CustomerPortalSettings
 from app.middleware.customer_access import customer_access_handler
@@ -128,6 +133,26 @@ async def resolve_branding_for_user(session: AsyncSession, user: User) -> Effect
         return await resolve_effective_branding(session, accessible[0])
 
     return await resolve_effective_branding(session, None)
+
+
+def to_portal_branding(effective: EffectiveBranding) -> PortalEffectiveBranding:
+    """Project resolved branding for the portal: a versioned logo URL instead of the bytes."""
+    return PortalEffectiveBranding(
+        title=effective.title,
+        logo_url=f"{EFFECTIVE_LOGO_PATH}?v={logo_content_version(effective.logo_base64)}" if effective.logo_base64 else None,
+        logo_mime_type=effective.logo_mime_type,
+        brand_color=effective.brand_color,
+        source=effective.source,
+        customer_code=effective.customer_code,
+    )
+
+
+async def get_effective_logo_for_user(session: AsyncSession, user: User) -> Optional[PortalLogo]:
+    """The logo the user's resolved branding shows, decoded; None when there is none."""
+    effective = await resolve_branding_for_user(session, user)
+    if not effective.logo_base64:
+        return None
+    return decode_logo(effective.logo_base64, effective.logo_mime_type, logo_content_version(effective.logo_base64))
 
 
 async def upsert_branding_override(

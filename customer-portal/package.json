@@ -77,6 +77,10 @@
 	"devDependencies": {
 		"@antfu/eslint-config": "~9.5.1",
 		"@clack/prompts": "^1.8.1",
+		"@iconify-json/carbon": "^1.2.27",
+		"@iconify-json/mdi": "^1.2.3",
+		"@iconify/types": "^2.0.0",
+		"@iconify/utils": "^3.1.7",
 		"@iconify/vue": "^5.0.3",
 		"@tailwindcss/vite": "^4.3.3",
 		"@tsconfig/node20": "^20.1.10",
