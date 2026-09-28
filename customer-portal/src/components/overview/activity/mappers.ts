@@ -1,7 +1,6 @@
 import type { ActivityItem } from "./types"
 import type { AiInsightAlert } from "@/types/aiReports"
-import type { Alert } from "@/types/alerts"
-import type { Case } from "@/types/cases"
+import type { OverviewAlert, OverviewCase } from "@/types/portal"
 import { severityColor, workflowStatus } from "../shared/status"
 
 /**
@@ -28,13 +27,13 @@ function pluralize(count: number, singular: string, plural = `${singular}s`) {
 	return `${count} ${count === 1 ? singular : plural}`
 }
 
-function assetsLabel(alert: Alert): string | null {
-	const [first, ...rest] = alert.assets ?? []
+function assetsLabel(alert: OverviewAlert): string | null {
+	const [first, ...rest] = alert.asset_names
 	if (!first) return null
-	return rest.length ? `${first.asset_name} +${rest.length}` : first.asset_name
+	return rest.length ? `${first} +${rest.length}` : first
 }
 
-export function alertToActivityItem(alert: Alert, { showCustomer }: MapperOptions): ActivityItem {
+export function alertToActivityItem(alert: OverviewAlert, { showCustomer }: MapperOptions): ActivityItem {
 	const title = alert.alert_name || "Unnamed alert"
 
 	return {
@@ -47,9 +46,9 @@ export function alertToActivityItem(alert: Alert, { showCustomer }: MapperOption
 	}
 }
 
-export function caseToActivityItem(caseItem: Case, { showCustomer }: MapperOptions): ActivityItem {
+export function caseToActivityItem(caseItem: OverviewCase, { showCustomer }: MapperOptions): ActivityItem {
 	const title = caseItem.case_name || "Unnamed case"
-	const alertCount = caseItem.alerts?.length ?? 0
+	const alertCount = caseItem.alert_count
 
 	return {
 		id: caseItem.id,

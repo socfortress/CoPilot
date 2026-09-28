@@ -99,12 +99,16 @@ async def _alert_visibility_filters(
     user can see nothing at all (caller should short-circuit).
     """
     filters = await alert_visibility_filters_for_user(user, session, customer_codes)
-    if filters is None:
-        return None
+    return None if filters is None else with_ai_report_switch(filters)
 
-    # Customers whose AI report surface is switched off contribute nothing, even
-    # when the user is otherwise entitled to their alerts.
-    return [*filters, Alert.customer_code.in_(_enabled_customer_codes_subquery())]
+
+def with_ai_report_switch(visibility: List[Any]) -> List[Any]:
+    """Narrow alert visibility filters to customers whose AI report surface is on.
+
+    Customers whose switch is off contribute nothing, even when the user is
+    otherwise entitled to their alerts.
+    """
+    return [*visibility, Alert.customer_code.in_(_enabled_customer_codes_subquery())]
 
 
 async def ensure_alert_visible(alert_id: int, user: User, session: AsyncSession) -> Alert:
@@ -239,7 +243,15 @@ async def get_portal_ai_insights(
     filters = await _alert_visibility_filters(user, session, customer_codes)
     if filters is None:
         return 0, {}, []
+    return await ai_insights_within(session, filters, limit)
 
+
+async def ai_insights_within(
+    session: AsyncSession,
+    filters: List[Any],
+    limit: int = 5,
+) -> Tuple[int, Dict[str, int], List[PortalAiInsightAlert]]:
+    """AI-report coverage within already-built filters (visibility + AI switch)."""
     latest_report_ids = _latest_report_ids_subquery()
 
     counts_query = (

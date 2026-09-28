@@ -1,5 +1,5 @@
 import type { StatusSegment } from "../shared/status"
-import type { AgentCounts, StatusCounts } from "@/composables/overview/useOverviewData"
+import type { AgentCounts, StatusCounts } from "@/types/portal"
 import { ICONS } from "@/const"
 
 export type PostureKey = "alerts" | "cases" | "agents"

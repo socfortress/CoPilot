@@ -14,6 +14,8 @@ from app.auth.utils import AuthHandler
 from app.customer_portal.schema.dashboard import CustomerDashboardAlertStatsResponse
 from app.customer_portal.schema.dashboard import CustomerDashboardCaseStatsResponse
 from app.customer_portal.schema.dashboard import CustomerDashboardStatsResponse
+from app.customer_portal.schema.overview import CustomerPortalOverviewResponse
+from app.customer_portal.services.overview import get_portal_overview
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
 from app.incidents.services.db_operations import alert_status_counts_for_user
@@ -29,6 +31,22 @@ customer_portal_dashboard_router = APIRouter()
 # user can actually see. This matters because alert visibility is additionally gated
 # by tag-based RBAC (see app/incidents/middleware/tag_access.py): counting alerts by
 # customer_code alone would report totals the user isn't entitled to view.
+
+
+@customer_portal_dashboard_router.get(
+    "/overview",
+    response_model=CustomerPortalOverviewResponse,
+    description="Everything the portal Overview renders in one call: alert/case counts and recent items, agent counts, AI findings.",
+)
+async def get_customer_portal_overview(
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the overview to"),
+    recent_limit: int = Query(6, ge=1, le=25, description="How many recent alerts and cases to return"),
+    ai_limit: int = Query(3, ge=1, le=25, description="How many recent AI findings to return"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> CustomerPortalOverviewResponse:
+    logger.info(f"Fetching portal overview for user {current_user.username}")
+    return await get_portal_overview(current_user, db, customer_codes=customer_codes, recent_limit=recent_limit, ai_limit=ai_limit)
 
 
 @customer_portal_dashboard_router.get(

@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Case } from "@/types/cases"
+import type { OverviewCase } from "@/types/portal"
 import { computed } from "vue"
 import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
 import { useIsMultiCustomer } from "@/composables/overview/useIsMultiCustomer"
@@ -42,7 +42,7 @@ import { caseToActivityItem } from "../activity/mappers"
 import OverviewPanel from "../shared/OverviewPanel.vue"
 
 const { cases } = defineProps<{
-	cases: Case[]
+	cases: OverviewCase[]
 	loading?: boolean
 	error?: string | null
 }>()

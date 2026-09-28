@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Alert } from "@/types/alerts"
+import type { OverviewAlert } from "@/types/portal"
 import { computed } from "vue"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
 import { useIsMultiCustomer } from "@/composables/overview/useIsMultiCustomer"
@@ -41,7 +41,7 @@ import { alertToActivityItem } from "../activity/mappers"
 import OverviewPanel from "../shared/OverviewPanel.vue"
 
 const { alerts } = defineProps<{
-	alerts: Alert[]
+	alerts: OverviewAlert[]
 	loading?: boolean
 	error?: string | null
 }>()

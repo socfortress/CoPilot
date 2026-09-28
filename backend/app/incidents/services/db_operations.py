@@ -375,13 +375,18 @@ def _status_counts(rows) -> StatusCounts:
     )
 
 
+async def alert_status_counts(db: AsyncSession, visibility: List[Any]) -> StatusCounts:
+    """Alert totals per status within already-built visibility filters, in one ``GROUP BY`` query."""
+    result = await db.execute(select(Alert.status, func.count(Alert.id)).where(*visibility).group_by(Alert.status))
+    return _status_counts(result.all())
+
+
 async def alert_status_counts_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> StatusCounts:
-    """Alert totals per status, with customer and tag filtering, in one ``GROUP BY`` query."""
+    """Alert totals per status, with customer and tag filtering."""
     filters = await alert_visibility_filters_for_user(user, db, customer_codes)
     if filters is None:
         return StatusCounts()
-    result = await db.execute(select(Alert.status, func.count(Alert.id)).where(*filters).group_by(Alert.status))
-    return _status_counts(result.all())
+    return await alert_status_counts(db, filters)
 
 
 async def alerts_total_multiple_filters(

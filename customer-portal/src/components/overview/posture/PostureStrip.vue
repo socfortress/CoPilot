@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import type { PostureKey } from "./postureCells"
-import type { AgentCounts, StatusCounts } from "@/composables/overview/useOverviewData"
+import type { AgentCounts, StatusCounts } from "@/types/portal"
 import { computed } from "vue"
 import PostureCell from "./PostureCell.vue"
 import { buildPostureCells } from "./postureCells"
