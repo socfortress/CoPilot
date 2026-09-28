@@ -17,11 +17,13 @@ overrides:
 allowBuilds:
   "@parcel/watcher": true
   "@tailwindcss/oxide": true
+  cypress: true
   esbuild: true
   unrs-resolver: true
 
 onlyBuiltDependencies:
   - "@parcel/watcher"
   - "@tailwindcss/oxide"
+  - cypress
   - esbuild
   - unrs-resolver

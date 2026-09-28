@@ -128,11 +128,11 @@ from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_ioc_name
 from app.incidents.services.db_operations import add_timefield_name
+from app.incidents.services.db_operations import alert_status_counts_for_user
 from app.incidents.services.db_operations import alert_total
 from app.incidents.services.db_operations import alert_total_by_alert_title
 from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alert_total_by_customer_codes
-from app.incidents.services.db_operations import alert_total_for_user
 from app.incidents.services.db_operations import alert_visibility_filters_for_user
 from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
@@ -143,7 +143,6 @@ from app.incidents.services.db_operations import alerts_closed_by_customer_codes
 from app.incidents.services.db_operations import alerts_closed_by_ioc
 from app.incidents.services.db_operations import alerts_closed_by_source
 from app.incidents.services.db_operations import alerts_closed_by_tag
-from app.incidents.services.db_operations import alerts_closed_for_user
 from app.incidents.services.db_operations import alerts_in_progress
 from app.incidents.services.db_operations import alerts_in_progress_by_alert_title
 from app.incidents.services.db_operations import alerts_in_progress_by_assest_name
@@ -153,7 +152,6 @@ from app.incidents.services.db_operations import alerts_in_progress_by_customer_
 from app.incidents.services.db_operations import alerts_in_progress_by_ioc
 from app.incidents.services.db_operations import alerts_in_progress_by_source
 from app.incidents.services.db_operations import alerts_in_progress_by_tag
-from app.incidents.services.db_operations import alerts_in_progress_for_user
 from app.incidents.services.db_operations import alerts_open
 from app.incidents.services.db_operations import alerts_open_by_alert_title
 from app.incidents.services.db_operations import alerts_open_by_assest_name
@@ -163,7 +161,6 @@ from app.incidents.services.db_operations import alerts_open_by_customer_codes
 from app.incidents.services.db_operations import alerts_open_by_ioc
 from app.incidents.services.db_operations import alerts_open_by_source
 from app.incidents.services.db_operations import alerts_open_by_tag
-from app.incidents.services.db_operations import alerts_open_for_user
 from app.incidents.services.db_operations import alerts_total_by_assigned_to
 from app.incidents.services.db_operations import alerts_total_by_customer_code
 from app.incidents.services.db_operations import alerts_total_by_ioc
@@ -171,10 +168,7 @@ from app.incidents.services.db_operations import alerts_total_by_source
 from app.incidents.services.db_operations import alerts_total_by_tag
 from app.incidents.services.db_operations import alerts_total_multiple_filters
 from app.incidents.services.db_operations import case_alert_unlink
-from app.incidents.services.db_operations import case_total_for_user
-from app.incidents.services.db_operations import cases_closed_for_user
-from app.incidents.services.db_operations import cases_in_progress_for_user
-from app.incidents.services.db_operations import cases_open_for_user
+from app.incidents.services.db_operations import case_status_counts_for_user
 from app.incidents.services.db_operations import create_alert
 from app.incidents.services.db_operations import create_alert_context
 from app.incidents.services.db_operations import create_alert_ioc
@@ -1656,18 +1650,15 @@ async def list_alerts_endpoint(
 
     alerts = await list_alerts_for_user(current_user, db, page, page_size, order, customer_codes=customer_codes)
 
-    # Get totals with both customer and tag filtering
-    total = await alert_total_for_user(current_user, db, customer_codes=customer_codes)
-    open_alerts = await alerts_open_for_user(current_user, db, customer_codes=customer_codes)
-    in_progress = await alerts_in_progress_for_user(current_user, db, customer_codes=customer_codes)
-    closed = await alerts_closed_for_user(current_user, db, customer_codes=customer_codes)
+    # Totals with both customer and tag filtering, one grouped query
+    counts = await alert_status_counts_for_user(current_user, db, customer_codes=customer_codes)
 
     return AlertOutResponse(
         alerts=alerts,
-        total=total,
-        open=open_alerts,
-        in_progress=in_progress,
-        closed=closed,
+        total=counts.total,
+        open=counts.open,
+        in_progress=counts.in_progress,
+        closed=counts.closed,
         success=True,
         message="Alerts retrieved successfully",
     )
@@ -2187,10 +2178,7 @@ async def list_alerts_multiple_filters_endpoint(
         return AlertOutResponse(
             alerts=[],
             total_filtered=0,
-            open=await alerts_open_for_user(current_user, db),
-            in_progress=await alerts_in_progress_for_user(current_user, db),
-            closed=await alerts_closed_for_user(current_user, db),
-            total=await alert_total_for_user(current_user, db),
+            **(await alert_status_counts_for_user(current_user, db))._asdict(),
             success=True,
             message="No alerts found for the requested customers",
         )
@@ -2217,11 +2205,8 @@ async def list_alerts_multiple_filters_endpoint(
         user=current_user,  # Pass user for tag filtering
     )
 
-    # Get totals with both customer and tag filtering
-    total = await alert_total_for_user(current_user, db)
-    open_alerts = await alerts_open_for_user(current_user, db)
-    in_progress = await alerts_in_progress_for_user(current_user, db)
-    closed = await alerts_closed_for_user(current_user, db)
+    # Totals with both customer and tag filtering, one grouped query
+    counts = await alert_status_counts_for_user(current_user, db)
 
     # Get filtered total
     total_filtered = await alerts_total_multiple_filters(
@@ -2241,10 +2226,10 @@ async def list_alerts_multiple_filters_endpoint(
     return AlertOutResponse(
         alerts=alerts,
         total_filtered=total_filtered,
-        open=open_alerts,
-        in_progress=in_progress,
-        closed=closed,
-        total=total,
+        open=counts.open,
+        in_progress=counts.in_progress,
+        closed=counts.closed,
+        total=counts.total,
         success=True,
         message="Alerts retrieved successfully",
     )
@@ -2268,17 +2253,14 @@ async def list_cases_endpoint(
 
     cases = await list_cases_for_user(current_user, db, page, page_size, order, customer_codes=customer_codes)
 
-    total = await case_total_for_user(current_user, db, customer_codes=customer_codes)
-    open_cases = await cases_open_for_user(current_user, db, customer_codes=customer_codes)
-    in_progress = await cases_in_progress_for_user(current_user, db, customer_codes=customer_codes)
-    closed = await cases_closed_for_user(current_user, db, customer_codes=customer_codes)
+    counts = await case_status_counts_for_user(current_user, db, customer_codes=customer_codes)
 
     return CaseOutResponse(
         cases=cases,
-        total=total,
-        open=open_cases,
-        in_progress=in_progress,
-        closed=closed,
+        total=counts.total,
+        open=counts.open,
+        in_progress=counts.in_progress,
+        closed=counts.closed,
         success=True,
         message="Cases retrieved successfully",
     )
@@ -2646,17 +2628,14 @@ async def list_cases_by_status_endpoint(
         all_user_cases = await list_cases_for_user(current_user, db, page, page_size, order, customer_codes=customer_codes)
         cases = [case for case in all_user_cases if case.case_status == status.value]
 
-    total = await case_total_for_user(current_user, db, customer_codes=customer_codes)
-    open_cases = await cases_open_for_user(current_user, db, customer_codes=customer_codes)
-    in_progress = await cases_in_progress_for_user(current_user, db, customer_codes=customer_codes)
-    closed = await cases_closed_for_user(current_user, db, customer_codes=customer_codes)
+    counts = await case_status_counts_for_user(current_user, db, customer_codes=customer_codes)
 
     return CaseOutResponse(
         cases=cases,
-        total=total,
-        open=open_cases,
-        in_progress=in_progress,
-        closed=closed,
+        total=counts.total,
+        open=counts.open,
+        in_progress=counts.in_progress,
+        closed=counts.closed,
         success=True,
         message="Cases retrieved successfully",
     )

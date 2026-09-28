@@ -6,6 +6,7 @@
 					v-model:value="model.username"
 					placeholder="Insert your Username"
 					:input-props="{ autocomplete: 'username' }"
+					data-testid="login-username"
 					size="large"
 					@keydown.enter="signIn"
 				/>
@@ -17,13 +18,22 @@
 					show-password-on="click"
 					placeholder="Insert your password"
 					:input-props="{ autocomplete: 'password' }"
+					data-testid="login-password"
 					size="large"
 					@keydown.enter="signIn"
 				/>
 			</n-form-item>
 			<div class="flex flex-col items-end gap-6">
 				<div class="w-full">
-					<n-button type="primary" class="w-full!" size="large" :loading :disabled="!isValid" @click="signIn">
+					<n-button
+						type="primary"
+						class="w-full!"
+						size="large"
+						:loading
+						:disabled="!isValid"
+						data-testid="login-submit"
+						@click="signIn"
+					>
 						Sign in
 					</n-button>
 				</div>

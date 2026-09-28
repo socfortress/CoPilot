@@ -22,10 +22,7 @@ from typing import Optional
 from typing import Tuple
 
 from fastapi import HTTPException
-from sqlalchemy import and_
-from sqlalchemy import exists
 from sqlalchemy import func
-from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -39,7 +36,7 @@ from app.db.universal_models import AiAnalystReport
 from app.db.universal_models import CustomerPortalAiReportSettings
 from app.incidents.middleware.tag_access import tag_access_handler
 from app.incidents.models import Alert
-from app.incidents.models import AlertToTag
+from app.incidents.services.db_operations import alert_visibility_filters_for_user
 from app.middleware.customer_access import customer_access_handler
 
 # Severity bucket used when a report was persisted without an assessment.
@@ -95,48 +92,23 @@ async def _alert_visibility_filters(
     session: AsyncSession,
     customer_codes: Optional[List[str]] = None,
 ) -> Optional[List[Any]]:
-    """Build the WHERE clauses that restrict ``Alert`` rows to what ``user`` may see.
+    """The alerts ``user`` may see, narrowed to customers whose AI report surface is on.
 
-    Mirrors the customer + tag filtering the ``*_for_user`` alert helpers apply, so
-    an AI report can never surface for an alert the user cannot open. Returns
-    ``None`` when the user can see nothing at all (caller should short-circuit).
+    Customer + tag visibility comes from the one shared definition, so an AI report
+    can never surface for an alert the user cannot open. Returns ``None`` when the
+    user can see nothing at all (caller should short-circuit).
     """
-    filters: List[Any] = []
+    filters = await alert_visibility_filters_for_user(user, session, customer_codes)
+    return None if filters is None else with_ai_report_switch(filters)
 
-    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, session)
-    if "*" not in accessible_customers:
-        if not accessible_customers:
-            return None
-        filters.append(Alert.customer_code.in_(accessible_customers))
 
-    tag_filters = await tag_access_handler.build_alert_query_filters(user, session)
-    accessible_tags = tag_filters["accessible_tags"]
+def with_ai_report_switch(visibility: List[Any]) -> List[Any]:
+    """Narrow alert visibility filters to customers whose AI report surface is on.
 
-    if "*" not in accessible_tags:
-        tag_conditions = []
-        if accessible_tags:
-            tag_conditions.append(
-                exists(
-                    select(AlertToTag.alert_id).where(
-                        and_(
-                            AlertToTag.alert_id == Alert.id,
-                            AlertToTag.tag_id.in_(accessible_tags),
-                        ),
-                    ),
-                ),
-            )
-        if tag_filters["include_untagged"]:
-            tag_conditions.append(~exists(select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id)))
-
-        if not tag_conditions:
-            return None
-        filters.append(or_(*tag_conditions))
-
-    # Customers whose AI report surface is switched off contribute nothing, even
-    # when the user is otherwise entitled to their alerts.
-    filters.append(Alert.customer_code.in_(_enabled_customer_codes_subquery()))
-
-    return filters
+    Customers whose switch is off contribute nothing, even when the user is
+    otherwise entitled to their alerts.
+    """
+    return [*visibility, Alert.customer_code.in_(_enabled_customer_codes_subquery())]
 
 
 async def ensure_alert_visible(alert_id: int, user: User, session: AsyncSession) -> Alert:
@@ -250,6 +222,13 @@ def _latest_report_ids_subquery():
     ``ai_analyst_report.id`` is a plain autoincrement PK, so max(id) and
     max(created_at) agree — and max(id) never ties, which max(created_at) can
     when a replay writes two reports inside the same second.
+
+    No extra index is needed (#1181, measured on MySQL 8.0 with 50k reports over
+    10k alerts): InnoDB secondary indexes carry the primary key, so
+    ``ix_ai_analyst_report_alert_id`` already *is* ``(alert_id, id)`` and the
+    ``GROUP BY`` runs as a covering index skip scan, never a table scan. A
+    ``NOT EXISTS (newer report)`` rewrite was ~15% faster with a customer filter
+    and ~15% slower without one — not worth the churn.
     """
     return select(func.max(AiAnalystReport.id)).group_by(AiAnalystReport.alert_id)
 
@@ -264,7 +243,15 @@ async def get_portal_ai_insights(
     filters = await _alert_visibility_filters(user, session, customer_codes)
     if filters is None:
         return 0, {}, []
+    return await ai_insights_within(session, filters, limit)
 
+
+async def ai_insights_within(
+    session: AsyncSession,
+    filters: List[Any],
+    limit: int = 5,
+) -> Tuple[int, Dict[str, int], List[PortalAiInsightAlert]]:
+    """AI-report coverage within already-built filters (visibility + AI switch)."""
     latest_report_ids = _latest_report_ids_subquery()
 
     counts_query = (

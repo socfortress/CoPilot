@@ -25,7 +25,7 @@
 			</div>
 			<slot />
 			<div class="font-mono text-xl font-semibold">
-				<slot name="value">{{ value }}</slot>
+				<slot name="value"><span data-testid="card-stats-value">{{ value }}</span></slot>
 			</div>
 			<div v-if="subtitle || $slots.subtitle" class="text-secondary text-xs">
 				<slot name="subtitle">{{ subtitle }}</slot>

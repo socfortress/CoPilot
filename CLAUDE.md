@@ -356,6 +356,19 @@ Tenant checks stop a customer from touching *another* tenant's data; what they m
 
 **Comments carry authorship only in `user_name`, so the routes own it**: create and edit stamp it from the caller (the body's `user_name` is ignored), a `customer_user` may edit or delete only their own comments (admin/analyst still moderate any), and edit resolves the alert/case from the comment itself rather than the body — otherwise a caller could name their own alert and a comment id from another tenant. `tests/test_comment_authorship.py`.
 
+### Customer Portal query budget (#1181)
+
+Round-trips, not SQL complexity, are what these pages cost (see `app/connectors/cache.py`), so the portal reads are shaped to minimise them:
+
+- **`GET /customer_portal/overview`** (`services/overview.py`) serves the whole Overview in one call, from light projections (`schema/overview.py`), not `AlertOut`/`CaseOut`. Alert visibility is built once and shared by the counts, the recent alerts and the AI findings; agents are counted in SQL. Each section carries its own `error` and a failing section is rolled back, so it never blanks the others — keep that when adding a section. Measured: 52 → 11 statements for a portal user.
+- **Per-status counts are one `GROUP BY`**: `alert_status_counts_for_user` / `case_status_counts_for_user` return a `StatusCounts`. Don't reintroduce a count per status.
+- **`get_user_accessible_customers` is memoized in `session.info`**, i.e. per request (`get_db` is a cached dependency). A write to `user_customer_access` must call `customer_access_handler.forget_accessible_customers(session, user_id)` after its commit, or the same request keeps reading the old scope.
+- **`alert_visibility_filters_for_user` is the only definition of which alerts a user may see** — the portal AI surface adds its switch on top (`with_ai_report_switch`) instead of copying it. It returns `None` for "sees nothing": short-circuit, never run the query.
+- **Resolved branding is cached in-process** (`services/branding_cache.py`, `BRANDING_CACHE_TTL_SECONDS`). Every write to `customer_portal_settings` or `customer_portal_branding` must call `branding_cache.invalidate_all()` after its commit (all entries: a global change reaches every customer); `tests/test_branding_cache.py` checks the three routes that write today.
+- **`tests/e2e/customer_portal_overview_e2e.py`** runs all of the above against a real MySQL (the disposable 13306 setup in its docstring): Overview = the four calls it replaced, field by field; the seeded counts; a statement budget (`MAX_OVERVIEW_STATEMENTS`) and one `user_customer_access` read; assignment, AI-switch and branding changes seen on the next request. Exits non-zero on failure — run it after touching any of this.
+- **Browser level: `customer-portal/cypress/`** (`pnpm test:e2e` from `customer-portal/`, which starts a backend on :5101 and a portal on :3101 against the same 13306 database and seed, `backend/tests/e2e/portal_overview_seed.py`). Selectors are `data-testid` attributes — keep them when restyling those components. Note the analyst frontend's browser tests are Playwright (`frontend/e2e/`); the portal's are Cypress.
+- **No index is missing for "latest AI report per alert"**: InnoDB secondary indexes carry the primary key, so `ix_ai_analyst_report_alert_id` already serves `MAX(id) GROUP BY alert_id` as a covering skip scan (EXPLAIN on 50k reports).
+
 ### Tenant scoping: customer codes are not the only tenant key
 
 #1050 made `user_customer_access` authoritative for analysts and guarded every route

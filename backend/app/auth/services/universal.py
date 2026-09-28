@@ -313,10 +313,13 @@ async def delete_user(user_id: int, session: AsyncSession):
         # Delete related customer access records first
         from sqlalchemy import delete as sql_delete
 
+        from app.middleware.customer_access import customer_access_handler
+
         await session.execute(sql_delete(UserCustomerAccess).where(UserCustomerAccess.user_id == user_id))
 
         await session.delete(user)
         await session.commit()
+        customer_access_handler.forget_accessible_customers(session, user_id)
         logger.info(f"User with ID {user_id} deleted.")
     except Exception as e:
         await session.rollback()

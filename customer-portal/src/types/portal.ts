@@ -1,3 +1,7 @@
+import type { AiInsights } from "./aiReports"
+import type { AlertStatus } from "./alerts"
+import type { CaseStatus } from "./cases"
+
 /** The global settings as served publicly: the logo is fetched separately from `logo_url`. */
 export interface PortalSettings {
 	id: number
@@ -22,6 +26,53 @@ export interface EffectivePortalBranding {
 	brand_color: string | null
 	source: "custom" | "global"
 	customer_code: string | null
+}
+
+/** Per-status totals, as `/customer_portal/overview` and the list endpoints report them. */
+export interface StatusCounts {
+	total: number
+	open: number
+	in_progress: number
+	closed: number
+}
+
+export interface AgentCounts {
+	total: number
+	online: number
+	offline: number
+	critical: number
+}
+
+/** An alert as the Overview shows it: a light projection, not the full `Alert`. */
+export interface OverviewAlert {
+	id: number
+	alert_name: string
+	alert_description: string | null
+	status: AlertStatus
+	alert_creation_time: string
+	source: string
+	customer_code: string
+	asset_names: string[]
+}
+
+/** A case as the Overview shows it: a light projection, not the full `Case`. */
+export interface OverviewCase {
+	id: number
+	case_name: string
+	case_description: string | null
+	case_status: CaseStatus
+	case_creation_time: string
+	assigned_to: string | null
+	customer_code: string | null
+	alert_count: number
+}
+
+/** `GET /customer_portal/overview`. Each section fails on its own: `error` is set only on the one that did. */
+export interface PortalOverview {
+	alerts: { counts: StatusCounts; recent: OverviewAlert[]; error: string | null }
+	cases: { counts: StatusCounts; recent: OverviewCase[]; error: string | null }
+	agents: AgentCounts & { error: string | null }
+	ai: AiInsights & { error: string | null }
 }
 
 export interface DashboardStats {

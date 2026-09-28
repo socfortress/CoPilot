@@ -1,25 +1,25 @@
 <template>
 	<n-spin :show="loading">
 		<div class="grid grid-cols-1 gap-6 @xl:grid-cols-2 @4xl:grid-cols-4">
-			<CardStats title="Total" :value="stats.total">
+			<CardStats data-testid="stat-total" title="Total" :value="stats.total">
 				<template #icon>
 					<Icon :name="ICONS.cases" :size="24" class="text-info" />
 				</template>
 			</CardStats>
 
-			<CardStats title="Open" :value="stats.open">
+			<CardStats data-testid="stat-open" title="Open" :value="stats.open">
 				<template #icon>
 					<Icon name="carbon:warning" :size="24" class="text-error" />
 				</template>
 			</CardStats>
 
-			<CardStats title="In Progress" :value="stats.in_progress">
+			<CardStats data-testid="stat-in_progress" title="In Progress" :value="stats.in_progress">
 				<template #icon>
 					<Icon name="carbon:hourglass" :size="24" class="text-warning" />
 				</template>
 			</CardStats>
 
-			<CardStats title="Closed" :value="stats.closed">
+			<CardStats data-testid="stat-closed" title="Closed" :value="stats.closed">
 				<template #icon>
 					<Icon name="carbon:checkmark-outline" :size="24" class="text-success" />
 				</template>

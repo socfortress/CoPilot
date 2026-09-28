@@ -1,5 +1,5 @@
 <template>
-	<ActivityRow :rail-class="bgClass(item.status.color)">
+	<ActivityRow :rail-class="bgClass(item.status.color)" data-testid="activity-item">
 		<!-- Line heights are mirrored by ActivityListItemSkeleton: change one, change both. -->
 		<p class="text-default truncate text-sm font-medium">{{ item.title }}</p>
 
