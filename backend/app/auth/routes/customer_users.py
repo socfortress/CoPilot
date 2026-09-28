@@ -34,6 +34,7 @@ async def assign_customer_access(
         session.add(access)
 
     await session.commit()
+    customer_access_handler.forget_accessible_customers(session, user_id)
 
     return {"success": True, "message": f"Assigned {len(customer_codes)} customers to user {user_id}", "customer_codes": customer_codes}
 

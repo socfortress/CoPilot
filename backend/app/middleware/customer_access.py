@@ -1,6 +1,8 @@
 # Create new file: app/middleware/customer_access.py
+from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 from fastapi import Depends
 from fastapi import HTTPException
@@ -14,8 +16,28 @@ from app.auth.models.users import UserCustomerAccess
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 
+# Key in ``session.info`` for the per-request memo of accessible customers.
+_ACCESSIBLE_CUSTOMERS_KEY = "accessible_customers_by_user"
+
+
+def _accessible_customers_memo(session: AsyncSession) -> Optional[Dict[int, Tuple[str, ...]]]:
+    """Per-session memo of ``get_user_accessible_customers``, or None if the session has no ``info`` dict.
+
+    A request gets one session (``get_db`` is a cached dependency), so this memo lives
+    exactly one request: a single endpoint that checks access several times — list,
+    counts, per-object checks — queries ``user_customer_access`` once.
+    """
+    info = getattr(session, "info", None)
+    return info.setdefault(_ACCESSIBLE_CUSTOMERS_KEY, {}) if isinstance(info, dict) else None
+
 
 class CustomerAccessHandler:
+    def forget_accessible_customers(self, session: AsyncSession, user_id: int) -> None:
+        """Drop the memoized access of ``user_id``; call after writing their ``user_customer_access`` rows."""
+        memo = _accessible_customers_memo(session)
+        if memo is not None:
+            memo.pop(user_id, None)
+
     async def get_user_accessible_customers(self, user: User, session: AsyncSession) -> List[str]:
         """Get all customer codes accessible to a user.
 
@@ -38,14 +60,20 @@ class CustomerAccessHandler:
             return ["*"]  # Wildcard for all customers
 
         if user.role_id in [RoleEnum.analyst, RoleEnum.customer_user]:
+            memo = _accessible_customers_memo(session)
+            if memo is not None and user.id in memo:
+                return list(memo[user.id])
+
             result = await session.execute(select(UserCustomerAccess.customer_code).where(UserCustomerAccess.user_id == user.id))
             assigned_customers = list(result.scalars().all())
 
             # An unassigned analyst keeps the deployment-wide access they had before
             # scoping existed; an unassigned portal user gets nothing.
             if not assigned_customers and user.role_id == RoleEnum.analyst:
-                return ["*"]
+                assigned_customers = ["*"]
 
+            if memo is not None:
+                memo[user.id] = tuple(assigned_customers)
             return assigned_customers
 
         return []  # No access by default
