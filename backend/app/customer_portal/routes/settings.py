@@ -19,6 +19,7 @@ from app.customer_portal.schema.settings import PortalSettingsResponse
 from app.customer_portal.schema.settings import PublicPortalSettingsResponse
 from app.customer_portal.schema.settings import UpdatePortalSettingsRequest
 from app.customer_portal.schema.settings import UpdatePortalSettingsResponse
+from app.customer_portal.services import branding_cache
 from app.customer_portal.services.branding import get_global_settings
 from app.customer_portal.services.settings import PortalLogo
 from app.customer_portal.services.settings import get_portal_logo
@@ -91,6 +92,7 @@ async def update_portal_settings(
         settings.updated_at = datetime.utcnow()
 
         await session.commit()
+        branding_cache.invalidate_all()
         await session.refresh(settings)
 
         logger.info(f"Portal settings updated successfully by user {current_user.username} (id={current_user.id})")

@@ -31,6 +31,7 @@ from app.customer_portal.schema.branding import CustomerBrandingOverride
 from app.customer_portal.schema.branding import CustomerBrandingResponse
 from app.customer_portal.schema.branding import EffectiveBrandingResponse
 from app.customer_portal.schema.branding import UpdateCustomerBrandingRequest
+from app.customer_portal.services import branding_cache
 from app.customer_portal.services.branding import delete_branding_override
 from app.customer_portal.services.branding import get_branding_override
 from app.customer_portal.services.branding import get_effective_logo_for_user
@@ -202,6 +203,7 @@ async def set_customer_branding(
             user_id=current_user.id,
         )
         await session.commit()
+        branding_cache.invalidate_all()
         await session.refresh(override)
 
         effective = await resolve_effective_branding(session, customer_code)
@@ -238,6 +240,7 @@ async def remove_customer_branding(
         deleted = await delete_branding_override(session, customer_code)
         if deleted:
             await session.commit()
+            branding_cache.invalidate_all()
 
         effective = await resolve_effective_branding(session, customer_code)
 

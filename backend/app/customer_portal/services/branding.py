@@ -30,6 +30,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.models.users import User
 from app.customer_portal.schema.branding import EffectiveBranding
 from app.customer_portal.schema.branding import PortalEffectiveBranding
+from app.customer_portal.services import branding_cache
 from app.customer_portal.services.settings import EFFECTIVE_LOGO_PATH
 from app.customer_portal.services.settings import PortalLogo
 from app.customer_portal.services.settings import decode_logo
@@ -110,10 +111,17 @@ def build_effective_branding(
 
 
 async def resolve_effective_branding(session: AsyncSession, customer_code: Optional[str]) -> EffectiveBranding:
-    """Resolve the branding for one customer (or the global defaults when None)."""
-    global_settings = await get_global_settings(session)
-    override = await get_branding_override(session, customer_code) if customer_code else None
-    return build_effective_branding(global_settings, override, customer_code)
+    """Resolve the branding for one customer (or the global defaults when None).
+
+    Read through ``branding_cache``: every write path invalidates it after its commit.
+    """
+
+    async def load() -> EffectiveBranding:
+        global_settings = await get_global_settings(session)
+        override = await get_branding_override(session, customer_code) if customer_code else None
+        return build_effective_branding(global_settings, override, customer_code)
+
+    return await branding_cache.get_or_load(customer_code, load)
 
 
 async def resolve_branding_for_user(session: AsyncSession, user: User) -> EffectiveBranding:
