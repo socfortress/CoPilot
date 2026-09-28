@@ -301,7 +301,8 @@ async def alert_visibility_filters_for_user(
     to an empty result rather than run an unfiltered query. This is the single
     definition every read *and* write path (counts, listings, bulk deletes) must
     go through, so a tag-restricted analyst can never touch an alert the list
-    would not show them.
+    would not show them — the Customer Portal's AI report surface included
+    (``customer_portal/services/ai_reports.py`` adds its own switch on top).
     """
     from sqlalchemy import and_
     from sqlalchemy import exists
@@ -311,6 +312,8 @@ async def alert_visibility_filters_for_user(
 
     accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, db)
     if "*" not in accessible_customers:
+        if not accessible_customers:
+            return None
         filters.append(Alert.customer_code.in_(accessible_customers))
 
     tag_filters = await tag_access_handler.build_alert_query_filters(user, db)
