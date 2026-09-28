@@ -16,14 +16,10 @@ from app.customer_portal.schema.dashboard import CustomerDashboardCaseStatsRespo
 from app.customer_portal.schema.dashboard import CustomerDashboardStatsResponse
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
+from app.incidents.services.db_operations import alert_status_counts_for_user
 from app.incidents.services.db_operations import alert_total_for_user
-from app.incidents.services.db_operations import alerts_closed_for_user
-from app.incidents.services.db_operations import alerts_in_progress_for_user
-from app.incidents.services.db_operations import alerts_open_for_user
+from app.incidents.services.db_operations import case_status_counts_for_user
 from app.incidents.services.db_operations import case_total_for_user
-from app.incidents.services.db_operations import cases_closed_for_user
-from app.incidents.services.db_operations import cases_in_progress_for_user
-from app.incidents.services.db_operations import cases_open_for_user
 from app.middleware.customer_access import customer_access_handler
 
 customer_portal_dashboard_router = APIRouter()
@@ -82,16 +78,10 @@ async def get_customer_dashboard_alert_stats(
 
     # Same tag- and customer-aware helpers the /alerts list uses, so the counts
     # never diverge from what the user sees in the list.
-    total = await alert_total_for_user(current_user, db, customer_codes=customer_codes)
-    open_count = await alerts_open_for_user(current_user, db, customer_codes=customer_codes)
-    in_progress_count = await alerts_in_progress_for_user(current_user, db, customer_codes=customer_codes)
-    closed_count = await alerts_closed_for_user(current_user, db, customer_codes=customer_codes)
+    counts = await alert_status_counts_for_user(current_user, db, customer_codes=customer_codes)
 
     return CustomerDashboardAlertStatsResponse(
-        total=total,
-        open=open_count,
-        in_progress=in_progress_count,
-        closed=closed_count,
+        **counts._asdict(),
         success=True,
         message="Dashboard alert stats retrieved successfully",
     )
@@ -110,16 +100,10 @@ async def get_customer_dashboard_case_stats(
     logger.info(f"Fetching dashboard case stats for user {current_user.username}")
 
     # Same customer-aware helpers the /cases list uses (cases are not tag-scoped).
-    total = await case_total_for_user(current_user, db, customer_codes=customer_codes)
-    open_count = await cases_open_for_user(current_user, db, customer_codes=customer_codes)
-    in_progress_count = await cases_in_progress_for_user(current_user, db, customer_codes=customer_codes)
-    closed_count = await cases_closed_for_user(current_user, db, customer_codes=customer_codes)
+    counts = await case_status_counts_for_user(current_user, db, customer_codes=customer_codes)
 
     return CustomerDashboardCaseStatsResponse(
-        total=total,
-        open=open_count,
-        in_progress=in_progress_count,
-        closed=closed_count,
+        **counts._asdict(),
         success=True,
         message="Dashboard case stats retrieved successfully",
     )

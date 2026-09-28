@@ -77,3 +77,19 @@ def test_portal_ai_surface_is_the_shared_definition_plus_the_switch():
 
 def test_portal_ai_surface_sees_nothing_when_the_user_sees_nothing():
     assert _visibility([], fn=portal_ai._alert_visibility_filters) is None
+
+
+# ── per-status counts come from one grouped query ─────────────────────────
+
+
+def test_status_counts_fold_grouped_rows():
+    counts = dbo._status_counts([("OPEN", 4), ("IN_PROGRESS", 2), ("CLOSED", 7), ("SOMETHING_ELSE", 1)])
+    # total counts every row the user can see, including statuses outside the three buckets
+    assert counts == dbo.StatusCounts(total=14, open=4, in_progress=2, closed=7)
+
+
+def test_status_counts_are_zero_when_the_user_sees_nothing():
+    with patch.object(dbo, "alert_visibility_filters_for_user", AsyncMock(return_value=None)):
+        db = AsyncMock()
+        assert asyncio.run(dbo.alert_status_counts_for_user(USER, db)) == dbo.StatusCounts()
+    db.execute.assert_not_awaited()

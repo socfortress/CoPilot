@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 from typing import List
+from typing import NamedTuple
 from typing import Optional
 from typing import Tuple
 
@@ -355,19 +356,32 @@ async def alert_total_for_user(user: User, db: AsyncSession, customer_codes: Opt
     return await _count_alerts_for_user(user, db, customer_codes)
 
 
-async def alerts_open_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
-    """Get open alerts count with customer and tag filtering"""
-    return await _count_alerts_for_user(user, db, customer_codes, Alert.status == "OPEN")
+class StatusCounts(NamedTuple):
+    """Per-status totals of alerts or cases, from one grouped query."""
+
+    total: int = 0
+    open: int = 0
+    in_progress: int = 0
+    closed: int = 0
 
 
-async def alerts_in_progress_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
-    """Get in-progress alerts count with customer and tag filtering"""
-    return await _count_alerts_for_user(user, db, customer_codes, Alert.status == "IN_PROGRESS")
+def _status_counts(rows) -> StatusCounts:
+    by_status = {status: count for status, count in rows}
+    return StatusCounts(
+        total=sum(by_status.values()),
+        open=by_status.get("OPEN", 0),
+        in_progress=by_status.get("IN_PROGRESS", 0),
+        closed=by_status.get("CLOSED", 0),
+    )
 
 
-async def alerts_closed_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
-    """Get closed alerts count with customer and tag filtering"""
-    return await _count_alerts_for_user(user, db, customer_codes, Alert.status == "CLOSED")
+async def alert_status_counts_for_user(user: User, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> StatusCounts:
+    """Alert totals per status, with customer and tag filtering, in one ``GROUP BY`` query."""
+    filters = await alert_visibility_filters_for_user(user, db, customer_codes)
+    if filters is None:
+        return StatusCounts()
+    result = await db.execute(select(Alert.status, func.count(Alert.id)).where(*filters).group_by(Alert.status))
+    return _status_counts(result.all())
 
 
 async def alerts_total_multiple_filters(
@@ -2480,40 +2494,22 @@ async def case_total_for_user(user: User, session: AsyncSession, customer_codes:
     return result.scalar_one()
 
 
-async def cases_open_for_user(user: User, session: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
-    """Get open cases count with customer filtering"""
-    base_query = select(func.count(Case.id)).where(Case.case_status == "OPEN")
+async def case_status_counts_for_user(
+    user: User,
+    session: AsyncSession,
+    customer_codes: Optional[List[str]] = None,
+) -> StatusCounts:
+    """Case totals per status, with customer filtering, in one ``GROUP BY`` query."""
+    query = select(Case.case_status, func.count(Case.id)).group_by(Case.case_status)
 
     accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, session)
     if "*" not in accessible_customers:
-        base_query = base_query.where(Case.customer_code.in_(accessible_customers))
+        if not accessible_customers:
+            return StatusCounts()
+        query = query.where(Case.customer_code.in_(accessible_customers))
 
-    result = await session.execute(base_query)
-    return result.scalar_one()
-
-
-async def cases_in_progress_for_user(user: User, session: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
-    """Get in-progress cases count with customer filtering"""
-    base_query = select(func.count(Case.id)).where(Case.case_status == "IN_PROGRESS")
-
-    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, session)
-    if "*" not in accessible_customers:
-        base_query = base_query.where(Case.customer_code.in_(accessible_customers))
-
-    result = await session.execute(base_query)
-    return result.scalar_one()
-
-
-async def cases_closed_for_user(user: User, session: AsyncSession, customer_codes: Optional[List[str]] = None) -> int:
-    """Get closed cases count with customer filtering"""
-    base_query = select(func.count(Case.id)).where(Case.case_status == "CLOSED")
-
-    accessible_customers = await customer_access_handler.resolve_effective_customers(user, customer_codes, session)
-    if "*" not in accessible_customers:
-        base_query = base_query.where(Case.customer_code.in_(accessible_customers))
-
-    result = await session.execute(base_query)
-    return result.scalar_one()
+    result = await session.execute(query)
+    return _status_counts(result.all())
 
 
 async def list_cases_for_user(
