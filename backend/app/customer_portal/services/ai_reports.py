@@ -218,6 +218,13 @@ def _latest_report_ids_subquery():
     ``ai_analyst_report.id`` is a plain autoincrement PK, so max(id) and
     max(created_at) agree — and max(id) never ties, which max(created_at) can
     when a replay writes two reports inside the same second.
+
+    No extra index is needed (#1181, measured on MySQL 8.0 with 50k reports over
+    10k alerts): InnoDB secondary indexes carry the primary key, so
+    ``ix_ai_analyst_report_alert_id`` already *is* ``(alert_id, id)`` and the
+    ``GROUP BY`` runs as a covering index skip scan, never a table scan. A
+    ``NOT EXISTS (newer report)`` rewrite was ~15% faster with a customer filter
+    and ~15% slower without one — not worth the churn.
     """
     return select(func.max(AiAnalystReport.id)).group_by(AiAnalystReport.alert_id)
 
