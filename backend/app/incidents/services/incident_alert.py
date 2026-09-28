@@ -1,3 +1,4 @@
+import ipaddress
 import os
 import re
 from datetime import datetime
@@ -6,6 +7,7 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 from fastapi import HTTPException
 from loguru import logger
@@ -540,6 +542,15 @@ async def build_alert_context_payload(alert_payload: dict, field_names: Any) -> 
     return alert_context_payload
 
 
+_DOMAIN_PATTERN = re.compile(r"^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$")
+_HASH_PATTERN = re.compile(r"^[a-fA-F0-9]{32}$|^[a-fA-F0-9]{40}$|^[a-fA-F0-9]{64}$")
+_URL_PATTERN = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*://\S+$")
+
+# When a composite value has several classifiable parts, the most specific one wins:
+# `filename|sha256` must yield the hash, not "evil.exe" read as a domain.
+_COMPOSITE_PART_PRIORITY = (AlertIocValue.HASH, AlertIocValue.IP, AlertIocValue.URL, AlertIocValue.DOMAIN)
+
+
 def get_ioc_type(ioc_value: str) -> Optional[AlertIocValue]:
     """
     Determine the IOC type based on the value.
@@ -550,19 +561,48 @@ def get_ioc_type(ioc_value: str) -> Optional[AlertIocValue]:
     Returns:
         AlertIocValue: The IOC type (IP, DOMAIN, HASH, or URL), or None if the type cannot be determined.
     """
-    # Regular expression patterns for IP, domain, and hash
-    ip_pattern = re.compile(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
-    domain_pattern = re.compile(r"^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$")
-    hash_pattern = re.compile(r"^[a-fA-F0-9]{32}$|^[a-fA-F0-9]{40}$|^[a-fA-F0-9]{64}$")
-
-    if ip_pattern.match(ioc_value):
+    ioc_value = ioc_value.strip()
+    try:
+        ipaddress.ip_address(ioc_value)
         return AlertIocValue.IP
-    elif domain_pattern.match(ioc_value):
-        return AlertIocValue.DOMAIN
-    elif hash_pattern.match(ioc_value):
+    except ValueError:
+        pass
+    if _HASH_PATTERN.match(ioc_value):
         return AlertIocValue.HASH
-    else:
+    if _URL_PATTERN.match(ioc_value):
+        return AlertIocValue.URL
+    if _DOMAIN_PATTERN.match(ioc_value):
+        return AlertIocValue.DOMAIN
+    return None
+
+
+def classify_ioc_value(ioc_value: str) -> Optional[Tuple[str, AlertIocValue]]:
+    """
+    Resolve a raw IoC field value to a (value, type) pair CoPilot can store.
+
+    MISP composite attributes (`ip-dst|port`, `domain|ip`, `filename|sha256`, …) reach
+    the IoC field as `a|b`, which matches no single pattern. Those are split on `|`
+    and the most specific classifiable part is kept (`0.0.0.0|4449` -> `0.0.0.0`).
+
+    Returns:
+        The value to store and its type, or None when nothing in it is classifiable.
+    """
+    ioc_value = ioc_value.strip()
+    ioc_type = get_ioc_type(ioc_value)
+    if ioc_type is not None:
+        return ioc_value, ioc_type
+    if "|" not in ioc_value:
         return None
+
+    candidates = {}
+    for part in (p.strip() for p in ioc_value.split("|")):
+        part_type = get_ioc_type(part) if part else None
+        if part_type is not None:
+            candidates.setdefault(part_type, part)
+    for preferred in _COMPOSITE_PART_PRIORITY:
+        if preferred in candidates:
+            return candidates[preferred], preferred
+    return None
 
 
 async def build_ioc_payload(alert_payload: dict, field_names: Any) -> Optional[Dict[str, Any]]:
@@ -585,11 +625,18 @@ async def build_ioc_payload(alert_payload: dict, field_names: Any) -> Optional[D
         logger.info("No IOC value found, returning None")
         return None
 
-    # Determine the IOC type
-    ioc_payload["ioc_value"] = ioc_value
-    ioc_payload["ioc_type"] = get_ioc_type(ioc_value)
+    # Determine the IOC type. An unclassifiable value must never fail alert creation:
+    # the Graylog event would stay unstamped, be retried on every run and, since events
+    # are fetched oldest-first, eventually fill every batch and stall the queue (#1183).
+    classified = classify_ioc_value(str(ioc_value))
+    if classified is None:
+        logger.warning(f"IOC value {ioc_value!r} has no recognised type (IP, DOMAIN, HASH or URL); creating the alert without an IOC")
+        return None
 
+    ioc_payload["ioc_value"], ioc_payload["ioc_type"] = classified
     ioc_payload["ioc_description"] = "IOC Auto-Generated From SOCFortress CoPilot"
+    if ioc_payload["ioc_value"] != str(ioc_value).strip():
+        ioc_payload["ioc_description"] += f" (extracted from composite value {str(ioc_value).strip()!r})"
     logger.info(f"IOC Payload: {ioc_payload}")
     return ioc_payload
 
