@@ -1,6 +1,6 @@
 <template>
 	<!-- Whether the card appears at all is decided by the page (useAiFindingsPlaceholder). -->
-	<OverviewPanel title="AI analyst findings" icon="carbon:ai-generate" :meta :loading>
+	<OverviewPanel title="AI analyst findings" icon="carbon:ai-generate" :meta :loading data-testid="ai-findings">
 		<template #skeleton>
 			<div :class="LAYOUT">
 				<AiSeveritySummarySkeleton :class="SUMMARY" />

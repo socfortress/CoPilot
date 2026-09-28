@@ -1,5 +1,6 @@
 <template>
 	<OverviewPanel
+		data-testid="recent-cases"
 		title="Recent cases"
 		:icon="ICONS.cases"
 		:meta="cases.length ? `latest ${cases.length}` : undefined"

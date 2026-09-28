@@ -1,5 +1,6 @@
 <template>
 	<OverviewPanel
+		data-testid="recent-alerts"
 		title="Recent alerts"
 		:icon="ICONS.alerts"
 		:meta="alerts.length ? `latest ${alerts.length}` : undefined"

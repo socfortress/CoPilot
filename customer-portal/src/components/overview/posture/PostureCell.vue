@@ -1,6 +1,7 @@
 <template>
 	<RouterLink
 		:to="{ name: cell.route }"
+		:data-testid="`posture-${cell.key}`"
 		class="group hover:bg-hover focus-visible:outline-primary flex min-w-0 flex-col gap-4 p-5 text-inherit no-underline transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 motion-reduce:transition-none"
 	>
 		<div class="flex items-center justify-between gap-2">
@@ -15,13 +16,16 @@
 			/>
 		</div>
 
-		<p v-if="error" class="text-error text-sm">{{ error }}</p>
+		<p v-if="error" class="text-error text-sm" data-testid="posture-error">{{ error }}</p>
 
 		<PostureCellSkeleton v-else-if="loading" />
 
 		<template v-else>
 			<div class="flex items-baseline gap-2">
-				<span class="font-mono text-4xl leading-none font-semibold tracking-tight tabular-nums">
+				<span
+					class="font-mono text-4xl leading-none font-semibold tracking-tight tabular-nums"
+					data-testid="posture-headline"
+				>
 					{{ cell.headline }}
 				</span>
 				<span class="text-secondary text-sm">{{ cell.caption }}</span>
@@ -31,7 +35,9 @@
 
 			<div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
 				<StatusLegend :segments="cell.segments" />
-				<span class="text-tertiary font-mono text-xs tabular-nums">{{ cell.footnote }}</span>
+				<span class="text-tertiary font-mono text-xs tabular-nums" data-testid="posture-footnote">{{
+					cell.footnote
+				}}</span>
 			</div>
 		</template>
 	</RouterLink>
