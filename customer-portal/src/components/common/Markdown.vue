@@ -6,7 +6,8 @@
 			:plugins="[
 				[
 					fromHighlighter(highlighter, {
-						themes: codeThemes
+						themes: codeThemes,
+						fallbackLanguage: MARKDOWN_FALLBACK_LANGUAGE
 					})
 				],
 				markdownItLinkTargetBlank
@@ -24,11 +25,12 @@
 <script setup lang="ts">
 import type MarkdownIt from "markdown-it/lib/index.mjs"
 import type Token from "markdown-it/lib/token.mjs"
-import type { HighlighterGeneric } from "shiki/core"
+import type { BuiltinLanguage } from "shiki"
+import type { HighlighterCore } from "shiki/core"
 import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
 import { fromHighlighter } from "@shikijs/markdown-it/core"
-import { onMounted, ref, toRefs } from "vue"
-import { codeThemes, getHighlighter } from "@/utils/highlighter"
+import { onMounted, shallowRef, toRefs } from "vue"
+import { codeThemes, FALLBACK_LANGUAGE, getHighlighter } from "@/utils/highlighter"
 import "@/assets/scss/overrides/vue-md-it-override.scss"
 
 const props = defineProps<{
@@ -41,7 +43,12 @@ const emit = defineEmits<{
 	(e: "mounted"): void
 }>()
 
-const highlighter = ref<HighlighterGeneric<string, string> | null>(null)
+const highlighter = shallowRef<HighlighterCore | null>(null)
+
+// A fenced block in a language the highlighter does not carry renders as plain text
+// instead of throwing. "text" is shiki's always-available plain language (the plugin's
+// own default); the option's type only lists grammar names, hence the cast.
+const MARKDOWN_FALLBACK_LANGUAGE = FALLBACK_LANGUAGE as BuiltinLanguage
 
 function markdownItLinkTargetBlank(md: MarkdownIt): void {
 	const defaultRender =
@@ -80,7 +87,7 @@ function markdownItLinkTargetBlank(md: MarkdownIt): void {
 const { source, codeBgTransparent } = toRefs(props)
 
 onMounted(async () => {
-	highlighter.value = (await getHighlighter()) as unknown as HighlighterGeneric<string, string>
+	highlighter.value = await getHighlighter()
 	emit("mounted")
 })
 </script>

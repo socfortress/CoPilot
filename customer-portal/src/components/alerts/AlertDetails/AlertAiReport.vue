@@ -107,12 +107,11 @@ import type { AiAlertAnalysis } from "@/types/aiReports"
 import type { ApiError } from "@/types/common"
 import axios from "axios"
 import { NAlert, NCollapse, NCollapseItem, NEmpty, NSpin } from "naive-ui"
-import { computed, onBeforeUnmount, ref, watch } from "vue"
+import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Chip from "@/components/common/Chip.vue"
-import Markdown from "@/components/common/Markdown.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -122,6 +121,9 @@ import { formatDate } from "@/utils/format"
 const props = defineProps<{
 	alertId: number
 }>()
+
+// Markdown pulls in markdown-it and the code highlighter: only load them when a report is shown.
+const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const dFormats = useSettingsStore().dateFormat
 

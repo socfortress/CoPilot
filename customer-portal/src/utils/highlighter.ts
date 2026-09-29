@@ -1,15 +1,24 @@
-import type { BundledLanguage, BundledTheme, HighlighterGeneric } from "shiki"
-import { createHighlighter } from "shiki"
-import { createOnigurumaEngine } from "shiki/engine/oniguruma"
+import type { HighlighterCore } from "shiki/core"
+import { createHighlighterCore } from "shiki/core"
+import { createJavaScriptRegexEngine } from "shiki/engine/javascript"
 
 const THEME_LIGHT = "slack-ochin"
 const THEME_DARK = "aurora-x"
 const LEADING_WHITESPACE_REGEX = /^\s+/
 const TAB_REGEX = /\t/g
 
-let highlighterInstance: HighlighterGeneric<BundledLanguage, BundledTheme> | null = null
-let highlighterPromise: Promise<HighlighterGeneric<BundledLanguage, BundledTheme>> | null = null
+/** Anything outside the languages loaded below renders as plain text rather than failing. */
+export const FALLBACK_LANGUAGE = "text"
 
+let highlighterInstance: HighlighterCore | null = null
+let highlighterPromise: Promise<HighlighterCore> | null = null
+
+/**
+ * One highlighter for the whole app, built from `shiki/core`: only the themes and
+ * languages listed here are bundled, and the regex engine is plain JavaScript. The
+ * `shiki` entry point would register all ~200 bundled languages (each a lazy chunk)
+ * and the Oniguruma WebAssembly, none of which the portal uses.
+ */
 export async function getHighlighter() {
 	if (highlighterInstance) {
 		return highlighterInstance
@@ -18,7 +27,7 @@ export async function getHighlighter() {
 		return highlighterPromise
 	}
 
-	highlighterPromise = createHighlighter({
+	highlighterPromise = createHighlighterCore({
 		themes: [import("shiki/themes/slack-ochin.mjs"), import("shiki/themes/aurora-x.mjs")],
 		langs: [
 			import("shiki/langs/javascript.mjs"),
@@ -38,13 +47,18 @@ export async function getHighlighter() {
 			import("shiki/langs/vb.mjs"),
 			import("shiki/langs/php.mjs")
 		],
-		engine: createOnigurumaEngine(() => import("shiki/wasm"))
+		engine: createJavaScriptRegexEngine()
 	}).then(instance => {
 		highlighterInstance = instance
 		return instance
 	})
 
 	return highlighterPromise
+}
+
+/** `lang` when the highlighter has it, otherwise plain text. */
+export function supportedLanguage(highlighter: HighlighterCore, lang: string): string {
+	return highlighter.getLoadedLanguages().includes(lang) ? lang : FALLBACK_LANGUAGE
 }
 
 export const codeThemes = {
