@@ -104,6 +104,10 @@ async def cleanup(s):
         if user:
             await s.execute(delete(UserCustomerAccess).where(UserCustomerAccess.user_id == user.id))
             await s.delete(user)
+    # The analyst frontend's Playwright seed borrows existing customers when licensing
+    # caps creation, and assigns its own analyst to them: drop every access row on our
+    # customers, not only our users', or the delete below fails on the foreign key.
+    await s.execute(delete(UserCustomerAccess).where(UserCustomerAccess.customer_code.in_(codes)))
     await s.execute(delete(Customers).where(Customers.customer_code.in_(codes)))
     await s.commit()
 
@@ -118,8 +122,20 @@ async def seed(quiet: bool = False) -> dict:
         await s.commit()
         await cleanup(s)
 
+        # Contact names are nullable in the table but required by GET /customers, so a
+        # customer without them breaks that list for everyone, including the analyst
+        # frontend's Playwright seed when it runs against this same database.
         for code in (CUST_A, CUST_B):
-            s.add(Customers(customer_code=code, customer_name=f"Customer {code}", customer_type="MSSP", logo_file=""))
+            s.add(
+                Customers(
+                    customer_code=code,
+                    customer_name=f"Customer {code}",
+                    contact_first_name="E2E",
+                    contact_last_name=code,
+                    customer_type="MSSP",
+                    logo_file="",
+                ),
+            )
         context = AlertContext(source=CONTEXT_SOURCE, context={})
         s.add(context)
         await s.commit()
@@ -227,8 +243,8 @@ async def seed(quiet: bool = False) -> dict:
             s.add(CustomerPortalAiReportSettings(customer_code=code, enabled=True))
 
         password = AuthHandler().get_password_hash(PASSWORD)
-        s.add(User(username=PORTAL_USER, password=password, email=f"{PORTAL_USER}@e2e.local", role_id=4))
-        s.add(User(username=ADMIN, password=password, email=f"{ADMIN}@e2e.local", role_id=1))
+        s.add(User(username=PORTAL_USER, password=password, email=f"{PORTAL_USER}@e2e.example", role_id=4))
+        s.add(User(username=ADMIN, password=password, email=f"{ADMIN}@e2e.example", role_id=1))
         await s.commit()
         portal = (await s.execute(select(User).where(User.username == PORTAL_USER))).scalars().first()
         s.add(UserCustomerAccess(user_id=portal.id, customer_code=CUST_A))
