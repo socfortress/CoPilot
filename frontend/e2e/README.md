@@ -17,6 +17,7 @@ customer information"):
 | `unassigned-analyst.spec.ts` | An analyst with **no** assignment is still deployment-wide (the documented upgrade compromise) **and** is told so, since mistaking the sidebar filter for an assignment is what produced the follow-up report. |
 | `admin-not-regressed.spec.ts` | The admin was not locked out — the failure mode a "deny everything" fix produces. |
 | `global-filter-disclaimer.spec.ts` | The Customers page tells you the sidebar filter does not apply to it — but only while a customer is selected — and the list really is unchanged by it. |
+| `portal-settings-patch.spec.ts` | #1188 — the Customer Portal settings editor saves with `PATCH`: renaming sends only the title (never the logo), clearing a field sends a `reset`, and saving without changes sends nothing. |
 
 ## Running them
 
