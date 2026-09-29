@@ -4,7 +4,6 @@ import { RouteRole } from "@/types/auth"
 import { Layout } from "@/types/theme"
 import { authCheck } from "@/utils/auth"
 import AuthPage from "@/views/Auth.vue"
-import Overview from "@/views/Overview.vue"
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
@@ -16,7 +15,7 @@ const router = createRouter({
 		{
 			path: "/overview",
 			name: "Overview",
-			component: Overview,
+			component: () => import("@/views/Overview.vue"),
 			meta: { title: "Overview", auth: true, roles: RouteRole.All }
 		},
 		{
