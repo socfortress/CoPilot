@@ -1,5 +1,5 @@
 <template>
-	<n-popover trigger="click" :show-arrow="false" to="body" placement="left" @update:show="loadList">
+	<n-popover trigger="click" :show-arrow="false" to="body" placement="left" @update:show="show => show && loadList()">
 		<template #trigger>
 			<n-button :size :focusable="false" :loading="!!linkingCaseId || !!linkingAlertId" :secondary>
 				{{ label || "Link Alert" }}
@@ -85,7 +85,6 @@ import type { ButtonSize } from "naive-ui"
 import type { Alert } from "@/types/alerts"
 import type { Case } from "@/types/cases"
 import type { ApiError, Pagination } from "@/types/common"
-import { useDebounceFn } from "@vueuse/core"
 import { NButton, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
@@ -145,7 +144,7 @@ function linkAlert(caseId: number, alertId: number) {
 		})
 }
 
-const loadList = useDebounceFn(async () => {
+async function loadList() {
 	loading.value = true
 
 	try {
@@ -172,7 +171,7 @@ const loadList = useDebounceFn(async () => {
 	} finally {
 		loading.value = false
 	}
-}, 300)
+}
 
 watch(() => pagination.value.page, loadList)
 </script>
