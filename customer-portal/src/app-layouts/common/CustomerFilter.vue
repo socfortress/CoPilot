@@ -6,6 +6,7 @@
 		clearable
 		size="small"
 		class="customer-filter"
+		data-testid="customer-filter"
 		:options
 		:max-tag-count="2"
 		placeholder="All customers"

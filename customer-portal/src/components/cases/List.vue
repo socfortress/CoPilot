@@ -25,6 +25,7 @@
 
 			<div class="grow overflow-hidden">
 				<n-data-table
+					data-testid="cases-table"
 					bordered
 					:loading
 					size="small"

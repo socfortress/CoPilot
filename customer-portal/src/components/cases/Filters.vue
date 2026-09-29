@@ -2,6 +2,7 @@
 	<n-input-group>
 		<n-select
 			v-model:value="model.key"
+			data-testid="cases-filter-key"
 			:options="filtersKeysOptions"
 			clearable
 			placeholder="Filter key"
@@ -10,6 +11,7 @@
 		/>
 		<n-select
 			v-model:value="model.value"
+			data-testid="cases-filter-value"
 			:disabled="!model.key"
 			:options="filtersValuesOptions"
 			filterable
