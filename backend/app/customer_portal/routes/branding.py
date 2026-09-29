@@ -19,7 +19,6 @@ from fastapi import Response
 from fastapi import Security
 from fastapi import status
 from loguru import logger
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
@@ -40,8 +39,8 @@ from app.customer_portal.services.branding import resolve_branding_for_user
 from app.customer_portal.services.branding import resolve_effective_branding
 from app.customer_portal.services.branding import to_portal_branding
 from app.customer_portal.services.branding import upsert_branding_override
+from app.customer_portal.services.customers import ensure_customer_exists
 from app.db.db_session import get_db
-from app.db.universal_models import Customers
 from app.middleware.customer_access import verify_customer_code_access
 
 customer_portal_branding_router = APIRouter()
@@ -59,12 +58,6 @@ def _to_override_schema(override) -> CustomerBrandingOverride:
         updated_at=override.updated_at.isoformat(),
         updated_by=override.updated_by,
     )
-
-
-async def _ensure_customer_exists(session: AsyncSession, customer_code: str) -> None:
-    result = await session.execute(select(Customers).where(Customers.customer_code == customer_code))
-    if result.scalars().first() is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Customer {customer_code} not found")
 
 
 @customer_portal_branding_router.get(
@@ -189,7 +182,7 @@ async def set_customer_branding(
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(AuthHandler().get_current_user),
 ) -> CustomerBrandingResponse:
-    await _ensure_customer_exists(session, customer_code)
+    await ensure_customer_exists(session, customer_code)
 
     try:
         override = await upsert_branding_override(
