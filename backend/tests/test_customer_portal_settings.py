@@ -158,3 +158,54 @@ def test_patch_route_is_admin_only():
     route = next(r for r in customer_portal_settings_router.routes if isinstance(r, APIRoute) and "PATCH" in r.methods)
     assert route.path == "/settings"
     assert _route_scopes(route.dependant) == {"admin"}
+
+
+# ── route handlers ────────────────────────────────────────────────────────
+
+ADMIN = MagicMock(id=3, username="admin")
+
+
+def test_post_replaces_commits_then_invalidates_the_branding_cache():
+    import app.customer_portal.routes.settings as settings_routes
+
+    order = []
+    session = AsyncMock(commit=AsyncMock(side_effect=lambda: order.append("commit")))
+    replace = AsyncMock()
+    with patch.object(settings_routes, "replace_global_settings", replace), patch.object(
+        settings_routes.branding_cache,
+        "invalidate_all",
+        lambda: order.append("invalidate"),
+    ):
+        response = asyncio.run(
+            settings_routes.update_portal_settings(UpdatePortalSettingsRequest(title="X"), session=session, current_user=ADMIN),
+        )
+
+    assert response.success is True
+    assert replace.await_args.args[2] == ADMIN.id
+    assert order == ["commit", "invalidate"]
+
+
+def test_a_failed_save_is_a_generic_500_and_rolls_back():
+    from fastapi import HTTPException
+    from sqlalchemy.exc import OperationalError
+
+    import app.customer_portal.routes.settings as settings_routes
+
+    session = AsyncMock()
+    failing = AsyncMock(side_effect=OperationalError("UPDATE customer_portal_settings", {}, Exception("deadlock")))
+    with patch.object(settings_routes, "patch_global_settings", failing), pytest.raises(HTTPException) as exc:
+        asyncio.run(settings_routes.patch_portal_settings(PatchPortalSettingsRequest(title="X"), session=session, current_user=ADMIN))
+
+    assert (exc.value.status_code, exc.value.detail) == (500, "Failed to update portal settings")
+    session.rollback.assert_awaited_once()
+    session.commit.assert_not_awaited()
+
+
+def test_the_editor_gets_defaults_before_anything_was_saved():
+    import app.customer_portal.routes.settings as settings_routes
+
+    with _with_global(None):
+        response = asyncio.run(settings_routes.get_global_portal_settings(session=MagicMock()))
+    assert response.settings.id == 0
+    assert response.settings.title == CustomerPortalSettings.get_default_values()["title"]
+    assert response.settings.logo_base64 is None

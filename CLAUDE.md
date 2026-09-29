@@ -350,6 +350,14 @@ Things to keep straight in the InfluxDB half:
 
 The `customer-portal/` mirrors this structure but is a leaner standalone app, served separately (its own `nginx.conf`; port 3001 dev, 8443 in compose when uncommented).
 
+### Customer Portal backend conventions (#1188)
+
+- **Global settings have two write verbs.** `POST /customer_portal/settings` replaces the row: a missing or null field restores its default, which is why changing only the title there means re-sending the logo. `PATCH` writes only the fields sent, restores defaults only through `reset: ["title" | "logo" | "brand_color"]`, rejects an explicit null, and takes `logo_base64` and `logo_mime_type` together. The CoPilot editor still uses `POST`. Both go through `services/settings.py`; the route commits and then invalidates the branding cache.
+- **Branding validation lives once**, in `app/customer_portal/utils/validators.py`, shared by the settings and override schemas; an empty value means unset. Validators raise `ValueError`, so a bad field is the standard 422 naming it (`brand_color: Expected a hex color…`). Never raise `HTTPException` from a schema.
+- **Route errors go through `routes/errors.py:internal_errors(action, session)`**: a service's `HTTPException` (403/404) passes through, and anything else is logged with its traceback, rolled back and returned as a generic `Failed to <action>`. Never put `str(e)` in a response: a database error's text carries SQL. `tests/test_customer_portal_route_errors.py` fails on a hand-rolled `except Exception` in a portal route.
+- **Timestamps use `app/time_utils.py:now_utc()`**, not the deprecated `datetime.utcnow()`. It is timezone-aware, but the columns are naive `DATETIME`, and the driver stores the same UTC wall-clock time as before.
+- `tests/e2e/customer_portal_settings_e2e.py` runs all of this against the disposable 13306 MySQL.
+
 ### What a portal user may write: the `customer_user` allowlist
 
 Tenant checks stop a customer from touching *another* tenant's data; what they may do to their *own* SOC record is a separate product decision, pinned by `tests/test_customer_user_write_allowlist.py`. A customer can triage (alert/case status, comments, link/unlink alerts, assignee), open cases, upload case files, generate and delete their own reports, flag critical assets and manage their own password/2FA. **Deleting alerts, cases or case files, escalating, moving a case to another customer, firing the Shuffle case notification and refreshing the deployment-wide rules cache are analyst-only.** The test enumerates every non-GET route whose scope admits `customer_user` and fails on any drift in either direction, so adding `customer_user` to a write route means updating `ALLOWED_CUSTOMER_USER_WRITES` on purpose. Read-only POSTs (panel data, rule lookups, logtest) are listed there too.
