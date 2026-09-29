@@ -142,7 +142,7 @@ async def check_parity(client, headers, who):
 
 
 async def main():
-    portal_id = await seed()
+    portal_id = (await seed())["portal_user_id"]
     counter = StatementCounter()
     auth = AuthHandler()
     admin = {"Authorization": f"Bearer {await auth.encode_token(ADMIN)}"}
@@ -247,6 +247,64 @@ async def main():
         check("saving branding invalidates the cache at once", title == "E2E After", title)
         await client.delete(f"/customer_portal/branding/{CUST_A}", headers=admin)
         check("removing the override is seen at once", await portal_title() != "E2E After")
+
+        print("\n=== E) agents list, paginated and filtered server-side (#1185) ===")
+
+        async def agents(headers, **params):
+            response = await client.get("/customer_portal/agents", headers=headers, params=params)
+            assert response.status_code == 200, (response.status_code, response.text[:300])
+            return response.json()
+
+        page = await agents(portal)
+        expected_stats = {"total": 3, "active": 2, "critical": 1, "offline": 1}
+        check("cards counted over the whole scope", page["stats"] == expected_stats, str(page["stats"]))
+        check("filter options from the scope", (page["statuses"], page["os_list"]) == (["active", "disconnected"], ["Linux", "Windows"]))
+        check(
+            "only the user's customer",
+            page["total"] == 3 and {a["customer_code"] for a in page["agents"]} == {CUST_A},
+            str(page["total"]),
+        )
+        legacy = (await client.get("/agents", headers=portal)).json()["agents"]
+        check("same agents as /agents", sorted(a["agent_id"] for a in page["agents"]) == sorted(a["agent_id"] for a in legacy))
+        first, second = await agents(portal, page=1, page_size=2), await agents(portal, page=2, page_size=2)
+        ids = [a["agent_id"] for a in first["agents"] + second["agents"]]
+        check("pages split the list, no overlap", len(first["agents"]) == 2 and len(second["agents"]) == 1 and len(set(ids)) == 3)
+        check("status filter", (await agents(portal, status="disconnected"))["total"] == 1)
+        check("OS filter", (await agents(portal, os="Windows"))["total"] == 1)
+        check("critical filter", (await agents(portal, critical="true"))["total"] == 1)
+        found = await agents(portal, search=f"ov-{CUST_A}-1")
+        check("search on hostname", found["total"] == 1 and found["agents"][0]["hostname"] == f"ov-{CUST_A}-1", str(found["total"]))
+        check("search never reaches another tenant", (await agents(portal, search=CUST_B))["total"] == 0)
+        check("cards ignore the filters", (await agents(portal, search="nothing-matches"))["stats"] == expected_stats)
+        oversized = await client.get("/customer_portal/agents", headers=portal, params={"page_size": 101})
+        check("page size is capped", oversized.status_code == 422, str(oversized.status_code))
+        csv_all = (await client.get("/customer_portal/agents/export", headers=portal)).text.strip().splitlines()
+        csv_active = (
+            (await client.get("/customer_portal/agents/export", headers=portal, params={"status": "active"})).text.strip().splitlines()
+        )
+        check(
+            "CSV export: every filtered agent, not a page",
+            (len(csv_all), len(csv_active)) == (4, 3),
+            f"{len(csv_all)} / {len(csv_active)} lines",
+        )
+        check("admin can narrow by customer", (await agents(admin, customer_codes=CUST_B))["total"] == 1)
+
+        print("\n=== F) alert filter options without every asset name (#1185) ===")
+        options_url = "/incidents/db_operations/alerts/filter-options"
+        full = (await client.get(options_url, headers=portal)).json()
+        light = (await client.get(options_url, headers=portal, params={"include_assets": "false"})).json()
+        check("default still lists the assets (other callers)", full["assets"] == ["host-a1", "host-a2", "host-a3"], str(full["assets"]))
+        check(
+            "include_assets=false leaves them out",
+            light["assets"] == [] and (light["sources"], light["tags"]) == (full["sources"], full["tags"]),
+        )
+
+        async def asset_search(**params):
+            return (await client.get(f"{options_url}/assets", headers=portal, params=params)).json()["assets"]
+
+        check("asset search matches", await asset_search(search="a2") == ["host-a2"])
+        check("asset search is bounded", len(await asset_search(search="host", limit=2)) == 2)
+        check("asset search never reaches another tenant", await asset_search(search="host-b") == [])
 
     async with AsyncSession(async_engine) as s:
         await cleanup(s)

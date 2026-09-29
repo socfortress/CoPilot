@@ -55,8 +55,23 @@ ALERTS_A = ["OPEN", "OPEN", "OPEN", "IN_PROGRESS", "IN_PROGRESS", "CLOSED"]
 ALERTS_B = ["OPEN", "OPEN", "CLOSED", "CLOSED"]
 CASES_A = ["OPEN", "OPEN", "CLOSED"]
 CASES_B = ["OPEN"]
-AGENTS_A = [("active", True), ("active", False), ("disconnected", False)]  # (wazuh status, critical)
-AGENTS_B = [("active", False)]
+AGENTS_A = [("active", True, "Linux"), ("active", False, "Windows"), ("disconnected", False, "Linux")]  # (wazuh status, critical, os)
+AGENTS_B = [("active", False, "Linux")]
+OFFLINE_STATUSES = ("disconnected", "never_connected")
+
+# The latest report of the first alert of A: one fenced block in a language the portal's
+# highlighter carries (powershell) and one it does not (python), which must fall back
+# to plain text instead of breaking the whole report.
+REPORT_MARKDOWN = """## Findings
+
+```powershell
+Get-Process -Name e2e-highlight
+```
+
+```python
+print("e2e-fallback")
+```
+"""
 
 NOW = datetime.datetime(2026, 9, 1, 12, 0, 0)
 
@@ -93,7 +108,7 @@ async def cleanup(s):
     await s.commit()
 
 
-async def seed(quiet: bool = False) -> int:
+async def seed(quiet: bool = False) -> dict:
     # expire_on_commit=False: the seed reads ids of rows it just committed, and an
     # expired attribute would trigger a synchronous refresh (MissingGreenlet).
     async with AsyncSession(async_engine, expire_on_commit=False) as s:
@@ -159,12 +174,12 @@ async def seed(quiet: bool = False) -> int:
             s.add(CaseAlertLink(case_id=cases[(CUST_A, 0)].id, alert_id=alerts[(CUST_A, i)].id))
 
         for code, agents in ((CUST_A, AGENTS_A), (CUST_B, AGENTS_B)):
-            for i, (wazuh_status, critical) in enumerate(agents):
+            for i, (wazuh_status, critical, os_name) in enumerate(agents):
                 s.add(
                     Agents(
                         agent_id=f"e2e-ov-{code}-{i}",
                         ip_address=f"10.9.0.{i}",
-                        os="Linux",
+                        os=os_name,
                         hostname=f"ov-{code}-{i}",
                         label=f"ov-{code}-{i}",
                         critical_asset=critical,
@@ -185,7 +200,17 @@ async def seed(quiet: bool = False) -> int:
             [(CUST_A, 0, "Low"), (CUST_A, 0, "High"), (CUST_A, 1, "Medium"), (CUST_B, 0, "Critical")],
         ):
             job_id = f"e2e-ov-job-{n}"
-            s.add(AiAnalystJob(id=job_id, alert_id=alerts[(code, i)].id, customer_code=code, status="completed", triggered_by="manual"))
+            # Distinct job times: the portal shows an alert's latest job, and a tie would pick either.
+            s.add(
+                AiAnalystJob(
+                    id=job_id,
+                    alert_id=alerts[(code, i)].id,
+                    customer_code=code,
+                    status="completed",
+                    triggered_by="manual",
+                    created_at=NOW + datetime.timedelta(days=1, minutes=n),
+                ),
+            )
             await s.flush()
             s.add(
                 AiAnalystReport(
@@ -194,6 +219,7 @@ async def seed(quiet: bool = False) -> int:
                     customer_code=code,
                     severity_assessment=severity,
                     summary=f"{severity} finding",
+                    report_markdown=REPORT_MARKDOWN if severity == "High" else None,
                     created_at=NOW + datetime.timedelta(days=1, minutes=n),
                 ),
             )
@@ -209,7 +235,7 @@ async def seed(quiet: bool = False) -> int:
         await s.commit()
         if not quiet:
             print(f"seed: {CUST_A} and {CUST_B} with alerts, assets, cases, agents, AI reports; '{PORTAL_USER}' assigned to {CUST_A}")
-        return portal.id
+        return {"portal_user_id": portal.id, "ai_alert_id": alerts[(CUST_A, 0)].id}
 
 
 def fixture() -> dict:
@@ -223,8 +249,11 @@ def fixture() -> dict:
         "cases": {"a": status_counts(CASES_A), "b": status_counts(CASES_B)},
         "agents_a": {
             "total": len(AGENTS_A),
-            "online": sum(status == "active" for status, _ in AGENTS_A),
-            "critical": sum(critical for _, critical in AGENTS_A),
+            "online": sum(status == "active" for status, _, _ in AGENTS_A),
+            "critical": sum(critical for _, critical, _ in AGENTS_A),
+            "offline": sum(status in OFFLINE_STATUSES for status, _, _ in AGENTS_A),
+            "statuses": sorted({status for status, _, _ in AGENTS_A}),
+            "os_list": sorted({os_name for _, _, os_name in AGENTS_A}),
         },
         "ai_a": {"total_reports": 2, "severity_counts": {"High": 1, "Medium": 1}},
     }
@@ -235,8 +264,8 @@ async def _main(command: str) -> None:
     if not os.environ["MYSQL_URL"].endswith(":13306") and os.environ.get("E2E_ALLOW_ANY_DB") != "1":
         raise SystemExit(f"Refusing to seed {os.environ['MYSQL_URL']}: not the e2e MySQL on :13306 (set E2E_ALLOW_ANY_DB=1 to override).")
     if command == "seed":
-        portal_user_id = await seed(quiet=True)
-        print(json.dumps({**fixture(), "portal_user_id": portal_user_id}))
+        ids = await seed(quiet=True)
+        print(json.dumps({**fixture(), **ids}))
     elif command == "cleanup":
         async with AsyncSession(async_engine) as s:
             await cleanup(s)

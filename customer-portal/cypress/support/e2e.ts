@@ -7,7 +7,9 @@ export interface PortalSeed {
 	password: string
 	alerts: { a: StatusCounts; b: StatusCounts }
 	cases: { a: StatusCounts; b: StatusCounts }
-	agents_a: { total: number; online: number; critical: number }
+	agents_a: { total: number; online: number; critical: number; offline: number; statuses: string[]; os_list: string[] }
+	/** The alert whose latest AI report carries the Markdown with code blocks. */
+	ai_alert_id: number
 	ai_a: { total_reports: number; severity_counts: Record<string, number> }
 }
 

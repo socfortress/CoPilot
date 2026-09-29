@@ -369,6 +369,14 @@ Round-trips, not SQL complexity, are what these pages cost (see `app/connectors/
 - **Browser level: `customer-portal/cypress/`** (`pnpm test:e2e` from `customer-portal/`, which starts a backend on :5101 and a portal on :3101 against the same 13306 database and seed, `backend/tests/e2e/portal_overview_seed.py`). Selectors are `data-testid` attributes — keep them when restyling those components. Note the analyst frontend's browser tests are Playwright (`frontend/e2e/`); the portal's are Cypress.
 - **No index is missing for "latest AI report per alert"**: InnoDB secondary indexes carry the primary key, so `ix_ai_analyst_report_alert_id` already serves `MAX(id) GROUP BY alert_id` as a covering skip scan (EXPLAIN on 50k reports).
 
+### Customer Portal frontend weight (#1185)
+
+- **The code highlighter is `shiki/core` + the JavaScript regex engine** (`customer-portal/src/utils/highlighter.ts`): only the languages listed there are bundled. Importing from `shiki` itself brings back ~200 language chunks and the Oniguruma WebAssembly (the build went from 14 MB / 347 JS files to 5.3 MB / 48). A language that is not listed renders as plain text (`supportedLanguage`, `fallbackLanguage` in `Markdown.vue`) — never let an unknown fenced block throw. `Markdown.vue` is lazy-loaded; keep it out of the entry chunk. Every route, the Overview included, is a `() => import()`.
+- **Server-paginated lists go through `composables/common/usePaginatedLoad.ts`**: one watcher, one load per mount or change, back to page 1 when a filter changes. Debounce only typed text (`refDebounced`) — never the load itself, which delayed every click by 400 ms.
+- **The agents list is server-side**: `GET /customer_portal/agents` (page, filters, cards over the whole scope, filter options) and `/customer_portal/agents/export` (CSV of every filtered agent, ISO timestamps). `/agents` keeps returning the whole list for its other callers.
+- **Alert filter options skip the asset names** in the portal (`include_assets=false`); the asset filter searches `/incidents/db_operations/alerts/filter-options/assets`. Both go through `alert_visibility_filters_for_user` (the options endpoint carried a third copy of the visibility rules).
+- Watch the customer filter through `customerFilterStore.queryCustomerCodes`, without `deep`: the store replaces the array on every change.
+
 ### Tenant scoping: customer codes are not the only tenant key
 
 #1050 made `user_customer_access` authoritative for analysts and guarded every route
