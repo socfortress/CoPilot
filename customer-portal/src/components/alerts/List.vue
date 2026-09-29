@@ -24,6 +24,7 @@
 
 			<div class="grow overflow-hidden">
 				<n-data-table
+					data-testid="alerts-table"
 					bordered
 					:loading
 					size="small"
@@ -62,16 +63,17 @@ import type { AlertStatusUpdateSuccessPayload } from "@/components/alerts/AlertS
 import type { FiltersModel } from "@/components/alerts/Filters.vue"
 import type { Alert, AlertsListResponse, AlertStatus } from "@/types/alerts"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
-import { useDebounceFn, useElementSize } from "@vueuse/core"
+import { useElementSize } from "@vueuse/core"
 import axios from "axios"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
-import { computed, ref, useTemplateRef, watch } from "vue"
+import { computed, ref, toRef, useTemplateRef } from "vue"
 import Api from "@/api"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
 import AlertStatusSelect from "@/components/alerts/AlertStatusSelect.vue"
 import Filters from "@/components/alerts/Filters.vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
+import { usePaginatedLoad } from "@/composables/common/usePaginatedLoad"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage, getStatusColor } from "@/utils"
@@ -159,7 +161,7 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 
 let abortController = new AbortController()
 
-const loadAlerts = useDebounceFn(async () => {
+async function loadAlerts() {
 	loading.value = true
 
 	abortController?.abort()
@@ -233,11 +235,6 @@ const loadAlerts = useDebounceFn(async () => {
 			loading.value = false
 		}
 	}
-}, 400)
-
-function resetPage() {
-	pagination.value.page = 1
-	loadAlerts()
 }
 
 function handleStatusUpdateSuccess(payload: AlertStatusUpdateSuccessPayload) {
@@ -247,17 +244,9 @@ function handleStatusUpdateSuccess(payload: AlertStatusUpdateSuccessPayload) {
 	}
 }
 
-watch(
-	[() => pagination.value.pageSize, () => filters.value.value, () => customerFilterStore.selectedCustomerCodes],
-	resetPage,
-	{
-		deep: true,
-		immediate: true
-	}
-)
-
-watch(() => pagination.value.page, loadAlerts, {
-	deep: true,
-	immediate: true
+usePaginatedLoad({
+	page: toRef(pagination.value, "page"),
+	resetOn: [() => pagination.value.pageSize, () => filters.value.value, () => customerFilterStore.queryCustomerCodes],
+	load: loadAlerts
 })
 </script>

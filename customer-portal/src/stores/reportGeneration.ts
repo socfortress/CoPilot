@@ -113,7 +113,8 @@ export const useReportGenerationStore = defineStore("report-generation", {
 
 			let reports: IncidentCustomerReport[]
 			try {
-				const response = await Api.reports.listReports()
+				// Not page-scoped: the poller outlives the page that started it.
+				const response = await Api.reports.listReports(undefined, true)
 				if (!response.data.success) return
 				reports = response.data.reports
 			} catch {

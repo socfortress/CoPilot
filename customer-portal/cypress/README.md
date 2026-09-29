@@ -4,12 +4,18 @@ They drive the real portal in a real browser against a **real backend and a real
 MySQL**, seeded with known rows. Nothing below the UI is mocked; one spec edits a single
 field of a real response to show a failed section.
 
-## What they cover (#1181)
+## What they cover
 
 | Spec | What it pins |
 |---|---|
 | `overview.cy.ts` | The Overview loads with **one** request (`/customer_portal/overview`) instead of the four it replaced, shows the seeded posture, recent alerts/cases and AI findings of the user's customer only, and a failing section does not blank the others. |
 | `status-cards.cy.ts` | The Total / Open / In progress / Closed cards on the Alerts and Cases pages show the seeded counts (now from one grouped query per page). |
+| `agents.cy.ts` | #1185 — the agents list loads one page from `/customer_portal/agents` (never the whole fleet), with server-side cards, status filter, a search sent once the user stops typing, and a CSV export of every filtered agent. |
+| `alerts-list.cy.ts` | #1185 — the alerts list loads with one request, reacts to a filter within 250 ms (the old 400 ms debounce fails this), and the asset filter searches the server instead of downloading every asset name. |
+| `ai-report.cy.ts` | #1185 — the Markdown renderer loads only when the full AI report opens; bundled languages are highlighted, others fall back to plain text instead of breaking the report. |
+| `cases-list.cy.ts` | #1185 — the cases list loads with one request and reacts to a filter within 250 ms. |
+| `customer-filter.cy.ts` | #1185 — picking a customer in the global filter reloads the alerts, cases and agents lists and cards once, for that customer; changing a selection already set is covered too (the case a shallow watcher would miss if the store ever mutated its array in place). |
+| `navigation-abort.cy.ts` | Leaving a page aborts its in-flight reads (Overview → Alerts → Cases leaves only the Cases calls alive), while the page landed on, branding and a query-string change on the same page are left alone. |
 | `live-changes.cy.ts` | What an operator changes in CoPilot reaches the portal on the next page load: customer assignments, the AI report switch, branding (save, second save, removal). |
 
 The same seed drives the API-level test `backend/tests/e2e/customer_portal_overview_e2e.py`,

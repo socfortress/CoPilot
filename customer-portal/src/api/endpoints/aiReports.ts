@@ -11,7 +11,10 @@ export default {
 	getAvailability(customerCode?: string, signal?: AbortSignal) {
 		return HttpClient.get<CommonResponse<AiReportAvailability>>("/customer_portal/ai_reports/availability", {
 			params: customerCode ? { customer_code: customerCode } : undefined,
-			signal
+			signal,
+			// Cached as a shared promise (useAiReportsAvailability): one cancelled by a
+			// navigation would never settle and pin that customer's AI tab to "loading".
+			keepOnNavigation: true
 		})
 	},
 

@@ -94,7 +94,7 @@ export const usePortalSettingsStore = defineStore("portalSettings", {
 			}
 
 			try {
-				const response = await HttpClient.get<Blob>(url, { responseType: "blob" })
+				const response = await HttpClient.get<Blob>(url, { responseType: "blob", keepOnNavigation: true })
 				this.setBrandingLogo(URL.createObjectURL(response.data))
 			} catch (error) {
 				console.error("Failed to load customer branding logo:", error)

@@ -681,6 +681,12 @@ class DefaultReportTemplateFileNames(Enum):
     CASE_REPORT_JINJA_TEMPLATE = "case_report_jinja_template.docx"
 
 
+class AlertAssetOptionsResponse(BaseModel):
+    assets: List[str]
+    success: bool
+    message: str
+
+
 class AlertFilterOptionsResponse(BaseModel):
     sources: List[str]
     assets: List[str]

@@ -13,12 +13,15 @@ import { withCustomerCodes } from "../params"
 export default {
 	/** Global defaults — public, used before login when no customer is known yet. */
 	getSettings() {
-		return HttpClient.get<CommonResponse<{ settings: PortalSettings }>>("/customer_portal/settings")
+		return HttpClient.get<CommonResponse<{ settings: PortalSettings }>>("/customer_portal/settings", {
+			keepOnNavigation: true
+		})
 	},
 	/** Branding for the authenticated user (per-customer override, else the global defaults). */
 	getEffectiveSettings() {
 		return HttpClient.get<CommonResponse<{ settings: EffectivePortalBranding }>>(
-			"/customer_portal/settings/effective"
+			"/customer_portal/settings/effective",
+			{ keepOnNavigation: true }
 		)
 	},
 	/** Everything the Overview renders, in one call. */

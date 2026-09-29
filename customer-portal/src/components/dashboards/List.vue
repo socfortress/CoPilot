@@ -53,7 +53,7 @@
 import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { EnabledDashboard } from "@/types/siem"
-import { useDebounceFn, useElementSize } from "@vueuse/core"
+import { useElementSize } from "@vueuse/core"
 import axios from "axios"
 import { NButton, NDataTable, NEmpty, NPagination, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, useTemplateRef, watch } from "vue"
@@ -152,7 +152,7 @@ const columns = computed<DataTableColumns<EnabledDashboard>>(() => [
 
 let abortController = new AbortController()
 
-const loadDashboards = useDebounceFn(async () => {
+async function loadDashboards() {
 	loading.value = true
 
 	abortController?.abort()
@@ -173,7 +173,7 @@ const loadDashboards = useDebounceFn(async () => {
 			loading.value = false
 		}
 	}
-}, 400)
+}
 
 function resetPage() {
 	pagination.value.page = 1
@@ -194,12 +194,11 @@ watch([() => pagination.value.pageSize], resetPage, {
 
 // Re-fetch when the global customer filter changes (the list is scoped server-side).
 watch(
-	() => customerFilterStore.selectedCustomerCodes,
+	() => customerFilterStore.queryCustomerCodes,
 	() => {
 		pagination.value.page = 1
 		loadDashboards()
-	},
-	{ deep: true }
+	}
 )
 
 onBeforeMount(() => {

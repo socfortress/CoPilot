@@ -18,3 +18,30 @@ export interface Agent {
 	velociraptor_org: string | null
 	customer_code: string
 }
+
+/** Counts over every agent in scope, independent of the list filters. */
+export interface AgentsStats {
+	total: number
+	active: number
+	critical: number
+	offline: number
+}
+
+export interface AgentsPageQuery {
+	page: number
+	pageSize: number
+	search?: string | null
+	status?: string | null
+	os?: string | null
+	critical?: boolean
+	customerCodes?: string[]
+}
+
+/** `GET /customer_portal/agents`: one page, the filtered total, the cards and the filter options. */
+export interface AgentsPageResponse {
+	agents: Agent[]
+	total: number
+	stats: AgentsStats
+	statuses: AgentStatus[]
+	os_list: string[]
+}

@@ -10,7 +10,8 @@
 					<n-button
 						size="small"
 						secondary
-						:disabled="loading || !paginatedTotal"
+						:disabled="loading || exporting || !paginatedTotal"
+						:loading="exporting"
 						:focusable="false"
 						@click="exportCsv"
 					>
@@ -35,10 +36,11 @@
 
 			<div class="grow overflow-hidden">
 				<n-data-table
+					data-testid="agents-table"
 					bordered
 					:loading
 					size="small"
-					:data="dataPaginated"
+					:data
 					:columns
 					:scroll-x="1400"
 					class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
@@ -70,31 +72,35 @@
 import type { DataTableColumns } from "naive-ui"
 import type { AgentCriticalUpdateSuccessPayload } from "./AgentCriticalSelect.vue"
 import type { AgentsFilters } from "@/components/agents/Filters.vue"
-import type { Agent } from "@/types/agents"
+import type { Agent, AgentsStats, AgentStatus } from "@/types/agents"
 import type { ApiError } from "@/types/common"
-import { useDebounceFn, useElementSize } from "@vueuse/core"
+import { refDebounced, useElementSize } from "@vueuse/core"
 import axios from "axios"
+import { saveAs } from "file-saver"
 import { NButton, NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref, useTemplateRef, watch } from "vue"
+import { computed, ref, toRef, useTemplateRef, watch } from "vue"
 import Api from "@/api"
 import Filters from "@/components/agents/Filters.vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
+import { usePaginatedLoad } from "@/composables/common/usePaginatedLoad"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
-import { downloadCsv, getApiErrorMessage, getStatusColor } from "@/utils"
+import { getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
 import AgentCriticalSelect from "./AgentCriticalSelect.vue"
 import AgentDetailsButton from "./AgentDetailsButton.vue"
 
 const emit = defineEmits<{
-	(e: "loaded", value: Agent[]): void
+	(e: "stats", value: AgentsStats): void
 	(e: "loading", value: boolean): void
 }>()
 
 const message = useMessage()
 const loading = ref(false)
+const exporting = ref(false)
 const dFormats = useSettingsStore().dateFormat
+const customerFilterStore = useCustomerFilterStore()
 
 const { width: headerWidthRef } = useElementSize(useTemplateRef("headerRef"))
 const pageSizes = [10, 25, 50, 100]
@@ -104,7 +110,7 @@ const showSizePicker = ref(true)
 
 const pagination = ref({
 	page: 1,
-	pageSize: pageSizes[1]
+	pageSize: pageSizes[1] ?? 25
 })
 
 const filters = ref<AgentsFilters>({
@@ -114,42 +120,27 @@ const filters = ref<AgentsFilters>({
 	search: null
 })
 
+// Paging, counting and filtering all happen on the server (GET /customer_portal/agents):
+// the browser holds one page, never the whole fleet. Only the typed search is debounced.
+const search = refDebounced(
+	computed(() => filters.value.search?.trim() || null),
+	400
+)
+
 const data = ref<Agent[]>([])
+const paginatedTotal = ref(0)
+const statusesList = ref<AgentStatus[]>([])
+const osList = ref<string[]>([])
 
-const dataFiltered = computed(() => {
-	return data.value.filter(agent => {
-		if (filters.value.status && agent.wazuh_agent_status !== filters.value.status) {
-			return false
-		}
-		if (filters.value.critical && agent.critical_asset !== filters.value.critical) {
-			return false
-		}
-		if (filters.value.os && agent.os !== filters.value.os) {
-			return false
-		}
-		if (
-			filters.value.search &&
-			!agent.hostname.toLowerCase().includes(filters.value.search.toLowerCase()) &&
-			!agent.ip_address.toLowerCase().includes(filters.value.search.toLowerCase()) &&
-			!agent.agent_id.toLowerCase().includes(filters.value.search.toLowerCase())
-		) {
-			return false
-		}
-		return true
-	})
-})
-
-const dataPaginated = computed(() => {
-	const from = (pagination.value.page - 1) * pagination.value.pageSize
-	const to = pagination.value.page * pagination.value.pageSize
-
-	return dataFiltered.value.slice(from, to)
-})
-
-const paginatedTotal = computed(() => dataFiltered.value.length)
-
-const statusesList = computed(() => [...new Set(data.value.map(agent => agent.wazuh_agent_status))])
-const osList = computed(() => [...new Set(data.value.map(agent => agent.os))])
+function query() {
+	return {
+		search: search.value,
+		status: filters.value.status,
+		os: filters.value.os,
+		critical: filters.value.critical,
+		customerCodes: customerFilterStore.queryCustomerCodes
+	}
+}
 
 const columns = computed<DataTableColumns<Agent>>(() => [
 	{
@@ -232,19 +223,23 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 
 let abortController = new AbortController()
 
-const customerFilterStore = useCustomerFilterStore()
-
-const loadAgents = useDebounceFn(async () => {
+async function loadAgents() {
 	loading.value = true
 
-	abortController?.abort()
+	abortController.abort()
 	abortController = new AbortController()
 
 	try {
-		const response = await Api.agents.getAgents(customerFilterStore.queryCustomerCodes, abortController.signal)
+		const response = await Api.agents.getAgentsPage(
+			{ ...query(), page: pagination.value.page, pageSize: pagination.value.pageSize },
+			abortController.signal
+		)
 
 		data.value = response.data.agents || []
-		emit("loaded", data.value)
+		paginatedTotal.value = response.data.total
+		statusesList.value = response.data.statuses
+		osList.value = response.data.os_list
+		emit("stats", response.data.stats)
 		loading.value = false
 	} catch (err) {
 		if (!axios.isCancel(err)) {
@@ -252,44 +247,21 @@ const loadAgents = useDebounceFn(async () => {
 			loading.value = false
 		}
 	}
-}, 400)
+}
 
-function exportCsv() {
-	// Export the currently-filtered set so the download reflects what the user
-	// sees (active filters/search), not just the current page.
-	const rows = dataFiltered.value
-	if (!rows.length) {
-		message.warning("No assets to export")
-		return
+async function exportCsv() {
+	// Every agent matching the filters, not only the page on screen.
+	exporting.value = true
+	try {
+		const response = await Api.agents.exportAgents(query())
+		const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")
+		saveAs(response.data, `assets-export-${stamp}.csv`)
+		message.success(`Exported ${paginatedTotal.value} asset${paginatedTotal.value === 1 ? "" : "s"} to CSV`)
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError))
+	} finally {
+		exporting.value = false
 	}
-
-	const headers = [
-		"Hostname",
-		"Agent ID",
-		"IP Address",
-		"Operating System",
-		"Status",
-		"Last Seen",
-		"Critical Asset",
-		"Agent Version",
-		"Customer Code"
-	]
-
-	const csvRows = rows.map(agent => [
-		agent.hostname,
-		agent.agent_id,
-		agent.ip_address,
-		agent.os,
-		agent.wazuh_agent_status,
-		agent.wazuh_last_seen ? String(formatDate(agent.wazuh_last_seen, dFormats.datetime)) : "",
-		agent.critical_asset ? "Yes" : "No",
-		agent.wazuh_agent_version,
-		agent.customer_code
-	])
-
-	const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")
-	downloadCsv(`assets-export-${stamp}.csv`, headers, csvRows)
-	message.success(`Exported ${rows.length} asset${rows.length === 1 ? "" : "s"} to CSV`)
 }
 
 function handleCriticalAssetUpdated(payload: AgentCriticalUpdateSuccessPayload) {
@@ -297,10 +269,8 @@ function handleCriticalAssetUpdated(payload: AgentCriticalUpdateSuccessPayload) 
 	if (agent) {
 		agent.critical_asset = payload.critical
 	}
-}
-
-function resetPage() {
-	pagination.value.page = 1
+	// The critical count in the cards (and a "critical only" page) now differ.
+	loadAgents()
 }
 
 watch(
@@ -311,23 +281,16 @@ watch(
 	{ immediate: true }
 )
 
-watch([() => pagination.value.pageSize, filters], resetPage, {
-	deep: true,
-	immediate: true
-})
-
-// The agents list is fetched once and filtered client-side, so a change to the
-// global customer filter must re-fetch (the backend scopes by customer_codes).
-watch(
-	() => customerFilterStore.selectedCustomerCodes,
-	() => {
-		pagination.value.page = 1
-		loadAgents()
-	},
-	{ deep: true }
-)
-
-onBeforeMount(() => {
-	loadAgents()
+usePaginatedLoad({
+	page: toRef(pagination.value, "page"),
+	resetOn: [
+		() => pagination.value.pageSize,
+		search,
+		() => filters.value.status,
+		() => filters.value.os,
+		() => filters.value.critical,
+		() => customerFilterStore.queryCustomerCodes
+	],
+	load: loadAgents
 })
 </script>

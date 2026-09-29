@@ -25,6 +25,7 @@
 
 			<div class="grow overflow-hidden">
 				<n-data-table
+					data-testid="cases-table"
 					bordered
 					:loading
 					size="small"
@@ -64,10 +65,10 @@ import type { CaseStatusUpdateSuccessPayload } from "@/components/cases/CaseStat
 import type { FiltersModel } from "@/components/cases/Filters.vue"
 import type { Case, CasesListResponse, CaseStatus } from "@/types/cases"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
-import { useDebounceFn, useElementSize } from "@vueuse/core"
+import { useElementSize } from "@vueuse/core"
 import axios from "axios"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
-import { computed, ref, useTemplateRef, watch } from "vue"
+import { computed, ref, toRef, useTemplateRef } from "vue"
 import Api from "@/api"
 import CaseAssignedSelect from "@/components/cases/CaseAssignedSelect.vue"
 import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
@@ -76,6 +77,7 @@ import CreateCaseButton from "@/components/cases/CreateCaseButton.vue"
 import Filters from "@/components/cases/Filters.vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
+import { usePaginatedLoad } from "@/composables/common/usePaginatedLoad"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage, getStatusColor } from "@/utils"
@@ -173,7 +175,7 @@ const columns = computed<DataTableColumns<Case>>(() => [
 
 let abortController = new AbortController()
 
-const loadCases = useDebounceFn(async () => {
+async function loadCases() {
 	loading.value = true
 
 	abortController?.abort()
@@ -231,11 +233,6 @@ const loadCases = useDebounceFn(async () => {
 			loading.value = false
 		}
 	}
-}, 400)
-
-function resetPage() {
-	pagination.value.page = 1
-	loadCases()
 }
 
 function handleFiltersLoaded(value: Record<string, string[]>) {
@@ -272,17 +269,9 @@ function handleStatusUpdateSuccess(payload: CaseStatusUpdateSuccessPayload) {
 	}
 }
 
-watch(
-	[() => pagination.value.pageSize, () => filters.value.value, () => customerFilterStore.selectedCustomerCodes],
-	resetPage,
-	{
-		deep: true,
-		immediate: true
-	}
-)
-
-watch(() => pagination.value.page, loadCases, {
-	deep: true,
-	immediate: true
+usePaginatedLoad({
+	page: toRef(pagination.value, "page"),
+	resetOn: [() => pagination.value.pageSize, () => filters.value.value, () => customerFilterStore.queryCustomerCodes],
+	load: loadCases
 })
 </script>

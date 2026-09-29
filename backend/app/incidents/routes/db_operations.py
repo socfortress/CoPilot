@@ -44,6 +44,7 @@ from app.incidents.models import FieldName
 from app.incidents.schema.case_templates import CaseTaskCreate
 from app.incidents.schema.case_templates import CaseTaskUpdate
 from app.incidents.schema.db_operations import AITriggerResponse
+from app.incidents.schema.db_operations import AlertAssetOptionsResponse
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
@@ -237,6 +238,7 @@ from app.incidents.services.db_operations import replace_field_name
 from app.incidents.services.db_operations import replace_ioc_name
 from app.incidents.services.db_operations import replace_timefield_name
 from app.incidents.services.db_operations import report_template_exists
+from app.incidents.services.db_operations import search_alert_asset_names
 from app.incidents.services.db_operations import update_alert_assigned_to
 from app.incidents.services.db_operations import update_alert_escalated
 from app.incidents.services.db_operations import update_alert_status
@@ -1582,11 +1584,15 @@ async def get_verdict_stats_endpoint(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def get_alert_filter_options_endpoint(
+    include_assets: bool = Query(
+        True,
+        description="Include every asset name. Large tenants have thousands: use /alerts/filter-options/assets to search them.",
+    ),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get distinct sources, assets, and tags available for alert filtering."""
-    options = await get_alert_filter_options(current_user, db)
+    options = await get_alert_filter_options(current_user, db, include_assets=include_assets)
     return AlertFilterOptionsResponse(
         sources=options["sources"],
         assets=options["assets"],
@@ -1594,6 +1600,22 @@ async def get_alert_filter_options_endpoint(
         success=True,
         message="Filter options retrieved successfully",
     )
+
+
+@incidents_db_operations_router.get(
+    "/alerts/filter-options/assets",
+    response_model=AlertAssetOptionsResponse,
+    description="Asset names on the alerts the caller can see, matching a search, for a searchable filter",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def search_alert_asset_options_endpoint(
+    search: Optional[str] = Query(None, description="Case-insensitive substring of the asset name"),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    assets = await search_alert_asset_names(current_user, db, search, limit)
+    return AlertAssetOptionsResponse(assets=assets, success=True, message=f"{len(assets)} assets found")
 
 
 @incidents_db_operations_router.get(

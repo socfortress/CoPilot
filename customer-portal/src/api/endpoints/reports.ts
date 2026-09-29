@@ -13,9 +13,10 @@ export default {
 	 * The backend scopes results to the authenticated user's accessible
 	 * customers, so no customer filter is sent from the portal.
 	 */
-	listReports(signal?: AbortSignal) {
+	listReports(signal?: AbortSignal, keepOnNavigation = false) {
 		return HttpClient.get<CommonResponse<IncidentCustomerReportListResponse>>("/incidents/customer_reports", {
-			signal
+			signal,
+			keepOnNavigation
 		})
 	},
 
@@ -34,7 +35,8 @@ export default {
 	 */
 	downloadReport(reportId: number) {
 		return HttpClient.get<Blob>(`/incidents/customer_reports/${reportId}/download`, {
-			responseType: "blob"
+			responseType: "blob",
+			keepOnNavigation: true
 		})
 	},
 

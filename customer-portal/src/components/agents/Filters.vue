@@ -3,6 +3,7 @@
 		<div>
 			<n-select
 				v-model:value="filters.status"
+				data-testid="agents-status"
 				:options="statusOptions"
 				placeholder="Status"
 				:consistent-menu-width="false"
@@ -19,7 +20,12 @@
 			/>
 		</div>
 		<div>
-			<n-input v-model:value="filters.search" placeholder="Search (hostname, ip address, agent id)" clearable />
+			<n-input
+				v-model:value="filters.search"
+				placeholder="Search (hostname, ip address, agent id)"
+				clearable
+				data-testid="agents-search"
+			/>
 		</div>
 		<div class="flex items-center justify-between gap-2">
 			<n-checkbox v-model:checked="filters.critical">Critical Assets</n-checkbox>

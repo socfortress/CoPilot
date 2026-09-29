@@ -7,7 +7,9 @@ export interface PortalSeed {
 	password: string
 	alerts: { a: StatusCounts; b: StatusCounts }
 	cases: { a: StatusCounts; b: StatusCounts }
-	agents_a: { total: number; online: number; critical: number }
+	agents_a: { total: number; online: number; critical: number; offline: number; statuses: string[]; os_list: string[] }
+	/** The alert whose latest AI report carries the Markdown with code blocks. */
+	ai_alert_id: number
 	ai_a: { total_reports: number; severity_counts: Record<string, number> }
 }
 
@@ -24,8 +26,12 @@ declare global {
 		interface Chainable {
 			/** Re-seed the e2e database (idempotent) and expose the result as `@seed`. */
 			seedPortal: () => Chainable<PortalSeed>
-			/** Sign in through the real login form; cached per user across specs. */
-			loginToPortal: (seed: PortalSeed) => Chainable<void>
+			/**
+			 * Sign in through the real login form; cached per `sessionKey` across specs. Use a
+			 * distinct key after changing the user's customers: the portal reads them from the
+			 * token issued at login.
+			 */
+			loginToPortal: (seed: PortalSeed, sessionKey?: string) => Chainable<void>
 			/** Call the backend as the seeded admin, e.g. to change what the portal user may see. */
 			adminApi: (
 				seed: PortalSeed,
@@ -44,8 +50,8 @@ Cypress.Commands.add("seedPortal", () => {
 	})
 })
 
-Cypress.Commands.add("loginToPortal", seed => {
-	cy.session(seed.portal_user, () => {
+Cypress.Commands.add("loginToPortal", (seed, sessionKey = seed.portal_user) => {
+	cy.session(sessionKey, () => {
 		cy.visit("/login")
 		cy.get("[data-testid=login-username] input").type(seed.portal_user)
 		cy.get("[data-testid=login-password] input").type(seed.password, { log: false })

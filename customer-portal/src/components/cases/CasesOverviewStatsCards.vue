@@ -72,5 +72,6 @@ onBeforeMount(() => {
 })
 
 // Refetch whenever the global customer filter changes.
-watch(() => customerFilterStore.selectedCustomerCodes, fetchStats, { deep: true })
+// The store replaces the selection array on every change, so no deep watch is needed.
+watch(() => customerFilterStore.queryCustomerCodes, fetchStats)
 </script>
