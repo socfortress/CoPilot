@@ -15,6 +15,7 @@ field of a real response to show a failed section.
 | `ai-report.cy.ts` | #1185 — the Markdown renderer loads only when the full AI report opens; bundled languages are highlighted, others fall back to plain text instead of breaking the report. |
 | `cases-list.cy.ts` | #1185 — the cases list loads with one request and reacts to a filter within 250 ms. |
 | `customer-filter.cy.ts` | #1185 — picking a customer in the global filter reloads the alerts, cases and agents lists and cards once, for that customer; changing a selection already set is covered too (the case a shallow watcher would miss if the store ever mutated its array in place). |
+| `navigation-abort.cy.ts` | Leaving a page aborts its in-flight reads (Overview → Alerts → Cases leaves only the Cases calls alive), while the page landed on, branding and a query-string change on the same page are left alone. |
 | `live-changes.cy.ts` | What an operator changes in CoPilot reaches the portal on the next page load: customer assignments, the AI report switch, branding (save, second save, removal). |
 
 The same seed drives the API-level test `backend/tests/e2e/customer_portal_overview_e2e.py`,

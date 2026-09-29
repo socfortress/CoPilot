@@ -27,7 +27,7 @@ export default {
 	exportAgents(query: Omit<AgentsPageQuery, "page" | "pageSize">) {
 		return HttpClient.get<Blob>(
 			"/customer_portal/agents/export",
-			withCustomerCodes(query.customerCodes, { params: agentsParams(query), responseType: "blob" })
+			withCustomerCodes(query.customerCodes, { params: agentsParams(query), responseType: "blob", keepOnNavigation: true })
 		)
 	},
 

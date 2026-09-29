@@ -1,5 +1,6 @@
 import type { FormType } from "@/components/auth/types"
 import { createRouter, createWebHistory } from "vue-router"
+import { resetNavigationScope } from "@/api/navigation-abort"
 import { RouteRole } from "@/types/auth"
 import { Layout } from "@/types/theme"
 import { authCheck } from "@/utils/auth"
@@ -161,6 +162,20 @@ const router = createRouter({
 
 router.beforeEach(route => {
 	return authCheck(route)
+})
+
+// Cancel the outgoing page's in-flight reads (see api/navigation-abort.ts).
+//
+// In `beforeEach`, not `afterEach`: routes are lazy, so the router fetches the
+// target's chunk before confirming the navigation, and that chunk would otherwise
+// queue behind the connections the page being left still holds. Registered after
+// `authCheck`, so a navigation redirected to /login never cancels the page we stay on.
+// Path-only: lists sync their filters to the query string while their load is in flight.
+router.beforeEach((to, from) => {
+	if (to.path !== from.path) {
+		resetNavigationScope()
+	}
+	return true
 })
 
 export default router

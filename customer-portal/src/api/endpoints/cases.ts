@@ -178,7 +178,8 @@ export default {
 	 */
 	downloadCaseFile(caseId: number, fileName: string) {
 		return HttpClient.get<Blob>(`/incidents/db_operations/case/data-store/download/${caseId}/${fileName}`, {
-			responseType: "blob"
+			responseType: "blob",
+			keepOnNavigation: true
 		})
 	},
 

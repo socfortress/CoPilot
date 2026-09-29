@@ -19,7 +19,7 @@ export default {
 	 * `customer_codes` claim for customer_user accounts.
 	 */
 	refresh() {
-		return HttpClient.get<AuthResponse>("/auth/refresh")
+		return HttpClient.get<AuthResponse>("/auth/refresh", { keepOnNavigation: true })
 	},
 
 	resetPassword(username: string, newPassword: string, currentPassword: string) {
