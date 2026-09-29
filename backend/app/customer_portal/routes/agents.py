@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import List
 from typing import Optional
 
@@ -18,6 +17,7 @@ from app.customer_portal.services.agents import export_portal_agents_csv
 from app.customer_portal.services.agents import list_portal_agents
 from app.db.db_session import get_db
 from app.middleware.customer_query import customer_codes_query
+from app.time_utils import now_utc
 
 customer_portal_agents_router = APIRouter()
 
@@ -48,7 +48,7 @@ async def export_agents(
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     content = await export_portal_agents_csv(current_user, db, filters, customer_codes)
-    stamp = datetime.utcnow().strftime("%Y-%m-%d-%H-%M-%S")
+    stamp = now_utc().strftime("%Y-%m-%d-%H-%M-%S")
     return Response(
         content=content,
         media_type="text/csv",

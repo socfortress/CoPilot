@@ -26,6 +26,7 @@ from app.customer_portal.schema.settings import PatchPortalSettingsRequest
 from app.customer_portal.schema.settings import PublicPortalSettingsData
 from app.customer_portal.schema.settings import UpdatePortalSettingsRequest
 from app.db.universal_models import CustomerPortalSettings
+from app.time_utils import now_utc
 
 # Relative to the API root, like every path the portal's HTTP client calls.
 LOGO_PATH = "/customer_portal/settings/logo"
@@ -94,7 +95,7 @@ async def replace_global_settings(
 
     settings.updated_by = user_id
     # UTC, like the column default and every other portal timestamp.
-    settings.updated_at = datetime.utcnow()
+    settings.updated_at = now_utc()
     return settings
 
 
@@ -126,7 +127,7 @@ async def patch_global_settings(
             setattr(settings, field, defaults[field])
 
     settings.updated_by = user_id
-    settings.updated_at = datetime.utcnow()
+    settings.updated_at = now_utc()
     return settings
 
 
