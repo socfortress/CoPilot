@@ -194,12 +194,11 @@ watch([() => pagination.value.pageSize], resetPage, {
 
 // Re-fetch when the global customer filter changes (the list is scoped server-side).
 watch(
-	() => customerFilterStore.selectedCustomerCodes,
+	() => customerFilterStore.queryCustomerCodes,
 	() => {
 		pagination.value.page = 1
 		loadDashboards()
-	},
-	{ deep: true }
+	}
 )
 
 onBeforeMount(() => {
