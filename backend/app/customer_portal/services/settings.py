@@ -22,6 +22,7 @@ from sqlalchemy import func
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.customer_portal.schema.settings import PatchPortalSettingsRequest
 from app.customer_portal.schema.settings import PublicPortalSettingsData
 from app.customer_portal.schema.settings import UpdatePortalSettingsRequest
 from app.db.universal_models import CustomerPortalSettings
@@ -93,6 +94,38 @@ async def replace_global_settings(
 
     settings.updated_by = user_id
     # UTC, like the column default and every other portal timestamp.
+    settings.updated_at = datetime.utcnow()
+    return settings
+
+
+# What each ``reset`` entry of a PATCH restores.
+RESET_FIELDS = {
+    "title": ("title",),
+    "logo": ("logo_base64", "logo_mime_type"),
+    "brand_color": ("brand_color",),
+}
+
+
+async def patch_global_settings(
+    session: AsyncSession,
+    request: PatchPortalSettingsRequest,
+    user_id: Optional[int],
+) -> CustomerPortalSettings:
+    """Write only the fields the request carries, then restore the ones it resets. Caller commits."""
+    settings = await get_global_settings(session)
+    if settings is None:
+        settings = CustomerPortalSettings.create_default()
+        session.add(settings)
+
+    for field, value in request.model_dump(exclude_unset=True, exclude={"reset"}).items():
+        setattr(settings, field, value)
+
+    defaults = CustomerPortalSettings.get_default_values()
+    for target in request.reset:
+        for field in RESET_FIELDS[target]:
+            setattr(settings, field, defaults[field])
+
+    settings.updated_by = user_id
     settings.updated_at = datetime.utcnow()
     return settings
 

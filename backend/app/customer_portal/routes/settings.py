@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.customer_portal.schema.settings import PatchPortalSettingsRequest
 from app.customer_portal.schema.settings import PortalSettingsData
 from app.customer_portal.schema.settings import PortalSettingsResponse
 from app.customer_portal.schema.settings import PublicPortalSettingsResponse
@@ -22,6 +23,7 @@ from app.customer_portal.services.settings import PortalLogo
 from app.customer_portal.services.settings import get_global_settings_or_default
 from app.customer_portal.services.settings import get_portal_logo
 from app.customer_portal.services.settings import get_public_portal_settings
+from app.customer_portal.services.settings import patch_global_settings
 from app.customer_portal.services.settings import replace_global_settings
 from app.db.db_session import get_db
 
@@ -33,7 +35,10 @@ LOGO_MAX_AGE_SECONDS = 3600
 @customer_portal_settings_router.post(
     "/settings",
     response_model=UpdatePortalSettingsResponse,
-    description="Update customer portal settings (logo and title). Set fields to null to restore defaults.",
+    description=(
+        "Replace the customer portal settings: every field is written, and a null or missing one restores its default. "
+        "Prefer PATCH, which changes only the fields sent."
+    ),
     dependencies=[Depends(AuthHandler().require_any_scope("admin"))],
 )
 async def update_portal_settings(
@@ -61,6 +66,25 @@ async def update_portal_settings(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update portal settings: {str(e)}",
         )
+
+
+@customer_portal_settings_router.patch(
+    "/settings",
+    response_model=UpdatePortalSettingsResponse,
+    description="Change only the customer portal settings sent; restore defaults explicitly with `reset`.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def patch_portal_settings(
+    request: PatchPortalSettingsRequest,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
+) -> UpdatePortalSettingsResponse:
+    await patch_global_settings(session, request, current_user.id)
+    await session.commit()
+    branding_cache.invalidate_all()
+
+    logger.info(f"Portal settings patched by user {current_user.username} (id={current_user.id})")
+    return UpdatePortalSettingsResponse(success=True, message="Portal settings updated successfully")
 
 
 @customer_portal_settings_router.get(

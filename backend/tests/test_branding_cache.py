@@ -79,6 +79,7 @@ def test_every_write_route_invalidates_after_its_commit():
 
     for route in (
         settings_routes.update_portal_settings,
+        settings_routes.patch_portal_settings,
         branding_routes.set_customer_branding,
         branding_routes.remove_customer_branding,
     ):
