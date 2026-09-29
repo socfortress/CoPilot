@@ -2,6 +2,7 @@
 	<div>
 		<vue-markdown-it
 			v-if="highlighter"
+			:key="languagesVersion"
 			:source
 			:plugins="[
 				[
@@ -29,8 +30,8 @@ import type { BuiltinLanguage } from "shiki"
 import type { HighlighterCore } from "shiki/core"
 import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
 import { fromHighlighter } from "@shikijs/markdown-it/core"
-import { onMounted, shallowRef, toRefs } from "vue"
-import { codeThemes, FALLBACK_LANGUAGE, getHighlighter } from "@/utils/highlighter"
+import { ref, shallowRef, toRefs, watch } from "vue"
+import { codeThemes, FALLBACK_LANGUAGE, fencedLanguages, getHighlighter, loadLanguages } from "@/utils/highlighter"
 import "@/assets/scss/overrides/vue-md-it-override.scss"
 
 const props = defineProps<{
@@ -86,10 +87,22 @@ function markdownItLinkTargetBlank(md: MarkdownIt): void {
 
 const { source, codeBgTransparent } = toRefs(props)
 
-onMounted(async () => {
-	highlighter.value = await getHighlighter()
-	emit("mounted")
-})
+// Rendered once the languages its code blocks name are loaded (and again when the source
+// brings new ones): the plugin reads the loaded languages when it renders.
+const languagesVersion = ref(0)
+
+watch(
+	source,
+	async markdown => {
+		const instance = highlighter.value ?? (await getHighlighter())
+		await loadLanguages(instance, fencedLanguages(markdown))
+		const firstRender = !highlighter.value
+		highlighter.value = instance
+		languagesVersion.value++
+		if (firstRender) emit("mounted")
+	},
+	{ immediate: true }
+)
 </script>
 
 <style lang="scss" scoped>

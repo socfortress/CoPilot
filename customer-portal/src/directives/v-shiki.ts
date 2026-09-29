@@ -1,6 +1,6 @@
 import flourite from "flourite"
 import { decode } from "html-entities"
-import { codeThemes, getHighlighter, supportedLanguage } from "@/utils/highlighter"
+import { codeThemes, getHighlighter, loadLanguages, supportedLanguage } from "@/utils/highlighter"
 
 const vShiki = {
 	created: async (
@@ -32,6 +32,7 @@ const vShiki = {
 		}
 
 		const highlighter = await getHighlighter()
+		await loadLanguages(highlighter, [language])
 		const html = highlighter.codeToHtml(formattedCode(code), {
 			lang: supportedLanguage(highlighter, language),
 			themes: codeThemes
