@@ -36,7 +36,6 @@ from app.data_store.data_store_operations import (
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.incidents.models import Alert
-from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import CaseComment
 from app.incidents.models import Comment
@@ -205,6 +204,7 @@ from app.incidents.services.db_operations import get_alert_filter_options
 from app.incidents.services.db_operations import get_alert_title_names
 from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_case_by_id
+from app.incidents.services.db_operations import get_case_filter_options
 from app.incidents.services.db_operations import get_customer_ai_trigger
 from app.incidents.services.db_operations import get_customer_notification
 from app.incidents.services.db_operations import get_field_names
@@ -1628,23 +1628,7 @@ async def get_case_filter_options_endpoint(
     db: AsyncSession = Depends(get_db),
 ):
     """Get distinct case statuses and assigned_to values for filtering."""
-    from sqlalchemy import distinct
-
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(current_user, db)
-
-    if "*" in accessible_customers:
-        statuses_q = select(distinct(Case.case_status)).order_by(Case.case_status)
-        assigned_q = select(distinct(Case.assigned_to)).where(Case.assigned_to.isnot(None)).order_by(Case.assigned_to)
-    else:
-        customer_filter = Case.customer_code.in_(accessible_customers)
-        statuses_q = select(distinct(Case.case_status)).where(customer_filter).order_by(Case.case_status)
-        assigned_q = select(distinct(Case.assigned_to)).where(customer_filter, Case.assigned_to.isnot(None)).order_by(Case.assigned_to)
-
-    statuses_result = await db.execute(statuses_q)
-    statuses = [row[0] for row in statuses_result if row[0]]
-
-    assigned_result = await db.execute(assigned_q)
-    assigned_to = [row[0] for row in assigned_result if row[0]]
+    statuses, assigned_to = await get_case_filter_options(current_user, db)
 
     return CaseFilterOptionsResponse(
         statuses=statuses,

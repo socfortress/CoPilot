@@ -50,14 +50,41 @@ class CustomerRequestBody(BaseModel):
     )
 
 
+class CustomerOut(BaseModel):
+    """A customer as the API returns it.
+
+    ``CustomerRequestBody`` is what creating or updating a customer must satisfy. A
+    response has to show whatever the row holds: the contact names are nullable
+    columns, and one row without them (manual SQL, an import, an older version) used
+    to fail the validation of every list it appeared in.
+    """
+
+    customer_code: str
+    customer_name: str
+    contact_last_name: Optional[str] = None
+    contact_first_name: Optional[str] = None
+    parent_customer_code: Optional[str] = None
+    phone: Optional[str] = None
+    address_line1: Optional[str] = None
+    address_line2: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    postal_code: Optional[str] = None
+    country: Optional[str] = None
+    customer_type: Optional[str] = None
+    logo_file: Optional[str] = None
+    is_provisioned: Optional[bool] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
 class CustomerResponse(BaseModel):
-    customer: Optional[CustomerRequestBody] = None
+    customer: Optional[CustomerOut] = None
     success: bool
     message: str
 
 
 class CustomersResponse(BaseModel):
-    customers: list[CustomerRequestBody]
+    customers: list[CustomerOut]
     success: bool
     message: str
 
@@ -121,16 +148,32 @@ class CustomerMetaRequestBody(BaseModel):
     )
 
 
+class CustomerMetaOut(BaseModel):
+    """Customer meta as the API returns it: the columns that are nullable in the table are optional here."""
+
+    customer_meta_graylog_index: str
+    customer_meta_graylog_stream: str
+    customer_meta_grafana_org_id: str
+    customer_meta_wazuh_group: str
+    customer_meta_index_retention: Optional[str] = None
+    customer_meta_wazuh_registration_port: Optional[str] = None
+    customer_meta_wazuh_log_ingestion_port: Optional[str] = None
+    customer_meta_wazuh_api_port: Optional[str] = None
+    customer_meta_wazuh_auth_password: Optional[str] = None
+    customer_meta_portainer_stack_id: Optional[int] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
 class CustomerMetaResponse(BaseModel):
-    customer_meta: Optional[CustomerMetaRequestBody] = None
+    customer_meta: Optional[CustomerMetaOut] = None
     success: bool
     message: str
 
 
 ############# Customer Full Response
 class CustomerFullResponse(BaseModel):
-    customer: Optional[CustomerRequestBody] = None
-    customer_meta: Optional[CustomerMetaRequestBody] = None
+    customer: Optional[CustomerOut] = None
+    customer_meta: Optional[CustomerMetaOut] = None
     success: bool
     message: str
 

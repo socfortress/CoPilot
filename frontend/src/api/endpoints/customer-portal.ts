@@ -15,6 +15,15 @@ export interface CustomerPortalSettingsPayload {
 	brand_color: string | null
 }
 
+/** Partial update of the global settings: only the fields present change; `reset` restores defaults. */
+export interface CustomerPortalSettingsPatch {
+	title?: string
+	logo_base64?: string
+	logo_mime_type?: string
+	brand_color?: string
+	reset?: ("title" | "logo" | "brand_color")[]
+}
+
 /** Per-customer override payload. Null fields inherit the corresponding global setting. */
 export interface CustomerPortalBrandingPayload extends CustomerPortalSettingsPayload {
 	enabled: boolean
@@ -41,11 +50,9 @@ export default {
 			{ signal }
 		)
 	},
-	setSettings(payload: CustomerPortalSettingsPayload) {
-		return HttpClient.post<FlaskBaseResponse & { settings: CustomerPortalSettings }>(
-			`/customer_portal/settings`,
-			payload
-		)
+	/** Change only the global settings sent (see `buildSettingsPatch`). */
+	patchSettings(patch: CustomerPortalSettingsPatch) {
+		return HttpClient.patch<FlaskBaseResponse>(`/customer_portal/settings`, patch)
 	},
 	getBrandingOverrides(signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { overrides: CustomerPortalBrandingListItem[] }>(

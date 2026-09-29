@@ -69,6 +69,7 @@
 							<div class="flex w-full flex-col gap-1">
 								<n-input
 									v-model:value="model.title"
+									data-testid="portal-settings-title"
 									:disabled="loading"
 									clearable
 									:placeholder="fallbackTitle"
@@ -156,7 +157,13 @@
 					</template>
 					Remove override
 				</n-button>
-				<n-button type="primary" :loading="saving" :disabled="loading" @click="save()">
+				<n-button
+					type="primary"
+					data-testid="portal-settings-save"
+					:loading="saving"
+					:disabled="loading"
+					@click="save()"
+				>
 					<template #icon>
 						<Icon :name="SaveIcon" />
 					</template>
@@ -168,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CustomerPortalBrandingPayload, CustomerPortalSettingsPayload } from "@/api/endpoints/customer-portal"
+import type { CustomerPortalBrandingPayload } from "@/api/endpoints/customer-portal"
 import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import type { ApiError } from "@/types/common"
 import type { CustomerPortalBrandingOverride, CustomerPortalEffectiveBranding } from "@/types/customer-portal"
@@ -191,6 +198,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import ImageCropper from "@/components/common/ImageCropper.vue"
 import { getApiErrorMessage } from "@/utils"
+import { buildSettingsPatch } from "./settingsPatch"
 
 /**
  * The branding form, in both of its scopes:
@@ -346,19 +354,26 @@ async function getSettings() {
 }
 
 async function save() {
-	const logoMeta = getLogoMeta(model.value.logo)
-	const payload: CustomerPortalSettingsPayload = {
-		title: model.value.title || null,
-		logo_base64: logoMeta.base64,
-		logo_mime_type: logoMeta.mime_type,
-		brand_color: model.value.brand_color || null
+	// The global settings are patched with just what changed, so a new title no longer
+	// re-uploads the logo. An override is one row replaced as a whole (PUT).
+	const patch = customerCode ? null : buildSettingsPatch(globalDefaults.value, model.value)
+	if (!customerCode && !patch) {
+		message.info("No changes to save")
+		return
 	}
 
 	saving.value = true
 
 	try {
 		if (customerCode) {
-			const brandingPayload: CustomerPortalBrandingPayload = { ...payload, enabled: mode.value === "custom" }
+			const logoMeta = getLogoMeta(model.value.logo)
+			const brandingPayload: CustomerPortalBrandingPayload = {
+				title: model.value.title || null,
+				logo_base64: logoMeta.base64,
+				logo_mime_type: logoMeta.mime_type,
+				brand_color: model.value.brand_color || null,
+				enabled: mode.value === "custom"
+			}
 			const res = await Api.customerPortal.setCustomerBranding(customerCode, brandingPayload)
 
 			if (res.data.success) {
@@ -369,8 +384,8 @@ async function save() {
 			} else {
 				message.warning(res.data?.message || "Failed to update customer branding")
 			}
-		} else {
-			const res = await Api.customerPortal.setSettings(payload)
+		} else if (patch) {
+			const res = await Api.customerPortal.patchSettings(patch)
 
 			if (res.data.success) {
 				globalDefaults.value = { ...model.value }

@@ -183,7 +183,7 @@ def test_customers_list_issues_a_single_statement(monkeypatch):
 
     class _Result:
         def all(self):
-            return [(SimpleNamespace(customer_code="SOC01"), True)]
+            return [(SimpleNamespace(customer_code="SOC01", customer_name="Acme"), True)]
 
     session = MagicMock()
 
@@ -199,18 +199,6 @@ def test_customers_list_issues_a_single_statement(monkeypatch):
         return query
 
     monkeypatch.setattr(route_module.customer_access_handler, "filter_query_by_customer_access", fake_filter)
-
-    # A real schema object: CustomersResponse validates its contents, and a stub
-    # would fail on the required fields rather than on what this test is about.
-    def _from_orm(cls, obj):
-        return route_module.CustomerRequestBody(
-            customer_code=obj.customer_code,
-            customer_name="Acme",
-            contact_last_name="Doe",
-            contact_first_name="Jane",
-        )
-
-    monkeypatch.setattr(route_module.CustomerRequestBody, "from_orm", classmethod(_from_orm))
 
     response = asyncio.run(
         route_module.get_customers(

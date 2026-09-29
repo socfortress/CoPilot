@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter
@@ -9,23 +8,25 @@ from fastapi import Response
 from fastapi import Security
 from fastapi import status
 from loguru import logger
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.customer_portal.routes.errors import internal_errors
+from app.customer_portal.schema.settings import PatchPortalSettingsRequest
 from app.customer_portal.schema.settings import PortalSettingsData
 from app.customer_portal.schema.settings import PortalSettingsResponse
 from app.customer_portal.schema.settings import PublicPortalSettingsResponse
 from app.customer_portal.schema.settings import UpdatePortalSettingsRequest
 from app.customer_portal.schema.settings import UpdatePortalSettingsResponse
 from app.customer_portal.services import branding_cache
-from app.customer_portal.services.branding import get_global_settings
 from app.customer_portal.services.settings import PortalLogo
+from app.customer_portal.services.settings import get_global_settings_or_default
 from app.customer_portal.services.settings import get_portal_logo
 from app.customer_portal.services.settings import get_public_portal_settings
+from app.customer_portal.services.settings import patch_global_settings
+from app.customer_portal.services.settings import replace_global_settings
 from app.db.db_session import get_db
-from app.db.universal_models import CustomerPortalSettings
 
 customer_portal_settings_router = APIRouter()
 
@@ -35,7 +36,10 @@ LOGO_MAX_AGE_SECONDS = 3600
 @customer_portal_settings_router.post(
     "/settings",
     response_model=UpdatePortalSettingsResponse,
-    description="Update customer portal settings (logo and title). Set fields to null to restore defaults.",
+    description=(
+        "Replace the customer portal settings: every field is written, and a null or missing one restores its default. "
+        "Prefer PATCH, which changes only the fields sent."
+    ),
     dependencies=[Depends(AuthHandler().require_any_scope("admin"))],
 )
 async def update_portal_settings(
@@ -43,57 +47,11 @@ async def update_portal_settings(
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(AuthHandler().get_current_user),
 ) -> UpdatePortalSettingsResponse:
-    """
-    Update customer portal settings including logo and title.
-    Set any field to null to restore its default value.
-    Requires authentication.
-    """
-    try:
-        # Check if settings exist
-        result = await session.execute(select(CustomerPortalSettings))
-        settings = result.scalars().first()
-
-        if not settings:
-            # Create default settings if none exist
-            settings = CustomerPortalSettings.create_default()
-            session.add(settings)
-
-        # Get default values
-        defaults = CustomerPortalSettings.get_default_values()
-
-        # Handle title: if explicitly set to null, restore default
-        if request.title is None:
-            settings.title = defaults["title"]
-        else:
-            settings.title = request.title
-
-        # Handle logo_base64: if explicitly set to null, restore default
-        if request.logo_base64 is None:
-            settings.logo_base64 = defaults["logo_base64"]
-        else:
-            settings.logo_base64 = request.logo_base64
-
-        # Handle logo_mime_type: if explicitly set to null, restore default
-        if request.logo_mime_type is None:
-            settings.logo_mime_type = defaults["logo_mime_type"]
-        else:
-            settings.logo_mime_type = request.logo_mime_type
-
-        # Handle brand_color: if explicitly set to null, restore default
-        if request.brand_color is None:
-            settings.brand_color = defaults["brand_color"]
-        else:
-            settings.brand_color = request.brand_color
-
-        # Update metadata. UTC, like the column default and every other portal
-        # timestamp — datetime.now() would stamp the server's local time and make
-        # this row inconsistent with the rest of the schema.
-        settings.updated_by = current_user.id
-        settings.updated_at = datetime.utcnow()
-
+    """Replace the global settings: every field is written, and a null one restores its default."""
+    async with internal_errors("update portal settings", session):
+        await replace_global_settings(session, request, current_user.id)
         await session.commit()
         branding_cache.invalidate_all()
-        await session.refresh(settings)
 
         logger.info(f"Portal settings updated successfully by user {current_user.username} (id={current_user.id})")
 
@@ -102,13 +60,25 @@ async def update_portal_settings(
             message="Portal settings updated successfully",
         )
 
-    except Exception as e:
-        logger.error(f"Failed to update portal settings: {e}")
-        await session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update portal settings: {str(e)}",
-        )
+
+@customer_portal_settings_router.patch(
+    "/settings",
+    response_model=UpdatePortalSettingsResponse,
+    description="Change only the customer portal settings sent; restore defaults explicitly with `reset`.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def patch_portal_settings(
+    request: PatchPortalSettingsRequest,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
+) -> UpdatePortalSettingsResponse:
+    async with internal_errors("update portal settings", session):
+        await patch_global_settings(session, request, current_user.id)
+        await session.commit()
+        branding_cache.invalidate_all()
+
+    logger.info(f"Portal settings patched by user {current_user.username} (id={current_user.id})")
+    return UpdatePortalSettingsResponse(success=True, message="Portal settings updated successfully")
 
 
 @customer_portal_settings_router.get(
@@ -123,18 +93,12 @@ async def get_portal_settings(
     Global title, brand color and logo URL for the login page.
     Public (no authentication) and read-only: a missing row reads as the defaults.
     """
-    try:
+    async with internal_errors("get portal settings"):
         settings = await get_public_portal_settings(session)
         return PublicPortalSettingsResponse(
             success=True,
             message="Portal settings retrieved successfully",
             settings=settings,
-        )
-    except Exception as e:
-        logger.error(f"Failed to get portal settings: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get portal settings",
         )
 
 
@@ -185,11 +149,8 @@ async def get_portal_logo_image(
 async def get_global_portal_settings(
     session: AsyncSession = Depends(get_db),
 ) -> PortalSettingsResponse:
-    try:
-        settings = await get_global_settings(session)
-        if settings is None:
-            settings = CustomerPortalSettings.create_default()
-            settings.id = 0
+    async with internal_errors("get portal settings"):
+        settings = await get_global_settings_or_default(session)
 
         return PortalSettingsResponse(
             success=True,
@@ -202,10 +163,4 @@ async def get_global_portal_settings(
                 brand_color=settings.brand_color,
                 updated_at=settings.updated_at.isoformat(),
             ),
-        )
-    except Exception as e:
-        logger.error(f"Failed to get portal settings: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get portal settings",
         )

@@ -19,7 +19,6 @@ Every consumer — the portal API, the report theming in
 ``resolve_effective_branding`` / ``resolve_branding_for_user`` rather than reading
 either table directly, so the fallback rules stay in one place.
 """
-from datetime import datetime
 from typing import List
 from typing import Optional
 
@@ -34,16 +33,12 @@ from app.customer_portal.services import branding_cache
 from app.customer_portal.services.settings import EFFECTIVE_LOGO_PATH
 from app.customer_portal.services.settings import PortalLogo
 from app.customer_portal.services.settings import decode_logo
+from app.customer_portal.services.settings import get_global_settings
 from app.customer_portal.services.settings import logo_content_version
 from app.db.universal_models import CustomerPortalBranding
 from app.db.universal_models import CustomerPortalSettings
 from app.middleware.customer_access import customer_access_handler
-
-
-async def get_global_settings(session: AsyncSession) -> Optional[CustomerPortalSettings]:
-    """Return the global portal settings row, or None when it has never been saved."""
-    result = await session.execute(select(CustomerPortalSettings).limit(1))
-    return result.scalars().first()
+from app.time_utils import now_utc
 
 
 async def get_branding_override(session: AsyncSession, customer_code: str) -> Optional[CustomerPortalBranding]:
@@ -186,7 +181,7 @@ async def upsert_branding_override(
     override.logo_mime_type = _normalize(logo_mime_type) if _normalize(logo_base64) else None
     override.brand_color = _normalize(brand_color)
     override.updated_by = user_id
-    override.updated_at = datetime.utcnow()
+    override.updated_at = now_utc()
 
     return override
 

@@ -88,6 +88,10 @@ async def seed():
         await s.execute(delete(Agents).where(Agents.customer_code.in_([CUST_A, CUST_B])))
         await s.execute(delete(CustomDashboardTemplates).where(CustomDashboardTemplates.template_key.like("e2eo_%")))
         await s.execute(delete(AlertCreationSettings).where(AlertCreationSettings.customer_code.in_([CUST_A, CUST_B])))
+        # Il seed Playwright del frontend analyst prende in prestito clienti esistenti quando
+        # la licenza impedisce di crearne e ci assegna il suo analista: tolgo ogni accesso ai
+        # nostri clienti, non solo quelli dei nostri utenti, o la delete sotto viola la FK.
+        await s.execute(delete(UserCustomerAccess).where(UserCustomerAccess.customer_code.in_([CUST_A, CUST_B])))
         await s.commit()
         for code in (CUST_A, CUST_B):
             c = (await s.execute(select(Customers).where(Customers.customer_code == code))).scalars().first()

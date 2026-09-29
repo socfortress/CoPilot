@@ -22,8 +22,11 @@ from sqlalchemy import func
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.customer_portal.schema.settings import PatchPortalSettingsRequest
 from app.customer_portal.schema.settings import PublicPortalSettingsData
+from app.customer_portal.schema.settings import UpdatePortalSettingsRequest
 from app.db.universal_models import CustomerPortalSettings
+from app.time_utils import now_utc
 
 # Relative to the API root, like every path the portal's HTTP client calls.
 LOGO_PATH = "/customer_portal/settings/logo"
@@ -57,6 +60,75 @@ def decode_logo(logo_base64: Optional[str], mime_type: Optional[str], version: s
         logger.error("Stored customer portal logo is not valid base64")
         return None
     return PortalLogo(content=content, mime_type=mime_type or "image/png", etag=f'"{version}"')
+
+
+async def get_global_settings(session: AsyncSession) -> Optional[CustomerPortalSettings]:
+    """Return the global portal settings row, or None when it has never been saved."""
+    result = await session.execute(select(CustomerPortalSettings).limit(1))
+    return result.scalars().first()
+
+
+async def get_global_settings_or_default(session: AsyncSession) -> CustomerPortalSettings:
+    """The global row, or an unsaved default one (``id=0``) when it has never been saved."""
+    settings = await get_global_settings(session)
+    if settings is None:
+        settings = CustomerPortalSettings.create_default()
+        settings.id = 0
+    return settings
+
+
+async def replace_global_settings(
+    session: AsyncSession,
+    request: UpdatePortalSettingsRequest,
+    user_id: Optional[int],
+) -> CustomerPortalSettings:
+    """Write every field of the global settings; a null field restores its default. Caller commits."""
+    settings = await get_global_settings(session)
+    if settings is None:
+        settings = CustomerPortalSettings.create_default()
+        session.add(settings)
+
+    defaults = CustomerPortalSettings.get_default_values()
+    for field in ("title", "logo_base64", "logo_mime_type", "brand_color"):
+        value = getattr(request, field)
+        setattr(settings, field, defaults[field] if value is None else value)
+
+    settings.updated_by = user_id
+    # UTC, like the column default and every other portal timestamp.
+    settings.updated_at = now_utc()
+    return settings
+
+
+# What each ``reset`` entry of a PATCH restores.
+RESET_FIELDS = {
+    "title": ("title",),
+    "logo": ("logo_base64", "logo_mime_type"),
+    "brand_color": ("brand_color",),
+}
+
+
+async def patch_global_settings(
+    session: AsyncSession,
+    request: PatchPortalSettingsRequest,
+    user_id: Optional[int],
+) -> CustomerPortalSettings:
+    """Write only the fields the request carries, then restore the ones it resets. Caller commits."""
+    settings = await get_global_settings(session)
+    if settings is None:
+        settings = CustomerPortalSettings.create_default()
+        session.add(settings)
+
+    for field, value in request.model_dump(exclude_unset=True, exclude={"reset"}).items():
+        setattr(settings, field, value)
+
+    defaults = CustomerPortalSettings.get_default_values()
+    for target in request.reset:
+        for field in RESET_FIELDS[target]:
+            setattr(settings, field, defaults[field])
+
+    settings.updated_by = user_id
+    settings.updated_at = now_utc()
+    return settings
 
 
 async def ensure_default_portal_settings(async_engine) -> None:
@@ -110,8 +182,7 @@ async def get_public_portal_settings(session: AsyncSession) -> PublicPortalSetti
 
 async def get_portal_logo(session: AsyncSession) -> Optional[PortalLogo]:
     """The decoded global logo, or None when none is configured (or it cannot be decoded)."""
-    result = await session.execute(select(CustomerPortalSettings).limit(1))
-    settings = result.scalars().first()
+    settings = await get_global_settings(session)
     if settings is None:
         return None
     return decode_logo(settings.logo_base64, settings.logo_mime_type, _logo_version(settings.updated_at))

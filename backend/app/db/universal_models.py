@@ -16,6 +16,8 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
+from app.time_utils import now_utc
+
 
 class Customers(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
@@ -402,51 +404,8 @@ class CustomerPortalSettings(SQLModel, table=True):
     logo_base64: Optional[str] = Field(default=None, sa_column=Column(LONGTEXT))  # Use TEXT column for large base64 data
     logo_mime_type: Optional[str] = Field(default=None, max_length=50)  # e.g., "image/png", "image/jpeg"
     brand_color: Optional[str] = Field(default=None, max_length=9)  # e.g., "#RRGGBB" - used to theme customer-branded reports
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=now_utc)
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
-
-    def update_from_request(
-        self,
-        title: Optional[str] = None,
-        logo_base64: Optional[str] = None,
-        logo_mime_type: Optional[str] = None,
-        brand_color: Optional[str] = None,
-        user_id: Optional[int] = None,
-    ) -> None:
-        """
-        Update settings from request data.
-        If a field is explicitly None, restore it to default value.
-        """
-        # Get default values for restoration
-        defaults = self.get_default_values()
-
-        # Update title - if None is passed, restore to default
-        if title is not None:
-            self.title = title
-        elif title is None and hasattr(self, "_explicit_none_title"):
-            self.title = defaults["title"]
-
-        # Update logo_base64 - if None is passed, restore to default
-        if logo_base64 is not None:
-            self.logo_base64 = logo_base64
-        elif logo_base64 is None and hasattr(self, "_explicit_none_logo"):
-            self.logo_base64 = defaults["logo_base64"]
-
-        # Update logo_mime_type - if None is passed, restore to default
-        if logo_mime_type is not None:
-            self.logo_mime_type = logo_mime_type
-        elif logo_mime_type is None and hasattr(self, "_explicit_none_mime"):
-            self.logo_mime_type = defaults["logo_mime_type"]
-
-        # Update brand_color - if None is passed, restore to default
-        if brand_color is not None:
-            self.brand_color = brand_color
-        elif brand_color is None and hasattr(self, "_explicit_none_brand_color"):
-            self.brand_color = defaults["brand_color"]
-
-        self.updated_by = user_id
-        # UTC, matching the column default (datetime.utcnow).
-        self.updated_at = datetime.utcnow()
 
     @staticmethod
     def get_default_values() -> dict:
@@ -494,7 +453,7 @@ class CustomerPortalBranding(SQLModel, table=True):
     logo_base64: Optional[str] = Field(default=None, sa_column=Column(LONGTEXT))  # LONGTEXT: base64 payloads are large
     logo_mime_type: Optional[str] = Field(default=None, max_length=50)  # e.g. "image/png", "image/jpeg"
     brand_color: Optional[str] = Field(default=None, max_length=9)  # e.g. "#RRGGBB"
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=now_utc)
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
 
@@ -521,7 +480,7 @@ class CustomerPortalAiReportSettings(SQLModel, table=True):
     # One row per customer. Hard FK: a setting for a deleted customer is meaningless.
     customer_code: str = Field(foreign_key="customers.customer_code", max_length=50, index=True, unique=True, nullable=False)
     enabled: bool = Field(default=False, nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=now_utc)
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
 

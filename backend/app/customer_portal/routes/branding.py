@@ -14,16 +14,14 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Header
-from fastapi import HTTPException
 from fastapi import Response
 from fastapi import Security
-from fastapi import status
 from loguru import logger
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.customer_portal.routes.errors import internal_errors
 from app.customer_portal.routes.settings import logo_response
 from app.customer_portal.schema.branding import CustomerBrandingListItem
 from app.customer_portal.schema.branding import CustomerBrandingListResponse
@@ -40,8 +38,8 @@ from app.customer_portal.services.branding import resolve_branding_for_user
 from app.customer_portal.services.branding import resolve_effective_branding
 from app.customer_portal.services.branding import to_portal_branding
 from app.customer_portal.services.branding import upsert_branding_override
+from app.customer_portal.services.customers import ensure_customer_exists
 from app.db.db_session import get_db
-from app.db.universal_models import Customers
 from app.middleware.customer_access import verify_customer_code_access
 
 customer_portal_branding_router = APIRouter()
@@ -61,12 +59,6 @@ def _to_override_schema(override) -> CustomerBrandingOverride:
     )
 
 
-async def _ensure_customer_exists(session: AsyncSession, customer_code: str) -> None:
-    result = await session.execute(select(Customers).where(Customers.customer_code == customer_code))
-    if result.scalars().first() is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Customer {customer_code} not found")
-
-
 @customer_portal_branding_router.get(
     "/settings/effective",
     response_model=EffectiveBrandingResponse,
@@ -78,21 +70,14 @@ async def get_effective_portal_settings(
 ) -> EffectiveBrandingResponse:
     """Resolve branding for the logged-in portal user.
 
-    Never fails the portal over branding: on any unexpected error we log and let
-    the caller keep whatever it already had (``settings=None``).
+    A failure is a generic 500; the portal keeps the branding it already shows.
     """
-    try:
+    async with internal_errors("resolve portal branding"):
         effective = await resolve_branding_for_user(session, current_user)
         return EffectiveBrandingResponse(
             success=True,
             message="Portal branding resolved successfully",
             settings=to_portal_branding(effective),
-        )
-    except Exception as e:
-        logger.error(f"Failed to resolve effective portal branding for user {current_user.username}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to resolve portal branding: {str(e)}",
         )
 
 
@@ -121,7 +106,7 @@ async def get_effective_portal_logo(
 async def list_customer_branding(
     session: AsyncSession = Depends(get_db),
 ) -> CustomerBrandingListResponse:
-    try:
+    async with internal_errors("list customer branding overrides"):
         overrides = await list_branding_overrides(session)
         return CustomerBrandingListResponse(
             success=True,
@@ -138,12 +123,6 @@ async def list_customer_branding(
                 for item in overrides
             ],
         )
-    except Exception as e:
-        logger.error(f"Failed to list customer branding overrides: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list customer branding overrides: {str(e)}",
-        )
 
 
 @customer_portal_branding_router.get(
@@ -159,7 +138,7 @@ async def get_customer_branding(
     customer_code: str,
     session: AsyncSession = Depends(get_db),
 ) -> CustomerBrandingResponse:
-    try:
+    async with internal_errors("get customer branding"):
         override = await get_branding_override(session, customer_code)
         effective = await resolve_effective_branding(session, customer_code)
 
@@ -168,12 +147,6 @@ async def get_customer_branding(
             message="Customer branding retrieved successfully",
             override=_to_override_schema(override) if override else None,
             effective=effective,
-        )
-    except Exception as e:
-        logger.error(f"Failed to get branding for customer {customer_code}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get customer branding: {str(e)}",
         )
 
 
@@ -189,9 +162,9 @@ async def set_customer_branding(
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(AuthHandler().get_current_user),
 ) -> CustomerBrandingResponse:
-    await _ensure_customer_exists(session, customer_code)
+    await ensure_customer_exists(session, customer_code)
 
-    try:
+    async with internal_errors("save customer branding", session):
         override = await upsert_branding_override(
             session,
             customer_code=customer_code,
@@ -215,15 +188,6 @@ async def set_customer_branding(
             override=_to_override_schema(override),
             effective=effective,
         )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to save branding for customer {customer_code}: {e}")
-        await session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to save customer branding: {str(e)}",
-        )
 
 
 @customer_portal_branding_router.delete(
@@ -236,7 +200,7 @@ async def remove_customer_branding(
     customer_code: str,
     session: AsyncSession = Depends(get_db),
 ) -> CustomerBrandingResponse:
-    try:
+    async with internal_errors("delete customer branding", session):
         deleted = await delete_branding_override(session, customer_code)
         if deleted:
             await session.commit()
@@ -251,11 +215,4 @@ async def remove_customer_branding(
             else "No branding override configured - already inheriting global portal settings",
             override=None,
             effective=effective,
-        )
-    except Exception as e:
-        logger.error(f"Failed to delete branding for customer {customer_code}: {e}")
-        await session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete customer branding: {str(e)}",
         )

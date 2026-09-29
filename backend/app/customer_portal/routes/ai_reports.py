@@ -3,16 +3,14 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
-from fastapi import status
 from loguru import logger
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.customer_portal.routes.errors import internal_errors
 from app.customer_portal.schema.ai_reports import PortalAiAlertAnalysisResponse
 from app.customer_portal.schema.ai_reports import PortalAiInsightsResponse
 from app.customer_portal.schema.ai_reports import PortalAiReportAvailabilityResponse
@@ -24,8 +22,8 @@ from app.customer_portal.services.ai_reports import get_portal_ai_insights
 from app.customer_portal.services.ai_reports import get_portal_alert_analysis
 from app.customer_portal.services.ai_reports import is_ai_reports_enabled_for_user
 from app.customer_portal.services.ai_reports import upsert_ai_report_settings
+from app.customer_portal.services.customers import ensure_customer_exists
 from app.db.db_session import get_db
-from app.db.universal_models import Customers
 from app.middleware.customer_access import verify_customer_code_access
 
 customer_portal_ai_reports_router = APIRouter()
@@ -42,12 +40,6 @@ customer_portal_ai_reports_router = APIRouter()
 # routes must stay declared above nothing wildcard-shaped in this router; the
 # only path parameter here is ``/ai_reports/alert/{alert_id}``, which cannot
 # collide. Keep it that way when appending routes (see CLAUDE.md route ordering).
-
-
-async def _ensure_customer_exists(session: AsyncSession, customer_code: str) -> None:
-    result = await session.execute(select(Customers).where(Customers.customer_code == customer_code))
-    if result.scalars().first() is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Customer {customer_code} not found")
 
 
 def _settings_schema(customer_code: str, settings) -> PortalAiReportSettings:
@@ -100,9 +92,9 @@ async def set_customer_ai_report_settings(
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(AuthHandler().get_current_user),
 ) -> PortalAiReportSettingsResponse:
-    await _ensure_customer_exists(session, customer_code)
+    await ensure_customer_exists(session, customer_code)
 
-    try:
+    async with internal_errors("save customer AI report settings", session):
         settings = await upsert_ai_report_settings(
             customer_code,
             request.enabled,
@@ -111,13 +103,6 @@ async def set_customer_ai_report_settings(
         )
         await session.commit()
         await session.refresh(settings)
-    except Exception as e:
-        logger.error(f"Failed to save AI report settings for customer {customer_code}: {e}")
-        await session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to save customer AI report settings: {str(e)}",
-        )
 
     logger.info(f"Customer portal AI reports {'enabled' if request.enabled else 'disabled'} for customer {customer_code}")
 

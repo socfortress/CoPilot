@@ -1,12 +1,16 @@
-import base64
-import re
+from typing import List
+from typing import Literal
 from typing import Optional
 
-from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
+from pydantic import model_validator
+
+from app.customer_portal.utils.validators import validate_brand_color
+from app.customer_portal.utils.validators import validate_logo_base64
+from app.customer_portal.utils.validators import validate_logo_mime_type
 
 
 class UpdatePortalSettingsRequest(BaseModel):
@@ -22,61 +26,79 @@ class UpdatePortalSettingsRequest(BaseModel):
     @field_validator("brand_color")
     @classmethod
     def validate_brand_color(cls, v):
-        if v is None:
-            return v
-
-        v = v.strip()
-        if not re.match(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$", v):
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid brand_color. Expected a hex color like #RGB or #RRGGBB",
-            )
-        return v.lower()
+        return validate_brand_color(v)
 
     @field_validator("logo_base64")
     @classmethod
     def validate_base64(cls, v):
-        if v is None:
-            return v
-
-        # Remove data URL prefix if present
-        if v.startswith("data:"):
-            v = v.split(",", 1)[1] if "," in v else v
-
-        # Check size (limit to 5MB base64 = ~3.75MB original)
-        max_size = 5 * 1024 * 1024  # 5MB
-        if len(v) > max_size:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Logo file too large. Maximum size is {max_size // (1024 * 1024)}MB (base64-encoded)",
-            )
-
-        # Validate base64 format
-        if not re.match(r"^[A-Za-z0-9+/]*={0,2}$", v):
-            raise HTTPException(status_code=400, detail="Invalid base64 encoded string for logo_base64")
-
-        # Optional: Try to decode to verify it's valid base64
-        try:
-            base64.b64decode(v)
-        except Exception:
-            raise HTTPException(status_code=400, detail="Invalid base64 data - cannot decode")
-
-        return v
+        return validate_logo_base64(v)
 
     @field_validator("logo_mime_type")
     @classmethod
     def validate_mime_type(cls, v):
-        if v is None:
-            return v
-
-        allowed_types = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/svg+xml", "image/webp"]
-        if v not in allowed_types:
-            raise HTTPException(status_code=400, detail=f"Invalid MIME type. Allowed types are: {', '.join(allowed_types)}")
-        return v
+        return validate_logo_mime_type(v)
 
     model_config = ConfigDict(
         json_schema_extra={"example": {"title": "My Custom Portal", "logo_base64": "iVBORw0KGgoAAAANS...", "logo_mime_type": "image/png"}},
     )
+
+
+ResettableField = Literal["title", "logo", "brand_color"]
+
+
+class PatchPortalSettingsRequest(BaseModel):
+    """Partial update of the global settings: only the fields sent are written.
+
+    Restoring a default is explicit (``reset``), never a null: in ``POST /settings`` a
+    missing field and a null both mean "reset", which is why changing only the title
+    there means re-sending the whole logo.
+    """
+
+    title: Optional[str] = Field(None, min_length=1, max_length=255, description="Portal title.")
+    logo_base64: Optional[str] = Field(None, description="Base64 encoded logo image. Send together with logo_mime_type.")
+    logo_mime_type: Optional[str] = Field(None, max_length=50, description="MIME type of the logo. Send together with logo_base64.")
+    brand_color: Optional[str] = Field(None, max_length=9, description="Brand color as a hex string (e.g. #RRGGBB).")
+    reset: List[ResettableField] = Field(
+        default_factory=list,
+        description="Fields to restore to their default. `logo` resets the logo and its MIME type.",
+    )
+
+    @field_validator("brand_color")
+    @classmethod
+    def validate_brand_color(cls, v):
+        return validate_brand_color(v)
+
+    @field_validator("logo_base64")
+    @classmethod
+    def validate_base64(cls, v):
+        return validate_logo_base64(v)
+
+    @field_validator("logo_mime_type")
+    @classmethod
+    def validate_mime_type(cls, v):
+        return validate_logo_mime_type(v)
+
+    @model_validator(mode="after")
+    def check_consistency(self):
+        sent = self.model_fields_set - {"reset"}
+        for field in sent:
+            if getattr(self, field) is None:
+                reset_name = "logo" if field.startswith("logo_") else field
+                raise ValueError(f'{field} cannot be empty; to restore its default send reset: ["{reset_name}"]')
+
+        if ("logo_base64" in sent) != ("logo_mime_type" in sent):
+            raise ValueError("logo_base64 and logo_mime_type must be sent together")
+
+        touched = {"logo" if field.startswith("logo_") else field for field in sent}
+        both = touched & set(self.reset)
+        if both:
+            raise ValueError(f"Cannot both set and reset: {', '.join(sorted(both))}")
+
+        if not sent and not self.reset:
+            raise ValueError("Nothing to update")
+        return self
+
+    model_config = ConfigDict(json_schema_extra={"example": {"title": "My Custom Portal", "reset": ["brand_color"]}})
 
 
 class PortalSettingsData(BaseModel):

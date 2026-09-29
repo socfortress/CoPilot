@@ -14,7 +14,6 @@ write path is the operator-facing per-customer switch
 not portal users.
 """
 
-from datetime import datetime
 from typing import Any
 from typing import Dict
 from typing import List
@@ -38,6 +37,7 @@ from app.incidents.middleware.tag_access import tag_access_handler
 from app.incidents.models import Alert
 from app.incidents.services.db_operations import alert_visibility_filters_for_user
 from app.middleware.customer_access import customer_access_handler
+from app.time_utils import now_utc
 
 # Severity bucket used when a report was persisted without an assessment.
 UNKNOWN_SEVERITY = "Unknown"
@@ -81,7 +81,7 @@ async def upsert_ai_report_settings(
         session.add(settings)
 
     settings.enabled = enabled
-    settings.updated_at = datetime.utcnow()
+    settings.updated_at = now_utc()
     settings.updated_by = user_id
 
     return settings

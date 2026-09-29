@@ -124,7 +124,7 @@ async def ensure_analyst(session: AsyncSession) -> str:
 
     user = (await session.execute(select(User).where(User.username == ANALYST))).scalars().first()
     if user is None:
-        user = User(username=ANALYST, password=auth.get_password_hash(PASSWORD), email=f"{ANALYST}@e2e.local", role_id=2)
+        user = User(username=ANALYST, password=auth.get_password_hash(PASSWORD), email=f"{ANALYST}@e2e.example", role_id=2)
         session.add(user)
         await session.commit()
 

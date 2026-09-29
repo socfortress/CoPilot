@@ -16,8 +16,10 @@ from app.auth.utils import AuthHandler
 from app.customers.schema.customers import AgentModel
 from app.customers.schema.customers import AgentsResponse
 from app.customers.schema.customers import CustomerFullResponse
+from app.customers.schema.customers import CustomerMetaOut
 from app.customers.schema.customers import CustomerMetaRequestBody
 from app.customers.schema.customers import CustomerMetaResponse
+from app.customers.schema.customers import CustomerOut
 from app.customers.schema.customers import CustomerRequestBody
 from app.customers.schema.customers import CustomerResponse
 from app.customers.schema.customers import CustomersResponse
@@ -240,7 +242,7 @@ async def create_customer(
     session.add(new_customer)
     await session.commit()
     return CustomerResponse(
-        customer=customer,
+        customer=CustomerOut.model_validate(customer),
         success=True,
         message="Customer created successfully",
     )
@@ -296,7 +298,7 @@ async def get_customers(
 
     customers_list = []
     for customer, is_provisioned in result.all():
-        customer_data = CustomerRequestBody.from_orm(customer)
+        customer_data = CustomerOut.model_validate(customer)
         customer_data.is_provisioned = bool(is_provisioned)
         customers_list.append(customer_data)
 
@@ -348,7 +350,7 @@ async def get_customer(
         )
 
     # Convert ORM object to Pydantic model
-    customer_data = CustomerRequestBody.from_orm(customer)
+    customer_data = CustomerOut.model_validate(customer)
     return CustomerResponse(
         customer=customer_data,
         success=True,
@@ -402,7 +404,7 @@ async def update_customer(
     await session.commit()  # Commit changes asynchronously
 
     return CustomerResponse(
-        customer=customer,  # CustomerRequestBody is already a Pydantic model
+        customer=CustomerOut.model_validate(customer),
         success=True,
         message="Customer updated successfully",
     )
@@ -534,7 +536,7 @@ async def add_customer_meta(
     await session.commit()  # Use await to perform the commit operation asynchronously
 
     return CustomerMetaResponse(
-        customer_meta=customer_meta,
+        customer_meta=CustomerMetaOut.model_validate(customer_meta),
         success=True,
         message="Customer meta added successfully",
     )
@@ -580,8 +582,7 @@ async def get_customer_meta(
             detail=f"Customer meta with customer_code {customer_code} not found",
         )
 
-    # Assuming CustomerMetaRequestBody can be created from the ORM model directly
-    customer_meta_data = CustomerMetaRequestBody.from_orm(customer_meta)
+    customer_meta_data = CustomerMetaOut.model_validate(customer_meta)
     return CustomerMetaResponse(
         customer_meta=customer_meta_data,
         success=True,
@@ -636,7 +637,7 @@ async def update_customer_meta(
 
     # Return the updated customer_meta
     return CustomerMetaResponse(
-        customer_meta=customer_meta,
+        customer_meta=CustomerMetaOut.model_validate(customer_meta),
         success=True,
         message="Customer meta updated successfully",
     )
@@ -680,7 +681,7 @@ async def delete_customer_meta(
         )
 
     # Store customer meta data for response before deleting
-    customer_meta_data = CustomerMetaRequestBody.from_orm(existing_customer_meta)
+    customer_meta_data = CustomerMetaOut.model_validate(existing_customer_meta)
 
     await session.delete(existing_customer_meta)
     await session.flush()  # Optional: Flush the changes to the database
@@ -742,14 +743,14 @@ async def get_customer_full(
     customer_meta = customer_meta_result.scalars().first()
     if not customer_meta:
         return CustomerFullResponse(
-            customer=CustomerRequestBody.from_orm(customer),
+            customer=CustomerOut.model_validate(customer),
             success=True,
             message="Customer fetched successfully but customer meta not found",
         )
 
     return CustomerFullResponse(
-        customer=CustomerRequestBody.from_orm(customer),
-        customer_meta=CustomerMetaRequestBody.from_orm(customer_meta),
+        customer=CustomerOut.model_validate(customer),
+        customer_meta=CustomerMetaOut.model_validate(customer_meta),
         success=True,
         message="Customer and customer meta fetched successfully",
     )

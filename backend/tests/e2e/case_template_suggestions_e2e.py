@@ -164,7 +164,7 @@ async def seed():
                 )
         await s.commit()
 
-        s.add(User(username=ANALYST, password=auth.get_password_hash(PASSWORD), email=f"{ANALYST}@e2e.local", role_id=2))
+        s.add(User(username=ANALYST, password=auth.get_password_hash(PASSWORD), email=f"{ANALYST}@e2e.example", role_id=2))
         await s.commit()
 
         # --- alert con tag + contesto MITRE ------------------------------
