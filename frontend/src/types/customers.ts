@@ -1,9 +1,10 @@
-// required: customer_code, customer_name, contact_last_name, contact_first_name
+// required on create/update: customer_code, customer_name, contact_last_name, contact_first_name.
+// A stored row may still lack the contact names (the columns are nullable), and the API returns it as is.
 export interface Customer {
 	customer_code: string
 	customer_name: string
-	contact_last_name: string
-	contact_first_name: string
+	contact_last_name: string | null
+	contact_first_name: string | null
 	parent_customer_code: string | null
 	phone: string
 	address_line1: string
@@ -26,13 +27,13 @@ export interface CustomerMeta {
 	customer_meta_graylog_stream: string
 	customer_meta_grafana_org_id: string
 	customer_meta_wazuh_group: string
-	customer_meta_index_retention: string
-	customer_meta_wazuh_registration_port: string
-	customer_meta_wazuh_log_ingestion_port: string
-	customer_meta_wazuh_auth_password: string
+	customer_meta_index_retention: string | null
+	customer_meta_wazuh_registration_port: string | null
+	customer_meta_wazuh_log_ingestion_port: string | null
+	customer_meta_wazuh_auth_password: string | null
 	customer_meta_iris_customer_id: number
 	customer_meta_office365_organization_id: string
-	customer_meta_wazuh_api_port: string
+	customer_meta_wazuh_api_port: string | null
 }
 
 export type CustomerHealthcheckSource = "wazuh" | "velociraptor"
