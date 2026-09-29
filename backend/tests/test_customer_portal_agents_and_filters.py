@@ -1,4 +1,4 @@
-"""Server-side agents list for the Customer Portal (#1185).
+"""Server-side agents list and searchable alert asset filter for the Customer Portal (#1185).
 
 Unit tests with a mocked session: the SQL itself is exercised by
 tests/e2e/customer_portal_overview_e2e.py against a real MySQL.
@@ -18,6 +18,7 @@ from fastapi.routing import APIRoute  # noqa: E402
 
 import app.customer_portal.routes.agents as agents_routes  # noqa: E402
 import app.customer_portal.services.agents as agents_service  # noqa: E402
+import app.incidents.services.db_operations as dbo  # noqa: E402
 
 USER = SimpleNamespace(id=1, username="customer1", role_id=4)
 
@@ -66,3 +67,49 @@ def test_page_size_is_capped():
 def test_export_route_is_declared_before_any_agents_wildcard():
     paths = [r.path for r in agents_routes.customer_portal_agents_router.routes]
     assert paths.index("/agents/export") < paths.index("/agents")
+
+
+# ── alert filter options ──────────────────────────────────────────────────
+
+
+def _sees_no_alert():
+    return patch.object(dbo, "alert_visibility_filters_for_user", AsyncMock(return_value=None))
+
+
+def test_a_user_who_sees_no_alert_gets_no_filter_options_without_querying():
+    session = AsyncMock()
+    with _sees_no_alert():
+        assert asyncio.run(dbo.get_alert_filter_options(USER, session)) == {"sources": [], "assets": [], "tags": []}
+    session.execute.assert_not_awaited()
+
+
+def test_a_user_who_sees_no_alert_finds_no_asset_without_querying():
+    session = AsyncMock()
+    with _sees_no_alert():
+        assert asyncio.run(dbo.search_alert_asset_names(USER, session, "x", 20)) == []
+    session.execute.assert_not_awaited()
+
+
+def test_filter_options_can_leave_the_asset_names_out():
+    session = AsyncMock()
+    asset_names = AsyncMock(return_value=["host-1"])
+    session.execute = AsyncMock(return_value=[])
+    with patch.object(dbo, "alert_visibility_filters_for_user", AsyncMock(return_value=[])), patch.object(dbo, "_asset_names", asset_names):
+        without = asyncio.run(dbo.get_alert_filter_options(USER, session, include_assets=False))
+        with_assets = asyncio.run(dbo.get_alert_filter_options(USER, session))
+    assert without["assets"] == [] and with_assets["assets"] == ["host-1"]
+    asset_names.assert_awaited_once()  # only the default call reads them
+
+
+def test_asset_search_is_bounded_and_uses_the_shared_visibility():
+    visibility = ["<visibility>"]
+    asset_names = AsyncMock(return_value=["web-01"])
+    with patch.object(dbo, "alert_visibility_filters_for_user", AsyncMock(return_value=visibility)), patch.object(
+        dbo,
+        "_asset_names",
+        asset_names,
+    ):
+        assert asyncio.run(dbo.search_alert_asset_names(USER, AsyncMock(), "  web ", 20)) == ["web-01"]
+    asset_names.assert_awaited_once()
+    args, kwargs = asset_names.await_args
+    assert args[1] is visibility and kwargs == {"search": "web", "limit": 20}

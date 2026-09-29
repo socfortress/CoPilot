@@ -131,9 +131,20 @@ export default {
 	},
 
 	/**
-	 * Get alerts filter options
+	 * Get alerts filter options, without asset names: a large tenant has thousands of
+	 * them, so the asset filter searches instead (`searchAlertAssets`).
 	 */
 	getAlertsFilters() {
-		return HttpClient.get<CommonResponse<AlertsFilters>>(`/incidents/db_operations/alerts/filter-options`)
+		return HttpClient.get<CommonResponse<AlertsFilters>>(`/incidents/db_operations/alerts/filter-options`, {
+			params: { include_assets: false }
+		})
+	},
+
+	/** Asset names on the alerts the user can see, matching `search` (at most `limit`). */
+	searchAlertAssets(search: string | null, signal?: AbortSignal, limit = 20) {
+		return HttpClient.get<CommonResponse<{ assets: string[] }>>(`/incidents/db_operations/alerts/filter-options/assets`, {
+			params: { search: search || undefined, limit },
+			signal
+		})
 	}
 }

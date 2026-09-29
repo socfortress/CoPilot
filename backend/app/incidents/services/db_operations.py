@@ -2940,75 +2940,54 @@ async def upload_report_template_to_data_store(db: AsyncSession) -> CaseReportTe
     return templates_list
 
 
-async def get_alert_filter_options(user: User, db: AsyncSession) -> dict:
-    """Get distinct sources, assets, and tags from alerts the user has access to."""
-    from sqlalchemy import and_
-    from sqlalchemy import exists
-    from sqlalchemy import or_
+async def get_alert_filter_options(user: User, db: AsyncSession, include_assets: bool = True) -> dict:
+    """Distinct sources, tags and asset names of the alerts the user can see.
 
-    filters = []
+    ``include_assets=False`` leaves the asset names out: a large tenant has thousands, far
+    too many for a select. The portal searches them instead
+    (``search_alert_asset_names``).
+    """
+    visibility = await alert_visibility_filters_for_user(user, db)
+    if visibility is None:
+        return {"sources": [], "assets": [], "tags": []}
 
-    # Customer filtering
-    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, db)
-    if "*" not in accessible_customers:
-        filters.append(Alert.customer_code.in_(accessible_customers))
-
-    # Tag filtering
-    tag_filters = await tag_access_handler.build_alert_query_filters(user, db)
-    accessible_tags = tag_filters["accessible_tags"]
-
-    if "*" not in accessible_tags:
-        tag_conditions = []
-        if accessible_tags:
-            has_accessible_tag = exists(
-                select(AlertToTag.alert_id)
-                .where(
-                    and_(
-                        AlertToTag.alert_id == Alert.id,
-                        AlertToTag.tag_id.in_(accessible_tags),
-                    ),
-                )
-                .correlate(Alert),
-            )
-            tag_conditions.append(has_accessible_tag)
-
-        if tag_filters["include_untagged"]:
-            is_untagged = ~exists(
-                select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id).correlate(Alert),
-            )
-            tag_conditions.append(is_untagged)
-
-        if tag_conditions:
-            filters.append(or_(*tag_conditions))
-        else:
-            return {"sources": [], "assets": [], "tags": []}
-
-    where_clause = and_(*filters) if filters else True
-
-    # Distinct sources
-    sources_query = select(distinct(Alert.source)).where(where_clause).order_by(Alert.source)
-    sources_result = await db.execute(sources_query)
+    sources_result = await db.execute(select(distinct(Alert.source)).where(*visibility).order_by(Alert.source))
     sources = [row[0] for row in sources_result if row[0]]
 
-    # Build a subquery of accessible alert IDs to avoid auto-correlation issues
-    # when joining Alert in asset/tag queries that also use exists() filters on Alert
-    accessible_alert_ids = select(Alert.id).where(where_clause).subquery()
-
-    # Distinct asset names
-    assets_query = (
-        select(distinct(Asset.asset_name)).where(Asset.alert_linked.in_(select(accessible_alert_ids.c.id))).order_by(Asset.asset_name)
-    )
-    assets_result = await db.execute(assets_query)
-    assets = [row[0] for row in assets_result if row[0]]
-
-    # Distinct tags
     tags_query = (
         select(distinct(AlertTag.tag))
         .join(AlertToTag, AlertToTag.tag_id == AlertTag.id)
-        .where(AlertToTag.alert_id.in_(select(accessible_alert_ids.c.id)))
+        .where(AlertToTag.alert_id.in_(_visible_alert_ids(visibility)))
         .order_by(AlertTag.tag)
     )
-    tags_result = await db.execute(tags_query)
-    tags = [row[0] for row in tags_result if row[0]]
+    tags = [row[0] for row in await db.execute(tags_query) if row[0]]
 
+    assets = await _asset_names(db, visibility) if include_assets else []
     return {"sources": sources, "assets": assets, "tags": tags}
+
+
+def _visible_alert_ids(visibility: List[Any]):
+    """The ids of the visible alerts, as a subquery.
+
+    A subquery rather than a join: the tag conditions in ``visibility`` are EXISTS clauses
+    on ``Alert``, which would auto-correlate against a joined ``Alert``.
+    """
+    return select(Alert.id).where(*visibility).scalar_subquery()
+
+
+async def _asset_names(db: AsyncSession, visibility: List[Any], search: Optional[str] = None, limit: Optional[int] = None) -> List[str]:
+    query = select(distinct(Asset.asset_name)).where(Asset.alert_linked.in_(_visible_alert_ids(visibility)))
+    if search:
+        query = query.where(Asset.asset_name.ilike(f"%{search}%"))
+    query = query.order_by(Asset.asset_name)
+    if limit is not None:
+        query = query.limit(limit)
+    return [row[0] for row in await db.execute(query) if row[0]]
+
+
+async def search_alert_asset_names(user: User, db: AsyncSession, search: Optional[str], limit: int) -> List[str]:
+    """Asset names on the alerts the user can see, matching ``search``, at most ``limit`` of them."""
+    visibility = await alert_visibility_filters_for_user(user, db)
+    if visibility is None:
+        return []
+    return await _asset_names(db, visibility, search=search.strip() if search else None, limit=limit)
