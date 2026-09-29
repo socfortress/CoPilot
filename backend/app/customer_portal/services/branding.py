@@ -34,16 +34,11 @@ from app.customer_portal.services import branding_cache
 from app.customer_portal.services.settings import EFFECTIVE_LOGO_PATH
 from app.customer_portal.services.settings import PortalLogo
 from app.customer_portal.services.settings import decode_logo
+from app.customer_portal.services.settings import get_global_settings
 from app.customer_portal.services.settings import logo_content_version
 from app.db.universal_models import CustomerPortalBranding
 from app.db.universal_models import CustomerPortalSettings
 from app.middleware.customer_access import customer_access_handler
-
-
-async def get_global_settings(session: AsyncSession) -> Optional[CustomerPortalSettings]:
-    """Return the global portal settings row, or None when it has never been saved."""
-    result = await session.execute(select(CustomerPortalSettings).limit(1))
-    return result.scalars().first()
 
 
 async def get_branding_override(session: AsyncSession, customer_code: str) -> Optional[CustomerPortalBranding]:

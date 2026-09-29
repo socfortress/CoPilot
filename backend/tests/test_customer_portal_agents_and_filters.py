@@ -113,3 +113,25 @@ def test_asset_search_is_bounded_and_uses_the_shared_visibility():
     asset_names.assert_awaited_once()
     args, kwargs = asset_names.await_args
     assert args[1] is visibility and kwargs == {"search": "web", "limit": 20}
+
+
+# ── case filter options ───────────────────────────────────────────────────
+
+
+def _case_options(accessible):
+    session = AsyncMock()
+    session.execute = AsyncMock(side_effect=[[("OPEN",), ("CLOSED",), (None,)], [("alice",)]])
+    with patch.object(dbo.customer_access_handler, "get_user_accessible_customers", AsyncMock(return_value=accessible)):
+        result = asyncio.run(dbo.get_case_filter_options(USER, session))
+    return result, [str(call.args[0]) for call in session.execute.await_args_list]
+
+
+def test_case_filter_options_are_scoped_to_the_users_customers():
+    (statuses, assigned_to), sql = _case_options(["ACME"])
+    assert statuses == ["OPEN", "CLOSED"] and assigned_to == ["alice"]
+    assert all("customer_code IN" in statement for statement in sql)
+
+
+def test_case_filter_options_are_unscoped_for_the_wildcard():
+    _, sql = _case_options(["*"])
+    assert not any("customer_code" in statement for statement in sql)

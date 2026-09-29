@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter
@@ -9,7 +8,6 @@ from fastapi import Response
 from fastapi import Security
 from fastapi import status
 from loguru import logger
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
@@ -20,12 +18,12 @@ from app.customer_portal.schema.settings import PublicPortalSettingsResponse
 from app.customer_portal.schema.settings import UpdatePortalSettingsRequest
 from app.customer_portal.schema.settings import UpdatePortalSettingsResponse
 from app.customer_portal.services import branding_cache
-from app.customer_portal.services.branding import get_global_settings
 from app.customer_portal.services.settings import PortalLogo
+from app.customer_portal.services.settings import get_global_settings_or_default
 from app.customer_portal.services.settings import get_portal_logo
 from app.customer_portal.services.settings import get_public_portal_settings
+from app.customer_portal.services.settings import replace_global_settings
 from app.db.db_session import get_db
-from app.db.universal_models import CustomerPortalSettings
 
 customer_portal_settings_router = APIRouter()
 
@@ -43,57 +41,11 @@ async def update_portal_settings(
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(AuthHandler().get_current_user),
 ) -> UpdatePortalSettingsResponse:
-    """
-    Update customer portal settings including logo and title.
-    Set any field to null to restore its default value.
-    Requires authentication.
-    """
+    """Replace the global settings: every field is written, and a null one restores its default."""
     try:
-        # Check if settings exist
-        result = await session.execute(select(CustomerPortalSettings))
-        settings = result.scalars().first()
-
-        if not settings:
-            # Create default settings if none exist
-            settings = CustomerPortalSettings.create_default()
-            session.add(settings)
-
-        # Get default values
-        defaults = CustomerPortalSettings.get_default_values()
-
-        # Handle title: if explicitly set to null, restore default
-        if request.title is None:
-            settings.title = defaults["title"]
-        else:
-            settings.title = request.title
-
-        # Handle logo_base64: if explicitly set to null, restore default
-        if request.logo_base64 is None:
-            settings.logo_base64 = defaults["logo_base64"]
-        else:
-            settings.logo_base64 = request.logo_base64
-
-        # Handle logo_mime_type: if explicitly set to null, restore default
-        if request.logo_mime_type is None:
-            settings.logo_mime_type = defaults["logo_mime_type"]
-        else:
-            settings.logo_mime_type = request.logo_mime_type
-
-        # Handle brand_color: if explicitly set to null, restore default
-        if request.brand_color is None:
-            settings.brand_color = defaults["brand_color"]
-        else:
-            settings.brand_color = request.brand_color
-
-        # Update metadata. UTC, like the column default and every other portal
-        # timestamp — datetime.now() would stamp the server's local time and make
-        # this row inconsistent with the rest of the schema.
-        settings.updated_by = current_user.id
-        settings.updated_at = datetime.utcnow()
-
+        await replace_global_settings(session, request, current_user.id)
         await session.commit()
         branding_cache.invalidate_all()
-        await session.refresh(settings)
 
         logger.info(f"Portal settings updated successfully by user {current_user.username} (id={current_user.id})")
 
@@ -186,10 +138,7 @@ async def get_global_portal_settings(
     session: AsyncSession = Depends(get_db),
 ) -> PortalSettingsResponse:
     try:
-        settings = await get_global_settings(session)
-        if settings is None:
-            settings = CustomerPortalSettings.create_default()
-            settings.id = 0
+        settings = await get_global_settings_or_default(session)
 
         return PortalSettingsResponse(
             success=True,

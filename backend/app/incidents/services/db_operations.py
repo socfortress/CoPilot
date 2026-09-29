@@ -2991,3 +2991,16 @@ async def search_alert_asset_names(user: User, db: AsyncSession, search: Optiona
     if visibility is None:
         return []
     return await _asset_names(db, visibility, search=search.strip() if search else None, limit=limit)
+
+
+async def get_case_filter_options(user: User, db: AsyncSession) -> Tuple[List[str], List[str]]:
+    """Distinct case statuses and assignees across the customers the user can see."""
+    accessible_customers = await customer_access_handler.get_user_accessible_customers(user, db)
+    scope = [] if "*" in accessible_customers else [Case.customer_code.in_(accessible_customers)]
+
+    statuses_q = select(distinct(Case.case_status)).where(*scope).order_by(Case.case_status)
+    assigned_q = select(distinct(Case.assigned_to)).where(*scope, Case.assigned_to.isnot(None)).order_by(Case.assigned_to)
+
+    statuses = [row[0] for row in await db.execute(statuses_q) if row[0]]
+    assigned_to = [row[0] for row in await db.execute(assigned_q) if row[0]]
+    return statuses, assigned_to
