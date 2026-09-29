@@ -1,25 +1,17 @@
 <template>
 	<div class="page @container flex flex-col gap-6">
 		<AgentsOverviewStatsCards :stats :loading />
-		<AgentsList @loaded="agents = $event" @loading="loading = $event" />
+		<AgentsList @stats="stats = $event" @loading="loading = $event" />
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { AgentsStats } from "@/components/agents/AgentsOverviewStatsCards.vue"
-import type { Agent } from "@/types/agents"
-import { computed, ref } from "vue"
+import type { AgentsStats } from "@/types/agents"
+import { ref } from "vue"
 import AgentsOverviewStatsCards from "@/components/agents/AgentsOverviewStatsCards.vue"
 import AgentsList from "@/components/agents/List.vue"
 
-const agents = ref<Agent[]>([])
-const stats = computed<AgentsStats>(() => ({
-	total: agents.value.length,
-	active: agents.value.filter(agent => agent.wazuh_agent_status === "active").length,
-	critical: agents.value.filter(agent => agent.critical_asset).length,
-	offline: agents.value.filter(
-		agent => agent.wazuh_agent_status === "disconnected" || agent.wazuh_agent_status === "never_connected"
-	).length
-}))
+// Counted server-side over every agent in scope, whatever page or filter the list shows.
+const stats = ref<AgentsStats>({ total: 0, active: 0, critical: 0, offline: 0 })
 const loading = ref(false)
 </script>
