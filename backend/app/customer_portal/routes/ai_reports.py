@@ -3,15 +3,14 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
-from fastapi import status
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.customer_portal.routes.errors import internal_errors
 from app.customer_portal.schema.ai_reports import PortalAiAlertAnalysisResponse
 from app.customer_portal.schema.ai_reports import PortalAiInsightsResponse
 from app.customer_portal.schema.ai_reports import PortalAiReportAvailabilityResponse
@@ -95,7 +94,7 @@ async def set_customer_ai_report_settings(
 ) -> PortalAiReportSettingsResponse:
     await ensure_customer_exists(session, customer_code)
 
-    try:
+    async with internal_errors("save customer AI report settings", session):
         settings = await upsert_ai_report_settings(
             customer_code,
             request.enabled,
@@ -104,13 +103,6 @@ async def set_customer_ai_report_settings(
         )
         await session.commit()
         await session.refresh(settings)
-    except Exception as e:
-        logger.error(f"Failed to save AI report settings for customer {customer_code}: {e}")
-        await session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to save customer AI report settings: {str(e)}",
-        )
 
     logger.info(f"Customer portal AI reports {'enabled' if request.enabled else 'disabled'} for customer {customer_code}")
 

@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.customer_portal.routes.errors import internal_errors
 from app.customer_portal.schema.settings import PatchPortalSettingsRequest
 from app.customer_portal.schema.settings import PortalSettingsData
 from app.customer_portal.schema.settings import PortalSettingsResponse
@@ -47,7 +48,7 @@ async def update_portal_settings(
     current_user: User = Depends(AuthHandler().get_current_user),
 ) -> UpdatePortalSettingsResponse:
     """Replace the global settings: every field is written, and a null one restores its default."""
-    try:
+    async with internal_errors("update portal settings", session):
         await replace_global_settings(session, request, current_user.id)
         await session.commit()
         branding_cache.invalidate_all()
@@ -57,14 +58,6 @@ async def update_portal_settings(
         return UpdatePortalSettingsResponse(
             success=True,
             message="Portal settings updated successfully",
-        )
-
-    except Exception as e:
-        logger.error(f"Failed to update portal settings: {e}")
-        await session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update portal settings: {str(e)}",
         )
 
 
@@ -79,9 +72,10 @@ async def patch_portal_settings(
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(AuthHandler().get_current_user),
 ) -> UpdatePortalSettingsResponse:
-    await patch_global_settings(session, request, current_user.id)
-    await session.commit()
-    branding_cache.invalidate_all()
+    async with internal_errors("update portal settings", session):
+        await patch_global_settings(session, request, current_user.id)
+        await session.commit()
+        branding_cache.invalidate_all()
 
     logger.info(f"Portal settings patched by user {current_user.username} (id={current_user.id})")
     return UpdatePortalSettingsResponse(success=True, message="Portal settings updated successfully")
@@ -99,18 +93,12 @@ async def get_portal_settings(
     Global title, brand color and logo URL for the login page.
     Public (no authentication) and read-only: a missing row reads as the defaults.
     """
-    try:
+    async with internal_errors("get portal settings"):
         settings = await get_public_portal_settings(session)
         return PublicPortalSettingsResponse(
             success=True,
             message="Portal settings retrieved successfully",
             settings=settings,
-        )
-    except Exception as e:
-        logger.error(f"Failed to get portal settings: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get portal settings",
         )
 
 
@@ -161,7 +149,7 @@ async def get_portal_logo_image(
 async def get_global_portal_settings(
     session: AsyncSession = Depends(get_db),
 ) -> PortalSettingsResponse:
-    try:
+    async with internal_errors("get portal settings"):
         settings = await get_global_settings_or_default(session)
 
         return PortalSettingsResponse(
@@ -175,10 +163,4 @@ async def get_global_portal_settings(
                 brand_color=settings.brand_color,
                 updated_at=settings.updated_at.isoformat(),
             ),
-        )
-    except Exception as e:
-        logger.error(f"Failed to get portal settings: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get portal settings",
         )
