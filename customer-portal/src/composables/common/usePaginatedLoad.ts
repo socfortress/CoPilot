@@ -16,10 +16,15 @@ import { watch } from "vue"
 export function usePaginatedLoad(options: { page: Ref<number>; resetOn: WatchSource[]; load: () => unknown }) {
 	const { page, resetOn, load } = options
 
+	// Vue hands a multi-source watcher `[]` as its first "previous" value, not
+	// `undefined`: tell the mount apart explicitly or it reads as a filter change.
+	let mounted = false
+
 	watch(
 		[page, ...resetOn],
 		(current, previous) => {
-			const resetRequested = previous !== undefined && current.slice(1).some((value, index) => value !== previous[index + 1])
+			const resetRequested = mounted && current.slice(1).some((value, index) => value !== previous[index + 1])
+			mounted = true
 
 			// Returning to page 1 changes `page`, which runs this watcher again and loads.
 			if (resetRequested && page.value !== 1) {
