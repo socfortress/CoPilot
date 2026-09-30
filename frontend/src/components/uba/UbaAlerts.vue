@@ -35,9 +35,10 @@
 import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { UbaAlert } from "@/types/uba"
-import { NDataTable, NPagination, NRadioButton, NRadioGroup, NTag } from "naive-ui"
+import { NButton, NDataTable, NPagination, NRadioButton, NRadioGroup, NTag } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import UbaError from "./UbaError.vue"
@@ -45,6 +46,8 @@ import { entityTypeLabel, riskLabel, riskTagType } from "./utils"
 
 const { customerCode, refreshKey = 0 } = defineProps<{ customerCode: string; refreshKey?: number }>()
 const emit = defineEmits<{ open: [alertId: string] }>()
+
+const { routeIncidentManagementAlerts } = useNavigation()
 
 const PAGE_SIZE = 25
 const dFormats = useSettingsStore().dateFormat
@@ -108,7 +111,21 @@ const columns: DataTableColumns<UbaAlert> = [
 		title: "Incident",
 		key: "copilot_alert_id",
 		width: 90,
-		render: row => (row.copilot_alert_id ? `#${row.copilot_alert_id}` : "—")
+		render: row =>
+			row.copilot_alert_id ? (
+				<NButton
+					text
+					type="primary"
+					onClick={(e: MouseEvent) => {
+						e.stopPropagation() // the row click opens the UBA alert drawer
+						routeIncidentManagementAlerts(row.copilot_alert_id ?? undefined).navigate()
+					}}
+				>
+					{`#${row.copilot_alert_id}`}
+				</NButton>
+			) : (
+				"—"
+			)
 	},
 	{
 		title: "Verdict",

@@ -9,7 +9,14 @@
 						{{ alert.entity_name || alert.entity_key }}
 					</n-button>
 					<span class="text-tertiary text-xs">opened {{ formatDate(alert.opened_at, dFormats.datetime) }}</span>
-					<n-tag v-if="alert.copilot_alert_id" size="small" :bordered="false">incident #{{ alert.copilot_alert_id }}</n-tag>
+					<n-button
+						v-if="alert.copilot_alert_id"
+						size="tiny"
+						secondary
+						@click="routeIncidentManagementAlerts(alert.copilot_alert_id).navigate()"
+					>
+						Incident alert #{{ alert.copilot_alert_id }}
+					</n-button>
 				</header>
 				<p v-if="alert.reason" class="text-secondary text-sm">{{ alert.reason }}</p>
 
@@ -81,6 +88,7 @@ import { NButton, NCheckbox, NInput, NRadioButton, NRadioGroup, NSelect, NSpin, 
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import { SECTION_LABEL } from "@/components/common/section-label"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -90,6 +98,7 @@ import { FALSE_POSITIVE_REASONS, riskLabel, riskTagType } from "./utils"
 const { customerCode, alertId } = defineProps<{ customerCode: string; alertId: string }>()
 const emit = defineEmits<{ openEntity: [entityKey: string]; changed: [] }>()
 
+const { routeIncidentManagementAlerts } = useNavigation()
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
 const loading = ref(false)
