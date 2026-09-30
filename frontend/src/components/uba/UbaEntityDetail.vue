@@ -52,10 +52,19 @@
 				<section v-if="detail.alerts.length" class="flex flex-col gap-2">
 					<span :class="SECTION_LABEL">Alerts</span>
 					<ul class="flex flex-col gap-1">
-						<li v-for="a of detail.alerts" :key="a.id">
+						<li v-for="a of detail.alerts" :key="a.id" class="flex flex-wrap items-center gap-2">
 							<n-button text type="primary" size="small" @click="emit('openAlert', a.id)">
 								{{ formatDate(a.opened_at, dFormats.datetime) }} · risk {{ riskLabel(a.risk) }}
 								{{ a.verdict ? `· ${a.verdict === "FALSE_POSITIVE" ? "false positive" : "true positive"}` : "" }}
+							</n-button>
+							<n-button
+								v-if="a.copilot_alert_id"
+								text
+								size="small"
+								class="text-secondary"
+								@click="routeIncidentManagementAlerts(a.copilot_alert_id).navigate()"
+							>
+								incident alert #{{ a.copilot_alert_id }}
 							</n-button>
 						</li>
 					</ul>
@@ -99,6 +108,7 @@ import { NButton, NSpin, NTag, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import { SECTION_LABEL } from "@/components/common/section-label"
+import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -109,6 +119,7 @@ const { customerCode, entityKey } = defineProps<{ customerCode: string; entityKe
 const emit = defineEmits<{ openAlert: [alertId: string]; changed: [] }>()
 
 const PAGE_SIZE = 30
+const { routeIncidentManagementAlerts } = useNavigation()
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
 const loading = ref(false)

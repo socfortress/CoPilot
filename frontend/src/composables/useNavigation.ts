@@ -439,6 +439,16 @@ export function useNavigation() {
 		return routerConstructor({ name: "Soc-Users", query: userId ? { user_id: userId } : {} })
 	}
 
+	/** The User Behavior page, opened on a customer and optionally one UBA alert or entity drawer. */
+	function routeUba(params?: { customer?: string; alert?: string; entity?: string; tab?: string }) {
+		const query: Record<string, string> = {}
+		if (params?.customer) query.customer = params.customer
+		if (params?.tab) query.tab = params.tab
+		if (params?.alert) query.alert = params.alert
+		else if (params?.entity) query.entity = params.entity
+		return routerConstructor({ name: "Uba", query })
+	}
+
 	function routeIncidentManagementAlerts(alertId?: number) {
 		if (alertId != null) {
 			return routerConstructor({
@@ -841,6 +851,7 @@ export function useNavigation() {
 		routeConnectors,
 		routeCopilotAction,
 		routeCopilotSearchRule,
+		routeUba,
 		routeIncidentManagementAlerts,
 		routeIncidentManagementAlertAsset,
 		routeIncidentManagementAlertIoc,

@@ -159,6 +159,8 @@
 						</template>
 					</CardKV>
 
+					<AlertUbaLink :alert />
+
 					<CardKV>
 						<template #key>customer code</template>
 						<template #value>
@@ -267,6 +269,7 @@ const AlertSendToChannelButton = defineAsyncComponent(() => import("./AlertSendT
 const AlertMergeCaseButton = defineAsyncComponent(() => import("./AlertMergeCaseButton.vue"))
 const AlertExclusionRules = defineAsyncComponent(() => import("./AlertExclusionRules.vue"))
 const AlertLinkedCases = defineAsyncComponent(() => import("./AlertLinkedCases.vue"))
+const AlertUbaLink = defineAsyncComponent(() => import("./AlertUbaLink.vue"))
 
 const { alert } = toRefs(props)
 
