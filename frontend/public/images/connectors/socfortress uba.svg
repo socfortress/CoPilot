@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="SOCFortress UBA">
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#1f2a44"/>
+  <circle cx="24" cy="23" r="7" fill="#e6ecf5"/>
+  <path d="M11 45c1.5-8 7-12 13-12s11.5 4 13 12" fill="none" stroke="#e6ecf5" stroke-width="4" stroke-linecap="round"/>
+  <polyline points="36,44 42,36 47,40 54,27" fill="none" stroke="#f5a524" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="54" cy="27" r="3.5" fill="#f5a524"/>
+</svg>

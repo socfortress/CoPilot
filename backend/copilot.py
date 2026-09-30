@@ -110,6 +110,7 @@ from app.routers import status
 from app.routers import sublime
 from app.routers import talon
 from app.routers import threat_intel
+from app.routers import uba
 from app.routers import velociraptor
 from app.routers import version
 from app.routers import wazuh_indexer
@@ -317,6 +318,7 @@ api_router.include_router(file_analysis.router)
 api_router.include_router(siem.router)
 api_router.include_router(talon.router)
 api_router.include_router(opencti.router)
+api_router.include_router(uba.router)
 api_router.include_router(customer_waf.router)
 
 # Include the APIRouter in the FastAPI app

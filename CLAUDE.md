@@ -277,6 +277,20 @@ Tests: `tests/test_office365_multi_tenant.py` (no DB, no network).
 
 Tests: `tests/test_opencti_connector.py` (no DB, no network).
 
+### SOCFortress UBA connector
+
+`app/connectors/uba/` makes CoPilot the analyst UI for [SOCFortress UBA](https://github.com/socfortress/socfortress-uba) (user behavior analytics): a first-party connector named **`SOCFortress UBA`** (`SOCFORTRESS_UBA_URL` / `SOCFORTRESS_UBA_API_KEY`, `api_key` auth), routes under `/api/uba/{customer_code}/…`, and the **Investigate → User Behavior** page (`/uba`, route `Uba`, `components/uba/`).
+
+- **UBA is the store; CoPilot proxies.** Entities ranked by risk, UBA alerts, signals, suppressions, verdicts and native-rule scores live in UBA's Postgres; the routes pass UBA's responses through (`UbaResponse` allows the payload fields; request bodies are typed). UBA's API is documented in its `docs/12-api.md` and at `<UBA URL>/docs`.
+- **Tenancy is checked twice.** Every route but `/availability` carries `verify_customer_code_access` (pinned by `tests/test_uba_connector.py`); UBA also scopes its API key to tenants and answers 404 outside them. The UBA tenant *is* the customer code (UBA reads `agent_labels_customer`).
+- **A UBA 401/403 is never a CoPilot 401/403** (the frontend would log the analyst out): upstream failures are 502 with a `reason` (`key_rejected`, `insufficient_scope`, `unreachable`, …), 404/422 pass through, a missing or incomplete connector is 409. Same rule as the Customer WAF.
+- **The analyst is sent as `X-UBA-Actor`** on writes, so UBA records who suppressed a rule or gave a verdict. Suppressions and verdicts are admin/analyst; native-rule scores (tuning a whole customer's risk) are admin only.
+- **Entity keys travel as `?entity_key=`**, not a path segment: they contain `\`, `:`, `@` (`windows-demo\jdoe`, `upn:jane@contoso.com`).
+- **TLS is verified.** UBA's API normally runs over plain HTTP on the private network next to CoPilot (on one Docker host: published on the bridge, `http://172.17.0.1:8010`, since CoPilot's containers have no `host.docker.internal`); behind HTTPS it needs a certificate CoPilot trusts.
+- **Two feedback paths, one effect.** UBA alerts also arrive as CoPilot incident alerts (source `uba`, created by UBA through `/api/incidents/alerts/create/manual`); UBA polls their verdicts. A verdict given on the UBA page goes straight to UBA; UBA records it on the incident's delivery so it never applies twice.
+
+Tests: `tests/test_uba_connector.py` (no DB, no network).
+
 ### SOCFortress WAF per customer (#1165)
 
 A customer can have one or more SOCFortress WAFs (Caddy + Coraza, [waf-platform](https://github.com/socfortress/waf-platform)). CoPilot reads their events, stats and threat intel, and phase 2 will block IPs. `app/customer_waf/`, routes under `/api/customer_waf/{customer_code}[/{waf_id}/…]`, and a **WAF** tab on the customer (phase 3). Phases and design are tracked in #1165.

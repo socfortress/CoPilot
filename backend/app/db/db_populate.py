@@ -190,6 +190,16 @@ def get_connectors_list():
                 "API key to an OpenCTI user's API token."
             ),
         ),
+        (
+            "SOCFortress UBA",
+            "1",
+            "api_key",
+            (
+                "Connection to SOCFortress UBA (user behavior analytics): entities ranked by risk, their signals and "
+                "alerts, suppressions and verdicts. Set the URL to the UBA API (e.g. http://172.17.0.1:8010) and the "
+                "API key to one created with `uba-admin api-keys create --name copilot --scope write`."
+            ),
+        ),
         # ... Add more connectors as needed ...
     ]
 
