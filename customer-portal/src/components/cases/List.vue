@@ -1,7 +1,13 @@
 <template>
 	<div class="flex flex-col gap-4">
 		<div class="flex w-full items-center justify-between gap-4">
-			<Filters v-model:value="filters" class="w-auto!" @loaded="handleFiltersLoaded" />
+			<KeyValueFilter
+				v-model:value="filters"
+				testid="cases"
+				:load-options="loadFilterOptions"
+				class="w-auto!"
+				@loaded="handleFiltersLoaded"
+			/>
 			<CreateCaseButton secondary @success="handleCreated" />
 		</div>
 
@@ -62,7 +68,7 @@ import type { AxiosResponse } from "axios"
 import type { DataTableColumns } from "naive-ui"
 import type { CaseAssignedUpdateSuccessPayload } from "@/components/cases/CaseAssignedSelect.vue"
 import type { CaseStatusUpdateSuccessPayload } from "@/components/cases/CaseStatusSelect.vue"
-import type { FiltersModel } from "@/components/cases/Filters.vue"
+import type { KeyValueFilterModel } from "@/components/common/KeyValueFilter.vue"
 import type { Case, CasesListResponse, CaseStatus } from "@/types/cases"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
 import { useElementSize } from "@vueuse/core"
@@ -73,9 +79,9 @@ import CaseAssignedSelect from "@/components/cases/CaseAssignedSelect.vue"
 import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
 import CaseStatusSelect from "@/components/cases/CaseStatusSelect.vue"
 import CreateCaseButton from "@/components/cases/CreateCaseButton.vue"
-import Filters from "@/components/cases/Filters.vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
+import KeyValueFilter from "@/components/common/KeyValueFilter.vue"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { usePaginatedLoad } from "@/composables/common/usePaginatedLoad"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
@@ -103,10 +109,15 @@ const pagination = ref({
 })
 
 // Filters
-const filters = ref<FiltersModel>({
+const filters = ref<KeyValueFilterModel>({
 	key: null,
 	value: null
 })
+
+async function loadFilterOptions(): Promise<Record<string, string[]>> {
+	const { assigned_to, statuses } = (await Api.cases.getCasesFilters()).data
+	return { assigned_to, statuses }
+}
 
 const columns = computed<DataTableColumns<Case>>(() => [
 	{
