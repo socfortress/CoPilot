@@ -13,6 +13,8 @@ export const investigateItem: MenuMixedOption = parentMenuItem("Investigate", "I
 	// Customers' SOCFortress WAFs: events, threat intel and IP blocks (#1168). Mostly
 	// reading what the WAF saw, hence Investigate; setup lives on the customer.
 	routerLinkItem("WAF", "Waf"),
+	// SOCFortress UBA: users and hosts ranked by behavioral risk, UBA alerts, suppressions.
+	routerLinkItem("User Behavior", "Uba"),
 	routerLinkItem("File Analysis", "FileAnalysis"),
 	// One page with a tab per source; OpenCTI is a tab there, shown only for a
 	// verified connector, rather than its own entry (#1153).

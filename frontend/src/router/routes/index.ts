@@ -26,6 +26,7 @@ import { schedulerRoutes } from "./scheduler"
 import { settingsRoutes } from "./settings"
 import { stackProvisioningRoutes } from "./stack-provisioning"
 import { threatIntelRoutes } from "./threat-intel"
+import { ubaRoutes } from "./uba"
 import { usersRoutes } from "./users"
 import { wafRoutes } from "./waf"
 
@@ -44,6 +45,7 @@ export const routes: RouteRecordRaw[] = [
 	...detectionCatalogRoutes,
 	...threatIntelRoutes,
 	...wafRoutes,
+	...ubaRoutes,
 	...healthcheckRoutes,
 	...customersRoutes,
 	...auditRoutes,

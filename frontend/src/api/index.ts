@@ -50,6 +50,7 @@ import tagRbac from "./endpoints/tag-rbac"
 import talon from "./endpoints/talon"
 import threatIntel from "./endpoints/threat-intel"
 import totp from "./endpoints/totp"
+import uba from "./endpoints/uba"
 import users from "./endpoints/users"
 import version from "./endpoints/version"
 import vulnerabilities from "./endpoints/vulnerabilities"
@@ -113,6 +114,7 @@ export default {
 	tagRbac,
 	talon,
 	opencti,
+	uba,
 	sso,
 	totp,
 	passkey
