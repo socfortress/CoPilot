@@ -113,8 +113,9 @@ export const useReportGenerationStore = defineStore("report-generation", {
 
 			let reports: IncidentCustomerReport[]
 			try {
-				// Not page-scoped: the poller outlives the page that started it.
-				const response = await Api.reports.listReports(undefined, true)
+				// Not page-scoped: the poller outlives the page that started it. Nor filtered
+				// by the global customer filter: every pending report must be resolved.
+				const response = await Api.reports.listReports({ keepOnNavigation: true })
 				if (!response.data.success) return
 				reports = response.data.reports
 			} catch {

@@ -5,19 +5,21 @@ import type {
 	IncidentCustomerReportListResponse
 } from "@/types/reports"
 import { HttpClient } from "../httpClient"
+import { withCustomerCodes } from "../params"
 
 export default {
 	/**
 	 * List Incident-Management reports the current customer can access.
 	 *
-	 * The backend scopes results to the authenticated user's accessible
-	 * customers, so no customer filter is sent from the portal.
+	 * The backend scopes results to the user's accessible customers; `customerCodes`
+	 * (the global customer filter) narrows them further, never widens them.
 	 */
-	listReports(signal?: AbortSignal, keepOnNavigation = false) {
-		return HttpClient.get<CommonResponse<IncidentCustomerReportListResponse>>("/incidents/customer_reports", {
-			signal,
-			keepOnNavigation
-		})
+	listReports(options: { customerCodes?: string[]; signal?: AbortSignal; keepOnNavigation?: boolean } = {}) {
+		const { customerCodes, signal, keepOnNavigation = false } = options
+		return HttpClient.get<CommonResponse<IncidentCustomerReportListResponse>>(
+			"/incidents/customer_reports",
+			withCustomerCodes(customerCodes, { signal, keepOnNavigation })
+		)
 	},
 
 	/**

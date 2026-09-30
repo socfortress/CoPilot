@@ -18,6 +18,7 @@
 				<ReportCard
 					v-for="report in reports"
 					:key="report.id"
+					data-testid="report-card"
 					:report
 					@download="handleDownload(report)"
 					@delete="handleDeleteClick(report)"
@@ -101,6 +102,7 @@ import Icon from "@/components/common/Icon.vue"
 import ReportCard from "@/components/reports/ReportCard.vue"
 import { useCustomerPrefill } from "@/composables/common/useCustomerPrefill"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
+import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useReportGenerationStore } from "@/stores/reportGeneration"
 import { getApiErrorMessage } from "@/utils"
 
@@ -110,6 +112,7 @@ const message = useMessage()
 const { loading, run } = useLatestRequest()
 const { customerOptions, hasMultipleCustomers, initialCustomerCode } = useCustomerPrefill()
 const reportGenerationStore = useReportGenerationStore()
+const customerFilterStore = useCustomerFilterStore()
 
 const generating = ref(false)
 const reports = ref<IncidentCustomerReport[]>([])
@@ -209,7 +212,7 @@ function resolveRange(): { date_from: string; date_to: string } {
 function loadReports() {
 	return run(
 		async signal => {
-			const response = await Api.reports.listReports(signal)
+			const response = await Api.reports.listReports({ customerCodes: customerFilterStore.queryCustomerCodes, signal })
 			if (response.data.success) {
 				reports.value = response.data.reports
 			} else {
@@ -303,6 +306,15 @@ async function confirmDelete() {
 		reportToDelete.value = null
 	}
 }
+
+// The global customer filter narrows the list. The store replaces the selection array on
+// every change, so no deep watch is needed.
+watch(
+	() => customerFilterStore.queryCustomerCodes,
+	() => {
+		loadReports()
+	}
+)
 
 // The store notifies the user; this only keeps the open list in sync with it.
 watch(

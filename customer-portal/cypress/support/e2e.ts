@@ -11,6 +11,8 @@ export interface PortalSeed {
 	/** The alert whose latest AI report carries the Markdown with code blocks. */
 	ai_alert_id: number
 	ai_a: { total_reports: number; severity_counts: Record<string, number> }
+	/** Completed customer reports per customer. */
+	reports: { a: number; b: number }
 }
 
 interface StatusCounts {
