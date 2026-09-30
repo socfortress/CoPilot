@@ -62,7 +62,7 @@ function markdownItLinkTargetBlank(md: MarkdownIt): void {
 		const token = tokens[idx]
 
 		if (token) {
-			// Aggiungi target="_blank"
+			// Open links in a new tab
 			const targetIndex = token.attrIndex("target")
 			const target = token.attrs?.[targetIndex]
 			if (targetIndex < 0) {
@@ -71,7 +71,7 @@ function markdownItLinkTargetBlank(md: MarkdownIt): void {
 				target[1] = "_blank"
 			}
 
-			// Aggiungi rel="noopener noreferrer"
+			// ...without handing the new page a reference to this one
 			const relIndex = token.attrIndex("rel")
 			const rel = token.attrs?.[relIndex]
 			if (relIndex < 0) {
