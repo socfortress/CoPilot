@@ -54,12 +54,12 @@ import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { EnabledDashboard } from "@/types/siem"
 import { useElementSize } from "@vueuse/core"
-import axios from "axios"
 import { NButton, NDataTable, NEmpty, NPagination, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, useTemplateRef, watch } from "vue"
 import Api from "@/api"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { useNavigation } from "@/composables/common/useNavigation"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
@@ -75,7 +75,7 @@ const emit = defineEmits<{
 const customerFilterStore = useCustomerFilterStore()
 const { routeDashboardViewer } = useNavigation()
 const message = useMessage()
-const loading = ref(false)
+const { loading, run } = useLatestRequest()
 const dFormats = useSettingsStore().dateFormat
 
 const { width: headerWidthRef } = useElementSize(useTemplateRef("headerRef"))
@@ -150,29 +150,19 @@ const columns = computed<DataTableColumns<EnabledDashboard>>(() => [
 	}
 ])
 
-let abortController = new AbortController()
+function loadDashboards() {
+	return run(
+		async signal => {
+			const response = await Api.siem.getEnabledDashboardsForCustomers(
+				customerFilterStore.queryCustomerCodes,
+				signal
+			)
 
-async function loadDashboards() {
-	loading.value = true
-
-	abortController?.abort()
-	abortController = new AbortController()
-
-	try {
-		const response = await Api.siem.getEnabledDashboardsForCustomers(
-			customerFilterStore.queryCustomerCodes,
-			abortController.signal
-		)
-
-		data.value = response.data?.enabled_dashboards || []
-		emit("loaded", data.value)
-		loading.value = false
-	} catch (err) {
-		if (!axios.isCancel(err)) {
-			message.error(getApiErrorMessage(err as ApiError))
-			loading.value = false
-		}
-	}
+			data.value = response.data?.enabled_dashboards || []
+			emit("loaded", data.value)
+		},
+		err => message.error(getApiErrorMessage(err as ApiError))
+	)
 }
 
 function resetPage() {

@@ -75,7 +75,6 @@ import type { AgentsFilters } from "@/components/agents/Filters.vue"
 import type { Agent, AgentsStats, AgentStatus } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import { refDebounced, useElementSize } from "@vueuse/core"
-import axios from "axios"
 import { saveAs } from "file-saver"
 import { NButton, NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, toRef, useTemplateRef, watch } from "vue"
@@ -83,6 +82,7 @@ import Api from "@/api"
 import Filters from "@/components/agents/Filters.vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { usePaginatedLoad } from "@/composables/common/usePaginatedLoad"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
@@ -97,7 +97,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
-const loading = ref(false)
+const { loading, run } = useLatestRequest()
 const exporting = ref(false)
 const dFormats = useSettingsStore().dateFormat
 const customerFilterStore = useCustomerFilterStore()
@@ -221,32 +221,22 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 	}
 ])
 
-let abortController = new AbortController()
+function loadAgents() {
+	return run(
+		async signal => {
+			const response = await Api.agents.getAgentsPage(
+				{ ...query(), page: pagination.value.page, pageSize: pagination.value.pageSize },
+				signal
+			)
 
-async function loadAgents() {
-	loading.value = true
-
-	abortController.abort()
-	abortController = new AbortController()
-
-	try {
-		const response = await Api.agents.getAgentsPage(
-			{ ...query(), page: pagination.value.page, pageSize: pagination.value.pageSize },
-			abortController.signal
-		)
-
-		data.value = response.data.agents || []
-		paginatedTotal.value = response.data.total
-		statusesList.value = response.data.statuses
-		osList.value = response.data.os_list
-		emit("stats", response.data.stats)
-		loading.value = false
-	} catch (err) {
-		if (!axios.isCancel(err)) {
-			message.error(getApiErrorMessage(err as ApiError))
-			loading.value = false
-		}
-	}
+			data.value = response.data.agents || []
+			paginatedTotal.value = response.data.total
+			statusesList.value = response.data.statuses
+			osList.value = response.data.os_list
+			emit("stats", response.data.stats)
+		},
+		err => message.error(getApiErrorMessage(err as ApiError))
+	)
 }
 
 async function exportCsv() {
