@@ -96,25 +96,22 @@ const dFormats = useSettingsStore().dateFormat
 const creatingCase = ref(false)
 const message = useMessage()
 
-function createCase() {
+async function createCase() {
 	creatingCase.value = true
 
-	Api.cases
-		.createCaseFromAlert(alert.id)
-		.then(res => {
-			if (res.data.success) {
-				emit("created", res.data.case_alert_link.case_id)
-				message.success(res.data?.message || "Case created successfully")
-			} else {
-				message.error(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError))
-		})
-		.finally(() => {
-			creatingCase.value = false
-		})
+	try {
+		const res = await Api.cases.createCaseFromAlert(alert.id)
+		if (res.data.success) {
+			emit("created", res.data.case_alert_link.case_id)
+			message.success(res.data?.message || "Case created successfully")
+		} else {
+			message.error(res.data?.message || "An error occurred. Please try again later.")
+		}
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError))
+	} finally {
+		creatingCase.value = false
+	}
 }
 
 function handleStatusUpdated(payload: CaseStatusUpdateSuccessPayload) {

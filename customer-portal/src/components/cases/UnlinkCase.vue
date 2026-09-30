@@ -1,5 +1,5 @@
 <template>
-	<n-popconfirm to="body" @positive-click="unlinkCase">
+	<n-popconfirm to="body" @positive-click="() => void unlinkCase()">
 		<template #trigger>
 			<n-button :size :focusable="false" :loading="unlinking">
 				<template #icon>
@@ -35,24 +35,21 @@ const emit = defineEmits<{
 const unlinking = ref(false)
 const message = useMessage()
 
-function unlinkCase() {
+async function unlinkCase() {
 	unlinking.value = true
 
-	Api.cases
-		.unlinkCaseFromAlert(props.caseId, props.alertId)
-		.then(res => {
-			if (res.data.success) {
-				emit("unlinked", props.caseId)
-				message.success(res.data?.message || "Case unlinked from alert successfully")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			unlinking.value = false
-		})
+	try {
+		const res = await Api.cases.unlinkCaseFromAlert(props.caseId, props.alertId)
+		if (res.data.success) {
+			emit("unlinked", props.caseId)
+			message.success(res.data?.message || "Case unlinked from alert successfully")
+		} else {
+			message.warning(res.data?.message || "An error occurred. Please try again later.")
+		}
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+	} finally {
+		unlinking.value = false
+	}
 }
 </script>

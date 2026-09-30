@@ -74,14 +74,14 @@ export async function getHighlighter() {
 		return highlighterPromise
 	}
 
-	highlighterPromise = createHighlighterCore({
-		themes: [import("shiki/themes/slack-ochin.mjs"), import("shiki/themes/aurora-x.mjs")],
-		langs: [],
-		engine: createJavaScriptRegexEngine()
-	}).then(instance => {
-		highlighterInstance = instance
-		return instance
-	})
+	highlighterPromise = (async () => {
+		highlighterInstance = await createHighlighterCore({
+			themes: [import("shiki/themes/slack-ochin.mjs"), import("shiki/themes/aurora-x.mjs")],
+			langs: [],
+			engine: createJavaScriptRegexEngine()
+		})
+		return highlighterInstance
+	})()
 
 	return highlighterPromise
 }

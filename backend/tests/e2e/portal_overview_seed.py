@@ -43,6 +43,10 @@ from app.incidents.models import AlertContext  # noqa: E402
 from app.incidents.models import Asset  # noqa: E402
 from app.incidents.models import Case  # noqa: E402
 from app.incidents.models import CaseAlertLink  # noqa: E402
+from app.incidents.models import CaseComment  # noqa: E402
+from app.incidents.models import CaseDataStore  # noqa: E402
+from app.incidents.models import CaseEvent  # noqa: E402
+from app.incidents.models import CaseTask  # noqa: E402
 
 CUST_A, CUST_B = "E2E_OV_A", "E2E_OV_B"
 PORTAL_USER = "e2e_ov_portal"  # customer_user assigned to E2E_OV_A
@@ -94,6 +98,10 @@ async def cleanup(s):
     await s.execute(delete(CustomerPortalAiReportSettings).where(CustomerPortalAiReportSettings.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalBranding).where(CustomerPortalBranding.customer_code.in_(codes)))
     await s.execute(delete(CaseAlertLink).where(CaseAlertLink.case_id.in_(case_ids)))
+    # Cases the browser specs create through the API (alert-cases.cy.ts) also get
+    # timeline events, and could get comments, tasks or files.
+    for child in (CaseEvent, CaseComment, CaseTask, CaseDataStore):
+        await s.execute(delete(child).where(child.case_id.in_(case_ids)))
     await s.execute(delete(Case).where(Case.customer_code.in_(codes)))
     await s.execute(delete(Asset).where(Asset.alert_linked.in_(alert_ids)))
     await s.execute(delete(Alert).where(Alert.customer_code.in_(codes)))
