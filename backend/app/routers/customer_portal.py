@@ -5,6 +5,7 @@ from app.customer_portal.routes.ai_reports import customer_portal_ai_reports_rou
 from app.customer_portal.routes.branding import customer_portal_branding_router
 from app.customer_portal.routes.dashboard import customer_portal_dashboard_router
 from app.customer_portal.routes.settings import customer_portal_settings_router
+from app.customer_portal.routes.sla import customer_portal_sla_router
 
 # Instantiate the APIRouter
 router = APIRouter()
@@ -37,4 +38,10 @@ router.include_router(
     customer_portal_agents_router,
     prefix="/customer_portal",
     tags=["Customer Portal Agents"],
+)
+# The SOC's SLA for the caller's customers (#1187) — opt-in per customer, read-only
+router.include_router(
+    customer_portal_sla_router,
+    prefix="/customer_portal",
+    tags=["Customer Portal SLA"],
 )

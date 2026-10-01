@@ -29,7 +29,7 @@ from app.soc_management.models.sla import CaseSlaTracking  # noqa: E402
 T0 = datetime(2026, 9, 1, 8, 0, 0)
 
 _TABLE_PREFIXES = ("incident_management", "soc_sla")
-_TABLE_NAMES = ("user", "role", "user_customer_access", "user_tag_access", "role_tag_access", "customers")
+_TABLE_NAMES = ("user", "role", "user_customer_access", "user_tag_access", "role_tag_access", "customers", "customer_portal_sla_settings")
 
 
 def _tables():
