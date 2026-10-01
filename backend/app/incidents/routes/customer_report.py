@@ -93,6 +93,10 @@ async def generate_report_background(
     except (ValueError, TypeError):
         role_name = None
 
+    if role_name == "customer_user" and request.include_sla:
+        # SLA figures are published by the SOC, never self-served (#1187).
+        request = request.model_copy(update={"include_sla": False})
+
     report_record = IncidentManagementCustomerReport(
         report_name=report_name,
         customer_code=request.customer_code,
@@ -111,6 +115,7 @@ async def generate_report_background(
                 "date_to": request.date_to.isoformat(),
                 "brand_theme": request.brand_theme,
                 "report_template": request.report_template,
+                "include_sla": request.include_sla,
             },
         ),
         # Customer-generated reports are always visible to the customer; otherwise

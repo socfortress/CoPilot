@@ -221,6 +221,14 @@ async def build_report_context(
 
     theme = await resolve_theme(session, request.brand_theme, customer_code=cc)
 
+    # SLA section (#1187): the same figures the SOC Management dashboard shows for this
+    # customer, imported lazily because soc_management itself imports this module.
+    sla = None
+    if request.include_sla:
+        from app.soc_management.services.report import customer_sla_context
+
+        sla = await customer_sla_context(session, cc, date_from, date_to)
+
     months = [row["month"] for row in trend]
     show_evolution = len(trend) >= 2
 
@@ -277,6 +285,7 @@ async def build_report_context(
         "closed_overflow": max(0, closed_total - len(closed_cards)),
         "has_alerts": total_alerts > 0,
         "has_cases": total_cases > 0,
+        "sla": sla,
         "_stats": {
             "total_alerts": total_alerts,
             "total_cases": total_cases,
@@ -302,10 +311,16 @@ def _render_pdf(context: Dict[str, Any], template: str = DEFAULT_TEMPLATE) -> by
     )
     template_name = TEMPLATE_FILES.get(template, TEMPLATE_FILES[DEFAULT_TEMPLATE])
     rendered_html = env.get_template(template_name).render(context)
+    return html_to_pdf_bytes(rendered_html, brand=context.get("brand") or "CoPilot", tlp=context.get("tlp") or "TLP:RED")
 
-    brand = context.get("brand") or "CoPilot"
-    tlp = context.get("tlp") or "TLP:RED"
 
+def html_to_pdf_bytes(rendered_html: str, brand: str, tlp: str) -> bytes:
+    """Convert a rendered report page to PDF with the shared report chrome.
+
+    The repeating footer (brand line + TLP + page number) is drawn by wkhtmltopdf so it
+    appears on every page. Shared by every report built on ``_report_base.html`` — the
+    customer reports and the SOC operations report (#1187).
+    """
     html_path = None
     pdf_path = None
     try:
@@ -434,6 +449,7 @@ async def generate_customer_report(
                 "date_to": request.date_to.isoformat(),
                 "brand_theme": request.brand_theme,
                 "report_template": request.report_template,
+                "include_sla": request.include_sla,
             },
         )
 

@@ -1,7 +1,7 @@
 {# FULL report — the complete picture: executive summary + charts/trends +
    open & closed cases with per-case technical detail (assets + IOCs). #}
 {% extends "_report_base.html" %}
-{% from "_report_macros.html" import priority_chip, case_summary_row, case_card with context %}
+{% from "_report_macros.html" import priority_chip, case_summary_row, case_card, sla_section with context %}
 
 {% block cover_kind %}<div class="kind">Complete Report</div>{% endblock %}
 
@@ -168,4 +168,7 @@
   {% else %}
     <div class="empty">No cases were closed for this customer in the selected period.</div>
   {% endif %}
+
+  {# SLA performance (#1187): present only when the SOC chose to include it. #}
+  {% if sla %}{{ sla_section(sla, "5.") }}{% endif %}
 {% endblock %}

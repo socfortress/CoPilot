@@ -36,6 +36,12 @@ class CustomerReportGenerateRequest(BaseModel):
     brand_theme: BrandTheme = "customer"
     # Which report layout to render. Defaults to the complete report.
     report_template: ReportTemplate = "full"
+    # Add the "Service Level Performance" section (#1187): SLA compliance and response /
+    # resolution times for this customer. Opt-in, because publishing SLA figures to a
+    # customer is a commercial decision; ignored for customer-generated reports, so it only
+    # ever reaches a customer through a report the SOC chose to include it in. The
+    # operational layout is case-centric and does not render it.
+    include_sla: bool = False
 
     @model_validator(mode="after")
     def _validate_range(self) -> "CustomerReportGenerateRequest":

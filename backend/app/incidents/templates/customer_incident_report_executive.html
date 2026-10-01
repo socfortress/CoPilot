@@ -2,6 +2,7 @@
    headline KPIs + service-metrics table + a single status donut. No per-case
    detail, no trend deep-dive. #}
 {% extends "_report_base.html" %}
+{% from "_report_macros.html" import sla_section with context %}
 
 {% block cover_eyebrow %}Executive Brief{% endblock %}
 {% block cover_title %}SOC Activity — Executive Summary{% endblock %}
@@ -60,4 +61,7 @@
   {% elif not has_alerts %}
   <div class="empty">No alerts were recorded for this customer in the selected period.</div>
   {% endif %}
+
+  {# SLA performance (#1187): present only when the SOC chose to include it. #}
+  {% if sla %}{{ sla_section(sla, "›") }}{% endif %}
 {% endblock %}
