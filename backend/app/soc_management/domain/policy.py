@@ -13,7 +13,7 @@ Resolution is per cell (entity × severity), most specific first:
     customer override  →  global policy  →  built-in default
 
 A row is a whole cell: a customer override for *High alerts* replaces both clocks of
-that cell, never one of them. Keeping the unit of override equal to the unit the UI
+that cell — and whether they count business hours — never one of them. Keeping the unit of override equal to the unit the UI
 edits is what makes "which number applies here?" answerable at a glance.
 """
 
@@ -21,7 +21,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from datetime import timedelta
 from enum import Enum
 from typing import Dict
 from typing import Iterable
@@ -29,6 +28,8 @@ from typing import Mapping
 from typing import Optional
 
 from app.incidents.services.alert_severity import SEVERITY_LEVELS
+from app.soc_management.domain.calendar import CONTINUOUS
+from app.soc_management.domain.calendar import ClockBasis
 
 
 class SlaEntity(str, Enum):
@@ -57,16 +58,18 @@ class SlaTargets:
     ack_minutes: Optional[int]
     resolve_minutes: Optional[int]
     source: TargetSource = TargetSource.DEFAULT
+    #: The targets count business hours of the customer's calendar, not wall-clock time.
+    business_hours: bool = False
 
-    def ack_due(self, opened_at: datetime) -> Optional[datetime]:
-        return _due(opened_at, self.ack_minutes)
+    def ack_due(self, opened_at: datetime, clock: ClockBasis = CONTINUOUS) -> Optional[datetime]:
+        return _due(opened_at, self.ack_minutes, clock)
 
-    def resolve_due(self, opened_at: datetime) -> Optional[datetime]:
-        return _due(opened_at, self.resolve_minutes)
+    def resolve_due(self, opened_at: datetime, clock: ClockBasis = CONTINUOUS) -> Optional[datetime]:
+        return _due(opened_at, self.resolve_minutes, clock)
 
 
-def _due(opened_at: datetime, minutes: Optional[int]) -> Optional[datetime]:
-    return opened_at + timedelta(minutes=minutes) if minutes is not None else None
+def _due(opened_at: datetime, minutes: Optional[int], clock: ClockBasis) -> Optional[datetime]:
+    return clock.add(opened_at, minutes * 60) if minutes is not None else None
 
 
 def _targets(ack_minutes: Optional[int], resolve_minutes: Optional[int]) -> SlaTargets:
@@ -111,6 +114,7 @@ class PolicyRow:
     severity: str
     ack_minutes: Optional[int]
     resolve_minutes: Optional[int]
+    business_hours: bool = False
 
 
 def builtin_targets(entity: SlaEntity, severity: str) -> SlaTargets:
@@ -130,11 +134,11 @@ def resolve_targets(
         if row.entity != entity or row.severity != severity:
             continue
         if customer_code is not None and row.customer_code == customer_code:
-            return SlaTargets(row.ack_minutes, row.resolve_minutes, TargetSource.CUSTOMER)
+            return SlaTargets(row.ack_minutes, row.resolve_minutes, TargetSource.CUSTOMER, row.business_hours)
         if row.customer_code is None:
             global_row = row
     if global_row is not None:
-        return SlaTargets(global_row.ack_minutes, global_row.resolve_minutes, TargetSource.GLOBAL)
+        return SlaTargets(global_row.ack_minutes, global_row.resolve_minutes, TargetSource.GLOBAL, global_row.business_hours)
     return builtin_targets(entity, severity)
 
 

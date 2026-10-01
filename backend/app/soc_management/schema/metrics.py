@@ -38,6 +38,7 @@ class ComplianceOut(_FromDomain):
     breached: int = 0
     at_risk: int = 0
     on_track: int = 0
+    paused: int = 0
     not_tracked: int = 0
     decided: int = 0
     rate: Optional[float] = None
@@ -159,6 +160,8 @@ class WorkloadOut(_FromDomain):
     oldest_unassigned_at: Optional[datetime] = None
     breached: int
     at_risk: int
+    #: Open items whose clocks are stopped while the customer answers.
+    waiting_on_customer: int = 0
     by_severity: List[SeverityLoadOut]
     by_assignee: List[AssigneeLoadOut]
 
@@ -249,4 +252,11 @@ class ItemSlaResponse(BaseModel):
     resolve: SlaClockOut
     first_assigned_at: Optional[datetime] = None
     reopen_count: int = 0
+    #: The targets count business hours of ``calendar_timezone``'s calendar.
+    business_hours: bool = False
+    calendar_timezone: Optional[str] = None
+    #: Set while the item waits on the customer; both clocks are stopped.
+    paused_at: Optional[datetime] = None
+    #: Time spent waiting on the customer so far, the current wait included.
+    paused_seconds: int = 0
     generated_at: datetime = Field(description="Server time the states were evaluated at")

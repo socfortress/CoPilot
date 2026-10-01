@@ -69,6 +69,7 @@ from app.network_connectors.models.network_connectors import (
 from app.schedulers.models.scheduler import JobMetadata
 from app.soc_management.models.sla import AlertSlaTracking
 from app.soc_management.models.sla import CaseSlaTracking
+from app.soc_management.models.sla import SlaCalendar
 from app.soc_management.models.sla import SlaPolicy
 
 # this is the Alembic Config object, which provides

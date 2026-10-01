@@ -173,6 +173,7 @@ async def build_report_context(session: AsyncSession, snapshot: Snapshot) -> Dic
             "unassigned_cases": snapshot.workload.unassigned_cases,
             "breached": snapshot.workload.breached,
             "at_risk": snapshot.workload.at_risk,
+            "waiting_on_customer": snapshot.workload.waiting_on_customer,
             "by_severity": snapshot.workload.by_severity,
             "by_assignee": snapshot.workload.by_assignee,
         },

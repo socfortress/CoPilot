@@ -13,6 +13,9 @@ Two semantics, chosen per question and stated in each docstring:
 - **Activity** (by when the action happened): "what did each analyst do in September?"
   — acknowledgements and resolutions attributed to whoever performed them.
 
+**Waiting on the customer is not the SOC's time.** A paused clock is neither on track
+nor late, the time to resolve leaves the wait out, and a paused item is not chased.
+
 **Only tracked items carry timings.** Items that existed before tracking began were
 backfilled with an approximate ``opened_at`` and no response history; they still count
 in volumes and workload, but never in a duration or a compliance figure, where an
@@ -34,6 +37,8 @@ from typing import Sequence
 from typing import Set
 from typing import Tuple
 
+from app.soc_management.domain.calendar import CONTINUOUS
+from app.soc_management.domain.calendar import ClockBasis
 from app.soc_management.domain.lifecycle import CLOSED
 from app.soc_management.domain.periods import Bucket
 from app.soc_management.domain.periods import Period
@@ -80,6 +85,12 @@ class ItemFact:
     resolved_at: Optional[datetime] = None
     resolved_by: Optional[str] = None
     reopen_count: int = 0
+    #: Set while the item waits on the customer; the clocks are stopped.
+    paused_at: Optional[datetime] = None
+    #: Wall-clock time spent waiting on the customer, over all pauses that ended.
+    paused_seconds: int = 0
+    #: The basis the targets run on: 24/7, or the customer's business calendar.
+    clock: ClockBasis = CONTINUOUS
     # Alert-only facts; neutral defaults for cases.
     source: Optional[str] = None
     verdict: Optional[str] = None
@@ -97,10 +108,15 @@ class ItemFact:
         return (self.first_ack_at - self.opened_at).total_seconds()
 
     @property
+    def is_paused(self) -> bool:
+        return self.paused_at is not None
+
+    @property
     def ttr(self) -> Optional[float]:
+        """Time to resolve, less the time spent waiting on the customer."""
         if not self.tracked or self.resolved_at is None:
             return None
-        return (self.resolved_at - self.opened_at).total_seconds()
+        return (self.resolved_at - self.opened_at).total_seconds() - self.paused_seconds
 
     @property
     def ack_achieved_at(self) -> Optional[datetime]:
@@ -114,12 +130,12 @@ class ItemFact:
     def ack_state(self, now: datetime) -> SlaState:
         if not self.tracked:
             return SlaState.NOT_TRACKED
-        return evaluate(self.opened_at, self.ack_due_at, self.ack_achieved_at, now)
+        return evaluate(self.opened_at, self.ack_due_at, self.ack_achieved_at, now, self.clock, self.paused_at)
 
     def resolve_state(self, now: datetime) -> SlaState:
         if not self.tracked:
             return SlaState.NOT_TRACKED
-        return evaluate(self.opened_at, self.resolve_due_at, self.resolved_at, now)
+        return evaluate(self.opened_at, self.resolve_due_at, self.resolved_at, now, self.clock, self.paused_at)
 
     def live_state(self, now: datetime) -> SlaState:
         """The state of the clocks still running — what needs action on an open item.
@@ -132,7 +148,7 @@ class ItemFact:
             running.append(self.ack_state(now))
         if self.resolved_at is None:
             running.append(self.resolve_state(now))
-        for state in (SlaState.BREACHED, SlaState.AT_RISK, SlaState.ON_TRACK):
+        for state in (SlaState.BREACHED, SlaState.AT_RISK, SlaState.PAUSED, SlaState.ON_TRACK):
             if state in running:
                 return state
         return SlaState.NOT_TRACKED
@@ -269,6 +285,8 @@ class Workload:
     open_cases: int
     unassigned_alerts: int
     unassigned_cases: int
+    #: Open items waiting on the customer (PENDING_CUSTOMER): their clocks are stopped.
+    waiting_on_customer: int
     #: Opening time of the oldest unassigned open item — the queue's tail.
     oldest_unassigned_at: Optional[datetime]
     breached: int
@@ -620,6 +638,7 @@ def workload(open_alerts: Sequence[ItemFact], open_cases: Sequence[ItemFact], no
         open_cases=len(open_cases),
         unassigned_alerts=sum(1 for f in open_alerts if not f.assigned_to),
         unassigned_cases=sum(1 for f in open_cases if not f.assigned_to),
+        waiting_on_customer=sum(1 for f in everything if f.is_paused),
         oldest_unassigned_at=min((f.opened_at for f in unassigned), default=None),
         breached=sum(1 for f in everything if _is_breached(f, now)),
         at_risk=sum(1 for f in everything if _is_at_risk(f, now)),

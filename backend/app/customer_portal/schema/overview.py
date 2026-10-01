@@ -29,6 +29,7 @@ class OverviewStatusCounts(BaseModel):
     open: int = 0
     in_progress: int = 0
     closed: int = 0
+    pending_customer: int = 0
 
 
 class OverviewAlert(BaseModel):

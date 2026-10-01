@@ -263,6 +263,39 @@ def test_policy_validation_errors_name_the_problem():
     assert "acknowledge target cannot be longer" in response.text
 
 
+def test_calendar_round_trip_validation_and_admin_only_writes():
+    week = {"mon": [["09:00", "17:00"]], "fri": [["09:00", "13:00"]]}
+
+    async def scenario(client, _):
+        default = await client.get("/soc_management/calendars", params={"customer_code": "ACME"}, headers=as_user("ana"))
+        denied = await client.put("/soc_management/calendars", json={"week": week}, headers=as_user("ana"))
+        invalid = await client.put(
+            "/soc_management/calendars",
+            json={"timezone": "Mars/Olympus", "week": week},
+            headers=as_user("admin"),
+        )
+        saved = await client.put(
+            "/soc_management/calendars",
+            json={"customer_code": "ACME", "timezone": "Europe/Rome", "week": week, "holidays": ["2026-12-25"], "apply_to_open": True},
+            headers=as_user("admin"),
+        )
+        foreign = await client.get("/soc_management/calendars", params={"customer_code": "GLOBEX"}, headers=as_user("ana"))
+        cleared = await client.delete("/soc_management/calendars/ACME", headers=as_user("admin"))
+        return default, denied, invalid, saved, foreign, cleared
+
+    default, denied, invalid, saved, foreign, cleared = call(scenario)
+    assert default.status_code == 200 and default.json()["calendar"]["source"] == "default"
+    assert denied.status_code == 403
+    assert invalid.status_code in (400, 422) and "Unknown timezone" in invalid.text
+    assert saved.status_code == 200, saved.text
+    body = saved.json()
+    assert body["calendar"]["source"] == "customer" and body["calendar"]["week"]["fri"] == [["09:00", "13:00"]]
+    assert body["customers_with_calendar"] == ["ACME"]
+    assert body["retargeted"] == 0  # the open alert runs 24/7: a calendar does not move it
+    assert foreign.status_code == 403
+    assert cleared.status_code == 200 and cleared.json()["calendar"]["source"] == "default"
+
+
 def test_item_sla_is_404_outside_the_callers_scope():
     async def scenario(client, foreign_id):
         own = await client.get("/soc_management/items/alert/1/sla", headers=as_user("ana"))

@@ -17,8 +17,11 @@ only when the operator explicitly asks for it, and never touches closed ones.
 """
 
 from datetime import datetime
+from typing import Dict
+from typing import List
 from typing import Optional
 
+from sqlalchemy import JSON
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
@@ -50,6 +53,31 @@ class SlaPolicy(SQLModel, table=True):
     severity: str = Field(max_length=20, nullable=False)
     ack_minutes: Optional[int] = Field(default=None, nullable=True, description="NULL = no acknowledge promise")
     resolve_minutes: Optional[int] = Field(default=None, nullable=True, description="NULL = no resolve promise")
+    #: The cell's targets count the customer's business hours instead of wall-clock time.
+    business_hours: bool = Field(default=False, nullable=False)
+    updated_at: datetime = Field(default_factory=utc_now, nullable=False)
+    updated_by: Optional[str] = Field(default=None, max_length=100, nullable=True)
+
+
+class SlaCalendar(SQLModel, table=True):
+    """Business hours for business-hours SLA targets: weekly windows in a timezone, and holidays.
+
+    ``customer_code`` NULL is the deployment's calendar; set, it replaces it for that
+    customer (hard FK, cascade). Shape of ``week`` / ``holidays``: see
+    ``domain/calendar.py:BusinessCalendar.to_dict``.
+    """
+
+    __tablename__ = "soc_sla_calendar"
+    __table_args__ = (UniqueConstraint("customer_code", name="uq_soc_sla_calendar_scope"),)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    customer_code: Optional[str] = Field(
+        default=None,
+        sa_column=Column(String(50), ForeignKey("customers.customer_code", ondelete="CASCADE"), nullable=True, index=True),
+    )
+    timezone: str = Field(max_length=64, nullable=False)
+    week: Dict = Field(sa_column=Column(JSON, nullable=False))
+    holidays: List = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     updated_at: datetime = Field(default_factory=utc_now, nullable=False)
     updated_by: Optional[str] = Field(default=None, max_length=100, nullable=True)
 
@@ -75,6 +103,24 @@ class SlaTrackingBase(SQLModel):
     resolved_by: Optional[str] = Field(default=None, max_length=100, nullable=True, index=True)
     first_resolved_at: Optional[datetime] = Field(default=None, nullable=True)
     reopen_count: int = Field(default=0, nullable=False)
+
+    #: Whether the targets count business hours (snapshot of the policy cell at opening).
+    business_hours: bool = Field(default=False, nullable=False)
+    #: Set while the item waits on the customer (PENDING_CUSTOMER): the clocks are stopped.
+    paused_at: Optional[datetime] = Field(default=None, nullable=True)
+    #: Wall-clock seconds spent waiting on the customer, over the pauses that ended.
+    paused_seconds: int = Field(default=0, nullable=False)
+    #: The same pauses on the targets' own basis (business seconds for business-hours
+    #: targets) — the credit every running target was extended by, kept for re-targets.
+    pause_credit_seconds: int = Field(default=0, nullable=False)
+
+    #: When an SLA notification went out for each clock and state. Stamped with a guarded
+    #: UPDATE before emitting, so a notification fires once per clock even if the job
+    #: overlaps itself or runs on two workers.
+    ack_at_risk_notified_at: Optional[datetime] = Field(default=None, nullable=True)
+    ack_breached_notified_at: Optional[datetime] = Field(default=None, nullable=True)
+    resolve_at_risk_notified_at: Optional[datetime] = Field(default=None, nullable=True)
+    resolve_breached_notified_at: Optional[datetime] = Field(default=None, nullable=True)
 
     #: True when the lifecycle was observed from the item's opening. False for rows
     #: backfilled for items that existed before tracking began: their opening time is

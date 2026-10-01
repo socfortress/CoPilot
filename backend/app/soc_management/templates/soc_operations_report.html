@@ -61,6 +61,7 @@
     <tr class="sub"><td class="k">• Open alerts · unassigned</td><td class="v" style="width:200px">{{ workload.open_alerts }} · {{ workload.unassigned_alerts }}</td></tr>
     <tr class="sub"><td class="k">• Open cases · unassigned</td><td class="v" style="width:200px">{{ workload.open_cases }} · {{ workload.unassigned_cases }}</td></tr>
     <tr class="sub"><td class="k">• Past SLA · at risk</td><td class="v" style="width:200px">{{ workload.breached }} · {{ workload.at_risk }}</td></tr>
+    <tr class="sub"><td class="k">• Waiting on the customer (clocks stopped)</td><td class="v" style="width:200px">{{ workload.waiting_on_customer }}</td></tr>
   </table>
 
   <div class="chart-block"><img src="{{ charts.volume }}" alt="alert volume" /><div class="chart-cap">Alerts opened vs resolved</div></div>

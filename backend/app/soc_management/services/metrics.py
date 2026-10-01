@@ -49,6 +49,7 @@ from app.soc_management.schema.metrics import TrendPointOut
 from app.soc_management.schema.metrics import Viewer
 from app.soc_management.schema.metrics import WorkloadOut
 from app.soc_management.schema.policy import PolicyMatrix
+from app.soc_management.services import calendars as calendar_service
 from app.soc_management.services import datasets
 from app.soc_management.services import policy as policy_service
 from app.soc_management.services.datasets import FactFilters
@@ -116,10 +117,11 @@ async def compute_snapshot(
     loaded = Period(previous.start, period.end)
     bucket = query.bucket or auto_bucket(period)
 
-    alerts = await datasets.window_alerts(session, visibility, loaded, query.filters)
-    cases = await datasets.window_cases(session, visibility, loaded, query.filters)
-    open_alerts = await datasets.open_alerts(session, visibility, query.filters)
-    open_cases = await datasets.open_cases(session, visibility, query.filters)
+    book = await calendar_service.load_book(session)
+    alerts = await datasets.window_alerts(session, visibility, loaded, query.filters, book)
+    cases = await datasets.window_cases(session, visibility, loaded, query.filters, book)
+    open_alerts = await datasets.open_alerts(session, visibility, query.filters, book)
+    open_cases = await datasets.open_cases(session, visibility, query.filters, book)
     soc_users = await datasets.soc_usernames(session)
 
     analyst_rows = analytics.analysts(alerts, cases, open_alerts, open_cases, period, now, soc_users)
@@ -219,11 +221,12 @@ async def build_attention(
     """Every open item that is breached or at risk, most urgent first."""
     now = utc_now()
     visibility = await datasets.visibility_for(user, session, customer_codes)
+    book = await calendar_service.load_book(session)
     facts = []
     if entity in (None, SlaEntity.ALERT):
-        facts.extend(await datasets.open_alerts(session, visibility, filters))
+        facts.extend(await datasets.open_alerts(session, visibility, filters, book))
     if entity in (None, SlaEntity.CASE):
-        facts.extend(await datasets.open_cases(session, visibility, filters))
+        facts.extend(await datasets.open_cases(session, visibility, filters, book))
     items = analytics.attention_items(facts, now, limit=len(facts))
     if state is not None:
         items = [item for item in items if item.state is state]
@@ -234,10 +237,12 @@ async def item_sla(session: AsyncSession, user: User, entity: SlaEntity, item_id
     """One item's SLA, or ``None`` when the caller cannot see it (the route answers 404)."""
     visibility = await datasets.visibility_for(user, session, None)
     load = datasets.alert_fact if entity is SlaEntity.ALERT else datasets.case_fact
-    fact = await load(session, visibility, item_id)
+    book = await calendar_service.load_book(session)
+    fact = await load(session, visibility, item_id, book)
     if fact is None:
         return None
     tracking = await session.get(AlertSlaTracking if entity is SlaEntity.ALERT else CaseSlaTracking, item_id)
+    credit = (tracking.pause_credit_seconds or 0) if tracking else 0
     now = utc_now()
     return ItemSlaResponse(
         entity=entity,
@@ -251,23 +256,31 @@ async def item_sla(session: AsyncSession, user: User, entity: SlaEntity, item_id
             state=fact.ack_state(now),
             by=fact.first_ack_by,
             action=tracking.first_ack_action if tracking else None,
-            target_minutes=_minutes_between(fact.opened_at, fact.ack_due_at),
+            target_minutes=_target_minutes(fact, fact.ack_due_at, credit),
         ),
         resolve=SlaClockOut(
             due_at=fact.resolve_due_at,
             achieved_at=fact.resolved_at,
             state=fact.resolve_state(now),
             by=fact.resolved_by,
-            target_minutes=_minutes_between(fact.opened_at, fact.resolve_due_at),
+            target_minutes=_target_minutes(fact, fact.resolve_due_at, credit),
         ),
         first_assigned_at=tracking.first_assigned_at if tracking else None,
         reopen_count=fact.reopen_count,
+        business_hours=fact.clock.business_hours,
+        calendar_timezone=book.for_customer(fact.customer_code).timezone if fact.clock.business_hours else None,
+        paused_at=fact.paused_at,
+        paused_seconds=fact.paused_seconds + (round((now - fact.paused_at).total_seconds()) if fact.paused_at else 0),
         generated_at=now,
     )
 
 
-def _minutes_between(start: datetime, end: Optional[datetime]) -> Optional[int]:
-    return round((end - start).total_seconds() / 60) if end is not None else None
+def _target_minutes(fact: analytics.ItemFact, due_at: Optional[datetime], credit_seconds: int) -> Optional[int]:
+    """The promised target, on the clock's own basis: a due time pushed back by waiting on
+    the customer still promised the same number of minutes."""
+    if due_at is None:
+        return None
+    return round((fact.clock.elapsed(fact.opened_at, due_at) - credit_seconds) / 60)
 
 
 def _single_customer(requested: Optional[List[str]], visibility: Visibility) -> Optional[str]:

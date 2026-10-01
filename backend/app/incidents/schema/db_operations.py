@@ -117,6 +117,8 @@ class AlertStatus(str, Enum):
     OPEN = "OPEN"
     CLOSED = "CLOSED"
     IN_PROGRESS = "IN_PROGRESS"
+    #: The SOC is waiting on the customer; the item's SLA clocks are stopped (#1187).
+    PENDING_CUSTOMER = "PENDING_CUSTOMER"
 
 
 class UpdateAlertStatus(BaseModel):
@@ -574,6 +576,7 @@ class AlertOutResponse(BaseModel):
     open: Optional[int] = None
     in_progress: Optional[int] = None
     closed: Optional[int] = None
+    pending_customer: Optional[int] = None
     total_filtered: Optional[int] = None
     success: bool
     message: str
@@ -609,6 +612,7 @@ class CaseOutResponse(BaseModel):
     open: Optional[int] = None
     in_progress: Optional[int] = None
     closed: Optional[int] = None
+    pending_customer: Optional[int] = None
     success: bool
     message: str
 

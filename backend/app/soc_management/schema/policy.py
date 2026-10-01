@@ -20,6 +20,8 @@ class PolicyCell(BaseModel):
     severity: str
     ack_minutes: Optional[int] = None
     resolve_minutes: Optional[int] = None
+    #: True: the targets count business hours of the customer's calendar.
+    business_hours: bool = False
     source: TargetSource
 
 
@@ -49,6 +51,7 @@ class PolicyCellIn(BaseModel):
     inherit: bool = False
     ack_minutes: Optional[int] = None
     resolve_minutes: Optional[int] = None
+    business_hours: bool = False
 
     @field_validator("severity")
     @classmethod

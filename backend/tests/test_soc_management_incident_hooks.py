@@ -214,23 +214,36 @@ def test_a_case_from_an_alert_takes_its_severity_before_the_creation_is_recorded
     ]
 
 
-def test_closing_a_case_records_it_and_every_alert_the_cascade_closed():
+def _case_status_change(old_status, new_status, linked):
     session = AsyncMock()
     links = MagicMock()
-    links.__iter__ = lambda self: iter([(11,), (12,)])
+    links.all = lambda: linked
     session.execute = AsyncMock(return_value=links)
-    case = SimpleNamespace(customer_code="ACME", case_status="IN_PROGRESS")
+    case = SimpleNamespace(customer_code="ACME", case_status=old_status)
+    moved = AsyncMock()
     with _patches(
         get_case_by_id=AsyncMock(return_value=case),
-        update_alert_status=AsyncMock(),
+        update_alert_status=moved,
         update_case_status=AsyncMock(),
         CaseOutResponse=lambda **kw: kw,
     ), patch("app.incidents.services.case_tasks.get_incomplete_mandatory_tasks", AsyncMock(return_value=[])):
-        asyncio.run(dbo.update_case_status_endpoint(UpdateCaseStatus(case_id=3, status="CLOSED"), False, ANALYST, session))
+        asyncio.run(dbo.update_case_status_endpoint(UpdateCaseStatus(case_id=3, status=new_status), False, ANALYST, session))
+    return [call.args[0].alert_id for call in moved.await_args_list]
+
+
+def test_closing_a_case_records_it_and_every_alert_the_cascade_closed():
+    moved = _case_status_change("IN_PROGRESS", "CLOSED", [(11, "OPEN"), (12, "PENDING_CUSTOMER")])
+    assert moved == [11, 12]
     assert recorded() == [
         ("case_action", (3, LifecycleAction.STATUS_CHANGED, ANA), {"to_status": "CLOSED"}),
         ("alerts_action", ([11, 12], LifecycleAction.STATUS_CHANGED, ANA), {"to_status": "CLOSED"}),
     ]
+
+
+def test_a_case_waiting_on_the_customer_takes_only_its_active_alerts_with_it():
+    moved = _case_status_change("IN_PROGRESS", "PENDING_CUSTOMER", [(11, "OPEN"), (12, "CLOSED"), (13, "IN_PROGRESS")])
+    assert moved == [11, 13]
+    assert recorded()[-1] == ("alerts_action", ([11, 13], LifecycleAction.STATUS_CHANGED, ANA), {"to_status": "PENDING_CUSTOMER"})
 
 
 def test_case_assignment_escalation_and_comment_are_recorded():

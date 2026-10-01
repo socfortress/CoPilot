@@ -18,11 +18,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # ───────────────
 # System Dependencies
 # ───────────────
+# tzdata: zoneinfo needs the IANA database for SLA business-hours calendars (#1187)
 RUN apt-get update && apt-get install -y \
     curl ca-certificates build-essential \
     python3.11 python3.11-venv python3.11-dev \
     libnss3 libatk-bridge2.0-0 libxkbcommon0 libgtk-3-0 libasound2 libx11-xcb1 \
-    wkhtmltopdf libmagic1 file && \
+    wkhtmltopdf libmagic1 file tzdata && \
     rm -rf /var/lib/apt/lists/*
 
 # ───────────────

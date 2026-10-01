@@ -46,6 +46,7 @@ STATUS_COLORS = {
     "IN_PROGRESS": "#4fa8e0",
     "IN PROGRESS": "#4fa8e0",
     "CLOSED": "#2ecc71",
+    "PENDING_CUSTOMER": "#a78bfa",
     "RESOLVED": "#2ecc71",
     "ESCALATED": "#ee4b3b",
     "FALSE_POSITIVE": "#94a3b8",

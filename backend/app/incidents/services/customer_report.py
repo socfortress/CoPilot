@@ -124,6 +124,12 @@ def _priority_from_tags(tags: List[str]) -> Optional[str]:
     return None
 
 
+def _status_label(case) -> str:
+    if case.case_closed_time is not None:
+        return "CLOSED"
+    return "WAITING ON CUSTOMER" if case.case_status == "PENDING_CUSTOMER" else "OPEN"
+
+
 def _build_case_card(case) -> Dict[str, Any]:
     """Flatten a Case ORM row (with eager-loaded relations) into template data."""
     linked_alerts = [link.alert for link in (case.alerts or []) if link.alert is not None]
@@ -164,7 +170,7 @@ def _build_case_card(case) -> Dict[str, Any]:
         "priority": _priority_from_tags(tags),
         "taxonomy": " / ".join(tags[:3]) if tags else None,
         "is_closed": case.case_closed_time is not None,
-        "status_label": "CLOSED" if case.case_closed_time is not None else "OPEN",
+        "status_label": _status_label(case),
         "assigned_to": case.assigned_to or "—",
         "creation_time": _fmt_dt(case.case_creation_time),
         "closed_time": _fmt_dt(case.case_closed_time),

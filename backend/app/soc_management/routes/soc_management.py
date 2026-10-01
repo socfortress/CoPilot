@@ -30,12 +30,15 @@ from app.soc_management.domain.periods import Bucket
 from app.soc_management.domain.periods import requested_period
 from app.soc_management.domain.policy import SlaEntity
 from app.soc_management.domain.sla import SlaState
+from app.soc_management.schema.calendar import CalendarIn
+from app.soc_management.schema.calendar import CalendarResponse
 from app.soc_management.schema.metrics import AttentionResponse
 from app.soc_management.schema.metrics import DashboardResponse
 from app.soc_management.schema.metrics import ItemSlaResponse
 from app.soc_management.schema.policy import PolicyOverridesResponse
 from app.soc_management.schema.policy import PolicyResponse
 from app.soc_management.schema.policy import PolicyUpdateRequest
+from app.soc_management.services import calendars as calendar_service
 from app.soc_management.services import metrics as metrics_service
 from app.soc_management.services import policy as policy_service
 from app.soc_management.services import report as report_service
@@ -258,3 +261,82 @@ async def delete_policy_override(
         policy=await policy_service.get_matrix(session, customer_code),
         retargeted=retargeted,
     )
+
+
+# ── business-hours calendars ─────────────────────────────────────────────────
+
+
+async def _calendar_response(session: AsyncSession, user: User, customer_code: Optional[str], message: str = "", retargeted: int = 0):
+    accessible = await customer_access_handler.get_user_accessible_customers(user, session)
+    codes = None if "*" in accessible else accessible
+    return CalendarResponse(
+        message=message,
+        calendar=await calendar_service.get_calendar(session, customer_code),
+        customers_with_calendar=await calendar_service.customers_with_calendar(session, codes),
+        retargeted=retargeted,
+    )
+
+
+@soc_management_router.get(
+    "/calendars",
+    response_model=CalendarResponse,
+    description="The business-hours calendar a scope runs on (global when no customer), labelled with its source",
+    dependencies=[_SOC],
+)
+async def get_calendar(
+    customer_code: Optional[str] = Query(None),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> CalendarResponse:
+    await _check_scope(customer_code, current_user, session)
+    return await _calendar_response(session, current_user, customer_code)
+
+
+@soc_management_router.put(
+    "/calendars",
+    response_model=CalendarResponse,
+    description="Replace a scope's business-hours calendar; optionally re-target open business-hours items",
+    dependencies=[_ADMIN],
+)
+async def put_calendar(
+    body: CalendarIn,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> CalendarResponse:
+    await _check_scope(body.customer_code, current_user, session)
+    try:
+        await calendar_service.replace_calendar(session, body, current_user.username)
+        retargeted = await retarget_open(session, body.customer_code) if body.apply_to_open else 0
+        await session.commit()
+    except Exception as e:
+        await session.rollback()
+        logger.exception(f"Failed to save the business-hours calendar: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save the business-hours calendar")
+    scope = f"customer {body.customer_code}" if body.customer_code else "the global calendar"
+    message = f"Saved {scope}" + (f"; {retargeted} open item(s) re-targeted" if body.apply_to_open else "")
+    return await _calendar_response(session, current_user, body.customer_code, message, retargeted)
+
+
+@soc_management_router.delete(
+    "/calendars/{customer_code}",
+    response_model=CalendarResponse,
+    description="Remove a customer's calendar so it follows the global one again",
+    dependencies=[_ADMIN],
+)
+async def delete_calendar(
+    customer_code: str,
+    apply_to_open: bool = Query(False),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> CalendarResponse:
+    await _check_scope(customer_code, current_user, session)
+    try:
+        removed = await calendar_service.clear_calendar(session, customer_code)
+        retargeted = await retarget_open(session, customer_code) if apply_to_open else 0
+        await session.commit()
+    except Exception as e:
+        await session.rollback()
+        logger.exception(f"Failed to remove the calendar of {customer_code}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to remove the business-hours calendar")
+    message = f"{customer_code} now follows the global calendar" if removed else f"{customer_code} had no calendar of its own"
+    return await _calendar_response(session, current_user, customer_code, message, retargeted)

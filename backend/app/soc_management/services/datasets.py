@@ -40,6 +40,7 @@ from app.incidents.models import CaseAlertLink
 from app.incidents.services.db_operations import alert_visibility_filters_for_user
 from app.middleware.customer_access import customer_access_handler
 from app.soc_management.domain.analytics import ItemFact
+from app.soc_management.domain.calendar import CalendarBook
 from app.soc_management.domain.lifecycle import CLOSED
 from app.soc_management.domain.periods import Period
 from app.soc_management.domain.policy import SlaEntity
@@ -83,6 +84,10 @@ async def visibility_for(user: User, session: AsyncSession, requested_codes: Opt
     return Visibility(alert_filters=alert_filters, case_codes=case_codes)
 
 
+#: No calendar configured: business-hours facts run on the built-in default.
+NO_CALENDARS = CalendarBook()
+
+
 # ── column sets ──────────────────────────────────────────────────────────────
 
 _TRACKING_FIELDS = (
@@ -96,7 +101,13 @@ _TRACKING_FIELDS = (
     "resolved_at",
     "resolved_by",
     "reopen_count",
+    "paused_at",
+    "paused_seconds",
+    "business_hours",
 )
+
+#: Tracking columns read as-is into ItemFact (the others are converted).
+_DIRECT_FIELDS = tuple(name for name in _TRACKING_FIELDS if name not in ("tracked", "reopen_count", "paused_seconds", "business_hours"))
 
 
 def _tracking_columns(model) -> List[Any]:
@@ -109,7 +120,17 @@ def _window_clause(model, period: Period):
     return or_(opened, resolved)
 
 
-def _alert_fact(row: Any) -> ItemFact:
+def _common(mapping: Any, book: CalendarBook) -> dict:
+    return {
+        **{name: mapping[name] for name in _DIRECT_FIELDS},
+        "tracked": bool(mapping["tracked"]),
+        "reopen_count": mapping["reopen_count"] or 0,
+        "paused_seconds": mapping["paused_seconds"] or 0,
+        "clock": book.clock(mapping["customer_code"], bool(mapping["business_hours"])),
+    }
+
+
+def _alert_fact(row: Any, book: CalendarBook) -> ItemFact:
     mapping = row._mapping
     return ItemFact(
         entity=SlaEntity.ALERT,
@@ -122,13 +143,11 @@ def _alert_fact(row: Any) -> ItemFact:
         verdict=mapping["verdict"],
         escalated=bool(mapping["escalated"]),
         in_case=bool(mapping.get("in_case", False)),
-        **{name: mapping[name] for name in _TRACKING_FIELDS if name not in ("tracked", "reopen_count")},
-        tracked=bool(mapping["tracked"]),
-        reopen_count=mapping["reopen_count"] or 0,
+        **_common(mapping, book),
     )
 
 
-def _case_fact(row: Any) -> ItemFact:
+def _case_fact(row: Any, book: CalendarBook) -> ItemFact:
     mapping = row._mapping
     return ItemFact(
         entity=SlaEntity.CASE,
@@ -138,9 +157,7 @@ def _case_fact(row: Any) -> ItemFact:
         status=mapping["case_status"] or "",
         assigned_to=mapping["assigned_to"] or None,
         escalated=bool(mapping["escalated"]),
-        **{name: mapping[name] for name in _TRACKING_FIELDS if name not in ("tracked", "reopen_count")},
-        tracked=bool(mapping["tracked"]),
-        reopen_count=mapping["reopen_count"] or 0,
+        **_common(mapping, book),
     )
 
 
@@ -194,7 +211,13 @@ def _case_narrowing(visibility: Visibility, filters: FactFilters) -> List[Any]:
 # ── loaders ──────────────────────────────────────────────────────────────────
 
 
-async def window_alerts(session: AsyncSession, visibility: Visibility, period: Period, filters: FactFilters) -> List[ItemFact]:
+async def window_alerts(
+    session: AsyncSession,
+    visibility: Visibility,
+    period: Period,
+    filters: FactFilters,
+    book: CalendarBook = NO_CALENDARS,
+) -> List[ItemFact]:
     """Alerts opened or resolved in ``period``."""
     if not visibility.sees_alerts:
         return []
@@ -204,48 +227,64 @@ async def window_alerts(session: AsyncSession, visibility: Visibility, period: P
         _window_clause(AlertSlaTracking, period),
     )
     result = await session.execute(query)
-    return [_alert_fact(row) for row in result.all()]
+    return [_alert_fact(row, book) for row in result.all()]
 
 
-async def open_alerts(session: AsyncSession, visibility: Visibility, filters: FactFilters) -> List[ItemFact]:
+async def open_alerts(
+    session: AsyncSession,
+    visibility: Visibility,
+    filters: FactFilters,
+    book: CalendarBook = NO_CALENDARS,
+) -> List[ItemFact]:
     """Every alert not closed right now, whenever it was opened — the backlog."""
     if not visibility.sees_alerts:
         return []
     query = _alert_select(include_case_link=False).where(*visibility.alert_filters, *_alert_narrowing(filters), Alert.status != CLOSED)
     result = await session.execute(query)
-    return [_alert_fact(row) for row in result.all()]
+    return [_alert_fact(row, book) for row in result.all()]
 
 
-async def window_cases(session: AsyncSession, visibility: Visibility, period: Period, filters: FactFilters) -> List[ItemFact]:
+async def window_cases(
+    session: AsyncSession,
+    visibility: Visibility,
+    period: Period,
+    filters: FactFilters,
+    book: CalendarBook = NO_CALENDARS,
+) -> List[ItemFact]:
     if not visibility.sees_cases:
         return []
     query = _case_select().where(*_case_narrowing(visibility, filters), _window_clause(CaseSlaTracking, period))
     result = await session.execute(query)
-    return [_case_fact(row) for row in result.all()]
+    return [_case_fact(row, book) for row in result.all()]
 
 
-async def open_cases(session: AsyncSession, visibility: Visibility, filters: FactFilters) -> List[ItemFact]:
+async def open_cases(
+    session: AsyncSession,
+    visibility: Visibility,
+    filters: FactFilters,
+    book: CalendarBook = NO_CALENDARS,
+) -> List[ItemFact]:
     if not visibility.sees_cases:
         return []
     query = _case_select().where(*_case_narrowing(visibility, filters), Case.case_status != CLOSED)
     result = await session.execute(query)
-    return [_case_fact(row) for row in result.all()]
+    return [_case_fact(row, book) for row in result.all()]
 
 
-async def alert_fact(session: AsyncSession, visibility: Visibility, alert_id: int) -> Optional[ItemFact]:
+async def alert_fact(session: AsyncSession, visibility: Visibility, alert_id: int, book: CalendarBook = NO_CALENDARS) -> Optional[ItemFact]:
     if not visibility.sees_alerts:
         return None
     query = _alert_select(include_case_link=True).where(*visibility.alert_filters, Alert.id == alert_id)
     row = (await session.execute(query)).first()
-    return _alert_fact(row) if row else None
+    return _alert_fact(row, book) if row else None
 
 
-async def case_fact(session: AsyncSession, visibility: Visibility, case_id: int) -> Optional[ItemFact]:
+async def case_fact(session: AsyncSession, visibility: Visibility, case_id: int, book: CalendarBook = NO_CALENDARS) -> Optional[ItemFact]:
     if not visibility.sees_cases:
         return None
     query = _case_select().where(*_case_narrowing(visibility, FactFilters()), Case.id == case_id)
     row = (await session.execute(query)).first()
-    return _case_fact(row) if row else None
+    return _case_fact(row, book) if row else None
 
 
 async def tracking_since(session: AsyncSession) -> Optional[datetime]:

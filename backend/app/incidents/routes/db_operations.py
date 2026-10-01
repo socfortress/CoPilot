@@ -119,6 +119,8 @@ from app.incidents.schema.db_operations import VerdictTrendPoint
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
 from app.incidents.services.alert_severity import severity_of
+from app.incidents.services.customer_reply import resume_alert_on_reply
+from app.incidents.services.customer_reply import resume_case_on_reply
 
 # from app.incidents.services.db_operations import list_alerts
 # from app.incidents.services.db_operations import alerts_open_multiple_filters
@@ -256,6 +258,7 @@ from app.incidents.services.db_operations import validate_source_exists
 from app.incidents.services.incident_case import handle_customer_notifications_case
 from app.incidents.services.notification_enrichment import extract_rule_level
 from app.incidents.services.notification_enrichment import severity_from_rule_level
+from app.incidents.services.status_cascade import cascade_for
 from app.incidents.services.verdict_stats import false_positive_trend
 from app.incidents.services.verdict_stats import false_positives_by_customer
 from app.incidents.services.verdict_stats import false_positives_by_reason
@@ -778,6 +781,8 @@ async def create_comment_endpoint(
     # Recorded here, never in create_comment: ingest also writes comments (signed "admin"),
     # and only a person commenting through the API is a response (#1187).
     await SlaLifecycleRecorder().alert_action(comment.alert_id, LifecycleAction.COMMENTED, Actor.from_user(current_user))
+    # A customer answering an alert the SOC waits on hands it back (and resumes its SLA).
+    await resume_alert_on_reply(comment.alert_id, current_user, db)
     return CommentResponse(comment=created, success=True, message="Comment created successfully")
 
 
@@ -873,6 +878,7 @@ async def create_case_comment_endpoint(
         commit=True,
     )
     await SlaLifecycleRecorder().case_action(comment.case_id, LifecycleAction.COMMENTED, Actor.from_user(current_user))
+    await resume_case_on_reply(comment.case_id, current_user, db)
 
     return CaseCommentResponse(comment=created, success=True, message="Case comment created successfully")
 
@@ -1722,6 +1728,7 @@ async def list_alerts_endpoint(
         open=counts.open,
         in_progress=counts.in_progress,
         closed=counts.closed,
+        pending_customer=counts.pending_customer,
         success=True,
         message="Alerts retrieved successfully",
     )
@@ -2292,6 +2299,7 @@ async def list_alerts_multiple_filters_endpoint(
         open=counts.open,
         in_progress=counts.in_progress,
         closed=counts.closed,
+        pending_customer=counts.pending_customer,
         total=counts.total,
         success=True,
         message="Alerts retrieved successfully",
@@ -2324,6 +2332,7 @@ async def list_cases_endpoint(
         open=counts.open,
         in_progress=counts.in_progress,
         closed=counts.closed,
+        pending_customer=counts.pending_customer,
         success=True,
         message="Cases retrieved successfully",
     )
@@ -2399,33 +2408,23 @@ async def update_case_status_endpoint(
             return build_close_warning_response(incomplete)
 
     try:
-        # Get all alert IDs linked to this case BEFORE updating
-        result = await db.execute(select(CaseAlertLink.alert_id).where(CaseAlertLink.case_id == case_status.case_id))
-        alert_ids = [row[0] for row in result]
+        # The linked alerts and their current status, BEFORE updating
+        result = await db.execute(
+            select(CaseAlertLink.alert_id, Alert.status)
+            .join(Alert, Alert.id == CaseAlertLink.alert_id)
+            .where(CaseAlertLink.case_id == case_status.case_id),
+        )
+        linked = result.all()
 
-        logger.info(f"Found {len(alert_ids)} alerts linked to case {case_status.case_id}")
+        logger.info(f"Found {len(linked)} alerts linked to case {case_status.case_id}")
 
-        # Determine what to do with linked alerts based on status transition
-        new_alert_status = None
-
-        # Handle status transitions
-        if new_status_value == "CLOSED" and (old_status != "CLOSED" or old_status is None):
-            # Case is being closed - close all linked alerts
-            logger.info(f"Closing {len(alert_ids)} alerts linked to case {case_status.case_id}")
-            new_alert_status = "CLOSED"
-
-        elif old_status == "CLOSED" and new_status_value in ["OPEN", "IN_PROGRESS"]:
-            # Case is being reopened from CLOSED - reopen alerts to IN_PROGRESS
-            logger.info(f"Reopening {len(alert_ids)} alerts linked to case {case_status.case_id} to IN_PROGRESS")
-            new_alert_status = "IN_PROGRESS"
-
-        elif old_status == "CLOSED" and new_status_value != "CLOSED":
-            # Case is being reopened from CLOSED to any other status - reopen to IN_PROGRESS
-            logger.info(f"Reopening {len(alert_ids)} alerts linked to case {case_status.case_id} to IN_PROGRESS")
-            new_alert_status = "IN_PROGRESS"
-
+        # What the transition does to the linked alerts (rules in services/status_cascade.py)
+        cascade = cascade_for(old_status, new_status_value)
+        new_alert_status = cascade.to_status if cascade else None
+        alert_ids = [alert_id for alert_id, alert_status in linked if cascade and cascade.applies_to(alert_status)]
+        if cascade:
+            logger.info(f"Moving {len(alert_ids)} alerts linked to case {case_status.case_id} to {new_alert_status}")
         else:
-            # No alert status change needed for other transitions
             logger.info(f"No alert status change needed for transition from {old_status} to {new_status_value}")
 
         # Update alert statuses if needed (BEFORE updating the case)
@@ -2752,6 +2751,7 @@ async def list_cases_by_status_endpoint(
         open=counts.open,
         in_progress=counts.in_progress,
         closed=counts.closed,
+        pending_customer=counts.pending_customer,
         success=True,
         message="Cases retrieved successfully",
     )
@@ -2786,6 +2786,7 @@ async def list_cases_by_name_endpoint(
     open_cases = sum(1 for case in cases if case.case_status == "OPEN")
     in_progress = sum(1 for case in cases if case.case_status == "IN_PROGRESS")
     closed = sum(1 for case in cases if case.case_status == "CLOSED")
+    pending_customer = sum(1 for case in cases if case.case_status == "PENDING_CUSTOMER")
 
     return CaseOutResponse(
         cases=cases,
@@ -2793,6 +2794,7 @@ async def list_cases_by_name_endpoint(
         open=open_cases,
         in_progress=in_progress,
         closed=closed,
+        pending_customer=pending_customer,
         success=True,
         message="Cases retrieved successfully",
     )

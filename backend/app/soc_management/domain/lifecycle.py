@@ -19,6 +19,12 @@ deliberate exclusions:
 **Writes are guarded, not read-modify-write.** Each milestone is a single
 ``UPDATE … WHERE <column> IS NULL`` (or ``IS NOT NULL`` for a reopen), so two analysts
 acting on the same alert at the same instant can never both claim the first response.
+
+**Waiting on the customer pauses the clocks.** Moving an item to ``PENDING_CUSTOMER``
+stamps ``paused_at``; any later status change resumes it (see ``resume_values``): the
+clocks still running are pushed back by the pause, measured on their own basis, and
+the pause is banked as ``pause_credit_seconds`` so a later re-target keeps it. Closing
+a paused item resumes it first, so the wait never counts against the resolution.
 """
 
 from __future__ import annotations
@@ -32,9 +38,12 @@ from typing import List
 from typing import Mapping
 from typing import Optional
 
+from app.soc_management.domain.calendar import CONTINUOUS
+from app.soc_management.domain.calendar import ClockBasis
 from app.soc_management.domain.policy import SlaTargets
 
 CLOSED = "CLOSED"
+PENDING_CUSTOMER = "PENDING_CUSTOMER"
 
 
 class LifecycleAction(str, Enum):
@@ -109,18 +118,61 @@ def retarget_values(
     *,
     ack_running: bool,
     resolve_running: bool,
+    clock: ClockBasis = CONTINUOUS,
+    credit_seconds: float = 0,
 ) -> dict:
     """New due times for an item whose targets changed (severity change, policy re-apply).
 
     Only clocks still running move. A clock already achieved keeps the due time it was
     judged against: raising a case to Critical after it was acknowledged in 50 minutes
     must not turn that on-time High acknowledgement into a retroactive Critical breach.
+    Time already spent waiting on the customer (``credit_seconds``, on the clock's own
+    basis) stays credited.
     """
+
+    def due(base: Optional[datetime]) -> Optional[datetime]:
+        return clock.add(base, credit_seconds) if base is not None and credit_seconds else base
+
     values: dict = {}
     if ack_running:
-        values["ack_due_at"] = targets.ack_due(opened_at)
+        values["ack_due_at"] = due(targets.ack_due(opened_at, clock))
     if resolve_running:
-        values["resolve_due_at"] = targets.resolve_due(opened_at)
+        values["resolve_due_at"] = due(targets.resolve_due(opened_at, clock))
+    return values
+
+
+def resumes(event: LifecycleEvent) -> bool:
+    """Every status change except into PENDING_CUSTOMER ends a pause (if there is one)."""
+    return event.action is LifecycleAction.STATUS_CHANGED and bool(event.to_status) and event.to_status != PENDING_CUSTOMER
+
+
+def resume_values(
+    *,
+    paused_at: datetime,
+    resumed_at: datetime,
+    clock: ClockBasis,
+    ack_due_at: Optional[datetime],
+    ack_running: bool,
+    resolve_due_at: Optional[datetime],
+    resolve_running: bool,
+    paused_seconds: int,
+    pause_credit_seconds: int,
+) -> dict:
+    """What ending a pause writes: running clocks pushed back by the pause, the pause banked.
+
+    The extension is the pause measured on the clock's basis — a weekend spent waiting
+    on the customer extends a business-hours target by nothing, a 24/7 one by two days.
+    """
+    credit = clock.elapsed(paused_at, resumed_at)
+    values: dict = {
+        "paused_at": None,
+        "paused_seconds": paused_seconds + max(0, int((resumed_at - paused_at).total_seconds())),
+        "pause_credit_seconds": pause_credit_seconds + int(credit),
+    }
+    if ack_running and ack_due_at is not None:
+        values["ack_due_at"] = clock.add(ack_due_at, credit)
+    if resolve_running and resolve_due_at is not None:
+        values["resolve_due_at"] = clock.add(resolve_due_at, credit)
     return values
 
 
@@ -168,5 +220,7 @@ def plan_milestones(event: LifecycleEvent) -> List[GuardedUpdate]:
                     reason="reopen",
                 ),
             )
+        if event.to_status == PENDING_CUSTOMER:
+            plan.append(GuardedUpdate(values={"paused_at": event.at}, guard_column="paused_at", reason="waiting on the customer"))
 
     return plan

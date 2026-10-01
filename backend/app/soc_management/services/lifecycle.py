@@ -40,18 +40,22 @@ from app.incidents.services.alert_severity import normalize_severity
 from app.incidents.services.alert_severity import severity_of
 from app.incidents.services.alert_severity import severity_rank
 from app.soc_management.clock import utc_now
+from app.soc_management.domain.calendar import CalendarBook
 from app.soc_management.domain.lifecycle import Actor
 from app.soc_management.domain.lifecycle import GuardedUpdate
 from app.soc_management.domain.lifecycle import Increment
 from app.soc_management.domain.lifecycle import LifecycleAction
 from app.soc_management.domain.lifecycle import LifecycleEvent
 from app.soc_management.domain.lifecycle import plan_milestones
+from app.soc_management.domain.lifecycle import resume_values
+from app.soc_management.domain.lifecycle import resumes
 from app.soc_management.domain.lifecycle import retarget_values
 from app.soc_management.domain.policy import PolicyRow
 from app.soc_management.domain.policy import SlaEntity
 from app.soc_management.domain.policy import resolve_targets
 from app.soc_management.models.sla import AlertSlaTracking
 from app.soc_management.models.sla import CaseSlaTracking
+from app.soc_management.services import calendars as calendar_service
 from app.soc_management.services import policy as policy_service
 
 Tracking = Union[AlertSlaTracking, CaseSlaTracking]
@@ -165,7 +169,8 @@ class SlaLifecycleRecorder:
 
 
 async def retarget_open(session: AsyncSession, customer_code: Optional[str] = None, now: Optional[datetime] = None) -> int:
-    """Recompute running clocks of every open tracked item in a scope after a policy change.
+    """Recompute running clocks of every open tracked item in a scope after a policy or
+    calendar change.
 
     Runs in the caller's session and transaction (the policy save) and raises: unlike a
     lifecycle action, this *is* the operation the caller asked for. ``customer_code=None``
@@ -174,6 +179,7 @@ async def retarget_open(session: AsyncSession, customer_code: Optional[str] = No
     """
     now = now or utc_now()
     rows = await policy_service.load_rows(session)
+    book = await calendar_service.load_book(session)
     moved = 0
     for entity, model, owner in ((SlaEntity.ALERT, AlertSlaTracking, Alert), (SlaEntity.CASE, CaseSlaTracking, Case)):
         query = (
@@ -184,7 +190,7 @@ async def retarget_open(session: AsyncSession, customer_code: Optional[str] = No
         if customer_code is not None:
             query = query.where(owner.customer_code == customer_code)
         for tracking, code in (await session.execute(query)).all():
-            moved += _retarget_row(tracking, entity, code, rows, now)
+            moved += _retarget_row(tracking, entity, code, rows, book, now)
     await session.flush()
     return moved
 
@@ -197,13 +203,18 @@ async def _open(session: AsyncSession, entity: SlaEntity, item_id: int, severity
     if await session.get(model, item_id) is not None:
         return  # opening is idempotent
     targets = await policy_service.targets_for(session, entity, severity, customer_code)
+    clock = (await calendar_service.load_book(session, [customer_code] if customer_code else [])).clock(
+        customer_code,
+        targets.business_hours,
+    )
     session.add(
         model(
             **{_key_name(model): item_id},
             severity=severity,
             opened_at=now,
-            ack_due_at=targets.ack_due(now),
-            resolve_due_at=targets.resolve_due(now),
+            ack_due_at=targets.ack_due(now, clock),
+            resolve_due_at=targets.resolve_due(now, clock),
+            business_hours=targets.business_hours,
             tracked=True,
             updated_at=now,
         ),
@@ -213,7 +224,40 @@ async def _open(session: AsyncSession, entity: SlaEntity, item_id: int, severity
 
 async def _apply(session: AsyncSession, entity: SlaEntity, item_id: int, event: LifecycleEvent) -> None:
     await _ensure_row(session, entity, item_id, event.at)
+    if resumes(event):
+        # First: a pause ends before anything else is judged, so closing an item that was
+        # waiting on the customer never counts the wait against its resolution.
+        await _resume(session, entity, item_id, event.at)
     await _execute_plan(session, _model(entity), item_id, plan_milestones(event), event.at)
+
+
+async def _resume(session: AsyncSession, entity: SlaEntity, item_id: int, at: datetime) -> None:
+    model = _model(entity)
+    tracking = await session.get(model, item_id)
+    if tracking is None or tracking.paused_at is None:
+        return
+    owner = await session.get(Alert if entity is SlaEntity.ALERT else Case, item_id)
+    code = getattr(owner, "customer_code", None)
+    clock = (await calendar_service.load_book(session, [code] if code else [])).clock(code, tracking.business_hours)
+    values = resume_values(
+        paused_at=tracking.paused_at,
+        resumed_at=at,
+        clock=clock,
+        ack_due_at=tracking.ack_due_at,
+        ack_running=tracking.first_ack_at is None and tracking.resolved_at is None,
+        resolve_due_at=tracking.resolve_due_at,
+        resolve_running=tracking.resolved_at is None,
+        paused_seconds=tracking.paused_seconds or 0,
+        pause_credit_seconds=tracking.pause_credit_seconds or 0,
+    )
+    values["updated_at"] = at
+    # Guarded on the pause we read: a concurrent resume of the same pause becomes a no-op.
+    await session.execute(
+        update(model)
+        .where(_key_column(model) == item_id, model.paused_at == tracking.paused_at)
+        .values(**values)
+        .execution_options(synchronize_session=False),
+    )
 
 
 async def _execute_plan(session: AsyncSession, model: Type[Tracking], item_id: int, plan: List[GuardedUpdate], now: datetime) -> None:
@@ -261,21 +305,37 @@ async def _retarget_case(session: AsyncSession, case_id: int, now: datetime) -> 
         return
     tracking.severity = severity
     tracking.updated_at = now
-    rows = await policy_service.load_rows(session, [case.customer_code] if case.customer_code else [])
-    _retarget_row(tracking, SlaEntity.CASE, case.customer_code, rows, now)
+    scope = [case.customer_code] if case.customer_code else []
+    rows = await policy_service.load_rows(session, scope)
+    book = await calendar_service.load_book(session, scope)
+    _retarget_row(tracking, SlaEntity.CASE, case.customer_code, rows, book, now)
     await session.flush()
 
 
-def _retarget_row(tracking: Tracking, entity: SlaEntity, customer_code: Optional[str], rows: List[PolicyRow], now: datetime) -> int:
+def _retarget_row(
+    tracking: Tracking,
+    entity: SlaEntity,
+    customer_code: Optional[str],
+    rows: List[PolicyRow],
+    book: CalendarBook,
+    now: datetime,
+) -> int:
     if not tracking.tracked:
         return 0
     targets = resolve_targets(entity, tracking.severity, customer_code, rows)
+    ack_running = tracking.first_ack_at is None and tracking.resolved_at is None
+    resolve_running = tracking.resolved_at is None
+    if not (ack_running or resolve_running):
+        return 0
     values = retarget_values(
         tracking.opened_at,
         targets,
-        ack_running=tracking.first_ack_at is None and tracking.resolved_at is None,
-        resolve_running=tracking.resolved_at is None,
+        ack_running=ack_running,
+        resolve_running=resolve_running,
+        clock=book.clock(customer_code, targets.business_hours),
+        credit_seconds=tracking.pause_credit_seconds or 0,
     )
+    values["business_hours"] = targets.business_hours
     changed = {column: value for column, value in values.items() if getattr(tracking, column) != value}
     if not changed:
         return 0

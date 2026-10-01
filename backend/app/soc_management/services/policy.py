@@ -38,6 +38,7 @@ def _to_row(policy: SlaPolicy) -> PolicyRow:
         severity=policy.severity,
         ack_minutes=policy.ack_minutes,
         resolve_minutes=policy.resolve_minutes,
+        business_hours=bool(policy.business_hours),
     )
 
 
@@ -67,6 +68,7 @@ def _matrix(customer_code: Optional[str], rows: Sequence[PolicyRow]) -> PolicyMa
             severity=severity,
             ack_minutes=targets.ack_minutes,
             resolve_minutes=targets.resolve_minutes,
+            business_hours=targets.business_hours,
             source=targets.source,
         )
         for entity, by_severity in resolved.items()
@@ -106,6 +108,7 @@ async def replace_scope(
                 severity=cell.severity,
                 ack_minutes=cell.ack_minutes,
                 resolve_minutes=cell.resolve_minutes,
+                business_hours=cell.business_hours,
                 updated_at=now,
                 updated_by=actor,
             ),

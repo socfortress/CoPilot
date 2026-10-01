@@ -364,6 +364,7 @@ class StatusCounts(NamedTuple):
     open: int = 0
     in_progress: int = 0
     closed: int = 0
+    pending_customer: int = 0
 
 
 def _status_counts(rows) -> StatusCounts:
@@ -373,6 +374,7 @@ def _status_counts(rows) -> StatusCounts:
         open=by_status.get("OPEN", 0),
         in_progress=by_status.get("IN_PROGRESS", 0),
         closed=by_status.get("CLOSED", 0),
+        pending_customer=by_status.get("PENDING_CUSTOMER", 0),
     )
 
 
@@ -985,11 +987,11 @@ async def update_alert_status(update_alert_status: UpdateAlertStatus, db: AsyncS
         raise HTTPException(status_code=404, detail="Alert not found")
     alert.status = update_alert_status.status
 
-    # Set time_closed if status is CLOSED
+    # Set time_closed if status is CLOSED; any other status reopens it, so the stamp goes
+    # (a stale one made reports count an alert reopened to IN_PROGRESS as closed).
     if update_alert_status.status == "CLOSED":
         alert.time_closed = datetime.utcnow()
-    # Reset time_closed if status is OPEN
-    elif update_alert_status.status == "OPEN":
+    else:
         alert.time_closed = None
 
     await db.commit()
@@ -1003,11 +1005,10 @@ async def update_case_status(update_case_status: UpdateCaseStatus, db: AsyncSess
         raise HTTPException(status_code=404, detail="Case not found")
     case.case_status = update_case_status.status
 
-    # Set case_closed_time if status is CLOSED
+    # Set case_closed_time if status is CLOSED; any other status reopens it (see above).
     if update_case_status.status == "CLOSED":
         case.case_closed_time = datetime.utcnow()
-    # Reset case_closed_time if status is OPEN
-    elif update_case_status.status == "OPEN":
+    else:
         case.case_closed_time = None
 
     await db.commit()
