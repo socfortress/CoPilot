@@ -51,6 +51,7 @@ from app.notifications.schema.notifications import AI_SOURCED_TRIGGERS
 from app.notifications.schema.notifications import DUAL_SCOPE_TRIGGERS
 from app.notifications.schema.notifications import INTERNAL_TRIGGERS
 from app.notifications.schema.notifications import SEVERITY_ORDER
+from app.notifications.schema.notifications import SLA_TRIGGERS
 from app.notifications.schema.notifications import DispatchOutcome
 from app.notifications.schema.notifications import DispatchRequest
 from app.notifications.schema.notifications import DispatchResponse
@@ -779,6 +780,13 @@ def _format_default_body(event: NotificationEvent) -> str:
     return _format_default_body_core(event) + _ai_report_section(event)
 
 
+def _sla_timing(late: bool, ctx: Dict[str, Any]) -> str:
+    """ "15 min overdue" / "30 min left", or nothing when the context does not say."""
+    if late:
+        return f"{ctx['overdue_minutes']} min overdue" if ctx.get("overdue_minutes") is not None else ""
+    return f"{ctx['remaining_minutes']} min left" if ctx.get("remaining_minutes") is not None else ""
+
+
 def _format_default_body_core(event: NotificationEvent) -> str:
     """Default message body when a route sets no `format_template`.
 
@@ -791,6 +799,26 @@ def _format_default_body_core(event: NotificationEvent) -> str:
     """
     trig = event.trigger.value
     ctx = event.context or {}
+
+    if trig in SLA_TRIGGERS:
+        what = "Case" if event.entity_type == EntityType.CASE else "Alert"
+        late = trig == NotificationTrigger.SLA_BREACHED.value
+        heading = "SLA breached" if late else "SLA at risk"
+        when = _sla_timing(late, ctx)
+        label = ctx.get("title") or event.subject
+        parts = [
+            f"*{heading}* — {ctx.get('clock', 'resolve')} target, severity *{event.severity.value}*" + (f" ({when})" if when else ""),
+            "",
+            f"{what}: #{event.entity_id}" + (f" — {label}" if label else ""),
+        ]
+        if event.customer_code:
+            parts.append(f"Customer: `{event.customer_code}`")
+        parts.append(f"Assigned to: {event.assignee_username or 'nobody'}")
+        if ctx.get("due_at"):
+            parts.append(f"Due: {ctx['due_at']} UTC")
+        if event.link_url:
+            parts.extend(["", f"Open in CoPilot: {event.link_url}"])
+        return "\n".join(parts)
 
     if trig in INTERNAL_TRIGGERS:
         what = {
@@ -1132,6 +1160,11 @@ def _sample_event_for(route: CustomerNotificationRoute) -> NotificationEvent:
 
     is_assignment = trigger.value in INTERNAL_TRIGGERS
     entity_type = EntityType.ALERT
+    sla_context = (
+        {"clock": "resolve", "due_at": "2026-01-01 12:00", "remaining_minutes": 30, "overdue_minutes": 15, "status": "IN_PROGRESS"}
+        if trigger.value in SLA_TRIGGERS
+        else {}
+    )
     if trigger == NotificationTrigger.CASE_ASSIGNED:
         entity_type = EntityType.CASE
     elif trigger == NotificationTrigger.CASE_TASK_ASSIGNED:
@@ -1152,7 +1185,7 @@ def _sample_event_for(route: CustomerNotificationRoute) -> NotificationEvent:
         link_url=None,
         assignee_username=route.created_by if is_assignment else None,
         actor_username=route.created_by,
-        context={"alert_name": "Test notification from CoPilot", "title": "Test notification from CoPilot"},
+        context={"alert_name": "Test notification from CoPilot", "title": "Test notification from CoPilot", **sla_context},
     )
 
 

@@ -75,6 +75,7 @@ from app.schedulers.services.refresh_sidebar_indicators import (
 from app.schedulers.services.refresh_wazuh_rules_cache import refresh_wazuh_rules_cache
 from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 from app.schedulers.utils.universal import record_job_success
+from app.soc_management.services.notifier import notify_sla_transitions
 
 # Fire-and-forget `record_job_success` tasks are kept here for the lifetime of the write.
 # asyncio only holds a weak reference to a task, so a task nobody references may be garbage
@@ -263,6 +264,15 @@ async def initialize_job_metadata():
                 "description": "Assembles the deployment-wide sidebar indicators so /status/sidebar reads them from memory.",
             },
             {
+                "job_id": "notify_sla_transitions",
+                # The SLA at-risk / breached notices (#1187). Two minutes keeps a notice
+                # within a couple of minutes of the transition; a pass reads only open
+                # tracked items and sends each notice once (guarded stamps).
+                "time_interval": 2,
+                "function": notify_sla_transitions,
+                "description": "Notifies internal routes when an alert's or case's SLA turns at risk or breaches, once per clock.",
+            },
+            {
                 "job_id": "prune_audit_log",
                 # Daily. Deletes audit_log rows older than AUDIT_LOG_RETENTION_DAYS (default 90)
                 # so the append-only audit trail can't grow without bound. See issue #943.
@@ -405,6 +415,7 @@ def get_function_by_name(function_name: str):
         "refresh_catalog_caches": refresh_catalog_caches,
         "refresh_sidebar_health": refresh_sidebar_health,
         "refresh_sidebar_indicators": refresh_sidebar_indicators,
+        "notify_sla_transitions": notify_sla_transitions,
         # Add other function mappings here
     }
     # Raise rather than returning a placeholder lambda: APScheduler's SQLAlchemy jobstore

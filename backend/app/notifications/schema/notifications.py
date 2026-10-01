@@ -51,6 +51,11 @@ class NotificationTrigger(str, Enum):
     CASE_ASSIGNED = "case_assigned"
     CASE_TASK_ASSIGNED = "case_task_assigned"
 
+    # SOC Management (#1187): an alert's or case's SLA clock entered its last quarter,
+    # or ran out. Once per clock, from the `notify_sla_transitions` scheduler job.
+    SLA_AT_RISK = "sla_at_risk"
+    SLA_BREACHED = "sla_breached"
+
     # Not a dispatch trigger. #999 reuses `notification_template` as a second
     # event source: the admin-issued temporary-password email is authored in the
     # same editor and rendered by the same sandboxed Jinja, but it is delivered
@@ -181,8 +186,16 @@ INTERNAL_TRIGGERS: frozenset = frozenset(
         "alert_assigned",
         "case_assigned",
         "case_task_assigned",
+        # An SLA running late is the SOC's own performance, never the customer's
+        # business: internal routes only (#1187).
+        "sla_at_risk",
+        "sla_breached",
     },
 )
+
+#: The SLA triggers, for the places that word or shape them differently from an
+#: assignment (default body, test send).
+SLA_TRIGGERS: frozenset = frozenset({"sla_at_risk", "sla_breached"})
 
 
 # Triggers that resolve against BOTH scopes, so one event can reach the SOC and
