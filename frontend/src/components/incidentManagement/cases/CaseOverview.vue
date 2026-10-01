@@ -4,15 +4,7 @@
 			<div class="content-box flex flex-col gap-4 py-3">
 				<div class="flex flex-col gap-4 sm:flex-row">
 					<CardKV
-						:color="
-							caseData.case_status === 'OPEN'
-								? 'danger'
-								: caseData.case_status === 'IN_PROGRESS'
-									? 'warning'
-									: caseData.case_status === 'CLOSED'
-										? 'success'
-										: undefined
-						"
+						:color="statusColor(caseData.case_status)"
 						size="lg"
 						class="w-full grow"
 					>
@@ -36,7 +28,7 @@
 											'cursor-pointer': !loadingStatus
 										}"
 									>
-										<span>{{ caseData.case_status || "n/d" }}</span>
+										<span>{{ statusLabel(caseData.case_status) }}</span>
 										<n-spin
 											:size="14"
 											:show="loadingStatus"
@@ -203,6 +195,7 @@ import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { statusColor, statusLabel } from "@/components/incidentManagement/common/status"
 import ItemSlaPanel from "@/components/socManagement/ItemSlaPanel.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"

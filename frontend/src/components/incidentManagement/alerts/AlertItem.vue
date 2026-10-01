@@ -44,13 +44,7 @@
 							type="splitted"
 							size="small"
 							bright
-							:color="
-								alert.status === 'OPEN'
-									? 'danger'
-									: alert.status === 'IN_PROGRESS'
-										? 'warning'
-										: 'success'
-							"
+							:color="statusColor(alert.status)"
 						>
 							<template #iconLeft>
 								<StatusIcon :status="alert.status" />
@@ -58,7 +52,7 @@
 							<template #label>Status</template>
 							<template #value>
 								<div class="flex items-center gap-2">
-									{{ alert.status || "n/d" }}
+									{{ statusLabel(alert.status) }}
 								</div>
 							</template>
 						</Badge>
@@ -88,13 +82,7 @@
 							type="splitted"
 							class="cursor-pointer"
 							bright
-							:color="
-								alert.status === 'OPEN'
-									? 'danger'
-									: alert.status === 'IN_PROGRESS'
-										? 'warning'
-										: 'success'
-							"
+							:color="statusColor(alert.status)"
 						>
 							<template #iconLeft>
 								<n-spin :size="12" :show="loadingStatus" content-class="flex flex-col justify-center">
@@ -104,7 +92,7 @@
 							<template #label>Status</template>
 							<template #value>
 								<div class="flex items-center gap-2">
-									{{ alert.status || "n/d" }}
+									{{ statusLabel(alert.status) }}
 									<Icon :name="EditIcon" :size="13" />
 								</div>
 							</template>
@@ -308,6 +296,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { statusColor, statusLabel } from "@/components/incidentManagement/common/status"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"

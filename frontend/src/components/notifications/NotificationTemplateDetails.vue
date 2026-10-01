@@ -175,7 +175,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { NotificationTemplate, NotificationTrigger, TemplatePreviewResult } from "@/types/notifications"
+import type { NotificationTemplate, TemplatePreviewResult } from "@/types/notifications"
 import { NAlert, NButton, NEmpty, NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"
@@ -185,6 +185,7 @@ import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
+import { NOTIFICATION_TRIGGER_LABELS } from "@/types/notifications"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
@@ -200,16 +201,6 @@ const TimeIcon = "carbon:time"
 const RefreshIcon = "carbon:renew"
 const InfoIcon = "carbon:information"
 
-const TRIGGER_LABELS: Record<NotificationTrigger, string> = {
-	alert_created: "Alert created",
-	investigation_complete: "AI investigation complete",
-	ai_report_reviewed: "AI report reviewed",
-	alert_assigned: "Alert assigned",
-	case_assigned: "Case assigned",
-	case_task_assigned: "Case task assigned",
-	temp_password_issued: "Temporary password email"
-}
-
 const dFormats = useSettingsStore().dateFormat
 const { routeCustomer } = useNavigation()
 
@@ -218,7 +209,7 @@ const previewing = ref(false)
 const preview = ref<TemplatePreviewResult | null>(null)
 
 const triggerLabel = computed(() =>
-	entity.value.trigger ? (TRIGGER_LABELS[entity.value.trigger] ?? entity.value.trigger) : "any"
+	entity.value.trigger ? (NOTIFICATION_TRIGGER_LABELS[entity.value.trigger] ?? entity.value.trigger) : "any"
 )
 
 // Only the languages bundled in utils/highlighter are highlighted; anything

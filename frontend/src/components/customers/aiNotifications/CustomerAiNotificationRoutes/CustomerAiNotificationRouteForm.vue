@@ -157,7 +157,7 @@
 				<n-select v-model:value="form.recipient_mode" :options="recipientModeOptions" />
 				<template #feedback>
 					<span v-if="isAssigneeMode">
-						Sent to whoever the alert or task is assigned to, resolved from their CoPilot account at
+						Sent to whoever the alert, case or task is assigned to, resolved from their CoPilot account at
 						delivery time. Events with no assignee are skipped.
 					</span>
 					<span v-else>Sent to a fixed list of addresses.</span>
@@ -614,6 +614,10 @@ const INTERNAL_TRIGGER_OPTIONS = [
 	{ label: "An alert is assigned", value: "alert_assigned" },
 	{ label: "A case is assigned", value: "case_assigned" },
 	{ label: "A case task is assigned", value: "case_task_assigned" },
+	// SLA (#1187): once per clock, when an alert's or case's acknowledge/resolve target
+	// enters its last quarter, or runs out. Minimum severity applies to the item's own.
+	{ label: "An alert or case SLA is at risk", value: "sla_at_risk" },
+	{ label: "An alert or case SLA is breached", value: "sla_breached" },
 	REVIEW_TRIGGER_OPTION
 ]
 

@@ -3,6 +3,7 @@
 		v-model:value="statusSelected"
 		v-model:show="listVisible"
 		:options="statusOptions"
+		:render-label="renderStatusLabel"
 		:disabled="loading"
 		size="medium"
 		scrollable
@@ -25,6 +26,8 @@ import { NButton, NPopselect, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { renderStatusLabel } from "@/components/incidentManagement/common/renderStatusLabel"
+import { STATUS_OPTIONS, statusLabel } from "@/components/incidentManagement/common/status"
 import { getApiErrorMessage } from "@/utils"
 
 const { alerts, size } = defineProps<{
@@ -45,11 +48,7 @@ const loading = ref(false)
 const message = useMessage()
 const listVisible = ref(false)
 const statusSelected = ref<AlertStatus | null>(null)
-const statusOptions = ref<{ label: string; value: AlertStatus }[]>([
-	{ label: "Open", value: "OPEN" },
-	{ label: "In progress", value: "IN_PROGRESS" },
-	{ label: "Closed", value: "CLOSED" }
-])
+const statusOptions = [...STATUS_OPTIONS]
 
 function updateStatus() {
 	const status = statusSelected.value
@@ -61,7 +60,7 @@ function updateStatus() {
 	const targets = alerts.filter(alert => alert.status !== status)
 
 	if (!targets.length) {
-		message.info(`All selected alerts are already ${status.replace("_", " ").toLowerCase()}.`)
+		message.info(`All selected alerts are already ${statusLabel(status).toLowerCase()}.`)
 		return
 	}
 

@@ -3,6 +3,7 @@
 		v-model:value="statusSelected"
 		v-model:show="listVisible"
 		:options="statusOptions"
+		:render-label="renderStatusLabel"
 		:disabled="loading"
 		size="medium"
 		scrollable
@@ -18,6 +19,8 @@ import type { Alert, AlertStatus } from "@/types/incidentManagement/alerts"
 import { NPopselect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
+import { renderStatusLabel } from "@/components/incidentManagement/common/renderStatusLabel"
+import { STATUS_OPTIONS } from "@/components/incidentManagement/common/status"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
@@ -33,16 +36,7 @@ const loading = ref(false)
 const message = useMessage()
 const listVisible = ref(false)
 const status = computed(() => alert.value.status)
-const statusOptions = ref<
-	{
-		label: string
-		value: AlertStatus
-	}[]
->([
-	{ label: "Open", value: "OPEN" },
-	{ label: "In progress", value: "IN_PROGRESS" },
-	{ label: "Closed", value: "CLOSED" }
-])
+const statusOptions = [...STATUS_OPTIONS]
 const statusSelected = ref<AlertStatus | null>(null)
 
 function updateStatus() {

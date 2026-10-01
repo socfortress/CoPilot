@@ -130,7 +130,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { NotificationTemplate, NotificationTrigger } from "@/types/notifications"
+import type { NotificationTemplate } from "@/types/notifications"
 import { NButton, NCard, NModal, NPopconfirm, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
@@ -140,6 +140,7 @@ import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
+import { NOTIFICATION_TRIGGER_LABELS } from "@/types/notifications"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import NotificationTemplateOverview from "./NotificationTemplateOverview.vue"
@@ -160,16 +161,6 @@ const EditIcon = "uil:edit-alt"
 const DeleteIcon = "ph:trash"
 const CopyIcon = "carbon:copy"
 
-const TRIGGER_LABELS: Record<NotificationTrigger, string> = {
-	alert_created: "Alert created",
-	investigation_complete: "AI investigation complete",
-	ai_report_reviewed: "AI report reviewed",
-	alert_assigned: "Alert assigned",
-	case_assigned: "Case assigned",
-	case_task_assigned: "Case task assigned",
-	temp_password_issued: "Temporary password email"
-}
-
 const message = useMessage()
 const loadingDelete = ref(false)
 const showDetails = ref(false)
@@ -177,7 +168,7 @@ const dFormats = useSettingsStore().dateFormat
 const { routeMessageTemplate } = useNavigation()
 
 const triggerLabel = computed(() =>
-	props.template.trigger ? (TRIGGER_LABELS[props.template.trigger] ?? props.template.trigger) : "any"
+	props.template.trigger ? (NOTIFICATION_TRIGGER_LABELS[props.template.trigger] ?? props.template.trigger) : "any"
 )
 
 const excerpt = computed(() => {

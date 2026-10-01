@@ -42,6 +42,14 @@ export interface CustomerPortalAiReportSettings {
 	updated_by: number | null
 }
 
+/** Per-customer switch for the Customer Portal's SLA page (#1187). Opt-in: a missing row reads as off. */
+export interface CustomerPortalSlaSettings {
+	customer_code: string
+	enabled: boolean
+	updated_at: string | null
+	updated_by: number | null
+}
+
 export interface CustomerPortalBrandingListItem {
 	customer_code: string
 	enabled: boolean

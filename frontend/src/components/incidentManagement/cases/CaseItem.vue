@@ -25,15 +25,7 @@
 							type="splitted"
 							size="small"
 							bright
-							:color="
-								caseEntity.case_status === 'OPEN'
-									? 'danger'
-									: caseEntity.case_status === 'IN_PROGRESS'
-										? 'warning'
-										: caseEntity.case_status === 'CLOSED'
-											? 'success'
-											: undefined
-							"
+							:color="statusColor(caseEntity.case_status)"
 						>
 							<template #iconLeft>
 								<StatusIcon :status="caseEntity.case_status" />
@@ -41,7 +33,7 @@
 							<template #label>Status</template>
 							<template #value>
 								<div class="flex items-center gap-2">
-									{{ caseEntity.case_status || "n/d" }}
+									{{ statusLabel(caseEntity.case_status) }}
 								</div>
 							</template>
 						</Badge>
@@ -74,15 +66,7 @@
 								type="splitted"
 								class="cursor-pointer"
 								bright
-								:color="
-									caseEntity.case_status === 'OPEN'
-										? 'danger'
-										: caseEntity.case_status === 'IN_PROGRESS'
-											? 'warning'
-											: caseEntity.case_status === 'CLOSED'
-												? 'success'
-												: undefined
-								"
+								:color="statusColor(caseEntity.case_status)"
 							>
 								<template #iconLeft>
 									<n-spin
@@ -96,7 +80,7 @@
 								<template #label>Status</template>
 								<template #value>
 									<div class="flex items-center gap-2">
-										{{ caseEntity.case_status || "n/d" }}
+										{{ statusLabel(caseEntity.case_status) }}
 										<Icon :name="EditIcon" :size="13" />
 									</div>
 								</template>
@@ -261,6 +245,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { statusColor, statusLabel } from "@/components/incidentManagement/common/status"
 import ManualSendDialog from "@/components/notifications/ManualSendDialog.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"

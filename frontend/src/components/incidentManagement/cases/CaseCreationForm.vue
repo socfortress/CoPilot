@@ -112,13 +112,14 @@ import type { Ref } from "vue"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
 import type { CaseTemplate } from "@/types/incidentManagement/case-templates"
-import type { Case, CasePayload, CaseStatus } from "@/types/incidentManagement/cases"
+import type { Case, CasePayload } from "@/types/incidentManagement/cases"
 import _get from "lodash/get"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, inject, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import CaseTemplateSuggestions from "@/components/incidentManagement/caseTemplates/CaseTemplateSuggestions.vue"
+import { STATUS_OPTIONS } from "@/components/incidentManagement/common/status"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 
@@ -198,11 +199,7 @@ const rules: FormRules = {
 	}
 }
 
-const statusOptions: { label: string; value: CaseStatus }[] = [
-	{ label: "Open", value: "OPEN" },
-	{ label: "Closed", value: "CLOSED" },
-	{ label: "In progress", value: "IN_PROGRESS" }
-]
+const statusOptions = [...STATUS_OPTIONS]
 
 const usersOptions = computed(() => availableUsers.value.map(o => ({ label: o, value: o })))
 const customersOptions = computed(() =>

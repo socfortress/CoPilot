@@ -193,7 +193,7 @@ import type { AlertsListFilter } from "./types.d"
 import type { AlertsFilterTypes, AlertsListFilterValue } from "@/api/endpoints/incidentManagement/alerts"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import type { AlertStatus, AlertVerdictFilter, FalsePositiveReason } from "@/types/incidentManagement/alerts"
+import type { AlertVerdictFilter, FalsePositiveReason } from "@/types/incidentManagement/alerts"
 import type { SourceName } from "@/types/incidentManagement/sources"
 import _castArray from "lodash/castArray"
 import _cloneDeep from "lodash/cloneDeep"
@@ -203,6 +203,7 @@ import { computed, inject, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { STATUS_OPTIONS } from "@/components/incidentManagement/common/status"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 import { falsePositiveReasonLabel } from "./utils"
@@ -230,11 +231,7 @@ const customersOptions = computed(() =>
 	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
 )
 const sourcesOptions = computed(() => configuredSourcesList.value.map(o => ({ label: o, value: o })))
-const statusOptions: { label: string; value: AlertStatus }[] = [
-	{ label: "Open", value: "OPEN" },
-	{ label: "Closed", value: "CLOSED" },
-	{ label: "In progress", value: "IN_PROGRESS" }
-]
+const statusOptions = [...STATUS_OPTIONS]
 // UNTRIAGED is offered alongside the two stored verdicts because "not yet judged" is the
 // slice an analyst working a review backlog actually wants.
 const verdictOptions: { label: string; value: AlertVerdictFilter }[] = [

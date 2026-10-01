@@ -47,6 +47,7 @@ import { h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
+import { statusLabel } from "@/components/incidentManagement/common/status"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -89,8 +90,8 @@ function summary(event: CaseEvent): string {
 			return p.source === "from_alert" ? `Case created from alert #${p.alert_id}` : "Case created"
 		case "case_status_changed":
 			return p.forced
-				? `Status forced from ${p.from ?? "—"} to ${p.to} (mandatory tasks bypassed)`
-				: `Status changed from ${p.from ?? "—"} to ${p.to}`
+				? `Status forced from ${p.from ? statusLabel(p.from) : "—"} to ${statusLabel(p.to)} (mandatory tasks bypassed)`
+				: `Status changed from ${p.from ? statusLabel(p.from) : "—"} to ${statusLabel(p.to)}`
 		case "case_assigned":
 			return p.from
 				? `Reassigned from ${p.from} to ${p.to ?? "unassigned"}`
@@ -137,7 +138,14 @@ function timelineType(event: CaseEvent): "default" | "success" | "info" | "warni
 		case "template_applied":
 			return "info"
 		case "case_status_changed":
-			return p.to === "CLOSED" ? "success" : p.to === "OPEN" ? "info" : "warning"
+			// Waiting on the customer is a pause, not progress: neutral rather than warning.
+			return p.to === "CLOSED"
+				? "success"
+				: p.to === "OPEN"
+					? "info"
+					: p.to === "PENDING_CUSTOMER"
+						? "default"
+						: "warning"
 		case "task_status_changed":
 			return p.to_status === "DONE" ? "success" : p.to_status === "NOT_NECESSARY" ? "warning" : "default"
 		case "case_escalated":

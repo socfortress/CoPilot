@@ -147,6 +147,8 @@ export default {
 				closed: number
 				in_progress: number
 				open: number
+				/** Absent from servers older than #1187. */
+				pending_customer?: number
 				total: number
 				total_filtered: number
 			}

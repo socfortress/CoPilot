@@ -226,6 +226,7 @@ import {
 import { computed, onBeforeMount, reactive, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { NOTIFICATION_TRIGGER_LABELS } from "@/types/notifications"
 import { getApiErrorMessage } from "@/utils"
 import { snippetsForTrigger, variablesForTrigger } from "./templateVariables"
 
@@ -285,21 +286,11 @@ const formatOptions = [
 	{ label: "JSON", value: "json" }
 ]
 
-const TRIGGER_LABELS: Record<NotificationTrigger, string> = {
-	alert_created: "Alert created",
-	investigation_complete: "AI investigation complete",
-	ai_report_reviewed: "AI report reviewed",
-	alert_assigned: "Alert assigned",
-	case_assigned: "Case assigned",
-	case_task_assigned: "Case task assigned",
-	temp_password_issued: "Temporary password email"
-}
-
 function triggerLabel(trigger: NotificationTrigger): string {
-	return TRIGGER_LABELS[trigger] ?? trigger
+	return NOTIFICATION_TRIGGER_LABELS[trigger] ?? trigger
 }
 
-const triggerOptions = Object.entries(TRIGGER_LABELS).map(([value, label]) => ({ label, value }))
+const triggerOptions = Object.entries(NOTIFICATION_TRIGGER_LABELS).map(([value, label]) => ({ label, value }))
 
 const customerOptions = computed(() =>
 	customers.value.map(c => ({ label: `${c.customer_name} (${c.customer_code})`, value: c.customer_code }))

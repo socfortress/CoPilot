@@ -42,7 +42,8 @@ export interface AlertIOC {
 	value: string
 }
 
-export type AlertStatus = "OPEN" | "CLOSED" | "IN_PROGRESS"
+/** `PENDING_CUSTOMER`: the SOC waits on the customer and the item's SLA clocks are stopped. */
+export type AlertStatus = "OPEN" | "CLOSED" | "IN_PROGRESS" | "PENDING_CUSTOMER"
 
 /** An analyst's triage verdict. `null` on an alert means untriaged — a distinct, meaningful state. */
 export type AlertVerdict = "TRUE_POSITIVE" | "FALSE_POSITIVE"

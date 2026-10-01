@@ -17,19 +17,13 @@
 						<Badge
 							type="splitted"
 							bright
-							:color="
-								alert.status === 'OPEN'
-									? 'danger'
-									: alert.status === 'IN_PROGRESS'
-										? 'warning'
-										: 'success'
-							"
+							:color="statusColor(alert.status)"
 						>
 							<template #iconLeft>
 								<Icon :name="StatusIcon" :size="14" />
 							</template>
 							<template #label>Status</template>
-							<template #value>{{ alert.status || "n/d" }}</template>
+							<template #value>{{ statusLabel(alert.status) }}</template>
 						</Badge>
 
 						<Badge v-if="alert.report.severity_assessment" type="splitted" bright :color="severityColor">
@@ -98,6 +92,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { statusColor, statusLabel } from "@/components/incidentManagement/common/status"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"

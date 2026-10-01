@@ -25,6 +25,10 @@
 							In Progress :
 							<code>{{ statusInProgressTotal }}</code>
 						</div>
+						<div class="box text-primary">
+							Waiting on customer :
+							<code>{{ statusPendingCustomerTotal }}</code>
+						</div>
 						<div class="box text-success">
 							Close :
 							<code>{{ statusCloseTotal }}</code>
@@ -244,6 +248,7 @@ import { computed, nextTick, onBeforeMount, onBeforeUnmount, provide, ref, toRef
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import GenerateIncidentReportButton from "@/components/customers/reporting/GenerateIncidentReportButton.vue"
+import { STATUS_OPTIONS } from "@/components/incidentManagement/common/status"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
@@ -289,6 +294,7 @@ const sortOptions = [
 const total = ref(0)
 const statusOpenTotal = ref(0)
 const statusInProgressTotal = ref(0)
+const statusPendingCustomerTotal = ref(0)
 const statusCloseTotal = ref(0)
 
 const FilterIcon = "carbon:filter-edit"
@@ -309,11 +315,7 @@ const typeOptions: { label: string; value: CasesFilterTypes }[] = [
 	{ label: "Customer Code", value: "customerCode" }
 ]
 
-const statusOptions: { label: string; value: CaseStatus }[] = [
-	{ label: "Open", value: "OPEN" },
-	{ label: "Closed", value: "CLOSED" },
-	{ label: "In progress", value: "IN_PROGRESS" }
-]
+const statusOptions = [...STATUS_OPTIONS]
 
 const usersOptions = computed(() => availableUsers.value.map(o => ({ label: o, value: o })))
 const customersOptions = computed(() =>
@@ -476,6 +478,7 @@ function getData() {
 				total.value = res.data.total || 0
 				statusOpenTotal.value = res.data.open || 0
 				statusInProgressTotal.value = res.data.in_progress || 0
+				statusPendingCustomerTotal.value = res.data.pending_customer || 0
 				statusCloseTotal.value = res.data.closed || 0
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
