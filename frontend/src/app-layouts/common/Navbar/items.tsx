@@ -16,6 +16,7 @@ import { respondItem } from "./items/respond"
 const OverviewIcon = "carbon:dashboard"
 const CustomersIcon = "carbon:user-multiple"
 const AiAnalystIcon = "carbon:machine-learning-model"
+const SocManagementIcon = "carbon:dashboard-reference"
 
 /**
  * The sidebar, ordered the way SOC work happens: triage, investigate, respond,
@@ -35,6 +36,10 @@ export default function getItems(): MenuMixedOption[] {
 		{
 			...routerLinkItem("Overview", "Overview"),
 			icon: renderIcon(OverviewIcon)
+		},
+		{
+			...routerLinkItem("SOC Management", "SocManagement"),
+			icon: renderIcon(SocManagementIcon)
 		},
 		{
 			...routerLinkItem("AI Analyst", "AiAnalyst"),
