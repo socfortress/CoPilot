@@ -41,6 +41,7 @@ class CaseEventType(str, Enum):
     CASE_STATUS_CHANGED = "case_status_changed"
     CASE_ASSIGNED = "case_assigned"
     CASE_ESCALATED = "case_escalated"
+    CASE_SEVERITY_CHANGED = "case_severity_changed"
     ALERT_LINKED = "alert_linked"
     ALERT_UNLINKED = "alert_unlinked"
     COMMENT_ADDED = "comment_added"

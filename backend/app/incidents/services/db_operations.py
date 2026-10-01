@@ -88,6 +88,7 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
     AlertCreationSettings,
 )
 from app.middleware.customer_access import customer_access_handler
+from app.soc_management.services.lifecycle import SlaLifecycleRecorder
 
 
 def build_alert_out(
@@ -972,6 +973,8 @@ async def create_alert(alert: AlertCreate, db: AsyncSession) -> Alert:
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=400, detail="Alert already exists")
+    # Start the SLA clocks here, not in the route: no creation path may skip it (#1187).
+    await SlaLifecycleRecorder().alert_opened(db_alert)
     return db_alert
 
 
@@ -1019,6 +1022,18 @@ async def update_case_assigned_to(case_id: int, assigned_to: str, db: AsyncSessi
     case.assigned_to = assigned_to
     await db.commit()
     return case
+
+
+async def update_case_severity(case_id: int, severity: Optional[str], db: AsyncSession) -> Tuple[Case, Optional[str]]:
+    """Set (or clear, with ``None``) a case's severity. Returns the case and the previous value."""
+    result = await db.execute(select(Case).where(Case.id == case_id))
+    case = result.scalars().first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    previous = case.severity
+    case.severity = severity
+    await db.commit()
+    return case, previous
 
 
 async def update_case_customer_code(case_id: int, customer_code: str, db: AsyncSession) -> Case:
@@ -1424,7 +1439,9 @@ async def create_case(
     has no source hint to pick from. Analysts can apply a template later
     via ``POST /case/{id}/apply-template/{template_id}``.
     """
-    db_case = Case(**case.model_dump())
+    data = case.model_dump()
+    data["severity"] = case.severity.value if case.severity else None
+    db_case = Case(**data)
     db.add(db_case)
     try:
         await db.flush()
@@ -1445,6 +1462,7 @@ async def create_case(
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=400, detail="Case already exists")
+    await SlaLifecycleRecorder().case_opened(db_case)
     return db_case
 
 
@@ -1519,6 +1537,8 @@ async def create_case_from_alert(
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=400, detail="Case already exists")
+    # Opened with no link yet; the route re-targets once the originating alert is linked.
+    await SlaLifecycleRecorder().case_opened(case)
     return case
 
 
@@ -1708,6 +1728,7 @@ async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
         notification_invoked_number=case.notification_invoked_number or 0,
         comments=case_comments,
         escalated=case.escalated,
+        severity=case.severity,
     )
     return case_out
 
@@ -1752,6 +1773,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             notification_invoked_number=case.notification_invoked_number or 0,
             comments=case_comments,
             escalated=case.escalated,
+            severity=case.severity,
         )
         cases_out.append(case_out)
     return cases_out
@@ -1805,6 +1827,7 @@ async def list_cases_by_status(status: str, db: AsyncSession, page: int = 1, pag
             notification_invoked_number=case.notification_invoked_number or 0,
             comments=case_comments,
             escalated=case.escalated,
+            severity=case.severity,
         )
         cases_out.append(case_out)
     return cases_out
@@ -1838,6 +1861,7 @@ def _case_to_out(case: Case) -> CaseOut:
         notification_invoked_number=case.notification_invoked_number or 0,
         comments=case_comments,
         escalated=case.escalated,
+        severity=case.severity,
     )
 
 
@@ -1917,6 +1941,7 @@ async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
             notification_invoked_number=case.notification_invoked_number or 0,
             comments=case_comments,
             escalated=case.escalated,
+            severity=case.severity,
         )
         cases_out.append(case_out)
     return cases_out
@@ -1972,6 +1997,7 @@ async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[Ca
             notification_invoked_number=case.notification_invoked_number or 0,
             comments=case_comments,
             escalated=case.escalated,
+            severity=case.severity,
         )
         cases_out.append(case_out)
     return cases_out
@@ -2024,6 +2050,7 @@ async def list_cases_by_customer_code(customer_code: str, db: AsyncSession) -> L
             notification_invoked_number=case.notification_invoked_number or 0,
             comments=case_comments,
             escalated=case.escalated,
+            severity=case.severity,
         )
         cases_out.append(case_out)
     return cases_out
@@ -2592,6 +2619,7 @@ async def list_cases_for_user(
             notification_invoked_number=case.notification_invoked_number or 0,
             comments=case_comments,
             escalated=case.escalated,
+            severity=case.severity,
         )
         cases_out.append(case_out)
     return cases_out

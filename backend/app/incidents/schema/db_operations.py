@@ -206,6 +206,23 @@ class UpdateCaseStatus(BaseModel):
     status: AlertStatus
 
 
+class CaseSeverity(str, Enum):
+    """The severity vocabulary of alerts (`alert_severity.SEVERITY_LEVELS`), for cases (#1187)."""
+
+    CRITICAL = "Critical"
+    HIGH = "High"
+    MEDIUM = "Medium"
+    LOW = "Low"
+    INFORMATIONAL = "Informational"
+
+
+class UpdateCaseSeverity(BaseModel):
+    """Set a case's severity, or clear it (``None``) so it follows its linked alerts again."""
+
+    case_id: int
+    severity: Optional[CaseSeverity] = None
+
+
 class AlertResponse(BaseModel):
     alert: Alert
     success: bool
@@ -402,6 +419,8 @@ class CaseCreate(BaseModel):
     case_status: str
     assigned_to: Optional[str] = None
     customer_code: Optional[str] = None
+    # Omitted = follow the linked alerts (#1187).
+    severity: Optional[CaseSeverity] = None
 
 
 class LinkedCaseCreate(BaseModel):
@@ -571,6 +590,9 @@ class CaseOut(BaseModel):
     customer_code: Optional[str] = None
     notification_invoked_number: Optional[int] = 0
     escalated: bool = False
+    # The analyst's choice; None = derived from the linked alerts (#1187). The derived
+    # value, and the SLA it drives, come from GET /soc_management/items/case/{id}/sla.
+    severity: Optional[str] = None
     comments: List[CaseCommentBase] = []
 
     @field_validator("case_creation_time", mode="before")

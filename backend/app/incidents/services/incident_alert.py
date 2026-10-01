@@ -63,6 +63,7 @@ from app.integrations.office365.services.tenant_lookup import (
 from app.integrations.routes import get_customer_by_auth_key
 from app.notifications.services.emit import emit
 from app.notifications.services.event_builders import alert_created_event
+from app.soc_management.services.lifecycle import SlaLifecycleRecorder
 
 
 async def fetch_settings(field: str, value: str, session: AsyncSession, case_insensitive: bool = False):
@@ -1267,6 +1268,9 @@ async def create_alert_in_copilot(alert_payload: CreatedAlertPayload, customer_c
     # Commit it to the database
     session.add(alert)
     await session.commit()
+    # The SLA clocks start when the alert reaches CoPilot. `alert_creation_time` cannot
+    # serve: ingest moves it to the latest trigger while the alert stays OPEN (#1187).
+    await SlaLifecycleRecorder().alert_opened(alert)
     return alert
 
 
