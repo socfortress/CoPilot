@@ -46,8 +46,28 @@
 					<template #label>processing lag</template>
 					<template #value>{{ formatLag(status.lag_seconds) }}</template>
 				</Badge>
+				<Badge
+					v-for="feed of status.feeds ?? []"
+					:key="feed.source"
+					type="splitted"
+					size="small"
+					:color="feed.status === 'ok' ? undefined : 'warning'"
+					:title="feedTitle(feed)"
+				>
+					<template #label>{{ feedLabel(feed.source) }}</template>
+					<template #value>{{ feed.status === "ok" ? formatLag(feed.lag_p50_s) : feed.status }}</template>
+				</Badge>
 				<span v-if="version" class="text-tertiary text-xs">UBA {{ version }}</span>
 			</header>
+			<n-alert v-if="unhealthyFeeds.length" type="warning" :bordered="false">
+				<p v-for="feed of unhealthyFeeds" :key="feed.source">
+					<b>{{ feedLabel(feed.source) }}</b>
+					is {{ feed.status }}: {{ feed.reasons.join("; ") }}.
+				</p>
+				<p class="text-secondary mt-1 text-xs">
+					UBA's findings for this source may be missing or late until the feed recovers.
+				</p>
+			</n-alert>
 			<n-alert v-else-if="statusLoaded" type="info" :bordered="false">
 				SOCFortress UBA has no data for this customer yet (or the API key isn't allowed to see it).
 			</n-alert>
@@ -98,7 +118,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { UbaTenantStatus } from "@/types/uba"
+import type { UbaFeedStatus, UbaTenantStatus } from "@/types/uba"
 import { NAlert, NDrawer, NDrawerContent, NEmpty, NFormItem, NSelect, NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
@@ -142,6 +162,21 @@ function setQuery(patch: Record<string, string | undefined>) {
 }
 
 const customerCodes = computed(() => customers.value.map(c => c.code))
+const unhealthyFeeds = computed(() => (status.value?.feeds ?? []).filter(feed => feed.status !== "ok"))
+
+const FEED_LABELS: Record<string, string> = { office365: "Microsoft 365", wazuh: "Wazuh" }
+
+function feedLabel(source: string) {
+	return FEED_LABELS[source] ?? source
+}
+
+function feedTitle(feed: UbaFeedStatus) {
+	const lines = [
+		`events arriving now: ${formatLag(feed.lag_p50_s)} old (median, last 15 min)`,
+		`last hour: ${feed.received_1h} received, ${feed.repeated_1h} repeats`
+	]
+	return [...feed.reasons, ...lines].join("\n")
+}
 const customerOptions = computed(() => customers.value.map(c => ({ label: c.name ? `${c.name} (${c.code})` : c.code, value: c.code })))
 
 const customerModel = computed<string | null>({
