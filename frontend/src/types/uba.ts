@@ -16,6 +16,25 @@ export interface UbaTenantStatus {
 	alerts_24h: number
 	open_alerts: number
 	signals_24h: number
+	/** Health of each source feeding UBA (absent from UBA versions before feed health). */
+	feeds?: UbaFeedStatus[]
+}
+
+export type UbaFeedState = "ok" | "lagging" | "quiet" | "repeating"
+
+export interface UbaFeedStatus {
+	source: string
+	status: UbaFeedState
+	/** Every problem found, in words. */
+	reasons: string[]
+	newest_event: string | null
+	last_received: string | null
+	/** Median age of the events received in the last 15 minutes. */
+	lag_p50_s: number | null
+	received_1h: number
+	/** Records the source sent again (already processed). */
+	repeated_1h: number
+	updated_at: string | null
 }
 
 export interface UbaPage {
