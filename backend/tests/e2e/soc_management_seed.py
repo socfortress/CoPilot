@@ -199,7 +199,13 @@ async def seed(quiet: bool = False) -> dict:
             if resolved and rng.random() < 0.8:
                 verdict = "FALSE_POSITIVE" if rng.random() < item["fp_share"] else "TRUE_POSITIVE"
 
-            status = "CLOSED" if resolved else ("IN_PROGRESS" if acked and rng.random() < 0.6 else "OPEN")
+            # Some acknowledged, unresolved alerts wait on the customer: their clocks are stopped.
+            waiting = acked and not resolved and rng.random() < 0.15
+            paused_at = min(now, ack + _minutes(rng, 90)) if waiting else None
+            if waiting:
+                status = "PENDING_CUSTOMER"
+            else:
+                status = "CLOSED" if resolved else ("IN_PROGRESS" if acked and rng.random() < 0.6 else "OPEN")
             assigned = actor if acked and rng.random() < 0.85 else None
             alert = Alert(
                 alert_name=item["title"],
@@ -234,6 +240,7 @@ async def seed(quiet: bool = False) -> dict:
                     resolved_by=actor if resolved else None,
                     first_resolved_at=resolve if resolved else None,
                     reopen_count=1 if resolved and rng.random() < 0.04 else 0,
+                    paused_at=paused_at,
                     tracked=True,
                     updated_at=now,
                 ),

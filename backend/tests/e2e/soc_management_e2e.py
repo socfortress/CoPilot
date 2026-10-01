@@ -26,7 +26,13 @@ a mocked request layer; this is where the whole loop runs as in production:
   E) the dashboard: seeded figures, an analyst scoped to one customer sees only it and
      only their own analyst row; per-item SLA is 404 across tenants;
   F) the PDF report renders (when wkhtmltopdf is installed);
-  G) deleting an alert takes its tracking row with it (ON DELETE CASCADE).
+  G) deleting an alert takes its tracking row with it (ON DELETE CASCADE);
+  H) waiting on the customer: PENDING_CUSTOMER stops the clocks, a case takes its alerts
+     with it, a portal reply hands both back and pushes the due times;
+  I) business hours: a customer calendar and a business-hours cell open on it;
+  J) SLA notifications: sent once per clock, never twice;
+  K) the portal SLA page: off until an admin turns it on, then the customer's figures
+     only, without a single analyst name.
 """
 
 import asyncio
@@ -53,6 +59,7 @@ from app.auth.models.users import User  # noqa: E402
 from app.auth.models.users import UserCustomerAccess  # noqa: E402
 from app.auth.utils import AuthHandler  # noqa: E402
 from app.db.db_session import async_engine  # noqa: E402
+from app.db.universal_models import CustomerPortalSlaSettings  # noqa: E402
 from app.db.universal_models import Customers  # noqa: E402
 from app.incidents.models import Alert  # noqa: E402
 from app.incidents.models import Case  # noqa: E402
@@ -64,7 +71,9 @@ from app.incidents.models import Comment  # noqa: E402
 from app.incidents.services.incident_alert import create_alert_in_copilot  # noqa: E402
 from app.soc_management.models.sla import AlertSlaTracking  # noqa: E402
 from app.soc_management.models.sla import CaseSlaTracking  # noqa: E402
+from app.soc_management.models.sla import SlaCalendar  # noqa: E402
 from app.soc_management.models.sla import SlaPolicy  # noqa: E402
+from app.soc_management.services.notifier import SlaNotifier  # noqa: E402
 
 CUST_A, CUST_B = "E2E_SLA_A", "E2E_SLA_B"
 ADMIN, ANALYST, PORTAL = "e2e_sla_admin", "e2e_sla_ana", "e2e_sla_portal"
@@ -82,11 +91,12 @@ def check(name, passed, detail=""):
 def build_app():
     """The real routers, without the startup hooks (MinIO, connectors, scheduler)."""
     from app.routers import auth
+    from app.routers import customer_portal
     from app.routers import incidents
     from app.routers import soc_management
 
     app = FastAPI()
-    for module in (auth, incidents, soc_management):
+    for module in (auth, incidents, soc_management, customer_portal):
         app.include_router(module.router)
     return app
 
@@ -108,6 +118,8 @@ async def cleanup():
         await s.execute(delete(Alert).where(Alert.customer_code.in_(codes)))
         await s.execute(delete(SlaPolicy).where(SlaPolicy.customer_code.in_(codes)))
         await s.execute(delete(SlaPolicy).where(SlaPolicy.updated_by == ADMIN))
+        await s.execute(delete(SlaCalendar).where(SlaCalendar.customer_code.in_(codes)))
+        await s.execute(delete(CustomerPortalSlaSettings).where(CustomerPortalSlaSettings.customer_code.in_(codes)))
         for username in (ADMIN, ANALYST, PORTAL):
             user = (await s.execute(select(User).where(User.username == username))).scalars().first()
             if user:
@@ -286,6 +298,114 @@ async def main():
         check("per-item SLA: other tenant is 404", foreign.status_code == 404)
         portal_dash = await client.get("/soc_management/dashboard", params=period, headers=portal)
         check("a portal user cannot read the dashboard", portal_dash.status_code == 403)
+
+        print("H) waiting on the customer")
+        a4 = await ingest(CUST_A, "E2E suspicious login")
+        resolve_due_before = (await tracking(AlertSlaTracking, a4)).resolve_due_at
+        pending = await client.put(f"{DB}/alert/status", json={"alert_id": a4, "status": "PENDING_CUSTOMER"}, headers=ana)
+        t_a4 = await tracking(AlertSlaTracking, a4)
+        check("an alert can wait on the customer", pending.status_code == 200 and t_a4.paused_at is not None, pending.text[:200])
+        counts = (await client.get(f"{DB}/alerts", params={"customer_codes": [CUST_A]}, headers=ana)).json()
+        check("the alert list counts it apart", counts.get("pending_customer", 0) >= 1, str(counts.get("pending_customer")))
+        item = (await client.get(f"/soc_management/items/alert/{a4}/sla", headers=ana)).json()
+        check("its clocks read as paused", item["resolve"]["state"] == "paused" and item["paused_at"] is not None, str(item["resolve"]))
+        await asyncio.sleep(1.1)
+        reply = await client.post(
+            f"{DB}/alert/comment",
+            json={"alert_id": a4, "comment": "yes, that was me", "user_name": "x"},
+            headers=portal,
+        )
+        t_a4 = await tracking(AlertSlaTracking, a4)
+        status_a4 = (await client.get(f"{DB}/alert/{a4}", headers=ana)).json()["alerts"][0]["status"]
+        check("a portal reply hands it back to the SOC", reply.status_code == 200 and status_a4 == "IN_PROGRESS", status_a4)
+        check(
+            "resuming banks the wait and pushes the resolve due",
+            t_a4.paused_at is None and t_a4.paused_seconds >= 1 and t_a4.resolve_due_at > resolve_due_before,
+            f"{t_a4.paused_seconds}s",
+        )
+
+        case_pending = await client.put(f"{DB}/case/status", json={"case_id": case_id, "status": "PENDING_CUSTOMER"}, headers=ana)
+        a2_status = (await client.get(f"{DB}/alert/{a2}", headers=ana)).json()["alerts"][0]["status"]
+        check(
+            "a waiting case takes its active alerts with it",
+            case_pending.status_code == 200 and a2_status == "PENDING_CUSTOMER",
+            a2_status,
+        )
+        await client.post(f"{DB}/case/comment", json={"case_id": case_id, "comment": "attached the logs", "user_name": "x"}, headers=portal)
+        case_status = (await client.get(f"{DB}/case/{case_id}", headers=ana)).json()["cases"][0]["case_status"]
+        a2_status = (await client.get(f"{DB}/alert/{a2}", headers=ana)).json()["alerts"][0]["status"]
+        t_case = await tracking(CaseSlaTracking, case_id)
+        check(
+            "a portal reply on the case resumes it and its alerts",
+            (case_status, a2_status) == ("IN_PROGRESS", "IN_PROGRESS") and t_case.paused_at is None,
+            f"{case_status}/{a2_status}",
+        )
+
+        print("I) business hours")
+        week = {day: [["09:00", "17:00"]] for day in ("mon", "tue", "wed", "thu", "fri")}
+        calendar = await client.put(
+            "/soc_management/calendars",
+            json={"customer_code": CUST_B, "timezone": "Europe/Rome", "week": week, "holidays": ["2026-12-25"]},
+            headers=admin,
+        )
+        check(
+            "an admin saves a customer calendar",
+            calendar.status_code == 200 and calendar.json()["calendar"]["source"] == "customer",
+            calendar.text[:200],
+        )
+        foreign_calendar = await client.get("/soc_management/calendars", params={"customer_code": CUST_B}, headers=ana)
+        check("an analyst cannot read another tenant's calendar", foreign_calendar.status_code == 403)
+        await client.put(
+            "/soc_management/policies",
+            json={"customer_code": CUST_B, "cells": [{**high, "ack_minutes": 60, "resolve_minutes": 240, "business_hours": True}]},
+            headers=admin,
+        )
+        b2 = await ingest(CUST_B, "E2E data exfiltration")
+        t_b2 = await tracking(AlertSlaTracking, b2)
+        check("a business-hours cell opens on the customer calendar", t_b2.business_hours and t_b2.ack_due_at > t_b2.opened_at)
+        b2_item = (await client.get(f"/soc_management/items/alert/{b2}/sla", headers=admin)).json()
+        check(
+            "the item says so, with its target in working minutes",
+            b2_item["business_hours"] and b2_item["calendar_timezone"] == "Europe/Rome" and b2_item["ack"]["target_minutes"] == 60,
+            str(b2_item["ack"]),
+        )
+
+        print("J) SLA notifications")
+        sent = []
+        later = datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+        notifier = SlaNotifier(send=sent.append, clock=lambda: later)
+        await notifier.run()
+        ours = [event for event in sent if event.customer_code in (CUST_A, CUST_B)]
+        check(
+            "breaches are notified",
+            any(event.trigger.value == "sla_breached" for event in ours),
+            str([(e.entity_id, e.trigger.value) for e in ours]),
+        )
+        check(
+            "internal routes only, with the item's severity",
+            all(event.trigger.value in ("sla_at_risk", "sla_breached") for event in ours),
+        )
+        sent.clear()
+        await notifier.run()
+        check("a second pass sends nothing new", not [event for event in sent if event.customer_code in (CUST_A, CUST_B)])
+
+        print("K) portal SLA page")
+        sla_period = {**period, "date_to": (datetime.datetime.utcnow() + datetime.timedelta(hours=1)).isoformat()}
+        off = (await client.get("/customer_portal/sla/overview", params=sla_period, headers=portal)).json()
+        check("off until an admin turns it on", off["enabled"] is False)
+        denied_switch = await client.put(f"/customer_portal/sla/settings/{CUST_A}", json={"enabled": True}, headers=ana)
+        check("an analyst cannot turn it on", denied_switch.status_code == 403)
+        for code in (CUST_A, CUST_B):
+            await client.put(f"/customer_portal/sla/settings/{code}", json={"enabled": True}, headers=admin)
+        page = await client.get("/customer_portal/sla/overview", params=sla_period, headers=portal)
+        body = page.json()
+        check(
+            "the customer sees only their own figures",
+            body["enabled"] and body["customer_codes"] == [CUST_A],
+            str(body["customer_codes"]),
+        )
+        check("their alerts are counted", body["alerts"]["opened"] == 4, str(body["alerts"]["opened"]))
+        check("no analyst name reaches the customer", ANALYST not in page.text and ADMIN not in page.text)
 
         print("F) report")
         if shutil.which("wkhtmltopdf"):
