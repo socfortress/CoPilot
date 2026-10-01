@@ -1,7 +1,14 @@
 <template>
 	<div class="flex flex-col gap-4">
 		<div>
-			<Filters v-model:value="filters" class="w-auto!" />
+			<KeyValueFilter
+				v-model:value="filters"
+				testid="alerts"
+				:load-options="loadFilterOptions"
+				:search-key="ASSETS_KEY"
+				:search="searchAssets"
+				class="w-auto!"
+			/>
 		</div>
 
 		<div class="flex flex-col gap-2">
@@ -60,19 +67,19 @@
 import type { AxiosResponse } from "axios"
 import type { DataTableColumns } from "naive-ui"
 import type { AlertStatusUpdateSuccessPayload } from "@/components/alerts/AlertStatusSelect.vue"
-import type { FiltersModel } from "@/components/alerts/Filters.vue"
+import type { KeyValueFilterModel } from "@/components/common/KeyValueFilter.vue"
 import type { Alert, AlertsListResponse, AlertStatus } from "@/types/alerts"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
 import { useElementSize } from "@vueuse/core"
-import axios from "axios"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, toRef, useTemplateRef } from "vue"
 import Api from "@/api"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
 import AlertStatusSelect from "@/components/alerts/AlertStatusSelect.vue"
-import Filters from "@/components/alerts/Filters.vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
+import KeyValueFilter from "@/components/common/KeyValueFilter.vue"
+import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { usePaginatedLoad } from "@/composables/common/usePaginatedLoad"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
@@ -80,8 +87,8 @@ import { getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const message = useMessage()
+const { loading, run } = useLatestRequest()
 const data = ref<Alert[]>([])
-const loading = ref(false)
 const dFormats = useSettingsStore().dateFormat
 const customerFilterStore = useCustomerFilterStore()
 
@@ -97,11 +104,22 @@ const pagination = ref({
 	total: 0
 })
 
-// Filters
-const filters = ref<FiltersModel>({
+// Filters. Asset names are not among the options (a large tenant has thousands): the
+// asset filter searches the server as the user types instead.
+const ASSETS_KEY = "assets"
+const filters = ref<KeyValueFilterModel>({
 	key: null,
 	value: null
 })
+
+async function loadFilterOptions(): Promise<Record<string, string[]>> {
+	const { sources, statuses, tags } = (await Api.alerts.getAlertsFilters()).data
+	return { sources, statuses, tags }
+}
+
+async function searchAssets(search: string | null, signal: AbortSignal): Promise<string[]> {
+	return (await Api.alerts.searchAlertAssets(search, signal)).data.assets
+}
 
 const columns = computed<DataTableColumns<Alert>>(() => [
 	{
@@ -159,82 +177,72 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 	}
 ])
 
-let abortController = new AbortController()
+function loadAlerts() {
+	return run(
+		async signal => {
+			let response: AxiosResponse<CommonResponse<AlertsListResponse>>
 
-async function loadAlerts() {
-	loading.value = true
-
-	abortController?.abort()
-	abortController = new AbortController()
-
-	try {
-		let response: AxiosResponse<CommonResponse<AlertsListResponse>>
-
-		const paginationPayload: Pagination = {
-			page: pagination.value.page,
-			pageSize: pagination.value.pageSize,
-			order: "desc"
-		}
-
-		if (filters.value.key && filters.value.value) {
-			switch (filters.value.key) {
-				case "statuses":
-					response = await Api.alerts.getAlertsByStatus(
-						filters.value.value as AlertStatus,
-						paginationPayload,
-						abortController.signal,
-						customerFilterStore.queryCustomerCodes
-					)
-					break
-				case "sources":
-					response = await Api.alerts.getAlertsBySource(
-						filters.value.value,
-						paginationPayload,
-						abortController.signal,
-						customerFilterStore.queryCustomerCodes
-					)
-					break
-				case "assets":
-					response = await Api.alerts.getAlertsByAsset(
-						filters.value.value,
-						paginationPayload,
-						abortController.signal,
-						customerFilterStore.queryCustomerCodes
-					)
-					break
-				case "tags":
-					response = await Api.alerts.getAlertsByTag(
-						filters.value.value,
-						paginationPayload,
-						abortController.signal,
-						customerFilterStore.queryCustomerCodes
-					)
-					break
-				default:
-					response = await Api.alerts.getAlerts(
-						paginationPayload,
-						abortController.signal,
-						customerFilterStore.queryCustomerCodes
-					)
-					break
+			const paginationPayload: Pagination = {
+				page: pagination.value.page,
+				pageSize: pagination.value.pageSize,
+				order: "desc"
 			}
-		} else {
-			response = await Api.alerts.getAlerts(
-				paginationPayload,
-				abortController.signal,
-				customerFilterStore.queryCustomerCodes
-			)
-		}
 
-		data.value = response.data.alerts
-		pagination.value.total = response.data.total
-		loading.value = false
-	} catch (err) {
-		if (!axios.isCancel(err)) {
-			message.error(getApiErrorMessage(err as ApiError))
-			loading.value = false
-		}
-	}
+			if (filters.value.key && filters.value.value) {
+				switch (filters.value.key) {
+					case "statuses":
+						response = await Api.alerts.getAlertsByStatus(
+							filters.value.value as AlertStatus,
+							paginationPayload,
+							signal,
+							customerFilterStore.queryCustomerCodes
+						)
+						break
+					case "sources":
+						response = await Api.alerts.getAlertsBySource(
+							filters.value.value,
+							paginationPayload,
+							signal,
+							customerFilterStore.queryCustomerCodes
+						)
+						break
+					case "assets":
+						response = await Api.alerts.getAlertsByAsset(
+							filters.value.value,
+							paginationPayload,
+							signal,
+							customerFilterStore.queryCustomerCodes
+						)
+						break
+					case "tags":
+						response = await Api.alerts.getAlertsByTag(
+							filters.value.value,
+							paginationPayload,
+							signal,
+							customerFilterStore.queryCustomerCodes
+						)
+						break
+					default:
+						response = await Api.alerts.getAlerts(
+							paginationPayload,
+							signal,
+							customerFilterStore.queryCustomerCodes
+						)
+						break
+				}
+			} else {
+				response = await Api.alerts.getAlerts(
+					paginationPayload,
+					signal,
+					customerFilterStore.queryCustomerCodes
+				)
+			}
+
+			data.value = response.data.alerts
+			pagination.value.total = response.data.total
+		},
+		err => message.error(getApiErrorMessage(err as ApiError))
+	)
 }
 
 function handleStatusUpdateSuccess(payload: AlertStatusUpdateSuccessPayload) {

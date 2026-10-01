@@ -18,6 +18,7 @@
 				<ReportCard
 					v-for="report in reports"
 					:key="report.id"
+					data-testid="report-card"
 					:report
 					@download="handleDownload(report)"
 					@delete="handleDeleteClick(report)"
@@ -93,7 +94,6 @@ import type {
 	IncidentCustomerReportGenerateRequest,
 	IncidentReportTemplate
 } from "@/types/reports"
-import axios from "axios"
 import { saveAs } from "file-saver"
 import { NButton, NDatePicker, NEmpty, NForm, NFormItem, NInput, NModal, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
@@ -101,23 +101,25 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import ReportCard from "@/components/reports/ReportCard.vue"
 import { useCustomerPrefill } from "@/composables/common/useCustomerPrefill"
+import { useLatestRequest } from "@/composables/common/useLatestRequest"
+import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useReportGenerationStore } from "@/stores/reportGeneration"
 import { getApiErrorMessage } from "@/utils"
 
 const AddIcon = "carbon:document-add"
 
 const message = useMessage()
+const { loading, run } = useLatestRequest()
 const { customerOptions, hasMultipleCustomers, initialCustomerCode } = useCustomerPrefill()
 const reportGenerationStore = useReportGenerationStore()
+const customerFilterStore = useCustomerFilterStore()
 
-const loading = ref(false)
 const generating = ref(false)
 const reports = ref<IncidentCustomerReport[]>([])
 const showGenerateModal = ref(false)
 const showDeleteModal = ref(false)
 const reportToDelete = ref<IncidentCustomerReport | null>(null)
 const formRef = ref<FormInst | null>(null)
-let abortController: AbortController | null = null
 
 interface GenerateFormData {
 	report_name?: string
@@ -207,25 +209,18 @@ function resolveRange(): { date_from: string; date_to: string } {
 	return { date_from: toUtcNaive(from), date_to: toUtcNaive(to) }
 }
 
-async function loadReports() {
-	abortController?.abort()
-	abortController = new AbortController()
-
-	loading.value = true
-	try {
-		const response = await Api.reports.listReports(abortController.signal)
-		if (response.data.success) {
-			reports.value = response.data.reports
-		} else {
-			message.error(response.data.message || "Failed to load reports")
-		}
-		loading.value = false
-	} catch (error) {
-		if (!axios.isCancel(error)) {
-			message.error(getApiErrorMessage(error as ApiError) || "Failed to load reports")
-			loading.value = false
-		}
-	}
+function loadReports() {
+	return run(
+		async signal => {
+			const response = await Api.reports.listReports({ customerCodes: customerFilterStore.queryCustomerCodes, signal })
+			if (response.data.success) {
+				reports.value = response.data.reports
+			} else {
+				message.error(response.data.message || "Failed to load reports")
+			}
+		},
+		error => message.error(getApiErrorMessage(error as ApiError) || "Failed to load reports")
+	)
 }
 
 async function handleGenerate() {
@@ -311,6 +306,15 @@ async function confirmDelete() {
 		reportToDelete.value = null
 	}
 }
+
+// The global customer filter narrows the list. The store replaces the selection array on
+// every change, so no deep watch is needed.
+watch(
+	() => customerFilterStore.queryCustomerCodes,
+	() => {
+		loadReports()
+	}
+)
 
 // The store notifies the user; this only keeps the open list in sync with it.
 watch(

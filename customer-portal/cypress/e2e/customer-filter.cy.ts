@@ -88,4 +88,19 @@ describe("global customer filter", () => {
 		cy.wait(800)
 		cy.get("@page.all").should("have.length", 2)
 	})
+
+	it("reports: the list reloads for the picked customer", () => {
+		cy.intercept("GET", "**/api/incidents/customer_reports*").as("list")
+		cy.visit("/reports")
+		cy.wait("@list")
+		cy.get("[data-testid=report-card]").should("have.length", seed.reports.a + seed.reports.b)
+
+		pickCustomer(seed.customers.b)
+		cy.wait("@list").its("request.url").should("include", `customer_codes=${seed.customers.b}`)
+		cy.get("[data-testid=report-card]").should("have.length", seed.reports.b)
+
+		pickCustomer(seed.customers.a)
+		cy.wait("@list").its("request.url").should("include", `customer_codes=${seed.customers.a}`)
+		cy.get("[data-testid=report-card]").should("have.length", seed.reports.a + seed.reports.b)
+	})
 })

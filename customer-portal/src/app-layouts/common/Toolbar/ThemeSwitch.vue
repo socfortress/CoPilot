@@ -26,7 +26,7 @@ const MoonOutline = "carbon:asleep"
 const themeStore = useThemeStore()
 const isThemeDark = computed<boolean>(() => themeStore.isThemeDark)
 
-function toggleTheme(event?: MouseEvent) {
+async function toggleTheme(event?: MouseEvent) {
 	const isAppearanceTransition =
 		typeof document !== "undefined" &&
 		document.startViewTransition &&
@@ -47,21 +47,19 @@ function toggleTheme(event?: MouseEvent) {
 			await nextTick()
 		})
 
-		transition.ready.then(() => {
-			const clipPath = [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`]
-			// const clipPath = [`inset(50%)`, `inset(0)`]
+		await transition.ready
+		const clipPath = [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`]
 
-			document.documentElement.animate(
-				{
-					clipPath
-				},
-				{
-					duration: 300,
-					easing: "ease-in",
-					pseudoElement: "::view-transition-new(root)"
-				}
-			)
-		})
+		document.documentElement.animate(
+			{
+				clipPath
+			},
+			{
+				duration: 300,
+				easing: "ease-in",
+				pseudoElement: "::view-transition-new(root)"
+			}
+		)
 	}
 }
 </script>

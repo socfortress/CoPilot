@@ -21,15 +21,16 @@ export function useAiReportsAvailability() {
 		const cached = cache.get(key)
 		if (cached) return cached
 
-		const request = Api.aiReports
-			.getAvailability(customerCode)
-			.then(res => res.data.enabled === true)
-			// A failed lookup must not permanently pin the surface to "off":
-			// drop it from the cache so the next view retries.
-			.catch(() => {
+		const request = (async () => {
+			try {
+				return (await Api.aiReports.getAvailability(customerCode)).data.enabled === true
+			} catch {
+				// A failed lookup must not permanently pin the surface to "off":
+				// drop it from the cache so the next view retries.
 				cache.delete(key)
 				return false
-			})
+			}
+		})()
 
 		cache.set(key, request)
 		return request

@@ -116,7 +116,7 @@ const pagination = ref({
 const cases = ref<Case[]>([])
 const alerts = ref<Alert[]>([])
 
-function linkAlert(caseId: number, alertId: number) {
+async function linkAlert(caseId: number, alertId: number) {
 	if (!caseId || !alertId) {
 		message.error("Case and alert IDs are required")
 		return
@@ -125,23 +125,20 @@ function linkAlert(caseId: number, alertId: number) {
 	linkingCaseId.value = caseId
 	linkingAlertId.value = alertId
 
-	Api.cases
-		.linkCaseToAlert(caseId, alertId)
-		.then(res => {
-			if (res.data.success) {
-				emit("linked", alertId)
-				message.success(res.data?.message || "Alert linked to case successfully")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			linkingCaseId.value = null
-			linkingAlertId.value = null
-		})
+	try {
+		const res = await Api.cases.linkCaseToAlert(caseId, alertId)
+		if (res.data.success) {
+			emit("linked", alertId)
+			message.success(res.data?.message || "Alert linked to case successfully")
+		} else {
+			message.warning(res.data?.message || "An error occurred. Please try again later.")
+		}
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+	} finally {
+		linkingCaseId.value = null
+		linkingAlertId.value = null
+	}
 }
 
 async function loadList() {

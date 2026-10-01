@@ -96,6 +96,24 @@ const isValid = computed(() => {
 	return model.value.username && model.value.password
 })
 
+async function login(payload: LoginPayload) {
+	try {
+		const res = await authStore.login(payload)
+		if (res?.requires_2fa) {
+			// Credentials accepted but a second factor is required. Carry the temp
+			// token into the TOTP challenge; login completes in TotpForm.
+			twoFaTempToken.value = res.access_token
+			show2faForm.value = true
+			return
+		}
+		router.replace(getSafeRedirect(route.query.redirect))
+	} catch (err) {
+		message.error((err as Error)?.message || "An error occurred. Please try again later.")
+	} finally {
+		loading.value = false
+	}
+}
+
 function signIn(e: Event) {
 	e.preventDefault()
 	formRef.value?.validate((errors: Array<FormValidationError> | undefined) => {
@@ -107,24 +125,7 @@ function signIn(e: Event) {
 				password: model.value.password || ""
 			}
 
-			authStore
-				.login(payload)
-				.then(res => {
-					if (res?.requires_2fa) {
-						// Credentials accepted but a second factor is required. Carry the temp
-						// token into the TOTP challenge; login completes in TotpForm.
-						twoFaTempToken.value = res.access_token
-						show2faForm.value = true
-						return
-					}
-					router.replace(getSafeRedirect(route.query.redirect))
-				})
-				.catch(err => {
-					message.error(err?.message || "An error occurred. Please try again later.")
-				})
-				.finally(() => {
-					loading.value = false
-				})
+			login(payload)
 		} else {
 			message.error("Invalid credentials")
 		}

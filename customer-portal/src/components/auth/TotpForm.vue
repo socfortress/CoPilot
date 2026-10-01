@@ -127,17 +127,14 @@ async function verify2fa(params?: { useBackupCode?: boolean }) {
 		backup_code: params?.useBackupCode ? backupCode.value : undefined
 	}
 
-	authStore
-		.verify2fa(payload)
-		.then(() => {
-			router.replace(getSafeRedirect(route.query.redirect))
-		})
-		.catch(err => {
-			message.error(err?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			twoFaLoading.value = false
-		})
+	try {
+		await authStore.verify2fa(payload)
+		router.replace(getSafeRedirect(route.query.redirect))
+	} catch (err) {
+		message.error((err as Error)?.message || "An error occurred. Please try again later.")
+	} finally {
+		twoFaLoading.value = false
+	}
 }
 
 onMounted(() => {

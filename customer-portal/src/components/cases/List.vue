@@ -1,7 +1,13 @@
 <template>
 	<div class="flex flex-col gap-4">
 		<div class="flex w-full items-center justify-between gap-4">
-			<Filters v-model:value="filters" class="w-auto!" @loaded="handleFiltersLoaded" />
+			<KeyValueFilter
+				v-model:value="filters"
+				testid="cases"
+				:load-options="loadFilterOptions"
+				class="w-auto!"
+				@loaded="handleFiltersLoaded"
+			/>
 			<CreateCaseButton secondary @success="handleCreated" />
 		</div>
 
@@ -62,11 +68,10 @@ import type { AxiosResponse } from "axios"
 import type { DataTableColumns } from "naive-ui"
 import type { CaseAssignedUpdateSuccessPayload } from "@/components/cases/CaseAssignedSelect.vue"
 import type { CaseStatusUpdateSuccessPayload } from "@/components/cases/CaseStatusSelect.vue"
-import type { FiltersModel } from "@/components/cases/Filters.vue"
+import type { KeyValueFilterModel } from "@/components/common/KeyValueFilter.vue"
 import type { Case, CasesListResponse, CaseStatus } from "@/types/cases"
 import type { ApiError, CommonResponse, Pagination } from "@/types/common"
 import { useElementSize } from "@vueuse/core"
-import axios from "axios"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, toRef, useTemplateRef } from "vue"
 import Api from "@/api"
@@ -74,9 +79,10 @@ import CaseAssignedSelect from "@/components/cases/CaseAssignedSelect.vue"
 import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
 import CaseStatusSelect from "@/components/cases/CaseStatusSelect.vue"
 import CreateCaseButton from "@/components/cases/CreateCaseButton.vue"
-import Filters from "@/components/cases/Filters.vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
+import KeyValueFilter from "@/components/common/KeyValueFilter.vue"
+import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { usePaginatedLoad } from "@/composables/common/usePaginatedLoad"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
@@ -84,8 +90,8 @@ import { getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 const message = useMessage()
+const { loading, run } = useLatestRequest()
 const data = ref<Case[]>([])
-const loading = ref(false)
 const dFormats = useSettingsStore().dateFormat
 const customerFilterStore = useCustomerFilterStore()
 
@@ -103,10 +109,15 @@ const pagination = ref({
 })
 
 // Filters
-const filters = ref<FiltersModel>({
+const filters = ref<KeyValueFilterModel>({
 	key: null,
 	value: null
 })
+
+async function loadFilterOptions(): Promise<Record<string, string[]>> {
+	const { assigned_to, statuses } = (await Api.cases.getCasesFilters()).data
+	return { assigned_to, statuses }
+}
 
 const columns = computed<DataTableColumns<Case>>(() => [
 	{
@@ -173,66 +184,56 @@ const columns = computed<DataTableColumns<Case>>(() => [
 	}
 ])
 
-let abortController = new AbortController()
+function loadCases() {
+	return run(
+		async signal => {
+			let response: AxiosResponse<CommonResponse<CasesListResponse>>
 
-async function loadCases() {
-	loading.value = true
-
-	abortController?.abort()
-	abortController = new AbortController()
-
-	try {
-		let response: AxiosResponse<CommonResponse<CasesListResponse>>
-
-		const paginationPayload: Pagination = {
-			page: pagination.value.page,
-			pageSize: pagination.value.pageSize,
-			order: "desc"
-		}
-
-		if (filters.value.key && filters.value.value) {
-			switch (filters.value.key) {
-				case "statuses":
-					response = await Api.cases.getCasesByStatus(
-						filters.value.value as CaseStatus,
-						paginationPayload,
-						abortController.signal,
-						customerFilterStore.queryCustomerCodes
-					)
-					break
-				case "assigned_to":
-					response = await Api.cases.getCasesByAssignedTo(
-						filters.value.value,
-						paginationPayload,
-						abortController.signal,
-						customerFilterStore.queryCustomerCodes
-					)
-					break
-				default:
-					response = await Api.cases.getCases(
-						paginationPayload,
-						abortController.signal,
-						customerFilterStore.queryCustomerCodes
-					)
-					break
+			const paginationPayload: Pagination = {
+				page: pagination.value.page,
+				pageSize: pagination.value.pageSize,
+				order: "desc"
 			}
-		} else {
-			response = await Api.cases.getCases(
-				paginationPayload,
-				abortController.signal,
-				customerFilterStore.queryCustomerCodes
-			)
-		}
 
-		data.value = response.data.cases
-		pagination.value.total = response.data.total
-		loading.value = false
-	} catch (err) {
-		if (!axios.isCancel(err)) {
-			message.error(getApiErrorMessage(err as ApiError))
-			loading.value = false
-		}
-	}
+			if (filters.value.key && filters.value.value) {
+				switch (filters.value.key) {
+					case "statuses":
+						response = await Api.cases.getCasesByStatus(
+							filters.value.value as CaseStatus,
+							paginationPayload,
+							signal,
+							customerFilterStore.queryCustomerCodes
+						)
+						break
+					case "assigned_to":
+						response = await Api.cases.getCasesByAssignedTo(
+							filters.value.value,
+							paginationPayload,
+							signal,
+							customerFilterStore.queryCustomerCodes
+						)
+						break
+					default:
+						response = await Api.cases.getCases(
+							paginationPayload,
+							signal,
+							customerFilterStore.queryCustomerCodes
+						)
+						break
+				}
+			} else {
+				response = await Api.cases.getCases(
+					paginationPayload,
+					signal,
+					customerFilterStore.queryCustomerCodes
+				)
+			}
+
+			data.value = response.data.cases
+			pagination.value.total = response.data.total
+		},
+		err => message.error(getApiErrorMessage(err as ApiError))
+	)
 }
 
 function handleFiltersLoaded(value: Record<string, string[]>) {

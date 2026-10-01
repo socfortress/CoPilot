@@ -1,6 +1,7 @@
 import io
 import json
 from datetime import datetime
+from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
@@ -151,10 +152,12 @@ async def generate_report_background(
 )
 async def list_reports(
     customer_code: Optional[str] = Query(None, description="Filter by customer code"),
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes (the portal's customer filter)"),
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> CustomerReportListResponse:
-    accessible = await customer_access_handler.get_user_accessible_customers(current_user, db)
+    # The requested subset is intersected with what the caller may see, never widened.
+    accessible = await customer_access_handler.resolve_effective_customers(current_user, customer_codes, db)
     # A customer_user (portal) only sees their own reports plus analyst/admin reports
     # explicitly flagged visible; analysts/admins (CoPilot) see everything.
     only_customer_visible = current_user.role_id == RoleEnum.customer_user

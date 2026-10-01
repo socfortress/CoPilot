@@ -3,6 +3,7 @@ import type { PortalSeed } from "../support/e2e"
 /**
  * The alerts list (#1185): one request per mount or change, no debounce on clicks, and
  * an asset filter that searches the server instead of downloading every asset name.
+ * Only the latest load counts (#1192): a slower, superseded one never lands.
  */
 describe("alerts list", () => {
 	let seed: PortalSeed
@@ -78,5 +79,32 @@ describe("alerts list", () => {
 
 		cy.wait("@byAsset")
 		cy.get("[data-testid=alerts-table] tbody tr").should("have.length", 1)
+	})
+
+	it("shows only the latest filter's rows, and stops loading, when an earlier load is slower", () => {
+		const DELAY_MS = 3000
+		cy.intercept("GET", "**/api/incidents/db_operations/alerts?*").as("list")
+		cy.intercept("GET", "**/alerts/status/OPEN*", req => req.on("response", res => res.setDelay(DELAY_MS))).as("open")
+		cy.intercept("GET", "**/alerts/status/CLOSED*").as("closed")
+		cy.visit("/alerts")
+		cy.wait("@list")
+
+		cy.get("[data-testid=alerts-filter-key]").click()
+		cy.get(".n-base-select-option:visible").contains(/^statuses$/).click()
+		cy.get("[data-testid=alerts-filter-value]").click()
+		cy.get(".n-base-select-option:visible").contains(/^OPEN$/).click()
+		cy.get("[data-testid=alerts-table] .n-data-table-loading-wrapper").should("exist")
+		// Change our mind while OPEN is still loading.
+		cy.get("[data-testid=alerts-filter-value]").click()
+		cy.get(".n-base-select-option:visible").contains(/^CLOSED$/).click()
+
+		cy.wait("@closed")
+		cy.get("[data-testid=alerts-table] tbody tr").should("have.length", seed.alerts.a.closed)
+		cy.get("[data-testid=alerts-table] .n-data-table-loading-wrapper").should("not.exist")
+
+		// Past the moment the superseded OPEN response would have arrived: still CLOSED.
+		cy.wait(DELAY_MS + 500)
+		cy.get("[data-testid=alerts-table] tbody tr").should("have.length", seed.alerts.a.closed)
+		cy.get("[data-testid=alerts-table] .n-data-table-loading-wrapper").should("not.exist")
 	})
 })

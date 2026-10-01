@@ -4,15 +4,6 @@
 			<div class="user-info flex flex-wrap">
 				<div class="propic">
 					<n-avatar :size="100" :src="userPic" round :img-props="{ alt: 'avatar' }" />
-					<ImageCropper
-						v-if="propicEnabled"
-						v-slot="{ openCropper }"
-						shape="circle"
-						placeholder="Select your profile picture"
-						@crop="setCroppedImage"
-					>
-						<Icon :name="EditIcon" :size="16" class="edit" @click="openCropper()" />
-					</ImageCropper>
 				</div>
 				<div class="info flex grow flex-col justify-center">
 					<div class="name">
@@ -43,17 +34,6 @@
 						</div>
 					</div>
 				</div>
-				<div class="actions">
-					<ImageCropper
-						v-if="propicEnabled"
-						v-slot="{ openCropper }"
-						shape="circle"
-						placeholder="Select your profile picture"
-						@crop="setCroppedImage"
-					>
-						<n-button size="large" type="primary" @click="openCropper()">Edit profile image</n-button>
-					</ImageCropper>
-				</div>
 			</div>
 			<div class="section-selector">
 				<n-tabs v-model:value="tabActive">
@@ -79,20 +59,15 @@
 </template>
 
 <script lang="ts" setup>
-import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
-import { NAvatar, NButton, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
+import { NAvatar, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
 import { ref } from "vue"
 import ChangePasswordCard from "@/components/auth/ChangePasswordCard.vue"
 import TotpToggle from "@/components/auth/TotpToggle.vue"
 import Icon from "@/components/common/Icon.vue"
-import ImageCropper from "@/components/common/ImageCropper.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
 import { useAuthStore } from "@/stores/auth"
 
-const propicEnabled = false
-
 const RoleIcon = "carbon:user"
-const EditIcon = "carbon:edit"
 const CustomerCodeIcon = "carbon:hashtag"
 
 const tabActive = ref("settings")
@@ -101,12 +76,7 @@ const authStore = useAuthStore()
 const userRole = authStore.userRoleName
 const userName = authStore.userName
 const userCustomerCode = authStore.userCustomerCode
-const userPic = ref(authStore.userPic)
-
-function setCroppedImage(result: ImageCropperResult) {
-	const canvas = result.canvas as HTMLCanvasElement
-	userPic.value = canvas.toDataURL()
-}
+const userPic = authStore.userPic
 </script>
 
 <style lang="scss" scoped>
@@ -117,27 +87,9 @@ function setCroppedImage(result: ImageCropperResult) {
 			padding: 30px;
 			padding-bottom: 20px;
 			border-block-end: 1px solid var(--border-color);
-			container-type: inline-size;
 
 			.propic {
-				position: relative;
 				height: 100px;
-
-				.edit {
-					display: none;
-					align-items: center;
-					justify-content: center;
-					background-color: var(--primary-color);
-					color: var(--bg-default-color);
-					position: absolute;
-					width: 26px;
-					height: 26px;
-					border-radius: 50%;
-					top: -1px;
-					right: -1px;
-					border: 1px solid var(--bg-default-color);
-					cursor: pointer;
-				}
 			}
 			.info {
 				.name {
@@ -164,13 +116,6 @@ function setCroppedImage(result: ImageCropperResult) {
 				}
 			}
 
-			@container (max-width: 900px) {
-				.propic {
-					.edit {
-						display: flex;
-					}
-				}
-			}
 		}
 		.section-selector {
 			padding: 0px 30px;

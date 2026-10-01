@@ -55,7 +55,7 @@ pnpm format            # prettier --write src/
 pnpm lint-type-format  # combined preflight
 ```
 
-`pnpm test:unit` (vitest) exists only in `frontend/`; customer-portal has no test setup. Single file: `pnpm test:unit path/to/file.spec.ts`.
+`pnpm test:unit` (vitest) exists in both `frontend/` and `customer-portal/`. Single file: `pnpm test:unit path/to/file.spec.ts`.
 
 ### Pre-commit
 
@@ -398,8 +398,11 @@ Round-trips, not SQL complexity, are what these pages cost (see `app/connectors/
 - **The agents list is server-side**: `GET /customer_portal/agents` (page, filters, cards over the whole scope, filter options) and `/customer_portal/agents/export` (CSV of every filtered agent, ISO timestamps). `/agents` keeps returning the whole list for its other callers.
 - **Alert filter options skip the asset names** in the portal (`include_assets=false`); the asset filter searches `/incidents/db_operations/alerts/filter-options/assets`. Both go through `alert_visibility_filters_for_user` (the options endpoint carried a third copy of the visibility rules).
 - **Leaving a page aborts its reads** (`src/api/navigation-abort.ts`, the portal's copy of the analyst frontend's #1072): every GET joins the current route's `AbortSignal`, reset in the router's `beforeEach` on a path change (not a query change), and the backend's `ClientDisconnectMiddleware` stops the handler. Unlike the analyst frontend, a caller's own `signal` does not opt out — portal lists own a controller only to cancel a superseded load — so the request follows both. A navigation-cancelled request never settles (no toast, no update on a page that is gone). Never POST/PUT/DELETE. Mark `keepOnNavigation: true` on anything not page-scoped: branding, token refresh, the cached AI availability (an unsettled promise would sit in its cache), the report poller, downloads.
+- **A list's load goes through `composables/common/useLatestRequest.ts` (#1192)**: `run(signal => …, onError)` aborts the load still in flight, clears `loading` in a `finally` for the latest load only, ignores a superseded load's error and cancels on unmount. The lists used to clear `loading` inside `try`/`catch` and skip it on a cancellation, which could leave the spinner on. Don't hand-roll an `AbortController` in a list again.
+- **"Filter by key = value" is `components/common/KeyValueFilter.vue`**, used by the alerts and cases lists: the list passes `loadOptions`, and optionally a `searchKey` whose values are searched on the server (`search`) — the alerts' asset names.
+- **Asynchronous code is async/await**: `src/utils/__tests__/async-style.spec.ts` fails on any `.then(` in `src/`. Mind handlers passed to naive-ui components that await a returned promise (`n-popconfirm`'s `@positive-click` keeps the popup open until it settles): call an async function there without returning its promise, as `UnlinkCase.vue` does.
 - Watch the customer filter through `customerFilterStore.queryCustomerCodes`, without `deep`: the store replaces the array on every change. Keep it that way — mutating it in place would silently stop every shallow watcher (`cypress/e2e/customer-filter.cy.ts` catches it).
-- **Checks, from `customer-portal/`:** `pnpm test:unit` (Vitest, `src/**/__tests__/*.spec.ts`: `usePaginatedLoad`, the highlighter, the Overview mappers, the agents endpoints, navigation-scoped cancellation), `pnpm check:bundle` (production build must carry only the grammars declared in `utils/highlighter.ts`, no WebAssembly, every routed page except the login as its own lazy chunk, entry chunk within its gzip budget), `pnpm test:e2e` (Cypress, see `cypress/README.md`).
+- **Checks, from `customer-portal/`:** `pnpm test:unit` (Vitest, `src/**/__tests__/*.spec.ts`: `usePaginatedLoad`, `useLatestRequest`, `KeyValueFilter`, the highlighter, the Overview mappers, the agents endpoints, navigation-scoped cancellation, the async style), `pnpm check:bundle` (production build must carry only the grammars declared in `utils/highlighter.ts`, no WebAssembly, every routed page except the login as its own lazy chunk, entry chunk within its gzip budget), `pnpm test:e2e` (Cypress, see `cypress/README.md`).
 
 ### Tenant scoping: customer codes are not the only tenant key
 

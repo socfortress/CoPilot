@@ -38,11 +38,16 @@ from app.db.universal_models import AiAnalystReport  # noqa: E402
 from app.db.universal_models import CustomerPortalAiReportSettings  # noqa: E402
 from app.db.universal_models import CustomerPortalBranding  # noqa: E402
 from app.db.universal_models import Customers  # noqa: E402
+from app.db.universal_models import IncidentManagementCustomerReport  # noqa: E402
 from app.incidents.models import Alert  # noqa: E402
 from app.incidents.models import AlertContext  # noqa: E402
 from app.incidents.models import Asset  # noqa: E402
 from app.incidents.models import Case  # noqa: E402
 from app.incidents.models import CaseAlertLink  # noqa: E402
+from app.incidents.models import CaseComment  # noqa: E402
+from app.incidents.models import CaseDataStore  # noqa: E402
+from app.incidents.models import CaseEvent  # noqa: E402
+from app.incidents.models import CaseTask  # noqa: E402
 
 CUST_A, CUST_B = "E2E_OV_A", "E2E_OV_B"
 PORTAL_USER = "e2e_ov_portal"  # customer_user assigned to E2E_OV_A
@@ -56,6 +61,7 @@ ALERTS_B = ["OPEN", "OPEN", "CLOSED", "CLOSED"]
 CASES_A = ["OPEN", "OPEN", "CLOSED"]
 CASES_B = ["OPEN"]
 AGENTS_A = [("active", True, "Linux"), ("active", False, "Windows"), ("disconnected", False, "Linux")]  # (wazuh status, critical, os)
+REPORTS = {"A": 2, "B": 1}  # completed customer reports per customer (keys: CUST_A / CUST_B below)
 AGENTS_B = [("active", False, "Linux")]
 OFFLINE_STATUSES = ("disconnected", "never_connected")
 
@@ -93,7 +99,12 @@ async def cleanup(s):
     await s.execute(delete(AiAnalystJob).where(AiAnalystJob.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalAiReportSettings).where(CustomerPortalAiReportSettings.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalBranding).where(CustomerPortalBranding.customer_code.in_(codes)))
+    await s.execute(delete(IncidentManagementCustomerReport).where(IncidentManagementCustomerReport.customer_code.in_(codes)))
     await s.execute(delete(CaseAlertLink).where(CaseAlertLink.case_id.in_(case_ids)))
+    # Cases the browser specs create through the API (alert-cases.cy.ts) also get
+    # timeline events, and could get comments, tasks or files.
+    for child in (CaseEvent, CaseComment, CaseTask, CaseDataStore):
+        await s.execute(delete(child).where(child.case_id.in_(case_ids)))
     await s.execute(delete(Case).where(Case.customer_code.in_(codes)))
     await s.execute(delete(Asset).where(Asset.alert_linked.in_(alert_ids)))
     await s.execute(delete(Alert).where(Alert.customer_code.in_(codes)))
@@ -248,6 +259,22 @@ async def seed(quiet: bool = False) -> dict:
         await s.commit()
         portal = (await s.execute(select(User).where(User.username == PORTAL_USER))).scalars().first()
         s.add(UserCustomerAccess(user_id=portal.id, customer_code=CUST_A))
+        for code, count in ((CUST_A, REPORTS["A"]), (CUST_B, REPORTS["B"])):
+            for i in range(count):
+                s.add(
+                    IncidentManagementCustomerReport(
+                        report_name=f"{code} report {i}",
+                        customer_code=code,
+                        object_key=f"{code}/e2e-{i}.pdf",
+                        file_name=f"e2e-{i}.pdf",
+                        generated_at=NOW + datetime.timedelta(hours=i),
+                        generated_by=portal.id,
+                        generated_by_role="customer_user",
+                        date_from=NOW - datetime.timedelta(days=30),
+                        date_to=NOW,
+                        status="completed",
+                    ),
+                )
         await s.commit()
         if not quiet:
             print(f"seed: {CUST_A} and {CUST_B} with alerts, assets, cases, agents, AI reports; '{PORTAL_USER}' assigned to {CUST_A}")
@@ -272,6 +299,7 @@ def fixture() -> dict:
             "os_list": sorted({os_name for _, _, os_name in AGENTS_A}),
         },
         "ai_a": {"total_reports": 2, "severity_counts": {"High": 1, "Medium": 1}},
+        "reports": {"a": REPORTS["A"], "b": REPORTS["B"]},
     }
 
 

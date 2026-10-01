@@ -51,20 +51,16 @@ const loading = ref(false)
 const message = useMessage()
 const customerFilterStore = useCustomerFilterStore()
 
-function fetchStats() {
+async function fetchStats() {
 	loading.value = true
 
-	Api.portal
-		.alertsStats(customerFilterStore.queryCustomerCodes)
-		.then(res => {
-			stats.value = res.data
-		})
-		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError))
-		})
-		.finally(() => {
-			loading.value = false
-		})
+	try {
+		stats.value = (await Api.portal.alertsStats(customerFilterStore.queryCustomerCodes)).data
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError))
+	} finally {
+		loading.value = false
+	}
 }
 
 onBeforeMount(() => {
