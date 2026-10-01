@@ -90,6 +90,9 @@
 				<n-tab-pane name="rules" tab="Rules" display-directive="show:lazy">
 					<UbaRules :key="`r${customerModel}`" :customer-code="customerModel" />
 				</n-tab-pane>
+				<n-tab-pane name="directory" tab="Directory" display-directive="show:lazy">
+					<UbaDirectory :key="`d${customerModel}`" :customer-code="customerModel" />
+				</n-tab-pane>
 			</n-tabs>
 
 			<n-drawer :show="!!drawer" :width="720" class="max-w-[95vw]" @update:show="show => !show && closeDrawer()">
@@ -129,6 +132,7 @@ import { useRouteQueryParam } from "@/composables/useNavigation"
 import { useUbaAvailability } from "@/composables/useUbaAvailability"
 import UbaAlertDetail from "./UbaAlertDetail.vue"
 import UbaAlerts from "./UbaAlerts.vue"
+import UbaDirectory from "./UbaDirectory.vue"
 import UbaEntities from "./UbaEntities.vue"
 import UbaEntityDetail from "./UbaEntityDetail.vue"
 import UbaError from "./UbaError.vue"
@@ -136,7 +140,7 @@ import UbaRules from "./UbaRules.vue"
 import UbaSuppressions from "./UbaSuppressions.vue"
 import { formatLag } from "./utils"
 
-const TABS = ["entities", "alerts", "suppressions", "rules"] as const
+const TABS = ["entities", "alerts", "suppressions", "rules", "directory"] as const
 
 const route = useRoute()
 const router = useRouter()

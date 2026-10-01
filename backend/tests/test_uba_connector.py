@@ -181,6 +181,16 @@ def test_native_override_writes_are_admin_only():
     assert writes and all(r.dependencies == routes._ADMIN for r in writes)
 
 
+def test_identity_source_actions_are_admin_only_and_reads_are_not():
+    from app.connectors.uba.routes import uba as routes
+
+    by_path = {(r.path, tuple(r.methods)): r for r in routes.uba_router.routes}
+    actions = [r for (path, _), r in by_path.items() if path.startswith("/{customer_code}/identity-sources/{source_id}/")]
+    assert {r.path.rsplit("/", 1)[1] for r in actions} == {"test", "sync"}
+    assert all(r.dependencies == routes._ADMIN for r in actions)
+    assert by_path[("/{customer_code}/identity-sources", ("GET",))].dependencies == routes._READ
+
+
 def test_route_errors_carry_reason_not_auth_status():
     from app.connectors.uba.routes.uba import _error
 

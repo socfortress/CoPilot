@@ -70,8 +70,40 @@ export interface UbaIdentity {
 	privileged_reasons: string[]
 	shadow: boolean
 	tags: string[]
+	/** When UBA first saw the identity. */
 	created_at: string | null
+	/** Account state in the directory, when known (Entra/AD sync or account-change events). */
+	enabled?: boolean | null
+	account_created_at?: string | null
+	deleted_at?: string | null
+	/** Which source set an attribute, e.g. `{ enabled: "entra_audit" }`. */
+	attr_source?: Record<string, string>
 	aliases: UbaAlias[]
+	memberships?: UbaMembership[]
+}
+
+export interface UbaMembership {
+	group_name: string
+	group_id: string | null
+	/** entra (directory sync), entra_audit / windows_audit (account-change events), manual, ... */
+	source: string
+	privileged: boolean
+	/** When the membership was granted (event time), if known. */
+	since: string | null
+}
+
+export type UbaIdentitySourceStatus = "new" | "ok" | "error" | "queued" | "disabled"
+
+export interface UbaIdentitySource {
+	id: string
+	type: string
+	status: UbaIdentitySourceStatus
+	entra_tenant_id: string | null
+	client_id: string | null
+	every_s: number | null
+	last_sync: string | null
+	last_error: string | null
+	last_result: Record<string, number | boolean | string[]>
 }
 
 export interface UbaRiskPart {

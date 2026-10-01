@@ -56,3 +56,33 @@ export const FALSE_POSITIVE_REASONS = [
 	{ label: "Rule too sensitive", value: "RULE_TOO_SENSITIVE" },
 	{ label: "Other", value: "OTHER" }
 ]
+
+/** Where an identity attribute or membership came from, in words. */
+export const IDENTITY_SOURCE_LABELS: Record<string, string> = {
+	entra: "Entra ID (directory sync)",
+	entra_audit: "Entra audit log",
+	windows_audit: "Windows security log",
+	manual: "set manually",
+	ldap: "Active Directory (LDAP)",
+	observed: "seen in events"
+}
+
+export function identitySourceLabel(source: string | null | undefined): string {
+	if (!source) return "unknown source"
+	return IDENTITY_SOURCE_LABELS[source] ?? source
+}
+
+/**
+ * A privileged reason as stored by UBA (``<source>:<role|group>:<name>`` or ``observed:privileged_hint``)
+ * in words: what the identity holds and how UBA knows.
+ */
+export function privilegedReasonLabel(reason: string): { what: string; how: string } {
+	if (reason === "observed:privileged_hint") return { what: "Acted with admin rights", how: "seen in events" }
+	const [source, kind, ...rest] = reason.split(":")
+	const name = rest.join(":")
+	if (!name) return { what: reason, how: "" }
+	const holds = kind === "role" ? "role" : "group"
+	const where = source.startsWith("windows") ? "Windows" : source.startsWith("entra") ? "Entra" : ""
+	const how = source === "entra" ? "directory sync" : source.endsWith("_audit") ? "seen granted in the audit log" : identitySourceLabel(source)
+	return { what: name, how: `${[where, holds].filter(Boolean).join(" ")}, ${how}` }
+}

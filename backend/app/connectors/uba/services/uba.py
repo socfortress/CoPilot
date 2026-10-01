@@ -97,6 +97,20 @@ async def remove_suppressions(customer_code: str, entity_key: str, rule_id: Opti
     return UbaResponse(**await uba_request("DELETE", f"{_tenant(customer_code)}/suppressions", params=params, actor=actor))
 
 
+async def list_identity_sources(customer_code: str) -> UbaResponse:
+    return await _get(f"{_tenant(customer_code)}/identity-sources")
+
+
+async def test_identity_source(customer_code: str, source_id: str, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/identity-sources/{path_segment(source_id)}/test"
+    return UbaResponse(**await uba_request("POST", path, actor=actor))
+
+
+async def sync_identity_source(customer_code: str, source_id: str, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/identity-sources/{path_segment(source_id)}/sync"
+    return UbaResponse(**await uba_request("POST", path, actor=actor))
+
+
 async def get_rule_stats(customer_code: str, since: str) -> UbaResponse:
     return await _get(f"{_tenant(customer_code)}/rules/stats", {"since": since})
 
