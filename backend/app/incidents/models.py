@@ -218,6 +218,15 @@ class Case(SQLModel, table=True):
     notification_invoked_number: Optional[int] = Field(default=0, nullable=True)
     escalated: bool = Field(default=False, nullable=False)
 
+    # How serious this case is: Critical | High | Medium | Low | Informational (#1187).
+    #
+    # NULL means "not set by an analyst" — the case then takes the most severe of its
+    # linked alerts (see `soc_management.services.lifecycle.case_effective_severity`),
+    # so a case opened from a Critical alert is Critical without anyone choosing it.
+    # Setting it explicitly overrides that, in either direction. Drives the case's SLA
+    # targets, which is why changing it recomputes the case's due times.
+    severity: Optional[str] = Field(default=None, max_length=20, nullable=True, index=True)
+
     alerts: List["CaseAlertLink"] = Relationship(back_populates="case")
     data_store: List["CaseDataStore"] = Relationship(back_populates="case")
     comments: List["CaseComment"] = Relationship(back_populates="case")
@@ -517,7 +526,7 @@ class CaseEvent(SQLModel, table=True):
         nullable=False,
         index=True,
         description=(
-            "One of: case_created, case_status_changed, case_assigned, case_escalated, "
+            "One of: case_created, case_status_changed, case_assigned, case_escalated, case_severity_changed, "
             "alert_linked, alert_unlinked, comment_added, template_applied, "
             "task_added, task_status_changed, task_commented, task_assigned"
         ),
