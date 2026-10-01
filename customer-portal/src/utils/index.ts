@@ -333,11 +333,13 @@ export function getSeverityColor(severity: string | null): "error" | "warning" |
 	return map[severity.toLowerCase()] ?? "default"
 }
 
-export function getStatusColor(status: string | null): "error" | "warning" | "info" | "default" | "success" {
+export function getStatusColor(status: string | null): "error" | "warning" | "info" | "default" | "success" | "primary" {
 	if (!status) return "default"
 
-	const map: Record<string, "error" | "warning" | "info" | "default" | "success"> = {
+	const map: Record<string, "error" | "warning" | "info" | "default" | "success" | "primary"> = {
 		pending: "warning",
+		// The SOC waits on the customer: their move, in the brand colour (#1187).
+		pending_customer: "primary",
 		in_progress: "warning",
 		running: "info",
 		open: "info",

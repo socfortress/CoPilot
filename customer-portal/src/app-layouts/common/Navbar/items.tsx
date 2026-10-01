@@ -4,7 +4,12 @@ import { RouterLink } from "vue-router"
 import { ICONS } from "@/const"
 import { renderIcon } from "@/utils"
 
-export default function getItems(): MenuMixedOption[] {
+export interface NavbarFeatures {
+	/** The SLA page is on for one of the user's customers (#1187). */
+	sla?: boolean
+}
+
+export default function getItems({ sla = false }: NavbarFeatures = {}): MenuMixedOption[] {
 	const items: MenuMixedOption[] = [
 		{
 			label: () =>
@@ -105,6 +110,14 @@ export default function getItems(): MenuMixedOption[] {
 			icon: renderIcon(ICONS.processes)
 		}
 	]
+
+	if (sla) {
+		items.push({
+			label: () => h(RouterLink, { "to": { name: "Sla" }, "data-testid": "nav-sla" }, { default: () => "Service Levels" }),
+			key: "Sla",
+			icon: renderIcon(ICONS.sla)
+		})
+	}
 
 	return items
 }

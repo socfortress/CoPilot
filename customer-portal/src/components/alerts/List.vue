@@ -5,6 +5,7 @@
 				v-model:value="filters"
 				testid="alerts"
 				:load-options="loadFilterOptions"
+				:value-label="filterValueLabel"
 				:search-key="ASSETS_KEY"
 				:search="searchAssets"
 				class="w-auto!"
@@ -73,6 +74,7 @@ import type { ApiError, CommonResponse, Pagination } from "@/types/common"
 import { useElementSize } from "@vueuse/core"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, toRef, useTemplateRef } from "vue"
+import { useRoute } from "vue-router"
 import Api from "@/api"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
 import AlertStatusSelect from "@/components/alerts/AlertStatusSelect.vue"
@@ -85,6 +87,7 @@ import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
+import { filterValueLabel, statusFilterFromQuery } from "@/utils/workflowStatus"
 
 const message = useMessage()
 const { loading, run } = useLatestRequest()
@@ -107,10 +110,8 @@ const pagination = ref({
 // Filters. Asset names are not among the options (a large tenant has thousands): the
 // asset filter searches the server as the user types instead.
 const ASSETS_KEY = "assets"
-const filters = ref<KeyValueFilterModel>({
-	key: null,
-	value: null
-})
+// `?status=` (the SLA page's "waiting on you" link) opens the list already filtered.
+const filters = ref<KeyValueFilterModel>(statusFilterFromQuery(useRoute().query.status))
 
 async function loadFilterOptions(): Promise<Record<string, string[]>> {
 	const { sources, statuses, tags } = (await Api.alerts.getAlertsFilters()).data

@@ -7,6 +7,7 @@ import _capitalize from "lodash/capitalize"
 import _castArray from "lodash/castArray"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
+import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useReportGenerationStore } from "@/stores/reportGeneration"
 import { RouteRole } from "@/types/auth"
@@ -42,6 +43,8 @@ export const useAuthStore = defineStore("auth", {
 
 			useCustomerFilterStore().clear()
 			useReportGenerationStore().reset()
+			// The next user may see other customers, whose SLA page may be off.
+			useSlaAvailability().reset()
 			removePersistentSessionKey()
 		},
 		async login(payload: LoginPayload) {

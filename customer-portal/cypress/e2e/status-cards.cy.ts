@@ -18,19 +18,19 @@ describe("status cards", () => {
 	})
 
 	function expectCards(counts: PortalSeed["alerts"]["a"]) {
-		for (const key of ["total", "open", "in_progress", "closed"] as const) {
+		for (const key of ["total", "open", "in_progress", "pending_customer", "closed"] as const) {
 			cy.get(`[data-testid=stat-${key}] [data-testid=card-stats-value]`).should("have.text", String(counts[key]))
 		}
 	}
 
-	it("alerts: total, open, in progress, closed", () => {
+	it("alerts: total, open, in progress, waiting on you, closed", () => {
 		cy.intercept("GET", "**/api/customer_portal/dashboard/alert-stats*").as("stats")
 		cy.visit("/alerts")
 		cy.wait("@stats")
 		expectCards(seed.alerts.a)
 	})
 
-	it("cases: total, open, in progress, closed", () => {
+	it("cases: total, open, in progress, waiting on you, closed", () => {
 		cy.intercept("GET", "**/api/customer_portal/dashboard/case-stats*").as("stats")
 		cy.visit("/cases")
 		cy.wait("@stats")

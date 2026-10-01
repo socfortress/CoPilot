@@ -7,6 +7,7 @@ import caseTemplates from "./endpoints/caseTemplates"
 import portal from "./endpoints/portal"
 import reports from "./endpoints/reports"
 import siem from "./endpoints/siem"
+import sla from "./endpoints/sla"
 import totp from "./endpoints/totp"
 
 export default {
@@ -17,6 +18,7 @@ export default {
 	cases,
 	caseTemplates,
 	siem,
+	sla,
 	portal,
 	reports,
 	totp

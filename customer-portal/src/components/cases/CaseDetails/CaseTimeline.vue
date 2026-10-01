@@ -47,6 +47,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
+import { workflowStatusLabel } from "@/utils/workflowStatus"
 
 const props = defineProps<{
 	caseId: number
@@ -70,6 +71,10 @@ async function fetchTimeline() {
 	}
 }
 
+function statusText(status: string | null | undefined): string {
+	return status ? workflowStatusLabel(status) : "—"
+}
+
 function summary(event: CaseEvent): string {
 	const p = (event.payload || {}) as Record<string, any>
 	switch (event.event_type) {
@@ -77,8 +82,8 @@ function summary(event: CaseEvent): string {
 			return p.source === "from_alert" ? `Case created from alert #${p.alert_id}` : "Case created"
 		case "case_status_changed":
 			return p.forced
-				? `Status forced from ${p.from ?? "—"} to ${p.to} (mandatory tasks bypassed)`
-				: `Status changed from ${p.from ?? "—"} to ${p.to}`
+				? `Status forced from ${statusText(p.from)} to ${statusText(p.to)} (mandatory tasks bypassed)`
+				: `Status changed from ${statusText(p.from)} to ${statusText(p.to)}`
 		case "case_assigned":
 			return p.from
 				? `Reassigned from ${p.from} to ${p.to ?? "unassigned"}`
@@ -112,6 +117,7 @@ function timelineType(event: CaseEvent): "default" | "success" | "info" | "warni
 		case "template_applied":
 			return "info"
 		case "case_status_changed":
+			// Waiting on the customer reads as the in-between states do: the item is not done.
 			return p.to === "CLOSED" ? "success" : p.to === "OPEN" ? "info" : "warning"
 		case "task_status_changed":
 			return p.to_status === "DONE" ? "success" : p.to_status === "NOT_NECESSARY" ? "warning" : "default"

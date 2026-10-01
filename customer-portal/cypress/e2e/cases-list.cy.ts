@@ -39,7 +39,7 @@ describe("cases list", () => {
 		cy.get(".n-base-select-option:visible").contains(/^statuses$/).click()
 		cy.get("[data-testid=cases-filter-value]").click()
 		cy.get(".n-base-select-option:visible")
-			.contains(/^OPEN$/)
+			.contains(/^Open$/)
 			.then($option => {
 				clickedAt = Date.now()
 				$option.trigger("click")

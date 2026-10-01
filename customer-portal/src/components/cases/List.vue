@@ -5,6 +5,7 @@
 				v-model:value="filters"
 				testid="cases"
 				:load-options="loadFilterOptions"
+				:value-label="filterValueLabel"
 				class="w-auto!"
 				@loaded="handleFiltersLoaded"
 			/>
@@ -74,6 +75,7 @@ import type { ApiError, CommonResponse, Pagination } from "@/types/common"
 import { useElementSize } from "@vueuse/core"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, toRef, useTemplateRef } from "vue"
+import { useRoute } from "vue-router"
 import Api from "@/api"
 import CaseAssignedSelect from "@/components/cases/CaseAssignedSelect.vue"
 import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
@@ -88,6 +90,7 @@ import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
+import { filterValueLabel, statusFilterFromQuery } from "@/utils/workflowStatus"
 
 const message = useMessage()
 const { loading, run } = useLatestRequest()
@@ -109,10 +112,8 @@ const pagination = ref({
 })
 
 // Filters
-const filters = ref<KeyValueFilterModel>({
-	key: null,
-	value: null
-})
+// `?status=` (the SLA page's "waiting on you" link) opens the list already filtered.
+const filters = ref<KeyValueFilterModel>(statusFilterFromQuery(useRoute().query.status))
 
 async function loadFilterOptions(): Promise<Record<string, string[]>> {
 	const { assigned_to, statuses } = (await Api.cases.getCasesFilters()).data

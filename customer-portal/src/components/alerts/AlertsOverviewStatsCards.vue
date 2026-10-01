@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<div class="grid grid-cols-1 gap-6 @xl:grid-cols-2 @4xl:grid-cols-4">
+		<div class="grid grid-cols-1 gap-6 @xl:grid-cols-2 @4xl:grid-cols-3 @6xl:grid-cols-5">
 			<CardStats data-testid="stat-total" title="Total" :value="stats.total">
 				<template #icon>
 					<Icon :name="ICONS.alerts" :size="24" class="text-info" />
@@ -16,6 +16,12 @@
 			<CardStats data-testid="stat-in_progress" title="In Progress" :value="stats.in_progress">
 				<template #icon>
 					<Icon name="carbon:hourglass" :size="24" class="text-warning" />
+				</template>
+			</CardStats>
+
+			<CardStats data-testid="stat-pending_customer" title="Waiting on you" :value="stats.pending_customer">
+				<template #icon>
+					<Icon name="carbon:user-follow" :size="24" class="text-primary" />
 				</template>
 			</CardStats>
 
@@ -44,7 +50,8 @@ const stats = ref<AlertsStats>({
 	total: 0,
 	open: 0,
 	in_progress: 0,
-	closed: 0
+	closed: 0,
+	pending_customer: 0
 })
 
 const loading = ref(false)

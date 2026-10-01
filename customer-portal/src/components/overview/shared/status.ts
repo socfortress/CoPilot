@@ -1,4 +1,5 @@
 import { getStatusColor } from "@/utils"
+import { workflowStatusLabel } from "@/utils/workflowStatus"
 
 /** A theme colour name; `neutral` is the muted text colour. */
 export type StatusColor = "error" | "warning" | "success" | "info" | "primary" | "neutral"
@@ -62,7 +63,7 @@ export function severityColor(severity: string | null | undefined): StatusColor 
 	}
 }
 
-/** Alert / case status as shown in the activity lists: "IN_PROGRESS" → "in progress". */
+/** Alert / case status as shown in the activity lists: "IN_PROGRESS" → "in progress", "PENDING_CUSTOMER" → "waiting on you". */
 export function workflowStatus(status: string) {
-	return { label: status.replaceAll("_", " ").toLowerCase(), color: statusColor(status) }
+	return { label: workflowStatusLabel(status).toLowerCase(), color: statusColor(status) }
 }

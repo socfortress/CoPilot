@@ -7,6 +7,7 @@ export interface CasesListResponse {
 	open: number
 	in_progress: number
 	closed: number
+	pending_customer?: number
 }
 
 export interface Case {
@@ -50,4 +51,5 @@ export interface CaseDataStoreFile {
 	file_hash: string
 }
 
-export type CaseStatus = "OPEN" | "IN_PROGRESS" | "CLOSED"
+/** `PENDING_CUSTOMER`: the SOC is waiting on the customer; the SLA clocks are stopped (#1187). */
+export type CaseStatus = "OPEN" | "IN_PROGRESS" | "PENDING_CUSTOMER" | "CLOSED"

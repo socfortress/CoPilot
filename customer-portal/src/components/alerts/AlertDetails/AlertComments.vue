@@ -17,6 +17,7 @@
 			<n-form-item label="Add Comment" :show-feedback="false">
 				<n-input
 					v-model:value.trim="newComment"
+					data-testid="comment-input"
 					placeholder="Enter your comment..."
 					clearable
 					type="textarea"
@@ -25,7 +26,13 @@
 				/>
 			</n-form-item>
 			<div class="flex justify-end">
-				<n-button :disabled="!newComment?.trim()" :loading type="primary" @click="addComment">
+				<n-button
+					:disabled="!newComment?.trim()"
+					:loading
+					type="primary"
+					data-testid="comment-submit"
+					@click="addComment"
+				>
 					Add Comment
 				</n-button>
 			</div>
