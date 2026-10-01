@@ -7,6 +7,7 @@ import type {
 	CaseDataStore,
 	CasePayload,
 	CaseReportTemplateDataStore,
+	CaseSeverity,
 	CasesListResponse,
 	CaseStatus
 } from "@/types/incidentManagement/cases"
@@ -147,6 +148,13 @@ export default {
 			},
 			{ params: force ? { force: true } : {} }
 		)
+	},
+	/** Admin/analyst. ``null`` clears it, so the case follows its most severe linked alert (#1187). */
+	updateCaseSeverity(caseId: number, severity: CaseSeverity | null) {
+		return HttpClient.put<FlaskBaseResponse & { cases: Case[] }>(`/incidents/db_operations/case/severity`, {
+			case_id: caseId,
+			severity
+		})
 	},
 	updateCaseAssignedUser(caseId: number, user: string) {
 		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/case/assigned-to`, {

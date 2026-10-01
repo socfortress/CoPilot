@@ -97,6 +97,10 @@ function summary(event: CaseEvent): string {
 				: `Assigned to ${p.to ?? "unassigned"}`
 		case "case_escalated":
 			return p.escalated ? "Case escalated" : "Case de-escalated"
+		case "case_severity_changed":
+			return p.to
+				? `Severity set to ${p.to}${p.from ? ` (was ${p.from})` : ""}`
+				: `Severity follows the linked alerts${p.from ? ` (was ${p.from})` : ""}`
 		case "alert_linked":
 			return p.alert_ids ? `${p.alert_ids.length} alert(s) linked to case` : `Alert #${p.alert_id} linked`
 		case "alert_unlinked":
@@ -138,6 +142,8 @@ function timelineType(event: CaseEvent): "default" | "success" | "info" | "warni
 			return p.to_status === "DONE" ? "success" : p.to_status === "NOT_NECESSARY" ? "warning" : "default"
 		case "case_escalated":
 			return p.escalated ? "warning" : "default"
+		case "case_severity_changed":
+			return "warning"
 		case "alert_unlinked":
 			return "warning"
 		case "comment_added":
@@ -160,6 +166,8 @@ function iconFor(event: CaseEvent): string {
 			return "carbon:user-avatar-filled-alt"
 		case "case_escalated":
 			return "carbon:warning-alt"
+		case "case_severity_changed":
+			return "carbon:meter"
 		case "alert_linked":
 			return "carbon:link"
 		case "alert_unlinked":

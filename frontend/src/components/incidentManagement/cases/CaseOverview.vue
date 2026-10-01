@@ -91,7 +91,50 @@
 							</div>
 						</template>
 					</CardKV>
+
+					<CardKV :color="severityColor" size="lg" class="w-full grow" data-testid="case-severity-card">
+						<template #key>
+							<div class="flex items-center gap-2">
+								<Icon :name="SeverityIcon" />
+								<span>Severity</span>
+							</div>
+						</template>
+						<template #value>
+							<div class="flex">
+								<CaseSeveritySelect
+									v-slot="{ loading: loadingSeverity }"
+									:case-data
+									@updated="updateCase($event)"
+								>
+									<div
+										class="flex items-center gap-3"
+										:class="{
+											'cursor-not-allowed': loadingSeverity,
+											'cursor-pointer': !loadingSeverity
+										}"
+										data-testid="case-severity-value"
+									>
+										<span>{{ severityLabel }}</span>
+										<n-spin
+											:size="14"
+											:show="loadingSeverity"
+											content-class="flex flex-col justify-center"
+										>
+											<Icon :name="EditIcon" />
+										</n-spin>
+									</div>
+								</CaseSeveritySelect>
+							</div>
+						</template>
+					</CardKV>
 				</div>
+
+				<ItemSlaPanel
+					entity="case"
+					:item-id="caseData.id"
+					:refresh-key="slaRefreshKey"
+					@loaded="effectiveSeverity = $event?.severity ?? null"
+				/>
 
 				<CardKV>
 					<template #key>description</template>
@@ -155,11 +198,12 @@
 <script setup lang="ts">
 import type { Case } from "@/types/incidentManagement/cases"
 import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
-import { ref, toRefs, watch } from "vue"
+import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ItemSlaPanel from "@/components/socManagement/ItemSlaPanel.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
@@ -167,6 +211,7 @@ import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
 import CaseAssignUser from "./CaseAssignUser.vue"
 import CaseReportButton from "./CaseReportButton.vue"
+import CaseSeveritySelect from "./CaseSeveritySelect.vue"
 import CaseStatusSwitch from "./CaseStatusSwitch.vue"
 import { handleDeleteCase } from "./utils"
 
@@ -181,6 +226,13 @@ const { caseData, useFooterBackground = true } = toRefs(props)
 const TrashIcon = "carbon:trash-can"
 const LinkIcon = "carbon:launch"
 const EditIcon = "uil:edit-alt"
+const SeverityIcon = "carbon:warning-alt"
+const SEVERITY_COLORS: Record<string, "danger" | "warning" | "success" | undefined> = {
+	Critical: "danger",
+	High: "danger",
+	Medium: "warning",
+	Low: "success"
+}
 
 const { routeCustomer, routeUser } = useNavigation()
 const dialog = useDialog()
@@ -188,6 +240,23 @@ const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
 const loading = ref(false)
 const assignedUserId = ref<number | null>(null)
+/** The severity in force, from the SLA: the explicit one, or the most severe linked alert's. */
+const effectiveSeverity = ref<string | null>(null)
+const severityLabel = computed(() => {
+	if (caseData.value.severity) return caseData.value.severity
+	return effectiveSeverity.value ? `${effectiveSeverity.value} · from alerts` : "Follows alerts"
+})
+const severityColor = computed(() => SEVERITY_COLORS[caseData.value.severity ?? effectiveSeverity.value ?? ""])
+// Any change a person makes can stop or re-target an SLA clock (#1187): reload it after.
+const slaRefreshKey = computed(() =>
+	[
+		caseData.value.case_status,
+		caseData.value.assigned_to,
+		caseData.value.severity,
+		caseData.value.comments?.length,
+		caseData.value.alerts?.length
+	].join("|")
+)
 
 function resolveAssignedUserId(username: string | null) {
 	if (!username) {

@@ -131,6 +131,8 @@
 					</CardKV>
 				</div>
 
+				<ItemSlaPanel entity="alert" :item-id="alert.id" :refresh-key="slaRefreshKey" />
+
 				<CardKV>
 					<template #key>description</template>
 					<template #value>
@@ -249,6 +251,7 @@ import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ItemSlaPanel from "@/components/socManagement/ItemSlaPanel.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
@@ -293,6 +296,16 @@ const loading = ref(false)
 const investigating = ref(false)
 const assignedUserId = ref<number | null>(null)
 const linkedCases = computed(() => alert.value.linked_cases)
+// Any change a person makes can stop an SLA clock (#1187): reload the clocks after it.
+const slaRefreshKey = computed(() =>
+	[
+		alert.value.status,
+		alert.value.assigned_to,
+		alert.value.verdict,
+		alert.value.comments?.length,
+		linkedCases.value?.length
+	].join("|")
+)
 const isSigmaAlert = computed(() => alert.value.tags.some(o => o.tag === "sigma-alert"))
 
 function resolveAssignedUserId(username: string | null) {

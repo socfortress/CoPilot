@@ -12,6 +12,7 @@ export type CaseEventType =
 	| "case_status_changed"
 	| "case_assigned"
 	| "case_escalated"
+	| "case_severity_changed"
 	| "alert_linked"
 	| "alert_unlinked"
 	| "comment_added"
