@@ -1,6 +1,8 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	AttentionItem,
+	CalendarPayload,
+	CalendarResponse,
 	ItemSla,
 	PolicyMatrix,
 	PolicyOverride,
@@ -100,6 +102,23 @@ export default {
 	deletePolicyOverride(customerCode: string, applyToOpen = false) {
 		return HttpClient.delete<FlaskBaseResponse & { policy: PolicyMatrix; retargeted: number }>(
 			`/soc_management/policies/${encodeURIComponent(customerCode)}`,
+			{ params: applyToOpen ? { apply_to_open: true } : {} }
+		)
+	},
+	getCalendar(customerCode: string | null, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & CalendarResponse>("/soc_management/calendars", {
+			params: customerCode ? { customer_code: customerCode } : {},
+			signal
+		})
+	},
+	/** Admin only. Replaces the calendar of a scope (global when no customer). */
+	saveCalendar(payload: CalendarPayload) {
+		return HttpClient.put<FlaskBaseResponse & CalendarResponse>("/soc_management/calendars", payload)
+	},
+	/** Admin only. The customer follows the global calendar again. */
+	deleteCalendar(customerCode: string, applyToOpen = false) {
+		return HttpClient.delete<FlaskBaseResponse & CalendarResponse>(
+			`/soc_management/calendars/${encodeURIComponent(customerCode)}`,
 			{ params: applyToOpen ? { apply_to_open: true } : {} }
 		)
 	},

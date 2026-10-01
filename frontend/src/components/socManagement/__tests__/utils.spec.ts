@@ -116,9 +116,30 @@ describe("policy editor helpers", () => {
 	const matrix: PolicyMatrix = {
 		customer_code: "ACME",
 		cells: [
-			{ entity: "alert", severity: "High", ack_minutes: 10, resolve_minutes: 60, source: "customer" },
-			{ entity: "alert", severity: "Low", ack_minutes: 480, resolve_minutes: 4320, source: "global" },
-			{ entity: "case", severity: "Low", ack_minutes: 1440, resolve_minutes: 20160, source: "default" }
+			{
+				entity: "alert",
+				severity: "High",
+				ack_minutes: 10,
+				resolve_minutes: 60,
+				business_hours: true,
+				source: "customer"
+			},
+			{
+				entity: "alert",
+				severity: "Low",
+				ack_minutes: 480,
+				resolve_minutes: 4320,
+				business_hours: true,
+				source: "global"
+			},
+			{
+				entity: "case",
+				severity: "Low",
+				ack_minutes: 1440,
+				resolve_minutes: 20160,
+				business_hours: false,
+				source: "default"
+			}
 		]
 	}
 
@@ -142,9 +163,10 @@ describe("policy editor helpers", () => {
 			severity: "Low",
 			inherit: true,
 			ack_minutes: null,
-			resolve_minutes: null
+			resolve_minutes: null,
+			business_hours: false
 		})
-		expect(payload.cells[0].ack_minutes).toBe(10)
+		expect(payload.cells[0]).toMatchObject({ ack_minutes: 10, business_hours: true })
 	})
 
 	it("is dirty only when what would be stored changes", () => {
@@ -158,10 +180,13 @@ describe("policy editor helpers", () => {
 		const overridden = toEditableCells(matrix)
 		overridden[2].inherit = false
 		expect(isPolicyDirty(overridden, original)).toBe(true)
+		const rebased = toEditableCells(matrix)
+		rebased[0].business_hours = false // same minutes, now counted 24/7
+		expect(isPolicyDirty(rebased, original)).toBe(true)
 	})
 
 	it("flags the cells the backend would reject", () => {
-		const base = { entity: "alert" as const, severity: "High" as const, inherit: false }
+		const base = { entity: "alert" as const, severity: "High" as const, inherit: false, business_hours: false }
 		expect(cellError({ ...base, ack_minutes: 600, resolve_minutes: 60 })).toMatch(/longer than the resolution/)
 		expect(cellError({ ...base, ack_minutes: 0, resolve_minutes: 60 })).toMatch(/above zero/)
 		expect(cellError({ ...base, ack_minutes: 1.5, resolve_minutes: 60 })).toMatch(/whole minutes/)

@@ -3,7 +3,7 @@
 // nothing to divide by — "no data" must never render as 0%.
 
 export type SlaEntity = "alert" | "case"
-export type SlaState = "met" | "breached" | "at_risk" | "on_track" | "not_tracked"
+export type SlaState = "met" | "breached" | "at_risk" | "on_track" | "paused" | "not_tracked"
 export type TargetSource = "customer" | "global" | "default"
 export type SocBucket = "hour" | "day" | "week" | "month"
 export type Severity = "Critical" | "High" | "Medium" | "Low" | "Informational"
@@ -20,6 +20,7 @@ export interface Compliance {
 	breached: number
 	at_risk: number
 	on_track: number
+	paused: number
 	not_tracked: number
 	decided: number
 	rate: number | null
@@ -141,6 +142,8 @@ export interface Workload {
 	oldest_unassigned_at: string | null
 	breached: number
 	at_risk: number
+	/** Open items waiting on the customer (PENDING_CUSTOMER): their clocks are stopped. */
+	waiting_on_customer: number
 	by_severity: SeverityLoad[]
 	by_assignee: AssigneeLoad[]
 }
@@ -167,6 +170,8 @@ export interface PolicyCell {
 	severity: Severity
 	ack_minutes: number | null
 	resolve_minutes: number | null
+	/** The targets count business hours of the customer's calendar, not wall-clock time. */
+	business_hours: boolean
 	source: TargetSource
 }
 
@@ -181,6 +186,7 @@ export interface PolicyCellInput {
 	inherit: boolean
 	ack_minutes: number | null
 	resolve_minutes: number | null
+	business_hours: boolean
 }
 
 export interface PolicyUpdatePayload {
@@ -245,5 +251,41 @@ export interface ItemSla {
 	resolve: SlaClock
 	first_assigned_at: string | null
 	reopen_count: number
+	/** The targets count business hours of the calendar in ``calendar_timezone``. */
+	business_hours: boolean
+	calendar_timezone: string | null
+	/** Set while the item waits on the customer; both clocks are stopped. */
+	paused_at: string | null
+	/** Time spent waiting on the customer so far, the current wait included (seconds). */
+	paused_seconds: number
 	generated_at: string
+}
+
+// ── business-hours calendars ─────────────────────────────────────────────────
+
+export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun"
+/** ``["09:00", "17:00"]`` — local time in the calendar's timezone. */
+export type WorkingWindow = [string, string]
+export type CalendarSource = "customer" | "global" | "default"
+
+export interface BusinessCalendar {
+	customer_code: string | null
+	source: CalendarSource
+	timezone: string
+	week: Record<Weekday, WorkingWindow[]>
+	holidays: string[]
+}
+
+export interface CalendarPayload {
+	customer_code: string | null
+	timezone: string
+	week: Partial<Record<Weekday, WorkingWindow[]>>
+	holidays: string[]
+	apply_to_open: boolean
+}
+
+export interface CalendarResponse {
+	calendar: BusinessCalendar
+	customers_with_calendar: string[]
+	retargeted: number
 }

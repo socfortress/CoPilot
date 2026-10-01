@@ -18,79 +18,101 @@
 						<span class="truncate">{{ option.label }}</span>
 						<span v-if="option.code" class="text-tertiary text-2xs font-mono">{{ option.code }}</span>
 					</span>
-					<n-tag v-if="option.overrides" size="tiny" type="warning" :bordered="false" round>
-						{{ option.overrides }} override{{ option.overrides === 1 ? "" : "s" }}
-					</n-tag>
+					<span class="flex shrink-0 items-center gap-1">
+						<n-tooltip v-if="option.code && calendars.has(option.code)">
+							<template #trigger>
+								<Icon
+									name="carbon:calendar"
+									:size="13"
+									class="text-tertiary"
+									:data-testid="`policy-scope-calendar-${option.key}`"
+								/>
+							</template>
+							Has its own business hours
+						</n-tooltip>
+						<n-tag v-if="option.overrides" size="tiny" type="warning" :bordered="false" round>
+							{{ option.overrides }} override{{ option.overrides === 1 ? "" : "s" }}
+						</n-tag>
+					</span>
 				</button>
 			</nav>
 		</SocPanel>
 
-		<SocPanel :title="scope ? `${scopeName} — overrides` : 'Global policy'" :caption="scopeCaption">
-			<template #actions>
-				<n-popconfirm v-if="isAdmin && scope && hasOverride" @positive-click="removeOverride">
-					<template #trigger>
-						<n-button
-							size="tiny"
-							quaternary
-							type="error"
-							:loading="removing"
-							data-testid="policy-remove-override"
-						>
-							<template #icon><Icon name="carbon:reset" /></template>
-							Follow global
-						</n-button>
-					</template>
-					Remove every override of {{ scope }}? It will follow the global policy again.
-				</n-popconfirm>
-			</template>
-
-			<n-alert v-if="!isAdmin" type="info" :bordered="false" class="mb-4" data-testid="policy-readonly">
-				SLA targets are a commitment to customers: only administrators can change them.
-			</n-alert>
-			<n-alert v-if="loadError" type="error" :bordered="false" class="mb-4">
-				Could not load the policy: {{ loadError }}
-			</n-alert>
-
-			<n-spin :show="loading">
-				<PolicyMatrixEditor
-					v-model="cells"
-					:original
-					:scope="scope ? 'customer' : 'global'"
-					:readonly="!isAdmin"
-				/>
-			</n-spin>
-
-			<footer
-				v-if="isAdmin"
-				class="border-default mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4"
-			>
-				<label class="flex items-center gap-2 text-sm">
-					<n-switch v-model:value="applyToOpen" size="small" data-testid="policy-apply-open" />
-					<span>Apply to items still open</span>
-					<n-tooltip style="max-width: 320px">
+		<div class="flex min-w-0 flex-col gap-4">
+			<SocPanel :title="scope ? `${scopeName} — overrides` : 'Global policy'" :caption="scopeCaption">
+				<template #actions>
+					<n-popconfirm v-if="isAdmin && scope && hasOverride" @positive-click="removeOverride">
 						<template #trigger>
-							<Icon name="carbon:information" :size="14" class="text-tertiary" />
+							<n-button
+								size="tiny"
+								quaternary
+								type="error"
+								:loading="removing"
+								data-testid="policy-remove-override"
+							>
+								<template #icon><Icon name="carbon:reset" /></template>
+								Follow global
+							</n-button>
 						</template>
-						Open items keep the targets they opened with unless you ask. Clocks already met or breached
-						never change.
-					</n-tooltip>
-				</label>
-				<div class="flex items-center gap-2">
-					<n-button size="small" :disabled="!dirty || saving" @click="discard">Discard</n-button>
-					<n-button
-						size="small"
-						type="primary"
-						:disabled="!dirty || hasErrors"
-						:loading="saving"
-						data-testid="policy-save"
-						@click="save"
-					>
-						<template #icon><Icon name="carbon:save" /></template>
-						Save {{ scope ? "overrides" : "policy" }}
-					</n-button>
-				</div>
-			</footer>
-		</SocPanel>
+						Remove every override of {{ scope }}? It will follow the global policy again.
+					</n-popconfirm>
+				</template>
+
+				<n-alert v-if="!isAdmin" type="info" :bordered="false" class="mb-4" data-testid="policy-readonly">
+					SLA targets are a commitment to customers: only administrators can change them.
+				</n-alert>
+				<n-alert v-if="loadError" type="error" :bordered="false" class="mb-4">
+					Could not load the policy: {{ loadError }}
+				</n-alert>
+
+				<n-spin :show="loading">
+					<PolicyMatrixEditor
+						v-model="cells"
+						:original
+						:scope="scope ? 'customer' : 'global'"
+						:readonly="!isAdmin"
+					/>
+				</n-spin>
+
+				<footer
+					v-if="isAdmin"
+					class="border-default mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4"
+				>
+					<label class="flex items-center gap-2 text-sm">
+						<n-switch v-model:value="applyToOpen" size="small" data-testid="policy-apply-open" />
+						<span>Apply to items still open</span>
+						<n-tooltip style="max-width: 320px">
+							<template #trigger>
+								<Icon name="carbon:information" :size="14" class="text-tertiary" />
+							</template>
+							Open items keep the targets they opened with unless you ask. Clocks already met or breached
+							never change.
+						</n-tooltip>
+					</label>
+					<div class="flex items-center gap-2">
+						<n-button size="small" :disabled="!dirty || saving" @click="discard">Discard</n-button>
+						<n-button
+							size="small"
+							type="primary"
+							:disabled="!dirty || hasErrors"
+							:loading="saving"
+							data-testid="policy-save"
+							@click="save"
+						>
+							<template #icon><Icon name="carbon:save" /></template>
+							Save {{ scope ? "overrides" : "policy" }}
+						</n-button>
+					</div>
+				</footer>
+			</SocPanel>
+
+			<CalendarPanel
+				:scope
+				:scope-name
+				:is-admin
+				@changed="codes => (calendars = new Set(codes))"
+			/>
+		</div>
 	</div>
 </template>
 
@@ -103,6 +125,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useCustomerOptions } from "@/composables/useCustomerOptions"
 import { useAuthStore } from "@/stores/auth"
+import CalendarPanel from "../policies/CalendarPanel.vue"
 import PolicyMatrixEditor from "../policies/PolicyMatrixEditor.vue"
 import SocPanel from "../ui/SocPanel.vue"
 import { buildPolicyPayload, cellError, isPolicyDirty, toEditableCells } from "../utils"
@@ -116,6 +139,8 @@ const { options: customerOptions, load: loadCustomers } = useCustomerOptions()
 const scope = shallowRef<string | null>(null)
 const search = shallowRef("")
 const overrides = shallowRef<PolicyOverride[]>([])
+/** Customers with business hours of their own, for the scope markers. */
+const calendars = shallowRef(new Set<string>())
 const original = shallowRef<EditablePolicyCell[]>([])
 const cells = shallowRef<EditablePolicyCell[]>([])
 const applyToOpen = shallowRef(false)

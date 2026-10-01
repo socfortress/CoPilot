@@ -1,8 +1,8 @@
 import type { BrowserContext, Page, Route } from "@playwright/test"
-import type { PolicyUpdatePayload, SocDashboard } from "../src/types/soc-management"
+import type { CalendarPayload, PolicyUpdatePayload, SocDashboard } from "../src/types/soc-management"
 import { expect, test } from "@playwright/test"
 import { installMockBackend, mintToken, signIn } from "./mock-backend"
-import { dashboard, POLICY } from "./soc-management-fixtures"
+import { CALENDAR, dashboard, POLICY } from "./soc-management-fixtures"
 
 /**
  * SOC Management (#1187) — the page's own behaviour, against a fixed snapshot.
@@ -17,13 +17,14 @@ import { dashboard, POLICY } from "./soc-management-fixtures"
 interface Mock {
 	dashboardRequests: URL[]
 	policySaves: PolicyUpdatePayload[]
+	calendarSaves: CalendarPayload[]
 }
 
 async function installSocMock(
 	context: BrowserContext,
 	options: { snapshot?: SocDashboard; dashboardStatus?: number; role?: "admin" | "analyst" } = {}
 ): Promise<Mock> {
-	const mock: Mock = { dashboardRequests: [], policySaves: [] }
+	const mock: Mock = { dashboardRequests: [], policySaves: [], calendarSaves: [] }
 	const json = (route: Route, body: unknown, status = 200) =>
 		route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) })
 
@@ -63,6 +64,30 @@ async function installSocMock(
 			if (path === "/soc_management/policies" && method === "PUT") {
 				mock.policySaves.push(route.request().postDataJSON() as PolicyUpdatePayload)
 				return json(route, { success: true, message: "Saved the global policy", policy: POLICY, retargeted: 0 })
+			}
+			if (path === "/soc_management/calendars" && method === "GET") {
+				return json(route, {
+					success: true,
+					message: "",
+					calendar: CALENDAR,
+					customers_with_calendar: [],
+					retargeted: 0
+				})
+			}
+			if (path === "/soc_management/calendars" && method === "PUT") {
+				const payload = route.request().postDataJSON() as CalendarPayload
+				mock.calendarSaves.push(payload)
+				return json(route, {
+					success: true,
+					message: "Saved the global calendar",
+					calendar: {
+						...CALENDAR,
+						...payload,
+						week: { ...CALENDAR.week, sat: [], sun: [], ...payload.week }
+					},
+					customers_with_calendar: [],
+					retargeted: 0
+				})
 			}
 			if (path === "/incidents/db_operations/configured/sources") {
 				return json(route, { success: true, message: "", sources: ["wazuh", "office365"] })
@@ -172,11 +197,47 @@ test.describe("as an admin", () => {
 			severity: "Critical",
 			inherit: false,
 			ack_minutes: 10,
-			resolve_minutes: 240
+			resolve_minutes: 240,
+			business_hours: false
 		})
 		// A cell the global policy already stores stays stored; the rest inherit the defaults.
 		expect(payload.cells.find(c => c.entity === "alert" && c.severity === "High")?.inherit).toBe(false)
 		expect(payload.cells.filter(c => c.inherit)).toHaveLength(8)
+	})
+
+	test("a cell can count business hours, and the calendar it counts on is edited below", async ({ page }) => {
+		await open(page, "?tab=policies")
+		await page.getByTestId("policy-own-alert-Critical").click()
+		await page.getByTestId("policy-hours-alert-Critical").click()
+		await page.getByTestId("policy-save").click()
+		await expect.poll(() => mock.policySaves.length).toBe(1)
+		expect(mock.policySaves[0].cells.find(c => c.entity === "alert" && c.severity === "Critical")).toMatchObject({
+			inherit: false,
+			business_hours: true
+		})
+
+		const calendar = page.getByTestId("calendar-panel")
+		await expect(calendar.getByTestId("calendar-source")).toHaveText("Global calendar")
+		await expect(calendar.getByTestId("calendar-weekly-hours")).toContainText("40 working hours")
+		await calendar.getByTestId("calendar-open-sat").click()
+		await expect(calendar.getByTestId("calendar-weekly-hours")).toContainText("48 working hours")
+		await calendar.getByTestId("calendar-holiday-2026-12-25").locator(".n-tag__close").click()
+		await calendar.getByTestId("calendar-save").click()
+
+		await expect.poll(() => mock.calendarSaves.length).toBe(1)
+		expect(mock.calendarSaves[0]).toMatchObject({
+			customer_code: null,
+			timezone: "Europe/Rome",
+			holidays: [],
+			apply_to_open: false
+		})
+		expect(mock.calendarSaves[0].week.sat).toEqual([["09:00", "17:00"]])
+		expect(mock.calendarSaves[0].week.sun).toBeUndefined()
+	})
+
+	test("the workload counts what waits on the customer", async ({ page }) => {
+		await open(page, "?tab=workload")
+		await expect(page.getByTestId("kpi-waiting").getByTestId("kpi-value")).toHaveText("4")
 	})
 })
 
@@ -208,5 +269,7 @@ test.describe("when things go wrong, or the viewer is an analyst", () => {
 		await page.getByTestId("soc-tab-policies").click()
 		await expect(page.getByTestId("policy-readonly")).toBeVisible()
 		await expect(page.getByTestId("policy-save")).toHaveCount(0)
+		await expect(page.getByTestId("calendar-panel")).toBeVisible()
+		await expect(page.getByTestId("calendar-save")).toHaveCount(0)
 	})
 })

@@ -18,6 +18,8 @@ import { apiAs, signIn, signOut } from "./fixtures/auth"
  * - a human action through the incidents API stops an SLA clock, and the alert page
  *   shows it;
  * - a case's severity can be set from its page and re-targets its clock;
+ * - a customer's business hours are an admin's to set, and persist;
+ * - an alert waiting on the customer shows its clocks stopped, and the wait afterwards;
  * - the PDF report downloads.
  *
  * The seeded rows are left in place, like the rest of this suite's seed: the script is
@@ -127,6 +129,32 @@ test.describe("an admin", () => {
 		expect(after.policy.cells.filter((c: { source: string }) => c.source === "customer")).toEqual([])
 	})
 
+	test("sets a customer's business hours, which persist until it follows the global ones again", async ({
+		page
+	}) => {
+		const code = seed.override_customer
+		await page.goto("/soc-management?tab=policies")
+		await page.getByTestId(`policy-scope-${code}`).click()
+		const calendar = page.getByTestId("calendar-panel")
+		await expect(calendar.getByTestId("calendar-source")).not.toHaveText("Customer calendar")
+
+		await calendar.getByTestId("calendar-open-sat").click()
+		await calendar.getByTestId("calendar-save").click()
+		await expect(page.getByText(`Saved customer ${code}`)).toBeVisible()
+		await expect(calendar.getByTestId("calendar-source")).toHaveText("Customer calendar")
+		await expect(page.getByTestId(`policy-scope-calendar-${code}`)).toBeVisible()
+
+		const stored = await (await apiAs(seed.admin, `/soc_management/calendars?customer_code=${code}`)).json()
+		expect(stored.calendar).toMatchObject({ source: "customer" })
+		expect(stored.calendar.week.sat).toEqual([["09:00", "17:00"]])
+
+		await calendar.getByTestId("calendar-remove").click()
+		await page.getByRole("button", { name: "Confirm" }).click()
+		await expect(calendar.getByTestId("calendar-source")).not.toHaveText("Customer calendar")
+		const after = await (await apiAs(seed.admin, `/soc_management/calendars?customer_code=${code}`)).json()
+		expect(after.calendar.source).not.toBe("customer")
+	})
+
 	test("sets a case's severity from its page, which re-targets its clock", async ({ page }) => {
 		const caseId = seed.ids.case[seed.scoped_customer] ?? Object.values(seed.ids.case)[0]
 		await page.goto(`/incident-management/cases/${caseId}`)
@@ -209,5 +237,27 @@ test.describe("an analyst assigned to one customer", () => {
 		await expect(page.getByTestId("item-sla-ack")).toContainText(seed.scoped_analyst, { timeout: 30_000 })
 		const sla = await (await apiAs(seed.scoped_analyst, `/soc_management/items/alert/${alertId}/sla`)).json()
 		expect(sla.ack).toMatchObject({ by: seed.scoped_analyst, action: "status_changed" })
+	})
+
+	test("puts an alert on hold for the customer: its clocks stop, and the wait is shown after", async ({ page }) => {
+		const alertId = seed.ids.unacked_open_alert[seed.scoped_customer]
+		const setStatus = (status: string) =>
+			apiAs(seed.scoped_analyst, "/incidents/db_operations/alert/status", {
+				method: "PUT",
+				body: JSON.stringify({ alert_id: alertId, status })
+			})
+
+		expect((await setStatus("PENDING_CUSTOMER")).ok).toBe(true)
+		await page.goto(`/incident-management/alerts/${alertId}`)
+		await expect(page.getByTestId("item-sla-paused")).toBeVisible({ timeout: 30_000 })
+		await expect(page.getByTestId("item-sla-resolve")).toContainText("Waiting on customer")
+		const paused = await (await apiAs(seed.scoped_analyst, `/soc_management/items/alert/${alertId}/sla`)).json()
+		expect(paused.resolve.state).toBe("paused")
+
+		await page.waitForTimeout(1_100) // a whole second of waiting, so the wait is visible
+		expect((await setStatus("IN_PROGRESS")).ok).toBe(true)
+		await page.reload()
+		await expect(page.getByTestId("item-sla-paused")).toHaveCount(0, { timeout: 30_000 })
+		await expect(page.getByTestId("item-sla-waited")).toBeVisible()
 	})
 })

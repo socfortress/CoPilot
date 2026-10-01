@@ -10,6 +10,7 @@
 							<th class="px-3 py-2 font-medium">Value</th>
 							<th class="px-3 py-2 font-medium">Respond within</th>
 							<th class="px-3 py-2 font-medium">Resolve within</th>
+							<th class="px-3 py-2 font-medium">Counted in</th>
 							<th class="px-3 py-2 font-medium" />
 						</tr>
 					</thead>
@@ -54,6 +55,19 @@
 									@update:model-value="value => update(cell, { resolve_minutes: value })"
 								/>
 							</td>
+							<td class="px-3 py-2">
+								<n-switch
+									:value="shown(cell).business_hours"
+									size="small"
+									:disabled="readonly || cell.inherit"
+									:aria-label="`${entity} ${cell.severity} counts business hours`"
+									:data-testid="`policy-hours-${entity}-${cell.severity}`"
+									@update:value="hours => update(cell, { business_hours: hours })"
+								>
+									<template #checked>Business hours</template>
+									<template #unchecked>24/7</template>
+								</n-switch>
+							</td>
 							<td class="px-3 py-2 text-xs">
 								<span
 									v-if="cellError(cell)"
@@ -73,7 +87,8 @@
 </template>
 
 <script setup lang="ts">
-// The SLA matrix of one scope: entity × severity → (respond within, resolve within).
+// The SLA matrix of one scope: entity × severity → (respond within, resolve within,
+// counted 24/7 or in the customer's business hours).
 // Each cell either has a value of its own in this scope or follows the next scope out
 // (customer → global → built-in default). An inheriting cell shows the value it follows
 // when that is known; one switched to inherit in this session shows it after saving.
@@ -117,11 +132,12 @@ function originalOf(cell: EditablePolicyCell) {
 
 /** What the inputs show: own values, or — while inheriting — the inherited ones if known. */
 function shown(cell: EditablePolicyCell) {
-	if (!cell.inherit) return { ack_minutes: cell.ack_minutes, resolve_minutes: cell.resolve_minutes, known: true }
-	const before = originalOf(cell)
-	if (before?.inherit)
-		return { ack_minutes: before.ack_minutes, resolve_minutes: before.resolve_minutes, known: true }
-	return { ack_minutes: null, resolve_minutes: null, known: false }
+	const source = cell.inherit ? originalOf(cell) : cell
+	if (source && (!cell.inherit || source.inherit)) {
+		const { ack_minutes, resolve_minutes, business_hours } = source
+		return { ack_minutes, resolve_minutes, business_hours, known: true }
+	}
+	return { ack_minutes: null, resolve_minutes: null, business_hours: false, known: false }
 }
 
 function replace(target: EditablePolicyCell, patch: Partial<EditablePolicyCell>) {
@@ -137,12 +153,20 @@ function setOwn(cell: EditablePolicyCell, own: boolean) {
 	replace(
 		cell,
 		own
-			? { inherit: false, ack_minutes: start.ack_minutes, resolve_minutes: start.resolve_minutes }
+			? {
+					inherit: false,
+					ack_minutes: start.ack_minutes,
+					resolve_minutes: start.resolve_minutes,
+					business_hours: start.business_hours
+				}
 			: { inherit: true }
 	)
 }
 
-function update(cell: EditablePolicyCell, patch: Pick<Partial<EditablePolicyCell>, "ack_minutes" | "resolve_minutes">) {
+function update(
+	cell: EditablePolicyCell,
+	patch: Pick<Partial<EditablePolicyCell>, "ack_minutes" | "resolve_minutes" | "business_hours">
+) {
 	replace(cell, patch)
 }
 </script>

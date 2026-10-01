@@ -1,7 +1,7 @@
 <template>
 	<div class="flex flex-col gap-4" data-testid="soc-workload">
 		<div
-			class="bg-border border-default grid grid-cols-1 gap-px overflow-hidden rounded-lg border sm:grid-cols-2 xl:grid-cols-4"
+			class="bg-border border-default grid grid-cols-1 gap-px overflow-hidden rounded-lg border sm:grid-cols-2 xl:grid-cols-5"
 		>
 			<KpiTile
 				label="Open now"
@@ -25,6 +25,13 @@
 				:value="formatCount(workload.breached)"
 				:tone="workload.breached ? 'bad' : 'good'"
 				hint="a running clock ran out"
+			/>
+			<KpiTile
+				label="Waiting on customer"
+				:value="formatCount(workload.waiting_on_customer)"
+				hint="clocks stopped until they reply"
+				help="Open items set to Waiting on customer. Their SLA clocks are stopped, and the customer's reply hands them back to the SOC."
+				test-id="kpi-waiting"
 			/>
 		</div>
 

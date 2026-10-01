@@ -166,6 +166,7 @@ export const SLA_STATE_META: Record<SlaState, StateMeta> = {
 	breached: { label: "Breached", tone: "bad", icon: "carbon:warning-filled" },
 	at_risk: { label: "At risk", tone: "warn", icon: "carbon:time" },
 	on_track: { label: "On track", tone: "neutral", icon: "carbon:in-progress" },
+	paused: { label: "Waiting on customer", tone: "neutral", icon: "carbon:pause-outline" },
 	not_tracked: { label: "No target", tone: "neutral", icon: "carbon:subtract-alt" }
 }
 
@@ -212,6 +213,7 @@ export function toEditableCells(matrix: PolicyMatrix): EditablePolicyCell[] {
 		inherit: cell.source !== ownSource,
 		ack_minutes: cell.ack_minutes,
 		resolve_minutes: cell.resolve_minutes,
+		business_hours: cell.business_hours,
 		inheritedFrom: cell.source
 	}))
 }
@@ -229,7 +231,8 @@ export function buildPolicyPayload(
 			severity: cell.severity,
 			inherit: cell.inherit,
 			ack_minutes: cell.inherit ? null : cell.ack_minutes,
-			resolve_minutes: cell.inherit ? null : cell.resolve_minutes
+			resolve_minutes: cell.inherit ? null : cell.resolve_minutes,
+			business_hours: cell.inherit ? false : cell.business_hours
 		}))
 	}
 }
@@ -245,7 +248,11 @@ export function isPolicyDirty(cells: EditablePolicyCell[], original: EditablePol
 		const was = before.get(cellKey(cell))
 		if (!was || was.inherit !== cell.inherit) return true
 		if (cell.inherit) return false
-		return was.ack_minutes !== cell.ack_minutes || was.resolve_minutes !== cell.resolve_minutes
+		return (
+			was.ack_minutes !== cell.ack_minutes ||
+			was.resolve_minutes !== cell.resolve_minutes ||
+			was.business_hours !== cell.business_hours
+		)
 	})
 }
 

@@ -1,4 +1,10 @@
-import type { Compliance, DurationStats, PolicyMatrix, SocDashboard } from "../src/types/soc-management"
+import type {
+	BusinessCalendar,
+	Compliance,
+	DurationStats,
+	PolicyMatrix,
+	SocDashboard
+} from "../src/types/soc-management"
 
 /**
  * One fixed SOC Management snapshot (#1187), shaped exactly like
@@ -21,6 +27,7 @@ function compliance(met: number, breached: number): Compliance {
 		breached,
 		at_risk: 0,
 		on_track: 0,
+		paused: 0,
 		not_tracked: 0,
 		decided: met + breached,
 		rate: met + breached ? Math.round((met * 1000) / (met + breached)) / 10 : null
@@ -37,9 +44,21 @@ export const POLICY: PolicyMatrix = {
 			severity,
 			ack_minutes: severity === "Informational" ? null : severity === "Critical" ? 15 : 60,
 			resolve_minutes: severity === "Informational" ? null : severity === "Critical" ? 240 : 480,
+			business_hours: false,
 			source: severity === "High" && entity === "alert" ? ("global" as const) : ("default" as const)
 		}))
 	)
+}
+
+const OFFICE: [string, string][] = [["09:00", "17:00"]]
+
+/** The global business-hours calendar the Policies tab loads. */
+export const CALENDAR: BusinessCalendar = {
+	customer_code: null,
+	source: "global",
+	timezone: "Europe/Rome",
+	week: { mon: OFFICE, tue: OFFICE, wed: OFFICE, thu: OFFICE, fri: OFFICE, sat: [], sun: [] },
+	holidays: ["2026-12-25"]
 }
 
 export function dashboard(over: Partial<SocDashboard> = {}): SocDashboard {
@@ -211,6 +230,7 @@ export function dashboard(over: Partial<SocDashboard> = {}): SocDashboard {
 			oldest_unassigned_at: "2026-09-30T06:00:00",
 			breached: 2,
 			at_risk: 1,
+			waiting_on_customer: 4,
 			by_severity: SEVERITIES.map(severity => ({ severity, alerts: 3, cases: 0, breached: 0, at_risk: 0 })),
 			by_assignee: [
 				{ username: "ana", alerts: 6, cases: 1, breached: 0, at_risk: 1 },

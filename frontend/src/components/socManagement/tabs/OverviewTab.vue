@@ -64,7 +64,7 @@
 						label="Past SLA now"
 						:value="formatCount(dashboard.workload.breached)"
 						:tone="dashboard.workload.breached ? 'bad' : 'good'"
-						:hint="`${formatCount(dashboard.workload.at_risk)} at risk · ${formatCount(openItems)} open`"
+						:hint="breachedHint"
 						help="Open alerts and cases whose response or resolution clock has run out and is still running."
 						test-id="kpi-breached"
 					/>
@@ -195,6 +195,11 @@ const previous = computed(() => dashboard.previous)
 const alerts = computed(() => dashboard.headline.alerts)
 const cases = computed(() => dashboard.headline.cases)
 const openItems = computed(() => dashboard.workload.open_alerts + dashboard.workload.open_cases)
+const breachedHint = computed(() => {
+	const { at_risk, waiting_on_customer } = dashboard.workload
+	const waiting = waiting_on_customer ? ` · ${formatCount(waiting_on_customer)} waiting` : ""
+	return `${formatCount(at_risk)} at risk · ${formatCount(openItems.value)} open${waiting}`
+})
 const alertSeverities = computed(() => dashboard.severities.filter(row => row.entity === "alert"))
 const attentionCaption = computed(() => {
 	const { breached, at_risk } = dashboard.workload

@@ -13,9 +13,30 @@ beforeEach(() => setActivePinia(createPinia()))
 const matrix: PolicyMatrix = {
 	customer_code: "ACME",
 	cells: [
-		{ entity: "alert", severity: "Critical", ack_minutes: 15, resolve_minutes: 240, source: "default" },
-		{ entity: "alert", severity: "High", ack_minutes: 10, resolve_minutes: 60, source: "customer" },
-		{ entity: "case", severity: "High", ack_minutes: 60, resolve_minutes: 4320, source: "global" }
+		{
+			entity: "alert",
+			severity: "Critical",
+			ack_minutes: 15,
+			resolve_minutes: 240,
+			business_hours: false,
+			source: "default"
+		},
+		{
+			entity: "alert",
+			severity: "High",
+			ack_minutes: 10,
+			resolve_minutes: 60,
+			business_hours: false,
+			source: "customer"
+		},
+		{
+			entity: "case",
+			severity: "High",
+			ack_minutes: 60,
+			resolve_minutes: 4320,
+			business_hours: true,
+			source: "global"
+		}
 	]
 }
 
@@ -67,6 +88,21 @@ describe("policyMatrixEditor", () => {
 			ack_minutes: null,
 			resolve_minutes: null
 		})
+	})
+
+	it("counts an own cell in business hours, and shows what an inheriting cell follows", async () => {
+		const { wrapper, cells } = editor()
+		const inherited = wrapper.get("[data-testid=policy-hours-case-High]")
+		expect(inherited.text()).toContain("Business hours") // the global cell it follows
+		expect(inherited.classes().join(" ")).toContain("disabled")
+
+		await wrapper.get("[data-testid=policy-hours-alert-High]").trigger("click")
+		expect(cell(cells.value, "alert", "High").business_hours).toBe(true)
+		const payload = buildPolicyPayload(cells.value, "ACME", false)
+		expect(payload.cells.find(c => c.entity === "alert" && c.severity === "High")?.business_hours).toBe(true)
+
+		await wrapper.get("[data-testid=policy-own-case-High]").trigger("click")
+		expect(cell(cells.value, "case", "High")).toMatchObject({ inherit: false, business_hours: true })
 	})
 
 	it("flags a response target longer than the resolution target", async () => {

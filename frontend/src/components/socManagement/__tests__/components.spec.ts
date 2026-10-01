@@ -24,7 +24,7 @@ const RouterLinkStub = defineComponent({
 })
 
 function compliance(over: Partial<Compliance> = {}): Compliance {
-	return { met: 0, breached: 0, at_risk: 0, on_track: 0, not_tracked: 0, decided: 0, rate: null, ...over }
+	return { met: 0, breached: 0, at_risk: 0, on_track: 0, paused: 0, not_tracked: 0, decided: 0, rate: null, ...over }
 }
 
 beforeEach(() => {
@@ -203,6 +203,10 @@ describe("itemSlaPanel", () => {
 		},
 		first_assigned_at: "2026-09-01T08:12:00",
 		reopen_count: 1,
+		business_hours: false,
+		calendar_timezone: null,
+		paused_at: null,
+		paused_seconds: 0,
 		generated_at: "2026-09-01T10:00:00"
 	}
 
@@ -216,6 +220,36 @@ describe("itemSlaPanel", () => {
 		expect(wrapper.get("[data-testid=item-sla-resolve] [role=progressbar]").attributes("aria-valuenow")).toBe("25")
 		expect(wrapper.text()).toContain("reopened 1×")
 		expect(wrapper.emitted("loaded")?.[0]).toEqual([sla])
+	})
+
+	it("shows a paused item as waiting on the customer, its clocks stopped where they were", async () => {
+		getItemSla.mockResolvedValue({
+			data: {
+				...sla,
+				paused_at: "2026-09-01T10:00:00",
+				paused_seconds: 3600,
+				generated_at: "2026-09-01T11:00:00",
+				resolve: { ...sla.resolve, state: "paused" }
+			}
+		})
+		const wrapper = mount(ItemSlaPanel, { props: { entity: "alert", itemId: 7 } })
+		await flushPromises()
+		expect(wrapper.get("[data-testid=item-sla-paused]").text()).toContain("Waiting on customer")
+		expect(wrapper.get("[data-testid=item-sla-resolve]").text()).toContain("Waiting on customer")
+		expect(wrapper.get("[data-testid=item-sla-resolve]").text()).toContain("stopped · 8h target")
+		// Frozen at the pause (2h of 8h), not at "now" (3h).
+		expect(wrapper.get("[data-testid=item-sla-resolve] [role=progressbar]").attributes("aria-valuenow")).toBe("25")
+	})
+
+	it("states business hours and gives a due time rather than a wall-clock countdown", async () => {
+		getItemSla.mockResolvedValue({
+			data: { ...sla, business_hours: true, calendar_timezone: "Europe/Rome", paused_seconds: 5400 }
+		})
+		const wrapper = mount(ItemSlaPanel, { props: { entity: "alert", itemId: 7 } })
+		await flushPromises()
+		expect(wrapper.get("[data-testid=item-sla-business-hours]").text()).toContain("Europe/Rome")
+		expect(wrapper.get("[data-testid=item-sla-resolve]").text()).toMatch(/due .* · 8h working/)
+		expect(wrapper.get("[data-testid=item-sla-waited]").text()).toContain("waited 1h 30m")
 	})
 
 	it("explains an untracked item instead of inventing a clock", async () => {
