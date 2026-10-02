@@ -7,6 +7,7 @@ import _capitalize from "lodash/capitalize"
 import _castArray from "lodash/castArray"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
+import { useAiReportsAvailability } from "@/composables/common/useAiReportsAvailability"
 import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useReportGenerationStore } from "@/stores/reportGeneration"
@@ -43,7 +44,9 @@ export const useAuthStore = defineStore("auth", {
 
 			useCustomerFilterStore().clear()
 			useReportGenerationStore().reset()
-			// The next user may see other customers, whose SLA page may be off.
+			// The next user may see other customers, whose AI report and SLA switches may
+			// be off: neither cached answer may outlive the session that asked.
+			useAiReportsAvailability().reset()
 			useSlaAvailability().reset()
 			removePersistentSessionKey()
 		},
