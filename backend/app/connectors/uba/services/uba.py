@@ -71,6 +71,10 @@ async def list_signals(customer_code: str, **params: Any) -> UbaResponse:
     return await _get(f"{_tenant(customer_code)}/signals", params)
 
 
+async def get_signal_evidence(customer_code: str, signal_id: str) -> UbaResponse:
+    return await _get(f"{_tenant(customer_code)}/signals/{path_segment(signal_id)}/evidence")
+
+
 async def list_alerts(customer_code: str, **params: Any) -> UbaResponse:
     return await _get(f"{_tenant(customer_code)}/alerts", params)
 

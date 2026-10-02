@@ -219,6 +219,16 @@ async def remove_suppressions(
 
 
 @uba_router.get(
+    "/{customer_code}/signals/{signal_id}/evidence",
+    response_model=UbaResponse,
+    description="The source events behind a UBA finding, fetched by UBA from the indexer",
+    dependencies=_READ,
+)
+async def get_signal_evidence(customer_code: str, signal_id: str):
+    return await _call(svc.get_signal_evidence(customer_code, signal_id))
+
+
+@uba_router.get(
     "/{customer_code}/identity-sources",
     response_model=UbaResponse,
     description="Directory syncs (Entra ID) of this customer and how their last run went; never the secret",

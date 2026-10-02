@@ -6,6 +6,7 @@ import type {
 	UbaEntitiesQuery,
 	UbaEntityDetail,
 	UbaEntitySummary,
+	UbaEvidence,
 	UbaFeedbackPayload,
 	UbaIdentitySource,
 	UbaPage,
@@ -82,6 +83,12 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse & { removed: number }>(`${base(customerCode)}/suppressions`, {
 			params: { entity_key: entityKey, rule_id: ruleId ?? undefined }
 		})
+	},
+	getSignalEvidence(customerCode: string, signalId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & UbaEvidence>(
+			`${base(customerCode)}/signals/${encodeURIComponent(signalId)}/evidence`,
+			{ signal }
+		)
 	},
 	getIdentitySources(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { identity_sources: UbaIdentitySource[] }>(

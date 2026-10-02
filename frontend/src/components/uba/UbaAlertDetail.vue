@@ -31,6 +31,7 @@
 								<span class="text-tertiary ml-auto text-xs">+{{ riskLabel(s.effective_score) }}</span>
 							</div>
 							<p class="mt-1 text-sm">{{ s.explanation }}</p>
+							<UbaEvidence :customer-code :signal-id="s.id" :count="s.evidence.length" class="mt-1" />
 						</li>
 					</ul>
 				</section>
@@ -93,6 +94,7 @@ import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import UbaError from "./UbaError.vue"
+import UbaEvidence from "./UbaEvidence.vue"
 import { FALSE_POSITIVE_REASONS, riskLabel, riskTagType } from "./utils"
 
 const { customerCode, alertId } = defineProps<{ customerCode: string; alertId: string }>()
