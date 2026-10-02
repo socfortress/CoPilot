@@ -19,7 +19,9 @@ import { apiAs, signIn, signOut } from "./fixtures/auth"
  *   shows it;
  * - a case's severity can be set from its page and re-targets its clock;
  * - a customer's business hours are an admin's to set, and persist;
- * - an alert waiting on the customer shows its clocks stopped, and the wait afterwards;
+ * - an alert waiting on the customer shows its clocks stopped, and the wait afterwards —
+ *   set through the alert page's own status switch, as an analyst would;
+ * - publishing the Customer Portal SLA page is a switch on the customer, and persists;
  * - the PDF report downloads.
  *
  * The seeded rows are left in place, like the rest of this suite's seed: the script is
@@ -155,6 +157,32 @@ test.describe("an admin", () => {
 		expect(after.calendar.source).not.toBe("customer")
 	})
 
+	test("publishes the Customer Portal SLA page from the customer's SLA tab, and it persists", async ({ page }) => {
+		const code = seed.scoped_customer
+		const stored = async () =>
+			(await (await apiAs(seed.admin, `/customer_portal/sla/settings/${code}`)).json()).settings.enabled as boolean
+		await apiAs(seed.admin, `/customer_portal/sla/settings/${code}`, {
+			method: "PUT",
+			body: JSON.stringify({ enabled: false })
+		})
+
+		await page.goto(`/customers/${code}`)
+		await page.locator(".n-tabs-tab", { hasText: /^\s*SLA\s*$/ }).click()
+		const toggle = page.getByTestId("sla-settings-switch")
+		await expect(toggle).toBeVisible({ timeout: 30_000 })
+		await expect(page.getByTestId("sla-settings-state")).toContainText("stay internal")
+
+		await toggle.click()
+		await expect(page.getByTestId("sla-settings-state")).toContainText("can see their SLA targets")
+		await expect.poll(stored).toBe(true)
+
+		await page.reload()
+		await page.locator(".n-tabs-tab", { hasText: /^\s*SLA\s*$/ }).click()
+		await expect(page.getByTestId("sla-settings-switch")).toHaveClass(/n-switch--active/, { timeout: 30_000 })
+		await page.getByTestId("sla-settings-switch").click()
+		await expect.poll(stored).toBe(false)
+	})
+
 	test("sets a case's severity from its page, which re-targets its clock", async ({ page }) => {
 		const caseId = seed.ids.case[seed.scoped_customer] ?? Object.values(seed.ids.case)[0]
 		await page.goto(`/incident-management/cases/${caseId}`)
@@ -259,5 +287,31 @@ test.describe("an analyst assigned to one customer", () => {
 		await page.reload()
 		await expect(page.getByTestId("item-sla-paused")).toHaveCount(0, { timeout: 30_000 })
 		await expect(page.getByTestId("item-sla-waited")).toBeVisible()
+	})
+
+	test("puts an alert on hold through its own status switch, and the SLA panel follows", async ({ page }) => {
+		const alertId = seed.ids.unacked_open_alert[seed.scoped_customer]
+		await apiAs(seed.scoped_analyst, "/incidents/db_operations/alert/status", {
+			method: "PUT",
+			body: JSON.stringify({ alert_id: alertId, status: "IN_PROGRESS" })
+		})
+		await page.goto(`/incident-management/alerts/${alertId}`)
+		await expect(page.getByTestId("item-sla-alert")).toBeVisible({ timeout: 30_000 })
+		await expect(page.getByTestId("item-sla-paused")).toHaveCount(0)
+
+		await page.getByTestId("alert-status-trigger").click()
+		await page.locator(".n-base-select-option", { hasText: "Waiting on customer" }).first().click()
+		await expect(page.getByTestId("alert-status-trigger")).toContainText("Waiting on customer")
+
+		const stored = await (await apiAs(seed.scoped_analyst, `/incidents/db_operations/alert/${alertId}`)).json()
+		expect(stored.alerts[0].status).toBe("PENDING_CUSTOMER")
+		await page.reload()
+		await expect(page.getByTestId("item-sla-paused")).toBeVisible({ timeout: 30_000 })
+
+		// Leave the seeded alert as the other specs expect it.
+		await apiAs(seed.scoped_analyst, "/incidents/db_operations/alert/status", {
+			method: "PUT",
+			body: JSON.stringify({ alert_id: alertId, status: "IN_PROGRESS" })
+		})
 	})
 })

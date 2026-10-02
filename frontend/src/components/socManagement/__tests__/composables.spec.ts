@@ -65,6 +65,15 @@ describe("useSocFilters (state in the URL)", () => {
 		expect(filters.preset.value).toBe("30d")
 	})
 
+	it("keeps every change made in one go, though the URL has not caught up between them", async () => {
+		const { filters, router } = await withFilters("/soc-management?tab=customers")
+		filters.customerCodes.value = ["ACME"]
+		filters.tab.value = "overview"
+		await flushPromises()
+		expect(router.currentRoute.value.query.tab).toBe("overview")
+		expect([router.currentRoute.value.query.customer].flat()).toEqual(["ACME"])
+	})
+
 	it("writes changes back to the URL with replace, keeping the other params", async () => {
 		const { filters, router } = await withFilters("/soc-management?tab=sla")
 		const replace = vi.spyOn(router, "replace")

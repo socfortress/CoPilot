@@ -168,6 +168,15 @@ test.describe("as an admin", () => {
 		await expect(page.getByTestId("rules-table")).toBeVisible()
 	})
 
+	test("focusing a customer from the customers tab keeps the customer and lands on the overview", async ({ page }) => {
+		await open(page, "?tab=customers")
+		await page.getByRole("button", { name: "Focus on ACME" }).click()
+		// Both changes land in one go: the customer must survive the tab switch.
+		await expect(page).toHaveURL(/customer=ACME/)
+		await expect(page).toHaveURL(/tab=overview/)
+		await expect.poll(() => mock.dashboardRequests.at(-1)?.searchParams.getAll("customer_codes[]")).toEqual(["ACME"])
+	})
+
 	test("a severity filter is sent to the server and kept in the URL", async ({ page }) => {
 		await open(page)
 		await page.getByTestId("filter-severities").locator(".n-base-selection").click()

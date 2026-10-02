@@ -27,6 +27,7 @@
 											'cursor-not-allowed': loadingStatus,
 											'cursor-pointer': !loadingStatus
 										}"
+										data-testid="alert-status-trigger"
 									>
 										<span>{{ statusLabel(alert.status) }}</span>
 										<n-spin

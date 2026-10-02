@@ -1,0 +1,237 @@
+import type { BusinessCalendar } from "@/types/soc-management"
+import { flushPromises, mount } from "@vue/test-utils"
+import { createPinia, setActivePinia } from "pinia"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { defineComponent, h, nextTick, ref, shallowRef } from "vue"
+import { useAttention } from "../composables/useAttention"
+import { useBusinessCalendar } from "../composables/useBusinessCalendar"
+import HolidayList from "../policies/HolidayList.vue"
+import SeverityTag from "../ui/SeverityTag.vue"
+import SocPanel from "../ui/SocPanel.vue"
+import Sparkline from "../ui/Sparkline.vue"
+import { SEVERITY_TONE } from "../utils"
+import { CALENDAR } from "./fixtures"
+
+const api = { getAttention: vi.fn(), getCalendar: vi.fn(), saveCalendar: vi.fn(), deleteCalendar: vi.fn() }
+vi.mock("@/api", () => ({
+	default: {
+		socManagement: new Proxy(
+			{},
+			{ get: (_, name: string) => (...args: unknown[]) => api[name as keyof typeof api](...args) }
+		)
+	}
+}))
+
+/** Runs a composable inside a component, so its watchers live as they would on a page. */
+function withSetup<T>(composable: () => T): T {
+	let result!: T
+	mount(
+		defineComponent({
+			setup() {
+				result = composable()
+				return () => h("div")
+			}
+		})
+	)
+	return result
+}
+
+function deferred<T>() {
+	let resolve!: (value: T) => void
+	const promise = new Promise<T>(r => {
+		resolve = r
+	})
+	return { promise, resolve }
+}
+
+beforeEach(() => {
+	setActivePinia(createPinia())
+	for (const mock of Object.values(api)) mock.mockReset()
+})
+
+describe("useAttention", () => {
+	it("loads with scope, filter and the page limit, and reloads when they change", async () => {
+		api.getAttention.mockResolvedValue({ data: { items: [{ id: 1 }], total: 7 } })
+		const scope = ref({ customerCodes: ["ACME"] })
+		const filter = ref<{ entity?: "alert" | "case" }>({})
+		const attention = withSetup(() => useAttention(scope, filter))
+		await flushPromises()
+		expect(api.getAttention).toHaveBeenCalledWith({ customerCodes: ["ACME"], limit: 200 }, expect.any(AbortSignal))
+		expect([attention.items.value.length, attention.total.value, attention.loading.value]).toEqual([1, 7, false])
+		filter.value = { entity: "case" }
+		await flushPromises()
+		expect(api.getAttention).toHaveBeenLastCalledWith({ customerCodes: ["ACME"], entity: "case", limit: 200 }, expect.any(AbortSignal))
+	})
+
+	it("aborts the load it supersedes and keeps only the latest answer", async () => {
+		const first = deferred<unknown>()
+		api.getAttention.mockReturnValueOnce(first.promise).mockResolvedValueOnce({ data: { items: [{ id: 2 }], total: 1 } })
+		const filter = ref({})
+		const attention = withSetup(() => useAttention(ref({}), filter))
+		filter.value = { state: "breached" }
+		await flushPromises()
+		const firstSignal = api.getAttention.mock.calls[0][1] as AbortSignal
+		expect(firstSignal.aborted).toBe(true)
+		first.resolve({ data: { items: [{ id: 1 }], total: 1 } })
+		await flushPromises()
+		expect(attention.items.value).toEqual([{ id: 2 }])
+	})
+
+	it("reports a failure but not a cancellation", async () => {
+		api.getAttention.mockImplementationOnce(() => Promise.reject(Object.assign(new Error("x"), { name: "CanceledError" })))
+		const attention = withSetup(() => useAttention(ref({}), ref({})))
+		await flushPromises()
+		expect(attention.error.value).toBeNull()
+		api.getAttention.mockImplementationOnce(() => Promise.reject(new Error("down")))
+		await attention.reload()
+		expect((attention.error.value as Error | null)?.message).toBe("down")
+	})
+})
+
+describe("useBusinessCalendar", () => {
+	const own: BusinessCalendar = { ...CALENDAR, customer_code: "ACME", source: "customer", timezone: "Europe/Rome" }
+
+	function respond(calendar: BusinessCalendar, customers: string[] = []) {
+		return { data: { calendar, customers_with_calendar: customers, retargeted: 0, message: "ok" } }
+	}
+
+	it("loads the scope's calendar and says whether the customer has one of its own", async () => {
+		api.getCalendar.mockResolvedValueOnce(respond(CALENDAR, ["GLOBEX"]))
+		const scope = shallowRef<string | null>("ACME")
+		const calendar = withSetup(() => useBusinessCalendar(scope))
+		await flushPromises()
+		expect(api.getCalendar).toHaveBeenCalledWith("ACME")
+		expect([calendar.source.value, calendar.hasOwn.value, calendar.dirty.value]).toEqual(["global", false, false])
+		expect(calendar.customersWithCalendar.value).toEqual(["GLOBEX"])
+		expect(calendar.draft.value?.week.mon).toEqual([["09:00", "17:00"]])
+	})
+
+	it("ignores a load a newer scope superseded", async () => {
+		const slow = deferred<unknown>()
+		api.getCalendar.mockReturnValueOnce(slow.promise).mockResolvedValueOnce(respond(own))
+		const scope = shallowRef<string | null>(null)
+		const calendar = withSetup(() => useBusinessCalendar(scope))
+		scope.value = "ACME"
+		await flushPromises()
+		slow.resolve(respond(CALENDAR))
+		await flushPromises()
+		expect(calendar.source.value).toBe("customer")
+		expect(calendar.loading.value).toBe(false)
+	})
+
+	it("tracks edits: dirty, a validation error, and discard", async () => {
+		api.getCalendar.mockResolvedValueOnce(respond(CALENDAR))
+		const calendar = withSetup(() => useBusinessCalendar(shallowRef(null)))
+		await flushPromises()
+		const draft = calendar.draft.value
+		if (!draft) throw new Error("no draft loaded")
+		draft.week.mon = [["18:00", "09:00"]]
+		await nextTick()
+		expect(calendar.dirty.value).toBe(true)
+		expect(calendar.error.value).toMatch(/^Monday: a window must start/)
+		calendar.discard()
+		await nextTick()
+		expect([calendar.dirty.value, calendar.error.value]).toEqual([false, null])
+	})
+
+	it("saves and removes, reporting each outcome in words", async () => {
+		api.getCalendar.mockResolvedValueOnce(respond(CALENDAR))
+		const calendar = withSetup(() => useBusinessCalendar(shallowRef("ACME")))
+		await flushPromises()
+
+		api.saveCalendar.mockResolvedValueOnce(respond(own, ["ACME"]))
+		expect(await calendar.save(true)).toEqual({ ok: true, message: "ok" })
+		expect(api.saveCalendar.mock.calls[0][0]).toMatchObject({ customer_code: "ACME", apply_to_open: true, timezone: "Europe/Rome" })
+		expect([calendar.hasOwn.value, calendar.customersWithCalendar.value]).toEqual([true, ["ACME"]])
+
+		api.deleteCalendar.mockImplementationOnce(() => Promise.reject(Object.assign(new Error("x"), { response: { data: { detail: "denied" } } })))
+		expect(await calendar.remove(false)).toEqual({ ok: false, message: "Could not remove the calendar: denied" })
+		expect(calendar.saving.value).toBe(false)
+	})
+
+	it("never tries to remove the global calendar", async () => {
+		api.getCalendar.mockResolvedValueOnce(respond(CALENDAR))
+		const calendar = withSetup(() => useBusinessCalendar(shallowRef(null)))
+		await flushPromises()
+		expect((await calendar.remove(false)).ok).toBe(false)
+		expect(api.deleteCalendar).not.toHaveBeenCalled()
+	})
+
+	it("says when the calendar could not be loaded", async () => {
+		api.getCalendar.mockImplementationOnce(() => Promise.reject(new Error("offline")))
+		const calendar = withSetup(() => useBusinessCalendar(shallowRef(null)))
+		await flushPromises()
+		expect(calendar.loadError.value).toBe("offline")
+	})
+})
+
+describe("holidayList", () => {
+	function list(initial: string[], readonly = false) {
+		const holidays = ref(initial)
+		const wrapper = mount(
+			defineComponent({
+				setup: () => () =>
+					h(HolidayList, {
+						modelValue: holidays.value,
+						"onUpdate:modelValue": (value: string[]) => {
+							holidays.value = value
+						},
+						readonly
+					})
+			})
+		)
+		return { wrapper, holidays }
+	}
+
+	it("removes a holiday, and shows the empty state", async () => {
+		const { wrapper, holidays } = list(["2026-12-25"])
+		expect(wrapper.get("[data-testid=calendar-holiday-2026-12-25]").text()).toContain("25 Dec 2026")
+		await wrapper.get("[data-testid=calendar-holiday-2026-12-25] .n-tag__close").trigger("click")
+		expect(holidays.value).toEqual([])
+		await nextTick()
+		expect(wrapper.text()).toContain("No holidays")
+	})
+
+	it("adds a picked day once, keeping the list sorted", async () => {
+		const { wrapper, holidays } = list(["2026-12-25"])
+		const picker = wrapper.findComponent({ name: "DatePicker" })
+		for (const day of ["2026-01-01", "2026-12-25"]) {
+			picker.vm.$emit("update:formatted-value", day)
+			await nextTick()
+			await wrapper.get("[data-testid=calendar-holiday-add]").trigger("click")
+		}
+		expect(holidays.value).toEqual(["2026-01-01", "2026-12-25"])
+	})
+
+	it("is read-only for analysts", () => {
+		const { wrapper } = list(["2026-12-25"], true)
+		expect(wrapper.find("[data-testid=calendar-holiday-add]").exists()).toBe(false)
+		expect(wrapper.find(".n-tag__close").exists()).toBe(false)
+	})
+})
+
+describe("small ui", () => {
+	it("severityTag names the severity next to its colour", () => {
+		const wrapper = mount(SeverityTag, { props: { severity: "Critical" } })
+		expect(wrapper.text()).toBe("Critical")
+		expect(wrapper.get(".severity-dot").attributes("style")).toContain(SEVERITY_TONE.Critical)
+	})
+
+	it("sparkline draws a line ending on the last value, and nothing for a single point", () => {
+		const wrapper = mount(Sparkline, { props: { values: [1, 4, 2] } })
+		expect(wrapper.get("svg").attributes("aria-label")).toBe("Trend over 3 periods, peak 4")
+		expect(wrapper.get("polyline").attributes("points")?.split(" ")).toHaveLength(3)
+		expect(mount(Sparkline, { props: { values: [5] } }).find("svg").exists()).toBe(false)
+	})
+
+	it("socPanel carries its title, caption, actions and body", () => {
+		const wrapper = mount(SocPanel, {
+			props: { title: "Backlog", caption: "open now" },
+			slots: { default: () => h("p", "body"), actions: () => h("button", "act") }
+		})
+		expect(wrapper.text()).toContain("Backlog")
+		expect(wrapper.text()).toContain("open now")
+		expect(wrapper.get("button").text()).toBe("act")
+		expect(wrapper.text()).toContain("body")
+	})
+})

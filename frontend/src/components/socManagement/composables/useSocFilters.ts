@@ -1,3 +1,4 @@
+import type { LocationQueryRaw } from "vue-router"
 import type { PeriodPreset, PeriodRange } from "../utils"
 import type { SocDashboardQuery } from "@/api/endpoints/soc-management"
 import type { Severity } from "@/types/soc-management"
@@ -36,8 +37,19 @@ export function useSocFilters() {
 	/** Bumped by `refresh()`: a rolling window ends "now", and now moves. */
 	const tick = shallowRef(0)
 
+	/**
+	 * The query of a navigation still in flight. `route.query` only moves once the
+	 * navigation settles, so two changes made in one go (a customer, then the tab) would
+	 * each start from the old query and the second would drop the first.
+	 */
+	let pending: LocationQueryRaw | null = null
+
 	function patch(query: Record<string, string | string[] | undefined>) {
-		router.replace({ query: { ...route.query, ...query } })
+		const next = { ...(pending ?? route.query), ...query }
+		pending = next
+		router.replace({ query: next }).finally(() => {
+			if (pending === next) pending = null
+		})
 	}
 
 	const tab = computed<SocTab>({
