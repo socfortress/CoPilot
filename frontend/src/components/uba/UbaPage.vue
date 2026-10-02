@@ -58,13 +58,18 @@
 					<template #value>{{ feed.status === "ok" ? formatLag(feed.lag_p50_s) : feed.status }}</template>
 				</Badge>
 				<span v-if="version" class="text-tertiary text-xs">UBA {{ version }}</span>
+				<n-button v-if="isAdmin && !needsSetup" text size="tiny" class="text-xs" @click="showSetup = !showSetup">
+					Setup
+				</n-button>
 			</header>
 			<!-- Not set up yet (no status row), or still learning from history: setup and progress. -->
 			<UbaSetup
-				v-if="needsSetup"
+				v-if="needsSetup || showSetup"
 				:key="`setup${customerModel}`"
 				:customer-code="customerModel"
-				@live="loadStatus(customerModel)"
+				:closable="!needsSetup"
+				@live="onLive"
+				@close="showSetup = false"
 			/>
 			<n-alert v-if="unhealthyFeeds.length" type="warning" :bordered="false">
 				<p v-for="feed of unhealthyFeeds" :key="feed.source">
@@ -128,7 +133,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { UbaFeedStatus, UbaTenantStatus } from "@/types/uba"
-import { NAlert, NDrawer, NDrawerContent, NEmpty, NFormItem, NSelect, NSpin, NTabPane, NTabs } from "naive-ui"
+import { NAlert, NButton, NDrawer, NDrawerContent, NEmpty, NFormItem, NSelect, NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
@@ -136,6 +141,7 @@ import Badge from "@/components/common/Badge.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { useRouteQueryParam } from "@/composables/useNavigation"
 import { useUbaAvailability } from "@/composables/useUbaAvailability"
+import { useAuthStore } from "@/stores/auth"
 import UbaAbout from "./UbaAbout.vue"
 import UbaAlertDetail from "./UbaAlertDetail.vue"
 import UbaAlerts from "./UbaAlerts.vue"
@@ -161,6 +167,9 @@ const version = ref("")
 const statusLoaded = ref(false)
 const statusError = ref<ApiError | null>(null)
 const refreshKey = ref(0)
+// Admins reopen setup for a live customer, e.g. to add Microsoft 365 provisioned after UBA.
+const showSetup = ref(false)
+const isAdmin = computed(() => useAuthStore().isAdmin)
 
 // Customer, tab and the open entity/alert live in the URL so a view can be linked and survives a
 // reload. Picker changes replace; opening a drawer pushes (browser back closes it).
@@ -226,6 +235,11 @@ function closeDrawer() {
 	setQuery({ entity: undefined, alert: undefined })
 }
 
+function onLive() {
+	// Just went live (refresh the header); when reopened by an admin, the card stays open.
+	if (!showSetup.value && customerModel.value) loadStatus(customerModel.value)
+}
+
 function loadStatus(code: string) {
 	statusLoaded.value = false
 	statusError.value = null
@@ -268,6 +282,7 @@ onGlobalCustomerFilterChange(codes => {
 watch(
 	customerModel,
 	code => {
+		showSetup.value = false
 		if (code && available.value) loadStatus(code)
 	},
 	{ immediate: true }

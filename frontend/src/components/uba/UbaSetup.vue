@@ -2,7 +2,10 @@
 	<n-card size="small" class="uba-setup">
 		<div class="flex flex-col gap-3">
 			<div class="flex flex-col gap-1">
-				<span :class="SECTION_LABEL">Set up UBA for this customer</span>
+				<div class="flex items-center gap-2">
+					<span :class="SECTION_LABEL">{{ registered ? "UBA setup for this customer" : "Set up UBA for this customer" }}</span>
+					<n-button v-if="closable" text size="tiny" class="ml-auto" @click="emit('close')">Close</n-button>
+				</div>
 				<p v-if="!isAdmin" class="text-secondary text-sm">
 					SOCFortress UBA is not set up for this customer yet. An admin can set it up from this page.
 				</p>
@@ -33,6 +36,14 @@
 							{{ onboarding.bootstrap_error }}. UBA retries every 10 minutes, and replays this customer's events once
 							it succeeds.
 						</n-alert>
+						<p class="text-secondary max-w-3xl text-sm">
+							UBA reads {{ sourceText }} for this customer. After provisioning Microsoft 365 (or another Microsoft
+							365 tenant) for it, run setup again so UBA reads the new streams too.
+						</p>
+						<p v-if="onboarding.status === 'live'" class="text-tertiary max-w-3xl text-xs">
+							A source added after the customer went live starts without history: UBA learns its normal activity
+							from then on, so expect more first-time findings from it for the first days.
+						</p>
 					</div>
 
 					<!-- Not registered: what will be created, and the form -->
@@ -47,16 +58,19 @@
 							<n-form-item label="History to learn from" :show-feedback="false" class="w-48">
 								<n-select v-model:value="days" :options="DAY_OPTIONS" />
 							</n-form-item>
-							<n-checkbox v-model:checked="deployRules" class="pb-1">
-								Also deploy UBA's Wazuh rules (Windows password changes and resets)
-							</n-checkbox>
 						</div>
+					</div>
+
+					<template v-if="!info.problem">
+						<n-checkbox v-model:checked="deployRules">
+							Also deploy UBA's Wazuh rules (Windows password changes and resets)
+						</n-checkbox>
 						<n-alert v-if="deployRules" type="warning" :bordered="false" class="text-xs">
 							This uploads a rules file and restarts the Wazuh manager. Check afterwards that the log shipper
 							(e.g. Fluent Bit) still ships alerts: on some hosts it stops after a manager restart until it is
 							restarted too.
 						</n-alert>
-					</div>
+					</template>
 
 					<div class="flex flex-wrap items-center gap-2">
 						<n-button
@@ -101,8 +115,8 @@ import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import UbaError from "./UbaError.vue"
 
-const { customerCode } = defineProps<{ customerCode: string }>()
-const emit = defineEmits<{ live: [] }>()
+const { customerCode, closable = false } = defineProps<{ customerCode: string; closable?: boolean }>()
+const emit = defineEmits<{ live: []; close: [] }>()
 
 const DAY_OPTIONS = [
 	{ label: "none (start now)", value: 0 },
@@ -194,7 +208,11 @@ function load(quiet = false) {
 function run() {
 	running.value = true
 	Api.uba
-		.provision(customerCode, { bootstrap_days: days.value, deploy_wazuh_rules: deployRules.value })
+		.provision(customerCode, {
+			// Registered already: keep its history setting (a live customer is never replayed again).
+			bootstrap_days: registered.value ? (onboarding.value?.bootstrap_days ?? days.value) : days.value,
+			deploy_wazuh_rules: deployRules.value
+		})
 		.then(res => {
 			steps.value = res.data.steps
 			message.success("UBA is set up for this customer")
