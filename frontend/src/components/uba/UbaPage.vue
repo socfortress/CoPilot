@@ -59,6 +59,10 @@
 				</Badge>
 				<span v-if="version" class="text-tertiary text-xs">UBA {{ version }}</span>
 			</header>
+			<!-- Part of the error / header chain above: shown only when UBA returned no status row. -->
+			<n-alert v-else-if="statusLoaded" type="info" :bordered="false">
+				SOCFortress UBA has no data for this customer yet (or the API key isn't allowed to see it).
+			</n-alert>
 			<n-alert v-if="unhealthyFeeds.length" type="warning" :bordered="false">
 				<p v-for="feed of unhealthyFeeds" :key="feed.source">
 					<b>{{ feedLabel(feed.source) }}</b>
@@ -67,9 +71,6 @@
 				<p class="text-secondary mt-1 text-xs">
 					UBA's findings for this source may be missing or late until the feed recovers.
 				</p>
-			</n-alert>
-			<n-alert v-else-if="statusLoaded" type="info" :bordered="false">
-				SOCFortress UBA has no data for this customer yet (or the API key isn't allowed to see it).
 			</n-alert>
 
 			<n-tabs v-model:value="tabModel" type="line" animated>

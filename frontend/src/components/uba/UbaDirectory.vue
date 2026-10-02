@@ -13,15 +13,15 @@
 				<template #extra>
 					<div class="text-secondary flex max-w-xl flex-col gap-2 text-left text-xs">
 						<p>
-							Create an Entra app registration with the read-only application permissions
-							<code>User.Read.All</code>
-							,
-							<code>RoleManagement.Read.Directory</code>
-							and
-							<code>GroupMember.Read.All</code>
-							(admin consent), then add it on the UBA host (the client secret is read from stdin and
-							stored encrypted):
+							Create an Entra app registration with these read-only application permissions (admin
+							consent), then add it on the UBA host (the client secret is read from stdin and stored
+							encrypted):
 						</p>
+						<ul class="list-disc pl-5">
+							<li v-for="permission of PERMISSIONS" :key="permission">
+								<code>{{ permission }}</code>
+							</li>
+						</ul>
 						<code class="bg-secondary rounded-md p-2 whitespace-pre-wrap">{{ addCommand }}</code>
 					</div>
 				</template>
@@ -88,6 +88,7 @@ import UbaError from "./UbaError.vue"
 
 const { customerCode } = defineProps<{ customerCode: string }>()
 
+const PERMISSIONS = ["User.Read.All", "RoleManagement.Read.Directory", "GroupMember.Read.All"]
 const POLL_MS = 15_000
 const POLL_FOR_MS = 180_000
 
