@@ -3,6 +3,8 @@ import type {
 	UbaAlert,
 	UbaAlertUpdate,
 	UbaAvailability,
+	UbaBacktest,
+	UbaBacktestPayload,
 	UbaEntitiesQuery,
 	UbaEntityDetail,
 	UbaEntitySummary,
@@ -12,6 +14,7 @@ import type {
 	UbaPage,
 	UbaRiskHistory,
 	UbaRiskStep,
+	UbaRuleInfo,
 	UbaRuleStat,
 	UbaSignal,
 	UbaSuppression,
@@ -112,6 +115,30 @@ export default {
 	syncIdentitySource(customerCode: string, sourceId: string) {
 		return HttpClient.post<FlaskBaseResponse & { ok: boolean; detail: string }>(
 			`${base(customerCode)}/identity-sources/${encodeURIComponent(sourceId)}/sync`
+		)
+	},
+	getRuleCatalog(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { rules: UbaRuleInfo[] }>(`${base(customerCode)}/rules/catalog`, {
+			signal
+		})
+	},
+	createBacktest(customerCode: string, payload: UbaBacktestPayload) {
+		return HttpClient.post<FlaskBaseResponse & { backtest: UbaBacktest }>(`${base(customerCode)}/backtests`, payload)
+	},
+	getBacktests(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { backtests: UbaBacktest[] }>(`${base(customerCode)}/backtests`, {
+			signal
+		})
+	},
+	getBacktest(customerCode: string, jobId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { backtest: UbaBacktest }>(
+			`${base(customerCode)}/backtests/${encodeURIComponent(jobId)}`,
+			{ signal }
+		)
+	},
+	cancelBacktest(customerCode: string, jobId: string) {
+		return HttpClient.post<FlaskBaseResponse & { backtest: UbaBacktest }>(
+			`${base(customerCode)}/backtests/${encodeURIComponent(jobId)}/cancel`
 		)
 	},
 	getRuleStats(customerCode: string, since = "24h", signal?: AbortSignal) {

@@ -27,6 +27,7 @@ from fastapi.responses import JSONResponse
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.uba.schema.uba import UbaAvailabilityResponse
+from app.connectors.uba.schema.uba import UbaBacktestRequest
 from app.connectors.uba.schema.uba import UbaCustomerStatusResponse
 from app.connectors.uba.schema.uba import UbaFeedbackRequest
 from app.connectors.uba.schema.uba import UbaResponse
@@ -279,6 +280,49 @@ async def sync_identity_source(
     current_user: User = Depends(AuthHandler().get_current_user),
 ):
     return await _call(svc.sync_identity_source(customer_code, source_id, current_user.username))
+
+
+@uba_router.get(
+    "/{customer_code}/rules/catalog",
+    response_model=UbaResponse,
+    description="UBA's rules (id, name, detector, score, MITRE); the customer code only checks access",
+    dependencies=_READ,
+)
+async def list_rule_catalog(customer_code: str):
+    return await _call(svc.list_rule_catalog())
+
+
+@uba_router.post(
+    "/{customer_code}/backtests",
+    response_model=UbaResponse,
+    description="Queue a backtest: what UBA's rules would have found over recent history (nothing is alerted)",
+    dependencies=_READ,
+)
+async def create_backtest(
+    customer_code: str,
+    body: UbaBacktestRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.create_backtest(customer_code, body, current_user.username))
+
+
+@uba_router.get("/{customer_code}/backtests", response_model=UbaResponse, dependencies=_READ)
+async def list_backtests(customer_code: str, limit: int = Query(20, ge=1, le=100)):
+    return await _call(svc.list_backtests(customer_code, limit))
+
+
+@uba_router.get("/{customer_code}/backtests/{job_id}", response_model=UbaResponse, dependencies=_READ)
+async def get_backtest(customer_code: str, job_id: str):
+    return await _call(svc.get_backtest(customer_code, job_id))
+
+
+@uba_router.post("/{customer_code}/backtests/{job_id}/cancel", response_model=UbaResponse, dependencies=_READ)
+async def cancel_backtest(
+    customer_code: str,
+    job_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.cancel_backtest(customer_code, job_id, current_user.username))
 
 
 @uba_router.get(

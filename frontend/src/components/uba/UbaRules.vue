@@ -20,6 +20,8 @@
 			size="small"
 			:scroll-x="800"
 		/>
+
+		<UbaBacktests :customer-code class="mt-4" />
 	</div>
 </template>
 
@@ -32,6 +34,7 @@ import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
+import UbaBacktests from "./UbaBacktests.vue"
 import UbaError from "./UbaError.vue"
 
 const { customerCode } = defineProps<{ customerCode: string }>()
