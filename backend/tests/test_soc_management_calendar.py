@@ -247,3 +247,43 @@ def test_a_case_status_change_moves_its_alerts(old, new, to_status, moves, stays
 )
 def test_other_case_transitions_leave_the_alerts_alone(old, new):
     assert cascade_for(old, new) is None
+
+
+# ── the API shape ────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "week, reason",
+    [
+        ({"mon": [["09:00"]]}, r"a \[start, end\] pair"),
+        ({"funday": [["09:00", "17:00"]]}, "Unknown weekday"),
+        ({"mon": [["9", "17:00"]]}, "HH:MM"),
+        ({"mon": [["17:00", "09:00"]]}, "start before it ends"),
+        ({}, "at least one working window"),
+    ],
+)
+def test_the_calendar_payload_is_refused_with_a_reason(week, reason):
+    from pydantic import ValidationError
+
+    from app.soc_management.schema.calendar import CalendarIn
+
+    with pytest.raises(ValidationError, match=reason):
+        CalendarIn(timezone="Europe/Rome", week=week)
+
+
+def test_the_calendar_payload_becomes_the_domain_calendar():
+    from app.soc_management.schema.calendar import CalendarIn
+
+    payload = CalendarIn(
+        customer_code="ACME",
+        timezone="Europe/Rome",
+        week={"mon": [["13:00", "17:00"], ["09:00", "12:00"]], "sat": []},
+        holidays=["2026-12-25"],
+    )
+    calendar = payload.to_domain()
+    assert calendar == BusinessCalendar(
+        timezone="Europe/Rome",
+        week={0: ((time(9), time(12)), (time(13), time(17)))},
+        holidays=frozenset({date(2026, 12, 25)}),
+    )
+    assert payload.apply_to_open is False  # re-timing open items is always opt-in

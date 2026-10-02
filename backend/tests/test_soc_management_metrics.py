@@ -242,3 +242,96 @@ def test_customer_sla_context_is_one_customer_and_names_no_analyst():
     assert sla["alerts"]["opened"] == 3
     assert sla["alerts"]["resolve"]["rate"] == "33.3%"  # a1 met; a2 and a3 overdue
     assert "analysts" not in sla
+
+
+# ── business hours and waiting on the customer ───────────────────────────────
+
+ROME_WEEK = {day: [["09:00", "17:00"]] for day in ("mon", "tue", "wed", "thu", "fri")}
+
+
+async def _rome_business_hours_and_paused(session, alert_id):
+    """ACME on Rome business hours; ``alert_id`` acked on that basis, waiting on the customer
+    for the last hour after an earlier 10-minute wait that banked 30 working minutes."""
+    from sqlalchemy import update
+
+    from app.incidents.models import Alert
+    from app.soc_management.models.sla import AlertSlaTracking
+    from app.soc_management.models.sla import SlaCalendar
+
+    session.add(SlaCalendar(customer_code="ACME", timezone="Europe/Rome", week=ROME_WEEK, holidays=[]))
+    await session.execute(
+        update(AlertSlaTracking)
+        .where(AlertSlaTracking.alert_id == alert_id)
+        .values(
+            business_hours=True,
+            # T0 is Tue 08:00 UTC = 10:00 Rome; 60 working minutes + 30 of credit → 11:30 Rome.
+            ack_due_at=T0 + timedelta(minutes=90),
+            resolve_due_at=NOW + timedelta(days=1),  # still running when the wait began
+            paused_at=NOW - timedelta(hours=1),
+            paused_seconds=600,
+            pause_credit_seconds=1800,
+        ),
+    )
+    await session.execute(update(Alert).where(Alert.id == alert_id).values(status="PENDING_CUSTOMER"))
+    await session.commit()
+
+
+def test_item_sla_reads_business_hours_and_the_wait_on_their_basis():
+    async def scenario(session, ids):
+        await _rome_business_hours_and_paused(session, ids["a2"])
+        return await metrics.item_sla(session, ADMIN, SlaEntity.ALERT, ids["a2"]), await metrics.item_sla(
+            session,
+            ADMIN,
+            SlaEntity.ALERT,
+            ids["a3"],
+        )
+
+    paused, plain = run(scenario)
+    assert paused.business_hours and paused.calendar_timezone == "Europe/Rome"
+    assert paused.ack.target_minutes == 60  # working minutes to the due time, less the banked wait
+    assert paused.paused_at is not None
+    assert paused.paused_seconds == 600 + 3600  # the banked wait plus the current one
+    assert paused.resolve.state is SlaState.PAUSED
+    assert not plain.business_hours and plain.calendar_timezone is None and plain.paused_seconds == 0
+
+
+def test_facts_carry_the_customers_clock_and_the_wait():
+    from app.soc_management.domain.calendar import CONTINUOUS
+    from app.soc_management.domain.calendar import BusinessCalendar
+    from app.soc_management.services import calendars as calendar_service
+    from app.soc_management.services import datasets
+
+    async def scenario(session, ids):
+        await _rome_business_hours_and_paused(session, ids["a2"])
+        book = await calendar_service.load_book(session)
+        everything = datasets.Visibility(alert_filters=[], case_codes=None)
+        facts = {fact.id: fact for fact in await datasets.open_alerts(session, everything, FactFilters(), book)}
+        return facts[ids["a2"]], facts[ids["a3"]]
+
+    paused, plain = run(scenario)
+    assert isinstance(paused.clock, BusinessCalendar) and paused.clock.timezone == "Europe/Rome"
+    assert paused.is_paused and paused.paused_seconds == 600
+    assert plain.clock is CONTINUOUS and not plain.is_paused
+
+
+def test_the_report_counts_what_waits_on_the_customer():
+    async def scenario(session, ids):
+        await _rome_business_hours_and_paused(session, ids["a2"])
+        snapshot = await metrics.snapshot_for_user(session, ADMIN, metrics.DashboardQuery(period=PERIOD))
+
+        async def static_theme(*args, **kwargs):
+            return _socfortress_theme()
+
+        chart = "data:image/png;base64,AA"
+        with patch.object(report, "line_png", lambda *a, **k: chart), patch.object(report, "hbar_png", lambda *a, **k: chart), patch.object(
+            report,
+            "resolve_theme",
+            static_theme,
+        ):
+            context = await report.build_report_context(session, snapshot)
+        return snapshot, context, report.render_html(context)
+
+    snapshot, context, html = run(scenario)
+    assert snapshot.workload.waiting_on_customer == 1
+    assert context["workload"]["waiting_on_customer"] == 1
+    assert "Waiting on the customer (clocks stopped)" in html

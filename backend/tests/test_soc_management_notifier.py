@@ -183,3 +183,92 @@ def test_a_notice_already_claimed_is_not_sent_again():
         return await SlaNotifier(db.factory, send=sent.append, clock=lambda: T0 + timedelta(hours=2)).run()
 
     assert run(scenario) == {"sent": 0, "silenced": 0, "lost_race": 0} and sent == []
+
+
+def test_a_case_notice_is_a_case_event_linking_to_the_case(monkeypatch):
+    from app.soc_management.models.sla import CaseSlaTracking
+    from tests.soc_management_support import add_case
+
+    monkeypatch.setenv("COPILOT_URL", "https://copilot.example")
+    sent = []
+
+    async def scenario(db):
+        async with db.session() as session:
+            case = await add_case(session, name="Lateral movement", assigned_to="bob")
+            session.add(tracking_row(CaseSlaTracking, case.id, first_ack_at=T0 + timedelta(minutes=5)))
+            await session.commit()
+        await SlaNotifier(db.factory, send=sent.append, clock=lambda: T0 + timedelta(hours=9)).run()
+        return case.id
+
+    case_id = run(scenario)
+    assert [(e.entity_type, e.trigger.value, e.context["clock"]) for e in sent] == [("case", "sla_breached", "resolve")]
+    assert sent[0].link_url == f"https://copilot.example/incident-management/cases/{case_id}"
+    assert sent[0].assignee_username == "bob" and sent[0].dedupe_key == f"case:{case_id}:sla_breached:resolve"
+
+
+def test_a_breach_seen_long_after_is_stamped_without_a_message():
+    sent = []
+
+    async def scenario(db):
+        async with db.session() as session:
+            alert = await add_alert(session)
+            session.add(tracking_row(AlertSlaTracking, alert.id))
+            await session.commit()
+        counts = await SlaNotifier(db.factory, send=sent.append, clock=lambda: T0 + timedelta(days=3)).run()
+        async with db.session() as session:
+            return counts, await session.get(AlertSlaTracking, alert.id)
+
+    counts, row = run(scenario)
+    assert counts == {"sent": 0, "silenced": 2, "lost_race": 0} and sent == []
+    assert row.ack_breached_notified_at and row.resolve_breached_notified_at  # handled: never sent later either
+
+
+def test_a_notice_another_worker_claimed_first_is_not_sent():
+    sent = []
+
+    class RacedNotifier(SlaNotifier):
+        """Another worker stamps every owed notice between our read and our claim."""
+
+        async def _owed(self, session, facts, now):
+            owed = await super()._owed(session, facts, now)
+            async with self._sessions() as other:
+                for fact, notice in owed:
+                    row = await other.get(AlertSlaTracking, fact.id)
+                    setattr(row, notice.column, now)
+                await other.commit()
+            return owed
+
+    async def scenario(db):
+        async with db.session() as session:
+            alert = await add_alert(session)
+            session.add(tracking_row(AlertSlaTracking, alert.id))
+            await session.commit()
+        return await RacedNotifier(db.factory, send=sent.append, clock=lambda: T0 + timedelta(hours=2)).run()
+
+    assert run(scenario) == {"sent": 0, "silenced": 0, "lost_race": 1} and sent == []
+
+
+def test_the_job_logs_what_a_pass_did_and_re_raises_a_failure(monkeypatch):
+    from unittest.mock import AsyncMock
+    from unittest.mock import MagicMock
+
+    import app.soc_management.services.notifier as notifier
+
+    log = MagicMock()
+    monkeypatch.setattr(notifier, "logger", log)
+    monkeypatch.setattr(notifier.SlaNotifier, "run", AsyncMock(return_value={"sent": 2, "silenced": 1, "lost_race": 0}))
+    asyncio.run(notifier.notify_sla_transitions())
+    assert "2 sent, 1 stale" in log.info.call_args.args[0]
+
+    log.reset_mock()
+    monkeypatch.setattr(notifier.SlaNotifier, "run", AsyncMock(return_value={"sent": 0, "silenced": 0, "lost_race": 0}))
+    asyncio.run(notifier.notify_sla_transitions())
+    assert not log.info.called  # a quiet pass stays quiet
+
+    monkeypatch.setattr(notifier.SlaNotifier, "run", AsyncMock(side_effect=RuntimeError("db gone")))
+    try:
+        asyncio.run(notifier.notify_sla_transitions())
+        raise AssertionError("a failed pass must reach the scheduler as an error")
+    except RuntimeError:
+        pass
+    assert log.exception.called
