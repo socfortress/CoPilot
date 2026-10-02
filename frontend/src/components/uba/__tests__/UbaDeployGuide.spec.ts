@@ -33,9 +33,23 @@ describe("ubaDeployGuide", () => {
 			expect(code).toContain(`${name}=`)
 		}
 		expect(code).toContain("UBA_BOOTSTRAP_TENANTS=[]")
-		// The API's published address is the connector URL the guide tells admins to enter.
-		expect(code).toContain("UBA_API_PUBLISH=172.17.0.1:8010")
-		expect(render().text()).toContain("URL http://172.17.0.1:8010")
+		// UBA on its own VM: Graylog, CoPilot and the indexer are reached by their VLAN addresses.
+		expect(code).toContain("UBA_API_PUBLISH=8010")
+		expect(code).toContain("UBA_PROVISION_FEED_HOST=<uba-ip>")
+		expect(code).toContain("UBA_GRAYLOG_GELF_HOST=<graylog-ip>")
+		expect(code).toContain("UBA_INDEXER__USERNAME=admin")
+		expect(code).not.toContain("host.docker.internal")
+		expect(render().text()).toContain("URL http://<uba-ip>:8010")
+	})
+
+	it("needs only the public image: the compose file comes out of it", () => {
+		const code = render()
+			.findAll("pre")
+			.map(w => w.text())
+			.join("\n")
+		expect(code).toContain("cat /app/deploy/docker-compose.yml > docker-compose.yml")
+		expect(code).not.toContain("git clone")
+		expect(code).not.toContain("--build")
 	})
 
 	it("reads as prose: no space before punctuation", () => {

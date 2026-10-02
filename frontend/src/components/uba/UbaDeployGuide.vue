@@ -2,9 +2,11 @@
 	<div class="uba-deploy-guide flex flex-col gap-4 text-sm">
 		<p class="text-secondary max-w-3xl">
 			SOCFortress UBA runs as its own small Docker Compose stack (API, GELF receiver, worker, Postgres,
-			Redis), usually on the Graylog host. Graylog sends it a copy of each customer's Wazuh and Microsoft 365
-			events, UBA reads history from the Wazuh indexer, and CoPilot talks to its API. Once it is running and
-			connected, every customer is set up from this page with one click.
+			Redis) on a VM in the same network as Graylog, the Wazuh indexer and CoPilot. Graylog sends it a copy
+			of each customer's Wazuh and Microsoft 365 events, UBA reads history from the Wazuh indexer, and
+			CoPilot talks to its API. Once it is running and connected, every customer is set up from this page
+			with one click. Below, replace the &lt;uba-ip&gt;, &lt;graylog-ip&gt;, &lt;indexer-ip&gt; and
+			&lt;copilot-ip&gt; placeholders with those hosts' addresses.
 		</p>
 
 		<ol class="flex flex-col gap-4">
@@ -30,63 +32,66 @@ interface Step {
 	code?: string
 }
 
-// Values match a deployment next to Graylog on one host (the setup UBA documents in
-// docs/13-deployment-operations.md): CoPilot's containers reach UBA on the Docker bridge, Graylog
-// reaches UBA's GELF receiver on 127.0.0.1, UBA reaches Graylog's UBA ALERTS input on docker0.
+const IMAGE = "ghcr.io/socfortress/socfortress-uba:latest"
+
+// The customer layout of UBA's docs/13-deployment-operations.md ("On its own VM"): UBA on its own VM
+// in the VLAN of Graylog, the indexer and CoPilot; the VM pulls only the public image, which carries
+// docker-compose.yml.
 const STEPS: Step[] = [
 	{
-		title: "Check the host",
+		title: "Prepare the VM",
 		text: [
-			"Docker with Compose v2, and about 4 GB of free memory next to Graylog and the indexer. From this host UBA must reach the Wazuh indexer (9200) and CoPilot (5000); Graylog must reach UBA's GELF port.",
-			"Create a read-only indexer user for UBA: read on wazuh-*, office365-*, graylog_* and wazuh-states-* indices, plus point-in-time search. Never use admin."
+			"A Linux VM with Docker and Compose v2, 4 vCPU and 8 GB of memory to start, in the same network as Graylog, the Wazuh indexer and CoPilot. Postgres keeps UBA's state: give it room on the Docker disk."
 		],
 		code: "docker compose version\nfree -m\ndf -h /var/lib/docker"
 	},
 	{
 		title: "Get UBA",
-		text: [
-			"The repository is private: clone it with an account that has access (or pull ghcr.io/socfortress/socfortress-uba after docker login ghcr.io with a read:packages token)."
-		],
+		text: ["The image is public and carries the stack definition, so nothing else is needed on the VM."],
 		code: [
-			"git clone https://github.com/socfortress/socfortress-uba.git /opt/socfortress-uba",
-			"cd /opt/socfortress-uba",
-			"cp .env.example .env && chmod 600 .env",
-			"mkdir -p data/geoip   # mounted at /var/lib/uba: the indexer's CA, optional GeoLite2 databases"
+			"mkdir -p /opt/socfortress-uba/data/geoip && cd /opt/socfortress-uba",
+			`docker pull ${IMAGE}`,
+			`docker run --rm ${IMAGE} cat /app/deploy/docker-compose.yml > docker-compose.yml`
 		].join("\n")
 	},
 	{
-		title: "Configure .env",
+		title: "Write /opt/socfortress-uba/.env",
 		text: [
-			"Set these values (replace the <...> parts). Keep UBA_SECRET_KEY safe: it encrypts identity-source secrets, and a new one means entering them again. Customers are not listed here: CoPilot registers them.",
-			"Copy the indexer's root CA to data/geoip/indexer-root-ca.pem. GeoLite2-City.mmdb and GeoLite2-ASN.mmdb in the same folder add countries and networks to sign-ins (optional)."
+			"Create the file with these values (chmod 600). Keep UBA_SECRET_KEY: it encrypts identity-source secrets, and a new one means entering them again. Customers are not listed here: CoPilot registers them.",
+			"Optional: GeoLite2-City.mmdb and GeoLite2-ASN.mmdb in data/geoip add countries and networks to sign-ins; without them the new-country, new-network and impossible-travel rules stay quiet."
 		],
 		code: [
+			"UBA_TAG=latest",
 			"POSTGRES_PASSWORD=<output of: openssl rand -hex 24>",
 			"UBA_SECRET_KEY=<output of: openssl rand -base64 32 | tr '+/' '-_'>",
+			"UBA_STORE=postgres",
 			"",
-			"# Where things listen (UBA next to Graylog on the same host)",
-			"UBA_API_PUBLISH=172.17.0.1:8010          # the API, on the Docker bridge for CoPilot's containers",
-			"UBA_GELF_PUBLISH=127.0.0.1:12203         # Graylog's GELF output sends the UBA feed here",
-			"UBA_POSTGRES_PUBLISH=127.0.0.1:15432",
-			"UBA_REDIS_PUBLISH=127.0.0.1:16379",
+			"# Where UBA listens (all interfaces of the VM)",
+			"UBA_API_PUBLISH=8010                      # CoPilot connects here",
+			"UBA_GELF_PUBLISH=12201                    # Graylog sends the UBA feed here",
 			"",
 			"# What CoPilot's \"Set up UBA\" creates in Graylog",
-			"UBA_PROVISION_FEED_HOST=127.0.0.1        # Graylog -> UBA (matches UBA_GELF_PUBLISH)",
-			"UBA_PROVISION_FEED_PORT=12203",
-			"UBA_PROVISION_ALERTS_BIND=172.17.0.1     # Graylog's UBA ALERTS input, never on a public address",
-			"UBA_GRAYLOG_GELF_HOST=host.docker.internal",
-			"UBA_GRAYLOG_GELF_PORT=12204              # UBA alerts -> that input",
+			"UBA_PROVISION_FEED_HOST=<uba-ip>          # Graylog's output -> this VM",
+			"UBA_PROVISION_FEED_PORT=12201",
+			"UBA_PROVISION_ALERTS_BIND=0.0.0.0         # Graylog's UBA ALERTS input, on the Graylog host",
+			"UBA_GRAYLOG_GELF_HOST=<graylog-ip>        # UBA's alerts -> that input",
+			"UBA_GRAYLOG_GELF_PORT=12204",
 			"",
 			"# Wazuh indexer: history for new customers, evidence, gap repair",
-			"UBA_INDEXER__URL=https://<indexer host>:9200",
-			"UBA_INDEXER__USERNAME=<read-only user>",
-			"UBA_INDEXER__PASSWORD=<password>",
-			"UBA_INDEXER__CA_CERTS=/var/lib/uba/indexer-root-ca.pem",
+			"UBA_INDEXER__URL=https://<indexer-ip>:9200",
+			"UBA_INDEXER__USERNAME=admin",
+			"UBA_INDEXER__PASSWORD=<indexer admin password>",
+			"UBA_INDEXER__VERIFY_CERTS=false",
 			"",
 			"# UBA alerts as CoPilot incident alerts (a CoPilot service account: analyst role, no 2FA)",
-			"UBA_COPILOT_URL=http://host.docker.internal:5000",
+			"UBA_COPILOT_URL=http://<copilot-ip>:5000",
 			"UBA_COPILOT_USERNAME=<service account>",
 			"UBA_COPILOT_PASSWORD=<password>",
+			"",
+			"# Computer changes (new local admins, services, ports, browser extensions), every 30 minutes",
+			"UBA_INVENTORY_EVERY_S=1800",
+			"UBA_ENRICH__GEOIP_CITY_DB=/var/lib/uba/GeoLite2-City.mmdb",
+			"UBA_ENRICH__GEOIP_ASN_DB=/var/lib/uba/GeoLite2-ASN.mmdb",
 			"",
 			"# Customers come from CoPilot, not from this file",
 			"UBA_BOOTSTRAP_TENANTS=[]",
@@ -96,12 +101,12 @@ const STEPS: Step[] = [
 	{
 		title: "Start it",
 		text: [
-			"The first start builds the image and creates the database; later starts keep everything. Check that the API answers and the worker reports every minute."
+			"The first start creates the database; later starts keep everything. Check that the API answers and the worker reports every minute."
 		],
 		code: [
 			"cd /opt/socfortress-uba",
-			"docker compose up -d --build",
-			"curl -s http://172.17.0.1:8010/healthz",
+			"docker compose pull && docker compose up -d",
+			"curl -s http://<uba-ip>:8010/healthz",
 			"docker compose logs --tail 20 worker"
 		].join("\n")
 	},
@@ -122,19 +127,27 @@ const STEPS: Step[] = [
 	{
 		title: "Connect CoPilot",
 		text: [
-			"Platform → Connectors → SOCFortress UBA: URL http://172.17.0.1:8010 (the address in UBA_API_PUBLISH), API key from the previous step, then Verify. This page then shows UBA."
+			"Platform → Connectors → SOCFortress UBA: URL http://<uba-ip>:8010, the API key from the previous step, then Verify. This page then shows UBA."
 		]
 	},
 	{
 		title: "Set each customer up",
 		text: [
-			"Provision the customer in CoPilot as usual (Wazuh, and Microsoft 365 if they have it). Then, on this page, pick the customer and click Set up UBA: it registers the customer with UBA and creates its Graylog streams, pipelines and output. UBA learns from the history you choose, then scores new activity. After adding Microsoft 365 later, use Setup → Run setup again."
+			"Provision the customer in CoPilot as usual (Wazuh, and Microsoft 365 if they have it). Then, on this page, pick the customer and click Set up UBA: it registers the customer with UBA and creates its Graylog streams, pipelines and output. UBA learns from the history you choose (the indexer must still hold it), then scores new activity. After adding Microsoft 365 later, use Setup → Run setup again."
 		]
 	},
 	{
-		title: "Upgrade",
-		text: ["Pull the new version and rebuild; database migrations run on start."],
-		code: "cd /opt/socfortress-uba\ngit pull\ndocker compose up -d --build"
+		title: "Back up and upgrade",
+		text: [
+			"Postgres holds what UBA has learned, its identities and alerts: back it up nightly. To upgrade, pull the new image and restart; database migrations run first."
+		],
+		code: [
+			"# nightly backup (in a crontab line, write each % as \\%)",
+			"cd /opt/socfortress-uba && docker compose exec -T postgres pg_dump -U uba -Fc uba > /backup/uba-$(date +%F).dump",
+			"",
+			"# upgrade",
+			"cd /opt/socfortress-uba && docker compose pull && docker compose up -d"
+		].join("\n")
 	}
 ]
 </script>
