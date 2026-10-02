@@ -8,11 +8,16 @@ were waiting with it (``status_cascade``).
 
 Only a ``customer_user`` reply resumes: an analyst's note on a waiting item ("chased the
 customer by phone") must not restart the clock.
+
+The other direction is closed: a customer cannot *set* ``PENDING_CUSTOMER``. It is the SOC
+asking the customer for something, and a customer choosing it would only stop the SOC's
+clock on their own item (``ensure_customer_may_set_status``).
 """
 
 from typing import Any
 from typing import List
 
+from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -37,6 +42,17 @@ RESUMED = AlertStatus.IN_PROGRESS
 def is_customer_reply(user: Any) -> bool:
     role = getattr(user.role_id, "value", user.role_id)
     return role == RoleEnum.customer_user.value
+
+
+#: Why a portal user is refused PENDING_CUSTOMER — phrased for the person who tried.
+CUSTOMER_CANNOT_WAIT = "Only the SOC can set an item to Waiting on customer; reply with a comment to hand it back to the SOC"
+
+
+def ensure_customer_may_set_status(user: Any, status: Any) -> None:
+    """403 when a ``customer_user`` tries to put an alert or case on hold for themselves."""
+    value = getattr(status, "value", status)
+    if value == AlertStatus.PENDING_CUSTOMER.value and is_customer_reply(user):
+        raise HTTPException(status_code=403, detail=CUSTOMER_CANNOT_WAIT)
 
 
 async def resume_alert_on_reply(alert_id: int, user: Any, db: AsyncSession) -> bool:

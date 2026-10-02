@@ -27,8 +27,9 @@ a mocked request layer; this is where the whole loop runs as in production:
      only their own analyst row; per-item SLA is 404 across tenants;
   F) the PDF report renders (when wkhtmltopdf is installed);
   G) deleting an alert takes its tracking row with it (ON DELETE CASCADE);
-  H) waiting on the customer: PENDING_CUSTOMER stops the clocks, a case takes its alerts
-     with it, a portal reply hands both back and pushes the due times;
+  H) waiting on the customer: only the SOC can set PENDING_CUSTOMER, it stops the clocks,
+     a case takes its alerts with it, a portal reply hands both back and pushes the due
+     times;
   I) business hours: a customer calendar and a business-hours cell open on it;
   J) SLA notifications: sent once per clock, never twice;
   K) the portal SLA page: off until an admin turns it on, then the customer's figures
@@ -338,6 +339,14 @@ async def main():
 
         print("H) waiting on the customer")
         a4 = await ingest(CUST_A, "E2E suspicious login")
+        refused = await client.put(f"{DB}/alert/status", json={"alert_id": a4, "status": "PENDING_CUSTOMER"}, headers=portal)
+        refused_case = await client.put(f"{DB}/case/status", json={"case_id": case_id, "status": "PENDING_CUSTOMER"}, headers=portal)
+        t_refused = await tracking(AlertSlaTracking, a4)
+        check(
+            "a portal user cannot put an alert or case on hold",
+            (refused.status_code, refused_case.status_code) == (403, 403) and t_refused.paused_at is None,
+            f"{refused.status_code}/{refused_case.status_code}",
+        )
         resolve_due_before = (await tracking(AlertSlaTracking, a4)).resolve_due_at
         pending = await client.put(f"{DB}/alert/status", json={"alert_id": a4, "status": "PENDING_CUSTOMER"}, headers=ana)
         t_a4 = await tracking(AlertSlaTracking, a4)

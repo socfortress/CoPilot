@@ -119,6 +119,7 @@ from app.incidents.schema.db_operations import VerdictTrendPoint
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
 from app.incidents.services.alert_severity import severity_of
+from app.incidents.services.customer_reply import ensure_customer_may_set_status
 from app.incidents.services.customer_reply import resume_alert_on_reply
 from app.incidents.services.customer_reply import resume_case_on_reply
 
@@ -602,6 +603,7 @@ async def update_alert_status_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    ensure_customer_may_set_status(current_user, alert_status.status)
     # Enforce per-object ownership: resolve the alert's customer and reject a
     # caller who is not entitled to it (GHSA-wjpw-xrg8-vmf9).
     await _ensure_alert_access(alert_status.alert_id, current_user, db)
@@ -643,6 +645,7 @@ async def bulk_update_alert_status_endpoint(
 
     for alert_id in bulk_status.alert_ids:
         try:
+            ensure_customer_may_set_status(current_user, bulk_status.status)
             await _ensure_alert_access(alert_id, current_user, db)
             await update_alert_status(UpdateAlertStatus(alert_id=alert_id, status=bulk_status.status), db)
             updated_alert_ids.append(alert_id)
@@ -2377,6 +2380,7 @@ async def update_case_status_endpoint(
     force=true to override.
     """
     logger.info(f"Updating case {case_status.case_id} status to {case_status.status} for user: {current_user.username}")
+    ensure_customer_may_set_status(current_user, case_status.status)
 
     # Get the case first to check customer access
     case = await get_case_by_id(case_status.case_id, db)

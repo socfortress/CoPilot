@@ -77,6 +77,7 @@ from app.notifications.services.dispatchers import (
     verify_shuffle_org as verify_shuffle_org_client,
 )
 from app.notifications.services.rendering import render_body
+from app.notifications.services.templates import SLA_SAMPLE_CONTEXT
 from app.notifications.services.templates import assert_template_usable
 from app.notifications.services.templates import build_branding_context
 from app.notifications.services.templates import resolve_template_for_route
@@ -1160,11 +1161,9 @@ def _sample_event_for(route: CustomerNotificationRoute) -> NotificationEvent:
 
     is_assignment = trigger.value in INTERNAL_TRIGGERS
     entity_type = EntityType.ALERT
-    sla_context = (
-        {"clock": "resolve", "due_at": "2026-01-01 12:00", "remaining_minutes": 30, "overdue_minutes": 15, "status": "IN_PROGRESS"}
-        if trigger.value in SLA_TRIGGERS
-        else {}
-    )
+    # The same context the template editor previews with: a template that previews
+    # cleanly must test-send cleanly too.
+    sla_context = SLA_SAMPLE_CONTEXT.get(trigger.value, {})
     if trigger == NotificationTrigger.CASE_ASSIGNED:
         entity_type = EntityType.CASE
     elif trigger == NotificationTrigger.CASE_TASK_ASSIGNED:

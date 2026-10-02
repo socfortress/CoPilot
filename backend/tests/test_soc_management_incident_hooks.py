@@ -304,3 +304,71 @@ def test_creation_services_open_a_clock_and_the_comment_service_does_not_record(
             dbo_services.create_comment(CommentCreate(alert_id=7, comment="Full Event Payload", user_name="admin"), comment_session),
         )
         assert recorded() == []
+
+
+# ── waiting on the customer ──────────────────────────────────────────────────
+
+
+def _resumers():
+    """resume_*_on_reply replaced by mocks that log into the recorder's sequence."""
+
+    def tracer(name):
+        async def resume(item_id, user, db):
+            FakeRecorder.calls.append((name, (item_id, user.username), {}))
+            return True
+
+        return AsyncMock(side_effect=resume)
+
+    return {"resume_alert_on_reply": tracer("resume_alert"), "resume_case_on_reply": tracer("resume_case")}
+
+
+def test_a_comment_hands_a_waiting_item_back_after_it_is_recorded():
+    case = SimpleNamespace(customer_code="ACME", assigned_to=None, case_name="Case")
+    with _patches(
+        get_alert_by_id=AsyncMock(return_value=ALERT),
+        get_case_by_id=AsyncMock(return_value=case),
+        create_comment=AsyncMock(return_value=SimpleNamespace(id=1)),
+        create_case_comment=AsyncMock(return_value=SimpleNamespace(id=2, comment="c")),
+        CommentResponse=lambda **kw: kw,
+        CaseCommentResponse=lambda **kw: kw,
+        **_resumers(),
+    ):
+        asyncio.run(dbo.create_comment_endpoint(CommentCreate(alert_id=7, comment="yes", user_name="x"), PORTAL, AsyncMock()))
+        asyncio.run(dbo.create_case_comment_endpoint(CaseCommentCreate(case_id=3, comment="logs", user_name="x"), PORTAL, AsyncMock()))
+    portal = Actor(username="portal", is_soc=False)
+    assert recorded() == [
+        ("alert_action", (7, LifecycleAction.COMMENTED, portal), {}),
+        ("resume_alert", (7, "portal"), {}),
+        ("case_action", (3, LifecycleAction.COMMENTED, portal), {}),
+        ("resume_case", (3, "portal"), {}),
+    ]
+
+
+def test_a_customer_cannot_put_an_alert_or_a_case_on_hold():
+    from fastapi import HTTPException
+
+    updated = AsyncMock(return_value=ALERT)
+    case_updated = AsyncMock()
+    with _patches(update_alert_status=updated, update_case_status=case_updated, AlertResponse=lambda **kw: kw):
+        for call in (
+            lambda: dbo.update_alert_status_endpoint(UpdateAlertStatus(alert_id=7, status="PENDING_CUSTOMER"), PORTAL, AsyncMock()),
+            lambda: dbo.update_case_status_endpoint(UpdateCaseStatus(case_id=3, status="PENDING_CUSTOMER"), False, PORTAL, AsyncMock()),
+        ):
+            try:
+                asyncio.run(call())
+                raise AssertionError("a portal user set PENDING_CUSTOMER")
+            except HTTPException as e:
+                assert e.status_code == 403 and "Only the SOC" in e.detail
+        bulk = asyncio.run(
+            dbo.bulk_update_alert_status_endpoint(BulkUpdateAlertStatus(alert_ids=[7, 8], status="PENDING_CUSTOMER"), PORTAL, AsyncMock()),
+        )
+    assert updated.await_count == 0 and case_updated.await_count == 0
+    assert bulk.updated_alert_ids == [] and bulk.not_updated_alert_ids == [7, 8]
+    assert [name for name, *_ in recorded() if name != "alerts_action"] == []
+
+
+def test_a_customer_may_still_move_an_item_and_the_soc_may_put_it_on_hold():
+    with _patches(update_alert_status=AsyncMock(return_value=ALERT), AlertResponse=lambda **kw: kw):
+        asyncio.run(dbo.update_alert_status_endpoint(UpdateAlertStatus(alert_id=7, status="IN_PROGRESS"), PORTAL, AsyncMock()))
+        asyncio.run(dbo.update_alert_status_endpoint(UpdateAlertStatus(alert_id=7, status="PENDING_CUSTOMER"), ANALYST, AsyncMock()))
+    assert [call[2] for call in recorded()] == [{"to_status": "IN_PROGRESS"}, {"to_status": "PENDING_CUSTOMER"}]
