@@ -17,38 +17,25 @@ describe("ubaDeployGuide", () => {
 		expect(text).toContain("Platform → Connectors → SOCFortress UBA")
 	})
 
-	it("configures what CoPilot's setup and the alert loop rely on, and no customers", () => {
+	it("names what to fill in .env for UBA on its own VM", () => {
 		const code = render()
 			.findAll("pre")
 			.map(w => w.text())
 			.join("\n")
-		for (const name of [
-			"UBA_PROVISION_FEED_HOST",
-			"UBA_PROVISION_ALERTS_BIND",
-			"UBA_GRAYLOG_GELF_HOST",
-			"UBA_INDEXER__URL",
-			"UBA_SECRET_KEY",
-			"UBA_COPILOT_URL"
-		]) {
-			expect(code).toContain(`${name}=`)
+		for (const name of ["UBA_PROVISION_FEED_HOST=<uba-ip>", "UBA_GRAYLOG_GELF_HOST=<graylog-ip>", "UBA_INDEXER__URL", "UBA_SECRET_KEY", "UBA_COPILOT_URL"]) {
+			expect(code).toContain(name)
 		}
-		expect(code).toContain("UBA_BOOTSTRAP_TENANTS=[]")
-		// UBA on its own VM: Graylog, CoPilot and the indexer are reached by their VLAN addresses.
-		expect(code).toContain("UBA_API_PUBLISH=8010")
-		expect(code).toContain("UBA_PROVISION_FEED_HOST=<uba-ip>")
-		expect(code).toContain("UBA_GRAYLOG_GELF_HOST=<graylog-ip>")
-		expect(code).toContain("UBA_INDEXER__USERNAME=admin")
 		expect(code).not.toContain("host.docker.internal")
 		expect(render().text()).toContain("URL http://<uba-ip>:8010")
 	})
 
-	it("needs only the public image: the compose file comes out of it", () => {
+	it("deploys from the public repository, not from source", () => {
 		const code = render()
 			.findAll("pre")
 			.map(w => w.text())
 			.join("\n")
-		expect(code).toContain("cat /app/deploy/docker-compose.yml > docker-compose.yml")
-		expect(code).not.toContain("git clone")
+		expect(code).toContain("git clone https://github.com/socfortress/socfortress-uba-deploy.git /opt/socfortress-uba")
+		expect(code).toContain("cp .env.example .env")
 		expect(code).not.toContain("--build")
 	})
 
@@ -57,6 +44,6 @@ describe("ubaDeployGuide", () => {
 			.findAll("p")
 			.map(w => w.text())
 			.join(" ")
-		expect(prose).not.toMatch(/\s[,.:;)]/)
+		expect(prose).not.toMatch(/\s[,.:;)](?!env)/) // a filename like .env is not punctuation
 	})
 })

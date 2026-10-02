@@ -32,11 +32,11 @@ interface Step {
 	code?: string
 }
 
-const IMAGE = "ghcr.io/socfortress/socfortress-uba:latest"
+const REPO = "https://github.com/socfortress/socfortress-uba-deploy"
 
-// The customer layout of UBA's docs/13-deployment-operations.md ("On its own VM"): UBA on its own VM
-// in the VLAN of Graylog, the indexer and CoPilot; the VM pulls only the public image, which carries
-// docker-compose.yml.
+// The customer layout (UBA's docs/13-deployment-operations.md, "On its own VM"): UBA on its own VM in
+// the VLAN of Graylog, the indexer and CoPilot, deployed from the public socfortress-uba-deploy
+// repository (compose file on the public image, .env.example, README).
 const STEPS: Step[] = [
 	{
 		title: "Prepare the VM",
@@ -47,55 +47,31 @@ const STEPS: Step[] = [
 	},
 	{
 		title: "Get UBA",
-		text: ["The image is public and carries the stack definition, so nothing else is needed on the VM."],
+		text: [
+			"Clone the public deployment repository: a Docker Compose file that runs the public UBA image, a settings template and a README with every detail."
+		],
 		code: [
-			"mkdir -p /opt/socfortress-uba/data/geoip && cd /opt/socfortress-uba",
-			`docker pull ${IMAGE}`,
-			`docker run --rm ${IMAGE} cat /app/deploy/docker-compose.yml > docker-compose.yml`
+			`git clone ${REPO}.git /opt/socfortress-uba`,
+			"cd /opt/socfortress-uba",
+			"cp .env.example .env && chmod 600 .env"
 		].join("\n")
 	},
 	{
-		title: "Write /opt/socfortress-uba/.env",
+		title: "Fill in .env",
 		text: [
-			"Create the file with these values (chmod 600). Keep UBA_SECRET_KEY: it encrypts identity-source secrets, and a new one means entering them again. Customers are not listed here: CoPilot registers them.",
+			"Replace every <...> value in .env: the addresses of this VM, Graylog, the Wazuh indexer and CoPilot on the private network; two generated secrets (the file shows the commands); the indexer's admin password; and a CoPilot service account for UBA's alerts (analyst role, no 2FA). Keep UBA_SECRET_KEY: it encrypts stored secrets, and a new one means entering them again.",
 			"Optional: GeoLite2-City.mmdb and GeoLite2-ASN.mmdb in data/geoip add countries and networks to sign-ins; without them the new-country, new-network and impossible-travel rules stay quiet."
 		],
 		code: [
-			"UBA_TAG=latest",
-			"POSTGRES_PASSWORD=<output of: openssl rand -hex 24>",
-			"UBA_SECRET_KEY=<output of: openssl rand -base64 32 | tr '+/' '-_'>",
-			"UBA_STORE=postgres",
-			"",
-			"# Where UBA listens (all interfaces of the VM)",
-			"UBA_API_PUBLISH=8010                      # CoPilot connects here",
-			"UBA_GELF_PUBLISH=12201                    # Graylog sends the UBA feed here",
-			"",
-			"# What CoPilot's \"Set up UBA\" creates in Graylog",
-			"UBA_PROVISION_FEED_HOST=<uba-ip>          # Graylog's output -> this VM",
-			"UBA_PROVISION_FEED_PORT=12201",
-			"UBA_PROVISION_ALERTS_BIND=0.0.0.0         # Graylog's UBA ALERTS input, on the Graylog host",
-			"UBA_GRAYLOG_GELF_HOST=<graylog-ip>        # UBA's alerts -> that input",
-			"UBA_GRAYLOG_GELF_PORT=12204",
-			"",
-			"# Wazuh indexer: history for new customers, evidence, gap repair",
+			"UBA_PROVISION_FEED_HOST=<uba-ip>        # Graylog sends the UBA feed to this VM",
+			"UBA_GRAYLOG_GELF_HOST=<graylog-ip>      # UBA sends its alerts back to Graylog",
 			"UBA_INDEXER__URL=https://<indexer-ip>:9200",
-			"UBA_INDEXER__USERNAME=admin",
 			"UBA_INDEXER__PASSWORD=<indexer admin password>",
-			"UBA_INDEXER__VERIFY_CERTS=false",
-			"",
-			"# UBA alerts as CoPilot incident alerts (a CoPilot service account: analyst role, no 2FA)",
 			"UBA_COPILOT_URL=http://<copilot-ip>:5000",
 			"UBA_COPILOT_USERNAME=<service account>",
 			"UBA_COPILOT_PASSWORD=<password>",
-			"",
-			"# Computer changes (new local admins, services, ports, browser extensions), every 30 minutes",
-			"UBA_INVENTORY_EVERY_S=1800",
-			"UBA_ENRICH__GEOIP_CITY_DB=/var/lib/uba/GeoLite2-City.mmdb",
-			"UBA_ENRICH__GEOIP_ASN_DB=/var/lib/uba/GeoLite2-ASN.mmdb",
-			"",
-			"# Customers come from CoPilot, not from this file",
-			"UBA_BOOTSTRAP_TENANTS=[]",
-			"UBA_O365_TENANT_MAP={}"
+			"POSTGRES_PASSWORD=<openssl rand -hex 24>",
+			"UBA_SECRET_KEY=<openssl rand -base64 32 | tr '+/' '-_'>"
 		].join("\n")
 	},
 	{
@@ -139,14 +115,14 @@ const STEPS: Step[] = [
 	{
 		title: "Back up and upgrade",
 		text: [
-			"Postgres holds what UBA has learned, its identities and alerts: back it up nightly. To upgrade, pull the new image and restart; database migrations run first."
+			"Postgres holds what UBA has learned, its identities and alerts: back it up nightly (the repository's README also shows the restore). To upgrade, pull the repository and the new image and restart; database migrations run first."
 		],
 		code: [
 			"# nightly backup (in a crontab line, write each % as \\%)",
 			"cd /opt/socfortress-uba && docker compose exec -T postgres pg_dump -U uba -Fc uba > /backup/uba-$(date +%F).dump",
 			"",
 			"# upgrade",
-			"cd /opt/socfortress-uba && docker compose pull && docker compose up -d"
+			"cd /opt/socfortress-uba && git pull && docker compose pull && docker compose up -d"
 		].join("\n")
 	}
 ]
