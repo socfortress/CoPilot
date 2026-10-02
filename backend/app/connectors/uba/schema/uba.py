@@ -49,6 +49,13 @@ class UbaSuppressionRequest(BaseModel):
     reason: Optional[str] = Field(None, max_length=500)
 
 
+class UbaBacktestRequest(BaseModel):
+    days: float = Field(1, gt=0, le=7, description="History replayed and scored (UBA allows up to 7 days)")
+    warmup_days: float = Field(0, ge=0, le=14, description="Replayed first with alerting off, so baselines exist")
+    rules: Optional[List[str]] = Field(None, description="Only these UBA rules; default all")
+    filter: Optional[str] = Field(None, max_length=1000, description="query_string ANDed to every source's query")
+
+
 class UbaScoreRequest(BaseModel):
     score: float = Field(..., ge=0, le=100, description="Native alerts never lower risk: 0 turns the rule's risk off")
 

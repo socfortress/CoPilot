@@ -247,3 +247,59 @@ export interface UbaRiskHistory {
 	findings: { id: string; time: string; rule_id: string; effective_score: number; native: boolean; explanation: string | null }[]
 	alerts: { id: string; opened_at: string; risk: number }[]
 }
+
+/** One UBA rule from its catalog (the fields the UI uses). */
+export interface UbaRuleInfo {
+	id: string
+	name: string
+	enabled?: boolean
+	score?: number
+	mitre?: string[]
+	detector?: { type: string }
+}
+
+export type UbaBacktestStatus = "queued" | "running" | "cancelling" | "done" | "error" | "cancelled"
+
+export interface UbaBacktestPayload {
+	days: number
+	warmup_days: number
+	rules?: string[]
+	filter?: string
+}
+
+export interface UbaBacktestRuleResult {
+	rule_id: string
+	signals: number
+	per_day: number
+	entities: number
+	top_entities: { entity: string; signals: number }[]
+	days: Record<string, number>
+	samples: string[]
+}
+
+export interface UbaBacktestResult {
+	since: string
+	until: string
+	docs: number
+	warmup_docs: number
+	/** Stopped at UBA's document limit: covers only part of the window. */
+	truncated: boolean
+	rules: UbaBacktestRuleResult[]
+	native_contributions: number
+	alerts: { entity: string; rules: string[]; risk: number; reason: string | null }[]
+	alert_count: number
+	alert_updates: number
+}
+
+export interface UbaBacktest {
+	id: string
+	status: UbaBacktestStatus
+	params: UbaBacktestPayload
+	requested_by: string | null
+	created_at: string
+	started_at: string | null
+	finished_at: string | null
+	progress: { docs?: number; phase?: string }
+	error: string | null
+	result: UbaBacktestResult | null
+}

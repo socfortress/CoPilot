@@ -95,6 +95,22 @@ def test_none_params_are_dropped_and_actor_is_sent_on_writes():
     assert json.loads(req.content)["verdict"] == "FALSE_POSITIVE"
 
 
+def test_backtests_send_only_given_params_and_the_catalog_list_is_wrapped():
+    from app.connectors.uba.schema.uba import UbaBacktestRequest
+
+    rec = Recorder(
+        (202, {"success": True, "message": "ok", "backtest": {"id": "b1", "status": "queued"}}),
+        (200, [{"id": "auth.new_country", "name": "New country"}]),
+    )
+    created = _run(services.create_backtest("lab", UbaBacktestRequest(days=2, rules=["auth.new_country"]), "analyst1"), rec)
+    req = rec.requests[0]
+    assert req.method == "POST" and req.url.path == "/v1/tenants/lab/backtests" and req.headers["x-uba-actor"] == "analyst1"
+    assert json.loads(req.content) == {"days": 2.0, "warmup_days": 0.0, "rules": ["auth.new_country"]}
+    assert created.backtest["status"] == "queued"
+    catalog = _run(services.list_rule_catalog(), rec)
+    assert rec.requests[1].url.path == "/v1/rules" and catalog.rules[0]["id"] == "auth.new_country"
+
+
 @pytest.mark.parametrize(
     "status,body,reason,code",
     [
