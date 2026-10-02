@@ -18,6 +18,48 @@ export interface UbaTenantStatus {
 	signals_24h: number
 	/** Health of each source feeding UBA (absent from UBA versions before feed health). */
 	feeds?: UbaFeedStatus[]
+	/** Onboarding state (absent from UBA versions before tenant registration). */
+	onboarding?: UbaOnboardingStatus | null
+}
+
+export type UbaOnboardingStatus = "inactive" | "pending" | "bootstrapping" | "error" | "live"
+
+/** UBA's registration of a customer and its history replay (GET /v1/tenants/{code}/onboarding). */
+export interface UbaOnboarding {
+	tenant: string
+	name: string
+	status: UbaOnboardingStatus
+	active: boolean
+	bootstrap_days: number
+	bootstrap_since: string | null
+	/** History replayed up to here. */
+	bootstrap_cursor: string | null
+	bootstrap_docs: number
+	bootstrap_error: string | null
+	bootstrapped_until: string | null
+	office365_organization_ids: string[]
+	indices: Record<string, string>
+}
+
+export interface UbaProvisioning {
+	/** Source streams UBA would read, per source (WAZUH, O365). */
+	sources: Record<string, number>
+	office365_tenants: string[]
+	/** Why UBA cannot be set up yet (e.g. the customer is not provisioned). */
+	problem: string | null
+	/** Null when UBA does not know the customer. */
+	onboarding: UbaOnboarding | null
+}
+
+export interface UbaProvisionPayload {
+	bootstrap_days: number
+	deploy_wazuh_rules: boolean
+}
+
+export interface UbaProvisionStep {
+	step: string
+	status: string
+	detail: string
 }
 
 export type UbaFeedState = "ok" | "lagging" | "quiet" | "repeating"

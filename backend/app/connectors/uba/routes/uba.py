@@ -23,9 +23,13 @@ from fastapi import Depends
 from fastapi import Query
 from fastapi import Security
 from fastapi.responses import JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.connectors.uba.schema.provision import UbaProvisionRequest
+from app.connectors.uba.schema.provision import UbaProvisionResponse
+from app.connectors.uba.schema.provision import UbaProvisionStatusResponse
 from app.connectors.uba.schema.uba import UbaAvailabilityResponse
 from app.connectors.uba.schema.uba import UbaBacktestRequest
 from app.connectors.uba.schema.uba import UbaCustomerStatusResponse
@@ -33,8 +37,10 @@ from app.connectors.uba.schema.uba import UbaFeedbackRequest
 from app.connectors.uba.schema.uba import UbaResponse
 from app.connectors.uba.schema.uba import UbaScoreRequest
 from app.connectors.uba.schema.uba import UbaSuppressionRequest
+from app.connectors.uba.services import provision as provisioning
 from app.connectors.uba.services import uba as svc
 from app.connectors.uba.utils.universal import UbaRequestError
+from app.db.db_session import get_db
 from app.middleware.customer_access import verify_customer_code_access
 
 uba_router = APIRouter()
@@ -374,3 +380,27 @@ async def delete_native_override(
     current_user: User = Depends(AuthHandler().get_current_user),
 ):
     return await _call(svc.delete_native_override(customer_code, rule_id, integration, current_user.username))
+
+
+@uba_router.get(
+    "/{customer_code}/provisioning",
+    response_model=UbaProvisionStatusResponse,
+    description="Whether UBA is set up for this customer, its onboarding progress, and the streams provisioning would use",
+    dependencies=_ADMIN,
+)
+async def get_provisioning(customer_code: str, session: AsyncSession = Depends(get_db)):
+    return await _call(provisioning.get_provisioning_status(customer_code, session))
+
+
+@uba_router.post(
+    "/{customer_code}/provision",
+    response_model=UbaProvisionResponse,
+    description=(
+        "Set UBA up for this customer: register it with UBA (history replay, then live), create the Graylog "
+        "UBA FEED streams, routing pipelines and output next to its Wazuh and Office365 streams, and the UBA "
+        "ALERTS input and stream. Optionally deploys UBA's Wazuh rules and restarts the manager. Safe to run again."
+    ),
+    dependencies=_ADMIN,
+)
+async def provision(customer_code: str, request: UbaProvisionRequest, session: AsyncSession = Depends(get_db)):
+    return await _call(provisioning.provision_uba(customer_code, request, session))

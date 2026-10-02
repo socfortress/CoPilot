@@ -124,7 +124,8 @@ async def uba_request(
         raise UbaRequestError(
             "insufficient_scope",
             f"The UBA API key's scope does not allow this ({_upstream_detail(response) or 'forbidden'}). "
-            "CoPilot needs a key with scope write.",
+            "CoPilot needs a key with scope write; setting UBA up for a customer needs scope admin "
+            "for that customer (or all: `--scope admin --tenants '*'`).",
         )
     if response.status_code == 404:
         raise UbaRequestError("not_found", _upstream_detail(response) or "Not found in SOCFortress UBA", 404)

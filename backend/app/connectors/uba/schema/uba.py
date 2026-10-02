@@ -69,6 +69,7 @@ class UbaTenantStatus(BaseModel):
     alerts_24h: int = 0
     open_alerts: int = 0
     signals_24h: int = 0
+    onboarding: Optional[str] = None  # inactive, pending, bootstrapping, error, live
 
 
 class UbaCustomerStatusResponse(BaseModel):
