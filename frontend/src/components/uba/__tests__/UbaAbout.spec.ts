@@ -47,7 +47,9 @@ const ABOUT: UbaAbout = {
 }
 
 const getAbout = vi.fn()
+const auth = { isAdmin: false }
 vi.mock("@/api", () => ({ default: { uba: { getAbout: (...args: unknown[]) => getAbout(...args) } } }))
+vi.mock("@/stores/auth", () => ({ useAuthStore: () => auth }))
 
 async function render() {
 	const wrapper = mount(UbaAboutCard, { props: { customerCode: "lab" } })
@@ -57,6 +59,7 @@ async function render() {
 
 describe("ubaAbout", () => {
 	beforeEach(() => {
+		auth.isAdmin = false
 		localStorage.clear()
 		getAbout.mockReset().mockResolvedValue({ data: ABOUT })
 	})
@@ -73,6 +76,14 @@ describe("ubaAbout", () => {
 		expect(text).toContain("Sign-ins (2)")
 		// Formatting never leaves a space before punctuation ("alert , which").
 		expect(text).not.toMatch(/\s[,.:;)]/)
+	})
+
+	it("offers admins the deployment guide, and nobody else", async () => {
+		expect((await render()).text()).not.toContain("Deploying UBA")
+		auth.isAdmin = true
+		const text = (await render()).text()
+		expect(text).toContain("Deploying UBA (admins)")
+		expect(text).toContain("create CoPilot's API key for all customers")
 	})
 
 	it("remembers that it was closed and does not load until opened", async () => {
