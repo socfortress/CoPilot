@@ -63,6 +63,10 @@ async def get_entity(customer_code: str, entity_key: str) -> UbaResponse:
     return await _get(f"{_tenant(customer_code)}/entities/{path_segment(entity_key)}")
 
 
+async def get_entity_risk_history(customer_code: str, entity_key: str, **params: Any) -> UbaResponse:
+    return await _get(f"{_tenant(customer_code)}/entities/{path_segment(entity_key)}/risk-history", params)
+
+
 async def get_entity_timeline(customer_code: str, entity_key: str, **params: Any) -> UbaResponse:
     return await _get(f"{_tenant(customer_code)}/entities/{path_segment(entity_key)}/timeline", params)
 

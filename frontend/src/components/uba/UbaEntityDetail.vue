@@ -11,6 +11,20 @@
 				</header>
 
 				<section class="flex flex-col gap-2">
+					<div class="flex flex-wrap items-center justify-between gap-2">
+						<span :class="SECTION_LABEL">Risk over time</span>
+						<n-radio-group v-model:value="range" size="small">
+							<n-radio-button v-for="r of RANGES" :key="r.value" :value="r.value">{{ r.value }}</n-radio-button>
+						</n-radio-group>
+					</div>
+					<UbaError v-if="historyError" :error="historyError" />
+					<n-spin v-else :show="historyLoading">
+						<UbaRiskChart v-if="history" :history />
+						<div v-else class="h-[200px]" />
+					</n-spin>
+				</section>
+
+				<section class="flex flex-col gap-2">
 					<span :class="SECTION_LABEL">Risk by rule (last 14 days, decayed now)</span>
 					<ul class="divide-border border-default flex flex-col divide-y rounded-lg border">
 						<li v-for="part of detail.risk_by_rule" :key="part.rule_id" class="flex items-center gap-3 px-3 py-2">
@@ -135,9 +149,9 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { UbaEntityDetail, UbaSignal } from "@/types/uba"
-import { NButton, NSpin, NTag, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import type { UbaEntityDetail, UbaRiskHistory, UbaRiskStep, UbaSignal } from "@/types/uba"
+import { NButton, NRadioButton, NRadioGroup, NSpin, NTag, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import { SECTION_LABEL } from "@/components/common/section-label"
 import { useNavigation } from "@/composables/useNavigation"
@@ -146,6 +160,7 @@ import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import UbaError from "./UbaError.vue"
 import UbaEvidence from "./UbaEvidence.vue"
+import UbaRiskChart from "./UbaRiskChart.vue"
 import { entityTypeLabel, identitySourceLabel, privilegedReasonLabel, riskLabel, riskTagType } from "./utils"
 
 const { customerCode, entityKey } = defineProps<{ customerCode: string; entityKey: string }>()
@@ -163,6 +178,37 @@ const detail = ref<UbaEntityDetail | null>(null)
 const timeline = ref<UbaSignal[]>([])
 const timelineTotal = ref(0)
 const timelinePage = ref(1)
+
+// Risk over time: the range picks the step so the chart stays a few hundred points.
+const RANGES: { value: string; step: UbaRiskStep }[] = [
+	{ value: "24h", step: "15m" },
+	{ value: "7d", step: "1h" },
+	{ value: "14d", step: "1h" },
+	{ value: "30d", step: "6h" }
+]
+const range = ref("14d")
+const history = ref<UbaRiskHistory | null>(null)
+const historyLoading = ref(false)
+const historyError = ref<ApiError | null>(null)
+
+function loadHistory() {
+	const step = RANGES.find(r => r.value === range.value)?.step ?? "1h"
+	historyLoading.value = true
+	historyError.value = null
+	Api.uba
+		.getEntityRiskHistory(customerCode, entityKey, range.value, step)
+		.then(res => {
+			history.value = res.data
+		})
+		.catch((err: ApiError) => {
+			historyError.value = err
+		})
+		.finally(() => {
+			historyLoading.value = false
+		})
+}
+
+watch(range, loadHistory)
 
 // The directory's view of the account, when any source told UBA (sync or account-change events).
 const accountState = computed<{ label: string; type: "success" | "warning" | "error" } | null>(() => {
@@ -223,6 +269,7 @@ function suppress(ruleId: string) {
 			message.success(`${ruleId} no longer adds risk for this entity for 30 days.`)
 			emit("changed")
 			load()
+			loadHistory() // a suppressed rule no longer adds risk
 		})
 		.catch((err: ApiError) => {
 			message.error(getApiErrorMessage(err) || "Suppressing failed.")
@@ -232,5 +279,8 @@ function suppress(ruleId: string) {
 		})
 }
 
-onBeforeMount(load)
+onBeforeMount(() => {
+	load()
+	loadHistory()
+})
 </script>
