@@ -176,14 +176,14 @@ describe("socFilterBar", () => {
 
 	it("marks the active period and picks another", async () => {
 		const { wrapper, preset } = bar()
-		expect(wrapper.get("[data-testid=period-30d]").attributes("aria-checked")).toBe("true")
-		await wrapper.get("[data-testid=period-7d]").trigger("click")
+		expect(wrapper.get("[data-testid=period-30d]").classes()).toContain("n-radio-button--checked")
+		await wrapper.get("[data-testid=period-7d] input").trigger("change")
 		expect(preset.value).toBe("7d")
 	})
 
 	it("starts a custom period from the window on screen", async () => {
 		const { wrapper, preset } = bar()
-		await wrapper.get("[data-testid=period-custom]").trigger("click")
+		await wrapper.get("[data-testid=period-custom] input").trigger("change")
 		expect(preset.value).toBe("30d") // the parent switches once it has a range
 		expect(wrapper.emitted("customRange")?.[0]).toEqual([
 			{ from: new Date("2026-09-01T00:00:00Z"), to: new Date("2026-09-30T00:00:00Z") }

@@ -62,7 +62,7 @@
 				<span>{{ rate == null ? EMPTY : rate.toFixed(1) }}</span>
 				<span v-if="rate != null" class="text-secondary text-lg">%</span>
 			</span>
-			<span class="text-secondary text-2xs mt-1 font-mono tracking-wider uppercase">{{ label }}</span>
+			<span class="text-secondary mt-1.5 font-mono text-[9px] leading-none tracking-wide uppercase">{{ label }}</span>
 		</div>
 		<figcaption v-if="caption" class="text-tertiary mt-2 text-center text-xs">{{ caption }}</figcaption>
 	</figure>

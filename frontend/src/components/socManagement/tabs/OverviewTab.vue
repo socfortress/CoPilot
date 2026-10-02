@@ -107,9 +107,9 @@
 						<template #icon><Icon name="carbon:arrow-right" /></template>
 					</n-button>
 				</template>
-				<div class="max-h-[340px] overflow-y-auto">
+				<n-scrollbar trigger="none" class="max-h-[340px]" data-testid="overview-attention-scroll">
 					<AttentionList :items="dashboard.attention" />
-				</div>
+				</n-scrollbar>
 			</SocPanel>
 		</div>
 
@@ -124,44 +124,25 @@
 						<template #icon><Icon name="carbon:arrow-right" /></template>
 					</n-button>
 				</template>
-				<table class="severity-table w-full text-sm" data-testid="overview-severity-table">
-					<thead>
-						<tr class="text-tertiary text-2xs text-left tracking-wider uppercase">
-							<th class="px-3 py-2 font-medium">Severity</th>
-							<th class="px-3 py-2 text-right font-medium">Opened</th>
-							<th class="px-3 py-2 font-medium">Response</th>
-							<th class="px-3 py-2 font-medium">Resolution</th>
-							<th class="px-3 py-2 text-right font-medium">Past SLA</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr v-for="row of alertSeverities" :key="row.severity" class="border-default border-t">
-							<td class="px-3 py-2"><SeverityTag :severity="row.severity" /></td>
-							<td class="px-3 py-2 text-right font-mono tabular-nums">{{ formatCount(row.opened) }}</td>
-							<td class="px-3 py-2">
-								<ComplianceMeter :compliance="row.sla.ack" label="Acknowledged within SLA" compact />
-							</td>
-							<td class="px-3 py-2">
-								<ComplianceMeter :compliance="row.sla.resolve" label="Resolved within SLA" compact />
-							</td>
-							<td
-								class="px-3 py-2 text-right font-mono tabular-nums"
-								:style="{ color: row.breached_now ? TONE_COLOR.bad : 'var(--fg-tertiary-color)' }"
-							>
-								{{ row.breached_now }}
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<n-data-table
+					:columns="severityColumns"
+					:data="alertSeverities"
+					:row-key="(row: SeverityRow) => row.severity"
+					size="small"
+					:bordered="false"
+					:scroll-x="620"
+					data-testid="overview-severity-table"
+				/>
 			</SocPanel>
 		</div>
 	</div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="tsx">
+import type { DataTableColumns } from "naive-ui"
 import type { SocTab } from "../composables/useSocFilters"
-import type { SlaEntity, SocDashboard } from "@/types/soc-management"
-import { NButton, NRadioButton, NRadioGroup } from "naive-ui"
+import type { SeverityRow, SlaEntity, SocDashboard } from "@/types/soc-management"
+import { NButton, NDataTable, NRadioButton, NRadioGroup, NScrollbar } from "naive-ui"
 import { computed, shallowRef } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
@@ -201,6 +182,42 @@ const breachedHint = computed(() => {
 	return `${formatCount(at_risk)} at risk · ${formatCount(openItems.value)} open${waiting}`
 })
 const alertSeverities = computed(() => dashboard.severities.filter(row => row.entity === "alert"))
+const severityColumns: DataTableColumns<SeverityRow> = [
+	{ title: "Severity", key: "severity", width: 130, render: row => <SeverityTag severity={row.severity} /> },
+	{
+		title: "Opened",
+		key: "opened",
+		width: 90,
+		align: "right",
+		render: row => <span class="font-mono tabular-nums">{formatCount(row.opened)}</span>
+	},
+	{
+		title: "Response",
+		key: "ack",
+		minWidth: 150,
+		render: row => <ComplianceMeter compliance={row.sla.ack} label="Acknowledged within SLA" compact />
+	},
+	{
+		title: "Resolution",
+		key: "resolve",
+		minWidth: 150,
+		render: row => <ComplianceMeter compliance={row.sla.resolve} label="Resolved within SLA" compact />
+	},
+	{
+		title: "Past SLA",
+		key: "breached_now",
+		width: 90,
+		align: "right",
+		render: row => (
+			<span
+				class="font-mono tabular-nums"
+				style={{ color: row.breached_now ? TONE_COLOR.bad : "var(--fg-tertiary-color)" }}
+			>
+				{row.breached_now}
+			</span>
+		)
+	}
+]
 const attentionCaption = computed(() => {
 	const { breached, at_risk } = dashboard.workload
 	return `${breached} past SLA · ${at_risk} at risk`
@@ -210,16 +227,9 @@ const attentionCaption = computed(() => {
 <style scoped>
 .hero-band {
 	background-color: var(--bg-default-color);
-	background-image: radial-gradient(rgb(var(--border-color-rgb) / 0.9) 1px, transparent 1px);
-	background-size: 14px 14px;
 }
 
 .hero-gauge {
 	background: radial-gradient(circle at 50% 40%, rgb(var(--primary-color-rgb) / 0.07), transparent 65%);
-}
-
-.severity-table th,
-.severity-table td {
-	white-space: nowrap;
 }
 </style>

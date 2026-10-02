@@ -2,9 +2,6 @@
 	<div class="soc-management flex flex-col gap-4" data-testid="soc-management">
 		<header class="flex flex-wrap items-end justify-between gap-4">
 			<div class="flex min-w-0 flex-col gap-1">
-				<span class="eyebrow text-primary text-2xs font-mono font-semibold tracking-[0.3em] uppercase">
-					SOC Management · SLA
-				</span>
 				<h2 class="m-0 text-xl font-semibold">Service performance</h2>
 				<p class="text-secondary m-0 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
 					<span>{{ periodLabel }}</span>

@@ -1,24 +1,22 @@
 <template>
 	<div class="soc-filter-bar flex flex-wrap items-center gap-2" data-testid="soc-filter-bar">
-		<div
-			class="period-switch border-default bg-default inline-flex overflow-hidden rounded-md border"
-			role="radiogroup"
+		<n-radio-group
+			:value="preset"
+			size="small"
+			class="period-switch"
 			aria-label="Period"
+			data-testid="period-switch"
+			@update:value="choose"
 		>
-			<button
+			<n-radio-button
 				v-for="option of periodOptions"
 				:key="option.key"
-				type="button"
-				role="radio"
-				:aria-checked="preset === option.key"
-				class="period-option px-3 py-1.5 font-mono text-xs tracking-wider uppercase transition-colors"
-				:class="preset === option.key ? 'is-active' : 'text-secondary hover:text-default'"
+				:value="option.key"
 				:data-testid="`period-${option.key}`"
-				@click="choose(option.key)"
 			>
 				{{ option.label }}
-			</button>
-		</div>
+			</n-radio-button>
+		</n-radio-group>
 
 		<n-date-picker
 			v-if="preset === 'custom'"
@@ -83,7 +81,7 @@
 import type { SelectOption } from "naive-ui"
 import type { PeriodPreset, PeriodRange } from "./utils"
 import type { Severity } from "@/types/soc-management"
-import { NDatePicker, NSelect, NTooltip } from "naive-ui"
+import { NDatePicker, NRadioButton, NRadioGroup, NSelect, NTooltip } from "naive-ui"
 import { computed } from "vue"
 import { isValidRange, PERIOD_PRESETS, SEVERITIES } from "./utils"
 
@@ -133,15 +131,3 @@ function isFuture(timestamp: number) {
 	return timestamp > Date.now()
 }
 </script>
-
-<style scoped>
-.period-option + .period-option {
-	border-left: 1px solid var(--border-color);
-}
-
-.period-option.is-active {
-	color: var(--primary-color);
-	background-color: rgb(var(--primary-color-rgb) / 0.12);
-	box-shadow: inset 0 -2px 0 var(--primary-color);
-}
-</style>
