@@ -4,7 +4,8 @@ SOCFortress UBA routes: ``/api/uba``.
 Every route but ``/availability`` names its tenant in the path and carries
 ``verify_customer_code_access``. Reads are admin/analyst; suppressions and
 verdicts are analyst actions; native rule scores (tuning risk for a whole
-customer) are admin only. The caller's username goes to UBA as ``X-UBA-Actor``.
+customer) and identity source test/sync (a customer's directory credentials) are
+admin only. The caller's username goes to UBA as ``X-UBA-Actor``.
 
 Upstream failures come back as ``{"detail", "reason", "success": false}`` with 502
 (or 404 / 409 / 422), never 401/403, which the frontend reads as the analyst's own
@@ -215,6 +216,44 @@ async def remove_suppressions(
     current_user: User = Depends(AuthHandler().get_current_user),
 ):
     return await _call(svc.remove_suppressions(customer_code, entity_key, rule_id, current_user.username))
+
+
+@uba_router.get(
+    "/{customer_code}/identity-sources",
+    response_model=UbaResponse,
+    description="Directory syncs (Entra ID) of this customer and how their last run went; never the secret",
+    dependencies=_READ,
+)
+async def list_identity_sources(customer_code: str):
+    return await _call(svc.list_identity_sources(customer_code))
+
+
+@uba_router.post(
+    "/{customer_code}/identity-sources/{source_id}/test",
+    response_model=UbaResponse,
+    description="Sign in to the directory and check each permission; the result names a missing one",
+    dependencies=_ADMIN,
+)
+async def test_identity_source(
+    customer_code: str,
+    source_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.test_identity_source(customer_code, source_id, current_user.username))
+
+
+@uba_router.post(
+    "/{customer_code}/identity-sources/{source_id}/sync",
+    response_model=UbaResponse,
+    description="Queue a directory sync; UBA's worker runs it within about a minute",
+    dependencies=_ADMIN,
+)
+async def sync_identity_source(
+    customer_code: str,
+    source_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.sync_identity_source(customer_code, source_id, current_user.username))
 
 
 @uba_router.get(

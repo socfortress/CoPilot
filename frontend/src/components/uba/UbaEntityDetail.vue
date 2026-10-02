@@ -35,6 +35,40 @@
 
 				<section v-if="detail.identity" class="flex flex-col gap-2">
 					<span :class="SECTION_LABEL">Identity</span>
+					<div v-if="accountState" class="flex flex-wrap items-center gap-2 text-sm">
+						<n-tag size="small" :type="accountState.type" :bordered="false">{{ accountState.label }}</n-tag>
+						<span v-if="detail.identity.account_created_at" class="text-secondary text-xs">
+							created in the directory {{ formatDate(detail.identity.account_created_at, dFormats.date) }}
+						</span>
+						<span v-if="detail.identity.attr_source?.enabled" class="text-tertiary text-xs">
+							· from {{ identitySourceLabel(detail.identity.attr_source.enabled) }}
+						</span>
+					</div>
+					<div v-if="detail.identity.privileged_reasons.length" class="flex flex-col gap-1">
+						<span class="text-secondary text-xs">Privileged because</span>
+						<ul class="flex flex-col gap-0.5">
+							<li v-for="r of detail.identity.privileged_reasons" :key="r" class="text-sm">
+								<b>{{ privilegedReasonLabel(r).what }}</b>
+								<span class="text-tertiary text-xs">· {{ privilegedReasonLabel(r).how }}</span>
+							</li>
+						</ul>
+					</div>
+					<div v-if="detail.identity.memberships?.length" class="flex flex-col gap-1">
+						<span class="text-secondary text-xs">Roles and groups</span>
+						<ul class="flex flex-col gap-0.5">
+							<li
+								v-for="m of detail.identity.memberships"
+								:key="`${m.source}:${m.group_name}`"
+								class="flex flex-wrap items-center gap-2 text-sm"
+							>
+								<span>{{ m.group_name }}</span>
+								<n-tag v-if="m.privileged" size="tiny" type="warning" :bordered="false">admin</n-tag>
+								<span class="text-tertiary text-xs">
+									{{ identitySourceLabel(m.source) }}{{ m.since ? ` · since ${formatDate(m.since, dFormats.date)}` : "" }}
+								</span>
+							</li>
+						</ul>
+					</div>
 					<div class="flex flex-wrap gap-1.5">
 						<span
 							v-for="a of detail.identity.aliases"
@@ -105,7 +139,7 @@
 import type { ApiError } from "@/types/common"
 import type { UbaEntityDetail, UbaSignal } from "@/types/uba"
 import { NButton, NSpin, NTag, useMessage } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import { SECTION_LABEL } from "@/components/common/section-label"
 import { useNavigation } from "@/composables/useNavigation"
@@ -113,7 +147,7 @@ import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import UbaError from "./UbaError.vue"
-import { entityTypeLabel, riskLabel, riskTagType } from "./utils"
+import { entityTypeLabel, identitySourceLabel, privilegedReasonLabel, riskLabel, riskTagType } from "./utils"
 
 const { customerCode, entityKey } = defineProps<{ customerCode: string; entityKey: string }>()
 const emit = defineEmits<{ openAlert: [alertId: string]; changed: [] }>()
@@ -130,6 +164,16 @@ const detail = ref<UbaEntityDetail | null>(null)
 const timeline = ref<UbaSignal[]>([])
 const timelineTotal = ref(0)
 const timelinePage = ref(1)
+
+// The directory's view of the account, when any source told UBA (sync or account-change events).
+const accountState = computed<{ label: string; type: "success" | "warning" | "error" } | null>(() => {
+	const identity = detail.value?.identity
+	if (!identity) return null
+	if (identity.deleted_at) return { label: `deleted ${formatDate(identity.deleted_at, dFormats.date)}`, type: "error" }
+	if (identity.enabled === false) return { label: "account disabled", type: "warning" }
+	if (identity.enabled === true) return { label: "account enabled", type: "success" }
+	return null
+})
 
 function isSuppressed(ruleId: string) {
 	return detail.value?.suppressions.some(s => s.rule_id === ruleId && s.active) ?? false
