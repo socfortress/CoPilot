@@ -355,7 +355,9 @@ async def main():
         check("the alert list counts it apart", counts.get("pending_customer", 0) >= 1, str(counts.get("pending_customer")))
         item = (await client.get(f"/soc_management/items/alert/{a4}/sla", headers=ana)).json()
         check("its clocks read as paused", item["resolve"]["state"] == "paused" and item["paused_at"] is not None, str(item["resolve"]))
-        await asyncio.sleep(1.1)
+        # MySQL DATETIME keeps whole seconds and rounds, so a stored paused_at can be up to
+        # half a second late: wait long enough that the banked wait is still >= 1s.
+        await asyncio.sleep(2.1)
         reply = await client.post(
             f"{DB}/alert/comment",
             json={"alert_id": a4, "comment": "yes, that was me", "user_name": "x"},
