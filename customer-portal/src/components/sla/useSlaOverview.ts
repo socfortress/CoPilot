@@ -26,6 +26,8 @@ export function useSlaOverview(period: Ref<PeriodPreset["key"]>) {
 		return run(
 			async signal => {
 				const response = await Api.sla.getOverview(from, to, customerFilterStore.queryCustomerCodes, signal)
+				// A response that lands after a newer load started must not overwrite it.
+				if (signal.aborted) return
 				overview.value = response.data
 				error.value = null
 			},
