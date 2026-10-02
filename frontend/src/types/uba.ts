@@ -215,3 +215,22 @@ export interface UbaSuppressionPayload {
 	days?: number
 	reason?: string | null
 }
+
+export interface UbaEvidenceEvent {
+	gl2_message_id: string
+	index: string
+	id: string
+	/** Graylog receive time. */
+	timestamp: string | null
+	/** The indexed document; values over 4,000 characters are clipped by UBA. */
+	source: Record<string, unknown>
+}
+
+export interface UbaEvidence {
+	signal_id: string
+	rule_id: string
+	events: UbaEvidenceEvent[]
+	/** Ids no longer in the indexer (index retention). */
+	missing: string[]
+	note: string | null
+}
