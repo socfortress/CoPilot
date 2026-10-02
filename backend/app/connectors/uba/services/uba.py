@@ -120,6 +120,12 @@ async def sync_identity_source(customer_code: str, source_id: str, actor: str) -
     return UbaResponse(**await uba_request("POST", path, actor=actor))
 
 
+async def get_about() -> UbaResponse:
+    """UBA in plain words: the risk policy's numbers and every rule by category (not per tenant)."""
+    body = await uba_request("GET", "/v1/about")
+    return UbaResponse(**body) if isinstance(body, dict) else UbaResponse()
+
+
 async def list_rule_catalog() -> UbaResponse:
     """UBA's rules (id, name, detector, score, MITRE); not per tenant, so the caller's route checks access."""
     rules = await uba_request("GET", "/v1/rules")

@@ -111,6 +111,13 @@ def test_backtests_send_only_given_params_and_the_catalog_list_is_wrapped():
     assert rec.requests[1].url.path == "/v1/rules" and catalog.rules[0]["id"] == "auth.new_country"
 
 
+def test_about_passes_ubas_explanation_through():
+    rec = Recorder((200, {"policy": {"alert_threshold": 100}, "rule_count": 1, "categories": [{"id": "auth", "rules": []}]}))
+    about = _run(services.get_about(), rec)
+    assert rec.requests[0].url.path == "/v1/about"
+    assert about.success and about.policy["alert_threshold"] == 100 and about.rule_count == 1
+
+
 @pytest.mark.parametrize(
     "status,body,reason,code",
     [

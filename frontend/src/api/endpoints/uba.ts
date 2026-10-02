@@ -1,5 +1,6 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type {
+	UbaAbout,
 	UbaAlert,
 	UbaAlertUpdate,
 	UbaAvailability,
@@ -116,6 +117,9 @@ export default {
 		return HttpClient.post<FlaskBaseResponse & { ok: boolean; detail: string }>(
 			`${base(customerCode)}/identity-sources/${encodeURIComponent(sourceId)}/sync`
 		)
+	},
+	getAbout(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & UbaAbout>(`${base(customerCode)}/about`, { signal })
 	},
 	getRuleCatalog(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { rules: UbaRuleInfo[] }>(`${base(customerCode)}/rules/catalog`, {
