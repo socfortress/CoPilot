@@ -116,6 +116,29 @@ describe("ubaSetup", () => {
 		expect(wrapper.emitted("live")).toHaveLength(1)
 	})
 
+	it("runs again for a live customer, keeping its history setting, e.g. after Microsoft 365 is added", async () => {
+		getProvisioning.mockResolvedValue({
+			data: { ...NOT_SET_UP, onboarding: onboarding("live", { bootstrap_days: 7 }) }
+		})
+		const wrapper = mount(UbaSetup, { props: { customerCode: "acme", closable: true } })
+		await flushPromises()
+		const text = wrapper.text()
+		expect(text).toContain("UBA setup for this customer")
+		expect(text).toContain("UBA reads Wazuh and Microsoft 365 (2 tenants) for this customer")
+		expect(text).toContain("run setup again so UBA reads the new streams too")
+		expect(text).not.toContain("History to learn from") // a live customer is never replayed again
+		expect(text).not.toMatch(/\s[,.:;)]/)
+
+		const again = wrapper.findAll("button").find(b => b.text() === "Run setup again")
+		expect(again).toBeDefined()
+		await again?.trigger("click")
+		await flushPromises()
+		expect(provision).toHaveBeenCalledWith("acme", { bootstrap_days: 7, deploy_wazuh_rules: false })
+
+		await wrapper.findAll("button").find(b => b.text() === "Close")?.trigger("click")
+		expect(wrapper.emitted("close")).toHaveLength(1)
+	})
+
 	it("names the problem instead of offering setup", async () => {
 		getProvisioning.mockResolvedValue({
 			data: { ...NOT_SET_UP, sources: {}, problem: "Customer acme has no Wazuh stream on record" }
