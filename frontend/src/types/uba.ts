@@ -234,3 +234,16 @@ export interface UbaEvidence {
 	missing: string[]
 	note: string | null
 }
+
+export type UbaRiskStep = "15m" | "1h" | "6h" | "1d"
+
+export interface UbaRiskHistory {
+	entity_key: string
+	step: UbaRiskStep
+	alert_threshold: number
+	/** Risk at each step (UBA's current-risk formula applied at that time); the last point is now. */
+	points: { time: string; risk: number; native: number }[]
+	/** Contributions in the window (the 200 largest), by time. */
+	findings: { id: string; time: string; rule_id: string; effective_score: number; native: boolean; explanation: string | null }[]
+	alerts: { id: string; opened_at: string; risk: number }[]
+}

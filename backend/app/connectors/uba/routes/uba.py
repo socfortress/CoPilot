@@ -112,6 +112,21 @@ async def get_entity(customer_code: str, entity_key: str = Query(..., min_length
 
 
 @uba_router.get(
+    "/{customer_code}/entity/risk-history",
+    response_model=UbaResponse,
+    description="The entity's risk over time, its native part, and the findings and alerts that moved it",
+    dependencies=_READ,
+)
+async def get_entity_risk_history(
+    customer_code: str,
+    entity_key: str = Query(..., min_length=1, max_length=512),
+    since: Optional[str] = Query(None, description="ISO time or duration (default 14d, at most 30d)"),
+    step: str = Query("1h", pattern="^(15m|1h|6h|1d)$"),
+):
+    return await _call(svc.get_entity_risk_history(customer_code, entity_key, since=since, step=step))
+
+
+@uba_router.get(
     "/{customer_code}/entity/timeline",
     response_model=UbaResponse,
     description="The entity's signals, newest first, including suppressed findings and native alert contributions",

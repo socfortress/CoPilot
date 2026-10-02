@@ -10,6 +10,8 @@ import type {
 	UbaFeedbackPayload,
 	UbaIdentitySource,
 	UbaPage,
+	UbaRiskHistory,
+	UbaRiskStep,
 	UbaRuleStat,
 	UbaSignal,
 	UbaSuppression,
@@ -42,6 +44,12 @@ export default {
 	getEntity(customerCode: string, entityKey: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & UbaEntityDetail>(`${base(customerCode)}/entity`, {
 			params: { entity_key: entityKey },
+			signal
+		})
+	},
+	getEntityRiskHistory(customerCode: string, entityKey: string, since: string, step: UbaRiskStep, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & UbaRiskHistory>(`${base(customerCode)}/entity/risk-history`, {
+			params: { entity_key: entityKey, since, step },
 			signal
 		})
 	},
