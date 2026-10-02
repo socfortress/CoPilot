@@ -21,8 +21,8 @@
 					<b>SOCFortress UBA</b>
 					connector under
 					<b>Platform → Connectors</b>
-					with the UBA API's URL and an API key (`uba-admin api-keys create --name copilot --scope write`), then
-					verify it.
+					with the UBA API's URL and an API key (`uba-admin api-keys create --name copilot --scope admin --tenants
+					'*'`; scope admin lets admins set customers up from this page), then verify it.
 				</p>
 			</template>
 		</n-empty>
@@ -59,10 +59,13 @@
 				</Badge>
 				<span v-if="version" class="text-tertiary text-xs">UBA {{ version }}</span>
 			</header>
-			<!-- Part of the error / header chain above: shown only when UBA returned no status row. -->
-			<n-alert v-else-if="statusLoaded" type="info" :bordered="false">
-				SOCFortress UBA has no data for this customer yet (or the API key isn't allowed to see it).
-			</n-alert>
+			<!-- Not set up yet (no status row), or still learning from history: setup and progress. -->
+			<UbaSetup
+				v-if="needsSetup"
+				:key="`setup${customerModel}`"
+				:customer-code="customerModel"
+				@live="loadStatus(customerModel)"
+			/>
 			<n-alert v-if="unhealthyFeeds.length" type="warning" :bordered="false">
 				<p v-for="feed of unhealthyFeeds" :key="feed.source">
 					<b>{{ feedLabel(feed.source) }}</b>
@@ -141,6 +144,7 @@ import UbaEntities from "./UbaEntities.vue"
 import UbaEntityDetail from "./UbaEntityDetail.vue"
 import UbaError from "./UbaError.vue"
 import UbaRules from "./UbaRules.vue"
+import UbaSetup from "./UbaSetup.vue"
 import UbaSuppressions from "./UbaSuppressions.vue"
 import { formatLag } from "./utils"
 
@@ -170,6 +174,13 @@ function setQuery(patch: Record<string, string | undefined>) {
 }
 
 const customerCodes = computed(() => customers.value.map(c => c.code))
+// No status row: UBA does not know the customer. A row that is not live: registered, history replaying.
+const needsSetup = computed(
+	() =>
+		statusLoaded.value &&
+		!statusError.value &&
+		(!status.value || (!!status.value.onboarding && status.value.onboarding !== "live"))
+)
 const unhealthyFeeds = computed(() => (status.value?.feeds ?? []).filter(feed => feed.status !== "ok"))
 
 const FEED_LABELS: Record<string, string> = { office365: "Microsoft 365", wazuh: "Wazuh" }

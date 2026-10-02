@@ -12,7 +12,11 @@ import type {
 	UbaEvidence,
 	UbaFeedbackPayload,
 	UbaIdentitySource,
+	UbaOnboarding,
 	UbaPage,
+	UbaProvisioning,
+	UbaProvisionPayload,
+	UbaProvisionStep,
 	UbaRiskHistory,
 	UbaRiskStep,
 	UbaRuleInfo,
@@ -143,6 +147,17 @@ export default {
 	cancelBacktest(customerCode: string, jobId: string) {
 		return HttpClient.post<FlaskBaseResponse & { backtest: UbaBacktest }>(
 			`${base(customerCode)}/backtests/${encodeURIComponent(jobId)}/cancel`
+		)
+	},
+	/** Admin: whether UBA is set up for the customer, its onboarding progress, the streams it would use. */
+	getProvisioning(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & UbaProvisioning>(`${base(customerCode)}/provisioning`, { signal })
+	},
+	/** Admin: register the customer with UBA and create its Graylog routing (safe to run again). */
+	provision(customerCode: string, payload: UbaProvisionPayload) {
+		return HttpClient.post<FlaskBaseResponse & { steps: UbaProvisionStep[]; onboarding: UbaOnboarding | null }>(
+			`${base(customerCode)}/provision`,
+			payload
 		)
 	},
 	getRuleStats(customerCode: string, since = "24h", signal?: AbortSignal) {
