@@ -32,7 +32,10 @@ a mocked request layer; this is where the whole loop runs as in production:
   I) business hours: a customer calendar and a business-hours cell open on it;
   J) SLA notifications: sent once per clock, never twice;
   K) the portal SLA page: off until an admin turns it on, then the customer's figures
-     only, without a single analyst name.
+     only, without a single analyst name;
+  L) an SLA notification delivered for real: an internal webhook route with the
+     built-in "SLA — running late" template, to an HTTP receiver started here — one
+     request, logged as sent, and nothing more on the next pass.
 """
 
 import asyncio
@@ -59,8 +62,11 @@ from app.auth.models.users import User  # noqa: E402
 from app.auth.models.users import UserCustomerAccess  # noqa: E402
 from app.auth.utils import AuthHandler  # noqa: E402
 from app.db.db_session import async_engine  # noqa: E402
+from app.db.universal_models import CustomerNotificationRoute  # noqa: E402
 from app.db.universal_models import CustomerPortalSlaSettings  # noqa: E402
 from app.db.universal_models import Customers  # noqa: E402
+from app.db.universal_models import NotificationDispatchLog  # noqa: E402
+from app.db.universal_models import NotificationTemplate  # noqa: E402
 from app.incidents.models import Alert  # noqa: E402
 from app.incidents.models import Case  # noqa: E402
 from app.incidents.models import CaseAlertLink  # noqa: E402
@@ -69,6 +75,10 @@ from app.incidents.models import CaseEvent  # noqa: E402
 from app.incidents.models import CaseTask  # noqa: E402
 from app.incidents.models import Comment  # noqa: E402
 from app.incidents.services.incident_alert import create_alert_in_copilot  # noqa: E402
+from app.notifications.services.emit import emit_now  # noqa: E402
+from app.notifications.services.template_seeds import (  # noqa: E402
+    seed_builtin_templates,
+)
 from app.soc_management.models.sla import AlertSlaTracking  # noqa: E402
 from app.soc_management.models.sla import CaseSlaTracking  # noqa: E402
 from app.soc_management.models.sla import SlaCalendar  # noqa: E402
@@ -79,6 +89,7 @@ CUST_A, CUST_B = "E2E_SLA_A", "E2E_SLA_B"
 ADMIN, ANALYST, PORTAL = "e2e_sla_admin", "e2e_sla_ana", "e2e_sla_portal"
 PASSWORD = "E2ePassw0rd!x"
 DB = "/incidents/db_operations"
+WEBHOOK_ROUTE = "E2E SLA webhook"
 
 results = []
 
@@ -93,10 +104,11 @@ def build_app():
     from app.routers import auth
     from app.routers import customer_portal
     from app.routers import incidents
+    from app.routers import notifications
     from app.routers import soc_management
 
     app = FastAPI()
-    for module in (auth, incidents, soc_management, customer_portal):
+    for module in (auth, incidents, soc_management, customer_portal, notifications):
         app.include_router(module.router)
     return app
 
@@ -120,6 +132,7 @@ async def cleanup():
         await s.execute(delete(SlaPolicy).where(SlaPolicy.updated_by == ADMIN))
         await s.execute(delete(SlaCalendar).where(SlaCalendar.customer_code.in_(codes)))
         await s.execute(delete(CustomerPortalSlaSettings).where(CustomerPortalSlaSettings.customer_code.in_(codes)))
+        await s.execute(delete(CustomerNotificationRoute).where(CustomerNotificationRoute.name == WEBHOOK_ROUTE))
         for username in (ADMIN, ANALYST, PORTAL):
             user = (await s.execute(select(User).where(User.username == username))).scalars().first()
             if user:
@@ -164,6 +177,30 @@ async def ingest(code, title, severity="High"):
         payload = SimpleNamespace(alert_title_payload=title, source="wazuh", severity=severity)
         alert = await create_alert_in_copilot(payload, code, s)
         return alert.id
+
+
+class Receiver:
+    """A bare HTTP endpoint on localhost that records every request body it is sent."""
+
+    def __init__(self):
+        self.bodies = []
+        self.server = None
+
+    async def start(self) -> str:
+        self.server = await asyncio.start_server(self._handle, "127.0.0.1", 0)
+        return f"http://127.0.0.1:{self.server.sockets[0].getsockname()[1]}/hook"
+
+    async def _handle(self, reader, writer):
+        head = await reader.readuntil(b"\r\n\r\n")
+        length = next((int(line.split(b":")[1]) for line in head.split(b"\r\n") if line.lower().startswith(b"content-length:")), 0)
+        self.bodies.append((await reader.readexactly(length)).decode())
+        writer.write(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nContent-Type: application/json\r\n\r\n{}")
+        await writer.drain()
+        writer.close()
+
+    async def stop(self):
+        self.server.close()
+        await self.server.wait_closed()
 
 
 async def tracking(model, key):
@@ -406,6 +443,66 @@ async def main():
         )
         check("their alerts are counted", body["alerts"]["opened"] == 4, str(body["alerts"]["opened"]))
         check("no analyst name reaches the customer", ANALYST not in page.text and ADMIN not in page.text)
+
+        print("L) SLA notification delivered through a real route")
+        receiver = Receiver()
+        url = await receiver.start()
+        await seed_builtin_templates(async_engine)
+        async with session() as s:
+            template_id = (
+                await s.execute(
+                    select(NotificationTemplate.id).where(
+                        NotificationTemplate.name == "SLA — running late",
+                        NotificationTemplate.is_default.is_(True),
+                    ),
+                )
+            ).scalar_one()
+        created = await client.post(
+            "/internal_notification_routes",
+            json={
+                "name": WEBHOOK_ROUTE,
+                "trigger": "sla_breached",
+                "channel": "webhook",
+                "scope": "internal",
+                "min_severity": "Informational",
+                "template_id": template_id,
+                "config": {"url": url},
+            },
+            headers=admin,
+        )
+        check("an admin creates an internal SLA route", created.status_code == 200, created.text[:200])
+        route_id = created.json()["route"]["id"]
+        a5 = await ingest(CUST_A, "E2E credential stuffing")
+        pending = []
+        late = datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+        await SlaNotifier(send=pending.append, clock=lambda: late).run()
+        mine = [event for event in pending if event.entity_id == a5]
+        check(
+            "the breach of the new alert is owed once",
+            [e.trigger.value for e in mine] == ["sla_breached"],
+            str([e.trigger.value for e in mine]),
+        )
+        for event in mine:
+            await emit_now(event)
+        check("the webhook received exactly one request", len(receiver.bodies) == 1, str(len(receiver.bodies)))
+        body = receiver.bodies[0] if receiver.bodies else ""
+        check(
+            "it is the SLA template, naming the item, the target and the delay",
+            "*SLA breached*" in body and "acknowledge target" in body and f"#{a5}" in body and "min overdue" in body,
+            body[:160].replace("\n", " | "),
+        )
+        async with session() as s:
+            logged = (await s.execute(select(NotificationDispatchLog).where(NotificationDispatchLog.route_id == route_id))).scalars().all()
+        check("the dispatch log records it as sent", [row.status for row in logged] == ["sent"], str([row.status for row in logged]))
+        # Once-only is the notifier's guarantee (it claims a notice before sending), not the
+        # dispatch log's: dispatch_event sends first and only then finds a duplicate row.
+        pending.clear()
+        await SlaNotifier(send=pending.append, clock=lambda: late).run()
+        check("the next pass owes nothing more for it", not [event for event in pending if event.entity_id == a5])
+        check("so the webhook still saw one request", len(receiver.bodies) == 1, str(len(receiver.bodies)))
+        await receiver.stop()
+        deleted = await client.delete(f"/internal_notification_routes/{route_id}", headers=admin)
+        check("the route is removed", deleted.status_code == 200)
 
         print("F) report")
         if shutil.which("wkhtmltopdf"):
