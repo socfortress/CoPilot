@@ -303,3 +303,37 @@ export interface UbaBacktest {
 	error: string | null
 	result: UbaBacktestResult | null
 }
+
+/** UBA's risk policy, in the numbers the About card explains. */
+export interface UbaRiskPolicy {
+	alert_threshold: number
+	/** One finding at least this strong (after weighting) alerts on its own. */
+	single_signal_threshold: number
+	half_life_hours: number
+	horizon_days: number
+	repeat_window_hours: number
+	repeat_decay: number
+	privileged_multiplier: number
+	/** Native (Wazuh) alerts add at most this much per entity per repeat window. */
+	max_native_per_window: number
+}
+
+export interface UbaAboutRule {
+	id: string
+	name: string
+	/** What it detects and why it matters, in plain words. */
+	description: string
+	/** How it decides, written from the rule's settings. */
+	how: string
+	score: number
+	/** Whose risk it adds to, in words ("the person or program that acted", "the computer", ...). */
+	about: string
+	mitre: string[]
+	enabled: boolean
+}
+
+export interface UbaAbout {
+	policy: UbaRiskPolicy
+	rule_count: number
+	categories: { id: string; label: string; summary: string; rules: UbaAboutRule[] }[]
+}

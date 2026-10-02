@@ -73,6 +73,8 @@
 				</p>
 			</n-alert>
 
+			<UbaAbout :key="`about${customerModel}`" :customer-code="customerModel" />
+
 			<n-tabs v-model:value="tabModel" type="line" animated>
 				<n-tab-pane name="entities" tab="Entities" display-directive="show:lazy">
 					<UbaEntities :key="`e${customerModel}`" :customer-code="customerModel" @open="openEntity" />
@@ -131,6 +133,7 @@ import Badge from "@/components/common/Badge.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { useRouteQueryParam } from "@/composables/useNavigation"
 import { useUbaAvailability } from "@/composables/useUbaAvailability"
+import UbaAbout from "./UbaAbout.vue"
 import UbaAlertDetail from "./UbaAlertDetail.vue"
 import UbaAlerts from "./UbaAlerts.vue"
 import UbaDirectory from "./UbaDirectory.vue"

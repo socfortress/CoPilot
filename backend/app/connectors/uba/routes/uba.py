@@ -283,6 +283,16 @@ async def sync_identity_source(
 
 
 @uba_router.get(
+    "/{customer_code}/about",
+    response_model=UbaResponse,
+    description="What UBA is, how its risk adds up and what each rule means, for people new to it",
+    dependencies=_READ,
+)
+async def get_about(customer_code: str):
+    return await _call(svc.get_about())
+
+
+@uba_router.get(
     "/{customer_code}/rules/catalog",
     response_model=UbaResponse,
     description="UBA's rules (id, name, detector, score, MITRE); the customer code only checks access",
