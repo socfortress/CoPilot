@@ -134,6 +134,20 @@
 						</n-collapse>
 					</section>
 
+					<section v-if="isAdmin" class="flex flex-col gap-2">
+						<span :class="SECTION_LABEL">Deploying UBA (admins)</span>
+						<n-collapse :default-expanded-names="[]" arrow-placement="right">
+							<n-collapse-item name="deploy">
+								<template #header>
+									<span class="text-secondary text-xs">
+										How to install SOCFortress UBA, create CoPilot's API key for all customers, and connect it
+									</span>
+								</template>
+								<UbaDeployGuide />
+							</n-collapse-item>
+						</n-collapse>
+					</section>
+
 					<section class="flex flex-col gap-2">
 						<span :class="SECTION_LABEL">Words used on this page</span>
 						<dl class="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-[max-content_1fr]">
@@ -160,6 +174,8 @@ import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
+import { useAuthStore } from "@/stores/auth"
+import UbaDeployGuide from "./UbaDeployGuide.vue"
 import UbaError from "./UbaError.vue"
 
 const { customerCode } = defineProps<{ customerCode: string }>()
@@ -175,6 +191,7 @@ const GLOSSARY = [
 ]
 
 const open = useLocalStorage("uba-about-open", true)
+const isAdmin = computed(() => useAuthStore().isAdmin)
 const loading = ref(false)
 const error = ref<ApiError | null>(null)
 const about = ref<UbaAbout | null>(null)

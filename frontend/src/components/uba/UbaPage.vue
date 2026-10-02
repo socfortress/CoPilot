@@ -14,18 +14,22 @@
 
 		<n-spin v-if="!availabilityLoaded" class="min-h-40" show />
 
-		<n-empty v-else-if="!available" description="SOCFortress UBA is not connected" class="py-10">
-			<template #extra>
-				<p class="text-secondary max-w-md text-sm">
-					Configure the
-					<b>SOCFortress UBA</b>
-					connector under
-					<b>Platform → Connectors</b>
-					with the UBA API's URL and an API key (`uba-admin api-keys create --name copilot --scope admin --tenants
-					'*'`; scope admin lets admins set customers up from this page), then verify it.
-				</p>
-			</template>
-		</n-empty>
+		<div v-else-if="!available" class="flex flex-col gap-4">
+			<n-empty description="SOCFortress UBA is not connected" class="py-6">
+				<template #extra>
+					<p class="text-secondary max-w-md text-sm">
+						{{
+							isAdmin
+								? "Deploy UBA and connect it with the steps below."
+								: "An admin can deploy SOCFortress UBA and connect it under Platform → Connectors."
+						}}
+					</p>
+				</template>
+			</n-empty>
+			<n-card v-if="isAdmin" size="small" title="Deploy SOCFortress UBA">
+				<UbaDeployGuide />
+			</n-card>
+		</div>
 
 		<template v-else-if="customerModel">
 			<UbaError v-if="statusError" :error="statusError" />
@@ -133,7 +137,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { UbaFeedStatus, UbaTenantStatus } from "@/types/uba"
-import { NAlert, NButton, NDrawer, NDrawerContent, NEmpty, NFormItem, NSelect, NSpin, NTabPane, NTabs } from "naive-ui"
+import { NAlert, NButton, NCard, NDrawer, NDrawerContent, NEmpty, NFormItem, NSelect, NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
@@ -145,6 +149,7 @@ import { useAuthStore } from "@/stores/auth"
 import UbaAbout from "./UbaAbout.vue"
 import UbaAlertDetail from "./UbaAlertDetail.vue"
 import UbaAlerts from "./UbaAlerts.vue"
+import UbaDeployGuide from "./UbaDeployGuide.vue"
 import UbaDirectory from "./UbaDirectory.vue"
 import UbaEntities from "./UbaEntities.vue"
 import UbaEntityDetail from "./UbaEntityDetail.vue"
