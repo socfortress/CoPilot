@@ -30,3 +30,7 @@ The resolved branding also themes that customer's branded PDF reports (the
     A portal user scoped to more than one customer sees the **global** branding,
     since no single customer's override applies unambiguously. Overrides apply to
     users scoped to exactly one customer.
+
+## Service Levels page
+
+A per-customer, opt-in page that shows the customer the SLA agreed with them and how it was kept — see [Customer Portal — Service Levels](./customer-portal-service-levels.md).

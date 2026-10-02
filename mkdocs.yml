@@ -94,6 +94,9 @@ nav:
               - Case Templates: user/ui/incident-case-templates.md
               - Alerting → Shuffle (notifications): user/ui/alerting-shuffle.md
               - Notifications (routes & channels): user/ui/notifications.md
+          - SOC Management:
+              - SOC Management: user/ui/soc-management.md
+              - SLA policies & business hours: user/ui/sla-policies.md
           - Alerts:
               - Alerts: user/ui/alerts.md
               - SIEM: user/ui/alerts-siem.md
@@ -136,7 +139,9 @@ nav:
               - Network Connectors: user/ui/external-network-connectors.md
               - Singul App Auth: user/ui/external-singul-app-auth.md
           - Scheduler: user/ui/scheduler.md
-          - Customer Portal: user/ui/customer-portal.md
+          - Customer Portal:
+              - Customer Portal: user/ui/customer-portal.md
+              - Service Levels: user/ui/customer-portal-service-levels.md
       - Videos (Playlist): user/videos.md
   - Developer / AI Agent Docs:
       - Start Here: developer/start-here.md

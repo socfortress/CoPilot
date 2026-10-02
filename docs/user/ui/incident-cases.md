@@ -77,6 +77,10 @@ Link them all to the same case so the case becomes the single place to:
 2) Click **Comments**
 3) Add investigation notes, decisions, and handoff context
 
+### Waiting on the customer
+
+When you need something from the customer (a confirmation, a log, a decision), set the case to **Waiting on customer**. Its SLA clocks stop, and its open alerts wait with it. When the customer replies with a comment in the portal, the case goes back to **In progress** on its own and the clocks restart — the wait never counts against the SOC. See [SOC Management](./soc-management.md).
+
 ---
 
 ## Step 4 — Use Data Store for supporting material

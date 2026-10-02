@@ -61,7 +61,7 @@ Use the filter controls to narrow your queue.
 
 Available filters include:
 
-- **Status** (Open / Closed / In progress)
+- **Status** (Open / In progress / Waiting on customer / Closed)
 - **Assigned To** (dropdown)
 - **Customer Code** (dropdown)
 - **Source** (dropdown)

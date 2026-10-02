@@ -46,6 +46,13 @@
             ]
           },
           {
+            "group": "SOC Management",
+            "pages": [
+              "user/ui/soc-management",
+              "user/ui/sla-policies"
+            ]
+          },
+          {
             "group": "SIEM",
             "pages": [
               "user/ui/siem-event-search",
@@ -111,6 +118,12 @@
             ]
           },
           {
+            "group": "SLA",
+            "pages": [
+              "user/ui/sla-policies"
+            ]
+          },
+          {
             "group": "Notifications & Alerting (outbound)",
             "pages": [
               "user/ui/notifications",
@@ -151,7 +164,8 @@
       {
         "tab": "Customer Portal",
         "pages": [
-          "customer-portal/index"
+          "customer-portal/index",
+          "user/ui/customer-portal-service-levels"
         ]
       },
       {

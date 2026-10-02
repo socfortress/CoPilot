@@ -5,7 +5,7 @@ description: Send alerts, AI investigation results and assignment events to emai
 
 # Notifications (routes & channels)
 
-CoPilot sends a message when something happens — a new alert lands, an AI investigation finishes, an analyst is assigned a case. You choose the **trigger**, the **severity floor**, the **channel**, and optionally the **message template**.
+CoPilot sends a message when something happens — a new alert lands, an AI investigation finishes, an analyst is assigned a case, an SLA is about to slip. You choose the **trigger**, the **severity floor**, the **channel**, and optionally the **message template**.
 
 Four channels ship today:
 
@@ -24,19 +24,28 @@ Things the customer should know about: an alert was raised, an investigation con
 
 **Internal routes** — *Notifications → Internal Routes* (admin only)
 
-Things your SOC should know about: who picked up which alert. These belong to no customer, which is the point — assigning an ACME alert to an analyst notifies your team, never ACME.
+Things your SOC should know about: who picked up which alert, and which alert or case is about to miss — or has missed — its SLA. These belong to no customer, which is the point — assigning an ACME alert to an analyst notifies your team, never ACME.
 
 **Message templates** — *Notifications → Message Templates* (admin only)
 
-Reusable message bodies shared across routes. Seven built-ins ship as working starting points; duplicate one to get an editable copy.
+Reusable message bodies shared across routes. Eight built-ins ship as working starting points; duplicate one to get an editable copy.
 
 ## The two things that catch people
 
 **An alert being created and its AI investigation finishing are different triggers**, minutes apart. A route set to *An alert is created* will never fire when the investigation completes — and AI content only rides the second event. If you want the report, you need a route with the *An AI investigation completes* trigger. Nothing reports an error when no route matches; it just stays quiet.
 
-**Assignment notifications are internal by design.** They only reach internal routes. A customer route with an assignment trigger could never fire, so the interface doesn't offer that combination.
+**Assignment and SLA notifications are internal by design.** They only reach internal routes. A customer route with an assignment or SLA trigger could never fire, so the interface doesn't offer that combination.
 
 If you want the assignee emailed directly, use the **Email (Resend)** channel with *Deliver to → Whoever it's assigned to*. It's the only channel that can address a person; a webhook targets a URL and Teams targets a channel.
+
+## SLA at risk / breached
+
+Two internal triggers watch the SLA clocks of every open alert and case ([SOC Management](./soc-management.md)):
+
+- **An alert or case SLA is at risk** — a running clock entered the last quarter of its window;
+- **An alert or case SLA is breached** — it ran out.
+
+Each fires **once per clock** (response and resolution separately), checked every two minutes. Items waiting on the customer are not chased, and a breach already more than a day old when first noticed (right after an upgrade, for instance) is recorded without a message, so a backlog does not flood the channel. The event carries the item's own severity — set the route's floor accordingly — and its assignee, so *Email → Whoever it's assigned to* tells the analyst whose item is running late. The built-in template **SLA — running late** fits both triggers.
 
 ## Sending one item on demand
 
