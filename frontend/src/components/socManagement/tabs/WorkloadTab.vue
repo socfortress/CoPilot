@@ -37,11 +37,7 @@
 
 		<div class="grid gap-4 xl:grid-cols-2">
 			<SocPanel title="Backlog by severity" caption="open now">
-				<LoadBars :rows="severityRows">
-					<template #label="{ row }">
-						<SeverityTag :severity="row.label as Severity" />
-					</template>
-				</LoadBars>
+				<LoadBars :rows="severityRows" :label-dot="row => colors.severity(row.label)" />
 			</SocPanel>
 			<SocPanel
 				:title="dashboard.viewer.sees_all_analysts ? 'Backlog by assignee' : 'Your backlog'"
@@ -82,19 +78,20 @@
 <script setup lang="ts">
 import type { LoadRow } from "../ui/LoadBars.vue"
 import type { SocScopeQuery } from "@/api/endpoints/soc-management"
-import type { Severity, SlaEntity, SocDashboard } from "@/types/soc-management"
+import type { SlaEntity, SocDashboard } from "@/types/soc-management"
 import { NAlert, NRadioButton, NRadioGroup, NSpin } from "naive-ui"
 import { computed, shallowRef } from "vue"
 import AttentionList from "../AttentionList.vue"
+import { useResolvedColors } from "../charts/chart-colors"
 import { useAttention } from "../composables/useAttention"
 import KpiTile from "../ui/KpiTile.vue"
 import LoadBars from "../ui/LoadBars.vue"
-import SeverityTag from "../ui/SeverityTag.vue"
 import SocPanel from "../ui/SocPanel.vue"
 import { formatCount, formatDuration, parseUtc } from "../utils"
 
 const { dashboard, scope } = defineProps<{ dashboard: SocDashboard; scope: SocScopeQuery }>()
 
+const colors = useResolvedColors()
 const workload = computed(() => dashboard.workload)
 const entityFilter = shallowRef<SlaEntity | "all">("all")
 const stateFilter = shallowRef<"breached" | "at_risk" | "all">("all")

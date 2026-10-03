@@ -4,54 +4,14 @@
 		:style="{ width: `${size}px` }"
 		data-testid="sla-gauge"
 	>
-		<svg
-			:width="size"
-			:height="size"
-			:viewBox="`0 0 ${VIEW} ${VIEW}`"
+		<VChart
+			:option
+			:style="{ width: `${size}px`, height: `${size}px` }"
 			role="img"
 			:aria-label="`${label}: ${formatRate(rate)}, objective ${objective}%`"
-		>
-			<!-- Dial: a ring of hairline ticks, the instrument's scale. -->
-			<g class="gauge-ticks">
-				<line
-					v-for="tick of ticks"
-					:key="tick.angle"
-					:x1="tick.x1"
-					:y1="tick.y1"
-					:x2="tick.x2"
-					:y2="tick.y2"
-					:stroke-width="tick.major ? 1.5 : 1"
-					stroke="var(--border-color)"
-				/>
-			</g>
-			<circle :cx="C" :cy="C" :r="R" fill="none" :stroke="track" :stroke-width="STROKE" />
-			<circle
-				v-if="rate != null"
-				class="gauge-arc"
-				:cx="C"
-				:cy="C"
-				:r="R"
-				fill="none"
-				:stroke="color"
-				:stroke-width="STROKE"
-				stroke-linecap="round"
-				:stroke-dasharray="`${arc} ${CIRCUMFERENCE}`"
-				:transform="`rotate(-90 ${C} ${C})`"
-				:style="{ filter: `drop-shadow(0 0 6px color-mix(in srgb, ${color} 55%, transparent))` }"
-			/>
-			<!-- The objective: a notch on the ring where "good" begins. -->
-			<line
-				:x1="objectiveMark.x1"
-				:y1="objectiveMark.y1"
-				:x2="objectiveMark.x2"
-				:y2="objectiveMark.y2"
-				stroke="var(--fg-secondary-color)"
-				stroke-width="2"
-				stroke-linecap="round"
-			/>
-		</svg>
+		/>
 		<div
-			class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
+			class="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-center justify-center"
 			:style="{ height: `${size}px` }"
 		>
 			<span
@@ -71,9 +31,20 @@
 <script setup lang="ts">
 // The page's hero figure: one SLA rate on a dial, with the objective notched on the
 // ring. Exactly one per view. The arc's colour is the SLA status, and the number is
-// printed in the middle — the colour never stands alone.
+// printed in the middle (HTML, so it keeps the page's type) — the colour never stands
+// alone. ECharts draws the dial: a ring of hairline ticks as the scale, the track, the
+// progress arc from twelve o'clock, and the objective notch.
+import type { GaugeSeriesOption } from "echarts/charts"
+import type { GraphicComponentOption } from "echarts/components"
+import type { ComposeOption } from "echarts/core"
+import { GaugeChart } from "echarts/charts"
+import { GraphicComponent } from "echarts/components"
+import { use } from "echarts/core"
+import { CanvasRenderer } from "echarts/renderers"
 import { computed } from "vue"
-import { EMPTY, formatRate, RATE_GOOD, rateTone, TONE_COLOR } from "../utils"
+import VChart from "vue-echarts"
+import { useResolvedColors } from "../charts/chart-colors"
+import { EMPTY, formatRate, RATE_GOOD, rateTone } from "../utils"
 
 const {
 	rate,
@@ -89,43 +60,86 @@ const {
 	objective?: number
 }>()
 
+use([CanvasRenderer, GaugeChart, GraphicComponent])
+
+const colors = useResolvedColors()
+
+/** Geometry in a 200-unit box, scaled to `size`: the ring's centre line and thickness. */
 const VIEW = 200
-const C = VIEW / 2
-const STROKE = 10
 const R = 74
-const CIRCUMFERENCE = 2 * Math.PI * R
+const STROKE = 10
 
-const color = computed(() => TONE_COLOR[rateTone(rate)])
-const track = computed(() =>
-	rate == null ? "var(--border-color)" : `color-mix(in srgb, ${color.value} 14%, transparent)`
-)
-const arc = computed(() => (Math.max(0, Math.min(100, rate ?? 0)) / 100) * CIRCUMFERENCE)
+const option = computed((): ComposeOption<GaugeSeriesOption | GraphicComponentOption> => {
+	const scale = size / VIEW
+	const hairline = colors.style.value["border-color"]
+	const color = colors.tone(rateTone(rate))
+	const dial = { type: "gauge" as const, startAngle: 90, endAngle: -270, min: 0, max: 100, center: ["50%", "50%"] }
+	const quiet = {
+		pointer: { show: false },
+		anchor: { show: false },
+		title: { show: false },
+		detail: { show: false },
+		axisLabel: { show: false }
+	}
 
-function polar(angleDeg: number, radius: number) {
-	const radians = ((angleDeg - 90) * Math.PI) / 180
-	return { x: C + radius * Math.cos(radians), y: C + radius * Math.sin(radians) }
-}
+	// The objective, as a notch across the ring at its angle (clockwise from the top).
+	const angle = (objective / 100) * 2 * Math.PI
+	const c = size / 2
+	const at = (radius: number) => ({ x: c + radius * scale * Math.sin(angle), y: c - radius * scale * Math.cos(angle) })
+	const inner = at(R - STROKE / 2 - 3)
+	const outer = at(R + STROKE / 2 + 3)
 
-const ticks = computed(() =>
-	Array.from({ length: 60 }, (_, i) => {
-		const angle = i * 6
-		const major = i % 5 === 0
-		const outer = polar(angle, 96)
-		const inner = polar(angle, major ? 88 : 91)
-		return { angle, major, x1: inner.x, y1: inner.y, x2: outer.x, y2: outer.y }
-	})
-)
-
-const objectiveMark = computed(() => {
-	const angle = (objective / 100) * 360
-	const outer = polar(angle, R + STROKE / 2 + 3)
-	const inner = polar(angle, R - STROKE / 2 - 3)
-	return { x1: inner.x, y1: inner.y, x2: outer.x, y2: outer.y }
+	return {
+		backgroundColor: "transparent",
+		series: [
+			// The scale: 60 hairline ticks outside the ring, a longer one every 30°.
+			{
+				...dial,
+				...quiet,
+				radius: "96%",
+				splitNumber: 12,
+				silent: true,
+				animation: false,
+				axisLine: { show: false, lineStyle: { width: 0 } },
+				progress: { show: false },
+				axisTick: { show: true, splitNumber: 5, distance: 0, length: 5 * scale, lineStyle: { color: hairline, width: 1 } },
+				splitLine: { show: true, distance: 0, length: 8 * scale, lineStyle: { color: hairline, width: 1.5 } },
+				data: [{ value: 0 }]
+			},
+			// The track and the arc: the rate, coloured by its status.
+			{
+				...dial,
+				...quiet,
+				radius: `${R + STROKE / 2}%`,
+				silent: true,
+				axisTick: { show: false },
+				splitLine: { show: false },
+				axisLine: {
+					lineStyle: {
+						width: STROKE * scale,
+						color: [[1, rate == null ? hairline : color]],
+						opacity: rate == null ? 1 : 0.14
+					}
+				},
+				progress: {
+					show: rate != null,
+					width: STROKE * scale,
+					roundCap: true,
+					itemStyle: { color, shadowBlur: 6, shadowColor: color }
+				},
+				animationDuration: 600,
+				data: [{ value: Math.max(0, Math.min(100, rate ?? 0)) }]
+			}
+		],
+		graphic: [
+			{
+				type: "line",
+				silent: true,
+				z: 10,
+				shape: { x1: inner.x, y1: inner.y, x2: outer.x, y2: outer.y },
+				style: { stroke: colors.style.value["fg-secondary-color"], lineWidth: 2, lineCap: "round" }
+			}
+		]
+	}
 })
 </script>
-
-<style scoped>
-.gauge-arc {
-	transition: stroke-dasharray 0.6s var(--bezier-ease, ease);
-}
-</style>

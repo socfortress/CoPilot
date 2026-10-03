@@ -29,6 +29,7 @@ function router() {
 		routes: [
 			{ path: "/", component: blank },
 			{ path: "/alerts", name: "IncidentManagement-Alerts", component: blank },
+			{ path: "/cases", name: "IncidentManagement-Cases", component: blank },
 			{ path: "/alerts/:id", name: "IncidentManagement-Alert", component: blank },
 			{ path: "/cases/:id", name: "IncidentManagement-Case", component: blank }
 		]
@@ -91,6 +92,15 @@ describe("overviewTab", () => {
 		expect(text).toContain("85–95% — below objective")
 		expect(text).toContain("the 95% objective")
 		wrapper.unmount()
+	})
+
+	it("links the opened-alerts and opened-cases tiles to their lists, keeping the customers in view", async () => {
+		const scoped = dashboard({ customer_codes: ["ACME"] })
+		const { wrapper } = await render(OverviewTab, { dashboard: scoped })
+		expect(wrapper.get("[data-testid=kpi-alerts-opened-link]").attributes("href")).toBe("/alerts?customerCode=ACME")
+		expect(wrapper.get("[data-testid=kpi-cases-opened-link]").attributes("href")).toBe("/cases")
+		const { wrapper: everyone } = await render(OverviewTab, { dashboard: dashboard({ customer_codes: null }) })
+		expect(everyone.get("[data-testid=kpi-alerts-opened-link]").attributes("href")).toBe("/alerts")
 	})
 
 	it("says how many open items wait on the customer, next to past SLA", async () => {
@@ -184,7 +194,9 @@ describe("workloadTab", () => {
 		const { wrapper } = await render(WorkloadTab, { dashboard: adminView(), scope: { customerCodes: ["ACME"] } })
 		expect(kpi(wrapper, "kpi-waiting")).toBe("4")
 		expect(wrapper.get("[data-testid=kpi-waiting]").text()).toContain("clocks stopped until they reply")
-		expect(wrapper.find("[data-testid=load-row-bob]").exists()).toBe(true)
+		const [bySeverity, byAssignee] = wrapper.findAll("[data-testid=load-bars]")
+		expect(bySeverity.attributes("aria-label")).toContain("Critical:")
+		expect(byAssignee.attributes("aria-label")).toContain("bob:")
 		expect(getAttention).toHaveBeenCalledWith(expect.objectContaining({ customerCodes: ["ACME"], limit: 200 }), expect.any(AbortSignal))
 		expect(wrapper.get("[data-testid=attention-list]").text()).toContain("Ransomware note dropped")
 	})
@@ -199,7 +211,8 @@ describe("workloadTab", () => {
 	it("gives an analyst only their own backlog", async () => {
 		const { wrapper } = await render(WorkloadTab, { dashboard: analystView(), scope: {} })
 		expect(wrapper.text()).toContain("Your backlog")
-		expect(wrapper.find("[data-testid=load-row-bob]").exists()).toBe(false)
+		const byAssignee = wrapper.findAll("[data-testid=load-bars]").at(-1)
+		expect(byAssignee?.attributes("aria-label") ?? "").not.toContain("bob:")
 	})
 
 	it("says when the list could not be loaded", async () => {

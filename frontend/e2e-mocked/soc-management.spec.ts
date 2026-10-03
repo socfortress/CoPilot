@@ -137,6 +137,17 @@ test.describe("as an admin", () => {
 		)
 	})
 
+	test("hovering the opened tiles reveals a View button to the alerts and cases lists", async ({ page }) => {
+		await open(page)
+		const alertsLink = page.getByTestId("kpi-alerts-opened-link")
+		await expect(alertsLink).toHaveCSS("opacity", "0")
+		await page.getByTestId("kpi-alerts-opened").hover()
+		await expect(alertsLink).toHaveCSS("opacity", "1")
+		await expect(page.getByTestId("kpi-cases-opened-link")).toHaveAttribute("href", "/incident-management/cases")
+		await alertsLink.click()
+		await expect(page).toHaveURL(/\/incident-management\/alerts/)
+	})
+
 	test("a period preset becomes the request's date range and the URL's", async ({ page }) => {
 		await open(page)
 		const before = mock.dashboardRequests.length

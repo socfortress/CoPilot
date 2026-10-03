@@ -3,6 +3,7 @@ import { flushPromises, mount } from "@vue/test-utils"
 import { createPinia, setActivePinia } from "pinia"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
+import { createMemoryHistory, createRouter } from "vue-router"
 import AttentionList from "../AttentionList.vue"
 import ItemSlaPanel from "../ItemSlaPanel.vue"
 import ComplianceMeter from "../ui/ComplianceMeter.vue"
@@ -14,6 +15,21 @@ import SlaStateTag from "../ui/SlaStateTag.vue"
 
 const getItemSla = vi.fn()
 vi.mock("@/api", () => ({ default: { socManagement: { getItemSla: (...args: unknown[]) => getItemSla(...args) } } }))
+
+/** VChart replaced by a stub that keeps the option it was given (and the attributes). */
+const rendered: Record<string, any>[] = []
+vi.mock("vue-echarts", () => ({
+	default: defineComponent({
+		props: { option: { type: Object, required: true } },
+		setup(props) {
+			return () => {
+				rendered.push(props.option)
+				return h("div", { "data-testid": "v-chart" })
+			}
+		}
+	})
+}))
+const lastOption = () => rendered.at(-1) as Record<string, any>
 
 /** RouterLink without a router: render the target as data so the test can read it. */
 const RouterLinkStub = defineComponent({
@@ -28,6 +44,7 @@ function compliance(over: Partial<Compliance> = {}): Compliance {
 }
 
 beforeEach(() => {
+	rendered.length = 0
 	setActivePinia(createPinia())
 	getItemSla.mockReset()
 })
@@ -84,15 +101,30 @@ describe("kpiTile and deltaChip", () => {
 })
 
 describe("slaGauge", () => {
-	it("shows the rate with its objective in the accessible name", () => {
+	it("draws the rate as an ECharts gauge, with its objective in the accessible name", () => {
 		const wrapper = mount(SlaGauge, { props: { rate: 96.4, label: "Resolved in SLA" } })
 		expect(wrapper.get("[data-testid=sla-gauge-value]").text().replace(/\s/g, "")).toBe("96.4%")
-		expect(wrapper.get("svg").attributes("aria-label")).toBe("Resolved in SLA: 96.4%, objective 95%")
+		expect(wrapper.get("[data-testid=v-chart]").attributes("aria-label")).toBe("Resolved in SLA: 96.4%, objective 95%")
+		const [scale, arc] = lastOption().series
+		expect(scale.axisTick.splitNumber * scale.splitNumber).toBe(60) // a tick every 6°
+		expect(arc).toMatchObject({ startAngle: 90, endAngle: -270, min: 0, max: 100 })
+		expect(arc.progress.show).toBe(true)
+		expect(arc.data[0].value).toBe(96.4)
+	})
+
+	it("notches the objective on the ring, clockwise from the top", () => {
+		mount(SlaGauge, { props: { rate: 50, label: "x", objective: 75, size: 200 } })
+		const notch = lastOption().graphic[0]
+		// 75% of a turn is nine o'clock: a horizontal notch left of the centre.
+		expect(notch.shape.y1).toBeCloseTo(100)
+		expect(notch.shape.y2).toBeCloseTo(100)
+		expect(notch.shape.x1).toBeLessThan(100)
+		expect(notch.shape.x2).toBeLessThan(notch.shape.x1)
 	})
 
 	it("draws no arc and shows a dash when there is no rate", () => {
 		const wrapper = mount(SlaGauge, { props: { rate: null, label: "Resolved in SLA" } })
-		expect(wrapper.find(".gauge-arc").exists()).toBe(false)
+		expect(lastOption().series[1].progress.show).toBe(false)
 		expect(wrapper.get("[data-testid=sla-gauge-value]").text()).toBe("—")
 	})
 })
@@ -159,22 +191,83 @@ describe("attentionList", () => {
 })
 
 describe("loadBars", () => {
-	it("scales every bar against the largest row and prints the counts beside it", () => {
-		const wrapper = mount(LoadBars, {
-			props: {
-				rows: [
-					{ key: "ana", label: "ana", alerts: 6, cases: 2, at_risk: 1, breached: 3 },
-					{ key: "bob", label: "bob", alerts: 4, cases: 0, at_risk: 0, breached: 0 }
-				]
-			}
+	const rows = [
+		{ key: "ana", label: "ana", alerts: 6, cases: 2, at_risk: 1, breached: 3 },
+		{ key: "bob", label: "bob", alerts: 4, cases: 0, at_risk: 0, breached: 0 }
+	]
+
+	it("stacks alerts and cases on one scale and prints the counts beside each bar", () => {
+		const wrapper = mount(LoadBars, { props: { rows } })
+		const option = lastOption()
+		expect(option.xAxis.max).toBe(8) // the largest row
+		expect(option.series.map((series: { name: string; stack: string }) => [series.name, series.stack])).toEqual([
+			["Alerts", "load"],
+			["Cases", "load"]
+		])
+		expect(option.series[0].data).toEqual([6, 4])
+		expect(option.series[1].data).toEqual([2, 0])
+		expect(option.yAxis[0].data).toEqual(["ana", "bob"])
+		const counts = option.yAxis[1].axisLabel.formatter("ana", 0)
+		expect(counts).toContain("{total|8}")
+		expect(counts).toContain("◷ 1")
+		expect(counts).toContain("▲ 3")
+		expect(wrapper.get("[data-testid=load-bars]").attributes("aria-label")).toContain("ana: 6 alerts, 2 cases, 1 at risk, 3 past SLA")
+	})
+
+	it("puts a dot before a label only when asked, keeping the names aligned", () => {
+		mount(LoadBars, { props: { rows, labelDot: row => (row.key === "ana" ? "#ff0000" : undefined) } })
+		const label = lastOption().yAxis[0].axisLabel
+		expect(label.formatter("ana", 0)).toBe("{dot0|●}{name|ana}")
+		expect(label.formatter("bob", 1)).toBe("{nodot|}{name|bob}")
+		expect(label.rich.dot0.color).toBe("#ff0000")
+		mount(LoadBars, { props: { rows } })
+		expect(lastOption().yAxis[0].axisLabel.formatter("bob", 1)).toBe("{name|bob}")
+	})
+
+	it("says so when nothing is open", () => {
+		const wrapper = mount(LoadBars, { props: { rows: [], emptyText: "Nothing open is assigned" } })
+		expect(wrapper.text()).toContain("Nothing open is assigned")
+		expect(wrapper.find("[data-testid=load-bars]").exists()).toBe(false)
+	})
+})
+
+describe("kpiTile link", () => {
+	function router() {
+		return createRouter({
+			history: createMemoryHistory(),
+			routes: [
+				{ path: "/", component: { render: () => null } },
+				{ path: "/incident-management/alerts", name: "IncidentManagement-Alerts", component: { render: () => null } }
+			]
 		})
-		const ana = wrapper.get("[data-testid=load-row-ana]")
-		const segments = ana.findAll(".bar-segment")
-		expect(segments[0].attributes("style")).toContain("width: 75%")
-		expect(segments[1].attributes("style")).toContain("width: 25%")
-		expect(ana.text()).toContain("8")
-		expect(ana.get("[title='3 past SLA']").text()).toBe("3")
-		expect(wrapper.get("[data-testid=load-row-bob]").findAll(".bar-segment")).toHaveLength(1)
+	}
+
+	it("offers a View button to the page behind the figure, revealed on hover", async () => {
+		const appRouter = router()
+		const wrapper = mount(KpiTile, {
+			props: {
+				label: "Alerts opened",
+				value: "12",
+				testId: "kpi-alerts-opened",
+				to: { name: "IncidentManagement-Alerts", query: { customerCode: ["ACME"] } },
+				linkLabel: "Open the alerts list"
+			},
+			global: { plugins: [appRouter] }
+		})
+		await flushPromises()
+		const link = wrapper.get("[data-testid=kpi-alerts-opened-link]")
+		expect(link.element.tagName).toBe("A")
+		expect(link.attributes("href")).toBe("/incident-management/alerts?customerCode=ACME")
+		expect(link.attributes("aria-label")).toBe("Open the alerts list")
+		expect(link.classes()).toContain("kpi-link")
+		await link.trigger("click")
+		await flushPromises()
+		expect(appRouter.currentRoute.value.name).toBe("IncidentManagement-Alerts")
+	})
+
+	it("has no button without a destination", () => {
+		const wrapper = mount(KpiTile, { props: { label: "x", value: "3", testId: "kpi-x" } })
+		expect(wrapper.find("[data-testid=kpi-x-link]").exists()).toBe(false)
 	})
 })
 

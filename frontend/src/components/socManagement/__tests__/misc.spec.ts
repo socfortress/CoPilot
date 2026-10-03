@@ -13,6 +13,19 @@ import { SEVERITY_TONE } from "../utils"
 import { CALENDAR } from "./fixtures"
 
 const api = { getAttention: vi.fn(), getCalendar: vi.fn(), saveCalendar: vi.fn(), deleteCalendar: vi.fn() }
+const sparkOptions: unknown[] = []
+vi.mock("vue-echarts", () => ({
+	default: defineComponent({
+		props: { option: { type: Object, required: true } },
+		setup(props) {
+			return () => {
+				sparkOptions.push(props.option)
+				return h("div", { "data-testid": "v-chart" })
+			}
+		}
+	})
+}))
+
 vi.mock("@/api", () => ({
 	default: {
 		socManagement: new Proxy(
@@ -217,11 +230,16 @@ describe("small ui", () => {
 		expect(wrapper.get(".severity-dot").attributes("style")).toContain(SEVERITY_TONE.Critical)
 	})
 
-	it("sparkline draws a line ending on the last value, and nothing for a single point", () => {
+	it("sparkline draws an axis-free ECharts line ending on a marked last value, and nothing for a single point", () => {
 		const wrapper = mount(Sparkline, { props: { values: [1, 4, 2] } })
-		expect(wrapper.get("svg").attributes("aria-label")).toBe("Trend over 3 periods, peak 4")
-		expect(wrapper.get("polyline").attributes("points")?.split(" ")).toHaveLength(3)
-		expect(mount(Sparkline, { props: { values: [5] } }).find("svg").exists()).toBe(false)
+		expect(wrapper.get("[data-testid=v-chart]").attributes("aria-label")).toBe("Trend over 3 periods, peak 4")
+		const option = sparkOptions.at(-1) as Record<string, any>
+		expect(option.xAxis.show).toBe(false)
+		expect(option.yAxis).toMatchObject({ show: false, min: 0, max: 4 })
+		const data = option.series[0].data
+		expect(data.slice(0, 2)).toEqual([1, 4])
+		expect(data[2]).toMatchObject({ value: 2, symbol: "circle" })
+		expect(mount(Sparkline, { props: { values: [5] } }).find("[data-testid=v-chart]").exists()).toBe(false)
 	})
 
 	it("socPanel carries its title, caption, actions and body", () => {

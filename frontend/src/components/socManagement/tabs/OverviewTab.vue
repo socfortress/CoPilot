@@ -77,6 +77,8 @@
 						:delta="computeDelta(alerts.opened, previous.alerts.opened)"
 						:hint="`${formatCount(alerts.resolved)} resolved in the period`"
 						test-id="kpi-alerts-opened"
+						:to="alertsListLink"
+						link-label="Open the alerts list"
 					/>
 					<KpiTile
 						label="Cases opened"
@@ -84,6 +86,8 @@
 						:delta="computeDelta(cases.opened, previous.cases.opened)"
 						:hint="`${formatCount(cases.resolved)} resolved in the period`"
 						test-id="kpi-cases-opened"
+						:to="{ name: 'IncidentManagement-Cases' }"
+						link-label="Open the cases list"
 					/>
 					<KpiTile
 						label="Time to acknowledge"
@@ -224,6 +228,12 @@ const breachedHint = computed(() => {
 	return `${formatCount(at_risk)} at risk · ${formatCount(openItems.value)} open${waiting}`
 })
 const alertSeverities = computed(() => dashboard.severities.filter(row => row.entity === "alert"))
+/** The alerts list, filtered to the customers in view (it reads `customerCode` from the URL). */
+const alertsListLink = computed(() => {
+	const codes = dashboard.customer_codes
+	return { name: "IncidentManagement-Alerts", query: codes?.length ? { customerCode: codes } : {} }
+})
+
 /** The colour bands of the dial, for its legend. */
 const gaugeBands = [
 	{ label: `${RATE_GOOD}% or more — on objective`, color: TONE_COLOR.good },

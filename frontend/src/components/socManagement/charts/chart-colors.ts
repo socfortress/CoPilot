@@ -1,3 +1,5 @@
+import type { Tone } from "../utils"
+import type { Severity } from "@/types/soc-management"
 import { computed } from "vue"
 import { useThemeStore } from "@/stores/theme"
 
@@ -26,5 +28,38 @@ export function useSocChartColors() {
 		mode,
 		primary: computed(() => PALETTE[mode.value].primary),
 		secondary: computed(() => PALETTE[mode.value].secondary)
+	}
+}
+
+/** The theme variable behind each status tone (TONE_COLOR holds the CSS `var()` form). */
+const TONE_VARS: Record<Tone, string> = {
+	good: "success-color",
+	warn: "warning-color",
+	bad: "error-color",
+	neutral: "fg-secondary-color"
+}
+
+/** The theme variable behind each severity dot (SEVERITY_TONE holds the CSS `var()` form). */
+const SEVERITY_VARS: Record<Severity, string> = {
+	Critical: "error-color",
+	High: "error-color",
+	Medium: "warning-color",
+	Low: "success-color",
+	Informational: "info-color"
+}
+
+/**
+ * Resolved colours for canvas charts. ECharts paints on a canvas, which cannot read CSS
+ * custom properties, so a chart needs the theme's actual values — the same ones the
+ * `var()` forms in `utils.ts` resolve to in the DOM, so a chart and the tag beside it
+ * always agree.
+ */
+export function useResolvedColors() {
+	const theme = useThemeStore()
+	const style = computed(() => theme.style)
+	return {
+		style,
+		tone: (tone: Tone) => style.value[TONE_VARS[tone]],
+		severity: (severity: string) => style.value[SEVERITY_VARS[severity as Severity]] ?? style.value["fg-secondary-color"]
 	}
 }

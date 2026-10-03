@@ -1,84 +1,34 @@
 <template>
-	<div class="load-bars flex flex-col gap-3">
-		<div class="flex flex-wrap items-center gap-4 text-xs" role="list" aria-label="Legend">
-			<span class="text-secondary inline-flex items-center gap-1.5" role="listitem">
-				<span class="inline-block size-2.5 rounded-sm" :style="{ backgroundColor: primary }" />
-				Alerts
-			</span>
-			<span class="text-secondary inline-flex items-center gap-1.5" role="listitem">
-				<span class="inline-block size-2.5 rounded-sm" :style="{ backgroundColor: secondary }" />
-				Cases
-			</span>
-		</div>
-		<n-empty v-if="!rows.length" :description="emptyText" class="py-4" />
-		<ul v-else class="m-0 flex list-none flex-col gap-2 p-0">
-			<li
-				v-for="row of rows"
-				:key="row.key"
-				class="load-row grid items-center gap-3"
-				:data-testid="`load-row-${row.key}`"
-			>
-				<span class="truncate text-sm" :title="row.label">
-					<slot name="label" :row>{{ row.label }}</slot>
-				</span>
-				<n-tooltip placement="top">
-					<template #trigger>
-						<div
-							class="bar-track flex h-3 items-center"
-							:aria-label="`${row.label}: ${row.alerts} alerts, ${row.cases} cases`"
-						>
-							<span
-								v-if="row.alerts"
-								class="bar-segment h-full rounded-l-sm"
-								:class="{ 'rounded-r-sm': !row.cases }"
-								:style="{ width: `${(row.alerts / scale) * 100}%`, backgroundColor: primary }"
-							/>
-							<span
-								v-if="row.cases"
-								class="bar-segment h-full rounded-r-sm"
-								:class="{ 'rounded-l-sm': !row.alerts, 'gap-left': row.alerts }"
-								:style="{ width: `${(row.cases / scale) * 100}%`, backgroundColor: secondary }"
-							/>
-						</div>
-					</template>
-					<div class="font-mono text-xs">
-						<div>{{ row.label }}</div>
-						<div class="text-secondary">{{ row.alerts }} alerts · {{ row.cases }} cases</div>
-					</div>
-				</n-tooltip>
-				<span class="w-12 text-right font-mono text-sm tabular-nums">{{ row.alerts + row.cases }}</span>
-				<span class="flex w-28 justify-end gap-2 font-mono text-xs tabular-nums">
-					<span
-						class="inline-flex items-center gap-0.5"
-						:style="{ color: row.at_risk ? TONE_COLOR.warn : 'var(--fg-tertiary-color)' }"
-						:title="`${row.at_risk} at risk`"
-					>
-						<Icon name="carbon:time" :size="12" />
-						{{ row.at_risk }}
-					</span>
-					<span
-						class="inline-flex items-center gap-0.5"
-						:style="{ color: row.breached ? TONE_COLOR.bad : 'var(--fg-tertiary-color)' }"
-						:title="`${row.breached} past SLA`"
-					>
-						<Icon name="carbon:warning-filled" :size="12" />
-						{{ row.breached }}
-					</span>
-				</span>
-			</li>
-		</ul>
-	</div>
+	<n-empty v-if="!rows.length" :description="emptyText" class="py-4" />
+	<VChart
+		v-else
+		class="load-bars w-full"
+		autoresize
+		:option
+		:style="{ height: `${chartHeight}px`, width: '100%' }"
+		role="img"
+		:aria-label
+		data-testid="load-bars"
+	/>
 </template>
 
 <script setup lang="ts">
-// Open load as horizontal stacked bars (alerts | cases) on one shared scale, with the
-// at-risk / past-SLA counts printed beside each — never left to colour alone. Bars cap
-// at 12px thick with a 2px surface gap between the two segments.
-import { NEmpty, NTooltip } from "naive-ui"
+// Open load as horizontal stacked bars (alerts | cases) on one shared scale, with each
+// row's total and its at-risk / past-SLA counts printed beside it — never left to colour
+// alone. Bars cap at 12px thick, with a 2px surface gap between the two segments; a row
+// label can carry a coloured dot (a severity).
+import type { BarSeriesOption } from "echarts/charts"
+import type { GridComponentOption, LegendComponentOption, TooltipComponentOption } from "echarts/components"
+import type { ComposeOption } from "echarts/core"
+import { BarChart } from "echarts/charts"
+import { GridComponent, LegendComponent, TooltipComponent } from "echarts/components"
+import { use } from "echarts/core"
+import { CanvasRenderer } from "echarts/renderers"
+import { NEmpty } from "naive-ui"
 import { computed } from "vue"
-import Icon from "@/components/common/Icon.vue"
-import { useSocChartColors } from "../charts/chart-colors"
-import { TONE_COLOR } from "../utils"
+import VChart from "vue-echarts"
+import { buildChartTooltipGlassBase, chartTooltipThemeFromStyle } from "@/components/common/charts"
+import { useResolvedColors, useSocChartColors } from "../charts/chart-colors"
 
 export interface LoadRow {
 	key: string
@@ -89,18 +39,152 @@ export interface LoadRow {
 	breached: number
 }
 
-const { rows, emptyText = "Nothing open" } = defineProps<{ rows: LoadRow[]; emptyText?: string }>()
+const {
+	rows,
+	emptyText = "Nothing open",
+	labelDot
+} = defineProps<{
+	rows: LoadRow[]
+	emptyText?: string
+	/** A resolved colour for a dot before the row's label (e.g. its severity), or nothing. */
+	labelDot?: (row: LoadRow) => string | undefined
+}>()
+
+use([CanvasRenderer, BarChart, GridComponent, LegendComponent, TooltipComponent])
 
 const { primary, secondary } = useSocChartColors()
+const colors = useResolvedColors()
+
+const ROW_HEIGHT = 30
+/** The label column: a dot slot, then the name, truncated to fit. */
+const LABEL_WIDTH = 150
+const DOT_WIDTH = 14
+const LEGEND_HEIGHT = 28
+const chartHeight = computed(() => LEGEND_HEIGHT + rows.length * ROW_HEIGHT + 4)
 const scale = computed(() => Math.max(1, ...rows.map(row => row.alerts + row.cases)))
+const ariaLabel = computed(() =>
+	rows.map(row => `${row.label}: ${row.alerts} alerts, ${row.cases} cases, ${row.at_risk} at risk, ${row.breached} past SLA`).join("; ")
+)
+
+/** A row's dot, an empty slot when this row has none (so names line up), or nothing without dots. */
+function dotSlot(index: number) {
+	if (!labelDot) return ""
+	return labelDot(rows[index]) ? `{dot${index}|●}` : "{nodot|}"
+}
+
+/** The counts beside a bar: the total, then at risk and past SLA, coloured only when non-zero. */
+function countsLabel(row: LoadRow, index: number) {
+	return `{total|${row.alerts + row.cases}}  {risk${index}|◷ ${row.at_risk}}  {bad${index}|▲ ${row.breached}}`
+}
+
+const option = computed(
+	(): ComposeOption<BarSeriesOption | GridComponentOption | LegendComponentOption | TooltipComponentOption> => {
+		const style = colors.style.value
+		const muted = style["fg-secondary-color"]
+		const quiet = style["fg-tertiary-color"] ?? muted
+		const ink = style["fg-default-color"]
+		const font = style["font-family"]
+		const surface = style["bg-default-color"]
+		const labels = rows.map(row => row.label)
+
+		const leftRich: Record<string, object> = {
+			name: { color: ink, fontFamily: font, fontSize: 13, width: LABEL_WIDTH - DOT_WIDTH, overflow: "truncate" },
+			nodot: { width: DOT_WIDTH }
+		}
+		const rightRich: Record<string, object> = {
+			total: { color: ink, fontFamily: "monospace", fontSize: 13, width: 36, align: "right" }
+		}
+		rows.forEach((row, i) => {
+			const dot = labelDot?.(row)
+			if (dot) leftRich[`dot${i}`] = { color: dot, fontSize: 11, width: DOT_WIDTH }
+			rightRich[`risk${i}`] = { color: row.at_risk ? colors.tone("warn") : quiet, fontFamily: "monospace", fontSize: 11 }
+			rightRich[`bad${i}`] = { color: row.breached ? colors.tone("bad") : quiet, fontFamily: "monospace", fontSize: 11 }
+		})
+
+		const segment = (name: string, color: string, values: number[]) => ({
+			type: "bar" as const,
+			name,
+			stack: "load",
+			barMaxWidth: 12,
+			itemStyle: { color, borderColor: surface, borderWidth: 1, borderRadius: 2 },
+			emphasis: { focus: "series" as const },
+			data: values
+		})
+
+		return {
+			backgroundColor: "transparent",
+			legend: {
+				top: 0,
+				left: 0,
+				icon: "roundRect",
+				itemWidth: 10,
+				itemHeight: 10,
+				textStyle: { color: muted, fontFamily: font, fontSize: 12 },
+				data: ["Alerts", "Cases"]
+			},
+			grid: {
+				left: 0,
+				right: 0,
+				top: LEGEND_HEIGHT,
+				bottom: 0,
+				outerBoundsMode: "same",
+				outerBoundsContain: "axisLabel"
+			},
+			tooltip: {
+				...buildChartTooltipGlassBase(chartTooltipThemeFromStyle(style), { trigger: "axis" }),
+				axisPointer: { type: "shadow" },
+				formatter: params => {
+					const index = (Array.isArray(params) ? params[0] : params)?.dataIndex ?? 0
+					const row = rows[index]
+					if (!row) return ""
+					return `<div style="padding:8px 10px;font-family:monospace;font-size:12px"><div>${row.label}</div>
+						<div style="color:${muted}">${row.alerts} alerts · ${row.cases} cases</div>
+						<div style="color:${muted}">${row.at_risk} at risk · ${row.breached} past SLA</div></div>`
+				}
+			},
+			xAxis: { type: "value", show: false, max: scale.value },
+			yAxis: [
+				{
+					type: "category",
+					inverse: true,
+					data: labels,
+					axisLine: { show: false },
+					axisTick: { show: false },
+					axisLabel: {
+						// Left-aligned in a fixed column, the dot right before the name.
+						align: "left",
+						margin: LABEL_WIDTH + 8,
+						formatter: (value: string, index: number) =>
+							`${dotSlot(index)}{name|${value}}`,
+						rich: leftRich
+					}
+				},
+				{
+					type: "category",
+					inverse: true,
+					position: "right",
+					data: labels,
+					axisLine: { show: false },
+					axisTick: { show: false },
+					axisLabel: {
+						formatter: (_value: string, index: number) => countsLabel(rows[index], index),
+						rich: rightRich
+					}
+				}
+			],
+			series: [
+				segment(
+					"Alerts",
+					primary.value,
+					rows.map(row => row.alerts)
+				),
+				segment(
+					"Cases",
+					secondary.value,
+					rows.map(row => row.cases)
+				)
+			]
+		}
+	}
+)
 </script>
-
-<style scoped>
-.load-row {
-	grid-template-columns: minmax(96px, 160px) minmax(0, 1fr) auto auto;
-}
-
-.gap-left {
-	margin-left: 2px;
-}
-</style>
