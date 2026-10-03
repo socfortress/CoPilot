@@ -31,9 +31,11 @@ os.environ.setdefault("MYSQL_PASSWORD", "e2epass")
 os.environ.setdefault("MYSQL_ROOT_PASSWORD", "e2eroot")
 os.environ.setdefault("JWT_SECRET", "e2e-test-secret-not-the-default")
 
-from sqlalchemy import delete  # noqa: E402
+from sqlalchemy import delete
 from sqlalchemy import select  # noqa: E402
-from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
+from sqlalchemy.exc import IntegrityError  # noqa: E402
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import SQLModel  # noqa: E402
 
 from app.auth.models.users import Role  # noqa: E402
 from app.auth.models.users import User  # noqa: E402
@@ -110,8 +112,42 @@ async def cleanup(s: AsyncSession) -> None:
             await s.execute(delete(UserCustomerAccess).where(UserCustomerAccess.user_id == user.id))
             await s.delete(user)
     await s.execute(delete(UserCustomerAccess).where(UserCustomerAccess.customer_code.in_(codes)))
+    await _delete_customer_dependents(s, codes)
     await s.execute(delete(Customers).where(Customers.customer_code.in_(codes)))
     await s.commit()
+
+
+async def _delete_customer_dependents(s: AsyncSession, codes: list) -> None:
+    """Remove every row that points at these customers, whatever created it.
+
+    Exploring the seeded data in the UI creates rows the seed never wrote — the portal SLA
+    or AI report switch, a calendar, a notification route, a branding override — and any
+    one of them would block deleting the customer on the next run. Rather than chase a
+    list, delete from every table with a foreign key to ``customers.customer_code``. A
+    table whose rows are themselves referenced is retried after its dependents went first.
+    """
+    tables = [
+        (table, fk.parent)
+        for table in SQLModel.metadata.sorted_tables
+        if table.name != Customers.__tablename__
+        for fk in table.foreign_keys
+        if fk.column.table.name == Customers.__tablename__ and fk.column.name == "customer_code"
+    ]
+    pending = tables
+    for _ in range(len(tables) + 1):
+        if not pending:
+            return
+        failed = []
+        for table, column in pending:
+            try:
+                async with s.begin_nested():
+                    await s.execute(table.delete().where(column.in_(codes)))
+            except IntegrityError:
+                failed.append((table, column))
+        if len(failed) == len(pending):
+            names = ", ".join(table.name for table, _ in failed)
+            raise RuntimeError(f"Cannot clear rows referencing the seeded customers from: {names}")
+        pending = failed
 
 
 def _minutes(rng: random.Random, median: float, spread: float = 0.9) -> datetime.timedelta:
