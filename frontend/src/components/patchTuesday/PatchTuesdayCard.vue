@@ -99,7 +99,17 @@
 	</CardEntity>
 
 	<n-drawer v-model:show="showDetail" :width="600" placement="right" class="max-w-[98vw]">
-		<n-drawer-content :title="item.cve" closable :native-scrollbar="false">
+		<n-drawer-content closable :native-scrollbar="false">
+			<template #header>
+				<div class="flex w-full items-center justify-between gap-2 pr-8">
+					<span>{{ item.cve }}</span>
+					<ModalPageButton
+						:route="routePatchTuesdayItem(item.cycle, item.cve, item.affected.product)"
+						label="Open the CVE's page"
+						@navigate="showDetail = false"
+					/>
+				</div>
+			</template>
 			<PatchTuesdayDetail :item />
 		</n-drawer-content>
 	</n-drawer>
@@ -114,6 +124,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { PriorityLevel } from "@/types/patch-tuesday"
 import PatchTuesdayDetail from "./PatchTuesdayDetail.vue"

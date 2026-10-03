@@ -21,12 +21,7 @@
 			<template v-if="caseEntity" #mainExtra>
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<div v-if="compact" class="flex flex-wrap items-center gap-3">
-						<Badge
-							type="splitted"
-							size="small"
-							bright
-							:color="statusColor(caseEntity.case_status)"
-						>
+						<Badge type="splitted" size="small" bright :color="statusColor(caseEntity.case_status)">
 							<template #iconLeft>
 								<StatusIcon :status="caseEntity.case_status" />
 							</template>
@@ -222,6 +217,13 @@
 				role="modal"
 				@close="closeDetails()"
 			>
+				<template #header-extra>
+					<ModalPageButton
+						:route="caseEntity ? routeIncidentManagementCases(caseEntity.id) : null"
+						label="Open the case's page"
+						@navigate="closeDetails()"
+					/>
+				</template>
 				<CaseDetails
 					v-if="caseEntity"
 					:case-data="caseEntity"
@@ -245,6 +247,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { statusColor, statusLabel } from "@/components/incidentManagement/common/status"
 import ManualSendDialog from "@/components/notifications/ManualSendDialog.vue"
 import { useNavigation } from "@/composables/useNavigation"

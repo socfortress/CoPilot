@@ -68,6 +68,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="routeScaPolicy(policy.id)"
+					label="Open the policy's page"
+					@navigate="showDetails = false"
+				/>
+			</template>
 			<PolicyCardContent :policy />
 		</n-modal>
 	</div>
@@ -81,6 +88,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import PlatformBadge from "@/components/common/PlatformBadge.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import PolicyCardContent from "./PolicyCardContent.vue"

@@ -140,6 +140,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="routeCustomer({ code: customer.customer_code })"
+					label="Open the customer's page"
+					@navigate="showDetails = false"
+				/>
+			</template>
 			<CustomerDetails v-if="showDetails" :customer use-max-height @delete="deletedItem()" />
 		</n-modal>
 	</div>
@@ -155,6 +162,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage, getAvatar, getNameInitials } from "@/utils"
 import CustomerDetails from "./CustomerDetails.vue"

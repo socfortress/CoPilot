@@ -88,6 +88,13 @@
 			segmented
 			content-class="p-0!"
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="selectedSca ? routeAgentSca(agent.agent_id, selectedSca.policy_id) : null"
+					label="Open the policy's page"
+					@navigate="showDetails = false"
+				/>
+			</template>
 			<ScaItem v-if="selectedSca" :sca="selectedSca" :agent></ScaItem>
 		</n-modal>
 	</n-spin>
@@ -103,6 +110,7 @@ import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"

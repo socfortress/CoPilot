@@ -43,6 +43,9 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton :route="alertRoute" label="Open the alert's page" @navigate="showDetails = false" />
+			</template>
 			<AlertDetailTabs :alert />
 		</n-modal>
 	</div>
@@ -55,6 +58,7 @@ import { NModal } from "naive-ui"
 import { computed, defineAsyncComponent, inject, ref, toRefs } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"

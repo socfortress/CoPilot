@@ -40,6 +40,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="routeAlertsMitreSoftware(id)"
+					label="Open the software's page"
+					@navigate="showDetails = false"
+				/>
+			</template>
 			<SoftwareOverview :entity="softwareDetails" />
 		</n-modal>
 	</div>
@@ -54,6 +61,7 @@ import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Markdown from "@/components/common/Markdown.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 

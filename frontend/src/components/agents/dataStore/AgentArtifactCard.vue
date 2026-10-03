@@ -66,6 +66,13 @@
 			:style="{ maxWidth: 'min(860px, 92vw)' }"
 			:segmented="{ content: true }"
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="agentId ? routeAgentArtifact(agentId, artifact.id) : null"
+					label="Open the artifact's page"
+					@navigate="showDetailsModal = false"
+				/>
+			</template>
 			<ArtifactDetails :artifact />
 		</n-modal>
 	</div>
@@ -83,6 +90,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"

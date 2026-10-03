@@ -6,6 +6,7 @@ import { NMessageProvider } from "naive-ui"
 import { createPinia, setActivePinia } from "pinia"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
+import { createMemoryHistory, createRouter } from "vue-router"
 import UserDetailsByUsername from "@/components/users/UserDetailsByUsername.vue"
 import EntityOverviewModal from "../EntityOverviewModal.vue"
 
@@ -74,25 +75,38 @@ describe("userDetailsByUsername", () => {
 })
 
 describe("entityOverviewModal", () => {
-	it("is closed without a target, and opens the customer's or the user's overview", async () => {
+	it("is closed without a target, opens the customer's or the user's overview, and links its page", async () => {
 		getUsers.mockResolvedValue({ data: { users: [user("ana")] } })
 		const Host = defineComponent({
 			props: { target: { type: Object as PropType<OverviewTarget | null>, default: null } },
 			setup: props => () => h(NMessageProvider, null, { default: () => h(EntityOverviewModal, { target: props.target }) })
 		})
-		const wrapper = mount(Host, { props: { target: null }, attachTo: document.body })
+		const blank = { render: () => null }
+		const appRouter = createRouter({
+			history: createMemoryHistory(),
+			routes: [
+				{ path: "/", component: blank },
+				{ path: "/customers/:code", name: "Customer", component: blank },
+				{ path: "/users/:id", name: "UserView", component: blank }
+			]
+		})
+		await appRouter.push("/")
+		const wrapper = mount(Host, { props: { target: null }, attachTo: document.body, global: { plugins: [appRouter] } })
 		await flushPromises()
 		expect(document.querySelector("[data-testid=entity-overview-modal]")).toBeNull()
+		const pageLink = () => document.querySelector("[data-testid=modal-page-button]")?.getAttribute("href")
 
 		await wrapper.setProps({ target: { kind: "customer", key: "ACME" } })
 		await flushPromises()
 		expect(document.body.textContent).toContain("Customer · ACME")
 		expect(document.querySelector("[data-testid=customer-details]")?.textContent).toBe("ACME")
+		expect(pageLink()).toBe("/customers/ACME")
 
 		await wrapper.setProps({ target: { kind: "user", key: "ana" } })
 		await flushPromises()
 		expect(document.body.textContent).toContain("User · ana")
 		expect(document.querySelector("[data-testid=user-details]")?.textContent).toBe("ana")
+		expect(pageLink()).toBe("/users/1") // addressed by id, known once the user loaded
 		wrapper.unmount()
 	})
 })

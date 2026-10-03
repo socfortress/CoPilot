@@ -51,6 +51,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="selectedGap ? routeDetectionCatalogCoverageGap(selectedGap.technique_id) : null"
+					label="Open the coverage gap's page"
+					@navigate="selectedGap = null"
+				/>
+			</template>
 			<CoverageGapDetails v-if="selectedGap" :gap="selectedGap" />
 		</n-modal>
 	</div>
@@ -68,6 +75,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardLink from "@/components/common/cards/CardLink.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import CoverageGapDetails from "./CoverageGapDetails.vue"

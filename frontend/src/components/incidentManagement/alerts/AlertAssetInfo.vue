@@ -60,6 +60,15 @@
 		title="Alert Details"
 		segmented
 	>
+		<template #header-extra>
+			<ModalPageButton
+				:route="
+					asset.index_name && asset.index_id ? routeAlertsSiemAlert(asset.index_name, asset.index_id) : null
+				"
+				label="Open the alert's page"
+				@navigate="showAlertDetails = false"
+			/>
+		</template>
 		<n-spin :show="loading" class="min-h-40">
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
@@ -105,6 +114,7 @@ import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 

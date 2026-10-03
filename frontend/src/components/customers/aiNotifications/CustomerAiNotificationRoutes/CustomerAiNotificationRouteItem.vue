@@ -136,6 +136,13 @@
 				role="modal"
 				@close="showDetails = false"
 			>
+				<template #header-extra>
+					<ModalPageButton
+						:route="isInternalScope ? routeInternalNotificationRoute(route.id) : null"
+						label="Open the notification route's page"
+						@navigate="showDetails = false"
+					/>
+				</template>
 				<CustomerAiNotificationRouteOverview
 					:entity="route"
 					:customer-code
@@ -158,6 +165,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"

@@ -6,8 +6,9 @@
 				:href="route.href()"
 				quaternary
 				circle
+				:focusable="false"
 				size="small"
-				class="modal-page-button"
+				class="modal-page-button opacity-60"
 				:aria-label="label"
 				data-testid="modal-page-button"
 				@click="go"

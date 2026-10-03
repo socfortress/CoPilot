@@ -117,6 +117,13 @@
 				role="modal"
 				@close="showDetails = false"
 			>
+				<template #header-extra>
+					<ModalPageButton
+						:route="routeMessageTemplate(template.id)"
+						label="Open the template's page"
+						@navigate="showDetails = false"
+					/>
+				</template>
 				<NotificationTemplateOverview
 					:entity="template"
 					@updated="$emit('updated')"
@@ -138,6 +145,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { NOTIFICATION_TRIGGER_LABELS } from "@/types/notifications"

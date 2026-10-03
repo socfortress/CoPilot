@@ -53,6 +53,13 @@
 				:bordered="false"
 				segmented
 			>
+				<template #header-extra>
+					<ModalPageButton
+						:route="modalRuleId !== null ? routeDetectionCatalogWazuhRule(modalRuleId) : null"
+						label="Open the rule's page"
+						@navigate="showDetailModal = false"
+					/>
+				</template>
 				<WazuhRuleDetail v-if="modalRuleId !== null" :rule-id="modalRuleId" />
 			</n-modal>
 		</div>
@@ -67,7 +74,9 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useEntityDetails } from "@/composables/useEntityDetails"
+import { useNavigation } from "@/composables/useNavigation"
 import WazuhRuleDetail from "./WazuhRuleDetail.vue"
 
 const props = withDefaults(
@@ -83,6 +92,8 @@ const props = withDefaults(
 const emit = defineEmits<{
 	(e: "loaded", value: CatalogComplianceGroupRow): void
 }>()
+
+const { routeDetectionCatalogWazuhRule } = useNavigation()
 
 const fetchedFrameworkLabel = ref<string | null>(null)
 
