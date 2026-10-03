@@ -78,6 +78,21 @@ describe("overviewTab", () => {
 		expect(wrapper.get("[data-testid=sla-gauge-value]").text()).toMatch(/96\.4/)
 	})
 
+	it("explains the dial in a tooltip: the arc, the colour bands, the objective notch", async () => {
+		const { wrapper } = await render(OverviewTab, { dashboard: adminView() })
+		const help = wrapper.get("[data-testid=hero-gauge-help]")
+		expect(help.attributes("aria-label")).toBe("How to read the dial")
+		await help.trigger("mouseenter")
+		await new Promise(resolve => setTimeout(resolve, 250)) // the tooltip's show delay
+		await flushPromises()
+		const text = document.body.textContent ?? ""
+		expect(text).toContain("met ÷ (met + breached)")
+		expect(text).toContain("95% or more — on objective")
+		expect(text).toContain("85–95% — below objective")
+		expect(text).toContain("the 95% objective")
+		wrapper.unmount()
+	})
+
 	it("says how many open items wait on the customer, next to past SLA", async () => {
 		const { wrapper } = await render(OverviewTab, { dashboard: adminView() })
 		expect(wrapper.get("[data-testid=kpi-breached]").text()).toContain("1 at risk · 16 open · 4 waiting")

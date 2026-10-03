@@ -4,8 +4,49 @@
 		<section class="hero-band border-default overflow-hidden rounded-lg border">
 			<div class="grid lg:grid-cols-[280px_minmax(0,1fr)]">
 				<div
-					class="hero-gauge border-default flex flex-col items-center justify-center gap-3 border-b p-6 lg:border-r lg:border-b-0"
+					class="hero-gauge border-default relative flex flex-col items-center justify-center gap-3 border-b p-6 lg:border-r lg:border-b-0"
 				>
+					<n-tooltip placement="right-start" style="max-width: 320px">
+						<template #trigger>
+							<span
+								class="absolute top-3 right-3 inline-flex cursor-help"
+								role="img"
+								aria-label="How to read the dial"
+								data-testid="hero-gauge-help"
+							>
+								<Icon name="carbon:information" :size="14" class="text-tertiary" />
+							</span>
+						</template>
+						<div class="flex flex-col gap-2 text-xs leading-relaxed" data-testid="hero-gauge-help-content">
+							<p class="m-0 font-semibold">How to read the dial</p>
+							<p class="m-0">
+								<strong>Arc</strong>
+								— the share of the period's alerts resolved within their SLA target: met ÷ (met +
+								breached). Alerts still on track have no outcome yet and are left out.
+							</p>
+							<ul class="m-0 flex list-none flex-col gap-1 p-0">
+								<li v-for="band of gaugeBands" :key="band.label" class="flex items-center gap-2">
+									<span
+										class="inline-block size-2 shrink-0 rounded-full"
+										:style="{ backgroundColor: band.color }"
+									/>
+									<span>{{ band.label }}</span>
+								</li>
+							</ul>
+							<p class="m-0">
+								<strong>Notch</strong>
+								— the {{ RATE_GOOD }}% objective: reach it and the arc turns green.
+							</p>
+							<p class="m-0">
+								<strong>Below</strong>
+								— the change against the previous period (points);
+								<em>Response</em>
+								is the same measure for acknowledging alerts,
+								<em>Cases</em>
+								for resolving cases.
+							</p>
+						</div>
+					</n-tooltip>
 					<SlaGauge :rate="alerts.sla.resolve.rate" label="Resolved in SLA" />
 					<DeltaChip :delta="computePointDelta(alerts.sla.resolve.rate, previous.alerts.sla.resolve.rate)" />
 					<dl class="m-0 grid w-full grid-cols-2 gap-2 text-center">
@@ -142,7 +183,7 @@
 import type { DataTableColumns } from "naive-ui"
 import type { SocTab } from "../composables/useSocFilters"
 import type { SeverityRow, SlaEntity, SocDashboard } from "@/types/soc-management"
-import { NButton, NDataTable, NRadioButton, NRadioGroup, NScrollbar } from "naive-ui"
+import { NButton, NDataTable, NRadioButton, NRadioGroup, NScrollbar, NTooltip } from "naive-ui"
 import { computed, shallowRef } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
@@ -162,6 +203,7 @@ import {
 	formatDuration,
 	formatRate,
 	RATE_GOOD,
+	RATE_WARN,
 	rateTone,
 	TONE_COLOR
 } from "../utils"
@@ -182,6 +224,13 @@ const breachedHint = computed(() => {
 	return `${formatCount(at_risk)} at risk · ${formatCount(openItems.value)} open${waiting}`
 })
 const alertSeverities = computed(() => dashboard.severities.filter(row => row.entity === "alert"))
+/** The colour bands of the dial, for its legend. */
+const gaugeBands = [
+	{ label: `${RATE_GOOD}% or more — on objective`, color: TONE_COLOR.good },
+	{ label: `${RATE_WARN}–${RATE_GOOD}% — below objective`, color: TONE_COLOR.warn },
+	{ label: `under ${RATE_WARN}% — well short`, color: TONE_COLOR.bad }
+]
+
 const severityColumns: DataTableColumns<SeverityRow> = [
 	{ title: "Severity", key: "severity", width: 130, render: row => <SeverityTag severity={row.severity} /> },
 	{
