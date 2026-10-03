@@ -26,10 +26,33 @@
 					</div>
 					<div class="text-tertiary flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
 						<SeverityTag :severity="item.severity" />
-						<span v-if="item.customer_code" class="font-mono">{{ item.customer_code }}</span>
-						<span class="inline-flex items-center gap-1">
+						<button
+							v-if="item.customer_code"
+							type="button"
+							class="peek-link inline-flex items-center gap-1 font-mono"
+							:aria-label="`Open the overview of customer ${item.customer_code}`"
+							:data-testid="`attention-customer-${item.entity}-${item.id}`"
+							@click="open('customer', item.customer_code)"
+						>
+							<Icon name="carbon:enterprise" :size="12" />
+							{{ item.customer_code }}
+							<Icon name="carbon:launch" :size="11" class="peek-icon" />
+						</button>
+						<button
+							v-if="item.assigned_to"
+							type="button"
+							class="peek-link inline-flex items-center gap-1"
+							:aria-label="`Open the overview of user ${item.assigned_to}`"
+							:data-testid="`attention-user-${item.entity}-${item.id}`"
+							@click="open('user', item.assigned_to)"
+						>
 							<Icon name="carbon:user" :size="12" />
-							{{ item.assigned_to ?? "unassigned" }}
+							{{ item.assigned_to }}
+							<Icon name="carbon:launch" :size="11" class="peek-icon" />
+						</button>
+						<span v-else class="inline-flex items-center gap-1">
+							<Icon name="carbon:user" :size="12" />
+							unassigned
 						</span>
 					</div>
 				</div>
@@ -44,22 +67,33 @@
 				</div>
 			</li>
 		</ul>
+		<EntityOverviewModal :target="overview" @close="overview = null" />
 	</div>
 </template>
 
 <script setup lang="ts">
-// Open items a manager has to chase: breached first (most overdue on top), then the
-// ones about to breach. Each row links to the alert or case itself.
 import type { RouteLocationRaw } from "vue-router"
+// Open items a manager has to chase: breached first (most overdue on top), then the
+// ones about to breach. Each row links to the alert or case itself, and its customer and
+// assignee open their overview in a modal, without leaving the dashboard.
+import type { OverviewTarget } from "./EntityOverviewModal.vue"
 import type { AttentionItem } from "@/types/soc-management"
 import { NEmpty } from "naive-ui"
+import { shallowRef } from "vue"
 import { RouterLink } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
+import EntityOverviewModal from "./EntityOverviewModal.vue"
 import SeverityTag from "./ui/SeverityTag.vue"
 import SlaStateTag from "./ui/SlaStateTag.vue"
 import { clockLabel, formatOverdue, TONE_COLOR } from "./utils"
 
 const { items } = defineProps<{ items: AttentionItem[] }>()
+
+const overview = shallowRef<OverviewTarget | null>(null)
+
+function open(kind: OverviewTarget["kind"], key: string) {
+	overview.value = { kind, key }
+}
 
 function link(item: AttentionItem): RouteLocationRaw {
 	return item.entity === "alert"
@@ -75,5 +109,38 @@ function railColor(item: AttentionItem) {
 <style scoped>
 .attention-row {
 	grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.peek-link {
+	border-radius: 4px;
+	color: inherit;
+	cursor: pointer;
+	transition: color 0.15s var(--bezier-ease, ease);
+}
+
+.peek-link:hover,
+.peek-link:focus-visible {
+	color: var(--primary-color);
+}
+
+.peek-link:focus-visible {
+	outline: 1px solid var(--primary-color);
+	outline-offset: 2px;
+}
+
+.peek-icon {
+	opacity: 0;
+	transition: opacity 0.15s var(--bezier-ease, ease);
+}
+
+.peek-link:hover .peek-icon,
+.peek-link:focus-visible .peek-icon {
+	opacity: 1;
+}
+
+@media (hover: none) {
+	.peek-icon {
+		opacity: 1;
+	}
 }
 </style>

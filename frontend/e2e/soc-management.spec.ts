@@ -197,6 +197,28 @@ test.describe("an admin", () => {
 		expect(sla.severity).toBe("Critical")
 	})
 
+	test("opens a customer's and an assignee's overview from Needs attention, in place", async ({ page }) => {
+		await page.goto(`/soc-management?${scopedQuery()}`)
+		const customer = page.locator("[data-testid^=attention-customer-]").first()
+		await expect(customer).toBeVisible({ timeout: 30_000 })
+		const code = (await customer.innerText()).trim()
+		await customer.click()
+		const modal = page.getByTestId("entity-overview-modal")
+		await expect(modal).toBeVisible()
+		await expect(modal).toContainText(code)
+		await expect(modal).toContainText(seed.customers[code])
+		await expect(page).toHaveURL(/\/soc-management/) // still on the dashboard
+		await page.keyboard.press("Escape")
+		await expect(modal).toBeHidden()
+
+		const assignee = page.locator("[data-testid^=attention-user-]").first()
+		const username = (await assignee.innerText()).trim()
+		await assignee.click()
+		await expect(modal).toBeVisible()
+		await expect(modal).toContainText(`User · ${username}`)
+		await expect(modal).toContainText("Customer access")
+	})
+
 	test("downloads the SOC report as a PDF", async ({ page }) => {
 		await page.goto(`/soc-management?${scopedQuery()}`)
 		await expect(page.getByTestId("soc-export")).toBeEnabled({ timeout: 30_000 })

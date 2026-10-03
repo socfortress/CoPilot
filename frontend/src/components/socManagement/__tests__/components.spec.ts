@@ -181,6 +181,38 @@ describe("attentionList", () => {
 		expect(wrapper.text()).toContain("unassigned")
 	})
 
+	it("opens the customer's and the assignee's overview in a modal from the row", async () => {
+		const ModalStub = defineComponent({
+			name: "EntityOverviewModal",
+			props: { target: { type: Object, default: null } },
+			emits: ["close"],
+			setup: props => () => h("div", { "data-testid": "modal-stub", "data-target": JSON.stringify(props.target) })
+		})
+		const wrapper = mount(AttentionList, {
+			props: { items: [item({ assigned_to: "ana" }), item({ id: 8, customer_code: null })] },
+			global: { stubs: { RouterLink: RouterLinkStub, EntityOverviewModal: ModalStub } }
+		})
+		const target = () => JSON.parse(wrapper.get("[data-testid=modal-stub]").attributes("data-target") as string)
+		expect(target()).toBeNull()
+
+		const customer = wrapper.get("[data-testid=attention-customer-alert-7]")
+		expect(customer.attributes("aria-label")).toBe("Open the overview of customer ACME")
+		await customer.trigger("click")
+		expect(target()).toEqual({ kind: "customer", key: "ACME" })
+
+		await wrapper.get("[data-testid=attention-user-alert-7]").trigger("click")
+		expect(target()).toEqual({ kind: "user", key: "ana" })
+
+		wrapper.findComponent(ModalStub).vm.$emit("close")
+		await wrapper.vm.$nextTick()
+		expect(target()).toBeNull()
+
+		// No customer, no assignee: plain text, nothing to open.
+		expect(wrapper.find("[data-testid=attention-customer-alert-8]").exists()).toBe(false)
+		expect(wrapper.find("[data-testid=attention-user-alert-8]").exists()).toBe(false)
+		expect(wrapper.text()).toContain("unassigned")
+	})
+
 	it("says so when nothing needs attention", () => {
 		const wrapper = mount(AttentionList, {
 			props: { items: [] },

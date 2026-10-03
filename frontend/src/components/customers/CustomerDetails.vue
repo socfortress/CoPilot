@@ -114,13 +114,20 @@ function getPortainerStackId(name: string) {
 	if (requestedStackName === name) return
 	requestedStackName = name
 
-	Api.portainer.getCustomerStackId(name).then(res => {
-		if (res.data.success) {
-			customerPortainerStackId.value = res.data.stack_id || null
-		} else {
-			message.warning(res.data?.message || "An error occurred. Please try again later.")
-		}
-	})
+	Api.portainer
+		.getCustomerStackId(name)
+		.then(res => {
+			if (res.data.success) {
+				customerPortainerStackId.value = res.data.stack_id || null
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(() => {
+			// A customer without a Portainer stack answers 404, and Portainer is optional:
+			// no stack is the answer, not an error to surface (it was an unhandled rejection).
+			customerPortainerStackId.value = null
+		})
 }
 
 function ensureLoaded() {
