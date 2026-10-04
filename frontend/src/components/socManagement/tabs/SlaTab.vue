@@ -108,6 +108,7 @@ import {
 	formatCount,
 	formatDuration,
 	formatRate,
+	oneLineTitle,
 	parseUtc,
 	RATE_GOOD,
 	rateTone,
@@ -130,9 +131,6 @@ const policyScope = computed(() =>
 )
 const trackingSince = computed(() => parseUtc(dashboard.tracking_since)?.local().format("D MMM YYYY") ?? "")
 
-/** A column title that stays on one line, however narrow the table gets. */
-const oneLine = (title: string) => () => <span class="whitespace-nowrap">{title}</span>
-
 const columns = computed<DataTableColumns<SeverityRow>>(() => [
 	{
 		title: "Severity",
@@ -142,13 +140,13 @@ const columns = computed<DataTableColumns<SeverityRow>>(() => [
 		render: row => <SeverityTag severity={row.severity} />
 	},
 	{
-		title: oneLine("Response target"),
+		title: oneLineTitle("Response target"),
 		key: "ack_target",
 		width: 150,
 		render: row => <TargetCell minutes={targets.value.get(row.severity)?.ack_minutes} />
 	},
 	{
-		title: oneLine("Resolution target"),
+		title: oneLineTitle("Resolution target"),
 		key: "resolve_target",
 		width: 160,
 		render: row => <TargetCell minutes={targets.value.get(row.severity)?.resolve_minutes} />
@@ -161,7 +159,7 @@ const columns = computed<DataTableColumns<SeverityRow>>(() => [
 		render: row => <span class="font-mono tabular-nums">{formatCount(row.opened)}</span>
 	},
 	{
-		title: oneLine("Median TTA"),
+		title: oneLineTitle("Median TTA"),
 		key: "tta",
 		width: 120,
 		align: "right",
@@ -174,7 +172,7 @@ const columns = computed<DataTableColumns<SeverityRow>>(() => [
 		render: row => <ComplianceMeter compliance={row.sla.ack} label="Acknowledged within SLA" />
 	},
 	{
-		title: oneLine("Median TTR"),
+		title: oneLineTitle("Median TTR"),
 		key: "ttr",
 		width: 120,
 		align: "right",

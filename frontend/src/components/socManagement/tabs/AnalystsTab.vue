@@ -20,7 +20,7 @@
 				:row-key="(row: AnalystRow) => row.username"
 				size="small"
 				:bordered="false"
-				:scroll-x="1260"
+				:scroll-x="1400"
 				data-testid="analysts-table"
 			>
 				<template #empty>
@@ -39,10 +39,11 @@
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
 import type { AnalystRow, SocDashboard } from "@/types/soc-management"
-import { NAlert, NDataTable, NEmpty } from "naive-ui"
+import { NAlert, NAvatar, NDataTable, NEmpty } from "naive-ui"
+import { getAvatar } from "@/utils"
 import ComplianceMeter from "../ui/ComplianceMeter.vue"
 import SocPanel from "../ui/SocPanel.vue"
-import { formatCount, formatDuration, TONE_COLOR } from "../utils"
+import { formatCount, formatDuration, oneLineTitle, TONE_COLOR } from "../utils"
 
 const { dashboard } = defineProps<{ dashboard: SocDashboard }>()
 
@@ -52,6 +53,17 @@ function initials(username: string) {
 	const first = parts[0]?.[0] ?? "?"
 	const last = parts.length > 1 ? parts[parts.length - 1][0] : (parts[0]?.[1] ?? "")
 	return `${first}${last}`.toUpperCase()
+}
+
+/** The analyst's oreo avatar, drawn once per username: the same person keeps the same face. */
+const avatars = new Map<string, string>()
+function avatarOf(username: string) {
+	let avatar = avatars.get(username)
+	if (!avatar) {
+		avatar = getAvatar({ seed: username, text: initials(username), size: 56 })
+		avatars.set(username, avatar)
+	}
+	return avatar
 }
 
 function count(value: number, muted = false) {
@@ -68,22 +80,27 @@ function load(value: number, tone: "bad" | "warn") {
 
 const columns: DataTableColumns<AnalystRow> = [
 	{
-		title: "Analyst",
+		title: oneLineTitle("Analyst"),
 		key: "username",
 		width: 190,
 		fixed: "left",
 		sorter: (a, b) => a.username.localeCompare(b.username),
 		render: row => (
 			<div class="flex items-center gap-2">
-				<span class="analyst-avatar bg-secondary border-default text-secondary text-2xs inline-flex size-7 items-center justify-center rounded-full border font-mono">
-					{initials(row.username)}
-				</span>
+				<NAvatar
+					round
+					size={28}
+					src={avatarOf(row.username)}
+					class="analyst-avatar shrink-0"
+					imgProps={{ alt: `${row.username} avatar` }}
+					data-testid={`analyst-avatar-${row.username}`}
+				/>
 				<span class="truncate font-medium">{row.username}</span>
 			</div>
 		)
 	},
 	{
-		title: "Acknowledged",
+		title: oneLineTitle("Acknowledged"),
 		key: "acknowledged",
 		width: 140,
 		align: "right",
@@ -91,45 +108,45 @@ const columns: DataTableColumns<AnalystRow> = [
 		render: row => count(row.alerts_acknowledged + row.cases_acknowledged)
 	},
 	{
-		title: "Alerts closed",
+		title: oneLineTitle("Alerts closed"),
 		key: "alerts_resolved",
-		width: 110,
+		width: 130,
 		align: "right",
 		defaultSortOrder: "descend",
 		sorter: (a, b) => a.alerts_resolved - b.alerts_resolved,
 		render: row => count(row.alerts_resolved)
 	},
 	{
-		title: "Cases closed",
+		title: oneLineTitle("Cases closed"),
 		key: "cases_resolved",
-		width: 110,
+		width: 130,
 		align: "right",
 		sorter: (a, b) => a.cases_resolved - b.cases_resolved,
 		render: row => count(row.cases_resolved, true)
 	},
 	{
-		title: "Median TTA",
+		title: oneLineTitle("Median TTA"),
 		key: "tta",
-		width: 110,
+		width: 130,
 		sorter: (a, b) => (a.tta.median ?? Infinity) - (b.tta.median ?? Infinity),
 		render: row => <span class="font-mono tabular-nums">{formatDuration(row.tta.median)}</span>
 	},
 	{
-		title: "Median TTR",
+		title: oneLineTitle("Median TTR"),
 		key: "ttr",
-		width: 110,
+		width: 130,
 		sorter: (a, b) => (a.ttr.median ?? Infinity) - (b.ttr.median ?? Infinity),
 		render: row => <span class="font-mono tabular-nums">{formatDuration(row.ttr.median)}</span>
 	},
 	{
-		title: "Resolved in SLA",
+		title: oneLineTitle("Resolved in SLA"),
 		key: "sla",
 		minWidth: 170,
 		sorter: (a, b) => (a.sla.rate ?? -1) - (b.sla.rate ?? -1),
 		render: row => <ComplianceMeter compliance={row.sla} label="Of the items they closed, resolved within SLA" />
 	},
 	{
-		title: "Open now",
+		title: oneLineTitle("Open now"),
 		key: "open",
 		width: 160,
 		sorter: (a, b) => a.open_alerts + a.open_cases - (b.open_alerts + b.open_cases),
@@ -138,17 +155,17 @@ const columns: DataTableColumns<AnalystRow> = [
 		)
 	},
 	{
-		title: "At risk",
+		title: oneLineTitle("At risk"),
 		key: "at_risk",
-		width: 80,
+		width: 100,
 		align: "right",
 		sorter: (a, b) => a.at_risk - b.at_risk,
 		render: row => load(row.at_risk, "warn")
 	},
 	{
-		title: "Past SLA",
+		title: oneLineTitle("Past SLA"),
 		key: "breached",
-		width: 90,
+		width: 110,
 		align: "right",
 		sorter: (a, b) => a.breached - b.breached,
 		render: row => load(row.breached, "bad")

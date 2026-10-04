@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from "pinia"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
 import { createMemoryHistory, createRouter } from "vue-router"
+import { getAvatar } from "@/utils"
 import VolumeTrendChart from "../charts/VolumeTrendChart.vue"
 import AnalystsTab from "../tabs/AnalystsTab.vue"
 import CustomersTab from "../tabs/CustomersTab.vue"
@@ -156,6 +157,18 @@ describe("analystsTab", () => {
 		expect(table).toContain("ana")
 		expect(table).toContain("bob")
 		expect(wrapper.find("[data-testid=analysts-own-only]").exists()).toBe(false)
+	})
+
+	it("draws each analyst's oreo avatar from their username, and keeps every header on one line", async () => {
+		const { wrapper } = await render(AnalystsTab, { dashboard: adminView() })
+		const avatarSrc = (username: string) =>
+			wrapper.get(`[data-testid=analyst-avatar-${username}] img`).attributes("src")
+		expect(avatarSrc("ana")).toBe(getAvatar({ seed: "ana", text: "AN", size: 56 }))
+		expect(avatarSrc("bob")).toBe(getAvatar({ seed: "bob", text: "BO", size: 56 }))
+		expect(avatarSrc("ana")).not.toBe(avatarSrc("bob"))
+		const headers = wrapper.findAll("[data-testid=analysts-table] th .n-data-table-th__title")
+		expect(headers.length).toBeGreaterThan(5)
+		for (const header of headers) expect(header.find(".whitespace-nowrap").exists()).toBe(true)
 	})
 
 	it("gives an analyst their own row and says why", async () => {

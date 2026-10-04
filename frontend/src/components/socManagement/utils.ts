@@ -9,6 +9,7 @@ import type {
 	SlaState,
 	SocBucket
 } from "@/types/soc-management"
+import { h } from "vue"
 import dayjs from "@/utils/dayjs"
 
 // Pure helpers for SOC Management (#1187). The backend's twins live in
@@ -290,4 +291,13 @@ export const TONE_COLOR: Record<Tone, string> = {
 	warn: "var(--warning-color)",
 	bad: "var(--error-color)",
 	neutral: "var(--fg-secondary-color)"
+}
+
+/**
+ * A data-table column title that stays on one line, however narrow the table gets — the
+ * table scrolls sideways instead (every SOC Management table sets `scroll-x`). Give the
+ * column a width that fits the title plus its sort icon.
+ */
+export function oneLineTitle(title: string) {
+	return () => h("span", { class: "whitespace-nowrap" }, title)
 }
