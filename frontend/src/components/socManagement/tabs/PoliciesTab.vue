@@ -4,7 +4,7 @@
 			<n-input v-model:value="search" size="small" placeholder="Find a customer" clearable class="m-3 w-auto!">
 				<template #prefix><Icon name="carbon:search" :size="14" /></template>
 			</n-input>
-			<n-scrollbar class="max-h-[520px]" data-testid="policy-scopes">
+			<n-scrollbar class="max-h-[520px]" data-testid="policy-scopes" trigger="none">
 				<nav class="scope-list flex flex-col pb-2" aria-label="Policy scope">
 					<button
 						v-for="option of scopeOptions"
@@ -108,12 +108,7 @@
 				</footer>
 			</SocPanel>
 
-			<CalendarPanel
-				:scope
-				:scope-name
-				:is-admin
-				@changed="codes => (calendars = new Set(codes))"
-			/>
+			<CalendarPanel :scope :scope-name :is-admin @changed="codes => (calendars = new Set(codes))" />
 		</div>
 	</div>
 </template>

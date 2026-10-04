@@ -71,10 +71,12 @@ describe("policyMatrixEditor", () => {
 		expect(wrapper.get("[data-testid=policy-own-alert-Critical]").text()).toContain("Default")
 	})
 
-	it("lays each entity's cells out in a Naive table, one row per severity", () => {
+	it("lays each entity's cells out in a Naive table that scrolls sideways in a Naive scrollbar", () => {
 		const { wrapper } = editor()
 		for (const entity of ["alert", "case"]) {
-			const table = wrapper.get(`[data-testid=policy-table-${entity}]`)
+			const scroll = wrapper.get(`[data-testid=policy-scroll-${entity}]`)
+			expect(scroll.classes()).toContain("n-scrollbar")
+			const table = scroll.get(`[data-testid=policy-table-${entity}]`)
 			expect(table.classes()).toContain("n-table")
 			expect(table.findAll("thead th").map(th => th.text())).toEqual([
 				"Severity",

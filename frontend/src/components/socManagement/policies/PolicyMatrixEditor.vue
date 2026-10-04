@@ -2,7 +2,7 @@
 	<div class="policy-matrix flex flex-col gap-5" data-testid="policy-matrix">
 		<section v-for="entity of ENTITIES" :key="entity" class="flex flex-col gap-2">
 			<h4 :class="SECTION_LABEL" class="m-0">{{ entity === "alert" ? "Alerts" : "Cases" }}</h4>
-			<div class="overflow-x-auto">
+			<n-scrollbar x-scrollable :data-testid="`policy-scroll-${entity}`">
 				<n-table class="policy-table" size="small" :data-testid="`policy-table-${entity}`">
 					<thead>
 						<tr>
@@ -80,7 +80,7 @@
 						</tr>
 					</tbody>
 				</n-table>
-			</div>
+			</n-scrollbar>
 		</section>
 	</div>
 </template>
@@ -93,7 +93,7 @@
 // when that is known; one switched to inherit in this session shows it after saving.
 import type { EditablePolicyCell } from "../utils"
 import type { SlaEntity } from "@/types/soc-management"
-import { NSwitch, NTable } from "naive-ui"
+import { NScrollbar, NSwitch, NTable } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
