@@ -336,6 +336,19 @@ test.describe("as an admin", () => {
 		await open(page, "?tab=workload")
 		await expect(page.getByTestId("kpi-waiting").getByTestId("kpi-value")).toHaveText("4")
 	})
+
+	test("the backlog panels print each bar's counts level with it, under named columns", async ({ page }) => {
+		await open(page, "?tab=workload")
+		for (const panel of await page.locator(".load-bars").all()) {
+			const chart = panel.getByTestId("load-bars")
+			const counts = panel.getByTestId("load-bars-counts")
+			await expect(counts.locator(".col-head")).toHaveText(["Open", "At risk", "Past SLA"])
+			// The counts column spans the chart exactly: legend row + one 30px line per bar.
+			const [chartBox, countsBox] = [await chart.boundingBox(), await counts.boundingBox()]
+			expect(Math.abs((countsBox?.height ?? 0) - (chartBox?.height ?? 0))).toBeLessThanOrEqual(1)
+			expect(Math.abs((countsBox?.y ?? 0) - (chartBox?.y ?? 0))).toBeLessThanOrEqual(1)
+		}
+	})
 })
 
 test.describe("when things go wrong, or the viewer is an analyst", () => {

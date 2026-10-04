@@ -254,10 +254,23 @@ describe("loadBars", () => {
 		expect(option.series[0].data).toEqual([6, 4])
 		expect(option.series[1].data).toEqual([2, 0])
 		expect(option.yAxis[0].data).toEqual(["ana", "bob"])
-		const counts = option.yAxis[1].axisLabel.formatter("ana", 0)
-		expect(counts).toContain("{total|8}")
-		expect(counts).toContain("◷ 1")
-		expect(counts).toContain("▲ 3")
+		expect(option.yAxis).toHaveLength(1) // the counts are HTML beside the chart, not canvas text
+		// One line of counts per bar, under named columns.
+		const counts = wrapper.get("[data-testid=load-bars-counts]")
+		expect(counts.findAll(".col-head").map(head => head.text())).toEqual(["Open", "At risk", "Past SLA"])
+		expect(counts.findAll("[data-testid=load-bars-total]").map(total => total.text())).toEqual(["8", "4"])
+		const atRisk = counts.findAll("[data-testid=load-bars-at-risk]")
+		const pastSla = counts.findAll("[data-testid=load-bars-past-sla]")
+		expect(atRisk.map(chip => chip.text())).toEqual(["1", "0"])
+		expect(pastSla.map(chip => chip.text())).toEqual(["3", "0"])
+		// A non-zero count is lit in its status colour; a zero stays quiet. Each says what it counts.
+		expect(atRisk[0].classes()).toContain("chip--on")
+		expect(atRisk[1].classes()).not.toContain("chip--on")
+		expect(pastSla[0].attributes("style")).toContain("--chip-color: var(--error-color)")
+		expect(pastSla[0].attributes("aria-label")).toBe("ana: 3 past SLA")
+		// The plot is exactly one 30px row per bar below the legend, so the HTML lines stay level.
+		expect(counts.attributes("style")).toContain("grid-template-rows: 28px")
+		expect(counts.attributes("style")).toContain("grid-auto-rows: 30px")
 		expect(wrapper.get("[data-testid=load-bars]").attributes("aria-label")).toContain("ana: 6 alerts, 2 cases, 1 at risk, 3 past SLA")
 	})
 
