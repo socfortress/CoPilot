@@ -46,7 +46,7 @@
 				:row-key="(row: SeverityRow) => row.severity"
 				size="small"
 				:bordered="false"
-				:scroll-x="1100"
+				:scroll-x="1180"
 				data-testid="sla-severity-table"
 			/>
 		</SocPanel>
@@ -96,9 +96,11 @@ import { NDataTable, NRadioButton, NRadioGroup } from "naive-ui"
 import { computed, shallowRef } from "vue"
 import ComplianceTrendChart from "../charts/ComplianceTrendChart.vue"
 import ComplianceMeter from "../ui/ComplianceMeter.vue"
+import DurationCell from "../ui/DurationCell.vue"
 import KpiTile from "../ui/KpiTile.vue"
 import SeverityTag from "../ui/SeverityTag.vue"
 import SocPanel from "../ui/SocPanel.vue"
+import TargetCell from "../ui/TargetCell.vue"
 import {
 	complianceSummary,
 	computeDelta,
@@ -106,7 +108,6 @@ import {
 	formatCount,
 	formatDuration,
 	formatRate,
-	formatTarget,
 	parseUtc,
 	RATE_GOOD,
 	rateTone,
@@ -129,18 +130,8 @@ const policyScope = computed(() =>
 )
 const trackingSince = computed(() => parseUtc(dashboard.tracking_since)?.local().format("D MMM YYYY") ?? "")
 
-function duration(stats: SeverityRow["tta"]) {
-	return (
-		<div class="flex flex-col leading-tight">
-			<span class="font-mono tabular-nums">{formatDuration(stats.median)}</span>
-			<span class="text-tertiary text-2xs font-mono">{`p90 ${formatDuration(stats.p90)}`}</span>
-		</div>
-	)
-}
-
-function target(minutes: number | null | undefined) {
-	return <span class="text-secondary font-mono text-xs">{formatTarget(minutes)}</span>
-}
+/** A column title that stays on one line, however narrow the table gets. */
+const oneLine = (title: string) => () => <span class="whitespace-nowrap">{title}</span>
 
 const columns = computed<DataTableColumns<SeverityRow>>(() => [
 	{
@@ -151,16 +142,16 @@ const columns = computed<DataTableColumns<SeverityRow>>(() => [
 		render: row => <SeverityTag severity={row.severity} />
 	},
 	{
-		title: "Response target",
+		title: oneLine("Response target"),
 		key: "ack_target",
-		width: 120,
-		render: row => target(targets.value.get(row.severity)?.ack_minutes)
+		width: 150,
+		render: row => <TargetCell minutes={targets.value.get(row.severity)?.ack_minutes} />
 	},
 	{
-		title: "Resolution target",
+		title: oneLine("Resolution target"),
 		key: "resolve_target",
-		width: 130,
-		render: row => target(targets.value.get(row.severity)?.resolve_minutes)
+		width: 160,
+		render: row => <TargetCell minutes={targets.value.get(row.severity)?.resolve_minutes} />
 	},
 	{
 		title: "Opened",
@@ -169,14 +160,26 @@ const columns = computed<DataTableColumns<SeverityRow>>(() => [
 		align: "right",
 		render: row => <span class="font-mono tabular-nums">{formatCount(row.opened)}</span>
 	},
-	{ title: "Median TTA", key: "tta", width: 110, render: row => duration(row.tta) },
+	{
+		title: oneLine("Median TTA"),
+		key: "tta",
+		width: 120,
+		align: "right",
+		render: row => <DurationCell stats={row.tta} />
+	},
 	{
 		title: "Acknowledged in SLA",
 		key: "ack",
 		minWidth: 170,
 		render: row => <ComplianceMeter compliance={row.sla.ack} label="Acknowledged within SLA" />
 	},
-	{ title: "Median TTR", key: "ttr", width: 110, render: row => duration(row.ttr) },
+	{
+		title: oneLine("Median TTR"),
+		key: "ttr",
+		width: 120,
+		align: "right",
+		render: row => <DurationCell stats={row.ttr} />
+	},
 	{
 		title: "Resolved in SLA",
 		key: "resolve",
