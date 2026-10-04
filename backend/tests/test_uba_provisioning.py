@@ -122,7 +122,7 @@ class FakeGraylog:
             self.pipelines[i].update(data)
         elif "/outputs/" in endpoint:
             self.outputs[i].update(title=data["title"], configuration=data["configuration"])
-        return {"data": None}
+        return {"data": None, "success": True}
 
 
 class FakeUba:
@@ -325,6 +325,20 @@ def test_a_source_stream_missing_from_graylog_stops_before_anything_is_created()
         _run(graylog, uba)
     assert e.value.status_code == 409 and "o365-a" in e.value.detail and "provision that source again" in e.value.detail
     assert not [c for c in uba.calls if c[0] == "PUT"] and not [c for c in graylog.calls if c[0] != "GET"]
+
+
+def test_a_put_graylog_did_not_take_stops_setup():
+    """send_put_request reports some failures as success: false instead of raising; setup must not go on."""
+    graylog = FakeGraylog({"wazuh-set": "wazuh-acme", "o365-set": "office365-acme"})
+    _run(graylog, FakeUba())
+
+    async def refused(endpoint, data=None):
+        return {"success": False, "message": f"Failed to send PUT request to {endpoint} with error: timeout"}
+
+    graylog.put = refused
+    with pytest.raises(HTTPException) as e:
+        _run(graylog, FakeUba(feed_host="10.0.0.5"))  # UBA moved: the output must be updated
+    assert e.value.status_code == 502 and "timeout" in e.value.detail
 
 
 def test_provisioning_routes_are_admin_only():
