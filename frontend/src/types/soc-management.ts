@@ -289,3 +289,9 @@ export interface CalendarResponse {
 	customers_with_calendar: string[]
 	retargeted: number
 }
+
+/** An alert source the caller's alerts come from, with how many alerts (for the filter). */
+export interface SourceOption {
+	source: string
+	alerts: number
+}

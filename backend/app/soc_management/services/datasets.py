@@ -23,6 +23,7 @@ from typing import List
 from typing import Optional
 from typing import Sequence
 from typing import Set
+from typing import Tuple
 
 from sqlalchemy import and_
 from sqlalchemy import exists
@@ -285,6 +286,26 @@ async def case_fact(session: AsyncSession, visibility: Visibility, case_id: int,
     query = _case_select().where(*_case_narrowing(visibility, FactFilters()), Case.id == case_id)
     row = (await session.execute(query)).first()
     return _case_fact(row, book) if row else None
+
+
+async def alert_sources(session: AsyncSession, visibility: Visibility) -> List[Tuple[str, int]]:
+    """The sources of the alerts the caller may see, with how many alerts each, busiest first.
+
+    What the source filter offers: the sources the data actually holds, not the ingest
+    sources someone configured — an alert can arrive from a source with no field mapping
+    (a manual alert, a Graylog threshold, UBA), and the configured list is deployment-wide
+    while this follows the caller's customers and tags.
+    """
+    if not visibility.sees_alerts:
+        return []
+    count = func.count(Alert.id)
+    query = (
+        select(Alert.source, count)
+        .where(*visibility.alert_filters, Alert.source.is_not(None), Alert.source != "")
+        .group_by(Alert.source)
+        .order_by(count.desc(), Alert.source)
+    )
+    return [(source, int(total)) for source, total in (await session.execute(query)).all()]
 
 
 async def tracking_since(session: AsyncSession) -> Optional[datetime]:

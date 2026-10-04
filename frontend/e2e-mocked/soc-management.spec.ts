@@ -18,13 +18,14 @@ interface Mock {
 	dashboardRequests: URL[]
 	policySaves: PolicyUpdatePayload[]
 	calendarSaves: CalendarPayload[]
+	sourceRequests: URL[]
 }
 
 async function installSocMock(
 	context: BrowserContext,
 	options: { snapshot?: SocDashboard; dashboardStatus?: number; role?: "admin" | "analyst" } = {}
 ): Promise<Mock> {
-	const mock: Mock = { dashboardRequests: [], policySaves: [], calendarSaves: [] }
+	const mock: Mock = { dashboardRequests: [], policySaves: [], calendarSaves: [], sourceRequests: [] }
 	const json = (route: Route, body: unknown, status = 200) =>
 		route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) })
 
@@ -89,8 +90,16 @@ async function installSocMock(
 					retargeted: 0
 				})
 			}
-			if (path === "/incidents/db_operations/configured/sources") {
-				return json(route, { success: true, message: "", sources: ["wazuh", "office365"] })
+			if (path === "/soc_management/sources") {
+				mock.sourceRequests.push(url)
+				return json(route, {
+					success: true,
+					message: "",
+					sources: [
+						{ source: "wazuh", alerts: 89 },
+						{ source: "office365", alerts: 43 }
+					]
+				})
 			}
 			return route.fallback()
 		}
@@ -186,6 +195,17 @@ test.describe("as an admin", () => {
 		await expect(page).toHaveURL(/customer=ACME/)
 		await expect(page).toHaveURL(/tab=overview/)
 		await expect.poll(() => mock.dashboardRequests.at(-1)?.searchParams.getAll("customer_codes[]")).toEqual(["ACME"])
+	})
+
+	test("the source filter offers the sources the alerts come from, with their counts", async ({ page }) => {
+		await open(page, "?customer=ACME")
+		await expect.poll(() => mock.sourceRequests.at(-1)?.searchParams.getAll("customer_codes[]")).toEqual(["ACME"])
+		await page.getByTestId("filter-sources").locator(".n-base-selection").click()
+		const options = page.locator(".n-select-menu .n-base-select-option")
+		await expect(options).toHaveText(["wazuh · 89", "office365 · 43"])
+		await options.first().click()
+		await expect(page).toHaveURL(/source=wazuh/)
+		await expect.poll(() => mock.dashboardRequests.at(-1)?.searchParams.getAll("sources[]")).toEqual(["wazuh"])
 	})
 
 	test("a severity filter is sent to the server and kept in the URL", async ({ page }) => {

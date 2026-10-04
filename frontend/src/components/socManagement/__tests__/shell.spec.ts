@@ -11,14 +11,14 @@ import { dashboard } from "./fixtures"
 
 const getDashboard = vi.fn()
 const downloadReport = vi.fn()
-const getConfiguredSources = vi.fn()
+const getSources = vi.fn()
 vi.mock("@/api", () => ({
 	default: {
 		socManagement: {
 			getDashboard: (...args: unknown[]) => getDashboard(...args),
-			downloadReport: (...args: unknown[]) => downloadReport(...args)
-		},
-		incidentManagement: { sources: { getConfiguredSources: (...args: unknown[]) => getConfiguredSources(...args) } }
+			downloadReport: (...args: unknown[]) => downloadReport(...args),
+			getSources: (...args: unknown[]) => getSources(...args)
+		}
 	}
 }))
 
@@ -78,9 +78,9 @@ beforeEach(() => {
 	setActivePinia(createPinia())
 	vi.useFakeTimers({ toFake: ["Date"] })
 	vi.setSystemTime(new Date("2026-09-30T10:00:00Z"))
-	for (const mock of [getDashboard, downloadReport, getConfiguredSources, saveAs]) mock.mockReset()
+	for (const mock of [getDashboard, downloadReport, getSources, saveAs]) mock.mockReset()
 	getDashboard.mockResolvedValue({ data: dashboard() })
-	getConfiguredSources.mockResolvedValue({ data: { sources: ["wazuh"] } })
+	getSources.mockResolvedValue({ data: { sources: [{ source: "wazuh", alerts: 1284 }] } })
 	globalCodes.value = []
 })
 afterEach(() => vi.useRealTimers())
@@ -144,6 +144,26 @@ describe("socManagementShell", () => {
 		await wrapper.get("[data-testid=soc-refresh]").trigger("click")
 		await flushPromises()
 		expect(getDashboard).toHaveBeenCalledTimes(2)
+	})
+
+	it("offers the sources the alerts in view come from, with their counts, per customers in view", async () => {
+		const { wrapper, router } = await shell("/soc-management?customer=ACME")
+		expect(getSources).toHaveBeenLastCalledWith(["ACME"], expect.any(AbortSignal))
+		const options = () => wrapper.findComponent(SocFilterBar).props("sourceOptions")
+		expect(options()).toEqual([{ label: "wazuh · 1,284", value: "wazuh" }])
+
+		getSources.mockResolvedValue({ data: { sources: [{ source: "office365", alerts: 4 }] } })
+		await router.replace("/soc-management?customer=GLOBEX")
+		await flushPromises()
+		expect(getSources).toHaveBeenLastCalledWith(["GLOBEX"], expect.any(AbortSignal))
+		expect(options()).toEqual([{ label: "office365 · 4", value: "office365" }])
+	})
+
+	it("keeps the page usable when the sources cannot be loaded", async () => {
+		getSources.mockImplementation(() => Promise.reject(new Error("boom")))
+		const { wrapper } = await shell("/soc-management")
+		expect(wrapper.findComponent(SocFilterBar).props("sourceOptions")).toEqual([])
+		expect(wrapper.find("[data-testid=stub-OverviewTab]").exists()).toBe(true)
 	})
 
 	it("starts from the sidebar's customer filter when the URL names none", async () => {

@@ -260,3 +260,17 @@ class ItemSlaResponse(BaseModel):
     #: Time spent waiting on the customer so far, the current wait included.
     paused_seconds: int = 0
     generated_at: datetime = Field(description="Server time the states were evaluated at")
+
+
+class SourceOption(BaseModel):
+    source: str
+    #: Alerts from this source the caller may see (all time), for ordering and the hint.
+    alerts: int
+
+
+class SourcesResponse(BaseModel):
+    """The alert sources the dashboard's source filter offers."""
+
+    success: bool = True
+    message: str = ""
+    sources: List[SourceOption]

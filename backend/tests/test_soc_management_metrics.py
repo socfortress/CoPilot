@@ -335,3 +335,23 @@ def test_the_report_counts_what_waits_on_the_customer():
     assert snapshot.workload.waiting_on_customer == 1
     assert context["workload"]["waiting_on_customer"] == 1
     assert "Waiting on the customer (clocks stopped)" in html
+
+
+# ── source filter options ────────────────────────────────────────────────────
+
+
+def test_source_options_are_the_sources_the_caller_can_see_busiest_first():
+    async def scenario(session, _ids):
+        everything = await metrics.build_sources(session, ADMIN, None)
+        scoped = await metrics.build_sources(session, ANA, None)
+        narrowed = await metrics.build_sources(session, ADMIN, ["GLOBEX"])
+        foreign = await metrics.build_sources(session, ANA, ["GLOBEX"])
+        return everything, scoped, narrowed, foreign
+
+    everything, scoped, narrowed, foreign = run(scenario)
+    pairs = lambda response: [(option.source, option.alerts) for option in response.sources]  # noqa: E731
+    # ACME: wazuh ×2, graylog ×1; GLOBEX: wazuh ×1 — taken from the alerts, not from a configuration.
+    assert pairs(everything) == [("wazuh", 3), ("graylog", 1)]
+    assert pairs(scoped) == [("wazuh", 2), ("graylog", 1)]  # ana sees ACME only
+    assert pairs(narrowed) == [("wazuh", 1)]
+    assert pairs(foreign) == []  # asking for another tenant widens nothing

@@ -105,7 +105,7 @@
 import type { SocScopeQuery } from "@/api/endpoints/soc-management"
 import { saveAs } from "file-saver"
 import { NAlert, NBadge, NButton, NSkeleton, NTabPane, NTabs, useMessage } from "naive-ui"
-import { computed, onBeforeMount, shallowRef } from "vue"
+import { computed, onBeforeMount, shallowRef, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useCustomerOptions } from "@/composables/useCustomerOptions"
@@ -120,7 +120,7 @@ import PoliciesTab from "./tabs/PoliciesTab.vue"
 import RulesTab from "./tabs/RulesTab.vue"
 import SlaTab from "./tabs/SlaTab.vue"
 import WorkloadTab from "./tabs/WorkloadTab.vue"
-import { parseUtc } from "./utils"
+import { formatCount, parseUtc } from "./utils"
 
 const TAB_DEFS = [
 	{ name: "overview", label: "Overview", icon: "carbon:dashboard" },
@@ -201,14 +201,29 @@ async function exportReport() {
 	}
 }
 
-async function loadSources() {
+/**
+ * The source filter offers the sources the alerts in view actually come from — not the
+ * configured ingest sources, which miss manual / threshold / UBA alerts and ignore the
+ * caller's scope — reloaded when the customers in view change.
+ */
+let sourcesController: AbortController | null = null
+async function loadSources(customerCodes: string[]) {
+	sourcesController?.abort()
+	const controller = new AbortController()
+	sourcesController = controller
 	try {
-		const sources = (await Api.incidentManagement.sources.getConfiguredSources()).data.sources ?? []
-		sourceOptions.value = sources.map(source => ({ label: source, value: source }))
+		const sources = (await Api.socManagement.getSources(customerCodes, controller.signal)).data.sources ?? []
+		sourceOptions.value = sources.map(({ source, alerts }) => ({ label: `${source} · ${formatCount(alerts)}`, value: source }))
 	} catch {
+		if (controller.signal.aborted) return
 		sourceOptions.value = [] // the filter is optional; the page works without it
 	}
 }
+
+watch(
+	() => [...filters.customerCodes.value],
+	codes => loadSources(codes)
+)
 
 // The sidebar's customer filter seeds the page when the URL names none, and — with live
 // sync on — wins over the local one. An emptied selection means "all customers" here.
@@ -221,7 +236,7 @@ onBeforeMount(() => {
 		filters.customerCodes.value = [...globalCustomerCodes.value]
 	}
 	loadCustomers()
-	loadSources()
+	loadSources(filters.customerCodes.value)
 })
 </script>
 

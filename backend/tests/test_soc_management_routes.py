@@ -296,6 +296,21 @@ def test_calendar_round_trip_validation_and_admin_only_writes():
     assert cleared.status_code == 200 and cleared.json()["calendar"]["source"] == "default"
 
 
+def test_sources_lists_what_the_alerts_hold_within_the_callers_scope():
+    async def scenario(client, _):
+        admin = await client.get("/soc_management/sources", headers=as_user("admin"))
+        narrowed = await client.get("/soc_management/sources", params={"customer_codes[]": ["GLOBEX"]}, headers=as_user("admin"))
+        analyst = await client.get("/soc_management/sources", params={"customer_codes": ["GLOBEX"]}, headers=as_user("ana"))
+        portal = await client.get("/soc_management/sources", headers=as_user("portal"))
+        return admin, narrowed, analyst, portal
+
+    admin, narrowed, analyst, portal = call(scenario)
+    assert admin.status_code == 200 and admin.json()["sources"] == [{"source": "wazuh", "alerts": 2}]
+    assert narrowed.json()["sources"] == [{"source": "wazuh", "alerts": 1}]  # axios bracket arrays narrow too
+    assert analyst.json()["sources"] == []  # ana is not assigned to GLOBEX
+    assert portal.status_code == 403
+
+
 def test_item_sla_is_404_outside_the_callers_scope():
     async def scenario(client, foreign_id):
         own = await client.get("/soc_management/items/alert/1/sla", headers=as_user("ana"))

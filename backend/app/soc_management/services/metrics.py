@@ -45,6 +45,8 @@ from app.soc_management.schema.metrics import PeriodOut
 from app.soc_management.schema.metrics import RuleRowOut
 from app.soc_management.schema.metrics import SeverityRowOut
 from app.soc_management.schema.metrics import SlaClockOut
+from app.soc_management.schema.metrics import SourceOption
+from app.soc_management.schema.metrics import SourcesResponse
 from app.soc_management.schema.metrics import TrendPointOut
 from app.soc_management.schema.metrics import Viewer
 from app.soc_management.schema.metrics import WorkloadOut
@@ -231,6 +233,13 @@ async def build_attention(
     if state is not None:
         items = [item for item in items if item.state is state]
     return AttentionResponse(items=[AttentionItemOut.model_validate(item) for item in items[:limit]], total=len(items))
+
+
+async def build_sources(session: AsyncSession, user: User, customer_codes: Optional[List[str]]) -> SourcesResponse:
+    """The sources the caller's alerts come from, within the customers asked for."""
+    visibility = await datasets.visibility_for(user, session, customer_codes)
+    sources = await datasets.alert_sources(session, visibility)
+    return SourcesResponse(sources=[SourceOption(source=source, alerts=alerts) for source, alerts in sources])
 
 
 async def item_sla(session: AsyncSession, user: User, entity: SlaEntity, item_id: int) -> Optional[ItemSlaResponse]:

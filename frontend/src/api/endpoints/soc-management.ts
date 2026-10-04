@@ -10,7 +10,8 @@ import type {
 	SlaEntity,
 	SlaState,
 	SocBucket,
-	SocDashboard
+	SocDashboard,
+	SourceOption
 } from "@/types/soc-management"
 import { HttpClient } from "../http-client"
 
@@ -73,6 +74,13 @@ export default {
 				signal
 			}
 		)
+	},
+	/** The sources the caller's alerts come from, within these customers, busiest first. */
+	getSources(customerCodes: string[], signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { sources: SourceOption[] }>("/soc_management/sources", {
+			params: scopeParams({ customerCodes }),
+			signal
+		})
 	},
 	getItemSla(entity: SlaEntity, id: number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & ItemSla>(`/soc_management/items/${entity}/${id}/sla`, { signal })

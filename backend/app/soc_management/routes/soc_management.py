@@ -35,6 +35,7 @@ from app.soc_management.schema.calendar import CalendarResponse
 from app.soc_management.schema.metrics import AttentionResponse
 from app.soc_management.schema.metrics import DashboardResponse
 from app.soc_management.schema.metrics import ItemSlaResponse
+from app.soc_management.schema.metrics import SourcesResponse
 from app.soc_management.schema.policy import PolicyOverridesResponse
 from app.soc_management.schema.policy import PolicyResponse
 from app.soc_management.schema.policy import PolicyUpdateRequest
@@ -100,6 +101,20 @@ async def get_dashboard(
         bucket=bucket,
     )
     return await metrics_service.build_dashboard(session, current_user, query)
+
+
+@soc_management_router.get(
+    "/sources",
+    response_model=SourcesResponse,
+    description="The alert sources the caller's alerts come from (for the source filter), busiest first",
+    dependencies=[_SOC],
+)
+async def get_sources(
+    customer_codes: Optional[List[str]] = Depends(customer_codes_query),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> SourcesResponse:
+    return await metrics_service.build_sources(session, current_user, customer_codes)
 
 
 @soc_management_router.get(
