@@ -40,6 +40,9 @@ from app.connectors.graylog.services.pipelines import get_pipelines
 from app.connectors.graylog.services.streams import delete_stream
 from app.connectors.graylog.utils.universal import send_post_request
 from app.connectors.graylog.utils.universal import send_post_request_create_entity
+from app.connectors.graylog.utils.universal import (
+    send_put_request as send_graylog_put_request,
+)
 from app.connectors.wazuh_indexer.services.monitoring import (
     output_shard_number_to_be_set_based_on_nodes,
 )
@@ -590,13 +593,58 @@ async def create_event_stream(
 # ! PIPELINE RULES ! #
 async def check_pipeline_rules() -> None:
     """
-    Checks if the pipeline rules exist in Graylog. If they don't, create them.
+    Checks if the pipeline rules exist in Graylog. If they don't, create them; a known-broken
+    version of one CoPilot created earlier is repaired (see ``repair_pipeline_rules``).
     """
     pipeline_rules = await get_pipeline_rules()
     non_existing_rules = await pipeline_rules_exists(pipeline_rules)
     if non_existing_rules:
         logger.info(f"Creating pipeline rules: {non_existing_rules}")
         await create_pipeline_rules(non_existing_rules)
+    await repair_pipeline_rules(pipeline_rules)
+
+
+# Sources earlier CoPilot versions created and that are wrong, by rule title: a rule is only ever
+# created when missing, so these stay broken on existing Graylogs unless repaired.
+# - "Office365 Timestamp - UTC" read `data_office_365_CreationTime`; the field is
+#   `data_office365_CreationTime`, so no Office 365 document got `timestamp_utc` (lab, 2026-10-04:
+#   0 of 3.27 million documents in a day).
+BROKEN_RULE_MARKERS = {
+    PipelineRuleTitles.OFFICE365_TIMESTAMP.value: "data_office_365_CreationTime",
+}
+
+
+async def repair_pipeline_rules(pipeline_rules: PipelineRulesResponse) -> List[str]:
+    """Rewrite rules whose source is a known-broken earlier version; the titles repaired."""
+    repaired = []
+    for rule in pipeline_rules.pipeline_rules:
+        marker = BROKEN_RULE_MARKERS.get(rule.title)
+        if marker is None or marker not in rule.source:
+            continue
+        source = PIPELINE_RULE_SOURCES[rule.title](rule.title)
+        result = await send_graylog_put_request(
+            endpoint=f"/api/system/pipelines/rule/{rule.id}",
+            data={"title": rule.title, "description": rule.description or rule.title, "source": source},
+        )
+        if not result or not result.get("success"):
+            logger.error(f"Could not repair pipeline rule {rule.title}: {(result or {}).get('message')}")
+            continue
+        logger.info(f"Repaired pipeline rule {rule.title} (it read {marker})")
+        repaired.append(rule.title)
+    return repaired
+
+
+async def ensure_office365_pipeline_rules() -> None:
+    """At CoPilot startup: where Office 365 is in use (its processing pipeline exists), create its
+    missing rules and repair broken ones, so existing deployments get the fixes without
+    re-provisioning. Never fatal: a missing or unreachable Graylog is only logged."""
+    try:
+        pipelines = await get_pipelines()
+        if not any(p.title == PipelineTitles.OFFICE365.value for p in pipelines.pipelines):
+            return
+        await check_pipeline_rules()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Could not check the Office 365 pipeline rules at startup: {exc}")
 
 
 async def pipeline_rules_exists(pipeline_rules: PipelineRulesResponse) -> List[str]:
@@ -616,7 +664,7 @@ async def create_pipeline_rules(non_existing_rules: List[str]) -> None:
     """
     rule_creators = {
         "Office365 Timestamp - UTC": create_office365_utc_rule,
-        "Office365 Syslog Type": create_office365_syslog_type_rule,
+        "SYSLOG TYPE OFFICE365": create_office365_syslog_type_rule,
         "WAZUH CREATE FIELD SYSLOG LEVEL - INFO": create_wazuh_info_rule,
         "WAZUH CREATE FIELD SYSLOG LEVEL - WARNING": create_wazuh_warning_rule,
         "WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE": create_wazuh_notice_rule,
@@ -628,11 +676,8 @@ async def create_pipeline_rules(non_existing_rules: List[str]) -> None:
         await rule_creators[rule_title](rule_title)
 
 
-async def create_office365_utc_rule(rule_title: str) -> None:
-    """
-    Creates the 'Office365 Timestamp - UTC' pipeline rule.
-    """
-    rule_source = (
+def office365_utc_rule_source(rule_title: str) -> str:
+    return (
         f'rule "{rule_title}"\n'
         "when\n"
         '  has_field("data_office365_CreationTime")\n'
@@ -641,6 +686,19 @@ async def create_office365_utc_rule(rule_title: str) -> None:
         '  set_field("timestamp_utc", creation_time);\n'
         "end"
     )
+
+
+# Title -> source, for rules ``repair_pipeline_rules`` may rewrite.
+PIPELINE_RULE_SOURCES = {
+    "Office365 Timestamp - UTC": office365_utc_rule_source,
+}
+
+
+async def create_office365_utc_rule(rule_title: str) -> None:
+    """
+    Creates the 'Office365 Timestamp - UTC' pipeline rule.
+    """
+    rule_source = office365_utc_rule_source(rule_title)
     await create_pipeline_rule(
         CreatePipelineRule(
             title=rule_title,
