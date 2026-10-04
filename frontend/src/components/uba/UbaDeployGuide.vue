@@ -115,14 +115,16 @@ const STEPS: Step[] = [
 	{
 		title: "Back up and upgrade",
 		text: [
-			"Postgres holds what UBA has learned, its identities and alerts: back it up nightly (the repository's README also shows the restore). To upgrade, pull the repository and the new image and restart; database migrations run first."
+			"Postgres holds what UBA has learned, its identities and alerts: back it up nightly (the repository's README also shows the restore). UBA runs the version set in UBA_TAG; releases are listed on the deployment repository's Releases page. To upgrade, pull the repository, set UBA_TAG to the new version, then pull the image and restart; database migrations run first."
 		],
 		code: [
 			"# nightly backup (in a crontab line, write each % as \\%)",
 			"cd /opt/socfortress-uba && docker compose exec -T postgres pg_dump -U uba -Fc uba > /backup/uba-$(date +%F).dump",
 			"",
 			"# upgrade",
-			"cd /opt/socfortress-uba && git pull && docker compose pull && docker compose up -d"
+			"cd /opt/socfortress-uba && git pull",
+			"sed -i 's/^UBA_TAG=.*/UBA_TAG=<new version>/' .env",
+			"docker compose pull && docker compose up -d"
 		].join("\n")
 	}
 ]
