@@ -72,6 +72,7 @@
 				</div>
 			</div>
 		</n-spin>
+		<UbaIdentityReview :customer-code class="mt-6" />
 	</div>
 </template>
 
@@ -85,6 +86,7 @@ import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import UbaError from "./UbaError.vue"
+import UbaIdentityReview from "./UbaIdentityReview.vue"
 
 const { customerCode } = defineProps<{ customerCode: string }>()
 

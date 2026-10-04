@@ -35,6 +35,7 @@ from app.connectors.uba.schema.uba import UbaAvailabilityResponse
 from app.connectors.uba.schema.uba import UbaBacktestRequest
 from app.connectors.uba.schema.uba import UbaCustomerStatusResponse
 from app.connectors.uba.schema.uba import UbaFeedbackRequest
+from app.connectors.uba.schema.uba import UbaIdentityMergeRequest
 from app.connectors.uba.schema.uba import UbaResponse
 from app.connectors.uba.schema.uba import UbaRuleSettingRequest
 from app.connectors.uba.schema.uba import UbaScoreRequest
@@ -250,6 +251,70 @@ async def remove_suppressions(
 )
 async def get_signal_evidence(customer_code: str, signal_id: str):
     return await _call(svc.get_signal_evidence(customer_code, signal_id))
+
+
+@uba_router.get(
+    "/{customer_code}/identities/review",
+    response_model=UbaResponse,
+    description="Identity review: merge candidates from directory syncs, unmatched accounts with recent findings, recent merges",
+    dependencies=_READ,
+)
+async def get_identity_review(customer_code: str, include_reviewed: bool = False):
+    return await _call(svc.get_identity_review(customer_code, include_reviewed))
+
+
+@uba_router.get(
+    "/{customer_code}/identities",
+    response_model=UbaResponse,
+    description="Identities by name or alias (merge targets), directory users first",
+    dependencies=_READ,
+)
+async def search_identities(customer_code: str, q: str = Query(..., min_length=2, max_length=200)):
+    return await _call(svc.search_identities(customer_code, q))
+
+
+@uba_router.post(
+    "/{customer_code}/identities/merge",
+    response_model=UbaResponse,
+    description="Merge one identity into another (admin; cannot be undone). Body: identity_id, into",
+    dependencies=_ADMIN,
+)
+async def merge_identity(
+    customer_code: str,
+    body: UbaIdentityMergeRequest,
+    identity_id: str = Query(..., min_length=1, max_length=64),
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.merge_identity(customer_code, identity_id, body, current_user.username))
+
+
+@uba_router.post(
+    "/{customer_code}/identities/reviewed",
+    response_model=UbaResponse,
+    description="Mark an unmatched account reviewed (kept as it is), or put it back with reviewed=false (admin)",
+    dependencies=_ADMIN,
+)
+async def mark_identity_reviewed(
+    customer_code: str,
+    identity_id: str = Query(..., min_length=1, max_length=64),
+    reviewed: bool = True,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.mark_identity_reviewed(customer_code, identity_id, reviewed, current_user.username))
+
+
+@uba_router.post(
+    "/{customer_code}/identity-candidates/{candidate_id}/dismiss",
+    response_model=UbaResponse,
+    description="Not the same person: the pair is not suggested again (admin)",
+    dependencies=_ADMIN,
+)
+async def dismiss_merge_candidate(
+    customer_code: str,
+    candidate_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.dismiss_merge_candidate(customer_code, candidate_id, current_user.username))
 
 
 @uba_router.get(

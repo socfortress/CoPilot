@@ -1,4 +1,4 @@
-import type { UbaAgentsSummary, UbaFailureReason } from "@/types/uba"
+import type { UbaAgentsSummary, UbaFailureReason, UbaIdentitySummary } from "@/types/uba"
 
 /** What to do about an upstream failure (the proxy returns a `reason`, never a 401/403). */
 export function reasonHint(reason: UbaFailureReason | string | null | undefined): string | null {
@@ -102,4 +102,20 @@ export function agentsSummaryTitle(agents: UbaAgentsSummary): string {
 	if (agents.retired) lines.push(`${agents.retired} silent for over 30 days (not counted)`)
 	if (agents.never_connected) lines.push(`${agents.never_connected} enrolled but never connected`)
 	return lines.join("\n")
+}
+
+/** An identity's name: its display name, else its strongest alias without the type. */
+export function identityLabel(i: UbaIdentitySummary): string {
+	if (i.display_name) return i.display_name
+	const alias = i.aliases[0]
+	return alias ? alias.slice(alias.indexOf(":") + 1) : i.id
+}
+
+/** "human · admin · 3 findings in 14 days · upn:jdoe@…, sid:S-1-5-…" */
+export function identityDetails(i: UbaIdentitySummary): string {
+	const parts = [i.kind && i.kind !== "unknown" ? i.kind : null, i.privileged ? "admin" : null]
+	parts.push(`${i.findings} finding${i.findings === 1 ? "" : "s"} in 14 days`)
+	const aliases = i.aliases.slice(0, 2).join(", ")
+	if (aliases) parts.push(aliases)
+	return parts.filter(Boolean).join(" · ")
 }

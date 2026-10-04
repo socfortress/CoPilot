@@ -11,7 +11,10 @@ import type {
 	UbaEntitySummary,
 	UbaEvidence,
 	UbaFeedbackPayload,
+	UbaIdentityMerge,
+	UbaIdentityReview,
 	UbaIdentitySource,
+	UbaIdentitySummary,
 	UbaOnboarding,
 	UbaPage,
 	UbaProvisioning,
@@ -188,6 +191,38 @@ export default {
 	/** Admin: back to UBA's built-in alert threshold for the customer. */
 	resetAlertThreshold(customerCode: string) {
 		return HttpClient.delete<FlaskBaseResponse & UbaRuleSettings>(`${base(customerCode)}/risk-policy`)
+	},
+	/** Identity review: merge candidates, unmatched accounts with recent findings, recent merges. */
+	getIdentityReview(customerCode: string, includeReviewed = false, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & UbaIdentityReview>(`${base(customerCode)}/identities/review`, {
+			params: { include_reviewed: includeReviewed },
+			signal
+		})
+	},
+	/** Identities by name or alias: merge targets, directory users first. */
+	searchIdentities(customerCode: string, q: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { identities: UbaIdentitySummary[] }>(`${base(customerCode)}/identities`, {
+			params: { q },
+			signal
+		})
+	},
+	/** Admin: merge one identity into another (queued; cannot be undone). */
+	mergeIdentity(customerCode: string, identityId: string, into: string) {
+		return HttpClient.post<FlaskBaseResponse & UbaIdentityMerge>(
+			`${base(customerCode)}/identities/merge`,
+			{ into },
+			{ params: { identity_id: identityId } }
+		)
+	},
+	/** Admin: keep an unmatched account as it is (it leaves the review), or put it back. */
+	markIdentityReviewed(customerCode: string, identityId: string, reviewed = true) {
+		return HttpClient.post<FlaskBaseResponse>(`${base(customerCode)}/identities/reviewed`, undefined, {
+			params: { identity_id: identityId, reviewed }
+		})
+	},
+	/** Admin: not the same person; the pair is not suggested again. */
+	dismissMergeCandidate(customerCode: string, candidateId: number) {
+		return HttpClient.post<FlaskBaseResponse>(`${base(customerCode)}/identity-candidates/${candidateId}/dismiss`)
 	},
 	getRuleStats(customerCode: string, since = "24h", signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { since: string; rules: UbaRuleStat[] }>(`${base(customerCode)}/rules/stats`, {
