@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from "pinia"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
 import { createMemoryHistory, createRouter } from "vue-router"
+import VolumeTrendChart from "../charts/VolumeTrendChart.vue"
 import AnalystsTab from "../tabs/AnalystsTab.vue"
 import CustomersTab from "../tabs/CustomersTab.vue"
 import OverviewTab from "../tabs/OverviewTab.vue"
@@ -101,6 +102,14 @@ describe("overviewTab", () => {
 		expect(wrapper.get("[data-testid=kpi-cases-opened-link]").attributes("href")).toBe("/cases")
 		const { wrapper: everyone } = await render(OverviewTab, { dashboard: dashboard({ customer_codes: null }) })
 		expect(everyone.get("[data-testid=kpi-alerts-opened-link]").attributes("href")).toBe("/alerts")
+	})
+
+	it("switches the volume chart between alerts and cases from its header toggle", async () => {
+		const { wrapper } = await render(OverviewTab, { dashboard: adminView() })
+		const chart = () => wrapper.findComponent(VolumeTrendChart)
+		expect(chart().props("entity")).toBe("alert")
+		await wrapper.get("[data-testid=volume-entity-case]").trigger("click")
+		expect(chart().props("entity")).toBe("case")
 	})
 
 	it("says how many open items wait on the customer, next to past SLA", async () => {

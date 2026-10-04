@@ -132,10 +132,12 @@
 				class="xl:col-span-3"
 			>
 				<template #actions>
-					<n-radio-group v-model:value="volumeEntity" size="small">
-						<n-radio-button value="alert">Alerts</n-radio-button>
-						<n-radio-button value="case">Cases</n-radio-button>
-					</n-radio-group>
+					<SegmentedToggle
+						v-model="volumeEntity"
+						:options="VOLUME_OPTIONS"
+						label="Show"
+						test-id="volume-entity"
+					/>
 				</template>
 				<VolumeTrendChart
 					:points="dashboard.trends"
@@ -187,7 +189,7 @@
 import type { DataTableColumns } from "naive-ui"
 import type { SocTab } from "../composables/useSocFilters"
 import type { SeverityRow, SlaEntity, SocDashboard } from "@/types/soc-management"
-import { NButton, NDataTable, NRadioButton, NRadioGroup, NScrollbar, NTooltip } from "naive-ui"
+import { NButton, NDataTable, NScrollbar, NTooltip } from "naive-ui"
 import { computed, shallowRef } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
@@ -197,6 +199,7 @@ import VolumeTrendChart from "../charts/VolumeTrendChart.vue"
 import ComplianceMeter from "../ui/ComplianceMeter.vue"
 import DeltaChip from "../ui/DeltaChip.vue"
 import KpiTile from "../ui/KpiTile.vue"
+import SegmentedToggle from "../ui/SegmentedToggle.vue"
 import SeverityTag from "../ui/SeverityTag.vue"
 import SlaGauge from "../ui/SlaGauge.vue"
 import SocPanel from "../ui/SocPanel.vue"
@@ -215,6 +218,10 @@ import {
 const { dashboard } = defineProps<{ dashboard: SocDashboard }>()
 const emit = defineEmits<{ (e: "openTab", tab: SocTab): void }>()
 
+const VOLUME_OPTIONS: { value: SlaEntity; label: string }[] = [
+	{ value: "alert", label: "Alerts" },
+	{ value: "case", label: "Cases" }
+]
 const volumeEntity = shallowRef<SlaEntity>("alert")
 
 const headline = computed(() => dashboard.headline)
