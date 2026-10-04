@@ -7,6 +7,9 @@
 					<n-tag :type="riskTagType(detail.risk)" round :bordered="false">risk {{ riskLabel(detail.risk) }}</n-tag>
 					<n-tag size="small" :bordered="false">{{ entityTypeLabel(detail.entity_type) }}</n-tag>
 					<n-tag v-if="detail.identity?.privileged" size="small" type="warning" :bordered="false">privileged</n-tag>
+					<n-tag v-if="detail.host && detail.host.reporting !== 'reporting'" size="small" type="warning" :bordered="false">
+						{{ REPORTING_LABELS[detail.host.reporting] }}
+					</n-tag>
 					<span class="text-tertiary font-mono text-xs">{{ detail.entity_key }}</span>
 				</header>
 
@@ -45,6 +48,36 @@
 						</li>
 						<li v-if="!detail.risk_by_rule.length" class="text-secondary px-3 py-2 text-sm">No risk in the last 14 days.</li>
 					</ul>
+				</section>
+
+				<section v-if="detail.host" class="flex flex-col gap-2">
+					<span :class="SECTION_LABEL">Computer</span>
+					<dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
+						<dt class="text-secondary">Name</dt>
+						<dd>{{ detail.host.name }}</dd>
+						<dt class="text-secondary">System</dt>
+						<dd>{{ detail.host.os || detail.host.platform || "unknown" }}{{ detail.host.role ? ` (${detail.host.role})` : "" }}</dd>
+						<template v-if="detail.host.ip">
+							<dt class="text-secondary">Address</dt>
+							<dd class="font-mono text-xs">{{ detail.host.ip }}</dd>
+						</template>
+						<dt class="text-secondary">Wazuh agent</dt>
+						<dd>
+							{{ detail.host.agent_id }}{{ detail.host.agent_version ? ` · ${detail.host.agent_version}` : "" }}{{
+								detail.host.groups.length ? ` · groups ${detail.host.groups.join(", ")}` : ""
+							}}
+						</dd>
+						<dt class="text-secondary">Reporting</dt>
+						<dd>
+							{{ REPORTING_LABELS[detail.host.reporting] }}{{
+								detail.host.last_keepalive ? ` · last check-in ${formatDate(detail.host.last_keepalive, dFormats.datetime)}` : ""
+							}}
+						</dd>
+						<template v-if="detail.host.registered_at">
+							<dt class="text-secondary">Enrolled</dt>
+							<dd>{{ formatDate(detail.host.registered_at, dFormats.date) }}</dd>
+						</template>
+					</dl>
 				</section>
 
 				<section v-if="detail.identity" class="flex flex-col gap-2">
@@ -149,7 +182,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { UbaEntityDetail, UbaRiskHistory, UbaRiskStep, UbaSignal } from "@/types/uba"
+import type { UbaEntityDetail, UbaReportingState, UbaRiskHistory, UbaRiskStep, UbaSignal } from "@/types/uba"
 import { NButton, NRadioButton, NRadioGroup, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
@@ -165,7 +198,12 @@ import { entityTypeLabel, identitySourceLabel, privilegedReasonLabel, riskLabel,
 
 const { customerCode, entityKey } = defineProps<{ customerCode: string; entityKey: string }>()
 const emit = defineEmits<{ openAlert: [alertId: string]; changed: [] }>()
-
+const REPORTING_LABELS: Record<UbaReportingState, string> = {
+	reporting: "reporting",
+	not_reporting: "not reporting",
+	retired: "retired (silent over 30 days)",
+	never_connected: "never connected"
+}
 const PAGE_SIZE = 30
 const { routeIncidentManagementAlerts } = useNavigation()
 const message = useMessage()
