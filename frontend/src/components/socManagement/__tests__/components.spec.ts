@@ -122,6 +122,21 @@ describe("slaGauge", () => {
 		expect(notch.shape.x2).toBeLessThan(notch.shape.x1)
 	})
 
+	it("explains the objective notch on hover, and highlights it meanwhile", async () => {
+		const wrapper = mount(SlaGauge, { props: { rate: 50, label: "x", objective: 75, size: 200 } })
+		const hit = wrapper.get("[data-testid=sla-gauge-objective]")
+		expect(hit.attributes("aria-label")).toBe("75% target: at 75% or more the arc turns green.")
+		expect(hit.attributes("tabindex")).toBe("0")
+		// Centred on the notch: 75% of a turn is nine o'clock, R=74 left of the centre.
+		expect(hit.attributes("style")).toContain("left: 17px")
+		expect(hit.attributes("style")).toContain("top: 91px")
+		expect(lastOption().graphic[0].style.lineWidth).toBe(2)
+		await hit.trigger("mouseenter")
+		expect(lastOption().graphic[0].style.lineWidth).toBe(3.5)
+		await hit.trigger("mouseleave")
+		expect(lastOption().graphic[0].style.lineWidth).toBe(2)
+	})
+
 	it("draws no arc and shows a dash when there is no rate", () => {
 		const wrapper = mount(SlaGauge, { props: { rate: null, label: "Resolved in SLA" } })
 		expect(lastOption().series[1].progress.show).toBe(false)
