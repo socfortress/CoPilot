@@ -20,6 +20,8 @@ import type {
 	UbaRiskHistory,
 	UbaRiskStep,
 	UbaRuleInfo,
+	UbaRuleSettingPayload,
+	UbaRuleSettings,
 	UbaRuleStat,
 	UbaSignal,
 	UbaSuppression,
@@ -159,6 +161,33 @@ export default {
 			`${base(customerCode)}/provision`,
 			payload
 		)
+	},
+	/** Every UBA rule as it applies to the customer, and its alert threshold. */
+	getRuleSettings(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & UbaRuleSettings>(`${base(customerCode)}/rule-settings`, { signal })
+	},
+	/** Admin: change one rule for the customer (only the fields sent change). */
+	setRuleSetting(customerCode: string, ruleId: string, payload: UbaRuleSettingPayload) {
+		return HttpClient.put<FlaskBaseResponse & UbaRuleSettings>(
+			`${base(customerCode)}/rule-settings/${encodeURIComponent(ruleId)}`,
+			payload
+		)
+	},
+	/** Admin: back to the built-in setting of one rule for the customer. */
+	resetRuleSetting(customerCode: string, ruleId: string) {
+		return HttpClient.delete<FlaskBaseResponse & UbaRuleSettings>(
+			`${base(customerCode)}/rule-settings/${encodeURIComponent(ruleId)}`
+		)
+	},
+	/** Admin: the customer's alert threshold. */
+	setAlertThreshold(customerCode: string, alertThreshold: number) {
+		return HttpClient.put<FlaskBaseResponse & UbaRuleSettings>(`${base(customerCode)}/risk-policy`, {
+			alert_threshold: alertThreshold
+		})
+	},
+	/** Admin: back to UBA's built-in alert threshold for the customer. */
+	resetAlertThreshold(customerCode: string) {
+		return HttpClient.delete<FlaskBaseResponse & UbaRuleSettings>(`${base(customerCode)}/risk-policy`)
 	},
 	getRuleStats(customerCode: string, since = "24h", signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { since: string; rules: UbaRuleStat[] }>(`${base(customerCode)}/rules/stats`, {
