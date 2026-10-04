@@ -379,3 +379,40 @@ export interface UbaAbout {
 	rule_count: number
 	categories: { id: string; label: string; summary: string; rules: UbaAboutRule[] }[]
 }
+
+/** One UBA rule as it applies to a customer (GET /v1/tenants/{code}/rule-settings). */
+export interface UbaRuleSetting {
+	rule_id: string
+	name: string
+	/** Rule id prefix: auth, account, mail, saas, file, process, inventory. */
+	category: string
+	default_enabled: boolean
+	default_score: number
+	enabled: boolean
+	score: number
+	/** The customer has its own setting for this rule. */
+	customized: boolean
+	changed_by: string | null
+	changed_at: string | null
+}
+
+export interface UbaAlertThreshold {
+	value: number
+	default: number
+	customized: boolean
+	changed_by: string | null
+	changed_at: string | null
+	/** One finding worth this much alerts at once (not per customer). */
+	single_finding: number
+}
+
+export interface UbaRuleSettings {
+	rules: UbaRuleSetting[]
+	alert_threshold: UbaAlertThreshold
+}
+
+/** Only the fields sent change; null puts one back to the built-in value. */
+export interface UbaRuleSettingPayload {
+	enabled?: boolean | null
+	score?: number | null
+}

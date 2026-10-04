@@ -60,6 +60,17 @@ class UbaScoreRequest(BaseModel):
     score: float = Field(..., ge=0, le=100, description="Native alerts never lower risk: 0 turns the rule's risk off")
 
 
+class UbaRuleSettingRequest(BaseModel):
+    """Only the fields sent change; null puts one back to UBA's built-in value."""
+
+    enabled: Optional[bool] = Field(None, description="false: the rule's findings are dropped for this customer")
+    score: Optional[float] = Field(None, ge=0, le=100, description="points per finding (0: recorded, no risk)")
+
+
+class UbaAlertThresholdRequest(BaseModel):
+    alert_threshold: float = Field(..., ge=20, le=1000, description="accumulated risk that raises an alert")
+
+
 class UbaTenantStatus(BaseModel):
     model_config = ConfigDict(extra="allow")
 

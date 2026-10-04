@@ -220,3 +220,38 @@ def test_route_errors_carry_reason_not_auth_status():
     response = _error(UbaRequestError("key_rejected", "UBA rejected the API key"))
     assert response.status_code == 502
     assert json.loads(response.body) == {"detail": "UBA rejected the API key", "reason": "key_rejected", "success": False}
+
+
+def test_rule_setting_changes_are_admin_only_and_reading_them_is_not():
+    from app.connectors.uba.routes import uba as routes
+
+    by_path = {(r.path, tuple(sorted(r.methods))): r for r in routes.uba_router.routes}
+    assert by_path[("/{customer_code}/rule-settings", ("GET",))].dependencies == routes._READ
+    for path, method in (
+        ("/{customer_code}/rule-settings/{rule_id}", "PUT"),
+        ("/{customer_code}/rule-settings/{rule_id}", "DELETE"),
+        ("/{customer_code}/risk-policy", "PUT"),
+        ("/{customer_code}/risk-policy", "DELETE"),
+    ):
+        assert by_path[(path, (method,))].dependencies == routes._ADMIN, (path, method)
+
+
+def test_a_rule_setting_sends_only_what_was_set_and_names_the_admin():
+    from app.connectors.uba.schema.uba import UbaAlertThresholdRequest
+    from app.connectors.uba.schema.uba import UbaRuleSettingRequest
+
+    settings = {"success": True, "message": "the worker applies it within a minute", "rules": [], "alert_threshold": {}}
+    rec = Recorder((200, settings), (200, settings), (200, settings))
+    out = _run(services.set_rule_setting("lab", "auth.new_country", UbaRuleSettingRequest(enabled=False), "admin1"), rec)
+    req = rec.requests[0]
+    assert req.method == "PUT" and req.url.path == "/v1/tenants/lab/rule-settings/auth.new_country"
+    assert json.loads(req.content) == {"enabled": False} and req.headers["x-uba-actor"] == "admin1"
+    assert out.message == "the worker applies it within a minute"
+    _run(services.set_alert_threshold("lab", UbaAlertThresholdRequest(alert_threshold=150), "admin1"), rec)
+    assert rec.requests[1].url.path == "/v1/tenants/lab/risk-policy" and json.loads(rec.requests[1].content) == {"alert_threshold": 150.0}
+    _run(services.reset_rule_setting("lab", "auth.new_country", "admin1"), rec)
+    assert rec.requests[2].method == "DELETE"
+    # An explicit null (back to built-in for that field) is sent; fields not given are not.
+    rec = Recorder((200, settings))
+    _run(services.set_rule_setting("lab", "auth.new_country", UbaRuleSettingRequest(score=None), "admin1"), rec)
+    assert json.loads(rec.requests[0].content) == {"score": None}

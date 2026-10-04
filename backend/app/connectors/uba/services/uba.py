@@ -8,11 +8,13 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 
+from app.connectors.uba.schema.uba import UbaAlertThresholdRequest
 from app.connectors.uba.schema.uba import UbaAvailabilityResponse
 from app.connectors.uba.schema.uba import UbaBacktestRequest
 from app.connectors.uba.schema.uba import UbaCustomerStatusResponse
 from app.connectors.uba.schema.uba import UbaFeedbackRequest
 from app.connectors.uba.schema.uba import UbaResponse
+from app.connectors.uba.schema.uba import UbaRuleSettingRequest
 from app.connectors.uba.schema.uba import UbaScoreRequest
 from app.connectors.uba.schema.uba import UbaSuppressionRequest
 from app.connectors.uba.schema.uba import UbaTenantStatus
@@ -166,3 +168,25 @@ async def set_native_override(customer_code: str, rule_id: str, body: UbaScoreRe
 async def delete_native_override(customer_code: str, rule_id: str, integration: str, actor: str) -> UbaResponse:
     path = f"{_tenant(customer_code)}/native-overrides/{path_segment(rule_id)}"
     return UbaResponse(**await uba_request("DELETE", path, params={"integration": integration}, actor=actor))
+
+
+async def get_rule_settings(customer_code: str) -> UbaResponse:
+    return await _get(f"{_tenant(customer_code)}/rule-settings")
+
+
+async def set_rule_setting(customer_code: str, rule_id: str, body: UbaRuleSettingRequest, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/rule-settings/{path_segment(rule_id)}"
+    return UbaResponse(**await uba_request("PUT", path, json=body.model_dump(exclude_unset=True), actor=actor))
+
+
+async def reset_rule_setting(customer_code: str, rule_id: str, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/rule-settings/{path_segment(rule_id)}"
+    return UbaResponse(**await uba_request("DELETE", path, actor=actor))
+
+
+async def set_alert_threshold(customer_code: str, body: UbaAlertThresholdRequest, actor: str) -> UbaResponse:
+    return UbaResponse(**await uba_request("PUT", f"{_tenant(customer_code)}/risk-policy", json=body.model_dump(), actor=actor))
+
+
+async def reset_alert_threshold(customer_code: str, actor: str) -> UbaResponse:
+    return UbaResponse(**await uba_request("DELETE", f"{_tenant(customer_code)}/risk-policy", actor=actor))

@@ -30,11 +30,13 @@ from app.auth.utils import AuthHandler
 from app.connectors.uba.schema.provision import UbaProvisionRequest
 from app.connectors.uba.schema.provision import UbaProvisionResponse
 from app.connectors.uba.schema.provision import UbaProvisionStatusResponse
+from app.connectors.uba.schema.uba import UbaAlertThresholdRequest
 from app.connectors.uba.schema.uba import UbaAvailabilityResponse
 from app.connectors.uba.schema.uba import UbaBacktestRequest
 from app.connectors.uba.schema.uba import UbaCustomerStatusResponse
 from app.connectors.uba.schema.uba import UbaFeedbackRequest
 from app.connectors.uba.schema.uba import UbaResponse
+from app.connectors.uba.schema.uba import UbaRuleSettingRequest
 from app.connectors.uba.schema.uba import UbaScoreRequest
 from app.connectors.uba.schema.uba import UbaSuppressionRequest
 from app.connectors.uba.services import provision as provisioning
@@ -349,6 +351,65 @@ async def cancel_backtest(
 )
 async def get_rule_stats(customer_code: str, since: str = Query("24h", description="ISO time or duration")):
     return await _call(svc.get_rule_stats(customer_code, since))
+
+
+@uba_router.get(
+    "/{customer_code}/rule-settings",
+    response_model=UbaResponse,
+    description="Every UBA rule as it applies to this customer (on or off, points) and its alert threshold, with who changed them",
+    dependencies=_READ,
+)
+async def get_rule_settings(customer_code: str):
+    return await _call(svc.get_rule_settings(customer_code))
+
+
+@uba_router.put(
+    "/{customer_code}/rule-settings/{rule_id}",
+    response_model=UbaResponse,
+    description="Turn a UBA rule off or on, or give it other points, for this customer (admin)",
+    dependencies=_ADMIN,
+)
+async def set_rule_setting(
+    customer_code: str,
+    rule_id: str,
+    body: UbaRuleSettingRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.set_rule_setting(customer_code, rule_id, body, current_user.username))
+
+
+@uba_router.delete(
+    "/{customer_code}/rule-settings/{rule_id}",
+    response_model=UbaResponse,
+    description="Back to the built-in setting of a UBA rule for this customer (admin)",
+    dependencies=_ADMIN,
+)
+async def reset_rule_setting(customer_code: str, rule_id: str, current_user: User = Depends(AuthHandler().get_current_user)):
+    return await _call(svc.reset_rule_setting(customer_code, rule_id, current_user.username))
+
+
+@uba_router.put(
+    "/{customer_code}/risk-policy",
+    response_model=UbaResponse,
+    description="This customer's UBA alert threshold (admin)",
+    dependencies=_ADMIN,
+)
+async def set_alert_threshold(
+    customer_code: str,
+    body: UbaAlertThresholdRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.set_alert_threshold(customer_code, body, current_user.username))
+
+
+@uba_router.delete(
+    "/{customer_code}/risk-policy",
+    response_model=UbaResponse,
+    description="Back to UBA's built-in alert threshold for this customer (admin)",
+    dependencies=_ADMIN,
+)
+async def reset_alert_threshold(customer_code: str, current_user: User = Depends(AuthHandler().get_current_user)):
+    return await _call(svc.reset_alert_threshold(customer_code, current_user.username))
 
 
 @uba_router.get(
