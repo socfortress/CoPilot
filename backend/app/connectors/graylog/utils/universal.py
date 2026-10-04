@@ -204,7 +204,9 @@ async def send_post_request(
                 "success": True,
                 "message": "Successfully completed request with no content",
             }
-        elif response.status_code == 201:
+        elif response.status_code in (201, 202):
+            # 201 Created, or 202 Accepted: Graylog 7 answers 202 with an empty body when it
+            # attaches outputs to a stream (POST /api/streams/{id}/outputs).
             try:
                 return {
                     "data": response.json(),
@@ -215,12 +217,16 @@ async def send_post_request(
                 return {
                     "data": None,
                     "success": True,
-                    "message": "Successfully created data, but no data returned",
+                    "message": "Successfully completed request, but no data returned",
                 }
         else:
+            try:
+                reason = response.json().get("message") or response.text
+            except ValueError:
+                reason = response.text or f"HTTP {response.status_code}"
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed to send POST request to {endpoint} with error: {response.json()['message']}",
+                detail=f"Failed to send POST request to {endpoint} with error: {reason}",
             )
     except HTTPException as e:
         raise e

@@ -65,6 +65,13 @@ GELF_TCP_INPUT = "org.graylog2.inputs.gelf.tcp.GELFTCPInput"
 DEFAULT_INDEX = {"wazuh": "wazuh-{code}_*", "office365": "office365-{code}_*,graylog_*"}
 
 
+async def _put(endpoint: str, data: Dict[str, Any]) -> None:
+    """``send_put_request`` reports some failures as ``success: false`` instead of raising."""
+    result = await send_put_request(endpoint=endpoint, data=data)
+    if not result or not result.get("success"):
+        raise HTTPException(status_code=502, detail=(result or {}).get("message") or f"Graylog PUT {endpoint} failed")
+
+
 class _Steps:
     def __init__(self) -> None:
         self.items: List[UbaProvisionStep] = []
@@ -226,7 +233,7 @@ async def _routing(
         body = {"title": title, "description": "SOCFortress UBA routing", "source": text}
         if title in rules:
             if rules[title].get("source", "").strip() != text.strip():
-                await send_put_request(endpoint=f"/api/system/pipelines/rule/{rules[title]['id']}", data=body)
+                await _put(f"/api/system/pipelines/rule/{rules[title]['id']}", body)
                 steps.add(f"rule {title}", "updated")
             else:
                 steps.add(f"rule {title}", "exists")
@@ -240,7 +247,7 @@ async def _routing(
     pipelines = {p["title"]: p for p in await _list("/api/system/pipelines/pipeline")}
     if pipeline_title in pipelines:
         pipeline_id = pipelines[pipeline_title]["id"]
-        await send_put_request(endpoint=f"/api/system/pipelines/pipeline/{pipeline_id}", data=body)
+        await _put(f"/api/system/pipelines/pipeline/{pipeline_id}", body)
         steps.add(f"pipeline {pipeline_title}", "updated")
     else:
         pipeline_id = (await send_post_request(endpoint="/api/system/pipelines/pipeline", data=body))["data"]["id"]
@@ -273,10 +280,7 @@ async def _output(title: str, host: str, port: int, feed_stream_ids: List[str], 
         output_id = outputs[title]["id"]
         current = outputs[title].get("configuration") or {}
         if (current.get("hostname"), current.get("port")) != (host, port):
-            await send_put_request(
-                endpoint=f"/api/system/outputs/{output_id}",
-                data={"title": title, "type": GELF_OUTPUT, "configuration": config},
-            )
+            await _put(f"/api/system/outputs/{output_id}", {"title": title, "type": GELF_OUTPUT, "configuration": config})
             steps.add(f"output {title}", "updated", f"-> {host}:{port}")
         else:
             steps.add(f"output {title}", "exists", f"-> {host}:{port}")
