@@ -188,13 +188,47 @@ test.describe("as an admin", () => {
 		await expect(page.getByTestId("rules-table")).toBeVisible()
 	})
 
-	test("focusing a customer from the customers tab keeps the customer and lands on the overview", async ({ page }) => {
+	test("the rules table pins its rule column only while it is at least 750px wide, and its sparkline explains a point", async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1440, height: 900 })
+		await open(page, "?tab=rules")
+		const table = page.getByTestId("rules-table")
+		const pinned = table.locator(".n-data-table-td--fixed-left")
+		await expect(pinned.first()).toBeVisible()
+
+		// Every header sits on one line.
+		for (const th of await table.locator("thead th").all()) {
+			const box = await th.boundingBox()
+			expect(box?.height ?? 0).toBeLessThan(48)
+		}
+
+		// Hovering the sparkline shows the period and its count.
+		const spark = table.locator("tbody tr").first().locator(".sparkline")
+		const tooltip = page.getByTestId("sparkline-tooltip")
+		await expect(async () => {
+			await page.mouse.move(0, 0)
+			await spark.hover()
+			await expect(tooltip).toBeVisible({ timeout: 1000 })
+		}).toPass()
+		await expect(tooltip).toContainText("alerts")
+
+		await page.setViewportSize({ width: 820, height: 900 })
+		await expect.poll(async () => (await table.boundingBox())?.width ?? 0).toBeLessThan(750)
+		await expect(pinned).toHaveCount(0)
+	})
+
+	test("focusing a customer from the customers tab keeps the customer and lands on the overview", async ({
+		page
+	}) => {
 		await open(page, "?tab=customers")
 		await page.getByRole("button", { name: "Focus on ACME" }).click()
 		// Both changes land in one go: the customer must survive the tab switch.
 		await expect(page).toHaveURL(/customer=ACME/)
 		await expect(page).toHaveURL(/tab=overview/)
-		await expect.poll(() => mock.dashboardRequests.at(-1)?.searchParams.getAll("customer_codes[]")).toEqual(["ACME"])
+		await expect
+			.poll(() => mock.dashboardRequests.at(-1)?.searchParams.getAll("customer_codes[]"))
+			.toEqual(["ACME"])
 	})
 
 	test("the source filter offers the sources the alerts come from, with their counts", async ({ page }) => {

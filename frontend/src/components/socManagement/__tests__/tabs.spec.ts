@@ -2,7 +2,7 @@ import type { SocDashboard } from "@/types/soc-management"
 import { flushPromises, mount } from "@vue/test-utils"
 import { createPinia, setActivePinia } from "pinia"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { defineComponent, h } from "vue"
+import { defineComponent, h, ref } from "vue"
 import { createMemoryHistory, createRouter } from "vue-router"
 import { getAvatar } from "@/utils"
 import VolumeTrendChart from "../charts/VolumeTrendChart.vue"
@@ -17,6 +17,13 @@ import { dashboard } from "./fixtures"
 const getAttention = vi.fn()
 vi.mock("@/api", () => ({
 	default: { socManagement: { getAttention: (...args: unknown[]) => getAttention(...args) } }
+}))
+
+// jsdom lays nothing out, so a box is 0px wide unless a test says otherwise.
+const boxWidth = ref(0)
+vi.mock("@vueuse/core", async importOriginal => ({
+	...(await importOriginal<typeof import("@vueuse/core")>()),
+	useElementSize: () => ({ width: boxWidth, height: ref(0), stop: () => {} })
 }))
 
 // Charts are covered by charts.spec.ts; here they only need to mount.
@@ -66,6 +73,7 @@ function analystView(): SocDashboard {
 
 beforeEach(() => {
 	setActivePinia(createPinia())
+	boxWidth.value = 0
 	getAttention.mockReset()
 	getAttention.mockResolvedValue({ data: { items: dashboard().attention, total: 2 } })
 })
@@ -189,6 +197,31 @@ describe("rulesTab", () => {
 		await flushPromises()
 		expect(rows()).toHaveLength(1)
 		expect(rows()[0].text()).toContain("Brute force SSH login")
+	})
+
+	it("keeps every header on one line and gives each row a hoverable alerts sparkline", async () => {
+		const { wrapper } = await render(RulesTab, { dashboard: adminView() })
+		const headers = wrapper.findAll("[data-testid=rules-table] thead th").filter(th => th.text().trim())
+		expect(headers.map(th => th.text().trim())).toEqual(
+			expect.arrayContaining(["Rule", "Alerts", "In a case", "False positive", "Median TTR", "Resolved in SLA", "Open"])
+		)
+		for (const th of headers) expect(th.find(".whitespace-nowrap").exists()).toBe(true)
+		const spark = wrapper.findComponent({ name: "Sparkline" })
+		expect(spark.props("labels")).toHaveLength(adminView().trends.length)
+		expect(spark.props("unit")).toBe("alerts")
+	})
+
+	it("pins the rule column only while the table box is at least 750px wide", async () => {
+		boxWidth.value = 1000
+		const { wrapper } = await render(RulesTab, { dashboard: adminView() })
+		const pinned = () => wrapper.findAll("[data-testid=rules-table] .n-data-table-td--fixed-left").length
+		expect(pinned()).toBeGreaterThan(0)
+		boxWidth.value = 749
+		await flushPromises()
+		expect(pinned()).toBe(0)
+		boxWidth.value = 750
+		await flushPromises()
+		expect(pinned()).toBeGreaterThan(0)
 	})
 
 	it("opens the alert list filtered to a rule, and to the one customer in scope", async () => {

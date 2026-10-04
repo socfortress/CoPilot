@@ -22,22 +22,24 @@
 					Noisy only
 				</n-checkbox>
 			</template>
-			<n-data-table
-				:columns
-				:data="visible"
-				:row-key="(row: RuleRow) => row.alert_name"
-				size="small"
-				:bordered="false"
-				:scroll-x="1200"
-				data-testid="rules-table"
-			>
-				<template #empty>
-					<n-empty
-						:description="onlyNoisy ? 'No noisy rule in this period' : 'No alert opened in this period'"
-						class="py-6"
-					/>
-				</template>
-			</n-data-table>
+			<div ref="tableBox" class="min-w-0">
+				<n-data-table
+					:columns
+					:data="visible"
+					:row-key="(row: RuleRow) => row.alert_name"
+					size="small"
+					:bordered="false"
+					:scroll-x="1200"
+					data-testid="rules-table"
+				>
+					<template #empty>
+						<n-empty
+							:description="onlyNoisy ? 'No noisy rule in this period' : 'No alert opened in this period'"
+							class="py-6"
+						/>
+					</template>
+				</n-data-table>
+			</div>
 		</SocPanel>
 	</div>
 </template>
@@ -45,15 +47,16 @@
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
 import type { RuleRow, SocDashboard } from "@/types/soc-management"
+import { useElementSize } from "@vueuse/core"
 import { NButton, NCheckbox, NDataTable, NEmpty, NTag, NTooltip } from "naive-ui"
-import { computed, shallowRef } from "vue"
+import { computed, shallowRef, useTemplateRef } from "vue"
 import { useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 import ComplianceMeter from "../ui/ComplianceMeter.vue"
 import KpiTile from "../ui/KpiTile.vue"
 import SocPanel from "../ui/SocPanel.vue"
 import Sparkline from "../ui/Sparkline.vue"
-import { formatCount, formatDuration, formatRate, TONE_COLOR } from "../utils"
+import { formatBucket, formatCount, formatDuration, formatRate, oneLineTitle, TONE_COLOR } from "../utils"
 
 const { dashboard } = defineProps<{ dashboard: SocDashboard }>()
 
@@ -85,12 +88,21 @@ function falsePositive(row: RuleRow) {
 	)
 }
 
-const columns: DataTableColumns<RuleRow> = [
+/** The period each sparkline point covers: the rules' series share the trend's buckets. */
+const bucketLabels = computed(() => dashboard.trends.map(point => formatBucket(point.start, dashboard.period.bucket)))
+
+/** Below this width a pinned Rule column would eat the room the figures need to scroll in. */
+const PIN_FROM_WIDTH = 750
+const tableBox = useTemplateRef<HTMLElement>("tableBox")
+const { width: boxWidth } = useElementSize(tableBox)
+const pinRule = computed(() => boxWidth.value === 0 || boxWidth.value >= PIN_FROM_WIDTH)
+
+const columns = computed<DataTableColumns<RuleRow>>(() => [
 	{
-		title: "Rule",
+		title: oneLineTitle("Rule"),
 		key: "alert_name",
 		minWidth: 280,
-		fixed: "left",
+		fixed: pinRule.value ? "left" : undefined,
 		render: row => (
 			<div class="flex min-w-0 flex-col gap-1">
 				<span class="truncate font-medium" title={row.alert_name}>
@@ -112,7 +124,7 @@ const columns: DataTableColumns<RuleRow> = [
 		)
 	},
 	{
-		title: "Alerts",
+		title: oneLineTitle("Alerts"),
 		key: "alerts",
 		width: 170,
 		defaultSortOrder: "descend",
@@ -120,14 +132,14 @@ const columns: DataTableColumns<RuleRow> = [
 		render: row => (
 			<div class="flex items-center gap-3">
 				<span class="w-10 text-right font-mono tabular-nums">{formatCount(row.alerts)}</span>
-				<Sparkline values={row.series} />
+				<Sparkline values={row.series} labels={bucketLabels.value} unit="alerts" />
 			</div>
 		)
 	},
 	{
-		title: "In a case",
+		title: oneLineTitle("In a case"),
 		key: "in_case",
-		width: 100,
+		width: 120,
 		sorter: (a, b) => a.in_case - b.in_case,
 		render: row => (
 			<div class="flex flex-col leading-tight">
@@ -139,29 +151,29 @@ const columns: DataTableColumns<RuleRow> = [
 		)
 	},
 	{
-		title: "False positive",
+		title: oneLineTitle("False positive"),
 		key: "false_positive_rate",
-		width: 130,
+		width: 150,
 		sorter: (a, b) => (a.false_positive_rate ?? -1) - (b.false_positive_rate ?? -1),
 		render: falsePositive
 	},
 	{
-		title: "Median TTR",
+		title: oneLineTitle("Median TTR"),
 		key: "ttr",
-		width: 110,
+		width: 130,
 		sorter: (a, b) => (a.ttr.median ?? Infinity) - (b.ttr.median ?? Infinity),
 		render: row => <span class="font-mono tabular-nums">{formatDuration(row.ttr.median)}</span>
 	},
 	{
-		title: "Resolved in SLA",
+		title: oneLineTitle("Resolved in SLA"),
 		key: "sla",
 		minWidth: 160,
 		render: row => <ComplianceMeter compliance={row.sla} label="Resolved within SLA" />
 	},
 	{
-		title: "Open",
+		title: oneLineTitle("Open"),
 		key: "open_now",
-		width: 70,
+		width: 90,
 		align: "right",
 		sorter: (a, b) => a.open_now - b.open_now,
 		render: row => <span class="font-mono tabular-nums">{row.open_now}</span>
@@ -189,5 +201,5 @@ const columns: DataTableColumns<RuleRow> = [
 			</NTooltip>
 		)
 	}
-]
+])
 </script>

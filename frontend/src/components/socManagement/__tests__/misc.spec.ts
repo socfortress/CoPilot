@@ -239,7 +239,24 @@ describe("small ui", () => {
 		const data = option.series[0].data
 		expect(data.slice(0, 2)).toEqual([1, 4])
 		expect(data[2]).toMatchObject({ value: 2, symbol: "circle" })
+		expect(option.tooltip).toEqual({ show: false })
+		expect(option.series[0].silent).toBe(true)
 		expect(mount(Sparkline, { props: { values: [5] } }).find("[data-testid=v-chart]").exists()).toBe(false)
+	})
+
+	it("sparkline with one label per value shows the period and the value on hover", () => {
+		mount(Sparkline, { props: { values: [1, 4, 2], labels: ["1 Sep", "2 Sep", "3 Sep"], unit: "alerts" } })
+		const option = sparkOptions.at(-1) as Record<string, any>
+		expect(option.xAxis.data).toEqual(["1 Sep", "2 Sep", "3 Sep"])
+		expect(option.series[0].silent).toBe(false)
+		expect(option.tooltip).toMatchObject({ trigger: "axis", appendToBody: true })
+		const html = option.tooltip.formatter([{ dataIndex: 1 }]) as string
+		expect(html).toContain("2 Sep")
+		expect(html).toContain(">4</b> alerts")
+
+		// Labels that do not match the values are ignored rather than misaligned.
+		mount(Sparkline, { props: { values: [1, 4, 2], labels: ["1 Sep"] } })
+		expect((sparkOptions.at(-1) as Record<string, any>).tooltip).toEqual({ show: false })
 	})
 
 	it("socPanel carries its title, caption, actions and body", () => {
