@@ -6,7 +6,7 @@
 				<span
 					v-for="hour of SCALE"
 					:key="hour"
-					class="absolute -translate-x-1/2"
+					class="absolute -translate-x-1/2 whitespace-nowrap"
 					:style="{ left: `${(hour / 24) * 100}%` }"
 				>
 					{{ String(hour).padStart(2, "0") }}

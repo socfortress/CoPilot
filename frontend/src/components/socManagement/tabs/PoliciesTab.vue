@@ -1,6 +1,6 @@
 <template>
 	<div class="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]" data-testid="soc-policies">
-		<SocPanel title="Scope" caption="global, or a customer override" flush>
+		<SegmentedPanel title="Scope" caption="global, or a customer override" flush>
 			<n-input v-model:value="search" size="small" placeholder="Find a customer" clearable class="m-3 w-auto!">
 				<template #prefix><Icon name="carbon:search" :size="14" /></template>
 			</n-input>
@@ -38,10 +38,10 @@
 					</button>
 				</nav>
 			</n-scrollbar>
-		</SocPanel>
+		</SegmentedPanel>
 
 		<div class="flex min-w-0 flex-col gap-4">
-			<SocPanel :title="scope ? `${scopeName} — overrides` : 'Global policy'" :caption="scopeCaption">
+			<SegmentedPanel :title="scope ? `${scopeName} — overrides` : 'Global policy'" :caption="scopeCaption">
 				<template #actions>
 					<n-popconfirm v-if="isAdmin && scope && hasOverride" @positive-click="removeOverride">
 						<template #trigger>
@@ -76,37 +76,36 @@
 					/>
 				</n-spin>
 
-				<footer
-					v-if="isAdmin"
-					class="border-default mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4"
-				>
-					<label class="flex items-center gap-2 text-sm">
-						<n-switch v-model:value="applyToOpen" size="small" data-testid="policy-apply-open" />
-						<span>Apply to items still open</span>
-						<n-tooltip style="max-width: 320px">
-							<template #trigger>
-								<Icon name="carbon:information" :size="14" class="text-tertiary" />
-							</template>
-							Open items keep the targets they opened with unless you ask. Clocks already met or breached
-							never change.
-						</n-tooltip>
-					</label>
-					<div class="flex items-center gap-2">
-						<n-button size="small" :disabled="!dirty || saving" @click="discard">Discard</n-button>
-						<n-button
-							size="small"
-							type="primary"
-							:disabled="!dirty || hasErrors"
-							:loading="saving"
-							data-testid="policy-save"
-							@click="save"
-						>
-							<template #icon><Icon name="carbon:save" /></template>
-							Save {{ scope ? "overrides" : "policy" }}
-						</n-button>
+				<template v-if="isAdmin" #footer>
+					<div class="flex flex-wrap items-center justify-between gap-3">
+						<label class="flex items-center gap-2 text-sm">
+							<n-switch v-model:value="applyToOpen" size="small" data-testid="policy-apply-open" />
+							<span>Apply to items still open</span>
+							<n-tooltip style="max-width: 320px">
+								<template #trigger>
+									<Icon name="carbon:information" :size="14" class="text-tertiary" />
+								</template>
+								Open items keep the targets they opened with unless you ask. Clocks already met or breached
+								never change.
+							</n-tooltip>
+						</label>
+						<div class="flex items-center gap-2">
+							<n-button size="small" :disabled="!dirty || saving" @click="discard">Discard</n-button>
+							<n-button
+								size="small"
+								type="primary"
+								:disabled="!dirty || hasErrors"
+								:loading="saving"
+								data-testid="policy-save"
+								@click="save"
+							>
+								<template #icon><Icon name="carbon:save" /></template>
+								Save {{ scope ? "overrides" : "policy" }}
+							</n-button>
+						</div>
 					</div>
-				</footer>
-			</SocPanel>
+				</template>
+			</SegmentedPanel>
 
 			<CalendarPanel :scope :scope-name :is-admin @changed="codes => (calendars = new Set(codes))" />
 		</div>
@@ -124,7 +123,7 @@ import { useCustomerOptions } from "@/composables/useCustomerOptions"
 import { useAuthStore } from "@/stores/auth"
 import CalendarPanel from "../policies/CalendarPanel.vue"
 import PolicyMatrixEditor from "../policies/PolicyMatrixEditor.vue"
-import SocPanel from "../ui/SocPanel.vue"
+import SegmentedPanel from "../ui/SegmentedPanel.vue"
 import { buildPolicyPayload, cellError, isPolicyDirty, toEditableCells } from "../utils"
 
 const emit = defineEmits<{ (e: "saved"): void }>()

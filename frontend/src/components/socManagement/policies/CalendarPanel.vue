@@ -1,5 +1,5 @@
 <template>
-	<SocPanel
+	<SegmentedPanel
 		:title="scope ? `${scopeName} — business hours` : 'Business hours'"
 		:caption
 		data-testid="calendar-panel"
@@ -65,34 +65,33 @@
 			</div>
 		</n-spin>
 
-		<footer
-			v-if="isAdmin"
-			class="border-default mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4"
-		>
-			<label class="flex items-center gap-2 text-sm">
-				<n-switch v-model:value="applyToOpen" size="small" data-testid="calendar-apply-open" />
-				<span>Re-time open business-hours items</span>
-			</label>
-			<div class="flex items-center gap-2">
-				<span v-if="error" class="inline-flex items-center gap-1 text-xs" :style="{ color: TONE_COLOR.bad }">
-					<Icon name="carbon:warning-filled" :size="13" />
-					{{ error }}
-				</span>
-				<n-button size="small" :disabled="!dirty || saving" @click="discard">Discard</n-button>
-				<n-button
-					size="small"
-					type="primary"
-					:disabled="!canSave"
-					:loading="saving"
-					data-testid="calendar-save"
-					@click="onSave"
-				>
-					<template #icon><Icon name="carbon:save" /></template>
-					Save calendar
-				</n-button>
+		<template v-if="isAdmin" #footer>
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<label class="flex items-center gap-2 text-sm">
+					<n-switch v-model:value="applyToOpen" size="small" data-testid="calendar-apply-open" />
+					<span>Re-time open business-hours items</span>
+				</label>
+				<div class="flex items-center gap-2">
+					<span v-if="error" class="inline-flex items-center gap-1 text-xs" :style="{ color: TONE_COLOR.bad }">
+						<Icon name="carbon:warning-filled" :size="13" />
+						{{ error }}
+					</span>
+					<n-button size="small" :disabled="!dirty || saving" @click="discard">Discard</n-button>
+					<n-button
+						size="small"
+						type="primary"
+						:disabled="!canSave"
+						:loading="saving"
+						data-testid="calendar-save"
+						@click="onSave"
+					>
+						<template #icon><Icon name="carbon:save" /></template>
+						Save calendar
+					</n-button>
+				</div>
 			</div>
-		</footer>
-	</SocPanel>
+		</template>
+	</SegmentedPanel>
 </template>
 
 <script setup lang="ts">
@@ -105,7 +104,7 @@ import { computed, shallowRef, toRef, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
 import { useBusinessCalendar } from "../composables/useBusinessCalendar"
-import SocPanel from "../ui/SocPanel.vue"
+import SegmentedPanel from "../ui/SegmentedPanel.vue"
 import { TONE_COLOR } from "../utils"
 import { timezoneOptions, weeklyMinutes } from "./calendar"
 import HolidayList from "./HolidayList.vue"

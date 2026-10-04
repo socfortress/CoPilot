@@ -2,7 +2,7 @@
 	<div class="policy-matrix flex flex-col gap-5" data-testid="policy-matrix">
 		<section v-for="entity of ENTITIES" :key="entity" class="flex flex-col gap-2">
 			<h4 :class="SECTION_LABEL" class="m-0">{{ entity === "alert" ? "Alerts" : "Cases" }}</h4>
-			<n-scrollbar x-scrollable :data-testid="`policy-scroll-${entity}`">
+			<n-scrollbar x-scrollable :data-testid="`policy-scroll-${entity}`" class="rounded-md">
 				<n-table class="policy-table" size="small" :data-testid="`policy-table-${entity}`">
 					<thead>
 						<tr>
