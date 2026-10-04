@@ -154,7 +154,12 @@
 						<template #icon><Icon name="carbon:arrow-right" /></template>
 					</n-button>
 				</template>
-				<n-scrollbar trigger="none" class="max-h-[340px]" data-testid="overview-attention-scroll">
+				<n-scrollbar
+					trigger="none"
+					class="max-h-85 min-h-full"
+					:content-class="`min-h-full ${dashboard.attention.length === 0 ? 'flex items-center justify-center' : ''}`"
+					data-testid="overview-attention-scroll"
+				>
 					<AttentionList :items="dashboard.attention" />
 				</n-scrollbar>
 			</SocPanel>

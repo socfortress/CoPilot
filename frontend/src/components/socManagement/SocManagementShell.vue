@@ -20,7 +20,7 @@
 				</p>
 			</div>
 			<div class="flex items-center gap-2">
-				<n-button size="small" :disabled="loading" data-testid="soc-refresh" @click="refresh">
+				<n-button size="small" :disabled="loading" data-testid="soc-refresh" quaternary @click="refresh">
 					<template #icon><Icon name="carbon:renew" /></template>
 					Refresh
 				</n-button>
