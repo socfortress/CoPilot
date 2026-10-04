@@ -249,10 +249,25 @@ def test_running_it_again_repairs_and_never_duplicates():
     assert (len(graylog.streams), len(graylog.rules), len(graylog.pipelines), len(graylog.outputs), len(graylog.inputs)) == counts
     statuses = {s.step: s.status for s in out.steps}
     assert statuses["stream UBA FEED - WAZUH - acme"] == "exists" and statuses["rule UBA FEED - WAZUH - acme - WINDOWS AUTH"] == "exists"
+    # An unchanged pipeline is reported as it is, not rewritten (a re-run on the lab showed "updated").
+    pipeline_steps = [s.status for s in out.steps if s.step == "pipeline UBA ROUTING - WAZUH - acme"]
+    assert pipeline_steps == ["exists", "connected"]
+    assert not any(c[0] == "PUT" and "/pipelines/pipeline/" in c[1] for c in graylog.calls)
     assert statuses["output UBA GELF - acme"] == "attached"
     assert [s.status for s in out.steps if s.step == "output UBA GELF - acme"][0] == "updated"
     [output] = graylog.outputs.values()
     assert output["configuration"]["hostname"] == "10.0.0.5"
+
+
+def test_a_pipeline_someone_changed_is_put_back():
+    graylog = FakeGraylog({"wazuh-set": "wazuh-acme", "o365-set": "office365-acme"})
+    _run(graylog, FakeUba())
+    pipeline = _by_title(graylog.pipelines)["UBA ROUTING - O365 - acme"]
+    original = pipeline["source"]
+    pipeline["source"] = original.replace("stage 10", "stage 5")  # edited by hand in Graylog
+    out = _run(graylog, FakeUba())
+    assert [s.status for s in out.steps if s.step == "pipeline UBA ROUTING - O365 - acme"][0] == "updated"
+    assert pipeline["source"] == original
 
 
 def test_index_sets_that_differ_from_ubas_defaults_are_registered():

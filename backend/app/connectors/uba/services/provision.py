@@ -247,8 +247,11 @@ async def _routing(
     pipelines = {p["title"]: p for p in await _list("/api/system/pipelines/pipeline")}
     if pipeline_title in pipelines:
         pipeline_id = pipelines[pipeline_title]["id"]
-        await _put(f"/api/system/pipelines/pipeline/{pipeline_id}", body)
-        steps.add(f"pipeline {pipeline_title}", "updated")
+        if pipelines[pipeline_title].get("source", "").strip() != source.strip():
+            await _put(f"/api/system/pipelines/pipeline/{pipeline_id}", body)
+            steps.add(f"pipeline {pipeline_title}", "updated")
+        else:
+            steps.add(f"pipeline {pipeline_title}", "exists")
     else:
         pipeline_id = (await send_post_request(endpoint="/api/system/pipelines/pipeline", data=body))["data"]["id"]
         steps.add(f"pipeline {pipeline_title}", "created")
