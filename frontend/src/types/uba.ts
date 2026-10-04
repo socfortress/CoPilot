@@ -452,3 +452,54 @@ export interface UbaRuleSettingPayload {
 	enabled?: boolean | null
 	score?: number | null
 }
+
+/** An identity as identity review shows it (UBA 1.4+). */
+export interface UbaIdentitySummary {
+	id: string
+	display_name: string | null
+	kind: string | null
+	/** Learned from events; no directory user owns its aliases. */
+	shadow: boolean
+	privileged: boolean
+	tags: string[]
+	/** "<type>:<value>", strongest first (at most 5). */
+	aliases: string[]
+	last_seen: string | null
+	/** Findings in the last 14 days. */
+	findings: number
+}
+
+export interface UbaMergeCandidate {
+	id: number
+	/** The alias both identities claim. */
+	alias: string
+	source: string
+	first_seen: string | null
+	last_seen: string | null
+	/** Owns the alias today (usually learned from events). */
+	identity: UbaIdentitySummary
+	/** The directory user. */
+	candidate: UbaIdentitySummary
+}
+
+export interface UbaIdentityMerge {
+	id: string
+	from_identity: string
+	into_identity: string
+	from_name: string | null
+	into_name: string | null
+	status: "queued" | "done" | "error"
+	requested_by: string | null
+	requested_at: string | null
+	done_at: string | null
+	error: string | null
+}
+
+export interface UbaIdentityReview {
+	/** A directory sync is connected; without one every account is unmatched. */
+	has_directory: boolean
+	candidates: UbaMergeCandidate[]
+	/** Accounts no directory user matched, with findings in the last 14 days. */
+	unmatched: UbaIdentitySummary[]
+	merges: UbaIdentityMerge[]
+}

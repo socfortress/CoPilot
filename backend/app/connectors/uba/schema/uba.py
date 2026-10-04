@@ -60,6 +60,10 @@ class UbaScoreRequest(BaseModel):
     score: float = Field(..., ge=0, le=100, description="Native alerts never lower risk: 0 turns the rule's risk off")
 
 
+class UbaIdentityMergeRequest(BaseModel):
+    into: str = Field(..., min_length=1, max_length=64, description="the identity that remains")
+
+
 class UbaRuleSettingRequest(BaseModel):
     """Only the fields sent change; null puts one back to UBA's built-in value."""
 

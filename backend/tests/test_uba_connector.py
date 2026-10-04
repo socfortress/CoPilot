@@ -255,3 +255,28 @@ def test_a_rule_setting_sends_only_what_was_set_and_names_the_admin():
     rec = Recorder((200, settings))
     _run(services.set_rule_setting("lab", "auth.new_country", UbaRuleSettingRequest(score=None), "admin1"), rec)
     assert json.loads(rec.requests[0].content) == {"score": None}
+
+
+def test_identity_review_reads_are_open_and_decisions_are_admin_only():
+    from app.connectors.uba.routes import uba as routes
+
+    by_path = {(r.path, tuple(sorted(r.methods))): r for r in routes.uba_router.routes}
+    assert by_path[("/{customer_code}/identities/review", ("GET",))].dependencies == routes._READ
+    assert by_path[("/{customer_code}/identities", ("GET",))].dependencies == routes._READ
+    for path in (
+        "/{customer_code}/identities/merge",
+        "/{customer_code}/identities/reviewed",
+        "/{customer_code}/identity-candidates/{candidate_id}/dismiss",
+    ):
+        assert by_path[(path, ("POST",))].dependencies == routes._ADMIN, path
+
+
+def test_a_merge_names_the_identity_encoded_and_the_admin():
+    from app.connectors.uba.schema.uba import UbaIdentityMergeRequest
+
+    rec = Recorder((202, {"success": True, "message": "ok", "id": "m1", "status": "queued"}))
+    out = _run(services.merge_identity("lab", "a/b", UbaIdentityMergeRequest(into="b1"), "admin1"), rec)
+    req = rec.requests[0]
+    assert req.method == "POST" and req.url.raw_path.decode() == "/v1/tenants/lab/identities/a%2Fb/merge"
+    assert json.loads(req.content) == {"into": "b1"} and req.headers["x-uba-actor"] == "admin1"
+    assert out.status == "queued"

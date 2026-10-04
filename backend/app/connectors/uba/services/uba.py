@@ -13,6 +13,7 @@ from app.connectors.uba.schema.uba import UbaAvailabilityResponse
 from app.connectors.uba.schema.uba import UbaBacktestRequest
 from app.connectors.uba.schema.uba import UbaCustomerStatusResponse
 from app.connectors.uba.schema.uba import UbaFeedbackRequest
+from app.connectors.uba.schema.uba import UbaIdentityMergeRequest
 from app.connectors.uba.schema.uba import UbaResponse
 from app.connectors.uba.schema.uba import UbaRuleSettingRequest
 from app.connectors.uba.schema.uba import UbaScoreRequest
@@ -190,3 +191,26 @@ async def set_alert_threshold(customer_code: str, body: UbaAlertThresholdRequest
 
 async def reset_alert_threshold(customer_code: str, actor: str) -> UbaResponse:
     return UbaResponse(**await uba_request("DELETE", f"{_tenant(customer_code)}/risk-policy", actor=actor))
+
+
+async def get_identity_review(customer_code: str, include_reviewed: bool) -> UbaResponse:
+    return await _get(f"{_tenant(customer_code)}/identities/review", {"include_reviewed": include_reviewed})
+
+
+async def search_identities(customer_code: str, q: str) -> UbaResponse:
+    return await _get(f"{_tenant(customer_code)}/identities", {"q": q})
+
+
+async def merge_identity(customer_code: str, identity_id: str, body: UbaIdentityMergeRequest, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/identities/{path_segment(identity_id)}/merge"
+    return UbaResponse(**await uba_request("POST", path, json=body.model_dump(), actor=actor))
+
+
+async def mark_identity_reviewed(customer_code: str, identity_id: str, reviewed: bool, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/identities/{path_segment(identity_id)}/reviewed"
+    return UbaResponse(**await uba_request("POST", path, params={"reviewed": reviewed}, actor=actor))
+
+
+async def dismiss_merge_candidate(customer_code: str, candidate_id: int, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/identity-candidates/{candidate_id}/dismiss"
+    return UbaResponse(**await uba_request("POST", path, actor=actor))
