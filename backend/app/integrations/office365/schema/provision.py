@@ -14,6 +14,9 @@ class PipelineRuleTitles(Enum):
     WAZUH_NOTICE = "WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE"
     WAZUH_ALERT = "WAZUH CREATE FIELD SYSLOG LEVEL - ALERT"
     OFFICE365_TIMESTAMP = "Office365 Timestamp - UTC"
+    # Referenced by OFFICE365 PROCESSING PIPELINE; it was never created, so on a Graylog where no
+    # content pack had added it the pipeline named a rule that did not exist.
+    OFFICE365_SYSLOG_TYPE = "SYSLOG TYPE OFFICE365"
 
 
 class PipelineTitles(Enum):

@@ -277,6 +277,23 @@ async def collect_indices(all_indices: bool = False) -> Indices:
         raise HTTPException(status_code=500, detail=f"Failed to collect indices: {e}")
 
 
+# `timestamp_utc` is not a date everywhere: the Wazuh pipeline writes epoch milliseconds and the
+# Office 365 one ISO text, and Graylog's dynamic mapping makes the field a keyword, where a date
+# range compares text and matches nothing (lab, 2026-10-04: 0 of 3,701 Wazuh alerts in 24 h). The
+# time window is applied to Graylog's own `timestamp`, which is always a date; sorting still uses
+# the requested field.
+TEXT_TIMESTAMP_FIELDS = {"timestamp_utc"}
+
+
+def time_range_query(timestamp_field: str, gte: str, lte: str) -> dict:
+    """A range filter on ``timestamp_field``, or on ``timestamp`` where that field may be text."""
+    field = "timestamp" if timestamp_field in TEXT_TIMESTAMP_FIELDS else timestamp_field
+    range_query = {"range": {field: {"gte": gte, "lte": lte}}}
+    if field == "timestamp":
+        range_query["range"][field]["format"] = "strict_date_optional_time"
+    return range_query
+
+
 class AlertsQueryBuilder:
     @staticmethod
     def _get_time_range_start(timerange: str) -> str:
@@ -325,17 +342,7 @@ class AlertsQueryBuilder:
             self: The updated instance of the class.
         """
         start = self._get_time_range_start(timerange)
-        range_query = {
-            "range": {
-                timestamp_field: {
-                    "gte": start,
-                    "lte": "now",
-                },
-            },
-        }
-        if timestamp_field == "timestamp":
-            range_query["range"][timestamp_field]["format"] = "strict_date_optional_time"
-        self.query["query"]["bool"]["must"].append(range_query)
+        self.query["query"]["bool"]["must"].append(time_range_query(timestamp_field, start, "now"))
         return self
 
     def add_absolute_time_range(self, time_from: str, time_to: str, timestamp_field: str):
@@ -350,17 +357,7 @@ class AlertsQueryBuilder:
         Returns:
             self: The updated instance of the class.
         """
-        range_query = {
-            "range": {
-                timestamp_field: {
-                    "gte": time_from,
-                    "lte": time_to,
-                },
-            },
-        }
-        if timestamp_field == "timestamp":
-            range_query["range"][timestamp_field]["format"] = "strict_date_optional_time"
-        self.query["query"]["bool"]["must"].append(range_query)
+        self.query["query"]["bool"]["must"].append(time_range_query(timestamp_field, time_from, time_to))
         return self
 
     def add_matches(self, matches: Iterable[Tuple[str, str]]):
@@ -480,9 +477,7 @@ class LogsQueryBuilder:
             self: The updated instance of the class.
         """
         start = self._get_time_range_start(timerange)
-        self.query["query"]["bool"]["must"].append(
-            {"range": {timestamp_field: {"gte": start, "lte": "now"}}},
-        )
+        self.query["query"]["bool"]["must"].append(time_range_query(timestamp_field, start, "now"))
         return self
 
     def add_matches(self, matches: Iterable[Tuple[str, str]]):

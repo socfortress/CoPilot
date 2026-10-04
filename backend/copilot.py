@@ -40,6 +40,9 @@ from app.db.db_setup import ensure_admin_user
 from app.db.db_setup import ensure_scheduler_user
 from app.db.db_setup import ensure_scheduler_user_removed
 from app.db.query_metrics import install as install_query_metrics
+from app.integrations.office365.services.provision import (
+    ensure_office365_pipeline_rules,
+)
 from app.middleware.client_disconnect import CANCEL_ON_DISCONNECT_ENABLED
 from app.middleware.client_disconnect import ClientDisconnectMiddleware
 from app.middleware.exception_handlers import custom_http_exception_handler
@@ -174,6 +177,11 @@ async def lifespan(_app: FastAPI):
     # whoever triggers one pays for it inside their request, so it must never be a
     # user. Detached on purpose: startup does not wait, and failures are logged.
     asyncio.create_task(warm_catalog_caches())
+
+    # Office 365 pipeline rules created by earlier CoPilot versions are created only when missing,
+    # so their fixes never reached existing Graylogs: check them once per start, in the background.
+    # Never fatal; does nothing where Office 365 is not in use.
+    asyncio.create_task(ensure_office365_pipeline_rules())
 
     # Event loop lag watchdog (#1072). Started last so the startup work above —
     # migrations, MinIO, seeding — is not reported as a stall.
