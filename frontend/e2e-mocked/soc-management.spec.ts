@@ -218,6 +218,29 @@ test.describe("as an admin", () => {
 		await expect(pinned).toHaveCount(0)
 	})
 
+	test("the customers, analysts and SLA tables pin their first column only while at least 500px wide", async ({
+		page
+	}) => {
+		for (const [tab, testid] of [
+			["customers", "customers-table"],
+			["analysts", "analysts-table"],
+			["sla", "sla-severity-table"]
+		]) {
+			await page.setViewportSize({ width: 1440, height: 900 })
+			await open(page, `?tab=${tab}`)
+			const table = page.getByTestId(testid)
+			const pinned = table.locator(".n-data-table-td--fixed-left")
+			await expect(pinned.first()).toBeVisible()
+			for (const th of await table.locator("thead th").all()) {
+				expect((await th.boundingBox())?.height ?? 0).toBeLessThan(48)
+			}
+
+			await page.setViewportSize({ width: 420, height: 900 })
+			await expect.poll(async () => (await table.boundingBox())?.width ?? 0).toBeLessThan(500)
+			await expect(pinned).toHaveCount(0)
+		}
+	})
+
 	test("focusing a customer from the customers tab keeps the customer and lands on the overview", async ({
 		page
 	}) => {

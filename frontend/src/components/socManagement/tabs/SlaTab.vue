@@ -40,15 +40,17 @@
 		</div>
 
 		<SocPanel :title="`${entity === 'alert' ? 'Alerts' : 'Cases'} by severity`" caption="target vs actual" flush>
-			<n-data-table
-				:columns
-				:data="rows"
-				:row-key="(row: SeverityRow) => row.severity"
-				size="small"
-				:bordered="false"
-				:scroll-x="1180"
-				data-testid="sla-severity-table"
-			/>
+			<div ref="tableBox" class="min-w-0">
+				<n-data-table
+					:columns
+					:data="rows"
+					:row-key="(row: SeverityRow) => row.severity"
+					size="small"
+					:bordered="false"
+					:scroll-x="1180"
+					data-testid="sla-severity-table"
+				/>
+			</div>
 		</SocPanel>
 
 		<div class="grid gap-4 xl:grid-cols-3">
@@ -93,8 +95,9 @@
 import type { DataTableColumns } from "naive-ui"
 import type { SeverityRow, SlaEntity, SocDashboard } from "@/types/soc-management"
 import { NDataTable, NRadioButton, NRadioGroup } from "naive-ui"
-import { computed, shallowRef } from "vue"
+import { computed, shallowRef, useTemplateRef } from "vue"
 import ComplianceTrendChart from "../charts/ComplianceTrendChart.vue"
+import { usePinnedColumn } from "../composables/usePinnedColumn"
 import ComplianceMeter from "../ui/ComplianceMeter.vue"
 import DurationCell from "../ui/DurationCell.vue"
 import KpiTile from "../ui/KpiTile.vue"
@@ -131,12 +134,16 @@ const policyScope = computed(() =>
 )
 const trackingSince = computed(() => parseUtc(dashboard.tracking_since)?.local().format("D MMM YYYY") ?? "")
 
+/** Below this width a pinned Severity column would eat the room the figures need to scroll in. */
+const PIN_FROM_WIDTH = 500
+const pinSeverity = usePinnedColumn(useTemplateRef<HTMLElement>("tableBox"), PIN_FROM_WIDTH)
+
 const columns = computed<DataTableColumns<SeverityRow>>(() => [
 	{
-		title: "Severity",
+		title: oneLineTitle("Severity"),
 		key: "severity",
 		width: 140,
-		fixed: "left",
+		fixed: pinSeverity.value ? "left" : undefined,
 		render: row => <SeverityTag severity={row.severity} />
 	},
 	{
@@ -152,7 +159,7 @@ const columns = computed<DataTableColumns<SeverityRow>>(() => [
 		render: row => <TargetCell minutes={targets.value.get(row.severity)?.resolve_minutes} />
 	},
 	{
-		title: "Opened",
+		title: oneLineTitle("Opened"),
 		key: "opened",
 		width: 80,
 		align: "right",
@@ -166,7 +173,7 @@ const columns = computed<DataTableColumns<SeverityRow>>(() => [
 		render: row => <DurationCell stats={row.tta} />
 	},
 	{
-		title: "Acknowledged in SLA",
+		title: oneLineTitle("Acknowledged in SLA"),
 		key: "ack",
 		minWidth: 170,
 		render: row => <ComplianceMeter compliance={row.sla.ack} label="Acknowledged within SLA" />
@@ -179,20 +186,20 @@ const columns = computed<DataTableColumns<SeverityRow>>(() => [
 		render: row => <DurationCell stats={row.ttr} />
 	},
 	{
-		title: "Resolved in SLA",
+		title: oneLineTitle("Resolved in SLA"),
 		key: "resolve",
 		minWidth: 170,
 		render: row => <ComplianceMeter compliance={row.sla.resolve} label="Resolved within SLA" />
 	},
 	{
-		title: "Open",
+		title: oneLineTitle("Open"),
 		key: "open_now",
 		width: 70,
 		align: "right",
 		render: row => <span class="font-mono tabular-nums">{formatCount(row.open_now)}</span>
 	},
 	{
-		title: "Past SLA",
+		title: oneLineTitle("Past SLA"),
 		key: "breached_now",
 		width: 90,
 		align: "right",

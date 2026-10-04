@@ -14,19 +14,21 @@
 			caption="activity in the period · workload now"
 			flush
 		>
-			<n-data-table
-				:columns
-				:data="dashboard.analysts"
-				:row-key="(row: AnalystRow) => row.username"
-				size="small"
-				:bordered="false"
-				:scroll-x="1400"
-				data-testid="analysts-table"
-			>
-				<template #empty>
-					<n-empty description="No SOC activity in this period" class="py-6" />
-				</template>
-			</n-data-table>
+			<div ref="tableBox" class="min-w-0">
+				<n-data-table
+					:columns
+					:data="dashboard.analysts"
+					:row-key="(row: AnalystRow) => row.username"
+					size="small"
+					:bordered="false"
+					:scroll-x="1400"
+					data-testid="analysts-table"
+				>
+					<template #empty>
+						<n-empty description="No SOC activity in this period" class="py-6" />
+					</template>
+				</n-data-table>
+			</div>
 		</SocPanel>
 
 		<p class="text-tertiary m-0 text-xs leading-relaxed">
@@ -40,7 +42,9 @@
 import type { DataTableColumns } from "naive-ui"
 import type { AnalystRow, SocDashboard } from "@/types/soc-management"
 import { NAlert, NAvatar, NDataTable, NEmpty } from "naive-ui"
+import { computed, useTemplateRef } from "vue"
 import { getAvatar } from "@/utils"
+import { usePinnedColumn } from "../composables/usePinnedColumn"
 import ComplianceMeter from "../ui/ComplianceMeter.vue"
 import SocPanel from "../ui/SocPanel.vue"
 import { formatCount, formatDuration, oneLineTitle, TONE_COLOR } from "../utils"
@@ -78,12 +82,16 @@ function load(value: number, tone: "bad" | "warn") {
 	)
 }
 
-const columns: DataTableColumns<AnalystRow> = [
+/** Below this width a pinned Analyst column would eat the room the figures need to scroll in. */
+const PIN_FROM_WIDTH = 500
+const pinAnalyst = usePinnedColumn(useTemplateRef<HTMLElement>("tableBox"), PIN_FROM_WIDTH)
+
+const columns = computed<DataTableColumns<AnalystRow>>(() => [
 	{
 		title: oneLineTitle("Analyst"),
 		key: "username",
 		width: 190,
-		fixed: "left",
+		fixed: pinAnalyst.value ? "left" : undefined,
 		sorter: (a, b) => a.username.localeCompare(b.username),
 		render: row => (
 			<div class="flex items-center gap-2">
@@ -170,5 +178,5 @@ const columns: DataTableColumns<AnalystRow> = [
 		sorter: (a, b) => a.breached - b.breached,
 		render: row => load(row.breached, "bad")
 	}
-]
+])
 </script>

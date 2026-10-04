@@ -47,11 +47,11 @@
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
 import type { RuleRow, SocDashboard } from "@/types/soc-management"
-import { useElementSize } from "@vueuse/core"
 import { NButton, NCheckbox, NDataTable, NEmpty, NTag, NTooltip } from "naive-ui"
 import { computed, shallowRef, useTemplateRef } from "vue"
 import { useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
+import { usePinnedColumn } from "../composables/usePinnedColumn"
 import ComplianceMeter from "../ui/ComplianceMeter.vue"
 import KpiTile from "../ui/KpiTile.vue"
 import SocPanel from "../ui/SocPanel.vue"
@@ -93,9 +93,7 @@ const bucketLabels = computed(() => dashboard.trends.map(point => formatBucket(p
 
 /** Below this width a pinned Rule column would eat the room the figures need to scroll in. */
 const PIN_FROM_WIDTH = 750
-const tableBox = useTemplateRef<HTMLElement>("tableBox")
-const { width: boxWidth } = useElementSize(tableBox)
-const pinRule = computed(() => boxWidth.value === 0 || boxWidth.value >= PIN_FROM_WIDTH)
+const pinRule = usePinnedColumn(useTemplateRef<HTMLElement>("tableBox"), PIN_FROM_WIDTH)
 
 const columns = computed<DataTableColumns<RuleRow>>(() => [
 	{

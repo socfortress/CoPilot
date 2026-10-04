@@ -211,19 +211,6 @@ describe("rulesTab", () => {
 		expect(spark.props("unit")).toBe("alerts")
 	})
 
-	it("pins the rule column only while the table box is at least 750px wide", async () => {
-		boxWidth.value = 1000
-		const { wrapper } = await render(RulesTab, { dashboard: adminView() })
-		const pinned = () => wrapper.findAll("[data-testid=rules-table] .n-data-table-td--fixed-left").length
-		expect(pinned()).toBeGreaterThan(0)
-		boxWidth.value = 749
-		await flushPromises()
-		expect(pinned()).toBe(0)
-		boxWidth.value = 750
-		await flushPromises()
-		expect(pinned()).toBeGreaterThan(0)
-	})
-
 	it("opens the alert list filtered to a rule, and to the one customer in scope", async () => {
 		const { wrapper, router: appRouter } = await render(RulesTab, { dashboard: dashboard({ customer_codes: ["ACME"] }) })
 		const push = vi.spyOn(appRouter, "push")
@@ -280,5 +267,36 @@ describe("workloadTab", () => {
 		getAttention.mockImplementation(() => Promise.reject(Object.assign(new Error("boom"), { response: { data: { detail: "down" } } })))
 		const { wrapper } = await render(WorkloadTab, { dashboard: adminView(), scope: {} })
 		expect(wrapper.text()).toContain("Could not load the list: down")
+	})
+})
+
+describe("tables with a pinned first column", () => {
+	// Each table pins its first column only while its box is wide enough for the rest
+	// to scroll beside it, and keeps every header on one line.
+	const tables = [
+		{ name: "rules", component: RulesTab, testid: "rules-table", pinFrom: 750 },
+		{ name: "customers", component: CustomersTab, testid: "customers-table", pinFrom: 500 },
+		{ name: "analysts", component: AnalystsTab, testid: "analysts-table", pinFrom: 500 },
+		{ name: "SLA by severity", component: SlaTab, testid: "sla-severity-table", pinFrom: 500 }
+	]
+
+	it.each(tables)("$name: pinned from $pinFrom px of box width, never below", async ({ component, testid, pinFrom }) => {
+		boxWidth.value = pinFrom + 200
+		const { wrapper } = await render(component, { dashboard: adminView() })
+		const pinned = () => wrapper.findAll(`[data-testid=${testid}] .n-data-table-td--fixed-left`).length
+		expect(pinned()).toBeGreaterThan(0)
+		boxWidth.value = pinFrom - 1
+		await flushPromises()
+		expect(pinned()).toBe(0)
+		boxWidth.value = pinFrom
+		await flushPromises()
+		expect(pinned()).toBeGreaterThan(0)
+	})
+
+	it.each(tables)("$name: every header sits on one line", async ({ component, testid }) => {
+		const { wrapper } = await render(component, { dashboard: adminView() })
+		const headers = wrapper.findAll(`[data-testid=${testid}] thead th`).filter(th => th.text().trim())
+		expect(headers.length).toBeGreaterThan(3)
+		for (const th of headers) expect(th.find(".whitespace-nowrap").exists(), th.text()).toBe(true)
 	})
 })
