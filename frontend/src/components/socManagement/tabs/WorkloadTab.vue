@@ -51,16 +51,18 @@
 
 		<SocPanel title="Needs attention" :caption="`${formatCount(total)} open item(s) past or near SLA`" flush>
 			<template #actions>
-				<n-radio-group v-model:value="entityFilter" size="small" data-testid="attention-entity">
-					<n-radio-button value="all">All</n-radio-button>
-					<n-radio-button value="alert">Alerts</n-radio-button>
-					<n-radio-button value="case">Cases</n-radio-button>
-				</n-radio-group>
-				<n-radio-group v-model:value="stateFilter" size="small" data-testid="attention-state">
-					<n-radio-button value="all">Any</n-radio-button>
-					<n-radio-button value="breached">Past SLA</n-radio-button>
-					<n-radio-button value="at_risk">At risk</n-radio-button>
-				</n-radio-group>
+				<SegmentedToggle
+					v-model="entityFilter"
+					:options="ENTITY_OPTIONS"
+					label="Show"
+					test-id="attention-entity"
+				/>
+				<SegmentedToggle
+					v-model="stateFilter"
+					:options="STATE_OPTIONS"
+					label="SLA state"
+					test-id="attention-state"
+				/>
 			</template>
 			<n-alert v-if="error" type="error" :bordered="false" class="m-3">
 				Could not load the list: {{ errorText }}
@@ -79,13 +81,14 @@
 import type { LoadRow } from "../ui/LoadBars.vue"
 import type { SocScopeQuery } from "@/api/endpoints/soc-management"
 import type { SlaEntity, SocDashboard } from "@/types/soc-management"
-import { NAlert, NRadioButton, NRadioGroup, NSpin } from "naive-ui"
+import { NAlert, NSpin } from "naive-ui"
 import { computed, shallowRef } from "vue"
 import AttentionList from "../AttentionList.vue"
 import { useResolvedColors } from "../charts/chart-colors"
 import { useAttention } from "../composables/useAttention"
 import KpiTile from "../ui/KpiTile.vue"
 import LoadBars from "../ui/LoadBars.vue"
+import SegmentedToggle from "../ui/SegmentedToggle.vue"
 import SocPanel from "../ui/SocPanel.vue"
 import { formatCount, formatDuration, parseUtc } from "../utils"
 
@@ -93,6 +96,16 @@ const { dashboard, scope } = defineProps<{ dashboard: SocDashboard; scope: SocSc
 
 const colors = useResolvedColors()
 const workload = computed(() => dashboard.workload)
+const ENTITY_OPTIONS: { value: SlaEntity | "all"; label: string }[] = [
+	{ value: "all", label: "All" },
+	{ value: "alert", label: "Alerts" },
+	{ value: "case", label: "Cases" }
+]
+const STATE_OPTIONS: { value: "breached" | "at_risk" | "all"; label: string }[] = [
+	{ value: "all", label: "Any" },
+	{ value: "breached", label: "Past SLA" },
+	{ value: "at_risk", label: "At risk" }
+]
 const entityFilter = shallowRef<SlaEntity | "all">("all")
 const stateFilter = shallowRef<"breached" | "at_risk" | "all">("all")
 

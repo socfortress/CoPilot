@@ -212,9 +212,15 @@ describe("workloadTab", () => {
 
 	it("reloads the attention list when its filters change", async () => {
 		const { wrapper } = await render(WorkloadTab, { dashboard: adminView(), scope: {} })
-		await wrapper.findAll("[data-testid=attention-state] input")[1].setValue(true)
+		await wrapper.get("[data-testid=attention-state-breached]").trigger("click")
 		await flushPromises()
 		expect(getAttention).toHaveBeenLastCalledWith(expect.objectContaining({ state: "breached" }), expect.any(AbortSignal))
+		await wrapper.get("[data-testid=attention-entity-case]").trigger("click")
+		await flushPromises()
+		expect(getAttention).toHaveBeenLastCalledWith(
+			expect.objectContaining({ entity: "case", state: "breached" }),
+			expect.any(AbortSignal)
+		)
 	})
 
 	it("gives an analyst only their own backlog", async () => {
