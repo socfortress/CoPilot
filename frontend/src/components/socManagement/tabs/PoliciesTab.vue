@@ -1,47 +1,25 @@
 <template>
-	<div class="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]" data-testid="soc-policies">
-		<SegmentedPanel title="Scope" caption="global, or a customer override" flush>
-			<n-input v-model:value="search" size="small" placeholder="Find a customer" clearable class="m-3 w-auto!">
-				<template #prefix><Icon name="carbon:search" :size="14" /></template>
-			</n-input>
-			<n-scrollbar class="max-h-[520px]" data-testid="policy-scopes" trigger="none">
-				<nav class="scope-list flex flex-col pb-2" aria-label="Policy scope">
-					<button
-						v-for="option of scopeOptions"
-						:key="option.key"
-						type="button"
-						class="scope-option flex items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors"
-						:class="{ 'is-active': option.code === scope }"
-						:data-testid="`policy-scope-${option.key}`"
-						@click="scope = option.code"
-					>
-						<span class="flex min-w-0 flex-col leading-tight">
-							<span class="truncate">{{ option.label }}</span>
-							<span v-if="option.code" class="text-tertiary text-2xs font-mono">{{ option.code }}</span>
-						</span>
-						<span class="flex shrink-0 items-center gap-1">
-							<n-tooltip v-if="option.code && calendars.has(option.code)">
-								<template #trigger>
-									<Icon
-										name="carbon:calendar"
-										:size="13"
-										class="text-tertiary"
-										:data-testid="`policy-scope-calendar-${option.key}`"
-									/>
-								</template>
-								Has its own business hours
-							</n-tooltip>
-							<n-tag v-if="option.overrides" size="tiny" type="warning" :bordered="false" round>
-								{{ option.overrides }} override{{ option.overrides === 1 ? "" : "s" }}
-							</n-tag>
-						</span>
-					</button>
-				</nav>
-			</n-scrollbar>
-		</SegmentedPanel>
+	<!-- One segmented surface: the scope rail on the left picks what the segments on the right edit. -->
+	<div
+		class="border-default bg-default overflow-hidden rounded-lg border lg:grid lg:grid-cols-[260px_minmax(0,1fr)]"
+		data-testid="soc-policies"
+	>
+		<ScopeSelector
+			v-model="scope"
+			v-model:search="search"
+			:options="scopeOptions"
+			:calendars
+			:panel-id="PANEL_ID"
+			class="bg-secondary border-default border-b lg:border-r lg:border-b-0"
+		/>
 
-		<div class="flex min-w-0 flex-col gap-4">
-			<SegmentedPanel :title="scope ? `${scopeName} — overrides` : 'Global policy'" :caption="scopeCaption">
+		<div
+			:id="PANEL_ID"
+			class="divide-border flex min-w-0 flex-col divide-y"
+			role="tabpanel"
+			:aria-label="scope ? `${scopeName} SLA policy` : 'Global SLA policy'"
+		>
+			<PanelSegment :title="scope ? `${scopeName} — overrides` : 'Global policy'" :caption="scopeCaption">
 				<template #actions>
 					<n-popconfirm v-if="isAdmin && scope && hasOverride" @positive-click="removeOverride">
 						<template #trigger>
@@ -77,35 +55,33 @@
 				</n-spin>
 
 				<template v-if="isAdmin" #footer>
-					<div class="flex flex-wrap items-center justify-between gap-3">
-						<label class="flex items-center gap-2 text-sm">
-							<n-switch v-model:value="applyToOpen" size="small" data-testid="policy-apply-open" />
-							<span>Apply to items still open</span>
-							<n-tooltip style="max-width: 320px">
-								<template #trigger>
-									<Icon name="carbon:information" :size="14" class="text-tertiary" />
-								</template>
-								Open items keep the targets they opened with unless you ask. Clocks already met or breached
-								never change.
-							</n-tooltip>
-						</label>
-						<div class="flex items-center gap-2">
-							<n-button size="small" :disabled="!dirty || saving" @click="discard">Discard</n-button>
-							<n-button
-								size="small"
-								type="primary"
-								:disabled="!dirty || hasErrors"
-								:loading="saving"
-								data-testid="policy-save"
-								@click="save"
-							>
-								<template #icon><Icon name="carbon:save" /></template>
-								Save {{ scope ? "overrides" : "policy" }}
-							</n-button>
-						</div>
+					<label class="flex items-center gap-2 text-sm">
+						<n-switch v-model:value="applyToOpen" size="small" data-testid="policy-apply-open" />
+						<span>Apply to items still open</span>
+						<n-tooltip style="max-width: 320px">
+							<template #trigger>
+								<Icon name="carbon:information" :size="14" class="text-tertiary" />
+							</template>
+							Open items keep the targets they opened with unless you ask. Clocks already met or breached
+							never change.
+						</n-tooltip>
+					</label>
+					<div class="flex items-center gap-2">
+						<n-button size="small" :disabled="!dirty || saving" @click="discard">Discard</n-button>
+						<n-button
+							size="small"
+							type="primary"
+							:disabled="!dirty || hasErrors"
+							:loading="saving"
+							data-testid="policy-save"
+							@click="save"
+						>
+							<template #icon><Icon name="carbon:save" /></template>
+							Save {{ scope ? "overrides" : "policy" }}
+						</n-button>
 					</div>
 				</template>
-			</SegmentedPanel>
+			</PanelSegment>
 
 			<CalendarPanel :scope :scope-name :is-admin @changed="codes => (calendars = new Set(codes))" />
 		</div>
@@ -115,7 +91,7 @@
 <script setup lang="ts">
 import type { EditablePolicyCell } from "../utils"
 import type { PolicyOverride } from "@/types/soc-management"
-import { NAlert, NButton, NInput, NPopconfirm, NScrollbar, NSpin, NSwitch, NTag, NTooltip, useMessage } from "naive-ui"
+import { NAlert, NButton, NPopconfirm, NSpin, NSwitch, NTooltip, useMessage } from "naive-ui"
 import { computed, onBeforeMount, shallowRef, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -123,10 +99,14 @@ import { useCustomerOptions } from "@/composables/useCustomerOptions"
 import { useAuthStore } from "@/stores/auth"
 import CalendarPanel from "../policies/CalendarPanel.vue"
 import PolicyMatrixEditor from "../policies/PolicyMatrixEditor.vue"
-import SegmentedPanel from "../ui/SegmentedPanel.vue"
+import ScopeSelector from "../policies/ScopeSelector.vue"
+import PanelSegment from "../ui/PanelSegment.vue"
 import { buildPolicyPayload, cellError, isPolicyDirty, toEditableCells } from "../utils"
 
 const emit = defineEmits<{ (e: "saved"): void }>()
+
+/** The editor panel the scope tabs control. */
+const PANEL_ID = "soc-policy-panel"
 
 const message = useMessage()
 const isAdmin = computed(() => useAuthStore().isAdmin)
@@ -247,18 +227,3 @@ onBeforeMount(() => {
 	loadCustomers()
 })
 </script>
-
-<style scoped>
-.scope-option {
-	border-left: 2px solid transparent;
-}
-
-.scope-option:hover {
-	background-color: var(--hover-color);
-}
-
-.scope-option.is-active {
-	border-left-color: var(--primary-color);
-	background-color: rgb(var(--primary-color-rgb) / 0.08);
-}
-</style>

@@ -50,7 +50,9 @@ function acmeMatrix(): PolicyMatrix {
 async function tab(role = AuthUserRole.Admin) {
 	useAuthStore().user.role = role
 	const wrapper = mount(
-		defineComponent({ setup: () => () => h(NMessageProvider, null, { default: () => h(PoliciesTab) }) })
+		defineComponent({ setup: () => () => h(NMessageProvider, null, { default: () => h(PoliciesTab) }) }),
+		// Attached, so focus moves the way it does on the page (the scope tabs use roving focus).
+		{ attachTo: document.body }
 	)
 	await flushPromises()
 	return wrapper
@@ -83,6 +85,45 @@ describe("policiesTab", () => {
 		const scroll = wrapper.get("[data-testid=policy-scopes]")
 		expect(scroll.classes()).toContain("n-scrollbar")
 		expect(scroll.find("[data-testid=policy-scope-INITECH]").exists()).toBe(true)
+	})
+
+	it("is one segmented surface: the scope list is a tab rail that controls the editor beside it", async () => {
+		const wrapper = await tab()
+		const tablist = wrapper.get("[role=tablist]")
+		expect(tablist.attributes("aria-orientation")).toBe("vertical")
+		const panel = wrapper.get("[role=tabpanel]")
+		const tabs = wrapper.findAll("[role=tab]")
+		expect(tabs.length).toBe(4)
+		for (const t of tabs) expect(t.attributes("aria-controls")).toBe(panel.attributes("id"))
+		// Global is open first: the only selected tab, and the only one in the tab order.
+		const selected = () => wrapper.findAll("[role=tab][aria-selected=true]").map(t => t.attributes("data-testid"))
+		expect(selected()).toEqual(["policy-scope-global"])
+		expect(tabs.filter(t => t.attributes("tabindex") === "0").map(t => t.attributes("data-testid"))).toEqual([
+			"policy-scope-global"
+		])
+		expect(wrapper.text()).toContain("Customers · 3")
+		await wrapper.get("[data-testid=policy-scope-ACME]").trigger("click")
+		await flushPromises()
+		expect(selected()).toEqual(["policy-scope-ACME"])
+		expect(wrapper.get("[data-testid=policy-scope-ACME]").classes()).toContain("is-active")
+		expect(panel.attributes("aria-label")).toContain("SLA policy")
+	})
+
+	it("moves between scope tabs with the arrow keys and opens one with a click or Enter", async () => {
+		const wrapper = await tab()
+		const global = wrapper.get<HTMLButtonElement>("[data-testid=policy-scope-global]")
+		global.element.focus()
+		await wrapper.get("[role=tablist]").trigger("keydown", { key: "ArrowDown" })
+		await flushPromises()
+		expect(document.activeElement?.getAttribute("data-testid")).toBe("policy-scope-ACME")
+		// Moving focus does not load anything: opening a scope is a deliberate step.
+		expect(api.getPolicy).toHaveBeenLastCalledWith(null)
+		await wrapper.get("[role=tablist]").trigger("keydown", { key: "End" })
+		await flushPromises()
+		expect(document.activeElement?.getAttribute("data-testid")).toBe("policy-scope-INITECH")
+		await wrapper.get("[role=tablist]").trigger("keydown", { key: "Home" })
+		await flushPromises()
+		expect(document.activeElement?.getAttribute("data-testid")).toBe("policy-scope-global")
 	})
 
 	it("loads a customer's matrix and calendar when its scope is picked", async () => {

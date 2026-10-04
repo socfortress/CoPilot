@@ -1,5 +1,5 @@
 <template>
-	<SegmentedPanel
+	<PanelSegment
 		:title="scope ? `${scopeName} — business hours` : 'Business hours'"
 		:caption
 		data-testid="calendar-panel"
@@ -66,32 +66,30 @@
 		</n-spin>
 
 		<template v-if="isAdmin" #footer>
-			<div class="flex flex-wrap items-center justify-between gap-3">
-				<label class="flex items-center gap-2 text-sm">
-					<n-switch v-model:value="applyToOpen" size="small" data-testid="calendar-apply-open" />
-					<span>Re-time open business-hours items</span>
-				</label>
-				<div class="flex items-center gap-2">
-					<span v-if="error" class="inline-flex items-center gap-1 text-xs" :style="{ color: TONE_COLOR.bad }">
-						<Icon name="carbon:warning-filled" :size="13" />
-						{{ error }}
-					</span>
-					<n-button size="small" :disabled="!dirty || saving" @click="discard">Discard</n-button>
-					<n-button
-						size="small"
-						type="primary"
-						:disabled="!canSave"
-						:loading="saving"
-						data-testid="calendar-save"
-						@click="onSave"
-					>
-						<template #icon><Icon name="carbon:save" /></template>
-						Save calendar
-					</n-button>
-				</div>
+			<label class="flex items-center gap-2 text-sm">
+				<n-switch v-model:value="applyToOpen" size="small" data-testid="calendar-apply-open" />
+				<span>Re-time open business-hours items</span>
+			</label>
+			<div class="flex items-center gap-2">
+				<span v-if="error" class="inline-flex items-center gap-1 text-xs" :style="{ color: TONE_COLOR.bad }">
+					<Icon name="carbon:warning-filled" :size="13" />
+					{{ error }}
+				</span>
+				<n-button size="small" :disabled="!dirty || saving" @click="discard">Discard</n-button>
+				<n-button
+					size="small"
+					type="primary"
+					:disabled="!canSave"
+					:loading="saving"
+					data-testid="calendar-save"
+					@click="onSave"
+				>
+					<template #icon><Icon name="carbon:save" /></template>
+					Save calendar
+				</n-button>
 			</div>
 		</template>
-	</SegmentedPanel>
+	</PanelSegment>
 </template>
 
 <script setup lang="ts">
@@ -104,7 +102,7 @@ import { computed, shallowRef, toRef, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
 import { useBusinessCalendar } from "../composables/useBusinessCalendar"
-import SegmentedPanel from "../ui/SegmentedPanel.vue"
+import PanelSegment from "../ui/PanelSegment.vue"
 import { TONE_COLOR } from "../utils"
 import { timezoneOptions, weeklyMinutes } from "./calendar"
 import HolidayList from "./HolidayList.vue"

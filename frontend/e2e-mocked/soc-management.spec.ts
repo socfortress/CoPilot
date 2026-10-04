@@ -275,6 +275,34 @@ test.describe("as an admin", () => {
 			.toEqual(["Critical"])
 	})
 
+	test("the policies are one segmented surface, the scope rail selecting what the editor beside it shows", async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1440, height: 900 })
+		await open(page, "?tab=policies")
+		const surface = page.getByTestId("soc-policies")
+		const rail = surface.getByRole("tablist", { name: "Policy scope" })
+		const panel = surface.getByRole("tabpanel")
+		await expect(rail.getByRole("tab", { selected: true })).toContainText("Global policy")
+
+		// Attached: the rail ends where the editor starts, inside the one outline.
+		const geometry = await surface.evaluate(el => {
+			const tabpanel = el.querySelector("[role=tabpanel]")?.getBoundingClientRect()
+			const selector = el.querySelector(".scope-selector")?.getBoundingClientRect()
+			return { gap: Math.round((tabpanel?.left ?? 0) - (selector?.right ?? 0)), top: Math.round((tabpanel?.top ?? 0) - (selector?.top ?? 0)) }
+		})
+		expect(geometry).toEqual({ gap: 0, top: 0 })
+
+		// Picking a customer selects its tab and the editor follows; arrow keys move between tabs.
+		const customer = rail.getByRole("tab").nth(1)
+		const name = ((await customer.locator(".scope-label").textContent()) ?? "").trim()
+		await customer.click()
+		await expect(customer).toHaveAttribute("aria-selected", "true")
+		await expect(panel).toContainText(`${name} — overrides`)
+		await customer.press("ArrowUp")
+		await expect(rail.getByRole("tab").first()).toBeFocused()
+	})
+
 	test("saving the policy sends the whole matrix, with the edited cell stored", async ({ page }) => {
 		await open(page, "?tab=policies")
 		await page.getByTestId("policy-own-alert-Critical").click()

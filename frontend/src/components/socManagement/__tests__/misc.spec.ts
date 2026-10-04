@@ -6,7 +6,7 @@ import { defineComponent, h, nextTick, ref, shallowRef } from "vue"
 import { useAttention } from "../composables/useAttention"
 import { useBusinessCalendar } from "../composables/useBusinessCalendar"
 import HolidayList from "../policies/HolidayList.vue"
-import SegmentedPanel from "../ui/SegmentedPanel.vue"
+import PanelSegment from "../ui/PanelSegment.vue"
 import SeverityTag from "../ui/SeverityTag.vue"
 import SocPanel from "../ui/SocPanel.vue"
 import Sparkline from "../ui/Sparkline.vue"
@@ -271,8 +271,8 @@ describe("small ui", () => {
 		expect(wrapper.text()).toContain("body")
 	})
 
-	it("segmentedPanel is a segmented Naive card: header with title, caption and actions, body, footer band", () => {
-		const wrapper = mount(SegmentedPanel, {
+	it("panelSegment has a header strip, a body and a footer band, but no box of its own", () => {
+		const wrapper = mount(PanelSegment, {
 			props: { title: "Global policy", caption: "cells left at default" },
 			slots: {
 				default: () => h("p", "matrix"),
@@ -280,22 +280,21 @@ describe("small ui", () => {
 				footer: () => h("button", "Save policy")
 			}
 		})
-		const card = wrapper.get(".n-card")
-		expect(card.classes()).toEqual(expect.arrayContaining(["soc-segmented-panel", "n-card--content-segmented", "n-card--footer-segmented"]))
-		expect(wrapper.get(".n-card-header").text()).toContain("Global policy")
-		expect(wrapper.get(".n-card-header").text()).toContain("cells left at default")
-		expect(wrapper.get(".n-card-header__extra").text()).toBe("Follow global")
-		expect(wrapper.get(".n-card-content").text()).toBe("matrix")
-		expect(wrapper.get(".n-card__footer").text()).toBe("Save policy")
-		// Header and footer bands share the secondary surface and the page's 12px gutter.
-		expect(wrapper.get(".n-card-header").attributes("style")).toContain("background-color: var(--bg-secondary-color)")
-		expect(wrapper.get(".n-card__footer").attributes("style")).toContain("padding: 10px 12px")
+		const section = wrapper.get("section")
+		// The surface it sits in draws the outline: a segment adds no border, radius or gap.
+		expect(section.classes()).not.toContain("border")
+		expect(section.classes()).not.toContain("rounded-lg")
+		expect(wrapper.get("header").text()).toContain("Global policy")
+		expect(wrapper.get("header").text()).toContain("cells left at default")
+		expect(wrapper.get("header button").text()).toBe("Follow global")
+		expect(wrapper.get("section > div").text()).toBe("matrix")
+		expect(wrapper.get("footer").text()).toBe("Save policy")
+		expect(wrapper.get("footer").classes()).toEqual(expect.arrayContaining(["bg-secondary", "border-t"]))
 	})
 
-	it("segmentedPanel leaves out the footer band when there is nothing to commit, and drops body padding when flush", () => {
-		const wrapper = mount(SegmentedPanel, { props: { title: "Scope", flush: true }, slots: { default: () => h("nav", "list") } })
-		expect(wrapper.find(".n-card__footer").exists()).toBe(false)
-		expect(wrapper.find(".n-card-header__extra").exists()).toBe(false)
-		expect(wrapper.get(".n-card-content").attributes("style")).toContain("padding: 0")
+	it("panelSegment leaves out the footer band when there is nothing to commit, and the body padding when flush", () => {
+		const wrapper = mount(PanelSegment, { props: { title: "Scope", flush: true }, slots: { default: () => h("nav", "list") } })
+		expect(wrapper.find("footer").exists()).toBe(false)
+		expect(wrapper.get("section > div").classes()).not.toContain("p-3")
 	})
 })
