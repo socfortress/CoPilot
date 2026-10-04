@@ -340,13 +340,20 @@ test.describe("as an admin", () => {
 	test("the backlog panels print each bar's counts level with it, under named columns", async ({ page }) => {
 		await open(page, "?tab=workload")
 		for (const panel of await page.locator(".load-bars").all()) {
-			const chart = panel.getByTestId("load-bars")
 			const counts = panel.getByTestId("load-bars-counts")
 			await expect(counts.locator(".col-head")).toHaveText(["Open", "At risk", "Past SLA"])
-			// The counts column spans the chart exactly: legend row + one 30px line per bar.
-			const [chartBox, countsBox] = [await chart.boundingBox(), await counts.boundingBox()]
-			expect(Math.abs((countsBox?.height ?? 0) - (chartBox?.height ?? 0))).toBeLessThanOrEqual(1)
-			expect(Math.abs((countsBox?.y ?? 0) - (chartBox?.y ?? 0))).toBeLessThanOrEqual(1)
+			// The counts column spans the chart exactly: legend row + one 30px line per bar. Both
+			// boxes are read in one frame, and again until the page has settled.
+			await expect
+				.poll(() =>
+					panel.evaluate(el => {
+						const chartBox = el.querySelector("[data-testid=load-bars]")?.getBoundingClientRect()
+						const countsBox = el.querySelector("[data-testid=load-bars-counts]")?.getBoundingClientRect()
+						if (!chartBox || !countsBox) return Number.POSITIVE_INFINITY
+						return Math.max(Math.abs(countsBox.height - chartBox.height), Math.abs(countsBox.top - chartBox.top))
+					})
+				)
+				.toBeLessThanOrEqual(1)
 		}
 	})
 })
