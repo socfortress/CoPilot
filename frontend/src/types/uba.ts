@@ -20,6 +20,8 @@ export interface UbaTenantStatus {
 	feeds?: UbaFeedStatus[]
 	/** Onboarding state (absent from UBA versions before tenant registration). */
 	onboarding?: UbaOnboardingStatus | null
+	/** The customer's computers with a Wazuh agent (UBA 1.3+). */
+	agents?: UbaAgentsSummary | null
 }
 
 export type UbaOnboardingStatus = "inactive" | "pending" | "bootstrapping" | "error" | "live"
@@ -212,6 +214,38 @@ export interface UbaAlertUpdate {
 	explanation: string | null
 }
 
+export type UbaReportingState = "reporting" | "not_reporting" | "retired" | "never_connected"
+
+/** A computer with a Wazuh agent (UBA reads the Wazuh dashboard's agent snapshots). */
+export interface UbaHost {
+	agent_id: string
+	name: string
+	os: string | null
+	platform: string | null
+	/** server or workstation (Windows, by edition). */
+	role: string | null
+	ip: string | null
+	/** Wazuh's agent status: active, disconnected, ... */
+	status: string | null
+	reporting: UbaReportingState
+	last_keepalive: string | null
+	agent_version: string | null
+	groups: string[]
+	registered_at: string | null
+	updated_at: string | null
+}
+
+export interface UbaAgentsSummary {
+	total: number
+	reporting: number
+	not_reporting: number
+	retired: number
+	never_connected: number
+	/** The computers not reporting (at most 20). */
+	not_reporting_hosts: UbaHost[]
+	updated_at: string | null
+}
+
 export interface UbaEntityDetail {
 	tenant: string
 	entity_key: string
@@ -220,6 +254,8 @@ export interface UbaEntityDetail {
 	risk: number
 	risk_by_rule: UbaRiskPart[]
 	identity: UbaIdentity | null
+	/** The computer, when the entity is a Wazuh agent (UBA 1.3+). */
+	host?: UbaHost | null
 	alerts: UbaAlert[]
 	suppressions: UbaSuppression[]
 }

@@ -1,4 +1,4 @@
-import type { UbaFailureReason } from "@/types/uba"
+import type { UbaAgentsSummary, UbaFailureReason } from "@/types/uba"
 
 /** What to do about an upstream failure (the proxy returns a `reason`, never a 401/403). */
 export function reasonHint(reason: UbaFailureReason | string | null | undefined): string | null {
@@ -85,4 +85,21 @@ export function privilegedReasonLabel(reason: string): { what: string; how: stri
 	const where = source.startsWith("windows") ? "Windows" : source.startsWith("entra") ? "Entra" : ""
 	const how = source === "entra" ? "directory sync" : source.endsWith("_audit") ? "seen granted in the audit log" : identitySourceLabel(source)
 	return { what: name, how: `${[where, holds].filter(Boolean).join(" ")}, ${how}` }
+}
+
+/** "WS02 (since <time>), DC01 and 3 more": the computers not reporting, for the page's warning. */
+export function silentComputers(agents: UbaAgentsSummary, formatTime: (iso: string) => string): string {
+	const names = agents.not_reporting_hosts.map(h =>
+		h.last_keepalive ? `${h.name} (since ${formatTime(h.last_keepalive)})` : h.name
+	)
+	const more = agents.not_reporting - names.length
+	return names.join(", ") + (more > 0 ? ` and ${more} more` : "")
+}
+
+/** Tooltip of the "computers" badge. Retired agents (silent over 30 days) are not counted. */
+export function agentsSummaryTitle(agents: UbaAgentsSummary): string {
+	const lines = [`${agents.reporting} of ${agents.total - agents.retired} computers with a Wazuh agent are reporting`]
+	if (agents.retired) lines.push(`${agents.retired} silent for over 30 days (not counted)`)
+	if (agents.never_connected) lines.push(`${agents.never_connected} enrolled but never connected`)
+	return lines.join("\n")
 }

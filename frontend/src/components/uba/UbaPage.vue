@@ -61,6 +61,16 @@
 					<template #label>{{ feedLabel(feed.source) }}</template>
 					<template #value>{{ feed.status === "ok" ? formatLag(feed.lag_p50_s) : feed.status }}</template>
 				</Badge>
+				<Badge
+					v-if="status.agents"
+					type="splitted"
+					size="small"
+					:color="status.agents.not_reporting ? 'warning' : undefined"
+					:title="agentsTitle(status.agents)"
+				>
+					<template #label>computers</template>
+					<template #value>{{ status.agents.reporting }}/{{ status.agents.total - status.agents.retired }} reporting</template>
+				</Badge>
 				<span v-if="version" class="text-tertiary text-xs">UBA {{ version }}</span>
 				<n-button v-if="isAdmin && !needsSetup" text size="tiny" class="text-xs" @click="showSetup = !showSetup">
 					Setup
@@ -83,6 +93,11 @@
 				<p class="text-secondary mt-1 text-xs">
 					UBA's findings for this source may be missing or late until the feed recovers.
 				</p>
+			</n-alert>
+			<n-alert v-if="status?.agents?.not_reporting" type="warning" :bordered="false">
+				{{ status.agents.not_reporting }} {{ status.agents.not_reporting === 1 ? "computer has" : "computers have" }}
+				stopped reporting: {{ silentText(status.agents) }}. UBA sees nothing from
+				{{ status.agents.not_reporting === 1 ? "it" : "them" }} until the Wazuh agent checks in again.
 			</n-alert>
 
 			<UbaAbout :key="`about${customerModel}`" :customer-code="customerModel" />
@@ -136,7 +151,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { UbaFeedStatus, UbaTenantStatus } from "@/types/uba"
+import type { UbaAgentsSummary, UbaFeedStatus, UbaTenantStatus } from "@/types/uba"
 import { NAlert, NButton, NCard, NDrawer, NDrawerContent, NEmpty, NFormItem, NSelect, NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
@@ -146,6 +161,8 @@ import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { useRouteQueryParam } from "@/composables/useNavigation"
 import { useUbaAvailability } from "@/composables/useUbaAvailability"
 import { useAuthStore } from "@/stores/auth"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils/format"
 import UbaAbout from "./UbaAbout.vue"
 import UbaAlertDetail from "./UbaAlertDetail.vue"
 import UbaAlerts from "./UbaAlerts.vue"
@@ -157,12 +174,13 @@ import UbaError from "./UbaError.vue"
 import UbaRules from "./UbaRules.vue"
 import UbaSetup from "./UbaSetup.vue"
 import UbaSuppressions from "./UbaSuppressions.vue"
-import { formatLag } from "./utils"
+import { agentsSummaryTitle, formatLag, silentComputers } from "./utils"
 
 const TABS = ["entities", "alerts", "suppressions", "rules", "directory"] as const
 
 const route = useRoute()
 const router = useRouter()
+const dFormats = useSettingsStore().dateFormat
 const { available, loaded: availabilityLoaded } = useUbaAvailability()
 const { getAvailableGlobalCustomerValue, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 
@@ -198,6 +216,14 @@ const needsSetup = computed(
 const unhealthyFeeds = computed(() => (status.value?.feeds ?? []).filter(feed => feed.status !== "ok"))
 
 const FEED_LABELS: Record<string, string> = { office365: "Microsoft 365", wazuh: "Wazuh" }
+
+function silentText(agents: UbaAgentsSummary) {
+	return silentComputers(agents, t => String(formatDate(t, dFormats.datetime)))
+}
+
+function agentsTitle(agents: UbaAgentsSummary) {
+	return agentsSummaryTitle(agents)
+}
 
 function feedLabel(source: string) {
 	return FEED_LABELS[source] ?? source
