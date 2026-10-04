@@ -4,38 +4,40 @@
 			<n-input v-model:value="search" size="small" placeholder="Find a customer" clearable class="m-3 w-auto!">
 				<template #prefix><Icon name="carbon:search" :size="14" /></template>
 			</n-input>
-			<nav class="scope-list flex max-h-[520px] flex-col overflow-y-auto pb-2" aria-label="Policy scope">
-				<button
-					v-for="option of scopeOptions"
-					:key="option.key"
-					type="button"
-					class="scope-option flex items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors"
-					:class="{ 'is-active': option.code === scope }"
-					:data-testid="`policy-scope-${option.key}`"
-					@click="scope = option.code"
-				>
-					<span class="flex min-w-0 flex-col leading-tight">
-						<span class="truncate">{{ option.label }}</span>
-						<span v-if="option.code" class="text-tertiary text-2xs font-mono">{{ option.code }}</span>
-					</span>
-					<span class="flex shrink-0 items-center gap-1">
-						<n-tooltip v-if="option.code && calendars.has(option.code)">
-							<template #trigger>
-								<Icon
-									name="carbon:calendar"
-									:size="13"
-									class="text-tertiary"
-									:data-testid="`policy-scope-calendar-${option.key}`"
-								/>
-							</template>
-							Has its own business hours
-						</n-tooltip>
-						<n-tag v-if="option.overrides" size="tiny" type="warning" :bordered="false" round>
-							{{ option.overrides }} override{{ option.overrides === 1 ? "" : "s" }}
-						</n-tag>
-					</span>
-				</button>
-			</nav>
+			<n-scrollbar class="max-h-[520px]" data-testid="policy-scopes">
+				<nav class="scope-list flex flex-col pb-2" aria-label="Policy scope">
+					<button
+						v-for="option of scopeOptions"
+						:key="option.key"
+						type="button"
+						class="scope-option flex items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors"
+						:class="{ 'is-active': option.code === scope }"
+						:data-testid="`policy-scope-${option.key}`"
+						@click="scope = option.code"
+					>
+						<span class="flex min-w-0 flex-col leading-tight">
+							<span class="truncate">{{ option.label }}</span>
+							<span v-if="option.code" class="text-tertiary text-2xs font-mono">{{ option.code }}</span>
+						</span>
+						<span class="flex shrink-0 items-center gap-1">
+							<n-tooltip v-if="option.code && calendars.has(option.code)">
+								<template #trigger>
+									<Icon
+										name="carbon:calendar"
+										:size="13"
+										class="text-tertiary"
+										:data-testid="`policy-scope-calendar-${option.key}`"
+									/>
+								</template>
+								Has its own business hours
+							</n-tooltip>
+							<n-tag v-if="option.overrides" size="tiny" type="warning" :bordered="false" round>
+								{{ option.overrides }} override{{ option.overrides === 1 ? "" : "s" }}
+							</n-tag>
+						</span>
+					</button>
+				</nav>
+			</n-scrollbar>
 		</SocPanel>
 
 		<div class="flex min-w-0 flex-col gap-4">
@@ -119,7 +121,7 @@
 <script setup lang="ts">
 import type { EditablePolicyCell } from "../utils"
 import type { PolicyOverride } from "@/types/soc-management"
-import { NAlert, NButton, NInput, NPopconfirm, NSpin, NSwitch, NTag, NTooltip, useMessage } from "naive-ui"
+import { NAlert, NButton, NInput, NPopconfirm, NScrollbar, NSpin, NSwitch, NTag, NTooltip, useMessage } from "naive-ui"
 import { computed, onBeforeMount, shallowRef, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"

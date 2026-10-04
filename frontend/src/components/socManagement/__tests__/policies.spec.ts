@@ -71,6 +71,23 @@ describe("policyMatrixEditor", () => {
 		expect(wrapper.get("[data-testid=policy-own-alert-Critical]").text()).toContain("Default")
 	})
 
+	it("lays each entity's cells out in a Naive table, one row per severity", () => {
+		const { wrapper } = editor()
+		for (const entity of ["alert", "case"]) {
+			const table = wrapper.get(`[data-testid=policy-table-${entity}]`)
+			expect(table.classes()).toContain("n-table")
+			expect(table.findAll("thead th").map(th => th.text())).toEqual([
+				"Severity",
+				"Value",
+				"Respond within",
+				"Resolve within",
+				"Counted in",
+				""
+			])
+			expect(table.findAll("tbody tr").length).toBeGreaterThan(0)
+		}
+	})
+
 	it("switching a cell to its own value starts from what it showed, and back to inherit drops it", async () => {
 		const { wrapper, cells } = editor()
 		await wrapper.get("[data-testid=policy-own-case-High]").trigger("click")

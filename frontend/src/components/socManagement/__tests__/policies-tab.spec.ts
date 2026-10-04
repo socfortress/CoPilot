@@ -79,6 +79,10 @@ describe("policiesTab", () => {
 		expect(wrapper.get("[data-testid=policy-scope-ACME]").text()).toContain("1 override")
 		expect(wrapper.find("[data-testid=policy-scope-calendar-GLOBEX]").exists()).toBe(true)
 		expect(wrapper.find("[data-testid=policy-scope-calendar-ACME]").exists()).toBe(false)
+		// A long customer list scrolls inside the panel, in Naive's scrollbar.
+		const scroll = wrapper.get("[data-testid=policy-scopes]")
+		expect(scroll.classes()).toContain("n-scrollbar")
+		expect(scroll.find("[data-testid=policy-scope-INITECH]").exists()).toBe(true)
 	})
 
 	it("loads a customer's matrix and calendar when its scope is picked", async () => {
