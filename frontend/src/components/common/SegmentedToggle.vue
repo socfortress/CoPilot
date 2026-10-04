@@ -25,10 +25,11 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number">
-// A compact segmented switch for a panel header: 22px tall, like a tiny button, so it
-// never makes the header taller than its label strip (a Naive radio group is 28px). One
-// radio group to assistive tech; arrow keys move the choice, and only the chosen
-// segment is in the tab order.
+// A compact segmented switch — a few mutually exclusive choices in one small control,
+// for places a Naive radio group (28px) is too tall: a panel or card header, a toolbar.
+// 22px, like a tiny button, so it never makes a header taller than its label strip. One
+// radio group to assistive tech; arrow keys move the choice, and only the chosen segment
+// is in the tab order. Values are strings or numbers (the component is generic over them).
 import { shallowRef } from "vue"
 
 const { options, label, testId } = defineProps<{

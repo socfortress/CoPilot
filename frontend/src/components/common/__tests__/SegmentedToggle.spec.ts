@@ -2,7 +2,7 @@ import type { Component } from "vue"
 import { mount } from "@vue/test-utils"
 import { describe, expect, it } from "vitest"
 import { defineComponent, h, ref } from "vue"
-import SegmentedToggle from "../ui/SegmentedToggle.vue"
+import SegmentedToggle from "../SegmentedToggle.vue"
 
 function toggle(initial = "alert") {
 	const value = ref(initial)
