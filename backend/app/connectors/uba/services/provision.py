@@ -138,6 +138,40 @@ async def _source_streams(customer_code: str, session: AsyncSession) -> Dict[str
     return sources
 
 
+async def _resolve_index_sets(sources: Dict[str, List[UbaSourceStream]]) -> None:
+    """Take each source stream's index set from Graylog, not from CoPilot's records.
+
+    The feed stream must write to the index set the source stream writes to (else routed messages are
+    indexed twice), and the stored id can be stale: index sets get recreated (lab, 2026-10-04: both
+    stored ids pointed at deleted index sets while the streams wrote to their replacements).
+    """
+    for name, streams in sources.items():
+        for source in streams:
+            try:
+                stream = (await send_get_request(endpoint=f"/api/streams/{source.stream_id}")).get("data") or {}
+            except HTTPException as e:
+                if e.status_code != 404:
+                    raise
+                stream = {}
+            if not stream.get("index_set_id"):
+                which = f"{name} stream {source.stream_id}" + (f" ({source.instance})" if source.instance else "")
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"The {which} CoPilot has on record is not in Graylog: provision that source again first",
+                )
+            if stream["index_set_id"] != source.index_set_id:
+                logger.info(
+                    f"UBA provisioning: {name} stream {source.stream_id} writes to index set {stream['index_set_id']}, "
+                    f"not {source.index_set_id} as recorded; using Graylog's",
+                )
+            source.index_set_id = stream["index_set_id"]
+        if len({s.index_set_id for s in streams}) > 1:
+            raise HTTPException(
+                status_code=409,
+                detail=f"The customer's {name} streams write to different index sets: one UBA feed stream cannot sit next to all of them",
+            )
+
+
 # -- Graylog objects --------------------------------------------------------------------------------
 
 
@@ -357,6 +391,7 @@ async def get_provisioning_status(customer_code: str, session: AsyncSession) -> 
     """What UBA provisioning would use, and the customer's state in UBA (onboarding progress)."""
     try:
         sources = await _source_streams(customer_code, session)
+        await _resolve_index_sets(sources)
         problem = None
     except HTTPException as e:
         sources, problem = {}, e.detail
@@ -381,6 +416,7 @@ async def provision_uba(customer_code: str, request: UbaProvisionRequest, sessio
     info = await _provisioning_info()
     names = info["graylog"]
     sources = await _source_streams(customer_code, session)
+    await _resolve_index_sets(sources)
     tenant_ids = await _office365_tenant_ids(customer_code, session)
     meta = await _customer_meta(customer_code, session)
 
@@ -428,7 +464,7 @@ async def provision_uba(customer_code: str, request: UbaProvisionRequest, sessio
     await _output(names["output"].format(tenant=customer_code), output["host"], output["port"], feed_ids, steps)
 
     # 4. Alerts back into Graylog.
-    await _alerts(info, customer_code, meta.customer_meta_graylog_index, steps)
+    await _alerts(info, customer_code, sources["WAZUH"][0].index_set_id, steps)
 
     # 5. Optional Wazuh rules.
     if request.deploy_wazuh_rules:

@@ -43,9 +43,14 @@ NAMES = {
 }
 
 
+# The customer's source streams as Graylog has them: stream id -> the index set it writes to.
+SOURCES = {"wazuh-src": "wazuh-set", "o365-a": "o365-set", "o365-b": "o365-set"}
+
+
 class FakeGraylog:
-    def __init__(self, prefixes):
+    def __init__(self, prefixes, sources=None):
         self.index_sets = {k: {"index_prefix": v} for k, v in prefixes.items()}
+        self.sources = dict(SOURCES if sources is None else sources)
         self.streams, self.rules, self.pipelines, self.outputs, self.inputs = {}, {}, {}, {}, {}
         self.connections, self.attached, self.calls = {}, {}, []
         self.next_id = 0
@@ -58,6 +63,13 @@ class FakeGraylog:
         self.calls.append(("GET", endpoint))
         if endpoint.startswith("/api/system/indices/index_sets/"):
             return {"data": self.index_sets[endpoint.rsplit("/", 1)[1]]}
+        if endpoint.startswith("/api/streams/"):
+            stream_id = endpoint.rsplit("/", 1)[1]
+            if stream_id in self.sources:
+                return {"data": {"id": stream_id, "index_set_id": self.sources[stream_id]}}
+            if stream_id in self.streams:
+                return {"data": self.streams[stream_id]}
+            raise HTTPException(status_code=404, detail=f"Failed to send GET request to {endpoint}: not found")
         data = {
             "/api/streams": {"streams": list(self.streams.values())},
             "/api/system/pipelines/rule": list(self.rules.values()),
@@ -290,6 +302,29 @@ def test_wazuh_rules_are_uploaded_and_the_manager_restarted_only_on_request():
         )
     assert uploads == [("0950-uba_windows_account_rules.xml", b"<group/>", True)] and restarts == ["/manager/restart"]
     assert [s.status for s in out.steps[-2:]] == ["uploaded", "restarted"]
+
+
+def test_the_index_set_comes_from_graylog_not_from_copilots_records():
+    """Lab, 2026-10-04: both recorded index set ids pointed at deleted index sets; the streams wrote to new ones."""
+    graylog = FakeGraylog(
+        {"wazuh-set-new": "wazuh-acme", "o365-set-new": "office365-acme"},
+        sources={"wazuh-src": "wazuh-set-new", "o365-a": "o365-set-new", "o365-b": "o365-set-new"},
+    )
+    out = _run(graylog, FakeUba())  # CoPilot's records still say wazuh-set / o365-set
+    streams = _by_title(graylog.streams)
+    assert streams["UBA FEED - WAZUH - acme"]["index_set_id"] == "wazuh-set-new"
+    assert streams["UBA FEED - O365 - acme"]["index_set_id"] == "o365-set-new"
+    assert streams["UBA ALERTS - acme"]["index_set_id"] == "wazuh-set-new"
+    assert out.steps[0].step == "UBA tenant"
+
+
+def test_a_source_stream_missing_from_graylog_stops_before_anything_is_created():
+    graylog = FakeGraylog({"wazuh-set": "wazuh-acme", "o365-set": "office365-acme"}, sources={"wazuh-src": "wazuh-set"})
+    uba = FakeUba()
+    with pytest.raises(HTTPException) as e:
+        _run(graylog, uba)
+    assert e.value.status_code == 409 and "o365-a" in e.value.detail and "provision that source again" in e.value.detail
+    assert not [c for c in uba.calls if c[0] == "PUT"] and not [c for c in graylog.calls if c[0] != "GET"]
 
 
 def test_provisioning_routes_are_admin_only():
