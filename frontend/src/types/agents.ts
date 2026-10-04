@@ -12,6 +12,8 @@ export interface Agent {
 	wazuh_agent_version: string
 	wazuh_agent_status: AgentStatus
 	velociraptor_agent_version: string
+	/** Set when the id was entered by hand: the agent sync then never re-matches it by hostname. */
+	velociraptor_id_pinned?: boolean
 	customer_code: null | string
 	vulnerabilities?: AgentVulnerabilities[]
 	online?: boolean

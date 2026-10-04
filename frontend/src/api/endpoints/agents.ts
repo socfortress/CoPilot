@@ -140,6 +140,9 @@ export default {
 			}
 		)
 	},
+	unpinAgentVelociraptorId(agentId: string) {
+		return HttpClient.put<FlaskBaseResponse>(`/agents/${agentId}/velociraptor/unpin`)
+	},
 	upgradeWazuhAgent(agentId: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/agents/${agentId}/wazuh/upgrade`)
 	},

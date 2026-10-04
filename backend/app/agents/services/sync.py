@@ -14,6 +14,14 @@ from app.agents.schema.agents import SyncedWazuhAgent
 from app.agents.velociraptor.schema.agents import VelociraptorAgent
 from app.agents.velociraptor.schema.agents import VelociraptorClients
 from app.agents.velociraptor.schema.agents import VelociraptorOrganizations
+from app.agents.velociraptor.utils.matching import UNRESOLVED_AMBIGUOUS
+from app.agents.velociraptor.utils.matching import UNRESOLVED_CONTESTED
+from app.agents.velociraptor.utils.matching import UNRESOLVED_NO_MATCH
+from app.agents.velociraptor.utils.matching import UNRESOLVED_PINNED_CLIENT_MISSING
+from app.agents.velociraptor.utils.matching import AgentRef
+from app.agents.velociraptor.utils.matching import OrgClient
+from app.agents.velociraptor.utils.matching import Resolution
+from app.agents.velociraptor.utils.matching import resolve_velociraptor_clients
 from app.agents.wazuh.schema.agents import WazuhAgent
 from app.agents.wazuh.schema.agents import WazuhAgentsList
 from app.connectors.models import Connectors
@@ -337,11 +345,10 @@ async def is_velociraptor_verified() -> bool:
 
 async def sync_agents_velociraptor() -> SyncedAgentsResponse:
     """
-    Syncronizes the agents with Velociraptor. This function retrieves all the
-    agents from the `Agents` table and invokes the velociraptor API with the
-    hostname. If the hostname cannot be found within Velociraptor, and the agent's
-    `velociraptor_id` is not None, invoke the Velociraptor API and pass it the
-    `velociraptor_id`.
+    Syncronizes the agents with Velociraptor. Collects the clients of every org, then
+    matches them to the rows of the `Agents` table in one pass; see
+    `app/agents/velociraptor/utils/matching.py` for the precedence (pinned id, stored id,
+    hostname). An agent that cannot be matched unambiguously keeps its current id.
 
     Deployments that only run the Wazuh Manager have no Velociraptor connector to talk
     to — that is a supported configuration, so this returns a successful no-op response
@@ -374,69 +381,93 @@ async def sync_agents_velociraptor() -> SyncedAgentsResponse:
             agents_added=agents_added_list,
         )
     logger.info(f"Collected Velociraptor Orgs: {velo_orgs}")
+
+    # Every org is collected before any agent is matched (#1195). Matching org by org and
+    # committing after each one let the last org processed win a hostname shared across
+    # tenants. A run that cannot see every org is skipped outright: with one org missing, a
+    # hostname shared by two clients looks unique and the agent would take the wrong one.
+    all_clients: List[OrgClient] = []
     for org in velo_orgs.organizations:
         try:
             velociraptor_clients = await fetch_velociraptor_clients(org_id=org.OrgId)
         except Exception as e:
             logger.error(f"Failed to collect Velociraptor clients for org {org.OrgId}: {e}")
-            continue
+            return SyncedAgentsResponse(
+                success=True,
+                message=f"Skipped Velociraptor agent sync: failed to collect clients for org {org.OrgId}: {e}",
+                agents_added=agents_added_list,
+            )
         logger.info(f"Collected Velociraptor Clients: {velociraptor_clients}")
-        velociraptor_clients = velociraptor_clients.clients if hasattr(velociraptor_clients, "clients") else []
+        all_clients.extend(OrgClient(org_id=org.OrgId, client=client) for client in velociraptor_clients.clients)
 
-        async with get_db_session() as session:  # Create a new session here
-            existing_agents_query = select(Agents)
-            result = await session.execute(existing_agents_query)
-            existing_agents = result.scalars().all()
+    unresolved: List[str] = []
+    async with get_db_session() as session:
+        result = await session.execute(select(Agents))
+        # Plain snapshots: a rollback expires every loaded row, and reading an expired
+        # attribute under AsyncSession raises MissingGreenlet for the agents after it.
+        agent_refs = [
+            AgentRef(
+                key=agent.id,
+                hostname=agent.hostname,
+                velociraptor_id=agent.velociraptor_id,
+                pinned=bool(agent.velociraptor_id_pinned),
+                customer_code=agent.customer_code,
+            )
+            for agent in result.scalars().all()
+        ]
+        resolutions = resolve_velociraptor_clients(agent_refs, all_clients)
 
-            for agent in existing_agents:
-                logger.info(f"Collecting Velociraptor Agent for {agent.hostname}")
+        for agent_ref in agent_refs:
+            resolution = resolutions[agent_ref.key]
+            if not resolution.resolved:
+                _log_unresolved(agent_ref, resolution)
+                if resolution.reason != UNRESOLVED_NO_MATCH:
+                    unresolved.append(agent_ref.hostname)
+                continue
 
-                try:
-                    # Hostname is resolved across the whole client list before the stored
-                    # `velociraptor_id` is considered. Testing both in a single pass let a stale id
-                    # win purely by appearing earlier in the list, which is what pinned another
-                    # tenant's client to an agent whose identity had been overwritten underneath it
-                    # (#1120) — and kept re-pinning it on every sync instead of self-correcting.
-                    # The id stays as the fallback so a renamed agent still resolves.
-                    velociraptor_agent = next(
-                        (client for client in velociraptor_clients if client.os_info.hostname == agent.hostname),
-                        None,
-                    )
-                    if velociraptor_agent is None:
-                        velociraptor_agent = next(
-                            (client for client in velociraptor_clients if client.client_id == agent.velociraptor_id),
-                            None,
-                        )
-                    # Convert Unix epoch timestamp to datetime
-                    last_seen_at = datetime.fromtimestamp(
-                        int(velociraptor_agent.last_seen_at) / 1e6,
-                    )  # Divide by 1e6 to convert from microseconds to seconds
-                    # Convert datetime to ISO 8601 format without fractional seconds
-                    last_seen_at_iso = last_seen_at.replace(tzinfo=timezone.utc).isoformat(timespec="seconds")
-                    velociraptor_agent = VelociraptorAgent(
-                        velociraptor_id=velociraptor_agent.client_id,
-                        velociraptor_last_seen=last_seen_at_iso,
-                        velociraptor_agent_version=velociraptor_agent.agent_information.version,
-                        velociraptor_org=org.OrgId,
-                    )
-
-                except Exception as e:
-                    logger.error(
-                        f"Failed to collect Velociraptor Agent for {agent.hostname}: {e}",
-                    )
-                    continue
-
-                if velociraptor_agent:
-                    # Update the agent with the Velociraptor client's details
-                    await update_agent_with_velociraptor_in_db(session, agent, velociraptor_agent)
-                    agents_added_list.append(velociraptor_agent)
-
-        # Close the session
-        await session.close()
+            org_client = resolution.client
+            try:
+                # Velociraptor reports last_seen_at in microseconds since the epoch.
+                last_seen_at = datetime.fromtimestamp(int(org_client.client.last_seen_at) / 1e6, tz=timezone.utc)
+                velociraptor_agent = VelociraptorAgent(
+                    velociraptor_id=org_client.client_id,
+                    velociraptor_last_seen=last_seen_at.isoformat(timespec="seconds"),
+                    velociraptor_agent_version=org_client.client.agent_information.version,
+                    velociraptor_org=org_client.org_id,
+                )
+                agent = await session.get(Agents, agent_ref.key)
+                await update_agent_with_velociraptor_in_db(session, agent, velociraptor_agent)
+            except Exception as e:
+                await session.rollback()
+                logger.error(f"Failed to update Velociraptor details for {agent_ref.hostname}: {e}")
+                continue
+            agents_added_list.append(velociraptor_agent)
 
     logger.info(f"Agents Added List: {agents_added_list}")
+    message = f"Agents synced successfully ({len(agents_added_list)} matched)"
+    if unresolved:
+        message += f". Left unchanged, needs review: {', '.join(unresolved)}"
     return SyncedAgentsResponse(
         success=True,
-        message="Agents synced successfully",
+        message=message,
         agents_added=agents_added_list,
     )
+
+
+def _log_unresolved(agent: AgentRef, resolution: Resolution) -> None:
+    """Explain why an agent kept its current Velociraptor id."""
+    subject = f"Agent {agent.hostname} (customer {agent.customer_code}, velociraptor_id {agent.velociraptor_id})"
+    if resolution.reason == UNRESOLVED_PINNED_CLIENT_MISSING:
+        logger.warning(f"{subject}: pinned Velociraptor client no longer exists in any org; left unchanged")
+    elif resolution.reason == UNRESOLVED_AMBIGUOUS:
+        logger.warning(
+            f"{subject}: hostname matches several Velociraptor clients ({', '.join(resolution.candidates)}); "
+            "left unchanged. Set the Velociraptor ID on the agent to pin it.",
+        )
+    elif resolution.reason == UNRESOLVED_CONTESTED:
+        logger.warning(
+            f"{subject}: Velociraptor client {', '.join(resolution.candidates)} is claimed by more than one agent; "
+            "left unchanged. Set the Velociraptor ID on the correct agent to pin it.",
+        )
+    else:
+        logger.info(f"{subject}: no matching Velociraptor client")

@@ -1347,6 +1347,10 @@ async def update_agent(
             raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found or access denied")
 
         agent.velociraptor_id = velociraptor_id
+        # An id entered by hand is authoritative: the sync resolves a pinned agent by this
+        # client id only, so a hostname shared with another tenant's client can no longer
+        # overwrite it (#1195). Unpin through /{agent_id}/velociraptor/unpin.
+        agent.velociraptor_id_pinned = True
         await session.commit()
         logger.info(f"Agent {agent_id} updated with Velociraptor ID: {velociraptor_id}")
         return AgentModifyResponse(
@@ -1359,6 +1363,39 @@ async def update_agent(
             status_code=500,
             detail=f"Failed to update agent {agent_id} with Velociraptor ID: {velociraptor_id}: {e}",
         )
+
+
+@agents_router.put(
+    "/{agent_id}/velociraptor/unpin",
+    response_model=AgentModifyResponse,
+    description="Let the agent sync match the agent's Velociraptor client automatically again",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def unpin_agent_velociraptor_id(
+    agent_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> AgentModifyResponse:
+    """
+    Clears the pin set when an analyst entered the agent's velociraptor_id by hand.
+    The stored id is kept; the next sync may replace it by hostname matching.
+    User must have access to the agent's customer.
+    """
+    base_query = select(Agents).filter(Agents.agent_id == agent_id)
+    filtered_query = await customer_access_handler.filter_query_by_customer_access(
+        current_user,
+        session,
+        base_query,
+        Agents.customer_code,
+    )
+    agent = (await session.execute(filtered_query)).scalars().first()
+    if not agent:
+        raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found or access denied")
+
+    agent.velociraptor_id_pinned = False
+    await session.commit()
+    logger.info(f"Agent {agent_id} Velociraptor ID unpinned")
+    return AgentModifyResponse(success=True, message=f"Agent {agent_id} Velociraptor ID unpinned")
 
 
 @agents_router.delete(
