@@ -35,7 +35,7 @@ describe("segmentedToggle", () => {
 		const cases = wrapper.get("[data-testid=volume-entity-case]")
 		expect([alerts.attributes("aria-checked"), cases.attributes("aria-checked")]).toEqual(["true", "false"])
 		expect([alerts.attributes("tabindex"), cases.attributes("tabindex")]).toEqual(["0", "-1"])
-		expect(group.classes()).toContain("h-[22px]") // never taller than a panel header's tiny buttons
+		expect(group.classes()).toContain("h-5.5") // never taller than a panel header's tiny buttons
 		wrapper.unmount()
 	})
 

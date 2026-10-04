@@ -2,7 +2,7 @@
 	<n-tooltip placement="top" :disabled="!compliance.decided">
 		<template #trigger>
 			<div
-				class="compliance-meter flex items-center gap-2"
+				class="compliance-meter flex cursor-help items-center gap-2"
 				:class="{ 'min-w-28': !compact }"
 				data-testid="compliance-meter"
 			>

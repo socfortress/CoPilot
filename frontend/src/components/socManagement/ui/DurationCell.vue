@@ -1,8 +1,14 @@
 <template>
 	<n-tooltip :disabled="stats.median == null" placement="top">
 		<template #trigger>
-			<div class="duration-cell flex flex-col items-end gap-0.5 font-mono tabular-nums" data-testid="duration-cell">
-				<span class="text-sm leading-tight" :class="stats.median == null ? 'text-tertiary' : 'text-default font-medium'">
+			<div
+				class="duration-cell flex cursor-help flex-col items-end gap-0.5 font-mono tabular-nums"
+				data-testid="duration-cell"
+			>
+				<span
+					class="text-sm leading-tight"
+					:class="stats.median == null ? 'text-tertiary' : 'text-default font-medium'"
+				>
 					{{ formatDuration(stats.median) }}
 				</span>
 				<span v-if="stats.median != null" class="text-2xs inline-flex items-baseline gap-1 leading-tight">
@@ -11,7 +17,10 @@
 				</span>
 			</div>
 		</template>
-		<dl class="m-0 grid grid-cols-[auto_auto] gap-x-3 gap-y-0.5 font-mono text-xs" data-testid="duration-cell-tooltip">
+		<dl
+			class="m-0 grid grid-cols-[auto_auto] gap-x-3 gap-y-0.5 font-mono text-xs"
+			data-testid="duration-cell-tooltip"
+		>
 			<dt class="text-secondary">median</dt>
 			<dd class="m-0 text-right">{{ formatDuration(stats.median) }}</dd>
 			<dt class="text-secondary">mean</dt>

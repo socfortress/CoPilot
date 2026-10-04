@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="segmented-toggle border-default bg-secondary inline-flex h-[22px] items-stretch rounded-md border p-px"
+		class="segmented-toggle border-default bg-secondary inline-flex h-5.5 items-stretch rounded-md border p-px"
 		role="radiogroup"
 		:aria-label="label"
 		:data-testid="testId"
@@ -14,7 +14,7 @@
 			role="radio"
 			:aria-checked="option.value === model"
 			:tabindex="option.value === model ? 0 : -1"
-			class="segment flex items-center rounded-[5px] px-2 font-mono text-[10px] leading-none tracking-wider uppercase transition-colors"
+			class="segment text-3xs flex cursor-pointer items-center rounded-[5px] px-2 font-mono leading-none tracking-wider uppercase transition-colors"
 			:class="{ 'is-active': option.value === model }"
 			:data-testid="testId ? `${testId}-${option.value}` : undefined"
 			@click="select(index)"
