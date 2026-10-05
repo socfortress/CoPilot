@@ -42,6 +42,9 @@ from app.incidents.schema.db_operations import AlertTagCreate  # noqa: E402
 from app.incidents.schema.db_operations import AlertTagDelete  # noqa: E402
 from app.incidents.schema.db_operations import AssetCreate  # noqa: E402
 from app.incidents.schema.db_operations import CaseAlertLinksCreate  # noqa: E402
+from tests.sla_recorder_stub import (  # noqa: E402,F401 — autouse: no SLA writes from these routes
+    no_sla_recorder,
+)
 
 ANALYST = SimpleNamespace(id=7, username="analyst", role_id=2)
 

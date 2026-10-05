@@ -29,6 +29,9 @@ os.environ.setdefault("JWT_SECRET", "test-only-secret-not-the-compromised-defaul
 import app.incidents.routes.db_operations as routes  # noqa: E402
 from app.incidents.schema.db_operations import BulkAssignedToAlert  # noqa: E402
 from app.incidents.schema.db_operations import BulkUpdateAlertStatus  # noqa: E402
+from tests.sla_recorder_stub import (  # noqa: E402,F401 — autouse: no SLA writes from these routes
+    no_sla_recorder,
+)
 
 ANALYST = SimpleNamespace(id=7, username="analyst", role_id=2)
 
