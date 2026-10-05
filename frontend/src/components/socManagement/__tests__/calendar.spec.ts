@@ -167,6 +167,29 @@ describe("weekScheduleEditor", () => {
 		expect(wrapper.get("[data-testid=calendar-day-wed]").text()).toContain("Windows overlap")
 	})
 
+	it("draws each window as its own block on the strip, labelled when it is wide enough", async () => {
+		const { wrapper, week } = editor()
+		// A lunch break: two windows that meet, plus a one-hour evening shift.
+		week.value = {
+			...week.value,
+			mon: [
+				["08:00", "12:00"],
+				["13:00", "19:00"],
+				["19:00", "20:00"]
+			]
+		}
+		await wrapper.vm.$nextTick()
+		const blocks = wrapper.findAll("[data-testid^=calendar-window-mon-]")
+		expect(blocks.map(block => block.attributes("title"))).toEqual(["08:00–12:00", "13:00–19:00", "19:00–20:00"])
+		// Full times on a wide window, short ones on a 4-hour one, nothing on a sliver.
+		expect(blocks.map(block => block.text())).toEqual(["08–12", "13:00–19:00", ""])
+		expect(blocks[0].attributes("style")).toContain("left: 33.3333")
+		// A closed day draws no block at all, and every day keeps its hour ticks.
+		expect(wrapper.findAll("[data-testid^=calendar-window-sat-]")).toHaveLength(0)
+		expect(wrapper.get("[data-testid=calendar-day-sat]").findAll(".tick")).toHaveLength(23)
+		expect(wrapper.get("[data-testid=calendar-day-sat]").findAll(".tick.is-major")).toHaveLength(3)
+	})
+
 	it("is read-only for analysts", () => {
 		const { wrapper } = editor(true)
 		expect(wrapper.find("[data-testid=calendar-add-mon]").exists()).toBe(false)

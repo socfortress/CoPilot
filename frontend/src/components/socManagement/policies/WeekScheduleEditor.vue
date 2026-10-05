@@ -34,19 +34,24 @@
 				<span class="text-sm">{{ WEEKDAY_LABEL[day].slice(0, 3) }}</span>
 			</div>
 
-			<div class="day-strip bg-secondary relative h-5 overflow-hidden rounded-sm" :title="stripTitle(day)">
+			<div class="day-strip bg-secondary relative h-6 overflow-hidden rounded-sm" :title="stripTitle(day)">
 				<span
-					v-for="hour of [6, 12, 18]"
+					v-for="hour of HOUR_TICKS"
 					:key="hour"
-					class="tick absolute inset-y-0"
+					class="tick absolute"
+					:class="hour % 6 === 0 ? 'is-major inset-y-0' : 'inset-y-1.5'"
 					:style="{ left: `${(hour / 24) * 100}%` }"
 				/>
 				<span
 					v-for="(window, index) of week[day]"
 					:key="index"
-					class="window absolute inset-y-1 rounded-xs"
+					class="window absolute inset-y-0.5 flex items-center justify-center overflow-hidden"
 					:style="spanStyle(window)"
-				/>
+					:title="`${window[0]}–${window[1]}`"
+					:data-testid="`calendar-window-${day}-${index}`"
+				>
+					<span class="window-label">{{ windowLabel(window) }}</span>
+				</span>
 			</div>
 
 			<div class="flex min-w-0 flex-wrap items-center gap-2">
@@ -125,6 +130,8 @@ const { readonly = false } = defineProps<{ readonly?: boolean }>()
 const week = defineModel<Record<Weekday, WorkingWindow[]>>({ required: true })
 
 const SCALE = [0, 6, 12, 18, 24]
+/** A faint tick every hour on the strip, a stronger one every six. */
+const HOUR_TICKS = Array.from({ length: 23 }, (_, i) => i + 1)
 
 function setDay(day: Weekday, windows: WorkingWindow[]) {
 	week.value = { ...week.value, [day]: windows }
@@ -160,6 +167,16 @@ function spanStyle(window: WorkingWindow) {
 	return span ? { left: `${span.left}%`, width: `${span.width}%` } : { display: "none" }
 }
 
+/** "09–12" on a window wide enough to carry it, the full times on a wide one, nothing on a sliver. */
+function windowLabel(window: WorkingWindow) {
+	const span = windowSpan(window)
+	if (!span) return ""
+	const hours = (span.width / 100) * 24
+	if (hours >= 6) return `${window[0]}–${window[1]}`
+	if (hours >= 3) return `${window[0].replace(/:00$/, "")}–${window[1].replace(/:00$/, "")}`
+	return ""
+}
+
 function stripTitle(day: Weekday) {
 	const windows = week.value[day]
 	return windows.length ? windows.map(([start, end]) => `${start}–${end}`).join(", ") : "Closed"
@@ -176,11 +193,37 @@ function stripTitle(day: Weekday) {
 .day-strip .tick {
 	width: 1px;
 	background-color: var(--border-color);
+	opacity: 0.45;
 }
 
+.day-strip .tick.is-major {
+	opacity: 1;
+}
+
+/* Each working window is a solid block cut out of the track by a ring of the track's own
+   colour, so two windows that meet (a lunch break) still read as two. */
 .day-strip .window {
-	background: linear-gradient(90deg, rgb(var(--primary-color-rgb) / 0.55), rgb(var(--primary-color-rgb) / 0.85));
-	box-shadow: 0 0 8px rgb(var(--primary-color-rgb) / 0.35);
+	background-color: var(--primary-color);
+	border-radius: 3px;
+	box-shadow:
+		0 0 0 1px var(--bg-secondary-color),
+		inset 0 1px 0 rgb(255 255 255 / 0.28);
+	transition: filter 0.15s;
+}
+
+.day-strip .window:hover {
+	filter: brightness(1.12);
+}
+
+.day-strip .window-label {
+	padding: 0 4px;
+	font-family: var(--font-family-mono);
+	font-size: 10px;
+	font-weight: 600;
+	line-height: 1;
+	white-space: nowrap;
+	/* Dark ink on the brand yellow, in both themes. */
+	color: rgb(0 0 0 / 0.78);
 }
 
 .is-closed .day-strip {
