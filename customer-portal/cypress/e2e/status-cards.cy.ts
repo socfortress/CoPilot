@@ -19,7 +19,7 @@ describe("status cards", () => {
 
 	function expectCards(counts: PortalSeed["alerts"]["a"]) {
 		for (const key of ["total", "open", "in_progress", "pending_customer", "closed"] as const) {
-			cy.get(`[data-testid=stat-${key}] [data-testid=card-stats-value]`).should("have.text", String(counts[key]))
+			cy.get(`[data-testid=stat-${key}] [data-testid=stat-value]`).should("have.text", String(counts[key]))
 		}
 	}
 

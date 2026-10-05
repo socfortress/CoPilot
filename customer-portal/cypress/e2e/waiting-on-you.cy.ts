@@ -36,7 +36,7 @@ describe("waiting on you", () => {
 			cy.visit(`/${list}`)
 			cy.wait("@stats")
 			const expected = seed[list].a.pending_customer
-			cy.get("[data-testid=stat-pending_customer] [data-testid=card-stats-value]").should("have.text", String(expected))
+			cy.get("[data-testid=stat-pending_customer] [data-testid=stat-value]").should("have.text", String(expected))
 
 			filterOnWaiting(list)
 			cy.wait("@waiting")

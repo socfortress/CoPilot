@@ -18,8 +18,8 @@ export interface PostureCellModel {
 }
 
 // Same colours as the alert and case lists (getStatusColor), so a colour means the
-// same thing on every page.
-function workflowSegments(counts: StatusCounts): StatusSegment[] {
+// same thing on every page. Also drives the status strip above the alert and case lists.
+export function workflowSegments(counts: StatusCounts): StatusSegment[] {
 	return [
 		{ key: "open", label: "open", value: counts.open, color: "info" },
 		{ key: "in_progress", label: "in progress", value: counts.in_progress, color: "warning" },
