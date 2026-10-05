@@ -14,18 +14,22 @@
 
 		<n-spin v-if="!availabilityLoaded" class="min-h-40" show />
 
-		<n-empty v-else-if="!available" description="SOCFortress UBA is not connected" class="py-10">
-			<template #extra>
-				<p class="text-secondary max-w-md text-sm">
-					Configure the
-					<b>SOCFortress UBA</b>
-					connector under
-					<b>Platform → Connectors</b>
-					with the UBA API's URL and an API key (`uba-admin api-keys create --name copilot --scope write`), then
-					verify it.
-				</p>
-			</template>
-		</n-empty>
+		<div v-else-if="!available" class="flex flex-col gap-4">
+			<n-empty description="SOCFortress UBA is not connected" class="py-6">
+				<template #extra>
+					<p class="text-secondary max-w-md text-sm">
+						{{
+							isAdmin
+								? "Deploy UBA and connect it with the steps below."
+								: "An admin can deploy SOCFortress UBA and connect it under Platform → Connectors."
+						}}
+					</p>
+				</template>
+			</n-empty>
+			<n-card v-if="isAdmin" size="small" title="Deploy SOCFortress UBA">
+				<UbaDeployGuide />
+			</n-card>
+		</div>
 
 		<template v-else-if="customerModel">
 			<UbaError v-if="statusError" :error="statusError" />
@@ -57,8 +61,30 @@
 					<template #label>{{ feedLabel(feed.source) }}</template>
 					<template #value>{{ feed.status === "ok" ? formatLag(feed.lag_p50_s) : feed.status }}</template>
 				</Badge>
+				<Badge
+					v-if="status.agents"
+					type="splitted"
+					size="small"
+					:color="status.agents.not_reporting ? 'warning' : undefined"
+					:title="agentsTitle(status.agents)"
+				>
+					<template #label>computers</template>
+					<template #value>{{ status.agents.reporting }}/{{ status.agents.total - status.agents.retired }} reporting</template>
+				</Badge>
 				<span v-if="version" class="text-tertiary text-xs">UBA {{ version }}</span>
+				<n-button v-if="isAdmin && !needsSetup" text size="tiny" class="text-xs" @click="showSetup = !showSetup">
+					Setup
+				</n-button>
 			</header>
+			<!-- Not set up yet (no status row), or still learning from history: setup and progress. -->
+			<UbaSetup
+				v-if="needsSetup || showSetup"
+				:key="`setup${customerModel}`"
+				:customer-code="customerModel"
+				:closable="!needsSetup"
+				@live="onLive"
+				@close="showSetup = false"
+			/>
 			<n-alert v-if="unhealthyFeeds.length" type="warning" :bordered="false">
 				<p v-for="feed of unhealthyFeeds" :key="feed.source">
 					<b>{{ feedLabel(feed.source) }}</b>
@@ -68,9 +94,13 @@
 					UBA's findings for this source may be missing or late until the feed recovers.
 				</p>
 			</n-alert>
-			<n-alert v-else-if="statusLoaded" type="info" :bordered="false">
-				SOCFortress UBA has no data for this customer yet (or the API key isn't allowed to see it).
+			<n-alert v-if="status?.agents?.not_reporting" type="warning" :bordered="false">
+				{{ status.agents.not_reporting }} {{ status.agents.not_reporting === 1 ? "computer has" : "computers have" }}
+				stopped reporting: {{ silentText(status.agents) }}. UBA sees nothing from
+				{{ status.agents.not_reporting === 1 ? "it" : "them" }} until the Wazuh agent checks in again.
 			</n-alert>
+
+			<UbaAbout :key="`about${customerModel}`" :customer-code="customerModel" />
 
 			<n-tabs v-model:value="tabModel" type="line" animated>
 				<n-tab-pane name="entities" tab="Entities" display-directive="show:lazy">
@@ -89,6 +119,9 @@
 				</n-tab-pane>
 				<n-tab-pane name="rules" tab="Rules" display-directive="show:lazy">
 					<UbaRules :key="`r${customerModel}`" :customer-code="customerModel" />
+				</n-tab-pane>
+				<n-tab-pane name="directory" tab="Directory" display-directive="show:lazy">
+					<UbaDirectory :key="`d${customerModel}`" :customer-code="customerModel" />
 				</n-tab-pane>
 			</n-tabs>
 
@@ -118,8 +151,8 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { UbaFeedStatus, UbaTenantStatus } from "@/types/uba"
-import { NAlert, NDrawer, NDrawerContent, NEmpty, NFormItem, NSelect, NSpin, NTabPane, NTabs } from "naive-ui"
+import type { UbaAgentsSummary, UbaFeedStatus, UbaTenantStatus } from "@/types/uba"
+import { NAlert, NButton, NCard, NDrawer, NDrawerContent, NEmpty, NFormItem, NSelect, NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
@@ -127,19 +160,27 @@ import Badge from "@/components/common/Badge.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { useRouteQueryParam } from "@/composables/useNavigation"
 import { useUbaAvailability } from "@/composables/useUbaAvailability"
+import { useAuthStore } from "@/stores/auth"
+import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils/format"
+import UbaAbout from "./UbaAbout.vue"
 import UbaAlertDetail from "./UbaAlertDetail.vue"
 import UbaAlerts from "./UbaAlerts.vue"
+import UbaDeployGuide from "./UbaDeployGuide.vue"
+import UbaDirectory from "./UbaDirectory.vue"
 import UbaEntities from "./UbaEntities.vue"
 import UbaEntityDetail from "./UbaEntityDetail.vue"
 import UbaError from "./UbaError.vue"
 import UbaRules from "./UbaRules.vue"
+import UbaSetup from "./UbaSetup.vue"
 import UbaSuppressions from "./UbaSuppressions.vue"
-import { formatLag } from "./utils"
+import { agentsSummaryTitle, formatLag, silentComputers } from "./utils"
 
-const TABS = ["entities", "alerts", "suppressions", "rules"] as const
+const TABS = ["entities", "alerts", "suppressions", "rules", "directory"] as const
 
 const route = useRoute()
 const router = useRouter()
+const dFormats = useSettingsStore().dateFormat
 const { available, loaded: availabilityLoaded } = useUbaAvailability()
 const { getAvailableGlobalCustomerValue, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 
@@ -149,6 +190,9 @@ const version = ref("")
 const statusLoaded = ref(false)
 const statusError = ref<ApiError | null>(null)
 const refreshKey = ref(0)
+// Admins reopen setup for a live customer, e.g. to add Microsoft 365 provisioned after UBA.
+const showSetup = ref(false)
+const isAdmin = computed(() => useAuthStore().isAdmin)
 
 // Customer, tab and the open entity/alert live in the URL so a view can be linked and survives a
 // reload. Picker changes replace; opening a drawer pushes (browser back closes it).
@@ -162,9 +206,24 @@ function setQuery(patch: Record<string, string | undefined>) {
 }
 
 const customerCodes = computed(() => customers.value.map(c => c.code))
+// No status row: UBA does not know the customer. A row that is not live: registered, history replaying.
+const needsSetup = computed(
+	() =>
+		statusLoaded.value &&
+		!statusError.value &&
+		(!status.value || (!!status.value.onboarding && status.value.onboarding !== "live"))
+)
 const unhealthyFeeds = computed(() => (status.value?.feeds ?? []).filter(feed => feed.status !== "ok"))
 
 const FEED_LABELS: Record<string, string> = { office365: "Microsoft 365", wazuh: "Wazuh" }
+
+function silentText(agents: UbaAgentsSummary) {
+	return silentComputers(agents, t => String(formatDate(t, dFormats.datetime)))
+}
+
+function agentsTitle(agents: UbaAgentsSummary) {
+	return agentsSummaryTitle(agents)
+}
 
 function feedLabel(source: string) {
 	return FEED_LABELS[source] ?? source
@@ -205,6 +264,11 @@ function openAlert(alertId: string) {
 
 function closeDrawer() {
 	setQuery({ entity: undefined, alert: undefined })
+}
+
+function onLive() {
+	// Just went live (refresh the header); when reopened by an admin, the card stays open.
+	if (!showSetup.value && customerModel.value) loadStatus(customerModel.value)
 }
 
 function loadStatus(code: string) {
@@ -249,6 +313,7 @@ onGlobalCustomerFilterChange(codes => {
 watch(
 	customerModel,
 	code => {
+		showSetup.value = false
 		if (code && available.value) loadStatus(code)
 	},
 	{ immediate: true }

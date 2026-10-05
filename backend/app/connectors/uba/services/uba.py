@@ -8,10 +8,14 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 
+from app.connectors.uba.schema.uba import UbaAlertThresholdRequest
 from app.connectors.uba.schema.uba import UbaAvailabilityResponse
+from app.connectors.uba.schema.uba import UbaBacktestRequest
 from app.connectors.uba.schema.uba import UbaCustomerStatusResponse
 from app.connectors.uba.schema.uba import UbaFeedbackRequest
+from app.connectors.uba.schema.uba import UbaIdentityMergeRequest
 from app.connectors.uba.schema.uba import UbaResponse
+from app.connectors.uba.schema.uba import UbaRuleSettingRequest
 from app.connectors.uba.schema.uba import UbaScoreRequest
 from app.connectors.uba.schema.uba import UbaSuppressionRequest
 from app.connectors.uba.schema.uba import UbaTenantStatus
@@ -63,12 +67,20 @@ async def get_entity(customer_code: str, entity_key: str) -> UbaResponse:
     return await _get(f"{_tenant(customer_code)}/entities/{path_segment(entity_key)}")
 
 
+async def get_entity_risk_history(customer_code: str, entity_key: str, **params: Any) -> UbaResponse:
+    return await _get(f"{_tenant(customer_code)}/entities/{path_segment(entity_key)}/risk-history", params)
+
+
 async def get_entity_timeline(customer_code: str, entity_key: str, **params: Any) -> UbaResponse:
     return await _get(f"{_tenant(customer_code)}/entities/{path_segment(entity_key)}/timeline", params)
 
 
 async def list_signals(customer_code: str, **params: Any) -> UbaResponse:
     return await _get(f"{_tenant(customer_code)}/signals", params)
+
+
+async def get_signal_evidence(customer_code: str, signal_id: str) -> UbaResponse:
+    return await _get(f"{_tenant(customer_code)}/signals/{path_segment(signal_id)}/evidence")
 
 
 async def list_alerts(customer_code: str, **params: Any) -> UbaResponse:
@@ -97,6 +109,50 @@ async def remove_suppressions(customer_code: str, entity_key: str, rule_id: Opti
     return UbaResponse(**await uba_request("DELETE", f"{_tenant(customer_code)}/suppressions", params=params, actor=actor))
 
 
+async def list_identity_sources(customer_code: str) -> UbaResponse:
+    return await _get(f"{_tenant(customer_code)}/identity-sources")
+
+
+async def test_identity_source(customer_code: str, source_id: str, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/identity-sources/{path_segment(source_id)}/test"
+    return UbaResponse(**await uba_request("POST", path, actor=actor))
+
+
+async def sync_identity_source(customer_code: str, source_id: str, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/identity-sources/{path_segment(source_id)}/sync"
+    return UbaResponse(**await uba_request("POST", path, actor=actor))
+
+
+async def get_about() -> UbaResponse:
+    """UBA in plain words: the risk policy's numbers and every rule by category (not per tenant)."""
+    body = await uba_request("GET", "/v1/about")
+    return UbaResponse(**body) if isinstance(body, dict) else UbaResponse()
+
+
+async def list_rule_catalog() -> UbaResponse:
+    """UBA's rules (id, name, detector, score, MITRE); not per tenant, so the caller's route checks access."""
+    rules = await uba_request("GET", "/v1/rules")
+    return UbaResponse(rules=rules if isinstance(rules, list) else [])
+
+
+async def create_backtest(customer_code: str, body: UbaBacktestRequest, actor: str) -> UbaResponse:
+    payload = body.model_dump(exclude_none=True)
+    return UbaResponse(**await uba_request("POST", f"{_tenant(customer_code)}/backtests", json=payload, actor=actor))
+
+
+async def list_backtests(customer_code: str, limit: int) -> UbaResponse:
+    return await _get(f"{_tenant(customer_code)}/backtests", {"limit": limit})
+
+
+async def get_backtest(customer_code: str, job_id: str) -> UbaResponse:
+    return await _get(f"{_tenant(customer_code)}/backtests/{path_segment(job_id)}")
+
+
+async def cancel_backtest(customer_code: str, job_id: str, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/backtests/{path_segment(job_id)}/cancel"
+    return UbaResponse(**await uba_request("POST", path, actor=actor))
+
+
 async def get_rule_stats(customer_code: str, since: str) -> UbaResponse:
     return await _get(f"{_tenant(customer_code)}/rules/stats", {"since": since})
 
@@ -113,3 +169,48 @@ async def set_native_override(customer_code: str, rule_id: str, body: UbaScoreRe
 async def delete_native_override(customer_code: str, rule_id: str, integration: str, actor: str) -> UbaResponse:
     path = f"{_tenant(customer_code)}/native-overrides/{path_segment(rule_id)}"
     return UbaResponse(**await uba_request("DELETE", path, params={"integration": integration}, actor=actor))
+
+
+async def get_rule_settings(customer_code: str) -> UbaResponse:
+    return await _get(f"{_tenant(customer_code)}/rule-settings")
+
+
+async def set_rule_setting(customer_code: str, rule_id: str, body: UbaRuleSettingRequest, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/rule-settings/{path_segment(rule_id)}"
+    return UbaResponse(**await uba_request("PUT", path, json=body.model_dump(exclude_unset=True), actor=actor))
+
+
+async def reset_rule_setting(customer_code: str, rule_id: str, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/rule-settings/{path_segment(rule_id)}"
+    return UbaResponse(**await uba_request("DELETE", path, actor=actor))
+
+
+async def set_alert_threshold(customer_code: str, body: UbaAlertThresholdRequest, actor: str) -> UbaResponse:
+    return UbaResponse(**await uba_request("PUT", f"{_tenant(customer_code)}/risk-policy", json=body.model_dump(), actor=actor))
+
+
+async def reset_alert_threshold(customer_code: str, actor: str) -> UbaResponse:
+    return UbaResponse(**await uba_request("DELETE", f"{_tenant(customer_code)}/risk-policy", actor=actor))
+
+
+async def get_identity_review(customer_code: str, include_reviewed: bool) -> UbaResponse:
+    return await _get(f"{_tenant(customer_code)}/identities/review", {"include_reviewed": include_reviewed})
+
+
+async def search_identities(customer_code: str, q: str) -> UbaResponse:
+    return await _get(f"{_tenant(customer_code)}/identities", {"q": q})
+
+
+async def merge_identity(customer_code: str, identity_id: str, body: UbaIdentityMergeRequest, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/identities/{path_segment(identity_id)}/merge"
+    return UbaResponse(**await uba_request("POST", path, json=body.model_dump(), actor=actor))
+
+
+async def mark_identity_reviewed(customer_code: str, identity_id: str, reviewed: bool, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/identities/{path_segment(identity_id)}/reviewed"
+    return UbaResponse(**await uba_request("POST", path, params={"reviewed": reviewed}, actor=actor))
+
+
+async def dismiss_merge_candidate(customer_code: str, candidate_id: int, actor: str) -> UbaResponse:
+    path = f"{_tenant(customer_code)}/identity-candidates/{candidate_id}/dismiss"
+    return UbaResponse(**await uba_request("POST", path, actor=actor))

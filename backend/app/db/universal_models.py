@@ -113,6 +113,9 @@ class Agents(SQLModel, table=True):
     customer_code: Optional[str] = Field(foreign_key="customers.customer_code", max_length=256)
     quarantined: bool = Field(default=False)
     velociraptor_org: Optional[str] = Field(max_length=256)
+    # Set when an analyst enters the id by hand: the sync then resolves the agent by this
+    # client id only and never re-matches it by hostname (#1195).
+    velociraptor_id_pinned: bool = Field(default=False)
 
     customer: Optional[Customers] = Relationship(back_populates="agents")
     vulnerabilities: Optional[list["AgentVulnerabilities"]] = Relationship(back_populates="agent")

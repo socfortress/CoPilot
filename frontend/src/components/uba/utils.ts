@@ -1,4 +1,4 @@
-import type { UbaFailureReason } from "@/types/uba"
+import type { UbaAgentsSummary, UbaFailureReason, UbaIdentitySummary } from "@/types/uba"
 
 /** What to do about an upstream failure (the proxy returns a `reason`, never a 401/403). */
 export function reasonHint(reason: UbaFailureReason | string | null | undefined): string | null {
@@ -56,3 +56,66 @@ export const FALSE_POSITIVE_REASONS = [
 	{ label: "Rule too sensitive", value: "RULE_TOO_SENSITIVE" },
 	{ label: "Other", value: "OTHER" }
 ]
+
+/** Where an identity attribute or membership came from, in words. */
+export const IDENTITY_SOURCE_LABELS: Record<string, string> = {
+	entra: "Entra ID (directory sync)",
+	entra_audit: "Entra audit log",
+	windows_audit: "Windows security log",
+	manual: "set manually",
+	ldap: "Active Directory (LDAP)",
+	observed: "seen in events"
+}
+
+export function identitySourceLabel(source: string | null | undefined): string {
+	if (!source) return "unknown source"
+	return IDENTITY_SOURCE_LABELS[source] ?? source
+}
+
+/**
+ * A privileged reason as stored by UBA (``<source>:<role|group>:<name>`` or ``observed:privileged_hint``)
+ * in words: what the identity holds and how UBA knows.
+ */
+export function privilegedReasonLabel(reason: string): { what: string; how: string } {
+	if (reason === "observed:privileged_hint") return { what: "Acted with admin rights", how: "seen in events" }
+	const [source, kind, ...rest] = reason.split(":")
+	const name = rest.join(":")
+	if (!name) return { what: reason, how: "" }
+	const holds = kind === "role" ? "role" : "group"
+	const where = source.startsWith("windows") ? "Windows" : source.startsWith("entra") ? "Entra" : ""
+	const how = source === "entra" ? "directory sync" : source.endsWith("_audit") ? "seen granted in the audit log" : identitySourceLabel(source)
+	return { what: name, how: `${[where, holds].filter(Boolean).join(" ")}, ${how}` }
+}
+
+/** "WS02 (since <time>), DC01 and 3 more": the computers not reporting, for the page's warning. */
+export function silentComputers(agents: UbaAgentsSummary, formatTime: (iso: string) => string): string {
+	const names = agents.not_reporting_hosts.map(h =>
+		h.last_keepalive ? `${h.name} (since ${formatTime(h.last_keepalive)})` : h.name
+	)
+	const more = agents.not_reporting - names.length
+	return names.join(", ") + (more > 0 ? ` and ${more} more` : "")
+}
+
+/** Tooltip of the "computers" badge. Retired agents (silent over 30 days) are not counted. */
+export function agentsSummaryTitle(agents: UbaAgentsSummary): string {
+	const lines = [`${agents.reporting} of ${agents.total - agents.retired} computers with a Wazuh agent are reporting`]
+	if (agents.retired) lines.push(`${agents.retired} silent for over 30 days (not counted)`)
+	if (agents.never_connected) lines.push(`${agents.never_connected} enrolled but never connected`)
+	return lines.join("\n")
+}
+
+/** An identity's name: its display name, else its strongest alias without the type. */
+export function identityLabel(i: UbaIdentitySummary): string {
+	if (i.display_name) return i.display_name
+	const alias = i.aliases[0]
+	return alias ? alias.slice(alias.indexOf(":") + 1) : i.id
+}
+
+/** "human · admin · 3 findings in 14 days · upn:jdoe@…, sid:S-1-5-…" */
+export function identityDetails(i: UbaIdentitySummary): string {
+	const parts = [i.kind && i.kind !== "unknown" ? i.kind : null, i.privileged ? "admin" : null]
+	parts.push(`${i.findings} finding${i.findings === 1 ? "" : "s"} in 14 days`)
+	const aliases = i.aliases.slice(0, 2).join(", ")
+	if (aliases) parts.push(aliases)
+	return parts.filter(Boolean).join(" · ")
+}

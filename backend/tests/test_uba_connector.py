@@ -95,6 +95,29 @@ def test_none_params_are_dropped_and_actor_is_sent_on_writes():
     assert json.loads(req.content)["verdict"] == "FALSE_POSITIVE"
 
 
+def test_backtests_send_only_given_params_and_the_catalog_list_is_wrapped():
+    from app.connectors.uba.schema.uba import UbaBacktestRequest
+
+    rec = Recorder(
+        (202, {"success": True, "message": "ok", "backtest": {"id": "b1", "status": "queued"}}),
+        (200, [{"id": "auth.new_country", "name": "New country"}]),
+    )
+    created = _run(services.create_backtest("lab", UbaBacktestRequest(days=2, rules=["auth.new_country"]), "analyst1"), rec)
+    req = rec.requests[0]
+    assert req.method == "POST" and req.url.path == "/v1/tenants/lab/backtests" and req.headers["x-uba-actor"] == "analyst1"
+    assert json.loads(req.content) == {"days": 2.0, "warmup_days": 0.0, "rules": ["auth.new_country"]}
+    assert created.backtest["status"] == "queued"
+    catalog = _run(services.list_rule_catalog(), rec)
+    assert rec.requests[1].url.path == "/v1/rules" and catalog.rules[0]["id"] == "auth.new_country"
+
+
+def test_about_passes_ubas_explanation_through():
+    rec = Recorder((200, {"policy": {"alert_threshold": 100}, "rule_count": 1, "categories": [{"id": "auth", "rules": []}]}))
+    about = _run(services.get_about(), rec)
+    assert rec.requests[0].url.path == "/v1/about"
+    assert about.success and about.policy["alert_threshold"] == 100 and about.rule_count == 1
+
+
 @pytest.mark.parametrize(
     "status,body,reason,code",
     [
@@ -181,9 +204,79 @@ def test_native_override_writes_are_admin_only():
     assert writes and all(r.dependencies == routes._ADMIN for r in writes)
 
 
+def test_identity_source_actions_are_admin_only_and_reads_are_not():
+    from app.connectors.uba.routes import uba as routes
+
+    by_path = {(r.path, tuple(r.methods)): r for r in routes.uba_router.routes}
+    actions = [r for (path, _), r in by_path.items() if path.startswith("/{customer_code}/identity-sources/{source_id}/")]
+    assert {r.path.rsplit("/", 1)[1] for r in actions} == {"test", "sync"}
+    assert all(r.dependencies == routes._ADMIN for r in actions)
+    assert by_path[("/{customer_code}/identity-sources", ("GET",))].dependencies == routes._READ
+
+
 def test_route_errors_carry_reason_not_auth_status():
     from app.connectors.uba.routes.uba import _error
 
     response = _error(UbaRequestError("key_rejected", "UBA rejected the API key"))
     assert response.status_code == 502
     assert json.loads(response.body) == {"detail": "UBA rejected the API key", "reason": "key_rejected", "success": False}
+
+
+def test_rule_setting_changes_are_admin_only_and_reading_them_is_not():
+    from app.connectors.uba.routes import uba as routes
+
+    by_path = {(r.path, tuple(sorted(r.methods))): r for r in routes.uba_router.routes}
+    assert by_path[("/{customer_code}/rule-settings", ("GET",))].dependencies == routes._READ
+    for path, method in (
+        ("/{customer_code}/rule-settings/{rule_id}", "PUT"),
+        ("/{customer_code}/rule-settings/{rule_id}", "DELETE"),
+        ("/{customer_code}/risk-policy", "PUT"),
+        ("/{customer_code}/risk-policy", "DELETE"),
+    ):
+        assert by_path[(path, (method,))].dependencies == routes._ADMIN, (path, method)
+
+
+def test_a_rule_setting_sends_only_what_was_set_and_names_the_admin():
+    from app.connectors.uba.schema.uba import UbaAlertThresholdRequest
+    from app.connectors.uba.schema.uba import UbaRuleSettingRequest
+
+    settings = {"success": True, "message": "the worker applies it within a minute", "rules": [], "alert_threshold": {}}
+    rec = Recorder((200, settings), (200, settings), (200, settings))
+    out = _run(services.set_rule_setting("lab", "auth.new_country", UbaRuleSettingRequest(enabled=False), "admin1"), rec)
+    req = rec.requests[0]
+    assert req.method == "PUT" and req.url.path == "/v1/tenants/lab/rule-settings/auth.new_country"
+    assert json.loads(req.content) == {"enabled": False} and req.headers["x-uba-actor"] == "admin1"
+    assert out.message == "the worker applies it within a minute"
+    _run(services.set_alert_threshold("lab", UbaAlertThresholdRequest(alert_threshold=150), "admin1"), rec)
+    assert rec.requests[1].url.path == "/v1/tenants/lab/risk-policy" and json.loads(rec.requests[1].content) == {"alert_threshold": 150.0}
+    _run(services.reset_rule_setting("lab", "auth.new_country", "admin1"), rec)
+    assert rec.requests[2].method == "DELETE"
+    # An explicit null (back to built-in for that field) is sent; fields not given are not.
+    rec = Recorder((200, settings))
+    _run(services.set_rule_setting("lab", "auth.new_country", UbaRuleSettingRequest(score=None), "admin1"), rec)
+    assert json.loads(rec.requests[0].content) == {"score": None}
+
+
+def test_identity_review_reads_are_open_and_decisions_are_admin_only():
+    from app.connectors.uba.routes import uba as routes
+
+    by_path = {(r.path, tuple(sorted(r.methods))): r for r in routes.uba_router.routes}
+    assert by_path[("/{customer_code}/identities/review", ("GET",))].dependencies == routes._READ
+    assert by_path[("/{customer_code}/identities", ("GET",))].dependencies == routes._READ
+    for path in (
+        "/{customer_code}/identities/merge",
+        "/{customer_code}/identities/reviewed",
+        "/{customer_code}/identity-candidates/{candidate_id}/dismiss",
+    ):
+        assert by_path[(path, ("POST",))].dependencies == routes._ADMIN, path
+
+
+def test_a_merge_names_the_identity_encoded_and_the_admin():
+    from app.connectors.uba.schema.uba import UbaIdentityMergeRequest
+
+    rec = Recorder((202, {"success": True, "message": "ok", "id": "m1", "status": "queued"}))
+    out = _run(services.merge_identity("lab", "a/b", UbaIdentityMergeRequest(into="b1"), "admin1"), rec)
+    req = rec.requests[0]
+    assert req.method == "POST" and req.url.raw_path.decode() == "/v1/tenants/lab/identities/a%2Fb/merge"
+    assert json.loads(req.content) == {"into": "b1"} and req.headers["x-uba-actor"] == "admin1"
+    assert out.status == "queued"

@@ -49,6 +49,9 @@ const { routeCustomer } = useNavigation()
 const propsSanitized = computed(() => {
 	const obj = []
 	for (const key in agent.value) {
+		// Shown as the pin badge inside the velociraptor_id card.
+		if (key === "velociraptor_id_pinned") continue
+
 		if (["wazuh_last_seen", "velociraptor_last_seen"].includes(key)) {
 			obj.push({ key, val: formatDate(Reflect.get(agent.value, key), dFormats.datetime) || "-" })
 		} else {

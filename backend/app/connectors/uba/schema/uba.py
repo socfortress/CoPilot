@@ -49,8 +49,30 @@ class UbaSuppressionRequest(BaseModel):
     reason: Optional[str] = Field(None, max_length=500)
 
 
+class UbaBacktestRequest(BaseModel):
+    days: float = Field(1, gt=0, le=7, description="History replayed and scored (UBA allows up to 7 days)")
+    warmup_days: float = Field(0, ge=0, le=14, description="Replayed first with alerting off, so baselines exist")
+    rules: Optional[List[str]] = Field(None, description="Only these UBA rules; default all")
+    filter: Optional[str] = Field(None, max_length=1000, description="query_string ANDed to every source's query")
+
+
 class UbaScoreRequest(BaseModel):
     score: float = Field(..., ge=0, le=100, description="Native alerts never lower risk: 0 turns the rule's risk off")
+
+
+class UbaIdentityMergeRequest(BaseModel):
+    into: str = Field(..., min_length=1, max_length=64, description="the identity that remains")
+
+
+class UbaRuleSettingRequest(BaseModel):
+    """Only the fields sent change; null puts one back to UBA's built-in value."""
+
+    enabled: Optional[bool] = Field(None, description="false: the rule's findings are dropped for this customer")
+    score: Optional[float] = Field(None, ge=0, le=100, description="points per finding (0: recorded, no risk)")
+
+
+class UbaAlertThresholdRequest(BaseModel):
+    alert_threshold: float = Field(..., ge=20, le=1000, description="accumulated risk that raises an alert")
 
 
 class UbaTenantStatus(BaseModel):
@@ -62,6 +84,7 @@ class UbaTenantStatus(BaseModel):
     alerts_24h: int = 0
     open_alerts: int = 0
     signals_24h: int = 0
+    onboarding: Optional[str] = None  # inactive, pending, bootstrapping, error, live
 
 
 class UbaCustomerStatusResponse(BaseModel):

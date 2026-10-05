@@ -1,13 +1,30 @@
 import type { FlaskBaseResponse } from "@/types/flask"
 import type {
+	UbaAbout,
 	UbaAlert,
 	UbaAlertUpdate,
 	UbaAvailability,
+	UbaBacktest,
+	UbaBacktestPayload,
 	UbaEntitiesQuery,
 	UbaEntityDetail,
 	UbaEntitySummary,
+	UbaEvidence,
 	UbaFeedbackPayload,
+	UbaIdentityMerge,
+	UbaIdentityReview,
+	UbaIdentitySource,
+	UbaIdentitySummary,
+	UbaOnboarding,
 	UbaPage,
+	UbaProvisioning,
+	UbaProvisionPayload,
+	UbaProvisionStep,
+	UbaRiskHistory,
+	UbaRiskStep,
+	UbaRuleInfo,
+	UbaRuleSettingPayload,
+	UbaRuleSettings,
 	UbaRuleStat,
 	UbaSignal,
 	UbaSuppression,
@@ -40,6 +57,12 @@ export default {
 	getEntity(customerCode: string, entityKey: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & UbaEntityDetail>(`${base(customerCode)}/entity`, {
 			params: { entity_key: entityKey },
+			signal
+		})
+	},
+	getEntityRiskHistory(customerCode: string, entityKey: string, since: string, step: UbaRiskStep, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & UbaRiskHistory>(`${base(customerCode)}/entity/risk-history`, {
+			params: { entity_key: entityKey, since, step },
 			signal
 		})
 	},
@@ -81,6 +104,125 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse & { removed: number }>(`${base(customerCode)}/suppressions`, {
 			params: { entity_key: entityKey, rule_id: ruleId ?? undefined }
 		})
+	},
+	getSignalEvidence(customerCode: string, signalId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & UbaEvidence>(
+			`${base(customerCode)}/signals/${encodeURIComponent(signalId)}/evidence`,
+			{ signal }
+		)
+	},
+	getIdentitySources(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { identity_sources: UbaIdentitySource[] }>(
+			`${base(customerCode)}/identity-sources`,
+			{ signal }
+		)
+	},
+	testIdentitySource(customerCode: string, sourceId: string) {
+		return HttpClient.post<FlaskBaseResponse & { ok: boolean; detail: string }>(
+			`${base(customerCode)}/identity-sources/${encodeURIComponent(sourceId)}/test`
+		)
+	},
+	syncIdentitySource(customerCode: string, sourceId: string) {
+		return HttpClient.post<FlaskBaseResponse & { ok: boolean; detail: string }>(
+			`${base(customerCode)}/identity-sources/${encodeURIComponent(sourceId)}/sync`
+		)
+	},
+	getAbout(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & UbaAbout>(`${base(customerCode)}/about`, { signal })
+	},
+	getRuleCatalog(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { rules: UbaRuleInfo[] }>(`${base(customerCode)}/rules/catalog`, {
+			signal
+		})
+	},
+	createBacktest(customerCode: string, payload: UbaBacktestPayload) {
+		return HttpClient.post<FlaskBaseResponse & { backtest: UbaBacktest }>(`${base(customerCode)}/backtests`, payload)
+	},
+	getBacktests(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { backtests: UbaBacktest[] }>(`${base(customerCode)}/backtests`, {
+			signal
+		})
+	},
+	getBacktest(customerCode: string, jobId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { backtest: UbaBacktest }>(
+			`${base(customerCode)}/backtests/${encodeURIComponent(jobId)}`,
+			{ signal }
+		)
+	},
+	cancelBacktest(customerCode: string, jobId: string) {
+		return HttpClient.post<FlaskBaseResponse & { backtest: UbaBacktest }>(
+			`${base(customerCode)}/backtests/${encodeURIComponent(jobId)}/cancel`
+		)
+	},
+	/** Admin: whether UBA is set up for the customer, its onboarding progress, the streams it would use. */
+	getProvisioning(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & UbaProvisioning>(`${base(customerCode)}/provisioning`, { signal })
+	},
+	/** Admin: register the customer with UBA and create its Graylog routing (safe to run again). */
+	provision(customerCode: string, payload: UbaProvisionPayload) {
+		return HttpClient.post<FlaskBaseResponse & { steps: UbaProvisionStep[]; onboarding: UbaOnboarding | null }>(
+			`${base(customerCode)}/provision`,
+			payload
+		)
+	},
+	/** Every UBA rule as it applies to the customer, and its alert threshold. */
+	getRuleSettings(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & UbaRuleSettings>(`${base(customerCode)}/rule-settings`, { signal })
+	},
+	/** Admin: change one rule for the customer (only the fields sent change). */
+	setRuleSetting(customerCode: string, ruleId: string, payload: UbaRuleSettingPayload) {
+		return HttpClient.put<FlaskBaseResponse & UbaRuleSettings>(
+			`${base(customerCode)}/rule-settings/${encodeURIComponent(ruleId)}`,
+			payload
+		)
+	},
+	/** Admin: back to the built-in setting of one rule for the customer. */
+	resetRuleSetting(customerCode: string, ruleId: string) {
+		return HttpClient.delete<FlaskBaseResponse & UbaRuleSettings>(
+			`${base(customerCode)}/rule-settings/${encodeURIComponent(ruleId)}`
+		)
+	},
+	/** Admin: the customer's alert threshold. */
+	setAlertThreshold(customerCode: string, alertThreshold: number) {
+		return HttpClient.put<FlaskBaseResponse & UbaRuleSettings>(`${base(customerCode)}/risk-policy`, {
+			alert_threshold: alertThreshold
+		})
+	},
+	/** Admin: back to UBA's built-in alert threshold for the customer. */
+	resetAlertThreshold(customerCode: string) {
+		return HttpClient.delete<FlaskBaseResponse & UbaRuleSettings>(`${base(customerCode)}/risk-policy`)
+	},
+	/** Identity review: merge candidates, unmatched accounts with recent findings, recent merges. */
+	getIdentityReview(customerCode: string, includeReviewed = false, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & UbaIdentityReview>(`${base(customerCode)}/identities/review`, {
+			params: { include_reviewed: includeReviewed },
+			signal
+		})
+	},
+	/** Identities by name or alias: merge targets, directory users first. */
+	searchIdentities(customerCode: string, q: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { identities: UbaIdentitySummary[] }>(`${base(customerCode)}/identities`, {
+			params: { q },
+			signal
+		})
+	},
+	/** Admin: merge one identity into another (queued; cannot be undone). */
+	mergeIdentity(customerCode: string, identityId: string, into: string) {
+		return HttpClient.post<FlaskBaseResponse & UbaIdentityMerge>(
+			`${base(customerCode)}/identities/merge`,
+			{ into },
+			{ params: { identity_id: identityId } }
+		)
+	},
+	/** Admin: keep an unmatched account as it is (it leaves the review), or put it back. */
+	markIdentityReviewed(customerCode: string, identityId: string, reviewed = true) {
+		return HttpClient.post<FlaskBaseResponse>(`${base(customerCode)}/identities/reviewed`, undefined, {
+			params: { identity_id: identityId, reviewed }
+		})
+	},
+	/** Admin: not the same person; the pair is not suggested again. */
+	dismissMergeCandidate(customerCode: string, candidateId: number) {
+		return HttpClient.post<FlaskBaseResponse>(`${base(customerCode)}/identity-candidates/${candidateId}/dismiss`)
 	},
 	getRuleStats(customerCode: string, since = "24h", signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { since: string; rules: UbaRuleStat[] }>(`${base(customerCode)}/rules/stats`, {

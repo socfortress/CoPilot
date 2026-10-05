@@ -1,5 +1,8 @@
 <template>
 	<div class="flex flex-col gap-3">
+		<UbaRuleSettings :customer-code class="mb-4" />
+
+		<span :class="SECTION_LABEL">What each rule found</span>
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<n-radio-group v-model:value="since" size="small">
 				<n-radio-button value="24h">24 h</n-radio-button>
@@ -20,6 +23,8 @@
 			size="small"
 			:scroll-x="800"
 		/>
+
+		<UbaBacktests :customer-code class="mt-4" />
 	</div>
 </template>
 
@@ -30,9 +35,12 @@ import type { UbaRuleStat } from "@/types/uba"
 import { NCheckbox, NDataTable, NRadioButton, NRadioGroup, NTag } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import { SECTION_LABEL } from "@/components/common/section-label"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
+import UbaBacktests from "./UbaBacktests.vue"
 import UbaError from "./UbaError.vue"
+import UbaRuleSettings from "./UbaRuleSettings.vue"
 
 const { customerCode } = defineProps<{ customerCode: string }>()
 

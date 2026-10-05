@@ -4,7 +4,8 @@ SOCFortress UBA routes: ``/api/uba``.
 Every route but ``/availability`` names its tenant in the path and carries
 ``verify_customer_code_access``. Reads are admin/analyst; suppressions and
 verdicts are analyst actions; native rule scores (tuning risk for a whole
-customer) are admin only. The caller's username goes to UBA as ``X-UBA-Actor``.
+customer) and identity source test/sync (a customer's directory credentials) are
+admin only. The caller's username goes to UBA as ``X-UBA-Actor``.
 
 Upstream failures come back as ``{"detail", "reason", "success": false}`` with 502
 (or 404 / 409 / 422), never 401/403, which the frontend reads as the analyst's own
@@ -22,17 +23,27 @@ from fastapi import Depends
 from fastapi import Query
 from fastapi import Security
 from fastapi.responses import JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.connectors.uba.schema.provision import UbaProvisionRequest
+from app.connectors.uba.schema.provision import UbaProvisionResponse
+from app.connectors.uba.schema.provision import UbaProvisionStatusResponse
+from app.connectors.uba.schema.uba import UbaAlertThresholdRequest
 from app.connectors.uba.schema.uba import UbaAvailabilityResponse
+from app.connectors.uba.schema.uba import UbaBacktestRequest
 from app.connectors.uba.schema.uba import UbaCustomerStatusResponse
 from app.connectors.uba.schema.uba import UbaFeedbackRequest
+from app.connectors.uba.schema.uba import UbaIdentityMergeRequest
 from app.connectors.uba.schema.uba import UbaResponse
+from app.connectors.uba.schema.uba import UbaRuleSettingRequest
 from app.connectors.uba.schema.uba import UbaScoreRequest
 from app.connectors.uba.schema.uba import UbaSuppressionRequest
+from app.connectors.uba.services import provision as provisioning
 from app.connectors.uba.services import uba as svc
 from app.connectors.uba.utils.universal import UbaRequestError
+from app.db.db_session import get_db
 from app.middleware.customer_access import verify_customer_code_access
 
 uba_router = APIRouter()
@@ -108,6 +119,21 @@ async def list_entities(
 )
 async def get_entity(customer_code: str, entity_key: str = Query(..., min_length=1, max_length=512)):
     return await _call(svc.get_entity(customer_code, entity_key))
+
+
+@uba_router.get(
+    "/{customer_code}/entity/risk-history",
+    response_model=UbaResponse,
+    description="The entity's risk over time, its native part, and the findings and alerts that moved it",
+    dependencies=_READ,
+)
+async def get_entity_risk_history(
+    customer_code: str,
+    entity_key: str = Query(..., min_length=1, max_length=512),
+    since: Optional[str] = Query(None, description="ISO time or duration (default 14d, at most 30d)"),
+    step: str = Query("1h", pattern="^(15m|1h|6h|1d)$"),
+):
+    return await _call(svc.get_entity_risk_history(customer_code, entity_key, since=since, step=step))
 
 
 @uba_router.get(
@@ -218,6 +244,171 @@ async def remove_suppressions(
 
 
 @uba_router.get(
+    "/{customer_code}/signals/{signal_id}/evidence",
+    response_model=UbaResponse,
+    description="The source events behind a UBA finding, fetched by UBA from the indexer",
+    dependencies=_READ,
+)
+async def get_signal_evidence(customer_code: str, signal_id: str):
+    return await _call(svc.get_signal_evidence(customer_code, signal_id))
+
+
+@uba_router.get(
+    "/{customer_code}/identities/review",
+    response_model=UbaResponse,
+    description="Identity review: merge candidates from directory syncs, unmatched accounts with recent findings, recent merges",
+    dependencies=_READ,
+)
+async def get_identity_review(customer_code: str, include_reviewed: bool = False):
+    return await _call(svc.get_identity_review(customer_code, include_reviewed))
+
+
+@uba_router.get(
+    "/{customer_code}/identities",
+    response_model=UbaResponse,
+    description="Identities by name or alias (merge targets), directory users first",
+    dependencies=_READ,
+)
+async def search_identities(customer_code: str, q: str = Query(..., min_length=2, max_length=200)):
+    return await _call(svc.search_identities(customer_code, q))
+
+
+@uba_router.post(
+    "/{customer_code}/identities/merge",
+    response_model=UbaResponse,
+    description="Merge one identity into another (admin; cannot be undone). Body: identity_id, into",
+    dependencies=_ADMIN,
+)
+async def merge_identity(
+    customer_code: str,
+    body: UbaIdentityMergeRequest,
+    identity_id: str = Query(..., min_length=1, max_length=64),
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.merge_identity(customer_code, identity_id, body, current_user.username))
+
+
+@uba_router.post(
+    "/{customer_code}/identities/reviewed",
+    response_model=UbaResponse,
+    description="Mark an unmatched account reviewed (kept as it is), or put it back with reviewed=false (admin)",
+    dependencies=_ADMIN,
+)
+async def mark_identity_reviewed(
+    customer_code: str,
+    identity_id: str = Query(..., min_length=1, max_length=64),
+    reviewed: bool = True,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.mark_identity_reviewed(customer_code, identity_id, reviewed, current_user.username))
+
+
+@uba_router.post(
+    "/{customer_code}/identity-candidates/{candidate_id}/dismiss",
+    response_model=UbaResponse,
+    description="Not the same person: the pair is not suggested again (admin)",
+    dependencies=_ADMIN,
+)
+async def dismiss_merge_candidate(
+    customer_code: str,
+    candidate_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.dismiss_merge_candidate(customer_code, candidate_id, current_user.username))
+
+
+@uba_router.get(
+    "/{customer_code}/identity-sources",
+    response_model=UbaResponse,
+    description="Directory syncs (Entra ID) of this customer and how their last run went; never the secret",
+    dependencies=_READ,
+)
+async def list_identity_sources(customer_code: str):
+    return await _call(svc.list_identity_sources(customer_code))
+
+
+@uba_router.post(
+    "/{customer_code}/identity-sources/{source_id}/test",
+    response_model=UbaResponse,
+    description="Sign in to the directory and check each permission; the result names a missing one",
+    dependencies=_ADMIN,
+)
+async def test_identity_source(
+    customer_code: str,
+    source_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.test_identity_source(customer_code, source_id, current_user.username))
+
+
+@uba_router.post(
+    "/{customer_code}/identity-sources/{source_id}/sync",
+    response_model=UbaResponse,
+    description="Queue a directory sync; UBA's worker runs it within about a minute",
+    dependencies=_ADMIN,
+)
+async def sync_identity_source(
+    customer_code: str,
+    source_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.sync_identity_source(customer_code, source_id, current_user.username))
+
+
+@uba_router.get(
+    "/{customer_code}/about",
+    response_model=UbaResponse,
+    description="What UBA is, how its risk adds up and what each rule means, for people new to it",
+    dependencies=_READ,
+)
+async def get_about(customer_code: str):
+    return await _call(svc.get_about())
+
+
+@uba_router.get(
+    "/{customer_code}/rules/catalog",
+    response_model=UbaResponse,
+    description="UBA's rules (id, name, detector, score, MITRE); the customer code only checks access",
+    dependencies=_READ,
+)
+async def list_rule_catalog(customer_code: str):
+    return await _call(svc.list_rule_catalog())
+
+
+@uba_router.post(
+    "/{customer_code}/backtests",
+    response_model=UbaResponse,
+    description="Queue a backtest: what UBA's rules would have found over recent history (nothing is alerted)",
+    dependencies=_READ,
+)
+async def create_backtest(
+    customer_code: str,
+    body: UbaBacktestRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.create_backtest(customer_code, body, current_user.username))
+
+
+@uba_router.get("/{customer_code}/backtests", response_model=UbaResponse, dependencies=_READ)
+async def list_backtests(customer_code: str, limit: int = Query(20, ge=1, le=100)):
+    return await _call(svc.list_backtests(customer_code, limit))
+
+
+@uba_router.get("/{customer_code}/backtests/{job_id}", response_model=UbaResponse, dependencies=_READ)
+async def get_backtest(customer_code: str, job_id: str):
+    return await _call(svc.get_backtest(customer_code, job_id))
+
+
+@uba_router.post("/{customer_code}/backtests/{job_id}/cancel", response_model=UbaResponse, dependencies=_READ)
+async def cancel_backtest(
+    customer_code: str,
+    job_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.cancel_backtest(customer_code, job_id, current_user.username))
+
+
+@uba_router.get(
     "/{customer_code}/rules/stats",
     response_model=UbaResponse,
     description="What each UBA rule found for this customer",
@@ -225,6 +416,65 @@ async def remove_suppressions(
 )
 async def get_rule_stats(customer_code: str, since: str = Query("24h", description="ISO time or duration")):
     return await _call(svc.get_rule_stats(customer_code, since))
+
+
+@uba_router.get(
+    "/{customer_code}/rule-settings",
+    response_model=UbaResponse,
+    description="Every UBA rule as it applies to this customer (on or off, points) and its alert threshold, with who changed them",
+    dependencies=_READ,
+)
+async def get_rule_settings(customer_code: str):
+    return await _call(svc.get_rule_settings(customer_code))
+
+
+@uba_router.put(
+    "/{customer_code}/rule-settings/{rule_id}",
+    response_model=UbaResponse,
+    description="Turn a UBA rule off or on, or give it other points, for this customer (admin)",
+    dependencies=_ADMIN,
+)
+async def set_rule_setting(
+    customer_code: str,
+    rule_id: str,
+    body: UbaRuleSettingRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.set_rule_setting(customer_code, rule_id, body, current_user.username))
+
+
+@uba_router.delete(
+    "/{customer_code}/rule-settings/{rule_id}",
+    response_model=UbaResponse,
+    description="Back to the built-in setting of a UBA rule for this customer (admin)",
+    dependencies=_ADMIN,
+)
+async def reset_rule_setting(customer_code: str, rule_id: str, current_user: User = Depends(AuthHandler().get_current_user)):
+    return await _call(svc.reset_rule_setting(customer_code, rule_id, current_user.username))
+
+
+@uba_router.put(
+    "/{customer_code}/risk-policy",
+    response_model=UbaResponse,
+    description="This customer's UBA alert threshold (admin)",
+    dependencies=_ADMIN,
+)
+async def set_alert_threshold(
+    customer_code: str,
+    body: UbaAlertThresholdRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    return await _call(svc.set_alert_threshold(customer_code, body, current_user.username))
+
+
+@uba_router.delete(
+    "/{customer_code}/risk-policy",
+    response_model=UbaResponse,
+    description="Back to UBA's built-in alert threshold for this customer (admin)",
+    dependencies=_ADMIN,
+)
+async def reset_alert_threshold(customer_code: str, current_user: User = Depends(AuthHandler().get_current_user)):
+    return await _call(svc.reset_alert_threshold(customer_code, current_user.username))
 
 
 @uba_router.get(
@@ -256,3 +506,27 @@ async def delete_native_override(
     current_user: User = Depends(AuthHandler().get_current_user),
 ):
     return await _call(svc.delete_native_override(customer_code, rule_id, integration, current_user.username))
+
+
+@uba_router.get(
+    "/{customer_code}/provisioning",
+    response_model=UbaProvisionStatusResponse,
+    description="Whether UBA is set up for this customer, its onboarding progress, and the streams provisioning would use",
+    dependencies=_ADMIN,
+)
+async def get_provisioning(customer_code: str, session: AsyncSession = Depends(get_db)):
+    return await _call(provisioning.get_provisioning_status(customer_code, session))
+
+
+@uba_router.post(
+    "/{customer_code}/provision",
+    response_model=UbaProvisionResponse,
+    description=(
+        "Set UBA up for this customer: register it with UBA (history replay, then live), create the Graylog "
+        "UBA FEED streams, routing pipelines and output next to its Wazuh and Office365 streams, and the UBA "
+        "ALERTS input and stream. Optionally deploys UBA's Wazuh rules and restarts the manager. Safe to run again."
+    ),
+    dependencies=_ADMIN,
+)
+async def provision(customer_code: str, request: UbaProvisionRequest, session: AsyncSession = Depends(get_db)):
+    return await _call(provisioning.provision_uba(customer_code, request, session))
