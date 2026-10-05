@@ -1,6 +1,12 @@
 <template>
 	<n-spin :show="loading">
-		<WorkflowStatusStrip :counts="stats" entity="Alerts" :icon="ICONS.alerts" />
+		<StatusStrip
+			:total="stats.total"
+			entity="Alerts"
+			:icon="ICONS.alerts"
+			:cells="workflowSegments(stats)"
+			lift="pending_customer"
+		/>
 	</n-spin>
 </template>
 
@@ -10,7 +16,8 @@ import type { AlertsStats } from "@/types/portal"
 import { NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
-import WorkflowStatusStrip from "@/components/common/WorkflowStatusStrip.vue"
+import StatusStrip from "@/components/common/StatusStrip.vue"
+import { workflowSegments } from "@/components/overview/posture/postureCells"
 import { ICONS } from "@/const"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { getApiErrorMessage } from "@/utils"

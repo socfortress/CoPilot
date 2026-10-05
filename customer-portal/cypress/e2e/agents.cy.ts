@@ -39,7 +39,7 @@ describe("agents list", () => {
 			offline: seed.agents_a.offline
 		}
 		for (const [key, value] of Object.entries(cards)) {
-			cy.get(`[data-testid=stat-${key}] [data-testid=card-stats-value]`).should("have.text", String(value))
+			cy.get(`[data-testid=stat-${key}] [data-testid=stat-value]`).should("have.text", String(value))
 		}
 	})
 
@@ -63,7 +63,7 @@ describe("agents list", () => {
 		cy.get(".n-base-select-option:visible").contains(/disconnected/i).click()
 		cy.wait("@page").its("request.url").should("include", "status=disconnected")
 		cy.get("[data-testid=agents-table] tbody tr").should("have.length", 1)
-		cy.get("[data-testid=stat-total] [data-testid=card-stats-value]").should("have.text", String(seed.agents_a.total))
+		cy.get("[data-testid=stat-total] [data-testid=stat-value]").should("have.text", String(seed.agents_a.total))
 	})
 
 	it("exports every filtered agent as CSV from the server", () => {

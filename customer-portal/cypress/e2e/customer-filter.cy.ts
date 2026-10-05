@@ -31,9 +31,8 @@ describe("global customer filter", () => {
 		cy.get("body").type("{esc}")
 	}
 
-	/** Alerts and cases show a status strip (`stat-value`); agents still use stat cards. */
-	function expectCard(key: string, value: number, valueTestId = "stat-value") {
-		cy.get(`[data-testid=stat-${key}] [data-testid=${valueTestId}]`).should("have.text", String(value))
+	function expectCard(key: string, value: number) {
+		cy.get(`[data-testid=stat-${key}] [data-testid=stat-value]`).should("have.text", String(value))
 	}
 
 	it("alerts: the cards and the list reload once for the picked customer", () => {
@@ -84,7 +83,7 @@ describe("global customer filter", () => {
 
 		pickCustomer(seed.customers.b)
 		cy.wait("@page").its("request.url").should("include", `customer_codes=${seed.customers.b}`)
-		expectCard("total", 1, "card-stats-value")
+		expectCard("total", 1)
 
 		cy.wait(800)
 		cy.get("@page.all").should("have.length", 2)
