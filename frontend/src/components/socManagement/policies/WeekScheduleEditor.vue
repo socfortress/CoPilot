@@ -54,54 +54,72 @@
 				</span>
 			</div>
 
-			<div class="flex min-w-0 flex-wrap items-center gap-2">
+			<div class="flex min-w-0 flex-col items-start gap-1.5">
 				<span v-if="!week[day].length" class="text-tertiary text-xs">Closed</span>
-				<div v-for="(window, index) of week[day]" :key="index" class="window-edit flex items-center gap-1">
-					<n-time-picker
-						:formatted-value="window[0]"
-						value-format="HH:mm"
-						format="HH:mm"
-						size="small"
-						:minutes="15"
-						:disabled="readonly"
-						:actions="null"
-						class="time-input"
-						:aria-label="`${WEEKDAY_LABEL[day]} window ${index + 1} start`"
-						@update:formatted-value="value => setTime(day, index, 0, value)"
-					/>
-					<span class="text-tertiary text-xs">–</span>
-					<n-time-picker
-						:formatted-value="window[1]"
-						value-format="HH:mm"
-						format="HH:mm"
-						size="small"
-						:minutes="15"
-						:disabled="readonly"
-						:actions="null"
-						class="time-input"
-						:aria-label="`${WEEKDAY_LABEL[day]} window ${index + 1} end`"
-						@update:formatted-value="value => setTime(day, index, 1, value)"
-					/>
-					<n-button
-						v-if="!readonly && week[day].length > 1"
-						quaternary
-						size="tiny"
-						:aria-label="`Remove ${WEEKDAY_LABEL[day]} window ${index + 1}`"
-						@click="removeWindow(day, index)"
-					>
-						<template #icon><Icon name="carbon:close" :size="12" /></template>
-					</n-button>
-				</div>
-				<n-button
-					v-if="!readonly && week[day].length"
-					quaternary
-					size="tiny"
-					:aria-label="`Add a ${WEEKDAY_LABEL[day]} window`"
-					:data-testid="`calendar-add-${day}`"
-					@click="addWindow(day)"
+				<div
+					v-for="(window, index) of week[day]"
+					:key="index"
+					class="flex items-center gap-2"
+					:data-testid="`calendar-range-${day}-${index}`"
 				>
-					<template #icon><Icon name="carbon:add" :size="14" /></template>
-				</n-button>
+					<!-- One working window: from → to, its remove control inside the same capsule. -->
+					<div class="time-range" :class="{ 'is-readonly': readonly }">
+						<n-time-picker
+							:formatted-value="window[0]"
+							value-format="HH:mm"
+							format="HH:mm"
+							size="small"
+							:bordered="false"
+							:show-icon="false"
+							:minutes="15"
+							:disabled="readonly"
+							:actions="null"
+							:theme-overrides="COMPACT_INPUT"
+							class="time-input"
+							:aria-label="`${WEEKDAY_LABEL[day]} window ${index + 1} start`"
+							@update:formatted-value="value => setTime(day, index, 0, value)"
+						/>
+						<Icon name="carbon:arrow-right" :size="12" class="text-tertiary shrink-0" />
+						<n-time-picker
+							:formatted-value="window[1]"
+							value-format="HH:mm"
+							format="HH:mm"
+							size="small"
+							:bordered="false"
+							:show-icon="false"
+							:minutes="15"
+							:disabled="readonly"
+							:actions="null"
+							:theme-overrides="COMPACT_INPUT"
+							class="time-input"
+							:aria-label="`${WEEKDAY_LABEL[day]} window ${index + 1} end`"
+							@update:formatted-value="value => setTime(day, index, 1, value)"
+						/>
+						<button
+							v-if="!readonly && week[day].length > 1"
+							type="button"
+							class="range-remove"
+							:aria-label="`Remove ${WEEKDAY_LABEL[day]} window ${index + 1}`"
+							:title="`Remove ${window[0]}–${window[1]}`"
+							:data-testid="`calendar-remove-${day}-${index}`"
+							@click="removeWindow(day, index)"
+						>
+							<Icon name="carbon:close" :size="12" />
+						</button>
+					</div>
+					<span class="text-tertiary font-mono text-[11px] tabular-nums">{{ windowDuration(window) }}</span>
+					<button
+						v-if="!readonly && index === week[day].length - 1"
+						type="button"
+						class="range-add"
+						:aria-label="`Add a ${WEEKDAY_LABEL[day]} window`"
+						:data-testid="`calendar-add-${day}`"
+						@click="addWindow(day)"
+					>
+						<Icon name="carbon:add" :size="12" />
+						Window
+					</button>
+				</div>
 				<span
 					v-if="dayError(week[day])"
 					class="inline-flex items-center gap-1 text-xs"
@@ -120,7 +138,7 @@
 // edited as times and shown as a 24-hour strip, so a lunch break or a late shift reads
 // at a glance. Several windows per day are allowed (a lunch break is two of them).
 import type { Weekday, WorkingWindow } from "@/types/soc-management"
-import { NButton, NSwitch, NTimePicker } from "naive-ui"
+import { NSwitch, NTimePicker } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import { TONE_COLOR } from "../utils"
 import { dayError, DEFAULT_WINDOW, nextWindow, WEEKDAY_LABEL, WEEKDAYS, windowSpan } from "./calendar"
@@ -130,6 +148,21 @@ const { readonly = false } = defineProps<{ readonly?: boolean }>()
 const week = defineModel<Record<Weekday, WorkingWindow[]>>({ required: true })
 
 const SCALE = [0, 6, 12, 18, 24]
+/** Time inputs sized to sit two to a capsule: shorter and smaller than Naive's "small". */
+const COMPACT_INPUT = {
+	peers: {
+		Input: {
+			heightSmall: "24px",
+			fontSizeSmall: "12px",
+			paddingSmall: "0 4px",
+			// The capsule is the field: the inputs inside it carry no fill of their own.
+			color: "transparent",
+			colorFocus: "transparent",
+			colorDisabled: "transparent"
+		}
+	}
+}
+
 /** A faint tick every hour on the strip, a stronger one every six. */
 const HOUR_TICKS = Array.from({ length: 23 }, (_, i) => i + 1)
 
@@ -175,6 +208,16 @@ function windowLabel(window: WorkingWindow) {
 	if (hours >= 6) return `${window[0]}–${window[1]}`
 	if (hours >= 3) return `${window[0].replace(/:00$/, "")}–${window[1].replace(/:00$/, "")}`
 	return ""
+}
+
+/** How long a window lasts: "8h", "1h 30m", "45m"; nothing for an invalid one. */
+function windowDuration(window: WorkingWindow) {
+	const span = windowSpan(window)
+	if (!span) return ""
+	const minutes = Math.round((span.width / 100) * 24 * 60)
+	const hours = Math.floor(minutes / 60)
+	const rest = minutes % 60
+	return hours ? (rest ? `${hours}h ${rest}m` : `${hours}h`) : `${rest}m`
 }
 
 function stripTitle(day: Weekday) {
@@ -230,8 +273,73 @@ function stripTitle(day: Weekday) {
 	opacity: 0.5;
 }
 
+/* A window's capsule: from → to, and its remove control behind a hairline. */
+.time-range {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	height: 28px;
+	padding: 0 2px 0 4px;
+	border: 1px solid var(--border-color);
+	border-radius: 6px;
+	background-color: var(--bg-secondary-color);
+	transition: border-color 0.15s;
+}
+
+.time-range:focus-within {
+	border-color: var(--primary-color);
+}
+
+.time-range.is-readonly {
+	padding-right: 4px;
+}
+
 .time-input {
-	width: 82px;
+	width: 50px;
+}
+
+.time-input :deep(.n-input__input-el) {
+	text-align: center;
+	font-family: var(--font-family-mono);
+	font-variant-numeric: tabular-nums;
+}
+
+.range-remove {
+	display: grid;
+	place-items: center;
+	width: 22px;
+	height: 22px;
+	margin-left: 2px;
+	border-left: 1px solid var(--border-color);
+	color: var(--fg-tertiary-color);
+	transition: color 0.15s;
+}
+
+.range-remove:hover,
+.range-remove:focus-visible {
+	color: var(--error-color);
+}
+
+/* Adding is a different act from removing: outside the capsule, dashed, worded. */
+.range-add {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	height: 24px;
+	padding: 0 8px;
+	border: 1px dashed var(--border-color);
+	border-radius: 6px;
+	font-size: 12px;
+	color: var(--fg-secondary-color);
+	transition:
+		color 0.15s,
+		border-color 0.15s;
+}
+
+.range-add:hover,
+.range-add:focus-visible {
+	border-color: var(--primary-color);
+	color: var(--primary-color);
 }
 
 @media (max-width: 900px) {

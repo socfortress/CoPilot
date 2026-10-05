@@ -190,6 +190,34 @@ describe("weekScheduleEditor", () => {
 		expect(wrapper.get("[data-testid=calendar-day-sat]").findAll(".tick.is-major")).toHaveLength(3)
 	})
 
+	it("gives each window one capsule, its remove control inside it and adding apart, with its length", async () => {
+		const { wrapper, week } = editor()
+		week.value = {
+			...week.value,
+			mon: [
+				["08:00", "12:30"],
+				["13:00", "17:00"]
+			]
+		}
+		await wrapper.vm.$nextTick()
+		const first = wrapper.get("[data-testid=calendar-range-mon-0]")
+		const capsule = first.get(".time-range")
+		expect(capsule.findAll("input")).toHaveLength(2)
+		// Remove belongs to its window; add is outside every capsule, on the last line only.
+		expect(capsule.find("[data-testid=calendar-remove-mon-0]").exists()).toBe(true)
+		expect(capsule.find("[data-testid=calendar-add-mon]").exists()).toBe(false)
+		expect(first.find("[data-testid=calendar-add-mon]").exists()).toBe(false)
+		expect(wrapper.get("[data-testid=calendar-range-mon-1]").find("[data-testid=calendar-add-mon]").exists()).toBe(true)
+		expect(first.text()).toContain("4h 30m")
+		expect(wrapper.get("[data-testid=calendar-range-mon-1]").text()).toContain("4h")
+
+		await wrapper.get("[data-testid=calendar-remove-mon-0]").trigger("click")
+		expect(week.value.mon).toEqual([["13:00", "17:00"]])
+		// A day's last window cannot be removed (close the day instead).
+		await wrapper.vm.$nextTick()
+		expect(wrapper.find("[data-testid=calendar-remove-mon-0]").exists()).toBe(false)
+	})
+
 	it("is read-only for analysts", () => {
 		const { wrapper } = editor(true)
 		expect(wrapper.find("[data-testid=calendar-add-mon]").exists()).toBe(false)
