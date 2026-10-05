@@ -60,7 +60,7 @@
 						<span>Apply to items still open</span>
 						<n-tooltip style="max-width: 320px">
 							<template #trigger>
-								<Icon name="carbon:information" :size="14" class="text-tertiary" />
+								<Icon name="carbon:information" :size="14" class="text-tertiary cursor-help" />
 							</template>
 							Open items keep the targets they opened with unless you ask. Clocks already met or breached
 							never change.

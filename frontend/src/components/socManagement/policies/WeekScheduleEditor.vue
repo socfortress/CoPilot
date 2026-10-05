@@ -18,7 +18,7 @@
 		<div
 			v-for="day of WEEKDAYS"
 			:key="day"
-			class="day-row border-default grid items-center gap-x-3 border-t py-2"
+			class="day-row border-default grid min-h-11.5 items-center gap-x-3 border-t py-2"
 			:class="{ 'is-closed': !week[day].length }"
 			:data-testid="`calendar-day-${day}`"
 		>

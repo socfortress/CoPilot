@@ -30,7 +30,7 @@
 				{{ label(day) }}
 			</n-tag>
 		</div>
-		<span v-else class="text-tertiary text-xs">No holidays: every working day counts.</span>
+		<div v-else class="text-tertiary min-h-5.5 text-xs">No holidays: every working day counts.</div>
 	</div>
 </template>
 
