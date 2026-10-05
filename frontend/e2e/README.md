@@ -18,6 +18,7 @@ customer information"):
 | `admin-not-regressed.spec.ts` | The admin was not locked out — the failure mode a "deny everything" fix produces. |
 | `global-filter-disclaimer.spec.ts` | The Customers page tells you the sidebar filter does not apply to it — but only while a customer is selected — and the list really is unchanged by it. |
 | `portal-settings-patch.spec.ts` | #1188 — the Customer Portal settings editor saves with `PATCH`: renaming sends only the title (never the logo), clearing a field sends a `reset`, and saving without changes sends nothing. |
+| `soc-management.spec.ts` | #1187 — SOC Management & SLA: an assigned analyst sees one customer's figures and only their own analyst row (on screen and at the API), SLA overrides are an admin's to change and persist, an action through the incidents API stops an alert's clock on its page, a case's severity is set from its page, and the PDF report downloads. Seeds a month of history with `backend/tests/e2e/soc_management_seed.py` (needs the backend venv and DB env); its admin is `e2e_sla_admin` / `E2ePlaywr1ght!`. |
 
 ## Running them
 

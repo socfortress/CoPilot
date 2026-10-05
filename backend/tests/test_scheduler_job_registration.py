@@ -171,3 +171,13 @@ def test_refresh_job_is_a_coroutine_function():
     """`schedule_enabled_jobs` branches on this to add the job correctly."""
     function = scheduler_module.get_function_by_name("refresh_wazuh_rules_cache")
     assert asyncio.iscoroutinefunction(function)
+
+
+def test_the_sla_notifier_is_scheduled_every_two_minutes():
+    """#1187: SLA at-risk / breached notices. Slower and "at risk" arrives too late to act on."""
+    from app.soc_management.services.notifier import notify_sla_transitions
+
+    assert "notify_sla_transitions" in _known_job_ids()
+    assert _job_interval("notify_sla_transitions") == 2
+    assert scheduler_module.get_function_by_name("notify_sla_transitions") is notify_sla_transitions
+    assert inspect.iscoroutinefunction(notify_sla_transitions)

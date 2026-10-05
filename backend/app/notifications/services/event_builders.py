@@ -16,6 +16,7 @@ governed by the route's trigger filter rather than accidentally suppressed.
 from __future__ import annotations
 
 import os
+from datetime import datetime
 from typing import Any
 from typing import Optional
 
@@ -294,4 +295,58 @@ def case_task_assigned_event(
         customer_code=customer_code,
         summary=(f"Task '{title}' on case #{case_id} was assigned to {assignee}." if assignee else f"Task '{title}' was unassigned."),
         extra={"case_id": case_id},
+    )
+
+
+def sla_event(
+    *,
+    breached: bool,
+    entity_type: str,
+    entity_id: int,
+    title: Optional[str],
+    severity: Optional[str],
+    customer_code: Optional[str],
+    assignee: Optional[str],
+    clock: str,
+    due_at: datetime,
+    opened_at: datetime,
+    now: datetime,
+    status: Optional[str] = None,
+) -> NotificationEvent:
+    """An SLA clock of an alert or case turned at risk, or breached (#1187).
+
+    The dedupe key is per clock: an item can be at risk on its acknowledgement and,
+    hours later, on its resolution, and both are news. The scheduler's own stamps
+    already guarantee once-per-clock; the key keeps the dispatch log saying the same.
+
+    Carries the item's severity, so a route gated at High hears only about the clocks
+    that matter to it, and the assignee, so an ``assignee`` route reaches the analyst
+    whose item is running late.
+    """
+    trigger = NotificationTrigger.SLA_BREACHED if breached else NotificationTrigger.SLA_AT_RISK
+    what = "Case" if entity_type == EntityType.CASE else "Alert"
+    minutes = round(abs((now - due_at).total_seconds()) / 60)
+    timing = f"{minutes} min overdue" if breached else f"{minutes} min left"
+    path = f"/incident-management/cases/{entity_id}" if entity_type == EntityType.CASE else f"/incident-management/alerts/{entity_id}"
+    return NotificationEvent(
+        customer_code=customer_code or "",
+        trigger=trigger,
+        severity=_coerce_severity(severity),
+        subject=f"SLA {'breached' if breached else 'at risk'}: {what} #{entity_id}" + (f" — {title}" if title else ""),
+        summary=f"The {clock} target of {what.lower()} #{entity_id} {'was due' if breached else 'is due'} at {due_at:%Y-%m-%d %H:%M} UTC ({timing}).",
+        entity_type=entity_type,
+        entity_id=entity_id,
+        dedupe_key=f"{entity_type}:{entity_id}:{trigger.value}:{clock}",
+        link_url=_copilot_link(path),
+        assignee_username=assignee,
+        actor_username=None,
+        context={
+            "title": title,
+            "clock": clock,
+            "due_at": f"{due_at:%Y-%m-%d %H:%M}",
+            "opened_at": f"{opened_at:%Y-%m-%d %H:%M}",
+            "remaining_minutes": None if breached else minutes,
+            "overdue_minutes": minutes if breached else None,
+            "status": status,
+        },
     )

@@ -37,6 +37,8 @@ export interface IncidentCustomerReportGenerateRequest {
 	visible_to_customer?: boolean
 	brand_theme?: IncidentReportBrandTheme
 	report_template?: IncidentReportTemplate
+	/** Add the Service Level Performance section (#1187). Ignored for portal users. */
+	include_sla?: boolean
 }
 
 export interface IncidentCustomerReportGenerateBackgroundResponse {

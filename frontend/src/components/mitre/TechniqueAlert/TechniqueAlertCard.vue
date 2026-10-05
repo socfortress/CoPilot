@@ -42,6 +42,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="routeAlertsMitreTechnique(entity.technique_id)"
+					label="Open the technique's page"
+					@navigate="showDetails = false"
+				/>
+			</template>
 			<TechniqueAlertOverview :external-id="entity.technique_id" />
 		</n-modal>
 	</div>
@@ -54,6 +61,7 @@ import { ref } from "vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"

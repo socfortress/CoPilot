@@ -427,8 +427,31 @@ def sample_event(trigger: str, customer_code: Optional[str]) -> NotificationEven
                 {"value": "185.199.108.153", "type": "ip"},
                 {"value": "a1b2c3d4e5f6", "type": "hash"},
             ],
+            **(SLA_SAMPLE_CONTEXT.get(parsed.value) or {}),
         },
     )
+
+
+#: What an SLA event carries in ``context`` (``event_builders.sla_event``), so a template
+#: written against ``context.clock`` previews — and test-sends — as it will send for real.
+SLA_SAMPLE_CONTEXT = {
+    "sla_at_risk": {
+        "clock": "resolve",
+        "due_at": "2026-09-01 12:00",
+        "opened_at": "2026-09-01 04:00",
+        "remaining_minutes": 45,
+        "overdue_minutes": None,
+        "status": "IN_PROGRESS",
+    },
+    "sla_breached": {
+        "clock": "resolve",
+        "due_at": "2026-09-01 12:00",
+        "opened_at": "2026-09-01 04:00",
+        "remaining_minutes": None,
+        "overdue_minutes": 20,
+        "status": "IN_PROGRESS",
+    },
+}
 
 
 async def preview(payload: Any, session: AsyncSession) -> Dict[str, Any]:

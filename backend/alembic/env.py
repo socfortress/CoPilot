@@ -67,6 +67,10 @@ from app.network_connectors.models.network_connectors import (
     NetworkConnectorsSubscription,
 )
 from app.schedulers.models.scheduler import JobMetadata
+from app.soc_management.models.sla import AlertSlaTracking
+from app.soc_management.models.sla import CaseSlaTracking
+from app.soc_management.models.sla import SlaCalendar
+from app.soc_management.models.sla import SlaPolicy
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

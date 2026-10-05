@@ -127,6 +127,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="modalRuleId !== null ? routeDetectionCatalogWazuhRule(modalRuleId) : null"
+					label="Open the rule's page"
+					@navigate="modalRuleId = null"
+				/>
+			</template>
 			<WazuhRuleDetail v-if="modalRuleId !== null" :rule-id="modalRuleId" />
 		</n-modal>
 
@@ -167,6 +174,7 @@ import Badge from "@/components/common/Badge.vue"
 import Dot, { hitsToDotVariant } from "@/components/common/Dot.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter.ts"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"

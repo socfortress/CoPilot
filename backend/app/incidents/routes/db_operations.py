@@ -112,12 +112,16 @@ from app.incidents.schema.db_operations import SocfortressRecommendsWazuhRespons
 from app.incidents.schema.db_operations import SocfortressRecommendsWazuhTimeFieldName
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateAlertVerdict
+from app.incidents.schema.db_operations import UpdateCaseSeverity
 from app.incidents.schema.db_operations import UpdateCaseStatus
 from app.incidents.schema.db_operations import VerdictStatsResponse
 from app.incidents.schema.db_operations import VerdictTrendPoint
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
 from app.incidents.services.alert_severity import severity_of
+from app.incidents.services.customer_reply import ensure_customer_may_set_status
+from app.incidents.services.customer_reply import resume_alert_on_reply
+from app.incidents.services.customer_reply import resume_case_on_reply
 
 # from app.incidents.services.db_operations import list_alerts
 # from app.incidents.services.db_operations import alerts_open_multiple_filters
@@ -246,6 +250,7 @@ from app.incidents.services.db_operations import update_alert_verdict
 from app.incidents.services.db_operations import update_case_assigned_to
 from app.incidents.services.db_operations import update_case_customer_code
 from app.incidents.services.db_operations import update_case_escalated
+from app.incidents.services.db_operations import update_case_severity
 from app.incidents.services.db_operations import update_case_status
 from app.incidents.services.db_operations import upload_file_to_case
 from app.incidents.services.db_operations import upload_report_template
@@ -254,6 +259,7 @@ from app.incidents.services.db_operations import validate_source_exists
 from app.incidents.services.incident_case import handle_customer_notifications_case
 from app.incidents.services.notification_enrichment import extract_rule_level
 from app.incidents.services.notification_enrichment import severity_from_rule_level
+from app.incidents.services.status_cascade import cascade_for
 from app.incidents.services.verdict_stats import false_positive_trend
 from app.incidents.services.verdict_stats import false_positives_by_customer
 from app.incidents.services.verdict_stats import false_positives_by_reason
@@ -265,6 +271,9 @@ from app.middleware.customer_query import customer_codes_query
 from app.notifications.services.emit import emit
 from app.notifications.services.event_builders import alert_assigned_event
 from app.notifications.services.event_builders import case_assigned_event
+from app.soc_management.domain.lifecycle import Actor
+from app.soc_management.domain.lifecycle import LifecycleAction
+from app.soc_management.services.lifecycle import SlaLifecycleRecorder
 
 incidents_db_operations_router = APIRouter()
 
@@ -578,7 +587,10 @@ async def create_alert_endpoint(
     # against the caller's entitlements the way `/case/create` does -- otherwise a
     # scoped analyst can file an alert against any tenant (#1102).
     await _ensure_customer_access(alert.customer_code, current_user, db)
-    return await create_alert(alert, db)
+    created = await create_alert(alert, db)
+    # A SOC user filing an alert by hand has responded to it by definition (#1187).
+    await SlaLifecycleRecorder().alert_action(created.id, LifecycleAction.CREATED, Actor.from_user(current_user))
+    return created
 
 
 @incidents_db_operations_router.put(
@@ -591,10 +603,18 @@ async def update_alert_status_endpoint(
     current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    ensure_customer_may_set_status(current_user, alert_status.status)
     # Enforce per-object ownership: resolve the alert's customer and reject a
     # caller who is not entitled to it (GHSA-wjpw-xrg8-vmf9).
     await _ensure_alert_access(alert_status.alert_id, current_user, db)
-    return AlertResponse(alert=await update_alert_status(alert_status, db), success=True, message="Alert status updated successfully")
+    updated = await update_alert_status(alert_status, db)
+    await SlaLifecycleRecorder().alert_action(
+        alert_status.alert_id,
+        LifecycleAction.STATUS_CHANGED,
+        Actor.from_user(current_user),
+        to_status=alert_status.status.value,
+    )
+    return AlertResponse(alert=updated, success=True, message="Alert status updated successfully")
 
 
 @incidents_db_operations_router.put(
@@ -625,12 +645,20 @@ async def bulk_update_alert_status_endpoint(
 
     for alert_id in bulk_status.alert_ids:
         try:
+            ensure_customer_may_set_status(current_user, bulk_status.status)
             await _ensure_alert_access(alert_id, current_user, db)
             await update_alert_status(UpdateAlertStatus(alert_id=alert_id, status=bulk_status.status), db)
             updated_alert_ids.append(alert_id)
         except HTTPException as e:
             logger.info(f"Skipping alert {alert_id} in bulk status update: {e.detail}")
             not_updated_alert_ids.append(alert_id)
+
+    await SlaLifecycleRecorder().alerts_action(
+        updated_alert_ids,
+        LifecycleAction.STATUS_CHANGED,
+        Actor.from_user(current_user),
+        to_status=bulk_status.status.value,
+    )
 
     return BulkAlertUpdateResponse(
         message=f"Updated {len(updated_alert_ids)} alert(s) to {bulk_status.status.value}",
@@ -692,6 +720,7 @@ async def update_alert_verdict_endpoint(
         },
         request=request,
     )
+    await SlaLifecycleRecorder().alert_action(updated_alert.id, LifecycleAction.VERDICT_SET, Actor.from_user(current_user))
 
     return AlertResponse(alert=updated_alert, success=True, message="Alert verdict updated successfully")
 
@@ -719,6 +748,7 @@ async def update_alert_escalated_endpoint(
         raise HTTPException(status_code=403, detail=f"Access denied to alert {escalate_alert.alert_id} - insufficient customer permissions")
 
     updated_alert = await update_alert_escalated(escalate_alert.alert_id, escalate_alert.escalated, db)
+    await SlaLifecycleRecorder().alert_action(escalate_alert.alert_id, LifecycleAction.ESCALATED, Actor.from_user(current_user))
     return AlertResponse(alert=updated_alert, success=True, message="Alert escalated status updated successfully")
 
 
@@ -750,7 +780,13 @@ async def create_comment_endpoint(
         raise HTTPException(status_code=403, detail=f"Access denied to alert {comment.alert_id} - insufficient customer permissions")
 
     comment.user_name = current_user.username
-    return CommentResponse(comment=await create_comment(comment, db), success=True, message="Comment created successfully")
+    created = await create_comment(comment, db)
+    # Recorded here, never in create_comment: ingest also writes comments (signed "admin"),
+    # and only a person commenting through the API is a response (#1187).
+    await SlaLifecycleRecorder().alert_action(comment.alert_id, LifecycleAction.COMMENTED, Actor.from_user(current_user))
+    # A customer answering an alert the SOC waits on hands it back (and resumes its SLA).
+    await resume_alert_on_reply(comment.alert_id, current_user, db)
+    return CommentResponse(comment=created, success=True, message="Comment created successfully")
 
 
 @incidents_db_operations_router.put(
@@ -844,6 +880,8 @@ async def create_case_comment_endpoint(
         payload=payload_comment(comment_id=created.id, snippet=created.comment),
         commit=True,
     )
+    await SlaLifecycleRecorder().case_action(comment.case_id, LifecycleAction.COMMENTED, Actor.from_user(current_user))
+    await resume_case_on_reply(comment.case_id, current_user, db)
 
     return CaseCommentResponse(comment=created, success=True, message="Case comment created successfully")
 
@@ -955,6 +993,12 @@ async def update_assigned_to_endpoint(
     alert_severity = severity_of(existing_alert) if existing_alert else None
 
     updated = await update_alert_assigned_to(assigned_to.alert_id, assigned_to.assigned_to, db)
+    await SlaLifecycleRecorder().alert_action(
+        assigned_to.alert_id,
+        LifecycleAction.ASSIGNED,
+        Actor.from_user(current_user),
+        assignee=assigned_to.assigned_to,
+    )
 
     if previous_assignee != assigned_to.assigned_to:
         emit(
@@ -1047,6 +1091,13 @@ async def bulk_update_assigned_to_endpoint(
         except HTTPException as e:
             logger.info(f"Skipping alert {alert_id} in bulk assignment: {e.detail}")
             not_updated_alert_ids.append(alert_id)
+
+    await SlaLifecycleRecorder().alerts_action(
+        updated_alert_ids,
+        LifecycleAction.ASSIGNED,
+        Actor.from_user(current_user),
+        assignee=bulk_assigned_to.assigned_to,
+    )
 
     return BulkAlertUpdateResponse(
         message=f"Assigned {len(updated_alert_ids)} alert(s) to {bulk_assigned_to.assigned_to}",
@@ -1313,6 +1364,7 @@ async def create_case_endpoint(
         payload={"source": "manual", "template_id": template_id},
         commit=True,
     )
+    await SlaLifecycleRecorder().case_action(created.id, LifecycleAction.CREATED, Actor.from_user(current_user))
 
     return CaseResponse(case=created, success=True, message="Case created successfully")
 
@@ -1346,6 +1398,9 @@ async def create_case_alert_link_endpoint(
         payload=payload_alert_link(alert_id=case_alert_link.alert_id),
         commit=True,
     )
+    recorder = SlaLifecycleRecorder()
+    await recorder.alert_action(case_alert_link.alert_id, LifecycleAction.LINKED_TO_CASE, Actor.from_user(current_user))
+    await recorder.case_links_changed(case_alert_link.case_id)
 
     return CaseAlertLinkResponse(
         case_alert_link=link,
@@ -1391,6 +1446,9 @@ async def create_case_alert_links_endpoint(
         payload=payload_alert_links_bulk(alert_ids=case_alert_links.alert_ids),
         commit=True,
     )
+    recorder = SlaLifecycleRecorder()
+    await recorder.alerts_action(case_alert_links.alert_ids, LifecycleAction.LINKED_TO_CASE, Actor.from_user(current_user))
+    await recorder.case_links_changed(case_alert_links.case_id)
 
     return CaseAlertLinksResponse(
         case_alert_links=links,
@@ -1430,6 +1488,7 @@ async def case_alert_unlink_endpoint(
         ),
         commit=True,
     )
+    await SlaLifecycleRecorder().case_links_changed(case_alert_link.case_id)
 
     return response
 
@@ -1501,6 +1560,13 @@ async def create_case_from_alert_endpoint(
         payload=payload_alert_link(alert_id=alert_id.alert_id),
         commit=True,
     )
+    # Order matters: the link first, so the case takes the alert's severity before the
+    # creation is recorded as the SOC's response (#1187).
+    recorder = SlaLifecycleRecorder()
+    actor = Actor.from_user(current_user)
+    await recorder.case_links_changed(case.id)
+    await recorder.case_action(case.id, LifecycleAction.CREATED, actor)
+    await recorder.alert_action(alert_id.alert_id, LifecycleAction.LINKED_TO_CASE, actor)
 
     return CaseAlertLinkResponse(
         case_alert_link=link,
@@ -1665,6 +1731,7 @@ async def list_alerts_endpoint(
         open=counts.open,
         in_progress=counts.in_progress,
         closed=counts.closed,
+        pending_customer=counts.pending_customer,
         success=True,
         message="Alerts retrieved successfully",
     )
@@ -2235,6 +2302,7 @@ async def list_alerts_multiple_filters_endpoint(
         open=counts.open,
         in_progress=counts.in_progress,
         closed=counts.closed,
+        pending_customer=counts.pending_customer,
         total=counts.total,
         success=True,
         message="Alerts retrieved successfully",
@@ -2267,6 +2335,7 @@ async def list_cases_endpoint(
         open=counts.open,
         in_progress=counts.in_progress,
         closed=counts.closed,
+        pending_customer=counts.pending_customer,
         success=True,
         message="Cases retrieved successfully",
     )
@@ -2311,6 +2380,7 @@ async def update_case_status_endpoint(
     force=true to override.
     """
     logger.info(f"Updating case {case_status.case_id} status to {case_status.status} for user: {current_user.username}")
+    ensure_customer_may_set_status(current_user, case_status.status)
 
     # Get the case first to check customer access
     case = await get_case_by_id(case_status.case_id, db)
@@ -2342,33 +2412,23 @@ async def update_case_status_endpoint(
             return build_close_warning_response(incomplete)
 
     try:
-        # Get all alert IDs linked to this case BEFORE updating
-        result = await db.execute(select(CaseAlertLink.alert_id).where(CaseAlertLink.case_id == case_status.case_id))
-        alert_ids = [row[0] for row in result]
+        # The linked alerts and their current status, BEFORE updating
+        result = await db.execute(
+            select(CaseAlertLink.alert_id, Alert.status)
+            .join(Alert, Alert.id == CaseAlertLink.alert_id)
+            .where(CaseAlertLink.case_id == case_status.case_id),
+        )
+        linked = result.all()
 
-        logger.info(f"Found {len(alert_ids)} alerts linked to case {case_status.case_id}")
+        logger.info(f"Found {len(linked)} alerts linked to case {case_status.case_id}")
 
-        # Determine what to do with linked alerts based on status transition
-        new_alert_status = None
-
-        # Handle status transitions
-        if new_status_value == "CLOSED" and (old_status != "CLOSED" or old_status is None):
-            # Case is being closed - close all linked alerts
-            logger.info(f"Closing {len(alert_ids)} alerts linked to case {case_status.case_id}")
-            new_alert_status = "CLOSED"
-
-        elif old_status == "CLOSED" and new_status_value in ["OPEN", "IN_PROGRESS"]:
-            # Case is being reopened from CLOSED - reopen alerts to IN_PROGRESS
-            logger.info(f"Reopening {len(alert_ids)} alerts linked to case {case_status.case_id} to IN_PROGRESS")
-            new_alert_status = "IN_PROGRESS"
-
-        elif old_status == "CLOSED" and new_status_value != "CLOSED":
-            # Case is being reopened from CLOSED to any other status - reopen to IN_PROGRESS
-            logger.info(f"Reopening {len(alert_ids)} alerts linked to case {case_status.case_id} to IN_PROGRESS")
-            new_alert_status = "IN_PROGRESS"
-
+        # What the transition does to the linked alerts (rules in services/status_cascade.py)
+        cascade = cascade_for(old_status, new_status_value)
+        new_alert_status = cascade.to_status if cascade else None
+        alert_ids = [alert_id for alert_id, alert_status in linked if cascade and cascade.applies_to(alert_status)]
+        if cascade:
+            logger.info(f"Moving {len(alert_ids)} alerts linked to case {case_status.case_id} to {new_alert_status}")
         else:
-            # No alert status change needed for other transitions
             logger.info(f"No alert status change needed for transition from {old_status} to {new_status_value}")
 
         # Update alert statuses if needed (BEFORE updating the case)
@@ -2400,6 +2460,18 @@ async def update_case_status_endpoint(
         logger.error(f"Error updating case status: {str(e)}")
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to update case status: {str(e)}")
+
+    # SLA (#1187): the case's own transition, and each linked alert the cascade moved.
+    recorder = SlaLifecycleRecorder()
+    actor = Actor.from_user(current_user)
+    await recorder.case_action(case_status.case_id, LifecycleAction.STATUS_CHANGED, actor, to_status=new_status_value)
+    if new_alert_status:
+        await recorder.alerts_action(
+            [alert_id for alert_id in alert_ids if alert_id not in failed_alerts],
+            LifecycleAction.STATUS_CHANGED,
+            actor,
+            to_status=new_alert_status,
+        )
 
     # Phase 4 audit emit. Records the from/to status, plus a forced flag
     # when the soft-warning was bypassed so it shows up in the timeline.
@@ -2468,10 +2540,45 @@ async def update_case_escalated_endpoint(
         payload=payload_escalation(escalated=escalate_case.escalated),
         commit=True,
     )
+    await SlaLifecycleRecorder().case_action(escalate_case.case_id, LifecycleAction.ESCALATED, Actor.from_user(current_user))
 
     # Re-fetch the case with full data structure
     updated_case = await get_case_by_id(escalate_case.case_id, db)
     return CaseOutResponse(cases=[updated_case], success=True, message="Case escalated status updated successfully")
+
+
+@incidents_db_operations_router.put(
+    "/case/severity",
+    response_model=CaseOutResponse,
+    description="Set a case's severity, or clear it so the case follows its most severe linked alert",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def update_case_severity_endpoint(
+    body: UpdateCaseSeverity,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Severity drives a case's SLA targets (#1187), so it is the SOC's call: admin and
+    analyst only, like escalation. Changing it re-targets the clocks still running."""
+    await _ensure_case_access(body.case_id, current_user, db)
+
+    severity = body.severity.value if body.severity else None
+    _, previous = await update_case_severity(body.case_id, severity, db)
+
+    from app.incidents.schema.case_templates import CaseEventType
+    from app.incidents.services.case_events import emit_case_event
+
+    await emit_case_event(
+        session=db,
+        case_id=body.case_id,
+        event_type=CaseEventType.CASE_SEVERITY_CHANGED,
+        actor=current_user.username,
+        payload={"from": previous, "to": severity},
+        commit=True,
+    )
+    await SlaLifecycleRecorder().case_severity_changed(body.case_id, Actor.from_user(current_user))
+
+    return CaseOutResponse(cases=[await get_case_by_id(body.case_id, db)], success=True, message="Case severity updated successfully")
 
 
 @incidents_db_operations_router.put(
@@ -2517,6 +2624,12 @@ async def update_case_assigned_to_endpoint(
         actor=current_user.username,
         payload=payload_assignment(from_assignee=previous_assignee, to_assignee=assigned_to.assigned_to),
         commit=True,
+    )
+    await SlaLifecycleRecorder().case_action(
+        assigned_to.case_id,
+        LifecycleAction.ASSIGNED,
+        Actor.from_user(current_user),
+        assignee=assigned_to.assigned_to,
     )
 
     # Notification routes (#1006). Only when the assignee actually changed — a
@@ -2642,6 +2755,7 @@ async def list_cases_by_status_endpoint(
         open=counts.open,
         in_progress=counts.in_progress,
         closed=counts.closed,
+        pending_customer=counts.pending_customer,
         success=True,
         message="Cases retrieved successfully",
     )
@@ -2676,6 +2790,7 @@ async def list_cases_by_name_endpoint(
     open_cases = sum(1 for case in cases if case.case_status == "OPEN")
     in_progress = sum(1 for case in cases if case.case_status == "IN_PROGRESS")
     closed = sum(1 for case in cases if case.case_status == "CLOSED")
+    pending_customer = sum(1 for case in cases if case.case_status == "PENDING_CUSTOMER")
 
     return CaseOutResponse(
         cases=cases,
@@ -2683,6 +2798,7 @@ async def list_cases_by_name_endpoint(
         open=open_cases,
         in_progress=in_progress,
         closed=closed,
+        pending_customer=pending_customer,
         success=True,
         message="Cases retrieved successfully",
     )

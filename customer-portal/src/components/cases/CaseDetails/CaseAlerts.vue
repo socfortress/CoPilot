@@ -8,7 +8,7 @@
 				<template #header-main>#{{ alert.id }}</template>
 				<template #header-extra>
 					<Chip :type="getStatusColor(alert.status)">
-						{{ alert.status.replace("_", " ").toUpperCase() }}
+						{{ workflowStatusLabel(alert.status).toUpperCase() }}
 					</Chip>
 				</template>
 				<template #default>
@@ -65,6 +65,7 @@ import Chip from "@/components/common/Chip.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
+import { workflowStatusLabel } from "@/utils/workflowStatus"
 
 defineProps<{
 	caseData: Case

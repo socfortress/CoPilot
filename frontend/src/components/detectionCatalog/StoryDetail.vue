@@ -166,6 +166,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="modalRuleId ? routeDetectionCatalogDetection(modalRuleId) : null"
+					label="Open the detection's page"
+					@navigate="showRuleModal = false"
+				/>
+			</template>
 			<RuleCardContent v-if="modalRuleId" :rule-id="modalRuleId" />
 		</n-modal>
 	</n-spin>
@@ -183,6 +190,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import RuleCardContent from "@/components/copilotSearches/RuleCardContent.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"

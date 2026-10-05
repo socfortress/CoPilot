@@ -18,5 +18,6 @@ export const ICONS = {
 	websocket: "carbon:ibm-watson-discovery",
 	worker: "carbon:ibm-openshift-container-platform-on-vpc-for-regulated-industries",
 	eventSearch: "carbon:search-locate",
-	reports: "carbon:document-pdf"
+	reports: "carbon:document-pdf",
+	sla: "carbon:meter"
 }

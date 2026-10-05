@@ -168,6 +168,8 @@ describe("sidebar menu", () => {
 	it("orders the sections the way the work happens", () => {
 		expect(menuFor("admin").map(item => item.key)).toEqual([
 			"Overview",
+			// How the SOC is doing, next to what is happening (#1187).
+			"SocManagement",
 			"AiAnalyst",
 			"Incidents",
 			"Investigate",
@@ -179,5 +181,10 @@ describe("sidebar menu", () => {
 			"Reports",
 			"Platform"
 		])
+	})
+
+	it("gives analysts SOC Management too: the page narrows per-analyst figures, not the entry", () => {
+		const keys = leaves(menuFor("analyst")).map(leaf => leaf.key)
+		expect(keys).toContain("SocManagement")
 	})
 })

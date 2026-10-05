@@ -90,6 +90,13 @@
 				role="modal"
 				@close="closeDetails()"
 			>
+				<template #header-extra>
+					<ModalPageButton
+						:route="routeIncidentManagementExclusionRule(entity.id)"
+						label="Open the exclusion rule's page"
+						@navigate="closeDetails()"
+					/>
+				</template>
 				<ExclusionRuleOverview :entity @deleted="handleDeleted()" @updated="emit('updated')" />
 			</n-card>
 		</n-modal>
@@ -104,6 +111,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"

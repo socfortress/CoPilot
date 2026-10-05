@@ -1,30 +1,12 @@
 <template>
 	<n-spin :show="loading">
-		<div class="grid grid-cols-1 gap-6 @xl:grid-cols-2 @4xl:grid-cols-4">
-			<CardStats data-testid="stat-total" title="Total" :value="stats.total">
-				<template #icon>
-					<Icon :name="ICONS.cases" :size="24" class="text-info" />
-				</template>
-			</CardStats>
-
-			<CardStats data-testid="stat-open" title="Open" :value="stats.open">
-				<template #icon>
-					<Icon name="carbon:warning" :size="24" class="text-error" />
-				</template>
-			</CardStats>
-
-			<CardStats data-testid="stat-in_progress" title="In Progress" :value="stats.in_progress">
-				<template #icon>
-					<Icon name="carbon:hourglass" :size="24" class="text-warning" />
-				</template>
-			</CardStats>
-
-			<CardStats data-testid="stat-closed" title="Closed" :value="stats.closed">
-				<template #icon>
-					<Icon name="carbon:checkmark-outline" :size="24" class="text-success" />
-				</template>
-			</CardStats>
-		</div>
+		<StatusStrip
+			:total="stats.total"
+			entity="Cases"
+			:icon="ICONS.cases"
+			:cells="workflowSegments(stats)"
+			lift="pending_customer"
+		/>
 	</n-spin>
 </template>
 
@@ -34,8 +16,8 @@ import type { CasesStats } from "@/types/portal"
 import { NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
-import CardStats from "@/components/common/cards/CardStats.vue"
-import Icon from "@/components/common/Icon.vue"
+import StatusStrip from "@/components/common/StatusStrip.vue"
+import { workflowSegments } from "@/components/overview/posture/postureCells"
 import { ICONS } from "@/const"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { getApiErrorMessage } from "@/utils"
@@ -44,7 +26,8 @@ const stats = ref<CasesStats>({
 	total: 0,
 	open: 0,
 	in_progress: 0,
-	closed: 0
+	closed: 0,
+	pending_customer: 0
 })
 
 const loading = ref(false)

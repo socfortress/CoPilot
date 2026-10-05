@@ -43,7 +43,7 @@ describe("alerts list", () => {
 		cy.get(".n-base-select-option:visible").contains(/^statuses$/).click()
 		cy.get("[data-testid=alerts-filter-value]").click()
 		cy.get(".n-base-select-option:visible")
-			.contains(/^OPEN$/)
+			.contains(/^Open$/)
 			.then($option => {
 				clickedAt = Date.now()
 				$option.trigger("click")
@@ -92,11 +92,11 @@ describe("alerts list", () => {
 		cy.get("[data-testid=alerts-filter-key]").click()
 		cy.get(".n-base-select-option:visible").contains(/^statuses$/).click()
 		cy.get("[data-testid=alerts-filter-value]").click()
-		cy.get(".n-base-select-option:visible").contains(/^OPEN$/).click()
+		cy.get(".n-base-select-option:visible").contains(/^Open$/).click()
 		cy.get("[data-testid=alerts-table] .n-data-table-loading-wrapper").should("exist")
 		// Change our mind while OPEN is still loading.
 		cy.get("[data-testid=alerts-filter-value]").click()
-		cy.get(".n-base-select-option:visible").contains(/^CLOSED$/).click()
+		cy.get(".n-base-select-option:visible").contains(/^Closed$/).click()
 
 		cy.wait("@closed")
 		cy.get("[data-testid=alerts-table] tbody tr").should("have.length", seed.alerts.a.closed)

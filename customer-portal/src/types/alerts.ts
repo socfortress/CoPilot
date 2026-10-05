@@ -34,9 +34,11 @@ export interface AlertsListResponse {
 	open: number
 	in_progress: number
 	closed: number
+	pending_customer?: number
 }
 
-export type AlertStatus = "OPEN" | "IN_PROGRESS" | "CLOSED"
+/** `PENDING_CUSTOMER`: the SOC is waiting on the customer; the SLA clocks are stopped (#1187). */
+export type AlertStatus = "OPEN" | "IN_PROGRESS" | "PENDING_CUSTOMER" | "CLOSED"
 
 export interface AlertsFilters {
 	sources: string[]

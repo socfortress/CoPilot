@@ -33,6 +33,10 @@
 								In Progress :
 								<code>{{ statusInProgressTotal }}</code>
 							</div>
+							<div class="box text-primary">
+								Waiting on customer :
+								<code>{{ statusPendingCustomerTotal }}</code>
+							</div>
 							<div class="box text-success">
 								Close :
 								<code>{{ statusCloseTotal }}</code>
@@ -74,6 +78,18 @@
 						<div class="flex items-center gap-2">
 							<span>In Progress</span>
 							<code class="text-warning py-1">{{ statusInProgressTotal }}</code>
+						</div>
+					</n-button>
+					<span>/</span>
+					<n-button
+						quaternary
+						size="small"
+						:title="PENDING_CUSTOMER_HELP"
+						@click="filtersRef?.setFilter([{ type: 'status', value: 'PENDING_CUSTOMER' }])"
+					>
+						<div class="flex items-center gap-2">
+							<span>Waiting</span>
+							<code class="text-primary py-1">{{ statusPendingCustomerTotal }}</code>
 						</div>
 					</n-button>
 					<span>/</span>
@@ -399,6 +415,7 @@ import Api from "@/api"
 import CollapseKeepAlive from "@/components/common/CollapseKeepAlive.vue"
 import Icon from "@/components/common/Icon.vue"
 import GenerateIncidentReportButton from "@/components/customers/reporting/GenerateIncidentReportButton.vue"
+import { PENDING_CUSTOMER_HELP } from "@/components/incidentManagement/common/status"
 import { useNavigation } from "@/composables/useNavigation"
 import { useAuthStore } from "@/stores/auth"
 import { AuthUserRole } from "@/types/auth"
@@ -470,6 +487,7 @@ const totalFiltered = ref(0)
 const total = ref(0)
 const statusOpenTotal = ref(0)
 const statusInProgressTotal = ref(0)
+const statusPendingCustomerTotal = ref(0)
 const statusCloseTotal = ref(0)
 
 const filtersRef = ref<{ setFilter: (payload: AlertsListFilter[]) => void } | null>(null)
@@ -671,6 +689,7 @@ function getData() {
 				totalFiltered.value = res.data.total_filtered ?? total.value ?? 0
 				statusCloseTotal.value = res.data.closed || 0
 				statusInProgressTotal.value = res.data.in_progress || 0
+				statusPendingCustomerTotal.value = res.data.pending_customer || 0
 				statusOpenTotal.value = res.data.open || 0
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")

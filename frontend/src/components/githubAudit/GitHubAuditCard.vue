@@ -59,10 +59,17 @@
 		>
 			<n-drawer-content closable :native-scrollbar="false">
 				<template #header>
-					<div class="flex items-center gap-3">
-						<Icon name="codicon:organization" :size="24" />
-						<span>{{ config.organization }}</span>
-						<n-tag v-if="!config.enabled" type="warning" size="small">Disabled</n-tag>
+					<div class="flex w-full items-center justify-between gap-2 pr-8">
+						<div class="flex items-center gap-3">
+							<Icon name="codicon:organization" :size="24" />
+							<span>{{ config.organization }}</span>
+							<n-tag v-if="!config.enabled" type="warning" size="small">Disabled</n-tag>
+						</div>
+						<ModalPageButton
+							:route="routeGitHubAuditConfig(config.id)"
+							label="Open the audit's page"
+							@navigate="showDetail = false"
+						/>
 					</div>
 				</template>
 
@@ -87,6 +94,7 @@ import { ref } from "vue"
 import Api from "@/api"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import CardEntity from "../common/cards/CardEntity.vue"

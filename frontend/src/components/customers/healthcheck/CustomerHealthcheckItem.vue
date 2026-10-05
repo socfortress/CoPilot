@@ -83,6 +83,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="detailRoute"
+					label="Open the health check's page"
+					@navigate="showDetails = false"
+				/>
+			</template>
 			<CustomerHealthcheckDetails v-if="showDetails" :health-data :source />
 		</n-modal>
 	</div>
@@ -96,6 +103,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { iconFromOs } from "@/utils"

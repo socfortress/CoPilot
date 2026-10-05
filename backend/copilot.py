@@ -107,6 +107,7 @@ from app.routers import scheduler
 from app.routers import scoutsuite
 from app.routers import shuffle
 from app.routers import siem
+from app.routers import soc_management
 from app.routers import socfortress_mdr
 from app.routers import stack_provisioning
 from app.routers import status
@@ -328,6 +329,7 @@ api_router.include_router(talon.router)
 api_router.include_router(opencti.router)
 api_router.include_router(uba.router)
 api_router.include_router(customer_waf.router)
+api_router.include_router(soc_management.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)

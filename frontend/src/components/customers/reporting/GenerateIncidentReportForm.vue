@@ -58,6 +58,25 @@
 			</div>
 		</n-form-item>
 
+		<n-form-item label="SLA performance" path="includeSla">
+			<div class="flex items-center gap-2">
+				<n-switch
+					v-model:value="formData.includeSla"
+					:disabled="formData.reportTemplate === 'operational'"
+					data-testid="report-include-sla"
+				/>
+				<span class="text-secondary text-xs">
+					{{
+						formData.reportTemplate === "operational"
+							? "The operational layout is case-centric and has no SLA section"
+							: formData.includeSla
+								? "Adds response and resolution times against the agreed SLA"
+								: "SLA figures stay internal"
+					}}
+				</span>
+			</div>
+		</n-form-item>
+
 		<div v-if="customerCode" class="text-secondary text-xs">
 			Customer:
 			<span class="font-mono">{{ customerCode }}</span>
@@ -120,6 +139,7 @@ interface GenerateFormData {
 	visibleToCustomer: boolean
 	brandTheme: IncidentReportBrandTheme
 	reportTemplate: IncidentReportTemplate
+	includeSla: boolean
 }
 
 function getDefaultFormData(): GenerateFormData {
@@ -130,7 +150,8 @@ function getDefaultFormData(): GenerateFormData {
 		customRange: null,
 		visibleToCustomer: false,
 		brandTheme: "customer",
-		reportTemplate: props.defaultTemplate
+		reportTemplate: props.defaultTemplate,
+		includeSla: false
 	}
 }
 
@@ -248,7 +269,8 @@ async function handleSubmit() {
 			date_to,
 			visible_to_customer: formData.value.visibleToCustomer,
 			brand_theme: formData.value.brandTheme,
-			report_template: formData.value.reportTemplate
+			report_template: formData.value.reportTemplate,
+			include_sla: formData.value.includeSla && formData.value.reportTemplate !== "operational"
 		}
 		if (formData.value.report_name?.trim()) {
 			request.report_name = formData.value.report_name.trim()

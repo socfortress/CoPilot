@@ -14,22 +14,12 @@
 				<div class="flex flex-col gap-2">
 					<div>{{ alert.alert_name }}</div>
 					<div class="flex flex-wrap items-center gap-3">
-						<Badge
-							type="splitted"
-							bright
-							:color="
-								alert.status === 'OPEN'
-									? 'danger'
-									: alert.status === 'IN_PROGRESS'
-										? 'warning'
-										: 'success'
-							"
-						>
+						<Badge type="splitted" bright :color="statusColor(alert.status)">
 							<template #iconLeft>
 								<Icon :name="StatusIcon" :size="14" />
 							</template>
 							<template #label>Status</template>
-							<template #value>{{ alert.status || "n/d" }}</template>
+							<template #value>{{ statusLabel(alert.status) }}</template>
 						</Badge>
 
 						<Badge v-if="alert.report.severity_assessment" type="splitted" bright :color="severityColor">
@@ -84,6 +74,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="alert ? routeAiAnalystReport(alert.report.id) : null"
+					label="Open the report's page"
+					@navigate="showDetails = false"
+				/>
+			</template>
 			<AlertReportDetails v-if="alert" :alert @tab-change="handleTabChange" />
 		</n-modal>
 	</div>
@@ -98,6 +95,8 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
+import { statusColor, statusLabel } from "@/components/incidentManagement/common/status"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"

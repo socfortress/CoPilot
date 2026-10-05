@@ -62,6 +62,13 @@
 			:title="assetNameTruncated"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="routeIncidentManagementAlertAsset(asset.alert_linked, asset.id)"
+					label="Open the asset's page"
+					@navigate="showDetails = false"
+				/>
+			</template>
 			<AlertAssetOverview :asset />
 		</n-modal>
 	</div>
@@ -76,6 +83,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import AlertAssetOverview from "./AlertAssetOverview.vue"
 

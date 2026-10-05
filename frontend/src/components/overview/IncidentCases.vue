@@ -38,12 +38,14 @@ const loading = ref(false)
 const total = ref(0)
 const openedCount = ref(0)
 const inProgressCount = ref(0)
+const pendingCustomerCount = ref(0)
 const closedCount = ref(0)
 
 const values = computed<ItemProps[]>(() => [
 	{ value: total.value, label: "Total", isTotal: true },
 	{ value: openedCount.value, label: "Open", status: "error" },
 	{ value: inProgressCount.value, label: "In Progress", status: "warning" },
+	{ value: pendingCustomerCount.value, label: "Waiting on customer", status: "primary" },
 	{ value: closedCount.value, label: "Closed", status: "success" }
 ])
 
@@ -72,6 +74,7 @@ function getData() {
 				total.value = res.data.total || 0
 				openedCount.value = res.data.open || 0
 				inProgressCount.value = res.data.in_progress || 0
+				pendingCustomerCount.value = res.data.pending_customer || 0
 				closedCount.value = res.data.closed || 0
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")

@@ -207,8 +207,7 @@ import type { ApiError } from "@/types/common"
 import type {
 	NotificationRoute,
 	NotificationScope,
-	NotificationTemplate,
-	NotificationTrigger
+	NotificationTemplate
 } from "@/types/notifications"
 import { NButton, NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
@@ -219,6 +218,7 @@ import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
+import { NOTIFICATION_TRIGGER_LABELS } from "@/types/notifications"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import { describeRouteChannel, describeRouteDestination } from "./destination"
@@ -244,18 +244,6 @@ const TimeIcon = "carbon:time"
 const PauseIcon = "carbon:pause"
 const PlayIcon = "carbon:play"
 
-const TRIGGER_LABELS: Record<NotificationTrigger, string> = {
-	alert_created: "Alert created",
-	investigation_complete: "AI investigation complete",
-	ai_report_reviewed: "AI report reviewed",
-	alert_assigned: "Alert assigned",
-	case_assigned: "Case assigned",
-	case_task_assigned: "Case task assigned",
-	// Never reachable on a route — the backend rejects it as a route trigger —
-	// but the map is exhaustive over NotificationTrigger, so it needs a label.
-	temp_password_issued: "Temporary password email"
-}
-
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
 const { routeCustomer, routeMessageTemplate } = useNavigation()
@@ -268,7 +256,7 @@ const isInternalScope = computed(() => props.scope === "internal" || entity.valu
 const destination = computed(() => describeRouteDestination(entity.value))
 const hasConfig = computed(() => Object.keys(entity.value.config ?? {}).length > 0)
 
-const triggerLabel = computed(() => TRIGGER_LABELS[entity.value.trigger] ?? entity.value.trigger)
+const triggerLabel = computed(() => NOTIFICATION_TRIGGER_LABELS[entity.value.trigger] ?? entity.value.trigger)
 
 // Shared with the list row so the two can't disagree about what a route is.
 const channelIcon = computed(() => describeRouteChannel(entity.value).icon)

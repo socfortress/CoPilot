@@ -15,7 +15,7 @@ export type OverviewSection = "alerts" | "cases" | "agents" | "ai"
 const SECTIONS: OverviewSection[] = ["alerts", "cases", "agents", "ai"]
 
 function emptyCounts(): StatusCounts {
-	return { total: 0, open: 0, in_progress: 0, closed: 0 }
+	return { total: 0, open: 0, in_progress: 0, closed: 0, pending_customer: 0 }
 }
 
 /**

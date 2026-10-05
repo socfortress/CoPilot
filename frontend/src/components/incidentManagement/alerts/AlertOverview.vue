@@ -4,9 +4,7 @@
 			<div class="content-box flex flex-col gap-4 py-3">
 				<div class="flex flex-col gap-4 sm:flex-row!">
 					<CardKV
-						:color="
-							alert.status === 'OPEN' ? 'danger' : alert.status === 'IN_PROGRESS' ? 'warning' : 'success'
-						"
+						:color="statusColor(alert.status)"
 						size="lg"
 						class="w-full grow"
 					>
@@ -29,8 +27,9 @@
 											'cursor-not-allowed': loadingStatus,
 											'cursor-pointer': !loadingStatus
 										}"
+										data-testid="alert-status-trigger"
 									>
-										<span>{{ alert.status || "n/d" }}</span>
+										<span>{{ statusLabel(alert.status) }}</span>
 										<n-spin
 											:size="14"
 											:show="loadingStatus"
@@ -130,6 +129,8 @@
 						</template>
 					</CardKV>
 				</div>
+
+				<ItemSlaPanel entity="alert" :item-id="alert.id" :refresh-key="slaRefreshKey" />
 
 				<CardKV>
 					<template #key>description</template>
@@ -249,6 +250,8 @@ import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { statusColor, statusLabel } from "@/components/incidentManagement/common/status"
+import ItemSlaPanel from "@/components/socManagement/ItemSlaPanel.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
@@ -293,6 +296,16 @@ const loading = ref(false)
 const investigating = ref(false)
 const assignedUserId = ref<number | null>(null)
 const linkedCases = computed(() => alert.value.linked_cases)
+// Any change a person makes can stop an SLA clock (#1187): reload the clocks after it.
+const slaRefreshKey = computed(() =>
+	[
+		alert.value.status,
+		alert.value.assigned_to,
+		alert.value.verdict,
+		alert.value.comments?.length,
+		linkedCases.value?.length
+	].join("|")
+)
 const isSigmaAlert = computed(() => alert.value.tags.some(o => o.tag === "sigma-alert"))
 
 function resolveAssignedUserId(username: string | null) {

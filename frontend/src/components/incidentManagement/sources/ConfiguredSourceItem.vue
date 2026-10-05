@@ -53,6 +53,13 @@
 				role="modal"
 				@close="closeDetails()"
 			>
+				<template #header-extra>
+					<ModalPageButton
+						:route="routeIncidentManagementSource(source)"
+						label="Open the source's page"
+						@navigate="closeDetails()"
+					/>
+				</template>
 				<SourceConfigurationDetails deletable :source @deleted="handleDeleted()" />
 			</n-card>
 		</n-modal>
@@ -68,6 +75,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import SourceConfigurationDetails from "./SourceConfigurationDetails.vue"

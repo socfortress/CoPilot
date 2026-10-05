@@ -24,6 +24,7 @@ matplotlib.use("Agg")  # headless backend; must be set before pyplot import
 
 import matplotlib.font_manager as fm  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.ticker as mticker  # noqa: E402
 
 # Brand-neutral categorical palette (distinct hues, echoes the reference reports:
 # gold / red / blue / green / violet / black ...).
@@ -45,6 +46,7 @@ STATUS_COLORS = {
     "IN_PROGRESS": "#4fa8e0",
     "IN PROGRESS": "#4fa8e0",
     "CLOSED": "#2ecc71",
+    "PENDING_CUSTOMER": "#a78bfa",
     "RESOLVED": "#2ecc71",
     "ESCALATED": "#ee4b3b",
     "FALSE_POSITIVE": "#94a3b8",
@@ -177,6 +179,7 @@ def hbar_png(data: List[Tuple[str, int]], width_in: float = 8.4, max_label: int 
     ax.set_yticklabels(labels, fontproperties=_FONT, fontsize=8, color=_TEXT)
     ax.xaxis.set_ticks_position("top")
     ax.xaxis.set_label_position("top")
+    ax.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))  # counts: never a 0.25 tick
     ax.tick_params(axis="x", labelsize=8, colors=_MUTED, length=0)
     ax.grid(axis="x", color="#e2e8f0", linewidth=0.8)
     ax.set_axisbelow(True)
@@ -237,4 +240,53 @@ def evolution_png(
     return _fig_to_data_uri(fig)
 
 
-__all__ = ["donut_png", "hbar_png", "evolution_png", "PALETTE"]
+def line_png(
+    labels: Sequence[str],
+    series: Sequence[Tuple[str, Sequence[Optional[float]], str]],
+    percent: bool = False,
+    reference: Optional[float] = None,
+    width_in: float = 8.4,
+    height_in: float = 2.6,
+) -> str:
+    """Line chart of one or more ``(name, values, color)`` series over shared labels.
+
+    ``None`` values leave a gap rather than dropping to zero: a bucket with nothing to
+    measure (no SLA outcome yet) is not a 0% bucket. ``percent`` fixes the axis to
+    0–100; ``reference`` draws a dashed target line (e.g. a 95% SLA objective).
+    """
+    if not labels or not any(any(v is not None for v in values) for _, values, _ in series):
+        return _empty(width_in, height_in)
+
+    fig, ax = plt.subplots(figsize=(width_in, height_in))
+    x = list(range(len(labels)))
+    for name, values, color in series:
+        ys = [float("nan") if v is None else float(v) for v in values]
+        ax.plot(x, ys, color=color, linewidth=1.8, marker="o", markersize=3, label=name, zorder=3)
+
+    if reference is not None:
+        ax.axhline(reference, color="#94a3b8", linewidth=0.9, linestyle=(0, (4, 3)), zorder=2)
+
+    step = max(1, math.ceil(len(labels) / 12))
+    ax.set_xticks(x[::step])
+    ax.set_xticklabels(list(labels)[::step], fontproperties=_FONT, fontsize=7.5, color=_MUTED)
+    ax.tick_params(axis="y", labelsize=7.5, colors=_MUTED, length=0)
+    ax.tick_params(axis="x", length=0)
+    if percent:
+        ax.set_ylim(0, 104)
+        ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v, _: f"{v:.0f}%"))
+    else:
+        ax.set_ylim(bottom=0)
+        ax.yaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+    ax.grid(axis="y", color="#e2e8f0", linewidth=0.8, zorder=0)
+    ax.set_axisbelow(True)
+    for spine in ("top", "right", "left", "bottom"):
+        ax.spines[spine].set_visible(False)
+    if len(series) > 1:
+        legend = ax.legend(loc="upper left", frameon=False, prop=_FONT, fontsize=7.5, ncol=len(series))
+        for text in legend.get_texts():
+            text.set_color(_MUTED)
+            text.set_fontsize(7.5)
+    return _fig_to_data_uri(fig)
+
+
+__all__ = ["donut_png", "hbar_png", "evolution_png", "line_png", "PALETTE"]

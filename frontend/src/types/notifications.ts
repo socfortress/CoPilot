@@ -29,9 +29,37 @@ export type NotificationTrigger =
 	| "alert_assigned"
 	| "case_assigned"
 	| "case_task_assigned"
+	| "sla_at_risk"
+	| "sla_breached"
 	| "temp_password_issued"
 
-export const INTERNAL_TRIGGERS: NotificationTrigger[] = ["alert_assigned", "case_assigned", "case_task_assigned"]
+// The SLA triggers (#1187) are internal too: a SOC running late on a clock is the
+// SOC's business, never the customer's. They fire once per clock, from a scheduler
+// job, and carry the item's assignee — so an "assignee" email route reaches the
+// analyst whose alert or case is running late.
+export const SLA_TRIGGERS: NotificationTrigger[] = ["sla_at_risk", "sla_breached"]
+
+export const INTERNAL_TRIGGERS: NotificationTrigger[] = [
+	"alert_assigned",
+	"case_assigned",
+	"case_task_assigned",
+	...SLA_TRIGGERS
+]
+
+/** Display names, shared by every list, badge and filter that names a trigger. */
+export const NOTIFICATION_TRIGGER_LABELS: Record<NotificationTrigger, string> = {
+	alert_created: "Alert created",
+	investigation_complete: "AI investigation complete",
+	ai_report_reviewed: "AI report reviewed",
+	alert_assigned: "Alert assigned",
+	case_assigned: "Case assigned",
+	case_task_assigned: "Case task assigned",
+	sla_at_risk: "SLA at risk",
+	sla_breached: "SLA breached",
+	// Never reachable on a route — the backend rejects it as a route trigger —
+	// but the map is exhaustive over NotificationTrigger, so it needs a label.
+	temp_password_issued: "Temporary password email"
+}
 
 export function isInternalTrigger(trigger: NotificationTrigger): boolean {
 	return INTERNAL_TRIGGERS.includes(trigger)

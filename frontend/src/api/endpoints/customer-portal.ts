@@ -3,7 +3,8 @@ import type {
 	CustomerPortalBrandingListItem,
 	CustomerPortalBrandingOverride,
 	CustomerPortalEffectiveBranding,
-	CustomerPortalSettings
+	CustomerPortalSettings,
+	CustomerPortalSlaSettings
 } from "@/types/customer-portal"
 import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
@@ -42,6 +43,14 @@ type AiReportSettingsResponse = FlaskBaseResponse & {
 	settings: CustomerPortalAiReportSettings
 }
 
+export interface CustomerPortalSlaSettingsPayload {
+	enabled: boolean
+}
+
+type SlaSettingsResponse = FlaskBaseResponse & {
+	settings: CustomerPortalSlaSettings
+}
+
 export default {
 	/** Global settings with the inline logo, for the editor. The public `/settings` omits the logo bytes. */
 	getSettings(signal?: AbortSignal) {
@@ -77,5 +86,12 @@ export default {
 	/** Admin-only: flips both portal AI surfaces for this customer at once. */
 	setCustomerAiReportSettings(customerCode: string, payload: CustomerPortalAiReportSettingsPayload) {
 		return HttpClient.put<AiReportSettingsResponse>(`/customer_portal/ai_reports/settings/${customerCode}`, payload)
+	},
+	getCustomerSlaSettings(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<SlaSettingsResponse>(`/customer_portal/sla/settings/${customerCode}`, { signal })
+	},
+	/** Admin-only: shows or hides the portal's SLA page for this customer (#1187). */
+	setCustomerSlaSettings(customerCode: string, payload: CustomerPortalSlaSettingsPayload) {
+		return HttpClient.put<SlaSettingsResponse>(`/customer_portal/sla/settings/${customerCode}`, payload)
 	}
 }

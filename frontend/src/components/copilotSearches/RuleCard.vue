@@ -131,6 +131,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="routeCopilotSearchRule(rule.id)"
+					label="Open the rule's page"
+					@navigate="showDetails = false"
+				/>
+			</template>
 			<RuleCardContent :rule-id="rule.id" />
 		</n-modal>
 
@@ -180,6 +187,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import ExecuteSearchForm from "./ExecuteSearchForm.vue"
 import ProvisionGraylogForm from "./ProvisionGraylogForm.vue"

@@ -9,6 +9,8 @@ export interface Case {
 	case_status: null | CaseStatus
 	customer_code: null | string
 	notification_invoked_number?: number
+	/** The analyst's choice; null = follows the most severe linked alert (#1187). */
+	severity?: CaseSeverity | null
 	alerts: Alert[]
 	comments: CaseComment[]
 }
@@ -23,6 +25,8 @@ export interface CaseComment {
 
 export type CaseStatus = AlertStatus
 
+export type CaseSeverity = "Critical" | "High" | "Medium" | "Low" | "Informational"
+
 export type CasePayload = Omit<Case, "id" | "alerts">
 
 export interface CasesListResponse {
@@ -31,6 +35,7 @@ export interface CasesListResponse {
 	open: number | null
 	in_progress: number | null
 	closed: number | null
+	pending_customer?: number | null
 }
 
 export interface CaseDataStore {

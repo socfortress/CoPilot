@@ -37,6 +37,7 @@ from app.db.universal_models import AiAnalystJob  # noqa: E402
 from app.db.universal_models import AiAnalystReport  # noqa: E402
 from app.db.universal_models import CustomerPortalAiReportSettings  # noqa: E402
 from app.db.universal_models import CustomerPortalBranding  # noqa: E402
+from app.db.universal_models import CustomerPortalSlaSettings  # noqa: E402
 from app.db.universal_models import Customers  # noqa: E402
 from app.db.universal_models import IncidentManagementCustomerReport  # noqa: E402
 from app.incidents.models import Alert  # noqa: E402
@@ -48,6 +49,9 @@ from app.incidents.models import CaseComment  # noqa: E402
 from app.incidents.models import CaseDataStore  # noqa: E402
 from app.incidents.models import CaseEvent  # noqa: E402
 from app.incidents.models import CaseTask  # noqa: E402
+from app.incidents.models import Comment  # noqa: E402
+from app.soc_management.models.sla import AlertSlaTracking  # noqa: E402
+from app.soc_management.models.sla import CaseSlaTracking  # noqa: E402
 
 CUST_A, CUST_B = "E2E_OV_A", "E2E_OV_B"
 PORTAL_USER = "e2e_ov_portal"  # customer_user assigned to E2E_OV_A
@@ -55,10 +59,11 @@ ADMIN = "e2e_ov_admin"
 CONTEXT_SOURCE = "e2e_overview"
 PASSWORD = "E2ePassw0rd!x"
 
-# What the portal user must see (E2E_OV_A only), straight from the seed below.
-ALERTS_A = ["OPEN", "OPEN", "OPEN", "IN_PROGRESS", "IN_PROGRESS", "CLOSED"]
+# What the portal user must see (E2E_OV_A only), straight from the seed below. One alert
+# and one case of A wait on the customer (#1187), so every status breakdown has all four.
+ALERTS_A = ["OPEN", "OPEN", "OPEN", "IN_PROGRESS", "PENDING_CUSTOMER", "CLOSED"]
 ALERTS_B = ["OPEN", "OPEN", "CLOSED", "CLOSED"]
-CASES_A = ["OPEN", "OPEN", "CLOSED"]
+CASES_A = ["OPEN", "PENDING_CUSTOMER", "CLOSED"]
 CASES_B = ["OPEN"]
 AGENTS_A = [("active", True, "Linux"), ("active", False, "Windows"), ("disconnected", False, "Linux")]  # (wazuh status, critical, os)
 REPORTS = {"A": 2, "B": 1}  # completed customer reports per customer (keys: CUST_A / CUST_B below)
@@ -81,6 +86,13 @@ print("e2e-fallback")
 
 NOW = datetime.datetime(2026, 9, 1, 12, 0, 0)
 
+# SLA clocks of A's alerts (#1187), opened day by day over the last week so the SLA
+# page's default 30-day window holds them all: (acknowledged after, resolved after).
+# Alert 1 is acknowledged late; the closed alert 5 is resolved on time; the rest are
+# still open with their resolve target ten days out, so they have no outcome yet.
+SLA_ACK_MINUTES = 60
+SLA_ALERTS_A = [(10, None), (120, None), (15, None), (5, None), (20, None), (5, 180)]
+
 
 def status_counts(statuses):
     return {
@@ -88,6 +100,24 @@ def status_counts(statuses):
         "open": statuses.count("OPEN"),
         "in_progress": statuses.count("IN_PROGRESS"),
         "closed": statuses.count("CLOSED"),
+        "pending_customer": statuses.count("PENDING_CUSTOMER"),
+    }
+
+
+def sla_expectations() -> dict:
+    """What the portal's SLA page must show for A, derived from the seed above."""
+    acked_late = sum(ack > SLA_ACK_MINUTES for ack, _ in SLA_ALERTS_A)
+    open_statuses = [status for status in ALERTS_A if status != "CLOSED"]
+    open_cases = [status for status in CASES_A if status != "CLOSED"]
+    return {
+        "alerts_opened": len(SLA_ALERTS_A),
+        "ack_met": len(SLA_ALERTS_A) - acked_late,
+        "ack_breached": acked_late,
+        "ack_rate": round((len(SLA_ALERTS_A) - acked_late) * 100 / len(SLA_ALERTS_A), 1),
+        "resolve_rate": 100.0,
+        "open_alerts": len(open_statuses),
+        "open_cases": len(open_cases),
+        "waiting_on_you": open_statuses.count("PENDING_CUSTOMER") + open_cases.count("PENDING_CUSTOMER"),
     }
 
 
@@ -98,6 +128,9 @@ async def cleanup(s):
     await s.execute(delete(AiAnalystReport).where(AiAnalystReport.customer_code.in_(codes)))
     await s.execute(delete(AiAnalystJob).where(AiAnalystJob.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalAiReportSettings).where(CustomerPortalAiReportSettings.customer_code.in_(codes)))
+    await s.execute(delete(CustomerPortalSlaSettings).where(CustomerPortalSlaSettings.customer_code.in_(codes)))
+    await s.execute(delete(AlertSlaTracking).where(AlertSlaTracking.alert_id.in_(alert_ids)))
+    await s.execute(delete(CaseSlaTracking).where(CaseSlaTracking.case_id.in_(case_ids)))
     await s.execute(delete(CustomerPortalBranding).where(CustomerPortalBranding.customer_code.in_(codes)))
     await s.execute(delete(IncidentManagementCustomerReport).where(IncidentManagementCustomerReport.customer_code.in_(codes)))
     await s.execute(delete(CaseAlertLink).where(CaseAlertLink.case_id.in_(case_ids)))
@@ -107,6 +140,8 @@ async def cleanup(s):
         await s.execute(delete(child).where(child.case_id.in_(case_ids)))
     await s.execute(delete(Case).where(Case.customer_code.in_(codes)))
     await s.execute(delete(Asset).where(Asset.alert_linked.in_(alert_ids)))
+    # sla.cy.ts replies to the waiting alert, which leaves a comment on it.
+    await s.execute(delete(Comment).where(Comment.alert_id.in_(alert_ids)))
     await s.execute(delete(Alert).where(Alert.customer_code.in_(codes)))
     await s.execute(delete(AlertContext).where(AlertContext.source == CONTEXT_SOURCE))
     await s.execute(delete(Agents).where(Agents.customer_code.in_(codes)))
@@ -253,6 +288,47 @@ async def seed(quiet: bool = False) -> dict:
         for code in (CUST_A, CUST_B):
             s.add(CustomerPortalAiReportSettings(customer_code=code, enabled=True))
 
+        # SLA (#1187): the page is on for A only, and A's items carry live clocks.
+        s.add(CustomerPortalSlaSettings(customer_code=CUST_A, enabled=True))
+        today = datetime.datetime.utcnow().replace(microsecond=0)
+        for i, (ack_after, resolved_after) in enumerate(SLA_ALERTS_A):
+            opened = today - datetime.timedelta(days=len(SLA_ALERTS_A) - i)
+            waiting = ALERTS_A[i] == "PENDING_CUSTOMER"
+            s.add(
+                AlertSlaTracking(
+                    alert_id=alerts[(CUST_A, i)].id,
+                    severity="High",
+                    opened_at=opened,
+                    tracked=True,
+                    ack_due_at=opened + datetime.timedelta(minutes=SLA_ACK_MINUTES),
+                    resolve_due_at=opened + datetime.timedelta(minutes=180 if resolved_after else 10 * 24 * 60),
+                    first_ack_at=opened + datetime.timedelta(minutes=ack_after),
+                    first_ack_by="analyst1",
+                    first_ack_action="assigned",
+                    resolved_at=opened + datetime.timedelta(minutes=resolved_after) if resolved_after else None,
+                    resolved_by="analyst1" if resolved_after else None,
+                    paused_at=opened + datetime.timedelta(hours=2) if waiting else None,
+                    updated_at=today,
+                ),
+            )
+        for i, status in enumerate(CASES_A):
+            opened = today - datetime.timedelta(days=2, hours=i)
+            s.add(
+                CaseSlaTracking(
+                    case_id=cases[(CUST_A, i)].id,
+                    severity="High",
+                    opened_at=opened,
+                    tracked=True,
+                    ack_due_at=opened + datetime.timedelta(hours=1),
+                    resolve_due_at=opened + datetime.timedelta(days=10),
+                    first_ack_at=opened + datetime.timedelta(minutes=10),
+                    first_ack_by="analyst1",
+                    resolved_at=opened + datetime.timedelta(days=1) if status == "CLOSED" else None,
+                    paused_at=opened + datetime.timedelta(hours=1) if status == "PENDING_CUSTOMER" else None,
+                    updated_at=today,
+                ),
+            )
+
         password = AuthHandler().get_password_hash(PASSWORD)
         s.add(User(username=PORTAL_USER, password=password, email=f"{PORTAL_USER}@e2e.example", role_id=4))
         s.add(User(username=ADMIN, password=password, email=f"{ADMIN}@e2e.example", role_id=1))
@@ -277,8 +353,16 @@ async def seed(quiet: bool = False) -> dict:
                 )
         await s.commit()
         if not quiet:
-            print(f"seed: {CUST_A} and {CUST_B} with alerts, assets, cases, agents, AI reports; '{PORTAL_USER}' assigned to {CUST_A}")
-        return {"portal_user_id": portal.id, "ai_alert_id": alerts[(CUST_A, 0)].id}
+            print(
+                f"seed: {CUST_A} and {CUST_B} with alerts, assets, cases, agents, AI reports, SLA clocks; '{PORTAL_USER}' assigned to {CUST_A}",
+            )
+        return {
+            "portal_user_id": portal.id,
+            "ai_alert_id": alerts[(CUST_A, 0)].id,
+            # The alert and case of A the SOC is waiting on the customer for (#1187).
+            "waiting_alert_id": alerts[(CUST_A, ALERTS_A.index("PENDING_CUSTOMER"))].id,
+            "waiting_case_id": cases[(CUST_A, CASES_A.index("PENDING_CUSTOMER"))].id,
+        }
 
 
 def fixture() -> dict:
@@ -300,6 +384,7 @@ def fixture() -> dict:
         },
         "ai_a": {"total_reports": 2, "severity_counts": {"High": 1, "Medium": 1}},
         "reports": {"a": REPORTS["A"], "b": REPORTS["B"]},
+        "sla_a": sla_expectations(),
     }
 
 

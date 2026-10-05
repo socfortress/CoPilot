@@ -88,6 +88,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import NotificationTemplateForm from "@/components/notifications/NotificationTemplateForm.vue"
 import NotificationTemplateItem from "@/components/notifications/NotificationTemplateItem.vue"
+import { NOTIFICATION_TRIGGER_LABELS } from "@/types/notifications"
 import { getApiErrorMessage } from "@/utils"
 
 // Deployment-level rather than nested under a customer: a template with no
@@ -110,15 +111,7 @@ const triggerFilter = ref<NotificationTrigger | null>(null)
 // editing one template then another would keep the first one's fields.
 const formKey = ref(0)
 
-const triggerOptions = [
-	{ label: "Alert created", value: "alert_created" },
-	{ label: "AI investigation complete", value: "investigation_complete" },
-	{ label: "AI report reviewed", value: "ai_report_reviewed" },
-	{ label: "Alert assigned", value: "alert_assigned" },
-	{ label: "Case assigned", value: "case_assigned" },
-	{ label: "Case task assigned", value: "case_task_assigned" },
-	{ label: "Temporary password email", value: "temp_password_issued" }
-]
+const triggerOptions = Object.entries(NOTIFICATION_TRIGGER_LABELS).map(([value, label]) => ({ label, value }))
 
 const formTitle = computed(() => {
 	if (!editingTemplate.value) return "Create a template"

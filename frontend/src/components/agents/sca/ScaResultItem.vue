@@ -66,6 +66,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="agentId ? routeAgentScaCheck(agentId, data.policy_id, data.id) : null"
+					label="Open the check's page"
+					@navigate="showDetails = false"
+				/>
+			</template>
 			<ScaResultItemDetails :data />
 		</n-modal>
 	</div>
@@ -78,6 +85,7 @@ import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import ScaResultItemDetails from "./ScaResultItemDetails.vue"
 

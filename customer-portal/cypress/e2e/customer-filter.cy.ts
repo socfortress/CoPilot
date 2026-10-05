@@ -32,7 +32,7 @@ describe("global customer filter", () => {
 	}
 
 	function expectCard(key: string, value: number) {
-		cy.get(`[data-testid=stat-${key}] [data-testid=card-stats-value]`).should("have.text", String(value))
+		cy.get(`[data-testid=stat-${key}] [data-testid=stat-value]`).should("have.text", String(value))
 	}
 
 	it("alerts: the cards and the list reload once for the picked customer", () => {

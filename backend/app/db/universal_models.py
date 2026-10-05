@@ -487,6 +487,25 @@ class CustomerPortalAiReportSettings(SQLModel, table=True):
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
 
+class CustomerPortalSlaSettings(SQLModel, table=True):
+    """Per-customer switch for the Customer Portal's SLA page (#1187).
+
+    **Opt-in** like the AI report switch: a customer with no row here does not see
+    the page, so the SOC's response-time figures reach an end customer only when an
+    operator decided they should. The figures themselves are computed by SOC
+    Management from the same tracking tables the analyst dashboard reads, through
+    ``app/customer_portal/services/sla.py`` — nothing should read this table directly.
+    """
+
+    __tablename__ = "customer_portal_sla_settings"
+
+    id: Optional[int] = Field(primary_key=True)
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=50, index=True, unique=True, nullable=False)
+    enabled: bool = Field(default=False, nullable=False)
+    updated_at: datetime = Field(default_factory=now_utc)
+    updated_by: Optional[int] = Field(default=None)  # User ID who last updated
+
+
 class CustomerWafInstance(SQLModel, table=True):
     """A SOCFortress WAF deployment that CoPilot talks to on a customer's behalf (#1165).
 

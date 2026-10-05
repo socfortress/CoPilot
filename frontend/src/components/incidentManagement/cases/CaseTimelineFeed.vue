@@ -47,6 +47,7 @@ import { h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
+import { statusLabel } from "@/components/incidentManagement/common/status"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -89,14 +90,18 @@ function summary(event: CaseEvent): string {
 			return p.source === "from_alert" ? `Case created from alert #${p.alert_id}` : "Case created"
 		case "case_status_changed":
 			return p.forced
-				? `Status forced from ${p.from ?? "—"} to ${p.to} (mandatory tasks bypassed)`
-				: `Status changed from ${p.from ?? "—"} to ${p.to}`
+				? `Status forced from ${p.from ? statusLabel(p.from) : "—"} to ${statusLabel(p.to)} (mandatory tasks bypassed)`
+				: `Status changed from ${p.from ? statusLabel(p.from) : "—"} to ${statusLabel(p.to)}`
 		case "case_assigned":
 			return p.from
 				? `Reassigned from ${p.from} to ${p.to ?? "unassigned"}`
 				: `Assigned to ${p.to ?? "unassigned"}`
 		case "case_escalated":
 			return p.escalated ? "Case escalated" : "Case de-escalated"
+		case "case_severity_changed":
+			return p.to
+				? `Severity set to ${p.to}${p.from ? ` (was ${p.from})` : ""}`
+				: `Severity follows the linked alerts${p.from ? ` (was ${p.from})` : ""}`
 		case "alert_linked":
 			return p.alert_ids ? `${p.alert_ids.length} alert(s) linked to case` : `Alert #${p.alert_id} linked`
 		case "alert_unlinked":
@@ -133,11 +138,20 @@ function timelineType(event: CaseEvent): "default" | "success" | "info" | "warni
 		case "template_applied":
 			return "info"
 		case "case_status_changed":
-			return p.to === "CLOSED" ? "success" : p.to === "OPEN" ? "info" : "warning"
+			// Waiting on the customer is a pause, not progress: neutral rather than warning.
+			return p.to === "CLOSED"
+				? "success"
+				: p.to === "OPEN"
+					? "info"
+					: p.to === "PENDING_CUSTOMER"
+						? "default"
+						: "warning"
 		case "task_status_changed":
 			return p.to_status === "DONE" ? "success" : p.to_status === "NOT_NECESSARY" ? "warning" : "default"
 		case "case_escalated":
 			return p.escalated ? "warning" : "default"
+		case "case_severity_changed":
+			return "warning"
 		case "alert_unlinked":
 			return "warning"
 		case "comment_added":
@@ -160,6 +174,8 @@ function iconFor(event: CaseEvent): string {
 			return "carbon:user-avatar-filled-alt"
 		case "case_escalated":
 			return "carbon:warning-alt"
+		case "case_severity_changed":
+			return "carbon:meter"
 		case "alert_linked":
 			return "carbon:link"
 		case "alert_unlinked":

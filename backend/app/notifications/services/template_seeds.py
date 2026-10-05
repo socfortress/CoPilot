@@ -88,6 +88,25 @@ BUILTIN_TEMPLATES: List[Dict[str, Any]] = [
         ),
     },
     {
+        "name": "SLA — running late",
+        "description": "For internal routes on SLA at risk / breached: which item, which target, how late, and whose it is.",
+        # Unscoped like the assignment template: both SLA triggers share the shape.
+        "trigger": None,
+        "format": "markdown",
+        "subject_template": "{{ subject }}",
+        "body_template": (
+            "{% if trigger == 'sla_breached' %}*SLA breached*{% else %}*SLA at risk*{% endif %}"
+            "{% if context.clock %} — {{ context.clock }} target{% endif %}, severity *{{ severity }}*\n\n"
+            "{{ entity_type | title }}: #{{ entity_id }}{% if context.title %} — {{ context.title }}{% endif %}\n"
+            "{% if customer_code %}Customer: `{{ customer_code }}`\n{% endif %}"
+            "Assigned to: {{ assignee or 'nobody' }}\n"
+            "{% if context.due_at %}Due: {{ context.due_at }} UTC"
+            "{% if context.overdue_minutes is not none %} ({{ context.overdue_minutes }} min overdue)"
+            "{% elif context.remaining_minutes is not none %} ({{ context.remaining_minutes }} min left){% endif %}\n{% endif %}"
+            "{% if link_url %}\nOpen in CoPilot: {{ link_url }}{% endif %}"
+        ),
+    },
+    {
         "name": "AI investigation — customer summary",
         "description": "Plain-language wrap-up of an AI investigation, written for the end customer.",
         "trigger": "investigation_complete",

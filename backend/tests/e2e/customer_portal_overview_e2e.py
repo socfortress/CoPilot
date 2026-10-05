@@ -94,7 +94,7 @@ class StatementCounter:
 
 
 def projected_counts(body):
-    return {key: body.get(key) for key in ("total", "open", "in_progress", "closed")}
+    return {key: body.get(key) for key in ("total", "open", "in_progress", "closed", "pending_customer")}
 
 
 async def check_parity(client, headers, who):

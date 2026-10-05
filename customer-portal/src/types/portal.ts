@@ -34,6 +34,8 @@ export interface StatusCounts {
 	open: number
 	in_progress: number
 	closed: number
+	/** Items the SOC is waiting on the customer for. */
+	pending_customer: number
 }
 
 export interface AgentCounts {
@@ -86,6 +88,8 @@ export interface AlertsStats {
 	open: number
 	in_progress: number
 	closed: number
+	/** Items the SOC is waiting on the customer for. */
+	pending_customer: number
 }
 
 export interface CasesStats {
@@ -93,4 +97,6 @@ export interface CasesStats {
 	open: number
 	in_progress: number
 	closed: number
+	/** Items the SOC is waiting on the customer for. */
+	pending_customer: number
 }

@@ -82,6 +82,8 @@ If you expected an AI notification and didn't get one, that line is the first th
 | **An alert is assigned** | An alert's assignee changes |
 | **A case is assigned** | A case's assignee changes |
 | **A case task is assigned** | A task within a case is assigned |
+| **An alert or case SLA is at risk** | A running response or resolution clock entered the last quarter of its window (in working time for business-hours targets) |
+| **An alert or case SLA is breached** | A running clock ran out |
 
 ### Both
 
@@ -92,6 +94,8 @@ If you expected an AI notification and didn't get one, that line is the first th
 This is the only trigger offered on **both** customer and internal routes, because analyst sign-off is legitimately both audiences' business. It's what lets you hold customer delivery until a human has checked the AI's work — see [Two audiences, two moments](#two-audiences-two-moments).
 
 It counts as AI-written content, so a customer-facing review route is governed by the same *Customers → (customer) → AI Report* opt-in as the rest. An internal route is not: if the switch is off, the customer's route is suppressed and **your internal one still fires**.
+
+SLA triggers fire **once per clock and state**: an item can be at risk on its response and, later, on its resolution — each is told once, and a breach never follows with a stale "at risk". The check runs every two minutes. Items waiting on the customer are skipped (their clocks are stopped), and a breach that was already more than 24 hours old when first seen is recorded silently instead of sent, so the first run after an upgrade does not flood the channel.
 
 Assignment triggers only fire on an **actual change**. Re-saving the same assignee sends nothing. By default, assigning something to *yourself* also sends nothing — there's a per-route **Notify on self-assign** option if your team wants the audit trail anyway.
 
@@ -117,6 +121,8 @@ DEFAULT_ALERT_SEVERITY=Medium   # Critical | High | Medium | Low | Informational
 > **The AI's severity is a different number.** An investigation assesses the *finding*, which often disagrees with the alert. Alert #14 in our own testing was `Critical` by rule level while its investigation concluded `Medium`. **An *AI investigation completes* route filters on the AI's assessment**, not the alert's — so a route gated at *High* will drop investigations the AI graded Medium, even for a Critical alert. If that surprises you, set AI routes lower than you'd set alert-creation routes.
 
 Assignment notifications are **Informational** — being assigned something isn't a security severity. Set assignment routes to *Informational and above*, or they'll never fire.
+
+SLA notifications carry **the item's own severity** — a route at *High and above* hears only about High and Critical alerts and cases running late, which is usually what you want.
 
 ---
 
@@ -188,6 +194,19 @@ Leave the template empty. Teams renders its own card with a severity-coloured he
 Two things bite here. Assignment events are always **Informational**, so any higher floor means the route never fires. And this must be an **internal** route — assignment triggers aren't offered on customer routes because they could never match.
 
 Analysts need an email address on their CoPilot account. A missing one is recorded as `failed` with the reason rather than silently falling back to anyone else.
+
+### Tell an analyst their item is running late
+
+| Field | Value |
+|---|---|
+| Where | *Notifications → Internal Routes* (admin only) |
+| Trigger | **An alert or case SLA is breached** (or *is at risk*, for an earlier nudge) |
+| Minimum severity | *High and above* — or lower if every promise matters |
+| Channel | Email (Resend) |
+| Deliver to | **Whoever it's assigned to** |
+| Message template | **SLA — running late** |
+
+An unassigned item has nobody to email: pair this with a route to the team's Teams channel or webhook if unassigned items should be chased too.
 
 ### Push everything into your own automation
 
@@ -403,9 +422,10 @@ Available variables:
 | `{{ link_url }}` | Deep link into CoPilot. May be empty. |
 | `{{ entity_type }}` / `{{ entity_id }}` | `alert`, `case` or `case_task`, and its id |
 | `{{ trigger }}` | Which trigger fired this |
-| `{{ assignee }}` / `{{ actor }}` | Assignment triggers only |
+| `{{ assignee }}` / `{{ actor }}` | Assignment triggers (and `assignee` on SLA triggers) |
 | `{{ context.… }}` | Per-event extras — `context.asset_name`, `context.rule_level`, `context.iocs` |
 | `{{ context.reviewer }}` / `{{ context.verdict }}` | Review trigger only — who signed off, and their verdict |
+| `{{ context.clock }}`, `{{ context.due_at }}`, `{{ context.opened_at }}`, `{{ context.remaining_minutes }}` / `{{ context.overdue_minutes }}`, `{{ context.status }}`, `{{ context.title }}` | SLA triggers only — which clock (`acknowledge` / `resolve`), when it was due (UTC), how long left or how late |
 | `{{ branding.… }}` | Customer logo and brand colours — `logo`, `title`, `accent`, `accent_strong`, `accent_text` |
 | `{{ context.ai_report.… }}` | The AI investigation report — see below |
 
@@ -443,13 +463,14 @@ The report is only fetched when a template mentions `ai_report`, so templates th
 
 ### Built-in templates
 
-Seven ship with every deployment, as working starting points and as worked examples of the syntax:
+Eight ship with every deployment, as working starting points and as worked examples of the syntax:
 
 | Template | For |
 |---|---|
 | **Alert — concise** | One-liner for high-volume chat channels |
 | **Alert — detailed with IOCs** | Full context including indicators |
 | **Assignment — who and what** | Internal routes |
+| **SLA — running late** | Internal routes on the SLA triggers: which item, which target, how late, whose it is |
 | **AI investigation — customer summary** | Plain-language wrap-up for the end customer |
 | **AI report reviewed — sign-off** | Who reviewed an investigation and what they concluded |
 | **AI investigation — full report (HTML email)** | The complete write-up with rendered tables, in the customer's brand colours |

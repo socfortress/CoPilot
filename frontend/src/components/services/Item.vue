@@ -39,6 +39,9 @@
 			:bordered="false"
 			content-class="p-0!"
 		>
+			<template #header-extra>
+				<ModalPageButton :route="detailRoute" label="Open the service's page" @navigate="showDetails = false" />
+			</template>
 			<NetworkConnectorDetails v-if="type === 'network-connector'" :connector="data" />
 			<IntegrationDetails v-else :integration="data" />
 		</n-modal>
@@ -52,6 +55,7 @@ import { computed, ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import IntegrationDetails from "@/components/integrations/IntegrationDetails.vue"
 import NetworkConnectorDetails from "@/components/networkConnectors/NetworkConnectorDetails.vue"
 import { useNavigation } from "@/composables/useNavigation"

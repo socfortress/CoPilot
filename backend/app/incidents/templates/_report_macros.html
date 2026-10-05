@@ -72,3 +72,61 @@ Linked alerts ({{ case.linked_alert_count }}):{% for t in case.linked_alert_titl
   {% endif %}
 </div>
 {% endmacro %}
+
+{# ===================== SLA (#1187) =====================
+   Shared by the SOC operations report and the customer report's SLA section. Rows
+   come from `soc_management.services.report.severity_table`; compliance cells carry
+   pre-formatted `rate`, a colour class `cls` and a meter `width`. #}
+{% macro rate_cell(c) -%}
+<td class="{{ c.cls }}"><span class="meter"><span style="width:{{ c.width }}%"></span></span>{{ c.rate }}</td>
+{%- endmacro %}
+
+{% macro sla_severity_table(rows) %}
+<table class="sla">
+  <tr>
+    <th>Severity</th><th>Target ack</th><th>Target resolve</th><th>Opened</th>
+    <th>Median TTA</th><th>Ack in SLA</th><th>Median TTR</th><th>Resolved in SLA</th><th>Open</th><th>Past SLA</th>
+  </tr>
+  {% for r in rows %}
+  <tr>
+    <td>{{ r.severity }}</td>
+    <td class="dim">{{ r.ack_target }}</td><td class="dim">{{ r.resolve_target }}</td>
+    <td{% if r.empty %} class="dim"{% endif %}>{{ r.opened }}</td>
+    <td>{{ r.tta }}</td>{{ rate_cell(r.ack) }}<td>{{ r.ttr }}</td>{{ rate_cell(r.resolve) }}
+    <td>{{ r.open_now }}</td>
+    <td class="{% if r.breached_now %}rate-bad{% else %}dim{% endif %}">{{ r.breached_now }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endmacro %}
+
+{# The customer-facing SLA section: figures only, never analyst names. Rendered only
+   when the report was generated with "Include SLA performance" by the SOC. #}
+{% macro sla_section(sla, number) %}
+<div class="page-break"></div>
+<div class="section-heading"><span class="n">{{ number }}</span><span class="t">Service Level Performance</span></div>
+<div class="section-sub">{{ period.from }} — {{ period.to }}</div>
+<p class="lead">
+  How quickly the SOC acknowledged and resolved the alerts and cases opened in the period, measured against the
+  service levels agreed for each severity. Times are medians; compliance counts only items whose outcome is known.
+</p>
+{% if sla.has_data %}
+<div class="kpi-row">
+  <div class="kpi"><div class="num {{ sla.alerts.ack.cls }}">{{ sla.alerts.ack.rate }}</div><div class="lbl">Alerts acknowledged in SLA</div></div>
+  <div class="kpi"><div class="num {{ sla.alerts.resolve.cls }}">{{ sla.alerts.resolve.rate }}</div><div class="lbl">Alerts resolved in SLA</div></div>
+  <div class="kpi"><div class="num">{{ sla.alerts.tta_median }}</div><div class="lbl">Median response time</div></div>
+  <div class="kpi"><div class="num">{{ sla.alerts.ttr_median }}</div><div class="lbl">Median resolution time</div></div>
+</div>
+<div class="bar">Alerts by severity</div>
+{{ sla_severity_table(sla.alert_severities) }}
+{% if sla.cases.opened %}
+<div class="bar" style="margin-top:18px;">Cases by severity</div>
+{{ sla_severity_table(sla.case_severities) }}
+{% endif %}
+{% if sla.tracking_since %}
+<div class="note">Service level tracking began on {{ sla.tracking_since }}; earlier items are not part of these figures.</div>
+{% endif %}
+{% else %}
+<div class="empty">No alerts or cases were opened for this customer in the selected period.</div>
+{% endif %}
+{% endmacro %}

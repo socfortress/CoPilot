@@ -9,7 +9,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Incident Management Report — {{ customer.name }}</title>
+  <title>{% block doc_title %}Incident Management Report — {{ customer.name }}{% endblock %}</title>
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
@@ -170,6 +170,30 @@
     table.toc td { padding: 9px 0; font-size: 12.5px; color: #0f172a; border-bottom: 1px solid #eef1f5; }
     table.toc td.num { width: 40px; font-weight: 700; color: {{ theme.accent }};
                        font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; }
+
+    /* ========================= SLA (#1187) ========================= */
+    /* Shared by the SOC operations report and the customer report's SLA section. */
+    table.sla th { background: #f4f7fb; color: #475569; font-weight: 700; text-transform: uppercase;
+                   letter-spacing: .07em; font-size: 8.5px; padding: 7px 8px; border-bottom: 2px solid #e2e8f0; text-align: right; }
+    table.sla th:first-child, table.sla td:first-child { text-align: left; }
+    table.sla td { padding: 7px 8px; border-bottom: 1px solid #eef1f5; font-size: 10px; text-align: right;
+                   font-family: Consolas, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace; color: #334155; }
+    table.sla td:first-child { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #0f172a; font-weight: 600; }
+    table.sla td.dim { color: #94a3b8; font-weight: 400; }
+    /* Qualified by element too, so the colour beats `table.sla td`'s neutral ink. */
+    .rate-good, table.sla td.rate-good, table.metrics td.rate-good { color: #15803d; font-weight: 700; }
+    .rate-warn, table.sla td.rate-warn, table.metrics td.rate-warn { color: #b45309; font-weight: 700; }
+    .rate-bad,  table.sla td.rate-bad,  table.metrics td.rate-bad  { color: #b91c1c; font-weight: 700; }
+    table.sla td { white-space: nowrap; }
+    table.sla td:first-child { white-space: normal; }
+    .meter { display: inline-block; width: 64px; height: 5px; background: #eef1f5; border-radius: 3px; vertical-align: middle; margin-right: 6px; }
+    .meter span { display: block; height: 5px; border-radius: 3px; background: {{ theme.accent_strong }}; }
+    .flag { display: inline-block; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+            padding: 1px 6px; border-radius: 10px; background: #fef3c7; color: #92400e; margin-left: 4px; }
+    .flag.bad { background: #fee2e2; color: #991b1b; }
+    .delta { font-size: 8.5px; margin-left: 4px; color: #94a3b8; }
+    .note { font-size: 9.5px; color: #64748b; border-left: 2px solid #e2e8f0; padding: 4px 0 4px 10px; margin: 12px 0; }
+    {% block extra_styles %}{% endblock %}
   </style>
 </head>
 <body>
@@ -189,9 +213,11 @@
       <div class="rule"></div>
       <div class="grid">
         <div class="cell">
+          {% block cover_scope %}
           <div class="k">Customer</div>
           <div class="v">{{ customer.name }}</div>
           <div class="v code">{{ customer.code }}</div>
+          {% endblock %}
         </div>
         <div class="cell">
           <div class="k">Reporting period</div>
@@ -203,8 +229,10 @@
         </div>
       </div>
       <div class="confidential">
+        {% block confidential %}
         Confidential document intended solely for the named customer. It summarizes the security activity
         derived from the Incident Management records for the stated period. Unauthorized distribution is prohibited.
+        {% endblock %}
       </div>
     </div>
   </div>

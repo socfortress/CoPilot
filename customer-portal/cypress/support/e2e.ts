@@ -13,6 +13,22 @@ export interface PortalSeed {
 	ai_a: { total_reports: number; severity_counts: Record<string, number> }
 	/** Completed customer reports per customer. */
 	reports: { a: number; b: number }
+	/** What the SLA page must show for customer A (#1187). */
+	sla_a: SlaSeed
+	/** The alert and case of A that wait on the customer (PENDING_CUSTOMER). */
+	waiting_alert_id: number
+	waiting_case_id: number
+}
+
+interface SlaSeed {
+	alerts_opened: number
+	ack_met: number
+	ack_breached: number
+	ack_rate: number
+	resolve_rate: number
+	open_alerts: number
+	open_cases: number
+	waiting_on_you: number
 }
 
 interface StatusCounts {
@@ -20,6 +36,7 @@ interface StatusCounts {
 	open: number
 	in_progress: number
 	closed: number
+	pending_customer: number
 }
 
 declare global {
@@ -44,6 +61,10 @@ declare global {
 		}
 	}
 }
+
+// A browser notice, not an application error: ResizeObserver could not deliver every
+// notification in one frame (naive-ui's autosizing textarea inside an animated tab).
+Cypress.on("uncaught:exception", err => !err.message.includes("ResizeObserver loop"))
 
 Cypress.Commands.add("seedPortal", () => {
 	return cy.task<PortalSeed>("portal:seed", null, { timeout: 60000 }).then(seed => {

@@ -1,0 +1,179 @@
+{# SOC OPERATIONS report (#1187) — the SOC Management dashboard as a document.
+   Internal: it names analysts (only the viewer's own row for an analyst) and spans
+   customers, so it is TLP:AMBER and never shared through the customer portal. #}
+{% extends "_report_base.html" %}
+{% from "_report_macros.html" import sla_severity_table, rate_cell with context %}
+
+{% block doc_title %}SOC Operations Report — {{ scope }}{% endblock %}
+{% block cover_eyebrow %}SOC Operations Report{% endblock %}
+{% block cover_title %}Service Performance &amp; SLA{% endblock %}
+{% block cover_kind %}<div class="kind">Internal · SOC management</div>{% endblock %}
+{% block cover_scope %}
+  <div class="k">Scope</div>
+  <div class="v">{{ scope }}</div>
+{% endblock %}
+{% block confidential %}
+  Internal document for SOC management. It measures the service delivered — response and resolution times
+  against the SLA in force, workload and detection quality — from the Incident Management records for the stated
+  period. Do not share outside the SOC.
+{% endblock %}
+
+{% block content %}
+  {# ================= 1. OVERVIEW ================= #}
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">01</span><span class="t">Overview</span></div>
+  <div class="section-sub">{{ period.from }} — {{ period.to }} UTC · compared with {{ previous_period.from }} — {{ previous_period.to }}</div>
+  <p class="lead">
+    Volumes count the items that <b>opened</b> in the period; response and resolution figures are measured on that
+    same cohort. Times are medians, with the mean and the 90th percentile alongside.
+  </p>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="num">{{ alerts.opened }}</div><div class="lbl">Alerts opened {% if alerts.opened_delta %}<span class="delta">{{ alerts.opened_delta }}</span>{% endif %}</div></div>
+    <div class="kpi"><div class="num {{ alerts.resolve.cls }}">{{ alerts.resolve.rate }}</div><div class="lbl">Alerts resolved in SLA</div></div>
+    <div class="kpi"><div class="num">{{ alerts.tta_median }}</div><div class="lbl">Median time to acknowledge</div></div>
+    <div class="kpi"><div class="num">{{ alerts.ttr_median }}</div><div class="lbl">Median time to resolve</div></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="num">{{ cases.opened }}</div><div class="lbl">Cases opened {% if cases.opened_delta %}<span class="delta">{{ cases.opened_delta }}</span>{% endif %}</div></div>
+    <div class="kpi"><div class="num {{ cases.resolve.cls }}">{{ cases.resolve.rate }}</div><div class="lbl">Cases resolved in SLA</div></div>
+    <div class="kpi"><div class="num {% if workload.breached %}rate-bad{% endif %}">{{ workload.breached }}</div><div class="lbl">Open items past SLA</div></div>
+    <div class="kpi"><div class="num">{{ false_positive_rate }}</div><div class="lbl">False positive rate</div></div>
+  </div>
+
+  <div class="bar">Service metrics</div>
+  <table class="metrics">
+    <tr class="grp"><td>Alerts</td><td class="v"></td></tr>
+    <tr class="sub"><td class="k">• Opened / resolved in period</td><td class="v">{{ alerts.opened }} / {{ alerts.resolved }}</td></tr>
+    <tr class="sub"><td class="k">• Acknowledge — median · mean · p90</td><td class="v" style="width:200px">{{ alerts.tta_median }} · {{ alerts.tta_mean }} · {{ alerts.tta_p90 }}</td></tr>
+    <tr class="sub"><td class="k">• Resolve — median · mean · p90</td><td class="v" style="width:200px">{{ alerts.ttr_median }} · {{ alerts.ttr_mean }} · {{ alerts.ttr_p90 }}</td></tr>
+    <tr class="sub"><td class="k">• Acknowledged within SLA</td><td class="v {{ alerts.ack.cls }}">{{ alerts.ack.rate }}</td></tr>
+    <tr class="sub"><td class="k">• Resolved within SLA</td><td class="v {{ alerts.resolve.cls }}">{{ alerts.resolve.rate }}</td></tr>
+    <tr class="sub"><td class="k">• Escalated · converted to a case</td><td class="v" style="width:200px">{{ escalated_alerts }} · {{ case_conversion_rate }}</td></tr>
+    <tr class="sub"><td class="k">• Reviewed · false positive rate</td><td class="v" style="width:200px">{{ reviewed_alerts }} · {{ false_positive_rate }}</td></tr>
+    <tr class="grp"><td>Cases</td><td class="v"></td></tr>
+    <tr class="sub"><td class="k">• Opened / resolved in period</td><td class="v">{{ cases.opened }} / {{ cases.resolved }}</td></tr>
+    <tr class="sub"><td class="k">• Acknowledge — median · mean · p90</td><td class="v" style="width:200px">{{ cases.tta_median }} · {{ cases.tta_mean }} · {{ cases.tta_p90 }}</td></tr>
+    <tr class="sub"><td class="k">• Resolve — median · mean · p90</td><td class="v" style="width:200px">{{ cases.ttr_median }} · {{ cases.ttr_mean }} · {{ cases.ttr_p90 }}</td></tr>
+    <tr class="sub"><td class="k">• Acknowledged within SLA</td><td class="v {{ cases.ack.cls }}">{{ cases.ack.rate }}</td></tr>
+    <tr class="sub"><td class="k">• Resolved within SLA</td><td class="v {{ cases.resolve.cls }}">{{ cases.resolve.rate }}</td></tr>
+    <tr class="grp"><td>Backlog now</td><td class="v"></td></tr>
+    <tr class="sub"><td class="k">• Open alerts · unassigned</td><td class="v" style="width:200px">{{ workload.open_alerts }} · {{ workload.unassigned_alerts }}</td></tr>
+    <tr class="sub"><td class="k">• Open cases · unassigned</td><td class="v" style="width:200px">{{ workload.open_cases }} · {{ workload.unassigned_cases }}</td></tr>
+    <tr class="sub"><td class="k">• Past SLA · at risk</td><td class="v" style="width:200px">{{ workload.breached }} · {{ workload.at_risk }}</td></tr>
+    <tr class="sub"><td class="k">• Waiting on the customer (clocks stopped)</td><td class="v" style="width:200px">{{ workload.waiting_on_customer }}</td></tr>
+  </table>
+
+  <div class="chart-block"><img src="{{ charts.volume }}" alt="alert volume" /><div class="chart-cap">Alerts opened vs resolved</div></div>
+
+  {% if tracking_since %}
+  <div class="note">SLA tracking began on {{ tracking_since }}. Items opened before then count in volumes and in the backlog, but in no time or compliance figure.</div>
+  {% endif %}
+
+  {# ================= 2. SLA ================= #}
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">02</span><span class="t">SLA Performance</span></div>
+  <div class="section-sub">By severity · targets in force for this scope</div>
+  <div class="bar">Alerts</div>
+  {{ sla_severity_table(alert_severities) }}
+  <div class="bar" style="margin-top:18px;">Cases</div>
+  {{ sla_severity_table(case_severities) }}
+  <div class="chart-block"><img src="{{ charts.sla }}" alt="SLA compliance trend" /><div class="chart-cap">Resolution SLA met, by opening date (dashed line: {{ sla_objective|int }}% objective)</div></div>
+
+  {# ================= 3. ANALYSTS ================= #}
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">03</span><span class="t">Analyst Performance</span></div>
+  <div class="section-sub">{% if viewer.sees_all_analysts %}Every SOC user active in the period{% else %}Your own figures — other analysts are visible to administrators only{% endif %}</div>
+  {% if analysts %}
+  <table class="sla">
+    <tr><th>Analyst</th><th>Acknowledged</th><th>Alerts closed</th><th>Cases closed</th><th>Median TTA</th><th>Median TTR</th><th>Resolved in SLA</th><th>Open now</th><th>Past SLA</th></tr>
+    {% for a in analysts %}
+    <tr>
+      <td>{{ a.username }}</td><td>{{ a.acknowledged }}</td><td>{{ a.alerts_resolved }}</td><td>{{ a.cases_resolved }}</td>
+      <td>{{ a.tta }}</td><td>{{ a.ttr }}</td>{{ rate_cell(a.sla) }}<td>{{ a.open }}</td>
+      <td class="{% if a.breached %}rate-bad{% else %}dim{% endif %}">{{ a.breached }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <div class="note">Activity is attributed to whoever performed it: the first SOC response, and the closure. Closures by customers are excluded.</div>
+  {% else %}
+  <div class="empty">No analyst activity in this period.</div>
+  {% endif %}
+
+  {# ================= 4. RULES ================= #}
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">04</span><span class="t">Detection Rules</span></div>
+  <div class="section-sub">Top rules by alerts opened in the period</div>
+  {% if rules %}
+  {% if charts.rules %}<div class="chart-block"><img src="{{ charts.rules }}" alt="top detection rules" /></div>{% endif %}
+  <table class="sla">
+    <tr><th>Rule</th><th>Source</th><th>Alerts</th><th>In a case</th><th>Reviewed</th><th>False positive</th><th>Median TTR</th></tr>
+    {% for r in rules %}
+    <tr>
+      <td>{{ r.name }}{% if r.noisy %}<span class="flag">noisy</span>{% endif %}</td>
+      <td>{{ r.sources }}</td><td>{{ r.alerts }}</td><td>{{ r.in_case }}</td><td>{{ r.reviewed }}</td>
+      <td class="{% if r.noisy %}rate-bad{% endif %}">{{ r.fp_rate }}</td><td>{{ r.ttr }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <div class="note">A rule is flagged noisy when at least five of its alerts were reviewed and half or more were judged false positives — a candidate for tuning.</div>
+  {% else %}
+  <div class="empty">No alerts opened in this period.</div>
+  {% endif %}
+
+  {# ================= 5. CUSTOMERS ================= #}
+  {% if customers|length > 1 %}
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">05</span><span class="t">Customers</span></div>
+  <div class="section-sub">Per tenant</div>
+  <table class="sla">
+    <tr><th>Customer</th><th>Alerts</th><th>Cases</th><th>Open</th><th>Past SLA</th><th>Alert SLA</th><th>Case SLA</th><th>Median TTR</th><th>Top rule</th></tr>
+    {% for c in customers %}
+    <tr>
+      <td>{{ c.name }} <span class="muted mono">{{ c.code }}</span></td><td>{{ c.alerts }}</td><td>{{ c.cases }}</td><td>{{ c.open }}</td>
+      <td class="{% if c.breached %}rate-bad{% else %}dim{% endif %}">{{ c.breached }}</td>
+      {{ rate_cell(c.alert_sla) }}{{ rate_cell(c.case_sla) }}<td>{{ c.ttr }}</td><td>{{ c.top_rule }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+  {# ================= 6. WORKLOAD ================= #}
+  <div class="page-break"></div>
+  <div class="section-heading"><span class="n">{% if customers|length > 1 %}06{% else %}05{% endif %}</span><span class="t">Workload</span></div>
+  <div class="section-sub">Open right now, whenever it was opened</div>
+  <table class="sla">
+    <tr><th>Severity</th><th>Open alerts</th><th>Open cases</th><th>At risk</th><th>Past SLA</th></tr>
+    {% for s in workload.by_severity %}
+    <tr><td>{{ s.severity }}</td><td>{{ s.alerts }}</td><td>{{ s.cases }}</td>
+      <td class="{% if s.at_risk %}rate-warn{% else %}dim{% endif %}">{{ s.at_risk }}</td>
+      <td class="{% if s.breached %}rate-bad{% else %}dim{% endif %}">{{ s.breached }}</td></tr>
+    {% endfor %}
+  </table>
+  {% if workload.by_assignee %}
+  <div class="bar" style="margin-top:18px;">By assignee</div>
+  <table class="sla">
+    <tr><th>Assignee</th><th>Open alerts</th><th>Open cases</th><th>At risk</th><th>Past SLA</th></tr>
+    {% for w in workload.by_assignee %}
+    <tr><td>{{ w.username }}</td><td>{{ w.alerts }}</td><td>{{ w.cases }}</td><td>{{ w.at_risk }}</td>
+      <td class="{% if w.breached %}rate-bad{% else %}dim{% endif %}">{{ w.breached }}</td></tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+  <div class="bar" style="margin-top:18px;">Needs attention</div>
+  {% if attention %}
+  <table class="sla">
+    <tr><th>Item</th><th>Customer</th><th>Severity</th><th>Assignee</th><th>Clock</th><th>State</th></tr>
+    {% for i in attention %}
+    <tr>
+      <td><span class="mono">{{ i.ref }}</span> {{ i.title }}</td><td>{{ i.customer }}</td><td>{{ i.severity }}</td><td>{{ i.assigned_to }}</td>
+      <td>{{ i.clock }}</td>
+      <td class="{% if i.late %}rate-bad{% else %}rate-warn{% endif %}">{% if i.late %}{{ i.overdue }} late{% else %}{{ i.overdue }} left{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="empty">Nothing open is past or close to its SLA.</div>
+  {% endif %}
+{% endblock %}

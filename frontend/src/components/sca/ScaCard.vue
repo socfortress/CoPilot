@@ -83,6 +83,13 @@
 			content-class="p-0!"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="routeAgentSca(sca.agent_id, sca.policy_id)"
+					label="Open the policy's page"
+					@navigate="showDetails = false"
+				/>
+			</template>
 			<ScaCardContent :sca />
 		</n-modal>
 	</div>
@@ -95,6 +102,7 @@ import { ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
@@ -104,7 +112,7 @@ import { getComplianceLevel } from "./utils"
 
 const { sca } = defineProps<{ sca: AgentScaOverviewItem; embedded?: boolean }>()
 
-const { routeCustomer } = useNavigation()
+const { routeCustomer, routeAgentSca } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
 
 const showDetails = ref(false)

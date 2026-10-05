@@ -2,6 +2,7 @@
    the monthly trend table. No per-case detail — that is the OPERATIONAL report's
    job. Complementary to it; together they equal the FULL report. #}
 {% extends "_report_base.html" %}
+{% from "_report_macros.html" import sla_section with context %}
 
 {% block cover_eyebrow %}Trends & Analytics Report{% endblock %}
 {% block cover_title %}SOC Activity Analytics{% endblock %}
@@ -104,4 +105,7 @@
   {% else %}
     <div class="empty">No alerts were recorded for this customer in the selected period.</div>
   {% endif %}
+
+  {# SLA performance (#1187): present only when the SOC chose to include it. #}
+  {% if sla %}{{ sla_section(sla, "3.") }}{% endif %}
 {% endblock %}

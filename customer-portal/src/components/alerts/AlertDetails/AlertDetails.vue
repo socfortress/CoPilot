@@ -3,46 +3,50 @@
 		<div class="@container min-h-50">
 			<n-alert v-if="detailsError" title="Error" type="error" :description="detailsError" />
 
-			<n-tabs v-else-if="alert" type="line" animated>
-				<n-tab-pane name="overview" tab="Overview">
-					<AlertOverview :alert @status-updated="handleStatusUpdated" />
-				</n-tab-pane>
+			<template v-else-if="alert">
+				<WaitingOnYouNotice v-if="isWaitingOnCustomer(alert.status)" entity="alert" @reply="activeTab = 'comments'" />
 
-				<n-tab-pane name="assets" tab="Assets">
-					<AlertAssets :alert />
-				</n-tab-pane>
+				<n-tabs v-model:value="activeTab" type="line" animated>
+					<n-tab-pane name="overview" tab="Overview">
+						<AlertOverview :alert @status-updated="handleStatusUpdated" />
+					</n-tab-pane>
 
-				<n-tab-pane
-					name="linked-cases"
-					:tab="`Linked Cases (${alert?.linked_cases?.length || alert?.case_ids?.length || 0})`"
-				>
-					<AlertCases
-						:alert
-						@created="handleCaseCreated"
-						@updated="handleCaseCreated"
-						@unlinked="handleCaseUnlinked"
-						@linked="handleCaseLinked"
-					/>
-				</n-tab-pane>
+					<n-tab-pane name="assets" tab="Assets">
+						<AlertAssets :alert />
+					</n-tab-pane>
 
-				<n-tab-pane name="iocs" tab="Indicators of Compromise (IoCs)">
-					<AlertIocs :alert />
-				</n-tab-pane>
+					<n-tab-pane
+						name="linked-cases"
+						:tab="`Linked Cases (${alert?.linked_cases?.length || alert?.case_ids?.length || 0})`"
+					>
+						<AlertCases
+							:alert
+							@created="handleCaseCreated"
+							@updated="handleCaseCreated"
+							@unlinked="handleCaseUnlinked"
+							@linked="handleCaseLinked"
+						/>
+					</n-tab-pane>
 
-				<!-- Gated by the customer's AI report switch, managed by the SOC in CoPilot. -->
-				<n-tab-pane v-if="aiReportEnabled" name="ai-report" tab="AI Report" display-directive="show:lazy">
-					<AlertAiReport :alert-id="alert.id" />
-				</n-tab-pane>
+					<n-tab-pane name="iocs" tab="Indicators of Compromise (IoCs)">
+						<AlertIocs :alert />
+					</n-tab-pane>
 
-				<n-tab-pane name="comments" :tab="`Comments (${alert.comments?.length || 0})`">
-					<AlertComments
-						:alert
-						@added="handleCommentAdded"
-						@updated="handleCommentUpdated"
-						@deleted="handleCommentDeleted"
-					/>
-				</n-tab-pane>
-			</n-tabs>
+					<!-- Gated by the customer's AI report switch, managed by the SOC in CoPilot. -->
+					<n-tab-pane v-if="aiReportEnabled" name="ai-report" tab="AI Report" display-directive="show:lazy">
+						<AlertAiReport :alert-id="alert.id" />
+					</n-tab-pane>
+
+					<n-tab-pane name="comments" :tab="`Comments (${alert.comments?.length || 0})`">
+						<AlertComments
+							:alert
+							@added="handleCommentAdded"
+							@updated="handleCommentUpdated"
+							@deleted="handleCommentDeleted"
+						/>
+					</n-tab-pane>
+				</n-tabs>
+			</template>
 		</div>
 	</n-spin>
 </template>
@@ -55,8 +59,10 @@ import type { ApiError } from "@/types/common"
 import { NAlert, NSpin, NTabPane, NTabs } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
+import WaitingOnYouNotice from "@/components/common/WaitingOnYouNotice.vue"
 import { useAiReportsAvailability } from "@/composables/common/useAiReportsAvailability"
 import { getApiErrorMessage } from "@/utils"
+import { isWaitingOnCustomer } from "@/utils/workflowStatus"
 import AlertAiReport from "./AlertAiReport.vue"
 import AlertAssets from "./AlertAssets.vue"
 import AlertCases from "./AlertCases.vue"
@@ -76,6 +82,7 @@ const alert = ref<Alert | null>(null)
 const detailsError = ref<string | null>(null)
 const loadingDetails = ref(false)
 const aiReportEnabled = ref(false)
+const activeTab = ref("overview")
 
 const { isEnabledFor } = useAiReportsAvailability()
 
@@ -102,13 +109,22 @@ async function loadAlertDetails() {
 	aiReportEnabled.value = alert.value ? await isEnabledFor(alert.value.customer_code) : false
 }
 
-function handleCommentAdded(comment: CommentItem) {
+async function handleCommentAdded(comment: CommentItem) {
 	if (!alert.value) return
 
 	if (!alert.value.comments) {
 		alert.value.comments = []
 	}
 	alert.value.comments.push(comment)
+
+	// Replying to an alert the SOC waits on hands it back (the backend moves it to
+	// IN_PROGRESS): read the status it now has, and tell the list.
+	if (isWaitingOnCustomer(alert.value.status)) {
+		await loadAlertDetails()
+		if (alert.value && !isWaitingOnCustomer(alert.value.status)) {
+			emit("statusUpdated", { alertId: alert.value.id, status: alert.value.status })
+		}
+	}
 }
 
 function handleCommentUpdated(comment: CommentItem) {
@@ -145,6 +161,7 @@ watch(
 		alert.value = null
 		detailsError.value = null
 		aiReportEnabled.value = false
+		activeTab.value = "overview"
 
 		if (newAlertId !== null) {
 			await loadAlertDetails()

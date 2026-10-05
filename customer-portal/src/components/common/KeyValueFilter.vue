@@ -53,6 +53,8 @@ const props = defineProps<{
 	loadOptions: () => Promise<Record<string, string[]>>
 	searchKey?: string
 	search?: (term: string | null, signal: AbortSignal) => Promise<string[]>
+	/** How a value reads in the picker (the value sent stays the raw one). */
+	valueLabel?: (key: string, value: string) => string
 }>()
 
 const emit = defineEmits<{
@@ -77,7 +79,9 @@ const keyOptions = computed(() => {
 
 const valueOptions = computed(() => {
 	const values = isSearchKey.value ? searchResults.value : model.value.key ? options.value[model.value.key] : []
-	return (values || []).map(value => ({ label: value, value }))
+	const { key } = model.value
+	const { valueLabel } = props
+	return (values || []).map(value => ({ label: valueLabel && key ? valueLabel(key, value) : value, value }))
 })
 
 function searchValues(term: string | null) {

@@ -14,6 +14,7 @@ class CustomerDashboardAlertStatsResponse(BaseModel):
     open: int
     in_progress: int
     closed: int
+    pending_customer: int = 0
     success: bool
     message: str
 
@@ -23,6 +24,7 @@ class CustomerDashboardCaseStatsResponse(BaseModel):
     open: int
     in_progress: int
     closed: int
+    pending_customer: int = 0
     success: bool
     message: str
 

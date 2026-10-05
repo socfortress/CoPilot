@@ -40,6 +40,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="routeAlertsMitreGroup(id)"
+					label="Open the group's page"
+					@navigate="showDetails = false"
+				/>
+			</template>
 			<GroupOverview :entity="groupDetails" />
 		</n-modal>
 	</div>
@@ -54,6 +61,7 @@ import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Markdown from "@/components/common/Markdown.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 

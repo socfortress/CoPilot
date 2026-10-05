@@ -42,6 +42,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="routeAlertsAtomicRedTeamTechnique(entity.technique_id)"
+					label="Open the technique's page"
+					@navigate="showDetails = false"
+				/>
+			</template>
 			<div class="p-6">
 				<TechniqueCardContent :technique-id="entity.technique_id" />
 			</div>
@@ -57,6 +64,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { iconFromOs } from "@/utils"
 import SimulatorButton from "../AttackSimulator/SimulatorButton.vue"

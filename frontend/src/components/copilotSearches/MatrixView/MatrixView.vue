@@ -56,6 +56,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="quickRuleId ? routeCopilotSearchRule(quickRuleId) : null"
+					label="Open the rule's page"
+					@navigate="quickRuleOpen = false"
+				/>
+			</template>
 			<RuleCardContent v-if="quickRuleId" :rule-id="quickRuleId" />
 		</n-modal>
 	</div>
@@ -79,6 +86,8 @@ import { NDrawer, NDrawerContent, NModal, useMessage } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
+import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import RuleCardContent from "../RuleCardContent.vue"
 import TechniqueDetails from "../TechniqueDetails.vue"
@@ -123,6 +132,7 @@ const techniqueDrawerWidth = computed(() => Math.min(820, viewportWidth.value - 
 
 // Direct-from-hover rule modal
 const quickRuleOpen = ref(false)
+const { routeCopilotSearchRule } = useNavigation()
 const quickRuleId = ref<string | null>(null)
 function openQuickRule(ruleId: string) {
 	quickRuleId.value = ruleId

@@ -80,6 +80,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="routeCopilotAction(action.copilot_action_name)"
+					label="Open the action's page"
+					@navigate="showDetails = false"
+				/>
+			</template>
 			<ActionCardContent :action />
 		</n-modal>
 
@@ -105,6 +112,7 @@ import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import ActionCardContent from "./ActionCardContent.vue"
 import InvokeActionForm from "./InvokeActionForm.vue"

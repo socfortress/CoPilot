@@ -126,6 +126,12 @@ const router = createRouter({
 		},
 
 		{
+			path: "/sla",
+			name: "Sla",
+			component: () => import("@/views/Sla.vue"),
+			meta: { title: "Service Levels", auth: true, roles: RouteRole.All }
+		},
+		{
 			path: "/profile",
 			name: "Profile",
 			component: () => import("@/views/Profile.vue"),

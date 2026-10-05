@@ -64,7 +64,16 @@
 
 		<n-drawer v-model:show="showDrawer" :width="520" placement="right">
 			<n-drawer-content v-if="drawerReview" closable>
-				<template #header>Review for report #{{ drawerReview.report_id }}</template>
+				<template #header>
+					<div class="flex w-full items-center justify-between gap-2 pr-8">
+						<span>Review for report #{{ drawerReview.report_id }}</span>
+						<ModalPageButton
+							:route="routeAiAnalystFeedbackReview(drawerReview.id)"
+							label="Open the review's page"
+							@navigate="showDrawer = false"
+						/>
+					</div>
+				</template>
 				<FeedbackDashboardRecentReviewDetail :review="drawerReview" />
 			</n-drawer-content>
 		</n-drawer>
@@ -78,6 +87,7 @@ import { ref, toRefs } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"

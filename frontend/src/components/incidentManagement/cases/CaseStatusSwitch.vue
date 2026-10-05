@@ -3,6 +3,7 @@
 		v-model:value="statusSelected"
 		v-model:show="listVisible"
 		:options="statusOptions"
+		:render-label="renderStatusLabel"
 		:loading
 		size="medium"
 		scrollable
@@ -52,6 +53,8 @@ import type { Case, CaseStatus } from "@/types/incidentManagement/cases"
 import { NButton, NModal, NPopselect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import Api from "@/api"
+import { renderStatusLabel } from "@/components/incidentManagement/common/renderStatusLabel"
+import { STATUS_OPTIONS } from "@/components/incidentManagement/common/status"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
@@ -67,11 +70,7 @@ const loading = ref(false)
 const message = useMessage()
 const listVisible = ref(false)
 const status = computed(() => caseData.value.case_status)
-const statusOptions = ref<{ label: string; value: CaseStatus }[]>([
-	{ label: "Open", value: "OPEN" },
-	{ label: "In progress", value: "IN_PROGRESS" },
-	{ label: "Closed", value: "CLOSED" }
-])
+const statusOptions = [...STATUS_OPTIONS]
 const statusSelected = ref<CaseStatus | null>(null)
 
 // Soft-warning state

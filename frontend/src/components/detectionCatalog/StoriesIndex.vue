@@ -37,6 +37,13 @@
 			segmented
 			@after-leave="selectedStoryName = null"
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="selectedStoryName ? routeDetectionCatalogStory(selectedStoryName) : null"
+					label="Open the story's page"
+					@navigate="showStoryModal = false"
+				/>
+			</template>
 			<StoryDetail v-if="selectedStoryName" :story-name="selectedStoryName" @error="handleError" />
 		</n-modal>
 	</div>
@@ -53,6 +60,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"

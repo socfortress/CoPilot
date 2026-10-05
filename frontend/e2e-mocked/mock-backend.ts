@@ -114,7 +114,7 @@ function json(route: Route, body: unknown, status = 200) {
 }
 
 /** A structurally valid JWT. The app decodes it without verifying — see `stores/auth.ts`. */
-function mintToken(username: string, scopes: string[]) {
+export function mintToken(username: string, scopes: string[]) {
 	const b64 = (o: object) =>
 		Buffer.from(JSON.stringify(o))
 			.toString("base64")

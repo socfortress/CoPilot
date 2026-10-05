@@ -43,6 +43,7 @@ import siem from "./endpoints/siem"
 import sigma from "./endpoints/sigma"
 import snapshots from "./endpoints/snapshots"
 import soc from "./endpoints/soc"
+import socManagement from "./endpoints/soc-management"
 import sso from "./endpoints/sso"
 import stackProvisioning from "./endpoints/stack-provisioning"
 import sysmonConfig from "./endpoints/sysmon-config"
@@ -70,6 +71,7 @@ export default {
 	graylog,
 	indices,
 	soc,
+	socManagement,
 	healthchecks,
 	threatIntel,
 	askSocfortress,

@@ -67,6 +67,13 @@
 			:bordered="false"
 			segmented
 		>
+			<template #header-extra>
+				<ModalPageButton
+					:route="modalGroup ? routeDetectionCatalogComplianceGroup(selectedFramework, modalGroup.control) : null"
+					label="Open the control's page"
+					@navigate="modalGroup = null"
+				/>
+			</template>
 			<ComplianceDetail v-if="modalGroup" :group="modalGroup" />
 		</n-modal>
 	</div>
@@ -88,6 +95,7 @@ import CardLink from "@/components/common/cards/CardLink.vue"
 import Dot, { hitsToDotVariant } from "@/components/common/Dot.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
 import ComplianceDetail from "./ComplianceDetail.vue"

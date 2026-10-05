@@ -5,9 +5,11 @@
 				? WarningIcon
 				: status === 'IN_PROGRESS'
 					? ProgressIcon
-					: status === 'CLOSED'
-						? CheckIcon
-						: UnknownIcon
+					: status === 'PENDING_CUSTOMER'
+						? PendingIcon
+						: status === 'CLOSED'
+							? CheckIcon
+							: UnknownIcon
 		"
 		:size="size || 16"
 	/>
@@ -22,6 +24,7 @@ const props = defineProps<{ status: AlertStatus | null; size?: number }>()
 const { status, size } = toRefs(props)
 
 const ProgressIcon = "carbon:hourglass"
+const PendingIcon = "carbon:pause-outline"
 const CheckIcon = "carbon:checkmark-outline"
 const WarningIcon = "carbon:warning-hex"
 const UnknownIcon = "carbon:unknown"

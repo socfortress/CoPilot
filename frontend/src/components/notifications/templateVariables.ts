@@ -1,4 +1,5 @@
 import type { NotificationTrigger } from "@/types/notifications"
+import { SLA_TRIGGERS } from "@/types/notifications"
 
 // The variables a notification template can reference, mirroring
 // `build_context` in app/notifications/services/rendering.py.
@@ -62,6 +63,27 @@ export const ASSIGNMENT_VARIABLES: TemplateVariable[] = [
 	{ name: "assignee", description: "Who it was assigned to.", example: "jdoe" },
 	{ name: "actor", description: "Who did the assigning.", example: "asmith" },
 	{ name: "context.title", description: "Title of the alert, case or task." }
+]
+
+// Set by the SLA triggers (#1187), on alerts and cases alike. `assignee` is the item's
+// assignee (empty when nobody has it); there is no actor — a clock ran out, nobody acted.
+const SLA_VARIABLES: TemplateVariable[] = [
+	{ name: "context.title", description: "Title of the alert or case running late." },
+	{ name: "context.clock", description: "Which target: acknowledge or resolve.", example: "resolve" },
+	{ name: "context.due_at", description: "When the target is (or was) due, UTC.", example: "2026-09-01 12:00" },
+	{ name: "context.opened_at", description: "When the item reached CoPilot, UTC.", example: "2026-09-01 04:00" },
+	{
+		name: "context.remaining_minutes",
+		description: "Minutes left before the target. At risk only; empty on a breach.",
+		example: "45"
+	},
+	{
+		name: "context.overdue_minutes",
+		description: "Minutes past the target. Breached only; empty when at risk.",
+		example: "20"
+	},
+	{ name: "context.status", description: "The item's status when the notice was sent.", example: "IN_PROGRESS" },
+	{ name: "assignee", description: "Who has the item. Empty when unassigned.", example: "jdoe" }
 ]
 
 const ALERT_VARIABLES: TemplateVariable[] = [
@@ -150,14 +172,19 @@ export function variablesForTrigger(trigger: NotificationTrigger | null): Templa
 	// and a manual send can attach one to any alert. Assignment triggers never
 	// do, so listing it there would invite a template with a permanent hole.
 	const specific = !trigger
-		? [...ASSIGNMENT_VARIABLES, ...ALERT_VARIABLES, ...AI_REPORT_VARIABLES, ...REVIEW_VARIABLES]
+		? [...ASSIGNMENT_VARIABLES, ...ALERT_VARIABLES, ...AI_REPORT_VARIABLES, ...REVIEW_VARIABLES, ...SLA_VARIABLES]
 		: ASSIGNMENT_TRIGGERS.includes(trigger)
 			? ASSIGNMENT_VARIABLES
-			: trigger === "ai_report_reviewed"
-				? [...REVIEW_VARIABLES, ...ALERT_VARIABLES, ...AI_REPORT_VARIABLES]
-				: [...ALERT_VARIABLES, ...AI_REPORT_VARIABLES]
+			: SLA_TRIGGERS.includes(trigger)
+				? SLA_VARIABLES
+				: trigger === "ai_report_reviewed"
+					? [...REVIEW_VARIABLES, ...ALERT_VARIABLES, ...AI_REPORT_VARIABLES]
+					: [...ALERT_VARIABLES, ...AI_REPORT_VARIABLES]
 
-	return [...specific, ...COMMON_VARIABLES, ...LEGACY_ALIASES]
+	// First mention wins: with no trigger picked, the assignment and SLA groups both
+	// list `assignee` and `context.title`, and the reference must show each once.
+	const seen = new Set<string>()
+	return [...specific, ...COMMON_VARIABLES, ...LEGACY_ALIASES].filter(v => !seen.has(v.name) && !!seen.add(v.name))
 }
 
 // Small worked examples, so the first thing an operator sees isn't a blank box.

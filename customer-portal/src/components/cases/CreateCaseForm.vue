@@ -47,6 +47,7 @@ import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import { useCustomerPrefill } from "@/composables/common/useCustomerPrefill"
 import { getApiErrorMessage } from "@/utils"
+import { SETTABLE_STATUSES, WORKFLOW_STATUS_LABELS } from "@/utils/workflowStatus"
 
 const emit = defineEmits<{
 	(e: "success"): void
@@ -58,11 +59,7 @@ const { customerOptions, hasMultipleCustomers, initialCustomerCode } = useCustom
 const loading = ref(false)
 const optionsLoading = ref(false)
 const assignedToOptions = ref<{ label: string; value: string }[]>([])
-const statusOptions = [
-	{ label: "Open", value: "OPEN" },
-	{ label: "In Progress", value: "IN_PROGRESS" },
-	{ label: "Closed", value: "CLOSED" }
-]
+const statusOptions = SETTABLE_STATUSES.map(value => ({ label: WORKFLOW_STATUS_LABELS[value], value }))
 function emptyModel(): CasePayload {
 	return {
 		case_name: "",
