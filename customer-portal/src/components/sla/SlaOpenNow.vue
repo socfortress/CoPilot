@@ -1,6 +1,6 @@
 <template>
 	<section
-		class="bg-default border-default divide-border grid grid-cols-2 divide-y rounded-lg border sm:grid-cols-5 sm:divide-x sm:divide-y-0"
+		class="bg-default border-default divide-border grid grid-cols-2 divide-y rounded-lg border md:grid-cols-5 md:divide-x md:divide-y-0"
 		data-testid="sla-open-now"
 		aria-label="Open right now"
 	>
