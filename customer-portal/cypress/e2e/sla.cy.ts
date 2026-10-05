@@ -86,6 +86,20 @@ describe("service levels", () => {
 		cy.get("[data-testid=alerts-table] tbody tr").should("have.length", seed.alerts.a.pending_customer)
 	})
 
+	it("links the open alerts and cases to their lists, unfiltered: open is every status but closed", () => {
+		cy.visit("/sla")
+		cy.get("[data-testid=sla-open-alerts-view-all]").should("contain.text", "View all").click()
+		cy.location("pathname").should("eq", "/alerts")
+		cy.location("search").should("not.contain", "status=")
+		cy.get("[data-testid=alerts-table]").should("be.visible")
+
+		cy.visit("/sla")
+		cy.get("[data-testid=sla-open-cases-view-all]").click()
+		cy.location("pathname").should("eq", "/cases")
+		cy.location("search").should("not.contain", "status=")
+		cy.get("[data-testid=cases-table]").should("be.visible")
+	})
+
 	it("is not offered while the SOC has not published it", () => {
 		cy.adminApi(seed, "PUT", `/customer_portal/sla/settings/${seed.customers.a}`, { enabled: false })
 		cy.visit("/overview")

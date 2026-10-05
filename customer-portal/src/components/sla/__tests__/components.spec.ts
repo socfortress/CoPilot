@@ -104,6 +104,19 @@ describe("slaOpenNow (#1187)", () => {
 		expect(to("cases")).toEqual({ name: "CasesList", query: { status: "PENDING_CUSTOMER" } })
 	})
 
+	it("links the open alerts and cases to their whole lists: open is every status but closed", () => {
+		const wrapper = mountOpenNow()
+		const to = (key: string) =>
+			JSON.parse(wrapper.get(`[data-testid=sla-open-${key}-view-all]`).attributes("data-to") as string)
+		expect(to("alerts")).toEqual({ name: "AlertsList" })
+		expect(to("cases")).toEqual({ name: "CasesList" })
+		expect(wrapper.get("[data-testid=sla-open-alerts-view-all]").text()).toContain("View all")
+		// Nothing open, nothing to view.
+		const empty = mountOpenNow({ ...openNow, alerts: 0, cases: 0 })
+		expect(empty.find("[data-testid=sla-open-alerts-view-all]").exists()).toBe(false)
+		expect(empty.find("[data-testid=sla-open-cases-view-all]").exists()).toBe(false)
+	})
+
 	it("offers no link when nothing waits on the customer", () => {
 		const wrapper = mountOpenNow({ ...openNow, waiting_on_you: 0 })
 		expect(wrapper.find("[data-testid=sla-open-waiting-alerts]").exists()).toBe(false)

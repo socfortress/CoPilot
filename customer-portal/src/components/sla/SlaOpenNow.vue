@@ -29,7 +29,7 @@
 						:key="link.label"
 						:to="link.to"
 						class="text-secondary hover:text-primary flex items-center gap-0.5 no-underline transition-colors"
-						:data-testid="`sla-open-${item.key}-${link.label.toLowerCase()}`"
+						:data-testid="linkTestId(item, link.label)"
 					>
 						{{ link.label }}
 						<Icon name="carbon:arrow-right" :size="12" />
@@ -64,11 +64,30 @@ interface Item {
 	links?: { label: string; to: RouteLocationRaw }[]
 }
 
+/** `sla-open-alerts-view-all`, `sla-open-waiting-cases`, … */
+function linkTestId(item: Item, label: string) {
+	return `sla-open-${item.key}-${label.toLowerCase().replaceAll(" ", "-")}`
+}
+
 // What is open now, whatever the period: the SOC's queue for this customer, and what
 // waits on the customer themselves — linked to both lists, filtered on that status.
 const items = computed<Item[]>(() => [
-	{ key: "alerts", label: "Open alerts", icon: ICONS.alerts, value: openNow.alerts },
-	{ key: "cases", label: "Open cases", icon: ICONS.cases, value: openNow.cases },
+	// "Open" here is every status but closed, and the lists filter on one status at a
+	// time, so these open the whole list rather than a filter that would show fewer.
+	{
+		key: "alerts",
+		label: "Open alerts",
+		icon: ICONS.alerts,
+		value: openNow.alerts,
+		links: [{ label: "View all", to: { name: "AlertsList" } }]
+	},
+	{
+		key: "cases",
+		label: "Open cases",
+		icon: ICONS.cases,
+		value: openNow.cases,
+		links: [{ label: "View all", to: { name: "CasesList" } }]
+	},
 	{
 		key: "at-risk",
 		label: "Due soon",
