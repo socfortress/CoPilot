@@ -2,9 +2,10 @@
 	<div class="flex flex-col gap-3" data-testid="uba-alerts">
 		<UbaToolbar>
 			<SegmentedToggle v-model="status" :options="STATUS_OPTIONS" label="Alerts" test-id="uba-alert-status" />
+			<template #summary>{{ summary }}</template>
 			<template #hint>
-				UBA alerts open when an entity's accumulated risk passes 100 (or one finding is strong enough on its own).
-				Each is also an incident alert in CoPilot; a verdict here or there closes the loop in UBA.
+				UBA alerts open when an entity's accumulated risk passes 100 (or one finding is strong enough on its
+				own). Each is also an incident alert in CoPilot; a verdict here or there closes the loop in UBA.
 			</template>
 		</UbaToolbar>
 
@@ -33,7 +34,7 @@ import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { UbaAlert } from "@/types/uba"
 import { NButton, NDataTable, NPagination, NTag } from "naive-ui"
-import { onBeforeMount, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SegmentedToggle from "@/components/common/SegmentedToggle.vue"
@@ -60,6 +61,11 @@ const STATUS_OPTIONS: { value: "open" | "closed" | "all"; label: string }[] = [
 const status = ref<"open" | "closed" | "all">("open")
 const page = ref(1)
 const total = ref(0)
+/** "1 open alert", "3 closed alerts", "4 alerts". */
+const summary = computed(() => {
+	const kind = status.value === "all" ? "" : `${status.value} `
+	return `${total.value} ${kind}alert${total.value === 1 ? "" : "s"}`
+})
 const loading = ref(false)
 const error = ref<ApiError | null>(null)
 const alerts = ref<UbaAlert[]>([])
@@ -94,7 +100,9 @@ const columns: DataTableColumns<UbaAlert> = [
 		title: "Opened",
 		key: "opened_at",
 		width: 170,
-		render: row => <span class="font-mono text-xs tabular-nums">{String(formatDate(row.opened_at, dFormats.datetime))}</span>
+		render: row => (
+			<span class="font-mono text-xs tabular-nums">{String(formatDate(row.opened_at, dFormats.datetime))}</span>
+		)
 	},
 	{
 		title: "Entity",
@@ -107,13 +115,19 @@ const columns: DataTableColumns<UbaAlert> = [
 				</span>
 				<div class="flex min-w-0 flex-col">
 					<span class="truncate font-medium">{row.entity_name || row.entity_key}</span>
-					<span class="text-tertiary text-[11px]">{entityTypeLabel(row.entity_type)}</span>
+					<span class="text-secondary text-[11px]">{entityTypeLabel(row.entity_type)}</span>
 				</div>
 			</div>
 		)
 	},
 	{ title: "Risk", key: "risk", width: 120, render: row => <RiskMeter risk={row.risk} /> },
-	{ title: "Updates", key: "update_count", width: 80, align: "right", render: row => <span class="font-mono tabular-nums">{row.update_count}</span> },
+	{
+		title: "Updates",
+		key: "update_count",
+		width: 80,
+		align: "right",
+		render: row => <span class="font-mono tabular-nums">{row.update_count}</span>
+	},
 	{
 		title: "Incident",
 		key: "copilot_alert_id",

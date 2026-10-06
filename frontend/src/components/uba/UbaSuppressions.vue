@@ -5,6 +5,7 @@
 				<n-switch v-model:value="includeExpired" size="small" />
 				Show expired
 			</label>
+			<template #summary>{{ summary }}</template>
 			<template #hint>
 				A suppressed rule keeps recording its findings on the entity (they show in its timeline) but adds no
 				risk and opens no alert until the date shown. Closing a UBA alert as a false positive suppresses the
@@ -32,7 +33,7 @@ import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { UbaSuppression } from "@/types/uba"
 import { NButton, NDataTable, NSwitch, NTag, useMessage } from "naive-ui"
-import { onBeforeMount, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -51,6 +52,12 @@ const loading = ref(false)
 const removing = ref<string | null>(null)
 const error = ref<ApiError | null>(null)
 const suppressions = ref<UbaSuppression[]>([])
+/** "2 active", and the expired ones too while they are shown. */
+const summary = computed(() => {
+	const active = suppressions.value.filter(row => row.active).length
+	const expired = suppressions.value.length - active
+	return includeExpired.value ? `${active} active · ${expired} expired` : `${active} active`
+})
 
 function load() {
 	loading.value = true
@@ -90,12 +97,26 @@ const columns: DataTableColumns<UbaSuppression> = [
 		key: "entity_key",
 		minWidth: 220,
 		render: row => (
-			<NButton text type="primary" class="font-mono text-xs" onClick={() => emit("openEntity", row.entity_key)}>
+			<button
+				type="button"
+				class="text-primary block max-w-full truncate font-mono text-xs hover:underline"
+				title={row.entity_key}
+				onClick={() => emit("openEntity", row.entity_key)}
+			>
 				{row.entity_key}
-			</NButton>
+			</button>
 		)
 	},
-	{ title: "Rule", key: "rule_id", minWidth: 200, render: row => <span class="rule-chip font-mono text-xs">{row.rule_id}</span> },
+	{
+		title: "Rule",
+		key: "rule_id",
+		minWidth: 220,
+		render: row => (
+			<span class="rule-chip inline-block max-w-full truncate align-middle font-mono text-xs whitespace-nowrap" title={row.rule_id}>
+				{row.rule_id}
+			</span>
+		)
+	},
 	{
 		title: "Until",
 		key: "until",

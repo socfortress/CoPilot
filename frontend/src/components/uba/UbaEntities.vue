@@ -22,7 +22,7 @@
 					noisy native alerts otherwise fill the top of the list.
 				</n-tooltip>
 			</label>
-			<template #hint>{{ total }} {{ total === 1 ? "entity" : "entities" }} with risk, highest first</template>
+			<template #summary>{{ total }} {{ total === 1 ? "entity" : "entities" }} · highest risk first</template>
 		</UbaToolbar>
 
 		<UbaError v-if="error" :error />

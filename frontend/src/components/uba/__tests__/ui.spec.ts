@@ -12,6 +12,7 @@ import RiskMeter from "../ui/RiskMeter.vue"
 import SignalTimeline from "../ui/SignalTimeline.vue"
 import UbaDrawerHeader from "../ui/UbaDrawerHeader.vue"
 import UbaStatusStrip from "../ui/UbaStatusStrip.vue"
+import UbaToolbar from "../ui/UbaToolbar.vue"
 import { riskTone } from "../utils"
 
 const api = {
@@ -358,5 +359,31 @@ describe("ubaAlertDetail", () => {
 		const text = document.body.querySelector("[data-testid=uba-verdict-confirm]")?.textContent ?? ""
 		expect(text).toContain("Save this alert as a true positive?")
 		expect(text).not.toContain("30 days")
+	})
+})
+
+describe("ubaToolbar", () => {
+	it("keeps the explanation behind a button and a short summary in line, so it stays one row", async () => {
+		const wrapper = mount(UbaToolbar, {
+			attachTo: document.body,
+			slots: {
+				default: () => h("button", "Open"),
+				summary: () => "1 open alert",
+				hint: () => "UBA alerts open when an entity's accumulated risk passes 100."
+			}
+		})
+		expect(wrapper.get("[data-testid=uba-toolbar-summary]").text()).toBe("1 open alert")
+		// The long text is not printed in the row; it opens from "How it works".
+		expect(wrapper.text()).not.toContain("accumulated risk")
+		await wrapper.get("[data-testid=uba-toolbar-hint]").trigger("click")
+		await flushPromises()
+		expect(document.body.querySelector("[data-testid=uba-toolbar-hint-text]")?.textContent).toContain("accumulated risk")
+		wrapper.unmount()
+	})
+
+	it("shows no right side when there is nothing to summarise or explain", () => {
+		const wrapper = mount(UbaToolbar, { slots: { default: () => h("button", "Open") } })
+		expect(wrapper.find("[data-testid=uba-toolbar-summary]").exists()).toBe(false)
+		expect(wrapper.find("[data-testid=uba-toolbar-hint]").exists()).toBe(false)
 	})
 })
