@@ -203,14 +203,17 @@
 						</li>
 						<li v-if="detail.identity.aliases.length">
 							<span class="k">Aliases</span>
-							<span class="v">
-								<!-- One alias per line: its kind in a fixed column, the value in mono. -->
-								<span class="aliases grid grid-cols-[max-content_minmax(0,1fr)] gap-x-3 gap-y-1">
-									<template v-for="a of detail.identity.aliases" :key="`${a.type}:${a.value}`">
-										<span class="text-tertiary font-mono text-[11px]">{{ a.type }}</span>
-										<span class="truncate font-mono text-xs" :title="a.value">{{ a.value }}</span>
-									</template>
-								</span>
+							<!-- One grid for all aliases: kinds in one column, values in the next, on one baseline. -->
+							<span
+								class="v grid grid-cols-[max-content_minmax(0,1fr)] items-baseline gap-x-3 gap-y-1.5"
+								data-testid="uba-identity-aliases"
+							>
+								<template v-for="a of detail.identity.aliases" :key="`${a.type}:${a.value}`">
+									<span class="alias-type justify-self-start font-mono text-[11px]" data-testid="uba-identity-alias">
+										{{ a.type }}
+									</span>
+									<span class="alias-value truncate font-mono text-xs" :title="a.value">{{ a.value }}</span>
+								</template>
 							</span>
 						</li>
 					</ul>
@@ -461,6 +464,18 @@ onBeforeMount(() => {
 
 .kv .v {
 	min-width: 0;
+}
+
+.alias-type {
+	padding: 1px 6px;
+	border-radius: 4px;
+	line-height: 1.4;
+	color: var(--fg-secondary-color);
+	background-color: var(--hover-color);
+}
+
+.alias-value {
+	color: var(--fg-default-color);
 }
 
 .share-track {

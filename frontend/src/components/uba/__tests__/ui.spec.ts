@@ -194,7 +194,18 @@ describe("ubaEntityDetail", () => {
 			{ rule_id: "auth.failures_then_success", risk: 50, signals: 1, native: false },
 			{ rule_id: "wazuh:60154", risk: 25, signals: 1, native: true }
 		],
-		identity: { privileged: true, privileged_reasons: [], memberships: [], aliases: [], kind: "human", shadow: true },
+		identity: {
+			privileged: true,
+			privileged_reasons: [],
+			memberships: [],
+			aliases: [
+				{ type: "netbios_sam", value: "CONTOSO\\administrator" },
+				{ type: "sid", value: "S-1-5-21-1-2-3-500" },
+				{ type: "something_new", value: "x-1" }
+			],
+			kind: "human",
+			shadow: true
+		},
 		host: null,
 		alerts: [{ id: "al1", opened_at: "2026-10-06T14:00:00Z", risk: 107, verdict: null, copilot_alert_id: null }],
 		suppressions: []
@@ -231,6 +242,13 @@ describe("ubaEntityDetail", () => {
 		expect(rows[0].get(".share-track > span").attributes("style")).toContain("width: 100%")
 		expect(rows[1].get(".share-track > span").attributes("style")).toContain("width: 50%")
 		expect(wrapper.findAll("[data-testid=signal-item]")).toHaveLength(1)
+
+		// Aliases: the kind in one column, the value in the next.
+		const aliases = wrapper.get("[data-testid=uba-identity-aliases]")
+		const kinds = aliases.findAll(".alias-type").map(k => k.text())
+		const values = aliases.findAll(".alias-value").map(v => v.text())
+		expect(kinds).toEqual(["netbios_sam", "sid", "something_new"])
+		expect(values).toEqual(["CONTOSO\\administrator", "S-1-5-21-1-2-3-500", "x-1"])
 
 		// The whole alert row opens the alert, by click or by keyboard.
 		const opened: string[] = []
