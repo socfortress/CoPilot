@@ -18,12 +18,51 @@ export function reasonHint(reason: UbaFailureReason | string | null | undefined)
 	}
 }
 
-/** Risk bands follow UBA's alerting: 100 opens an alert, 150 is high, 200 critical. */
-export function riskTagType(risk: number): "error" | "warning" | "info" | "default" {
-	if (risk >= 150) return "error"
-	if (risk >= 100) return "warning"
-	if (risk >= 30) return "info"
-	return "default"
+export type RiskTone = "error" | "warning" | "info" | "neutral"
+
+/**
+ * Risk bands follow UBA's alerting, relative to the customer's alert threshold (100 by default):
+ * at the threshold an alert opens, half as much again is high, under 30% of it is background.
+ */
+export function riskTone(risk: number, threshold = 100): RiskTone {
+	if (risk >= threshold * 1.5) return "error"
+	if (risk >= threshold) return "warning"
+	if (risk >= threshold * 0.3) return "info"
+	return "neutral"
+}
+
+export function riskTagType(risk: number, threshold = 100): "error" | "warning" | "info" | "default" {
+	const tone = riskTone(risk, threshold)
+	return tone === "neutral" ? "default" : tone
+}
+
+/** Full class names, written out so Tailwind finds them. */
+export const RISK_TEXT_CLASS: Record<RiskTone, string> = {
+	error: "text-error",
+	warning: "text-warning",
+	info: "text-info",
+	neutral: "text-secondary"
+}
+
+export const RISK_BG_CLASS: Record<RiskTone, string> = {
+	error: "bg-error",
+	warning: "bg-warning",
+	info: "bg-info",
+	neutral: "bg-[var(--fg-tertiary-color)]"
+}
+
+/** An entity type's icon (carbon), for headers and lists. */
+export function entityTypeIcon(type: string | null | undefined): string {
+	switch (entityTypeLabel(type)) {
+		case "host":
+			return "carbon:laptop"
+		case "address":
+			return "carbon:network-3"
+		case "tenant":
+			return "carbon:enterprise"
+		default:
+			return "carbon:user"
+	}
 }
 
 export function riskLabel(risk: number): string {
