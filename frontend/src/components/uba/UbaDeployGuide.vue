@@ -1,24 +1,24 @@
 <template>
-	<div class="uba-deploy-guide flex flex-col gap-4 text-sm">
+	<div class="uba-deploy-guide flex flex-col gap-6 text-sm">
 		<p class="text-secondary max-w-3xl">
-			SOCFortress UBA runs as its own small Docker Compose stack (API, GELF receiver, worker, Postgres,
-			Redis) on a VM in the same network as Graylog, the Wazuh indexer and CoPilot. Graylog sends it a copy
-			of each customer's Wazuh and Microsoft 365 events, UBA reads history from the Wazuh indexer, and
-			CoPilot talks to its API. Once it is running and connected, every customer is set up from this page
-			with one click. Below, replace the &lt;uba-ip&gt;, &lt;graylog-ip&gt;, &lt;indexer-ip&gt; and
-			&lt;copilot-ip&gt; placeholders with those hosts' addresses.
+			SOCFortress UBA runs as its own small Docker Compose stack (API, GELF receiver, worker, Postgres, Redis) on
+			a VM in the same network as Graylog, the Wazuh indexer and CoPilot. Graylog sends it a copy of each
+			customer's Wazuh and Microsoft 365 events, UBA reads history from the Wazuh indexer, and CoPilot talks to
+			its API. Once it is running and connected, every customer is set up from this page with one click. Below,
+			replace the &lt;uba-ip&gt;, &lt;graylog-ip&gt;, &lt;indexer-ip&gt; and &lt;copilot-ip&gt; placeholders with
+			those hosts' addresses.
 		</p>
 
-		<ol class="flex flex-col gap-4">
-			<li v-for="(step, i) of STEPS" :key="step.title" class="flex flex-col gap-2">
+		<div class="flex flex-col gap-6">
+			<div v-for="(step, i) of STEPS" :key="step.title" class="flex flex-col gap-2">
 				<div class="flex items-baseline gap-2">
 					<n-tag size="small" round :bordered="false">{{ i + 1 }}</n-tag>
 					<b>{{ step.title }}</b>
 				</div>
 				<p v-for="(line, j) of step.text" :key="j" class="text-secondary max-w-3xl">{{ line }}</p>
 				<CodeSource v-if="step.code" :code="step.code" lang="shellscript" :max-height="360" />
-			</li>
-		</ol>
+			</div>
+		</div>
 	</div>
 </template>
 
