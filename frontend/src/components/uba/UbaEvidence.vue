@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-col gap-2">
+	<div class="flex flex-col items-start gap-2">
 		<n-button text size="tiny" type="primary" :loading @click="toggle">
 			{{ open ? "Hide events" : count ? `Show events (${count})` : "Show events" }}
 		</n-button>

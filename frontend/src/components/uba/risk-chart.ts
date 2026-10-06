@@ -4,7 +4,7 @@
 // cyan), stepped per mode and validated with the dataviz palette validator (light #8a3ffc/#1192e8 on
 // #ffffff, dark #914bfd/#1c9cf0 on #26282d: all checks pass). The alert threshold is a recessive dashed
 // reference line labelled at its left end (the curve's recent end is usually higher), not a series;
-// UBA alerts are ink markers with a surface ring. Crosshair tooltip.
+// UBA alerts are ink markers with a surface ring. Crosshair tooltip, in the platform's multi-series format.
 import type { LineSeriesOption, ScatterSeriesOption } from "echarts/charts"
 import type {
 	GridComponentOption,
@@ -14,7 +14,7 @@ import type {
 } from "echarts/components"
 import type { ComposeOption } from "echarts/core"
 import type { UbaRiskHistory } from "@/types/uba"
-import { buildChartTooltipGlassBase, chartTooltipThemeFromStyle } from "@/components/common/charts"
+import { buildChartTooltipGlassBase, chartTooltipThemeFromStyle, formatChartTooltipAxisMultiSeries } from "@/components/common/charts"
 import dayjs from "@/utils/dayjs"
 import { riskLabel } from "./utils"
 
@@ -117,18 +117,19 @@ export function buildRiskChartOption(history: UbaRiskHistory, style: Record<stri
 		tooltip: {
 			...buildChartTooltipGlassBase(chartTooltipThemeFromStyle(style), { trigger: "axis" }),
 			axisPointer: { type: "line", lineStyle: { color: muted, width: 1 } },
+			// The platform's multi-series tooltip (title band + marker rows), so it reads like every other chart.
 			formatter: params => {
 				const list = Array.isArray(params) ? params : [params]
-				const index = list[0]?.dataIndex ?? 0
-				const point = history.points[index]
+				const point = history.points[list[0]?.dataIndex ?? 0]
 				if (!point) return ""
-				const dot = (c: string) => `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c}"></span>`
-				const row = (c: string, label: string, v: number) =>
-					`<div style="display:flex;align-items:center;gap:6px">${dot(c)}${label} <b style="margin-left:auto;font-variant-numeric:tabular-nums">${riskLabel(v)}</b></div>`
-				return `<div style="color:${muted};font-size:11px">${dayjs(point.time).format("ddd D MMM, HH:mm")}</div>
-					<div style="margin:2px 0"><b style="font-variant-numeric:tabular-nums">${riskLabel(point.risk)}</b> risk</div>
-					${row(colors.findings, "UBA findings", point.risk - point.native)}
-					${row(colors.native, "Wazuh alerts", point.native)}`
+				const rows: { marker: undefined; color: string; label: string; valueHtml: string }[] = [
+					{ marker: undefined, color: colors.findings, label: "UBA findings", valueHtml: riskLabel(point.risk - point.native) }
+				]
+				if (hasNative) rows.push({ marker: undefined, color: colors.native, label: "Wazuh alerts", valueHtml: riskLabel(point.native) })
+				return formatChartTooltipAxisMultiSeries({
+					title: `${dayjs(point.time).format("ddd D MMM, HH:mm")} · risk <b style="color:${ink}">${riskLabel(point.risk)}</b>`,
+					rows
+				})
 			}
 		},
 		xAxis: {
