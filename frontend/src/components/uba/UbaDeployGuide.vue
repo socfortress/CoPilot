@@ -1,6 +1,6 @@
 <template>
 	<div class="uba-deploy-guide flex flex-col gap-6 text-sm">
-		<p class="text-secondary max-w-3xl">
+		<p class="text-default max-w-3xl">
 			SOCFortress UBA runs as its own small Docker Compose stack (API, GELF receiver, worker, Postgres, Redis) on
 			a VM in the same network as Graylog, the Wazuh indexer and CoPilot. Graylog sends it a copy of each
 			customer's Wazuh and Microsoft 365 events, UBA reads history from the Wazuh indexer, and CoPilot talks to
