@@ -92,10 +92,28 @@
 						</template>
 						<n-input v-model:value="note" type="textarea" placeholder="Note (optional)" :autosize="{ minRows: 2 }" size="small" />
 						<div class="flex justify-end">
-							<n-button type="primary" size="small" :disabled="!canSubmit" :loading="submitting" @click="submit">
-								<template #icon><Icon name="carbon:checkmark" :size="14" /></template>
-								Save verdict
-							</n-button>
+							<!-- A verdict is final (see confirmText): confirm before it is sent. -->
+							<n-popconfirm
+								:disabled="!canSubmit"
+								:positive-text="`Save ${verdictLabel}`"
+								negative-text="Cancel"
+								style="max-width: 320px"
+								@positive-click="submit"
+							>
+								<template #trigger>
+									<n-button
+										type="primary"
+										size="small"
+										:disabled="!canSubmit"
+										:loading="submitting"
+										data-testid="uba-verdict-save"
+									>
+										<template #icon><Icon name="carbon:checkmark" :size="14" /></template>
+										Save verdict
+									</n-button>
+								</template>
+								<span class="text-sm" data-testid="uba-verdict-confirm">{{ confirmText }}</span>
+							</n-popconfirm>
 						</div>
 					</div>
 				</UbaSection>
@@ -109,7 +127,7 @@ import type { SignalTimelineItem } from "./ui/SignalTimeline.vue"
 import type { UbaDrawerMeta } from "./ui/UbaDrawerHeader.vue"
 import type { ApiError } from "@/types/common"
 import type { UbaAlert, UbaAlertUpdate, UbaSignal } from "@/types/uba"
-import { NButton, NCheckbox, NInput, NSelect, NSpin, NTag, useMessage } from "naive-ui"
+import { NButton, NCheckbox, NInput, NPopconfirm, NSelect, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -200,6 +218,18 @@ const meta = computed<UbaDrawerMeta | null>(() => {
 })
 
 watch(meta, value => value && emit("meta", value))
+
+const verdictLabel = computed(() => (verdict.value === "FALSE_POSITIVE" ? "false positive" : "true positive"))
+
+/**
+ * What saving does. A verdict cannot be changed afterwards (UBA keeps the first one on CoPilot's
+ * incident, and a false positive's suppressions are not lifted by a later verdict), so say so.
+ */
+const confirmText = computed(() =>
+	verdict.value === "FALSE_POSITIVE" && suppress.value
+		? "Save this alert as a false positive? The rules behind it stop adding risk for this entity for 30 days. The verdict cannot be changed afterwards."
+		: `Save this alert as a ${verdictLabel.value}? The verdict cannot be changed afterwards.`
+)
 
 const canSubmit = computed(() => verdict.value === "TRUE_POSITIVE" || (verdict.value === "FALSE_POSITIVE" && !!reason.value))
 

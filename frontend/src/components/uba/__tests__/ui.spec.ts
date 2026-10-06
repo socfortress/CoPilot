@@ -15,6 +15,7 @@ import UbaStatusStrip from "../ui/UbaStatusStrip.vue"
 import { riskTone } from "../utils"
 
 const api = {
+	submitFeedback: vi.fn(),
 	getAlert: vi.fn(),
 	getEntity: vi.fn(),
 	getEntityTimeline: vi.fn(),
@@ -291,5 +292,53 @@ describe("ubaAlertDetail", () => {
 		expect(wrapper.text()).toContain("Suppress the rules behind this alert")
 		await wrapper.get("[data-testid=uba-verdict-TRUE_POSITIVE]").trigger("click")
 		expect(wrapper.text()).not.toContain("Suppress the rules behind this alert")
+	})
+
+	it("asks for confirmation before saving, since a verdict cannot be changed afterwards", async () => {
+		api.submitFeedback.mockResolvedValue({ data: { suppressed_rules: ["auth.x"] } })
+		const wrapper = withProviders(UbaAlertDetailView, { customerCode: "lab", alertId: "al1" })
+		await flushPromises()
+		await wrapper.get("[data-testid=uba-verdict-FALSE_POSITIVE]").trigger("click")
+		const why = wrapper.findComponent({ name: "Select" })
+		why.vm.$emit("update:value", "EXPECTED_ACTIVITY")
+		await flushPromises()
+
+		const confirm = () => document.body.querySelector("[data-testid=uba-verdict-confirm]")
+		await wrapper.get("[data-testid=uba-verdict-save]").trigger("click")
+		await flushPromises()
+		// Clicking Save only opens the confirmation; nothing is sent yet.
+		expect(api.submitFeedback).not.toHaveBeenCalled()
+		expect(confirm()?.textContent).toContain("stop adding risk for this entity for 30 days")
+		expect(confirm()?.textContent).toContain("cannot be changed afterwards")
+
+		const buttons = [...document.body.querySelectorAll<HTMLButtonElement>(".n-popconfirm__action button")]
+		buttons.find(b => b.textContent?.includes("Cancel"))?.click()
+		await flushPromises()
+		expect(api.submitFeedback).not.toHaveBeenCalled()
+
+		await wrapper.get("[data-testid=uba-verdict-save]").trigger("click")
+		await flushPromises()
+		const save = [...document.body.querySelectorAll<HTMLButtonElement>(".n-popconfirm__action button")].find(b =>
+			b.textContent?.includes("Save false positive")
+		)
+		save?.click()
+		await flushPromises()
+		expect(api.submitFeedback).toHaveBeenCalledWith("lab", "al1", {
+			verdict: "FALSE_POSITIVE",
+			reason: "EXPECTED_ACTIVITY",
+			note: null,
+			suppress: true
+		})
+	})
+
+	it("words the confirmation for a true positive without the suppression", async () => {
+		const wrapper = withProviders(UbaAlertDetailView, { customerCode: "lab", alertId: "al1" })
+		await flushPromises()
+		await wrapper.get("[data-testid=uba-verdict-TRUE_POSITIVE]").trigger("click")
+		await wrapper.get("[data-testid=uba-verdict-save]").trigger("click")
+		await flushPromises()
+		const text = document.body.querySelector("[data-testid=uba-verdict-confirm]")?.textContent ?? ""
+		expect(text).toContain("Save this alert as a true positive?")
+		expect(text).not.toContain("30 days")
 	})
 })
