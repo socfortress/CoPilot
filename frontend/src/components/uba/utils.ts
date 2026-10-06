@@ -195,3 +195,29 @@ export function suppressionOrigin(reason: string | null | undefined, source: str
 	const why = source && text.startsWith(`${source}:`) ? text.slice(source.length + 1).trim() : text
 	return { why: why || "Suppressed", by, via }
 }
+
+/** "ana via copilot" (how CoPilot's requests reach UBA) → who and from where. */
+export function requesterOrigin(requestedBy: string | null | undefined): { by: string | null; via: string | null } {
+	if (!requestedBy) return { by: null, via: null }
+	const match = requestedBy.match(/^(.+?) via (\w+)$/i)
+	if (!match) return { by: requestedBy, via: null }
+	return { by: match[1], via: match[2].toLowerCase() === "copilot" ? "CoPilot" : match[2] }
+}
+
+/**
+ * A UBA job error in one short line: the exception and its first message, without the repeated
+ * wrapper, the connector internals and the cause chain ("ConnectionError: Cannot connect to host
+ * indexer:9200"). The full text stays available beside it.
+ */
+export function shortError(error: string | null | undefined, max = 110): string {
+	if (!error) return ""
+	let text = error.split(/\s+caused by:|\n/i)[0].trim()
+	// "ConnectionError: ConnectionError(Cannot connect …)" → "ConnectionError: Cannot connect …"
+	const wrapped = text.match(/^(\w+): \1\((.*)$/)
+	if (wrapped) text = `${wrapped[1]}: ${wrapped[2]}`
+	text = text.replace(/\s+ssl:\S.*$/, "").replace(/\s+\[.*$/, "").trim()
+	// Drop only the closing parentheses left without their opening one.
+	const count = (c: string) => text.split(c).length - 1
+	while (text.endsWith(")") && count(")") > count("(")) text = text.slice(0, -1).trimEnd()
+	return text.length > max ? `${text.slice(0, max - 1)}…` : text
+}

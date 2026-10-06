@@ -7,6 +7,7 @@ import { defineComponent, h, ref } from "vue"
 import { createMemoryHistory, createRouter } from "vue-router"
 import { buildRiskChartOption } from "../risk-chart"
 import UbaAlertDetailView from "../UbaAlertDetail.vue"
+import UbaBacktestsView from "../UbaBacktests.vue"
 import UbaEntityDetailView from "../UbaEntityDetail.vue"
 import UbaSuppressionsView from "../UbaSuppressions.vue"
 import RiskMeter from "../ui/RiskMeter.vue"
@@ -14,9 +15,11 @@ import SignalTimeline from "../ui/SignalTimeline.vue"
 import UbaDrawerHeader from "../ui/UbaDrawerHeader.vue"
 import UbaStatusStrip from "../ui/UbaStatusStrip.vue"
 import UbaToolbar from "../ui/UbaToolbar.vue"
-import { riskTone, suppressionOrigin } from "../utils"
+import { requesterOrigin, riskTone, shortError, suppressionOrigin } from "../utils"
 
 const api = {
+	getBacktests: vi.fn(),
+	getRuleCatalog: vi.fn(),
 	getSuppressions: vi.fn(),
 	removeSuppressions: vi.fn(),
 	submitFeedback: vi.fn(),
@@ -445,5 +448,78 @@ describe("ubaSuppressions", () => {
 		expect(wrapper.get("[data-testid=uba-toolbar-summary]").text()).toBe("1 active")
 		await row.get("button").trigger("click")
 		expect(opened).toEqual(["eb93-key"])
+	})
+})
+
+describe("backtest helpers", () => {
+	it("says who asked for a run and from where", () => {
+		expect(requesterOrigin("ana via copilot")).toEqual({ by: "ana", via: "CoPilot" })
+		expect(requesterOrigin("uba-admin")).toEqual({ by: "uba-admin", via: null })
+		expect(requesterOrigin(null)).toEqual({ by: null, via: null })
+	})
+
+	it("cuts a UBA error to its first message, keeping balanced parentheses", () => {
+		const connection =
+			"ConnectionError: ConnectionError(Cannot connect to host indexer:9200 ssl:default [Connect call failed ('10.0.0.1', 9200)]) caused by: ClientConnectorError(Cannot connect to host indexer:9200)"
+		expect(shortError(connection)).toBe("ConnectionError: Cannot connect to host indexer:9200")
+		expect(shortError("TransportError(429, too many requests)")).toBe("TransportError(429, too many requests)")
+		expect(shortError("ValueError: bad filter")).toBe("ValueError: bad filter")
+		expect(shortError(`ValueError: ${"x".repeat(200)}`, 20)).toHaveLength(20)
+		expect(shortError(null)).toBe("")
+	})
+})
+
+describe("ubaBacktests", () => {
+	const job = (over: Record<string, unknown>) => ({
+		id: "j",
+		status: "done",
+		params: { days: 1, warmup_days: 0 },
+		requested_by: "ana via copilot",
+		created_at: new Date(Date.now() - 120_000).toISOString(),
+		started_at: "2026-10-06T10:00:00Z",
+		finished_at: "2026-10-06T10:00:04Z",
+		progress: {},
+		error: null,
+		result: null,
+		...over
+	})
+
+	it("lists runs with their window as chips, a status with an icon and one line of detail", async () => {
+		api.getRuleCatalog.mockResolvedValue({ data: { rules: [] } })
+		api.getBacktests.mockResolvedValue({
+			data: {
+				backtests: [
+					job({ id: "a", params: { days: 3, warmup_days: 7, rules: ["auth.x", "auth.y"], filter: "eventID:4720" } }),
+					job({
+						id: "b",
+						status: "error",
+						error: "ConnectionError: ConnectionError(Cannot connect to host indexer:9200 ssl:default [x]) caused by: y"
+					}),
+					job({ id: "c", status: "queued", started_at: null, finished_at: null })
+				]
+			}
+		})
+		const wrapper = withProviders(UbaBacktestsView, { customerCode: "lab" })
+		await flushPromises()
+		const rows = wrapper.findAll("[data-testid=uba-backtest-runs] .n-data-table-tbody .n-data-table-tr")
+		expect(rows).toHaveLength(3)
+		const flat = (n: number) => rows[n].text().replace(/\s+/g, " ")
+
+		expect(flat(0)).toContain("2 minutes ago")
+		expect(flat(0)).toContain("ana via CoPilot")
+		expect(rows[0].findAll(".param-chip").map(c => c.text().trim())).toEqual(["3 days", "+7 d warm-up", "2 rules", "filter"])
+		expect(flat(0)).toContain("done")
+		expect(flat(0)).toContain("took 4 s")
+		expect(flat(0)).toContain("View result")
+
+		// A failure reads as one short line; the whole message is behind "Details".
+		expect(flat(1)).toContain("failed")
+		expect(flat(1)).toContain("ConnectionError: Cannot connect to host indexer:9200")
+		expect(flat(1)).not.toContain("caused by")
+		expect(rows[1].find("[data-testid=uba-backtest-error-details]").exists()).toBe(true)
+
+		expect(flat(2)).toContain("queued")
+		expect(flat(2)).toContain("Cancel")
+		expect(flat(2)).toContain("all rules")
 	})
 })
