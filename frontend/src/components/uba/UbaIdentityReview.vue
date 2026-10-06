@@ -11,8 +11,8 @@
 		<n-spin v-else :show="loading" class="min-h-16">
 			<template v-if="review">
 				<div class="flex flex-col gap-2">
-					<span class="text-sm font-semibold">Probably the same person ({{ review.candidates.length }})</span>
-					<p v-if="!review.candidates.length" class="text-secondary text-xs">
+					<span class="text-sm font-medium">Probably the same person ({{ review.candidates.length }})</span>
+					<p v-if="!review.candidates.length" class="text-secondary m-0 text-xs">
 						{{
 							review.has_directory
 								? "Nothing to review: the directory sync found no account that another identity already owns."
@@ -25,17 +25,17 @@
 						class="panel border-default flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5 text-sm"
 					>
 						<div class="flex min-w-60 flex-col">
-							<span class="text-tertiary text-xs">Learned from events</span>
+							<span class="text-secondary text-xs">Learned from events</span>
 							<b>{{ label(c.identity) }}</b>
 							<span class="text-secondary text-xs">{{ details(c.identity) }}</span>
 						</div>
 						<Icon name="carbon:arrow-right" :size="16" class="text-tertiary" />
 						<div class="flex min-w-60 flex-col">
-							<span class="text-tertiary text-xs">Directory user</span>
+							<span class="text-secondary text-xs">Directory user</span>
 							<b>{{ label(c.candidate) }}</b>
 							<span class="text-secondary text-xs">{{ details(c.candidate) }}</span>
 						</div>
-						<span class="text-tertiary text-xs">both claim <span class="font-mono">{{ c.alias }}</span></span>
+						<span class="text-secondary text-xs">both claim <span class="font-mono">{{ c.alias }}</span></span>
 						<div v-if="isAdmin" class="ml-auto flex gap-2">
 							<n-popconfirm @positive-click="merge(c.identity.id, c.candidate.id)">
 								<template #trigger>
@@ -51,7 +51,7 @@
 				</div>
 
 				<div v-if="review.has_directory" class="mt-3 flex flex-col gap-2">
-					<span class="text-sm font-semibold">Accounts not matched to the directory ({{ review.unmatched.length }})</span>
+					<span class="text-sm font-medium">Accounts not matched to the directory ({{ review.unmatched.length }})</span>
 					<p class="text-secondary text-xs">
 						With findings in the last 14 days. Merge one into the person it belongs to, or keep it as it is
 						(for example a local or service account).
@@ -92,14 +92,14 @@
 				</div>
 
 				<div v-if="review.merges.length" class="mt-3 flex flex-col gap-1">
-					<span class="text-sm font-semibold">Recent merges</span>
+					<span class="text-sm font-medium">Recent merges</span>
 					<ul class="m-0 flex list-none flex-col gap-1 p-0 text-xs">
 						<li v-for="m of review.merges" :key="m.id" class="flex flex-wrap items-center gap-2">
 							<n-tag size="tiny" :bordered="false" :type="m.status === 'done' ? 'success' : m.status === 'error' ? 'error' : 'default'">
 								{{ m.status }}
 							</n-tag>
 							<span>{{ m.from_name || m.from_identity }} → {{ m.into_name || m.into_identity }}</span>
-							<span class="text-tertiary">
+							<span class="text-secondary">
 								{{ m.requested_by }}{{ m.requested_at ? ` · ${formatDate(m.requested_at, dFormats.datetime)}` : "" }}
 							</span>
 							<span v-if="m.error" class="text-error">{{ m.error }}</span>

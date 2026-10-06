@@ -9,7 +9,7 @@
 				<slot name="actions" />
 			</div>
 		</header>
-		<p v-if="$slots.description" class="text-tertiary m-0 -mt-1 max-w-3xl text-xs leading-relaxed">
+		<p v-if="$slots.description" class="text-secondary m-0 -mt-1 max-w-3xl text-xs leading-relaxed">
 			<slot name="description" />
 		</p>
 		<slot />

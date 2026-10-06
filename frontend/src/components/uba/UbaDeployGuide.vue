@@ -16,7 +16,7 @@
 					<b>{{ step.title }}</b>
 				</div>
 				<p v-for="(line, j) of step.text" :key="j" class="text-secondary max-w-3xl">{{ line }}</p>
-				<CodeSource v-if="step.code" :code="step.code" lang="shellscript" :max-height="360" />
+				<CodeSource v-if="step.code" text :code="step.code" lang="shellscript" :max-height="360" />
 			</div>
 		</div>
 	</div>

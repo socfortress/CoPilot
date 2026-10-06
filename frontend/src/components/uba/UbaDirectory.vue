@@ -10,23 +10,41 @@
 			<UbaError v-if="error" :error />
 
 			<n-spin v-else :show="loading" class="min-h-24">
-				<n-empty v-if="loaded && !sources.length" description="No directory sync configured for this customer">
-					<template #extra>
-						<div class="text-secondary flex max-w-xl flex-col gap-2 text-left text-xs">
-							<p>
-								Create an Entra app registration with these read-only application permissions (admin
-								consent), then add it on the UBA host (the client secret is read from stdin and stored
-								encrypted):
-							</p>
-							<ul class="m-0 flex list-none flex-wrap gap-1.5 p-0">
-								<li v-for="permission of PERMISSIONS" :key="permission">
-									<code>{{ permission }}</code>
-								</li>
-							</ul>
-							<code class="bg-secondary rounded-md p-2 whitespace-pre-wrap">{{ addCommand }}</code>
-						</div>
-					</template>
-				</n-empty>
+				<!-- No sync yet: how to add one, as two steps. -->
+				<div
+					v-if="loaded && !sources.length"
+					class="panel border-default flex flex-col gap-4 rounded-lg border p-4"
+					data-testid="uba-directory-setup"
+				>
+					<div class="flex items-center gap-2">
+						<Icon name="carbon:catalog" :size="16" class="text-primary" />
+						<span class="text-sm font-medium">No directory sync for this customer yet</span>
+					</div>
+					<ol class="m-0 flex list-none flex-col gap-4 p-0">
+						<li class="step flex gap-3">
+							<span class="step-number">1</span>
+							<div class="flex min-w-0 flex-1 flex-col gap-2">
+								<span class="text-secondary text-xs leading-relaxed">
+									Create an Entra app registration with these read-only application permissions (admin consent):
+								</span>
+								<span class="flex flex-wrap gap-1.5">
+									<span v-for="permission of PERMISSIONS" :key="permission" class="permission font-mono text-xs">
+										{{ permission }}
+									</span>
+								</span>
+							</div>
+						</li>
+						<li class="step flex gap-3">
+							<span class="step-number">2</span>
+							<div class="flex min-w-0 flex-1 flex-col gap-2">
+								<span class="text-secondary text-xs leading-relaxed">
+									Add it on the UBA host. The client secret is read from stdin and stored encrypted:
+								</span>
+								<CodeSource text :code="addCommand" lang="shellscript" data-testid="uba-directory-command" />
+							</div>
+						</li>
+					</ol>
+				</div>
 
 				<div class="flex flex-col gap-3">
 					<div v-for="s of sources" :key="s.id" class="panel border-default flex flex-col gap-2 rounded-lg border p-3">
@@ -34,7 +52,7 @@
 							<Icon name="carbon:catalog" :size="15" class="text-primary" />
 							<b>{{ s.type === "entra" ? "Entra ID" : s.type }}</b>
 							<n-tag size="small" :type="statusType(s.status)" :bordered="false">{{ s.status }}</n-tag>
-							<span class="text-tertiary font-mono text-xs">directory {{ s.entra_tenant_id }} · app {{ s.client_id }}</span>
+							<span class="text-secondary font-mono text-xs">directory {{ s.entra_tenant_id }} · app {{ s.client_id }}</span>
 							<div class="ml-auto flex gap-2">
 								<n-button size="small" secondary :loading="testing === s.id" @click="test(s)">Test</n-button>
 								<n-button
@@ -67,7 +85,7 @@
 						>
 							{{ testResults[s.id].detail }}
 						</n-alert>
-						<p v-if="conflicts(s)" class="text-tertiary text-xs">
+						<p v-if="conflicts(s)" class="text-secondary m-0 text-xs">
 							{{ conflicts(s) }} aliases belong to other identities UBA learned from events (merge candidates);
 							they stay separate until merged.
 						</p>
@@ -82,9 +100,10 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { UbaIdentitySource, UbaIdentitySourceStatus } from "@/types/uba"
-import { NAlert, NButton, NEmpty, NSpin, NTag, useMessage } from "naive-ui"
+import { NAlert, NButton, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
+import CodeSource from "@/components/common/CodeSource.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
@@ -201,5 +220,25 @@ onBeforeUnmount(stopPolling)
 <style scoped>
 .panel {
 	background-color: var(--bg-secondary-color);
+}
+
+.step-number {
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	width: 20px;
+	height: 20px;
+	border-radius: 999px;
+	font-family: var(--font-family-mono);
+	font-size: 11px;
+	color: var(--primary-color);
+	background-color: rgb(var(--primary-color-rgb) / 0.12);
+}
+
+.permission {
+	padding: 2px 8px;
+	border: 1px solid var(--border-color);
+	border-radius: 6px;
+	background-color: var(--bg-default-color);
 }
 </style>
