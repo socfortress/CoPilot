@@ -158,3 +158,40 @@ export function identityDetails(i: UbaIdentitySummary): string {
 	if (aliases) parts.push(aliases)
 	return parts.filter(Boolean).join(" · ")
 }
+
+export interface SuppressionOrigin {
+	/** Why the rule is muted, in words: "False positive · Expected activity", "Suppressed by hand". */
+	why: string
+	/** Who muted it, when the source names someone. */
+	by: string | null
+	/** Where it was set: "CoPilot", or UBA's own source name. */
+	via: string | null
+}
+
+/**
+ * A suppression's reason and source as UBA stores them, in words. CoPilot's writes come as
+ * source "api:<user> via copilot"; a false-positive verdict's reason ends "false positive (<REASON>)",
+ * a hand-made one says "added by <user> via copilot". Anything else is shown as it is.
+ */
+export function suppressionOrigin(reason: string | null | undefined, source: string | null | undefined): SuppressionOrigin {
+	let by: string | null = null
+	let via: string | null = source ?? null
+	const api = source?.match(/^api:(.+?)(?: via (\w+))?$/i)
+	if (api) {
+		by = api[1]
+		via = api[2] ? (api[2].toLowerCase() === "copilot" ? "CoPilot" : api[2]) : "UBA API"
+	}
+
+	const text = (reason ?? "").trim()
+	const falsePositive = text.match(/false positive \(([^)]*)\)/i)
+	if (falsePositive) {
+		const code = falsePositive[1]
+		const label = FALSE_POSITIVE_REASONS.find(r => r.value === code)?.label
+		return { why: label ? `False positive · ${label}` : "False positive", by, via }
+	}
+	const added = text.match(/^added by (.+?)(?: via (\w+))?$/i)
+	if (added) return { why: "Suppressed by hand", by: by ?? added[1], via }
+	// "<source>: <text>" carries the source again: keep only the text.
+	const why = source && text.startsWith(`${source}:`) ? text.slice(source.length + 1).trim() : text
+	return { why: why || "Suppressed", by, via }
+}

@@ -8,14 +8,17 @@ import { createMemoryHistory, createRouter } from "vue-router"
 import { buildRiskChartOption } from "../risk-chart"
 import UbaAlertDetailView from "../UbaAlertDetail.vue"
 import UbaEntityDetailView from "../UbaEntityDetail.vue"
+import UbaSuppressionsView from "../UbaSuppressions.vue"
 import RiskMeter from "../ui/RiskMeter.vue"
 import SignalTimeline from "../ui/SignalTimeline.vue"
 import UbaDrawerHeader from "../ui/UbaDrawerHeader.vue"
 import UbaStatusStrip from "../ui/UbaStatusStrip.vue"
 import UbaToolbar from "../ui/UbaToolbar.vue"
-import { riskTone } from "../utils"
+import { riskTone, suppressionOrigin } from "../utils"
 
 const api = {
+	getSuppressions: vi.fn(),
+	removeSuppressions: vi.fn(),
 	submitFeedback: vi.fn(),
 	getAlert: vi.fn(),
 	getEntity: vi.fn(),
@@ -385,5 +388,62 @@ describe("ubaToolbar", () => {
 		const wrapper = mount(UbaToolbar, { slots: { default: () => h("button", "Open") } })
 		expect(wrapper.find("[data-testid=uba-toolbar-summary]").exists()).toBe(false)
 		expect(wrapper.find("[data-testid=uba-toolbar-hint]").exists()).toBe(false)
+	})
+})
+
+describe("suppressionOrigin", () => {
+	it("reads CoPilot's reasons and sources in words", () => {
+		expect(suppressionOrigin("added by ana via copilot", "api:ana via copilot")).toEqual({
+			why: "Suppressed by hand",
+			by: "ana",
+			via: "CoPilot"
+		})
+		expect(
+			suppressionOrigin("api:ana via copilot: false positive (EXPECTED_ACTIVITY)", "api:ana via copilot")
+		).toEqual({ why: "False positive · Expected activity", by: "ana", via: "CoPilot" })
+		expect(suppressionOrigin("api:ana: false positive (no reason)", "api:ana").why).toBe("False positive")
+		// Anything else is kept, without repeating its source.
+		expect(suppressionOrigin("worker: noisy on this host", "worker")).toEqual({
+			why: "noisy on this host",
+			by: null,
+			via: "worker"
+		})
+		expect(suppressionOrigin(null, null)).toEqual({ why: "Suppressed", by: null, via: null })
+	})
+})
+
+describe("ubaSuppressions", () => {
+	it("names each entity, says when the mute ends and why, and opens the entity", async () => {
+		api.getSuppressions.mockResolvedValue({
+			data: {
+				suppressions: [
+					{
+						tenant_id: "lab",
+						entity_key: "eb93-key",
+						rule_id: "auth.failures_then_success",
+						until: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+						reason: "added by ana via copilot",
+						source: "api:ana via copilot",
+						created_at: new Date().toISOString(),
+						active: true
+					}
+				]
+			}
+		})
+		api.getEntity.mockResolvedValue({ data: { entity_name: "CONTOSO\\Administrator", entity_type: "actor" } })
+		const opened: string[] = []
+		const wrapper = withProviders(UbaSuppressionsView, { customerCode: "lab" }, { onOpenEntity: (k: string) => opened.push(k) })
+		await flushPromises()
+		// One lookup per entity: suppressions carry only the key.
+		expect(api.getEntity).toHaveBeenCalledOnce()
+		const row = wrapper.get(".n-data-table-tbody .n-data-table-tr")
+		expect(row.text()).toContain("CONTOSO\\Administrator")
+		expect(row.text()).toContain("eb93-key")
+		expect(row.text()).toContain("in a month")
+		expect(row.text()).toContain("Suppressed by hand")
+		expect(row.text()).toContain("by ana · via CoPilot")
+		expect(wrapper.get("[data-testid=uba-toolbar-summary]").text()).toBe("1 active")
+		await row.get("button").trigger("click")
+		expect(opened).toEqual(["eb93-key"])
 	})
 })
