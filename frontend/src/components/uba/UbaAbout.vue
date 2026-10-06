@@ -148,28 +148,17 @@
 												<span class="text-secondary text-xs">{{ c.summary }}</span>
 											</div>
 										</template>
-										<ul
-											class="border-default m-0 flex list-none flex-col overflow-hidden rounded-lg border p-0"
-										>
-											<li
-												v-for="r of c.rules"
-												:key="r.id"
-												class="border-default flex flex-col gap-1 border-b px-3 py-2.5 last:border-b-0"
-											>
-												<div class="flex flex-wrap items-center gap-2">
-													<span class="score font-mono text-[11px] tabular-nums">
-														{{ r.score }} pts
-													</span>
-													<b>{{ r.name }}</b>
+										<ul class="rule-list border-default m-0 flex list-none flex-col overflow-hidden rounded-lg border p-0">
+											<li v-for="r of c.rules" :key="r.id" class="rule-item flex flex-col gap-0.5 px-3 py-2">
+												<div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+													<span class="score font-mono text-[11px] tabular-nums">{{ r.score }} pts</span>
+													<span class="text-[13px] font-semibold">{{ r.name }}</span>
 													<n-tag v-if="!r.enabled" size="tiny" :bordered="false">off</n-tag>
 												</div>
-												<p class="m-0">{{ r.description }}</p>
-												<p class="text-secondary m-0 text-xs">{{ r.how }}</p>
-												<p class="text-tertiary m-0 text-xs">
-													Adds to {{ r.about }}
-													<template v-if="r.mitre.length">
-														· MITRE {{ r.mitre.join(", ") }}
-													</template>
+												<p class="text-secondary m-0 text-xs leading-snug">{{ r.description }}</p>
+												<p class="text-tertiary m-0 text-[11px] leading-snug">
+													{{ r.how }} · Adds to {{ r.about }}
+													<template v-if="r.mitre.length">· MITRE {{ r.mitre.join(", ") }}</template>
 													·
 													<span class="font-mono">{{ r.id }}</span>
 												</p>
@@ -299,8 +288,18 @@ watch(open, value => value && load(), { immediate: true })
 	font-weight: 600;
 }
 
+/* The rules: compact rows on the secondary (slightly darker) surface, hairlines between. */
+.rule-item {
+	background-color: var(--bg-secondary-color);
+	border-bottom: 1px solid var(--border-color);
+}
+
+.rule-item:last-child {
+	border-bottom: 0;
+}
+
 .score {
-	padding: 1px 6px;
+	padding: 0 5px;
 	border-radius: 4px;
 	background-color: rgb(var(--primary-color-rgb) / 0.12);
 	color: var(--primary-color);
