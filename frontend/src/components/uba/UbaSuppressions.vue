@@ -1,13 +1,16 @@
 <template>
-	<div class="flex flex-col gap-3">
-		<div class="flex flex-wrap items-center justify-between gap-3">
-			<p class="text-secondary max-w-2xl text-xs">
-				A suppressed rule keeps recording its findings on the entity (they show in the entity's timeline)
-				but adds no risk and opens no alert until the date shown. Closing a UBA alert as a false positive
-				suppresses the rules behind it for that entity.
-			</p>
-			<n-checkbox v-model:checked="includeExpired" size="small">Show expired</n-checkbox>
-		</div>
+	<div class="flex flex-col gap-3" data-testid="uba-suppressions">
+		<UbaToolbar>
+			<label class="flex items-center gap-2 text-xs">
+				<n-switch v-model:value="includeExpired" size="small" />
+				Show expired
+			</label>
+			<template #hint>
+				A suppressed rule keeps recording its findings on the entity (they show in its timeline) but adds no
+				risk and opens no alert until the date shown. Closing a UBA alert as a false positive suppresses the
+				rules behind it for that entity.
+			</template>
+		</UbaToolbar>
 
 		<UbaError v-if="error" :error />
 
@@ -19,6 +22,7 @@
 			:row-key="(row: UbaSuppression) => `${row.entity_key}|${row.rule_id}`"
 			size="small"
 			:scroll-x="900"
+			class="uba-table"
 		/>
 	</div>
 </template>
@@ -27,13 +31,15 @@
 import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { UbaSuppression } from "@/types/uba"
-import { NButton, NCheckbox, NDataTable, NTag, useMessage } from "naive-ui"
+import { NButton, NDataTable, NSwitch, NTag, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import UbaError from "./UbaError.vue"
+import UbaToolbar from "./ui/UbaToolbar.vue"
 
 const { customerCode, refreshKey = 0 } = defineProps<{ customerCode: string; refreshKey?: number }>()
 const emit = defineEmits<{ openEntity: [entityKey: string] }>()
@@ -89,13 +95,15 @@ const columns: DataTableColumns<UbaSuppression> = [
 			</NButton>
 		)
 	},
-	{ title: "Rule", key: "rule_id", minWidth: 200, render: row => <span class="font-mono text-xs">{row.rule_id}</span> },
+	{ title: "Rule", key: "rule_id", minWidth: 200, render: row => <span class="rule-chip font-mono text-xs">{row.rule_id}</span> },
 	{
 		title: "Until",
 		key: "until",
 		width: 170,
 		render: row => (
-			<span class={row.active ? "" : "text-tertiary line-through"}>{formatDate(row.until, dFormats.datetime)}</span>
+			<span class={`font-mono text-xs tabular-nums ${row.active ? "" : "text-tertiary line-through"}`}>
+				{formatDate(row.until, dFormats.datetime)}
+			</span>
 		)
 	},
 	{ title: "Why", key: "reason", minWidth: 220, ellipsis: { tooltip: true } },
@@ -112,8 +120,8 @@ const columns: DataTableColumns<UbaSuppression> = [
 		width: 90,
 		render: row =>
 			row.active ? (
-				<NButton size="tiny" secondary loading={removing.value === `${row.entity_key}|${row.rule_id}`} onClick={() => remove(row)}>
-					Remove
+				<NButton size="tiny" quaternary loading={removing.value === `${row.entity_key}|${row.rule_id}`} onClick={() => remove(row)}>
+					{{ icon: () => <Icon name="carbon:notification" size={13} />, default: () => "Remove" }}
 				</NButton>
 			) : null
 	}

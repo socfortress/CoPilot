@@ -1,30 +1,31 @@
 <template>
-	<div class="flex flex-col gap-3">
-		<UbaRuleSettings :customer-code class="mb-4" />
+	<div class="flex flex-col gap-9" data-testid="uba-rules">
+		<UbaRuleSettings :customer-code />
 
-		<span :class="SECTION_LABEL">What each rule found</span>
-		<div class="flex flex-wrap items-end justify-between gap-3">
-			<n-radio-group v-model:value="since" size="small">
-				<n-radio-button value="24h">24 h</n-radio-button>
-				<n-radio-button value="7d">7 days</n-radio-button>
-				<n-radio-button value="30d">30 days</n-radio-button>
-			</n-radio-group>
-			<n-checkbox v-model:checked="showNative" size="small">Include native alert rules</n-checkbox>
-		</div>
+		<UbaSection title="What each rule found" :caption="`${visible.length} rules`">
+			<UbaToolbar>
+				<SegmentedToggle v-model="since" :options="SINCE_OPTIONS" label="Window" test-id="uba-rules-since" />
+				<label class="flex items-center gap-2 pl-1 text-xs">
+					<n-switch v-model:value="showNative" size="small" />
+					Include native alert rules
+				</label>
+			</UbaToolbar>
 
-		<UbaError v-if="error" :error />
+			<UbaError v-if="error" :error />
 
-		<n-data-table
-			v-else
-			:columns
-			:data="visible"
-			:loading
-			:row-key="(row: UbaRuleStat) => row.rule_id"
-			size="small"
-			:scroll-x="800"
-		/>
+			<n-data-table
+				v-else
+				:columns
+				:data="visible"
+				:loading
+				:row-key="(row: UbaRuleStat) => row.rule_id"
+				size="small"
+				:scroll-x="800"
+				class="uba-table"
+			/>
+		</UbaSection>
 
-		<UbaBacktests :customer-code class="mt-4" />
+		<UbaBacktests :customer-code />
 	</div>
 </template>
 
@@ -32,19 +33,26 @@
 import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { UbaRuleStat } from "@/types/uba"
-import { NCheckbox, NDataTable, NRadioButton, NRadioGroup, NTag } from "naive-ui"
+import { NDataTable, NSwitch, NTag } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
-import { SECTION_LABEL } from "@/components/common/section-label"
+import SegmentedToggle from "@/components/common/SegmentedToggle.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import UbaBacktests from "./UbaBacktests.vue"
 import UbaError from "./UbaError.vue"
 import UbaRuleSettings from "./UbaRuleSettings.vue"
+import UbaSection from "./ui/UbaSection.vue"
+import UbaToolbar from "./ui/UbaToolbar.vue"
 
 const { customerCode } = defineProps<{ customerCode: string }>()
 
 const dFormats = useSettingsStore().dateFormat
+const SINCE_OPTIONS = [
+	{ value: "24h", label: "24 h" },
+	{ value: "7d", label: "7 days" },
+	{ value: "30d", label: "30 days" }
+]
 const since = ref("7d")
 const showNative = ref(false)
 const loading = ref(false)
@@ -84,15 +92,34 @@ const columns: DataTableColumns<UbaRuleStat> = [
 			</div>
 		)
 	},
-	{ title: "Signals", key: "signals", width: 90, sorter: (a, b) => a.signals - b.signals, defaultSortOrder: "descend" },
-	{ title: "Entities", key: "entities", width: 90, sorter: (a, b) => a.entities - b.entities },
-	{ title: "Added risk", key: "with_risk", width: 100 },
-	{ title: "Suppressed", key: "suppressed", width: 100 },
+	{
+		title: "Findings",
+		key: "signals",
+		width: 100,
+		align: "right",
+		sorter: (a, b) => a.signals - b.signals,
+		defaultSortOrder: "descend",
+		render: row => <span class="font-mono tabular-nums">{row.signals}</span>
+	},
+	{
+		title: "Entities",
+		key: "entities",
+		width: 100,
+		align: "right",
+		sorter: (a, b) => a.entities - b.entities,
+		render: row => <span class="font-mono tabular-nums">{row.entities}</span>
+	},
+	{ title: "Added risk", key: "with_risk", width: 110, align: "right", render: row => <span class="font-mono tabular-nums">{row.with_risk}</span> },
+	{ title: "Suppressed", key: "suppressed", width: 110, align: "right", render: row => <span class="font-mono tabular-nums">{row.suppressed}</span> },
 	{
 		title: "Last",
 		key: "last_signal",
 		width: 170,
-		render: row => (row.last_signal ? String(formatDate(row.last_signal, dFormats.datetime)) : "—")
+		render: row => (
+			<span class="text-secondary font-mono text-xs tabular-nums">
+				{row.last_signal ? String(formatDate(row.last_signal, dFormats.datetime)) : "—"}
+			</span>
+		)
 	}
 ]
 

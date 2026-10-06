@@ -1,15 +1,21 @@
 <template>
-	<n-card size="small" class="uba-setup">
-		<div class="flex flex-col gap-3">
-			<div class="flex flex-col gap-1">
-				<div class="flex items-center gap-2">
-					<span :class="SECTION_LABEL">{{ registered ? "UBA setup for this customer" : "Set up UBA for this customer" }}</span>
-					<n-button v-if="closable" text size="tiny" class="ml-auto" @click="emit('close')">Close</n-button>
-				</div>
-				<p v-if="!isAdmin" class="text-secondary text-sm">
-					SOCFortress UBA is not set up for this customer yet. An admin can set it up from this page.
-				</p>
-			</div>
+	<section class="uba-setup border-default overflow-hidden rounded-lg border" data-testid="uba-setup">
+		<header class="bg-secondary border-default flex items-center gap-3 border-b px-4 py-2.5">
+			<span class="setup-tile grid size-7 shrink-0 place-items-center rounded-md" aria-hidden="true">
+				<Icon name="carbon:settings-adjust" :size="15" />
+			</span>
+			<span :class="SECTION_LABEL" class="min-w-0 flex-1 truncate">
+				{{ registered ? "UBA setup for this customer" : "Set up UBA for this customer" }}
+			</span>
+			<n-button v-if="closable" size="small" quaternary @click="emit('close')">
+				<template #icon><Icon name="carbon:close" :size="14" /></template>
+				Close
+			</n-button>
+		</header>
+		<div class="flex flex-col gap-3 px-4 py-4">
+			<p v-if="!isAdmin" class="text-secondary m-0 text-sm">
+				SOCFortress UBA is not set up for this customer yet. An admin can set it up from this page.
+			</p>
 
 			<template v-if="isAdmin">
 				<n-spin v-if="loading && !info" class="min-h-16" show />
@@ -87,7 +93,7 @@
 						</span>
 					</div>
 
-					<ul v-if="steps.length" class="flex flex-col gap-0.5 text-xs">
+					<ul v-if="steps.length" class="m-0 flex list-none flex-col gap-1 p-0 text-xs">
 						<li v-for="(s, i) of steps" :key="i" class="flex flex-wrap items-center gap-2">
 							<n-tag size="tiny" :bordered="false" :type="s.status === 'skipped' ? 'default' : 'success'">
 								{{ s.status }}
@@ -99,15 +105,16 @@
 				</template>
 			</template>
 		</div>
-	</n-card>
+	</section>
 </template>
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { UbaOnboarding, UbaProvisioning, UbaProvisionStep } from "@/types/uba"
-import { NAlert, NButton, NCard, NCheckbox, NFormItem, NProgress, NSelect, NSpin, NTag, useMessage } from "naive-ui"
+import { NAlert, NButton, NCheckbox, NFormItem, NProgress, NSelect, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
@@ -231,3 +238,10 @@ onBeforeMount(() => {
 })
 onBeforeUnmount(stopPolling)
 </script>
+
+<style scoped>
+.setup-tile {
+	color: var(--primary-color);
+	background-color: rgb(var(--primary-color-rgb) / 0.1);
+}
+</style>

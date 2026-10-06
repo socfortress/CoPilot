@@ -1,13 +1,10 @@
 <template>
-	<section class="flex flex-col gap-3">
-		<div class="flex flex-col gap-1">
-			<span :class="SECTION_LABEL">Backtest</span>
-			<p class="text-secondary max-w-3xl text-xs">
-				Replays recent history through a separate copy of UBA's rules and reports what they would have
-				found: per rule, how often, for whom, and the alerts it would have raised. Nothing is alerted or
-				stored on entities. A warm-up replays older history first so baselines and learning periods exist.
-			</p>
-		</div>
+	<UbaSection title="Backtest">
+		<template #description>
+			Replays recent history through a separate copy of UBA's rules and reports what they would have
+			found: per rule, how often, for whom, and the alerts it would have raised. Nothing is alerted or
+			stored on entities. A warm-up replays older history first so baselines and learning periods exist.
+		</template>
 
 		<div class="flex flex-wrap items-end gap-3">
 			<n-form-item label="Rules" :show-feedback="false" class="min-w-72 grow">
@@ -31,7 +28,10 @@
 			<n-form-item label="Filter (optional)" :show-feedback="false" class="min-w-60 grow">
 				<n-input v-model:value="filter" clearable placeholder="e.g. data_win_system_eventID:(4720 OR 4726)" />
 			</n-form-item>
-			<n-button type="primary" :loading="starting" @click="start">Run backtest</n-button>
+			<n-button type="primary" :loading="starting" @click="start">
+				<template #icon><Icon name="carbon:play" :size="14" /></template>
+				Run backtest
+			</n-button>
 		</div>
 
 		<UbaError v-if="error" :error />
@@ -43,9 +43,10 @@
 			:row-key="(row: UbaBacktest) => row.id"
 			size="small"
 			:scroll-x="760"
+			class="uba-table"
 		/>
 
-		<div v-if="selected" class="border-default flex flex-col gap-3 rounded-lg border p-3">
+		<div v-if="selected" class="panel border-default flex flex-col gap-3 rounded-lg border p-3" data-testid="uba-backtest-result">
 			<div class="flex flex-wrap items-center gap-2 text-sm">
 				<b>Result</b>
 				<span class="text-secondary text-xs">
@@ -73,7 +74,7 @@
 			<p v-if="!selected.result!.rules.length" class="text-secondary text-sm">No rule found anything.</p>
 			<div v-if="selected.result!.alerts.length" class="flex flex-col gap-1">
 				<span class="text-secondary text-xs">Alerts it would have raised (first {{ selected.result!.alerts.length }})</span>
-				<ul class="flex flex-col gap-0.5 text-xs">
+				<ul class="m-0 flex list-none flex-col gap-0.5 p-0 text-xs">
 					<li v-for="(a, i) of selected.result!.alerts.slice(0, 20)" :key="i">
 						<b>{{ a.entity }}</b>
 						· risk {{ Math.round(a.risk) }} ·
@@ -82,7 +83,7 @@
 				</ul>
 			</div>
 		</div>
-	</section>
+	</UbaSection>
 </template>
 
 <script setup lang="tsx">
@@ -92,11 +93,12 @@ import type { UbaBacktest, UbaBacktestRuleResult, UbaBacktestStatus, UbaRuleInfo
 import { NAlert, NButton, NDataTable, NFormItem, NInput, NSelect, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
-import { SECTION_LABEL } from "@/components/common/section-label"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import UbaError from "./UbaError.vue"
+import UbaSection from "./ui/UbaSection.vue"
 
 const { customerCode } = defineProps<{ customerCode: string }>()
 
@@ -304,3 +306,9 @@ onBeforeUnmount(() => {
 	if (poll) clearInterval(poll)
 })
 </script>
+
+<style scoped>
+.panel {
+	background-color: var(--bg-secondary-color);
+}
+</style>

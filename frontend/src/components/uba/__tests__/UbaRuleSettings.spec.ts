@@ -87,7 +87,8 @@ describe("ubaRuleSettings", () => {
 
 	it("turning a rule off sends only that, and shows who changed it", async () => {
 		const wrapper = await render()
-		await wrapper.findAll("[role=switch]")[0].trigger("click")
+		// The rules' own switches, in the table (the toolbar's filter is a switch too).
+		await wrapper.findAll(".n-data-table [role=switch]")[0].trigger("click")
 		await flushPromises()
 		expect(setRuleSetting).toHaveBeenCalledWith("lab", "auth.new_country", { enabled: false })
 		expect(wrapper.text()).toContain("this customer")
@@ -120,7 +121,9 @@ describe("ubaRuleSettings", () => {
 		auth.isAdmin = false
 		const wrapper = await render()
 		expect(wrapper.text()).toContain("Only admins can change them")
-		expect(wrapper.findAll("[role=switch]").every(s => s.classes().some(c => c.includes("disabled")))).toBe(true)
+		const ruleSwitches = wrapper.findAll(".n-data-table [role=switch]")
+		expect(ruleSwitches.length).toBeGreaterThan(0)
+		expect(ruleSwitches.every(s => s.classes().some(c => c.includes("disabled")))).toBe(true)
 		expect(wrapper.findAll("button").some(b => b.text() === "Save")).toBe(false)
 	})
 })

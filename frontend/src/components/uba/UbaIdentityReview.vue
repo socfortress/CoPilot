@@ -1,14 +1,11 @@
 <template>
-	<section class="flex flex-col gap-3">
-		<div class="flex flex-col gap-1">
-			<span :class="SECTION_LABEL">Identity review</span>
-			<p class="text-secondary max-w-3xl text-xs">
-				Accounts UBA learned from events and the customer's directory users may be the same person. Merging
-				moves the account's findings, alerts, history and risk to the person it belongs to; it cannot be
-				undone. UBA runs a merge within a minute.
-				<template v-if="!isAdmin">Only admins can merge.</template>
-			</p>
-		</div>
+	<UbaSection title="Identity review">
+		<template #description>
+			Accounts UBA learned from events and the customer's directory users may be the same person. Merging
+			moves the account's findings, alerts, history and risk to the person it belongs to; it cannot be
+			undone. UBA runs a merge within a minute.
+			<template v-if="!isAdmin">Only admins can merge.</template>
+		</template>
 
 		<UbaError v-if="error" :error />
 		<n-spin v-else :show="loading" class="min-h-16">
@@ -25,7 +22,7 @@
 					<div
 						v-for="c of review.candidates"
 						:key="c.id"
-						class="border-default flex flex-wrap items-center gap-3 rounded-lg border p-3 text-sm"
+						class="panel border-default flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5 text-sm"
 					>
 						<div class="flex min-w-60 flex-col">
 							<span class="text-tertiary text-xs">Learned from events</span>
@@ -62,7 +59,7 @@
 					<div
 						v-for="u of review.unmatched"
 						:key="u.id"
-						class="border-default flex flex-wrap items-center gap-3 rounded-lg border p-3 text-sm"
+						class="panel border-default flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5 text-sm"
 					>
 						<div class="flex min-w-60 flex-col">
 							<b>{{ label(u) }}</b>
@@ -96,7 +93,7 @@
 
 				<div v-if="review.merges.length" class="mt-3 flex flex-col gap-1">
 					<span class="text-sm font-semibold">Recent merges</span>
-					<ul class="flex flex-col gap-0.5 text-xs">
+					<ul class="m-0 flex list-none flex-col gap-1 p-0 text-xs">
 						<li v-for="m of review.merges" :key="m.id" class="flex flex-wrap items-center gap-2">
 							<n-tag size="tiny" :bordered="false" :type="m.status === 'done' ? 'success' : m.status === 'error' ? 'error' : 'default'">
 								{{ m.status }}
@@ -111,7 +108,7 @@
 				</div>
 			</template>
 		</n-spin>
-	</section>
+	</UbaSection>
 </template>
 
 <script setup lang="ts">
@@ -121,12 +118,12 @@ import { NButton, NPopconfirm, NSelect, NSpin, NTag, useMessage } from "naive-ui
 import { computed, onBeforeMount, onBeforeUnmount, reactive, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { SECTION_LABEL } from "@/components/common/section-label"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import UbaError from "./UbaError.vue"
+import UbaSection from "./ui/UbaSection.vue"
 import { identityDetails, identityLabel } from "./utils"
 
 const { customerCode } = defineProps<{ customerCode: string }>()
@@ -231,3 +228,9 @@ onBeforeUnmount(() => {
 	if (poll) clearInterval(poll)
 })
 </script>
+
+<style scoped>
+.panel {
+	background-color: var(--bg-secondary-color);
+}
+</style>

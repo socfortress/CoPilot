@@ -1,16 +1,12 @@
 <template>
-	<div class="flex flex-col gap-3">
-		<div class="flex flex-wrap items-end justify-between gap-3">
-			<n-radio-group v-model:value="status" size="small">
-				<n-radio-button value="open">Open</n-radio-button>
-				<n-radio-button value="closed">Closed</n-radio-button>
-				<n-radio-button value="all">All</n-radio-button>
-			</n-radio-group>
-			<p class="text-secondary max-w-xl text-xs">
-				UBA alerts open when an entity's accumulated risk passes 100 (or one finding is strong enough on its
-				own). Each is also an incident alert in CoPilot; a verdict here or there closes the loop in UBA.
-			</p>
-		</div>
+	<div class="flex flex-col gap-3" data-testid="uba-alerts">
+		<UbaToolbar>
+			<SegmentedToggle v-model="status" :options="STATUS_OPTIONS" label="Alerts" test-id="uba-alert-status" />
+			<template #hint>
+				UBA alerts open when an entity's accumulated risk passes 100 (or one finding is strong enough on its own).
+				Each is also an incident alert in CoPilot; a verdict here or there closes the loop in UBA.
+			</template>
+		</UbaToolbar>
 
 		<UbaError v-if="error" :error />
 
@@ -23,6 +19,7 @@
 			:row-props
 			size="small"
 			:scroll-x="900"
+			class="uba-table"
 		/>
 
 		<div v-if="total > PAGE_SIZE" class="flex justify-end">
@@ -35,14 +32,18 @@
 import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { UbaAlert } from "@/types/uba"
-import { NButton, NDataTable, NPagination, NRadioButton, NRadioGroup, NTag } from "naive-ui"
+import { NButton, NDataTable, NPagination, NTag } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import SegmentedToggle from "@/components/common/SegmentedToggle.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import UbaError from "./UbaError.vue"
-import { entityTypeLabel, riskLabel, riskTagType } from "./utils"
+import RiskMeter from "./ui/RiskMeter.vue"
+import UbaToolbar from "./ui/UbaToolbar.vue"
+import { entityTypeIcon, entityTypeLabel } from "./utils"
 
 const { customerCode, refreshKey = 0 } = defineProps<{ customerCode: string; refreshKey?: number }>()
 const emit = defineEmits<{ open: [alertId: string] }>()
@@ -51,6 +52,11 @@ const { routeIncidentManagementAlerts } = useNavigation()
 
 const PAGE_SIZE = 25
 const dFormats = useSettingsStore().dateFormat
+const STATUS_OPTIONS: { value: "open" | "closed" | "all"; label: string }[] = [
+	{ value: "open", label: "Open" },
+	{ value: "closed", label: "Closed" },
+	{ value: "all", label: "All" }
+]
 const status = ref<"open" | "closed" | "all">("open")
 const page = ref(1)
 const total = ref(0)
@@ -84,38 +90,40 @@ function rowProps(row: UbaAlert) {
 }
 
 const columns: DataTableColumns<UbaAlert> = [
-	{ title: "Opened", key: "opened_at", width: 170, render: row => String(formatDate(row.opened_at, dFormats.datetime)) },
+	{
+		title: "Opened",
+		key: "opened_at",
+		width: 170,
+		render: row => <span class="font-mono text-xs tabular-nums">{String(formatDate(row.opened_at, dFormats.datetime))}</span>
+	},
 	{
 		title: "Entity",
 		key: "entity_name",
-		minWidth: 240,
+		minWidth: 260,
 		render: row => (
-			<div class="flex min-w-0 flex-col">
-				<span class="truncate font-medium">{row.entity_name || row.entity_key}</span>
-				<span class="text-tertiary text-xs">{entityTypeLabel(row.entity_type)}</span>
+			<div class="flex min-w-0 items-center gap-2.5">
+				<span class="entity-icon" title={entityTypeLabel(row.entity_type)}>
+					<Icon name={entityTypeIcon(row.entity_type)} size={14} />
+				</span>
+				<div class="flex min-w-0 flex-col">
+					<span class="truncate font-medium">{row.entity_name || row.entity_key}</span>
+					<span class="text-tertiary text-[11px]">{entityTypeLabel(row.entity_type)}</span>
+				</div>
 			</div>
 		)
 	},
-	{
-		title: "Risk",
-		key: "risk",
-		width: 80,
-		render: row => (
-			<NTag type={riskTagType(row.risk)} size="small" round bordered={false}>
-				{riskLabel(row.risk)}
-			</NTag>
-		)
-	},
-	{ title: "Updates", key: "update_count", width: 80 },
+	{ title: "Risk", key: "risk", width: 120, render: row => <RiskMeter risk={row.risk} /> },
+	{ title: "Updates", key: "update_count", width: 80, align: "right", render: row => <span class="font-mono tabular-nums">{row.update_count}</span> },
 	{
 		title: "Incident",
 		key: "copilot_alert_id",
-		width: 90,
+		width: 100,
 		render: row =>
 			row.copilot_alert_id ? (
 				<NButton
 					text
 					type="primary"
+					class="font-mono"
 					onClick={(e: MouseEvent) => {
 						e.stopPropagation() // the row click opens the UBA alert drawer
 						routeIncidentManagementAlerts(row.copilot_alert_id ?? undefined).navigate()
@@ -124,7 +132,7 @@ const columns: DataTableColumns<UbaAlert> = [
 					{`#${row.copilot_alert_id}`}
 				</NButton>
 			) : (
-				"—"
+				<span class="text-tertiary">—</span>
 			)
 	},
 	{
@@ -133,7 +141,7 @@ const columns: DataTableColumns<UbaAlert> = [
 		width: 140,
 		render: row =>
 			row.verdict ? (
-				<NTag type={row.verdict === "FALSE_POSITIVE" ? "default" : "error"} size="small" bordered={false}>
+				<NTag type={row.verdict === "FALSE_POSITIVE" ? "default" : "error"} size="small" round bordered={false}>
 					{row.verdict === "FALSE_POSITIVE" ? "false positive" : "true positive"}
 				</NTag>
 			) : (
