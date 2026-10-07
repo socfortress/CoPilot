@@ -156,7 +156,18 @@
 					body-content-class="uba-drawer-body"
 				>
 					<template #header>
-						<UbaDrawerHeader :meta="drawerMeta" :kind="drawer.kind === 'entity' ? 'Entity' : 'UBA alert'" />
+						<div class="flex min-w-0 items-start gap-2">
+							<UbaDrawerHeader
+								:meta="drawerMeta"
+								:kind="drawer.kind === 'entity' ? 'Entity' : 'UBA alert'"
+								class="min-w-0 flex-1"
+							/>
+							<ModalPageButton
+								:route="drawerPage"
+								:label="drawer.kind === 'entity' ? 'Open the entity\'s page' : 'Open the alert\'s page'"
+								@navigate="closeDrawer"
+							/>
+						</div>
 					</template>
 					<UbaEntityDetail
 						v-if="drawer.kind === 'entity'"
@@ -191,8 +202,9 @@ import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
-import { useRouteQueryParam } from "@/composables/useNavigation"
+import { useNavigation, useRouteQueryParam } from "@/composables/useNavigation"
 import { useUbaAvailability } from "@/composables/useUbaAvailability"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
@@ -211,11 +223,13 @@ import UbaSuppressions from "./UbaSuppressions.vue"
 import UbaDrawerHeader from "./ui/UbaDrawerHeader.vue"
 import UbaStatusStrip from "./ui/UbaStatusStrip.vue"
 import { silentComputers } from "./utils"
+import "./uba-shared.css"
 
 const TABS = ["entities", "alerts", "suppressions", "rules", "directory"] as const
 
 const route = useRoute()
 const router = useRouter()
+const { routeUbaAlert, routeUbaEntity } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
 const { available, loaded: availabilityLoaded } = useUbaAvailability()
 const { getAvailableGlobalCustomerValue, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
@@ -282,6 +296,14 @@ const drawer = computed<{ kind: "entity" | "alert"; id: string } | null>(() => {
 	if (entityQuery.value) return { kind: "entity", id: entityQuery.value }
 	if (alertQuery.value) return { kind: "alert", id: alertQuery.value }
 	return null
+})
+
+/** The open drawer's own page, offered from its header. */
+const drawerPage = computed(() => {
+	if (!drawer.value || !customerModel.value) return null
+	return drawer.value.kind === "entity"
+		? routeUbaEntity(customerModel.value, drawer.value.id)
+		: routeUbaAlert(customerModel.value, drawer.value.id)
 })
 
 function openEntity(entityKey: string) {
@@ -362,26 +384,6 @@ onBeforeMount(loadCustomers)
 </script>
 
 <style>
-/* Shared by the UBA tabs' table cells (JSX renders, so not scoped): the entity type tile, and table
-   headers in the page's section-label voice. */
-.uba-page .entity-icon,
-.n-drawer .entity-icon {
-	display: grid;
-	place-items: center;
-	flex-shrink: 0;
-	width: 26px;
-	height: 26px;
-	border-radius: 6px;
-	color: var(--fg-secondary-color);
-	background-color: var(--hover-color);
-}
-
-.uba-page .rule-chip {
-	padding: 1px 6px;
-	border-radius: 4px;
-	background-color: var(--hover-color);
-}
-
 /* The UBA drawers: a header tall enough for the entity's name and risk, a calmer body. */
 .uba-drawer-head {
 	align-items: flex-start !important;
@@ -392,8 +394,8 @@ onBeforeMount(loadCustomers)
 .uba-drawer-head .n-drawer-header__main {
 	min-width: 0;
 	flex: 1;
-	/* Room for the close button beside the risk figure. */
-	padding-right: 36px;
+	/* The page button closes the row, right before the drawer's close button. */
+	padding-right: 4px;
 }
 
 .uba-drawer-body {

@@ -1,0 +1,19 @@
+/* Shared by every UBA surface: the /uba page and its drawers, and the UBA alert and entity pages.
+   Not scoped because JSX table cells render them too. */
+.uba-page .entity-icon,
+.n-drawer .entity-icon {
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	width: 26px;
+	height: 26px;
+	border-radius: 6px;
+	color: var(--fg-secondary-color);
+	background-color: var(--hover-color);
+}
+
+.uba-page .rule-chip {
+	padding: 1px 6px;
+	border-radius: 4px;
+	background-color: var(--hover-color);
+}
