@@ -187,8 +187,10 @@ def get_connectors_list():
             (
                 "Connection to OpenCTI's GraphQL API for threat intelligence lookups — IOC enrichment, indicators, "
                 "reports and threat entities. Set the URL to the platform address (e.g. http://opencti:8080) and the "
-                "API key to an OpenCTI user's API token."
+                "API key to an OpenCTI user's API token. Optionally set the public URL analysts open OpenCTI at "
+                "(e.g. https://cti.example.com) when it differs from the address CoPilot calls."
             ),
+            "OPENCTI_PUBLIC_URL",
         ),
         (
             "SOCFortress UBA",
@@ -248,6 +250,12 @@ async def add_connectors_if_not_exist(session: AsyncSession):
             new_connector = Connectors(**connector_data)
             session.add(new_connector)
             logger.info(f"Added new connector: {connector_data['connector_name']}")
+        elif connector_data["connector_accepts_extra_data"] and not existing_connector.connector_accepts_extra_data:
+            # A connector that gained an optional extra field after it was first
+            # seeded (OpenCTI's public URL, #1221). The flag is what shows the field
+            # on the Connectors page; the stored value is left alone.
+            existing_connector.connector_accepts_extra_data = True
+            logger.info(f"Connector {connector_data['connector_name']} now accepts extra data")
 
     await session.commit()
     # Startup runs before the first request, so nothing can be cached yet. Kept

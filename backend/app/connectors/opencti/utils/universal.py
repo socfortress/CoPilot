@@ -25,6 +25,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Sequence
+from urllib.parse import urlparse
 
 import httpx
 from loguru import logger
@@ -53,6 +54,26 @@ def build_graphql_url(connector_url: str) -> str:
     if base.endswith(GRAPHQL_PATH):
         return base
     return f"{base}{GRAPHQL_PATH}"
+
+
+def resolve_platform_url(connector_url: str, public_url: Optional[str] = None) -> str:
+    """
+    The address an analyst's browser opens OpenCTI at, for "Open in OpenCTI" links (#1221).
+
+    The connector URL is what the backend calls, often an internal address the
+    analyst cannot reach, while the UI may sit behind a proxy that the backend
+    must not go through. An operator can therefore store a separate public URL
+    in `connector_extra_data`. It is used only when it is an absolute http(s)
+    URL, since it ends up in an `href`; otherwise links fall back to the
+    connector URL, as before.
+    """
+    candidate = (public_url or "").strip()
+    if candidate:
+        parsed = urlparse(candidate)
+        if parsed.scheme in ("http", "https") and parsed.netloc:
+            return build_graphql_url(candidate)[: -len(GRAPHQL_PATH)]
+        logger.warning("Ignoring the OpenCTI public URL: it is not an absolute http(s) URL")
+    return build_graphql_url(connector_url)[: -len(GRAPHQL_PATH)]
 
 
 def _build_headers(api_key: Optional[str]) -> Dict[str, str]:

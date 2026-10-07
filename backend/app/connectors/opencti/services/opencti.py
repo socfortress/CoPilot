@@ -23,11 +23,10 @@ from app.connectors.opencti.services.queries import ENTITY_QUERY
 from app.connectors.opencti.services.queries import INDICATORS_QUERY
 from app.connectors.opencti.services.queries import OBSERVABLE_LOOKUP_KEYS
 from app.connectors.opencti.services.queries import OBSERVABLE_LOOKUP_QUERY
-from app.connectors.opencti.utils.universal import GRAPHQL_PATH
 from app.connectors.opencti.utils.universal import OPENCTI_CONNECTOR_NAME
-from app.connectors.opencti.utils.universal import build_graphql_url
 from app.connectors.opencti.utils.universal import filter_group
 from app.connectors.opencti.utils.universal import filter_item
+from app.connectors.opencti.utils.universal import resolve_platform_url
 from app.connectors.opencti.utils.universal import send_graphql_request
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
@@ -132,8 +131,8 @@ async def get_availability() -> OpenCTIAvailabilityResponse:
         message="OpenCTI connector is verified" if verified else "OpenCTI connector is not verified",
         configured=configured,
         verified=verified,
-        # The stored URL may be the GraphQL endpoint itself; links need the platform.
-        platform_url=build_graphql_url(attributes["connector_url"])[: -len(GRAPHQL_PATH)] if verified else None,
+        # Links open in the analyst's browser: the public URL when one is set, else the connector URL.
+        platform_url=resolve_platform_url(attributes["connector_url"], attributes.get("connector_extra_data")) if verified else None,
     )
 
 

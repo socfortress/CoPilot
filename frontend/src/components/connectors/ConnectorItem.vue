@@ -142,6 +142,8 @@ function closeConfigDialog(update: boolean) {
 
 	if (update) {
 		emit("updated")
+		// The public URL for "Open in OpenCTI" links is part of the config, not of verification.
+		if (props.connector.connector_name === "OpenCTI") refreshOpenCTIAvailability()
 	}
 }
 
