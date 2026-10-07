@@ -47,8 +47,16 @@
 					label-width="120px"
 					label-placement="top"
 				>
-					<n-form-item v-if="connectorFormOptions.extraData" label="Extra data" path="connector_extra_data">
-						<n-input v-model:value="connectorForm.connector_extra_data" type="text" />
+					<n-form-item v-if="connectorFormOptions.extraData" :label="extraDataField.label" path="connector_extra_data">
+						<div class="flex w-full flex-col gap-1">
+							<n-input
+								v-model:value="connectorForm.connector_extra_data"
+								type="text"
+								:placeholder="extraDataField.placeholder"
+								clearable
+							/>
+							<p v-if="extraDataField.help" class="text-secondary text-xs">{{ extraDataField.help }}</p>
+						</div>
 					</n-form-item>
 				</n-form>
 			</div>
@@ -66,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FormInst, FormRules, FormValidationError } from "naive-ui"
+import type { FormInst, FormItemRule, FormRules, FormValidationError } from "naive-ui"
 import type {
 	Connector,
 	ConnectorForm,
@@ -103,14 +111,59 @@ const connectorForm = ref<ConnectorForm>({
 	connector_file: null
 })
 
-const optionsRules: FormRules = {
-	connector_extra_data: [{ required: true, trigger: "blur", message: "Please input a valid Extra Data" }]
+interface ExtraDataField {
+	label: string
+	placeholder?: string
+	help?: string
+	required: boolean
+	url?: boolean
+}
+
+const DEFAULT_EXTRA_DATA_FIELD: ExtraDataField = { label: "Extra data", required: true }
+
+// Connectors whose extra data is something more specific than a free-form string.
+const EXTRA_DATA_FIELDS: Record<string, ExtraDataField> = {
+	// The URL above is what CoPilot calls; this is where analysts' browsers open OpenCTI (#1221).
+	OpenCTI: {
+		label: "Public URL (for links)",
+		placeholder: "https://cti.example.com",
+		help: "Optional. Used for \"Open in OpenCTI\" links when analysts reach OpenCTI at a different address than CoPilot does. Leave empty to link to the URL above.",
+		required: false,
+		url: true
+	}
+}
+
+function isHttpUrl(value: string): boolean {
+	try {
+		const url = new URL(value)
+		return (url.protocol === "http:" || url.protocol === "https:") && !!url.host
+	} catch {
+		return false
+	}
 }
 
 const message = useMessage()
 const formOptionsRef = ref<FormInst>()
 const connectorFormType = computed<ConnectorFormType>(() => getConnectorFormType(connector.value))
 const connectorFormOptions = computed<ConnectorFormOptions>(() => getConnectorFormOptions(connector.value))
+const extraDataField = computed<ExtraDataField>(
+	() => EXTRA_DATA_FIELDS[connector.value.connector_name] ?? DEFAULT_EXTRA_DATA_FIELD
+)
+const optionsRules = computed<FormRules>(() => {
+	const field = extraDataField.value
+	const rules: FormItemRule[] = []
+	if (field.required) {
+		rules.push({ required: true, trigger: "blur", message: `Please input a valid ${field.label}` })
+	}
+	if (field.url) {
+		rules.push({
+			trigger: "blur",
+			validator: (_rule: FormItemRule, value: string) =>
+				!value?.trim() || isHttpUrl(value.trim()) || new Error("Please input an http(s) URL")
+		})
+	}
+	return { connector_extra_data: rules }
+})
 const isConnectorConfigured = computed<boolean>(() => connector.value.connector_configured)
 const connectorTypeFormRef = ref<{ formRef: FormInst } | null>(null)
 const loading = ref<boolean>(false)

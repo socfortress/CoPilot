@@ -133,7 +133,10 @@ class OpenCTIAvailabilityResponse(BaseModel):
     verified: bool = Field(..., description="The last Verify on the Connectors page succeeded")
     platform_url: Optional[str] = Field(
         default=None,
-        description="OpenCTI's web address, for 'open in OpenCTI' links (<platform_url>/dashboard/id/<id>). Only set once verified.",
+        description=(
+            "OpenCTI's web address, for 'open in OpenCTI' links (<platform_url>/dashboard/id/<id>): the connector's public URL "
+            "when one is set, else its URL. Only set once verified."
+        ),
     )
 
 

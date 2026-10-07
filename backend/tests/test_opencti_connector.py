@@ -391,6 +391,87 @@ def test_availability_hides_platform_url_until_verified():
     assert _availability(row).platform_url is None
 
 
+# ── public URL for links (#1221) ─────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "public",
+    ["https://cti.example.com", "https://cti.example.com/", " https://cti.example.com ", "https://cti.example.com/graphql"],
+)
+def test_availability_links_use_the_public_url_when_set(public):
+    row = {"connector_url": "http://10.0.0.24:8080", "connector_api_key": "k", "connector_verified": True, "connector_extra_data": public}
+    assert _availability(row).platform_url == "https://cti.example.com"
+
+
+@pytest.mark.parametrize("public", [None, "", "   "])
+def test_availability_falls_back_to_the_connector_url_without_a_public_url(public):
+    row = {"connector_url": "http://10.0.0.24:8080", "connector_api_key": "k", "connector_verified": True, "connector_extra_data": public}
+    assert _availability(row).platform_url == "http://10.0.0.24:8080"
+
+
+@pytest.mark.parametrize("public", ["javascript:alert(1)", "cti.example.com", "ftp://cti.example.com", "https://"])
+def test_availability_ignores_a_public_url_that_is_not_absolute_http(public):
+    # It ends up in an href: never hand the browser a script URL or a relative path.
+    row = {"connector_url": "http://10.0.0.24:8080", "connector_api_key": "k", "connector_verified": True, "connector_extra_data": public}
+    assert _availability(row).platform_url == "http://10.0.0.24:8080"
+
+
+def test_public_url_does_not_change_where_the_backend_calls():
+    # The public URL sits behind the analysts' proxy; API calls must keep using the connector URL.
+    client = _client(_response(200, {"data": {}}))
+    attrs = {**ATTRS, "connector_url": "http://10.0.0.24:8080", "connector_extra_data": "https://cti.example.com"}
+    _run(transport.send_graphql_request("{ about { version } }"), client, attrs)
+    assert client.post.call_args.args[0] == "http://10.0.0.24:8080/graphql"
+
+
+def test_seed_lets_opencti_store_a_public_url():
+    from app.db.db_populate import get_connectors_list
+
+    opencti = next(c for c in get_connectors_list() if c["connector_name"] == "OpenCTI")
+    assert opencti["connector_accepts_extra_data"] is True
+
+
+def test_existing_connector_rows_gain_the_extra_data_flag_without_losing_their_value():
+    from app.connectors.models import Connectors
+    from app.db import db_populate
+
+    existing = Connectors(
+        connector_name="OpenCTI",
+        connector_type="7",
+        connector_url="http://10.0.0.24:8080",
+        connector_accepts_extra_data=False,
+        connector_extra_data=None,
+    )
+
+    class _Result:
+        def scalars(self):
+            return self
+
+        def first(self):
+            return existing
+
+    class _Session:
+        added = []
+
+        async def execute(self, _query):
+            return _Result()
+
+        def add(self, obj):
+            self.added.append(obj)
+
+        async def commit(self):
+            return None
+
+    session = _Session()
+    seed = [{"connector_name": "OpenCTI", "connector_accepts_extra_data": True, "connector_extra_data": "https://from-env"}]
+    with patch.object(db_populate, "get_connectors_list", lambda: seed):
+        asyncio.run(db_populate.add_connectors_if_not_exist(session))
+
+    assert existing.connector_accepts_extra_data is True
+    assert existing.connector_extra_data is None
+    assert session.added == []
+
+
 # ── batch lookup (inline alert IoC badges, #1146) ────────────────────────────
 
 
