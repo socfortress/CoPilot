@@ -52,21 +52,36 @@ vi.mock("@/api", () => ({ default: { uba: { getAbout: (...args: unknown[]) => ge
 vi.mock("@/stores/auth", () => ({ useAuthStore: () => auth }))
 
 async function render() {
-	const wrapper = mount(UbaAboutCard, { props: { customerCode: "lab" } })
+	const wrapper = mount(UbaAboutCard, { props: { customerCode: "lab" }, attachTo: document.body })
 	await flushPromises()
 	return wrapper
+}
+
+/** Opens the drawer from the bar and returns what it shows (the drawer renders into the body). */
+async function open(wrapper: Awaited<ReturnType<typeof render>>) {
+	await wrapper.get("[data-testid=uba-about-toggle]").trigger("click")
+	await flushPromises()
+	return document.body.textContent ?? ""
 }
 
 describe("ubaAbout", () => {
 	beforeEach(() => {
 		auth.isAdmin = false
-		localStorage.clear()
+		document.body.innerHTML = ""
 		getAbout.mockReset().mockResolvedValue({ data: ABOUT })
 	})
 
-	it("explains risk with UBA's own numbers on the first visit", async () => {
-		const text = (await render()).text()
+	it("is a slim bar that loads nothing until it is opened", async () => {
+		const wrapper = await render()
+		expect(wrapper.text()).toContain("What UBA is, how risk adds up")
+		expect(getAbout).not.toHaveBeenCalled()
+		await open(wrapper)
+		expect(getAbout).toHaveBeenCalledOnce()
 		expect(getAbout).toHaveBeenCalledWith("lab")
+	})
+
+	it("explains risk with UBA's own numbers, in a drawer, one section under the other", async () => {
+		const text = await open(await render())
 		expect(text).toContain("when they reach 100 UBA raises an alert")
 		expect(text).toContain("halve every 3 days")
 		expect(text).toContain("between 10 and 45")
@@ -75,24 +90,18 @@ describe("ubaAbout", () => {
 		expect(text).toContain("The 2 rules")
 		expect(text).toContain("Sign-ins (2)")
 		// Formatting never leaves a space before punctuation ("alert , which").
-		expect(text).not.toMatch(/\s[,.:;)]/)
+		const drawer = document.querySelector(".n-drawer")?.textContent ?? ""
+		expect(drawer).not.toMatch(/\s[,.:;)]/)
+		// Sections stack: no side-by-side grid inside the drawer.
+		expect(document.querySelector(".n-drawer [class*=grid-cols-2]")).toBeNull()
 	})
 
 	it("offers admins the deployment guide, and nobody else", async () => {
-		expect((await render()).text()).not.toContain("Deploying UBA")
+		expect(await open(await render())).not.toContain("Deploying UBA")
+		document.body.innerHTML = ""
 		auth.isAdmin = true
-		const text = (await render()).text()
+		const text = await open(await render())
 		expect(text).toContain("Deploying UBA (admins)")
 		expect(text).toContain("create CoPilot's API key for all customers")
-	})
-
-	it("remembers that it was closed and does not load until opened", async () => {
-		localStorage.setItem("uba-about-open", "false")
-		const wrapper = await render()
-		expect(getAbout).not.toHaveBeenCalled()
-		expect(wrapper.text()).toContain("What UBA is, how risk adds up")
-		await wrapper.find("button").trigger("click")
-		await flushPromises()
-		expect(getAbout).toHaveBeenCalledOnce()
 	})
 })

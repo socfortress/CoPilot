@@ -2,7 +2,7 @@ import type { UbaIdentityReview, UbaIdentitySummary } from "@/types/uba"
 import { flushPromises, mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import UbaIdentityReviewPanel from "../UbaIdentityReview.vue"
-import { identityDetails, identityLabel } from "../utils"
+import { identityKind, identityKindIcon, identityLabel, splitAlias } from "../utils"
 
 const getIdentityReview = vi.fn()
 const dismissMergeCandidate = vi.fn()
@@ -84,18 +84,52 @@ describe("ubaIdentityReview", () => {
 	it("names identities by display name, else their strongest alias", () => {
 		expect(identityLabel(LEARNED)).toBe("CORP\\jdoe")
 		expect(identityLabel(DIRECTORY)).toBe("John Doe")
-		expect(identityDetails(LEARNED)).toBe("admin · 2 findings in 14 days · netbios_sam:CORP\\jdoe")
+	})
+
+	it("splits aliases and reads the identity kind", () => {
+		expect(splitAlias("upn:jdoe@contoso.example")).toEqual({ type: "upn", value: "jdoe@contoso.example" })
+		expect(splitAlias("sid:S-1-5-21:500")).toEqual({ type: "sid", value: "S-1-5-21:500" })
+		expect(splitAlias("jdoe")).toEqual({ type: null, value: "jdoe" })
+		expect(identityKind(LEARNED)).toBeNull()
+		expect(identityKind(DIRECTORY)).toBe("human")
+		expect(identityKindIcon("service")).toBe("carbon:bot")
+		expect(identityKindIcon("human")).toBe("carbon:user")
 	})
 
 	it("shows candidates, unmatched accounts and recent merges", async () => {
 		const text = (await render()).text()
 		expect(getIdentityReview).toHaveBeenCalledWith("lab")
-		expect(text).toContain("Probably the same person (1)")
-		expect(text).toContain("CORP\\jdoe")
-		expect(text).toContain("John Doe")
-		expect(text).toContain("Accounts not matched to the directory (1)")
-		expect(text).toContain("win-demo\\svc_backup")
-		expect(text).toContain("CORP\\asmith → Ann Smith")
+		expect(text).toContain("Probably the same person")
+		expect(text).toContain("Accounts not matched to the directory")
+		const wrapper = await render()
+		expect(wrapper.findAll("[data-testid=uba-review-candidate]")).toHaveLength(1)
+		expect(wrapper.findAll("[data-testid=uba-review-account]")).toHaveLength(1)
+		const names = wrapper.findAll("[data-testid=identity-card-name]").map(n => n.text())
+		expect(names).toEqual(["CORP\\jdoe", "John Doe", "win-demo\\svc_backup"])
+		const merge = wrapper.get("[data-testid=uba-review-merge]").text()
+		expect(merge).toContain("merged")
+		expect(merge).toContain("CORP\\asmith")
+		expect(merge).toContain("Ann Smith")
+	})
+
+	it("puts the alias both identities claim first and highlights it", async () => {
+		const wrapper = await render()
+		const candidate = wrapper.get("[data-testid=uba-review-candidate]")
+		expect(candidate.text()).toContain("Both claim")
+		expect(candidate.text()).toContain("jdoe@contoso.example")
+		const directory = candidate.findAll("[data-testid=identity-card]")[1]
+		const first = directory.get("[data-testid=identity-card-aliases] li")
+		expect(first.classes()).toContain("is-shared")
+		expect(first.text()).toContain("jdoe@contoso.example")
+	})
+
+	it("shows why a merge failed", async () => {
+		getIdentityReview.mockResolvedValue({
+			data: { ...REVIEW, merges: [{ ...REVIEW.merges[0], status: "error", error: "into identity was deleted" }] }
+		})
+		const merge = (await render()).get("[data-testid=uba-review-merge]").text()
+		expect(merge).toContain("failed")
+		expect(merge).toContain("into identity was deleted")
 	})
 
 	it("dismisses a candidate and keeps an account as it is", async () => {

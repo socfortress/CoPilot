@@ -1,16 +1,38 @@
 <template>
-	<div class="flex flex-col gap-4">
-		<div class="flex flex-wrap items-end justify-between gap-4">
-			<div class="flex flex-col gap-1">
-				<h2 class="text-lg font-semibold">User Behavior Analytics</h2>
-				<p class="text-secondary text-sm">
-					Users and hosts ranked by behavioral risk from SOCFortress UBA, its alerts, and suppressions.
+	<div class="uba-page @container flex flex-col gap-5" data-testid="uba-page">
+		<header class="flex flex-wrap items-end justify-between gap-4">
+			<div class="flex min-w-0 flex-col gap-1">
+				<h2 class="m-0 text-xl font-semibold">User Behavior Analytics</h2>
+				<p class="text-secondary m-0 max-w-2xl text-sm">
+					People and computers ranked by behavioral risk, the alerts it raises, and what is muted.
 				</p>
 			</div>
-			<n-form-item v-if="available && customerOptions.length" label="Customer" :show-feedback="false" class="w-64">
-				<n-select v-model:value="customerModel" :options="customerOptions" filterable />
-			</n-form-item>
-		</div>
+			<div v-if="available && customerOptions.length" class="flex flex-wrap items-center gap-2">
+				<span v-if="version" class="version-chip font-mono text-[11px]" data-testid="uba-version">
+					UBA {{ version }}
+				</span>
+				<n-button
+					v-if="isAdmin && customerModel && !needsSetup"
+					size="small"
+					quaternary
+					data-testid="uba-setup-toggle"
+					@click="showSetup = !showSetup"
+				>
+					<template #icon><Icon name="carbon:settings-adjust" :size="15" /></template>
+					Setup
+				</n-button>
+				<n-select
+					v-model:value="customerModel"
+					:options="customerOptions"
+					filterable
+					class="w-72!"
+					aria-label="Customer"
+					data-testid="uba-customer"
+				>
+					<template #arrow><Icon name="carbon:enterprise" :size="14" /></template>
+				</n-select>
+			</div>
+		</header>
 
 		<n-spin v-if="!availabilityLoaded" class="min-h-40" show />
 
@@ -33,49 +55,7 @@
 
 		<template v-else-if="customerModel">
 			<UbaError v-if="statusError" :error="statusError" />
-			<header v-else-if="status" class="flex flex-wrap items-center gap-2">
-				<Badge type="splitted" size="small">
-					<template #label>open alerts</template>
-					<template #value>{{ status.open_alerts }}</template>
-				</Badge>
-				<Badge type="splitted" size="small">
-					<template #label>alerts 24 h</template>
-					<template #value>{{ status.alerts_24h }}</template>
-				</Badge>
-				<Badge type="splitted" size="small">
-					<template #label>signals 24 h</template>
-					<template #value>{{ status.signals_24h }}</template>
-				</Badge>
-				<Badge type="splitted" size="small" :color="(status.lag_seconds ?? 0) > 600 ? 'warning' : undefined">
-					<template #label>processing lag</template>
-					<template #value>{{ formatLag(status.lag_seconds) }}</template>
-				</Badge>
-				<Badge
-					v-for="feed of status.feeds ?? []"
-					:key="feed.source"
-					type="splitted"
-					size="small"
-					:color="feed.status === 'ok' ? undefined : 'warning'"
-					:title="feedTitle(feed)"
-				>
-					<template #label>{{ feedLabel(feed.source) }}</template>
-					<template #value>{{ feed.status === "ok" ? formatLag(feed.lag_p50_s) : feed.status }}</template>
-				</Badge>
-				<Badge
-					v-if="status.agents"
-					type="splitted"
-					size="small"
-					:color="status.agents.not_reporting ? 'warning' : undefined"
-					:title="agentsTitle(status.agents)"
-				>
-					<template #label>computers</template>
-					<template #value>{{ status.agents.reporting }}/{{ status.agents.total - status.agents.retired }} reporting</template>
-				</Badge>
-				<span v-if="version" class="text-tertiary text-xs">UBA {{ version }}</span>
-				<n-button v-if="isAdmin && !needsSetup" text size="tiny" class="text-xs" @click="showSetup = !showSetup">
-					Setup
-				</n-button>
-			</header>
+			<UbaStatusStrip v-else-if="status" :status />
 			<!-- Not set up yet (no status row), or still learning from history: setup and progress. -->
 			<UbaSetup
 				v-if="needsSetup || showSetup"
@@ -86,30 +66,54 @@
 				@close="showSetup = false"
 			/>
 			<n-alert v-if="unhealthyFeeds.length" type="warning" :bordered="false">
-				<p v-for="feed of unhealthyFeeds" :key="feed.source">
+				<div v-for="feed of unhealthyFeeds" :key="feed.source">
 					<b>{{ feedLabel(feed.source) }}</b>
 					is {{ feed.status }}: {{ feed.reasons.join("; ") }}.
-				</p>
-				<p class="text-secondary mt-1 text-xs">
+				</div>
+				<div class="text-secondary mt-1 text-xs">
 					UBA's findings for this source may be missing or late until the feed recovers.
-				</p>
+				</div>
 			</n-alert>
 			<n-alert v-if="status?.agents?.not_reporting" type="warning" :bordered="false">
-				{{ status.agents.not_reporting }} {{ status.agents.not_reporting === 1 ? "computer has" : "computers have" }}
-				stopped reporting: {{ silentText(status.agents) }}. UBA sees nothing from
+				{{ status.agents.not_reporting }}
+				{{ status.agents.not_reporting === 1 ? "computer has" : "computers have" }} stopped reporting:
+				{{ silentText(status.agents) }}. UBA sees nothing from
 				{{ status.agents.not_reporting === 1 ? "it" : "them" }} until the Wazuh agent checks in again.
 			</n-alert>
 
 			<UbaAbout :key="`about${customerModel}`" :customer-code="customerModel" />
 
 			<n-tabs v-model:value="tabModel" type="line" animated>
-				<n-tab-pane name="entities" tab="Entities" display-directive="show:lazy">
+				<n-tab-pane name="entities" display-directive="show:lazy">
+					<template #tab>
+						<span class="flex items-center gap-1.5">
+							<Icon name="carbon:user-multiple" :size="15" />
+							Entities
+						</span>
+					</template>
 					<UbaEntities :key="`e${customerModel}`" :customer-code="customerModel" @open="openEntity" />
 				</n-tab-pane>
-				<n-tab-pane name="alerts" tab="Alerts" display-directive="show:lazy">
-					<UbaAlerts :key="`a${customerModel}`" :customer-code="customerModel" :refresh-key @open="openAlert" />
+				<n-tab-pane name="alerts" display-directive="show:lazy">
+					<template #tab>
+						<span class="flex items-center gap-1.5">
+							<Icon name="carbon:warning-alt" :size="15" />
+							Alerts
+						</span>
+					</template>
+					<UbaAlerts
+						:key="`a${customerModel}`"
+						:customer-code="customerModel"
+						:refresh-key
+						@open="openAlert"
+					/>
 				</n-tab-pane>
-				<n-tab-pane name="suppressions" tab="Suppressions" display-directive="show:lazy">
+				<n-tab-pane name="suppressions" display-directive="show:lazy">
+					<template #tab>
+						<span class="flex items-center gap-1.5">
+							<Icon name="carbon:notification-off" :size="15" />
+							Suppressions
+						</span>
+					</template>
 					<UbaSuppressions
 						:key="`s${customerModel}`"
 						:customer-code="customerModel"
@@ -117,31 +121,69 @@
 						@open-entity="openEntity"
 					/>
 				</n-tab-pane>
-				<n-tab-pane name="rules" tab="Rules" display-directive="show:lazy">
+				<n-tab-pane name="rules" display-directive="show:lazy">
+					<template #tab>
+						<span class="flex items-center gap-1.5">
+							<Icon name="carbon:rule" :size="15" />
+							Rules
+						</span>
+					</template>
 					<UbaRules :key="`r${customerModel}`" :customer-code="customerModel" />
 				</n-tab-pane>
-				<n-tab-pane name="directory" tab="Directory" display-directive="show:lazy">
+				<n-tab-pane name="directory" display-directive="show:lazy">
+					<template #tab>
+						<span class="flex items-center gap-1.5">
+							<Icon name="carbon:catalog" :size="15" />
+							Directory
+						</span>
+					</template>
 					<UbaDirectory :key="`d${customerModel}`" :customer-code="customerModel" />
 				</n-tab-pane>
 			</n-tabs>
 
-			<n-drawer :show="!!drawer" :width="720" class="max-w-[95vw]" @update:show="show => !show && closeDrawer()">
-				<n-drawer-content v-if="drawer" :title="drawer.kind === 'entity' ? 'Entity' : 'UBA alert'" closable>
+			<n-drawer
+				:show="!!drawer"
+				:width="760"
+				class="max-w-[95vw]"
+				data-testid="uba-drawer"
+				@update:show="show => !show && closeDrawer()"
+			>
+				<n-drawer-content
+					v-if="drawer"
+					closable
+					:native-scrollbar="false"
+					header-class="uba-drawer-head"
+					body-content-class="uba-drawer-body"
+				>
+					<template #header>
+						<UbaDrawerHeader :meta="drawerMeta" :kind="drawer.kind === 'entity' ? 'Entity' : 'UBA alert'">
+							<template #actions>
+								<ModalPageButton
+									:route="drawerPage"
+									text="Open page"
+									:label="drawer.kind === 'entity' ? 'Open the entity\'s page' : 'Open the alert\'s page'"
+									@navigate="closeDrawer"
+								/>
+							</template>
+						</UbaDrawerHeader>
+					</template>
 					<UbaEntityDetail
 						v-if="drawer.kind === 'entity'"
-						:key="drawer.id"
+						:key="`entity:${drawer.id}`"
 						:customer-code="customerModel"
 						:entity-key="drawer.id"
 						@open-alert="openAlert"
 						@changed="refreshKey++"
+						@meta="m => (drawerMeta = m)"
 					/>
 					<UbaAlertDetail
 						v-else
-						:key="drawer.id"
+						:key="`alert:${drawer.id}`"
 						:customer-code="customerModel"
 						:alert-id="drawer.id"
 						@open-entity="openEntity"
 						@changed="refreshKey++"
+						@meta="m => (drawerMeta = m)"
 					/>
 				</n-drawer-content>
 			</n-drawer>
@@ -150,15 +192,17 @@
 </template>
 
 <script setup lang="ts">
+import type { UbaDrawerMeta } from "./ui/UbaDrawerHeader.vue"
 import type { ApiError } from "@/types/common"
-import type { UbaAgentsSummary, UbaFeedStatus, UbaTenantStatus } from "@/types/uba"
-import { NAlert, NButton, NCard, NDrawer, NDrawerContent, NEmpty, NFormItem, NSelect, NSpin, NTabPane, NTabs } from "naive-ui"
+import type { UbaAgentsSummary, UbaTenantStatus } from "@/types/uba"
+import { NAlert, NButton, NCard, NDrawer, NDrawerContent, NEmpty, NSelect, NSpin, NTabPane, NTabs } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
-import Badge from "@/components/common/Badge.vue"
+import Icon from "@/components/common/Icon.vue"
+import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
-import { useRouteQueryParam } from "@/composables/useNavigation"
+import { useNavigation, useRouteQueryParam } from "@/composables/useNavigation"
 import { useUbaAvailability } from "@/composables/useUbaAvailability"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
@@ -174,12 +218,16 @@ import UbaError from "./UbaError.vue"
 import UbaRules from "./UbaRules.vue"
 import UbaSetup from "./UbaSetup.vue"
 import UbaSuppressions from "./UbaSuppressions.vue"
-import { agentsSummaryTitle, formatLag, silentComputers } from "./utils"
+import UbaDrawerHeader from "./ui/UbaDrawerHeader.vue"
+import UbaStatusStrip from "./ui/UbaStatusStrip.vue"
+import { silentComputers } from "./utils"
+import "./uba-shared.css"
 
 const TABS = ["entities", "alerts", "suppressions", "rules", "directory"] as const
 
 const route = useRoute()
 const router = useRouter()
+const { routeUbaAlert, routeUbaEntity } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
 const { available, loaded: availabilityLoaded } = useUbaAvailability()
 const { getAvailableGlobalCustomerValue, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
@@ -221,22 +269,13 @@ function silentText(agents: UbaAgentsSummary) {
 	return silentComputers(agents, t => String(formatDate(t, dFormats.datetime)))
 }
 
-function agentsTitle(agents: UbaAgentsSummary) {
-	return agentsSummaryTitle(agents)
-}
-
 function feedLabel(source: string) {
 	return FEED_LABELS[source] ?? source
 }
 
-function feedTitle(feed: UbaFeedStatus) {
-	const lines = [
-		`events arriving now: ${formatLag(feed.lag_p50_s)} old (median, last 15 min)`,
-		`last hour: ${feed.received_1h} received, ${feed.repeated_1h} repeats`
-	]
-	return [...feed.reasons, ...lines].join("\n")
-}
-const customerOptions = computed(() => customers.value.map(c => ({ label: c.name ? `${c.name} (${c.code})` : c.code, value: c.code })))
+const customerOptions = computed(() =>
+	customers.value.map(c => ({ label: c.name ? `${c.name} (${c.code})` : c.code, value: c.code }))
+)
 
 const customerModel = computed<string | null>({
 	get: () => (customerQuery.value && customerCodes.value.includes(customerQuery.value) ? customerQuery.value : null),
@@ -248,10 +287,21 @@ const tabModel = computed<string>({
 	set: tab => setQuery({ tab })
 })
 
+/** The open drawer's header, sent up by the entity or alert it shows; cleared when it changes. */
+const drawerMeta = ref<UbaDrawerMeta | null>(null)
+
 const drawer = computed<{ kind: "entity" | "alert"; id: string } | null>(() => {
 	if (entityQuery.value) return { kind: "entity", id: entityQuery.value }
 	if (alertQuery.value) return { kind: "alert", id: alertQuery.value }
 	return null
+})
+
+/** The open drawer's own page, offered from its header. */
+const drawerPage = computed(() => {
+	if (!drawer.value || !customerModel.value) return null
+	return drawer.value.kind === "entity"
+		? routeUbaEntity(customerModel.value, drawer.value.id)
+		: routeUbaAlert(customerModel.value, drawer.value.id)
 })
 
 function openEntity(entityKey: string) {
@@ -318,9 +368,45 @@ watch(
 	},
 	{ immediate: true }
 )
+watch(
+	() => (drawer.value ? `${drawer.value.kind}:${drawer.value.id}` : ""),
+	() => {
+		drawerMeta.value = null
+	}
+)
 watch(available, ok => {
 	if (ok && customerModel.value) loadStatus(customerModel.value)
 })
 
 onBeforeMount(loadCustomers)
 </script>
+
+<style>
+/* The UBA drawers: a header tall enough for the entity's name and risk, a calmer body. */
+.uba-drawer-head {
+	align-items: flex-start !important;
+	padding-top: 18px !important;
+	padding-bottom: 16px !important;
+}
+
+.uba-drawer-head .n-drawer-header__main {
+	min-width: 0;
+	flex: 1;
+	/* Room for the close button beside the risk figure. */
+	padding-right: 36px;
+}
+
+.uba-drawer-body {
+	padding-top: 20px !important;
+	padding-bottom: 32px !important;
+}
+</style>
+
+<style scoped>
+.version-chip {
+	padding: 2px 8px;
+	border: 1px solid var(--border-color);
+	border-radius: 999px;
+	color: var(--fg-secondary-color);
+}
+</style>

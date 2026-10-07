@@ -81,7 +81,7 @@ export function sourceOptionLabel(name: string) {
 /** The source the "first enabled EDR source" fallback lands on instead. */
 export const FALLBACK_SOURCE_NAME = "Wazuh EDR"
 
-const ALERT = {
+export const ALERT = {
 	id: ALERT_ID,
 	alert_creation_time: "2026-09-08T10:00:00Z",
 	alert_description: "Suspicious mailbox rule created",

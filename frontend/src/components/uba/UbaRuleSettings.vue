@@ -1,19 +1,19 @@
 <template>
-	<section class="flex flex-col gap-3">
-		<div class="flex flex-col gap-1">
-			<span :class="SECTION_LABEL">Rule settings for this customer</span>
-			<p class="text-secondary max-w-3xl text-xs">
-				Turn a rule off or give it other points for this customer only; everything else keeps UBA's built-in
-				values. A rule turned off still learns what is normal, so turning it back on needs no new learning
-				period. Changes apply to new findings within a minute.
-				<template v-if="!isAdmin">Only admins can change them.</template>
-			</p>
-		</div>
+	<UbaSection title="Rule settings for this customer">
+		<template #description>
+			Turn a rule off or give it other points for this customer only; everything else keeps UBA's built-in
+			values. A rule turned off still learns what is normal, so turning it back on needs no new learning
+			period. Changes apply to new findings within a minute.
+			<template v-if="!isAdmin">Only admins can change them.</template>
+		</template>
 
 		<UbaError v-if="error" :error />
 		<template v-else-if="settings">
-			<div class="border-default flex flex-wrap items-center gap-3 rounded-lg border p-3 text-sm">
-				<span class="font-semibold">Alert threshold</span>
+			<div class="panel border-default flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5 text-sm">
+				<span class="flex items-center gap-1.5 font-semibold">
+					<Icon name="carbon:meter" :size="15" class="text-primary" />
+					Alert threshold
+				</span>
 				<n-input-number
 					v-model:value="threshold"
 					:min="20"
@@ -55,12 +55,15 @@
 				</span>
 			</div>
 
-			<div class="flex flex-wrap items-center gap-3">
-				<n-input v-model:value="search" size="small" clearable placeholder="Search rules" class="max-w-72" />
-				<n-checkbox v-model:checked="customizedOnly" size="small">
+			<UbaToolbar>
+				<n-input v-model:value="search" size="small" clearable placeholder="Search rules" class="w-64!">
+					<template #prefix><Icon name="carbon:search" :size="14" /></template>
+				</n-input>
+				<label class="flex items-center gap-2 pl-1 text-xs">
+					<n-switch v-model:value="customizedOnly" size="small" />
 					Changed for this customer ({{ customizedCount }})
-				</n-checkbox>
-			</div>
+				</label>
+			</UbaToolbar>
 
 			<n-data-table
 				:columns
@@ -70,25 +73,28 @@
 				size="small"
 				:scroll-x="880"
 				:max-height="480"
+				class="uba-table"
 			/>
 		</template>
 		<n-spin v-else :show="loading" class="min-h-24" />
-	</section>
+	</UbaSection>
 </template>
 
 <script setup lang="tsx">
 import type { DataTableColumns } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { UbaRuleSetting, UbaRuleSettingPayload, UbaRuleSettings } from "@/types/uba"
-import { NButton, NCheckbox, NDataTable, NInput, NInputNumber, NSpin, NSwitch, NTag, useMessage } from "naive-ui"
+import { NButton, NDataTable, NInput, NInputNumber, NSpin, NSwitch, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
-import { SECTION_LABEL } from "@/components/common/section-label"
+import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import UbaError from "./UbaError.vue"
+import UbaSection from "./ui/UbaSection.vue"
+import UbaToolbar from "./ui/UbaToolbar.vue"
 
 const { customerCode } = defineProps<{ customerCode: string }>()
 
@@ -298,3 +304,9 @@ const columns = computed<DataTableColumns<UbaRuleSetting>>(() => [
 
 onBeforeMount(load)
 </script>
+
+<style scoped>
+.panel {
+	background-color: var(--bg-secondary-color);
+}
+</style>

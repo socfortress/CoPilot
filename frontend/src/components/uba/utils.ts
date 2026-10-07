@@ -18,12 +18,51 @@ export function reasonHint(reason: UbaFailureReason | string | null | undefined)
 	}
 }
 
-/** Risk bands follow UBA's alerting: 100 opens an alert, 150 is high, 200 critical. */
-export function riskTagType(risk: number): "error" | "warning" | "info" | "default" {
-	if (risk >= 150) return "error"
-	if (risk >= 100) return "warning"
-	if (risk >= 30) return "info"
-	return "default"
+export type RiskTone = "error" | "warning" | "info" | "neutral"
+
+/**
+ * Risk bands follow UBA's alerting, relative to the customer's alert threshold (100 by default):
+ * at the threshold an alert opens, half as much again is high, under 30% of it is background.
+ */
+export function riskTone(risk: number, threshold = 100): RiskTone {
+	if (risk >= threshold * 1.5) return "error"
+	if (risk >= threshold) return "warning"
+	if (risk >= threshold * 0.3) return "info"
+	return "neutral"
+}
+
+export function riskTagType(risk: number, threshold = 100): "error" | "warning" | "info" | "default" {
+	const tone = riskTone(risk, threshold)
+	return tone === "neutral" ? "default" : tone
+}
+
+/** Full class names, written out so Tailwind finds them. */
+export const RISK_TEXT_CLASS: Record<RiskTone, string> = {
+	error: "text-error",
+	warning: "text-warning",
+	info: "text-info",
+	neutral: "text-secondary"
+}
+
+export const RISK_BG_CLASS: Record<RiskTone, string> = {
+	error: "bg-error",
+	warning: "bg-warning",
+	info: "bg-info",
+	neutral: "bg-[var(--fg-tertiary-color)]"
+}
+
+/** An entity type's icon (carbon), for headers and lists. */
+export function entityTypeIcon(type: string | null | undefined): string {
+	switch (entityTypeLabel(type)) {
+		case "host":
+			return "carbon:laptop"
+		case "address":
+			return "carbon:network-3"
+		case "tenant":
+			return "carbon:enterprise"
+		default:
+			return "carbon:user"
+	}
 }
 
 export function riskLabel(risk: number): string {
@@ -111,11 +150,80 @@ export function identityLabel(i: UbaIdentitySummary): string {
 	return alias ? alias.slice(alias.indexOf(":") + 1) : i.id
 }
 
-/** "human · admin · 3 findings in 14 days · upn:jdoe@…, sid:S-1-5-…" */
-export function identityDetails(i: UbaIdentitySummary): string {
-	const parts = [i.kind && i.kind !== "unknown" ? i.kind : null, i.privileged ? "admin" : null]
-	parts.push(`${i.findings} finding${i.findings === 1 ? "" : "s"} in 14 days`)
-	const aliases = i.aliases.slice(0, 2).join(", ")
-	if (aliases) parts.push(aliases)
-	return parts.filter(Boolean).join(" · ")
+/** An identity's kind worth showing ("human", "service"), or null when UBA does not know it. */
+export function identityKind(i: Pick<UbaIdentitySummary, "kind">): string | null {
+	return i.kind && i.kind !== "unknown" ? i.kind : null
+}
+
+export function identityKindIcon(kind: string | null | undefined): string {
+	return kind === "service" ? "carbon:bot" : "carbon:user"
+}
+
+/** "upn:jdoe@contoso.com" → { type: "upn", value: "jdoe@contoso.com" }; no type when there is no prefix. */
+export function splitAlias(alias: string): { type: string | null; value: string } {
+	const at = alias.indexOf(":")
+	return at > 0 ? { type: alias.slice(0, at), value: alias.slice(at + 1) } : { type: null, value: alias }
+}
+
+export interface SuppressionOrigin {
+	/** Why the rule is muted, in words: "False positive · Expected activity", "Suppressed by hand". */
+	why: string
+	/** Who muted it, when the source names someone. */
+	by: string | null
+	/** Where it was set: "CoPilot", or UBA's own source name. */
+	via: string | null
+}
+
+/**
+ * A suppression's reason and source as UBA stores them, in words. CoPilot's writes come as
+ * source "api:<user> via copilot"; a false-positive verdict's reason ends "false positive (<REASON>)",
+ * a hand-made one says "added by <user> via copilot". Anything else is shown as it is.
+ */
+export function suppressionOrigin(reason: string | null | undefined, source: string | null | undefined): SuppressionOrigin {
+	let by: string | null = null
+	let via: string | null = source ?? null
+	const api = source?.match(/^api:(.+?)(?: via (\w+))?$/i)
+	if (api) {
+		by = api[1]
+		via = api[2] ? (api[2].toLowerCase() === "copilot" ? "CoPilot" : api[2]) : "UBA API"
+	}
+
+	const text = (reason ?? "").trim()
+	const falsePositive = text.match(/false positive \(([^)]*)\)/i)
+	if (falsePositive) {
+		const code = falsePositive[1]
+		const label = FALSE_POSITIVE_REASONS.find(r => r.value === code)?.label
+		return { why: label ? `False positive · ${label}` : "False positive", by, via }
+	}
+	const added = text.match(/^added by (.+?)(?: via (\w+))?$/i)
+	if (added) return { why: "Suppressed by hand", by: by ?? added[1], via }
+	// "<source>: <text>" carries the source again: keep only the text.
+	const why = source && text.startsWith(`${source}:`) ? text.slice(source.length + 1).trim() : text
+	return { why: why || "Suppressed", by, via }
+}
+
+/** "ana via copilot" (how CoPilot's requests reach UBA) → who and from where. */
+export function requesterOrigin(requestedBy: string | null | undefined): { by: string | null; via: string | null } {
+	if (!requestedBy) return { by: null, via: null }
+	const match = requestedBy.match(/^(.+?) via (\w+)$/i)
+	if (!match) return { by: requestedBy, via: null }
+	return { by: match[1], via: match[2].toLowerCase() === "copilot" ? "CoPilot" : match[2] }
+}
+
+/**
+ * A UBA job error in one short line: the exception and its first message, without the repeated
+ * wrapper, the connector internals and the cause chain ("ConnectionError: Cannot connect to host
+ * indexer:9200"). The full text stays available beside it.
+ */
+export function shortError(error: string | null | undefined, max = 110): string {
+	if (!error) return ""
+	let text = error.split(/\s+caused by:|\n/i)[0].trim()
+	// "ConnectionError: ConnectionError(Cannot connect …)" → "ConnectionError: Cannot connect …"
+	const wrapped = text.match(/^(\w+): \1\((.*)$/)
+	if (wrapped) text = `${wrapped[1]}: ${wrapped[2]}`
+	text = text.replace(/\s+ssl:\S.*$/, "").replace(/\s+\[.*$/, "").trim()
+	// Drop only the closing parentheses left without their opening one.
+	const count = (c: string) => text.split(c).length - 1
+	while (text.endsWith(")") && count(")") > count("(")) text = text.slice(0, -1).trimEnd()
+	return text.length > max ? `${text.slice(0, max - 1)}…` : text
 }

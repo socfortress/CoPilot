@@ -2,12 +2,14 @@
 	<div class="flex flex-col gap-0.5">
 		<n-card v-if="!showSource" content-class="p-0!" embedded class="overflow-hidden">
 			<div
-				v-shiki="{ lang, decode }"
+				v-shiki="{ lang, decode: decode || text }"
 				class="scrollbar-styled code-bg-transparent overflow-auto"
 				:class="codeClass"
 				:style="codeBlockStyle"
 			>
-				<pre v-html="source"></pre>
+				<!-- `text`: the code is plain text, so it is never parsed as HTML (a `<placeholder>` stays one). -->
+				<pre v-if="text">{{ source }}</pre>
+				<pre v-else v-html="source"></pre>
 			</div>
 		</n-card>
 
@@ -54,6 +56,7 @@ const {
 	code,
 	lang,
 	decode,
+	text = false,
 	showToggleButton = true,
 	maxHeight,
 	codeClass
@@ -61,6 +64,11 @@ const {
 	code: string | object | number
 	lang?: string
 	decode?: boolean
+	/**
+	 * The code is plain text (a shell command with `<placeholders>`, a log line): shown as text, never
+	 * parsed as HTML, and copied as written. Without it the code is rendered as HTML, as before.
+	 */
+	text?: boolean
 	showToggleButton?: boolean
 	maxHeight?: string | number
 	codeClass?: HTMLAttributes["class"]

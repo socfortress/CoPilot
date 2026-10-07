@@ -49,6 +49,7 @@ const ENTITY_OVERLAYS = [
 	"components/scaPolicies/PolicyCard.vue",
 	"components/services/Item.vue",
 	"components/socManagement/EntityOverviewModal.vue",
+	"components/uba/UbaPage.vue",
 	"components/vulnerabilities/VulnerabilityCard.vue"
 ]
 

@@ -449,6 +449,16 @@ export function useNavigation() {
 		return routerConstructor({ name: "Uba", query })
 	}
 
+	/** One UBA alert's page. */
+	function routeUbaAlert(customerCode: string, alertId: string) {
+		return routerConstructor({ name: "UbaAlert", params: { customerCode, alertId } })
+	}
+
+	/** One UBA entity's page (a person, an account or a computer), by its UBA entity key. */
+	function routeUbaEntity(customerCode: string, entityKey: string) {
+		return routerConstructor({ name: "UbaEntity", params: { customerCode, entityKey } })
+	}
+
 	function routeIncidentManagementAlerts(alertId?: number) {
 		if (alertId != null) {
 			return routerConstructor({
@@ -852,6 +862,8 @@ export function useNavigation() {
 		routeCopilotAction,
 		routeCopilotSearchRule,
 		routeUba,
+		routeUbaAlert,
+		routeUbaEntity,
 		routeIncidentManagementAlerts,
 		routeIncidentManagementAlertAsset,
 		routeIncidentManagementAlertIoc,

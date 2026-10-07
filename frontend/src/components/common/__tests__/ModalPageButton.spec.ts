@@ -18,7 +18,7 @@ function router() {
 }
 
 /** Mounts the button for a customer's page, built the way callers build it. */
-async function mountFor(code: string | null, at = "/") {
+async function mountFor(code: string | null, at = "/", text?: string) {
 	const appRouter = router()
 	await appRouter.push(at)
 	await appRouter.isReady()
@@ -30,6 +30,7 @@ async function mountFor(code: string | null, at = "/") {
 				h(ModalPageButton, {
 					route: code ? routeCustomer({ code }) : null,
 					label: "Open the customer's page",
+					text,
 					onNavigate: () => navigated.push("navigate")
 				})
 		}
@@ -69,5 +70,18 @@ describe("modalPageButton", () => {
 		expect(none.wrapper.find("[data-testid=modal-page-button]").exists()).toBe(false)
 		const here = await mountFor("ACME", "/customers/ACME")
 		expect(here.wrapper.find("[data-testid=modal-page-button]").exists()).toBe(false)
+	})
+
+	it("with a text, is a labelled button: still a link, named, and closing the modal on a plain click", async () => {
+		const { wrapper, appRouter, navigated } = await mountFor("ACME", "/", "Open page")
+		const link = wrapper.get("[data-testid=modal-page-button]")
+		expect(link.element.tagName).toBe("A")
+		expect(link.text()).toContain("Open page")
+		expect(link.attributes("href")).toBe("/customers/ACME")
+		expect(link.attributes("aria-label")).toBe("Open the customer's page")
+		await link.trigger("click", { button: 0 })
+		await flushPromises()
+		expect(navigated).toEqual(["navigate"])
+		expect(appRouter.currentRoute.value.fullPath).toBe("/customers/ACME")
 	})
 })

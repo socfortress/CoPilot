@@ -1,22 +1,29 @@
 <template>
-	<div class="flex flex-col gap-3">
-		<div class="flex flex-wrap items-end gap-3">
-			<n-form-item label="Search" :show-feedback="false" class="w-64">
-				<n-input v-model:value="search" placeholder="Name or key" clearable @keyup.enter="reload()" @clear="reload()" />
-			</n-form-item>
-			<n-form-item label="Type" :show-feedback="false" class="w-40">
-				<n-select v-model:value="entityType" :options="typeOptions" clearable placeholder="Any" />
-			</n-form-item>
-			<n-form-item label="UBA findings only" :show-feedback="false">
-				<n-tooltip>
-					<template #trigger>
-						<n-switch v-model:value="ownOnly" />
-					</template>
-					Rank by UBA's own findings, leaving out risk from native alerts (Wazuh rules). Hosts with
-					months of noisy native alerts otherwise fill the top of the list.
+	<div class="flex flex-col gap-3" data-testid="uba-entities">
+		<UbaToolbar>
+			<n-input
+				v-model:value="search"
+				placeholder="Search name or key"
+				clearable
+				size="small"
+				class="w-64!"
+				@keyup.enter="reload()"
+				@clear="reload()"
+			>
+				<template #prefix><Icon name="carbon:search" :size="14" /></template>
+			</n-input>
+			<n-select v-model:value="entityType" :options="typeOptions" clearable placeholder="Any type" size="small" class="w-44!" />
+			<label class="flex items-center gap-2 pl-1 text-xs">
+				<n-switch v-model:value="ownOnly" size="small" />
+				<span>UBA findings only</span>
+				<n-tooltip style="max-width: 300px">
+					<template #trigger><Icon name="carbon:information" :size="13" class="text-tertiary" /></template>
+					Rank by UBA's own findings, leaving out risk from native alerts (Wazuh rules). Hosts with months of
+					noisy native alerts otherwise fill the top of the list.
 				</n-tooltip>
-			</n-form-item>
-		</div>
+			</label>
+			<template #summary>{{ total }} {{ total === 1 ? "entity" : "entities" }} · highest risk first</template>
+		</UbaToolbar>
 
 		<UbaError v-if="error" :error />
 
@@ -29,6 +36,7 @@
 			:row-props
 			size="small"
 			:scroll-x="900"
+			class="uba-table"
 		/>
 
 		<div v-if="total > PAGE_SIZE" class="flex justify-end">
@@ -41,13 +49,16 @@
 import type { DataTableColumns, SelectOption } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { UbaEntitySummary } from "@/types/uba"
-import { NDataTable, NFormItem, NInput, NPagination, NSelect, NSwitch, NTag, NTooltip } from "naive-ui"
+import { NDataTable, NInput, NPagination, NSelect, NSwitch, NTag, NTooltip } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import UbaError from "./UbaError.vue"
-import { entityTypeLabel, riskLabel, riskTagType } from "./utils"
+import RiskMeter from "./ui/RiskMeter.vue"
+import UbaToolbar from "./ui/UbaToolbar.vue"
+import { entityTypeIcon, entityTypeLabel } from "./utils"
 
 const { customerCode } = defineProps<{ customerCode: string }>()
 const emit = defineEmits<{ open: [entityKey: string] }>()
@@ -113,41 +124,52 @@ const columns: DataTableColumns<UbaEntitySummary> = [
 	{
 		title: "Risk",
 		key: "risk",
-		width: 90,
-		render: row => (
-			<NTag type={riskTagType(row.risk)} size="small" round bordered={false}>
-				{riskLabel(row.risk)}
-			</NTag>
-		)
+		width: 120,
+		render: row => <RiskMeter risk={row.risk} />
 	},
 	{
 		title: "Entity",
 		key: "entity_name",
-		minWidth: 260,
+		minWidth: 280,
 		render: row => (
-			<div class="flex min-w-0 flex-col">
-				<span class="truncate font-medium">{row.entity_name || row.entity_key}</span>
-				{row.entity_name ? <span class="text-tertiary truncate font-mono text-xs">{row.entity_key}</span> : null}
+			<div class="flex min-w-0 items-center gap-2.5">
+				<span class="entity-icon" title={entityTypeLabel(row.entity_type)}>
+					<Icon name={entityTypeIcon(row.entity_type)} size={14} />
+				</span>
+				<div class="flex min-w-0 flex-col">
+					<span class="truncate font-medium">{row.entity_name || row.entity_key}</span>
+					{row.entity_name ? <span class="text-tertiary truncate font-mono text-[11px]">{row.entity_key}</span> : null}
+				</div>
 			</div>
 		)
 	},
-	{ title: "Type", key: "entity_type", width: 100, render: row => entityTypeLabel(row.entity_type) },
-	{ title: "Rules", key: "rules", width: 70 },
-	{ title: "Signals 24h", key: "signals_24h", width: 100 },
+	{ title: "Type", key: "entity_type", width: 90, render: row => <span class="text-secondary text-xs">{entityTypeLabel(row.entity_type)}</span> },
+	{ title: "Rules", key: "rules", width: 70, align: "right", render: row => <span class="font-mono tabular-nums">{row.rules}</span> },
 	{
-		title: "Last signal",
+		title: "Findings 24 h",
+		key: "signals_24h",
+		width: 120,
+		align: "right",
+		render: row => <span class="font-mono tabular-nums">{row.signals_24h}</span>
+	},
+	{
+		title: "Last finding",
 		key: "last_signal",
 		width: 170,
-		render: row => (row.last_signal ? String(formatDate(row.last_signal, dFormats.datetime)) : "—")
+		render: row => (
+			<span class="text-secondary font-mono text-xs tabular-nums">
+				{row.last_signal ? String(formatDate(row.last_signal, dFormats.datetime)) : "—"}
+			</span>
+		)
 	},
 	{
 		title: "Alert",
 		key: "open_alert_id",
-		width: 80,
+		width: 90,
 		render: row =>
 			row.open_alert_id ? (
-				<NTag type="error" size="small" bordered={false}>
-					open
+				<NTag type="error" size="small" round bordered={false}>
+					{{ icon: () => <Icon name="carbon:warning-alt-filled" size={12} />, default: () => "open" }}
 				</NTag>
 			) : null
 	}
