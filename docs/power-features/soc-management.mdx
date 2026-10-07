@@ -1,0 +1,178 @@
+---
+title: SOC Management & SLA
+description: Measure how fast the SOC responds and resolves against the SLA promised to each customer — per severity, analyst, rule and customer — with business-hours clocks, pause-on-customer, breach notifications, PDF reports and an opt-in customer view.
+---
+
+SOC Management answers the questions a SOC is judged on: **how fast did we respond, how fast did we resolve, did we keep the promise we made to each customer, and what is about to slip?**
+
+Every figure comes from the alerts and cases already in Incident Management. There is nothing to feed by hand and no extra service to deploy — the work is deciding the targets and who gets told what.
+
+<CardGroup cols={2}>
+  <Card title="SOC Management (operator guide)" icon="chart-line" href="/user/ui/soc-management">
+    The two clocks, how figures are computed, every tab and the PDF report.
+  </Card>
+  <Card title="SLA policies & business hours" icon="clock" href="/user/ui/sla-policies">
+    Targets per severity, customer overrides, calendars and holidays.
+  </Card>
+</CardGroup>
+
+---
+
+## What it does
+
+- **Two clocks on every alert and case** — **response** (stops at the SOC's first action) and **resolution** (stops at close), each with its own target.
+- **SLA policies** per entity × severity, globally or overridden per customer, each cell counted **24/7** or in **business hours**.
+- **Business-hours calendars** per customer (timezone, working windows, holidays) — a weekend never breaches a business-hours target.
+- **"Waiting on customer"** — a status that pauses both clocks while the SOC needs something from the customer. The customer's reply in the portal hands the item back automatically.
+- **A dashboard** with SLA compliance, median times, analyst performance, detection-rule quality, per-customer figures and the live backlog.
+- **At-risk and breached notifications** to Teams, email, webhooks — once per clock.
+- **PDF reports** — an internal SOC operations report, and an SLA section in customer incident reports.
+- **Customer Portal "Service Levels"** — opt-in per customer, read-only, no analyst names.
+
+---
+
+## Why this is a power feature
+
+SLA figures are only meaningful once alerts flow reliably and analysts work them in CoPilot. Clocks start running for every alert and case as soon as you upgrade, but the numbers become a management tool when:
+
+- the targets reflect what you actually promised each customer,
+- business-hours customers have their real calendar,
+- someone is notified before a clock runs out, not after,
+- and analysts use **Waiting on customer** instead of leaving items open.
+
+---
+
+## Who this is for
+
+| Role | Uses it for |
+|---|---|
+| **SOC manager / team lead** | Compliance, backlog, analyst load, noisy rules, management reporting |
+| **Admin** | Setting SLA policies and calendars, notification routes, turning the portal page on per customer |
+| **Analyst** | Their own figures, the attention list, and each item's **Service level** panel |
+| **Account manager** | Showing a customer how their SLA was kept (portal page or PDF section) |
+
+Admins see every analyst's row; **an analyst sees every aggregate but only their own row** in the Analysts tab and per-assignee workload.
+
+---
+
+## Inputs (what it needs)
+
+- Alerts and cases in Incident Management (nothing else to connect)
+- Optional: a notification route (Teams, email, webhook…) for SLA alerts
+- Optional: real business-hours calendars for customers on business-hours contracts
+
+---
+
+## Where it lives in the UI
+
+| Where | What |
+|---|---|
+| **SOC Management** (top of the sidebar, `/soc-management`) | Overview, SLA, Analysts, Detection rules, Customers, Workload and SLA policies tabs; **Report** downloads the PDF |
+| Any alert or case page | The **Service level** panel: time used against each target, who stopped each clock, whether it is waiting on the customer |
+| **Customers → (customer) → SLA** | The Customer Portal switch (admin) |
+| **Customers → (customer) → Reporting** | The **SLA performance** option on customer incident reports |
+| **Platform → Notifications → Internal Routes** | Routes for **SLA at risk** / **SLA breached** (admin) |
+
+Filters (period, customers, severities, sources) and the current tab live in the URL, so a shared link opens the same view. Customer assignments and tag-based access apply exactly as in the alert and case lists.
+
+---
+
+## Rollout checklist
+
+<Steps>
+  <Step title="Review the built-in targets">
+    Out of the box, every customer is measured against the built-in defaults (e.g. a critical alert: respond in 15 min, resolve in 4 h; counted 24/7). Open **SOC Management → SLA policies** and set the **Global policy** to what you actually promise. Leaving a cell empty means **no promise** — those items are left out of compliance rather than counted as met.
+  </Step>
+  <Step title="Override per customer where contracts differ">
+    Pick the customer on the left and switch only the cells that differ to **Override**; the rest keep following the global policy.
+  </Step>
+  <Step title="Set calendars for business-hours customers">
+    Switch the relevant cells to **Business hours** and set the calendar (timezone, working week, holidays) — globally or per customer. Until you do, the fallback is **Mon–Fri 09:00–17:00 UTC**.
+  </Step>
+  <Step title="Decide what happens to open items">
+    Each item keeps the targets it **opened with**. Turn on **Apply to items still open** when saving to re-time open items too; clocks already met or breached never move.
+  </Step>
+  <Step title="Get told before it is too late">
+    In **Platform → Notifications → Internal Routes** (admin), add a route for **An alert or case SLA is at risk** and/or **…is breached** (an internal channel, or email to the assignee). The built-in template is *SLA — running late*.
+  </Step>
+  <Step title="Teach the team “Waiting on customer”">
+    When the SOC needs a confirmation, a log or a decision from the customer, set the alert or case to **Waiting on customer**. Both clocks stop; the customer's reply restarts them. A case set to waiting takes its open alerts with it.
+  </Step>
+  <Step title="Optionally share it with customers">
+    Turn on **Customers → (customer) → SLA** to give that customer the **Service Levels** page in the Customer Portal, and/or tick **SLA performance** when generating their incident report.
+  </Step>
+</Steps>
+
+---
+
+## How the numbers behave
+
+- **Acknowledged = the SOC's first action**: assignment, status change, comment, verdict, escalation, case link or case severity change. A customer commenting in the portal, or automation writing to the item, does **not** stop the response clock. A customer *closing* an item does resolve it; those closures are reported apart.
+- **Compliance = met ÷ (met + breached).** Items still running are on neither side; "no outcome yet" shows **—**, never 0% or 100%.
+- **Times are medians**, with the mean and 90th percentile alongside — one bulk close of old noise can move an average by days.
+- **At risk** = a running clock in the last quarter of its window, measured in working time for business-hours cells.
+- **Past SLA now** counts only clocks that ran out and are **still running** — a late acknowledgement stays a breach in compliance but is no longer something to chase.
+- **One snapshot per view** — every tab, the attention list and the PDF are computed together, so they never disagree.
+- **Items opened before the upgrade** count in volumes and backlog but in no time or compliance figure (an invented clock would be worse than none). A banner says when tracking began.
+- **A case's severity** is the one set on the case, or the most severe of its linked alerts when none is set. Changing it re-targets running clocks.
+
+See [SOC Management](/user/ui/soc-management) for every tab in detail.
+
+---
+
+## Reports
+
+| Report | Where | Audience |
+|---|---|---|
+| **SOC operations report** | SOC Management → **Report** (current filters) | Internal / management — includes analyst figures |
+| **Service Level Performance** section | Customer incident report, option **SLA performance** | The customer — never includes analyst names |
+
+---
+
+## Customer Portal — Service Levels
+
+Opt-in per customer, **off by default** — SLA figures never reach a customer without an operator deciding so. When on, the customer sees compliance for alert and case response/resolution, what is open now (and **waiting on you**), the trend, and the targets agreed with them. They never see analyst names, per-analyst figures, other customers or the SOC's internal workload.
+
+Customers cannot set **Waiting on customer** themselves; in the portal it reads **Waiting on you**, with a banner whose **Reply** hands the item back to the SOC.
+
+This switch is independent of the clocks: SLAs run for every customer either way. See [Customer Portal — Service Levels](/user/ui/customer-portal-service-levels).
+
+---
+
+## Permissions
+
+| Action | Admin | Analyst | Customer user |
+|---|:---:|:---:|:---:|
+| View SOC Management (aggregates) | ✅ | ✅ | — |
+| Every analyst's row | ✅ | own row only | — |
+| Read SLA policies and calendars | ✅ | ✅ | — |
+| Change SLA policies and calendars | ✅ | — | — |
+| Set a case's severity | ✅ | ✅ | — |
+| Set **Waiting on customer** | ✅ | ✅ | — |
+| Turn the portal Service Levels page on/off | ✅ | — | — |
+| See the portal Service Levels page | — | — | ✅ when enabled |
+
+---
+
+## Success criteria
+
+- [ ] The Global policy reflects your contracts, and business-hours customers have a real calendar
+- [ ] An alert's **Service level** panel shows both clocks with the expected targets
+- [ ] Assigning or commenting on a new alert stops its response clock
+- [ ] Setting an item to **Waiting on customer** pauses it, and a portal reply resumes it
+- [ ] An SLA at-risk or breached notification reaches your channel
+- [ ] The SOC operations PDF downloads with the same figures as the page
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+|---|---|
+| Compliance shows **—** | No item in the period has an outcome yet, or the cells have no target |
+| Older items missing from time/compliance figures | They opened before SLA tracking began — by design |
+| A business-hours target looks wrong | The customer is on the default calendar (Mon–Fri 09–17 UTC) — set the real one |
+| A policy change didn't affect an open item | Items keep their opening targets — save with **Apply to items still open** |
+| A customer's reply didn't resume the clock | The reply must be a comment from a customer user on the waiting item; an analyst's note doesn't hand it back |
+| No SLA notifications | No route bound to the SLA triggers, or the route's minimum severity filters the item out |
+| Service Levels missing in the portal | The customer's switch under **Customers → (customer) → SLA** is off |

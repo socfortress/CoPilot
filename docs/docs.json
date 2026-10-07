@@ -218,6 +218,8 @@
               "power-features/ai-analyst",
               "power-features/ai-analyst-review",
               "power-features/ai-analyst-notifications",
+              "power-features/user-behavior-analytics",
+              "power-features/soc-management",
               "power-features/atomic-red-team",
               "power-features/report-creation",
               "power-features/copilot-searches",
