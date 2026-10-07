@@ -15,12 +15,14 @@
 					<UbaError v-if="historyError" :error="historyError" />
 					<n-spin v-else :show="historyLoading">
 						<UbaRiskChart v-if="history" :history />
-						<div v-else class="h-[200px]" />
+						<div v-else class="h-50" />
 					</n-spin>
 				</UbaSection>
 
 				<UbaSection title="Risk by rule" caption="last 14 days, decayed to now" test-id="uba-entity-rules">
-					<ul class="border-default m-0 flex list-none flex-col overflow-hidden rounded-lg border p-0">
+					<ul
+						class="border-default bg-secondary m-0 flex list-none flex-col overflow-hidden rounded-lg border p-0"
+					>
 						<li
 							v-for="part of detail.risk_by_rule"
 							:key="part.rule_id"
@@ -71,7 +73,7 @@
 					:caption="`${detail.alerts.length}`"
 					test-id="uba-entity-alerts"
 				>
-					<ul class="m-0 flex list-none flex-col gap-1.5 p-0">
+					<ul class="bg-secondary m-0 flex list-none flex-col gap-1.5 p-0">
 						<li
 							v-for="a of detail.alerts"
 							:key="a.id"
@@ -85,13 +87,21 @@
 							@keydown.space.prevent="emit('openAlert', a.id)"
 						>
 							<RiskMeter :risk="a.risk" :threshold />
-							<span class="font-mono text-xs tabular-nums">{{ formatDate(a.opened_at, dFormats.datetime) }}</span>
+							<span class="font-mono text-xs tabular-nums">
+								{{ formatDate(a.opened_at, dFormats.datetime) }}
+							</span>
 							<n-tag
 								size="tiny"
 								:type="!a.verdict ? 'error' : a.verdict === 'FALSE_POSITIVE' ? 'default' : 'error'"
 								:bordered="false"
 							>
-								{{ !a.verdict ? "open" : a.verdict === "FALSE_POSITIVE" ? "false positive" : "true positive" }}
+								{{
+									!a.verdict
+										? "open"
+										: a.verdict === "FALSE_POSITIVE"
+											? "false positive"
+											: "true positive"
+								}}
 							</n-tag>
 							<span class="ml-auto flex items-center gap-2">
 								<n-button
@@ -103,7 +113,12 @@
 								>
 									Incident #{{ a.copilot_alert_id }}
 								</n-button>
-								<Icon name="carbon:arrow-right" :size="14" class="go text-tertiary" aria-hidden="true" />
+								<Icon
+									name="carbon:arrow-right"
+									:size="14"
+									class="go text-tertiary"
+									aria-hidden="true"
+								/>
 							</span>
 						</li>
 					</ul>
@@ -119,7 +134,9 @@
 							<span class="k">System</span>
 							<span class="v">
 								{{ detail.host.os || detail.host.platform || "unknown" }}
-								<span v-if="detail.host.role" class="text-tertiary text-xs">· {{ detail.host.role }}</span>
+								<span v-if="detail.host.role" class="text-tertiary text-xs">
+									· {{ detail.host.role }}
+								</span>
 							</span>
 						</li>
 						<li v-if="detail.host.ip">
@@ -130,7 +147,9 @@
 							<span class="k">Wazuh agent</span>
 							<span class="v">
 								<span class="font-mono text-xs">{{ detail.host.agent_id }}</span>
-								<span v-if="detail.host.agent_version" class="text-tertiary text-xs">· {{ detail.host.agent_version }}</span>
+								<span v-if="detail.host.agent_version" class="text-tertiary text-xs">
+									· {{ detail.host.agent_version }}
+								</span>
 								<span v-if="detail.host.groups.length" class="text-tertiary text-xs">
 									· groups {{ detail.host.groups.join(", ") }}
 								</span>
@@ -160,11 +179,15 @@
 							learned from events
 						</n-tag>
 					</template>
-					<ul class="kv border-default m-0 list-none overflow-hidden rounded-lg border p-0 text-sm">
+					<ul
+						class="kv border-default bg-secondary m-0 list-none overflow-hidden rounded-lg border p-0 text-sm"
+					>
 						<li v-if="accountState">
 							<span class="k">Account</span>
 							<span class="v flex flex-wrap items-center gap-2">
-								<n-tag size="tiny" :type="accountState.type" :bordered="false">{{ accountState.label }}</n-tag>
+								<n-tag size="tiny" :type="accountState.type" :bordered="false">
+									{{ accountState.label }}
+								</n-tag>
 								<span v-if="detail.identity.account_created_at" class="text-tertiary text-xs">
 									created {{ formatDate(detail.identity.account_created_at, dFormats.date) }}
 								</span>
@@ -176,7 +199,11 @@
 						<li v-if="detail.identity.privileged_reasons.length">
 							<span class="k">Privileged</span>
 							<span class="v flex flex-col gap-1">
-								<span v-for="r of detail.identity.privileged_reasons" :key="r" class="flex flex-wrap items-baseline gap-x-2">
+								<span
+									v-for="r of detail.identity.privileged_reasons"
+									:key="r"
+									class="flex flex-wrap items-baseline gap-x-2"
+								>
 									<span class="flex items-center gap-1.5">
 										<Icon name="carbon:security" :size="13" class="text-warning" />
 										{{ privilegedReasonLabel(r).what }}
@@ -194,9 +221,12 @@
 									class="flex flex-wrap items-center gap-x-2 gap-y-0.5"
 								>
 									{{ m.group_name }}
-									<n-tag v-if="m.privileged" size="tiny" type="warning" :bordered="false">admin</n-tag>
+									<n-tag v-if="m.privileged" size="tiny" type="warning" :bordered="false">
+										admin
+									</n-tag>
 									<span class="text-tertiary text-xs">
-										{{ identitySourceLabel(m.source) }}{{ m.since ? ` · since ${formatDate(m.since, dFormats.date)}` : "" }}
+										{{ identitySourceLabel(m.source)
+										}}{{ m.since ? ` · since ${formatDate(m.since, dFormats.date)}` : "" }}
 									</span>
 								</span>
 							</span>
@@ -209,10 +239,15 @@
 								data-testid="uba-identity-aliases"
 							>
 								<template v-for="a of detail.identity.aliases" :key="`${a.type}:${a.value}`">
-									<span class="alias-type justify-self-start font-mono text-[11px]" data-testid="uba-identity-alias">
+									<span
+										class="alias-type justify-self-start font-mono text-[11px]"
+										data-testid="uba-identity-alias"
+									>
 										{{ a.type }}
 									</span>
-									<span class="alias-value truncate font-mono text-xs" :title="a.value">{{ a.value }}</span>
+									<span class="alias-value truncate font-mono text-xs" :title="a.value">
+										{{ a.value }}
+									</span>
 								</template>
 							</span>
 						</li>

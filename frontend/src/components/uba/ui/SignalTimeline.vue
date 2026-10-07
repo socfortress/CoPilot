@@ -12,7 +12,7 @@
 				class="node absolute top-3.5 left-0 size-2.25 rounded-full"
 				:class="RISK_BG_CLASS[pointsTone(item.points)]"
 			/>
-			<article class="card border-default flex flex-col gap-1.5 rounded-lg border px-3 py-2.5">
+			<article class="card border-default bg-secondary flex flex-col gap-1.5 rounded-lg border px-3 py-2.5">
 				<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
 					<time class="text-secondary font-mono text-[11px] tabular-nums">
 						{{ formatDate(item.time, dFormats.datetime) }}
@@ -89,10 +89,6 @@ function pointsTone(points: number | null | undefined) {
 
 .node {
 	box-shadow: 0 0 0 3px var(--bg-default-color);
-}
-
-.card {
-	background-color: var(--bg-default-color);
 }
 
 .rule-chip {
