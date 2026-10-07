@@ -19,7 +19,7 @@ minio_root_password = env.str("MINIO_ROOT_PASSWORD", default="password")
 minio_url = env.str("MINIO_URL", default="copilot-minio")
 minio_secure = env.bool("MINIO_SECURE", default=False)
 
-logger.info(f"Minio Root User: {minio_root_user} and password: {minio_root_password}")
+logger.info(f"Minio Root User: {minio_root_user}")
 
 
 async def create_session() -> Minio:

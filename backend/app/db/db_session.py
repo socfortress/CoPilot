@@ -29,7 +29,7 @@ db_password = env.str("MYSQL_PASSWORD")
 db_root_password = env.str("MYSQL_ROOT_PASSWORD")
 db_url = env.str("MYSQL_URL", default="copilot-mysql")
 
-logger.info(f"DB User: {db_user} and password: {db_password}")
+logger.info(f"DB User: {db_user}")
 
 # Update the SQLALCHEMY_DATABASE_URI to a MySQL compatible one in settings.py
 # For this example, let's assume it has been updated. copilot-mysql
