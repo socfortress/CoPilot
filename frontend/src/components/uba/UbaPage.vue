@@ -66,13 +66,13 @@
 				@close="showSetup = false"
 			/>
 			<n-alert v-if="unhealthyFeeds.length" type="warning" :bordered="false">
-				<p v-for="feed of unhealthyFeeds" :key="feed.source">
+				<div v-for="feed of unhealthyFeeds" :key="feed.source">
 					<b>{{ feedLabel(feed.source) }}</b>
 					is {{ feed.status }}: {{ feed.reasons.join("; ") }}.
-				</p>
-				<p class="text-secondary mt-1 text-xs">
+				</div>
+				<div class="text-secondary mt-1 text-xs">
 					UBA's findings for this source may be missing or late until the feed recovers.
-				</p>
+				</div>
 			</n-alert>
 			<n-alert v-if="status?.agents?.not_reporting" type="warning" :bordered="false">
 				{{ status.agents.not_reporting }}
