@@ -156,18 +156,16 @@
 					body-content-class="uba-drawer-body"
 				>
 					<template #header>
-						<div class="flex min-w-0 items-start gap-2">
-							<UbaDrawerHeader
-								:meta="drawerMeta"
-								:kind="drawer.kind === 'entity' ? 'Entity' : 'UBA alert'"
-								class="min-w-0 flex-1"
-							/>
-							<ModalPageButton
-								:route="drawerPage"
-								:label="drawer.kind === 'entity' ? 'Open the entity\'s page' : 'Open the alert\'s page'"
-								@navigate="closeDrawer"
-							/>
-						</div>
+						<UbaDrawerHeader :meta="drawerMeta" :kind="drawer.kind === 'entity' ? 'Entity' : 'UBA alert'">
+							<template #actions>
+								<ModalPageButton
+									:route="drawerPage"
+									text="Open page"
+									:label="drawer.kind === 'entity' ? 'Open the entity\'s page' : 'Open the alert\'s page'"
+									@navigate="closeDrawer"
+								/>
+							</template>
+						</UbaDrawerHeader>
 					</template>
 					<UbaEntityDetail
 						v-if="drawer.kind === 'entity'"
@@ -394,8 +392,8 @@ onBeforeMount(loadCustomers)
 .uba-drawer-head .n-drawer-header__main {
 	min-width: 0;
 	flex: 1;
-	/* The page button closes the row, right before the drawer's close button. */
-	padding-right: 4px;
+	/* Room for the close button beside the risk figure. */
+	padding-right: 36px;
 }
 
 .uba-drawer-body {

@@ -120,6 +120,24 @@ describe("ubaDrawerHeader", () => {
 		await flushPromises()
 		expect(copy).toHaveBeenCalledWith("eb93-key")
 	})
+
+	it("puts its actions at the end of the tags row, even with no tags", () => {
+		const wrapper = mount(
+			defineComponent({
+				setup: () => () =>
+					h(NMessageProvider, null, {
+						default: () =>
+							h(
+								UbaDrawerHeader,
+								{ meta: { kind: "UBA alert", icon: "carbon:warning-alt", title: "A" } },
+								{ actions: () => h("button", "Open page") }
+							)
+					})
+			})
+		)
+		expect(wrapper.findAll("[data-testid=uba-drawer-tag]")).toHaveLength(0)
+		expect(wrapper.get("[data-testid=uba-drawer-actions]").text()).toBe("Open page")
+	})
 })
 
 describe("signalTimeline", () => {

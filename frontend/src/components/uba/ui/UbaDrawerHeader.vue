@@ -33,9 +33,9 @@
 			</div>
 			<RiskMeter v-if="meta?.risk != null" :risk="meta.risk" :threshold="meta.threshold ?? 100" size="lg" />
 		</div>
-		<div v-if="meta?.tags?.length" class="flex flex-wrap items-center gap-1.5">
+		<div v-if="meta?.tags?.length || $slots.actions" class="flex flex-wrap items-center gap-1.5">
 			<n-tag
-				v-for="tag of meta.tags"
+				v-for="tag of meta?.tags ?? []"
 				:key="tag.label"
 				size="small"
 				:type="tag.type ?? 'default'"
@@ -47,14 +47,18 @@
 				{{ tag.label }}
 			</n-tag>
 			<slot name="extra" />
+			<span v-if="$slots.actions" class="ml-auto flex items-center gap-2" data-testid="uba-drawer-actions">
+				<slot name="actions" />
+			</span>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-// The header of an entity or alert drawer: what it is (a small mono label), its name, its key (copy
-// it), and its risk as the headline figure; badges for what qualifies it underneath. The drawer
-// draws the close button beside it. Until the item loads, a skeleton keeps the height.
+// The header of an entity or alert drawer (and of its page): what it is (a small mono label), its name,
+// its key (copy it), and its risk as the headline figure; badges for what qualifies it underneath, with
+// the `actions` slot at the end of that row. The drawer draws the close button beside it. Until the
+// item loads, a skeleton keeps the height.
 import { useClipboard } from "@vueuse/core"
 import { NButton, NSkeleton, NTag, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"

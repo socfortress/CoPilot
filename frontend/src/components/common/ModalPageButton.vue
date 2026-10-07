@@ -1,5 +1,20 @@
 <template>
-	<n-tooltip v-if="route && !alreadyThere" placement="bottom">
+	<n-button
+		v-if="route && !alreadyThere && text"
+		tag="a"
+		:href="route.href()"
+		size="tiny"
+		secondary
+		:focusable="false"
+		class="modal-page-button"
+		:aria-label="label"
+		data-testid="modal-page-button"
+		@click="go"
+	>
+		<template #icon><Icon name="carbon:launch" :size="13" /></template>
+		{{ text }}
+	</n-button>
+	<n-tooltip v-else-if="route && !alreadyThere" placement="bottom">
 		<template #trigger>
 			<n-button
 				tag="a"
@@ -26,17 +41,24 @@
 // middle-click or "open in new tab" works; a plain click navigates and tells the
 // parent to close the modal (a modal owned by something that outlives the page —
 // the layout, the search palette — would otherwise stay open on top of it). Hidden
-// when the page it points to is the one already open.
+// when the page it points to is the one already open. With `text` it is a small
+// labelled button instead ("Open page"), for a header with room for words.
 import type { EntityRoute } from "@/composables/useNavigation"
 import { NButton, NTooltip } from "naive-ui"
 import { computed } from "vue"
 import { useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 
-const { route, label = "Open the page" } = defineProps<{
+const {
+	route,
+	label = "Open the page",
+	text
+} = defineProps<{
 	/** The entity's page, from a `useNavigation().route*()` helper; nothing renders without one. */
 	route?: EntityRoute | null
 	label?: string
+	/** Shown beside the icon instead of the bare icon with a tooltip ("Open page"). */
+	text?: string
 }>()
 
 const emit = defineEmits<{ (e: "navigate"): void }>()
