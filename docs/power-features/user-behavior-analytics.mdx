@@ -1,0 +1,343 @@
+---
+title: User Behavior Analytics (SOCFortress UBA)
+description: Rank every person and computer by behavioral risk, raise an alert when unusual activity adds up, and tune it per customer — all from CoPilot, on the Wazuh and Microsoft 365 data you already collect.
+---
+
+SOCFortress UBA learns how each person and computer **normally** behaves — where they sign in from, what they do with email and files, which programs run — and points out what is new or unusual. It reads the same Wazuh and Microsoft 365 events CoPilot already collects; nothing is installed on users' machines.
+
+UBA runs as its own service next to your stack. CoPilot is its analyst UI: you deploy it once, connect it, and then set every customer up and work its findings from **Investigate → User Behavior**.
+
+<CardGroup cols={2}>
+  <Card title="UBA deployment repository" icon="github" href="https://github.com/socfortress/socfortress-uba-deploy">
+    Docker Compose file, `.env` template and the full README.
+  </Card>
+  <Card title="SOCFortress UBA" icon="github" href="https://github.com/socfortress/socfortress-uba">
+    The engine: rules, scoring and the API CoPilot talks to.
+  </Card>
+</CardGroup>
+
+---
+
+## What it does
+
+- **Risk-ranked entities** — people and computers per customer, highest behavioral risk first, with a risk-over-time chart and every finding that contributed.
+- **Alerts that need corroboration** — one unusual thing rarely means trouble; several together usually do. UBA raises an alert only when findings add up, and every UBA alert also lands in **Incidents → Alerts** like any other source.
+- **A closed feedback loop** — a verdict given in CoPilot (on the UBA page *or* on the incident alert) goes back to UBA. A false positive can mute the rules behind it for that person for 30 days.
+- **Per-customer tuning** — turn rules off, change their points or the alert threshold for one customer, and **backtest** rules against recent history before trusting them.
+- **Directory awareness** — sync a customer's Entra ID so UBA knows real accounts, departments, disabled users and who holds admin roles (including through groups). Findings about admins weigh more.
+- **One-click customer setup** — CoPilot registers the customer with UBA and builds the Graylog streams, pipelines and outputs that feed it.
+
+---
+
+## How risk adds up
+
+<Steps>
+  <Step title="A finding">
+    Each unusual thing UBA notices is a **finding** worth its rule's risk points. Many rules first spend 7–14 days learning what is normal and stay quiet until then, so a new customer sees few findings at first.
+  </Step>
+  <Step title="Points accumulate">
+    Points add up per person or computer. They **fade** over time (they halve on a fixed half-life and drop off entirely after a horizon), so old findings stop counting. The same rule firing again for the same entity soon after adds little — one noisy rule cannot raise an alert alone.
+  </Step>
+  <Step title="Weighting">
+    Findings about **administrators** count 1.5×: their accounts can do more damage. Wazuh's own alerts add context, capped, but can never raise a UBA alert on their own — UBA's findings must.
+  </Step>
+  <Step title="An alert">
+    When an entity's risk passes the threshold (**100 points** by default), or a single finding is strong enough on its own, UBA opens an alert. It appears on the UBA page and as a CoPilot incident alert (source `uba`).
+  </Step>
+</Steps>
+
+The exact values (points per rule, half-life, horizon, multipliers) are shown live on the page under **About User Behavior Analytics**, together with what every rule means and whose risk it adds to.
+
+---
+
+## Architecture
+
+```
+            ┌──────────── copy of Wazuh + M365 events (GELF) ────────────┐
+            │                                                            ▼
+┌───────────────────────┐                                  ┌──────────────────────────┐
+│        Graylog        │                                  │     SOCFortress UBA      │
+│  UBA FEED streams     │ ◀── UBA alerts back (GELF) ───── │  API · GELF receiver ·   │
+│  UBA ROUTING pipeline │                                  │  worker · Postgres ·     │
+│  UBA ALERTS stream    │                                  │  Redis                   │
+└───────────────────────┘                                  └──────┬─────────▲─────────┘
+                                                                  │         │
+                          history (bootstrap) ── Wazuh indexer ◀──┘         │ REST (API key)
+                                                                            │
+┌───────────────────────────────────────────────────────────────────────────┴─────────┐
+│  CoPilot   Investigate → User Behavior   (/api/uba/{customer_code}/…)                 │
+│            Incidents → Alerts  ◀── UBA alerts created via the incident API            │
+└───────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **UBA is the store; CoPilot proxies.** Entities, findings, alerts, suppressions, verdicts and rule settings live in UBA's Postgres. CoPilot adds no tables for them.
+- **The UBA tenant is the customer code.** UBA reads `agent_labels_customer` from events.
+- **Tenancy is checked twice:** CoPilot checks the analyst's customer access on every request, and UBA scopes its own API key to tenants.
+
+---
+
+## Who this is for
+
+| Role | What they do |
+|---|---|
+| **Admin / Platform** | Deploy UBA, connect it, set customers up, sync directories, tune rules and thresholds, merge identities |
+| **Analyst** | Work the entity list and UBA alerts, give verdicts, suppress expected behavior, run backtests |
+
+Analysts only see the customers they are assigned to, exactly as everywhere else in CoPilot.
+
+---
+
+## Inputs (what it needs)
+
+- A Linux VM for UBA (Docker + Compose v2; 4 vCPU / 8 GB RAM to start) on the same private network as Graylog, the Wazuh indexer and CoPilot
+- The **Wazuh indexer** admin credentials (UBA replays history from it)
+- A **CoPilot service account** (analyst role, no 2FA) that UBA uses to create its incident alerts
+- Customers already provisioned in CoPilot (Wazuh; Microsoft 365 if they have it)
+- Optional: MaxMind **GeoLite2-City** and **GeoLite2-ASN** databases — without them the new-country, new-network and impossible-travel rules stay quiet
+- Optional: an **Entra ID app registration** per customer for directory sync
+
+---
+
+## Setup
+
+The same steps are shown inside CoPilot, with copyable commands, on **Investigate → User Behavior** until UBA is connected.
+
+<Steps>
+  <Step title="Get UBA onto the VM">
+    ```bash
+    git clone https://github.com/socfortress/socfortress-uba-deploy.git /opt/socfortress-uba
+    cd /opt/socfortress-uba
+    cp .env.example .env && chmod 600 .env
+    ```
+  </Step>
+  <Step title="Fill in .env">
+    Replace every `<...>` value. The key ones:
+
+    ```bash
+    UBA_PROVISION_FEED_HOST=<uba-ip>        # Graylog sends the UBA feed to this VM
+    UBA_GRAYLOG_GELF_HOST=<graylog-ip>      # UBA sends its alerts back to Graylog
+    UBA_INDEXER__URL=https://<indexer-ip>:9200
+    UBA_INDEXER__PASSWORD=<indexer admin password>
+    UBA_COPILOT_URL=http://<copilot-ip>:5000
+    UBA_COPILOT_USERNAME=<service account>
+    UBA_COPILOT_PASSWORD=<password>
+    POSTGRES_PASSWORD=<openssl rand -hex 24>
+    UBA_SECRET_KEY=<openssl rand -base64 32 | tr '+/' '-_'>
+    ```
+
+    <Warning>
+      Keep `UBA_SECRET_KEY`. It encrypts stored secrets (such as directory client secrets); a new key means entering them all again.
+    </Warning>
+  </Step>
+  <Step title="Start it">
+    ```bash
+    docker compose pull && docker compose up -d
+    curl -s http://<uba-ip>:8010/healthz
+    docker compose logs --tail 20 worker     # the worker reports every minute
+    ```
+  </Step>
+  <Step title="Create CoPilot's API key">
+    One key covers every customer, current and future. Scope `admin` lets CoPilot set customers up as well as read and triage; CoPilot still enforces each user's customer access.
+
+    ```bash
+    docker compose exec api uba-admin api-keys create --name copilot --scope admin --tenants '*'
+    ```
+
+    The key is shown once — copy it now.
+  </Step>
+  <Step title="Connect CoPilot">
+    **Platform → Connectors → SOCFortress UBA**: URL `http://<uba-ip>:8010`, the API key, then **Verify**. The User Behavior page now shows UBA.
+
+    <Note>
+      On a single Docker host, CoPilot's containers reach UBA on the bridge address (for example `http://172.17.0.1:8010`), not `localhost`. If UBA is served over HTTPS, its certificate must be one CoPilot trusts — TLS is verified.
+    </Note>
+  </Step>
+  <Step title="Set each customer up">
+    On **Investigate → User Behavior**, pick the customer and click **Set up UBA**. Choose how many days of history UBA should learn from first (default 14, up to 30; the indexer must still hold it). Optionally deploy UBA's Wazuh rules (Windows password changes and resets).
+  </Step>
+</Steps>
+
+### What "Set up UBA" creates
+
+1. **Registers the customer** with UBA, including its Microsoft 365 tenant IDs. UBA then replays the chosen history with alerting **off**, so it knows what is normal, and goes live.
+2. **Per source stream** (the customer's Wazuh stream, plus each Microsoft 365 tenant's stream): a **UBA FEED** stream in the *same* index set (so nothing is indexed twice) and a **UBA ROUTING** pipeline.
+3. **One GELF output** to UBA, attached to the feed streams.
+4. **The way back:** a global **UBA ALERTS** GELF input (once per Graylog) and a `UBA ALERTS - <code>` stream.
+5. *(Optional)* UBA's Wazuh rules uploaded to the manager, which is then restarted.
+
+Every step looks objects up by title first, so **Run setup again** repairs a partial setup and never duplicates anything. Run it again after adding Microsoft 365 (or another M365 tenant) to a customer so UBA reads the new streams — a source added after go-live starts without history, so expect more first-time findings from it for a few days.
+
+<Warning>
+  Deploying the Wazuh rules restarts the Wazuh manager. Check afterwards that your log shipper (e.g. Fluent Bit) still ships alerts — on some hosts it stops after a manager restart until it is restarted too.
+</Warning>
+
+### Directory sync (Entra ID, optional but recommended)
+
+Without a directory, UBA learns accounts from events and only sees role changes as they happen. With one, it knows real names, departments, disabled accounts and who holds admin roles.
+
+1. In the customer's Entra tenant, create an app registration with these **read-only application permissions** (admin consent): `User.Read.All`, `RoleManagement.Read.Directory`, `GroupMember.Read.All`.
+2. Add it **on the UBA host** — the client secret is read from stdin and stored encrypted, and never passes through CoPilot:
+
+   ```bash
+   docker compose exec -T worker uba-admin identity-sources add --tenant <customer_code> \
+       --entra-tenant <directory id> --client-id <application id> < secret.txt
+   ```
+
+3. In CoPilot's **Directory** tab, **Test** it and **Sync now** (admin only). The tab shows each source's status, last sync, result and any error.
+
+---
+
+## Where it lives in the UI
+
+**Menu path:** Investigate → User Behavior (`/uba`)
+
+The page has a customer picker (it follows the sidebar's global customer filter), a status strip, warnings for unhealthy feeds and for computers that stopped reporting, and five tabs:
+
+| Tab | What it shows |
+|---|---|
+| **Entities** | People and computers ranked by risk. **UBA findings only** leaves out risk from native Wazuh alerts, so hosts with months of noisy native alerts don't crowd the top. |
+| **Alerts** | UBA alerts with their verdicts. Each links to its CoPilot incident alert. |
+| **Suppressions** | Rules muted per entity, until when, and why. **Show expired** for history. |
+| **Rules** | Rule settings for this customer, what each rule found, and backtests. |
+| **Directory** | Directory sync sources and the identity review (merge candidates). |
+
+Clicking an entity or an alert opens it in a drawer; **Open page** turns it into a shareable page (`/uba/<customer>/entities/<key>` or `/uba/<customer>/alerts/<id>`). Incident alerts raised by UBA carry a **user behavior** link straight to these pages.
+
+### The entity view
+
+- **Risk** over a selectable range, broken down by rule, with suppressed and native contributions marked
+- **Host** facts for computers: OS, address, Wazuh agent, groups, whether it is still reporting and its last check-in
+- **Identity** facts for people: account state, when it was created, **why it is privileged** (which role, granted how), group memberships and aliases
+- Its alerts, and every finding with **Show events** — the original records from the indexer (events past index retention are listed as missing)
+- **Suppress** a rule for this entity right from the finding
+
+### The alert view
+
+What the alert was made of (findings in the 24 h before it opened), updates while it was open, and the **verdict**:
+
+- **True positive** — a real threat: the alert stands and the risk keeps counting.
+- **False positive** — expected activity: say why, and optionally **suppress the rules behind it for this entity for 30 days**.
+
+---
+
+## Operator workflows
+
+### Triage the riskiest entities
+
+1. Open **Investigate → User Behavior** and pick the customer.
+2. On **Entities**, start from the top. Turn on **UBA findings only** if native alerts dominate.
+3. Open an entity, read the risk breakdown, and use **Show events** on the findings that drive it.
+4. Decide: escalate (open a case from the incident alert), or suppress what is expected for that entity.
+
+### Close the loop on a UBA alert
+
+1. Open the alert (from the **Alerts** tab, or from the incident alert's user behavior link).
+2. Give a verdict with a reason. For a false positive, keep **suppress for 30 days** on unless the behavior should still be watched.
+3. The verdict reaches UBA either way — given here or on the incident alert — and is applied once.
+
+### Mute expected behavior without losing it
+
+Suppress a rule for one entity when the behavior is expected there (a service account that always signs in from a datacenter, an admin's jump host). A suppressed rule **keeps recording its findings** on the entity — they stay in its timeline — but adds no risk and opens no alert until the suppression expires.
+
+---
+
+## Tuning (Rules tab)
+
+<Tabs>
+  <Tab title="Rule settings (admin)">
+    Turn a rule off or give it different points **for this customer only**; everything else keeps UBA's built-in values. Change the **alert threshold** for the customer. Each change records who made it and when, and applies to new findings within a minute.
+
+    A rule turned off **still learns** what is normal, so turning it back on needs no new learning period.
+  </Tab>
+  <Tab title="What each rule found">
+    Per-rule finding counts for the customer, with **Include native alert rules** to show Wazuh-derived rules too. The fastest way to spot a noisy rule.
+  </Tab>
+  <Tab title="Backtests">
+    Replays recent history through a **separate copy** of UBA's rules and reports what they would have found: per rule, how often, for whom, and the alerts it would have raised. Nothing is alerted or stored on entities.
+
+    Pick the number of **days** and a **warm-up** (none, 7 or 14 days of older history replayed first so baselines and learning periods exist). If a run stops at UBA's document limit the result says so — use fewer days or fewer rules.
+  </Tab>
+</Tabs>
+
+### Identity review (admin)
+
+Accounts UBA learned from events and the customer's directory users may be the same person. The **Directory** tab lists:
+
+- **Probably the same person** — pairs that both claim the same alias. **Merge** or **Not the same**.
+- **Accounts not matched to the directory** — with findings in the last 14 days. Merge one into the person it belongs to, or **Keep as is** (a local or service account).
+- **Recent merges** and their status.
+
+<Warning>
+  A merge moves the account's findings, alerts, history and risk to the person it belongs to, and **cannot be undone**. UBA runs it within a minute.
+</Warning>
+
+---
+
+## Permissions
+
+| Action | Admin | Analyst |
+|---|:---:|:---:|
+| View entities, alerts, findings, evidence, rule stats | ✅ | ✅ |
+| Verdicts and suppressions | ✅ | ✅ |
+| Run and cancel backtests | ✅ | ✅ |
+| Set a customer up (provisioning) | ✅ | — |
+| Rule settings and alert threshold | ✅ | — |
+| Directory test / sync | ✅ | — |
+| Merge identities | ✅ | — |
+
+The analyst's username is sent to UBA with every write, so UBA records who suppressed a rule or gave a verdict.
+
+---
+
+## Success criteria
+
+- [ ] **Platform → Connectors → SOCFortress UBA** verifies, and the User Behavior page shows the UBA version
+- [ ] A customer shows as set up, learning from history, then live
+- [ ] Entities appear with risk, and **Show events** opens the source records
+- [ ] A UBA alert appears both on the UBA page and in **Incidents → Alerts**
+- [ ] A verdict given on the incident alert shows on the UBA alert
+
+---
+
+## Safety / guardrails
+
+- **Expect a quiet start.** Learning periods mean few findings for the first one to two weeks — that is by design, not a broken feed.
+- **Suppress narrowly.** Suppressions are per entity and rule; prefer them over raising the customer's threshold or turning a rule off.
+- **Backtest before you tune.** A backtest shows what a change would have done without alerting anyone.
+- **Directory secrets stay on the UBA host.** CoPilot never sees or stores a customer's Entra client secret.
+- **Keep UBA's API on the private network**, next to Graylog, the indexer and CoPilot.
+- **Back up Postgres.** It holds everything UBA has learned. Nightly:
+
+  ```bash
+  cd /opt/socfortress-uba && docker compose exec -T postgres pg_dump -U uba -Fc uba > /backup/uba-$(date +%F).dump
+  ```
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+|---|---|
+| Page says *SOCFortress UBA is not connected* | Connector missing or not verified under Platform → Connectors |
+| Errors with reason `key_rejected` / `insufficient_scope` | The API key was revoked, or created without `--scope admin` / `--tenants '*'` |
+| Errors with reason `unreachable` | Wrong URL (from a container, use the Docker bridge address), firewall, or UBA down — check `/healthz` |
+| *Set up UBA* refuses: *no Wazuh stream on record* | Provision the customer in CoPilot first |
+| *Set up UBA* refuses: stream *not in Graylog* | The source stream was deleted or recreated — provision that source again, then rerun setup |
+| A feed is shown as unhealthy | Graylog stopped routing that source to UBA; findings for it may be missing or late until it recovers |
+| *Computers have stopped reporting* | Their Wazuh agents stopped checking in — UBA sees nothing from them until they do |
+| No sign-in location findings | GeoLite2 databases missing from `data/geoip` on the UBA host |
+| Wazuh alerts stopped after setup | The manager restarted to load UBA's rules — restart the log shipper |
+
+A UBA authentication failure is always reported as an upstream error (502 with a `reason`), never as a CoPilot 401/403 — it will not log you out.
+
+---
+
+## Upgrading UBA
+
+UBA runs the version pinned in `UBA_TAG`; releases are listed on the deployment repository's Releases page. Database migrations run first on start.
+
+```bash
+cd /opt/socfortress-uba && git pull
+sed -i 's/^UBA_TAG=.*/UBA_TAG=<new version>/' .env
+docker compose pull && docker compose up -d
+```
