@@ -160,7 +160,7 @@
 					</template>
 					<UbaEntityDetail
 						v-if="drawer.kind === 'entity'"
-						:key="drawer.id"
+						:key="`entity:${drawer.id}`"
 						:customer-code="customerModel"
 						:entity-key="drawer.id"
 						@open-alert="openAlert"
@@ -169,7 +169,7 @@
 					/>
 					<UbaAlertDetail
 						v-else
-						:key="drawer.id"
+						:key="`alert:${drawer.id}`"
 						:customer-code="customerModel"
 						:alert-id="drawer.id"
 						@open-entity="openEntity"
