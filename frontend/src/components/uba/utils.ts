@@ -150,13 +150,19 @@ export function identityLabel(i: UbaIdentitySummary): string {
 	return alias ? alias.slice(alias.indexOf(":") + 1) : i.id
 }
 
-/** "human · admin · 3 findings in 14 days · upn:jdoe@…, sid:S-1-5-…" */
-export function identityDetails(i: UbaIdentitySummary): string {
-	const parts = [i.kind && i.kind !== "unknown" ? i.kind : null, i.privileged ? "admin" : null]
-	parts.push(`${i.findings} finding${i.findings === 1 ? "" : "s"} in 14 days`)
-	const aliases = i.aliases.slice(0, 2).join(", ")
-	if (aliases) parts.push(aliases)
-	return parts.filter(Boolean).join(" · ")
+/** An identity's kind worth showing ("human", "service"), or null when UBA does not know it. */
+export function identityKind(i: Pick<UbaIdentitySummary, "kind">): string | null {
+	return i.kind && i.kind !== "unknown" ? i.kind : null
+}
+
+export function identityKindIcon(kind: string | null | undefined): string {
+	return kind === "service" ? "carbon:bot" : "carbon:user"
+}
+
+/** "upn:jdoe@contoso.com" → { type: "upn", value: "jdoe@contoso.com" }; no type when there is no prefix. */
+export function splitAlias(alias: string): { type: string | null; value: string } {
+	const at = alias.indexOf(":")
+	return at > 0 ? { type: alias.slice(0, at), value: alias.slice(at + 1) } : { type: null, value: alias }
 }
 
 export interface SuppressionOrigin {
