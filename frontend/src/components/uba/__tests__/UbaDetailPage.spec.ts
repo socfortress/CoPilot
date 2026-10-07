@@ -3,7 +3,7 @@ import type { UbaDrawerMeta } from "../ui/UbaDrawerHeader.vue"
 import { flushPromises, mount } from "@vue/test-utils"
 import { NMessageProvider } from "naive-ui"
 import { describe, expect, it, vi } from "vitest"
-import { defineComponent, h } from "vue"
+import { defineComponent, h, ref } from "vue"
 import { createMemoryHistory, createRouter } from "vue-router"
 import { ubaRoutes } from "@/router/routes/uba"
 import UbaDetailPage from "../UbaDetailPage.vue"
@@ -15,6 +15,12 @@ const ALERT_META: UbaDrawerMeta = {
 	risk: 107
 }
 const ENTITY_KEY = "windows-demo\\jdoe"
+
+const copy = vi.hoisted(() => vi.fn())
+vi.mock("@vueuse/core", async importOriginal => ({
+	...(await importOriginal<typeof import("@vueuse/core")>()),
+	useClipboard: () => ({ copy, copied: ref(false) })
+}))
 
 // The bodies are the drawers' own components, covered in ui.spec.ts: here they only report their
 // header and ask to open the other kind, which is what the page wires.
@@ -83,6 +89,15 @@ describe("ubaDetailPage", () => {
 		expect(wrapper.get("[data-testid=uba-drawer-title]").text()).toBe("CONTOSO\\Administrator")
 		expect(wrapper.get("[data-testid=uba-drawer-kind]").text()).toBe("UBA alert")
 		expect(wrapper.text()).toContain("alert a-1")
+	})
+
+	it("links the customer's view and copies a link to the page", async () => {
+		copy.mockReset().mockResolvedValue(undefined)
+		const { wrapper } = await render("alert", "a-1")
+		expect(wrapper.get("[data-testid=uba-detail-customer]").attributes("href")).toBe("/uba?customer=ACME")
+		await wrapper.get("[data-testid=uba-detail-copy-link]").trigger("click")
+		await flushPromises()
+		expect(copy).toHaveBeenCalledWith(`${window.location.protocol}//${window.location.host}/uba/ACME/alerts/a-1`)
 	})
 
 	it("opens the entity's page from an alert, with the key encoded in the path", async () => {
