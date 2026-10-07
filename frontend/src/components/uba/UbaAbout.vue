@@ -1,12 +1,12 @@
 <template>
 	<section class="uba-about border-default overflow-hidden rounded-lg border" data-testid="uba-about">
-		<header class="bg-secondary flex items-center gap-3 px-4 py-2.5">
+		<header class="bg-secondary flex flex-wrap items-center gap-3 px-4 py-2.5">
 			<span class="info-tile grid size-7 shrink-0 place-items-center rounded-md" aria-hidden="true">
 				<Icon name="carbon:information" :size="15" />
 			</span>
 			<div class="flex min-w-0 flex-1 items-baseline gap-2">
-				<span class="text-sm font-semibold whitespace-nowrap">About User Behavior Analytics</span>
-				<span class="text-tertiary hidden truncate text-xs sm:inline">
+				<span class="text-sm font-semibold">About User Behavior Analytics</span>
+				<span class="text-tertiary hidden text-xs sm:inline">
 					What UBA is, how risk adds up to an alert, and what each rule means
 				</span>
 			</div>
@@ -148,17 +148,29 @@
 												<span class="text-secondary text-xs">{{ c.summary }}</span>
 											</div>
 										</template>
-										<ul class="rule-list border-default m-0 flex list-none flex-col overflow-hidden rounded-lg border p-0">
-											<li v-for="r of c.rules" :key="r.id" class="rule-item flex flex-col gap-0.5 px-3 py-2">
+										<ul
+											class="rule-list border-default m-0 flex list-none flex-col overflow-hidden rounded-lg border p-0"
+										>
+											<li
+												v-for="r of c.rules"
+												:key="r.id"
+												class="rule-item flex flex-col gap-0.5 px-3 py-2"
+											>
 												<div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-													<span class="score font-mono text-[11px] tabular-nums">{{ r.score }} pts</span>
+													<span class="score font-mono text-[11px] tabular-nums">
+														{{ r.score }} pts
+													</span>
 													<span class="text-[13px] font-semibold">{{ r.name }}</span>
 													<n-tag v-if="!r.enabled" size="tiny" :bordered="false">off</n-tag>
 												</div>
-												<p class="text-secondary m-0 text-xs leading-snug">{{ r.description }}</p>
+												<p class="text-secondary m-0 text-xs leading-snug">
+													{{ r.description }}
+												</p>
 												<p class="text-tertiary m-0 text-[11px] leading-snug">
 													{{ r.how }} · Adds to {{ r.about }}
-													<template v-if="r.mitre.length">· MITRE {{ r.mitre.join(", ") }}</template>
+													<template v-if="r.mitre.length">
+														· MITRE {{ r.mitre.join(", ") }}
+													</template>
 													·
 													<span class="font-mono">{{ r.id }}</span>
 												</p>
