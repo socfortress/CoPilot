@@ -116,6 +116,9 @@ async def decomission_wazuh_customer(
     """
     logger.info(f"Decomissioning customer {customer_meta.customer_name}")
 
+    # Read before the worker step runs, which takes the Portainer path on this same check.
+    portainer_deployment = await is_connector_verified(connector_name="Portainer", db=session)
+
     # Delete the Wazuh Agents
     agents = await gather_wazuh_agents(customer_meta.customer_code)
     agents_deleted = await delete_wazuh_agents(agents)
@@ -159,9 +162,22 @@ async def decomission_wazuh_customer(
     await session.delete(customer_meta)
     await session.commit()
 
+    manual_steps = []
+    if portainer_deployment:
+        # Portainer's API leaves the stack behind, and a leftover stack makes Portainer refuse the
+        # next stack with the same name, so reprovisioning this customer code fails (#1218).
+        stack_name = f"wazuh-worker-{customer_meta.customer_code.replace(' ', '_')}".lower()
+        manual_steps.append(
+            f"Portainer does not allow CoPilot to fully remove the associated stack through the API. "
+            f"Please manually delete the stack '{stack_name}' from Portainer -> Stacks before recreating "
+            f"or reprovisioning the customer, reusing the customer code, or provisioning another customer "
+            f"on the same Wazuh ports.",
+        )
+
     return DecommissionCustomerResponse(
         message=f"Customer {customer_meta.customer_name} decomissioned successfully.",
         success=True,
+        manual_steps=manual_steps,
         decomissioned_data={
             "agents_deleted": agents_deleted,
             "groups_deleted": groups_deleted,
