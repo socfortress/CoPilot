@@ -138,7 +138,9 @@ export default {
 		)
 	},
 	decommissionCustomer(code: string) {
-		return HttpClient.post<FlaskBaseResponse & { decomissioned_data: CustomerDecommissionedData }>(
+		return HttpClient.post<
+			FlaskBaseResponse & { decomissioned_data: CustomerDecommissionedData; manual_steps?: string[] }
+		>(
 			`/customer_provisioning/decommission`,
 			{},
 			{

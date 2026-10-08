@@ -100,6 +100,7 @@ function decommissionCustomer() {
 		.decommissionCustomer(customerCode.value)
 		.then(res => {
 			if (res.data.success) {
+				showManualSteps(res.data.manual_steps)
 				emit("delete")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
@@ -111,6 +112,22 @@ function decommissionCustomer() {
 		.finally(() => {
 			loadingDelete.value = false
 		})
+}
+
+// Cleanup CoPilot can't do itself (e.g. the Portainer stack). A dialog rather than a toast:
+// skipping it breaks the next provisioning of this customer code (#1218).
+function showManualSteps(steps?: string[]) {
+	if (!steps?.length) return
+
+	dialog.warning({
+		title: "Customer decommission completed",
+		content: () =>
+			h("div", { class: "flex flex-col gap-2" }, [
+				h("strong", "Important:"),
+				...steps.map(step => h("p", step))
+			]),
+		positiveText: "Understood"
+	})
 }
 
 function handleDelete() {

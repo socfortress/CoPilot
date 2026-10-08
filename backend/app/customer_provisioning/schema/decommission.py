@@ -34,3 +34,8 @@ class DecommissionCustomerResponse(BaseModel):
         ...,
         description="Data from the decomissioning process",
     )
+    manual_steps: List[str] = Field(
+        default_factory=list,
+        examples=[["Delete the Portainer stack 'wazuh-worker-socfortress' in Portainer -> Stacks."]],
+        description="Cleanup CoPilot cannot do itself and an operator must finish by hand",
+    )
