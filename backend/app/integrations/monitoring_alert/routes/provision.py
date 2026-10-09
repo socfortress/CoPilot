@@ -18,6 +18,9 @@ from app.connectors.graylog.utils.routing import set_graylog_context
 from app.customer_waf.services import alerts as waf_alerts
 from app.db.db_session import get_db
 from app.db.universal_models import CustomersMeta
+from app.integrations.aws.services.account_lookup import (
+    resolve_customer_code_from_aws_account,
+)
 from app.integrations.monitoring_alert.schema.provision import AvailableMonitoringAlerts
 from app.integrations.monitoring_alert.schema.provision import (
     AvailableMonitoringAlertsResponse,
@@ -218,6 +221,15 @@ async def get_customer_meta(customer_code: str, session: AsyncSession) -> Custom
         # The column above names only the customer's first Microsoft 365 tenant, so a later tenant's
         # organization ID is resolved through the credentials stored per Office365 instance.
         resolved_code = await resolve_customer_code_from_office365_tenant(customer_code, session)
+        if resolved_code:
+            customer_meta = await session.execute(
+                select(CustomersMeta).where(CustomersMeta.customer_code == resolved_code),
+            )
+            customer_meta = customer_meta.scalars().first()
+
+    if not customer_meta:
+        # AWS alerts carry the AWS account ID, resolved through the AWS integration instances.
+        resolved_code = await resolve_customer_code_from_aws_account(customer_code, session)
         if resolved_code:
             customer_meta = await session.execute(
                 select(CustomersMeta).where(CustomersMeta.customer_code == resolved_code),

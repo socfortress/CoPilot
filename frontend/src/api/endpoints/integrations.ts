@@ -39,6 +39,22 @@ export interface UpdateMetaAutoRequest extends Omit<CustomerIntegrationMetaCommo
 
 export type UpdateIntegrationPayload = Omit<NewIntegration, "customer_name">
 
+/** The manual step on the Wazuh master that CoPilot cannot do through the Wazuh API. */
+export interface AwsConfigNotice {
+	/** The manager's log showed the aws-s3 module exit with code 23 after this deployment. */
+	detected: boolean
+	file_path: string
+	summary: string
+	steps: string[]
+	/** The section to add to /root/.aws/config. */
+	contents: string
+}
+
+export interface AwsProvisionResult {
+	warnings: string[]
+	aws_config: AwsConfigNotice | null
+}
+
 export default {
 	// #region Integrations
 	getAvailableIntegrations(signal?: AbortSignal) {
@@ -100,6 +116,13 @@ export default {
 	// #endregion
 
 	// #region Provision
+	awsProvision(customerCode: string, instanceName?: string | null) {
+		return HttpClient.post<FlaskBaseResponse & AwsProvisionResult>(`/aws/provision`, {
+			customer_code: customerCode,
+			integration_name: "AWS",
+			instance_name: instanceName ?? null
+		})
+	},
 	office365Provision(customerCode: string, integrationName: string, instanceName?: string | null) {
 		return HttpClient.post<FlaskBaseResponse>(`/office365/provision`, {
 			customer_code: customerCode,

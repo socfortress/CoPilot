@@ -619,10 +619,13 @@ async def send_put_request(
         logger.debug(f"Request URL: {attributes['connector_url']}{endpoint}")
         logger.debug(f"Request headers: {wazuh_manager_client}")
         logger.debug(f"Request params: {params}")
-        logger.debug(f"Request data: {data}")
+        logger.debug(f"Request data: {f'<{len(data)} bytes>' if binary_data and data is not None else data}")
 
     try:
-        logger.debug(f"Sending PUT request to {endpoint} with data: {data}")
+        # A binary body is ossec.conf or a rule file: the former carries every integration's
+        # credentials (Office365 client secrets, AWS secret keys), so only its size is logged.
+        logged_data = f"<{len(data)} bytes>" if binary_data and data is not None else data
+        logger.debug(f"Sending PUT request to {endpoint} with data: {logged_data}")
 
         response = await run_blocking(
             requests.put,

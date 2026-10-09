@@ -7,6 +7,14 @@
 			Deploy
 		</n-button>
 
+		<!-- AWS re-syncs a deployed instance: key rotation, services added to or dropped from SERVICES. -->
+		<n-button v-if="isSyncEnabled" :loading :size secondary @click.stop="provision()">
+			<template #icon>
+				<Icon :name="SyncIcon" />
+			</template>
+			Sync
+		</n-button>
+
 		<n-button v-if="!hideDeleteButton" :size type="error" ghost :loading="loadingDelete" @click.stop="handleDelete">
 			<template #icon>
 				<Icon :name="DeleteIcon" :size="15" />
@@ -21,10 +29,11 @@ import type { ButtonSize } from "naive-ui"
 import type { ApiCommonResponse, ApiError } from "@/types/common"
 import type { CustomerIntegration } from "@/types/integrations"
 import { NButton, useDialog, useMessage } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { computed, h, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
+import AwsDeployResult from "./AwsDeployResult.vue"
 import { handleDeleteIntegration } from "./utils"
 
 const { integration, hideDeleteButton, size } = defineProps<{
@@ -42,6 +51,7 @@ const emit = defineEmits<{
 
 const DeployIcon = "carbon:deploy"
 const DeleteIcon = "ph:trash"
+const SyncIcon = "carbon:renew"
 
 const dialog = useDialog()
 const message = useMessage()
@@ -53,6 +63,7 @@ const serviceName = computed(() => integration.integration_service_name)
 const customerCode = computed(() => integration.customer_code)
 const instanceName = computed(() => integration.instance_name || null)
 const isOffice365 = computed(() => serviceName.value === "Office365")
+const isAws = computed(() => serviceName.value === "AWS")
 const isMimecast = computed(() => serviceName.value === "Mimecast")
 const isCrowdstrike = computed(() => serviceName.value === "Crowdstrike")
 const isDuo = computed(() => serviceName.value === "DUO")
@@ -64,6 +75,7 @@ const isSOCFortressMdr = computed(() => serviceName.value === "SOCFortress MDR")
 const isDeployEnabled = computed(
 	() =>
 		(isOffice365.value ||
+			isAws.value ||
 			isMimecast.value ||
 			isCrowdstrike.value ||
 			isDuo.value ||
@@ -75,6 +87,8 @@ const isDeployEnabled = computed(
 		!integration.deployed
 )
 
+const isSyncEnabled = computed(() => isAws.value && !!integration.deployed)
+
 watch(loading, val => {
 	if (val) {
 		emit("startLoading")
@@ -83,7 +97,51 @@ watch(loading, val => {
 	}
 })
 
+function provisionAws() {
+	loadingProvision.value = true
+
+	Api.integrations
+		.awsProvision(customerCode.value, instanceName.value)
+		.then(res => {
+			if (!res.data.success) {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+				return
+			}
+			emit("deployed")
+			// Always shown: CoPilot cannot see /root/.aws/config on the Wazuh master, so the operator
+			// has to check it by hand, and any warning (validation skipped, wodle disabled) must be read.
+			const awsConfig = res.data.aws_config
+			const options = {
+				title: "AWS deployed",
+				style: { width: "min(720px, 92vw)" },
+				positiveText: "Close",
+				content: () =>
+					h(AwsDeployResult, {
+						message: res.data.message,
+						warnings: res.data.warnings,
+						awsConfig
+					})
+			}
+			if (awsConfig?.detected || res.data.warnings?.length) {
+				dialog.warning(options)
+			} else {
+				dialog.info(options)
+			}
+		})
+		.catch(err => {
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingProvision.value = false
+		})
+}
+
 function provision() {
+	if (isAws.value) {
+		provisionAws()
+		return
+	}
+
 	let apiCall: Promise<ApiCommonResponse> | null = null
 
 	if (isOffice365.value) {

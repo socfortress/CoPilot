@@ -25,6 +25,13 @@ from app.db.universal_models import CustomersMeta
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
+from app.integrations.aws.schema.provision import AWS_INTEGRATION_NAME
+from app.integrations.aws.services.account_lookup import (
+    ensure_aws_account_not_owned_elsewhere,
+)
+from app.integrations.aws.services.account_lookup import find_aws_instance
+from app.integrations.aws.services.decommission import cleanup_aws_infrastructure
+from app.integrations.aws.services.decommission import decommission_aws_instance
 from app.integrations.models.customer_integration_settings import AvailableIntegrations
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.integrations.models.customer_integration_settings import (
@@ -57,6 +64,7 @@ from app.integrations.schema import IntegrationWithAuthKeys
 from app.integrations.schema import UpdateCustomerIntegration
 from app.integrations.schema import UpdateMetaAutoRequest
 from app.integrations.schema import UpdateMetaResponse
+from app.integrations.schema import is_unchanged_secret
 from app.middleware.customer_access import verify_customer_code_access
 from app.network_connectors.models.network_connectors import (
     CustomerNetworkConnectorsMeta,
@@ -78,7 +86,14 @@ MISSING_META_RECOVERY_HINT = (
 # act, not a default.
 MULTI_INSTANCE_INTEGRATIONS = {
     "Office365",
+    # One instance per AWS account (+ bucket). See app/integrations/aws/services/provision.py.
+    "AWS",
 }
+
+# AWS auth keys that identify what a deployed instance put on the Wazuh manager and in Graylog
+# (its `<bucket>` entries and stream rules are keyed by them). Changing one on a deployed instance
+# would orphan both, so it takes deleting the instance and adding it again.
+AWS_IDENTITY_AUTH_KEYS = ("AWS_ACCOUNT_ID", "BUCKET_NAME")
 
 NETWORK_INTEGRATIONS = [
     "DefenderForEndpoint",
@@ -175,7 +190,7 @@ async def validate_integration_auth_key_update(
     """
     Validate if the integration auth key is valid.
     """
-    logger.info(f"integration_auth_key: {integration_auth_key}")
+    logger.info(f"Updating integration auth keys: {[auth_key.auth_key_name for auth_key in integration_auth_key]}")
     available_integrations = await fetch_available_integrations(session)
     integration = [ai for ai in available_integrations if ai.integration_name == integration_name][0]
     available_auth_keys = [ak.auth_key_name for ak in integration.auth_keys]
@@ -383,7 +398,7 @@ async def create_integration_subscription(
     """
     Create IntegrationSubscription instance.
     """
-    logger.info(f"integration_auth_keys: {integration_auth_keys}")
+    logger.info(f"Creating integration auth keys: {[auth_key.auth_key_name for auth_key in integration_auth_keys]}")
     for auth_key in integration_auth_keys:
         new_integration_subscription = IntegrationSubscription(
             customer_integrations=customer_integrations,
@@ -606,6 +621,27 @@ def get_subscription_id(
                 if auth_key.auth_key_name == auth_key_name:
                     return subscription.id
     return None
+
+
+def ensure_aws_identity_unchanged(customer_integration, integration_auth_keys) -> None:
+    """Refuse to change the account or bucket of a deployed AWS instance (see `AWS_IDENTITY_AUTH_KEYS`)."""
+    stored = {
+        auth_key.auth_key_name: (auth_key.auth_value or "").strip()
+        for subscription in customer_integration.integration_subscriptions
+        for auth_key in subscription.integration_auth_keys
+    }
+    for auth_key in integration_auth_keys:
+        if auth_key.auth_key_name in AWS_IDENTITY_AUTH_KEYS and (auth_key.auth_value or "").strip() != stored.get(
+            auth_key.auth_key_name,
+            "",
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"{auth_key.auth_key_name} cannot be changed on a deployed AWS integration: it identifies the buckets on the "
+                    "Wazuh manager and the Graylog streams. Delete the integration and add it again with the new value."
+                ),
+            )
 
 
 async def get_tenant_id(
@@ -1033,6 +1069,13 @@ async def create_integration(
         session,
         instance_name=instance_name,
     )
+    if customer_integration_create.integration_name == AWS_INTEGRATION_NAME:
+        # AWS alerts are routed to a customer by account ID, so one account belongs to one customer.
+        await ensure_aws_account_not_owned_elsewhere(
+            customer_integration_create.customer_code,
+            next((k.auth_value for k in customer_integration_create.integration_auth_keys if k.auth_key_name == "AWS_ACCOUNT_ID"), None),
+            session,
+        )
     integration_service_id = await get_integration_service_id(
         customer_integration_create.integration_name,
         session,
@@ -1175,7 +1218,20 @@ async def update_integration(
         session,
     )
 
+    if customer_integration_update.integration_name == AWS_INTEGRATION_NAME:
+        if customer_integration.deployed:
+            ensure_aws_identity_unchanged(customer_integration, customer_integration_update.integration_auth_keys)
+        await ensure_aws_account_not_owned_elsewhere(
+            customer_code,
+            next((k.auth_value for k in customer_integration_update.integration_auth_keys if k.auth_key_name == "AWS_ACCOUNT_ID"), None),
+            session,
+        )
+
     for auth_key in customer_integration_update.integration_auth_keys:
+        if is_unchanged_secret(auth_key.auth_key_name, auth_key.auth_value):
+            # A write-only key comes back from the UI as the redaction placeholder; keep the stored value.
+            continue
+
         subscription_id = get_subscription_id(
             customer_integration,
             customer_integration_update.integration_name,
@@ -1450,6 +1506,11 @@ async def delete_integration(
     if integration_name == "Office365":
         office365_tenant_id = await get_office365_tenant_id(customer_code, session, instance_name=instance_name)
 
+    # Likewise for AWS: the bucket and account say which <bucket> entries are this instance's.
+    aws_instance = None
+    if integration_name == AWS_INTEGRATION_NAME and is_deployed:
+        aws_instance = await find_aws_instance(customer_code, instance_name, session)
+
     # Only proceed with infrastructure cleanup if the integration is deployed
     if is_deployed:
         logger.info("Integration is deployed, proceeding with full cleanup including infrastructure components")
@@ -1479,6 +1540,10 @@ async def delete_integration(
                 f"No metadata record was found for {integration_name}, so the Graylog stream/index and Grafana folder/datasource "
                 "could not be removed automatically. Delete any leftover Graylog and Grafana resources for this customer manually.",
             )
+        elif integration_name == AWS_INTEGRATION_NAME:
+            # AWS records one index set, stream and datasource per service, shared per service
+            # between the customer's accounts; the generic cleanup below cannot tell them apart.
+            await cleanup_aws_infrastructure(meta_data, customer_code, instance_name, session, cleanup_warnings)
         else:
             await _cleanup_integration_infrastructure(
                 meta_data=meta_data,
@@ -1528,6 +1593,19 @@ async def delete_integration(
             cleanup_warnings.append(
                 f"Could not remove the Office365 api_auth block for tenant {office365_tenant_id} from the Wazuh "
                 f"manager ({e}). Remove it from ossec.conf and restart the manager.",
+            )
+
+    # Only for a deployed instance: an undeployed one put nothing on the manager, and any bucket with
+    # the same bucket + account there would be somebody's hand-made configuration.
+    if aws_instance and aws_instance.bucket_name and aws_instance.account_id:
+        try:
+            await decommission_aws_instance(aws_instance.bucket_name, aws_instance.account_id)
+        except Exception as e:
+            detail = getattr(e, "detail", None) or e
+            logger.warning(f"Failed to remove the aws-s3 buckets for {aws_instance.bucket_name} / {aws_instance.account_id}: {detail}")
+            cleanup_warnings.append(
+                f"Could not remove the aws-s3 <bucket> entries for bucket {aws_instance.bucket_name} and account "
+                f"{aws_instance.account_id} from the Wazuh manager ({detail}). Remove them from ossec.conf and restart the manager.",
             )
 
     return generate_decommission_response(customer_code, integration_name, cleanup_warnings)

@@ -397,6 +397,7 @@ def get_available_integrations_list():
         ("CATO", "Integrate CATO NETWORKS with SOCFortress."),
         ("DefenderForEndpoint", "Integrate DefenderForEndpoint with SOCFortress."),
         ("SOCFortress MDR", "Forward alerts to the SOCFortress MDR server for this customer."),
+        ("AWS", "Integrate AWS with SOCFortress."),
         # ... Add more available integrations as needed ...
     ]
 
@@ -540,6 +541,16 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
         ("DefenderForEndpoint", "CLIENT_SECRET"),
         ("DefenderForEndpoint", "SYSLOG_PORT"),
         ("SOCFortress MDR", "COLLECTOR_UUID"),
+        # SERVICES is `service[:s3-prefix]` per entry, e.g. `cloudtrail,guardduty:guardduty`; see
+        # app/integrations/aws/utils/services.py. ALIAS, ORGANIZATION_ID and ONLY_LOGS_AFTER may be empty.
+        ("AWS", "ACCESS_KEY_ID"),
+        ("AWS", "SECRET_ACCESS_KEY"),
+        ("AWS", "AWS_ACCOUNT_ID"),
+        ("AWS", "AWS_ACCOUNT_ALIAS"),
+        ("AWS", "AWS_ORGANIZATION_ID"),
+        ("AWS", "BUCKET_NAME"),
+        ("AWS", "SERVICES"),
+        ("AWS", "ONLY_LOGS_AFTER"),
         # ... Add more available integrations auth keys as needed ...
     ]
     logger.info("Getting available integrations auth keys.")

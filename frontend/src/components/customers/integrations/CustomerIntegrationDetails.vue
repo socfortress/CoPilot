@@ -37,7 +37,20 @@
 						<div class="flex flex-wrap gap-2">
 							<div v-for="(_, key) of model" :key class="min-w-72 grow">
 								<n-form-item :label="key" :path="key">
-									<n-input v-model:value="model[key]" :placeholder="`${key}...`" clearable />
+									<n-input
+										v-model:value="model[key]"
+										:type="isWriteOnlyAuthKey(key) ? 'password' : 'text'"
+										:show-password-on="isWriteOnlyAuthKey(key) ? 'click' : undefined"
+										:input-props="
+											isWriteOnlyAuthKey(key) ? { autocomplete: 'new-password' } : undefined
+										"
+										:placeholder="
+											isWriteOnlyAuthKey(key)
+												? 'Leave unchanged to keep the stored secret'
+												: authKeyPlaceholder(serviceName, key)
+										"
+										clearable
+									/>
 								</n-form-item>
 							</div>
 						</div>
@@ -80,7 +93,7 @@ import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
-import { handleDeleteIntegration } from "./utils"
+import { authKeyPlaceholder, handleDeleteIntegration, isOptionalAuthKey, isWriteOnlyAuthKey } from "./utils"
 
 const props = defineProps<{
 	integration: CustomerIntegration
@@ -105,10 +118,17 @@ const deleting = ref<boolean>(false)
 const updating = ref<boolean>(false)
 const authKeys = ref(getAuthKeys(integration.value))
 
+const serviceName = computed(() => integration.value.integration_service_name)
+
+// A write-only key left empty keeps the stored secret, so it is never required on edit.
+function isRequiredOnEdit(key: string): boolean {
+	return !isOptionalAuthKey(serviceName.value, key) && !isWriteOnlyAuthKey(key)
+}
+
 const rules = computed(() =>
 	authKeys.value.reduce((acc, cur) => {
 		acc[cur.key] = {
-			required: true,
+			required: isRequiredOnEdit(cur.key),
 			message: `Please insert the ${cur.key}`,
 			trigger: ["input", "blur"]
 		}
@@ -116,17 +136,7 @@ const rules = computed(() =>
 	}, {} as FormRules)
 )
 
-const isValid = computed(() => {
-	let valid = true
-
-	for (const field of Object.entries(model.value)) {
-		if (!field[1]) {
-			valid = false
-		}
-	}
-
-	return valid
-})
+const isValid = computed(() => Object.entries(model.value).every(([key, value]) => !!value || !isRequiredOnEdit(key)))
 
 function validate() {
 	if (!form.value) return

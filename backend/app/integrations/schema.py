@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_serializer
 from pydantic import field_validator
 
 
@@ -160,6 +161,18 @@ class CustomerIntegrationDeleteResponse(BaseModel):
 #     success: bool
 
 
+# Auth keys whose value is write-only: API responses carry `REDACTED_AUTH_VALUE` instead, and an
+# update that sends that placeholder (or nothing) back keeps the stored value. Scoped to the AWS
+# secret for now; other integrations' secrets are still read back by external consumers of the API.
+REDACTED_AUTH_KEYS = frozenset({"SECRET_ACCESS_KEY"})
+REDACTED_AUTH_VALUE = "********"
+
+
+def is_unchanged_secret(auth_key_name: str, auth_value: Optional[str]) -> bool:
+    """Whether an update leaves a write-only auth key as it is (blank, or the placeholder sent back)."""
+    return auth_key_name in REDACTED_AUTH_KEYS and (auth_value or "").strip() in ("", REDACTED_AUTH_VALUE)
+
+
 class IntegrationAuthKeys(BaseModel):
     id: int
     auth_key_name: str
@@ -167,6 +180,14 @@ class IntegrationAuthKeys(BaseModel):
     subscription_id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+    # Applied when the model is serialized into a response only: code that reads `auth_value` off the
+    # model (the provisioning routes) still gets the real value.
+    @field_serializer("auth_value")
+    def redact_write_only_value(self, auth_value: str) -> str:
+        if self.auth_key_name in REDACTED_AUTH_KEYS and auth_value:
+            return REDACTED_AUTH_VALUE
+        return auth_value
 
 
 class IntegrationService(BaseModel):
