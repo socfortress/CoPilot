@@ -57,6 +57,9 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
     AlertCreationSettings,
 )
 from app.integrations.alert_escalation.schema.escalate_alert import CustomerCodeKeys
+from app.integrations.aws.services.account_lookup import (
+    resolve_customer_code_from_aws_account,
+)
 from app.integrations.office365.services.tenant_lookup import (
     resolve_customer_code_from_office365_tenant,
 )
@@ -134,6 +137,14 @@ async def is_customer_code_valid(customer_code: str, session: AsyncSession) -> A
     office365_customer_code = await resolve_customer_code_from_office365_tenant(customer_code, session)
     if office365_customer_code:
         settings = await fetch_settings("customer_code", office365_customer_code, session)
+        if settings:
+            return settings
+
+    # AWS alerts carry the AWS account ID in the customer-code field, resolved through the AWS
+    # integration instance that collects that account.
+    aws_customer_code = await resolve_customer_code_from_aws_account(customer_code, session)
+    if aws_customer_code:
+        settings = await fetch_settings("customer_code", aws_customer_code, session)
         if settings:
             return settings
 
@@ -339,6 +350,15 @@ async def get_customer_code(alert_details: dict, session: AsyncSession = None):
                     logger.warning(f"Failed to get customer code from Office365 organization ID: {str(e)}")
                     # Continue checking other keys if this lookup fails
                     continue
+
+            # AWS account IDs resolve through the AWS integration instances that collect them
+            if key == CustomerCodeKeys.AWS_ACCOUNT_ID:
+                if session:
+                    aws_customer_code = await resolve_customer_code_from_aws_account(str(value), session)
+                    if aws_customer_code:
+                        return aws_customer_code
+                logger.warning(f"AWS account {value} does not belong to any customer's AWS integration")
+                continue
 
             # Handle cluster node special processing
             if key == CustomerCodeKeys.CLUSTER_NODE:

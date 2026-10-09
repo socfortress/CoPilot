@@ -38,11 +38,22 @@
 						:feedback="instanceNameError"
 						class="w-full"
 					>
-						<n-input v-model:value="instanceName" placeholder="e.g. company.onmicrosoft.com" clearable />
+						<n-input
+							v-model:value="instanceName"
+							:placeholder="instanceNamePlaceholder(selectedIntegration?.name ?? '')"
+							clearable
+						/>
 					</n-form-item>
 					<template v-for="ak of authKeysForm" :key="ak.key">
-						<n-form-item v-if="ak.type === 'string'" :label="ak.key" required class="grow">
-							<n-input v-model:value="ak.value" :placeholder="`Input ${ak.key}...`" clearable />
+						<n-form-item v-if="ak.type === 'string'" :label="ak.key" :required="!ak.optional" class="grow">
+							<n-input
+								v-model:value="ak.value"
+								:type="isWriteOnlyAuthKey(ak.key) ? 'password' : 'text'"
+								:show-password-on="isWriteOnlyAuthKey(ak.key) ? 'click' : undefined"
+								:input-props="isWriteOnlyAuthKey(ak.key) ? { autocomplete: 'new-password' } : undefined"
+								:placeholder="authKeyPlaceholder(selectedIntegration?.name ?? '', ak.key)"
+								clearable
+							/>
 						</n-form-item>
 						<n-form-item v-if="ak.type === 'selectType'" :label="ak.key" required class="grow">
 							<n-select
@@ -94,12 +105,20 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import IntegrationsList from "@/components/integrations/IntegrationsList.vue"
 import { getApiErrorMessage } from "@/utils"
-import { isMultiInstanceIntegration } from "./utils"
+import {
+	authKeyPlaceholder,
+	instanceNamePlaceholder,
+	isMultiInstanceIntegration,
+	isOptionalAuthKey,
+	isWriteOnlyAuthKey
+} from "./utils"
 
 interface AuthKeysInput {
 	key: string
 	value: string
 	type: "selectType" | "string"
+	/** May be left empty (see `isOptionalAuthKey`). */
+	optional?: boolean
 }
 
 const { customerCode, customerName, disabledIdsList, existingInstanceNames } = defineProps<{
@@ -169,7 +188,8 @@ watch(selectedIntegration, val => {
 			authKeysForm.value.push({
 				key: ak.auth_key_name,
 				value: ak.auth_key_name === "API_TYPE" ? (apiTypeOptions[0]?.value ?? "") : "",
-				type: ak.auth_key_name === "API_TYPE" ? "selectType" : "string"
+				type: ak.auth_key_name === "API_TYPE" ? "selectType" : "string",
+				optional: isOptionalAuthKey(val.name, ak.auth_key_name)
 			})
 		}
 	}
@@ -189,10 +209,7 @@ const isSubmitValid = computed(() => {
 		return false
 	}
 
-	const keys = authKeysForm.value.length
-	const valid = authKeysForm.value.filter(o => !!o.value).length
-
-	return valid === keys
+	return authKeysForm.value.every(o => o.optional || !!o.value)
 })
 
 const loading = ref(false)

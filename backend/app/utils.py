@@ -804,7 +804,32 @@ async def get_customer_alert_settings(
         # customer, so any further tenant is resolved through its stored integration credentials.
         settings = await _settings_for_office365_tenant(customer_code, session)
 
+    if not settings:
+        # ...or an AWS account ID, which AWS alerts carry instead of a customer code.
+        settings = await _settings_for_aws_account(customer_code, session)
+
     return settings
+
+
+async def _settings_for_aws_account(
+    account_id: str,
+    session: AsyncSession,
+) -> Optional[AlertCreationSettings]:
+    """Resolve alert creation settings via the customer whose AWS integration collects an account."""
+    from app.integrations.aws.services.account_lookup import (
+        resolve_customer_code_from_aws_account,
+    )
+
+    customer_code = await resolve_customer_code_from_aws_account(account_id, session)
+    if not customer_code:
+        return None
+
+    result = await session.execute(
+        select(AlertCreationSettings).filter(
+            AlertCreationSettings.customer_code == customer_code,
+        ),
+    )
+    return result.scalars().first()
 
 
 async def _settings_for_office365_tenant(

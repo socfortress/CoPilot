@@ -63,6 +63,7 @@ from app.routers import ai_analyst
 from app.routers import alert_creation_settings
 from app.routers import audit
 from app.routers import auth
+from app.routers import aws
 from app.routers import bitdefender
 from app.routers import carbonblack
 from app.routers import cato
@@ -294,6 +295,7 @@ api_router.include_router(threat_intel.router)
 api_router.include_router(alert_creation_settings.router)
 api_router.include_router(integrations.router)
 api_router.include_router(office365.router)
+api_router.include_router(aws.router)
 api_router.include_router(copilot_action.router)
 api_router.include_router(copilot_mcp.router)
 api_router.include_router(mimecast.router)

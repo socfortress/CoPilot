@@ -11,10 +11,61 @@ import { getApiErrorMessage } from "@/utils"
  * `instance_name`. Mirrors `MULTI_INSTANCE_INTEGRATIONS` in `app/integrations/routes.py` — the
  * backend is what enforces it; this list only decides whether the UI offers to add another one.
  */
-export const MULTI_INSTANCE_INTEGRATIONS = ["Office365"]
+export const MULTI_INSTANCE_INTEGRATIONS = ["Office365", "AWS"]
 
 export function isMultiInstanceIntegration(integrationName: string): boolean {
 	return MULTI_INSTANCE_INTEGRATIONS.includes(integrationName)
+}
+
+/** Placeholder for the instance-name field: what an instance *is* differs per integration. */
+const INSTANCE_NAME_PLACEHOLDERS: Record<string, string> = {
+	Office365: "e.g. company.onmicrosoft.com",
+	AWS: "e.g. production (one instance per AWS account and bucket)"
+}
+
+export function instanceNamePlaceholder(integrationName: string): string {
+	return INSTANCE_NAME_PLACEHOLDERS[integrationName] ?? "e.g. production"
+}
+
+/**
+ * Auth keys an integration accepts empty. Every other key is required, as before. Mirrors what the
+ * backend's provisioning schema treats as optional (`app/integrations/aws/schema/provision.py`).
+ */
+const OPTIONAL_AUTH_KEYS: Record<string, string[]> = {
+	AWS: ["AWS_ACCOUNT_ALIAS", "AWS_ORGANIZATION_ID", "ONLY_LOGS_AFTER"]
+}
+
+export function isOptionalAuthKey(integrationName: string, authKeyName: string): boolean {
+	return OPTIONAL_AUTH_KEYS[integrationName]?.includes(authKeyName) ?? false
+}
+
+/**
+ * Auth keys the API never returns: it sends `REDACTED_AUTH_VALUE` instead, and an update that sends
+ * that placeholder (or nothing) back keeps the stored value. Mirrors `REDACTED_AUTH_KEYS` in
+ * `app/integrations/schema.py`.
+ */
+export const WRITE_ONLY_AUTH_KEYS = ["SECRET_ACCESS_KEY"]
+export const REDACTED_AUTH_VALUE = "********"
+
+export function isWriteOnlyAuthKey(authKeyName: string): boolean {
+	return WRITE_ONLY_AUTH_KEYS.includes(authKeyName)
+}
+
+/** Placeholders that explain a key's format where its name alone does not. */
+const AUTH_KEY_HINTS: Record<string, Record<string, string>> = {
+	AWS: {
+		ACCESS_KEY_ID: "AKIA…",
+		AWS_ACCOUNT_ID: "12-digit account ID",
+		AWS_ACCOUNT_ALIAS: "Optional label for the account",
+		AWS_ORGANIZATION_ID: "Optional, CloudTrail organization trails only (o-…)",
+		BUCKET_NAME: "S3 bucket the logs are exported to",
+		SERVICES: "cloudtrail,guardduty:guardduty (service or service:s3-prefix)",
+		ONLY_LOGS_AFTER: "Optional, YYYY-MMM-DD (e.g. 2026-OCT-08); defaults to today"
+	}
+}
+
+export function authKeyPlaceholder(integrationName: string, authKeyName: string): string {
+	return AUTH_KEY_HINTS[integrationName]?.[authKeyName] ?? `Input ${authKeyName}...`
 }
 
 /** Label for an instance in lists and dialogs; the unnamed instance reads as "Default". */

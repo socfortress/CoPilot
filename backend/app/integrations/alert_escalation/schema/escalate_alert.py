@@ -14,6 +14,10 @@ class CustomerCodeKeys(Enum):
     DATA_OFFICE365_ORGANIZATION_ID = "data_office365_OrganizationId"
     SYSLOG_CUSTOMER = "syslog_customer"
     CUSTOMER_CODE = "customer_code"
+    # AWS events come from the Wazuh master and carry no customer label, only the account (copied
+    # into `aws_account_id` by the AWS pipeline). Must stay ahead of CLUSTER_NODE: those events carry
+    # the master's node name too, which names no customer.
+    AWS_ACCOUNT_ID = "aws_account_id"
     CLUSTER_NODE = "cluster_node"
 
     @staticmethod
