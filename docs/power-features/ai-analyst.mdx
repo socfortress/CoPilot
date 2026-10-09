@@ -170,6 +170,20 @@ When you open any alert in **Incident Management → Alerts**:
 3. If multiple investigations exist for the same alert, a dropdown lets you switch between them (most recent first)
 4. The **"Investigate with AI Analyst"** button on the Overview tab triggers a new investigation on demand
 
+### Customer Portal
+
+Under **Customers → *customer* → AI Report**, an admin decides what the customer's portal users get:
+
+| Setting | Effect |
+|---------|--------|
+| **Show AI Analyst findings in the Customer Portal** | An AI Analyst Insights card on the portal Overview and an **AI Report** tab on each alert, both read-only |
+| **Let portal users request an AI analysis** | A **Run AI analysis** button on that tab, also to re-run a finished analysis. Needs the findings switch on |
+| **Daily limit** | How many analyses the customer's users can request in any 24 hours, or unlimited |
+
+All three start off for a new customer. A request is refused while an analysis of the alert is still running and within 30 minutes of the last one; it is noted on the alert's timeline and in the audit log. The portal never shows the limit: a request over it is refused with a message saying the daily limit has been reached. The panel shows how many requests the customer made in the last 24 hours.
+
+This is independent of **AI Triggers**, which start investigations automatically as alerts arrive: a customer can get analyses on request only.
+
 ---
 
 ## Alert-type templates
