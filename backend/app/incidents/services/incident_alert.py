@@ -1,3 +1,4 @@
+import asyncio
 import ipaddress
 import os
 import re
@@ -1104,9 +1105,17 @@ async def create_alert_full(
     return alert_id
 
 
+# Investigations handed to Talon in the background. asyncio keeps only a weak reference
+# to a task, so one not held here can be collected before it has run.
+_pending_investigations: set = set()
+
+
 async def handle_talon_investigation(alert_id: int, customer_code: str, session: AsyncSession) -> None:
     """
     Trigger a Talon investigation if AI analyst triggers are enabled for the customer.
+
+    The call to Talon runs in the background: it can take up to its 120 s timeout, and the
+    alert it is about is already stored, so ingest does not wait for it.
 
     Args:
         alert_id: The alert ID to investigate.
@@ -1117,14 +1126,18 @@ async def handle_talon_investigation(alert_id: int, customer_code: str, session:
         ai_triggers = await get_customer_ai_trigger(customer_code, session)
         if ai_triggers and ai_triggers[0].enabled:
             logger.info(f"AI analyst trigger enabled for customer {customer_code}, invoking Talon investigation for alert {alert_id}")
-            await talon_investigate_alert(
-                TalonInvestigateRequest(
-                    alert_id=alert_id,
-                    customer_code=customer_code,
-                ),
-            )
+            task = asyncio.create_task(_investigate_in_background(alert_id, customer_code))
+            _pending_investigations.add(task)
+            task.add_done_callback(_pending_investigations.discard)
         else:
             logger.info(f"AI analyst trigger not enabled for customer {customer_code}, skipping Talon investigation")
+    except Exception as e:
+        logger.error(f"Failed to trigger Talon investigation for alert {alert_id}: {e}")
+
+
+async def _investigate_in_background(alert_id: int, customer_code: str) -> None:
+    try:
+        await talon_investigate_alert(TalonInvestigateRequest(alert_id=alert_id, customer_code=customer_code))
     except Exception as e:
         logger.error(f"Failed to trigger Talon investigation for alert {alert_id}: {e}")
 
