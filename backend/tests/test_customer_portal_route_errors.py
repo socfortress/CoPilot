@@ -77,11 +77,26 @@ def test_saving_the_ai_report_switch_returns_the_saved_state():
         UpdatePortalAiReportSettingsRequest,
     )
 
-    saved = SimpleNamespace(customer_code="ACME", enabled=True, updated_at=None, updated_by=3)
+    saved = SimpleNamespace(
+        customer_code="ACME",
+        enabled=True,
+        allow_customer_requests=False,
+        daily_request_limit=None,
+        updated_at=None,
+        updated_by=3,
+    )
     with patch.object(ai_reports_routes, "ensure_customer_exists", AsyncMock()), patch.object(
         ai_reports_routes,
         "upsert_ai_report_settings",
         AsyncMock(return_value=saved),
+    ), patch.object(ai_reports_routes, "get_ai_report_settings", AsyncMock(return_value=None)), patch.object(
+        ai_reports_routes,
+        "count_recent_requests",
+        AsyncMock(return_value=0),
+    ), patch.object(
+        ai_reports_routes,
+        "record_audit_event",
+        AsyncMock(),
     ):
         response = asyncio.run(
             ai_reports_routes.set_customer_ai_report_settings(

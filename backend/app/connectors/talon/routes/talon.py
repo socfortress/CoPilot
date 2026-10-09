@@ -18,7 +18,7 @@ from app.connectors.talon.schema.talon import TalonTemplatesResponse
 from app.connectors.talon.services.talon import get_talon_job
 from app.connectors.talon.services.talon import get_talon_session_context
 from app.connectors.talon.services.talon import get_talon_status
-from app.connectors.talon.services.talon import investigate_alert
+from app.connectors.talon.services.talon import investigate_alert_for_user
 from app.connectors.talon.services.talon import list_talon_templates
 from app.connectors.talon.services.talon import reset_talon_session
 from app.connectors.talon.services.talon import stream_talon_message
@@ -62,10 +62,14 @@ async def send_message(
     description="Trigger a Talon investigation for a specific alert",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def trigger_investigation(request: TalonInvestigateRequest) -> TalonInvestigateResponse:
+async def trigger_investigation(
+    request: TalonInvestigateRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> TalonInvestigateResponse:
     """Trigger an investigation for a specific alert."""
     logger.info(f"Triggering investigation for alert ID: {request.alert_id}")
-    return await investigate_alert(request)
+    return await investigate_alert_for_user(request, current_user, session)
 
 
 @talon_router.post(

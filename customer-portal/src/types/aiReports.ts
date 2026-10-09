@@ -1,5 +1,5 @@
 /**
- * Read-only AI Analyst types for the portal.
+ * AI Analyst types for the portal: read-only findings, plus asking for an analysis (#1215).
  *
  * Mirrors backend/app/customer_portal/schema/ai_reports.py, which is a
  * deliberately narrower projection of the ai_analyst_* tables than the one the
@@ -44,6 +44,8 @@ export interface AiAlertAnalysis {
 	alert_id: number
 	/** False when the customer's AI report switch is off — no data is returned at all. */
 	enabled: boolean
+	/** The customer lets its portal users ask for an analysis of an alert. */
+	can_request: boolean
 	has_analysis: boolean
 	investigation: AiInvestigation | null
 	report: AiReport | null
@@ -63,4 +65,10 @@ export interface AiInsights {
 	total_reports: number
 	severity_counts: Record<string, number>
 	recent: AiInsightAlert[]
+}
+
+/** A request accepted by the backend: Talon has it, its investigation appears once Talon starts. */
+export interface AiAnalysisRequest {
+	alert_id: number
+	requested_at: string
 }

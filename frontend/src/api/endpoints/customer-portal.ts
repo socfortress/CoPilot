@@ -32,6 +32,10 @@ export interface CustomerPortalBrandingPayload extends CustomerPortalSettingsPay
 
 export interface CustomerPortalAiReportSettingsPayload {
 	enabled: boolean
+	/** Left out: unchanged. */
+	allow_customer_requests?: boolean
+	/** Left out: unchanged; null: unlimited. */
+	daily_request_limit?: number | null
 }
 
 type BrandingResponse = FlaskBaseResponse & {
@@ -83,7 +87,7 @@ export default {
 			signal
 		})
 	},
-	/** Admin-only: flips both portal AI surfaces for this customer at once. */
+	/** Admin-only: flips both portal AI surfaces for this customer at once, and whether its users may request analyses. */
 	setCustomerAiReportSettings(customerCode: string, payload: CustomerPortalAiReportSettingsPayload) {
 		return HttpClient.put<AiReportSettingsResponse>(`/customer_portal/ai_reports/settings/${customerCode}`, payload)
 	},

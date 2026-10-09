@@ -65,6 +65,10 @@ class AuditAction(str, Enum):
     ALERT_VERDICT_SET = "alert.verdict_set"
     ALERT_VERDICT_CLEAR = "alert.verdict_clear"
 
+    # AI Analyst from the Customer Portal (#1215)
+    AI_ANALYSIS_REQUEST = "ai_analysis.request"
+    AI_REPORT_SETTINGS_UPDATE = "ai_report.settings_update"
+
     # File data store
     DATASTORE_FILE_CREATE = "datastore.file_create"
     DATASTORE_FILE_DELETE = "datastore.file_delete"

@@ -30,6 +30,7 @@ an ordinary `pnpm dev` on 5173 is never reused (it proxies `/api` to whatever
 | Spec | Issue |
 |---|---|
 | `event-search-source-prefill.spec.ts` | [#1124](https://github.com/socfortress/CoPilot/issues/1124) — "View in Event Search" does not carry the alert's source |
+| `ai-report-settings.spec.ts` | [#1215](https://github.com/socfortress/CoPilot/issues/1215) — an admin lets a customer's portal users request AI analyses and sets their daily limit; an analyst cannot |
 | `uba-pages.spec.ts` | An incident alert raised by UBA links the UBA alert and entity pages, which link each other; back retraces them |
 
 `mock-backend.ts` holds the fixture and the route table. Only the endpoints a flow

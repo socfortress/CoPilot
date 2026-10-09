@@ -1,4 +1,4 @@
-import type { AiAlertAnalysis, AiInsights, AiReportAvailability } from "@/types/aiReports"
+import type { AiAlertAnalysis, AiAnalysisRequest, AiInsights, AiReportAvailability } from "@/types/aiReports"
 import type { CommonResponse } from "@/types/common"
 import { HttpClient } from "../httpClient"
 import { withCustomerCodes } from "../params"
@@ -26,6 +26,15 @@ export default {
 		return HttpClient.get<CommonResponse<AiAlertAnalysis>>(`/customer_portal/ai_reports/alert/${alertId}`, {
 			signal
 		})
+	},
+
+	/**
+	 * Ask the AI analyst to analyse an alert (#1215), where its customer allows it. The
+	 * backend refuses while an analysis runs, within 30 minutes of the last one, or over
+	 * the customer's daily limit, each with a message meant for the user.
+	 */
+	requestAnalysis(alertId: number) {
+		return HttpClient.post<CommonResponse<AiAnalysisRequest>>(`/customer_portal/ai_reports/alert/${alertId}/investigate`)
 	},
 
 	/**

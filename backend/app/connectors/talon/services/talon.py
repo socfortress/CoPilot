@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
+from app.auth.models.users import User
 from app.connectors.talon.schema.talon import TalonInvestigateRequest
 from app.connectors.talon.schema.talon import TalonInvestigateResponse
 from app.connectors.talon.schema.talon import TalonJobResponse
@@ -21,6 +22,8 @@ from app.connectors.talon.utils.universal import send_get_request
 from app.connectors.talon.utils.universal import send_post_request
 from app.connectors.talon.utils.universal import send_post_request_sse
 from app.db.universal_models import AiAnalystJob
+from app.incidents.models import Alert
+from app.middleware.customer_access import customer_access_handler
 
 
 def _message_payload(
@@ -184,6 +187,25 @@ async def investigate_alert(request: TalonInvestigateRequest) -> TalonInvestigat
         message="Investigation triggered successfully",
         data=response.get("data"),
     )
+
+
+async def investigate_alert_for_user(request: TalonInvestigateRequest, user: User, session: AsyncSession) -> TalonInvestigateResponse:
+    """``investigate_alert`` for an analyst: the alert must exist and be one of the caller's customers.
+
+    The body names both the alert and its customer; trusting the second would let a scoped
+    analyst start an investigation of another tenant's alert, or send Talon a customer
+    code that does not match the alert it reads.
+    """
+    alert = (await session.execute(select(Alert).where(Alert.id == request.alert_id))).scalars().first()
+    if alert is None:
+        raise HTTPException(status_code=404, detail=f"Alert {request.alert_id} not found")
+    await customer_access_handler.enforce_customer_access(user, alert.customer_code, session)
+    if request.customer_code != alert.customer_code:
+        raise HTTPException(
+            status_code=400,
+            detail=f"customer_code mismatch: alert {alert.id} belongs to {alert.customer_code}, got {request.customer_code}",
+        )
+    return await investigate_alert(request)
 
 
 async def get_talon_status() -> TalonStatusResponse:

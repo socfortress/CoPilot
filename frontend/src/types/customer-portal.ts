@@ -38,6 +38,12 @@ export interface CustomerPortalEffectiveBranding {
 export interface CustomerPortalAiReportSettings {
 	customer_code: string
 	enabled: boolean
+	/** Portal users may ask for an analysis of an alert (#1215); only effective with `enabled`. */
+	allow_customer_requests: boolean
+	/** Portal requests allowed in any 24 hours; null = unlimited. Never shown to the customer. */
+	daily_request_limit: number | null
+	/** Portal requests made in the last 24 hours, for the operator. */
+	requests_last_24h: number
 	updated_at: string | null
 	updated_by: number | null
 }

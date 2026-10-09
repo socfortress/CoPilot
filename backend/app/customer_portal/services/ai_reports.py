@@ -8,15 +8,17 @@ the ai_analyst *service* layer directly and applies the portal's own customer +
 tag visibility rules on top.
 
 Everything the portal consumes here is read-only. Review submission, palace
-lessons, replay and the Talon chat stay analyst-only by construction. The one
-write path is the operator-facing per-customer switch
-(``upsert_ai_report_settings``), which admins call from the CoPilot frontend —
-not portal users.
+lessons, replay and the Talon chat stay analyst-only by construction. The write
+paths are the operator-facing per-customer settings (``upsert_ai_report_settings``),
+which admins call from the CoPilot frontend, and — in ``ai_requests.py``, gated
+by those settings — a portal user asking for an analysis of their own alert (#1215).
 """
 
+from datetime import timedelta
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import NamedTuple
 from typing import Optional
 from typing import Tuple
 
@@ -33,6 +35,7 @@ from app.customer_portal.schema.ai_reports import PortalAiIoc
 from app.customer_portal.schema.ai_reports import PortalAiReport
 from app.db.universal_models import AiAnalystReport
 from app.db.universal_models import CustomerPortalAiReportSettings
+from app.db.universal_models import CustomerPortalAiRequest
 from app.incidents.middleware.tag_access import tag_access_handler
 from app.incidents.models import Alert
 from app.incidents.services.db_operations import alert_visibility_filters_for_user
@@ -41,6 +44,23 @@ from app.time_utils import now_utc
 
 # Severity bucket used when a report was persisted without an assessment.
 UNKNOWN_SEVERITY = "Unknown"
+
+# The window a customer's daily request limit counts over: any 24 hours, not a calendar
+# day, so the limit means the same whatever the customer's timezone.
+REQUEST_LIMIT_WINDOW = timedelta(hours=24)
+
+# Marks a setting the caller did not send, so ``None`` can still mean "unlimited".
+_UNSET: Any = object()
+
+
+class PortalAlertAnalysis(NamedTuple):
+    """What the portal's AI Report tab renders for one alert."""
+
+    enabled: bool
+    can_request: bool
+    investigation: Optional[PortalAiInvestigation]
+    report: Optional[PortalAiReport]
+    iocs: List[PortalAiIoc]
 
 
 # --- Per-customer AI report switch ---
@@ -67,13 +87,36 @@ async def is_ai_reports_enabled(customer_code: str, session: AsyncSession) -> bo
     return bool(settings and settings.enabled)
 
 
+def requests_allowed(settings: Optional[CustomerPortalAiReportSettings]) -> bool:
+    """Portal users may ask for an analysis: only with the read switch on as well."""
+    return bool(settings and settings.enabled and settings.allow_customer_requests)
+
+
+async def count_recent_requests(customer_code: str, session: AsyncSession) -> int:
+    """Portal requests the customer made within the daily limit's window."""
+    since = now_utc().replace(tzinfo=None) - REQUEST_LIMIT_WINDOW
+    result = await session.execute(
+        select(func.count())
+        .select_from(CustomerPortalAiRequest)
+        .where(CustomerPortalAiRequest.customer_code == customer_code, CustomerPortalAiRequest.requested_at >= since),
+    )
+    return int(result.scalar_one())
+
+
 async def upsert_ai_report_settings(
     customer_code: str,
     enabled: bool,
     session: AsyncSession,
     user_id: Optional[int] = None,
+    *,
+    allow_customer_requests: Any = _UNSET,
+    daily_request_limit: Any = _UNSET,
 ) -> CustomerPortalAiReportSettings:
-    """Create or update a customer's switch. Caller commits."""
+    """Create or update a customer's settings. Caller commits.
+
+    The request settings change only when passed; ``daily_request_limit=None`` means
+    unlimited, which is why "not passed" needs its own marker.
+    """
     settings = await get_ai_report_settings(customer_code, session)
 
     if settings is None:
@@ -81,6 +124,10 @@ async def upsert_ai_report_settings(
         session.add(settings)
 
     settings.enabled = enabled
+    if allow_customer_requests is not _UNSET:
+        settings.allow_customer_requests = bool(allow_customer_requests)
+    if daily_request_limit is not _UNSET:
+        settings.daily_request_limit = daily_request_limit
     settings.updated_at = now_utc()
     settings.updated_by = user_id
 
@@ -161,21 +208,24 @@ async def get_portal_alert_analysis(
     alert_id: int,
     user: User,
     session: AsyncSession,
-) -> Tuple[bool, Optional[PortalAiInvestigation], Optional[PortalAiReport], List[PortalAiIoc]]:
+) -> PortalAlertAnalysis:
     """Latest investigation + report + IOCs for an alert, projected for the portal.
 
-    The leading flag is the customer's AI report switch. When it is off nothing
-    else is read — an operator reading the response can tell "switched off" apart
-    from "no investigation ran", which returning a bare empty payload would hide.
+    ``enabled`` is the customer's AI report switch. When it is off nothing else is
+    read — an operator reading the response can tell "switched off" apart from "no
+    investigation ran", which returning a bare empty payload would hide.
+    ``can_request`` says whether the portal offers to (re)run the analysis.
     """
     alert = await ensure_alert_visible(alert_id, user, session)
 
-    if not await is_ai_reports_enabled(alert.customer_code, session):
-        return False, None, None, []
+    settings = await get_ai_report_settings(alert.customer_code, session)
+    if not (settings and settings.enabled):
+        return PortalAlertAnalysis(False, False, None, None, [])
+    can_request = requests_allowed(settings)
 
     job, report, iocs = await get_alert_analysis(alert_id, session)
     if not job:
-        return True, None, None, []
+        return PortalAlertAnalysis(True, can_request, None, None, [])
 
     investigation = PortalAiInvestigation(
         status=job.status,
@@ -213,7 +263,7 @@ async def get_portal_alert_analysis(
         for ioc in iocs
     ]
 
-    return True, investigation, portal_report, portal_iocs
+    return PortalAlertAnalysis(True, can_request, investigation, portal_report, portal_iocs)
 
 
 def _latest_report_ids_subquery():
