@@ -105,11 +105,34 @@
 						<template #default>{{ report.recommended_actions }}</template>
 					</CardKV>
 
-					<n-collapse v-if="report.report_markdown">
-						<n-collapse-item title="Full Report" name="report">
-							<Markdown :source="report.report_markdown" />
-						</n-collapse-item>
-					</n-collapse>
+					<template v-if="report.report_markdown">
+						<div>
+							<n-button size="small" secondary data-testid="ai-full-report-open" @click="showFullReport = true">
+								<template #icon><Icon name="carbon:document-view" /></template>
+								Full Report
+							</n-button>
+						</div>
+
+						<!-- The report can be long: it opens beside the page, resizable, and its Markdown
+						     (markdown-it and the highlighter) loads only when the drawer opens. -->
+						<n-drawer
+							v-model:show="showFullReport"
+							resizable
+							:default-width="FULL_REPORT_WIDTH"
+							:min-width="FULL_REPORT_MIN_WIDTH"
+							:max-width="fullReportMaxWidth"
+							:trap-focus="false"
+						>
+							<n-drawer-content
+								title="Full Report"
+								closable
+								:native-scrollbar="false"
+								data-testid="ai-full-report-drawer"
+							>
+								<Markdown :source="report.report_markdown" />
+							</n-drawer-content>
+						</n-drawer>
+					</template>
 
 					<div v-if="analysis.iocs.length" class="flex flex-col gap-2">
 						<div class="text-secondary text-sm">Indicators identified by the AI analyst</div>
@@ -146,13 +169,15 @@
 import type { TagProps } from "naive-ui"
 import type { AiAlertAnalysis } from "@/types/aiReports"
 import type { ApiError } from "@/types/common"
+import { useWindowSize } from "@vueuse/core"
 import axios from "axios"
-import { NAlert, NCollapse, NCollapseItem, NEmpty, NSpin } from "naive-ui"
+import { NAlert, NButton, NDrawer, NDrawerContent, NEmpty, NSpin } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Chip from "@/components/common/Chip.vue"
+import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -166,6 +191,8 @@ const props = defineProps<{
 }>()
 
 const POLL_MS = 15_000
+const FULL_REPORT_WIDTH = 760
+const FULL_REPORT_MIN_WIDTH = 420
 // The backend treats a job pending or running for longer as dead; so does the button.
 const STALE_INVESTIGATION_MS = 2 * 60 * 60_000
 // How long the tab expects Talon to start a request before it stops waiting for it.
@@ -177,6 +204,11 @@ const CLOCK_SKEW_MS = 60_000
 const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const dFormats = useSettingsStore().dateFormat
+
+const showFullReport = ref(false)
+const { width: windowWidth } = useWindowSize()
+/** Dragged wider, the drawer still leaves a strip of the page visible. */
+const fullReportMaxWidth = computed(() => Math.max(FULL_REPORT_MIN_WIDTH, windowWidth.value - 48))
 
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -332,6 +364,7 @@ watch(
 		analysis.value = null
 		awaiting.value = null
 		requestError.value = null
+		showFullReport.value = false
 		loadAnalysis()
 	},
 	{ immediate: true }
