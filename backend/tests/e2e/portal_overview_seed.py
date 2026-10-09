@@ -36,6 +36,7 @@ from app.db.universal_models import Agents  # noqa: E402
 from app.db.universal_models import AiAnalystJob  # noqa: E402
 from app.db.universal_models import AiAnalystReport  # noqa: E402
 from app.db.universal_models import CustomerPortalAiReportSettings  # noqa: E402
+from app.db.universal_models import CustomerPortalAiRequest  # noqa: E402
 from app.db.universal_models import CustomerPortalBranding  # noqa: E402
 from app.db.universal_models import CustomerPortalSlaSettings  # noqa: E402
 from app.db.universal_models import Customers  # noqa: E402
@@ -128,6 +129,8 @@ async def cleanup(s):
     await s.execute(delete(AiAnalystReport).where(AiAnalystReport.customer_code.in_(codes)))
     await s.execute(delete(AiAnalystJob).where(AiAnalystJob.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalAiReportSettings).where(CustomerPortalAiReportSettings.customer_code.in_(codes)))
+    # Analyses the portal user asked for (#1215): they hold a foreign key to the customer.
+    await s.execute(delete(CustomerPortalAiRequest).where(CustomerPortalAiRequest.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalSlaSettings).where(CustomerPortalSlaSettings.customer_code.in_(codes)))
     await s.execute(delete(AlertSlaTracking).where(AlertSlaTracking.alert_id.in_(alert_ids)))
     await s.execute(delete(CaseSlaTracking).where(CaseSlaTracking.case_id.in_(case_ids)))
@@ -359,6 +362,8 @@ async def seed(quiet: bool = False) -> dict:
         return {
             "portal_user_id": portal.id,
             "ai_alert_id": alerts[(CUST_A, 0)].id,
+            # An open alert of A no AI analysis ever ran on, for the portal request (#1215).
+            "fresh_alert_id": alerts[(CUST_A, 2)].id,
             # The alert and case of A the SOC is waiting on the customer for (#1187).
             "waiting_alert_id": alerts[(CUST_A, ALERTS_A.index("PENDING_CUSTOMER"))].id,
             "waiting_case_id": cases[(CUST_A, CASES_A.index("PENDING_CUSTOMER"))].id,

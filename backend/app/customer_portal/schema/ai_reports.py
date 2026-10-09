@@ -48,6 +48,10 @@ class PortalAiInvestigation(BaseModel):
 class PortalAiAlertAnalysisResponse(BaseModel):
     alert_id: int
     enabled: bool = Field(True, description="False when the customer's AI report switch is off — no data is read at all")
+    can_request: bool = Field(
+        False,
+        description="Whether the caller may ask for a new analysis of this alert (the customer allows portal requests)",
+    )
     has_analysis: bool = Field(..., description="False when no investigation has ever run for this alert")
     investigation: Optional[PortalAiInvestigation] = None
     report: Optional[PortalAiReport] = None
@@ -83,6 +87,9 @@ class PortalAiReportSettings(BaseModel):
 
     customer_code: str
     enabled: bool
+    allow_customer_requests: bool = False
+    daily_request_limit: Optional[int] = Field(None, description="Portal requests allowed in any 24 hours; null = unlimited")
+    requests_last_24h: int = Field(0, description="Portal requests made in the last 24 hours, for the operator")
     updated_at: Optional[str] = None
     updated_by: Optional[int] = None
 
@@ -94,7 +101,33 @@ class PortalAiReportSettingsResponse(BaseModel):
 
 
 class UpdatePortalAiReportSettingsRequest(BaseModel):
+    """Writes ``enabled`` and whichever of the request settings are sent.
+
+    The request settings are optional so a client that only flips the read switch keeps
+    working. ``daily_request_limit: null`` sent explicitly means unlimited; leaving the key
+    out keeps the stored limit.
+    """
+
     enabled: bool = Field(..., description="Whether the customer's portal users can see AI analyst findings")
+    allow_customer_requests: Optional[bool] = Field(
+        None,
+        description="Whether the customer's portal users can ask for an AI analysis of an alert",
+    )
+    daily_request_limit: Optional[int] = Field(
+        None,
+        ge=1,
+        le=10000,
+        description="Portal requests allowed in any 24 hours; null = unlimited",
+    )
+
+
+class PortalAiAnalysisRequestResponse(BaseModel):
+    """A request a portal user made: Talon has it, the job appears once Talon starts."""
+
+    alert_id: int
+    requested_at: datetime
+    success: bool
+    message: str
 
 
 class PortalAiInsightsResponse(BaseModel):

@@ -106,18 +106,34 @@ def test_analysis_is_gated_by_visibility_before_any_read():
     get_alert_analysis.assert_not_awaited()
 
 
+def _settings(enabled=True, allow=False, limit=None):
+    return SimpleNamespace(enabled=enabled, allow_customer_requests=allow, daily_request_limit=limit)
+
+
 def test_analysis_is_empty_when_no_job_ran():
     alert = SimpleNamespace(id=3, customer_code="TENANT_A")
     with patch.object(svc, "ensure_alert_visible", AsyncMock(return_value=alert)), patch.object(
         svc,
-        "is_ai_reports_enabled",
-        AsyncMock(return_value=True),
+        "get_ai_report_settings",
+        AsyncMock(return_value=_settings()),
     ), patch.object(svc, "get_alert_analysis", AsyncMock(return_value=(None, None, []))):
-        enabled, investigation, report, iocs = asyncio.run(svc.get_portal_alert_analysis(3, _user(), AsyncMock()))
-    assert enabled is True
-    assert investigation is None
-    assert report is None
-    assert iocs == []
+        analysis = asyncio.run(svc.get_portal_alert_analysis(3, _user(), AsyncMock()))
+    assert analysis.enabled is True
+    assert analysis.can_request is False
+    assert analysis.investigation is None
+    assert analysis.report is None
+    assert analysis.iocs == []
+
+
+def test_analysis_offers_a_request_only_where_the_customer_allows_it():
+    alert = SimpleNamespace(id=3, customer_code="TENANT_A")
+    for settings, expected in ((_settings(allow=True), True), (_settings(allow=False), False)):
+        with patch.object(svc, "ensure_alert_visible", AsyncMock(return_value=alert)), patch.object(
+            svc,
+            "get_ai_report_settings",
+            AsyncMock(return_value=settings),
+        ), patch.object(svc, "get_alert_analysis", AsyncMock(return_value=(None, None, []))):
+            assert asyncio.run(svc.get_portal_alert_analysis(3, _user(), AsyncMock())).can_request is expected
 
 
 # ── Per-customer AI report switch ─────────────────────────────────────────
@@ -127,15 +143,17 @@ def test_disabled_customer_reads_no_report_data():
     """The switch short-circuits before any report row is touched."""
     alert = SimpleNamespace(id=3, customer_code="TENANT_A")
     get_alert_analysis = AsyncMock(return_value=(object(), object(), [object()]))
+    # Requests allowed but reading off: the switch that lets the customer read wins.
     with patch.object(svc, "ensure_alert_visible", AsyncMock(return_value=alert)), patch.object(
         svc,
-        "is_ai_reports_enabled",
-        AsyncMock(return_value=False),
+        "get_ai_report_settings",
+        AsyncMock(return_value=_settings(enabled=False, allow=True)),
     ), patch.object(svc, "get_alert_analysis", get_alert_analysis):
-        enabled, investigation, report, iocs = asyncio.run(svc.get_portal_alert_analysis(3, _user(), AsyncMock()))
+        analysis = asyncio.run(svc.get_portal_alert_analysis(3, _user(), AsyncMock()))
 
-    assert enabled is False
-    assert (investigation, report, iocs) == (None, None, [])
+    assert analysis.enabled is False
+    assert analysis.can_request is False
+    assert (analysis.investigation, analysis.report, analysis.iocs) == (None, None, [])
     get_alert_analysis.assert_not_awaited()
 
 
@@ -171,9 +189,11 @@ def test_insight_filters_restrict_to_enabled_customers():
 
 # ── Read-only + no-leak structure ─────────────────────────────────────────
 
-# Everything the portal reads is a GET. The only write in this router is the
-# operator switch, which is admin-scoped and never reachable by a portal user.
+# Everything the portal reads is a GET. The writes in this router are the operator
+# settings, admin-scoped and never reachable by a portal user, and the one portal
+# request (#1215), gated per customer by those settings.
 PORTAL_READ_PATHS = {"/ai_reports/availability", "/ai_reports/insights", "/ai_reports/alert/{alert_id}"}
+PORTAL_REQUEST_PATH = "/ai_reports/alert/{alert_id}/investigate"
 OPERATOR_WRITE_PATH = "/ai_reports/settings/{customer_code}"
 
 
@@ -185,11 +205,14 @@ def _routes_by_path():
 
 
 def test_portal_facing_routes_are_read_only():
-    """No write path for customers: review, palace lessons and replay stay analyst-only."""
+    """The only portal write is the analysis request: review, palace lessons and replay stay analyst-only."""
     by_path = _routes_by_path()
     assert PORTAL_READ_PATHS <= set(by_path), f"portal read routes changed shape: {sorted(by_path)}"
     for path in PORTAL_READ_PATHS:
         assert by_path[path] == {"GET"}, f"{path} gained a write method: {sorted(by_path[path])}"
+    portal_paths = {path for path in by_path if not path.startswith("/ai_reports/settings")}
+    assert portal_paths == PORTAL_READ_PATHS | {PORTAL_REQUEST_PATH}, f"unexpected portal routes: {sorted(portal_paths)}"
+    assert by_path[PORTAL_REQUEST_PATH] == {"POST"}
 
 
 def _route_scopes(source: str):
@@ -221,6 +244,7 @@ def test_portal_read_routes_admit_customer_user():
     scopes = _route_scopes(open(routes.__file__).read())
     missing = [path for path in PORTAL_READ_PATHS if "customer_user" not in scopes.get(("GET", path), "")]
     assert not missing, f"these portal routes no longer admit customer_user: {missing}"
+    assert "customer_user" in scopes.get(("POST", PORTAL_REQUEST_PATH), ""), "portal users must be able to request an analysis"
 
 
 def test_switch_write_route_is_admin_only():

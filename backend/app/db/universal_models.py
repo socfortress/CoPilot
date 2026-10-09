@@ -483,8 +483,36 @@ class CustomerPortalAiReportSettings(SQLModel, table=True):
     # One row per customer. Hard FK: a setting for a deleted customer is meaningless.
     customer_code: str = Field(foreign_key="customers.customer_code", max_length=50, index=True, unique=True, nullable=False)
     enabled: bool = Field(default=False, nullable=False)
+    # Portal users may ask Talon to (re)investigate an alert (#1215). Only effective with
+    # ``enabled``: a customer never starts an analysis it could not read. Opt-in as well.
+    allow_customer_requests: bool = Field(default=False, nullable=False)
+    # Requests the customer's portal users may make in any 24 hours; NULL = unlimited.
+    # The portal never shows it: a request over the limit is simply refused with a message.
+    daily_request_limit: Optional[int] = Field(default=None, nullable=True)
     updated_at: datetime = Field(default_factory=now_utc)
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
+
+
+class CustomerPortalAiRequest(SQLModel, table=True):
+    """One AI analysis a portal user asked for (#1215).
+
+    Talon creates the ``ai_analyst_job`` row only once it picks the request up, so these
+    rows are what the per-alert cooldown and the per-customer daily limit count, and what
+    stops a double click from starting two investigations before the job exists. They are
+    also the record of who asked: a job carries no requester.
+
+    ``alert_id`` is deliberately not a foreign key: deleting an alert must not hand its
+    customer back the requests already spent on it.
+    """
+
+    __tablename__ = "customer_portal_ai_request"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    customer_code: str = Field(foreign_key="customers.customer_code", max_length=50, index=True, nullable=False)
+    alert_id: int = Field(nullable=False, index=True)
+    requested_by_user_id: Optional[int] = Field(default=None)
+    requested_by: str = Field(max_length=256, nullable=False)
+    requested_at: datetime = Field(default_factory=now_utc, index=True)
 
 
 class CustomerPortalSlaSettings(SQLModel, table=True):
