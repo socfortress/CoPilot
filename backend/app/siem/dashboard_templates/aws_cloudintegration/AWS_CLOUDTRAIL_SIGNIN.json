@@ -1,0 +1,135 @@
+{
+  "id": "AWS_CLOUDTRAIL_SIGNIN",
+  "title": "AWS CloudTrail - Console Sign-ins",
+  "description": "AWS Management Console sign-ins: successes and failures, sign-ins without MFA, root account activity, and the users, source IPs and countries behind failed attempts.",
+  "panels": [
+    {
+      "id": "signins",
+      "title": "Console Sign-ins",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:ConsoleLogin"
+    },
+    {
+      "id": "failed_signins",
+      "title": "Failed Sign-ins",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:ConsoleLogin AND data_aws_responseElements_ConsoleLogin:Failure"
+    },
+    {
+      "id": "no_mfa",
+      "title": "Sign-ins Without MFA",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:ConsoleLogin AND data_aws_additionalEventData_MFAUsed:No"
+    },
+    {
+      "id": "root_activity",
+      "title": "Root Account Activity",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_userIdentity_type:Root"
+    },
+    {
+      "id": "signins_over_time",
+      "title": "Sign-ins Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:ConsoleLogin"
+    },
+    {
+      "id": "by_result",
+      "title": "Sign-in Result",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:ConsoleLogin",
+      "field": "data_aws_responseElements_ConsoleLogin",
+      "size": 10
+    },
+    {
+      "id": "by_mfa",
+      "title": "MFA Used",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:ConsoleLogin",
+      "field": "data_aws_additionalEventData_MFAUsed",
+      "size": 10
+    },
+    {
+      "id": "by_identity_type",
+      "title": "Sign-ins by Identity Type",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:ConsoleLogin",
+      "field": "data_aws_userIdentity_type",
+      "size": 10
+    },
+    {
+      "id": "failed_by_user",
+      "title": "Failed Sign-ins by User",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:ConsoleLogin AND data_aws_responseElements_ConsoleLogin:Failure",
+      "field": "data_aws_userIdentity_userName",
+      "size": 15
+    },
+    {
+      "id": "failed_by_ip",
+      "title": "Failed Sign-ins by Source IP",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:ConsoleLogin AND data_aws_responseElements_ConsoleLogin:Failure",
+      "field": "data_aws_sourceIPAddress",
+      "size": 15
+    },
+    {
+      "id": "signins_by_user",
+      "title": "Sign-ins by User",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:ConsoleLogin",
+      "field": "data_aws_userIdentity_userName",
+      "size": 15
+    },
+    {
+      "id": "signins_by_country",
+      "title": "Sign-ins by Country",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:ConsoleLogin",
+      "field": "data_aws_sourceIPAddress_country_code",
+      "size": 15
+    },
+    {
+      "id": "recent_signins",
+      "title": "Recent Sign-ins",
+      "type": "table",
+      "w": 12,
+      "h": 420,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:ConsoleLogin",
+      "fields": [
+        "timestamp",
+        "data_aws_userIdentity_userName",
+        "data_aws_userIdentity_type",
+        "data_aws_responseElements_ConsoleLogin",
+        "data_aws_additionalEventData_MFAUsed",
+        "data_aws_sourceIPAddress",
+        "data_aws_sourceIPAddress_country_code"
+      ],
+      "size": 50
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "aws_cloudintegration",
+  "title": "AWS - Cloud Integration",
+  "description": "Cloud integration dashboards for Amazon Web Services, collected by the Wazuh aws-s3 module. CloudTrail dashboards cover API activity, IAM and access changes, console sign-ins, denied calls and security-relevant configuration changes; GuardDuty dashboards cover findings by severity and type, and network threats such as port probes and brute force. Enable CloudTrail dashboards on the customer's cloudtrail-<customer_code>* event source and GuardDuty dashboards on guardduty-<customer_code>* (or one event source covering both).",
+  "vendor": "Amazon Web Services",
+  "product": "AWS CloudTrail / GuardDuty",
+  "event_type": "Cloud",
+  "tags": [
+    "aws",
+    "amazon",
+    "cloud",
+    "cloudtrail",
+    "guardduty",
+    "iam",
+    "s3"
+  ],
+  "color": "#FF9900",
+  "icon": "cloud"
+}
