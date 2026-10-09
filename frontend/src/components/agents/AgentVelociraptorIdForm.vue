@@ -1,5 +1,5 @@
 <template>
-	<div class="flex items-center gap-2">
+	<div class="flex items-center gap-2" data-testid="agent-velociraptor-id">
 		<template v-if="!editing">
 			<code class="text-primary cursor-pointer" @click="edit()">
 				{{ velociraptorId }}
@@ -99,6 +99,7 @@ function updateAgent() {
 					velociraptorId.value = velociraptorIdPayload
 					pinned.value = true
 					editing.value = false
+					message.success("Velociraptor ID updated successfully")
 					emit("updated", velociraptorIdPayload)
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
@@ -122,6 +123,7 @@ function unpin() {
 			.then(res => {
 				if (res.data.success) {
 					pinned.value = false
+					message.success("Velociraptor ID unpinned: the agent sync can match it again")
 					emit("updated", velociraptorId.value)
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")

@@ -30,6 +30,7 @@ an ordinary `pnpm dev` on 5173 is never reused (it proxies `/api` to whatever
 | Spec | Issue |
 |---|---|
 | `event-search-source-prefill.spec.ts` | [#1124](https://github.com/socfortress/CoPilot/issues/1124) — "View in Event Search" does not carry the alert's source |
+| `agent-velociraptor-id.spec.ts` | [#1217](https://github.com/socfortress/CoPilot/issues/1217) — saving an agent's Velociraptor ID ends on the edit icon with a success message, even when the spinner icon downloads slower than the save; a refused save says why |
 | `ai-report-settings.spec.ts` | [#1215](https://github.com/socfortress/CoPilot/issues/1215) — an admin lets a customer's portal users request AI analyses and sets their daily limit; an analyst cannot |
 | `uba-pages.spec.ts` | An incident alert raised by UBA links the UBA alert and entity pages, which link each other; back retraces them |
 
