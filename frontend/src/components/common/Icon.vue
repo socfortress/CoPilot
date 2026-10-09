@@ -47,13 +47,18 @@ const load = (name: string) => loadIcon(name).catch(() => console.error(`Failed 
 
 const icon = ref<void | Required<IconifyIcon>>()
 
-function setIcon(name: string | undefined) {
-	if (name) {
-		load(name).then(res => (icon.value = res))
+// Icons not used before are fetched from the Iconify API, so loads finish in any order.
+// Only the icon still asked for may be shown: a slow load for a name that has since
+// changed must not land on top of the current one (#1217: a spinner fetched for the
+// first time arrived after the save it stood for, and stayed on screen for good).
+watchEffect(() => {
+	const name = props.name
+	if (!name) {
+		icon.value = undefined
+		return
 	}
-}
-
-setIcon(props.name)
-
-watchEffect(() => setIcon(props.name))
+	load(name).then(res => {
+		if (props.name === name) icon.value = res
+	})
+})
 </script>
