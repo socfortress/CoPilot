@@ -1,0 +1,156 @@
+{
+  "id": "AWS_GUARDDUTY_NETWORK",
+  "title": "AWS GuardDuty - Network Threats",
+  "description": "GuardDuty's network findings: unprotected ports being probed and suspicious connections such as SSH or RDP brute force — the ports targeted, the remote IPs, countries and networks involved, the threat lists that flagged them, and the instances on the receiving end.",
+  "panels": [
+    {
+      "id": "port_probes",
+      "title": "Port Probe Findings",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_aws_source:guardduty AND data_aws_service_action_actionType:PORT_PROBE"
+    },
+    {
+      "id": "network_connections",
+      "title": "Network Connection Findings",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_aws_source:guardduty AND data_aws_service_action_actionType:NETWORK_CONNECTION"
+    },
+    {
+      "id": "inbound_connections",
+      "title": "Inbound Connection Findings",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_aws_source:guardduty AND data_aws_service_action_actionType:NETWORK_CONNECTION AND data_aws_service_action_networkConnectionAction_connectionDirection:INBOUND"
+    },
+    {
+      "id": "blocked_connections",
+      "title": "Blocked Connections",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_aws_source:guardduty AND data_aws_service_action_actionType:NETWORK_CONNECTION AND data_aws_service_action_networkConnectionAction_blocked:true"
+    },
+    {
+      "id": "network_findings_over_time",
+      "title": "Network Findings Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "data_aws_source:guardduty AND data_aws_service_action_actionType:(PORT_PROBE OR NETWORK_CONNECTION)"
+    },
+    {
+      "id": "probed_ports",
+      "title": "Probed Ports",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_aws_source:guardduty AND data_aws_service_action_actionType:PORT_PROBE",
+      "field": "data_aws_service_action_portProbeAction_portProbeDetails_localPortDetails_port",
+      "size": 15
+    },
+    {
+      "id": "probing_ips",
+      "title": "Probing IPs",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_aws_source:guardduty AND data_aws_service_action_actionType:PORT_PROBE",
+      "field": "data_aws_service_action_portProbeAction_portProbeDetails_remoteIpDetails_ipAddressV4",
+      "size": 15
+    },
+    {
+      "id": "probing_countries",
+      "title": "Probing Countries",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_aws_source:guardduty AND data_aws_service_action_actionType:PORT_PROBE",
+      "field": "data_aws_service_action_portProbeAction_portProbeDetails_remoteIpDetails_country_countryName",
+      "size": 15
+    },
+    {
+      "id": "probing_networks",
+      "title": "Probing Networks (ASN)",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_aws_source:guardduty AND data_aws_service_action_actionType:PORT_PROBE",
+      "field": "data_aws_service_action_portProbeAction_portProbeDetails_remoteIpDetails_organization_asnOrg",
+      "size": 15
+    },
+    {
+      "id": "connection_remote_ips",
+      "title": "Connection Remote IPs",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_aws_source:guardduty AND data_aws_service_action_actionType:NETWORK_CONNECTION",
+      "field": "data_aws_service_action_networkConnectionAction_remoteIpDetails_ipAddressV4",
+      "size": 15
+    },
+    {
+      "id": "connection_ports",
+      "title": "Connection Local Ports",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_aws_source:guardduty AND data_aws_service_action_actionType:NETWORK_CONNECTION",
+      "field": "data_aws_service_action_networkConnectionAction_localPortDetails_portName",
+      "size": 15
+    },
+    {
+      "id": "threat_lists",
+      "title": "Threat Lists",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_aws_source:guardduty",
+      "field": "data_aws_service_additionalInfo_threatListName",
+      "size": 10
+    },
+    {
+      "id": "targeted_instances",
+      "title": "Targeted Instances",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_aws_source:guardduty AND data_aws_service_action_actionType:(PORT_PROBE OR NETWORK_CONNECTION)",
+      "field": "data_aws_resource_instanceDetails_instanceId",
+      "size": 10
+    },
+    {
+      "id": "connection_countries",
+      "title": "Connection Countries",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_aws_source:guardduty AND data_aws_service_action_actionType:NETWORK_CONNECTION",
+      "field": "data_aws_service_action_networkConnectionAction_remoteIpDetails_country_countryName",
+      "size": 10
+    },
+    {
+      "id": "recent_network_findings",
+      "title": "Recent Network Findings",
+      "type": "table",
+      "w": 12,
+      "h": 420,
+      "lucene": "data_aws_source:guardduty AND data_aws_service_action_actionType:(PORT_PROBE OR NETWORK_CONNECTION)",
+      "fields": [
+        "timestamp",
+        "data_aws_type",
+        "data_aws_service_action_actionType",
+        "data_aws_service_action_portProbeAction_portProbeDetails_remoteIpDetails_ipAddressV4",
+        "data_aws_service_action_portProbeAction_portProbeDetails_localPortDetails_port",
+        "data_aws_service_action_networkConnectionAction_remoteIpDetails_ipAddressV4",
+        "data_aws_service_action_networkConnectionAction_localPortDetails_port",
+        "data_aws_resource_instanceDetails_instanceId"
+      ],
+      "size": 50
+    }
+  ]
+}

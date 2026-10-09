@@ -1,0 +1,135 @@
+{
+  "id": "AWS_CLOUDTRAIL_SECURITY_CHANGES",
+  "title": "AWS CloudTrail - Security-Relevant Changes",
+  "description": "Configuration changes an attacker makes to hide or widen access: logging and detection tampering (CloudTrail, GuardDuty, VPC flow logs, AWS Config), security-group and network-ACL changes, S3 bucket policy, ACL and public-access changes, and KMS key changes.",
+  "panels": [
+    {
+      "id": "logging_tampering",
+      "title": "Logging & Detection Tampering",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:(StopLogging OR DeleteTrail OR UpdateTrail OR PutEventSelectors OR DeleteDetector OR UpdateDetector OR DisassociateFromMasterAccount OR DeleteFlowLogs OR StopConfigurationRecorder OR DeleteConfigurationRecorder OR DeleteDeliveryChannel)"
+    },
+    {
+      "id": "network_exposure",
+      "title": "Security Group & NACL Changes",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:(AuthorizeSecurityGroupIngress OR AuthorizeSecurityGroupEgress OR RevokeSecurityGroupIngress OR RevokeSecurityGroupEgress OR CreateSecurityGroup OR DeleteSecurityGroup OR CreateNetworkAclEntry OR ReplaceNetworkAclEntry OR DeleteNetworkAclEntry)"
+    },
+    {
+      "id": "s3_exposure",
+      "title": "S3 Policy & Access Changes",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:(PutBucketPolicy OR DeleteBucketPolicy OR PutBucketAcl OR PutObjectAcl OR PutBucketPublicAccessBlock OR DeleteBucketPublicAccessBlock OR PutAccountPublicAccessBlock OR DeleteAccountPublicAccessBlock)"
+    },
+    {
+      "id": "kms_changes",
+      "title": "KMS Key Changes",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:(DisableKey OR ScheduleKeyDeletion OR PutKeyPolicy OR CancelKeyDeletion OR CreateGrant OR RevokeGrant)"
+    },
+    {
+      "id": "changes_over_time",
+      "title": "Security-Relevant Changes Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:(StopLogging OR DeleteTrail OR UpdateTrail OR PutEventSelectors OR DeleteDetector OR UpdateDetector OR DisassociateFromMasterAccount OR DeleteFlowLogs OR StopConfigurationRecorder OR DeleteConfigurationRecorder OR DeleteDeliveryChannel OR AuthorizeSecurityGroupIngress OR AuthorizeSecurityGroupEgress OR RevokeSecurityGroupIngress OR RevokeSecurityGroupEgress OR CreateSecurityGroup OR DeleteSecurityGroup OR CreateNetworkAclEntry OR ReplaceNetworkAclEntry OR DeleteNetworkAclEntry OR PutBucketPolicy OR DeleteBucketPolicy OR PutBucketAcl OR PutObjectAcl OR PutBucketPublicAccessBlock OR DeleteBucketPublicAccessBlock OR PutAccountPublicAccessBlock OR DeleteAccountPublicAccessBlock OR DisableKey OR ScheduleKeyDeletion OR PutKeyPolicy OR CancelKeyDeletion OR CreateGrant OR RevokeGrant)"
+    },
+    {
+      "id": "by_event_source",
+      "title": "Changes by AWS Service",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:(StopLogging OR DeleteTrail OR UpdateTrail OR PutEventSelectors OR DeleteDetector OR UpdateDetector OR DisassociateFromMasterAccount OR DeleteFlowLogs OR StopConfigurationRecorder OR DeleteConfigurationRecorder OR DeleteDeliveryChannel OR AuthorizeSecurityGroupIngress OR AuthorizeSecurityGroupEgress OR RevokeSecurityGroupIngress OR RevokeSecurityGroupEgress OR CreateSecurityGroup OR DeleteSecurityGroup OR CreateNetworkAclEntry OR ReplaceNetworkAclEntry OR DeleteNetworkAclEntry OR PutBucketPolicy OR DeleteBucketPolicy OR PutBucketAcl OR PutObjectAcl OR PutBucketPublicAccessBlock OR DeleteBucketPublicAccessBlock OR PutAccountPublicAccessBlock OR DeleteAccountPublicAccessBlock OR DisableKey OR ScheduleKeyDeletion OR PutKeyPolicy OR CancelKeyDeletion OR CreateGrant OR RevokeGrant)",
+      "field": "data_aws_eventSource",
+      "size": 10
+    },
+    {
+      "id": "by_region",
+      "title": "Changes by Region",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:(StopLogging OR DeleteTrail OR UpdateTrail OR PutEventSelectors OR DeleteDetector OR UpdateDetector OR DisassociateFromMasterAccount OR DeleteFlowLogs OR StopConfigurationRecorder OR DeleteConfigurationRecorder OR DeleteDeliveryChannel OR AuthorizeSecurityGroupIngress OR AuthorizeSecurityGroupEgress OR RevokeSecurityGroupIngress OR RevokeSecurityGroupEgress OR CreateSecurityGroup OR DeleteSecurityGroup OR CreateNetworkAclEntry OR ReplaceNetworkAclEntry OR DeleteNetworkAclEntry OR PutBucketPolicy OR DeleteBucketPolicy OR PutBucketAcl OR PutObjectAcl OR PutBucketPublicAccessBlock OR DeleteBucketPublicAccessBlock OR PutAccountPublicAccessBlock OR DeleteAccountPublicAccessBlock OR DisableKey OR ScheduleKeyDeletion OR PutKeyPolicy OR CancelKeyDeletion OR CreateGrant OR RevokeGrant)",
+      "field": "data_aws_awsRegion",
+      "size": 10
+    },
+    {
+      "id": "by_result",
+      "title": "Failed Changes by Error",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:(StopLogging OR DeleteTrail OR UpdateTrail OR PutEventSelectors OR DeleteDetector OR UpdateDetector OR DisassociateFromMasterAccount OR DeleteFlowLogs OR StopConfigurationRecorder OR DeleteConfigurationRecorder OR DeleteDeliveryChannel OR AuthorizeSecurityGroupIngress OR AuthorizeSecurityGroupEgress OR RevokeSecurityGroupIngress OR RevokeSecurityGroupEgress OR CreateSecurityGroup OR DeleteSecurityGroup OR CreateNetworkAclEntry OR ReplaceNetworkAclEntry OR DeleteNetworkAclEntry OR PutBucketPolicy OR DeleteBucketPolicy OR PutBucketAcl OR PutObjectAcl OR PutBucketPublicAccessBlock OR DeleteBucketPublicAccessBlock OR PutAccountPublicAccessBlock OR DeleteAccountPublicAccessBlock OR DisableKey OR ScheduleKeyDeletion OR PutKeyPolicy OR CancelKeyDeletion OR CreateGrant OR RevokeGrant) AND data_aws_errorCode:*",
+      "field": "data_aws_errorCode",
+      "size": 10
+    },
+    {
+      "id": "by_api_call",
+      "title": "Changes by API Call",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:(StopLogging OR DeleteTrail OR UpdateTrail OR PutEventSelectors OR DeleteDetector OR UpdateDetector OR DisassociateFromMasterAccount OR DeleteFlowLogs OR StopConfigurationRecorder OR DeleteConfigurationRecorder OR DeleteDeliveryChannel OR AuthorizeSecurityGroupIngress OR AuthorizeSecurityGroupEgress OR RevokeSecurityGroupIngress OR RevokeSecurityGroupEgress OR CreateSecurityGroup OR DeleteSecurityGroup OR CreateNetworkAclEntry OR ReplaceNetworkAclEntry OR DeleteNetworkAclEntry OR PutBucketPolicy OR DeleteBucketPolicy OR PutBucketAcl OR PutObjectAcl OR PutBucketPublicAccessBlock OR DeleteBucketPublicAccessBlock OR PutAccountPublicAccessBlock OR DeleteAccountPublicAccessBlock OR DisableKey OR ScheduleKeyDeletion OR PutKeyPolicy OR CancelKeyDeletion OR CreateGrant OR RevokeGrant)",
+      "field": "data_aws_eventName",
+      "size": 15
+    },
+    {
+      "id": "by_actor",
+      "title": "Changes by Actor",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:(StopLogging OR DeleteTrail OR UpdateTrail OR PutEventSelectors OR DeleteDetector OR UpdateDetector OR DisassociateFromMasterAccount OR DeleteFlowLogs OR StopConfigurationRecorder OR DeleteConfigurationRecorder OR DeleteDeliveryChannel OR AuthorizeSecurityGroupIngress OR AuthorizeSecurityGroupEgress OR RevokeSecurityGroupIngress OR RevokeSecurityGroupEgress OR CreateSecurityGroup OR DeleteSecurityGroup OR CreateNetworkAclEntry OR ReplaceNetworkAclEntry OR DeleteNetworkAclEntry OR PutBucketPolicy OR DeleteBucketPolicy OR PutBucketAcl OR PutObjectAcl OR PutBucketPublicAccessBlock OR DeleteBucketPublicAccessBlock OR PutAccountPublicAccessBlock OR DeleteAccountPublicAccessBlock OR DisableKey OR ScheduleKeyDeletion OR PutKeyPolicy OR CancelKeyDeletion OR CreateGrant OR RevokeGrant)",
+      "field": "data_aws_userIdentity_arn",
+      "size": 15
+    },
+    {
+      "id": "buckets_changed",
+      "title": "S3 Buckets Changed",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:(PutBucketPolicy OR DeleteBucketPolicy OR PutBucketAcl OR PutObjectAcl OR PutBucketPublicAccessBlock OR DeleteBucketPublicAccessBlock OR PutAccountPublicAccessBlock OR DeleteAccountPublicAccessBlock)",
+      "field": "data_aws_requestParameters_bucketName",
+      "size": 15
+    },
+    {
+      "id": "by_source_ip",
+      "title": "Changes by Source IP",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:(StopLogging OR DeleteTrail OR UpdateTrail OR PutEventSelectors OR DeleteDetector OR UpdateDetector OR DisassociateFromMasterAccount OR DeleteFlowLogs OR StopConfigurationRecorder OR DeleteConfigurationRecorder OR DeleteDeliveryChannel OR AuthorizeSecurityGroupIngress OR AuthorizeSecurityGroupEgress OR RevokeSecurityGroupIngress OR RevokeSecurityGroupEgress OR CreateSecurityGroup OR DeleteSecurityGroup OR CreateNetworkAclEntry OR ReplaceNetworkAclEntry OR DeleteNetworkAclEntry OR PutBucketPolicy OR DeleteBucketPolicy OR PutBucketAcl OR PutObjectAcl OR PutBucketPublicAccessBlock OR DeleteBucketPublicAccessBlock OR PutAccountPublicAccessBlock OR DeleteAccountPublicAccessBlock OR DisableKey OR ScheduleKeyDeletion OR PutKeyPolicy OR CancelKeyDeletion OR CreateGrant OR RevokeGrant)",
+      "field": "data_aws_sourceIPAddress",
+      "size": 15
+    },
+    {
+      "id": "recent_changes",
+      "title": "Recent Security-Relevant Changes",
+      "type": "table",
+      "w": 12,
+      "h": 420,
+      "lucene": "data_aws_source:cloudtrail AND data_aws_eventName:(StopLogging OR DeleteTrail OR UpdateTrail OR PutEventSelectors OR DeleteDetector OR UpdateDetector OR DisassociateFromMasterAccount OR DeleteFlowLogs OR StopConfigurationRecorder OR DeleteConfigurationRecorder OR DeleteDeliveryChannel OR AuthorizeSecurityGroupIngress OR AuthorizeSecurityGroupEgress OR RevokeSecurityGroupIngress OR RevokeSecurityGroupEgress OR CreateSecurityGroup OR DeleteSecurityGroup OR CreateNetworkAclEntry OR ReplaceNetworkAclEntry OR DeleteNetworkAclEntry OR PutBucketPolicy OR DeleteBucketPolicy OR PutBucketAcl OR PutObjectAcl OR PutBucketPublicAccessBlock OR DeleteBucketPublicAccessBlock OR PutAccountPublicAccessBlock OR DeleteAccountPublicAccessBlock OR DisableKey OR ScheduleKeyDeletion OR PutKeyPolicy OR CancelKeyDeletion OR CreateGrant OR RevokeGrant)",
+      "fields": [
+        "timestamp",
+        "data_aws_eventName",
+        "data_aws_eventSource",
+        "data_aws_userIdentity_arn",
+        "data_aws_requestParameters_bucketName",
+        "data_aws_sourceIPAddress",
+        "data_aws_errorCode"
+      ],
+      "size": 50
+    }
+  ]
+}
