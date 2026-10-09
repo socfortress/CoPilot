@@ -10,6 +10,8 @@ export interface PortalSeed {
 	agents_a: { total: number; online: number; critical: number; offline: number; statuses: string[]; os_list: string[] }
 	/** The alert whose latest AI report carries the Markdown with code blocks. */
 	ai_alert_id: number
+	/** An open alert of A that no AI analysis ever ran on (#1215). */
+	fresh_alert_id: number
 	ai_a: { total_reports: number; severity_counts: Record<string, number> }
 	/** Completed customer reports per customer. */
 	reports: { a: number; b: number }
