@@ -708,7 +708,7 @@ async def send_get_request(endpoint: str) -> Dict[str, Any]:
             "Content-Type": "application/json",
             "module-version": "1.0",
         }
-        response = await run_blocking(requests.get, f"https://license.socfortress.co/{endpoint}", headers=HEADERS, verify=False, timeout=10)
+        response = await run_blocking(requests.get, f"https://license.socfortress.co/{endpoint}", headers=HEADERS, timeout=10)
 
         if response.status_code == 204:
             return {"success": True, "message": "No content"}
@@ -1036,7 +1036,6 @@ async def send_post_request(endpoint: str, data: Dict[str, Any] = None) -> Dict[
             f"https://license.socfortress.co/{endpoint}",
             headers=HEADERS,
             json=data,
-            verify=False,
             timeout=10,
         )
 
