@@ -239,6 +239,14 @@ async def verify_wazuh_manager_connection(connector_name: str) -> str:
 #         return None
 
 
+AUTH_FAILED_MESSAGE = "Could not authenticate to the Wazuh Manager (unreachable or credentials rejected)"
+
+
+def _auth_failed() -> Dict[str, Any]:
+    logger.error(AUTH_FAILED_MESSAGE)
+    return {"success": False, "message": AUTH_FAILED_MESSAGE}
+
+
 async def create_wazuh_manager_client(connector_name: str) -> Optional[Dict[str, str]]:
     """
     Returns the authentication token headers for the Wazuh manager service.
@@ -388,11 +396,7 @@ async def send_get_request(
     wazuh_manager_client = await create_wazuh_manager_client(connector_name)
 
     if wazuh_manager_client is None:
-        logger.error("Failed to get Wazuh Manager client")
-        return {
-            "success": False,
-            "message": "Failed to authenticate with Wazuh Manager",
-        }
+        return _auth_failed()
 
     async with AsyncSessionLocal() as session:
         attributes = await get_connector_info_from_db(connector_name, session)
@@ -491,6 +495,8 @@ async def send_post_request(
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
+    if wazuh_manager_client is None:
+        return _auth_failed()
     try:
         response = await run_blocking(
             requests.post,
@@ -605,6 +611,9 @@ async def send_put_request(
         logger.error("No Wazuh Manager connector found in the database")
         return None
 
+    if wazuh_manager_client is None:
+        return _auth_failed()
+
     # Add the default `Content-Type` header to the request
     wazuh_manager_client["Content-Type"] = "application/json"
 
@@ -708,6 +717,8 @@ async def send_delete_request(
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
+    if wazuh_manager_client is None:
+        return _auth_failed()
     try:
         response = await run_blocking(
             requests.delete,
@@ -745,6 +756,8 @@ async def restart_service(connector_name: str = "Wazuh-Manager") -> Dict[str, An
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
+    if wazuh_manager_client is None:
+        return _auth_failed()
     try:
         response = await run_blocking(
             requests.put,
