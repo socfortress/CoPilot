@@ -23,6 +23,8 @@ prima della fix rispondevano 200, ora devono rispondere 403.
 import asyncio
 import datetime
 import os
+from unittest.mock import AsyncMock
+from unittest.mock import patch
 
 os.environ.setdefault("MYSQL_URL", "127.0.0.1:13306")
 os.environ.setdefault("MYSQL_USER", "copilot")
@@ -221,6 +223,7 @@ def build_app():
     from app.ai_analyst.routes.ai_analyst import ai_analyst_router
     from app.customers.routes.customers import customers_router
     from app.data_store.data_store_routes import agent_data_store_router
+    from app.healthchecks.agents.routes.agents import healtcheck_agents_router
     from app.integrations.alert_creation_settings.routes.alert_creation_settings import (
         alert_creation_settings_router,
     )
@@ -233,6 +236,7 @@ def build_app():
     api.include_router(ai_analyst_router, prefix="/ai_analyst")
     api.include_router(dashboards_router, prefix="/siem/dashboards")
     api.include_router(sca_router, prefix="/sca")
+    api.include_router(healtcheck_agents_router, prefix="/healthcheck")
     app = FastAPI()
     app.include_router(api)
     return app
@@ -298,6 +302,45 @@ async def main():
         check("DELETE dashboard custom altrui -> 403", r.status_code == 403, str(r.status_code))
         r = await client.get(f"/siem/dashboards/custom/e2eo_dash_{CUST_B}/export", headers=H(t_scoped))
         check("EXPORT dashboard custom altrui -> 403", r.status_code == 403, str(r.status_code))
+
+        print("\n=== 4b) healthcheck agenti: liste, agent id e log per hostname ===")
+        import app.healthchecks.agents.routes.agents as healthcheck_routes
+
+        def e2e_agents(body):
+            listed = [*(body.get("healthy_wazuh_agents") or []), *(body.get("unhealthy_wazuh_agents") or [])]
+            listed += [*(body.get("healthy_velociraptor_agents") or []), *(body.get("unhealthy_velociraptor_agents") or [])]
+            return {a["agent_id"] for a in listed if str(a.get("agent_id", "")).startswith("e2eo")}
+
+        for kind in ("wazuh", "velociraptor"):
+            r = await client.get(f"/healthcheck/{kind}", headers=H(t_scoped))
+            got = e2e_agents(r.json()) if r.status_code == 200 else None
+            check(f"GET /healthcheck/{kind} -> solo l'agente di A", got == {"e2eo1"}, f"{r.status_code} {got}")
+            r = await client.get(f"/healthcheck/{kind}/e2eo2", headers=H(t_scoped))
+            check(f"GET /healthcheck/{kind}/<agente di B> -> 403", r.status_code == 403, str(r.status_code))
+            r = await client.get(f"/healthcheck/{kind}/e2eo1", headers=H(t_scoped))
+            check(f"GET /healthcheck/{kind}/<agente di A> -> 200", r.status_code == 200, str(r.status_code))
+
+        # The log search itself goes to the SIEM: stubbed, so "reached" means the route let it through.
+        logs = AsyncMock(return_value={"logs_summary": [], "healthy": True, "message": "stub", "success": True})
+        with patch.object(healthcheck_routes, "host_logs", logs):
+            r = await client.post("/healthcheck/logs", json={"agent_name": f"host-{CUST_B}"}, headers=H(t_scoped))
+            check(
+                "POST /healthcheck/logs host di B -> 403, ricerca mai partita",
+                r.status_code == 403 and logs.await_count == 0,
+                str(r.status_code),
+            )
+            r = await client.post("/healthcheck/logs", json={"agent_name": f"host-{CUST_A}"}, headers=H(t_scoped))
+            check(
+                "POST /healthcheck/logs host di A -> 200 (prima: 403 per tutti)",
+                r.status_code == 200 and logs.await_count == 1,
+                f"{r.status_code} {r.text[:120]}",
+            )
+            r = await client.post("/healthcheck/logs", json={"agent_name": f"host-{CUST_B}"}, headers=H(t_admin))
+            check("admin POST /healthcheck/logs host di B -> 200", r.status_code == 200, f"{r.status_code} {r.text[:120]}")
+
+        r = await client.get("/healthcheck/wazuh", headers=H(t_admin))
+        got = e2e_agents(r.json()) if r.status_code == 200 else None
+        check("admin GET /healthcheck/wazuh -> entrambi gli agenti", got == {"e2eo1", "e2eo2"}, f"{r.status_code} {got}")
 
         print("\n=== 5) l'admin non regredisce ===")
         for label, url in (

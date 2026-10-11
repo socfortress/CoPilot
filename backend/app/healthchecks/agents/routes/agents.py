@@ -7,6 +7,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
@@ -19,8 +20,22 @@ from app.healthchecks.agents.services.agents import velociraptor_agent_healthche
 from app.healthchecks.agents.services.agents import velociraptor_agents_healthcheck
 from app.healthchecks.agents.services.agents import wazuh_agent_healthcheck
 from app.healthchecks.agents.services.agents import wazuh_agents_healthcheck
+from app.middleware.customer_access import enforce_hostname_access
+from app.middleware.customer_access import scoped_customer_codes
+from app.middleware.customer_access import verify_agent_id_access
 
 healtcheck_agents_router = APIRouter()
+
+
+async def _visible_agents(user: User, session: AsyncSession) -> list:
+    """The agents of the customers ``user`` may see: a scoped analyst gets theirs, none if unassigned."""
+    customer_codes = await scoped_customer_codes(user, None, session)
+    if customer_codes == []:
+        return []
+    query = select(Agents)
+    if customer_codes is not None:
+        query = query.where(Agents.customer_code.in_(customer_codes))
+    return (await session.execute(query)).scalars().all()
 
 
 @healtcheck_agents_router.get(
@@ -30,6 +45,7 @@ healtcheck_agents_router = APIRouter()
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_wazuh_agent_healthcheck(
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
     minutes: int = Query(
         60,
@@ -58,9 +74,7 @@ async def get_wazuh_agent_healthcheck(
     """
     time_criteria = TimeCriteriaModel(minutes=minutes, hours=hours, days=days)
 
-    # Asynchronously fetch all agents
-    result = await session.execute(select(Agents))
-    agents = result.scalars().all()
+    agents = await _visible_agents(current_user, session)
     return await wazuh_agents_healthcheck(agents, time_criteria)
 
 
@@ -68,7 +82,7 @@ async def get_wazuh_agent_healthcheck(
     "/wazuh/{agent_id}",
     response_model=AgentHealthCheckResponse,
     description="Get Wazuh agent healthcheck by agent_id",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst")), Depends(verify_agent_id_access)],
 )
 async def get_wazuh_agent_healthcheck_by_agent_id(
     agent_id: str,
@@ -123,6 +137,7 @@ async def get_wazuh_agent_healthcheck_by_agent_id(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_velociraptor_agent_healthcheck(
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
     minutes: int = Query(
         60,
@@ -151,9 +166,7 @@ async def get_velociraptor_agent_healthcheck(
     """
     time_criteria = TimeCriteriaModel(minutes=minutes, hours=hours, days=days)
 
-    # Asynchronously fetch all agents
-    result = await session.execute(select(Agents))
-    agents = result.scalars().all()
+    agents = await _visible_agents(current_user, session)
     return await velociraptor_agents_healthcheck(agents, time_criteria)
 
 
@@ -161,7 +174,7 @@ async def get_velociraptor_agent_healthcheck(
     "/velociraptor/{agent_id}",
     response_model=AgentHealthCheckResponse,
     description="Get Velociraptor agent healthcheck by agent_id",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst")), Depends(verify_agent_id_access)],
 )
 async def get_velociraptor_agent_healthcheck_by_agent_id(
     agent_id: str,
@@ -209,12 +222,13 @@ async def get_velociraptor_agent_healthcheck_by_agent_id(
     "/logs",
     response_model=HostLogsSearchResponse,
     description="Get host logs",
-    dependencies=[
-        Security(AuthHandler().get_current_user, scopes=["admin", "analyst"]),
-    ],
+    # Either scope, like every other route here: scopes=["admin", "analyst"] on
+    # get_current_user requires *both*, which no token carries, so no one could call it.
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_host_logs(
     body: HostLogsSearchBody,
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> HostLogsSearchResponse:
     """
@@ -231,6 +245,10 @@ async def get_host_logs(
         HTTPException: If the agent with the specified hostname is not found.
     """
     logger.info(f"Received request to get host logs for {body.agent_name}")
+
+    # The host is named in the body, so no route dependency can see it: a scoped
+    # analyst may only read the logs of their own customers' hosts.
+    await enforce_hostname_access(current_user, body.agent_name, session)
 
     # Asynchronously verify the agent exists
     result = await session.execute(
