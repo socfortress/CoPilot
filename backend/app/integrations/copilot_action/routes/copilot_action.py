@@ -6,11 +6,15 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
+from fastapi import Request
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.audit.models.audit import AuditAction
+from app.audit.services.audit import record_audit_event
+from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
@@ -28,6 +32,7 @@ from app.integrations.copilot_action.schema.copilot_action import (
 )
 from app.integrations.copilot_action.schema.copilot_action import Technology
 from app.integrations.copilot_action.services.copilot_action import CopilotActionService
+from app.middleware.customer_access import enforce_hostname_access
 
 copilot_action_router = APIRouter()
 auth_handler = AuthHandler()
@@ -195,7 +200,7 @@ async def build_artifact_collection_body(agent: Agents, artifact_name: str, velo
     "/inventory",
     response_model=InventoryResponse,
     description="Get paginated inventory of available active response scripts",
-    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder"))],
 )
 async def get_inventory(
     technology: Optional[Technology] = Query(None, description="Filter by technology type"),
@@ -256,7 +261,7 @@ async def get_inventory(
 @copilot_action_router.get(
     "/inventory/count",
     description="Get total count of available scripts for pagination calculations",
-    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder"))],
 )
 async def get_inventory_count(
     technology: Optional[Technology] = Query(None, description="Filter by technology type"),
@@ -302,7 +307,7 @@ async def get_inventory_count(
     "/inventory/{copilot_action_name}",
     response_model=ActionDetailResponse,
     description="Get details for a specific active response script",
-    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder"))],
 )
 async def get_action_by_name(copilot_action_name: str) -> ActionDetailResponse:
     """Get detailed information for a specific active response script."""
@@ -334,7 +339,7 @@ async def get_action_by_name(copilot_action_name: str) -> ActionDetailResponse:
     "/metrics",
     response_model=InventoryMetricsResponse,
     description="Get inventory metrics and status",
-    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder"))],
 )
 async def get_metrics() -> InventoryMetricsResponse:
     """Get metrics and status information for the inventory service."""
@@ -355,7 +360,7 @@ async def get_metrics() -> InventoryMetricsResponse:
 @copilot_action_router.get(
     "/technologies",
     description="Get available technology types",
-    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder"))],
 )
 async def get_technologies() -> dict:
     """Get list of available technology types for filtering."""
@@ -417,9 +422,14 @@ async def invoke_action_on_agent(
     "/invoke",
     response_model=InvokeCopilotActionResponse,  # Updated to use structured response
     description="Invoke a Copilot Action on multiple target agents",
-    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder"))],
 )
-async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = Depends(get_db)) -> InvokeCopilotActionResponse:
+async def invoke_action(
+    body: InvokeCopilotActionBody,
+    request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> InvokeCopilotActionResponse:
     """
     Invoke a Copilot Action on multiple target agents.
 
@@ -436,6 +446,23 @@ async def invoke_action(body: InvokeCopilotActionBody, session: AsyncSession = D
         InvokeCopilotActionResponse: Structured response with list of results, message, and success status
     """
     logger.info(f"Invoking Copilot action '{body.copilot_action_name}' on {len(body.agent_names)} agents")
+
+    # Every target must belong to one of the caller's customers (#1219), checked before
+    # anything runs: a responder is scoped, and one foreign host refuses the whole request.
+    if not body.agent_names:
+        raise HTTPException(status_code=400, detail="Name at least one agent to invoke the action on")
+    for hostname in body.agent_names:
+        await enforce_hostname_access(current_user, hostname, session)
+
+    await record_audit_event(
+        action=AuditAction.COPILOT_ACTION_INVOKE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        entity_type="copilot_action",
+        entity_id=body.copilot_action_name,
+        new_value={"agents": body.agent_names},
+        request=request,
+    )
 
     try:
         # Step 1: Get all target agents

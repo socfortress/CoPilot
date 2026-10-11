@@ -11,7 +11,7 @@ import { loginWithPasskey as performPasskeyLogin } from "@/composables/usePasske
 import { useCustomerFilterStore } from "@/stores/customer-filter"
 import { AuthUserRole, RouteRole } from "@/types/auth"
 import { getAvatar, getNameInitials } from "@/utils"
-import { jwtRoleToUserRole } from "@/utils/auth"
+import { jwtRoleToUserRole, ROLE_EXTENDS } from "@/utils/auth"
 import { piniaStorage, removePersistentSessionKey } from "@/utils/secure-storage"
 
 export const useAuthStore = defineStore("auth", {
@@ -162,6 +162,13 @@ export const useAuthStore = defineStore("auth", {
 		isAdmin(): boolean {
 			return _toLower(this.userRoleName) === "admin"
 		},
+		isResponder(): boolean {
+			return this.userRole === AuthUserRole.Responder
+		},
+		/** May run response actions (quarantine, Velociraptor commands, CoPilot Actions, Sysmon deploy) (#1219). */
+		canRespond(): boolean {
+			return this.isAdmin || this.isResponder
+		},
 		isRoleGranted() {
 			return (roles?: RouteMetaAuthRole | RouteMetaAuthRole[]) => {
 				if (!roles) {
@@ -177,7 +184,7 @@ export const useAuthStore = defineStore("auth", {
 					return true
 				}
 
-				return arrRoles.includes(this.userRole)
+				return [this.userRole, ...(ROLE_EXTENDS[this.userRole] ?? [])].some(role => arrRoles.includes(role))
 			}
 		}
 	},

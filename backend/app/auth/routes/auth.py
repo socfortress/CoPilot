@@ -9,14 +9,17 @@ from fastapi import Security
 from fastapi import status
 from fastapi.security import OAuth2PasswordRequestForm
 from loguru import logger
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.models.audit import AuditAction
 from app.audit.models.audit import AuditResult
 from app.audit.services.audit import record_audit_event
+from app.auth.models.users import CUSTOMER_SCOPED_SOC_ROLES
 from app.auth.models.users import PasswordReset
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
+from app.auth.models.users import UserCustomerAccess
 from app.auth.models.users import UserInput
 from app.auth.models.users import UserLogin
 from app.auth.schema.auth import Token
@@ -25,6 +28,10 @@ from app.auth.schema.auth import UserLoginResponse
 from app.auth.schema.auth import UserResponse
 from app.auth.schema.user import UserBaseResponse
 from app.auth.schema.user import UserDetailResponse
+from app.auth.services.customer_assignment import NEEDS_A_CUSTOMER
+from app.auth.services.customer_assignment import assigned_codes
+from app.auth.services.customer_assignment import replace_assignment
+from app.auth.services.customer_assignment import validate_assignment
 from app.auth.services.totp import is_2fa_enabled
 from app.auth.services.universal import delete_user
 from app.auth.services.universal import find_user
@@ -35,6 +42,7 @@ from app.auth.services.universal import update_last_login
 from app.auth.services.universal import user_to_base_dict
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.middleware.customer_access import customer_access_handler
 from app.middleware.search_query import SearchParams
 from app.middleware.search_query import search_query
 
@@ -261,15 +269,21 @@ async def register(
         raise HTTPException(status_code=400, detail="Email is already registered")
     if any(x.username == user.username for x in users):
         raise HTTPException(status_code=400, detail="Username is taken")
+    role_id = user.role_id.value if user.role_id else RoleEnum.analyst.value
+    # Validated before anything is written: an analyst or responder is never created
+    # without a customer (#1219).
+    customer_codes = await validate_assignment(role_id, user.customer_codes, session)
     hashed_pwd = auth_handler.get_password_hash(user.password)
     u = User(
         username=user.username,
         password=hashed_pwd,
         email=user.email,
-        role_id=user.role_id.value if user.role_id else 2,
+        role_id=role_id,
     )
     logger.info(f"User: {u}")
     session.add(u)
+    await session.flush()
+    await replace_assignment(u.id, customer_codes, session)
     await session.commit()
     await record_audit_event(
         action=AuditAction.USER_CREATE,
@@ -277,7 +291,7 @@ async def register(
         actor_username=current_user.username,
         entity_type="user",
         entity_id=u.username,
-        new_value={"username": u.username, "email": u.email, "role_id": u.role_id},
+        new_value={"username": u.username, "email": u.email, "role_id": u.role_id, "customer_codes": customer_codes},
         request=http_request,
     )
     return {"message": "User created successfully", "success": True}
@@ -332,6 +346,7 @@ async def login(user: UserLogin, session: AsyncSession = Depends(get_db)):
 )
 async def get_users(
     search_params: SearchParams = Depends(search_query),
+    current_user: User = Depends(auth_handler.get_current_user),
     session: AsyncSession = Depends(get_db),
 ):
     """
@@ -354,6 +369,19 @@ async def get_users(
 
     # Transform users to include role_name — single source of truth for the mapping
     user_list = [user_to_base_dict(user) for user in users]
+
+    # Who serves which customer is for the admin who assigns them, not for every analyst.
+    if current_user.role_id == RoleEnum.admin:
+        rows = await session.execute(
+            select(UserCustomerAccess.user_id, UserCustomerAccess.customer_code).where(
+                UserCustomerAccess.user_id.in_([user["id"] for user in user_list]),
+            ),
+        )
+        by_user: dict = {}
+        for user_id, code in rows.all():
+            by_user.setdefault(user_id, []).append(code)
+        for user in user_list:
+            user["customer_codes"] = sorted(by_user.get(user["id"], []))
 
     return UserBaseResponse(
         users=user_list,
@@ -544,13 +572,7 @@ async def update_user_role_by_name(
         raise HTTPException(status_code=404, detail="User not found")
     old_role_id = user.role_id
 
-    # Map role names to IDs
-    role_mapping = {
-        "admin": RoleEnum.admin.value,
-        "analyst": RoleEnum.analyst.value,
-        "scheduler": RoleEnum.scheduler.value,
-        "customer_user": RoleEnum.customer_user.value,
-    }
+    role_mapping = {role.name: role.value for role in RoleEnum}
 
     role_name_lower = request.role_name.lower()
     if role_name_lower not in role_mapping:
@@ -558,10 +580,23 @@ async def update_user_role_by_name(
 
     role_id = role_mapping[role_name_lower]
 
+    # An analyst or responder keeps at least one customer (#1219): the request can name
+    # them, otherwise the user must already have some. An admin's are left as they are
+    # (ignored while admin, back in force if the user is demoted again).
+    old_codes = await assigned_codes(user_id, session)
+    new_codes = None
+    if request.customer_codes is not None:
+        new_codes = await validate_assignment(role_id, request.customer_codes, session)
+    elif role_id in CUSTOMER_SCOPED_SOC_ROLES and not old_codes:
+        raise HTTPException(status_code=400, detail=NEEDS_A_CUSTOMER)
+
     # Update the user's role
     user.role_id = role_id
     session.add(user)
+    if new_codes is not None:
+        await replace_assignment(user_id, new_codes, session)
     await session.commit()
+    customer_access_handler.forget_accessible_customers(session, user_id)
 
     await record_audit_event(
         action=AuditAction.USER_ROLE_CHANGE,
@@ -569,8 +604,8 @@ async def update_user_role_by_name(
         actor_username=current_user.username,
         entity_type="user",
         entity_id=user.username,
-        old_value={"role_id": old_role_id},
-        new_value={"role_id": role_id},
+        old_value={"role_id": old_role_id, "customer_codes": old_codes},
+        new_value={"role_id": role_id, "customer_codes": new_codes if new_codes is not None else old_codes},
         details=f"Role changed to {request.role_name}",
         request=http_request,
     )

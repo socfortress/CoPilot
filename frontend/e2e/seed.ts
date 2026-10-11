@@ -27,8 +27,11 @@ export const SEED_PASSWORD = "E2ePlaywr1ght!"
 
 /** Analyst assigned to one tenant — the reporter's account in #1050. */
 export const SCOPED_ANALYST = "e2e_pw_scoped_analyst"
-/** Analyst with no assignment at all — still deployment-wide, by design. */
-export const UNSCOPED_ANALYST = "e2e_pw_unscoped_analyst"
+/**
+ * A user the API must refuse to create: an analyst without a customer (#1219). The spec
+ * that tries it expects a 400, so this name never exists unless an older run left it.
+ */
+export const UNASSIGNED_ANALYST = "e2e_pw_unscoped_analyst"
 
 /** Tenants the specs would like to own, when the deployment lets us create them. */
 const PREFERRED = [
@@ -157,12 +160,19 @@ async function resolveTenants(token: string): Promise<[Tenant, Tenant]> {
 	return [resolved[0], resolved[1]]
 }
 
-async function ensureAnalyst(token: string, username: string) {
+/** Creates the analyst with its customers: an analyst is never created without one (#1219). */
+async function ensureAnalyst(token: string, username: string, customerCodes: string[]) {
 	const res = await api(
 		"/auth/register",
 		{
 			method: "POST",
-			body: JSON.stringify({ username, password: SEED_PASSWORD, email: `${username}@e2e.example`, role_id: 2 })
+			body: JSON.stringify({
+				username,
+				password: SEED_PASSWORD,
+				email: `${username}@e2e.example`,
+				role_id: 2,
+				customer_codes: customerCodes
+			})
 		},
 		token
 	)
@@ -207,14 +217,12 @@ export async function seed(): Promise<[Tenant, Tenant]> {
 
 	const resolved = await resolveTenants(adminToken)
 
-	await ensureAnalyst(adminToken, SCOPED_ANALYST)
-	await ensureAnalyst(adminToken, UNSCOPED_ANALYST)
+	await ensureAnalyst(adminToken, SCOPED_ANALYST, [resolved[0].code])
 
-	// The whole point: one analyst assigned to exactly one tenant...
+	// The whole point: one analyst assigned to exactly one tenant. Assigned again, through
+	// the assignment endpoint, so a broken one fails the suite (an analyst created by an
+	// older run keeps whatever it had).
 	await assignCustomers(adminToken, await userIdOf(adminToken, SCOPED_ANALYST), [resolved[0].code])
-	// ...and one assigned to none, which still means deployment-wide (#1050's upgrade
-	// compromise). Both halves have to be seeded or the specs prove only half the rule.
-	await assignCustomers(adminToken, await userIdOf(adminToken, UNSCOPED_ANALYST), [])
 
 	fs.writeFileSync(TENANTS_FILE, JSON.stringify(resolved, null, 2))
 	return resolved

@@ -8,7 +8,7 @@
 					</span>
 				</template>
 				<template #headerExtra>
-					<n-tag :type="roleTagType" size="small">
+					<n-tag :type="roleTagType(resolvedUser.role_name)" size="small">
 						{{ resolvedUser.role_name || "No Role" }}
 					</n-tag>
 				</template>
@@ -43,6 +43,12 @@
 							{{ code }}
 						</n-tag>
 					</div>
+					<p v-else-if="seesEveryCustomer(resolvedUser.role_name)" class="text-secondary text-sm">
+						Admins see every customer.
+					</p>
+					<p v-else-if="needsCustomers(resolvedUser.role_name)" class="text-warning text-sm" data-testid="user-no-customers">
+						No customer assigned: this user sees nothing. {{ NEEDS_A_CUSTOMER }}
+					</p>
 					<p v-else class="text-secondary text-sm">No customer access assigned</p>
 				</n-spin>
 			</n-card>
@@ -64,7 +70,7 @@
 			<n-card v-if="isAdmin" size="small" title="Actions" embedded>
 				<div class="flex flex-col gap-1">
 					<AssignRole :user="resolvedUser" @success="reload" />
-					<AssignCustomer :user="resolvedUser" @success="reload" />
+					<AssignCustomer v-if="!seesEveryCustomer(resolvedUser.role_name)" :user="resolvedUser" @success="reload" />
 					<AssignTags :user="resolvedUser" @success="reload" />
 					<ChangePassword :user="resolvedUser" quaternary class-name="w-full! justify-start!" />
 					<DeleteUser :user="resolvedUser" @success="handleDeleted" @loading="deleting = $event" />
@@ -86,6 +92,7 @@ import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
+import { NEEDS_A_CUSTOMER, needsCustomers, roleTagType, seesEveryCustomer } from "./roles"
 
 const props = defineProps<{
 	user?: User | null
@@ -130,21 +137,6 @@ const {
 	onLoaded: value => {
 		emit("loaded", value)
 		loadAccessData(value.id)
-	}
-})
-
-const roleTagType = computed(() => {
-	switch (resolvedUser.value?.role_name?.toLowerCase()) {
-		case "admin":
-			return "error"
-		case "analyst":
-			return "warning"
-		case "scheduler":
-			return "info"
-		case "customer_user":
-			return "success"
-		default:
-			return "default"
 	}
 })
 

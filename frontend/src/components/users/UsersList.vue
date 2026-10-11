@@ -52,9 +52,20 @@
 								{{ user.email }}
 							</td>
 							<td>
-								<n-tag :type="getRoleTagType(user.role_name)" size="small">
-									{{ user.role_name || "No Role" }}
-								</n-tag>
+								<div class="flex flex-wrap items-center gap-1.5">
+									<n-tag :type="roleTagType(user.role_name)" size="small">
+										{{ user.role_name || "No Role" }}
+									</n-tag>
+									<!-- Sees nothing until an admin assigns a customer (#1219). -->
+									<n-tooltip v-if="seesNothing(user)">
+										<template #trigger>
+											<n-tag type="warning" size="small" :bordered="false" data-testid="user-no-customers">
+												No customers
+											</n-tag>
+										</template>
+										{{ NEEDS_A_CUSTOMER }}
+									</n-tooltip>
+								</div>
 							</td>
 							<td class="max-w-75">
 								<div class="flex items-center justify-end gap-2">
@@ -113,11 +124,12 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { User } from "@/types/user"
-import { NButton, NModal, NScrollbar, NSpin, NTable, NTag, useMessage } from "naive-ui"
+import { NButton, NModal, NScrollbar, NSpin, NTable, NTag, NTooltip, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { NEEDS_A_CUSTOMER, needsCustomers, roleTagType } from "@/components/users/roles"
 import UserDropdown from "@/components/users/UserDropdown.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useAuthStore } from "@/stores/auth"
@@ -141,19 +153,9 @@ const loading = computed(() => loadingUsers.value || loadingDelete.value)
 const usernameList = computed(() => usersList.value.map(user => user.username))
 const emailList = computed(() => usersList.value.map(user => user.email))
 
-function getRoleTagType(roleName: string | null | undefined) {
-	switch (roleName?.toLowerCase()) {
-		case "admin":
-			return "error"
-		case "analyst":
-			return "warning"
-		case "scheduler":
-			return "info"
-		case "customer_user":
-			return "success"
-		default:
-			return "default"
-	}
+/** An analyst or responder with no customer assigned sees nothing (only known in the admin's list). */
+function seesNothing(user: User) {
+	return needsCustomers(user.role_name) && Array.isArray(user.customer_codes) && user.customer_codes.length === 0
 }
 
 function updateLoadingDelete(value: boolean) {

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
 import { signIn, signOut } from "./fixtures/auth"
-import { UNSCOPED_ANALYST } from "./seed"
+import { SCOPED_ANALYST } from "./seed"
 
 /**
  * #1133 — a `C:\` search in the Ctrl+K palette logged the user out.
@@ -16,7 +16,7 @@ import { UNSCOPED_ANALYST } from "./seed"
 test.describe("global search with a backslash in the term", () => {
 	test.beforeEach(async ({ page }) => {
 		await signOut(page)
-		await signIn(page, UNSCOPED_ANALYST)
+		await signIn(page, SCOPED_ANALYST)
 	})
 
 	test("sends the term as one encoded path segment and keeps the session", async ({ page }) => {

@@ -69,8 +69,13 @@
 									placeholder="Choose a role"
 									size="large"
 									to="body"
+									data-testid="signup-role"
 									@keydown.enter="signUp"
 								/>
+							</n-form-item>
+							<!-- An analyst or responder sees only their customers: at least one (#1219). -->
+							<n-form-item v-if="customersNeeded" path="customerCodes" label="Customers">
+								<UserCustomersSelect v-model:value="model.customerCodes" />
 							</n-form-item>
 
 							<!--
@@ -169,6 +174,8 @@ import isEmail from "validator/es/lib/isEmail"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { NEEDS_A_CUSTOMER, needsCustomers } from "@/components/users/roles"
+import UserCustomersSelect from "@/components/users/UserCustomersSelect.vue"
 import { AuthUserRole } from "@/types/auth"
 import { getApiErrorMessage } from "@/utils"
 // import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
@@ -179,6 +186,7 @@ interface ModelType {
 	username: string | null
 	confirmPassword: string | null
 	role: number | null
+	customerCodes: string[]
 	/*
 	customerCode: string | null
 	firstName: string | null
@@ -222,7 +230,13 @@ const accountStepValid = computed(
 		!!model.value.confirmPassword &&
 		model.value.password === model.value.confirmPassword
 )
-const detailsStepValid = computed(() => !!_trim(model.value.username || "") && !!model.value.role)
+const customersNeeded = computed(() => needsCustomers(model.value.role))
+const detailsStepValid = computed(
+	() =>
+		!!_trim(model.value.username || "") &&
+		!!model.value.role &&
+		(!customersNeeded.value || model.value.customerCodes.length > 0)
+)
 // const detailsStepValid = computed(() => !!model.value.customerCode && !!model.value.firstName && !!model.value.lastName)
 
 const passwordSchema = new PasswordValidator()
@@ -312,6 +326,13 @@ const rules: FormRules = {
 			type: "number",
 			message: "Role is required"
 		}
+	],
+	customerCodes: [
+		{
+			validator: (_rule: FormItemRule, value: string[]): boolean => !customersNeeded.value || value?.length > 0,
+			message: NEEDS_A_CUSTOMER,
+			trigger: ["change", "blur"]
+		}
 	]
 	/*
 	customerCode: [
@@ -344,7 +365,8 @@ function getModel(): ModelType {
 		password: null,
 		confirmPassword: null,
 		username: null,
-		role: null
+		role: null,
+		customerCodes: []
 		/*
 		customerCode: null,
 		firstName: null,
@@ -364,6 +386,7 @@ function reset(step?: number) {
 		case 2:
 			model.value.username = null
 			model.value.role = null
+			model.value.customerCodes = []
 			break
 		default:
 			model.value = getModel()
@@ -382,7 +405,8 @@ function signUp(e: Event) {
 				password: model.value.password || "",
 				email: _trim(model.value.email || ""),
 				username: _trim(model.value.username || ""),
-				role_id: model.value.role || 1
+				role_id: model.value.role || 1,
+				customer_codes: customersNeeded.value ? model.value.customerCodes : []
 				/*
 				customerCode: model.value.customerCode,
 				usersFirstName: model.value.firstName,

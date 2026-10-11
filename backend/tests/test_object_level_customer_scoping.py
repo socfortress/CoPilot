@@ -93,10 +93,12 @@ def test_admin_reaches_any_object_including_unattributable_ones():
     _run(ca.enforce_owned_object_access(_user(RoleEnum.admin), None, session, subject="report 1"))
 
 
-def test_unassigned_analyst_keeps_deployment_wide_reach():
-    # the #1050 upgrade compromise must survive here too, or upgrading strips access
-    session = _session([])
-    _run(ca.enforce_owned_object_access(_user(), THEIRS, session, subject="report 1"))
+def test_unassigned_analyst_or_responder_reaches_no_object():
+    # #1219 ended the #1050 upgrade compromise: no customers assigned means no access.
+    for role in (RoleEnum.analyst, RoleEnum.responder):
+        with pytest.raises(HTTPException) as exc:
+            _run(ca.enforce_owned_object_access(_user(role), THEIRS, _session([]), subject="report 1"))
+        assert exc.value.status_code == 403
 
 
 # ── scoped_customer_codes: aggregates with no customer code in the request ────
@@ -108,8 +110,11 @@ def test_scoped_codes_narrows_an_unfiltered_aggregate_to_the_assignment():
 
 
 def test_scoped_codes_returns_none_for_wildcard_so_nothing_is_filtered():
-    session = _session([])
-    assert _run(ca.scoped_customer_codes(_user(), None, session)) is None
+    assert _run(ca.scoped_customer_codes(_user(RoleEnum.admin), None, _session([]))) is None
+
+
+def test_scoped_codes_returns_nothing_for_an_unassigned_analyst():
+    assert _run(ca.scoped_customer_codes(_user(), None, _session([]))) == []
 
 
 def test_scoped_codes_intersects_a_requested_subset_rather_than_trusting_it():
@@ -126,5 +131,4 @@ def test_empty_list_is_distinct_from_none():
     """
     session = _session([MINE])
     assert _run(ca.scoped_customer_codes(_user(), [THEIRS], session)) == []
-    session = _session([])
-    assert _run(ca.scoped_customer_codes(_user(), None, session)) is None
+    assert _run(ca.scoped_customer_codes(_user(RoleEnum.admin), None, _session([]))) is None

@@ -4,14 +4,14 @@ import { useAuthStore } from "@/stores/auth"
 import { renderIcon } from "@/utils"
 
 import { detectionsItem } from "./items/detections"
-import { endpointsItem } from "./items/endpoints"
+import { getEndpointsItem } from "./items/endpoints"
 import { exposureItem } from "./items/exposure"
 import { routerLinkItem } from "./items/helpers"
 import { incidentsItem } from "./items/incidents"
 import { investigateItem } from "./items/investigate"
 import { getPlatformItem } from "./items/platform"
 import { reportsItem } from "./items/reports"
-import { respondItem } from "./items/respond"
+import { getRespondItem } from "./items/respond"
 
 const OverviewIcon = "carbon:dashboard"
 const CustomersIcon = "carbon:user-multiple"
@@ -47,10 +47,10 @@ export default function getItems(): MenuMixedOption[] {
 		},
 		incidentsItem,
 		investigateItem,
-		respondItem,
+		getRespondItem(authStore.canRespond),
 		detectionsItem,
 		exposureItem,
-		endpointsItem,
+		getEndpointsItem(authStore.canRespond),
 		{
 			...routerLinkItem("Customers", "Customers"),
 			icon: renderIcon(CustomersIcon)

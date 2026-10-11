@@ -78,12 +78,35 @@ class User(SQLModel, table=True):
     tag_access: List["UserTagAccess"] = Relationship(back_populates="user")
 
 
-# Enum class for role_id 1,2
+# Role ids are fixed: they are stored in user.role_id and role_tag_access.role_id, and
+# seeded with these exact ids (db_populate.add_roles_if_not_exist, migration c1219…).
 class RoleEnum(int, Enum):
     admin = 1
     analyst = 2
     scheduler = 3
     customer_user = 4
+    # An analyst who may also run response actions (quarantine, Velociraptor commands,
+    # CoPilot Actions, Sysmon deploy) — only on their assigned customers (#1219).
+    responder = 5
+
+
+# SOC staff scoped to the customers assigned to them: no assignments means no access,
+# and they must be created with at least one customer.
+CUSTOMER_SCOPED_SOC_ROLES = frozenset({RoleEnum.analyst, RoleEnum.responder})
+
+# Everyone who works in the SOC, as opposed to the scheduler and portal users.
+SOC_ROLES = frozenset({RoleEnum.admin, RoleEnum.analyst, RoleEnum.responder})
+
+# A role that extends another gets everything granted to it: a responder is an analyst
+# who may also run response actions, so its token carries the analyst scope too and it
+# sees the alerts the analyst role's tags open.
+ROLE_EXTENDS = {RoleEnum.responder: (RoleEnum.analyst,)}
+
+
+def effective_roles(role_id: int) -> List[RoleEnum]:
+    """The role itself first, then the roles it extends."""
+    role = RoleEnum(role_id)
+    return [role, *ROLE_EXTENDS.get(role, ())]
 
 
 class UserInput(SQLModel):
@@ -100,9 +123,12 @@ class UserInput(SQLModel):
     email: EmailStr
     role_id: RoleEnum = Field(
         RoleEnum.analyst,
-        description="Role ID 1: admin, 2: analyst",
+        description="Role ID 1: admin, 2: analyst, 5: responder",
         foreign_key="role.id",
     )
+
+    # The customers an analyst or responder works on: required for those roles (#1219).
+    customer_codes: List[str] = Field(default_factory=list, description="Customers to assign: at least one for an analyst or responder")
 
     @field_validator("role_id")
     @classmethod

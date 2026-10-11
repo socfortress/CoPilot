@@ -40,6 +40,7 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import SOC_ROLES
 from app.auth.models.users import RoleEnum
 from app.customer_portal.services.ai_reports import is_ai_reports_enabled
 from app.db.universal_models import CustomerNotificationRoute
@@ -122,7 +123,7 @@ def _require_send_permission(user: Any, route: CustomerNotificationRoute) -> Non
     if role_id == RoleEnum.customer_user.value:
         raise HTTPException(status_code=403, detail="Portal users cannot send notifications.")
 
-    if role_id not in (RoleEnum.admin.value, RoleEnum.analyst.value):
+    if role_id not in {role.value for role in SOC_ROLES}:
         raise HTTPException(status_code=403, detail="You do not have permission to send notifications.")
 
     if route.scope == NotificationScope.CUSTOMER.value and role_id != RoleEnum.admin.value:

@@ -12,7 +12,7 @@
 					@loaded-artifacts="artifacts = $event"
 				/>
 			</n-tab-pane>
-			<n-tab-pane name="command" tab="Command" display-directive="show:lazy">
+			<n-tab-pane v-if="canRespond" name="command" tab="Command" display-directive="show:lazy">
 				<ArtifactsCommand
 					:agents
 					:artifacts
@@ -20,7 +20,7 @@
 					@loaded-artifacts="artifacts = $event"
 				/>
 			</n-tab-pane>
-			<n-tab-pane name="quarantine" tab="Quarantine" display-directive="show:lazy">
+			<n-tab-pane v-if="canRespond" name="quarantine" tab="Quarantine" display-directive="show:lazy">
 				<ArtifactsQuarantine
 					:agents
 					:artifacts
@@ -36,7 +36,8 @@
 import type { Agent } from "@/types/agents"
 import type { Artifact } from "@/types/artifacts"
 import { NTabPane, NTabs } from "naive-ui"
-import { defineAsyncComponent, ref } from "vue"
+import { computed, defineAsyncComponent, ref } from "vue"
+import { useAuthStore } from "@/stores/auth"
 
 const ArtifactsList = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsList.vue"))
 const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
@@ -47,4 +48,6 @@ const artifacts = ref<Artifact[]>([])
 const agents = ref<Agent[]>([])
 
 const activeTab = ref<string | undefined>(undefined)
+// Running a command or quarantining a host: admins and responders (#1219).
+const canRespond = computed(() => useAuthStore().canRespond)
 </script>

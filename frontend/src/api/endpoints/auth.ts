@@ -34,10 +34,11 @@ export default {
 			new_password: password
 		})
 	},
-	/** need admin role */
-	assignRole(userId: number, roleName: string) {
+	/** need admin role. An analyst or responder needs customers: send them unless the user already has some (#1219). */
+	assignRole(userId: number, roleName: string, customerCodes?: string[]) {
 		return HttpClient.put<FlaskBaseResponse>(`/auth/users/${userId}/role/by-name`, {
-			role_name: roleName
+			role_name: roleName,
+			...(customerCodes ? { customer_codes: customerCodes } : {})
 		})
 	},
 	/** need admin role */

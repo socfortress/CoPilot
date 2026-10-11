@@ -502,7 +502,7 @@ async def collect_artifact(
     "/command",
     response_model=RunCommandResponse,
     description="Run a remote command",
-    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder"))],
 )
 async def run_command(
     run_command_body: RunCommandBody,
@@ -521,6 +521,8 @@ async def run_command(
         RunCommandResponse: The response containing the result of the command execution.
     """
     logger.info(f"Received request to run command {run_command_body}")
+    # A responder is scoped to their customers (#1219): the host is named in the body.
+    await enforce_hostname_access(current_user, run_command_body.hostname, session)
     result = await get_all_artifacts_for_hostname(run_command_body.hostname, session)
     artifact_names = [artifact.name for artifact in result.artifacts]
     if run_command_body.artifact_name not in artifact_names:
@@ -558,8 +560,8 @@ async def run_command(
 @velociraptor_artifacts_router.post(
     "/quarantine",
     response_model=QuarantineResponse,
-    description="Quarantine a host",
-    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+    description="Quarantine a host, or release it (action=remove_quarantine)",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder"))],
 )
 async def quarantine(
     quarantine_body: QuarantineBody,
@@ -578,6 +580,8 @@ async def quarantine(
         QuarantineResponse: The response containing the result of the quarantine operation.
     """
     logger.info(f"Received request to quarantine host {quarantine_body}")
+    # A responder is scoped to their customers (#1219): the host is named in the body.
+    await enforce_hostname_access(current_user, quarantine_body.hostname, session)
     result = await get_all_artifacts_for_hostname(quarantine_body.hostname, session)
     artifact_names = [artifact.name for artifact in result.artifacts]
     # Resolve any configured custom-artifact override (e.g.

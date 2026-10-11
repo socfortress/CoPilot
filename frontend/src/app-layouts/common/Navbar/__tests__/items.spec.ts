@@ -13,9 +13,10 @@ import type { MenuMixedOption } from "naive-ui/es/menu/src/interface"
 import type { RouteRecordRaw } from "vue-router"
 import { describe, expect, it, vi } from "vitest"
 import { routes } from "@/router/routes"
+import { AuthUserRole } from "@/types/auth"
 import getItems from "../items"
 
-const auth = { isAdmin: true }
+const auth = { isAdmin: true, canRespond: true }
 
 vi.mock("@/stores/auth", () => ({ useAuthStore: () => auth }))
 
@@ -84,6 +85,9 @@ const PREVIOUS_DESTINATIONS = [
 /** Entries analysts could not use or see before, and still don't get. */
 const ADMIN_ONLY = ["InternalNotifications", "MessageTemplates", "SSOConfig", "Audit"]
 
+/** Response pages: admins and responders, not analysts (#1219) — the same as their routes. */
+const RESPONSE_ONLY = ["CopilotActions", "SysmonConfig"]
+
 interface Leaf {
 	key: string
 	linkedRoute: string | null
@@ -119,8 +123,9 @@ function routeNames(records: RouteRecordRaw[]): Set<string> {
 	return names
 }
 
-function menuFor(role: "admin" | "analyst") {
+function menuFor(role: "admin" | "analyst" | "responder") {
 	auth.isAdmin = role === "admin"
+	auth.canRespond = role !== "analyst"
 	return getItems()
 }
 
@@ -151,10 +156,30 @@ describe("sidebar menu", () => {
 		expect(keys.filter((key, i) => keys.indexOf(key) !== i)).toEqual([])
 	})
 
-	it("gives analysts everything except the admin-only entries", () => {
+	it("gives analysts everything except the admin-only and response entries", () => {
 		const admin = leaves(menuFor("admin")).map(leaf => leaf.key)
 		const analyst = leaves(menuFor("analyst")).map(leaf => leaf.key)
-		expect(admin.filter(key => !analyst.includes(key)).sort()).toEqual([...ADMIN_ONLY].sort())
+		expect(admin.filter(key => !analyst.includes(key)).sort()).toEqual([...ADMIN_ONLY, ...RESPONSE_ONLY].sort())
+	})
+
+	it("gives responders everything except the admin-only entries (#1219)", () => {
+		const admin = leaves(menuFor("admin")).map(leaf => leaf.key)
+		const responder = leaves(menuFor("responder")).map(leaf => leaf.key)
+		expect(admin.filter(key => !responder.includes(key)).sort()).toEqual([...ADMIN_ONLY].sort())
+	})
+
+	it("shows a response entry exactly to the roles its route admits", () => {
+		const roleOf = (name: string) => {
+			const find = (list: RouteRecordRaw[]): RouteRecordRaw | undefined =>
+				list.reduce<RouteRecordRaw | undefined>(
+					(found, record) => found ?? (record.name === name ? record : find(record.children ?? [])),
+					undefined
+				)
+			return find(routes)?.meta?.roles
+		}
+		for (const name of RESPONSE_ONLY) {
+			expect(roleOf(name), name).toEqual([AuthUserRole.Admin, AuthUserRole.Responder])
+		}
 	})
 
 	it("drops a Platform group left empty for analysts rather than showing it bare", () => {

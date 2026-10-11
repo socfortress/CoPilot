@@ -57,10 +57,17 @@ def test_analyst_with_assignments_is_scoped_to_them():
     assert "*" not in codes
 
 
-def test_analyst_without_assignments_keeps_deployment_wide_access():
-    # backwards compatibility: no deployment has assigned analysts before this change
-    codes, _ = _accessible(RoleEnum.analyst, [])
-    assert codes == ["*"]
+def test_analyst_without_assignments_sees_nothing():
+    # #1219: an analyst or responder is scoped to their customers, and none means none.
+    # (Before it, an unassigned analyst kept the deployment-wide access of pre-#1050.)
+    for role in (RoleEnum.analyst, RoleEnum.responder):
+        codes, _ = _accessible(role, [])
+        assert codes == [], role
+
+
+def test_responder_is_scoped_to_its_assignments_like_an_analyst():
+    codes, _ = _accessible(RoleEnum.responder, [ASSIGNED])
+    assert codes == [ASSIGNED]
 
 
 def test_admin_ignores_assignments_entirely():
@@ -101,10 +108,10 @@ def test_scoped_analyst_is_allowed_their_own_customer():
     assert allowed is True
 
 
-def test_unassigned_analyst_still_reaches_every_customer():
+def test_unassigned_analyst_reaches_no_customer():
     handler = CustomerAccessHandler()
     allowed = asyncio.run(handler.check_customer_access(_user(RoleEnum.analyst), FOREIGN, _session([])))
-    assert allowed is True
+    assert allowed is False
 
 
 def test_enforce_customer_access_raises_403_for_scoped_analyst():
@@ -227,12 +234,12 @@ def test_optional_code_dependency_passes_through_when_absent():
     assert result is None
 
 
-def test_query_is_untouched_for_an_unassigned_analyst():
+def test_query_returns_nothing_for_an_unassigned_analyst():
     handler = CustomerAccessHandler()
     base_query = MagicMock()
     column = MagicMock()
 
-    returned = asyncio.run(
+    asyncio.run(
         handler.filter_query_by_customer_access(
             _user(RoleEnum.analyst),
             _session([]),
@@ -241,5 +248,4 @@ def test_query_is_untouched_for_an_unassigned_analyst():
         ),
     )
 
-    assert returned is base_query
-    base_query.where.assert_not_called()
+    base_query.where.assert_called_once_with(False)

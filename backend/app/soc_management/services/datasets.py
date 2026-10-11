@@ -32,7 +32,7 @@ from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.models.users import RoleEnum
+from app.auth.models.users import SOC_ROLES
 from app.auth.models.users import User
 from app.db.universal_models import Customers
 from app.incidents.models import Alert
@@ -320,8 +320,8 @@ async def tracking_since(session: AsyncSession) -> Optional[datetime]:
 
 
 async def soc_usernames(session: AsyncSession) -> Set[str]:
-    """Usernames of the SOC team (admins and analysts) — whose actions the dashboard attributes."""
-    result = await session.execute(select(User.username).where(User.role_id.in_([RoleEnum.admin.value, RoleEnum.analyst.value])))
+    """Usernames of the SOC team (admins, analysts, responders) — whose actions the dashboard attributes."""
+    result = await session.execute(select(User.username).where(User.role_id.in_([role.value for role in SOC_ROLES])))
     return set(result.scalars().all())
 
 
