@@ -37,38 +37,20 @@
 		</div>
 	</n-popover>
 
-	<n-modal
+	<CustomerDetailsModal
 		v-model:show="showDetails"
-		preset="card"
-		content-class="p-0!"
-		:style="{ maxWidth: 'min(1100px, 90vw)', minHeight: 'min(470px, 90vh)', overflow: 'hidden' }"
+		:customer-code="selectedCode"
 		:title="selectedCode ? nameOf(selectedCode) : ''"
-		:bordered="false"
-		segmented
-	>
-		<template #header-extra>
-			<ModalPageButton
-				v-if="selectedCode"
-				:route="routeCustomer({ code: selectedCode })"
-				label="Open the customer's page"
-				@navigate="showDetails = false"
-			/>
-		</template>
-		<CustomerDetails
-			v-if="showDetails && selectedCode"
-			:customer-code="selectedCode"
-			use-max-height
-			@delete="deleted()"
-		/>
-	</n-modal>
+		@deleted="emit('customerDeleted')"
+	/>
 </template>
 
 <script setup lang="ts">
-import { NModal, NPopover, NScrollbar, NTag } from "naive-ui"
-import { computed, defineAsyncComponent, ref } from "vue"
+import { NPopover, NScrollbar, NTag } from "naive-ui"
+import { computed, ref } from "vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
-import ModalPageButton from "@/components/common/ModalPageButton.vue"
+import CustomerDetailsModal from "@/components/customers/CustomerDetailsModal.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { seesEveryCustomer } from "./roles"
 
@@ -88,8 +70,6 @@ const emit = defineEmits<{
 	(e: "customerDeleted"): void
 }>()
 
-const CustomerDetails = defineAsyncComponent(() => import("@/components/customers/CustomerDetails.vue"))
-
 const CustomersIcon = "carbon:enterprise"
 
 const { routeCustomer } = useNavigation()
@@ -105,10 +85,5 @@ function nameOf(code: string) {
 function openCustomer(code: string) {
 	selectedCode.value = code
 	showDetails.value = true
-}
-
-function deleted() {
-	showDetails.value = false
-	emit("customerDeleted")
 }
 </script>

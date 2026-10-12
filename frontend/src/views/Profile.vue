@@ -54,6 +54,7 @@
 				<n-tabs v-model:value="tabActive">
 					<n-tab name="settings">Settings</n-tab>
 					<n-tab name="security">Security</n-tab>
+					<n-tab name="customers">Customers</n-tab>
 				</n-tabs>
 			</div>
 		</n-card>
@@ -70,6 +71,9 @@
 						<PasskeyToggle />
 					</div>
 				</n-tab-pane>
+				<n-tab-pane name="customers">
+					<ProfileCustomers />
+				</n-tab-pane>
 			</n-tabs>
 		</div>
 	</div>
@@ -84,6 +88,7 @@ import PasskeyToggle from "@/components/auth/PasskeyToggle.vue"
 import TotpToggle from "@/components/auth/TotpToggle.vue"
 import Icon from "@/components/common/Icon.vue"
 import ImageCropper from "@/components/common/ImageCropper.vue"
+import ProfileCustomers from "@/components/profile/ProfileCustomers.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
 
 import { useAuthStore } from "@/stores/auth"
