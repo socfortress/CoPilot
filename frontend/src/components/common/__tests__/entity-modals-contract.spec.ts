@@ -20,6 +20,7 @@ const ENTITY_OVERLAYS = [
 	"components/copilotSearches/MatrixView/MatrixView.vue",
 	"components/copilotSearches/RuleCard.vue",
 	"components/customers/aiNotifications/CustomerAiNotificationRoutes/CustomerAiNotificationRouteItem.vue",
+	"components/customers/CustomerDetailsModal.vue",
 	"components/customers/CustomerItem.vue",
 	"components/customers/healthcheck/CustomerHealthcheckItem.vue",
 	"components/detectionCatalog/ComplianceDetail.vue",

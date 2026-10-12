@@ -7,7 +7,6 @@ from loguru import logger
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from starlette.status import HTTP_403_FORBIDDEN
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
@@ -41,25 +40,6 @@ from app.middleware.search_query import apply_search_limit
 from app.middleware.search_query import search_query
 
 customers_router = APIRouter()
-
-
-def verify_admin(user):
-    """
-    Verify if the user is an admin.
-
-    Args:
-        user: The user object to be verified.
-
-    Raises:
-        HTTPException: If the user is not an admin.
-
-    Returns:
-        None
-    """
-    # 403, not 401: the caller *is* authenticated, just not allowed. The frontend
-    # treats a 401 as an expired session and logs the user out (#1133).
-    if not user.is_admin:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Unauthorized")
 
 
 async def verify_unique_customer_code(

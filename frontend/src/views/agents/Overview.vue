@@ -91,7 +91,7 @@
 							@loaded-artifacts="artifacts = $event"
 						/>
 					</n-tab-pane>
-					<n-tab-pane name="command" tab="Command" display-directive="show:lazy">
+					<n-tab-pane v-if="canRespond" name="command" tab="Command" display-directive="show:lazy">
 						<ArtifactsCommand
 							v-if="agent"
 							:hostname="agent.hostname"
@@ -100,7 +100,7 @@
 							@loaded-artifacts="artifacts = $event"
 						/>
 					</n-tab-pane>
-					<n-tab-pane name="quarantine" tab="Quarantine" display-directive="show:lazy">
+					<n-tab-pane v-if="canRespond" name="quarantine" tab="Quarantine" display-directive="show:lazy">
 						<ArtifactsQuarantine
 							v-if="agent"
 							:hostname="agent.hostname"
@@ -142,6 +142,7 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import DetailPageHeader from "@/components/common/DetailPageHeader.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useNavigation } from "@/composables/useNavigation"
+import { useAuthStore } from "@/stores/auth"
 import { AgentStatus } from "@/types/agents"
 import { getApiErrorMessage } from "@/utils"
 
@@ -172,6 +173,8 @@ const router = useRouter()
 const dialog = useDialog()
 const route = useRoute()
 const loadingAgent = ref(false)
+// Running a command or quarantining the host: admins and responders (#1219).
+const canRespond = computed(() => useAuthStore().canRespond)
 const upgradingAgent = ref(false)
 const agent = ref<Agent | null>(null)
 const agentId = ref<string | null>(null)

@@ -30,6 +30,7 @@
 							<th>Username</th>
 							<th>Email</th>
 							<th>Role</th>
+							<th v-if="isAdmin">Customers</th>
 							<th class="max-w-75"></th>
 						</tr>
 					</thead>
@@ -52,9 +53,34 @@
 								{{ user.email }}
 							</td>
 							<td>
-								<n-tag :type="getRoleTagType(user.role_name)" size="small">
+								<n-tag :type="roleTagType(user.role_name)" size="small">
 									{{ user.role_name || "No Role" }}
 								</n-tag>
+							</td>
+							<!-- Assignments are the admin's to see: only their list carries customer_codes. -->
+							<td v-if="isAdmin">
+								<!-- Sees nothing until an admin assigns a customer (#1219). -->
+								<n-tooltip v-if="seesNothing(user)" class="max-w-75 text-xs!">
+									<template #trigger>
+										<n-tag
+											type="warning"
+											size="small"
+											:bordered="false"
+											data-testid="user-no-customers"
+											class="cursor-help!"
+										>
+											No customers
+										</n-tag>
+									</template>
+									{{ NEEDS_A_CUSTOMER }}
+								</n-tooltip>
+								<UserCustomersBadge
+									v-else
+									:customer-codes="user.customer_codes || []"
+									:role-name="user.role_name"
+									:customer-names
+									@customer-deleted="getUsers"
+								/>
 							</td>
 							<td class="max-w-75">
 								<div class="flex items-center justify-end gap-2">
@@ -113,11 +139,13 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { User } from "@/types/user"
-import { NButton, NModal, NScrollbar, NSpin, NTable, NTag, useMessage } from "naive-ui"
+import { NButton, NModal, NScrollbar, NSpin, NTable, NTag, NTooltip, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
+import { NEEDS_A_CUSTOMER, needsCustomers, roleTagType } from "@/components/users/roles"
+import UserCustomersBadge from "@/components/users/UserCustomersBadge.vue"
 import UserDropdown from "@/components/users/UserDropdown.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useAuthStore } from "@/stores/auth"
@@ -138,22 +166,13 @@ const showTagRbacSettings = ref(false)
 const usersList = ref<User[]>([])
 const isAdmin = useAuthStore().isAdmin
 const loading = computed(() => loadingUsers.value || loadingDelete.value)
+const customerNames = ref<Record<string, string>>({})
 const usernameList = computed(() => usersList.value.map(user => user.username))
 const emailList = computed(() => usersList.value.map(user => user.email))
 
-function getRoleTagType(roleName: string | null | undefined) {
-	switch (roleName?.toLowerCase()) {
-		case "admin":
-			return "error"
-		case "analyst":
-			return "warning"
-		case "scheduler":
-			return "info"
-		case "customer_user":
-			return "success"
-		default:
-			return "default"
-	}
+/** An analyst or responder with no customer assigned sees nothing (only known in the admin's list). */
+function seesNothing(user: User) {
+	return needsCustomers(user.role_name) && Array.isArray(user.customer_codes) && user.customer_codes.length === 0
 }
 
 function updateLoadingDelete(value: boolean) {
@@ -187,7 +206,22 @@ function getUsers() {
 		})
 }
 
+/** Names for the customers column, once for the whole table; a code stands in on failure. */
+async function getCustomerNames() {
+	try {
+		const res = await Api.customers.getCustomers({})
+		customerNames.value = Object.fromEntries(
+			(res.data.customers || []).map(c => [c.customer_code, c.customer_name])
+		)
+	} catch {
+		customerNames.value = {}
+	}
+}
+
 onBeforeMount(() => {
 	getUsers()
+	if (isAdmin) {
+		getCustomerNames()
+	}
 })
 </script>

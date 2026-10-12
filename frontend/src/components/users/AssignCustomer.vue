@@ -23,7 +23,7 @@
 			</div>
 
 			<n-form :model="formModel">
-				<n-form-item label="Select Customers">
+				<n-form-item label="Select Customers" :feedback="customersNeeded ? NEEDS_A_CUSTOMER : undefined">
 					<n-select
 						v-model:value="formModel.customerCodes"
 						:options="customerOptions"
@@ -45,7 +45,15 @@
 
 			<div class="flex justify-end gap-3">
 				<n-button @click="showModal = false">Cancel</n-button>
-				<n-button type="primary" :loading @click="handleAssignCustomers">Assign Customers</n-button>
+				<n-button
+					type="primary"
+					:loading
+					:disabled="customersNeeded && !formModel.customerCodes.length"
+					data-testid="assign-customers-submit"
+					@click="handleAssignCustomers"
+				>
+					Assign Customers
+				</n-button>
 			</div>
 		</div>
 	</n-modal>
@@ -60,6 +68,7 @@ import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
+import { NEEDS_A_CUSTOMER, needsCustomers } from "./roles"
 
 const props = defineProps<{
 	user?: User
@@ -80,6 +89,9 @@ const currentAccess = ref<string[]>([])
 const formModel = ref({
 	customerCodes: [] as string[]
 })
+
+// An analyst or responder sees only their customers, so they keep at least one (#1219).
+const customersNeeded = computed(() => needsCustomers(props.user?.role_name ?? props.user?.role_id))
 
 const customerOptions = computed(() =>
 	customers.value.map(customer => ({

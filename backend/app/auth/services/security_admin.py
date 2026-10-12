@@ -31,16 +31,12 @@ from app.auth.models.users import UserCustomerAccess
 
 TEMP_PASSWORD_LENGTH = 16
 
-_ROLE_NAMES = {
-    RoleEnum.admin.value: "admin",
-    RoleEnum.analyst.value: "analyst",
-    RoleEnum.scheduler.value: "scheduler",
-    RoleEnum.customer_user.value: "customer_user",
-}
-
 
 def _role_name(role_id: Optional[int]) -> Optional[str]:
-    return _ROLE_NAMES.get(role_id) if role_id is not None else None
+    try:
+        return RoleEnum(role_id).name if role_id is not None else None
+    except ValueError:
+        return None
 
 
 async def list_customer_users(session: AsyncSession, customer_code: str) -> List[Dict[str, Any]]:

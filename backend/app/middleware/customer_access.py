@@ -10,6 +10,7 @@ from fastapi import Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import CUSTOMER_SCOPED_SOC_ROLES
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.auth.models.users import UserCustomerAccess
@@ -18,6 +19,9 @@ from app.db.db_session import get_db
 
 # Key in ``session.info`` for the per-request memo of accessible customers.
 _ACCESSIBLE_CUSTOMERS_KEY = "accessible_customers_by_user"
+
+# Roles whose access is exactly their user_customer_access rows (no rows: no access).
+CUSTOMER_SCOPED_ROLES = (*CUSTOMER_SCOPED_SOC_ROLES, RoleEnum.customer_user)
 
 
 def _accessible_customers_memo(session: AsyncSession) -> Optional[Dict[int, Tuple[str, ...]]]:
@@ -43,15 +47,12 @@ class CustomerAccessHandler:
 
         Returns ``["*"]`` for deployment-wide access, or a concrete list of codes.
 
-        Roles differ in how an *empty* ``user_customer_access`` set is read, and the
-        difference is deliberate:
-
         - **admin** — always deployment-wide. Assignments are never consulted, so an
           admin cannot lock themselves out of the tenant they administer.
-        - **analyst** — scoped to their assignments *when they have any*, otherwise
-          deployment-wide. Assigning customers to an analyst is what opts that analyst
-          into scoping (#1050); without this, an upgrade would silently strip every
-          existing analyst of all access, since no deployment has assigned them rows.
+        - **analyst** and **responder** — scoped to their assignments, and no
+          assignments means no access (#1219). Both are created with at least one
+          customer; an analyst left over from before #1219 with none sees nothing until
+          an admin assigns some. (Before #1219 an unassigned analyst was deployment-wide.)
         - **customer_user** — always scoped to their assignments, and no assignments
           means no access. A portal user must never fall back to seeing everything.
         """
@@ -59,18 +60,13 @@ class CustomerAccessHandler:
         if user.role_id == RoleEnum.admin:
             return ["*"]  # Wildcard for all customers
 
-        if user.role_id in [RoleEnum.analyst, RoleEnum.customer_user]:
+        if user.role_id in CUSTOMER_SCOPED_ROLES:
             memo = _accessible_customers_memo(session)
             if memo is not None and user.id in memo:
                 return list(memo[user.id])
 
             result = await session.execute(select(UserCustomerAccess.customer_code).where(UserCustomerAccess.user_id == user.id))
             assigned_customers = list(result.scalars().all())
-
-            # An unassigned analyst keeps the deployment-wide access they had before
-            # scoping existed; an unassigned portal user gets nothing.
-            if not assigned_customers and user.role_id == RoleEnum.analyst:
-                assigned_customers = ["*"]
 
             if memo is not None:
                 memo[user.id] = tuple(assigned_customers)

@@ -21,6 +21,7 @@ import type { User } from "@/types/user"
 import { NButton, NDropdown } from "naive-ui"
 import { computed, defineAsyncComponent, h } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import { seesEveryCustomer } from "./roles"
 
 const props = defineProps<{
 	user: User
@@ -49,15 +50,20 @@ const options = computed(() => [
 				onSuccess: () => emit("success")
 			})
 	},
-	{
-		key: "AssignCustomer",
-		type: "render",
-		render: () =>
-			h(AssignCustomer, {
-				user: props.user,
-				onSuccess: () => emit("success")
-			})
-	},
+	// An admin sees every customer: assigning them some would change nothing (#1219).
+	...(seesEveryCustomer(props.user.role_name ?? props.user.role_id)
+		? []
+		: [
+				{
+					key: "AssignCustomer",
+					type: "render",
+					render: () =>
+						h(AssignCustomer, {
+							user: props.user,
+							onSuccess: () => emit("success")
+						})
+				}
+			]),
 	{
 		key: "AssignTags",
 		type: "render",

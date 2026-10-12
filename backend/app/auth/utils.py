@@ -11,6 +11,8 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi.security import SecurityScopes
 from loguru import logger
 
+from app.auth.models.users import RoleEnum
+from app.auth.models.users import effective_roles
 from app.auth.services.universal import find_user
 from app.auth.services.universal import get_role
 
@@ -35,6 +37,18 @@ def _load_jwt_secret() -> str:
     return secret
 
 
+def role_scopes(role: str) -> list:
+    """A token's scopes: its role's name first, then the names of the roles it extends.
+
+    A responder's token says ``["responder", "analyst"]`` (#1219), so every analyst route
+    admits it unchanged and only the response routes name "responder".
+    """
+    try:
+        return [extended.name for extended in effective_roles(RoleEnum[role])]
+    except KeyError:
+        return [role]
+
+
 class AuthHandler:
     security = OAuth2PasswordBearer(
         tokenUrl="api/auth/token",
@@ -43,6 +57,7 @@ class AuthHandler:
             "analyst": "SOC Analysts",
             "scheduler": "Scheduler for automated tasks",
             "customer_user": "Customer portal users",
+            "responder": "SOC Analysts who may also run response actions on their customers",
         },
     )
     secret = _load_jwt_secret()
@@ -160,7 +175,7 @@ class AuthHandler:
             "exp": datetime.utcnow() + access_token_expires,
             "iat": datetime.utcnow(),
             "sub": username,
-            "scopes": [role],
+            "scopes": role_scopes(role),
         }
         if extra_claims:
             payload.update(extra_claims)

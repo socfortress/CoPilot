@@ -43,7 +43,7 @@ from tests.soc_management_support import add_case  # noqa: E402
 
 ADMIN = SimpleNamespace(id=1, username="admin", role_id=1)
 ANA = SimpleNamespace(id=2, username="ana", role_id=2)  # assigned to ACME only
-BOB = SimpleNamespace(id=3, username="bob", role_id=2)  # unassigned: deployment-wide
+BOB = SimpleNamespace(id=3, username="bob", role_id=2)  # unassigned: sees no customer (#1219)
 PERIOD = Period(T0 - timedelta(days=1), T0 + timedelta(days=6))
 NOW = T0 + timedelta(days=5)
 
@@ -152,10 +152,11 @@ def test_a_scoped_analyst_counts_only_their_customer_and_sees_only_their_row():
     assert dash.policy.customer_code == "ACME"  # one customer in scope: its policy is shown
 
 
-def test_an_unassigned_analyst_is_deployment_wide_but_still_sees_only_their_row():
+def test_an_unassigned_analyst_sees_no_customer_and_only_their_row():
+    # #1219: no customers assigned means none of their figures, not every customer's.
     dash = run(_dashboard(BOB))
-    assert dash.headline.alerts.opened == 4
-    assert [row.username for row in dash.analysts] == ["bob"]
+    assert dash.headline.alerts.opened == 0 and dash.headline.cases.opened == 0
+    assert dash.analysts == []
 
 
 def test_an_admin_can_narrow_to_customers():

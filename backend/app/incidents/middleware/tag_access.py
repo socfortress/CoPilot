@@ -11,6 +11,7 @@ from app.auth.models.users import RoleEnum
 from app.auth.models.users import RoleTagAccess
 from app.auth.models.users import User
 from app.auth.models.users import UserTagAccess
+from app.auth.models.users import effective_roles
 from app.incidents.models import Alert
 from app.incidents.models import AlertToTag
 from app.incidents.models import TagAccessSettings
@@ -78,9 +79,11 @@ class TagAccessHandler:
         user_tags = {row[0] for row in user_tags_result}
         accessible_tags.update(user_tags)
 
-        # Get role-based tag access
+        # Get role-based tag access: the user's role and the roles it extends (a
+        # responder sees what the analyst role's tags open, #1219).
         if user.role_id:
-            role_tags_result = await db.execute(select(RoleTagAccess.tag_id).where(RoleTagAccess.role_id == user.role_id))
+            role_ids = [role.value for role in effective_roles(user.role_id)]
+            role_tags_result = await db.execute(select(RoleTagAccess.tag_id).where(RoleTagAccess.role_id.in_(role_ids)))
             role_tags = {row[0] for row in role_tags_result}
             accessible_tags.update(role_tags)
 

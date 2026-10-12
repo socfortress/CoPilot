@@ -1,3 +1,6 @@
+from typing import List
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -23,3 +26,6 @@ class TokenData(BaseModel):
 
 class UpdateUserRoleRequest(BaseModel):
     role_name: str
+    # Replaces the user's customers in the same change. Required when the user becomes an
+    # analyst or responder and has none yet (#1219); ignored for other roles' rules.
+    customer_codes: Optional[List[str]] = None

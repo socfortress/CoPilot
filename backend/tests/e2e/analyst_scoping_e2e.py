@@ -13,7 +13,7 @@
 Punta a un'istanza usa-e-getta sulla porta 13306: mai al MySQL della .env.
 
 Verifica le due assunzioni:
-  A) analyst SENZA clienti assegnati -> vede tutto
+  A) analyst SENZA clienti assegnati -> non vede nulla (#1219; prima di #1219 vedeva tutto)
   B) analyst CON clienti assegnati  -> vede solo quelli, anche quando la lista
      viene chiamata senza customer_code
 """
@@ -64,7 +64,7 @@ async def seed():
     auth = AuthHandler()
     async with AsyncSession(async_engine) as s:
         # ruoli
-        for rid, rname in [(1, "admin"), (2, "analyst"), (3, "scheduler"), (4, "customer_user")]:
+        for rid, rname in [(1, "admin"), (2, "analyst"), (3, "scheduler"), (4, "customer_user"), (5, "responder")]:
             if not (await s.execute(select(Role).where(Role.id == rid))).scalars().first():
                 s.add(Role(id=rid, name=rname, description=rname))
         await s.commit()
@@ -199,13 +199,13 @@ async def main():
         r = await client.get("/customers", headers=H(t_unscoped))
         codes = {c["customer_code"] for c in r.json().get("customers", [])} if r.status_code == 200 else set()
         check(
-            "GET /customers -> vede tutti e 3",
-            r.status_code == 200 and {CUST_A, CUST_B, CUST_C} <= codes,
+            "GET /customers -> nessun cliente",
+            r.status_code in (200, 404) and not codes & {CUST_A, CUST_B, CUST_C},
             f"{r.status_code} {sorted(codes)}",
         )
 
         r = await client.get(f"/customers/{CUST_B}", headers=H(t_unscoped))
-        check("GET /customers/E2E_B -> 200", r.status_code == 200, str(r.status_code))
+        check("GET /customers/E2E_B -> 403", r.status_code == 403, str(r.status_code))
 
         print("\n=== B) analyst CON un cliente assegnato (E2E_A) ===")
         r = await client.get("/customers", headers=H(t_scoped))

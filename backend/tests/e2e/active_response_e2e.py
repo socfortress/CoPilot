@@ -43,6 +43,7 @@ Verifica:
   G) la 422 di (B) è finita davvero in log_entries
 """
 import asyncio
+import datetime
 import os
 import sys
 from unittest.mock import AsyncMock
@@ -69,9 +70,12 @@ from app.active_response.routes.active_response import (  # noqa: E402
 )
 from app.auth.models.users import Role  # noqa: E402
 from app.auth.models.users import User
+from app.auth.models.users import UserCustomerAccess
 from app.auth.utils import AuthHandler  # noqa: E402
 from app.db.db_session import async_engine  # noqa: E402
-from app.db.universal_models import LogEntry  # noqa: E402
+from app.db.universal_models import Agents  # noqa: E402
+from app.db.universal_models import Customers
+from app.db.universal_models import LogEntry
 from app.middleware.exception_handlers import (  # noqa: E402
     custom_http_exception_handler,
 )
@@ -79,6 +83,8 @@ from app.middleware.exception_handlers import validation_exception_handler
 
 PASSWORD = "E2ePassw0rd!x"
 ANALYST = "e2e_ar_analyst"
+AGENT_ID = "032"
+CUSTOMER = "E2E_AR"
 
 FAILURES = []
 
@@ -127,6 +133,40 @@ async def ensure_analyst(session: AsyncSession) -> str:
         user = User(username=ANALYST, password=auth.get_password_hash(PASSWORD), email=f"{ANALYST}@e2e.example", role_id=2)
         session.add(user)
         await session.commit()
+
+    # Un analyst vede solo i clienti assegnati (#1219: senza assegnazioni non vede nulla),
+    # e il route verifica che l'agente bersaglio sia di uno di questi. Lo assegniamo al
+    # cliente che possiede l'agente: quello gia' presente nel DB, oppure uno creato qui.
+    owner = (await session.execute(select(Agents.customer_code).where(Agents.agent_id == AGENT_ID))).scalars().first()
+    if owner is None:
+        if not (await session.execute(select(Customers).where(Customers.customer_code == CUSTOMER))).scalars().first():
+            session.add(Customers(customer_code=CUSTOMER, customer_name="E2E active response", customer_type="MSSP", logo_file=""))
+            await session.commit()
+        session.add(
+            Agents(
+                agent_id=AGENT_ID,
+                ip_address="10.0.0.32",
+                os="Windows",
+                hostname="e2e-ar-host",
+                label="e2e-ar-host",
+                critical_asset=False,
+                customer_code=CUSTOMER,
+                quarantined=False,
+                velociraptor_id="",
+                velociraptor_org="root",
+                wazuh_last_seen=datetime.datetime(2026, 1, 1),
+                wazuh_agent_version="4.x",
+                velociraptor_agent_version="0.7",
+            ),
+        )
+        await session.commit()
+        owner = CUSTOMER
+    # Read the id with a query: the committed ``user`` is expired, and touching it here
+    # would refresh it synchronously (MissingGreenlet under AsyncSession).
+    user_id = (await session.execute(select(User.id).where(User.username == ANALYST))).scalars().one()
+    await session.execute(delete(UserCustomerAccess).where(UserCustomerAccess.user_id == user_id))
+    session.add(UserCustomerAccess(user_id=user_id, customer_code=owner))
+    await session.commit()
 
     # encode_token e' async e prende lo username: il ruolo lo risolve da DB.
     return await auth.encode_token(ANALYST)
@@ -226,7 +266,13 @@ async def main():
         )
 
     async with AsyncSession(async_engine) as session:
-        await session.execute(delete(User).where(User.username == ANALYST))
+        user = (await session.execute(select(User).where(User.username == ANALYST))).scalars().first()
+        if user:
+            await session.execute(delete(UserCustomerAccess).where(UserCustomerAccess.user_id == user.id))
+            await session.delete(user)
+        # Solo cio' che ha creato questo script: un agente 032 preesistente resta dov'e'.
+        await session.execute(delete(Agents).where(Agents.agent_id == AGENT_ID, Agents.customer_code == CUSTOMER))
+        await session.execute(delete(Customers).where(Customers.customer_code == CUSTOMER))
         await session.commit()
 
     print()

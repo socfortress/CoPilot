@@ -6,6 +6,7 @@
 		indent-with-tab
 		:tab-size="4"
 		:extensions
+		:disabled="readonly"
 		:style="{
 			height: '100%'
 		}"
@@ -49,6 +50,11 @@ export interface XMLError {
 	message: string
 	level: "error"
 }
+
+const { readonly = false } = defineProps<{
+	/** Show the XML without letting it be edited. */
+	readonly?: boolean
+}>()
 
 const emit = defineEmits<{
 	(e: "errors", value: XMLError[]): void

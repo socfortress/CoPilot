@@ -142,12 +142,12 @@ MySQL is the primary store via async SQLAlchemy/SQLModel (`app/db/db_session.py`
 
 **Permissions / RBAC** (`app/auth/models/`):
 
-- `role` — four enumerated rows: `admin=1, analyst=2, scheduler=3, customer_user=4` (see `RoleEnum`).
+- `role` — five enumerated rows: `admin=1, analyst=2, scheduler=3, customer_user=4, responder=5` (see `RoleEnum`; ids are fixed and seeded explicitly — see "Responder role" below).
 - `user` — bcrypt password, FK to role.
 - `user_customer_access` — M2M scoping which customers a user can see.
 - `user_tag_access` + `role_tag_access` — parallel allow-list ACLs against alert tags (`incident_management_alerttag.id`). Toggled globally by the singleton `incident_management_tag_access_settings` (`enabled` flag, `untagged_alert_behavior` ∈ admin_only|visible_to_all|default_tag).
 - `user_totp` — Fernet-encrypted secret + bcrypt-hashed backup codes; `last_used_at` prevents replay.
-- `sso_config` (singleton id=1) — Azure / Google / Cloudflare Access JWT settings. `sso_allowed_email` is the email allowlist; new SSO users default to role 2 (analyst).
+- `sso_config` (singleton id=1) — Azure / Google / Cloudflare Access JWT settings. `sso_allowed_email` is the email allowlist (admin, analyst or responder); new SSO users default to role 2 (analyst) and, having no customer, see nothing until an admin assigns some.
 
 **Major domain blocks** — module → core tables → tenancy enforcement:
 
@@ -457,16 +457,21 @@ Rules when adding a route:
   deployment*.** `["*"]` from the UI normalises to `[]` before the handler sees it, so a
   scoped caller must name their targets and own each one; the empty case is a 403 rather
   than a silent fan-out across tenants.
-- **Admins stay deployment-wide everywhere**, and an analyst with *no* assignments keeps
-  the pre-#1050 wildcard — that upgrade compromise is preserved by every helper here.
+- **Admins stay deployment-wide everywhere.** Analysts and responders see exactly the
+  customers assigned to them — **no assignment means no customer** (#1219 removed the
+  pre-#1050 wildcard for unassigned analysts, which was the one remaining way an
+  assigned-looking analyst saw everything).
 
-**The wildcard-for-unassigned-analysts fallback is the one remaining way an assigned-
-looking analyst sees everything**, and it is invisible from the outside: `["*"]` looks
-the same whether the caller is an admin or an unassigned analyst. `GET /auth/me/customers`
-now returns a `scope` of `assigned` | `deployment` | `unassigned` to tell them apart, and
-the sidebar filter shows a warning on `unassigned` — because picking a customer *there*
-is only a view filter, and mistaking it for an assignment is exactly what produces
-"I assigned a customer and they still see the others".
+**Analysts and responders always have a customer** (#1219,
+`app/auth/services/customer_assignment.py:validate_assignment`): registering one, changing
+a user's role to one (`PUT /auth/users/{id}/role/by-name` takes `customer_codes` for that)
+and replacing their assignments all 400 without at least one existing customer, and
+assigning customers to an admin is refused rather than silently ignored (the Users menu
+offers no *Assign Customer* for an admin). An analyst left without customers from before
+the upgrade — or created at first SSO sign-in, which has no customer to give — sees
+nothing until an admin assigns some; `GET /auth/me/customers` reports that as
+`scope: unassigned` (vs `assigned` / `deployment`) and the sidebar filter says so, and the
+Users list flags them "No customers".
 
 **Browser e2e** for this area lives in `frontend/e2e/` (Playwright, `pnpm test:e2e`,
 `pnpm test:e2e:headed` to watch it). It drives the real app against a real backend on
@@ -482,6 +487,39 @@ Tests: `tests/test_object_level_customer_scoping.py` (middleware primitives) and
 `tests/e2e/analyst_object_scoping_e2e.py` (real routers, real MySQL, real JWT — the
 same disposable-13306 setup as `analyst_scoping_e2e.py`). Run the e2e against the
 pre-fix tree and 13 of its checks come back 200: that is the bug, reproduced.
+
+### Responder role (#1219)
+
+A **Responder** (`RoleEnum.responder = 5`) is an analyst who may also *act* on endpoints of
+the customers assigned to them. It sits between Analyst and Admin; analysts lost nothing.
+
+- **The token carries `["responder", "analyst"]`** (`auth/utils.py:role_scopes`, from
+  `models/users.py:ROLE_EXTENDS`), so every analyst route admits a responder without being
+  touched. Only response routes name `"responder"`: Velociraptor **command** and
+  **quarantine/unquarantine** (`/api/artifacts/command|quarantine`), every **CoPilot
+  Actions** route, and **Sysmon config** read + **deploy** (`/api/sysmon_config/…`).
+  Uploading a Sysmon config, deleting data-store artifacts and all user/customer/connector
+  administration stay admin-only. `tests/test_responder_role.py` enumerates the exact set
+  of routes that admit `responder` and fails on drift in either direction.
+- **Every response route checks the target's tenant**, since the target is in the body:
+  `enforce_hostname_access` per host (an empty CoPilot Action `agent_names` is a 400, never
+  a fan-out), `verify_customer_code_access` for Sysmon. CoPilot Action invokes and Sysmon
+  deploys write audit events (`response.copilot_action_invoke`, `response.sysmon_deploy`).
+- **Role-keyed tables follow `effective_roles`**: a responder gets the analyst role's
+  `role_tag_access` tags, and `SOC_ROLES` / `CUSTOMER_SCOPED_SOC_ROLES` replace the
+  hard-coded `(1, 2)` lists (SOC usernames, manual notification recipients, SSO allowlist
+  roles). Name a role with `RoleEnum(id).name`, never a local id → name map.
+- **Frontend**: `authStore.isRoleGranted` admits a responder wherever an analyst is
+  admitted (`utils/auth.ts:ROLE_EXTENDS`); `authStore.canRespond` (admin or responder)
+  gates the CoPilot Actions / Sysmon Config menu entries and routes and the Command /
+  Quarantine tabs. A responder sees Sysmon configs read-only and can deploy them.
+- **The role id is fixed at 5** (migration `c1219a2b3c4d` and `add_roles_if_not_exist`
+  insert it with an explicit id; the migration refuses if 5 is taken by another role, and
+  its downgrade refuses while a responder exists).
+
+Tests: `tests/test_responder_role.py`; frontend `stores/__tests__/auth-roles.spec.ts`,
+`components/users/__tests__/`, `Navbar/__tests__/items.spec.ts`,
+`e2e-mocked/responder-role.spec.ts`, and `e2e/unassigned-analyst.spec.ts` (real backend).
 
 ### Global customers filter (analyst frontend)
 
@@ -532,6 +570,7 @@ Tests: `tests/test_soc_management_{domain,analytics,lifecycle,metrics,routes,inc
 
 - **Don't edit `backend/app/routers/__init__.py` or `backend/app/db/all_models.py`** — auto-managed import aggregators, excluded from pre-commit for that reason.
 - **Don't write `scheduled_job_metadata.last_success` from inside a job.** It is stamped centrally by `scheduler_listener` on APScheduler's `EVENT_JOB_EXECUTED`, which fires only when the callable returned — a job that raises gets `EVENT_JOB_ERROR` and no stamp, and a job that deliberately no-ops ("cache still fresh, skipping") returns normally and correctly counts as a success. It used to be each job's own job, copy-pasted, and five jobs shipped without it: the four #1072 cache/sidebar refreshers and `prune_audit_log` ran fine for months while the UI reported `last_success: null` (#1135). The per-job writes that predate this still exist and are harmless duplicates — don't add new ones. Note the listener is synchronous and runs in the scheduler's event loop, so the write is handed off as a task; keep a strong reference to it (`_pending_metadata_writes`) or asyncio may collect it mid-await.
+- **`Security(get_current_user, scopes=[...])` requires *every* scope listed; "any of these roles" is `require_any_scope(...)`.** FastAPI also adds the scopes of the dependencies above it, and a token carries one role's scopes, so `scopes=["admin", "analyst"]` makes a route nobody can call — `POST /healthcheck/logs` sat dead like that until it was found (and it had no tenant check either, now `enforce_hostname_access`). `tests/test_route_scope_semantics.py` walks every route of the real app and fails if any `get_current_user` would be resolved with more than one scope.
 - **A new router takes two edits**: the file in `app/routers/`, plus the import + `api_router.include_router(...)` in `backend/copilot.py`. Miss the second and the route silently doesn't exist.
 - **Alembic autogenerate's model registry is `backend/alembic/env.py`, not `app/db/all_models.py`** — `all_models.py` has many imports commented out and is *not* what env.py loads (env.py imports models directly). **Adding a model to an existing model file is fine** (Python imports the whole module, registering every SQLModel in it). **Adding a model in a brand-new file requires an explicit import in `env.py`** — otherwise the file is never loaded and autogenerate silently skips it.
 - **`incident_management_*.customer_code` is a STRING, not a foreign key.** Same for `customer_integrations`, `customer_network_connectors`, `monitoring_alerts`, `custom_alert_creation_settings`. Renaming or deleting a customer does *not* cascade. Don't write joins that assume referential integrity on these columns.

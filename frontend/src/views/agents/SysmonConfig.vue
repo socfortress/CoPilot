@@ -43,7 +43,7 @@
 					</template>
 					<div class="p-4">
 						<n-dropdown
-							v-if="hasCustomersAvailable"
+							v-if="isAdmin && hasCustomersAvailable"
 							placement="bottom-start"
 							trigger="click"
 							:options="customersOptions"
@@ -114,6 +114,7 @@
 						</n-popover>
 
 						<n-button
+							v-if="isAdmin"
 							:loading="uploadingConfig"
 							size="small"
 							type="primary"
@@ -150,9 +151,11 @@
 					content-class="flex h-full grow flex-col overflow-hidden"
 				>
 					<template v-if="currentConfig">
+						<!-- A responder deploys their customers' configs; writing one stays admin (#1219). -->
 						<XMLEditor
 							ref="xmlEditorRef"
 							v-model="currentConfig.config_content"
+							:readonly="!isAdmin"
 							class="scrollbar-styled text-sm"
 							@errors="xmlErrors = $event"
 						/>
@@ -180,10 +183,12 @@ import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
 import { useNavigation } from "@/composables/useNavigation"
+import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
 
 const message = useMessage()
 const { routeCustomer } = useNavigation()
+const isAdmin = computed(() => useAuthStore().isAdmin)
 const loadingList = ref(false)
 const loadingConfig = ref(false)
 const uploadingConfig = ref(false)

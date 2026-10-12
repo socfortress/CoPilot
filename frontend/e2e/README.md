@@ -14,7 +14,8 @@ customer information"):
 | Spec | What it pins |
 |---|---|
 | `customer-scoping.spec.ts` | An analyst assigned to one tenant sees one tenant — in the list, in the sidebar filter, on a typed-in URL, and at the API below the UI (including keys #1050 missed: customer *name*, agent id). |
-| `unassigned-analyst.spec.ts` | An analyst with **no** assignment is still deployment-wide (the documented upgrade compromise) **and** is told so, since mistaking the sidebar filter for an assignment is what produced the follow-up report. |
+| `unassigned-analyst.spec.ts` | #1219 — an analyst or responder cannot be created without a customer nor left without one (the refusal changes nothing), and an admin is offered no customer assignment. The pre-#1219 "unassigned means deployment-wide" compromise is gone: an unassigned analyst now sees nothing. |
+| `responder-role.spec.ts` | #1219 — an admin promotes an analyst to responder from the Users page and the backend stores the role with the analyst's customers; signed in, the responder gets CoPilot Actions and the Command / Quarantine tabs, and the server refuses them the other tenant; an analyst gets none of it, in the UI or at the API. |
 | `admin-not-regressed.spec.ts` | The admin was not locked out — the failure mode a "deny everything" fix produces. |
 | `global-filter-disclaimer.spec.ts` | The Customers page tells you the sidebar filter does not apply to it — but only while a customer is selected — and the list really is unchanged by it. |
 | `portal-settings-patch.spec.ts` | #1188 — the Customer Portal settings editor saves with `PATCH`: renaming sends only the title (never the logo), clearing a field sends a `reset`, and saving without changes sends nothing. |

@@ -16,7 +16,9 @@ export enum AuthUserRole {
 	Admin = 1,
 	Analyst = 2,
 	Scheduler = 3,
-	CustomerUser = 4
+	CustomerUser = 4,
+	/** An analyst who may also run response actions, on their assigned customers only (#1219). */
+	Responder = 5
 }
 
 export type RouteMetaAuthRole = AuthUserRole | RouteRole
@@ -25,7 +27,7 @@ export interface JWTPayload extends JoseJWTPayload {
 	scopes: JWTRole[]
 }
 
-export type JWTRole = "admin" | "analyst"
+export type JWTRole = "admin" | "analyst" | "responder"
 
 export interface AuthUser {
 	access_token: string
@@ -44,6 +46,8 @@ export interface RegisterPayload {
 	password: string
 	email: string
 	role_id: number
+	/** Required for an analyst or responder (#1219). */
+	customer_codes?: string[]
 	/*
 	customerCode: string
 	usersFirstName: string

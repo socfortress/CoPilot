@@ -68,12 +68,6 @@ MAX_CASE_IOCS = 25
 MAX_CASE_SHEETS = 50
 DOWNLOAD_URL_TEMPLATE = "/api/v1/incidents/customer_reports/{report_id}/download"
 
-_ROLE_NAMES = {
-    RoleEnum.admin: "admin",
-    RoleEnum.analyst: "analyst",
-    RoleEnum.scheduler: "scheduler",
-    RoleEnum.customer_user: "customer_user",
-}
 # Best-effort case-type extraction from a "[RFI] ..." style prefix (see gap
 # analysis in issue #961 — no native case-type column exists).
 _CASE_TYPE_RE = re.compile(r"\[(RFI|INC|CONF|CTI)\]", re.IGNORECASE)
@@ -97,7 +91,7 @@ _TYPE_LABELS = {"RFI": "Investigation (RFI)", "INC": "Incident (INC)", "CONF": "
 
 def _role_name(user: User) -> Optional[str]:
     try:
-        return _ROLE_NAMES.get(RoleEnum(user.role_id))
+        return RoleEnum(user.role_id).name
     except (ValueError, TypeError):
         return None
 

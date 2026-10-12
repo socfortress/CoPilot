@@ -54,7 +54,19 @@ export function authCheck(route: RouteLocationNormalized) {
 	}
 }
 
+const JWT_ROLES: Record<JWTRole, AuthUserRole> = {
+	admin: AuthUserRole.Admin,
+	analyst: AuthUserRole.Analyst,
+	responder: AuthUserRole.Responder
+}
+
+/** The role is the token's first scope; a responder's token also carries "analyst" after it. */
 export function jwtRoleToUserRole(scope: JWTRole | JWTRole[]): AuthUserRole {
 	const role = _castArray(scope)[0]?.toLowerCase() as JWTRole
-	return role === "admin" ? AuthUserRole.Admin : role === "analyst" ? AuthUserRole.Analyst : AuthUserRole.Unknown
+	return JWT_ROLES[role] ?? AuthUserRole.Unknown
+}
+
+/** A role is granted what the roles it extends are granted: a responder is an analyst who may also respond. */
+export const ROLE_EXTENDS: Partial<Record<AuthUserRole, AuthUserRole[]>> = {
+	[AuthUserRole.Responder]: [AuthUserRole.Analyst]
 }

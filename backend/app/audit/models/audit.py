@@ -57,6 +57,8 @@ class AuditAction(str, Enum):
     RESPONSE_QUARANTINE = "response.quarantine"
     RESPONSE_COMMAND_EXECUTE = "response.command_execute"
     ARTIFACT_COLLECT = "artifact.collect"
+    COPILOT_ACTION_INVOKE = "response.copilot_action_invoke"
+    SYSMON_CONFIG_DEPLOY = "response.sysmon_deploy"
 
     # Cases
     CASE_CREATE = "case.create"

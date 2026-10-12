@@ -2,13 +2,14 @@ from typing import List
 
 from fastapi import APIRouter
 from fastapi import Depends
-from sqlalchemy import delete
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.auth.models.users import UserCustomerAccess
+from app.auth.services.customer_assignment import replace_assignment
+from app.auth.services.customer_assignment import validate_assignment
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.middleware.customer_access import customer_access_handler
@@ -23,20 +24,21 @@ async def assign_customer_access(
     current_user: User = Depends(AuthHandler().require_any_scope("admin")),
     session: AsyncSession = Depends(get_db),
 ):
-    """Assign customer access to a user (admin only)"""
+    """Replace a user's customer assignments (admin only).
 
-    # Remove existing access
-    await session.execute(delete(UserCustomerAccess).where(UserCustomerAccess.user_id == user_id))
+    An analyst or responder keeps at least one customer, an admin gets none (they see
+    every customer anyway), and every code must exist: see ``customer_assignment``.
+    """
+    user = await session.get(User, user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
 
-    # Add new access
-    for customer_code in customer_codes:
-        access = UserCustomerAccess(user_id=user_id, customer_code=customer_code)
-        session.add(access)
-
+    codes = await validate_assignment(user.role_id, customer_codes, session)
+    await replace_assignment(user_id, codes, session)
     await session.commit()
     customer_access_handler.forget_accessible_customers(session, user_id)
 
-    return {"success": True, "message": f"Assigned {len(customer_codes)} customers to user {user_id}", "customer_codes": customer_codes}
+    return {"success": True, "message": f"Assigned {len(codes)} customers to user {user_id}", "customer_codes": codes}
 
 
 @customer_users_router.get("/users/{user_id}/customers")
@@ -57,23 +59,18 @@ async def get_user_customer_access(
 async def get_my_customer_access(current_user: User = Depends(AuthHandler().get_current_user), session: AsyncSession = Depends(get_db)):
     """Get current user's accessible customers, and *why* they are what they are.
 
-    ``customer_codes == ["*"]`` means deployment-wide, and it has two very different
-    causes that used to be indistinguishable from the outside:
-
-    - the caller is an admin (``scope="deployment"``), or
-    - the caller is an analyst nobody has assigned any customer to
-      (``scope="unassigned"``), which keeps pre-#1050 behaviour on upgrade.
-
-    That second case is what makes an operator report "I assigned a customer and the
-    analyst still sees everything": the assignment went to a different user, or never
-    landed. Naming it here lets the UI say so instead of leaving it to be guessed.
+    - ``scope="deployment"``: an admin, ``customer_codes == ["*"]``;
+    - ``scope="assigned"``: the customers assigned to the caller;
+    - ``scope="unassigned"``: an analyst, responder or portal user nobody has assigned a
+      customer to — they see nothing (#1219; before it, an unassigned analyst saw every
+      customer). Naming it lets the UI say why the caller sees nothing.
     """
     customer_codes = await customer_access_handler.get_user_accessible_customers(current_user, session)
 
-    if "*" not in customer_codes:
-        scope = "assigned"
-    elif current_user.role_id == RoleEnum.admin:
+    if "*" in customer_codes:
         scope = "deployment"
+    elif customer_codes:
+        scope = "assigned"
     else:
         scope = "unassigned"
 

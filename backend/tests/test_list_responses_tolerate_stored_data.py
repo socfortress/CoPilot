@@ -133,7 +133,14 @@ def test_the_users_route_serves_them():
         ),
     ]
     with patch.object(auth_routes, "select_all_users", AsyncMock(return_value=stored)):
-        response = asyncio.run(auth_routes.get_users(search_params=SimpleNamespace(search=None, limit=None), session=MagicMock()))
+        # An analyst caller: the customer assignments (admin-only, #1219) are not read.
+        response = asyncio.run(
+            auth_routes.get_users(
+                search_params=SimpleNamespace(search=None, limit=None),
+                current_user=SimpleNamespace(role_id=2),
+                session=MagicMock(),
+            ),
+        )
 
     assert [u.email for u in response.users] == ["admin@corp.local"]
 

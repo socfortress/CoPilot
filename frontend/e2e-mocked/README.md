@@ -32,6 +32,7 @@ an ordinary `pnpm dev` on 5173 is never reused (it proxies `/api` to whatever
 | `event-search-source-prefill.spec.ts` | [#1124](https://github.com/socfortress/CoPilot/issues/1124) — "View in Event Search" does not carry the alert's source |
 | `agent-velociraptor-id.spec.ts` | [#1217](https://github.com/socfortress/CoPilot/issues/1217) — saving an agent's Velociraptor ID ends on the edit icon with a success message, even when the spinner icon downloads slower than the save; a refused save says why |
 | `ai-report-settings.spec.ts` | [#1215](https://github.com/socfortress/CoPilot/issues/1215) — an admin lets a customer's portal users request AI analyses and sets their daily limit; an analyst cannot |
+| `responder-role.spec.ts` | [#1219](https://github.com/socfortress/CoPilot/issues/1219) — a responder is offered CoPilot Actions and the Command / Quarantine tabs and still no administration, an analyst is offered neither; an admin making someone a responder must pick their customers in the same step, sees a legacy analyst without customers flagged, and is offered no customer assignment for an admin |
 | `uba-pages.spec.ts` | An incident alert raised by UBA links the UBA alert and entity pages, which link each other; back retraces them |
 
 `mock-backend.ts` holds the fixture and the route table. Only the endpoints a flow

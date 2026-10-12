@@ -84,12 +84,7 @@ async def generate_report_background(
 
     role_name = None
     try:
-        role_name = {
-            RoleEnum.admin: "admin",
-            RoleEnum.analyst: "analyst",
-            RoleEnum.scheduler: "scheduler",
-            RoleEnum.customer_user: "customer_user",
-        }.get(RoleEnum(current_user.role_id))
+        role_name = RoleEnum(current_user.role_id).name
     except (ValueError, TypeError):
         role_name = None
 

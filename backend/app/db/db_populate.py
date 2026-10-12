@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.models.users import Role
+from app.auth.models.users import RoleEnum
 from app.connectors import cache as connector_cache
 from app.connectors.models import Connectors
 from app.integrations.models.customer_integration_settings import AvailableIntegrations
@@ -297,33 +298,35 @@ async def add_roles_if_not_exist(session: AsyncSession) -> None:
     """
     Adds roles to the database if they do not already exist.
 
+    Each role is inserted with its ``RoleEnum`` id: ids are what ``user.role_id`` and
+    ``role_tag_access.role_id`` store, so they cannot depend on insertion order. The
+    roles migration (c1219a2b3c4d) seeds the same rows first; this only fills gaps.
+
     Args:
         session (AsyncSession): The database session.
 
     Returns:
         None
     """
-    # List of roles to add
-    role_list = [
-        {"name": "admin", "description": "Administrator"},
-        {"name": "analyst", "description": "SOC Analyst"},
-        {"name": "scheduler", "description": "Scheduler for automated tasks"},
-        {"name": "customer_user", "description": "Customer user with limited access to their own data"},
-    ]
-
-    for role_data in role_list:
-        logger.info(f"Checking for existence of role {role_data['name']}")
-        query = select(Role).where(Role.name == role_data["name"])
-        result = await session.execute(query)
-        existing_role = result.scalars().first()
-
-        if existing_role is None:
-            new_role = Role(**role_data)
-            session.add(new_role)  # Use session.add() to add new objects
-            logger.info(f"Added new role: {role_data['name']}")
+    for role_id, name, description in ROLES:
+        logger.info(f"Checking for existence of role {name}")
+        result = await session.execute(select(Role).where(Role.name == name))
+        if result.scalars().first() is None:
+            session.add(Role(id=role_id, name=name, description=description))
+            logger.info(f"Added new role: {name}")
 
     await session.commit()  # Commit the transaction
     logger.info("Role check and addition completed.")
+
+
+# (id, name, description): the ids are RoleEnum's.
+ROLES = [
+    (RoleEnum.admin.value, "admin", "Administrator"),
+    (RoleEnum.analyst.value, "analyst", "SOC Analyst"),
+    (RoleEnum.scheduler.value, "scheduler", "Scheduler for automated tasks"),
+    (RoleEnum.customer_user.value, "customer_user", "Customer user with limited access to their own data"),
+    (RoleEnum.responder.value, "responder", "SOC Analyst who may also run response actions on their assigned customers"),
+]
 
 
 # ! AVAILABLE THIRD PARTY INTEGRATIONS ! #

@@ -8,6 +8,7 @@ from typing import Optional
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import SOC_ROLES
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.connectors.services import ConnectorServices
@@ -399,7 +400,7 @@ async def build_sidebar_context(
     user: User,
 ) -> SidebarContextResponse:
     is_admin = user.role_id == RoleEnum.admin.value
-    is_analyst_or_admin = user.role_id in (RoleEnum.admin.value, RoleEnum.analyst.value)
+    is_analyst_or_admin = user.role_id in {role.value for role in SOC_ROLES}
     is_customer_user = user.role_id == RoleEnum.customer_user.value
 
     audience_tags = set()

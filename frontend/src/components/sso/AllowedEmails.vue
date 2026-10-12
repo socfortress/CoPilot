@@ -105,9 +105,11 @@ import {
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { roleNameOf, roleTagType } from "@/components/users/roles"
 import { useNavigation } from "@/composables/useNavigation"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
+import { AuthUserRole } from "@/types/auth"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
@@ -130,17 +132,20 @@ const showAddEmail = ref(false)
 const allowedEmails = ref<SSOAllowedEmail[]>([])
 const newEmail = ref({ email: "", role_id: 2 })
 
+// SSO signs people into CoPilot: SOC roles only. An analyst or responder created at first
+// sign-in has no customer yet and sees nothing until an admin assigns some (#1219).
 const roleOptions = [
-	{ label: "Admin", value: 1 },
-	{ label: "Analyst (default)", value: 2 }
+	{ label: "Admin", value: AuthUserRole.Admin },
+	{ label: "Analyst (default)", value: AuthUserRole.Analyst },
+	{ label: "Responder", value: AuthUserRole.Responder }
 ]
 
 function getRoleName(roleId: number) {
-	return roleId === 1 ? "admin" : roleId === 2 ? "analyst" : roleId === 3 ? "scheduler" : "customer_user"
+	return roleNameOf(roleId) || "unknown"
 }
 
 function getRoleTagType(roleId: number) {
-	return roleId === 1 ? "error" : roleId === 2 ? "warning" : "default"
+	return roleTagType(getRoleName(roleId))
 }
 
 async function loadEmails() {

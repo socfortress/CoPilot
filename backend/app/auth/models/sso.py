@@ -5,8 +5,11 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import EmailStr
+from pydantic import field_validator
 from sqlmodel import Field
 from sqlmodel import SQLModel
+
+from app.auth.models.users import SOC_ROLES
 
 
 class SSOConfig(SQLModel, table=True):
@@ -98,6 +101,16 @@ class SSOConfigResponse(BaseModel):
 class SSOAllowedEmailInput(BaseModel):
     email: EmailStr
     role_id: int = 2  # analyst by default
+
+    @field_validator("role_id")
+    @classmethod
+    def soc_role(cls, value: int) -> int:
+        # SSO signs people into CoPilot itself: a SOC role, never the scheduler or a
+        # portal user. An analyst or responder created this way starts with no customer
+        # and sees nothing until an admin assigns some (#1219).
+        if value not in {role.value for role in SOC_ROLES}:
+            raise ValueError("SSO users must be admins, analysts or responders")
+        return value
 
 
 class SSOAllowedEmailOut(BaseModel):

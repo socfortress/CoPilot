@@ -61,10 +61,11 @@ def test_callers_cannot_corrupt_the_memo():
     assert _run(handler.get_user_accessible_customers(_user(), session)) == ["ACME"]
 
 
-def test_unassigned_analyst_wildcard_is_memoized_too():
+def test_unassigned_analyst_nothing_is_memoized_too():
+    # Since #1219 an analyst with no customers sees none; that empty answer is memoized too.
     handler, session = CustomerAccessHandler(), _session([])
-    assert _run(handler.get_user_accessible_customers(_user(role_id=2), session)) == ["*"]
-    assert _run(handler.get_user_accessible_customers(_user(role_id=2), session)) == ["*"]
+    assert _run(handler.get_user_accessible_customers(_user(role_id=2), session)) == []
+    assert _run(handler.get_user_accessible_customers(_user(role_id=2), session)) == []
     assert session.execute.await_count == 1
 
 

@@ -8,7 +8,7 @@
 					</span>
 				</template>
 				<template #headerExtra>
-					<n-tag :type="roleTagType" size="small">
+					<n-tag :type="roleTagType(resolvedUser.role_name)" size="small">
 						{{ resolvedUser.role_name || "No Role" }}
 					</n-tag>
 				</template>
@@ -38,24 +38,35 @@
 
 			<n-card size="small" title="Customer access" embedded>
 				<n-spin :show="loadingCustomers" class="min-h-10">
-					<div v-if="customerCodes.length" class="flex flex-wrap gap-2">
+					<p v-if="!accessReadable" class="text-secondary text-sm" data-testid="user-access-hidden">
+						{{ ACCESS_HIDDEN }}
+					</p>
+					<div v-else-if="customerCodes.length" class="flex flex-wrap gap-2">
 						<n-tag v-for="code in customerCodes" :key="code" type="info" size="small">
 							{{ code }}
 						</n-tag>
 					</div>
+					<p v-else-if="seesEveryCustomer(resolvedUser.role_name)" class="text-secondary text-sm">
+						Admins see every customer.
+					</p>
+					<p v-else-if="needsCustomers(resolvedUser.role_name)" class="text-warning text-sm" data-testid="user-no-customers">
+						No customer assigned: this user sees nothing. {{ NEEDS_A_CUSTOMER }}
+					</p>
 					<p v-else class="text-secondary text-sm">No customer access assigned</p>
 				</n-spin>
 			</n-card>
 
 			<n-card size="small" title="Tag access" embedded>
 				<n-spin :show="loadingTags" class="min-h-10">
-					<template v-if="tagRbacEnabled">
+					<p v-if="!accessReadable" class="text-secondary text-sm">{{ ACCESS_HIDDEN }}</p>
+					<template v-else-if="tagRbacEnabled">
 						<div v-if="accessibleTags.length" class="flex flex-wrap gap-2">
 							<n-tag v-for="tag in accessibleTags" :key="tag.id" type="info" size="small">
 								{{ tag.tag }}
 							</n-tag>
 						</div>
-						<p v-else class="text-secondary text-sm">No restrictions (full access)</p>
+						<p v-else-if="tagsUnrestricted" class="text-secondary text-sm">No restrictions (full access)</p>
+						<p v-else class="text-secondary text-sm">No tag access: tagged alerts are hidden</p>
 					</template>
 					<p v-else class="text-secondary text-sm">Tag RBAC is disabled</p>
 				</n-spin>
@@ -64,7 +75,7 @@
 			<n-card v-if="isAdmin" size="small" title="Actions" embedded>
 				<div class="flex flex-col gap-1">
 					<AssignRole :user="resolvedUser" @success="reload" />
-					<AssignCustomer :user="resolvedUser" @success="reload" />
+					<AssignCustomer v-if="!seesEveryCustomer(resolvedUser.role_name)" :user="resolvedUser" @success="reload" />
 					<AssignTags :user="resolvedUser" @success="reload" />
 					<ChangePassword :user="resolvedUser" quaternary class-name="w-full! justify-start!" />
 					<DeleteUser :user="resolvedUser" @success="handleDeleted" @loading="deleting = $event" />
@@ -86,6 +97,7 @@ import { useEntityDetails } from "@/composables/useEntityDetails"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
+import { NEEDS_A_CUSTOMER, needsCustomers, roleTagType, seesEveryCustomer } from "./roles"
 
 const props = defineProps<{
 	user?: User | null
@@ -103,8 +115,14 @@ const AssignTags = defineAsyncComponent(() => import("./AssignTags.vue"))
 const ChangePassword = defineAsyncComponent(() => import("./ChangePassword.vue"))
 const DeleteUser = defineAsyncComponent(() => import("./DeleteUser.vue"))
 
+// Another user's access is the admin's to read (those routes are admin-only); anyone
+// may read their own, through the "me" route. Anything else would show a 403 as "no
+// customer" — a false warning.
+const ACCESS_HIDDEN = "Only admins can see another user's access."
+
 const dFormats = useSettingsStore().dateFormat
-const isAdmin = useAuthStore().isAdmin
+const authStore = useAuthStore()
+const isAdmin = authStore.isAdmin
 
 const loadingCustomers = ref(false)
 const loadingTags = ref(false)
@@ -112,6 +130,7 @@ const deleting = ref(false)
 const customerCodes = ref<string[]>([])
 const accessibleTags = ref<AlertTag[]>([])
 const tagRbacEnabled = ref(false)
+const tagsUnrestricted = ref(true)
 
 const {
 	loading,
@@ -129,24 +148,16 @@ const {
 	errorMessage: "Failed to load user.",
 	onLoaded: value => {
 		emit("loaded", value)
-		loadAccessData(value.id)
+		loadAccessData(value)
 	}
 })
 
-const roleTagType = computed(() => {
-	switch (resolvedUser.value?.role_name?.toLowerCase()) {
-		case "admin":
-			return "error"
-		case "analyst":
-			return "warning"
-		case "scheduler":
-			return "info"
-		case "customer_user":
-			return "success"
-		default:
-			return "default"
-	}
-})
+// Usernames are unique, and the token names the signed-in user by username, not id.
+function isSelf(user: User) {
+	return user.username === authStore.userName
+}
+
+const accessReadable = computed(() => !!resolvedUser.value && (isAdmin || isSelf(resolvedUser.value)))
 
 async function loadTagSettings() {
 	try {
@@ -190,6 +201,7 @@ function loadTagAccess(userId: number) {
 		.then(res => {
 			if (res.data.success) {
 				accessibleTags.value = res.data.accessible_tags || []
+				tagsUnrestricted.value = !accessibleTags.value.length
 			}
 		})
 		.catch(() => {
@@ -200,17 +212,47 @@ function loadTagAccess(userId: number) {
 		})
 }
 
-async function loadAccessData(userId: number) {
+/** The signed-in user's own access, from the one route that serves it to non-admins. */
+async function loadOwnAccess() {
+	loadingCustomers.value = true
+	loadingTags.value = true
+
+	try {
+		const res = await Api.tagRbac.getMyEffectiveAccess()
+		customerCodes.value = (res.data.accessible_customers || []).filter(code => code !== "*")
+		tagRbacEnabled.value = res.data.tag_rbac_enabled
+		tagsUnrestricted.value = res.data.is_tag_unrestricted
+		accessibleTags.value = res.data.is_tag_unrestricted ? [] : res.data.accessible_tags || []
+	} catch {
+		customerCodes.value = []
+		accessibleTags.value = []
+	} finally {
+		loadingCustomers.value = false
+		loadingTags.value = false
+	}
+}
+
+async function loadAccessData(user: User) {
+	if (!isAdmin) {
+		if (isSelf(user)) {
+			await loadOwnAccess()
+		} else {
+			customerCodes.value = []
+			accessibleTags.value = []
+		}
+		return
+	}
+
 	// customer access does not depend on the tag settings, only tag access does
-	await Promise.all([loadTagSettings(), loadCustomerAccess(userId)])
-	loadTagAccess(userId)
+	await Promise.all([loadTagSettings(), loadCustomerAccess(user.id)])
+	loadTagAccess(user.id)
 }
 
 function reload() {
-	const id = resolvedUser.value?.id
-	if (id == null) return
+	const user = resolvedUser.value
+	if (!user) return
 	if (props.user) {
-		loadAccessData(id)
+		loadAccessData(user)
 		return
 	}
 	reloadUser()
@@ -224,7 +266,7 @@ watch(
 	() => [props.user, props.userId] as const,
 	([user, userId]) => {
 		if (user) {
-			loadAccessData(user.id)
+			loadAccessData(user)
 			return
 		}
 

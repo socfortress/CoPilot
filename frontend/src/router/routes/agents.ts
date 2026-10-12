@@ -1,5 +1,5 @@
 import type { RouteRecordRaw } from "vue-router"
-import { RouteRole } from "@/types/auth"
+import { AuthUserRole, RouteRole } from "@/types/auth"
 
 export const agentsRoutes: RouteRecordRaw[] = [
 	{
@@ -77,7 +77,8 @@ export const agentsRoutes: RouteRecordRaw[] = [
 				path: "sysmon-config",
 				name: "SysmonConfig",
 				component: () => import("@/views/agents/SysmonConfig.vue"),
-				meta: { title: "Sysmon Config" }
+				// Response actions on endpoints: admins and responders (#1219).
+				meta: { title: "Sysmon Config", roles: [AuthUserRole.Admin, AuthUserRole.Responder] }
 			},
 			{
 				path: "detection-rules",
@@ -95,14 +96,15 @@ export const agentsRoutes: RouteRecordRaw[] = [
 				path: "copilot-actions",
 				name: "CopilotActions",
 				component: () => import("@/views/agents/CopilotActions.vue"),
-				meta: { title: "CoPilot Actions" }
+				// Response actions on endpoints: admins and responders (#1219).
+				meta: { title: "CoPilot Actions", roles: [AuthUserRole.Admin, AuthUserRole.Responder] }
 			},
 			{
 				// action names contain dots/spaces — :path converter keeps them intact
 				path: "copilot-actions/:name(.*)",
 				name: "CopilotAction",
 				component: () => import("@/views/agents/CopilotAction.vue"),
-				meta: { title: "CoPilot Action", skipPin: true }
+				meta: { title: "CoPilot Action", skipPin: true, roles: [AuthUserRole.Admin, AuthUserRole.Responder] }
 			},
 			{
 				path: "/copilot-searches/editor",
