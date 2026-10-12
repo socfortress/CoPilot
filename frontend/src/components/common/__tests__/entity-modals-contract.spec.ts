@@ -50,6 +50,7 @@ const ENTITY_OVERLAYS = [
 	"components/services/Item.vue",
 	"components/socManagement/EntityOverviewModal.vue",
 	"components/uba/UbaPage.vue",
+	"components/users/UserCustomersBadge.vue",
 	"components/vulnerabilities/VulnerabilityCard.vue"
 ]
 
