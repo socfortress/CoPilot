@@ -105,7 +105,7 @@ import {
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { roleTagType } from "@/components/users/roles"
+import { roleNameOf, roleTagType } from "@/components/users/roles"
 import { useNavigation } from "@/composables/useNavigation"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
@@ -141,7 +141,7 @@ const roleOptions = [
 ]
 
 function getRoleName(roleId: number) {
-	return (AuthUserRole[roleId] ?? "unknown").replace(/([a-z])([A-Z])/g, "$1_$2").toLowerCase()
+	return roleNameOf(roleId) || "unknown"
 }
 
 function getRoleTagType(roleId: number) {

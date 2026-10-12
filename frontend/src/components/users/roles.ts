@@ -32,6 +32,17 @@ export function seesEveryCustomer(role: string | number | null | undefined): boo
 	return role === AuthUserRole.Admin || (typeof role === "string" && role.toLowerCase() === "admin")
 }
 
+/** The role's API name (`customer_user`) from its id. */
+export function roleNameOf(role: AuthUserRole | null | undefined): string {
+	const key = role ? AuthUserRole[role] : undefined
+	return key ? key.replace(/([a-z])([A-Z])/g, "$1_$2").toLowerCase() : ""
+}
+
+/** The role's display label ("Customer User"), as the role pickers show it. */
+export function roleLabel(roleName: string | null | undefined): string {
+	return ROLE_NAME_OPTIONS.find(option => option.value === roleName?.toLowerCase())?.label ?? roleName ?? ""
+}
+
 export function roleTagType(roleName: string | null | undefined): TagProps["type"] {
 	switch (roleName?.toLowerCase()) {
 		case "admin":

@@ -4,6 +4,7 @@
 		:options
 		:loading
 		multiple
+		to="body"
 		filterable
 		placeholder="Choose customers"
 		data-testid="user-customers-select"

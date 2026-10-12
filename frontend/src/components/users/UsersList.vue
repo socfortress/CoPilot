@@ -57,9 +57,14 @@
 										{{ user.role_name || "No Role" }}
 									</n-tag>
 									<!-- Sees nothing until an admin assigns a customer (#1219). -->
-									<n-tooltip v-if="seesNothing(user)">
+									<n-tooltip v-if="seesNothing(user)" class="max-w-75 text-xs!">
 										<template #trigger>
-											<n-tag type="warning" size="small" :bordered="false" data-testid="user-no-customers">
+											<n-tag
+												type="warning"
+												size="small"
+												:bordered="false"
+												data-testid="user-no-customers"
+											>
 												No customers
 											</n-tag>
 										</template>

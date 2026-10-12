@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { AuthUserRole } from "@/types/auth"
-import { needsCustomers, ROLE_NAME_OPTIONS, roleTagType, seesEveryCustomer } from "../roles"
+import { needsCustomers, ROLE_NAME_OPTIONS, roleLabel, roleNameOf, roleTagType, seesEveryCustomer } from "../roles"
 
 describe("user roles and customers (#1219)", () => {
 	it("offers the responder role", () => {
@@ -25,5 +25,18 @@ describe("user roles and customers (#1219)", () => {
 	it("gives the responder its own tag colour", () => {
 		expect(roleTagType("responder")).toBe("primary")
 		expect(new Set(["admin", "analyst", "responder"].map(roleTagType)).size).toBe(3)
+	})
+
+	it("names a role from its id, as the API spells it", () => {
+		expect(roleNameOf(AuthUserRole.Responder)).toBe("responder")
+		expect(roleNameOf(AuthUserRole.CustomerUser)).toBe("customer_user")
+		expect(roleNameOf(AuthUserRole.Unknown)).toBe("")
+		expect(roleNameOf(undefined)).toBe("")
+	})
+
+	it("labels a role the way the role pickers do", () => {
+		expect(roleLabel("customer_user")).toBe("Customer User")
+		expect(roleLabel("RESPONDER")).toBe("Responder")
+		expect(roleLabel("something_else")).toBe("something_else")
 	})
 })

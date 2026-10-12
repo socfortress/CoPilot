@@ -74,7 +74,7 @@
 								/>
 							</n-form-item>
 							<!-- An analyst or responder sees only their customers: at least one (#1219). -->
-							<n-form-item v-if="customersNeeded" path="customerCodes" label="Customers">
+							<n-form-item v-if="customersNeeded" path="customerCodes" label="Customers" required>
 								<UserCustomersSelect v-model:value="model.customerCodes" />
 							</n-form-item>
 
