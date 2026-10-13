@@ -1,4 +1,5 @@
 import type { PortalSeed } from "../support/e2e"
+import { alertsListRequest } from "../support/alerts"
 
 /**
  * Leaving a page cancels its reads (see src/api/navigation-abort.ts). Before, Overview →
@@ -45,7 +46,7 @@ describe("navigation cancels the previous page's requests", () => {
 	it("Overview → Alerts → Cases: only the last page's reads stay alive", () => {
 		cy.intercept("GET", "**/api/customer_portal/overview*", delayed).as("overview")
 		cy.intercept("GET", "**/api/customer_portal/dashboard/alert-stats*", delayed).as("alertStats")
-		cy.intercept("GET", "**/api/incidents/db_operations/alerts?*", delayed).as("alerts")
+		cy.intercept(alertsListRequest(), delayed).as("alerts")
 		cy.intercept("GET", "**/api/incidents/db_operations/cases?*").as("cases")
 
 		cy.visit("/overview", { onBeforeLoad: recordAborts })
@@ -61,7 +62,7 @@ describe("navigation cancels the previous page's requests", () => {
 		cy.get('a[href="/cases"]').first().click()
 		cy.location("pathname").should("eq", "/cases")
 		aborted().should(list => {
-			expect(list.some(entry => entry.includes("/incidents/db_operations/alerts?"))).to.eq(true)
+			expect(list.some(entry => entry.includes("/incidents/db_operations/alerts/filter?"))).to.eq(true)
 			expect(list.some(entry => entry.includes("/customer_portal/dashboard/alert-stats"))).to.eq(true)
 		})
 

@@ -1,4 +1,5 @@
 import type { PortalSeed } from "../support/e2e"
+import { alertsListRequest } from "../support/alerts"
 
 /**
  * The SLA page and the "waiting on you" status (#1187): the page is offered only while
@@ -78,7 +79,7 @@ describe("service levels", () => {
 	})
 
 	it("links what waits on the customer to the filtered alerts list", () => {
-		cy.intercept("GET", "**/alerts/status/PENDING_CUSTOMER*").as("waiting")
+		cy.intercept(alertsListRequest({ status: "PENDING_CUSTOMER" })).as("waiting")
 		cy.visit("/sla")
 		cy.get("[data-testid=sla-open-waiting-alerts]").click()
 		cy.location("search").should("contain", "status=PENDING_CUSTOMER")

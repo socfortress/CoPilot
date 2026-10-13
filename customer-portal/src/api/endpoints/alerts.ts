@@ -1,4 +1,5 @@
-import type { Alert, AlertsFilters, AlertsListResponse, AlertStatus } from "@/types/alerts"
+import type { AlertsFilterParams } from "@/components/alerts/filters/alertsFilters"
+import type { Alert, AlertsFilteredResponse, AlertsFilters, AlertsListResponse, AlertStatus } from "@/types/alerts"
 import type { CommentItem } from "@/types/comments"
 import type { CommonResponse, Pagination } from "@/types/common"
 import { HttpClient } from "../httpClient"
@@ -71,62 +72,23 @@ export default {
 	},
 
 	/**
-	 * Get alerts by status with customer filtering
+	 * The alerts matching every filter at once (#1245), within the customers the user may
+	 * see. `total_filtered` counts the matches across all pages.
 	 */
-	getAlertsByStatus(
-		status: AlertStatus,
+	getFilteredAlerts(
+		filters: AlertsFilterParams,
 		{ page = 1, pageSize = 25, order = "desc" }: Pagination,
 		signal?: AbortSignal,
 		customerCodes?: string[]
 	) {
-		return HttpClient.get<CommonResponse<AlertsListResponse>>(
-			`/incidents/db_operations/alerts/status/${status}`,
-			withCustomerCodes(customerCodes, { params: { page, page_size: pageSize, order }, signal })
-		)
-	},
-
-	/**
-	 * Get alerts by asset name with customer filtering
-	 */
-	getAlertsByAsset(
-		assetName: string,
-		{ page = 1, pageSize = 25, order = "desc" }: Pagination,
-		signal?: AbortSignal,
-		customerCodes?: string[]
-	) {
-		return HttpClient.get<CommonResponse<AlertsListResponse>>(
-			`/incidents/db_operations/alerts/asset/${assetName}`,
-			withCustomerCodes(customerCodes, { params: { page, page_size: pageSize, order }, signal })
-		)
-	},
-
-	/**
-	 * Get alerts by tag with customer filtering
-	 */
-	getAlertsByTag(
-		tag: string,
-		{ page = 1, pageSize = 25, order = "desc" }: Pagination,
-		signal?: AbortSignal,
-		customerCodes?: string[]
-	) {
-		return HttpClient.get<CommonResponse<AlertsListResponse>>(
-			`/incidents/db_operations/alert/tag/${tag}`,
-			withCustomerCodes(customerCodes, { params: { page, page_size: pageSize, order }, signal })
-		)
-	},
-
-	/**
-	 * Get alerts by source with customer filtering
-	 */
-	getAlertsBySource(
-		source: string,
-		{ page = 1, pageSize = 25, order = "desc" }: Pagination,
-		signal?: AbortSignal,
-		customerCodes?: string[]
-	) {
-		return HttpClient.get<CommonResponse<AlertsListResponse>>(
-			`/incidents/db_operations/alerts/source/${source}`,
-			withCustomerCodes(customerCodes, { params: { page, page_size: pageSize, order }, signal })
+		return HttpClient.get<CommonResponse<AlertsFilteredResponse>>(
+			`/incidents/db_operations/alerts/filter`,
+			withCustomerCodes(customerCodes, {
+				params: { ...filters, page, page_size: pageSize, order },
+				// Repeated keys (`tags=a&tags=b`), the shape FastAPI's `List[str]` reads.
+				paramsSerializer: { indexes: null },
+				signal
+			})
 		)
 	},
 

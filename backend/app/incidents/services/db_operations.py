@@ -322,20 +322,25 @@ async def alert_visibility_filters_for_user(
     accessible_tags = tag_filters["accessible_tags"]
 
     if "*" not in accessible_tags:
+        # Correlated on Alert only: a caller whose query also joins AlertToTag (the
+        # filtered list does, for its tag criterion) would otherwise correlate that
+        # table too, leaving the subquery without a FROM clause.
         tag_conditions = []
         if accessible_tags:
             tag_conditions.append(
                 exists(
-                    select(AlertToTag.alert_id).where(
+                    select(AlertToTag.alert_id)
+                    .where(
                         and_(
                             AlertToTag.alert_id == Alert.id,
                             AlertToTag.tag_id.in_(accessible_tags),
                         ),
-                    ),
+                    )
+                    .correlate(Alert),
                 ),
             )
         if tag_filters["include_untagged"]:
-            tag_conditions.append(~exists(select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id)))
+            tag_conditions.append(~exists(select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id).correlate(Alert)))
 
         if not tag_conditions:
             return None
@@ -392,8 +397,7 @@ async def alert_status_counts_for_user(user: User, db: AsyncSession, customer_co
     return await alert_status_counts(db, filters)
 
 
-async def alerts_total_multiple_filters(
-    db: AsyncSession,
+def _alert_criteria(
     assigned_to: Optional[str] = None,
     alert_title: Optional[str] = None,
     customer_code: Optional[str] = None,
@@ -405,14 +409,16 @@ async def alerts_total_multiple_filters(
     ioc_value: Optional[str] = None,
     verdict: Optional[str] = None,
     verdict_reason: Optional[str] = None,
-) -> int:
-    """Count alerts matching the filter set.
+    date_from: Optional[datetime] = None,
+    date_to: Optional[datetime] = None,
+) -> List[Any]:
+    """WHERE clauses for the alert filter set, shared by the page and its count.
 
-    ``customer_code`` filters to a single customer; ``customer_codes`` to a set — mirrors
-    ``list_alerts_multiple_filters`` so the count and the page it annotates stay in sync.
+    Asset, tag and IoC criteria name the joined tables; both queries join them the
+    same way. ``date_from`` / ``date_to`` bound ``alert_creation_time`` inclusively and
+    must be naive UTC, like the column.
     """
-    # Build dynamic filters
-    filters = []
+    filters: List[Any] = []
     if assigned_to:
         filters.append(Alert.assigned_to == assigned_to)
     if alert_title:
@@ -438,6 +444,52 @@ async def alerts_total_multiple_filters(
         filters.append(Alert.verdict.is_(None) if verdict == VERDICT_FILTER_UNTRIAGED else Alert.verdict == verdict)
     if verdict_reason:
         filters.append(Alert.verdict_reason == verdict_reason)
+    if date_from:
+        filters.append(Alert.alert_creation_time >= date_from)
+    if date_to:
+        filters.append(Alert.alert_creation_time <= date_to)
+    return filters
+
+
+async def alerts_total_multiple_filters(
+    db: AsyncSession,
+    assigned_to: Optional[str] = None,
+    alert_title: Optional[str] = None,
+    customer_code: Optional[str] = None,
+    customer_codes: Optional[List[str]] = None,
+    source: Optional[str] = None,
+    asset_name: Optional[str] = None,
+    status: Optional[str] = None,
+    tags: Optional[List[str]] = None,
+    ioc_value: Optional[str] = None,
+    verdict: Optional[str] = None,
+    verdict_reason: Optional[str] = None,
+    date_from: Optional[datetime] = None,
+    date_to: Optional[datetime] = None,
+    visibility: Optional[List[Any]] = None,
+) -> int:
+    """Count alerts matching the filter set.
+
+    ``customer_code`` filters to a single customer; ``customer_codes`` to a set — mirrors
+    ``list_alerts_multiple_filters`` so the count and the page it annotates stay in sync.
+    Pass the same ``visibility`` (``alert_visibility_filters_for_user``) to both, or the
+    count includes alerts the page would hide from the user.
+    """
+    filters = _alert_criteria(
+        assigned_to=assigned_to,
+        alert_title=alert_title,
+        customer_code=customer_code,
+        customer_codes=customer_codes,
+        source=source,
+        asset_name=asset_name,
+        status=status,
+        tags=tags,
+        ioc_value=ioc_value,
+        verdict=verdict,
+        verdict_reason=verdict_reason,
+        date_from=date_from,
+        date_to=date_to,
+    )
 
     # Build the query with dynamic filters
     query = (
@@ -448,7 +500,7 @@ async def alerts_total_multiple_filters(
         .join(AlertTag, AlertToTag.tag_id == AlertTag.id, isouter=True)  # Join with AlertTag table
         .join(AlertToIoC, AlertToIoC.alert_id == Alert.id, isouter=True)  # Join with AlertToIoC table
         .join(IoC, AlertToIoC.ioc_id == IoC.id, isouter=True)  # Join with IoC table
-        .where(*filters)
+        .where(*filters, *(visibility or []))
     )
 
     result = await db.execute(query)
@@ -2350,12 +2402,19 @@ async def list_alerts_multiple_filters(
     page_size: int = 25,
     order: str = "desc",
     user: Optional[User] = None,  # New parameter for tag filtering
+    date_from: Optional[datetime] = None,
+    date_to: Optional[datetime] = None,
+    visibility: Optional[List[Any]] = None,
 ) -> List[AlertOut]:
     """List alerts with multiple filters including tag-based RBAC.
 
     ``customer_code`` filters to a single customer; ``customer_codes`` filters to
     a set (used to constrain scoped users to their accessible customers — passing
     the caller's full accessible set prevents cross-tenant disclosure).
+
+    ``visibility`` — the clauses from ``alert_visibility_filters_for_user`` — replaces
+    the ``user`` tag check below with the single definition of what a user may see;
+    pass the same list to ``alerts_total_multiple_filters`` so the count matches.
     """
     from sqlalchemy import and_
     from sqlalchemy import exists
@@ -2364,36 +2423,26 @@ async def list_alerts_multiple_filters(
     offset = (page - 1) * page_size
     order_by = asc(Alert.id) if order == "asc" else desc(Alert.id)
 
-    # Build dynamic filters
-    filters = []
-    if assigned_to:
-        filters.append(Alert.assigned_to == assigned_to)
-    if alert_title:
-        filters.append(Alert.alert_name.like(f"%{alert_title}%"))
-    if customer_code:
-        filters.append(Alert.customer_code == customer_code)
-    if customer_codes:
-        filters.append(Alert.customer_code.in_(customer_codes))
-    if source:
-        filters.append(Alert.source == source)
-    if asset_name:
-        filters.append(Asset.asset_name == asset_name)
-    if status:
-        filters.append(Alert.status == status)
-    if tags:
-        filters.append(AlertTag.tag.in_(tags))
-    if ioc_value:
-        filters.append(IoC.value == ioc_value)
-    if verdict:
-        # UNTRIAGED is a filter-only sentinel, not a stored value: the untriaged state is
-        # NULL on the column, and "no verdict yet" is exactly the slice an analyst working
-        # a review queue wants (GitHub issue #1085).
-        filters.append(Alert.verdict.is_(None) if verdict == VERDICT_FILTER_UNTRIAGED else Alert.verdict == verdict)
-    if verdict_reason:
-        filters.append(Alert.verdict_reason == verdict_reason)
+    filters = _alert_criteria(
+        assigned_to=assigned_to,
+        alert_title=alert_title,
+        customer_code=customer_code,
+        customer_codes=customer_codes,
+        source=source,
+        asset_name=asset_name,
+        status=status,
+        tags=tags,
+        ioc_value=ioc_value,
+        verdict=verdict,
+        verdict_reason=verdict_reason,
+        date_from=date_from,
+        date_to=date_to,
+    )
 
+    if visibility is not None:
+        filters.extend(visibility)
     # Apply tag-based RBAC filtering if user is provided
-    if user:
+    elif user:
         tag_filters = await tag_access_handler.build_alert_query_filters(user, db)
         accessible_tags = tag_filters["accessible_tags"]
 
@@ -2402,20 +2451,23 @@ async def list_alerts_multiple_filters(
 
             if accessible_tags:
                 # Alerts that have at least one accessible tag
+                # Correlated on Alert only: the query below joins AlertToTag as well.
                 has_accessible_tag = exists(
-                    select(AlertToTag.alert_id).where(
+                    select(AlertToTag.alert_id)
+                    .where(
                         and_(
                             AlertToTag.alert_id == Alert.id,
                             AlertToTag.tag_id.in_(accessible_tags),
                         ),
-                    ),
+                    )
+                    .correlate(Alert),
                 )
                 tag_conditions.append(has_accessible_tag)
 
             if tag_filters["include_untagged"]:
                 # Include untagged alerts
                 is_untagged = ~exists(
-                    select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id),
+                    select(AlertToTag.alert_id).where(AlertToTag.alert_id == Alert.id).correlate(Alert),
                 )
                 tag_conditions.append(is_untagged)
 

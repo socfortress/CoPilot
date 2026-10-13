@@ -1,4 +1,5 @@
 import type { PortalSeed } from "../support/e2e"
+import { alertsListRequest } from "../support/alerts"
 
 /**
  * The global customer filter (#1185): picking a customer reloads each list and card once
@@ -37,7 +38,7 @@ describe("global customer filter", () => {
 
 	it("alerts: the cards and the list reload once for the picked customer", () => {
 		cy.intercept("GET", "**/api/customer_portal/dashboard/alert-stats*").as("stats")
-		cy.intercept("GET", "**/api/incidents/db_operations/alerts?*").as("list")
+		cy.intercept(alertsListRequest()).as("list")
 		cy.visit("/alerts")
 		cy.wait(["@stats", "@list"])
 		expectCard("total", seed.alerts.a.total + seed.alerts.b.total)
@@ -58,6 +59,22 @@ describe("global customer filter", () => {
 		cy.wait(800)
 		cy.get("@stats.all").should("have.length", 3)
 		cy.get("@list.all").should("have.length", 3)
+	})
+
+	it("alerts: the list's own filters and the global filter narrow together (#1245)", () => {
+		const office365 = (rows: PortalSeed["alert_rows"]["a"]) => rows.filter(row => row.source === "office365").length
+		cy.intercept(alertsListRequest()).as("list")
+		cy.visit("/alerts?source=office365", { onBeforeLoad: win => win.localStorage.removeItem("customerFilter") })
+		cy.wait("@list")
+		cy.get("[data-testid=alerts-table] tbody tr").should(
+			"have.length",
+			office365(seed.alert_rows.a) + office365(seed.alert_rows.b)
+		)
+
+		pickCustomer(seed.customers.b)
+		cy.wait("@list").its("request.url").should("include", `customer_codes=${seed.customers.b}`).and("include", "source=office365")
+		cy.get("[data-testid=alerts-table] tbody tr").should("have.length", office365(seed.alert_rows.b))
+		cy.location("search").should("contain", "source=office365")
 	})
 
 	it("cases: the cards and the list reload once for the picked customer", () => {

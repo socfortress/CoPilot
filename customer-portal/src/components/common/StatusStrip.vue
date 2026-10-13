@@ -6,7 +6,13 @@
 		:aria-label="`${entity} by status`"
 		data-testid="status-strip"
 	>
-		<div class="col-span-2 flex min-w-0 flex-col gap-2.5 px-4 py-3 @3xl:col-span-1" data-testid="stat-total">
+		<component
+			:is="selectable ? 'button' : 'div'"
+			v-bind="pressable(null)"
+			class="col-span-2 flex min-w-0 flex-col gap-2.5 px-4 py-3 text-left @3xl:col-span-1"
+			:class="selectableClasses(null)"
+			data-testid="stat-total"
+		>
 			<span class="text-tertiary flex items-center gap-1.5 text-xs">
 				<Icon :name="icon" :size="14" />
 				Total {{ entity.toLowerCase() }}
@@ -17,17 +23,22 @@
 				v-text="formatCount(total)"
 			/>
 			<StatusBar :segments="split ?? cells" />
-		</div>
+		</component>
 
-		<div
+		<component
+			:is="selectable ? 'button' : 'div'"
 			v-for="(cell, index) of cells"
 			:key="cell.key"
-			class="border-border flex min-w-0 flex-col gap-2.5 px-4 py-3 @max-3xl:odd:border-l"
-			:class="{
-				'is-lifted': lifted(cell),
-				// Two to a row when narrow: an odd last cell takes the whole row, not half of it.
-				'col-span-2 @3xl:col-span-1': cells.length % 2 === 1 && index === cells.length - 1
-			}"
+			v-bind="pressable(cell.key)"
+			class="border-border flex min-w-0 flex-col gap-2.5 px-4 py-3 text-left @max-3xl:odd:border-l"
+			:class="[
+				selectableClasses(cell.key),
+				{
+					'is-lifted': lifted(cell),
+					// Two to a row when narrow: an odd last cell takes the whole row, not half of it.
+					'col-span-2 @3xl:col-span-1': cells.length % 2 === 1 && index === cells.length - 1
+				}
+			]"
 			:data-testid="`stat-${cell.key}`"
 		>
 			<span class="text-tertiary flex min-w-0 items-center gap-1.5 text-xs whitespace-nowrap">
@@ -49,7 +60,7 @@
 					v-text="share(cell.value)"
 				/>
 			</div>
-		</div>
+		</component>
 	</section>
 </template>
 
@@ -60,7 +71,10 @@
 // the same thing here, in the lists and on the Overview. `split` is what the bar shows
 // when it is not simply the cells — a flag such as "critical" is a cell (marked with an
 // icon) but no share of the bar. `lift` names the one cell to raise while it is not zero:
-// the figure the customer acts on.
+// the figure the customer acts on. A `selectable` strip is also a filter (#1245): each
+// cell is a toggle button that emits its key (or `null` when pressed again), the total
+// emits `null` ("all"), and
+// `selected` marks the one in force.
 import type { StatusSegment } from "@/components/overview/shared/status"
 import Icon from "@/components/common/Icon.vue"
 import { bgClass, textClass } from "@/components/overview/shared/status"
@@ -71,7 +85,7 @@ export interface StatusStripCell extends StatusSegment {
 	icon?: string
 }
 
-const { total, entity, icon, cells, split, lift } = defineProps<{
+const { total, entity, icon, cells, split, lift, selectable, selected } = defineProps<{
 	total: number
 	/** "Alerts", "Cases", "Agents": names the strip and its total. */
 	entity: string
@@ -81,7 +95,30 @@ const { total, entity, icon, cells, split, lift } = defineProps<{
 	split?: StatusSegment[]
 	/** The key of the cell to raise while it is not zero. */
 	lift?: string
+	/** Cells become buttons that emit `select`. */
+	selectable?: boolean
+	/** The selected cell's key; `null` selects the total. */
+	selected?: string | null
 }>()
+
+const emit = defineEmits<{
+	(e: "select", key: string | null): void
+}>()
+
+/** Button attributes for a cell (`null`: the total) of a selectable strip. */
+function pressable(key: string | null) {
+	if (!selectable) return {}
+	// A second press on the selected cell lets go of it, back to the total.
+	return { "type": "button", "aria-pressed": isSelected(key), "onClick": () => emit("select", isSelected(key) ? null : key) }
+}
+
+function isSelected(key: string | null) {
+	return selectable && (selected ?? null) === key
+}
+
+function selectableClasses(key: string | null) {
+	return selectable ? ["is-selectable", { "is-selected": isSelected(key) }] : []
+}
 
 // Full class names, so Tailwind finds them: the total plus 3 or 4 cells.
 const WIDE_COLUMNS: Record<number, string> = { 4: "@3xl:grid-cols-4", 5: "@3xl:grid-cols-5" }
@@ -102,6 +139,26 @@ function share(value: number) {
 
 <style scoped>
 .is-lifted {
+	background-color: rgb(var(--primary-color-rgb) / 0.06);
+}
+
+.is-selectable {
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+
+	&:hover {
+		background-color: rgb(var(--primary-color-rgb) / 0.04);
+	}
+
+	&:focus-visible {
+		outline: 2px solid rgb(var(--primary-color-rgb));
+		outline-offset: -2px;
+	}
+}
+
+/* The filter in force: a bar along the cell's bottom edge, the way a tab reads. */
+.is-selected {
+	box-shadow: inset 0 -2px 0 rgb(var(--primary-color-rgb));
 	background-color: rgb(var(--primary-color-rgb) / 0.06);
 }
 </style>

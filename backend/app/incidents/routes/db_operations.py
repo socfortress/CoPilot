@@ -274,6 +274,7 @@ from app.notifications.services.event_builders import case_assigned_event
 from app.soc_management.domain.lifecycle import Actor
 from app.soc_management.domain.lifecycle import LifecycleAction
 from app.soc_management.services.lifecycle import SlaLifecycleRecorder
+from app.time_utils import to_naive_utc
 
 incidents_db_operations_router = APIRouter()
 
@@ -2230,6 +2231,8 @@ async def list_alerts_multiple_filters_endpoint(
         description="TRUE_POSITIVE, FALSE_POSITIVE, or UNTRIAGED for alerts with no verdict recorded yet",
     ),
     verdict_reason: Optional[str] = Query(None, description="False-positive reason; only meaningful alongside verdict=FALSE_POSITIVE"),
+    date_from: Optional[datetime] = Query(None, description="Alerts created at or after this time (ISO 8601; without an offset, UTC)"),
+    date_to: Optional[datetime] = Query(None, description="Alerts created at or before this time (ISO 8601; without an offset, UTC)"),
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", pattern="^(asc|desc)$"),
@@ -2238,16 +2241,23 @@ async def list_alerts_multiple_filters_endpoint(
 ):
     """
     Endpoint to list alerts with multiple filters and customer/tag access control.
+
+    Every criterion combines with every other (AND); ``tags`` matches an alert carrying
+    any of them. The page and ``total_filtered`` share one visibility definition
+    (customers *and* tag RBAC), so the count never includes an alert the page hides.
     """
     logger.info(f"Listing alerts with filters for user: {current_user.username} with role_id: {current_user.role_id}")
 
-    # Intersect the requested subset with what the user may see — never widens scope.
-    effective_customers = await customer_access_handler.resolve_effective_customers(current_user, customer_codes, db)
+    date_from, date_to = to_naive_utc(date_from), to_naive_utc(date_to)
+    if date_from and date_to and date_from > date_to:
+        raise HTTPException(status_code=422, detail="date_from must not be after date_to")
 
-    # An empty resolution means "the requested customers resolve to nothing you may see".
-    # It must short-circuit: the services skip the filter on a falsy list, so passing [] down
-    # would drop the tenant constraint entirely instead of matching no rows.
-    if not effective_customers:
+    # Customers (the requested subset intersected with what the user may see — never
+    # widened) and tag RBAC, built once for the page and its count.
+    visibility = await alert_visibility_filters_for_user(current_user, db, customer_codes)
+
+    # None means the user may see no alert at all: short-circuit rather than run a query.
+    if visibility is None:
         return AlertOutResponse(
             alerts=[],
             total_filtered=0,
@@ -2256,10 +2266,6 @@ async def list_alerts_multiple_filters_endpoint(
             message="No alerts found for the requested customers",
         )
 
-    # ["*"] = wildcard access with no requested subset -> no customer constraint at all.
-    scoped_customers = None if "*" in effective_customers else effective_customers
-
-    # Pass user for tag filtering
     alerts = await list_alerts_multiple_filters(
         assigned_to=assigned_to,
         alert_title=alert_title,
@@ -2270,12 +2276,13 @@ async def list_alerts_multiple_filters_endpoint(
         ioc_value=ioc_value,
         verdict=verdict,
         verdict_reason=verdict_reason,
+        date_from=date_from,
+        date_to=date_to,
         db=db,
         page=page,
         page_size=page_size,
         order=order,
-        customer_codes=scoped_customers,
-        user=current_user,  # Pass user for tag filtering
+        visibility=visibility,
     )
 
     # Totals with both customer and tag filtering, one grouped query
@@ -2285,7 +2292,6 @@ async def list_alerts_multiple_filters_endpoint(
     total_filtered = await alerts_total_multiple_filters(
         assigned_to=assigned_to,
         alert_title=alert_title,
-        customer_codes=scoped_customers,
         source=source,
         asset_name=asset_name,
         status=status,
@@ -2293,6 +2299,9 @@ async def list_alerts_multiple_filters_endpoint(
         ioc_value=ioc_value,
         verdict=verdict,
         verdict_reason=verdict_reason,
+        date_from=date_from,
+        date_to=date_to,
+        visibility=visibility,
         db=db,
     )
 
