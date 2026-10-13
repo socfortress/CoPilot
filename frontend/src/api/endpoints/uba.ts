@@ -15,6 +15,7 @@ import type {
 	UbaIdentityReview,
 	UbaIdentitySource,
 	UbaIdentitySummary,
+	UbaIncidentVerdict,
 	UbaOnboarding,
 	UbaPage,
 	UbaProvisioning,
@@ -86,7 +87,9 @@ export default {
 	},
 	/** FALSE_POSITIVE with suppress suppresses the alert's rules for the entity (UBA records who). */
 	submitFeedback(customerCode: string, alertId: string, payload: UbaFeedbackPayload) {
-		return HttpClient.post<FlaskBaseResponse & { verdict: string; suppressed_rules: string[]; suppressed_until: string | null }>(
+		return HttpClient.post<
+			FlaskBaseResponse & { verdict: string; suppressed_rules: string[]; suppressed_until: string | null; incident?: UbaIncidentVerdict }
+		>(
 			`${base(customerCode)}/alerts/${encodeURIComponent(alertId)}/feedback`,
 			payload
 		)

@@ -138,7 +138,7 @@ import { formatDate } from "@/utils/format"
 import UbaError from "./UbaError.vue"
 import SignalTimeline from "./ui/SignalTimeline.vue"
 import UbaSection from "./ui/UbaSection.vue"
-import { entityTypeIcon, FALSE_POSITIVE_REASONS } from "./utils"
+import { entityTypeIcon, FALSE_POSITIVE_REASONS, incidentNeedsAttention } from "./utils"
 
 const { customerCode, alertId } = defineProps<{ customerCode: string; alertId: string }>()
 const emit = defineEmits<{ openEntity: [entityKey: string]; changed: []; meta: [meta: UbaDrawerMeta] }>()
@@ -224,12 +224,14 @@ const verdictLabel = computed(() => (verdict.value === "FALSE_POSITIVE" ? "false
 /**
  * What saving does. A verdict cannot be changed afterwards (UBA keeps the first one on CoPilot's
  * incident, and a false positive's suppressions are not lifted by a later verdict), so say so.
+ * The incident alert gets the same verdict unless it already has one (#1239).
  */
-const confirmText = computed(() =>
-	verdict.value === "FALSE_POSITIVE" && suppress.value
-		? "Save this alert as a false positive? The rules behind it stop adding risk for this entity for 30 days. The verdict cannot be changed afterwards."
-		: `Save this alert as a ${verdictLabel.value}? The verdict cannot be changed afterwards.`
-)
+const confirmText = computed(() => {
+	const incident = alert.value?.copilot_alert_id ? ` It is also recorded on incident alert #${alert.value.copilot_alert_id}.` : ""
+	return verdict.value === "FALSE_POSITIVE" && suppress.value
+		? `Save this alert as a false positive? The rules behind it stop adding risk for this entity for 30 days.${incident} The verdict cannot be changed afterwards.`
+		: `Save this alert as a ${verdictLabel.value}?${incident} The verdict cannot be changed afterwards.`
+})
 
 const canSubmit = computed(() => verdict.value === "TRUE_POSITIVE" || (verdict.value === "FALSE_POSITIVE" && !!reason.value))
 
@@ -263,7 +265,11 @@ function submit() {
 		})
 		.then(res => {
 			const rules = res.data.suppressed_rules
-			message.success(rules.length ? `Saved. ${rules.length} rule(s) suppressed for this entity.` : "Verdict saved.")
+			const saved = rules.length ? `Saved. ${rules.length} rule(s) suppressed for this entity.` : "Verdict saved."
+			const incident = res.data.incident
+			if (incident?.status === "recorded") message.success(`${saved} ${incident.message}`)
+			else message.success(saved)
+			if (incident && incidentNeedsAttention(incident, verdict.value)) message.warning(incident.message, { duration: 8000 })
 			emit("changed")
 			load()
 		})
