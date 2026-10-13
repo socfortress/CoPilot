@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import Any
 from typing import Dict
 
+import anyio
+import anyio.to_thread
 import grpc
 import pyvelociraptor
 from fastapi import HTTPException
@@ -11,6 +13,7 @@ from loguru import logger
 from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
 
+from app.blocking import run_blocking
 from app.connectors.utils import get_connector_info_from_db
 from app.connectors.velociraptor.utils.validation import validate_artifact_name
 from app.connectors.velociraptor.utils.validation import validate_client_id
@@ -21,16 +24,16 @@ from app.db.db_session import AsyncSessionLocal
 from app.db.db_session import get_db_session
 
 
-def _timeout_seconds(name: str, default: int) -> int:
-    """Read a gRPC deadline from the environment, falling back to `default`."""
+def _positive_int_from_env(name: str, default: int) -> int:
+    """Read a positive integer setting from the environment, falling back to `default`."""
     raw = os.getenv(name, str(default))
     try:
         parsed = int(raw)
     except ValueError:
-        logger.warning(f"{name}={raw!r} is not an integer; falling back to {default}s")
+        logger.warning(f"{name}={raw!r} is not an integer; falling back to {default}")
         return default
     if parsed <= 0:
-        logger.warning(f"{name}={parsed} is not a positive number of seconds; falling back to {default}s")
+        logger.warning(f"{name}={parsed} is not a positive integer; falling back to {default}")
         return default
     return parsed
 
@@ -38,23 +41,34 @@ def _timeout_seconds(name: str, default: int) -> int:
 # Ordinary VQL — listing clients, resolving a client_id, reading collection results.
 # These talk to the Velociraptor server's own datastore and should answer quickly; a
 # slow one means the server is unwell, and waiting minutes on it just moves the failure.
-QUERY_TIMEOUT_SECONDS = _timeout_seconds("VELOCIRAPTOR_QUERY_TIMEOUT", 30)
+QUERY_TIMEOUT_SECONDS = _positive_int_from_env("VELOCIRAPTOR_QUERY_TIMEOUT", 30)
 
 # Waiting for a *flow* to finish is a different kind of wait: the deadline has to cover
 # however long the endpoint takes to run the artifact, which for anything touching disk
 # is routinely minutes rather than seconds. Sharing the 30s query deadline meant a
 # perfectly healthy collection failed with DEADLINE_EXCEEDED while it was still running
 # (the flow completed server-side; only CoPilot gave up), which is what this splits.
-FLOW_TIMEOUT_SECONDS = _timeout_seconds("VELOCIRAPTOR_FLOW_TIMEOUT", 300)
+FLOW_TIMEOUT_SECONDS = _positive_int_from_env("VELOCIRAPTOR_FLOW_TIMEOUT", 300)
+
+# pyvelociraptor is synchronous gRPC: every call blocks the thread it runs on until
+# Velociraptor answers. Run on the event loop, that thread is the whole backend, so
+# one command waiting minutes for an endpoint froze every other request and the
+# reverse proxy answered them with 504s (#1226). Every gRPC call therefore goes
+# through `run_blocking`; the `*_async` methods below are the API for coroutines,
+# and the sync methods remain only for code that is already on a worker thread.
+#
+# Waiting for a flow holds a worker thread for as long as the endpoint takes, up to
+# FLOW_TIMEOUT_SECONDS. Those threads come from the pool every connector shares
+# (`app.blocking.DEFAULT_THREAD_LIMIT`), so a burst of slow collections -- the AI
+# analyst investigating several alerts at once -- could still exhaust it and stall
+# every other connector call. Flow waits get their own, smaller allowance: past it
+# they queue behind each other rather than starving everything else.
+FLOW_WAIT_CONCURRENCY = _positive_int_from_env("VELOCIRAPTOR_MAX_CONCURRENT_FLOW_WAITS", 20)
+_flow_wait_limiter = anyio.CapacityLimiter(FLOW_WAIT_CONCURRENCY)
 
 
-async def verify_velociraptor_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Verifies the connection to Velociraptor service.
-
-    Returns:
-        dict: A dictionary containing 'connectionSuccessful' status and 'authToken' if the connection is successful.
-    """
+def _verify_velociraptor_credentials_sync(attributes: Dict[str, Any]) -> Dict[str, Any]:
+    """Blocking body of `verify_velociraptor_credentials`; runs on a worker thread."""
     try:
         connector_api_key = attributes["connector_api_key"]
 
@@ -90,7 +104,9 @@ async def verify_velociraptor_credentials(attributes: Dict[str, Any]) -> Dict[st
                 )
 
                 r = []
-                for response in stub.Query(client_request):
+                # Without a deadline an unreachable server held this check (and its
+                # worker thread) for as long as gRPC kept retrying the connection.
+                for response in stub.Query(client_request, timeout=QUERY_TIMEOUT_SECONDS):
                     if response.Response:
                         r = r + json.loads(response.Response)
                 return {
@@ -109,6 +125,16 @@ async def verify_velociraptor_credentials(attributes: Dict[str, Any]) -> Dict[st
             "connectionSuccessful": False,
             "message": f"Failed to get connector_api_key from the database: {e}",
         }
+
+
+async def verify_velociraptor_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Verifies the connection to Velociraptor service.
+
+    Returns:
+        dict: A dictionary containing 'connectionSuccessful' status and 'authToken' if the connection is successful.
+    """
+    return await run_blocking(_verify_velociraptor_credentials_sync, attributes)
 
 
 async def verify_velociraptor_connection(connector_name: str) -> str:
@@ -316,6 +342,31 @@ class UniversalService:
         vql = f"SELECT * FROM source(client_id='{client_id}', flow_id='{flow_id}', artifact='{artifact}')"
         return self.execute_query(vql, org_id)
 
+    async def execute_query_async(self, vql: str, org_id: str = "root", timeout: int = None):
+        """`execute_query` on a worker thread, so the event loop keeps serving other requests."""
+        return await run_blocking(self.execute_query, vql, org_id, timeout)
+
+    async def watch_flow_completion_async(self, flow_id: str, org_id: str = "root", timeout: int = None):
+        """`watch_flow_completion` on a worker thread from the flow-wait allowance.
+
+        The gRPC deadline starts when a thread picks the wait up, so a wait queued
+        behind FLOW_WAIT_CONCURRENCY others is not cut short by its time in the queue.
+        """
+        return await anyio.to_thread.run_sync(
+            lambda: self.watch_flow_completion(flow_id, org_id, timeout),
+            limiter=_flow_wait_limiter,
+        )
+
+    async def read_collection_results_async(
+        self,
+        client_id: str,
+        flow_id: str,
+        org_id: str = "root",
+        artifact: str = "Generic.Client.Info/BasicInformation",
+    ):
+        """`read_collection_results` on a worker thread."""
+        return await run_blocking(self.read_collection_results, client_id, flow_id, org_id, artifact)
+
     async def get_client_id(self, client_name: str):
         """
         Get the client_id associated with a given client_name.
@@ -341,9 +392,9 @@ class UniversalService:
 
             # if last_seen_at is longer than 30 seconds from now, return False
             if await self._is_offline(last_seen_at):
-                return self.execute_query(vql_client_id)
+                return await self.execute_query_async(vql_client_id)
 
-            return self.execute_query(vql_client_id)
+            return await self.execute_query_async(vql_client_id)
         except Exception as e:
             return {
                 "success": False,
@@ -375,9 +426,9 @@ class UniversalService:
 
             # if last_seen_at is longer than 30 seconds from now, return False
             if await self._is_offline(last_seen_at):
-                return self.execute_query(vql_client_id)
+                return await self.execute_query_async(vql_client_id)
 
-            return self.execute_query(vql_client_id)
+            return await self.execute_query_async(vql_client_id)
         except Exception as e:
             return {
                 "success": False,
@@ -395,7 +446,7 @@ class UniversalService:
         Returns:
             float: The last_seen_at timestamp.
         """
-        return self.execute_query(vql)["results"][0]["last_seen_at"]
+        return (await self.execute_query_async(vql))["results"][0]["last_seen_at"]
 
     async def _get_client_version(self, vql: str):
         """
@@ -407,7 +458,7 @@ class UniversalService:
         Returns:
             str: The client version.
         """
-        return self.execute_query(vql)["results"][0]["agent_information"]["version"]
+        return (await self.execute_query_async(vql))["results"][0]["agent_information"]["version"]
 
     async def _get_server_version(self, vql: str):
         """
@@ -420,7 +471,7 @@ class UniversalService:
             str: The server version.
         """
         try:
-            return self.execute_query(vql)["results"][0]["version"]["version"]
+            return (await self.execute_query_async(vql))["results"][0]["version"]["version"]
         except IndexError as e:
             raise HTTPException(
                 status_code=500,

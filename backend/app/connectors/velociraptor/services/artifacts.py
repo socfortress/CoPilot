@@ -98,7 +98,7 @@ async def get_artifacts() -> ArtifactsResponse:
     logger.info("Fetching artifacts from Velociraptor")
     velociraptor_service = await UniversalService.create("Velociraptor")
     query = create_query("SELECT name,description,parameters FROM artifact_definitions()")
-    all_artifacts = velociraptor_service.execute_query(query)
+    all_artifacts = await velociraptor_service.execute_query_async(query)
     try:
         if all_artifacts["success"]:
             artifacts = [Artifacts(**artifact) for artifact in all_artifacts["results"]]
@@ -136,7 +136,7 @@ async def get_artifact_by_name(artifact_name: str) -> ArtifactsResponse:
 
     # Query for a specific artifact by name
     query = create_query(f"SELECT name,description,parameters FROM artifact_definitions() WHERE name = '{artifact_name}'")
-    artifact_result = velociraptor_service.execute_query(query)
+    artifact_result = await velociraptor_service.execute_query_async(query)
 
     try:
         if artifact_result["success"]:
@@ -536,7 +536,7 @@ async def run_artifact_collection(
             )
 
         logger.info(f"Running artifact collection with query: {query}")
-        flow = velociraptor_service.execute_query(query, org_id=collect_artifact_body.velociraptor_org)
+        flow = await velociraptor_service.execute_query_async(query, org_id=collect_artifact_body.velociraptor_org)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
         # Check if results are available
@@ -568,13 +568,13 @@ async def run_artifact_collection(
 
         logger.info(f"Extracted flow_id: {flow_id}")
 
-        completed = velociraptor_service.watch_flow_completion(flow_id, org_id=collect_artifact_body.velociraptor_org)
+        completed = await velociraptor_service.watch_flow_completion_async(flow_id, org_id=collect_artifact_body.velociraptor_org)
         logger.info(f"Successfully watched flow completion on {completed}")
 
         # Only read collection results if data_store_only is False
         results = None
         if not collect_artifact_body.data_store_only:
-            results = velociraptor_service.read_collection_results(
+            results = await velociraptor_service.read_collection_results_async(
                 client_id=collect_artifact_body.velociraptor_id,
                 flow_id=flow_id,
                 org_id=collect_artifact_body.velociraptor_org,
@@ -696,7 +696,7 @@ async def run_file_collection(
         )
 
         logger.info(f"Query: {query}")
-        flow = velociraptor_service.execute_query(query, org_id=collect_artifact_body.velociraptor_org)
+        flow = await velociraptor_service.execute_query_async(query, org_id=collect_artifact_body.velociraptor_org)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
         # Check if results are available
@@ -726,10 +726,10 @@ async def run_file_collection(
 
         logger.info(f"Extracted flow_id: {flow_id}")
 
-        completed = velociraptor_service.watch_flow_completion(flow_id, org_id=collect_artifact_body.velociraptor_org)
+        completed = await velociraptor_service.watch_flow_completion_async(flow_id, org_id=collect_artifact_body.velociraptor_org)
         logger.info(f"Successfully watched flow completion on {completed}")
 
-        results = velociraptor_service.read_collection_results(
+        results = await velociraptor_service.read_collection_results_async(
             client_id=collect_artifact_body.velociraptor_id,
             flow_id=flow_id,
             org_id=collect_artifact_body.velociraptor_org,
@@ -821,7 +821,7 @@ async def fetch_file_from_filestore(
                 f"SELECT os_info.hostname AS Hostname "
                 f"FROM clients(client_id='{client_id}')",
             )
-            client_info = velociraptor_service.execute_query(query, org_id=org_id)
+            client_info = await velociraptor_service.execute_query_async(query, org_id=org_id)
 
             if client_info.get("results") and len(client_info["results"]) > 0:
                 hostname = client_info["results"][0].get("Hostname", client_id)
@@ -852,7 +852,7 @@ async def fetch_file_from_filestore(
         )
 
         logger.info(f"Create download query: {create_download_query}")
-        download_result = velociraptor_service.execute_query(create_download_query, org_id=org_id)
+        download_result = await velociraptor_service.execute_query_async(create_download_query, org_id=org_id)
 
         if not download_result.get("success"):
             raise HTTPException(
@@ -883,7 +883,7 @@ async def fetch_file_from_filestore(
                     f"FROM scope()",
                 )
 
-                result = velociraptor_service.execute_query(query, org_id=org_id)
+                result = await velociraptor_service.execute_query_async(query, org_id=org_id)
 
                 if not result.get("success"):
                     raise HTTPException(
@@ -986,7 +986,7 @@ async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResp
                 "FROM scope()"
             ),
         )
-        flow = velociraptor_service.execute_query(query, org_id=run_command_body.velociraptor_org)
+        flow = await velociraptor_service.execute_query_async(query, org_id=run_command_body.velociraptor_org)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
         artifact_key = get_artifact_key(analyzer_body=run_command_body)
@@ -994,10 +994,10 @@ async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResp
         flow_id = flow["results"][0][artifact_key]["flow_id"]
         logger.info(f"Extracted flow_id: {flow_id}")
 
-        completed = velociraptor_service.watch_flow_completion(flow_id, org_id=run_command_body.velociraptor_org)
+        completed = await velociraptor_service.watch_flow_completion_async(flow_id, org_id=run_command_body.velociraptor_org)
         logger.info(f"Successfully watched flow completion on {completed}")
 
-        results = velociraptor_service.read_collection_results(
+        results = await velociraptor_service.read_collection_results_async(
             client_id=run_command_body.velociraptor_id,
             flow_id=flow_id,
             org_id=run_command_body.velociraptor_org,
@@ -1087,7 +1087,7 @@ async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse
                     "FROM scope()"
                 ),
             )
-        flow = velociraptor_service.execute_query(query, org_id=quarantine_body.velociraptor_org)
+        flow = await velociraptor_service.execute_query_async(query, org_id=quarantine_body.velociraptor_org)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
         artifact_key = get_artifact_key(analyzer_body=quarantine_body)
@@ -1095,10 +1095,10 @@ async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse
         flow_id = flow["results"][0][artifact_key]["flow_id"]
         logger.info(f"Extracted flow_id: {flow_id}")
 
-        completed = velociraptor_service.watch_flow_completion(flow_id, org_id=quarantine_body.velociraptor_org)
+        completed = await velociraptor_service.watch_flow_completion_async(flow_id, org_id=quarantine_body.velociraptor_org)
         logger.info(f"Successfully watched flow completion on {completed}")
 
-        results = velociraptor_service.read_collection_results(
+        results = await velociraptor_service.read_collection_results_async(
             client_id=quarantine_body.velociraptor_id,
             flow_id=flow_id,
             org_id=quarantine_body.velociraptor_org,
