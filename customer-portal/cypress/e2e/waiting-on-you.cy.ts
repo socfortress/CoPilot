@@ -1,4 +1,5 @@
 import type { PortalSeed } from "../support/e2e"
+import { alertsListRequest } from "../support/alerts"
 
 /**
  * "Waiting on you" in the lists (#1187): the stats card counts what the SOC is waiting on
@@ -21,7 +22,13 @@ describe("waiting on you", () => {
 		cy.loginToPortal(seed)
 	})
 
+	// The alerts' status cards are their status filter (#1245); the cases list still
+	// filters through its key/value picker.
 	function filterOnWaiting(list: "alerts" | "cases") {
+		if (list === "alerts") {
+			cy.get("[data-testid=stat-pending_customer]").click()
+			return
+		}
 		cy.get(`[data-testid=${list}-filter-key]`).click()
 		cy.get(".n-base-select-option:visible").contains(/^statuses$/).click()
 		cy.get(`[data-testid=${list}-filter-value]`).click()
@@ -32,7 +39,8 @@ describe("waiting on you", () => {
 		it(`${list}: the card's count is exactly what the list shows filtered on that status`, () => {
 			const stats = list === "alerts" ? "alert-stats" : "case-stats"
 			cy.intercept("GET", `**/api/customer_portal/dashboard/${stats}*`).as("stats")
-			cy.intercept("GET", `**/${list === "alerts" ? "alerts" : "case"}/status/PENDING_CUSTOMER*`).as("waiting")
+			if (list === "alerts") cy.intercept(alertsListRequest({ status: "PENDING_CUSTOMER" })).as("waiting")
+			else cy.intercept("GET", "**/case/status/PENDING_CUSTOMER*").as("waiting")
 			cy.visit(`/${list}`)
 			cy.wait("@stats")
 			const expected = seed[list].a.pending_customer
@@ -46,7 +54,7 @@ describe("waiting on you", () => {
 	}
 
 	it("an item the SOC is not waiting on never offers the status", () => {
-		cy.intercept("GET", "**/alerts/status/OPEN*").as("open")
+		cy.intercept(alertsListRequest({ status: "OPEN" })).as("open")
 		cy.visit("/alerts?status=OPEN")
 		cy.wait("@open")
 		cy.get("[data-testid=alerts-table] tbody tr").first().find(".n-base-selection").click()
@@ -54,7 +62,7 @@ describe("waiting on you", () => {
 	})
 
 	it("a waiting item shows the status, but the customer cannot pick it", () => {
-		cy.intercept("GET", "**/alerts/status/PENDING_CUSTOMER*").as("waiting")
+		cy.intercept(alertsListRequest({ status: "PENDING_CUSTOMER" })).as("waiting")
 		cy.intercept("PUT", "**/alert/status").as("setStatus")
 		cy.visit("/alerts?status=PENDING_CUSTOMER")
 		cy.wait("@waiting")

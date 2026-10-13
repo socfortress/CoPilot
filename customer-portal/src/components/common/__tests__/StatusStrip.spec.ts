@@ -99,4 +99,50 @@ describe("statusStrip", () => {
 			"offline"
 		])
 	})
+
+	it("is plain figures unless asked to be a filter", () => {
+		const wrapper = workflow()
+		expect(wrapper.findAll("button")).toHaveLength(0)
+		expect(wrapper.get("[data-testid=stat-open]").element.tagName).toBe("DIV")
+	})
+})
+
+/** The alerts page's cards double as its status filter (#1245). */
+describe("statusStrip as a filter", () => {
+	function selectable(selected: string | null) {
+		return mount(StatusStrip, {
+			props: {
+				total: counts.total,
+				entity: "Alerts",
+				icon: "carbon:warning-alt",
+				cells: workflowSegments(counts),
+				selectable: true,
+				selected
+			}
+		})
+	}
+
+	it("makes every cell and the total a toggle button, pressed for the filter in force", () => {
+		const wrapper = selectable("open")
+		const cells = ["total", "open", "in_progress", "pending_customer", "closed"]
+		for (const key of cells) {
+			const cell = wrapper.get(`[data-testid=stat-${key}]`)
+			expect(cell.element.tagName).toBe("BUTTON")
+			expect(cell.attributes("type")).toBe("button")
+			expect(cell.attributes("aria-pressed")).toBe(String(key === "open"))
+		}
+		expect(wrapper.get("[data-testid=stat-open]").classes()).toContain("is-selected")
+	})
+
+	it("presses the total when no status is chosen", () => {
+		expect(selectable(null).get("[data-testid=stat-total]").attributes("aria-pressed")).toBe("true")
+	})
+
+	it("emits the key pressed, null for the total, and null again to let go of the cell in force", async () => {
+		const wrapper = selectable("open")
+		await wrapper.get("[data-testid=stat-closed]").trigger("click")
+		await wrapper.get("[data-testid=stat-total]").trigger("click")
+		await wrapper.get("[data-testid=stat-open]").trigger("click")
+		expect(wrapper.emitted("select")).toEqual([["closed"], [null], [null]])
+	})
 })

@@ -416,6 +416,16 @@ Round-trips, not SQL complexity, are what these pages cost (see `app/connectors/
 - Watch the customer filter through `customerFilterStore.queryCustomerCodes`, without `deep`: the store replaces the array on every change. Keep it that way — mutating it in place would silently stop every shallow watcher (`cypress/e2e/customer-filter.cy.ts` catches it).
 - **Checks, from `customer-portal/`:** `pnpm test:unit` (Vitest, `src/**/__tests__/*.spec.ts`: `usePaginatedLoad`, `useLatestRequest`, `KeyValueFilter`, the highlighter, the Overview mappers, the agents endpoints, navigation-scoped cancellation, the async style), `pnpm check:bundle` (production build must carry only the grammars declared in `utils/highlighter.ts`, no WebAssembly, every routed page except the login as its own lazy chunk, entry chunk within its gzip budget), `pnpm test:e2e` (Cypress, see `cypress/README.md`).
 
+### Customer Portal alerts: combined filters in the URL (#1245)
+
+- **One request for every filter**: the portal's alerts list calls `GET /incidents/db_operations/alerts/filter` (title, status, source, asset, tags = any of them, and `date_from`/`date_to` on `alert_creation_time`, inclusive, an aware time converted with `time_utils.to_naive_utc`; reversed range → 422). The per-key endpoints (`/alerts/status/{s}`, `/source/{s}`, …) are no longer called by the portal.
+- **The page and `total_filtered` share one visibility**: the route builds `alert_visibility_filters_for_user` once and passes it as `visibility` to both `list_alerts_multiple_filters` and `alerts_total_multiple_filters` (the criteria themselves come from `_alert_criteria`). The count used to skip tag RBAC. The response's per-status counts are still `alert_status_counts_for_user`, unchanged for the analyst frontend.
+- **Tag-visibility `EXISTS` clauses are `.correlate(Alert)`**: the filtered list joins `AlertToTag` for its tag criterion, and auto-correlation took that table out of the subquery too (`returned no FROM clauses`) — every filtered list of a tag-restricted analyst was a 500.
+- **The URL is the only store** (`components/alerts/filters/alertsFilters.ts`): `?title&status&source&asset&tag=a&tag=b&from=YYYY-MM-DD&to=YYYY-MM-DD`. Dates are local calendar days; the API gets local midnight → last local millisecond as UTC. Unreadable values are dropped, not sent. `views/Alerts/List.vue` owns `useAlertsFilters()` (writes with `replace`, a quick second change builds on the first) and hands it to the filter bar and the status cards, which are a `selectable` `StatusStrip`. `?status=` from the SLA page keeps working.
+- **Seed**: `portal_overview_seed.py` gives every alert a status, source, day and tags (`ALERT_ROWS_A/B`, exported as `alert_rows`); tests derive their expectations from it. The cases list still uses `KeyValueFilter`.
+
+Tests: `tests/test_alert_combined_filters.py` (no DB), `tests/e2e/alert_filters_e2e.py` (13306: criteria, dates, customer scoping, a tag-restricted analyst), portal `components/alerts/**/__tests__/`, `cypress/e2e/alert-filters.cy.ts`.
+
 ### Tenant scoping: customer codes are not the only tenant key
 
 #1050 made `user_customer_access` authoritative for analysts and guarded every route

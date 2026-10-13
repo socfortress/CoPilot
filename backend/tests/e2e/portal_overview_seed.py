@@ -28,8 +28,10 @@ from sqlalchemy import select  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 
 from app.auth.models.users import Role  # noqa: E402
+from app.auth.models.users import RoleTagAccess  # noqa: E402
 from app.auth.models.users import User  # noqa: E402
 from app.auth.models.users import UserCustomerAccess  # noqa: E402
+from app.auth.models.users import UserTagAccess  # noqa: E402
 from app.auth.utils import AuthHandler  # noqa: E402
 from app.db.db_session import async_engine  # noqa: E402
 from app.db.universal_models import Agents  # noqa: E402
@@ -43,6 +45,8 @@ from app.db.universal_models import Customers  # noqa: E402
 from app.db.universal_models import IncidentManagementCustomerReport  # noqa: E402
 from app.incidents.models import Alert  # noqa: E402
 from app.incidents.models import AlertContext  # noqa: E402
+from app.incidents.models import AlertTag  # noqa: E402
+from app.incidents.models import AlertToTag  # noqa: E402
 from app.incidents.models import Asset  # noqa: E402
 from app.incidents.models import Case  # noqa: E402
 from app.incidents.models import CaseAlertLink  # noqa: E402
@@ -64,8 +68,29 @@ PASSWORD = "E2ePassw0rd!x"
 
 # What the portal user must see (E2E_OV_A only), straight from the seed below. One alert
 # and one case of A wait on the customer (#1187), so every status breakdown has all four.
-ALERTS_A = ["OPEN", "OPEN", "OPEN", "IN_PROGRESS", "PENDING_CUSTOMER", "CLOSED"]
-ALERTS_B = ["OPEN", "OPEN", "CLOSED", "CLOSED"]
+# Each alert is (status, source, days before NOW, tags): sources, days and tags differ so
+# the alerts list's combined filters (#1245) have something to tell apart.
+TAG_PHISHING, TAG_VIP = "e2e-phishing", "e2e-vip"
+ALERT_TAGS = (TAG_PHISHING, TAG_VIP)
+# Later rows are newer, as ids and creation times grow together in a real deployment.
+ALERT_ROWS_A = [
+    ("OPEN", "wazuh", 10, [TAG_PHISHING]),
+    ("OPEN", "office365", 8, [TAG_PHISHING, TAG_VIP]),
+    ("OPEN", "wazuh", 5, []),
+    ("IN_PROGRESS", "office365", 3, [TAG_VIP]),
+    ("PENDING_CUSTOMER", "wazuh", 1, []),
+    ("CLOSED", "wazuh", 0, [TAG_PHISHING]),
+]
+ALERT_ROWS_B = [
+    ("OPEN", "wazuh", 6, []),
+    ("OPEN", "office365", 4, [TAG_PHISHING]),
+    ("CLOSED", "wazuh", 2, []),
+    ("CLOSED", "wazuh", 0, []),
+]
+ALERTS_A = [row[0] for row in ALERT_ROWS_A]
+ALERTS_B = [row[0] for row in ALERT_ROWS_B]
+# Two assets on one alert, one on another: the Overview shows "first +N".
+ALERT_ASSETS = {("A", 0): ["host-a1", "host-a2"], ("A", 1): ["host-a3"], ("B", 0): ["host-b1"]}
 CASES_A = ["OPEN", "PENDING_CUSTOMER", "CLOSED"]
 CASES_B = ["OPEN"]
 AGENTS_A = [("active", True, "Linux"), ("active", False, "Windows"), ("disconnected", False, "Linux")]  # (wazuh status, critical, os)
@@ -87,7 +112,33 @@ print("e2e-fallback")
 ```
 """
 
+# Noon UTC: an alert's calendar day is the same in every timezone a browser test runs in.
 NOW = datetime.datetime(2026, 9, 1, 12, 0, 0)
+
+
+def alert_name(code: str, i: int) -> str:
+    return f"{code} alert {i}"
+
+
+def alert_time(days_before: int, minute: int) -> datetime.datetime:
+    return NOW - datetime.timedelta(days=days_before) + datetime.timedelta(minutes=minute)
+
+
+def alert_rows(side: str) -> list:
+    """The alerts of customer A or B as the list shows them, for tests to filter."""
+    code, rows = (CUST_A, ALERT_ROWS_A) if side == "A" else (CUST_B, ALERT_ROWS_B)
+    return [
+        {
+            "name": alert_name(code, i),
+            "status": status,
+            "source": source,
+            "day": (NOW - datetime.timedelta(days=days_before)).date().isoformat(),
+            "tags": tags,
+            "assets": ALERT_ASSETS.get((side, i), []),
+        }
+        for i, (status, source, days_before, tags) in enumerate(rows)
+    ]
+
 
 # SLA clocks of A's alerts (#1187), opened day by day over the last week so the SLA
 # page's default 30-day window holds them all: (acknowledged after, resolved after).
@@ -145,6 +196,13 @@ async def cleanup(s):
         await s.execute(delete(child).where(child.case_id.in_(case_ids)))
     await s.execute(delete(Case).where(Case.customer_code.in_(codes)))
     await s.execute(delete(Asset).where(Asset.alert_linked.in_(alert_ids)))
+    await s.execute(delete(AlertToTag).where(AlertToTag.alert_id.in_(alert_ids)))
+    # Our tags, with any tag-access rule a test pinned to them (alert_filters_e2e.py).
+    tag_ids = select(AlertTag.id).where(AlertTag.tag.in_(ALERT_TAGS))
+    await s.execute(delete(AlertToTag).where(AlertToTag.tag_id.in_(tag_ids)))
+    await s.execute(delete(UserTagAccess).where(UserTagAccess.tag_id.in_(tag_ids)))
+    await s.execute(delete(RoleTagAccess).where(RoleTagAccess.tag_id.in_(tag_ids)))
+    await s.execute(delete(AlertTag).where(AlertTag.tag.in_(ALERT_TAGS)))
     # sla.cy.ts replies to the waiting alert, which leaves a comment on it.
     await s.execute(delete(Comment).where(Comment.alert_id.in_(alert_ids)))
     await s.execute(delete(Alert).where(Alert.customer_code.in_(codes)))
@@ -191,25 +249,31 @@ async def seed(quiet: bool = False) -> dict:
         s.add(context)
         await s.commit()
 
+        tags = {name: AlertTag(tag=name) for name in ALERT_TAGS}
+        s.add_all(tags.values())
         alerts = {}
         minute = 0
-        for code, statuses in ((CUST_A, ALERTS_A), (CUST_B, ALERTS_B)):
-            for i, status in enumerate(statuses):
+        for code, rows in ((CUST_A, ALERT_ROWS_A), (CUST_B, ALERT_ROWS_B)):
+            for i, (status, source, days_before, _) in enumerate(rows):
                 minute += 1
                 alert = Alert(
-                    alert_name=f"{code} alert {i}",
-                    alert_description=f"{code} alert {i} description" if i % 2 else f"{code} alert {i}",
+                    alert_name=alert_name(code, i),
+                    alert_description=f"{alert_name(code, i)} description" if i % 2 else alert_name(code, i),
                     status=status,
-                    alert_creation_time=NOW + datetime.timedelta(minutes=minute),
+                    alert_creation_time=alert_time(days_before, minute),
                     customer_code=code,
-                    source="wazuh",
+                    source=source,
                 )
                 s.add(alert)
                 alerts[(code, i)] = alert
         await s.commit()
+        for code, rows in ((CUST_A, ALERT_ROWS_A), (CUST_B, ALERT_ROWS_B)):
+            for i, (_, _, _, alert_tags) in enumerate(rows):
+                for name in alert_tags:
+                    s.add(AlertToTag(alert_id=alerts[(code, i)].id, tag_id=tags[name].id))
 
-        # Two assets on one alert, one on another: the Overview shows "first +N".
-        for (code, i), names in {(CUST_A, 0): ["host-a1", "host-a2"], (CUST_A, 1): ["host-a3"], (CUST_B, 0): ["host-b1"]}.items():
+        for (side, i), names in ALERT_ASSETS.items():
+            code = CUST_A if side == "A" else CUST_B
             for name in names:
                 s.add(
                     Asset(
@@ -359,7 +423,7 @@ async def seed(quiet: bool = False) -> dict:
         await s.commit()
         if not quiet:
             print(
-                f"seed: {CUST_A} and {CUST_B} with alerts, assets, cases, agents, AI reports, SLA clocks; '{PORTAL_USER}' assigned to {CUST_A}",
+                f"seed: {CUST_A} and {CUST_B} with alerts, tags, assets, cases, agents, AI reports, SLA clocks; '{PORTAL_USER}' assigned to {CUST_A}",
             )
         return {
             "portal_user_id": portal.id,
@@ -381,6 +445,8 @@ def fixture() -> dict:
         "admin": ADMIN,
         "password": PASSWORD,
         "alerts": {"a": status_counts(ALERTS_A), "b": status_counts(ALERTS_B)},
+        "alert_rows": {"a": alert_rows("A"), "b": alert_rows("B")},
+        "alert_tags": {"phishing": TAG_PHISHING, "vip": TAG_VIP},
         "cases": {"a": status_counts(CASES_A), "b": status_counts(CASES_B)},
         "agents_a": {
             "total": len(AGENTS_A),

@@ -37,6 +37,11 @@ export interface AlertsListResponse {
 	pending_customer?: number
 }
 
+/** One page of `GET /incidents/db_operations/alerts/filter`: `total_filtered` counts every match. */
+export interface AlertsFilteredResponse extends AlertsListResponse {
+	total_filtered: number
+}
+
 /** `PENDING_CUSTOMER`: the SOC is waiting on the customer; the SLA clocks are stopped (#1187). */
 export type AlertStatus = "OPEN" | "IN_PROGRESS" | "PENDING_CUSTOMER" | "CLOSED"
 

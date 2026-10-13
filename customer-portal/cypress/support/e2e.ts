@@ -8,6 +8,9 @@ export interface PortalSeed {
 	admin: string
 	password: string
 	alerts: { a: StatusCounts; b: StatusCounts }
+	/** Every seeded alert, oldest first, with what the list's filters read (#1245). */
+	alert_rows: { a: AlertRow[]; b: AlertRow[] }
+	alert_tags: { phishing: string; vip: string }
 	cases: { a: StatusCounts; b: StatusCounts }
 	agents_a: { total: number; online: number; critical: number; offline: number; statuses: string[]; os_list: string[] }
 	/** The alert whose latest AI report carries the Markdown with code blocks. */
@@ -22,6 +25,16 @@ export interface PortalSeed {
 	/** The alert and case of A that wait on the customer (PENDING_CUSTOMER). */
 	waiting_alert_id: number
 	waiting_case_id: number
+}
+
+export interface AlertRow {
+	name: string
+	status: string
+	source: string
+	/** The calendar day it was created on, `YYYY-MM-DD` (noon UTC: the same day in any timezone). */
+	day: string
+	tags: string[]
+	assets: string[]
 }
 
 interface SlaSeed {

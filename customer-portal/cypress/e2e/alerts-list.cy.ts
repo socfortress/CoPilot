@@ -1,9 +1,12 @@
 import type { PortalSeed } from "../support/e2e"
+import { alertsListRequest } from "../support/alerts"
 
 /**
  * The alerts list (#1185): one request per mount or change, no debounce on clicks, and
  * an asset filter that searches the server instead of downloading every asset name.
- * Only the latest load counts (#1192): a slower, superseded one never lands.
+ * Only the latest load counts (#1192): a slower, superseded one never lands. Since #1245
+ * every filter goes to one endpoint, `/alerts/filter`; alert-filters.cy.ts covers how
+ * they combine and live in the URL.
  */
 describe("alerts list", () => {
 	let seed: PortalSeed
@@ -18,8 +21,17 @@ describe("alerts list", () => {
 		cy.loginToPortal(seed)
 	})
 
+	function addFilter(label: string) {
+		cy.get("[data-testid=alerts-filter-add]").click()
+		cy.get(".n-dropdown-option:visible").contains(label).click()
+	}
+
+	function openSelect(type: string) {
+		cy.get(`[data-testid=alerts-filter-${type}] .n-base-selection`).click()
+	}
+
 	it("loads with a single request", () => {
-		cy.intercept("GET", "**/api/incidents/db_operations/alerts?*").as("list")
+		cy.intercept(alertsListRequest()).as("list")
 		cy.visit("/alerts")
 
 		cy.wait("@list")
@@ -32,16 +44,15 @@ describe("alerts list", () => {
 	it("reacts to a filter at once: no debounce on clicks", () => {
 		let clickedAt = 0
 		let requestedAt = 0
-		cy.intercept("GET", "**/api/incidents/db_operations/alerts?*").as("list")
-		cy.intercept("GET", "**/alerts/status/*", () => {
-			requestedAt = Date.now()
-		}).as("byStatus")
+		cy.intercept(alertsListRequest()).as("list")
 		cy.visit("/alerts")
 		cy.wait("@list")
+		cy.intercept(alertsListRequest({ status: "OPEN" }), () => {
+			requestedAt = Date.now()
+		}).as("byStatus")
 
-		cy.get("[data-testid=alerts-filter-key]").click()
-		cy.get(".n-base-select-option:visible").contains(/^statuses$/).click()
-		cy.get("[data-testid=alerts-filter-value]").click()
+		addFilter("Status")
+		openSelect("status")
 		cy.get(".n-base-select-option:visible")
 			.contains(/^Open$/)
 			.then($option => {
@@ -59,7 +70,7 @@ describe("alerts list", () => {
 	it("filters by asset through a server-side search", () => {
 		cy.intercept("GET", "**/alerts/filter-options?*").as("options")
 		cy.intercept("GET", "**/alerts/filter-options/assets*").as("assets")
-		cy.intercept("GET", "**/alerts/asset/*").as("byAsset")
+		cy.intercept(alertsListRequest({ asset_name: "host-a2" })).as("byAsset")
 		cy.visit("/alerts")
 
 		cy.wait("@options").then(({ request, response }) => {
@@ -67,14 +78,11 @@ describe("alerts list", () => {
 			expect(response?.body.assets).to.have.length(0)
 		})
 
-		cy.get("[data-testid=alerts-filter-key]").click()
-		cy.get(".n-base-select-option:visible").contains(/^assets$/).click()
+		addFilter("Asset")
+		openSelect("asset")
 		cy.wait("@assets")
-
-		cy.get("[data-testid=alerts-filter-value]").click()
-		cy.get("[data-testid=alerts-filter-value] input").type("a2")
+		cy.get("[data-testid=alerts-filter-asset] input").type("a2")
 		cy.wait("@assets").its("request.url").should("include", "search=a2")
-		// Only the open menu: the key select's options stay in the DOM, hidden, once it closes.
 		cy.get(".n-base-select-option:visible").should("have.length", 1).and("contain", "host-a2").click()
 
 		cy.wait("@byAsset")
@@ -83,19 +91,22 @@ describe("alerts list", () => {
 
 	it("shows only the latest filter's rows, and stops loading, when an earlier load is slower", () => {
 		const DELAY_MS = 3000
-		cy.intercept("GET", "**/api/incidents/db_operations/alerts?*").as("list")
-		cy.intercept("GET", "**/alerts/status/OPEN*", req => req.on("response", res => res.setDelay(DELAY_MS))).as("open")
-		cy.intercept("GET", "**/alerts/status/CLOSED*").as("closed")
+		cy.intercept(alertsListRequest()).as("list")
 		cy.visit("/alerts")
 		cy.wait("@list")
+		cy.intercept(alertsListRequest({ status: "OPEN" }), req => {
+			req.on("response", res => {
+				res.setDelay(DELAY_MS)
+			})
+		}).as("open")
+		cy.intercept(alertsListRequest({ status: "CLOSED" })).as("closed")
 
-		cy.get("[data-testid=alerts-filter-key]").click()
-		cy.get(".n-base-select-option:visible").contains(/^statuses$/).click()
-		cy.get("[data-testid=alerts-filter-value]").click()
+		addFilter("Status")
+		openSelect("status")
 		cy.get(".n-base-select-option:visible").contains(/^Open$/).click()
 		cy.get("[data-testid=alerts-table] .n-data-table-loading-wrapper").should("exist")
 		// Change our mind while OPEN is still loading.
-		cy.get("[data-testid=alerts-filter-value]").click()
+		openSelect("status")
 		cy.get(".n-base-select-option:visible").contains(/^Closed$/).click()
 
 		cy.wait("@closed")

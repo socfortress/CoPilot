@@ -1,16 +1,6 @@
 <template>
 	<div class="flex flex-col gap-4">
-		<div>
-			<KeyValueFilter
-				v-model:value="filters"
-				testid="alerts"
-				:load-options="loadFilterOptions"
-				:value-label="filterValueLabel"
-				:search-key="ASSETS_KEY"
-				:search="searchAssets"
-				class="w-auto!"
-			/>
-		</div>
+		<AlertsFilterBar :filters @change="patch => emit('change', patch)" />
 
 		<div class="flex flex-col gap-2">
 			<div ref="headerRef" class="flex items-center justify-between">
@@ -38,12 +28,16 @@
 					size="small"
 					:data
 					:columns
-					:scroll-x="1400"
+					:scroll-x="1600"
 					class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
 				>
 					<template #empty>
 						<n-empty description="No alerts found">
-							<template #extra>try changing the filters</template>
+							<template v-if="hasFilters(filters)" #extra>
+								<n-button size="small" data-testid="alerts-empty-clear" @click="emit('change', EMPTY_ALERTS_FILTERS)">
+									Clear filters
+								</n-button>
+							</template>
 						</n-empty>
 					</template>
 				</n-data-table>
@@ -65,29 +59,34 @@
 </template>
 
 <script setup lang="tsx">
-import type { AxiosResponse } from "axios"
 import type { DataTableColumns } from "naive-ui"
 import type { AlertStatusUpdateSuccessPayload } from "@/components/alerts/AlertStatusSelect.vue"
-import type { KeyValueFilterModel } from "@/components/common/KeyValueFilter.vue"
-import type { Alert, AlertsListResponse, AlertStatus } from "@/types/alerts"
-import type { ApiError, CommonResponse, Pagination } from "@/types/common"
+import type { AlertsFilters } from "@/components/alerts/filters/alertsFilters"
+import type { Alert } from "@/types/alerts"
+import type { ApiError, Pagination } from "@/types/common"
 import { useElementSize } from "@vueuse/core"
-import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
+import { NButton, NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, toRef, useTemplateRef } from "vue"
-import { useRoute } from "vue-router"
 import Api from "@/api"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
 import AlertStatusSelect from "@/components/alerts/AlertStatusSelect.vue"
+import AlertsFilterBar from "@/components/alerts/filters/AlertsFilterBar.vue"
+import { EMPTY_ALERTS_FILTERS, filtersKey, filtersToParams, hasFilters } from "@/components/alerts/filters/alertsFilters"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
-import KeyValueFilter from "@/components/common/KeyValueFilter.vue"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { usePaginatedLoad } from "@/composables/common/usePaginatedLoad"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage, getStatusColor } from "@/utils"
 import { formatDate } from "@/utils/format"
-import { filterValueLabel, statusFilterFromQuery } from "@/utils/workflowStatus"
+
+// The filters live in the URL, owned by the page (it shares them with the status cards).
+const { filters } = defineProps<{ filters: AlertsFilters }>()
+
+const emit = defineEmits<{
+	(e: "change", patch: Partial<AlertsFilters>): void
+}>()
 
 const message = useMessage()
 const { loading, run } = useLatestRequest()
@@ -106,21 +105,6 @@ const pagination = ref({
 	pageSize: pageSizes[1],
 	total: 0
 })
-
-// Filters. Asset names are not among the options (a large tenant has thousands): the
-// asset filter searches the server as the user types instead.
-const ASSETS_KEY = "assets"
-// `?status=` (the SLA page's "waiting on you" link) opens the list already filtered.
-const filters = ref<KeyValueFilterModel>(statusFilterFromQuery(useRoute().query.status))
-
-async function loadFilterOptions(): Promise<Record<string, string[]>> {
-	const { sources, statuses, tags } = (await Api.alerts.getAlertsFilters()).data
-	return { sources, statuses, tags }
-}
-
-async function searchAssets(search: string | null, signal: AbortSignal): Promise<string[]> {
-	return (await Api.alerts.searchAlertAssets(search, signal)).data.assets
-}
 
 const columns = computed<DataTableColumns<Alert>>(() => [
 	{
@@ -141,6 +125,21 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 		key: "assets",
 		ellipsis: true,
 		render: row => row.assets.map(asset => asset.asset_name).join(", ")
+	},
+	{
+		// Shown because they can be filtered on: a match must be explainable from the row.
+		title: "Tags",
+		key: "tags",
+		width: 200,
+		render: row => (
+			<div class="flex flex-wrap gap-1" data-testid="alert-tags">
+				{row.tags.map(tag => (
+					<NTag key={tag.id} size="small" bordered={false}>
+						{tag.tag}
+					</NTag>
+				))}
+			</div>
+		)
 	},
 	{
 		title: "Created",
@@ -181,66 +180,19 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 function loadAlerts() {
 	return run(
 		async signal => {
-			let response: AxiosResponse<CommonResponse<AlertsListResponse>>
-
 			const paginationPayload: Pagination = {
 				page: pagination.value.page,
 				pageSize: pagination.value.pageSize,
 				order: "desc"
 			}
-
-			if (filters.value.key && filters.value.value) {
-				switch (filters.value.key) {
-					case "statuses":
-						response = await Api.alerts.getAlertsByStatus(
-							filters.value.value as AlertStatus,
-							paginationPayload,
-							signal,
-							customerFilterStore.queryCustomerCodes
-						)
-						break
-					case "sources":
-						response = await Api.alerts.getAlertsBySource(
-							filters.value.value,
-							paginationPayload,
-							signal,
-							customerFilterStore.queryCustomerCodes
-						)
-						break
-					case "assets":
-						response = await Api.alerts.getAlertsByAsset(
-							filters.value.value,
-							paginationPayload,
-							signal,
-							customerFilterStore.queryCustomerCodes
-						)
-						break
-					case "tags":
-						response = await Api.alerts.getAlertsByTag(
-							filters.value.value,
-							paginationPayload,
-							signal,
-							customerFilterStore.queryCustomerCodes
-						)
-						break
-					default:
-						response = await Api.alerts.getAlerts(
-							paginationPayload,
-							signal,
-							customerFilterStore.queryCustomerCodes
-						)
-						break
-				}
-			} else {
-				response = await Api.alerts.getAlerts(
-					paginationPayload,
-					signal,
-					customerFilterStore.queryCustomerCodes
-				)
-			}
-
+			const response = await Api.alerts.getFilteredAlerts(
+				filtersToParams(filters),
+				paginationPayload,
+				signal,
+				customerFilterStore.queryCustomerCodes
+			)
 			data.value = response.data.alerts
-			pagination.value.total = response.data.total
+			pagination.value.total = response.data.total_filtered
 		},
 		err => message.error(getApiErrorMessage(err as ApiError))
 	)
@@ -255,7 +207,8 @@ function handleStatusUpdateSuccess(payload: AlertStatusUpdateSuccessPayload) {
 
 usePaginatedLoad({
 	page: toRef(pagination.value, "page"),
-	resetOn: [() => pagination.value.pageSize, () => filters.value.value, () => customerFilterStore.queryCustomerCodes],
+	// The filters by what they ask, not by object: an unrelated query change rebuilds them.
+	resetOn: [() => pagination.value.pageSize, () => filtersKey(filters), () => customerFilterStore.queryCustomerCodes],
 	load: loadAlerts
 })
 </script>
