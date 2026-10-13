@@ -14,10 +14,10 @@
 					<div class="flex items-center gap-2">
 						<n-select
 							v-model:value="selectedCustomerCode"
+							data-testid="event-search-customer"
 							placeholder="Select Customer"
 							filterable
 							size="tiny"
-							data-testid="event-search-customer"
 							:options="customerOptions"
 							:render-label="renderCustomerLabel"
 							:filter="filterCustomer"
@@ -150,8 +150,7 @@ import { computed, h, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { useCustomers } from "@/composables/common/useCustomers"
-import { useAuthStore } from "@/stores/auth"
+import { useCustomerPrefill } from "@/composables/common/useCustomerPrefill"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
@@ -186,18 +185,14 @@ const query = defineModel<string>("query")
 const TRAILING_WHITESPACE_RE = /\s$/
 
 const route = useRoute()
-const authStore = useAuthStore()
 const customerFilterStore = useCustomerFilterStore()
 const message = useMessage()
 
-const { customerOptions, filterCustomer, renderCustomerLabel } = useCustomers()
-// Seed the searched customer from the global filter when it resolves to a single
-// customer, otherwise the user's first accessible customer.
-const selectedCustomerCode = ref(
-	customerFilterStore.selectedCustomerCodes.length === 1
-		? customerFilterStore.selectedCustomerCodes[0]
-		: authStore.accessibleCustomerCodes[0] || ""
-)
+const { customerOptions, filterCustomer, renderCustomerLabel, initialCustomerCode } = useCustomerPrefill()
+// Seeded by the same rule as the case and report forms: the global filter when it
+// resolves to one customer, else the user's only customer, else the user chooses.
+// (It used to fall back to the token's first code, an arbitrary one.)
+const selectedCustomerCode = ref<string | null>(initialCustomerCode())
 
 const eventSources = ref<EventSourceItem[]>([])
 const loadingEventSources = ref(false)
@@ -347,7 +342,7 @@ function onMentionSelect(option: MentionOption, prefix: string) {
 
 // -- Lifecycle --
 async function applyRouteParams() {
-	const qCustomer = (route.query.customer_code || selectedCustomerCode.value) as string
+	const qCustomer = (route.query.customer_code as string | undefined) || selectedCustomerCode.value
 	const qSource = route.query.source_name as string | undefined
 	const qQuery = route.query.query as string | undefined
 
@@ -382,16 +377,17 @@ watch(
 	{ immediate: true }
 )
 
-// Follow the global customer filter when it narrows to a single customer.
+// Follow the global customer filter when it narrows to a single customer. The store
+// replaces the selection on every change, so no deep watch is needed.
 watch(
 	() => customerFilterStore.selectedCustomerCodes,
 	codes => {
-		if (codes.length === 1 && codes[0] !== selectedCustomerCode.value) {
-			selectedCustomerCode.value = codes[0]
-			loadEventSources(codes[0])
+		const [only] = codes
+		if (codes.length === 1 && only && only !== selectedCustomerCode.value) {
+			selectedCustomerCode.value = only
+			loadEventSources(only)
 		}
-	},
-	{ deep: true }
+	}
 )
 
 onBeforeMount(() => {

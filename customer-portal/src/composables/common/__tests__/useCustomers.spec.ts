@@ -5,6 +5,7 @@ import { h } from "vue"
 import CustomerName from "@/components/common/CustomerName.vue"
 import { useAuthStore } from "@/stores/auth"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
+import { useCustomerPrefill } from "../useCustomerPrefill"
 import { useCustomers } from "../useCustomers"
 
 function withCustomers(customers: [string, string][]) {
@@ -66,6 +67,45 @@ describe("customerName", () => {
 	it("shows only the code when no name is known, and a dash for nothing", () => {
 		expect(mount({ render: () => h(CustomerName, { code: "GONE" }) }).text()).toBe("GONE")
 		expect(mount({ render: () => h(CustomerName, { code: null }) }).text()).toBe("—")
+	})
+})
+
+/** One prefill rule for every form that files something under a customer (#1243, point 49). */
+describe("useCustomerPrefill", () => {
+	beforeEach(() => setActivePinia(createPinia()))
+
+	it("takes the global filter when it resolves to one customer", () => {
+		withCustomers([
+			["ACME", "Acme Rome"],
+			["BETA", "Beta Milan"]
+		])
+		useCustomerFilterStore().setSelected(["BETA"])
+		expect(useCustomerPrefill().initialCustomerCode()).toBe("BETA")
+	})
+
+	it("takes the user's only customer when the filter says nothing", () => {
+		withCustomers([["ACME", "Acme Rome"]])
+		expect(useCustomerPrefill().initialCustomerCode()).toBe("ACME")
+		expect(useCustomerPrefill().hasMultipleCustomers.value).toBe(false)
+	})
+
+	it("makes the user choose when several customers are possible", () => {
+		withCustomers([
+			["ACME", "Acme Rome"],
+			["BETA", "Beta Milan"]
+		])
+		useCustomerFilterStore().setSelected(["ACME", "BETA"])
+		expect(useCustomerPrefill().initialCustomerCode()).toBeNull()
+		expect(useCustomerPrefill().hasMultipleCustomers.value).toBe(true)
+	})
+
+	it("ignores a filtered customer the user can no longer see", () => {
+		withCustomers([
+			["ACME", "Acme Rome"],
+			["BETA", "Beta Milan"]
+		])
+		useCustomerFilterStore().setSelected(["GONE"])
+		expect(useCustomerPrefill().initialCustomerCode()).toBeNull()
 	})
 })
 

@@ -2,9 +2,10 @@ import type { PortalSeed } from "../support/e2e"
 
 /**
  * Customers by name (#1243): the token carries only codes, `GET /customer_portal/me`
- * names them and is read live.
+ * names them and is read live. And one prefill rule for every form that files something
+ * under a customer: the case, report and event-search forms.
  */
-describe("customer names", () => {
+describe("customer names and the customer prefill", () => {
 	let seed: PortalSeed
 	const SESSION = (s: PortalSeed) => `${s.portal_user}-names`
 
@@ -29,6 +30,11 @@ describe("customer names", () => {
 	function openFilter() {
 		cy.get("[data-testid=customer-filter]").click()
 		return cy.get(".n-base-select-menu:visible")
+	}
+
+	function pickCustomer(name: string) {
+		openFilter().contains(".n-base-select-option", name).click()
+		cy.get("body").type("{esc}")
 	}
 
 	it("the global filter offers customers by name, finds them by name or code, and shows the name once picked", () => {
@@ -61,6 +67,36 @@ describe("customer names", () => {
 	it("the profile lists every customer by name", () => {
 		cy.visit("/profile")
 		cy.get("[data-testid=profile-customers]").should("contain", seed.customer_names.a).and("contain", seed.customer_names.b)
+	})
+
+	it("the case form is seeded from the global filter, and names the customer", () => {
+		cy.visit("/cases")
+		pickCustomer(seed.customer_names.b)
+		cy.get("[data-testid=create-case-button]").click()
+		cy.get("[data-testid=case-customer]").should("contain", seed.customer_names.b)
+	})
+
+	it("the case form makes the user choose when several customers are possible", () => {
+		cy.visit("/cases")
+		cy.get("[data-testid=create-case-button]").click()
+		cy.get("[data-testid=case-customer] .n-base-selection-placeholder").should("be.visible")
+	})
+
+	it("the report form is seeded the same way", () => {
+		cy.visit("/reports")
+		pickCustomer(seed.customer_names.a)
+		cy.get("[data-testid=generate-report-button]").click()
+		cy.get("[data-testid=report-customer]").should("contain", seed.customer_names.a)
+	})
+
+	it("event search follows the same rule: the filter's one customer, or nothing preselected", () => {
+		cy.visit("/event-search")
+		// Two customers and no filter: no longer the token's first code.
+		cy.get("[data-testid=event-search-customer] .n-base-selection-placeholder").should("be.visible")
+		cy.contains("Select a customer to search")
+
+		pickCustomer(seed.customer_names.b)
+		cy.get("[data-testid=event-search-customer]").should("contain", seed.customer_names.b)
 	})
 
 	it("reads the customers live: an assignment removed after login disappears without a new login", () => {

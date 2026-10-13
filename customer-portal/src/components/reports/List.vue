@@ -5,7 +5,7 @@
 				<h2 class="text-xl font-bold">Reports</h2>
 				<p class="text-secondary text-sm">Generate and download PDF activity reports for your organization</p>
 			</div>
-			<n-button type="primary" @click="showGenerateModal = true">
+			<n-button type="primary" data-testid="generate-report-button" @click="openGenerateModal()">
 				<template #icon>
 					<Icon :name="AddIcon" />
 				</template>
@@ -147,6 +147,13 @@ function getDefaultFormData(): GenerateFormData {
 }
 
 const formData = ref<GenerateFormData>(getDefaultFormData())
+
+// Reset on every open, like the case form: the customer is re-seeded from the global
+// filter as it is now, not as it was when the page mounted.
+function openGenerateModal() {
+	formData.value = getDefaultFormData()
+	showGenerateModal.value = true
+}
 
 const rangeOptions = [
 	{ label: "Last 30 days", value: "30d" },

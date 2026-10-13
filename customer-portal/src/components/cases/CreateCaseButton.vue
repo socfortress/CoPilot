@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<n-button type="primary" :secondary :size @click="openModal()">
+		<n-button type="primary" :secondary :size data-testid="create-case-button" @click="openModal()">
 			<template #icon>
 				<Icon name="carbon:add" />
 			</template>
