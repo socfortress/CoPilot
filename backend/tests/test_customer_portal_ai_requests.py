@@ -347,6 +347,13 @@ def test_analysts_investigate_only_existing_alerts_of_their_customers_under_the_
     investigate.assert_awaited_once()
 
 
+def test_an_analyst_request_reaches_talon_as_the_analyst_sender_whatever_the_client_sent():
+    result, investigate = _investigate(SimpleNamespace(id=5, customer_code="ACME"))
+    (sent,) = investigate.await_args.args
+    assert (sent.alert_id, sent.customer_code, sent.sender) == (5, "ACME", talon_svc.ANALYST_SENDER)
+    assert talon_svc.ANALYST_SENDER == "copilot-analyst"
+
+
 # ── Ingest no longer waits for Talon ──────────────────────────────────────
 
 

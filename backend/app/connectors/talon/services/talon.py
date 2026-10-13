@@ -25,6 +25,12 @@ from app.db.universal_models import AiAnalystJob
 from app.incidents.models import Alert
 from app.middleware.customer_access import customer_access_handler
 
+#: The sender for investigations an analyst starts from the alert page ("Investigate with AI
+#: Analyst"). Set here, not taken from the request, so Talon can tell a click from the ingest
+#: trigger (``copilot``) and start a fresh investigation instead of returning one that completed
+#: a few minutes ago.
+ANALYST_SENDER = "copilot-analyst"
+
 
 def _message_payload(
     request: TalonMessageRequest,
@@ -205,7 +211,7 @@ async def investigate_alert_for_user(request: TalonInvestigateRequest, user: Use
             status_code=400,
             detail=f"customer_code mismatch: alert {alert.id} belongs to {alert.customer_code}, got {request.customer_code}",
         )
-    return await investigate_alert(request)
+    return await investigate_alert(request.model_copy(update={"sender": ANALYST_SENDER}))
 
 
 async def get_talon_status() -> TalonStatusResponse:
