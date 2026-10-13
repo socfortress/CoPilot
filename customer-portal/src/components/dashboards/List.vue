@@ -58,6 +58,7 @@ import { NButton, NDataTable, NEmpty, NPagination, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, useTemplateRef, watch } from "vue"
 import Api from "@/api"
 import Chip from "@/components/common/Chip.vue"
+import CustomerName from "@/components/common/CustomerName.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { useNavigation } from "@/composables/common/useNavigation"
@@ -112,7 +113,7 @@ const columns = computed<DataTableColumns<EnabledDashboard>>(() => [
 		title: "Customer",
 		key: "customer_code",
 		width: 150,
-		render: row => <div>{row.customer_code}</div>
+		render: row => <CustomerName code={row.customer_code} />
 	},
 	{
 		title: "Category",

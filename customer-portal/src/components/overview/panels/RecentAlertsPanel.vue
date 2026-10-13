@@ -34,6 +34,7 @@
 import type { OverviewAlert } from "@/types/portal"
 import { computed } from "vue"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
+import { useCustomers } from "@/composables/common/useCustomers"
 import { useIsMultiCustomer } from "@/composables/overview/useIsMultiCustomer"
 import { RECENT_LIMIT } from "@/composables/overview/useOverviewData"
 import { ICONS } from "@/const"
@@ -54,5 +55,6 @@ const emit = defineEmits<{
 }>()
 
 const showCustomer = useIsMultiCustomer()
-const items = computed(() => alerts.map(alert => alertToActivityItem(alert, { showCustomer: showCustomer.value })))
+const { customerName } = useCustomers()
+const items = computed(() => alerts.map(alert => alertToActivityItem(alert, { customerLabel: showCustomer.value ? customerName : undefined })))
 </script>

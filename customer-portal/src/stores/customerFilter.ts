@@ -22,10 +22,12 @@ export const useCustomerFilterStore = defineStore("customer-filter", {
 		},
 		/** Drop any selected codes the user no longer has access to. */
 		pruneToAccessible(accessibleCodes: string[]) {
-			if (!this.selectedCustomerCodes.length) {
-				return
+			const kept = this.selectedCustomerCodes.filter(code => accessibleCodes.includes(code))
+			// Replace the selection only when something was dropped: every list watches it,
+			// and a new array with the same codes would reload them all for nothing.
+			if (kept.length !== this.selectedCustomerCodes.length) {
+				this.selectedCustomerCodes = kept
 			}
-			this.selectedCustomerCodes = this.selectedCustomerCodes.filter(code => accessibleCodes.includes(code))
 		}
 	},
 	getters: {

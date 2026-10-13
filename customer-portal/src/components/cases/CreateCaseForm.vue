@@ -3,7 +3,10 @@
 		<n-form-item v-if="hasMultipleCustomers" label="Customer" required>
 			<n-select
 				v-model:value="model.customer_code"
+				data-testid="case-customer"
 				:options="customerOptions"
+				:render-label="renderCustomerLabel"
+				:filter="filterCustomer"
 				filterable
 				placeholder="Select the customer this case belongs to"
 			/>
@@ -55,7 +58,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
-const { customerOptions, hasMultipleCustomers, initialCustomerCode } = useCustomerPrefill()
+const { customerOptions, filterCustomer, renderCustomerLabel, hasMultipleCustomers, initialCustomerCode } = useCustomerPrefill()
 const loading = ref(false)
 const optionsLoading = ref(false)
 const assignedToOptions = ref<{ label: string; value: string }[]>([])

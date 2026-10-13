@@ -4,6 +4,7 @@ from app.customer_portal.routes.agents import customer_portal_agents_router
 from app.customer_portal.routes.ai_reports import customer_portal_ai_reports_router
 from app.customer_portal.routes.branding import customer_portal_branding_router
 from app.customer_portal.routes.dashboard import customer_portal_dashboard_router
+from app.customer_portal.routes.me import customer_portal_me_router
 from app.customer_portal.routes.settings import customer_portal_settings_router
 from app.customer_portal.routes.sla import customer_portal_sla_router
 
@@ -44,4 +45,10 @@ router.include_router(
     customer_portal_sla_router,
     prefix="/customer_portal",
     tags=["Customer Portal SLA"],
+)
+# The portal user and their customers, with names (the token carries only codes)
+router.include_router(
+    customer_portal_me_router,
+    prefix="/customer_portal",
+    tags=["Customer Portal Profile"],
 )

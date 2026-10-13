@@ -95,11 +95,13 @@ watch(layoutComponentName, () => {
 })
 
 // Re-resolve branding whenever the session changes: signing in may swap in the
-// customer's own branding, signing out must fall back to the global defaults.
+// customer's own branding, signing out must fall back to the global defaults. The
+// customers' names load at the same moments (the token carries only their codes).
 watch(
 	() => authStore.isLogged,
 	() => {
 		portalSettingsStore.syncBranding()
+		authStore.loadProfile()
 	}
 )
 
@@ -108,6 +110,8 @@ router.afterEach(currentRoute => {
 })
 
 onBeforeMount(async () => {
+	// Not awaited: until the names arrive the portal shows the codes.
+	authStore.loadProfile()
 	await portalSettingsStore.fetchSettings()
 	await portalSettingsStore.syncBranding()
 

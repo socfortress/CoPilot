@@ -1,4 +1,5 @@
 import { computed } from "vue"
+import { useCustomers } from "@/composables/common/useCustomers"
 import { useAuthStore } from "@/stores/auth"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 
@@ -16,9 +17,7 @@ export function useCustomerPrefill() {
 	const authStore = useAuthStore()
 	const customerFilterStore = useCustomerFilterStore()
 
-	const customerOptions = computed(() =>
-		authStore.accessibleCustomerCodes.map(code => ({ label: code, value: code }))
-	)
+	const { customerOptions, filterCustomer, renderCustomerLabel } = useCustomers()
 	const hasMultipleCustomers = computed(() => authStore.accessibleCustomerCodes.length > 1)
 
 	function initialCustomerCode(): string | null {
@@ -30,5 +29,5 @@ export function useCustomerPrefill() {
 		return null
 	}
 
-	return { customerOptions, hasMultipleCustomers, initialCustomerCode }
+	return { customerOptions, filterCustomer, renderCustomerLabel, hasMultipleCustomers, initialCustomerCode }
 }

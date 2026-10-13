@@ -35,6 +35,7 @@
 import type { OverviewCase } from "@/types/portal"
 import { computed } from "vue"
 import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
+import { useCustomers } from "@/composables/common/useCustomers"
 import { useIsMultiCustomer } from "@/composables/overview/useIsMultiCustomer"
 import { RECENT_LIMIT } from "@/composables/overview/useOverviewData"
 import { ICONS } from "@/const"
@@ -55,5 +56,6 @@ const emit = defineEmits<{
 }>()
 
 const showCustomer = useIsMultiCustomer()
-const items = computed(() => cases.map(caseItem => caseToActivityItem(caseItem, { showCustomer: showCustomer.value })))
+const { customerName } = useCustomers()
+const items = computed(() => cases.map(caseItem => caseToActivityItem(caseItem, { customerLabel: showCustomer.value ? customerName : undefined })))
 </script>

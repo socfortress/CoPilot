@@ -5,7 +5,7 @@
 				<h2 class="text-xl font-bold">Reports</h2>
 				<p class="text-secondary text-sm">Generate and download PDF activity reports for your organization</p>
 			</div>
-			<n-button type="primary" @click="showGenerateModal = true">
+			<n-button type="primary" data-testid="generate-report-button" @click="openGenerateModal()">
 				<template #icon>
 					<Icon :name="AddIcon" />
 				</template>
@@ -46,7 +46,14 @@
 				</n-form-item>
 
 				<n-form-item v-if="hasMultipleCustomers" label="Customer" path="customer_code" required>
-					<n-select v-model:value="formData.customer_code" :options="customerOptions" filterable />
+					<n-select
+						v-model:value="formData.customer_code"
+						data-testid="report-customer"
+						:options="customerOptions"
+						:render-label="renderCustomerLabel"
+						:filter="filterCustomer"
+						filterable
+					/>
 				</n-form-item>
 
 				<n-form-item label="Time Range" path="range">
@@ -110,7 +117,7 @@ const AddIcon = "carbon:document-add"
 
 const message = useMessage()
 const { loading, run } = useLatestRequest()
-const { customerOptions, hasMultipleCustomers, initialCustomerCode } = useCustomerPrefill()
+const { customerOptions, filterCustomer, renderCustomerLabel, hasMultipleCustomers, initialCustomerCode } = useCustomerPrefill()
 const reportGenerationStore = useReportGenerationStore()
 const customerFilterStore = useCustomerFilterStore()
 
@@ -140,6 +147,13 @@ function getDefaultFormData(): GenerateFormData {
 }
 
 const formData = ref<GenerateFormData>(getDefaultFormData())
+
+// Reset on every open, like the case form: the customer is re-seeded from the global
+// filter as it is now, not as it was when the page mounted.
+function openGenerateModal() {
+	formData.value = getDefaultFormData()
+	showGenerateModal.value = true
+}
 
 const rangeOptions = [
 	{ label: "Last 30 days", value: "30d" },

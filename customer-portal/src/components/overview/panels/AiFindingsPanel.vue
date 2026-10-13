@@ -29,6 +29,7 @@
 import type { AiInsights } from "@/types/aiReports"
 import { computed } from "vue"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
+import { useCustomers } from "@/composables/common/useCustomers"
 import { useIsMultiCustomer } from "@/composables/overview/useIsMultiCustomer"
 import ActivityList from "../activity/ActivityList.vue"
 import { findingToActivityItem } from "../activity/mappers"
@@ -54,6 +55,7 @@ const LAYOUT = "flex flex-col lg:flex-row"
 const SUMMARY = "border-border shrink-0 border-b lg:w-68 lg:border-r lg:border-b-0"
 
 const showCustomer = useIsMultiCustomer()
+const { customerName } = useCustomers()
 
 const meta = computed(() => {
 	const total = insights.total_reports
@@ -61,6 +63,8 @@ const meta = computed(() => {
 })
 
 const items = computed(() =>
-	insights.recent.map(finding => findingToActivityItem(finding, { showCustomer: showCustomer.value }))
+	insights.recent.map(finding =>
+		findingToActivityItem(finding, { customerLabel: showCustomer.value ? customerName : undefined })
+	)
 )
 </script>

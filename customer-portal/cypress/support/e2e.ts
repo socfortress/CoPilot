@@ -1,6 +1,8 @@
 /** What `tests/e2e/portal_overview_seed.py seed` prints: the rows every spec asserts against. */
 export interface PortalSeed {
 	customers: { a: string; b: string }
+	/** Their names, deliberately unlike the codes (#1243). */
+	customer_names: { a: string; b: string }
 	portal_user: string
 	portal_user_id: number
 	admin: string

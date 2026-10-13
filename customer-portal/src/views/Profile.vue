@@ -24,12 +24,15 @@
 						<div class="item">
 							<n-tooltip placement="top">
 								<template #trigger>
-									<div class="tooltip-wrap">
-										<Icon :name="CustomerCodeIcon" />
-										<span>{{ userCustomerCode }}</span>
+									<div class="tooltip-wrap" data-testid="profile-customers">
+										<Icon :name="CustomersIcon" />
+										<span v-for="(customer, index) in customers" :key="customer.customer_code">
+											<CustomerName :code="customer.customer_code" />{{ index < customers.length - 1 ? "," : "" }}
+										</span>
+										<span v-if="!customers.length">No customer</span>
 									</div>
 								</template>
-								<span>Customer Code</span>
+								<span>{{ customers.length === 1 ? "Customer" : "Customers" }}</span>
 							</n-tooltip>
 						</div>
 					</div>
@@ -60,22 +63,23 @@
 
 <script lang="ts" setup>
 import { NAvatar, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
-import { ref } from "vue"
+import { computed, ref } from "vue"
 import ChangePasswordCard from "@/components/auth/ChangePasswordCard.vue"
 import TotpToggle from "@/components/auth/TotpToggle.vue"
+import CustomerName from "@/components/common/CustomerName.vue"
 import Icon from "@/components/common/Icon.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
 import { useAuthStore } from "@/stores/auth"
 
 const RoleIcon = "carbon:user"
-const CustomerCodeIcon = "carbon:hashtag"
+const CustomersIcon = "carbon:enterprise"
 
 const tabActive = ref("settings")
 const authStore = useAuthStore()
 
 const userRole = authStore.userRoleName
 const userName = authStore.userName
-const userCustomerCode = authStore.userCustomerCode
+const customers = computed(() => authStore.accessibleCustomers)
 const userPic = authStore.userPic
 </script>
 

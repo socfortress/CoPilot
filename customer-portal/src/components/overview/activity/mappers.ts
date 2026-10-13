@@ -9,8 +9,15 @@ import { severityColor, workflowStatus } from "../shared/status"
  */
 
 export interface MapperOptions {
-	/** Add the customer code to the meta line — only useful when the user sees several. */
-	showCustomer: boolean
+	/**
+	 * Names a customer for the meta line. Pass it only when the user sees several
+	 * customers; without it the row names none.
+	 */
+	customerLabel?: (code: string) => string
+}
+
+function customerMeta(code: string | null | undefined, customerLabel?: (code: string) => string): string | null {
+	return code && customerLabel ? customerLabel(code) : null
 }
 
 function compact(values: Array<string | null | undefined>): string[] {
@@ -33,7 +40,7 @@ function assetsLabel(alert: OverviewAlert): string | null {
 	return rest.length ? `${first} +${rest.length}` : first
 }
 
-export function alertToActivityItem(alert: OverviewAlert, { showCustomer }: MapperOptions): ActivityItem {
+export function alertToActivityItem(alert: OverviewAlert, { customerLabel }: MapperOptions): ActivityItem {
 	const title = alert.alert_name || "Unnamed alert"
 
 	return {
@@ -42,11 +49,11 @@ export function alertToActivityItem(alert: OverviewAlert, { showCustomer }: Mapp
 		detail: distinctDetail(title, alert.alert_description),
 		status: workflowStatus(alert.status),
 		time: alert.alert_creation_time,
-		meta: compact([alert.source, assetsLabel(alert), showCustomer ? alert.customer_code : null])
+		meta: compact([alert.source, assetsLabel(alert), customerMeta(alert.customer_code, customerLabel)])
 	}
 }
 
-export function caseToActivityItem(caseItem: OverviewCase, { showCustomer }: MapperOptions): ActivityItem {
+export function caseToActivityItem(caseItem: OverviewCase, { customerLabel }: MapperOptions): ActivityItem {
 	const title = caseItem.case_name || "Unnamed case"
 	const alertCount = caseItem.alert_count
 
@@ -59,7 +66,7 @@ export function caseToActivityItem(caseItem: OverviewCase, { showCustomer }: Map
 		meta: compact([
 			caseItem.assigned_to || "unassigned",
 			alertCount ? pluralize(alertCount, "alert") : null,
-			showCustomer ? caseItem.customer_code : null
+			customerMeta(caseItem.customer_code, customerLabel)
 		])
 	}
 }
@@ -68,7 +75,7 @@ export function caseToActivityItem(caseItem: OverviewCase, { showCustomer }: Map
  * An AI finding reads like an alert row: the severity takes the place of the
  * workflow status and the analyst's summary is the detail, with room for two lines.
  */
-export function findingToActivityItem(finding: AiInsightAlert, { showCustomer }: MapperOptions): ActivityItem {
+export function findingToActivityItem(finding: AiInsightAlert, { customerLabel }: MapperOptions): ActivityItem {
 	return {
 		id: finding.alert_id,
 		title: finding.alert_name,
@@ -79,6 +86,6 @@ export function findingToActivityItem(finding: AiInsightAlert, { showCustomer }:
 			color: severityColor(finding.severity_assessment)
 		},
 		time: finding.report_created_at,
-		meta: compact([showCustomer ? finding.customer_code : null])
+		meta: compact([customerMeta(finding.customer_code, customerLabel)])
 	}
 }

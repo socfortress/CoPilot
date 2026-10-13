@@ -12,7 +12,7 @@
 		<div class="text-tertiary flex items-center gap-4 font-mono text-xs">
 			<span class="flex items-center gap-1.5" :title="scopeTitle">
 				<Icon name="carbon:filter" :size="14" />
-				<span class="max-w-60 truncate">{{ scopeLabel }}</span>
+				<span class="max-w-60 truncate" data-testid="overview-scope">{{ scopeLabel }}</span>
 			</span>
 			<span v-if="lastUpdated" class="tabular-nums">updated {{ formatDate(lastUpdated, dFormats.time) }}</span>
 			<n-button
@@ -64,8 +64,17 @@ const scopeLabel = computed(() => {
 	if (!customerFilterStore.selectedCustomerCodes.length && authStore.accessibleCustomerCodes.length > 1) {
 		return `all customers (${authStore.accessibleCustomerCodes.length})`
 	}
-	return scopeCodes.value.join(", ") || "no customer"
+	return scopeCodes.value.map(code => authStore.customerName(code)).join(", ") || "no customer"
 })
 
-const scopeTitle = computed(() => `Scope: ${scopeCodes.value.join(", ")}`)
+// The tooltip names each customer with its code, which is what support quotes.
+const scopeTitle = computed(
+	() =>
+		`Scope: ${scopeCodes.value
+			.map(code => {
+				const name = authStore.customerName(code)
+				return name === code ? code : `${name} (${code})`
+			})
+			.join(", ")}`
+)
 </script>
