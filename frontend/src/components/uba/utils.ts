@@ -1,4 +1,4 @@
-import type { UbaAgentsSummary, UbaFailureReason, UbaIdentitySummary } from "@/types/uba"
+import type { UbaAgentsSummary, UbaFailureReason, UbaIdentitySummary, UbaIncidentVerdict } from "@/types/uba"
 
 /** What to do about an upstream failure (the proxy returns a `reason`, never a 401/403). */
 export function reasonHint(reason: UbaFailureReason | string | null | undefined): string | null {
@@ -95,6 +95,16 @@ export const FALSE_POSITIVE_REASONS = [
 	{ label: "Rule too sensitive", value: "RULE_TOO_SENSITIVE" },
 	{ label: "Other", value: "OTHER" }
 ]
+
+/**
+ * Whether a verdict's write-back to the incident alert (#1239) is worth telling the analyst about:
+ * it was skipped or failed, or the incident alert already holds a different verdict.
+ * An alert with no incident alert is the normal case for UBA without CoPilot delivery.
+ */
+export function incidentNeedsAttention(incident: UbaIncidentVerdict, given: string | null): boolean {
+	if (incident.status === "skipped" || incident.status === "failed") return true
+	return incident.status === "already_set" && incident.verdict !== given
+}
 
 /** Where an identity attribute or membership came from, in words. */
 export const IDENTITY_SOURCE_LABELS: Record<string, string> = {

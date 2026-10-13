@@ -287,6 +287,15 @@ export interface UbaFeedbackPayload {
 	suppress_days?: number
 }
 
+/** What a UBA verdict did to the linked CoPilot incident alert (#1239). */
+export interface UbaIncidentVerdict {
+	status: "recorded" | "already_set" | "not_linked" | "skipped" | "failed"
+	incident_alert_id: number | null
+	/** The incident alert's verdict afterwards. */
+	verdict: "TRUE_POSITIVE" | "FALSE_POSITIVE" | null
+	message: string
+}
+
 export interface UbaSuppressionPayload {
 	entity_key: string
 	rule_ids: string[]

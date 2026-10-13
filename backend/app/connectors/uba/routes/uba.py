@@ -21,10 +21,14 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Query
+from fastapi import Request
 from fastapi import Security
 from fastapi.responses import JSONResponse
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.audit.models.audit import AuditAction
+from app.audit.services.audit import record_audit_event
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.uba.schema.provision import UbaProvisionRequest
@@ -40,11 +44,16 @@ from app.connectors.uba.schema.uba import UbaResponse
 from app.connectors.uba.schema.uba import UbaRuleSettingRequest
 from app.connectors.uba.schema.uba import UbaScoreRequest
 from app.connectors.uba.schema.uba import UbaSuppressionRequest
+from app.connectors.uba.services import incident_verdict
 from app.connectors.uba.services import provision as provisioning
 from app.connectors.uba.services import uba as svc
+from app.connectors.uba.services.incident_verdict import UbaIncidentVerdict
 from app.connectors.uba.utils.universal import UbaRequestError
 from app.db.db_session import get_db
 from app.middleware.customer_access import verify_customer_code_access
+from app.soc_management.domain.lifecycle import Actor
+from app.soc_management.domain.lifecycle import LifecycleAction
+from app.soc_management.services.lifecycle import SlaLifecycleRecorder
 
 uba_router = APIRouter()
 
@@ -202,16 +211,67 @@ async def get_alert(customer_code: str, alert_id: str):
 @uba_router.post(
     "/{customer_code}/alerts/{alert_id}/feedback",
     response_model=UbaResponse,
-    description="An analyst's verdict. FALSE_POSITIVE suppresses the alert's rules for the entity (like closing its incident alert as a false positive).",
+    description=(
+        "An analyst's verdict. FALSE_POSITIVE suppresses the alert's rules for the entity (like closing its incident alert "
+        "as a false positive). Also recorded on the linked incident alert unless it already has one; `incident` says what happened."
+    ),
     dependencies=_READ,
 )
 async def submit_feedback(
     customer_code: str,
     alert_id: str,
     body: UbaFeedbackRequest,
+    request: Request,
     current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
-    return await _call(svc.submit_feedback(customer_code, alert_id, body, current_user.username))
+    try:
+        result = await svc.submit_feedback(customer_code, alert_id, body, current_user.username)
+    except UbaRequestError as e:
+        return _error(e)
+    # UBA holds the verdict now; the incident alert is a second, best-effort write (#1239).
+    incident = await _record_on_incident(customer_code, alert_id, body, request, current_user, db)
+    return UbaResponse(**result.model_dump(), incident=incident.model_dump())
+
+
+async def _record_on_incident(
+    customer_code: str,
+    alert_id: str,
+    body: UbaFeedbackRequest,
+    request: Request,
+    current_user: User,
+    db: AsyncSession,
+) -> UbaIncidentVerdict:
+    """The UBA verdict on the linked incident alert, audited and on its SLA clock like a verdict
+    given there. Never fails the request: UBA has already accepted the verdict."""
+    try:
+        outcome, updated, previous = await incident_verdict.record_on_incident(customer_code, alert_id, body, current_user, db)
+    except Exception as e:
+        await db.rollback()
+        logger.exception(f"UBA alert {alert_id}: recording the verdict on its incident alert failed")
+        reason = e.reason if isinstance(e, UbaRequestError) else "error"
+        return UbaIncidentVerdict(status="failed", message=f"The verdict was saved in UBA but not on the incident alert ({reason}).")
+    if updated is None:
+        return outcome
+    await record_audit_event(
+        action=AuditAction.ALERT_VERDICT_SET,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        customer_code=updated.customer_code,
+        entity_type="alert",
+        entity_id=updated.id,
+        old_value=previous,
+        new_value={
+            "verdict": updated.verdict,
+            "verdict_reason": updated.verdict_reason,
+            "verdict_note": updated.verdict_note,
+            "via": "uba",
+            "uba_alert_id": alert_id,
+        },
+        request=request,
+    )
+    await SlaLifecycleRecorder().alert_action(updated.id, LifecycleAction.VERDICT_SET, Actor.from_user(current_user))
+    return outcome
 
 
 @uba_router.get("/{customer_code}/suppressions", response_model=UbaResponse, dependencies=_READ)
