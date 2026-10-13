@@ -41,7 +41,7 @@ async def collect_velociraptor_clients(org_id: str) -> list:
     query = create_query(
         f"SELECT * FROM query(org_id='{org_id}', query='SELECT * FROM clients()')",
     )
-    flow = velociraptor_service.execute_query(query)
+    flow = await velociraptor_service.execute_query_async(query)
     logger.info(f"Successfully ran artifact collection on {flow}")
     return flow["results"]
 
@@ -57,7 +57,7 @@ async def collect_velociraptor_organizations() -> list:
     query = create_query(
         "SELECT * FROM orgs()",
     )
-    flow = velociraptor_service.execute_query(query)
+    flow = await velociraptor_service.execute_query_async(query)
     logger.info(f"Successfully ran artifact collection on {flow}")
     return flow["results"]
 
@@ -176,7 +176,7 @@ async def collect_velociraptor_agent_via_client_id(client_id: str) -> Velocirapt
     )
 
 
-def execute_query(universal_service, query: str) -> dict:
+async def execute_query(universal_service, query: str) -> dict:
     """
     Executes a query using the provided universal service.
 
@@ -187,7 +187,7 @@ def execute_query(universal_service, query: str) -> dict:
     Returns:
         A dictionary containing the result of the query execution.
     """
-    flow = universal_service.execute_query(query)
+    flow = await universal_service.execute_query_async(query)
     logger.info(f"Successfully ran artifact collection on {flow}")
     return flow
 
@@ -274,7 +274,7 @@ async def delete_client(client_id: str) -> dict:
         query = create_query(
             f"SELECT collect_client(client_id='server', artifacts=['Server.Utils.DeleteClient'], env=dict(ClientIdList='{client_id}',ReallyDoIt='Y')) FROM scope()",
         )
-        flow = execute_query(universal_service, query)
+        flow = await execute_query(universal_service, query)
         return check_flow_success(flow, client_id)
     except Exception as e:
         return handle_exception(e, client_id)
