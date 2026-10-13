@@ -1153,6 +1153,27 @@ async def update_alert_verdict(
     return alert, previous
 
 
+async def alert_verdict_states(alert_ids: List[int], user: User, db: AsyncSession) -> Tuple[List[Any], List[int]]:
+    """The current verdict of each requested alert the user may see, in one query, and the requested
+    ids that are missing or not visible (one list: the caller must not learn which is which).
+
+    Visibility is ``alert_visibility_filters_for_user`` (customer scoping and tag RBAC), the same
+    definition as the lists, so this can never reveal an alert the caller could not open.
+    """
+    requested = list(dict.fromkeys(alert_ids))
+    filters = await alert_visibility_filters_for_user(user, db)
+    if filters is None:
+        return [], requested
+    result = await db.execute(
+        select(Alert.id, Alert.verdict, Alert.verdict_reason, Alert.verdict_note, Alert.verdict_by, Alert.verdict_at)
+        .where(Alert.id.in_(requested), *filters)
+        .order_by(Alert.id),
+    )
+    rows = list(result.all())
+    found = {row.id for row in rows}
+    return rows, [alert_id for alert_id in requested if alert_id not in found]
+
+
 async def update_alert_escalated(alert_id: int, escalated: bool, db: AsyncSession) -> Alert:
     result = await db.execute(select(Alert).where(Alert.id == alert_id))
     alert = result.scalars().first()
