@@ -57,6 +57,9 @@ from app.incidents.schema.db_operations import AlertStatus
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AlertTagDelete
 from app.incidents.schema.db_operations import AlertTagResponse
+from app.incidents.schema.db_operations import AlertVerdictState
+from app.incidents.schema.db_operations import AlertVerdictStateRequest
+from app.incidents.schema.db_operations import AlertVerdictStateResponse
 from app.incidents.schema.db_operations import AssetCreate
 from app.incidents.schema.db_operations import AssetResponse
 from app.incidents.schema.db_operations import AssignedToAlert
@@ -137,6 +140,7 @@ from app.incidents.services.db_operations import alert_total
 from app.incidents.services.db_operations import alert_total_by_alert_title
 from app.incidents.services.db_operations import alert_total_by_assest_name
 from app.incidents.services.db_operations import alert_total_by_customer_codes
+from app.incidents.services.db_operations import alert_verdict_states
 from app.incidents.services.db_operations import alert_visibility_filters_for_user
 from app.incidents.services.db_operations import alerts_closed
 from app.incidents.services.db_operations import alerts_closed_by_alert_title
@@ -724,6 +728,31 @@ async def update_alert_verdict_endpoint(
     await SlaLifecycleRecorder().alert_action(updated_alert.id, LifecycleAction.VERDICT_SET, Actor.from_user(current_user))
 
     return AlertResponse(alert=updated_alert, success=True, message="Alert verdict updated successfully")
+
+
+@incidents_db_operations_router.post(
+    "/alerts/verdict-state",
+    response_model=AlertVerdictStateResponse,
+    description=(
+        "The current triage verdict of up to 500 alerts in one call, for integrations that follow verdicts "
+        "(UBA). Ids that do not exist or that the caller may not see are listed in `missing`, alike."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_alert_verdict_states_endpoint(
+    body: AlertVerdictStateRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Read-only, so POST only for the id list (#1239). Same scope as `PUT /alert/verdict`; customer
+    and tag visibility come from the service, so a scoped analyst gets their own alerts' verdicts only."""
+    rows, missing = await alert_verdict_states(body.alert_ids, current_user, db)
+    return AlertVerdictStateResponse(
+        alerts=[AlertVerdictState.model_validate(row) for row in rows],
+        missing=missing,
+        success=True,
+        message=f"{len(rows)} alert verdict(s)",
+    )
 
 
 @incidents_db_operations_router.put(

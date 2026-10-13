@@ -203,6 +203,41 @@ class UpdateAlertVerdict(BaseModel):
         return self
 
 
+# One request answers this many alerts: enough for an integration polling its own alerts (UBA reads
+# the verdicts of every incident alert it created) in a handful of calls, small enough for one query.
+MAX_VERDICT_STATE_ALERTS = 500
+
+
+class AlertVerdictStateRequest(BaseModel):
+    """Alerts whose current verdict the caller wants (``POST /alerts/verdict-state``)."""
+
+    alert_ids: List[int] = Field(..., min_length=1, max_length=MAX_VERDICT_STATE_ALERTS)
+
+
+class AlertVerdictState(BaseModel):
+    """An alert's current triage verdict only: what an integration following verdicts needs, without
+    the comments, assets and IoCs of ``AlertOut``. A NULL ``verdict`` means untriaged."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    verdict: Optional[str] = None
+    verdict_reason: Optional[str] = None
+    verdict_note: Optional[str] = None
+    verdict_by: Optional[str] = None
+    verdict_at: Optional[datetime] = None
+
+
+class AlertVerdictStateResponse(BaseModel):
+    """``missing``: requested ids that do not exist *or* that the caller may not see, reported alike so
+    a scoped caller cannot tell another tenant's alert ids from unused ones."""
+
+    alerts: List[AlertVerdictState]
+    missing: List[int]
+    success: bool
+    message: str
+
+
 class UpdateCaseStatus(BaseModel):
     case_id: int
     status: AlertStatus
