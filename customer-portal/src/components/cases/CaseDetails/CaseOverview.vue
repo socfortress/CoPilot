@@ -38,7 +38,7 @@
 				<template #header>
 					<div class="text-secondary text-sm">Customer</div>
 				</template>
-				{{ caseData.customer_code }}
+				<CustomerName :code="caseData.customer_code" />
 			</CardEntity>
 
 			<CardEntity size="small">
@@ -75,6 +75,7 @@ import type { CaseStatusUpdateSuccessPayload } from "../CaseStatusSelect.vue"
 import type { Case } from "@/types/cases"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
+import CustomerName from "@/components/common/CustomerName.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 import CaseAssignedSelect from "../CaseAssignedSelect.vue"

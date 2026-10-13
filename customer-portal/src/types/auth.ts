@@ -20,11 +20,24 @@ export enum AuthUserRole {
 
 export type RouteMetaAuthRole = AuthUserRole | RouteRole | string
 
+/** A customer the portal user may see: the code is the key, the name is what to show. */
+export interface PortalCustomer {
+	customer_code: string
+	customer_name: string
+}
+
+/** `GET /customer_portal/me`: read live, unlike the token's `customer_codes` claim. */
+export interface PortalProfile {
+	username: string
+	role: string
+	customers: PortalCustomer[]
+}
+
 export interface AuthUser {
 	access_token: string | null
 	role: AuthUserRole | string | null
 	username: string | null
-	customer_code: string | null
+	/** From the token, until `GET /customer_portal/me` answers: see `stores/auth.ts`. */
 	customer_codes: string[]
 }
 

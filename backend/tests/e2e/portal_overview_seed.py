@@ -55,6 +55,8 @@ from app.soc_management.models.sla import AlertSlaTracking  # noqa: E402
 from app.soc_management.models.sla import CaseSlaTracking  # noqa: E402
 
 CUST_A, CUST_B = "E2E_OV_A", "E2E_OV_B"
+# Names unlike the codes, so a test can tell which of the two the portal shows (#1243).
+CUSTOMER_NAMES = {CUST_A: "Acme Rome", CUST_B: "Beta Milan"}
 PORTAL_USER = "e2e_ov_portal"  # customer_user assigned to E2E_OV_A
 ADMIN = "e2e_ov_admin"
 CONTEXT_SOURCE = "e2e_overview"
@@ -178,7 +180,7 @@ async def seed(quiet: bool = False) -> dict:
             s.add(
                 Customers(
                     customer_code=code,
-                    customer_name=f"Customer {code}",
+                    customer_name=CUSTOMER_NAMES[code],
                     contact_first_name="E2E",
                     contact_last_name=code,
                     customer_type="MSSP",
@@ -374,6 +376,7 @@ def fixture() -> dict:
     """What the tests need to know about the seed, as JSON-friendly data."""
     return {
         "customers": {"a": CUST_A, "b": CUST_B},
+        "customer_names": {"a": CUSTOMER_NAMES[CUST_A], "b": CUSTOMER_NAMES[CUST_B]},
         "portal_user": PORTAL_USER,
         "admin": ADMIN,
         "password": PASSWORD,

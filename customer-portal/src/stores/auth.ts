@@ -1,6 +1,13 @@
 import type { LoginPayload } from "@/api/endpoints/auth"
 import type { TOTPValidateRequest } from "@/api/endpoints/totp"
-import type { AuthResponse, AuthUser, AuthUserRole, JWTPayload, RouteMetaAuthRole } from "@/types/auth"
+import type {
+	AuthResponse,
+	AuthUser,
+	AuthUserRole,
+	JWTPayload,
+	PortalCustomer,
+	RouteMetaAuthRole
+} from "@/types/auth"
 import type { ApiError } from "@/types/common"
 import * as jose from "jose"
 import _capitalize from "lodash/capitalize"
@@ -20,6 +27,11 @@ import { piniaStorage, removePersistentSessionKey } from "@/utils/secure-storage
 export const useAuthStore = defineStore("auth", {
 	state: () => ({
 		user: null as AuthUser | null,
+		/**
+		 * The customers from `GET /customer_portal/me`, with names. Until it answers, the
+		 * token's `customer_codes` claim stands in (see `accessibleCustomers`).
+		 */
+		customers: null as PortalCustomer[] | null,
 		tokenDebounceTime: toNumber(import.meta.env.VITE_TOKEN_DEBOUNCE_TIME) || 10 // seconds
 	}),
 	actions: {
@@ -29,10 +41,11 @@ export const useAuthStore = defineStore("auth", {
 			this.user = {
 				access_token: payload.access_token,
 				username: jwtPayload.sub || "",
-				customer_code: jwtPayload.customer_codes?.[0] || null,
 				customer_codes: jwtPayload.customer_codes ?? [],
 				role: jwtRoleToUserRole(jwtPayload.scopes)
 			}
+			// A new session: never show the customers of the previous one.
+			this.customers = null
 		},
 		setTokens(payload: AuthResponse) {
 			if (this.user) {
@@ -41,6 +54,7 @@ export const useAuthStore = defineStore("auth", {
 		},
 		setLogout() {
 			this.user = null
+			this.customers = null
 
 			useCustomerFilterStore().clear()
 			useReportGenerationStore().reset()
@@ -81,6 +95,23 @@ export const useAuthStore = defineStore("auth", {
 				throw error.response?.data
 			}
 		},
+		/**
+		 * Load the user's customers, with names. Read live: an assignment changed after
+		 * login shows here, while the token keeps the codes it was issued with. A failure
+		 * keeps what is known (the token's codes, or the last answer): names are a
+		 * nicety, never a reason to block the portal.
+		 */
+		async loadProfile() {
+			if (!this.isLogged) return
+			try {
+				const response = await Api.portal.me()
+				if (response.data?.success && this.isLogged) {
+					this.customers = response.data.customers
+				}
+			} catch (err) {
+				console.error("Failed to load the portal profile:", err)
+			}
+		},
 		/** Extend the session by re-issuing the access token. Rejects with the API error body. */
 		async refreshToken(): Promise<AuthResponse> {
 			try {
@@ -103,11 +134,20 @@ export const useAuthStore = defineStore("auth", {
 		userToken(state): string | null {
 			return state.user?.access_token || null
 		},
-		userCustomerCode(state): string | null {
-			return state.user?.customer_code || null
+		/** The customers the user may see, named once the profile has loaded. */
+		accessibleCustomers(state): PortalCustomer[] {
+			if (state.customers) return state.customers
+			return (state.user?.customer_codes ?? []).map(code => ({ customer_code: code, customer_name: code }))
 		},
-		accessibleCustomerCodes(state): string[] {
-			return state.user?.customer_codes ?? []
+		accessibleCustomerCodes(): string[] {
+			return this.accessibleCustomers.map(customer => customer.customer_code)
+		},
+		/** A customer's name, or its code when the name is not known (e.g. not one of the user's). */
+		customerName() {
+			return (code: string | null | undefined): string => {
+				if (!code) return ""
+				return this.accessibleCustomers.find(customer => customer.customer_code === code)?.customer_name || code
+			}
 		},
 		userName(state): string | null {
 			return state.user?.username || null
@@ -144,7 +184,7 @@ export const useAuthStore = defineStore("auth", {
 	},
 	persist: {
 		storage: piniaStorage({ session: true }),
-		pick: ["user"]
+		pick: ["user", "customers"]
 	}
 })
 

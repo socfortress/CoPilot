@@ -27,7 +27,7 @@
 				<template #header>
 					<div class="text-secondary text-sm">Customer</div>
 				</template>
-				{{ alert.customer_code }}
+				<CustomerName :code="alert.customer_code" />
 			</CardEntity>
 
 			<CardEntity size="small">
@@ -65,6 +65,7 @@ import { computed } from "vue"
 import AlertStatusSelect from "@/components/alerts/AlertStatusSelect.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
+import CustomerName from "@/components/common/CustomerName.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 

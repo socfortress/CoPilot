@@ -1,3 +1,4 @@
+import type { PortalProfile } from "@/types/auth"
 import type { CommonResponse } from "@/types/common"
 import type {
 	AlertsStats,
@@ -23,6 +24,10 @@ export default {
 			"/customer_portal/settings/effective",
 			{ keepOnNavigation: true }
 		)
+	},
+	/** The portal user and their customers, with names. Not page-scoped: the whole session reads it. */
+	me() {
+		return HttpClient.get<CommonResponse<PortalProfile>>("/customer_portal/me", { keepOnNavigation: true })
 	},
 	/** Everything the Overview renders, in one call. */
 	overview(options: { recentLimit: number; aiLimit: number; customerCodes?: string[]; signal?: AbortSignal }) {

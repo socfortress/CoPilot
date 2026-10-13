@@ -46,7 +46,14 @@
 				</n-form-item>
 
 				<n-form-item v-if="hasMultipleCustomers" label="Customer" path="customer_code" required>
-					<n-select v-model:value="formData.customer_code" :options="customerOptions" filterable />
+					<n-select
+						v-model:value="formData.customer_code"
+						data-testid="report-customer"
+						:options="customerOptions"
+						:render-label="renderCustomerLabel"
+						:filter="filterCustomer"
+						filterable
+					/>
 				</n-form-item>
 
 				<n-form-item label="Time Range" path="range">
@@ -110,7 +117,7 @@ const AddIcon = "carbon:document-add"
 
 const message = useMessage()
 const { loading, run } = useLatestRequest()
-const { customerOptions, hasMultipleCustomers, initialCustomerCode } = useCustomerPrefill()
+const { customerOptions, filterCustomer, renderCustomerLabel, hasMultipleCustomers, initialCustomerCode } = useCustomerPrefill()
 const reportGenerationStore = useReportGenerationStore()
 const customerFilterStore = useCustomerFilterStore()
 

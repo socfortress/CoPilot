@@ -17,7 +17,10 @@
 							placeholder="Select Customer"
 							filterable
 							size="tiny"
-							:options="customersOptions"
+							data-testid="event-search-customer"
+							:options="customerOptions"
+							:render-label="renderCustomerLabel"
+							:filter="filterCustomer"
 							:consistent-menu-width="false"
 							@update:value="onCustomerChange"
 						/>
@@ -147,6 +150,7 @@ import { computed, h, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useCustomers } from "@/composables/common/useCustomers"
 import { useAuthStore } from "@/stores/auth"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { getApiErrorMessage } from "@/utils"
@@ -186,14 +190,13 @@ const authStore = useAuthStore()
 const customerFilterStore = useCustomerFilterStore()
 const message = useMessage()
 
-const customerCode = computed(() => authStore.userCustomerCode)
-const customersOptions = computed(() => authStore.accessibleCustomerCodes.map(code => ({ label: code, value: code })))
+const { customerOptions, filterCustomer, renderCustomerLabel } = useCustomers()
 // Seed the searched customer from the global filter when it resolves to a single
-// customer, otherwise the user's primary / first accessible customer.
+// customer, otherwise the user's first accessible customer.
 const selectedCustomerCode = ref(
 	customerFilterStore.selectedCustomerCodes.length === 1
 		? customerFilterStore.selectedCustomerCodes[0]
-		: customerCode.value || authStore.accessibleCustomerCodes[0] || ""
+		: authStore.accessibleCustomerCodes[0] || ""
 )
 
 const eventSources = ref<EventSourceItem[]>([])
