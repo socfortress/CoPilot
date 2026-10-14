@@ -31,16 +31,21 @@
 						</Chip>
 					</span>
 					<span class="flex min-w-0 flex-col leading-tight [grid-area:name]">
-						<span class="text-default truncate text-sm">{{ c.case_name }}</span>
+						<span class="text-default line-clamp-2 text-sm @3xl:line-clamp-1">{{ c.case_name }}</span>
 						<span class="text-tertiary font-mono text-xs tabular-nums">
 							#{{ c.id }} · {{ c.alerts?.length ?? 0 }} alert{{ c.alerts?.length === 1 ? "" : "s" }}
 						</span>
 					</span>
-					<span class="text-secondary truncate text-xs [grid-area:owner]">
-						{{ c.assigned_to ?? "unassigned" }}
-					</span>
-					<span class="text-secondary text-xs whitespace-nowrap [grid-area:created]" :title="String(formatDate(c.case_creation_time, dFormats.datetime))">
-						{{ relative(c.case_creation_time) }}
+					<!-- Narrow: one line under the name; wide (contents): two columns of their own. -->
+					<span class="text-secondary flex min-w-0 items-baseline gap-2 text-xs [grid-area:info] @3xl:contents">
+						<span class="truncate @3xl:[grid-area:owner]">{{ c.assigned_to ?? "unassigned" }}</span>
+						<span class="text-tertiary @3xl:hidden">·</span>
+						<span
+							class="whitespace-nowrap @3xl:[grid-area:created]"
+							:title="String(formatDate(c.case_creation_time, dFormats.datetime))"
+						>
+							{{ relative(c.case_creation_time) }}
+						</span>
 					</span>
 					<span class="flex justify-end [grid-area:open]">
 						<CaseDetailsButton :case-id="c.id" size="small" />
@@ -73,9 +78,11 @@ import { workflowStatusLabel } from "@/utils/workflowStatus"
 
 const { hostname } = defineProps<{ hostname: string }>()
 
+// Narrow, a small card: status and the case's buttons on top, then its name, then who and
+// when; wide, one line under the header.
 const ROW = [
-	"grid-cols-[auto_minmax(0,1fr)_auto]",
-	"[grid-template-areas:'status_name_open'_'owner_created_open']",
+	"grid-cols-[minmax(0,1fr)_auto]",
+	"[grid-template-areas:'status_open'_'name_name'_'info_info']",
 	"@3xl:grid-cols-[8rem_minmax(0,1fr)_9rem_7rem_auto]",
 	"@3xl:[grid-template-areas:'status_name_owner_created_open']"
 ].join(" ")

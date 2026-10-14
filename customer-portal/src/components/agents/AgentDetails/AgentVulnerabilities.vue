@@ -101,9 +101,11 @@
 						<span class="[grid-area:sev]">
 							<span :class="[CHIP, severityClasses(v.severity)]">{{ v.severity ?? "unknown" }}</span>
 						</span>
-						<span class="flex min-w-0 flex-col leading-tight [grid-area:vuln]">
+						<span class="flex min-w-0 flex-col gap-0.5 leading-tight [grid-area:vuln]">
 							<span class="text-default truncate font-mono text-sm">{{ v.cve ?? "—" }}</span>
-							<span v-if="v.title" class="text-tertiary truncate text-xs">{{ v.title }}</span>
+							<span v-if="v.title" class="text-secondary line-clamp-2 text-xs @3xl:line-clamp-1">
+								{{ v.title }}
+							</span>
 						</span>
 						<span
 							class="flex min-w-0 items-baseline gap-2 leading-tight [grid-area:pkg] @3xl:flex-col @3xl:gap-0"
@@ -220,11 +222,12 @@ const { agentId, agentLabel } = defineProps<{ agentId: string; agentLabel: strin
 const PAGE_SIZES = [25, 50, 100]
 const HEAD = "text-xxs font-medium tracking-[0.12em] uppercase"
 const CHIP = "inline-flex rounded border px-1.5 py-0.5 text-xxs font-medium tracking-wide uppercase"
-// Every cell placed by area, by the list's own width: narrow, a small card; wide, one line.
+// Every cell placed by area, by the list's own width: narrow, a small card (severity and
+// score on top, then the CVE and its title, then the package); wide, one line.
 const COLUMNS = "grid-cols-[6rem_minmax(0,1.6fr)_minmax(0,1fr)_3.5rem_7rem_1rem]"
 const COLUMNS_ROW = [
 	"grid-cols-[auto_minmax(0,1fr)_auto_auto]",
-	"[grid-template-areas:'sev_vuln_cvss_chev'_'pkg_pkg_pkg_pkg']",
+	"[grid-template-areas:'sev_._cvss_chev'_'vuln_vuln_vuln_vuln'_'pkg_pkg_pkg_pkg']",
 	"@3xl:grid-cols-[6rem_minmax(0,1.6fr)_minmax(0,1fr)_3.5rem_7rem_1rem]",
 	"@3xl:[grid-template-areas:'sev_vuln_pkg_cvss_det_chev']"
 ].join(" ")
