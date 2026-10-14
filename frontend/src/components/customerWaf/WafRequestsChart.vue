@@ -14,7 +14,7 @@
 <script setup lang="ts">
 // Requests per hour, last 24h — one series, so no legend box: the card title names it.
 // Specs: 2px line, 10% area wash of the same hue, hairline recessive grid, crosshair
-// tooltip. Height goes in :style because vue-echarts sets height:100% inline.
+// tooltip in the shared chart-tooltip UI. Height goes in :style because vue-echarts sets height:100% inline.
 import type { LineSeriesOption } from "echarts/charts"
 import type { GridComponentOption, TooltipComponentOption } from "echarts/components"
 import type { ComposeOption } from "echarts/core"
@@ -25,7 +25,11 @@ import { CanvasRenderer } from "echarts/renderers"
 import { NEmpty } from "naive-ui"
 import { computed } from "vue"
 import VChart from "vue-echarts"
-import { buildChartTooltipGlassBase, chartTooltipThemeFromStyle } from "@/components/common/charts"
+import {
+	buildChartTooltipGlassBase,
+	chartTooltipThemeFromStyle,
+	formatChartTooltipAxisMultiSeriesFromParams
+} from "@/components/common/charts"
 import { useThemeStore } from "@/stores/theme"
 import dayjs from "@/utils/dayjs"
 import { useWafChartColors } from "./chart-colors"
@@ -42,6 +46,13 @@ const { markColor } = useWafChartColors()
 
 const peak = computed(() => Math.max(0, ...points.map(p => p.count)))
 
+/** "Tue 14 Oct, 09:00–10:00": the hour a point counts. */
+function hourRange(hour: string | undefined) {
+	if (!hour) return ""
+	const when = dayjs(hour)
+	return `${when.format("ddd D MMM, HH:mm")}–${when.add(1, "hour").format("HH:mm")}`
+}
+
 const option = computed((): ComposeOption<LineSeriesOption | GridComponentOption | TooltipComponentOption> => {
 	const style = theme.style
 	const muted = style["fg-secondary-color"]
@@ -52,20 +63,19 @@ const option = computed((): ComposeOption<LineSeriesOption | GridComponentOption
 	return {
 		backgroundColor: "transparent",
 		grid: { left: 8, right: 16, top: 12, bottom: 4, outerBoundsMode: "same", outerBoundsContain: "axisLabel" },
+		// The shared tooltip UI (common/charts): muted title band with the hour range, then one
+		// marker row — the same look as every other chart, in the mono face ChartArea uses.
 		tooltip: {
-			...buildChartTooltipGlassBase(chartTooltipThemeFromStyle(style), { trigger: "axis" }),
+			...buildChartTooltipGlassBase(chartTooltipThemeFromStyle({ ...style, "font-family": style["font-family-mono"] }), {
+				trigger: "axis"
+			}),
 			axisPointer: { type: "line", lineStyle: { color: muted, width: 1 } },
-			formatter: params => {
-				const p = Array.isArray(params) ? params[0] : params
-				const point = points[p?.dataIndex ?? 0]
-				if (!point) return ""
-				const when = dayjs(point.hour)
-				return `<div style="color:${muted};font-size:11px">${when.format("ddd D MMM, HH:mm")}–${when.add(1, "hour").format("HH:mm")}</div>
-					<div style="display:flex;align-items:center;gap:6px;margin-top:2px">
-						<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color}"></span>
-						<b style="font-variant-numeric:tabular-nums">${point.count.toLocaleString()}</b> requests
-					</div>`
-			}
+			formatter: params =>
+				formatChartTooltipAxisMultiSeriesFromParams(params, {
+					titleMutedColor: muted,
+					formatTitle: first => hourRange(points[first.dataIndex ?? 0]?.hour),
+					formatRow: p => ({ label: p.seriesName ?? "", valueHtml: Number(p.value ?? 0).toLocaleString() })
+				})
 		},
 		xAxis: {
 			type: "category",
