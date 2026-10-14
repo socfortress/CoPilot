@@ -25,13 +25,13 @@
 
 		<section
 			v-else
-			class="border-default bg-default overflow-hidden rounded-lg border"
+			class="border-default bg-default @container overflow-hidden rounded-lg border"
 			:aria-busy="loading"
 			data-testid="waf-events"
 		>
 			<!-- Column heads: the rows below share this exact grid, so every value lines up. -->
 			<div
-				class="bg-secondary border-default text-tertiary hidden items-center gap-4 border-b px-4 py-2 md:grid"
+				class="bg-secondary border-default text-tertiary hidden items-center gap-4 border-b px-4 py-2 @4xl:grid"
 				:class="COLUMNS"
 			>
 				<span :class="HEAD">Time</span>
@@ -60,24 +60,26 @@
 				>
 					<button
 						type="button"
-						class="group hover:bg-secondary/50 grid w-full cursor-pointer items-center gap-x-4 gap-y-1.5 border-l-2 px-4 py-2.5 text-left transition-colors md:gap-y-0"
+						class="group hover:bg-secondary/50 grid w-full cursor-pointer items-center gap-x-3 gap-y-2 border-l-2 px-4 py-2.5 text-left transition-colors @4xl:gap-x-4 @4xl:gap-y-0"
 						:class="[COLUMNS_ROW, accent(e.action), { 'bg-secondary/50': expanded.has(e.id) }]"
 						:aria-expanded="expanded.has(e.id)"
 						@click="toggle(e.id)"
 					>
 						<n-tooltip>
 							<template #trigger>
-								<span class="flex flex-col font-mono leading-tight tabular-nums">
+								<span
+									class="flex min-w-0 items-baseline gap-2 font-mono leading-tight tabular-nums [grid-area:time] @4xl:flex-col @4xl:items-start @4xl:gap-0"
+								>
 									<span class="text-default text-xs">{{ clock(e.timestamp) }}</span>
-									<span class="text-tertiary text-2xs">{{ day(e.timestamp) }}</span>
+									<span class="text-tertiary text-2xs whitespace-nowrap @max-md:hidden">{{ day(e.timestamp) }}</span>
 								</span>
 							</template>
 							{{ formatDate(e.timestamp, dFormats.datetimesec) }} · {{ relative(e.timestamp) }}
 						</n-tooltip>
 
-						<span><WafActionPill :action="e.action" /></span>
+						<span class="[grid-area:action]"><WafActionPill :action="e.action" /></span>
 
-						<span class="col-span-2 flex min-w-0 flex-col gap-0.5 md:col-span-1">
+						<span class="flex min-w-0 flex-col gap-0.5 [grid-area:req]">
 							<span class="flex min-w-0 items-center gap-2 text-sm">
 								<span
 									class="border-default text-secondary text-2xs shrink-0 rounded border px-1.5 py-px font-mono tracking-wide"
@@ -98,21 +100,28 @@
 							</span>
 						</span>
 
-						<span class="flex min-w-0 flex-col leading-tight">
+						<!-- Narrow: address and country on one line; wide: stacked in their column. -->
+						<span
+							class="flex min-w-0 items-baseline gap-2 leading-tight [grid-area:client] @4xl:flex-col @4xl:items-start @4xl:gap-0"
+						>
 							<span class="text-default truncate font-mono text-xs">{{ e.client_ip }}</span>
 							<span v-if="e.geoip_country_code" class="text-tertiary text-2xs truncate">
 								{{ flag(e.geoip_country_code) }} {{ e.geoip_country_name ?? e.geoip_country_code }}
 							</span>
 						</span>
 
-						<span class="text-right font-mono text-sm tabular-nums" :class="scoreClass(e.anomaly_score)">
+						<span
+							class="text-right font-mono text-sm tabular-nums [grid-area:score]"
+							:class="scoreClass(e.anomaly_score)"
+						>
+							<span class="text-tertiary text-2xs mr-1 font-normal tracking-wide uppercase @4xl:hidden">score</span>
 							{{ e.anomaly_score ?? "—" }}
 						</span>
 
 						<Icon
 							:name="ExpandIcon"
 							:size="14"
-							class="text-tertiary group-hover:text-default justify-self-end transition-transform duration-200"
+							class="text-tertiary group-hover:text-default justify-self-end transition-transform duration-200 [grid-area:chev]"
 							:class="{ 'rotate-180': expanded.has(e.id) }"
 						/>
 					</button>
@@ -124,7 +133,7 @@
 						:class="accent(e.action)"
 						data-testid="waf-event-detail"
 					>
-						<dl class="grid grid-cols-2 gap-x-6 gap-y-3 md:grid-cols-4">
+						<dl class="grid grid-cols-2 gap-x-6 gap-y-3 @3xl:grid-cols-4">
 							<div v-for="fact of details(e)" :key="fact.label" class="flex min-w-0 flex-col gap-0.5">
 								<dt :class="HEAD" class="text-tertiary">{{ fact.label }}</dt>
 								<dd class="text-default truncate text-xs" :class="{ 'font-mono': fact.mono }">
@@ -249,7 +258,15 @@ const PrevIcon = "carbon:chevron-left"
 const NextIcon = "carbon:chevron-right"
 // One grid for the column heads and every row. Narrow screens fold it to two columns.
 const COLUMNS = "grid-cols-[6.5rem_7rem_minmax(0,1fr)_11rem_3.5rem_1rem]"
-const COLUMNS_ROW = "grid-cols-[auto_1fr] md:grid-cols-[6.5rem_7rem_minmax(0,1fr)_11rem_3.5rem_1rem]"
+// Rows place every cell by area (by the list's own width, not the window's: the sidebar
+// takes a variable share of it): narrow, a small card (action, time, score and chevron on
+// top, then the request, then the client); wide, one line under the column heads.
+const COLUMNS_ROW = [
+	"grid-cols-[auto_minmax(0,1fr)_auto_auto]",
+	"[grid-template-areas:'action_time_score_chev'_'req_req_req_req'_'client_client_client_client']",
+	"@4xl:grid-cols-[6.5rem_7rem_minmax(0,1fr)_11rem_3.5rem_1rem]",
+	"@4xl:[grid-template-areas:'time_action_req_client_score_chev']"
+].join(" ")
 const HEAD = "text-2xs font-medium tracking-[0.12em] uppercase"
 const dFormats = useSettingsStore().dateFormat
 

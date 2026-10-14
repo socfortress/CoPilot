@@ -27,14 +27,16 @@
 				:aria-busy="loading"
 				data-testid="waf-copilot-blocks"
 			>
-				<header class="bg-secondary border-default flex flex-wrap items-baseline justify-between gap-2 border-b px-4 py-2">
+				<header
+					class="bg-secondary border-default flex flex-wrap items-baseline justify-between gap-2 border-b px-4 py-2"
+				>
 					<span :class="SECTION_LABEL">CoPilot blocks</span>
-					<span class="text-tertiary text-2xs font-mono tabular-nums">
+					<span class="text-secondary text-2xs font-mono tabular-nums">
 						<template v-if="searching">{{ shownCopilot.length }} of {{ copilotBlocks.length }} ·</template>
 						{{ activeCount }} active · {{ copilotBlocks.length - activeCount }} lifted
 					</span>
 				</header>
-				<p class="text-tertiary border-default m-0 border-b px-4 py-2 text-xs">
+				<p class="text-secondary border-default m-0 border-b px-4 py-2 text-xs">
 					Unblocking disables the rule rather than deleting it: re-blocking re-enables the same rule, and the
 					WAF keeps its history.
 				</p>
@@ -53,7 +55,11 @@
 				</div>
 				<n-empty
 					v-else-if="!shownCopilot.length"
-					:description="copilotBlocks.length ? 'No block matches the search' : 'CoPilot hasn\'t blocked anything on this WAF'"
+					:description="
+						copilotBlocks.length
+							? 'No block matches the search'
+							: 'CoPilot hasn\'t blocked anything on this WAF'
+					"
 					class="min-h-40 justify-center"
 				/>
 				<div v-else class="divide-border border-default flex flex-col divide-y border-t">
@@ -71,7 +77,9 @@
 						<span class="text-secondary col-span-2 truncate text-xs md:col-span-1" :title="b.description">
 							{{ b.description || "—" }}
 						</span>
-						<span class="text-tertiary hidden font-mono text-xs tabular-nums md:block">#{{ b.rule_id }}</span>
+						<span class="text-tertiary hidden font-mono text-xs tabular-nums md:block">
+							#{{ b.rule_id }}
+						</span>
 						<CreatedAt :value="b.created_at" class="hidden md:block" />
 						<span class="flex justify-end">
 							<n-button
@@ -112,16 +120,16 @@
 						/>
 						<span :class="SECTION_LABEL">WAF-managed IP blocks</span>
 					</span>
-					<span class="text-tertiary text-2xs font-mono tabular-nums">
+					<span class="text-secondary text-2xs font-mono tabular-nums">
 						<template v-if="searching">{{ shownOther.length }} of</template>
 						{{ otherBlocks.length }} rules
 					</span>
 				</button>
 
 				<template v-if="managedVisible">
-					<p class="text-tertiary border-default m-0 border-b px-4 py-2 text-xs">
-						Created on the WAF itself, e.g. by its Threat Intel. CoPilot respects them but never changes them:
-						manage them in the WAF UI.
+					<p class="text-secondary border-default m-0 border-b px-4 py-2 text-xs">
+						Created on the WAF itself, e.g. by its Threat Intel. CoPilot respects them but never changes
+						them: manage them in the WAF UI.
 					</p>
 					<div class="text-tertiary hidden items-center gap-4 px-4 py-2 md:grid" :class="COLUMNS">
 						<span :class="HEAD">State</span>
@@ -145,17 +153,27 @@
 							:class="COLUMNS_ROW"
 							data-testid="waf-managed-block"
 						>
-							<span><BlockState :active="b.enabled" active-label="enforced" inactive-label="disabled" /></span>
-							<span class="text-default truncate font-mono text-sm" :class="{ 'text-tertiary! line-through': !b.enabled }">
+							<span>
+								<BlockState :active="b.enabled" active-label="enforced" inactive-label="disabled" />
+							</span>
+							<span
+								class="text-default truncate font-mono text-sm"
+								:class="{ 'text-tertiary! line-through': !b.enabled }"
+							>
 								{{ b.target }}
 							</span>
-							<span class="text-secondary col-span-2 truncate text-xs md:col-span-1" :title="b.description || b.name">
+							<span
+								class="text-secondary col-span-2 truncate text-xs md:col-span-1"
+								:title="b.description || b.name"
+							>
 								{{ b.name }}
 								<span v-if="b.description && b.description !== b.name" class="text-tertiary">
 									· {{ b.description }}
 								</span>
 							</span>
-							<span class="text-tertiary hidden font-mono text-xs tabular-nums md:block">#{{ b.rule_id }}</span>
+							<span class="text-tertiary hidden font-mono text-xs tabular-nums md:block">
+								#{{ b.rule_id }}
+							</span>
 							<CreatedAt :value="b.created_at" class="hidden md:block" />
 							<span />
 						</div>
@@ -236,7 +254,9 @@ function CreatedAt(props: { value: string | null }) {
 	return (
 		<NTooltip>
 			{{
-				trigger: () => <span class="text-secondary text-xs whitespace-nowrap">{dayjs(props.value).fromNow()}</span>,
+				trigger: () => (
+					<span class="text-secondary text-xs whitespace-nowrap">{dayjs(props.value).fromNow()}</span>
+				),
 				default: () => formatDate(props.value as string, dFormats.datetime)
 			}}
 		</NTooltip>
