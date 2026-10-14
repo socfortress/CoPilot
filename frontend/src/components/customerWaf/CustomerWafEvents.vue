@@ -51,10 +51,16 @@
 				class="min-h-52 justify-center"
 			/>
 			<div v-else class="divide-border flex flex-col divide-y transition-opacity" :class="{ 'opacity-50': loading }">
-				<div v-for="e of events" :key="e.id" data-testid="waf-event-row">
+				<!-- An open event closes on its own border and leaves a gap before the next one. -->
+				<div
+					v-for="e of events"
+					:key="e.id"
+					:class="{ 'pb-5': expanded.has(e.id) }"
+					data-testid="waf-event-row"
+				>
 					<button
 						type="button"
-						class="group hover:bg-secondary/50 grid w-full items-center gap-x-4 gap-y-1.5 border-l-2 px-4 py-2.5 text-left transition-colors md:gap-y-0"
+						class="group hover:bg-secondary/50 grid w-full cursor-pointer items-center gap-x-4 gap-y-1.5 border-l-2 px-4 py-2.5 text-left transition-colors md:gap-y-0"
 						:class="[COLUMNS_ROW, accent(e.action), { 'bg-secondary/50': expanded.has(e.id) }]"
 						:aria-expanded="expanded.has(e.id)"
 						@click="toggle(e.id)"
@@ -114,7 +120,7 @@
 					<!-- Detail: every fact as label over value, then the rules that matched. -->
 					<div
 						v-if="expanded.has(e.id)"
-						class="bg-secondary/30 border-default flex flex-col gap-4 border-t border-l-2 px-4 py-4"
+						class="bg-secondary/30 border-default flex flex-col gap-4 border-y border-l-2 px-4 pt-4 pb-5"
 						:class="accent(e.action)"
 						data-testid="waf-event-detail"
 					>

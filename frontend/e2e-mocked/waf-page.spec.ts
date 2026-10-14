@@ -137,15 +137,23 @@ test.describe("WAF page", () => {
 		expect(eventRequests.at(-1)?.searchParams.get("offset")).toBe("0")
 	})
 
-	test("events: a row opens its detail with every matched rule", async ({ page }) => {
+	test("events: the whole row opens its detail with every matched rule", async ({ page }) => {
 		await openTab(page, "events")
 		const first = page.getByTestId("waf-event-row").first()
-		await first.getByRole("button").click()
+		const row = first.getByRole("button")
+		await expect(row).toHaveCSS("cursor", "pointer")
+
+		// Anywhere on the row toggles it: the client column, far from the chevron, opens it…
+		await row.getByText(wafEvent(0).client_ip).click()
 		const detail = first.getByTestId("waf-event-detail")
 		await expect(detail).toBeVisible()
 		await expect(detail).toContainText(wafEvent(0).transaction_id)
 		await expect(detail).toContainText("Matched rules · 2")
 		await expect(detail).toContainText("Inbound Anomaly Score Exceeded")
+
+		// …and the time column closes it again.
+		await row.getByText(/^\d{2}:\d{2}:\d{2}$/).click()
+		await expect(detail).toHaveCount(0)
 	})
 
 	test("threat intel: ranked by score, paged client-side, and no list element", async ({ page }) => {
