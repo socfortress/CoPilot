@@ -20,6 +20,7 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Request
 from fastapi import Security
@@ -31,9 +32,16 @@ from app.audit.models.audit import AuditAction
 from app.audit.services.audit import record_audit_event
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.connectors.uba.schema.provision import UbaModeRequest
+from app.connectors.uba.schema.provision import UbaModeResponse
 from app.connectors.uba.schema.provision import UbaProvisionRequest
 from app.connectors.uba.schema.provision import UbaProvisionResponse
 from app.connectors.uba.schema.provision import UbaProvisionStatusResponse
+from app.connectors.uba.schema.provision import UbaRollbackListResponse
+from app.connectors.uba.schema.provision import UbaRollbackPlan
+from app.connectors.uba.schema.provision import UbaRollbackReportResponse
+from app.connectors.uba.schema.provision import UbaRollbackResponse
+from app.connectors.uba.schema.provision import UbaRollbackSummary
 from app.connectors.uba.schema.uba import UbaAlertThresholdRequest
 from app.connectors.uba.schema.uba import UbaAvailabilityResponse
 from app.connectors.uba.schema.uba import UbaBacktestRequest
@@ -46,6 +54,7 @@ from app.connectors.uba.schema.uba import UbaScoreRequest
 from app.connectors.uba.schema.uba import UbaSuppressionRequest
 from app.connectors.uba.services import incident_verdict
 from app.connectors.uba.services import provision as provisioning
+from app.connectors.uba.services import rollback as rollbacks
 from app.connectors.uba.services import uba as svc
 from app.connectors.uba.services.incident_verdict import UbaIncidentVerdict
 from app.connectors.uba.utils.universal import UbaRequestError
@@ -590,3 +599,115 @@ async def get_provisioning(customer_code: str, session: AsyncSession = Depends(g
 )
 async def provision(customer_code: str, request: UbaProvisionRequest, session: AsyncSession = Depends(get_db)):
     return await _call(provisioning.provision_uba(customer_code, request, session))
+
+
+@uba_router.put(
+    "/{customer_code}/mode",
+    response_model=UbaModeResponse,
+    description=(
+        "Active: UBA alerts become CoPilot incident alerts. Learning: UBA keeps processing and learning and records its alerts "
+        "on the UBA page, but CoPilot gets none (not even later, when it is set back to active)"
+    ),
+    dependencies=_ADMIN,
+)
+async def set_mode(
+    customer_code: str,
+    body: UbaModeRequest,
+    request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    try:
+        result = await provisioning.set_mode(customer_code, body.mode)
+    except UbaRequestError as e:
+        return _error(e)
+    await record_audit_event(
+        action=AuditAction.UBA_MODE_CHANGE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        customer_code=customer_code,
+        entity_type="uba_tenant",
+        entity_id=customer_code,
+        new_value={"mode": body.mode},
+        request=request,
+    )
+    return result
+
+
+@uba_router.get(
+    "/{customer_code}/rollback",
+    response_model=UbaRollbackPlan,
+    description=(
+        "Preview of a UBA rollback: the Graylog objects UBA setup made for this customer that would be removed (in order), "
+        "the shared ones kept, conflicts that would be left alone, and the customer's streams that keep running"
+    ),
+    dependencies=_ADMIN,
+)
+async def get_rollback_plan(customer_code: str, session: AsyncSession = Depends(get_db)):
+    return await _call(rollbacks.get_rollback_plan(customer_code, session))
+
+
+@uba_router.post(
+    "/{customer_code}/rollback",
+    response_model=UbaRollbackResponse,
+    description=(
+        "Roll UBA back for this customer: disconnect its UBA routing, remove the output to UBA, the routing pipelines and rules, "
+        "the feed streams and its UBA alerts stream (the shared input only once no customer uses it), deactivate it in UBA, then "
+        "check its own streams and Graylog's event definitions. Keeps UBA's and CoPilot's history. Safe to run again; "
+        "set-up recreates everything"
+    ),
+    dependencies=_ADMIN,
+)
+async def roll_back(
+    customer_code: str,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    try:
+        report = await rollbacks.roll_back(customer_code, session, current_user.id, current_user.username)
+    except UbaRequestError as e:
+        return _error(e)
+    except HTTPException:
+        raise
+    except Exception:
+        await session.rollback()
+        logger.exception(f"UBA rollback of {customer_code} failed")
+        raise HTTPException(status_code=500, detail="Failed to roll UBA back")
+    await record_audit_event(
+        action=AuditAction.UBA_ROLLBACK,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        customer_code=customer_code,
+        entity_type="uba_rollback",
+        entity_id=report.id,
+        result="success" if report.status == "completed" else "failure",
+        new_value={
+            "status": report.status,
+            "steps": [s.model_dump() for s in report.steps],
+            "verification": [c.model_dump() for c in report.verification],
+        },
+        details=report.message,
+        request=request,
+    )
+    return UbaRollbackResponse(success=report.status == "completed", message=report.message or "", report=report)
+
+
+@uba_router.get(
+    "/{customer_code}/rollbacks",
+    response_model=UbaRollbackListResponse,
+    description="This customer's UBA rollbacks, newest first",
+    dependencies=_ADMIN,
+)
+async def list_rollbacks(customer_code: str, session: AsyncSession = Depends(get_db)):
+    rows = await rollbacks.list_rollbacks(customer_code, session)
+    return UbaRollbackListResponse(rollbacks=[UbaRollbackSummary.model_validate(r) for r in rows])
+
+
+@uba_router.get(
+    "/{customer_code}/rollbacks/{rollback_id}",
+    response_model=UbaRollbackReportResponse,
+    description="One UBA rollback: the snapshot taken before it, every step and the checks",
+    dependencies=_ADMIN,
+)
+async def get_rollback(customer_code: str, rollback_id: int, session: AsyncSession = Depends(get_db)):
+    return UbaRollbackReportResponse(report=await rollbacks.get_rollback(customer_code, rollback_id, session))

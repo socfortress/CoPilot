@@ -32,6 +32,8 @@ export interface UbaOnboarding {
 	name: string
 	status: UbaOnboardingStatus
 	active: boolean
+	/** Absent on a UBA without modes. Learning: UBA keeps its alerts, CoPilot gets none. */
+	mode?: UbaMode
 	bootstrap_days: number
 	bootstrap_since: string | null
 	/** History replayed up to here. */
@@ -62,6 +64,64 @@ export interface UbaProvisionStep {
 	step: string
 	status: string
 	detail: string
+}
+
+export type UbaMode = "active" | "learning"
+
+export interface UbaRollbackItem {
+	/** feed_stream, routing_pipeline, routing_rule, output, alerts_stream, alerts_input, wazuh_rules or uba_tenant */
+	kind: string
+	id: string
+	title: string
+	source: string | null
+	/** Recorded by UBA setup; false: found by title and structure (set up before records were kept). */
+	recorded: boolean
+	detail: string
+}
+
+export interface UbaRollbackSourceStream {
+	id: string
+	title: string | null
+	exists: boolean
+	/** Titles of the pipelines connected to it now. */
+	pipelines: string[]
+}
+
+export interface UbaRollbackPlan {
+	/** Removed by the rollback, in this order. */
+	remove: UbaRollbackItem[]
+	/** Left in place on purpose (shared, or still used). */
+	keep: UbaRollbackItem[]
+	/** Not provably the customer's, or something else depends on them: never touched. */
+	conflicts: UbaRollbackItem[]
+	source_streams: UbaRollbackSourceStream[]
+	uba: UbaOnboarding | null
+	uba_problem: string | null
+}
+
+export type UbaRollbackStatus = "running" | "completed" | "partial" | "failed"
+
+export interface UbaRollbackCheck {
+	check: string
+	/** Null: could not be checked. */
+	ok: boolean | null
+	detail: string
+}
+
+export interface UbaRollbackSummary {
+	id: number
+	customer_code: string
+	status: UbaRollbackStatus
+	started_at: string
+	finished_at: string | null
+	actor_username: string | null
+	message: string | null
+}
+
+export interface UbaRollbackReport extends UbaRollbackSummary {
+	steps: UbaProvisionStep[]
+	verification: UbaRollbackCheck[]
+	snapshot: Record<string, unknown> | null
 }
 
 export type UbaFeedState = "ok" | "lagging" | "quiet" | "repeating"
