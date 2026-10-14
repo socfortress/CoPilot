@@ -45,3 +45,55 @@ export interface AgentsPageResponse {
 	statuses: AgentStatus[]
 	os_list: string[]
 }
+
+/** Severities the vulnerability endpoints filter on; `All` is every one of them. */
+export type VulnerabilitySeverity = "Critical" | "High" | "Medium" | "Low"
+
+/** One vulnerability Wazuh found on an agent (`GET /agents/{id}/vulnerabilities/{severity}`). */
+export interface AgentVulnerability {
+	cve: string | null
+	severity: string | null
+	title: string | null
+	name: string | null
+	version: string | null
+	type: string | null
+	architecture: string | null
+	status: string | null
+	cvss3_score: number | null
+	published: string | null
+	detection_time: string | null
+	external_references: string[] | null
+}
+
+/** An SCA policy's latest scan on an agent (`GET /agents/{id}/sca`). Wazuh omits fields on some policies. */
+export interface AgentScaPolicy {
+	policy_id: string
+	name: string | null
+	description: string | null
+	references: string | null
+	pass: number
+	fail: number
+	invalid: number
+	score: number
+	total_checks: number
+	start_scan: string | null
+	end_scan: string | null
+}
+
+export type AgentScaCheckResult = "passed" | "failed" | "not applicable"
+
+/** One check of an SCA policy (`GET /agents/{id}/sca/{policy_id}`). */
+export interface AgentScaCheck {
+	id: number
+	policy_id: string
+	title: string
+	description: string | null
+	rationale: string | null
+	remediation: string | null
+	reason: string | null
+	command: string | null
+	condition: string | null
+	result: AgentScaCheckResult | string
+	compliance: { key: string; value: string }[]
+	rules: { type: string; rule: string }[]
+}
