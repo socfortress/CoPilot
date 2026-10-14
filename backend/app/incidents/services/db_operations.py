@@ -2021,14 +2021,20 @@ async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
     return cases_out
 
 
-async def list_cases_by_asset_name(asset_name: str, db: AsyncSession) -> List[CaseOut]:
+async def list_cases_by_asset_name(asset_name: str, db: AsyncSession, customer_codes: Optional[List[str]] = None) -> List[CaseOut]:
+    """Cases with an alert on the asset ``asset_name``, newest first, each once.
+
+    Asset names are not unique across tenants (two customers can both have a
+    ``web-01``), so a caller acting for particular customers must pass
+    ``customer_codes``: without it, every tenant's cases on that name come back.
+    An empty list matches nothing.
+    """
+    linked = select(CaseAlertLink.case_id).join(Alert, Alert.id == CaseAlertLink.alert_id).join(Asset, Asset.alert_linked == Alert.id)
+    query = select(Case).where(Case.id.in_(linked.where(Asset.asset_name == asset_name)))
+    if customer_codes is not None:
+        query = query.where(Case.customer_code.in_(customer_codes))
     result = await db.execute(
-        select(Case)
-        .join(CaseAlertLink)
-        .join(Alert)
-        .join(Asset)
-        .where(Asset.asset_name == asset_name)
-        .options(
+        query.order_by(Case.id.desc()).options(
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),

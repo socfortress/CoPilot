@@ -1240,18 +1240,18 @@ async def get_agent_soc_cases(
     """
     logger.info(f"Fetching agent {agent_hostname} cases")
 
-    # Check customer access - first verify user has access to this agent
-    base_query = select(Agents).filter(Agents.hostname == agent_hostname)
+    # The customers of the agents with this hostname the caller may see. Hostnames are not
+    # unique across tenants, so the cases are narrowed to these customers: another
+    # tenant's "web-01" must not show up under this one's.
+    base_query = select(Agents.customer_code).filter(Agents.hostname == agent_hostname)
     filtered_query = await customer_access_handler.filter_query_by_customer_access(current_user, session, base_query, Agents.customer_code)
+    customer_codes = sorted(set((await session.execute(filtered_query)).scalars().all()))
 
-    result = await session.execute(filtered_query)
-    agent = result.scalars().first()
-
-    if not agent:
+    if not customer_codes:
         raise HTTPException(status_code=404, detail=f"Agent with hostname {agent_hostname} not found or access denied")
 
     return CaseOutResponse(
-        cases=await list_cases_by_asset_name(asset_name=agent_hostname, db=session),
+        cases=await list_cases_by_asset_name(asset_name=agent_hostname, db=session, customer_codes=customer_codes),
         success=True,
         message="Cases retrieved successfully",
     )
