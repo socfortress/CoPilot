@@ -126,10 +126,10 @@ class FakeGraylog:
 
 
 class FakeUba:
-    def __init__(self, feed_host="127.0.0.1", log=None):
+    def __init__(self, feed_host="127.0.0.1", log=None, protocol="udp"):
         self.info = {
             "graylog": NAMES,
-            "feed_output": {"host": feed_host, "port": 12203} if feed_host else None,
+            "feed_output": {"host": feed_host, "port": 12203, "protocol": protocol} if feed_host else None,
             "alerts_input": {"bind_address": "172.17.0.1", "port": 12204},
             "wazuh_rules": [{"filename": "0950-uba_windows_account_rules.xml", "content": "<group/>"}],
         }
@@ -399,6 +399,22 @@ def test_every_object_is_recorded_for_the_customer_even_when_a_step_fails():
     with pytest.raises(HTTPException):
         _run(graylog, FakeUba(), session=session)
     assert {r.kind for r in session.added} == {"feed_stream", "routing_rule", "routing_pipeline"}
+
+
+def test_the_feed_output_is_udp_and_a_tcp_one_is_moved_to_udp():
+    """A GELF TCP output whose receiver is down stops Graylog's indexing for every stream (#1252)."""
+    graylog = FakeGraylog({"wazuh-set": "wazuh-acme", "o365-set": "office365-acme"})
+    _run(graylog, FakeUba(protocol=None))  # a UBA before 1.4.6 listens on TCP only
+    [output] = graylog.outputs.values()
+    assert output["configuration"]["protocol"] == "TCP"
+
+    out = _run(graylog, FakeUba())  # UBA upgraded: setup again moves the output to UDP
+    [output] = graylog.outputs.values()
+    assert output["configuration"]["protocol"] == "UDP" and len(graylog.outputs) == 1
+    [step] = [s for s in out.steps if s.step == "output UBA GELF - acme" and s.status != "attached"]
+    assert step.status == "updated" and step.detail.endswith("UDP")
+    out = _run(graylog, FakeUba())
+    assert [s.status for s in out.steps if s.step == "output UBA GELF - acme"][0] == "exists"
 
 
 def test_provisioning_routes_are_admin_only():

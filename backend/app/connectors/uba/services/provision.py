@@ -15,7 +15,11 @@ customer provisioning and Office365 provisioning already made:
    "UBA FEED" stream in the source stream's index set (so routed messages are not
    indexed twice), the routing rules, and a "UBA ROUTING" pipeline connected to the
    source stream(s) only.
-3. One GELF output to UBA, attached to the feed streams.
+3. One GELF output to UBA, attached to the feed streams. UDP whenever UBA offers it (1.4.6+): a GELF
+   TCP output whose receiver is down stops Graylog's indexing for every stream (#1252, measured on
+   the lab: zero writes within 40 s, Graylog's output fault penalty never engaged). UDP cannot block
+   Graylog; what UBA misses is replayed from the indexer by its reconciliation. Running setup again
+   moves an existing TCP output to UDP.
 4. The way back: the global "UBA ALERTS" GELF input (once per Graylog) and a
    "UBA ALERTS - <code>" stream in the Wazuh index set. No pipeline may be connected
    to it: UBA never consumes its own output.
@@ -281,11 +285,11 @@ async def _routing(
     steps.add(f"pipeline {pipeline_title}", "connected", f"to {len(source_stream_ids)} source stream(s)")
 
 
-async def _output(title: str, host: str, port: int, feed_stream_ids: List[str], steps: _Steps) -> None:
+async def _output(title: str, host: str, port: int, protocol: str, feed_stream_ids: List[str], steps: _Steps) -> None:
     config = {
         "hostname": host,
         "port": port,
-        "protocol": "TCP",
+        "protocol": protocol,
         "connect_timeout": 1000,
         "reconnect_delay": 500,
         "tcp_no_delay": False,
@@ -300,11 +304,11 @@ async def _output(title: str, host: str, port: int, feed_stream_ids: List[str], 
         output_id = outputs[title]["id"]
         steps.own(ownership.OUTPUT, output_id, title, False)
         current = outputs[title].get("configuration") or {}
-        if (current.get("hostname"), current.get("port")) != (host, port):
+        if (current.get("hostname"), current.get("port"), current.get("protocol")) != (host, port, protocol):
             await _put(f"/api/system/outputs/{output_id}", {"title": title, "type": GELF_OUTPUT, "configuration": config})
-            steps.add(f"output {title}", "updated", f"-> {host}:{port}")
+            steps.add(f"output {title}", "updated", f"-> {host}:{port} {protocol}")
         else:
-            steps.add(f"output {title}", "exists", f"-> {host}:{port}")
+            steps.add(f"output {title}", "exists", f"-> {host}:{port} {protocol}")
     else:
         created = await send_post_request(
             endpoint="/api/system/outputs",
@@ -312,10 +316,15 @@ async def _output(title: str, host: str, port: int, feed_stream_ids: List[str], 
         )
         output_id = created["data"]["id"]
         steps.own(ownership.OUTPUT, output_id, title, True)
-        steps.add(f"output {title}", "created", f"-> {host}:{port}")
+        steps.add(f"output {title}", "created", f"-> {host}:{port} {protocol}")
     for stream_id in feed_stream_ids:
         await send_post_request(endpoint=f"/api/streams/{stream_id}/outputs", data={"outputs": [output_id]})
     steps.add(f"output {title}", "attached", f"to {len(feed_stream_ids)} feed stream(s)")
+
+
+def _protocol(feed_output: Dict[str, Any]) -> str:
+    """UBA says which protocol its receiver takes (1.4.6+: udp). An older UBA listens on TCP only."""
+    return "UDP" if str(feed_output.get("protocol") or "tcp").lower() == "udp" else "TCP"
 
 
 async def _alerts(info: Dict[str, Any], customer_code: str, wazuh_index_set: str, steps: _Steps) -> None:
@@ -505,7 +514,7 @@ async def provision_uba(customer_code: str, request: UbaProvisionRequest, sessio
                 steps,
             )
         output = info["feed_output"]
-        await _output(names["output"].format(tenant=customer_code), output["host"], output["port"], feed_ids, steps)
+        await _output(names["output"].format(tenant=customer_code), output["host"], output["port"], _protocol(output), feed_ids, steps)
 
         # 4. Alerts back into Graylog.
         await _alerts(info, customer_code, sources["WAZUH"][0].index_set_id, steps)

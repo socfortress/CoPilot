@@ -161,7 +161,7 @@ The same steps are shown inside CoPilot, with copyable commands, on **Investigat
 
 1. **Registers the customer** with UBA, including its Microsoft 365 tenant IDs. UBA then replays the chosen history with alerting **off**, so it knows what is normal, and goes live.
 2. **Per source stream** (the customer's Wazuh stream, plus each Microsoft 365 tenant's stream): a **UBA FEED** stream in the *same* index set (so nothing is indexed twice) and a **UBA ROUTING** pipeline.
-3. **One GELF output** to UBA, attached to the feed streams.
+3. **One GELF output** to UBA, attached to the feed streams. It is **UDP** with UBA 1.4.6 or later: a TCP output whose UBA is down stops Graylog from indexing *anything*, for every customer, until UBA is back. UDP can't block Graylog, and whatever UBA misses while it's down it reads back from the indexer. With an older UBA the output stays TCP; after upgrading UBA, **Run setup again** on each customer to switch it.
 4. **The way back:** a global **UBA ALERTS** GELF input (once per Graylog) and a `UBA ALERTS - <code>` stream.
 5. *(Optional)* UBA's Wazuh rules uploaded to the manager, which is then restarted.
 
@@ -189,7 +189,7 @@ Only objects that are provably the customer's UBA objects are touched. Setup rec
 Rollback works while UBA is down (the Graylog side is what matters); deactivating the customer in UBA is then retried by rolling back again. A step that fails leaves whatever depends on it in place, and rolling back again finishes the job. To bring UBA back, run **Set up UBA** again: everything is recreated, and UBA starts the customer from that moment instead of replaying the weeks it was off.
 
 <Warning>
-  Never stop UBA's containers while a customer is still routed to it: roll the customer back (or switch it off in Graylog) first.
+  With a TCP feed output (UBA before 1.4.6, or a customer not set up again since), never stop UBA's containers while a customer is still routed to it: Graylog stops indexing everything within a minute. Roll the customer back, or upgrade UBA and run setup again (UDP), first.
 </Warning>
 
 ### Directory sync (Entra ID, optional but recommended)
