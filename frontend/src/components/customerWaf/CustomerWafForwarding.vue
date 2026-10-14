@@ -39,15 +39,13 @@
 			:mask-closable="!saving"
 		>
 			<div class="flex flex-col gap-4">
-				<p class="text-secondary text-sm">
-					CoPilot creates, and removes again if any step fails:
-				</p>
-				<ul class="text-secondary ml-4 flex list-disc flex-col gap-1 text-sm">
+				<p class="text-default text-sm">CoPilot creates, and removes again if any step fails:</p>
+				<ul class="text-default ml-4 flex list-disc flex-col gap-1 text-sm">
 					<li>
 						a Graylog
 						<b>Syslog TCP input</b>
-						for this WAF (no TLS) on a free port{{ portRange ? ` in ${portRange}` : "" }}, tagging every event
-						with the customer and WAF name;
+						for this WAF (no TLS) on a free port{{ portRange ? ` in ${portRange}` : "" }}, tagging every
+						event with the customer and WAF name;
 					</li>
 					<li>
 						the customer's
@@ -71,7 +69,9 @@
 						<span>{{ result.message }}</span>
 						<span v-if="result.test_success" class="text-xs">The WAF's test event was sent.</span>
 						<span v-for="w of result.warnings" :key="w" class="text-xs">{{ w }}</span>
-						<span v-if="result.reused.length" class="text-xs opacity-80">Reused: {{ result.reused.join(", ") }}</span>
+						<span v-if="result.reused.length" class="text-xs opacity-80">
+							Reused: {{ result.reused.join(", ") }}
+						</span>
 					</div>
 				</n-alert>
 				<CustomerWafError v-if="error" :error />
@@ -79,7 +79,9 @@
 
 			<template #footer>
 				<div class="flex justify-end gap-3">
-					<n-button :disabled="saving" @click="showDialog = false">{{ result ? "Close" : "Cancel" }}</n-button>
+					<n-button :disabled="saving" @click="showDialog = false">
+						{{ result ? "Close" : "Cancel" }}
+					</n-button>
 					<n-button v-if="!result" type="primary" :loading="saving" :disabled="!host.trim()" @click="setUp()">
 						Set up
 					</n-button>
@@ -120,7 +122,9 @@ const dFormats = useSettingsStore().dateFormat
 const isAdmin = computed(() => useAuthStore().isAdmin)
 
 // Creating the WAF-side forwarder needs a token whose WAF user is an admin.
-const canForward = computed(() => instance.enabled && capabilitiesFromRoles(instance.last_verified_role).can_manage_forwarders)
+const canForward = computed(
+	() => instance.enabled && capabilitiesFromRoles(instance.last_verified_role).can_manage_forwarders
+)
 
 const showDialog = ref(false)
 const host = ref("")
