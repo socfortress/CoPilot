@@ -40,7 +40,9 @@ function settings(over: Partial<CustomerPortalAiReportSettings> = {}) {
 }
 
 async function render() {
-	const Host = defineComponent({ render: () => h(NMessageProvider, () => h(AiReportSettings, { customerCode: "ACME" })) })
+	const Host = defineComponent({
+		render: () => h(NMessageProvider, () => h(AiReportSettings, { customerCode: "ACME" }))
+	})
 	const wrapper = mount(Host)
 	await flushPromises()
 	return wrapper
@@ -73,7 +75,10 @@ describe("customer portal AI report settings", () => {
 
 		await wrapper.get("[data-testid=ai-requests-switch]").trigger("click")
 		await flushPromises()
-		expect(setCustomerAiReportSettings).toHaveBeenCalledWith("ACME", { enabled: true, allow_customer_requests: true })
+		expect(setCustomerAiReportSettings).toHaveBeenCalledWith("ACME", {
+			enabled: true,
+			allow_customer_requests: true
+		})
 		expect(wrapper.get("[data-testid=ai-requests-state]").text()).toContain("can ask the AI Analyst")
 		expect(wrapper.find("[data-testid=ai-requests-limit]").exists()).toBe(true)
 	})
@@ -87,12 +92,16 @@ describe("customer portal AI report settings", () => {
 			settings({ allow_customer_requests: true, daily_request_limit: 20, requests_last_24h: 7 })
 		)
 		wrapper = await render()
-		expect(wrapper.get("[data-testid=ai-requests-usage]").text()).toBe("7 of 20 requests used in the last 24 hours.")
+		expect(wrapper.get("[data-testid=ai-requests-usage]").text()).toBe(
+			"7 of 20 requests used in the last 24 hours."
+		)
 	})
 
 	it("saves a limit with its own button, and unlimited as null", async () => {
 		getCustomerAiReportSettings.mockResolvedValue(settings({ allow_customer_requests: true }))
-		setCustomerAiReportSettings.mockResolvedValue(settings({ allow_customer_requests: true, daily_request_limit: 20 }))
+		setCustomerAiReportSettings.mockResolvedValue(
+			settings({ allow_customer_requests: true, daily_request_limit: 20 })
+		)
 		const wrapper = await render()
 		expect(wrapper.find("[data-testid=ai-requests-limit-save]").exists()).toBe(false)
 
@@ -104,17 +113,24 @@ describe("customer portal AI report settings", () => {
 		expect(setCustomerAiReportSettings).toHaveBeenLastCalledWith("ACME", { enabled: true, daily_request_limit: 20 })
 		expect(wrapper.find("[data-testid=ai-requests-limit-save]").exists()).toBe(false)
 
-		setCustomerAiReportSettings.mockResolvedValue(settings({ allow_customer_requests: true, daily_request_limit: null }))
+		setCustomerAiReportSettings.mockResolvedValue(
+			settings({ allow_customer_requests: true, daily_request_limit: null })
+		)
 		await wrapper.get("[data-testid=ai-requests-limit-mode] input[value=unlimited]").setValue(true)
 		await flushPromises()
 		await wrapper.get("[data-testid=ai-requests-limit-save]").trigger("click")
 		await flushPromises()
-		expect(setCustomerAiReportSettings).toHaveBeenLastCalledWith("ACME", { enabled: true, daily_request_limit: null })
+		expect(setCustomerAiReportSettings).toHaveBeenLastCalledWith("ACME", {
+			enabled: true,
+			daily_request_limit: null
+		})
 	})
 
 	it("is read-only for an analyst", async () => {
 		auth.isAdmin = false
-		getCustomerAiReportSettings.mockResolvedValue(settings({ allow_customer_requests: true, daily_request_limit: 5 }))
+		getCustomerAiReportSettings.mockResolvedValue(
+			settings({ allow_customer_requests: true, daily_request_limit: 5 })
+		)
 		const wrapper = await render()
 		expect(switchDisabled(wrapper, "ai-report-switch")).toBe(true)
 		expect(switchDisabled(wrapper, "ai-requests-switch")).toBe(true)

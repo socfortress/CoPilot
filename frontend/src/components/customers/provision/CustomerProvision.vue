@@ -122,10 +122,7 @@ function showManualSteps(steps?: string[]) {
 	dialog.warning({
 		title: "Customer decommission completed",
 		content: () =>
-			h("div", { class: "flex flex-col gap-2" }, [
-				h("strong", "Important:"),
-				...steps.map(step => h("p", step))
-			]),
+			h("div", { class: "flex flex-col gap-2" }, [h("strong", "Important:"), ...steps.map(step => h("p", step))]),
 		positiveText: "Understood"
 	})
 }

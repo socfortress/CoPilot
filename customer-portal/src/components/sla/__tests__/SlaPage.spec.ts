@@ -16,7 +16,10 @@ vi.mock("vue-echarts", () => ({
 
 const RouterLinkStub = defineComponent({
 	props: { to: { type: Object, required: true } },
-	setup: (_, { slots }) => () => h("a", slots.default?.())
+	setup:
+		(_, { slots }) =>
+		() =>
+			h("a", slots.default?.())
 })
 
 function overview(overrides: Partial<SlaOverview> = {}): SlaOverview {
@@ -63,10 +66,9 @@ function respond(value: SlaOverview) {
 }
 
 function mountPage() {
-	return mount(
-		defineComponent({ setup: () => () => h(NMessageProvider, null, () => h(SlaPage)) }),
-		{ global: { stubs: { RouterLink: RouterLinkStub } } }
-	)
+	return mount(defineComponent({ setup: () => () => h(NMessageProvider, null, () => h(SlaPage)) }), {
+		global: { stubs: { RouterLink: RouterLinkStub } }
+	})
 }
 
 beforeEach(() => {

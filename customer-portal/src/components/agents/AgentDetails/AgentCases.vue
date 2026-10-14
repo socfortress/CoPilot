@@ -2,9 +2,15 @@
 	<div class="flex flex-col gap-3" data-testid="agent-cases">
 		<n-alert v-if="error" type="error" :bordered="false" data-testid="agent-cases-error">{{ error }}</n-alert>
 
-		<section v-else class="border-default bg-default @container overflow-hidden rounded-lg border" :aria-busy="loading">
+		<section
+			v-else
+			class="border-default bg-default @container overflow-hidden rounded-lg border"
+			:aria-busy="loading"
+		>
 			<header class="bg-secondary border-default flex items-baseline justify-between gap-2 border-b px-4 py-2">
-				<span class="text-tertiary text-xs font-medium tracking-wider uppercase">Cases involving this host</span>
+				<span class="text-tertiary text-xs font-medium tracking-wider uppercase">
+					Cases involving this host
+				</span>
 				<span v-if="!loading" class="text-tertiary font-mono text-xs tabular-nums">{{ cases.length }}</span>
 			</header>
 
@@ -37,7 +43,9 @@
 						</span>
 					</span>
 					<!-- Narrow: one line under the name; wide (contents): two columns of their own. -->
-					<span class="text-secondary flex min-w-0 items-baseline gap-2 text-xs [grid-area:info] @3xl:contents">
+					<span
+						class="text-secondary flex min-w-0 items-baseline gap-2 text-xs [grid-area:info] @3xl:contents"
+					>
 						<span class="truncate @3xl:[grid-area:owner]">{{ c.assigned_to ?? "unassigned" }}</span>
 						<span class="text-tertiary @3xl:hidden">·</span>
 						<span

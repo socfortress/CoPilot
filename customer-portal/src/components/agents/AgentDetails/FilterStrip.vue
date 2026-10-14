@@ -53,7 +53,12 @@ export interface FilterStripOption<V extends string = string> {
 	testid?: string
 }
 
-const { options, label, testid, loading = false } = defineProps<{
+const {
+	options,
+	label,
+	testid,
+	loading = false
+} = defineProps<{
 	options: FilterStripOption<T>[]
 	label: string
 	/** Prefix of every cell's `data-testid`: `<testid>-<value>`, and `<testid>-count`. */

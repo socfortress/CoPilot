@@ -104,7 +104,9 @@ describe("slaGauge", () => {
 	it("draws the rate as an ECharts gauge, with its objective in the accessible name", () => {
 		const wrapper = mount(SlaGauge, { props: { rate: 96.4, label: "Resolved in SLA" } })
 		expect(wrapper.get("[data-testid=sla-gauge-value]").text().replace(/\s/g, "")).toBe("96.4%")
-		expect(wrapper.get("[data-testid=v-chart]").attributes("aria-label")).toBe("Resolved in SLA: 96.4%, objective 95%")
+		expect(wrapper.get("[data-testid=v-chart]").attributes("aria-label")).toBe(
+			"Resolved in SLA: 96.4%, objective 95%"
+		)
 		const [scale, arc] = lastOption().series
 		expect(scale.axisTick.splitNumber * scale.splitNumber).toBe(60) // a tick every 6°
 		expect(arc).toMatchObject({ startAngle: 90, endAngle: -270, min: 0, max: 100 })
@@ -271,7 +273,9 @@ describe("loadBars", () => {
 		// The plot is exactly one 30px row per bar below the legend, so the HTML lines stay level.
 		expect(counts.attributes("style")).toContain("grid-template-rows: 28px")
 		expect(counts.attributes("style")).toContain("grid-auto-rows: 30px")
-		expect(wrapper.get("[data-testid=load-bars]").attributes("aria-label")).toContain("ana: 6 alerts, 2 cases, 1 at risk, 3 past SLA")
+		expect(wrapper.get("[data-testid=load-bars]").attributes("aria-label")).toContain(
+			"ana: 6 alerts, 2 cases, 1 at risk, 3 past SLA"
+		)
 	})
 
 	it("puts a dot before a label only when asked, keeping the names aligned", () => {
@@ -297,7 +301,11 @@ describe("kpiTile link", () => {
 			history: createMemoryHistory(),
 			routes: [
 				{ path: "/", component: { render: () => null } },
-				{ path: "/incident-management/alerts", name: "IncidentManagement-Alerts", component: { render: () => null } }
+				{
+					path: "/incident-management/alerts",
+					name: "IncidentManagement-Alerts",
+					component: { render: () => null }
+				}
 			]
 		})
 	}

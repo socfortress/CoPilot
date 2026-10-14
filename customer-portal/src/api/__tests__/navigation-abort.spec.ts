@@ -87,7 +87,10 @@ describe("navigation-scoped request cancellation", () => {
 	it("still rejects when the caller cancels its own request (a superseded load)", async () => {
 		const own = new AbortController()
 		const captured: Captured = {}
-		const request = HttpClient.get("/customer_portal/agents", { signal: own.signal, adapter: hangingAdapter(captured) })
+		const request = HttpClient.get("/customer_portal/agents", {
+			signal: own.signal,
+			adapter: hangingAdapter(captured)
+		})
 		await flush()
 
 		own.abort()
@@ -107,7 +110,10 @@ describe("navigation-scoped request cancellation", () => {
 
 	it("leaves `keepOnNavigation` requests alone", async () => {
 		const captured: Captured = {}
-		HttpClient.get("/customer_portal/settings/effective", { keepOnNavigation: true, adapter: hangingAdapter(captured) })
+		HttpClient.get("/customer_portal/settings/effective", {
+			keepOnNavigation: true,
+			adapter: hangingAdapter(captured)
+		})
 		await flush()
 
 		resetNavigationScope()

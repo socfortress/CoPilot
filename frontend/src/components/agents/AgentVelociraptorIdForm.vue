@@ -7,7 +7,15 @@
 			</code>
 			<n-tooltip v-if="pinned">
 				<template #trigger>
-					<n-tag size="small" round :bordered="false" type="info" closable :disabled="loading" @close="unpin()">
+					<n-tag
+						size="small"
+						round
+						:bordered="false"
+						type="info"
+						closable
+						:disabled="loading"
+						@close="unpin()"
+					>
 						<template #icon>
 							<Icon :name="PinIcon" :size="12" />
 						</template>

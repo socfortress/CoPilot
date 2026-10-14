@@ -54,7 +54,13 @@ async function expectPageLink(wrapper: VueWrapper, router: Router, href: string,
 
 describe("agent entity modals", () => {
 	it("artifact → its data-store page", async () => {
-		const artifact = { id: 9, artifact_name: "Windows.KapeFiles", file_name: "a.zip", file_size: 10, status: "done" }
+		const artifact = {
+			id: 9,
+			artifact_name: "Windows.KapeFiles",
+			file_name: "a.zip",
+			file_size: 10,
+			status: "done"
+		}
 		const { wrapper, router } = await mountWithRouter(
 			AgentArtifactCard,
 			{ artifact, agentId: "007", showActions: true },
@@ -66,7 +72,9 @@ describe("agent entity modals", () => {
 
 	it("sCA check → its check page", async () => {
 		const data = { id: 31, policy_id: "cis_win", title: "Ensure X", result: "failed", compliance: [], rules: [] }
-		const { wrapper, router } = await mountWithRouter(ScaResultItem, { data, agentId: "007" }, ["ScaResultItemDetails"])
+		const { wrapper, router } = await mountWithRouter(ScaResultItem, { data, agentId: "007" }, [
+			"ScaResultItemDetails"
+		])
 		await open(wrapper)
 		await expectPageLink(wrapper, router, "/agents/007/sca/cis_win/checks/31", "Open the check's page")
 	})
@@ -80,7 +88,10 @@ describe("agent entity modals", () => {
 
 	it("agent SCA policy (table row) → the agent's policy page", async () => {
 		getSCA.mockResolvedValue({
-			data: { success: true, sca: [{ policy_id: "cis_win", name: "CIS Windows", description: "d", end_scan: null }] }
+			data: {
+				success: true,
+				sca: [{ policy_id: "cis_win", name: "CIS Windows", description: "d", end_scan: null }]
+			}
 		})
 		const { wrapper, router } = await mountWithRouter(ScaTable, { agent: { agent_id: "007" } }, ["ScaItem"])
 		await open(wrapper)
@@ -156,6 +167,11 @@ describe("overview entity modals", () => {
 		}
 		const { wrapper, router } = await mountWithRouter(PatchTuesdayCard, { item }, ["PatchTuesdayDetail"])
 		await open(wrapper)
-		await expectPageLink(wrapper, router, "/patch-tuesday/2026-09/CVE-2026-3?product=Windows+11", "Open the CVE's page")
+		await expectPageLink(
+			wrapper,
+			router,
+			"/patch-tuesday/2026-09/CVE-2026-3?product=Windows+11",
+			"Open the CVE's page"
+		)
 	})
 })

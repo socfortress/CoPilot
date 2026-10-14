@@ -63,15 +63,29 @@ describe("chart colours", () => {
 		const theme = useThemeStore()
 		theme.setTheme(ThemeNameEnum.Light)
 		const colors = useSocChartColors()
-		expect([colors.mode.value, colors.primary.value, colors.secondary.value]).toEqual(["light", "#A87400", "#2A78D6"])
+		expect([colors.mode.value, colors.primary.value, colors.secondary.value]).toEqual([
+			"light",
+			"#A87400",
+			"#2A78D6"
+		])
 		theme.setTheme(ThemeNameEnum.Dark)
-		expect([colors.mode.value, colors.primary.value, colors.secondary.value]).toEqual(["dark", "#C98500", "#3987E5"])
+		expect([colors.mode.value, colors.primary.value, colors.secondary.value]).toEqual([
+			"dark",
+			"#C98500",
+			"#3987E5"
+		])
 	})
 })
 
 describe("complianceTrendChart", () => {
 	it("draws one series on one 0–100% axis, with the objective as a reference line", () => {
-		mount(ComplianceTrendChart, { props: { points: [point(1), point(2, { sla_rate: null }), point(3, { sla_rate: 80 })], bucket: "day", objective: 95 } })
+		mount(ComplianceTrendChart, {
+			props: {
+				points: [point(1), point(2, { sla_rate: null }), point(3, { sla_rate: 80 })],
+				bucket: "day",
+				objective: 95
+			}
+		})
 		const option = lastOption()
 		expect(option.series).toHaveLength(1)
 		const [series] = option.series
@@ -86,7 +100,9 @@ describe("complianceTrendChart", () => {
 	})
 
 	it("says there is nothing yet instead of drawing an empty chart", () => {
-		const wrapper = mount(ComplianceTrendChart, { props: { points: [point(1, { sla_rate: null })], bucket: "day" } })
+		const wrapper = mount(ComplianceTrendChart, {
+			props: { points: [point(1, { sla_rate: null })], bucket: "day" }
+		})
 		expect(wrapper.find("[data-testid=v-chart]").exists()).toBe(false)
 		expect(wrapper.text()).toContain("No SLA outcome in this period yet")
 	})
@@ -94,7 +110,9 @@ describe("complianceTrendChart", () => {
 
 describe("volumeTrendChart", () => {
 	it("draws opened and resolved on one axis, washing only the lead series", () => {
-		const wrapper = mount(VolumeTrendChart, { props: { points: [point(1), point(2, { alerts_opened: 5 })], bucket: "day" } })
+		const wrapper = mount(VolumeTrendChart, {
+			props: { points: [point(1), point(2, { alerts_opened: 5 })], bucket: "day" }
+		})
 		const option = lastOption()
 		expect(option.series.map(s => [s.name, s.data])).toEqual([
 			["Opened", [10, 5]],

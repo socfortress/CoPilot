@@ -36,7 +36,11 @@ export default {
 	exportAgents(query: Omit<AgentsPageQuery, "page" | "pageSize">) {
 		return HttpClient.get<Blob>(
 			"/customer_portal/agents/export",
-			withCustomerCodes(query.customerCodes, { params: agentsParams(query), responseType: "blob", keepOnNavigation: true })
+			withCustomerCodes(query.customerCodes, {
+				params: agentsParams(query),
+				responseType: "blob",
+				keepOnNavigation: true
+			})
 		)
 	},
 
@@ -81,10 +85,10 @@ export default {
 
 	/** One SCA policy's checks as a CSV file. */
 	exportScaChecks(agentId: string, policyId: string) {
-		return HttpClient.get<Blob>(
-			`/agents/${encodeURIComponent(agentId)}/csv/sca/${encodeURIComponent(policyId)}`,
-			{ responseType: "blob", keepOnNavigation: true }
-		)
+		return HttpClient.get<Blob>(`/agents/${encodeURIComponent(agentId)}/csv/sca/${encodeURIComponent(policyId)}`, {
+			responseType: "blob",
+			keepOnNavigation: true
+		})
 	},
 
 	/** The cases with an alert on this host, of the agent's own customer only. */

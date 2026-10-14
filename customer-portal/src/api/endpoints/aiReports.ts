@@ -34,7 +34,9 @@ export default {
 	 * the customer's daily limit, each with a message meant for the user.
 	 */
 	requestAnalysis(alertId: number) {
-		return HttpClient.post<CommonResponse<AiAnalysisRequest>>(`/customer_portal/ai_reports/alert/${alertId}/investigate`)
+		return HttpClient.post<CommonResponse<AiAnalysisRequest>>(
+			`/customer_portal/ai_reports/alert/${alertId}/investigate`
+		)
 	},
 
 	/**

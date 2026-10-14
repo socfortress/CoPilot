@@ -25,7 +25,16 @@ function render(component: object, props: Record<string, unknown>) {
 	return mount(
 		defineComponent({ setup: () => () => h(NMessageProvider, null, () => h(component, props)) }),
 		// The case button opens a modal with the full case: not what these tests are about.
-		{ global: { stubs: { CaseDetailsButton: { props: ["caseId"], template: "<span data-testid='case-button'>{{ caseId }}</span>" } } } }
+		{
+			global: {
+				stubs: {
+					CaseDetailsButton: {
+						props: ["caseId"],
+						template: "<span data-testid='case-button'>{{ caseId }}</span>"
+					}
+				}
+			}
+		}
 	)
 }
 
@@ -89,7 +98,9 @@ describe("agent vulnerabilities", () => {
 
 	it("loads once, counts each severity and lists the worst first", async () => {
 		api.getVulnerabilities.mockResolvedValue({
-			data: { vulnerabilities: [vuln("CVE-L", "Low", 2), vuln("CVE-C", "Critical", 9.8), vuln("CVE-H", "High", 8)] }
+			data: {
+				vulnerabilities: [vuln("CVE-L", "Low", 2), vuln("CVE-C", "Critical", 9.8), vuln("CVE-H", "High", 8)]
+			}
 		})
 		const wrapper = render(AgentVulnerabilities, { agentId: "001", agentLabel: "web-01" })
 		await flushPromises()
@@ -120,7 +131,9 @@ describe("agent vulnerabilities", () => {
 		await wrapper.get("[data-testid=vulnerabilities-export]").trigger("click")
 		await flushPromises()
 		expect(api.exportVulnerabilities).toHaveBeenCalledWith("001", "High")
-		expect(saveAs.mock.calls[0]![1]).toMatch(/^web-01-vulnerabilities-high-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.csv$/)
+		expect(saveAs.mock.calls[0]![1]).toMatch(
+			/^web-01-vulnerabilities-high-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.csv$/
+		)
 	})
 
 	it("says that Wazuh can take a while, and shows no count, while it loads", async () => {
@@ -138,7 +151,9 @@ describe("agent vulnerabilities", () => {
 		await flushPromises()
 
 		await wrapper.get("[data-testid=vulnerability-row] button").trigger("click")
-		expect(wrapper.get("[data-testid=vulnerability-detail] a").attributes("href")).toBe("https://example.test/advisory")
+		expect(wrapper.get("[data-testid=vulnerability-detail] a").attributes("href")).toBe(
+			"https://example.test/advisory"
+		)
 	})
 
 	it("says when Wazuh could not be read, and that there is nothing when there is nothing", async () => {
@@ -180,7 +195,9 @@ describe("agent SCA", () => {
 		// The result strip counts and filters the checks.
 		expect(wrapper.get("[data-testid=result-failed] [data-testid=result-count]").text()).toBe("1")
 		await wrapper.get("[data-testid=result-passed]").trigger("click")
-		expect(wrapper.findAll("[data-testid=sca-check-row]").map(r => r.text())).toEqual([expect.stringContaining("passed")])
+		expect(wrapper.findAll("[data-testid=sca-check-row]").map(r => r.text())).toEqual([
+			expect.stringContaining("passed")
+		])
 		await wrapper.get("[data-testid=result-all]").trigger("click")
 		expect(wrapper.get("[data-testid=sca-policy-score]").text()).toBe("30%")
 
@@ -218,7 +235,14 @@ describe("agent cases", () => {
 		api.getCases.mockResolvedValue({
 			data: {
 				cases: [
-					{ id: 7, case_name: "Phishing on web-01", case_status: "OPEN", alerts: [{}, {}], assigned_to: null, case_creation_time: "2026-09-01T10:00:00Z" }
+					{
+						id: 7,
+						case_name: "Phishing on web-01",
+						case_status: "OPEN",
+						alerts: [{}, {}],
+						assigned_to: null,
+						case_creation_time: "2026-09-01T10:00:00Z"
+					}
 				]
 			}
 		})

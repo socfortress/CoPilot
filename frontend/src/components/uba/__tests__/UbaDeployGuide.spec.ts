@@ -4,7 +4,10 @@ import { defineComponent, h } from "vue"
 import UbaDeployGuide from "../UbaDeployGuide.vue"
 
 // The real CodeSource highlights asynchronously; the commands are what matters here.
-const CodeSource = defineComponent({ props: { code: { type: String, required: true } }, setup: p => () => h("pre", p.code) })
+const CodeSource = defineComponent({
+	props: { code: { type: String, required: true } },
+	setup: p => () => h("pre", p.code)
+})
 
 function render() {
 	return mount(UbaDeployGuide, { global: { stubs: { CodeSource } } })
@@ -22,7 +25,13 @@ describe("ubaDeployGuide", () => {
 			.findAll("pre")
 			.map(w => w.text())
 			.join("\n")
-		for (const name of ["UBA_PROVISION_FEED_HOST=<uba-ip>", "UBA_GRAYLOG_GELF_HOST=<graylog-ip>", "UBA_INDEXER__URL", "UBA_SECRET_KEY", "UBA_COPILOT_URL"]) {
+		for (const name of [
+			"UBA_PROVISION_FEED_HOST=<uba-ip>",
+			"UBA_GRAYLOG_GELF_HOST=<graylog-ip>",
+			"UBA_INDEXER__URL",
+			"UBA_SECRET_KEY",
+			"UBA_COPILOT_URL"
+		]) {
 			expect(code).toContain(name)
 		}
 		expect(code).not.toContain("host.docker.internal")
@@ -34,7 +43,9 @@ describe("ubaDeployGuide", () => {
 			.findAll("pre")
 			.map(w => w.text())
 			.join("\n")
-		expect(code).toContain("git clone https://github.com/socfortress/socfortress-uba-deploy.git /opt/socfortress-uba")
+		expect(code).toContain(
+			"git clone https://github.com/socfortress/socfortress-uba-deploy.git /opt/socfortress-uba"
+		)
 		expect(code).toContain("cp .env.example .env")
 		expect(code).not.toContain("--build")
 		// Customers run a pinned release: upgrading means choosing the new version.

@@ -50,7 +50,11 @@
 				description="No events match these filters"
 				class="min-h-52 justify-center"
 			/>
-			<div v-else class="divide-border flex flex-col divide-y transition-opacity" :class="{ 'opacity-50': loading }">
+			<div
+				v-else
+				class="divide-border flex flex-col divide-y transition-opacity"
+				:class="{ 'opacity-50': loading }"
+			>
 				<!-- An open event closes on its own border and leaves a gap before the next one. -->
 				<div
 					v-for="e of events"
@@ -71,7 +75,9 @@
 									class="flex min-w-0 items-baseline gap-2 font-mono leading-tight tabular-nums [grid-area:time] @4xl:flex-col @4xl:items-start @4xl:gap-0"
 								>
 									<span class="text-default text-xs">{{ clock(e.timestamp) }}</span>
-									<span class="text-tertiary text-2xs whitespace-nowrap @max-md:hidden">{{ day(e.timestamp) }}</span>
+									<span class="text-tertiary text-2xs whitespace-nowrap @max-md:hidden">
+										{{ day(e.timestamp) }}
+									</span>
 								</span>
 							</template>
 							{{ formatDate(e.timestamp, dFormats.datetimesec) }} · {{ relative(e.timestamp) }}
@@ -91,7 +97,10 @@
 									<span class="text-default font-mono text-xs">{{ e.uri }}</span>
 								</span>
 							</span>
-							<span v-if="e.matched_rules[0]?.msg" class="text-tertiary flex min-w-0 items-center gap-1.5 text-xs">
+							<span
+								v-if="e.matched_rules[0]?.msg"
+								class="text-tertiary flex min-w-0 items-center gap-1.5 text-xs"
+							>
 								<span v-if="e.matched_rules[0].id" class="font-mono">{{ e.matched_rules[0].id }}</span>
 								<span class="truncate">{{ e.matched_rules[0].msg }}</span>
 								<span v-if="e.matched_rules.length > 1" class="shrink-0 font-mono">
@@ -114,7 +123,9 @@
 							class="text-right font-mono text-sm tabular-nums [grid-area:score]"
 							:class="scoreClass(e.anomaly_score)"
 						>
-							<span class="text-tertiary text-2xs mr-1 font-normal tracking-wide uppercase @4xl:hidden">score</span>
+							<span class="text-tertiary text-2xs mr-1 font-normal tracking-wide uppercase @4xl:hidden">
+								score
+							</span>
 							{{ e.anomaly_score ?? "—" }}
 						</span>
 
@@ -142,8 +153,12 @@
 							</div>
 						</dl>
 						<div v-if="e.matched_rules.length" class="flex flex-col gap-1.5">
-							<span :class="HEAD" class="text-tertiary">Matched rules · {{ e.matched_rules.length }}</span>
-							<div class="border-default divide-border bg-default divide-y overflow-hidden rounded-md border">
+							<span :class="HEAD" class="text-tertiary">
+								Matched rules · {{ e.matched_rules.length }}
+							</span>
+							<div
+								class="border-default divide-border bg-default divide-y overflow-hidden rounded-md border"
+							>
 								<div
 									v-for="m of e.matched_rules"
 									:key="`${m.id}-${m.msg}`"
@@ -318,7 +333,11 @@ function details(e: CustomerWafEvent) {
 		{ label: "Rule", value: e.rule_id ?? "—", mono: true },
 		{ label: "Severity", value: e.severity ?? "—", mono: false },
 		{ label: "Client IP", value: e.client_ip, mono: true },
-		{ label: "Location", value: [e.geoip_city, e.geoip_country_name].filter(Boolean).join(", ") || "—", mono: false },
+		{
+			label: "Location",
+			value: [e.geoip_city, e.geoip_country_name].filter(Boolean).join(", ") || "—",
+			mono: false
+		},
 		{ label: "Anomaly score", value: e.anomaly_score ?? "—", mono: true },
 		{ label: "Host", value: e.host || "—", mono: true }
 	]

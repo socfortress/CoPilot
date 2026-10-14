@@ -22,7 +22,12 @@ vi.mock("@/api", () => ({
 	default: {
 		socManagement: new Proxy(
 			{},
-			{ get: (_, name: string) => (...args: unknown[]) => api[name as keyof typeof api](...args) }
+			{
+				get:
+					(_, name: string) =>
+					(...args: unknown[]) =>
+						api[name as keyof typeof api](...args)
+			}
 		)
 	}
 }))
@@ -42,7 +47,9 @@ function acmeMatrix(): PolicyMatrix {
 	return {
 		customer_code: "ACME",
 		cells: POLICY.cells.map(cell =>
-			cell.entity === "alert" && cell.severity === "Critical" ? { ...cell, ack_minutes: 5, source: "customer" } : cell
+			cell.entity === "alert" && cell.severity === "Critical"
+				? { ...cell, ack_minutes: 5, source: "customer" }
+				: cell
 		)
 	}
 }
@@ -61,17 +68,23 @@ async function tab(role = AuthUserRole.Admin) {
 beforeEach(() => {
 	setActivePinia(createPinia())
 	for (const mock of Object.values(api)) mock.mockReset()
-	api.getPolicy.mockImplementation((code: string | null) => Promise.resolve({ data: { policy: code ? acmeMatrix() : POLICY } }))
+	api.getPolicy.mockImplementation((code: string | null) =>
+		Promise.resolve({ data: { policy: code ? acmeMatrix() : POLICY } })
+	)
 	api.getPolicyOverrides.mockResolvedValue({
 		data: { overrides: [{ customer_code: "ACME", cells: 1, updated_at: null, updated_by: "admin" }] }
 	})
-	api.getCalendar.mockResolvedValue({ data: { calendar: CALENDAR, customers_with_calendar: ["GLOBEX"], retargeted: 0 } })
+	api.getCalendar.mockResolvedValue({
+		data: { calendar: CALENDAR, customers_with_calendar: ["GLOBEX"], retargeted: 0 }
+	})
 })
 
 describe("policiesTab", () => {
 	it("lists the global scope first, then customers with overrides, marking overrides and own calendars", async () => {
 		const wrapper = await tab()
-		const scopes = wrapper.findAll("[data-testid^=policy-scope-]").filter(el => !el.attributes("data-testid")?.includes("calendar"))
+		const scopes = wrapper
+			.findAll("[data-testid^=policy-scope-]")
+			.filter(el => !el.attributes("data-testid")?.includes("calendar"))
 		expect(scopes.map(el => el.attributes("data-testid"))).toEqual([
 			"policy-scope-global",
 			"policy-scope-ACME",
@@ -137,7 +150,9 @@ describe("policiesTab", () => {
 	})
 
 	it("saves the whole matrix with the edited cell, and only when something changed", async () => {
-		api.savePolicy.mockResolvedValue({ data: { policy: POLICY, retargeted: 0, message: "Saved the global policy" } })
+		api.savePolicy.mockResolvedValue({
+			data: { policy: POLICY, retargeted: 0, message: "Saved the global policy" }
+		})
 		const wrapper = await tab()
 		const save = wrapper.get("[data-testid=policy-save]")
 		expect(save.attributes("disabled")).toBeDefined()
@@ -149,7 +164,9 @@ describe("policiesTab", () => {
 		const payload = api.savePolicy.mock.calls[0][0]
 		expect(payload).toMatchObject({ customer_code: null, apply_to_open: true })
 		expect(payload.cells).toHaveLength(10)
-		expect(payload.cells.find((c: { entity: string; severity: string }) => c.entity === "case" && c.severity === "Low")).toEqual({
+		expect(
+			payload.cells.find((c: { entity: string; severity: string }) => c.entity === "case" && c.severity === "Low")
+		).toEqual({
 			entity: "case",
 			severity: "Low",
 			inherit: false,
@@ -167,7 +184,9 @@ describe("policiesTab", () => {
 	})
 
 	it("says when the policy could not be loaded", async () => {
-		api.getPolicy.mockImplementation(() => Promise.reject(Object.assign(new Error("boom"), { response: { data: { detail: "denied" } } })))
+		api.getPolicy.mockImplementation(() =>
+			Promise.reject(Object.assign(new Error("boom"), { response: { data: { detail: "denied" } } }))
+		)
 		const wrapper = await tab()
 		expect(wrapper.text()).toContain("Could not load the policy: denied")
 	})

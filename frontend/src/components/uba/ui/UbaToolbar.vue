@@ -4,7 +4,11 @@
 			<slot />
 		</div>
 		<div v-if="$slots.summary || $slots.hint" class="flex items-center gap-3">
-			<span v-if="$slots.summary" class="text-tertiary font-mono text-[11px] tabular-nums" data-testid="uba-toolbar-summary">
+			<span
+				v-if="$slots.summary"
+				class="text-tertiary font-mono text-[11px] tabular-nums"
+				data-testid="uba-toolbar-summary"
+			>
 				<slot name="summary" />
 			</span>
 			<n-popover v-if="$slots.hint" trigger="click" placement="bottom-end" style="max-width: 360px">

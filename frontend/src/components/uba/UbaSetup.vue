@@ -39,18 +39,22 @@
 							class="max-w-xl"
 						/>
 						<n-alert v-if="onboarding.bootstrap_error" type="error" :bordered="false" class="text-xs">
-							{{ onboarding.bootstrap_error }}. UBA retries every 10 minutes, and replays this customer's events once
-							it succeeds.
+							{{ onboarding.bootstrap_error }}. UBA retries every 10 minutes, and replays this customer's
+							events once it succeeds.
 						</n-alert>
 						<p class="text-secondary max-w-3xl text-sm">
-							UBA reads {{ sourceText }} for this customer. After provisioning Microsoft 365 (or another Microsoft
-							365 tenant) for it, run setup again so UBA reads the new streams too.
+							UBA reads {{ sourceText }} for this customer. After provisioning Microsoft 365 (or another
+							Microsoft 365 tenant) for it, run setup again so UBA reads the new streams too.
 						</p>
 						<p v-if="onboarding.status === 'live'" class="text-tertiary max-w-3xl text-xs">
-							A source added after the customer went live starts without history: UBA learns its normal activity
-							from then on, so expect more first-time findings from it for the first days.
+							A source added after the customer went live starts without history: UBA learns its normal
+							activity from then on, so expect more first-time findings from it for the first days.
 						</p>
-						<div v-if="onboarding.mode" class="flex flex-wrap items-center gap-3 text-sm" data-testid="uba-mode">
+						<div
+							v-if="onboarding.mode"
+							class="flex flex-wrap items-center gap-3 text-sm"
+							data-testid="uba-mode"
+						>
 							<span class="text-secondary">Mode</span>
 							<n-radio-group
 								:value="onboarding.mode"
@@ -59,7 +63,9 @@
 								@update:value="setMode"
 							>
 								<n-radio-button value="active" data-testid="uba-mode-active">Active</n-radio-button>
-								<n-radio-button value="learning" data-testid="uba-mode-learning">Learning only</n-radio-button>
+								<n-radio-button value="learning" data-testid="uba-mode-learning">
+									Learning only
+								</n-radio-button>
 							</n-radio-group>
 							<span class="text-tertiary text-xs">
 								{{
@@ -74,10 +80,10 @@
 					<!-- Not registered: what will be created, and the form -->
 					<div v-else class="flex flex-col gap-3">
 						<p class="text-secondary max-w-3xl text-sm">
-							Registers the customer with UBA and routes its events to UBA in Graylog: a UBA FEED stream and
-							routing pipeline next to each source stream ({{ sourceText }}), one output to UBA, and the UBA ALERTS
-							stream that brings UBA's alerts back. UBA first replays the history you choose with alerting off,
-							so it knows what is normal, then scores new activity.
+							Registers the customer with UBA and routes its events to UBA in Graylog: a UBA FEED stream
+							and routing pipeline next to each source stream ({{ sourceText }}), one output to UBA, and
+							the UBA ALERTS stream that brings UBA's alerts back. UBA first replays the history you
+							choose with alerting off, so it knows what is normal, then scores new activity.
 						</p>
 						<div class="flex flex-wrap items-end gap-4">
 							<n-form-item label="History to learn from" :show-feedback="false" class="w-48">
@@ -91,9 +97,9 @@
 							Also deploy UBA's Wazuh rules (Windows password changes and resets)
 						</n-checkbox>
 						<n-alert v-if="deployRules" type="warning" :bordered="false" class="text-xs">
-							This uploads a rules file and restarts the Wazuh manager. Check afterwards that the log shipper
-							(e.g. Fluent Bit) still ships alerts: on some hosts it stops after a manager restart until it is
-							restarted too.
+							This uploads a rules file and restarts the Wazuh manager. Check afterwards that the log
+							shipper (e.g. Fluent Bit) still ships alerts: on some hosts it stops after a manager restart
+							until it is restarted too.
 						</n-alert>
 					</template>
 

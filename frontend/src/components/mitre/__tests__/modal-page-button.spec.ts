@@ -100,13 +100,22 @@ describe("coPilot Actions and Searches entity modals", () => {
 			script_parameters: [],
 			tags: []
 		}
-		const { wrapper, router } = await mountWithRouter(ActionCard, { action }, ["ActionCardContent", "InvokeActionForm"])
+		const { wrapper, router } = await mountWithRouter(ActionCard, { action }, [
+			"ActionCardContent",
+			"InvokeActionForm"
+		])
 		await open(wrapper)
 		await expectPageLink(wrapper, router, "/agents/copilot-actions/Windows.Isolate.Host", "Open the action's page")
 	})
 
 	it("detection rule card → the rule's page", async () => {
-		const rule = { id: "rule-42", name: "Encoded PowerShell", mitre_attack_id: [], severity: "high", status: "production" }
+		const rule = {
+			id: "rule-42",
+			name: "Encoded PowerShell",
+			mitre_attack_id: [],
+			severity: "high",
+			status: "production"
+		}
 		const { wrapper, router } = await mountWithRouter(RuleCard, { rule }, [
 			"RuleCardContent",
 			"ExecuteSearchForm",

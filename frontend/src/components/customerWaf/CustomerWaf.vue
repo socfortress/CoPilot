@@ -39,11 +39,7 @@
 				class="h-32 justify-center"
 			/>
 			<div class="flex flex-col gap-3">
-				<n-card
-					v-for="waf of instances"
-					:key="waf.id"
-					size="small"
-				>
+				<n-card v-for="waf of instances" :key="waf.id" size="small">
 					<div class="flex flex-wrap items-center justify-between gap-3">
 						<div class="flex min-w-0 flex-col gap-1">
 							<div class="flex flex-wrap items-center gap-2">
@@ -227,7 +223,11 @@ function openForm(waf: CustomerWafInstance | null) {
 	showForm.value = true
 }
 
-function onSaved(e: { instance: CustomerWafInstance; verification: CustomerWafVerification | null; warnings: string[] }) {
+function onSaved(e: {
+	instance: CustomerWafInstance
+	verification: CustomerWafVerification | null
+	warnings: string[]
+}) {
 	replace(e.instance)
 	if (e.verification) verifyResults.value[e.instance.id] = e.verification
 	else delete verifyResults.value[e.instance.id]

@@ -62,8 +62,8 @@
 				Setting UBA up again recreates everything.
 			</p>
 			<n-alert v-if="plan.uba_problem" type="warning" :bordered="false" class="text-sm">
-				UBA could not be asked ({{ plan.uba_problem }}). The Graylog side is rolled back anyway; roll back
-				again once UBA answers to deactivate the customer there.
+				UBA could not be asked ({{ plan.uba_problem }}). The Graylog side is rolled back anyway; roll back again
+				once UBA answers to deactivate the customer there.
 			</n-alert>
 			<n-alert v-if="!plan.remove.length" type="info" :bordered="false" class="text-sm">
 				UBA is not set up for this customer: there is nothing to roll back.
@@ -76,7 +76,12 @@
 						<span class="text-secondary">{{ kindLabel(item.kind) }}</span>
 						<span class="font-mono">{{ item.title }}</span>
 						<span v-if="item.detail" class="text-tertiary text-xs">— {{ item.detail }}</span>
-						<n-tag v-if="!item.recorded && item.kind !== 'uba_tenant'" size="tiny" :bordered="false" class="ml-1">
+						<n-tag
+							v-if="!item.recorded && item.kind !== 'uba_tenant'"
+							size="tiny"
+							:bordered="false"
+							class="ml-1"
+						>
 							found by name
 						</n-tag>
 					</li>
@@ -110,7 +115,11 @@
 						<span class="font-medium">{{ s.title || s.id }}</span>
 						<span class="text-tertiary text-xs">
 							—
-							{{ keptPipelines(s).length ? `pipelines: ${keptPipelines(s).join(", ")}` : "no other pipelines" }}
+							{{
+								keptPipelines(s).length
+									? `pipelines: ${keptPipelines(s).join(", ")}`
+									: "no other pipelines"
+							}}
 						</span>
 					</li>
 				</ul>

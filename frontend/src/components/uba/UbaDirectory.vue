@@ -1,6 +1,9 @@
 <template>
 	<div class="flex flex-col gap-9" data-testid="uba-directory">
-		<UbaSection title="Directory sync" :caption="loaded ? `${sources.length} source${sources.length === 1 ? '' : 's'}` : undefined">
+		<UbaSection
+			title="Directory sync"
+			:caption="loaded ? `${sources.length} source${sources.length === 1 ? '' : 's'}` : undefined"
+		>
 			<template #description>
 				A directory sync gives UBA the customer's real accounts: names, departments, whether an account is
 				enabled, and who holds admin roles (also roles granted through groups). Admins' findings weigh 1.5x.
@@ -25,10 +28,15 @@
 							<span class="step-number">1</span>
 							<div class="flex min-w-0 flex-1 flex-col gap-2">
 								<span class="text-secondary text-xs leading-relaxed">
-									Create an Entra app registration with these read-only application permissions (admin consent):
+									Create an Entra app registration with these read-only application permissions (admin
+									consent):
 								</span>
 								<span class="flex flex-wrap gap-1.5">
-									<span v-for="permission of PERMISSIONS" :key="permission" class="permission font-mono text-xs">
+									<span
+										v-for="permission of PERMISSIONS"
+										:key="permission"
+										class="permission font-mono text-xs"
+									>
 										{{ permission }}
 									</span>
 								</span>
@@ -40,21 +48,34 @@
 								<span class="text-secondary text-xs leading-relaxed">
 									Add it on the UBA host. The client secret is read from stdin and stored encrypted:
 								</span>
-								<CodeSource text :code="addCommand" lang="shellscript" data-testid="uba-directory-command" />
+								<CodeSource
+									text
+									:code="addCommand"
+									lang="shellscript"
+									data-testid="uba-directory-command"
+								/>
 							</div>
 						</li>
 					</ol>
 				</div>
 
 				<div class="flex flex-col gap-3">
-					<div v-for="s of sources" :key="s.id" class="panel border-default flex flex-col gap-2 rounded-lg border p-3">
+					<div
+						v-for="s of sources"
+						:key="s.id"
+						class="panel border-default flex flex-col gap-2 rounded-lg border p-3"
+					>
 						<div class="flex flex-wrap items-center gap-2">
 							<Icon name="carbon:catalog" :size="15" class="text-primary" />
 							<b>{{ s.type === "entra" ? "Entra ID" : s.type }}</b>
 							<n-tag size="small" :type="statusType(s.status)" :bordered="false">{{ s.status }}</n-tag>
-							<span class="text-secondary font-mono text-xs">directory {{ s.entra_tenant_id }} · app {{ s.client_id }}</span>
+							<span class="text-secondary font-mono text-xs">
+								directory {{ s.entra_tenant_id }} · app {{ s.client_id }}
+							</span>
 							<div class="ml-auto flex gap-2">
-								<n-button size="small" secondary :loading="testing === s.id" @click="test(s)">Test</n-button>
+								<n-button size="small" secondary :loading="testing === s.id" @click="test(s)">
+									Test
+								</n-button>
 								<n-button
 									size="small"
 									type="primary"
@@ -72,7 +93,12 @@
 							<template v-if="s.every_s">· every {{ Math.round(s.every_s / 60) }} min</template>
 							<template v-if="resultSummary(s)">· {{ resultSummary(s) }}</template>
 						</div>
-						<n-alert v-if="s.last_error && s.status === 'error'" type="error" :bordered="false" class="text-xs">
+						<n-alert
+							v-if="s.last_error && s.status === 'error'"
+							type="error"
+							:bordered="false"
+							class="text-xs"
+						>
 							{{ s.last_error }}
 						</n-alert>
 						<n-alert
@@ -86,8 +112,8 @@
 							{{ testResults[s.id].detail }}
 						</n-alert>
 						<p v-if="conflicts(s)" class="text-secondary m-0 text-xs">
-							{{ conflicts(s) }} aliases belong to other identities UBA learned from events (merge candidates);
-							they stay separate until merged.
+							{{ conflicts(s) }} aliases belong to other identities UBA learned from events (merge
+							candidates); they stay separate until merged.
 						</p>
 					</div>
 				</div>
@@ -136,7 +162,10 @@ const addCommand = computed(
 )
 
 function statusType(status: UbaIdentitySourceStatus) {
-	return ({ ok: "success", error: "error", queued: "info", new: "default", disabled: "default" } as const)[status] ?? "default"
+	return (
+		({ ok: "success", error: "error", queued: "info", new: "default", disabled: "default" } as const)[status] ??
+		"default"
+	)
 }
 
 function resultSummary(s: UbaIdentitySource): string {

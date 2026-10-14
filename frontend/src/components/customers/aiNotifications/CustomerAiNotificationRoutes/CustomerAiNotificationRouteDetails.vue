@@ -204,11 +204,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type {
-	NotificationRoute,
-	NotificationScope,
-	NotificationTemplate
-} from "@/types/notifications"
+import type { NotificationRoute, NotificationScope, NotificationTemplate } from "@/types/notifications"
 import { NButton, NEmpty, NSpin, NTabPane, NTabs, useMessage } from "naive-ui"
 import { computed, ref, toRefs, watch } from "vue"
 import Api from "@/api"

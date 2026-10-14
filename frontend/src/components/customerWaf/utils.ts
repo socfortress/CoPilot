@@ -21,7 +21,10 @@ export function capabilitiesFromRoles(roles: string | string[] | null | undefine
 	}
 }
 
-export function wafCapabilityLabel(instance: CustomerWafInstance): { label: string; type: "success" | "info" | "default" } {
+export function wafCapabilityLabel(instance: CustomerWafInstance): {
+	label: string
+	type: "success" | "info" | "default"
+} {
 	if (!instance.last_verified_role) return { label: "Not verified", type: "default" }
 	const caps = capabilitiesFromRoles(instance.last_verified_role)
 	if (caps.can_block) return { label: "Can block", type: "success" }
@@ -90,5 +93,5 @@ export function useCustomerWafs(customerCode: string) {
 /** ISO 3166 alpha-2 → flag emoji (regional-indicator pair); a globe when unknown. */
 export function flag(code: string | null | undefined): string {
 	if (!code || !/^[A-Z]{2}$/i.test(code)) return "🌐"
-	return String.fromCodePoint(...[...code.toUpperCase()].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65))
+	return String.fromCodePoint(...[...code.toUpperCase()].map(ch => 0x1f1e6 + ch.charCodeAt(0) - 65))
 }

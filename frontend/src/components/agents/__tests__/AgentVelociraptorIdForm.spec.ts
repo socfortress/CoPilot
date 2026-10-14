@@ -50,7 +50,9 @@ describe("agentVelociraptorIdForm", () => {
 	})
 
 	it("reports a refused save and lets the user try again", async () => {
-		updateAgent.mockRejectedValue({ response: { status: 400, data: { success: false, message: "Invalid Velociraptor client id" } } })
+		updateAgent.mockRejectedValue({
+			response: { status: 400, data: { success: false, message: "Invalid Velociraptor client id" } }
+		})
 		const wrapper = render()
 		await save(wrapper, "not-an-id")
 

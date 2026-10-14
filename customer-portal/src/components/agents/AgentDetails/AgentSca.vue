@@ -9,7 +9,10 @@
 			:aria-busy="loading"
 			data-testid="sca-policies"
 		>
-			<div class="bg-secondary border-default text-tertiary hidden items-center gap-4 border-b px-4 py-2 @3xl:grid" :class="POLICY_COLUMNS">
+			<div
+				class="bg-secondary border-default text-tertiary hidden items-center gap-4 border-b px-4 py-2 @3xl:grid"
+				:class="POLICY_COLUMNS"
+			>
 				<span :class="HEAD">Policy</span>
 				<span :class="HEAD">Score</span>
 				<span :class="HEAD">Checks</span>
@@ -40,7 +43,9 @@
 						<span class="text-tertiary truncate font-mono text-xs">{{ p.policy_id }}</span>
 					</span>
 					<span class="flex min-w-0 items-center gap-3 [grid-area:score]">
-						<span class="text-default w-10 shrink-0 font-mono text-sm font-semibold tabular-nums">{{ p.score }}%</span>
+						<span class="text-default w-10 shrink-0 font-mono text-sm font-semibold tabular-nums">
+							{{ p.score }}%
+						</span>
 						<span class="bg-secondary h-1 min-w-0 grow overflow-hidden rounded-full">
 							<span
 								class="block h-full rounded-full"
@@ -49,7 +54,9 @@
 							/>
 						</span>
 					</span>
-					<span class="flex flex-wrap items-baseline gap-x-2 font-mono text-xs tabular-nums [grid-area:checks]">
+					<span
+						class="flex flex-wrap items-baseline gap-x-2 font-mono text-xs tabular-nums [grid-area:checks]"
+					>
 						<span class="text-success">{{ p.pass }} passed</span>
 						<span class="text-error">{{ p.fail }} failed</span>
 						<span v-if="p.invalid" class="text-tertiary">{{ p.invalid }} n/a</span>
@@ -192,9 +199,15 @@
 							:aria-expanded="expanded.has(c.id)"
 							@click="toggle(c.id)"
 						>
-							<span><span :class="[CHIP, scaResultClasses(c.result)]">{{ c.result }}</span></span>
-							<span class="text-tertiary hidden font-mono text-xs tabular-nums @3xl:block">#{{ c.id }}</span>
-							<span class="text-default line-clamp-2 min-w-0 text-sm @3xl:line-clamp-1">{{ c.title }}</span>
+							<span>
+								<span :class="[CHIP, scaResultClasses(c.result)]">{{ c.result }}</span>
+							</span>
+							<span class="text-tertiary hidden font-mono text-xs tabular-nums @3xl:block">
+								#{{ c.id }}
+							</span>
+							<span class="text-default line-clamp-2 min-w-0 text-sm @3xl:line-clamp-1">
+								{{ c.title }}
+							</span>
 							<Icon
 								name="carbon:chevron-down"
 								:size="14"
@@ -366,7 +379,8 @@ function openPolicy(selected: AgentScaPolicy) {
 	search.value = ""
 	runChecks(
 		async signal => {
-			checks.value = (await Api.agents.getScaChecks(agentId, selected.policy_id, signal)).data.sca_policy_results ?? []
+			checks.value =
+				(await Api.agents.getScaChecks(agentId, selected.policy_id, signal)).data.sca_policy_results ?? []
 		},
 		err => {
 			checksError.value = getApiErrorMessage(err as ApiError) || "Could not load the policy's checks."

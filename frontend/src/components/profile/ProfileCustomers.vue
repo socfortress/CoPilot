@@ -1,7 +1,13 @@
 <template>
 	<n-card size="small" title="Customer access" segmented data-testid="profile-customers">
 		<template #header-extra>
-			<n-tag v-if="scope === 'assigned'" type="info" size="small" :bordered="false" data-testid="profile-customers-count">
+			<n-tag
+				v-if="scope === 'assigned'"
+				type="info"
+				size="small"
+				:bordered="false"
+				data-testid="profile-customers-count"
+			>
 				{{ customers.length }} {{ customers.length === 1 ? "customer" : "customers" }}
 			</n-tag>
 		</template>
@@ -9,7 +15,12 @@
 		<n-spin :show="loading" class="min-h-16">
 			<n-alert v-if="failed" type="error" :bordered="false">Your customers could not be loaded.</n-alert>
 
-			<n-alert v-else-if="scope === 'deployment'" type="info" :bordered="false" data-testid="profile-customers-all">
+			<n-alert
+				v-else-if="scope === 'deployment'"
+				type="info"
+				:bordered="false"
+				data-testid="profile-customers-all"
+			>
 				As an admin you see every customer.
 				<a :href="routeCustomer().href()" class="text-primary ml-1" @click.prevent="routeCustomer().navigate()">
 					Browse customers
@@ -27,7 +38,9 @@
 			</n-alert>
 
 			<div v-else-if="scope === 'assigned'" class="flex flex-col gap-3">
-				<p class="text-secondary text-sm">You see the data of these customers only. An admin manages your assignments.</p>
+				<p class="text-secondary text-sm">
+					You see the data of these customers only. An admin manages your assignments.
+				</p>
 				<ul class="border-default divide-border m-0 list-none divide-y overflow-hidden rounded-lg border p-0">
 					<li
 						v-for="customer of customers"
@@ -44,12 +57,18 @@
 								class="shrink-0"
 							/>
 							<div class="flex min-w-0 flex-col">
-								<span class="text-default truncate font-medium" :title="customer.name" data-testid="customer-name">
+								<span
+									class="text-default truncate font-medium"
+									:title="customer.name"
+									data-testid="customer-name"
+								>
 									{{ customer.name }}
 								</span>
 								<span class="text-tertiary font-mono text-xs">#{{ customer.code }}</span>
 							</div>
-							<n-tag v-if="customer.type" size="tiny" :bordered="false" class="shrink-0">{{ customer.type }}</n-tag>
+							<n-tag v-if="customer.type" size="tiny" :bordered="false" class="shrink-0">
+								{{ customer.type }}
+							</n-tag>
 						</div>
 						<EntityDetailsButton
 							size="tiny"

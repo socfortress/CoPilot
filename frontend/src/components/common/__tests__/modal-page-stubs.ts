@@ -18,11 +18,15 @@ const OverlayStub = defineComponent({
 		return () =>
 			// A real overlay teleports to <body>: a click inside it never reaches the card that
 			// owns it. Stop it here, or a card that opens on click would reopen at once.
-			h("div", { "data-testid": "overlay-stub", "data-show": String(props.show), onClick: (e: Event) => e.stopPropagation() }, [
-				slots["header-extra"]?.(),
-				slots.header?.(),
-				slots.default?.()
-			])
+			h(
+				"div",
+				{
+					"data-testid": "overlay-stub",
+					"data-show": String(props.show),
+					onClick: (e: Event) => e.stopPropagation()
+				},
+				[slots["header-extra"]?.(), slots.header?.(), slots.default?.()]
+			)
 	}
 })
 

@@ -87,7 +87,9 @@ const formModel = ref({
 })
 
 const customersNeeded = computed(() => needsCustomers(formModel.value.role))
-const canAssign = computed(() => !!formModel.value.role && (!customersNeeded.value || formModel.value.customerCodes.length > 0))
+const canAssign = computed(
+	() => !!formModel.value.role && (!customersNeeded.value || formModel.value.customerCodes.length > 0)
+)
 
 const rules = {
 	role: {

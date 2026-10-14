@@ -35,10 +35,9 @@ describe("overview mappers (light projections from /customer_portal/overview)", 
 
 	it("alert: the description is shown only when it says more than the name", () => {
 		expect(alertToActivityItem(alert, {}).detail).toBeUndefined()
-		expect(
-			alertToActivityItem({ ...alert, alert_description: "Seen from a new country" }, {})
-				.detail
-		).toBe("Seen from a new country")
+		expect(alertToActivityItem({ ...alert, alert_description: "Seen from a new country" }, {}).detail).toBe(
+			"Seen from a new country"
+		)
 	})
 
 	it("alert: the customer appears, by name, only when the user sees several", () => {
@@ -64,11 +63,10 @@ describe("overview mappers (light projections from /customer_portal/overview)", 
 
 	it("case: assignee or 'unassigned', and the linked alert count from alert_count", () => {
 		expect(caseToActivityItem(caseItem, {}).meta).toEqual(["unassigned", "1 alert"])
-		expect(
-			caseToActivityItem({ ...caseItem, assigned_to: "analyst1", alert_count: 3 }, {}).meta
-		).toEqual(["analyst1", "3 alerts"])
-		expect(caseToActivityItem({ ...caseItem, alert_count: 0 }, {}).meta).toEqual([
-			"unassigned"
+		expect(caseToActivityItem({ ...caseItem, assigned_to: "analyst1", alert_count: 3 }, {}).meta).toEqual([
+			"analyst1",
+			"3 alerts"
 		])
+		expect(caseToActivityItem({ ...caseItem, alert_count: 0 }, {}).meta).toEqual(["unassigned"])
 	})
 })

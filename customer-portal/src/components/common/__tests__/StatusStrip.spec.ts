@@ -19,7 +19,7 @@ function workflow(value = counts) {
 }
 
 function bar(wrapper: ReturnType<typeof workflow>) {
-  return wrapper.findAll("[data-testid=stat-total] [role=img]").at(-1)
+	return wrapper.findAll("[data-testid=stat-total] [role=img]").at(-1)
 } // the first one is the label's icon
 
 describe("statusStrip", () => {

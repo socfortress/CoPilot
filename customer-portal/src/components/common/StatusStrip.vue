@@ -109,7 +109,11 @@ const emit = defineEmits<{
 function pressable(key: string | null) {
 	if (!selectable) return {}
 	// A second press on the selected cell lets go of it, back to the total.
-	return { "type": "button", "aria-pressed": isSelected(key), "onClick": () => emit("select", isSelected(key) ? null : key) }
+	return {
+		type: "button",
+		"aria-pressed": isSelected(key),
+		onClick: () => emit("select", isSelected(key) ? null : key)
+	}
 }
 
 function isSelected(key: string | null) {

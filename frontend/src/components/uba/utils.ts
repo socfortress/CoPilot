@@ -132,7 +132,12 @@ export function privilegedReasonLabel(reason: string): { what: string; how: stri
 	if (!name) return { what: reason, how: "" }
 	const holds = kind === "role" ? "role" : "group"
 	const where = source.startsWith("windows") ? "Windows" : source.startsWith("entra") ? "Entra" : ""
-	const how = source === "entra" ? "directory sync" : source.endsWith("_audit") ? "seen granted in the audit log" : identitySourceLabel(source)
+	const how =
+		source === "entra"
+			? "directory sync"
+			: source.endsWith("_audit")
+				? "seen granted in the audit log"
+				: identitySourceLabel(source)
 	return { what: name, how: `${[where, holds].filter(Boolean).join(" ")}, ${how}` }
 }
 
@@ -189,7 +194,10 @@ export interface SuppressionOrigin {
  * source "api:<user> via copilot"; a false-positive verdict's reason ends "false positive (<REASON>)",
  * a hand-made one says "added by <user> via copilot". Anything else is shown as it is.
  */
-export function suppressionOrigin(reason: string | null | undefined, source: string | null | undefined): SuppressionOrigin {
+export function suppressionOrigin(
+	reason: string | null | undefined,
+	source: string | null | undefined
+): SuppressionOrigin {
 	let by: string | null = null
 	let via: string | null = source ?? null
 	const api = source?.match(/^api:(.+?)(?: via (\w+))?$/i)
@@ -231,7 +239,10 @@ export function shortError(error: string | null | undefined, max = 110): string 
 	// "ConnectionError: ConnectionError(Cannot connect …)" → "ConnectionError: Cannot connect …"
 	const wrapped = text.match(/^(\w+): \1\((.*)$/)
 	if (wrapped) text = `${wrapped[1]}: ${wrapped[2]}`
-	text = text.replace(/\s+ssl:\S.*$/, "").replace(/\s+\[.*$/, "").trim()
+	text = text
+		.replace(/\s+ssl:\S.*$/, "")
+		.replace(/\s+\[.*$/, "")
+		.trim()
 	// Drop only the closing parentheses left without their opening one.
 	const count = (c: string) => text.split(c).length - 1
 	while (text.endsWith(")") && count(")") > count("(")) text = text.slice(0, -1).trimEnd()

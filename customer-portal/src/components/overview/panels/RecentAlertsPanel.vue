@@ -56,5 +56,7 @@ const emit = defineEmits<{
 
 const showCustomer = useIsMultiCustomer()
 const { customerName } = useCustomers()
-const items = computed(() => alerts.map(alert => alertToActivityItem(alert, { customerLabel: showCustomer.value ? customerName : undefined })))
+const items = computed(() =>
+	alerts.map(alert => alertToActivityItem(alert, { customerLabel: showCustomer.value ? customerName : undefined }))
+)
 </script>

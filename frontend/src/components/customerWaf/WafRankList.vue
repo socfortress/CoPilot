@@ -1,5 +1,8 @@
 <template>
-	<section class="border-default bg-default flex flex-col overflow-hidden rounded-lg border" data-testid="waf-rank-list">
+	<section
+		class="border-default bg-default flex flex-col overflow-hidden rounded-lg border"
+		data-testid="waf-rank-list"
+	>
 		<header class="bg-secondary border-default flex items-baseline justify-between gap-2 border-b px-4 py-2">
 			<span :class="SECTION_LABEL">{{ title }}</span>
 			<span v-if="caption" class="text-tertiary text-2xs font-mono">{{ caption }}</span>
@@ -13,12 +16,16 @@
 				class="group hover:bg-secondary/50 grid grid-cols-[1.75rem_minmax(0,1fr)_auto] items-center gap-x-3 px-4 py-2 transition-colors"
 				data-testid="waf-rank-row"
 			>
-				<span class="text-tertiary font-mono text-xs tabular-nums">{{ String(index + 1).padStart(2, "0") }}</span>
+				<span class="text-tertiary font-mono text-xs tabular-nums">
+					{{ String(index + 1).padStart(2, "0") }}
+				</span>
 
 				<span class="flex min-w-0 flex-col gap-1.5">
 					<span class="flex min-w-0 items-center gap-2 text-sm">
 						<slot name="label" :item>
-							<span class="text-default truncate" :class="{ 'font-mono text-xs': mono }">{{ item.label }}</span>
+							<span class="text-default truncate" :class="{ 'font-mono text-xs': mono }">
+								{{ item.label }}
+							</span>
 						</slot>
 					</span>
 					<!-- The meter: one hue, the track a lighter step of it, so magnitude reads across the list. -->

@@ -42,14 +42,18 @@ vi.mock("@/api", () => {
 
 function mountInProvider(component: unknown, props: Record<string, unknown>) {
 	return mount(
-		defineComponent({ setup: () => () => h(NMessageProvider, null, { default: () => h(component as never, props) }) })
+		defineComponent({
+			setup: () => () => h(NMessageProvider, null, { default: () => h(component as never, props) })
+		})
 	)
 }
 
 function selectOffering(wrapper: ReturnType<typeof mount>, value: string) {
 	const select = wrapper
 		.findAllComponents(NSelect)
-		.find(candidate => ((candidate.props("options") as { value: string }[]) ?? []).some(option => option.value === value))
+		.find(candidate =>
+			((candidate.props("options") as { value: string }[]) ?? []).some(option => option.value === value)
+		)
 	if (!select) throw new Error(`no select offers ${value}`)
 	return select
 }
@@ -66,9 +70,10 @@ describe("route form", () => {
 		await flushPromises()
 		const trigger = selectOffering(wrapper, "alert_assigned")
 		expect(values(trigger)).toEqual(expect.arrayContaining(["sla_at_risk", "sla_breached"]))
-		expect((trigger.props("options") as { value: string; label: string }[]).find(o => o.value === "sla_breached")?.label).toBe(
-			"An alert or case SLA is breached"
-		)
+		expect(
+			(trigger.props("options") as { value: string; label: string }[]).find(o => o.value === "sla_breached")
+				?.label
+		).toBe("An alert or case SLA is breached")
 	})
 
 	it("never offers them on a customer's route", async () => {
@@ -98,7 +103,9 @@ describe("template form", () => {
 		const wrapper = mountInProvider(NotificationTemplateForm, { editingTemplate: null })
 		await flushPromises()
 		const trigger = selectOffering(wrapper, "alert_assigned")
-		const labels = Object.fromEntries((trigger.props("options") as { value: string; label: string }[]).map(o => [o.value, o.label]))
+		const labels = Object.fromEntries(
+			(trigger.props("options") as { value: string; label: string }[]).map(o => [o.value, o.label])
+		)
 		expect(labels.sla_at_risk).toBe("SLA at risk")
 		expect(labels.sla_breached).toBe("SLA breached")
 	})

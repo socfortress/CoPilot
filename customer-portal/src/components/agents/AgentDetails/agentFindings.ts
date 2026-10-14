@@ -43,10 +43,16 @@ export function filterVulnerabilities(
 		return index === -1 ? SEVERITIES.length : index
 	}
 	return vulnerabilities
-		.filter(v => (severity === "All" || normalizeSeverity(v.severity) === severity) && matches(needle, v.cve, v.title, v.name))
+		.filter(
+			v =>
+				(severity === "All" || normalizeSeverity(v.severity) === severity) &&
+				matches(needle, v.cve, v.title, v.name)
+		)
 		.sort(
 			(a, b) =>
-				rank(a) - rank(b) || (b.cvss3_score ?? -1) - (a.cvss3_score ?? -1) || (a.cve ?? "").localeCompare(b.cve ?? "")
+				rank(a) - rank(b) ||
+				(b.cvss3_score ?? -1) - (a.cvss3_score ?? -1) ||
+				(a.cve ?? "").localeCompare(b.cve ?? "")
 		)
 }
 
@@ -90,7 +96,7 @@ export type ScaResultFilter = (typeof SCA_RESULTS)[number] | "all"
 export type ScaResultCounts = Record<ScaResultFilter, number>
 
 export function scaResultCounts(checks: AgentScaCheck[]): ScaResultCounts {
-	const counts: ScaResultCounts = { "all": checks.length, "failed": 0, "passed": 0, "not applicable": 0 }
+	const counts: ScaResultCounts = { all: checks.length, failed: 0, passed: 0, "not applicable": 0 }
 	for (const check of checks) {
 		const result = check.result.toLowerCase() as ScaResultFilter
 		if (result in counts && result !== "all") counts[result]++
@@ -139,7 +145,9 @@ export const SCORE_COLORS: Record<ReturnType<typeof scoreLevel>, string> = {
 
 /** Worst policies first, so what needs attention is on top; a tie keeps the name order. */
 export function sortScaPolicies(policies: AgentScaPolicy[]): AgentScaPolicy[] {
-	return [...policies].sort((a, b) => a.score - b.score || (a.name ?? a.policy_id).localeCompare(b.name ?? b.policy_id))
+	return [...policies].sort(
+		(a, b) => a.score - b.score || (a.name ?? a.policy_id).localeCompare(b.name ?? b.policy_id)
+	)
 }
 
 /** A file name for an export: what it is, the agent, and when. */

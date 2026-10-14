@@ -213,7 +213,10 @@ async function loadSources(customerCodes: string[]) {
 	sourcesController = controller
 	try {
 		const sources = (await Api.socManagement.getSources(customerCodes, controller.signal)).data.sources ?? []
-		sourceOptions.value = sources.map(({ source, alerts }) => ({ label: `${source} · ${formatCount(alerts)}`, value: source }))
+		sourceOptions.value = sources.map(({ source, alerts }) => ({
+			label: `${source} · ${formatCount(alerts)}`,
+			value: source
+		}))
 	} catch {
 		if (controller.signal.aborted) return
 		sourceOptions.value = [] // the filter is optional; the page works without it

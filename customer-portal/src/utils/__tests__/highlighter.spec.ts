@@ -48,7 +48,19 @@ describe("highlighter", () => {
 	})
 
 	it("fencedLanguages reads the languages named on a report's code blocks", () => {
-		const markdown = ["# Findings", "```powershell", "Get-Process", "```", "", "~~~ sql", "SELECT 1", "~~~", "```", "no language", "```"].join("\n")
+		const markdown = [
+			"# Findings",
+			"```powershell",
+			"Get-Process",
+			"```",
+			"",
+			"~~~ sql",
+			"SELECT 1",
+			"~~~",
+			"```",
+			"no language",
+			"```"
+		].join("\n")
 		expect(fencedLanguages(markdown)).toEqual(["powershell", "sql"])
 		expect(fencedLanguages("no code here")).toEqual([])
 		expect(fencedLanguages(null)).toEqual([])

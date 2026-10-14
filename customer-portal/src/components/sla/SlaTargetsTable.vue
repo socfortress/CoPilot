@@ -1,6 +1,11 @@
 <template>
 	<div class="flex flex-col" data-testid="sla-targets">
-		<table v-for="group of groups" :key="group.entity" class="w-full text-sm" :data-testid="`sla-targets-${group.entity}`">
+		<table
+			v-for="group of groups"
+			:key="group.entity"
+			class="w-full text-sm"
+			:data-testid="`sla-targets-${group.entity}`"
+		>
 			<caption class="text-tertiary px-5 pt-4 pb-1 text-left font-mono text-[11px] tracking-wider uppercase">
 				{{ group.title }}
 			</caption>
@@ -25,7 +30,9 @@
 							{{ row.severity }}
 						</span>
 					</th>
-					<td class="px-2 py-2.5 font-mono text-xs tabular-nums">{{ formatTarget(row.acknowledge_minutes) }}</td>
+					<td class="px-2 py-2.5 font-mono text-xs tabular-nums">
+						{{ formatTarget(row.acknowledge_minutes) }}
+					</td>
 					<td class="px-2 py-2.5 font-mono text-xs tabular-nums">
 						<span class="flex flex-wrap items-center gap-1.5">
 							{{ formatTarget(row.resolve_minutes) }}
@@ -38,7 +45,8 @@
 										business hours
 									</span>
 								</template>
-								These targets count working hours only: nights, weekends and holidays do not run the clock.
+								These targets count working hours only: nights, weekends and holidays do not run the
+								clock.
 							</n-tooltip>
 						</span>
 					</td>
@@ -52,8 +60,8 @@
 			</tbody>
 		</table>
 		<p class="text-tertiary px-5 pt-3 pb-4 text-xs">
-			Kept: the share resolved within target (or answered, when resolution has no outcome yet). Time spent
-			waiting on you does not count against the SOC.
+			Kept: the share resolved within target (or answered, when resolution has no outcome yet). Time spent waiting
+			on you does not count against the SOC.
 		</p>
 	</div>
 </template>

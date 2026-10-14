@@ -26,7 +26,11 @@ const saveAs = vi.fn()
 vi.mock("file-saver", () => ({ saveAs: (...args: unknown[]) => saveAs(...args) }))
 
 vi.mock("@/composables/useCustomerOptions", () => ({
-	useCustomerOptions: () => ({ options: ref([{ label: "Acme Corp (ACME)", value: "ACME" }]), loading: ref(false), load: vi.fn() })
+	useCustomerOptions: () => ({
+		options: ref([{ label: "Acme Corp (ACME)", value: "ACME" }]),
+		loading: ref(false),
+		load: vi.fn()
+	})
 }))
 
 const globalCodes = ref<string[]>([])
@@ -44,7 +48,10 @@ function tabStub(name: string, emits: string[] = []) {
 			() =>
 				h("div", { "data-testid": `stub-${name}` }, [
 					...emits.map(event =>
-						h("button", { "data-testid": `stub-${name}-${event}`, onClick: () => emit(event, event === "focusCustomer" ? "ACME" : "workload") })
+						h("button", {
+							"data-testid": `stub-${name}-${event}`,
+							onClick: () => emit(event, event === "focusCustomer" ? "ACME" : "workload")
+						})
 					)
 				])
 	})
@@ -126,7 +133,9 @@ describe("socManagementShell", () => {
 	})
 
 	it("says when the dashboard could not be loaded", async () => {
-		getDashboard.mockImplementation(() => Promise.reject(Object.assign(new Error("boom"), { response: { data: { detail: "unavailable" } } })))
+		getDashboard.mockImplementation(() =>
+			Promise.reject(Object.assign(new Error("boom"), { response: { data: { detail: "unavailable" } } }))
+		)
 		const { wrapper } = await shell("/soc-management")
 		expect(wrapper.get("[data-testid=soc-error]").text()).toContain("unavailable")
 	})

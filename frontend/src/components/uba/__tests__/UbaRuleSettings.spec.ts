@@ -56,7 +56,14 @@ function settings(overrides: Partial<UbaRuleSettings["rules"][number]> = {}): Ub
 				changed_at: null
 			}
 		],
-		alert_threshold: { value: 100, default: 100, customized: false, changed_by: null, changed_at: null, single_finding: 80 }
+		alert_threshold: {
+			value: 100,
+			default: 100,
+			customized: false,
+			changed_by: null,
+			changed_at: null,
+			single_finding: 80
+		}
 	}
 }
 
@@ -70,7 +77,9 @@ describe("ubaRuleSettings", () => {
 	beforeEach(() => {
 		auth.isAdmin = true
 		getRuleSettings.mockReset().mockResolvedValue({ data: settings() })
-		setRuleSetting.mockReset().mockResolvedValue({ data: settings({ enabled: false, customized: true, changed_by: "admin1" }) })
+		setRuleSetting
+			.mockReset()
+			.mockResolvedValue({ data: settings({ enabled: false, customized: true, changed_by: "admin1" }) })
 		resetRuleSetting.mockReset().mockResolvedValue({ data: settings() })
 		setAlertThreshold.mockReset().mockResolvedValue({ data: settings() })
 	})

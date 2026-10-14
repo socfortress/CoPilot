@@ -162,7 +162,9 @@
 								<ModalPageButton
 									:route="drawerPage"
 									text="Open page"
-									:label="drawer.kind === 'entity' ? 'Open the entity\'s page' : 'Open the alert\'s page'"
+									:label="
+										drawer.kind === 'entity' ? 'Open the entity\'s page' : 'Open the alert\'s page'
+									"
 									@navigate="closeDrawer"
 								/>
 							</template>

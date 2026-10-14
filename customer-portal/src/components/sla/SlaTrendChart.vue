@@ -31,7 +31,11 @@ import {
 import { useThemeStore } from "@/stores/theme"
 import { bucketLabel, formatRate } from "./sla"
 
-const { points, bucket, height = "260px" } = defineProps<{
+const {
+	points,
+	bucket,
+	height = "260px"
+} = defineProps<{
 	points: SlaTrendPoint[]
 	bucket: SlaOverview["bucket"]
 	height?: string

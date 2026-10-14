@@ -14,7 +14,11 @@ import type {
 } from "echarts/components"
 import type { ComposeOption } from "echarts/core"
 import type { UbaRiskHistory } from "@/types/uba"
-import { buildChartTooltipGlassBase, chartTooltipThemeFromStyle, formatChartTooltipAxisMultiSeries } from "@/components/common/charts"
+import {
+	buildChartTooltipGlassBase,
+	chartTooltipThemeFromStyle,
+	formatChartTooltipAxisMultiSeries
+} from "@/components/common/charts"
 import dayjs from "@/utils/dayjs"
 import { riskLabel } from "./utils"
 
@@ -42,7 +46,11 @@ export type RiskChartOption = ComposeOption<
 	| TooltipComponentOption
 >
 
-export function buildRiskChartOption(history: UbaRiskHistory, style: Record<string, string>, dark: boolean): RiskChartOption {
+export function buildRiskChartOption(
+	history: UbaRiskHistory,
+	style: Record<string, string>,
+	dark: boolean
+): RiskChartOption {
 	const ink = style["fg-default-color"]
 	const muted = style["fg-secondary-color"]
 	const faint = style["fg-tertiary-color"]
@@ -84,7 +92,13 @@ export function buildRiskChartOption(history: UbaRiskHistory, style: Record<stri
 		silent: true,
 		symbol: "none",
 		lineStyle: { color: faint, type: "dashed", width: 1 },
-		label: { formatter: `alert at ${history.alert_threshold}`, color: muted, fontFamily: font, fontSize: 11, position: "insideStartTop" },
+		label: {
+			formatter: `alert at ${history.alert_threshold}`,
+			color: muted,
+			fontFamily: font,
+			fontSize: 11,
+			position: "insideStartTop"
+		},
 		data: [{ yAxis: history.alert_threshold }]
 	}
 
@@ -112,7 +126,11 @@ export function buildRiskChartOption(history: UbaRiskHistory, style: Record<stri
 			itemHeight: 10,
 			icon: "circle",
 			textStyle: { color: muted, fontFamily: font, fontSize: 11 },
-			data: ["UBA findings", ...(hasNative ? ["Wazuh alerts"] : []), ...(history.alerts.length ? ["UBA alert"] : [])]
+			data: [
+				"UBA findings",
+				...(hasNative ? ["Wazuh alerts"] : []),
+				...(history.alerts.length ? ["UBA alert"] : [])
+			]
 		},
 		tooltip: {
 			...buildChartTooltipGlassBase(chartTooltipThemeFromStyle(style), { trigger: "axis" }),
@@ -123,9 +141,20 @@ export function buildRiskChartOption(history: UbaRiskHistory, style: Record<stri
 				const point = history.points[list[0]?.dataIndex ?? 0]
 				if (!point) return ""
 				const rows: { marker: undefined; color: string; label: string; valueHtml: string }[] = [
-					{ marker: undefined, color: colors.findings, label: "UBA findings", valueHtml: riskLabel(point.risk - point.native) }
+					{
+						marker: undefined,
+						color: colors.findings,
+						label: "UBA findings",
+						valueHtml: riskLabel(point.risk - point.native)
+					}
 				]
-				if (hasNative) rows.push({ marker: undefined, color: colors.native, label: "Wazuh alerts", valueHtml: riskLabel(point.native) })
+				if (hasNative)
+					rows.push({
+						marker: undefined,
+						color: colors.native,
+						label: "Wazuh alerts",
+						valueHtml: riskLabel(point.native)
+					})
 				return formatChartTooltipAxisMultiSeries({
 					title: `${dayjs(point.time).format("ddd D MMM, HH:mm")} · risk <b style="color:${ink}">${riskLabel(point.risk)}</b>`,
 					rows
@@ -148,10 +177,6 @@ export function buildRiskChartOption(history: UbaRiskHistory, style: Record<stri
 			axisLabel: { color: muted, fontFamily: font, fontSize: 11, showMaxLabel: false },
 			splitLine: { lineStyle: { color: hairline, width: 1 } }
 		},
-		series: [
-			findings,
-			...(hasNative ? [native] : []),
-			...alertMarks
-		]
+		series: [findings, ...(hasNative ? [native] : []), ...alertMarks]
 	}
 }

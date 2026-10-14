@@ -29,7 +29,11 @@ function router() {
 			{ path: "/detection-catalog/stories/:name", name: "DetectionCatalogStory", component: blank },
 			{ path: "/detection-catalog/detections/:id", name: "DetectionCatalogDetection", component: blank },
 			{ path: "/detection-catalog/wazuh-rules/:id", name: "DetectionCatalogWazuhRule", component: blank },
-			{ path: "/detection-catalog/coverage-gaps/:techniqueId", name: "DetectionCatalogCoverageGap", component: blank },
+			{
+				path: "/detection-catalog/coverage-gaps/:techniqueId",
+				name: "DetectionCatalogCoverageGap",
+				component: blank
+			},
 			{
 				path: "/detection-catalog/compliance/:framework/:control",
 				name: "DetectionCatalogComplianceGroup",
@@ -122,7 +126,14 @@ describe("detection catalog modals open their entity's page from the header", ()
 		const { appRouter, state } = await render(ComplianceIndex)
 		await openAndFollow(
 			state,
-			() => (state.modalGroup = { control: "10.2.4", rule_count: 3, rule_ids: [], total_hits_30d: 9, total_hits_7d: 2 }),
+			() =>
+				(state.modalGroup = {
+					control: "10.2.4",
+					rule_count: 3,
+					rule_ids: [],
+					total_hits_30d: 9,
+					total_hits_7d: 2
+				}),
 			appRouter,
 			"/detection-catalog/compliance/pci_dss/10.2.4"
 		)

@@ -41,7 +41,11 @@ export function workflowStatusLabel(status: string): string {
 export function statusSelectOptions(current: string | null | undefined): StatusOption[] {
 	const options: StatusOption[] = SETTABLE_STATUSES.map(value => ({ label: WORKFLOW_STATUS_LABELS[value], value }))
 	if (isWaitingOnCustomer(current)) {
-		options.splice(2, 0, { label: WORKFLOW_STATUS_LABELS.PENDING_CUSTOMER, value: WAITING_ON_CUSTOMER, disabled: true })
+		options.splice(2, 0, {
+			label: WORKFLOW_STATUS_LABELS.PENDING_CUSTOMER,
+			value: WAITING_ON_CUSTOMER,
+			disabled: true
+		})
 	}
 	return options
 }

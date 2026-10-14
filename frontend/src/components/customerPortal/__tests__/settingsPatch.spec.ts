@@ -34,7 +34,9 @@ describe("buildSettingsPatch", () => {
 	it("returns null when nothing changed, whitespace included", () => {
 		expect(buildSettingsPatch(SAVED, { ...SAVED })).toBeNull()
 		expect(buildSettingsPatch(SAVED, { ...SAVED, title: "  Acme SOC " })).toBeNull()
-		expect(buildSettingsPatch({ title: "", logo: null, brand_color: null }, { title: " ", logo: "", brand_color: "" })).toBeNull()
+		expect(
+			buildSettingsPatch({ title: "", logo: null, brand_color: null }, { title: " ", logo: "", brand_color: "" })
+		).toBeNull()
 	})
 
 	it("never sends an empty value, which the API rejects", () => {

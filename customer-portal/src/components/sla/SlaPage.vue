@@ -2,7 +2,9 @@
 	<div class="flex flex-col gap-6" data-testid="sla-page">
 		<header class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
 			<div class="flex min-w-0 flex-col gap-1.5">
-				<h1 class="font-display text-2xl leading-tight font-semibold tracking-tight text-balance">Service levels</h1>
+				<h1 class="font-display text-2xl leading-tight font-semibold tracking-tight text-balance">
+					Service levels
+				</h1>
 				<p class="text-secondary text-sm">
 					How fast the SOC answered and resolved your alerts and cases, against the targets agreed with you.
 				</p>
@@ -29,7 +31,12 @@
 			Could not refresh the figures: {{ error }}
 		</n-alert>
 
-		<PanelError v-if="error && !overview" :message="error" class="bg-default border-default rounded-lg border" @retry="reload()" />
+		<PanelError
+			v-if="error && !overview"
+			:message="error"
+			class="bg-default border-default rounded-lg border"
+			@retry="reload()"
+		/>
 
 		<div
 			v-else-if="overview && !overview.enabled"
@@ -39,8 +46,8 @@
 			<Icon name="carbon:meter" :size="28" class="text-tertiary" />
 			<p class="font-semibold">Service levels are not available yet</p>
 			<p class="text-secondary max-w-md text-sm">
-				Your SOC has not published service level figures for this customer. Ask your SOC contact if you would like
-				to see them here.
+				Your SOC has not published service level figures for this customer. Ask your SOC contact if you would
+				like to see them here.
 			</p>
 		</div>
 

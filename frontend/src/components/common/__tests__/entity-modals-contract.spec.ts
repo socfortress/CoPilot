@@ -54,10 +54,11 @@ const ENTITY_OVERLAYS = [
 	"components/vulnerabilities/VulnerabilityCard.vue"
 ]
 
-const sources = import.meta.glob("/src/components/**/*.vue", { query: "?raw", import: "default", eager: true }) as Record<
-	string,
-	string
->
+const sources = import.meta.glob("/src/components/**/*.vue", {
+	query: "?raw",
+	import: "default",
+	eager: true
+}) as Record<string, string>
 
 describe("entity modals link their page", () => {
 	it.each(ENTITY_OVERLAYS)("%s puts ModalPageButton in its header", file => {

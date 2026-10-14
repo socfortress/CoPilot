@@ -2,7 +2,10 @@ import type { UbaIncidentVerdict } from "@/types/uba"
 import { describe, expect, it } from "vitest"
 import { incidentNeedsAttention } from "../utils"
 
-function incident(status: UbaIncidentVerdict["status"], verdict: UbaIncidentVerdict["verdict"] = null): UbaIncidentVerdict {
+function incident(
+	status: UbaIncidentVerdict["status"],
+	verdict: UbaIncidentVerdict["verdict"] = null
+): UbaIncidentVerdict {
 	return { status, incident_alert_id: 42, verdict, message: "" }
 }
 

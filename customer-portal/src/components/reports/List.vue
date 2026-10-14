@@ -117,7 +117,8 @@ const AddIcon = "carbon:document-add"
 
 const message = useMessage()
 const { loading, run } = useLatestRequest()
-const { customerOptions, filterCustomer, renderCustomerLabel, hasMultipleCustomers, initialCustomerCode } = useCustomerPrefill()
+const { customerOptions, filterCustomer, renderCustomerLabel, hasMultipleCustomers, initialCustomerCode } =
+	useCustomerPrefill()
 const reportGenerationStore = useReportGenerationStore()
 const customerFilterStore = useCustomerFilterStore()
 
@@ -226,7 +227,10 @@ function resolveRange(): { date_from: string; date_to: string } {
 function loadReports() {
 	return run(
 		async signal => {
-			const response = await Api.reports.listReports({ customerCodes: customerFilterStore.queryCustomerCodes, signal })
+			const response = await Api.reports.listReports({
+				customerCodes: customerFilterStore.queryCustomerCodes,
+				signal
+			})
 			if (response.data.success) {
 				reports.value = response.data.reports
 			} else {

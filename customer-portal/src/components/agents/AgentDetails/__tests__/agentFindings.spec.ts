@@ -57,7 +57,11 @@ describe("vulnerabilities", () => {
 	]
 
 	it("reads Wazuh's spellings of a severity as one", () => {
-		expect(["Critical", "CRITICAL", " critical "].map(normalizeSeverity)).toEqual(["Critical", "Critical", "Critical"])
+		expect(["Critical", "CRITICAL", " critical "].map(normalizeSeverity)).toEqual([
+			"Critical",
+			"Critical",
+			"Critical"
+		])
 		expect(normalizeSeverity("Untriaged")).toBeNull()
 	})
 
@@ -73,7 +77,9 @@ describe("vulnerabilities", () => {
 	it("filters by severity and searches CVE, title and package, case-insensitively", () => {
 		expect(filterVulnerabilities(list, { severity: "Critical", search: "" })).toHaveLength(2)
 		expect(filterVulnerabilities(list, { severity: "All", search: "OPENSSL" }).map(v => v.cve)).toEqual(["CVE-2"])
-		expect(filterVulnerabilities(list, { severity: "All", search: "cve-3 title" }).map(v => v.cve)).toEqual(["CVE-3"])
+		expect(filterVulnerabilities(list, { severity: "All", search: "cve-3 title" }).map(v => v.cve)).toEqual([
+			"CVE-3"
+		])
 		expect(filterVulnerabilities(list, { severity: "High", search: "" })).toEqual([])
 	})
 
@@ -85,11 +91,16 @@ describe("vulnerabilities", () => {
 describe("sCA", () => {
 	it("counts checks by result", () => {
 		const checks = [check(1, "failed"), check(2, "passed"), check(3, "Failed"), check(4, "not applicable")]
-		expect(scaResultCounts(checks)).toEqual({ "all": 4, "failed": 2, "passed": 1, "not applicable": 1 })
+		expect(scaResultCounts(checks)).toEqual({ all: 4, failed: 2, passed: 1, "not applicable": 1 })
 	})
 
 	it("lists failed checks first, then by id, and filters and searches them", () => {
-		const checks = [check(3, "passed"), check(2, "failed", "Ensure AIDE"), check(1, "not applicable"), check(4, "failed")]
+		const checks = [
+			check(3, "passed"),
+			check(2, "failed", "Ensure AIDE"),
+			check(1, "not applicable"),
+			check(4, "failed")
+		]
 		expect(filterScaChecks(checks, { result: "all", search: "" }).map(c => c.id)).toEqual([2, 4, 3, 1])
 		expect(filterScaChecks(checks, { result: "failed", search: "" }).map(c => c.id)).toEqual([2, 4])
 		expect(filterScaChecks(checks, { result: "all", search: "aide" }).map(c => c.id)).toEqual([2])
@@ -98,7 +109,11 @@ describe("sCA", () => {
 
 	it("puts the worst policy first, and grades a score", () => {
 		const policy = (policy_id: string, score: number) => ({ policy_id, score, name: policy_id }) as AgentScaPolicy
-		expect(sortScaPolicies([policy("b", 90), policy("a", 40), policy("c", 40)]).map(p => p.policy_id)).toEqual(["a", "c", "b"])
+		expect(sortScaPolicies([policy("b", 90), policy("a", 40), policy("c", 40)]).map(p => p.policy_id)).toEqual([
+			"a",
+			"c",
+			"b"
+		])
 		expect([95, 80, 79, 50, 49].map(scoreLevel)).toEqual(["good", "good", "fair", "fair", "poor"])
 	})
 })
@@ -106,6 +121,8 @@ describe("sCA", () => {
 describe("export file names", () => {
 	it("say what, which agent and when, safe for any file system", () => {
 		const at = new Date(Date.UTC(2026, 9, 14, 12, 30, 5))
-		expect(exportFilename("vulnerabilities-high", "web 01/prod", at)).toBe("web_01_prod-vulnerabilities-high-2026-10-14-12-30-05.csv")
+		expect(exportFilename("vulnerabilities-high", "web 01/prod", at)).toBe(
+			"web_01_prod-vulnerabilities-high-2026-10-14-12-30-05.csv"
+		)
 	})
 })

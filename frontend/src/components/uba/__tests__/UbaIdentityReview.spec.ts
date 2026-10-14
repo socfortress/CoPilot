@@ -43,12 +43,26 @@ function identity(over: Partial<UbaIdentitySummary>): UbaIdentitySummary {
 }
 
 const LEARNED = identity({ id: "s1", aliases: ["netbios_sam:CORP\\jdoe"], findings: 2, privileged: true })
-const DIRECTORY = identity({ id: "d1", display_name: "John Doe", kind: "human", shadow: false, aliases: ["upn:jdoe@contoso.example"] })
+const DIRECTORY = identity({
+	id: "d1",
+	display_name: "John Doe",
+	kind: "human",
+	shadow: false,
+	aliases: ["upn:jdoe@contoso.example"]
+})
 
 const REVIEW: UbaIdentityReview = {
 	has_directory: true,
 	candidates: [
-		{ id: 7, alias: "upn:jdoe@contoso.example", source: "entra", first_seen: null, last_seen: null, identity: LEARNED, candidate: DIRECTORY }
+		{
+			id: 7,
+			alias: "upn:jdoe@contoso.example",
+			source: "entra",
+			first_seen: null,
+			last_seen: null,
+			identity: LEARNED,
+			candidate: DIRECTORY
+		}
 	],
 	unmatched: [identity({ id: "s2", aliases: ["local:win-demo\\svc_backup"], findings: 1 })],
 	merges: [
@@ -134,15 +148,23 @@ describe("ubaIdentityReview", () => {
 
 	it("dismisses a candidate and keeps an account as it is", async () => {
 		const wrapper = await render()
-		await wrapper.findAll("button").find(b => b.text() === "Not the same")?.trigger("click")
-		await wrapper.findAll("button").find(b => b.text() === "Keep as is")?.trigger("click")
+		await wrapper
+			.findAll("button")
+			.find(b => b.text() === "Not the same")
+			?.trigger("click")
+		await wrapper
+			.findAll("button")
+			.find(b => b.text() === "Keep as is")
+			?.trigger("click")
 		await flushPromises()
 		expect(dismissMergeCandidate).toHaveBeenCalledWith("lab", 7)
 		expect(markIdentityReviewed).toHaveBeenCalledWith("lab", "s2")
 	})
 
 	it("says why there are no suggestions without a directory", async () => {
-		getIdentityReview.mockResolvedValue({ data: { ...REVIEW, has_directory: false, candidates: [], unmatched: [] } })
+		getIdentityReview.mockResolvedValue({
+			data: { ...REVIEW, has_directory: false, candidates: [], unmatched: [] }
+		})
 		const text = (await render()).text()
 		expect(text).toContain("none is connected for this customer")
 		expect(text).not.toContain("Accounts not matched")
@@ -152,6 +174,8 @@ describe("ubaIdentityReview", () => {
 		auth.isAdmin = false
 		const wrapper = await render()
 		expect(wrapper.text()).toContain("Only admins can merge")
-		expect(wrapper.findAll("button").some(b => ["Merge", "Not the same", "Keep as is"].includes(b.text()))).toBe(false)
+		expect(wrapper.findAll("button").some(b => ["Merge", "Not the same", "Keep as is"].includes(b.text()))).toBe(
+			false
+		)
 	})
 })

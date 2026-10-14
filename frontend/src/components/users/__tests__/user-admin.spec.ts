@@ -28,7 +28,9 @@ const ACME = { customer_code: "ACME", customer_name: "Acme" }
 
 function withMessages(component: unknown, props: Record<string, unknown>) {
 	return mount(
-		defineComponent({ setup: () => () => h(NMessageProvider, null, { default: () => h(component as never, props) }) }),
+		defineComponent({
+			setup: () => () => h(NMessageProvider, null, { default: () => h(component as never, props) })
+		}),
 		{ attachTo: document.body }
 	)
 }
@@ -58,7 +60,9 @@ describe("assign role", () => {
 	}
 
 	function choose(wrapper: ReturnType<typeof withMessages>, role: string) {
-		const select = wrapper.findComponent(AssignRole).vm as unknown as { $: { setupState: { formModel: { role: string | null; customerCodes: string[] } } } }
+		const select = wrapper.findComponent(AssignRole).vm as unknown as {
+			$: { setupState: { formModel: { role: string | null; customerCodes: string[] } } }
+		}
 		select.$.setupState.formModel.role = role
 		return nextTick()
 	}
@@ -72,7 +76,11 @@ describe("assign role", () => {
 		expect(body("[data-testid=user-customers-select]")).not.toBeNull()
 		expect((body("[data-testid=assign-role-submit]") as HTMLButtonElement).disabled).toBe(true)
 
-		const state = (wrapper.findComponent(AssignRole).vm as unknown as { $: { setupState: { formModel: { customerCodes: string[] } } } }).$.setupState.formModel
+		const state = (
+			wrapper.findComponent(AssignRole).vm as unknown as {
+				$: { setupState: { formModel: { customerCodes: string[] } } }
+			}
+		).$.setupState.formModel
 		state.customerCodes = ["ACME"]
 		await nextTick()
 		;(body("[data-testid=assign-role-submit]") as HTMLButtonElement).click()

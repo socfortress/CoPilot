@@ -40,7 +40,9 @@
 		</div>
 
 		<footer class="text-tertiary flex items-center justify-between gap-2 font-mono text-xs tabular-nums">
-			<span data-testid="sla-kpi-count">{{ kpi.decided ? `${kpi.met} of ${kpi.decided} on target` : "no outcome yet" }}</span>
+			<span data-testid="sla-kpi-count">
+				{{ kpi.decided ? `${kpi.met} of ${kpi.decided} on target` : "no outcome yet" }}
+			</span>
 			<span :title="kpi.medianLabel" data-testid="sla-kpi-median">
 				<Icon name="carbon:time" :size="12" class="mr-1 inline-block align-[-1px]" />
 				{{ kpi.median }}
