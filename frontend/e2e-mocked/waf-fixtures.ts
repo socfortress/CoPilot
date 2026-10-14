@@ -121,3 +121,34 @@ export const WAF_STATS = {
 	events_per_minute: 81.3,
 	caddy_healthy: true
 }
+
+function wafBlock(n: number, over: Partial<Record<string, unknown>>) {
+	return {
+		target: `192.0.2.${n}`,
+		rule_uuid: `rule-${n}`,
+		rule_id: 1000 + n,
+		name: `CoPilot block 192.0.2.${n}`,
+		description: "",
+		enabled: true,
+		created_by_copilot: true,
+		created_at: new Date(NOW - n * 86_400_000).toISOString(),
+		...over
+	}
+}
+
+/** CoPilot's blocks: two in force, one lifted; reasons an analyst would search for. */
+export const COPILOT_BLOCKS = [
+	wafBlock(1, { description: "Responding to alert #42 — credential stuffing" }),
+	wafBlock(2, { description: "Scanner hammering the login page" }),
+	wafBlock(3, { description: "False positive, lifted", enabled: false })
+]
+
+/** The WAF's own blocks (Threat Intel): more than a page of them. */
+export const OTHER_BLOCKS = Array.from({ length: 40 }, (_, n) =>
+	wafBlock(100 + n, {
+		target: `198.18.${Math.floor(n / 10)}.${n}`,
+		name: `Threat Intel auto-block ${n}`,
+		description: n === 7 ? "Botnet scanner seen on 3 sites" : "",
+		created_by_copilot: false,
+		enabled: n % 9 !== 0
+	}))

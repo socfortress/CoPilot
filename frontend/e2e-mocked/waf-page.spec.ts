@@ -2,9 +2,11 @@ import type { BrowserContext, Page, Route } from "@playwright/test"
 import { expect, test } from "@playwright/test"
 import { installMockBackend, signIn } from "./mock-backend"
 import {
+	COPILOT_BLOCKS,
 	EVENT_COUNT,
 	OFFENDER_COUNT,
 	OFFENDERS,
+	OTHER_BLOCKS,
 	TOP_OFFENDER,
 	WAF_CUSTOMER,
 	WAF_ID,
@@ -37,6 +39,9 @@ async function installWafMock(context: BrowserContext, eventRequests: URL[]) {
 				return json(route, { success: true, instances: [WAF_INSTANCE], encryption_key_configured: true })
 			}
 			if (path === `${BASE}/stats`) return json(route, { success: true, stats: WAF_STATS })
+			if (path === `${BASE}/blocks` && route.request().method() === "GET") {
+				return json(route, { success: true, copilot_blocks: COPILOT_BLOCKS, other_ip_blocks: OTHER_BLOCKS })
+			}
 			if (path === `${BASE}/threat-intel`) {
 				return json(route, {
 					success: true,
@@ -101,6 +106,43 @@ test.describe("WAF page", () => {
 		// "Events from this IP" still opens Events pre-filtered on it.
 		await first.getByRole("button").first().click()
 		await expect(page).toHaveURL(new RegExp(`tab=events.*ip=${WAF_STATS.top_ips[0].client_ip}`))
+	})
+
+	test("blocks: one search over both lists, by address or reason; the WAF's own list opens for a match", async ({
+		page
+	}) => {
+		await openTab(page, "blocks")
+		const copilot = page.getByTestId("waf-copilot-block")
+		const managed = page.getByTestId("waf-managed-block")
+		await expect(copilot).toHaveCount(COPILOT_BLOCKS.length)
+		await expect(page.getByTestId("waf-copilot-blocks").locator("ul, li")).toHaveCount(0)
+		// In force first, then lifted.
+		await expect(copilot.last()).toContainText("lifted")
+		// The WAF's own list is folded until asked for.
+		await expect(managed).toHaveCount(0)
+		await expect(page.getByTestId("waf-managed-toggle")).toContainText(`${OTHER_BLOCKS.length} rules`)
+
+		const search = page.getByTestId("waf-blocks-search").locator("input")
+
+		// A word of the reason finds a CoPilot block…
+		await search.fill("scanner")
+		await expect(copilot).toHaveCount(1)
+		await expect(copilot.first()).toContainText(COPILOT_BLOCKS[1].target)
+		// …and opens the WAF's list on its own match there.
+		await expect(managed).toHaveCount(1)
+		await expect(managed.first()).toContainText("Botnet scanner")
+		await expect(page.getByTestId("waf-managed-toggle")).toContainText(`1 of ${OTHER_BLOCKS.length} rules`)
+
+		// An address narrows both lists the same way.
+		await search.fill("192.0.2.1")
+		await expect(copilot).toHaveCount(1)
+		await expect(page.getByText("No WAF-managed block matches the search")).toBeVisible()
+
+		// Cleared: the WAF's list folds again; opened by hand, it pages.
+		await search.fill("")
+		await expect(managed).toHaveCount(0)
+		await page.getByTestId("waf-managed-toggle").click()
+		await expect(managed).toHaveCount(25)
 	})
 
 	test("events: page by page with a page size, saying whether there is more, never a page count that grows", async ({
