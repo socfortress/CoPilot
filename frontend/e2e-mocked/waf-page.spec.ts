@@ -61,12 +61,6 @@ function openTab(page: Page, tab: string) {
 	return page.goto(`/waf?customer=${WAF_CUSTOMER}&waf=${WAF_ID}&tab=${tab}`)
 }
 
-/** Picks a page size from the pagination's own size picker. */
-async function pickPageSize(page: Page, testId: string, size: number) {
-	await page.getByTestId(testId).locator(".n-pagination-quick-jumper, .n-base-selection").first().click()
-	await page.locator(".n-base-select-option").filter({ hasText: `${size} / page` }).click()
-}
-
 test.describe("WAF page", () => {
 	let eventRequests: URL[]
 
@@ -109,29 +103,45 @@ test.describe("WAF page", () => {
 		await expect(page).toHaveURL(new RegExp(`tab=events.*ip=${WAF_STATS.top_ips[0].client_ip}`))
 	})
 
-	test("events: native pagination with a page size, one extra row telling whether a next page exists", async ({
+	test("events: page by page with a page size, saying whether there is more, never a page count that grows", async ({
 		page
 	}) => {
 		await openTab(page, "events")
 		const rows = page.getByTestId("waf-event-row")
+		const pageLabel = page.getByTestId("waf-events-page")
 		await expect(rows).toHaveCount(50)
 		await expect(page.getByTestId("waf-events-range")).toContainText("1–50")
+		await expect(pageLabel).toHaveText(/Page 1\s*· more available/)
+		await expect(page.getByTestId("waf-events-prev")).toBeDisabled()
+		// One row more than a page: it only says whether a next page exists.
 		expect(eventRequests.at(-1)?.searchParams.get("limit")).toBe("51")
 		expect(eventRequests.at(-1)?.searchParams.get("offset")).toBe("0")
 
-		const pagination = page.getByTestId("waf-events-pagination")
-		await pagination.locator(".n-pagination-item").filter({ hasText: /^2$/ }).click()
+		await page.getByTestId("waf-events-next").click()
 		await expect(page.getByTestId("waf-events-range")).toContainText("51–100")
+		await expect(pageLabel).toHaveText(/Page 2\s*· more available/)
 		expect(eventRequests.at(-1)?.searchParams.get("offset")).toBe("50")
 
-		// The last page is short and offers nothing after it.
-		await pagination.locator(".n-pagination-item").filter({ hasText: /^3$/ }).click()
+		// The last page is short, says so, and offers nothing after it.
+		await page.getByTestId("waf-events-next").click()
 		await expect(rows).toHaveCount(EVENT_COUNT - 100)
-		await expect(pagination.locator(".n-pagination-item").filter({ hasText: /^4$/ })).toHaveCount(0)
+		await expect(pageLabel).toHaveText(/Page 3\s*· last page/)
+		await expect(page.getByTestId("waf-events-next")).toBeDisabled()
 
-		// A new page size starts again from the first page.
-		await pickPageSize(page, "waf-events-pagination", 25)
+		// Back one, then straight to the newest.
+		await page.getByTestId("waf-events-prev").click()
+		await expect(pageLabel).toHaveText(/Page 2/)
+		await page.getByTestId("waf-events-first").click()
+		await expect(pageLabel).toHaveText(/Page 1/)
+		expect(eventRequests.at(-1)?.searchParams.get("offset")).toBe("0")
+
+		// A new page size starts again from the newest page.
+		await page.getByTestId("waf-events-next").click()
+		await expect(pageLabel).toHaveText(/Page 2/)
+		await page.getByTestId("waf-events-page-size").click()
+		await page.locator(".n-base-select-option").filter({ hasText: "25 / page" }).click()
 		await expect(rows).toHaveCount(25)
+		await expect(pageLabel).toHaveText(/Page 1/)
 		await expect(page.getByTestId("waf-events-range")).toContainText("1–25")
 		expect(eventRequests.at(-1)?.searchParams.get("limit")).toBe("26")
 		expect(eventRequests.at(-1)?.searchParams.get("offset")).toBe("0")

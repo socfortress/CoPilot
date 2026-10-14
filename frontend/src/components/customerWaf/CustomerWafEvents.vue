@@ -149,24 +149,60 @@
 				</div>
 			</div>
 
-			<!-- The WAF returns no total: the page count grows by one while there is a next page. -->
+			<!--
+				The WAF returns no total, and counting is not affordable (half a million events took
+				minutes to measure; deep offsets cost seconds each): page by page, newest first,
+				saying only whether there is more. Never a page count that grows as you go.
+			-->
 			<footer
 				class="bg-secondary border-default flex flex-wrap items-center justify-between gap-3 border-t px-4 py-2"
 			>
 				<span class="text-tertiary font-mono text-xs tabular-nums" data-testid="waf-events-range">
 					{{ rangeLabel }} · newest first
 				</span>
-				<n-pagination
-					v-model:page="page"
-					v-model:page-size="pageSize"
-					:page-count
-					:page-sizes="PAGE_SIZES"
-					:page-slot="7"
-					:disabled="loading"
-					show-size-picker
-					size="small"
-					data-testid="waf-events-pagination"
-				/>
+				<div class="flex flex-wrap items-center gap-3">
+					<span class="text-secondary font-mono text-xs tabular-nums" data-testid="waf-events-page">
+						Page {{ page.toLocaleString() }}
+						<span class="text-tertiary">· {{ hasMore ? "more available" : "last page" }}</span>
+					</span>
+					<n-button-group size="small">
+						<n-button
+							secondary
+							:disabled="page === 1 || loading"
+							aria-label="Newest page"
+							data-testid="waf-events-first"
+							@click="page = 1"
+						>
+							<template #icon><Icon :name="FirstIcon" /></template>
+						</n-button>
+						<n-button
+							secondary
+							:disabled="page === 1 || loading"
+							aria-label="Previous page"
+							data-testid="waf-events-prev"
+							@click="page--"
+						>
+							<template #icon><Icon :name="PrevIcon" /></template>
+						</n-button>
+						<n-button
+							secondary
+							:disabled="!hasMore || loading"
+							aria-label="Next page"
+							data-testid="waf-events-next"
+							@click="page++"
+						>
+							<template #icon><Icon :name="NextIcon" /></template>
+						</n-button>
+					</n-button-group>
+					<n-select
+						v-model:value="pageSize"
+						:options="pageSizeOptions"
+						size="small"
+						class="w-28!"
+						aria-label="Events per page"
+						data-testid="waf-events-page-size"
+					/>
+				</div>
 			</footer>
 		</section>
 	</div>
@@ -176,7 +212,17 @@
 import type { ApiError } from "@/types/common"
 import type { CustomerWafAction, CustomerWafEvent, CustomerWafInstance } from "@/types/customer-waf"
 import axios from "axios"
-import { NButton, NEmpty, NInput, NPagination, NRadioButton, NRadioGroup, NSkeleton, NTooltip } from "naive-ui"
+import {
+	NButton,
+	NButtonGroup,
+	NEmpty,
+	NInput,
+	NRadioButton,
+	NRadioGroup,
+	NSelect,
+	NSkeleton,
+	NTooltip
+} from "naive-ui"
 import { computed, onBeforeMount, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -197,6 +243,10 @@ const { customerCode, instance, initialClientIp } = defineProps<{
 const SearchIcon = "carbon:search"
 const ExpandIcon = "carbon:chevron-down"
 const PAGE_SIZES = [25, 50, 100, 200]
+const pageSizeOptions = PAGE_SIZES.map(size => ({ label: `${size} / page`, value: size }))
+const FirstIcon = "carbon:page-first"
+const PrevIcon = "carbon:chevron-left"
+const NextIcon = "carbon:chevron-right"
 // One grid for the column heads and every row. Narrow screens fold it to two columns.
 const COLUMNS = "grid-cols-[6.5rem_7rem_minmax(0,1fr)_11rem_3.5rem_1rem]"
 const COLUMNS_ROW = "grid-cols-[auto_1fr] md:grid-cols-[6.5rem_7rem_minmax(0,1fr)_11rem_3.5rem_1rem]"
@@ -217,14 +267,11 @@ const events = ref<CustomerWafEvent[]>([])
 const page = ref(1)
 const pageSize = ref(50)
 const hasMore = ref(false)
-// The furthest page known to exist, so stepping back does not shrink the page count.
-const lastKnownPage = ref(1)
 const action = ref<CustomerWafAction | "all">("all")
 const clientIp = ref<string | null>(initialClientIp ?? null)
 const expanded = ref(new Set<string>())
 let controller: AbortController | null = null
 
-const pageCount = computed(() => Math.max(lastKnownPage.value, page.value + (hasMore.value ? 1 : 0)))
 const rangeLabel = computed(() => {
 	if (!events.value.length) return "0 events"
 	const first = (page.value - 1) * pageSize.value + 1
@@ -288,7 +335,6 @@ async function load() {
 		)
 		hasMore.value = res.data.events.length > pageSize.value
 		events.value = res.data.events.slice(0, pageSize.value)
-		lastKnownPage.value = Math.max(lastKnownPage.value, page.value + (hasMore.value ? 1 : 0))
 		expanded.value = new Set()
 		loading.value = false
 	} catch (err) {
@@ -298,9 +344,8 @@ async function load() {
 	}
 }
 
-/** A filter changed: back to the first page, and forget how far the old results went. */
+/** A filter or the page size changed: back to the newest page. */
 function reload() {
-	lastKnownPage.value = 1
 	if (page.value !== 1) page.value = 1
 	else load()
 }
