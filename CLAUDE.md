@@ -433,6 +433,17 @@ Round-trips, not SQL complexity, are what these pages cost (see `app/connectors/
 
 Tests: `tests/test_alert_combined_filters.py` (no DB), `tests/e2e/alert_filters_e2e.py` (13306: criteria, dates, customer scoping, a tag-restricted analyst), portal `components/alerts/**/__tests__/`, `cypress/e2e/alert-filters.cy.ts`.
 
+### Customer Portal agent details: Vulnerabilities, SCA and Cases (#1256)
+
+`components/agents/AgentDetails/` has four tabs: Overview, Vulnerabilities, SCA and Cases. Each loads only when first opened. They read routes the backend already served to `customer_user` (`app/agents/routes/agents.py`), each checking the agent's tenant (another customer's agent is a 404, and Wazuh is never asked about it). The filtering, counting and ordering are pure functions in `agentFindings.ts`.
+
+- **Vulnerabilities are fetched once with every severity** (`/{agent_id}/vulnerabilities/All`); the severity filter, counts, search and paging are client-side. The CSV export asks for the severity on screen.
+- **The CSV's EPSS column is best-effort and batched** (`threat_intel/services/epss.py:collect_epss_scores`, 100 CVEs a request). It used to make one call to api.first.org per CVE, and one failure made the whole export a 500. An unreachable EPSS (an air-gapped deployment) now leaves the column empty.
+- **`GET /agents/{hostname}/cases` was a cross-tenant leak.** It checked that the caller sees *an* agent with that hostname, then listed every case with an alert on that asset name across tenants. A hostname is no tenant key: two customers can each have a `web-01`. `list_cases_by_asset_name(..., customer_codes=)` now narrows to the customers of the agents the caller sees. It also matches through a subquery (each case once, newest first) instead of a join that returned a case once per matching alert. The incidents route `/case/asset/{name}` filters its own way and is unchanged.
+- **Seed:** A's first agent (`AGENT_HOST_A0`) is the asset of an alert in A's case and of an alert in B's case. B's case must never show under A's agent.
+
+Tests: `tests/test_agent_cases_scoping.py` and `tests/test_vulnerabilities_csv_epss.py` (no DB, no network); `tests/e2e/agent_tabs_e2e.py` (13306, Wazuh replaced by a recorder; run against the pre-fix tree, it lists B's case). Portal: `components/agents/AgentDetails/__tests__/`, `api/endpoints/__tests__/agents.spec.ts`, `cypress/e2e/agent-tabs.cy.ts`. The e2e backend has no Wazuh, so that spec serves the Wazuh-backed answers at the network layer (`cypress/support/agent-findings.ts`); the cases come from the real backend.
+
 ### Tenant scoping: customer codes are not the only tenant key
 
 #1050 made `user_customer_access` authoritative for analysts and guarded every route
