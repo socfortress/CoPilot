@@ -39,6 +39,8 @@ describe("ubaDeployGuide", () => {
 		expect(code).not.toContain("--build")
 		// Customers run a pinned release: upgrading means choosing the new version.
 		expect(code).toContain("UBA_TAG=<new version>")
+		// Graylog sends the feed over UDP in bursts; the default receive buffer loses most of it (#1252).
+		expect(code).toContain("net.core.rmem_max = 33554432")
 	})
 
 	it("reads as prose: no space before punctuation", () => {

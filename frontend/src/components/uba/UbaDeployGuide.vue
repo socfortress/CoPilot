@@ -41,9 +41,16 @@ const STEPS: Step[] = [
 	{
 		title: "Prepare the VM",
 		text: [
-			"A Linux VM with Docker and Compose v2, 4 vCPU and 8 GB of memory to start, in the same network as Graylog, the Wazuh indexer and CoPilot. Postgres keeps UBA's state: give it room on the Docker disk."
+			"A Linux VM with Docker and Compose v2, 4 vCPU and 8 GB of memory to start, in the same network as Graylog, the Wazuh indexer and CoPilot. Postgres keeps UBA's state: give it room on the Docker disk.",
+			"Graylog sends UBA its feed over UDP, in bursts. Linux's default UDP receive buffer is far too small for them, and the VM's kernel sets the limit: raise it once, or UBA loses most of its live feed."
 		],
-		code: "docker compose version\nfree -m\ndf -h /var/lib/docker"
+		code: [
+			"docker compose version",
+			"free -m",
+			"df -h /var/lib/docker",
+			"echo 'net.core.rmem_max = 33554432' > /etc/sysctl.d/90-socfortress-uba.conf",
+			"sysctl -p /etc/sysctl.d/90-socfortress-uba.conf"
+		].join("\n")
 	},
 	{
 		title: "Get UBA",
