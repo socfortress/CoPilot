@@ -46,6 +46,7 @@ from app.auth.utils import AuthHandler  # noqa: E402
 from app.db.db_session import async_engine  # noqa: E402
 from app.db.universal_models import CustomerPortalBranding  # noqa: E402
 from tests.e2e.portal_overview_seed import ADMIN  # noqa: E402
+from tests.e2e.portal_overview_seed import ALERT_ASSETS  # noqa: E402
 from tests.e2e.portal_overview_seed import ALERTS_A  # noqa: E402
 from tests.e2e.portal_overview_seed import ALERTS_B  # noqa: E402
 from tests.e2e.portal_overview_seed import CASES_A  # noqa: E402
@@ -293,7 +294,11 @@ async def main():
         options_url = "/incidents/db_operations/alerts/filter-options"
         full = (await client.get(options_url, headers=portal)).json()
         light = (await client.get(options_url, headers=portal, params={"include_assets": "false"})).json()
-        check("default still lists the assets (other callers)", full["assets"] == ["host-a1", "host-a2", "host-a3"], str(full["assets"]))
+        check(
+            "default still lists the assets (other callers)",
+            full["assets"] == sorted({name for (side, _), names in ALERT_ASSETS.items() if side == "A" for name in names}),
+            str(full["assets"]),
+        )
         check(
             "include_assets=false leaves them out",
             light["assets"] == [] and (light["sources"], light["tags"]) == (full["sources"], full["tags"]),

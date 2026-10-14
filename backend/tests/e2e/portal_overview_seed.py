@@ -90,7 +90,11 @@ ALERT_ROWS_B = [
 ALERTS_A = [row[0] for row in ALERT_ROWS_A]
 ALERTS_B = [row[0] for row in ALERT_ROWS_B]
 # Two assets on one alert, one on another: the Overview shows "first +N".
-ALERT_ASSETS = {("A", 0): ["host-a1", "host-a2"], ("A", 1): ["host-a3"], ("B", 0): ["host-b1"]}
+# A's first agent, by hostname: the asset of an alert in A's first case (its Cases tab,
+# #1256) — and of an alert in B's case too, since a hostname is no tenant key: B's case
+# must never show under A's agent.
+AGENT_HOST_A0 = f"ov-{CUST_A}-0"
+ALERT_ASSETS = {("A", 0): ["host-a1", "host-a2"], ("A", 1): ["host-a3", AGENT_HOST_A0], ("B", 0): ["host-b1", AGENT_HOST_A0]}
 CASES_A = ["OPEN", "PENDING_CUSTOMER", "CLOSED"]
 CASES_B = ["OPEN"]
 AGENTS_A = [("active", True, "Linux"), ("active", False, "Windows"), ("disconnected", False, "Linux")]  # (wazuh status, critical, os)
@@ -303,6 +307,8 @@ async def seed(quiet: bool = False) -> dict:
         # The first case of A links two alerts, so its row reads "2 alerts".
         for i in (0, 1):
             s.add(CaseAlertLink(case_id=cases[(CUST_A, 0)].id, alert_id=alerts[(CUST_A, i)].id))
+        # B's case holds the alert that names A's agent host (see AGENT_HOST_A0).
+        s.add(CaseAlertLink(case_id=cases[(CUST_B, 0)].id, alert_id=alerts[(CUST_B, 0)].id))
 
         for code, agents in ((CUST_A, AGENTS_A), (CUST_B, AGENTS_B)):
             for i, (wazuh_status, critical, os_name) in enumerate(agents):
@@ -430,6 +436,10 @@ async def seed(quiet: bool = False) -> dict:
             "ai_alert_id": alerts[(CUST_A, 0)].id,
             # An open alert of A no AI analysis ever ran on, for the portal request (#1215).
             "fresh_alert_id": alerts[(CUST_A, 2)].id,
+            # A's first agent (#1256): its case is A's first, never B's on the same host name.
+            "agent_a0": {"agent_id": f"e2e-ov-{CUST_A}-0", "hostname": AGENT_HOST_A0, "case_id": cases[(CUST_A, 0)].id},
+            "agent_b0_id": f"e2e-ov-{CUST_B}-0",
+            "foreign_case_id": cases[(CUST_B, 0)].id,
             # The alert and case of A the SOC is waiting on the customer for (#1187).
             "waiting_alert_id": alerts[(CUST_A, ALERTS_A.index("PENDING_CUSTOMER"))].id,
             "waiting_case_id": cases[(CUST_A, CASES_A.index("PENDING_CUSTOMER"))].id,
