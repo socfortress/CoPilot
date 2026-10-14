@@ -72,7 +72,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { CustomerWafBlockAction, CustomerWafInstance } from "@/types/customer-waf"
-import { NAlert, NButton, NForm, NFormItem, NInput, NModal, NSelect } from "naive-ui"
+import { NAlert, NButton, NForm, NFormItem, NInput, NModal, NSelect, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -95,6 +95,7 @@ const emit = defineEmits<{
 const show = defineModel<boolean>("show", { default: false })
 
 const BlockIcon = "carbon:locked"
+const message = useMessage()
 
 const blockable = computed(() =>
 	props.instances.filter(i => i.enabled && capabilitiesFromRoles(i.last_verified_role).can_block)
@@ -105,7 +106,8 @@ const wafId = ref<number | null>(null)
 const target = ref("")
 const reason = ref("")
 const submitting = ref(false)
-const result = ref<{ type: "success" | "info" | "error"; message: string; warnings: string[] } | null>(null)
+// Only a failure is shown in the dialog; success closes it.
+const result = ref<{ type: "error"; message: string; warnings: string[] } | null>(null)
 
 const canSubmit = computed(() => !!wafId.value && !!target.value.trim() && !!reason.value.trim() && !result.value)
 
@@ -117,32 +119,38 @@ watch(show, open => {
 	result.value = null
 })
 
-function submit() {
+/**
+ * Success closes the dialog and reports through Naive's message API: a new or re-enabled
+ * block as a success, an address already blocked as information, and each warning (a
+ * shared exit, a wide range) as its own warning, left up longer so it can be read.
+ * A failure stays in the dialog, with the reason's hint, so the analyst can see why.
+ */
+async function submit() {
 	if (!wafId.value) return
 	const id = wafId.value
 	submitting.value = true
-	Api.customerWaf
-		.block(props.customerCode, id, { target: target.value.trim(), reason: reason.value.trim(), alert_id: props.alertId })
-		.then(res => {
-			const d = res.data
-			result.value = {
-				type: d.action === "created" || d.action === "reenabled" ? "success" : "info",
-				message: d.message,
-				warnings: d.warnings ?? []
-			}
-			emit("blocked", { wafId: id, action: d.action, target: d.target })
+	try {
+		const { data } = await Api.customerWaf.block(props.customerCode, id, {
+			target: target.value.trim(),
+			reason: reason.value.trim(),
+			alert_id: props.alertId
 		})
-		.catch((err: ApiError) => {
-			const reasonCode = (err.response?.data as { reason?: string } | undefined)?.reason
-			const hint = reasonHint(reasonCode)
-			result.value = {
-				type: "error",
-				message: getApiErrorMessage(err) || "Blocking failed.",
-				warnings: hint ? [hint] : []
-			}
-		})
-		.finally(() => {
-			submitting.value = false
-		})
+		const fresh = data.action === "created" || data.action === "reenabled"
+		if (fresh) message.success(data.message)
+		else message.info(data.message)
+		for (const warning of data.warnings ?? []) message.warning(warning, { duration: 8000 })
+		emit("blocked", { wafId: id, action: data.action, target: data.target })
+		show.value = false
+	} catch (err) {
+		const reasonCode = ((err as ApiError).response?.data as { reason?: string } | undefined)?.reason
+		const hint = reasonHint(reasonCode)
+		result.value = {
+			type: "error",
+			message: getApiErrorMessage(err as ApiError) || "Blocking failed.",
+			warnings: hint ? [hint] : []
+		}
+	} finally {
+		submitting.value = false
+	}
 }
 </script>
