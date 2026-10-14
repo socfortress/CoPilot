@@ -47,6 +47,18 @@ describe("agent tabs: vulnerabilities, SCA and cases", () => {
 		cy.get("@sca.all").should("have.length", 0)
 	})
 
+	it("vulnerabilities: while Wazuh answers, the tab says it can take a while", () => {
+		cy.intercept({ method: "GET", pathname: `${agentPath}/vulnerabilities/All` }, req => {
+			req.reply({ delay: 1500, body: { success: true, message: "ok", vulnerabilities: VULNERABILITIES } })
+		}).as("slowFindings")
+		cy.visit(`/agents/${seed.agent_a0.agent_id}`)
+		openTab("Vulnerabilities")
+		cy.get("[data-testid=vulnerabilities-loading]").should("contain", "This can take up to a minute")
+		cy.wait("@slowFindings")
+		cy.get("[data-testid=vulnerabilities-loading]").should("not.exist")
+		cy.get("[data-testid=vulnerability-row]").should("have.length", 25)
+	})
+
 	it("vulnerabilities: counted per severity, worst first, filtered, searched and paged", () => {
 		cy.visit(`/agents/${seed.agent_a0.agent_id}`)
 		openTab("Vulnerabilities")
@@ -63,7 +75,7 @@ describe("agent tabs: vulnerabilities, SCA and cases", () => {
 		// Worst first: the highest-scored Critical leads.
 		cy.get("[data-testid=vulnerability-row]").first().should("contain", VULNERABILITIES[0].cve)
 
-		severity().contains("High").click()
+		cy.get("[data-testid=severity-High]").click().should("have.attr", "aria-pressed", "true")
 		cy.get("[data-testid=vulnerability-row]").should("have.length", 5)
 		cy.get("[data-testid=vulnerabilities-range]").should("not.exist")
 
@@ -97,7 +109,7 @@ describe("agent tabs: vulnerabilities, SCA and cases", () => {
 		openTab("Vulnerabilities")
 		cy.wait("@vulnerabilities")
 
-		cy.get("[data-testid=vulnerabilities-severity]").contains("Critical").click()
+		cy.get("[data-testid=severity-Critical]").click()
 		cy.get("[data-testid=vulnerabilities-export]").click()
 		cy.wait("@csv")
 		cy.readFile(`cypress/downloads/${seed.agent_a0.hostname}-vulnerabilities-critical-2026-10-14-12-00-00.csv`).should(

@@ -1,26 +1,39 @@
 <template>
 	<div class="flex flex-col gap-3" data-testid="agent-vulnerabilities">
-		<div class="flex flex-wrap items-center gap-2">
-			<n-radio-group v-model:value="severity" size="small" data-testid="vulnerabilities-severity">
-				<n-radio-button v-for="option of severityOptions" :key="option" :value="option">
-					{{ option }}
-					<span class="text-tertiary ml-1 font-mono text-xs tabular-nums">{{ counts[option] }}</span>
-				</n-radio-button>
-			</n-radio-group>
+		<!--
+			Header, in reading order: how many findings of each severity (a strip whose cells are
+			also the filter), then the tools for the list — search on the left, export on the right.
+		-->
+		<FilterStrip
+			v-model="severity"
+			:options="severityStrip"
+			:loading
+			label="Filter by severity"
+			testid="severity"
+			data-testid="vulnerabilities-severity"
+		/>
+
+		<div class="flex items-center gap-2">
 			<n-input
 				v-model:value="search"
 				size="small"
 				clearable
 				placeholder="Search CVE, title or package"
-				class="w-64!"
+				class="min-w-0 flex-1 @2xl:max-w-80!"
 				data-testid="vulnerabilities-search"
 			>
 				<template #prefix><Icon name="carbon:search" :size="14" /></template>
 			</n-input>
+			<span
+				v-if="!loading && vulnerabilities.length"
+				class="text-tertiary hidden font-mono text-xs whitespace-nowrap tabular-nums @2xl:inline"
+			>
+				{{ shown.length.toLocaleString() }} shown · worst first
+			</span>
 			<n-button
 				size="small"
 				secondary
-				class="ml-auto!"
+				class="ml-auto! shrink-0"
 				:loading="exporting"
 				:disabled="!vulnerabilities.length"
 				data-testid="vulnerabilities-export"
@@ -33,8 +46,15 @@
 
 		<n-alert v-if="error" type="error" :bordered="false" data-testid="vulnerabilities-error">{{ error }}</n-alert>
 
-		<section v-else class="border-default bg-default @container overflow-hidden rounded-lg border" :aria-busy="loading">
-			<div class="bg-secondary border-default text-tertiary hidden items-center gap-4 border-b px-4 py-2 @3xl:grid" :class="COLUMNS">
+		<section
+			v-else
+			class="border-default bg-default @container overflow-hidden rounded-lg border"
+			:aria-busy="loading"
+		>
+			<div
+				class="bg-secondary border-default text-tertiary hidden items-center gap-4 border-b px-4 py-2 @3xl:grid"
+				:class="COLUMNS"
+			>
 				<span :class="HEAD">Severity</span>
 				<span :class="HEAD">Vulnerability</span>
 				<span :class="HEAD">Package</span>
@@ -43,12 +63,24 @@
 				<span />
 			</div>
 
-			<div v-if="loading" class="flex flex-col gap-2 p-3">
+			<div v-if="loading" class="flex flex-col gap-3 p-3" data-testid="vulnerabilities-loading">
+				<!-- Wazuh builds the list per request: on an agent with many packages that takes a while. -->
+				<p class="text-secondary m-0 flex items-start gap-2 text-sm" role="status">
+					<Icon name="carbon:renew" :size="16" class="text-primary mt-0.5 shrink-0 animate-spin" />
+					<span>
+						Fetching the vulnerabilities from Wazuh. This can take up to a minute on an agent with many
+						packages.
+					</span>
+				</p>
 				<n-skeleton v-for="n of 5" :key="n" :height="44" :sharp="false" class="rounded-md" />
 			</div>
 			<n-empty
 				v-else-if="!shown.length"
-				:description="vulnerabilities.length ? 'No vulnerability matches the filters' : 'No vulnerabilities found on this agent'"
+				:description="
+					vulnerabilities.length
+						? 'No vulnerability matches the filters'
+						: 'No vulnerabilities found on this agent'
+				"
 				class="min-h-40 justify-center"
 				data-testid="vulnerabilities-empty"
 			/>
@@ -73,11 +105,18 @@
 							<span class="text-default truncate font-mono text-sm">{{ v.cve ?? "—" }}</span>
 							<span v-if="v.title" class="text-tertiary truncate text-xs">{{ v.title }}</span>
 						</span>
-						<span class="flex min-w-0 items-baseline gap-2 leading-tight [grid-area:pkg] @3xl:flex-col @3xl:gap-0">
+						<span
+							class="flex min-w-0 items-baseline gap-2 leading-tight [grid-area:pkg] @3xl:flex-col @3xl:gap-0"
+						>
 							<span class="text-default truncate text-sm">{{ v.name ?? "—" }}</span>
-							<span v-if="v.version" class="text-tertiary truncate font-mono text-xs">{{ v.version }}</span>
+							<span v-if="v.version" class="text-tertiary truncate font-mono text-xs">
+								{{ v.version }}
+							</span>
 						</span>
-						<span class="text-right font-mono text-sm tabular-nums [grid-area:cvss]" :class="cvssClass(v.cvss3_score)">
+						<span
+							class="text-right font-mono text-sm tabular-nums [grid-area:cvss]"
+							:class="cvssClass(v.cvss3_score)"
+						>
 							<span class="text-tertiary mr-1 text-xs font-normal uppercase @3xl:hidden">cvss</span>
 							{{ formatCvss(v.cvss3_score) }}
 						</span>
@@ -101,11 +140,15 @@
 						<dl class="m-0 grid grid-cols-2 gap-x-6 gap-y-3 @3xl:grid-cols-4">
 							<div v-for="fact of facts(v)" :key="fact.label" class="flex min-w-0 flex-col gap-0.5">
 								<dt :class="HEAD" class="text-tertiary">{{ fact.label }}</dt>
-								<dd class="text-default m-0 truncate text-xs" :class="{ 'font-mono': fact.mono }">{{ fact.value }}</dd>
+								<dd class="text-default m-0 truncate text-xs" :class="{ 'font-mono': fact.mono }">
+									{{ fact.value }}
+								</dd>
 							</div>
 						</dl>
 						<div v-if="v.external_references?.length" class="flex min-w-0 flex-col gap-1.5">
-							<span :class="HEAD" class="text-tertiary">References · {{ v.external_references.length }}</span>
+							<span :class="HEAD" class="text-tertiary">
+								References · {{ v.external_references.length }}
+							</span>
 							<a
 								v-for="url of v.external_references"
 								:key="url"
@@ -125,7 +168,9 @@
 				v-if="shown.length > PAGE_SIZES[0]"
 				class="bg-secondary border-default flex flex-wrap items-center justify-between gap-3 border-t px-4 py-2"
 			>
-				<span class="text-tertiary font-mono text-xs tabular-nums" data-testid="vulnerabilities-range">{{ rangeLabel }}</span>
+				<span class="text-tertiary font-mono text-xs tabular-nums" data-testid="vulnerabilities-range">
+					{{ rangeLabel }}
+				</span>
 				<n-pagination
 					v-model:page="pageNumber"
 					v-model:page-size="pageSize"
@@ -141,10 +186,11 @@
 </template>
 
 <script setup lang="ts">
+import type { FilterStripOption } from "./FilterStrip.vue"
 import type { AgentVulnerability, VulnerabilitySeverity } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import { saveAs } from "file-saver"
-import { NAlert, NButton, NEmpty, NInput, NPagination, NRadioButton, NRadioGroup, NSkeleton, useMessage } from "naive-ui"
+import { NAlert, NButton, NEmpty, NInput, NPagination, NSkeleton, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -159,8 +205,10 @@ import {
 	formatCvss,
 	SEVERITIES,
 	severityClasses,
-	severityCounts
+	severityCounts,
+	severityDot
 } from "./agentFindings"
+import FilterStrip from "./FilterStrip.vue"
 
 /**
  * An agent's vulnerabilities, as Wazuh found them (#1256): fetched once with every severity,
@@ -193,9 +241,18 @@ const pageSize = ref(PAGE_SIZES[0])
 const expanded = ref(new Set<string>())
 const exporting = ref(false)
 
-const severityOptions: (VulnerabilitySeverity | "All")[] = ["All", ...SEVERITIES]
 const counts = computed(() => severityCounts(vulnerabilities.value))
-const shown = computed(() => filterVulnerabilities(vulnerabilities.value, { severity: severity.value, search: search.value }))
+const severityStrip = computed<FilterStripOption<VulnerabilitySeverity | "All">[]>(() =>
+	(["All", ...SEVERITIES] as const).map(value => ({
+		value,
+		label: value,
+		count: counts.value[value],
+		dot: value === "All" ? "bg-primary" : severityDot(value)
+	}))
+)
+const shown = computed(() =>
+	filterVulnerabilities(vulnerabilities.value, { severity: severity.value, search: search.value })
+)
 const offset = computed(() => (pageNumber.value - 1) * pageSize.value)
 const page = computed(() => shown.value.slice(offset.value, offset.value + pageSize.value))
 const rangeLabel = computed(

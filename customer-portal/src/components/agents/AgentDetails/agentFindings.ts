@@ -69,6 +69,20 @@ export function formatCvss(score: number | null | undefined): string {
 	return score == null ? "—" : score.toFixed(1)
 }
 
+/** The dot beside a severity in the counts: the same hue as its chip. */
+export function severityDot(severity: string | null | undefined): string {
+	switch (normalizeSeverity(severity)) {
+		case "Critical":
+			return "bg-error"
+		case "High":
+			return "bg-warning"
+		case "Medium":
+			return "bg-info"
+		default:
+			return "bg-muted"
+	}
+}
+
 export const SCA_RESULTS = ["failed", "passed", "not applicable"] as const
 
 export type ScaResultFilter = (typeof SCA_RESULTS)[number] | "all"

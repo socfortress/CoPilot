@@ -1,6 +1,6 @@
 import type { AgentScaCheck, AgentScaPolicy, AgentVulnerability } from "@/types/agents"
 import { flushPromises, mount } from "@vue/test-utils"
-import { NMessageProvider, NRadioGroup } from "naive-ui"
+import { NMessageProvider } from "naive-ui"
 import { createPinia, setActivePinia } from "pinia"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h, nextTick } from "vue"
@@ -98,7 +98,9 @@ describe("agent vulnerabilities", () => {
 		expect(api.getVulnerabilities.mock.calls[0]![0]).toBe("001")
 		const rows = wrapper.findAll("[data-testid=vulnerability-row]")
 		expect(rows.map(r => r.find(".font-mono").text())).toEqual(["CVE-C", "CVE-H", "CVE-L"])
-		expect(wrapper.get("[data-testid=vulnerabilities-severity]").text().replace(/\s+/g, " ")).toContain("Critical 1")
+		expect(wrapper.get("[data-testid=severity-Critical] [data-testid=severity-count]").text()).toBe("1")
+		expect(wrapper.get("[data-testid=severity-All] [data-testid=severity-count]").text()).toBe("3")
+		expect(wrapper.get("[data-testid=severity-All]").attributes("aria-pressed")).toBe("true")
 	})
 
 	it("a severity filter narrows the list without asking again, and the export asks for it", async () => {
@@ -109,8 +111,9 @@ describe("agent vulnerabilities", () => {
 		const wrapper = render(AgentVulnerabilities, { agentId: "001", agentLabel: "web-01" })
 		await flushPromises()
 
-		wrapper.findComponent(NRadioGroup).vm.$emit("update:value", "High")
+		await wrapper.get("[data-testid=severity-High]").trigger("click")
 		await nextTick()
+		expect(wrapper.get("[data-testid=severity-High]").attributes("aria-pressed")).toBe("true")
 		expect(wrapper.findAll("[data-testid=vulnerability-row]")).toHaveLength(1)
 		expect(api.getVulnerabilities).toHaveBeenCalledTimes(1)
 
@@ -118,6 +121,15 @@ describe("agent vulnerabilities", () => {
 		await flushPromises()
 		expect(api.exportVulnerabilities).toHaveBeenCalledWith("001", "High")
 		expect(saveAs.mock.calls[0]![1]).toMatch(/^web-01-vulnerabilities-high-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.csv$/)
+	})
+
+	it("says that Wazuh can take a while, and shows no count, while it loads", async () => {
+		api.getVulnerabilities.mockReturnValue(new Promise(() => {}))
+		const wrapper = render(AgentVulnerabilities, { agentId: "001", agentLabel: "web-01" })
+		await flushPromises()
+
+		expect(wrapper.get("[data-testid=vulnerabilities-loading]").text()).toContain("This can take up to a minute")
+		expect(wrapper.get("[data-testid=severity-All] [data-testid=severity-count]").text()).toBe("—")
 	})
 
 	it("a row opens its detail with the references", async () => {
