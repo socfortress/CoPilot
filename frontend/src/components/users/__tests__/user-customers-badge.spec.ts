@@ -70,7 +70,11 @@ describe("user customers badge", () => {
 	})
 
 	it("lists the customers by name on hover, each with View and Open", async () => {
-		const wrapper = render({ customerCodes: ["INITECH", "ACME", "UNKNOWN"], roleName: "responder", customerNames: NAMES })
+		const wrapper = render({
+			customerCodes: ["INITECH", "ACME", "UNKNOWN"],
+			roleName: "responder",
+			customerNames: NAMES
+		})
 		await hover(wrapper)
 
 		const list = inBody("[data-testid=user-customers-list]")

@@ -1,3 +1,6 @@
+from typing import Dict
+from typing import Iterable
+
 import httpx
 from fastapi import HTTPException
 from loguru import logger
@@ -60,3 +63,33 @@ async def collect_epss_score(
     data = [EpssData(**item) for item in response_data.get("data", [])]
 
     return EpssThreatIntelResponse(data=data, success=True, message="EPSS score retrieved successfully")
+
+
+EPSS_URL = "https://api.first.org/data/v1/epss"
+# The API takes a comma-separated list and answers up to `limit` rows a page: one request
+# per batch instead of one per CVE.
+EPSS_BATCH_SIZE = 100
+EPSS_TIMEOUT_SECONDS = 15.0
+
+
+async def collect_epss_scores(cves: Iterable[str]) -> Dict[str, str]:
+    """EPSS score per CVE, looked up in batches; a CVE EPSS does not know is absent.
+
+    Best-effort by design: a batch that fails (EPSS down, an air-gapped deployment) is
+    logged and skipped, so a report that merely *adds* EPSS scores still comes out —
+    with the column empty — instead of failing as a whole.
+    """
+    unique = sorted({cve for cve in cves if cve})
+    scores: Dict[str, str] = {}
+    async with httpx.AsyncClient(timeout=EPSS_TIMEOUT_SECONDS) as client:
+        for start in range(0, len(unique), EPSS_BATCH_SIZE):
+            batch = unique[start : start + EPSS_BATCH_SIZE]
+            try:
+                response = await client.get(EPSS_URL, params={"cve": ",".join(batch), "limit": EPSS_BATCH_SIZE})
+                response.raise_for_status()
+                for row in response.json().get("data", []):
+                    if row.get("cve") and row.get("epss") is not None:
+                        scores[row["cve"]] = row["epss"]
+            except (httpx.HTTPError, ValueError) as e:
+                logger.warning(f"EPSS lookup failed for {len(batch)} CVE(s), leaving their scores empty: {type(e).__name__}")
+    return scores

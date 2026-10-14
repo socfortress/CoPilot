@@ -333,7 +333,9 @@ export function getSeverityColor(severity: string | null): "error" | "warning" |
 	return map[severity.toLowerCase()] ?? "default"
 }
 
-export function getStatusColor(status: string | null): "error" | "warning" | "info" | "default" | "success" | "primary" {
+export function getStatusColor(
+	status: string | null
+): "error" | "warning" | "info" | "default" | "success" | "primary" {
 	if (!status) return "default"
 
 	const map: Record<string, "error" | "warning" | "info" | "default" | "success" | "primary"> = {

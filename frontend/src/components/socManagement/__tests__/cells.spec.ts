@@ -48,7 +48,10 @@ describe("durationCell", () => {
 		await wrapper.get("[data-testid=duration-cell]").trigger("mouseenter")
 		await new Promise(resolve => setTimeout(resolve, 250))
 		const tooltip = document.querySelector("[data-testid=duration-cell-tooltip]")
-		const pairs = [...(tooltip?.querySelectorAll("dt") ?? [])].map(term => [term.textContent?.trim(), term.nextElementSibling?.textContent?.trim()])
+		const pairs = [...(tooltip?.querySelectorAll("dt") ?? [])].map(term => [
+			term.textContent?.trim(),
+			term.nextElementSibling?.textContent?.trim()
+		])
 		expect(pairs).toEqual([
 			["median", "7m"],
 			["mean", "10m"],

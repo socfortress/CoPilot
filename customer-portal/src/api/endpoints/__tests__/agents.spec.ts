@@ -38,3 +38,32 @@ describe("agents endpoints (server-side list, #1185)", () => {
 		expect(config.params).toMatchObject({ search: "web", status: "active", page: undefined, page_size: undefined })
 	})
 })
+
+/** An agent's tabs (#1256): ids and host names travel encoded; exports are blobs kept across navigation. */
+describe("agents endpoints: an agent's findings", () => {
+	beforeEach(() => {
+		get.mockReset()
+	})
+
+	it("asks for every severity at once: the page filters", () => {
+		const signal = new AbortController().signal
+		agents.getVulnerabilities("001", signal)
+		expect(get.mock.calls[0]).toEqual(["/agents/001/vulnerabilities/All", { signal }])
+	})
+
+	it("encodes the agent id, the policy id and the host name", () => {
+		agents.getScaChecks("a/b", "cis ubuntu")
+		agents.getCases("web 01/x")
+		expect(get.mock.calls[0]![0]).toBe("/agents/a%2Fb/sca/cis%20ubuntu")
+		expect(get.mock.calls[1]![0]).toBe("/agents/web%2001%2Fx/cases")
+	})
+
+	it("downloads both exports as blobs that outlive a navigation", () => {
+		agents.exportVulnerabilities("001", "Critical")
+		agents.exportScaChecks("001", "cis_ubuntu22-04")
+		expect(get.mock.calls.map(([url, config]) => [url, config.responseType, config.keepOnNavigation])).toEqual([
+			["/agents/001/csv/vulnerabilities/Critical", "blob", true],
+			["/agents/001/csv/sca/cis_ubuntu22-04", "blob", true]
+		])
+	})
+})

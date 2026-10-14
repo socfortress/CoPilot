@@ -65,19 +65,32 @@ export default {
 			signal
 		})
 	},
-	getEntityRiskHistory(customerCode: string, entityKey: string, since: string, step: UbaRiskStep, signal?: AbortSignal) {
+	getEntityRiskHistory(
+		customerCode: string,
+		entityKey: string,
+		since: string,
+		step: UbaRiskStep,
+		signal?: AbortSignal
+	) {
 		return HttpClient.get<FlaskBaseResponse & UbaRiskHistory>(`${base(customerCode)}/entity/risk-history`, {
 			params: { entity_key: entityKey, since, step },
 			signal
 		})
 	},
 	getEntityTimeline(customerCode: string, entityKey: string, page = 1, pageSize = 50, signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & UbaPage & { signals: UbaSignal[] }>(`${base(customerCode)}/entity/timeline`, {
-			params: { entity_key: entityKey, page, page_size: pageSize },
-			signal
-		})
+		return HttpClient.get<FlaskBaseResponse & UbaPage & { signals: UbaSignal[] }>(
+			`${base(customerCode)}/entity/timeline`,
+			{
+				params: { entity_key: entityKey, page, page_size: pageSize },
+				signal
+			}
+		)
 	},
-	getAlerts(customerCode: string, query: { status?: "open" | "closed" | null; page?: number; page_size?: number } = {}, signal?: AbortSignal) {
+	getAlerts(
+		customerCode: string,
+		query: { status?: "open" | "closed" | null; page?: number; page_size?: number } = {},
+		signal?: AbortSignal
+	) {
 		return HttpClient.get<FlaskBaseResponse & UbaPage & { alerts: UbaAlert[] }>(`${base(customerCode)}/alerts`, {
 			params: query,
 			signal
@@ -92,20 +105,32 @@ export default {
 	/** FALSE_POSITIVE with suppress suppresses the alert's rules for the entity (UBA records who). */
 	submitFeedback(customerCode: string, alertId: string, payload: UbaFeedbackPayload) {
 		return HttpClient.post<
-			FlaskBaseResponse & { verdict: string; suppressed_rules: string[]; suppressed_until: string | null; incident?: UbaIncidentVerdict }
-		>(
-			`${base(customerCode)}/alerts/${encodeURIComponent(alertId)}/feedback`,
-			payload
+			FlaskBaseResponse & {
+				verdict: string
+				suppressed_rules: string[]
+				suppressed_until: string | null
+				incident?: UbaIncidentVerdict
+			}
+		>(`${base(customerCode)}/alerts/${encodeURIComponent(alertId)}/feedback`, payload)
+	},
+	getSuppressions(
+		customerCode: string,
+		query: { entity_key?: string; include_expired?: boolean } = {},
+		signal?: AbortSignal
+	) {
+		return HttpClient.get<FlaskBaseResponse & { suppressions: UbaSuppression[] }>(
+			`${base(customerCode)}/suppressions`,
+			{
+				params: query,
+				signal
+			}
 		)
 	},
-	getSuppressions(customerCode: string, query: { entity_key?: string; include_expired?: boolean } = {}, signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { suppressions: UbaSuppression[] }>(`${base(customerCode)}/suppressions`, {
-			params: query,
-			signal
-		})
-	},
 	addSuppressions(customerCode: string, payload: UbaSuppressionPayload) {
-		return HttpClient.post<FlaskBaseResponse & { suppressions: UbaSuppression[] }>(`${base(customerCode)}/suppressions`, payload)
+		return HttpClient.post<FlaskBaseResponse & { suppressions: UbaSuppression[] }>(
+			`${base(customerCode)}/suppressions`,
+			payload
+		)
 	},
 	removeSuppressions(customerCode: string, entityKey: string, ruleId?: string | null) {
 		return HttpClient.delete<FlaskBaseResponse & { removed: number }>(`${base(customerCode)}/suppressions`, {
@@ -143,7 +168,10 @@ export default {
 		})
 	},
 	createBacktest(customerCode: string, payload: UbaBacktestPayload) {
-		return HttpClient.post<FlaskBaseResponse & { backtest: UbaBacktest }>(`${base(customerCode)}/backtests`, payload)
+		return HttpClient.post<FlaskBaseResponse & { backtest: UbaBacktest }>(
+			`${base(customerCode)}/backtests`,
+			payload
+		)
 	},
 	getBacktests(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { backtests: UbaBacktest[] }>(`${base(customerCode)}/backtests`, {
@@ -188,9 +216,12 @@ export default {
 	},
 	/** Admin: the customer's rollbacks, newest first. */
 	getRollbacks(customerCode: string, signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { rollbacks: UbaRollbackSummary[] }>(`${base(customerCode)}/rollbacks`, {
-			signal
-		})
+		return HttpClient.get<FlaskBaseResponse & { rollbacks: UbaRollbackSummary[] }>(
+			`${base(customerCode)}/rollbacks`,
+			{
+				signal
+			}
+		)
 	},
 	/** Admin: one rollback with its snapshot, steps and checks. */
 	getRollback(customerCode: string, rollbackId: number, signal?: AbortSignal) {
@@ -235,10 +266,13 @@ export default {
 	},
 	/** Identities by name or alias: merge targets, directory users first. */
 	searchIdentities(customerCode: string, q: string, signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { identities: UbaIdentitySummary[] }>(`${base(customerCode)}/identities`, {
-			params: { q },
-			signal
-		})
+		return HttpClient.get<FlaskBaseResponse & { identities: UbaIdentitySummary[] }>(
+			`${base(customerCode)}/identities`,
+			{
+				params: { q },
+				signal
+			}
+		)
 	},
 	/** Admin: merge one identity into another (queued; cannot be undone). */
 	mergeIdentity(customerCode: string, identityId: string, into: string) {
@@ -259,9 +293,12 @@ export default {
 		return HttpClient.post<FlaskBaseResponse>(`${base(customerCode)}/identity-candidates/${candidateId}/dismiss`)
 	},
 	getRuleStats(customerCode: string, since = "24h", signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { since: string; rules: UbaRuleStat[] }>(`${base(customerCode)}/rules/stats`, {
-			params: { since },
-			signal
-		})
+		return HttpClient.get<FlaskBaseResponse & { since: string; rules: UbaRuleStat[] }>(
+			`${base(customerCode)}/rules/stats`,
+			{
+				params: { since },
+				signal
+			}
+		)
 	}
 }

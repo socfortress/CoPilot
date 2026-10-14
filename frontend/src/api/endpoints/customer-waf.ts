@@ -39,13 +39,18 @@ export default {
 	},
 	/** Admin only. Creates the Graylog input, index set, stream and the WAF forwarder; rolls back on failure. */
 	setUpForwarding(customerCode: string, wafId: number, syslogHost: string | null) {
-		return HttpClient.post<FlaskBaseResponse & CustomerWafForwardingResult>(`${base(customerCode)}/${wafId}/forwarding`, {
-			syslog_host: syslogHost
-		})
+		return HttpClient.post<FlaskBaseResponse & CustomerWafForwardingResult>(
+			`${base(customerCode)}/${wafId}/forwarding`,
+			{
+				syslog_host: syslogHost
+			}
+		)
 	},
 	/** Admin only. Removes the forwarder and this WAF's input; stored events are kept. */
 	removeForwarding(customerCode: string, wafId: number) {
-		return HttpClient.delete<FlaskBaseResponse & CustomerWafForwardingResult>(`${base(customerCode)}/${wafId}/forwarding`)
+		return HttpClient.delete<FlaskBaseResponse & CustomerWafForwardingResult>(
+			`${base(customerCode)}/${wafId}/forwarding`
+		)
 	},
 	/** Admin only. Saves, then runs a connection test (the save stands even if it fails). */
 	createInstance(customerCode: string, payload: CustomerWafPayload) {
@@ -77,9 +82,12 @@ export default {
 		>(`${base(customerCode)}/${wafId}/verify`)
 	},
 	getSites(customerCode: string, wafId: number, signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { sites: CustomerWafSite[] }>(`${base(customerCode)}/${wafId}/sites`, {
-			signal
-		})
+		return HttpClient.get<FlaskBaseResponse & { sites: CustomerWafSite[] }>(
+			`${base(customerCode)}/${wafId}/sites`,
+			{
+				signal
+			}
+		)
 	},
 	getEvents(customerCode: string, wafId: number, query: CustomerWafEventsQuery = {}, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { events: CustomerWafEvent[]; limit: number; offset: number }>(
@@ -116,7 +124,11 @@ export default {
 	/** Disables CoPilot's rule for exactly this target (never deletes, never touches WAF-owned rules). */
 	unblock(customerCode: string, wafId: number, target: string) {
 		return HttpClient.delete<
-			FlaskBaseResponse & { action: "unblocked" | "already_unblocked"; target: string; blocks: CustomerWafBlock[] }
+			FlaskBaseResponse & {
+				action: "unblocked" | "already_unblocked"
+				target: string
+				blocks: CustomerWafBlock[]
+			}
 		>(`${base(customerCode)}/${wafId}/blocks`, { params: { target } })
 	}
 }

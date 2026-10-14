@@ -104,9 +104,12 @@ export default {
 
 	/** Asset names on the alerts the user can see, matching `search` (at most `limit`). */
 	searchAlertAssets(search: string | null, signal?: AbortSignal, limit = 20) {
-		return HttpClient.get<CommonResponse<{ assets: string[] }>>(`/incidents/db_operations/alerts/filter-options/assets`, {
-			params: { search: search || undefined, limit },
-			signal
-		})
+		return HttpClient.get<CommonResponse<{ assets: string[] }>>(
+			`/incidents/db_operations/alerts/filter-options/assets`,
+			{
+				params: { search: search || undefined, limit },
+				signal
+			}
+		)
 	}
 }

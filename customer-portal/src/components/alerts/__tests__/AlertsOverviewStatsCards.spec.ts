@@ -15,7 +15,11 @@ function mountCards(status: AlertStatus | null) {
 		defineComponent({
 			setup: () => () =>
 				h(NMessageProvider, null, () =>
-					h(AlertsOverviewStatsCards, { "status": status, "onUpdate:status": (value: AlertStatus | null) => updates.push(value) }))
+					h(AlertsOverviewStatsCards, {
+						status: status,
+						"onUpdate:status": (value: AlertStatus | null) => updates.push(value)
+					})
+				)
 		})
 	)
 	return { wrapper, updates }

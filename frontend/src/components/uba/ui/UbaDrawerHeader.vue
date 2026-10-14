@@ -5,11 +5,18 @@
 				<Icon :name="meta?.icon ?? 'carbon:user'" :size="20" />
 			</span>
 			<div class="flex min-w-0 flex-1 flex-col gap-1">
-				<span class="text-tertiary font-mono text-[10px] tracking-widest uppercase" data-testid="uba-drawer-kind">
+				<span
+					class="text-tertiary font-mono text-[10px] tracking-widest uppercase"
+					data-testid="uba-drawer-kind"
+				>
 					{{ meta?.kind ?? kind }}
 				</span>
 				<template v-if="meta">
-					<h3 class="m-0 truncate text-lg leading-tight font-semibold" :title="meta.title" data-testid="uba-drawer-title">
+					<h3
+						class="m-0 truncate text-lg leading-tight font-semibold"
+						:title="meta.title"
+						data-testid="uba-drawer-title"
+					>
 						{{ meta.title }}
 					</h3>
 					<div v-if="meta.key" class="flex min-w-0 items-center gap-1">
@@ -22,7 +29,9 @@
 							data-testid="uba-drawer-copy"
 							@click="copyKey"
 						>
-							<template #icon><Icon :name="copied ? 'carbon:checkmark' : 'carbon:copy'" :size="12" /></template>
+							<template #icon>
+								<Icon :name="copied ? 'carbon:checkmark' : 'carbon:copy'" :size="12" />
+							</template>
 						</n-button>
 					</div>
 				</template>

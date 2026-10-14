@@ -109,8 +109,20 @@ const columns: DataTableColumns<UbaRuleStat> = [
 		sorter: (a, b) => a.entities - b.entities,
 		render: row => <span class="font-mono tabular-nums">{row.entities}</span>
 	},
-	{ title: "Added risk", key: "with_risk", width: 110, align: "right", render: row => <span class="font-mono tabular-nums">{row.with_risk}</span> },
-	{ title: "Suppressed", key: "suppressed", width: 110, align: "right", render: row => <span class="font-mono tabular-nums">{row.suppressed}</span> },
+	{
+		title: "Added risk",
+		key: "with_risk",
+		width: 110,
+		align: "right",
+		render: row => <span class="font-mono tabular-nums">{row.with_risk}</span>
+	},
+	{
+		title: "Suppressed",
+		key: "suppressed",
+		width: 110,
+		align: "right",
+		render: row => <span class="font-mono tabular-nums">{row.suppressed}</span>
+	},
 	{
 		title: "Last",
 		key: "last_signal",

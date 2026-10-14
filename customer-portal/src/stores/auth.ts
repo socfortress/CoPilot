@@ -1,13 +1,6 @@
 import type { LoginPayload } from "@/api/endpoints/auth"
 import type { TOTPValidateRequest } from "@/api/endpoints/totp"
-import type {
-	AuthResponse,
-	AuthUser,
-	AuthUserRole,
-	JWTPayload,
-	PortalCustomer,
-	RouteMetaAuthRole
-} from "@/types/auth"
+import type { AuthResponse, AuthUser, AuthUserRole, JWTPayload, PortalCustomer, RouteMetaAuthRole } from "@/types/auth"
 import type { ApiError } from "@/types/common"
 import * as jose from "jose"
 import _capitalize from "lodash/capitalize"

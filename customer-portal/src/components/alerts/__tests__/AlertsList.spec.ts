@@ -23,7 +23,11 @@ function mountList(initial: Partial<AlertsFilters> = {}) {
 		defineComponent({
 			setup: () => () =>
 				h(NMessageProvider, null, () =>
-					h(AlertsList, { filters: filters.value, onChange: (patch: Partial<AlertsFilters>) => changes.push(patch) }))
+					h(AlertsList, {
+						filters: filters.value,
+						onChange: (patch: Partial<AlertsFilters>) => changes.push(patch)
+					})
+				)
 		}),
 		// The detail and status components are not what this spec is about.
 		{ global: { stubs: { AlertDetailsButton: true, AlertStatusSelect: true } } }

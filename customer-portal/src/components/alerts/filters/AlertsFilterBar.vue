@@ -86,7 +86,9 @@
 						clearable
 						size="small"
 						class="w-36!"
-						@update:value="(ts: number | null) => change('date', { from: ts === null ? null : timestampToDay(ts) })"
+						@update:value="
+							(ts: number | null) => change('date', { from: ts === null ? null : timestampToDay(ts) })
+						"
 					/>
 					<n-date-picker
 						:value="filters.to ? dayToTimestamp(filters.to) : null"
@@ -98,7 +100,9 @@
 						clearable
 						size="small"
 						class="w-36!"
-						@update:value="(ts: number | null) => change('date', { to: ts === null ? null : timestampToDay(ts) })"
+						@update:value="
+							(ts: number | null) => change('date', { to: ts === null ? null : timestampToDay(ts) })
+						"
 					/>
 				</template>
 
@@ -131,7 +135,13 @@
 			</n-button>
 		</n-dropdown>
 
-		<n-button v-if="hasFilters(filters)" size="small" quaternary data-testid="alerts-filter-clear" @click="clearAll">
+		<n-button
+			v-if="hasFilters(filters)"
+			size="small"
+			quaternary
+			data-testid="alerts-filter-clear"
+			@click="clearAll"
+		>
 			Clear filters
 		</n-button>
 	</div>
@@ -142,16 +152,7 @@ import type { AlertsFilters, AlertsFilterType } from "./alertsFilters"
 import type { AlertStatus } from "@/types/alerts"
 import type { ApiError } from "@/types/common"
 import { refDebounced, useDebounceFn } from "@vueuse/core"
-import {
-	NButton,
-	NDatePicker,
-	NDropdown,
-	NInput,
-	NInputGroup,
-	NInputGroupLabel,
-	NSelect,
-	useMessage
-} from "naive-ui"
+import { NButton, NDatePicker, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"

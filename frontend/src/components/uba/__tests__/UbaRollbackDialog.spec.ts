@@ -25,14 +25,14 @@ vi.mock("naive-ui", async original => ({
 const ModalStub = { template: '<div><slot /><slot name="footer" /></div>' }
 
 function item(kind: string, title: string, detail = "", recorded = true) {
-  return {
-	kind,
-	id: `${kind}-1`,
-	title,
-	source: null,
-	recorded,
-	detail
-}
+	return {
+		kind,
+		id: `${kind}-1`,
+		title,
+		source: null,
+		recorded,
+		detail
+	}
 }
 
 const PLAN: UbaRollbackPlan = {
@@ -89,7 +89,10 @@ describe("ubaRollbackDialog", () => {
 	it("previews what goes, what stays and what is left alone, without changing anything", async () => {
 		const w = await open()
 		expect(getRollbackPlan).toHaveBeenCalledWith("acme")
-		const removed = w.find("[data-testid=uba-rollback-remove]").findAll("li").map(li => li.text())
+		const removed = w
+			.find("[data-testid=uba-rollback-remove]")
+			.findAll("li")
+			.map(li => li.text())
 		expect(removed[0]).toContain("UBA ROUTING - WAZUH - acme")
 		expect(removed[2]).toContain("found by name")
 		expect(removed[3]).not.toContain("found by name")

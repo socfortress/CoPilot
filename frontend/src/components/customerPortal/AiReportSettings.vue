@@ -37,7 +37,9 @@
 					<div class="flex flex-wrap items-center justify-between gap-4">
 						<div class="flex flex-col gap-1">
 							<div class="font-semibold">Let portal users request an AI analysis</div>
-							<div class="text-secondary text-sm" data-testid="ai-requests-state">{{ requestsState }}</div>
+							<div class="text-secondary text-sm" data-testid="ai-requests-state">
+								{{ requestsState }}
+							</div>
 						</div>
 
 						<n-switch
@@ -125,8 +127,8 @@
 						<b>request an analysis</b>
 						adds a Run AI analysis button to the AI Report tab, also to re-run a finished one. An alert is
 						analysed at most once every 30 minutes and never while an analysis is still running, and each
-						request is noted on the alert's timeline and in the audit log. The daily limit is never shown
-						to the customer: a request over it is refused with a message.
+						request is noted on the alert's timeline and in the audit log. The daily limit is never shown to
+						the customer: a request over it is refused with a message.
 					</p>
 					<p>
 						This is independent of
@@ -153,17 +155,7 @@
 import type { CustomerPortalAiReportSettingsPayload } from "@/api/endpoints/customer-portal"
 import type { ApiError } from "@/types/common"
 import type { CustomerPortalAiReportSettings } from "@/types/customer-portal"
-import {
-	NAlert,
-	NButton,
-	NCard,
-	NInputNumber,
-	NRadioButton,
-	NRadioGroup,
-	NSpin,
-	NSwitch,
-	useMessage
-} from "naive-ui"
+import { NAlert, NButton, NCard, NInputNumber, NRadioButton, NRadioGroup, NSpin, NSwitch, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import { useAuthStore } from "@/stores/auth"
@@ -206,14 +198,18 @@ function resetLimit() {
 watch(settings, resetLimit)
 
 const editedLimit = computed(() => (limitMode.value === "unlimited" ? null : limitValue.value))
-const limitValid = computed(() => editedLimit.value === null || (Number.isInteger(editedLimit.value) && editedLimit.value >= 1))
+const limitValid = computed(
+	() => editedLimit.value === null || (Number.isInteger(editedLimit.value) && editedLimit.value >= 1)
+)
 const limitChanged = computed(() => editedLimit.value !== (settings.value?.daily_request_limit ?? null))
 
 const usage = computed(() => {
 	const used = settings.value?.requests_last_24h ?? 0
 	const limit = settings.value?.daily_request_limit ?? null
 	const requests = `${used} request${used === 1 ? "" : "s"}`
-	return limit === null ? `${requests} in the last 24 hours, no limit.` : `${used} of ${limit} requests used in the last 24 hours.`
+	return limit === null
+		? `${requests} in the last 24 hours, no limit.`
+		: `${used} of ${limit} requests used in the last 24 hours.`
 })
 
 function getSettings() {
@@ -236,7 +232,10 @@ function getSettings() {
 		})
 }
 
-function save(change: Omit<CustomerPortalAiReportSettingsPayload, "enabled"> & { enabled?: boolean }, control: typeof saving.value) {
+function save(
+	change: Omit<CustomerPortalAiReportSettingsPayload, "enabled"> & { enabled?: boolean },
+	control: typeof saving.value
+) {
 	saving.value = control
 
 	Api.customerPortal
@@ -266,7 +265,9 @@ function savedMessage(change: Partial<CustomerPortalAiReportSettingsPayload>) {
 		return change.enabled ? "AI reports enabled for this customer" : "AI reports disabled for this customer"
 	}
 	if (change.allow_customer_requests !== undefined) {
-		return change.allow_customer_requests ? "Portal users can now request AI analyses" : "AI analysis requests turned off"
+		return change.allow_customer_requests
+			? "Portal users can now request AI analyses"
+			: "AI analysis requests turned off"
 	}
 	return "Daily limit saved"
 }

@@ -60,6 +60,7 @@ export function useResolvedColors() {
 	return {
 		style,
 		tone: (tone: Tone) => style.value[TONE_VARS[tone]],
-		severity: (severity: string) => style.value[SEVERITY_VARS[severity as Severity]] ?? style.value["fg-secondary-color"]
+		severity: (severity: string) =>
+			style.value[SEVERITY_VARS[severity as Severity]] ?? style.value["fg-secondary-color"]
 	}
 }

@@ -14,14 +14,22 @@
 		<template v-else-if="stats">
 			<!-- Last hour: one fact grid, hairlines between cells (File Analysis's pattern). -->
 			<section class="border-default overflow-hidden rounded-lg border">
-				<header class="bg-secondary border-default flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2">
+				<header
+					class="bg-secondary border-default flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2"
+				>
 					<span :class="SECTION_LABEL">Last hour</span>
 					<div class="flex flex-wrap items-center gap-2">
-						<Badge type="splitted" size="small" :color="stats.caddy_healthy === false ? 'danger' : 'success'">
+						<Badge
+							type="splitted"
+							size="small"
+							:color="stats.caddy_healthy === false ? 'danger' : 'success'"
+						>
 							<template #iconLeft>
 								<Icon :name="stats.caddy_healthy === false ? AlertIcon : HealthyIcon" :size="12" />
 							</template>
-							<template #value>engine {{ stats.caddy_healthy === false ? "unhealthy" : "healthy" }}</template>
+							<template #value>
+								engine {{ stats.caddy_healthy === false ? "unhealthy" : "healthy" }}
+							</template>
 						</Badge>
 						<Badge v-if="stats.ingestion_lag_seconds != null" type="splitted" size="small">
 							<template #iconLeft><Icon :name="LagIcon" :size="12" /></template>
@@ -46,7 +54,9 @@
 			</section>
 
 			<section class="border-default overflow-hidden rounded-lg border">
-				<header class="bg-secondary border-default flex items-baseline justify-between gap-2 border-b px-3 py-2">
+				<header
+					class="bg-secondary border-default flex items-baseline justify-between gap-2 border-b px-3 py-2"
+				>
 					<span :class="SECTION_LABEL">Requests per hour</span>
 					<span class="text-tertiary text-2xs">last 24h · peak {{ peak.toLocaleString() }}/h</span>
 				</header>
@@ -198,7 +208,11 @@ const countries = computed<WafRankItem[]>(() =>
 	}))
 )
 const rules = computed<WafRankItem[]>(() =>
-	byCount(stats.value?.top_rules ?? []).map(r => ({ key: r.rule_id ?? "none", label: r.rule_id ?? "—", value: r.count }))
+	byCount(stats.value?.top_rules ?? []).map(r => ({
+		key: r.rule_id ?? "none",
+		label: r.rule_id ?? "—",
+		value: r.count
+	}))
 )
 const ips = computed<WafRankItem[]>(() =>
 	byCount(stats.value?.top_ips ?? []).map(i => ({ key: i.client_ip, label: i.client_ip, value: i.count }))

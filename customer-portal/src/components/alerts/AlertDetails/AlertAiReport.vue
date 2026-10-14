@@ -56,7 +56,10 @@
 						round
 						label="Started"
 						:value="
-							formatDate(investigation.started_at ?? investigation.created_at, dFormats.datetime) as string
+							formatDate(
+								investigation.started_at ?? investigation.created_at,
+								dFormats.datetime
+							) as string
 						"
 					/>
 					<Chip
@@ -67,12 +70,7 @@
 						:value="formatDate(investigation.completed_at, dFormats.datetime) as string"
 					/>
 					<div v-if="analysis.can_request" class="ml-auto">
-						<AiAnalysisRequestButton
-							has-analysis
-							:in-progress
-							:requesting
-							@request="requestAnalysis"
-						/>
+						<AiAnalysisRequestButton has-analysis :in-progress :requesting @request="requestAnalysis" />
 					</div>
 				</div>
 
@@ -83,7 +81,8 @@
 					title="AI analysis requested"
 					data-testid="ai-request-pending"
 				>
-					The AI analyst will pick it up shortly. This page updates by itself, and the new findings replace these once it has finished.
+					The AI analyst will pick it up shortly. This page updates by itself, and the new findings replace
+					these once it has finished.
 				</n-alert>
 				<n-alert
 					v-else-if="investigationPending"
@@ -91,7 +90,8 @@
 					:show-icon="false"
 					title="Investigation in progress"
 				>
-					The AI analyst is still working on this alert. Findings will appear here once the investigation completes.
+					The AI analyst is still working on this alert. Findings will appear here once the investigation
+					completes.
 				</n-alert>
 
 				<template v-if="report">
@@ -107,7 +107,12 @@
 
 					<template v-if="report.report_markdown">
 						<div>
-							<n-button size="small" secondary data-testid="ai-full-report-open" @click="showFullReport = true">
+							<n-button
+								size="small"
+								secondary
+								data-testid="ai-full-report-open"
+								@click="showFullReport = true"
+							>
 								<template #icon><Icon name="carbon:document-view" /></template>
 								Full Report
 							</n-button>
@@ -150,7 +155,13 @@
 										label="VT Verdict"
 										:value="ioc.vt_verdict"
 									/>
-									<Chip v-if="ioc.vt_score" size="tiny" round label="VT Score" :value="ioc.vt_score" />
+									<Chip
+										v-if="ioc.vt_score"
+										size="tiny"
+										round
+										label="VT Score"
+										:value="ioc.vt_score"
+									/>
 								</div>
 							</template>
 						</CardEntity>

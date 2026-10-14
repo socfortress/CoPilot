@@ -35,7 +35,9 @@ function render(user: User) {
 	return mount(
 		defineComponent({
 			setup: () => () =>
-				h(NMessageProvider, null, { default: () => h(NDialogProvider, null, { default: () => h(UserDetails, { user }) }) })
+				h(NMessageProvider, null, {
+					default: () => h(NDialogProvider, null, { default: () => h(UserDetails, { user }) })
+				})
 		}),
 		{ attachTo: document.body }
 	)
@@ -75,7 +77,13 @@ describe("a non-admin on their own page", () => {
 
 	it("is warned only when they really have no customer", async () => {
 		getMyEffectiveAccess.mockResolvedValue({
-			data: { success: true, accessible_customers: [], accessible_tags: [], is_tag_unrestricted: true, tag_rbac_enabled: false }
+			data: {
+				success: true,
+				accessible_customers: [],
+				accessible_tags: [],
+				is_tag_unrestricted: true,
+				tag_rbac_enabled: false
+			}
 		})
 		const wrapper = render(ALICE)
 		await flushPromises()

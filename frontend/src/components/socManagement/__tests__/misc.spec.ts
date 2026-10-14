@@ -31,7 +31,12 @@ vi.mock("@/api", () => ({
 	default: {
 		socManagement: new Proxy(
 			{},
-			{ get: (_, name: string) => (...args: unknown[]) => api[name as keyof typeof api](...args) }
+			{
+				get:
+					(_, name: string) =>
+					(...args: unknown[]) =>
+						api[name as keyof typeof api](...args)
+			}
 		)
 	}
 }))
@@ -74,12 +79,17 @@ describe("useAttention", () => {
 		expect([attention.items.value.length, attention.total.value, attention.loading.value]).toEqual([1, 7, false])
 		filter.value = { entity: "case" }
 		await flushPromises()
-		expect(api.getAttention).toHaveBeenLastCalledWith({ customerCodes: ["ACME"], entity: "case", limit: 200 }, expect.any(AbortSignal))
+		expect(api.getAttention).toHaveBeenLastCalledWith(
+			{ customerCodes: ["ACME"], entity: "case", limit: 200 },
+			expect.any(AbortSignal)
+		)
 	})
 
 	it("aborts the load it supersedes and keeps only the latest answer", async () => {
 		const first = deferred<unknown>()
-		api.getAttention.mockReturnValueOnce(first.promise).mockResolvedValueOnce({ data: { items: [{ id: 2 }], total: 1 } })
+		api.getAttention
+			.mockReturnValueOnce(first.promise)
+			.mockResolvedValueOnce({ data: { items: [{ id: 2 }], total: 1 } })
 		const filter = ref({})
 		const attention = withSetup(() => useAttention(ref({}), filter))
 		filter.value = { state: "breached" }
@@ -92,7 +102,9 @@ describe("useAttention", () => {
 	})
 
 	it("reports a failure but not a cancellation", async () => {
-		api.getAttention.mockImplementationOnce(() => Promise.reject(Object.assign(new Error("x"), { name: "CanceledError" })))
+		api.getAttention.mockImplementationOnce(() =>
+			Promise.reject(Object.assign(new Error("x"), { name: "CanceledError" }))
+		)
 		const attention = withSetup(() => useAttention(ref({}), ref({})))
 		await flushPromises()
 		expect(attention.error.value).toBeNull()
@@ -155,10 +167,16 @@ describe("useBusinessCalendar", () => {
 
 		api.saveCalendar.mockResolvedValueOnce(respond(own, ["ACME"]))
 		expect(await calendar.save(true)).toEqual({ ok: true, message: "ok" })
-		expect(api.saveCalendar.mock.calls[0][0]).toMatchObject({ customer_code: "ACME", apply_to_open: true, timezone: "Europe/Rome" })
+		expect(api.saveCalendar.mock.calls[0][0]).toMatchObject({
+			customer_code: "ACME",
+			apply_to_open: true,
+			timezone: "Europe/Rome"
+		})
 		expect([calendar.hasOwn.value, calendar.customersWithCalendar.value]).toEqual([true, ["ACME"]])
 
-		api.deleteCalendar.mockImplementationOnce(() => Promise.reject(Object.assign(new Error("x"), { response: { data: { detail: "denied" } } })))
+		api.deleteCalendar.mockImplementationOnce(() =>
+			Promise.reject(Object.assign(new Error("x"), { response: { data: { detail: "denied" } } }))
+		)
 		expect(await calendar.remove(false)).toEqual({ ok: false, message: "Could not remove the calendar: denied" })
 		expect(calendar.saving.value).toBe(false)
 	})
@@ -242,7 +260,11 @@ describe("small ui", () => {
 		expect(data[2]).toMatchObject({ value: 2, symbol: "circle" })
 		expect(option.tooltip).toEqual({ show: false })
 		expect(option.series[0].silent).toBe(true)
-		expect(mount(Sparkline, { props: { values: [5] } }).find("[data-testid=v-chart]").exists()).toBe(false)
+		expect(
+			mount(Sparkline, { props: { values: [5] } })
+				.find("[data-testid=v-chart]")
+				.exists()
+		).toBe(false)
 	})
 
 	it("sparkline with one label per value shows the period and the value on hover", () => {
@@ -293,7 +315,10 @@ describe("small ui", () => {
 	})
 
 	it("panelSegment leaves out the footer band when there is nothing to commit, and the body padding when flush", () => {
-		const wrapper = mount(PanelSegment, { props: { title: "Scope", flush: true }, slots: { default: () => h("nav", "list") } })
+		const wrapper = mount(PanelSegment, {
+			props: { title: "Scope", flush: true },
+			slots: { default: () => h("nav", "list") }
+		})
 		expect(wrapper.find("footer").exists()).toBe(false)
 		expect(wrapper.get("section > div").classes()).not.toContain("p-3")
 	})

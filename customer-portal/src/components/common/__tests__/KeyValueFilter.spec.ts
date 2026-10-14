@@ -19,12 +19,13 @@ function mountFilter(props: FilterProps) {
 			setup: () => () =>
 				h(NMessageProvider, null, () =>
 					h(KeyValueFilter, {
-						"value": model.value,
+						value: model.value,
 						"onUpdate:value": (value: KeyValueFilterModel) => (model.value = value),
-						"onLoaded": loaded,
-						"testid": "things",
+						onLoaded: loaded,
+						testid: "things",
 						...props
-					}))
+					})
+				)
 		})
 	)
 	const selects = () => wrapper.findAllComponents(NSelect)

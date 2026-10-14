@@ -5,7 +5,13 @@
 		aria-label="UBA status for this customer"
 		data-testid="uba-status-strip"
 	>
-		<n-tooltip v-for="cell of cells" :key="cell.key" :disabled="!cell.title" placement="bottom" style="max-width: 320px">
+		<n-tooltip
+			v-for="cell of cells"
+			:key="cell.key"
+			:disabled="!cell.title"
+			placement="bottom"
+			style="max-width: 320px"
+		>
 			<template #trigger>
 				<div
 					class="cell border-border flex min-w-0 flex-col gap-1.5 px-4 py-3 @max-3xl:odd:border-l"
@@ -65,8 +71,20 @@ const cells = computed<Cell[]>(() => {
 			value: String(status.open_alerts),
 			tone: status.open_alerts ? "error" : "neutral"
 		},
-		{ key: "alerts-24h", label: "Alerts 24 h", icon: "carbon:notification", value: String(status.alerts_24h), tone: "neutral" },
-		{ key: "signals-24h", label: "Findings 24 h", icon: "carbon:activity", value: String(status.signals_24h), tone: "neutral" },
+		{
+			key: "alerts-24h",
+			label: "Alerts 24 h",
+			icon: "carbon:notification",
+			value: String(status.alerts_24h),
+			tone: "neutral"
+		},
+		{
+			key: "signals-24h",
+			label: "Findings 24 h",
+			icon: "carbon:activity",
+			value: String(status.signals_24h),
+			tone: "neutral"
+		},
 		{
 			key: "lag",
 			label: "Processing lag",

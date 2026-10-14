@@ -1,9 +1,9 @@
 <template>
 	<UbaSection title="Backtest" test-id="uba-backtests">
 		<template #description>
-			Replays recent history through a separate copy of UBA's rules and reports what they would have
-			found: per rule, how often, for whom, and the alerts it would have raised. Nothing is alerted or
-			stored on entities. A warm-up replays older history first so baselines and learning periods exist.
+			Replays recent history through a separate copy of UBA's rules and reports what they would have found: per
+			rule, how often, for whom, and the alerts it would have raised. Nothing is alerted or stored on entities. A
+			warm-up replays older history first so baselines and learning periods exist.
 		</template>
 
 		<!-- Start a run: what to replay, then the button. -->
@@ -32,7 +32,11 @@
 					<n-select v-model:value="warmup" :options="WARMUP_OPTIONS" />
 				</n-form-item>
 				<n-form-item label="Filter (optional)" :show-feedback="false" size="small" class="min-w-60 grow">
-					<n-input v-model:value="filter" clearable placeholder="e.g. data_win_system_eventID:(4720 OR 4726)" />
+					<n-input
+						v-model:value="filter"
+						clearable
+						placeholder="e.g. data_win_system_eventID:(4720 OR 4726)"
+					/>
 				</n-form-item>
 				<n-button type="primary" size="small" :loading="starting" data-testid="uba-backtest-run" @click="start">
 					<template #icon><Icon name="carbon:play" :size="14" /></template>
@@ -58,7 +62,11 @@
 			data-testid="uba-backtest-runs"
 		/>
 
-		<div v-if="selected" class="panel border-default flex flex-col gap-3 rounded-lg border p-3" data-testid="uba-backtest-result">
+		<div
+			v-if="selected"
+			class="panel border-default flex flex-col gap-3 rounded-lg border p-3"
+			data-testid="uba-backtest-result"
+		>
 			<div class="flex flex-wrap items-center gap-2 text-sm">
 				<b>Result</b>
 				<span class="text-secondary text-xs">
@@ -73,8 +81,8 @@
 				<n-button text size="tiny" class="ml-auto" @click="selected = null">Close</n-button>
 			</div>
 			<n-alert v-if="selected.result!.truncated" type="warning" :bordered="false" class="text-xs">
-				Stopped at UBA's document limit: these numbers cover only the first part of the window. Use fewer
-				days, a filter, or fewer rules.
+				Stopped at UBA's document limit: these numbers cover only the first part of the window. Use fewer days,
+				a filter, or fewer rules.
 			</n-alert>
 			<n-data-table
 				:columns="resultColumns"
@@ -85,7 +93,9 @@
 			/>
 			<p v-if="!selected.result!.rules.length" class="text-secondary text-sm">No rule found anything.</p>
 			<div v-if="selected.result!.alerts.length" class="flex flex-col gap-1">
-				<span class="text-secondary text-xs">Alerts it would have raised (first {{ selected.result!.alerts.length }})</span>
+				<span class="text-secondary text-xs">
+					Alerts it would have raised (first {{ selected.result!.alerts.length }})
+				</span>
 				<ul class="m-0 flex list-none flex-col gap-0.5 p-0 text-xs">
 					<li v-for="(a, i) of selected.result!.alerts.slice(0, 20)" :key="i">
 						<b>{{ a.entity }}</b>
@@ -145,7 +155,14 @@ const ruleOptions = computed(() =>
 
 function statusType(status: UbaBacktestStatus) {
 	return (
-		{ queued: "default", running: "info", cancelling: "warning", done: "success", error: "error", cancelled: "default" } as const
+		{
+			queued: "default",
+			running: "info",
+			cancelling: "warning",
+			done: "success",
+			error: "error",
+			cancelled: "default"
+		} as const
 	)[status]
 }
 
@@ -177,11 +194,18 @@ function statusDetail(job: UbaBacktest) {
 				<NPopover trigger="click" placement="bottom-end" style="max-width: 520px">
 					{{
 						trigger: () => (
-							<NButton text size="tiny" class="shrink-0 text-[11px]" data-testid="uba-backtest-error-details">
+							<NButton
+								text
+								size="tiny"
+								class="shrink-0 text-[11px]"
+								data-testid="uba-backtest-error-details"
+							>
 								Details
 							</NButton>
 						),
-						default: () => <pre class="m-0 font-mono text-[11px] leading-relaxed whitespace-pre-wrap">{job.error}</pre>
+						default: () => (
+							<pre class="m-0 font-mono text-[11px] leading-relaxed whitespace-pre-wrap">{job.error}</pre>
+						)
 					}}
 				</NPopover>
 			</div>
@@ -213,7 +237,9 @@ const columns: DataTableColumns<UbaBacktest> = [
 				<div class="flex flex-col leading-tight">
 					<span class="text-sm">{dayjs(row.created_at).fromNow()}</span>
 					<span class="text-tertiary truncate text-[11px]">
-						<span class="font-mono tabular-nums">{String(formatDate(row.created_at, dFormats.datetime))}</span>
+						<span class="font-mono tabular-nums">
+							{String(formatDate(row.created_at, dFormats.datetime))}
+						</span>
 						{origin.by ? ` · ${origin.by}` : ""}
 						{origin.via ? ` via ${origin.via}` : ""}
 					</span>
@@ -230,14 +256,18 @@ const columns: DataTableColumns<UbaBacktest> = [
 			return (
 				<div class="flex flex-wrap items-center gap-1.5">
 					<span class="param-chip font-mono text-[11px]">{`${p.days} day${p.days === 1 ? "" : "s"}`}</span>
-					{p.warmup_days ? <span class="param-chip font-mono text-[11px]">{`+${p.warmup_days} d warm-up`}</span> : null}
+					{p.warmup_days ? (
+						<span class="param-chip font-mono text-[11px]">{`+${p.warmup_days} d warm-up`}</span>
+					) : null}
 					{p.rules?.length ? (
 						<NTooltip>
 							{{
 								trigger: () => (
 									<span class="param-chip cursor-help font-mono text-[11px]">{`${p.rules?.length} rule${p.rules?.length === 1 ? "" : "s"}`}</span>
 								),
-								default: () => <span class="font-mono text-xs whitespace-pre-line">{p.rules?.join("\n")}</span>
+								default: () => (
+									<span class="font-mono text-xs whitespace-pre-line">{p.rules?.join("\n")}</span>
+								)
 							}}
 						</NTooltip>
 					) : (
@@ -322,11 +352,31 @@ const resultColumns: DataTableColumns<UbaBacktestRuleResult> = [
 		title: "Rule",
 		key: "rule_id",
 		minWidth: 240,
-		render: row => <span class="rule-chip inline-block max-w-full truncate align-middle font-mono text-xs">{row.rule_id}</span>
+		render: row => (
+			<span class="rule-chip inline-block max-w-full truncate align-middle font-mono text-xs">{row.rule_id}</span>
+		)
 	},
-	{ title: "Findings", key: "signals", width: 100, align: "right", render: row => <span class="font-mono tabular-nums">{row.signals}</span> },
-	{ title: "Per day", key: "per_day", width: 90, align: "right", render: row => <span class="font-mono tabular-nums">{row.per_day}</span> },
-	{ title: "Entities", key: "entities", width: 90, align: "right", render: row => <span class="font-mono tabular-nums">{row.entities}</span> },
+	{
+		title: "Findings",
+		key: "signals",
+		width: 100,
+		align: "right",
+		render: row => <span class="font-mono tabular-nums">{row.signals}</span>
+	},
+	{
+		title: "Per day",
+		key: "per_day",
+		width: 90,
+		align: "right",
+		render: row => <span class="font-mono tabular-nums">{row.per_day}</span>
+	},
+	{
+		title: "Entities",
+		key: "entities",
+		width: 90,
+		align: "right",
+		render: row => <span class="font-mono tabular-nums">{row.entities}</span>
+	},
 	{
 		title: "Top entity",
 		key: "top",

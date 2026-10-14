@@ -11,7 +11,13 @@ class StubResizeObserver {
 	observe(target: Element) {
 		resize = width =>
 			this.callback(
-				[{ target, contentRect: { width, height: 10 }, contentBoxSize: [{ inlineSize: width, blockSize: 10 }] } as never],
+				[
+					{
+						target,
+						contentRect: { width, height: 10 },
+						contentBoxSize: [{ inlineSize: width, blockSize: 10 }]
+					} as never
+				],
 				this as never
 			)
 	}

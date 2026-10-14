@@ -60,7 +60,9 @@
 					class="font-mono text-xs"
 					:autosize="{ minRows: 3, maxRows: 8 }"
 					:placeholder="
-						instance?.has_ca_cert ? 'A CA is stored — paste a new one to replace it' : '-----BEGIN CERTIFICATE-----'
+						instance?.has_ca_cert
+							? 'A CA is stored — paste a new one to replace it'
+							: '-----BEGIN CERTIFICATE-----'
 					"
 				/>
 			</n-form-item>
@@ -108,7 +110,10 @@ const error = ref<ApiError | null>(null)
 const form = ref({ name: "", api_url: "", service_token: "", verify_tls: false, ca_cert_pem: "", enabled: true })
 
 const canSave = computed(
-	() => !!form.value.name.trim() && !!form.value.api_url.trim() && (!!props.instance || !!form.value.service_token.trim())
+	() =>
+		!!form.value.name.trim() &&
+		!!form.value.api_url.trim() &&
+		(!!props.instance || !!form.value.service_token.trim())
 )
 
 watch(show, open => {

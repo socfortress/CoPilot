@@ -66,7 +66,9 @@ function follow(event: MouseEvent, page: EntityRoute | null) {
 
 // Only UBA's alerts carry these fields, so other sources skip the extra request.
 const contextId = computed(() =>
-	alert.source?.toLowerCase() === "uba" ? alert.assets.find(a => a.alert_context_id != null)?.alert_context_id : undefined
+	alert.source?.toLowerCase() === "uba"
+		? alert.assets.find(a => a.alert_context_id != null)?.alert_context_id
+		: undefined
 )
 
 watch(

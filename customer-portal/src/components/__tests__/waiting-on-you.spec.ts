@@ -72,9 +72,11 @@ describe("the SOC waiting on the customer, in the portal (#1187)", () => {
 	it("opens a case only in a status the customer may set", async () => {
 		const wrapper = withMessages(CreateCaseForm, {})
 		await flushPromises()
-		const statusSelect = wrapper.findAllComponents(NSelect).find(select =>
-			(select.props("options") as SelectOption[] | undefined)?.some(option => option.value === "OPEN")
-		)
+		const statusSelect = wrapper
+			.findAllComponents(NSelect)
+			.find(select =>
+				(select.props("options") as SelectOption[] | undefined)?.some(option => option.value === "OPEN")
+			)
 		expect((statusSelect?.props("options") as SelectOption[]).map(option => option.value)).toEqual([
 			"OPEN",
 			"IN_PROGRESS",

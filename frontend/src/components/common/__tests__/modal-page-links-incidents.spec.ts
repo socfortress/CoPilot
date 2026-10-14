@@ -23,22 +23,24 @@ vi.mock("@/api", () => ({ default: apiProxy() }))
 
 // The details shown inside each modal are covered by their own specs.
 function stub(name: string) {
-  return {
-	__esModule: true,
-	default: defineComponent({ name, setup: () => () => h("div", { "data-testid": `stub-${name}` }) })
-}
+	return {
+		__esModule: true,
+		default: defineComponent({ name, setup: () => () => h("div", { "data-testid": `stub-${name}` }) })
+	}
 }
 vi.mock("@/components/incidentManagement/alerts/AlertDetails.vue", () => stub("AlertDetails"))
 vi.mock("@/components/incidentManagement/cases/CaseDetails.vue", () => stub("CaseDetails"))
 vi.mock("@/components/incidentManagement/alerts/AlertAssetOverview.vue", () => stub("AlertAssetOverview"))
 vi.mock("@/components/incidentManagement/exclusionRules/ExclusionRuleOverview.vue", () => stub("ExclusionRuleOverview"))
 vi.mock("@/components/incidentManagement/sources/SourceConfigurationDetails.vue", () =>
-	stub("SourceConfigurationDetails"))
+	stub("SourceConfigurationDetails")
+)
 vi.mock("@/components/customers/CustomerDetails.vue", () => stub("CustomerDetails"))
-vi.mock("@/components/customers/healthcheck/CustomerHealthcheckDetails.vue", () =>
-	stub("CustomerHealthcheckDetails"))
-vi.mock("@/components/customers/aiNotifications/CustomerAiNotificationRoutes/CustomerAiNotificationRouteOverview.vue", () =>
-	stub("CustomerAiNotificationRouteOverview"))
+vi.mock("@/components/customers/healthcheck/CustomerHealthcheckDetails.vue", () => stub("CustomerHealthcheckDetails"))
+vi.mock(
+	"@/components/customers/aiNotifications/CustomerAiNotificationRoutes/CustomerAiNotificationRouteOverview.vue",
+	() => stub("CustomerAiNotificationRouteOverview")
+)
 vi.mock("@/components/notifications/NotificationTemplateOverview.vue", () => stub("NotificationTemplateOverview"))
 vi.mock("@/components/aiAnalyst/AlertReportDetails.vue", () => stub("AlertReportDetails"))
 vi.mock("@/components/alerts/AlertDetailTabs.vue", () => stub("AlertDetailTabs"))
@@ -158,30 +160,32 @@ describe("entity modals link to the entity's page", () => {
 	})
 
 	it("an exclusion rule", async () => {
-		const { default: ExclusionRuleItem } = await import(
-			"@/components/incidentManagement/exclusionRules/ExclusionRuleItem.vue"
-		)
+		const { default: ExclusionRuleItem } =
+			await import("@/components/incidentManagement/exclusionRules/ExclusionRuleItem.vue")
 		const entity = { id: 9, name: "Noisy rule", enabled: true, customer_code: null, source_alert_id: null }
 		await follow(await openModal(ExclusionRuleItem, { entity }), "/incident-management/exclusion-rules/9")
 	})
 
 	it("a configured source", async () => {
-		const { default: ConfiguredSourceItem } = await import(
-			"@/components/incidentManagement/sources/ConfiguredSourceItem.vue"
-		)
+		const { default: ConfiguredSourceItem } =
+			await import("@/components/incidentManagement/sources/ConfiguredSourceItem.vue")
 		await follow(await openModal(ConfiguredSourceItem, { source: "wazuh" }), "/incident-management/sources/wazuh")
 	})
 
 	it("a customer", async () => {
 		const { default: CustomerItem } = await import("@/components/customers/CustomerItem.vue")
-		const customer = { customer_code: "ACME", customer_name: "Acme Corp", contact_first_name: "", contact_last_name: "" }
+		const customer = {
+			customer_code: "ACME",
+			customer_name: "Acme Corp",
+			contact_first_name: "",
+			contact_last_name: ""
+		}
 		await follow(await openModal(CustomerItem, { customer }), "/customers/ACME")
 	})
 
 	it("an agent's health check", async () => {
-		const { default: CustomerHealthcheckItem } = await import(
-			"@/components/customers/healthcheck/CustomerHealthcheckItem.vue"
-		)
+		const { default: CustomerHealthcheckItem } =
+			await import("@/components/customers/healthcheck/CustomerHealthcheckItem.vue")
 		const healthData = {
 			id: 1,
 			label: "host-1",
@@ -197,9 +201,8 @@ describe("entity modals link to the entity's page", () => {
 	})
 
 	it("an internal notification route — and no link for a customer route, which has no page", async () => {
-		const { default: RouteItem } = await import(
-			"@/components/customers/aiNotifications/CustomerAiNotificationRoutes/CustomerAiNotificationRouteItem.vue"
-		)
+		const { default: RouteItem } =
+			await import("@/components/customers/aiNotifications/CustomerAiNotificationRoutes/CustomerAiNotificationRouteItem.vue")
 		const route = {
 			id: 3,
 			name: "SOC Teams",
@@ -223,7 +226,8 @@ describe("entity modals link to the entity's page", () => {
 	})
 
 	it("a message template", async () => {
-		const { default: NotificationTemplateItem } = await import("@/components/notifications/NotificationTemplateItem.vue")
+		const { default: NotificationTemplateItem } =
+			await import("@/components/notifications/NotificationTemplateItem.vue")
 		const template = {
 			id: 11,
 			name: "SLA — running late",
@@ -255,7 +259,10 @@ describe("entity modals link to the entity's page", () => {
 	it("a third-party integration and a network connector", async () => {
 		const { default: ServiceItem } = await import("@/components/services/Item.vue")
 		const data = { id: 4, name: "Huntress", description: "", auth_keys: [] }
-		await follow(await openModal(ServiceItem, { data, type: "integration" }), "/external-services/third-party-integrations/4")
+		await follow(
+			await openModal(ServiceItem, { data, type: "integration" }),
+			"/external-services/third-party-integrations/4"
+		)
 		document.body.innerHTML = ""
 		await follow(
 			await openModal(ServiceItem, { data, type: "network-connector" }),

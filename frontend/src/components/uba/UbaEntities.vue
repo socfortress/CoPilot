@@ -12,7 +12,14 @@
 			>
 				<template #prefix><Icon name="carbon:search" :size="14" /></template>
 			</n-input>
-			<n-select v-model:value="entityType" :options="typeOptions" clearable placeholder="Any type" size="small" class="w-44!" />
+			<n-select
+				v-model:value="entityType"
+				:options="typeOptions"
+				clearable
+				placeholder="Any type"
+				size="small"
+				class="w-44!"
+			/>
 			<label class="flex items-center gap-2 pl-1 text-xs">
 				<n-switch v-model:value="ownOnly" size="small" />
 				<span>UBA findings only</span>
@@ -138,13 +145,26 @@ const columns: DataTableColumns<UbaEntitySummary> = [
 				</span>
 				<div class="flex min-w-0 flex-col">
 					<span class="truncate font-medium">{row.entity_name || row.entity_key}</span>
-					{row.entity_name ? <span class="text-tertiary truncate font-mono text-[11px]">{row.entity_key}</span> : null}
+					{row.entity_name ? (
+						<span class="text-tertiary truncate font-mono text-[11px]">{row.entity_key}</span>
+					) : null}
 				</div>
 			</div>
 		)
 	},
-	{ title: "Type", key: "entity_type", width: 90, render: row => <span class="text-secondary text-xs">{entityTypeLabel(row.entity_type)}</span> },
-	{ title: "Rules", key: "rules", width: 70, align: "right", render: row => <span class="font-mono tabular-nums">{row.rules}</span> },
+	{
+		title: "Type",
+		key: "entity_type",
+		width: 90,
+		render: row => <span class="text-secondary text-xs">{entityTypeLabel(row.entity_type)}</span>
+	},
+	{
+		title: "Rules",
+		key: "rules",
+		width: 70,
+		align: "right",
+		render: row => <span class="font-mono tabular-nums">{row.rules}</span>
+	},
 	{
 		title: "Findings 24 h",
 		key: "signals_24h",

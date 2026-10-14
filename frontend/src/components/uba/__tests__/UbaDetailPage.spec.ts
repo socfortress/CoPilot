@@ -119,7 +119,10 @@ describe("ubaDetailPage", () => {
 
 	it("goes back to User Behavior on the customer and the matching tab when there is no history", async () => {
 		const { wrapper, router } = await render("entity", ENTITY_KEY)
-		await wrapper.findAll("button").find(b => b.text() === "User Behavior")?.trigger("click")
+		await wrapper
+			.findAll("button")
+			.find(b => b.text() === "User Behavior")
+			?.trigger("click")
 		await flushPromises()
 		expect(router.currentRoute.value.name).toBe("Uba")
 		expect(router.currentRoute.value.query).toEqual({ customer: "ACME", tab: "entities" })

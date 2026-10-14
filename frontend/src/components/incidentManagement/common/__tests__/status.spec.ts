@@ -21,14 +21,21 @@ describe("incident statuses", () => {
 
 	it("never colours waiting on customer, or an unknown status, as closed", () => {
 		const colors = Object.fromEntries(STATUS_ORDER.map(s => [s, statusColor(s)])) as Record<AlertStatus, string>
-		expect(colors).toEqual({ OPEN: "danger", IN_PROGRESS: "warning", PENDING_CUSTOMER: "primary", CLOSED: "success" })
+		expect(colors).toEqual({
+			OPEN: "danger",
+			IN_PROGRESS: "warning",
+			PENDING_CUSTOMER: "primary",
+			CLOSED: "success"
+		})
 		expect(statusColor("SOMETHING_NEW")).toBeUndefined()
 		expect(statusColor(null)).toBeUndefined()
 	})
 
 	it("explains in the picker that waiting on the customer stops the SLA clocks", () => {
 		expect(PENDING_CUSTOMER_HELP).toMatch(/SLA clocks stop/)
-		const Host = defineComponent({ render: () => renderStatusLabel({ label: "Waiting on customer", value: "PENDING_CUSTOMER" }) })
+		const Host = defineComponent({
+			render: () => renderStatusLabel({ label: "Waiting on customer", value: "PENDING_CUSTOMER" })
+		})
 		const wrapper = mount(Host)
 		expect(wrapper.text()).toContain("Waiting on customer")
 		expect(wrapper.find("[data-testid=pending-customer-help]").exists()).toBe(true)

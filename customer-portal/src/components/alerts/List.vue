@@ -34,7 +34,11 @@
 					<template #empty>
 						<n-empty description="No alerts found">
 							<template v-if="hasFilters(filters)" #extra>
-								<n-button size="small" data-testid="alerts-empty-clear" @click="emit('change', EMPTY_ALERTS_FILTERS)">
+								<n-button
+									size="small"
+									data-testid="alerts-empty-clear"
+									@click="emit('change', EMPTY_ALERTS_FILTERS)"
+								>
 									Clear filters
 								</n-button>
 							</template>
@@ -71,7 +75,12 @@ import Api from "@/api"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
 import AlertStatusSelect from "@/components/alerts/AlertStatusSelect.vue"
 import AlertsFilterBar from "@/components/alerts/filters/AlertsFilterBar.vue"
-import { EMPTY_ALERTS_FILTERS, filtersKey, filtersToParams, hasFilters } from "@/components/alerts/filters/alertsFilters"
+import {
+	EMPTY_ALERTS_FILTERS,
+	filtersKey,
+	filtersToParams,
+	hasFilters
+} from "@/components/alerts/filters/alertsFilters"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"

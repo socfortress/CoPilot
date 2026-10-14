@@ -1,9 +1,9 @@
 <template>
 	<UbaSection title="Rule settings for this customer">
 		<template #description>
-			Turn a rule off or give it other points for this customer only; everything else keeps UBA's built-in
-			values. A rule turned off still learns what is normal, so turning it back on needs no new learning
-			period. Changes apply to new findings within a minute.
+			Turn a rule off or give it other points for this customer only; everything else keeps UBA's built-in values.
+			A rule turned off still learns what is normal, so turning it back on needs no new learning period. Changes
+			apply to new findings within a minute.
 			<template v-if="!isAdmin">Only admins can change them.</template>
 		</template>
 
@@ -51,7 +51,11 @@
 				</template>
 				<span v-if="settings.alert_threshold.customized" class="text-tertiary w-full text-xs">
 					Set by {{ settings.alert_threshold.changed_by }}
-					{{ settings.alert_threshold.changed_at ? formatDate(settings.alert_threshold.changed_at, dFormats.datetime) : "" }}
+					{{
+						settings.alert_threshold.changed_at
+							? formatDate(settings.alert_threshold.changed_at, dFormats.datetime)
+							: ""
+					}}
 				</span>
 			</div>
 
@@ -127,7 +131,10 @@ const visible = computed(() => {
 	return (settings.value?.rules ?? []).filter(
 		r =>
 			(!customizedOnly.value || r.customized) &&
-			(!q || r.name.toLowerCase().includes(q) || r.rule_id.includes(q) || (GROUPS[r.category] ?? "").toLowerCase().includes(q))
+			(!q ||
+				r.name.toLowerCase().includes(q) ||
+				r.rule_id.includes(q) ||
+				(GROUPS[r.category] ?? "").toLowerCase().includes(q))
 	)
 })
 
@@ -271,7 +278,9 @@ const columns = computed<DataTableColumns<UbaRuleSetting>>(() => [
 					disabled={!isAdmin.value || !row.enabled || pending.value === row.rule_id}
 					onBlur={(e: FocusEvent) => setScore(row, scoreFrom(e))}
 				/>
-				{row.score !== row.default_score ? <span class="text-tertiary text-xs">{`built in ${row.default_score}`}</span> : null}
+				{row.score !== row.default_score ? (
+					<span class="text-tertiary text-xs">{`built in ${row.default_score}`}</span>
+				) : null}
 			</div>
 		)
 	},
@@ -291,7 +300,12 @@ const columns = computed<DataTableColumns<UbaRuleSetting>>(() => [
 						</span>
 					</div>
 					{isAdmin.value ? (
-						<NButton size="tiny" quaternary disabled={pending.value === row.rule_id} onClick={() => reset(row)}>
+						<NButton
+							size="tiny"
+							quaternary
+							disabled={pending.value === row.rule_id}
+							onClick={() => reset(row)}
+						>
 							Reset
 						</NButton>
 					) : null}

@@ -25,7 +25,12 @@
 								<span>opened {{ formatDate(alert.opened_at, dFormats.datetime) }}</span>
 							</span>
 						</div>
-						<Icon name="carbon:arrow-right" :size="16" class="go text-tertiary shrink-0" aria-hidden="true" />
+						<Icon
+							name="carbon:arrow-right"
+							:size="16"
+							class="go text-tertiary shrink-0"
+							aria-hidden="true"
+						/>
 					</div>
 					<n-button
 						v-if="alert.copilot_alert_id"
@@ -43,24 +48,38 @@
 					<SignalTimeline :items="signalItems" :customer-code />
 				</UbaSection>
 
-				<UbaSection v-if="updates.length" title="Updates" caption="new findings while it was open" test-id="uba-alert-updates">
+				<UbaSection
+					v-if="updates.length"
+					title="Updates"
+					caption="new findings while it was open"
+					test-id="uba-alert-updates"
+				>
 					<SignalTimeline :items="updateItems" :customer-code />
 				</UbaSection>
 
 				<UbaSection title="Verdict" test-id="uba-alert-verdict">
-					<div v-if="alert.verdict" class="verdict border-default flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2.5 text-sm">
+					<div
+						v-if="alert.verdict"
+						class="verdict border-default flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2.5 text-sm"
+					>
 						<n-tag :type="alert.verdict === 'FALSE_POSITIVE' ? 'default' : 'error'" :bordered="false">
 							{{ alert.verdict === "FALSE_POSITIVE" ? "False positive" : "True positive" }}
 						</n-tag>
 						<span class="text-secondary">
-							{{ alert.verdict_reason ? `${alert.verdict_reason} · ` : "" }}by {{ alert.verdict_by || "unknown" }}
+							{{ alert.verdict_reason ? `${alert.verdict_reason} · ` : "" }}by
+							{{ alert.verdict_by || "unknown" }}
 						</span>
 						<span v-if="alert.verdict_at" class="text-tertiary ml-auto font-mono text-[11px]">
 							{{ formatDate(alert.verdict_at, dFormats.datetime) }}
 						</span>
 					</div>
 					<div v-else class="verdict border-default flex flex-col gap-3 rounded-lg border p-3">
-						<div class="grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Verdict" data-testid="uba-verdict">
+						<div
+							class="grid grid-cols-1 gap-2 sm:grid-cols-2"
+							role="radiogroup"
+							aria-label="Verdict"
+							data-testid="uba-verdict"
+						>
 							<button
 								v-for="option of VERDICT_OPTIONS"
 								:key="option.value"
@@ -85,12 +104,24 @@
 							</button>
 						</div>
 						<template v-if="verdict === 'FALSE_POSITIVE'">
-							<n-select v-model:value="reason" :options="FALSE_POSITIVE_REASONS" placeholder="Why" size="small" class="max-w-xs" />
+							<n-select
+								v-model:value="reason"
+								:options="FALSE_POSITIVE_REASONS"
+								placeholder="Why"
+								size="small"
+								class="max-w-xs"
+							/>
 							<n-checkbox v-model:checked="suppress">
 								Suppress the rules behind this alert for this entity for 30 days
 							</n-checkbox>
 						</template>
-						<n-input v-model:value="note" type="textarea" placeholder="Note (optional)" :autosize="{ minRows: 2 }" size="small" />
+						<n-input
+							v-model:value="note"
+							type="textarea"
+							placeholder="Note (optional)"
+							:autosize="{ minRows: 2 }"
+							size="small"
+						/>
 						<div class="flex justify-end">
 							<!-- A verdict is final (see confirmText): confirm before it is sent. -->
 							<n-popconfirm
@@ -202,7 +233,12 @@ const meta = computed<UbaDrawerMeta | null>(() => {
 	const a = alert.value
 	if (!a) return null
 	const tags: NonNullable<UbaDrawerMeta["tags"]> = a.verdict
-		? [{ label: a.verdict === "FALSE_POSITIVE" ? "false positive" : "true positive", type: a.verdict === "FALSE_POSITIVE" ? "default" : "error" }]
+		? [
+				{
+					label: a.verdict === "FALSE_POSITIVE" ? "false positive" : "true positive",
+					type: a.verdict === "FALSE_POSITIVE" ? "default" : "error"
+				}
+			]
 		: [{ label: "open", type: "error", icon: "carbon:warning-alt-filled" }]
 	if (a.update_count) tags.push({ label: `${a.update_count} update${a.update_count === 1 ? "" : "s"}` })
 	if (a.copilot_alert_id) tags.push({ label: `incident #${a.copilot_alert_id}`, icon: "carbon:link" })
@@ -227,13 +263,17 @@ const verdictLabel = computed(() => (verdict.value === "FALSE_POSITIVE" ? "false
  * The incident alert gets the same verdict unless it already has one (#1239).
  */
 const confirmText = computed(() => {
-	const incident = alert.value?.copilot_alert_id ? ` It is also recorded on incident alert #${alert.value.copilot_alert_id}.` : ""
+	const incident = alert.value?.copilot_alert_id
+		? ` It is also recorded on incident alert #${alert.value.copilot_alert_id}.`
+		: ""
 	return verdict.value === "FALSE_POSITIVE" && suppress.value
 		? `Save this alert as a false positive? The rules behind it stop adding risk for this entity for 30 days.${incident} The verdict cannot be changed afterwards.`
 		: `Save this alert as a ${verdictLabel.value}?${incident} The verdict cannot be changed afterwards.`
 })
 
-const canSubmit = computed(() => verdict.value === "TRUE_POSITIVE" || (verdict.value === "FALSE_POSITIVE" && !!reason.value))
+const canSubmit = computed(
+	() => verdict.value === "TRUE_POSITIVE" || (verdict.value === "FALSE_POSITIVE" && !!reason.value)
+)
 
 function load() {
 	loading.value = true
@@ -269,7 +309,8 @@ function submit() {
 			const incident = res.data.incident
 			if (incident?.status === "recorded") message.success(`${saved} ${incident.message}`)
 			else message.success(saved)
-			if (incident && incidentNeedsAttention(incident, verdict.value)) message.warning(incident.message, { duration: 8000 })
+			if (incident && incidentNeedsAttention(incident, verdict.value))
+				message.warning(incident.message, { duration: 8000 })
 			emit("changed")
 			load()
 		})

@@ -8,8 +8,8 @@
 		<div class="min-w-0 grow basis-64">
 			<div class="font-semibold">The SOC is waiting on your reply</div>
 			<div class="text-secondary text-sm">
-				Their response clock for this {{ entity }} is paused until you answer. Reply in the comments to
-				hand it back to the analysts.
+				Their response clock for this {{ entity }} is paused until you answer. Reply in the comments to hand it
+				back to the analysts.
 			</div>
 		</div>
 		<n-button size="small" type="primary" secondary data-testid="waiting-on-you-reply" @click="emit('reply')">

@@ -23,7 +23,10 @@ export const PENDING_CUSTOMER_HELP =
 	"The SOC is waiting on the customer: the SLA clocks stop until the item moves on. A reply from the customer in the portal hands it back to the SOC (In progress) and restarts them."
 
 /** Ready for `n-select` / `n-popselect` (spread it: Naive UI wants a mutable array). */
-export const STATUS_OPTIONS: readonly SelectOption[] = STATUS_ORDER.map(value => ({ label: STATUS_LABELS[value], value }))
+export const STATUS_OPTIONS: readonly SelectOption[] = STATUS_ORDER.map(value => ({
+	label: STATUS_LABELS[value],
+	value
+}))
 
 function isStatus(status: string | null | undefined): status is AlertStatus {
 	return !!status && status in STATUS_LABELS

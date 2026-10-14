@@ -7,7 +7,12 @@ const updateInstance = vi.fn()
 const createInstance = vi.fn()
 
 vi.mock("@/api", () => ({
-	default: { customerWaf: { updateInstance: (...a: unknown[]) => updateInstance(...a), createInstance: (...a: unknown[]) => createInstance(...a) } }
+	default: {
+		customerWaf: {
+			updateInstance: (...a: unknown[]) => updateInstance(...a),
+			createInstance: (...a: unknown[]) => createInstance(...a)
+		}
+	}
 }))
 
 const existing: CustomerWafInstance = {
@@ -33,7 +38,7 @@ const existing: CustomerWafInstance = {
 	forwarding_provisioned_at: null
 }
 
-const ModalStub = { template: "<div><slot /><slot name=\"footer\" /></div>" }
+const ModalStub = { template: '<div><slot /><slot name="footer" /></div>' }
 
 async function open(instance: CustomerWafInstance | null) {
 	const w = mount(CustomerWafForm, {

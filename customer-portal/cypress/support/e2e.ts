@@ -22,6 +22,10 @@ export interface PortalSeed {
 	reports: { a: number; b: number }
 	/** What the SLA page must show for customer A (#1187). */
 	sla_a: SlaSeed
+	/** A's first agent and its case (#1256); B's case names the same host and must not show. */
+	agent_a0: { agent_id: string; hostname: string; case_id: number }
+	agent_b0_id: string
+	foreign_case_id: number
 	/** The alert and case of A that wait on the customer (PENDING_CUSTOMER). */
 	waiting_alert_id: number
 	waiting_case_id: number

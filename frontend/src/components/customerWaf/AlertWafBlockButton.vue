@@ -6,13 +6,7 @@
 			</template>
 			Block at WAF
 		</n-button>
-		<CustomerWafBlockDialog
-			v-model:show="showDialog"
-			:customer-code
-			:instances
-			:initial-target="value"
-			:alert-id
-		/>
+		<CustomerWafBlockDialog v-model:show="showDialog" :customer-code :instances :initial-target="value" :alert-id />
 	</template>
 </template>
 

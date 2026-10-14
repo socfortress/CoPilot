@@ -58,7 +58,8 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
-const { customerOptions, filterCustomer, renderCustomerLabel, hasMultipleCustomers, initialCustomerCode } = useCustomerPrefill()
+const { customerOptions, filterCustomer, renderCustomerLabel, hasMultipleCustomers, initialCustomerCode } =
+	useCustomerPrefill()
 const loading = ref(false)
 const optionsLoading = ref(false)
 const assignedToOptions = ref<{ label: string; value: string }[]>([])

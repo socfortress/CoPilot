@@ -141,7 +141,10 @@ describe("ubaSetup", () => {
 		await flushPromises()
 		expect(provision).toHaveBeenCalledWith("acme", { bootstrap_days: 7, deploy_wazuh_rules: false })
 
-		await wrapper.findAll("button").find(b => b.text() === "Close")?.trigger("click")
+		await wrapper
+			.findAll("button")
+			.find(b => b.text() === "Close")
+			?.trigger("click")
 		expect(wrapper.emitted("close")).toHaveLength(1)
 	})
 
@@ -162,7 +165,9 @@ describe("ubaSetup", () => {
 	})
 
 	it("switches a live customer to learning only", async () => {
-		getProvisioning.mockResolvedValue({ data: { ...NOT_SET_UP, onboarding: onboarding("live", { mode: "active" }) } })
+		getProvisioning.mockResolvedValue({
+			data: { ...NOT_SET_UP, onboarding: onboarding("live", { mode: "active" }) }
+		})
 		setMode.mockResolvedValue({
 			data: { message: "acme: UBA keeps learning", onboarding: onboarding("live", { mode: "learning" }) }
 		})
@@ -190,7 +195,9 @@ describe("ubaSetup", () => {
 	})
 
 	it("offers the rollback while UBA cannot be reached", async () => {
-		getProvisioning.mockRejectedValue({ response: { status: 502, data: { detail: "UBA is unreachable", reason: "unreachable" } } })
+		getProvisioning.mockRejectedValue({
+			response: { status: 502, data: { detail: "UBA is unreachable", reason: "unreachable" } }
+		})
 		const wrapper = await render()
 		expect(wrapper.find("[data-testid=uba-rollback-open]").exists()).toBe(true)
 	})

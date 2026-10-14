@@ -20,7 +20,13 @@ vi.mock("@/stores/auth", () => ({ useAuthStore: () => auth }))
 vi.mock("@/stores/settings", () => ({ useSettingsStore: () => ({ dateFormat: { datetime: "YYYY-MM-DD HH:mm" } }) }))
 
 function settings(enabled: boolean) {
-	return { data: { success: true, message: "", settings: { customer_code: "ACME", enabled, updated_at: null, updated_by: null } } }
+	return {
+		data: {
+			success: true,
+			message: "",
+			settings: { customer_code: "ACME", enabled, updated_at: null, updated_by: null }
+		}
+	}
 }
 
 function render() {

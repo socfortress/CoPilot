@@ -23,7 +23,11 @@
 					@keydown="onKeydown"
 				>
 					<template v-for="option of options" :key="option.key">
-						<div v-if="option.key === firstCustomerKey" :class="SECTION_LABEL" class="px-3 pt-3 pb-1 text-[10px]!">
+						<div
+							v-if="option.key === firstCustomerKey"
+							:class="SECTION_LABEL"
+							class="px-3 pt-3 pb-1 text-[10px]!"
+						>
 							Customers · {{ customerCount }}
 						</div>
 						<button
@@ -37,9 +41,14 @@
 							:data-testid="`policy-scope-${option.key}`"
 							@click="select(option.code)"
 						>
-							<span class="scope-mark grid size-6 shrink-0 place-items-center rounded-md" aria-hidden="true">
+							<span
+								class="scope-mark grid size-6 shrink-0 place-items-center rounded-md"
+								aria-hidden="true"
+							>
 								<Icon v-if="!option.code" name="carbon:earth" :size="14" />
-								<span v-else class="font-mono text-[10px] font-semibold">{{ initials(option.label) }}</span>
+								<span v-else class="font-mono text-[10px] font-semibold">
+									{{ initials(option.label) }}
+								</span>
 							</span>
 							<span class="flex min-w-0 flex-1 flex-col leading-tight">
 								<span class="scope-label truncate">{{ option.label }}</span>
@@ -91,11 +100,7 @@ export interface ScopeOption {
 	overrides: number
 }
 
-const {
-	options,
-	calendars,
-	panelId
-} = defineProps<{
+const { options, calendars, panelId } = defineProps<{
 	options: ScopeOption[]
 	/** Customers with business hours of their own. */
 	calendars: Set<string>

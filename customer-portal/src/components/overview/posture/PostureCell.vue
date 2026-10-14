@@ -35,9 +35,9 @@
 
 			<div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
 				<StatusLegend :segments="cell.segments" />
-				<span class="text-tertiary font-mono text-xs tabular-nums" data-testid="posture-footnote">{{
-					cell.footnote
-				}}</span>
+				<span class="text-tertiary font-mono text-xs tabular-nums" data-testid="posture-footnote">
+					{{ cell.footnote }}
+				</span>
 			</div>
 		</template>
 	</RouterLink>

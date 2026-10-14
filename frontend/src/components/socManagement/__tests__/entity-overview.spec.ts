@@ -35,7 +35,12 @@ vi.mock("@/components/users/UserDetails.vue", () => ({
 	})
 }))
 
-const user = (username: string, id = 1): User => ({ id, username, email: `${username}@example.com`, role_name: "analyst" })
+const user = (username: string, id = 1): User => ({
+	id,
+	username,
+	email: `${username}@example.com`,
+	role_name: "analyst"
+})
 
 beforeEach(() => {
 	setActivePinia(createPinia())
@@ -44,7 +49,9 @@ beforeEach(() => {
 
 function inProvider(component: unknown, props: Record<string, unknown>) {
 	return mount(
-		defineComponent({ setup: () => () => h(NMessageProvider, null, { default: () => h(component as never, props) }) }),
+		defineComponent({
+			setup: () => () => h(NMessageProvider, null, { default: () => h(component as never, props) })
+		}),
 		{ attachTo: document.body }
 	)
 }
@@ -79,7 +86,8 @@ describe("entityOverviewModal", () => {
 		getUsers.mockResolvedValue({ data: { users: [user("ana")] } })
 		const Host = defineComponent({
 			props: { target: { type: Object as PropType<OverviewTarget | null>, default: null } },
-			setup: props => () => h(NMessageProvider, null, { default: () => h(EntityOverviewModal, { target: props.target }) })
+			setup: props => () =>
+				h(NMessageProvider, null, { default: () => h(EntityOverviewModal, { target: props.target }) })
 		})
 		const blank = { render: () => null }
 		const appRouter = createRouter({
@@ -91,7 +99,11 @@ describe("entityOverviewModal", () => {
 			]
 		})
 		await appRouter.push("/")
-		const wrapper = mount(Host, { props: { target: null }, attachTo: document.body, global: { plugins: [appRouter] } })
+		const wrapper = mount(Host, {
+			props: { target: null },
+			attachTo: document.body,
+			global: { plugins: [appRouter] }
+		})
 		await flushPromises()
 		expect(document.querySelector("[data-testid=entity-overview-modal]")).toBeNull()
 		const pageLink = () => document.querySelector("[data-testid=modal-page-button]")?.getAttribute("href")

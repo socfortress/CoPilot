@@ -2,7 +2,10 @@
 	<div class="uba-page uba-detail-page @container flex flex-col gap-4" data-testid="uba-detail-page">
 		<section class="panel border-default overflow-hidden rounded-lg border" data-testid="uba-detail-hero">
 			<!-- Where this page sits: back to User Behavior, the customer, what it is; and a link to share it. -->
-			<nav class="bar border-default flex min-h-11 flex-wrap items-center gap-x-2 gap-y-1 border-b px-3 py-1.5" aria-label="UBA">
+			<nav
+				class="bar border-default flex min-h-11 flex-wrap items-center gap-x-2 gap-y-1 border-b px-3 py-1.5"
+				aria-label="UBA"
+			>
 				<n-button size="small" quaternary @click="goBack(usersBehavior)">
 					<template #icon><Icon name="carbon:arrow-left" :size="16" /></template>
 					User Behavior
@@ -21,13 +24,10 @@
 				<span class="text-secondary text-sm">{{ kindLabel }}</span>
 				<!-- Naive resets a button's margin: the wrapper pushes it to the end. -->
 				<span class="ml-auto">
-					<n-button
-						size="small"
-						quaternary
-						data-testid="uba-detail-copy-link"
-						@click="copyLink"
-					>
-						<template #icon><Icon :name="copied ? 'carbon:checkmark' : 'carbon:link'" :size="15" /></template>
+					<n-button size="small" quaternary data-testid="uba-detail-copy-link" @click="copyLink">
+						<template #icon>
+							<Icon :name="copied ? 'carbon:checkmark' : 'carbon:link'" :size="15" />
+						</template>
 						Copy link
 					</n-button>
 				</span>
@@ -89,7 +89,9 @@ const { copy, copied } = useClipboard({ legacy: true })
 const meta = ref<UbaDrawerMeta | null>(null)
 const kindLabel = computed(() => (kind === "alert" ? "UBA alert" : "Entity"))
 /** Where "User Behavior" lands on a cold load: the customer, on the tab that lists this kind. */
-const usersBehavior = computed(() => routeUba({ customer: customerCode, tab: kind === "alert" ? "alerts" : "entities" }))
+const usersBehavior = computed(() =>
+	routeUba({ customer: customerCode, tab: kind === "alert" ? "alerts" : "entities" })
+)
 const customerPage = computed(() => routeUba({ customer: customerCode }))
 const thisPage = computed(() => (kind === "alert" ? routeUbaAlert(customerCode, id) : routeUbaEntity(customerCode, id)))
 

@@ -44,13 +44,13 @@ async function openDialog() {
 		defineComponent({
 			setup: () => () =>
 				h(CustomerWafBlockDialog, {
-					"show": show.value,
+					show: show.value,
 					"onUpdate:show": (value: boolean) => (show.value = value),
-					"customerCode": "ACME",
-					"instances": [WAF],
-					"initialTarget": "203.0.113.7",
-					"alertId": 42,
-					"onBlocked": blocked
+					customerCode: "ACME",
+					instances: [WAF],
+					initialTarget: "203.0.113.7",
+					alertId: 42,
+					onBlocked: blocked
 				})
 		}),
 		{ attachTo: document.body }

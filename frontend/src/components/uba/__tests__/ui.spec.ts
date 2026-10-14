@@ -30,7 +30,17 @@ const api = {
 	getSignalEvidence: vi.fn()
 }
 vi.mock("@/api", () => ({
-	default: { uba: new Proxy({}, { get: (_, name: string) => (...args: unknown[]) => api[name as keyof typeof api](...args) }) }
+	default: {
+		uba: new Proxy(
+			{},
+			{
+				get:
+					(_, name: string) =>
+					(...args: unknown[]) =>
+						api[name as keyof typeof api](...args)
+			}
+		)
+	}
 }))
 const copy = vi.hoisted(() => vi.fn())
 vi.mock("@vueuse/core", async importOriginal => ({
@@ -50,11 +60,19 @@ const STYLE: Record<string, string> = {
 	"primary-color": "#fc0"
 }
 
-function withProviders(component: unknown, props: Record<string, unknown> = {}, listeners: Record<string, unknown> = {}) {
-	const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/", component: { render: () => null } }] })
+function withProviders(
+	component: unknown,
+	props: Record<string, unknown> = {},
+	listeners: Record<string, unknown> = {}
+) {
+	const router = createRouter({
+		history: createMemoryHistory(),
+		routes: [{ path: "/", component: { render: () => null } }]
+	})
 	return mount(
 		defineComponent({
-			setup: () => () => h(NMessageProvider, null, { default: () => h(component as never, { ...props, ...listeners }) })
+			setup: () => () =>
+				h(NMessageProvider, null, { default: () => h(component as never, { ...props, ...listeners }) })
 		}),
 		{ global: { plugins: [router] } }
 	)
@@ -145,8 +163,24 @@ describe("signalTimeline", () => {
 		const wrapper = withProviders(SignalTimeline, {
 			customerCode: "lab",
 			items: [
-				{ key: "a", time: "2026-10-06T14:00:00Z", ruleId: "auth.failures_then_success", explanation: "Logged on after 34 failures", points: 50, signalId: "s1", evidenceCount: 1 },
-				{ key: "b", time: "2026-10-06T13:00:00Z", ruleId: "wazuh:60115", explanation: "Locked out", points: 0, native: true, muted: true },
+				{
+					key: "a",
+					time: "2026-10-06T14:00:00Z",
+					ruleId: "auth.failures_then_success",
+					explanation: "Logged on after 34 failures",
+					points: 50,
+					signalId: "s1",
+					evidenceCount: 1
+				},
+				{
+					key: "b",
+					time: "2026-10-06T13:00:00Z",
+					ruleId: "wazuh:60115",
+					explanation: "Locked out",
+					points: 0,
+					native: true,
+					muted: true
+				},
 				{ key: "c", time: "2026-10-06T12:00:00Z", ruleId: null, explanation: "An update" }
 			]
 		})
@@ -169,7 +203,16 @@ describe("ubaStatusStrip", () => {
 		alerts_24h: 3,
 		signals_24h: 12,
 		lag_seconds: 900,
-		feeds: [{ source: "wazuh", status: "stale", lag_p50_s: 3000, received_1h: 0, repeated_1h: 0, reasons: ["no events for 50 min"] }],
+		feeds: [
+			{
+				source: "wazuh",
+				status: "stale",
+				lag_p50_s: 3000,
+				received_1h: 0,
+				repeated_1h: 0,
+				reasons: ["no events for 50 min"]
+			}
+		],
 		agents: { total: 5, reporting: 3, not_reporting: 1, retired: 1, never_connected: 0, not_reporting_hosts: [] }
 	} as unknown as UbaTenantStatus
 
@@ -242,13 +285,26 @@ describe("ubaEntityDetail", () => {
 			data: {
 				total: 1,
 				signals: [
-					{ id: "s1", time: "2026-10-06T14:00:00Z", rule_id: "auth.failures_then_success", explanation: "x", effective_score: 50, native: false, suppressed: false, evidence: [] }
+					{
+						id: "s1",
+						time: "2026-10-06T14:00:00Z",
+						rule_id: "auth.failures_then_success",
+						explanation: "x",
+						effective_score: 50,
+						native: false,
+						suppressed: false,
+						evidence: []
+					}
 				]
 			}
 		})
 		api.getEntityRiskHistory.mockResolvedValue({ data: { alert_threshold: 80, points: [], alerts: [] } })
 		const metas: unknown[] = []
-		const wrapper = withProviders(UbaEntityDetailView, { customerCode: "lab", entityKey: "eb93-key" }, { onMeta: (m: unknown) => metas.push(m) })
+		const wrapper = withProviders(
+			UbaEntityDetailView,
+			{ customerCode: "lab", entityKey: "eb93-key" },
+			{ onMeta: (m: unknown) => metas.push(m) }
+		)
 		await flushPromises()
 		expect(metas.at(-1)).toMatchObject({
 			kind: "Entity · user",
@@ -277,7 +333,11 @@ describe("ubaEntityDetail", () => {
 
 		// The whole alert row opens the alert, by click or by keyboard.
 		const opened: string[] = []
-		const view = withProviders(UbaEntityDetailView, { customerCode: "lab", entityKey: "eb93-key" }, { onOpenAlert: (id: string) => opened.push(id) })
+		const view = withProviders(
+			UbaEntityDetailView,
+			{ customerCode: "lab", entityKey: "eb93-key" },
+			{ onOpenAlert: (id: string) => opened.push(id) }
+		)
 		await flushPromises()
 		const row = view.get("[data-testid=uba-entity-alert]")
 		expect(row.attributes("role")).toBe("button")
@@ -313,7 +373,11 @@ describe("ubaAlertDetail", () => {
 
 	it("opens the entity from anywhere on the summary box", async () => {
 		const entities: string[] = []
-		const wrapper = withProviders(UbaAlertDetailView, { customerCode: "lab", alertId: "al1" }, { onOpenEntity: (k: string) => entities.push(k) })
+		const wrapper = withProviders(
+			UbaAlertDetailView,
+			{ customerCode: "lab", alertId: "al1" },
+			{ onOpenEntity: (k: string) => entities.push(k) }
+		)
 		await flushPromises()
 		const box = wrapper.get("[data-testid=uba-alert-entity]")
 		expect(box.attributes("role")).toBe("button")
@@ -401,7 +465,9 @@ describe("ubaToolbar", () => {
 		expect(wrapper.text()).not.toContain("accumulated risk")
 		await wrapper.get("[data-testid=uba-toolbar-hint]").trigger("click")
 		await flushPromises()
-		expect(document.body.querySelector("[data-testid=uba-toolbar-hint-text]")?.textContent).toContain("accumulated risk")
+		expect(document.body.querySelector("[data-testid=uba-toolbar-hint-text]")?.textContent).toContain(
+			"accumulated risk"
+		)
 		wrapper.unmount()
 	})
 
@@ -453,7 +519,11 @@ describe("ubaSuppressions", () => {
 		})
 		api.getEntity.mockResolvedValue({ data: { entity_name: "CONTOSO\\Administrator", entity_type: "actor" } })
 		const opened: string[] = []
-		const wrapper = withProviders(UbaSuppressionsView, { customerCode: "lab" }, { onOpenEntity: (k: string) => opened.push(k) })
+		const wrapper = withProviders(
+			UbaSuppressionsView,
+			{ customerCode: "lab" },
+			{ onOpenEntity: (k: string) => opened.push(k) }
+		)
 		await flushPromises()
 		// One lookup per entity: suppressions carry only the key.
 		expect(api.getEntity).toHaveBeenCalledOnce()
@@ -507,7 +577,10 @@ describe("ubaBacktests", () => {
 		api.getBacktests.mockResolvedValue({
 			data: {
 				backtests: [
-					job({ id: "a", params: { days: 3, warmup_days: 7, rules: ["auth.x", "auth.y"], filter: "eventID:4720" } }),
+					job({
+						id: "a",
+						params: { days: 3, warmup_days: 7, rules: ["auth.x", "auth.y"], filter: "eventID:4720" }
+					}),
 					job({
 						id: "b",
 						status: "error",
@@ -525,7 +598,12 @@ describe("ubaBacktests", () => {
 
 		expect(flat(0)).toContain("2 minutes ago")
 		expect(flat(0)).toContain("ana via CoPilot")
-		expect(rows[0].findAll(".param-chip").map(c => c.text().trim())).toEqual(["3 days", "+7 d warm-up", "2 rules", "filter"])
+		expect(rows[0].findAll(".param-chip").map(c => c.text().trim())).toEqual([
+			"3 days",
+			"+7 d warm-up",
+			"2 rules",
+			"filter"
+		])
 		expect(flat(0)).toContain("done")
 		expect(flat(0)).toContain("took 4 s")
 		expect(flat(0)).toContain("View result")

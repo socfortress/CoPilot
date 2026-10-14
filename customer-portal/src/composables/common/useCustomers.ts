@@ -11,7 +11,10 @@ export function useCustomers() {
 	const authStore = useAuthStore()
 
 	const customerOptions = computed<SelectOption[]>(() =>
-		authStore.accessibleCustomers.map(customer => ({ label: customer.customer_name, value: customer.customer_code }))
+		authStore.accessibleCustomers.map(customer => ({
+			label: customer.customer_name,
+			value: customer.customer_code
+		}))
 	)
 
 	/** A customer's name, or its code when the name is not known. */
@@ -23,7 +26,11 @@ export function useCustomers() {
 	function filterCustomer(pattern: string, option: SelectOption): boolean {
 		const needle = pattern.trim().toLowerCase()
 		if (!needle) return true
-		return [option.label, option.value].some(text => String(text ?? "").toLowerCase().includes(needle))
+		return [option.label, option.value].some(text =>
+			String(text ?? "")
+				.toLowerCase()
+				.includes(needle)
+		)
 	}
 
 	/** For `n-select`'s `render-label`: the name, with the code beside it when they differ. */
@@ -33,7 +40,7 @@ export function useCustomers() {
 		if (!code || code === name) return name
 		return h("span", { class: "inline-flex items-baseline gap-2" }, [
 			h("span", name),
-			h("span", { "class": "text-secondary font-mono text-xs", "data-testid": "customer-option-code" }, code)
+			h("span", { class: "text-secondary font-mono text-xs", "data-testid": "customer-option-code" }, code)
 		])
 	}
 

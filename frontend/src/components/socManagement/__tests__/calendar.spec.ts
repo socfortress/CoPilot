@@ -207,7 +207,9 @@ describe("weekScheduleEditor", () => {
 		expect(capsule.find("[data-testid=calendar-remove-mon-0]").exists()).toBe(true)
 		expect(capsule.find("[data-testid=calendar-add-mon]").exists()).toBe(false)
 		expect(first.find("[data-testid=calendar-add-mon]").exists()).toBe(false)
-		expect(wrapper.get("[data-testid=calendar-range-mon-1]").find("[data-testid=calendar-add-mon]").exists()).toBe(true)
+		expect(wrapper.get("[data-testid=calendar-range-mon-1]").find("[data-testid=calendar-add-mon]").exists()).toBe(
+			true
+		)
 		expect(first.text()).toContain("4h 30m")
 		expect(wrapper.get("[data-testid=calendar-range-mon-1]").text()).toContain("4h")
 

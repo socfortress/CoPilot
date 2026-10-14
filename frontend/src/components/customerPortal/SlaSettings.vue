@@ -3,8 +3,8 @@
 		<div class="flex flex-col gap-1">
 			<h3 class="text-lg font-bold">SLA</h3>
 			<p class="text-secondary text-sm">
-				Control whether this customer's portal users can see how the SOC is meeting the service levels
-				promised to them
+				Control whether this customer's portal users can see how the SOC is meeting the service levels promised
+				to them
 			</p>
 		</div>
 
@@ -33,7 +33,13 @@
 					</div>
 				</n-card>
 
-				<n-alert v-if="!isAdmin" type="info" :bordered="false" class="text-xs" data-testid="sla-settings-readonly">
+				<n-alert
+					v-if="!isAdmin"
+					type="info"
+					:bordered="false"
+					class="text-xs"
+					data-testid="sla-settings-readonly"
+				>
 					Only administrators can change this setting.
 				</n-alert>
 

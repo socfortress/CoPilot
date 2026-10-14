@@ -67,12 +67,17 @@ describe("alerts filters ↔ query string", () => {
 	})
 
 	it("replaces the filter keys and keeps every other key of the query", () => {
-		const query = withFilters({ status: "OPEN", tag: ["x"], page: "3" }, { ...EMPTY_ALERTS_FILTERS, source: "wazuh" })
+		const query = withFilters(
+			{ status: "OPEN", tag: ["x"], page: "3" },
+			{ ...EMPTY_ALERTS_FILTERS, source: "wazuh" }
+		)
 		expect(query).toEqual({ page: "3", source: "wazuh" })
 	})
 
 	it("is keyed by what it asks, not by its spelling", () => {
-		expect(filtersKey(filtersFromQuery({ title: " login " }))).toBe(filtersKey({ ...EMPTY_ALERTS_FILTERS, title: "login" }))
+		expect(filtersKey(filtersFromQuery({ title: " login " }))).toBe(
+			filtersKey({ ...EMPTY_ALERTS_FILTERS, title: "login" })
+		)
 		expect(filtersKey(ALL)).not.toBe(filtersKey({ ...ALL, tags: ["vip"] }))
 	})
 })
@@ -80,7 +85,10 @@ describe("alerts filters ↔ query string", () => {
 describe("alerts filters: which are in use", () => {
 	it("lists the menu filters in use, in menu order", () => {
 		expect(activeFilterTypes(ALL)).toEqual(["status", "source", "asset", "tag", "date"])
-		expect(activeFilterTypes({ ...EMPTY_ALERTS_FILTERS, to: "2026-10-01", source: "x" })).toEqual(["source", "date"])
+		expect(activeFilterTypes({ ...EMPTY_ALERTS_FILTERS, to: "2026-10-01", source: "x" })).toEqual([
+			"source",
+			"date"
+		])
 		expect(activeFilterTypes({ ...EMPTY_ALERTS_FILTERS, title: "x" })).toEqual([])
 	})
 
@@ -100,7 +108,13 @@ describe("alerts filters: which are in use", () => {
 describe("alerts filters → API parameters", () => {
 	it("names each filter as the endpoint does", () => {
 		const params = filtersToParams({ ...ALL, from: null, to: null })
-		expect(params).toEqual({ alert_title: "login", status: "OPEN", source: "wazuh", asset_name: "web-01", tags: ["phishing", "vip"] })
+		expect(params).toEqual({
+			alert_title: "login",
+			status: "OPEN",
+			source: "wazuh",
+			asset_name: "web-01",
+			tags: ["phishing", "vip"]
+		})
 	})
 
 	it("sends nothing for no filter", () => {
@@ -108,7 +122,11 @@ describe("alerts filters → API parameters", () => {
 	})
 
 	it("covers both days whole, from local midnight to the last local millisecond, as UTC", () => {
-		const { date_from, date_to } = filtersToParams({ ...EMPTY_ALERTS_FILTERS, from: "2026-10-01", to: "2026-10-13" })
+		const { date_from, date_to } = filtersToParams({
+			...EMPTY_ALERTS_FILTERS,
+			from: "2026-10-01",
+			to: "2026-10-13"
+		})
 		expect(new Date(date_from!).getTime()).toBe(new Date(2026, 9, 1).getTime())
 		expect(new Date(date_to!).getTime()).toBe(new Date(2026, 9, 13, 23, 59, 59, 999).getTime())
 		expect(date_from).toMatch(/Z$/)
@@ -124,7 +142,8 @@ describe("calendar days", () => {
 	it("accepts real days only", () => {
 		expect(isDay("2026-10-13")).toBe(true)
 		expect(isDay("2028-02-29")).toBe(true)
-		for (const value of ["2026-02-29", "2026-13-01", "2026-1-1", "13/10/2026", "", null]) expect(isDay(value)).toBe(false)
+		for (const value of ["2026-02-29", "2026-13-01", "2026-1-1", "13/10/2026", "", null])
+			expect(isDay(value)).toBe(false)
 	})
 
 	it("round-trips through the date picker's timestamps, in local time", () => {

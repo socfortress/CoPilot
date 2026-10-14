@@ -13,12 +13,21 @@ const NOW = Date.parse("2026-10-09T12:00:00Z")
 
 /** The backend's format: UTC, no offset. */
 function minutesAgo(minutes: number) {
-	return new Date(NOW - minutes * 60_000).toISOString().replace("Z", "").replace(/\.\d+$/, "")
+	return new Date(NOW - minutes * 60_000)
+		.toISOString()
+		.replace("Z", "")
+		.replace(/\.\d+$/, "")
 }
 
 function job(status: string, startedMinutesAgo = 5): AiInvestigation {
 	const at = minutesAgo(startedMinutesAgo)
-	return { status, triggered_by: "manual", created_at: at, started_at: at, completed_at: status === "completed" ? at : null }
+	return {
+		status,
+		triggered_by: "manual",
+		created_at: at,
+		started_at: at,
+		completed_at: status === "completed" ? at : null
+	}
 }
 
 function analysis(over: Partial<AiAlertAnalysis> = {}) {
@@ -86,7 +95,9 @@ describe("asking for an AI analysis from the AI Report tab (#1215)", () => {
 
 	it("waits for the requested analysis and refreshes until it has finished", async () => {
 		getAlertAnalysis.mockResolvedValue(done())
-		requestAnalysis.mockResolvedValue({ data: { alert_id: 7, requested_at: minutesAgo(0), success: true, message: "" } })
+		requestAnalysis.mockResolvedValue({
+			data: { alert_id: 7, requested_at: minutesAgo(0), success: true, message: "" }
+		})
 		const wrapper = await render()
 
 		await button(wrapper).vm.$emit("request")
@@ -119,7 +130,10 @@ describe("asking for an AI analysis from the AI Report tab (#1215)", () => {
 		requestAnalysis.mockRejectedValue({
 			response: {
 				status: 429,
-				data: { success: false, message: "Your organization has reached its daily limit of AI analyses. Please try again later." }
+				data: {
+					success: false,
+					message: "Your organization has reached its daily limit of AI analyses. Please try again later."
+				}
 			}
 		})
 		const wrapper = await render()
@@ -148,7 +162,9 @@ describe("aiAnalysisRequestButton", () => {
 		})
 		await wrapper.get("[data-testid=ai-request-button]").trigger("click")
 		await flushPromises()
-		expect(document.body.querySelector("[data-testid=ai-request-confirm]")?.textContent).toContain("analyse this alert?")
+		expect(document.body.querySelector("[data-testid=ai-request-confirm]")?.textContent).toContain(
+			"analyse this alert?"
+		)
 		expect(wrapper.emitted("request")).toBeUndefined()
 
 		const confirm = [...document.body.querySelectorAll("button")].find(b => b.textContent?.includes("Run analysis"))

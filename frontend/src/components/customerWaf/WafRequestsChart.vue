@@ -8,7 +8,12 @@
 		role="img"
 		:aria-label="`Requests per hour over the last ${points.length} hours, peak ${peak.toLocaleString()}`"
 	/>
-	<n-empty v-else description="No traffic in the last 24 hours" class="justify-center" :style="{ height: `${height}px` }" />
+	<n-empty
+		v-else
+		description="No traffic in the last 24 hours"
+		class="justify-center"
+		:style="{ height: `${height}px` }"
+	/>
 </template>
 
 <script setup lang="ts">
@@ -66,9 +71,12 @@ const option = computed((): ComposeOption<LineSeriesOption | GridComponentOption
 		// The shared tooltip UI (common/charts): muted title band with the hour range, then one
 		// marker row — the same look as every other chart, in the mono face ChartArea uses.
 		tooltip: {
-			...buildChartTooltipGlassBase(chartTooltipThemeFromStyle({ ...style, "font-family": style["font-family-mono"] }), {
-				trigger: "axis"
-			}),
+			...buildChartTooltipGlassBase(
+				chartTooltipThemeFromStyle({ ...style, "font-family": style["font-family-mono"] }),
+				{
+					trigger: "axis"
+				}
+			),
 			axisPointer: { type: "line", lineStyle: { color: muted, width: 1 } },
 			formatter: params =>
 				formatChartTooltipAxisMultiSeriesFromParams(params, {

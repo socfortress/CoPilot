@@ -4,7 +4,11 @@
 			<n-alert v-if="detailsError" title="Error" type="error" :description="detailsError" />
 
 			<template v-else-if="alert">
-				<WaitingOnYouNotice v-if="isWaitingOnCustomer(alert.status)" entity="alert" @reply="activeTab = 'comments'" />
+				<WaitingOnYouNotice
+					v-if="isWaitingOnCustomer(alert.status)"
+					entity="alert"
+					@reply="activeTab = 'comments'"
+				/>
 
 				<n-tabs v-model:value="activeTab" type="line" animated>
 					<n-tab-pane name="overview" tab="Overview">

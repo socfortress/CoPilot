@@ -25,19 +25,23 @@ function mountBar(initial: Partial<AlertsFilters> = {}) {
 							patches.push(patch)
 							filters.value = { ...filters.value, ...patch }
 						}
-					}))
+					})
+				)
 		})
 	)
 	const group = (type: string) => wrapper.find(`[data-testid=alerts-filter-${type}]`)
 	const select = (type: string) => wrapper.getComponent(`[data-testid=alerts-filter-${type}]`).findComponent(NSelect)
-	const menu = () => (wrapper.findComponent(NDropdown).props("options") as { key: string }[]).map(option => option.key)
+	const menu = () =>
+		(wrapper.findComponent(NDropdown).props("options") as { key: string }[]).map(option => option.key)
 	return { wrapper, filters, patches, group, select, menu }
 }
 
 describe("alertsFilterBar (#1245)", () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
-		getAlertsFilters.mockResolvedValue({ data: { sources: ["wazuh", "office365"], tags: ["vip"], statuses: [], assets: [] } })
+		getAlertsFilters.mockResolvedValue({
+			data: { sources: ["wazuh", "office365"], tags: ["vip"], statuses: [], assets: [] }
+		})
 		searchAlertAssets.mockResolvedValue({ data: { assets: ["host-a1"] } })
 	})
 
@@ -64,7 +68,10 @@ describe("alertsFilterBar (#1245)", () => {
 		await nextTick()
 		expect(group("source").exists()).toBe(true)
 		expect(patches).toEqual([])
-		expect((select("source").props("options") as { value: string }[]).map(o => o.value)).toEqual(["wazuh", "office365"])
+		expect((select("source").props("options") as { value: string }[]).map(o => o.value)).toEqual([
+			"wazuh",
+			"office365"
+		])
 
 		select("source").vm.$emit("update:value", "office365")
 		expect(patches).toEqual([{ source: "office365" }])
@@ -107,7 +114,10 @@ describe("alertsFilterBar (#1245)", () => {
 		select("asset").vm.$emit("focus")
 		await flushPromises()
 		expect(searchAlertAssets).toHaveBeenCalledWith(null, expect.any(AbortSignal))
-		expect((select("asset").props("options") as { value: string }[]).map(o => o.value)).toEqual(["host-a1", "host-z9"])
+		expect((select("asset").props("options") as { value: string }[]).map(o => o.value)).toEqual([
+			"host-a1",
+			"host-z9"
+		])
 	})
 
 	it("offers every status, the waiting one by the customer's name for it", async () => {

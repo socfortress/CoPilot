@@ -223,11 +223,7 @@ function loadCases() {
 						break
 				}
 			} else {
-				response = await Api.cases.getCases(
-					paginationPayload,
-					signal,
-					customerFilterStore.queryCustomerCodes
-				)
+				response = await Api.cases.getCases(paginationPayload, signal, customerFilterStore.queryCustomerCodes)
 			}
 
 			data.value = response.data.cases

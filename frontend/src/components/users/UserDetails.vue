@@ -49,7 +49,11 @@
 					<p v-else-if="seesEveryCustomer(resolvedUser.role_name)" class="text-secondary text-sm">
 						Admins see every customer.
 					</p>
-					<p v-else-if="needsCustomers(resolvedUser.role_name)" class="text-warning text-sm" data-testid="user-no-customers">
+					<p
+						v-else-if="needsCustomers(resolvedUser.role_name)"
+						class="text-warning text-sm"
+						data-testid="user-no-customers"
+					>
 						No customer assigned: this user sees nothing. {{ NEEDS_A_CUSTOMER }}
 					</p>
 					<p v-else class="text-secondary text-sm">No customer access assigned</p>
@@ -75,7 +79,11 @@
 			<n-card v-if="isAdmin" size="small" title="Actions" embedded>
 				<div class="flex flex-col gap-1">
 					<AssignRole :user="resolvedUser" @success="reload" />
-					<AssignCustomer v-if="!seesEveryCustomer(resolvedUser.role_name)" :user="resolvedUser" @success="reload" />
+					<AssignCustomer
+						v-if="!seesEveryCustomer(resolvedUser.role_name)"
+						:user="resolvedUser"
+						@success="reload"
+					/>
 					<AssignTags :user="resolvedUser" @success="reload" />
 					<ChangePassword :user="resolvedUser" quaternary class-name="w-full! justify-start!" />
 					<DeleteUser :user="resolvedUser" @success="handleDeleted" @loading="deleting = $event" />

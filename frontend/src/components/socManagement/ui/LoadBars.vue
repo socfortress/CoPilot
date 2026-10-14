@@ -12,7 +12,11 @@
 		/>
 		<!-- The counts, one line per bar: HTML rather than canvas text, so they keep the page's
 		type, line up in fixed columns and carry an icon beside every status colour. -->
-		<div class="counts grid shrink-0 gap-x-2" :style="{ gridTemplateRows: `${LEGEND_HEIGHT}px`, gridAutoRows: `${ROW_HEIGHT}px` }" data-testid="load-bars-counts">
+		<div
+			class="counts grid shrink-0 gap-x-2"
+			:style="{ gridTemplateRows: `${LEGEND_HEIGHT}px`, gridAutoRows: `${ROW_HEIGHT}px` }"
+			data-testid="load-bars-counts"
+		>
 			<div class="col-head">Open</div>
 			<div class="col-head">At risk</div>
 			<div class="col-head">Past SLA</div>
@@ -90,7 +94,12 @@ const LEGEND_HEIGHT = 28
 const chartHeight = computed(() => LEGEND_HEIGHT + rows.length * ROW_HEIGHT)
 const scale = computed(() => Math.max(1, ...rows.map(row => row.alerts + row.cases)))
 const ariaLabel = computed(() =>
-	rows.map(row => `${row.label}: ${row.alerts} alerts, ${row.cases} cases, ${row.at_risk} at risk, ${row.breached} past SLA`).join("; ")
+	rows
+		.map(
+			row =>
+				`${row.label}: ${row.alerts} alerts, ${row.cases} cases, ${row.at_risk} at risk, ${row.breached} past SLA`
+		)
+		.join("; ")
 )
 
 /** A row's dot, an empty slot when this row has none (so names line up), or nothing without dots. */
@@ -102,8 +111,20 @@ function dotSlot(index: number) {
 /** A row's at-risk and past-SLA counts, as the chips beside its bar. */
 function chipsOf(row: LoadRow) {
 	return [
-		{ key: "at-risk", label: "at risk", value: row.at_risk, icon: SLA_STATE_META.at_risk.icon, color: TONE_COLOR.warn },
-		{ key: "past-sla", label: "past SLA", value: row.breached, icon: SLA_STATE_META.breached.icon, color: TONE_COLOR.bad }
+		{
+			key: "at-risk",
+			label: "at risk",
+			value: row.at_risk,
+			icon: SLA_STATE_META.at_risk.icon,
+			color: TONE_COLOR.warn
+		},
+		{
+			key: "past-sla",
+			label: "past SLA",
+			value: row.breached,
+			icon: SLA_STATE_META.breached.icon,
+			color: TONE_COLOR.bad
+		}
 	]
 }
 
@@ -178,8 +199,7 @@ const option = computed(
 						// Left-aligned in a fixed column, the dot right before the name.
 						align: "left",
 						margin: LABEL_WIDTH + 8,
-						formatter: (value: string, index: number) =>
-							`${dotSlot(index)}{name|${value}}`,
+						formatter: (value: string, index: number) => `${dotSlot(index)}{name|${value}}`,
 						rich: leftRich
 					}
 				}

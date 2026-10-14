@@ -47,7 +47,11 @@
 					label-width="120px"
 					label-placement="top"
 				>
-					<n-form-item v-if="connectorFormOptions.extraData" :label="extraDataField.label" path="connector_extra_data">
+					<n-form-item
+						v-if="connectorFormOptions.extraData"
+						:label="extraDataField.label"
+						path="connector_extra_data"
+					>
 						<div class="flex w-full flex-col gap-1">
 							<n-input
 								v-model:value="connectorForm.connector_extra_data"
@@ -127,7 +131,7 @@ const EXTRA_DATA_FIELDS: Record<string, ExtraDataField> = {
 	OpenCTI: {
 		label: "Public URL (for links)",
 		placeholder: "https://cti.example.com",
-		help: "Optional. Used for \"Open in OpenCTI\" links when analysts reach OpenCTI at a different address than CoPilot does. Leave empty to link to the URL above.",
+		help: 'Optional. Used for "Open in OpenCTI" links when analysts reach OpenCTI at a different address than CoPilot does. Leave empty to link to the URL above.',
 		required: false,
 		url: true
 	}

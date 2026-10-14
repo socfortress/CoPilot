@@ -113,7 +113,8 @@ export default function getItems({ sla = false }: NavbarFeatures = {}): MenuMixe
 
 	if (sla) {
 		items.push({
-			label: () => h(RouterLink, { "to": { name: "Sla" }, "data-testid": "nav-sla" }, { default: () => "Service Levels" }),
+			label: () =>
+				h(RouterLink, { to: { name: "Sla" }, "data-testid": "nav-sla" }, { default: () => "Service Levels" }),
 			key: "Sla",
 			icon: renderIcon(ICONS.sla)
 		})

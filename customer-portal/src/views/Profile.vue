@@ -27,7 +27,8 @@
 									<div class="tooltip-wrap" data-testid="profile-customers">
 										<Icon :name="CustomersIcon" />
 										<span v-for="(customer, index) in customers" :key="customer.customer_code">
-											<CustomerName :code="customer.customer_code" />{{ index < customers.length - 1 ? "," : "" }}
+											<CustomerName :code="customer.customer_code" />
+											{{ index < customers.length - 1 ? "," : "" }}
 										</span>
 										<span v-if="!customers.length">No customer</span>
 									</div>
@@ -119,7 +120,6 @@ const userPic = authStore.userPic
 					}
 				}
 			}
-
 		}
 		.section-selector {
 			padding: 0px 30px;

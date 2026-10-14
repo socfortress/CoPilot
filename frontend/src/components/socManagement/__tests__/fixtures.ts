@@ -1,10 +1,4 @@
-import type {
-	BusinessCalendar,
-	Compliance,
-	DurationStats,
-	PolicyMatrix,
-	SocDashboard
-} from "@/types/soc-management"
+import type { BusinessCalendar, Compliance, DurationStats, PolicyMatrix, SocDashboard } from "@/types/soc-management"
 
 /**
  * One fixed SOC Management snapshot (#1187), shaped exactly like

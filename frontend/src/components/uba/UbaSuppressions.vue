@@ -133,7 +133,9 @@ const columns: DataTableColumns<UbaSuppression> = [
 						<span class="group-hover:text-primary truncate font-medium transition-colors">
 							{known?.name || row.entity_key}
 						</span>
-						{known?.name ? <span class="text-tertiary truncate font-mono text-[11px]">{row.entity_key}</span> : null}
+						{known?.name ? (
+							<span class="text-tertiary truncate font-mono text-[11px]">{row.entity_key}</span>
+						) : null}
 					</span>
 				</button>
 			)
@@ -144,7 +146,10 @@ const columns: DataTableColumns<UbaSuppression> = [
 		key: "rule_id",
 		minWidth: 220,
 		render: row => (
-			<span class="rule-chip inline-block max-w-full truncate align-middle font-mono text-xs whitespace-nowrap" title={row.rule_id}>
+			<span
+				class="rule-chip inline-block max-w-full truncate align-middle font-mono text-xs whitespace-nowrap"
+				title={row.rule_id}
+			>
 				{row.rule_id}
 			</span>
 		)
@@ -160,7 +165,9 @@ const columns: DataTableColumns<UbaSuppression> = [
 					<span class={["text-sm", !row.active ? "text-tertiary line-through" : soon ? "text-warning" : ""]}>
 						{row.active ? dayjs(row.until).fromNow() : `expired ${dayjs(row.until).fromNow()}`}
 					</span>
-					<span class="text-tertiary font-mono text-[11px] tabular-nums">{String(formatDate(row.until, dFormats.datetime))}</span>
+					<span class="text-tertiary font-mono text-[11px] tabular-nums">
+						{String(formatDate(row.until, dFormats.datetime))}
+					</span>
 				</div>
 			)
 		}
@@ -177,7 +184,10 @@ const columns: DataTableColumns<UbaSuppression> = [
 				row.created_at ? dayjs(row.created_at).fromNow() : null
 			].filter(Boolean)
 			return (
-				<div class="flex min-w-0 flex-col leading-tight" title={[row.reason, row.source].filter(Boolean).join("\n")}>
+				<div
+					class="flex min-w-0 flex-col leading-tight"
+					title={[row.reason, row.source].filter(Boolean).join("\n")}
+				>
 					<span class="truncate text-sm">{origin.why}</span>
 					{meta.length ? <span class="text-tertiary truncate text-[11px]">{meta.join(" · ")}</span> : null}
 				</div>
@@ -191,7 +201,12 @@ const columns: DataTableColumns<UbaSuppression> = [
 		align: "right",
 		render: row =>
 			row.active ? (
-				<NButton size="tiny" quaternary loading={removing.value === `${row.entity_key}|${row.rule_id}`} onClick={() => remove(row)}>
+				<NButton
+					size="tiny"
+					quaternary
+					loading={removing.value === `${row.entity_key}|${row.rule_id}`}
+					onClick={() => remove(row)}
+				>
 					{{ icon: () => <Icon name="carbon:notification" size={13} />, default: () => "Remove" }}
 				</NButton>
 			) : null

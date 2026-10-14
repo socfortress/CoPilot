@@ -47,7 +47,12 @@ const overview: SlaOverview = {
 	bucket: "day",
 	tracking_since: null,
 	alerts: entity(),
-	cases: entity({ opened: 0, resolved: 0, acknowledge: { met: 0, breached: 0, rate: null }, time_to_acknowledge: null }),
+	cases: entity({
+		opened: 0,
+		resolved: 0,
+		acknowledge: { met: 0, breached: 0, rate: null },
+		time_to_acknowledge: null
+	}),
 	previous_alerts: entity({ acknowledge: { met: 9, breached: 1, rate: 90 } }),
 	previous_cases: null,
 	targets: [],
@@ -109,7 +114,10 @@ describe("sLA page presentation (#1187)", () => {
 	})
 
 	it("groups the promise by entity, alerts first, dropping an empty group", () => {
-		const groups = groupTargets([target({ entity: "case", severity: "Critical" }), target({ severity: "Critical" })])
+		const groups = groupTargets([
+			target({ entity: "case", severity: "Critical" }),
+			target({ severity: "Critical" })
+		])
 		expect(groups.map(group => group.title)).toEqual(["Alerts", "Cases"])
 		expect(groupTargets([target({})]).map(group => group.entity)).toEqual(["alert"])
 	})

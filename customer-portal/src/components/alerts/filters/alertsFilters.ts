@@ -107,7 +107,9 @@ export function filtersToQuery(filters: AlertsFilters): LocationQueryRaw {
 
 /** `query` with its filter keys replaced by `filters`'; every other key is kept. */
 export function withFilters(query: LocationQuery, filters: AlertsFilters): LocationQueryRaw {
-	const rest = Object.fromEntries(Object.entries(query).filter(([key]) => !(QUERY_KEYS as readonly string[]).includes(key)))
+	const rest = Object.fromEntries(
+		Object.entries(query).filter(([key]) => !(QUERY_KEYS as readonly string[]).includes(key))
+	)
 	return { ...rest, ...filtersToQuery(filters) }
 }
 

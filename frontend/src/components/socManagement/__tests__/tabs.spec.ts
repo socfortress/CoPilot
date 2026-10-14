@@ -28,7 +28,11 @@ vi.mock("@vueuse/core", async importOriginal => ({
 
 // Charts are covered by charts.spec.ts; here they only need to mount.
 vi.mock("vue-echarts", () => ({
-	default: defineComponent({ name: "VChart", props: { option: Object }, setup: () => () => h("div", { class: "v-chart" }) })
+	default: defineComponent({
+		name: "VChart",
+		props: { option: Object },
+		setup: () => () => h("div", { class: "v-chart" })
+	})
 }))
 
 function router() {
@@ -67,7 +71,10 @@ function analystView(): SocDashboard {
 	return dashboard({
 		viewer: { username: "ana", is_admin: false, sees_all_analysts: false },
 		analysts: snapshot.analysts.filter(row => row.username === "ana"),
-		workload: { ...snapshot.workload, by_assignee: snapshot.workload.by_assignee.filter(row => row.username === "ana") }
+		workload: {
+			...snapshot.workload,
+			by_assignee: snapshot.workload.by_assignee.filter(row => row.username === "ana")
+		}
 	})
 }
 
@@ -203,7 +210,15 @@ describe("rulesTab", () => {
 		const { wrapper } = await render(RulesTab, { dashboard: adminView() })
 		const headers = wrapper.findAll("[data-testid=rules-table] thead th").filter(th => th.text().trim())
 		expect(headers.map(th => th.text().trim())).toEqual(
-			expect.arrayContaining(["Rule", "Alerts", "In a case", "False positive", "Median TTR", "Resolved in SLA", "Open"])
+			expect.arrayContaining([
+				"Rule",
+				"Alerts",
+				"In a case",
+				"False positive",
+				"Median TTR",
+				"Resolved in SLA",
+				"Open"
+			])
 		)
 		for (const th of headers) expect(th.find(".whitespace-nowrap").exists()).toBe(true)
 		const spark = wrapper.findComponent({ name: "Sparkline" })
@@ -212,7 +227,9 @@ describe("rulesTab", () => {
 	})
 
 	it("opens the alert list filtered to a rule, and to the one customer in scope", async () => {
-		const { wrapper, router: appRouter } = await render(RulesTab, { dashboard: dashboard({ customer_codes: ["ACME"] }) })
+		const { wrapper, router: appRouter } = await render(RulesTab, {
+			dashboard: dashboard({ customer_codes: ["ACME"] })
+		})
 		const push = vi.spyOn(appRouter, "push")
 		await wrapper.get("[aria-label='Open the alerts of Brute force SSH login']").trigger("click")
 		expect(push).toHaveBeenCalledWith({
@@ -239,7 +256,10 @@ describe("workloadTab", () => {
 		const [bySeverity, byAssignee] = wrapper.findAll("[data-testid=load-bars]")
 		expect(bySeverity.attributes("aria-label")).toContain("Critical:")
 		expect(byAssignee.attributes("aria-label")).toContain("bob:")
-		expect(getAttention).toHaveBeenCalledWith(expect.objectContaining({ customerCodes: ["ACME"], limit: 200 }), expect.any(AbortSignal))
+		expect(getAttention).toHaveBeenCalledWith(
+			expect.objectContaining({ customerCodes: ["ACME"], limit: 200 }),
+			expect.any(AbortSignal)
+		)
 		expect(wrapper.get("[data-testid=attention-list]").text()).toContain("Ransomware note dropped")
 	})
 
@@ -247,7 +267,10 @@ describe("workloadTab", () => {
 		const { wrapper } = await render(WorkloadTab, { dashboard: adminView(), scope: {} })
 		await wrapper.get("[data-testid=attention-state-breached]").trigger("click")
 		await flushPromises()
-		expect(getAttention).toHaveBeenLastCalledWith(expect.objectContaining({ state: "breached" }), expect.any(AbortSignal))
+		expect(getAttention).toHaveBeenLastCalledWith(
+			expect.objectContaining({ state: "breached" }),
+			expect.any(AbortSignal)
+		)
 		await wrapper.get("[data-testid=attention-entity-case]").trigger("click")
 		await flushPromises()
 		expect(getAttention).toHaveBeenLastCalledWith(
@@ -264,7 +287,9 @@ describe("workloadTab", () => {
 	})
 
 	it("says when the list could not be loaded", async () => {
-		getAttention.mockImplementation(() => Promise.reject(Object.assign(new Error("boom"), { response: { data: { detail: "down" } } })))
+		getAttention.mockImplementation(() =>
+			Promise.reject(Object.assign(new Error("boom"), { response: { data: { detail: "down" } } }))
+		)
 		const { wrapper } = await render(WorkloadTab, { dashboard: adminView(), scope: {} })
 		expect(wrapper.text()).toContain("Could not load the list: down")
 	})
@@ -280,18 +305,21 @@ describe("tables with a pinned first column", () => {
 		{ name: "SLA by severity", component: SlaTab, testid: "sla-severity-table", pinFrom: 500 }
 	]
 
-	it.each(tables)("$name: pinned from $pinFrom px of box width, never below", async ({ component, testid, pinFrom }) => {
-		boxWidth.value = pinFrom + 200
-		const { wrapper } = await render(component, { dashboard: adminView() })
-		const pinned = () => wrapper.findAll(`[data-testid=${testid}] .n-data-table-td--fixed-left`).length
-		expect(pinned()).toBeGreaterThan(0)
-		boxWidth.value = pinFrom - 1
-		await flushPromises()
-		expect(pinned()).toBe(0)
-		boxWidth.value = pinFrom
-		await flushPromises()
-		expect(pinned()).toBeGreaterThan(0)
-	})
+	it.each(tables)(
+		"$name: pinned from $pinFrom px of box width, never below",
+		async ({ component, testid, pinFrom }) => {
+			boxWidth.value = pinFrom + 200
+			const { wrapper } = await render(component, { dashboard: adminView() })
+			const pinned = () => wrapper.findAll(`[data-testid=${testid}] .n-data-table-td--fixed-left`).length
+			expect(pinned()).toBeGreaterThan(0)
+			boxWidth.value = pinFrom - 1
+			await flushPromises()
+			expect(pinned()).toBe(0)
+			boxWidth.value = pinFrom
+			await flushPromises()
+			expect(pinned()).toBeGreaterThan(0)
+		}
+	)
 
 	it.each(tables)("$name: every header sits on one line", async ({ component, testid }) => {
 		const { wrapper } = await render(component, { dashboard: adminView() })

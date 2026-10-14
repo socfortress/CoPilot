@@ -28,7 +28,11 @@ function form(defaultTemplate?: IncidentReportTemplate) {
 		defineComponent({
 			setup: () => () =>
 				h(NMessageProvider, null, {
-					default: () => h(GenerateIncidentReportForm, { customerCode: "ACME", ...(defaultTemplate ? { defaultTemplate } : {}) })
+					default: () =>
+						h(GenerateIncidentReportForm, {
+							customerCode: "ACME",
+							...(defaultTemplate ? { defaultTemplate } : {})
+						})
 				})
 		})
 	)
@@ -54,7 +58,11 @@ describe("generateIncidentReportForm — SLA performance", () => {
 	it("leaves SLA figures out unless asked", async () => {
 		const wrapper = form()
 		expect(wrapper.text()).toContain("SLA figures stay internal")
-		expect(await submit(wrapper)).toMatchObject({ customer_code: "ACME", report_template: "full", include_sla: false })
+		expect(await submit(wrapper)).toMatchObject({
+			customer_code: "ACME",
+			report_template: "full",
+			include_sla: false
+		})
 	})
 
 	it("sends include_sla when switched on", async () => {

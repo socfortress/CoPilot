@@ -31,7 +31,9 @@ beforeEach(() => {
 
 describe("the waiting-on-you banner on the detail pages (#1187)", () => {
 	describe("alertDetails", () => {
-		const alert = (status: string) => ({ data: { alerts: [{ id: 7, status, customer_code: "ACME", comments: [] }] } })
+		const alert = (status: string) => ({
+			data: { alerts: [{ id: 7, status, customer_code: "ACME", comments: [] }] }
+		})
 
 		function mountAlert() {
 			return mount(AlertDetails, { props: { alertId: 7 }, global: { stubs: stubs(ALERT_CHILDREN) } })
@@ -74,7 +76,9 @@ describe("the waiting-on-you banner on the detail pages (#1187)", () => {
 	})
 
 	describe("caseDetails", () => {
-		const caseOf = (status: string) => ({ data: { cases: [{ id: 3, case_status: status, comments: [], alerts: [] }] } })
+		const caseOf = (status: string) => ({
+			data: { cases: [{ id: 3, case_status: status, comments: [], alerts: [] }] }
+		})
 
 		function mountCase() {
 			return mount(CaseDetails, { props: { caseId: 3 }, global: { stubs: stubs(CASE_CHILDREN) } })

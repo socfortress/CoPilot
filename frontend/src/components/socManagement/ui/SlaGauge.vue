@@ -22,7 +22,9 @@
 				<span>{{ rate == null ? EMPTY : rate.toFixed(1) }}</span>
 				<span v-if="rate != null" class="text-secondary text-lg">%</span>
 			</span>
-			<span class="text-secondary mt-1.5 font-mono text-[9px] leading-none tracking-wide uppercase">{{ label }}</span>
+			<span class="text-secondary mt-1.5 font-mono text-[9px] leading-none tracking-wide uppercase">
+				{{ label }}
+			</span>
 		</div>
 		<!-- The objective notch: hover (or focus) it for what it means. -->
 		<n-tooltip placement="top" style="max-width: 260px">
@@ -105,7 +107,12 @@ function onRing(radius: number) {
 }
 const hitStyle = computed(() => {
 	const { x, y } = onRing(R)
-	return { left: `${Math.round(x - HIT / 2)}px`, top: `${Math.round(y - HIT / 2)}px`, width: `${HIT}px`, height: `${HIT}px` }
+	return {
+		left: `${Math.round(x - HIT / 2)}px`,
+		top: `${Math.round(y - HIT / 2)}px`,
+		width: `${HIT}px`,
+		height: `${HIT}px`
+	}
 })
 
 const option = computed((): ComposeOption<GaugeSeriesOption | GraphicComponentOption> => {
@@ -139,7 +146,13 @@ const option = computed((): ComposeOption<GaugeSeriesOption | GraphicComponentOp
 				animation: false,
 				axisLine: { show: false, lineStyle: { width: 0 } },
 				progress: { show: false },
-				axisTick: { show: true, splitNumber: 5, distance: 0, length: 5 * scale, lineStyle: { color: hairline, width: 1 } },
+				axisTick: {
+					show: true,
+					splitNumber: 5,
+					distance: 0,
+					length: 5 * scale,
+					lineStyle: { color: hairline, width: 1 }
+				},
 				splitLine: { show: true, distance: 0, length: 8 * scale, lineStyle: { color: hairline, width: 1.5 } },
 				data: [{ value: 0 }]
 			},
@@ -175,7 +188,9 @@ const option = computed((): ComposeOption<GaugeSeriesOption | GraphicComponentOp
 				z: 10,
 				shape: { x1: inner.x, y1: inner.y, x2: outer.x, y2: outer.y },
 				style: {
-					stroke: objectiveHovered.value ? colors.style.value["fg-default-color"] : colors.style.value["fg-secondary-color"],
+					stroke: objectiveHovered.value
+						? colors.style.value["fg-default-color"]
+						: colors.style.value["fg-secondary-color"],
 					lineWidth: objectiveHovered.value ? 3.5 : 2,
 					lineCap: "round"
 				}

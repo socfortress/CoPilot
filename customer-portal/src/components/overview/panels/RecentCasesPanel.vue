@@ -57,5 +57,9 @@ const emit = defineEmits<{
 
 const showCustomer = useIsMultiCustomer()
 const { customerName } = useCustomers()
-const items = computed(() => cases.map(caseItem => caseToActivityItem(caseItem, { customerLabel: showCustomer.value ? customerName : undefined })))
+const items = computed(() =>
+	cases.map(caseItem =>
+		caseToActivityItem(caseItem, { customerLabel: showCustomer.value ? customerName : undefined })
+	)
+)
 </script>

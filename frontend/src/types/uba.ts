@@ -1,7 +1,15 @@
 // SOCFortress UBA (user behavior analytics), proxied by /api/uba. Shapes mirror UBA's /v1 API
 // (socfortress-uba docs/12-api.md). Upstream failures come back as 502/404/409/422 with a `reason`.
 
-export type UbaFailureReason = "not_configured" | "unreachable" | "key_rejected" | "insufficient_scope" | "not_found" | "invalid_request" | "upstream_error" | "bad_response"
+export type UbaFailureReason =
+	| "not_configured"
+	| "unreachable"
+	| "key_rejected"
+	| "insufficient_scope"
+	| "not_found"
+	| "invalid_request"
+	| "upstream_error"
+	| "bad_response"
 
 export interface UbaAvailability {
 	configured: boolean
@@ -391,7 +399,14 @@ export interface UbaRiskHistory {
 	/** Risk at each step (UBA's current-risk formula applied at that time); the last point is now. */
 	points: { time: string; risk: number; native: number }[]
 	/** Contributions in the window (the 200 largest), by time. */
-	findings: { id: string; time: string; rule_id: string; effective_score: number; native: boolean; explanation: string | null }[]
+	findings: {
+		id: string
+		time: string
+		rule_id: string
+		effective_score: number
+		native: boolean
+		explanation: string | null
+	}[]
 	alerts: { id: string; opened_at: string; risk: number }[]
 }
 

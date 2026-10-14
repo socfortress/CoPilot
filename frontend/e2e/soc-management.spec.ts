@@ -201,7 +201,7 @@ test.describe("an admin", () => {
 		await page.goto(`/soc-management?${scopedQuery()}`)
 		const customer = page.locator("[data-testid^=attention-customer-]").first()
 		await expect(customer).toBeVisible({ timeout: 30_000 })
-		const code = (await customer.innerText()).trim()
+		const code = ((await customer.textContent()) ?? "").trim()
 		await customer.click()
 		const modal = page.getByTestId("entity-overview-modal")
 		await expect(modal).toBeVisible()
@@ -212,7 +212,7 @@ test.describe("an admin", () => {
 		await expect(modal).toBeHidden()
 
 		const assignee = page.locator("[data-testid^=attention-user-]").first()
-		const username = (await assignee.innerText()).trim()
+		const username = ((await assignee.textContent()) ?? "").trim()
 		await assignee.click()
 		await expect(modal).toBeVisible()
 		await expect(modal).toContainText(`User · ${username}`)

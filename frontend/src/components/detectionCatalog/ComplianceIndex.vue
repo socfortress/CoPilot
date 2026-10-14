@@ -69,7 +69,9 @@
 		>
 			<template #header-extra>
 				<ModalPageButton
-					:route="modalGroup ? routeDetectionCatalogComplianceGroup(selectedFramework, modalGroup.control) : null"
+					:route="
+						modalGroup ? routeDetectionCatalogComplianceGroup(selectedFramework, modalGroup.control) : null
+					"
 					label="Open the control's page"
 					@navigate="modalGroup = null"
 				/>

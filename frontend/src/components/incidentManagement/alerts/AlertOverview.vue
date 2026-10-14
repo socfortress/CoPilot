@@ -3,11 +3,7 @@
 		<div class="flex grow flex-col justify-between gap-4">
 			<div class="content-box flex flex-col gap-4 py-3">
 				<div class="flex flex-col gap-4 sm:flex-row!">
-					<CardKV
-						:color="statusColor(alert.status)"
-						size="lg"
-						class="w-full grow"
-					>
+					<CardKV :color="statusColor(alert.status)" size="lg" class="w-full grow">
 						<template #key>
 							<div class="flex items-center gap-2">
 								<StatusIcon :status="alert.status" />
