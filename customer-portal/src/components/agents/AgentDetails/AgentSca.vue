@@ -67,22 +67,92 @@
 		</section>
 
 		<!-- One policy's checks: failed first, filtered by result and searched by title or id. -->
+		<!--
+			One policy's checks. The header reads top-down: the way back, the policy itself (what it
+			is, how it scores, what its last scan found), the counts that filter the checks, then
+			the tools for the list.
+		-->
 		<template v-else>
-			<div class="flex flex-wrap items-center gap-2">
-				<n-button size="small" quaternary data-testid="sca-back" @click="closePolicy()">
-					<template #icon><Icon name="carbon:arrow-left" /></template>
+			<div>
+				<n-button size="tiny" quaternary data-testid="sca-back" @click="closePolicy()">
+					<template #icon><Icon name="carbon:arrow-left" :size="14" /></template>
 					All policies
 				</n-button>
-				<span class="flex min-w-0 items-baseline gap-2">
-					<span class="text-default truncate text-sm font-medium" data-testid="sca-policy-name">
-						{{ policy.name || policy.policy_id }}
+			</div>
+
+			<section class="border-default bg-default overflow-hidden rounded-lg border" data-testid="sca-policy">
+				<div class="flex items-start justify-between gap-4 px-4 pt-3 pb-3">
+					<div class="flex min-w-0 flex-col gap-1">
+						<span class="text-tertiary text-xxs font-medium tracking-[0.12em] uppercase">SCA policy</span>
+						<span class="text-default text-base leading-snug font-semibold" data-testid="sca-policy-name">
+							{{ policy.name || policy.policy_id }}
+						</span>
+						<span class="text-tertiary truncate font-mono text-xs">{{ policy.policy_id }}</span>
+						<p v-if="policy.description" class="text-secondary m-0 mt-1 line-clamp-2 max-w-3xl text-xs">
+							{{ policy.description }}
+						</p>
+					</div>
+					<div class="flex shrink-0 flex-col items-end gap-1">
+						<span class="text-tertiary text-xxs font-medium tracking-[0.12em] uppercase">Score</span>
+						<span
+							class="font-mono text-2xl leading-none font-semibold tabular-nums"
+							:class="SCORE_TEXT[scoreLevel(policy.score)]"
+							data-testid="sca-policy-score"
+						>
+							{{ policy.score }}%
+						</span>
+					</div>
+				</div>
+				<div class="bg-secondary h-1 w-full">
+					<div
+						class="h-full"
+						:class="SCORE_COLORS[scoreLevel(policy.score)]"
+						:style="{ width: `${Math.max(1, policy.score)}%` }"
+					/>
+				</div>
+				<div
+					class="bg-secondary text-tertiary flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-2 font-mono text-xs tabular-nums"
+				>
+					<span class="text-success">{{ policy.pass.toLocaleString() }} passed</span>
+					<span class="text-error">{{ policy.fail.toLocaleString() }} failed</span>
+					<span v-if="policy.invalid">{{ policy.invalid.toLocaleString() }} n/a</span>
+					<span>· {{ policy.total_checks.toLocaleString() }} checks</span>
+					<span v-if="policy.end_scan" class="ml-auto" :title="policy.end_scan">
+						scanned {{ relative(policy.end_scan) }}
 					</span>
-					<span class="text-tertiary font-mono text-xs tabular-nums">{{ policy.score }}%</span>
+				</div>
+			</section>
+
+			<FilterStrip
+				v-model="result"
+				:options="resultStrip"
+				:loading="loadingChecks"
+				label="Filter by result"
+				testid="result"
+				data-testid="sca-result"
+			/>
+
+			<div class="flex items-center gap-2">
+				<n-input
+					v-model:value="search"
+					size="small"
+					clearable
+					placeholder="Search check title or id"
+					class="min-w-0 flex-1 @2xl:max-w-80!"
+					data-testid="sca-search"
+				>
+					<template #prefix><Icon name="carbon:search" :size="14" /></template>
+				</n-input>
+				<span
+					v-if="!loadingChecks && checks.length"
+					class="text-tertiary hidden font-mono text-xs whitespace-nowrap tabular-nums @2xl:inline"
+				>
+					{{ shownChecks.length.toLocaleString() }} shown · failed first
 				</span>
 				<n-button
 					size="small"
 					secondary
-					class="ml-auto!"
+					class="ml-auto! shrink-0"
 					:loading="exporting"
 					:disabled="!checks.length"
 					data-testid="sca-export"
@@ -91,24 +161,6 @@
 					<template #icon><Icon name="carbon:download" /></template>
 					Export CSV
 				</n-button>
-			</div>
-			<div class="flex flex-wrap items-center gap-2">
-				<n-radio-group v-model:value="result" size="small" data-testid="sca-result">
-					<n-radio-button v-for="option of RESULT_OPTIONS" :key="option.value" :value="option.value">
-						{{ option.label }}
-						<span class="text-tertiary ml-1 font-mono text-xs tabular-nums">{{ counts[option.value] }}</span>
-					</n-radio-button>
-				</n-radio-group>
-				<n-input
-					v-model:value="search"
-					size="small"
-					clearable
-					placeholder="Search check title or id"
-					class="w-64!"
-					data-testid="sca-search"
-				>
-					<template #prefix><Icon name="carbon:search" :size="14" /></template>
-				</n-input>
 			</div>
 
 			<n-alert v-if="checksError" type="error" :bordered="false">{{ checksError }}</n-alert>
@@ -142,7 +194,7 @@
 						>
 							<span><span :class="[CHIP, scaResultClasses(c.result)]">{{ c.result }}</span></span>
 							<span class="text-tertiary hidden font-mono text-xs tabular-nums @3xl:block">#{{ c.id }}</span>
-							<span class="text-default min-w-0 truncate text-sm">{{ c.title }}</span>
+							<span class="text-default line-clamp-2 min-w-0 text-sm @3xl:line-clamp-1">{{ c.title }}</span>
 							<Icon
 								name="carbon:chevron-down"
 								:size="14"
@@ -196,10 +248,11 @@
 
 <script setup lang="ts">
 import type { ScaResultFilter } from "./agentFindings"
+import type { FilterStripOption } from "./FilterStrip.vue"
 import type { AgentScaCheck, AgentScaPolicy } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import { saveAs } from "file-saver"
-import { NAlert, NButton, NEmpty, NInput, NPagination, NRadioButton, NRadioGroup, NSkeleton, useMessage } from "naive-ui"
+import { NAlert, NButton, NEmpty, NInput, NPagination, NSkeleton, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -215,6 +268,7 @@ import {
 	scoreLevel,
 	sortScaPolicies
 } from "./agentFindings"
+import FilterStrip from "./FilterStrip.vue"
 
 /**
  * An agent's SCA (#1256): its policies, worst score first, and one policy's checks — the
@@ -233,12 +287,17 @@ const POLICY_ROW = [
 	"@3xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_7rem_1rem]",
 	"@3xl:[grid-template-areas:'name_score_checks_scan_chev']"
 ].join(" ")
-const RESULT_OPTIONS: { label: string; value: ScaResultFilter }[] = [
-	{ label: "All", value: "all" },
-	{ label: "Failed", value: "failed" },
-	{ label: "Passed", value: "passed" },
-	{ label: "N/A", value: "not applicable" }
+const RESULT_OPTIONS: { label: string; value: ScaResultFilter; dot: string; testid: string }[] = [
+	{ label: "All", value: "all", dot: "bg-primary", testid: "all" },
+	{ label: "Failed", value: "failed", dot: "bg-error", testid: "failed" },
+	{ label: "Passed", value: "passed", dot: "bg-success", testid: "passed" },
+	{ label: "N/A", value: "not applicable", dot: "bg-muted", testid: "na" }
 ]
+const SCORE_TEXT: Record<ReturnType<typeof scoreLevel>, string> = {
+	good: "text-success",
+	fair: "text-warning",
+	poor: "text-error"
+}
 
 const message = useMessage()
 const { loading, run } = useLatestRequest()
@@ -256,6 +315,9 @@ const expanded = ref(new Set<number>())
 const exporting = ref(false)
 
 const counts = computed(() => scaResultCounts(checks.value))
+const resultStrip = computed<FilterStripOption<ScaResultFilter>[]>(() =>
+	RESULT_OPTIONS.map(option => ({ ...option, count: counts.value[option.value] }))
+)
 const shownChecks = computed(() => filterScaChecks(checks.value, { result: result.value, search: search.value }))
 const offset = computed(() => (pageNumber.value - 1) * pageSize.value)
 const pageChecks = computed(() => shownChecks.value.slice(offset.value, offset.value + pageSize.value))

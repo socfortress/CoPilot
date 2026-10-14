@@ -177,6 +177,13 @@ describe("agent SCA", () => {
 		const checks = wrapper.findAll("[data-testid=sca-check-row]")
 		expect(checks[0]!.text()).toContain("failed")
 
+		// The result strip counts and filters the checks.
+		expect(wrapper.get("[data-testid=result-failed] [data-testid=result-count]").text()).toBe("1")
+		await wrapper.get("[data-testid=result-passed]").trigger("click")
+		expect(wrapper.findAll("[data-testid=sca-check-row]").map(r => r.text())).toEqual([expect.stringContaining("passed")])
+		await wrapper.get("[data-testid=result-all]").trigger("click")
+		expect(wrapper.get("[data-testid=sca-policy-score]").text()).toBe("30%")
+
 		await checks[0]!.get("button").trigger("click")
 		const detail = wrapper.get("[data-testid=sca-check-detail]")
 		expect(detail.text()).toContain("do this")
