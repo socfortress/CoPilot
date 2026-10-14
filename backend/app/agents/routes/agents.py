@@ -75,8 +75,7 @@ from app.middleware.customer_query import customer_codes_query
 from app.middleware.search_query import SearchParams
 from app.middleware.search_query import apply_search_limit
 from app.middleware.search_query import search_query
-from app.threat_intel.schema.epss import EpssThreatIntelRequest
-from app.threat_intel.services.epss import collect_epss_score
+from app.threat_intel.services.epss import collect_epss_scores
 
 
 async def get_wazuh_manager_version() -> str:
@@ -996,9 +995,10 @@ async def get_agent_vulnerabilities_csv(
         vulnerabilities = (
             await collect_agent_vulnerabilities(agent_id, vulnerability_severity=vulnerability_severity.value)
         ).vulnerabilities
-    # Create a CSV file
+    # Create a CSV file. EPSS is looked up in batches and best-effort: a CSV with an empty
+    # EPSS column beats no CSV when the EPSS API is slow or unreachable.
     logger.info(f"Creating CSV file for agent {agent_id} with {len(vulnerabilities)} vulnerabilities")
-    logger.info(f"Vulnerabilities: {vulnerabilities}")
+    epss_scores = await collect_epss_scores(v.cve for v in vulnerabilities)
     output = io.StringIO()
     writer = csv.writer(output)
     # Write the header
@@ -1021,7 +1021,6 @@ async def get_agent_vulnerabilities_csv(
     )
     # Write the rows
     for vulnerability in vulnerabilities:
-        epss_score = await collect_epss_score(EpssThreatIntelRequest(cve=vulnerability.cve))
         writer.writerow(
             [
                 vulnerability.severity,
@@ -1036,7 +1035,7 @@ async def get_agent_vulnerabilities_csv(
                 vulnerability.cve,
                 vulnerability.status,
                 vulnerability.title,
-                epss_score.data[0].epss if epss_score.data else "",
+                epss_scores.get(vulnerability.cve or "", ""),
             ],
         )
     # Return the CSV file as a streaming response
