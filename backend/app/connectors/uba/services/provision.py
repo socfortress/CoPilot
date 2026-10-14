@@ -23,7 +23,8 @@ customer provisioning and Office365 provisioning already made:
    which is then restarted.
 
 Every step looks the object up by title first, so running it again repairs a
-partial setup instead of duplicating anything.
+partial setup instead of duplicating anything. Every object created or found is recorded
+for the customer (``services/ownership.py``): that is what UBA rollback removes.
 """
 
 from typing import Any
@@ -40,11 +41,14 @@ from app.connectors.graylog.utils.universal import send_get_request
 from app.connectors.graylog.utils.universal import send_post_request
 from app.connectors.graylog.utils.universal import send_post_request_create_entity
 from app.connectors.graylog.utils.universal import send_put_request
+from app.connectors.uba.schema.provision import UbaModeResponse
 from app.connectors.uba.schema.provision import UbaProvisionRequest
 from app.connectors.uba.schema.provision import UbaProvisionResponse
 from app.connectors.uba.schema.provision import UbaProvisionStatusResponse
 from app.connectors.uba.schema.provision import UbaProvisionStep
 from app.connectors.uba.schema.provision import UbaSourceStream
+from app.connectors.uba.services import ownership
+from app.connectors.uba.services.ownership import Owned
 from app.connectors.uba.utils.universal import UbaRequestError
 from app.connectors.uba.utils.universal import path_segment
 from app.connectors.uba.utils.universal import uba_request
@@ -75,6 +79,10 @@ async def _put(endpoint: str, data: Dict[str, Any]) -> None:
 class _Steps:
     def __init__(self) -> None:
         self.items: List[UbaProvisionStep] = []
+        self.owned: List[Owned] = []  # every object created or found, recorded for the customer
+
+    def own(self, kind: str, graylog_id: str, title: str, created: bool, source: Optional[str] = None, shared: bool = False) -> None:
+        self.owned.append(Owned(kind, str(graylog_id), title, source, shared, "created" if created else "found"))
 
     def add(self, step: str, status: str, detail: str = "") -> None:
         logger.info(f"UBA provisioning: {step}: {status} {detail}".rstrip())
@@ -187,7 +195,7 @@ async def _list(endpoint: str, key: Optional[str] = None) -> List[Dict[str, Any]
     return (data or {}).get(key, []) if key else (data or [])
 
 
-async def _feed_stream(title: str, source: UbaSourceStream, streams: Dict[str, Dict], steps: _Steps) -> str:
+async def _feed_stream(title: str, name: str, source: UbaSourceStream, streams: Dict[str, Dict], steps: _Steps) -> str:
     existing = streams.get(title)
     if existing is not None:
         if existing.get("index_set_id") != source.index_set_id:
@@ -196,6 +204,7 @@ async def _feed_stream(title: str, source: UbaSourceStream, streams: Dict[str, D
                 detail=f"Stream {title} writes to another index set than its source stream: messages would be indexed twice",
             )
         steps.add(f"stream {title}", "exists")
+        steps.own(ownership.FEED_STREAM, existing["id"], title, False, name)
         return existing["id"]
     created = await send_post_request_create_entity(
         endpoint="/api/streams",
@@ -209,6 +218,7 @@ async def _feed_stream(title: str, source: UbaSourceStream, streams: Dict[str, D
         },
     )
     stream_id = created["data"]["stream_id"]
+    steps.own(ownership.FEED_STREAM, stream_id, title, True, name)
     await send_post_request(endpoint=f"/api/streams/{stream_id}/resume")
     steps.add(f"stream {title}", "created")
     return stream_id
@@ -220,6 +230,7 @@ def _rule_title(source: str) -> str:
 
 async def _routing(
     pipeline_title: str,
+    name: str,
     stage: int,
     rule_sources: List[str],
     source_stream_ids: List[str],
@@ -232,13 +243,17 @@ async def _routing(
         titles.append(title)
         body = {"title": title, "description": "SOCFortress UBA routing", "source": text}
         if title in rules:
+            steps.own(ownership.ROUTING_RULE, rules[title]["id"], title, False, name)
             if rules[title].get("source", "").strip() != text.strip():
                 await _put(f"/api/system/pipelines/rule/{rules[title]['id']}", body)
                 steps.add(f"rule {title}", "updated")
             else:
                 steps.add(f"rule {title}", "exists")
         else:
-            await send_post_request(endpoint="/api/system/pipelines/rule", data=body)
+            created = await send_post_request(endpoint="/api/system/pipelines/rule", data=body)
+            rule_id = (created.get("data") or {}).get("id")
+            if rule_id:
+                steps.own(ownership.ROUTING_RULE, rule_id, title, True, name)
             steps.add(f"rule {title}", "created")
 
     source = f'pipeline "{pipeline_title}"\nstage {stage} match either\n'
@@ -247,6 +262,7 @@ async def _routing(
     pipelines = {p["title"]: p for p in await _list("/api/system/pipelines/pipeline")}
     if pipeline_title in pipelines:
         pipeline_id = pipelines[pipeline_title]["id"]
+        steps.own(ownership.ROUTING_PIPELINE, pipeline_id, pipeline_title, False, name)
         if pipelines[pipeline_title].get("source", "").strip() != source.strip():
             await _put(f"/api/system/pipelines/pipeline/{pipeline_id}", body)
             steps.add(f"pipeline {pipeline_title}", "updated")
@@ -254,6 +270,7 @@ async def _routing(
             steps.add(f"pipeline {pipeline_title}", "exists")
     else:
         pipeline_id = (await send_post_request(endpoint="/api/system/pipelines/pipeline", data=body))["data"]["id"]
+        steps.own(ownership.ROUTING_PIPELINE, pipeline_id, pipeline_title, True, name)
         steps.add(f"pipeline {pipeline_title}", "created")
     # to_pipeline sets this pipeline's streams (ours alone); to_stream would replace the source
     # stream's other pipelines (the Wazuh / Office365 processing pipelines).
@@ -281,6 +298,7 @@ async def _output(title: str, host: str, port: int, feed_stream_ids: List[str], 
     outputs = {o["title"]: o for o in await _list("/api/system/outputs", "outputs")}
     if title in outputs:
         output_id = outputs[title]["id"]
+        steps.own(ownership.OUTPUT, output_id, title, False)
         current = outputs[title].get("configuration") or {}
         if (current.get("hostname"), current.get("port")) != (host, port):
             await _put(f"/api/system/outputs/{output_id}", {"title": title, "type": GELF_OUTPUT, "configuration": config})
@@ -293,6 +311,7 @@ async def _output(title: str, host: str, port: int, feed_stream_ids: List[str], 
             data={"title": title, "type": GELF_OUTPUT, "configuration": config, "streams": []},
         )
         output_id = created["data"]["id"]
+        steps.own(ownership.OUTPUT, output_id, title, True)
         steps.add(f"output {title}", "created", f"-> {host}:{port}")
     for stream_id in feed_stream_ids:
         await send_post_request(endpoint=f"/api/streams/{stream_id}/outputs", data={"outputs": [output_id]})
@@ -304,10 +323,11 @@ async def _alerts(info: Dict[str, Any], customer_code: str, wazuh_index_set: str
     listen = info["alerts_input"]
     inputs = {i["title"]: i for i in await _list("/api/system/inputs", "inputs")}
     if names["alerts_input"] in inputs:
+        steps.own(ownership.ALERTS_INPUT, inputs[names["alerts_input"]]["id"], names["alerts_input"], False, shared=True)
         attrs = inputs[names["alerts_input"]].get("attributes") or {}
         steps.add(f"input {names['alerts_input']}", "exists", f"{attrs.get('bind_address')}:{attrs.get('port')}")
     else:
-        await send_post_request(
+        created = await send_post_request(
             endpoint="/api/system/inputs",
             data={
                 "title": names["alerts_input"],
@@ -327,11 +347,15 @@ async def _alerts(info: Dict[str, Any], customer_code: str, wazuh_index_set: str
                 },
             },
         )
+        input_id = (created.get("data") or {}).get("id")
+        if input_id:
+            steps.own(ownership.ALERTS_INPUT, input_id, names["alerts_input"], True, shared=True)
         steps.add(f"input {names['alerts_input']}", "created", f"{listen['bind_address']}:{listen['port']}")
 
     title = names["alerts_stream"].format(tenant=customer_code)
     streams = {s["title"]: s for s in await _list("/api/streams", "streams")}
     if title in streams:
+        steps.own(ownership.ALERTS_STREAM, streams[title]["id"], title, False)
         steps.add(f"stream {title}", "exists")
         return
     rules = [
@@ -350,6 +374,7 @@ async def _alerts(info: Dict[str, Any], customer_code: str, wazuh_index_set: str
         },
     )
     stream_id = created["data"]["stream_id"]
+    steps.own(ownership.ALERTS_STREAM, stream_id, title, True)
     await send_post_request(endpoint=f"/api/streams/{stream_id}/resume")
     steps.add(f"stream {title}", "created", "in the Wazuh index set")
 
@@ -362,6 +387,7 @@ async def _wazuh_rules(files: List[Dict[str, str]], steps: _Steps) -> None:
 
     for f in files:
         await update_wazuh_rule_file(f["filename"], f["content"].encode(), overwrite=True)
+        steps.own(ownership.WAZUH_RULES, f["filename"], f["filename"], True, shared=True)
         steps.add(f"Wazuh rules {f['filename']}", "uploaded")
     if files:
         await wazuh_put(endpoint="/manager/restart", data=None)
@@ -373,6 +399,15 @@ async def _wazuh_rules(files: List[Dict[str, str]], steps: _Steps) -> None:
 
 
 # -- entry points -----------------------------------------------------------------------------------
+
+
+async def _record_ownership(customer_code: str, steps: _Steps, session: AsyncSession) -> None:
+    try:
+        await ownership.record(session, customer_code, steps.owned)
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        logger.exception(f"UBA provisioning: recording the Graylog objects of {customer_code} failed")
 
 
 async def _provisioning_info() -> Dict[str, Any]:
@@ -452,32 +487,37 @@ async def provision_uba(customer_code: str, request: UbaProvisionRequest, sessio
         f"{registration.get('status')}; {len(tenant_ids)} Microsoft 365 tenant(s); {request.bootstrap_days} day(s) of history",
     )
 
-    # 2-3. Feed streams, routing, output.
-    streams = {s["title"]: s for s in await _list("/api/streams", "streams")}
-    feed_ids = []
-    for name, source_streams in sources.items():
-        integration = names["sources"][name]
-        title = names["feed_stream"].format(source=name, tenant=customer_code)
-        feed_ids.append(await _feed_stream(title, source_streams[0], streams, steps))
-        rule_sources = (await uba_request("GET", f"/v1/integrations/{integration}/graylog-rules", params={"stream": title}))["rules"]
-        await _routing(
-            names["routing_pipeline"].format(source=name, tenant=customer_code),
-            names["pipeline_stage"],
-            rule_sources,
-            [s.stream_id for s in source_streams],
-            steps,
-        )
-    output = info["feed_output"]
-    await _output(names["output"].format(tenant=customer_code), output["host"], output["port"], feed_ids, steps)
+    try:
+        # 2-3. Feed streams, routing, output.
+        streams = {s["title"]: s for s in await _list("/api/streams", "streams")}
+        feed_ids = []
+        for name, source_streams in sources.items():
+            integration = names["sources"][name]
+            title = names["feed_stream"].format(source=name, tenant=customer_code)
+            feed_ids.append(await _feed_stream(title, name, source_streams[0], streams, steps))
+            rule_sources = (await uba_request("GET", f"/v1/integrations/{integration}/graylog-rules", params={"stream": title}))["rules"]
+            await _routing(
+                names["routing_pipeline"].format(source=name, tenant=customer_code),
+                name,
+                names["pipeline_stage"],
+                rule_sources,
+                [s.stream_id for s in source_streams],
+                steps,
+            )
+        output = info["feed_output"]
+        await _output(names["output"].format(tenant=customer_code), output["host"], output["port"], feed_ids, steps)
 
-    # 4. Alerts back into Graylog.
-    await _alerts(info, customer_code, sources["WAZUH"][0].index_set_id, steps)
+        # 4. Alerts back into Graylog.
+        await _alerts(info, customer_code, sources["WAZUH"][0].index_set_id, steps)
 
-    # 5. Optional Wazuh rules.
-    if request.deploy_wazuh_rules:
-        await _wazuh_rules(info.get("wazuh_rules") or [], steps)
-    else:
-        steps.add("Wazuh rules", "skipped", "not requested")
+        # 5. Optional Wazuh rules.
+        if request.deploy_wazuh_rules:
+            await _wazuh_rules(info.get("wazuh_rules") or [], steps)
+        else:
+            steps.add("Wazuh rules", "skipped", "not requested")
+    finally:
+        # Recorded even when a step failed: what was created before it is the customer's too.
+        await _record_ownership(customer_code, steps, session)
 
     return UbaProvisionResponse(
         success=True,
@@ -485,3 +525,23 @@ async def provision_uba(customer_code: str, request: UbaProvisionRequest, sessio
         steps=steps.items,
         onboarding=registration,
     )
+
+
+async def set_mode(customer_code: str, mode: str) -> UbaModeResponse:
+    """Active or learning (UBA keeps learning and records its alerts, CoPilot gets none). Only for a
+    customer UBA serves: a rolled back customer is set up again first."""
+    tenant = path_segment(customer_code)
+    try:
+        onboarding = await uba_request("GET", f"/v1/tenants/{tenant}/onboarding")
+    except UbaRequestError as e:
+        if e.status_code != 404:
+            raise
+        onboarding = None
+    if not onboarding or not onboarding.get("active"):
+        raise UbaRequestError("not_active", f"UBA is not set up for {customer_code}: set it up first", 409)
+    # "active" is sent too: a UBA without modes reads a registration that leaves it out as active=true.
+    result = await uba_request("PUT", f"/v1/tenants/{tenant}", json={"active": True, "mode": mode})
+    if result.get("mode") != mode:
+        raise UbaRequestError("unsupported", "This SOCFortress UBA version has no learning mode: upgrade UBA", 409)
+    text = "UBA alerts reach CoPilot again" if mode == "active" else "UBA keeps learning; its alerts stay in UBA"
+    return UbaModeResponse(success=True, message=f"{customer_code}: {text}", onboarding=result)

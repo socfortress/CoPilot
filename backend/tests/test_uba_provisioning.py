@@ -151,7 +151,26 @@ class FakeUba:
         raise AssertionError(path)
 
 
-def _run(graylog, uba, request=None, sources=None):
+class _Session:
+    """Enough of an AsyncSession for recording ownership (services/ownership.py)."""
+
+    def __init__(self):
+        self.added = []
+
+    async def execute(self, query):
+        return SimpleNamespace(scalars=lambda: SimpleNamespace(all=lambda: []))
+
+    def add(self, row):
+        self.added.append(row)
+
+    async def commit(self):
+        pass
+
+    async def rollback(self):
+        pass
+
+
+def _run(graylog, uba, request=None, sources=None, session=None):
     sources = sources or {
         "WAZUH": [UbaSourceStream(stream_id="wazuh-src", index_set_id="wazuh-set")],
         "O365": [
@@ -191,7 +210,7 @@ def _run(graylog, uba, request=None, sources=None):
         "_office365_tenant_ids",
         tenant_ids,
     ):
-        return asyncio.run(provision.provision_uba("acme", request or UbaProvisionRequest(), session=None))
+        return asyncio.run(provision.provision_uba("acme", request or UbaProvisionRequest(), session=session or _Session()))
 
 
 def _by_title(objects):
@@ -354,6 +373,32 @@ def test_a_put_graylog_did_not_take_stops_setup():
     with pytest.raises(HTTPException) as e:
         _run(graylog, FakeUba(feed_host="10.0.0.5"))  # UBA moved: the output must be updated
     assert e.value.status_code == 502 and "timeout" in e.value.detail
+
+
+def test_every_object_is_recorded_for_the_customer_even_when_a_step_fails():
+    """What UBA rollback removes (#1241): setup records each object it creates or finds."""
+    graylog = FakeGraylog({"wazuh-set": "wazuh-acme", "o365-set": "office365-acme"})
+    session = _Session()
+    _run(graylog, FakeUba(), session=session)
+    rows = {(r.kind, r.title): r for r in session.added}
+    assert ("feed_stream", "UBA FEED - O365 - acme") in rows and ("output", "UBA GELF - acme") in rows
+    assert rows[("alerts_input", "UBA ALERTS")].shared and rows[("routing_pipeline", "UBA ROUTING - WAZUH - acme")].source == "WAZUH"
+    assert {r.origin for r in session.added} == {"created"}
+    assert {r.graylog_id for r in session.added if r.kind == "routing_rule"} <= set(graylog.rules)
+
+    graylog = FakeGraylog({"wazuh-set": "wazuh-acme", "o365-set": "office365-acme"})
+    real = graylog.post
+
+    async def output_refused(endpoint, data=None):
+        if endpoint == "/api/system/outputs":
+            raise HTTPException(status_code=500, detail="refused")
+        return await real(endpoint, data)
+
+    graylog.post = output_refused
+    session = _Session()
+    with pytest.raises(HTTPException):
+        _run(graylog, FakeUba(), session=session)
+    assert {r.kind for r in session.added} == {"feed_stream", "routing_rule", "routing_pipeline"}
 
 
 def test_provisioning_routes_are_admin_only():

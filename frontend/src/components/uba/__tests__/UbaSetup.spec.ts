@@ -5,13 +5,17 @@ import UbaSetup from "../UbaSetup.vue"
 
 const getProvisioning = vi.fn()
 const provision = vi.fn()
+const getRollbacks = vi.fn()
+const setMode = vi.fn()
 const auth = { isAdmin: true }
 
 vi.mock("@/api", () => ({
 	default: {
 		uba: {
 			getProvisioning: (...args: unknown[]) => getProvisioning(...args),
-			provision: (...args: unknown[]) => provision(...args)
+			provision: (...args: unknown[]) => provision(...args),
+			getRollbacks: (...args: unknown[]) => getRollbacks(...args),
+			setMode: (...args: unknown[]) => setMode(...args)
 		}
 	}
 }))
@@ -57,6 +61,8 @@ describe("ubaSetup", () => {
 	beforeEach(() => {
 		auth.isAdmin = true
 		getProvisioning.mockReset().mockResolvedValue({ data: NOT_SET_UP })
+		getRollbacks.mockReset().mockResolvedValue({ data: { rollbacks: [] } })
+		setMode.mockReset()
 		provision.mockReset().mockResolvedValue({
 			data: {
 				steps: [{ step: "UBA tenant", status: "registered", detail: "pending" }],
@@ -153,5 +159,65 @@ describe("ubaSetup", () => {
 		const wrapper = await render()
 		expect(getProvisioning).not.toHaveBeenCalled()
 		expect(wrapper.text()).toContain("An admin can set it up")
+	})
+
+	it("switches a live customer to learning only", async () => {
+		getProvisioning.mockResolvedValue({ data: { ...NOT_SET_UP, onboarding: onboarding("live", { mode: "active" }) } })
+		setMode.mockResolvedValue({
+			data: { message: "acme: UBA keeps learning", onboarding: onboarding("live", { mode: "learning" }) }
+		})
+		const wrapper = await render()
+		expect(wrapper.text()).toContain("UBA alerts become CoPilot incident alerts")
+		await wrapper.find("[data-testid=uba-mode-learning] input").setValue(true)
+		await flushPromises()
+		expect(setMode).toHaveBeenCalledWith("acme", "learning")
+		expect(wrapper.text()).toContain("CoPilot gets no UBA alerts for this customer")
+	})
+
+	it("has no mode switch on a UBA without modes", async () => {
+		getProvisioning.mockResolvedValue({ data: { ...NOT_SET_UP, onboarding: onboarding("live") } })
+		const wrapper = await render()
+		expect(wrapper.find("[data-testid=uba-mode]").exists()).toBe(false)
+	})
+
+	it("offers the rollback for a set-up customer, and not for one never set up", async () => {
+		let wrapper = await render()
+		expect(wrapper.find("[data-testid=uba-rollback-open]").exists()).toBe(false)
+
+		getProvisioning.mockResolvedValue({ data: { ...NOT_SET_UP, onboarding: onboarding("live") } })
+		wrapper = await render()
+		expect(wrapper.find("[data-testid=uba-rollback-open]").text()).toContain("Roll back UBA")
+	})
+
+	it("offers the rollback while UBA cannot be reached", async () => {
+		getProvisioning.mockRejectedValue({ response: { status: 502, data: { detail: "UBA is unreachable", reason: "unreachable" } } })
+		const wrapper = await render()
+		expect(wrapper.find("[data-testid=uba-rollback-open]").exists()).toBe(true)
+	})
+
+	it("shows the last rollback and offers to finish one that did not complete", async () => {
+		getProvisioning.mockResolvedValue({
+			data: { ...NOT_SET_UP, onboarding: onboarding("inactive", { active: false }) }
+		})
+		getRollbacks.mockResolvedValue({
+			data: {
+				rollbacks: [
+					{
+						id: 3,
+						customer_code: "acme",
+						status: "partial",
+						started_at: "2026-10-13T10:00:00",
+						finished_at: "2026-10-13T10:00:05",
+						actor_username: "admin",
+						message: "partial"
+					}
+				]
+			}
+		})
+		const wrapper = await render()
+		const text = wrapper.find("[data-testid=uba-rollback]").text()
+		expect(text).toContain("by admin: partial")
+		expect(text).toContain("View report")
+		expect(wrapper.find("[data-testid=uba-rollback-open]").text()).toContain("Finish the rollback")
 	})
 })

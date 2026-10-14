@@ -171,6 +171,27 @@ Every step looks objects up by title first, so **Run setup again** repairs a par
   Deploying the Wazuh rules restarts the Wazuh manager. Check afterwards that your log shipper (e.g. Fluent Bit) still ships alerts — on some hosts it stops after a manager restart until it is restarted too.
 </Warning>
 
+### Learning only
+
+An admin can switch a live customer to **Learning only** in the setup card (**Setup** next to the customer picker). UBA keeps processing and learning, and its alerts stay on the UBA page, but none reach **Incidents → Alerts**. Use it to tune a noisy customer without filling the alert queue. Alerts raised while learning are not delivered later when you switch back to **Active**. Needs a UBA with tenant modes; an older UBA says so instead of ignoring the switch.
+
+### Rolling UBA back for a customer
+
+**Roll back UBA** in the setup card removes everything setup made for that customer, and nothing else. The preview lists what goes (in order), what is kept, and anything left alone for review, and you type the customer code to confirm.
+
+1. **Routing first.** The UBA ROUTING pipelines are disconnected from the customer's streams, so from then on nothing is sent to UBA. An optional component that is down can then no longer back Graylog's outputs up.
+2. The **output to UBA**, the routing pipelines and rules, the **UBA FEED** streams and the customer's **UBA ALERTS** stream are removed. The shared **UBA ALERTS** input goes only with the last customer that has a UBA alerts stream.
+3. The customer is **deactivated in UBA**. UBA keeps its entities, alerts, verdicts and suppressions, and CoPilot keeps its incident alerts.
+4. CoPilot **checks** that the customer's own streams still run with their other pipelines and that Graylog's event definitions are unchanged, and keeps a report (with a snapshot of the objects removed) under **View report**.
+
+Only objects that are provably the customer's UBA objects are touched. Setup records every object it makes; customers set up before that are matched by name *and* shape. A pipeline that also runs a rule UBA did not make, or a stream an event definition reads, is listed as a conflict and left alone. UBA's Wazuh rules are never removed: they are shared, and removing them would restart the Wazuh manager.
+
+Rollback works while UBA is down (the Graylog side is what matters); deactivating the customer in UBA is then retried by rolling back again. A step that fails leaves whatever depends on it in place, and rolling back again finishes the job. To bring UBA back, run **Set up UBA** again: everything is recreated, and UBA starts the customer from that moment instead of replaying the weeks it was off.
+
+<Warning>
+  Never stop UBA's containers while a customer is still routed to it: roll the customer back (or switch it off in Graylog) first.
+</Warning>
+
 ### Directory sync (Entra ID, optional but recommended)
 
 Without a directory, UBA learns accounts from events and only sees role changes as they happen. With one, it knows real names, departments, disabled accounts and who holds admin roles.
@@ -281,6 +302,8 @@ Accounts UBA learned from events and the customer's directory users may be the s
 | Verdicts and suppressions | ✅ | ✅ |
 | Run and cancel backtests | ✅ | ✅ |
 | Set a customer up (provisioning) | ✅ | — |
+| Learning only / Active | ✅ | — |
+| Roll a customer back | ✅ | — |
 | Rule settings and alert threshold | ✅ | — |
 | Directory test / sync | ✅ | — |
 | Merge identities | ✅ | — |
@@ -327,6 +350,9 @@ The analyst's username is sent to UBA with every write, so UBA records who suppr
 | *Computers have stopped reporting* | Their Wazuh agents stopped checking in — UBA sees nothing from them until they do |
 | No sign-in location findings | GeoLite2 databases missing from `data/geoip` on the UBA host |
 | Wazuh alerts stopped after setup | The manager restarted to load UBA's rules — restart the log shipper |
+| A rollback is *partial* | A step failed (see **View report**) or UBA could not be reached — roll back again to finish |
+| A rollback leaves an object *for review* | Something else uses it (another pipeline, an event definition, another output), or it no longer looks like what setup made — check it in Graylog |
+| *Learning only* refused: *no learning mode* | Upgrade UBA |
 
 A UBA authentication failure is always reported as an upstream error (502 with a `reason`), never as a CoPilot 401/403 — it will not log you out.
 

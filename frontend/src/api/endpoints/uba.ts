@@ -16,6 +16,7 @@ import type {
 	UbaIdentitySource,
 	UbaIdentitySummary,
 	UbaIncidentVerdict,
+	UbaMode,
 	UbaOnboarding,
 	UbaPage,
 	UbaProvisioning,
@@ -23,6 +24,9 @@ import type {
 	UbaProvisionStep,
 	UbaRiskHistory,
 	UbaRiskStep,
+	UbaRollbackPlan,
+	UbaRollbackReport,
+	UbaRollbackSummary,
 	UbaRuleInfo,
 	UbaRuleSettingPayload,
 	UbaRuleSettings,
@@ -166,6 +170,33 @@ export default {
 		return HttpClient.post<FlaskBaseResponse & { steps: UbaProvisionStep[]; onboarding: UbaOnboarding | null }>(
 			`${base(customerCode)}/provision`,
 			payload
+		)
+	},
+	/** Admin: active, or learning (UBA keeps learning and records its alerts; CoPilot gets none). */
+	setMode(customerCode: string, mode: UbaMode) {
+		return HttpClient.put<FlaskBaseResponse & { onboarding: UbaOnboarding | null }>(`${base(customerCode)}/mode`, {
+			mode
+		})
+	},
+	/** Admin: what a rollback would remove, keep and leave alone. Changes nothing. */
+	getRollbackPlan(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & UbaRollbackPlan>(`${base(customerCode)}/rollback`, { signal })
+	},
+	/** Admin: roll UBA back for the customer (safe to run again; set-up recreates everything). */
+	rollBack(customerCode: string) {
+		return HttpClient.post<FlaskBaseResponse & { report: UbaRollbackReport }>(`${base(customerCode)}/rollback`)
+	},
+	/** Admin: the customer's rollbacks, newest first. */
+	getRollbacks(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { rollbacks: UbaRollbackSummary[] }>(`${base(customerCode)}/rollbacks`, {
+			signal
+		})
+	},
+	/** Admin: one rollback with its snapshot, steps and checks. */
+	getRollback(customerCode: string, rollbackId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { report: UbaRollbackReport }>(
+			`${base(customerCode)}/rollbacks/${rollbackId}`,
+			{ signal }
 		)
 	},
 	/** Every UBA rule as it applies to the customer, and its alert threshold. */

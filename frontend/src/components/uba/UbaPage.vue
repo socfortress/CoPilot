@@ -64,6 +64,7 @@
 				:closable="!needsSetup"
 				@live="onLive"
 				@close="showSetup = false"
+				@rolled-back="onRolledBack"
 			/>
 			<n-alert v-if="unhealthyFeeds.length" type="warning" :bordered="false">
 				<div v-for="feed of unhealthyFeeds" :key="feed.source">
@@ -319,6 +320,12 @@ function closeDrawer() {
 function onLive() {
 	// Just went live (refresh the header); when reopened by an admin, the card stays open.
 	if (!showSetup.value && customerModel.value) loadStatus(customerModel.value)
+}
+
+function onRolledBack() {
+	// Keep the card (and its report) open while the header reloads.
+	showSetup.value = true
+	if (customerModel.value) loadStatus(customerModel.value)
 }
 
 function loadStatus(code: string) {

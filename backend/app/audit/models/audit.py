@@ -71,6 +71,10 @@ class AuditAction(str, Enum):
     AI_ANALYSIS_REQUEST = "ai_analysis.request"
     AI_REPORT_SETTINGS_UPDATE = "ai_report.settings_update"
 
+    # SOCFortress UBA per customer (#1241)
+    UBA_MODE_CHANGE = "uba.mode_change"
+    UBA_ROLLBACK = "uba.rollback"
+
     # File data store
     DATASTORE_FILE_CREATE = "datastore.file_create"
     DATASTORE_FILE_DELETE = "datastore.file_delete"

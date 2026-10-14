@@ -596,6 +596,73 @@ class CustomerWafInstance(SQLModel, table=True):
     forwarding_provisioned_at: Optional[datetime] = Field(default=None)
 
 
+class UbaProvisionedResource(SQLModel, table=True):
+    """A Graylog object (or Wazuh rules file) UBA setup made or took on for a customer (#1241).
+
+    UBA rollback removes what this table says the customer owns, after checking each
+    object still looks like what setup made, instead of deleting whatever carries a
+    "UBA ..." title. Setup records every object it creates *or* finds by title
+    (``origin`` ``created`` / ``found``); a rollback of a customer set up before this
+    table existed takes its objects on by title and structure (``adopted``). A
+    removed object keeps its row with ``removed_at`` set, so the history stays readable.
+
+    ``shared``: used by every customer (the "UBA ALERTS" input, the Wazuh rules file).
+    Rollback removes the input only once no other customer has a UBA alerts stream,
+    and never removes the Wazuh rules.
+    """
+
+    __tablename__ = "uba_provisioned_resource"
+    __table_args__ = (UniqueConstraint("customer_code", "kind", "graylog_id", name="uq_uba_provisioned_resource"),)
+
+    id: Optional[int] = Field(primary_key=True)
+    customer_code: str = Field(
+        sa_column=Column(
+            String(50),
+            ForeignKey("customers.customer_code", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
+    )
+    # feed_stream | routing_rule | routing_pipeline | output | alerts_stream | alerts_input | wazuh_rules
+    kind: str = Field(max_length=32, nullable=False)
+    graylog_id: str = Field(max_length=255, nullable=False)  # the Graylog id; the file name for wazuh_rules
+    title: str = Field(max_length=255, nullable=False)
+    source: Optional[str] = Field(default=None, max_length=16)  # WAZUH | O365 (per-source objects)
+    shared: bool = Field(default=False, nullable=False)
+    origin: str = Field(max_length=16, nullable=False)  # created | found | adopted
+    created_at: datetime = Field(default_factory=now_utc, nullable=False)
+    updated_at: datetime = Field(default_factory=now_utc, nullable=False)  # last seen by setup
+    removed_at: Optional[datetime] = Field(default=None)
+    removed_by_rollback_id: Optional[int] = Field(default=None)
+
+
+class UbaRollback(SQLModel, table=True):
+    """One UBA rollback of a customer (#1241): what Graylog held before, every step and
+    the checks that the customer's standard pipeline still runs. ``snapshot`` is the
+    record a rollback can be undone from (set-up again recreates the objects)."""
+
+    __tablename__ = "uba_rollback"
+
+    id: Optional[int] = Field(primary_key=True)
+    customer_code: str = Field(
+        sa_column=Column(
+            String(50),
+            ForeignKey("customers.customer_code", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
+    )
+    status: str = Field(max_length=16, nullable=False)  # running | completed | partial | failed
+    started_at: datetime = Field(default_factory=now_utc, nullable=False)
+    finished_at: Optional[datetime] = Field(default=None)
+    actor_user_id: Optional[int] = Field(default=None)
+    actor_username: Optional[str] = Field(default=None, max_length=256)
+    message: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
+    snapshot: Optional[dict] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    steps: Optional[list] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    verification: Optional[list] = Field(default=None, sa_column=Column(JSON, nullable=True))
+
+
 class VulnerabilityReport(SQLModel, table=True):
     __tablename__ = "vulnerability_reports"
 

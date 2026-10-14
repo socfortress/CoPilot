@@ -50,6 +50,25 @@
 							A source added after the customer went live starts without history: UBA learns its normal activity
 							from then on, so expect more first-time findings from it for the first days.
 						</p>
+						<div v-if="onboarding.mode" class="flex flex-wrap items-center gap-3 text-sm" data-testid="uba-mode">
+							<span class="text-secondary">Mode</span>
+							<n-radio-group
+								:value="onboarding.mode"
+								size="small"
+								:disabled="modeSaving"
+								@update:value="setMode"
+							>
+								<n-radio-button value="active" data-testid="uba-mode-active">Active</n-radio-button>
+								<n-radio-button value="learning" data-testid="uba-mode-learning">Learning only</n-radio-button>
+							</n-radio-group>
+							<span class="text-tertiary text-xs">
+								{{
+									onboarding.mode === "learning"
+										? "UBA keeps learning and records its alerts here; CoPilot gets no UBA alerts for this customer."
+										: "UBA alerts become CoPilot incident alerts."
+								}}
+							</span>
+						</div>
 					</div>
 
 					<!-- Not registered: what will be created, and the form -->
@@ -103,6 +122,35 @@
 						</li>
 					</ul>
 				</template>
+
+				<!-- Rollback: also offered when UBA cannot be reached, which is when it matters most -->
+				<div
+					v-if="!loading && (showRollback || lastRollback)"
+					class="border-default flex flex-wrap items-center gap-2 border-t pt-3"
+					data-testid="uba-rollback"
+				>
+					<span class="text-tertiary min-w-0 flex-1 text-xs">{{ rollbackText }}</span>
+					<n-button v-if="lastRollback" size="small" quaternary @click="openRollback(lastRollback.id)">
+						View report
+					</n-button>
+					<n-button
+						v-if="showRollback"
+						size="small"
+						type="error"
+						secondary
+						data-testid="uba-rollback-open"
+						@click="openRollback(null)"
+					>
+						<template #icon><Icon name="carbon:reset" :size="14" /></template>
+						{{ registered ? "Roll back UBA" : "Finish the rollback" }}
+					</n-button>
+				</div>
+				<UbaRollbackDialog
+					v-model:show="rollbackOpen"
+					:customer-code
+					:report-id="rollbackReportId"
+					@done="onRolledBack"
+				/>
 			</template>
 		</div>
 	</section>
@@ -110,8 +158,20 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
-import type { UbaOnboarding, UbaProvisioning, UbaProvisionStep } from "@/types/uba"
-import { NAlert, NButton, NCheckbox, NFormItem, NProgress, NSelect, NSpin, NTag, useMessage } from "naive-ui"
+import type { UbaMode, UbaOnboarding, UbaProvisioning, UbaProvisionStep, UbaRollbackSummary } from "@/types/uba"
+import {
+	NAlert,
+	NButton,
+	NCheckbox,
+	NFormItem,
+	NProgress,
+	NRadioButton,
+	NRadioGroup,
+	NSelect,
+	NSpin,
+	NTag,
+	useMessage
+} from "naive-ui"
 import { computed, onBeforeMount, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -121,9 +181,10 @@ import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import UbaError from "./UbaError.vue"
+import UbaRollbackDialog from "./UbaRollbackDialog.vue"
 
 const { customerCode, closable = false } = defineProps<{ customerCode: string; closable?: boolean }>()
-const emit = defineEmits<{ live: []; close: [] }>()
+const emit = defineEmits<{ live: []; close: []; rolledBack: [] }>()
 
 const DAY_OPTIONS = [
 	{ label: "none (start now)", value: 0 },
@@ -143,10 +204,33 @@ const running = ref(false)
 const steps = ref<UbaProvisionStep[]>([])
 const days = ref(14)
 const deployRules = ref(false)
+const modeSaving = ref(false)
+const lastRollback = ref<UbaRollbackSummary | null>(null)
+const rollbackOpen = ref(false)
+const rollbackReportId = ref<number | null>(null)
 let poll: ReturnType<typeof setInterval> | null = null
 
 const onboarding = computed<UbaOnboarding | null>(() => info.value?.onboarding ?? null)
 const registered = computed(() => !!onboarding.value && onboarding.value.status !== "inactive")
+
+// Set up, UBA unreachable (the rollback still removes the Graylog side), deactivated without a
+// rollback, or a rollback that did not finish.
+const showRollback = computed(
+	() =>
+		registered.value ||
+		!!error.value ||
+		(!!lastRollback.value && lastRollback.value.status !== "completed") ||
+		(onboarding.value?.status === "inactive" && !lastRollback.value)
+)
+
+const rollbackText = computed(() => {
+	const last = lastRollback.value
+	if (last) {
+		const when = formatDate(last.started_at, dFormats.datetime)
+		return `Last rolled back ${when}${last.actor_username ? ` by ${last.actor_username}` : ""}: ${last.status}.`
+	}
+	return "Roll back removes this customer's UBA routing from Graylog and deactivates it in UBA. History is kept."
+})
 
 const sourceText = computed(() => {
 	const sources = info.value?.sources ?? {}
@@ -212,6 +296,45 @@ function load(quiet = false) {
 		})
 }
 
+function loadRollbacks() {
+	Api.uba
+		.getRollbacks(customerCode)
+		.then(res => {
+			lastRollback.value = res.data.rollbacks[0] ?? null
+		})
+		.catch(() => {
+			lastRollback.value = null
+		})
+}
+
+function openRollback(reportId: number | null) {
+	rollbackReportId.value = reportId
+	rollbackOpen.value = true
+}
+
+function onRolledBack() {
+	steps.value = []
+	loadRollbacks()
+	load(true)
+	emit("rolledBack")
+}
+
+function setMode(mode: UbaMode) {
+	modeSaving.value = true
+	Api.uba
+		.setMode(customerCode, mode)
+		.then(res => {
+			if (info.value && res.data.onboarding) info.value = { ...info.value, onboarding: res.data.onboarding }
+			message.success(res.data.message)
+		})
+		.catch((err: ApiError) => {
+			message.error(getApiErrorMessage(err) || "Changing the UBA mode failed")
+		})
+		.finally(() => {
+			modeSaving.value = false
+		})
+}
+
 function run() {
 	running.value = true
 	Api.uba
@@ -234,7 +357,10 @@ function run() {
 }
 
 onBeforeMount(() => {
-	if (isAdmin.value) load()
+	if (isAdmin.value) {
+		load()
+		loadRollbacks()
+	}
 })
 onBeforeUnmount(stopPolling)
 </script>
