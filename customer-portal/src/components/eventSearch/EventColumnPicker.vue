@@ -6,17 +6,26 @@
 				<span class="text-tertiary font-mono text-xs tabular-nums">{{ columns.length }}</span>
 			</div>
 
-			<p v-if="!columns.length" class="border-default text-tertiary m-0 rounded-md border border-dashed px-3 py-4 text-center text-xs">
-				No column picked: the table shows {{ sourceColumns?.length ? "the SOC's layout for this source" : "the default layout" }}.
+			<p
+				v-if="!columns.length"
+				class="border-default text-tertiary m-0 rounded-md border border-dashed px-3 py-4 text-center text-xs"
+			>
+				No column picked: the table shows
+				{{ sourceColumns?.length ? "the SOC's layout for this source" : "the default layout" }}.
 			</p>
-			<div v-else class="border-default divide-border @container flex flex-col divide-y overflow-hidden rounded-md border">
+			<div
+				v-else
+				class="border-default divide-border @container flex flex-col divide-y overflow-hidden rounded-md border"
+			>
 				<div
 					v-for="(column, index) of columns"
 					:key="column.key"
 					class="group hover:bg-secondary/50 flex items-center gap-2 px-2 py-1.5"
 					data-testid="picked-column"
 				>
-					<span class="text-tertiary w-5 shrink-0 text-center font-mono text-xs tabular-nums">{{ index + 1 }}</span>
+					<span class="text-tertiary w-5 shrink-0 text-center font-mono text-xs tabular-nums">
+						{{ index + 1 }}
+					</span>
 					<!-- The header beside the field it reads; stacked when the dialog is narrow. -->
 					<div class="flex min-w-0 grow flex-col gap-1 @md:flex-row @md:items-center @md:gap-3">
 						<n-input
@@ -35,7 +44,13 @@
 						</span>
 					</div>
 					<div class="flex shrink-0 opacity-60 transition-opacity group-hover:opacity-100">
-						<n-button size="tiny" quaternary :disabled="index === 0" aria-label="Move left" @click="move(index, -1)">
+						<n-button
+							size="tiny"
+							quaternary
+							:disabled="index === 0"
+							aria-label="Move left"
+							@click="move(index, -1)"
+						>
 							<template #icon><Icon name="carbon:arrow-up" :size="14" /></template>
 						</n-button>
 						<n-button
@@ -89,34 +104,43 @@
 				<div
 					v-for="template of templates"
 					:key="template.id"
-					class="group hover:bg-secondary/50 flex items-center gap-2 px-2 py-1.5"
+					class="group hover:bg-secondary/50 flex min-h-12 min-w-0 items-stretch"
 					data-testid="column-template"
 				>
-					<div class="flex min-w-0 grow flex-col">
-						<span class="text-default truncate text-sm">{{ template.name }}</span>
-						<span class="text-tertiary truncate text-xs">{{ summary(template.columns) }}</span>
+					<TemplateDeleteConfirm
+						v-if="confirmingId === template.id"
+						:name="template.name"
+						:loading="savingTemplate"
+						@confirm="emit('deleteTemplate', template.id)"
+						@cancel="confirmingId = null"
+					/>
+					<div v-else class="flex min-w-0 grow items-center gap-2 px-2 py-1.5">
+						<div class="flex min-w-0 grow flex-col">
+							<span class="text-default truncate text-sm">{{ template.name }}</span>
+							<span class="text-tertiary truncate text-xs">{{ summary(template.columns) }}</span>
+						</div>
+						<n-button
+							size="tiny"
+							secondary
+							:title="`Put the columns of “${template.name}” above, to adjust or apply them`"
+							data-testid="column-template-load"
+							@click="load(template)"
+						>
+							Load
+						</n-button>
+						<n-button
+							size="tiny"
+							quaternary
+							type="error"
+							class="opacity-60 group-hover:opacity-100"
+							:aria-label="`Delete the template “${template.name}”`"
+							:disabled="savingTemplate"
+							data-testid="column-template-delete"
+							@click="confirmingId = template.id"
+						>
+							<template #icon><Icon name="carbon:trash-can" :size="14" /></template>
+						</n-button>
 					</div>
-					<n-button
-						size="tiny"
-						secondary
-						:title="`Put the columns of “${template.name}” above, to adjust or apply them`"
-						data-testid="column-template-load"
-						@click="load(template)"
-					>
-						Load
-					</n-button>
-					<n-button
-						size="tiny"
-						quaternary
-						type="error"
-						class="opacity-60 group-hover:opacity-100"
-						:aria-label="`Delete “${template.name}”`"
-						:disabled="savingTemplate"
-						data-testid="column-template-delete"
-						@click="emit('deleteTemplate', template.id)"
-					>
-						<template #icon><Icon name="carbon:trash-can" :size="14" /></template>
-					</n-button>
 				</div>
 			</div>
 			<form
@@ -173,13 +197,14 @@ import type { DisplayColumn, EventSearchColumnTemplate, FieldMapping } from "@/t
 import { NButton, NInput, NSelect } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import TemplateDeleteConfirm from "./TemplateDeleteConfirm.vue"
 
 /**
  * Picks the columns of event search for one source (#1258): which fields, in which order,
  * under which headers. It starts from what the table shows now; Apply hands the choice to
  * the parent, which keeps it per source on the server, and "Back to…" drops it for the
- * source's layout. The columns being edited can also be saved as a named template, and a
- * template loaded back to start from.
+ * source's layout. The columns being edited can also be saved as a named template, a
+ * template loaded back to start from, and one deleted once confirmed.
  */
 
 const {
@@ -261,12 +286,18 @@ function saveTemplate() {
 	emit("saveTemplate", name, picked())
 }
 
-// The name is cleared once the template is saved: the list then holds it.
+/** The template whose deletion is being confirmed. */
+const confirmingId = ref<number | null>(null)
+
 watch(
 	() => templates,
 	list => {
+		// The name is cleared once the template is saved: the list then holds it.
 		const name = templateName.value.trim().toLowerCase()
 		if (name && list.some(template => template.name.toLowerCase() === name)) templateName.value = ""
+		// A deleted template leaves nothing to confirm.
+		if (confirmingId.value !== null && !list.some(template => template.id === confirmingId.value))
+			confirmingId.value = null
 	}
 )
 </script>

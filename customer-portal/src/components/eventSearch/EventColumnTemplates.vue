@@ -23,31 +23,64 @@
 						<span class="text-tertiary font-mono text-xs tabular-nums">{{ templates.length + 1 }}</span>
 					</header>
 					<div class="divide-border flex max-h-[min(50vh,22rem)] flex-col divide-y overflow-y-auto">
-						<button
+						<div
 							v-for="option of options"
 							:key="option.key"
-							type="button"
-							class="hover:bg-secondary/50 focus-visible:bg-secondary/50 flex min-w-0 cursor-pointer items-start gap-2 px-3 py-2 text-left outline-none"
+							class="group flex min-h-15 min-w-0 items-stretch"
 							:class="{ 'bg-secondary/50': previewKey === option.key }"
-							:data-active="option.key === activeKey"
-							data-testid="column-layout"
-							@mouseenter="previewKey = option.key"
-							@focus="previewKey = option.key"
-							@click="apply(option)"
+							data-testid="column-layout-row"
 						>
-							<Icon
-								:name="option.key === activeKey ? 'carbon:checkmark' : 'carbon:dot-mark'"
-								:size="14"
-								class="mt-0.5 shrink-0"
-								:class="option.key === activeKey ? 'text-primary' : 'text-tertiary opacity-40'"
+							<TemplateDeleteConfirm
+								v-if="option.template && confirmingId === option.template.id"
+								:name="option.name"
+								:loading="deletingId === option.template.id"
+								@confirm="emit('delete', option.template.id)"
+								@cancel="confirmingId = null"
 							/>
-							<span class="flex min-w-0 grow flex-col gap-0.5">
-								<span class="text-default truncate text-sm" :class="{ 'font-medium': option.key === activeKey }">
-									{{ option.name }}
-								</span>
-								<span class="text-tertiary truncate text-xs">{{ summary(option.columns) }}</span>
-							</span>
-						</button>
+							<template v-else>
+								<button
+									type="button"
+									class="hover:bg-secondary/50 focus-visible:bg-secondary/50 flex min-w-0 grow cursor-pointer items-start gap-2 py-2 pl-3 text-left outline-none"
+									:class="option.template ? 'pr-1' : 'pr-3'"
+									:data-active="option.key === activeKey"
+									data-testid="column-layout"
+									@mouseenter="previewKey = option.key"
+									@focus="previewKey = option.key"
+									@click="apply(option)"
+								>
+									<Icon
+										:name="option.key === activeKey ? 'carbon:checkmark' : 'carbon:dot-mark'"
+										:size="14"
+										class="mt-0.5 shrink-0"
+										:class="option.key === activeKey ? 'text-primary' : 'text-tertiary opacity-40'"
+									/>
+									<span class="flex min-w-0 grow flex-col gap-0.5">
+										<span
+											class="text-default truncate text-sm"
+											:class="{ 'font-medium': option.key === activeKey }"
+										>
+											{{ option.name }}
+										</span>
+										<span class="text-tertiary truncate text-xs">
+											{{ summary(option.columns) }}
+										</span>
+									</span>
+								</button>
+								<n-button
+									v-if="option.template"
+									size="tiny"
+									quaternary
+									type="error"
+									class="mr-2 self-center opacity-50 group-hover:opacity-100 focus-visible:opacity-100"
+									:aria-label="`Delete the template “${option.name}”`"
+									data-testid="column-layout-delete"
+									@mouseenter="previewKey = option.key"
+									@click="confirmingId = option.template.id"
+								>
+									<template #icon><Icon name="carbon:trash-can" :size="14" /></template>
+								</n-button>
+							</template>
+						</div>
 					</div>
 					<p v-if="!templates.length" class="text-tertiary border-default m-0 border-t px-3 py-2 text-xs">
 						No template yet: arrange the columns, then save them as a template.
@@ -77,14 +110,15 @@
 import type { EventColumn } from "./eventColumns"
 import type { DisplayColumn, EventSearchColumnTemplate } from "@/types/siem"
 import { NButton, NPopover } from "naive-ui"
-import { computed, ref } from "vue"
+import { computed, ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import EventColumnsPreview from "./EventColumnsPreview.vue"
+import TemplateDeleteConfirm from "./TemplateDeleteConfirm.vue"
 
 /**
  * Switches event search between column layouts (#1258): the source's own, and the user's
  * templates for it. Each one is previewed (every column, its header and field) before it is
- * picked; picking one applies it at once.
+ * picked; picking one applies it at once. A template can be deleted here too, once confirmed.
  */
 
 interface LayoutOption {
@@ -102,7 +136,8 @@ const {
 	resolve,
 	timeField,
 	disabled = false,
-	busy = false
+	busy = false,
+	deletingId = null
 } = defineProps<{
 	templates: EventSearchColumnTemplate[]
 	/** "source", a template's id, or null when the columns on screen match no layout. */
@@ -115,16 +150,21 @@ const {
 	timeField?: string | null
 	disabled?: boolean
 	busy?: boolean
+	/** The template being deleted, while it is. */
+	deletingId?: number | null
 }>()
 
 const emit = defineEmits<{
 	(e: "apply", value: EventSearchColumnTemplate | null): void
+	(e: "delete", id: number): void
 	(e: "manage"): void
 }>()
 
 const HEAD = "text-tertiary text-xxs font-medium tracking-[0.12em] uppercase"
 const open = ref(false)
 const previewKey = ref<string | null>(null)
+/** The template whose deletion is being confirmed. */
+const confirmingId = ref<number | null>(null)
 
 const options = computed<LayoutOption[]>(() => [
 	{ key: "source", name: sourceName, columns: sourceColumns, template: null },
@@ -152,7 +192,20 @@ function summary(columns: EventColumn[]): string {
 function onShow(show: boolean) {
 	// Opening shows the layout in force; hovering or focusing another shows that one.
 	if (show) previewKey.value = activeKey
+	// A confirmation left open never survives the menu closing.
+	confirmingId.value = null
 }
+
+// Once deleted, the template leaves the list: nothing is left to confirm or preview.
+watch(
+	() => templates,
+	list => {
+		if (confirmingId.value !== null && !list.some(template => template.id === confirmingId.value)) {
+			confirmingId.value = null
+			previewKey.value = activeKey
+		}
+	}
+)
 
 function apply(option: LayoutOption) {
 	open.value = false

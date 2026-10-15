@@ -121,12 +121,29 @@ describe("eventColumnPicker", () => {
 			expect((name.element as HTMLInputElement).value).toBe("")
 		})
 
-		it("cannot save a template without columns, and deletes one by id", async () => {
+		it("cannot save a template without columns", async () => {
 			const wrapper = render({ current: [], templates: [TRIAGE] })
 			await wrapper.find("[data-testid=column-template-name] input").setValue("Empty")
 			expect(wrapper.find("[data-testid=column-template-save]").attributes("disabled")).toBeDefined()
+		})
+
+		it("deletes a template only once confirmed, and can be talked out of it", async () => {
+			const wrapper = render({ current: [], templates: [TRIAGE] })
 			await wrapper.find("[data-testid=column-template-delete]").trigger("click")
+			expect(wrapper.emitted("deleteTemplate")).toBeUndefined()
+			expect(wrapper.find("[data-testid=template-delete-confirm]").text()).toContain("Delete “Triage”?")
+
+			await wrapper.find("[data-testid=template-delete-cancel]").trigger("click")
+			expect(wrapper.find("[data-testid=template-delete-confirm]").exists()).toBe(false)
+			expect(wrapper.find("[data-testid=column-template-load]").exists()).toBe(true)
+
+			await wrapper.find("[data-testid=column-template-delete]").trigger("click")
+			await wrapper.find("[data-testid=template-delete-confirm-button]").trigger("click")
 			expect(wrapper.emitted("deleteTemplate")).toEqual([[3]])
+
+			// Gone from the list: nothing left to confirm.
+			await wrapper.setProps({ templates: [] })
+			expect(wrapper.find("[data-testid=template-delete-confirm]").exists()).toBe(false)
 		})
 	})
 })

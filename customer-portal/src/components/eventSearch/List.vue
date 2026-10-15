@@ -28,7 +28,9 @@
 						:time-field
 						:disabled="!selectedEventSource"
 						:busy="savingColumns"
+						:deleting-id="deletingTemplateId"
 						@apply="applyTemplate"
+						@delete="deleteTemplate"
 						@manage="showColumns = true"
 					/>
 					<n-button size="small" secondary data-testid="event-columns-toggle" @click="showColumns = true">
@@ -304,14 +306,21 @@ async function saveTemplate(name: string, picked: DisplayColumn[]) {
 	}
 }
 
+const deletingTemplateId = ref<number | null>(null)
+
+/** Deletes a template, once the user confirmed it (in the Layout menu or the Columns dialog). */
 async function deleteTemplate(id: number) {
+	const name = templates.value.find(template => template.id === id)?.name
 	savingTemplate.value = true
+	deletingTemplateId.value = id
 	try {
 		await memory.removeTemplate(id)
+		message.success(name ? `Deleted the template “${name}”` : "Template deleted")
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError) || "Failed to delete the template")
 	} finally {
 		savingTemplate.value = false
+		deletingTemplateId.value = null
 	}
 }
 

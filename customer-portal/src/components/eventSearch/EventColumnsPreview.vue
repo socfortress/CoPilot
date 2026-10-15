@@ -10,7 +10,7 @@
 		<!-- Every column, in display order: its position, its header, the field it reads. -->
 		<div class="border-default overflow-hidden rounded-md border">
 			<div
-				class="bg-secondary border-default text-tertiary grid grid-cols-[1.75rem_minmax(0,1fr)_minmax(0,1.2fr)] border-b text-xxs font-medium tracking-[0.12em] uppercase"
+				class="bg-secondary border-default text-tertiary text-xxs grid grid-cols-[1.75rem_minmax(0,1fr)_minmax(0,1.2fr)] border-b font-medium tracking-[0.12em] uppercase"
 			>
 				<span class="px-2 py-1 text-right">#</span>
 				<span class="px-2 py-1">Header</span>
@@ -23,8 +23,12 @@
 					class="grid grid-cols-[1.75rem_minmax(0,1fr)_minmax(0,1.2fr)] items-baseline"
 					data-testid="columns-preview-column"
 				>
-					<span class="text-tertiary px-2 py-1 text-right font-mono text-xs tabular-nums">{{ index + 1 }}</span>
-					<span class="text-default truncate px-2 py-1 text-xs" :title="column.label">{{ column.label }}</span>
+					<span class="text-tertiary px-2 py-1 text-right font-mono text-xs whitespace-nowrap tabular-nums">
+						{{ index + 1 }}
+					</span>
+					<span class="text-default truncate px-2 py-1 text-xs" :title="column.label">
+						{{ column.label }}
+					</span>
 					<span
 						class="text-secondary truncate px-2 py-1 font-mono text-xs [font-variant-ligatures:none]"
 						:title="columnSource(column, timeField)"

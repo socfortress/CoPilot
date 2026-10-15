@@ -278,6 +278,20 @@ describe("event search list (#1258)", () => {
 		expect(switcher.props("activeKey")).toBe("source")
 	})
 
+	it("deletes a template from the Layout menu, saying so", async () => {
+		server.memory.templates = [
+			{ id: 9, source_name: "Wazuh", name: "Triage", columns: [{ key: "agent_name", label: "Host" }], updated_at: "" }
+		]
+		const wrapper = await render()
+		await restore(wrapper, STATE)
+		const switcher = wrapper.findComponent(EventColumnTemplates)
+		switcher.vm.$emit("delete", 9)
+		await flushPromises()
+		expect(siem.deleteEventSearchTemplate).toHaveBeenCalledWith("A", 9)
+		expect(switcher.props("templates")).toEqual([])
+		expect(document.body.textContent).toContain("Deleted the template “Triage”")
+	})
+
 	it("saves and deletes templates from the column dialog", async () => {
 		const wrapper = await render()
 		await restore(wrapper, STATE)

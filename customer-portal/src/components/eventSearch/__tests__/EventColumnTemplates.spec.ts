@@ -123,4 +123,49 @@ describe("eventColumnTemplates", () => {
 		all("[data-testid=column-layouts-manage]")[0]!.click()
 		expect(wrapper.emitted("manage")).toHaveLength(1)
 	})
+
+	it("deletes a template from the menu only once confirmed", async () => {
+		wrapper = render("1")
+		await wrapper.find("[data-testid=column-layouts-toggle]").trigger("click")
+		await flushPromises()
+		// The source's own layout cannot be deleted.
+		expect(all("[data-testid=column-layout-row]")[0]!.querySelector("[data-testid=column-layout-delete]")).toBeNull()
+
+		all("[data-testid=column-layout-delete]")[1]!.click()
+		await flushPromises()
+		expect(wrapper.emitted("delete")).toBeUndefined()
+		const confirm = all("[data-testid=template-delete-confirm]")
+		expect(confirm).toHaveLength(1)
+		expect(confirm[0]!.textContent).toContain("Delete “Network”?")
+		expect(document.activeElement?.textContent?.trim()).toBe("Cancel")
+
+		all("[data-testid=template-delete-cancel]")[0]!.click()
+		await flushPromises()
+		expect(all("[data-testid=template-delete-confirm]")).toHaveLength(0)
+		expect(all("[data-testid=column-layout]")).toHaveLength(3)
+
+		all("[data-testid=column-layout-delete]")[1]!.click()
+		await flushPromises()
+		all("[data-testid=template-delete-confirm-button]")[0]!.click()
+		expect(wrapper.emitted("delete")).toEqual([[2]])
+		// Deleting is not picking: the menu applies nothing.
+		expect(wrapper.emitted("apply")).toBeUndefined()
+
+		await wrapper.setProps({ templates: [TRIAGE] })
+		await flushPromises()
+		expect(all("[data-testid=template-delete-confirm]")).toHaveLength(0)
+		expect(all("[data-testid=column-layout]")).toHaveLength(2)
+	})
+
+	it("cancels a confirmation with Escape, and never keeps one when the menu closes", async () => {
+		wrapper = render("1")
+		await wrapper.find("[data-testid=column-layouts-toggle]").trigger("click")
+		await flushPromises()
+		all("[data-testid=column-layout-delete]")[0]!.click()
+		await flushPromises()
+		all("[data-testid=template-delete-confirm]")[0]!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+		await flushPromises()
+		expect(all("[data-testid=template-delete-confirm]")).toHaveLength(0)
+		expect(wrapper.emitted("delete")).toBeUndefined()
+	})
 })
