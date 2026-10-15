@@ -58,6 +58,13 @@ ALLOWED_CUSTOMER_USER_WRITES = frozenset(
         # Asset criticality of the customer's own agents.
         ("POST", "/api/agents/{agent_id}/critical"),
         ("POST", "/api/agents/{agent_id}/noncritical"),
+        # Their own event search memory: saved and recent searches, picked columns (#1258).
+        # Rows belong to the caller (the user comes from the token), per customer they see.
+        ("POST", "/api/siem/event_search/{customer_code}/saved"),
+        ("DELETE", "/api/siem/event_search/{customer_code}/saved/{query_id}"),
+        ("POST", "/api/siem/event_search/{customer_code}/recent"),
+        ("DELETE", "/api/siem/event_search/{customer_code}/recent"),
+        ("PUT", "/api/siem/event_search/{customer_code}/columns"),
         # Reads that take a body, so they are POSTs. They change nothing.
         ("POST", "/api/siem/dashboards/panel-data"),
         ("POST", "/api/copilot_searches/by-ids"),
