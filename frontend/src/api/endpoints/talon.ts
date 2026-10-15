@@ -3,6 +3,9 @@ import type { TalonInvestigateRequest, TalonJobData, TalonTemplate } from "@/typ
 import { useAuthStore } from "@/stores/auth"
 import { HttpClient } from "../http-client"
 
+/** Shown when a Talon reply stream ends without `done` or `error`. */
+export const TALON_STREAM_CLOSED = "The connection to Talon closed before the reply finished."
+
 export default {
 	investigate(payload: TalonInvestigateRequest) {
 		return HttpClient.post<FlaskBaseResponse & { data?: Record<string, unknown> }>(`/talon/investigate`, payload)
@@ -45,9 +48,16 @@ export default {
 	/**
 	 * Stream a message to Talon via SSE.
 	 *
-	 * NanoClaw sends events in the format:
-	 *   data: {"type":"text","content":"...the markdown..."}\n\n
+	 * Talon sends events in the format:
+	 *   data: {"type":"text","content":"...the markdown..."}\n\n   (repeated)
 	 *   data: {"type":"done"}\n\n
+	 * or, on failure, possibly after some text has already streamed:
+	 *   data: {"error":"Talon request failed: ..."}\n\n
+	 * `: keepalive` comment lines may arrive while a reply is being worked on.
+	 *
+	 * Exactly one of `onDone` / `onError` is called, unless the caller aborts. A
+	 * stream that ends without `done` or `error` was cut off, so it is reported as
+	 * an error rather than as a finished reply.
 	 */
 	async streamMessage(
 		message: string,
@@ -58,6 +68,17 @@ export default {
 	) {
 		const store = useAuthStore()
 		const baseUrl = "/api"
+
+		// Set before the callback runs, so a callback that throws can't end the reply a second time.
+		let settled = false
+		const finish = () => {
+			settled = true
+			onDone()
+		}
+		const fail = (error: string) => {
+			settled = true
+			onError(error)
+		}
 
 		try {
 			const response = await fetch(`${baseUrl}/talon/message`, {
@@ -71,58 +92,86 @@ export default {
 			})
 
 			if (!response.ok) {
-				onError(`Request failed with status ${response.status}`)
+				fail(`Request failed with status ${response.status}`)
 				return
 			}
 
 			const reader = response.body?.getReader()
 			if (!reader) {
-				onError("No response body")
+				fail("No response body")
 				return
+			}
+
+			/** Handle one SSE event; true once it ended the reply. */
+			const handleEvent = (event: string): boolean => {
+				for (const line of event.split("\n")) {
+					// Only `data:` lines carry events: `: keepalive` comments are skipped here.
+					if (!line.startsWith("data:")) continue
+					let parsed: { type?: string; content?: string; error?: unknown }
+					try {
+						parsed = JSON.parse(line.slice(5))
+					} catch {
+						continue // Not JSON — ignore
+					}
+					if (parsed?.error) {
+						fail(String(parsed.error))
+						return true
+					}
+					if (parsed?.type === "done") {
+						finish()
+						return true
+					}
+					if (parsed?.type === "text" && parsed.content) {
+						onChunk(parsed.content)
+					}
+				}
+				return false
 			}
 
 			const decoder = new TextDecoder()
 			let buffer = ""
 
-			while (true) {
-				const { done, value } = await reader.read()
-				if (done) break
+			try {
+				while (true) {
+					let read: ReadableStreamReadResult<Uint8Array>
+					try {
+						read = await reader.read()
+					} catch {
+						// The connection failed mid-reply; an abort is the caller's own doing.
+						if (!signal?.aborted) fail(TALON_STREAM_CLOSED)
+						return
+					}
+					const { done, value } = read
+					if (done) break
 
-				buffer += decoder.decode(value, { stream: true })
+					// SSE allows CRLF line endings; normalised after joining, so a pair split across reads still matches.
+					buffer = (buffer + decoder.decode(value, { stream: true })).replace(/\r\n/g, "\n")
 
-				// SSE events are separated by \n\n
-				const events = buffer.split("\n\n")
-				// Last element is incomplete — keep in buffer
-				buffer = events.pop() || ""
+					// SSE events are separated by \n\n
+					const events = buffer.split("\n\n")
+					// Last element is incomplete — keep in buffer
+					buffer = events.pop() || ""
 
-				for (const event of events) {
-					for (const line of event.split("\n")) {
-						if (!line.startsWith("data: ")) continue
-						const data = line.slice(6)
-						try {
-							const parsed = JSON.parse(data)
-							if (parsed.type === "done") {
-								onDone()
-								return
-							}
-							if (parsed.type === "text" && parsed.content) {
-								onChunk(parsed.content)
-							}
-							if (parsed.error) {
-								onError(parsed.error)
-								return
-							}
-						} catch {
-							// Not JSON — ignore
-						}
+					for (const event of events) {
+						if (handleEvent(event)) return
 					}
 				}
-			}
 
-			onDone()
+				// A final event the server closed without a trailing blank line.
+				buffer += decoder.decode()
+				if (buffer && handleEvent(buffer)) return
+
+				// No `done` and no `error`: the connection dropped mid-reply (proxy timeout,
+				// backend restart). Not a finished reply, so don't present it as one.
+				if (!signal?.aborted) fail(TALON_STREAM_CLOSED)
+			} finally {
+				// Release the connection however the reply ended, including after `done` / `error`.
+				reader.cancel().catch(() => {})
+			}
 		} catch (err) {
+			if (settled) return
 			if (err instanceof DOMException && err.name === "AbortError") return
-			onError(err instanceof Error ? err.message : "An error occurred")
+			fail(err instanceof Error ? err.message : "An error occurred")
 		}
 	}
 }

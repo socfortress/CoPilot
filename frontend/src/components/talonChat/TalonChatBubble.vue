@@ -24,6 +24,13 @@
 			</div>
 		</template>
 
+		<template v-if="msg.sender === 'error'">
+			<!-- Plain text, not Markdown: this is the failure reason, not model output. -->
+			<n-alert type="error" :bordered="false" class="text-sm" data-testid="talon-chat-error">
+				{{ msg.body }}
+			</n-alert>
+		</template>
+
 		<template v-if="msg.sender === 'user'">
 			<div class="flex items-end justify-end gap-3 pl-6">
 				<div class="bg-secondary **:text-default rounded-lg px-2 py-1 text-sm [&_*:last-child]:mb-0!">
@@ -40,7 +47,7 @@
 
 <script setup lang="ts">
 import { useClipboard } from "@vueuse/core"
-import { NButton, NTooltip } from "naive-ui"
+import { NAlert, NButton, NTooltip } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Markdown from "@/components/common/Markdown.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -50,7 +57,8 @@ export interface TalonMessage {
 	id: string
 	datetime: Date
 	body: string
-	sender: "user" | "server"
+	/** `error`: why a reply failed or stopped early, shown after any text that had already streamed. */
+	sender: "user" | "server" | "error"
 }
 
 defineProps<{

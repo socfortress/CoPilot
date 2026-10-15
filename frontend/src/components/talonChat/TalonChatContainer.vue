@@ -36,6 +36,7 @@
 
 <script setup lang="ts">
 import type { ScrollbarInst } from "naive-ui"
+import type { TalonMessage } from "./TalonChatBubble.vue"
 import type { Message } from "./TalonChatQuery.vue"
 import { useStorage } from "@vueuse/core"
 import { NScrollbar, useMessage } from "naive-ui"
@@ -48,13 +49,6 @@ import { secureLocalStorage } from "@/utils/secure-storage"
 import TalonChatBubble from "./TalonChatBubble.vue"
 import TalonChatExample from "./TalonChatExample.vue"
 import TalonChatQuery from "./TalonChatQuery.vue"
-
-interface TalonMessage {
-	id: string
-	datetime: Date
-	body: string
-	sender: "user" | "server"
-}
 
 const message = useMessage()
 
@@ -137,38 +131,24 @@ async function sendMessage(payload: Message) {
 				scrollChat()
 			},
 			() => {
-				if (streamBuffer.value) {
-					messages.value.push({
-						id: nanoid(),
-						datetime: new Date(),
-						body: streamBuffer.value,
-						sender: "server"
-					})
-				}
-				streaming.value = false
-				streamBuffer.value = ""
-				scrollChat()
+				endReply()
 				loadContextSize()
 			},
 			(err: string) => {
-				if (err !== "AbortError") {
-					message.error("An error occurred. Please try again.")
-				}
-				streaming.value = false
-				streamBuffer.value = ""
-				scrollChat()
+				// Talon can fail after part of the reply has streamed (a turn limit, a
+				// dropped connection): keep what arrived, then say why it stopped.
+				endReply(err)
+				loadContextSize()
 			},
 			abortController.signal
 		)
-	} catch {
-		streaming.value = false
-		streamBuffer.value = ""
+	} catch (err) {
+		endReply(err instanceof Error ? err.message : "An error occurred")
 	}
 }
 
-function stopStream() {
-	abortController?.abort()
-
+/** Close the reply in flight: keep any streamed text, then show the error if there is one. */
+function endReply(error?: string) {
 	if (streamBuffer.value) {
 		messages.value.push({
 			id: nanoid(),
@@ -177,10 +157,23 @@ function stopStream() {
 			sender: "server"
 		})
 	}
+	if (error) {
+		messages.value.push({
+			id: nanoid(),
+			datetime: new Date(),
+			body: error,
+			sender: "error"
+		})
+	}
 
 	streaming.value = false
 	streamBuffer.value = ""
 	scrollChat()
+}
+
+function stopStream() {
+	abortController?.abort()
+	endReply()
 }
 
 defineExpose({
