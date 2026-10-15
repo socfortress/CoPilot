@@ -25,7 +25,9 @@ to the user's own customer:
   G) columns per source, found from the other device, and back to the source's layout;
   H) at most 50 saved queries per customer: the next one is refused, not dropped;
   I) another user sees none of it and cannot delete it, another customer is a 403;
-  J) deleting the user and the customer takes their rows with them.
+  J) deleting the user and the customer takes their rows with them;
+  K) column templates: named per source, found from the other device, updated by name,
+     at most 20 per source, never someone else's.
 
 Exits non-zero when a check fails.
 """
@@ -52,6 +54,7 @@ from app.auth.utils import AuthHandler  # noqa: E402
 from app.db.db_session import async_engine  # noqa: E402
 from app.db.universal_models import EventSources  # noqa: E402
 from app.siem.models.event_search import EventSearchColumns  # noqa: E402
+from app.siem.models.event_search import EventSearchColumnTemplate  # noqa: E402
 from app.siem.models.event_search import EventSearchRecentQuery  # noqa: E402
 from app.siem.models.event_search import EventSearchSavedQuery  # noqa: E402
 from tests.e2e.portal_overview_seed import ADMIN  # noqa: E402
@@ -229,6 +232,80 @@ async def check_memory(client, portal, admin):
         str(response.json()["columns"]),
     )
 
+    print("\n=== K) column templates ===")
+    triage = [{"key": "agent_name", "label": "Host"}, {"key": "rule_level", "label": "Level"}]
+    response = await client.post(f"{base}/templates", json={"source_name": "Wazuh", "name": " Triage ", "columns": triage}, headers=portal)
+    body = response.json()
+    check("save: 200, a new one", response.status_code == 200 and body["replaced"] is False, response.text[:160])
+    found = (await client.get(base, headers=other_device)).json()["templates"]
+    check(
+        "the other device finds it, named and in order",
+        [(t["source_name"], t["name"], t["columns"]) for t in found] == [("Wazuh", "Triage", triage)],
+        str(found)[:200],
+    )
+    response = await client.post(
+        f"{base}/templates",
+        json={"source_name": "Wazuh", "name": "TRIAGE", "columns": [{"key": "data_srcip", "label": ""}]},
+        headers=other_device,
+    )
+    templates = response.json()["templates"]
+    check(
+        "the same name, in another case, updates it",
+        response.json()["replaced"] is True
+        and [(t["name"], t["columns"]) for t in templates] == [("TRIAGE", [{"key": "data_srcip", "label": "data_srcip"}])],
+        str(templates)[:200],
+    )
+    await client.post(f"{base}/templates", json={"source_name": "Office", "name": "Triage", "columns": triage}, headers=portal)
+    templates = (
+        await client.post(f"{base}/templates", json={"source_name": "Wazuh", "name": "Audit", "columns": triage}, headers=portal)
+    ).json()["templates"]
+    check(
+        "a name is per source; listed by source, then name",
+        [(t["source_name"], t["name"]) for t in templates] == [("Office", "Triage"), ("Wazuh", "Audit"), ("Wazuh", "TRIAGE")],
+        str([(t["source_name"], t["name"]) for t in templates]),
+    )
+    check(
+        "a template without columns: 422",
+        (await client.post(f"{base}/templates", json={"source_name": "Wazuh", "name": "x", "columns": []}, headers=portal)).status_code
+        == 422,
+    )
+    for n in range(18):
+        response = await client.post(
+            f"{base}/templates",
+            json={"source_name": "Wazuh", "name": f"T{n:02}", "columns": triage},
+            headers=portal,
+        )
+    check("the twentieth on a source: saved", response.status_code == 200, response.text[:120])
+    over = await client.post(f"{base}/templates", json={"source_name": "Wazuh", "name": "One too many", "columns": triage}, headers=portal)
+    check("the next one: 409, nothing dropped", over.status_code == 409 and "delete one" in over.text, over.text[:160])
+    check(
+        "another source still has room",
+        (
+            await client.post(f"{base}/templates", json={"source_name": "Office", "name": "Second", "columns": triage}, headers=portal)
+        ).status_code
+        == 200,
+    )
+    audit = next(t["id"] for t in (await client.get(base, headers=portal)).json()["templates"] if t["name"] == "Audit")
+    check("another user cannot delete it: 404", (await client.delete(f"{base}/templates/{audit}", headers=admin)).status_code == 404)
+    check(
+        "nor see it",
+        (await client.get(base, headers=admin)).json()["templates"] == [],
+    )
+    check(
+        "another customer: 403",
+        (
+            await client.post(
+                f"/siem/event_search/{CUST_B}/templates",
+                json={"source_name": "Wazuh", "name": "x", "columns": triage},
+                headers=portal,
+            )
+        ).status_code
+        == 403,
+    )
+    response = await client.delete(f"{base}/templates/{audit}", headers=portal)
+    check("delete: 200, gone", response.status_code == 200 and all(t["id"] != audit for t in response.json()["templates"]))
+    check("deleting it again: 404", (await client.delete(f"{base}/templates/{audit}", headers=portal)).status_code == 404)
+
     print("\n=== H) at most 50 saved queries per customer ===")
     for n in range(48):
         response = await client.post(f"{base}/saved", json={**RELATIVE, "name": f"Query {n}"}, headers=portal)
@@ -373,10 +450,10 @@ async def main():
     async with AsyncSession(async_engine) as s:
         await cleanup(s)
         left = 0
-        for table in (EventSearchSavedQuery, EventSearchRecentQuery, EventSearchColumns):
+        for table in (EventSearchSavedQuery, EventSearchRecentQuery, EventSearchColumns, EventSearchColumnTemplate):
             left += await s.scalar(select(func.count()).select_from(table).where(table.customer_code.in_([CUST_A, CUST_B])))
     print("\n=== J) deleting the user and the customer ===")
-    check("their saved, recent and column rows went with them", left == 0, str(left))
+    check("their saved, recent, column and template rows went with them", left == 0, str(left))
     await async_engine.dispose()
 
     passed = sum(1 for _, ok, _ in results if ok)
