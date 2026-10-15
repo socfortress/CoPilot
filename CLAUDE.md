@@ -445,6 +445,17 @@ Tests: `tests/test_alert_combined_filters.py` (no DB), `tests/e2e/alert_filters_
 
 Tests: `tests/test_agent_cases_scoping.py` and `tests/test_vulnerabilities_csv_epss.py` (no DB, no network); `tests/e2e/agent_tabs_e2e.py` (13306, Wazuh replaced by a recorder; run against the pre-fix tree, it lists B's case). Portal: `components/agents/AgentDetails/__tests__/`, `api/endpoints/__tests__/agents.spec.ts`, `cypress/e2e/agent-tabs.cy.ts`. The e2e backend has no Wazuh, so that spec serves the Wazuh-backed answers at the network layer (`cypress/support/agent-findings.ts`); the cases come from the real backend.
 
+### Customer Portal event search: saved queries, CSV export and columns (#1258)
+
+`components/eventSearch/` in the portal. Everything the user keeps stays in their browser; the server is unchanged except for one fix.
+
+- **Saved and recent queries and the picked columns are per user and customer** (`event-search:<username>:<customer_code>`, through `secureLocalStorage`: queries can name hosts, users and addresses). The rules (a name saved again updates it, at most 50 saved and 10 recent, a recent search once whatever its page size, stored data that no longer parses is dropped entry by entry) are pure functions in `eventSearchMemory.ts`; `useEventSearchMemory` shares one state per key, so the form and the results never disagree.
+- **A saved query is restored only if its source still exists** for that customer; otherwise it says so rather than running. `SearchForm.restore` waits a `nextTick` before searching: `query` is the parent's `v-model`, which reads the new text only once the parent has rendered.
+- **The table and the CSV share one column definition** (`eventColumns.ts:resolveColumns`): the user's columns for the source, else the SOC's `displayed_columns`, else the default layout. The export writes the events loaded so far (it says when more are left) with times as ISO 8601 UTC; an offset-less time from the indexer is UTC.
+- **The next-page token is bound to its search.** `GET /siem/events/{code}/{source}?scroll_id=` used to hand any scroll id to the indexer: the route checked only the customer in the path, and a scroll id names a search context, not a tenant (it travels in a query string and is built from per-node counters). `query_events` now returns the scroll id signed with the customer and source (`app/siem/utils/scroll_token.py`, HMAC with the JWT secret) and continues only a token issued for that pair, after the source is looked up again (a source disabled since stops there). Anything else is a 400 "run the search again". Clients treat the token as opaque; the analyst frontend is unaffected.
+
+Tests: `tests/test_event_scroll_scoping.py` (no DB, no network), `tests/e2e/event_search_e2e.py` (13306, the indexer replaced by a recorder; against the pre-fix tree another customer's scroll is continued). Portal: `components/eventSearch/__tests__/`, `cypress/e2e/event-search.cy.ts`.
+
 ### Tenant scoping: customer codes are not the only tenant key
 
 #1050 made `user_customer_access` authoritative for analysts and guarded every route
