@@ -17,17 +17,39 @@ vi.mock("@/stores/auth", () => ({
 
 const { default: talon, TALON_STREAM_CLOSED } = await import("../endpoints/talon")
 
-/** A streamed response whose body arrives as `chunks`, then closes (or fails with `failWith`). */
-function sseResponse(chunks: string[], failWith?: Error) {
+interface StreamOptions {
+	/** Fail the stream with this instead of closing it. */
+	failWith?: Error
+	/** Never close: the server keeps the connection open after the last chunk. */
+	hang?: boolean
+	/** Runs once every chunk has been read, before the stream closes. */
+	beforeClose?: () => void
+	/** Called when the reader cancels the stream. */
+	onCancel?: () => void
+}
+
+/** A streamed response whose body arrives as `chunks`, then closes (or as `options` says). */
+function sseResponse(chunks: string[], options: StreamOptions = {}) {
 	const encoder = new TextEncoder()
 	const pending = [...chunks]
 	// One chunk per read, like a network stream: erroring a stream drops anything still queued.
 	const body = new ReadableStream<Uint8Array>({
 		pull(controller) {
 			const chunk = pending.shift()
-			if (chunk !== undefined) controller.enqueue(encoder.encode(chunk))
-			else if (failWith) controller.error(failWith)
-			else controller.close()
+			if (chunk !== undefined) {
+				controller.enqueue(encoder.encode(chunk))
+				return
+			}
+			if (options.hang) return new Promise<void>(() => {})
+			if (options.failWith) {
+				controller.error(options.failWith)
+				return
+			}
+			options.beforeClose?.()
+			controller.close()
+		},
+		cancel() {
+			options.onCancel?.()
 		}
 	})
 	return new Response(body, { status: 200, headers: { "Content-Type": "text/event-stream" } })
@@ -124,7 +146,7 @@ describe("talon streamMessage", () => {
 
 	it("treats a connection that fails mid-stream as cut off", async () => {
 		const { text, onDone, onError } = await stream(
-			sseResponse(['data: {"type":"text","content":"Half a"}\n\n'], new TypeError("network error"))
+			sseResponse(['data: {"type":"text","content":"Half a"}\n\n'], { failWith: new TypeError("network error") })
 		)
 
 		expect(text).toBe("Half a")
@@ -148,5 +170,63 @@ describe("talon streamMessage", () => {
 
 		expect(onDone).not.toHaveBeenCalled()
 		expect(onError).not.toHaveBeenCalled()
+	})
+
+	it("ends a reply once when the done callback throws", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce(sseResponse(['data: {"type":"done"}\n\n']))
+		const onDone = vi.fn(() => {
+			throw new Error("caller bug")
+		})
+		const onError = vi.fn()
+
+		await talon.streamMessage("hi", vi.fn(), onDone, onError)
+
+		expect(onDone).toHaveBeenCalledOnce()
+		expect(onError).not.toHaveBeenCalled()
+	})
+
+	it("ends a reply once when the error callback throws", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce(sseResponse(['data: {"error":"Talon request failed: cut off"}\n\n']))
+		const onDone = vi.fn()
+		const onError = vi.fn(() => {
+			throw new Error("caller bug")
+		})
+
+		await talon.streamMessage("hi", vi.fn(), onDone, onError)
+
+		expect(onError).toHaveBeenCalledExactlyOnceWith("Talon request failed: cut off")
+		expect(onDone).not.toHaveBeenCalled()
+	})
+
+	it("doesn't report a cut-off reply the caller aborted", async () => {
+		const controller = new AbortController()
+		vi.mocked(fetch).mockResolvedValueOnce(
+			sseResponse(['data: {"type":"text","content":"Half a"}\n\n'], { beforeClose: () => controller.abort() })
+		)
+		const onDone = vi.fn()
+		const onError = vi.fn()
+
+		await talon.streamMessage("hi", vi.fn(), onDone, onError, controller.signal)
+
+		expect(onDone).not.toHaveBeenCalled()
+		expect(onError).not.toHaveBeenCalled()
+	})
+
+	it("releases the connection after done, even if the server keeps it open", async () => {
+		const onCancel = vi.fn()
+		const { onDone } = await stream(sseResponse(['data: {"type":"done"}\n\n'], { hang: true, onCancel }))
+
+		expect(onDone).toHaveBeenCalledOnce()
+		expect(onCancel).toHaveBeenCalledOnce()
+	})
+
+	it("releases the connection after an error event", async () => {
+		const onCancel = vi.fn()
+		const { onError } = await stream(
+			sseResponse(['data: {"error":"Talon request failed"}\n\n'], { hang: true, onCancel })
+		)
+
+		expect(onError).toHaveBeenCalledExactlyOnceWith("Talon request failed")
+		expect(onCancel).toHaveBeenCalledOnce()
 	})
 })

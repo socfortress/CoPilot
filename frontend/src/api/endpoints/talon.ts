@@ -69,6 +69,17 @@ export default {
 		const store = useAuthStore()
 		const baseUrl = "/api"
 
+		// Set before the callback runs, so a callback that throws can't end the reply a second time.
+		let settled = false
+		const finish = () => {
+			settled = true
+			onDone()
+		}
+		const fail = (error: string) => {
+			settled = true
+			onError(error)
+		}
+
 		try {
 			const response = await fetch(`${baseUrl}/talon/message`, {
 				method: "POST",
@@ -81,13 +92,13 @@ export default {
 			})
 
 			if (!response.ok) {
-				onError(`Request failed with status ${response.status}`)
+				fail(`Request failed with status ${response.status}`)
 				return
 			}
 
 			const reader = response.body?.getReader()
 			if (!reader) {
-				onError("No response body")
+				fail("No response body")
 				return
 			}
 
@@ -103,11 +114,11 @@ export default {
 						continue // Not JSON — ignore
 					}
 					if (parsed?.error) {
-						onError(String(parsed.error))
+						fail(String(parsed.error))
 						return true
 					}
 					if (parsed?.type === "done") {
-						onDone()
+						finish()
 						return true
 					}
 					if (parsed?.type === "text" && parsed.content) {
@@ -122,7 +133,15 @@ export default {
 
 			try {
 				while (true) {
-					const { done, value } = await reader.read()
+					let read: ReadableStreamReadResult<Uint8Array>
+					try {
+						read = await reader.read()
+					} catch {
+						// The connection failed mid-reply; an abort is the caller's own doing.
+						if (!signal?.aborted) fail(TALON_STREAM_CLOSED)
+						return
+					}
+					const { done, value } = read
 					if (done) break
 
 					// SSE allows CRLF line endings; normalised after joining, so a pair split across reads still matches.
@@ -137,22 +156,22 @@ export default {
 						if (handleEvent(event)) return
 					}
 				}
-			} catch (err) {
-				if (err instanceof DOMException && err.name === "AbortError") return
-				onError(TALON_STREAM_CLOSED)
-				return
+
+				// A final event the server closed without a trailing blank line.
+				buffer += decoder.decode()
+				if (buffer && handleEvent(buffer)) return
+
+				// No `done` and no `error`: the connection dropped mid-reply (proxy timeout,
+				// backend restart). Not a finished reply, so don't present it as one.
+				if (!signal?.aborted) fail(TALON_STREAM_CLOSED)
+			} finally {
+				// Release the connection however the reply ended, including after `done` / `error`.
+				reader.cancel().catch(() => {})
 			}
-
-			// A final event the server closed without a trailing blank line.
-			buffer += decoder.decode()
-			if (buffer && handleEvent(buffer)) return
-
-			// No `done` and no `error`: the connection dropped mid-reply (proxy timeout,
-			// backend restart). Not a finished reply, so don't present it as one.
-			onError(TALON_STREAM_CLOSED)
 		} catch (err) {
+			if (settled) return
 			if (err instanceof DOMException && err.name === "AbortError") return
-			onError(err instanceof Error ? err.message : "An error occurred")
+			fail(err instanceof Error ? err.message : "An error occurred")
 		}
 	}
 }
