@@ -96,3 +96,46 @@ export interface EventSearchQueryParams {
 	time_from?: string
 	time_to?: string
 }
+
+/** Everything that makes an event search: run it again and the same events come back (#1258). */
+export interface EventSearchState {
+	source_name: string
+	query: string
+	time_mode: "relative" | "absolute"
+	/** Relative mode: how many units back. */
+	time_amount: number
+	time_unit: "h" | "d" | "w"
+	/** Absolute mode: ISO 8601 with an offset (the server answers in UTC). */
+	time_from: string | null
+	time_to: string | null
+	page_size: number
+}
+
+export interface EventSearchSavedQuery extends EventSearchState {
+	id: number
+	name: string
+	updated_at: string
+}
+
+export interface EventSearchRecentQuery extends EventSearchState {
+	ran_at: string
+}
+
+/** A named set of columns for one event source, which the user switches to. */
+export interface EventSearchColumnTemplate {
+	id: number
+	source_name: string
+	name: string
+	columns: DisplayColumn[]
+	updated_at: string
+}
+
+/** What event search keeps for the signed-in user and one customer, on the server. */
+export interface EventSearchMemory {
+	saved: EventSearchSavedQuery[]
+	recent: EventSearchRecentQuery[]
+	/** The user's own columns per event source; absent means the source's layout. */
+	columns: Record<string, DisplayColumn[]>
+	/** Column templates, by source then name. */
+	templates: EventSearchColumnTemplate[]
+}

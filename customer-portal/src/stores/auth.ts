@@ -7,6 +7,7 @@ import _capitalize from "lodash/capitalize"
 import _castArray from "lodash/castArray"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
+import { resetEventSearchMemory } from "@/components/eventSearch/useEventSearchMemory"
 import { useAiReportsAvailability } from "@/composables/common/useAiReportsAvailability"
 import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
@@ -55,6 +56,8 @@ export const useAuthStore = defineStore("auth", {
 			// be off: neither cached answer may outlive the session that asked.
 			useAiReportsAvailability().reset()
 			useSlaAvailability().reset()
+			// Event search's saved and recent searches are the user's own (#1258).
+			resetEventSearchMemory()
 			removePersistentSessionKey()
 		},
 		async login(payload: LoginPayload) {
