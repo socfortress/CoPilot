@@ -53,7 +53,8 @@ export function event(n: number): EventSearchResult {
 }
 
 /**
- * Empties the portal user's event search memory for `customerCode`, through the API: it
+ * Empties the portal user's event search memory for `customerCode` (saved and recent
+ * searches, columns, templates), through the API: it
  * lives on the server, so a test that expects a clean slate must ask for one.
  */
 export function resetEventSearchMemory(seed: { portal_user: string; password: string }, customerCode: string) {
@@ -70,6 +71,9 @@ export function resetEventSearchMemory(seed: { portal_user: string; password: st
 			cy.request({ url: base, headers }).then(response => {
 				const memory = response.body as EventSearchMemory
 				for (const saved of memory.saved) cy.request({ method: "DELETE", url: `${base}/saved/${saved.id}`, headers })
+				for (const template of memory.templates) {
+					cy.request({ method: "DELETE", url: `${base}/templates/${template.id}`, headers })
+				}
 				for (const source of Object.keys(memory.columns)) {
 					cy.request({ method: "PUT", url: `${base}/columns`, headers, body: { source_name: source, columns: null } })
 				}

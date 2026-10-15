@@ -202,6 +202,60 @@ describe("event search: saved queries, CSV export and columns", () => {
 		headers().should("deep.equal", ["Time", "User", "Actions"])
 	})
 
+	it("saves column templates, previews and switches between them, and finds them on another device", () => {
+		visit()
+		pickSource("Office 365")
+		search("*")
+		cy.get("[data-testid=column-layouts-current]").should("have.text", "SOC layout")
+
+		// A template from the columns being edited: the SOC's two, plus the source address.
+		cy.get("[data-testid=event-columns-toggle]").click()
+		cy.get("[data-testid=column-picker-add]").click()
+		cy.get(".n-base-select-option:visible").contains("data_srcip").click()
+		cy.get("[data-testid=picked-column-label] input").last().clear().type("Source IP")
+		cy.get("[data-testid=column-template-name] input").type("Network")
+		cy.get("[data-testid=column-template-save]").click()
+		cy.contains("Saved the template “Network”")
+		cy.get("[data-testid=column-template]").should("have.length", 1).and("contain", "Time · User · Source IP")
+		cy.get("[data-testid=column-template-name] input").should("have.value", "")
+		// Saving a template applies nothing.
+		cy.get("[data-testid=column-picker]").parents(".n-card").find("[aria-label=close]").first().click()
+		headers().should("deep.equal", ["Time", "User", "Actions"])
+
+		// Each layout is previewed before it is picked: every column, its header and field.
+		cy.get("[data-testid=column-layouts-toggle]").click()
+		cy.get("[data-testid=column-layout]").should("have.length", 2)
+		cy.get("[data-testid=columns-preview-column]").should("have.length", 2)
+		cy.get("[data-testid=column-layout]").eq(1).trigger("mouseenter")
+		cy.get("[data-testid=columns-preview-column]").then($rows => {
+			expect([...$rows].map(row => [...row.querySelectorAll("span")].map(cell => cell.textContent?.trim()))).to.deep.equal([
+				["1", "Time", "timestamp"],
+				["2", "User", "data_office365_UserId"],
+				["3", "Source IP", "data_srcip"]
+			])
+		})
+		cy.get("[data-testid=column-layout]").eq(1).click()
+		headers().should("deep.equal", ["Time", "User", "Source IP", "Actions"])
+		cy.get("[data-testid=column-layouts-current]").should("have.text", "Network")
+
+		// Another device finds the template and the layout in force.
+		cy.clearAllLocalStorage()
+		cy.clearAllSessionStorage()
+		cy.loginToPortal(seed, "event-search-templates-device")
+		visit()
+		pickSource("Office 365")
+		search("*")
+		headers().should("deep.equal", ["Time", "User", "Source IP", "Actions"])
+		cy.get("[data-testid=column-layouts-current]").should("have.text", "Network")
+		cy.get("[data-testid=column-layouts-toggle]").click()
+		cy.get("[data-testid=column-layout]").first().click()
+		headers().should("deep.equal", ["Time", "User", "Actions"])
+
+		cy.get("[data-testid=event-columns-toggle]").click()
+		cy.get("[data-testid=column-template-delete]").click()
+		cy.get("[data-testid=column-template]").should("not.exist")
+	})
+
 	it("a saved search whose source is gone says so instead of running", () => {
 		visit()
 		pickSource("Office 365")
