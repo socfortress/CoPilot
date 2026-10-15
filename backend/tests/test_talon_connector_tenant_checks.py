@@ -11,7 +11,8 @@ unassigned analyst:
   tasks; an admin sees every lane;
 - ``PUT /incidents/db_operations/ai_trigger`` and ``/notification``: the body's customer is
   checked, and must be the ``?customer_code=`` the route checked exists;
-- ``POST /notifications/dispatch``: the body's customer is checked;
+- ``POST /notifications/dispatch``: admin only, `investigation_complete` only, and the alert must be the
+  body's customer's (real dispatch service: nothing sent or logged when refused);
 - ``POST /ai_analyst/jobs``, ``/reports``, ``/iocs``, ``/palace_lessons``: the alert, job,
   report or review named must be the body's customer's; a second report for a job is a 409;
 - ``GET /ai_analyst/alerts_with_reports``: narrowed to the caller's customers.
@@ -42,7 +43,6 @@ from app.db.universal_models import AiAnalystJob  # noqa: E402
 from app.db.universal_models import AiAnalystReport  # noqa: E402
 from app.db.universal_models import AiAnalystReview  # noqa: E402
 from app.db.universal_models import Customers  # noqa: E402
-from app.notifications.schema.notifications import DispatchResponse  # noqa: E402
 from tests.soc_management_support import Db  # noqa: E402
 from tests.soc_management_support import _tables  # noqa: E402
 from tests.soc_management_support import add_alert  # noqa: E402
@@ -76,7 +76,8 @@ class _Db(Db):
     """soc_management_support's database plus the AI analyst tables."""
 
     async def create(self) -> "_Db":
-        names = {t.name for t in _tables()} | {name for name in SQLModel.metadata.tables if name.startswith("ai_analyst")}
+        extra = ("ai_analyst", "customer_notification_route", "notification_", "customer_shuffle_integration", "customer_portal_ai_report")
+        names = {t.name for t in _tables()} | {name for name in SQLModel.metadata.tables if name.startswith(extra)}
         tables = [SQLModel.metadata.tables[name] for name in names]
         async with self.engine.begin() as conn:
             await conn.run_sync(lambda c: SQLModel.metadata.create_all(c, tables=tables))
@@ -150,7 +151,7 @@ async def _seed(db: Db) -> None:
         await session.commit()
 
 
-def call(scenario):
+def call(scenario, with_db=False):
     async def _inner():
         db = await _Db().create()
         try:
@@ -166,7 +167,7 @@ def call(scenario):
                 resolve_user,
             ), patch("app.ai_analyst.services.ai_analyst.emit"):
                 async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-                    return await scenario(client)
+                    return await (scenario(client, db) if with_db else scenario(client))
         finally:
             await db.dispose()
 
@@ -279,6 +280,13 @@ def test_ai_trigger_for_another_customer_is_refused():
     assert _put("ai_trigger", "resp", THEIRS, THEIRS).status_code == 403
 
 
+def test_unknown_and_foreign_customers_read_the_same_to_a_scoped_analyst():
+    # `check_customer_exists` would say 404 for an unknown code; the access check runs first.
+    assert _put("ai_trigger", "ana", "NO_SUCH_CUSTOMER", "NO_SUCH_CUSTOMER").status_code == 403
+    assert _put("notification", "ana", "NO_SUCH_CUSTOMER", "NO_SUCH_CUSTOMER", shuffle_workflow_id="wf").status_code == 403
+    assert _put("ai_trigger", "admin", "NO_SUCH_CUSTOMER", "NO_SUCH_CUSTOMER").status_code == 404
+
+
 def test_ai_trigger_cannot_be_smuggled_past_the_existence_check():
     # The query parameter is what `check_customer_exists` reads; the body is what gets written.
     assert _put("ai_trigger", "ana", THEIRS, MINE).status_code == 403
@@ -304,35 +312,82 @@ def test_notification_setting_follows_the_same_rules():
 
 
 # ── POST /notifications/dispatch ──────────────────────────────────────────────
+#
+# The real dispatch service runs here; only the webhook's network call is replaced. ACME has
+# an enabled webhook route that includes the full report, so a dispatch that got through
+# would both call the webhook and write a dispatch-log row (with its dedupe key).
 
 
-def _dispatch(who, code):
-    async def scenario(client):
-        done = DispatchResponse(routes_matched=0, dispatched=0, skipped=0, failed=0, outcomes=[])
-        with patch("app.notifications.routes.notifications.svc.dispatch", AsyncMock(return_value=done)) as dispatch:
+async def _add_webhook_route(session):
+    from app.db.universal_models import CustomerNotificationRoute
+    from app.db.universal_models import CustomerPortalAiReportSettings
+
+    # A customer-facing route only carries AI output once the customer's AI report switch is on.
+    session.add(CustomerPortalAiReportSettings(customer_code=MINE, enabled=True))
+    session.add(
+        CustomerNotificationRoute(
+            customer_code=MINE,
+            scope="customer",
+            name="ACME webhook",
+            trigger="investigation_complete",
+            channel="webhook",
+            destination="https://hooks.invalid/acme",
+            min_severity="Low",
+            config='{"url": "https://hooks.invalid/acme", "method": "POST", "include_full_report": true}',
+        ),
+    )
+    await session.commit()
+
+
+def _dispatch(who, code, alert_id, trigger="investigation_complete"):
+    """(status, webhook calls, dispatch-log rows) for one dispatch."""
+    from sqlalchemy import func
+    from sqlalchemy import select
+
+    from app.db.universal_models import NotificationDispatchLog
+    from app.notifications.channels.base import SendResult
+    from app.notifications.channels.webhook import WebhookChannel
+
+    async def scenario(client, db):
+        async with db.session() as session:
+            await _add_webhook_route(session)
+        send = AsyncMock(return_value=SendResult(status="sent", latency_ms=1))
+        with patch.object(WebhookChannel, "send", send):
             response = await client.post(
                 "/notifications/dispatch",
-                json={
-                    "customer_code": code,
-                    "alert_id": MY_ALERT if code == MINE else THEIR_ALERT,
-                    "trigger": "investigation_complete",
-                    "severity_assessment": "High",
-                    "summary": "s",
-                },
+                json={"customer_code": code, "alert_id": alert_id, "trigger": trigger, "severity_assessment": "High", "summary": "s"},
                 headers=as_user(who),
             )
-            return response.status_code, dispatch.await_count
+        async with db.session() as session:
+            rows = (await session.execute(select(func.count()).select_from(NotificationDispatchLog))).scalar()
+        return response.status_code, send.await_count, rows
 
-    return call(scenario)
-
-
-def test_dispatch_for_another_customer_is_refused_before_anything_is_sent():
-    assert _dispatch("ana", THEIRS) == (403, 0)
+    return call(scenario, with_db=True)
 
 
-def test_dispatch_for_own_customer_and_by_an_admin_is_allowed():
-    assert _dispatch("ana", MINE) == (200, 1)
-    assert _dispatch("admin", THEIRS) == (200, 1)
+def test_dispatch_with_another_customers_alert_is_refused_and_nothing_is_sent_or_logged():
+    # The proof of concept: ACME's route, GLOBEX's alert, whose report the webhook would carry.
+    assert _dispatch("admin", MINE, THEIR_ALERT) == (400, 0, 0)
+    assert _dispatch("ana", MINE, THEIR_ALERT) == (403, 0, 0)
+
+
+def test_dispatch_of_any_other_trigger_is_refused_and_takes_no_dedupe_key():
+    for trigger in ("ai_report_reviewed", "alert_created", "alert_assigned", "sla_breached"):
+        assert _dispatch("admin", MINE, MY_ALERT, trigger=trigger) == (400, 0, 0), trigger
+
+
+def test_dispatch_is_admin_only():
+    # talon-analyst never calls it, and CoPilot emits investigation_complete itself on write-back.
+    for who in ("ana", "resp", "lonely"):
+        assert _dispatch(who, MINE, MY_ALERT)[0] == 403, who
+
+
+def test_dispatch_for_an_unknown_alert_is_a_404_for_an_admin():
+    assert _dispatch("admin", MINE, 999) == (404, 0, 0)
+
+
+def test_dispatch_for_the_alerts_own_customer_still_works():
+    assert _dispatch("admin", MINE, MY_ALERT) == (200, 1, 1)
 
 
 # ── POST /ai_analyst/jobs ─────────────────────────────────────────────────────

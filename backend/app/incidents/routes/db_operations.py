@@ -306,7 +306,12 @@ async def get_customer_ai_trigger_endpoint(
 @incidents_db_operations_router.put(
     "/ai_trigger",
     response_model=AITriggerResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        # Runs before `check_customer_exists`, so a scoped caller gets 403 for an unknown
+        # code as for a foreign one, rather than learning which codes exist from a 404.
+        Depends(verify_customer_code_access),
+    ],
 )
 async def put_customer_ai_trigger_endpoint(
     notification: PutAITrigger,
@@ -346,7 +351,12 @@ async def get_customer_notification_endpoint(
 @incidents_db_operations_router.put(
     "/notification",
     response_model=NotificationResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        # Runs before `check_customer_exists`, so a scoped caller gets 403 for an unknown
+        # code as for a foreign one, rather than learning which codes exist from a 404.
+        Depends(verify_customer_code_access),
+    ],
 )
 async def put_customer_notification_endpoint(
     notification: PutNotification,

@@ -146,6 +146,23 @@ def main() -> int:
         add_job(conn, LONG_JOB, 77)
         r_old = add_report(conn, "copilot-inv-70-1", 70, "2026-10-01 08:01:00")
         r_mid = add_report(conn, "copilot-inv-70-1", 70, "2026-10-01 08:02:00")
+        # Planted on pre-upgrade code, where an analyst could create a job under any id for
+        # their customers: an unrelated job holding the id r_mid's split would get.
+        add_job(conn, f"split-{r_mid}-copilot-inv-70-1", 99)
+        # A look-alike of this migration's own split (same alert, customer and note) that
+        # already holds a report: reusing it would put two reports on one job.
+        add_job(conn, "copilot-inv-72-1", 72)
+        r72_old = add_report(conn, "copilot-inv-72-1", 72, "2026-10-01 08:07:00")
+        r72_new = add_report(conn, "copilot-inv-72-1", 72, "2026-10-01 08:08:00")
+        lookalike = f"split-{r72_old}-copilot-inv-72-1"
+        add_job(conn, lookalike, 72)
+        q(
+            conn,
+            "UPDATE ai_analyst_job SET error_message = :n WHERE id = :id",
+            n=f"Split from job copilot-inv-72-1 by migration {UNIQUE_REV}: it held a second report for that job.",
+            id=lookalike,
+        )
+        r_planted = add_report(conn, lookalike, 72, "2026-10-01 08:09:00")
         r_new = add_report(conn, "copilot-inv-70-1", 70, "2026-10-01 08:03:00")
         r_single = add_report(conn, "copilot-inv-71-1", 71, "2026-10-01 08:04:00")
         r_long_old = add_report(conn, LONG_JOB, 77, "2026-10-01 08:05:00")
@@ -173,7 +190,24 @@ def main() -> int:
         check("the newest report stays on its job", job_of(conn, r_new) == "copilot-inv-70-1")
         check("a job with one report is untouched", job_of(conn, r_single) == "copilot-inv-71-1")
         check("an older duplicate moves to its own job", job_of(conn, r_old) == f"split-{r_old}-copilot-inv-70-1", job_of(conn, r_old))
-        check("so does the middle one", job_of(conn, r_mid) == f"split-{r_mid}-copilot-inv-70-1", job_of(conn, r_mid))
+        check(
+            "an unrelated job already holding a split id is not used: the next suffix is",
+            job_of(conn, r_mid) == f"split-{r_mid}-2-copilot-inv-70-1",
+            job_of(conn, r_mid),
+        )
+        planted = q(conn, "SELECT alert_id FROM ai_analyst_job WHERE id = :id", id=f"split-{r_mid}-copilot-inv-70-1").scalar()
+        check(
+            "and the planted job is left as it was, with no report",
+            planted == 99
+            and q(conn, "SELECT COUNT(*) FROM ai_analyst_report WHERE job_id = :id", id=f"split-{r_mid}-copilot-inv-70-1").scalar() == 0,
+        )
+        check(
+            "a look-alike split that already holds a report is not reused",
+            job_of(conn, r72_old) == f"split-{r72_old}-2-copilot-inv-72-1"
+            and job_of(conn, r72_new) == "copilot-inv-72-1"
+            and job_of(conn, r_planted) == lookalike,
+            job_of(conn, r72_old),
+        )
         split = q(
             conn,
             "SELECT alert_id, customer_code, status, completed_at, error_message, template_used FROM ai_analyst_job WHERE id = :id",
