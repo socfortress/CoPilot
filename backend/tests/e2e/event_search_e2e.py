@@ -18,7 +18,14 @@ to the user's own customer:
   C) the next-page token is the search's own: a token for another customer, another source
      or a bare scroll id is refused before the indexer is asked (it was continued as given
      before #1258);
-  D) a disabled source: refused, its next page too.
+  D) a disabled source: refused, its next page too;
+  E) what the user saves is on the server: a second login (another device) finds it, a
+     name saved again (whatever its case) updates it, an absolute range keeps its instant;
+  F) recent searches: once each whatever the page size, newest first, the last ten;
+  G) columns per source, found from the other device, and back to the source's layout;
+  H) at most 50 saved queries per customer: the next one is refused, not dropped;
+  I) another user sees none of it and cannot delete it, another customer is a 403;
+  J) deleting the user and the customer takes their rows with them.
 
 Exits non-zero when a check fails.
 """
@@ -36,12 +43,17 @@ os.environ.setdefault("JWT_SECRET", "e2e-test-secret-not-the-default")
 
 import httpx  # noqa: E402
 from fastapi import FastAPI  # noqa: E402
+from sqlalchemy import func  # noqa: E402
+from sqlalchemy import select  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 
 import app.siem.services.events as event_services  # noqa: E402
 from app.auth.utils import AuthHandler  # noqa: E402
 from app.db.db_session import async_engine  # noqa: E402
 from app.db.universal_models import EventSources  # noqa: E402
+from app.siem.models.event_search import EventSearchColumns  # noqa: E402
+from app.siem.models.event_search import EventSearchRecentQuery  # noqa: E402
+from app.siem.models.event_search import EventSearchSavedQuery  # noqa: E402
 from tests.e2e.portal_overview_seed import ADMIN  # noqa: E402
 from tests.e2e.portal_overview_seed import CUST_A  # noqa: E402
 from tests.e2e.portal_overview_seed import CUST_B  # noqa: E402
@@ -120,6 +132,154 @@ async def seed_sources():
             s.add(EventSources(customer_code=code, name="Office", index_pattern=f"o365-{code.lower()}-*", event_type="Cloud"))
         s.add(EventSources(customer_code=CUST_A, name="Old", index_pattern="old-a-*", event_type="EDR", enabled=False))
         await s.commit()
+
+
+RELATIVE = {
+    "source_name": "Wazuh",
+    "query": "rule_level:>=10",
+    "time_mode": "relative",
+    "time_amount": 24,
+    "time_unit": "h",
+    "page_size": 50,
+}
+
+
+async def check_memory(client, portal, admin):
+    base = f"/siem/event_search/{CUST_A}"
+    login = await client.post("/auth/token/customer-portal", data={"username": PORTAL_USER, "password": PASSWORD})
+    other_device = {"Authorization": f"Bearer {login.json()['access_token']}"}
+
+    print("\n=== E) saved queries live on the server ===")
+    empty = await client.get(base, headers=portal)
+    check(
+        "an empty memory to start with",
+        empty.status_code == 200 and empty.json()["saved"] == [] and empty.json()["recent"] == [],
+        empty.text[:120],
+    )
+    saved = await client.post(f"{base}/saved", json={**RELATIVE, "name": "  High level "}, headers=portal)
+    body = saved.json()
+    check("save: 200, a new one", saved.status_code == 200 and body["replaced"] is False, saved.text[:160])
+    check(
+        "save: the name trimmed, the search as given",
+        body["saved"][0]["name"] == "High level" and body["saved"][0]["query"] == "rule_level:>=10",
+    )
+    found = (await client.get(base, headers=other_device)).json()["saved"]
+    check("the other device finds it", [q["name"] for q in found] == ["High level"], str(found)[:160])
+    again = await client.post(f"{base}/saved", json={**RELATIVE, "query": "rule_level:>=12", "name": "HIGH level"}, headers=other_device)
+    body = again.json()
+    check(
+        "the same name in another case updates it, under the name as typed last",
+        body["replaced"] is True and [(q["name"], q["query"]) for q in body["saved"]] == [("HIGH level", "rule_level:>=12")],
+        str(body["saved"])[:200],
+    )
+    absolute = await client.post(
+        f"{base}/saved",
+        json={
+            **RELATIVE,
+            "name": "Incident window",
+            "time_mode": "absolute",
+            "time_from": "2026-10-01T08:00:00+02:00",
+            "time_to": "2026-10-01T10:30:00+02:00",
+        },
+        headers=portal,
+    )
+    window = next((q for q in absolute.json().get("saved", []) if q["name"] == "Incident window"), {})
+    check(
+        "an absolute range keeps its instant, in UTC",
+        (window.get("time_from"), window.get("time_to")) == ("2026-10-01T06:00:00Z", "2026-10-01T08:30:00Z"),
+        str(window)[:200],
+    )
+    check("newest first", [q["name"] for q in absolute.json()["saved"]] == ["Incident window", "HIGH level"])
+    bad = await client.post(f"{base}/saved", json={**RELATIVE, "name": "   "}, headers=portal)
+    check("a blank name: 422", bad.status_code == 422, bad.text[:120])
+    bad = await client.post(f"{base}/saved", json={**RELATIVE, "name": "x", "time_mode": "absolute"}, headers=portal)
+    check("an absolute range without dates: 422", bad.status_code == 422, bad.text[:120])
+
+    print("\n=== F) recent searches ===")
+    await client.post(f"{base}/recent", json=RELATIVE, headers=portal)
+    recent = (await client.post(f"{base}/recent", json={**RELATIVE, "page_size": 250}, headers=other_device)).json()["recent"]
+    check("the same search twice, whatever the page size: once", len(recent) == 1 and recent[0]["page_size"] == 250, str(recent)[:160])
+    for n in range(12):
+        recent = (await client.post(f"{base}/recent", json={**RELATIVE, "query": f"q{n}"}, headers=portal)).json()["recent"]
+    check(
+        "the last ten, newest first",
+        [r["query"] for r in recent] == [f"q{n}" for n in range(11, 1, -1)],
+        str([r["query"] for r in recent]),
+    )
+    found = (await client.get(base, headers=other_device)).json()["recent"]
+    check("the other device sees the same list", [r["query"] for r in found] == [r["query"] for r in recent])
+    cleared = await client.delete(f"{base}/recent", headers=other_device)
+    check("clear: none left, the saved ones kept", cleared.json()["recent"] == [] and len(cleared.json()["saved"]) == 2, cleared.text[:160])
+
+    print("\n=== G) columns per source ===")
+    picked = [{"key": "agent_name", "label": "Host"}, {"key": "timestamp", "label": " "}]
+    response = await client.put(f"{base}/columns", json={"source_name": "Wazuh", "columns": picked}, headers=portal)
+    check("set: 200", response.status_code == 200, response.text[:160])
+    columns = (await client.get(base, headers=other_device)).json()["columns"]
+    check(
+        "the other device finds them, a blank header read as the field",
+        columns == {"Wazuh": [{"key": "agent_name", "label": "Host"}, {"key": "timestamp", "label": "timestamp"}]},
+        str(columns),
+    )
+    await client.put(f"{base}/columns", json={"source_name": "Office", "columns": [{"key": "user", "label": "User"}]}, headers=portal)
+    response = await client.put(f"{base}/columns", json={"source_name": "Wazuh", "columns": None}, headers=other_device)
+    check(
+        "none: back to the source's layout, the other source kept",
+        list(response.json()["columns"]) == ["Office"],
+        str(response.json()["columns"]),
+    )
+
+    print("\n=== H) at most 50 saved queries per customer ===")
+    for n in range(48):
+        response = await client.post(f"{base}/saved", json={**RELATIVE, "name": f"Query {n}"}, headers=portal)
+    check("the fiftieth: saved", response.status_code == 200 and len(response.json()["saved"]) == 50, response.text[:120])
+    over = await client.post(f"{base}/saved", json={**RELATIVE, "name": "One too many"}, headers=portal)
+    check("the next one: 409, nothing dropped", over.status_code == 409 and "delete one" in over.text, over.text[:160])
+    check(
+        "an existing name still updates",
+        (await client.post(f"{base}/saved", json={**RELATIVE, "name": "Query 3"}, headers=portal)).status_code == 200,
+    )
+    memory = (await client.get(base, headers=portal)).json()
+    victim = next(q["id"] for q in memory["saved"] if q["name"] == "Query 0")
+    response = await client.delete(f"{base}/saved/{victim}", headers=portal)
+    check("delete: 200, one less", response.status_code == 200 and len(response.json()["saved"]) == 49)
+    check(
+        "then there is room again",
+        (await client.post(f"{base}/saved", json={**RELATIVE, "name": "One too many"}, headers=portal)).status_code == 200,
+    )
+    check("deleting it again: 404", (await client.delete(f"{base}/saved/{victim}", headers=portal)).status_code == 404)
+    one_left = next(q["id"] for q in (await client.get(base, headers=portal)).json()["saved"] if q["name"] == "Query 1")
+    await client.delete(f"{base}/saved/{one_left}", headers=portal)
+    race = await asyncio.gather(
+        client.post(f"{base}/saved", json={**RELATIVE, "name": "From this device"}, headers=portal),
+        client.post(f"{base}/saved", json={**RELATIVE, "name": "From that device"}, headers=other_device),
+    )
+    count = len((await client.get(base, headers=portal)).json()["saved"])
+    check(
+        "two devices racing for the last slot: one saves, the other is refused",
+        sorted(r.status_code for r in race) == [200, 409] and count == 50,
+        f"{[r.status_code for r in race]} {count}",
+    )
+
+    print("\n=== I) another user, another customer ===")
+    theirs = (await client.get(base, headers=admin)).json()
+    check("another user (an admin) sees none of it", theirs["saved"] == [] and theirs["columns"] == {}, str(theirs)[:120])
+    mine = next(q["id"] for q in memory["saved"] if q["name"] == "HIGH level")
+    response = await client.delete(f"{base}/saved/{mine}", headers=admin)
+    check("nor deletes it: 404", response.status_code == 404, response.text[:120])
+    check("it is still there", any(q["id"] == mine for q in (await client.get(base, headers=portal)).json()["saved"]))
+    other = f"/siem/event_search/{CUST_B}"
+    for name, request in (
+        ("read", client.get(other, headers=portal)),
+        ("save", client.post(f"{other}/saved", json={**RELATIVE, "name": "x"}, headers=portal)),
+        ("delete", client.delete(f"{other}/saved/{mine}", headers=portal)),
+        ("remember", client.post(f"{other}/recent", json=RELATIVE, headers=portal)),
+        ("clear", client.delete(f"{other}/recent", headers=portal)),
+        ("columns", client.put(f"{other}/columns", json={"source_name": "Wazuh", "columns": None}, headers=portal)),
+    ):
+        response = await request
+        check(f"another customer, {name}: 403", response.status_code == 403, f"{response.status_code} {response.text[:80]}")
+    check("without a token: 401", (await client.get(base)).status_code == 401)
 
 
 async def main():
@@ -208,8 +368,15 @@ async def main():
             check("next page: 400, even with a valid token", response.status_code == 400, response.text[:80])
             check("the indexer was never asked", indexer.asked == [], str(indexer.asked))
 
+            await check_memory(client, portal, admin)
+
     async with AsyncSession(async_engine) as s:
         await cleanup(s)
+        left = 0
+        for table in (EventSearchSavedQuery, EventSearchRecentQuery, EventSearchColumns):
+            left += await s.scalar(select(func.count()).select_from(table).where(table.customer_code.in_([CUST_A, CUST_B])))
+    print("\n=== J) deleting the user and the customer ===")
+    check("their saved, recent and column rows went with them", left == 0, str(left))
     await async_engine.dispose()
 
     passed = sum(1 for _, ok, _ in results if ok)
