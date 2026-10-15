@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import case
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -40,6 +41,7 @@ from app.ai_analyst.schema.ai_analyst import SubmitReviewResponse
 from app.ai_analyst.schema.ai_analyst import UpdateJobRequest
 from app.ai_analyst.schema.ai_analyst import UpdateJobResponse
 from app.auth.models.users import User
+from app.db.universal_models import REPORT_JOB_UNIQUE
 from app.db.universal_models import AiAnalystIoc
 from app.db.universal_models import AiAnalystIocReview
 from app.db.universal_models import AiAnalystJob
@@ -115,11 +117,20 @@ def _ioc_to_response(ioc: AiAnalystIoc) -> IocResponse:
 
 
 async def create_job(request: CreateJobRequest, session: AsyncSession) -> CreateJobResponse:
+    """Create a job, or update the one with this id.
+
+    The route has checked the caller may act for ``request.customer_code``. That is not
+    enough on its own: the alert, and an existing job with this id, must be that
+    customer's too, or a caller could open a job on another tenant's alert, or rewrite
+    another tenant's job by naming its id.
+    """
     logger.info(f"Creating AI analyst job {request.id} for alert {request.alert_id}")
 
     # Check if job already exists (may have been auto-created by an early status update)
     existing = await session.get(AiAnalystJob, request.id)
     if existing:
+        if existing.customer_code != request.customer_code or existing.alert_id != request.alert_id:
+            raise HTTPException(status_code=409, detail=f"Job {request.id} already exists for another alert or customer")
         logger.info(f"Job {request.id} already exists, updating fields")
         if request.alert_type is not None:
             existing.alert_type = request.alert_type
@@ -130,6 +141,12 @@ async def create_job(request: CreateJobRequest, session: AsyncSession) -> Create
         await session.commit()
         await session.refresh(existing)
         return CreateJobResponse(success=True, message="Job updated", job=_job_to_response(existing))
+
+    alert = await session.get(Alert, request.alert_id)
+    if alert is None:
+        raise HTTPException(status_code=404, detail=f"Alert {request.alert_id} not found")
+    if alert.customer_code != request.customer_code:
+        raise HTTPException(status_code=400, detail=f"Alert {request.alert_id} does not belong to customer {request.customer_code}")
 
     job = AiAnalystJob(
         id=request.id,
@@ -289,6 +306,18 @@ async def submit_report(request: SubmitReportRequest, session: AsyncSession) -> 
     job = await session.get(AiAnalystJob, request.job_id)
     if not job:
         raise HTTPException(status_code=404, detail=f"Job {request.job_id} not found")
+    # The route checked the body's customer; the job must be that customer's and that alert's,
+    # or a report could be filed under another tenant's job.
+    if job.customer_code != request.customer_code or job.alert_id != request.alert_id:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Job {request.job_id} is not for alert {request.alert_id} of customer {request.customer_code}",
+        )
+    # One report per job (`uq_ai_analyst_report_job_id`). A writer that retries a POST whose
+    # answer it lost is told the report is already there rather than filing a second one.
+    existing = await session.execute(select(AiAnalystReport.id).where(AiAnalystReport.job_id == request.job_id))
+    if existing.scalars().first() is not None:
+        raise HTTPException(status_code=409, detail=f"A report already exists for job {request.job_id}")
 
     report = AiAnalystReport(
         job_id=request.job_id,
@@ -301,7 +330,15 @@ async def submit_report(request: SubmitReportRequest, session: AsyncSession) -> 
         created_at=datetime.utcnow(),
     )
     session.add(report)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError as e:
+        await session.rollback()
+        if REPORT_JOB_UNIQUE not in str(e.orig):
+            raise
+        # Two submissions for one job at once: the pre-check above passed for both, and the
+        # unique index let only one in.
+        raise HTTPException(status_code=409, detail=f"A report already exists for job {request.job_id}")
     await session.refresh(report)
 
     logger.info(f"AI analyst report {report.id} created for job {request.job_id}")
@@ -354,6 +391,12 @@ async def submit_iocs(request: SubmitIocsRequest, session: AsyncSession) -> Subm
     report = await session.get(AiAnalystReport, request.report_id)
     if not report:
         raise HTTPException(status_code=404, detail=f"Report {request.report_id} not found")
+    # As for reports: the route checked the body's customer, the report must be theirs too.
+    if report.customer_code != request.customer_code or report.alert_id != request.alert_id:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Report {request.report_id} is not for alert {request.alert_id} of customer {request.customer_code}",
+        )
 
     created_iocs = []
     for ioc_data in request.iocs:
@@ -750,6 +793,12 @@ async def queue_palace_lesson(
             raise HTTPException(
                 status_code=404,
                 detail=f"Review {request.review_id} not found",
+            )
+        # The route checked the body's customer; the review the lesson cites must be theirs too.
+        if review.customer_code != request.customer_code:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Review {request.review_id} does not belong to customer {request.customer_code}",
             )
 
     lesson = AiAnalystPalaceLesson(
