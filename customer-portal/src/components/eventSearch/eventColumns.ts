@@ -105,6 +105,26 @@ export function columnValue(column: EventColumn, row: EventSearchResult, timeFie
 }
 
 /**
+ * The field a column reads, as an analyst would name it: its own for a picked column, the
+ * one `columnValue` reads first for a column of the default layout.
+ */
+export function columnSource(column: EventColumn, timeField: string | null | undefined): string {
+	if (column.field !== null) return column.field
+	switch (column.key) {
+		case "Timestamp":
+			return timeField || "timestamp"
+		case "Level":
+			return "rule_level"
+		case "Source":
+			return "agent_name"
+		case "Rule":
+			return "rule_description"
+		default:
+			return column.key
+	}
+}
+
+/**
  * The CSV of `events` in `columns`: a header per column, then one row per event. Times are
  * written as ISO 8601 in UTC — what a spreadsheet or a script reads without guessing the
  * viewer's timezone; a time that cannot be read is kept as it came.

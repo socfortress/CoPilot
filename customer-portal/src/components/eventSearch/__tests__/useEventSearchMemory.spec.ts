@@ -12,7 +12,9 @@ const siem = vi.hoisted(() => ({
 	deleteEventSearchQuery: vi.fn(),
 	rememberEventSearch: vi.fn(),
 	clearEventSearchRecent: vi.fn(),
-	setEventSearchColumns: vi.fn()
+	setEventSearchColumns: vi.fn(),
+	saveEventSearchTemplate: vi.fn(),
+	deleteEventSearchTemplate: vi.fn()
 }))
 vi.mock("@/api", () => ({ default: { siem } }))
 
@@ -32,6 +34,7 @@ function memory(names: string[] = [], extra: Partial<EventSearchMemory> = {}): E
 		saved: names.map((name, i) => ({ ...STATE, id: i + 1, name, updated_at: "2026-10-01T00:00:00Z" })),
 		recent: [],
 		columns: {},
+		templates: [],
 		...extra
 	}
 }
@@ -124,6 +127,27 @@ describe("useEventSearchMemory", () => {
 		await form.clearRecent()
 		expect(siem.clearEventSearchRecent).toHaveBeenCalledWith("A")
 		expect(results.memory.value.saved).toEqual([])
+	})
+
+	it("lists a source's templates, and saves and deletes them", async () => {
+		signIn("alice")
+		const triage = { id: 3, source_name: "Wazuh", name: "Triage", columns: [{ key: "agent_name", label: "Host" }], updated_at: "" }
+		const office = { ...triage, id: 4, source_name: "Office" }
+		siem.getEventSearchMemory.mockImplementation(() => answer(memory([], { templates: [triage, office] })))
+		const search = useEventSearchMemory("A")
+		await flushPromises()
+		expect(search.templatesFor("Wazuh")).toEqual([triage])
+		expect(search.templatesFor(null)).toEqual([])
+
+		siem.saveEventSearchTemplate.mockReturnValue(answer({ ...memory([], { templates: [office] }), replaced: true }))
+		expect(await search.saveTemplate("Wazuh", "Triage", triage.columns)).toBe(true)
+		expect(siem.saveEventSearchTemplate).toHaveBeenCalledWith("A", "Wazuh", "Triage", triage.columns)
+		expect(search.templatesFor("Wazuh")).toEqual([])
+
+		siem.deleteEventSearchTemplate.mockReturnValue(answer(memory()))
+		await search.removeTemplate(4)
+		expect(siem.deleteEventSearchTemplate).toHaveBeenCalledWith("A", 4)
+		expect(search.memory.value.templates).toEqual([])
 	})
 
 	it("drops an answer that arrives after a newer one", async () => {

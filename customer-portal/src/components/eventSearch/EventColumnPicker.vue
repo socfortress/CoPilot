@@ -77,6 +77,76 @@
 			/>
 		</section>
 
+		<section class="@container flex min-w-0 flex-col gap-2" data-testid="column-templates">
+			<div class="flex items-baseline justify-between gap-3">
+				<span :class="HEAD">Templates for this source</span>
+				<span class="text-tertiary font-mono text-xs tabular-nums">{{ templates.length }}</span>
+			</div>
+			<div
+				v-if="templates.length"
+				class="border-default divide-border flex max-h-48 flex-col divide-y overflow-y-auto rounded-md border"
+			>
+				<div
+					v-for="template of templates"
+					:key="template.id"
+					class="group hover:bg-secondary/50 flex items-center gap-2 px-2 py-1.5"
+					data-testid="column-template"
+				>
+					<div class="flex min-w-0 grow flex-col">
+						<span class="text-default truncate text-sm">{{ template.name }}</span>
+						<span class="text-tertiary truncate text-xs">{{ summary(template.columns) }}</span>
+					</div>
+					<n-button
+						size="tiny"
+						secondary
+						:title="`Put the columns of “${template.name}” above, to adjust or apply them`"
+						data-testid="column-template-load"
+						@click="load(template)"
+					>
+						Load
+					</n-button>
+					<n-button
+						size="tiny"
+						quaternary
+						type="error"
+						class="opacity-60 group-hover:opacity-100"
+						:aria-label="`Delete “${template.name}”`"
+						:disabled="savingTemplate"
+						data-testid="column-template-delete"
+						@click="emit('deleteTemplate', template.id)"
+					>
+						<template #icon><Icon name="carbon:trash-can" :size="14" /></template>
+					</n-button>
+				</div>
+			</div>
+			<form
+				class="flex min-w-0 flex-col gap-2 @md:flex-row @md:items-center"
+				data-testid="column-template-form"
+				@submit.prevent="saveTemplate"
+			>
+				<n-input
+					v-model:value="templateName"
+					size="small"
+					placeholder="Save the columns above as…"
+					:maxlength="80"
+					class="min-w-0 grow"
+					data-testid="column-template-name"
+				/>
+				<n-button
+					size="small"
+					secondary
+					attr-type="submit"
+					:disabled="!templateName.trim() || !columns.length"
+					:loading="savingTemplate"
+					data-testid="column-template-save"
+				>
+					<template #icon><Icon name="carbon:template" /></template>
+					Save as template
+				</n-button>
+			</form>
+			<span v-if="willReplace" class="text-warning text-xs">Updates the template saved under this name.</span>
+		</section>
+
 		<footer class="border-default flex flex-wrap items-center justify-between gap-2 border-t pt-4">
 			<n-button
 				size="small"
@@ -99,16 +169,17 @@
 </template>
 
 <script setup lang="ts">
-import type { DisplayColumn, FieldMapping } from "@/types/siem"
+import type { DisplayColumn, EventSearchColumnTemplate, FieldMapping } from "@/types/siem"
 import { NButton, NInput, NSelect } from "naive-ui"
-import { computed, ref } from "vue"
+import { computed, ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 
 /**
  * Picks the columns of event search for one source (#1258): which fields, in which order,
  * under which headers. It starts from what the table shows now; Apply hands the choice to
  * the parent, which keeps it per source on the server, and "Back to…" drops it for the
- * source's layout.
+ * source's layout. The columns being edited can also be saved as a named template, and a
+ * template loaded back to start from.
  */
 
 const {
@@ -116,7 +187,9 @@ const {
 	personal,
 	sourceColumns,
 	fields,
-	saving = false
+	templates = [],
+	saving = false,
+	savingTemplate = false
 } = defineProps<{
 	/** The columns the table shows now, as fields. */
 	current: DisplayColumn[]
@@ -125,13 +198,19 @@ const {
 	/** The SOC's layout for the source, if any. */
 	sourceColumns?: DisplayColumn[] | null
 	fields: FieldMapping[]
+	/** The user's templates for this source. */
+	templates?: EventSearchColumnTemplate[]
 	/** The choice is being kept. */
 	saving?: boolean
+	/** A template is being saved or deleted. */
+	savingTemplate?: boolean
 }>()
 
 const emit = defineEmits<{
 	(e: "save", value: DisplayColumn[] | null): void
 	(e: "cancel"): void
+	(e: "saveTemplate", name: string, columns: DisplayColumn[]): void
+	(e: "deleteTemplate", id: number): void
 }>()
 
 const HEAD = "text-tertiary text-xxs font-medium tracking-[0.12em] uppercase"
@@ -153,10 +232,41 @@ function move(index: number, step: -1 | 1) {
 	if (column) columns.value.splice(target, 0, column)
 }
 
-function save() {
-	emit(
-		"save",
-		columns.value.map(c => ({ key: c.key, label: c.label.trim() || c.key }))
-	)
+function picked(): DisplayColumn[] {
+	return columns.value.map(c => ({ key: c.key, label: c.label.trim() || c.key }))
 }
+
+function save() {
+	emit("save", picked())
+}
+
+const templateName = ref("")
+const willReplace = computed(() => {
+	const wanted = templateName.value.trim().toLowerCase()
+	return !!wanted && templates.some(template => template.name.toLowerCase() === wanted)
+})
+
+function summary(list: DisplayColumn[]): string {
+	const labels = list.slice(0, 4).map(column => column.label || column.key)
+	return list.length > 4 ? `${labels.join(" · ")} · +${list.length - 4}` : labels.join(" · ")
+}
+
+function load(template: EventSearchColumnTemplate) {
+	columns.value = template.columns.map(c => ({ key: c.key, label: c.label }))
+}
+
+function saveTemplate() {
+	const name = templateName.value.trim()
+	if (!name || !columns.value.length) return
+	emit("saveTemplate", name, picked())
+}
+
+// The name is cleared once the template is saved: the list then holds it.
+watch(
+	() => templates,
+	list => {
+		const name = templateName.value.trim().toLowerCase()
+		if (name && list.some(template => template.name.toLowerCase() === name)) templateName.value = ""
+	}
+)
 </script>

@@ -1,4 +1,4 @@
-import type { DisplayColumn, FieldMapping } from "@/types/siem"
+import type { DisplayColumn, EventSearchColumnTemplate, FieldMapping } from "@/types/siem"
 import { mount } from "@vue/test-utils"
 import { describe, expect, it } from "vitest"
 import EventColumnPicker from "../EventColumnPicker.vue"
@@ -9,7 +9,12 @@ const FIELDS: FieldMapping[] = [
 	{ field: "data_srcip", type: "ip" }
 ]
 
-function render(props: { current: DisplayColumn[]; personal?: boolean; sourceColumns?: DisplayColumn[] | null }) {
+function render(props: {
+	current: DisplayColumn[]
+	personal?: boolean
+	sourceColumns?: DisplayColumn[] | null
+	templates?: EventSearchColumnTemplate[]
+}) {
 	return mount(EventColumnPicker, { props: { personal: false, fields: FIELDS, ...props } })
 }
 
@@ -74,5 +79,54 @@ describe("eventColumnPicker", () => {
 		expect(mine.text()).toContain("Back to the default")
 		await mine.find("[data-testid=column-picker-reset]").trigger("click")
 		expect(mine.emitted("save")?.[0]).toEqual([null])
+	})
+
+	describe("templates", () => {
+		const TRIAGE: EventSearchColumnTemplate = {
+			id: 3,
+			source_name: "Wazuh",
+			name: "Triage",
+			columns: [
+				{ key: "agent_name", label: "Host" },
+				{ key: "data_srcip", label: "IP" }
+			],
+			updated_at: ""
+		}
+
+		it("lists the source's templates and loads one into the columns being edited", async () => {
+			const wrapper = render({ current: [{ key: "timestamp", label: "Time" }], templates: [TRIAGE] })
+			const row = wrapper.find("[data-testid=column-template]")
+			expect(row.text()).toContain("Triage")
+			expect(row.text()).toContain("Host · IP")
+			await row.find("[data-testid=column-template-load]").trigger("click")
+			expect(keys(wrapper)).toEqual(["agent_name", "data_srcip"])
+			// Loading changes nothing yet: Apply does.
+			expect(wrapper.emitted("save")).toBeUndefined()
+		})
+
+		it("saves the columns being edited as a template, saying when the name is taken", async () => {
+			const wrapper = render({ current: [{ key: "timestamp", label: " " }], templates: [TRIAGE] })
+			const name = wrapper.find("[data-testid=column-template-name] input")
+			expect(wrapper.find("[data-testid=column-template-save]").attributes("disabled")).toBeDefined()
+
+			await name.setValue("triage")
+			expect(wrapper.text()).toContain("Updates the template saved under this name.")
+			await name.setValue("  Morning ")
+			expect(wrapper.text()).not.toContain("Updates the template")
+			await wrapper.find("[data-testid=column-template-form]").trigger("submit")
+			expect(wrapper.emitted("saveTemplate")).toEqual([["Morning", [{ key: "timestamp", label: "timestamp" }]]])
+
+			// Saved: the list now holds it, and the name is cleared for the next one.
+			await wrapper.setProps({ templates: [TRIAGE, { ...TRIAGE, id: 4, name: "Morning" }] })
+			expect((name.element as HTMLInputElement).value).toBe("")
+		})
+
+		it("cannot save a template without columns, and deletes one by id", async () => {
+			const wrapper = render({ current: [], templates: [TRIAGE] })
+			await wrapper.find("[data-testid=column-template-name] input").setValue("Empty")
+			expect(wrapper.find("[data-testid=column-template-save]").attributes("disabled")).toBeDefined()
+			await wrapper.find("[data-testid=column-template-delete]").trigger("click")
+			expect(wrapper.emitted("deleteTemplate")).toEqual([[3]])
+		})
 	})
 })

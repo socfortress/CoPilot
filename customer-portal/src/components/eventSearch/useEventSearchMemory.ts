@@ -1,7 +1,7 @@
 import type { AxiosResponse } from "axios"
 import type { MaybeRefOrGetter, Ref } from "vue"
 import type { ApiError, CommonResponse } from "@/types/common"
-import type { DisplayColumn, EventSearchMemory, EventSearchState } from "@/types/siem"
+import type { DisplayColumn, EventSearchColumnTemplate, EventSearchMemory, EventSearchState } from "@/types/siem"
 import { computed, ref, toValue, watch } from "vue"
 import Api from "@/api"
 import { useAuthStore } from "@/stores/auth"
@@ -32,7 +32,7 @@ export function resetEventSearchMemory() {
 }
 
 function memoryOf(data: EventSearchMemory): EventSearchMemory {
-	return { saved: data.saved, recent: data.recent, columns: data.columns }
+	return { saved: data.saved, recent: data.recent, columns: data.columns, templates: data.templates ?? [] }
 }
 
 /**
@@ -138,6 +138,17 @@ export function useEventSearchMemory(customerCode: MaybeRefOrGetter<string | nul
 		},
 		async setColumns(sourceName: string, columns: DisplayColumn[] | null) {
 			await write(customer => Api.siem.setEventSearchColumns(customer, sourceName, columns))
+		},
+		templatesFor(sourceName: string | null | undefined): EventSearchColumnTemplate[] {
+			return sourceName ? memory.value.templates.filter(template => template.source_name === sourceName) : []
+		},
+		/** Saves a named column set for a source; true when a template of that name was updated. */
+		async saveTemplate(sourceName: string, name: string, columns: DisplayColumn[]): Promise<boolean> {
+			const data = await write(customer => Api.siem.saveEventSearchTemplate(customer, sourceName, name, columns))
+			return !!data.replaced
+		},
+		async removeTemplate(id: number) {
+			await write(customer => Api.siem.deleteEventSearchTemplate(customer, id))
 		}
 	}
 }

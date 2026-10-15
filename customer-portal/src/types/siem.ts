@@ -121,10 +121,21 @@ export interface EventSearchRecentQuery extends EventSearchState {
 	ran_at: string
 }
 
+/** A named set of columns for one event source, which the user switches to. */
+export interface EventSearchColumnTemplate {
+	id: number
+	source_name: string
+	name: string
+	columns: DisplayColumn[]
+	updated_at: string
+}
+
 /** What event search keeps for the signed-in user and one customer, on the server. */
 export interface EventSearchMemory {
 	saved: EventSearchSavedQuery[]
 	recent: EventSearchRecentQuery[]
 	/** The user's own columns per event source; absent means the source's layout. */
 	columns: Record<string, DisplayColumn[]>
+	/** Column templates, by source then name. */
+	templates: EventSearchColumnTemplate[]
 }

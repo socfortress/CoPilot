@@ -18,7 +18,19 @@
 					<span class="font-semibold tabular-nums">{{ totalEvents.toLocaleString() }}</span>
 					events loaded
 				</p>
-				<div class="ml-auto flex items-center gap-2">
+				<div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+					<EventColumnTemplates
+						:templates
+						:active-key="activeLayoutKey"
+						:source-name="sourceLayoutName"
+						:source-columns="sourceLayoutColumns"
+						:resolve="resolveTemplate"
+						:time-field
+						:disabled="!selectedEventSource"
+						:busy="savingColumns"
+						@apply="applyTemplate"
+						@manage="showColumns = true"
+					/>
 					<n-button size="small" secondary data-testid="event-columns-toggle" @click="showColumns = true">
 						<template #icon><Icon name="carbon:column" /></template>
 						Columns
@@ -74,9 +86,13 @@
 				:personal="!!userColumns"
 				:source-columns="selectedEventSource?.displayed_columns"
 				:fields
+				:templates
 				:saving="savingColumns"
+				:saving-template
 				@save="applyColumns"
 				@cancel="showColumns = false"
+				@save-template="saveTemplate"
+				@delete-template="deleteTemplate"
 			/>
 		</n-modal>
 
@@ -97,6 +113,7 @@ import type { SearchFormLoad, SearchFormParams } from "@/components/eventSearch/
 import type { ApiError } from "@/types/common"
 import type {
 	DisplayColumn,
+	EventSearchColumnTemplate,
 	EventSearchQueryParams,
 	EventSearchResult,
 	EventSourceItem,
@@ -123,6 +140,8 @@ import {
 	parseEventTime,
 	resolveColumns
 } from "./eventColumns"
+import EventColumnTemplates from "./EventColumnTemplates.vue"
+import { sameColumns } from "./eventSearchMemory"
 import { useEventSearchMemory } from "./useEventSearchMemory"
 
 const message = useMessage()
@@ -180,6 +199,21 @@ const eventColumns = computed<EventColumn[]>(() =>
 )
 /** What the column picker starts from: the columns shown, when they are fields. */
 const pickerStart = computed(() => userColumns.value ?? selectedEventSource.value?.displayed_columns ?? [])
+
+// Column templates: named layouts for the source, switched from the toolbar. Applying one
+// copies its columns, so the layout in force is whichever one the columns match.
+const templates = computed(() => memory.templatesFor(selectedEventSource.value?.name))
+const sourceLayoutName = computed(() => (selectedEventSource.value?.displayed_columns?.length ? "SOC layout" : "Default layout"))
+const sourceLayoutColumns = computed(() => resolveColumns(null, selectedEventSource.value?.displayed_columns, timeField.value))
+const activeLayoutKey = computed(() => {
+	if (!userColumns.value) return "source"
+	const match = templates.value.find(template => sameColumns(template.columns, userColumns.value))
+	return match ? String(match.id) : null
+})
+
+function resolveTemplate(picked: DisplayColumn[]): EventColumn[] {
+	return resolveColumns(picked, null, timeField.value)
+}
 
 function tableColumn(column: EventColumn): DataTableColumn<EventSearchResult> {
 	const value = (row: EventSearchResult) => columnValue(column, row, timeField.value)
@@ -240,6 +274,46 @@ const columns = computed<DataTableColumns<EventSearchResult>>(() => [
 ])
 
 const savingColumns = ref(false)
+const savingTemplate = ref(false)
+
+/** Switches to a template's columns, or back to the source's layout. */
+async function applyTemplate(template: EventSearchColumnTemplate | null) {
+	const source = selectedEventSource.value?.name
+	if (!source) return
+	savingColumns.value = true
+	try {
+		await memory.setColumns(source, template ? template.columns : null)
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to switch the columns")
+	} finally {
+		savingColumns.value = false
+	}
+}
+
+async function saveTemplate(name: string, picked: DisplayColumn[]) {
+	const source = selectedEventSource.value?.name
+	if (!source) return
+	savingTemplate.value = true
+	try {
+		const replaced = await memory.saveTemplate(source, name, picked)
+		message.success(replaced ? `Updated the template “${name}”` : `Saved the template “${name}”`)
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to save the template")
+	} finally {
+		savingTemplate.value = false
+	}
+}
+
+async function deleteTemplate(id: number) {
+	savingTemplate.value = true
+	try {
+		await memory.removeTemplate(id)
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to delete the template")
+	} finally {
+		savingTemplate.value = false
+	}
+}
 
 /** Keeps the picked columns on the server; the dialog stays open if they could not be kept. */
 async function applyColumns(picked: DisplayColumn[] | null) {

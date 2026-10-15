@@ -2,6 +2,7 @@ import type { EventSearchResult } from "@/types/siem"
 import { describe, expect, it } from "vitest"
 import {
 	cellText,
+	columnSource,
 	columnValue,
 	DEFAULT_COLUMNS,
 	eventsFilename,
@@ -92,5 +93,16 @@ describe("events as CSV", () => {
 		expect(eventsFilename("Office 365 / Audit", new Date(Date.UTC(2026, 9, 15, 9, 5, 0)))).toBe(
 			"events-Office_365_Audit-2026-10-15-09-05-00.csv"
 		)
+	})
+
+	it("names the field a column reads: its own, or the one behind a default column", () => {
+		expect(DEFAULT_COLUMNS.map(column => columnSource(column, "@timestamp"))).toEqual([
+			"@timestamp",
+			"rule_level",
+			"agent_name",
+			"rule_description"
+		])
+		expect(columnSource(DEFAULT_COLUMNS[0]!, null)).toBe("timestamp")
+		expect(columnSource(resolveColumns([{ key: "data.win.user", label: "User" }], null, null)[0]!, null)).toBe("data.win.user")
 	})
 })

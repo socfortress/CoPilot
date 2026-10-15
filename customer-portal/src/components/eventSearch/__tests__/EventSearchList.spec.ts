@@ -1,4 +1,11 @@
-import type { DisplayColumn, EventSearchMemory, EventSearchResult, EventSearchState, EventSourceItem } from "@/types/siem"
+import type {
+	DisplayColumn,
+	EventSearchColumnTemplate,
+	EventSearchMemory,
+	EventSearchResult,
+	EventSearchState,
+	EventSourceItem
+} from "@/types/siem"
 import { flushPromises, mount } from "@vue/test-utils"
 import { NMessageProvider } from "naive-ui"
 import { createPinia, setActivePinia } from "pinia"
@@ -6,12 +13,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
 import { useAuthStore } from "@/stores/auth"
 import EventColumnPicker from "../EventColumnPicker.vue"
+import EventColumnTemplates from "../EventColumnTemplates.vue"
 import EventSearchQueries from "../EventSearchQueries.vue"
 import List from "../List.vue"
 import { resetEventSearchMemory } from "../useEventSearchMemory"
 
 /** The server's side of the memory, as the routes answer it: the whole memory every time. */
-const server = vi.hoisted(() => ({ memory: { saved: [], recent: [], columns: {} } as EventSearchMemory, failColumns: false }))
+const server = vi.hoisted(() => ({ memory: { saved: [], recent: [], columns: {}, templates: [] } as EventSearchMemory, failColumns: false }))
 const reply = () => Promise.resolve({ data: { success: true, message: "ok", ...structuredClone(server.memory) } })
 const siem = vi.hoisted(() => ({
 	getEventSources: vi.fn(),
@@ -22,7 +30,9 @@ const siem = vi.hoisted(() => ({
 	deleteEventSearchQuery: vi.fn(),
 	rememberEventSearch: vi.fn(),
 	clearEventSearchRecent: vi.fn(),
-	setEventSearchColumns: vi.fn()
+	setEventSearchColumns: vi.fn(),
+	saveEventSearchTemplate: vi.fn(),
+	deleteEventSearchTemplate: vi.fn()
 }))
 const downloadCsv = vi.hoisted(() => vi.fn())
 
@@ -91,7 +101,7 @@ describe("event search list (#1258)", () => {
 		setActivePinia(createPinia())
 		resetEventSearchMemory()
 		vi.clearAllMocks()
-		server.memory = { saved: [], recent: [], columns: {} }
+		server.memory = { saved: [], recent: [], columns: {}, templates: [] }
 		server.failColumns = false
 		useAuthStore().$patch({ user: { username: "alice", role: "customer_user", customer_codes: ["A"] } as never })
 		siem.getEventSources.mockResolvedValue({ data: { event_sources: SOURCES } })
@@ -104,6 +114,14 @@ describe("event search list (#1258)", () => {
 		})
 		siem.saveEventSearchQuery.mockImplementation((_code: string, name: string, state: EventSearchState) => {
 			server.memory.saved = [{ ...state, id: 1, name, updated_at: "2026-10-15T09:00:00Z" }]
+			return reply()
+		})
+		siem.saveEventSearchTemplate.mockImplementation((_code: string, source: string, name: string, columns: DisplayColumn[]) => {
+			server.memory.templates = [{ id: 9, source_name: source, name, columns, updated_at: "" }]
+			return reply()
+		})
+		siem.deleteEventSearchTemplate.mockImplementation(() => {
+			server.memory.templates = []
 			return reply()
 		})
 		siem.setEventSearchColumns.mockImplementation((_code: string, source: string, columns: DisplayColumn[] | null) => {
@@ -224,5 +242,56 @@ describe("event search list (#1258)", () => {
 		expect(wrapper.findComponent(EventColumnPicker).exists()).toBe(true)
 		expect(headers(wrapper)).toEqual(["Timestamp", "Level", "Source", "Rule", "Actions"])
 		expect(document.body.textContent).toContain("Network Error")
+	})
+
+	it("switches between the source's layout and the user's templates, naming the one in force", async () => {
+		const triage: EventSearchColumnTemplate = {
+			id: 9,
+			source_name: "Wazuh",
+			name: "Triage",
+			columns: [{ key: "agent_name", label: "Host" }],
+			updated_at: ""
+		}
+		server.memory.templates = [triage, { ...triage, id: 10, source_name: "Office", name: "Elsewhere" }]
+		const wrapper = await render()
+		await restore(wrapper, STATE)
+		const switcher = wrapper.findComponent(EventColumnTemplates)
+		expect(switcher.props("templates")).toEqual([triage])
+		expect(switcher.props("activeKey")).toBe("source")
+		expect(switcher.props("sourceName")).toBe("Default layout")
+
+		switcher.vm.$emit("apply", triage)
+		await flushPromises()
+		expect(siem.setEventSearchColumns).toHaveBeenCalledWith("A", "Wazuh", triage.columns)
+		expect(headers(wrapper)).toEqual(["Host", "Actions"])
+		expect(switcher.props("activeKey")).toBe("9")
+
+		// Editing the columns afterwards leaves the template alone: the layout reads as custom.
+		await wrapper.find("[data-testid=event-columns-toggle]").trigger("click")
+		wrapper.findComponent(EventColumnPicker).vm.$emit("save", [{ key: "agent_name", label: "Agent" }])
+		await flushPromises()
+		expect(switcher.props("activeKey")).toBeNull()
+
+		switcher.vm.$emit("apply", null)
+		await flushPromises()
+		expect(siem.setEventSearchColumns).toHaveBeenLastCalledWith("A", "Wazuh", null)
+		expect(switcher.props("activeKey")).toBe("source")
+	})
+
+	it("saves and deletes templates from the column dialog", async () => {
+		const wrapper = await render()
+		await restore(wrapper, STATE)
+		await wrapper.find("[data-testid=event-columns-toggle]").trigger("click")
+		const picker = wrapper.findComponent(EventColumnPicker)
+		picker.vm.$emit("saveTemplate", "Triage", [{ key: "agent_name", label: "Host" }])
+		await flushPromises()
+		expect(siem.saveEventSearchTemplate).toHaveBeenCalledWith("A", "Wazuh", "Triage", [{ key: "agent_name", label: "Host" }])
+		expect(document.body.textContent).toContain("Saved the template “Triage”")
+		expect(picker.props("templates")).toHaveLength(1)
+
+		picker.vm.$emit("deleteTemplate", 9)
+		await flushPromises()
+		expect(siem.deleteEventSearchTemplate).toHaveBeenCalledWith("A", 9)
+		expect(picker.props("templates")).toEqual([])
 	})
 })

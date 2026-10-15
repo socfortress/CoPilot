@@ -77,6 +77,19 @@ export default {
 		})
 	},
 
+	saveEventSearchTemplate(customerCode: string, sourceName: string, name: string, columns: DisplayColumn[]) {
+		return HttpClient.post<CommonResponse<EventSearchMemory & { replaced: boolean }>>(
+			`/siem/event_search/${customerCode}/templates`,
+			{ source_name: sourceName, name, columns }
+		)
+	},
+
+	deleteEventSearchTemplate(customerCode: string, templateId: number) {
+		return HttpClient.delete<CommonResponse<EventSearchMemory>>(
+			`/siem/event_search/${customerCode}/templates/${templateId}`
+		)
+	},
+
 	getEnabledDashboards(customerCode: string) {
 		return HttpClient.get<CommonResponse<{ enabled_dashboards: EnabledDashboard[] }>>(
 			`/siem/dashboards/enabled/${customerCode}`

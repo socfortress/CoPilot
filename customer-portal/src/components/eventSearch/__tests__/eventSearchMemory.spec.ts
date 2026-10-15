@@ -1,6 +1,6 @@
 import type { EventSearchState } from "@/types/siem"
 import { describe, expect, it } from "vitest"
-import { describeTime, emptyMemory } from "../eventSearchMemory"
+import { describeTime, emptyMemory, sameColumns } from "../eventSearchMemory"
 
 const RELATIVE: EventSearchState = {
 	source_name: "Wazuh",
@@ -15,7 +15,7 @@ const RELATIVE: EventSearchState = {
 
 describe("eventSearchMemory", () => {
 	it("starts empty", () => {
-		expect(emptyMemory()).toEqual({ saved: [], recent: [], columns: {} })
+		expect(emptyMemory()).toEqual({ saved: [], recent: [], columns: {}, templates: [] })
 	})
 
 	it("describes a relative range in words, singular and plural", () => {
@@ -32,5 +32,18 @@ describe("eventSearchMemory", () => {
 			time_to: "2026-10-01T08:00:00Z"
 		}
 		expect(describeTime(state, iso => iso.slice(11, 16))).toBe("06:00 → 08:00")
+	})
+
+	it("tells two column lists apart by field, order and header", () => {
+		const a = [
+			{ key: "agent_name", label: "Host" },
+			{ key: "rule_level", label: "Level" }
+		]
+		expect(sameColumns(a, a.map(c => ({ ...c })))).toBe(true)
+		expect(sameColumns(a, [...a].reverse())).toBe(false)
+		expect(sameColumns(a, [{ key: "agent_name", label: "Agent" }, a[1]!])).toBe(false)
+		expect(sameColumns(a, a.slice(0, 1))).toBe(false)
+		expect(sameColumns(null, [])).toBe(true)
+		expect(sameColumns(a, null)).toBe(false)
 	})
 })
