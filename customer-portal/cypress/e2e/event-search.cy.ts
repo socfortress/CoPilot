@@ -1,10 +1,11 @@
 import type { PortalSeed } from "../support/e2e"
-import { event, EVENT_TOTAL, eventSources, FIELDS, PAGE } from "../support/event-search"
+import { event, EVENT_TOTAL, eventSources, FIELDS, PAGE, resetEventSearchMemory } from "../support/event-search"
 
 /**
  * Event search's saved and recent queries, CSV export and column picker (#1258). The page,
- * the login and the browser's storage are real; the indexer's answers (sources, fields,
- * events) are served at the network layer, since the e2e backend runs without one.
+ * the login and the user's memory (kept on the backend, so it follows them to any device)
+ * are real; the indexer's answers (sources, fields, events) are served at the network
+ * layer, since the e2e backend runs without one.
  */
 describe("event search: saved queries, CSV export and columns", () => {
 	let seed: PortalSeed
@@ -19,6 +20,9 @@ describe("event search: saved queries, CSV export and columns", () => {
 	beforeEach(() => {
 		cy.loginToPortal(seed)
 		const customer = seed.customers.a
+		// The memory lives on the server: each test starts from one that holds nothing.
+		resetEventSearchMemory(seed, customer)
+		cy.intercept({ method: "GET", pathname: `/api/siem/event_search/${customer}` }).as("memory")
 		cy.intercept({ method: "GET", pathname: `/api/siem/event_sources/${customer}` }, {
 			success: true,
 			message: "ok",
@@ -49,15 +53,8 @@ describe("event search: saved queries, CSV export and columns", () => {
 	})
 
 	function visit() {
-		cy.visit("/event-search", {
-			// Each test starts from a browser that remembers nothing.
-			onBeforeLoad: win => {
-				for (const key of Object.keys(win.localStorage)) {
-					if (key.includes("event-search")) win.localStorage.removeItem(key)
-				}
-			}
-		})
-		cy.wait("@sources")
+		cy.visit("/event-search")
+		cy.wait(["@sources", "@memory"])
 	}
 
 	function pickSource(name: string) {
@@ -76,7 +73,7 @@ describe("event search: saved queries, CSV export and columns", () => {
 		return cy.get("[data-testid=event-results] thead th").then($th => [...$th].map(th => th.textContent?.trim()).filter(Boolean))
 	}
 
-	it("saves a search under a name, keeps it across a reload, and runs it again from the list", () => {
+	it("saves a search under a name, finds it on another device, and runs it again from the list", () => {
 		visit()
 		pickSource("Wazuh Alerts")
 		search("rule_level:>=10")
@@ -86,8 +83,11 @@ describe("event search: saved queries, CSV export and columns", () => {
 		cy.get("[data-testid=save-query-submit]").click()
 		cy.contains("Saved “High level alerts”")
 
-		cy.reload()
-		cy.wait("@sources")
+		// Another device: a browser with nothing stored, signed in afresh.
+		cy.clearAllLocalStorage()
+		cy.clearAllSessionStorage()
+		cy.loginToPortal(seed, "event-search-other-device")
+		visit()
 		cy.get("[data-testid=saved-queries-toggle]").should("contain", "1").click()
 		cy.get("[data-testid=saved-query]")
 			.should("have.length", 1)
@@ -185,7 +185,7 @@ describe("event search: saved queries, CSV export and columns", () => {
 		)
 
 		cy.reload()
-		cy.wait("@sources")
+		cy.wait(["@sources", "@memory"])
 		pickSource("Office 365")
 		search("*")
 		headers().should("deep.equal", ["Source IP", "Time", "User", "Actions"])
@@ -210,6 +210,7 @@ describe("event search: saved queries, CSV export and columns", () => {
 		cy.get("[data-testid=save-query-name] input").type("Office")
 		cy.get("[data-testid=save-query-submit]").click()
 
+		cy.contains("Saved “Office”")
 		// The SOC removes the source.
 		cy.intercept({ method: "GET", pathname: `/api/siem/event_sources/${seed.customers.a}` }, {
 			success: true,
@@ -217,6 +218,7 @@ describe("event search: saved queries, CSV export and columns", () => {
 			event_sources: eventSources(seed.customers.a).filter(s => s.name !== "Office 365")
 		})
 		cy.reload()
+		cy.wait("@memory")
 		cy.get("[data-testid=saved-queries-toggle]").click()
 		cy.get("[data-testid=saved-query] button").first().click()
 		cy.contains("The source “Office 365” is no longer available for this customer")

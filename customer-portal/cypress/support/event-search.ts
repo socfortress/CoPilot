@@ -1,9 +1,10 @@
-import type { EventSearchResult, EventSourceItem, FieldMapping } from "../../src/types/siem"
+import type { EventSearchMemory, EventSearchResult, EventSourceItem, FieldMapping } from "../../src/types/siem"
 
 /**
  * What the indexer would answer for event search (#1258). The e2e backend runs without a
  * Wazuh indexer, so `event-search.cy.ts` serves these at the network layer; the tenancy of
- * the same routes is the backend's own test (tests/e2e/event_search_e2e.py).
+ * the same routes is the backend's own test (tests/e2e/event_search_e2e.py). The user's
+ * saved and recent searches and columns are not faked: they go to the real backend.
  */
 
 export const EVENT_TOTAL = 70
@@ -49,4 +50,30 @@ export function event(n: number): EventSearchResult {
 		data_srcip: `203.0.113.${n}`,
 		data_office365_UserId: `user${n}@acme.test`
 	} as unknown as EventSearchResult
+}
+
+/**
+ * Empties the portal user's event search memory for `customerCode`, through the API: it
+ * lives on the server, so a test that expects a clean slate must ask for one.
+ */
+export function resetEventSearchMemory(seed: { portal_user: string; password: string }, customerCode: string) {
+	return cy
+		.request({
+			method: "POST",
+			url: "/api/auth/token/customer-portal",
+			form: true,
+			body: { username: seed.portal_user, password: seed.password }
+		})
+		.then(login => {
+			const headers = { Authorization: `Bearer ${login.body.access_token as string}` }
+			const base = `/api/siem/event_search/${customerCode}`
+			cy.request({ url: base, headers }).then(response => {
+				const memory = response.body as EventSearchMemory
+				for (const saved of memory.saved) cy.request({ method: "DELETE", url: `${base}/saved/${saved.id}`, headers })
+				for (const source of Object.keys(memory.columns)) {
+					cy.request({ method: "PUT", url: `${base}/columns`, headers, body: { source_name: source, columns: null } })
+				}
+				cy.request({ method: "DELETE", url: `${base}/recent`, headers })
+			})
+		})
 }
