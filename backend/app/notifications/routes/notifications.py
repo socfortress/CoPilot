@@ -642,7 +642,11 @@ async def verify_shuffle_integration_route(
 async def dispatch_route(
     payload: DispatchRequest,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ) -> DispatchResponse:
+    # The tenant is in the body: without this, any analyst could fire another
+    # customer's notification routes (customer-facing ones included).
+    await customer_access_handler.enforce_customer_access(current_user, payload.customer_code, session)
     logger.info(
         f"Notification dispatch requested for customer {payload.customer_code} "
         f"alert {payload.alert_id} trigger {payload.trigger.value} "

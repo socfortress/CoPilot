@@ -1,3 +1,5 @@
+import json
+import re
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -172,6 +174,54 @@ async def send_post_request(
         }
 
 
+#: Most of a 4xx body read when looking for its reason. Talon's are a few dozen bytes.
+MAX_REFUSAL_BODY_BYTES = 4096
+
+#: What an upstream 4xx reason must look like to be shown to the user as it is: one line of
+#: printable ASCII, at most 200 characters. Talon's refusals are fixed texts of that shape
+#: ("message is required", "user_id is required ([A-Za-z0-9_-], max 48 chars)", "Unauthorized").
+_REFUSAL_REASON = re.compile(r"[ -~]{1,200}")
+
+
+def _sse_error(text: str) -> bytes:
+    """One SSE error event in the wire format the chat UI reads: ``data: {"error": "…"}``."""
+    return f"data: {json.dumps({'error': text})}\n\n".encode()
+
+
+def refusal_reason(status_code: int, body: bytes) -> Optional[str]:
+    """
+    The reason Talon gave for refusing a request, when it is safe to show the user.
+
+    Only a 4xx is a refusal: Talon declining the request as sent, with its own fixed text
+    (FastAPI's ``{"detail": "…"}``, or ``{"error": "Unauthorized"}`` for a wrong API key).
+    A 5xx body, a non-JSON body, a structured ``detail`` (a 422's list) or anything longer
+    or stranger than one short printable line yields None, and the caller shows its own
+    fixed text instead.
+    """
+    if not 400 <= status_code < 500:
+        return None
+    try:
+        payload = json.loads(body)
+    except ValueError:  # includes UnicodeDecodeError
+        return None
+    if not isinstance(payload, dict):
+        return None
+    reason = payload.get("detail", payload.get("error"))
+    if not isinstance(reason, str) or not _REFUSAL_REASON.fullmatch(reason):
+        return None
+    return reason
+
+
+async def _read_capped(response: httpx.Response, limit: int = MAX_REFUSAL_BODY_BYTES) -> bytes:
+    """At most ``limit`` bytes of a streamed response body."""
+    body = b""
+    async for chunk in response.aiter_bytes():
+        body += chunk
+        if len(body) >= limit:
+            return body[:limit]
+    return body
+
+
 async def send_post_request_sse(
     endpoint: str,
     data: Optional[Dict[str, Any]] = None,
@@ -182,6 +232,11 @@ async def send_post_request_sse(
 
     Uses httpx async streaming to avoid blocking the event loop and preserves
     the raw SSE wire format (including \\n\\n event boundaries).
+
+    When Talon refuses the request with a 4xx and a short reason of its own, that reason
+    is the error event's text, so the user learns why ("message is required"). Any other
+    failure (a 5xx, an unreadable 4xx, a connection error) gets a fixed text: neither an
+    upstream error body nor exception text reaches the user.
 
     Args:
         endpoint (str): The endpoint to send the POST request to.
@@ -196,8 +251,9 @@ async def send_post_request_sse(
         attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Talon connector found in the database")
-        yield b'data: {"error": "No Talon connector found in the database"}\n\n'
+        yield _sse_error("No Talon connector found in the database")
         return
+    failed = f"Failed to stream from {endpoint}"
     try:
         headers = _build_headers(attributes["connector_api_key"])
         timeout = httpx.Timeout(connect=10.0, read=None, write=10.0, pool=10.0)
@@ -208,9 +264,13 @@ async def send_post_request_sse(
                 headers=headers,
                 json=data,
             ) as response:
-                response.raise_for_status()
+                if not response.is_success:
+                    reason = refusal_reason(response.status_code, await _read_capped(response))
+                    logger.error(f"Talon {endpoint} answered {response.status_code}" + (f": {reason}" if reason else ""))
+                    yield _sse_error(f"Talon refused the request: {reason}" if reason else failed)
+                    return
                 async for chunk in response.aiter_bytes():
                     yield chunk
     except Exception as e:
         logger.error(f"Failed to stream from Talon {endpoint} with error: {e}")
-        yield f'data: {{"error": "Failed to stream from {endpoint}"}}\n\n'.encode()
+        yield _sse_error(failed)
