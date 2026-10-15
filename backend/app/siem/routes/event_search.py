@@ -1,4 +1,5 @@
-"""Event search's memory (#1258): what a user saved, ran and picked, per customer.
+"""Event search's memory (#1258): what a user saved, ran and picked, per customer, and the
+column templates they switch between.
 
 Every row belongs to the caller: the user comes from the token, never from the request,
 and the customer must be one the caller may see. Each route answers with the whole
@@ -19,6 +20,7 @@ from app.siem.schema.event_search import EventSearchMemory
 from app.siem.schema.event_search import EventSearchMemoryResponse
 from app.siem.schema.event_search import EventSearchState
 from app.siem.schema.event_search import SaveQueryRequest
+from app.siem.schema.event_search import SaveTemplateRequest
 from app.siem.schema.event_search import SetColumnsRequest
 from app.siem.services import event_search as memory_service
 
@@ -130,3 +132,36 @@ async def set_columns(
 ) -> EventSearchMemoryResponse:
     user_id = await _owner(customer_code, current_user, db)
     return _response(await memory_service.set_columns(db, user_id, customer_code, request), "Columns saved")
+
+
+@event_search_router.post(
+    "/{customer_code}/templates",
+    response_model=EventSearchMemoryResponse,
+    description="Save a named column set for an event source; a name already used there is updated",
+    dependencies=SCOPE,
+)
+async def save_template(
+    customer_code: str,
+    request: SaveTemplateRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> EventSearchMemoryResponse:
+    user_id = await _owner(customer_code, current_user, db)
+    memory, replaced = await memory_service.save_template(db, user_id, customer_code, request)
+    return _response(memory, "Template updated" if replaced else "Template saved", replaced=replaced)
+
+
+@event_search_router.delete(
+    "/{customer_code}/templates/{template_id}",
+    response_model=EventSearchMemoryResponse,
+    description="Delete one of the caller's column templates",
+    dependencies=SCOPE,
+)
+async def delete_template(
+    customer_code: str,
+    template_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> EventSearchMemoryResponse:
+    user_id = await _owner(customer_code, current_user, db)
+    return _response(await memory_service.delete_template(db, user_id, customer_code, template_id), "Template deleted")

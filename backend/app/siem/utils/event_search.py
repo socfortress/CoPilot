@@ -6,6 +6,7 @@ from app.time_utils import to_naive_utc
 
 SAVED_LIMIT = 50
 RECENT_LIMIT = 10
+TEMPLATE_LIMIT = 20  # per event source
 
 
 class SearchLike(Protocol):

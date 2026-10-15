@@ -118,13 +118,42 @@ class SetColumnsRequest(BaseModel):
     )
 
 
+class SaveTemplateRequest(BaseModel):
+    source_name: str = Field(..., min_length=1, max_length=255)
+    name: str = Field(..., max_length=NAME_MAX)
+    columns: List[EventSearchColumn] = Field(..., min_length=1, max_length=COLUMNS_MAX)
+
+    @field_validator("name")
+    @classmethod
+    def _name(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("A template needs a name")
+        return value
+
+
+class ColumnTemplateOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    source_name: str
+    name: str
+    columns: List[EventSearchColumn]
+    updated_at: datetime
+
+    @field_serializer("updated_at")
+    def _serialize_updated(self, moment: datetime) -> Optional[str]:
+        return _utc(moment)
+
+
 class EventSearchMemory(BaseModel):
     saved: List[SavedQueryOut]
     recent: List[RecentQueryOut]
     columns: Dict[str, List[EventSearchColumn]]
+    templates: List[ColumnTemplateOut] = Field(default_factory=list, description="Named column sets, by source then name.")
 
 
 class EventSearchMemoryResponse(EventSearchMemory):
     success: bool
     message: str
-    replaced: Optional[bool] = Field(None, description="On save: whether a query of that name was updated.")
+    replaced: Optional[bool] = Field(None, description="On save: whether a query or template of that name was updated.")

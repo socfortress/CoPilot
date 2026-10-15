@@ -6,7 +6,9 @@ tables, each row owned by one user *and* one customer:
 - ``event_search_saved_query``: searches saved under a name, unique per user and customer
   (MySQL's default collation compares it case-insensitively, as the UI does);
 - ``event_search_recent_query``: the last searches run, trimmed by the service;
-- ``event_search_columns``: the columns a user picked for one event source.
+- ``event_search_columns``: the columns a user picked for one event source;
+- ``event_search_column_template``: named column sets for one event source, which the
+  user switches between (applying one copies its columns into ``event_search_columns``).
 
 Both keys are hard foreign keys with ``ON DELETE CASCADE``: deleting the user or the
 customer takes their rows with it. ``source_name`` is the event source's name, not a
@@ -90,4 +92,18 @@ class EventSearchColumns(SQLModel, table=True):
     source_name: str = Field(max_length=255, nullable=False)
     # [{"key": "agent_name", "label": "Host"}, …], in display order
     columns: List[Dict[str, str]] = Field(sa_column=Column(JSON, nullable=False))
+    updated_at: datetime = Field(default_factory=now_utc, nullable=False)
+
+
+class EventSearchColumnTemplate(SQLModel, table=True):
+    __tablename__ = "event_search_column_template"
+    __table_args__ = (UniqueConstraint("user_id", "customer_code", "source_name", "name", name="uq_event_search_column_template"),)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(sa_column=_user_fk())
+    customer_code: str = Field(sa_column=_customer_fk())
+    source_name: str = Field(max_length=255, nullable=False)
+    name: str = Field(max_length=80, nullable=False)
+    columns: List[Dict[str, str]] = Field(sa_column=Column(JSON, nullable=False))
+    created_at: datetime = Field(default_factory=now_utc, nullable=False)
     updated_at: datetime = Field(default_factory=now_utc, nullable=False)

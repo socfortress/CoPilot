@@ -21,6 +21,7 @@ os.environ.setdefault("JWT_SECRET", "test-only-secret-not-the-compromised-defaul
 from app.siem.schema.event_search import EventSearchState  # noqa: E402
 from app.siem.schema.event_search import RecentQueryOut  # noqa: E402
 from app.siem.schema.event_search import SaveQueryRequest  # noqa: E402
+from app.siem.schema.event_search import SaveTemplateRequest  # noqa: E402
 from app.siem.schema.event_search import SetColumnsRequest  # noqa: E402
 from app.siem.utils.event_search import same_search  # noqa: E402
 
@@ -117,6 +118,27 @@ class TestColumns:
     def test_a_column_without_a_field_or_too_many_columns_are_refused(self, columns):
         with pytest.raises(ValidationError):
             SetColumnsRequest(source_name="Wazuh", columns=columns)
+
+
+class TestTemplates:
+    def test_a_template_has_a_name_and_at_least_one_column(self):
+        template = SaveTemplateRequest(source_name="Wazuh", name="  Triage ", columns=[{"key": "agent_name", "label": ""}])
+        assert template.name == "Triage"
+        assert template.columns[0].model_dump() == {"key": "agent_name", "label": "agent_name"}
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            {"name": "  "},
+            {"name": "x" * 81},
+            {"columns": []},
+            {"columns": [{"key": f"f{i}"} for i in range(51)]},
+            {"source_name": ""},
+        ],
+    )
+    def test_what_is_not_a_template_is_refused(self, change):
+        with pytest.raises(ValidationError):
+            SaveTemplateRequest(**{"source_name": "Wazuh", "name": "Triage", "columns": [{"key": "agent_name"}], **change})
 
 
 class TestSameSearch:
