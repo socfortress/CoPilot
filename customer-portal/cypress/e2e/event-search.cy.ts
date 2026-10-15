@@ -251,8 +251,29 @@ describe("event search: saved queries, CSV export and columns", () => {
 		cy.get("[data-testid=column-layout]").first().click()
 		headers().should("deep.equal", ["Time", "User", "Actions"])
 
+		// Deleting asks first, in the Layout menu…
+		cy.get("[data-testid=column-layouts-toggle]").click()
+		cy.get("[data-testid=column-layout-delete]").click()
+		cy.get("[data-testid=template-delete-confirm]").should("contain", "Delete “Network”?")
+		cy.get("[data-testid=template-delete-cancel]").click()
+		cy.get("[data-testid=column-layout]").should("have.length", 2)
+		cy.get("[data-testid=column-layout-delete]").click()
+		cy.get("[data-testid=template-delete-confirm-button]").click()
+		cy.contains("Deleted the template “Network”")
+		cy.get("[data-testid=column-layout]").should("have.length", 1)
+		cy.get("[data-testid=column-layouts-toggle]").click()
+
+		// …and in the Columns dialog.
 		cy.get("[data-testid=event-columns-toggle]").click()
+		cy.get("[data-testid=column-template-name] input").type("Quick")
+		cy.get("[data-testid=column-template-save]").click()
+		cy.get("[data-testid=column-template]").should("have.length", 1)
 		cy.get("[data-testid=column-template-delete]").click()
+		cy.get("[data-testid=template-delete-confirm]").should("contain", "Delete “Quick”?")
+		cy.get("[data-testid=template-delete-cancel]").click()
+		cy.get("[data-testid=column-template]").should("have.length", 1).and("contain", "Quick")
+		cy.get("[data-testid=column-template-delete]").click()
+		cy.get("[data-testid=template-delete-confirm-button]").click()
 		cy.get("[data-testid=column-template]").should("not.exist")
 	})
 
