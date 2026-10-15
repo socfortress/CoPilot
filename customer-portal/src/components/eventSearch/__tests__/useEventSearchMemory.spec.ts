@@ -1,112 +1,175 @@
-import type { QueryState } from "../eventSearchMemory"
-import type { MemoryStorage } from "../useEventSearchMemory"
+import type { EventSearchMemory, EventSearchState } from "@/types/siem"
+import { flushPromises } from "@vue/test-utils"
 import { createPinia, setActivePinia } from "pinia"
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { nextTick, ref } from "vue"
 import { useAuthStore } from "@/stores/auth"
-import { resetEventSearchMemoryCache, useEventSearchMemory } from "../useEventSearchMemory"
+import { resetEventSearchMemory, useEventSearchMemory } from "../useEventSearchMemory"
 
-function fakeStorage(): MemoryStorage & { data: Map<string, string> } {
-	const data = new Map<string, string>()
+const siem = vi.hoisted(() => ({
+	getEventSearchMemory: vi.fn(),
+	saveEventSearchQuery: vi.fn(),
+	deleteEventSearchQuery: vi.fn(),
+	rememberEventSearch: vi.fn(),
+	clearEventSearchRecent: vi.fn(),
+	setEventSearchColumns: vi.fn()
+}))
+vi.mock("@/api", () => ({ default: { siem } }))
+
+const STATE: EventSearchState = {
+	source_name: "Wazuh",
+	query: "rule_level:>=10",
+	time_mode: "relative",
+	time_amount: 24,
+	time_unit: "h",
+	time_from: null,
+	time_to: null,
+	page_size: 50
+}
+
+function memory(names: string[] = [], extra: Partial<EventSearchMemory> = {}): EventSearchMemory {
 	return {
-		data,
-		getItem: key => data.get(key) ?? null,
-		setItem: (key, value) => void data.set(key, value)
+		saved: names.map((name, i) => ({ ...STATE, id: i + 1, name, updated_at: "2026-10-01T00:00:00Z" })),
+		recent: [],
+		columns: {},
+		...extra
 	}
 }
 
-function signIn(username: string | null) {
-	const auth = useAuthStore()
-	auth.$patch({ user: username ? ({ username, role: "customer_user", customer_codes: ["A", "B"] } as never) : null })
-}
+const answer = (data: object) => Promise.resolve({ data: { success: true, message: "ok", ...data } })
 
-const STATE: QueryState = {
-	sourceName: "Wazuh",
-	query: "rule_level:>=10",
-	timeMode: "relative",
-	time: 24,
-	unit: "h",
-	timeFrom: null,
-	timeTo: null,
-	pageSize: 50
+function signIn(username: string | null) {
+	useAuthStore().$patch({ user: username ? ({ username, role: "customer_user", customer_codes: ["A", "B"] } as never) : null })
 }
 
 describe("useEventSearchMemory", () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
-		resetEventSearchMemoryCache()
+		resetEventSearchMemory()
+		vi.clearAllMocks()
+		siem.getEventSearchMemory.mockImplementation((code: string) => answer(memory([`on ${code}`])))
 	})
 
-	it("remembers nothing without a signed-in user or a customer", () => {
-		const storage = fakeStorage()
+	it("asks nothing and keeps nothing without a signed-in user or a customer", async () => {
 		signIn(null)
-		const memory = useEventSearchMemory("A", storage)
-		expect(memory.available.value).toBe(false)
-		memory.save("x", STATE)
-		expect(storage.data.size).toBe(0)
+		const noUser = useEventSearchMemory("A")
+		await flushPromises()
+		expect(noUser.available.value).toBe(false)
+		expect(siem.getEventSearchMemory).not.toHaveBeenCalled()
+		await expect(noUser.save("x", STATE)).rejects.toThrow("Select a customer first")
 
 		signIn("alice")
-		expect(useEventSearchMemory(null, storage).available.value).toBe(false)
+		const noCustomer = useEventSearchMemory(null)
+		await flushPromises()
+		expect(noCustomer.available.value).toBe(false)
+		// Only the first one asks, now that someone signed in.
+		expect(siem.getEventSearchMemory).toHaveBeenCalledTimes(1)
+		await expect(noCustomer.save("x", STATE)).rejects.toThrow("Select a customer first")
 	})
 
-	it("stores per user and customer, so another user of the browser never sees it", () => {
-		const storage = fakeStorage()
+	it("reads the memory once per user and customer, whoever asks", async () => {
 		signIn("alice")
-		useEventSearchMemory("A", storage).save("Mine", STATE)
-		expect([...storage.data.keys()]).toEqual(["event-search:alice:A"])
-		expect(useEventSearchMemory("B", storage).memory.value.saved).toEqual([])
-
-		signIn("bob")
-		expect(useEventSearchMemory("A", storage).memory.value.saved).toEqual([])
+		const form = useEventSearchMemory("A")
+		const results = useEventSearchMemory("A")
+		expect(form.loading.value).toBe(true)
+		await flushPromises()
+		expect(siem.getEventSearchMemory).toHaveBeenCalledTimes(1)
+		expect(form.memory.value.saved.map(q => q.name)).toEqual(["on A"])
+		expect(results.memory.value).toBe(form.memory.value)
+		expect(form.loading.value).toBe(false)
 	})
 
-	it("shares one state between the form and the results, and reads it back after a reload", () => {
-		const storage = fakeStorage()
-		signIn("alice")
-		const form = useEventSearchMemory("A", storage)
-		const results = useEventSearchMemory("A", storage)
-		results.setColumns("Wazuh", [{ key: "agent_name", label: "Host" }])
-		form.remember(STATE)
-		expect(form.columnsFor("Wazuh")).toEqual([{ key: "agent_name", label: "Host" }])
-		expect(results.memory.value.recent).toHaveLength(1)
-
-		resetEventSearchMemoryCache()
-		const reloaded = useEventSearchMemory("A", storage)
-		expect(reloaded.memory.value.recent[0]?.query).toBe("rule_level:>=10")
-		expect(reloaded.columnsFor("Wazuh")).toEqual([{ key: "agent_name", label: "Host" }])
-		expect(reloaded.columnsFor("Office")).toBeNull()
-	})
-
-	it("follows the customer it is given", async () => {
-		const storage = fakeStorage()
+	it("follows the customer it is given, and the user", async () => {
 		signIn("alice")
 		const code = ref<string | null>("A")
-		const memory = useEventSearchMemory(code, storage)
-		memory.save("On A", STATE)
+		const search = useEventSearchMemory(code)
+		await flushPromises()
 		code.value = "B"
-		await nextTick()
-		expect(memory.memory.value.saved).toEqual([])
+		await flushPromises()
+		expect(search.memory.value.saved.map(q => q.name)).toEqual(["on B"])
 		code.value = "A"
+		await flushPromises()
+		expect(siem.getEventSearchMemory).toHaveBeenCalledTimes(2)
+
+		signIn("bob")
 		await nextTick()
-		expect(memory.memory.value.saved.map(s => s.name)).toEqual(["On A"])
+		await flushPromises()
+		expect(siem.getEventSearchMemory).toHaveBeenCalledTimes(3)
 	})
 
-	it("reports an update of a name already saved, and deletes by id", () => {
-		const storage = fakeStorage()
+	it("takes every write's answer as the memory, for every component", async () => {
 		signIn("alice")
-		const memory = useEventSearchMemory("A", storage)
-		expect(memory.save("Mine", STATE)).toBe(false)
-		expect(memory.save("MINE", { ...STATE, query: "other" })).toBe(true)
-		expect(memory.memory.value.saved).toHaveLength(1)
-		memory.remove(memory.memory.value.saved[0]!.id)
-		expect(memory.memory.value.saved).toEqual([])
-		expect(JSON.parse(storage.data.get("event-search:alice:A")!).saved).toEqual([])
+		const form = useEventSearchMemory("A")
+		const results = useEventSearchMemory("A")
+		await flushPromises()
+
+		siem.saveEventSearchQuery.mockReturnValue(answer({ ...memory(["on A", "Mine"]), replaced: false }))
+		expect(await form.save("Mine", STATE)).toBe(false)
+		expect(siem.saveEventSearchQuery).toHaveBeenCalledWith("A", "Mine", STATE)
+		expect(results.memory.value.saved.map(q => q.name)).toEqual(["on A", "Mine"])
+
+		siem.saveEventSearchQuery.mockReturnValue(answer({ ...memory(["on A", "MINE"]), replaced: true }))
+		expect(await form.save("MINE", STATE)).toBe(true)
+
+		siem.setEventSearchColumns.mockReturnValue(answer(memory([], { columns: { Wazuh: [{ key: "agent_name", label: "Host" }] } })))
+		await results.setColumns("Wazuh", [{ key: "agent_name", label: "Host" }])
+		expect(siem.setEventSearchColumns).toHaveBeenCalledWith("A", "Wazuh", [{ key: "agent_name", label: "Host" }])
+		expect(form.columnsFor("Wazuh")).toEqual([{ key: "agent_name", label: "Host" }])
+		expect(form.columnsFor("Office")).toBeNull()
+
+		siem.deleteEventSearchQuery.mockReturnValue(answer(memory()))
+		await form.remove(1)
+		expect(siem.deleteEventSearchQuery).toHaveBeenCalledWith("A", 1)
+		siem.clearEventSearchRecent.mockReturnValue(answer(memory()))
+		await form.clearRecent()
+		expect(siem.clearEventSearchRecent).toHaveBeenCalledWith("A")
+		expect(results.memory.value.saved).toEqual([])
 	})
 
-	it("tolerates broken stored data", () => {
-		const storage = fakeStorage()
-		storage.data.set("event-search:alice:A", "{not json")
+	it("drops an answer that arrives after a newer one", async () => {
 		signIn("alice")
-		expect(useEventSearchMemory("A", storage).memory.value).toEqual({ version: 1, saved: [], recent: [], columns: {} })
+		const search = useEventSearchMemory("A")
+		await flushPromises()
+		let slow: (value: unknown) => void = () => {}
+		siem.rememberEventSearch.mockReturnValue(new Promise(resolve => (slow = resolve)))
+		siem.saveEventSearchQuery.mockReturnValue(answer({ ...memory(["newer"]), replaced: false }))
+
+		const remembering = search.remember(STATE)
+		await search.save("newer", STATE)
+		slow({ data: { success: true, message: "ok", ...memory(["older"]) } })
+		await remembering
+		expect(search.memory.value.saved.map(q => q.name)).toEqual(["newer"])
+	})
+
+	it("never fails a search because it could not be recorded", async () => {
+		signIn("alice")
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+		const search = useEventSearchMemory("A")
+		await flushPromises()
+		siem.rememberEventSearch.mockRejectedValue(new Error("offline"))
+		await expect(search.remember(STATE)).resolves.toBeUndefined()
+		expect(warn).toHaveBeenCalled()
+		warn.mockRestore()
+	})
+
+	it("says why the memory could not be read, and reads it again on request", async () => {
+		signIn("alice")
+		siem.getEventSearchMemory.mockRejectedValueOnce({ response: { data: { message: "Database unavailable" } } })
+		const search = useEventSearchMemory("A")
+		await flushPromises()
+		expect(search.error.value).toBe("Database unavailable.")
+		await search.reload()
+		expect(search.error.value).toBeNull()
+		expect(search.memory.value.saved.map(q => q.name)).toEqual(["on A"])
+	})
+
+	it("forgets everything on logout, so the next user reads their own", async () => {
+		signIn("alice")
+		useEventSearchMemory("A")
+		await flushPromises()
+		resetEventSearchMemory()
+		useEventSearchMemory("A")
+		await flushPromises()
+		expect(siem.getEventSearchMemory).toHaveBeenCalledTimes(2)
 	})
 })

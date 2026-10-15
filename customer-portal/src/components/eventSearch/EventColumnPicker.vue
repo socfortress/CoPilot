@@ -78,13 +78,21 @@
 		</section>
 
 		<footer class="border-default flex flex-wrap items-center justify-between gap-2 border-t pt-4">
-			<n-button size="small" quaternary :disabled="!personal" data-testid="column-picker-reset" @click="emit('save', null)">
+			<n-button
+				size="small"
+				quaternary
+				:disabled="!personal || saving"
+				data-testid="column-picker-reset"
+				@click="emit('save', null)"
+			>
 				<template #icon><Icon name="carbon:reset" /></template>
 				Back to {{ sourceColumns?.length ? "the SOC's layout" : "the default" }}
 			</n-button>
 			<div class="flex gap-2">
 				<n-button size="small" @click="emit('cancel')">Cancel</n-button>
-				<n-button size="small" type="primary" data-testid="column-picker-save" @click="save">Apply</n-button>
+				<n-button size="small" type="primary" :loading="saving" data-testid="column-picker-save" @click="save">
+					Apply
+				</n-button>
 			</div>
 		</footer>
 	</div>
@@ -99,10 +107,17 @@ import Icon from "@/components/common/Icon.vue"
 /**
  * Picks the columns of event search for one source (#1258): which fields, in which order,
  * under which headers. It starts from what the table shows now; Apply hands the choice to
- * the parent, which keeps it per source, and "Back to…" drops it for the source's layout.
+ * the parent, which keeps it per source on the server, and "Back to…" drops it for the
+ * source's layout.
  */
 
-const { current, personal, sourceColumns, fields } = defineProps<{
+const {
+	current,
+	personal,
+	sourceColumns,
+	fields,
+	saving = false
+} = defineProps<{
 	/** The columns the table shows now, as fields. */
 	current: DisplayColumn[]
 	/** Whether `current` is the user's own choice (rather than the source's layout). */
@@ -110,6 +125,8 @@ const { current, personal, sourceColumns, fields } = defineProps<{
 	/** The SOC's layout for the source, if any. */
 	sourceColumns?: DisplayColumn[] | null
 	fields: FieldMapping[]
+	/** The choice is being kept. */
+	saving?: boolean
 }>()
 
 const emit = defineEmits<{

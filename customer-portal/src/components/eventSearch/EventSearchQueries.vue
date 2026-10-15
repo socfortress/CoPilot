@@ -2,7 +2,7 @@
 	<div class="flex items-center gap-2" data-testid="event-search-queries">
 		<n-popover v-model:show="showList" trigger="click" placement="bottom-start" :show-arrow="false" class="p-0!">
 			<template #trigger>
-				<n-button size="small" secondary :disabled="!available" data-testid="saved-queries-toggle">
+				<n-button size="small" secondary :disabled="!available" :loading data-testid="saved-queries-toggle">
 					<template #icon><Icon name="carbon:bookmark" /></template>
 					Queries
 					<span v-if="saved.length" class="text-tertiary ml-1.5 font-mono text-xs tabular-nums">{{ saved.length }}</span>
@@ -10,13 +10,21 @@
 			</template>
 
 			<div class="flex max-h-[min(70vh,32rem)] w-[min(92vw,26rem)] flex-col overflow-y-auto" data-testid="saved-queries">
+				<div
+					v-if="error"
+					class="border-default bg-error/5 flex items-center justify-between gap-3 border-b px-3 py-2"
+					data-testid="saved-queries-error"
+				>
+					<span class="text-error text-xs">{{ error }}</span>
+					<n-button size="tiny" secondary @click="emit('retry')">Retry</n-button>
+				</div>
 				<section class="flex flex-col">
 					<header class="bg-secondary border-default flex items-baseline justify-between border-b px-3 py-2">
 						<span :class="HEAD">Saved</span>
 						<span class="text-tertiary font-mono text-xs tabular-nums">{{ saved.length }}</span>
 					</header>
 					<p v-if="!saved.length" class="text-tertiary m-0 px-3 py-3 text-xs">
-						No saved query yet. Run a search, then save it with a name.
+						{{ loading ? "Loading…" : "No saved query yet. Run a search, then save it with a name." }}
 					</p>
 					<div v-else class="divide-border flex flex-col divide-y">
 						<div
@@ -33,7 +41,7 @@
 							>
 								<span class="text-default truncate text-sm font-medium">{{ entry.name }}</span>
 								<span class="text-secondary truncate font-mono text-xs [font-variant-ligatures:none]">{{ entry.query || "*" }}</span>
-								<span class="text-tertiary truncate text-xs">{{ entry.sourceName }} · {{ timeLabel(entry) }}</span>
+								<span class="text-tertiary truncate text-xs">{{ entry.source_name }} · {{ timeLabel(entry) }}</span>
 							</button>
 							<n-button
 								size="tiny"
@@ -56,11 +64,13 @@
 							Clear
 						</n-button>
 					</header>
-					<p v-if="!recent.length" class="text-tertiary m-0 px-3 py-3 text-xs">The searches you run show up here.</p>
+					<p v-if="!recent.length" class="text-tertiary m-0 px-3 py-3 text-xs">
+						{{ loading ? "Loading…" : "The searches you run show up here." }}
+					</p>
 					<div v-else class="divide-border flex flex-col divide-y">
 						<button
-							v-for="entry of recent"
-							:key="entry.ranAt"
+							v-for="(entry, index) of recent"
+							:key="`${index}-${entry.ran_at}`"
 							type="button"
 							class="hover:bg-secondary/50 flex min-w-0 cursor-pointer flex-col gap-0.5 px-3 py-2 text-left"
 							data-testid="recent-query"
@@ -68,7 +78,7 @@
 						>
 							<span class="text-default truncate font-mono text-xs [font-variant-ligatures:none]">{{ entry.query || "*" }}</span>
 							<span class="text-tertiary truncate text-xs">
-								{{ entry.sourceName }} · {{ timeLabel(entry) }} · {{ relative(entry.ranAt) }}
+								{{ entry.source_name }} · {{ timeLabel(entry) }} · {{ relative(entry.ran_at) }}
 							</span>
 						</button>
 					</div>
@@ -106,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import type { QueryState, RecentQuery, SavedQuery } from "./eventSearchMemory"
+import type { EventSearchRecentQuery, EventSearchSavedQuery, EventSearchState } from "@/types/siem"
 import { NButton, NInput, NPopover } from "naive-ui"
 import { computed, nextTick, ref, useTemplateRef } from "vue"
 import Icon from "@/components/common/Icon.vue"
@@ -120,20 +130,25 @@ import { describeTime } from "./eventSearchMemory"
  * a name. Picking one hands it to the search form, which restores it and runs it.
  */
 
-const { saved, recent, available, canSave } = defineProps<{
-	saved: SavedQuery[]
-	recent: RecentQuery[]
+const { saved, recent, available, canSave, loading = false, error = null } = defineProps<{
+	saved: EventSearchSavedQuery[]
+	recent: EventSearchRecentQuery[]
 	/** A user and a customer to remember for. */
 	available: boolean
 	/** A source is selected: there is a search to save. */
 	canSave: boolean
+	/** The memory is being read from the server. */
+	loading?: boolean
+	/** Why it could not be read. */
+	error?: string | null
 }>()
 
 const emit = defineEmits<{
-	(e: "restore", value: QueryState): void
+	(e: "restore", value: EventSearchState): void
 	(e: "save", name: string): void
-	(e: "delete", id: string): void
+	(e: "delete", id: number): void
 	(e: "clearRecent"): void
+	(e: "retry"): void
 }>()
 
 const HEAD = "text-tertiary text-xxs font-medium tracking-[0.12em] uppercase"
@@ -148,10 +163,10 @@ const willReplace = computed(() => {
 	return !!wanted && saved.some(entry => entry.name.toLowerCase() === wanted)
 })
 
-const relative = (epoch: number) => dayjs(epoch).fromNow()
-const timeLabel = (state: QueryState) => describeTime(state, epoch => String(formatDate(epoch, dFormats.datetime)))
+const relative = (iso: string) => dayjs(iso).fromNow()
+const timeLabel = (state: EventSearchState) => describeTime(state, iso => String(formatDate(iso, dFormats.datetime)))
 
-function pick(state: QueryState) {
+function pick(state: EventSearchState) {
 	showList.value = false
 	emit("restore", state)
 }

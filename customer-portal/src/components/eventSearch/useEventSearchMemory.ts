@@ -1,91 +1,143 @@
+import type { AxiosResponse } from "axios"
 import type { MaybeRefOrGetter, Ref } from "vue"
-import type { EventSearchMemory, QueryState } from "./eventSearchMemory"
-import type { DisplayColumn } from "@/types/siem"
-import { computed, ref, toValue } from "vue"
+import type { ApiError, CommonResponse } from "@/types/common"
+import type { DisplayColumn, EventSearchMemory, EventSearchState } from "@/types/siem"
+import { computed, ref, toValue, watch } from "vue"
+import Api from "@/api"
 import { useAuthStore } from "@/stores/auth"
-import { secureLocalStorage } from "@/utils/secure-storage"
-import {
-	clearRecent,
-	deleteQuery,
-	emptyMemory,
-	memoryKey,
-	normalizeMemory,
-	rememberRecent,
-	saveQuery,
-	setColumns
-} from "./eventSearchMemory"
+import { getApiErrorMessage } from "@/utils"
+import { emptyMemory } from "./eventSearchMemory"
 
-export interface MemoryStorage {
-	getItem: (key: string) => unknown
-	setItem: (key: string, value: string) => void
+interface Entry {
+	memory: Ref<EventSearchMemory>
+	status: Ref<"idle" | "loading" | "ready" | "error">
+	error: Ref<string | null>
+	pending?: Promise<void>
+	/** The last request whose answer was taken: an older answer arriving late is dropped. */
+	applied: number
 }
 
-// One state per storage key, shared by every component that asks for it: the search form
-// (saved and recent queries) and the results (columns) always see the same memory.
-const states = new Map<string, Ref<EventSearchMemory>>()
+function newEntry(): Entry {
+	return { memory: ref(emptyMemory()), status: ref("idle"), error: ref(null), applied: 0 }
+}
 
-/** Forgets the in-memory copies (tests; the stored data is untouched). */
-export function resetEventSearchMemoryCache() {
-	states.clear()
+// One entry per user and customer, shared by every component that asks: the search form
+// (saved and recent searches) and the results (columns) always show the same memory.
+const entries = new Map<string, Entry>()
+let sequence = 0
+
+/** Forgets every copy: called on logout, so the next user of the browser starts clean. */
+export function resetEventSearchMemory() {
+	entries.clear()
+}
+
+function memoryOf(data: EventSearchMemory): EventSearchMemory {
+	return { saved: data.saved, recent: data.recent, columns: data.columns }
 }
 
 /**
- * Event search's memory for the signed-in user and `customerCode` (#1258), kept in this
- * browser, encrypted (queries can name hosts, users and addresses) and keyed per user and
- * customer, so another user of the same browser never sees it.
+ * Event search's memory for the signed-in user and `customerCode` (#1258), kept on the
+ * server so the user finds it on any device. Loaded once per user and customer; every
+ * write answers with the whole memory, which replaces the copy.
  */
-export function useEventSearchMemory(
-	customerCode: MaybeRefOrGetter<string | null | undefined>,
-	storage: MemoryStorage = secureLocalStorage()
-) {
+export function useEventSearchMemory(customerCode: MaybeRefOrGetter<string | null | undefined>) {
 	const authStore = useAuthStore()
-	const key = computed(() => {
-		const code = toValue(customerCode)
-		return authStore.userName && code ? memoryKey(authStore.userName, code) : null
-	})
-	const fallback = ref(emptyMemory())
+	const code = computed(() => toValue(customerCode) || null)
+	const key = computed(() => (authStore.userName && code.value ? `${authStore.userName}:${code.value}` : null))
+	const fallback = newEntry()
 
-	function stateFor(storageKey: string | null): Ref<EventSearchMemory> {
+	function entryFor(storageKey: string | null): Entry {
 		if (!storageKey) return fallback
-		let state = states.get(storageKey)
-		if (!state) {
-			state = ref(normalizeMemory(storage.getItem(storageKey)))
-			states.set(storageKey, state)
+		let entry = entries.get(storageKey)
+		if (!entry) {
+			entry = newEntry()
+			entries.set(storageKey, entry)
 		}
-		return state
+		return entry
 	}
 
-	const memory = computed(() => stateFor(key.value).value)
+	const entry = computed(() => entryFor(key.value))
 
-	function commit(next: EventSearchMemory) {
-		if (!key.value) return
-		stateFor(key.value).value = next
-		storage.setItem(key.value, JSON.stringify(next))
+	function load(force = false): Promise<void> {
+		const customer = code.value
+		const target = entryFor(key.value)
+		if (!customer || target === fallback) return Promise.resolve()
+		if (target.pending) return target.pending
+		if (!force && target.status.value === "ready") return Promise.resolve()
+
+		const ticket = ++sequence
+		target.status.value = "loading"
+		target.error.value = null
+		target.pending = (async () => {
+			try {
+				const response = await Api.siem.getEventSearchMemory(customer)
+				if (ticket > target.applied) {
+					target.applied = ticket
+					target.memory.value = memoryOf(response.data)
+				}
+				target.status.value = "ready"
+			} catch (err) {
+				target.error.value = getApiErrorMessage(err as ApiError) || "Could not load your saved searches"
+				target.status.value = "error"
+			} finally {
+				target.pending = undefined
+			}
+		})()
+		return target.pending
 	}
+
+	watch(key, () => load(), { immediate: true })
+
+	async function write<T extends EventSearchMemory>(
+		request: (customer: string) => Promise<AxiosResponse<CommonResponse<T>>>
+	): Promise<T> {
+		const customer = code.value
+		const target = entryFor(key.value)
+		if (!customer || target === fallback) throw new Error("Select a customer first")
+		const ticket = ++sequence
+		const response = await request(customer)
+		if (ticket > target.applied) {
+			target.applied = ticket
+			target.memory.value = memoryOf(response.data)
+			target.status.value = "ready"
+		}
+		return response.data
+	}
+
+	const memory = computed(() => entry.value.memory.value)
 
 	return {
 		memory,
+		loading: computed(() => entry.value.status.value === "loading"),
+		/** Why the memory could not be read, if it could not. */
+		error: computed(() => entry.value.error.value),
 		/** Whether anything can be remembered: a signed-in user and a customer. */
 		available: computed(() => !!key.value),
-		save(name: string, state: QueryState) {
-			const result = saveQuery(memory.value, name, state, Date.now())
-			commit(result.memory)
-			return result.replaced
+		reload: () => load(true),
+		/** Saves the search under `name`; true when a query of that name was updated. */
+		async save(name: string, state: EventSearchState): Promise<boolean> {
+			const data = await write(customer => Api.siem.saveEventSearchQuery(customer, name, state))
+			return !!data.replaced
 		},
-		remove(id: string) {
-			commit(deleteQuery(memory.value, id))
+		async remove(id: number) {
+			await write(customer => Api.siem.deleteEventSearchQuery(customer, id))
 		},
-		remember(state: QueryState) {
-			commit(rememberRecent(memory.value, state, Date.now()))
+		/** Records a search just run. Never in the user's way: a failure is only logged. */
+		async remember(state: EventSearchState) {
+			try {
+				await write(customer => Api.siem.rememberEventSearch(customer, state))
+			} catch (err) {
+				console.warn("[event search] could not record the search", err)
+			}
 		},
-		clearRecent() {
-			commit(clearRecent(memory.value))
+		async clearRecent() {
+			await write(customer => Api.siem.clearEventSearchRecent(customer))
 		},
 		columnsFor(sourceName: string | null | undefined): DisplayColumn[] | null {
 			return (sourceName && memory.value.columns[sourceName]) || null
 		},
-		setColumns(sourceName: string, columns: DisplayColumn[] | null) {
-			commit(setColumns(memory.value, sourceName, columns))
+		async setColumns(sourceName: string, columns: DisplayColumn[] | null) {
+			await write(customer => Api.siem.setEventSearchColumns(customer, sourceName, columns))
 		}
 	}
 }

@@ -74,6 +74,7 @@
 				:personal="!!userColumns"
 				:source-columns="selectedEventSource?.displayed_columns"
 				:fields
+				:saving="savingColumns"
 				@save="applyColumns"
 				@cancel="showColumns = false"
 			/>
@@ -238,10 +239,21 @@ const columns = computed<DataTableColumns<EventSearchResult>>(() => [
 	actionsColumn.value
 ])
 
-function applyColumns(picked: DisplayColumn[] | null) {
+const savingColumns = ref(false)
+
+/** Keeps the picked columns on the server; the dialog stays open if they could not be kept. */
+async function applyColumns(picked: DisplayColumn[] | null) {
 	const source = selectedEventSource.value?.name
-	if (source) memory.setColumns(source, picked)
-	showColumns.value = false
+	if (!source) return
+	savingColumns.value = true
+	try {
+		await memory.setColumns(source, picked)
+		showColumns.value = false
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to save the columns")
+	} finally {
+		savingColumns.value = false
+	}
 }
 
 /** The loaded events, in the columns on screen. */

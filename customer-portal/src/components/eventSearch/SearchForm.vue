@@ -66,11 +66,14 @@
 						:saved="memory.memory.value.saved"
 						:recent="memory.memory.value.recent"
 						:available="memory.available.value"
+						:loading="memory.loading.value"
+						:error="memory.error.value"
 						:can-save="!!selectedSourceName"
 						@restore="restore"
 						@save="saveCurrent"
-						@delete="memory.remove"
-						@clear-recent="memory.clearRecent"
+						@delete="removeSaved"
+						@clear-recent="clearRecent"
+						@retry="memory.reload"
 					/>
 					<span v-if="!selectedCustomerCode || !selectedSourceName" class="text-secondary text-xs">
 						{{ !selectedCustomerCode ? "Select a customer to search" : "Select a source to search" }}
@@ -152,9 +155,8 @@
 <script setup lang="ts">
 import type { MentionOption } from "naive-ui"
 import type { VNodeChild } from "vue"
-import type { QueryState } from "./eventSearchMemory"
 import type { ApiError } from "@/types/common"
-import type { EventSearchQueryTimerange, EventSourceItem, FieldMapping } from "@/types/siem"
+import type { EventSearchQueryTimerange, EventSearchState, EventSourceItem, FieldMapping } from "@/types/siem"
 import { NAlert, NButton, NDatePicker, NInputGroup, NInputNumber, NMention, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, nextTick, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
@@ -307,41 +309,62 @@ async function loadFieldMappings() {
 const memory = useEventSearchMemory(selectedCustomerCode)
 
 /** The search on screen, as it is remembered. */
-function currentState(): QueryState | null {
+function currentState(): EventSearchState | null {
 	if (!selectedSourceName.value) return null
+	const absolute = timerangeMode.value === "absolute"
 	return {
-		sourceName: selectedSourceName.value,
-		query: query.value || "",
-		timeMode: timerangeMode.value,
-		time: filterTimeRange.value.time,
-		unit: filterTimeRange.value.unit,
-		timeFrom: timerangeMode.value === "absolute" ? daterange.value[0] : null,
-		timeTo: timerangeMode.value === "absolute" ? daterange.value[1] : null,
-		pageSize: pageSize.value
+		source_name: selectedSourceName.value,
+		query: (query.value || "").trim(),
+		time_mode: timerangeMode.value,
+		time_amount: filterTimeRange.value.time,
+		time_unit: filterTimeRange.value.unit,
+		time_from: absolute ? new Date(daterange.value[0]).toISOString() : null,
+		time_to: absolute ? new Date(daterange.value[1]).toISOString() : null,
+		page_size: pageSize.value
 	}
 }
 
-function saveCurrent(name: string) {
+async function saveCurrent(name: string) {
 	const state = currentState()
 	if (!state) return
-	const replaced = memory.save(name, state)
-	message.success(replaced ? `Updated “${name.trim()}”` : `Saved “${name.trim()}”`)
+	try {
+		const replaced = await memory.save(name, state)
+		message.success(replaced ? `Updated “${name.trim()}”` : `Saved “${name.trim()}”`)
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to save the query")
+	}
+}
+
+async function removeSaved(id: number) {
+	try {
+		await memory.remove(id)
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to delete the query")
+	}
+}
+
+async function clearRecent() {
+	try {
+		await memory.clearRecent()
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to clear the recent searches")
+	}
 }
 
 /** Puts a remembered search back on the form and runs it, if its source is still there. */
-async function restore(state: QueryState) {
-	if (!enabledSources.value.some(s => s.name === state.sourceName)) {
-		message.warning(`The source “${state.sourceName}” is no longer available for this customer`)
+async function restore(state: EventSearchState) {
+	if (!enabledSources.value.some(s => s.name === state.source_name)) {
+		message.warning(`The source “${state.source_name}” is no longer available for this customer`)
 		return
 	}
-	selectedSourceName.value = state.sourceName
+	selectedSourceName.value = state.source_name
 	query.value = state.query
-	timerangeMode.value = state.timeMode
-	filterTimeRange.value = { time: state.time, unit: state.unit }
-	if (state.timeMode === "absolute" && state.timeFrom !== null && state.timeTo !== null) {
-		daterange.value = [state.timeFrom, state.timeTo]
+	timerangeMode.value = state.time_mode
+	filterTimeRange.value = { time: state.time_amount, unit: state.time_unit }
+	if (state.time_mode === "absolute" && state.time_from && state.time_to) {
+		daterange.value = [Date.parse(state.time_from), Date.parse(state.time_to)]
 	}
-	if (pageSizeOptions.some(o => o.value === state.pageSize)) pageSize.value = state.pageSize
+	if (pageSizeOptions.some(o => o.value === state.page_size)) pageSize.value = state.page_size
 	// `query` is the parent's model: it reads the new text only once the parent has rendered.
 	await nextTick()
 	searchEvents()
