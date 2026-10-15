@@ -32,14 +32,22 @@
 							v-for="tpl of templates"
 							:key="tpl.filename"
 							:value="tpl.filename"
-							class="border-default hover:border-primary w-full rounded-lg border p-3 transition-colors [&_.n-radio\_\_label]:grow"
+							class="border-default hover:border-primary w-full rounded-lg border p-3 transition-colors [&_.n-radio\_\_label]:min-w-0 [&_.n-radio\_\_label]:grow"
 							:class="selectedFilename === tpl.filename ? 'border-primary bg-primary/5' : ''"
 						>
-							<div class="flex w-full flex-col gap-1 pl-0.5">
+							<div class="flex w-full min-w-0 flex-col gap-1 pl-0.5">
 								<div class="flex w-full items-center justify-between gap-3">
 									<span class="font-medium">{{ tpl.filename }}</span>
 									<span class="text-secondary text-xs">{{ formatBytes(tpl.size_bytes) }}</span>
 								</div>
+								<!-- The template's description (its first line), as plain text. -->
+								<span
+									v-if="tpl.first_line"
+									class="text-secondary truncate text-xs"
+									:title="tpl.first_line"
+								>
+									{{ tpl.first_line }}
+								</span>
 								<span class="text-secondary text-xs">
 									updated {{ formatDate(tpl.modified_at, dFormats.datetime) }}
 								</span>
