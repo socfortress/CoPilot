@@ -14,10 +14,12 @@ run itself (plan M5-11a steps 2, 5 and 6; talon-analyst SPEC §5.3 M5-11, §9.5,
 failure runs nothing:
 - ``assign_alert``: the assignee is exactly one CoPilot user, of a SOC role (decision h), with
   access to the record's customer (CoPilot's own route only checks that the name exists);
-- quarantine and release, under ``SELECT … FOR UPDATE`` on ``agents`` (held while the route runs):
-  exactly one row for the host name (compared with ``lower()`` *and* the column's collation, which is
-  what the route's own lookup uses), whose canonical client id (``C.`` + 16 lowercase hex) is the
-  record's, whose customer is the record's, and no other row claiming that client id. CoPilot's
+- quarantine and release, under ``SELECT … FOR UPDATE`` on ``agents`` (held while the route runs;
+  index lookups only, so other agents stay writable; a lock wait of at most 5 s, then it fails
+  closed): exactly one row for the host name (compared with ``lower()`` *and* the column's
+  collation, which is what the route's own lookup uses), whose canonical client id (``C.`` + 16
+  lowercase hex) is the record's, whose customer is the record's, and no other row claiming that
+  client id. CoPilot's
   quarantine route resolves the host's client by name with ``.first()``; this makes that first row
   the proposal's.
 
@@ -31,14 +33,17 @@ import re
 from dataclasses import dataclass
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Optional
+from typing import Tuple
 
 from fastapi import HTTPException
 from fastapi import Request
 from loguru import logger
 from sqlalchemy import func
-from sqlalchemy import or_
 from sqlalchemy import select
+from sqlalchemy import text
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import SOC_ROLES
@@ -226,18 +231,62 @@ async def recheck_assignee(plan: Plan, row: TalonActionRequest, session: AsyncSe
         raise RecheckFailed("the assignee has no access to this customer")
 
 
+#: How long the re-check waits for a host's ``agents`` rows another change holds (MySQL's
+#: ``innodb_lock_wait_timeout``, set for the re-check's own statements only): a Talon run fails
+#: closed quickly rather than queueing behind it.
+LOCK_WAIT_SECONDS = 5
+
+
+def host_lock_queries(hostname: str, client: str) -> List[Any]:
+    """The re-check's ``SELECT … FOR UPDATE`` queries, each one an index lookup (migration
+    ``d5b11a2b3c4d``), so only the matching rows and their gaps are locked, never the table:
+
+    1. the host name as the column's collation compares it (the quarantine route's own lookup);
+    2. ``lower(hostname)``, which doesn't rely on that collation;
+    3. ``lower(substr(velociraptor_id, 1, 18))``: every row whose client id claims the record's
+       (``C.`` + 16 hex digits, any case, any org suffix; the exact claim is checked in Python).
+    """
+    return [
+        select(Agents).where(Agents.hostname == hostname).with_for_update(),
+        select(Agents).where(func.lower(Agents.hostname) == hostname.lower()).with_for_update(),
+        select(Agents).where(func.lower(func.substr(Agents.velociraptor_id, 1, 18)) == client.lower()).with_for_update(),
+    ]
+
+
+async def _lock_host_rows(session: AsyncSession, hostname: str, client: str) -> Tuple[List[Agents], List[Agents]]:
+    """Lock and read the host's rows (by name) and the client's claimants, waiting at most
+    ``LOCK_WAIT_SECONDS`` on MySQL. The locks stay with ``session``'s transaction."""
+    connection = await session.connection()
+    mysql = connection.dialect.name == "mysql"
+    if mysql:
+        await session.execute(text(f"SET SESSION innodb_lock_wait_timeout = {LOCK_WAIT_SECONDS}"))
+    try:
+        by_name, by_client = {}, {}
+        queries = host_lock_queries(hostname, client)
+        for n, query in enumerate(queries):
+            for agent in (await session.execute(query)).scalars().all():
+                (by_client if n == len(queries) - 1 else by_name)[agent.id] = agent
+        return list(by_name.values()), list(by_client.values())
+    except DBAPIError as e:  # a lock wait timeout, mostly: the rows are someone else's right now
+        logger.warning(f"Talon v2 action re-check: the host's agent rows could not be locked: {type(e).__name__}")
+        raise RecheckFailed("the host's agent rows are being changed; try again") from None
+    finally:
+        if mysql:
+            try:
+                # Back to the server's value before anything else runs on this connection (the
+                # route's own statements, then whoever the pool hands it to next).
+                await session.execute(text("SET SESSION innodb_lock_wait_timeout = DEFAULT"))
+            except Exception as e:  # noqa: BLE001 - never return the connection with our setting
+                logger.error(f"Talon v2 action re-check: resetting the lock wait failed ({type(e).__name__}); dropping the connection")
+                await connection.invalidate()
+
+
 async def lock_and_recheck_host(plan: Plan, row: TalonActionRequest, session: AsyncSession) -> None:
     """Lock the host's ``agents`` rows (and every row claiming its client) and check them. The
     locks are held by ``session``'s transaction, so the route run in it sees what was checked."""
     hostname, client = plan.hostname or "", plan.velociraptor_id or ""
-    by_name = await session.execute(
-        select(Agents).where(or_(Agents.hostname == hostname, func.lower(Agents.hostname) == hostname.lower())).with_for_update(),
-    )
-    host_rows = list(by_name.scalars().all())
-    by_client = await session.execute(
-        select(Agents).where(func.lower(Agents.velociraptor_id).like(client.lower() + "%")).with_for_update(),
-    )
-    claimants = {agent.id for agent in by_client.scalars().all() if claimed_client_id(agent.velociraptor_id) == client}
+    host_rows, client_rows = await _lock_host_rows(session, hostname, client)
+    claimants = {agent.id for agent in client_rows if claimed_client_id(agent.velociraptor_id) == client}
     if len(host_rows) != 1 or (host_rows[0].hostname or "").lower() != hostname.lower():
         raise RecheckFailed("the host name is not on exactly one agent")
     agent = host_rows[0]

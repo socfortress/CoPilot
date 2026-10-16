@@ -116,6 +116,9 @@ class TalonActionRequest(SQLModel, table=True):
     next_attempt_at: Optional[datetime] = Field(default=None, index=True)
     last_outcome_error: Optional[str] = Field(default=None, max_length=255)
 
+    #: When ``state`` last changed (only state changes set it, never a sync): what the job's
+    #: "left by a dead request" check reads.
+    state_changed_at: datetime = Field(default_factory=now_utc, nullable=False, index=True)
     synced_at: datetime = Field(default_factory=now_utc, nullable=False)
     created_at: datetime = Field(default_factory=now_utc, nullable=False)
     updated_at: datetime = Field(default_factory=now_utc, nullable=False)

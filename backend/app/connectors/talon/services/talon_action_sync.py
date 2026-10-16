@@ -178,6 +178,7 @@ def _new_row(body: TalonActionBody, now: datetime) -> TalonActionRequest:
         synced_at=now,
         created_at=now,
         updated_at=now,
+        state_changed_at=now,
         **_talon_fields(body),
     )
 
@@ -223,7 +224,7 @@ async def _move(session: AsyncSession, action_id: str, before: str, after: str, 
     result = await session.execute(
         update(TalonActionRequest)
         .where(TalonActionRequest.id == action_id, TalonActionRequest.state == before)
-        .values(state=after, state_reason=reason, updated_at=now),
+        .values(state=after, state_reason=reason, updated_at=now, state_changed_at=now),
     )
     return result.rowcount == 1
 

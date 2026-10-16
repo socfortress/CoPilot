@@ -101,7 +101,9 @@ class Agents(SQLModel, table=True):
     agent_id: str = Field(index=True, max_length=256)
     ip_address: str = Field(max_length=256)
     os: str = Field(max_length=256)
-    hostname: str = Field(max_length=256)
+    # Indexed, with lower(hostname) and the client id's claim key as functional indexes beside it
+    # (migration d5b11a2b3c4d): the Talon action re-check locks a host's rows by them (M5-11a).
+    hostname: str = Field(max_length=256, index=True)
     label: str = Field(max_length=256)
     critical_asset: bool = Field(default=False)
     wazuh_last_seen: datetime

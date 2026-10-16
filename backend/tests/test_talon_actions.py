@@ -1354,8 +1354,10 @@ def test_rows_a_dead_request_left_are_settled_without_running_anything(stale_sta
             approver_username="resp",
             decided_at=sync.utcnow() - timedelta(minutes=30),
             copilot_ref="copilot-dead",
-            updated_at=sync.utcnow() - timedelta(minutes=30),
+            state_changed_at=sync.utcnow() - timedelta(minutes=30),
         )
+        # The card keeps reading the record (as an open card polls): that doesn't keep it alive.
+        await client.get(f"/talon/actions/{rid}", headers=as_user("resp"))
         await actions.run_outcome_job()
         return await row_of(ctx, rid), ctx.velociraptor.await_count, results(ctx.talon, rid), ctx.talon.records[rid]
 
@@ -1369,6 +1371,148 @@ def test_rows_a_dead_request_left_are_settled_without_running_anything(stale_sta
         assert rec["status"] == "failed"
     else:  # the claim's answer was lost with the request: never run, "failed" posted
         assert row.state == "claim_lost" and posted and posted[0]["outcome"] == "failed"
+
+
+def test_a_row_whose_state_just_changed_is_not_stale_and_a_sync_does_not_touch_it():
+    async def scenario(client, ctx):
+        rid = ctx.talon.add("quarantine_host", user="5")
+        await client.get(f"/talon/actions/{rid}", headers=as_user("resp"))
+        await set_row(ctx, rid, state="claimed", decision="approve", approver_user_id=5, updated_at=sync.utcnow() - timedelta(hours=2))
+        before = (await row_of(ctx, rid)).state_changed_at
+        await set_row(ctx, rid, state_changed_at=before)
+        await client.get(f"/talon/actions/{rid}", headers=as_user("resp"))  # a sync
+        after_sync = (await row_of(ctx, rid)).state_changed_at
+        await actions.run_outcome_job()
+        return before, after_sync, await row_of(ctx, rid)
+
+    before, after_sync, row = call(scenario)
+    assert after_sync == before and row.state == "claimed"
+
+
+def test_a_run_inside_velociraptors_flow_timeout_is_not_called_dead():
+    async def scenario(client, ctx):
+        rid = ctx.talon.add("quarantine_host", user="5")
+        await client.get(f"/talon/actions/{rid}", headers=as_user("resp"))
+        await set_row(
+            ctx,
+            rid,
+            state="executing",
+            decision="approve",
+            approver_user_id=5,
+            state_changed_at=sync.utcnow() - timedelta(minutes=40),
+        )
+        with patch.object(actions, "FLOW_TIMEOUT_SECONDS", 3600):
+            await actions.run_outcome_job()
+            during = (await row_of(ctx, rid)).state
+            await actions.run_outcome_job(now=sync.utcnow() + timedelta(hours=1))
+        return during, (await row_of(ctx, rid)).state, actions.executing_stale_after()
+
+    during, after, window = call(scenario)
+    assert during == "executing" and after == "unreported"
+    assert window == timedelta(minutes=15)  # the default flow timeout (300 s) + 5 min is shorter
+
+
+def test_a_run_the_job_settled_meanwhile_keeps_its_outcome():
+    async def scenario(client, ctx):
+        rid = ctx.talon.add(alert_id=ctx.alert_id)
+
+        async def slow_route(**kwargs):
+            await set_row(ctx, rid, state="unreported")  # the job, while the route ran
+            return SimpleNamespace(success=True, message="done late")
+
+        with patch.object(incident_routes, "update_alert_status_endpoint", slow_route):
+            await approve(client, "ana", rid)
+        return await row_of(ctx, rid), results(ctx.talon, rid)
+
+    row, posted = call(scenario)
+    assert row.state == "unreported" and row.execution_result["message"] == "done late" and row.executed_at is not None
+    assert posted == []
+
+
+def test_a_claim_answer_for_another_proposal_runs_nothing():
+    async def scenario(client, ctx):
+        rid = ctx.talon.add("quarantine_host", user="5")
+
+        async def make(request):
+            answer = await ctx.talon.default(request)
+            payload = json.loads(answer.content)
+            payload["args"] = {**payload["args"], "hostname": "SOMEONE-ELSE"}
+            return httpx.Response(200, json=payload)
+
+        ctx.talon.intercept = _claim_answer(make)
+        response = await approve(client, "resp", rid)
+        return response.status_code, ctx.velociraptor.await_count, await row_of(ctx, rid), results(ctx.talon, rid), audit_actions(ctx)
+
+    status, ran, row, posted, audited = call(scenario)
+    assert status == 502 and ran == 0 and row.state == "failed" and row.args["hostname"] == HOST
+    assert posted[0]["result"]["message"] == "not run: talon-analyst's answer to the claim is not this proposal"
+    assert audited == [(AuditAction.TALON_ACTION_APPROVE, "failure")]
+
+
+@pytest.mark.parametrize("status, retried", [(404, True), (408, True), (429, True), (503, True), (401, True), (400, False), (422, False)])
+def test_which_result_answers_are_retried(status, retried):
+    async def scenario(client, ctx):
+        ctx.talon.intercept = _failing_results(1, status=status)
+        rid = ctx.talon.add(alert_id=ctx.alert_id)
+        await approve(client, "ana", rid)
+        return await row_of(ctx, rid)
+
+    row = call(scenario)
+    if retried:  # the inline retry got through
+        assert row.state == "executed" and row.outcome_posted_at is not None
+    else:
+        assert row.state == "unreported" and row.outcome_posted_at is None
+
+
+def test_the_job_audits_what_it_settles():
+    async def scenario(client, ctx):
+        ids = {}
+        for decision in ("approve", "deny"):
+            rid = ctx.talon.add(alert_id=ctx.alert_id)
+            await client.get(f"/talon/actions/{rid}", headers=as_user("ana"))
+            await set_row(
+                ctx,
+                rid,
+                state="claiming",
+                decision=decision,
+                approver_user_id=2,
+                approver_username="ana",
+                copilot_ref=f"copilot-{decision}",
+                state_changed_at=sync.utcnow() - timedelta(hours=1),
+            )
+            ids[decision] = rid
+        await actions.run_outcome_job()
+        events = {
+            (c.kwargs["entity_id"], c.kwargs["action"], c.kwargs["result"].value, c.kwargs["actor_username"])
+            for c in ctx.audit.await_args_list
+        }
+        return ids, events, await row_of(ctx, ids["deny"])
+
+    ids, events, denied = call(scenario)
+    assert (ids["approve"], AuditAction.TALON_ACTION_APPROVE, "failure", "ana") in events
+    assert (ids["deny"], AuditAction.TALON_ACTION_DENY, "failure", "ana") in events
+    assert denied.state == "pending"
+
+
+def test_the_requesters_list_and_card_follow_their_current_tags():
+    async def scenario(client, ctx):
+        rid = ctx.talon.add(alert_id=ctx.alert_id, user="2")  # ana's own proposal
+        await client.get(f"/talon/actions/{rid}", headers=as_user("ana"))
+        async with ctx.db.session() as session:
+            tag = AlertTag(tag="restricted")
+            session.add_all([tag, TagAccessSettings(enabled=True, untagged_alert_behavior="visible_to_all")])
+            await session.commit()
+            session.add(AlertToTag(alert_id=ctx.alert_id, tag_id=tag.id))
+            await session.commit()
+        ctx.talon.lenient = True  # even if talon-analyst still showed it
+        lists = [
+            (await client.get(f"/talon/actions?scope={scope}", headers=as_user("ana"))).json()["actions"] for scope in ("pending", "mine")
+        ]
+        card = await client.get(f"/talon/actions/{rid}", headers=as_user("ana"))
+        return lists, card.status_code
+
+    lists, card = call(scenario)
+    assert lists == [[], []] and card == 404
 
 
 # ── deny ──────────────────────────────────────────────────────────────────────

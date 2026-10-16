@@ -46,6 +46,8 @@ from fastapi import HTTPException
 from fastapi import Request
 from loguru import logger
 from pydantic import ValidationError
+from sqlalchemy import and_
+from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -65,6 +67,9 @@ from app.connectors.talon.services.talon_v2 import is_v2_enabled
 from app.connectors.talon.utils.universal import refusal_reason
 from app.connectors.talon.utils.v2_client import V2Answer
 from app.connectors.talon.utils.v2_client import v2_request
+from app.connectors.velociraptor.utils.universal import FLOW_TIMEOUT_SECONDS
+from app.incidents.models import Alert
+from app.incidents.services.db_operations import alert_visibility_filters_for_user
 from app.middleware.customer_access import customer_access_handler
 
 #: talon-analyst's ``RESULT_WINDOW``: the result must reach it within 24 h of the approval.
@@ -75,8 +80,10 @@ INLINE_PAUSES = (0.5, 1.0)
 #: The job's back-off: 1 minute, doubling, at most hourly.
 FIRST_RETRY = timedelta(minutes=1)
 LAST_RETRY = timedelta(hours=1)
-#: A row left mid-decision this long ago belongs to a request that is gone.
+#: A row left mid-decision this long ago belongs to a request that is gone (``state_changed_at``).
 STALE_AFTER = timedelta(minutes=15)
+#: A run is given at least Velociraptor's flow timeout plus this before it counts as dead.
+RUN_MARGIN = timedelta(minutes=5)
 #: Rows the job handles per tick, and rows a list shows.
 JOB_BATCH = 50
 LIST_LIMIT = 200
@@ -87,10 +94,14 @@ WITHDRAWN_TEXT = "this action was withdrawn"
 NOT_APPROVED_TEXT = "this action isn't approved"
 AFTER_WINDOW_TEXT = "the result came after its window"
 
+#: A result post talon-analyst refused for its body (besides its fixed 409s): not retried.
+STOP_STATUSES = frozenset({400, 422})
+
 NOT_FOUND = "Action not found"
 FAILED_TEXT = "Talon request failed"
 CLAIM_LOST = "not run: the claim's answer was lost"
 CLAIM_NOT_GRANTED = "not run: talon-analyst did not grant this claim"
+CLAIM_MISMATCH = "not run: talon-analyst's answer to the claim is not this proposal"
 STOPPED_BEFORE = "not run: CoPilot stopped before running it"
 STOPPED_DURING = "CoPilot stopped while running it: the outcome is unknown"
 
@@ -107,6 +118,12 @@ _STATE_TEXT = {
     "claim_lost": "this action was already decided",
     "unreported": "this action was already decided",
 }
+
+
+def executing_stale_after() -> timedelta:
+    """How long a row may stay ``executing``: the larger of ``STALE_AFTER`` and
+    ``VELOCIRAPTOR_FLOW_TIMEOUT`` plus ``RUN_MARGIN``, so a slow run isn't called dead."""
+    return max(STALE_AFTER, timedelta(seconds=FLOW_TIMEOUT_SECONDS) + RUN_MARGIN)
 
 
 def new_ref() -> str:
@@ -199,14 +216,42 @@ async def get_action(action_id: str, user: Any, session: AsyncSession) -> Action
     _, result = await _refresh(action_id, user, session)
     row = result.row
     decider = await execution.may_decide(user, row, session)
-    if not decider and row.requester_user_id != str(user.id):
+    if not decider and not (row.requester_user_id == str(user.id) and await _alert_visible(user, session, row)):
         raise _fail(404, NOT_FOUND)
     return ActionResponse(success=True, message="Action retrieved", action=await view(row, user, session, decider))
 
 
+def _alert_id(row: TalonActionRequest) -> Optional[int]:
+    if row.action not in sync.ALERT_ACTIONS:
+        return None
+    value = (row.target or {}).get("alert_id")
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+
+async def visible_alerts(user: Any, session: AsyncSession, alert_ids: List[int]) -> Dict[int, str]:
+    """The alerts of ``alert_ids`` the user may see (customer and tags:
+    ``alert_visibility_filters_for_user``), with their customer, in one query."""
+    if not alert_ids:
+        return {}
+    filters = await alert_visibility_filters_for_user(user, session)
+    if filters is None:
+        return {}
+    rows = await session.execute(select(Alert.id, Alert.customer_code).where(Alert.id.in_(sorted(set(alert_ids))), *filters))
+    return {alert_id: customer for alert_id, customer in rows.all()}
+
+
+async def _alert_visible(user: Any, session: AsyncSession, row: TalonActionRequest) -> bool:
+    """A host action, or an alert action whose alert the user sees and that is the record's customer's."""
+    if row.action not in sync.ALERT_ACTIONS:
+        return True
+    alert_id = _alert_id(row)
+    return alert_id is not None and (await visible_alerts(user, session, [alert_id])).get(alert_id) == row.customer_code
+
+
 async def list_actions(user: Any, session: AsyncSession, scope: str) -> ActionListResponse:
     """``pending``: what the caller may decide now, and their own pending proposals; ``mine``:
-    every proposal of theirs. From the mirror only, within the customers the caller has now."""
+    every proposal of theirs. From the mirror only, within the customers the caller has now, and for
+    an alert, only if the caller sees it now (customer and tags, one query for the whole page)."""
     accessible = await customer_access_handler.get_user_accessible_customers(user, session)
     own = str(user.id)
     query = select(TalonActionRequest)
@@ -219,10 +264,17 @@ async def list_actions(user: Any, session: AsyncSession, scope: str) -> ActionLi
     else:
         query = query.where(TalonActionRequest.state == "pending", TalonActionRequest.expires_at > sync.utcnow())
     rows = (await session.execute(query.order_by(TalonActionRequest.created_at.desc()).limit(LIST_LIMIT))).scalars().all()
+    visible = await visible_alerts(user, session, [i for i in map(_alert_id, rows) if i is not None])
     shown: List[ActionOut] = []
     for row in rows:
-        decider = await execution.may_decide(user, row, session)
-        if scope == "mine" or decider or row.requester_user_id == own:
+        if row.action in sync.ALERT_ACTIONS:
+            # D47 for an alert, batched: the role, the customer (the query's filter) and the alert seen.
+            seen = visible.get(_alert_id(row)) == row.customer_code
+            decider = seen and execution.role_may_decide(row.action, user)
+        else:
+            seen = True
+            decider = await execution.may_decide(user, row, session)
+        if seen and (decider or row.requester_user_id == own):
             shown.append(await view(row, user, session, decider))
     return ActionListResponse(success=True, message=f"{len(shown)} action(s)", actions=shown)
 
@@ -236,7 +288,7 @@ async def _move(action_id: str, before: Tuple[str, ...], after: str, **values: A
         result = await session.execute(
             update(TalonActionRequest)
             .where(TalonActionRequest.id == action_id, TalonActionRequest.state.in_(before))
-            .values(state=after, updated_at=sync.utcnow(), **values),
+            .values(state=after, updated_at=sync.utcnow(), state_changed_at=sync.utcnow(), **values),
         )
         await session.commit()
         return result.rowcount == 1
@@ -374,8 +426,12 @@ async def _approve(row, plan, user, session, request, identity) -> ActionRespons
             request=request,
         )
         raise _fail(status if status in (403, 404, 409) else 409, reason)
-    if kind in ("lost", "replay"):
-        message = CLAIM_LOST if kind == "lost" else CLAIM_NOT_GRANTED
+    if kind == "granted" and (sync.proposal_of(detail) != sync.proposal_of(row) or detail.copilot_ref != row.copilot_ref):
+        # The licence must be for this proposal, as mirrored, and this claim: otherwise it is none.
+        logger.error(f"Talon v2 action {row.id}: the claim's answer doesn't match the mirrored proposal; nothing runs")
+        kind = "mismatch"
+    if kind in ("lost", "replay", "mismatch"):
+        message = {"lost": CLAIM_LOST, "replay": CLAIM_NOT_GRANTED, "mismatch": CLAIM_MISMATCH}[kind]
         await _move(
             row.id,
             ("claiming",),
@@ -397,7 +453,16 @@ async def _approve(row, plan, user, session, request, identity) -> ActionRespons
 
     await sync.store_body(detail)  # talon-analyst's decision time, for the result window
     if not await _move(row.id, ("claiming",), "claimed"):
-        # The job found it stale first and settled it: nothing runs here.
+        # The job found it stale first and settled it (claim_lost: "failed" is posted): nothing runs.
+        await _audit(
+            AuditAction.TALON_ACTION_APPROVE,
+            row,
+            actor_id=user.id,
+            actor_name=user.username,
+            ok=True,
+            details="Approved, but the claim had already been settled as lost; nothing was run",
+            request=request,
+        )
         return ActionResponse(
             success=False,
             message="This action was settled while it waited",
@@ -443,14 +508,18 @@ async def _execute(row, plan, user, session, request) -> Dict[str, Any]:
         except Exception as e:  # noqa: BLE001 - the outcome is what matters now
             logger.error(f"Talon v2 action {row.id}: ending the run's transaction failed: {type(e).__name__}")
     after = "executed" if ran and outcome.get("success") else "failed"
-    await _move(
+    executed_at = sync.utcnow() if ran else None
+    if not await _move(
         row.id,
         ("executing", "claimed"),
         after,
         execution_result=outcome,
-        executed_at=sync.utcnow() if ran else None,
+        executed_at=executed_at,
         state_reason=None if after == "executed" else str(outcome.get("message") or "")[:255],
-    )
+    ):
+        # The job settled it meanwhile (a run longer than its window): keep what happened anyway.
+        logger.error(f"Talon v2 action {row.id}: settled while it ran; its outcome ({after}) is kept but not reported")
+        await _set(row.id, execution_result=outcome, executed_at=executed_at)
     await _audit(
         AuditAction.TALON_ACTION_EXECUTE,
         row,
@@ -641,11 +710,12 @@ async def report_result(action_id: str, now: Optional[datetime] = None) -> str:
         await _move(row.id, (row.state,), "unreported", next_attempt_at=None, last_outcome_error=reason[:255], state_reason=reason[:255])
         logger.error(f"Talon v2 action {row.id}: talon-analyst refused the result: {reason}")
         return "stopped"
-    if answer.status is not None and 400 <= answer.status < 500 and answer.status != 401 and row.state != "claim_lost":
+    if answer.status in STOP_STATUSES:  # the body itself was refused: sending it again can't help
         reason = refusal_reason(answer.status, answer.body) or f"HTTP {answer.status}"
         await _move(row.id, (row.state,), "unreported", next_attempt_at=None, last_outcome_error=reason[:255], state_reason=reason[:255])
         logger.error(f"Talon v2 action {row.id}: talon-analyst refused the result ({answer.status})")
         return "stopped"
+    # No answer, a 5xx, 401 (CoPilot's key), 404, 408, 429…: tried again, within the 24 h.
     return await _retry_later(row, f"no usable answer ({answer.status or 'none'})", now)
 
 
@@ -674,55 +744,38 @@ async def _report_inline(action_id: str) -> None:
 
 
 async def _settle_stale(now: datetime) -> None:
-    """Rows a request left mid-decision (it crashed, or the process restarted)."""
-    cutoff = now - STALE_AFTER
+    """Rows a request left mid-decision (it crashed, or the process restarted), by when their
+    state last changed: a card reading the record keeps ``updated_at`` fresh, not this."""
+    cutoff, run_cutoff = now - STALE_AFTER, now - executing_stale_after()
+    t = TalonActionRequest
     async with sync.new_session() as session:
-        rows = (
-            (
-                await session.execute(
-                    select(TalonActionRequest)
-                    .where(TalonActionRequest.state.in_(("claiming", "claimed", "executing")), TalonActionRequest.updated_at < cutoff)
-                    .limit(JOB_BATCH),
-                )
-            )
-            .scalars()
-            .all()
+        stale = or_(
+            and_(t.state.in_(("claiming", "claimed")), t.state_changed_at < cutoff),
+            and_(t.state == "executing", t.state_changed_at < run_cutoff),
         )
+        rows = (await session.execute(select(t).where(stale).limit(JOB_BATCH))).scalars().all()
     for row in rows:
+        actor = {"actor_id": row.approver_user_id, "actor_name": row.approver_username}
         if row.state == "claiming" and row.decision == "deny":
-            await _move(
-                row.id,
-                ("claiming",),
-                "pending",
-                decision=None,
-                approver_user_id=None,
-                approver_username=None,
-                decided_at=None,
-                copilot_ref=None,
-            )
+            reset = {"decision": None, "approver_user_id": None, "approver_username": None, "decided_at": None, "copilot_ref": None}
+            if await _move(row.id, ("claiming",), "pending", **reset):
+                await _audit(AuditAction.TALON_ACTION_DENY, row, **actor, ok=False, details="The denial's answer was lost; undecided again")
         elif row.state == "claiming":
             result = {"success": False, "message": CLAIM_LOST, "status_code": None}
-            await _move(row.id, ("claiming",), "claim_lost", execution_result=result, state_reason=CLAIM_LOST, next_attempt_at=now)
+            if await _move(row.id, ("claiming",), "claim_lost", execution_result=result, state_reason=CLAIM_LOST, next_attempt_at=now):
+                await _audit(
+                    AuditAction.TALON_ACTION_APPROVE,
+                    row,
+                    **actor,
+                    ok=False,
+                    details="The claim's answer was lost; nothing was run",
+                )
         elif row.state == "claimed":
             result = {"success": False, "message": STOPPED_BEFORE, "status_code": None}
             if await _move(row.id, ("claimed",), "failed", execution_result=result, state_reason=STOPPED_BEFORE, next_attempt_at=now):
-                await _audit(
-                    AuditAction.TALON_ACTION_EXECUTE,
-                    row,
-                    actor_id=row.approver_user_id,
-                    actor_name=row.approver_username,
-                    ok=False,
-                    details=f"Not run: {STOPPED_BEFORE}",
-                )
+                await _audit(AuditAction.TALON_ACTION_EXECUTE, row, **actor, ok=False, details=f"Not run: {STOPPED_BEFORE}")
         elif await _move(row.id, ("executing",), "unreported", state_reason=STOPPED_DURING, next_attempt_at=None):
-            await _audit(
-                AuditAction.TALON_ACTION_EXECUTE,
-                row,
-                actor_id=row.approver_user_id,
-                actor_name=row.approver_username,
-                ok=False,
-                details=STOPPED_DURING,
-            )
+            await _audit(AuditAction.TALON_ACTION_EXECUTE, row, **actor, ok=False, details=STOPPED_DURING)
 
 
 async def run_outcome_job(now: Optional[datetime] = None) -> Dict[str, int]:

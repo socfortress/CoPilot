@@ -17,8 +17,8 @@ setting on there, and migrates the action table down and up.
 Real routers, real JWTs, real MySQL; talon-analyst is the unit tests' ``FakeTalon`` (its records
 kept by talon-analyst's rules) and Velociraptor is a recorder, so nothing real is ever run.
 
-  A) the migration: ``talon_action_request`` exists with its unique ``copilot_ref``; one step down
-     drops it and up again recreates it; one head
+  A) the migrations: ``talon_action_request`` exists with its unique ``copilot_ref`` and ``agents``
+     has the re-check's three indexes; down past both drops them, up recreates them; one head
   B) two approvals of one quarantine racing past the refresh together: the guarded update lets
      one through, the other is a 409; one claim, one run (five rounds)
   C) the host re-check under ``SELECT … FOR UPDATE``, on MySQL: a second agent whose name differs
@@ -27,6 +27,10 @@ kept by talon-analyst's rules) and Velociraptor is a recorder, so nothing real i
      differs there, as it does for the quarantine route's own lookup)
   D) the audit rows: approve and execute, plus the quarantine route's own ``response.quarantine``
   E) a result the inline tries couldn't post is posted by the job, once
+  F) during a slow quarantine (index-backed locks): an UPDATE of another agent and an INSERT of a
+     new one don't wait, and EXPLAIN shows each re-check query uses an index (in A)
+  G) a host whose rows another transaction holds fails closed within the 5 s lock wait, and the
+     pooled connections keep the server's own lock wait
 """
 import asyncio
 import os
@@ -51,6 +55,8 @@ from sqlalchemy import delete  # noqa: E402
 from sqlalchemy import inspect as sa_inspect  # noqa: E402
 from sqlalchemy import select  # noqa: E402
 from sqlalchemy import text  # noqa: E402
+from sqlalchemy import update  # noqa: E402
+from sqlalchemy.dialects import mysql as mysql_dialect  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 
 import app.connectors.velociraptor.routes.artifacts as artifact_routes  # noqa: E402
@@ -63,6 +69,7 @@ from app.auth.models.users import UserCustomerAccess  # noqa: E402
 from app.auth.utils import AuthHandler  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonActionRequest  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonConnectorSettings  # noqa: E402
+from app.connectors.talon.services import talon_action_execution as execution  # noqa: E402
 from app.connectors.talon.services import talon_action_sync as sync  # noqa: E402
 from app.connectors.talon.services import talon_actions as actions  # noqa: E402
 from app.connectors.talon.utils import v2_client  # noqa: E402
@@ -84,10 +91,11 @@ ADMIN, RESP_1, RESP_2 = "e2e_ta_admin", "e2e_ta_resp1", "e2e_ta_resp2"
 USERS = ((ADMIN, 1), (RESP_1, 5), (RESP_2, 5))
 HOST = "e2e-ta-host"
 VID = "C.00000000000e2e01"
-REV, DOWN_REV = "d5b11a1c2e3f", "d54a0c1b2e3f"
+REV, DOWN_REV = "d5b11a2b3c4d", "d54a0c1b2e3f"  # the index migration, and before both of this PR's
 CONNECTOR = {"connector_url": "http://talon.invalid", "connector_api_key": "k", "connector_verified": True}
 NOW = datetime(2026, 10, 16, 8, 0)
 URL = SQLALCHEMY_DATABASE_URI.replace("+aiomysql", "+pymysql")
+AGENT_INDEXES = ("ix_agents_hostname", "ix_agents_lower_hostname", "ix_agents_velociraptor_client")
 results = []
 
 
@@ -108,7 +116,7 @@ def section_a():
     print("\n=== A) the migration ===")
     cfg = alembic_cfg()
     heads = ScriptDirectory.from_config(cfg).get_heads()
-    check("one alembic head, this migration", heads == [REV], str(heads))
+    check("one alembic head, this PR's index migration", heads == [REV], str(heads))
     engine = create_engine(URL)
 
     def table():
@@ -119,11 +127,25 @@ def section_a():
         uniques |= {tuple(i["column_names"]) for i in insp.get_indexes("talon_action_request") if i.get("unique")}
         return uniques
 
+    def agent_indexes():
+        return {i["name"] for i in sa_inspect(engine).get_indexes("agents")} & set(AGENT_INDEXES)
+
     check("table exists with a unique copilot_ref", ("copilot_ref",) in (table() or set()), str(table()))
+    check("agents has the re-check's three indexes", agent_indexes() == set(AGENT_INDEXES), str(sorted(agent_indexes())))
     command.downgrade(cfg, DOWN_REV)
-    check("one step down drops it", table() is None)
+    check("down past both migrations drops the table and the indexes", table() is None and not agent_indexes())
     command.upgrade(cfg, "head")
-    check("up again recreates it", ("copilot_ref",) in (table() or set()))
+    check("up again recreates them", ("copilot_ref",) in (table() or set()) and agent_indexes() == set(AGENT_INDEXES))
+    with engine.connect() as conn:
+        version = conn.execute(text("SELECT VERSION()")).scalar()
+        for n, query in enumerate(execution.host_lock_queries(HOST, VID)):
+            sql = str(query.compile(dialect=mysql_dialect.dialect(), compile_kwargs={"literal_binds": True}))
+            plan = [dict(r._mapping) for r in conn.execute(text("EXPLAIN " + sql))]
+            check(
+                f"re-check query {n + 1} is an index lookup (MySQL {version})",
+                all(r["type"] != "ALL" and r["key"] in AGENT_INDEXES for r in plan),
+                ", ".join(f"type={r['type']} key={r['key']}" for r in plan),
+            )
     engine.dispose()
 
 
@@ -358,6 +380,88 @@ async def main():
                 f"{counts} {again}",
             )
             talon.intercept = None
+
+            print("\n=== F) a slow Talon quarantine locks only its host ===")
+            # Neighbours bound the locked gaps (InnoDB's next-key locks, REPEATABLE READ), as other
+            # agents do on a real deployment.
+            async with AsyncSession(async_engine) as s:
+                s.add_all(
+                    [
+                        agent("e2e-ta-hosz", "e2eta-nb", vid="C.00000000000e2e03"),
+                        agent("e2e-ta-other", "e2eta-ot", vid="C.00000000000e2e05"),
+                    ],
+                )
+                await s.commit()
+
+            async def slow_quarantine(body):
+                await asyncio.sleep(4)
+                return QuarantineResponse(success=True, message="Quarantine scheduled", results=None)
+
+            velociraptor.side_effect = slow_quarantine
+            rid = proposal()
+            running = asyncio.create_task(client.post(f"/talon/actions/{rid}/approve", headers=H(RESP_1)))
+            while getattr(await row(rid), "state", None) != "executing" or velociraptor.await_count == 0:
+                await asyncio.sleep(0.05)
+            await asyncio.sleep(0.5)  # inside the route's run, the host's rows locked
+
+            async def timed(work):
+                started = asyncio.get_running_loop().time()
+                try:
+                    async with AsyncSession(async_engine) as s:
+                        await work(s)
+                        await s.commit()
+                    return asyncio.get_running_loop().time() - started, None
+                except Exception as e:  # noqa: BLE001 - reported as the check's detail
+                    return asyncio.get_running_loop().time() - started, type(e).__name__
+
+            async def touch_other(s):
+                await s.execute(update(Agents).where(Agents.agent_id == "e2eta-ot").values(quarantined=True, label="touched"))
+
+            async def add_new(s):
+                s.add(agent("e2e-tz-new", "e2eta-new", vid="C.ffffffff0000e2e1"))
+
+            updated, update_error = await timed(touch_other)
+            inserted, insert_error = await timed(add_new)
+            still_running = not running.done()
+            response = await running
+            velociraptor.side_effect = None
+            check(
+                "another agent's UPDATE doesn't wait for the run",
+                update_error is None and updated < 1.5 and still_running,
+                f"{updated:.2f}s {update_error}",
+            )
+            check(
+                "a new agent's INSERT doesn't wait for the run",
+                insert_error is None and inserted < 1.5,
+                f"{inserted:.2f}s {insert_error}",
+            )
+            check(
+                "and the run itself completes",
+                response.status_code == 200 and (await row(rid)).state == "executed",
+                str(response.status_code),
+            )
+
+            print("\n=== G) a locked host fails closed quickly ===")
+            async with AsyncSession(async_engine) as holder:
+                await holder.execute(select(Agents).where(Agents.agent_id == "e2eta1").with_for_update())
+                rid = proposal()
+                before = velociraptor.await_count
+                started = asyncio.get_running_loop().time()
+                response = await client.post(f"/talon/actions/{rid}/approve", headers=H(RESP_1))
+                took = asyncio.get_running_loop().time() - started
+                await holder.rollback()
+            stored = await row(rid)
+            check(
+                "the re-check gives up within ~5 s, runs nothing, and says why",
+                stored.state == "failed"
+                and velociraptor.await_count == before
+                and took < 15
+                and "being changed" in (stored.execution_result or {}).get("message", ""),
+                f"{took:.1f}s {stored.state} {(stored.execution_result or {}).get('message')}",
+            )
+            async with AsyncSession(async_engine) as s:
+                wait = (await s.execute(text("SELECT @@SESSION.innodb_lock_wait_timeout, @@GLOBAL.innodb_lock_wait_timeout"))).one()
+            check("pooled connections keep the server's lock wait", wait[0] == wait[1], str(tuple(wait)))
 
     async with AsyncSession(async_engine) as s:
         await cleanup(s)
