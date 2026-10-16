@@ -22,8 +22,6 @@
 				inputText
 			}}</pre>
 		</details>
-
-		<TalonApprovalPlaceholder v-if="item.approval" :key="item.approval.id" :approval="item.approval" />
 	</div>
 </template>
 
@@ -31,12 +29,13 @@
 // One tool call of a turn: its name, then its arguments as JSON text in a collapsed block
 // (`{truncated, keys}` by key name only), then how it ended with talon-analyst's fixed summary or
 // text. Everything here is text: the name, the arguments and the error come from the model or
-// from talon-analyst and are never rendered as HTML or Markdown.
+// from talon-analyst and are never rendered as HTML or Markdown. These are the model's own
+// arguments: an action proposal's approval card (`TalonApprovalCard`) sits apart from this row and
+// shows CoPilot's record of the proposal instead.
 import type { TalonV2ToolItem } from "@/types/talonV2"
 import { computed } from "vue"
 import { describeToolOutput, formatToolInput, truncatedKeys } from "@/api/talonV2Parser"
 import Icon from "@/components/common/Icon.vue"
-import TalonApprovalPlaceholder from "./TalonApprovalPlaceholder.vue"
 
 const { item, live = false } = defineProps<{
 	item: TalonV2ToolItem

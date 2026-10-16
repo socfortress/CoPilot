@@ -6,7 +6,7 @@ import { installMockBackend, signIn } from "./mock-backend"
 /**
  * The Talon v2 chat (talon-analyst M5-5), behind the "Talon v2" setting: the AI Analyst page's chat
  * tab lists the analyst's threads with their customer, reads a thread's history back (a tool row,
- * an approval placeholder), streams a new turn (the golden `v2_tool` stream), starts a general
+ * an approval card read from CoPilot's record, its call answered by a later turn), streams a new turn (the golden `v2_tool` stream), starts a general
  * thread from the picker, says "waiting for a decision" on a 409, and locks a thread whose
  * customer was taken away. What is asserted is what the page shows and what it sends.
  */
@@ -46,14 +46,55 @@ const HISTORY = [
 			{
 				type: "tool-set_alert_status",
 				toolCallId: "call_q",
-				state: "approval-requested",
+				state: "approval-responded",
 				input: { alert_id: 840, status: "CLOSED", reason: "a known scanner" },
-				approval: { id: APPROVAL, status: "pending" }
+				approval: { id: APPROVAL, status: "denied", approved: false }
 			}
 		],
 		metadata: { created_at: "2026-10-16T08:00:01+00:00", status: "completed" }
+	},
+	{
+		// The turn that resumed it: the call answered (denied), so the thread no longer waits.
+		id: "r2-assistant",
+		role: "assistant",
+		parts: [
+			{ type: "tool-set_alert_status", toolCallId: "call_q", state: "output-denied" },
+			{ type: "text", text: "The proposal was denied.", state: "done" }
+		],
+		metadata: { created_at: "2026-10-16T08:05:00+00:00", status: "completed" }
 	}
 ]
+
+/** CoPilot's record of the proposal (`GET /api/talon/actions/{id}`): denied. */
+const DENIED_ACTION = {
+	id: APPROVAL,
+	thread_id: ACME_THREAD,
+	customer_code: "ACME",
+	requester_user_id: "1",
+	action: "set_alert_status",
+	side_effect: "external-action",
+	executes_through: null,
+	target: { alert_id: 840 },
+	args: { alert_id: 840, status: "CLOSED" },
+	reason: "a known scanner",
+	links: false,
+	provenance: {},
+	talon_status: "denied",
+	state: "denied",
+	state_reason: null,
+	expired: false,
+	expires_at: "2026-10-16T12:00:00",
+	created_at: "2026-10-16T08:00:01",
+	decision: "deny",
+	approver_user_id: 1,
+	approver_username: "admin",
+	decided_at: "2026-10-16T08:04:00",
+	execution_result: null,
+	executed_at: null,
+	outcome_reported: false,
+	can_decide: false,
+	is_requester: true
+}
 
 const TOOL_STREAM = readFileSync(new URL("../src/api/__tests__/fixtures/talon-v2/v2_tool.txt", import.meta.url), "utf8")
 
@@ -68,6 +109,10 @@ async function installTalonV2Mock(context: BrowserContext) {
 		route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) })
 
 	// Registered after the generic mock, so these run first; anything else falls back to it.
+	await context.route(
+		url => url.pathname === `/api/talon/actions/${APPROVAL}`,
+		route => json(route, { success: true, message: "Action retrieved", action: DENIED_ACTION })
+	)
 	await context.route(
 		url => url.pathname.startsWith("/api/talon/v2/"),
 		async route => {
@@ -129,13 +174,15 @@ test.describe("Talon v2 chat", () => {
 			rail.locator(`[data-thread-id="${LOCKED_THREAD}"]`).getByTestId("talon-v2-thread-locked")
 		).toBeVisible()
 
-		// The newest thread opens with its history: the text, the tool row and the approval placeholder.
+		// The newest thread opens with its history: the text, the tool row and the approval card.
 		const conversation = page.getByTestId("talon-v2-conversation")
 		await expect(conversation).toHaveAttribute("data-thread-id", ACME_THREAD)
 		await expect(conversation.getByTestId("talon-v2-user-text")).toHaveText("close alert 840?")
-		await expect(conversation.getByTestId("talon-v2-tool-name")).toHaveText("set_alert_status")
-		await expect(conversation.getByTestId("talon-v2-approval")).toHaveAttribute("data-approval-id", APPROVAL)
-		await expect(conversation.getByTestId("talon-v2-approval")).toHaveText("Approval pending")
+		await expect(conversation.getByTestId("talon-v2-tool-name").first()).toHaveText("set_alert_status")
+		const card = conversation.getByTestId("talon-approval-card")
+		await expect(card).toHaveAttribute("data-approval-id", APPROVAL)
+		await expect(card.getByTestId("talon-approval-status")).toHaveText("Denied")
+		await expect(card.getByRole("button")).toHaveCount(0)
 		await expect(conversation.getByTestId("talon-v2-context")).toHaveText("context 1k")
 
 		// A new turn streams in: the golden v2_tool stream.

@@ -2,7 +2,8 @@
  * How a v2 message renders: only the assistant's text goes through Markdown (HTML off, as in v1);
  * every other string from talon-analyst or the model (the prompt read back, `errorText`, tool
  * names, tool arguments, the approval status) is text, so markup in it never becomes elements.
- * And a turn renders the same whether it was streamed or read back.
+ * And a turn renders the same whether it was streamed or read back. An approval card sits apart from
+ * its tool row and is given only the approval id (it reads CoPilot's record itself).
  */
 import type { TalonV2ChatMessage } from "@/types/talonV2"
 import { mount } from "@vue/test-utils"
@@ -27,10 +28,17 @@ const MarkdownStub = defineComponent({
 
 const HOSTILE = `<img src=x onerror="alert(1)"> **bold** [x](https://evil.invalid) <script>alert(2)</script>`
 
+// The card reads CoPilot's record itself (its own spec): here, only where it sits and what it is given.
+const CardStub = defineComponent({
+	name: "TalonApprovalCard",
+	props: { approvalId: { type: String, required: true } },
+	setup: props => () => h("div", { "data-testid": "talon-approval-card", "data-approval-id": props.approvalId })
+})
+
 function render(message: TalonV2ChatMessage) {
 	return mount(TalonV2Message, {
 		props: { message },
-		global: { stubs: { Markdown: MarkdownStub, Icon: true } }
+		global: { stubs: { Markdown: MarkdownStub, Icon: true, TalonApprovalCard: CardStub } }
 	})
 }
 
@@ -86,7 +94,9 @@ describe("talon v2 message: text only", () => {
 		expect(first.get('[data-testid="talon-v2-tool-input"]').text()).toContain(JSON.stringify(HOSTILE))
 		expect(first.get('[data-testid="talon-v2-tool-input"]').text()).toContain('"why": "**really**"')
 		expect(second.get('[data-testid="talon-v2-tool-input"]').text()).toContain("[click](javascript:alert(1))")
-		expect(second.get('[data-testid="talon-v2-approval-status"]').text()).toBe(`Approval ${HOSTILE}`)
+		// The card is given the id only: the stream's or read-back's status never reaches the page.
+		expect(wrapper.getComponent(CardStub).props()).toEqual({ approvalId: "ap-1" })
+		expect(wrapper.text()).not.toContain("Approval <img")
 		expectNoMarkup(wrapper)
 		// No Markdown anywhere but the assistant's text (there is none here).
 		expect(wrapper.findAllComponents(MarkdownStub)).toHaveLength(0)
@@ -147,8 +157,8 @@ describe("talon v2 message: text only", () => {
 		expect(markdown[0].props("noImages")).toBe(true)
 	})
 
-	it("the approval placeholder says only whether it waits, keyed by its approval id", () => {
-		const pending = render({
+	it("the approval card sits apart from the tool row, keyed by its approval id and given nothing else", () => {
+		const wrapper = render({
 			id: "a",
 			role: "assistant",
 			createdAt: null,
@@ -159,16 +169,17 @@ describe("talon v2 message: text only", () => {
 					toolCallId: "call_q",
 					name: "set_alert_status",
 					state: "approval-requested",
-					input: { alert_id: 840 },
+					input: { alert_id: 999, status: "CLOSED", reason: "from the stream" },
 					approval: { id: "ap-1", status: "pending" }
 				}
 			]
 		})
-		const card = pending.get('[data-testid="talon-v2-approval"]')
-		expect(card.attributes("data-approval-id")).toBe("ap-1")
-		expect(card.text()).toBe("Approval pending")
-		// Nothing to act on here: M5-11b's card decides from CoPilot's own record.
-		expect(card.find("button").exists()).toBe(false)
+		const row = wrapper.get('[data-testid="talon-v2-tool"]')
+		// The model's own arguments stay in the tool row; the card is not inside it.
+		expect(row.find('[data-testid="talon-approval-card"]').exists()).toBe(false)
+		expect(row.get('[data-testid="talon-v2-tool-input"]').text()).toContain('"alert_id": 999')
+		const card = wrapper.getComponent(CardStub)
+		expect(card.props()).toEqual({ approvalId: "ap-1" })
 
 		const decided = render({
 			id: "a",
@@ -181,11 +192,11 @@ describe("talon v2 message: text only", () => {
 					toolCallId: "call_q",
 					name: "set_alert_status",
 					state: "approval-responded",
-					approval: { id: "ap-1", status: "executed", approved: true }
+					approval: { id: "ap-2", status: "executed", approved: true }
 				}
 			]
 		})
-		expect(decided.get('[data-testid="talon-v2-approval"]').text()).toBe("Approval executed")
+		expect(decided.getComponent(CardStub).props("approvalId")).toBe("ap-2")
 	})
 
 	it("a cut-off turn says so; usage shows the cost as its decimal string", () => {
