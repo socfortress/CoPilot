@@ -46,6 +46,7 @@ export interface CustomerWafCapabilities {
 /** Stable failure codes from the backend; see app/customer_waf/utils/universal.py. */
 export type CustomerWafFailureReason =
 	| "unreachable"
+	| "timeout"
 	| "tls_error"
 	| "token_rejected"
 	| "insufficient_role"

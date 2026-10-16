@@ -1,6 +1,6 @@
 import type { CustomerWafInstance } from "@/types/customer-waf"
 import { describe, expect, it } from "vitest"
-import { capabilitiesFromRoles, flag, looksLikeIp, wafCapabilityLabel } from "../utils"
+import { capabilitiesFromRoles, flag, looksLikeIp, reasonHint, wafCapabilityLabel } from "../utils"
 
 function waf(over: Partial<CustomerWafInstance> = {}): CustomerWafInstance {
 	return {
@@ -80,5 +80,22 @@ describe("flag", () => {
 	})
 	it.each([null, undefined, "", "XYZ", "1A"])("falls back to a globe for %s", code => {
 		expect(flag(code)).toBe("🌐")
+	})
+})
+
+describe("reasonHint", () => {
+	it("sends an unreachable WAF to the network", () => {
+		expect(reasonHint("unreachable")).toContain("can't reach the WAF")
+	})
+
+	it("does not blame the network for a slow answer (#1261)", () => {
+		const hint = reasonHint("timeout")
+		expect(hint).toContain("reachable but answered too slowly")
+		expect(hint).not.toContain("Check the URL")
+	})
+
+	it("has nothing to add for an unknown reason", () => {
+		expect(reasonHint("something-new")).toBeNull()
+		expect(reasonHint(undefined)).toBeNull()
 	})
 })

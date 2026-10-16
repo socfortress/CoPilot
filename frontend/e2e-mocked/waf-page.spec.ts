@@ -244,4 +244,55 @@ test.describe("WAF page", () => {
 		}).toPass()
 		await expect(page.getByText(/^\w{3} \d{1,2} \w{3}, \d{2}:\d{2}–\d{2}:\d{2}$/)).toBeVisible()
 	})
+
+	// #1261: a busy WAF's /logs/stats is slow, which used to read as "CoPilot can't reach the WAF".
+	const STATS_TIMEOUT_BODY = {
+		detail: `WAF '${WAF_INSTANCE.name}' did not answer within 120s`,
+		reason: "timeout",
+		success: false
+	}
+
+	test("overview: a slow WAF reads as slow, not unreachable, and Try again loads the stats", async ({ page }) => {
+		let calls = 0
+		await page.route(`**/api${BASE}/stats`, route => {
+			calls += 1
+			return calls === 1
+				? route.fulfill({ status: 502, contentType: "application/json", body: JSON.stringify(STATS_TIMEOUT_BODY) })
+				: route.fulfill({
+						status: 200,
+						contentType: "application/json",
+						body: JSON.stringify({ success: true, stats: WAF_STATS })
+					})
+		})
+		await openTab(page, "overview")
+
+		const error = page.getByTestId("waf-overview-error")
+		await expect(error).toContainText("did not answer within 120s")
+		await expect(error).toContainText("reachable but answered too slowly")
+		await expect(error).not.toContainText("can't reach the WAF")
+
+		await error.getByRole("button", { name: "Try again" }).click()
+		await expect(error).toBeHidden()
+		await expect(page.getByText(WAF_STATS.total_1h.toLocaleString("en-US"), { exact: true })).toBeVisible()
+		expect(calls).toBe(2)
+	})
+
+	test("overview: a long wait says why the skeleton is still there", async ({ page }) => {
+		await page.route(`**/api${BASE}/stats`, async route => {
+			await new Promise(resolve => setTimeout(resolve, 10_000))
+			await route.fulfill({
+				status: 200,
+				contentType: "application/json",
+				body: JSON.stringify({ success: true, stats: WAF_STATS })
+			})
+		})
+		await openTab(page, "overview")
+
+		const note = page.getByTestId("waf-overview-slow")
+		await expect(note).toBeVisible({ timeout: 9_500 })
+		await expect(note).toHaveAttribute("role", "status")
+		await expect(note).toContainText("up to two minutes")
+		await expect(note).toBeHidden({ timeout: 5_000 })
+		await expect(page.getByText(WAF_STATS.total_1h.toLocaleString("en-US"), { exact: true })).toBeVisible()
+	})
 })

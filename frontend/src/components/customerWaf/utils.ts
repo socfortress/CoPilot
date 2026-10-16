@@ -46,6 +46,8 @@ export function reasonHint(reason: CustomerWafFailureReason | string | null | un
 	switch (reason) {
 		case "unreachable":
 			return "CoPilot can't reach the WAF. Check the URL, and that the WAF admin port is reachable from CoPilot."
+		case "timeout":
+			return "The WAF is reachable but answered too slowly. A busy WAF can take a while to compute its statistics: try again, and check the WAF host's load if it keeps happening."
 		case "tls_error":
 			return "TLS verification failed. Turn verification off for a self-signed WAF, or add its CA certificate."
 		case "token_rejected":

@@ -18,7 +18,9 @@ Run with: cd backend && python -m pytest tests/test_customer_waf.py
 import asyncio
 import inspect
 import os
+import re
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
 
@@ -200,7 +202,7 @@ def test_insufficient_role_names_the_missing_permission(monkeypatch):
     assert "rules:write" in exc.value.detail
 
 
-@pytest.mark.parametrize("error", [httpx.ConnectTimeout("t"), httpx.ConnectError("refused"), httpx.ReadTimeout("t")])
+@pytest.mark.parametrize("error", [httpx.ConnectTimeout("t"), httpx.ConnectError("refused"), httpx.RemoteProtocolError("closed")])
 def test_network_failures_are_unreachable(monkeypatch, error):
     def _raise(request):
         raise error
@@ -209,6 +211,152 @@ def test_network_failures_are_unreachable(monkeypatch, error):
     with pytest.raises(transport.WafRequestError) as exc:
         asyncio.run(transport.waf_get(_row(), "/logs/"))
     assert exc.value.reason == "unreachable"
+    assert exc.value.status_code == 502
+
+
+@pytest.mark.parametrize("error", [httpx.ReadTimeout("t"), httpx.WriteTimeout("t"), httpx.PoolTimeout("t")])
+def test_a_slow_answer_is_timeout_not_unreachable(monkeypatch, error):
+    """Connected, then no answer in time: the WAF is up, so the network is not what to check (#1261)."""
+
+    def _raise(request):
+        raise error
+
+    _stub_waf(monkeypatch, _raise)
+    with pytest.raises(transport.WafRequestError) as exc:
+        asyncio.run(transport.waf_get(_row(), "/logs/"))
+    assert exc.value.reason == "timeout"
+    assert exc.value.status_code == 502
+    assert exc.value.detail == "WAF 'prod' did not answer within 15s"
+
+
+def test_connect_timeout_names_the_connection(monkeypatch):
+    def _raise(request):
+        raise httpx.ConnectTimeout("t")
+
+    _stub_waf(monkeypatch, _raise)
+    with pytest.raises(transport.WafRequestError) as exc:
+        asyncio.run(transport.waf_get(_row(), "/logs/stats", timeout=svc.STATS_TIMEOUT))
+    # The 15s connect bound, not the call's 120s answer budget.
+    assert exc.value.detail == "WAF 'prod' did not accept a connection within 15s"
+
+
+def _timeouts_of(monkeypatch, call):
+    seen = _stub_waf(monkeypatch, lambda r: httpx.Response(200, json={}))
+    asyncio.run(call())
+    return seen[-1].extensions["timeout"]
+
+
+@pytest.mark.parametrize(
+    ("timeout", "connect"),
+    [(transport.DEFAULT_TIMEOUT, 15.0), (5.0, 5.0), (30.0, 15.0), (120.0, 15.0)],
+)
+def test_connect_never_waits_longer_than_the_connect_bound(monkeypatch, timeout, connect):
+    """A WAF that is down reads as unreachable in seconds, whatever the call allows for the answer."""
+    timeouts = _timeouts_of(monkeypatch, lambda: transport.waf_get(_row(), "/x", timeout=timeout))
+    assert timeouts == {"connect": connect, "read": timeout, "write": timeout, "pool": timeout}
+
+
+def test_stats_waits_two_minutes_for_the_answer(monkeypatch):
+    """A busy WAF's /logs/stats takes longer than the 15s every other read gets (#1261)."""
+    assert svc.STATS_TIMEOUT == 120.0
+    payload = {"total_1h": 10, "blocked_1h": 2, "detected_1h": 1, "block_rate": 0.2}
+    seen = _stub_waf(monkeypatch, lambda r: httpx.Response(200, json=payload))
+    stats = asyncio.run(svc.fetch_stats(_row()))
+    assert stats.total_1h == 10
+    assert seen[0].url.path == "/api/v1/logs/stats"
+    assert seen[0].extensions["timeout"] == {"connect": 15.0, "read": 120.0, "write": 120.0, "pool": 120.0}
+
+
+@pytest.mark.parametrize("path", ["/logs/", "/threat-intel/", "/threat-intel/stats", "/sites/"])
+def test_other_reads_keep_the_default_timeout(monkeypatch, path):
+    seen = _stub_waf(monkeypatch, lambda r: httpx.Response(200, json=[]))
+    asyncio.run(transport.waf_get(_row(), path))
+    assert seen[0].extensions["timeout"]["read"] == transport.DEFAULT_TIMEOUT
+
+
+def test_stats_route_reports_a_timeout_as_502_with_its_reason(monkeypatch):
+    from app.customer_waf.routes import customer_waf as routes
+
+    def _raise(request):
+        raise httpx.ReadTimeout("t")
+
+    _stub_waf(monkeypatch, _raise)
+    monkeypatch.setattr(routes.svc, "get_instance_for_customer", AsyncMock(return_value=_row()))
+    response = asyncio.run(routes.get_customer_waf_stats("ACME", 7, session=_session()))
+    assert response.status_code == 502
+    assert response.body == b'{"detail":"WAF \'prod\' did not answer within 120s","reason":"timeout","success":false}'
+
+
+def test_verify_counts_a_slow_waf_as_reachable(monkeypatch):
+    def _raise(request):
+        raise httpx.ReadTimeout("t")
+
+    _stub_waf(monkeypatch, _raise)
+    result = asyncio.run(svc.verify_instance(_session(), _row()))
+    assert (result.reachable, result.authenticated, result.reason) == (True, False, "timeout")
+
+
+# ── the same, over real sockets (no MockTransport) ─────────────────────────
+
+
+async def _against_silent_server(timeout: float):
+    """A TCP server that accepts the connection and never answers: what a busy WAF looks like."""
+
+    async def _hold(reader, writer):
+        await reader.read()  # read the request, answer nothing, return once the client gives up
+        writer.close()
+
+    server = await asyncio.start_server(_hold, "127.0.0.1", 0)
+    port = server.sockets[0].getsockname()[1]
+    try:
+        await transport.waf_get(_row(api_url=f"http://127.0.0.1:{port}"), "/logs/stats", timeout=timeout)
+    finally:
+        server.close()
+        await server.wait_closed()
+
+
+def test_real_socket_slow_answer_is_timeout():
+    with pytest.raises(transport.WafRequestError) as exc:
+        asyncio.run(_against_silent_server(0.3))
+    assert exc.value.reason == "timeout"
+
+
+def test_real_socket_closed_port_is_unreachable():
+    import socket
+
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]  # bound, never listening: the connection is refused
+        with pytest.raises(transport.WafRequestError) as exc:
+            asyncio.run(transport.waf_get(_row(api_url=f"http://127.0.0.1:{port}"), "/logs/stats"))
+    assert exc.value.reason == "unreachable"
+
+
+# ── the frontend nginx must outlast the stats call ─────────────────────────
+
+NGINX_CONF = Path(__file__).resolve().parents[2] / "frontend" / "build" / "etc" / "nginx" / "sites-enabled" / "default.conf"
+
+
+def _stats_location():
+    conf = NGINX_CONF.read_text()
+    match = re.search(r"location ~ (\^/api/customer_waf/\S+) \{([^}]*)\}", conf)
+    assert match, "the /stats location is missing from the frontend nginx config"
+    timeout = re.search(r"proxy_read_timeout (\d+)s;", match.group(2))
+    assert timeout, "the /stats location sets no proxy_read_timeout"
+    return re.compile(match.group(1)), int(timeout.group(1))
+
+
+@pytest.mark.skipif(not NGINX_CONF.exists(), reason="frontend tree not present")
+def test_nginx_gives_stats_longer_than_the_backend_waits():
+    """nginx's default 60s would answer 504 before a slow WAF does (#1261)."""
+    pattern, read_timeout = _stats_location()
+    assert read_timeout > svc.STATS_TIMEOUT + transport.CONNECT_TIMEOUT
+    route_paths = {r.path for r in customer_waf_router.routes}
+    assert "/{customer_code}/{waf_id}/stats" in route_paths
+    assert pattern.match("/api/customer_waf/ACME/7/stats")
+    assert pattern.match("/api/customer_waf/acme-corp_2/12345/stats")
+    for other in ["/api/customer_waf/ACME/7/events", "/api/customer_waf/ACME/7/threat-intel", "/api/customer_waf/ACME/stats"]:
+        assert not pattern.match(other), other
 
 
 def test_certificate_failure_is_tls_error(monkeypatch):

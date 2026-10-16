@@ -148,13 +148,14 @@ export function buildRiskChartOption(
 						valueHtml: riskLabel(point.risk - point.native)
 					}
 				]
-				if (hasNative)
+				if (hasNative) {
 					rows.push({
 						marker: undefined,
 						color: colors.native,
 						label: "Wazuh alerts",
 						valueHtml: riskLabel(point.native)
 					})
+				}
 				return formatChartTooltipAxisMultiSeries({
 					title: `${dayjs(point.time).format("ddd D MMM, HH:mm")} · risk <b style="color:${ink}">${riskLabel(point.risk)}</b>`,
 					rows

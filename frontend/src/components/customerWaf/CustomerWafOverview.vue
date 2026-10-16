@@ -1,9 +1,18 @@
 <template>
 	<div class="flex flex-col gap-4" :aria-busy="loading">
-		<CustomerWafError v-if="error" :error />
+		<div v-if="error" class="flex flex-col items-start gap-2" data-testid="waf-overview-error">
+			<CustomerWafError :error />
+			<n-button size="small" @click="load()">
+				<template #icon><Icon :name="RetryIcon" :size="14" /></template>
+				Try again
+			</n-button>
+		</div>
 
 		<!-- Skeleton mirrors the real layout so nothing jumps when data lands. -->
 		<template v-else-if="loading && !stats">
+			<p v-if="slow" class="text-secondary text-sm" role="status" data-testid="waf-overview-slow">
+				The WAF is still computing its statistics. On a busy WAF this can take up to two minutes.
+			</p>
 			<n-skeleton :height="112" :sharp="false" class="rounded-lg" />
 			<n-skeleton :height="260" :sharp="false" class="rounded-lg" />
 			<div class="grid gap-4 md:grid-cols-2">
@@ -134,7 +143,7 @@ import type { WafRankItem } from "./WafRankList.vue"
 import type { ApiError } from "@/types/common"
 import type { CustomerWafInstance, CustomerWafStats } from "@/types/customer-waf"
 import { NButton, NSkeleton, NTooltip } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -157,8 +166,14 @@ const LagIcon = "carbon:time"
 const RateIcon = "carbon:activity"
 const EventsIcon = "carbon:list"
 const BlockIcon = "carbon:locked"
+const RetryIcon = "carbon:renew"
+
+// After this long the skeleton says why it is still there: a busy WAF's /logs/stats can take
+// up to the backend's STATS_TIMEOUT (120s, app/customer_waf/services/customer_waf.py).
+const SLOW_AFTER_MS = 8000
 
 const loading = ref(false)
+const slow = ref(false)
 const error = ref<ApiError | null>(null)
 const stats = ref<CustomerWafStats | null>(null)
 const showBlock = ref(false)
@@ -229,18 +244,33 @@ function openBlock(ip: string) {
 	showBlock.value = true
 }
 
-onBeforeMount(() => {
+let slowTimer: ReturnType<typeof setTimeout> | undefined
+
+async function load() {
 	loading.value = true
-	Api.customerWaf
-		.getStats(customerCode, instance.id)
-		.then(res => {
-			stats.value = res.data.stats
-		})
-		.catch((err: ApiError) => {
-			error.value = err
-		})
-		.finally(() => {
-			loading.value = false
-		})
+	slow.value = false
+	error.value = null
+	clearTimeout(slowTimer)
+	slowTimer = setTimeout(() => {
+		slow.value = true
+	}, SLOW_AFTER_MS)
+	try {
+		const res = await Api.customerWaf.getStats(customerCode, instance.id)
+		stats.value = res.data.stats
+	} catch (err) {
+		error.value = err as ApiError
+	} finally {
+		clearTimeout(slowTimer)
+		loading.value = false
+		slow.value = false
+	}
+}
+
+onBeforeMount(() => {
+	load()
+})
+
+onBeforeUnmount(() => {
+	clearTimeout(slowTimer)
 })
 </script>
