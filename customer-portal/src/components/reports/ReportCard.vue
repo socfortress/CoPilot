@@ -1,15 +1,16 @@
 <template>
 	<n-card size="small" :title="report.report_name" embedded>
 		<template #header-extra>
-			<n-tag :type="statusColor(report.status)" size="small" round>
-				{{ statusLabel(report.status) }}
+			<n-tag :type="statusColor(report.status)" size="small" round data-testid="report-status">
+				{{ statusText }}
 			</n-tag>
 		</template>
 
 		<div class="flex flex-col gap-2 text-sm">
 			<div class="text-secondary flex items-center gap-2 font-mono text-xs">
 				<Icon :name="PeriodIcon" :size="14" />
-				{{ formatDate(report.date_from, dFormats.date) }} → {{ formatDate(report.date_to, dFormats.date) }}
+				{{ formatDate(report.date_from, dFormats.date, { tz: true }) }} →
+				{{ formatDate(report.date_to, dFormats.date, { tz: true }) }}
 			</div>
 			<div class="text-secondary flex items-center gap-2 text-xs" :title="templateDescription">
 				<Icon :name="TemplateIcon" :size="14" />
@@ -30,7 +31,7 @@
 			<div class="flex items-center justify-between gap-2">
 				<span class="text-secondary text-xs">
 					<template v-if="authorText">{{ authorText }} ·</template>
-					{{ formatDate(report.generated_at, dFormats.datetime) }} · {{ formatBytes(report.file_size) }}
+					{{ formatDate(report.generated_at, dFormats.datetime, { tz: true }) }} · {{ formatBytes(report.file_size) }}
 				</span>
 				<div class="flex items-center gap-2">
 					<n-button
@@ -55,12 +56,14 @@
 
 <script setup lang="ts">
 import type { IncidentCustomerReport } from "@/types/reports"
+import { useIntervalFn, useNow } from "@vueuse/core"
 import { NButton, NCard, NTag } from "naive-ui"
 import { computed } from "vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatBytes, formatDate } from "@/utils/format"
+import { elapsedLabel, secondsSince } from "./reportTiming"
 
 const { report } = defineProps<{
 	report: IncidentCustomerReport
@@ -119,8 +122,16 @@ const authorText = computed(() => {
 })
 
 function statusLabel(status: IncidentCustomerReport["status"]) {
-	return { completed: "Completed", processing: "Processing", failed: "Failed" }[status]
+	return { completed: "Completed", processing: "Generating", failed: "Failed" }[status]
 }
+
+// While it generates, say for how long (#1263): the times are stored as UTC, read as such.
+const now = useNow({ scheduler: tick => useIntervalFn(tick, 15_000) })
+const statusText = computed(() => {
+	if (report.status !== "processing") return statusLabel(report.status)
+	const seconds = secondsSince(report.generated_at, now.value.getTime())
+	return seconds === null ? statusLabel(report.status) : `${statusLabel(report.status)} · ${elapsedLabel(seconds)}`
+})
 
 function statusColor(status: IncidentCustomerReport["status"]): "success" | "warning" | "error" {
 	if (status === "completed") return "success"
