@@ -294,6 +294,26 @@ async def _move(action_id: str, before: Tuple[str, ...], after: str, **values: A
         return result.rowcount == 1
 
 
+async def _move_late_run(action_id: str, after: str, **values: Any) -> bool:
+    """``unreported`` → the run's real outcome, only for a row the job marked "stopped while
+    running" (so no outcome was recorded or posted for it)."""
+    t = TalonActionRequest
+    async with sync.new_session() as session:
+        result = await session.execute(
+            update(t)
+            .where(
+                t.id == action_id,
+                t.state == "unreported",
+                t.state_reason == STOPPED_DURING,
+                t.executed_at.is_(None),
+                t.outcome_posted_at.is_(None),
+            )
+            .values(state=after, updated_at=sync.utcnow(), state_changed_at=sync.utcnow(), **values),
+        )
+        await session.commit()
+        return result.rowcount == 1
+
+
 async def _set(action_id: str, **values: Any) -> None:
     async with sync.new_session() as session:
         await session.execute(
@@ -509,17 +529,19 @@ async def _execute(row, plan, user, session, request) -> Dict[str, Any]:
             logger.error(f"Talon v2 action {row.id}: ending the run's transaction failed: {type(e).__name__}")
     after = "executed" if ran and outcome.get("success") else "failed"
     executed_at = sync.utcnow() if ran else None
-    if not await _move(
-        row.id,
-        ("executing", "claimed"),
-        after,
-        execution_result=outcome,
-        executed_at=executed_at,
-        state_reason=None if after == "executed" else str(outcome.get("message") or "")[:255],
-    ):
-        # The job settled it meanwhile (a run longer than its window): keep what happened anyway.
-        logger.error(f"Talon v2 action {row.id}: settled while it ran; its outcome ({after}) is kept but not reported")
-        await _set(row.id, execution_result=outcome, executed_at=executed_at)
+    final = {
+        "execution_result": outcome,
+        "executed_at": executed_at,
+        "state_reason": None if after == "executed" else str(outcome.get("message") or "")[:255],
+    }
+    if not await _move(row.id, ("executing", "claimed"), after, **final):
+        if await _move_late_run(row.id, after, **final):
+            # The run outlasted the job's window (flow waits can queue), and the job had called it
+            # "outcome unknown". Now it is known: recorded and reported as usual.
+            logger.warning(f"Talon v2 action {row.id}: the run ended after the job had marked it unreported; {after} after all")
+        else:
+            logger.error(f"Talon v2 action {row.id}: settled while it ran; its outcome ({after}) is kept but not reported")
+            await _set(row.id, execution_result=outcome, executed_at=executed_at)
     await _audit(
         AuditAction.TALON_ACTION_EXECUTE,
         row,
@@ -716,7 +738,10 @@ async def report_result(action_id: str, now: Optional[datetime] = None) -> str:
         logger.error(f"Talon v2 action {row.id}: talon-analyst refused the result ({answer.status})")
         return "stopped"
     # No answer, a 5xx, 401 (CoPilot's key), 404, 408, 429…: tried again, within the 24 h.
-    return await _retry_later(row, f"no usable answer ({answer.status or 'none'})", now)
+    error = f"no usable answer ({answer.status or 'none'})"
+    if answer.status == 401 and row.last_outcome_error != error:  # once per row, not every retry
+        logger.warning(f"Talon v2 action {row.id}: talon-analyst refused CoPilot's API key (401) for the result; check the Talon connector")
+    return await _retry_later(row, error, now)
 
 
 async def _report_inline(action_id: str) -> None:

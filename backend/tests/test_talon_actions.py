@@ -1412,12 +1412,14 @@ def test_a_run_inside_velociraptors_flow_timeout_is_not_called_dead():
     assert window == timedelta(minutes=15)  # the default flow timeout (300 s) + 5 min is shorter
 
 
-def test_a_run_the_job_settled_meanwhile_keeps_its_outcome():
+@pytest.mark.parametrize("settled_as", ["stopped while running", "another reason"])
+def test_a_run_the_job_called_dead_records_its_real_outcome(settled_as):
     async def scenario(client, ctx):
         rid = ctx.talon.add(alert_id=ctx.alert_id)
+        reason = actions.STOPPED_DURING if settled_as == "stopped while running" else "the result could not be reported within 24 hours"
 
         async def slow_route(**kwargs):
-            await set_row(ctx, rid, state="unreported")  # the job, while the route ran
+            await set_row(ctx, rid, state="unreported", state_reason=reason)  # the job, while the route ran
             return SimpleNamespace(success=True, message="done late")
 
         with patch.object(incident_routes, "update_alert_status_endpoint", slow_route):
@@ -1425,8 +1427,120 @@ def test_a_run_the_job_settled_meanwhile_keeps_its_outcome():
         return await row_of(ctx, rid), results(ctx.talon, rid)
 
     row, posted = call(scenario)
-    assert row.state == "unreported" and row.execution_result["message"] == "done late" and row.executed_at is not None
-    assert posted == []
+    assert row.execution_result["message"] == "done late" and row.executed_at is not None
+    if settled_as == "stopped while running":  # the outcome is known after all: recorded and reported
+        assert row.state == "executed" and [p["outcome"] for p in posted] == ["executed"] and row.outcome_posted_at is not None
+    else:
+        assert row.state == "unreported" and posted == []
+
+
+def test_a_lock_wait_that_cannot_be_reset_runs_nothing():
+    async def scenario(client, ctx):
+        rid = ctx.talon.add("quarantine_host", user="5")
+        settings = []
+
+        async def set_lock_wait(session, value):
+            settings.append(value)
+            if value == "DEFAULT":
+                raise RuntimeError("connection lost")
+
+        dropped = AsyncMock()
+        with patch.object(execution, "_is_mysql", lambda connection: True), patch.object(
+            execution,
+            "_set_lock_wait",
+            set_lock_wait,
+        ), patch.object(
+            execution,
+            "_drop_connection",
+            dropped,
+        ):
+            response = await approve(client, "resp", rid)
+        return response, settings, dropped.await_count, ctx.velociraptor.await_count, await row_of(ctx, rid), results(ctx.talon, rid)
+
+    response, settings, dropped, ran, row, posted = call(scenario)
+    assert settings == [str(execution.LOCK_WAIT_SECONDS), "DEFAULT"] and dropped == 1
+    assert ran == 0 and row.state == "failed" and row.executed_at is None
+    assert posted[0]["result"]["message"] == "not run: the checks before the run could not be made"
+
+
+def test_a_401_on_the_result_is_warned_about_once():
+    async def scenario(client, ctx):
+        ctx.talon.intercept = _failing_results(3, status=401)
+        rid = ctx.talon.add(alert_id=ctx.alert_id)
+        with patch.object(actions, "logger") as log:
+            await approve(client, "ana", rid)
+        return [c for c in log.warning.call_args_list if "401" in str(c)], await row_of(ctx, rid)
+
+    warned, row = call(scenario)
+    assert len(warned) == 1 and row.outcome_attempts == 3 and row.state == "executed"
+
+
+def _migration():
+    import importlib.util
+
+    path = Path(__file__).parent.parent / "alembic" / "versions" / "d5b11a2b3c4d_index_agents_for_talon_action_rechecks.py"
+    spec = importlib.util.spec_from_file_location("m_d5b11a2b3c4d", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize(
+    "dialect, version, supported",
+    [
+        ("mysql", "8.0.46", True),
+        ("mysql", "8.0.13", True),
+        ("mysql", "8.0.12", False),
+        ("mysql", "5.7.44-log", False),
+        ("mysql", "8.4.3", True),
+        ("mysql", "11.4.4-MariaDB-ubu2404", False),
+        ("mysql", "10.11.6-MariaDB", False),
+        ("mysql", "5.5.5-10.6.12-MariaDB", False),
+        ("mysql", None, False),
+        ("sqlite", None, True),
+        ("postgresql", "16.3", False),
+    ],
+)
+def test_functional_indexes_only_where_the_server_has_them(dialect, version, supported):
+    assert _migration().supports_functional_indexes(dialect, version) is supported
+
+
+def test_the_index_migration_is_idempotent_both_ways():
+    from sqlalchemy import create_engine
+    from sqlalchemy import inspect as sa_inspect
+    from sqlalchemy import text
+
+    from alembic.operations import Operations
+    from alembic.runtime.migration import MigrationContext
+
+    module = _migration()
+    engine = create_engine("sqlite://")
+    with engine.begin() as conn:
+        SQLModel.metadata.create_all(conn, tables=[Customers.__table__, Agents.__table__])
+        conn.execute(text("CREATE TABLE talon_action_request (id VARCHAR(36) PRIMARY KEY)"))
+        conn.execute(text("DROP INDEX IF EXISTS ix_agents_hostname"))  # as before the migration
+        ops = Operations(MigrationContext.configure(conn))
+
+        def indexes():
+            names = conn.execute(text("SELECT name FROM sqlite_master WHERE type = 'index'")).scalars().all()
+            return {n for n in names if n.startswith("ix_agents_") or n.startswith("ix_talon")} - {"ix_agents_agent_id"}
+
+        with Operations.context(ops.migration_context):
+            module.upgrade()
+            first = indexes()
+            module.upgrade()  # a rerun after a partial failure skips what is there
+            again = indexes()
+            columns = {c["name"] for c in sa_inspect(conn).get_columns("talon_action_request")}
+            module.downgrade()
+            module.downgrade()
+            after = indexes()
+    expected = {
+        "ix_agents_hostname",
+        "ix_agents_lower_hostname",
+        "ix_agents_velociraptor_client",
+        "ix_talon_action_request_state_changed_at",
+    }
+    assert first == again == expected and "state_changed_at" in columns and after == set()
 
 
 def test_a_claim_answer_for_another_proposal_runs_nothing():

@@ -15,8 +15,9 @@ failure runs nothing:
 - ``assign_alert``: the assignee is exactly one CoPilot user, of a SOC role (decision h), with
   access to the record's customer (CoPilot's own route only checks that the name exists);
 - quarantine and release, under ``SELECT … FOR UPDATE`` on ``agents`` (held while the route runs;
-  index lookups only, so other agents stay writable; a lock wait of at most 5 s, then it fails
-  closed): exactly one row for the host name (compared with ``lower()`` *and* the column's
+  index lookups only, locking the host's rows plus the neighbouring index gaps for the run, so
+  other agents stay writable but for inserts or moves right beside the host's keys; a lock wait
+  of at most 5 s, then it fails closed): exactly one row for the host name (compared with ``lower()`` *and* the column's
   collation, which is what the route's own lookup uses), whose canonical client id (``C.`` + 16
   lowercase hex) is the record's, whose customer is the record's, and no other row claiming that
   client id. CoPilot's
@@ -239,7 +240,9 @@ LOCK_WAIT_SECONDS = 5
 
 def host_lock_queries(hostname: str, client: str) -> List[Any]:
     """The re-check's ``SELECT … FOR UPDATE`` queries, each one an index lookup (migration
-    ``d5b11a2b3c4d``), so only the matching rows and their gaps are locked, never the table:
+    ``d5b11a2b3c4d``), so what is locked is the matching rows plus the neighbouring index gaps
+    (REPEATABLE READ's next-key locks: an insert of another agent with the host's name, which would
+    change the route's ``.first()``, waits), never the whole table:
 
     1. the host name as the column's collation compares it (the quarantine route's own lookup);
     2. ``lower(hostname)``, which doesn't rely on that collation;
@@ -253,19 +256,37 @@ def host_lock_queries(hostname: str, client: str) -> List[Any]:
     ]
 
 
+def _is_mysql(connection: Any) -> bool:
+    return connection.dialect.name == "mysql"
+
+
+async def _set_lock_wait(session: AsyncSession, value: str) -> None:
+    await session.execute(text(f"SET SESSION innodb_lock_wait_timeout = {value}"))
+
+
+async def _drop_connection(connection: Any) -> None:
+    await connection.invalidate()
+
+
 async def _lock_host_rows(session: AsyncSession, hostname: str, client: str) -> Tuple[List[Agents], List[Agents]]:
     """Lock and read the host's rows (by name) and the client's claimants, waiting at most
-    ``LOCK_WAIT_SECONDS`` on MySQL. The locks stay with ``session``'s transaction."""
+    ``LOCK_WAIT_SECONDS`` on MySQL. The locks stay with ``session``'s transaction.
+
+    If the lock wait can't be put back, the connection is dropped (it must never reach the pool
+    with our setting), which also drops the locks: then the checks count as not made, and nothing
+    runs."""
     connection = await session.connection()
-    mysql = connection.dialect.name == "mysql"
+    mysql = _is_mysql(connection)
     if mysql:
-        await session.execute(text(f"SET SESSION innodb_lock_wait_timeout = {LOCK_WAIT_SECONDS}"))
+        await _set_lock_wait(session, str(LOCK_WAIT_SECONDS))
+    done = False
     try:
         by_name, by_client = {}, {}
         queries = host_lock_queries(hostname, client)
         for n, query in enumerate(queries):
             for agent in (await session.execute(query)).scalars().all():
                 (by_client if n == len(queries) - 1 else by_name)[agent.id] = agent
+        done = True
         return list(by_name.values()), list(by_client.values())
     except DBAPIError as e:  # a lock wait timeout, mostly: the rows are someone else's right now
         logger.warning(f"Talon v2 action re-check: the host's agent rows could not be locked: {type(e).__name__}")
@@ -275,10 +296,12 @@ async def _lock_host_rows(session: AsyncSession, hostname: str, client: str) -> 
             try:
                 # Back to the server's value before anything else runs on this connection (the
                 # route's own statements, then whoever the pool hands it to next).
-                await session.execute(text("SET SESSION innodb_lock_wait_timeout = DEFAULT"))
+                await _set_lock_wait(session, "DEFAULT")
             except Exception as e:  # noqa: BLE001 - never return the connection with our setting
                 logger.error(f"Talon v2 action re-check: resetting the lock wait failed ({type(e).__name__}); dropping the connection")
-                await connection.invalidate()
+                await _drop_connection(connection)
+                if done:  # the locks went with the connection: the checks no longer hold
+                    raise RecheckFailed("the checks before the run could not be made") from None
 
 
 async def lock_and_recheck_host(plan: Plan, row: TalonActionRequest, session: AsyncSession) -> None:

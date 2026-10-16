@@ -28,7 +28,9 @@ kept by talon-analyst's rules) and Velociraptor is a recorder, so nothing real i
   D) the audit rows: approve and execute, plus the quarantine route's own ``response.quarantine``
   E) a result the inline tries couldn't post is posted by the job, once
   F) during a slow quarantine (index-backed locks): an UPDATE of another agent and an INSERT of a
-     new one don't wait, and EXPLAIN shows each re-check query uses an index (in A)
+     new one whose keys are far from the host's don't wait; an INSERT right beside the host's name
+     does (the next-key gap lock, which stops a same-name insert changing the route's ``.first()``);
+     EXPLAIN shows each re-check query uses an index (in A)
   G) a host whose rows another transaction holds fails closed within the 5 s lock wait, and the
      pooled connections keep the server's own lock wait
 """
@@ -381,7 +383,7 @@ async def main():
             )
             talon.intercept = None
 
-            print("\n=== F) a slow Talon quarantine locks only its host ===")
+            print("\n=== F) a slow Talon quarantine locks its host's rows and their gaps ===")
             # Neighbours bound the locked gaps (InnoDB's next-key locks, REPEATABLE READ), as other
             # agents do on a real deployment.
             async with AsyncSession(async_engine) as s:
@@ -420,8 +422,15 @@ async def main():
             async def add_new(s):
                 s.add(agent("e2e-tz-new", "e2eta-new", vid="C.ffffffff0000e2e1"))
 
+            async def add_neighbour(s):
+                # Sorts right after the host's name, before the next agent's: in the locked gap.
+                await s.execute(text("SET SESSION innodb_lock_wait_timeout = 1"))
+                s.add(agent("e2e-ta-hosu", "e2eta-nbr", vid="C.ffffffff0000e2e2"))
+                await s.flush()
+
             updated, update_error = await timed(touch_other)
             inserted, insert_error = await timed(add_new)
+            neighboured, neighbour_error = await timed(add_neighbour)
             still_running = not running.done()
             response = await running
             velociraptor.side_effect = None
@@ -431,9 +440,14 @@ async def main():
                 f"{updated:.2f}s {update_error}",
             )
             check(
-                "a new agent's INSERT doesn't wait for the run",
+                "a new agent far from the host's keys doesn't wait for the run",
                 insert_error is None and inserted < 1.5,
                 f"{inserted:.2f}s {insert_error}",
+            )
+            check(
+                "a new agent right beside the host's name waits (the gap lock, as documented)",
+                neighbour_error == "OperationalError" and neighboured >= 0.9,
+                f"{neighboured:.2f}s {neighbour_error}",
             )
             check(
                 "and the run itself completes",
