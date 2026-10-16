@@ -445,6 +445,17 @@ Tests: `tests/test_alert_combined_filters.py` (no DB), `tests/e2e/alert_filters_
 
 Tests: `tests/test_agent_cases_scoping.py` and `tests/test_vulnerabilities_csv_epss.py` (no DB, no network); `tests/e2e/agent_tabs_e2e.py` (13306, Wazuh replaced by a recorder; run against the pre-fix tree, it lists B's case). Portal: `components/agents/AgentDetails/__tests__/`, `api/endpoints/__tests__/agents.spec.ts`, `cypress/e2e/agent-tabs.cy.ts`. The e2e backend has no Wazuh, so that spec serves the Wazuh-backed answers at the network layer (`cypress/support/agent-findings.ts`); the cases come from the real backend.
 
+### Customer Portal reports: status polling and a Download when ready (#1263)
+
+- **The poller reads the reports it waits for, nothing else.** `stores/reportGeneration.ts` asks `GET /incidents/customer_reports/status?ids=…` (admin/analyst/customer_user, 1–50 ids, `paramsSerializer: { indexes: null }`), one request at a time, every 3 s for the first minute, 10 s up to five, then 30 s (`pollDelay`), and stops when nothing is pending; it used to reload the whole list every 5 s. The route reads six columns in one query; `report_visibility_filters` is the one definition of what the list and the poll may show, so an id the list hides (another customer's, an analyst report not shared with the portal, a deleted one) comes back in `missing`, indistinguishable from one that never existed.
+- **`started_at` and `running_seconds` are the server's** (`generated_at` is set when generation starts and never moves), so the client clock does not matter. The Reports page counts on its own from `generated_at`, read as UTC (`reportTiming.ts`): "Generating · 3 min". Report times are naive UTC and are now shown with `formatDate(…, { tz: true })`; they used to read as the viewer's local time.
+- **"Report ready" carries a Download**: its `actionRoute` is `{ name: "ReportsList", query: { download: id } }` (plain data, so the bell keeps it across a reload), the Reports page downloads `?download=<id>` (file name from the list, else `Content-Disposition`) and drops the query first, so a reload or Back never downloads again. Using a toast's action closes the toast.
+- **A failed report's stored error is the SOC's.** `error_message` is the exception's text (storage, database, wkhtmltopdf); `public_error` gives a `customer_user` `CUSTOMER_FAILURE_MESSAGE` instead, in the poll and in the list.
+- **Generation answers with URLs that exist**: `check_status_url` is the poll, `download_url` the download, both under `/api` (they said `/api/v1`, under which nothing is mounted).
+- **`MINIO_URL` takes `host` or `host:port`** (`data_store_session.minio_endpoint`; a bare host still gets `:9000`). The e2e MinIO listens on 19000, like MySQL on 13306.
+
+Tests: `tests/test_customer_report_status.py` (no DB, no network), `tests/e2e/customer_report_status_e2e.py` (13306 and the e2e MinIO on 19000: a real generation polled and downloaded, visibility, errors, limits, one query). Portal: `stores/__tests__/reportGeneration.spec.ts`, `components/reports/__tests__/`, `composables/common/__tests__/useNotifications.spec.ts`, `cypress/e2e/reports.cy.ts`.
+
 ### Customer Portal event search: saved queries, CSV export and columns (#1258)
 
 `components/eventSearch/` in the portal, and `/api/siem/event_search` in the backend.
