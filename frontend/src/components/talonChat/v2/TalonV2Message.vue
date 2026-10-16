@@ -33,7 +33,15 @@
 						<!-- No images: a URL in the reply is never fetched by the browser (talon-analyst escapes `![` too). -->
 						<Markdown :source="item.text" no-images class="overflow-hidden" />
 					</div>
-					<TalonToolActivity v-else :item :live="message.status === 'streaming'" />
+					<template v-else>
+						<TalonToolActivity :item :live="message.status === 'streaming'" />
+						<!-- Apart from the tool row: CoPilot's record of the proposal, never the model's arguments. -->
+						<TalonApprovalCard
+							v-if="item.approval"
+							:key="item.approval.id"
+							:approval-id="item.approval.id"
+						/>
+					</template>
 				</template>
 
 				<div v-if="message.status === 'streaming' && !message.items.length" class="flex items-center gap-2">
@@ -81,6 +89,7 @@ import Icon from "@/components/common/Icon.vue"
 import Markdown from "@/components/common/Markdown.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
+import TalonApprovalCard from "./TalonApprovalCard.vue"
 import TalonToolActivity from "./TalonToolActivity.vue"
 import TalonUsageLine from "./TalonUsageLine.vue"
 

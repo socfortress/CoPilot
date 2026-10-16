@@ -59,14 +59,14 @@
 		</n-scrollbar>
 
 		<n-alert
-			v-if="notice"
-			:type="notice.kind === 'pending' || notice.kind === 'archived' ? 'warning' : 'error'"
+			v-if="shownNotice"
+			:type="shownNotice.kind === 'pending' || shownNotice.kind === 'archived' ? 'warning' : 'error'"
 			:bordered="false"
 			class="mb-2 text-sm"
 			data-testid="talon-v2-notice"
-			:data-kind="notice.kind"
+			:data-kind="shownNotice.kind"
 		>
-			{{ notice.text }}
+			{{ shownNotice.text }}
 		</n-alert>
 
 		<div class="relative flex flex-col overflow-hidden">
@@ -74,7 +74,7 @@
 				v-model:value="input"
 				class="max-h-full min-h-20 pt-1 pb-9"
 				type="textarea"
-				:placeholder="composerLocked ? 'This thread can\'t take new messages' : 'Ask Talon...'"
+				:placeholder
 				:disabled="composerLocked"
 				:autosize="{ minRows: 3, maxRows: 18 }"
 				data-testid="talon-v2-input"
@@ -102,6 +102,13 @@
 // folded into the same model (`talonV2Parser`), so a turn looks the same live and read back.
 // Refusals keep their meaning: 409 is a decision pending, 403 a customer or alert access taken
 // away (the composer is then disabled), 404 a thread that is gone.
+//
+// Action proposals (M5-11b): while a card of the thread's open calls says its record is pending or
+// approved without a result, the composer says "waiting for a decision" and is disabled (as
+// talon-analyst would answer 409). Once every one is final, the requester's open thread resumes:
+// one empty message, `{message: ""}`, streamed like any turn (talon-analyst answers the calls from
+// its own records). Sent once per set of proposals for the session (`claimResume`); a 400 means it
+// was already answered, and nothing is sent again.
 import type { ScrollbarInst } from "naive-ui"
 import type { ThreadNotice } from "./notices"
 import type { TalonV2StreamResult } from "@/api/endpoints/talonV2"
@@ -121,7 +128,9 @@ import {
 	TALON_V2_FAILED
 } from "@/api/talonV2Parser"
 import Icon from "@/components/common/Icon.vue"
-import { NOTICE_ARCHIVED, NOTICE_BUSY, NOTICE_LOAD_FAILED, NOTICE_REVOKED, noticeFor } from "./notices"
+import { cardsClock, claimResume, knownAction } from "./actionCards"
+import { blocksThread, openApprovals } from "./approvals"
+import { NOTICE_ARCHIVED, NOTICE_BUSY, NOTICE_LOAD_FAILED, NOTICE_PENDING, NOTICE_REVOKED, noticeFor } from "./notices"
 import TalonContextBadge from "./TalonContextBadge.vue"
 import TalonV2Message from "./TalonV2Message.vue"
 
@@ -156,9 +165,36 @@ let streamController: AbortController | null = null
 
 const title = computed(() => thread.title || "Untitled thread")
 const archived = computed(() => thread.status === "archived")
-const composerLocked = computed(
-	() => archived.value || !thread.accessible || !!notice.value?.locksComposer || loading.value
+/** The thread's open approval cards, with what each card last read of its record (shared, `actionCards`). */
+const openCards = computed(() =>
+	openApprovals(messages.value).map(open => ({ ...open, record: knownAction(open.approvalId) }))
 )
+/**
+ * A proposal holds the thread: a card read its record (of this thread) pending, or approved and
+ * inside its result window; or a card is still reading a proposal the stream or the read-back
+ * called pending. A record of another thread holds nothing here.
+ */
+const waitingForDecision = computed(() =>
+	openCards.value.some(card => {
+		const action = card.record?.action
+		if (action) return action.thread_id === thread.id && blocksThread(action, cardsClock.value)
+		return !card.record?.gone && card.hint === "pending"
+	})
+)
+const pendingNotice: ThreadNotice = { kind: "pending", text: NOTICE_PENDING, locksComposer: true }
+const shownNotice = computed(() => notice.value ?? (waitingForDecision.value ? pendingNotice : null))
+const composerLocked = computed(
+	() =>
+		archived.value ||
+		!thread.accessible ||
+		!!notice.value?.locksComposer ||
+		loading.value ||
+		waitingForDecision.value
+)
+const placeholder = computed(() => {
+	if (waitingForDecision.value) return "Waiting for a decision in CoPilot"
+	return composerLocked.value ? "This thread can't take new messages" : "Ask Talon..."
+})
 const canSend = computed(() => !composerLocked.value && !streaming.value && !!input.value.trim())
 
 function scrollToEnd() {
@@ -266,18 +302,25 @@ function knownToolName(toolCallId: string): string | null {
 	return null
 }
 
-async function send() {
+function send() {
 	const text = input.value.trim()
 	if (!text || !canSend.value) return
+	input.value = ""
+	runTurn(text)
+}
 
+/**
+ * One turn: the user's message (with its bubble), or the resume (`text` null: an empty message and
+ * no bubble), streamed into a new assistant message.
+ */
+async function runTurn(text: string | null) {
 	const threadId = thread.id
 	const messageId = `copilot-${nanoid()}`
 	const now = new Date().toISOString()
-	messages.value.push(newUserMessage(`local-${messageId}`, text, now))
+	if (text !== null) messages.value.push(newUserMessage(`local-${messageId}`, text, now))
 	messages.value.push(newAssistantMessage(`local-${messageId}-reply`, now))
 	// The reactive copy: chunks fold into what the template renders.
 	const reply = messages.value[messages.value.length - 1]
-	input.value = ""
 	streaming.value = true
 	if (notice.value && !notice.value.locksComposer) notice.value = null
 	scrollToEnd()
@@ -289,6 +332,12 @@ async function send() {
 		if (result.kind === "refused") {
 			// Refused before anything ran: the message wasn't taken, so it goes back to the composer.
 			messages.value = messages.value.filter(m => m.id !== reply.id && m.id !== `local-${messageId}`)
+			if (text === null) {
+				// The resume: a 400 says the calls were already answered; nothing to show or retry.
+				if (result.status !== 400) notice.value = noticeFor(result.status, result.detail)
+				if (result.status === 404) emit("gone", threadId)
+				return
+			}
 			if (!input.value) input.value = text
 			notice.value = noticeFor(result.status, result.detail)
 			if (result.status === 404) emit("gone", threadId)
@@ -303,7 +352,7 @@ async function send() {
 	try {
 		await Api.talonV2.streamChat(
 			threadId,
-			{ message: text, message_id: messageId },
+			text === null ? { message: "" } : { message: text, message_id: messageId },
 			{
 				onChunk: chunk => {
 					applyV2Chunk(reply, chunk, { toolName: knownToolName })
@@ -327,6 +376,32 @@ async function send() {
 function stop() {
 	streamController?.abort()
 }
+
+/**
+ * The thread resumes now: it is open, nothing is loading or streaming, it has open calls, every
+ * one of whose records the cards read final, and this user asked for every one of them (chat is
+ * owner only; a decider who isn't the requester never resumes someone's thread).
+ */
+const resumeDue = computed(() => {
+	if (loading.value || streaming.value || archived.value || !thread.accessible || notice.value?.locksComposer) {
+		return false
+	}
+	const cards = openCards.value
+	if (!cards.length) return false
+	return cards.every(card => {
+		const action = card.record?.action
+		return (
+			!!action && action.thread_id === thread.id && action.is_requester && !blocksThread(action, cardsClock.value)
+		)
+	})
+})
+
+watch(resumeDue, due => {
+	if (!due) return
+	const ids = openCards.value.map(card => card.approvalId)
+	if (!claimResume(thread.id, ids)) return
+	runTurn(null)
+})
 
 watch(
 	() => thread.id,

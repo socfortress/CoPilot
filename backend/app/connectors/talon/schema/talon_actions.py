@@ -68,6 +68,8 @@ class ActionOut(BaseModel):
     thread_id: str
     customer_code: str
     requester_user_id: str
+    #: The requester's CoPilot user name, read now; None if the user no longer exists.
+    requester_username: Optional[str] = None
     action: str
     side_effect: str
     executes_through: Optional[str] = None
@@ -84,6 +86,12 @@ class ActionOut(BaseModel):
     #: Whether ``expires_at`` has passed while nobody decided it (shown locally, M5-11 "Expiry").
     expired: bool
     expires_at: datetime
+    #: Seconds until ``expires_at`` by CoPilot's clock (0 once passed): the card counts down from
+    #: this, not from the browser's clock.
+    expires_in_seconds: int
+    #: For an approved record: when talon-analyst stops waiting for its result (24 h after the
+    #: approval); after it the thread no longer waits on it. None before an approval.
+    result_due_by: Optional[datetime] = None
     created_at: Optional[datetime] = None
     decision: Optional[str] = None
     approver_user_id: Optional[int] = None

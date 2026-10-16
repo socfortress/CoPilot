@@ -38,6 +38,7 @@ import asyncio
 import inspect
 import json
 import os
+import re
 import uuid
 from contextlib import ExitStack
 from datetime import datetime
@@ -1752,3 +1753,94 @@ def test_an_expired_proposal_is_shown_expired_and_cannot_be_approved():
 
     listed, response, claimed = call(scenario)
     assert listed == [] and response.status_code == 409 and claimed == []
+
+
+# ── review of #1270 ───────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize("decide_with", [approve, deny], ids=["approve", "deny"])
+@pytest.mark.parametrize("status", [403, 404])
+def test_a_claim_refused_for_this_approvers_own_access_leaves_it_pending_for_others(decide_with, status):
+    async def scenario(client, ctx):
+        rid = ctx.talon.add(alert_id=ctx.alert_id)
+
+        async def make(request):
+            if request.headers["x-talon-user"] == "2":  # ana: talon-analyst refuses her alone (tags, customers)
+                return httpx.Response(
+                    status,
+                    json={"detail": "action not found" if status == 404 else "this role may not decide this action"},
+                )
+            return None
+
+        async def intercept(request):
+            if request.url.path.endswith("/outcome") and json.loads(request.content)["outcome"] in ("approved", "denied"):
+                return await make(request)
+            return None
+
+        ctx.talon.intercept = intercept
+        refused = await decide_with(client, "ana", rid)
+        after_refusal = await row_of(ctx, rid)
+        other = await approve(client, "admin", rid)
+        return refused, after_refusal, other, await row_of(ctx, rid)
+
+    refused, row, other, final = call(scenario)
+    assert refused.status_code == status
+    assert row.state == "pending" and row.approver_user_id is None and row.decision is None and row.copilot_ref is None
+    assert other.status_code == 200 and final.state == "executed" and final.approver_username == "admin"
+
+
+@pytest.mark.parametrize("status", [400, 422])
+def test_a_claim_refused_for_its_body_is_final(status):
+    async def scenario(client, ctx):
+        rid = ctx.talon.add(alert_id=ctx.alert_id)
+
+        async def make(request):
+            return httpx.Response(status, json={"detail": "invalid request"})
+
+        ctx.talon.intercept = _claim_answer(make)
+        response = await approve(client, "ana", rid)
+        return response, await row_of(ctx, rid), ctx.velociraptor.await_count
+
+    response, row, ran = call(scenario)
+    assert response.status_code == 409 and row.state == "refused" and ran == 0
+
+
+def test_the_card_shows_the_requesters_name_the_time_left_and_the_result_window():
+    async def scenario(client, ctx):
+        rid = ctx.talon.add(alert_id=ctx.alert_id, user="2", ttl=timedelta(hours=1))
+        before = (await client.get(f"/talon/actions/{rid}", headers=as_user("resp"))).json()["action"]
+        await approve(client, "resp", rid)
+        after = (await client.get(f"/talon/actions/{rid}", headers=as_user("resp"))).json()["action"]
+        gone = ctx.talon.add(alert_id=ctx.alert_id, user="99")
+        orphan = (await client.get(f"/talon/actions/{gone}", headers=as_user("admin"))).json()["action"]
+        listed = (await client.get("/talon/actions?scope=pending", headers=as_user("admin"))).json()["actions"]
+        return before, after, orphan, listed
+
+    before, after, orphan, listed = call(scenario)
+    assert before["requester_username"] == "ana" and before["result_due_by"] is None
+    assert 3500 <= before["expires_in_seconds"] <= 3600
+    assert after["result_due_by"] is not None
+    due = datetime.fromisoformat(after["result_due_by"]).replace(tzinfo=UTC)
+    assert timedelta(hours=23, minutes=59) <= due - now() <= timedelta(hours=24)
+    assert orphan["requester_username"] is None
+    assert {a["requester_username"] for a in listed} == {None}
+
+
+NGINX_CONF = Path(__file__).resolve().parents[2] / "frontend" / "build" / "etc" / "nginx" / "sites-enabled" / "default.conf"
+
+
+@pytest.mark.skipif(not NGINX_CONF.exists(), reason="frontend tree not present")
+def test_nginx_waits_for_an_approval_as_long_as_the_backend_counts_its_run_alive():
+    """An approval runs the action in the request: nginx's default 60s would answer 504 while a
+    quarantine still waits on its Velociraptor flow, and the card would call a run lost."""
+    conf = NGINX_CONF.read_text()
+    match = re.search(r"location ~ (\^/api/talon/actions/\S+) \{([^}]*)\}", conf)
+    assert match, "the approve location is missing from the frontend nginx config"
+    timeout = re.search(r"proxy_read_timeout (\d+)s;", match.group(2))
+    assert timeout, "the approve location sets no proxy_read_timeout"
+    # The flow, plus the refresh, the claim, the re-check and the result's first tries around it.
+    assert int(timeout.group(1)) >= actions.FLOW_TIMEOUT_SECONDS + 120
+    pattern = re.compile(match.group(1))
+    assert pattern.match(f"/api/talon/actions/{ANY_ID}/approve")
+    for other in (f"/api/talon/actions/{ANY_ID}/deny", f"/api/talon/actions/{ANY_ID}", "/api/talon/actions"):
+        assert not pattern.match(other), other

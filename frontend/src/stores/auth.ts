@@ -7,8 +7,10 @@ import _toLower from "lodash/toLower"
 import _toNumber from "lodash/toNumber"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
+import { resetTalonActions } from "@/components/talonChat/v2/actionCards"
 import { resetCustomerOptions } from "@/composables/useCustomerOptions"
 import { loginWithPasskey as performPasskeyLogin } from "@/composables/usePasskey"
+import { resetTalonApprovals } from "@/composables/useTalonApprovals"
 import { resetTalonV2Availability } from "@/composables/useTalonV2Availability"
 import { useCustomerFilterStore } from "@/stores/customer-filter"
 import { AuthUserRole, RouteRole } from "@/types/auth"
@@ -56,6 +58,8 @@ export const useAuthStore = defineStore("auth", {
 
 			useCustomerFilterStore().clear()
 			resetTalonV2Availability()
+			resetTalonApprovals()
+			resetTalonActions()
 			resetCustomerOptions()
 			removePersistentSessionKey()
 		},
