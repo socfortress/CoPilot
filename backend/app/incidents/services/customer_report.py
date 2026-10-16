@@ -39,6 +39,7 @@ from app.db.universal_models import Customers
 from app.db.universal_models import IncidentManagementCustomerReport
 from app.incidents.schema.customer_report import CustomerReportGenerateRequest
 from app.incidents.schema.customer_report import CustomerReportResponse
+from app.incidents.schema.customer_report import CustomerReportStatus
 from app.incidents.services import customer_report_aggregations as agg
 from app.incidents.services.customer_report_branding import resolve_theme
 from app.incidents.services.customer_report_charts import donut_png
@@ -66,7 +67,23 @@ DEFAULT_TEMPLATE = "full"
 MAX_CASE_ASSETS = 20
 MAX_CASE_IOCS = 25
 MAX_CASE_SHEETS = 50
-DOWNLOAD_URL_TEMPLATE = "/api/v1/incidents/customer_reports/{report_id}/download"
+DOWNLOAD_URL_TEMPLATE = "/api/incidents/customer_reports/{report_id}/download"
+STATUS_URL_TEMPLATE = "/api/incidents/customer_reports/status?ids={report_id}"
+
+# What a portal user reads when their report failed. The stored error is the exception's
+# own text (a storage, database or PDF-renderer message): it stays for the SOC, never
+# for the customer.
+CUSTOMER_FAILURE_MESSAGE = "The report could not be generated. Try again, or contact your SOC if it keeps failing."
+
+
+def public_error(status: str, error: Optional[str], for_customer: bool) -> Optional[str]:
+    """The error a caller may read: none unless the report failed, a generic one for a customer."""
+    if status != "failed":
+        return None
+    if for_customer:
+        return CUSTOMER_FAILURE_MESSAGE
+    return error
+
 
 # Best-effort case-type extraction from a "[RFI] ..." style prefix (see gap
 # analysis in issue #961 — no native case-type column exists).
@@ -358,7 +375,11 @@ def html_to_pdf_bytes(rendered_html: str, brand: str, tlp: str) -> bytes:
                     pass
 
 
-def _to_response(report: IncidentManagementCustomerReport, user_name: Optional[str] = None) -> CustomerReportResponse:
+def _to_response(
+    report: IncidentManagementCustomerReport,
+    user_name: Optional[str] = None,
+    for_customer: bool = False,
+) -> CustomerReportResponse:
     filters: Dict[str, Any] = {}
     if report.filters_json:
         try:
@@ -384,7 +405,7 @@ def _to_response(report: IncidentManagementCustomerReport, user_name: Optional[s
         closed_cases=report.closed_cases,
         visible_to_customer=report.visible_to_customer,
         status=report.status,
-        error_message=report.error_message,
+        error_message=public_error(report.status, report.error_message, for_customer),
         download_url=DOWNLOAD_URL_TEMPLATE.format(report_id=report.id) if report.status == "completed" else None,
     )
 
@@ -508,22 +529,75 @@ async def list_customer_reports(
     (customer-generated) reports, plus analyst/admin reports explicitly flagged
     ``visible_to_customer``.
     """
-    query = select(IncidentManagementCustomerReport).order_by(IncidentManagementCustomerReport.generated_at.desc())
+    visibility = report_visibility_filters(accessible_customers, only_customer_visible)
+    if visibility is None:
+        return []
+    query = select(IncidentManagementCustomerReport).where(*visibility).order_by(IncidentManagementCustomerReport.generated_at.desc())
     if customer_code:
         query = query.where(IncidentManagementCustomerReport.customer_code == customer_code)
+    result = await session.execute(query)
+    return list(result.scalars().all())
+
+
+def report_visibility_filters(accessible_customers: List[str], only_customer_visible: bool) -> Optional[list]:
+    """Which reports a caller may see, as WHERE clauses; ``None`` when they see none.
+
+    The one definition shared by the list and the status poll, so a report the list
+    hides can never be read by asking for its id.
+    """
+    filters: list = []
     if "*" not in accessible_customers:
         if not accessible_customers:
-            return []
-        query = query.where(IncidentManagementCustomerReport.customer_code.in_(accessible_customers))
+            return None
+        filters.append(IncidentManagementCustomerReport.customer_code.in_(accessible_customers))
     if only_customer_visible:
-        query = query.where(
+        filters.append(
             or_(
                 IncidentManagementCustomerReport.visible_to_customer.is_(True),
                 IncidentManagementCustomerReport.generated_by_role == "customer_user",
             ),
         )
-    result = await session.execute(query)
-    return list(result.scalars().all())
+    return filters
+
+
+async def report_statuses(
+    session: AsyncSession,
+    report_ids: List[int],
+    accessible_customers: List[str],
+    only_customer_visible: bool,
+    now: datetime,
+) -> tuple[List[CustomerReportStatus], List[int]]:
+    """Where the asked reports stand, in one query that reads only the columns a poller needs.
+
+    An id the caller may not see is reported missing exactly like one that does not exist
+    (deleted while generating), so ids cannot be probed across tenants. ``now`` is naive UTC.
+    """
+    wanted = list(dict.fromkeys(report_ids))
+    visibility = report_visibility_filters(accessible_customers, only_customer_visible)
+    if visibility is None:
+        return [], wanted
+    report = IncidentManagementCustomerReport
+    result = await session.execute(
+        select(report.id, report.report_name, report.file_name, report.status, report.error_message, report.generated_at).where(
+            report.id.in_(wanted),
+            *visibility,
+        ),
+    )
+    found = {row.id: row for row in result.all()}
+    statuses = [
+        CustomerReportStatus(
+            id=row.id,
+            report_name=row.report_name,
+            file_name=row.file_name,
+            status=row.status,
+            error_message=public_error(row.status, row.error_message, only_customer_visible),
+            started_at=row.generated_at,
+            running_seconds=max(0, int((now - row.generated_at).total_seconds())) if row.status == "processing" else None,
+            download_url=DOWNLOAD_URL_TEMPLATE.format(report_id=row.id) if row.status == "completed" else None,
+        )
+        for row in (found[report_id] for report_id in wanted if report_id in found)
+    ]
+    return statuses, [report_id for report_id in wanted if report_id not in found]
 
 
 async def set_report_visibility(
@@ -566,5 +640,9 @@ async def delete_customer_report(
     await session.commit()
 
 
-def to_response(report: IncidentManagementCustomerReport, user_name: Optional[str] = None) -> CustomerReportResponse:
-    return _to_response(report, user_name)
+def to_response(
+    report: IncidentManagementCustomerReport,
+    user_name: Optional[str] = None,
+    for_customer: bool = False,
+) -> CustomerReportResponse:
+    return _to_response(report, user_name, for_customer)

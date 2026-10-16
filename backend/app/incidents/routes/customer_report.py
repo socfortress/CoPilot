@@ -22,20 +22,27 @@ from app.db.db_session import get_db
 from app.db.db_session import get_db_session
 from app.db.universal_models import Customers
 from app.db.universal_models import IncidentManagementCustomerReport
+from app.incidents.schema.customer_report import STATUS_IDS_MAX
 from app.incidents.schema.customer_report import (
     CustomerReportGenerateBackgroundResponse,
 )
 from app.incidents.schema.customer_report import CustomerReportGenerateRequest
 from app.incidents.schema.customer_report import CustomerReportListResponse
+from app.incidents.schema.customer_report import CustomerReportStatusResponse
 from app.incidents.schema.customer_report import CustomerReportVisibilityRequest
+from app.incidents.services.customer_report import DOWNLOAD_URL_TEMPLATE
+from app.incidents.services.customer_report import STATUS_URL_TEMPLATE
 from app.incidents.services.customer_report import delete_customer_report
 from app.incidents.services.customer_report import generate_customer_report
 from app.incidents.services.customer_report import get_customer_report_download
 from app.incidents.services.customer_report import list_customer_reports
+from app.incidents.services.customer_report import report_statuses
 from app.incidents.services.customer_report import resolve_user_names
 from app.incidents.services.customer_report import set_report_visibility
 from app.incidents.services.customer_report import to_response
 from app.middleware.customer_access import customer_access_handler
+from app.time_utils import now_utc
+from app.time_utils import to_naive_utc
 
 customer_reports_router = APIRouter()
 
@@ -69,7 +76,7 @@ async def generate_report_background(
 ) -> CustomerReportGenerateBackgroundResponse:
     """Create a ``processing`` placeholder row, then render the PDF in the background.
 
-    The client polls ``GET /`` until ``status`` flips to ``completed``/``failed``,
+    The client polls ``GET /status?ids=…`` until ``status`` flips to ``completed``/``failed``,
     then downloads via ``GET /{report_id}/download``.
     """
     await _ensure_customer_access(current_user, db, request.customer_code)
@@ -139,8 +146,8 @@ async def generate_report_background(
         report_name=report_name,
         customer_code=request.customer_code,
         status="processing",
-        check_status_url="/api/v1/incidents/customer_reports",
-        download_url=f"/api/v1/incidents/customer_reports/{report_id}/download",
+        check_status_url=STATUS_URL_TEMPLATE.format(report_id=report_id),
+        download_url=DOWNLOAD_URL_TEMPLATE.format(report_id=report_id),
     )
 
 
@@ -163,13 +170,37 @@ async def list_reports(
     only_customer_visible = current_user.role_id == RoleEnum.customer_user
     reports = await list_customer_reports(db, accessible, customer_code, only_customer_visible=only_customer_visible)
     names = await resolve_user_names(db, [r.generated_by for r in reports])
-    items = [to_response(r, names.get(r.generated_by)) for r in reports]
+    # A failed report's stored error is the exception's own text: the SOC reads it, a
+    # customer reads a generic one.
+    items = [to_response(r, names.get(r.generated_by), for_customer=only_customer_visible) for r in reports]
     return CustomerReportListResponse(
         reports=items,
         total_count=len(items),
         success=True,
         message="Reports retrieved successfully",
     )
+
+
+@customer_reports_router.get(
+    "/status",
+    response_model=CustomerReportStatusResponse,
+    description=(
+        "Where the named reports' generation stands (status, error, running time), for a poller: "
+        "one light query, never the whole list. Ids the caller may not see are listed in `missing`."
+    ),
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
+)
+async def report_status(
+    ids: List[int] = Query(..., min_length=1, max_length=STATUS_IDS_MAX, description="Report ids, repeated: ?ids=1&ids=2"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> CustomerReportStatusResponse:
+    # The same visibility as the list: the caller's customers, and for a portal user only
+    # their own reports and those shared with them.
+    accessible = await customer_access_handler.resolve_effective_customers(current_user, None, db)
+    only_customer_visible = current_user.role_id == RoleEnum.customer_user
+    reports, missing = await report_statuses(db, ids, accessible, only_customer_visible, to_naive_utc(now_utc()))
+    return CustomerReportStatusResponse(reports=reports, missing=missing, success=True, message="Report status retrieved")
 
 
 @customer_reports_router.get(

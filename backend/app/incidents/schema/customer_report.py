@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timezone
 from typing import Any
 from typing import Dict
 from typing import List
@@ -7,6 +8,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import field_serializer
 from pydantic import model_validator
 
 # Branding theme for the generated report: SOCFortress branding (logo + green
@@ -80,6 +82,38 @@ class CustomerReportResponse(BaseModel):
 class CustomerReportListResponse(BaseModel):
     reports: List[CustomerReportResponse]
     total_count: int
+    success: bool
+    message: str
+
+
+# How many reports one status request may ask about: the portal polls the few it is
+# waiting for, never the whole list.
+STATUS_IDS_MAX = 50
+
+
+class CustomerReportStatus(BaseModel):
+    """Where one report's generation stands: what a poller needs, and nothing more."""
+
+    id: int
+    report_name: str
+    file_name: str
+    status: str
+    error_message: Optional[str] = None
+    started_at: datetime
+    running_seconds: Optional[int] = None
+    download_url: Optional[str] = None
+
+    @field_serializer("started_at")
+    def _serialize_started_at(self, moment: datetime) -> str:
+        # Stored as naive UTC: say so, so no client reads it as its own local time.
+        if moment.tzinfo is None:
+            moment = moment.replace(tzinfo=timezone.utc)
+        return moment.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+class CustomerReportStatusResponse(BaseModel):
+    reports: List[CustomerReportStatus]
+    missing: List[int]
     success: bool
     message: str
 
