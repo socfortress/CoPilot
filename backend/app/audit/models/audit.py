@@ -71,6 +71,12 @@ class AuditAction(str, Enum):
     AI_ANALYSIS_REQUEST = "ai_analysis.request"
     AI_REPORT_SETTINGS_UPDATE = "ai_report.settings_update"
 
+    # Talon v2 chat action proposals, decided and run in CoPilot (talon-analyst M5-11). A
+    # quarantine run this way also records RESPONSE_QUARANTINE, from its own route.
+    TALON_ACTION_APPROVE = "talon_action.approve"
+    TALON_ACTION_DENY = "talon_action.deny"
+    TALON_ACTION_EXECUTE = "talon_action.execute"
+
     # SOCFortress UBA per customer (#1241)
     UBA_MODE_CHANGE = "uba.mode_change"
     UBA_ROLLBACK = "uba.rollback"

@@ -67,6 +67,9 @@ from app.schedulers.services.invoke_sap_siem import (
 from app.schedulers.services.invoke_snapshot_and_restore import (
     invoke_snapshot_schedules,
 )
+from app.schedulers.services.invoke_talon_action_outcomes import (
+    invoke_talon_action_outcomes,
+)
 from app.schedulers.services.refresh_catalog_caches import refresh_catalog_caches
 from app.schedulers.services.refresh_sidebar_health import refresh_sidebar_health
 from app.schedulers.services.refresh_sidebar_indicators import (
@@ -226,6 +229,15 @@ async def initialize_job_metadata():
                 "time_interval": 60,
                 "function": invoke_palace_lesson_sweeper,
                 "description": "Forgets expired one-off AI analyst palace lessons via NanoClaw /palace/forget.",
+            },
+            {
+                "job_id": "invoke_talon_action_outcomes",
+                # Every minute: an approved Talon action's result must reach talon-analyst within
+                # 24 h of the approval. Each row backs off on its own (1 min up to hourly), and the
+                # tick does nothing while the "Talon v2" setting is off (talon-analyst M5-11).
+                "time_interval": 1,
+                "function": invoke_talon_action_outcomes,
+                "description": "Reports approved Talon v2 actions' results to talon-analyst, retrying until accepted or 24 h after approval.",
             },
             {
                 "job_id": "refresh_wazuh_rules_cache",
@@ -411,6 +423,7 @@ def get_function_by_name(function_name: str):
         "invoke_carbonblack_integration_collection": invoke_carbonblack_integration_collect,
         "invoke_palace_lesson_drainer": invoke_palace_lesson_drainer,
         "invoke_palace_lesson_sweeper": invoke_palace_lesson_sweeper,
+        "invoke_talon_action_outcomes": invoke_talon_action_outcomes,
         "refresh_wazuh_rules_cache": refresh_wazuh_rules_cache,
         "refresh_catalog_caches": refresh_catalog_caches,
         "refresh_sidebar_health": refresh_sidebar_health,
