@@ -73,6 +73,11 @@ WAF_ROLE_PERMISSIONS: Dict[str, set] = {
 # The column is varchar(50); a user with several roles is summarised, not truncated mid-name.
 _ROLE_COLUMN_LENGTH = 50
 
+# The WAF aggregates its whole log store for /logs/stats (last hour, top rules and IPs,
+# 24h trend), which takes well over DEFAULT_TIMEOUT on a WAF with many sites (#1261).
+# The frontend nginx allows /stats longer than this (frontend/build/etc/nginx/sites-enabled/default.conf).
+STATS_TIMEOUT = 120.0
+
 
 def capabilities_for_roles(roles: List[str]) -> WafCapabilities:
     perms = set().union(*(WAF_ROLE_PERMISSIONS.get(r, set()) for r in roles)) if roles else set()
@@ -384,7 +389,7 @@ async def fetch_events(row: CustomerWafInstance, params: Dict[str, Any]) -> List
 
 
 async def fetch_stats(row: CustomerWafInstance) -> WafStats:
-    return WafStats.model_validate(await waf_get(row, "/logs/stats"))
+    return WafStats.model_validate(await waf_get(row, "/logs/stats", timeout=STATS_TIMEOUT))
 
 
 async def fetch_threat_intel(row: CustomerWafInstance) -> Tuple[WafThreatIntelSummary, List[WafThreatIntelEntry]]:

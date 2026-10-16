@@ -29,6 +29,9 @@ from app.customer_waf.services.crypto import decrypt_token
 
 API_PREFIX = "/api/v1"
 DEFAULT_TIMEOUT = 15.0
+# Opening the connection never waits longer than this, whatever a call allows for the answer:
+# a WAF that is down must read as unreachable in seconds, not after a slow call's whole budget.
+CONNECT_TIMEOUT = 15.0
 
 
 class WafRequestError(Exception):
@@ -77,7 +80,7 @@ def _make_client(instance, timeout: float) -> httpx.AsyncClient:
     return httpx.AsyncClient(
         base_url=normalize_api_url(instance.api_url),
         verify=build_ssl_verify(instance.verify_tls, instance.ca_cert_pem),
-        timeout=timeout,
+        timeout=httpx.Timeout(timeout, connect=min(timeout, CONNECT_TIMEOUT)),
         headers={
             "Authorization": f"Bearer {decrypt_token(instance.service_token_encrypted)}",
             "Accept": "application/json",
@@ -119,9 +122,15 @@ async def waf_request(
     try:
         async with _make_client(instance, timeout) as client:
             response = await client.request(method, url, params=params, json=json)
+    except httpx.ConnectTimeout:
+        logger.warning(f"{where}: connection timed out on {method} {url}")
+        connect = min(timeout, CONNECT_TIMEOUT)
+        raise WafRequestError("unreachable", f"WAF '{instance.name}' did not accept a connection within {connect:.0f}s")
     except httpx.TimeoutException:
-        logger.warning(f"{where}: timed out on {method} {url}")
-        raise WafRequestError("unreachable", f"WAF '{instance.name}' did not respond within {timeout:.0f}s")
+        # Connected, then the answer took too long: the WAF is up but slow (a busy WAF's
+        # /logs/stats, #1261). Not "unreachable", which sends the operator to check the network.
+        logger.warning(f"{where}: no answer within {timeout:.0f}s on {method} {url}")
+        raise WafRequestError("timeout", f"WAF '{instance.name}' did not answer within {timeout:.0f}s")
     except ssl.SSLError as e:
         raise WafRequestError("tls_error", f"TLS verification failed for WAF '{instance.name}': {e}")
     except httpx.ConnectError as e:
