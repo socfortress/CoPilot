@@ -2,8 +2,8 @@
 chat proxy (talon-analyst SPEC §5.3 D54 and the M5-5 row, §8 "v2 API"; plan M5-5a).
 
 **The setting** (``talon_connector_settings``, one row per Talon connector, off when missing) is
-the only switch: off, every proxy route answers 404 ``{"detail": "Not Found"}`` exactly like a
-route that doesn't exist (``require_talon_v2``), and nothing of v1 changes. Turning it on is an
+the only switch: off, every declared proxy route answers 404 ``{"detail": "Not Found"}`` exactly
+like a route that doesn't exist (``require_talon_v2``; a method no route declares still answers 405), and nothing of v1 changes. Turning it on is an
 admin's, audited, and refused while talon-analyst itself answers ``GET /v2/threads`` with 404
 (its ``TALON_V2_API`` is off).
 
@@ -38,6 +38,7 @@ from starlette.responses import Response
 from app.audit.models.audit import AuditAction
 from app.audit.models.audit import AuditResult
 from app.audit.services.audit import record_audit_event
+from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.connectors.talon.models.talon_v2 import TalonConnectorSettings
 from app.connectors.talon.schema.talon_v2 import TalonV2AvailabilityResponse
@@ -111,7 +112,16 @@ def _settings_response(row: Optional[TalonConnectorSettings], connector_name: st
     )
 
 
-async def get_v2_settings(session: AsyncSession, connector_name: str = TALON_CONNECTOR) -> TalonV2SettingsResponse:
+def require_admin(user: User) -> None:
+    """The setting is an admin's: by the user's role in the database, not only the token's scope
+    (a token issued before a demotion still carries ``admin``). The same database truth the proxy
+    sends as ``X-Talon-Role``."""
+    if user.role_id != RoleEnum.admin:
+        raise HTTPException(status_code=403, detail="Only an admin may read or change the Talon v2 setting")
+
+
+async def get_v2_settings(user: User, session: AsyncSession, connector_name: str = TALON_CONNECTOR) -> TalonV2SettingsResponse:
+    require_admin(user)
     row = await get_settings_row(session, connector_name)
     return _settings_response(row, connector_name, "Talon v2 setting retrieved")
 
@@ -141,6 +151,7 @@ async def update_v2_settings(
 ) -> TalonV2SettingsResponse:
     """Turn the setting on or off (admin only, at the route). Turning it on first asks talon-analyst
     for the admin's own threads; it stays off unless that answers 2xx. Audited either way."""
+    require_admin(user)
     row = await get_settings_row(session, connector_name)
     old = bool(row is not None and row.v2_enabled)
     audit = {
@@ -220,8 +231,18 @@ def relay(answer: V2Answer) -> JSONResponse:
 # ── threads ───────────────────────────────────────────────────────────────────
 
 
-async def list_threads(user: User, session: AsyncSession, params: Dict[str, Any]) -> JSONResponse:
+async def _identity_then_release(user: User, session: AsyncSession) -> Dict[str, str]:
+    """The user's identity headers, then the request's session closed: everything a proxy route
+    reads from the database has been read, and talon-analyst's answer may take seconds (a turn,
+    minutes), so no pooled connection is held while waiting. (The connector row is read in a
+    session of its own, opened and closed around that one read.)"""
     identity = await talon_identity_headers(user, session)
+    await session.close()
+    return identity
+
+
+async def list_threads(user: User, session: AsyncSession, params: Dict[str, Any]) -> JSONResponse:
+    identity = await _identity_then_release(user, session)
     return relay(await v2_request("GET", "/v2/threads", identity, params={k: v for k, v in params.items() if v is not None}))
 
 
@@ -244,18 +265,18 @@ async def check_thread_customer(user: User, session: AsyncSession, customer_code
 async def create_thread(user: User, session: AsyncSession, body: TalonV2ThreadCreate) -> JSONResponse:
     if body.customer_code is not None:
         await check_thread_customer(user, session, body.customer_code)
-    identity = await talon_identity_headers(user, session)
+    identity = await _identity_then_release(user, session)
     payload = {"title": body.title, "customer_code": body.customer_code}
     return relay(await v2_request("POST", "/v2/threads", identity, json_body=payload))
 
 
 async def rename_thread(user: User, session: AsyncSession, thread_id: uuid.UUID, body: TalonV2ThreadRename) -> JSONResponse:
-    identity = await talon_identity_headers(user, session)
+    identity = await _identity_then_release(user, session)
     return relay(await v2_request("PATCH", f"/v2/threads/{thread_id}", identity, json_body={"title": body.title}))
 
 
 async def archive_thread(user: User, session: AsyncSession, thread_id: uuid.UUID) -> JSONResponse:
-    identity = await talon_identity_headers(user, session)
+    identity = await _identity_then_release(user, session)
     return relay(await v2_request("DELETE", f"/v2/threads/{thread_id}", identity))
 
 
@@ -281,10 +302,7 @@ def submit_message(thread_id: uuid.UUID, body: TalonV2ChatRequest) -> Dict[str, 
 
 async def chat(user: User, session: AsyncSession, thread_id: uuid.UUID, body: TalonV2ChatRequest) -> Response:
     """One chat turn. A refusal before the stream keeps its status; a 2xx streams through as is."""
-    identity = await talon_identity_headers(user, session)
-    # The turn can stream for minutes: don't hold a pooled database connection for it. Everything
-    # this request reads from the database has been read.
-    await session.close()
+    identity = await _identity_then_release(user, session)
     opened = await open_v2_stream(f"/v2/chat/{thread_id}", identity, submit_message(thread_id, body))
     if isinstance(opened, V2Answer):
         return refused(opened.status, opened.body)

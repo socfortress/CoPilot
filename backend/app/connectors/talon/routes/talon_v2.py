@@ -5,8 +5,9 @@ Two routers:
   chat) and ``GET``/``PUT /settings`` (admin only). They answer whatever the setting is: they are
   how it is read and changed.
 - ``talon_v2_proxy_router``: the threads and the chat stream, for admins and analysts (a
-  responder's token carries ``analyst``), behind ``require_talon_v2``: with the setting off each
-  answers 404 ``{"detail": "Not Found"}``, as if it didn't exist. The scope check comes first.
+  responder's token carries ``analyst``), behind ``require_talon_v2``: with the setting off every
+  declared route answers 404 ``{"detail": "Not Found"}``, as if it didn't exist (a method no route
+  declares still answers 405). The scope check comes first.
 
 The identity talon-analyst sees is computed from the JWT's user on every request
 (``services/identity.py``); no header and no body field from the browser carries it.
@@ -63,8 +64,11 @@ async def get_talon_v2_availability(session: AsyncSession = Depends(get_db)) -> 
     description="The Talon v2 setting of the Talon connector",
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
-async def get_talon_v2_settings(session: AsyncSession = Depends(get_db)) -> TalonV2SettingsResponse:
-    return await service.get_v2_settings(session)
+async def get_talon_v2_settings(
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> TalonV2SettingsResponse:
+    return await service.get_v2_settings(current_user, session)
 
 
 @talon_v2_router.put(

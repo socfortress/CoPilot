@@ -1,7 +1,7 @@
 """The "Talon v2" setting (talon-analyst SPEC §5.3, D54; plan M5-5a, decision a).
 
 One row per Talon connector, keyed by the connector's name, so a second connector (the pilot's
-"Talon Next", D53) gets a row of its own. A missing row reads as off: every v2 route answers 404
+"Talon Next", D53) gets a row of its own. A missing row reads as off: every declared v2 proxy route answers 404
 and CoPilot's Talon UI and proxy stay exactly as they are without it.
 
 A typed table rather than ``connectors.connector_extra_data`` (free text) or a new ``connectors``

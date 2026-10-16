@@ -228,3 +228,19 @@ def test_only_an_admin_may_be_sent_the_wildcard():
     # A non-admin with "*" can't happen today; if it ever did, it would mean nothing, never all.
     assert customers_header(user, "analyst", ["*"]) == ""
     assert customers_header(user, "analyst", ["*", "ACME", "ACME"]) == "ACME"
+
+
+def test_headers_too_large_for_talon_analyst_are_warned_about_and_still_sent():
+    user = SimpleNamespace(id=2, username="ana", role_id=2)
+    with patch.object(identity.logger, "warning") as warned:
+        assert tags_header(set(range(1, 1001))).count(",") == 999
+        customers_header(user, "analyst", [f"C{n}" for n in range(500)])
+    warned.assert_not_called()  # at the limits: no warning
+    with patch.object(identity.logger, "warning") as warned:
+        tags = tags_header(set(range(1, 1002)))
+        codes = customers_header(user, "analyst", [f"C{n}" for n in range(501)])
+    # Sent as they are: talon-analyst refuses the request (400), which fails closed.
+    assert tags.count(",") == 1000 and codes.count(",") == 500
+    messages = [call.args[0] for call in warned.call_args_list]
+    assert any("1001 tag ids" in m and "1000" in m for m in messages)
+    assert any("501 customers" in m for m in messages)

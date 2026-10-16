@@ -75,8 +75,12 @@ def build_upstream_headers(api_key: str, identity: Mapping[str, str], *, accept:
 
 
 def _new_client(timeout: httpx.Timeout) -> httpx.AsyncClient:
-    """One client per request, as v1's stream does (tests replace this to mock the transport)."""
-    return httpx.AsyncClient(verify=False, timeout=timeout, follow_redirects=False)
+    """One client per request, as v1's stream does (tests replace this to mock the transport).
+
+    ``trust_env=False``: a host's ``HTTPS_PROXY``/``HTTP_PROXY`` must never carry the API key and
+    the identity headers through a proxy nobody chose for Talon. TLS isn't verified, as for v1
+    (the connector's own TLS option is a follow-up), so talon-analyst belongs on a private network."""
+    return httpx.AsyncClient(verify=False, timeout=timeout, follow_redirects=False, trust_env=False)
 
 
 async def _connector(connector_name: str) -> Optional[Dict[str, Any]]:

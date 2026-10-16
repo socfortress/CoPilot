@@ -58,8 +58,10 @@ USERS = {
     "admin": SimpleNamespace(id=1, username="admin", role_id=1),
     "ana": SimpleNamespace(id=2, username="ana", role_id=2),
     "resp": SimpleNamespace(id=5, username="resp", role_id=5),
+    # An admin since demoted to analyst: the token issued before still carries the admin scope.
+    "demoted": SimpleNamespace(id=4, username="demoted", role_id=2),
 }
-SCOPES = {"admin": ["admin"], "ana": ["analyst"], "resp": ["responder", "analyst"]}
+SCOPES = {"admin": ["admin"], "ana": ["analyst"], "resp": ["responder", "analyst"], "demoted": ["admin"]}
 MINE, THEIRS = "ACME", "GLOBEX"
 API_KEY = "connector-key"
 CONNECTOR = {"connector_url": "http://talon.invalid", "connector_api_key": API_KEY, "connector_verified": True}
@@ -101,9 +103,11 @@ class Upstream:
         self.respond = respond or (lambda request: httpx.Response(200, json={"threads": [], "next": None}))
         self.requests = []
         self.clients = []
+        self.events = []  # ("session closed",) and ("upstream", path), in order
 
     def handler(self, request: httpx.Request) -> httpx.Response:
         self.requests.append(request)
+        self.events.append(("upstream", request.url.path))
         return self.respond(request)
 
     def new_client(self, timeout):
@@ -134,7 +138,7 @@ class Chunks(httpx.AsyncByteStream):
         self.closed = True
 
 
-def _app(db, *, copilot_handler=False):
+def _app(db, *, copilot_handler=False, events=None):
     from app.routers import talon
 
     app = FastAPI()
@@ -148,6 +152,14 @@ def _app(db, *, copilot_handler=False):
 
     async def _session():
         async with db.session() as session:
+            if events is not None:
+                close = session.close
+
+                async def recorded_close():
+                    events.append(("session closed",))
+                    await close()
+
+                session.close = recorded_close
             yield session
 
     app.dependency_overrides[get_db] = _session
@@ -178,7 +190,7 @@ def call(scenario, *, enabled=True, upstream=None, copilot_handler=False, connec
         db = await _Db().create()
         try:
             await _seed(db, enabled)
-            app = _app(db, copilot_handler=copilot_handler)
+            app = _app(db, copilot_handler=copilot_handler, events=upstream.events)
 
             async def resolve_user(self, request, username):
                 return USERS.get(username)
@@ -280,6 +292,19 @@ def test_the_settings_are_admin_only():
         ]
 
     assert call(scenario, enabled=False) == [403, 403, 403, [], 0]
+
+
+def test_a_demoted_admins_old_token_can_neither_read_nor_change_the_setting():
+    async def scenario(client, ctx):
+        statuses = [
+            (await client.get("/talon/v2/settings", headers=as_user("demoted"))).status_code,
+            (await client.put("/talon/v2/settings", json={"v2_enabled": True}, headers=as_user("demoted"))).status_code,
+            (await client.put("/talon/v2/settings", json={"v2_enabled": False}, headers=as_user("demoted"))).status_code,
+        ]
+        enabled = (await client.get("/talon/v2/availability", headers=as_user("admin"))).json()["enabled"]
+        return statuses, enabled, ctx.upstream.requests, ctx.audit.await_count
+
+    assert call(scenario, enabled=True) == ([403, 403, 403], True, [], 0)
 
 
 def test_turning_v2_on_checks_talon_analyst_with_the_admins_headers_and_is_audited():
@@ -658,6 +683,35 @@ def test_the_golden_fixtures_are_all_here():
     assert [p.name for p in GOLDEN] == ["v2_approval.txt", "v2_error.txt", "v2_text.txt", "v2_tool.txt"]
     for path in GOLDEN:
         assert path.read_bytes().endswith(b"data: [DONE]\n\n")
+
+
+def test_every_proxy_route_closes_its_db_session_before_calling_talon_analyst():
+    def respond(request):
+        if request.url.path.startswith("/v2/chat/"):
+            return httpx.Response(200, content=b"data: [DONE]\n\n", headers={"content-type": "text/event-stream"})
+        status = 201 if request.method == "POST" else 200
+        return httpx.Response(status, json=THREAD_BODY)
+
+    routes = [
+        ("GET", "/talon/v2/threads", None),
+        ("POST", "/talon/v2/threads", {"title": "x", "customer_code": MINE}),
+        ("PATCH", f"/talon/v2/threads/{THREAD}", {"title": "y"}),
+        ("DELETE", f"/talon/v2/threads/{THREAD}", None),
+        ("POST", f"/talon/v2/chat/{THREAD}", {"message": "hi"}),
+    ]
+
+    async def scenario(client, ctx):
+        found = []
+        for method, path, body in routes:
+            ctx.upstream.events.clear()
+            response = await client.request(method, path, json=body, headers=as_user("ana"))
+            assert response.status_code < 300, (method, path, response.status_code)
+            upstream_at = next(n for n, event in enumerate(ctx.upstream.events) if event[0] == "upstream")
+            found.append((method, path, ("session closed",) in ctx.upstream.events[:upstream_at]))
+        return found
+
+    for method, path, closed_first in call(scenario, upstream=Upstream(respond)):
+        assert closed_first, (method, path)
 
 
 # ── a browser that leaves ─────────────────────────────────────────────────────

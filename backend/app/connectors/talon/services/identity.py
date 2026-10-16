@@ -56,6 +56,12 @@ TALON_CUSTOMER_CODE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
 CHAT_MEMORY_WING = "talon chat memory"
 #: talon-analyst's tag id range (CoPilot's tag id is a signed 32-bit INT).
 TAG_ID_MAX = 2_147_483_647
+#: talon-analyst refuses more tag ids than this in one header (``TAGS_MAX``): every v2 request of
+#: such a user is then a 400, which fails closed. Warned about so an operator can see why.
+TAGS_MAX = 1000
+#: Customer codes past which the header gets large enough to worry about (no talon-analyst limit;
+#: a proxy's header-size limit would refuse the request, which also fails closed).
+CUSTOMERS_WARN = 500
 
 
 def is_talon_customer_code(code: object) -> bool:
@@ -92,7 +98,10 @@ def customers_header(user: User, role: str, accessible: Iterable[str]) -> str:
             f"Talon v2: dropped {len(dropped)} customer code(s) outside talon-analyst's grammar for user {user.id}: "
             + ", ".join(repr(code) for code in sorted(map(str, dropped))),
         )
-    return ",".join(sorted(set(kept)))
+    kept = sorted(set(kept))
+    if len(kept) > CUSTOMERS_WARN:
+        logger.warning(f"Talon v2: user {user.id} has {len(kept)} customers; a header that large may be refused upstream")
+    return ",".join(kept)
 
 
 def tags_header(accessible_tags: Iterable[object]) -> str:
@@ -103,6 +112,8 @@ def tags_header(accessible_tags: Iterable[object]) -> str:
     ids = sorted({tag for tag in tags if isinstance(tag, int) and not isinstance(tag, bool) and 1 <= tag <= TAG_ID_MAX})
     if len(ids) != len(tags):  # not a tag id talon-analyst could read: leaving it out only narrows the filter
         logger.warning(f"Talon v2: dropped {len(tags) - len(ids)} tag id(s) talon-analyst can't read")
+    if len(ids) > TAGS_MAX:
+        logger.warning(f"Talon v2: {len(ids)} tag ids is over talon-analyst's {TAGS_MAX}: its v2 routes will refuse this user (400)")
     return ",".join(str(tag) for tag in ids)
 
 
