@@ -8,6 +8,7 @@ import _toNumber from "lodash/toNumber"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
 import { loginWithPasskey as performPasskeyLogin } from "@/composables/usePasskey"
+import { resetTalonV2Availability } from "@/composables/useTalonV2Availability"
 import { useCustomerFilterStore } from "@/stores/customer-filter"
 import { AuthUserRole, RouteRole } from "@/types/auth"
 import { getAvatar, getNameInitials } from "@/utils"
@@ -53,6 +54,7 @@ export const useAuthStore = defineStore("auth", {
 			}
 
 			useCustomerFilterStore().clear()
+			resetTalonV2Availability()
 			removePersistentSessionKey()
 		},
 		async login(payload: LoginPayload) {

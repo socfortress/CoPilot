@@ -49,6 +49,7 @@ import stackProvisioning from "./endpoints/stack-provisioning"
 import sysmonConfig from "./endpoints/sysmon-config"
 import tagRbac from "./endpoints/tag-rbac"
 import talon from "./endpoints/talon"
+import talonV2 from "./endpoints/talonV2"
 import threatIntel from "./endpoints/threat-intel"
 import totp from "./endpoints/totp"
 import uba from "./endpoints/uba"
@@ -115,6 +116,7 @@ export default {
 	snapshots,
 	tagRbac,
 	talon,
+	talonV2,
 	opencti,
 	uba,
 	sso,

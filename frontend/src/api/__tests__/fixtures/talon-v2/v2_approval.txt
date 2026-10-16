@@ -1,0 +1,24 @@
+data: {"type":"start"}
+
+data: {"type":"start-step"}
+
+data: {"type":"text-start","id":"text-1"}
+
+data: {"type":"text-delta","delta":"I can close it. ","id":"text-1"}
+
+data: {"type":"text-end","id":"text-1"}
+
+data: {"type":"tool-input-start","toolCallId":"call_q","toolName":"set_alert_status"}
+
+data: {"type":"tool-input-available","toolCallId":"call_q","toolName":"set_alert_status","input":{"alert_id":840,"status":"CLOSED","reason":"a known scanner"}}
+
+data: {"type":"tool-approval-request","approvalId":"3f1c9a2e-5b7d-4e8f-9a01-2c3d4e5f6a7b","toolCallId":"call_q"}
+
+data: {"type":"finish-step"}
+
+data: {"type":"data-usage","data":{"input_tokens":50,"output_tokens":15,"requests":1,"tool_calls":0,"context_tokens":1055,"cost_usd":"0"}}
+
+data: {"type":"finish"}
+
+data: [DONE]
+
