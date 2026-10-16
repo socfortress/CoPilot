@@ -1,0 +1,20 @@
+data: {"type":"start"}
+
+data: {"type":"start-step"}
+
+data: {"type":"text-start","id":"text-1"}
+
+data: {"type":"text-delta","delta":"hello ","id":"text-1"}
+
+data: {"type":"text-delta","delta":"analyst","id":"text-1"}
+
+data: {"type":"text-end","id":"text-1"}
+
+data: {"type":"finish-step"}
+
+data: {"type":"data-usage","data":{"input_tokens":51,"output_tokens":2,"requests":1,"tool_calls":0,"context_tokens":883,"cost_usd":"0"}}
+
+data: {"type":"finish"}
+
+data: [DONE]
+

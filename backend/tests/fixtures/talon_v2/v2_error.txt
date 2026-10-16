@@ -1,0 +1,18 @@
+data: {"type":"start"}
+
+data: {"type":"start-step"}
+
+data: {"type":"text-start","id":"text-1"}
+
+data: {"type":"text-delta","delta":"partial ","id":"text-1"}
+
+data: {"type":"text-end","id":"text-1"}
+
+data: {"type":"error","errorText":"Talon request failed"}
+
+data: {"type":"finish-step"}
+
+data: {"type":"finish","finishReason":"error"}
+
+data: [DONE]
+
