@@ -4,10 +4,11 @@ Two routers:
 - ``talon_v2_router``: ``GET /availability`` (admin, analyst; whether the frontend shows the v2
   chat) and ``GET``/``PUT /settings`` (admin only). They answer whatever the setting is: they are
   how it is read and changed.
-- ``talon_v2_proxy_router``: the threads and the chat stream, for admins and analysts (a
-  responder's token carries ``analyst``), behind ``require_talon_v2``: with the setting off every
-  declared route answers 404 ``{"detail": "Not Found"}``, as if it didn't exist (a method no route
-  declares still answers 405). The scope check comes first.
+- ``talon_v2_proxy_router``: the threads, a thread's earlier turns (``/threads/{id}/messages``,
+  talon-analyst M5-5t) and the chat stream, for admins and analysts (a responder's token carries
+  ``analyst``), behind ``require_talon_v2``: with the setting off every declared route answers 404
+  ``{"detail": "Not Found"}``, as if it didn't exist (a method no route declares still answers
+  405). The scope check comes first.
 
 The identity talon-analyst sees is computed from the JWT's user on every request
 (``services/identity.py``); no header and no body field from the browser carries it.
@@ -54,7 +55,8 @@ talon_v2_proxy_router = APIRouter(
     description="Whether the Talon v2 chat is turned on. Reads the setting only; never calls Talon.",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_talon_v2_availability(session: AsyncSession = Depends(get_db)) -> TalonV2AvailabilityResponse:
+async def get_talon_v2_availability(response: Response, session: AsyncSession = Depends(get_db)) -> TalonV2AvailabilityResponse:
+    response.headers.update(service.NO_STORE)
     return await service.get_availability(session)
 
 
@@ -65,9 +67,11 @@ async def get_talon_v2_availability(session: AsyncSession = Depends(get_db)) -> 
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def get_talon_v2_settings(
+    response: Response,
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> TalonV2SettingsResponse:
+    response.headers.update(service.NO_STORE)
     return await service.get_v2_settings(current_user, session)
 
 
@@ -80,9 +84,11 @@ async def get_talon_v2_settings(
 async def put_talon_v2_settings(
     body: TalonV2SettingsUpdate,
     request: Request,
+    response: Response,
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> TalonV2SettingsResponse:
+    response.headers.update(service.NO_STORE)
     return await service.update_v2_settings(current_user, session, body.v2_enabled, request)
 
 
@@ -121,6 +127,20 @@ async def rename_talon_v2_thread(
     session: AsyncSession = Depends(get_db),
 ) -> Response:
     return await service.rename_thread(current_user, session, thread_id, body)
+
+
+@talon_v2_proxy_router.get(
+    "/threads/{thread_id}/messages",
+    description="A page of one of the caller's Talon v2 threads' earlier turns, newest page first",
+)
+async def list_talon_v2_thread_messages(
+    thread_id: uuid.UUID,
+    limit: Optional[int] = Query(None, ge=1, le=100),
+    before: Optional[str] = Query(None, min_length=1, max_length=64),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    return await service.thread_messages(current_user, session, thread_id, {"limit": limit, "before": before})
 
 
 @talon_v2_proxy_router.delete("/threads/{thread_id}", description="Archive one of the caller's Talon v2 threads")

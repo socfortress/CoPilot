@@ -14,14 +14,18 @@ import Api from "@/api"
 const options = ref<SelectOption[]>([])
 const loading = ref(false)
 let inflight: Promise<void> | null = null
+// Bumped by `resetCustomerOptions`: an answer for the previous session is dropped.
+let generation = 0
 
 function fetchCustomers(): Promise<void> {
 	if (inflight) return inflight
 
+	const asked = generation
 	loading.value = true
 	inflight = Api.customers
 		.getCustomers({})
 		.then(res => {
+			if (asked !== generation) return
 			options.value = (res.data.customers || []).map(c => ({
 				label: `${c.customer_name} (${c.customer_code})`,
 				value: c.customer_code
@@ -32,11 +36,23 @@ function fetchCustomers(): Promise<void> {
 			// handle by keeping their submit button disabled.
 		})
 		.finally(() => {
+			if (asked !== generation) return
 			loading.value = false
 			inflight = null
 		})
 
 	return inflight
+}
+
+/**
+ * Forget the list (logout, `stores/auth.ts:setLogout`). `GET /customers` is scoped to the caller,
+ * so the next user on a shared machine must never be offered the previous one's customers.
+ */
+export function resetCustomerOptions() {
+	generation += 1
+	options.value = []
+	loading.value = false
+	inflight = null
 }
 
 export function useCustomerOptions() {

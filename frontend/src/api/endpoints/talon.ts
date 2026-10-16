@@ -2,6 +2,7 @@ import type { FlaskBaseResponse } from "@/types/flask"
 import type { TalonInvestigateRequest, TalonJobData, TalonTemplate } from "@/types/talon"
 import { useAuthStore } from "@/stores/auth"
 import { HttpClient } from "../http-client"
+import { createSseFramer, sseDataLines } from "../sse-framing"
 
 /** Shown when a Talon reply stream ends without `done` or `error`. */
 export const TALON_STREAM_CLOSED = "The connection to Talon closed before the reply finished."
@@ -104,12 +105,11 @@ export default {
 
 			/** Handle one SSE event; true once it ended the reply. */
 			const handleEvent = (event: string): boolean => {
-				for (const line of event.split("\n")) {
-					// Only `data:` lines carry events: `: keepalive` comments are skipped here.
-					if (!line.startsWith("data:")) continue
+				// Only `data:` lines carry events: `: keepalive` comments are skipped there.
+				for (const data of sseDataLines(event)) {
 					let parsed: { type?: string; content?: string; error?: unknown }
 					try {
-						parsed = JSON.parse(line.slice(5))
+						parsed = JSON.parse(data)
 					} catch {
 						continue // Not JSON — ignore
 					}
@@ -128,8 +128,7 @@ export default {
 				return false
 			}
 
-			const decoder = new TextDecoder()
-			let buffer = ""
+			const framer = createSseFramer()
 
 			try {
 				while (true) {
@@ -144,22 +143,16 @@ export default {
 					const { done, value } = read
 					if (done) break
 
-					// SSE allows CRLF line endings; normalised after joining, so a pair split across reads still matches.
-					buffer = (buffer + decoder.decode(value, { stream: true })).replace(/\r\n/g, "\n")
-
-					// SSE events are separated by \n\n
-					const events = buffer.split("\n\n")
-					// Last element is incomplete — keep in buffer
-					buffer = events.pop() || ""
-
-					for (const event of events) {
+					// SSE events are separated by a blank line; CRLF is allowed (`createSseFramer`).
+					for (const event of framer.push(value)) {
 						if (handleEvent(event)) return
 					}
 				}
 
 				// A final event the server closed without a trailing blank line.
-				buffer += decoder.decode()
-				if (buffer && handleEvent(buffer)) return
+				for (const event of framer.end()) {
+					if (handleEvent(event)) return
+				}
 
 				// No `done` and no `error`: the connection dropped mid-reply (proxy timeout,
 				// backend restart). Not a finished reply, so don't present it as one.

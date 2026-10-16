@@ -49,6 +49,7 @@ from app.connectors.talon.schema.talon_v2 import TalonV2ThreadRename
 from app.connectors.talon.services.identity import is_talon_customer_code
 from app.connectors.talon.services.identity import talon_identity_headers
 from app.connectors.talon.utils.universal import refusal_reason
+from app.connectors.talon.utils.v2_client import MAX_MESSAGES_BODY_BYTES
 from app.connectors.talon.utils.v2_client import TALON_CONNECTOR
 from app.connectors.talon.utils.v2_client import V2Answer
 from app.connectors.talon.utils.v2_client import V2StreamingResponse
@@ -216,16 +217,33 @@ def refused(status: Optional[int], body: bytes) -> JSONResponse:
     return JSONResponse({"detail": reason or FAILED}, status_code=status)
 
 
+#: Every v2 JSON answer: a thread list, a title, a transcript is the user's own and must not be
+#: kept by a browser or a proxy (talon-analyst sends the same on its own v2 answers).
+NO_STORE = {"Cache-Control": "no-store"}
+
+
+class RelayedJSONResponse(JSONResponse):
+    """A JSON body relayed as the bytes it arrived as (already checked to parse)."""
+
+    def render(self, content: Any) -> bytes:
+        return content
+
+
 def relay(answer: V2Answer) -> JSONResponse:
-    """A JSON upstream answer as CoPilot's answer."""
+    """A JSON upstream answer as CoPilot's answer, never stored by a cache. A 2xx body is relayed
+    as the bytes talon-analyst sent, once they parse as JSON (else a 502 with the fixed text)."""
     if answer.status is not None and 200 <= answer.status < 300:
         try:
-            payload = json.loads(answer.body)
+            json.loads(answer.body)
         except ValueError:
             logger.error(f"Talon v2: talon-analyst answered {answer.status} with a body that isn't JSON")
-            return JSONResponse({"detail": FAILED}, status_code=502)
-        return JSONResponse(payload, status_code=answer.status)
-    return refused(answer.status, answer.body)
+            response = JSONResponse({"detail": FAILED}, status_code=502)
+        else:
+            response = RelayedJSONResponse(answer.body, status_code=answer.status)
+    else:
+        response = refused(answer.status, answer.body)
+    response.headers.update(NO_STORE)
+    return response
 
 
 # ── threads ───────────────────────────────────────────────────────────────────
@@ -278,6 +296,22 @@ async def rename_thread(user: User, session: AsyncSession, thread_id: uuid.UUID,
 async def archive_thread(user: User, session: AsyncSession, thread_id: uuid.UUID) -> JSONResponse:
     identity = await _identity_then_release(user, session)
     return relay(await v2_request("DELETE", f"/v2/threads/{thread_id}", identity))
+
+
+async def thread_messages(user: User, session: AsyncSession, thread_id: uuid.UUID, params: Dict[str, Any]) -> JSONResponse:
+    """A page of the thread's earlier turns (talon-analyst M5-5t, SPEC §8 "Reading turns back"), as
+    the AI SDK's UI messages, redacted by talon-analyst exactly as its stream is. Only ``limit`` and
+    ``before`` are forwarded. A 403 keeps its fixed text: the thread's customer was removed, or the
+    caller's alert access narrowed since the thread began."""
+    identity = await _identity_then_release(user, session)
+    answer = await v2_request(
+        "GET",
+        f"/v2/threads/{thread_id}/messages",
+        identity,
+        params={k: v for k, v in params.items() if v is not None},
+        max_body_bytes=MAX_MESSAGES_BODY_BYTES,
+    )
+    return relay(answer)
 
 
 # ── chat ──────────────────────────────────────────────────────────────────────
