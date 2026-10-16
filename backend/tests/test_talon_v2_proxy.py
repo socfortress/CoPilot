@@ -13,6 +13,9 @@ Pinned here:
   values, each exactly once, and none of the browser's other headers;
 - threads: a customer the user lacks is a 403 with no upstream call, a malformed or unknown one a
   400; thread ids are UUIDs; answers and refusals pass through with their status;
+- a thread's earlier turns (talon-analyst M5-5t): only ``limit`` and ``before`` are forwarded, a bad
+  query or id is refused before talon-analyst, both 403s keep their fixed texts, and a page larger
+  than the thread routes' cap still comes through;
 - chat: CoPilot builds the ``SubmitMessage``; each pre-stream refusal keeps its status with a fixed
   text (never a 200, never a 401); each golden v2 stream (talon-analyst ``tests/contract/golden``,
   copied at talon-analyst ``5a2103e``) comes through byte for byte, keepalives included, with the
@@ -232,6 +235,7 @@ PROXY_ROUTES = [
     ("POST", "/talon/v2/threads", {"title": "x"}),
     ("PATCH", f"/talon/v2/threads/{THREAD}", {"title": "y"}),
     ("DELETE", f"/talon/v2/threads/{THREAD}", None),
+    ("GET", f"/talon/v2/threads/{THREAD}/messages", None),
     ("POST", f"/talon/v2/chat/{THREAD}", {"message": "hi"}),
 ]
 
@@ -546,6 +550,92 @@ def test_no_connector_or_no_answer_is_a_502():
     assert status == 502 and "10.0.0.7" not in text
 
 
+# ── a thread's earlier turns (talon-analyst M5-5t) ──────────────────────────────
+
+MESSAGES = f"/talon/v2/threads/{THREAD}/messages"
+PAGE = {
+    "thread": {**THREAD_BODY, "context_tokens": 1055},
+    "messages": [
+        {"id": "r1-user", "role": "user", "parts": [{"type": "text", "text": "hi", "state": "done"}], "metadata": {}},
+        {
+            "id": "r1-assistant",
+            "role": "assistant",
+            "parts": [{"type": "text", "text": "hello", "state": "done"}],
+            "metadata": {"created_at": "2026-10-16T08:00:00+00:00", "status": "completed"},
+        },
+    ],
+    "next": "WzQyXQ",
+}
+
+
+def test_messages_forward_only_limit_and_before_and_pass_the_page_through():
+    async def scenario(client, ctx):
+        first = await client.get(MESSAGES, headers=as_user("ana", **FORGED))
+        older = await client.get(f"{MESSAGES}?limit=5&before=WzQyXQ&user_id=9&status=all", headers=as_user("ana"))
+        return first, older, ctx.upstream.requests
+
+    first, older, (plain, paged) = call(scenario, upstream=Upstream(lambda r: httpx.Response(200, json=PAGE)))
+    assert (first.status_code, first.json()) == (200, PAGE)
+    assert older.status_code == 200
+    assert (plain.method, plain.url.path, dict(plain.url.params)) == ("GET", f"/v2/threads/{THREAD}/messages", {})
+    assert dict(paged.url.params) == {"limit": "5", "before": "WzQyXQ"}
+    _assert_own_identity(plain, "2", "analyst", MINE)
+
+
+def test_messages_refuse_a_bad_query_or_id_before_talon_analyst():
+    async def scenario(client, ctx):
+        paths = [
+            f"{MESSAGES}?limit=0",
+            f"{MESSAGES}?limit=101",
+            f"{MESSAGES}?before=",
+            f"{MESSAGES}?before={'x' * 65}",
+            "/talon/v2/threads/not-a-uuid/messages",
+        ]
+        statuses = [(await client.get(path, headers=as_user("ana"))).status_code for path in paths]
+        return statuses, ctx.upstream.requests
+
+    assert call(scenario) == ([422] * 5, [])
+
+
+@pytest.mark.parametrize(
+    "status, body, expected",
+    [
+        (403, {"detail": "access to this thread's customer was removed"}, (403, "access to this thread's customer was removed")),
+        (
+            403,
+            {"detail": "your alert access changed since this thread began; start a new thread"},
+            (403, "your alert access changed since this thread began; start a new thread"),
+        ),
+        (404, {"detail": "thread not found"}, (404, "thread not found")),
+        (400, {"detail": "invalid cursor"}, (400, "invalid cursor")),
+        (503, {"detail": "the thread's messages are busy; try again shortly"}, (503, "Talon request failed")),
+        (401, {"error": "Unauthorized"}, (502, "Talon request failed")),
+    ],
+    ids=["customer removed", "tags narrowed", "not found", "bad cursor", "busy", "bad key"],
+)
+def test_messages_refusals_keep_their_status_with_a_fixed_text(status, body, expected):
+    async def scenario(client, ctx):
+        response = await client.get(MESSAGES, headers=as_user("ana"))
+        return response.status_code, response.json()
+
+    assert call(scenario, upstream=Upstream(lambda r: httpx.Response(status, json=body))) == (expected[0], {"detail": expected[1]})
+
+
+def test_a_messages_page_over_the_thread_routes_cap_still_comes_through():
+    big = {**PAGE, "messages": [{**PAGE["messages"][1], "parts": [{"type": "text", "text": "é" * 900_000, "state": "done"}]}]}
+
+    async def scenario(client, ctx):
+        response = await client.get(MESSAGES, headers=as_user("ana"))
+        return response.status_code, response.json()
+
+    assert len(json.dumps(big, ensure_ascii=False).encode()) > v2_client.MAX_JSON_BODY_BYTES
+    assert call(scenario, upstream=Upstream(lambda r: httpx.Response(200, json=big))) == (200, big)
+
+    huge = {**PAGE, "messages": [{**PAGE["messages"][1], "parts": [{"type": "text", "text": "x" * (5 * 1024 * 1024)}]}]}
+    status, _ = call(scenario, upstream=Upstream(lambda r: httpx.Response(200, json=huge)))
+    assert status == 502
+
+
 # ── chat ──────────────────────────────────────────────────────────────────────
 
 
@@ -697,6 +787,7 @@ def test_every_proxy_route_closes_its_db_session_before_calling_talon_analyst():
         ("POST", "/talon/v2/threads", {"title": "x", "customer_code": MINE}),
         ("PATCH", f"/talon/v2/threads/{THREAD}", {"title": "y"}),
         ("DELETE", f"/talon/v2/threads/{THREAD}", None),
+        ("GET", f"/talon/v2/threads/{THREAD}/messages", None),
         ("POST", f"/talon/v2/chat/{THREAD}", {"message": "hi"}),
     ]
 

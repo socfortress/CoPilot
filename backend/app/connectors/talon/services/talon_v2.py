@@ -49,6 +49,7 @@ from app.connectors.talon.schema.talon_v2 import TalonV2ThreadRename
 from app.connectors.talon.services.identity import is_talon_customer_code
 from app.connectors.talon.services.identity import talon_identity_headers
 from app.connectors.talon.utils.universal import refusal_reason
+from app.connectors.talon.utils.v2_client import MAX_MESSAGES_BODY_BYTES
 from app.connectors.talon.utils.v2_client import TALON_CONNECTOR
 from app.connectors.talon.utils.v2_client import V2Answer
 from app.connectors.talon.utils.v2_client import V2StreamingResponse
@@ -278,6 +279,22 @@ async def rename_thread(user: User, session: AsyncSession, thread_id: uuid.UUID,
 async def archive_thread(user: User, session: AsyncSession, thread_id: uuid.UUID) -> JSONResponse:
     identity = await _identity_then_release(user, session)
     return relay(await v2_request("DELETE", f"/v2/threads/{thread_id}", identity))
+
+
+async def thread_messages(user: User, session: AsyncSession, thread_id: uuid.UUID, params: Dict[str, Any]) -> JSONResponse:
+    """A page of the thread's earlier turns (talon-analyst M5-5t, SPEC §8 "Reading turns back"), as
+    the AI SDK's UI messages, redacted by talon-analyst exactly as its stream is. Only ``limit`` and
+    ``before`` are forwarded. A 403 keeps its fixed text: the thread's customer was removed, or the
+    caller's alert access narrowed since the thread began."""
+    identity = await _identity_then_release(user, session)
+    answer = await v2_request(
+        "GET",
+        f"/v2/threads/{thread_id}/messages",
+        identity,
+        params={k: v for k, v in params.items() if v is not None},
+        max_body_bytes=MAX_MESSAGES_BODY_BYTES,
+    )
+    return relay(answer)
 
 
 # ── chat ──────────────────────────────────────────────────────────────────────

@@ -44,6 +44,9 @@ REQUEST_TIMEOUT = httpx.Timeout(connect=10.0, read=30.0, write=10.0, pool=10.0)
 STREAM_TIMEOUT = httpx.Timeout(connect=10.0, read=120.0, write=10.0, pool=10.0)
 #: The largest JSON answer relayed (a page of 200 threads is a few tens of KB).
 MAX_JSON_BODY_BYTES = 1024 * 1024
+#: The largest page of a thread's messages relayed: talon-analyst ends a page at about 1,000,000
+#: characters of stored JSON (``transcript.PAGE_CHARS``), which as UTF-8 can be more bytes.
+MAX_MESSAGES_BODY_BYTES = 4 * 1024 * 1024
 
 #: The stream's own headers (talon-analyst ``v2_chat.HEADERS``), set by CoPilot, not copied.
 STREAM_HEADERS = {
@@ -124,6 +127,7 @@ async def v2_request(
     params: Optional[Mapping[str, Any]] = None,
     json_body: Optional[Dict[str, Any]] = None,
     connector_name: str = TALON_CONNECTOR,
+    max_body_bytes: int = MAX_JSON_BODY_BYTES,
 ) -> V2Answer:
     """One v2 request that answers JSON. Never raises for an upstream status or a transport error."""
     attributes = await _connector(connector_name)
@@ -138,9 +142,9 @@ async def v2_request(
     try:
         async with _new_client(REQUEST_TIMEOUT) as client:
             async with client.stream(method, _url(attributes, path), headers=headers, params=params, json=json_body) as response:
-                body = await _read_capped(response, MAX_JSON_BODY_BYTES)
+                body = await _read_capped(response, max_body_bytes)
                 if body is None:
-                    logger.error(f"Talon v2 {method} {path}: the answer is over {MAX_JSON_BODY_BYTES} bytes")
+                    logger.error(f"Talon v2 {method} {path}: the answer is over {max_body_bytes} bytes")
                     return V2Answer(None)
                 return V2Answer(response.status_code, body)
     except Exception as e:  # noqa: BLE001 - a transport error or a malformed connector URL
